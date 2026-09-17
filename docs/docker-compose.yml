@@ -7,7 +7,8 @@ services:
     environment:
       POSTGRES_USER: kdy987
       POSTGRES_PASSWORD: kalpa987!
-      POSTGRES_DB: omsdb
+      POSTGRES_DB: asseterpdb
+      POSTGRES_INITDB_ARGS: "--locale=C.UTF-8 --lc-collate=C.UTF-8 --lc-ctype=C.UTF-8"
     ports:
       - "5432:5432"
     volumes:
