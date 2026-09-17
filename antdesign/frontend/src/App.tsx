@@ -20,6 +20,7 @@ import './flexlayout-custom.css';
 import { TopBar } from './components/TopBar';
 import { LeftSidebar } from './components/LeftSidebar';
 import { RightSideBar } from './components/RightSideBar';
+import { StatusBar } from './components/StatusBar';
 import { MyPageCalendar } from './components/MyPageCalendar';
 import {
   ScheduleGridBox,
@@ -34,11 +35,18 @@ import { MenuLevel_1, MenuLevel_3 } from './types';
 const defaultLayoutJson: IJsonModel = {
   global: {
     tabEnableClose: true,
-    tabSetEnableMaximize: true,
+    tabSetEnableMaximize: false, // 최대화로 인한 분할 차단 및 전체화면 고착 방지
     tabSetEnableClose: true, // 탭셋 닫기/삭제 허용
     tabSetEnableCloseButton: false, // 탭셋 헤더 자체의 닫기 버튼은 미노출
     tabSetEnableDeleteWhenEmpty: true, // 탭이 0개가 되면 해당 분할 패널(탭셋) 자동 소멸
     tabEnableRename: false,
+    tabEnableScrollbars: false, // 탭 외곽 스크롤바 방지 (뷰포트 피팅 및 내부 가상 스크롤 격리)
+    tabSetEnableDivide: true, // 패널 드래그 분할 허용
+    tabSetEnableDrop: true, // 드롭 허용
+    tabSetEnableDrag: true,
+    tabEnableDrag: true,
+    enableEdgeDock: true,
+    enableEdgeDockIndicators: true,
     tabSetMinWidth: 240,
     tabSetMinHeight: 160,
   },
@@ -51,12 +59,15 @@ const defaultLayoutJson: IJsonModel = {
         type: 'tabset',
         weight: 100,
         id: 'main-tabset',
+        enableDivide: true,
+        enableDrop: true,
         children: [
           {
             type: 'tab',
             name: 'My Page',
             component: 'mypage',
             enableClose: false,
+            enableScrollbars: false,
             id: 'tab-mypage',
           },
         ],
@@ -67,7 +78,7 @@ const defaultLayoutJson: IJsonModel = {
 
 const STORAGE_KEY = 'asseterp_flexlayout_model';
 
-// 로컬 스토리지에 저장된 레이아웃 정제 (0개 탭 자동 소멸 옵션 강제 적용)
+// 로컬 스토리지에 저장된 레이아웃 정제 (0개 탭 자동 소멸, 최대화 해제, 분할 허용 강제 적용)
 function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
   if (!json.global) {
     json.global = {};
@@ -75,12 +86,27 @@ function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
   json.global.tabSetEnableClose = true;
   json.global.tabSetEnableCloseButton = false;
   json.global.tabSetEnableDeleteWhenEmpty = true;
+  json.global.tabEnableScrollbars = false; // 외곽 스크롤 방지
+  json.global.tabSetEnableMaximize = false; // 최대화 고착 방지
+  json.global.tabSetEnableDivide = true; // 패널 드래그 분할 보장
+  json.global.tabSetEnableDrop = true;
+  json.global.tabSetEnableDrag = true;
+  json.global.tabEnableDrag = true;
+  json.global.enableEdgeDock = true;
+  json.global.enableEdgeDockIndicators = true;
 
   const fixNode = (node: any) => {
     if (!node) return;
     if (node.type === 'tabset') {
       if (node.enableClose === false) delete node.enableClose;
       if (node.enableDeleteWhenEmpty === false) delete node.enableDeleteWhenEmpty;
+      if (node.maximized) delete node.maximized; // 저장된 최대화 상태 강제 해제!
+      node.enableMaximize = false;
+      node.enableDivide = true;
+      node.enableDrop = true;
+    }
+    if (node.type === 'tab') {
+      node.enableScrollbars = false;
     }
     if (Array.isArray(node.children)) {
       node.children.forEach(fixNode);
@@ -99,7 +125,12 @@ function getInitialModel(): Model {
   if (saved) {
     try {
       const json = JSON.parse(saved);
-      return Model.fromJson(sanitizeLayoutJson(json));
+      const m = Model.fromJson(sanitizeLayoutJson(json));
+      const maxTs = m.getMaximizedTabset();
+      if (maxTs) {
+        m.doAction(Actions.maximizeToggle(maxTs.getId()));
+      }
+      return m;
     } catch (e) {
       console.warn('저장된 레이아웃 복원 실패, 기본값 사용:', e);
     }
@@ -143,6 +174,7 @@ export default function App() {
             id: tabId,
             config: { code: item.code, title: item.title },
             enableClose: true,
+            enableScrollbars: false,
           },
           targetTabsetId,
           DockLocation.CENTER,
@@ -164,48 +196,134 @@ export default function App() {
 
   // ── 빠른 버튼: 현재 활성 탭을 우측으로 분할 ──
   const handleSplitRight = () => {
+    // 혹시 최대화 상태인 경우 즉시 해제
+    const maxTs = model.getMaximizedTabset();
+    if (maxTs) {
+      model.doAction(Actions.maximizeToggle(maxTs.getId()));
+    }
+
     const activeTabset = model.getActiveTabset() || model.getFirstTabSet();
-    const activeTab = activeTabset?.getSelectedNode();
-    if (!activeTabset || !activeTab) {
-      message.warning('분할할 활성 탭이 없습니다.');
+    if (!activeTabset) {
+      message.warning('분할할 패널이 없습니다.');
       return;
     }
+    const activeTab = activeTabset.getSelectedNode();
+
+    // 패널에 탭이 1개뿐일 때: 우측에 새 작업 화면([1495] 당직명령부)을 분할 생성하여 즉시 2개 패널 배치
     if (activeTabset.getChildren().length <= 1) {
-      message.info('현재 패널에 탭이 1개뿐입니다. 메뉴에서 새 화면을 열거나 다른 탭을 추가한 후 분할해 보세요.');
+      const splitTabId = 'tab-1495';
+      const existing = model.getNodeById(splitTabId);
+      if (existing) {
+        model.doAction(
+          Actions.moveNode(
+            splitTabId,
+            activeTabset.getId(),
+            DockLocation.RIGHT,
+            -1,
+            true
+          )
+        );
+      } else {
+        model.doAction(
+          Actions.addTab(
+            {
+              type: 'tab',
+              name: '[1495] 당직명령부',
+              component: 'largedata',
+              id: splitTabId,
+              config: { code: '1495', title: '당직명령부' },
+              enableClose: true,
+              enableScrollbars: false,
+            },
+            activeTabset.getId(),
+            DockLocation.RIGHT,
+            -1,
+            true
+          )
+        );
+      }
+      message.success('우측으로 새 작업 패널이 분할 생성되었습니다.');
       return;
     }
-    model.doAction(
-      Actions.moveNode(
-        activeTab.getId(),
-        activeTabset.getId(),
-        DockLocation.RIGHT,
-        -1,
-        true
-      )
-    );
+
+    if (activeTab) {
+      model.doAction(
+        Actions.moveNode(
+          activeTab.getId(),
+          activeTabset.getId(),
+          DockLocation.RIGHT,
+          -1,
+          true
+        )
+      );
+      message.success('현재 탭이 우측 패널로 분할 이동되었습니다.');
+    }
   };
 
   // ── 빠른 버튼: 현재 활성 탭을 하단으로 분할 ──
   const handleSplitBottom = () => {
+    // 혹시 최대화 상태인 경우 즉시 해제
+    const maxTs = model.getMaximizedTabset();
+    if (maxTs) {
+      model.doAction(Actions.maximizeToggle(maxTs.getId()));
+    }
+
     const activeTabset = model.getActiveTabset() || model.getFirstTabSet();
-    const activeTab = activeTabset?.getSelectedNode();
-    if (!activeTabset || !activeTab) {
-      message.warning('분할할 활성 탭이 없습니다.');
+    if (!activeTabset) {
+      message.warning('분할할 패널이 없습니다.');
       return;
     }
+    const activeTab = activeTabset.getSelectedNode();
+
+    // 패널에 탭이 1개뿐일 때: 하단에 새 작업 화면([1495] 당직명령부)을 분할 생성하여 즉시 2개 패널 배치
     if (activeTabset.getChildren().length <= 1) {
-      message.info('현재 패널에 탭이 1개뿐입니다. 메뉴에서 새 화면을 열거나 다른 탭을 추가한 후 분할해 보세요.');
+      const splitTabId = 'tab-1495';
+      const existing = model.getNodeById(splitTabId);
+      if (existing) {
+        model.doAction(
+          Actions.moveNode(
+            splitTabId,
+            activeTabset.getId(),
+            DockLocation.BOTTOM,
+            -1,
+            true
+          )
+        );
+      } else {
+        model.doAction(
+          Actions.addTab(
+            {
+              type: 'tab',
+              name: '[1495] 당직명령부',
+              component: 'largedata',
+              id: splitTabId,
+              config: { code: '1495', title: '당직명령부' },
+              enableClose: true,
+              enableScrollbars: false,
+            },
+            activeTabset.getId(),
+            DockLocation.BOTTOM,
+            -1,
+            true
+          )
+        );
+      }
+      message.success('하단으로 새 작업 패널이 분할 생성되었습니다.');
       return;
     }
-    model.doAction(
-      Actions.moveNode(
-        activeTab.getId(),
-        activeTabset.getId(),
-        DockLocation.BOTTOM,
-        -1,
-        true
-      )
-    );
+
+    if (activeTab) {
+      model.doAction(
+        Actions.moveNode(
+          activeTab.getId(),
+          activeTabset.getId(),
+          DockLocation.BOTTOM,
+          -1,
+          true
+        )
+      );
+      message.success('현재 탭이 하단 패널로 분할 이동되었습니다.');
+    }
   };
 
   // ── 레이아웃 수동 저장 ──
@@ -234,19 +352,22 @@ export default function App() {
             display: 'flex',
             overflow: 'hidden',
             height: '100%',
+            minHeight: 0,
+            boxSizing: 'border-box',
           }}
         >
-          {/* MyPage Grid/Calendar Container */}
+          {/* MyPage Grid/Calendar Container (뷰포트 피팅 및 외부 스크롤바 방지) */}
           <div
             style={{
               flex: 1,
               display: 'flex',
               padding: 8,
               gap: 8,
-              overflowX: 'auto',
-              overflowY: 'auto',
+              overflow: 'hidden',
               minWidth: 0,
+              minHeight: 0,
               height: '100%',
+              boxSizing: 'border-box',
             }}
           >
             {/* Left Column: Calendar (상단) + Schedule Box (하단 채움) */}
@@ -258,6 +379,7 @@ export default function App() {
                 flexDirection: 'column',
                 gap: 8,
                 height: '100%',
+                minHeight: 0,
                 flexShrink: 0,
               }}
             >
@@ -277,6 +399,8 @@ export default function App() {
                 flexDirection: 'column',
                 gap: 8,
                 height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
               }}
             >
               <DayListBox />
@@ -291,9 +415,9 @@ export default function App() {
       );
     }
 
-    // 기본 대용량 데이터 뷰 (AgGrid)
+    // 기본 대용량 데이터 뷰 (AgGrid: 외부 스크롤 없이 AgGrid 내부 가상 스크롤만 동작하도록 격리)
     return (
-      <div style={{ flex: 1, overflowY: 'auto', height: '100%' }}>
+      <div style={{ flex: 1, overflow: 'hidden', height: '100%', minHeight: 0, boxSizing: 'border-box' }}>
         <LargeDataView
           title={config.title || node.getName()}
           menuCode={config.code || node.getId().replace('tab-', '')}
@@ -310,7 +434,7 @@ export default function App() {
       />
 
       {/* ── Body Container with LeftSidebar & FlexLayout ── */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', height: 'calc(100vh - 50px)', position: 'relative' }}>
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
         {/* ── 왼쪽 MenuLevel_1 아이콘 메뉴 및 MenuLevel_2/3 서브메뉴 ── */}
         <LeftSidebar
           activeMenuId={activeMenuId}
@@ -339,7 +463,7 @@ export default function App() {
             {/* Guide message */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <Tag color="geekblue" icon={<InfoCircleOutlined />} style={{ fontSize: 11, margin: 0 }}>
-                탭을 잡고 화면 상/하/좌/우로 드래그하면 자유롭게 패널 분할 및 도킹이 가능합니다
+                💡 탭이 2개 이상일 때 탭을 패널 우측/하단 가장자리로 드래그하거나, '우측/하단 분할' 버튼을 누르면 즉시 분할됩니다
               </Tag>
             </div>
 
@@ -407,6 +531,9 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {/* ── Status Bar (System Health, Message, Clock) ── */}
+      <StatusBar />
     </div>
   );
 }

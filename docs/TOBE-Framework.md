@@ -67,4 +67,11 @@
 1. Dashboard -> MyPage라는 용어를 사용할 것
 2. Tailwindcss의 사용은 자제한다.
 3. icon은 ant design의 것을 사용한다.
+4. flexlayout-react의 도입, split panel에서 tab
+  - 화면 layout을 저장, 호출해서 변경가능
+5. Status bar의 도입- topbar와 statubar사이에 contents가 보여짐으로서 안정감과 스크롤없는 편안한 조작  
+6. 뷰포트 피팅 레이아웃 (Viewport-Fitting Layout / Fit-to-Window) 도입
+  - 논스크롤 / 고정 뷰포트 (No-Scroll Body / Fixed Viewport Layout)
+  - 내부 가상 스크롤 격리 (Isolated Internal Virtual Scrolling)
+
 

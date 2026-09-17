@@ -32,7 +32,7 @@
 
 ## 폴더
 
-- antdesign : Ant Design으로 화면디자인을 만들어 봄
+- antdesign : UI테스트, Ant Design으로 화면디자인을 만들어 봄 
 
 
 

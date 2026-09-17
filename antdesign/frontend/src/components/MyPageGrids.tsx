@@ -104,7 +104,7 @@ export const ScheduleGridBox: React.FC<ScheduleBoxProps> = ({ selectedDay }) => 
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
-        minHeight: 180,
+        minHeight: 0,
       }}
     >
       {/* Box Header */}
@@ -253,7 +253,7 @@ export const DayListBox: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
-        minHeight: 160,
+        minHeight: 0,
       }}
     >
       <div
@@ -383,7 +383,7 @@ export const ApprovalGridBox: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
-        minHeight: 160,
+        minHeight: 0,
       }}
     >
       <div
@@ -491,7 +491,7 @@ export const ComplianceGridBox: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
-        minHeight: 150,
+        minHeight: 0,
       }}
     >
       <div
