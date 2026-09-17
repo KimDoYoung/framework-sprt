@@ -1,22 +1,28 @@
-export interface MenuItem {
+// ── Menu Hierarchy Types ──
+export interface MenuLevel_3 {
   code: string;
   title: string;
   group?: string;
   badge?: string;
 }
 
-export interface MenuGroup {
+export interface MenuLevel_2 {
   groupCode: string;
   groupTitle: string;
-  items: MenuItem[];
+  items: MenuLevel_3[];
 }
 
-export interface FirstLevelMenu {
+export interface MenuLevel_1 {
   id: string;
   title: string;
   iconName: string;
-  groups: MenuGroup[];
+  groups: MenuLevel_2[];
 }
+
+// Backward-compatible aliases
+export type MenuItem = MenuLevel_3;
+export type MenuGroup = MenuLevel_2;
+export type FirstLevelMenu = MenuLevel_1;
 
 export interface EmployeeStatus {
   id: string;

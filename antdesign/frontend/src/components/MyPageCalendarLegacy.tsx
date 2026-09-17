@@ -23,7 +23,7 @@ interface CalendarProps {
   onSelectDate: (day: number) => void;
 }
 
-export const DashboardCalendar: React.FC<CalendarProps> = ({
+export const MyPageCalendar: React.FC<CalendarProps> = ({
   selectedDate,
   onSelectDate,
 }) => {
@@ -316,3 +316,6 @@ export const DashboardCalendar: React.FC<CalendarProps> = ({
     </div>
   );
 };
+
+export const MyPageCalendarLegacy = MyPageCalendar;
+export const MyPageCalenderLegacy = MyPageCalendar;

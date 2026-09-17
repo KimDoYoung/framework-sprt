@@ -50,7 +50,7 @@
    - 카멜케이스(Java) ↔ 스네이크케이스(DB) 자동 매핑
    - Service 기본 읽기 전용 트랜잭션(`readOnly = true`), CUD 메서드에만 쓰기 트랜잭션 선언
 
-### 6. Lombok 및 정적 분석 규칙
+6. Lombok 및 정적 분석 규칙
 
 - **Lombok 사용 범위 제한**
   - 허용: `@RequiredArgsConstructor`, `@Slf4j`, `@Getter`, `@Builder`
@@ -61,3 +61,10 @@
   - IDE(SonarLint) 및 CI 빌드 시 정적 분석 검사 통과 필수
   - Blocker / Critical 레벨 버그 및 취약점 0건 유지
   - 표준 코드 스타일러(Spotless/Checkstyle)를 통한 포맷 자동 정렬 준수
+
+### frontend
+
+1. Dashboard -> MyPage라는 용어를 사용할 것
+2. Tailwindcss의 사용은 자제한다.
+3. icon은 ant design의 것을 사용한다.
+

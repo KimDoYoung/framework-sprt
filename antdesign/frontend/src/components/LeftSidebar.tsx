@@ -12,28 +12,33 @@ import {
   PlusOutlined,
   MinusOutlined,
 } from '@ant-design/icons';
-import { FirstLevelMenu, MenuItem } from '../types';
-import { firstLevelMenus } from '../mock/data';
+import { MenuLevel_1, MenuLevel_3 } from '../types';
+import { menuLevel_1_List } from '../mock/data';
 
 interface LeftSidebarProps {
   activeMenuId: string | null;
-  onSelectFirstLevel: (menuId: string) => void;
-  onSelectMenuItem: (item: MenuItem, parentMenu: FirstLevelMenu) => void;
+  onSelectMenuLevel_1: (menuId: string | null) => void;
+  onSelectMenuLevel_3: (item: MenuLevel_3, parentMenu: MenuLevel_1) => void;
   pinned: boolean;
   onTogglePin: (pinned: boolean) => void;
+  selectedMenuLevel_3_Code?: string;
+  // Backward compatibility props
+  onSelectFirstLevel?: (menuId: string) => void;
+  onSelectMenuItem?: (item: MenuLevel_3, parentMenu: MenuLevel_1) => void;
   selectedSubMenuCode?: string;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   activeMenuId,
-  onSelectFirstLevel,
-  onSelectMenuItem,
+  onSelectMenuLevel_1,
+  onSelectMenuLevel_3,
   pinned,
   onTogglePin,
-  selectedSubMenuCode,
+  selectedMenuLevel_3_Code,
 }) => {
   const [fontSizeOffset, setFontSizeOffset] = useState<number>(0);
 
+  // 1차 메뉴 아이콘 렌더링
   const renderIcon = (iconName: string, active: boolean) => {
     const style = { fontSize: 20, color: active ? '#1a1a1a' : '#abb4c4', marginBottom: 4 };
     switch (iconName) {
@@ -58,11 +63,25 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     }
   };
 
-  const activeMenuObj = firstLevelMenus.find((m) => m.id === activeMenuId);
+  // 1차 메뉴(MenuLevel_1) 아이콘 클릭 핸들러
+  // - 현재 펼쳐진 상태에서 동일한 아이콘을 다시 클릭하면 2,3차 메뉴 패널 닫힘 (토글)
+  // - '고정'이 체크되어 있으면 토글로 닫히지 않고 열린 상태 유지
+  // - 다른 1차 메뉴 아이콘이 클릭되면 무조건 해당 메뉴로 오픈
+  const handleMenuLevel_1_Click = (menuId: string) => {
+    if (activeMenuId === menuId) {
+      if (!pinned) {
+        onSelectMenuLevel_1(null);
+      }
+    } else {
+      onSelectMenuLevel_1(menuId);
+    }
+  };
+
+  const activeMenuObj = menuLevel_1_List.find((m) => m.id === activeMenuId);
 
   return (
     <div style={{ display: 'flex', height: '100%', zIndex: 900 }}>
-      {/* ── 1단계: 아이콘 바 (Dark Sidebar, 64px) ── */}
+      {/* ── MenuLevel_1: 1차 아이콘 바 (Dark Sidebar, 64px) ── */}
       <div
         style={{
           width: 64,
@@ -76,12 +95,12 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           flexShrink: 0,
         }}
       >
-        {firstLevelMenus.map((menu) => {
+        {menuLevel_1_List.map((menu) => {
           const isActive = activeMenuId === menu.id;
           return (
             <div
               key={menu.id}
-              onClick={() => onSelectFirstLevel(menu.id)}
+              onClick={() => handleMenuLevel_1_Click(menu.id)}
               style={{
                 width: 54,
                 height: 58,
@@ -114,7 +133,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         })}
       </div>
 
-      {/* ── 2단계 / 3단계: 서브메뉴 패널 (230px, White & Clean) ── */}
+      {/* ── MenuLevel_2 / MenuLevel_3: 2단계 그룹 및 3단계 항목 패널 (230px, White & Clean) ── */}
       {activeMenuObj && (
         <div
           style={{
@@ -128,7 +147,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             zIndex: 950,
           }}
         >
-          {/* Submenu Header/Groups */}
+          {/* MenuLevel_2 & MenuLevel_3 List */}
           <div
             style={{
               flex: 1,
@@ -138,7 +157,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           >
             {activeMenuObj.groups.map((group) => (
               <div key={group.groupCode} style={{ marginBottom: 12 }}>
-                {/* Group Title Header */}
+                {/* MenuLevel_2 헤더 */}
                 <div
                   style={{
                     backgroundColor: '#eef2f8',
@@ -153,14 +172,14 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                   {group.groupTitle}
                 </div>
 
-                {/* Group Items */}
+                {/* MenuLevel_3 항목들 */}
                 <div style={{ padding: '4px 0' }}>
                   {group.items.map((item) => {
-                    const isItemSelected = selectedSubMenuCode === item.code;
+                    const isItemSelected = selectedMenuLevel_3_Code === item.code;
                     return (
                       <div
                         key={item.code}
-                        onClick={() => onSelectMenuItem(item, activeMenuObj)}
+                        onClick={() => onSelectMenuLevel_3(item, activeMenuObj)}
                         style={{
                           padding: '6px 14px',
                           display: 'flex',
@@ -203,7 +222,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             ))}
           </div>
 
-          {/* Bottom Controls: Zoom (+, -) and Pin (고정) as seen in main2.png */}
+          {/* 하단 컨트롤: 폰트 확대/축소 및 '고정' 체크박스 */}
           <div
             style={{
               height: 38,
@@ -215,6 +234,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
               padding: '0 12px',
               fontSize: 12,
               userSelect: 'none',
+              flexShrink: 0,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

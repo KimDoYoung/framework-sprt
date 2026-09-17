@@ -1,6 +1,6 @@
-import { FirstLevelMenu, EmployeeStatus, ScheduleItem, DayListItem, ApprovalItem, ComplianceItem, LargeAssetItem } from '../types';
-
-export const firstLevelMenus: FirstLevelMenu[] = [
+import { MenuLevel_1, EmployeeStatus, ScheduleItem, DayListItem, ApprovalItem, ComplianceItem, LargeAssetItem } from '../types';
+ 
+export const menuLevel_1_List: MenuLevel_1[] = [
   {
     id: 'doc',
     title: '문서작성',
@@ -188,6 +188,8 @@ export const firstLevelMenus: FirstLevelMenu[] = [
     ],
   },
 ];
+
+export const firstLevelMenus = menuLevel_1_List;
 
 export const employeeList: EmployeeStatus[] = [
   { id: '1', name: '박동진', position: '사장', status: 'busy', dept: '경영진' },
