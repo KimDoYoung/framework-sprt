@@ -22,8 +22,17 @@
 2. 기술인력이 모두 TOBE 기술스택에 익숙치 않다.
 
 
+## 테스트 환경
+
+### db
+
+- local에 postgresql, redis database를 설치, WAS tomcat설치함
+- @docs/docker-compose.yml 참조
+- deploy.sh로 배포함
+
 ## 폴더
 
 - antdesign : Ant Design으로 화면디자인을 만들어 봄
+
 
 
