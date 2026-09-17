@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Tabs } from 'antd';
-import { ProLayout } from '@ant-design/pro-components';
 import { TopBar } from './components/TopBar';
 import { LeftSidebar } from './components/LeftSidebar';
 import { RightMessengerSidebar } from './components/RightMessengerSidebar';
@@ -69,18 +68,11 @@ export default function App() {
   };
 
   return (
-    <ProLayout
-      title="Asset-ERP"
-      pure
-      headerRender={() => (
-        <TopBar
-          sidebarPinned={sidebarPinned}
-          onToggleSidebarPin={() => setSidebarPinned(!sidebarPinned)}
-        />
-      )}
-      menuRender={false}
-      style={{ height: '100vh', overflow: 'hidden' }}
-    >
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <TopBar
+        sidebarPinned={sidebarPinned}
+        onToggleSidebarPin={() => setSidebarPinned(!sidebarPinned)}
+      />
       {/* ── Body Container with LeftSidebar, Main Content & Messenger ── */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', height: 'calc(100vh - 50px)', position: 'relative' }}>
         {/* ── 2. 왼쪽 1단계 아이콘 메뉴 및 2단계/3단계 서브메뉴 ── */}
@@ -191,6 +183,6 @@ export default function App() {
           </div>
         </div>
       </div>
-    </ProLayout>
+    </div>
   );
 }

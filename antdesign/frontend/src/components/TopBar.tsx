@@ -100,19 +100,20 @@ export const TopBar: React.FC<TopBarProps> = ({
 
       {/* Right section: Help, User, Messenger/Tool icons */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-        <Tooltip title="온라인 도움말 / 아이디어 제안">
-          <BulbOutlined
-            style={{
-              fontSize: 18,
-              cursor: 'pointer',
-              color: '#fff',
-              transition: 'transform 0.2s',
-            }}
-          />
+        <Tooltip title="온라인 도움말 / 아이디어 제안" placement="bottom">
+          <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+            <BulbOutlined
+              style={{
+                fontSize: 18,
+                color: '#fff',
+                transition: 'transform 0.2s',
+              }}
+            />
+          </span>
         </Tooltip>
 
         {/* User Profile dropdown */}
-        <Dropdown menu={{ items: userMenuItems }} trigger={['click']}>
+        <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
           <div
             style={{
               display: 'flex',
@@ -137,26 +138,40 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* Tool action icons from screenshot */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, borderLeft: '1px solid rgba(255,255,255,0.25)', paddingLeft: 14 }}>
-          <Tooltip title="AI 어시스턴트 (Beta)">
-            <RobotOutlined style={{ fontSize: 17, cursor: 'pointer', color: '#fff' }} />
+          <Tooltip title="AI 어시스턴트 (Beta)" placement="bottom">
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <RobotOutlined style={{ fontSize: 17, color: '#fff' }} />
+            </span>
           </Tooltip>
-          <Tooltip title="사내 메신저">
-            <MessageOutlined style={{ fontSize: 17, cursor: 'pointer', color: '#fff' }} />
+          <Tooltip title="사내 메신저" placement="bottom">
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <MessageOutlined style={{ fontSize: 17, color: '#fff' }} />
+            </span>
           </Tooltip>
-          <Tooltip title="업무 전송 / 쪽지">
-            <SendOutlined style={{ fontSize: 17, cursor: 'pointer', color: '#fff' }} />
+          <Tooltip title="업무 전송 / 쪽지" placement="bottom">
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <SendOutlined style={{ fontSize: 17, color: '#fff' }} />
+            </span>
           </Tooltip>
-          <Tooltip title="사내 공지사항">
-            <SoundOutlined style={{ fontSize: 17, cursor: 'pointer', color: '#fff' }} />
+          <Tooltip title="사내 공지사항" placement="bottom">
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <SoundOutlined style={{ fontSize: 17, color: '#fff' }} />
+            </span>
           </Tooltip>
-          <Tooltip title="사용자 정보">
-            <UserOutlined style={{ fontSize: 17, cursor: 'pointer', color: '#fff' }} />
+          <Tooltip title="사용자 정보" placement="bottom">
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <UserOutlined style={{ fontSize: 17, color: '#fff' }} />
+            </span>
           </Tooltip>
-          <Tooltip title="시스템 설정">
-            <SettingOutlined style={{ fontSize: 17, cursor: 'pointer', color: '#fff' }} />
+          <Tooltip title="시스템 설정" placement="bottom">
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <SettingOutlined style={{ fontSize: 17, color: '#fff' }} />
+            </span>
           </Tooltip>
-          <Tooltip title="로그아웃">
-            <PoweroffOutlined style={{ fontSize: 17, cursor: 'pointer', color: '#fff' }} />
+          <Tooltip title="로그아웃" placement="bottomRight">
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <PoweroffOutlined style={{ fontSize: 17, color: '#fff' }} />
+            </span>
           </Tooltip>
         </div>
       </div>

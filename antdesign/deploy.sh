@@ -75,8 +75,9 @@ if [[ -n "$WAR_PATH" && -f "$WAR_PATH" ]]; then
     echo ""
     header "Step 4: Tomcat webapps 복사 및 배포"
     if [[ -d "$TOMCAT_WEBAPPS_DIR" ]]; then
-        info "WAR 파일을 $TOMCAT_WEBAPPS_DIR 에 복사합니다..."
-        rm -rf "$TOMCAT_WEBAPPS_DIR/antdesign" "$TOMCAT_WEBAPPS_DIR/$WAR_NAME"
+        # 기존 war 및 디렉터리 정리 (root 권한으로 생성된 압축 해제 디렉터리는 권한 에러 무시)
+        rm -rf "$TOMCAT_WEBAPPS_DIR/antdesign" 2>/dev/null || true
+        rm -f "$TOMCAT_WEBAPPS_DIR/$WAR_NAME"
         cp "$WAR_PATH" "$TOMCAT_WEBAPPS_DIR/"
         info "복사 완료: $TOMCAT_WEBAPPS_DIR/$WAR_NAME"
         echo ""

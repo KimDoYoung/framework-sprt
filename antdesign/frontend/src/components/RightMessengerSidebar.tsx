@@ -121,7 +121,7 @@ export const RightMessengerSidebar: React.FC = () => {
       >
         {/* Status indicator buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Tooltip title="온라인">
+          <Tooltip title="온라인" placement="bottom">
             <span
               onClick={() => setStatusFilter(statusFilter === 'online' ? 'all' : 'online')}
               style={{
@@ -134,7 +134,7 @@ export const RightMessengerSidebar: React.FC = () => {
               }}
             />
           </Tooltip>
-          <Tooltip title="자리비움">
+          <Tooltip title="자리비움" placement="bottom">
             <span
               onClick={() => setStatusFilter(statusFilter === 'busy' ? 'all' : 'busy')}
               style={{
@@ -158,14 +158,16 @@ export const RightMessengerSidebar: React.FC = () => {
           style={{ fontSize: 11, borderRadius: 4 }}
         />
 
-        <Tooltip title="새로고침">
-          <ReloadOutlined
-            style={{ fontSize: 12, color: '#64748b', cursor: 'pointer' }}
-            onClick={() => {
-              setSearchTerm('');
-              setStatusFilter('all');
-            }}
-          />
+        <Tooltip title="새로고침" placement="left">
+          <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+            <ReloadOutlined
+              style={{ fontSize: 12, color: '#64748b' }}
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+              }}
+            />
+          </span>
         </Tooltip>
       </div>
     </div>
