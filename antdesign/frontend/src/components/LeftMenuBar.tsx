@@ -15,7 +15,7 @@ import {
 import { MenuLevel_1, MenuLevel_3 } from '../types';
 import { menuLevel_1_List } from '../mock/data';
 
-interface LeftSidebarProps {
+interface LeftMenuBarProps {
   activeMenuId: string | null;
   onSelectMenuLevel_1: (menuId: string | null) => void;
   onSelectMenuLevel_3: (item: MenuLevel_3, parentMenu: MenuLevel_1) => void;
@@ -28,7 +28,7 @@ interface LeftSidebarProps {
   selectedSubMenuCode?: string;
 }
 
-export const LeftSidebar: React.FC<LeftSidebarProps> = ({
+export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
   activeMenuId,
   onSelectMenuLevel_1,
   onSelectMenuLevel_3,

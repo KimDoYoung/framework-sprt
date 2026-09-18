@@ -11,8 +11,8 @@ import {
   mockDayList,
   mockApprovalList,
   mockComplianceList,
-} from '../mock/data';
-import { ScheduleItem, DayListItem, ApprovalItem, ComplianceItem } from '../types';
+} from '../../mock/data';
+import { ScheduleItem, DayListItem, ApprovalItem, ComplianceItem } from '../../types';
 
 // ── 1. 기준일 상세 일정 박스 (MyPage 좌측 하단) ──
 interface ScheduleBoxProps {

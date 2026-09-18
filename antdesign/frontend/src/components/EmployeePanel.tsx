@@ -7,7 +7,7 @@ import {
 } from '@ant-design/icons';
 import { employeeList } from '../mock/data';
 
-export const RightSideBar: React.FC = () => {
+export const EmployeePanel: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'busy'>('all');
 
@@ -174,4 +174,4 @@ export const RightSideBar: React.FC = () => {
   );
 };
 
-export const RightMessengerSidebar = RightSideBar;
+export const RightMessengerSidebar = EmployeePanel;

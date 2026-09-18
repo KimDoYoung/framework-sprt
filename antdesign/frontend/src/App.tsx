@@ -18,16 +18,16 @@ import {
 import './flexlayout-custom.css';
 
 import { TopBar } from './components/TopBar';
-import { LeftSidebar } from './components/LeftSidebar';
-import { RightSideBar } from './components/RightSideBar';
+import { LeftMenuBar } from './components/LeftMenuBar';
+import { EmployeePanel } from './components/EmployeePanel';
 import { StatusBar } from './components/StatusBar';
-import { MyPageCalendar } from './components/MyPageCalendar';
+import { MyPageCalendar } from './components/mypage/MyPageCalendar';
 import {
   ScheduleGridBox,
   DayListBox,
   ApprovalGridBox,
   ComplianceGridBox,
-} from './components/MyPageGrids';
+} from './components/mypage/MyPageGrids';
 import { LargeDataView } from './components/LargeDataView';
 import { MenuLevel_1, MenuLevel_3 } from './types';
 
@@ -409,7 +409,7 @@ export default function App() {
             </div>
 
             {/* Rightmost Column: 사원 조직도 / 우측 사이드바 */}
-            <RightSideBar />
+            <EmployeePanel />
           </div>
         </div>
       );
@@ -433,10 +433,10 @@ export default function App() {
         onToggleSidebarPin={() => setSidebarPinned(!sidebarPinned)}
       />
 
-      {/* ── Body Container with LeftSidebar & FlexLayout ── */}
+      {/* ── Body Container with LeftMenuBar & FlexLayout ── */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
         {/* ── 왼쪽 MenuLevel_1 아이콘 메뉴 및 MenuLevel_2/3 서브메뉴 ── */}
-        <LeftSidebar
+        <LeftMenuBar
           activeMenuId={activeMenuId}
           onSelectMenuLevel_1={handleSelectMenuLevel_1}
           onSelectMenuLevel_3={handleSelectMenuLevel_3}
