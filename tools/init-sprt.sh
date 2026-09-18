@@ -170,8 +170,32 @@ mkdir -p "$TARGET_DIR/frontend/src/assets"
 mkdir -p "$TARGET_DIR/frontend/public"
 
 if [[ "$UI_FRAMEWORK" == "antd" ]]; then
-    mkdir -p "$TARGET_DIR/frontend/src/components"
+    mkdir -p "$TARGET_DIR/frontend/src/assets/icons"
+    mkdir -p "$TARGET_DIR/frontend/src/assets/images"
+    mkdir -p "$TARGET_DIR/frontend/src/components/common/button"
+    mkdir -p "$TARGET_DIR/frontend/src/components/common/form"
+    mkdir -p "$TARGET_DIR/frontend/src/components/common/grid"
+    mkdir -p "$TARGET_DIR/frontend/src/components/common/modal"
+    mkdir -p "$TARGET_DIR/frontend/src/components/layout"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/mypage/components"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/act/components"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/act/hooks"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/act/types"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/biz/components"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/biz/types"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/crm/components"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/crm/types"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/emp/components"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/emp/types"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/fnd/components"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/fnd/types"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/rpt/components"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/rpt/types"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/sys/components"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/sys/types"
+    mkdir -p "$TARGET_DIR/frontend/src/services/biz"
     mkdir -p "$TARGET_DIR/frontend/src/types"
+    mkdir -p "$TARGET_DIR/frontend/src/utils"
     mkdir -p "$TARGET_DIR/frontend/src/mock"
 elif [[ "$UI_FRAMEWORK" == "shadcn" ]]; then
     mkdir -p "$TARGET_DIR/frontend/src/components/ui"
@@ -371,6 +395,7 @@ if [[ "$UI_FRAMEWORK" == "antd" ]]; then
     "ag-grid-react": "^36.1.0",
     "antd": "^5.24.0",
     "dayjs": "^1.11.13",
+    "flexlayout-react": "^0.11.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -456,26 +481,127 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 );
 EOF
 
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/flexlayout-custom.css"
+@import 'flexlayout-react/style/light.css';
+
+/* ── Ant Design Theme Tuning for FlexLayout ── */
+.flexlayout__layout {
+  --flexlayout-color-background: #eef2f6;
+  --flexlayout-color-tabset-background: #ffffff;
+  --flexlayout-color-tabset-background-selected: #ffffff;
+  --flexlayout-color-tab-selected-background: #ffffff;
+  --flexlayout-color-tab-selected: #1677ff;
+  --flexlayout-color-tab-unselected-background: #f8fafc;
+  --flexlayout-color-tab-unselected: #64748b;
+  --flexlayout-color-focus: #1677ff;
+  --flexlayout-color-drag1: #1677ff;
+  --flexlayout-color-drag1-background: rgba(22, 119, 255, 0.16);
+  --flexlayout-color-splitter: #d9dfe8;
+  --flexlayout-color-splitter-hover: #1677ff;
+  --flexlayout-color-splitter-drag: #1677ff;
+  --flexlayout-splitter-size: 6px;
+  --flexlayout-font-size: 12px;
+  --flexlayout-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* 탭 버튼 스타일 (Ant Design Card 탭과 일관된 느낌) */
+.flexlayout__tab_button {
+  border-radius: 4px 4px 0 0 !important;
+  margin-right: 3px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  padding: 4px 10px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-bottom: none !important;
+  transition: all 0.12s ease !important;
+}
+
+.flexlayout__tab_button:hover {
+  background-color: #f1f5f9 !important;
+  color: #1677ff !important;
+}
+
+.flexlayout__tab_button--selected {
+  background-color: #ffffff !important;
+  border-top: 2px solid #1677ff !important;
+  border-color: #d9dfe8 #d9dfe8 transparent #d9dfe8 !important;
+  color: #1677ff !important;
+  font-weight: 600 !important;
+}
+
+/* 탭 바 헤더 (34px 슬림 헤더) */
+.flexlayout__tabset_header {
+  height: 34px !important;
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #d9dfe8 !important;
+  box-sizing: border-box !important;
+}
+
+.flexlayout__tabset_tabbar_outer {
+  background-color: #ffffff !important;
+}
+
+.flexlayout__tabset_tabbar_inner {
+  padding-top: 2px !important;
+}
+
+/* 스플리터 구분선 */
+.flexlayout__splitter {
+  background-color: #d9dfe8 !important;
+  transition: background-color 0.15s !important;
+}
+
+.flexlayout__splitter:hover {
+  background-color: #1677ff !important;
+}
+
+/* 탭 닫기 버튼 */
+.flexlayout__tab_button_trailing {
+  margin-left: 6px !important;
+  color: #94a3b8 !important;
+}
+
+.flexlayout__tab_button_trailing:hover {
+  color: #ef4444 !important;
+}
+
+/* 탭 내부 콘텐츠 영역: 브라우저/모니터 우측 외곽 스크롤바 방지 (뷰포트 피팅) */
+.flexlayout__tab {
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+EOF
+
     cat << 'EOF' > "$TARGET_DIR/frontend/src/types/index.ts"
-export interface MenuItem {
+// ── Menu Hierarchy Types ──
+export interface MenuLevel_3 {
   code: string;
   title: string;
   group?: string;
   badge?: string;
 }
 
-export interface MenuGroup {
+export interface MenuLevel_2 {
   groupCode: string;
   groupTitle: string;
-  items: MenuItem[];
+  items: MenuLevel_3[];
 }
 
-export interface FirstLevelMenu {
+export interface MenuLevel_1 {
   id: string;
   title: string;
   iconName: string;
-  groups: MenuGroup[];
+  groups: MenuLevel_2[];
 }
+
+// Backward-compatible aliases
+export type MenuItem = MenuLevel_3;
+export type MenuGroup = MenuLevel_2;
+export type FirstLevelMenu = MenuLevel_1;
 
 export interface EmployeeStatus {
   id: string;
@@ -539,9 +665,9 @@ export interface LargeAssetItem {
 EOF
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/mock/data.ts"
-import { FirstLevelMenu, EmployeeStatus, ScheduleItem, DayListItem, ApprovalItem, ComplianceItem, LargeAssetItem } from '../types';
+import { MenuLevel_1, EmployeeStatus, ScheduleItem, DayListItem, ApprovalItem, ComplianceItem, LargeAssetItem } from '../types';
 
-export const firstLevelMenus: FirstLevelMenu[] = [
+export const menuLevel_1_List: MenuLevel_1[] = [
   {
     id: 'doc',
     title: '문서작성',
@@ -730,6 +856,8 @@ export const firstLevelMenus: FirstLevelMenu[] = [
   },
 ];
 
+export const firstLevelMenus = menuLevel_1_List;
+
 export const employeeList: EmployeeStatus[] = [
   { id: '1', name: '박동진', position: '사장', status: 'busy', dept: '경영진' },
   { id: '2', name: '배주한', position: '상무', status: 'busy', dept: '금융영업본부' },
@@ -890,7 +1018,7 @@ export function generateLargeAssetData(count: number = 10000): LargeAssetItem[] 
 
 EOF
 
-    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/TopBar.tsx"
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/layout/TopBar.tsx"
 import React from 'react';
 import { Input, Avatar, Dropdown, MenuProps, Tooltip } from 'antd';
 import {
@@ -993,19 +1121,20 @@ export const TopBar: React.FC<TopBarProps> = ({
 
       {/* Right section: Help, User, Messenger/Tool icons */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-        <Tooltip title="온라인 도움말 / 아이디어 제안">
-          <BulbOutlined
-            style={{
-              fontSize: 18,
-              cursor: 'pointer',
-              color: '#fff',
-              transition: 'transform 0.2s',
-            }}
-          />
+        <Tooltip title="온라인 도움말 / 아이디어 제안" placement="bottom">
+          <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+            <BulbOutlined
+              style={{
+                fontSize: 18,
+                color: '#fff',
+                transition: 'transform 0.2s',
+              }}
+            />
+          </span>
         </Tooltip>
 
         {/* User Profile dropdown */}
-        <Dropdown menu={{ items: userMenuItems }} trigger={['click']}>
+        <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
           <div
             style={{
               display: 'flex',
@@ -1030,36 +1159,469 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* Tool action icons from screenshot */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, borderLeft: '1px solid rgba(255,255,255,0.25)', paddingLeft: 14 }}>
-          <Tooltip title="AI 어시스턴트 (Beta)">
-            <RobotOutlined style={{ fontSize: 17, cursor: 'pointer', color: '#fff' }} />
+          <Tooltip title="AI 어시스턴트 (Beta)" placement="bottom">
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <RobotOutlined style={{ fontSize: 17, color: '#fff' }} />
+            </span>
           </Tooltip>
-          <Tooltip title="사내 메신저">
-            <MessageOutlined style={{ fontSize: 17, cursor: 'pointer', color: '#fff' }} />
+          <Tooltip title="사내 메신저" placement="bottom">
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <MessageOutlined style={{ fontSize: 17, color: '#fff' }} />
+            </span>
           </Tooltip>
-          <Tooltip title="업무 전송 / 쪽지">
-            <SendOutlined style={{ fontSize: 17, cursor: 'pointer', color: '#fff' }} />
+          <Tooltip title="업무 전송 / 쪽지" placement="bottom">
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <SendOutlined style={{ fontSize: 17, color: '#fff' }} />
+            </span>
           </Tooltip>
-          <Tooltip title="사내 공지사항">
-            <SoundOutlined style={{ fontSize: 17, cursor: 'pointer', color: '#fff' }} />
+          <Tooltip title="사내 공지사항" placement="bottom">
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <SoundOutlined style={{ fontSize: 17, color: '#fff' }} />
+            </span>
           </Tooltip>
-          <Tooltip title="사용자 정보">
-            <UserOutlined style={{ fontSize: 17, cursor: 'pointer', color: '#fff' }} />
+          <Tooltip title="사용자 정보" placement="bottom">
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <UserOutlined style={{ fontSize: 17, color: '#fff' }} />
+            </span>
           </Tooltip>
-          <Tooltip title="시스템 설정">
-            <SettingOutlined style={{ fontSize: 17, cursor: 'pointer', color: '#fff' }} />
+          <Tooltip title="시스템 설정" placement="bottom">
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <SettingOutlined style={{ fontSize: 17, color: '#fff' }} />
+            </span>
           </Tooltip>
-          <Tooltip title="로그아웃">
-            <PoweroffOutlined style={{ fontSize: 17, cursor: 'pointer', color: '#fff' }} />
+          <Tooltip title="로그아웃" placement="bottomRight">
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <PoweroffOutlined style={{ fontSize: 17, color: '#fff' }} />
+            </span>
           </Tooltip>
         </div>
       </div>
     </header>
   );
 };
-
 EOF
 
-    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/LeftSidebar.tsx"
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/layout/StatusBar.tsx"
+import React, { useState, useEffect } from 'react';
+import { Tooltip, Popover, Modal, Button, Tag, Space, Divider, message } from 'antd';
+import {
+  CheckCircleFilled,
+  ClockCircleOutlined,
+  SoundOutlined,
+  CloudServerOutlined,
+  DatabaseOutlined,
+  SyncOutlined,
+  SafetyCertificateOutlined,
+  DashboardOutlined,
+  WifiOutlined,
+  HistoryOutlined,
+} from '@ant-design/icons';
+import dayjs from 'dayjs';
+
+interface StatusMessage {
+  id: string;
+  type: 'notice' | 'update' | 'info' | 'warning';
+  tag: string;
+  tagColor: string;
+  text: string;
+  timestamp: string;
+  detail?: string;
+}
+
+const statusMessages: StatusMessage[] = [
+  {
+    id: '1',
+    type: 'notice',
+    tag: '시스템',
+    tagColor: 'blue',
+    text: 'Asset-ERP 서버 및 인프라 서비스가 모두 정상 운영 중입니다.',
+    timestamp: '16:00',
+    detail: '모든 마이크로서비스 및 메인 데이터베이스(DB), 캐시 클러스터와의 지연 시간이 정상 범위를 유지하고 있습니다.',
+  },
+  {
+    id: '2',
+    type: 'update',
+    tag: '업데이트',
+    tagColor: 'green',
+    text: 'FlexLayout 기반 멀티 윈도우 분할 탭 및 레이아웃 자동 저장 기능이 활성화되었습니다.',
+    timestamp: '15:30',
+    detail: '탭 헤더를 상/하/좌/우로 드래그하여 패널을 무제한 분할할 수 있으며, 탭이 0개가 된 패널은 자동으로 정리됩니다.',
+  },
+  {
+    id: '3',
+    type: 'info',
+    tag: '결재안내',
+    tagColor: 'orange',
+    text: '결재 대기 중인 문서가 2건 있습니다. MyPage 결재함을 확인하세요.',
+    timestamp: '14:15',
+    detail: '정기 승인 및 컴플라이언스 준수 승인 요청 건이 도착해 있습니다.',
+  },
+  {
+    id: '4',
+    type: 'warning',
+    tag: '점검예정',
+    tagColor: 'volcano',
+    text: '정기 보안 패치 및 데이터 무결성 검증 작업이 토요일 02:00에 예정되어 있습니다.',
+    timestamp: '10:00',
+    detail: '작업 중 약 5분간 간헐적 접속 지연이 발생할 수 있습니다.',
+  },
+];
+
+const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+export const StatusBar: React.FC = () => {
+  // ── 실시간 시계 상태 ──
+  const [currentTime, setCurrentTime] = useState<dayjs.Dayjs>(dayjs());
+  const [sessionSeconds, setSessionSeconds] = useState<number>(3540); // 59분
+
+  // ── 메시지 티커 상태 ──
+  const [currentMsgIndex, setCurrentMsgIndex] = useState<number>(0);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
+
+  // ── 시스템 헬스 새로고침 상태 ──
+  const [isCheckingHealth, setIsCheckingHealth] = useState<boolean>(false);
+  const [lastCheckedTime, setLastCheckedTime] = useState<string>('방금 전');
+  const [latency, setLatency] = useState<number>(14);
+
+  // 1초마다 시계 업데이트 및 세션 감소
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(dayjs());
+      setSessionSeconds((prev) => (prev > 0 ? prev - 1 : 3600));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // 5초마다 중앙 메시지 순환
+  useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(() => {
+      setCurrentMsgIndex((prev) => (prev + 1) % statusMessages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isPaused]);
+
+  // 세션 연장 처리
+  const handleExtendSession = () => {
+    setSessionSeconds(3600);
+    message.success('로그인 세션이 60분 연장되었습니다.');
+  };
+
+  // 헬스체크 새로고침 시뮬레이션
+  const handleRefreshHealth = () => {
+    setIsCheckingHealth(true);
+    setTimeout(() => {
+      setIsCheckingHealth(false);
+      setLatency(Math.floor(Math.random() * 8) + 11);
+      setLastCheckedTime(dayjs().format('HH:mm:ss'));
+      message.success('시스템 헬스 상태가 정상 확인되었습니다.');
+    }, 600);
+  };
+
+  const currentMsg = statusMessages[currentMsgIndex];
+  const sessionMinutes = Math.floor(sessionSeconds / 60);
+  const sessionRemSec = sessionSeconds % 60;
+
+  // ── 왼쪽 시스템 헬스 Popover 컨텐츠 ──
+  const healthPopoverContent = (
+    <div style={{ width: 280, fontSize: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div style={{ fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <CheckCircleFilled style={{ color: '#52c41a', fontSize: 14 }} />
+          <span>전체 시스템 정상 가동 중</span>
+        </div>
+        <Button
+          type="text"
+          size="small"
+          icon={<SyncOutlined spin={isCheckingHealth} />}
+          onClick={handleRefreshHealth}
+          style={{ fontSize: 11, padding: '0 4px', height: 22 }}
+        >
+          재점검
+        </Button>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, color: '#475569' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <CloudServerOutlined style={{ color: '#1677ff' }} /> API Gateway
+          </span>
+          <Tag color="success" style={{ margin: 0, fontSize: 10, lineHeight: '18px' }}>
+            200 OK ({latency}ms)
+          </Tag>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <DatabaseOutlined style={{ color: '#722ed1' }} /> Main Database
+          </span>
+          <Tag color="success" style={{ margin: 0, fontSize: 10, lineHeight: '18px' }}>
+            Connected (Pool: 8/20)
+          </Tag>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <WifiOutlined style={{ color: '#13c2c2' }} /> EventBus / Push
+          </span>
+          <Tag color="success" style={{ margin: 0, fontSize: 10, lineHeight: '18px' }}>
+            Active (Live)
+          </Tag>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <DashboardOutlined style={{ color: '#fa8c16' }} /> Server CPU / Mem
+          </span>
+          <span style={{ fontSize: 11, color: '#64748b' }}>16% / 32% (안정)</span>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <SafetyCertificateOutlined style={{ color: '#52c41a' }} /> 보안 컴플라이언스
+          </span>
+          <span style={{ fontSize: 11, color: '#52c41a', fontWeight: 600 }}>정상 (0건 위반)</span>
+        </div>
+      </div>
+
+      <Divider style={{ margin: '8px 0' }} />
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#94a3b8' }}>
+        <span>마지막 점검: {lastCheckedTime}</span>
+        <span>Version 2.4.0</span>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <footer
+        style={{
+          height: 28,
+          backgroundColor: '#151a24',
+          borderTop: '1px solid #222938',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 12px',
+          color: '#94a3b8',
+          fontSize: 11,
+          fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`,
+          userSelect: 'none',
+          zIndex: 1000,
+          flexShrink: 0,
+        }}
+      >
+        {/* ── 1. 왼쪽: System Health (시스템 헬스 상태) ── */}
+        <Popover content={healthPopoverContent} title={null} trigger="hover" placement="topLeft">
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 7,
+              cursor: 'pointer',
+              padding: '2px 6px',
+              borderRadius: 3,
+              transition: 'background-color 0.15s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1f2736')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+          >
+            {/* Pulsing Green Indicator */}
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                backgroundColor: '#52c41a',
+                display: 'inline-block',
+                boxShadow: '0 0 6px #52c41a',
+              }}
+            />
+            <span style={{ color: '#e2e8f0', fontWeight: 600, fontSize: 11 }}>
+              System Healthy
+            </span>
+            <span style={{ color: '#334155' }}>|</span>
+            <span style={{ color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 3 }}>
+              <CloudServerOutlined style={{ fontSize: 11 }} />
+              API {latency}ms
+            </span>
+            <span style={{ color: '#334155' }}>|</span>
+            <span style={{ color: '#a78bfa', display: 'flex', alignItems: 'center', gap: 3 }}>
+              <DatabaseOutlined style={{ fontSize: 11 }} />
+              DB OK
+            </span>
+          </div>
+        </Popover>
+
+        {/* ── 2. 중앙: 메세지 (시스템 공지 및 상태 알림) ── */}
+        <div
+          style={{
+            flex: 1,
+            maxWidth: 680,
+            margin: '0 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            padding: '2px 8px',
+            borderRadius: 3,
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={(e) => {
+            setIsPaused(true);
+            e.currentTarget.style.backgroundColor = '#1f2736';
+          }}
+          onMouseLeave={(e) => {
+            setIsPaused(false);
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
+          onClick={() => setModalOpen(true)}
+          title="클릭하여 전체 시스템 공지 및 메시지 확인"
+        >
+          <SoundOutlined style={{ color: '#fbbf24', fontSize: 12, marginRight: 6, flexShrink: 0 }} />
+          <Tag
+            color={currentMsg.tagColor}
+            style={{
+              fontSize: 10,
+              lineHeight: '16px',
+              padding: '0 4px',
+              marginRight: 6,
+              borderRadius: 2,
+              border: 'none',
+              flexShrink: 0,
+            }}
+          >
+            {currentMsg.tag}
+          </Tag>
+          <span
+            style={{
+              color: '#cbd5e1',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              fontSize: 11,
+              transition: 'opacity 0.2s',
+            }}
+          >
+            {currentMsg.text}
+          </span>
+          <span style={{ color: '#64748b', fontSize: 10, marginLeft: 6, flexShrink: 0 }}>
+            ({currentMsgIndex + 1}/{statusMessages.length})
+          </span>
+        </div>
+
+        {/* ── 3. 오른쪽: Clock (실시간 시계 및 세션) ── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Tooltip title={`세션 남은 시간: ${sessionMinutes}분 ${sessionRemSec}초 (클릭하여 연장)`}>
+            <span
+              onClick={handleExtendSession}
+              style={{
+                color: sessionMinutes < 10 ? '#f87171' : '#94a3b8',
+                fontSize: 11,
+                cursor: 'pointer',
+                padding: '2px 5px',
+                borderRadius: 3,
+                transition: 'background-color 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1f2736')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              세션 {sessionMinutes}m
+            </span>
+          </Tooltip>
+
+          <span style={{ color: '#334155' }}>|</span>
+
+          <Tooltip title="대한민국 표준시 (KST, UTC+09:00)">
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                color: '#f1f5f9',
+                fontWeight: 500,
+                fontSize: 11,
+                padding: '2px 4px',
+              }}
+            >
+              <ClockCircleOutlined style={{ color: '#38bdf8', fontSize: 12 }} />
+              <span>
+                {currentTime.format('YYYY-MM-DD')} ({dayNames[currentTime.day()]}){' '}
+                <strong style={{ color: '#ffffff', fontWeight: 600 }}>{currentTime.format('HH:mm:ss')}</strong>
+              </span>
+              <Tag
+                color="blue"
+                style={{
+                  margin: '0 0 0 4px',
+                  fontSize: 9,
+                  lineHeight: '14px',
+                  padding: '0 3px',
+                  borderRadius: 2,
+                  border: 'none',
+                }}
+              >
+                KST
+              </Tag>
+            </div>
+          </Tooltip>
+        </div>
+      </footer>
+
+      {/* ── 전체 시스템 메시지 및 공지사항 모달 ── */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <HistoryOutlined style={{ color: '#1677ff' }} />
+            <span>시스템 알림 및 공지사항 전체 내역</span>
+          </div>
+        }
+        open={modalOpen}
+        onOk={() => setModalOpen(false)}
+        onCancel={() => setModalOpen(false)}
+        footer={[
+          <Button key="close" type="primary" onClick={() => setModalOpen(false)}>
+            확인
+          </Button>,
+        ]}
+        width={580}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14 }}>
+          {statusMessages.map((msg) => (
+            <div
+              key={msg.id}
+              style={{
+                padding: '10px 14px',
+                borderRadius: 6,
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <Space size={6}>
+                  <Tag color={msg.tagColor} style={{ margin: 0, fontSize: 11 }}>
+                    {msg.tag}
+                  </Tag>
+                  <span style={{ fontWeight: 600, color: '#1e293b', fontSize: 13 }}>{msg.text}</span>
+                </Space>
+                <span style={{ fontSize: 11, color: '#94a3b8' }}>{msg.timestamp}</span>
+              </div>
+              {msg.detail && (
+                <div style={{ fontSize: 12, color: '#64748b', marginTop: 4, lineHeight: 1.5 }}>
+                  {msg.detail}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </Modal>
+    </>
+  );
+};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/layout/LeftMenuBar.tsx"
 import React, { useState } from 'react';
 import { Checkbox, Tag } from 'antd';
 import {
@@ -1074,28 +1636,33 @@ import {
   PlusOutlined,
   MinusOutlined,
 } from '@ant-design/icons';
-import { FirstLevelMenu, MenuItem } from '../types';
-import { firstLevelMenus } from '../mock/data';
+import { MenuLevel_1, MenuLevel_3 } from '../../types';
+import { menuLevel_1_List } from '../../mock/data';
 
-interface LeftSidebarProps {
+interface LeftMenuBarProps {
   activeMenuId: string | null;
-  onSelectFirstLevel: (menuId: string) => void;
-  onSelectMenuItem: (item: MenuItem, parentMenu: FirstLevelMenu) => void;
+  onSelectMenuLevel_1: (menuId: string | null) => void;
+  onSelectMenuLevel_3: (item: MenuLevel_3, parentMenu: MenuLevel_1) => void;
   pinned: boolean;
   onTogglePin: (pinned: boolean) => void;
+  selectedMenuLevel_3_Code?: string;
+  // Backward compatibility props
+  onSelectFirstLevel?: (menuId: string) => void;
+  onSelectMenuItem?: (item: MenuLevel_3, parentMenu: MenuLevel_1) => void;
   selectedSubMenuCode?: string;
 }
 
-export const LeftSidebar: React.FC<LeftSidebarProps> = ({
+export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
   activeMenuId,
-  onSelectFirstLevel,
-  onSelectMenuItem,
+  onSelectMenuLevel_1,
+  onSelectMenuLevel_3,
   pinned,
   onTogglePin,
-  selectedSubMenuCode,
+  selectedMenuLevel_3_Code,
 }) => {
   const [fontSizeOffset, setFontSizeOffset] = useState<number>(0);
 
+  // 1차 메뉴 아이콘 렌더링
   const renderIcon = (iconName: string, active: boolean) => {
     const style = { fontSize: 20, color: active ? '#1a1a1a' : '#abb4c4', marginBottom: 4 };
     switch (iconName) {
@@ -1120,11 +1687,25 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     }
   };
 
-  const activeMenuObj = firstLevelMenus.find((m) => m.id === activeMenuId);
+  // 1차 메뉴(MenuLevel_1) 아이콘 클릭 핸들러
+  // - 현재 펼쳐진 상태에서 동일한 아이콘을 다시 클릭하면 2,3차 메뉴 패널 닫힘 (토글)
+  // - '고정'이 체크되어 있으면 토글로 닫히지 않고 열린 상태 유지
+  // - 다른 1차 메뉴 아이콘이 클릭되면 무조건 해당 메뉴로 오픈
+  const handleMenuLevel_1_Click = (menuId: string) => {
+    if (activeMenuId === menuId) {
+      if (!pinned) {
+        onSelectMenuLevel_1(null);
+      }
+    } else {
+      onSelectMenuLevel_1(menuId);
+    }
+  };
+
+  const activeMenuObj = menuLevel_1_List.find((m) => m.id === activeMenuId);
 
   return (
     <div style={{ display: 'flex', height: '100%', zIndex: 900 }}>
-      {/* ── 1단계: 아이콘 바 (Dark Sidebar, 64px) ── */}
+      {/* ── MenuLevel_1: 1차 아이콘 바 (Dark Sidebar, 64px) ── */}
       <div
         style={{
           width: 64,
@@ -1138,12 +1719,12 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           flexShrink: 0,
         }}
       >
-        {firstLevelMenus.map((menu) => {
+        {menuLevel_1_List.map((menu) => {
           const isActive = activeMenuId === menu.id;
           return (
             <div
               key={menu.id}
-              onClick={() => onSelectFirstLevel(menu.id)}
+              onClick={() => handleMenuLevel_1_Click(menu.id)}
               style={{
                 width: 54,
                 height: 58,
@@ -1176,7 +1757,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         })}
       </div>
 
-      {/* ── 2단계 / 3단계: 서브메뉴 패널 (230px, White & Clean) ── */}
+      {/* ── MenuLevel_2 / MenuLevel_3: 2단계 그룹 및 3단계 항목 패널 (230px, White & Clean) ── */}
       {activeMenuObj && (
         <div
           style={{
@@ -1190,7 +1771,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             zIndex: 950,
           }}
         >
-          {/* Submenu Header/Groups */}
+          {/* MenuLevel_2 & MenuLevel_3 List */}
           <div
             style={{
               flex: 1,
@@ -1200,7 +1781,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           >
             {activeMenuObj.groups.map((group) => (
               <div key={group.groupCode} style={{ marginBottom: 12 }}>
-                {/* Group Title Header */}
+                {/* MenuLevel_2 헤더 */}
                 <div
                   style={{
                     backgroundColor: '#eef2f8',
@@ -1215,14 +1796,14 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                   {group.groupTitle}
                 </div>
 
-                {/* Group Items */}
+                {/* MenuLevel_3 항목들 */}
                 <div style={{ padding: '4px 0' }}>
                   {group.items.map((item) => {
-                    const isItemSelected = selectedSubMenuCode === item.code;
+                    const isItemSelected = selectedMenuLevel_3_Code === item.code;
                     return (
                       <div
                         key={item.code}
-                        onClick={() => onSelectMenuItem(item, activeMenuObj)}
+                        onClick={() => onSelectMenuLevel_3(item, activeMenuObj)}
                         style={{
                           padding: '6px 14px',
                           display: 'flex',
@@ -1265,7 +1846,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             ))}
           </div>
 
-          {/* Bottom Controls: Zoom (+, -) and Pin (고정) as seen in main2.png */}
+          {/* 하단 컨트롤: 폰트 확대/축소 및 '고정' 체크박스 */}
           <div
             style={{
               height: 38,
@@ -1277,6 +1858,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
               padding: '0 12px',
               fontSize: 12,
               userSelect: 'none',
+              flexShrink: 0,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1329,10 +1911,9 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     </div>
   );
 };
-
 EOF
 
-    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/RightMessengerSidebar.tsx"
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/mypage/components/EmployeePanel.tsx"
 import React, { useState } from 'react';
 import { Input, Avatar, Tooltip } from 'antd';
 import {
@@ -1340,9 +1921,9 @@ import {
   InfoCircleFilled,
   ReloadOutlined,
 } from '@ant-design/icons';
-import { employeeList } from '../mock/data';
+import { employeeList } from '../../../mock/data';
 
-export const RightMessengerSidebar: React.FC = () => {
+export const EmployeePanel: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'busy'>('all');
 
@@ -1456,7 +2037,7 @@ export const RightMessengerSidebar: React.FC = () => {
       >
         {/* Status indicator buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Tooltip title="온라인">
+          <Tooltip title="온라인" placement="bottom">
             <span
               onClick={() => setStatusFilter(statusFilter === 'online' ? 'all' : 'online')}
               style={{
@@ -1469,7 +2050,7 @@ export const RightMessengerSidebar: React.FC = () => {
               }}
             />
           </Tooltip>
-          <Tooltip title="자리비움">
+          <Tooltip title="자리비움" placement="bottom">
             <span
               onClick={() => setStatusFilter(statusFilter === 'busy' ? 'all' : 'busy')}
               style={{
@@ -1493,23 +2074,316 @@ export const RightMessengerSidebar: React.FC = () => {
           style={{ fontSize: 11, borderRadius: 4 }}
         />
 
-        <Tooltip title="새로고침">
-          <ReloadOutlined
-            style={{ fontSize: 12, color: '#64748b', cursor: 'pointer' }}
-            onClick={() => {
-              setSearchTerm('');
-              setStatusFilter('all');
-            }}
-          />
+        <Tooltip title="새로고침" placement="left">
+          <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+            <ReloadOutlined
+              style={{ fontSize: 12, color: '#64748b' }}
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+              }}
+            />
+          </span>
         </Tooltip>
       </div>
     </div>
   );
 };
 
+export const RightMessengerSidebar = EmployeePanel;
 EOF
 
-    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/DashboardCalendar.tsx"
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/mypage/MyPageCalendar.tsx"
+import React, { useState } from 'react';
+import { Calendar, Button, Space } from 'antd';
+import type { CellRenderInfo } from 'rc-picker/lib/interface';
+import {
+  DoubleLeftOutlined,
+  LeftOutlined,
+  RightOutlined,
+  DoubleRightOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons';
+import dayjs, { Dayjs } from 'dayjs';
+
+interface CalendarProps {
+  selectedDate?: number;
+  onSelectDate?: (day: number) => void;
+  value?: Dayjs;
+  onChange?: (date: Dayjs) => void;
+}
+
+interface EventItem {
+  badge?: string;
+  count?: string;
+  holiday?: string;
+}
+
+// 2026-09 기준 목업 일정 데이터
+const eventMap: Record<string, EventItem> = {
+  '2026-09-02': { badge: '부서일정 1건' },
+  '2026-09-03': { count: '+2 개' },
+  '2026-09-04': { count: '+2 개' },
+  '2026-09-06': { count: '+2 개' },
+  '2026-09-07': { count: '+2 개' },
+  '2026-09-08': { count: '+4 개' },
+  '2026-09-09': { count: '+2 개' },
+  '2026-09-10': { count: '+2 개' },
+  '2026-09-11': { count: '+2 개' },
+  '2026-09-13': { count: '+3 개' },
+  '2026-09-15': { badge: '부서일정 1건' },
+  '2026-09-16': { count: '+2 개' },
+  '2026-09-17': { count: '+2 개' },
+  '2026-09-18': { badge: '부서일정 1건' },
+  '2026-09-20': { count: '+2 개' },
+  '2026-09-22': { badge: '부서일정 1건' },
+  '2026-09-23': { count: '+2 개' },
+  '2026-09-24': { holiday: '휴일(추석연휴)' },
+  '2026-09-25': { holiday: '휴일(추석)' },
+  '2026-09-27': { count: '+2 개' },
+  '2026-09-29': { count: '+2 개' },
+  '2026-09-30': { badge: '부서일정 1건' },
+};
+
+export const MyPageCalendar: React.FC<CalendarProps> = ({
+  selectedDate = 16,
+  onSelectDate,
+  value: propValue,
+  onChange: propOnChange,
+}) => {
+  const [internalValue, setInternalValue] = useState<Dayjs>(() =>
+    dayjs('2026-09-01').set('date', selectedDate)
+  );
+
+  const currentValue = propValue ?? internalValue;
+
+  const handleDateSelect = (date: Dayjs) => {
+    setInternalValue(date);
+    onSelectDate?.(date.date());
+    propOnChange?.(date);
+  };
+
+  // Ant Design Calendar 헤더 렌더러 (연/월 네비게이션 및 빠른 액션 버튼)
+  const renderHeader = ({ value, onChange }: { value: Dayjs; onChange: (date: Dayjs) => void }) => {
+    return (
+      <div
+        style={{
+          padding: '8px 12px',
+          borderBottom: '1px solid #e2e8f0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 8,
+          backgroundColor: '#fafbfc',
+        }}
+      >
+        {/* Left: 연/월 표시 및 빠른 버튼들 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}>
+            {value.year()}년 {value.month() + 1}월
+          </span>
+
+          <Space size={4}>
+            <Button size="small" style={{ fontSize: 11, padding: '0 6px', height: 24, borderRadius: 3 }}>
+              <span style={{ color: '#eab308', marginRight: 3 }}>🔔</span> 일정표시
+            </Button>
+            <Button size="small" style={{ fontSize: 11, padding: '0 6px', height: 24, borderRadius: 3 }}>
+              <span style={{ color: '#eab308', marginRight: 3 }}>⭐</span> 북마크
+            </Button>
+            <Button size="small" style={{ fontSize: 11, padding: '0 6px', height: 24, borderRadius: 3 }}>
+              <span style={{ color: '#ef4444', marginRight: 3 }}>📅</span> 공모주
+            </Button>
+            <Button size="small" style={{ fontSize: 11, padding: '0 6px', height: 24, borderRadius: 3 }}>
+              <span style={{ color: '#854d0e', marginRight: 3 }}>💼</span> 출퇴근(Beta)
+            </Button>
+          </Space>
+        </div>
+
+        {/* Right: 연/월 이동 버튼 그룹 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <Button.Group size="small">
+            <Button
+              icon={<DoubleLeftOutlined style={{ fontSize: 10 }} />}
+              onClick={() => onChange(value.subtract(1, 'year'))}
+              style={{ height: 24, padding: '0 6px' }}
+              title="이전 연도"
+            />
+            <Button
+              icon={<LeftOutlined style={{ fontSize: 10 }} />}
+              onClick={() => onChange(value.subtract(1, 'month'))}
+              style={{ height: 24, padding: '0 6px' }}
+              title="이전 달"
+            />
+            <Button
+              icon={<RightOutlined style={{ fontSize: 10 }} />}
+              onClick={() => onChange(value.add(1, 'month'))}
+              style={{ height: 24, padding: '0 6px' }}
+              title="다음 달"
+            />
+            <Button
+              icon={<DoubleRightOutlined style={{ fontSize: 10 }} />}
+              onClick={() => onChange(value.add(1, 'year'))}
+              style={{ height: 24, padding: '0 6px' }}
+              title="다음 연도"
+            />
+          </Button.Group>
+
+          <Button
+            size="small"
+            style={{ fontSize: 11, height: 24, borderRadius: 3 }}
+            onClick={() => {
+              const today = dayjs('2026-09-16');
+              onChange(today);
+              handleDateSelect(today);
+            }}
+          >
+            오늘
+          </Button>
+
+          <Button
+            size="small"
+            type="primary"
+            style={{ fontSize: 11, height: 24, borderRadius: 3, backgroundColor: '#1e3a5f' }}
+            icon={<ReloadOutlined style={{ fontSize: 10 }} />}
+            onClick={() => {
+              onChange(value.clone());
+            }}
+          >
+            새로고침
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // Ant Design Calendar 커스텀 날짜 셀 렌더러
+  const fullCellRender = (date: Dayjs, info: CellRenderInfo<Dayjs>) => {
+    if (info.type !== 'date') return info.originNode;
+
+    const isCurrentMonth = date.month() === currentValue.month();
+    const isChosen = date.isSame(currentValue, 'day');
+    const dayOfWeek = date.day(); // 0 = Sun, 6 = Sat
+    const dateKey = date.format('YYYY-MM-DD');
+    const event = eventMap[dateKey];
+
+    const dayColor = !isCurrentMonth
+      ? '#cbd5e1'
+      : dayOfWeek === 0
+      ? '#dc2626'
+      : dayOfWeek === 6
+      ? '#2563eb'
+      : '#1e293b';
+
+    return (
+      <div
+        style={{
+          height: 48,
+          borderRight: '1px solid #e2e8f0',
+          borderBottom: '1px solid #e2e8f0',
+          padding: 4,
+          boxSizing: 'border-box',
+          backgroundColor: isChosen ? '#e06666' : isCurrentMonth ? '#ffffff' : '#fcfcfc',
+          color: isChosen ? '#ffffff' : '#334155',
+          cursor: isCurrentMonth ? 'pointer' : 'default',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          transition: 'background-color 0.12s',
+        }}
+      >
+        {/* 상단: 날짜 번호 및 개수 카운트 */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <span
+            style={{
+              fontWeight: isChosen ? 700 : 500,
+              color: isChosen ? '#ffffff' : dayColor,
+              fontSize: 12,
+            }}
+          >
+            {date.date()}
+          </span>
+
+          {event?.count && (
+            <span
+              style={{
+                fontSize: 10,
+                color: isChosen ? 'rgba(255,255,255,0.9)' : '#94a3b8',
+                fontWeight: 400,
+              }}
+            >
+              {event.count}
+            </span>
+          )}
+        </div>
+
+        {/* 하단: 일정 배지 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {event?.badge && (
+            <div
+              style={{
+                backgroundColor: '#1d63b8',
+                color: '#ffffff',
+                fontSize: 10,
+                padding: '1px 3px',
+                borderRadius: 3,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                textAlign: 'center',
+              }}
+            >
+              {event.badge}
+            </div>
+          )}
+          {event?.holiday && (
+            <div
+              style={{
+                backgroundColor: '#274b78',
+                color: '#ffffff',
+                fontSize: 10,
+                padding: '1px 3px',
+                borderRadius: 3,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                textAlign: 'center',
+              }}
+            >
+              {event.holiday}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div
+      style={{
+        backgroundColor: '#ffffff',
+        border: '1px solid #d9dfe8',
+        borderRadius: 4,
+        overflow: 'hidden',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+      }}
+    >
+      <Calendar
+        fullscreen={false}
+        value={currentValue}
+        onSelect={handleDateSelect}
+        headerRender={renderHeader}
+        fullCellRender={fullCellRender}
+      />
+    </div>
+  );
+};
+
+export const MyPageCalender = MyPageCalendar;
+export const DashboardCalendar = MyPageCalendar;
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/mypage/MyPageCalendarLegacy.tsx"
 import React, { useState } from 'react';
 import { Button, Space } from 'antd';
 import {
@@ -1535,7 +2409,7 @@ interface CalendarProps {
   onSelectDate: (day: number) => void;
 }
 
-export const DashboardCalendar: React.FC<CalendarProps> = ({
+export const MyPageCalendar: React.FC<CalendarProps> = ({
   selectedDate,
   onSelectDate,
 }) => {
@@ -1829,33 +2703,36 @@ export const DashboardCalendar: React.FC<CalendarProps> = ({
   );
 };
 
+export const MyPageCalendarLegacy = MyPageCalendar;
+export const MyPageCalenderLegacy = MyPageCalendar;
 EOF
 
-    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/DashboardGrids.tsx"
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/mypage/MyPageCalender.tsx"
+export * from './MyPageCalendar';
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/mypage/MyPageCalenderLegacy.tsx"
+export * from './MyPageCalendarLegacy';
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/mypage/MyPageGrids.tsx"
 import React, { useState } from 'react';
-import { Button, Tag } from 'antd';
+import { Button, Tag, Table, TableProps } from 'antd';
 import {
   CalendarOutlined,
   LeftOutlined,
   RightOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
-import { AgGridReact } from 'ag-grid-react';
-import { ColDef, ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
-
 import {
   mockScheduleList,
   mockDayList,
   mockApprovalList,
   mockComplianceList,
-} from '../mock/data';
-import { ScheduleItem, DayListItem, ApprovalItem, ComplianceItem } from '../types';
+} from '../../mock/data';
+import { ScheduleItem, DayListItem, ApprovalItem, ComplianceItem } from '../../types';
 
-// Register AG Grid Community modules once
-ModuleRegistry.registerModules([AllCommunityModule]);
-
-// ── 1. 기준일 상세 일정 박스 (좌측 하단) ──
+// ── 1. 기준일 상세 일정 박스 (MyPage 좌측 하단) ──
 interface ScheduleBoxProps {
   selectedDay: number;
 }
@@ -1878,27 +2755,56 @@ export const ScheduleGridBox: React.FC<ScheduleBoxProps> = ({ selectedDay }) => 
     return true;
   });
 
-  const columnDefs: ColDef<ScheduleItem>[] = [
+  const columns: TableProps<ScheduleItem>['columns'] = [
     {
-      field: 'category',
-      headerName: '분류',
-      width: 90,
-      cellRenderer: (params: any) => (
-        <Tag color={params.value === '부서일정' ? 'blue' : 'default'} style={{ margin: 0 }}>
-          {params.value}
+      title: '분류',
+      dataIndex: 'category',
+      key: 'category',
+      width: 80,
+      render: (val: string) => (
+        <Tag color={val === '부서일정' ? 'blue' : 'default'} style={{ margin: 0, fontSize: 11 }}>
+          {val}
         </Tag>
       ),
     },
-    { field: 'title', headerName: '나의일정명', flex: 1, minWidth: 220 },
-    { field: 'registrant', headerName: '등록자', width: 90 },
-    { field: 'dueDate', headerName: '마감일', width: 140 },
-    { field: 'processedDate', headerName: '처리일', width: 85 },
     {
-      field: 'detail',
-      headerName: '상세보기',
-      width: 85,
-      cellRenderer: () => (
-        <Button size="small" type="link" style={{ padding: 0 }}>
+      title: '나의일정명',
+      dataIndex: 'title',
+      key: 'title',
+      ellipsis: true,
+      render: (val: string) => <span style={{ fontWeight: 500 }}>{val}</span>,
+    },
+    {
+      title: '등록자',
+      dataIndex: 'registrant',
+      key: 'registrant',
+      width: 75,
+      align: 'center',
+    },
+    {
+      title: '마감일',
+      dataIndex: 'dueDate',
+      key: 'dueDate',
+      width: 130,
+      align: 'center',
+      render: (val: string) => <span style={{ fontSize: 11, color: '#64748b' }}>{val}</span>,
+    },
+    {
+      title: '처리일',
+      dataIndex: 'processedDate',
+      key: 'processedDate',
+      width: 75,
+      align: 'center',
+      render: (val: string) => <span style={{ fontSize: 11, color: '#64748b' }}>{val || '-'}</span>,
+    },
+    {
+      title: '상세보기',
+      dataIndex: 'detail',
+      key: 'detail',
+      width: 70,
+      align: 'center',
+      render: () => (
+        <Button size="small" type="link" style={{ padding: 0, fontSize: 11 }}>
           보기
         </Button>
       ),
@@ -1913,17 +2819,22 @@ export const ScheduleGridBox: React.FC<ScheduleBoxProps> = ({ selectedDay }) => 
         borderRadius: 4,
         overflow: 'hidden',
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minHeight: 0,
       }}
     >
       {/* Box Header */}
       <div
         style={{
-          padding: '7px 12px',
+          padding: '6px 12px',
           borderBottom: '1px solid #e2e8f0',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           backgroundColor: '#fafbfc',
+          flexShrink: 0,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1931,7 +2842,7 @@ export const ScheduleGridBox: React.FC<ScheduleBoxProps> = ({ selectedDay }) => 
             ▶ 기준일 : 2026년 09월 {String(selectedDay).padStart(2, '0')}일
           </span>
         </div>
-        <Button size="small" style={{ fontSize: 11, borderRadius: 3 }}>
+        <Button size="small" style={{ fontSize: 11, borderRadius: 3, height: 22 }}>
           ↪ 등록 바로가기
         </Button>
       </div>
@@ -1942,8 +2853,10 @@ export const ScheduleGridBox: React.FC<ScheduleBoxProps> = ({ selectedDay }) => 
           display: 'flex',
           backgroundColor: '#f1f5f9',
           borderBottom: '1px solid #e2e8f0',
-          padding: '4px 6px',
+          padding: '3px 6px',
           gap: 4,
+          flexShrink: 0,
+          flexWrap: 'wrap',
         }}
       >
         {tabs.map((tab) => {
@@ -1962,44 +2875,85 @@ export const ScheduleGridBox: React.FC<ScheduleBoxProps> = ({ selectedDay }) => 
                 fontSize: 11,
                 fontWeight: isSelected ? 600 : 400,
                 cursor: 'pointer',
+                transition: 'all 0.12s',
               }}
             >
-              {tab.label} <span style={{ opacity: 0.9 }}>[{tab.count}]</span>
+              {tab.label} <span style={{ opacity: 0.85 }}>[{tab.count}]</span>
             </button>
           );
         })}
       </div>
 
-      {/* AG Grid Table */}
-      <div className="ag-theme-alpine" style={{ height: 160, width: '100%' }}>
-        <AgGridReact
-          rowData={filteredData}
-          columnDefs={columnDefs}
-          headerHeight={30}
-          rowHeight={30}
-          defaultColDef={{ resizable: true, sortable: true }}
+      {/* Ant Design Compact Table */}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <Table<ScheduleItem>
+          rowKey="id"
+          dataSource={filteredData}
+          columns={columns}
+          size="small"
+          pagination={false}
+          style={{ width: '100%' }}
         />
       </div>
     </div>
   );
 };
 
-// ── 2. Day List 박스 (중앙 상단) ──
+// ── 2. Day List 박스 (MyPage 우측 상단) ──
 export const DayListBox: React.FC = () => {
   const [dayDate, setDayDate] = useState('2026-09-17');
 
-  const columnDefs: ColDef<DayListItem>[] = [
-    { field: 'workType', headerName: '업무구분', width: 95 },
-    { field: 'regDueDate', headerName: '등록(마감)일', width: 110 },
-    { field: 'title', headerName: '제목', flex: 1, minWidth: 200 },
-    { field: 'completedDate', headerName: '처리(완료)일', width: 100 },
-    { field: 'manager', headerName: '담당자', width: 100 },
+  const columns: TableProps<DayListItem>['columns'] = [
     {
-      field: 'detail',
-      headerName: '상세보기',
+      title: '업무구분',
+      dataIndex: 'workType',
+      key: 'workType',
+      width: 90,
+      align: 'center',
+      render: (val: string) => (
+        <Tag color="cyan" style={{ margin: 0, fontSize: 11 }}>
+          {val}
+        </Tag>
+      ),
+    },
+    {
+      title: '등록(마감)일',
+      dataIndex: 'regDueDate',
+      key: 'regDueDate',
+      width: 105,
+      align: 'center',
+      render: (val: string) => <span style={{ fontSize: 11, color: '#64748b' }}>{val}</span>,
+    },
+    {
+      title: '제목',
+      dataIndex: 'title',
+      key: 'title',
+      ellipsis: true,
+      render: (val: string) => <span style={{ fontWeight: 500 }}>{val}</span>,
+    },
+    {
+      title: '처리(완료)일',
+      dataIndex: 'completedDate',
+      key: 'completedDate',
+      width: 95,
+      align: 'center',
+      render: (val: string) => <span style={{ fontSize: 11, color: '#64748b' }}>{val || '-'}</span>,
+    },
+    {
+      title: '담당자',
+      dataIndex: 'manager',
+      key: 'manager',
       width: 85,
-      cellRenderer: () => (
-        <Button size="small" type="link" style={{ padding: 0 }}>
+      align: 'center',
+    },
+    {
+      title: '상세보기',
+      dataIndex: 'detail',
+      key: 'detail',
+      width: 70,
+      align: 'center',
+      render: () => (
+        <Button size="small" type="link" style={{ padding: 0, fontSize: 11 }}>
           상세
         </Button>
       ),
@@ -2014,6 +2968,10 @@ export const DayListBox: React.FC = () => {
         borderRadius: 4,
         overflow: 'hidden',
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minHeight: 0,
       }}
     >
       <div
@@ -2024,6 +2982,7 @@ export const DayListBox: React.FC = () => {
           alignItems: 'center',
           justifyContent: 'space-between',
           backgroundColor: '#fafbfc',
+          flexShrink: 0,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -2049,29 +3008,30 @@ export const DayListBox: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Button size="small" style={{ fontSize: 11, height: 24, borderRadius: 3 }}>
+          <Button size="small" icon={<ReloadOutlined style={{ fontSize: 10 }} />} style={{ fontSize: 11, height: 22, borderRadius: 3 }}>
             새로고침
           </Button>
-          <Button size="small" style={{ fontSize: 11, height: 24, borderRadius: 3 }}>
+          <Button size="small" style={{ fontSize: 11, height: 22, borderRadius: 3 }}>
             바로가기
           </Button>
         </div>
       </div>
 
-      <div className="ag-theme-alpine" style={{ height: 140, width: '100%' }}>
-        <AgGridReact
-          rowData={mockDayList}
-          columnDefs={columnDefs}
-          headerHeight={28}
-          rowHeight={28}
-          defaultColDef={{ resizable: true, sortable: true }}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <Table<DayListItem>
+          rowKey="id"
+          dataSource={mockDayList}
+          columns={columns}
+          size="small"
+          pagination={false}
+          style={{ width: '100%' }}
         />
       </div>
     </div>
   );
 };
 
-// ── 3. 결재요청함 박스 (중앙 중간) ──
+// ── 3. 결재요청함 박스 (MyPage 우측 중간) ──
 export const ApprovalGridBox: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'pending' | 'requested' | 'draft'>('requested');
 
@@ -2081,26 +3041,49 @@ export const ApprovalGridBox: React.FC = () => {
     { key: 'draft', label: '임시저장함', count: 0 },
   ];
 
-  const columnDefs: ColDef<ApprovalItem>[] = [
+  const columns: TableProps<ApprovalItem>['columns'] = [
     {
-      field: 'status',
-      headerName: '진행상태',
+      title: '진행상태',
+      dataIndex: 'status',
+      key: 'status',
       width: 90,
-      cellRenderer: (params: any) => (
-        <Tag color={params.value === '결재대기' ? 'orange' : 'blue'} style={{ margin: 0 }}>
-          {params.value}
+      align: 'center',
+      render: (val: string) => (
+        <Tag color={val === '결재대기' ? 'orange' : 'blue'} style={{ margin: 0, fontSize: 11 }}>
+          {val}
         </Tag>
       ),
     },
-    { field: 'regDate', headerName: '등록일', width: 100 },
-    { field: 'title', headerName: '제목', flex: 1, minWidth: 220 },
-    { field: 'applicant', headerName: '상신자', width: 100 },
     {
-      field: 'detail',
-      headerName: '상세보기',
+      title: '등록일',
+      dataIndex: 'regDate',
+      key: 'regDate',
+      width: 95,
+      align: 'center',
+      render: (val: string) => <span style={{ fontSize: 11, color: '#64748b' }}>{val}</span>,
+    },
+    {
+      title: '제목',
+      dataIndex: 'title',
+      key: 'title',
+      ellipsis: true,
+      render: (val: string) => <span style={{ fontWeight: 500 }}>{val}</span>,
+    },
+    {
+      title: '상신자',
+      dataIndex: 'applicant',
+      key: 'applicant',
       width: 85,
-      cellRenderer: () => (
-        <Button size="small" type="link" style={{ padding: 0 }}>
+      align: 'center',
+    },
+    {
+      title: '상세보기',
+      dataIndex: 'detail',
+      key: 'detail',
+      width: 70,
+      align: 'center',
+      render: () => (
+        <Button size="small" type="link" style={{ padding: 0, fontSize: 11 }}>
           결재
         </Button>
       ),
@@ -2115,6 +3098,10 @@ export const ApprovalGridBox: React.FC = () => {
         borderRadius: 4,
         overflow: 'hidden',
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minHeight: 0,
       }}
     >
       <div
@@ -2122,8 +3109,10 @@ export const ApprovalGridBox: React.FC = () => {
           display: 'flex',
           backgroundColor: '#f1f5f9',
           borderBottom: '1px solid #e2e8f0',
-          padding: '4px 8px',
+          padding: '3px 8px',
           gap: 6,
+          flexShrink: 0,
+          flexWrap: 'wrap',
         }}
       >
         {tabs.map((tab) => {
@@ -2138,52 +3127,71 @@ export const ApprovalGridBox: React.FC = () => {
                 backgroundColor: isSelected ? '#1677ff' : '#ffffff',
                 color: isSelected ? '#ffffff' : '#334155',
                 borderRadius: 3,
-                padding: '3px 8px',
+                padding: '2px 8px',
                 fontSize: 11,
                 fontWeight: isSelected ? 600 : 400,
                 cursor: 'pointer',
+                transition: 'all 0.12s',
               }}
             >
-              {tab.label} <span style={{ opacity: 0.9 }}>[{tab.count}]</span>
+              {tab.label} <span style={{ opacity: 0.85 }}>[{tab.count}]</span>
             </button>
           );
         })}
       </div>
 
-      <div className="ag-theme-alpine" style={{ height: 140, width: '100%' }}>
-        <AgGridReact
-          rowData={mockApprovalList}
-          columnDefs={columnDefs}
-          headerHeight={28}
-          rowHeight={28}
-          defaultColDef={{ resizable: true, sortable: true }}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <Table<ApprovalItem>
+          rowKey="id"
+          dataSource={mockApprovalList}
+          columns={columns}
+          size="small"
+          pagination={false}
+          style={{ width: '100%' }}
         />
       </div>
     </div>
   );
 };
 
-// ── 4. 법규보고공시 및 내규정보 박스 (중앙 하단) ──
+// ── 4. 법규보고공시 및 내규정보 박스 (MyPage 우측 하단) ──
 export const ComplianceGridBox: React.FC = () => {
-  const columnDefs: ColDef<ComplianceItem>[] = [
+  const columns: TableProps<ComplianceItem>['columns'] = [
     {
-      field: 'category',
-      headerName: '구분',
-      width: 100,
-      cellRenderer: (params: any) => (
-        <Tag color="geekblue" style={{ margin: 0 }}>
-          {params.value}
+      title: '구분',
+      dataIndex: 'category',
+      key: 'category',
+      width: 90,
+      align: 'center',
+      render: (val: string) => (
+        <Tag color="geekblue" style={{ margin: 0, fontSize: 11 }}>
+          {val}
         </Tag>
       ),
     },
-    { field: 'dueDate', headerName: '마감일', width: 100 },
-    { field: 'title', headerName: '제목', flex: 1, minWidth: 240 },
     {
-      field: 'detail',
-      headerName: '상세보기',
-      width: 85,
-      cellRenderer: () => (
-        <Button size="small" type="link" style={{ padding: 0 }}>
+      title: '마감일',
+      dataIndex: 'dueDate',
+      key: 'dueDate',
+      width: 95,
+      align: 'center',
+      render: (val: string) => <span style={{ fontSize: 11, color: '#64748b' }}>{val}</span>,
+    },
+    {
+      title: '제목',
+      dataIndex: 'title',
+      key: 'title',
+      ellipsis: true,
+      render: (val: string) => <span style={{ fontWeight: 500 }}>{val}</span>,
+    },
+    {
+      title: '상세보기',
+      dataIndex: 'detail',
+      key: 'detail',
+      width: 70,
+      align: 'center',
+      render: () => (
+        <Button size="small" type="link" style={{ padding: 0, fontSize: 11 }}>
           열람
         </Button>
       ),
@@ -2198,6 +3206,10 @@ export const ComplianceGridBox: React.FC = () => {
         borderRadius: 4,
         overflow: 'hidden',
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minHeight: 0,
       }}
     >
       <div
@@ -2208,27 +3220,28 @@ export const ComplianceGridBox: React.FC = () => {
           fontWeight: 700,
           fontSize: 13,
           color: '#1e293b',
+          flexShrink: 0,
         }}
       >
         법규보고공시 및 내규정보
       </div>
 
-      <div className="ag-theme-alpine" style={{ height: 140, width: '100%' }}>
-        <AgGridReact
-          rowData={mockComplianceList}
-          columnDefs={columnDefs}
-          headerHeight={28}
-          rowHeight={28}
-          defaultColDef={{ resizable: true, sortable: true }}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <Table<ComplianceItem>
+          rowKey="id"
+          dataSource={mockComplianceList}
+          columns={columns}
+          size="small"
+          pagination={false}
+          style={{ width: '100%' }}
         />
       </div>
     </div>
   );
 };
-
 EOF
 
-    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/LargeDataView.tsx"
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/common/grid/LargeDataView.tsx"
 import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { Card, Button, Input, Select, Tag, Space, Statistic, Row, Col, message } from 'antd';
 import {
@@ -2242,8 +3255,8 @@ import {
 } from '@ant-design/icons';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef } from 'ag-grid-community';
-import { generateLargeAssetData } from '../mock/data';
-import { LargeAssetItem } from '../types';
+import { generateLargeAssetData } from '../../../mock/data';
+import { LargeAssetItem } from '../../../types';
 
 interface LargeDataViewProps {
   title?: string;
@@ -2413,47 +3426,74 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
   );
 
   return (
-    <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', height: '100%', gap: 12 }}>
+    <div
+      style={{
+        padding: '10px 14px',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        minHeight: 0,
+        gap: 8,
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+      }}
+    >
       {/* ── Summary Stats Cards ── */}
-      <Row gutter={12}>
+      <Row gutter={8} style={{ flexShrink: 0 }}>
         <Col span={6}>
-          <Card size="small" style={{ backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }}>
+          <Card
+            size="small"
+            style={{ backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }}
+            bodyStyle={{ padding: '6px 12px' }}
+          >
             <Statistic
-              title={<span style={{ fontSize: 12, color: '#0369a1' }}>총 로드된 자산 건수 (AgGrid)</span>}
+              title={<span style={{ fontSize: 11, color: '#0369a1' }}>총 로드된 자산 건수 (AgGrid)</span>}
               value={stats.total}
               suffix="건"
-              valueStyle={{ color: '#0284c7', fontSize: 20, fontWeight: 700 }}
+              valueStyle={{ color: '#0284c7', fontSize: 17, fontWeight: 700 }}
               prefix={<DatabaseOutlined />}
             />
           </Card>
         </Col>
         <Col span={6}>
-          <Card size="small" style={{ backgroundColor: '#fdf4ff', borderColor: '#f5d0fe' }}>
+          <Card
+            size="small"
+            style={{ backgroundColor: '#fdf4ff', borderColor: '#f5d0fe' }}
+            bodyStyle={{ padding: '6px 12px' }}
+          >
             <Statistic
-              title={<span style={{ fontSize: 12, color: '#86198f' }}>총 자산 가액 (취득가 합산)</span>}
+              title={<span style={{ fontSize: 11, color: '#86198f' }}>총 자산 가액 (취득가 합산)</span>}
               value={stats.totalPrice}
               suffix="억원"
-              valueStyle={{ color: '#c026d3', fontSize: 20, fontWeight: 700 }}
+              valueStyle={{ color: '#c026d3', fontSize: 17, fontWeight: 700 }}
             />
           </Card>
         </Col>
         <Col span={6}>
-          <Card size="small" style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }}>
+          <Card
+            size="small"
+            style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }}
+            bodyStyle={{ padding: '6px 12px' }}
+          >
             <Statistic
-              title={<span style={{ fontSize: 12, color: '#15803d' }}>정상 가동 자산</span>}
+              title={<span style={{ fontSize: 11, color: '#15803d' }}>정상 가동 자산</span>}
               value={stats.normalCount}
               suffix="건"
-              valueStyle={{ color: '#16a34a', fontSize: 20, fontWeight: 700 }}
+              valueStyle={{ color: '#16a34a', fontSize: 17, fontWeight: 700 }}
             />
           </Card>
         </Col>
         <Col span={6}>
-          <Card size="small" style={{ backgroundColor: '#fffbeb', borderColor: '#fde68a' }}>
+          <Card
+            size="small"
+            style={{ backgroundColor: '#fffbeb', borderColor: '#fde68a' }}
+            bodyStyle={{ padding: '6px 12px' }}
+          >
             <Statistic
-              title={<span style={{ fontSize: 12, color: '#b45309' }}>점검/수리/폐기 대상</span>}
+              title={<span style={{ fontSize: 11, color: '#b45309' }}>점검/수리/폐기 대상</span>}
               value={stats.repairCount + stats.discardCount}
               suffix="건"
-              valueStyle={{ color: '#d97706', fontSize: 20, fontWeight: 700 }}
+              valueStyle={{ color: '#d97706', fontSize: 17, fontWeight: 700 }}
             />
           </Card>
         </Col>
@@ -2462,34 +3502,38 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
       {/* ── Action Toolbar ── */}
       <Card
         size="small"
+        bodyStyle={{ padding: '6px 12px' }}
         style={{
+          flexShrink: 0,
           boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>
               [{menuCode}] {title}
             </span>
-            <Tag color="purple" style={{ margin: 0 }}>
+            <Tag color="purple" style={{ margin: 0, fontSize: 10 }}>
               가상 스크롤 60fps
             </Tag>
           </div>
 
-          <Space size={8} wrap>
+          <Space size={6} wrap>
             <Input
-              placeholder="빠른 통합 검색 (자산번호, 이름, 부서...)"
+              placeholder="빠른 통합 검색 (자산번호, 이름...)"
               prefix={<SearchOutlined />}
               value={quickFilterText}
               onChange={(e) => setQuickFilterText(e.target.value)}
-              style={{ width: 230 }}
+              style={{ width: 200, fontSize: 12 }}
+              size="small"
               allowClear
             />
 
             <Select
               value={selectedCategory}
               onChange={setSelectedCategory}
-              style={{ width: 140 }}
+              style={{ width: 125 }}
+              size="small"
               options={[
                 { value: 'all', label: '전체 분류' },
                 { value: 'IT전산장비', label: 'IT전산장비' },
@@ -2500,36 +3544,37 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
               ]}
             />
 
-            <Button.Group>
+            <Button.Group size="small">
               <Button
                 type={dataCount === 10000 ? 'primary' : 'default'}
                 onClick={() => handleRegenerate(10000)}
                 icon={<ReloadOutlined />}
               >
-                1만 건 로드
+                1만 건
               </Button>
               <Button
                 type={dataCount === 30000 ? 'primary' : 'default'}
                 onClick={() => handleRegenerate(30000)}
               >
-                3만 건 로드
+                3만 건
               </Button>
             </Button.Group>
 
-            <Button icon={<DownloadOutlined />} onClick={handleExportCsv}>
-              CSV 저장
+            <Button size="small" icon={<DownloadOutlined />} onClick={handleExportCsv}>
+              CSV
             </Button>
           </Space>
         </div>
       </Card>
 
-      {/* ── AG Grid Table (Large Dataset with Virtual Scrolling) ── */}
+      {/* ── AG Grid Table (Viewport Fitted, Pure Internal Virtual Scrolling) ── */}
       <div
         className="ag-theme-alpine"
         style={{
           flex: 1,
+          minHeight: 0,
           width: '100%',
-          minHeight: 450,
+          height: '100%',
           borderRadius: 4,
           overflow: 'hidden',
           boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
@@ -2554,207 +3599,873 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
     </div>
   );
 };
-
 EOF
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/App.tsx"
-import { useState } from 'react';
-import { Tabs } from 'antd';
-import { ProLayout } from '@ant-design/pro-components';
-import { TopBar } from './components/TopBar';
-import { LeftSidebar } from './components/LeftSidebar';
-import { RightMessengerSidebar } from './components/RightMessengerSidebar';
-import { DashboardCalendar } from './components/DashboardCalendar';
+import { MainLayout } from './components/layout/MainLayout';
+
+export default function App() {
+  return <MainLayout />;
+}
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/layout/MainLayout.tsx"
+import { useRef, useState } from 'react';
+import { TopBar } from './TopBar';
+import { LeftMenuBar } from './LeftMenuBar';
+import { StatusBar } from './StatusBar';
+import { Workspace, WorkspaceHandle } from './Workspace';
+import { MenuLevel_1, MenuLevel_3 } from '../../types';
+
+// ── 최상위 셸 레이아웃 (Header + LNB + Workspace + Status) ──
+export function MainLayout() {
+  const [activeMenuId, setActiveMenuId] = useState<string | null>('duty');
+  const [sidebarPinned, setSidebarPinned] = useState<boolean>(true);
+  const [selectedMenuLevel_3_Code, setSelectedMenuLevel_3_Code] = useState<string>('1495');
+
+  const workspaceRef = useRef<WorkspaceHandle>(null);
+
+  const handleSelectMenuLevel_1 = (menuId: string | null) => {
+    setActiveMenuId(menuId);
+  };
+
+  // ── 메뉴 클릭 시: Workspace(FlexLayout)에 새 탭 추가 또는 기존 탭 활성화 위임 ──
+  const handleSelectMenuLevel_3 = (item: MenuLevel_3, parent: MenuLevel_1) => {
+    setSelectedMenuLevel_3_Code(item.code);
+    workspaceRef.current?.openMenuTab(item, parent);
+  };
+
+  return (
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <TopBar
+        sidebarPinned={sidebarPinned}
+        onToggleSidebarPin={() => setSidebarPinned(!sidebarPinned)}
+      />
+
+      {/* ── Body Container with LeftMenuBar & Workspace ── */}
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
+        {/* ── 왼쪽 MenuLevel_1 아이콘 메뉴 및 MenuLevel_2/3 서브메뉴 ── */}
+        <LeftMenuBar
+          activeMenuId={activeMenuId}
+          onSelectMenuLevel_1={handleSelectMenuLevel_1}
+          onSelectMenuLevel_3={handleSelectMenuLevel_3}
+          pinned={sidebarPinned}
+          onTogglePin={setSidebarPinned}
+          selectedMenuLevel_3_Code={selectedMenuLevel_3_Code}
+        />
+
+        {/* ── Main Content Area: FlexLayout Multi-Split & Docking ── */}
+        <Workspace ref={workspaceRef} />
+      </div>
+
+      {/* ── Status Bar (System Health, Message, Clock) ── */}
+      <StatusBar />
+    </div>
+  );
+}
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/layout/Workspace.tsx"
+import { forwardRef, useImperativeHandle, useState } from 'react';
+import { Button, Tooltip, Tag, Popconfirm, message } from 'antd';
+import {
+  SplitCellsOutlined,
+  InsertRowBelowOutlined,
+  SaveOutlined,
+  ReloadOutlined,
+  InfoCircleOutlined,
+} from '@ant-design/icons';
+import {
+  Layout,
+  Model,
+  Actions,
+  TabNode,
+  IJsonModel,
+  DockLocation,
+} from 'flexlayout-react';
+import '../../flexlayout-custom.css';
+
+import { MyPageCalendar } from '../../pages/mypage/MyPageCalendar';
 import {
   ScheduleGridBox,
   DayListBox,
   ApprovalGridBox,
   ComplianceGridBox,
-} from './components/DashboardGrids';
-import { LargeDataView } from './components/LargeDataView';
-import { MenuItem, FirstLevelMenu } from './types';
+} from '../../pages/mypage/MyPageGrids';
+import { EmployeePanel } from '../../pages/mypage/components/EmployeePanel';
+import { LargeDataView } from '../common/grid/LargeDataView';
+import { MenuLevel_1, MenuLevel_3 } from '../../types';
 
-interface OpenTab {
-  key: string;
-  title: string;
-  code?: string;
-  closable: boolean;
+// ── 기본 레이아웃 정의 (초기 상태: My Page 1개 탭) ──
+const defaultLayoutJson: IJsonModel = {
+  global: {
+    tabEnableClose: true,
+    tabSetEnableMaximize: false, // 최대화로 인한 분할 차단 및 전체화면 고착 방지
+    tabSetEnableClose: true, // 탭셋 닫기/삭제 허용
+    tabSetEnableCloseButton: false, // 탭셋 헤더 자체의 닫기 버튼은 미노출
+    tabSetEnableDeleteWhenEmpty: true, // 탭이 0개가 되면 해당 분할 패널(탭셋) 자동 소멸
+    tabEnableRename: false,
+    tabEnableScrollbars: false, // 탭 외곽 스크롤바 방지 (뷰포트 피팅 및 내부 가상 스크롤 격리)
+    tabSetEnableDivide: true, // 패널 드래그 분할 허용
+    tabSetEnableDrop: true, // 드롭 허용
+    tabSetEnableDrag: true,
+    tabEnableDrag: true,
+    enableEdgeDock: true,
+    enableEdgeDockIndicators: true,
+    tabSetMinWidth: 240,
+    tabSetMinHeight: 160,
+  },
+  borders: [],
+  layout: {
+    type: 'row',
+    weight: 100,
+    children: [
+      {
+        type: 'tabset',
+        weight: 100,
+        id: 'main-tabset',
+        enableDivide: true,
+        enableDrop: true,
+        children: [
+          {
+            type: 'tab',
+            name: 'My Page',
+            component: 'mypage',
+            enableClose: false,
+            enableScrollbars: false,
+            id: 'tab-mypage',
+          },
+        ],
+      },
+    ],
+  },
+};
+
+const STORAGE_KEY = 'asseterp_flexlayout_model';
+
+// 로컬 스토리지에 저장된 레이아웃 정제 (0개 탭 자동 소멸, 최대화 해제, 분할 허용 강제 적용)
+function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
+  if (!json.global) {
+    json.global = {};
+  }
+  json.global.tabSetEnableClose = true;
+  json.global.tabSetEnableCloseButton = false;
+  json.global.tabSetEnableDeleteWhenEmpty = true;
+  json.global.tabEnableScrollbars = false; // 외곽 스크롤 방지
+  json.global.tabSetEnableMaximize = false; // 최대화 고착 방지
+  json.global.tabSetEnableDivide = true; // 패널 드래그 분할 보장
+  json.global.tabSetEnableDrop = true;
+  json.global.tabSetEnableDrag = true;
+  json.global.tabEnableDrag = true;
+  json.global.enableEdgeDock = true;
+  json.global.enableEdgeDockIndicators = true;
+
+  const fixNode = (node: any) => {
+    if (!node) return;
+    if (node.type === 'tabset') {
+      if (node.enableClose === false) delete node.enableClose;
+      if (node.enableDeleteWhenEmpty === false) delete node.enableDeleteWhenEmpty;
+      if (node.maximized) delete node.maximized; // 저장된 최대화 상태 강제 해제!
+      node.enableMaximize = false;
+      node.enableDivide = true;
+      node.enableDrop = true;
+    }
+    if (node.type === 'tab') {
+      node.enableScrollbars = false;
+    }
+    if (Array.isArray(node.children)) {
+      node.children.forEach(fixNode);
+    }
+  };
+
+  if (json.layout) {
+    fixNode(json.layout);
+  }
+  return json;
 }
 
-export default function App() {
+// 로컬 스토리지에서 저장된 레이아웃 복원 또는 기본 레이아웃 로드
+function getInitialModel(): Model {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      const json = JSON.parse(saved);
+      const m = Model.fromJson(sanitizeLayoutJson(json));
+      const maxTs = m.getMaximizedTabset();
+      if (maxTs) {
+        m.doAction(Actions.maximizeToggle(maxTs.getId()));
+      }
+      return m;
+    } catch (e) {
+      console.warn('저장된 레이아웃 복원 실패, 기본값 사용:', e);
+    }
+  }
+  return Model.fromJson(defaultLayoutJson);
+}
+
+export interface WorkspaceHandle {
+  openMenuTab: (item: MenuLevel_3, parent: MenuLevel_1) => void;
+}
+
+// ── FlexLayout 기반 MDI 다중 탭/도킹 컨테이너 ──
+export const Workspace = forwardRef<WorkspaceHandle>((_props, ref) => {
   const [selectedDay, setSelectedDay] = useState<number>(16);
-  // Default active 1st level menu to 'duty' ('책무') matching main2.png
-  const [activeMenuId, setActiveMenuId] = useState<string | null>('duty');
-  const [sidebarPinned, setSidebarPinned] = useState<boolean>(true);
-  const [selectedSubMenuCode, setSelectedSubMenuCode] = useState<string>('1495');
 
-  // Multi-tab state: starts with "My Page"
-  const [activeTabKey, setActiveTabKey] = useState<string>('mypage');
-  const [openTabs, setOpenTabs] = useState<OpenTab[]>([
-    { key: 'mypage', title: 'My Page', closable: false },
-  ]);
+  // ── FlexLayout 모델 상태 ──
+  const [model, setModel] = useState<Model>(() => getInitialModel());
 
-  const handleSelectFirstLevel = (menuId: string) => {
-    if (activeMenuId === menuId && !sidebarPinned) {
-      setActiveMenuId(null);
-    } else {
-      setActiveMenuId(menuId);
+  // ── 메뉴 클릭 시: 활성화된 탭셋(TabSet)에 새 탭 추가 또는 기존 탭 활성화 ──
+  useImperativeHandle(ref, () => ({
+    openMenuTab: (item: MenuLevel_3) => {
+      const tabId = `tab-${item.code}`;
+
+      const existingNode = model.getNodeById(tabId);
+      if (existingNode) {
+        // 이미 열려 있는 탭이면 해당 탭 선택
+        model.doAction(Actions.selectTab(tabId));
+      } else {
+        // 현재 활성화된 탭셋(없으면 첫 번째 탭셋)에 탭 추가
+        const activeTabset = model.getActiveTabset() || model.getFirstTabSet();
+        const targetTabsetId = activeTabset ? activeTabset.getId() : 'main-tabset';
+
+        model.doAction(
+          Actions.addTab(
+            {
+              type: 'tab',
+              name: `[${item.code}] ${item.title}`,
+              component: 'largedata',
+              id: tabId,
+              config: { code: item.code, title: item.title },
+              enableClose: true,
+              enableScrollbars: false,
+            },
+            targetTabsetId,
+            DockLocation.CENTER,
+            -1,
+            true // 바로 선택
+          )
+        );
+      }
+    },
+  }));
+
+  // ── 레이아웃 변경 시 자동 로컬 스토리지 저장 ──
+  const handleModelChange = (newModel: Model) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newModel.toJson()));
+    } catch (e) {
+      console.error('레이아웃 저장 실패:', e);
     }
   };
 
-  const handleSelectMenuItem = (item: MenuItem, _parent: FirstLevelMenu) => {
-    setSelectedSubMenuCode(item.code);
-
-    const existingTab = openTabs.find((t) => t.key === item.code);
-    if (!existingTab) {
-      setOpenTabs((prev) => [
-        ...prev,
-        {
-          key: item.code,
-          title: `[${item.code}] ${item.title}`,
-          code: item.code,
-          closable: true,
-        },
-      ]);
+  // ── 빠른 버튼: 현재 활성 탭을 우측으로 분할 ──
+  const handleSplitRight = () => {
+    // 혹시 최대화 상태인 경우 즉시 해제
+    const maxTs = model.getMaximizedTabset();
+    if (maxTs) {
+      model.doAction(Actions.maximizeToggle(maxTs.getId()));
     }
-    setActiveTabKey(item.code);
+
+    const activeTabset = model.getActiveTabset() || model.getFirstTabSet();
+    if (!activeTabset) {
+      message.warning('분할할 패널이 없습니다.');
+      return;
+    }
+    const activeTab = activeTabset.getSelectedNode();
+
+    // 패널에 탭이 1개뿐일 때: 우측에 새 작업 화면([1495] 당직명령부)을 분할 생성하여 즉시 2개 패널 배치
+    if (activeTabset.getChildren().length <= 1) {
+      const splitTabId = 'tab-1495';
+      const existing = model.getNodeById(splitTabId);
+      if (existing) {
+        model.doAction(
+          Actions.moveNode(
+            splitTabId,
+            activeTabset.getId(),
+            DockLocation.RIGHT,
+            -1,
+            true
+          )
+        );
+      } else {
+        model.doAction(
+          Actions.addTab(
+            {
+              type: 'tab',
+              name: '[1495] 당직명령부',
+              component: 'largedata',
+              id: splitTabId,
+              config: { code: '1495', title: '당직명령부' },
+              enableClose: true,
+              enableScrollbars: false,
+            },
+            activeTabset.getId(),
+            DockLocation.RIGHT,
+            -1,
+            true
+          )
+        );
+      }
+      message.success('우측으로 새 작업 패널이 분할 생성되었습니다.');
+      return;
+    }
+
+    if (activeTab) {
+      model.doAction(
+        Actions.moveNode(
+          activeTab.getId(),
+          activeTabset.getId(),
+          DockLocation.RIGHT,
+          -1,
+          true
+        )
+      );
+      message.success('현재 탭이 우측 패널로 분할 이동되었습니다.');
+    }
   };
 
-  const handleCloseTab = (targetKey: string) => {
-    const newTabs = openTabs.filter((t) => t.key !== targetKey);
-    setOpenTabs(newTabs);
-    if (activeTabKey === targetKey) {
-      setActiveTabKey(newTabs[newTabs.length - 1]?.key || 'mypage');
+  // ── 빠른 버튼: 현재 활성 탭을 하단으로 분할 ──
+  const handleSplitBottom = () => {
+    // 혹시 최대화 상태인 경우 즉시 해제
+    const maxTs = model.getMaximizedTabset();
+    if (maxTs) {
+      model.doAction(Actions.maximizeToggle(maxTs.getId()));
+    }
+
+    const activeTabset = model.getActiveTabset() || model.getFirstTabSet();
+    if (!activeTabset) {
+      message.warning('분할할 패널이 없습니다.');
+      return;
+    }
+    const activeTab = activeTabset.getSelectedNode();
+
+    // 패널에 탭이 1개뿐일 때: 하단에 새 작업 화면([1495] 당직명령부)을 분할 생성하여 즉시 2개 패널 배치
+    if (activeTabset.getChildren().length <= 1) {
+      const splitTabId = 'tab-1495';
+      const existing = model.getNodeById(splitTabId);
+      if (existing) {
+        model.doAction(
+          Actions.moveNode(
+            splitTabId,
+            activeTabset.getId(),
+            DockLocation.BOTTOM,
+            -1,
+            true
+          )
+        );
+      } else {
+        model.doAction(
+          Actions.addTab(
+            {
+              type: 'tab',
+              name: '[1495] 당직명령부',
+              component: 'largedata',
+              id: splitTabId,
+              config: { code: '1495', title: '당직명령부' },
+              enableClose: true,
+              enableScrollbars: false,
+            },
+            activeTabset.getId(),
+            DockLocation.BOTTOM,
+            -1,
+            true
+          )
+        );
+      }
+      message.success('하단으로 새 작업 패널이 분할 생성되었습니다.');
+      return;
+    }
+
+    if (activeTab) {
+      model.doAction(
+        Actions.moveNode(
+          activeTab.getId(),
+          activeTabset.getId(),
+          DockLocation.BOTTOM,
+          -1,
+          true
+        )
+      );
+      message.success('현재 탭이 하단 패널로 분할 이동되었습니다.');
     }
   };
 
-  return (
-    <ProLayout
-      title="Asset-ERP"
-      pure
-      headerRender={() => (
-        <TopBar
-          sidebarPinned={sidebarPinned}
-          onToggleSidebarPin={() => setSidebarPinned(!sidebarPinned)}
-        />
-      )}
-      menuRender={false}
-      style={{ height: '100vh', overflow: 'hidden' }}
-    >
-      {/* ── Body Container with LeftSidebar, Main Content & Messenger ── */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', height: 'calc(100vh - 50px)', position: 'relative' }}>
-        {/* ── 2. 왼쪽 1단계 아이콘 메뉴 및 2단계/3단계 서브메뉴 ── */}
-        <LeftSidebar
-          activeMenuId={activeMenuId}
-          onSelectFirstLevel={handleSelectFirstLevel}
-          onSelectMenuItem={handleSelectMenuItem}
-          pinned={sidebarPinned}
-          onTogglePin={setSidebarPinned}
-          selectedSubMenuCode={selectedSubMenuCode}
-        />
+  // ── 레이아웃 수동 저장 ──
+  const handleSaveLayout = () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(model.toJson()));
+    message.success('현재 화면 분할 및 탭 레이아웃이 저장되었습니다.');
+  };
 
-        {/* ── Main Content Area ── */}
+  // ── 레이아웃 기본값으로 초기화 ──
+  const handleResetLayout = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setModel(Model.fromJson(defaultLayoutJson));
+    message.info('기본 레이아웃으로 초기화되었습니다.');
+  };
+
+  // ── FlexLayout Tab 컴포넌트 렌더러 (factory) ──
+  const factory = (node: TabNode) => {
+    const component = node.getComponent();
+    const config = (node.getConfig() as { code?: string; title?: string }) || {};
+
+    if (component === 'mypage') {
+      return (
         <div
           style={{
             flex: 1,
             display: 'flex',
-            flexDirection: 'column',
-            backgroundColor: '#eef2f6',
-            minWidth: 0,
             overflow: 'hidden',
+            height: '100%',
+            minHeight: 0,
+            boxSizing: 'border-box',
           }}
         >
-          {/* Breadcrumb / Tab Bar matching main1.png & main2.png */}
+          {/* MyPage Grid/Calendar Container (뷰포트 피팅 및 외부 스크롤바 방지) */}
           <div
             style={{
-              height: 34,
-              backgroundColor: '#ffffff',
-              borderBottom: '1px solid #d9dfe8',
+              flex: 1,
               display: 'flex',
-              alignItems: 'center',
-              padding: '0 12px',
-              flexShrink: 0,
+              padding: 8,
+              gap: 8,
+              overflow: 'hidden',
+              minWidth: 0,
+              minHeight: 0,
+              height: '100%',
+              boxSizing: 'border-box',
             }}
           >
-            <Tabs
-              activeKey={activeTabKey}
-              onChange={setActiveTabKey}
-              type="editable-card"
-              hideAdd
-              onEdit={(targetKey, action) => {
-                if (action === 'remove' && typeof targetKey === 'string') {
-                  handleCloseTab(targetKey);
-                }
+            {/* Left Column: Calendar (상단) + Schedule Box (하단 채움) */}
+            <div
+              style={{
+                width: 440,
+                minWidth: 380,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                height: '100%',
+                minHeight: 0,
+                flexShrink: 0,
               }}
-              size="small"
-              tabBarStyle={{ margin: 0, height: 32 }}
-              items={openTabs.map((tab) => ({
-                key: tab.key,
-                label: tab.title,
-                closable: tab.closable,
-              }))}
-            />
-          </div>
+            >
+              <MyPageCalendar
+                selectedDate={selectedDay}
+                onSelectDate={setSelectedDay}
+              />
+              <ScheduleGridBox selectedDay={selectedDay} />
+            </div>
 
-          {/* Tab View Switcher */}
-          <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
-            {activeTabKey === 'mypage' ? (
-              // ── My Page: AS-IS Dashboard matching main1.png & main2.png ──
-              <div
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Center Dashboard (Left & Center Columns) */}
-                <div
-                  style={{
-                    flex: 1,
-                    overflowY: 'auto',
-                    padding: 8,
-                    display: 'grid',
-                    gridTemplateColumns: 'minmax(420px, 48%) minmax(460px, 52%)',
-                    gap: 8,
-                    alignContent: 'start',
-                  }}
-                >
-                  {/* Left Column: Calendar + Schedule Box */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <DashboardCalendar
-                      selectedDate={selectedDay}
-                      onSelectDate={setSelectedDay}
-                    />
-                    <ScheduleGridBox selectedDay={selectedDay} />
-                  </div>
+            {/* Center Column: Day List + Approvals + Compliance (높이 균등 분할) */}
+            <div
+              style={{
+                flex: 1,
+                minWidth: 420,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+              }}
+            >
+              <DayListBox />
+              <ApprovalGridBox />
+              <ComplianceGridBox />
+            </div>
 
-                  {/* Center Column: Day List + Approvals + Compliance */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <DayListBox />
-                    <ApprovalGridBox />
-                    <ComplianceGridBox />
-                  </div>
-                </div>
-
-                {/* Rightmost Column: Employee Organization / Messenger Status */}
-                <RightMessengerSidebar />
-              </div>
-            ) : (
-              // ── 대용량 AgGrid View ──
-              <div style={{ flex: 1, overflowY: 'auto' }}>
-                <LargeDataView
-                  title={openTabs.find((t) => t.key === activeTabKey)?.title}
-                  menuCode={activeTabKey}
-                />
-              </div>
-            )}
+            {/* Rightmost Column: 사원 조직도 / 우측 사이드바 */}
+            <EmployeePanel />
           </div>
         </div>
-      </div>
-    </ProLayout>
-  );
-}
+      );
+    }
 
+    // 기본 대용량 데이터 뷰 (AgGrid: 외부 스크롤 없이 AgGrid 내부 가상 스크롤만 동작하도록 격리)
+    return (
+      <div style={{ flex: 1, overflow: 'hidden', height: '100%', minHeight: 0, boxSizing: 'border-box' }}>
+        <LargeDataView
+          title={config.title || node.getName()}
+          menuCode={config.code || node.getId().replace('tab-', '')}
+        />
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, backgroundColor: '#eef2f6' }}>
+      {/* Layout Utility Toolbar */}
+      <div
+        style={{
+          height: 32,
+          backgroundColor: '#ffffff',
+          borderBottom: '1px solid #d9dfe8',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 10px',
+          flexShrink: 0,
+        }}
+      >
+        {/* Guide message */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Tag color="geekblue" icon={<InfoCircleOutlined />} style={{ fontSize: 11, margin: 0 }}>
+            💡 탭이 2개 이상일 때 탭을 패널 우측/하단 가장자리로 드래그하거나, '우측/하단 분할' 버튼을 누르면 즉시 분할됩니다
+          </Tag>
+        </div>
+
+        {/* Quick Action Buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Tooltip title="현재 선택된 탭을 오른쪽으로 분할">
+            <Button
+              size="small"
+              icon={<SplitCellsOutlined style={{ color: '#1677ff' }} />}
+              onClick={handleSplitRight}
+              style={{ fontSize: 11, height: 24, padding: '0 8px' }}
+            >
+              우측 분할
+            </Button>
+          </Tooltip>
+
+          <Tooltip title="현재 선택된 탭을 아래쪽으로 분할">
+            <Button
+              size="small"
+              icon={<InsertRowBelowOutlined style={{ color: '#1677ff' }} />}
+              onClick={handleSplitBottom}
+              style={{ fontSize: 11, height: 24, padding: '0 8px' }}
+            >
+              하단 분할
+            </Button>
+          </Tooltip>
+
+          <Tooltip title="현재 화면 배치(분할 크기, 열린 탭 위치)를 브라우저에 저장">
+            <Button
+              size="small"
+              icon={<SaveOutlined style={{ color: '#52c41a' }} />}
+              onClick={handleSaveLayout}
+              style={{ fontSize: 11, height: 24, padding: '0 8px' }}
+            >
+              레이아웃 저장
+            </Button>
+          </Tooltip>
+
+          <Popconfirm
+            title="레이아웃 초기화"
+            description="모든 분할을 닫고 기본 단일 화면으로 초기화하시겠습니까?"
+            onConfirm={handleResetLayout}
+            okText="초기화"
+            cancelText="취소"
+          >
+            <Button
+              size="small"
+              icon={<ReloadOutlined />}
+              style={{ fontSize: 11, height: 24, padding: '0 8px' }}
+            >
+              초기화
+            </Button>
+          </Popconfirm>
+        </div>
+      </div>
+
+      {/* FlexLayout Viewport */}
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        <Layout
+          model={model}
+          factory={factory}
+          onModelChange={handleModelChange}
+          realtimeResize
+        />
+      </div>
+    </div>
+  );
+});
+
+Workspace.displayName = 'Workspace';
+EOF
+
+    # ── common/button ──
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/common/button/AuthButton.tsx"
+// TODO: AuthButton.tsx - 권한 연동 제어 버튼 (스켈레톤)
+import React from 'react';
+import { Button, ButtonProps } from 'antd';
+
+export const AuthButton: React.FC<ButtonProps> = (props) => {
+  return <Button {...props} />;
+};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/common/button/index.ts"
+// TODO: barrel export - 하위 컴포넌트 완성 후 추가
+export * from './AuthButton';
+EOF
+
+    # ── common/form ──
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/common/form/AmountInput.tsx"
+// TODO: AmountInput.tsx - 통화/금액 포맷 입력기 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/common/form/CodeSelect.tsx"
+// TODO: CodeSelect.tsx - 공통 코드 기반 Select 드롭다운 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/common/form/DateRangePicker.tsx"
+// TODO: DateRangePicker.tsx - 표준 기간 선택기 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/common/form/index.ts"
+// TODO: barrel export - 하위 컴포넌트 완성 후 추가
+export {};
+EOF
+
+    # ── common/grid ──
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/common/grid/AppDataGrid.tsx"
+// TODO: AppDataGrid.tsx - Ant Design Table 기반 표준 그리드 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/common/grid/columnRenderers.tsx"
+// TODO: columnRenderers.tsx - 통화, 날짜, 태그 등 공통 셀 렌더러 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/common/grid/index.ts"
+// TODO: barrel export - 하위 컴포넌트 완성 후 추가
+export * from './AppDataGrid';
+export * from './columnRenderers';
+EOF
+
+    # ── common/modal ──
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/common/modal/ConfirmModal.tsx"
+// TODO: ConfirmModal.tsx - 표준 확인/취소 팝업 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/common/modal/index.ts"
+// TODO: barrel export - 하위 컴포넌트 완성 후 추가
+export {};
+EOF
+
+    # ── pages/act (회계) ──
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/act/components/SlipDetailModal.tsx"
+// TODO: SlipDetailModal.tsx - 회계 전표 상세 팝업 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/act/hooks/useActSlipQuery.ts"
+// TODO: useActSlipQuery.ts - 회계 전표 조회용 React Query 훅 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/act/types/actTypes.ts"
+// TODO: actTypes.ts - act(회계) 도메인 DTO/VO 정의 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/act/ActSlipManageView.tsx"
+// TODO: ActSlipManageView.tsx - 회계 전표 관리 화면 (Workspace 탭에 마운트 예정, 스켈레톤)
+import React from 'react';
+
+const ActSlipManageView: React.FC = () => {
+  return <div style={{ padding: 16, color: '#94a3b8', fontSize: 13 }}>ActSlipManageView (구현 예정)</div>;
+};
+
+export default ActSlipManageView;
+EOF
+
+    # ── pages/biz (업무/영업 공통) ──
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/biz/types/bizTypes.ts"
+// TODO: bizTypes.ts - biz(업무/영업) 도메인 DTO/VO 정의 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/biz/BizOverviewView.tsx"
+// TODO: BizOverviewView.tsx - 업무/영업 현황 개요 화면 (스켈레톤)
+import React from 'react';
+
+const BizOverviewView: React.FC = () => {
+  return <div style={{ padding: 16, color: '#94a3b8', fontSize: 13 }}>BizOverviewView (구현 예정)</div>;
+};
+
+export default BizOverviewView;
+EOF
+
+    # ── pages/crm (고객 관리) ──
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/crm/types/crmTypes.ts"
+// TODO: crmTypes.ts - crm(고객 관리) 도메인 DTO/VO 정의 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/crm/CrmCustomerView.tsx"
+// TODO: CrmCustomerView.tsx - 고객 마스터 관리 화면 (스켈레톤)
+import React from 'react';
+
+const CrmCustomerView: React.FC = () => {
+  return <div style={{ padding: 16, color: '#94a3b8', fontSize: 13 }}>CrmCustomerView (구현 예정)</div>;
+};
+
+export default CrmCustomerView;
+EOF
+
+    # ── pages/emp (인사 관리) ──
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/emp/components/EmpDetailCard.tsx"
+// TODO: EmpDetailCard.tsx - 임직원 상세 정보 카드 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/emp/types/empTypes.ts"
+// TODO: empTypes.ts - emp(인사) 도메인 DTO/VO 정의 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/emp/EmpListView.tsx"
+// TODO: EmpListView.tsx - 임직원 마스터 목록 화면 (스켈레톤)
+import React from 'react';
+
+const EmpListView: React.FC = () => {
+  return <div style={{ padding: 16, color: '#94a3b8', fontSize: 13 }}>EmpListView (구현 예정)</div>;
+};
+
+export default EmpListView;
+EOF
+
+    # ── pages/fnd (펀드 기준 정보) ──
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/fnd/types/fndTypes.ts"
+// TODO: fndTypes.ts - fnd(펀드) 도메인 DTO/VO 정의 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/fnd/FndMasterView.tsx"
+// TODO: FndMasterView.tsx - 펀드 기준 정보 관리 화면 (스켈레톤)
+import React from 'react';
+
+const FndMasterView: React.FC = () => {
+  return <div style={{ padding: 16, color: '#94a3b8', fontSize: 13 }}>FndMasterView (구현 예정)</div>;
+};
+
+export default FndMasterView;
+EOF
+
+    # ── pages/rpt (보고서 출력) ──
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/rpt/types/rptTypes.ts"
+// TODO: rptTypes.ts - rpt(보고서) 도메인 DTO/VO 정의 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/rpt/RptDailySummaryView.tsx"
+// TODO: RptDailySummaryView.tsx - 일일 요약 보고서 화면 (스켈레톤)
+import React from 'react';
+
+const RptDailySummaryView: React.FC = () => {
+  return <div style={{ padding: 16, color: '#94a3b8', fontSize: 13 }}>RptDailySummaryView (구현 예정)</div>;
+};
+
+export default RptDailySummaryView;
+EOF
+
+    # ── pages/sys (시스템 관리) ──
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/sys/types/sysTypes.ts"
+// TODO: sysTypes.ts - sys(시스템) 도메인 DTO/VO 정의 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/sys/SysUserAuthView.tsx"
+// TODO: SysUserAuthView.tsx - 사용자/권한 관리 화면 (스켈레톤)
+import React from 'react';
+
+const SysUserAuthView: React.FC = () => {
+  return <div style={{ padding: 16, color: '#94a3b8', fontSize: 13 }}>SysUserAuthView (구현 예정)</div>;
+};
+
+export default SysUserAuthView;
+EOF
+
+    # ── services ──
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/services/api.ts"
+// TODO: api.ts - Axios 인스턴스 (JWT 주입 및 ApiResponse 처리) 예정 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/services/authService.ts"
+// TODO: authService.ts - 로그인/로그아웃/토큰 재발급 API 예정 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/services/commonService.ts"
+// TODO: commonService.ts - 공통 코드/메뉴 목록 조회 API 예정 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/services/biz/actService.ts"
+// TODO: actService.ts - act(회계) 도메인 API 서비스 예정 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/services/biz/bizService.ts"
+// TODO: bizService.ts - biz(업무/영업) 도메인 API 서비스 예정 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/services/biz/crmService.ts"
+// TODO: crmService.ts - crm(고객 관리) 도메인 API 서비스 예정 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/services/biz/empService.ts"
+// TODO: empService.ts - emp(인사) 도메인 API 서비스 예정 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/services/biz/fndService.ts"
+// TODO: fndService.ts - fnd(펀드) 도메인 API 서비스 예정 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/services/biz/sysService.ts"
+// TODO: sysService.ts - sys(시스템) 도메인 API 서비스 예정 (스켈레톤)
+export {};
+EOF
+
+    # ── types (전역 공통 규약 스켈레톤) ──
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/types/api.ts"
+// TODO: api.ts - 백엔드 표준 응답 Envelope (ApiResponse<T>, PageResponse) 예정 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/types/auth.ts"
+// TODO: auth.ts - 사용자 세션, 토큰, Role 권한 규약 예정 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/types/common.ts"
+// TODO: common.ts - 공통 코드(CodeItem), Key-Value 옵션 규약 예정 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/types/grid.ts"
+// TODO: grid.ts - DataGrid 컬럼 스키마 및 셀 렌더러 인터페이스 예정 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/types/layout.ts"
+// TODO: layout.ts - FlexLayout JSON 노드, MDI 탭 상태 규약 예정 (스켈레톤)
+export {};
+EOF
+
+    # ── utils ──
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/utils/auth.ts"
+// TODO: auth.ts - 권한 확인 및 로컬 스토리지 헬퍼 예정 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/utils/excel.ts"
+// TODO: excel.ts - 엑셀 파일 파싱 및 다운로드 유틸 예정 (스켈레톤)
+export {};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/utils/formatters.ts"
+// TODO: formatters.ts - 통화, 날짜, 사업자번호 등 포맷팅 함수 예정 (스켈레톤)
+export {};
 EOF
 
 else
