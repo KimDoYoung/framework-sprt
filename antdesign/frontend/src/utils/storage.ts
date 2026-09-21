@@ -17,12 +17,14 @@ export interface AppSettings {
   menu23_font_size: number;
   flexlayout_model?: any;
   saved_layouts?: SavedLayoutItem[];
+  mypage_employee_collapsed?: boolean;
   [key: string]: any;
 }
 
 export const defaultAppSettings: AppSettings = {
   menu23_font_size: 0,
   saved_layouts: [],
+  mypage_employee_collapsed: false,
 };
 
 /**

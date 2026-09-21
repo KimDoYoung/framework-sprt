@@ -1,12 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Button, Tooltip, Tag, Popconfirm, message, Dropdown, MenuProps } from 'antd';
-import {
-  SplitCellsOutlined,
-  InsertRowBelowOutlined,
-  SaveOutlined,
-  ReloadOutlined,
-  InfoCircleOutlined,
-} from '@ant-design/icons';
+import { message, Dropdown, MenuProps } from 'antd';
 import {
   Layout,
   Model,
@@ -22,15 +15,8 @@ import './flexlayout-custom.css';
 
 import { TopBar } from './components/TopBar';
 import { LeftMenuBar } from './components/LeftMenuBar';
-import { EmployeePanel } from './components/EmployeePanel';
 import { StatusBar } from './components/StatusBar';
-import { MyPageCalendar } from './components/mypage/MyPageCalendar';
-import {
-  ScheduleGridBox,
-  DayListBox,
-  ApprovalGridBox,
-  ComplianceGridBox,
-} from './components/mypage/MyPageGrids';
+import { MyPageView } from './components/mypage';
 import { LargeDataView } from './components/LargeDataView';
 import { MenuLevel_1, MenuLevel_3 } from './types';
 import { appSettingsStorage, SavedLayoutItem } from './utils/storage';
@@ -140,7 +126,6 @@ function getInitialModel(): Model {
 }
 
 export default function App() {
-  const [selectedDay, setSelectedDay] = useState<number>(16);
   const [activeMenuId, setActiveMenuId] = useState<string | null>('duty');
   const [sidebarPinned, setSidebarPinned] = useState<boolean>(true);
   const [selectedMenuLevel_3_Code, setSelectedMenuLevel_3_Code] = useState<string>('1495');
@@ -424,133 +409,6 @@ export default function App() {
     ];
   };
 
-  // ── 빠른 버튼: 현재 활성 탭을 우측으로 분할 ──
-  const handleSplitRight = () => {
-    const maxTs = model.getMaximizedTabset();
-    if (maxTs) {
-      model.doAction(Actions.maximizeToggle(maxTs.getId()));
-    }
-
-    const activeTabset = model.getActiveTabset() || model.getFirstTabSet();
-    if (!activeTabset) {
-      message.warning('분할할 패널이 없습니다.');
-      return;
-    }
-    const activeTab = activeTabset.getSelectedNode();
-
-    if (activeTabset.getChildren().length <= 1) {
-      const splitTabId = 'tab-1495';
-      const existing = model.getNodeById(splitTabId);
-      if (existing) {
-        model.doAction(
-          Actions.moveNode(
-            splitTabId,
-            activeTabset.getId(),
-            DockLocation.RIGHT,
-            -1,
-            true
-          )
-        );
-      } else {
-        model.doAction(
-          Actions.addTab(
-            {
-              type: 'tab',
-              name: '1495 책무점검 현황',
-              component: 'largedata',
-              id: splitTabId,
-              config: { code: '1495', title: '책무점검 현황' },
-              enableClose: true,
-              enableScrollbars: false,
-            },
-            activeTabset.getId(),
-            DockLocation.RIGHT,
-            -1,
-            true
-          )
-        );
-      }
-      message.success('우측으로 새 작업 패널이 분할 생성되었습니다.');
-      return;
-    }
-
-    if (activeTab) {
-      model.doAction(
-        Actions.moveNode(
-          activeTab.getId(),
-          activeTabset.getId(),
-          DockLocation.RIGHT,
-          -1,
-          true
-        )
-      );
-      message.success('현재 탭이 우측 패널로 분할 이동되었습니다.');
-    }
-  };
-
-  // ── 빠른 버튼: 현재 활성 탭을 하단으로 분할 ──
-  const handleSplitBottom = () => {
-    const maxTs = model.getMaximizedTabset();
-    if (maxTs) {
-      model.doAction(Actions.maximizeToggle(maxTs.getId()));
-    }
-
-    const activeTabset = model.getActiveTabset() || model.getFirstTabSet();
-    if (!activeTabset) {
-      message.warning('분할할 패널이 없습니다.');
-      return;
-    }
-    const activeTab = activeTabset.getSelectedNode();
-
-    if (activeTabset.getChildren().length <= 1) {
-      const splitTabId = 'tab-1495';
-      const existing = model.getNodeById(splitTabId);
-      if (existing) {
-        model.doAction(
-          Actions.moveNode(
-            splitTabId,
-            activeTabset.getId(),
-            DockLocation.BOTTOM,
-            -1,
-            true
-          )
-        );
-      } else {
-        model.doAction(
-          Actions.addTab(
-            {
-              type: 'tab',
-              name: '1495 책무점검 현황',
-              component: 'largedata',
-              id: splitTabId,
-              config: { code: '1495', title: '책무점검 현황' },
-              enableClose: true,
-              enableScrollbars: false,
-            },
-            activeTabset.getId(),
-            DockLocation.BOTTOM,
-            -1,
-            true
-          )
-        );
-      }
-      message.success('하단으로 새 작업 패널이 분할 생성되었습니다.');
-      return;
-    }
-
-    if (activeTab) {
-      model.doAction(
-        Actions.moveNode(
-          activeTab.getId(),
-          activeTabset.getId(),
-          DockLocation.BOTTOM,
-          -1,
-          true
-        )
-      );
-      message.success('현재 탭이 하단 패널로 분할 이동되었습니다.');
-    }
-  };
 
   // ── 명명 레이아웃 저장/불러오기/삭제/초기화 핸들러 ──
   const handleSaveNamedLayout = (name: string) => {
@@ -590,74 +448,7 @@ export default function App() {
     const config = (node.getConfig() as { code?: string; title?: string }) || {};
 
     if (component === 'mypage') {
-      return (
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            overflow: 'hidden',
-            height: '100%',
-            minHeight: 0,
-            boxSizing: 'border-box',
-          }}
-        >
-          {/* MyPage Grid/Calendar Container (뷰포트 피팅 및 외부 스크롤바 방지) */}
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              padding: 8,
-              gap: 8,
-              overflow: 'hidden',
-              minWidth: 0,
-              minHeight: 0,
-              height: '100%',
-              boxSizing: 'border-box',
-            }}
-          >
-            {/* Left Column: Calendar (상단) + Schedule Box (하단 채움) */}
-            <div
-              style={{
-                width: 440,
-                minWidth: 380,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-                height: '100%',
-                minHeight: 0,
-                flexShrink: 0,
-              }}
-            >
-              <MyPageCalendar
-                selectedDate={selectedDay}
-                onSelectDate={setSelectedDay}
-              />
-              <ScheduleGridBox selectedDay={selectedDay} />
-            </div>
-
-            {/* Center Column: Day List + Approvals + Compliance (높이 균등 분할) */}
-            <div
-              style={{
-                flex: 1,
-                minWidth: 420,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-                height: '100%',
-                minHeight: 0,
-                overflow: 'hidden',
-              }}
-            >
-              <DayListBox />
-              <ApprovalGridBox />
-              <ComplianceGridBox />
-            </div>
-
-            {/* Rightmost Column: 사원 조직도 / 우측 사이드바 */}
-            <EmployeePanel />
-          </div>
-        </div>
-      );
+      return <MyPageView />;
     }
 
     // 기본 대용량 데이터 뷰 (AgGrid: 외부 스크롤 없이 AgGrid 내부 가상 스크롤만 동작하도록 격리)
@@ -698,82 +489,6 @@ export default function App() {
 
         {/* ── Main Content Area: FlexLayout Multi-Split & Docking ── */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, backgroundColor: '#eef2f6' }}>
-          {/* Layout Utility Toolbar */}
-          <div
-            style={{
-              height: 32,
-              backgroundColor: '#ffffff',
-              borderBottom: '1px solid #d9dfe8',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '0 10px',
-              flexShrink: 0,
-            }}
-          >
-            {/* Guide message */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Tag color="geekblue" icon={<InfoCircleOutlined />} style={{ fontSize: 11, margin: 0 }}>
-                💡 화면번호 입력(Enter)으로 탭 호출, 탭 헤더 우클릭(컨텍스트 메뉴), F4로 최대화/복원 가능
-              </Tag>
-            </div>
-
-            {/* Quick Action Buttons */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Tooltip title="현재 선택된 탭을 오른쪽으로 분할">
-                <Button
-                  size="small"
-                  icon={<SplitCellsOutlined style={{ color: '#1677ff' }} />}
-                  onClick={handleSplitRight}
-                  style={{ fontSize: 11, height: 24, padding: '0 8px' }}
-                >
-                  우측 분할
-                </Button>
-              </Tooltip>
-
-              <Tooltip title="현재 선택된 탭을 아래쪽으로 분할">
-                <Button
-                  size="small"
-                  icon={<InsertRowBelowOutlined style={{ color: '#1677ff' }} />}
-                  onClick={handleSplitBottom}
-                  style={{ fontSize: 11, height: 24, padding: '0 8px' }}
-                >
-                  하단 분할
-                </Button>
-              </Tooltip>
-
-              <Tooltip title="현재 화면 배치를 기본 로컬 저장소에 빠른 저장">
-                <Button
-                  size="small"
-                  icon={<SaveOutlined style={{ color: '#52c41a' }} />}
-                  onClick={() => {
-                    appSettingsStorage.set('flexlayout_model', model.toJson());
-                    message.success('현재 화면 분할 및 탭 레이아웃이 저장되었습니다.');
-                  }}
-                  style={{ fontSize: 11, height: 24, padding: '0 8px' }}
-                >
-                  빠른 저장
-                </Button>
-              </Tooltip>
-
-              <Popconfirm
-                title="레이아웃 초기화"
-                description="모든 분할을 닫고 기본 단일 화면으로 초기화하시겠습니까?"
-                onConfirm={handleResetLayout}
-                okText="초기화"
-                cancelText="취소"
-              >
-                <Button
-                  size="small"
-                  icon={<ReloadOutlined />}
-                  style={{ fontSize: 11, height: 24, padding: '0 8px' }}
-                >
-                  초기화
-                </Button>
-              </Popconfirm>
-            </div>
-          </div>
-
           {/* FlexLayout Viewport */}
           <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
             <Layout
