@@ -24,29 +24,63 @@
   box-sizing: border-box;
 }
 
-/* 탭 버튼 스타일 (Ant Design Card 탭과 일관된 느낌) */
+/* 탭 버튼 스타일: 모든 탭 동일 너비(160px - '1234 일이삼사오...' 수용), 선택된 탭만 테두리 표시 */
 .flexlayout__tab_button {
+  width: 160px !important;
+  min-width: 160px !important;
+  max-width: 160px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
   border-radius: 4px 4px 0 0 !important;
-  margin-right: 3px !important;
+  margin-right: 2px !important;
   font-size: 12px !important;
   font-weight: 500 !important;
-  padding: 4px 10px !important;
-  border: 1px solid #e2e8f0 !important;
-  border-bottom: none !important;
-  transition: all 0.12s ease !important;
+  padding: 4px 8px !important;
+  border: 1px solid transparent !important; /* 미선택 탭: 테두리 없음 */
+  background-color: transparent !important;
+  color: #64748b !important;
+  box-sizing: border-box !important;
+  transition: none !important; /* 불필요한 탭 전환 지연/애니메이션 제거 - 즉각 반응 */
+  animation: none !important;
+  cursor: pointer !important;
+}
+
+.flexlayout__tab_button_content {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  flex: 1 !important;
+  text-align: left !important;
+  user-select: none !important;
 }
 
 .flexlayout__tab_button:hover {
   background-color: #f1f5f9 !important;
   color: #1677ff !important;
+  border-color: transparent !important;
+  transition: background-color 0.08s ease !important;
 }
 
+/* 현재 선택된 탭만 테두리 선 표시 (상단 2px 포인트 블루, 배경 흰색, 하단 경계 일체화) */
 .flexlayout__tab_button--selected {
   background-color: #ffffff !important;
+  border: 1px solid #d9dfe8 !important;
   border-top: 2px solid #1677ff !important;
-  border-color: #d9dfe8 #d9dfe8 transparent #d9dfe8 !important;
+  border-bottom: 1px solid #ffffff !important;
   color: #1677ff !important;
   font-weight: 600 !important;
+  position: relative !important;
+  z-index: 2 !important;
+  transition: none !important; /* 애니메이션 제거 */
+  animation: none !important;
+}
+
+.flexlayout__tab_button--selected:hover {
+  background-color: #ffffff !important;
+  border-color: #d9dfe8 !important;
+  border-top-color: #1677ff !important;
+  border-bottom-color: #ffffff !important;
 }
 
 /* 탭 바 헤더 (34px 슬림 헤더) */
@@ -85,9 +119,42 @@
   color: #ef4444 !important;
 }
 
-/* 탭 내부 콘텐츠 영역: 브라우저/모니터 우측 외곽 스크롤바 방지 (뷰포트 피팅) */
+/* 탭 내부 콘텐츠 영역: 브라우저/모니터 우측 외곽 스크롤바 방지 (뷰포트 피팅 및 탭 전환 즉각 반응) */
 .flexlayout__tab {
   overflow: hidden !important;
   box-sizing: border-box !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+/* 탭셋 헤더 우측 툴바 (모든 탭 닫기, 최대화/복원 버튼) */
+.flexlayout__tab_toolbar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding-right: 8px !important;
+  --color-icon: #94a3b8;
+}
+
+.flexlayout-toolbar-custom-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 4px !important;
+  border: none !important;
+  background: transparent !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  transition: all 0.15s ease !important;
+  user-select: none !important;
+}
+
+.flexlayout-toolbar-custom-btn:hover {
+  background-color: #e2e8f0 !important;
+  color: #334155 !important;
+  --color-icon: #334155;
 }
 

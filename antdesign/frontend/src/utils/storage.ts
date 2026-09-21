@@ -6,14 +6,23 @@
 
 export const SETTINGS_STORAGE_KEY = 'asseterp_settings';
 
+export interface SavedLayoutItem {
+  id: string;
+  name: string;
+  createdAt: string;
+  modelJson: any;
+}
+
 export interface AppSettings {
   menu23_font_size: number;
   flexlayout_model?: any;
+  saved_layouts?: SavedLayoutItem[];
   [key: string]: any;
 }
 
 export const defaultAppSettings: AppSettings = {
   menu23_font_size: 0,
+  saved_layouts: [],
 };
 
 /**
@@ -141,6 +150,44 @@ export const appSettingsStorage = {
     } catch (e) {
       console.error('[appSettingsStorage] 초기화 실패:', e);
     }
+  },
+
+  /**
+   * 저장된 레이아웃 목록을 조회합니다.
+   */
+  getSavedLayouts(): SavedLayoutItem[] {
+    return this.get('saved_layouts', []) || [];
+  },
+
+  /**
+   * 현재 화면 레이아웃을 이름과 함께 저장합니다.
+   */
+  saveLayout(name: string, modelJson: any): SavedLayoutItem {
+    const list = this.getSavedLayouts();
+    const cleanName = name.trim() || `레이아웃 ${list.length + 1}`;
+    const newItem: SavedLayoutItem = {
+      id: `layout_${Date.now()}`,
+      name: cleanName,
+      createdAt: new Date().toLocaleString('ko-KR', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      modelJson,
+    };
+    const updated = [newItem, ...list];
+    this.set('saved_layouts', updated);
+    return newItem;
+  },
+
+  /**
+   * 저장된 특정 레이아웃을 삭제합니다.
+   */
+  deleteSavedLayout(id: string): void {
+    const list = this.getSavedLayouts();
+    const updated = list.filter((item) => item.id !== id);
+    this.set('saved_layouts', updated);
   },
 };
 

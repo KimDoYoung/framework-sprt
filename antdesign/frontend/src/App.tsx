@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Button, Tooltip, Tag, Popconfirm, message } from 'antd';
+import { useState, useEffect, useRef } from 'react';
+import { Button, Tooltip, Tag, Popconfirm, message, Dropdown, MenuProps } from 'antd';
 import {
   SplitCellsOutlined,
   InsertRowBelowOutlined,
@@ -12,6 +12,9 @@ import {
   Model,
   Actions,
   TabNode,
+  TabSetNode,
+  BorderNode,
+  ITabSetRenderValues,
   IJsonModel,
   DockLocation,
 } from 'flexlayout-react';
@@ -30,15 +33,15 @@ import {
 } from './components/mypage/MyPageGrids';
 import { LargeDataView } from './components/LargeDataView';
 import { MenuLevel_1, MenuLevel_3 } from './types';
-import { appSettingsStorage } from './utils/storage';
+import { appSettingsStorage, SavedLayoutItem } from './utils/storage';
 
 // ── 기본 레이아웃 정의 (초기 상태: My Page 1개 탭) ──
 const defaultLayoutJson: IJsonModel = {
   global: {
     tabEnableClose: true,
-    tabSetEnableMaximize: false, // 최대화로 인한 분할 차단 및 전체화면 고착 방지
+    tabSetEnableMaximize: false, // FlexLayout 기본 최대화 버튼 미노출 (onRenderTabSet에서 커스텀 버튼 렌더)
     tabSetEnableClose: true, // 탭셋 닫기/삭제 허용
-    tabSetEnableCloseButton: false, // 탭셋 헤더 자체의 닫기 버튼은 미노출
+    tabSetEnableCloseButton: false, // FlexLayout 기본 닫기 버튼 미노출 (onRenderTabSet에서 커스텀 버튼 렌더)
     tabSetEnableDeleteWhenEmpty: true, // 탭이 0개가 되면 해당 분할 패널(탭셋) 자동 소멸
     tabEnableRename: false,
     tabEnableScrollbars: false, // 탭 외곽 스크롤바 방지 (뷰포트 피팅 및 내부 가상 스크롤 격리)
@@ -86,7 +89,7 @@ function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
   json.global.tabSetEnableCloseButton = false;
   json.global.tabSetEnableDeleteWhenEmpty = true;
   json.global.tabEnableScrollbars = false; // 외곽 스크롤 방지
-  json.global.tabSetEnableMaximize = false; // 최대화 고착 방지
+  json.global.tabSetEnableMaximize = false; // FlexLayout 기본 최대화 버튼 방지
   json.global.tabSetEnableDivide = true; // 패널 드래그 분할 보장
   json.global.tabSetEnableDrop = true;
   json.global.tabSetEnableDrag = true;
@@ -99,7 +102,7 @@ function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
     if (node.type === 'tabset') {
       if (node.enableClose === false) delete node.enableClose;
       if (node.enableDeleteWhenEmpty === false) delete node.enableDeleteWhenEmpty;
-      if (node.maximized) delete node.maximized; // 저장된 최대화 상태 강제 해제!
+      if (node.maximized) delete node.maximized; // 저장된 최대화 상태 초기 해제
       node.enableMaximize = false;
       node.enableDivide = true;
       node.enableDrop = true;
@@ -145,11 +148,24 @@ export default function App() {
   // ── FlexLayout 모델 상태 ──
   const [model, setModel] = useState<Model>(() => getInitialModel());
 
+  // ── 저장된 명명 레이아웃 목록 상태 ──
+  const [savedLayouts, setSavedLayouts] = useState<SavedLayoutItem[]>(() =>
+    appSettingsStorage.getSavedLayouts()
+  );
+
+  // ── 탭 헤더 컨텍스트 메뉴 상태 ──
+  const [contextMenu, setContextMenu] = useState<{
+    open: boolean;
+    x: number;
+    y: number;
+    tabNode: TabNode | null;
+  }>({ open: false, x: 0, y: 0, tabNode: null });
+
   const handleSelectMenuLevel_1 = (menuId: string | null) => {
     setActiveMenuId(menuId);
   };
 
-  // ── 메뉴 클릭 시: 활성화된 탭셋(TabSet)에 새 탭 추가 또는 기존 탭 활성화 ──
+  // ── 메뉴 클릭 및 화면번호 검색 시: 활성화된 탭셋(TabSet)에 새 탭 추가 또는 기존 탭 활성화 ──
   const handleSelectMenuLevel_3 = (item: MenuLevel_3, _parent: MenuLevel_1) => {
     setSelectedMenuLevel_3_Code(item.code);
     const tabId = `tab-${item.code}`;
@@ -167,7 +183,7 @@ export default function App() {
         Actions.addTab(
           {
             type: 'tab',
-            name: `[${item.code}] ${item.title}`,
+            name: `${item.code} ${item.title}`,
             component: 'largedata',
             id: tabId,
             config: { code: item.code, title: item.title },
@@ -183,14 +199,233 @@ export default function App() {
     }
   };
 
-  // ── 레이아웃 변경 시 자동 로컬 스토리지(asseterp_settings) 저장 ──
+  // ── 레이아웃 변경 시 자동 로컬 스토리지(asseterp_settings) 디바운스 비동기 저장 ──
+  const saveLayoutTimerRef = useRef<number | null>(null);
   const handleModelChange = (newModel: Model) => {
-    appSettingsStorage.set('flexlayout_model', newModel.toJson());
+    if (saveLayoutTimerRef.current) {
+      window.clearTimeout(saveLayoutTimerRef.current);
+    }
+    saveLayoutTimerRef.current = window.setTimeout(() => {
+      appSettingsStorage.set('flexlayout_model', newModel.toJson());
+    }, 200);
+  };
+
+  // ── 단축키 F4: 최대화 및 복원 토글 ──
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F4') {
+        e.preventDefault();
+        const maxTs = model.getMaximizedTabset();
+        if (maxTs) {
+          model.doAction(Actions.maximizeToggle(maxTs.getId()));
+        } else {
+          const target = model.getActiveTabset() || model.getFirstTabSet();
+          if (target) {
+            model.doAction(Actions.maximizeToggle(target.getId()));
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [model]);
+
+  // ── 컨텍스트 메뉴 외부 클릭 시 닫기 ──
+  useEffect(() => {
+    if (!contextMenu.open) return;
+    const handleOutsideClick = () => {
+      setContextMenu((prev) => ({ ...prev, open: false }));
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, [contextMenu.open]);
+
+  // ── 탭셋 내부의 모든 닫기 가능 탭 일괄 닫기 ──
+  const handleCloseAllInTabSet = (tabset: TabSetNode) => {
+    const children = tabset.getChildren().filter((c): c is TabNode => c instanceof TabNode);
+    const closeableTabs = children.filter((t) => t.isCloseable());
+    if (closeableTabs.length === 0) {
+      message.info('닫을 수 있는 탭이 없습니다.');
+      return;
+    }
+    closeableTabs.forEach((tab) => {
+      model.doAction(Actions.deleteTab(tab.getId()));
+    });
+  };
+
+  // ── TabSet 우측 툴바 버튼 커스텀 렌더: '모든 탭 닫기' & '최대화/복원(F4)' ──
+  const onRenderTabSet = (tabSetNode: TabSetNode | BorderNode, renderValues: ITabSetRenderValues) => {
+    if (!(tabSetNode instanceof TabSetNode)) return;
+    const isMax = tabSetNode.isMaximized();
+
+    renderValues.buttons.push(
+      <button
+        key="close-all"
+        type="button"
+        title="모든 탭 닫기"
+        className="flexlayout-toolbar-custom-btn"
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleCloseAllInTabSet(tabSetNode);
+        }}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="11"
+          height="11"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="lucide lucide-x"
+          aria-hidden="true"
+        >
+          <path d="M18 6 6 18"></path>
+          <path d="m6 6 12 12"></path>
+        </svg>
+      </button>,
+      <button
+        key="max-toggle"
+        type="button"
+        title={isMax ? '복원(F4)' : '최대화(F4)'}
+        className="flexlayout-toolbar-custom-btn"
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          model.doAction(Actions.maximizeToggle(tabSetNode.getId()));
+        }}
+      >
+        {isMax ? (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            style={{ width: 14, height: 14, strokeWidth: 2.5 }}
+          >
+            <path
+              stroke="var(--color-icon)"
+              d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"
+            ></path>
+          </svg>
+        ) : (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            style={{ width: 14, height: 14, strokeWidth: 2.5 }}
+          >
+            <path
+              stroke="var(--color-icon)"
+              d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"
+            ></path>
+          </svg>
+        )}
+      </button>
+    );
+  };
+
+  // ── 탭 헤더 우클릭 시 컨텍스트 메뉴 표시 ──
+  const handleContextMenu = (node: any, event: React.MouseEvent<HTMLElement>) => {
+    if (node instanceof TabNode) {
+      event.preventDefault();
+      event.stopPropagation();
+      setContextMenu({
+        open: true,
+        x: event.clientX,
+        y: event.clientY,
+        tabNode: node,
+      });
+    }
+  };
+
+  // ── 컨텍스트 메뉴 아이템 목록 생성 ──
+  const getContextMenuItems = (): MenuProps['items'] => {
+    const targetTab = contextMenu.tabNode;
+    if (!targetTab) return [];
+
+    const parent = targetTab.getParent();
+    const siblings = parent
+      ? parent.getChildren().filter((c): c is TabNode => c instanceof TabNode)
+      : [];
+    const currentIndex = siblings.findIndex((s) => s.getId() === targetTab.getId());
+
+    const rightSiblings = currentIndex >= 0 ? siblings.slice(currentIndex + 1) : [];
+    const otherSiblings = currentIndex >= 0 ? siblings.filter((_, i) => i !== currentIndex) : [];
+
+    const canCloseCurrent = targetTab.isCloseable();
+    const canCloseRight = rightSiblings.some((s) => s.isCloseable());
+    const canCloseOthers = otherSiblings.some((s) => s.isCloseable());
+    const canCloseAll = siblings.some((s) => s.isCloseable());
+
+    return [
+      {
+        key: 'close-current',
+        label: '이 탭 닫기',
+        disabled: !canCloseCurrent,
+        onClick: () => {
+          if (canCloseCurrent) {
+            model.doAction(Actions.deleteTab(targetTab.getId()));
+          }
+          setContextMenu((prev) => ({ ...prev, open: false }));
+        },
+      },
+      {
+        key: 'close-right',
+        label: '오른쪽 모든 탭 닫기',
+        disabled: !canCloseRight,
+        onClick: () => {
+          rightSiblings.forEach((tab) => {
+            if (tab.isCloseable()) {
+              model.doAction(Actions.deleteTab(tab.getId()));
+            }
+          });
+          setContextMenu((prev) => ({ ...prev, open: false }));
+        },
+      },
+      {
+        key: 'close-others',
+        label: '다른 탭 모두 닫기',
+        disabled: !canCloseOthers,
+        onClick: () => {
+          otherSiblings.forEach((tab) => {
+            if (tab.isCloseable()) {
+              model.doAction(Actions.deleteTab(tab.getId()));
+            }
+          });
+          setContextMenu((prev) => ({ ...prev, open: false }));
+        },
+      },
+      {
+        type: 'divider',
+      },
+      {
+        key: 'close-all',
+        label: '전체 탭 닫기',
+        disabled: !canCloseAll,
+        danger: true,
+        onClick: () => {
+          siblings.forEach((tab) => {
+            if (tab.isCloseable()) {
+              model.doAction(Actions.deleteTab(tab.getId()));
+            }
+          });
+          setContextMenu((prev) => ({ ...prev, open: false }));
+        },
+      },
+    ];
   };
 
   // ── 빠른 버튼: 현재 활성 탭을 우측으로 분할 ──
   const handleSplitRight = () => {
-    // 혹시 최대화 상태인 경우 즉시 해제
     const maxTs = model.getMaximizedTabset();
     if (maxTs) {
       model.doAction(Actions.maximizeToggle(maxTs.getId()));
@@ -203,7 +438,6 @@ export default function App() {
     }
     const activeTab = activeTabset.getSelectedNode();
 
-    // 패널에 탭이 1개뿐일 때: 우측에 새 작업 화면([1495] 당직명령부)을 분할 생성하여 즉시 2개 패널 배치
     if (activeTabset.getChildren().length <= 1) {
       const splitTabId = 'tab-1495';
       const existing = model.getNodeById(splitTabId);
@@ -222,10 +456,10 @@ export default function App() {
           Actions.addTab(
             {
               type: 'tab',
-              name: '[1495] 당직명령부',
+              name: '1495 책무점검 현황',
               component: 'largedata',
               id: splitTabId,
-              config: { code: '1495', title: '당직명령부' },
+              config: { code: '1495', title: '책무점검 현황' },
               enableClose: true,
               enableScrollbars: false,
             },
@@ -256,7 +490,6 @@ export default function App() {
 
   // ── 빠른 버튼: 현재 활성 탭을 하단으로 분할 ──
   const handleSplitBottom = () => {
-    // 혹시 최대화 상태인 경우 즉시 해제
     const maxTs = model.getMaximizedTabset();
     if (maxTs) {
       model.doAction(Actions.maximizeToggle(maxTs.getId()));
@@ -269,7 +502,6 @@ export default function App() {
     }
     const activeTab = activeTabset.getSelectedNode();
 
-    // 패널에 탭이 1개뿐일 때: 하단에 새 작업 화면([1495] 당직명령부)을 분할 생성하여 즉시 2개 패널 배치
     if (activeTabset.getChildren().length <= 1) {
       const splitTabId = 'tab-1495';
       const existing = model.getNodeById(splitTabId);
@@ -288,10 +520,10 @@ export default function App() {
           Actions.addTab(
             {
               type: 'tab',
-              name: '[1495] 당직명령부',
+              name: '1495 책무점검 현황',
               component: 'largedata',
               id: splitTabId,
-              config: { code: '1495', title: '당직명령부' },
+              config: { code: '1495', title: '책무점검 현황' },
               enableClose: true,
               enableScrollbars: false,
             },
@@ -320,13 +552,32 @@ export default function App() {
     }
   };
 
-  // ── 레이아웃 수동 저장 ──
-  const handleSaveLayout = () => {
-    appSettingsStorage.set('flexlayout_model', model.toJson());
-    message.success('현재 화면 분할 및 탭 레이아웃이 저장되었습니다.');
+  // ── 명명 레이아웃 저장/불러오기/삭제/초기화 핸들러 ──
+  const handleSaveNamedLayout = (name: string) => {
+    const item = appSettingsStorage.saveLayout(name, model.toJson());
+    setSavedLayouts(appSettingsStorage.getSavedLayouts());
+    message.success(`'${item.name}' 레이아웃이 저장되었습니다.`);
   };
 
-  // ── 레이아웃 기본값으로 초기화 ──
+  const handleLoadNamedLayout = (item: SavedLayoutItem) => {
+    try {
+      const sanitized = sanitizeLayoutJson(item.modelJson);
+      const m = Model.fromJson(sanitized);
+      setModel(m);
+      appSettingsStorage.set('flexlayout_model', sanitized);
+      message.success(`'${item.name}' 레이아웃을 불러왔습니다.`);
+    } catch (e) {
+      message.error('레이아웃 불러오기에 실패했습니다.');
+      console.error(e);
+    }
+  };
+
+  const handleDeleteNamedLayout = (id: string) => {
+    appSettingsStorage.deleteSavedLayout(id);
+    setSavedLayouts(appSettingsStorage.getSavedLayouts());
+    message.info('레이아웃이 삭제되었습니다.');
+  };
+
   const handleResetLayout = () => {
     appSettingsStorage.remove('flexlayout_model');
     setModel(Model.fromJson(defaultLayoutJson));
@@ -425,6 +676,12 @@ export default function App() {
       <TopBar
         sidebarPinned={sidebarPinned}
         onToggleSidebarPin={() => setSidebarPinned(!sidebarPinned)}
+        onOpenScreen={handleSelectMenuLevel_3}
+        savedLayouts={savedLayouts}
+        onSaveNamedLayout={handleSaveNamedLayout}
+        onLoadNamedLayout={handleLoadNamedLayout}
+        onDeleteNamedLayout={handleDeleteNamedLayout}
+        onResetLayout={handleResetLayout}
       />
 
       {/* ── Body Container with LeftMenuBar & FlexLayout ── */}
@@ -457,7 +714,7 @@ export default function App() {
             {/* Guide message */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <Tag color="geekblue" icon={<InfoCircleOutlined />} style={{ fontSize: 11, margin: 0 }}>
-                💡 탭이 2개 이상일 때 탭을 패널 우측/하단 가장자리로 드래그하거나, '우측/하단 분할' 버튼을 누르면 즉시 분할됩니다
+                💡 화면번호 입력(Enter)으로 탭 호출, 탭 헤더 우클릭(컨텍스트 메뉴), F4로 최대화/복원 가능
               </Tag>
             </div>
 
@@ -485,14 +742,17 @@ export default function App() {
                 </Button>
               </Tooltip>
 
-              <Tooltip title="현재 화면 배치(분할 크기, 열린 탭 위치)를 브라우저에 저장">
+              <Tooltip title="현재 화면 배치를 기본 로컬 저장소에 빠른 저장">
                 <Button
                   size="small"
                   icon={<SaveOutlined style={{ color: '#52c41a' }} />}
-                  onClick={handleSaveLayout}
+                  onClick={() => {
+                    appSettingsStorage.set('flexlayout_model', model.toJson());
+                    message.success('현재 화면 분할 및 탭 레이아웃이 저장되었습니다.');
+                  }}
                   style={{ fontSize: 11, height: 24, padding: '0 8px' }}
                 >
-                  레이아웃 저장
+                  빠른 저장
                 </Button>
               </Tooltip>
 
@@ -520,8 +780,30 @@ export default function App() {
               model={model}
               factory={factory}
               onModelChange={handleModelChange}
+              onRenderTabSet={onRenderTabSet}
+              onContextMenu={handleContextMenu}
               realtimeResize
             />
+
+            {/* 탭 헤더 우클릭 컨텍스트 메뉴 */}
+            <Dropdown
+              menu={{ items: getContextMenuItems() }}
+              open={contextMenu.open}
+              onOpenChange={(open) => !open && setContextMenu((prev) => ({ ...prev, open: false }))}
+              trigger={['contextMenu']}
+            >
+              <div
+                style={{
+                  position: 'fixed',
+                  left: contextMenu.x,
+                  top: contextMenu.y,
+                  width: 1,
+                  height: 1,
+                  pointerEvents: 'none',
+                  zIndex: 9999,
+                }}
+              />
+            </Dropdown>
           </div>
         </div>
       </div>

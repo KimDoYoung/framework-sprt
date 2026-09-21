@@ -509,29 +509,63 @@ EOF
   box-sizing: border-box;
 }
 
-/* 탭 버튼 스타일 (Ant Design Card 탭과 일관된 느낌) */
+/* 탭 버튼 스타일: 모든 탭 동일 너비(160px - '1234 일이삼사오...' 수용), 선택된 탭만 테두리 표시 */
 .flexlayout__tab_button {
+  width: 160px !important;
+  min-width: 160px !important;
+  max-width: 160px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
   border-radius: 4px 4px 0 0 !important;
-  margin-right: 3px !important;
+  margin-right: 2px !important;
   font-size: 12px !important;
   font-weight: 500 !important;
-  padding: 4px 10px !important;
-  border: 1px solid #e2e8f0 !important;
-  border-bottom: none !important;
-  transition: all 0.12s ease !important;
+  padding: 4px 8px !important;
+  border: 1px solid transparent !important; /* 미선택 탭: 테두리 없음 */
+  background-color: transparent !important;
+  color: #64748b !important;
+  box-sizing: border-box !important;
+  transition: none !important; /* 불필요한 탭 전환 지연/애니메이션 제거 - 즉각 반응 */
+  animation: none !important;
+  cursor: pointer !important;
+}
+
+.flexlayout__tab_button_content {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  flex: 1 !important;
+  text-align: left !important;
+  user-select: none !important;
 }
 
 .flexlayout__tab_button:hover {
   background-color: #f1f5f9 !important;
   color: #1677ff !important;
+  border-color: transparent !important;
+  transition: background-color 0.08s ease !important;
 }
 
+/* 현재 선택된 탭만 테두리 선 표시 (상단 2px 포인트 블루, 배경 흰색, 하단 경계 일체화) */
 .flexlayout__tab_button--selected {
   background-color: #ffffff !important;
+  border: 1px solid #d9dfe8 !important;
   border-top: 2px solid #1677ff !important;
-  border-color: #d9dfe8 #d9dfe8 transparent #d9dfe8 !important;
+  border-bottom: 1px solid #ffffff !important;
   color: #1677ff !important;
   font-weight: 600 !important;
+  position: relative !important;
+  z-index: 2 !important;
+  transition: none !important; /* 애니메이션 제거 */
+  animation: none !important;
+}
+
+.flexlayout__tab_button--selected:hover {
+  background-color: #ffffff !important;
+  border-color: #d9dfe8 !important;
+  border-top-color: #1677ff !important;
+  border-bottom-color: #ffffff !important;
 }
 
 /* 탭 바 헤더 (34px 슬림 헤더) */
@@ -570,10 +604,43 @@ EOF
   color: #ef4444 !important;
 }
 
-/* 탭 내부 콘텐츠 영역: 브라우저/모니터 우측 외곽 스크롤바 방지 (뷰포트 피팅) */
+/* 탭 내부 콘텐츠 영역: 브라우저/모니터 우측 외곽 스크롤바 방지 (뷰포트 피팅 및 탭 전환 즉각 반응) */
 .flexlayout__tab {
   overflow: hidden !important;
   box-sizing: border-box !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+/* 탭셋 헤더 우측 툴바 (모든 탭 닫기, 최대화/복원 버튼) */
+.flexlayout__tab_toolbar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding-right: 8px !important;
+  --color-icon: #94a3b8;
+}
+
+.flexlayout-toolbar-custom-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 4px !important;
+  border: none !important;
+  background: transparent !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  transition: all 0.15s ease !important;
+  user-select: none !important;
+}
+
+.flexlayout-toolbar-custom-btn:hover {
+  background-color: #e2e8f0 !important;
+  color: #334155 !important;
+  --color-icon: #334155;
 }
 EOF
 
@@ -674,14 +741,23 @@ EOF
 
 export const SETTINGS_STORAGE_KEY = 'asseterp_settings';
 
+export interface SavedLayoutItem {
+  id: string;
+  name: string;
+  createdAt: string;
+  modelJson: any;
+}
+
 export interface AppSettings {
   menu23_font_size: number;
   flexlayout_model?: any;
+  saved_layouts?: SavedLayoutItem[];
   [key: string]: any;
 }
 
 export const defaultAppSettings: AppSettings = {
   menu23_font_size: 0,
+  saved_layouts: [],
 };
 
 function migrateLegacySettings(settings: Partial<AppSettings>): AppSettings {
@@ -782,6 +858,35 @@ export const appSettingsStorage = {
     } catch (e) {
       console.error('[appSettingsStorage] 초기화 실패:', e);
     }
+  },
+
+  getSavedLayouts(): SavedLayoutItem[] {
+    return this.get('saved_layouts', []) || [];
+  },
+
+  saveLayout(name: string, modelJson: any): SavedLayoutItem {
+    const list = this.getSavedLayouts();
+    const cleanName = name.trim() || `레이아웃 ${list.length + 1}`;
+    const newItem: SavedLayoutItem = {
+      id: `layout_${Date.now()}`,
+      name: cleanName,
+      createdAt: new Date().toLocaleString('ko-KR', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      modelJson,
+    };
+    const updated = [newItem, ...list];
+    this.set('saved_layouts', updated);
+    return newItem;
+  },
+
+  deleteSavedLayout(id: string): void {
+    const list = this.getSavedLayouts();
+    const updated = list.filter((item) => item.id !== id);
+    this.set('saved_layouts', updated);
   },
 };
 
@@ -1223,8 +1328,13 @@ export const mockComplianceList: ComplianceItem[] = [
   },
 ];
 
+let cached10kAssetData: LargeAssetItem[] | null = null;
+
 // 10,000건 이상의 고성능 대용량 데이터 생성기 (AgGrid 가상 스크롤 테스트용)
 export function generateLargeAssetData(count: number = 10000): LargeAssetItem[] {
+  if (count === 10000 && cached10kAssetData) {
+    return cached10kAssetData;
+  }
   const categories = ['IT전산장비', '네트워크서버', '사무가구', '업무용차량', '소프트웨어라이선스', '연구개발장비'];
   const depts = ['IT개발실', '자산운용팀', '기획조정실', '컴플라이언스팀', '재무회계팀', '금융영업부', '리스크관리팀'];
   const managers = ['김도영', '김승주', '박동진', '배주한', '정영주', '김상환', '이용희', '천영임', '한송이'];
@@ -1259,14 +1369,17 @@ export function generateLargeAssetData(count: number = 10000): LargeAssetItem[] 
       complianceChecked: i % 3 === 0,
     };
   }
+  if (count === 10000) {
+    cached10kAssetData = items;
+  }
   return items;
 }
 
 EOF
 
-    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/layout/TopBar.tsx"
-import React from 'react';
-import { Input, Avatar, Dropdown, MenuProps, Tooltip } from 'antd';
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/components/TopBar.tsx"
+import React, { useState, useMemo } from 'react';
+import { Input, Avatar, Dropdown, MenuProps, Tooltip, AutoComplete, Modal, Popconfirm, message, Tag } from 'antd';
 import {
   SearchOutlined,
   BulbOutlined,
@@ -1281,19 +1394,211 @@ import {
   MenuUnfoldOutlined,
   MenuFoldOutlined,
   UnorderedListOutlined,
+  AppstoreOutlined,
+  PlusOutlined,
+  DeleteOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
+import { MenuLevel_1, MenuLevel_3 } from '../types';
+import { menuLevel_1_List } from '../mock/data';
+import { SavedLayoutItem } from '../utils/storage';
 
 interface TopBarProps {
-  onSearch?: (term: string) => void;
   sidebarPinned: boolean;
   onToggleSidebarPin: () => void;
+  onOpenScreen?: (item: MenuLevel_3, parent: MenuLevel_1) => void;
+  savedLayouts?: SavedLayoutItem[];
+  onSaveNamedLayout?: (name: string) => void;
+  onLoadNamedLayout?: (item: SavedLayoutItem) => void;
+  onDeleteNamedLayout?: (id: string) => void;
+  onResetLayout?: () => void;
+}
+
+interface ScreenSearchItem {
+  code: string;
+  title: string;
+  categoryTitle: string;
+  parentLevel1: MenuLevel_1;
+  item: MenuLevel_3;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
-  onSearch,
   sidebarPinned,
   onToggleSidebarPin,
+  onOpenScreen,
+  savedLayouts = [],
+  onSaveNamedLayout,
+  onLoadNamedLayout,
+  onDeleteNamedLayout,
+  onResetLayout,
 }) => {
+  const [searchValue, setSearchValue] = useState('');
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [newLayoutName, setNewLayoutName] = useState('');
+
+  const allScreens: ScreenSearchItem[] = useMemo(() => {
+    const list: ScreenSearchItem[] = [];
+    for (const m1 of menuLevel_1_List) {
+      for (const grp of m1.groups) {
+        for (const item of grp.items) {
+          list.push({
+            code: item.code,
+            title: item.title,
+            categoryTitle: m1.title,
+            parentLevel1: m1,
+            item,
+          });
+        }
+      }
+    }
+    return list;
+  }, []);
+
+  const searchOptions = useMemo(() => {
+    const term = searchValue.trim().toLowerCase();
+    if (!term) return [];
+    return allScreens
+      .filter((s) => s.code.toLowerCase().includes(term) || s.title.toLowerCase().includes(term))
+      .slice(0, 10)
+      .map((s) => ({
+        value: s.code,
+        label: (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>
+              <Tag color="blue" style={{ marginRight: 6, fontSize: 11, padding: '0 4px' }}>
+                {s.code}
+              </Tag>
+              <span style={{ fontWeight: 500, fontSize: 12 }}>{s.title}</span>
+            </span>
+            <span style={{ fontSize: 11, color: '#8c8c8c' }}>{s.categoryTitle}</span>
+          </div>
+        ),
+        screen: s,
+      }));
+  }, [searchValue, allScreens]);
+
+  const handleSelectScreen = (code: string) => {
+    const found = allScreens.find((s) => s.code === code);
+    if (found && onOpenScreen) {
+      onOpenScreen(found.item, found.parentLevel1);
+      message.success(`[${found.code}] ${found.title} 화면을 열었습니다.`);
+      setSearchValue('');
+    }
+  };
+
+  const handleSearchEnter = () => {
+    const term = searchValue.trim().toLowerCase();
+    if (!term) return;
+
+    let found = allScreens.find((s) => s.code.toLowerCase() === term);
+    if (!found) {
+      found = allScreens.find((s) => s.title.toLowerCase() === term);
+    }
+    if (!found) {
+      found = allScreens.find(
+        (s) => s.code.toLowerCase().includes(term) || s.title.toLowerCase().includes(term)
+      );
+    }
+
+    if (found && onOpenScreen) {
+      onOpenScreen(found.item, found.parentLevel1);
+      message.success(`[${found.code}] ${found.title} 화면을 열었습니다.`);
+      setSearchValue('');
+    } else {
+      message.warning(`화면번호 또는 메뉴 '${searchValue}'을(를) 찾을 수 없습니다.`);
+    }
+  };
+
+  const handleSaveLayoutConfirm = () => {
+    if (!newLayoutName.trim()) {
+      message.warning('레이아웃 이름을 입력해 주세요.');
+      return;
+    }
+    onSaveNamedLayout?.(newLayoutName.trim());
+    setNewLayoutName('');
+    setIsSaveModalOpen(false);
+  };
+
+  const layoutMenuItems: MenuProps['items'] = [
+    {
+      key: 'save-current',
+      icon: <PlusOutlined style={{ color: '#1677ff' }} />,
+      label: '현재 레이아웃 이름 지정 저장...',
+      onClick: () => {
+        setNewLayoutName(`화면배치 ${savedLayouts.length + 1}`);
+        setIsSaveModalOpen(true);
+      },
+    },
+    { type: 'divider' },
+    {
+      key: 'saved-group',
+      type: 'group',
+      label: `저장된 레이아웃 목록 (${savedLayouts.length})`,
+      children:
+        savedLayouts.length > 0
+          ? savedLayouts.map((item) => ({
+              key: item.id,
+              label: (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    minWidth: 220,
+                    gap: 8,
+                  }}
+                >
+                  <div
+                    style={{
+                      flex: 1,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => onLoadNamedLayout?.(item)}
+                  >
+                    <span style={{ fontWeight: 500, fontSize: 13 }}>{item.name}</span>
+                    <span style={{ fontSize: 11, color: '#8c8c8c', marginLeft: 8 }}>
+                      {item.createdAt}
+                    </span>
+                  </div>
+                  <Popconfirm
+                    title="레이아웃 삭제"
+                    description={`'${item.name}'을(를) 삭제하시겠습니까?`}
+                    onConfirm={(e) => {
+                      e?.stopPropagation();
+                      onDeleteNamedLayout?.(item.id);
+                    }}
+                    onCancel={(e) => e?.stopPropagation()}
+                    okText="삭제"
+                    cancelText="취소"
+                  >
+                    <DeleteOutlined
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ color: '#ff4d4f', fontSize: 12, padding: '2px 4px', cursor: 'pointer' }}
+                    />
+                  </Popconfirm>
+                </div>
+              ),
+            }))
+          : [
+              {
+                key: 'no-layouts',
+                disabled: true,
+                label: <span style={{ color: '#8c8c8c', fontSize: 12 }}>저장된 레이아웃이 없습니다</span>,
+              },
+            ],
+    },
+    { type: 'divider' },
+    {
+      key: 'reset-default',
+      icon: <ReloadOutlined />,
+      label: '기본 레이아웃으로 초기화',
+      onClick: () => onResetLayout?.(),
+    },
+  ];
+
   const userMenuItems: MenuProps['items'] = [
     { key: 'profile', icon: <UserOutlined />, label: '내 정보 수정' },
     { key: 'setting', icon: <SettingOutlined />, label: '개인 환경설정' },
@@ -1302,150 +1607,210 @@ export const TopBar: React.FC<TopBarProps> = ({
   ];
 
   return (
-    <header
-      style={{
-        height: 50,
-        background: 'linear-gradient(90deg, #1872b7 0%, #1782c5 45%, #009ab8 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 16px',
-        color: '#fff',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-        zIndex: 1000,
-        position: 'relative',
-      }}
-    >
-      {/* Left section: Logo, Search */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div
-          onClick={onToggleSidebarPin}
-          style={{
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            userSelect: 'none',
-          }}
-          title={sidebarPinned ? '메뉴 고정 해제' : '메뉴 고정'}
-        >
-          {sidebarPinned ? (
-            <MenuFoldOutlined style={{ fontSize: 18, color: '#fff' }} />
-          ) : (
-            <MenuUnfoldOutlined style={{ fontSize: 18, color: '#fff' }} />
-          )}
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, userSelect: 'none' }}>
-          <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: -0.5, color: '#fff' }}>
-            Asset-ERP
-          </span>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: 400 }}>
-            All-in-One System
-          </span>
-          <UnorderedListOutlined style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, marginLeft: 2 }} />
-        </div>
-
-        {/* Rounded pill search bar matching main1.png */}
-        <div style={{ marginLeft: 16 }}>
-          <Input
-            placeholder="화면번호/메뉴명/기능설명"
-            prefix={<SearchOutlined style={{ color: '#8c8c8c' }} />}
-            allowClear
-            onChange={(e) => onSearch?.(e.target.value)}
+    <>
+      <header
+        style={{
+          height: 50,
+          background: 'linear-gradient(90deg, #1872b7 0%, #1782c5 45%, #009ab8 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 16px',
+          color: '#fff',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+          zIndex: 1000,
+          position: 'relative',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div
+            onClick={onToggleSidebarPin}
             style={{
-              width: 250,
-              borderRadius: 20,
-              fontSize: 12,
-              background: '#fff',
-              border: 'none',
-              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.12)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              userSelect: 'none',
             }}
-          />
-        </div>
-      </div>
+            title={sidebarPinned ? '메뉴 고정 해제' : '메뉴 고정'}
+          >
+            {sidebarPinned ? (
+              <MenuFoldOutlined style={{ fontSize: 18, color: '#fff' }} />
+            ) : (
+              <MenuUnfoldOutlined style={{ fontSize: 18, color: '#fff' }} />
+            )}
+          </div>
 
-      {/* Right section: Help, User, Messenger/Tool icons */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-        <Tooltip title="온라인 도움말 / 아이디어 제안" placement="bottom">
-          <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
-            <BulbOutlined
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, userSelect: 'none' }}>
+            <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: -0.5, color: '#fff' }}>
+              Asset-ERP
+            </span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: 400 }}>
+              All-in-One System
+            </span>
+            <UnorderedListOutlined style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, marginLeft: 2 }} />
+          </div>
+
+          <div style={{ marginLeft: 12 }}>
+            <AutoComplete
+              value={searchValue}
+              options={searchOptions}
+              onSelect={handleSelectScreen}
+              onChange={setSearchValue}
+              style={{ width: 240 }}
+            >
+              <Input
+                placeholder="화면번호/메뉴명 (Enter)"
+                prefix={<SearchOutlined style={{ color: '#8c8c8c' }} />}
+                onPressEnter={handleSearchEnter}
+                allowClear
+                style={{
+                  borderRadius: 20,
+                  fontSize: 12,
+                  background: '#fff',
+                  border: 'none',
+                  boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.12)',
+                }}
+              />
+            </AutoComplete>
+          </div>
+
+          <Dropdown menu={{ items: layoutMenuItems }} trigger={['click']} placement="bottomLeft">
+            <div
               style={{
-                fontSize: 18,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '4px 10px',
+                borderRadius: 14,
+                backgroundColor: 'rgba(255, 255, 255, 0.16)',
+                fontSize: 12,
+                fontWeight: 500,
+                userSelect: 'none',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
                 color: '#fff',
-                transition: 'transform 0.2s',
+                transition: 'all 0.15s ease',
               }}
-            />
-          </span>
-        </Tooltip>
+              title="화면 레이아웃 저장 및 불러오기"
+            >
+              <AppstoreOutlined style={{ fontSize: 13 }} />
+              <span>화면 레이아웃</span>
+              <DownOutlined style={{ fontSize: 9, opacity: 0.8 }} />
+            </div>
+          </Dropdown>
+        </div>
 
-        {/* User Profile dropdown */}
-        <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+          <Tooltip title="온라인 도움말 / 아이디어 제안" placement="bottom">
+            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <BulbOutlined
+                style={{
+                  fontSize: 18,
+                  color: '#fff',
+                  transition: 'transform 0.2s',
+                }}
+              />
+            </span>
+          </Tooltip>
+
+          <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                cursor: 'pointer',
+                padding: '4px 8px',
+                borderRadius: 4,
+                backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                userSelect: 'none',
+              }}
+            >
+              <Avatar
+                size={26}
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.35)', color: '#fff' }}
+                icon={<UserOutlined />}
+              />
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>IT개발실 김도영님</span>
+              <DownOutlined style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)' }} />
+            </div>
+          </Dropdown>
+
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 8,
-              cursor: 'pointer',
-              padding: '4px 8px',
-              borderRadius: 4,
-              backgroundColor: 'rgba(255, 255, 255, 0.12)',
-              userSelect: 'none',
+              gap: 14,
+              borderLeft: '1px solid rgba(255,255,255,0.25)',
+              paddingLeft: 14,
             }}
           >
-            <Avatar
-              size={26}
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.35)', color: '#fff' }}
-              icon={<UserOutlined />}
-            />
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>IT개발실 김도영님</span>
-            <DownOutlined style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)' }} />
+            <Tooltip title="AI 어시스턴트 (Beta)" placement="bottom">
+              <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+                <RobotOutlined style={{ fontSize: 17, color: '#fff' }} />
+              </span>
+            </Tooltip>
+            <Tooltip title="사내 메신저" placement="bottom">
+              <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+                <MessageOutlined style={{ fontSize: 17, color: '#fff' }} />
+              </span>
+            </Tooltip>
+            <Tooltip title="업무 전송 / 쪽지" placement="bottom">
+              <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+                <SendOutlined style={{ fontSize: 17, color: '#fff' }} />
+              </span>
+            </Tooltip>
+            <Tooltip title="사내 공지사항" placement="bottom">
+              <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+                <SoundOutlined style={{ fontSize: 17, color: '#fff' }} />
+              </span>
+            </Tooltip>
+            <Tooltip title="사용자 정보" placement="bottom">
+              <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+                <UserOutlined style={{ fontSize: 17, color: '#fff' }} />
+              </span>
+            </Tooltip>
+            <Tooltip title="시스템 설정" placement="bottom">
+              <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+                <SettingOutlined style={{ fontSize: 17, color: '#fff' }} />
+              </span>
+            </Tooltip>
+            <Tooltip title="로그아웃" placement="bottomRight">
+              <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+                <PoweroffOutlined style={{ fontSize: 17, color: '#fff' }} />
+              </span>
+            </Tooltip>
           </div>
-        </Dropdown>
-
-        {/* Tool action icons from screenshot */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, borderLeft: '1px solid rgba(255,255,255,0.25)', paddingLeft: 14 }}>
-          <Tooltip title="AI 어시스턴트 (Beta)" placement="bottom">
-            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
-              <RobotOutlined style={{ fontSize: 17, color: '#fff' }} />
-            </span>
-          </Tooltip>
-          <Tooltip title="사내 메신저" placement="bottom">
-            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
-              <MessageOutlined style={{ fontSize: 17, color: '#fff' }} />
-            </span>
-          </Tooltip>
-          <Tooltip title="업무 전송 / 쪽지" placement="bottom">
-            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
-              <SendOutlined style={{ fontSize: 17, color: '#fff' }} />
-            </span>
-          </Tooltip>
-          <Tooltip title="사내 공지사항" placement="bottom">
-            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
-              <SoundOutlined style={{ fontSize: 17, color: '#fff' }} />
-            </span>
-          </Tooltip>
-          <Tooltip title="사용자 정보" placement="bottom">
-            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
-              <UserOutlined style={{ fontSize: 17, color: '#fff' }} />
-            </span>
-          </Tooltip>
-          <Tooltip title="시스템 설정" placement="bottom">
-            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
-              <SettingOutlined style={{ fontSize: 17, color: '#fff' }} />
-            </span>
-          </Tooltip>
-          <Tooltip title="로그아웃" placement="bottomRight">
-            <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
-              <PoweroffOutlined style={{ fontSize: 17, color: '#fff' }} />
-            </span>
-          </Tooltip>
         </div>
-      </div>
-    </header>
+      </header>
+
+      <Modal
+        title="현재 화면 레이아웃 저장"
+        open={isSaveModalOpen}
+        onOk={handleSaveLayoutConfirm}
+        onCancel={() => setIsSaveModalOpen(false)}
+        okText="저장"
+        cancelText="취소"
+        destroyOnClose
+      >
+        <div style={{ marginBottom: 12, color: '#595959', fontSize: 13 }}>
+          현재 분할된 화면과 열려 있는 탭들의 배치를 이름으로 저장합니다.
+        </div>
+        <Input
+          placeholder="레이아웃 이름 (예: 기본 업무 3분할, 당직점검 배치)"
+          value={newLayoutName}
+          onChange={(e) => setNewLayoutName(e.target.value)}
+          onPressEnter={handleSaveLayoutConfirm}
+          autoFocus
+        />
+      </Modal>
+    </>
   );
 };
 EOF
+    cp "$TARGET_DIR/frontend/src/components/TopBar.tsx" "$TARGET_DIR/frontend/src/components/layout/TopBar.tsx" 2>/dev/null || true
+
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/components/layout/StatusBar.tsx"
 import React, { useState, useEffect } from 'react';
@@ -3773,6 +4138,14 @@ interface LargeDataViewProps {
   menuCode?: string;
 }
 
+let cached10kStats: {
+  total: number;
+  totalPrice: string;
+  normalCount: number;
+  repairCount: number;
+  discardCount: number;
+} | null = null;
+
 export const LargeDataView: React.FC<LargeDataViewProps> = ({
   title = '대용량 자산 마스터 관리 (AgGrid Community)',
   menuCode = '1701',
@@ -3801,6 +4174,9 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
 
   const stats = useMemo(() => {
     const total = rowData.length;
+    if (total === 10000 && cached10kStats) {
+      return cached10kStats;
+    }
     let totalPrice = 0;
     let normalCount = 0;
     let repairCount = 0;
@@ -3813,13 +4189,17 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
       else if (rowData[i].status === '폐기예정') discardCount++;
     }
 
-    return {
+    const calculated = {
       total,
       totalPrice: (totalPrice / 100000000).toFixed(1), // 억원 단위
       normalCount,
       repairCount,
       discardCount,
     };
+    if (total === 10000) {
+      cached10kStats = calculated;
+    }
+    return calculated;
   }, [rowData]);
 
   const filteredRowData = useMemo(() => {
@@ -4112,12 +4492,795 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
 EOF
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/App.tsx"
-import { MainLayout } from './components/layout/MainLayout';
+import { useState, useEffect, useRef } from 'react';
+import { Button, Tooltip, Tag, Popconfirm, message, Dropdown, MenuProps } from 'antd';
+import {
+  SplitCellsOutlined,
+  InsertRowBelowOutlined,
+  SaveOutlined,
+  ReloadOutlined,
+  InfoCircleOutlined,
+} from '@ant-design/icons';
+import {
+  Layout,
+  Model,
+  Actions,
+  TabNode,
+  TabSetNode,
+  BorderNode,
+  ITabSetRenderValues,
+  IJsonModel,
+  DockLocation,
+} from 'flexlayout-react';
+import './flexlayout-custom.css';
+
+import { TopBar } from './components/TopBar';
+import { LeftMenuBar } from './components/LeftMenuBar';
+import { EmployeePanel } from './components/EmployeePanel';
+import { StatusBar } from './components/StatusBar';
+import { MyPageCalendar } from './components/mypage/MyPageCalendar';
+import {
+  ScheduleGridBox,
+  DayListBox,
+  ApprovalGridBox,
+  ComplianceGridBox,
+} from './components/mypage/MyPageGrids';
+import { LargeDataView } from './components/LargeDataView';
+import { MenuLevel_1, MenuLevel_3 } from './types';
+import { appSettingsStorage, SavedLayoutItem } from './utils/storage';
+
+const defaultLayoutJson: IJsonModel = {
+  global: {
+    tabEnableClose: true,
+    tabSetEnableMaximize: false,
+    tabSetEnableClose: true,
+    tabSetEnableCloseButton: false,
+    tabSetEnableDeleteWhenEmpty: true,
+    tabEnableRename: false,
+    tabEnableScrollbars: false,
+    tabSetEnableDivide: true,
+    tabSetEnableDrop: true,
+    tabSetEnableDrag: true,
+    tabEnableDrag: true,
+    enableEdgeDock: true,
+    enableEdgeDockIndicators: true,
+    tabSetMinWidth: 240,
+    tabSetMinHeight: 160,
+  },
+  borders: [],
+  layout: {
+    type: 'row',
+    weight: 100,
+    children: [
+      {
+        type: 'tabset',
+        weight: 100,
+        id: 'main-tabset',
+        enableDivide: true,
+        enableDrop: true,
+        children: [
+          {
+            type: 'tab',
+            name: 'My Page',
+            component: 'mypage',
+            enableClose: false,
+            enableScrollbars: false,
+            id: 'tab-mypage',
+          },
+        ],
+      },
+    ],
+  },
+};
+
+function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
+  if (!json.global) {
+    json.global = {};
+  }
+  json.global.tabSetEnableClose = true;
+  json.global.tabSetEnableCloseButton = false;
+  json.global.tabSetEnableDeleteWhenEmpty = true;
+  json.global.tabEnableScrollbars = false;
+  json.global.tabSetEnableMaximize = false;
+  json.global.tabSetEnableDivide = true;
+  json.global.tabSetEnableDrop = true;
+  json.global.tabSetEnableDrag = true;
+  json.global.tabEnableDrag = true;
+  json.global.enableEdgeDock = true;
+  json.global.enableEdgeDockIndicators = true;
+
+  const fixNode = (node: any) => {
+    if (!node) return;
+    if (node.type === 'tabset') {
+      if (node.enableClose === false) delete node.enableClose;
+      if (node.enableDeleteWhenEmpty === false) delete node.enableDeleteWhenEmpty;
+      if (node.maximized) delete node.maximized;
+      node.enableMaximize = false;
+      node.enableDivide = true;
+      node.enableDrop = true;
+    }
+    if (node.type === 'tab') {
+      node.enableScrollbars = false;
+    }
+    if (Array.isArray(node.children)) {
+      node.children.forEach(fixNode);
+    }
+  };
+
+  if (json.layout) {
+    fixNode(json.layout);
+  }
+  return json;
+}
+
+function getInitialModel(): Model {
+  const savedLayout = appSettingsStorage.get('flexlayout_model');
+  if (savedLayout) {
+    try {
+      const m = Model.fromJson(sanitizeLayoutJson(savedLayout));
+      const maxTs = m.getMaximizedTabset();
+      if (maxTs) {
+        m.doAction(Actions.maximizeToggle(maxTs.getId()));
+      }
+      return m;
+    } catch (e) {
+      console.warn('저장된 레이아웃 복원 실패, 기본값 사용:', e);
+    }
+  }
+  return Model.fromJson(defaultLayoutJson);
+}
 
 export default function App() {
-  return <MainLayout />;
+  const [selectedDay, setSelectedDay] = useState<number>(16);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>('duty');
+  const [sidebarPinned, setSidebarPinned] = useState<boolean>(true);
+  const [selectedMenuLevel_3_Code, setSelectedMenuLevel_3_Code] = useState<string>('1495');
+
+  const [model, setModel] = useState<Model>(() => getInitialModel());
+  const [savedLayouts, setSavedLayouts] = useState<SavedLayoutItem[]>(() =>
+    appSettingsStorage.getSavedLayouts()
+  );
+
+  const [contextMenu, setContextMenu] = useState<{
+    open: boolean;
+    x: number;
+    y: number;
+    tabNode: TabNode | null;
+  }>({ open: false, x: 0, y: 0, tabNode: null });
+
+  const handleSelectMenuLevel_1 = (menuId: string | null) => {
+    setActiveMenuId(menuId);
+  };
+
+  const handleSelectMenuLevel_3 = (item: MenuLevel_3, _parent: MenuLevel_1) => {
+    setSelectedMenuLevel_3_Code(item.code);
+    const tabId = `tab-${item.code}`;
+
+    const existingNode = model.getNodeById(tabId);
+    if (existingNode) {
+      model.doAction(Actions.selectTab(tabId));
+    } else {
+      const activeTabset = model.getActiveTabset() || model.getFirstTabSet();
+      const targetTabsetId = activeTabset ? activeTabset.getId() : 'main-tabset';
+
+      model.doAction(
+        Actions.addTab(
+          {
+            type: 'tab',
+            name: `${item.code} ${item.title}`,
+            component: 'largedata',
+            id: tabId,
+            config: { code: item.code, title: item.title },
+            enableClose: true,
+            enableScrollbars: false,
+          },
+          targetTabsetId,
+          DockLocation.CENTER,
+          -1,
+          true
+        )
+      );
+    }
+  };
+
+  // ── 레이아웃 변경 시 자동 로컬 스토리지(asseterp_settings) 디바운스 비동기 저장 ──
+  const saveLayoutTimerRef = useRef<number | null>(null);
+  const handleModelChange = (newModel: Model) => {
+    if (saveLayoutTimerRef.current) {
+      window.clearTimeout(saveLayoutTimerRef.current);
+    }
+    saveLayoutTimerRef.current = window.setTimeout(() => {
+      appSettingsStorage.set('flexlayout_model', newModel.toJson());
+    }, 200);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F4') {
+        e.preventDefault();
+        const maxTs = model.getMaximizedTabset();
+        if (maxTs) {
+          model.doAction(Actions.maximizeToggle(maxTs.getId()));
+        } else {
+          const target = model.getActiveTabset() || model.getFirstTabSet();
+          if (target) {
+            model.doAction(Actions.maximizeToggle(target.getId()));
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [model]);
+
+  useEffect(() => {
+    if (!contextMenu.open) return;
+    const handleOutsideClick = () => {
+      setContextMenu((prev) => ({ ...prev, open: false }));
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, [contextMenu.open]);
+
+  const handleCloseAllInTabSet = (tabset: TabSetNode) => {
+    const children = tabset.getChildren().filter((c): c is TabNode => c instanceof TabNode);
+    const closeableTabs = children.filter((t) => t.isCloseable());
+    if (closeableTabs.length === 0) {
+      message.info('닫을 수 있는 탭이 없습니다.');
+      return;
+    }
+    closeableTabs.forEach((tab) => {
+      model.doAction(Actions.deleteTab(tab.getId()));
+    });
+  };
+
+  const onRenderTabSet = (tabSetNode: TabSetNode | BorderNode, renderValues: ITabSetRenderValues) => {
+    if (!(tabSetNode instanceof TabSetNode)) return;
+    const isMax = tabSetNode.isMaximized();
+
+    renderValues.buttons.push(
+      <button
+        key="close-all"
+        type="button"
+        title="모든 탭 닫기"
+        className="flexlayout-toolbar-custom-btn"
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleCloseAllInTabSet(tabSetNode);
+        }}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="11"
+          height="11"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="lucide lucide-x"
+          aria-hidden="true"
+        >
+          <path d="M18 6 6 18"></path>
+          <path d="m6 6 12 12"></path>
+        </svg>
+      </button>,
+      <button
+        key="max-toggle"
+        type="button"
+        title={isMax ? '복원(F4)' : '최대화(F4)'}
+        className="flexlayout-toolbar-custom-btn"
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          model.doAction(Actions.maximizeToggle(tabSetNode.getId()));
+        }}
+      >
+        {isMax ? (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            style={{ width: 14, height: 14, strokeWidth: 2.5 }}
+          >
+            <path
+              stroke="var(--color-icon)"
+              d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"
+            ></path>
+          </svg>
+        ) : (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            style={{ width: 14, height: 14, strokeWidth: 2.5 }}
+          >
+            <path
+              stroke="var(--color-icon)"
+              d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"
+            ></path>
+          </svg>
+        )}
+      </button>
+    );
+  };
+
+  const handleContextMenu = (node: any, event: React.MouseEvent<HTMLElement>) => {
+    if (node instanceof TabNode) {
+      event.preventDefault();
+      event.stopPropagation();
+      setContextMenu({
+        open: true,
+        x: event.clientX,
+        y: event.clientY,
+        tabNode: node,
+      });
+    }
+  };
+
+  const getContextMenuItems = (): MenuProps['items'] => {
+    const targetTab = contextMenu.tabNode;
+    if (!targetTab) return [];
+
+    const parent = targetTab.getParent();
+    const siblings = parent
+      ? parent.getChildren().filter((c): c is TabNode => c instanceof TabNode)
+      : [];
+    const currentIndex = siblings.findIndex((s) => s.getId() === targetTab.getId());
+
+    const rightSiblings = currentIndex >= 0 ? siblings.slice(currentIndex + 1) : [];
+    const otherSiblings = currentIndex >= 0 ? siblings.filter((_, i) => i !== currentIndex) : [];
+
+    const canCloseCurrent = targetTab.isCloseable();
+    const canCloseRight = rightSiblings.some((s) => s.isCloseable());
+    const canCloseOthers = otherSiblings.some((s) => s.isCloseable());
+    const canCloseAll = siblings.some((s) => s.isCloseable());
+
+    return [
+      {
+        key: 'close-current',
+        label: '이 탭 닫기',
+        disabled: !canCloseCurrent,
+        onClick: () => {
+          if (canCloseCurrent) {
+            model.doAction(Actions.deleteTab(targetTab.getId()));
+          }
+          setContextMenu((prev) => ({ ...prev, open: false }));
+        },
+      },
+      {
+        key: 'close-right',
+        label: '오른쪽 모든 탭 닫기',
+        disabled: !canCloseRight,
+        onClick: () => {
+          rightSiblings.forEach((tab) => {
+            if (tab.isCloseable()) {
+              model.doAction(Actions.deleteTab(tab.getId()));
+            }
+          });
+          setContextMenu((prev) => ({ ...prev, open: false }));
+        },
+      },
+      {
+        key: 'close-others',
+        label: '다른 탭 모두 닫기',
+        disabled: !canCloseOthers,
+        onClick: () => {
+          otherSiblings.forEach((tab) => {
+            if (tab.isCloseable()) {
+              model.doAction(Actions.deleteTab(tab.getId()));
+            }
+          });
+          setContextMenu((prev) => ({ ...prev, open: false }));
+        },
+      },
+      {
+        type: 'divider',
+      },
+      {
+        key: 'close-all',
+        label: '전체 탭 닫기',
+        disabled: !canCloseAll,
+        danger: true,
+        onClick: () => {
+          siblings.forEach((tab) => {
+            if (tab.isCloseable()) {
+              model.doAction(Actions.deleteTab(tab.getId()));
+            }
+          });
+          setContextMenu((prev) => ({ ...prev, open: false }));
+        },
+      },
+    ];
+  };
+
+  const handleSplitRight = () => {
+    const maxTs = model.getMaximizedTabset();
+    if (maxTs) {
+      model.doAction(Actions.maximizeToggle(maxTs.getId()));
+    }
+
+    const activeTabset = model.getActiveTabset() || model.getFirstTabSet();
+    if (!activeTabset) {
+      message.warning('분할할 패널이 없습니다.');
+      return;
+    }
+    const activeTab = activeTabset.getSelectedNode();
+
+    if (activeTabset.getChildren().length <= 1) {
+      const splitTabId = 'tab-1495';
+      const existing = model.getNodeById(splitTabId);
+      if (existing) {
+        model.doAction(
+          Actions.moveNode(
+            splitTabId,
+            activeTabset.getId(),
+            DockLocation.RIGHT,
+            -1,
+            true
+          )
+        );
+      } else {
+        model.doAction(
+          Actions.addTab(
+            {
+              type: 'tab',
+              name: '1495 책무점검 현황',
+              component: 'largedata',
+              id: splitTabId,
+              config: { code: '1495', title: '책무점검 현황' },
+              enableClose: true,
+              enableScrollbars: false,
+            },
+            activeTabset.getId(),
+            DockLocation.RIGHT,
+            -1,
+            true
+          )
+        );
+      }
+      message.success('우측으로 새 작업 패널이 분할 생성되었습니다.');
+      return;
+    }
+
+    if (activeTab) {
+      model.doAction(
+        Actions.moveNode(
+          activeTab.getId(),
+          activeTabset.getId(),
+          DockLocation.RIGHT,
+          -1,
+          true
+        )
+      );
+      message.success('현재 탭이 우측 패널로 분할 이동되었습니다.');
+    }
+  };
+
+  const handleSplitBottom = () => {
+    const maxTs = model.getMaximizedTabset();
+    if (maxTs) {
+      model.doAction(Actions.maximizeToggle(maxTs.getId()));
+    }
+
+    const activeTabset = model.getActiveTabset() || model.getFirstTabSet();
+    if (!activeTabset) {
+      message.warning('분할할 패널이 없습니다.');
+      return;
+    }
+    const activeTab = activeTabset.getSelectedNode();
+
+    if (activeTabset.getChildren().length <= 1) {
+      const splitTabId = 'tab-1495';
+      const existing = model.getNodeById(splitTabId);
+      if (existing) {
+        model.doAction(
+          Actions.moveNode(
+            splitTabId,
+            activeTabset.getId(),
+            DockLocation.BOTTOM,
+            -1,
+            true
+          )
+        );
+      } else {
+        model.doAction(
+          Actions.addTab(
+            {
+              type: 'tab',
+              name: '1495 책무점검 현황',
+              component: 'largedata',
+              id: splitTabId,
+              config: { code: '1495', title: '책무점검 현황' },
+              enableClose: true,
+              enableScrollbars: false,
+            },
+            activeTabset.getId(),
+            DockLocation.BOTTOM,
+            -1,
+            true
+          )
+        );
+      }
+      message.success('하단으로 새 작업 패널이 분할 생성되었습니다.');
+      return;
+    }
+
+    if (activeTab) {
+      model.doAction(
+        Actions.moveNode(
+          activeTab.getId(),
+          activeTabset.getId(),
+          DockLocation.BOTTOM,
+          -1,
+          true
+        )
+      );
+      message.success('현재 탭이 하단 패널로 분할 이동되었습니다.');
+    }
+  };
+
+  const handleSaveNamedLayout = (name: string) => {
+    const item = appSettingsStorage.saveLayout(name, model.toJson());
+    setSavedLayouts(appSettingsStorage.getSavedLayouts());
+    message.success(`'${item.name}' 레이아웃이 저장되었습니다.`);
+  };
+
+  const handleLoadNamedLayout = (item: SavedLayoutItem) => {
+    try {
+      const sanitized = sanitizeLayoutJson(item.modelJson);
+      const m = Model.fromJson(sanitized);
+      setModel(m);
+      appSettingsStorage.set('flexlayout_model', sanitized);
+      message.success(`'${item.name}' 레이아웃을 불러왔습니다.`);
+    } catch (e) {
+      message.error('레이아웃 불러오기에 실패했습니다.');
+      console.error(e);
+    }
+  };
+
+  const handleDeleteNamedLayout = (id: string) => {
+    appSettingsStorage.deleteSavedLayout(id);
+    setSavedLayouts(appSettingsStorage.getSavedLayouts());
+    message.info('레이아웃이 삭제되었습니다.');
+  };
+
+  const handleResetLayout = () => {
+    appSettingsStorage.remove('flexlayout_model');
+    setModel(Model.fromJson(defaultLayoutJson));
+    message.info('기본 레이아웃으로 초기화되었습니다.');
+  };
+
+  const factory = (node: TabNode) => {
+    const component = node.getComponent();
+    const config = (node.getConfig() as { code?: string; title?: string }) || {};
+
+    if (component === 'mypage') {
+      return (
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            overflow: 'hidden',
+            height: '100%',
+            minHeight: 0,
+            boxSizing: 'border-box',
+          }}
+        >
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              padding: 8,
+              gap: 8,
+              overflow: 'hidden',
+              minWidth: 0,
+              minHeight: 0,
+              height: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
+            <div
+              style={{
+                width: 440,
+                minWidth: 380,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                height: '100%',
+                minHeight: 0,
+                flexShrink: 0,
+              }}
+            >
+              <MyPageCalendar
+                selectedDate={selectedDay}
+                onSelectDate={setSelectedDay}
+              />
+              <ScheduleGridBox selectedDay={selectedDay} />
+            </div>
+
+            <div
+              style={{
+                flex: 1,
+                minWidth: 420,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+              }}
+            >
+              <DayListBox />
+              <ApprovalGridBox />
+              <ComplianceGridBox />
+            </div>
+
+            <EmployeePanel />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ flex: 1, overflow: 'hidden', height: '100%', minHeight: 0, boxSizing: 'border-box' }}>
+        <LargeDataView
+          title={config.title || node.getName()}
+          menuCode={config.code || node.getId().replace('tab-', '')}
+        />
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <TopBar
+        sidebarPinned={sidebarPinned}
+        onToggleSidebarPin={() => setSidebarPinned(!sidebarPinned)}
+        onOpenScreen={handleSelectMenuLevel_3}
+        savedLayouts={savedLayouts}
+        onSaveNamedLayout={handleSaveNamedLayout}
+        onLoadNamedLayout={handleLoadNamedLayout}
+        onDeleteNamedLayout={handleDeleteNamedLayout}
+        onResetLayout={handleResetLayout}
+      />
+
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
+        <LeftMenuBar
+          activeMenuId={activeMenuId}
+          onSelectMenuLevel_1={handleSelectMenuLevel_1}
+          onSelectMenuLevel_3={handleSelectMenuLevel_3}
+          pinned={sidebarPinned}
+          onTogglePin={setSidebarPinned}
+          selectedMenuLevel_3_Code={selectedMenuLevel_3_Code}
+        />
+
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, backgroundColor: '#eef2f6' }}>
+          <div
+            style={{
+              height: 32,
+              backgroundColor: '#ffffff',
+              borderBottom: '1px solid #d9dfe8',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '0 10px',
+              flexShrink: 0,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Tag color="geekblue" icon={<InfoCircleOutlined />} style={{ fontSize: 11, margin: 0 }}>
+                💡 화면번호 입력(Enter)으로 탭 호출, 탭 헤더 우클릭(컨텍스트 메뉴), F4로 최대화/복원 가능
+              </Tag>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Tooltip title="현재 선택된 탭을 오른쪽으로 분할">
+                <Button
+                  size="small"
+                  icon={<SplitCellsOutlined style={{ color: '#1677ff' }} />}
+                  onClick={handleSplitRight}
+                  style={{ fontSize: 11, height: 24, padding: '0 8px' }}
+                >
+                  우측 분할
+                </Button>
+              </Tooltip>
+
+              <Tooltip title="현재 선택된 탭을 아래쪽으로 분할">
+                <Button
+                  size="small"
+                  icon={<InsertRowBelowOutlined style={{ color: '#1677ff' }} />}
+                  onClick={handleSplitBottom}
+                  style={{ fontSize: 11, height: 24, padding: '0 8px' }}
+                >
+                  하단 분할
+                </Button>
+              </Tooltip>
+
+              <Tooltip title="현재 화면 배치를 기본 로컬 저장소에 빠른 저장">
+                <Button
+                  size="small"
+                  icon={<SaveOutlined style={{ color: '#52c41a' }} />}
+                  onClick={() => {
+                    appSettingsStorage.set('flexlayout_model', model.toJson());
+                    message.success('현재 화면 분할 및 탭 레이아웃이 저장되었습니다.');
+                  }}
+                  style={{ fontSize: 11, height: 24, padding: '0 8px' }}
+                >
+                  빠른 저장
+                </Button>
+              </Tooltip>
+
+              <Popconfirm
+                title="레이아웃 초기화"
+                description="모든 분할을 닫고 기본 단일 화면으로 초기화하시겠습니까?"
+                onConfirm={handleResetLayout}
+                okText="초기화"
+                cancelText="취소"
+              >
+                <Button
+                  size="small"
+                  icon={<ReloadOutlined />}
+                  style={{ fontSize: 11, height: 24, padding: '0 8px' }}
+                >
+                  초기화
+                </Button>
+              </Popconfirm>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+            <Layout
+              model={model}
+              factory={factory}
+              onModelChange={handleModelChange}
+              onRenderTabSet={onRenderTabSet}
+              onContextMenu={handleContextMenu}
+              realtimeResize
+            />
+
+            <Dropdown
+              menu={{ items: getContextMenuItems() }}
+              open={contextMenu.open}
+              onOpenChange={(open) => !open && setContextMenu((prev) => ({ ...prev, open: false }))}
+              trigger={['contextMenu']}
+            >
+              <div
+                style={{
+                  position: 'fixed',
+                  left: contextMenu.x,
+                  top: contextMenu.y,
+                  width: 1,
+                  height: 1,
+                  pointerEvents: 'none',
+                  zIndex: 9999,
+                }}
+              />
+            </Dropdown>
+          </div>
+        </div>
+      </div>
+
+      <StatusBar />
+    </div>
+  );
 }
 EOF
+    cp "$TARGET_DIR/frontend/src/components/layout/LeftMenuBar.tsx" "$TARGET_DIR/frontend/src/components/LeftMenuBar.tsx" 2>/dev/null || true
+    cp "$TARGET_DIR/frontend/src/components/layout/StatusBar.tsx" "$TARGET_DIR/frontend/src/components/StatusBar.tsx" 2>/dev/null || true
+    cp "$TARGET_DIR/frontend/src/pages/mypage/components/EmployeePanel.tsx" "$TARGET_DIR/frontend/src/components/EmployeePanel.tsx" 2>/dev/null || true
+    cp "$TARGET_DIR/frontend/src/components/common/grid/LargeDataView.tsx" "$TARGET_DIR/frontend/src/components/LargeDataView.tsx" 2>/dev/null || true
+    mkdir -p "$TARGET_DIR/frontend/src/components/mypage"
+    cp "$TARGET_DIR/frontend/src/pages/mypage/"*.tsx "$TARGET_DIR/frontend/src/components/mypage/" 2>/dev/null || true
+
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/components/layout/MainLayout.tsx"
 import { useRef, useState } from 'react';

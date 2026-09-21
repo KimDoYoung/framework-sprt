@@ -13,6 +13,10 @@
 1. 왼쪽에 logo과 오른쪽에 로그아웃을 비롯한 외부 연계 프로그램의 진입점을 위한 icon메뉴를 갖는다.
 2. 화면 번호를 입력하여 workspace에 tab을 호출할 수 있다.
 3. tab set과 tab들로 구성된 화면 레이아웃을 이름을 붙여서 저장하고 불러올 수 있는 기능을 갖는다.
+4. tab header의 크기는 동일하게 한다.
+5. tab set (tab들로 구성된 판넬의)의 오른쪽에는 아래 2개의 icon을 둔다.
+<div class="flexlayout__tab_toolbar"><button title="모든 탭 닫기" class="flex items-center justify-center w-4 h-4 rounded hover:bg-gray-200 text-gray-400 hover:text-gray-700 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button><button data-layout-path="/ts1/button/max" title="최대화(F4)" class="flexlayout__tab_toolbar_button flexlayout__tab_toolbar_button-min"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--color-icon)" style="width: 1em; height: 1em; display: flex; align-items: center;"><path d="M0 0h24v24H0z" fill="none"></path><path stroke="var(--color-icon)" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"></path></svg></button></div>
+
 
 ## 2. LeftMenuBar
 

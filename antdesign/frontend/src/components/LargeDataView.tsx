@@ -19,6 +19,14 @@ interface LargeDataViewProps {
   menuCode?: string;
 }
 
+let cached10kStats: {
+  total: number;
+  totalPrice: string;
+  normalCount: number;
+  repairCount: number;
+  discardCount: number;
+} | null = null;
+
 export const LargeDataView: React.FC<LargeDataViewProps> = ({
   title = '대용량 자산 마스터 관리 (AgGrid Community)',
   menuCode = '1701',
@@ -47,6 +55,9 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
 
   const stats = useMemo(() => {
     const total = rowData.length;
+    if (total === 10000 && cached10kStats) {
+      return cached10kStats;
+    }
     let totalPrice = 0;
     let normalCount = 0;
     let repairCount = 0;
@@ -59,13 +70,17 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
       else if (rowData[i].status === '폐기예정') discardCount++;
     }
 
-    return {
+    const calculated = {
       total,
       totalPrice: (totalPrice / 100000000).toFixed(1), // 억원 단위
       normalCount,
       repairCount,
       discardCount,
     };
+    if (total === 10000) {
+      cached10kStats = calculated;
+    }
+    return calculated;
   }, [rowData]);
 
   const filteredRowData = useMemo(() => {

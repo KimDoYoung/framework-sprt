@@ -310,8 +310,13 @@ export const mockComplianceList: ComplianceItem[] = [
   },
 ];
 
+let cached10kAssetData: LargeAssetItem[] | null = null;
+
 // 10,000건 이상의 고성능 대용량 데이터 생성기 (AgGrid 가상 스크롤 테스트용)
 export function generateLargeAssetData(count: number = 10000): LargeAssetItem[] {
+  if (count === 10000 && cached10kAssetData) {
+    return cached10kAssetData;
+  }
   const categories = ['IT전산장비', '네트워크서버', '사무가구', '업무용차량', '소프트웨어라이선스', '연구개발장비'];
   const depts = ['IT개발실', '자산운용팀', '기획조정실', '컴플라이언스팀', '재무회계팀', '금융영업부', '리스크관리팀'];
   const managers = ['김도영', '김승주', '박동진', '배주한', '정영주', '김상환', '이용희', '천영임', '한송이'];
@@ -345,6 +350,9 @@ export function generateLargeAssetData(count: number = 10000): LargeAssetItem[] 
       location: loc,
       complianceChecked: i % 3 === 0,
     };
+  }
+  if (count === 10000) {
+    cached10kAssetData = items;
   }
   return items;
 }
