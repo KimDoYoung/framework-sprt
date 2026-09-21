@@ -30,6 +30,7 @@ import {
 } from './components/mypage/MyPageGrids';
 import { LargeDataView } from './components/LargeDataView';
 import { MenuLevel_1, MenuLevel_3 } from './types';
+import { appSettingsStorage } from './utils/storage';
 
 // ── 기본 레이아웃 정의 (초기 상태: My Page 1개 탭) ──
 const defaultLayoutJson: IJsonModel = {
@@ -76,8 +77,6 @@ const defaultLayoutJson: IJsonModel = {
   },
 };
 
-const STORAGE_KEY = 'asseterp_flexlayout_model';
-
 // 로컬 스토리지에 저장된 레이아웃 정제 (0개 탭 자동 소멸, 최대화 해제, 분할 허용 강제 적용)
 function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
   if (!json.global) {
@@ -119,13 +118,12 @@ function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
   return json;
 }
 
-// 로컬 스토리지에서 저장된 레이아웃 복원 또는 기본 레이아웃 로드
+// 로컬 스토리지(asseterp_settings)에서 저장된 레이아웃 복원 또는 기본 레이아웃 로드
 function getInitialModel(): Model {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
+  const savedLayout = appSettingsStorage.get('flexlayout_model');
+  if (savedLayout) {
     try {
-      const json = JSON.parse(saved);
-      const m = Model.fromJson(sanitizeLayoutJson(json));
+      const m = Model.fromJson(sanitizeLayoutJson(savedLayout));
       const maxTs = m.getMaximizedTabset();
       if (maxTs) {
         m.doAction(Actions.maximizeToggle(maxTs.getId()));
@@ -185,13 +183,9 @@ export default function App() {
     }
   };
 
-  // ── 레이아웃 변경 시 자동 로컬 스토리지 저장 ──
+  // ── 레이아웃 변경 시 자동 로컬 스토리지(asseterp_settings) 저장 ──
   const handleModelChange = (newModel: Model) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newModel.toJson()));
-    } catch (e) {
-      console.error('레이아웃 저장 실패:', e);
-    }
+    appSettingsStorage.set('flexlayout_model', newModel.toJson());
   };
 
   // ── 빠른 버튼: 현재 활성 탭을 우측으로 분할 ──
@@ -328,13 +322,13 @@ export default function App() {
 
   // ── 레이아웃 수동 저장 ──
   const handleSaveLayout = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(model.toJson()));
+    appSettingsStorage.set('flexlayout_model', model.toJson());
     message.success('현재 화면 분할 및 탭 레이아웃이 저장되었습니다.');
   };
 
   // ── 레이아웃 기본값으로 초기화 ──
   const handleResetLayout = () => {
-    localStorage.removeItem(STORAGE_KEY);
+    appSettingsStorage.remove('flexlayout_model');
     setModel(Model.fromJson(defaultLayoutJson));
     message.info('기본 레이아웃으로 초기화되었습니다.');
   };

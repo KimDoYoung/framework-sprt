@@ -196,6 +196,7 @@ if [[ "$UI_FRAMEWORK" == "antd" ]]; then
     mkdir -p "$TARGET_DIR/frontend/src/services/biz"
     mkdir -p "$TARGET_DIR/frontend/src/types"
     mkdir -p "$TARGET_DIR/frontend/src/utils"
+    mkdir -p "$TARGET_DIR/frontend/src/hooks"
     mkdir -p "$TARGET_DIR/frontend/src/mock"
 elif [[ "$UI_FRAMEWORK" == "shadcn" ]]; then
     mkdir -p "$TARGET_DIR/frontend/src/components/ui"
@@ -662,6 +663,251 @@ export interface LargeAssetItem {
   complianceChecked: boolean;
 }
 
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/utils/storage.ts"
+/**
+ * Asset-ERP 단일 통합 JSON LocalStorage 관리 라이브러리
+ * - 모든 화면 및 사용자 설정은 'asseterp_settings' 단일 키에 1개의 JSON 객체로 저장됩니다.
+ * - 개별 설정 항목(menu23_font_size, flexlayout_model 등)을 일관되게 관리합니다.
+ */
+
+export const SETTINGS_STORAGE_KEY = 'asseterp_settings';
+
+export interface AppSettings {
+  menu23_font_size: number;
+  flexlayout_model?: any;
+  [key: string]: any;
+}
+
+export const defaultAppSettings: AppSettings = {
+  menu23_font_size: 0,
+};
+
+function migrateLegacySettings(settings: Partial<AppSettings>): AppSettings {
+  let migrated = false;
+  const merged: AppSettings = { ...defaultAppSettings, ...settings };
+
+  if (typeof window !== 'undefined') {
+    const oldFont = localStorage.getItem('asseterp_font_size_offset');
+    if (oldFont !== null) {
+      try {
+        merged.menu23_font_size = JSON.parse(oldFont);
+        migrated = true;
+      } catch (e) {}
+      localStorage.removeItem('asseterp_font_size_offset');
+    }
+
+    const oldLayout = localStorage.getItem('asseterp_flexlayout_model');
+    if (oldLayout !== null) {
+      try {
+        merged.flexlayout_model = JSON.parse(oldLayout);
+        migrated = true;
+      } catch (e) {}
+      localStorage.removeItem('asseterp_flexlayout_model');
+    }
+
+    if (migrated) {
+      try {
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
+      } catch (e) {
+        console.error('[appSettingsStorage] 마이그레이션 저장 실패:', e);
+      }
+    }
+  }
+
+  return merged;
+}
+
+export const appSettingsStorage = {
+  getAll(): AppSettings {
+    if (typeof window === 'undefined') {
+      return defaultAppSettings;
+    }
+    try {
+      const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return migrateLegacySettings(parsed);
+    } catch (e) {
+      console.warn('[appSettingsStorage] 설정 파싱 실패, 기본값 사용:', e);
+      return defaultAppSettings;
+    }
+  },
+
+  get<K extends keyof AppSettings>(key: K, defaultValue?: AppSettings[K]): AppSettings[K] {
+    const all = this.getAll();
+    if (key in all && all[key] !== undefined) {
+      return all[key];
+    }
+    return defaultValue !== undefined ? defaultValue : defaultAppSettings[key];
+  },
+
+  set<K extends keyof AppSettings>(key: K, value: AppSettings[K]): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const all = this.getAll();
+      all[key] = value;
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(all));
+    } catch (e) {
+      console.error(`[appSettingsStorage] '${String(key)}' 저장 실패:`, e);
+    }
+  },
+
+  setMultiple(partial: Partial<AppSettings>): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const all = this.getAll();
+      const updated = { ...all, ...partial };
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
+    } catch (e) {
+      console.error('[appSettingsStorage] 일괄 저장 실패:', e);
+    }
+  },
+
+  remove(key: keyof AppSettings): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const all = this.getAll();
+      delete all[key];
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(all));
+    } catch (e) {
+      console.error(`[appSettingsStorage] '${String(key)}' 삭제 실패:`, e);
+    }
+  },
+
+  reset(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(defaultAppSettings));
+    } catch (e) {
+      console.error('[appSettingsStorage] 초기화 실패:', e);
+    }
+  },
+};
+
+export const appStorage = {
+  get<T>(key: string, defaultValue: T): T {
+    if (typeof window === 'undefined') return defaultValue;
+    try {
+      const raw = localStorage.getItem(`asseterp_${key}`);
+      return raw !== null ? (JSON.parse(raw) as T) : defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  },
+  set<T>(key: string, value: T): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+      localStorage.setItem(`asseterp_${key}`, JSON.stringify(value));
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  remove(key: string): void {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.removeItem(`asseterp_${key}`);
+    } catch {}
+  },
+};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/hooks/useAppSetting.ts"
+import { useState, useEffect, useCallback } from 'react';
+import {
+  AppSettings,
+  appSettingsStorage,
+  SETTINGS_STORAGE_KEY,
+} from '../utils/storage';
+
+export function useAppSetting<K extends keyof AppSettings>(
+  key: K,
+  defaultValue?: AppSettings[K]
+): [AppSettings[K], (value: AppSettings[K] | ((prev: AppSettings[K]) => AppSettings[K])) => void] {
+  const [storedValue, setStoredValue] = useState<AppSettings[K]>(() => {
+    return appSettingsStorage.get(key, defaultValue);
+  });
+
+  const setValue = useCallback(
+    (value: AppSettings[K] | ((prev: AppSettings[K]) => AppSettings[K])) => {
+      setStoredValue((prev) => {
+        const nextValue = value instanceof Function ? value(prev) : value;
+        appSettingsStorage.set(key, nextValue);
+        return nextValue;
+      });
+    },
+    [key]
+  );
+
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === SETTINGS_STORAGE_KEY && e.newValue !== null) {
+        try {
+          const parsed = JSON.parse(e.newValue) as AppSettings;
+          if (key in parsed) {
+            setStoredValue(parsed[key]);
+          }
+        } catch (err) {
+          console.warn(`[useAppSetting] 외부 변경 파싱 실패 (${String(key)}):`, err);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [key]);
+
+  return [storedValue, setValue];
+}
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/hooks/useLocalStorage.ts"
+import { useState, useEffect, useCallback } from 'react';
+import { appStorage } from '../utils/storage';
+
+export function useLocalStorage<T>(
+  key: string,
+  initialValue: T
+): [T, (value: T | ((prev: T) => T)) => void] {
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    return appStorage.get<T>(key, initialValue);
+  });
+
+  const setValue = useCallback(
+    (value: T | ((prev: T) => T)) => {
+      setStoredValue((prev) => {
+        const nextValue = value instanceof Function ? value(prev) : value;
+        appStorage.set<T>(key, nextValue);
+        return nextValue;
+      });
+    },
+    [key]
+  );
+
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      const fullKey = `asseterp_${key}`;
+      if (e.key === fullKey && e.newValue !== null) {
+        try {
+          const parsed = JSON.parse(e.newValue) as T;
+          setStoredValue(parsed);
+        } catch (err) {
+          console.warn(`[useLocalStorage] 외부 변경 이벤트 파싱 실패 (${key}):`, err);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [key]);
+
+  return [storedValue, setValue];
+}
 EOF
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/mock/data.ts"
@@ -1622,8 +1868,8 @@ export const StatusBar: React.FC = () => {
 EOF
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/components/layout/LeftMenuBar.tsx"
-import React, { useState } from 'react';
-import { Checkbox, Tag } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Tag, Tooltip, Button } from 'antd';
 import {
   FileTextOutlined,
   AuditOutlined,
@@ -1635,9 +1881,87 @@ import {
   AppstoreOutlined,
   PlusOutlined,
   MinusOutlined,
+  CaretDownOutlined,
+  CaretRightOutlined,
 } from '@ant-design/icons';
 import { MenuLevel_1, MenuLevel_3 } from '../../types';
 import { menuLevel_1_List } from '../../mock/data';
+import { useAppSetting } from '../../hooks/useAppSetting';
+
+// ── 설계 문서(설계-layout.md)에 제시된 Lucide 규격 아이콘 컴포넌트 ──
+const ChevronsDownIcon: React.FC<{ size?: number; style?: React.CSSProperties }> = ({ size = 13, style }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ display: 'inline-block', verticalAlign: 'middle', ...style }}
+  >
+    <path d="m7 6 5 5 5-5" />
+    <path d="m7 13 5 5 5-5" />
+  </svg>
+);
+
+const ChevronsUpIcon: React.FC<{ size?: number; style?: React.CSSProperties }> = ({ size = 13, style }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ display: 'inline-block', verticalAlign: 'middle', ...style }}
+  >
+    <path d="m17 11-5-5-5 5" />
+    <path d="m17 18-5-5-5 5" />
+  </svg>
+);
+
+const PinIcon: React.FC<{ size?: number; style?: React.CSSProperties }> = ({ size = 13, style }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ display: 'inline-block', verticalAlign: 'middle', ...style }}
+  >
+    <line x1="12" y1="17" x2="12" y2="22" />
+    <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1v3.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+  </svg>
+);
+
+const PinOffIcon: React.FC<{ size?: number; style?: React.CSSProperties }> = ({ size = 13, style }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ display: 'inline-block', verticalAlign: 'middle', ...style }}
+  >
+    <path d="M12 17v5" />
+    <path d="M15 9.34V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H7.89" />
+    <path d="m2 2 20 20" />
+    <path d="M9 9v1.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h11" />
+  </svg>
+);
 
 interface LeftMenuBarProps {
   activeMenuId: string | null;
@@ -1660,7 +1984,14 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
   onTogglePin,
   selectedMenuLevel_3_Code,
 }) => {
-  const [fontSizeOffset, setFontSizeOffset] = useState<number>(0);
+  const [fontSizeOffset, setFontSizeOffset] = useAppSetting('menu23_font_size', 0);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [isPanelHovered, setIsPanelHovered] = useState<boolean>(false);
+
+  // 1차 메뉴 변경 시 서브 메뉴 그룹 접힘 상태 초기화 (모두 펼침)
+  useEffect(() => {
+    setCollapsedGroups(new Set());
+  }, [activeMenuId]);
 
   // 1차 메뉴 아이콘 렌더링
   const renderIcon = (iconName: string, active: boolean) => {
@@ -1689,19 +2020,54 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
 
   // 1차 메뉴(MenuLevel_1) 아이콘 클릭 핸들러
   // - 현재 펼쳐진 상태에서 동일한 아이콘을 다시 클릭하면 2,3차 메뉴 패널 닫힘 (토글)
-  // - '고정'이 체크되어 있으면 토글로 닫히지 않고 열린 상태 유지
   // - 다른 1차 메뉴 아이콘이 클릭되면 무조건 해당 메뉴로 오픈
   const handleMenuLevel_1_Click = (menuId: string) => {
     if (activeMenuId === menuId) {
-      if (!pinned) {
-        onSelectMenuLevel_1(null);
-      }
+      onSelectMenuLevel_1(null);
     } else {
       onSelectMenuLevel_1(menuId);
     }
   };
 
   const activeMenuObj = menuLevel_1_List.find((m) => m.id === activeMenuId);
+
+  // 3차 메뉴(MenuLevel_3) 항목 클릭 핸들러
+  // - 선택된 메뉴 항목을 상위로 전달하여 탭 열기/활성화
+  // - '고정(pinned)' 상태가 아니면 3차 메뉴 선택 시 메뉴23 패널을 자동으로 숨김 (설계-layout.md 규칙)
+  const handleSelectMenuLevel_3_Item = (item: MenuLevel_3) => {
+    if (activeMenuObj) {
+      onSelectMenuLevel_3(item, activeMenuObj);
+    }
+    if (!pinned) {
+      onSelectMenuLevel_1(null);
+    }
+  };
+
+  // 개별 2차 메뉴 그룹 접기/펼치기 토글
+  const handleToggleGroup = (groupCode: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupCode)) {
+        next.delete(groupCode);
+      } else {
+        next.add(groupCode);
+      }
+      return next;
+    });
+  };
+
+  // 모두 펼치기
+  const handleExpandAll = () => {
+    setCollapsedGroups(new Set());
+  };
+
+  // 모두 접기
+  const handleCollapseAll = () => {
+    if (activeMenuObj) {
+      const allCodes = activeMenuObj.groups.map((g) => g.groupCode);
+      setCollapsedGroups(new Set(allCodes));
+    }
+  };
 
   return (
     <div style={{ display: 'flex', height: '100%', zIndex: 900 }}>
@@ -1760,6 +2126,8 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
       {/* ── MenuLevel_2 / MenuLevel_3: 2단계 그룹 및 3단계 항목 패널 (230px, White & Clean) ── */}
       {activeMenuObj && (
         <div
+          onMouseEnter={() => setIsPanelHovered(true)}
+          onMouseLeave={() => setIsPanelHovered(false)}
           style={{
             width: 230,
             backgroundColor: '#ffffff',
@@ -1776,108 +2144,239 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
             style={{
               flex: 1,
               overflowY: 'auto',
-              padding: '8px 0',
+              padding: '6px 0',
             }}
           >
-            {activeMenuObj.groups.map((group) => (
-              <div key={group.groupCode} style={{ marginBottom: 12 }}>
-                {/* MenuLevel_2 헤더 */}
-                <div
-                  style={{
-                    backgroundColor: '#eef2f8',
-                    color: '#2a3b5c',
-                    fontWeight: 700,
-                    fontSize: 12 + fontSizeOffset,
-                    padding: '6px 14px',
-                    borderTop: '1px solid #e1e7f0',
-                    borderBottom: '1px solid #e1e7f0',
-                  }}
-                >
-                  {group.groupTitle}
-                </div>
+            {activeMenuObj.groups.map((group, groupIndex) => {
+              const isCollapsed = collapsedGroups.has(group.groupCode);
+              const isFirstGroup = groupIndex === 0;
 
-                {/* MenuLevel_3 항목들 */}
-                <div style={{ padding: '4px 0' }}>
-                  {group.items.map((item) => {
-                    const isItemSelected = selectedMenuLevel_3_Code === item.code;
-                    return (
-                      <div
-                        key={item.code}
-                        onClick={() => onSelectMenuLevel_3(item, activeMenuObj)}
+              return (
+                <div key={group.groupCode} style={{ marginBottom: isCollapsed ? 4 : 8 }}>
+                  {/* MenuLevel_2 헤더 */}
+                  <div
+                    onClick={() => handleToggleGroup(group.groupCode)}
+                    style={{
+                      backgroundColor: '#eef2f8',
+                      color: '#2a3b5c',
+                      fontWeight: 700,
+                      fontSize: 12 + fontSizeOffset,
+                      padding: '4px 8px 4px 10px',
+                      borderTop: '1px solid #e1e7f0',
+                      borderBottom: '1px solid #e1e7f0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      transition: 'background-color 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#e4ecf7';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#eef2f8';
+                    }}
+                  >
+                    {/* 좌측: 펼침/접힘 화살표 및 그룹 제목 */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        minWidth: 0,
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {isCollapsed ? (
+                        <CaretRightOutlined style={{ fontSize: 10, color: '#627d98', flexShrink: 0 }} />
+                      ) : (
+                        <CaretDownOutlined style={{ fontSize: 10, color: '#627d98', flexShrink: 0 }} />
+                      )}
+                      <span
                         style={{
-                          padding: '6px 14px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          cursor: 'pointer',
-                          fontSize: 12 + fontSizeOffset,
-                          color: isItemSelected ? '#1677ff' : '#4a5568',
-                          fontWeight: isItemSelected ? 600 : 400,
-                          backgroundColor: isItemSelected ? '#e6f4ff' : 'transparent',
-                          transition: 'background-color 0.12s',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isItemSelected) {
-                            e.currentTarget.style.backgroundColor = '#f7fafc';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isItemSelected) {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                          }
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ color: '#8c9ba5', fontSize: 11, fontFamily: 'monospace' }}>
-                            {item.code}
-                          </span>
-                          <span>{item.title}</span>
-                        </div>
-                        {item.badge && (
-                          <Tag color="cyan" style={{ fontSize: 10, margin: 0, padding: '0 4px' }}>
-                            {item.badge}
-                          </Tag>
-                        )}
+                        {group.groupTitle}
+                      </span>
+                    </div>
+
+                    {/* 첫 번째 메뉴레벨2 우측: '모두펼치기', '모두접기', '고정' 3개 아이콘 */}
+                    {isFirstGroup && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 2,
+                          flexShrink: 0,
+                          marginLeft: 4,
+                        }}
+                      >
+                        <Tooltip title="모두 펼치기" placement="top">
+                          <Button
+                            type="text"
+                            size="small"
+                            onClick={handleExpandAll}
+                            style={{
+                              width: 20,
+                              height: 20,
+                              padding: 0,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#627d98',
+                            }}
+                            icon={<ChevronsDownIcon size={13} />}
+                          />
+                        </Tooltip>
+
+                        <Tooltip title="모두 접기" placement="top">
+                          <Button
+                            type="text"
+                            size="small"
+                            onClick={handleCollapseAll}
+                            style={{
+                              width: 20,
+                              height: 20,
+                              padding: 0,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#627d98',
+                            }}
+                            icon={<ChevronsUpIcon size={13} />}
+                          />
+                        </Tooltip>
+
+                        <Tooltip
+                          title={pinned ? '메뉴 고정 해제' : '메뉴 고정'}
+                          placement="top"
+                        >
+                          <Button
+                            type="text"
+                            size="small"
+                            onClick={() => onTogglePin(!pinned)}
+                            style={{
+                              width: 20,
+                              height: 20,
+                              padding: 0,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: pinned ? '#1677ff' : '#627d98',
+                              backgroundColor: pinned ? '#e6f4ff' : 'transparent',
+                              border: pinned ? '1px solid #91caff' : '1px solid transparent',
+                              borderRadius: 3,
+                            }}
+                            icon={
+                              pinned ? (
+                                <PinIcon size={13} style={{ color: '#1677ff' }} />
+                              ) : (
+                                <PinOffIcon size={13} style={{ color: '#627d98' }} />
+                              )
+                            }
+                          />
+                        </Tooltip>
                       </div>
-                    );
-                  })}
+                    )}
+                  </div>
+
+                  {/* MenuLevel_3 항목들 (펼쳐진 상태에서만 렌더링) */}
+                  {!isCollapsed && (
+                    <div style={{ padding: '2px 0' }}>
+                      {group.items.map((item) => {
+                        const isItemSelected = selectedMenuLevel_3_Code === item.code;
+                        return (
+                          <div
+                            key={item.code}
+                            onClick={() => handleSelectMenuLevel_3_Item(item)}
+                            style={{
+                              padding: '5px 12px 5px 18px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              cursor: 'pointer',
+                              fontSize: 12 + fontSizeOffset,
+                              color: isItemSelected ? '#1677ff' : '#4a5568',
+                              fontWeight: isItemSelected ? 600 : 400,
+                              backgroundColor: isItemSelected ? '#e6f4ff' : 'transparent',
+                              transition: 'background-color 0.12s',
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isItemSelected) {
+                                e.currentTarget.style.backgroundColor = '#f7fafc';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isItemSelected) {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ color: '#8c9ba5', fontSize: 11, fontFamily: 'monospace' }}>
+                                {item.code}
+                              </span>
+                              <span>{item.title}</span>
+                            </div>
+                            {item.badge && (
+                              <Tag color="cyan" style={{ fontSize: 10, margin: 0, padding: '0 4px' }}>
+                                {item.badge}
+                              </Tag>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* 하단 컨트롤: 폰트 확대/축소 및 '고정' 체크박스 */}
+          {/* 하단 컨트롤: 마우스 호버 시에만 나타나는 폰트 확대/축소 및 크기 초기화 */}
           <div
             style={{
-              height: 38,
-              borderTop: '1px solid #e5e9f0',
+              height: isPanelHovered ? 32 : 0,
+              minHeight: isPanelHovered ? 32 : 0,
+              opacity: isPanelHovered ? 1 : 0,
+              overflow: 'hidden',
+              borderTop: isPanelHovered ? '1px solid #e5e9f0' : '1px solid transparent',
               backgroundColor: '#f8fafc',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '0 12px',
-              fontSize: 12,
+              padding: isPanelHovered ? '0 10px' : '0 10px',
+              fontSize: 11,
+              color: '#6b7280',
               userSelect: 'none',
               flexShrink: 0,
+              transition: 'all 0.2s ease-in-out',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 11 }}>글꼴 크기</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <button
                 onClick={() => setFontSizeOffset((prev) => Math.min(prev + 1, 3))}
                 style={{
                   border: '1px solid #d1d5db',
                   background: '#fff',
                   borderRadius: 3,
-                  width: 22,
-                  height: 22,
+                  width: 20,
+                  height: 20,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  color: '#4b5563',
                 }}
                 title="글꼴 확대"
               >
-                <PlusOutlined style={{ fontSize: 10 }} />
+                <PlusOutlined style={{ fontSize: 9 }} />
               </button>
               <button
                 onClick={() => setFontSizeOffset((prev) => Math.max(prev - 1, -2))}
@@ -1885,26 +2384,37 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
                   border: '1px solid #d1d5db',
                   background: '#fff',
                   borderRadius: 3,
-                  width: 22,
-                  height: 22,
+                  width: 20,
+                  height: 20,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  color: '#4b5563',
                 }}
                 title="글꼴 축소"
               >
-                <MinusOutlined style={{ fontSize: 10 }} />
+                <MinusOutlined style={{ fontSize: 9 }} />
               </button>
+              {fontSizeOffset !== 0 && (
+                <button
+                  onClick={() => setFontSizeOffset(0)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    background: '#fff',
+                    borderRadius: 3,
+                    padding: '0 4px',
+                    height: 20,
+                    cursor: 'pointer',
+                    fontSize: 10,
+                    color: '#6b7280',
+                  }}
+                  title="글꼴 기본 크기로 초기화"
+                >
+                  기본
+                </button>
+              )}
             </div>
-
-            <Checkbox
-              checked={pinned}
-              onChange={(e) => onTogglePin(e.target.checked)}
-              style={{ fontSize: 12, fontWeight: 500, color: '#4b5563' }}
-            >
-              고정
-            </Checkbox>
           </div>
         </div>
       )}
@@ -3695,6 +4205,7 @@ import {
 import { EmployeePanel } from '../../pages/mypage/components/EmployeePanel';
 import { LargeDataView } from '../common/grid/LargeDataView';
 import { MenuLevel_1, MenuLevel_3 } from '../../types';
+import { appSettingsStorage } from '../../utils/storage';
 
 // ── 기본 레이아웃 정의 (초기 상태: My Page 1개 탭) ──
 const defaultLayoutJson: IJsonModel = {
@@ -3741,8 +4252,6 @@ const defaultLayoutJson: IJsonModel = {
   },
 };
 
-const STORAGE_KEY = 'asseterp_flexlayout_model';
-
 // 로컬 스토리지에 저장된 레이아웃 정제 (0개 탭 자동 소멸, 최대화 해제, 분할 허용 강제 적용)
 function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
   if (!json.global) {
@@ -3786,11 +4295,10 @@ function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
 
 // 로컬 스토리지에서 저장된 레이아웃 복원 또는 기본 레이아웃 로드
 function getInitialModel(): Model {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
+  const savedLayout = appSettingsStorage.get('flexlayout_model');
+  if (savedLayout) {
     try {
-      const json = JSON.parse(saved);
-      const m = Model.fromJson(sanitizeLayoutJson(json));
+      const m = Model.fromJson(sanitizeLayoutJson(savedLayout));
       const maxTs = m.getMaximizedTabset();
       if (maxTs) {
         m.doAction(Actions.maximizeToggle(maxTs.getId()));
@@ -3849,13 +4357,9 @@ export const Workspace = forwardRef<WorkspaceHandle>((_props, ref) => {
     },
   }));
 
-  // ── 레이아웃 변경 시 자동 로컬 스토리지 저장 ──
+  // ── 레이아웃 변경 시 자동 로컬 스토리지(asseterp_settings) 저장 ──
   const handleModelChange = (newModel: Model) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newModel.toJson()));
-    } catch (e) {
-      console.error('레이아웃 저장 실패:', e);
-    }
+    appSettingsStorage.set('flexlayout_model', newModel.toJson());
   };
 
   // ── 빠른 버튼: 현재 활성 탭을 우측으로 분할 ──
@@ -3992,13 +4496,13 @@ export const Workspace = forwardRef<WorkspaceHandle>((_props, ref) => {
 
   // ── 레이아웃 수동 저장 ──
   const handleSaveLayout = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(model.toJson()));
+    appSettingsStorage.set('flexlayout_model', model.toJson());
     message.success('현재 화면 분할 및 탭 레이아웃이 저장되었습니다.');
   };
 
   // ── 레이아웃 기본값으로 초기화 ──
   const handleResetLayout = () => {
-    localStorage.removeItem(STORAGE_KEY);
+    appSettingsStorage.remove('flexlayout_model');
     setModel(Model.fromJson(defaultLayoutJson));
     message.info('기본 레이아웃으로 초기화되었습니다.');
   };
