@@ -184,7 +184,7 @@ export const ScheduleGridBox: React.FC<ScheduleGridBoxProps> = ({ selectedDay })
         }
       `}</style>
 
-      {/* Ant Design Table: y축 패딩 2px 축소(6px), 5개 행(약 175px) 기준 스크롤 뷰 */}
+      {/* Ant Design Table: 2개 Tr 높이(약 56px) 추가하여 약 8개 행 표시 (scroll y: 231px) */}
       <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <Table<ScheduleItem>
           className="schedule-table"
@@ -193,7 +193,7 @@ export const ScheduleGridBox: React.FC<ScheduleGridBoxProps> = ({ selectedDay })
           columns={columns}
           size="small"
           pagination={false}
-          scroll={{ y: 175 }} // 5개 행(각 약 35px) 기준 스크롤 높이
+          scroll={{ y: 231 }} // 기존 약 6개 행에서 2개 Tr(약 56px) 확장하여 약 8개 행 스크롤 뷰
           style={{ width: '100%' }}
         />
       </div>

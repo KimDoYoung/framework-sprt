@@ -4296,16 +4296,16 @@ export const ScheduleGridBox: React.FC<ScheduleGridBoxProps> = ({ selectedDay })
       <style>{`
         /* 테이블 row 높이 미세 축소: y축 패딩을 2px 줄여 컴팩트한 행 높이 제공 (기본 8px -> 6px) */
         .schedule-table .ant-table-thead > tr > th {
-          padding-top: 6px !important;
-          padding-bottom: 6px !important;
+          padding-top: 2px !important;
+          padding-bottom: 2px !important;
         }
         .schedule-table .ant-table-tbody > tr > td {
-          padding-top: 6px !important;
-          padding-bottom: 6px !important;
+          padding-top: 2px !important;
+          padding-bottom: 2px !important;
         }
       `}</style>
 
-      {/* Ant Design Table: y축 패딩 2px 축소(6px), 5개 행(약 175px) 기준 스크롤 뷰 */}
+      {/* Ant Design Table: 2개 Tr 높이(약 56px) 추가하여 약 8개 행 표시 (scroll y: 231px) */}
       <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <Table<ScheduleItem>
           className="schedule-table"
@@ -4314,7 +4314,7 @@ export const ScheduleGridBox: React.FC<ScheduleGridBoxProps> = ({ selectedDay })
           columns={columns}
           size="small"
           pagination={false}
-          scroll={{ y: 175 }} // 5개 행(각 약 35px) 기준 스크롤 높이
+          scroll={{ y: 231 }} // 기존 약 6개 행에서 2개 Tr(약 56px) 확장하여 약 8개 행 스크롤 뷰
           style={{ width: '100%' }}
         />
       </div>
@@ -4739,8 +4739,8 @@ export const MyPageView: React.FC = () => {
           <MyPageCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
         </div>
 
-        {/* 하단: 기준일 상세 일정 그리드 (y축 패딩 축소 5개 행 기준 약 280px 고정) */}
-        <div style={{ height: 280, flexShrink: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {/* 하단: 기준일 상세 일정 그리드 (기존 280px + 2개 Tr 높이 56px = 336px 고정) */}
+        <div style={{ height: 336, flexShrink: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <ScheduleGridBox selectedDay={selectedDate} />
         </div>
       </div>

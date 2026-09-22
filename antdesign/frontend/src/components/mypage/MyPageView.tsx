@@ -41,8 +41,8 @@ export const MyPageView: React.FC = () => {
           <MyPageCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
         </div>
 
-        {/* 하단: 기준일 상세 일정 그리드 (y축 패딩 축소 5개 행 기준 약 280px 고정) */}
-        <div style={{ height: 280, flexShrink: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {/* 하단: 기준일 상세 일정 그리드 (기존 280px + 2개 Tr 높이 56px = 336px 고정) */}
+        <div style={{ height: 336, flexShrink: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <ScheduleGridBox selectedDay={selectedDate} />
         </div>
       </div>
