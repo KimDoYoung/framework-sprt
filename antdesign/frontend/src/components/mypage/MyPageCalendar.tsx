@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, Button, Space } from 'antd';
 import type { CellRenderInfo } from 'rc-picker/lib/interface';
 import {
@@ -44,6 +44,7 @@ const eventMap: Record<string, EventItem> = {
   '2026-09-23': { count: '+2 개' },
   '2026-09-24': { holiday: '휴일(추석연휴)' },
   '2026-09-25': { holiday: '휴일(추석)' },
+  '2026-09-26': { holiday: '휴일(추석연휴)' },
   '2026-09-27': { count: '+2 개' },
   '2026-09-29': { count: '+2 개' },
   '2026-09-30': { badge: '부서일정 1건' },
@@ -60,6 +61,27 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
   );
 
   const currentValue = propValue ?? internalValue;
+  const calendarRef = useRef<HTMLDivElement>(null);
+
+  // 이번 달(in-view) 날짜가 단 하루도 없는 다음 달 잉여 행(6번째 주 등) 자동 숨김
+  useEffect(() => {
+    const hideEmptyRows = () => {
+      if (!calendarRef.current) return;
+      const trList = calendarRef.current.querySelectorAll('.ant-picker-content tbody tr');
+      trList.forEach((tr) => {
+        const inViewCell = tr.querySelector('.ant-picker-cell-in-view');
+        if (!inViewCell) {
+          (tr as HTMLElement).style.display = 'none';
+        } else {
+          (tr as HTMLElement).style.display = '';
+        }
+      });
+    };
+
+    hideEmptyRows();
+    const rafId = requestAnimationFrame(hideEmptyRows);
+    return () => cancelAnimationFrame(rafId);
+  }, [currentValue]);
 
   const handleDateSelect = (date: Dayjs) => {
     setInternalValue(date);
@@ -89,17 +111,17 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
           </span>
 
           <Space size={4}>
-            <Button size="small" style={{ fontSize: 11, padding: '0 6px', height: 24, borderRadius: 3 }}>
-              <span style={{ color: '#eab308', marginRight: 3 }}>🔔</span> 일정표시
+            <Button size="small" style={{ fontSize: 12, padding: '0 8px', height: 25, borderRadius: 3 }}>
+              <span style={{ color: '#eab308', marginRight: 2 }}>🔔</span> 일정표시
             </Button>
-            <Button size="small" style={{ fontSize: 11, padding: '0 6px', height: 24, borderRadius: 3 }}>
-              <span style={{ color: '#eab308', marginRight: 3 }}>⭐</span> 북마크
+            <Button size="small" style={{ fontSize: 12, padding: '0 8px', height: 25, borderRadius: 3 }}>
+              <span style={{ color: '#eab308', marginRight: 2 }}>⭐</span> 북마크
             </Button>
-            <Button size="small" style={{ fontSize: 11, padding: '0 6px', height: 24, borderRadius: 3 }}>
-              <span style={{ color: '#ef4444', marginRight: 3 }}>📅</span> 공모주
+            <Button size="small" style={{ fontSize: 12, padding: '0 8px', height: 25, borderRadius: 3 }}>
+              <span style={{ color: '#ef4444', marginRight: 2 }}>📅</span> 공모주
             </Button>
-            <Button size="small" style={{ fontSize: 11, padding: '0 6px', height: 24, borderRadius: 3 }}>
-              <span style={{ color: '#854d0e', marginRight: 3 }}>💼</span> 출퇴근(Beta)
+            <Button size="small" style={{ fontSize: 12, padding: '0 8px', height: 25, borderRadius: 3 }}>
+              <span style={{ color: '#854d0e', marginRight: 2 }}>💼</span> 출퇴근(Beta)
             </Button>
           </Space>
         </div>
@@ -167,13 +189,16 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
 
     const isCurrentMonth = date.month() === currentValue.month();
     const isChosen = date.isSame(currentValue, 'day');
+    const isToday = date.isSame(dayjs('2026-09-16'), 'day');
     const dayOfWeek = date.day(); // 0 = Sun, 6 = Sat
     const dateKey = date.format('YYYY-MM-DD');
     const event = eventMap[dateKey];
+    const isHoliday = Boolean(event?.holiday);
 
+    // 공휴일 및 일요일: 빨간색, 토요일: 파란색, 평일: 진한 텍스트
     const dayColor = !isCurrentMonth
       ? '#cbd5e1'
-      : dayOfWeek === 0
+      : isHoliday || dayOfWeek === 0
       ? '#dc2626'
       : dayOfWeek === 6
       ? '#2563eb'
@@ -182,38 +207,67 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
     return (
       <div
         style={{
-          height: 48,
+          height: 96, // 48px의 2배 (96px)
           borderRight: '1px solid #e2e8f0',
           borderBottom: '1px solid #e2e8f0',
-          padding: 4,
+          padding: '4px 5px',
           boxSizing: 'border-box',
-          backgroundColor: isChosen ? '#e06666' : isCurrentMonth ? '#ffffff' : '#fcfcfc',
-          color: isChosen ? '#ffffff' : '#334155',
+          // 선택된 셀은 짙은 빨간색 대신 눈이 편안한 소프트 블루 배경 + 2px 인셋 테두리 적용
+          backgroundColor: isChosen
+            ? '#eff6ff'
+            : isToday
+            ? '#f8fafc'
+            : isCurrentMonth
+            ? '#ffffff'
+            : '#fafafa',
+          boxShadow: isChosen ? 'inset 0 0 0 2px #1677ff' : 'none',
+          color: '#334155',
           cursor: isCurrentMonth ? 'pointer' : 'default',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between',
-          transition: 'background-color 0.12s',
+          justifyContent: 'flex-start', // 하단이 아닌 상단부터 차례대로 표시
+          gap: 3,
+          transition: 'background-color 0.12s, box-shadow 0.12s',
         }}
       >
-        {/* 상단: 날짜 번호 및 개수 카운트 */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <span
-            style={{
-              fontWeight: isChosen ? 700 : 500,
-              color: isChosen ? '#ffffff' : dayColor,
-              fontSize: 12,
-            }}
-          >
-            {date.date()}
-          </span>
+        {/* 1. 셀 상단: 날짜 번호 + '오늘' 뱃지 + 건수 카운트 */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', lineHeight: 1, marginBottom: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span
+              style={{
+                fontWeight: isChosen ? 800 : isHoliday || dayOfWeek === 0 ? 600 : 500,
+                color: dayColor,
+                fontSize: 12,
+                lineHeight: '13px',
+                display: 'inline-block',
+              }}
+            >
+              {date.date()}
+            </span>
+            {isToday && (
+              <span
+                style={{
+                  fontSize: 9,
+                  fontWeight: 700,
+                  color: '#1677ff',
+                  backgroundColor: '#dbeafe',
+                  padding: '1px 3px',
+                  borderRadius: 2,
+                  lineHeight: '11px',
+                }}
+              >
+                오늘
+              </span>
+            )}
+          </div>
 
           {event?.count && (
             <span
               style={{
                 fontSize: 10,
-                color: isChosen ? 'rgba(255,255,255,0.9)' : '#94a3b8',
-                fontWeight: 400,
+                color: '#64748b',
+                fontWeight: 500,
+                lineHeight: '13px',
               }}
             >
               {event.count}
@@ -221,49 +275,52 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
           )}
         </div>
 
-        {/* 하단: 일정 배지 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {event?.badge && (
-            <div
-              style={{
-                backgroundColor: '#1d63b8',
-                color: '#ffffff',
-                fontSize: 10,
-                padding: '1px 3px',
-                borderRadius: 3,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                textAlign: 'center',
-              }}
-            >
-              {event.badge}
-            </div>
-          )}
-          {event?.holiday && (
-            <div
-              style={{
-                backgroundColor: '#274b78',
-                color: '#ffffff',
-                fontSize: 10,
-                padding: '1px 3px',
-                borderRadius: 3,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                textAlign: 'center',
-              }}
-            >
-              {event.holiday}
-            </div>
-          )}
-        </div>
+        {/* 2. 셀 상단 이어서 표시: 공휴일 배지 및 부서일정 항목들 */}
+        {event?.holiday && (
+          <div
+            style={{
+              backgroundColor: '#dc2626', // 공휴일 전용 빨간색 배경
+              color: '#ffffff',
+              fontSize: 10,
+              fontWeight: 600,
+              padding: '2px 4px',
+              borderRadius: 3,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              lineHeight: '13px',
+            }}
+          >
+            {event.holiday}
+          </div>
+        )}
+
+        {event?.badge && (
+          <div
+            style={{
+              backgroundColor: '#1d63b8',
+              color: '#ffffff',
+              fontSize: 10,
+              fontWeight: 500,
+              padding: '2px 4px',
+              borderRadius: 3,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              lineHeight: '13px',
+            }}
+          >
+            {event.badge}
+          </div>
+        )}
       </div>
     );
   };
 
   return (
     <div
+      ref={calendarRef}
+      className="mypage-calendar-container"
       style={{
         backgroundColor: '#ffffff',
         border: '1px solid #d9dfe8',
@@ -272,6 +329,37 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
       }}
     >
+      <style>{`
+        /* 요일 헤더(일~토) 밑 라인 및 스타일 */
+        .mypage-calendar-container .ant-picker-content thead tr {
+          border-bottom: 2px solid #cbd5e1 !important;
+        }
+        .mypage-calendar-container .ant-picker-content th {
+          padding: 6px 0 !important;
+          color: #334155 !important;
+          font-weight: 600 !important;
+          font-size: 12px !important;
+          background-color: #f8fafc !important;
+          border-bottom: 1px solid #cbd5e1 !important;
+        }
+        .mypage-calendar-container .ant-picker-content th:first-child {
+          color: #dc2626 !important;
+        }
+        .mypage-calendar-container .ant-picker-content th:last-child {
+          color: #2563eb !important;
+        }
+        .mypage-calendar-container .ant-picker-cell {
+          padding: 0 !important;
+        }
+        .mypage-calendar-container .ant-picker-cell-inner {
+          padding: 0 !important;
+          border-radius: 0 !important;
+        }
+        /* 이번 달 날짜가 단 하나도 없는 행(완전히 다음 달로만 채워진 6번째 주 등) 자동 숨김 */
+        .mypage-calendar-container .ant-picker-content tbody tr:not(:has(.ant-picker-cell-in-view)) {
+          display: none !important;
+        }
+      `}</style>
       <Calendar
         fullscreen={false}
         value={currentValue}

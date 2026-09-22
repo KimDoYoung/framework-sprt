@@ -17,7 +17,7 @@
   --flexlayout-color-splitter-drag: #1677ff;
   --flexlayout-splitter-size: 6px;
   --flexlayout-font-size: 12px;
-  --flexlayout-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --flexlayout-font-family: var(--app-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
   height: 100%;
   width: 100%;
   position: relative;

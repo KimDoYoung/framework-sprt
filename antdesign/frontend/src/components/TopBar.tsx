@@ -18,10 +18,13 @@ import {
   PlusOutlined,
   DeleteOutlined,
   ReloadOutlined,
+  FontSizeOutlined,
+  CheckOutlined,
 } from '@ant-design/icons';
 import { MenuLevel_1, MenuLevel_3 } from '../types';
 import { menuLevel_1_List } from '../mock/data';
 import { SavedLayoutItem } from '../utils/storage';
+import { FontFamilyId, FONT_OPTIONS, getFontOption } from '../utils/font';
 
 interface TopBarProps {
   sidebarPinned: boolean;
@@ -32,6 +35,8 @@ interface TopBarProps {
   onLoadNamedLayout?: (item: SavedLayoutItem) => void;
   onDeleteNamedLayout?: (id: string) => void;
   onResetLayout?: () => void;
+  currentFontId?: FontFamilyId;
+  onChangeFont?: (id: FontFamilyId) => void;
 }
 
 interface ScreenSearchItem {
@@ -51,6 +56,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   onLoadNamedLayout,
   onDeleteNamedLayout,
   onResetLayout,
+  currentFontId = 'pretendard',
+  onChangeFont,
 }) => {
   const [searchValue, setSearchValue] = useState('');
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
@@ -227,6 +234,74 @@ export const TopBar: React.FC<TopBarProps> = ({
     },
   ];
 
+  const currentFontOpt = getFontOption(currentFontId);
+
+  // ── 폰트 선택 드롭다운 메뉴 아이템 (Pretendard vs 나눔폰트 비교) ──
+  const fontMenuItems: MenuProps['items'] = [
+    {
+      key: 'font-group-header',
+      type: 'group',
+      label: (
+        <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>
+          한글 폰트 비교 / 선택 (ERP 환경)
+        </span>
+      ),
+      children: FONT_OPTIONS.map((opt) => ({
+        key: opt.id,
+        label: (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              minWidth: 280,
+              gap: 12,
+              padding: '4px 0',
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span
+                  style={{
+                    fontWeight: currentFontId === opt.id ? 700 : 500,
+                    fontSize: 13,
+                    color: currentFontId === opt.id ? '#1677ff' : '#1e293b',
+                  }}
+                >
+                  {opt.name}
+                </span>
+                {opt.badge && (
+                  <Tag
+                    color={
+                      opt.id === 'pretendard'
+                        ? 'blue'
+                        : opt.id === 'nanum-square-neo'
+                        ? 'green'
+                        : opt.id === 'nanum-gothic'
+                        ? 'orange'
+                        : 'default'
+                    }
+                    style={{ margin: 0, fontSize: 10, padding: '0 4px', lineHeight: '16px' }}
+                  >
+                    {opt.badge}
+                  </Tag>
+                )}
+              </div>
+              <span style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{opt.description}</span>
+            </div>
+            {currentFontId === opt.id && (
+              <CheckOutlined style={{ color: '#1677ff', fontSize: 13, flexShrink: 0 }} />
+            )}
+          </div>
+        ),
+        onClick: () => {
+          onChangeFont?.(opt.id);
+          message.info(`글꼴이 '${opt.name}'(으)로 적용되었습니다.`);
+        },
+      })),
+    },
+  ];
+
   const userMenuItems: MenuProps['items'] = [
     { key: 'profile', icon: <UserOutlined />, label: '내 정보 수정' },
     { key: 'setting', icon: <SettingOutlined />, label: '개인 환경설정' },
@@ -327,6 +402,32 @@ export const TopBar: React.FC<TopBarProps> = ({
             >
               <AppstoreOutlined style={{ fontSize: 13 }} />
               <span>화면 레이아웃</span>
+              <DownOutlined style={{ fontSize: 9, opacity: 0.8 }} />
+            </div>
+          </Dropdown>
+
+          {/* ── 폰트 선택 드롭다운 (Pretendard vs 나눔폰트 비교) ── */}
+          <Dropdown menu={{ items: fontMenuItems }} trigger={['click']} placement="bottomLeft">
+            <div
+              style={{
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '4px 10px',
+                borderRadius: 14,
+                backgroundColor: 'rgba(255, 255, 255, 0.16)',
+                fontSize: 12,
+                fontWeight: 500,
+                userSelect: 'none',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                color: '#fff',
+                transition: 'all 0.15s ease',
+              }}
+              title="글꼴 실시간 비교 및 전환 (Pretendard vs 나눔폰트)"
+            >
+              <FontSizeOutlined style={{ fontSize: 13 }} />
+              <span>글꼴: {currentFontOpt.name}</span>
               <DownOutlined style={{ fontSize: 9, opacity: 0.8 }} />
             </div>
           </Dropdown>

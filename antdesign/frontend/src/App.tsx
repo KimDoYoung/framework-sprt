@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { message, Dropdown, MenuProps } from 'antd';
+import { message, Dropdown, MenuProps, ConfigProvider } from 'antd';
+import koKR from 'antd/locale/ko_KR';
 import {
   Layout,
   Model,
@@ -20,6 +21,8 @@ import { MyPageView } from './components/mypage';
 import { LargeDataView } from './components/LargeDataView';
 import { MenuLevel_1, MenuLevel_3 } from './types';
 import { appSettingsStorage, SavedLayoutItem } from './utils/storage';
+import { useAppSetting } from './hooks/useAppSetting';
+import { getFontOption, applyGlobalFont, FontFamilyId } from './utils/font';
 
 // ── 기본 레이아웃 정의 (초기 상태: My Page 1개 탭) ──
 const defaultLayoutJson: IJsonModel = {
@@ -129,6 +132,14 @@ export default function App() {
   const [activeMenuId, setActiveMenuId] = useState<string | null>('duty');
   const [sidebarPinned, setSidebarPinned] = useState<boolean>(true);
   const [selectedMenuLevel_3_Code, setSelectedMenuLevel_3_Code] = useState<string>('1495');
+
+  // ── 글꼴 설정 상태 (asseterp_settings 단일 저장소 연동) ──
+  const [fontFamily, setFontFamily] = useAppSetting('font_family', 'pretendard');
+  const currentFontOpt = getFontOption(fontFamily);
+
+  useEffect(() => {
+    applyGlobalFont(fontFamily);
+  }, [fontFamily]);
 
   // ── FlexLayout 모델 상태 ──
   const [model, setModel] = useState<Model>(() => getInitialModel());
@@ -463,68 +474,80 @@ export default function App() {
   };
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <TopBar
-        sidebarPinned={sidebarPinned}
-        onToggleSidebarPin={() => setSidebarPinned(!sidebarPinned)}
-        onOpenScreen={handleSelectMenuLevel_3}
-        savedLayouts={savedLayouts}
-        onSaveNamedLayout={handleSaveNamedLayout}
-        onLoadNamedLayout={handleLoadNamedLayout}
-        onDeleteNamedLayout={handleDeleteNamedLayout}
-        onResetLayout={handleResetLayout}
-      />
-
-      {/* ── Body Container with LeftMenuBar & FlexLayout ── */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
-        {/* ── 왼쪽 MenuLevel_1 아이콘 메뉴 및 MenuLevel_2/3 서브메뉴 ── */}
-        <LeftMenuBar
-          activeMenuId={activeMenuId}
-          onSelectMenuLevel_1={handleSelectMenuLevel_1}
-          onSelectMenuLevel_3={handleSelectMenuLevel_3}
-          pinned={sidebarPinned}
-          onTogglePin={setSidebarPinned}
-          selectedMenuLevel_3_Code={selectedMenuLevel_3_Code}
+    <ConfigProvider
+      locale={koKR}
+      theme={{
+        token: {
+          colorPrimary: '#1677ff',
+          fontFamily: currentFontOpt.cssFamily,
+        },
+      }}
+    >
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <TopBar
+          sidebarPinned={sidebarPinned}
+          onToggleSidebarPin={() => setSidebarPinned(!sidebarPinned)}
+          onOpenScreen={handleSelectMenuLevel_3}
+          savedLayouts={savedLayouts}
+          onSaveNamedLayout={handleSaveNamedLayout}
+          onLoadNamedLayout={handleLoadNamedLayout}
+          onDeleteNamedLayout={handleDeleteNamedLayout}
+          onResetLayout={handleResetLayout}
+          currentFontId={fontFamily as FontFamilyId}
+          onChangeFont={(id) => setFontFamily(id)}
         />
 
-        {/* ── Main Content Area: FlexLayout Multi-Split & Docking ── */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, backgroundColor: '#eef2f6' }}>
-          {/* FlexLayout Viewport */}
-          <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-            <Layout
-              model={model}
-              factory={factory}
-              onModelChange={handleModelChange}
-              onRenderTabSet={onRenderTabSet}
-              onContextMenu={handleContextMenu}
-              realtimeResize
-            />
+        {/* ── Body Container with LeftMenuBar & FlexLayout ── */}
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
+          {/* ── 왼쪽 MenuLevel_1 아이콘 메뉴 및 MenuLevel_2/3 서브메뉴 ── */}
+          <LeftMenuBar
+            activeMenuId={activeMenuId}
+            onSelectMenuLevel_1={handleSelectMenuLevel_1}
+            onSelectMenuLevel_3={handleSelectMenuLevel_3}
+            pinned={sidebarPinned}
+            onTogglePin={setSidebarPinned}
+            selectedMenuLevel_3_Code={selectedMenuLevel_3_Code}
+          />
 
-            {/* 탭 헤더 우클릭 컨텍스트 메뉴 */}
-            <Dropdown
-              menu={{ items: getContextMenuItems() }}
-              open={contextMenu.open}
-              onOpenChange={(open) => !open && setContextMenu((prev) => ({ ...prev, open: false }))}
-              trigger={['contextMenu']}
-            >
-              <div
-                style={{
-                  position: 'fixed',
-                  left: contextMenu.x,
-                  top: contextMenu.y,
-                  width: 1,
-                  height: 1,
-                  pointerEvents: 'none',
-                  zIndex: 9999,
-                }}
+          {/* ── Main Content Area: FlexLayout Multi-Split & Docking ── */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, backgroundColor: '#eef2f6' }}>
+            {/* FlexLayout Viewport */}
+            <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+              <Layout
+                model={model}
+                factory={factory}
+                onModelChange={handleModelChange}
+                onRenderTabSet={onRenderTabSet}
+                onContextMenu={handleContextMenu}
+                realtimeResize
               />
-            </Dropdown>
+
+              {/* 탭 헤더 우클릭 컨텍스트 메뉴 */}
+              <Dropdown
+                menu={{ items: getContextMenuItems() }}
+                open={contextMenu.open}
+                onOpenChange={(open) => !open && setContextMenu((prev) => ({ ...prev, open: false }))}
+                trigger={['contextMenu']}
+              >
+                <div
+                  style={{
+                    position: 'fixed',
+                    left: contextMenu.x,
+                    top: contextMenu.y,
+                    width: 1,
+                    height: 1,
+                    pointerEvents: 'none',
+                    zIndex: 9999,
+                  }}
+                />
+              </Dropdown>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* ── Status Bar (System Health, Message, Clock) ── */}
-      <StatusBar />
-    </div>
+        {/* ── Status Bar (System Health, Message, Clock) ── */}
+        <StatusBar />
+      </div>
+    </ConfigProvider>
   );
 }

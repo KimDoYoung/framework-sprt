@@ -458,8 +458,46 @@ EOF
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${APP_NAME} - Ant Design Prototype</title>
+    <!-- Web Fonts: Pretendard, NanumSquare Neo, Nanum Gothic -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+      @font-face {
+        font-family: 'NanumSquareNeo';
+        font-weight: 400;
+        font-style: normal;
+        src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-bRg.woff') format('woff');
+      }
+      @font-face {
+        font-family: 'NanumSquareNeo';
+        font-weight: 700;
+        font-style: normal;
+        src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-cBd.woff') format('woff');
+      }
+      @font-face {
+        font-family: 'NanumSquareNeo';
+        font-weight: 800;
+        font-style: normal;
+        src: url('https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-dEb.woff') format('woff');
+      }
+
+      :root {
+        --app-font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+      }
+
+      html, body, #root {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: var(--app-font-family);
+      }
+    </style>
   </head>
-  <body style="margin:0; padding:0; background-color:#f5f5f5;">
+  <body style="background-color:#f5f5f5; font-family: var(--app-font-family);">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
@@ -470,14 +508,10 @@ EOF
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
-import { ConfigProvider } from 'antd';
-import koKR from 'antd/locale/ko_KR';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ConfigProvider locale={koKR} theme={{ token: { colorPrimary: '#1677ff' } }}>
-      <App />
-    </ConfigProvider>
+    <App />
   </React.StrictMode>
 );
 EOF
@@ -502,7 +536,7 @@ EOF
   --flexlayout-color-splitter-drag: #1677ff;
   --flexlayout-splitter-size: 6px;
   --flexlayout-font-size: 12px;
-  --flexlayout-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --flexlayout-font-family: var(--app-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
   height: 100%;
   width: 100%;
   position: relative;
@@ -750,6 +784,7 @@ export interface SavedLayoutItem {
 
 export interface AppSettings {
   menu23_font_size: number;
+  font_family?: 'pretendard' | 'nanum-square-neo' | 'nanum-gothic' | 'system';
   flexlayout_model?: any;
   saved_layouts?: SavedLayoutItem[];
   mypage_employee_collapsed?: boolean;
@@ -758,6 +793,7 @@ export interface AppSettings {
 
 export const defaultAppSettings: AppSettings = {
   menu23_font_size: 0,
+  font_family: 'pretendard',
   saved_layouts: [],
   mypage_employee_collapsed: false,
 };
@@ -968,6 +1004,66 @@ export function useAppSetting<K extends keyof AppSettings>(
   }, [key]);
 
   return [storedValue, setValue];
+}
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/utils/font.ts"
+export type FontFamilyId = 'pretendard' | 'nanum-square-neo' | 'nanum-gothic' | 'system';
+
+export interface FontOption {
+  id: FontFamilyId;
+  name: string;
+  badge?: string;
+  cssFamily: string;
+  description: string;
+}
+
+export const FONT_OPTIONS: FontOption[] = [
+  {
+    id: 'pretendard',
+    name: 'Pretendard',
+    badge: '추천',
+    cssFamily:
+      '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif',
+    description: '작은 글씨(10~12px) 및 숫자/코드 정렬에 최적화된 ERP 추천 폰트',
+  },
+  {
+    id: 'nanum-square-neo',
+    name: '나눔스퀘어 네오',
+    badge: '네이버',
+    cssFamily:
+      '"NanumSquareNeo", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif',
+    description: '단정하고 현대적인 직선형 네이버 고딕 폰트',
+  },
+  {
+    id: 'nanum-gothic',
+    name: '나눔고딕',
+    badge: '클래식',
+    cssFamily:
+      '"Nanum Gothic", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif',
+    description: '부드러운 곡선의 친근한 대중적 한글 고딕 폰트',
+  },
+  {
+    id: 'system',
+    name: '시스템 기본',
+    badge: 'OS 기본',
+    cssFamily:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif',
+    description: '맑은 고딕(Windows) / 산돌고딕(macOS) 등 OS 내장 폰트',
+  },
+];
+
+export function getFontOption(id?: string): FontOption {
+  return FONT_OPTIONS.find((f) => f.id === id) || FONT_OPTIONS[0];
+}
+
+export function applyGlobalFont(id?: string): string {
+  const fontOpt = getFontOption(id);
+  if (typeof document !== 'undefined') {
+    document.documentElement.style.setProperty('--app-font-family', fontOpt.cssFamily);
+    document.body.style.fontFamily = fontOpt.cssFamily;
+  }
+  return fontOpt.cssFamily;
 }
 EOF
 
@@ -1400,10 +1496,13 @@ import {
   PlusOutlined,
   DeleteOutlined,
   ReloadOutlined,
+  FontSizeOutlined,
+  CheckOutlined,
 } from '@ant-design/icons';
 import { MenuLevel_1, MenuLevel_3 } from '../types';
 import { menuLevel_1_List } from '../mock/data';
 import { SavedLayoutItem } from '../utils/storage';
+import { FontFamilyId, FONT_OPTIONS, getFontOption } from '../utils/font';
 
 interface TopBarProps {
   sidebarPinned: boolean;
@@ -1414,6 +1513,8 @@ interface TopBarProps {
   onLoadNamedLayout?: (item: SavedLayoutItem) => void;
   onDeleteNamedLayout?: (id: string) => void;
   onResetLayout?: () => void;
+  currentFontId?: FontFamilyId;
+  onChangeFont?: (id: FontFamilyId) => void;
 }
 
 interface ScreenSearchItem {
@@ -1433,11 +1534,14 @@ export const TopBar: React.FC<TopBarProps> = ({
   onLoadNamedLayout,
   onDeleteNamedLayout,
   onResetLayout,
+  currentFontId = 'pretendard',
+  onChangeFont,
 }) => {
   const [searchValue, setSearchValue] = useState('');
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [newLayoutName, setNewLayoutName] = useState('');
 
+  // ── 전체 메뉴 평탄화 (화면번호/메뉴명 검색용) ──
   const allScreens: ScreenSearchItem[] = useMemo(() => {
     const list: ScreenSearchItem[] = [];
     for (const m1 of menuLevel_1_List) {
@@ -1456,6 +1560,7 @@ export const TopBar: React.FC<TopBarProps> = ({
     return list;
   }, []);
 
+  // ── 화면번호/메뉴명 자동완성 옵션 목록 ──
   const searchOptions = useMemo(() => {
     const term = searchValue.trim().toLowerCase();
     if (!term) return [];
@@ -1479,6 +1584,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       }));
   }, [searchValue, allScreens]);
 
+  // ── 검색어 입력 후 Enter 또는 선택 시 화면 열기 ──
   const handleSelectScreen = (code: string) => {
     const found = allScreens.find((s) => s.code === code);
     if (found && onOpenScreen) {
@@ -1492,10 +1598,13 @@ export const TopBar: React.FC<TopBarProps> = ({
     const term = searchValue.trim().toLowerCase();
     if (!term) return;
 
+    // 1. 코드 완전 일치 검색
     let found = allScreens.find((s) => s.code.toLowerCase() === term);
+    // 2. 제목 완전 일치 검색
     if (!found) {
       found = allScreens.find((s) => s.title.toLowerCase() === term);
     }
+    // 3. 코드 또는 제목 부분 일치 검색
     if (!found) {
       found = allScreens.find(
         (s) => s.code.toLowerCase().includes(term) || s.title.toLowerCase().includes(term)
@@ -1511,6 +1620,7 @@ export const TopBar: React.FC<TopBarProps> = ({
     }
   };
 
+  // ── 레이아웃 저장 확인 ──
   const handleSaveLayoutConfirm = () => {
     if (!newLayoutName.trim()) {
       message.warning('레이아웃 이름을 입력해 주세요.');
@@ -1521,6 +1631,7 @@ export const TopBar: React.FC<TopBarProps> = ({
     setIsSaveModalOpen(false);
   };
 
+  // ── 화면 레이아웃 드롭다운 메뉴 아이템 ──
   const layoutMenuItems: MenuProps['items'] = [
     {
       key: 'save-current',
@@ -1601,6 +1712,74 @@ export const TopBar: React.FC<TopBarProps> = ({
     },
   ];
 
+  const currentFontOpt = getFontOption(currentFontId);
+
+  // ── 폰트 선택 드롭다운 메뉴 아이템 (Pretendard vs 나눔폰트 비교) ──
+  const fontMenuItems: MenuProps['items'] = [
+    {
+      key: 'font-group-header',
+      type: 'group',
+      label: (
+        <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>
+          한글 폰트 비교 / 선택 (ERP 환경)
+        </span>
+      ),
+      children: FONT_OPTIONS.map((opt) => ({
+        key: opt.id,
+        label: (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              minWidth: 280,
+              gap: 12,
+              padding: '4px 0',
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span
+                  style={{
+                    fontWeight: currentFontId === opt.id ? 700 : 500,
+                    fontSize: 13,
+                    color: currentFontId === opt.id ? '#1677ff' : '#1e293b',
+                  }}
+                >
+                  {opt.name}
+                </span>
+                {opt.badge && (
+                  <Tag
+                    color={
+                      opt.id === 'pretendard'
+                        ? 'blue'
+                        : opt.id === 'nanum-square-neo'
+                        ? 'green'
+                        : opt.id === 'nanum-gothic'
+                        ? 'orange'
+                        : 'default'
+                    }
+                    style={{ margin: 0, fontSize: 10, padding: '0 4px', lineHeight: '16px' }}
+                  >
+                    {opt.badge}
+                  </Tag>
+                )}
+              </div>
+              <span style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{opt.description}</span>
+            </div>
+            {currentFontId === opt.id && (
+              <CheckOutlined style={{ color: '#1677ff', fontSize: 13, flexShrink: 0 }} />
+            )}
+          </div>
+        ),
+        onClick: () => {
+          onChangeFont?.(opt.id);
+          message.info(`글꼴이 '${opt.name}'(으)로 적용되었습니다.`);
+        },
+      })),
+    },
+  ];
+
   const userMenuItems: MenuProps['items'] = [
     { key: 'profile', icon: <UserOutlined />, label: '내 정보 수정' },
     { key: 'setting', icon: <SettingOutlined />, label: '개인 환경설정' },
@@ -1624,6 +1803,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           position: 'relative',
         }}
       >
+        {/* Left section: Logo, Search, Layout Management */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div
             onClick={onToggleSidebarPin}
@@ -1653,6 +1833,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             <UnorderedListOutlined style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, marginLeft: 2 }} />
           </div>
 
+          {/* ── 화면번호/메뉴명 입력 AutoComplete 검색창 (Enter 호출 지원) ── */}
           <div style={{ marginLeft: 12 }}>
             <AutoComplete
               value={searchValue}
@@ -1677,6 +1858,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             </AutoComplete>
           </div>
 
+          {/* ── 화면 레이아웃 관리 드롭다운 (저장/불러오기) ── */}
           <Dropdown menu={{ items: layoutMenuItems }} trigger={['click']} placement="bottomLeft">
             <div
               style={{
@@ -1701,8 +1883,35 @@ export const TopBar: React.FC<TopBarProps> = ({
               <DownOutlined style={{ fontSize: 9, opacity: 0.8 }} />
             </div>
           </Dropdown>
+
+          {/* ── 폰트 선택 드롭다운 (Pretendard vs 나눔폰트 비교) ── */}
+          <Dropdown menu={{ items: fontMenuItems }} trigger={['click']} placement="bottomLeft">
+            <div
+              style={{
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '4px 10px',
+                borderRadius: 14,
+                backgroundColor: 'rgba(255, 255, 255, 0.16)',
+                fontSize: 12,
+                fontWeight: 500,
+                userSelect: 'none',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                color: '#fff',
+                transition: 'all 0.15s ease',
+              }}
+              title="글꼴 실시간 비교 및 전환 (Pretendard vs 나눔폰트)"
+            >
+              <FontSizeOutlined style={{ fontSize: 13 }} />
+              <span>글꼴: {currentFontOpt.name}</span>
+              <DownOutlined style={{ fontSize: 9, opacity: 0.8 }} />
+            </div>
+          </Dropdown>
         </div>
 
+        {/* Right section: Help, User, Messenger/Tool icons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
           <Tooltip title="온라인 도움말 / 아이디어 제안" placement="bottom">
             <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
@@ -1716,6 +1925,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             </span>
           </Tooltip>
 
+          {/* User Profile dropdown */}
           <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
             <div
               style={{
@@ -1739,6 +1949,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             </div>
           </Dropdown>
 
+          {/* Tool action icons */}
           <div
             style={{
               display: 'flex',
@@ -1787,6 +1998,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
       </header>
 
+      {/* ── 화면 레이아웃 이름 지정 저장 모달 ── */}
       <Modal
         title="현재 화면 레이아웃 저장"
         open={isSaveModalOpen}
@@ -2020,7 +2232,7 @@ export const StatusBar: React.FC = () => {
           padding: '0 12px',
           color: '#94a3b8',
           fontSize: 11,
-          fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`,
+          fontFamily: 'var(--app-font-family)',
           userSelect: 'none',
           zIndex: 1000,
           flexShrink: 0,
@@ -3097,7 +3309,7 @@ export const RightMessengerSidebar = EmployeePanel;
 EOF
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/mypage/MyPageCalendar.tsx"
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, Button, Space } from 'antd';
 import type { CellRenderInfo } from 'rc-picker/lib/interface';
 import {
@@ -3143,6 +3355,7 @@ const eventMap: Record<string, EventItem> = {
   '2026-09-23': { count: '+2 개' },
   '2026-09-24': { holiday: '휴일(추석연휴)' },
   '2026-09-25': { holiday: '휴일(추석)' },
+  '2026-09-26': { holiday: '휴일(추석연휴)' },
   '2026-09-27': { count: '+2 개' },
   '2026-09-29': { count: '+2 개' },
   '2026-09-30': { badge: '부서일정 1건' },
@@ -3159,6 +3372,27 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
   );
 
   const currentValue = propValue ?? internalValue;
+  const calendarRef = useRef<HTMLDivElement>(null);
+
+  // 이번 달(in-view) 날짜가 단 하루도 없는 다음 달 잉여 행(6번째 주 등) 자동 숨김
+  useEffect(() => {
+    const hideEmptyRows = () => {
+      if (!calendarRef.current) return;
+      const trList = calendarRef.current.querySelectorAll('.ant-picker-content tbody tr');
+      trList.forEach((tr) => {
+        const inViewCell = tr.querySelector('.ant-picker-cell-in-view');
+        if (!inViewCell) {
+          (tr as HTMLElement).style.display = 'none';
+        } else {
+          (tr as HTMLElement).style.display = '';
+        }
+      });
+    };
+
+    hideEmptyRows();
+    const rafId = requestAnimationFrame(hideEmptyRows);
+    return () => cancelAnimationFrame(rafId);
+  }, [currentValue]);
 
   const handleDateSelect = (date: Dayjs) => {
     setInternalValue(date);
@@ -3188,17 +3422,17 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
           </span>
 
           <Space size={4}>
-            <Button size="small" style={{ fontSize: 11, padding: '0 6px', height: 24, borderRadius: 3 }}>
-              <span style={{ color: '#eab308', marginRight: 3 }}>🔔</span> 일정표시
+            <Button size="small" style={{ fontSize: 12, padding: '0 8px', height: 25, borderRadius: 3 }}>
+              <span style={{ color: '#eab308', marginRight: 2 }}>🔔</span> 일정표시
             </Button>
-            <Button size="small" style={{ fontSize: 11, padding: '0 6px', height: 24, borderRadius: 3 }}>
-              <span style={{ color: '#eab308', marginRight: 3 }}>⭐</span> 북마크
+            <Button size="small" style={{ fontSize: 12, padding: '0 8px', height: 25, borderRadius: 3 }}>
+              <span style={{ color: '#eab308', marginRight: 2 }}>⭐</span> 북마크
             </Button>
-            <Button size="small" style={{ fontSize: 11, padding: '0 6px', height: 24, borderRadius: 3 }}>
-              <span style={{ color: '#ef4444', marginRight: 3 }}>📅</span> 공모주
+            <Button size="small" style={{ fontSize: 12, padding: '0 8px', height: 25, borderRadius: 3 }}>
+              <span style={{ color: '#ef4444', marginRight: 2 }}>📅</span> 공모주
             </Button>
-            <Button size="small" style={{ fontSize: 11, padding: '0 6px', height: 24, borderRadius: 3 }}>
-              <span style={{ color: '#854d0e', marginRight: 3 }}>💼</span> 출퇴근(Beta)
+            <Button size="small" style={{ fontSize: 12, padding: '0 8px', height: 25, borderRadius: 3 }}>
+              <span style={{ color: '#854d0e', marginRight: 2 }}>💼</span> 출퇴근(Beta)
             </Button>
           </Space>
         </div>
@@ -3266,13 +3500,16 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
 
     const isCurrentMonth = date.month() === currentValue.month();
     const isChosen = date.isSame(currentValue, 'day');
+    const isToday = date.isSame(dayjs('2026-09-16'), 'day');
     const dayOfWeek = date.day(); // 0 = Sun, 6 = Sat
     const dateKey = date.format('YYYY-MM-DD');
     const event = eventMap[dateKey];
+    const isHoliday = Boolean(event?.holiday);
 
+    // 공휴일 및 일요일: 빨간색, 토요일: 파란색, 평일: 진한 텍스트
     const dayColor = !isCurrentMonth
       ? '#cbd5e1'
-      : dayOfWeek === 0
+      : isHoliday || dayOfWeek === 0
       ? '#dc2626'
       : dayOfWeek === 6
       ? '#2563eb'
@@ -3281,38 +3518,67 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
     return (
       <div
         style={{
-          height: 48,
+          height: 96, // 48px의 2배 (96px)
           borderRight: '1px solid #e2e8f0',
           borderBottom: '1px solid #e2e8f0',
-          padding: 4,
+          padding: '4px 5px',
           boxSizing: 'border-box',
-          backgroundColor: isChosen ? '#e06666' : isCurrentMonth ? '#ffffff' : '#fcfcfc',
-          color: isChosen ? '#ffffff' : '#334155',
+          // 선택된 셀은 짙은 빨간색 대신 눈이 편안한 소프트 블루 배경 + 2px 인셋 테두리 적용
+          backgroundColor: isChosen
+            ? '#eff6ff'
+            : isToday
+            ? '#f8fafc'
+            : isCurrentMonth
+            ? '#ffffff'
+            : '#fafafa',
+          boxShadow: isChosen ? 'inset 0 0 0 2px #1677ff' : 'none',
+          color: '#334155',
           cursor: isCurrentMonth ? 'pointer' : 'default',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between',
-          transition: 'background-color 0.12s',
+          justifyContent: 'flex-start', // 하단이 아닌 상단부터 차례대로 표시
+          gap: 3,
+          transition: 'background-color 0.12s, box-shadow 0.12s',
         }}
       >
-        {/* 상단: 날짜 번호 및 개수 카운트 */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <span
-            style={{
-              fontWeight: isChosen ? 700 : 500,
-              color: isChosen ? '#ffffff' : dayColor,
-              fontSize: 12,
-            }}
-          >
-            {date.date()}
-          </span>
+        {/* 1. 셀 상단: 날짜 번호 + '오늘' 뱃지 + 건수 카운트 */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', lineHeight: 1, marginBottom: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span
+              style={{
+                fontWeight: isChosen ? 800 : isHoliday || dayOfWeek === 0 ? 600 : 500,
+                color: dayColor,
+                fontSize: 12,
+                lineHeight: '13px',
+                display: 'inline-block',
+              }}
+            >
+              {date.date()}
+            </span>
+            {isToday && (
+              <span
+                style={{
+                  fontSize: 9,
+                  fontWeight: 700,
+                  color: '#1677ff',
+                  backgroundColor: '#dbeafe',
+                  padding: '1px 3px',
+                  borderRadius: 2,
+                  lineHeight: '11px',
+                }}
+              >
+                오늘
+              </span>
+            )}
+          </div>
 
           {event?.count && (
             <span
               style={{
                 fontSize: 10,
-                color: isChosen ? 'rgba(255,255,255,0.9)' : '#94a3b8',
-                fontWeight: 400,
+                color: '#64748b',
+                fontWeight: 500,
+                lineHeight: '13px',
               }}
             >
               {event.count}
@@ -3320,49 +3586,52 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
           )}
         </div>
 
-        {/* 하단: 일정 배지 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {event?.badge && (
-            <div
-              style={{
-                backgroundColor: '#1d63b8',
-                color: '#ffffff',
-                fontSize: 10,
-                padding: '1px 3px',
-                borderRadius: 3,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                textAlign: 'center',
-              }}
-            >
-              {event.badge}
-            </div>
-          )}
-          {event?.holiday && (
-            <div
-              style={{
-                backgroundColor: '#274b78',
-                color: '#ffffff',
-                fontSize: 10,
-                padding: '1px 3px',
-                borderRadius: 3,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                textAlign: 'center',
-              }}
-            >
-              {event.holiday}
-            </div>
-          )}
-        </div>
+        {/* 2. 셀 상단 이어서 표시: 공휴일 배지 및 부서일정 항목들 */}
+        {event?.holiday && (
+          <div
+            style={{
+              backgroundColor: '#dc2626', // 공휴일 전용 빨간색 배경
+              color: '#ffffff',
+              fontSize: 10,
+              fontWeight: 600,
+              padding: '2px 4px',
+              borderRadius: 3,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              lineHeight: '13px',
+            }}
+          >
+            {event.holiday}
+          </div>
+        )}
+
+        {event?.badge && (
+          <div
+            style={{
+              backgroundColor: '#1d63b8',
+              color: '#ffffff',
+              fontSize: 10,
+              fontWeight: 500,
+              padding: '2px 4px',
+              borderRadius: 3,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              lineHeight: '13px',
+            }}
+          >
+            {event.badge}
+          </div>
+        )}
       </div>
     );
   };
 
   return (
     <div
+      ref={calendarRef}
+      className="mypage-calendar-container"
       style={{
         backgroundColor: '#ffffff',
         border: '1px solid #d9dfe8',
@@ -3371,6 +3640,37 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
       }}
     >
+      <style>{`
+        /* 요일 헤더(일~토) 밑 라인 및 스타일 */
+        .mypage-calendar-container .ant-picker-content thead tr {
+          border-bottom: 2px solid #cbd5e1 !important;
+        }
+        .mypage-calendar-container .ant-picker-content th {
+          padding: 6px 0 !important;
+          color: #334155 !important;
+          font-weight: 600 !important;
+          font-size: 12px !important;
+          background-color: #f8fafc !important;
+          border-bottom: 1px solid #cbd5e1 !important;
+        }
+        .mypage-calendar-container .ant-picker-content th:first-child {
+          color: #dc2626 !important;
+        }
+        .mypage-calendar-container .ant-picker-content th:last-child {
+          color: #2563eb !important;
+        }
+        .mypage-calendar-container .ant-picker-cell {
+          padding: 0 !important;
+        }
+        .mypage-calendar-container .ant-picker-cell-inner {
+          padding: 0 !important;
+          border-radius: 0 !important;
+        }
+        /* 이번 달 날짜가 단 하나도 없는 행(완전히 다음 달로만 채워진 6번째 주 등) 자동 숨김 */
+        .mypage-calendar-container .ant-picker-content tbody tr:not(:has(.ant-picker-cell-in-view)) {
+          display: none !important;
+        }
+      `}</style>
       <Calendar
         fullscreen={false}
         value={currentValue}
@@ -4727,7 +5027,8 @@ EOF
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/App.tsx"
 import { useState, useEffect, useRef } from 'react';
-import { message, Dropdown, MenuProps } from 'antd';
+import { message, Dropdown, MenuProps, ConfigProvider } from 'antd';
+import koKR from 'antd/locale/ko_KR';
 import {
   Layout,
   Model,
@@ -4748,18 +5049,21 @@ import { MyPageView } from './components/mypage';
 import { LargeDataView } from './components/LargeDataView';
 import { MenuLevel_1, MenuLevel_3 } from './types';
 import { appSettingsStorage, SavedLayoutItem } from './utils/storage';
+import { useAppSetting } from './hooks/useAppSetting';
+import { getFontOption, applyGlobalFont, FontFamilyId } from './utils/font';
 
+// ── 기본 레이아웃 정의 (초기 상태: My Page 1개 탭) ──
 const defaultLayoutJson: IJsonModel = {
   global: {
     tabEnableClose: true,
-    tabSetEnableMaximize: false,
-    tabSetEnableClose: true,
-    tabSetEnableCloseButton: false,
-    tabSetEnableDeleteWhenEmpty: true,
+    tabSetEnableMaximize: false, // FlexLayout 기본 최대화 버튼 미노출 (onRenderTabSet에서 커스텀 버튼 렌더)
+    tabSetEnableClose: true, // 탭셋 닫기/삭제 허용
+    tabSetEnableCloseButton: false, // FlexLayout 기본 닫기 버튼 미노출 (onRenderTabSet에서 커스텀 버튼 렌더)
+    tabSetEnableDeleteWhenEmpty: true, // 탭이 0개가 되면 해당 분할 패널(탭셋) 자동 소멸
     tabEnableRename: false,
-    tabEnableScrollbars: false,
-    tabSetEnableDivide: true,
-    tabSetEnableDrop: true,
+    tabEnableScrollbars: false, // 탭 외곽 스크롤바 방지 (뷰포트 피팅 및 내부 가상 스크롤 격리)
+    tabSetEnableDivide: true, // 패널 드래그 분할 허용
+    tabSetEnableDrop: true, // 드롭 허용
     tabSetEnableDrag: true,
     tabEnableDrag: true,
     enableEdgeDock: true,
@@ -4793,6 +5097,7 @@ const defaultLayoutJson: IJsonModel = {
   },
 };
 
+// 로컬 스토리지에 저장된 레이아웃 정제 (0개 탭 자동 소멸, 최대화 해제, 분할 허용 강제 적용)
 function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
   if (!json.global) {
     json.global = {};
@@ -4800,9 +5105,9 @@ function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
   json.global.tabSetEnableClose = true;
   json.global.tabSetEnableCloseButton = false;
   json.global.tabSetEnableDeleteWhenEmpty = true;
-  json.global.tabEnableScrollbars = false;
-  json.global.tabSetEnableMaximize = false;
-  json.global.tabSetEnableDivide = true;
+  json.global.tabEnableScrollbars = false; // 외곽 스크롤 방지
+  json.global.tabSetEnableMaximize = false; // FlexLayout 기본 최대화 버튼 방지
+  json.global.tabSetEnableDivide = true; // 패널 드래그 분할 보장
   json.global.tabSetEnableDrop = true;
   json.global.tabSetEnableDrag = true;
   json.global.tabEnableDrag = true;
@@ -4814,7 +5119,7 @@ function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
     if (node.type === 'tabset') {
       if (node.enableClose === false) delete node.enableClose;
       if (node.enableDeleteWhenEmpty === false) delete node.enableDeleteWhenEmpty;
-      if (node.maximized) delete node.maximized;
+      if (node.maximized) delete node.maximized; // 저장된 최대화 상태 초기 해제
       node.enableMaximize = false;
       node.enableDivide = true;
       node.enableDrop = true;
@@ -4833,6 +5138,7 @@ function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
   return json;
 }
 
+// 로컬 스토리지(asseterp_settings)에서 저장된 레이아웃 복원 또는 기본 레이아웃 로드
 function getInitialModel(): Model {
   const savedLayout = appSettingsStorage.get('flexlayout_model');
   if (savedLayout) {
@@ -4855,11 +5161,23 @@ export default function App() {
   const [sidebarPinned, setSidebarPinned] = useState<boolean>(true);
   const [selectedMenuLevel_3_Code, setSelectedMenuLevel_3_Code] = useState<string>('1495');
 
+  // ── 글꼴 설정 상태 (asseterp_settings 단일 저장소 연동) ──
+  const [fontFamily, setFontFamily] = useAppSetting('font_family', 'pretendard');
+  const currentFontOpt = getFontOption(fontFamily);
+
+  useEffect(() => {
+    applyGlobalFont(fontFamily);
+  }, [fontFamily]);
+
+  // ── FlexLayout 모델 상태 ──
   const [model, setModel] = useState<Model>(() => getInitialModel());
+
+  // ── 저장된 명명 레이아웃 목록 상태 ──
   const [savedLayouts, setSavedLayouts] = useState<SavedLayoutItem[]>(() =>
     appSettingsStorage.getSavedLayouts()
   );
 
+  // ── 탭 헤더 컨텍스트 메뉴 상태 ──
   const [contextMenu, setContextMenu] = useState<{
     open: boolean;
     x: number;
@@ -4871,14 +5189,17 @@ export default function App() {
     setActiveMenuId(menuId);
   };
 
+  // ── 메뉴 클릭 및 화면번호 검색 시: 활성화된 탭셋(TabSet)에 새 탭 추가 또는 기존 탭 활성화 ──
   const handleSelectMenuLevel_3 = (item: MenuLevel_3, _parent: MenuLevel_1) => {
     setSelectedMenuLevel_3_Code(item.code);
     const tabId = `tab-${item.code}`;
 
     const existingNode = model.getNodeById(tabId);
     if (existingNode) {
+      // 이미 열려 있는 탭이면 해당 탭 선택
       model.doAction(Actions.selectTab(tabId));
     } else {
+      // 현재 활성화된 탭셋(없으면 첫 번째 탭셋)에 탭 추가
       const activeTabset = model.getActiveTabset() || model.getFirstTabSet();
       const targetTabsetId = activeTabset ? activeTabset.getId() : 'main-tabset';
 
@@ -4896,7 +5217,7 @@ export default function App() {
           targetTabsetId,
           DockLocation.CENTER,
           -1,
-          true
+          true // 바로 선택
         )
       );
     }
@@ -4913,6 +5234,7 @@ export default function App() {
     }, 200);
   };
 
+  // ── 단축키 F4: 최대화 및 복원 토글 ──
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'F4') {
@@ -4932,6 +5254,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [model]);
 
+  // ── 컨텍스트 메뉴 외부 클릭 시 닫기 ──
   useEffect(() => {
     if (!contextMenu.open) return;
     const handleOutsideClick = () => {
@@ -4941,6 +5264,7 @@ export default function App() {
     return () => window.removeEventListener('click', handleOutsideClick);
   }, [contextMenu.open]);
 
+  // ── 탭셋 내부의 모든 닫기 가능 탭 일괄 닫기 ──
   const handleCloseAllInTabSet = (tabset: TabSetNode) => {
     const children = tabset.getChildren().filter((c): c is TabNode => c instanceof TabNode);
     const closeableTabs = children.filter((t) => t.isCloseable());
@@ -4953,6 +5277,7 @@ export default function App() {
     });
   };
 
+  // ── TabSet 우측 툴바 버튼 커스텀 렌더: '모든 탭 닫기' & '최대화/복원(F4)' ──
   const onRenderTabSet = (tabSetNode: TabSetNode | BorderNode, renderValues: ITabSetRenderValues) => {
     if (!(tabSetNode instanceof TabSetNode)) return;
     const isMax = tabSetNode.isMaximized();
@@ -5032,6 +5357,7 @@ export default function App() {
     );
   };
 
+  // ── 탭 헤더 우클릭 시 컨텍스트 메뉴 표시 ──
   const handleContextMenu = (node: any, event: React.MouseEvent<HTMLElement>) => {
     if (node instanceof TabNode) {
       event.preventDefault();
@@ -5045,6 +5371,7 @@ export default function App() {
     }
   };
 
+  // ── 컨텍스트 메뉴 아이템 목록 생성 ──
   const getContextMenuItems = (): MenuProps['items'] => {
     const targetTab = contextMenu.tabNode;
     if (!targetTab) return [];
@@ -5121,6 +5448,8 @@ export default function App() {
     ];
   };
 
+
+  // ── 명명 레이아웃 저장/불러오기/삭제/초기화 핸들러 ──
   const handleSaveNamedLayout = (name: string) => {
     const item = appSettingsStorage.saveLayout(name, model.toJson());
     setSavedLayouts(appSettingsStorage.getSavedLayouts());
@@ -5152,6 +5481,7 @@ export default function App() {
     message.info('기본 레이아웃으로 초기화되었습니다.');
   };
 
+  // ── FlexLayout Tab 컴포넌트 렌더러 (factory) ──
   const factory = (node: TabNode) => {
     const component = node.getComponent();
     const config = (node.getConfig() as { code?: string; title?: string }) || {};
@@ -5160,6 +5490,7 @@ export default function App() {
       return <MyPageView />;
     }
 
+    // 기본 대용량 데이터 뷰 (AgGrid: 외부 스크롤 없이 AgGrid 내부 가상 스크롤만 동작하도록 격리)
     return (
       <div style={{ flex: 1, overflow: 'hidden', height: '100%', minHeight: 0, boxSizing: 'border-box' }}>
         <LargeDataView
@@ -5171,63 +5502,81 @@ export default function App() {
   };
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <TopBar
-        sidebarPinned={sidebarPinned}
-        onToggleSidebarPin={() => setSidebarPinned(!sidebarPinned)}
-        onOpenScreen={handleSelectMenuLevel_3}
-        savedLayouts={savedLayouts}
-        onSaveNamedLayout={handleSaveNamedLayout}
-        onLoadNamedLayout={handleLoadNamedLayout}
-        onDeleteNamedLayout={handleDeleteNamedLayout}
-        onResetLayout={handleResetLayout}
-      />
-
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
-        <LeftMenuBar
-          activeMenuId={activeMenuId}
-          onSelectMenuLevel_1={handleSelectMenuLevel_1}
-          onSelectMenuLevel_3={handleSelectMenuLevel_3}
-          pinned={sidebarPinned}
-          onTogglePin={setSidebarPinned}
-          selectedMenuLevel_3_Code={selectedMenuLevel_3_Code}
+    <ConfigProvider
+      locale={koKR}
+      theme={{
+        token: {
+          colorPrimary: '#1677ff',
+          fontFamily: currentFontOpt.cssFamily,
+        },
+      }}
+    >
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <TopBar
+          sidebarPinned={sidebarPinned}
+          onToggleSidebarPin={() => setSidebarPinned(!sidebarPinned)}
+          onOpenScreen={handleSelectMenuLevel_3}
+          savedLayouts={savedLayouts}
+          onSaveNamedLayout={handleSaveNamedLayout}
+          onLoadNamedLayout={handleLoadNamedLayout}
+          onDeleteNamedLayout={handleDeleteNamedLayout}
+          onResetLayout={handleResetLayout}
+          currentFontId={fontFamily as FontFamilyId}
+          onChangeFont={(id) => setFontFamily(id)}
         />
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, backgroundColor: '#eef2f6' }}>
-          <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-            <Layout
-              model={model}
-              factory={factory}
-              onModelChange={handleModelChange}
-              onRenderTabSet={onRenderTabSet}
-              onContextMenu={handleContextMenu}
-              realtimeResize
-            />
+        {/* ── Body Container with LeftMenuBar & FlexLayout ── */}
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
+          {/* ── 왼쪽 MenuLevel_1 아이콘 메뉴 및 MenuLevel_2/3 서브메뉴 ── */}
+          <LeftMenuBar
+            activeMenuId={activeMenuId}
+            onSelectMenuLevel_1={handleSelectMenuLevel_1}
+            onSelectMenuLevel_3={handleSelectMenuLevel_3}
+            pinned={sidebarPinned}
+            onTogglePin={setSidebarPinned}
+            selectedMenuLevel_3_Code={selectedMenuLevel_3_Code}
+          />
 
-            <Dropdown
-              menu={{ items: getContextMenuItems() }}
-              open={contextMenu.open}
-              onOpenChange={(open) => !open && setContextMenu((prev) => ({ ...prev, open: false }))}
-              trigger={['contextMenu']}
-            >
-              <div
-                style={{
-                  position: 'fixed',
-                  left: contextMenu.x,
-                  top: contextMenu.y,
-                  width: 1,
-                  height: 1,
-                  pointerEvents: 'none',
-                  zIndex: 9999,
-                }}
+          {/* ── Main Content Area: FlexLayout Multi-Split & Docking ── */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, backgroundColor: '#eef2f6' }}>
+            {/* FlexLayout Viewport */}
+            <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+              <Layout
+                model={model}
+                factory={factory}
+                onModelChange={handleModelChange}
+                onRenderTabSet={onRenderTabSet}
+                onContextMenu={handleContextMenu}
+                realtimeResize
               />
-            </Dropdown>
+
+              {/* 탭 헤더 우클릭 컨텍스트 메뉴 */}
+              <Dropdown
+                menu={{ items: getContextMenuItems() }}
+                open={contextMenu.open}
+                onOpenChange={(open) => !open && setContextMenu((prev) => ({ ...prev, open: false }))}
+                trigger={['contextMenu']}
+              >
+                <div
+                  style={{
+                    position: 'fixed',
+                    left: contextMenu.x,
+                    top: contextMenu.y,
+                    width: 1,
+                    height: 1,
+                    pointerEvents: 'none',
+                    zIndex: 9999,
+                  }}
+                />
+              </Dropdown>
+            </div>
           </div>
         </div>
-      </div>
 
-      <StatusBar />
-    </div>
+        {/* ── Status Bar (System Health, Message, Clock) ── */}
+        <StatusBar />
+      </div>
+    </ConfigProvider>
   );
 }
 EOF

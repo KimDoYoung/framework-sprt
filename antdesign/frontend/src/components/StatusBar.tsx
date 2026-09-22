@@ -203,7 +203,7 @@ export const StatusBar: React.FC = () => {
           padding: '0 12px',
           color: '#94a3b8',
           fontSize: 11,
-          fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`,
+          fontFamily: 'var(--app-font-family)',
           userSelect: 'none',
           zIndex: 1000,
           flexShrink: 0,

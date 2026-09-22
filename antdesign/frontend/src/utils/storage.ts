@@ -15,6 +15,7 @@ export interface SavedLayoutItem {
 
 export interface AppSettings {
   menu23_font_size: number;
+  font_family?: 'pretendard' | 'nanum-square-neo' | 'nanum-gothic' | 'system';
   flexlayout_model?: any;
   saved_layouts?: SavedLayoutItem[];
   mypage_employee_collapsed?: boolean;
@@ -23,6 +24,7 @@ export interface AppSettings {
 
 export const defaultAppSettings: AppSettings = {
   menu23_font_size: 0,
+  font_family: 'pretendard',
   saved_layouts: [],
   mypage_employee_collapsed: false,
 };
