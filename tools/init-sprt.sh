@@ -688,12 +688,34 @@ EOF
 
 /* 1. AG Grid (1101 일반기안서, 1102 지출결의서, 1103 자산취득품의, 대용량 그리드 등) */
 .ag-theme-alpine {
-  --ag-row-hover-color: rgba(22, 119, 255, 0.13) !important; /* 선명하고 부드러운 소프트 블루 */
-  --ag-selected-row-background-color: rgba(22, 119, 255, 0.24) !important;
+  --ag-row-hover-color: #dbeafe !important;
+  --ag-selected-row-background-color: #bfdbfe !important;
 }
 
-.ag-theme-alpine .ag-row:not(.ag-row-pinned) {
-  cursor: pointer;
+/* 일반 데이터 행 마우스 호버 시 배경색 변경 (확실하게 눈에 띄는 스카이블루 #dbeafe) */
+.ag-theme-alpine .ag-row:not(.ag-row-pinned):hover,
+.ag-theme-alpine .ag-row:not(.ag-row-pinned).ag-row-hover {
+  background-color: #dbeafe !important;
+  cursor: pointer !important;
+}
+
+/* 행 내부의 모든 셀(좌측 고정 컬럼 셀 포함)도 동일한 호버 배경색 적용 */
+.ag-theme-alpine .ag-row:not(.ag-row-pinned):hover .ag-cell,
+.ag-theme-alpine .ag-row:not(.ag-row-pinned).ag-row-hover .ag-cell {
+  background-color: #dbeafe !important;
+}
+
+/* 선택된 행 */
+.ag-theme-alpine .ag-row-selected:not(.ag-row-pinned),
+.ag-theme-alpine .ag-row-selected:not(.ag-row-pinned) .ag-cell {
+  background-color: #bfdbfe !important;
+}
+
+/* 선택된 행에 마우스 호버 시 더 짙은 하이라이트 */
+.ag-theme-alpine .ag-row-selected:not(.ag-row-pinned):hover,
+.ag-theme-alpine .ag-row-selected:not(.ag-row-pinned):hover .ag-cell,
+.ag-theme-alpine .ag-row-selected:not(.ag-row-pinned).ag-row-hover .ag-cell {
+  background-color: #93c5fd !important;
 }
 
 /* 2. Ant Design 일반 Table (MyPage 상세 일정, 전자결재함, 컴플라이언스 등) */
@@ -702,9 +724,12 @@ EOF
 }
 
 .ant-table-wrapper .ant-table-tbody > tr:not(.ant-table-placeholder):hover > td,
-.ant-table-wrapper .ant-table-tbody > tr.ant-table-row:hover > td {
-  background-color: #e6f4ff !important; /* Ant Design 대표 hover 소프트 블루 */
-  cursor: pointer;
+.ant-table-wrapper .ant-table-tbody > tr.ant-table-row:hover > td,
+.ant-table-wrapper .ant-table-tbody > tr:hover > td,
+.schedule-table .ant-table-tbody > tr:hover > td,
+.schedule-table .ant-table-tbody > tr.ant-table-row:hover > td {
+  background-color: #dbeafe !important; /* 확실하게 식별 가능한 스카이블루 */
+  cursor: pointer !important;
 }
 
 /* 3. MyPage 달력 날짜 셀 호버 효과 */
@@ -713,7 +738,8 @@ EOF
 }
 
 .mypage-calendar-day-cell.is-current-month:not(.is-chosen):hover {
-  background-color: #f0f7ff !important;
+  background-color: #dbeafe !important;
+  cursor: pointer !important;
 }
 EOF
 
@@ -4961,9 +4987,10 @@ export const ScheduleGridBox: React.FC<ScheduleGridBoxProps> = ({ selectedDay })
         }
         /* 행 마우스 호버 시 명확한 하이라이트 배경색 및 커서 제공 */
         .schedule-table .ant-table-tbody > tr:hover > td,
-        .schedule-table .ant-table-tbody > tr.ant-table-row:hover > td {
-          background-color: #e6f4ff !important;
-          cursor: pointer;
+        .schedule-table .ant-table-tbody > tr.ant-table-row:hover > td,
+        .schedule-table .ant-table-row:hover td {
+          background-color: #dbeafe !important;
+          cursor: pointer !important;
         }
       `}</style>
 
@@ -6925,9 +6952,8 @@ export const DocExpenseManageView: React.FC = () => {
         }}
       >
         <style>{`
-          /* 인라인 편집 가능한 셀에 마우스 오버 시 연한 하이라이트 */
-          .ag-theme-alpine .editable-cell:hover {
-            background-color: #f8fafc !important;
+          /* 인라인 편집 가능한 셀 커서 모양 */
+          .ag-theme-alpine .editable-cell {
             cursor: cell;
           }
           .ag-theme-alpine .ag-row-pinned {

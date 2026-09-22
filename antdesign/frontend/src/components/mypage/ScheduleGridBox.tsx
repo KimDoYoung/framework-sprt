@@ -184,9 +184,10 @@ export const ScheduleGridBox: React.FC<ScheduleGridBoxProps> = ({ selectedDay })
         }
         /* 행 마우스 호버 시 명확한 하이라이트 배경색 및 커서 제공 */
         .schedule-table .ant-table-tbody > tr:hover > td,
-        .schedule-table .ant-table-tbody > tr.ant-table-row:hover > td {
-          background-color: #e6f4ff !important;
-          cursor: pointer;
+        .schedule-table .ant-table-tbody > tr.ant-table-row:hover > td,
+        .schedule-table .ant-table-row:hover td {
+          background-color: #dbeafe !important;
+          cursor: pointer !important;
         }
       `}</style>
 

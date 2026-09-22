@@ -473,9 +473,8 @@ export const DocExpenseManageView: React.FC = () => {
         }}
       >
         <style>{`
-          /* 인라인 편집 가능한 셀에 마우스 오버 시 연한 하이라이트 */
-          .ag-theme-alpine .editable-cell:hover {
-            background-color: #f8fafc !important;
+          /* 인라인 편집 가능한 셀 커서 모양 */
+          .ag-theme-alpine .editable-cell {
             cursor: cell;
           }
           .ag-theme-alpine .ag-row-pinned {
