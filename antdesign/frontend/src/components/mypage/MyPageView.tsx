@@ -36,13 +36,13 @@ export const MyPageView: React.FC = () => {
           overflow: 'hidden',
         }}
       >
-        {/* 상단: 월간 캘린더 */}
-        <div style={{ flexShrink: 0 }}>
+        {/* 상단: 월간 캘린더 (남은 높이를 유연하게 채우는 가변 셀 뷰 flex: 1) */}
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <MyPageCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
         </div>
 
-        {/* 하단: 기준일 상세 일정 그리드 */}
-        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {/* 하단: 기준일 상세 일정 그리드 (y축 패딩 축소 5개 행 기준 약 280px 고정) */}
+        <div style={{ height: 280, flexShrink: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <ScheduleGridBox selectedDay={selectedDate} />
         </div>
       </div>

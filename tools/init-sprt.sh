@@ -1115,7 +1115,7 @@ EOF
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/mock/data.ts"
 import { MenuLevel_1, EmployeeStatus, ScheduleItem, DayListItem, ApprovalItem, ComplianceItem, LargeAssetItem } from '../types';
-
+ 
 export const menuLevel_1_List: MenuLevel_1[] = [
   {
     id: 'doc',
@@ -1338,17 +1338,80 @@ export const mockScheduleList: ScheduleItem[] = [
     category: '부서일정',
     title: 'IT 인프라 자산 실사 및 라이선스 갱신 품의',
     registrant: '김승주',
-    dueDate: '2026-09-18 15:00',
+    dueDate: '2026-09-16 15:00',
     processedDate: '대기',
     detail: '보기',
   },
   {
     id: 's3',
     category: '자리비움',
-    title: '금융감독원 업무보고 세미나 참석',
+    title: '금융감독원 펀드 분기 결산 업무보고 세미나 참석',
     registrant: '김도영',
     dueDate: '2026-09-16 17:00',
     processedDate: '완료',
+    detail: '보기',
+  },
+  {
+    id: 's4',
+    category: '부서일정',
+    title: '사모펀드 수탁고 일일 대사 및 잔고 검증 회의',
+    registrant: '이정훈',
+    dueDate: '2026-09-16 11:30',
+    processedDate: '완료',
+    detail: '보기',
+  },
+  {
+    id: 's5',
+    category: '부서일정',
+    title: '신탁업자 고유자산 운용내역 컴플라이언스 정기 점검',
+    registrant: '박지민',
+    dueDate: '2026-09-16 14:00',
+    processedDate: '진행중',
+    detail: '보기',
+  },
+  {
+    id: 's6',
+    category: '나의일정',
+    title: '신규 퇴직연금 디폴트옵션 상품 등록 심사 보고',
+    registrant: '김도영',
+    dueDate: '2026-09-16 16:30',
+    processedDate: '대기',
+    detail: '보기',
+  },
+  {
+    id: 's7',
+    category: '부서일정',
+    title: '대체투자 자산 공정가치 평가 실무위원회 개최',
+    registrant: '정민우',
+    dueDate: '2026-09-16 17:00',
+    processedDate: '대기',
+    detail: '보기',
+  },
+  {
+    id: 's8',
+    category: '부서일정',
+    title: '외부 감사인 상반기 전산감사 실사 인터뷰 대응',
+    registrant: '김도영',
+    dueDate: '2026-09-16 10:00',
+    processedDate: '완료',
+    detail: '보기',
+  },
+  {
+    id: 's9',
+    category: '나의일정',
+    title: '부서 정기 주간 업무 보고 및 포트폴리오 리뷰',
+    registrant: '강동원',
+    dueDate: '2026-09-16 09:30',
+    processedDate: '완료',
+    detail: '보기',
+  },
+  {
+    id: 's10',
+    category: '부서일정',
+    title: '리스크관리위원회 의결사항 사후 모니터링 취합',
+    registrant: '한승우',
+    dueDate: '2026-09-16 17:30',
+    processedDate: '대기',
     detail: '보기',
   },
 ];
@@ -1472,7 +1535,6 @@ export function generateLargeAssetData(count: number = 10000): LargeAssetItem[] 
   }
   return items;
 }
-
 EOF
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/components/TopBar.tsx"
@@ -3518,7 +3580,8 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
     return (
       <div
         style={{
-          height: 96, // 48px의 2배 (96px)
+          height: '100%',
+          minHeight: 48,
           borderRight: '1px solid #e2e8f0',
           borderBottom: '1px solid #e2e8f0',
           padding: '4px 5px',
@@ -3638,15 +3701,51 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
         borderRadius: 4,
         overflow: 'hidden',
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       <style>{`
-        /* 요일 헤더(일~토) 밑 라인 및 스타일 */
+        /* 캘린더 전체 및 내부 테이블 높이 가변 100% 확장 */
+        .mypage-calendar-container .ant-picker-calendar {
+          height: 100% !important;
+          display: flex !important;
+          flex-direction: column !important;
+          flex: 1 !important;
+          min-height: 0 !important;
+        }
+        .mypage-calendar-container .ant-picker-panel {
+          height: 100% !important;
+          display: flex !important;
+          flex-direction: column !important;
+          flex: 1 !important;
+          min-height: 0 !important;
+        }
+        .mypage-calendar-container .ant-picker-date-panel {
+          height: 100% !important;
+          display: flex !important;
+          flex-direction: column !important;
+          flex: 1 !important;
+          min-height: 0 !important;
+        }
+        .mypage-calendar-container .ant-picker-body {
+          flex: 1 !important;
+          display: flex !important;
+          flex-direction: column !important;
+          min-height: 0 !important;
+          padding: 0 !important;
+        }
+        .mypage-calendar-container .ant-picker-content {
+          height: 100% !important;
+          width: 100% !important;
+          border-collapse: collapse !important;
+        }
         .mypage-calendar-container .ant-picker-content thead tr {
           border-bottom: 2px solid #cbd5e1 !important;
         }
         .mypage-calendar-container .ant-picker-content th {
-          padding: 6px 0 !important;
+          padding: 5px 0 !important;
           color: #334155 !important;
           font-weight: 600 !important;
           font-size: 12px !important;
@@ -3659,12 +3758,21 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
         .mypage-calendar-container .ant-picker-content th:last-child {
           color: #2563eb !important;
         }
+        .mypage-calendar-container .ant-picker-content tbody {
+          height: 100% !important;
+        }
         .mypage-calendar-container .ant-picker-cell {
           padding: 0 !important;
+          vertical-align: top !important;
+          height: 1% !important; /* 남은 높이 균등 분할 */
         }
         .mypage-calendar-container .ant-picker-cell-inner {
           padding: 0 !important;
           border-radius: 0 !important;
+          height: 100% !important;
+          min-height: 48px !important;
+          display: flex !important;
+          flex-direction: column !important;
         }
         /* 이번 달 날짜가 단 하나도 없는 행(완전히 다음 달로만 채워진 6번째 주 등) 자동 숨김 */
         .mypage-calendar-container .ant-picker-content tbody tr:not(:has(.ant-picker-cell-in-view)) {
@@ -3677,6 +3785,7 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
         onSelect={handleDateSelect}
         headerRender={renderHeader}
         fullCellRender={fullCellRender}
+        style={{ height: '100%' }}
       />
     </div>
   );
@@ -4020,19 +4129,20 @@ interface ScheduleGridBoxProps {
 }
 
 export const ScheduleGridBox: React.FC<ScheduleGridBoxProps> = ({ selectedDay }) => {
-  const [activeTab, setActiveTab] = useState<'all' | 'dept' | 'away'>('dept');
+  const [activeTab, setActiveTab] = useState<'all' | 'dept' | 'my' | 'away'>('all');
 
   const tabs = [
-    { key: 'my', label: '나의일정', count: 0 },
-    { key: 'dept', label: '부서일정', count: 1 },
+    { key: 'all', label: '전체', count: mockScheduleList.length },
+    { key: 'dept', label: '부서일정', count: mockScheduleList.filter((i) => i.category === '부서일정').length },
+    { key: 'my', label: '나의일정', count: mockScheduleList.filter((i) => i.category === '나의일정').length },
+    { key: 'away', label: '자리비움', count: mockScheduleList.filter((i) => i.category === '자리비움').length },
     { key: 'work', label: '업무활동', count: 0 },
     { key: 'alert', label: '알림', count: 0 },
-    { key: 'away', label: '자리비움', count: 1 },
-    { key: 'reserve', label: '예약', count: 0 },
   ];
 
   const filteredData = mockScheduleList.filter((item) => {
     if (activeTab === 'dept') return item.category === '부서일정';
+    if (activeTab === 'my') return item.category === '나의일정';
     if (activeTab === 'away') return item.category === '자리비움';
     return true;
   });
@@ -4044,13 +4154,16 @@ export const ScheduleGridBox: React.FC<ScheduleGridBoxProps> = ({ selectedDay })
       key: 'category',
       width: 80,
       render: (val: string) => (
-        <Tag color={val === '부서일정' ? 'blue' : 'default'} style={{ margin: 0, fontSize: 11 }}>
+        <Tag
+          color={val === '부서일정' ? 'blue' : val === '나의일정' ? 'cyan' : 'default'}
+          style={{ margin: 0, fontSize: 11 }}
+        >
           {val}
         </Tag>
       ),
     },
     {
-      title: '나의일정명',
+      title: '일정명',
       dataIndex: 'title',
       key: 'title',
       ellipsis: true,
@@ -4077,7 +4190,17 @@ export const ScheduleGridBox: React.FC<ScheduleGridBoxProps> = ({ selectedDay })
       key: 'processedDate',
       width: 75,
       align: 'center',
-      render: (val: string) => <span style={{ fontSize: 11, color: '#64748b' }}>{val || '-'}</span>,
+      render: (val: string) => (
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: val === '완료' || val === '진행중' ? 600 : 400,
+            color: val === '완료' ? '#22c55e' : val === '진행중' ? '#1677ff' : '#64748b',
+          }}
+        >
+          {val || '-'}
+        </span>
+      ),
     },
     {
       title: '상세보기',
@@ -4103,7 +4226,7 @@ export const ScheduleGridBox: React.FC<ScheduleGridBoxProps> = ({ selectedDay })
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
         display: 'flex',
         flexDirection: 'column',
-        flex: 1,
+        height: '100%',
         minHeight: 0,
       }}
     >
@@ -4121,8 +4244,11 @@ export const ScheduleGridBox: React.FC<ScheduleGridBoxProps> = ({ selectedDay })
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ color: '#1e3a5f', fontWeight: 700, fontSize: 13 }}>
-            ▶ 기준일 : 2026년 09월 {String(selectedDay).padStart(2, '0')}일
+            ▶ 기준일 : 2026년 09월 {String(selectedDay).padStart(2, '0')}일 상세 일정
           </span>
+          <Tag color="blue" style={{ margin: 0, fontSize: 11 }}>
+            총 {filteredData.length}건
+          </Tag>
         </div>
         <Button size="small" style={{ fontSize: 11, borderRadius: 3, height: 22 }}>
           ↪ 등록 바로가기
@@ -4139,6 +4265,7 @@ export const ScheduleGridBox: React.FC<ScheduleGridBoxProps> = ({ selectedDay })
           gap: 4,
           flexShrink: 0,
           flexWrap: 'wrap',
+          alignItems: 'center',
         }}
       >
         {tabs.map((tab) => {
@@ -4166,14 +4293,28 @@ export const ScheduleGridBox: React.FC<ScheduleGridBoxProps> = ({ selectedDay })
         })}
       </div>
 
-      {/* Ant Design Compact Table */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <style>{`
+        /* 테이블 row 높이 미세 축소: y축 패딩을 2px 줄여 컴팩트한 행 높이 제공 (기본 8px -> 6px) */
+        .schedule-table .ant-table-thead > tr > th {
+          padding-top: 6px !important;
+          padding-bottom: 6px !important;
+        }
+        .schedule-table .ant-table-tbody > tr > td {
+          padding-top: 6px !important;
+          padding-bottom: 6px !important;
+        }
+      `}</style>
+
+      {/* Ant Design Table: y축 패딩 2px 축소(6px), 5개 행(약 175px) 기준 스크롤 뷰 */}
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <Table<ScheduleItem>
+          className="schedule-table"
           rowKey="id"
           dataSource={filteredData}
           columns={columns}
           size="small"
           pagination={false}
+          scroll={{ y: 175 }} // 5개 행(각 약 35px) 기준 스크롤 높이
           style={{ width: '100%' }}
         />
       </div>
@@ -4593,13 +4734,13 @@ export const MyPageView: React.FC = () => {
           overflow: 'hidden',
         }}
       >
-        {/* 상단: 월간 캘린더 */}
-        <div style={{ flexShrink: 0 }}>
+        {/* 상단: 월간 캘린더 (남은 높이를 유연하게 채우는 가변 셀 뷰 flex: 1) */}
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <MyPageCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
         </div>
 
-        {/* 하단: 기준일 상세 일정 그리드 */}
-        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {/* 하단: 기준일 상세 일정 그리드 (y축 패딩 축소 5개 행 기준 약 280px 고정) */}
+        <div style={{ height: 280, flexShrink: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <ScheduleGridBox selectedDay={selectedDate} />
         </div>
       </div>

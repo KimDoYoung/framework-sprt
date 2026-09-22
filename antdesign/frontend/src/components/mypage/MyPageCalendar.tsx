@@ -207,7 +207,8 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
     return (
       <div
         style={{
-          height: 96, // 48px의 2배 (96px)
+          height: '100%',
+          minHeight: 48,
           borderRight: '1px solid #e2e8f0',
           borderBottom: '1px solid #e2e8f0',
           padding: '4px 5px',
@@ -327,15 +328,51 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
         borderRadius: 4,
         overflow: 'hidden',
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       <style>{`
-        /* 요일 헤더(일~토) 밑 라인 및 스타일 */
+        /* 캘린더 전체 및 내부 테이블 높이 가변 100% 확장 */
+        .mypage-calendar-container .ant-picker-calendar {
+          height: 100% !important;
+          display: flex !important;
+          flex-direction: column !important;
+          flex: 1 !important;
+          min-height: 0 !important;
+        }
+        .mypage-calendar-container .ant-picker-panel {
+          height: 100% !important;
+          display: flex !important;
+          flex-direction: column !important;
+          flex: 1 !important;
+          min-height: 0 !important;
+        }
+        .mypage-calendar-container .ant-picker-date-panel {
+          height: 100% !important;
+          display: flex !important;
+          flex-direction: column !important;
+          flex: 1 !important;
+          min-height: 0 !important;
+        }
+        .mypage-calendar-container .ant-picker-body {
+          flex: 1 !important;
+          display: flex !important;
+          flex-direction: column !important;
+          min-height: 0 !important;
+          padding: 0 !important;
+        }
+        .mypage-calendar-container .ant-picker-content {
+          height: 100% !important;
+          width: 100% !important;
+          border-collapse: collapse !important;
+        }
         .mypage-calendar-container .ant-picker-content thead tr {
           border-bottom: 2px solid #cbd5e1 !important;
         }
         .mypage-calendar-container .ant-picker-content th {
-          padding: 6px 0 !important;
+          padding: 5px 0 !important;
           color: #334155 !important;
           font-weight: 600 !important;
           font-size: 12px !important;
@@ -348,12 +385,21 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
         .mypage-calendar-container .ant-picker-content th:last-child {
           color: #2563eb !important;
         }
+        .mypage-calendar-container .ant-picker-content tbody {
+          height: 100% !important;
+        }
         .mypage-calendar-container .ant-picker-cell {
           padding: 0 !important;
+          vertical-align: top !important;
+          height: 1% !important; /* 남은 높이 균등 분할 */
         }
         .mypage-calendar-container .ant-picker-cell-inner {
           padding: 0 !important;
           border-radius: 0 !important;
+          height: 100% !important;
+          min-height: 48px !important;
+          display: flex !important;
+          flex-direction: column !important;
         }
         /* 이번 달 날짜가 단 하나도 없는 행(완전히 다음 달로만 채워진 6번째 주 등) 자동 숨김 */
         .mypage-calendar-container .ant-picker-content tbody tr:not(:has(.ant-picker-cell-in-view)) {
@@ -366,6 +412,7 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
         onSelect={handleDateSelect}
         headerRender={renderHeader}
         fullCellRender={fullCellRender}
+        style={{ height: '100%' }}
       />
     </div>
   );
