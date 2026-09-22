@@ -178,6 +178,7 @@ if [[ "$UI_FRAMEWORK" == "antd" ]]; then
     mkdir -p "$TARGET_DIR/frontend/src/components/common/modal"
     mkdir -p "$TARGET_DIR/frontend/src/components/layout"
     mkdir -p "$TARGET_DIR/frontend/src/pages/mypage/components"
+    mkdir -p "$TARGET_DIR/frontend/src/pages/doc"
     mkdir -p "$TARGET_DIR/frontend/src/pages/act/components"
     mkdir -p "$TARGET_DIR/frontend/src/pages/act/hooks"
     mkdir -p "$TARGET_DIR/frontend/src/pages/act/types"
@@ -507,7 +508,13 @@ EOF
     cat << 'EOF' > "$TARGET_DIR/frontend/src/main.tsx"
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
 import App from './App.tsx';
+
+// AG Grid Community 전체 모듈 등록
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -676,6 +683,38 @@ EOF
   color: #334155 !important;
   --color-icon: #334155;
 }
+
+/* ── 글로벌 마우스 호버(Hover) 배경색 하이라이트 효과 ── */
+
+/* 1. AG Grid (1101 일반기안서, 1102 지출결의서, 1103 자산취득품의, 대용량 그리드 등) */
+.ag-theme-alpine {
+  --ag-row-hover-color: rgba(22, 119, 255, 0.13) !important; /* 선명하고 부드러운 소프트 블루 */
+  --ag-selected-row-background-color: rgba(22, 119, 255, 0.24) !important;
+}
+
+.ag-theme-alpine .ag-row:not(.ag-row-pinned) {
+  cursor: pointer;
+}
+
+/* 2. Ant Design 일반 Table (MyPage 상세 일정, 전자결재함, 컴플라이언스 등) */
+.ant-table-wrapper .ant-table-tbody > tr {
+  transition: background-color 0.12s ease;
+}
+
+.ant-table-wrapper .ant-table-tbody > tr:not(.ant-table-placeholder):hover > td,
+.ant-table-wrapper .ant-table-tbody > tr.ant-table-row:hover > td {
+  background-color: #e6f4ff !important; /* Ant Design 대표 hover 소프트 블루 */
+  cursor: pointer;
+}
+
+/* 3. MyPage 달력 날짜 셀 호버 효과 */
+.mypage-calendar-day-cell {
+  transition: background-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.mypage-calendar-day-cell.is-current-month:not(.is-chosen):hover {
+  background-color: #f0f7ff !important;
+}
 EOF
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/types/index.ts"
@@ -764,6 +803,65 @@ export interface LargeAssetItem {
   complianceChecked: boolean;
 }
 
+// ── 1101 일반기안서 작성 타입 ──
+export interface DraftDocItem {
+  id: string;
+  docNo: string;
+  draftDate: string;
+  category: string;
+  title: string;
+  dept: string;
+  drafter: string;
+  status: '임시저장' | '결재대기' | '진행중' | '승인완료' | '반려';
+  approvalDate: string;
+  isUrgent: boolean;
+  retentionPeriod: string;
+  content?: string;
+}
+
+// ── 1102 비용품의서 작성 타입 ──
+export interface ExpenseDocItem {
+  id: string;
+  expenseDate: string;
+  accountName: string;
+  description: string;
+  merchant: string;
+  supplyAmount: number;
+  taxAmount: number;
+  totalAmount: number;
+  paymentMethod: '법인카드' | '세금계산서' | '개인카드' | '현금영수증';
+  evidenceStatus: '첨부완료' | '미첨부';
+  dept: string;
+  isDirty?: boolean;
+}
+
+// ── 1103 자산취득품의서 마스터/디테일 타입 ──
+export interface AssetAcqMasterItem {
+  id: string;
+  docNo: string;
+  reqDate: string;
+  title: string;
+  dept: string;
+  requester: string;
+  totalBudget: number;
+  itemCount: number;
+  status: '작성중' | '결재대기' | '승인완료' | '집행완료';
+}
+
+export interface AssetAcqDetailItem {
+  id: string;
+  masterId: string;
+  assetCode: string;
+  category: string;
+  name: string;
+  spec: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  location: string;
+  targetUser: string;
+  note?: string;
+}
 EOF
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/utils/storage.ts"
@@ -1114,7 +1212,19 @@ export function useLocalStorage<T>(
 EOF
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/mock/data.ts"
-import { MenuLevel_1, EmployeeStatus, ScheduleItem, DayListItem, ApprovalItem, ComplianceItem, LargeAssetItem } from '../types';
+import {
+  MenuLevel_1,
+  EmployeeStatus,
+  ScheduleItem,
+  DayListItem,
+  ApprovalItem,
+  ComplianceItem,
+  LargeAssetItem,
+  DraftDocItem,
+  ExpenseDocItem,
+  AssetAcqMasterItem,
+  AssetAcqDetailItem,
+} from '../types';
  
 export const menuLevel_1_List: MenuLevel_1[] = [
   {
@@ -1535,6 +1645,551 @@ export function generateLargeAssetData(count: number = 10000): LargeAssetItem[] 
   }
   return items;
 }
+
+// ── 1101 일반기안서 목업 데이터 ──
+export const mockDraftDocList: DraftDocItem[] = [
+  {
+    id: 'dft-1',
+    docNo: 'DFT-2026-0089',
+    draftDate: '2026-09-22',
+    category: '일반기안',
+    title: '[책무구조도] 2026년 3분기 내부통제 관리의무 이행점검 결과 보고 및 개선안 승인의 건',
+    dept: 'IT개발실',
+    drafter: '김도영',
+    status: '진행중',
+    approvalDate: '2026-09-22 14:30',
+    isUrgent: true,
+    retentionPeriod: '5년',
+    content: '금융회사 지배구조법 개정에 따른 3분기 임원별 관리의무 및 IT정보보호 영역 점검 결과를 보고하며, 미흡사항에 대한 보완조치 계획을 상신합니다.',
+  },
+  {
+    id: 'dft-2',
+    docNo: 'DFT-2026-0088',
+    draftDate: '2026-09-21',
+    category: '업무협조',
+    title: '신규 사모투자재간접펀드(PEF) 수탁계약 체결에 따른 전산시스템 연계 지원 요청',
+    dept: '자산운용팀',
+    drafter: '이정훈',
+    status: '승인완료',
+    approvalDate: '2026-09-21 17:10',
+    isUrgent: false,
+    retentionPeriod: '영구',
+    content: '신규 출시 예정인 PEF 펀드의 수탁사(신한은행) 전문 대사 및 일일 잔고 검증 프로세스 구축을 위한 IT 지원을 요청합니다.',
+  },
+  {
+    id: 'dft-3',
+    docNo: 'DFT-2026-0087',
+    draftDate: '2026-09-20',
+    category: '인사총무',
+    title: '2026년 하반기 전문계약직 운용역 채용 계획안 및 연봉 테이블 검토의 건',
+    dept: '인사총무팀',
+    drafter: '정가해',
+    status: '결재대기',
+    approvalDate: '-',
+    isUrgent: false,
+    retentionPeriod: '3년',
+    content: '대체투자 및 부동산 실물자산 운용역 2인 채용에 관한 공고 및 심사 기준 승인을 요청드립니다.',
+  },
+  {
+    id: 'dft-4',
+    docNo: 'DFT-2026-0086',
+    draftDate: '2026-09-19',
+    category: '규정개정',
+    title: '임직원 개인정보보호 및 단말기 보안통제 내규 일부 개정의 건',
+    dept: '준법감시실',
+    drafter: '한송이',
+    status: '승인완료',
+    approvalDate: '2026-09-20 11:20',
+    isUrgent: false,
+    retentionPeriod: '영구',
+    content: '금융보안원 보안관제 권고에 따라 망분리 예외 단말에 대한 보안수칙을 강화하고자 관련 내규를 개정합니다.',
+  },
+  {
+    id: 'dft-5',
+    docNo: 'DFT-2026-0085',
+    draftDate: '2026-09-18',
+    category: '일반기안',
+    title: '추석 연휴 전산인프라 비상당직 편성 및 24시간 장애대응 매뉴얼 공유',
+    dept: 'IT정보전략실',
+    drafter: '김승주',
+    status: '승인완료',
+    approvalDate: '2026-09-18 16:45',
+    isUrgent: true,
+    retentionPeriod: '1년',
+    content: '추석 명절 연휴 기간 데이터센터 서버 모니터링 및 비상연락망 가동 계획입니다.',
+  },
+  {
+    id: 'dft-6',
+    docNo: 'DFT-2026-0084',
+    draftDate: '2026-09-17',
+    category: '제휴제안',
+    title: '글로벌 ETF 시장데이터 피드(Bloomberg B-PIPE) 제휴 라이선스 갱신 품의',
+    dept: '금융영업부',
+    drafter: '박동진',
+    status: '반려',
+    approvalDate: '2026-09-18 09:30',
+    isUrgent: false,
+    retentionPeriod: '3년',
+    content: '단가 인상률이 과다하여 대체 솔루션(Refinitiv) 검토 후 재상신 요망.',
+  },
+  {
+    id: 'dft-7',
+    docNo: 'DFT-2026-0083',
+    draftDate: '2026-09-16',
+    category: '일반기안',
+    title: '사내 업무포털 및 ERP UI 전환 프로토타입(Ant Design) 시범도입 계획',
+    dept: 'IT개발실',
+    drafter: '김도영',
+    status: '임시저장',
+    approvalDate: '-',
+    isUrgent: false,
+    retentionPeriod: '3년',
+    content: '레거시 GXT 프레임워크를 대체하기 위한 Spring Boot + React + Ant Design 프로토타입 개발 보고서.',
+  },
+  {
+    id: 'dft-8',
+    docNo: 'DFT-2026-0082',
+    draftDate: '2026-09-15',
+    category: '업무협조',
+    title: '외감법인 외부회계감사 중간감사 수검 준비 및 자료제출 협조',
+    dept: '재무회계본부',
+    drafter: '나필순',
+    status: '진행중',
+    approvalDate: '2026-09-16 10:00',
+    isUrgent: false,
+    retentionPeriod: '5년',
+    content: '삼일회계법인 중간 전산감사 실사 인터뷰 및 재무자료 제출 일정 안내.',
+  },
+  {
+    id: 'dft-9',
+    docNo: 'DFT-2026-0081',
+    draftDate: '2026-09-14',
+    category: '인사총무',
+    title: '2026년 10월 전사 체육대회 및 추계 워크숍 일정 승인 건',
+    dept: '인사총무팀',
+    drafter: '정가해',
+    status: '승인완료',
+    approvalDate: '2026-09-15 15:30',
+    isUrgent: false,
+    retentionPeriod: '1년',
+    content: '가평 마이다스리조트 전사 임직원 추계 워크숍 진행 계획.',
+  },
+  {
+    id: 'dft-10',
+    docNo: 'DFT-2026-0080',
+    draftDate: '2026-09-13',
+    category: '일반기안',
+    title: '컴플라이언스 상시 모니터링 룰셋(불건전영업행위 방지) 업데이트 승인',
+    dept: '컴플라이언스팀',
+    drafter: '천영임',
+    status: '승인완료',
+    approvalDate: '2026-09-14 14:00',
+    isUrgent: false,
+    retentionPeriod: '5년',
+    content: '자본시장법 시행령 개정에 맞춘 사전 주문 이상징후 탐지 룰 적용.',
+  },
+];
+
+// ── 1102 비용품의서 목업 데이터 ──
+export const mockExpenseDocList: ExpenseDocItem[] = [
+  {
+    id: 'exp-1',
+    expenseDate: '2026-09-22',
+    accountName: '지급수수료',
+    description: 'AWS 클라우드 인프라 8월 사용료 정산 (EC2, RDS, S3)',
+    merchant: '아마존웹서비시즈코리아(유)',
+    supplyAmount: 4850000,
+    taxAmount: 485000,
+    totalAmount: 5335000,
+    paymentMethod: '세금계산서',
+    evidenceStatus: '첨부완료',
+    dept: 'IT개발실',
+  },
+  {
+    id: 'exp-2',
+    expenseDate: '2026-09-22',
+    accountName: '회의비',
+    description: '책무구조도 외부 법률자문위원회 실무 회의 및 식대',
+    merchant: '여의도 한암동 본점',
+    supplyAmount: 380000,
+    taxAmount: 38000,
+    totalAmount: 418000,
+    paymentMethod: '법인카드',
+    evidenceStatus: '첨부완료',
+    dept: '준법감시실',
+  },
+  {
+    id: 'exp-3',
+    expenseDate: '2026-09-21',
+    accountName: '도서인쇄비',
+    description: '금융투자협회 2026년 자본시장법 해설집 및 최신 실무교재 구매',
+    merchant: '교보문고 영등포점',
+    supplyAmount: 185000,
+    taxAmount: 0,
+    totalAmount: 185000,
+    paymentMethod: '법인카드',
+    evidenceStatus: '첨부완료',
+    dept: 'IT개발실',
+  },
+  {
+    id: 'exp-4',
+    expenseDate: '2026-09-20',
+    accountName: '소모품비',
+    description: 'IT개발실 및 펀드운용팀 토너 카트리지 및 A4 복사용지 20박스',
+    merchant: '오피스디포 여의도점',
+    supplyAmount: 420000,
+    taxAmount: 42000,
+    totalAmount: 462000,
+    paymentMethod: '법인카드',
+    evidenceStatus: '첨부완료',
+    dept: '인사총무팀',
+  },
+  {
+    id: 'exp-5',
+    expenseDate: '2026-09-19',
+    accountName: '여비교통비',
+    description: '부산 벡스코 금융포럼 출장 KTX 왕복 및 시내교통비 정산 (3인)',
+    merchant: '한국철도공사',
+    supplyAmount: 358800,
+    taxAmount: 0,
+    totalAmount: 358800,
+    paymentMethod: '법인카드',
+    evidenceStatus: '첨부완료',
+    dept: '금융영업부',
+  },
+  {
+    id: 'exp-6',
+    expenseDate: '2026-09-18',
+    accountName: '교육훈련비',
+    description: '한국금융투자협회 금융사 IT 보안 아키텍처 전문과정 수강료 (김도영)',
+    merchant: '금융투자교육원',
+    supplyAmount: 850000,
+    taxAmount: 0,
+    totalAmount: 850000,
+    paymentMethod: '세금계산서',
+    evidenceStatus: '첨부완료',
+    dept: 'IT개발실',
+  },
+  {
+    id: 'exp-7',
+    expenseDate: '2026-09-17',
+    accountName: '복리후생비',
+    description: '개발팀 야간 비상 장애대응 근무자 특식 및 다과비',
+    merchant: '배달의민족 (우아한형제들)',
+    supplyAmount: 145000,
+    taxAmount: 14500,
+    totalAmount: 159500,
+    paymentMethod: '법인카드',
+    evidenceStatus: '첨부완료',
+    dept: 'IT개발실',
+  },
+  {
+    id: 'exp-8',
+    expenseDate: '2026-09-16',
+    accountName: '지급수수료',
+    description: '코스콤 FNPricing 펀드 기준가 산정 엔진 9월 라이선스 이용료',
+    merchant: '(주)코스콤',
+    supplyAmount: 3200000,
+    taxAmount: 320000,
+    totalAmount: 3520000,
+    paymentMethod: '세금계산서',
+    evidenceStatus: '첨부완료',
+    dept: '자산운용팀',
+  },
+  {
+    id: 'exp-9',
+    expenseDate: '2026-09-15',
+    accountName: '소모품비',
+    description: '본사 전산실 랙 선반 및 CAT.7 랜케이블/패치코드 일체',
+    merchant: '강원전자 주식회사',
+    supplyAmount: 260000,
+    taxAmount: 26000,
+    totalAmount: 286000,
+    paymentMethod: '법인카드',
+    evidenceStatus: '첨부완료',
+    dept: 'IT정보전략실',
+  },
+  {
+    id: 'exp-10',
+    expenseDate: '2026-09-14',
+    accountName: '회의비',
+    description: '기관투자가 대상 신규 OCIO 상품 설명회 및 오찬 미팅',
+    merchant: '더플라자호텔 세븐스퀘어',
+    supplyAmount: 640000,
+    taxAmount: 64000,
+    totalAmount: 704000,
+    paymentMethod: '법인카드',
+    evidenceStatus: '첨부완료',
+    dept: '금융영업부',
+  },
+];
+
+// ── 1103 자산취득품의서 마스터/디테일 목업 데이터 ──
+export const mockAssetAcqMasterList: AssetAcqMasterItem[] = [
+  {
+    id: 'acq-m1',
+    docNo: 'ACQ-2026-0041',
+    reqDate: '2026-09-22',
+    title: '2026년 하반기 클라우드 전환 전산 개발장비 및 서버 인프라 확충의 건',
+    dept: 'IT개발실',
+    requester: '김도영',
+    totalBudget: 42800000,
+    itemCount: 4,
+    status: '결재대기',
+  },
+  {
+    id: 'acq-m2',
+    docNo: 'ACQ-2026-0040',
+    reqDate: '2026-09-19',
+    title: '여의도 파크원 본사 10층 자산운용 트레이딩룸 PC/모니터 듀얼 환경 구축',
+    dept: '자산운용팀',
+    requester: '이정훈',
+    totalBudget: 24500000,
+    itemCount: 3,
+    status: '승인완료',
+  },
+  {
+    id: 'acq-m3',
+    docNo: 'ACQ-2026-0039',
+    reqDate: '2026-09-15',
+    title: '가산 IDC 센터 백업 스토리지 및 네트워크 방화벽 교체 도입의 건',
+    dept: 'IT정보전략실',
+    requester: '김승주',
+    totalBudget: 68000000,
+    itemCount: 2,
+    status: '집행완료',
+  },
+  {
+    id: 'acq-m4',
+    docNo: 'ACQ-2026-0038',
+    reqDate: '2026-09-10',
+    title: '준법감시실 및 컴플라이언스 상시감사 전용 단말기 및 암호화 USB 구매',
+    dept: '준법감시실',
+    requester: '한송이',
+    totalBudget: 7800000,
+    itemCount: 2,
+    status: '승인완료',
+  },
+  {
+    id: 'acq-m5',
+    docNo: 'ACQ-2026-0037',
+    reqDate: '2026-09-05',
+    title: '신규 입사자 사무용 인체공학 의자 및 전동 데스크 가구 일괄 취득',
+    dept: '인사총무팀',
+    requester: '정가해',
+    totalBudget: 15400000,
+    itemCount: 3,
+    status: '집행완료',
+  },
+];
+
+export const mockAssetAcqDetailList: AssetAcqDetailItem[] = [
+  // acq-m1 (4건)
+  {
+    id: 'acq-d1',
+    masterId: 'acq-m1',
+    assetCode: 'SRV-001',
+    category: 'IT서버',
+    name: 'Dell PowerEdge R760 Rack Server',
+    spec: 'Dual Xeon Gold 6430 / 256GB RAM / 4x1.92TB NVMe',
+    quantity: 2,
+    unitPrice: 14500000,
+    totalPrice: 29000000,
+    location: 'IDC 가산센터 R-3',
+    targetUser: 'IT개발실 공용',
+    note: '클라우드 마이그레이션 백엔드 테스트베드',
+  },
+  {
+    id: 'acq-d2',
+    masterId: 'acq-m1',
+    assetCode: 'DEV-002',
+    category: 'PC/노트북',
+    name: 'Apple MacBook Pro 16형 (M3 Max)',
+    spec: 'M3 Max 16코어 / 64GB RAM / 1TB SSD',
+    quantity: 2,
+    unitPrice: 4800000,
+    totalPrice: 9600000,
+    location: '본사 8F 개발실',
+    targetUser: '김도영 이사, 수석개발자',
+    note: '아키텍처 설계 및 대규모 빌드용',
+  },
+  {
+    id: 'acq-d3',
+    masterId: 'acq-m1',
+    assetCode: 'MON-003',
+    category: 'PC/노트북',
+    name: 'Dell UltraSharp 32인치 4K 모니터 (U3223QE)',
+    spec: '32형 IPS Black 4K / USB-C 허브 / 400nits',
+    quantity: 3,
+    unitPrice: 1100000,
+    totalPrice: 3300000,
+    location: '본사 8F 개발실',
+    targetUser: '개발팀원 공용',
+    note: '다중 분할 소스코드 뷰어용',
+  },
+  {
+    id: 'acq-d4',
+    masterId: 'acq-m1',
+    assetCode: 'LIC-004',
+    category: 'SW라이선스',
+    name: 'IntelliJ IDEA Ultimate 10 User Pack',
+    spec: 'JetBrains 상업용 연간 구독 라이선스',
+    quantity: 1,
+    unitPrice: 900000,
+    totalPrice: 900000,
+    location: '본사 전사',
+    targetUser: '개발팀 전체',
+    note: '2026-2027 연간 갱신',
+  },
+
+  // acq-m2 (3건)
+  {
+    id: 'acq-d5',
+    masterId: 'acq-m2',
+    assetCode: 'TRD-010',
+    category: 'PC/노트북',
+    name: 'HP Z4 G5 Workstation',
+    spec: 'Intel Xeon W5 / 64GB DDR5 / RTX 4000 Ada 20GB',
+    quantity: 3,
+    unitPrice: 5200000,
+    totalPrice: 15600000,
+    location: '본사 10F 트레이딩룸',
+    targetUser: '이정훈 팀장 외 2인',
+    note: '고빈도 실시간 틱데이터 처리용',
+  },
+  {
+    id: 'acq-d6',
+    masterId: 'acq-m2',
+    assetCode: 'MON-011',
+    category: 'PC/노트북',
+    name: 'LG 울트라기어 34인치 WQHD 곡면 모니터',
+    spec: '34형 21:9 WQHD 커브드 / 160Hz',
+    quantity: 6,
+    unitPrice: 850000,
+    totalPrice: 5100000,
+    location: '본사 10F 트레이딩룸',
+    targetUser: '운용역 3인 듀얼 셋업',
+    note: '블룸버그 및 차트 모니터링용',
+  },
+  {
+    id: 'acq-d7',
+    masterId: 'acq-m2',
+    assetCode: 'NET-012',
+    category: '네트워크장비',
+    name: 'Cisco Catalyst 1000 24포트 PoE 스위치',
+    spec: '24 x 10/100/1000, 4 x 1G SFP',
+    quantity: 1,
+    unitPrice: 3800000,
+    totalPrice: 3800000,
+    location: '본사 10F EPS실',
+    targetUser: '트레이딩룸 네트워크',
+    note: '독립 망분리 저지연 라우팅',
+  },
+
+  // acq-m3 (2건)
+  {
+    id: 'acq-d8',
+    masterId: 'acq-m3',
+    assetCode: 'STO-020',
+    category: 'IT서버',
+    name: 'Synology Enterprise All-Flash FS3410',
+    spec: '24베이 2.5인치 / 10GbE SFP+ / 64GB ECC',
+    quantity: 1,
+    unitPrice: 42000000,
+    totalPrice: 42000000,
+    location: '가산 IDC 4층',
+    targetUser: '전사 백업 시스템',
+    note: '자산운용 데이터 실시간 스냅샷',
+  },
+  {
+    id: 'acq-d9',
+    masterId: 'acq-m3',
+    assetCode: 'FW-021',
+    category: '네트워크장비',
+    name: 'Palo Alto Networks PA-1410 차세대 방화벽',
+    spec: '최대 처리량 8.5Gbps / Threat Prevention 4.5G',
+    quantity: 1,
+    unitPrice: 26000000,
+    totalPrice: 26000000,
+    location: '가산 IDC 4층',
+    targetUser: '인프라보안',
+    note: '금융보안 가이드라인 차세대 방화벽 교체',
+  },
+
+  // acq-m4 (2건)
+  {
+    id: 'acq-d10',
+    masterId: 'acq-m4',
+    assetCode: 'SEC-030',
+    category: 'PC/노트북',
+    name: 'Lenovo ThinkPad P16s Gen 2 (보안단말)',
+    spec: 'AMD Ryzen 7 PRO / 32GB / SmartCard 리더 탑재',
+    quantity: 2,
+    unitPrice: 3200000,
+    totalPrice: 6400000,
+    location: '본사 11F 준법감시실',
+    targetUser: '한송이 차장, 박지민 대리',
+    note: '감사로그 열람 전용 분리단말',
+  },
+  {
+    id: 'acq-d11',
+    masterId: 'acq-m4',
+    assetCode: 'SEC-031',
+    category: '사무용기기',
+    name: 'DataLocker FIPS 140-2 암호화 외장보안키 1TB',
+    spec: '하드웨어 256비트 AES 암호화 키패드',
+    quantity: 2,
+    unitPrice: 700000,
+    totalPrice: 1400000,
+    location: '준법감시실 금고',
+    targetUser: '준법감시인 관리',
+    note: '감사 증빙자료 안전 보관',
+  },
+
+  // acq-m5 (3건)
+  {
+    id: 'acq-d12',
+    masterId: 'acq-m5',
+    assetCode: 'FUR-040',
+    category: '사무용기기',
+    name: 'Herman Miller New Aeron Chair (Full)',
+    spec: '포워드 틸팅 / 럼버 서포트 / 그라파이트 프레임',
+    quantity: 6,
+    unitPrice: 1900000,
+    totalPrice: 11400000,
+    location: '본사 8층/10층',
+    targetUser: '신규 입사 전문직',
+    note: '직원 복지 인체공학 체어',
+  },
+  {
+    id: 'acq-d13',
+    masterId: 'acq-m5',
+    assetCode: 'FUR-041',
+    category: '사무용기기',
+    name: '데스커 모션데스크 듀얼모터 전동 높이조절',
+    spec: '1600x800 / 메모리 프리셋 / 스마트 콘센트',
+    quantity: 3,
+    unitPrice: 850000,
+    totalPrice: 2550000,
+    location: '본사 8층 개발실',
+    targetUser: '개발팀 집중 업무존',
+    note: '스탠딩 워크스페이스 구축',
+  },
+  {
+    id: 'acq-d14',
+    masterId: 'acq-m5',
+    assetCode: 'FUR-042',
+    category: '사무용기기',
+    name: '펠로우즈 서서일하는 풋레스트 발받침대',
+    spec: '각도조절형 마사지 롤러 내장',
+    quantity: 5,
+    unitPrice: 290000,
+    totalPrice: 1450000,
+    location: '본사 8층 개발실',
+    targetUser: '개발팀',
+    note: '자세교정 악세사리',
+  },
+];
 EOF
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/components/TopBar.tsx"
@@ -3579,6 +4234,7 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
 
     return (
       <div
+        className={`mypage-calendar-day-cell ${isChosen ? 'is-chosen' : ''} ${isCurrentMonth ? 'is-current-month' : 'is-other-month'}`}
         style={{
           height: '100%',
           minHeight: 48,
@@ -4303,6 +4959,12 @@ export const ScheduleGridBox: React.FC<ScheduleGridBoxProps> = ({ selectedDay })
           padding-top: 2px !important;
           padding-bottom: 2px !important;
         }
+        /* 행 마우스 호버 시 명확한 하이라이트 배경색 및 커서 제공 */
+        .schedule-table .ant-table-tbody > tr:hover > td,
+        .schedule-table .ant-table-tbody > tr.ant-table-row:hover > td {
+          background-color: #e6f4ff !important;
+          cursor: pointer;
+        }
       `}</style>
 
       {/* Ant Design Table: 2개 Tr 높이(약 56px) 추가하여 약 8개 행 표시 (scroll y: 231px) */}
@@ -4805,8 +5467,8 @@ import {
 } from '@ant-design/icons';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef } from 'ag-grid-community';
-import { generateLargeAssetData } from '../../../mock/data';
-import { LargeAssetItem } from '../../../types';
+import { generateLargeAssetData } from '../mock/data';
+import { LargeAssetItem } from '../types';
 
 interface LargeDataViewProps {
   title?: string;
@@ -4898,42 +5560,36 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
         pinned: 'left',
         cellStyle: { fontFamily: 'monospace', fontWeight: 600 } as Record<string, string | number>,
         sortable: true,
-        filter: true,
       },
       {
         field: 'name',
         headerName: '자산명 / 모델규격',
         width: 260,
         sortable: true,
-        filter: true,
       },
       {
         field: 'category',
         headerName: '자산분류',
         width: 140,
         sortable: true,
-        filter: true,
       },
       {
         field: 'dept',
         headerName: '관리부서',
         width: 120,
         sortable: true,
-        filter: true,
       },
       {
         field: 'manager',
         headerName: '담당자',
         width: 100,
         sortable: true,
-        filter: true,
       },
       {
         field: 'status',
         headerName: '상태',
         width: 110,
         sortable: true,
-        filter: true,
         cellRenderer: (params: any) => {
           const status = params.value;
           let color = 'green';
@@ -4967,7 +5623,6 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
         headerName: '취득일자',
         width: 120,
         sortable: true,
-        filter: true,
       },
       {
         field: 'location',
@@ -5156,7 +5811,8 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
           defaultColDef={{
             resizable: true,
             sortable: true,
-            filter: true,
+            filter: false,
+            suppressHeaderMenuButton: true,
           }}
           pagination={false} // Virtual DOM scrolling for extreme performance!
         />
@@ -5164,6 +5820,1816 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
     </div>
   );
 };
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/doc/DocDraftManageView.tsx"
+import React, { useState, useRef, useMemo, useCallback } from 'react';
+import { Card, Button, Input, Select, Tag, Space, Modal, Form, message, Popconfirm, Badge } from 'antd';
+import {
+  SearchOutlined,
+  PlusOutlined,
+  DeleteOutlined,
+  ReloadOutlined,
+  DownloadOutlined,
+  SendOutlined,
+  FileTextOutlined,
+  EyeOutlined,
+} from '@ant-design/icons';
+import { AgGridReact } from 'ag-grid-react';
+import { ColDef, RowDoubleClickedEvent } from 'ag-grid-community';
+import { mockDraftDocList } from '../../mock/data';
+import { DraftDocItem } from '../../types';
+
+export const DocDraftManageView: React.FC = () => {
+  const gridRef = useRef<AgGridReact<DraftDocItem>>(null);
+  const [rowData, setRowData] = useState<DraftDocItem[]>(() => [...mockDraftDocList]);
+  const [quickFilterText, setQuickFilterText] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+
+  // 모달 상태
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [detailModalDoc, setDetailModalDoc] = useState<DraftDocItem | null>(null);
+  const [form] = Form.useForm();
+
+  // 통계 계산
+  const stats = useMemo(() => {
+    const total = rowData.length;
+    const pending = rowData.filter((d) => d.status === '결재대기').length;
+    const ongoing = rowData.filter((d) => d.status === '진행중').length;
+    const approved = rowData.filter((d) => d.status === '승인완료').length;
+    const rejected = rowData.filter((d) => d.status === '반려').length;
+    const draft = rowData.filter((d) => d.status === '임시저장').length;
+    return { total, pending, ongoing, approved, rejected, draft };
+  }, [rowData]);
+
+  // 필터링된 데이터
+  const filteredData = useMemo(() => {
+    return rowData.filter((item) => {
+      if (selectedCategory !== 'all' && item.category !== selectedCategory) return false;
+      if (selectedStatus !== 'all' && item.status !== selectedStatus) return false;
+      return true;
+    });
+  }, [rowData, selectedCategory, selectedStatus]);
+
+  // 새로고침 / 초기화
+  const handleReload = () => {
+    setRowData([...mockDraftDocList]);
+    setQuickFilterText('');
+    setSelectedCategory('all');
+    setSelectedStatus('all');
+    message.success('기안서 목록이 새로고침되었습니다.');
+  };
+
+  // CSV 내보내기 (AgGrid Community 내장 기능)
+  const handleExportCsv = useCallback(() => {
+    if (gridRef.current?.api) {
+      gridRef.current.api.exportDataAsCsv({
+        fileName: `일반기안서목록_${new Date().toISOString().slice(0, 10)}.csv`,
+      });
+      message.info('CSV 내보내기가 완료되었습니다.');
+    }
+  }, []);
+
+  // 선택 행 일괄 삭제
+  const handleDeleteSelected = () => {
+    const selectedNodes = gridRef.current?.api?.getSelectedNodes();
+    if (!selectedNodes || selectedNodes.length === 0) {
+      message.warning('삭제할 문서를 선택해 주세요.');
+      return;
+    }
+    const selectedIds = new Set(selectedNodes.map((n) => n.data?.id));
+    setRowData((prev) => prev.filter((item) => !selectedIds.has(item.id)));
+    message.success(`${selectedNodes.length}건의 기안서가 삭제되었습니다.`);
+  };
+
+  // 선택 행 일괄 결재상신 (임시저장 건 대상)
+  const handleSubmitSelected = () => {
+    const selectedNodes = gridRef.current?.api?.getSelectedNodes();
+    if (!selectedNodes || selectedNodes.length === 0) {
+      message.warning('상신할 문서를 선택해 주세요.');
+      return;
+    }
+    const draftNodes = selectedNodes.filter((n) => n.data?.status === '임시저장');
+    if (draftNodes.length === 0) {
+      message.warning('선택한 문서 중 [임시저장] 상태인 문서가 없습니다.');
+      return;
+    }
+    const draftIds = new Set(draftNodes.map((n) => n.data?.id));
+    setRowData((prev) =>
+      prev.map((item) =>
+        draftIds.has(item.id)
+          ? { ...item, status: '결재대기' as const, draftDate: new Date().toISOString().slice(0, 10) }
+          : item
+      )
+    );
+    message.success(`${draftNodes.length}건의 문서가 [결재대기] 상태로 일괄 상신되었습니다.`);
+  };
+
+  // 행 더블클릭 시 상세 모달 열기
+  const handleRowDoubleClicked = (event: RowDoubleClickedEvent<DraftDocItem>) => {
+    if (event.data) {
+      setDetailModalDoc(event.data);
+    }
+  };
+
+  // 신규 기안서 작성 제출
+  const handleCreateDraft = (isDirectSubmit: boolean) => {
+    form.validateFields().then((values) => {
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10);
+      const newDoc: DraftDocItem = {
+        id: `dft-${Date.now()}`,
+        docNo: `DFT-2026-${String(rowData.length + 1).padStart(4, '0')}`,
+        draftDate: dateStr,
+        category: values.category,
+        title: values.title,
+        dept: values.dept || 'IT개발실',
+        drafter: values.drafter || '김도영',
+        status: isDirectSubmit ? '결재대기' : '임시저장',
+        approvalDate: '-',
+        isUrgent: values.isUrgent || false,
+        retentionPeriod: values.retentionPeriod || '3년',
+        content: values.content,
+      };
+
+      setRowData((prev) => [newDoc, ...prev]);
+      setIsModalOpen(false);
+      form.resetFields();
+      message.success(
+        isDirectSubmit ? '기안서가 [결재대기] 상태로 상신되었습니다.' : '기안서가 [임시저장]되었습니다.'
+      );
+    });
+  };
+
+  // AG Grid 컬럼 정의
+  const columnDefs: ColDef<DraftDocItem>[] = useMemo(
+    () => [
+      {
+        field: 'docNo',
+        headerName: '문서번호',
+        width: 150,
+        pinned: 'left',
+        checkboxSelection: true,
+        headerCheckboxSelection: true,
+        headerCheckboxSelectionFilteredOnly: true,
+        cellRenderer: (params: any) => (
+          <span style={{ fontWeight: 600, color: '#1677ff', cursor: 'pointer' }}>
+            {params.value}
+          </span>
+        ),
+      },
+      {
+        field: 'draftDate',
+        headerName: '기안일자',
+        width: 110,
+        sortable: true,
+      },
+      {
+        field: 'category',
+        headerName: '문서분류',
+        width: 100,
+        sortable: true,
+        cellRenderer: (params: any) => {
+          const cat = params.value;
+          const color =
+            cat === '일반기안'
+              ? 'blue'
+              : cat === '업무협조'
+              ? 'cyan'
+              : cat === '규정개정'
+              ? 'purple'
+              : cat === '인사총무'
+              ? 'geekblue'
+              : 'default';
+          return <Tag color={color} style={{ margin: 0, fontSize: 11 }}>{cat}</Tag>;
+        },
+      },
+      {
+        field: 'title',
+        headerName: '기안제목 (더블클릭 시 상세조회)',
+        flex: 1,
+        minWidth: 260,
+        sortable: true,
+        tooltipField: 'title',
+        cellRenderer: (params: any) => {
+          const isUrgent = params.data?.isUrgent;
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
+              {isUrgent && (
+                <Tag color="error" style={{ margin: 0, fontSize: 10, padding: '0 3px', lineHeight: '16px' }}>
+                  긴급
+                </Tag>
+              )}
+              <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {params.value}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
+        field: 'dept',
+        headerName: '기안부서',
+        width: 120,
+        sortable: true,
+      },
+      {
+        field: 'drafter',
+        headerName: '기안자',
+        width: 90,
+        sortable: true,
+        cellStyle: () => ({ textAlign: 'center' }),
+      },
+      {
+        field: 'status',
+        headerName: '결재상태',
+        width: 100,
+        sortable: true,
+        cellRenderer: (params: any) => {
+          const status = params.value;
+          if (status === '승인완료') {
+            return <Badge status="success" text={<span style={{ color: '#15803d', fontWeight: 600 }}>승인완료</span>} />;
+          }
+          if (status === '진행중') {
+            return <Badge status="processing" text={<span style={{ color: '#1677ff', fontWeight: 600 }}>진행중</span>} />;
+          }
+          if (status === '결재대기') {
+            return <Badge status="warning" text={<span style={{ color: '#d97706', fontWeight: 600 }}>결재대기</span>} />;
+          }
+          if (status === '반려') {
+            return <Badge status="error" text={<span style={{ color: '#dc2626', fontWeight: 600 }}>반려</span>} />;
+          }
+          return <Badge status="default" text={<span style={{ color: '#64748b' }}>임시저장</span>} />;
+        },
+      },
+      {
+        field: 'retentionPeriod',
+        headerName: '보존연한',
+        width: 90,
+        sortable: true,
+        cellStyle: () => ({ textAlign: 'center' }),
+      },
+      {
+        field: 'approvalDate',
+        headerName: '최종결재일시',
+        width: 140,
+        sortable: true,
+        cellStyle: () => ({ textAlign: 'center', color: '#64748b' }),
+      },
+      {
+        headerName: '상세보기',
+        width: 85,
+        pinned: 'right',
+        cellRenderer: (params: any) => (
+          <Button
+            size="small"
+            type="link"
+            icon={<EyeOutlined />}
+            style={{ padding: 0, fontSize: 11 }}
+            onClick={() => setDetailModalDoc(params.data)}
+          >
+            보기
+          </Button>
+        ),
+      },
+    ],
+    []
+  );
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        overflow: 'hidden',
+        boxSizing: 'border-box',
+        backgroundColor: '#f0f2f5',
+        padding: 6,
+        gap: 6,
+      }}
+    >
+      {/* ── 1. Header Toolbar (사용법 2: 검색조건 + 팝업 등록형) ── */}
+      <Card
+        size="small"
+        bodyStyle={{ padding: '8px 12px' }}
+        style={{
+          flexShrink: 0,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          borderRadius: 4,
+          border: '1px solid #d9dfe8',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          {/* 타이틀 및 상태 배지 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <FileTextOutlined style={{ color: '#1677ff', fontSize: 16 }} />
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#1e3a5f' }}>
+                [1101] 일반 기안서 작성
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Tag color="blue" style={{ margin: 0, fontSize: 11 }}>전체 {stats.total}건</Tag>
+              <Tag color="warning" style={{ margin: 0, fontSize: 11 }}>대기 {stats.pending}</Tag>
+              <Tag color="processing" style={{ margin: 0, fontSize: 11 }}>진행 {stats.ongoing}</Tag>
+              <Tag color="success" style={{ margin: 0, fontSize: 11 }}>승인 {stats.approved}</Tag>
+              {stats.rejected > 0 && <Tag color="error" style={{ margin: 0, fontSize: 11 }}>반려 {stats.rejected}</Tag>}
+            </div>
+          </div>
+
+          {/* 우측 검색 조건 및 4개 핵심 액션 버튼 */}
+          <Space size={6} wrap>
+            <Input
+              placeholder="통합 검색 (문서번호, 제목, 기안자...)"
+              prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+              value={quickFilterText}
+              onChange={(e) => setQuickFilterText(e.target.value)}
+              style={{ width: 220, fontSize: 12 }}
+              size="small"
+              allowClear
+            />
+
+            <Select
+              value={selectedCategory}
+              onChange={setSelectedCategory}
+              style={{ width: 110 }}
+              size="small"
+              options={[
+                { value: 'all', label: '전체 분류' },
+                { value: '일반기안', label: '일반기안' },
+                { value: '업무협조', label: '업무협조' },
+                { value: '인사총무', label: '인사총무' },
+                { value: '규정개정', label: '규정개정' },
+                { value: '제휴제안', label: '제휴제안' },
+              ]}
+            />
+
+            <Select
+              value={selectedStatus}
+              onChange={setSelectedStatus}
+              style={{ width: 105 }}
+              size="small"
+              options={[
+                { value: 'all', label: '전체 상태' },
+                { value: '결재대기', label: '결재대기' },
+                { value: '진행중', label: '진행중' },
+                { value: '승인완료', label: '승인완료' },
+                { value: '반려', label: '반려' },
+                { value: '임시저장', label: '임시저장' },
+              ]}
+            />
+
+            <Button
+              size="small"
+              icon={<ReloadOutlined />}
+              onClick={handleReload}
+              title="데이터 새로고침"
+            >
+              조회
+            </Button>
+
+            {/* 신규 등록 모달 열기 버튼 (사용법 2) */}
+            <Button
+              size="small"
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setIsModalOpen(true)}
+              style={{ backgroundColor: '#1e3a5f' }}
+            >
+              신규 기안 등록
+            </Button>
+
+            {/* 선택 상신 */}
+            <Button
+              size="small"
+              icon={<SendOutlined />}
+              onClick={handleSubmitSelected}
+            >
+              결재 상신
+            </Button>
+
+            {/* 선택 삭제 (사용법 2) */}
+            <Popconfirm
+              title="선택한 기안서를 삭제하시겠습니까?"
+              okText="삭제"
+              cancelText="취소"
+              onConfirm={handleDeleteSelected}
+            >
+              <Button size="small" danger icon={<DeleteOutlined />}>
+                삭제
+              </Button>
+            </Popconfirm>
+
+            {/* CSV 내보내기 */}
+            <Button
+              size="small"
+              icon={<DownloadOutlined />}
+              onClick={handleExportCsv}
+            >
+              CSV
+            </Button>
+          </Space>
+        </div>
+      </Card>
+
+      {/* ── 2. AG Grid Viewport-Fitted Container (Virtual Scrolling) ── */}
+      <div
+        className="ag-theme-alpine"
+        style={{
+          flex: 1,
+          minHeight: 0,
+          width: '100%',
+          backgroundColor: '#ffffff',
+          borderRadius: 4,
+          overflow: 'hidden',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          border: '1px solid #d9dfe8',
+        }}
+      >
+        <AgGridReact<DraftDocItem>
+          ref={gridRef}
+          rowData={filteredData}
+          columnDefs={columnDefs}
+          quickFilterText={quickFilterText}
+          rowSelection="multiple"
+          headerHeight={34}
+          rowHeight={33}
+          defaultColDef={{
+            resizable: true,
+            sortable: true,
+            filter: false,
+            suppressHeaderMenuButton: true,
+          }}
+          pagination={false}
+          onRowDoubleClicked={handleRowDoubleClicked}
+        />
+      </div>
+
+      {/* ── 3. 신규 기안서 작성 팝업 모달 (사용법 2: 모달 팝업 등록형) ── */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#1e3a5f' }}>
+            <FileTextOutlined />
+            <span>신규 일반기안서 작성 및 상신</span>
+          </div>
+        }
+        open={isModalOpen}
+        onCancel={() => {
+          setIsModalOpen(false);
+          form.resetFields();
+        }}
+        width={680}
+        footer={[
+          <Button key="cancel" onClick={() => setIsModalOpen(false)}>
+            닫기
+          </Button>,
+          <Button key="draft" onClick={() => handleCreateDraft(false)}>
+            임시저장
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            icon={<SendOutlined />}
+            style={{ backgroundColor: '#1e3a5f' }}
+            onClick={() => handleCreateDraft(true)}
+          >
+            결재 상신
+          </Button>,
+        ]}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{
+            category: '일반기안',
+            dept: 'IT개발실',
+            drafter: '김도영',
+            retentionPeriod: '3년',
+            isUrgent: false,
+          }}
+          style={{ marginTop: 12 }}
+        >
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <Form.Item name="category" label="문서분류" rules={[{ required: true }]}>
+              <Select
+                options={[
+                  { value: '일반기안', label: '일반기안' },
+                  { value: '업무협조', label: '업무협조' },
+                  { value: '인사총무', label: '인사총무' },
+                  { value: '규정개정', label: '규정개정' },
+                  { value: '제휴제안', label: '제휴제안' },
+                ]}
+              />
+            </Form.Item>
+
+            <Form.Item name="retentionPeriod" label="보존연한" rules={[{ required: true }]}>
+              <Select
+                options={[
+                  { value: '1년', label: '1년' },
+                  { value: '3년', label: '3년' },
+                  { value: '5년', label: '5년' },
+                  { value: '영구', label: '영구' },
+                ]}
+              />
+            </Form.Item>
+
+            <Form.Item name="isUrgent" label="긴급 결재" valuePropName="checked">
+              <Select
+                options={[
+                  { value: false, label: '일반' },
+                  { value: true, label: '긴급 결재 요망' },
+                ]}
+              />
+            </Form.Item>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <Form.Item name="dept" label="기안부서" rules={[{ required: true }]}>
+              <Input disabled />
+            </Form.Item>
+            <Form.Item name="drafter" label="기안자" rules={[{ required: true }]}>
+              <Input disabled />
+            </Form.Item>
+          </div>
+
+          <Form.Item
+            name="title"
+            label="기안 제목"
+            rules={[{ required: true, message: '기안서 제목을 입력해 주세요.' }]}
+          >
+            <Input placeholder="예: [IT인프라] 2026년 하반기 클라우드 전환 전산장비 확충의 건" />
+          </Form.Item>
+
+          <Form.Item
+            name="content"
+            label="기안 내용 / 사유"
+            rules={[{ required: true, message: '상세 기안 내용을 입력해 주세요.' }]}
+          >
+            <Input.TextArea
+              rows={6}
+              placeholder="1. 추진 배경 및 목적&#10;2. 주요 세부 실행 계획&#10;3. 기대 효과 및 소요 예산 등을 상세히 기술하십시오."
+            />
+          </Form.Item>
+
+          {/* 결재선 프리뷰 박스 */}
+          <div
+            style={{
+              padding: '8px 12px',
+              backgroundColor: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: 4,
+              fontSize: 12,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <span style={{ fontWeight: 600, color: '#334155' }}>지정 결재선:</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#64748b' }}>
+              <span>[기안] 김도영 이사</span>
+              <span>➔</span>
+              <span>[1차 검토] 김승주 차장</span>
+              <span>➔</span>
+              <span>[최종 승인] 나필순 상무</span>
+            </div>
+          </div>
+        </Form>
+      </Modal>
+
+      {/* ── 4. 기안서 상세 모달 ── */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <FileTextOutlined style={{ color: '#1677ff' }} />
+            <span>기안서 상세 조회 - {detailModalDoc?.docNo}</span>
+          </div>
+        }
+        open={Boolean(detailModalDoc)}
+        onCancel={() => setDetailModalDoc(null)}
+        footer={[
+          <Button key="close" type="primary" onClick={() => setDetailModalDoc(null)}>
+            확인
+          </Button>,
+        ]}
+        width={650}
+      >
+        {detailModalDoc && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, backgroundColor: '#f8fafc', padding: 10, borderRadius: 4, fontSize: 12 }}>
+              <div><strong>문서분류:</strong> {detailModalDoc.category}</div>
+              <div><strong>기안일자:</strong> {detailModalDoc.draftDate}</div>
+              <div><strong>보존연한:</strong> {detailModalDoc.retentionPeriod}</div>
+              <div><strong>기안자:</strong> {detailModalDoc.drafter} ({detailModalDoc.dept})</div>
+              <div><strong>결재상태:</strong> <Tag color="blue">{detailModalDoc.status}</Tag></div>
+              <div><strong>최종결재:</strong> {detailModalDoc.approvalDate}</div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>기안 제목</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', padding: '6px 8px', backgroundColor: '#fafbfc', border: '1px solid #e2e8f0', borderRadius: 4 }}>
+                {detailModalDoc.title}
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>기안 본문 내용</div>
+              <div style={{ minHeight: 120, padding: 12, backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                {detailModalDoc.content || '등록된 상세 본문 내용이 없습니다.'}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/doc/DocExpenseManageView.tsx"
+import React, { useState, useRef, useMemo, useCallback } from 'react';
+import { Card, Button, Input, Tag, Space, message, Popconfirm, Statistic, Row, Col, Badge } from 'antd';
+import {
+  SearchOutlined,
+  PlusOutlined,
+  SaveOutlined,
+  DeleteOutlined,
+  ReloadOutlined,
+  DownloadOutlined,
+  DollarCircleOutlined,
+  EditOutlined,
+  CheckOutlined,
+} from '@ant-design/icons';
+import { AgGridReact } from 'ag-grid-react';
+import { ColDef, CellValueChangedEvent } from 'ag-grid-community';
+import { mockExpenseDocList } from '../../mock/data';
+import { ExpenseDocItem } from '../../types';
+
+export const DocExpenseManageView: React.FC = () => {
+  const gridRef = useRef<AgGridReact<ExpenseDocItem>>(null);
+  const [rowData, setRowData] = useState<ExpenseDocItem[]>(() => [...mockExpenseDocList]);
+  const [quickFilterText, setQuickFilterText] = useState('');
+  const [hasDirtyRows, setHasDirtyRows] = useState(false);
+
+  // 상단 집계 통계
+  const stats = useMemo(() => {
+    let totalSupply = 0;
+    let totalTax = 0;
+    let totalSum = 0;
+    for (const item of rowData) {
+      totalSupply += Number(item.supplyAmount || 0);
+      totalTax += Number(item.taxAmount || 0);
+      totalSum += Number(item.totalAmount || 0);
+    }
+    return {
+      count: rowData.length,
+      totalSupply,
+      totalTax,
+      totalSum,
+    };
+  }, [rowData]);
+
+  // AgGrid 하단 고정 집계 행 (Pinned Bottom Row Data: 실시간 합계 자동 계산)
+  const pinnedBottomRowData = useMemo(() => {
+    return [
+      {
+        id: 'pinned-summary',
+        expenseDate: '',
+        accountName: '【 총 합계 】',
+        description: `총 ${stats.count}건 비용 집행`,
+        merchant: '',
+        supplyAmount: stats.totalSupply,
+        taxAmount: stats.totalTax,
+        totalAmount: stats.totalSum,
+        paymentMethod: '' as any,
+        evidenceStatus: '' as any,
+        dept: '',
+      },
+    ];
+  }, [stats]);
+
+  // 1. [조회] 핸들러 (사용법 1)
+  const handleReload = () => {
+    setRowData([...mockExpenseDocList]);
+    setHasDirtyRows(false);
+    setQuickFilterText('');
+    message.success('비용 품의서 데이터가 초기화 및 재조회되었습니다.');
+  };
+
+  // 2. [등록 / 행 추가] 핸들러 (사용법 1: 인라인 빈 행 생성 및 셀 편집 시작)
+  const handleAddRow = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const newId = `exp-new-${Date.now()}`;
+    const newRow: ExpenseDocItem = {
+      id: newId,
+      expenseDate: today,
+      accountName: '지급수수료',
+      description: '신규 비용 지출 내역을 입력하세요',
+      merchant: '신규 거래처',
+      supplyAmount: 100000,
+      taxAmount: 10000,
+      totalAmount: 110000,
+      paymentMethod: '법인카드',
+      evidenceStatus: '미첨부',
+      dept: 'IT개발실',
+      isDirty: true,
+    };
+
+    setRowData((prev) => [newRow, ...prev]);
+    setHasDirtyRows(true);
+    message.info('신규 비용 행이 최상단에 추가되었습니다. 각 셀을 더블클릭하여 바로 수정하십시오.');
+  };
+
+  // 3. [저장] 핸들러 (사용법 1: 인라인 변경사항 일괄 저장)
+  const handleSave = () => {
+    setRowData((prev) => prev.map((r) => ({ ...r, isDirty: false })));
+    setHasDirtyRows(false);
+    message.success(`총 ${rowData.length}건의 비용 품의 내역이 데이터베이스에 성공적으로 저장되었습니다.`);
+  };
+
+  // 4. [삭제] 핸들러 (사용법 1: 선택 행 삭제)
+  const handleDeleteSelected = () => {
+    const selectedNodes = gridRef.current?.api?.getSelectedNodes();
+    if (!selectedNodes || selectedNodes.length === 0) {
+      message.warning('삭제할 비용 항목을 선택해 주세요.');
+      return;
+    }
+    const selectedIds = new Set(selectedNodes.map((n) => n.data?.id));
+    setRowData((prev) => prev.filter((item) => !selectedIds.has(item.id)));
+    setHasDirtyRows(true);
+    message.success(`${selectedNodes.length}건의 항목이 삭제되었습니다. [저장]을 눌러 반영하십시오.`);
+  };
+
+  // 5. [CSV 내보내기]
+  const handleExportCsv = useCallback(() => {
+    if (gridRef.current?.api) {
+      gridRef.current.api.exportDataAsCsv({
+        fileName: `비용품의서내역_${new Date().toISOString().slice(0, 10)}.csv`,
+        exportedRows: 'all',
+      });
+      message.info('CSV 내보내기가 완료되었습니다.');
+    }
+  }, []);
+
+  // 셀 값 변경 시 자동 계산 (공급가액 변경 시 부가세 10% 및 합계 실시간 반영)
+  const handleCellValueChanged = (event: CellValueChangedEvent<ExpenseDocItem>) => {
+    const field = event.colDef.field;
+    const row = event.data;
+    if (!row) return;
+
+    if (field === 'supplyAmount') {
+      const supply = Math.max(0, Number(row.supplyAmount) || 0);
+      const tax = Math.round(supply * 0.1);
+      const total = supply + tax;
+
+      row.supplyAmount = supply;
+      row.taxAmount = tax;
+      row.totalAmount = total;
+    }
+    row.isDirty = true;
+    setHasDirtyRows(true);
+
+    // 그리드 갱신
+    setRowData((prev) => [...prev]);
+  };
+
+  // 컬럼 정의
+  const columnDefs: ColDef<ExpenseDocItem>[] = useMemo(
+    () => [
+      {
+        field: 'id',
+        headerName: 'No',
+        width: 60,
+        pinned: 'left',
+        checkboxSelection: (params: any) => !params.node.rowPinned,
+        headerCheckboxSelection: true,
+        headerCheckboxSelectionFilteredOnly: true,
+        valueGetter: (params: any) => {
+          if (params.node.rowPinned) return '∑';
+          return (params.node.rowIndex ?? 0) + 1;
+        },
+        cellStyle: () => ({ textAlign: 'center' }),
+      },
+      {
+        field: 'expenseDate',
+        headerName: '집행일자',
+        width: 120,
+        editable: (params: any) => !params.node.rowPinned,
+        sortable: true,
+        cellClass: 'editable-cell',
+      },
+      {
+        field: 'accountName',
+        headerName: '계정과목 (선택)',
+        width: 130,
+        editable: (params: any) => !params.node.rowPinned,
+        sortable: true,
+        cellEditor: 'agSelectCellEditor',
+        cellEditorParams: {
+          values: ['지급수수료', '회의비', '도서인쇄비', '소모품비', '여비교통비', '교육훈련비', '복리후생비'],
+        },
+        cellClass: 'editable-cell',
+        cellRenderer: (params: any) => {
+          if (params.node.rowPinned) return <strong>{params.value}</strong>;
+          return <span style={{ fontWeight: 600, color: '#1e3a5f' }}>{params.value}</span>;
+        },
+      },
+      {
+        field: 'description',
+        headerName: '적요 / 상세 사용 내역 (인라인 입력)',
+        flex: 1,
+        minWidth: 240,
+        editable: (params: any) => !params.node.rowPinned,
+        sortable: true,
+        cellClass: 'editable-cell',
+        cellRenderer: (params: any) => {
+          if (params.node.rowPinned) return <strong>{params.value}</strong>;
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {params.data?.isDirty && (
+                <Badge status="processing" title="수정됨 (미저장)" />
+              )}
+              <span>{params.value}</span>
+            </div>
+          );
+        },
+      },
+      {
+        field: 'merchant',
+        headerName: '가맹점 / 거래처',
+        width: 160,
+        editable: (params: any) => !params.node.rowPinned,
+        sortable: true,
+        cellClass: 'editable-cell',
+      },
+      {
+        field: 'supplyAmount',
+        headerName: '공급가액 (원)',
+        width: 130,
+        editable: (params: any) => !params.node.rowPinned,
+        sortable: true,
+        type: 'numericColumn',
+        cellClass: 'editable-cell',
+        valueFormatter: (params: any) => {
+          const val = params.value;
+          return val != null ? `${Number(val).toLocaleString()}원` : '0원';
+        },
+        cellStyle: () => ({ textAlign: 'right' }),
+      },
+      {
+        field: 'taxAmount',
+        headerName: '부가세 (10%)',
+        width: 110,
+        editable: false,
+        sortable: true,
+        type: 'numericColumn',
+        valueFormatter: (params: any) => {
+          const val = params.value;
+          return val != null ? `${Number(val).toLocaleString()}원` : '0원';
+        },
+        cellStyle: () => ({ textAlign: 'right', color: '#64748b' }),
+      },
+      {
+        field: 'totalAmount',
+        headerName: '합계금액 (원)',
+        width: 140,
+        editable: false,
+        sortable: true,
+        type: 'numericColumn',
+        valueFormatter: (params: any) => {
+          const val = params.value;
+          return val != null ? `${Number(val).toLocaleString()}원` : '0원';
+        },
+        cellStyle: (params: any): Record<string, string | number> => {
+          if (params.node.rowPinned) {
+            return { textAlign: 'right', fontWeight: 800, color: '#dc2626', fontSize: 13 };
+          }
+          return { textAlign: 'right', fontWeight: 700, color: '#1677ff' };
+        },
+      },
+      {
+        field: 'paymentMethod',
+        headerName: '결제수단',
+        width: 110,
+        editable: (params: any) => !params.node.rowPinned,
+        cellEditor: 'agSelectCellEditor',
+        cellEditorParams: {
+          values: ['법인카드', '세금계산서', '개인카드', '현금영수증'],
+        },
+        cellClass: 'editable-cell',
+        cellStyle: () => ({ textAlign: 'center' }),
+      },
+      {
+        field: 'evidenceStatus',
+        headerName: '증빙상태',
+        width: 100,
+        editable: (params: any) => !params.node.rowPinned,
+        cellEditor: 'agSelectCellEditor',
+        cellEditorParams: {
+          values: ['첨부완료', '미첨부'],
+        },
+        cellClass: 'editable-cell',
+        cellRenderer: (params: any) => {
+          if (params.node.rowPinned) return null;
+          const val = params.value;
+          return (
+            <Tag color={val === '첨부완료' ? 'success' : 'warning'} style={{ margin: 0, fontSize: 11 }}>
+              {val}
+            </Tag>
+          );
+        },
+      },
+      {
+        field: 'dept',
+        headerName: '귀속부서',
+        width: 110,
+        sortable: true,
+        cellStyle: () => ({ textAlign: 'center' }),
+      },
+    ],
+    []
+  );
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        overflow: 'hidden',
+        boxSizing: 'border-box',
+        backgroundColor: '#f0f2f5',
+        padding: 6,
+        gap: 6,
+      }}
+    >
+      {/* ── 1. Header Toolbar (사용법 1: 조회 / 저장 / 등록 / 삭제 4대 버튼) ── */}
+      <Card
+        size="small"
+        bodyStyle={{ padding: '8px 12px' }}
+        style={{
+          flexShrink: 0,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          borderRadius: 4,
+          border: '1px solid #d9dfe8',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          {/* 좌측 타이틀 및 저장 상태 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <DollarCircleOutlined style={{ color: '#059669', fontSize: 16 }} />
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#1e3a5f' }}>
+                [1102] 비용 품의서 작성 (인라인 편집 그리드)
+              </span>
+            </div>
+
+            {hasDirtyRows ? (
+              <Tag color="error" icon={<EditOutlined />} style={{ margin: 0, fontSize: 11 }}>
+                수정된 내역 있음 (저장 필요)
+              </Tag>
+            ) : (
+              <Tag color="success" icon={<CheckOutlined />} style={{ margin: 0, fontSize: 11 }}>
+                모든 변경사항 저장됨
+              </Tag>
+            )}
+          </div>
+
+          {/* 우측 4대 핵심 버튼: 조회, 저장, 등록(행추가), 삭제 (사용법 1) */}
+          <Space size={6} wrap>
+            <Input
+              placeholder="적요 / 계정과목 빠른 검색"
+              prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+              value={quickFilterText}
+              onChange={(e) => setQuickFilterText(e.target.value)}
+              style={{ width: 180, fontSize: 12 }}
+              size="small"
+              allowClear
+            />
+
+            {/* 1. 조회 버튼 */}
+            <Button
+              size="small"
+              icon={<ReloadOutlined />}
+              onClick={handleReload}
+              title="데이터 새로고침"
+            >
+              조회
+            </Button>
+
+            {/* 2. 저장 버튼 (사용법 1) */}
+            <Button
+              size="small"
+              type="primary"
+              icon={<SaveOutlined />}
+              onClick={handleSave}
+              style={{ backgroundColor: hasDirtyRows ? '#16a34a' : '#1e3a5f' }}
+            >
+              저장
+            </Button>
+
+            {/* 3. 등록(행추가) 버튼 (사용법 1) */}
+            <Button
+              size="small"
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAddRow}
+              style={{ backgroundColor: '#2563eb' }}
+            >
+              등록 (행추가)
+            </Button>
+
+            {/* 4. 삭제 버튼 (사용법 1) */}
+            <Popconfirm
+              title="선택한 비용 항목을 삭제하시겠습니까?"
+              okText="삭제"
+              cancelText="취소"
+              onConfirm={handleDeleteSelected}
+            >
+              <Button size="small" danger icon={<DeleteOutlined />}>
+                삭제
+              </Button>
+            </Popconfirm>
+
+            <Button
+              size="small"
+              icon={<DownloadOutlined />}
+              onClick={handleExportCsv}
+            >
+              CSV
+            </Button>
+          </Space>
+        </div>
+      </Card>
+
+      {/* ── 2. 비용 집계 통계 대시보드 바 ── */}
+      <Row gutter={6} style={{ flexShrink: 0 }}>
+        <Col span={6}>
+          <Card size="small" bodyStyle={{ padding: '6px 12px' }} style={{ backgroundColor: '#ffffff', borderColor: '#d9dfe8' }}>
+            <Statistic
+              title={<span style={{ fontSize: 11, color: '#64748b' }}>비용 품의 총 건수</span>}
+              value={stats.count}
+              suffix="건"
+              valueStyle={{ fontSize: 16, fontWeight: 700, color: '#1e293b' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card size="small" bodyStyle={{ padding: '6px 12px' }} style={{ backgroundColor: '#ffffff', borderColor: '#d9dfe8' }}>
+            <Statistic
+              title={<span style={{ fontSize: 11, color: '#64748b' }}>공급가액 소계</span>}
+              value={stats.totalSupply}
+              suffix="원"
+              valueStyle={{ fontSize: 16, fontWeight: 700, color: '#334155' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card size="small" bodyStyle={{ padding: '6px 12px' }} style={{ backgroundColor: '#ffffff', borderColor: '#d9dfe8' }}>
+            <Statistic
+              title={<span style={{ fontSize: 11, color: '#64748b' }}>부가세 세액 합계</span>}
+              value={stats.totalTax}
+              suffix="원"
+              valueStyle={{ fontSize: 16, fontWeight: 700, color: '#64748b' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card size="small" bodyStyle={{ padding: '6px 12px' }} style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }}>
+            <Statistic
+              title={<span style={{ fontSize: 11, color: '#15803d', fontWeight: 600 }}>총 품의 집행금액 (합계)</span>}
+              value={stats.totalSum}
+              suffix="원"
+              valueStyle={{ fontSize: 17, fontWeight: 800, color: '#16a34a' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* ── 3. AG Grid Editable Table (Pinned Summary Row at Bottom) ── */}
+      <div
+        className="ag-theme-alpine"
+        style={{
+          flex: 1,
+          minHeight: 0,
+          width: '100%',
+          backgroundColor: '#ffffff',
+          borderRadius: 4,
+          overflow: 'hidden',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          border: '1px solid #d9dfe8',
+        }}
+      >
+        <style>{`
+          /* 인라인 편집 가능한 셀에 마우스 오버 시 연한 하이라이트 */
+          .ag-theme-alpine .editable-cell:hover {
+            background-color: #f8fafc !important;
+            cursor: cell;
+          }
+          .ag-theme-alpine .ag-row-pinned {
+            background-color: #f1f5f9 !important;
+            font-weight: 700 !important;
+            border-top: 2px solid #94a3b8 !important;
+          }
+        `}</style>
+        <AgGridReact<ExpenseDocItem>
+          ref={gridRef}
+          rowData={rowData}
+          pinnedBottomRowData={pinnedBottomRowData}
+          columnDefs={columnDefs}
+          quickFilterText={quickFilterText}
+          rowSelection="multiple"
+          headerHeight={34}
+          rowHeight={32}
+          defaultColDef={{
+            resizable: true,
+            sortable: true,
+            filter: false,
+            suppressHeaderMenuButton: true,
+          }}
+          pagination={false}
+          singleClickEdit={false}
+          stopEditingWhenCellsLoseFocus={true}
+          onCellValueChanged={handleCellValueChanged}
+        />
+      </div>
+    </div>
+  );
+};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/doc/DocAssetAcquisitionView.tsx"
+import React, { useState, useRef, useMemo, useCallback } from 'react';
+import { Card, Button, Input, Tag, Space, message, Popconfirm, Badge, Modal, Form } from 'antd';
+import {
+  SearchOutlined,
+  PlusOutlined,
+  SaveOutlined,
+  DeleteOutlined,
+  ReloadOutlined,
+  DownloadOutlined,
+  LaptopOutlined,
+} from '@ant-design/icons';
+import { AgGridReact } from 'ag-grid-react';
+import { ColDef, RowSelectedEvent, CellValueChangedEvent } from 'ag-grid-community';
+import { mockAssetAcqMasterList, mockAssetAcqDetailList } from '../../mock/data';
+import { AssetAcqMasterItem, AssetAcqDetailItem } from '../../types';
+
+export const DocAssetAcquisitionView: React.FC = () => {
+  // 마스터 상태
+  const masterGridRef = useRef<AgGridReact<AssetAcqMasterItem>>(null);
+  const [masterData, setMasterData] = useState<AssetAcqMasterItem[]>(() => [...mockAssetAcqMasterList]);
+  const [selectedMasterId, setSelectedMasterId] = useState<string>('acq-m1');
+  const [masterQuickFilter, setMasterQuickFilter] = useState('');
+  const [isMasterModalOpen, setIsMasterModalOpen] = useState(false);
+  const [masterForm] = Form.useForm();
+
+  // 디테일 상태
+  const detailGridRef = useRef<AgGridReact<AssetAcqDetailItem>>(null);
+  const [detailData, setDetailData] = useState<AssetAcqDetailItem[]>(() => [...mockAssetAcqDetailList]);
+  const [detailQuickFilter, setDetailQuickFilter] = useState('');
+
+  // 현재 선택된 마스터 품의 정보
+  const selectedMaster = useMemo(() => {
+    return masterData.find((m) => m.id === selectedMasterId) || masterData[0];
+  }, [masterData, selectedMasterId]);
+
+  // 현재 선택된 마스터에 종속된 디테일 자산 목록 (Master-Detail 연동)
+  const currentDetailList = useMemo(() => {
+    return detailData.filter((d) => d.masterId === selectedMaster?.id);
+  }, [detailData, selectedMaster]);
+
+  // 디테일 하단 실시간 Pinned Summary 행 (수량 합계 & 취득금액 합계)
+  const detailPinnedBottomRowData = useMemo(() => {
+    let totalQty = 0;
+    let totalPriceSum = 0;
+    for (const item of currentDetailList) {
+      totalQty += Number(item.quantity || 0);
+      totalPriceSum += Number(item.totalPrice || 0);
+    }
+    return [
+      {
+        id: 'detail-pinned-summary',
+        masterId: '',
+        assetCode: '∑ 합계',
+        category: '',
+        name: `${currentDetailList.length}개 품목`,
+        spec: '',
+        quantity: totalQty,
+        unitPrice: 0,
+        totalPrice: totalPriceSum,
+        location: '',
+        targetUser: '',
+        note: '',
+      },
+    ];
+  }, [currentDetailList]);
+
+  // ── [마스터 그리드 핸들러] ──
+  // 1. 마스터 새로고침
+  const handleMasterReload = () => {
+    setMasterData([...mockAssetAcqMasterList]);
+    setDetailData([...mockAssetAcqDetailList]);
+    message.success('자산취득 품의 목록 및 상세 내역이 재조회되었습니다.');
+  };
+
+  // 2. 마스터 저장
+  const handleMasterSave = () => {
+    message.success('자산취득 품의 마스터 및 상세 자산 정보가 모두 저장되었습니다.');
+  };
+
+  // 3. 마스터 신규 등록 모달 열기
+  const handleOpenMasterModal = () => {
+    setIsMasterModalOpen(true);
+  };
+
+  // 4. 마스터 신규 등록 완료
+  const handleCreateMaster = () => {
+    masterForm.validateFields().then((values) => {
+      const today = new Date().toISOString().slice(0, 10);
+      const newId = `acq-m-${Date.now()}`;
+      const newMaster: AssetAcqMasterItem = {
+        id: newId,
+        docNo: `ACQ-2026-${String(masterData.length + 1).padStart(4, '0')}`,
+        reqDate: today,
+        title: values.title,
+        dept: values.dept || 'IT개발실',
+        requester: values.requester || '김도영',
+        totalBudget: 0,
+        itemCount: 0,
+        status: '작성중',
+      };
+      setMasterData((prev) => [newMaster, ...prev]);
+      setSelectedMasterId(newId);
+      setIsMasterModalOpen(false);
+      masterForm.resetFields();
+      message.success('신규 품의가 생성되었습니다. 우측에서 취득 대상 자산들을 등록하십시오.');
+    });
+  };
+
+  // 5. 마스터 삭제
+  const handleMasterDelete = () => {
+    if (!selectedMaster) return;
+    setMasterData((prev) => prev.filter((m) => m.id !== selectedMaster.id));
+    setDetailData((prev) => prev.filter((d) => d.masterId !== selectedMaster.id));
+    const nextMaster = masterData.find((m) => m.id !== selectedMaster.id);
+    if (nextMaster) {
+      setSelectedMasterId(nextMaster.id);
+    }
+    message.success(`[${selectedMaster.docNo}] 품의 및 관련 자산 목록이 삭제되었습니다.`);
+  };
+
+  // 마스터 행 선택 이벤트
+  const handleMasterRowSelected = (event: RowSelectedEvent<AssetAcqMasterItem>) => {
+    if (event.node.isSelected() && event.data) {
+      setSelectedMasterId(event.data.id);
+    }
+  };
+
+  // ── [디테일 그리드 핸들러] ──
+  // 1. 디테일 신규 자산 행추가 (인라인 등록)
+  const handleAddDetailRow = () => {
+    if (!selectedMaster) {
+      message.warning('먼저 좌측에서 품의서를 선택해 주세요.');
+      return;
+    }
+    const newDetailId = `acq-d-${Date.now()}`;
+    const newDetail: AssetAcqDetailItem = {
+      id: newDetailId,
+      masterId: selectedMaster.id,
+      assetCode: `AST-${String(currentDetailList.length + 1).padStart(3, '0')}`,
+      category: 'PC/노트북',
+      name: '신규 취득 자산명 입력',
+      spec: '상세 사양 입력',
+      quantity: 1,
+      unitPrice: 1500000,
+      totalPrice: 1500000,
+      location: '본사 8F',
+      targetUser: '지정 담당자',
+    };
+
+    const nextDetailList = [newDetail, ...detailData];
+    setDetailData(nextDetailList);
+
+    // 마스터의 총예산 및 품목 수 실시간 동기화 업데이트!
+    syncMasterWithDetails(selectedMaster.id, nextDetailList);
+    message.info('취득 대상 자산 항목이 추가되었습니다. 인라인으로 바로 수정하세요.');
+  };
+
+  // 2. 디테일 선택 항목 삭제
+  const handleDeleteSelectedDetails = () => {
+    const selectedNodes = detailGridRef.current?.api?.getSelectedNodes();
+    if (!selectedNodes || selectedNodes.length === 0) {
+      message.warning('삭제할 자산 항목을 선택해 주세요.');
+      return;
+    }
+    const delIds = new Set(selectedNodes.map((n) => n.data?.id));
+    const nextDetailList = detailData.filter((d) => !delIds.has(d.id));
+    setDetailData(nextDetailList);
+
+    // 마스터 재계산 동기화
+    if (selectedMaster) {
+      syncMasterWithDetails(selectedMaster.id, nextDetailList);
+    }
+    message.success(`${selectedNodes.length}건의 자산 항목이 삭제되었습니다.`);
+  };
+
+  // 디테일 셀 인라인 편집 시 자동 금액 계산 (수량 * 단가) 및 마스터 자동 동기화
+  const handleDetailCellValueChanged = (event: CellValueChangedEvent<AssetAcqDetailItem>) => {
+    const field = event.colDef.field;
+    const row = event.data;
+    if (!row) return;
+
+    if (field === 'quantity' || field === 'unitPrice') {
+      const qty = Math.max(1, Number(row.quantity) || 1);
+      const unit = Math.max(0, Number(row.unitPrice) || 0);
+      row.quantity = qty;
+      row.unitPrice = unit;
+      row.totalPrice = qty * unit;
+    }
+
+    const nextDetailList = [...detailData];
+    setDetailData(nextDetailList);
+    if (selectedMaster) {
+      syncMasterWithDetails(selectedMaster.id, nextDetailList);
+    }
+  };
+
+  // 마스터 총예산 및 자산품목수 실시간 동기화 함수
+  const syncMasterWithDetails = (mId: string, allDetails: AssetAcqDetailItem[]) => {
+    const items = allDetails.filter((d) => d.masterId === mId);
+    const sum = items.reduce((acc, cur) => acc + Number(cur.totalPrice || 0), 0);
+    setMasterData((prev) =>
+      prev.map((m) =>
+        m.id === mId ? { ...m, totalBudget: sum, itemCount: items.length } : m
+      )
+    );
+  };
+
+  // 디테일 CSV 내보내기
+  const handleExportDetailCsv = useCallback(() => {
+    if (detailGridRef.current?.api) {
+      detailGridRef.current.api.exportDataAsCsv({
+        fileName: `자산취득상세내역_${selectedMaster?.docNo || 'EXPORT'}.csv`,
+        exportedRows: 'all',
+      });
+      message.info('상세 자산 목록 CSV 내보내기가 완료되었습니다.');
+    }
+  }, [selectedMaster]);
+
+  // ── 컬럼 정의 ──
+  // 마스터 컬럼
+  const masterColumnDefs: ColDef<AssetAcqMasterItem>[] = useMemo(
+    () => [
+      {
+        field: 'docNo',
+        headerName: '품의번호',
+        width: 135,
+        pinned: 'left',
+        sortable: true,
+        cellRenderer: (params: any) => (
+          <span style={{ fontWeight: 600, color: '#1677ff' }}>{params.value}</span>
+        ),
+      },
+      {
+        field: 'reqDate',
+        headerName: '기안일자',
+        width: 105,
+        sortable: true,
+      },
+      {
+        field: 'title',
+        headerName: '품의명',
+        flex: 1,
+        minWidth: 160,
+        sortable: true,
+        tooltipField: 'title',
+        cellStyle: () => ({ fontWeight: 500 }),
+      },
+      {
+        field: 'totalBudget',
+        headerName: '총예산',
+        width: 125,
+        sortable: true,
+        type: 'numericColumn',
+        valueFormatter: (params: any) => `${Number(params.value || 0).toLocaleString()}원`,
+        cellStyle: () => ({ textAlign: 'right', fontWeight: 700, color: '#059669' }),
+      },
+      {
+        field: 'itemCount',
+        headerName: '품목수',
+        width: 75,
+        sortable: true,
+        cellStyle: () => ({ textAlign: 'center' }),
+        valueFormatter: (params: any) => `${params.value}건`,
+      },
+      {
+        field: 'status',
+        headerName: '상태',
+        width: 90,
+        cellRenderer: (params: any) => {
+          const s = params.value;
+          const color = s === '집행완료' ? 'success' : s === '승인완료' ? 'blue' : s === '결재대기' ? 'warning' : 'default';
+          return <Tag color={color} style={{ margin: 0, fontSize: 11 }}>{s}</Tag>;
+        },
+      },
+    ],
+    []
+  );
+
+  // 디테일 컬럼
+  const detailColumnDefs: ColDef<AssetAcqDetailItem>[] = useMemo(
+    () => [
+      {
+        field: 'assetCode',
+        headerName: '자산코드',
+        width: 90,
+        pinned: 'left',
+        checkboxSelection: (params: any) => !params.node.rowPinned,
+        headerCheckboxSelection: true,
+        headerCheckboxSelectionFilteredOnly: true,
+        cellStyle: () => ({ textAlign: 'center', fontWeight: 600 }),
+      },
+      {
+        field: 'category',
+        headerName: '분류',
+        width: 110,
+        editable: (params: any) => !params.node.rowPinned,
+        cellEditor: 'agSelectCellEditor',
+        cellEditorParams: {
+          values: ['IT서버', 'PC/노트북', '네트워크장비', '사무용기기', 'SW라이선스'],
+        },
+        cellRenderer: (params: any) => {
+          if (params.node.rowPinned) return null;
+          const cat = params.value;
+          const color = cat === 'IT서버' ? 'geekblue' : cat === 'PC/노트북' ? 'blue' : cat === 'SW라이선스' ? 'purple' : 'default';
+          return <Tag color={color} style={{ margin: 0, fontSize: 11 }}>{cat}</Tag>;
+        },
+      },
+      {
+        field: 'name',
+        headerName: '취득 자산명 (인라인 편집)',
+        flex: 1,
+        minWidth: 170,
+        editable: (params: any) => !params.node.rowPinned,
+        sortable: true,
+        cellRenderer: (params: any) => {
+          if (params.node.rowPinned) return <strong>{params.value}</strong>;
+          return <span style={{ fontWeight: 500 }}>{params.value}</span>;
+        },
+      },
+      {
+        field: 'spec',
+        headerName: '모델명 / 상세 규격',
+        width: 180,
+        editable: (params: any) => !params.node.rowPinned,
+        tooltipField: 'spec',
+      },
+      {
+        field: 'quantity',
+        headerName: '수량',
+        width: 75,
+        editable: (params: any) => !params.node.rowPinned,
+        sortable: true,
+        type: 'numericColumn',
+        cellStyle: () => ({ textAlign: 'center' }),
+      },
+      {
+        field: 'unitPrice',
+        headerName: '단가 (원)',
+        width: 115,
+        editable: (params: any) => !params.node.rowPinned,
+        sortable: true,
+        type: 'numericColumn',
+        valueFormatter: (params: any) => {
+          if (params.node.rowPinned) return '';
+          return `${Number(params.value || 0).toLocaleString()}원`;
+        },
+        cellStyle: () => ({ textAlign: 'right' }),
+      },
+      {
+        field: 'totalPrice',
+        headerName: '취득금액 (수량×단가)',
+        width: 135,
+        editable: false,
+        sortable: true,
+        type: 'numericColumn',
+        valueFormatter: (params: any) => `${Number(params.value || 0).toLocaleString()}원`,
+        cellStyle: (params: any): Record<string, string | number> => {
+          if (params.node.rowPinned) {
+            return { textAlign: 'right', fontWeight: 800, color: '#dc2626', fontSize: 12 };
+          }
+          return { textAlign: 'right', fontWeight: 700, color: '#1677ff' };
+        },
+      },
+      {
+        field: 'location',
+        headerName: '설치/배치장소',
+        width: 120,
+        editable: (params: any) => !params.node.rowPinned,
+      },
+      {
+        field: 'targetUser',
+        headerName: '담당/사용자',
+        width: 100,
+        editable: (params: any) => !params.node.rowPinned,
+        cellStyle: () => ({ textAlign: 'center' }),
+      },
+    ],
+    []
+  );
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        overflow: 'hidden',
+        boxSizing: 'border-box',
+        backgroundColor: '#f0f2f5',
+        padding: 6,
+        gap: 6,
+      }}
+    >
+      {/* ── 1. 통합 탑바 ── */}
+      <Card
+        size="small"
+        bodyStyle={{ padding: '8px 12px' }}
+        style={{
+          flexShrink: 0,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          borderRadius: 4,
+          border: '1px solid #d9dfe8',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <LaptopOutlined style={{ color: '#0284c7', fontSize: 16 }} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#1e3a5f' }}>
+              [1103] 자산 취득 품의서 (마스터-디테일 좌우 연동 그리드)
+            </span>
+            <Tag color="cyan" style={{ margin: 0, fontSize: 11 }}>
+              마스터: {masterData.length}건 / 디테일 자산: {detailData.length}개
+            </Tag>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#64748b' }}>
+            <span>선택된 품의:</span>
+            <Tag color="blue" style={{ margin: 0, fontSize: 12, fontWeight: 600 }}>
+              {selectedMaster ? `${selectedMaster.docNo} - ${selectedMaster.title}` : '선택 없음'}
+            </Tag>
+          </div>
+        </div>
+      </Card>
+
+      {/* ── 2. 좌우 2분할 마스터-디테일 본체 (사용법 3) ── */}
+      <div style={{ flex: 1, display: 'flex', gap: 6, minHeight: 0, overflow: 'hidden' }}>
+        {/* ── [좌측 마스터 영역 (46% 너비)]: 자산취득 품의 마스터 목록 ── */}
+        <div
+          style={{
+            flex: '0 0 46%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+            minWidth: 360,
+            overflow: 'hidden',
+          }}
+        >
+          {/* 마스터 액션 바 (사용법 1: 조회, 저장, 등록, 삭제) */}
+          <Card
+            size="small"
+            bodyStyle={{ padding: '6px 10px' }}
+            style={{ flexShrink: 0, border: '1px solid #d9dfe8', borderRadius: 4 }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontWeight: 700, fontSize: 12, color: '#1e3a5f' }}>
+                  ▶ 품의 마스터
+                </span>
+                <Badge count={masterData.length} overflowCount={999} style={{ backgroundColor: '#1677ff' }} />
+              </div>
+
+              <Space size={4}>
+                <Input
+                  placeholder="품의명/번호 검색"
+                  prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+                  value={masterQuickFilter}
+                  onChange={(e) => setMasterQuickFilter(e.target.value)}
+                  style={{ width: 130, fontSize: 11 }}
+                  size="small"
+                  allowClear
+                />
+                <Button size="small" icon={<ReloadOutlined />} onClick={handleMasterReload}>
+                  조회
+                </Button>
+                <Button size="small" type="primary" icon={<SaveOutlined />} onClick={handleMasterSave} style={{ backgroundColor: '#1e3a5f' }}>
+                  저장
+                </Button>
+                <Button size="small" type="primary" icon={<PlusOutlined />} onClick={handleOpenMasterModal} style={{ backgroundColor: '#2563eb' }}>
+                  등록
+                </Button>
+                <Popconfirm title="선택한 품의를 삭제하시겠습니까?" okText="삭제" cancelText="취소" onConfirm={handleMasterDelete}>
+                  <Button size="small" danger icon={<DeleteOutlined />}>
+                    삭제
+                  </Button>
+                </Popconfirm>
+              </Space>
+            </div>
+          </Card>
+
+          {/* 마스터 AG Grid */}
+          <div
+            className="ag-theme-alpine"
+            style={{
+              flex: 1,
+              minHeight: 0,
+              width: '100%',
+              backgroundColor: '#ffffff',
+              borderRadius: 4,
+              overflow: 'hidden',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+              border: '1px solid #d9dfe8',
+            }}
+          >
+            <AgGridReact<AssetAcqMasterItem>
+              ref={masterGridRef}
+              rowData={masterData}
+              columnDefs={masterColumnDefs}
+              quickFilterText={masterQuickFilter}
+              rowSelection="single"
+              headerHeight={34}
+              rowHeight={32}
+              defaultColDef={{
+                resizable: true,
+                sortable: true,
+                filter: false,
+                suppressHeaderMenuButton: true,
+              }}
+              pagination={false}
+              onRowSelected={handleMasterRowSelected}
+            />
+          </div>
+        </div>
+
+        {/* ── [우측 디테일 영역 (54% 너비)]: 선택된 품의의 취득 자산 목록 ── */}
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+            minWidth: 420,
+            overflow: 'hidden',
+          }}
+        >
+          {/* 디테일 액션 바 (사용법 1 스타일: 상세 추가, 삭제, 저장, CSV) */}
+          <Card
+            size="small"
+            bodyStyle={{ padding: '6px 10px' }}
+            style={{ flexShrink: 0, border: '1px solid #d9dfe8', borderRadius: 4 }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
+                <span style={{ fontWeight: 700, fontSize: 12, color: '#1e3a5f' }}>
+                  ▶ 상세 취득 자산 목록
+                </span>
+                <Tag color="blue" style={{ margin: 0, fontSize: 11 }}>
+                  {currentDetailList.length}건
+                </Tag>
+                <span style={{ fontSize: 11, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  (품의: {selectedMaster?.docNo})
+                </span>
+              </div>
+
+              <Space size={4}>
+                <Input
+                  placeholder="자산명/규격 검색"
+                  prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+                  value={detailQuickFilter}
+                  onChange={(e) => setDetailQuickFilter(e.target.value)}
+                  style={{ width: 140, fontSize: 11 }}
+                  size="small"
+                  allowClear
+                />
+                <Button size="small" type="primary" icon={<PlusOutlined />} onClick={handleAddDetailRow} style={{ backgroundColor: '#2563eb' }}>
+                  자산 추가
+                </Button>
+                <Popconfirm title="선택한 자산 항목을 삭제하시겠습니까?" okText="삭제" cancelText="취소" onConfirm={handleDeleteSelectedDetails}>
+                  <Button size="small" danger icon={<DeleteOutlined />}>
+                    자산 삭제
+                  </Button>
+                </Popconfirm>
+                <Button size="small" type="primary" icon={<SaveOutlined />} onClick={handleMasterSave} style={{ backgroundColor: '#1e3a5f' }}>
+                  저장
+                </Button>
+                <Button size="small" icon={<DownloadOutlined />} onClick={handleExportDetailCsv}>
+                  CSV
+                </Button>
+              </Space>
+            </div>
+          </Card>
+
+          {/* 디테일 AG Grid (인라인 편집 및 하단 Pinned 합계 행) */}
+          <div
+            className="ag-theme-alpine"
+            style={{
+              flex: 1,
+              minHeight: 0,
+              width: '100%',
+              backgroundColor: '#ffffff',
+              borderRadius: 4,
+              overflow: 'hidden',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+              border: '1px solid #d9dfe8',
+            }}
+          >
+            <style>{`
+              .ag-theme-alpine .ag-row-pinned {
+                background-color: #f8fafc !important;
+                font-weight: 700 !important;
+                border-top: 2px solid #cbd5e1 !important;
+              }
+            `}</style>
+            <AgGridReact<AssetAcqDetailItem>
+              ref={detailGridRef}
+              rowData={currentDetailList}
+              pinnedBottomRowData={detailPinnedBottomRowData}
+              columnDefs={detailColumnDefs}
+              quickFilterText={detailQuickFilter}
+              rowSelection="multiple"
+              headerHeight={34}
+              rowHeight={32}
+              defaultColDef={{
+                resizable: true,
+                sortable: true,
+                filter: false,
+                suppressHeaderMenuButton: true,
+              }}
+              pagination={false}
+              singleClickEdit={false}
+              stopEditingWhenCellsLoseFocus={true}
+              onCellValueChanged={handleDetailCellValueChanged}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3. 신규 자산취득품의 마스터 등록 모달 ── */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#1e3a5f' }}>
+            <LaptopOutlined />
+            <span>신규 자산 취득 품의서 등록</span>
+          </div>
+        }
+        open={isMasterModalOpen}
+        onCancel={() => {
+          setIsMasterModalOpen(false);
+          masterForm.resetFields();
+        }}
+        onOk={handleCreateMaster}
+        okText="품의 등록"
+        cancelText="취소"
+        width={540}
+      >
+        <Form
+          form={masterForm}
+          layout="vertical"
+          initialValues={{
+            dept: 'IT개발실',
+            requester: '김도영',
+          }}
+          style={{ marginTop: 12 }}
+        >
+          <Form.Item name="title" label="품의명" rules={[{ required: true, message: '품의명을 입력하세요.' }]}>
+            <Input placeholder="예: 2026년 하반기 전산실 네트워크 스위치 및 방화벽 고도화의 건" />
+          </Form.Item>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <Form.Item name="dept" label="신청부서" rules={[{ required: true }]}>
+              <Input disabled />
+            </Form.Item>
+            <Form.Item name="requester" label="기안자" rules={[{ required: true }]}>
+              <Input disabled />
+            </Form.Item>
+          </div>
+        </Form>
+      </Modal>
+    </div>
+  );
+};
+EOF
+
+    cat << 'EOF' > "$TARGET_DIR/frontend/src/pages/doc/index.ts"
+export { DocDraftManageView } from './DocDraftManageView';
+export { DocExpenseManageView } from './DocExpenseManageView';
+export { DocAssetAcquisitionView } from './DocAssetAcquisitionView';
 EOF
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/App.tsx"
@@ -5188,6 +7654,7 @@ import { LeftMenuBar } from './components/LeftMenuBar';
 import { StatusBar } from './components/StatusBar';
 import { MyPageView } from './components/mypage';
 import { LargeDataView } from './components/LargeDataView';
+import { DocDraftManageView, DocExpenseManageView, DocAssetAcquisitionView } from './pages/doc';
 import { MenuLevel_1, MenuLevel_3 } from './types';
 import { appSettingsStorage, SavedLayoutItem } from './utils/storage';
 import { useAppSetting } from './hooks/useAppSetting';
@@ -5344,12 +7811,21 @@ export default function App() {
       const activeTabset = model.getActiveTabset() || model.getFirstTabSet();
       const targetTabsetId = activeTabset ? activeTabset.getId() : 'main-tabset';
 
+      const componentType =
+        item.code === '1101'
+          ? 'doc-1101'
+          : item.code === '1102'
+          ? 'doc-1102'
+          : item.code === '1103'
+          ? 'doc-1103'
+          : 'largedata';
+
       model.doAction(
         Actions.addTab(
           {
             type: 'tab',
             name: `${item.code} ${item.title}`,
-            component: 'largedata',
+            component: componentType,
             id: tabId,
             config: { code: item.code, title: item.title },
             enableClose: true,
@@ -5631,12 +8107,29 @@ export default function App() {
       return <MyPageView />;
     }
 
+    const code = config.code || node.getId().replace('tab-', '');
+
+    // 1101 일반기안서 작성
+    if (code === '1101' || component === 'doc-1101') {
+      return <DocDraftManageView />;
+    }
+
+    // 1102 비용품의서 작성
+    if (code === '1102' || component === 'doc-1102') {
+      return <DocExpenseManageView />;
+    }
+
+    // 1103 자산취득품의서
+    if (code === '1103' || component === 'doc-1103') {
+      return <DocAssetAcquisitionView />;
+    }
+
     // 기본 대용량 데이터 뷰 (AgGrid: 외부 스크롤 없이 AgGrid 내부 가상 스크롤만 동작하도록 격리)
     return (
       <div style={{ flex: 1, overflow: 'hidden', height: '100%', minHeight: 0, boxSizing: 'border-box' }}>
         <LargeDataView
           title={config.title || node.getName()}
-          menuCode={config.code || node.getId().replace('tab-', '')}
+          menuCode={code}
         />
       </div>
     );
@@ -7143,8 +9636,13 @@ EOF
     cat << 'EOF' > "$TARGET_DIR/frontend/src/main.tsx"
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
 import App from './App.tsx';
-import './index.css';
+
+// AG Grid Community 전체 모듈 등록
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -7154,146 +9652,584 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 EOF
 
     cat << 'EOF' > "$TARGET_DIR/frontend/src/App.tsx"
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { useState, useEffect, useRef } from 'react';
+import { message, Dropdown, MenuProps, ConfigProvider } from 'antd';
+import koKR from 'antd/locale/ko_KR';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Database, LayoutGrid, RefreshCw, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+  Layout,
+  Model,
+  Actions,
+  TabNode,
+  TabSetNode,
+  BorderNode,
+  ITabSetRenderValues,
+  IJsonModel,
+  DockLocation,
+} from 'flexlayout-react';
+import './flexlayout-custom.css';
 
-interface AssetRecord {
-  key: string;
-  assetNo: string;
-  name: string;
-  category: string;
-  status: '정상' | '수리중' | '폐기예정';
-  regDate: string;
+import { TopBar } from './components/TopBar';
+import { LeftMenuBar } from './components/LeftMenuBar';
+import { StatusBar } from './components/StatusBar';
+import { MyPageView } from './components/mypage';
+import { LargeDataView } from './components/LargeDataView';
+import { DocDraftManageView, DocExpenseManageView, DocAssetAcquisitionView } from './pages/doc';
+import { MenuLevel_1, MenuLevel_3 } from './types';
+import { appSettingsStorage, SavedLayoutItem } from './utils/storage';
+import { useAppSetting } from './hooks/useAppSetting';
+import { getFontOption, applyGlobalFont, FontFamilyId } from './utils/font';
+
+// ── 기본 레이아웃 정의 (초기 상태: My Page 1개 탭) ──
+const defaultLayoutJson: IJsonModel = {
+  global: {
+    tabEnableClose: true,
+    tabSetEnableMaximize: false, // FlexLayout 기본 최대화 버튼 미노출 (onRenderTabSet에서 커스텀 버튼 렌더)
+    tabSetEnableClose: true, // 탭셋 닫기/삭제 허용
+    tabSetEnableCloseButton: false, // FlexLayout 기본 닫기 버튼 미노출 (onRenderTabSet에서 커스텀 버튼 렌더)
+    tabSetEnableDeleteWhenEmpty: true, // 탭이 0개가 되면 해당 분할 패널(탭셋) 자동 소멸
+    tabEnableRename: false,
+    tabEnableScrollbars: false, // 탭 외곽 스크롤바 방지 (뷰포트 피팅 및 내부 가상 스크롤 격리)
+    tabSetEnableDivide: true, // 패널 드래그 분할 허용
+    tabSetEnableDrop: true, // 드롭 허용
+    tabSetEnableDrag: true,
+    tabEnableDrag: true,
+    enableEdgeDock: true,
+    enableEdgeDockIndicators: true,
+    tabSetMinWidth: 240,
+    tabSetMinHeight: 160,
+  },
+  borders: [],
+  layout: {
+    type: 'row',
+    weight: 100,
+    children: [
+      {
+        type: 'tabset',
+        weight: 100,
+        id: 'main-tabset',
+        enableDivide: true,
+        enableDrop: true,
+        children: [
+          {
+            type: 'tab',
+            name: 'My Page',
+            component: 'mypage',
+            enableClose: false,
+            enableScrollbars: false,
+            id: 'tab-mypage',
+          },
+        ],
+      },
+    ],
+  },
+};
+
+// 로컬 스토리지에 저장된 레이아웃 정제 (0개 탭 자동 소멸, 최대화 해제, 분할 허용 강제 적용)
+function sanitizeLayoutJson(json: IJsonModel): IJsonModel {
+  if (!json.global) {
+    json.global = {};
+  }
+  json.global.tabSetEnableClose = true;
+  json.global.tabSetEnableCloseButton = false;
+  json.global.tabSetEnableDeleteWhenEmpty = true;
+  json.global.tabEnableScrollbars = false; // 외곽 스크롤 방지
+  json.global.tabSetEnableMaximize = false; // FlexLayout 기본 최대화 버튼 방지
+  json.global.tabSetEnableDivide = true; // 패널 드래그 분할 보장
+  json.global.tabSetEnableDrop = true;
+  json.global.tabSetEnableDrag = true;
+  json.global.tabEnableDrag = true;
+  json.global.enableEdgeDock = true;
+  json.global.enableEdgeDockIndicators = true;
+
+  const fixNode = (node: any) => {
+    if (!node) return;
+    if (node.type === 'tabset') {
+      if (node.enableClose === false) delete node.enableClose;
+      if (node.enableDeleteWhenEmpty === false) delete node.enableDeleteWhenEmpty;
+      if (node.maximized) delete node.maximized; // 저장된 최대화 상태 초기 해제
+      node.enableMaximize = false;
+      node.enableDivide = true;
+      node.enableDrop = true;
+    }
+    if (node.type === 'tab') {
+      node.enableScrollbars = false;
+    }
+    if (Array.isArray(node.children)) {
+      node.children.forEach(fixNode);
+    }
+  };
+
+  if (json.layout) {
+    fixNode(json.layout);
+  }
+  return json;
 }
 
-const mockData: AssetRecord[] = [
-  { key: '1', assetNo: 'AST-2026-001', name: 'MacBook Pro M3 Max', category: 'IT전산장비', status: '정상', regDate: '2026-01-15' },
-  { key: '2', assetNo: 'AST-2026-002', name: 'Dell UltraSharp 32"', category: 'IT전산장비', status: '정상', regDate: '2026-02-01' },
-  { key: '3', assetNo: 'AST-2026-003', name: 'Herman Miller Aeron', category: '사무가구', status: '수리중', regDate: '2025-11-20' },
-  { key: '4', assetNo: 'AST-2026-004', name: 'Canon 복합기 C5535i', category: '사무기기', status: '폐기예정', regDate: '2023-04-12' },
-];
+// 로컬 스토리지(asseterp_settings)에서 저장된 레이아웃 복원 또는 기본 레이아웃 로드
+function getInitialModel(): Model {
+  const savedLayout = appSettingsStorage.get('flexlayout_model');
+  if (savedLayout) {
+    try {
+      const m = Model.fromJson(sanitizeLayoutJson(savedLayout));
+      const maxTs = m.getMaximizedTabset();
+      if (maxTs) {
+        m.doAction(Actions.maximizeToggle(maxTs.getId()));
+      }
+      return m;
+    } catch (e) {
+      console.warn('저장된 레이아웃 복원 실패, 기본값 사용:', e);
+    }
+  }
+  return Model.fromJson(defaultLayoutJson);
+}
 
 export default function App() {
-  const [collapsed, setCollapsed] = useState(false);
-  const [activeMenu, setActiveMenu] = useState('1');
+  const [activeMenuId, setActiveMenuId] = useState<string | null>('duty');
+  const [sidebarPinned, setSidebarPinned] = useState<boolean>(true);
+  const [selectedMenuLevel_3_Code, setSelectedMenuLevel_3_Code] = useState<string>('1495');
+
+  // ── 글꼴 설정 상태 (asseterp_settings 단일 저장소 연동) ──
+  const [fontFamily, setFontFamily] = useAppSetting('font_family', 'pretendard');
+  const currentFontOpt = getFontOption(fontFamily);
+
+  useEffect(() => {
+    applyGlobalFont(fontFamily);
+  }, [fontFamily]);
+
+  // ── FlexLayout 모델 상태 ──
+  const [model, setModel] = useState<Model>(() => getInitialModel());
+
+  // ── 저장된 명명 레이아웃 목록 상태 ──
+  const [savedLayouts, setSavedLayouts] = useState<SavedLayoutItem[]>(() =>
+    appSettingsStorage.getSavedLayouts()
+  );
+
+  // ── 탭 헤더 컨텍스트 메뉴 상태 ──
+  const [contextMenu, setContextMenu] = useState<{
+    open: boolean;
+    x: number;
+    y: number;
+    tabNode: TabNode | null;
+  }>({ open: false, x: 0, y: 0, tabNode: null });
+
+  const handleSelectMenuLevel_1 = (menuId: string | null) => {
+    setActiveMenuId(menuId);
+  };
+
+  // ── 메뉴 클릭 및 화면번호 검색 시: 활성화된 탭셋(TabSet)에 새 탭 추가 또는 기존 탭 활성화 ──
+  const handleSelectMenuLevel_3 = (item: MenuLevel_3, _parent: MenuLevel_1) => {
+    setSelectedMenuLevel_3_Code(item.code);
+    const tabId = `tab-${item.code}`;
+
+    const existingNode = model.getNodeById(tabId);
+    if (existingNode) {
+      // 이미 열려 있는 탭이면 해당 탭 선택
+      model.doAction(Actions.selectTab(tabId));
+    } else {
+      // 현재 활성화된 탭셋(없으면 첫 번째 탭셋)에 탭 추가
+      const activeTabset = model.getActiveTabset() || model.getFirstTabSet();
+      const targetTabsetId = activeTabset ? activeTabset.getId() : 'main-tabset';
+
+      const componentType =
+        item.code === '1101'
+          ? 'doc-1101'
+          : item.code === '1102'
+          ? 'doc-1102'
+          : item.code === '1103'
+          ? 'doc-1103'
+          : 'largedata';
+
+      model.doAction(
+        Actions.addTab(
+          {
+            type: 'tab',
+            name: `${item.code} ${item.title}`,
+            component: componentType,
+            id: tabId,
+            config: { code: item.code, title: item.title },
+            enableClose: true,
+            enableScrollbars: false,
+          },
+          targetTabsetId,
+          DockLocation.CENTER,
+          -1,
+          true // 바로 선택
+        )
+      );
+    }
+  };
+
+  // ── 레이아웃 변경 시 자동 로컬 스토리지(asseterp_settings) 디바운스 비동기 저장 ──
+  const saveLayoutTimerRef = useRef<number | null>(null);
+  const handleModelChange = (newModel: Model) => {
+    if (saveLayoutTimerRef.current) {
+      window.clearTimeout(saveLayoutTimerRef.current);
+    }
+    saveLayoutTimerRef.current = window.setTimeout(() => {
+      appSettingsStorage.set('flexlayout_model', newModel.toJson());
+    }, 200);
+  };
+
+  // ── 단축키 F4: 최대화 및 복원 토글 ──
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F4') {
+        e.preventDefault();
+        const maxTs = model.getMaximizedTabset();
+        if (maxTs) {
+          model.doAction(Actions.maximizeToggle(maxTs.getId()));
+        } else {
+          const target = model.getActiveTabset() || model.getFirstTabSet();
+          if (target) {
+            model.doAction(Actions.maximizeToggle(target.getId()));
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [model]);
+
+  // ── 컨텍스트 메뉴 외부 클릭 시 닫기 ──
+  useEffect(() => {
+    if (!contextMenu.open) return;
+    const handleOutsideClick = () => {
+      setContextMenu((prev) => ({ ...prev, open: false }));
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, [contextMenu.open]);
+
+  // ── 탭셋 내부의 모든 닫기 가능 탭 일괄 닫기 ──
+  const handleCloseAllInTabSet = (tabset: TabSetNode) => {
+    const children = tabset.getChildren().filter((c): c is TabNode => c instanceof TabNode);
+    const closeableTabs = children.filter((t) => t.isCloseable());
+    if (closeableTabs.length === 0) {
+      message.info('닫을 수 있는 탭이 없습니다.');
+      return;
+    }
+    closeableTabs.forEach((tab) => {
+      model.doAction(Actions.deleteTab(tab.getId()));
+    });
+  };
+
+  // ── TabSet 우측 툴바 버튼 커스텀 렌더: '모든 탭 닫기' & '최대화/복원(F4)' ──
+  const onRenderTabSet = (tabSetNode: TabSetNode | BorderNode, renderValues: ITabSetRenderValues) => {
+    if (!(tabSetNode instanceof TabSetNode)) return;
+    const isMax = tabSetNode.isMaximized();
+
+    renderValues.buttons.push(
+      <button
+        key="close-all"
+        type="button"
+        title="모든 탭 닫기"
+        className="flexlayout-toolbar-custom-btn"
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleCloseAllInTabSet(tabSetNode);
+        }}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="11"
+          height="11"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="lucide lucide-x"
+          aria-hidden="true"
+        >
+          <path d="M18 6 6 18"></path>
+          <path d="m6 6 12 12"></path>
+        </svg>
+      </button>,
+      <button
+        key="max-toggle"
+        type="button"
+        title={isMax ? '복원(F4)' : '최대화(F4)'}
+        className="flexlayout-toolbar-custom-btn"
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          model.doAction(Actions.maximizeToggle(tabSetNode.getId()));
+        }}
+      >
+        {isMax ? (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            style={{ width: 14, height: 14, strokeWidth: 2.5 }}
+          >
+            <path
+              stroke="var(--color-icon)"
+              d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"
+            ></path>
+          </svg>
+        ) : (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            style={{ width: 14, height: 14, strokeWidth: 2.5 }}
+          >
+            <path
+              stroke="var(--color-icon)"
+              d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"
+            ></path>
+          </svg>
+        )}
+      </button>
+    );
+  };
+
+  // ── 탭 헤더 우클릭 시 컨텍스트 메뉴 표시 ──
+  const handleContextMenu = (node: any, event: React.MouseEvent<HTMLElement>) => {
+    if (node instanceof TabNode) {
+      event.preventDefault();
+      event.stopPropagation();
+      setContextMenu({
+        open: true,
+        x: event.clientX,
+        y: event.clientY,
+        tabNode: node,
+      });
+    }
+  };
+
+  // ── 컨텍스트 메뉴 아이템 목록 생성 ──
+  const getContextMenuItems = (): MenuProps['items'] => {
+    const targetTab = contextMenu.tabNode;
+    if (!targetTab) return [];
+
+    const parent = targetTab.getParent();
+    const siblings = parent
+      ? parent.getChildren().filter((c): c is TabNode => c instanceof TabNode)
+      : [];
+    const currentIndex = siblings.findIndex((s) => s.getId() === targetTab.getId());
+
+    const rightSiblings = currentIndex >= 0 ? siblings.slice(currentIndex + 1) : [];
+    const otherSiblings = currentIndex >= 0 ? siblings.filter((_, i) => i !== currentIndex) : [];
+
+    const canCloseCurrent = targetTab.isCloseable();
+    const canCloseRight = rightSiblings.some((s) => s.isCloseable());
+    const canCloseOthers = otherSiblings.some((s) => s.isCloseable());
+    const canCloseAll = siblings.some((s) => s.isCloseable());
+
+    return [
+      {
+        key: 'close-current',
+        label: '이 탭 닫기',
+        disabled: !canCloseCurrent,
+        onClick: () => {
+          if (canCloseCurrent) {
+            model.doAction(Actions.deleteTab(targetTab.getId()));
+          }
+          setContextMenu((prev) => ({ ...prev, open: false }));
+        },
+      },
+      {
+        key: 'close-right',
+        label: '오른쪽 모든 탭 닫기',
+        disabled: !canCloseRight,
+        onClick: () => {
+          rightSiblings.forEach((tab) => {
+            if (tab.isCloseable()) {
+              model.doAction(Actions.deleteTab(tab.getId()));
+            }
+          });
+          setContextMenu((prev) => ({ ...prev, open: false }));
+        },
+      },
+      {
+        key: 'close-others',
+        label: '다른 탭 모두 닫기',
+        disabled: !canCloseOthers,
+        onClick: () => {
+          otherSiblings.forEach((tab) => {
+            if (tab.isCloseable()) {
+              model.doAction(Actions.deleteTab(tab.getId()));
+            }
+          });
+          setContextMenu((prev) => ({ ...prev, open: false }));
+        },
+      },
+      {
+        type: 'divider',
+      },
+      {
+        key: 'close-all',
+        label: '전체 탭 닫기',
+        disabled: !canCloseAll,
+        danger: true,
+        onClick: () => {
+          siblings.forEach((tab) => {
+            if (tab.isCloseable()) {
+              model.doAction(Actions.deleteTab(tab.getId()));
+            }
+          });
+          setContextMenu((prev) => ({ ...prev, open: false }));
+        },
+      },
+    ];
+  };
+
+
+  // ── 명명 레이아웃 저장/불러오기/삭제/초기화 핸들러 ──
+  const handleSaveNamedLayout = (name: string) => {
+    const item = appSettingsStorage.saveLayout(name, model.toJson());
+    setSavedLayouts(appSettingsStorage.getSavedLayouts());
+    message.success(`'${item.name}' 레이아웃이 저장되었습니다.`);
+  };
+
+  const handleLoadNamedLayout = (item: SavedLayoutItem) => {
+    try {
+      const sanitized = sanitizeLayoutJson(item.modelJson);
+      const m = Model.fromJson(sanitized);
+      setModel(m);
+      appSettingsStorage.set('flexlayout_model', sanitized);
+      message.success(`'${item.name}' 레이아웃을 불러왔습니다.`);
+    } catch (e) {
+      message.error('레이아웃 불러오기에 실패했습니다.');
+      console.error(e);
+    }
+  };
+
+  const handleDeleteNamedLayout = (id: string) => {
+    appSettingsStorage.deleteSavedLayout(id);
+    setSavedLayouts(appSettingsStorage.getSavedLayouts());
+    message.info('레이아웃이 삭제되었습니다.');
+  };
+
+  const handleResetLayout = () => {
+    appSettingsStorage.remove('flexlayout_model');
+    setModel(Model.fromJson(defaultLayoutJson));
+    message.info('기본 레이아웃으로 초기화되었습니다.');
+  };
+
+  // ── FlexLayout Tab 컴포넌트 렌더러 (factory) ──
+  const factory = (node: TabNode) => {
+    const component = node.getComponent();
+    const config = (node.getConfig() as { code?: string; title?: string }) || {};
+
+    if (component === 'mypage') {
+      return <MyPageView />;
+    }
+
+    const code = config.code || node.getId().replace('tab-', '');
+
+    // 1101 일반기안서 작성
+    if (code === '1101' || component === 'doc-1101') {
+      return <DocDraftManageView />;
+    }
+
+    // 1102 비용품의서 작성
+    if (code === '1102' || component === 'doc-1102') {
+      return <DocExpenseManageView />;
+    }
+
+    // 1103 자산취득품의서
+    if (code === '1103' || component === 'doc-1103') {
+      return <DocAssetAcquisitionView />;
+    }
+
+    // 기본 대용량 데이터 뷰 (AgGrid: 외부 스크롤 없이 AgGrid 내부 가상 스크롤만 동작하도록 격리)
+    return (
+      <div style={{ flex: 1, overflow: 'hidden', height: '100%', minHeight: 0, boxSizing: 'border-box' }}>
+        <LargeDataView
+          title={config.title || node.getName()}
+          menuCode={code}
+        />
+      </div>
+    );
+  };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-900">
-      {/* Sidebar */}
-      <aside
-        className={`${
-          collapsed ? 'w-16' : 'w-64'
-        } transition-all duration-300 bg-slate-900 text-slate-100 flex flex-col`}
-      >
-        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800">
-          {!collapsed && <span className="font-bold text-lg">AssetERP Next</span>}
-          {collapsed && <span className="font-bold text-base mx-auto">ERP</span>}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white"
-          >
-            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-          </button>
-        </div>
-        <nav className="flex-1 p-2 space-y-1">
-          <button
-            onClick={() => setActiveMenu('1')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              activeMenu === '1'
-                ? 'bg-blue-600 text-white'
-                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-            }`}
-          >
-            <Database size={18} className="shrink-0" />
-            {!collapsed && <span>자산 관리</span>}
-          </button>
-          <button
-            onClick={() => setActiveMenu('2')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              activeMenu === '2'
-                ? 'bg-blue-600 text-white'
-                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-            }`}
-          >
-            <LayoutGrid size={18} className="shrink-0" />
-            {!collapsed && <span>공통 코드</span>}
-          </button>
-        </nav>
-      </aside>
+    <ConfigProvider
+      locale={koKR}
+      theme={{
+        token: {
+          colorPrimary: '#1677ff',
+          fontFamily: currentFontOpt.cssFamily,
+        },
+      }}
+    >
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <TopBar
+          sidebarPinned={sidebarPinned}
+          onToggleSidebarPin={() => setSidebarPinned(!sidebarPinned)}
+          onOpenScreen={handleSelectMenuLevel_3}
+          savedLayouts={savedLayouts}
+          onSaveNamedLayout={handleSaveNamedLayout}
+          onLoadNamedLayout={handleLoadNamedLayout}
+          onDeleteNamedLayout={handleDeleteNamedLayout}
+          onResetLayout={handleResetLayout}
+          currentFontId={fontFamily as FontFamilyId}
+          onChangeFont={(id) => setFontFamily(id)}
+        />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between">
-          <h1 className="text-lg font-bold text-slate-800">
-            자산 마스터 목록 (shadcn/ui Prototype)
-          </h1>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <RefreshCw size={14} />
-              새로고침
-            </Button>
-            <Button size="sm" className="gap-1.5">
-              <Plus size={14} />
-              자산 등록
-            </Button>
+        {/* ── Body Container with LeftMenuBar & FlexLayout ── */}
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
+          {/* ── 왼쪽 MenuLevel_1 아이콘 메뉴 및 MenuLevel_2/3 서브메뉴 ── */}
+          <LeftMenuBar
+            activeMenuId={activeMenuId}
+            onSelectMenuLevel_1={handleSelectMenuLevel_1}
+            onSelectMenuLevel_3={handleSelectMenuLevel_3}
+            pinned={sidebarPinned}
+            onTogglePin={setSidebarPinned}
+            selectedMenuLevel_3_Code={selectedMenuLevel_3_Code}
+          />
+
+          {/* ── Main Content Area: FlexLayout Multi-Split & Docking ── */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, backgroundColor: '#eef2f6' }}>
+            {/* FlexLayout Viewport */}
+            <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+              <Layout
+                model={model}
+                factory={factory}
+                onModelChange={handleModelChange}
+                onRenderTabSet={onRenderTabSet}
+                onContextMenu={handleContextMenu}
+                realtimeResize
+              />
+
+              {/* 탭 헤더 우클릭 컨텍스트 메뉴 */}
+              <Dropdown
+                menu={{ items: getContextMenuItems() }}
+                open={contextMenu.open}
+                onOpenChange={(open) => !open && setContextMenu((prev) => ({ ...prev, open: false }))}
+                trigger={['contextMenu']}
+              >
+                <div
+                  style={{
+                    position: 'fixed',
+                    left: contextMenu.x,
+                    top: contextMenu.y,
+                    width: 1,
+                    height: 1,
+                    pointerEvents: 'none',
+                    zIndex: 9999,
+                  }}
+                />
+              </Dropdown>
+            </div>
           </div>
-        </header>
+        </div>
 
-        {/* Content */}
-        <main className="flex-1 p-6">
-          <Card className="bg-white">
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[140px]">자산번호</TableHead>
-                    <TableHead>자산명</TableHead>
-                    <TableHead>카테고리</TableHead>
-                    <TableHead className="w-[120px]">상태</TableHead>
-                    <TableHead className="w-[140px]">취득일자</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockData.map((item) => (
-                    <TableRow key={item.key}>
-                      <TableCell className="font-mono font-medium">{item.assetNo}</TableCell>
-                      <TableCell>{item.name}</TableCell>
-                      <TableCell>{item.category}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            item.status === '정상'
-                              ? 'success'
-                              : item.status === '수리중'
-                              ? 'warning'
-                              : 'destructive'
-                          }
-                        >
-                          {item.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-slate-500">{item.regDate}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </main>
+        {/* ── Status Bar (System Health, Message, Clock) ── */}
+        <StatusBar />
       </div>
-    </div>
+    </ConfigProvider>
   );
 }
 EOF

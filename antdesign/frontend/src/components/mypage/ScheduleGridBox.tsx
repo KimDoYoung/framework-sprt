@@ -182,6 +182,12 @@ export const ScheduleGridBox: React.FC<ScheduleGridBoxProps> = ({ selectedDay })
           padding-top: 2px !important;
           padding-bottom: 2px !important;
         }
+        /* 행 마우스 호버 시 명확한 하이라이트 배경색 및 커서 제공 */
+        .schedule-table .ant-table-tbody > tr:hover > td,
+        .schedule-table .ant-table-tbody > tr.ant-table-row:hover > td {
+          background-color: #e6f4ff !important;
+          cursor: pointer;
+        }
       `}</style>
 
       {/* Ant Design Table: 2개 Tr 높이(약 56px) 추가하여 약 8개 행 표시 (scroll y: 231px) */}

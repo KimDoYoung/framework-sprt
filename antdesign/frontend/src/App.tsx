@@ -19,6 +19,7 @@ import { LeftMenuBar } from './components/LeftMenuBar';
 import { StatusBar } from './components/StatusBar';
 import { MyPageView } from './components/mypage';
 import { LargeDataView } from './components/LargeDataView';
+import { DocDraftManageView, DocExpenseManageView, DocAssetAcquisitionView } from './pages/doc';
 import { MenuLevel_1, MenuLevel_3 } from './types';
 import { appSettingsStorage, SavedLayoutItem } from './utils/storage';
 import { useAppSetting } from './hooks/useAppSetting';
@@ -175,12 +176,21 @@ export default function App() {
       const activeTabset = model.getActiveTabset() || model.getFirstTabSet();
       const targetTabsetId = activeTabset ? activeTabset.getId() : 'main-tabset';
 
+      const componentType =
+        item.code === '1101'
+          ? 'doc-1101'
+          : item.code === '1102'
+          ? 'doc-1102'
+          : item.code === '1103'
+          ? 'doc-1103'
+          : 'largedata';
+
       model.doAction(
         Actions.addTab(
           {
             type: 'tab',
             name: `${item.code} ${item.title}`,
-            component: 'largedata',
+            component: componentType,
             id: tabId,
             config: { code: item.code, title: item.title },
             enableClose: true,
@@ -462,12 +472,29 @@ export default function App() {
       return <MyPageView />;
     }
 
+    const code = config.code || node.getId().replace('tab-', '');
+
+    // 1101 일반기안서 작성
+    if (code === '1101' || component === 'doc-1101') {
+      return <DocDraftManageView />;
+    }
+
+    // 1102 비용품의서 작성
+    if (code === '1102' || component === 'doc-1102') {
+      return <DocExpenseManageView />;
+    }
+
+    // 1103 자산취득품의서
+    if (code === '1103' || component === 'doc-1103') {
+      return <DocAssetAcquisitionView />;
+    }
+
     // 기본 대용량 데이터 뷰 (AgGrid: 외부 스크롤 없이 AgGrid 내부 가상 스크롤만 동작하도록 격리)
     return (
       <div style={{ flex: 1, overflow: 'hidden', height: '100%', minHeight: 0, boxSizing: 'border-box' }}>
         <LargeDataView
           title={config.title || node.getName()}
-          menuCode={config.code || node.getId().replace('tab-', '')}
+          menuCode={code}
         />
       </div>
     );

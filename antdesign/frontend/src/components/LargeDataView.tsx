@@ -104,42 +104,36 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
         pinned: 'left',
         cellStyle: { fontFamily: 'monospace', fontWeight: 600 } as Record<string, string | number>,
         sortable: true,
-        filter: true,
       },
       {
         field: 'name',
         headerName: '자산명 / 모델규격',
         width: 260,
         sortable: true,
-        filter: true,
       },
       {
         field: 'category',
         headerName: '자산분류',
         width: 140,
         sortable: true,
-        filter: true,
       },
       {
         field: 'dept',
         headerName: '관리부서',
         width: 120,
         sortable: true,
-        filter: true,
       },
       {
         field: 'manager',
         headerName: '담당자',
         width: 100,
         sortable: true,
-        filter: true,
       },
       {
         field: 'status',
         headerName: '상태',
         width: 110,
         sortable: true,
-        filter: true,
         cellRenderer: (params: any) => {
           const status = params.value;
           let color = 'green';
@@ -173,7 +167,6 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
         headerName: '취득일자',
         width: 120,
         sortable: true,
-        filter: true,
       },
       {
         field: 'location',
@@ -362,7 +355,8 @@ export const LargeDataView: React.FC<LargeDataViewProps> = ({
           defaultColDef={{
             resizable: true,
             sortable: true,
-            filter: true,
+            filter: false,
+            suppressHeaderMenuButton: true,
           }}
           pagination={false} // Virtual DOM scrolling for extreme performance!
         />

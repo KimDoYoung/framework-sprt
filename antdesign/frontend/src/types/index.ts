@@ -82,3 +82,64 @@ export interface LargeAssetItem {
   location: string;
   complianceChecked: boolean;
 }
+
+// ── 1101 일반기안서 작성 타입 ──
+export interface DraftDocItem {
+  id: string;
+  docNo: string;
+  draftDate: string;
+  category: string;
+  title: string;
+  dept: string;
+  drafter: string;
+  status: '임시저장' | '결재대기' | '진행중' | '승인완료' | '반려';
+  approvalDate: string;
+  isUrgent: boolean;
+  retentionPeriod: string;
+  content?: string;
+}
+
+// ── 1102 비용품의서 작성 타입 ──
+export interface ExpenseDocItem {
+  id: string;
+  expenseDate: string;
+  accountName: string;
+  description: string;
+  merchant: string;
+  supplyAmount: number;
+  taxAmount: number;
+  totalAmount: number;
+  paymentMethod: '법인카드' | '세금계산서' | '개인카드' | '현금영수증';
+  evidenceStatus: '첨부완료' | '미첨부';
+  dept: string;
+  isDirty?: boolean;
+}
+
+// ── 1103 자산취득품의서 마스터/디테일 타입 ──
+export interface AssetAcqMasterItem {
+  id: string;
+  docNo: string;
+  reqDate: string;
+  title: string;
+  dept: string;
+  requester: string;
+  totalBudget: number;
+  itemCount: number;
+  status: '작성중' | '결재대기' | '승인완료' | '집행완료';
+}
+
+export interface AssetAcqDetailItem {
+  id: string;
+  masterId: string;
+  assetCode: string;
+  category: string;
+  name: string;
+  spec: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  location: string;
+  targetUser: string;
+  note?: string;
+}
+

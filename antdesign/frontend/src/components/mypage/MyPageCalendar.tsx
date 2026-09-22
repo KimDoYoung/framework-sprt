@@ -206,6 +206,7 @@ export const MyPageCalendar: React.FC<CalendarProps> = ({
 
     return (
       <div
+        className={`mypage-calendar-day-cell ${isChosen ? 'is-chosen' : ''} ${isCurrentMonth ? 'is-current-month' : 'is-other-month'}`}
         style={{
           height: '100%',
           minHeight: 48,
