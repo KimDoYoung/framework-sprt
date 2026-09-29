@@ -27,15 +27,21 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
         String authError = (String) request.getAttribute("AUTH_ERROR");
         String message;
+        String errorCode;
+
         if ("MULTI_LOGIN_DETECTED".equals(authError)) {
-            message = "다른 기기/브라우저에서 로그인되어 현재 세션이 만료되었습니다.";
+            message = "다른 기기/브라우저에서 로그인되어 현재 세션이 차단되었습니다.";
+            errorCode = "MULTI_LOGIN_DETECTED";
         } else if ("TOKEN_EXPIRED_OR_INVALID".equals(authError)) {
             message = "인증 토큰이 만료되었거나 유효하지 않습니다.";
+            errorCode = "TOKEN_EXPIRED";
         } else {
             message = "로그인이 필요한 서비스입니다.";
+            errorCode = "UNAUTHORIZED";
         }
 
-        ApiResponse<Void> apiResponse = ApiResponse.fail(message);
+        response.setHeader("X-Auth-Error", errorCode);
+        ApiResponse<String> apiResponse = ApiResponse.fail(message, errorCode);
         response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
     }
 }

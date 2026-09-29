@@ -46,8 +46,9 @@ public class AuthService {
         UserPrincipal principal = UserPrincipal.from(user, jti);
 
         String accessToken = tokenProvider.generateAccessToken(principal, jti);
+        String refreshToken = tokenProvider.generateRefreshToken(user.getUserId(), jti);
 
-        // Redis에 활성 jti 저장 (기존 브라우저 접속 즉시 차단)
+        // Redis에 활성 jti 저장 (TTL: Refresh Token 만료시간 기준, 기본 60초)
         long ttlMillis = Math.max(tokenProvider.getRefreshTokenExpiration(), 60000);
         redisTokenService.saveActiveJti(user.getUserId(), jti, Duration.ofMillis(ttlMillis));
 
@@ -62,7 +63,54 @@ public class AuthService {
                 principal.getRoles(),
                 jti,
                 accessToken,
-                tokenProvider.getAccessTokenExpiration()
+                tokenProvider.getAccessTokenExpiration(),
+                refreshToken,
+                tokenProvider.getRefreshTokenExpiration()
+        );
+    }
+
+    /**
+     * Refresh Token을 통한 Access Token 재발급 (Silent Refresh)
+     */
+    @Transactional
+    public LoginRes refresh(String refreshToken) {
+        if (refreshToken == null || !tokenProvider.validateToken(refreshToken)) {
+            throw new BadCredentialsException("리프레시 토큰이 만료되었거나 유효하지 않습니다.");
+        }
+
+        Long userId = tokenProvider.getUserId(refreshToken);
+        String jti = tokenProvider.getJti(refreshToken);
+
+        // 멀티 로그인 여부 검사 (Redis의 활성 JTI 확인)
+        if (!redisTokenService.isLatestJti(userId, jti)) {
+            log.warn("Refresh 차단 - 멀티 로그인 감지: userId={}, jti={}", userId, jti);
+            throw new BadCredentialsException("MULTI_LOGIN_DETECTED: 다른 브라우저에서 로그인되어 세션이 차단되었습니다.");
+        }
+
+        AppUser user = appUserMapper.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("사용자 정보를 찾을 수 없습니다: " + userId));
+
+        UserPrincipal principal = UserPrincipal.from(user, jti);
+        String newAccessToken = tokenProvider.generateAccessToken(principal, jti);
+
+        // 활동 중인 세션 유지를 위해 Redis TTL 갱신 (Sliding Session)
+        long ttlMillis = Math.max(tokenProvider.getRefreshTokenExpiration(), 60000);
+        redisTokenService.saveActiveJti(user.getUserId(), jti, Duration.ofMillis(ttlMillis));
+
+        log.info("토큰 갱신(Refresh) 성공: userId={}, username={}, jti={}", userId, user.getUsername(), jti);
+
+        return new LoginRes(
+                principal.getUserId(),
+                principal.getUsername(),
+                principal.getName(),
+                principal.getCompanyId(),
+                principal.getDeptId(),
+                principal.getRoles(),
+                jti,
+                newAccessToken,
+                tokenProvider.getAccessTokenExpiration(),
+                refreshToken,
+                tokenProvider.getRefreshTokenExpiration()
         );
     }
 

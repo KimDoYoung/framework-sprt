@@ -13,7 +13,9 @@ import {
   Row,
   Col,
   Alert,
-  Tooltip
+  Tooltip,
+  Progress,
+  List
 } from 'antd';
 import {
   LogoutOutlined,
@@ -24,10 +26,17 @@ import {
   FileDoneOutlined,
   SyncOutlined,
   UserOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  ClockCircleOutlined,
+  ThunderboltOutlined,
+  ApiOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined
 } from '@ant-design/icons';
 import { authApi } from '../api/auth';
 import { fileApi } from '../api/file';
+import { testApi } from '../api/test';
+import { onTokenRefresh, notifySessionTerminated } from '../api/client';
 import { User, FileItem } from '../types/auth';
 
 const { Header, Content } = Layout;
@@ -38,12 +47,79 @@ interface MainPageProps {
   onLogout: () => void;
 }
 
+interface PingLogItem {
+  id: number;
+  time: string;
+  status: 'SUCCESS' | 'FAIL';
+  detail: string;
+  wasRefreshed: boolean;
+  durationMs: number;
+}
+
 export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
   const [currentUser, setCurrentUser] = useState<User>(user);
   const [files, setFiles] = useState<FileItem[]>([]);
   const [fileLoading, setFileLoading] = useState(false);
   const [sessionCheckLoading, setSessionCheckLoading] = useState(false);
-  const [sessionAlert, setSessionAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [refreshLoading, setRefreshLoading] = useState(false);
+  const [sessionAlert, setSessionAlert] = useState<{ type: 'success' | 'info' | 'warning' | 'error'; message: string; description?: string } | null>(null);
+
+  // 토큰 타이머 (Access Token: 10초, Refresh Token: 60초)
+  const [accessRemainSec, setAccessRemainSec] = useState<number>(10);
+  const [refreshRemainSec, setRefreshRemainSec] = useState<number>(60);
+
+  // 서버 통신 테스트 상태
+  const [pingLoading, setPingLoading] = useState(false);
+  const [lastPingResult, setLastPingResult] = useState<{
+    callSeq: number;
+    time: string;
+    serverTime: string;
+    message: string;
+    wasRefreshed: boolean;
+    durationMs: number;
+  } | null>(null);
+  const [pingLogs, setPingLogs] = useState<PingLogItem[]>([]);
+
+  const resetTimers = () => {
+    setAccessRemainSec(10);
+    setRefreshRemainSec(60);
+  };
+
+  useEffect(() => {
+    // 1초마다 타이머 감소
+    const interval = window.setInterval(() => {
+      setAccessRemainSec(prev => (prev > 0 ? prev - 1 : 0));
+      setRefreshRemainSec(prev => {
+        if (prev <= 1) {
+          // 1분(60초) 모두 경과 시 자동 세션 만료 처리 -> 로그인 화면 이동
+          notifySessionTerminated('EXPIRED');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    // Axios Silent Refresh 발생 시 리스너
+    const unsubscribe = onTokenRefresh((refreshedData: User) => {
+      setAccessRemainSec(10);
+      setRefreshRemainSec(60);
+      if (refreshedData) {
+        setCurrentUser(refreshedData);
+      }
+      message.info('🔄 Access Token(10초) 만료 -> Refresh Token으로 자동 갱신되었습니다!');
+      setSessionAlert({
+        type: 'info',
+        message: '자동 토큰 갱신 (Silent Refresh) 완료',
+        description: 'Access Token이 만료되었으나, Refresh Token(60초)으로 새 토큰을 자동 재발급받아 세션이 1분 연장되었습니다.'
+      });
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const fetchFiles = async () => {
     setFileLoading(true);
@@ -65,34 +141,125 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
 
   const handleApiError = (err: any) => {
     const errorMsg = err.response?.data?.message || err.message || '요청 처리 실패';
+    const authError = err.response?.headers?.['x-auth-error'] || err.response?.data?.data;
+
     if (err.response?.status === 401) {
-      message.error(errorMsg);
-      setSessionAlert({
-        type: 'error',
-        message: `세션이 차단되었습니다: ${errorMsg}`
-      });
+      if (authError === 'MULTI_LOGIN_DETECTED') {
+        notifySessionTerminated('MULTI_LOGIN');
+      } else {
+        notifySessionTerminated('EXPIRED');
+      }
     } else {
       message.error(errorMsg);
     }
   };
 
+  // 사용자가 요청한 핵심 기능: 서버로 자유롭게 통신하는 테스트 버튼
+  const handlePing = async () => {
+    setPingLoading(true);
+    const startTime = performance.now();
+    let refreshedDuringThisCall = false;
+
+    // 이번 호출 중에 silent refresh가 일어났는지 감지
+    const unsub = onTokenRefresh(() => {
+      refreshedDuringThisCall = true;
+    });
+
+    try {
+      const res = await testApi.ping();
+      const durationMs = Math.round(performance.now() - startTime);
+
+      if (res.success && res.data) {
+        const clientTime = new Date().toLocaleTimeString();
+        setLastPingResult({
+          callSeq: res.data.callSeq,
+          time: clientTime,
+          serverTime: res.data.serverTime,
+          message: res.data.message,
+          wasRefreshed: refreshedDuringThisCall,
+          durationMs
+        });
+
+        setPingLogs(prev => [
+          {
+            id: Date.now(),
+            time: clientTime,
+            status: 'SUCCESS',
+            detail: `호출 #${res.data.callSeq} - 서버 시간: ${res.data.serverTime}`,
+            wasRefreshed: refreshedDuringThisCall,
+            durationMs
+          },
+          ...prev.slice(0, 9) // 최근 10개 보관
+        ]);
+
+        if (refreshedDuringThisCall) {
+          message.success(`[자동 갱신] 10초 만료 후 Refresh Token으로 자동 복구되어 정상 통신 성공! (${durationMs}ms)`);
+        } else {
+          message.success(`[통신 성공] 세션 유효 - 서버 응답 수신 (${durationMs}ms)`);
+        }
+      }
+    } catch (err: any) {
+      const durationMs = Math.round(performance.now() - startTime);
+      const clientTime = new Date().toLocaleTimeString();
+      const errorMsg = err.response?.data?.message || err.message || '통신 실패';
+
+      setPingLogs(prev => [
+        {
+          id: Date.now(),
+          time: clientTime,
+          status: 'FAIL',
+          detail: `실패: ${errorMsg}`,
+          wasRefreshed: false,
+          durationMs
+        },
+        ...prev.slice(0, 9)
+      ]);
+
+      handleApiError(err);
+    } finally {
+      unsub();
+      setPingLoading(false);
+    }
+  };
+
   const handleSessionCheck = async () => {
     setSessionCheckLoading(true);
-    setSessionAlert(null);
     try {
       const res = await authApi.getMe();
       if (res.success && res.data) {
         setCurrentUser(res.data);
-        message.success('현재 세션이 유효합니다.');
+        message.success('현재 세션이 정상 유지 중입니다.');
         setSessionAlert({
           type: 'success',
-          message: `정상 세션 유지 중 (JTI: ${res.data.jti})`
+          message: '정상 세션 유지 중',
+          description: `사용자: ${res.data.name} (JTI: ${res.data.jti})`
         });
       }
     } catch (err: any) {
       handleApiError(err);
     } finally {
       setSessionCheckLoading(false);
+    }
+  };
+
+  const handleManualRefresh = async () => {
+    setRefreshLoading(true);
+    try {
+      const res = await authApi.refresh();
+      if (res.success && res.data) {
+        setCurrentUser(res.data);
+        resetTimers();
+        message.success('수동 토큰 갱신(Refresh) 성공! (Access Token 10초 리셋)');
+        setSessionAlert({
+          type: 'success',
+          message: '토큰 수동 갱신 성공',
+          description: 'Refresh Token을 사용하여 새 Access Token(10초)을 재발급받았습니다.'
+        });
+      }
+    } catch (err: any) {
+      handleApiError(err);
+    } finally {
+      setRefreshLoading(false);
     }
   };
 
@@ -118,9 +285,7 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
       title: 'Tika 감지 MIME Type (Magic Number)',
       dataIndex: 'detectedMimeType',
       key: 'detectedMimeType',
-      render: (mime: string) => (
-        <Tag color="cyan">{mime}</Tag>
-      )
+      render: (mime: string) => <Tag color="cyan">{mime}</Tag>
     },
     {
       title: '선언된 Content-Type',
@@ -197,27 +362,190 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
       </Header>
 
       <Content style={{ padding: '24px', maxWidth: 1280, margin: '0 auto', width: '100%' }}>
+        {/* 1. 토큰 만료 상태 배너 카드 */}
+        <Card style={{ marginBottom: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+          <Row gutter={[24, 16]} align="middle">
+            <Col xs={24} md={10}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <ClockCircleOutlined style={{ fontSize: 24, color: accessRemainSec > 0 ? '#1890ff' : '#ff4d4f' }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <Text strong>Access Token (수명: 10초)</Text>
+                    <Text type={accessRemainSec > 0 ? 'secondary' : 'danger'}>
+                      {accessRemainSec > 0 ? `${accessRemainSec}초 남음` : '만료됨 (Refresh로 즉시 유지)'}
+                    </Text>
+                  </div>
+                  <Progress
+                    percent={accessRemainSec * 10}
+                    status={accessRemainSec > 0 ? 'active' : 'exception'}
+                    showInfo={false}
+                    strokeColor={accessRemainSec > 3 ? '#1890ff' : '#faad14'}
+                  />
+                </div>
+              </div>
+            </Col>
+
+            <Col xs={24} md={10}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <ThunderboltOutlined style={{ fontSize: 24, color: refreshRemainSec > 0 ? '#52c41a' : '#ff4d4f' }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <Text strong>Refresh Token (최대 유지: 60초)</Text>
+                    <Text type={refreshRemainSec > 0 ? 'secondary' : 'danger'}>
+                      {refreshRemainSec > 0 ? `${refreshRemainSec}초 남음` : '완전 만료'}
+                    </Text>
+                  </div>
+                  <Progress
+                    percent={Math.round((refreshRemainSec / 60) * 100)}
+                    status={refreshRemainSec > 0 ? 'normal' : 'exception'}
+                    showInfo={false}
+                    strokeColor="#52c41a"
+                  />
+                </div>
+              </div>
+            </Col>
+
+            <Col xs={24} md={4} style={{ textAlign: 'right' }}>
+              <Button
+                type="default"
+                icon={<SyncOutlined spin={refreshLoading} />}
+                onClick={handleManualRefresh}
+                loading={refreshLoading}
+              >
+                수동 갱신
+              </Button>
+            </Col>
+          </Row>
+        </Card>
+
+        {/* 2. 핵심 요구사항: 서버 통신 테스트 전용 인터랙티브 카드 */}
+        <Card
+          style={{
+            marginBottom: 20,
+            boxShadow: '0 4px 14px rgba(22, 119, 255, 0.12)',
+            border: '2px solid #91caff',
+            background: 'linear-gradient(to right, #f6faff, #ffffff)'
+          }}
+        >
+          <Row gutter={[24, 20]} align="middle">
+            <Col xs={24} md={14}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+                <ApiOutlined style={{ fontSize: 36, color: '#1677ff', marginTop: 4 }} />
+                <div>
+                  <Title level={4} style={{ margin: '0 0 6px 0', color: '#0958d9' }}>
+                    서버 자유 통신 테스트 (1분 세션 유지 검증)
+                  </Title>
+                  <Paragraph style={{ margin: 0, color: '#4b5563', fontSize: 13 }}>
+                    로그인 후 <b>10초가 지나 Access Token이 만료되어도</b>, 1분(60초)의 Refresh Token 기간 안에는 아래 버튼을 클릭하면
+                    <b> 백그라운드 자동 갱신(Silent Refresh)</b>이 동작하여 끊김 없이 <b>정상 200 OK 통신</b>이 이루어집니다!
+                  </Paragraph>
+                </div>
+              </div>
+            </Col>
+
+            <Col xs={24} md={10} style={{ textAlign: 'right' }}>
+              <Button
+                type="primary"
+                size="large"
+                icon={<ThunderboltOutlined />}
+                loading={pingLoading}
+                onClick={handlePing}
+                style={{
+                  height: 48,
+                  padding: '0 28px',
+                  fontSize: 16,
+                  fontWeight: 600,
+                  boxShadow: '0 4px 10px rgba(22, 119, 255, 0.3)'
+                }}
+              >
+                서버 통신 테스트 (Ping)
+              </Button>
+            </Col>
+          </Row>
+
+          {/* 최근 통신 결과 요약 */}
+          {lastPingResult && (
+            <div style={{
+              marginTop: 16,
+              padding: '12px 16px',
+              borderRadius: 8,
+              background: lastPingResult.wasRefreshed ? '#f6ffed' : '#e6f4ff',
+              border: `1px solid ${lastPingResult.wasRefreshed ? '#b7eb8f' : '#91caff'}`
+            }}>
+              <Row justify="space-between" align="middle">
+                <Space size="middle">
+                  {lastPingResult.wasRefreshed ? (
+                    <Tag color="green" icon={<CheckCircleOutlined />}>토큰 자동 갱신 후 성공 (Silent Refresh)</Tag>
+                  ) : (
+                    <Tag color="blue" icon={<CheckCircleOutlined />}>기존 세션 유지 성공</Tag>
+                  )}
+                  <Text strong>{lastPingResult.message}</Text>
+                </Space>
+                <Space>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    서버 시간: <b>{lastPingResult.serverTime}</b> | 소요시간: <b>{lastPingResult.durationMs}ms</b>
+                  </Text>
+                </Space>
+              </Row>
+            </div>
+          )}
+
+          {/* 통신 이력 로그 (최근 10건) */}
+          {pingLogs.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <Text strong style={{ fontSize: 12, color: '#6b7280' }}>실시간 통신 로그 이력:</Text>
+              <List
+                size="small"
+                bordered
+                style={{ marginTop: 8, background: '#fff', maxHeight: 160, overflowY: 'auto' }}
+                dataSource={pingLogs}
+                renderItem={item => (
+                  <List.Item style={{ padding: '6px 12px' }}>
+                    <Row justify="space-between" align="middle" style={{ width: '100%' }}>
+                      <Space size="small">
+                        {item.status === 'SUCCESS' ? (
+                          <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                        ) : (
+                          <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                        )}
+                        <Text code style={{ fontSize: 11 }}>{item.time}</Text>
+                        <Text style={{ fontSize: 12 }}>{item.detail}</Text>
+                        {item.wasRefreshed && (
+                          <Tag color="cyan" style={{ fontSize: 10, padding: '0 4px' }}>Silent Refreshed</Tag>
+                        )}
+                      </Space>
+                      <Text type="secondary" style={{ fontSize: 11 }}>{item.durationMs}ms</Text>
+                    </Row>
+                  </List.Item>
+                )}
+              />
+            </div>
+          )}
+        </Card>
+
         {sessionAlert && (
           <Alert
             type={sessionAlert.type}
             message={sessionAlert.message}
+            description={sessionAlert.description}
             showIcon
             closable
+            onClose={() => setSessionAlert(null)}
             style={{ marginBottom: 20 }}
           />
         )}
 
         <Row gutter={[20, 20]}>
-          {/* 1. JWT 및 세션 정보 카드 */}
+          {/* 3. JWT 및 세션 정보 카드 */}
           <Col xs={24} lg={12}>
             <Card
               title={<span><SafetyCertificateOutlined style={{ marginRight: 8, color: '#1677ff' }} />JWT 세션 상세 (Payload & JTI)</span>}
               bordered={false}
               style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)', height: '100%' }}
               extra={
-                <Tooltip title="Redis JTI 및 토큰 검증">
+                <Tooltip title="API 호출을 통해 Redis JTI 및 토큰 검증">
                   <Button
-                    icon={<SyncOutlined spin={sessionCheckLoading} />}
+                    icon={<ReloadOutlined spin={sessionCheckLoading} />}
                     size="small"
                     onClick={handleSessionCheck}
                   >
@@ -241,17 +569,19 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
               </Descriptions>
 
               <div style={{ marginTop: 16 }}>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  * JWT 토큰은 HttpOnly 쿠키(ACCESS_TOKEN)로 관리되며, 브라우저 스크립트 탈취(XSS)를 원천 방지합니다.
-                </Text>
+                <Paragraph type="secondary" style={{ fontSize: 12, margin: 0 }}>
+                  💡 <b>이중 토큰 및 자동 갱신 동작 원리:</b><br />
+                  - <b>10초 경과</b>: Access Token이 만료되어도 <b>[서버 통신 테스트]</b>를 누르면 백엔드의 <code>/api/auth/refresh</code>를 자동 호출하여 <b>새 Access Token으로 투명하게 갱신</b>되고 세션이 1분 연장됩니다.<br />
+                  - <b>60초 경과</b>: 아무런 요청 없이 60초가 지나면 Refresh Token까지 만료되어 완전한 재로그인이 요구됩니다.
+                </Paragraph>
               </div>
             </Card>
           </Col>
 
-          {/* 2. 중복 로그인 차단 테스트 안내 */}
+          {/* 4. 중복 로그인 차단 테스트 안내 */}
           <Col xs={24} lg={12}>
             <Card
-              title={<span><ExclamationCircleOutlined style={{ marginRight: 8, color: '#fa8c16' }} />멀티 로그인(동시 접속) 즉시 차단 테스트</span>}
+              title={<span><ExclamationCircleOutlined style={{ marginRight: 8, color: '#fa8c16' }} />동시 접속(멀티 로그인) 즉시 차단 테스트</span>}
               bordered={false}
               style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)', height: '100%' }}
             >
@@ -262,15 +592,15 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
                 description={
                   <div>
                     <Paragraph style={{ margin: 0, fontSize: 13 }}>
-                      1. 로그인 시마다 새로운 고유 <b>JTI(UUID)</b>가 생성되어 Redis에 등록됩니다.<br />
-                      2. <b>다른 브라우저나 시크릿 창</b>에서 동일 계정(<code>{currentUser.username}</code>)으로 새로 로그인하면 Redis의 JTI가 갱신됩니다.<br />
-                      3. 이전 브라우저(현재 창)에서 아래 <b>[세션 확인 / 새로고침]</b> 버튼을 누르면 즉시 <b>401 Unauthorized (차단)</b> 처리됩니다!
+                      1. 로그인 시마다 고유한 <b>JTI</b>가 Redis에 활성 세션으로 등록됩니다.<br />
+                      2. <b>시크릿 창</b>에서 동일 계정(<code>{currentUser.username}</code>)으로 새로 로그인하면 Redis의 JTI가 갱신됩니다.<br />
+                      3. 이전 창(현재 창)에서 상단 <b>[서버 통신 테스트]</b> 버튼을 누르면, 만료 여부와 무관하게 <b>즉시 401 차단(MULTI_LOGIN_DETECTED)</b>되며 Refresh조차 거부됩니다!
                     </Paragraph>
                   </div>
                 }
               />
 
-              <div style={{ marginTop: 20, textAlign: 'center' }}>
+              <div style={{ marginTop: 24, textAlign: 'center' }}>
                 <Space>
                   <Button
                     type="primary"
@@ -278,14 +608,14 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
                     loading={sessionCheckLoading}
                     onClick={handleSessionCheck}
                   >
-                    현재 창 세션 유효성 검사 (API 호출)
+                    현재 세션 유효성 검사 (API 호출)
                   </Button>
                 </Space>
               </div>
             </Card>
           </Col>
 
-          {/* 3. 파일 업로드 및 Apache Tika Magic Number 검사 */}
+          {/* 5. 파일 업로드 및 Apache Tika Magic Number 검사 */}
           <Col span={24}>
             <Card
               title={<span><FileDoneOutlined style={{ marginRight: 8, color: '#52c41a' }} />파일 업로드 & Apache Tika Magic Number MIME 검사</span>}
@@ -320,7 +650,7 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
             >
               <div style={{ marginBottom: 16 }}>
                 <Text type="secondary">
-                  * 업로드 시 <b>Apache Tika</b> 라이브러리가 파일 바이너리의 Magic Number를 읽어 실제 MIME 타입을 검증하고 로그/목록에 기록합니다. (위장 확장자 방지)
+                  * 10초가 지난 후에도 파일을 업로드하면 <b>자동 토큰 갱신(Silent Refresh)</b> 후 정상 업로드됩니다.
                 </Text>
               </div>
 

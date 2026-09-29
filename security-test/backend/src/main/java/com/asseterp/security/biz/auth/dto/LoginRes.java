@@ -11,6 +11,8 @@ public record LoginRes(
         List<String> roles,
         String jti,
         String accessToken,
-        long accessTokenExpiresIn
+        long accessTokenExpiresIn,
+        String refreshToken,
+        long refreshTokenExpiresIn
 ) {
 }

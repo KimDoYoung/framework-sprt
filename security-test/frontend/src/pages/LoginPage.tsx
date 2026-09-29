@@ -6,11 +6,19 @@ import { User } from '../types/auth';
 
 const { Title, Text, Paragraph } = Typography;
 
-interface LoginPageProps {
-  onLoginSuccess: (user: User) => void;
+export interface LoginNotice {
+  type: 'warning' | 'error' | 'info';
+  message: string;
+  description: string;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+interface LoginPageProps {
+  onLoginSuccess: (user: User) => void;
+  notice?: LoginNotice | null;
+  onClearNotice?: () => void;
+}
+
+export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, onClearNotice }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -22,6 +30,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       const res = await authApi.login(values.username, values.password);
       if (res.success && res.data) {
         message.success(`환영합니다, ${res.data.name}님!`);
+        onClearNotice?.();
         onLoginSuccess(res.data);
       } else {
         setErrorMessage(res.message || '로그인에 실패했습니다.');
@@ -51,7 +60,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       padding: '20px'
     }}>
       <Card
-        style={{ width: '100%', maxWidth: 420, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+        style={{ width: '100%', maxWidth: 440, boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}
         bordered={false}
       >
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
@@ -60,6 +69,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           <Text type="secondary">JWT · 쿠키 인증 · 중복 로그인 차단 프로토타입</Text>
         </div>
 
+        {/* 1. 세션 만료 또는 중복 로그인 차단으로 튕겨져 나왔을 때의 안내 메시지 */}
+        {notice && (
+          <Alert
+            message={<b>{notice.message}</b>}
+            description={notice.description}
+            type={notice.type}
+            showIcon
+            closable
+            onClose={onClearNotice}
+            style={{ marginBottom: 20 }}
+          />
+        )}
+
+        {/* 2. 로그인 실패 에러 메시지 */}
         {errorMessage && (
           <Alert
             message={errorMessage}
