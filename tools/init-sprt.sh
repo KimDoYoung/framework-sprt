@@ -10305,6 +10305,16 @@ cat << EOF > "$TARGET_DIR/backend/src/main/resources/application.properties"
 spring.application.name=${APP_NAME}-backend
 server.port=8080
 spring.application.version=0.0.1
+
+# Database (PostgreSQL)
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.datasource.url=jdbc:postgresql://localhost:5432/asseterpdb
+spring.datasource.username=kdy987
+spring.datasource.password=kalpa987!
+
+# Redis
+spring.data.redis.host=localhost
+spring.data.redis.port=6379
 EOF
 
 cat << 'EOF' > "$TARGET_DIR/backend/src/main/java/com/asseterp/test/TestApplication.java"
