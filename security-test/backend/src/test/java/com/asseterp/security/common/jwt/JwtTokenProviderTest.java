@@ -1,13 +1,15 @@
 package com.asseterp.security.common.jwt;
 
 import com.asseterp.security.biz.auth.dto.UserPrincipal;
+import com.asseterp.security.common.config.properties.AuthProperties;
+import com.asseterp.security.common.config.properties.JwtProperties;
 import com.asseterp.security.common.jwt.JwtTokenProvider.TokenType;
+import com.asseterp.security.support.TestProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
@@ -29,13 +31,9 @@ class JwtTokenProviderTest {
     }
 
     private JwtTokenProvider newProvider(long accessExp, long refreshExp) {
-        JwtTokenProvider p = new JwtTokenProvider();
-        ReflectionTestUtils.setField(p, "secret", "test-secret-key-for-hmac-sha-256-must-be-at-least-32-bytes");
-        ReflectionTestUtils.setField(p, "issuer", "asset-erp");
-        ReflectionTestUtils.setField(p, "accessTokenExpiration", accessExp);
-        ReflectionTestUtils.setField(p, "refreshTokenExpiration", refreshExp);
-        p.init();
-        return p;
+        JwtProperties base = TestProperties.bind("jwt", JwtProperties.class);
+        JwtProperties jwtProperties = new JwtProperties(base.secret(), base.issuer(), accessExp, refreshExp, base.cookie());
+        return new JwtTokenProvider(jwtProperties, TestProperties.bind("asseterp.auth", AuthProperties.class));
     }
 
     @Test
@@ -51,9 +49,16 @@ class JwtTokenProviderTest {
 
     @Test
     void Refresh_Token은_Access_Token으로_사용할_수_없다() {
-        String refreshToken = provider.generateRefreshToken(1L, "jti-1");
+        String refreshToken = provider.generateRefreshToken(1L, "jti-1", "rid-1");
         assertThatThrownBy(() -> provider.parseClaims(refreshToken, TokenType.ACCESS))
                 .isInstanceOf(JwtException.class);
+    }
+
+    @Test
+    void Refresh_Token에는_재사용_탐지용_rid가_담긴다() {
+        Claims claims = provider.parseClaims(provider.generateRefreshToken(1L, "jti-1", "rid-1"), TokenType.REFRESH);
+        assertThat(claims.get(JwtTokenProvider.CLAIM_REFRESH_ID, String.class)).isEqualTo("rid-1");
+        assertThat(claims.getId()).isEqualTo("jti-1");
     }
 
     @Test

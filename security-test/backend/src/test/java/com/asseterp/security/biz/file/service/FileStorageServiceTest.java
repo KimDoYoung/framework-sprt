@@ -1,6 +1,8 @@
 package com.asseterp.security.biz.file.service;
 
+import com.asseterp.security.common.config.properties.UploadProperties;
 import com.asseterp.security.common.error.BusinessException;
+import com.asseterp.security.support.TestProperties;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -18,7 +20,9 @@ class FileStorageServiceTest {
     private static final byte[] PNG_HEADER = {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n', 0, 0, 0, 0x0D, 'I', 'H', 'D', 'R'};
     private static final byte[] EXE_HEADER = {'M', 'Z', (byte) 0x90, 0, 3, 0, 0, 0, 4, 0, 0, 0, (byte) 0xFF, (byte) 0xFF, 0, 0};
 
-    private final FileStorageService service = new FileStorageService();
+    // 실제 application.properties의 asseterp.upload.allowed-types로 검증
+    private final FileStorageService service =
+            new FileStorageService(TestProperties.bind("asseterp.upload", UploadProperties.class));
 
     @Test
     void 실제_PNG는_통과() throws IOException {

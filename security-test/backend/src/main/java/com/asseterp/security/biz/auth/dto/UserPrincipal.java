@@ -26,14 +26,14 @@ public class UserPrincipal implements UserDetails {
     /** Access Token 만료 시각 (토큰에서 복원한 경우에만 값이 있음) */
     private final Instant accessTokenExpiresAt;
 
-    public static UserPrincipal from(AppUser user, String jti) {
+    public static UserPrincipal from(AppUser user, String jti, String deptId) {
         return UserPrincipal.builder()
                 .userId(user.getUserId())
                 .username(user.getUsername())
                 .password(user.getPassword())
                 .name(user.getFullName())
                 .companyId(user.getCompanyId())
-                .deptId("D101")
+                .deptId(deptId)
                 .roles(List.of(user.getRole()))
                 .jti(jti)
                 .build();

@@ -10,6 +10,21 @@ export interface User {
   accessTokenExpiresIn: number;
   /** 응답 시점 기준 세션(Refresh Token) 남은 수명(ms) */
   refreshTokenExpiresIn: number;
+  /** 서버 설정 Access Token 전체 수명(ms) - jwt.access-token-expiration */
+  accessTokenLifetime: number;
+  /** 서버 설정 세션(Refresh Token) 전체 수명(ms) - jwt.refresh-token-expiration */
+  refreshTokenLifetime: number;
+}
+
+export interface UserItem {
+  userId: number;
+  username: string;
+  fullName: string;
+  role: string;
+  /** 잠금여부 (Y/N) */
+  lockYn: string;
+  /** 현재 연속 로그인 실패 횟수 */
+  failureCount: number;
 }
 
 export interface FileItem {

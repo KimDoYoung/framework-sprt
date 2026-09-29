@@ -85,7 +85,7 @@ JWT의 `sub` 클레임은 `user_id`를 의미하며, RBAC 권한 제어와 세�
 - **쿠키 Max-Age를 Refresh 수명(60초)으로 맞추는 이유**: Access Token의 JWT가 만료돼도 쿠키는 서버로 전송되어, 서버가 `TOKEN_EXPIRED`/`MULTI_LOGIN_DETECTED`를 구분해 응답할 수 있다. 토큰 자체의 유효성은 JWT `exp`로 검증한다.
 - **토큰 타입 구분**: 두 토큰 모두 `typ` 클레임(`ACCESS`/`REFRESH`)을 가지며, Refresh Token을 Access Token 자리에 사용하면 `INVALID_TOKEN`으로 거부된다.
 - **응답 본문에 토큰 미포함**: 로그인/갱신 응답은 사용자 정보와 남은 수명(`accessTokenExpiresIn`, `refreshTokenExpiresIn`, ms)만 반환하고, 토큰 값은 쿠키로만 전달한다.
-- **Secure 속성**: `jwt.cookie-secure`(기본 `false`)로 제어하며, 운영(HTTPS)에서는 `true`로 설정한다.
+- **쿠키 설정**: 이름·`SameSite`·Refresh 쿠키 경로·`Secure`는 `jwt.cookie.*`로 설정한다. 운영(HTTPS)에서는 `jwt.cookie.secure=true`로 설정한다.
 
 > **보안 이점**: 토큰이 자바스크립트 `document.cookie`나 `localStorage`, 응답 본문 어디에도 노출되지 않으므로 XSS로 토큰 값을 탈취할 수 없다. (단, XSS가 발생하면 탈취 없이도 사용자 권한으로 요청을 보낼 수 있으므로 XSS 방어 자체는 별도로 필요하다.)
 
@@ -109,10 +109,42 @@ JWT의 `sub` 클레임은 `user_id`를 의미하며, RBAC 권한 제어와 세�
      - **Redis 연결 실패**: 인증 여부를 판단할 수 없으므로 **503 (`SESSION_STORE_UNAVAILABLE`)**.
 4. **리프레시 요청 시 (`POST /api/auth/refresh`)**:
    - `REFRESH_TOKEN`의 `jti` 역시 Redis의 활성 `jti`와 일치해야만 재발급을 허용. 다른 브라우저에서 로그인된 경우 갱신도 **401 (`X-Auth-Error: MULTI_LOGIN_DETECTED`)** 로 거부되어, Access Token이 이미 만료된 뒤에도 프론트엔드가 "동시 접속 차단" 사유를 정확히 안내한다.
+   - 이어서 Refresh Token 재사용 검사(3.3.1)를 수행한다. jti 검사와 재사용 검사는 Lua 스크립트 하나로 원자적으로 처리한다.
 5. **로그아웃 시 (`POST /api/auth/logout`, 인증 불필요)**:
    - `REFRESH_TOKEN`의 `jti`가 현재 활성 `jti`일 때만 Redis 키를 삭제한다. 이미 다른 곳에서 새로 로그인된 이전 세션이 로그아웃해도 새 세션은 유지된다.
 
-### 3.3.1 인증 에러 코드
+### 3.3.1 Refresh Token 교체(Rotation) 및 재사용 탐지
+
+Refresh Token이 탈취되면 공격자가 계속 갱신하며 세션을 유지할 수 있다. 이를 막기 위해 Refresh Token마다 고유 ID(`rid` 클레임)를 부여하고 **갱신할 때마다 새 `rid`로 교체**한다.
+
+| Redis Key | 값 | TTL |
+|:---|:---|:---|
+| `security:user:jti:{userId}` | 활성 세션 `jti` | 세션 수명 (60초, 갱신 시 연장) |
+| `security:user:rid:{userId}` | 현재 유효한 `rid` | 세션 수명 |
+| `security:user:rid-prev:{userId}` | 직전 `rid` | 유예시간 (`grace-period`, 기본 5초) |
+
+갱신 요청의 `rid` 판정 (`resources/redis/rotate-refresh-token.lua`):
+
+| 요청 `rid` | 결과 |
+|:---|:---|
+| 현재 `rid` | 새 `rid`로 교체, 직전 `rid`는 유예시간 동안 보관 → 200 |
+| 직전 `rid` + 유예시간 이내 | 같은 브라우저의 여러 탭이 동시에 갱신한 경우로 보고 현재 `rid`로 재발급 → 200 |
+| 그 외 (이미 교체된 토큰) | **탈취 의심 → 세션 키 전체 삭제** → 401 `REFRESH_TOKEN_REUSED` |
+
+- 세션이 폐기되므로 정상 사용자와 공격자 모두 재로그인해야 하며, 정상 사용자는 "보안 경고: 인증 토큰 재사용 감지" 안내를 받는다.
+- 재사용 탐지는 ERROR 로그(`[보안] Refresh Token 재사용 탐지`)로 기록된다.
+
+### 3.3.2 로그인 실패 잠금 (AS-IS `emp01_person.emp01_lock_yn` 방식)
+
+- 비밀번호가 틀리면 Redis에 연속 실패 횟수를 센다 (`security:login:fail:{userId}`, 마지막 실패 후 `fail-count-ttl`(24h) 지나면 초기화).
+- 연속 실패가 `asseterp.auth.login-lock.max-failures`(기본 **2회**)에 도달하면 `app_user.lock_yn='Y'`로 **영구 잠금**한다.
+- 잠긴 계정은 비밀번호를 검사하지 않고 즉시 거부한다 (잠긴 뒤의 무차별 대입 차단).
+- 로그인에 성공하면 실패 횟수를 초기화한다.
+- 잠금 해제는 관리자(`ROLE_ADMIN`)만 가능하다: `GET /api/user/list`, `POST /api/user/{userId}/unlock` (화면: 메인 페이지 "계정 잠금 관리" 카드).
+- 세션 도중 계정이 잠기면 다음 토큰 갱신 시 세션이 종료된다.
+- 실패 응답 메시지에 남은 횟수를 안내한다 (예: `실패 1/2회, 1회 더 실패하면 계정이 잠깁니다.`). 없는 아이디는 횟수를 안내하지 않는다.
+
+### 3.3.3 인증 에러 코드
 
 401 응답은 `X-Auth-Error` 헤더와 응답 본문 `ApiResponse.code`에 동일한 코드를 담는다 (`common/error/ErrorCode`).
 
@@ -123,7 +155,9 @@ JWT의 `sub` 클레임은 `user_id`를 의미하며, RBAC 권한 제어와 세�
 | `INVALID_TOKEN` | 서명/발급자/토큰 타입 오류 | Silent Refresh 시도 |
 | `MULTI_LOGIN_DETECTED` | 다른 곳에서 새로 로그인됨 | 즉시 로그인 화면 + ⛔ 동시 접속 차단 안내 |
 | `SESSION_NOT_FOUND` / `REFRESH_EXPIRED` | 세션 없음 / Refresh Token 만료 | 로그인 화면 + ⚠️ 세션 만료 안내 |
-| `LOGIN_FAILED` | 아이디 또는 비밀번호 오류 (구분하지 않음) | 로그인 화면에 메시지 표시 |
+| `REFRESH_TOKEN_REUSED` | 이미 교체된 Refresh Token 재사용 (탈취 의심) | 즉시 로그인 화면 + ⛔ 토큰 재사용 보안 경고 |
+| `LOGIN_FAILED` | 아이디 또는 비밀번호 오류 (구분하지 않음, 남은 실패 횟수 안내) | 로그인 화면에 메시지 표시 |
+| `ACCOUNT_LOCKED` | 로그인 실패 횟수 초과로 잠긴 계정 | 로그인 화면에 메시지 표시 (세션 중이면 로그인 화면 + 잠금 안내) |
 
 ---
 
@@ -201,8 +235,12 @@ CREATE TABLE app_user (
     password    VARCHAR(100) NOT NULL, -- 테스트 환경 특성: 평문 저장 및 비교
     full_name   VARCHAR(100) NOT NULL,
     role        VARCHAR(20)  NOT NULL DEFAULT 'ROLE_USER',
+    lock_yn     VARCHAR(1)   NOT NULL DEFAULT 'N',  -- 잠금여부 (로그인 실패 횟수 초과 시 Y)
     created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 기존 테이블에 잠금 컬럼만 추가하는 경우
+-- ALTER TABLE app_user ADD COLUMN IF NOT EXISTS lock_yn VARCHAR(1) NOT NULL DEFAULT 'N';
 
 -- 테스트용 기초 계정
 INSERT INTO app_user (company_id, username, password, full_name, role)
@@ -230,6 +268,7 @@ if (!ALLOWED_TYPES.get(extension).contains(detectedMimeType)) {
 - **허용 목록**: 확장자별 허용 MIME 화이트리스트(`FileStorageService.ALLOWED_TYPES`)에 없는 확장자, 또는 내용과 확장자가 일치하지 않는 파일은 저장 전에 거부한다.
   - 허용 확장자: `jpg, jpeg, png, gif, pdf, txt, csv, xlsx, docx, pptx, xls, doc, ppt, hwp, hwpx, zip`
   - `tika-core`만 사용하므로 OOXML(docx/xlsx/pptx)은 `application/x-tika-ooxml`/`application/zip`, OLE2(doc/xls/ppt/hwp)는 `application/x-tika-msoffice`로 판별된다. 문서 종류까지 정밀 구분이 필요하면 `tika-parsers-standard-package`를 추가한다.
+- 허용 목록은 `application.properties`의 `asseterp.upload.allowed-types.{확장자}=MIME1,MIME2`로 관리한다.
 - 저장 파일명: `{UUID}.{확장자}` (원본 파일명은 메타데이터로만 보관)
 - 다운로드 Content-Type: 확장자 기준 표준 MIME (`MediaTypeFactory`)
 - 저장소: `${asseterp.base.dir}/uploads`
@@ -264,6 +303,7 @@ security-test/
 │       │       ├── auth/
 │       │       │   ├── controller/AuthController.java # 로그인, 리프레시, 로그아웃, 내 정보
 │       │       │   ├── service/AuthService.java       # 인증 비즈니스 로직
+│       │       │   ├── service/LoginLockService.java  # 로그인 실패 횟수·계정 잠금
 │       │       │   └── dto/UserPrincipal.java         # UserDetails 구현체
 │       │       ├── test/
 │       │       │   └── controller/TestController.java # 자유 서버 통신 테스트 (Ping)
@@ -271,11 +311,14 @@ security-test/
 │       │       │   ├── controller/FileController.java # 파일 업/다운로드 엔드포인트
 │       │       │   └── service/FileStorageService.java# Apache Tika Magic Number 검사 및 저장
 │       │       └── user/
+│       │           ├── controller/UserController.java # 사용자 목록·잠금 해제 (ROLE_ADMIN)
+│       │           ├── service/UserService.java
 │       │           ├── entity/AppUser.java            # app_user 매핑 엔티티
 │       │           └── mapper/AppUserMapper.java      # MyBatis 매퍼 인터페이스
 │       └── resources/
 │           ├── application.properties         # DB, Redis, JWT 수명, 업로드 디렉토리 설정
-│           └── mapper/AppUserMapper.xml       # PostgreSQL 쿼리 매퍼
+│           ├── mapper/AppUserMapper.xml       # PostgreSQL 쿼리 매퍼
+│           └── redis/rotate-refresh-token.lua # Refresh Token 교체·재사용 탐지 (원자적 처리)
 ├── frontend/                                  # React 19 + TypeScript + Ant Design 5
 │   ├── src/
 │   │   ├── api/
@@ -294,6 +337,23 @@ security-test/
 ├── deploy.sh                                  # 프론트 빌드 -> 정적 리소스 복사 -> WAR 패키징 -> 톰캣 자동 배포
 └── make.sh                                    # 종합 환경 점검, 빌드, DB 확인 마스터 스크립트
 ```
+
+---
+
+### 6.1 설정 항목 (`application.properties`)
+
+설정값은 `common/config/properties/`의 `@ConfigurationProperties` 레코드로 바인딩된다.
+
+| Prefix | 레코드 | 주요 항목 |
+|:---|:---|:---|
+| `jwt.*` | `JwtProperties` | `secret`, `issuer`, `access-token-expiration`, `refresh-token-expiration`, `cookie.{secure, same-site, access-token-name, refresh-token-name, refresh-path}` |
+| `asseterp.auth.*` | `AuthProperties` | `session-key-prefix`(Redis 키), `default-dept-id`, `default-role`, `permit-all-paths`, `refresh-rotation.{key-prefix, previous-key-prefix, grace-period}`, `login-lock.{max-failures, fail-count-key-prefix, fail-count-ttl}` |
+| `asseterp.cors.*` | `CorsProperties` | `allowed-origins`, `allowed-methods`, `allowed-headers`, `max-age` |
+| `asseterp.redis.*` | `RedisProbeProperties` | `fallback-hosts`, `connect-timeout` |
+| `asseterp.upload.*` | `UploadProperties` | `dir`, `allowed-types.{확장자}` |
+
+- 로그 경로·롤링 정책(`logging.file.*`, `logging.logback.rollingpolicy.*`)과 레벨(`logging.level.*`)도 `application.properties`에서 설정하며 `logback-spring.xml`이 이를 참조한다.
+- 토큰 수명을 바꾸면 프론트엔드 타이머와 안내 문구도 응답의 `accessTokenLifetime`/`refreshTokenLifetime`을 따라 자동으로 바뀐다.
 
 ---
 
@@ -333,7 +393,13 @@ cd security-test
    - Refresh Token 타이머가 0이 되는 순간 자동으로 로그인 화면으로 이동하며 **`⚠️ 세션 만료 안내`** 노란색 경고가 나타남을 확인.
 4. **Sliding Session**:
    - 로그인 후 20~30초 간격으로 **[서버 통신 테스트]** 를 반복 클릭하여 60초가 넘어도 세션이 유지되고, 갱신 때마다 Refresh 타이머가 60초로 초기화됨을 확인.
-5. **파일 위변조 차단**:
+5. **로그인 실패 잠금**:
+   - `user1`으로 잘못된 비밀번호를 입력하면 `실패 1/2회` 안내, 한 번 더 틀리면 계정 잠금 안내가 나타나고 올바른 비밀번호로도 로그인되지 않음을 확인.
+   - `admin`으로 로그인해 "계정 잠금 관리" 카드에서 `user1`의 잠금을 해제한 뒤 로그인되는지 확인.
+6. **Refresh Token 재사용 탐지** (curl):
+   - 로그인 후 쿠키 파일을 복사해 두고(옛 토큰), 원래 쿠키로 `/api/auth/refresh` 호출(교체).
+   - 5초 이내 옛 토큰으로 갱신하면 200(유예), 5초 이후 옛 토큰으로 갱신하면 401 `REFRESH_TOKEN_REUSED`이며 원래 쿠키의 세션도 `SESSION_NOT_FOUND`로 폐기됨을 확인.
+7. **파일 위변조 차단**:
    - `.exe` 파일의 확장자를 `.png`로 바꿔 업로드하면 `파일 내용이 확장자(.png)와 일치하지 않습니다` 오류로 거부됨을 확인.
 
 ### 7.3 자동 테스트
@@ -341,5 +407,6 @@ cd security-test
 ```bash
 cd security-test/backend && gradle test
 ```
-- `JwtTokenProviderTest`: 토큰 파싱, Access/Refresh 토큰 타입 교차 사용 거부, 만료 판정
+- `JwtTokenProviderTest`: 토큰 파싱, Access/Refresh 토큰 타입 교차 사용 거부, 만료 판정, `rid` 클레임
+- `AuthServiceTest`: 잠긴 계정 거부, 실패 횟수 안내·잠금, 성공 시 초기화, Refresh Token 재사용 거부·교체
 - `FileStorageServiceTest`: 매직 넘버 기반 허용/거부 (PNG, 위장 EXE, 한글 CSV, OOXML)

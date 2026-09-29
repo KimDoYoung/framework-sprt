@@ -1,13 +1,12 @@
 package com.asseterp.security.common.jwt;
 
 import com.asseterp.security.biz.auth.dto.UserPrincipal;
+import com.asseterp.security.common.config.properties.AuthProperties;
+import com.asseterp.security.common.config.properties.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
-import jakarta.annotation.PostConstruct;
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -22,35 +21,33 @@ public class JwtTokenProvider {
     public enum TokenType { ACCESS, REFRESH }
 
     private static final String CLAIM_TOKEN_TYPE = "typ";
+    /** Refresh Token 고유 ID. 갱신 때마다 새로 발급되어 재사용 탐지에 사용 */
+    public static final String CLAIM_REFRESH_ID = "rid";
 
-    @Value("${jwt.secret}")
-    private String secret;
+    private final JwtProperties jwtProperties;
+    private final AuthProperties authProperties;
+    private final SecretKey secretKey;
 
-    @Value("${jwt.issuer:asset-erp}")
-    private String issuer;
+    public JwtTokenProvider(JwtProperties jwtProperties, AuthProperties authProperties) {
+        this.jwtProperties = jwtProperties;
+        this.authProperties = authProperties;
+        this.secretKey = Keys.hmacShaKeyFor(jwtProperties.secret().getBytes(StandardCharsets.UTF_8));
+    }
 
-    @Getter
-    @Value("${jwt.access-token-expiration:10000}")
-    private long accessTokenExpiration;
+    public long getAccessTokenExpiration() {
+        return jwtProperties.accessTokenExpiration();
+    }
 
-    @Getter
-    @Value("${jwt.refresh-token-expiration:60000}")
-    private long refreshTokenExpiration;
-
-    private SecretKey secretKey;
-
-    @PostConstruct
-    public void init() {
-        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
-        this.secretKey = Keys.hmacShaKeyFor(keyBytes);
+    public long getRefreshTokenExpiration() {
+        return jwtProperties.refreshTokenExpiration();
     }
 
     public String generateAccessToken(UserPrincipal principal, String jti) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
+        Date expiryDate = new Date(now.getTime() + jwtProperties.accessTokenExpiration());
 
         return Jwts.builder()
-                .issuer(issuer)
+                .issuer(jwtProperties.issuer())
                 .subject(String.valueOf(principal.getUserId()))
                 .id(jti)
                 .issuedAt(now)
@@ -59,23 +56,24 @@ public class JwtTokenProvider {
                 .claim("username", principal.getUsername())
                 .claim("name", principal.getName())
                 .claim("company_id", principal.getCompanyId())
-                .claim("dept_id", principal.getDeptId() != null ? principal.getDeptId() : "D101")
+                .claim("dept_id", principal.getDeptId())
                 .claim("roles", principal.getRoles())
                 .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 
-    public String generateRefreshToken(Long userId, String jti) {
+    public String generateRefreshToken(Long userId, String jti, String refreshId) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + refreshTokenExpiration);
+        Date expiryDate = new Date(now.getTime() + jwtProperties.refreshTokenExpiration());
 
         return Jwts.builder()
-                .issuer(issuer)
+                .issuer(jwtProperties.issuer())
                 .subject(String.valueOf(userId))
                 .id(jti)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .claim(CLAIM_TOKEN_TYPE, TokenType.REFRESH.name())
+                .claim(CLAIM_REFRESH_ID, refreshId)
                 .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
@@ -89,7 +87,7 @@ public class JwtTokenProvider {
     public Claims parseClaims(String token, TokenType expectedType) {
         Claims claims = Jwts.parser()
                 .verifyWith(secretKey)
-                .requireIssuer(issuer)
+                .requireIssuer(jwtProperties.issuer())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
@@ -110,7 +108,7 @@ public class JwtTokenProvider {
                 .name(claims.get("name", String.class))
                 .companyId(claims.get("company_id", Integer.class))
                 .deptId(claims.get("dept_id", String.class))
-                .roles(roles != null ? roles : List.of("ROLE_USER"))
+                .roles(roles != null ? roles : List.of(authProperties.defaultRole()))
                 .jti(claims.getId())
                 .accessTokenExpiresAt(claims.getExpiration().toInstant())
                 .build();

@@ -1,5 +1,7 @@
 package com.asseterp.security.common.config;
 
+import com.asseterp.security.common.config.properties.RedisProbeProperties;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -18,7 +20,10 @@ import java.net.Socket;
 
 @Slf4j
 @Configuration
+@RequiredArgsConstructor
 public class RedisConfig {
+
+    private final RedisProbeProperties probeProperties;
 
     @Value("${spring.data.redis.host:localhost}")
     private String host;
@@ -46,20 +51,18 @@ public class RedisConfig {
         if (canConnect(host, port)) {
             return host;
         }
-        // 2. 도커 컨테이너 네트워크 별칭 'redis' 테스트
-        if (canConnect("redis", port)) {
-            return "redis";
-        }
-        // 3. 도커 브릿지 게이트웨이 '172.18.0.1' 테스트
-        if (canConnect("172.18.0.1", port)) {
-            return "172.18.0.1";
+        // 2. asseterp.redis.fallback-hosts 순서대로 테스트 (도커 별칭, 브릿지 게이트웨이 등)
+        for (String fallbackHost : probeProperties.fallbackHosts()) {
+            if (canConnect(fallbackHost, port)) {
+                return fallbackHost;
+            }
         }
         return host;
     }
 
     private boolean canConnect(String h, int p) {
         try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress(h, p), 400);
+            socket.connect(new InetSocketAddress(h, p), (int) probeProperties.connectTimeout().toMillis());
             return true;
         } catch (Exception e) {
             return false;

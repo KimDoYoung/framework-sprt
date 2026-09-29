@@ -7,6 +7,29 @@ import { authApi } from './api/auth';
 import { onSessionTerminated, SessionTerminateReason } from './api/client';
 import { User } from './types/auth';
 
+const SESSION_NOTICES: Record<SessionTerminateReason, LoginNotice> = {
+  MULTI_LOGIN: {
+    type: 'error',
+    message: '동시 접속 차단 안내',
+    description: '다른 기기 또는 브라우저에서 동일한 계정으로 새로 로그인되어 현재 세션이 즉시 종료되었습니다.'
+  },
+  TOKEN_REUSED: {
+    type: 'error',
+    message: '보안 경고: 인증 토큰 재사용 감지',
+    description: '이미 사용된 인증 토큰이 다시 사용되어 탈취가 의심됩니다. 보안을 위해 세션을 종료했습니다. 다시 로그인해주세요.'
+  },
+  ACCOUNT_LOCKED: {
+    type: 'error',
+    message: '계정 잠금 안내',
+    description: '계정이 잠겨 세션이 종료되었습니다. 관리자에게 잠금 해제를 요청하세요.'
+  },
+  EXPIRED: {
+    type: 'warning',
+    message: '세션 만료 안내',
+    description: '세션 유효시간(리프레시 토큰)이 모두 만료되었습니다. 안전을 위해 다시 로그인해주세요.'
+  }
+};
+
 export const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [initializing, setInitializing] = useState(true);
@@ -25,19 +48,7 @@ export const App: React.FC = () => {
       userRef.current = null;
       setUser(null); // 로그인 페이지로 즉시 이동
 
-      if (reason === 'MULTI_LOGIN') {
-        setSessionNotice({
-          type: 'error',
-          message: '동시 접속 차단 안내',
-          description: '다른 기기 또는 브라우저에서 동일한 계정으로 새로 로그인되어 현재 세션이 즉시 종료되었습니다.'
-        });
-      } else {
-        setSessionNotice({
-          type: 'warning',
-          message: '세션 만료 안내',
-          description: '세션 유효시간(리프레시 토큰 1분)이 모두 만료되었습니다. 안전을 위해 다시 로그인해주세요.'
-        });
-      }
+      setSessionNotice(SESSION_NOTICES[reason]);
     });
 
     return () => unsubscribe();

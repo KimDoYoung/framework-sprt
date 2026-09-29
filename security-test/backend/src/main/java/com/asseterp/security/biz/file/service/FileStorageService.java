@@ -4,10 +4,11 @@ import com.asseterp.security.biz.auth.dto.UserPrincipal;
 import com.asseterp.security.biz.file.dto.FileItemDto;
 import com.asseterp.security.common.error.BusinessException;
 import com.asseterp.security.common.error.ErrorCode;
+import com.asseterp.security.common.config.properties.UploadProperties;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -24,44 +25,12 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static java.util.Map.entry;
-
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class FileStorageService {
 
-    // tika-core 매직 넘버 판별 결과 기준. OOXML(docx/xlsx/pptx)은 컨테이너 파서 없이 zip 계열로,
-    // OLE2(doc/xls/ppt/hwp)는 x-tika-msoffice로 판별되므로 해당 값도 허용한다.
-    private static final Set<String> OOXML_TYPES = Set.of(
-            "application/x-tika-ooxml", "application/zip");
-    private static final Set<String> OLE2_TYPES = Set.of(
-            "application/x-tika-msoffice", "application/vnd.ms-excel", "application/msword",
-            "application/vnd.ms-powerpoint", "application/x-hwp");
-    private static final Set<String> TEXT_TYPES = Set.of("text/plain", "text/csv");
-
-    /** 허용 확장자 → 매직 넘버로 판별된 실제 MIME 타입 화이트리스트 */
-    private static final Map<String, Set<String>> ALLOWED_TYPES = Map.ofEntries(
-            entry("jpg", Set.of("image/jpeg")),
-            entry("jpeg", Set.of("image/jpeg")),
-            entry("png", Set.of("image/png")),
-            entry("gif", Set.of("image/gif")),
-            entry("pdf", Set.of("application/pdf")),
-            entry("txt", TEXT_TYPES),
-            entry("csv", TEXT_TYPES),
-            entry("xlsx", OOXML_TYPES),
-            entry("docx", OOXML_TYPES),
-            entry("pptx", OOXML_TYPES),
-            entry("xls", OLE2_TYPES),
-            entry("doc", OLE2_TYPES),
-            entry("ppt", OLE2_TYPES),
-            entry("hwp", OLE2_TYPES),
-            entry("hwpx", Set.of("application/zip")),
-            entry("zip", Set.of("application/zip"))
-    );
-
-    @Value("${asseterp.upload.dir:/home/kdy987/tmp/asseterp-data/uploads}")
-    private String uploadDir;
-
+    private final UploadProperties uploadProperties;
     private final Tika tika = new Tika();
     private final Map<String, FileItemDto> fileMetadataStore = new ConcurrentHashMap<>();
     private Path uploadPath;
@@ -69,11 +38,11 @@ public class FileStorageService {
     @PostConstruct
     public void init() {
         try {
-            uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+            uploadPath = Paths.get(uploadProperties.dir()).toAbsolutePath().normalize();
             Files.createDirectories(uploadPath);
             log.info("파일 업로드 디렉토리 초기화 완료: {}", uploadPath);
         } catch (Exception e) {
-            log.warn("기본 업로드 디렉토리 생성 실패({}), /tmp/asseterp-data/uploads 로 fallback합니다: {}", uploadDir, e.getMessage());
+            log.warn("기본 업로드 디렉토리 생성 실패({}), /tmp/asseterp-data/uploads 로 fallback합니다: {}", uploadProperties.dir(), e.getMessage());
             try {
                 uploadPath = Paths.get(System.getProperty("java.io.tmpdir"), "asseterp-data", "uploads").toAbsolutePath().normalize();
                 Files.createDirectories(uploadPath);
@@ -135,16 +104,17 @@ public class FileStorageService {
     }
 
     /**
-     * 확장자가 허용 목록에 있고, 파일 내용(매직 넘버)으로 판별한 MIME 타입이 그 확장자와 일치하는지 검사한다.
+     * 확장자가 허용 목록(asseterp.upload.allowed-types)에 있고, 파일 내용(매직 넘버)으로 판별한 MIME 타입이 그 확장자와 일치하는지 검사한다.
      * 파일명 힌트 없이 스트림만으로 판별해야 확장자 위장(예: .exe → .png)을 잡을 수 있다.
      *
      * @return 감지된 MIME 타입
      */
     String validateFileType(String extension, InputStream content) throws IOException {
-        Set<String> allowedTypes = ALLOWED_TYPES.get(extension);
+        Map<String, Set<String>> allowedTypesByExtension = uploadProperties.allowedTypes();
+        Set<String> allowedTypes = allowedTypesByExtension.get(extension);
         if (allowedTypes == null) {
             throw new BusinessException(ErrorCode.INVALID_FILE,
-                    "허용되지 않는 확장자입니다: ." + extension + " (허용: " + new TreeSet<>(ALLOWED_TYPES.keySet()) + ")");
+                    "허용되지 않는 확장자입니다: ." + extension + " (허용: " + new TreeSet<>(allowedTypesByExtension.keySet()) + ")");
         }
 
         String detectedMimeType = tika.detect(content);

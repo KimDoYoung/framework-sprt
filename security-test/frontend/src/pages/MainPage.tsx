@@ -38,6 +38,7 @@ import { fileApi } from '../api/file';
 import { testApi } from '../api/test';
 import { onTokenRefresh, notifySessionTerminated } from '../api/client';
 import { User, FileItem } from '../types/auth';
+import { UserLockCard } from '../components/UserLockCard';
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -46,10 +47,6 @@ interface MainPageProps {
   user: User;
   onLogout: () => void;
 }
-
-// 화면 표시용 설정 수명 (서버 jwt.access-token-expiration / jwt.refresh-token-expiration)
-const ACCESS_LIFETIME_SEC = 10;
-const REFRESH_LIFETIME_SEC = 60;
 
 interface TokenExpiry {
   accessAt: number;
@@ -86,6 +83,9 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
   const [now, setNow] = useState<number>(Date.now());
   const accessRemainSec = remainSec(expiry.accessAt, now);
   const refreshRemainSec = remainSec(expiry.refreshAt, now);
+  // 서버 설정 수명 (jwt.access-token-expiration / jwt.refresh-token-expiration)
+  const accessLifetimeSec = Math.round(currentUser.accessTokenLifetime / 1000);
+  const refreshLifetimeSec = Math.round(currentUser.refreshTokenLifetime / 1000);
 
   // 서버 통신 테스트 상태
   const [pingLoading, setPingLoading] = useState(false);
@@ -120,14 +120,15 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
   useEffect(() => {
     // Axios Silent Refresh 발생 시 리스너
     const unsubscribe = onTokenRefresh((refreshedData: User) => {
-      if (refreshedData) {
-        applySession(refreshedData);
-      }
-      message.info('🔄 Access Token(10초) 만료 -> Refresh Token으로 자동 갱신되었습니다!');
+      if (!refreshedData) return;
+      applySession(refreshedData);
+      const accessSec = Math.round(refreshedData.accessTokenLifetime / 1000);
+      const refreshSec = Math.round(refreshedData.refreshTokenLifetime / 1000);
+      message.info(`🔄 Access Token(${accessSec}초) 만료 -> Refresh Token으로 자동 갱신되었습니다!`);
       setSessionAlert({
         type: 'info',
         message: '자동 토큰 갱신 (Silent Refresh) 완료',
-        description: 'Access Token이 만료되었으나, Refresh Token(60초)으로 새 토큰을 자동 재발급받아 세션이 1분 연장되었습니다.'
+        description: `Access Token이 만료되었으나, Refresh Token으로 새 토큰을 자동 재발급받아 세션이 ${refreshSec}초 연장되었습니다.`
       });
     });
 
@@ -205,7 +206,7 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
         ]);
 
         if (refreshedDuringThisCall) {
-          message.success(`[자동 갱신] 10초 만료 후 Refresh Token으로 자동 복구되어 정상 통신 성공! (${durationMs}ms)`);
+          message.success(`[자동 갱신] Access Token(${accessLifetimeSec}초) 만료 후 Refresh Token으로 자동 복구되어 정상 통신 성공! (${durationMs}ms)`);
         } else {
           message.success(`[통신 성공] 세션 유효 - 서버 응답 수신 (${durationMs}ms)`);
         }
@@ -260,11 +261,11 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
       const res = await authApi.refresh();
       if (res.success && res.data) {
         applySession(res.data);
-        message.success('수동 토큰 갱신(Refresh) 성공! (Access Token 10초 리셋)');
+        message.success(`수동 토큰 갱신(Refresh) 성공! (Access Token ${accessLifetimeSec}초 리셋)`);
         setSessionAlert({
           type: 'success',
           message: '토큰 수동 갱신 성공',
-          description: 'Refresh Token을 사용하여 새 Access Token(10초)을 재발급받았습니다.'
+          description: `Refresh Token을 사용하여 새 Access Token(${accessLifetimeSec}초)을 재발급받았습니다.`
         });
       }
     } catch (err: any) {
@@ -380,13 +381,13 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
                 <ClockCircleOutlined style={{ fontSize: 24, color: accessRemainSec > 0 ? '#1890ff' : '#ff4d4f' }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <Text strong>Access Token (수명: {ACCESS_LIFETIME_SEC}초)</Text>
+                    <Text strong>Access Token (수명: {accessLifetimeSec}초)</Text>
                     <Text type={accessRemainSec > 0 ? 'secondary' : 'danger'}>
                       {accessRemainSec > 0 ? `${accessRemainSec}초 남음` : '만료됨 (Refresh로 즉시 유지)'}
                     </Text>
                   </div>
                   <Progress
-                    percent={Math.round((accessRemainSec / ACCESS_LIFETIME_SEC) * 100)}
+                    percent={Math.round((accessRemainSec / accessLifetimeSec) * 100)}
                     status={accessRemainSec > 0 ? 'active' : 'exception'}
                     showInfo={false}
                     strokeColor={accessRemainSec > 3 ? '#1890ff' : '#faad14'}
@@ -400,13 +401,13 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
                 <ThunderboltOutlined style={{ fontSize: 24, color: refreshRemainSec > 0 ? '#52c41a' : '#ff4d4f' }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <Text strong>Refresh Token (유휴 유지: {REFRESH_LIFETIME_SEC}초)</Text>
+                    <Text strong>Refresh Token (유휴 유지: {refreshLifetimeSec}초)</Text>
                     <Text type={refreshRemainSec > 0 ? 'secondary' : 'danger'}>
                       {refreshRemainSec > 0 ? `${refreshRemainSec}초 남음` : '완전 만료'}
                     </Text>
                   </div>
                   <Progress
-                    percent={Math.round((refreshRemainSec / REFRESH_LIFETIME_SEC) * 100)}
+                    percent={Math.round((refreshRemainSec / refreshLifetimeSec) * 100)}
                     status={refreshRemainSec > 0 ? 'normal' : 'exception'}
                     showInfo={false}
                     strokeColor="#52c41a"
@@ -443,10 +444,10 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
                 <ApiOutlined style={{ fontSize: 36, color: '#1677ff', marginTop: 4 }} />
                 <div>
                   <Title level={4} style={{ margin: '0 0 6px 0', color: '#0958d9' }}>
-                    서버 자유 통신 테스트 (1분 세션 유지 검증)
+                    서버 자유 통신 테스트 ({refreshLifetimeSec}초 세션 유지 검증)
                   </Title>
                   <Paragraph style={{ margin: 0, color: '#4b5563', fontSize: 13 }}>
-                    로그인 후 <b>10초가 지나 Access Token이 만료되어도</b>, 1분(60초)의 Refresh Token 기간 안에는 아래 버튼을 클릭하면
+                    로그인 후 <b>{accessLifetimeSec}초가 지나 Access Token이 만료되어도</b>, {refreshLifetimeSec}초의 Refresh Token 기간 안에는 아래 버튼을 클릭하면
                     <b> 백그라운드 자동 갱신(Silent Refresh)</b>이 동작하여 끊김 없이 <b>정상 200 OK 통신</b>이 이루어집니다!
                   </Paragraph>
                 </div>
@@ -581,8 +582,8 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
               <div style={{ marginTop: 16 }}>
                 <Paragraph type="secondary" style={{ fontSize: 12, margin: 0 }}>
                   💡 <b>이중 토큰 및 자동 갱신 동작 원리:</b><br />
-                  - <b>10초 경과</b>: Access Token이 만료되어도 <b>[서버 통신 테스트]</b>를 누르면 백엔드의 <code>/api/auth/refresh</code>를 자동 호출하여 <b>새 Access Token으로 투명하게 갱신</b>되고 세션이 1분 연장됩니다.<br />
-                  - <b>60초 경과</b>: 아무런 요청 없이 60초가 지나면 Refresh Token까지 만료되어 완전한 재로그인이 요구됩니다.
+                  - <b>{accessLifetimeSec}초 경과</b>: Access Token이 만료되어도 <b>[서버 통신 테스트]</b>를 누르면 백엔드의 <code>/api/auth/refresh</code>를 자동 호출하여 <b>새 Access Token으로 투명하게 갱신</b>되고 세션이 {refreshLifetimeSec}초 연장됩니다.<br />
+                  - <b>{refreshLifetimeSec}초 경과</b>: 아무런 요청 없이 {refreshLifetimeSec}초가 지나면 Refresh Token까지 만료되어 완전한 재로그인이 요구됩니다.
                 </Paragraph>
               </div>
             </Card>
@@ -625,7 +626,14 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
             </Card>
           </Col>
 
-          {/* 5. 파일 업로드 및 Apache Tika Magic Number 검사 */}
+          {/* 5. 계정 잠금 관리 (관리자 전용) */}
+          {currentUser.roles?.includes('ROLE_ADMIN') && (
+            <Col span={24}>
+              <UserLockCard />
+            </Col>
+          )}
+
+          {/* 6. 파일 업로드 및 Apache Tika Magic Number 검사 */}
           <Col span={24}>
             <Card
               title={<span><FileDoneOutlined style={{ marginRight: 8, color: '#52c41a' }} />파일 업로드 & Apache Tika Magic Number MIME 검사</span>}
@@ -660,7 +668,7 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
             >
               <div style={{ marginBottom: 16 }}>
                 <Text type="secondary">
-                  * 10초가 지난 후에도 파일을 업로드하면 <b>자동 토큰 갱신(Silent Refresh)</b> 후 정상 업로드됩니다.
+                  * {accessLifetimeSec}초가 지난 후에도 파일을 업로드하면 <b>자동 토큰 갱신(Silent Refresh)</b> 후 정상 업로드됩니다.
                 </Text>
               </div>
 

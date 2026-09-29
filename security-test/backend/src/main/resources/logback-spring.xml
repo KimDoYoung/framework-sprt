@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="30 seconds">
-    <springProperty scope="context" name="LOG_PATH" source="logging.file.path" defaultValue="/home/kdy987/tmp/asseterp-data/logs"/>
-    <springProperty scope="context" name="LOG_FILE" source="logging.file.name" defaultValue="/home/kdy987/tmp/asseterp-data/logs/security-test.log"/>
+    <!-- 경로·롤링 정책은 application.properties의 logging.* 값을 사용 -->
+    <springProperty scope="context" name="LOG_FILE" source="logging.file.name" defaultValue="./logs/security-test.log"/>
+    <springProperty scope="context" name="LOG_FILE_NAME_PATTERN" source="logging.logback.rollingpolicy.file-name-pattern" defaultValue="./logs/security-test-%d{yyyy-MM-dd}.%i.log"/>
+    <springProperty scope="context" name="LOG_MAX_HISTORY" source="logging.logback.rollingpolicy.max-history" defaultValue="30"/>
+    <springProperty scope="context" name="LOG_MAX_FILE_SIZE" source="logging.logback.rollingpolicy.max-file-size" defaultValue="50MB"/>
 
     <!-- 콘솔 출력 패턴 -->
     <property name="CONSOLE_LOG_PATTERN"
@@ -19,14 +22,13 @@
         </encoder>
     </appender>
 
-    <!-- 날짜별 파일 롤링 Appender -->
+    <!-- 날짜별 + 크기별 파일 롤링 Appender -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_FILE}</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- 일별 롤링 파일명 패턴 -->
-            <fileNamePattern>${LOG_PATH}/security-test-%d{yyyy-MM-dd}.log</fileNamePattern>
-            <!-- 30일 보관 -->
-            <maxHistory>30</maxHistory>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE_NAME_PATTERN}</fileNamePattern>
+            <maxFileSize>${LOG_MAX_FILE_SIZE}</maxFileSize>
+            <maxHistory>${LOG_MAX_HISTORY}</maxHistory>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
         <encoder>
@@ -35,9 +37,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.asseterp.security" level="DEBUG"/>
-    <logger name="org.springframework.security" level="INFO"/>
-
+    <!-- 로그 레벨은 application.properties의 logging.level.* 로 설정 -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>

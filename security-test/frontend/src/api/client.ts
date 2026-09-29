@@ -30,7 +30,7 @@ export const onTokenRefresh = (listener: RefreshListener) => {
 };
 
 // 세션 종료 이벤트 리스너 (로그인 페이지 이동 및 메시지 표시용)
-export type SessionTerminateReason = 'MULTI_LOGIN' | 'EXPIRED';
+export type SessionTerminateReason = 'MULTI_LOGIN' | 'TOKEN_REUSED' | 'ACCOUNT_LOCKED' | 'EXPIRED';
 type SessionTerminateListener = (reason: SessionTerminateReason) => void;
 const sessionTerminateListeners: SessionTerminateListener[] = [];
 
@@ -50,8 +50,14 @@ export const notifySessionTerminated = (reason: SessionTerminateReason) => {
 const getErrorCode = (error: AxiosError<any>): string | undefined =>
   error.response?.headers?.['x-auth-error'] || error.response?.data?.code;
 
+const TERMINATE_REASON_BY_CODE: Record<string, SessionTerminateReason> = {
+  MULTI_LOGIN_DETECTED: 'MULTI_LOGIN',
+  REFRESH_TOKEN_REUSED: 'TOKEN_REUSED',
+  ACCOUNT_LOCKED: 'ACCOUNT_LOCKED'
+};
+
 const notifyByErrorCode = (code: string | undefined) => {
-  notifySessionTerminated(code === 'MULTI_LOGIN_DETECTED' ? 'MULTI_LOGIN' : 'EXPIRED');
+  notifySessionTerminated((code && TERMINATE_REASON_BY_CODE[code]) || 'EXPIRED');
 };
 
 let isRefreshing = false;
