@@ -188,7 +188,7 @@ Refresh Token이 탈취되면 공격자가 계속 갱신하며 세션을 유지�
 
 - **유예시간(`grace-period`, 기본 5초)**: 같은 브라우저의 여러 탭은 쿠키를 공유하므로 동시에 같은 토큰으로 갱신할 수 있다. 직전 토큰을 잠시 허용해 정상 사용자가 오탐으로 끊기지 않게 한다.
 - **원자성**: 동시 로그인 검사, `rid` 비교, 교체를 Lua 스크립트 하나로 처리하므로 동시 요청이 와도 상태가 꼬이지 않는다.
-- **탐지 후**: 세션이 폐기되므로 정상 사용자와 공격자 모두 재로그인해야 하며, 정상 사용자는 "보안 경고: 인증 토큰 재사용 감지" 안내를 받는다. 서버에는 ERROR 로그(`[보안] Refresh Token 재사용 탐지`)가 남는다.
+- **탐지 후**: 세션이 폐기되므로 정상 사용자와 공격자 모두 재로그인해야 하며, 정상 사용자는 "보안 경고: 인증 토큰 재사용 감지" 안내를 받는다. 서버에는 ERROR 로그(`[보안] Refresh Token 재사용 탐지`)와 감사 이벤트 `TOKEN_REUSED`가 남는다 (`docs/log-설계.md` 5장).
 - `rid` 클레임이 없는 Refresh Token(이전 버전에서 발급된 토큰)은 `INVALID_TOKEN`으로 거부된다.
 
 ### 3.5 로그인 실패 잠금 (AS-IS `emp01_person.emp01_lock_yn` 방식)
@@ -378,8 +378,10 @@ VALUES
 | GET | `/api/file/download/{fileId}` | 필요 | 파일 다운로드 |
 | GET | `/api/user/list` | `ROLE_ADMIN` | 사용자 목록 (잠금 여부, 연속 실패 횟수) |
 | POST | `/api/user/{userId}/unlock` | `ROLE_ADMIN` | 계정 잠금 해제 |
+| GET | `/api/audit/list?limit=100` | `ROLE_ADMIN` | 보안 감사 로그 최근 N건 (`docs/log-설계.md`) |
 
 - 인증 없이 접근 가능한 경로(정적 리소스, 인증 공개 API)는 `asseterp.auth.permit-all-paths`로 관리한다.
+- 모든 응답에는 요청 추적 ID 헤더 `X-Trace-Id`가 포함된다 (`docs/log-설계.md` 4장).
 
 ---
 
@@ -427,7 +429,8 @@ security-test/
 │       │   │   ├── config/
 │       │   │   │   ├── SecurityConfig.java         # SecurityFilterChain, permitAll, CORS
 │       │   │   │   ├── RedisConfig.java            # RedisConnectionFactory (호스트 자동 Fallback)
-│       │   │   │   └── properties/                 # Jwt/Auth/Cors/RedisProbe/Upload Properties (record)
+│       │   │   │   └── properties/                 # Jwt/Auth/Cors/RedisProbe/Upload/Log Properties (record)
+│       │   │   ├── log/                            # MdcLoggingFilter(추적ID·IP, access 로그), MdcKeys
 │       │   │   ├── jwt/
 │       │   │   │   ├── JwtTokenProvider.java       # 토큰 생성/검증 (typ, rid 클레임), Claims → Principal
 │       │   │   │   ├── JwtAuthenticationFilter.java# 쿠키 토큰 검증 및 Redis jti 대조
@@ -449,6 +452,12 @@ security-test/
 │       │       │   ├── dto/UserItemRes.java
 │       │       │   ├── entity/AppUser.java              # app_user 매핑 (lock_yn 포함)
 │       │       │   └── mapper/AppUserMapper.java
+│       │       ├── audit/                               # 보안 감사 로그 (docs/log-설계.md)
+│       │       │   ├── controller/AuditLogController.java # 감사 로그 조회 (ROLE_ADMIN)
+│       │       │   ├── service/AuditLogService.java     # audit 파일 + DB 이중 기록
+│       │       │   ├── service/AuditLogWriter.java      # DB 등록 (REQUIRES_NEW)
+│       │       │   ├── mapper/AuditLogMapper.java
+│       │       │   └── dto/                             # AuditEventType, AuditResult, AuditLogRecord
 │       │       ├── file/
 │       │       │   ├── controller/FileController.java   # 파일 업/다운로드
 │       │       │   ├── service/FileStorageService.java  # Tika 매직 넘버 검증 및 저장
@@ -456,8 +465,9 @@ security-test/
 │       │       └── test/controller/TestController.java  # 서버 통신 테스트 (Ping)
 │       ├── main/resources/
 │       │   ├── application.properties              # 전체 설정 (7.2)
-│       │   ├── logback-spring.xml                  # 로그 (경로·롤링은 properties 참조)
+│       │   ├── logback-spring.xml                  # info/error/audit 파일 분리, Async, 롤링 (docs/log-설계.md)
 │       │   ├── mapper/AppUserMapper.xml            # PostgreSQL 쿼리
+│       │   ├── mapper/AuditLogMapper.xml           # sys71_security_audit_log
 │       │   └── redis/rotate-refresh-token.lua      # Refresh Token 교체·재사용 탐지 (원자적)
 │       └── test/java/com/asseterp/security/        # 단위 테스트 (7.5)
 ├── frontend/                                       # React 19 + TypeScript + Ant Design 5
@@ -466,13 +476,16 @@ security-test/
 │   │   │   ├── client.ts                           # Axios 인스턴스, 인터셉터, 세션 종료 이벤트
 │   │   │   ├── auth.ts                             # 로그인, 로그아웃, 갱신, 내 정보
 │   │   │   ├── user.ts                             # 사용자 목록, 잠금 해제 (관리자)
+│   │   │   ├── audit.ts                            # 보안 감사 로그 조회 (관리자)
 │   │   │   ├── file.ts                             # 파일 업로드/목록/다운로드(blob)
 │   │   │   └── test.ts                             # 서버 통신 Ping
-│   │   ├── components/UserLockCard.tsx             # 계정 잠금 관리 카드 (관리자)
+│   │   ├── components/
+│   │   │   ├── UserLockCard.tsx                    # 계정 잠금 관리 카드 (관리자)
+│   │   │   └── AuditLogCard.tsx                    # 보안 감사 로그 카드 (관리자)
 │   │   ├── pages/
 │   │   │   ├── LoginPage.tsx                       # 로그인, 세션 종료 사유 안내
-│   │   │   └── MainPage.tsx                        # 토큰 게이지, Ping, 파일, 잠금 관리
-│   │   ├── types/auth.ts                           # User, UserItem, FileItem, ApiResponse
+│   │   │   └── MainPage.tsx                        # 토큰 게이지, Ping, 파일, 잠금 관리, 감사 로그
+│   │   ├── types/auth.ts                           # User, UserItem, AuditLogItem, FileItem, ApiResponse
 │   │   └── App.tsx                                 # 세션 종료 사유별 안내, 로그인 화면 전환
 │   ├── package.json
 │   └── vite.config.ts                              # 상대 경로 베이스(./), /api 프록시
@@ -493,6 +506,7 @@ security-test/
 | `asseterp.cors.*` | `CorsProperties` | `allowed-origins`, `allowed-methods`, `allowed-headers`, `max-age` |
 | `asseterp.redis.*` | `RedisProbeProperties` | `fallback-hosts`, `connect-timeout` |
 | `asseterp.upload.*` | `UploadProperties` | `dir`, `allowed-types.{확장자}` |
+| `asseterp.log.*` | `LogProperties` (+ `logback-spring.xml`) | `app-name`, `{info,error,audit}.{max-history, max-file-size, total-size-cap}`, `async.*`, `trace-header`, `request-log.*` |
 
 주요 보안 설정 기본값:
 
@@ -505,7 +519,7 @@ asseterp.auth.login-lock.max-failures=2              # 연속 실패 허용 횟�
 asseterp.auth.login-lock.fail-count-ttl=24h          # 실패 횟수 유지 시간
 ```
 
-- 로그 경로·롤링 정책(`logging.file.*`, `logging.logback.rollingpolicy.*`)과 레벨(`logging.level.*`)도 `application.properties`에서 설정하며 `logback-spring.xml`이 이를 참조한다. 로그 파일은 일별 + 50MB 단위로 롤링된다(`security-test-{날짜}.{번호}.log`).
+- 로그는 `{app}-info.log` / `-error.log` / `-audit.log`로 분리되고 경로(`logging.file.path`)·보관 정책(`asseterp.log.*`)·레벨(`logging.level.*`)을 `application.properties`에서 설정한다. 자세한 내용은 `docs/log-설계.md` 참조.
 - 토큰 수명을 바꾸면 프론트엔드 타이머와 안내 문구도 응답의 `accessTokenLifetime`/`refreshTokenLifetime`을 따라 자동으로 바뀐다.
 
 ---
@@ -578,6 +592,7 @@ cd security-test/backend && gradle test
 | `JwtTokenProviderTest` | 토큰 파싱·Principal 복원, Access/Refresh 교차 사용 거부, 만료 판정, `rid` 클레임 |
 | `AuthServiceTest` | 잠긴 계정 거부(비밀번호 검사 안 함), 실패 횟수 안내, 최대 횟수 도달 시 잠금, 성공 시 초기화·세션 등록, Refresh Token 재사용 거부, 교체된 `rid`로 재발급 |
 | `FileStorageServiceTest` | 매직 넘버 기반 허용/거부 (PNG, 위장 EXE, 허용 외 확장자, 한글 CSV, OOXML, 위장 PDF) |
+| `AuditLogServiceTest`, `MdcLoggingFilterTest` | 감사 로그·요청 추적 (`docs/log-설계.md` 7.5) |
 
 ---
 
@@ -591,7 +606,7 @@ cd security-test/backend && gradle test
 | 파일 접근 권한 | 인증된 사용자는 모든 파일 다운로드 가능 | 업로더/회사 기준 접근 제어 |
 | 파일 메타데이터 | 메모리(`ConcurrentHashMap`) 저장, 재시작 시 목록 유실 | DB 테이블로 이전 |
 | 계정 존재 여부 노출 | 실패 횟수 안내는 실제 계정에만 표시되어 계정 존재 여부 추측 가능 | 정책에 따라 안내 문구 제거 |
-| 로그인 이력 | 기록하지 않음 | AS-IS `sys26_login`처럼 로그인 성공/실패/차단/잠금 이력(IP, 브라우저) 저장 |
+| 로그인 이력 | **완료**: 보안 감사 로그 `sys71_security_audit_log` + `*-audit.log` (로그인·잠금·세션 차단·토큰 재사용·파일 업/다운로드, IP·브라우저·추적ID) | 기간·사용자 조건 검색, 보관 기간 배치 (`docs/log-설계.md` 9장) |
 | 동시 로그인 차단 시점 | 이전 세션은 "다음 요청" 때 차단됨 | SSE/WebSocket으로 즉시 알림 (선택) |
 | REST 경로 규칙 | `/api/{domain}/...` | 프레임워크 규칙(`/api/v1/{domain}/{resource}`)으로 변경 |
 | 에러 메시지 | `ErrorCode` enum에 한글 메시지 고정 | 다국어가 필요하면 `messages.properties`로 분리 |

@@ -1,5 +1,8 @@
 package com.asseterp.security.biz.auth.service;
 
+import com.asseterp.security.biz.audit.dto.AuditEventType;
+import com.asseterp.security.biz.audit.dto.AuditResult;
+import com.asseterp.security.biz.audit.service.AuditLogService;
 import com.asseterp.security.biz.auth.dto.AuthResult;
 import com.asseterp.security.biz.auth.dto.LoginReq;
 import com.asseterp.security.biz.auth.dto.LoginRes;
@@ -38,6 +41,7 @@ public class AuthService {
     private final RedisTokenService redisTokenService;
     private final AuthProperties authProperties;
     private final LoginLockService loginLockService;
+    private final AuditLogService auditLogService;
 
     public AuthResult login(LoginReq req) {
         log.info("로그인 시도: username={}", req.username());
@@ -45,12 +49,14 @@ public class AuthService {
         AppUser user = appUserMapper.findByUsername(req.username())
                 .orElseThrow(() -> {
                     log.warn("로그인 실패 (없는 아이디): username={}", req.username());
+                    auditLogService.record(AuditEventType.LOGIN_FAIL, AuditResult.FAIL, req.username(), null, "없는 아이디");
                     return new BusinessException(ErrorCode.LOGIN_FAILED);
                 });
 
         // 잠긴 계정은 비밀번호를 검사하지 않음 (잠긴 뒤의 무차별 대입 차단)
         if (user.isLocked()) {
             log.warn("잠긴 계정 로그인 시도: username={}", req.username());
+            auditLogService.record(AuditEventType.LOGIN_LOCKED_ATTEMPT, AuditResult.FAIL, user.getUsername(), null, null);
             throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
         }
 
@@ -58,9 +64,13 @@ public class AuthService {
         if (!passwordEncoder.matches(req.password(), user.getPassword())) {
             LoginLockService.FailureResult failure = loginLockService.recordFailure(user.getUserId());
             if (failure.locked()) {
+                auditLogService.record(AuditEventType.ACCOUNT_LOCKED, AuditResult.FAIL, user.getUsername(), null,
+                        "로그인 " + failure.failureCount() + "회 연속 실패");
                 throw new BusinessException(ErrorCode.ACCOUNT_LOCKED,
                         "로그인 " + failure.maxFailures() + "회 실패로 계정이 잠겼습니다. 관리자에게 잠금 해제를 요청하세요.");
             }
+            auditLogService.record(AuditEventType.LOGIN_FAIL, AuditResult.FAIL, user.getUsername(), null,
+                    "비밀번호 불일치 (" + failure.failureCount() + "/" + failure.maxFailures() + ")");
             throw new BusinessException(ErrorCode.LOGIN_FAILED,
                     ErrorCode.LOGIN_FAILED.getMessage() + " (실패 " + failure.failureCount() + "/" + failure.maxFailures()
                             + "회, " + failure.remaining() + "회 더 실패하면 계정이 잠깁니다.)");
@@ -74,6 +84,7 @@ public class AuthService {
         redisTokenService.startSession(user.getUserId(), jti, refreshId, sessionTtl());
 
         log.info("로그인 성공: userId={}, username={}, jti={}", user.getUserId(), user.getUsername(), jti);
+        auditLogService.record(AuditEventType.LOGIN_SUCCESS, AuditResult.SUCCESS, user.getUsername(), null, "jti=" + jti);
         return result;
     }
 
@@ -108,9 +119,17 @@ public class AuthService {
         RedisTokenService.RotationResult rotation = redisTokenService.rotateRefreshToken(
                 userId, jti, refreshId, UUID.randomUUID().toString(), sessionTtl());
         switch (rotation.status()) {
-            case MISMATCH -> throw new BusinessException(ErrorCode.MULTI_LOGIN_DETECTED);
+            case MISMATCH -> {
+                auditLogService.record(AuditEventType.MULTI_LOGIN_BLOCKED, AuditResult.FAIL, usernameOf(userId), null,
+                        "Refresh 차단, jti=" + jti);
+                throw new BusinessException(ErrorCode.MULTI_LOGIN_DETECTED);
+            }
             case NOT_FOUND -> throw new BusinessException(ErrorCode.SESSION_NOT_FOUND);
-            case REUSED -> throw new BusinessException(ErrorCode.REFRESH_TOKEN_REUSED);
+            case REUSED -> {
+                auditLogService.record(AuditEventType.TOKEN_REUSED, AuditResult.FAIL, usernameOf(userId), null,
+                        "세션 폐기, jti=" + jti + ", rid=" + refreshId);
+                throw new BusinessException(ErrorCode.REFRESH_TOKEN_REUSED);
+            }
             case ROTATED, GRACE -> { }
         }
 
@@ -152,11 +171,21 @@ public class AuthService {
             if (redisTokenService.checkJti(userId, claims.getId()) == RedisTokenService.JtiStatus.MATCH) {
                 redisTokenService.removeSession(userId);
                 log.info("로그아웃 완료: userId={}", userId);
+                auditLogService.record(AuditEventType.LOGOUT, AuditResult.SUCCESS, usernameOf(userId), null, null);
             }
         } catch (JwtException | IllegalArgumentException e) {
             // 만료/위조 토큰: 제거할 활성 세션이 없으므로 쿠키 삭제만 진행
             log.debug("로그아웃 시 Refresh Token 무시: {}", e.getMessage());
         }
+    }
+
+    /**
+     * 감사 로그용 로그인 아이디 (토큰에는 숫자 userId만 있음)
+     */
+    private String usernameOf(Long userId) {
+        return appUserMapper.findById(userId)
+                .map(AppUser::getUsername)
+                .orElse(String.valueOf(userId));
     }
 
     private Duration sessionTtl() {

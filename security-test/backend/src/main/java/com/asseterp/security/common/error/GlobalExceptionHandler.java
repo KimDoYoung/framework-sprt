@@ -1,7 +1,9 @@
 package com.asseterp.security.common.error;
 
 import com.asseterp.security.common.dto.ApiResponse;
+import com.asseterp.security.common.log.MdcKeys;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.ErrorResponse;
@@ -36,7 +38,10 @@ public class GlobalExceptionHandler {
                     .body(ApiResponse.fail("HTTP_" + status, e.getMessage()));
         }
         log.error("처리되지 않은 예외", e);
-        return toResponse(ErrorCode.INTERNAL_ERROR, ErrorCode.INTERNAL_ERROR.getMessage());
+        // 사용자가 추적ID를 알려주면 운영자가 로그에서 해당 요청을 바로 찾을 수 있다
+        String traceId = MDC.get(MdcKeys.TRACE_ID);
+        String message = ErrorCode.INTERNAL_ERROR.getMessage() + (traceId != null ? " (추적ID: " + traceId + ")" : "");
+        return toResponse(ErrorCode.INTERNAL_ERROR, message);
     }
 
     private ResponseEntity<ApiResponse<Void>> toResponse(ErrorCode errorCode, String message) {

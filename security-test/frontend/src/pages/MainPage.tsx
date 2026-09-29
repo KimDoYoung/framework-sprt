@@ -36,9 +36,10 @@ import {
 import { authApi } from '../api/auth';
 import { fileApi } from '../api/file';
 import { testApi } from '../api/test';
-import { onTokenRefresh, notifySessionTerminated } from '../api/client';
+import { onTokenRefresh, notifySessionTerminated, errorMessage } from '../api/client';
 import { User, FileItem } from '../types/auth';
 import { UserLockCard } from '../components/UserLockCard';
+import { AuditLogCard } from '../components/AuditLogCard';
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -156,7 +157,7 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
   const handleApiError = (err: any) => {
     // 401(세션 종료)은 axios 인터셉터가 이미 로그인 화면 전환을 처리함
     if (err.response?.status === 401) return;
-    message.error(err.response?.data?.message || err.message || '요청 처리 실패');
+    message.error(errorMessage(err));
   };
 
   const handleDownload = async (record: FileItem) => {
@@ -630,6 +631,13 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
           {currentUser.roles?.includes('ROLE_ADMIN') && (
             <Col span={24}>
               <UserLockCard />
+            </Col>
+          )}
+
+          {/* 5-1. 보안 감사 로그 (관리자 전용) */}
+          {currentUser.roles?.includes('ROLE_ADMIN') && (
+            <Col span={24}>
+              <AuditLogCard />
             </Col>
           )}
 

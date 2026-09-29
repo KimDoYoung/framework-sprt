@@ -2,6 +2,7 @@ package com.asseterp.security.common.config;
 
 import com.asseterp.security.common.config.properties.AuthProperties;
 import com.asseterp.security.common.config.properties.CorsProperties;
+import com.asseterp.security.common.config.properties.LogProperties;
 import com.asseterp.security.common.error.ErrorCode;
 import com.asseterp.security.common.jwt.JwtAccessDeniedHandler;
 import com.asseterp.security.common.jwt.JwtAuthenticationEntryPoint;
@@ -36,6 +37,7 @@ public class SecurityConfig {
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final AuthProperties authProperties;
     private final CorsProperties corsProperties;
+    private final LogProperties logProperties;
 
     /**
      * 요구사항 6: 테스트 용이를 위해 password는 평문을 비교
@@ -84,7 +86,7 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(corsProperties.allowedOrigins());
         configuration.setAllowedMethods(corsProperties.allowedMethods());
         configuration.setAllowedHeaders(corsProperties.allowedHeaders());
-        configuration.setExposedHeaders(List.of(ErrorCode.AUTH_ERROR_HEADER));
+        configuration.setExposedHeaders(List.of(ErrorCode.AUTH_ERROR_HEADER, logProperties.traceHeader()));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(corsProperties.maxAge());
 

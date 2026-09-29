@@ -46,6 +46,17 @@ export const notifySessionTerminated = (reason: SessionTerminateReason) => {
   sessionTerminateListeners.forEach(listener => listener(reason));
 };
 
+/**
+ * 화면에 표시할 오류 메시지. 서버 오류(5xx)에는 추적ID(X-Trace-Id)를 붙여
+ * 사용자가 알려준 ID로 운영자가 서버 로그에서 해당 요청을 바로 찾을 수 있게 한다.
+ */
+export const errorMessage = (err: any, fallback = '요청 처리 실패'): string => {
+  const message: string = err?.response?.data?.message || err?.message || fallback;
+  const traceId: string | undefined = err?.response?.headers?.['x-trace-id'];
+  const isServerError = (err?.response?.status ?? 0) >= 500;
+  return isServerError && traceId && !message.includes(traceId) ? `${message} (추적ID: ${traceId})` : message;
+};
+
 /** 서버 에러 코드: X-Auth-Error 헤더 우선, 없으면 ApiResponse.code */
 const getErrorCode = (error: AxiosError<any>): string | undefined =>
   error.response?.headers?.['x-auth-error'] || error.response?.data?.code;

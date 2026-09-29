@@ -1,5 +1,8 @@
 package com.asseterp.security.biz.auth.service;
 
+import com.asseterp.security.biz.audit.dto.AuditEventType;
+import com.asseterp.security.biz.audit.dto.AuditResult;
+import com.asseterp.security.biz.audit.service.AuditLogService;
 import com.asseterp.security.biz.auth.dto.LoginReq;
 import com.asseterp.security.biz.user.entity.AppUser;
 import com.asseterp.security.biz.user.mapper.AppUserMapper;
@@ -28,6 +31,7 @@ class AuthServiceTest {
     private final AppUserMapper appUserMapper = mock(AppUserMapper.class);
     private final RedisTokenService redisTokenService = mock(RedisTokenService.class);
     private final LoginLockService loginLockService = mock(LoginLockService.class);
+    private final AuditLogService auditLogService = mock(AuditLogService.class);
     private final AuthProperties authProperties = TestProperties.bind("asseterp.auth", AuthProperties.class);
     private final JwtTokenProvider tokenProvider = new JwtTokenProvider(
             TestProperties.bind("jwt", JwtProperties.class), authProperties);
@@ -39,7 +43,7 @@ class AuthServiceTest {
         @SuppressWarnings("deprecation")
         NoOpPasswordEncoder encoder = (NoOpPasswordEncoder) NoOpPasswordEncoder.getInstance();
         authService = new AuthService(appUserMapper, encoder, tokenProvider, redisTokenService,
-                authProperties, loginLockService);
+                authProperties, loginLockService, auditLogService);
     }
 
     private AppUser user(String lockYn) {
@@ -56,6 +60,7 @@ class AuthServiceTest {
                         e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.ACCOUNT_LOCKED));
         verify(loginLockService, never()).recordFailure(any());
         verify(redisTokenService, never()).startSession(any(), any(), any(), any());
+        verify(auditLogService).record(eq(AuditEventType.LOGIN_LOCKED_ATTEMPT), eq(AuditResult.FAIL), eq("user1"), any(), any());
     }
 
     @Test
@@ -78,6 +83,7 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.login(new LoginReq("user1", "wrong")))
                 .isInstanceOfSatisfying(BusinessException.class,
                         e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.ACCOUNT_LOCKED));
+        verify(auditLogService).record(eq(AuditEventType.ACCOUNT_LOCKED), eq(AuditResult.FAIL), eq("user1"), any(), any());
     }
 
     @Test
@@ -88,6 +94,7 @@ class AuthServiceTest {
 
         verify(loginLockService).resetFailures(2L);
         verify(redisTokenService).startSession(eq(2L), anyString(), anyString(), any());
+        verify(auditLogService).record(eq(AuditEventType.LOGIN_SUCCESS), eq(AuditResult.SUCCESS), eq("user1"), any(), any());
     }
 
     @Test
@@ -99,6 +106,7 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.refresh(refreshToken))
                 .isInstanceOfSatisfying(BusinessException.class,
                         e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.REFRESH_TOKEN_REUSED));
+        verify(auditLogService).record(eq(AuditEventType.TOKEN_REUSED), eq(AuditResult.FAIL), any(), any(), any());
     }
 
     @Test

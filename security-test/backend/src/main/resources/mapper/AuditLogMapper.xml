@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.asseterp.security.biz.audit.mapper.AuditLogMapper">
+
+    <insert id="insert">
+        INSERT INTO sys71_security_audit_log (
+            event_type,
+            result,
+            user_id,
+            target_id,
+            detail,
+            client_ip,
+            user_agent,
+            trace_id
+        ) VALUES (
+            #{eventType},
+            #{result},
+            #{userId},
+            #{targetId},
+            #{detail},
+            #{clientIp},
+            #{userAgent},
+            #{traceId}
+        )
+    </insert>
+
+    <!-- 컬럼 순서 = AuditLogRecord 생성자 인자 순서 -->
+    <select id="findRecent" resultType="com.asseterp.security.biz.audit.dto.AuditLogRecord">
+        SELECT
+            audit_id,
+            event_type,
+            result,
+            user_id,
+            target_id,
+            detail,
+            client_ip,
+            user_agent,
+            trace_id,
+            created_at
+        FROM sys71_security_audit_log
+        ORDER BY audit_id DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

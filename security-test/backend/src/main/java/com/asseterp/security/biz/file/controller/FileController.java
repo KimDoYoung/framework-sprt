@@ -1,9 +1,13 @@
 package com.asseterp.security.biz.file.controller;
 
+import com.asseterp.security.biz.audit.dto.AuditEventType;
+import com.asseterp.security.biz.audit.dto.AuditResult;
+import com.asseterp.security.biz.audit.service.AuditLogService;
 import com.asseterp.security.biz.auth.dto.UserPrincipal;
 import com.asseterp.security.biz.file.dto.FileItemDto;
 import com.asseterp.security.biz.file.service.FileStorageService;
 import com.asseterp.security.common.dto.ApiResponse;
+import com.asseterp.security.common.error.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
@@ -27,6 +31,7 @@ import java.util.List;
 public class FileController {
 
     private final FileStorageService fileStorageService;
+    private final AuditLogService auditLogService;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<FileItemDto> uploadFile(
@@ -36,14 +41,26 @@ public class FileController {
         log.info("파일 업로드 요청: filename={}, uploader={}", file.getOriginalFilename(),
                 principal != null ? principal.getUsername() : "unknown");
 
-        FileItemDto fileItem = fileStorageService.storeFile(file, principal);
+        FileItemDto fileItem;
+        try {
+            fileItem = fileStorageService.storeFile(file, principal);
+        } catch (BusinessException e) {
+            auditLogService.record(AuditEventType.FILE_UPLOAD_REJECTED, AuditResult.FAIL, usernameOf(principal),
+                    file.getOriginalFilename(), e.getMessage());
+            throw e;
+        }
+        auditLogService.record(AuditEventType.FILE_UPLOAD, AuditResult.SUCCESS, usernameOf(principal),
+                fileItem.fileId(), fileItem.originalFilename() + " (" + fileItem.fileSize() + " bytes, " + fileItem.detectedMimeType() + ")");
         return ApiResponse.ok("파일이 성공적으로 업로드되었습니다.", fileItem);
     }
 
     @GetMapping("/download/{fileId}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable("fileId") String fileId) {
+    public ResponseEntity<Resource> downloadFile(@PathVariable("fileId") String fileId,
+                                                 @AuthenticationPrincipal UserPrincipal principal) {
         FileItemDto meta = fileStorageService.getFileMetadata(fileId);
         Resource resource = fileStorageService.loadFileAsResource(fileId);
+        auditLogService.record(AuditEventType.FILE_DOWNLOAD, AuditResult.SUCCESS, usernameOf(principal),
+                fileId, meta.originalFilename());
 
         // RFC 6266/5987: 한글 파일명은 filename*=UTF-8''... 로 인코딩
         ContentDisposition contentDisposition = ContentDisposition.attachment()
@@ -63,5 +80,9 @@ public class FileController {
     public ApiResponse<List<FileItemDto>> listFiles() {
         List<FileItemDto> files = fileStorageService.listFiles();
         return ApiResponse.ok(files);
+    }
+
+    private static String usernameOf(UserPrincipal principal) {
+        return principal != null ? principal.getUsername() : null;
     }
 }

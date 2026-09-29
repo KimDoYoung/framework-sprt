@@ -27,6 +27,25 @@ export interface UserItem {
   failureCount: number;
 }
 
+/** 보안 감사 로그 (sys71_security_audit_log) */
+export interface AuditLogItem {
+  auditId: number;
+  /** 이벤트 유형 (LOGIN_SUCCESS, LOGIN_FAIL, ACCOUNT_LOCKED ...) */
+  eventType: string;
+  /** SUCCESS / FAIL */
+  result: string;
+  /** 행위자 로그인 아이디 */
+  userId: string | null;
+  /** 대상 (잠금 해제 대상 사용자, 파일ID 등) */
+  targetId: string | null;
+  detail: string | null;
+  clientIp: string | null;
+  userAgent: string | null;
+  /** 요청 추적 ID - 서버 로그 검색 키 */
+  traceId: string | null;
+  createdAt: string;
+}
+
 export interface FileItem {
   fileId: string;
   originalFilename: string;

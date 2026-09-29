@@ -1,9 +1,13 @@
 package com.asseterp.security.common.jwt;
 
+import com.asseterp.security.biz.audit.dto.AuditEventType;
+import com.asseterp.security.biz.audit.dto.AuditResult;
+import com.asseterp.security.biz.audit.service.AuditLogService;
 import com.asseterp.security.biz.auth.dto.UserPrincipal;
 import com.asseterp.security.common.error.BusinessException;
 import com.asseterp.security.common.error.ErrorCode;
 import com.asseterp.security.common.error.ErrorResponseWriter;
+import com.asseterp.security.common.log.MdcKeys;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -12,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -33,6 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final RedisTokenService redisTokenService;
     private final AuthCookieManager cookieManager;
     private final ErrorResponseWriter errorResponseWriter;
+    private final AuditLogService auditLogService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -53,8 +59,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
                         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authentication);
+                        // 이후 로그 줄에 사용자 표시 (MDC 정리는 MdcLoggingFilter가 담당)
+                        MDC.put(MdcKeys.USER_ID, principal.getUsername());
                     }
-                    case MISMATCH -> request.setAttribute(AUTH_ERROR_ATTRIBUTE, ErrorCode.MULTI_LOGIN_DETECTED);
+                    case MISMATCH -> {
+                        request.setAttribute(AUTH_ERROR_ATTRIBUTE, ErrorCode.MULTI_LOGIN_DETECTED);
+                        auditLogService.record(AuditEventType.MULTI_LOGIN_BLOCKED, AuditResult.FAIL,
+                                principal.getUsername(), null, request.getMethod() + " " + request.getRequestURI());
+                    }
                     case NOT_FOUND -> request.setAttribute(AUTH_ERROR_ATTRIBUTE, ErrorCode.SESSION_NOT_FOUND);
                 }
             } catch (ExpiredJwtException e) {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Popconfirm, Table, Tag, Typography, message } from 'antd';
 import { LockOutlined, ReloadOutlined, UnlockOutlined } from '@ant-design/icons';
+import { errorMessage } from '../api/client';
 import { userApi } from '../api/user';
 import { UserItem } from '../types/auth';
 
@@ -23,7 +24,7 @@ export const UserLockCard: React.FC = () => {
     } catch (err: any) {
       // 401(세션 종료)은 axios 인터셉터가 처리
       if (err.response?.status !== 401) {
-        message.error(err.response?.data?.message || '사용자 목록 조회 실패');
+        message.error(errorMessage(err, '사용자 목록 조회 실패'));
       }
     } finally {
       setLoading(false);
@@ -41,7 +42,7 @@ export const UserLockCard: React.FC = () => {
       fetchUsers();
     } catch (err: any) {
       if (err.response?.status !== 401) {
-        message.error(err.response?.data?.message || '잠금 해제 실패');
+        message.error(errorMessage(err, '잠금 해제 실패'));
       }
     }
   };

@@ -1,0 +1,14 @@
+package com.asseterp.security.common.log;
+
+/**
+ * 로그 패턴(logback-spring.xml)과 감사 로그에서 사용하는 MDC 키
+ */
+public final class MdcKeys {
+
+    public static final String TRACE_ID = "traceId";
+    public static final String USER_ID = "userId";
+    public static final String CLIENT_IP = "clientIp";
+
+    private MdcKeys() {
+    }
+}
