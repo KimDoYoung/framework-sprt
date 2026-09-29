@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ConfigProvider, Spin } from 'antd';
 import koKR from 'antd/locale/ko_KR';
 import { LoginPage, LoginNotice } from './pages/LoginPage';
@@ -11,10 +11,18 @@ export const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [initializing, setInitializing] = useState(true);
   const [sessionNotice, setSessionNotice] = useState<LoginNotice | null>(null);
+  const userRef = useRef<User | null>(null);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   useEffect(() => {
     // 세션 종료(중복 로그인 차단 또는 리프레시 토큰 완전 만료) 이벤트 리스너
     const unsubscribe = onSessionTerminated((reason: SessionTerminateReason) => {
+      // 로그인 상태가 아니면 무시 (첫 방문 시 세션 복원 실패에 "세션 만료" 안내가 뜨지 않도록)
+      if (!userRef.current) return;
+      userRef.current = null;
       setUser(null); // 로그인 페이지로 즉시 이동
 
       if (reason === 'MULTI_LOGIN') {

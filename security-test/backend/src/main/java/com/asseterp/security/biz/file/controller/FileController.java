@@ -7,13 +7,14 @@ import com.asseterp.security.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.util.UriUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -44,19 +45,17 @@ public class FileController {
         FileItemDto meta = fileStorageService.getFileMetadata(fileId);
         Resource resource = fileStorageService.loadFileAsResource(fileId);
 
-        String encodedFilename = UriUtils.encode(meta.originalFilename(), StandardCharsets.UTF_8);
-        String contentDisposition = "attachment; filename=\"" + encodedFilename + "\"; filename*=UTF-8''" + encodedFilename;
-
-        MediaType mediaType;
-        try {
-            mediaType = MediaType.parseMediaType(meta.detectedMimeType());
-        } catch (Exception e) {
-            mediaType = MediaType.APPLICATION_OCTET_STREAM;
-        }
+        // RFC 6266/5987: 한글 파일명은 filename*=UTF-8''... 로 인코딩
+        ContentDisposition contentDisposition = ContentDisposition.attachment()
+                .filename(meta.originalFilename(), StandardCharsets.UTF_8)
+                .build();
+        // 검증을 통과한 파일이므로 확장자 기준의 표준 MIME 타입으로 응답 (tika-core의 x-tika-* 내부 타입 노출 방지)
+        MediaType mediaType = MediaTypeFactory.getMediaType(meta.originalFilename())
+                .orElse(MediaType.APPLICATION_OCTET_STREAM);
 
         return ResponseEntity.ok()
                 .contentType(mediaType)
-                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString())
                 .body(resource);
     }
 

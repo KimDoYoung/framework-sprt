@@ -19,7 +19,18 @@ export const fileApi = {
     return res.data;
   },
 
-  getDownloadUrl: (fileId: string): string => {
-    return `/api/file/download/${fileId}`;
+  /**
+   * axios로 받아 저장한다. 링크(href) 방식은 인터셉터를 거치지 않아 Access Token 만료 시 자동 갱신이 되지 않는다.
+   */
+  download: async (fileId: string, filename: string): Promise<void> => {
+    const res = await apiClient.get<Blob>(`/file/download/${fileId}`, { responseType: 'blob' });
+    const url = URL.createObjectURL(res.data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 };

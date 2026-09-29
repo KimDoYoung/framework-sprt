@@ -7,6 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 
@@ -22,6 +23,8 @@ public class UserPrincipal implements UserDetails {
     private final String deptId;
     private final List<String> roles;
     private final String jti;
+    /** Access Token 만료 시각 (토큰에서 복원한 경우에만 값이 있음) */
+    private final Instant accessTokenExpiresAt;
 
     public static UserPrincipal from(AppUser user, String jti) {
         return UserPrincipal.builder()

@@ -1,21 +1,28 @@
 package com.asseterp.security.biz.auth.service;
 
+import com.asseterp.security.biz.auth.dto.AuthResult;
 import com.asseterp.security.biz.auth.dto.LoginReq;
 import com.asseterp.security.biz.auth.dto.LoginRes;
 import com.asseterp.security.biz.auth.dto.UserPrincipal;
 import com.asseterp.security.biz.user.entity.AppUser;
 import com.asseterp.security.biz.user.mapper.AppUserMapper;
+import com.asseterp.security.common.error.BusinessException;
+import com.asseterp.security.common.error.ErrorCode;
 import com.asseterp.security.common.jwt.JwtTokenProvider;
+import com.asseterp.security.common.jwt.JwtTokenProvider.TokenType;
 import com.asseterp.security.common.jwt.RedisTokenService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
 
 @Slf4j
@@ -29,76 +36,108 @@ public class AuthService {
     private final JwtTokenProvider tokenProvider;
     private final RedisTokenService redisTokenService;
 
-    @Transactional
-    public LoginRes login(LoginReq req) {
+    public AuthResult login(LoginReq req) {
         log.info("로그인 시도: username={}", req.username());
 
+        // 요구사항 6: 평문 패스워드 비교. 아이디/비밀번호 오류는 동일 메시지로 응답(계정 존재 여부 노출 방지)
         AppUser user = appUserMapper.findByUsername(req.username())
-                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + req.username()));
+                .filter(u -> passwordEncoder.matches(req.password(), u.getPassword()))
+                .orElseThrow(() -> {
+                    log.warn("로그인 실패: username={}", req.username());
+                    return new BusinessException(ErrorCode.LOGIN_FAILED);
+                });
 
-        // 요구사항 6: 평문 패스워드 비교
-        if (!passwordEncoder.matches(req.password(), user.getPassword())) {
-            throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
-        }
-
-        // 고유 jti 생성 (요구사항 7, 8)
+        // 고유 jti 생성 (요구사항 7, 8) - 새 jti로 Redis를 덮어써 기존 세션을 차단
         String jti = UUID.randomUUID().toString();
-        UserPrincipal principal = UserPrincipal.from(user, jti);
-
-        String accessToken = tokenProvider.generateAccessToken(principal, jti);
-        String refreshToken = tokenProvider.generateRefreshToken(user.getUserId(), jti);
-
-        // Redis에 활성 jti 저장 (TTL: Refresh Token 만료시간 기준, 기본 60초)
-        long ttlMillis = Math.max(tokenProvider.getRefreshTokenExpiration(), 60000);
-        redisTokenService.saveActiveJti(user.getUserId(), jti, Duration.ofMillis(ttlMillis));
+        AuthResult result = issueTokens(user, jti);
 
         log.info("로그인 성공: userId={}, username={}, jti={}", user.getUserId(), user.getUsername(), jti);
-
-        return new LoginRes(
-                principal.getUserId(),
-                principal.getUsername(),
-                principal.getName(),
-                principal.getCompanyId(),
-                principal.getDeptId(),
-                principal.getRoles(),
-                jti,
-                accessToken,
-                tokenProvider.getAccessTokenExpiration(),
-                refreshToken,
-                tokenProvider.getRefreshTokenExpiration()
-        );
+        return result;
     }
 
     /**
-     * Refresh Token을 통한 Access Token 재발급 (Silent Refresh)
+     * Refresh Token을 통한 토큰 재발급 (Silent Refresh + Sliding Session).
+     * Access Token과 함께 Refresh Token도 새 만료시각으로 재발급하여, 활동이 이어지는 한 세션이 연장된다.
      */
-    @Transactional
-    public LoginRes refresh(String refreshToken) {
-        if (refreshToken == null || !tokenProvider.validateToken(refreshToken)) {
-            throw new BadCredentialsException("리프레시 토큰이 만료되었거나 유효하지 않습니다.");
+    public AuthResult refresh(String refreshToken) {
+        if (!StringUtils.hasText(refreshToken)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
-        Long userId = tokenProvider.getUserId(refreshToken);
-        String jti = tokenProvider.getJti(refreshToken);
+        Claims claims;
+        try {
+            claims = tokenProvider.parseClaims(refreshToken, TokenType.REFRESH);
+        } catch (ExpiredJwtException e) {
+            throw new BusinessException(ErrorCode.REFRESH_EXPIRED);
+        } catch (JwtException | IllegalArgumentException e) {
+            log.warn("유효하지 않은 Refresh Token: {}", e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        Long userId = Long.parseLong(claims.getSubject());
+        String jti = claims.getId();
 
         // 멀티 로그인 여부 검사 (Redis의 활성 JTI 확인)
-        if (!redisTokenService.isLatestJti(userId, jti)) {
-            log.warn("Refresh 차단 - 멀티 로그인 감지: userId={}, jti={}", userId, jti);
-            throw new BadCredentialsException("MULTI_LOGIN_DETECTED: 다른 브라우저에서 로그인되어 세션이 차단되었습니다.");
+        switch (redisTokenService.checkJti(userId, jti)) {
+            case MISMATCH -> throw new BusinessException(ErrorCode.MULTI_LOGIN_DETECTED);
+            case NOT_FOUND -> throw new BusinessException(ErrorCode.SESSION_NOT_FOUND);
+            case MATCH -> { }
         }
 
         AppUser user = appUserMapper.findById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("사용자 정보를 찾을 수 없습니다: " + userId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.SESSION_NOT_FOUND));
 
-        UserPrincipal principal = UserPrincipal.from(user, jti);
-        String newAccessToken = tokenProvider.generateAccessToken(principal, jti);
-
-        // 활동 중인 세션 유지를 위해 Redis TTL 갱신 (Sliding Session)
-        long ttlMillis = Math.max(tokenProvider.getRefreshTokenExpiration(), 60000);
-        redisTokenService.saveActiveJti(user.getUserId(), jti, Duration.ofMillis(ttlMillis));
+        AuthResult result = issueTokens(user, jti);
 
         log.info("토큰 갱신(Refresh) 성공: userId={}, username={}, jti={}", userId, user.getUsername(), jti);
+        return result;
+    }
 
+    /**
+     * 현재 세션 정보와 남은 수명 조회
+     */
+    public LoginRes getMe(UserPrincipal principal) {
+        long accessRemain = Math.max(0,
+                Duration.between(Instant.now(), principal.getAccessTokenExpiresAt()).toMillis());
+        long refreshRemain = redisTokenService.getRemainingTtlMillis(principal.getUserId());
+        return toLoginRes(principal, accessRemain, refreshRemain);
+    }
+
+    /**
+     * 로그아웃: Refresh Token의 jti가 현재 활성 세션일 때만 Redis에서 제거한다.
+     * (이미 다른 곳에서 새로 로그인된 경우, 이전 세션의 로그아웃이 새 세션을 끊지 않도록)
+     */
+    public void logout(String refreshToken) {
+        if (!StringUtils.hasText(refreshToken)) {
+            return;
+        }
+        try {
+            Claims claims = tokenProvider.parseClaims(refreshToken, TokenType.REFRESH);
+            Long userId = Long.parseLong(claims.getSubject());
+            if (redisTokenService.checkJti(userId, claims.getId()) == RedisTokenService.JtiStatus.MATCH) {
+                redisTokenService.removeActiveJti(userId);
+                log.info("로그아웃 완료: userId={}", userId);
+            }
+        } catch (JwtException | IllegalArgumentException e) {
+            // 만료/위조 토큰: 제거할 활성 세션이 없으므로 쿠키 삭제만 진행
+            log.debug("로그아웃 시 Refresh Token 무시: {}", e.getMessage());
+        }
+    }
+
+    private AuthResult issueTokens(AppUser user, String jti) {
+        UserPrincipal principal = UserPrincipal.from(user, jti);
+        String accessToken = tokenProvider.generateAccessToken(principal, jti);
+        String refreshToken = tokenProvider.generateRefreshToken(user.getUserId(), jti);
+
+        // Redis TTL = Refresh Token 수명 (로그인 시 등록, 갱신 시 연장)
+        long refreshExpiration = tokenProvider.getRefreshTokenExpiration();
+        redisTokenService.saveActiveJti(user.getUserId(), jti, Duration.ofMillis(refreshExpiration));
+
+        LoginRes loginRes = toLoginRes(principal, tokenProvider.getAccessTokenExpiration(), refreshExpiration);
+        return new AuthResult(loginRes, accessToken, refreshToken);
+    }
+
+    private LoginRes toLoginRes(UserPrincipal principal, long accessTokenExpiresIn, long refreshTokenExpiresIn) {
         return new LoginRes(
                 principal.getUserId(),
                 principal.getUsername(),
@@ -106,18 +145,9 @@ public class AuthService {
                 principal.getCompanyId(),
                 principal.getDeptId(),
                 principal.getRoles(),
-                jti,
-                newAccessToken,
-                tokenProvider.getAccessTokenExpiration(),
-                refreshToken,
-                tokenProvider.getRefreshTokenExpiration()
+                principal.getJti(),
+                accessTokenExpiresIn,
+                refreshTokenExpiresIn
         );
-    }
-
-    public void logout(Long userId) {
-        if (userId != null) {
-            redisTokenService.removeActiveJti(userId);
-            log.info("로그아웃 완료: userId={}", userId);
-        }
     }
 }

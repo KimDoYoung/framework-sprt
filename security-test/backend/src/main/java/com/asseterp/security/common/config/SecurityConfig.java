@@ -1,9 +1,11 @@
 package com.asseterp.security.common.config;
 
+import com.asseterp.security.common.error.ErrorCode;
 import com.asseterp.security.common.jwt.JwtAccessDeniedHandler;
 import com.asseterp.security.common.jwt.JwtAuthenticationEntryPoint;
 import com.asseterp.security.common.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -68,7 +70,8 @@ public class SecurityConfig {
                         // 인증 관련 공개 API
                         .requestMatchers(
                                 "/api/auth/login",
-                                "/api/auth/refresh"
+                                "/api/auth/refresh",
+                                "/api/auth/logout"
                         ).permitAll()
                         // 나머지 모든 요청은 인증 필요
                         .anyRequest().authenticated()
@@ -78,6 +81,17 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * JwtAuthenticationFilter는 @Component라 서블릿 필터로도 자동 등록된다.
+     * Security 필터 체인에서만 동작하도록 서블릿 컨테이너 등록은 비활성화한다.
+     */
+    @Bean
+    public FilterRegistrationBean<JwtAuthenticationFilter> jwtAuthenticationFilterRegistration(JwtAuthenticationFilter filter) {
+        FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -85,6 +99,7 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of("http://localhost:5173", "http://localhost:8080", "http://localhost:8082"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(List.of(ErrorCode.AUTH_ERROR_HEADER));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

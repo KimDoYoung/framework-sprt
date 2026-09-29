@@ -47,6 +47,23 @@ interface MainPageProps {
   onLogout: () => void;
 }
 
+// 화면 표시용 설정 수명 (서버 jwt.access-token-expiration / jwt.refresh-token-expiration)
+const ACCESS_LIFETIME_SEC = 10;
+const REFRESH_LIFETIME_SEC = 60;
+
+interface TokenExpiry {
+  accessAt: number;
+  refreshAt: number;
+}
+
+// 서버가 내려준 "남은 시간(ms)"을 클라이언트 시계 기준 만료 시각으로 변환 (서버와의 시계 오차 영향 없음)
+const toExpiry = (u: User): TokenExpiry => {
+  const now = Date.now();
+  return { accessAt: now + u.accessTokenExpiresIn, refreshAt: now + u.refreshTokenExpiresIn };
+};
+
+const remainSec = (at: number, now: number) => Math.max(0, Math.ceil((at - now) / 1000));
+
 interface PingLogItem {
   id: number;
   time: string;
@@ -64,9 +81,11 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
   const [refreshLoading, setRefreshLoading] = useState(false);
   const [sessionAlert, setSessionAlert] = useState<{ type: 'success' | 'info' | 'warning' | 'error'; message: string; description?: string } | null>(null);
 
-  // 토큰 타이머 (Access Token: 10초, Refresh Token: 60초)
-  const [accessRemainSec, setAccessRemainSec] = useState<number>(10);
-  const [refreshRemainSec, setRefreshRemainSec] = useState<number>(60);
+  // 토큰 타이머: 서버 응답 기준 만료 시각에서 매초 남은 시간을 계산
+  const [expiry, setExpiry] = useState<TokenExpiry>(() => toExpiry(user));
+  const [now, setNow] = useState<number>(Date.now());
+  const accessRemainSec = remainSec(expiry.accessAt, now);
+  const refreshRemainSec = remainSec(expiry.refreshAt, now);
 
   // 서버 통신 테스트 상태
   const [pingLoading, setPingLoading] = useState(false);
@@ -80,35 +99,29 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
   } | null>(null);
   const [pingLogs, setPingLogs] = useState<PingLogItem[]>([]);
 
-  const resetTimers = () => {
-    setAccessRemainSec(10);
-    setRefreshRemainSec(60);
+  const applySession = (u: User) => {
+    setCurrentUser(u);
+    setExpiry(toExpiry(u));
+    setNow(Date.now());
   };
 
   useEffect(() => {
-    // 1초마다 타이머 감소
-    const interval = window.setInterval(() => {
-      setAccessRemainSec(prev => (prev > 0 ? prev - 1 : 0));
-      setRefreshRemainSec(prev => {
-        if (prev <= 1) {
-          // 1분(60초) 모두 경과 시 자동 세션 만료 처리 -> 로그인 화면 이동
-          notifySessionTerminated('EXPIRED');
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
+    const interval = window.setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
+    // 세션(Refresh Token) 수명이 모두 경과하면 자동 세션 만료 처리 -> 로그인 화면 이동
+    if (refreshRemainSec === 0) {
+      notifySessionTerminated('EXPIRED');
+    }
+  }, [refreshRemainSec]);
+
+  useEffect(() => {
     // Axios Silent Refresh 발생 시 리스너
     const unsubscribe = onTokenRefresh((refreshedData: User) => {
-      setAccessRemainSec(10);
-      setRefreshRemainSec(60);
       if (refreshedData) {
-        setCurrentUser(refreshedData);
+        applySession(refreshedData);
       }
       message.info('🔄 Access Token(10초) 만료 -> Refresh Token으로 자동 갱신되었습니다!');
       setSessionAlert({
@@ -140,17 +153,16 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
   }, []);
 
   const handleApiError = (err: any) => {
-    const errorMsg = err.response?.data?.message || err.message || '요청 처리 실패';
-    const authError = err.response?.headers?.['x-auth-error'] || err.response?.data?.data;
+    // 401(세션 종료)은 axios 인터셉터가 이미 로그인 화면 전환을 처리함
+    if (err.response?.status === 401) return;
+    message.error(err.response?.data?.message || err.message || '요청 처리 실패');
+  };
 
-    if (err.response?.status === 401) {
-      if (authError === 'MULTI_LOGIN_DETECTED') {
-        notifySessionTerminated('MULTI_LOGIN');
-      } else {
-        notifySessionTerminated('EXPIRED');
-      }
-    } else {
-      message.error(errorMsg);
+  const handleDownload = async (record: FileItem) => {
+    try {
+      await fileApi.download(record.fileId, record.originalFilename);
+    } catch (err: any) {
+      handleApiError(err);
     }
   };
 
@@ -227,7 +239,7 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
     try {
       const res = await authApi.getMe();
       if (res.success && res.data) {
-        setCurrentUser(res.data);
+        applySession(res.data);
         message.success('현재 세션이 정상 유지 중입니다.');
         setSessionAlert({
           type: 'success',
@@ -247,8 +259,7 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
     try {
       const res = await authApi.refresh();
       if (res.success && res.data) {
-        setCurrentUser(res.data);
-        resetTimers();
+        applySession(res.data);
         message.success('수동 토큰 갱신(Refresh) 성공! (Access Token 10초 리셋)');
         setSessionAlert({
           type: 'success',
@@ -323,8 +334,7 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
           type="primary"
           icon={<DownloadOutlined />}
           size="small"
-          href={fileApi.getDownloadUrl(record.fileId)}
-          target="_blank"
+          onClick={() => handleDownload(record)}
         >
           다운로드
         </Button>
@@ -370,13 +380,13 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
                 <ClockCircleOutlined style={{ fontSize: 24, color: accessRemainSec > 0 ? '#1890ff' : '#ff4d4f' }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <Text strong>Access Token (수명: 10초)</Text>
+                    <Text strong>Access Token (수명: {ACCESS_LIFETIME_SEC}초)</Text>
                     <Text type={accessRemainSec > 0 ? 'secondary' : 'danger'}>
                       {accessRemainSec > 0 ? `${accessRemainSec}초 남음` : '만료됨 (Refresh로 즉시 유지)'}
                     </Text>
                   </div>
                   <Progress
-                    percent={accessRemainSec * 10}
+                    percent={Math.round((accessRemainSec / ACCESS_LIFETIME_SEC) * 100)}
                     status={accessRemainSec > 0 ? 'active' : 'exception'}
                     showInfo={false}
                     strokeColor={accessRemainSec > 3 ? '#1890ff' : '#faad14'}
@@ -390,13 +400,13 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
                 <ThunderboltOutlined style={{ fontSize: 24, color: refreshRemainSec > 0 ? '#52c41a' : '#ff4d4f' }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <Text strong>Refresh Token (최대 유지: 60초)</Text>
+                    <Text strong>Refresh Token (유휴 유지: {REFRESH_LIFETIME_SEC}초)</Text>
                     <Text type={refreshRemainSec > 0 ? 'secondary' : 'danger'}>
                       {refreshRemainSec > 0 ? `${refreshRemainSec}초 남음` : '완전 만료'}
                     </Text>
                   </div>
                   <Progress
-                    percent={Math.round((refreshRemainSec / 60) * 100)}
+                    percent={Math.round((refreshRemainSec / REFRESH_LIFETIME_SEC) * 100)}
                     status={refreshRemainSec > 0 ? 'normal' : 'exception'}
                     showInfo={false}
                     strokeColor="#52c41a"

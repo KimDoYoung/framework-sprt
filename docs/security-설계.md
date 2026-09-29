@@ -63,6 +63,7 @@ JWT의 `sub` 클레임은 `user_id`를 의미하며, RBAC 권한 제어와 세�
   "iat": 1790654992,
   "exp": 1790655002,
   "jti": "18bb2206-01c8-4630-bc18-86fea8f82daf",
+  "typ": "ACCESS",
 
   "username": "admin",
   "name": "시스템 관리자",
@@ -76,12 +77,17 @@ JWT의 `sub` 클레임은 `user_id`를 의미하며, RBAC 권한 제어와 세�
 
 ### 3.2 이중 쿠키 정책
 
-| 쿠키 이름 | 유효 시간 | 보안 속성 | 용도 |
-|:---|:---|:---|:---|
-| `ACCESS_TOKEN` | **10초** (`jwt.access-token-expiration`) | `HttpOnly`, `SameSite=Lax`, `Path=/` | 모든 보호된 API 인가에 사용 |
-| `REFRESH_TOKEN` | **60초** (`jwt.refresh-token-expiration`) | `HttpOnly`, `SameSite=Lax`, `Path=/` | Access Token 만료 시 재발급에 사용 |
+| 쿠키 이름 | 토큰 수명 (JWT `exp`) | 쿠키 Max-Age | 보안 속성 | 용도 |
+|:---|:---|:---|:---|:---|
+| `ACCESS_TOKEN` | **10초** (`jwt.access-token-expiration`) | 60초 | `HttpOnly`, `SameSite=Lax`, `Path={context}/` | 모든 보호된 API 인가에 사용 |
+| `REFRESH_TOKEN` | **60초** (`jwt.refresh-token-expiration`) | 60초 | `HttpOnly`, `SameSite=Lax`, `Path={context}/api/auth` | 토큰 재발급·로그아웃에만 사용 |
 
-> **보안 이점**: 토큰이 자바스크립트 `document.cookie`나 `localStorage`에 노출되지 않으므로 XSS(Cross-Site Scripting) 공격으로 인한 토큰 탈취가 불가능하다.
+- **쿠키 Max-Age를 Refresh 수명(60초)으로 맞추는 이유**: Access Token의 JWT가 만료돼도 쿠키는 서버로 전송되어, 서버가 `TOKEN_EXPIRED`/`MULTI_LOGIN_DETECTED`를 구분해 응답할 수 있다. 토큰 자체의 유효성은 JWT `exp`로 검증한다.
+- **토큰 타입 구분**: 두 토큰 모두 `typ` 클레임(`ACCESS`/`REFRESH`)을 가지며, Refresh Token을 Access Token 자리에 사용하면 `INVALID_TOKEN`으로 거부된다.
+- **응답 본문에 토큰 미포함**: 로그인/갱신 응답은 사용자 정보와 남은 수명(`accessTokenExpiresIn`, `refreshTokenExpiresIn`, ms)만 반환하고, 토큰 값은 쿠키로만 전달한다.
+- **Secure 속성**: `jwt.cookie-secure`(기본 `false`)로 제어하며, 운영(HTTPS)에서는 `true`로 설정한다.
+
+> **보안 이점**: 토큰이 자바스크립트 `document.cookie`나 `localStorage`, 응답 본문 어디에도 노출되지 않으므로 XSS로 토큰 값을 탈취할 수 없다. (단, XSS가 발생하면 탈취 없이도 사용자 권한으로 요청을 보낼 수 있으므로 XSS 방어 자체는 별도로 필요하다.)
 
 ---
 
@@ -99,8 +105,25 @@ JWT의 `sub` 클레임은 `user_id`를 의미하며, RBAC 권한 제어와 세�
    - Redis에 보관된 활성 `jti`와 비교:
      - **일치**: 정상 처리 (`SecurityContextHolder`에 인증 객체 등록).
      - **불일치**: 다른 기기에서 로그인되었음을 의미하므로 즉시 **401 Unauthorized (`X-Auth-Error: MULTI_LOGIN_DETECTED`)** 로 차단.
+     - **키 없음**: 로그아웃·TTL 만료·Redis 초기화 → **401 (`SESSION_NOT_FOUND`)**.
+     - **Redis 연결 실패**: 인증 여부를 판단할 수 없으므로 **503 (`SESSION_STORE_UNAVAILABLE`)**.
 4. **리프레시 요청 시 (`POST /api/auth/refresh`)**:
-   - `REFRESH_TOKEN`의 `jti` 역시 Redis의 활성 `jti`와 일치해야만 재발급을 허용. 다른 브라우저에서 로그인된 경우 갱신도 거부됨.
+   - `REFRESH_TOKEN`의 `jti` 역시 Redis의 활성 `jti`와 일치해야만 재발급을 허용. 다른 브라우저에서 로그인된 경우 갱신도 **401 (`X-Auth-Error: MULTI_LOGIN_DETECTED`)** 로 거부되어, Access Token이 이미 만료된 뒤에도 프론트엔드가 "동시 접속 차단" 사유를 정확히 안내한다.
+5. **로그아웃 시 (`POST /api/auth/logout`, 인증 불필요)**:
+   - `REFRESH_TOKEN`의 `jti`가 현재 활성 `jti`일 때만 Redis 키를 삭제한다. 이미 다른 곳에서 새로 로그인된 이전 세션이 로그아웃해도 새 세션은 유지된다.
+
+### 3.3.1 인증 에러 코드
+
+401 응답은 `X-Auth-Error` 헤더와 응답 본문 `ApiResponse.code`에 동일한 코드를 담는다 (`common/error/ErrorCode`).
+
+| 코드 | 상황 | 프론트엔드 처리 |
+|:---|:---|:---|
+| `UNAUTHORIZED` | 토큰 쿠키 없음 | Silent Refresh 시도 → 실패 시 로그인 화면 (로그인 상태가 아니었다면 안내 없음) |
+| `TOKEN_EXPIRED` | Access Token 만료 | Silent Refresh 후 원 요청 재시도 |
+| `INVALID_TOKEN` | 서명/발급자/토큰 타입 오류 | Silent Refresh 시도 |
+| `MULTI_LOGIN_DETECTED` | 다른 곳에서 새로 로그인됨 | 즉시 로그인 화면 + ⛔ 동시 접속 차단 안내 |
+| `SESSION_NOT_FOUND` / `REFRESH_EXPIRED` | 세션 없음 / Refresh Token 만료 | 로그인 화면 + ⚠️ 세션 만료 안내 |
+| `LOGIN_FAILED` | 아이디 또는 비밀번호 오류 (구분하지 않음) | 로그인 화면에 메시지 표시 |
 
 ---
 
@@ -127,12 +150,12 @@ sequenceDiagram
     Backend->>Backend: JwtAuthenticationFilter: 만료 감지
     Backend-->>Interceptor: 401 Unauthorized (Header: X-Auth-Error: TOKEN_EXPIRED)
     
-    Note over Interceptor: 인터셉터가 401 및 TOKEN_EXPIRED 감지 후 자동 갱신 트리거
+    Note over Interceptor: 인터셉터가 401 감지 후 자동 갱신 트리거 (MULTI_LOGIN_DETECTED 제외)
     Interceptor->>Backend: POST /api/auth/refresh (REFRESH_TOKEN 쿠키 전송)
     Backend->>Redis: GET security:user:jti:1 == jti_A 검증
     Redis-->>Backend: 검증 일치 (정상 세션)
     Backend->>Redis: TTL 60초 재연장 (Sliding Session)
-    Backend-->>Interceptor: 새 ACCESS_TOKEN(10s) 쿠키 발급 (200 OK)
+    Backend-->>Interceptor: 새 ACCESS_TOKEN(10s) + 새 REFRESH_TOKEN(60s) 쿠키 발급 (200 OK)
     
     Note over Interceptor: 실패했던 원래 API(GET /api/test/ping) 자동 재시도
     Interceptor->>Backend: GET /api/test/ping (새 ACCESS_TOKEN 쿠키 포함)
@@ -197,15 +220,22 @@ VALUES
 이를 차단하기 위해 **Apache Tika (`org.apache.tika:tika-core`)** 를 적용하여 파일의 첫 몇 바이트인 **매직 넘버(Magic Number)** 를 분석, 실제 MIME 타입을 서버에서 강제 판별한다:
 
 ```java
-try (InputStream is = file.getInputStream()) {
-    String detectedMimeType = tika.detect(is, originalFilename);
-    // 선언된 Content-Type과 실제 감지된 MIME Type을 비교 및 검증 기록
+// 파일명 힌트 없이 스트림(매직 넘버)만으로 판별해야 확장자 위장을 잡을 수 있다
+String detectedMimeType = tika.detect(inputStream);
+if (!ALLOWED_TYPES.get(extension).contains(detectedMimeType)) {
+    throw new BusinessException(ErrorCode.INVALID_FILE, ...);   // 400, 저장하지 않음
 }
 ```
 
+- **허용 목록**: 확장자별 허용 MIME 화이트리스트(`FileStorageService.ALLOWED_TYPES`)에 없는 확장자, 또는 내용과 확장자가 일치하지 않는 파일은 저장 전에 거부한다.
+  - 허용 확장자: `jpg, jpeg, png, gif, pdf, txt, csv, xlsx, docx, pptx, xls, doc, ppt, hwp, hwpx, zip`
+  - `tika-core`만 사용하므로 OOXML(docx/xlsx/pptx)은 `application/x-tika-ooxml`/`application/zip`, OLE2(doc/xls/ppt/hwp)는 `application/x-tika-msoffice`로 판별된다. 문서 종류까지 정밀 구분이 필요하면 `tika-parsers-standard-package`를 추가한다.
+- 저장 파일명: `{UUID}.{확장자}` (원본 파일명은 메타데이터로만 보관)
+- 다운로드 Content-Type: 확장자 기준 표준 MIME (`MediaTypeFactory`)
 - 저장소: `${asseterp.base.dir}/uploads`
 - 최대 업로드 크기: 단일 500MB, 전체 500MB (`spring.servlet.multipart.max-file-size=500MB`)
 - 한글 파일명 다운로드 처리: RFC 5987 표준 `Content-Disposition: attachment; filename="..."; filename*=UTF-8''...` 인코딩 지원.
+- 프론트엔드 다운로드는 링크(`href`)가 아닌 axios(`responseType: 'blob'`)로 받아, Access Token 만료 시에도 Silent Refresh가 적용된다.
 
 ---
 
@@ -223,11 +253,13 @@ security-test/
 │       │   │   │   ├── SecurityConfig.java    # SecurityFilterChain, Public 엔드포인트 허용
 │       │   │   │   └── RedisConfig.java       # RedisConnectionFactory (호스트 자동 Fallback)
 │       │   │   ├── jwt/
-│       │   │   │   ├── JwtTokenProvider.java       # 토큰 생성/검증, Claims/JTI 추출
+│       │   │   │   ├── JwtTokenProvider.java       # 토큰 생성/검증(typ 클레임), Claims → Principal 변환
 │       │   │   │   ├── JwtAuthenticationFilter.java# 쿠키 토큰 추출 및 Redis JTI 대조
+│       │   │   │   ├── AuthCookieManager.java      # ACCESS/REFRESH 쿠키 발급·삭제·조회
 │       │   │   │   ├── RedisTokenService.java      # Redis 활성 JTI 등록/조회/삭제
 │       │   │   │   └── JwtAuthenticationEntryPoint.java # 401 응답 및 X-Auth-Error 헤더 출력
-│       │   │   └── dto/ApiResponse.java       # 공통 응답 레코드
+│       │   │   ├── error/                     # ErrorCode, BusinessException, GlobalExceptionHandler, ErrorResponseWriter
+│       │   │   └── dto/ApiResponse.java       # 공통 응답 레코드 (success, code, message, data)
 │       │   └── biz/
 │       │       ├── auth/
 │       │       │   ├── controller/AuthController.java # 로그인, 리프레시, 로그아웃, 내 정보
@@ -293,8 +325,21 @@ cd security-test
    - Axios 인터셉터가 백그라운드에서 `/api/auth/refresh`를 호출하고, 곧바로 Ping 요청을 완수하여 **초록색 배너 `[토큰 자동 갱신 후 성공]`** 과 함께 200 OK가 수신됨을 확인.
 2. **동시 접속 차단**:
    - 일반 창에 로그인된 상태에서 **시크릿 창**을 열어 동일한 `admin / 1111`로 로그인.
-   - 원래 일반 창으로 돌아와 **[서버 통신 테스트]** 버튼을 클릭.
+   - 원래 일반 창으로 돌아와 **[서버 통신 테스트]** 버튼을 클릭 (Access Token 만료 전/후 모두).
    - 이전 창의 세션이 즉시 무효화되어 로그인 화면으로 튕기며 **`⛔ 동시 접속 차단 안내`** 빨간색 경고가 나타남을 확인.
+   - 이전 창에서 로그아웃해도 시크릿 창의 세션은 유지됨을 확인.
 3. **1분 세션 완전 만료**:
    - 로그인 후 아무런 버튼도 누르지 않고 60초 동안 대기.
    - Refresh Token 타이머가 0이 되는 순간 자동으로 로그인 화면으로 이동하며 **`⚠️ 세션 만료 안내`** 노란색 경고가 나타남을 확인.
+4. **Sliding Session**:
+   - 로그인 후 20~30초 간격으로 **[서버 통신 테스트]** 를 반복 클릭하여 60초가 넘어도 세션이 유지되고, 갱신 때마다 Refresh 타이머가 60초로 초기화됨을 확인.
+5. **파일 위변조 차단**:
+   - `.exe` 파일의 확장자를 `.png`로 바꿔 업로드하면 `파일 내용이 확장자(.png)와 일치하지 않습니다` 오류로 거부됨을 확인.
+
+### 7.3 자동 테스트
+
+```bash
+cd security-test/backend && gradle test
+```
+- `JwtTokenProviderTest`: 토큰 파싱, Access/Refresh 토큰 타입 교차 사용 거부, 만료 판정
+- `FileStorageServiceTest`: 매직 넘버 기반 허용/거부 (PNG, 위장 EXE, 한글 CSV, OOXML)

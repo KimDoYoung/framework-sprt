@@ -6,8 +6,10 @@ export interface User {
   deptId: string;
   roles: string[];
   jti: string;
-  accessToken?: string;
-  accessTokenExpiresIn?: number;
+  /** 응답 시점 기준 Access Token 남은 수명(ms) */
+  accessTokenExpiresIn: number;
+  /** 응답 시점 기준 세션(Refresh Token) 남은 수명(ms) */
+  refreshTokenExpiresIn: number;
 }
 
 export interface FileItem {
@@ -23,6 +25,8 @@ export interface FileItem {
 
 export interface ApiResponse<T> {
   success: boolean;
+  /** 성공 시 'OK', 실패 시 에러 코드 (예: LOGIN_FAILED, MULTI_LOGIN_DETECTED) */
+  code: string;
   message: string;
   data: T;
 }

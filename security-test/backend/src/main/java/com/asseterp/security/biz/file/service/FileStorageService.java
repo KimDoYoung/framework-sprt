@@ -2,6 +2,8 @@ package com.asseterp.security.biz.file.service;
 
 import com.asseterp.security.biz.auth.dto.UserPrincipal;
 import com.asseterp.security.biz.file.dto.FileItemDto;
+import com.asseterp.security.common.error.BusinessException;
+import com.asseterp.security.common.error.ErrorCode;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
@@ -22,9 +24,40 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static java.util.Map.entry;
+
 @Slf4j
 @Service
 public class FileStorageService {
+
+    // tika-core 매직 넘버 판별 결과 기준. OOXML(docx/xlsx/pptx)은 컨테이너 파서 없이 zip 계열로,
+    // OLE2(doc/xls/ppt/hwp)는 x-tika-msoffice로 판별되므로 해당 값도 허용한다.
+    private static final Set<String> OOXML_TYPES = Set.of(
+            "application/x-tika-ooxml", "application/zip");
+    private static final Set<String> OLE2_TYPES = Set.of(
+            "application/x-tika-msoffice", "application/vnd.ms-excel", "application/msword",
+            "application/vnd.ms-powerpoint", "application/x-hwp");
+    private static final Set<String> TEXT_TYPES = Set.of("text/plain", "text/csv");
+
+    /** 허용 확장자 → 매직 넘버로 판별된 실제 MIME 타입 화이트리스트 */
+    private static final Map<String, Set<String>> ALLOWED_TYPES = Map.ofEntries(
+            entry("jpg", Set.of("image/jpeg")),
+            entry("jpeg", Set.of("image/jpeg")),
+            entry("png", Set.of("image/png")),
+            entry("gif", Set.of("image/gif")),
+            entry("pdf", Set.of("application/pdf")),
+            entry("txt", TEXT_TYPES),
+            entry("csv", TEXT_TYPES),
+            entry("xlsx", OOXML_TYPES),
+            entry("docx", OOXML_TYPES),
+            entry("pptx", OOXML_TYPES),
+            entry("xls", OLE2_TYPES),
+            entry("doc", OLE2_TYPES),
+            entry("ppt", OLE2_TYPES),
+            entry("hwp", OLE2_TYPES),
+            entry("hwpx", Set.of("application/zip")),
+            entry("zip", Set.of("application/zip"))
+    );
 
     @Value("${asseterp.upload.dir:/home/kdy987/tmp/asseterp-data/uploads}")
     private String uploadDir;
@@ -57,22 +90,26 @@ public class FileStorageService {
     public FileItemDto storeFile(MultipartFile file, UserPrincipal principal) throws IOException {
         String originalFilename = file.getOriginalFilename();
         if (originalFilename == null || originalFilename.isBlank()) {
-            throw new IllegalArgumentException("파일명이 올바르지 않습니다.");
+            throw new BusinessException(ErrorCode.INVALID_FILE, "파일명이 올바르지 않습니다.");
+        }
+        if (file.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_FILE, "빈 파일은 업로드할 수 없습니다.");
         }
 
-        // 요구사항 9: Apache Tika 기반 Magic Number MIME Type 검사
+        // 요구사항 9: Apache Tika 기반 Magic Number MIME Type 검사 (위변조 파일은 저장 전에 거부)
+        String extension = extractExtension(originalFilename);
         String detectedMimeType;
         try (InputStream is = file.getInputStream()) {
-            detectedMimeType = tika.detect(is, originalFilename);
+            detectedMimeType = validateFileType(extension, is);
         }
 
         String declaredContentType = file.getContentType();
-        log.info("파일 업로드 검사 - 원본명: {}, 선언된 Content-Type: {}, Tika 감지 MIME Type: {}, 크기: {} bytes",
+        log.info("파일 업로드 검사 통과 - 원본명: {}, 선언된 Content-Type: {}, Tika 감지 MIME Type: {}, 크기: {} bytes",
                 originalFilename, declaredContentType, detectedMimeType, file.getSize());
 
-        // 고유 저장 파일명 생성
+        // 저장 파일명은 UUID + 확장자만 사용 (원본 파일명의 특수문자/경로 조작 배제)
         String fileId = UUID.randomUUID().toString();
-        String storedFilename = fileId + "_" + Paths.get(originalFilename).getFileName().toString();
+        String storedFilename = fileId + "." + extension;
         Path targetLocation = uploadPath.resolve(storedFilename);
 
         // 실제 파일 디스크 저장
@@ -97,29 +134,56 @@ public class FileStorageService {
         return fileItem;
     }
 
-    public Resource loadFileAsResource(String fileId) {
-        FileItemDto meta = fileMetadataStore.get(fileId);
-        if (meta == null) {
-            throw new NoSuchElementException("해당 파일 정보를 찾을 수 없습니다: " + fileId);
+    /**
+     * 확장자가 허용 목록에 있고, 파일 내용(매직 넘버)으로 판별한 MIME 타입이 그 확장자와 일치하는지 검사한다.
+     * 파일명 힌트 없이 스트림만으로 판별해야 확장자 위장(예: .exe → .png)을 잡을 수 있다.
+     *
+     * @return 감지된 MIME 타입
+     */
+    String validateFileType(String extension, InputStream content) throws IOException {
+        Set<String> allowedTypes = ALLOWED_TYPES.get(extension);
+        if (allowedTypes == null) {
+            throw new BusinessException(ErrorCode.INVALID_FILE,
+                    "허용되지 않는 확장자입니다: ." + extension + " (허용: " + new TreeSet<>(ALLOWED_TYPES.keySet()) + ")");
         }
+
+        String detectedMimeType = tika.detect(content);
+        if (!allowedTypes.contains(detectedMimeType)) {
+            log.warn("파일 위변조 의심 - 확장자: {}, 감지된 MIME: {}", extension, detectedMimeType);
+            throw new BusinessException(ErrorCode.INVALID_FILE,
+                    "파일 내용이 확장자(." + extension + ")와 일치하지 않습니다. (감지된 형식: " + detectedMimeType + ")");
+        }
+        return detectedMimeType;
+    }
+
+    private String extractExtension(String filename) {
+        int dot = filename.lastIndexOf('.');
+        if (dot < 0 || dot == filename.length() - 1) {
+            throw new BusinessException(ErrorCode.INVALID_FILE, "확장자가 없는 파일은 업로드할 수 없습니다.");
+        }
+        return filename.substring(dot + 1).toLowerCase(Locale.ROOT);
+    }
+
+    public Resource loadFileAsResource(String fileId) {
+        FileItemDto meta = getFileMetadata(fileId);
 
         try {
             Path filePath = uploadPath.resolve(meta.storedFilename()).normalize();
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists() && resource.isReadable()) {
                 return resource;
-            } else {
-                throw new RuntimeException("파일을 읽을 수 없거나 파일이 존재하지 않습니다: " + meta.storedFilename());
             }
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND,
+                    "파일을 읽을 수 없거나 파일이 존재하지 않습니다: " + meta.originalFilename());
         } catch (MalformedURLException e) {
-            throw new RuntimeException("파일 경로 오류: " + meta.storedFilename(), e);
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND, "파일 경로 오류: " + meta.originalFilename());
         }
     }
 
     public FileItemDto getFileMetadata(String fileId) {
         FileItemDto meta = fileMetadataStore.get(fileId);
         if (meta == null) {
-            throw new NoSuchElementException("파일 정보를 찾을 수 없습니다: " + fileId);
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND, "파일 정보를 찾을 수 없습니다: " + fileId);
         }
         return meta;
     }

@@ -1,11 +1,20 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
+// 상대 경로: WAR 컨텍스트(/security-test/) 하위 배포와 Vite 개발 서버(/) 모두에서 동작
+export const API_BASE_URL = 'api';
+
 export const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   withCredentials: true, // 쿠키 자동 전송 (요구사항 1)
   headers: {
     'Content-Type': 'application/json'
   }
+});
+
+// 인터셉터를 거치지 않는 토큰 갱신 전용 클라이언트 (갱신 실패가 다시 갱신을 유발하지 않도록)
+const refreshClient = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true
 });
 
 // 토큰 갱신 이벤트 리스너 (UI 상태 업데이트용)
@@ -37,6 +46,14 @@ export const notifySessionTerminated = (reason: SessionTerminateReason) => {
   sessionTerminateListeners.forEach(listener => listener(reason));
 };
 
+/** 서버 에러 코드: X-Auth-Error 헤더 우선, 없으면 ApiResponse.code */
+const getErrorCode = (error: AxiosError<any>): string | undefined =>
+  error.response?.headers?.['x-auth-error'] || error.response?.data?.code;
+
+const notifyByErrorCode = (code: string | undefined) => {
+  notifySessionTerminated(code === 'MULTI_LOGIN_DETECTED' ? 'MULTI_LOGIN' : 'EXPIRED');
+};
+
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (value?: any) => void;
@@ -66,7 +83,7 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const authError = error.response.headers?.['x-auth-error'] || error.response.data?.data;
+    const authError = getErrorCode(error);
     const requestUrl = originalRequest.url || '';
 
     // 1. 중복 로그인 차단된 경우 (MULTI_LOGIN_DETECTED): 재발급하지 않고 즉시 로그인 페이지로 유도
@@ -75,15 +92,18 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 2. 로그인 또는 리프레시 요청 자체가 401인 경우: 무한 루프 방지 및 세션 만료 통지
-    if (requestUrl.includes('/auth/login') || requestUrl.includes('/auth/refresh')) {
-      if (requestUrl.includes('/auth/refresh')) {
-        notifySessionTerminated('EXPIRED');
-      }
+    // 2. 수동 리프레시 요청 자체가 401인 경우: 세션 종료 통지 (무한 루프 방지)
+    if (requestUrl.includes('/auth/refresh')) {
+      notifyByErrorCode(authError);
       return Promise.reject(error);
     }
 
-    // 3. 이미 재시도한 요청이면 중복 시도 방지
+    // 3. 로그인/로그아웃의 401은 호출한 화면에서 처리 (예: LOGIN_FAILED 메시지 표시)
+    if (requestUrl.includes('/auth/login') || requestUrl.includes('/auth/logout')) {
+      return Promise.reject(error);
+    }
+
+    // 4. 이미 재시도한 요청이면 중복 시도 방지
     if (originalRequest._retry) {
       notifySessionTerminated('EXPIRED');
       return Promise.reject(error);
@@ -101,8 +121,8 @@ apiClient.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      // Refresh Token으로 새 Access Token 쿠키 재발급 요청
-      const refreshResponse = await axios.post('/api/auth/refresh', {}, { withCredentials: true });
+      // Refresh Token으로 새 Access/Refresh Token 쿠키 재발급 요청
+      const refreshResponse = await refreshClient.post('auth/refresh');
 
       if (refreshResponse.data?.success) {
         // 리스너 호출 (UI에 자동 갱신 알림)
@@ -117,12 +137,7 @@ apiClient.interceptors.response.use(
       }
     } catch (refreshErr: any) {
       processQueue(refreshErr);
-      const refreshAuthError = refreshErr.response?.headers?.['x-auth-error'] || refreshErr.response?.data?.data;
-      if (refreshAuthError === 'MULTI_LOGIN_DETECTED') {
-        notifySessionTerminated('MULTI_LOGIN');
-      } else {
-        notifySessionTerminated('EXPIRED');
-      }
+      notifyByErrorCode(getErrorCode(refreshErr));
       return Promise.reject(refreshErr);
     } finally {
       isRefreshing = false;
