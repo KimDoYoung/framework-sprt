@@ -15,8 +15,9 @@ import java.time.Duration;
 /**
  * 인증 토큰 쿠키(ACCESS_TOKEN / REFRESH_TOKEN)의 발급·삭제·조회를 담당한다.
  * <ul>
- *   <li>두 쿠키 모두 Refresh Token 수명만큼 유지한다. Access Token이 만료돼도 쿠키는 남아 서버가
- *       TOKEN_EXPIRED / MULTI_LOGIN_DETECTED를 판정할 수 있게 하기 위함이다(토큰 자체의 만료는 JWT exp로 검증).</li>
+ *   <li>두 쿠키 모두 Refresh Token 수명 + 여유시간(jwt.cookie.max-age-margin)만큼 유지한다.
+ *       토큰이 만료돼도 쿠키가 남아 서버가 TOKEN_EXPIRED / MULTI_LOGIN_DETECTED / REFRESH_EXPIRED를 판정하고,
+ *       세션 만료를 누구의 것인지 감사 로그에 기록할 수 있게 하기 위함이다 (토큰 자체의 만료는 JWT exp로 검증).</li>
  *   <li>REFRESH_TOKEN은 {contextPath}{jwt.cookie.refresh-path} 경로에만 전송되도록 Path를 제한한다.</li>
  * </ul>
  */
@@ -28,7 +29,7 @@ public class AuthCookieManager {
 
     public void writeTokens(HttpServletRequest request, HttpServletResponse response,
                             String accessToken, String refreshToken) {
-        Duration maxAge = Duration.ofMillis(jwtProperties.refreshTokenExpiration());
+        Duration maxAge = Duration.ofMillis(jwtProperties.refreshTokenExpiration()).plus(cookie().maxAgeMargin());
         addCookie(response, cookie().accessTokenName(), accessToken, accessPath(request), maxAge);
         addCookie(response, cookie().refreshTokenName(), refreshToken, refreshPath(request), maxAge);
     }

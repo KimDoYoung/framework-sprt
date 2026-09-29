@@ -92,13 +92,20 @@ public class JwtTokenProvider {
                 .parseSignedClaims(token)
                 .getPayload();
 
-        if (!expectedType.name().equals(claims.get(CLAIM_TOKEN_TYPE, String.class))) {
+        if (!isTokenType(claims, expectedType)) {
             throw new UnsupportedJwtException("토큰 타입이 올바르지 않습니다. expected=" + expectedType);
         }
         return claims;
     }
 
     @SuppressWarnings("unchecked")
+    /**
+     * 토큰 종류(typ) 확인. 만료 예외(ExpiredJwtException)의 Claims처럼 parseClaims를 거치지 않은 Claims 검사용.
+     */
+    public boolean isTokenType(Claims claims, TokenType type) {
+        return type.name().equals(claims.get(CLAIM_TOKEN_TYPE, String.class));
+    }
+
     public UserPrincipal toUserPrincipal(Claims claims) {
         List<String> roles = claims.get("roles", List.class);
 

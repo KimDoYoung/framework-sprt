@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Layout,
   Card,
@@ -84,6 +84,8 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
   const [now, setNow] = useState<number>(Date.now());
   const accessRemainSec = remainSec(expiry.accessAt, now);
   const refreshRemainSec = remainSec(expiry.refreshAt, now);
+  // 세션 만료 확인 요청을 한 번만 보내기 위한 플래그 (세션이 갱신되면 초기화)
+  const expiryCheckedRef = useRef(false);
   // 서버 설정 수명 (jwt.access-token-expiration / jwt.refresh-token-expiration)
   const accessLifetimeSec = Math.round(currentUser.accessTokenLifetime / 1000);
   const refreshLifetimeSec = Math.round(currentUser.refreshTokenLifetime / 1000);
@@ -101,6 +103,7 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
   const [pingLogs, setPingLogs] = useState<PingLogItem[]>([]);
 
   const applySession = (u: User) => {
+    expiryCheckedRef.current = false;
     setCurrentUser(u);
     setExpiry(toExpiry(u));
     setNow(Date.now());
@@ -112,10 +115,23 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
   }, []);
 
   useEffect(() => {
-    // 세션(Refresh Token) 수명이 모두 경과하면 자동 세션 만료 처리 -> 로그인 화면 이동
-    if (refreshRemainSec === 0) {
-      notifySessionTerminated('EXPIRED');
-    }
+    // 세션(Refresh Token) 수명이 모두 경과하면 서버에 갱신을 한 번 요청해 만료를 확인시킨다.
+    //  - 서버: 만료 판정 + 감사 로그(REFRESH_REJECTED) 기록 → 401 → 인터셉터가 로그인 화면으로 이동
+    //  - 다른 탭에서 세션이 연장되어 있었다면 갱신에 성공하고 그대로 이어서 사용
+    if (refreshRemainSec !== 0 || expiryCheckedRef.current) return;
+    expiryCheckedRef.current = true;
+    authApi.refresh()
+      .then(res => {
+        if (res.success && res.data) {
+          applySession(res.data);
+        } else {
+          notifySessionTerminated('EXPIRED');
+        }
+      })
+      .catch(err => {
+        // 401은 인터셉터가 세션 종료를 통지함. 서버 무응답(네트워크 오류 등)이면 여기서 종료 처리
+        if (!err.response) notifySessionTerminated('EXPIRED');
+      });
   }, [refreshRemainSec]);
 
   useEffect(() => {

@@ -102,6 +102,10 @@ public class AuthService {
         try {
             claims = tokenProvider.parseClaims(refreshToken, TokenType.REFRESH);
         } catch (ExpiredJwtException e) {
+            // 서명이 검증된 만료 토큰이므로 Claims의 사용자로 만료를 기록한다 (쿠키 여유시간 jwt.cookie.max-age-margin 동안 도착)
+            if (tokenProvider.isTokenType(e.getClaims(), TokenType.REFRESH)) {
+                auditRefreshRejected(Long.parseLong(e.getClaims().getSubject()), ErrorCode.REFRESH_EXPIRED);
+            }
             throw new BusinessException(ErrorCode.REFRESH_EXPIRED);
         } catch (JwtException | IllegalArgumentException e) {
             log.warn("유효하지 않은 Refresh Token: {}", e.getMessage());
@@ -124,7 +128,10 @@ public class AuthService {
                         "Refresh 차단, jti=" + jti);
                 throw new BusinessException(ErrorCode.MULTI_LOGIN_DETECTED);
             }
-            case NOT_FOUND -> throw new BusinessException(ErrorCode.SESSION_NOT_FOUND);
+            case NOT_FOUND -> {
+                auditRefreshRejected(userId, ErrorCode.SESSION_NOT_FOUND);
+                throw new BusinessException(ErrorCode.SESSION_NOT_FOUND);
+            }
             case REUSED -> {
                 auditLogService.record(AuditEventType.TOKEN_REUSED, AuditResult.FAIL, usernameOf(userId), null,
                         "세션 폐기, jti=" + jti + ", rid=" + refreshId);
@@ -177,6 +184,14 @@ public class AuthService {
             // 만료/위조 토큰: 제거할 활성 세션이 없으므로 쿠키 삭제만 진행
             log.debug("로그아웃 시 Refresh Token 무시: {}", e.getMessage());
         }
+    }
+
+    /**
+     * 만료되었거나 이미 끝난 세션으로 갱신을 시도한 경우 (세션 만료 후 사용자가 다시 요청한 시점)
+     */
+    private void auditRefreshRejected(Long userId, ErrorCode reason) {
+        auditLogService.record(AuditEventType.REFRESH_REJECTED, AuditResult.FAIL, usernameOf(userId), null,
+                reason.name() + ": " + reason.getMessage());
     }
 
     /**

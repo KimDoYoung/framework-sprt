@@ -204,6 +204,8 @@ flowchart LR
 | `LOGOUT` | SUCCESS | `AuthService.logout` | 활성 세션을 종료한 경우만 |
 | `MULTI_LOGIN_BLOCKED` | FAIL | `JwtAuthenticationFilter`, `AuthService.refresh` | 사용자 / - / 차단된 요청(`GET /api/test/ping`) 또는 `Refresh 차단` |
 | `TOKEN_REUSED` | FAIL | `AuthService.refresh` | 사용자 / - / `세션 폐기, jti=…, rid=…` |
+| `SESSION_EXPIRED` | SUCCESS | `SessionExpiryAuditListener` (Redis 만료 이벤트) | 사용자 / - / `유휴 시간 초과 (Redis 세션 TTL 만료)`. 실제 세션 종료 시각, IP·브라우저 없음 (5.5) |
+| `REFRESH_REJECTED` | FAIL | `AuthService.refresh` | 사용자 / - / `REFRESH_EXPIRED: …` 또는 `SESSION_NOT_FOUND: …`. 만료 후 다시 요청한 시점 (5.5) |
 | `FILE_UPLOAD` | SUCCESS | `FileController.uploadFile` | 사용자 / 파일ID / `원본명 (크기, MIME)` |
 | `FILE_UPLOAD_REJECTED` | FAIL | `FileController.uploadFile` | 사용자 / 원본 파일명 / 거부 사유 |
 | `FILE_DOWNLOAD` | SUCCESS | `FileController.downloadFile` | 사용자 / 파일ID / 원본명 |
@@ -248,6 +250,44 @@ CREATE INDEX idx_sys71_security_audit_log_created ON sys71_security_audit_log (c
 - API: `GET /api/audit/list?limit=100` (`ROLE_ADMIN`, 최대 1000건, 최신순)
 - 화면: admin 로그인 시 메인 페이지의 **보안 감사 로그** 카드(`AuditLogCard`). 이벤트별 색상 태그를 보여 주고, IP에 마우스를 올리면 User-Agent를, 추적ID는 복사 버튼을 제공한다.
 
+### 5.5 세션 만료 기록
+
+세션 만료는 Redis 세션 키의 TTL이 끝나 조용히 사라지는 것이라, 별도 장치 없이는 서버가 알아차리는 시점이 없다. 두 가지 방식을 함께 사용한다.
+
+| | ① 갱신 거부 시점 (`REFRESH_REJECTED`) | ② Redis 만료 이벤트 (`SESSION_EXPIRED`) |
+|:---|:---|:---|
+| 기록 시점 | 만료 후 사용자가 다시 요청할 때 (화면 타이머 0, 새로고침, 재방문) | 세션 키가 만료되는 순간 |
+| 브라우저를 닫고 떠난 경우 | 기록 안 됨 | 기록됨 |
+| IP·브라우저 | 있음 | 없음 (요청 밖) |
+| 누락 가능성 | 쿠키 여유시간(10분) 이후 재방문하면 쿠키가 없어 사용자를 알 수 없음 | 만료 순간 앱이 내려가 있으면 이벤트 유실 (Pub/Sub은 저장되지 않음) |
+
+**① 갱신 거부 시점**
+- 쿠키 Max-Age를 `Refresh 수명 + jwt.cookie.max-age-margin(10분)`으로 두어, 토큰이 만료된 뒤에도 쿠키가 서버에 도착하게 한다. 쿠키가 토큰과 함께 사라지면 서버는 누구의 세션인지 알 수 없다.
+- 만료 예외(`ExpiredJwtException`)에서도 서명 검증된 Claims를 얻을 수 있으므로, `typ=REFRESH`를 확인한 뒤 사용자를 기록한다.
+- 프론트엔드는 세션 타이머가 0이 되면 `/api/auth/refresh`를 한 번 호출해 서버가 만료를 판정하게 한다(다른 탭에서 세션이 연장됐다면 이어서 사용).
+
+**② Redis 만료 이벤트**
+- 채널 `__keyevent@{db}__:expired`를 구독하고, 활성 세션 키(`security:user:jti:{userId}`)만 처리한다. `rid`, `rid-prev`, 로그인 실패 횟수 키의 만료는 무시한다.
+- 로그인(덮어쓰기), 갱신(TTL 연장), 로그아웃·재사용 탐지(삭제)는 만료 이벤트를 만들지 않는다. 그래서 **유휴 시간 초과로 끝난 세션만** 기록된다.
+- 서버가 여러 대면 모든 서버가 같은 이벤트를 받는다. `SET NX security:audit:session-expired:{userId}` (10초)를 먼저 잡은 서버 한 대만 기록한다.
+- 리스너 스레드에서 추적ID를 새로 발급하므로 해당 로그 줄과 감사 기록이 연결된다.
+- Redis 부하: 만료 이벤트(`x`)만 발행하므로 일반 명령에는 비용이 없다. 모든 이벤트를 켜는 `KEA`는 사용하지 않는다.
+- 두 방식이 모두 동작하면 한 번의 만료에 `SESSION_EXPIRED`(종료 시각)와 `REFRESH_REJECTED`(재요청 시각)가 각각 남는다. 뜻이 다르므로 둘 다 유지한다.
+
+**Redis 설정 (필수)**
+
+Redis 서버에 `notify-keyspace-events Ex`가 설정되어 있어야 이벤트가 발행된다. 설정이 없어도 오류는 나지 않고, 이벤트가 오지 않아 ②만 기록되지 않는다.
+
+- 로컬 `t3600_redis`는 `--rename-command CONFIG ""`로 `CONFIG` 명령이 막혀 있다. 그래서 앱이 `CONFIG SET`으로 설정을 바꿀 수 없고, 컨테이너 기동 옵션에 추가해야 한다.
+
+```bash
+redis-server --requirepass ... --appendonly yes \
+  --rename-command FLUSHALL "" --rename-command FLUSHDB "" --rename-command CONFIG "" \
+  --notify-keyspace-events Ex
+```
+
+- 끄려면 `asseterp.audit.session-expiry.enabled=false`로 설정한다. 이 값이 false면 구독 자체를 하지 않는다.
+
 ---
 
 ## 6. 설정 항목 (`application.properties`)
@@ -268,6 +308,11 @@ asseterp.log.audit.total-size-cap=50GB
 
 asseterp.log.async.queue-size=1024
 asseterp.log.async.max-flush-time=5000               # ms
+
+jwt.cookie.max-age-margin=10m                        # 쿠키 수명 여유시간 (만료 세션 판정, 5.5 ①)
+asseterp.audit.session-expiry.enabled=true           # Redis 만료 이벤트 구독 (5.5 ②)
+asseterp.audit.session-expiry.dedup-key-prefix=security:audit:session-expired:
+asseterp.audit.session-expiry.dedup-ttl=10s
 
 asseterp.log.trace-header=X-Trace-Id
 asseterp.log.request-log.enabled=true
@@ -323,6 +368,9 @@ chmod 750 /data/asseterp-data/logs
 | `/api/audit/list` admin 200 / user1 403 | 확인 |
 | `max-file-size=10KB`로 롤링 → `archived/2026-09/…-2026-09-29.{0..5}.log.gz` | 확인 |
 | `prod` 프로필 콘솔 출력 | Spring 배너만 출력 |
+| 세션 만료 ② (Ex 설정한 임시 Redis, 세션 15초) | 로그인 15초 뒤 `SESSION_EXPIRED` 기록 (IP 없음, 추적ID 발급) |
+| 세션 만료 ① (만료 후 쿠키로 갱신 시도) | 쿠키 `Max-Age=615`(15초+10분), 401 `REFRESH_EXPIRED` + `REFRESH_REJECTED` 기록 |
+| 서버 2대 동시 구독 | `SESSION_EXPIRED` 1건만 기록 (dedup) |
 
 ### 7.5 자동 테스트
 
@@ -330,7 +378,8 @@ chmod 750 /data/asseterp-data/logs
 |:---|:---|
 | `AuditLogServiceTest` | MDC의 추적ID·IP를 DB 레코드에 반영, DB 실패 시 예외 미전파, 줄바꿈 제거·길이 제한 |
 | `MdcLoggingFilterTest` | 요청 중 MDC 값, 응답 헤더와 추적ID 일치, 요청 후 MDC 비움, 요청마다 다른 ID |
-| `AuthServiceTest` | 로그인 성공·실패·잠금·잠긴 계정 시도·토큰 재사용 시 감사 이벤트 기록 |
+| `AuthServiceTest` | 로그인 성공·실패·잠금·잠긴 계정 시도·토큰 재사용·갱신 거부(만료 토큰, 세션 없음) 시 감사 이벤트 기록 |
+| `SessionExpiryAuditListenerTest` | 세션 키 만료 시 기록, 다른 키(`rid`·실패 횟수) 무시, 다른 서버가 기록했으면 생략 |
 
 ---
 
@@ -344,12 +393,15 @@ security-test/backend/src/main/
 │   │   │   ├── MdcLoggingFilter.java        # traceId·clientIp MDC, X-Trace-Id, access 로그
 │   │   │   └── MdcKeys.java                 # MDC 키 상수
 │   │   ├── config/properties/LogProperties.java  # asseterp.log.* (trace-header, request-log)
+│   │   ├── config/properties/AuditProperties.java# asseterp.audit.* (session-expiry)
 │   │   ├── jwt/JwtAuthenticationFilter.java # 인증 성공 시 MDC userId, 동시 로그인 차단 감사
 │   │   └── error/GlobalExceptionHandler.java# 500 메시지에 추적ID
 │   └── biz/audit/
 │       ├── controller/AuditLogController.java    # GET /api/audit/list (ROLE_ADMIN)
 │       ├── service/AuditLogService.java          # 파일 + DB 이중 기록
 │       ├── service/AuditLogWriter.java           # DB 등록 (REQUIRES_NEW)
+│       ├── service/SessionExpiryAuditListener.java # Redis 세션 키 만료 이벤트 → SESSION_EXPIRED
+│       ├── service/SessionExpiryAuditConfig.java   # __keyevent@{db}__:expired 구독 (asseterp.audit.session-expiry.enabled)
 │       ├── mapper/AuditLogMapper.java
 │       └── dto/                                  # AuditEventType, AuditResult, AuditLogRecord
 └── resources/
@@ -374,5 +426,7 @@ security-test/frontend/src/
 | 런타임 레벨 변경 | 재시작 필요 | `spring-boot-starter-actuator`의 `/actuator/loggers` (ADMIN 보호) |
 | 개인정보 마스킹 | 개발자 규칙에 의존 | Logback `MessageConverter`로 주민번호·계좌번호 패턴 마스킹 |
 | 동시 로그인 차단 감사 중복 | 차단된 세션이 요청할 때마다 1건씩 기록 | 필요 시 세션(jti)당 1회만 기록 |
+| 기록하지 않는 보안 이벤트 | 위조·변조 토큰(`INVALID_TOKEN`)은 WARN 로그만, 권한 없는 호출(403 `ACCESS_DENIED`)은 기록 없음 | 공격 시도 신호이므로 감사 이벤트로 추가 |
+| 세션 만료 이벤트 유실 | 만료 순간 앱이 내려가 있으면 `SESSION_EXPIRED` 누락 | 기동 시 마지막 로그인 이후 종료 기록이 없는 세션을 보정하는 배치 (필요 시) |
 | 감사 로그 조회 | 최근 N건 | 기간·사용자·이벤트 조건 검색, 엑셀 다운로드 |
 | Spring 기본 경고 | `UserDetailsServiceAutoConfiguration`의 "generated security password" WARN이 error 로그에 남음 | 해당 자동 설정 제외 (JWT 인증만 사용) |

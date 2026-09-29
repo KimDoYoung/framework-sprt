@@ -16,6 +16,8 @@ const EVENT_COLORS: Record<string, string> = {
   ACCOUNT_UNLOCKED: 'blue',
   MULTI_LOGIN_BLOCKED: 'volcano',
   TOKEN_REUSED: 'magenta',
+  SESSION_EXPIRED: 'gold',
+  REFRESH_REJECTED: 'gold',
   FILE_UPLOAD: 'cyan',
   FILE_UPLOAD_REJECTED: 'red',
   FILE_DOWNLOAD: 'geekblue'

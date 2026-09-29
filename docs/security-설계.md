@@ -137,10 +137,14 @@ JWT의 `sub` 클레임은 `user_id`를 의미하며, `typ` 클레임으로 Acces
 
 | 쿠키 이름 | 토큰 수명 (JWT `exp`) | 쿠키 Max-Age | 보안 속성 | 용도 |
 |:---|:---|:---|:---|:---|
-| `ACCESS_TOKEN` | **10초** (`jwt.access-token-expiration`) | 60초 | `HttpOnly`, `SameSite=Lax`, `Path={context}/` | 모든 보호된 API 인가 |
-| `REFRESH_TOKEN` | **60초** (`jwt.refresh-token-expiration`) | 60초 | `HttpOnly`, `SameSite=Lax`, `Path={context}/api/auth` | 토큰 재발급·로그아웃에만 전송 |
+| `ACCESS_TOKEN` | **10초** (`jwt.access-token-expiration`) | 60초 + 10분 | `HttpOnly`, `SameSite=Lax`, `Path={context}/` | 모든 보호된 API 인가 |
+| `REFRESH_TOKEN` | **60초** (`jwt.refresh-token-expiration`) | 60초 + 10분 | `HttpOnly`, `SameSite=Lax`, `Path={context}/api/auth` | 토큰 재발급·로그아웃에만 전송 |
 
-- **쿠키 Max-Age를 Refresh 수명으로 맞추는 이유**: Access Token의 JWT가 만료돼도 쿠키는 서버로 전송되므로, 서버가 `TOKEN_EXPIRED`와 `MULTI_LOGIN_DETECTED`를 구분해 응답할 수 있다. 토큰 자체의 유효성은 JWT `exp`로 검증한다.
+- **쿠키 Max-Age = Refresh 수명 + 여유시간(`jwt.cookie.max-age-margin`, 기본 10분)인 이유**:
+  - Access Token의 JWT가 만료돼도 쿠키는 서버로 전송되므로, 서버가 `TOKEN_EXPIRED`와 `MULTI_LOGIN_DETECTED`를 구분해 응답할 수 있다.
+  - 세션(Refresh Token)이 만료된 뒤에도 여유시간 동안은 쿠키가 남아, 서버가 **누구의 세션이 만료됐는지** 판정하고 감사 로그(`REFRESH_REJECTED`)에 기록할 수 있다. 여유시간이 없으면 쿠키가 토큰과 함께 사라져 서버에는 토큰 없는 요청(`UNAUTHORIZED`)만 도착한다.
+  - 토큰 자체의 유효성은 JWT `exp`로 검증하므로, 만료된 토큰이 담긴 쿠키가 남아 있어도 보안상 영향은 없다.
+- **세션 만료 시 프론트엔드**: 세션 타이머가 0이 되면 바로 로그인 화면으로 보내지 않고 `/api/auth/refresh`를 한 번 호출한다. 서버가 만료를 판정·기록하고 401 `REFRESH_EXPIRED`로 응답하면 인터셉터가 로그인 화면으로 이동한다. 다른 탭에서 세션이 연장되어 있었다면 갱신에 성공하여 그대로 이어서 사용한다.
 - **Refresh 쿠키 경로 제한**: `REFRESH_TOKEN`은 `/api/auth` 이하(갱신·로그아웃)에서만 전송되어 일반 API 요청에 노출되지 않는다.
 - **응답 본문에 토큰 미포함**: 로그인/갱신/내 정보 응답(`LoginRes`)은 사용자 정보와 수명 정보만 반환한다.
 
@@ -501,12 +505,13 @@ security-test/
 
 | Prefix | 레코드 | 주요 항목 |
 |:---|:---|:---|
-| `jwt.*` | `JwtProperties` | `secret`, `issuer`, `access-token-expiration`, `refresh-token-expiration`, `cookie.{secure, same-site, access-token-name, refresh-token-name, refresh-path}` |
+| `jwt.*` | `JwtProperties` | `secret`, `issuer`, `access-token-expiration`, `refresh-token-expiration`, `cookie.{secure, same-site, access-token-name, refresh-token-name, refresh-path, max-age-margin}` |
 | `asseterp.auth.*` | `AuthProperties` | `session-key-prefix`, `default-dept-id`, `default-role`, `permit-all-paths`, `refresh-rotation.{key-prefix, previous-key-prefix, grace-period}`, `login-lock.{max-failures, fail-count-key-prefix, fail-count-ttl}` |
 | `asseterp.cors.*` | `CorsProperties` | `allowed-origins`, `allowed-methods`, `allowed-headers`, `max-age` |
 | `asseterp.redis.*` | `RedisProbeProperties` | `fallback-hosts`, `connect-timeout` |
 | `asseterp.upload.*` | `UploadProperties` | `dir`, `allowed-types.{확장자}` |
 | `asseterp.log.*` | `LogProperties` (+ `logback-spring.xml`) | `app-name`, `{info,error,audit}.{max-history, max-file-size, total-size-cap}`, `async.*`, `trace-header`, `request-log.*` |
+| `asseterp.audit.*` | `AuditProperties` | `session-expiry.{enabled, dedup-key-prefix, dedup-ttl}` (`docs/log-설계.md` 5.5) |
 
 주요 보안 설정 기본값:
 
@@ -514,6 +519,7 @@ security-test/
 jwt.access-token-expiration=10000                    # Access Token 10초 (ms)
 jwt.refresh-token-expiration=60000                   # Refresh Token / 세션 60초 (ms)
 jwt.cookie.secure=false                              # 운영(HTTPS)에서는 true
+jwt.cookie.max-age-margin=10m                        # 쿠키 수명 = Refresh 수명 + 여유시간 (만료 세션 판정·기록용)
 asseterp.auth.refresh-rotation.grace-period=5s       # 직전 Refresh Token 허용 시간
 asseterp.auth.login-lock.max-failures=2              # 연속 실패 허용 횟수 (도달 시 잠금)
 asseterp.auth.login-lock.fail-count-ttl=24h          # 실패 횟수 유지 시간

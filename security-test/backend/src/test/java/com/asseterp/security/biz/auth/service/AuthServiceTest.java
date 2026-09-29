@@ -110,6 +110,35 @@ class AuthServiceTest {
     }
 
     @Test
+    void 만료된_Refresh_Token으로_갱신하면_해당_사용자로_거부를_기록한다() {
+        JwtProperties props = TestProperties.bind("jwt", JwtProperties.class);
+        JwtTokenProvider expiredProvider = new JwtTokenProvider(new JwtProperties(props.secret(), props.issuer(),
+                props.accessTokenExpiration(), -1000, props.cookie()), authProperties);
+        String expiredRefreshToken = expiredProvider.generateRefreshToken(2L, "jti-1", "rid-1");
+        when(appUserMapper.findById(2L)).thenReturn(Optional.of(user("N")));
+
+        assertThatThrownBy(() -> authService.refresh(expiredRefreshToken))
+                .isInstanceOfSatisfying(BusinessException.class,
+                        e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.REFRESH_EXPIRED));
+        verify(auditLogService).record(eq(AuditEventType.REFRESH_REJECTED), eq(AuditResult.FAIL), eq("user1"), any(),
+                startsWith("REFRESH_EXPIRED"));
+    }
+
+    @Test
+    void 세션이_없으면_갱신_거부를_기록한다() {
+        String refreshToken = tokenProvider.generateRefreshToken(2L, "jti-1", "rid-1");
+        when(redisTokenService.rotateRefreshToken(eq(2L), eq("jti-1"), eq("rid-1"), anyString(), any()))
+                .thenReturn(new RotationResult(RotationStatus.NOT_FOUND, null));
+        when(appUserMapper.findById(2L)).thenReturn(Optional.of(user("N")));
+
+        assertThatThrownBy(() -> authService.refresh(refreshToken))
+                .isInstanceOfSatisfying(BusinessException.class,
+                        e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.SESSION_NOT_FOUND));
+        verify(auditLogService).record(eq(AuditEventType.REFRESH_REJECTED), eq(AuditResult.FAIL), eq("user1"), any(),
+                startsWith("SESSION_NOT_FOUND"));
+    }
+
+    @Test
     void 정상_갱신_시_교체된_rid로_새_Refresh_Token을_발급한다() {
         String refreshToken = tokenProvider.generateRefreshToken(2L, "jti-1", "rid-1");
         when(redisTokenService.rotateRefreshToken(eq(2L), eq("jti-1"), eq("rid-1"), anyString(), any()))

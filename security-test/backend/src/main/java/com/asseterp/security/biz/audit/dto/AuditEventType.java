@@ -18,6 +18,10 @@ public enum AuditEventType {
     MULTI_LOGIN_BLOCKED,
     /** 이미 교체된 Refresh Token 재사용 탐지 → 세션 폐기 */
     TOKEN_REUSED,
+    /** 유휴 시간 초과로 세션 종료 (Redis 세션 키 TTL 만료 이벤트, 실제 종료 시각) */
+    SESSION_EXPIRED,
+    /** 토큰 갱신 거부: Refresh Token 만료 또는 세션 없음 (만료 후 사용자가 다시 요청한 시점) */
+    REFRESH_REJECTED,
     FILE_UPLOAD,
     /** 허용되지 않는 형식/위변조 의심으로 업로드 거부 */
     FILE_UPLOAD_REJECTED,

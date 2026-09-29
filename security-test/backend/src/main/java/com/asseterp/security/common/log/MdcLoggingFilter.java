@@ -61,7 +61,7 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
         }
     }
 
-    static String newTraceId() {
+    public static String newTraceId() {
         return HexFormat.of().toHexDigits(ThreadLocalRandom.current().nextLong());
     }
 
