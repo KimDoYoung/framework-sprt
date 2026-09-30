@@ -6,6 +6,7 @@ import { MainPage } from './pages/MainPage';
 import { authApi } from './api/auth';
 import { onSessionTerminated, SessionTerminateReason } from './api/client';
 import { User } from './types/auth';
+import { realtime } from './ws/stompClient';
 
 const SESSION_NOTICES: Record<SessionTerminateReason, LoginNotice> = {
   MULTI_LOGIN: {
@@ -22,6 +23,11 @@ const SESSION_NOTICES: Record<SessionTerminateReason, LoginNotice> = {
     type: 'error',
     message: '계정 잠금 안내',
     description: '계정이 잠겨 세션이 종료되었습니다. 관리자에게 잠금 해제를 요청하세요.'
+  },
+  LOGOUT: {
+    type: 'info',
+    message: '로그아웃 안내',
+    description: '같은 브라우저의 다른 탭에서 로그아웃되어 현재 화면의 세션도 종료되었습니다.'
   },
   EXPIRED: {
     type: 'warning',
@@ -53,6 +59,15 @@ export const App: React.FC = () => {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    // 로그인 상태 동안 WebSocket 연결 유지 (세션 즉시 종료 알림, 공지, 개인 알림, 접속자 현황)
+    if (!user) return;
+    realtime.connect(user.roles?.includes('ROLE_ADMIN') ?? false);
+    return () => {
+      realtime.disconnect();
+    };
+  }, [user?.userId, user?.jti]);
 
   useEffect(() => {
     // 앱 진입 시 기존 쿠키를 통한 세션 복원 시도

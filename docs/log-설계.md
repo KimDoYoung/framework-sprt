@@ -209,6 +209,11 @@ flowchart LR
 | `FILE_UPLOAD` | SUCCESS | `FileController.uploadFile` | 사용자 / 파일ID / `원본명 (크기, MIME)` |
 | `FILE_UPLOAD_REJECTED` | FAIL | `FileController.uploadFile` | 사용자 / 원본 파일명 / 거부 사유 |
 | `FILE_DOWNLOAD` | SUCCESS | `FileController.downloadFile` | 사용자 / 파일ID / 원본명 |
+| `WS_CONNECT` | SUCCESS | `PresenceService.onConnected` | 사용자 / WebSocket 세션ID / `instance=…` (`docs/websocket-설계.md`) |
+| `WS_DISCONNECT` | SUCCESS | `PresenceService.onDisconnected` | 사용자 / WebSocket 세션ID / `closeStatus=…` |
+| `WS_FORCED_CLOSE` | SUCCESS | `WsSessionTerminator.terminate` | 사용자 / WebSocket 세션ID / 종료 사유(`MULTI_LOGIN`, `LOGOUT`, `EXPIRED` …). 추적ID는 원인 요청(로그인 등)과 같음 |
+| `NOTICE_BROADCAST` | SUCCESS | `PushService.createNotice` | 발송 관리자 / 메시지ID / 제목 |
+| `NOTIFICATION_SEND` | SUCCESS | `PushService.createNotification` | 발송 관리자 / 받는 사용자 / 제목 |
 
 audit 파일 예:
 

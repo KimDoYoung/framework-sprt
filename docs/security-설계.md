@@ -613,6 +613,6 @@ cd security-test/backend && gradle test
 | 파일 메타데이터 | 메모리(`ConcurrentHashMap`) 저장, 재시작 시 목록 유실 | DB 테이블로 이전 |
 | 계정 존재 여부 노출 | 실패 횟수 안내는 실제 계정에만 표시되어 계정 존재 여부 추측 가능 | 정책에 따라 안내 문구 제거 |
 | 로그인 이력 | **완료**: 보안 감사 로그 `sys71_security_audit_log` + `*-audit.log` (로그인·잠금·세션 차단·토큰 재사용·파일 업/다운로드, IP·브라우저·추적ID) | 기간·사용자 조건 검색, 보관 기간 배치 (`docs/log-설계.md` 9장) |
-| 동시 로그인 차단 시점 | 이전 세션은 "다음 요청" 때 차단됨 | SSE/WebSocket으로 즉시 알림 (선택) |
+| 동시 로그인 차단 시점 | **완료**: STOMP WebSocket으로 이전 세션에 즉시 알리고 연결 종료. 로그아웃·토큰 재사용·계정 잠금·세션 만료도 즉시 전달 (`docs/websocket-설계.md`) | 오프라인 사용자 알림 저장(알림함) |
 | REST 경로 규칙 | `/api/{domain}/...` | 프레임워크 규칙(`/api/v1/{domain}/{resource}`)으로 변경 |
 | 에러 메시지 | `ErrorCode` enum에 한글 메시지 고정 | 다국어가 필요하면 `messages.properties`로 분리 |

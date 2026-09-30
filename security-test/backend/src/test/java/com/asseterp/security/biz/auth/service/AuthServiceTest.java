@@ -4,6 +4,8 @@ import com.asseterp.security.biz.audit.dto.AuditEventType;
 import com.asseterp.security.biz.audit.dto.AuditResult;
 import com.asseterp.security.biz.audit.service.AuditLogService;
 import com.asseterp.security.biz.auth.dto.LoginReq;
+import com.asseterp.security.biz.auth.dto.SessionTerminateReason;
+import com.asseterp.security.biz.auth.dto.SessionTerminatedEvent;
 import com.asseterp.security.biz.user.entity.AppUser;
 import com.asseterp.security.biz.user.mapper.AppUserMapper;
 import com.asseterp.security.common.config.properties.AuthProperties;
@@ -17,6 +19,8 @@ import com.asseterp.security.common.jwt.RedisTokenService.RotationStatus;
 import com.asseterp.security.support.TestProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 
 import java.util.Optional;
@@ -32,6 +36,7 @@ class AuthServiceTest {
     private final RedisTokenService redisTokenService = mock(RedisTokenService.class);
     private final LoginLockService loginLockService = mock(LoginLockService.class);
     private final AuditLogService auditLogService = mock(AuditLogService.class);
+    private final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
     private final AuthProperties authProperties = TestProperties.bind("asseterp.auth", AuthProperties.class);
     private final JwtTokenProvider tokenProvider = new JwtTokenProvider(
             TestProperties.bind("jwt", JwtProperties.class), authProperties);
@@ -43,7 +48,7 @@ class AuthServiceTest {
         @SuppressWarnings("deprecation")
         NoOpPasswordEncoder encoder = (NoOpPasswordEncoder) NoOpPasswordEncoder.getInstance();
         authService = new AuthService(appUserMapper, encoder, tokenProvider, redisTokenService,
-                authProperties, loginLockService, auditLogService);
+                authProperties, loginLockService, auditLogService, eventPublisher);
     }
 
     private AppUser user(String lockYn) {
@@ -84,6 +89,7 @@ class AuthServiceTest {
                 .isInstanceOfSatisfying(BusinessException.class,
                         e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.ACCOUNT_LOCKED));
         verify(auditLogService).record(eq(AuditEventType.ACCOUNT_LOCKED), eq(AuditResult.FAIL), eq("user1"), any(), any());
+        verify(eventPublisher).publishEvent(new SessionTerminatedEvent(2L, null, SessionTerminateReason.ACCOUNT_LOCKED));
     }
 
     @Test
@@ -98,6 +104,17 @@ class AuthServiceTest {
     }
 
     @Test
+    void 로그인_성공_시_새_jti를_제외한_이전_세션_종료_이벤트를_발행한다() {
+        when(appUserMapper.findByUsername("user1")).thenReturn(Optional.of(user("N")));
+
+        String jti = authService.login(new LoginReq("user1", "1111")).loginRes().jti();
+
+        ArgumentCaptor<SessionTerminatedEvent> captor = ArgumentCaptor.forClass(SessionTerminatedEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertThat(captor.getValue()).isEqualTo(new SessionTerminatedEvent(2L, jti, SessionTerminateReason.MULTI_LOGIN));
+    }
+
+    @Test
     void 이미_교체된_Refresh_Token이_오면_재사용으로_거부한다() {
         String refreshToken = tokenProvider.generateRefreshToken(2L, "jti-1", "old-rid");
         when(redisTokenService.rotateRefreshToken(eq(2L), eq("jti-1"), eq("old-rid"), anyString(), any()))
@@ -107,6 +124,7 @@ class AuthServiceTest {
                 .isInstanceOfSatisfying(BusinessException.class,
                         e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.REFRESH_TOKEN_REUSED));
         verify(auditLogService).record(eq(AuditEventType.TOKEN_REUSED), eq(AuditResult.FAIL), any(), any(), any());
+        verify(eventPublisher).publishEvent(new SessionTerminatedEvent(2L, null, SessionTerminateReason.TOKEN_REUSED));
     }
 
     @Test

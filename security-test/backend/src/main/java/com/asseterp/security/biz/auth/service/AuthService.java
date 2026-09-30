@@ -6,6 +6,8 @@ import com.asseterp.security.biz.audit.service.AuditLogService;
 import com.asseterp.security.biz.auth.dto.AuthResult;
 import com.asseterp.security.biz.auth.dto.LoginReq;
 import com.asseterp.security.biz.auth.dto.LoginRes;
+import com.asseterp.security.biz.auth.dto.SessionTerminateReason;
+import com.asseterp.security.biz.auth.dto.SessionTerminatedEvent;
 import com.asseterp.security.biz.auth.dto.UserPrincipal;
 import com.asseterp.security.biz.user.entity.AppUser;
 import com.asseterp.security.biz.user.mapper.AppUserMapper;
@@ -20,6 +22,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +45,8 @@ public class AuthService {
     private final AuthProperties authProperties;
     private final LoginLockService loginLockService;
     private final AuditLogService auditLogService;
+    /** 세션 종료 이벤트 → push 도메인이 WebSocket으로 즉시 알림 (SessionTerminatedEvent) */
+    private final ApplicationEventPublisher eventPublisher;
 
     public AuthResult login(LoginReq req) {
         log.info("로그인 시도: username={}", req.username());
@@ -66,6 +71,8 @@ public class AuthService {
             if (failure.locked()) {
                 auditLogService.record(AuditEventType.ACCOUNT_LOCKED, AuditResult.FAIL, user.getUsername(), null,
                         "로그인 " + failure.failureCount() + "회 연속 실패");
+                // 다른 곳에 살아 있는 세션도 즉시 종료 (HTTP 요청은 다음 갱신 때 거부됨)
+                publishSessionTerminated(user.getUserId(), null, SessionTerminateReason.ACCOUNT_LOCKED);
                 throw new BusinessException(ErrorCode.ACCOUNT_LOCKED,
                         "로그인 " + failure.maxFailures() + "회 실패로 계정이 잠겼습니다. 관리자에게 잠금 해제를 요청하세요.");
             }
@@ -82,6 +89,8 @@ public class AuthService {
         String refreshId = UUID.randomUUID().toString();
         AuthResult result = issueTokens(user, jti, refreshId);
         redisTokenService.startSession(user.getUserId(), jti, refreshId, sessionTtl());
+        // 이전 세션(다른 jti)의 WebSocket에 즉시 알림 - 다음 요청을 기다리지 않고 차단
+        publishSessionTerminated(user.getUserId(), jti, SessionTerminateReason.MULTI_LOGIN);
 
         log.info("로그인 성공: userId={}, username={}, jti={}", user.getUserId(), user.getUsername(), jti);
         auditLogService.record(AuditEventType.LOGIN_SUCCESS, AuditResult.SUCCESS, user.getUsername(), null, "jti=" + jti);
@@ -135,6 +144,7 @@ public class AuthService {
             case REUSED -> {
                 auditLogService.record(AuditEventType.TOKEN_REUSED, AuditResult.FAIL, usernameOf(userId), null,
                         "세션 폐기, jti=" + jti + ", rid=" + refreshId);
+                publishSessionTerminated(userId, null, SessionTerminateReason.TOKEN_REUSED);
                 throw new BusinessException(ErrorCode.REFRESH_TOKEN_REUSED);
             }
             case ROTATED, GRACE -> { }
@@ -145,6 +155,7 @@ public class AuthService {
         // 세션 도중 계정이 잠긴 경우 갱신 거부
         if (user.isLocked()) {
             redisTokenService.removeSession(userId);
+            publishSessionTerminated(userId, null, SessionTerminateReason.ACCOUNT_LOCKED);
             throw new BusinessException(ErrorCode.ACCOUNT_LOCKED);
         }
 
@@ -179,6 +190,8 @@ public class AuthService {
                 redisTokenService.removeSession(userId);
                 log.info("로그아웃 완료: userId={}", userId);
                 auditLogService.record(AuditEventType.LOGOUT, AuditResult.SUCCESS, usernameOf(userId), null, null);
+                // 같은 세션을 쓰는 다른 탭도 로그인 화면으로
+                publishSessionTerminated(userId, null, SessionTerminateReason.LOGOUT);
             }
         } catch (JwtException | IllegalArgumentException e) {
             // 만료/위조 토큰: 제거할 활성 세션이 없으므로 쿠키 삭제만 진행
@@ -201,6 +214,10 @@ public class AuthService {
         return appUserMapper.findById(userId)
                 .map(AppUser::getUsername)
                 .orElse(String.valueOf(userId));
+    }
+
+    private void publishSessionTerminated(Long userId, String keepJti, SessionTerminateReason reason) {
+        eventPublisher.publishEvent(new SessionTerminatedEvent(userId, keepJti, reason));
     }
 
     private Duration sessionTtl() {

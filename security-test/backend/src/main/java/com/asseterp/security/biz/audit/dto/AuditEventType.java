@@ -25,5 +25,15 @@ public enum AuditEventType {
     FILE_UPLOAD,
     /** 허용되지 않는 형식/위변조 의심으로 업로드 거부 */
     FILE_UPLOAD_REJECTED,
-    FILE_DOWNLOAD
+    FILE_DOWNLOAD,
+    /** WebSocket 연결 (STOMP CONNECT 완료) */
+    WS_CONNECT,
+    /** WebSocket 연결 종료 (클라이언트 종료, 네트워크 단절, 강제 종료 모두) */
+    WS_DISCONNECT,
+    /** 세션 종료 사유(멀티 로그인, 로그아웃, 만료 등)로 서버가 WebSocket을 강제 종료 */
+    WS_FORCED_CLOSE,
+    /** 관리자 전체 공지 발송 */
+    NOTICE_BROADCAST,
+    /** 관리자 개인 알림 발송 */
+    NOTIFICATION_SEND
 }

@@ -22,6 +22,7 @@ public enum ErrorCode {
 
     // 인가 (403)
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
+    WS_DESTINATION_DENIED(HttpStatus.FORBIDDEN, "구독 또는 전송이 허용되지 않은 WebSocket 목적지입니다."),
 
     // 사용자
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),

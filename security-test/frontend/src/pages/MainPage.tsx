@@ -40,6 +40,8 @@ import { onTokenRefresh, notifySessionTerminated, errorMessage } from '../api/cl
 import { User, FileItem } from '../types/auth';
 import { UserLockCard } from '../components/UserLockCard';
 import { AuditLogCard } from '../components/AuditLogCard';
+import { RealtimeCard } from '../components/RealtimeCard';
+import { realtime } from '../ws/stompClient';
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -293,6 +295,8 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
   };
 
   const handleLogout = async () => {
+    // 로그아웃 알림(LOGOUT)은 다른 탭용이므로, 이 탭은 먼저 연결을 끊어 자기 알림을 받지 않는다
+    await realtime.disconnect();
     try {
       await authApi.logout();
       message.info('로그아웃되었습니다.');
@@ -641,6 +645,11 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
                 </Space>
               </div>
             </Card>
+          </Col>
+
+          {/* 4-1. WebSocket 실시간 알림 (세션 종료, 공지, 개인 알림, 접속자 현황) */}
+          <Col span={24}>
+            <RealtimeCard user={currentUser} />
           </Col>
 
           {/* 5. 계정 잠금 관리 (관리자 전용) */}
