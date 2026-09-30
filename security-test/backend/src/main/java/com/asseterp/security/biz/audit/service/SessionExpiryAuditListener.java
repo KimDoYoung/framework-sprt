@@ -2,8 +2,8 @@ package com.asseterp.security.biz.audit.service;
 
 import com.asseterp.security.biz.audit.dto.AuditEventType;
 import com.asseterp.security.biz.audit.dto.AuditResult;
-import com.asseterp.security.biz.user.entity.AppUser;
-import com.asseterp.security.biz.user.mapper.AppUserMapper;
+import com.asseterp.security.biz.user.dto.LoginAccount;
+import com.asseterp.security.biz.user.mapper.AccountMapper;
 import com.asseterp.security.common.config.properties.AuditProperties;
 import com.asseterp.security.common.config.properties.AuthProperties;
 import com.asseterp.security.common.log.MdcKeys;
@@ -34,7 +34,7 @@ public class SessionExpiryAuditListener implements MessageListener {
     private final AuthProperties authProperties;
     private final AuditProperties.SessionExpiry settings;
     private final StringRedisTemplate redisTemplate;
-    private final AppUserMapper appUserMapper;
+    private final AccountMapper accountMapper;
     private final AuditLogService auditLogService;
 
     @Override
@@ -55,8 +55,11 @@ public class SessionExpiryAuditListener implements MessageListener {
                 return;
             }
 
-            String username = appUserMapper.findById(userId)
-                    .map(AppUser::getUsername)
+            Long accountId = LoginAccount.toAccountId(userId);
+            String username = (LoginAccount.isEmployeeSessionId(userId)
+                    ? accountMapper.findEmployeeById(accountId)
+                    : accountMapper.findManagerById(accountId))
+                    .map(LoginAccount::qualifiedUsername)
                     .orElse(String.valueOf(userId));
             log.info("세션 만료 (유휴 시간 초과) - userId: {}, username: {}", userId, username);
             auditLogService.record(AuditEventType.SESSION_EXPIRED, AuditResult.SUCCESS, username, null,

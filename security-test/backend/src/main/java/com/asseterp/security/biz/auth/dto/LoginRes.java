@@ -10,8 +10,12 @@ import java.util.List;
 public record LoginRes(
         Long userId,
         String username,
+        String loginId,
         String name,
-        Integer companyId,
+        Long companyId,
+        String companyCode,
+        String companyName,
+        String tenant,
         String deptId,
         List<String> roles,
         String jti,

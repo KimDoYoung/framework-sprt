@@ -7,8 +7,11 @@ import { UserItem } from '../types/auth';
 
 const { Text } = Typography;
 
+/** emp01_lock_yn 잠김 값 */
+const LOCKED = 'true';
+
 /**
- * 관리자 전용: 계정 잠금 현황 조회 및 잠금 해제
+ * 관리자 전용: 관리자 회사 사원의 계정 잠금 현황 조회 및 잠금 해제 (AS-IS emp01_lock_yn)
  */
 export const UserLockCard: React.FC = () => {
   const [users, setUsers] = useState<UserItem[]>([]);
@@ -48,8 +51,7 @@ export const UserLockCard: React.FC = () => {
   };
 
   const columns = [
-    { title: 'ID', dataIndex: 'userId', key: 'userId', width: 60 },
-    { title: '아이디', dataIndex: 'username', key: 'username', render: (v: string) => <Text strong>{v}</Text> },
+    { title: '사번', dataIndex: 'username', key: 'username', render: (v: string) => <Text strong>{v}</Text> },
     { title: '성명', dataIndex: 'fullName', key: 'fullName' },
     { title: '권한', dataIndex: 'role', key: 'role' },
     {
@@ -62,8 +64,8 @@ export const UserLockCard: React.FC = () => {
       title: '잠금',
       dataIndex: 'lockYn',
       key: 'lockYn',
-      render: (lockYn: string) =>
-        lockYn === 'Y' ? <Tag color="red" icon={<LockOutlined />}>잠김</Tag> : <Tag color="green">정상</Tag>
+      render: (lockYn: string | null) =>
+        lockYn === LOCKED ? <Tag color="red" icon={<LockOutlined />}>잠김</Tag> : <Tag color="green">정상</Tag>
     },
     {
       title: '해제',
@@ -74,9 +76,9 @@ export const UserLockCard: React.FC = () => {
           onConfirm={() => handleUnlock(record)}
           okText="해제"
           cancelText="취소"
-          disabled={record.lockYn !== 'Y'}
+          disabled={record.lockYn !== LOCKED}
         >
-          <Button size="small" icon={<UnlockOutlined />} disabled={record.lockYn !== 'Y'}>
+          <Button size="small" icon={<UnlockOutlined />} disabled={record.lockYn !== LOCKED}>
             잠금 해제
           </Button>
         </Popconfirm>
@@ -97,7 +99,8 @@ export const UserLockCard: React.FC = () => {
           잠긴 계정은 관리자가 해제하기 전까지 로그인할 수 없습니다.
         </Text>
       </div>
-      <Table columns={columns} dataSource={users} rowKey="userId" loading={loading} pagination={false} size="small" />
+      <Table columns={columns} dataSource={users} rowKey="userId" loading={loading} size="small"
+             pagination={{ pageSize: 10, showSizeChanger: false, showTotal: total => `${total}명` }} />
     </Card>
   );
 };

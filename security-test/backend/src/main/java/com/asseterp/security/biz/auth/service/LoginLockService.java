@@ -1,7 +1,7 @@
 package com.asseterp.security.biz.auth.service;
 
-import com.asseterp.security.biz.user.entity.AppUser;
-import com.asseterp.security.biz.user.mapper.AppUserMapper;
+import com.asseterp.security.biz.user.dto.LoginAccount;
+import com.asseterp.security.biz.user.mapper.AccountMapper;
 import com.asseterp.security.common.config.properties.AuthProperties;
 import com.asseterp.security.common.error.BusinessException;
 import com.asseterp.security.common.error.ErrorCode;
@@ -16,8 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.function.Supplier;
 
 /**
- * 로그인 실패 잠금 (AS-IS emp01_lock_yn 방식).
- * 실패 횟수는 Redis에 세고, 최대 횟수에 도달하면 app_user.lock_yn='Y'로 영구 잠금한다. 해제는 관리자만 가능.
+ * 로그인 실패 잠금 (AS-IS emp01_lock_yn 방식). 사원(emp01_person)만 대상이다.
+ * 실패 횟수는 Redis에 세고, 최대 횟수에 도달하면 emp01_lock_yn='true'로 영구 잠금한다. 해제는 관리자만 가능.
+ * AS-IS는 실패 횟수를 브라우저 변수(LoginPage.passWordCnt)로 세어 새로고침하면 초기화되었지만, TOBE는 서버에서 센다.
+ * userId는 세션용 사용자 ID(LoginAccount.sessionUserId, 사원은 emp01_person_id)이다.
  */
 @Slf4j
 @Service
@@ -26,7 +28,7 @@ import java.util.function.Supplier;
 public class LoginLockService {
 
     private final StringRedisTemplate redisTemplate;
-    private final AppUserMapper appUserMapper;
+    private final AccountMapper accountMapper;
     private final AuthProperties authProperties;
 
     /**
@@ -72,7 +74,7 @@ public class LoginLockService {
             return new FailureResult(failureCount, maxFailures, false);
         }
 
-        appUserMapper.updateLockYn(userId, AppUser.LOCKED);
+        accountMapper.updateEmpLockYn(LoginAccount.toAccountId(userId), LoginAccount.LOCKED);
         execute(() -> redisTemplate.delete(key));
         log.warn("[보안] 로그인 {}회 실패로 계정 잠금 - userId: {}", failureCount, userId);
         return new FailureResult(failureCount, maxFailures, true);
@@ -86,11 +88,11 @@ public class LoginLockService {
     }
 
     /**
-     * 관리자 잠금 해제: lock_yn='N' + 실패 횟수 초기화
+     * 관리자 잠금 해제: emp01_lock_yn='false' + 실패 횟수 초기화
      */
     @Transactional
     public void unlock(Long userId) {
-        appUserMapper.updateLockYn(userId, AppUser.UNLOCKED);
+        accountMapper.updateEmpLockYn(LoginAccount.toAccountId(userId), LoginAccount.UNLOCKED);
         resetFailures(userId);
         log.info("계정 잠금 해제 - userId: {}", userId);
     }

@@ -1,9 +1,22 @@
 import { apiClient } from './client';
-import { ApiResponse, User } from '../types/auth';
+import { ApiResponse, CompanyItem, TenantInfo, User } from '../types/auth';
 
 export const authApi = {
-  login: async (username: string, password: string): Promise<ApiResponse<User>> => {
-    const res = await apiClient.post<ApiResponse<User>>('/auth/login', { username, password });
+  /** companyCode는 admin 서브도메인에서 회사를 선택한 경우에만 사용된다 (그 외에는 서버가 호스트로 판정) */
+  login: async (username: string, password: string, companyCode?: string): Promise<ApiResponse<User>> => {
+    const res = await apiClient.post<ApiResponse<User>>('/auth/login', { username, password, companyCode });
+    return res.data;
+  },
+
+  /** 접속한 서브도메인의 회사 정보 */
+  getTenant: async (): Promise<ApiResponse<TenantInfo>> => {
+    const res = await apiClient.get<ApiResponse<TenantInfo>>('/public/tenant');
+    return res.data;
+  },
+
+  /** admin 로그인 화면의 회사 선택 목록 */
+  getCompanies: async (): Promise<ApiResponse<CompanyItem[]>> => {
+    const res = await apiClient.get<ApiResponse<CompanyItem[]>>('/public/companies');
     return res.data;
   },
 

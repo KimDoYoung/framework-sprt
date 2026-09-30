@@ -9,11 +9,12 @@ import java.util.List;
  * 인증/세션 설정 (asseterp.auth.*)
  *
  * @param sessionKeyPrefix Redis 활성 JTI 키 prefix (뒤에 userId가 붙음)
- * @param defaultDeptId    app_user에 부서 정보가 없을 때 사용할 부서 ID
+ * @param defaultDeptId    부서(발령 조직)를 조회하기 전까지 사용할 부서 ID
  * @param defaultRole      토큰에 roles 클레임이 없을 때 부여할 권한
  * @param permitAllPaths   인증 없이 접근 가능한 경로 (정적 리소스, 공개 API)
  * @param refreshRotation  Refresh Token 교체(rotation) 및 재사용 탐지 설정
  * @param loginLock        로그인 실패 잠금 설정
+ * @param passwordExpireDays 비밀번호 만료 경과일 (AS-IS 90일, sys25_password.sys25_work_date 기준)
  */
 @ConfigurationProperties(prefix = "asseterp.auth")
 public record AuthProperties(
@@ -22,7 +23,8 @@ public record AuthProperties(
         String defaultRole,
         List<String> permitAllPaths,
         RefreshRotation refreshRotation,
-        LoginLock loginLock
+        LoginLock loginLock,
+        int passwordExpireDays
 ) {
     /**
      * @param keyPrefix         현재 유효한 Refresh Token ID(rid) 키 prefix
@@ -37,7 +39,7 @@ public record AuthProperties(
     }
 
     /**
-     * @param maxFailures         연속 실패 허용 횟수. 이 횟수에 도달하면 계정 잠금 (lock_yn='Y')
+     * @param maxFailures         연속 실패 허용 횟수. 이 횟수에 도달하면 계정 잠금 (emp01_lock_yn='true')
      * @param failCountKeyPrefix  실패 횟수 Redis 키 prefix (뒤에 userId가 붙음)
      * @param failCountTtl        실패 횟수 유지 시간 (마지막 실패 후 이 시간이 지나면 0으로 초기화)
      */

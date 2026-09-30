@@ -1,6 +1,6 @@
 package com.asseterp.security.biz.audit.service;
 
-import com.asseterp.security.biz.user.mapper.AppUserMapper;
+import com.asseterp.security.biz.user.mapper.AccountMapper;
 import com.asseterp.security.common.config.properties.AuditProperties;
 import com.asseterp.security.common.config.properties.AuthProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -27,10 +27,10 @@ public class SessionExpiryAuditConfig {
     public SessionExpiryAuditListener sessionExpiryAuditListener(AuthProperties authProperties,
                                                                  AuditProperties auditProperties,
                                                                  StringRedisTemplate redisTemplate,
-                                                                 AppUserMapper appUserMapper,
+                                                                 AccountMapper accountMapper,
                                                                  AuditLogService auditLogService) {
         return new SessionExpiryAuditListener(authProperties, auditProperties.sessionExpiry(),
-                redisTemplate, appUserMapper, auditLogService);
+                redisTemplate, accountMapper, auditLogService);
     }
 
     @Bean

@@ -8,6 +8,8 @@ public final class MdcKeys {
     public static final String TRACE_ID = "traceId";
     public static final String USER_ID = "userId";
     public static final String CLIENT_IP = "clientIp";
+    /** 접속 회사 코드 (서브도메인, sys01_loc_nm) */
+    public static final String TENANT = "tenant";
 
     private MdcKeys() {
     }

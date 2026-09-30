@@ -382,7 +382,7 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
         <Space size="middle">
           <Text style={{ color: '#fff' }}>
             <UserOutlined style={{ marginRight: 6 }} />
-            {currentUser.name} ({currentUser.username})
+            [{currentUser.companyName}] {currentUser.name} ({currentUser.loginId})
           </Text>
           {currentUser.roles?.map(r => (
             <Tag color={r === 'ROLE_ADMIN' ? 'red' : 'green'} key={r}>{r}</Tag>
@@ -590,7 +590,10 @@ export const MainPage: React.FC<MainPageProps> = ({ user, onLogout }) => {
                 <Descriptions.Item label="User ID (sub)">{currentUser.userId}</Descriptions.Item>
                 <Descriptions.Item label="아이디 (username)">{currentUser.username}</Descriptions.Item>
                 <Descriptions.Item label="성명 (name)">{currentUser.name}</Descriptions.Item>
-                <Descriptions.Item label="회사 ID (company_id)">{currentUser.companyId}</Descriptions.Item>
+                <Descriptions.Item label="회사 (company)">
+                  {currentUser.companyName} <Text code>{currentUser.companyCode}</Text> ({currentUser.companyId})
+                </Descriptions.Item>
+                <Descriptions.Item label="접속 서브도메인 (tenant)"><Text code>{currentUser.tenant}</Text></Descriptions.Item>
                 <Descriptions.Item label="부서 ID (dept_id)">{currentUser.deptId || 'D101'}</Descriptions.Item>
                 <Descriptions.Item label="권한 (roles)">
                   {currentUser.roles?.join(', ')}

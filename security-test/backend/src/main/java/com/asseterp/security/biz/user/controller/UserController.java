@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 사용자 관리 (관리자 전용): 계정 목록 조회, 로그인 잠금 해제
+ * 사용자 관리 (관리자 전용): 관리자 회사의 사원 목록 조회, 로그인 잠금 해제
  */
 @RestController
 @RequestMapping("/api/user")
@@ -23,14 +23,14 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/list")
-    public ApiResponse<List<UserItemRes>> searchUsers() {
-        return ApiResponse.ok(userService.searchUsers());
+    public ApiResponse<List<UserItemRes>> searchUsers(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(userService.searchUsers(principal));
     }
 
     @PostMapping("/{userId}/unlock")
     public ApiResponse<Void> updateUserUnlock(@PathVariable("userId") Long userId,
                                               @AuthenticationPrincipal UserPrincipal principal) {
-        userService.updateUserUnlock(userId, principal.getUsername());
+        userService.updateUserUnlock(userId, principal);
         return ApiResponse.ok("계정 잠금이 해제되었습니다.", null);
     }
 }

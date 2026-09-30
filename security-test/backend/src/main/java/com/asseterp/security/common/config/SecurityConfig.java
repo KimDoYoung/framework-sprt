@@ -7,6 +7,7 @@ import com.asseterp.security.common.error.ErrorCode;
 import com.asseterp.security.common.jwt.JwtAccessDeniedHandler;
 import com.asseterp.security.common.jwt.JwtAuthenticationEntryPoint;
 import com.asseterp.security.common.jwt.JwtAuthenticationFilter;
+import com.asseterp.security.common.tenant.TenantFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +34,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final TenantFilter tenantFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final AuthProperties authProperties;
@@ -64,13 +66,22 @@ public class SecurityConfig {
                         // 나머지 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                // 테넌트(서브도메인) 판별 → JWT 인증 순서. JWT 필터가 토큰의 테넌트와 요청 테넌트를 비교한다
+                .addFilterBefore(tenantFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(jwtAuthenticationFilter, TenantFilter.class);
 
         return http.build();
     }
 
+    @Bean
+    public FilterRegistrationBean<TenantFilter> tenantFilterRegistration(TenantFilter filter) {
+        FilterRegistrationBean<TenantFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
     /**
-     * JwtAuthenticationFilter는 @Component라 서블릿 필터로도 자동 등록된다.
+     * JwtAuthenticationFilter, TenantFilter는 @Component라 서블릿 필터로도 자동 등록된다.
      * Security 필터 체인에서만 동작하도록 서블릿 컨테이너 등록은 비활성화한다.
      */
     @Bean
@@ -83,6 +94,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        // *.localhost:5173 처럼 서브도메인(테넌트) 패턴을 허용하기 위해 origin pattern으로 등록
         configuration.setAllowedOriginPatterns(corsProperties.allowedOrigins());
         configuration.setAllowedMethods(corsProperties.allowedMethods());
         configuration.setAllowedHeaders(corsProperties.allowedHeaders());

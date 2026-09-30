@@ -227,8 +227,8 @@ export const RealtimeCard: React.FC<{ user: User }> = ({ user }) => {
                     onFinish={handleNotification}>
                 <Row gutter={8}>
                   <Col span={8}>
-                    <Form.Item name="username" label="받는 사람" rules={[{ required: true, message: '아이디' }]}>
-                      <Input placeholder="user1" />
+                    <Form.Item name="username" label="받는 사람 (같은 회사 사번/ID)" rules={[{ required: true, message: '사번/ID' }]}>
+                      <Input placeholder="사번" />
                     </Form.Item>
                   </Col>
                   <Col span={10}>

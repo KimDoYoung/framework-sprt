@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
-import { Card, Form, Input, Button, Typography, Alert, Space, Divider, message } from 'antd';
-import { UserOutlined, LockOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { Card, Form, Input, Button, Typography, Alert, Select, Spin, message } from 'antd';
+import { UserOutlined, LockOutlined, SafetyCertificateOutlined, BankOutlined } from '@ant-design/icons';
 import { authApi } from '../api/auth';
-import { User } from '../types/auth';
+import { errorMessage } from '../api/client';
+import { CompanyItem, TenantInfo, User } from '../types/auth';
 
 const { Title, Text, Paragraph } = Typography;
+
+interface LoginFormValues {
+  companyCode?: string;
+  username: string;
+  password: string;
+}
 
 export interface LoginNotice {
   type: 'warning' | 'error' | 'info';
@@ -21,34 +28,49 @@ interface LoginPageProps {
 export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, onClearNotice }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  // 접속한 서브도메인의 회사 (AS-IS LoginPage: URL에서 회사 코드를 떼어 sys01_company 조회)
+  const [tenant, setTenant] = useState<TenantInfo | null>(null);
+  const [tenantError, setTenantError] = useState<string | null>(null);
+  // admin 서브도메인에서만: 로그인할 회사 선택 목록 (AS-IS Sys01_Lookup_SelectSingle)
+  const [companies, setCompanies] = useState<CompanyItem[]>([]);
 
-  const handleSubmit = async (values: { username: string; password: string }) => {
+  useEffect(() => {
+    const loadTenant = async () => {
+      try {
+        const res = await authApi.getTenant();
+        setTenant(res.data);
+        if (res.data?.valid && res.data.admin) {
+          const list = await authApi.getCompanies();
+          setCompanies(list.data ?? []);
+        }
+      } catch (err: any) {
+        setTenantError(errorMessage(err, '회사 정보 조회 실패'));
+      }
+    };
+    loadTenant();
+  }, []);
+
+  const handleSubmit = async (values: LoginFormValues) => {
     setLoading(true);
-    setErrorMessage(null);
+    setLoginError(null);
     try {
-      const res = await authApi.login(values.username, values.password);
+      const res = await authApi.login(values.username, values.password, values.companyCode);
       if (res.success && res.data) {
         message.success(`환영합니다, ${res.data.name}님!`);
         onClearNotice?.();
         onLoginSuccess(res.data);
       } else {
-        setErrorMessage(res.message || '로그인에 실패했습니다.');
+        setLoginError(res.message || '로그인에 실패했습니다.');
       }
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || '로그인 요청 중 오류가 발생했습니다.';
-      setErrorMessage(msg);
+      setLoginError(errorMessage(err, '로그인 요청 중 오류가 발생했습니다.'));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleQuickFill = (username: string) => {
-    form.setFieldsValue({
-      username,
-      password: '1111'
-    });
-  };
+  const tenantValid = tenant?.valid === true;
 
   return (
     <div style={{
@@ -66,8 +88,35 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <SafetyCertificateOutlined style={{ fontSize: 44, color: '#1677ff', marginBottom: 8 }} />
           <Title level={3} style={{ margin: 0 }}>AssetERP 보안 테스트</Title>
-          <Text type="secondary">JWT · 쿠키 인증 · 중복 로그인 차단 프로토타입</Text>
+          {tenantValid ? (
+            <Text strong style={{ fontSize: 15 }}>
+              <BankOutlined style={{ marginRight: 6 }} />
+              {tenant!.admin ? 'AssetERP 관리자 (한국펀드서비스)' : tenant!.companyName}
+            </Text>
+          ) : (
+            <Text type="secondary">JWT · 쿠키 인증 · 중복 로그인 차단 프로토타입</Text>
+          )}
         </div>
+
+        {/* 0. 서브도메인 판별 결과: 조회 중 / 조회 실패 / 등록되지 않은 회사 */}
+        {!tenant && !tenantError && (
+          <div style={{ textAlign: 'center', marginBottom: 20 }}><Spin tip="회사 정보 확인 중..." /></div>
+        )}
+        {tenantError && (
+          <Alert message={tenantError} type="error" showIcon style={{ marginBottom: 20 }} />
+        )}
+        {tenant && !tenant.valid && (
+          <Alert
+            message="유효하지 않은 고객정보"
+            description={<>
+              <Text code>{tenant.host}</Text> 에 해당하는 회사(<Text code>{tenant.companyCode}</Text>)가 없거나 사용 중지되었습니다.
+              <br />예) <Text code>kfstest.localhost</Text>, <Text code>admin.localhost</Text> 로 접속하세요.
+            </>}
+            type="error"
+            showIcon
+            style={{ marginBottom: 20 }}
+          />
+        )}
 
         {/* 1. 세션 만료 또는 중복 로그인 차단으로 튕겨져 나왔을 때의 안내 메시지 */}
         {notice && (
@@ -83,13 +132,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
         )}
 
         {/* 2. 로그인 실패 에러 메시지 */}
-        {errorMessage && (
+        {loginError && (
           <Alert
-            message={errorMessage}
+            message={loginError}
             type="error"
             showIcon
             closable
-            onClose={() => setErrorMessage(null)}
+            onClose={() => setLoginError(null)}
             style={{ marginBottom: 20 }}
           />
         )}
@@ -98,16 +147,30 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ username: 'admin', password: '1111' }}
+          disabled={!tenantValid}
         >
+          {/* admin 서브도메인: 로그인할 회사 선택 (미선택 시 admin 회사 = KFS 관리자) */}
+          {tenant?.admin && (
+            <Form.Item name="companyCode" label="회사">
+              <Select
+                size="large"
+                allowClear
+                showSearch
+                placeholder="admin (관리자)"
+                optionFilterProp="label"
+                options={companies.map(c => ({ value: c.companyCode, label: `${c.companyCode} (${c.companyName})` }))}
+              />
+            </Form.Item>
+          )}
+
           <Form.Item
             name="username"
-            label="아이디"
-            rules={[{ required: true, message: '아이디를 입력해주세요.' }]}
+            label="로그인 ID"
+            rules={[{ required: true, message: '로그인 ID를 입력해주세요.' }]}
           >
             <Input
               prefix={<UserOutlined style={{ color: 'rgba(0,0,0,.25)' }} />}
-              placeholder="admin / user1"
+              placeholder="사번 (예: 000) 또는 관리자 ID"
               size="large"
             />
           </Form.Item>
@@ -119,7 +182,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
           >
             <Input.Password
               prefix={<LockOutlined style={{ color: 'rgba(0,0,0,.25)' }} />}
-              placeholder="1111"
+              placeholder="비밀번호"
               size="large"
             />
           </Form.Item>
@@ -131,20 +194,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, notice, on
           </Form.Item>
         </Form>
 
-        <Divider plain><Text type="secondary" style={{ fontSize: 12 }}>빠른 테스트 계정</Text></Divider>
-
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Button block onClick={() => handleQuickFill('admin')}>
-            관리자 계정 (admin / 1111 - ROLE_ADMIN)
-          </Button>
-          <Button block onClick={() => handleQuickFill('user1')}>
-            일반 계정 (user1 / 1111 - ROLE_USER)
-          </Button>
-        </Space>
-
-        <div style={{ marginTop: 20, textAlign: 'center' }}>
+        <div style={{ marginTop: 8, textAlign: 'center' }}>
           <Paragraph type="secondary" style={{ fontSize: 12, margin: 0 }}>
-            * 패스워드는 테스트 환경 특성에 따라 평문 비교됩니다.
+            * 회사는 접속한 서브도메인(<Text code>{tenant?.companyCode ?? '-'}</Text>)으로 정해집니다.
+            <br />* 사원(emp01_person)을 먼저 찾고, 없으면 회사관리자(sys02_user)로 로그인합니다.
           </Paragraph>
         </div>
       </Card>

@@ -7,10 +7,12 @@ import com.asseterp.security.biz.auth.dto.UserPrincipal;
 import com.asseterp.security.biz.auth.service.AuthService;
 import com.asseterp.security.common.dto.ApiResponse;
 import com.asseterp.security.common.jwt.AuthCookieManager;
+import com.asseterp.security.common.tenant.TenantFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,14 +29,15 @@ public class AuthController {
     public ApiResponse<LoginRes> login(@RequestBody LoginReq req,
                                        HttpServletRequest request,
                                        HttpServletResponse response) {
-        AuthResult result = authService.login(req);
+        AuthResult result = authService.login(req, TenantFilter.current(request),
+                request.getRemoteAddr(), request.getHeader(HttpHeaders.USER_AGENT));
         cookieManager.writeTokens(request, response, result.accessToken(), result.refreshToken());
         return ApiResponse.ok("로그인에 성공했습니다.", result.loginRes());
     }
 
     @PostMapping("/refresh")
     public ApiResponse<LoginRes> refresh(HttpServletRequest request, HttpServletResponse response) {
-        AuthResult result = authService.refresh(cookieManager.resolveRefreshToken(request));
+        AuthResult result = authService.refresh(cookieManager.resolveRefreshToken(request), TenantFilter.current(request));
         // Access Token + Refresh Token 모두 재발급 (Sliding Session)
         cookieManager.writeTokens(request, response, result.accessToken(), result.refreshToken());
         return ApiResponse.ok("토큰이 갱신되었습니다.", result.loginRes());

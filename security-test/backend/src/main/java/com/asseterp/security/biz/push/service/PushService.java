@@ -10,7 +10,7 @@ import com.asseterp.security.biz.push.dto.NoticeReq;
 import com.asseterp.security.biz.push.dto.NotificationPayload;
 import com.asseterp.security.biz.push.dto.NotificationReq;
 import com.asseterp.security.biz.push.dto.SessionTerminatedPayload;
-import com.asseterp.security.biz.user.mapper.AppUserMapper;
+import com.asseterp.security.biz.user.mapper.AccountMapper;
 import com.asseterp.security.common.error.BusinessException;
 import com.asseterp.security.common.error.ErrorCode;
 import com.asseterp.security.common.websocket.WsDestinations;
@@ -36,7 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PushService {
 
     private final WsPublisher wsPublisher;
-    private final AppUserMapper appUserMapper;
+    private final AccountMapper accountMapper;
     private final AuditLogService auditLogService;
 
     /**
@@ -56,19 +56,24 @@ public class PushService {
 
     /**
      * 개인 알림 (/user/queue/notifications). 받는 사용자가 접속해 있지 않으면 전달되지 않는다 (저장하지 않음).
+     * 받는 사람은 보내는 사람과 같은 회사의 로그인 ID이다. WebSocket 사용자 이름은 {회사코드}:{로그인ID}.
      *
      * @return 발송한 메시지 ID
      */
     public String createNotification(NotificationReq req, UserPrincipal sender) {
-        if (appUserMapper.findByUsername(req.username()).isEmpty()) {
+        String companyCode = sender.getCompanyCode();
+        String loginId = req.username();
+        if (accountMapper.findEmployee(companyCode, loginId).isEmpty()
+                && accountMapper.findManager(companyCode, loginId).isEmpty()) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
+        String receiver = companyCode + ":" + loginId;
         WsMessage<NotificationPayload> message = WsMessage.of(WsMessageType.NOTIFICATION, levelOrInfo(req.level()),
                 req.title(), req.message(), new NotificationPayload(req.link(), req.refId()), senderOf(sender));
-        wsPublisher.publish(WsRoute.user(req.username(), WsDestinations.QUEUE_NOTIFICATIONS), message);
+        wsPublisher.publish(WsRoute.user(receiver, WsDestinations.QUEUE_NOTIFICATIONS), message);
 
         auditLogService.record(AuditEventType.NOTIFICATION_SEND, AuditResult.SUCCESS, sender.getUsername(),
-                req.username(), req.title());
+                receiver, req.title());
         return message.id();
     }
 

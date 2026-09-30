@@ -2,8 +2,8 @@ package com.asseterp.security.biz.audit.service;
 
 import com.asseterp.security.biz.audit.dto.AuditEventType;
 import com.asseterp.security.biz.audit.dto.AuditResult;
-import com.asseterp.security.biz.user.entity.AppUser;
-import com.asseterp.security.biz.user.mapper.AppUserMapper;
+import com.asseterp.security.biz.user.dto.LoginAccount;
+import com.asseterp.security.biz.user.mapper.AccountMapper;
 import com.asseterp.security.common.config.properties.AuditProperties;
 import com.asseterp.security.common.config.properties.AuthProperties;
 import com.asseterp.security.support.TestProperties;
@@ -27,17 +27,18 @@ class SessionExpiryAuditListenerTest {
     private final StringRedisTemplate redisTemplate = mock(StringRedisTemplate.class);
     @SuppressWarnings("unchecked")
     private final ValueOperations<String, String> valueOps = mock(ValueOperations.class);
-    private final AppUserMapper appUserMapper = mock(AppUserMapper.class);
+    private final AccountMapper accountMapper = mock(AccountMapper.class);
     private final AuditLogService auditLogService = mock(AuditLogService.class);
 
     private final SessionExpiryAuditListener listener = new SessionExpiryAuditListener(
-            authProperties, auditProperties.sessionExpiry(), redisTemplate, appUserMapper, auditLogService);
+            authProperties, auditProperties.sessionExpiry(), redisTemplate, accountMapper, auditLogService);
 
     @BeforeEach
     void setUp() {
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
-        when(appUserMapper.findById(2L)).thenReturn(Optional.of(
-                AppUser.builder().userId(2L).username("user1").build()));
+        when(accountMapper.findEmployeeById(2L)).thenReturn(Optional.of(new LoginAccount(
+                LoginAccount.EMPLOYEE, 2L, 28000L, "kfstest", "한국펀드서비스(주)", "user1", "일반 사용자",
+                null, null, null, "100")));
     }
 
     private void expire(String key) {
@@ -53,7 +54,7 @@ class SessionExpiryAuditListenerTest {
 
         verify(valueOps).setIfAbsent(eq(auditProperties.sessionExpiry().dedupKeyPrefix() + "2"), anyString(),
                 eq(auditProperties.sessionExpiry().dedupTtl()));
-        verify(auditLogService).record(eq(AuditEventType.SESSION_EXPIRED), eq(AuditResult.SUCCESS), eq("user1"), any(), any());
+        verify(auditLogService).record(eq(AuditEventType.SESSION_EXPIRED), eq(AuditResult.SUCCESS), eq("kfstest:user1"), any(), any());
     }
 
     @Test

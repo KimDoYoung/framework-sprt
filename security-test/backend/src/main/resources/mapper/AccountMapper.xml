@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS 로그인 조회(Sys02_User.getLoginInfo)를 축약한 것
+   - 사원: emp00_trans_info.selectByLoginId + sys25_password.selectByPersonId
+   - 관리자: sys02_user.selectByLoginId
+  컬럼 순서는 LoginAccount 레코드 생성자 순서와 같아야 한다.
+-->
+<mapper namespace="com.asseterp.security.biz.user.mapper.AccountMapper">
+
+    <!-- 사원: 비밀번호는 sys25_password 최신 seq, 현재 발령은 오늘 기준 최신 emp03_trans -->
+    <sql id="employeeSelect">
+        SELECT 'E'                    AS account_type,
+               p.emp01_person_id      AS account_id,
+               c.sys01_company_id     AS company_id,
+               c.sys01_loc_nm         AS company_code,
+               c.sys01_company_nm     AS company_name,
+               p.emp01_emp_no         AS login_id,
+               p.emp01_kor_nm         AS name,
+               pw.pwd                 AS password,
+               pw.age_days            AS password_age_days,
+               p.emp01_lock_yn        AS lock_yn,
+               t.emp03_trans_cd       AS trans_code
+        FROM emp01_person p
+             INNER JOIN sys01_company c ON c.sys01_company_id = p.emp01_company_id
+             LEFT JOIN LATERAL (
+                 SELECT TO_DECRYPTS(sys25_pwd)                                       AS pwd,
+                        COALESCE(DATE_PART('day', f_sysdate() - sys25_work_date), 0)::int AS age_days
+                 FROM sys25_password
+                 WHERE sys25_company_id = p.emp01_company_id
+                   AND sys25_person_id  = p.emp01_person_id
+                 ORDER BY sys25_seq DESC
+                 LIMIT 1
+             ) pw ON TRUE
+             LEFT JOIN LATERAL (
+                 SELECT emp03_trans_cd
+                 FROM emp03_trans
+                 WHERE emp03_person_id  = p.emp01_person_id
+                   AND emp03_trans_date <![CDATA[ <= ]]> f_sysdate()
+                 ORDER BY emp03_trans_date DESC, emp03_trans_id DESC
+                 LIMIT 1
+             ) t ON TRUE
+    </sql>
+
+    <sql id="managerSelect">
+        SELECT 'M'                    AS account_type,
+               u.sys02_user_id        AS account_id,
+               c.sys01_company_id     AS company_id,
+               c.sys01_loc_nm         AS company_code,
+               c.sys01_company_nm     AS company_name,
+               u.sys02_login_id       AS login_id,
+               u.sys02_kor_nm         AS name,
+               TO_DECRYPTS(u.sys02_passwd) AS password,
+               0                      AS password_age_days,
+               NULL                   AS lock_yn,
+               NULL                   AS trans_code
+        FROM sys02_user u
+             INNER JOIN sys01_company c ON c.sys01_company_id = u.sys02_company_id
+    </sql>
+
+    <select id="findEmployee" resultType="com.asseterp.security.biz.user.dto.LoginAccount">
+        <include refid="employeeSelect"/>
+        WHERE c.sys01_loc_nm  = #{companyCode}
+          AND p.emp01_emp_no  = #{loginId}
+    </select>
+
+    <select id="findManager" resultType="com.asseterp.security.biz.user.dto.LoginAccount">
+        <include refid="managerSelect"/>
+        WHERE c.sys01_loc_nm    = #{companyCode}
+          AND u.sys02_login_id  = #{loginId}
+    </select>
+
+    <select id="findEmployeeById" resultType="com.asseterp.security.biz.user.dto.LoginAccount">
+        <include refid="employeeSelect"/>
+        WHERE p.emp01_person_id = #{personId}
+    </select>
+
+    <select id="findManagerById" resultType="com.asseterp.security.biz.user.dto.LoginAccount">
+        <include refid="managerSelect"/>
+        WHERE u.sys02_user_id = #{userId}
+    </select>
+
+    <select id="findEmployeesByCompany" resultType="com.asseterp.security.biz.user.dto.LoginAccount">
+        SELECT 'E'                    AS account_type,
+               p.emp01_person_id      AS account_id,
+               c.sys01_company_id     AS company_id,
+               c.sys01_loc_nm         AS company_code,
+               c.sys01_company_nm     AS company_name,
+               p.emp01_emp_no         AS login_id,
+               p.emp01_kor_nm         AS name,
+               NULL                   AS password,
+               NULL                   AS password_age_days,
+               p.emp01_lock_yn        AS lock_yn,
+               NULL                   AS trans_code
+        FROM emp01_person p
+             INNER JOIN sys01_company c ON c.sys01_company_id = p.emp01_company_id
+        WHERE p.emp01_company_id = #{companyId}
+        ORDER BY (p.emp01_lock_yn = 'true') DESC, p.emp01_emp_no
+    </select>
+
+    <!-- AS-IS emp01_person.updateLockYn -->
+    <update id="updateEmpLockYn">
+        UPDATE emp01_person
+        SET emp01_lock_yn = #{lockYn}
+        WHERE emp01_person_id = #{personId}
+    </update>
+
+</mapper>

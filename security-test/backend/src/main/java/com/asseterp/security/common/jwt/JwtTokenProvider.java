@@ -23,6 +23,8 @@ public class JwtTokenProvider {
     private static final String CLAIM_TOKEN_TYPE = "typ";
     /** Refresh Token 고유 ID. 갱신 때마다 새로 발급되어 재사용 탐지에 사용 */
     public static final String CLAIM_REFRESH_ID = "rid";
+    /** 토큰을 발급한 호스트의 테넌트 코드 (서브도메인). 다른 서브도메인에서의 사용을 막는다 */
+    public static final String CLAIM_TENANT = "tenant";
 
     private final JwtProperties jwtProperties;
     private final AuthProperties authProperties;
@@ -54,15 +56,19 @@ public class JwtTokenProvider {
                 .expiration(expiryDate)
                 .claim(CLAIM_TOKEN_TYPE, TokenType.ACCESS.name())
                 .claim("username", principal.getUsername())
+                .claim("login_id", principal.getLoginId())
                 .claim("name", principal.getName())
                 .claim("company_id", principal.getCompanyId())
+                .claim("company_code", principal.getCompanyCode())
+                .claim("company_name", principal.getCompanyName())
+                .claim(CLAIM_TENANT, principal.getTenant())
                 .claim("dept_id", principal.getDeptId())
                 .claim("roles", principal.getRoles())
                 .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 
-    public String generateRefreshToken(Long userId, String jti, String refreshId) {
+    public String generateRefreshToken(Long userId, String tenant, String jti, String refreshId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtProperties.refreshTokenExpiration());
 
@@ -74,6 +80,7 @@ public class JwtTokenProvider {
                 .expiration(expiryDate)
                 .claim(CLAIM_TOKEN_TYPE, TokenType.REFRESH.name())
                 .claim(CLAIM_REFRESH_ID, refreshId)
+                .claim(CLAIM_TENANT, tenant)
                 .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
@@ -112,8 +119,12 @@ public class JwtTokenProvider {
         return UserPrincipal.builder()
                 .userId(Long.parseLong(claims.getSubject()))
                 .username(claims.get("username", String.class))
+                .loginId(claims.get("login_id", String.class))
                 .name(claims.get("name", String.class))
-                .companyId(claims.get("company_id", Integer.class))
+                .companyId(claims.get("company_id", Long.class))
+                .companyCode(claims.get("company_code", String.class))
+                .companyName(claims.get("company_name", String.class))
+                .tenant(claims.get(CLAIM_TENANT, String.class))
                 .deptId(claims.get("dept_id", String.class))
                 .roles(roles != null ? roles : List.of(authProperties.defaultRole()))
                 .jti(claims.getId())

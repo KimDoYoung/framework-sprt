@@ -24,7 +24,7 @@
 5. **Refresh Token 교체(Rotation) 및 재사용 탐지**:
    - 갱신할 때마다 Refresh Token을 새 ID(`rid`)로 교체하고, 이미 교체된 토큰이 다시 사용되면 탈취로 판단하여 **세션 전체를 폐기**한다 (`REFRESH_TOKEN_REUSED`).
 6. **로그인 실패 잠금 (AS-IS 방식)**:
-   - 연속 로그인 실패가 설정 횟수(기본 2회)에 도달하면 계정을 **영구 잠금**(`app_user.lock_yn='Y'`)하고, 관리자만 해제할 수 있다.
+   - 연속 로그인 실패가 설정 횟수(기본 5회, AS-IS와 동일)에 도달하면 사원 계정을 **영구 잠금**(`emp01_person.emp01_lock_yn='true'`)하고, 관리자만 해제할 수 있다. (`asis-db-연동.md` 7장)
 7. **예외 시 자동 리다이렉트 및 사유 안내**:
    - 세션 만료, 동시 접속 차단, 토큰 재사용 탐지, 계정 잠금으로 세션이 종료되면 즉시 로그인 화면으로 이동하고 사유를 안내 배너(`Alert`)로 표시한다.
 8. **Apache Tika 기반 Magic Number MIME 검증**:
@@ -46,7 +46,7 @@
 | **Framework** | Spring Boot | `3.4.3` | Apache-2.0 | 백엔드 애플리케이션 프레임워크 (jakarta.*) |
 | **Security** | Spring Security | `6.4.x` | Apache-2.0 | `SecurityFilterChain` Bean, Lambda DSL, `@PreAuthorize` 메서드 보안 |
 | **Token** | JJWT | `0.12.6` | Apache-2.0 | HMAC-SHA256 기반 JWT 생성, 파싱, 서명·발급자 검증 |
-| **Database** | PostgreSQL | `15.x / 16.x` | PostgreSQL License | 사용자 정보(`app_user`) 및 계정 잠금 상태 저장 |
+| **Database** | PostgreSQL | `15.x / 16.x` | PostgreSQL License | AS-IS 사용자(`emp01_person`, `sys02_user`, `sys25_password`) 및 계정 잠금 상태(`emp01_lock_yn`) |
 | **Cache/Session**| Redis | `7.x` | BSD-3-Clause | 활성 `JTI`·`rid` 세션 관리, Lua 스크립트 원자적 토큰 교체, 로그인 실패 횟수 |
 | **ORM/SQL** | MyBatis | `3.0.4` | Apache-2.0 | XML 기반 SQL 매핑 및 카멜케이스 자동 변환 |
 | **MIME 검증** | Apache Tika (`tika-core`) | `2.9.2` | Apache-2.0 | 파일 바이너리 Magic Number 기반 실제 MIME 타입 판별 |
@@ -71,7 +71,7 @@ flowchart LR
         G[GlobalExceptionHandler]
     end
     R[(Redis<br/>jti · rid · 실패횟수)]
-    D[(PostgreSQL<br/>app_user)]
+    D[(PostgreSQL<br/>emp01_person / sys02_user)]
 
     UI --> AX
     AX -- "HttpOnly 쿠키" --> F
@@ -129,7 +129,7 @@ JWT의 `sub` 클레임은 `user_id`를 의미하며, `typ` 클레임으로 Acces
 | `jti` | 세션 식별자. 로그인 시 생성되어 세션이 끝날 때까지 유지된다. 동시 로그인 차단에 사용 (3.3) |
 | `typ` | `ACCESS` / `REFRESH`. 다른 타입의 토큰을 사용하면 `INVALID_TOKEN`으로 거부된다 |
 | `rid` | Refresh Token 고유 ID. 갱신할 때마다 새로 발급되며 재사용 탐지에 사용 (3.4) |
-| `dept_id` | `app_user`에 부서 컬럼이 없어 `asseterp.auth.default-dept-id` 설정값(`D101`)을 사용 |
+| `dept_id` | 발령 조직을 아직 조회하지 않아 `asseterp.auth.default-dept-id` 설정값(`D101`)을 사용 |
 
 토큰 검증 시 서명, 발급자(`iss`), 만료(`exp`), 토큰 타입(`typ`)을 모두 확인한다 (`JwtTokenProvider.parseClaims`).
 
@@ -197,7 +197,7 @@ Refresh Token이 탈취되면 공격자가 계속 갱신하며 세션을 유지�
 
 ### 3.5 로그인 실패 잠금 (AS-IS `emp01_person.emp01_lock_yn` 방식)
 
-AS-IS AssetERP는 `emp01_person.emp01_lock_yn`(잠금여부) 컬럼으로 계정 잠금 상태를 DB에 영구 저장한다. TOBE도 같은 방식으로 `app_user.lock_yn`을 두고, 연속 실패 횟수는 Redis로 센다.
+AS-IS AssetERP는 `emp01_person.emp01_lock_yn`(잠금여부) 컬럼으로 계정 잠금 상태를 DB에 영구 저장한다. TOBE도 같은 컬럼(`emp01_lock_yn='true'`)을 쓰고, 연속 실패 횟수는 Redis로 센다 (AS-IS는 브라우저 변수로 셌다).
 
 ```mermaid
 flowchart TD
@@ -216,7 +216,7 @@ flowchart TD
 - **잠금 기준**: `asseterp.auth.login-lock.max-failures`(기본 **2회**) 연속 실패.
 - **실패 횟수 초기화**: 로그인 성공 시, 또는 마지막 실패 후 `fail-count-ttl`(기본 24시간)이 지나면 초기화된다.
 - **잠긴 계정**: 비밀번호를 검사하지 않고 즉시 거부하여, 잠긴 뒤의 무차별 대입 시도를 막는다.
-- **트랜잭션**: 잠금(`UPDATE app_user SET lock_yn='Y'`)은 `REQUIRES_NEW` 트랜잭션으로 커밋한다. 바로 뒤에 로그인 실패 예외가 발생해도 잠금이 롤백되지 않는다.
+- **트랜잭션**: 잠금(`UPDATE emp01_person SET emp01_lock_yn='true'`)은 `REQUIRES_NEW` 트랜잭션으로 커밋한다. 바로 뒤에 로그인 실패 예외가 발생해도 잠금이 롤백되지 않는다.
 - **세션 중 잠금**: 로그인된 상태에서 계정이 잠기면 다음 토큰 갱신 시 세션이 폐기되고 401 `ACCOUNT_LOCKED`로 종료된다.
 - **잠금 해제**: 관리자(`ROLE_ADMIN`)만 가능하다. 해제 시 `lock_yn='N'`으로 바꾸고 실패 횟수도 초기화한다.
   - API: `GET /api/user/list`(잠금 여부·연속 실패 횟수 포함), `POST /api/user/{userId}/unlock`
@@ -255,7 +255,7 @@ sequenceDiagram
     participant Interceptor as Axios Response Interceptor
     participant Backend as Spring Boot (Filter / Controller)
     participant Redis as Redis
-    participant DB as PostgreSQL (app_user)
+    participant DB as PostgreSQL (emp01_person)
 
     Client->>Backend: POST /api/auth/login (admin/1111)
     Backend->>DB: 사용자 조회, 잠금 여부 확인, 비밀번호 비교
@@ -322,7 +322,9 @@ flowchart TD
 
 ## 4. 데이터 설계
 
-### 4.1 `app_user` 테이블 구조
+### 4.1 `app_user` 테이블 구조 (폐기)
+
+> 2026-09-30부터 사용하지 않는다. 인증은 AS-IS 테이블로 전환했다 (`asis-db-연동.md` 7장). 테이블은 확인 후 DROP한다.
 
 ```sql
 DROP TABLE IF EXISTS app_user;

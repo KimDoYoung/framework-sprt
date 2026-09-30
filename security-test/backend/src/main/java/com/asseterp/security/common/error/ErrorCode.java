@@ -19,13 +19,18 @@ public enum ErrorCode {
     SESSION_NOT_FOUND(HttpStatus.UNAUTHORIZED, "세션 정보가 없습니다. 다시 로그인해주세요."),
     MULTI_LOGIN_DETECTED(HttpStatus.UNAUTHORIZED, "다른 기기/브라우저에서 로그인되어 현재 세션이 차단되었습니다."),
     REFRESH_TOKEN_REUSED(HttpStatus.UNAUTHORIZED, "이미 사용된 인증 토큰이 재사용되어 보안을 위해 세션을 종료했습니다. 다시 로그인해주세요."),
+    TENANT_MISMATCH(HttpStatus.UNAUTHORIZED, "다른 회사(서브도메인)에서 발급된 인증 정보입니다. 다시 로그인해주세요."),
+    PASSWORD_CHANGE_REQUIRED(HttpStatus.UNAUTHORIZED, "비밀번호를 설정(변경)해야 합니다. 관리자에게 문의해주세요."),
+    RETIRED_EMPLOYEE(HttpStatus.UNAUTHORIZED, "퇴사한 사원입니다. 관리자에게 문의해주세요."),
 
     // 인가 (403)
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
     WS_DESTINATION_DENIED(HttpStatus.FORBIDDEN, "구독 또는 전송이 허용되지 않은 WebSocket 목적지입니다."),
 
-    // 사용자
+    // 사용자 / 회사
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
+    TENANT_NOT_FOUND(HttpStatus.NOT_FOUND, "유효하지 않은 고객정보입니다."),
+    COMPANY_NOT_FOUND(HttpStatus.BAD_REQUEST, "선택한 회사를 찾을 수 없거나 사용 중지된 회사입니다."),
 
     // 파일
     INVALID_FILE(HttpStatus.BAD_REQUEST, "허용되지 않는 파일입니다."),

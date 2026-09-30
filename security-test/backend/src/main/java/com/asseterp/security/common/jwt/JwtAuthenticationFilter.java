@@ -8,6 +8,8 @@ import com.asseterp.security.common.error.BusinessException;
 import com.asseterp.security.common.error.ErrorCode;
 import com.asseterp.security.common.error.ErrorResponseWriter;
 import com.asseterp.security.common.log.MdcKeys;
+import com.asseterp.security.common.tenant.Tenant;
+import com.asseterp.security.common.tenant.TenantFilter;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -51,6 +53,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 UserPrincipal principal = tokenProvider.toUserPrincipal(
                         tokenProvider.parseClaims(token, JwtTokenProvider.TokenType.ACCESS));
+
+                // 다른 서브도메인에서 발급된 토큰은 거부 (쿠키는 호스트별로 분리되므로 Authorization 헤더로 옮겨 온 경우)
+                Tenant tenant = TenantFilter.current(request);
+                if (tenant != null && !tenant.code().equals(principal.getTenant())) {
+                    log.warn("테넌트 불일치 토큰 거부: user={}, token={}, request={}",
+                            principal.getUsername(), principal.getTenant(), tenant.code());
+                    request.setAttribute(AUTH_ERROR_ATTRIBUTE, ErrorCode.TENANT_MISMATCH);
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
                 // 요구사항 7: 멀티 로그인 검사 (Redis의 최신 jti와 일치 여부 확인)
                 switch (redisTokenService.checkJti(principal.getUserId(), principal.getJti())) {

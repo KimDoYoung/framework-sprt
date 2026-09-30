@@ -27,7 +27,7 @@
     <springProperty scope="context" name="ASYNC_MAX_FLUSH_TIME" source="asseterp.log.async.max-flush-time" defaultValue="5000"/>
 
     <!-- 추적ID / 사용자 / 클라이언트 IP는 MDC(MdcLoggingFilter, JwtAuthenticationFilter)에서 채운다 -->
-    <property name="MDC_PATTERN" value="[%X{traceId:-SYSTEM}] [%X{userId:--}] [%X{clientIp:--}]"/>
+    <property name="MDC_PATTERN" value="[%X{traceId:-SYSTEM}] [%X{tenant:--}] [%X{userId:--}] [%X{clientIp:--}]"/>
     <property name="FILE_LOG_PATTERN"
               value="%d{yyyy-MM-dd HH:mm:ss.SSS} ${MDC_PATTERN} [%thread] %-5level %logger{36} - %msg%n"/>
     <property name="CONSOLE_LOG_PATTERN"
