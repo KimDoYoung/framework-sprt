@@ -33,6 +33,13 @@
 ## 폴더
 
 - antdesign : UI테스트, Ant Design으로 화면디자인을 만들어 봄 
+- security-test : jwt 쿠키를 이용한 security 모듈 및 websocket 모듈, tenant가져오기
 
 
+## tools
+
+- 목적을 달성하기 위한 몇가지 python 및 shell 프로그램
+- init-sprt.sh : 초기 target 기술스택을 생성하기 위한 shell
+- dbml-index.py : docs/as-is/db에 db index를 만듬.
+- src-ondex.py : docs/as-is/src에  AssetERP의 소스로 index를 만듬.
 
