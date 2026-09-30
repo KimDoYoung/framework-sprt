@@ -17,6 +17,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `docs/TOBE-Framework.md` — backend/frontend 네이밍 및 레이어 규칙(신규 코드 작성 시 반드시 준수).
 - `docs/docker-compose.yml` — 로컬 PostgreSQL/Redis/Tomcat 개발 인프라 정의(호스트 경로가 특정 서버에 고정되어 있어 그대로는 다른 환경에서 재사용 불가).
 - `tools/init-sprt.sh` — `antdesign/` 프로젝트 전체(디렉토리 구조, `package.json`, 모든 소스 파일, `bm.sh`/`fm.sh`/`deploy.sh` 등)를 처음부터 생성하는 스캐폴딩 스크립트. `antdesign/`의 구조를 바꾸는 작업을 하면 이 스크립트도 함께 갱신해야 재생성 시 실제 코드와 어긋나지 않는다.
+- `tools/dbml-index.py`, `tools/src-index.py` — AS-IS DB 스키마·소스 색인 생성기. 출력은 `docs/as-is/`(git-ignored, 재생성 가능).
+
+## AS-IS 참조 (전환 작업 시)
+
+AS-IS 소스(`~/oms-data/src/Asset-ERP`, 약 3,000개 Java)와 DB 스키마 문서는 수 MB라 통째로 읽지 않는다. **색인에서 필요한 파일·줄만 골라 읽는다.**
+
+1. `docs/as-is/src/menus.md`를 grep해 메뉴 → 화면 파일(`docs/as-is/src/{도메인}/screens/{화면}.md`)을 찾는다.
+2. 화면 파일에 함께 쓰는 클래스, 서비스 → 서버 메서드(파일:줄) → SQL ID → 테이블이 있다. 다른 도메인 컴포넌트(예: 전자결재 `Apr01_Edit_ApprDoc`)는 링크만 있다.
+3. 테이블 정의·컬럼 한글 주석은 `docs/as-is/db/tables/{도메인}.md`, DB 함수는 `docs/as-is/db/functions/{이름}.md`.
+4. 실제 코드는 색인이 가리키는 소스 파일·줄만 연다.
+
+색인이 없거나 오래됐으면 다시 만든다:
+```bash
+python3 tools/dbml-index.py .yunhee/asseterp-dbml.md                          # → docs/as-is/db/
+python3 tools/src-index.py ~/oms-data/src/Asset-ERP --menus docs/as-is/menus.tsv  # → docs/as-is/src/ (menus.tsv 생성 SQL은 docs/as-is/src/README.md)
+```
 
 ## 커맨드
 
