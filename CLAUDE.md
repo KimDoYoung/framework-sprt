@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `antdesign/bm.sh`, `antdesign/fm.sh`, `antdesign/deploy.sh` — 각각 backend/frontend 관리 스크립트와 배포 스크립트.
 - `docs/TOBE-Framework.md` — backend/frontend 네이밍 및 레이어 규칙(신규 코드 작성 시 반드시 준수).
 - `docs/docker-compose.yml` — 로컬 PostgreSQL/Redis/Tomcat 개발 인프라 정의(호스트 경로가 특정 서버에 고정되어 있어 그대로는 다른 환경에서 재사용 불가).
-- `tools/init-sprt.sh` — `antdesign/` 프로젝트 전체(디렉토리 구조, `package.json`, 모든 소스 파일, `bm.sh`/`fm.sh`/`deploy.sh` 등)를 처음부터 생성하는 스캐폴딩 스크립트. `antdesign/`의 구조를 바꾸는 작업을 하면 이 스크립트도 함께 갱신해야 재생성 시 실제 코드와 어긋나지 않는다.
+- `tools/init-sprt.sh` — `antdesign/`의 골격(디렉토리 구조, 설정 파일, 빈 앱 셸 `App.tsx`, `bm.sh`/`fm.sh`/`deploy.sh`)만 생성하는 스캐폴딩 스크립트. 화면 소스는 생성하지 않는다(추후 `git archive`로 `antdesign/`에서 가져오는 방식으로 전환 예정). 빈 디렉토리에서만 실행되며, `antdesign/`의 설정 파일·디렉토리 구조를 바꾸면 이 스크립트도 함께 갱신한다.
 - `tools/dbml-index.py`, `tools/src-index.py` — AS-IS DB 스키마·소스 색인 생성기. 출력은 `docs/as-is/`(git-ignored, 재생성 가능).
 
 ## AS-IS 참조 (전환 작업 시)
