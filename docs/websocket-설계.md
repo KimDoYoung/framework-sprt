@@ -3,7 +3,7 @@
 > **프로젝트**: AssetERP 차세대 전환 보안 프로토타입 (`security-test`)  
 > **기준 일자**: 2026-09-30  
 > **대상 환경**: Java 21 / Spring Boot 3.4.3 (spring-boot-starter-websocket) / React 19 / @stomp/stompjs 7.x / Redis 7.x / Tomcat 10.1 (WAR)  
-> **관련 문서**: `docs/security-설계.md`(인증·세션), `docs/log-설계.md`(MDC·감사 로그)
+> **관련 문서**: `docs/security-설계.md`(인증·세션), `docs/log-설계.md`(MDC·감사 로그), `docs/asis-db-연동.md`(AS-IS 사용자·회사·권한 데이터)
 
 ---
 
@@ -309,3 +309,79 @@ Node(@stomp/stompjs) 스크립트로 실제 서버에 연결해 확인했다.
 | 브로커 확장 | 인스턴스별 SimpleBroker + Redis 중계 | 대규모·구독 다양화 시 외부 STOMP 브로커(RabbitMQ) relay |
 | 클라이언트 → 서버 메시지 | `/app/echo`만 존재 | 읽음 처리(ACK) 등 추가 시 `@MessageMapping` + 권한 검사 확장 |
 | 메인 셸 연동 | security-test 단독 화면 | `antdesign` StatusBar의 "EventBus / Push" 표시·공지 영역에 `realtime` 연결 |
+| 회사·조직 단위 발송 | 미구현. "전체 공지"가 회사 구분 없이 전체에 전달됨 | 8장 (AS-IS DB 연동 후) |
+
+---
+
+## 8. 추후 개발: 회사·조직 단위 메시지
+
+> **상태**: 설계만 정리함. `docs/asis-db-연동.md`의 AS-IS DB 전환(특히 로그인 ID, 역할 매핑)을 먼저 해야 한다.
+
+### 8.1 요구사항
+
+예) **회사 A의 대표이사가 회사 A 전 직원에게** 메시지를 보낸다. 다른 회사 사용자는 받지 못하고, 다른 회사로 보낼 수도 없어야 한다.
+
+### 8.2 현재 구현의 한계
+
+| 항목 | 현재 | 문제 |
+|:---|:---|:---|
+| 전체 공지 `/topic/notice` | 접속한 **모든 회사** 사용자에게 전달 | 회사 A 관리자의 공지가 회사 B에도 간다 (멀티 테넌트 격리 위반) |
+| 발송 권한 | `ROLE_ADMIN` 하나 | "회사 대표", "부서장" 같은 구분이 없다 |
+| 연결 사용자 정보 `WsUser` | userId, username, jti, roles | `companyId`, 부서가 없어 대상 필터링이 불가능하다 |
+| 저장 | 저장하지 않음 | 오프라인 직원은 공지를 영영 받지 못한다 |
+
+`app_user`에는 `company_id`만 있고 직위·직책·부서가 없다. 이 요구사항은 AS-IS 데이터(`sys01_company`, `emp03_trans`, `sys04_role`/`sys05_user_role`)가 있어야 제대로 설계된다.
+
+### 8.3 설계 방향
+
+**① 대상 범위와 목적지**
+
+| 범위 | 목적지 | 구독 허용 조건 (`StompAuthChannelInterceptor`) | AS-IS 근거 |
+|:---|:---|:---|:---|
+| 회사 | `/topic/company/{companyId}` | `WsUser.companyId == {companyId}` | `emp01_company_id` |
+| 조직(부서) | `/topic/org/{orgCodeId}` | 본인 소속(겸직 포함) 조직 | 최신 유효 `emp03_trans.emp03_org_code_id` |
+| 지정 사원 | `/user/queue/notifications` (기존) | 본인 | `bbs03_target.bbs03_person_id` |
+| 전체 고객사 | `/topic/notice` (기존) | 인증 사용자 | `bbs02_public_company_yn` (운영사 공지) |
+
+- 목적지 경로의 ID는 서버가 **구독 시 본인 정보와 대조**한다. 클라이언트가 다른 회사 ID로 구독하면 `WS_DESTINATION_DENIED`를 받는다.
+- 발송 API는 대상 회사를 요청으로 받지 않고 **발송자 토큰의 `companyId`** 를 쓴다. 그래서 회사 A 사용자는 구조적으로 회사 B에 보낼 수 없다.
+- 기존 `WsRoute.all(destination)`으로 Redis 중계를 타므로 다중 인스턴스에서도 추가 작업 없이 동작한다.
+- `/topic/notice`(전체 고객사)는 운영사(시스템 관리자) 전용으로 제한한다.
+
+**② 발송 권한**
+
+직위·직책(`EmpPosCode` 100 사장, `EmpTitleCode` 100 대표이사)이 아니라 **역할(`sys04_role`/`sys05_user_role`)** 로 판단하는 것을 권장한다.
+- AS-IS의 권한 체계 자체가 역할 기반이다(메뉴 권한 `sys07_role_menu`). 발령 때마다 직위 코드를 권한에 연동하면 관리가 어렵다.
+- "대표이사가 보낸다"는 조건은 해당 회사에서 대표이사에게 "회사 공지 발송" 역할을 부여하는 것으로 표현한다.
+- 역할명 → Spring 권한 매핑(`asis-db-연동.md` Q6)이 정해지면 예를 들어 `COMPANY_NOTICE` 권한으로 검사한다.
+
+**③ 저장 + 실시간 push (AS-IS 공지 테이블 연계)**
+
+AS-IS에는 이미 공지와 대상 모델이 있다: `bbs02_notice`(공지), `bbs04_target_company`(대상 회사), `bbs03_target`(대상 사원).
+WebSocket은 공지를 **저장하는 수단이 아니라 "새 공지가 있다"는 실시간 트리거**로 쓰는 것이 맞다.
+
+```
+발송 → bbs02_notice (+ bbs03/bbs04 대상) INSERT → 커밋 후 WsPublisher.publish(회사/조직/사원 목적지, NOTICE{noticeId})
+                                                         │
+접속 중 사용자: 즉시 알림 표시 ◀───────────────────────────┘
+오프라인 사용자: 다음 로그인 시 MyPage 공지 목록(bbs02 조회)에서 확인
+```
+
+- 커밋 후 발행(`@TransactionalEventListener(AFTER_COMMIT)`)한다. 롤백된 공지가 push되지 않게 하기 위해서다.
+- `NOTICE` payload에 `noticeId`를 넣는다. 클라이언트는 알림을 클릭하면 공지 상세로 이동한다.
+- 7장의 "오프라인 알림 미저장" 제약이 함께 해결된다.
+
+**④ UI**
+
+- 발송 폼: 대상 범위(우리 회사 전체 / 조직 선택 / 사원 선택)를 고르고, 수준, 제목, 내용을 입력한다. 권한이 있는 사용자에게만 표시한다.
+- 조직 선택은 `org02_info` 트리(`org02_parent_code_id`)를 쓴다.
+- 수신: 우하단 알림에 `[회사 공지]`, `[부서 공지]` 구분을 표시하고, MyPage 공지 영역을 갱신한다.
+
+### 8.4 작업 목록
+
+1. (선행) AS-IS DB 연동: 로그인 ID, 역할 매핑 (`asis-db-연동.md` 6장 1~3단계)
+2. `WsUser`에 `companyId`, `orgCodeIds`, 권한 목록을 추가하고, 핸드셰이크 시 채운다.
+3. `WsDestinations`에 회사·조직 목적지 패턴을 추가하고, `StompAuthChannelInterceptor`에 소속 검사를 추가한다(+ 테스트: 타 회사 구독 거부).
+4. `PushService`: `bbs02_notice` 저장 → 커밋 후 발행. 발송 API는 `/api/push/company-notice` 또는 AS-IS 공지 API와 통합한다.
+5. `RealtimeCard`(또는 MyPage)에 발송 폼과 수신 표시를 추가한다.
+6. 검증: 서로 다른 회사 사원 2명 이상으로 격리 테스트를 하고, 다중 인스턴스 전달을 확인한다.
