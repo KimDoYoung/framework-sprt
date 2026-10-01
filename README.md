@@ -43,3 +43,14 @@
 - dbml-index.py : docs/as-is/db에 db index를 만듬.
 - src-ondex.py : docs/as-is/src에  AssetERP의 소스로 index를 만듬.
 
+```bash
+  # 1) asseterpdb 스키마 → DBML 마크다운 (yunhee, 읽기 전용 접속)
+  yunhee dbml LOCAL_DB -o .yunhee/asseterp-dbml.md
+
+  # 2) DBML → DB 색인 (docs/as-is/db/)
+  python3 tools/dbml-index.py .yunhee/asseterp-dbml.md
+
+  # 3) AssetERP 소스 → 소스 색인 (docs/as-is/src/, OMS 결과는 지워짐)
+  python3 tools/src-index.py ~/oms-data/src/Asset-ERP --menus docs/as-is/menus.tsv
+```  
+

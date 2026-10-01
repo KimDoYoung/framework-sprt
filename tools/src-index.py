@@ -46,7 +46,7 @@ JAVA_REL = Path("application/src/main/java")
 
 COMMON_DOMAIN = "_common"   # client/vi 밖 (service, utils, grid ...)
 VIEW_DOMAIN = "_view"      # DB 색인 views.md의 뷰 (테이블처럼 취급)
-VI_ROOT_DOMAIN = "_vi"      # client/vi 바로 아래, OMS는 client/app (MainFrame, LoginPage ...)
+VI_ROOT_DOMAIN = "_frame"   # 프레임: client/vi 바로 아래, OMS는 client/app (MainFrame, LoginPage ...)
 
 SQL_CALL_RE = re.compile(r"\bsqlSession\s*\.\s*(selectList|selectOne|selectMap|selectCursor|insert|update|delete)\s*\(")
 SERVICE_REQ_RE = re.compile(r"\bnew\s+ServiceRequest\s*\(")
@@ -494,8 +494,15 @@ class Index:
             for c in items:
                 for ref in c.refs:
                     target = self.client_class(ref)
-                    if target and self.is_vi(target) and target.domain != c.domain and self.is_vi(c):
+                    if (target and self.is_vi(target) and target.domain != c.domain and self.is_vi(c)
+                            and VI_ROOT_DOMAIN not in (c.domain, target.domain)):
                         self.used_by_domains[ref].add(c.domain)
+        # 프레임 클래스(LoginPage, MainFrame, MyPage ...): 서비스를 호출하거나 업무 화면 클래스를 여는 것은 화면처럼 파일을 만든다
+        self.frame_names = {c.name for items in client.values() for c in items
+                            if c.domain == VI_ROOT_DOMAIN and not c.is_model
+                            and (c.services or any(self.is_vi(t) and t.domain != VI_ROOT_DOMAIN
+                                                   for t in map(self.client_class, c.refs) if t))}
+        self.screen_names |= self.frame_names
         self.component_names = {n for n in self.used_by_domains if n not in self.screen_names}
 
     def client_class(self, name):
@@ -504,7 +511,7 @@ class Index:
 
     @staticmethod
     def is_vi(cls):
-        return cls.domain not in (COMMON_DOMAIN, VI_ROOT_DOMAIN) and not cls.is_model
+        return cls.domain != COMMON_DOMAIN and not cls.is_model
 
     def is_unit(self, name):
         return name in self.screen_names or name in self.component_names
@@ -513,6 +520,7 @@ class Index:
         """단위(화면·컴포넌트)에서 도달하는 같은 도메인 vi 클래스.
         다른 단위는 따라가지 않고 linked로 돌려준다 (각자 자기 파일이 있다)."""
         seen, stack, linked, visited = [], [start], set(), {start}
+        in_frame = start in self.frame_names  # 업무 화면에서는 프레임 클래스(LoginUser 등)를 따라가지 않는다
         while stack:
             cls = self.client_class(stack.pop())
             if not cls:
@@ -523,7 +531,7 @@ class Index:
                     continue
                 visited.add(ref)
                 target = self.client_class(ref)
-                if not target or not self.is_vi(target):
+                if not target or not self.is_vi(target) or (target.domain == VI_ROOT_DOMAIN and not in_frame):
                     continue
                 if self.is_unit(ref):
                     linked.add(ref)
@@ -577,7 +585,8 @@ def write_unit(idx, out, name, menus_by_key, keys_by_class):
     cls = idx.client_class(name)
     classes, linked = idx.closure(name)
     is_screen = name in idx.screen_names
-    lines = [f"# {name}", "", f"- 종류: {'화면' if is_screen else '컴포넌트 (다른 도메인에서도 쓰는 클래스)'}"]
+    kind = "프레임 (로그인·메인 화면 등, 메뉴로 열지 않음)" if name in idx.frame_names else "화면" if is_screen else "컴포넌트 (다른 도메인에서도 쓰는 클래스)"
+    lines = [f"# {name}", "", f"- 종류: {kind}"]
     for key in keys_by_class.get(name, []):
         for m in menus_by_key.get(key, []):
             lines.append(f"- 메뉴: {m['path']} (#{m['no']}{'' if m['use'] == 'true' else ', 미사용'})")
@@ -787,7 +796,7 @@ def write_readme(idx, out, src_root, stats, menus_path, missing):
              "3. 링크를 따라 필요한 것만 연다: 서버 `{도메인}/services/{클래스}.md`, SQL `{도메인}/sql/{namespace}.md`(파일·줄), 테이블은 DB 색인.",
              "4. 실제 코드는 소스 경로의 해당 파일·줄만 연다.", "",
              "## 통계", "",
-             f"- 클라이언트 클래스 {n_client}개, 메뉴 화면 {len(idx.screen_names)}개, 컴포넌트 {len(idx.component_names)}개, "
+             f"- 클라이언트 클래스 {n_client}개, 메뉴 화면 {len(idx.screen_names) - len(idx.frame_names)}개, 프레임 {len(idx.frame_names)}개([_frame](_frame/README.md)), 컴포넌트 {len(idx.component_names)}개, "
              f"서버 서비스 메서드 {len(idx.service_methods)}개, 매퍼 SQL {len(idx.statements)}개",
              f"- 해석 못 한 호출: 클라이언트 {n_unres_client}건, 서버 {n_unres_server}건, 서버 메서드 없는 서비스 키 {missing[0]}개, "
              f"매퍼에 없는 SQL ID {missing[1]}개 → [unresolved.md](unresolved.md)", "",
@@ -869,7 +878,7 @@ def main():
     write_readme(idx, out, src_root, stats, args.menus, missing)
 
     print(f"[INFO] 출력: {out}")
-    print(f"[INFO] 클라이언트 {sum(len(v) for v in client.values())}개, 메뉴 화면 {len(idx.screen_names)}개, 컴포넌트 {len(idx.component_names)}개, "
+    print(f"[INFO] 클라이언트 {sum(len(v) for v in client.values())}개, 메뉴 화면 {len(idx.screen_names) - len(idx.frame_names)}개, 프레임 {len(idx.frame_names)}개, 컴포넌트 {len(idx.component_names)}개, "
           f"서비스 메서드 {len(idx.service_methods)}개, 매퍼 SQL {len(statements)}개, 도메인 {len(stats)}개")
     print(f"[INFO] 서버 메서드 없는 서비스 키 {missing[0]}개, 매퍼에 없는 SQL ID {missing[1]}개 (unresolved.md)")
 
