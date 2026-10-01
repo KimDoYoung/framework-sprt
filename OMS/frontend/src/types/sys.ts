@@ -76,6 +76,30 @@ export interface TopMenu {
   menuNm: string;
 }
 
+/** 고객별 서버사용량 (GET /api/v1/sys/files/usage) */
+export interface FileUsage {
+  companyNm: string;
+  locNm: string;
+  /** 누적 사용용량(MB) */
+  totalSize: number;
+}
+
+/** 연도·월별 사용량 (period: yyyy 또는 mm) */
+export interface FileUsagePeriod {
+  period: string;
+  totalSize: number;
+}
+
+/** 미사용 파일 (GET /api/v1/sys/files/trash) */
+export interface TrashFile {
+  fileId: number;
+  parentId: number;
+  regDate: string;
+  fileNm: string;
+  serverPath: string;
+  size: number | null;
+}
+
 /** 메뉴 관리 트리 행 (GET /api/v1/sys/menu-items, 깊이 우선 순서) */
 export interface MenuItem {
   menuId: number;

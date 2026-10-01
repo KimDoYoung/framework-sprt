@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
 import {
-  Code, CodeGroup, CodeKind, PersonMenu, CompanyDetail, CompanyMenu, CompanyUseMenu, MenuGuide, TopMenu, CompanyMenuYn, CompanySave, LoginSecure, MenuCopy, MenuItem, MenuItemSave, Role, RoleMenu, RoleUser, SysCompany, UserRole,
+  Code, CodeGroup, CodeKind, PersonMenu, CompanyDetail, CompanyMenu, CompanyUseMenu, MenuGuide, TopMenu, FileUsage, FileUsagePeriod, TrashFile, CompanyMenuYn, CompanySave, LoginSecure, MenuCopy, MenuItem, MenuItemSave, Role, RoleMenu, RoleUser, SysCompany, UserRole,
 } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
@@ -127,6 +127,28 @@ export const sysApi = {
   copyRoleMenu: async (sourceCompanyId: number, roleNm: string, menuId: number, companyIds: number[]): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/sys/role-menus/copy-menu', { sourceCompanyId, roleNm, menuId, companyIds });
     return res.data.data ?? 0;
+  },
+
+  /** 고객별 서버사용량 (SYSADMIN). useYn=true면 사용 고객만 */
+  searchFileUsage: async (useYn: boolean): Promise<FileUsage[]> => {
+    const res = await apiClient.get<ApiResponse<FileUsage[]>>('v1/sys/files/usage', { params: { useYn } });
+    return res.data.data ?? [];
+  },
+
+  searchFileUsageByYear: async (locNm: string): Promise<FileUsagePeriod[]> => {
+    const res = await apiClient.get<ApiResponse<FileUsagePeriod[]>>(`v1/sys/files/usage/${encodeURIComponent(locNm)}/years`);
+    return res.data.data ?? [];
+  },
+
+  searchFileUsageByMonth: async (locNm: string, year: string): Promise<FileUsagePeriod[]> => {
+    const res = await apiClient.get<ApiResponse<FileUsagePeriod[]>>(`v1/sys/files/usage/${encodeURIComponent(locNm)}/months`, { params: { year } });
+    return res.data.data ?? [];
+  },
+
+  /** 미사용 파일 (SYSADMIN) */
+  searchTrashFiles: async (): Promise<TrashFile[]> => {
+    const res = await apiClient.get<ApiResponse<TrashFile[]>>('v1/sys/files/trash');
+    return res.data.data ?? [];
   },
 
   /** 권한그룹의 사원 */

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS sys10_file 매퍼 중 서버사용량·미사용 파일 SQL.
+  - 서브도메인 추출: AS-IS는 sys10_server_path에서 끝 7자('/yyyymm')를 떼고 앞 17자(AS-IS 서버의 고정 접두어)를 떼어 sys01_loc_nm과 맞췄다.
+    asseterpdb 경로는 '…/docs/{서브도메인}/{yyyymm}'인데 접두어 길이가 서버마다 달라(/data1/IDMS_dev/docs/, /data1/asseterp/acd/IDMS/docs/ …)
+    그대로는 0행 → 'yyyymm 바로 앞 디렉터리'를 정규식으로 뽑는다 (의도는 같다). 'KIDMS'(로컬 PC) 경로 제외는 그대로.
+  - selectByTotalSize의 sys10_running_total_size는 같은 그룹을 다시 합한 값이라 total_size와 같다 → 하나만 둔다.
+-->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.sys.mapper.SysFileMapper">
+
+    <sql id="locNm">substring(sys10_server_path from '([^/\\]+)/[0-9]{6}$')</sql>
+
+    <!-- AS-IS sys10_file.selectByTotalSize -->
+    <select id="searchUsage" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.FileUsageRes">
+        SELECT sys01_company_nm  AS company_nm,
+               sys01_loc_nm      AS loc_nm,
+               a.total_size      AS total_size
+          FROM (
+                SELECT <include refid="locNm"/>               AS loc_nm
+                     , ROUND(SUM(sys10_size)*(0.001), 1)     AS total_size
+                  FROM sys10_file
+                 WHERE sys10_server_path NOT LIKE '%KIDMS%'
+                 GROUP BY 1
+               ) a
+               INNER JOIN sys01_company ON sys01_loc_nm = a.loc_nm
+         WHERE 1=1
+        <if test="useYn != null">
+           AND ((#{useYn} = 'true' AND COALESCE(sys01_use_yn,'true') = 'true')
+                OR
+                (#{useYn} = 'false'))
+        </if>
+         ORDER BY a.total_size DESC, a.loc_nm
+    </select>
+
+    <!-- AS-IS sys10_file.selectByTotalSizeYear -->
+    <select id="searchUsageByYear" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.FileUsagePeriodRes">
+        SELECT TO_CHAR(sys10_reg_date, 'yyyy')        AS period
+             , ROUND(SUM(sys10_size)*(0.001), 1)      AS total_size
+          FROM sys10_file
+         WHERE sys10_server_path NOT LIKE '%KIDMS%'
+           AND <include refid="locNm"/> = #{locNm}
+         GROUP BY TO_CHAR(sys10_reg_date, 'yyyy')
+         ORDER BY 1 DESC
+    </select>
+
+    <!-- AS-IS sys10_file.selectByTotalSizeMonth -->
+    <select id="searchUsageByMonth" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.FileUsagePeriodRes">
+        SELECT TO_CHAR(sys10_reg_date, 'mm')          AS period
+             , ROUND(SUM(sys10_size)*(0.001), 1)      AS total_size
+          FROM sys10_file
+         WHERE sys10_server_path NOT LIKE '%KIDMS%'
+           AND TO_CHAR(sys10_reg_date, 'yyyy') = #{year}
+           AND <include refid="locNm"/> = #{locNm}
+         GROUP BY TO_CHAR(sys10_reg_date, 'mm')
+         ORDER BY 1 DESC
+    </select>
+
+    <!-- AS-IS sys10_file.findTrashFile (DB 함수 find_orphan_sys10_files) -->
+    <select id="searchTrashFiles" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.TrashFileRes">
+        SELECT sys10_file_id             AS file_id,
+               sys10_parent_id           AS parent_id,
+               sys10_reg_date::date      AS reg_date,
+               sys10_file_nm             AS file_nm,
+               sys10_server_path         AS server_path,
+               sys10_size                AS size
+          FROM find_orphan_sys10_files()
+         ORDER BY sys10_reg_date, sys10_file_nm
+    </select>
+</mapper>

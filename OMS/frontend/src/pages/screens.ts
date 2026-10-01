@@ -20,6 +20,8 @@ import { Sys07CompanyView } from './sys/Sys07CompanyView';
 import { Sys07CompanyRoleMenuView } from './sys/Sys07CompanyRoleMenuView';
 import { Sys08CodeKindAdminView } from './sys/Sys08CodeKindAdminView';
 import { Sys08CodeKindClientView } from './sys/Sys08CodeKindClientView';
+import { Sys10TotalSizeView } from './sys/Sys10TotalSizeView';
+import { Sys10TrashFileListView } from './sys/Sys10TrashFileListView';
 
 /**
  * 화면 등록표 (AS-IS MenuOpener.TAB_REGISTRY): sys06_menu.sys06_class_nm → 화면 컴포넌트.
@@ -50,4 +52,6 @@ export const SCREENS: Record<string, React.FC> = {
   Sys07_Tab_CompanyRoleMenu: Sys07CompanyRoleMenuView,
   Sys08_Tab_CodeKindAdmin: Sys08CodeKindAdminView,
   Sys08_Tab_CodeKindClient: Sys08CodeKindClientView,
+  Sys10_Tab_TotalSize: Sys10TotalSizeView,
+  Sys10_Tab_TrashFileList: Sys10TrashFileListView,
 };
