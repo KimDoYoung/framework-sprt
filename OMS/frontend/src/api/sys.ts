@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
 import {
-  Code, CodeGroup, CodeKind, PersonMenu, CompanyDetail, CompanyMenu, CompanyUseMenu, MenuGuide, TopMenu, Calendar, FileUsage, FileUsagePeriod, TrashFile, CompanyMenuYn, CompanySave, LoginSecure, MenuCopy, MenuItem, MenuItemSave, Role, RoleMenu, RoleUser, SysCompany, UserRole,
+  Code, CodeGroup, CodeKind, PersonMenu, CompanyDetail, CompanyMenu, CompanyUseMenu, MenuGuide, TopMenu, PasswordPerson, Calendar, FileUsage, FileUsagePeriod, TrashFile, CompanyMenuYn, CompanySave, LoginSecure, MenuCopy, MenuItem, MenuItemSave, Role, RoleMenu, RoleUser, SysCompany, UserRole,
 } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
@@ -179,6 +179,21 @@ export const sysApi = {
     const body = rows.map(({ calendarId, workingYn, offReason, note }) => ({ calendarId, workingYn, offReason, note }));
     const res = await apiClient.put<ApiResponse<Calendar[]>>('v1/sys/calendars/customers', body);
     return res.data.data ?? [];
+  },
+
+  /** 비밀번호 초기화 대상 (로그인 회사, personId 없으면 전체) */
+  searchPasswordPersons: async (personId?: number): Promise<PasswordPerson[]> => {
+    const res = await apiClient.get<ApiResponse<PasswordPerson[]>>('v1/sys/passwords/persons', { params: { personId } });
+    return res.data.data ?? [];
+  },
+
+  unlockPerson: async (personId: number): Promise<void> => {
+    await apiClient.put(`v1/sys/passwords/persons/${personId}/unlock`);
+  },
+
+  /** 비밀번호를 비운다 → 다음 로그인 때 변경 요구 */
+  resetPassword: async (personId: number): Promise<void> => {
+    await apiClient.put(`v1/sys/passwords/persons/${personId}/reset`);
   },
 
   /** 권한그룹의 사원 */

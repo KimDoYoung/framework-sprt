@@ -114,6 +114,17 @@ export interface Calendar {
   note: string | null;
 }
 
+/** 비밀번호 초기화 대상 사원 (GET /api/v1/sys/passwords/persons) */
+export interface PasswordPerson {
+  personId: number;
+  empNo: string;
+  korNm: string;
+  /** 본부(부서) */
+  orgNm: string | null;
+  /** 잠금 */
+  lockYn: boolean;
+}
+
 /** 메뉴 관리 트리 행 (GET /api/v1/sys/menu-items, 깊이 우선 순서) */
 export interface MenuItem {
   menuId: number;

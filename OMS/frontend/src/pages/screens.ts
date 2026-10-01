@@ -22,6 +22,7 @@ import { Sys08CodeKindAdminView } from './sys/Sys08CodeKindAdminView';
 import { Sys08CodeKindClientView } from './sys/Sys08CodeKindClientView';
 import { Sys10TotalSizeView } from './sys/Sys10TotalSizeView';
 import { Sys12CalendarView } from './sys/Sys12CalendarView';
+import { Sys25ResetPasswordView } from './sys/Sys25ResetPasswordView';
 import { Sys10TrashFileListView } from './sys/Sys10TrashFileListView';
 
 /**
@@ -56,4 +57,5 @@ export const SCREENS: Record<string, React.FC> = {
   Sys10_Tab_TotalSize: Sys10TotalSizeView,
   Sys10_Tab_TrashFileList: Sys10TrashFileListView,
   Sys12_Tab_Calendar: Sys12CalendarView,
+  Sys25_Tab_ResetPassword: Sys25ResetPasswordView,
 };
