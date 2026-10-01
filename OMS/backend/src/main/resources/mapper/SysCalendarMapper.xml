@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS sys12_calendar 매퍼(myOms server/sys/mapper/sys12_calendar.xml).
+  - insertAuto(insertPostgreSql): ${companyId} → #{companyId}, INSERT 컬럼 목록 명시,
+    f_create_seq()를 generate_series와 같은 SELECT 목록에서 바깥 SELECT로 옮겼다 (행마다 새 ID임을 분명히)
+  - update: AS-IS UpdateDataModel → 화면에서 바꾸는 영업일·휴일사유·비고만. 회사 조건은 서버에서 넣는다(고객사반영은 조건 없음)
+-->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.sys.mapper.SysCalendarMapper">
+
+    <sql id="columns">
+        sys12_calendar_id                            AS calendar_id,
+        sys12_company_id                             AS company_id,
+        sys12_day::date                              AS day,
+        sys12_weekday                                AS weekday,
+        COALESCE(sys12_working_yn = 'true', false)   AS working_yn,
+        sys12_off_reason                             AS off_reason,
+        sys12_note                                   AS note
+    </sql>
+
+    <!-- AS-IS sys12_calendar.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.CalendarRes">
+        SELECT <include refid="columns"/>,
+               NULL AS company_nm
+          FROM sys12_calendar
+         WHERE sys12_calendar_id = #{calendarId}
+    </select>
+
+    <!-- AS-IS sys12_calendar.selectByYear -->
+    <select id="searchByYear" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.CalendarRes">
+        SELECT <include refid="columns"/>,
+               NULL AS company_nm
+          FROM sys12_calendar
+         WHERE sys12_company_id = #{companyId}
+           AND to_char(sys12_day,'yyyy') = #{year}
+           AND (
+                 (#{month} != '%' AND to_char(sys12_day,'MM') = #{month})
+                 OR
+                 (#{month} = '%')
+               )
+         ORDER BY sys12_day
+    </select>
+
+    <!-- AS-IS sys12_calendar.selectByDay (companyId 없음 분기) -->
+    <select id="searchCustomersByDay" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.CalendarRes">
+        SELECT <include refid="columns"/>,
+               sys01_company_nm AS company_nm
+          FROM sys12_calendar
+               INNER JOIN sys01_company ON sys01_company_id = sys12_company_id
+         WHERE 1=1
+           AND sys12_company_id != 0
+           AND sys12_day = #{day}::timestamp
+           AND sys01_use_yn = 'true'
+         ORDER BY sys01_company_id
+    </select>
+
+    <!-- AS-IS sys12_calendar.deleteByDay -->
+    <delete id="deleteByYear">
+        DELETE FROM sys12_calendar
+         WHERE sys12_company_id = #{companyId}
+           AND to_char(sys12_day,'yyyymmdd') BETWEEN #{year} || '0101' AND #{year} || '1231'
+    </delete>
+
+    <!-- AS-IS sys12_calendar.insertAuto (insertPostgreSql) -->
+    <insert id="insertYear">
+        INSERT INTO sys12_calendar
+               (sys12_calendar_id, sys12_company_id, sys12_day, sys12_weekday, sys12_working_yn, sys12_off_reason, sys12_note)
+        SELECT f_create_seq()
+             , company_id
+             , dt
+             , CASE to_char(dt, 'D')
+               WHEN '1' THEN '일요일'
+               WHEN '2' THEN '월요일'
+               WHEN '3' THEN '화요일'
+               WHEN '4' THEN '수요일'
+               WHEN '5' THEN '목요일'
+               WHEN '6' THEN '금요일'
+               WHEN '7' THEN '토요일' END
+             , CASE to_char(dt, 'D')
+               WHEN '1' THEN 'false'
+               WHEN '7' THEN 'false'
+               ELSE (
+                      CASE WHEN sys14_holiday_id IS NOT NULL
+                      THEN 'false'
+                      ELSE 'true' END
+                    ) END
+             , sys14_holiday_nm
+             , ''
+          FROM (
+                SELECT #{companyId}::numeric AS company_id
+                     , generate_series(to_date(#{year} || '0101','yyyymmdd'), to_date(#{year} || '1231','yyyymmdd'), '1 day'::interval)::date AS dt
+               ) a
+               LEFT OUTER JOIN sys14_holiday ON ( sys14_company_id = company_id AND sys14_day = dt )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(sys12_calendar) UPDATE -->
+    <update id="update">
+        UPDATE sys12_calendar
+           SET sys12_working_yn = #{workingYn},
+               sys12_off_reason = #{offReason},
+               sys12_note       = #{note}
+         WHERE sys12_calendar_id = #{calendarId}
+        <if test="companyId != null">
+           AND sys12_company_id = #{companyId}
+        </if>
+    </update>
+</mapper>

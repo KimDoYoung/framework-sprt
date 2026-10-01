@@ -100,6 +100,20 @@ export interface TrashFile {
   size: number | null;
 }
 
+/** 일자 (GET /api/v1/sys/calendars, AS-IS Sys12_CalendarModel) */
+export interface Calendar {
+  calendarId: number;
+  companyId: number;
+  /** 고객사반영 목록에서만 */
+  companyNm: string | null;
+  day: string;
+  weekday: string;
+  /** 영업일 */
+  workingYn: boolean;
+  offReason: string | null;
+  note: string | null;
+}
+
 /** 메뉴 관리 트리 행 (GET /api/v1/sys/menu-items, 깊이 우선 순서) */
 export interface MenuItem {
   menuId: number;

@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
 import {
-  Code, CodeGroup, CodeKind, PersonMenu, CompanyDetail, CompanyMenu, CompanyUseMenu, MenuGuide, TopMenu, FileUsage, FileUsagePeriod, TrashFile, CompanyMenuYn, CompanySave, LoginSecure, MenuCopy, MenuItem, MenuItemSave, Role, RoleMenu, RoleUser, SysCompany, UserRole,
+  Code, CodeGroup, CodeKind, PersonMenu, CompanyDetail, CompanyMenu, CompanyUseMenu, MenuGuide, TopMenu, Calendar, FileUsage, FileUsagePeriod, TrashFile, CompanyMenuYn, CompanySave, LoginSecure, MenuCopy, MenuItem, MenuItemSave, Role, RoleMenu, RoleUser, SysCompany, UserRole,
 } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
@@ -148,6 +148,36 @@ export const sysApi = {
   /** 미사용 파일 (SYSADMIN) */
   searchTrashFiles: async (): Promise<TrashFile[]> => {
     const res = await apiClient.get<ApiResponse<TrashFile[]>>('v1/sys/files/trash');
+    return res.data.data ?? [];
+  },
+
+  /** 로그인 회사 일자 (month 없으면 연도 전체) */
+  searchCalendars: async (year: string, month?: string): Promise<Calendar[]> => {
+    const res = await apiClient.get<ApiResponse<Calendar[]>>('v1/sys/calendars', { params: { year, month } });
+    return res.data.data ?? [];
+  },
+
+  updateCalendars: async (rows: Calendar[]): Promise<Calendar[]> => {
+    const body = rows.map(({ calendarId, workingYn, offReason, note }) => ({ calendarId, workingYn, offReason, note }));
+    const res = await apiClient.put<ApiResponse<Calendar[]>>('v1/sys/calendars', body);
+    return res.data.data ?? [];
+  },
+
+  /** 그 연도 일자를 지우고 다시 만든다 → 만든 일수 */
+  generateCalendars: async (year: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/sys/calendars/generate', null, { params: { year } });
+    return res.data.data ?? 0;
+  },
+
+  /** 고객사반영: 그 날의 사용 고객사 일자 (SYSADMIN) */
+  searchCustomerCalendars: async (day: string): Promise<Calendar[]> => {
+    const res = await apiClient.get<ApiResponse<Calendar[]>>('v1/sys/calendars/customers', { params: { day } });
+    return res.data.data ?? [];
+  },
+
+  updateCustomerCalendars: async (rows: Calendar[]): Promise<Calendar[]> => {
+    const body = rows.map(({ calendarId, workingYn, offReason, note }) => ({ calendarId, workingYn, offReason, note }));
+    const res = await apiClient.put<ApiResponse<Calendar[]>>('v1/sys/calendars/customers', body);
     return res.data.data ?? [];
   },
 
