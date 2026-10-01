@@ -16,6 +16,8 @@ public enum SessionTerminateReason {
     ACCOUNT_LOCKED(ErrorCode.ACCOUNT_LOCKED, "계정 잠금", ErrorCode.ACCOUNT_LOCKED.getMessage()),
     /** 로그아웃 (같은 세션을 쓰는 다른 탭 동기화) */
     LOGOUT(null, "로그아웃", "로그아웃되어 세션이 종료되었습니다."),
+    /** 관리자가 강제 로그아웃 (AS-IS Sys86_Tab_Websocket 개별·전체 로그아웃) */
+    FORCED_LOGOUT(null, "강제 로그아웃", "관리자가 접속을 종료했습니다. 다시 로그인해주세요."),
     /** 유휴 시간 초과 등으로 Redis 세션이 사라짐 */
     EXPIRED(ErrorCode.REFRESH_EXPIRED, "세션 만료", ErrorCode.REFRESH_EXPIRED.getMessage());
 

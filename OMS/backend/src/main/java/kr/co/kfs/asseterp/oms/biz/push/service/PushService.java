@@ -56,12 +56,13 @@ public class PushService {
 
     /**
      * 개인 알림 (/user/queue/notifications). 받는 사용자가 접속해 있지 않으면 전달되지 않는다 (저장하지 않음).
-     * 받는 사람은 보내는 사람과 같은 회사의 로그인 ID이다. WebSocket 사용자 이름은 {회사코드}:{로그인ID}.
+     * 받는 사람은 보내는 사람과 같은 회사의 로그인 ID이다 (KFS 관리자는 req.companyCode로 다른 회사 지정). WebSocket 사용자 이름은 {회사코드}:{로그인ID}.
      *
      * @return 발송한 메시지 ID
      */
     public String createNotification(NotificationReq req, UserPrincipal sender) {
-        String companyCode = sender.getCompanyCode();
+        String companyCode = sender.isSysAdmin() && req.companyCode() != null && !req.companyCode().isBlank()
+                ? req.companyCode() : sender.getCompanyCode();
         String loginId = req.username();
         if (accountMapper.findEmployee(companyCode, loginId).isEmpty()
                 && accountMapper.findManager(companyCode, loginId).isEmpty()) {

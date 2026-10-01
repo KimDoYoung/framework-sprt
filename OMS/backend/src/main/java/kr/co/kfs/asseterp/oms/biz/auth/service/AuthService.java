@@ -284,6 +284,17 @@ public class AuthService {
     }
 
     /**
+     * 관리자 강제 로그아웃 (AS-IS Sys86_Tab_Websocket): 세션을 지우고 그 사용자의 모든 화면에 종료를 알린다.
+     * 이후 요청은 세션이 없어 401이 된다.
+     */
+    public void forceLogout(Long userId, String byUsername) {
+        redisTokenService.removeSession(userId);
+        log.info("강제 로그아웃: userId={}, by={}", userId, byUsername);
+        auditLogService.record(AuditEventType.LOGOUT, AuditResult.SUCCESS, usernameOf(userId), "FORCED", "관리자 " + byUsername);
+        publishSessionTerminated(userId, null, SessionTerminateReason.FORCED_LOGOUT);
+    }
+
+    /**
      * 만료되었거나 이미 끝난 세션으로 갱신을 시도한 경우 (세션 만료 후 사용자가 다시 요청한 시점)
      */
     private void auditRefreshRejected(Long userId, ErrorCode reason) {

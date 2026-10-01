@@ -31,7 +31,7 @@ export const onTokenRefresh = (listener: RefreshListener) => {
 
 // 세션 종료 이벤트 리스너 (로그인 페이지 이동 및 메시지 표시용)
 // LOGOUT: 같은 세션을 쓰는 다른 탭에서 로그아웃 (WebSocket으로 수신)
-export type SessionTerminateReason = 'MULTI_LOGIN' | 'TOKEN_REUSED' | 'ACCOUNT_LOCKED' | 'EXPIRED' | 'LOGOUT';
+export type SessionTerminateReason = 'MULTI_LOGIN' | 'TOKEN_REUSED' | 'ACCOUNT_LOCKED' | 'EXPIRED' | 'LOGOUT' | 'FORCED_LOGOUT';
 type SessionTerminateListener = (reason: SessionTerminateReason) => void;
 const sessionTerminateListeners: SessionTerminateListener[] = [];
 

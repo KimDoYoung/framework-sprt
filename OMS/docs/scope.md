@@ -75,7 +75,7 @@ SQL 정합성(`tools/sql-check.py`, P2) — 2026-10-01 기준.
 | `Sys12_Tab_Calendar` | 일자관리 #1080, #1113 | 9 (4) | 3 | 3 | | 8 **완료** (일자만, 고객사반영은 SYSADMIN) | 휴일 Lookup(sys14) 서버 없음 → 일자 부분만 |
 | `Sys25_Tab_ResetPassword` | 비밀번호 초기화 #1182 | 4 (1) | 1 | 4 | | 8 **완료** (초기화=NULL → TOBE 로그인 변경 요구) | 로그인 모듈(sys25 암호화 `to_encrypts`)과 함께 |
 | `Sys26_Tab_LoginHistory` | 로그인내역 조회 #1140 | 3 | 1 | 5 | f_cdnm 성능 조정 | 8 **완료** (SYSADMIN, 조회만 — AS-IS 삭제 버튼은 툴바에 없음) | 감사 로그(TOBE audit)와 관계 정리 필요 |
-| `Sys86_Tab_Websocket` | 로그아웃 알림 관리 #1404 | 2 | 1 | 3 | 수정(collation) | 8 | TOBE STOMP(security-test push)로 대체 검토 |
+| `Sys86_Tab_Websocket` | 로그아웃 알림 관리 #1404 | 2 | 1 | 3 | 수정(collation) | 8 **완료** (presence + push, 강제 로그아웃 FORCED_LOGOUT 추가) | TOBE STOMP(security-test push)로 대체 검토 |
 | `Sys02_Tab_User` | (asseterpdb 메뉴 없음) | 5 (1) | 2 | 4 | | 후순위 | 회사관리자 계정(sys02). 메뉴가 없어 열 경로부터 정해야 함 |
 | `Sys08_Tab_SuperUser` | (asseterpdb 메뉴 없음) | 7 | 3 | 2 | | 후순위 | 같음 |
 | `Emp00_RD_OrgPerson`, `Emp00_RDR_OrgPerson` | (메뉴 없음) | 0, 1 | 1, 1 | 0, 2 | RDR 수정(grade_nm) | 보류 | **RD(Report Designer) 리포트** — TOBE 리포트 방식 결정 필요(AssetERP 공통 이슈) |

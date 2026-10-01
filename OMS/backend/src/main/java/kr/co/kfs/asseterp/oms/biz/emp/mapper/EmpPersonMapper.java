@@ -5,7 +5,11 @@ import kr.co.kfs.asseterp.oms.biz.emp.dto.PersonRes;
 import kr.co.kfs.asseterp.oms.biz.emp.dto.PersonRow;
 import kr.co.kfs.asseterp.oms.biz.emp.dto.UserInfoRes;
 import kr.co.kfs.asseterp.oms.biz.emp.dto.UserInfoSearchParam;
+import kr.co.kfs.asseterp.oms.biz.emp.dto.OnlinePersonParam;
+import kr.co.kfs.asseterp.oms.biz.emp.dto.OnlinePersonRes;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 @Mapper
 public interface EmpPersonMapper {
@@ -24,4 +28,7 @@ public interface EmpPersonMapper {
     java.util.List<UserInfoRes> searchUserInfos(UserInfoSearchParam param);
 
     long countUserInfos(UserInfoSearchParam param);
+
+    /** 접속 중 사원 (회사·검색어 조건) */
+    List<OnlinePersonRes> searchOnlinePersons(OnlinePersonParam param);
 }

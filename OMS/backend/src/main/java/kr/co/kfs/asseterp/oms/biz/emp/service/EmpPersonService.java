@@ -12,9 +12,13 @@ import kr.co.kfs.asseterp.oms.biz.emp.mapper.EmpAddTitleMapper;
 import kr.co.kfs.asseterp.oms.biz.emp.mapper.EmpPersonMapper;
 import kr.co.kfs.asseterp.oms.common.error.BusinessException;
 import kr.co.kfs.asseterp.oms.common.error.ErrorCode;
+import kr.co.kfs.asseterp.oms.biz.emp.dto.OnlinePersonParam;
+import kr.co.kfs.asseterp.oms.biz.emp.dto.OnlinePersonRes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /** 사원 기본정보 (AS-IS server/emp/Emp01_Person) */
 @Service
@@ -61,5 +65,15 @@ public class EmpPersonService {
         UserInfoSearchParam param = new UserInfoSearchParam(companyId, "%" + (searchText == null ? "" : searchText.trim()) + "%",
                 String.valueOf(useOnly), String.valueOf(excludeRetired), Math.max(page, 0) * size, size);
         return new PageRes<>(empPersonMapper.countUserInfos(param), empPersonMapper.searchUserInfos(param));
+    }
+
+    /** AS-IS selectByLoginUserPaging: 접속 중 사원 정보 (페이징 없이 — 대상이 접속자뿐이다) */
+    public List<OnlinePersonRes> searchOnlinePersons(List<Long> personIds, Long companyId, String searchText) {
+        if (personIds.isEmpty()) {
+            return List.of();
+        }
+        return empPersonMapper.searchOnlinePersons(new OnlinePersonParam(personIds,
+                companyId == null ? "%" : String.valueOf(companyId),
+                "%" + (searchText == null ? "" : searchText.trim()) + "%"));
     }
 }

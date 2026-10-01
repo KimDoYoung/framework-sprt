@@ -29,6 +29,11 @@ const SESSION_NOTICES: Record<SessionTerminateReason, LoginNotice> = {
     message: '로그아웃 안내',
     description: '같은 브라우저의 다른 탭에서 로그아웃되어 현재 화면의 세션도 종료되었습니다.'
   },
+  FORCED_LOGOUT: {
+    type: 'warning',
+    message: '강제 로그아웃 안내',
+    description: '관리자가 접속을 종료했습니다. 다시 로그인해주세요.'
+  },
   EXPIRED: {
     type: 'warning',
     message: '세션 만료 안내',
