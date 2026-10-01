@@ -27,16 +27,27 @@ public class SysUserRoleService {
 
     /** AS-IS selectByRoleId */
     public List<UserRoleRes> searchUserRoles(UserPrincipal user, Long roleId) {
-        return sysUserRoleMapper.searchByRoleId(new UserRoleSearchParam(user.getCompanyId(), roleId, null));
+        return searchUserRoles(user.getCompanyId(), roleId);
+    }
+
+    /** companyId 회사의 권한그룹 사원 (Sys05_Tab_CompanyUserRole은 KFS 관리자가 고른 회사) */
+    public List<UserRoleRes> searchUserRoles(Long companyId, Long roleId) {
+        return sysUserRoleMapper.searchByRoleId(new UserRoleSearchParam(companyId, roleId, null));
     }
 
     /** AS-IS update(UpdateDataModel): 신규는 INSERT, 기존은 권한조직 UPDATE → 저장된 행(요청 순서) */
     @Transactional
     public List<UserRoleRes> updateUserRoles(UserPrincipal user, List<UserRoleSaveReq> rows) {
+        return updateUserRoles(user.getCompanyId(), rows);
+    }
+
+    /** companyId 회사 권한그룹의 행만 저장된다 */
+    @Transactional
+    public List<UserRoleRes> updateUserRoles(Long companyId, List<UserRoleSaveReq> rows) {
         List<UserRoleRes> saved = new ArrayList<>(rows.size());
         for (UserRoleSaveReq req : rows) {
             Long id = req.isNew() ? sysUserRoleMapper.selectNextId() : req.userRoleId();
-            UserRoleRow row = new UserRoleRow(id, user.getCompanyId(), req.userId(), req.roleId(), null, null, req.authOrgId());
+            UserRoleRow row = new UserRoleRow(id, companyId, req.userId(), req.roleId(), null, null, req.authOrgId());
             int count;
             try {
                 count = req.isNew() ? sysUserRoleMapper.insert(row) : sysUserRoleMapper.update(row);
@@ -46,7 +57,7 @@ public class SysUserRoleService {
             if (count == 0) {
                 throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
             }
-            saved.add(sysUserRoleMapper.selectById(new UserRoleSearchParam(user.getCompanyId(), null, id)));
+            saved.add(sysUserRoleMapper.selectById(new UserRoleSearchParam(companyId, null, id)));
         }
         return saved;
     }
@@ -54,9 +65,14 @@ public class SysUserRoleService {
     /** AS-IS delete */
     @Transactional
     public int deleteUserRoles(UserPrincipal user, List<Long> userRoleIds) {
+        return deleteUserRoles(user.getCompanyId(), userRoleIds);
+    }
+
+    @Transactional
+    public int deleteUserRoles(Long companyId, List<Long> userRoleIds) {
         if (userRoleIds == null || userRoleIds.isEmpty()) {
             return 0;
         }
-        return sysUserRoleMapper.delete(new UserRoleDeleteParam(user.getCompanyId(), userRoleIds));
+        return sysUserRoleMapper.delete(new UserRoleDeleteParam(companyId, userRoleIds));
     }
 }

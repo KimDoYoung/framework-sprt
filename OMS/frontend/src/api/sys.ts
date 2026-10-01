@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
 import {
-  Code, CodeGroup, CodeKind, PersonMenu, CompanyDetail, CompanyMenu, CompanyMenuYn, CompanySave, LoginSecure, MenuCopy, MenuItem, MenuItemSave, Role, RoleMenu, RoleUser, SysCompany, UserRole,
+  Code, CodeGroup, CodeKind, PersonMenu, CompanyDetail, CompanyMenu, CompanyUseMenu, MenuGuide, TopMenu, CompanyMenuYn, CompanySave, LoginSecure, MenuCopy, MenuItem, MenuItemSave, Role, RoleMenu, RoleUser, SysCompany, UserRole,
 } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
@@ -42,6 +42,72 @@ export const sysApi = {
 
   deleteRoles: async (roleIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/sys/roles', { data: roleIds });
+    return res.data.data ?? 0;
+  },
+
+  /** 메뉴를 쓸 수 있는 권한그룹 (로그인 회사) */
+  searchRolesByMenu: async (menuId: number): Promise<Role[]> => {
+    const res = await apiClient.get<ApiResponse<Role[]>>(`v1/sys/roles/menus/${menuId}`);
+    return res.data.data ?? [];
+  },
+
+  /** 로그인 회사가 사용하는 메뉴 트리 (깊이 우선 + level) */
+  searchCompanyUseMenus: async (): Promise<CompanyUseMenu[]> => {
+    const res = await apiClient.get<ApiResponse<CompanyUseMenu[]>>('v1/sys/menus/company');
+    return res.data.data ?? [];
+  },
+
+  /** 화면안내 (3차 메뉴). menuId: 1차 메뉴 (없으면 전체) */
+  searchMenuGuides: async (menuId?: number, searchText?: string): Promise<MenuGuide[]> => {
+    const res = await apiClient.get<ApiResponse<MenuGuide[]>>('v1/sys/menu-guides', { params: { menuId, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** 바꾼 행의 화면안내만 보내고, 저장된 값을 원래 행에 덮어 돌려준다 (요청 순서) */
+  updateMenuGuides: async (rows: MenuGuide[]): Promise<MenuGuide[]> => {
+    const body = rows.map(({ menuId, note }) => ({ menuId, note }));
+    const res = await apiClient.put<ApiResponse<{ menuId: number; note: string | null }[]>>('v1/sys/menu-guides', body);
+    return (res.data.data ?? []).map((s, i) => ({ ...rows[i], note: s.note }));
+  },
+
+  /** 1차 메뉴 (화면안내등록 메뉴명 콤보) */
+  searchTopMenus: async (): Promise<TopMenu[]> => {
+    const res = await apiClient.get<ApiResponse<TopMenu[]>>('v1/sys/menu-items/top');
+    return res.data.data ?? [];
+  },
+
+  /** 고객사 권한그룹 (SYSADMIN) */
+  searchCompanyRoles: async (companyId: number, roleNm?: string): Promise<Role[]> => {
+    const res = await apiClient.get<ApiResponse<Role[]>>(`v1/sys/roles/companies/${companyId}`, { params: { roleNm } });
+    return res.data.data ?? [];
+  },
+
+  /** 고객사 권한그룹 저장 (기본권한·관리자권한 포함) → 저장된 행(요청 순서) */
+  updateCompanyRoles: async (companyId: number, rows: Role[]): Promise<Role[]> => {
+    const body = rows.map(({ roleId, roleNm, seq, note, defaultRole, adminYn }) => ({ roleId, roleNm, seq, note, defaultRole, adminYn }));
+    const res = await apiClient.put<ApiResponse<Role[]>>(`v1/sys/roles/companies/${companyId}`, body);
+    return res.data.data ?? [];
+  },
+
+  deleteCompanyRoles: async (companyId: number, roleIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sys/roles/companies/${companyId}`, { data: roleIds });
+    return res.data.data ?? 0;
+  },
+
+  /** 고객사 권한그룹의 사원 (SYSADMIN) */
+  searchCompanyUserRoles: async (companyId: number, roleId: number): Promise<UserRole[]> => {
+    const res = await apiClient.get<ApiResponse<UserRole[]>>(`v1/sys/user-roles/companies/${companyId}`, { params: { roleId } });
+    return res.data.data ?? [];
+  },
+
+  updateCompanyUserRoles: async (companyId: number, rows: UserRole[]): Promise<UserRole[]> => {
+    const body = rows.map(({ userRoleId, userId, roleId, authOrgId }) => ({ userRoleId, userId, roleId, authOrgId }));
+    const res = await apiClient.put<ApiResponse<UserRole[]>>(`v1/sys/user-roles/companies/${companyId}`, body);
+    return res.data.data ?? [];
+  },
+
+  deleteCompanyUserRoles: async (companyId: number, userRoleIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sys/user-roles/companies/${companyId}`, { data: userRoleIds });
     return res.data.data ?? 0;
   },
 

@@ -40,7 +40,7 @@ public class SysCodeService {
 
     /** 요청한 회사: KFS 관리자만 다른 회사를 고를 수 있다 */
     static Long companyOf(UserPrincipal user, Long requested) {
-        return user.isSysAdmin() && requested != null ? requested : user.getCompanyId();
+        return user.companyOf(requested);
     }
 
     /** AS-IS selectByCodeKindId */

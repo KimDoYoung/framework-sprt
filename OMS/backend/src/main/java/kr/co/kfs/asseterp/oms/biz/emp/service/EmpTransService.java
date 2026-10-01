@@ -31,9 +31,9 @@ public class EmpTransService {
     private final EmpPersonService empPersonService;
 
     /** AS-IS selectByText (사원 Lookup): 기준일 현재 재직 사원 중 성명·조직명·사번 LIKE */
-    public List<TransRes> searchTrans(UserPrincipal user, String searchText, LocalDate transDate) {
+    public List<TransRes> searchTrans(UserPrincipal user, String searchText, LocalDate transDate, Long companyId) {
         return empTransMapper.searchByText(new TransSearchParam(
-                user.getCompanyId(),
+                user.companyOf(companyId),
                 "%" + (searchText == null ? "" : searchText.trim()) + "%",
                 transDate == null ? LocalDate.now() : transDate,
                 false));

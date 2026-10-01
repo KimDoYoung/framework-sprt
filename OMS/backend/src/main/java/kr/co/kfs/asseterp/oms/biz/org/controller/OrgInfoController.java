@@ -27,7 +27,8 @@ public class OrgInfoController {
     public ApiResponse<List<OrgInfoRes>> searchOrgInfos(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false) String korNm,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
-        return ApiResponse.ok(orgInfoService.searchOrgInfos(principal, korNm, baseDate));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate,
+            @RequestParam(required = false) Long companyId) {
+        return ApiResponse.ok(orgInfoService.searchOrgInfos(principal, korNm, baseDate, companyId));
     }
 }

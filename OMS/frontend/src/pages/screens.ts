@@ -8,9 +8,13 @@ import { Org01OrgCodeView } from './org/Org01OrgCodeView';
 import { Sys01CompanyView } from './sys/Sys01CompanyView';
 import { Sys03CompanyMenuView } from './sys/Sys03CompanyMenuView';
 import { Sys04RoleView } from './sys/Sys04RoleView';
+import { Sys04RoleAdminView } from './sys/Sys04RoleAdminView';
 import { Sys05UserRoleView } from './sys/Sys05UserRoleView';
 import { Sys05PersonRoleView } from './sys/Sys05PersonRoleView';
+import { Sys05CompanyUserRoleView } from './sys/Sys05CompanyUserRoleView';
 import { Sys06MenuView } from './sys/Sys06MenuView';
+import { Sys06MenuGuideView } from './sys/Sys06MenuGuideView';
+import { Sys06MenuViewView } from './sys/Sys06MenuViewView';
 import { Sys07RoleMenuView } from './sys/Sys07RoleMenuView';
 import { Sys08CodeKindAdminView } from './sys/Sys08CodeKindAdminView';
 import { Sys08CodeKindClientView } from './sys/Sys08CodeKindClientView';
@@ -32,9 +36,13 @@ export const SCREENS: Record<string, React.FC> = {
   Sys03_Tab_ComapnyMenu: Sys03CompanyMenuView,
   Sys03_Tab_CompanyMenu: Sys03CompanyMenuView,
   Sys04_Tab_Role: Sys04RoleView,
+  Sys04_Tab_RoleAdmin: Sys04RoleAdminView,
   Sys05_Tab_UserRole: Sys05UserRoleView,
+  Sys05_Tab_CompanyUserRole: Sys05CompanyUserRoleView,
   Sys05_Tab_PersonRole: Sys05PersonRoleView,
   Sys06_Tab_Menu: Sys06MenuView,
+  Sys06_Tab_MenuGuide: Sys06MenuGuideView,
+  Sys06_Tab_MenuView: Sys06MenuViewView,
   Sys07_Tab_RoleMenu: Sys07RoleMenuView,
   Sys08_Tab_CodeKindAdmin: Sys08CodeKindAdminView,
   Sys08_Tab_CodeKindClient: Sys08CodeKindClientView,

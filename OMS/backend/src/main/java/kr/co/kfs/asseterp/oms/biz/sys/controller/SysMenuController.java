@@ -4,7 +4,11 @@ import kr.co.kfs.asseterp.oms.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyMenuBulkReq;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyMenuRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyMenuUse;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyUseMenuRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuCopyRes;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuGuideRes;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuGuideSaveReq;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.TopMenuRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuItemRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuItemSaveReq;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuRes;
@@ -56,6 +60,12 @@ public class SysMenuController {
         return ApiResponse.ok(sysMenuService.updateRoleMenus(principal, roleId, rows));
     }
 
+    /** 로그인 회사가 사용하는 메뉴 트리 (AS-IS Sys06_Tab_MenuView → sys.Sys06_Menu.selectByCompanyId) */
+    @GetMapping("/menus/company")
+    public ApiResponse<List<CompanyUseMenuRes>> searchCompanyUseMenus(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(sysMenuService.searchCompanyUseMenus(principal));
+    }
+
     // ── 메뉴 관리 (AS-IS Sys06_Tab_Menu) — 전 고객사 공통 데이터라 KFS 관리자(SYSADMIN)만 ──
 
     @GetMapping("/menu-items")
@@ -88,6 +98,28 @@ public class SysMenuController {
     public ApiResponse<List<MenuCopyRes>> searchCopyMenus(@RequestParam(required = false) String searchText,
                                                          @RequestParam(defaultValue = "false") boolean menuNameYn) {
         return ApiResponse.ok(sysMenuService.searchCopyMenus(searchText, menuNameYn));
+    }
+
+    // ── 화면안내등록 (AS-IS Sys06_Tab_MenuGuide) — sys06_menu는 전 고객사 공통이라 SYSADMIN만 ──
+
+    @GetMapping("/menu-guides")
+    @PreAuthorize("hasRole('SYSADMIN')")
+    public ApiResponse<List<MenuGuideRes>> searchMenuGuides(@RequestParam(required = false) Long menuId,
+                                                           @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(sysMenuService.searchMenuGuides(menuId, searchText));
+    }
+
+    @PutMapping("/menu-guides")
+    @PreAuthorize("hasRole('SYSADMIN')")
+    public ApiResponse<List<MenuGuideSaveReq>> updateMenuGuides(@RequestBody List<MenuGuideSaveReq> rows) {
+        return ApiResponse.ok(sysMenuService.updateMenuGuides(rows));
+    }
+
+    /** 1차 메뉴 (화면안내등록 메뉴명 콤보) */
+    @GetMapping("/menu-items/top")
+    @PreAuthorize("hasRole('SYSADMIN')")
+    public ApiResponse<List<TopMenuRes>> searchTopMenus() {
+        return ApiResponse.ok(sysMenuService.searchTopMenus());
     }
 
     // ── 회사별 메뉴 (AS-IS Sys03_Tab_CompanyMenu, Sys06_Lookup_CopyMulti) ──

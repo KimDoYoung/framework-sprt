@@ -12,8 +12,9 @@ export const empApi = {
   },
 
   /** 사원 Lookup: 기준일 현재 재직 사원 (성명·조직명·사번) */
-  searchTrans: async (searchText?: string, transDate?: string): Promise<Trans[]> => {
-    const res = await apiClient.get<ApiResponse<Trans[]>>('v1/emp/trans', { params: { searchText, transDate } });
+  /** companyId: KFS 관리자가 다른 회사 사원을 찾을 때 (그 외에는 서버가 로그인 회사로 바꾼다) */
+  searchTrans: async (searchText?: string, transDate?: string, companyId?: number): Promise<Trans[]> => {
+    const res = await apiClient.get<ApiResponse<Trans[]>>('v1/emp/trans', { params: { searchText, transDate, companyId } });
     return res.data.data ?? [];
   },
 

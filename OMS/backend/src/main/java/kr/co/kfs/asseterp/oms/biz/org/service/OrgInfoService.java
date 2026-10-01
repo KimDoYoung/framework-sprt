@@ -20,9 +20,9 @@ public class OrgInfoService {
     private final OrgInfoMapper orgInfoMapper;
 
     /** AS-IS selectByKorName (조직 Lookup) */
-    public List<OrgInfoRes> searchOrgInfos(UserPrincipal user, String korNm, LocalDate baseDate) {
+    public List<OrgInfoRes> searchOrgInfos(UserPrincipal user, String korNm, LocalDate baseDate, Long companyId) {
         return orgInfoMapper.searchByKorName(new OrgInfoSearchParam(
-                user.getCompanyId(),
+                user.companyOf(companyId),
                 baseDate == null ? LocalDate.now() : baseDate,
                 "%" + (korNm == null ? "" : korNm.trim()) + "%"));
     }

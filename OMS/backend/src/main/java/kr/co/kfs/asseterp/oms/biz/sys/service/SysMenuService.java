@@ -7,8 +7,13 @@ import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyMenuRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyMenuRow;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyMenuSearchParam;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyMenuUse;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyUseMenuRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuCopyRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuCopySearchParam;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuGuideRes;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuGuideSaveReq;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuGuideSearchParam;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.TopMenuRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuItemRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuItemRow;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuItemSaveReq;
@@ -132,6 +137,20 @@ public class SysMenuService {
         return saved;
     }
 
+    /** AS-IS Sys06_Tab_MenuView → selectByCompanyId: 로그인 회사가 사용하는 메뉴 트리 (깊이 우선, level 포함) */
+    public List<CompanyUseMenuRes> searchCompanyUseMenus(UserPrincipal user) {
+        List<CompanyUseMenuRes> result = new ArrayList<>();
+        addCompanyUseMenus(result, user.getCompanyId(), ROOT_MENU_ID, 0);
+        return result;
+    }
+
+    private void addCompanyUseMenus(List<CompanyUseMenuRes> result, Long companyId, Long parentId, int level) {
+        for (CompanyUseMenuRes menu : sysMenuMapper.searchCompanyUseMenus(new CompanyMenuSearchParam(companyId, parentId, null))) {
+            result.add(menu.withLevel(level));
+            addCompanyUseMenus(result, companyId, menu.menuId(), level + 1);
+        }
+    }
+
     // ── 메뉴 관리 (AS-IS Sys06_Tab_Menu) ──────────────────────────────
 
     /** AS-IS selectByAll: 전체 메뉴 트리 (깊이 우선, level 포함) */
@@ -209,6 +228,29 @@ public class SysMenuService {
     public List<MenuCopyRes> searchCopyMenus(String searchText, boolean menuNameYn) {
         return sysMenuMapper.searchCopyMenus(new MenuCopySearchParam(
                 "%" + (searchText == null ? "" : searchText.trim()) + "%", String.valueOf(menuNameYn)));
+    }
+
+    // ── 화면안내등록 (AS-IS Sys06_Tab_MenuGuide) ──────────────────────
+
+    /** AS-IS selectByMenuId: 3차 메뉴와 화면안내 */
+    public List<MenuGuideRes> searchMenuGuides(Long menuId, String searchText) {
+        return sysMenuMapper.searchMenuGuides(MenuGuideSearchParam.of(menuId, searchText));
+    }
+
+    /** AS-IS update(UpdateDataModel): 바꾼 행의 화면안내만 저장 → 저장된 값(요청 순서) */
+    @Transactional
+    public List<MenuGuideSaveReq> updateMenuGuides(List<MenuGuideSaveReq> rows) {
+        for (MenuGuideSaveReq req : rows) {
+            if (sysMenuMapper.updateMenuGuide(req) == 0) {
+                throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+            }
+        }
+        return rows;
+    }
+
+    /** AS-IS sys00_common.selectMenuName (메뉴명 콤보) */
+    public List<TopMenuRes> searchTopMenus() {
+        return sysMenuMapper.searchTopMenus();
     }
 
     // ── 회사별 메뉴 (AS-IS Sys03_Tab_CompanyMenu) ─────────────────────

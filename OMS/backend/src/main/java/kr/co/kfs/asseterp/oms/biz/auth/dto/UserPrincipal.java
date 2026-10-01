@@ -56,6 +56,11 @@ public class UserPrincipal implements UserDetails {
         return roles != null && roles.contains("ROLE_SYSADMIN");
     }
 
+    /** 요청한 회사: KFS 관리자만 다른 회사를 고를 수 있고, 그 외에는 로그인 회사 */
+    public Long companyOf(Long requested) {
+        return isSysAdmin() && requested != null ? requested : companyId;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()

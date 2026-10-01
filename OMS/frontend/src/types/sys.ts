@@ -52,6 +52,30 @@ export interface RoleMenu {
   roleMenuYn: boolean;
 }
 
+/** 회사가 사용하는 메뉴 트리 행 (GET /api/v1/sys/menus/company, 깊이 우선 순서) */
+export interface CompanyUseMenu {
+  menuId: number;
+  parentId: number;
+  /** 1차 메뉴 = 0 */
+  level: number;
+  menuNoPlusNm: string;
+}
+
+/** 화면안내 행 (GET /api/v1/sys/menu-guides: 3차 메뉴) */
+export interface MenuGuide {
+  menuId: number;
+  /** 1차 > 2차 메뉴 */
+  menuFullNm: string;
+  menuNm: string;
+  note: string | null;
+}
+
+/** 1차 메뉴 (GET /api/v1/sys/menu-items/top) */
+export interface TopMenu {
+  menuId: number;
+  menuNm: string;
+}
+
 /** 메뉴 관리 트리 행 (GET /api/v1/sys/menu-items, 깊이 우선 순서) */
 export interface MenuItem {
   menuId: number;

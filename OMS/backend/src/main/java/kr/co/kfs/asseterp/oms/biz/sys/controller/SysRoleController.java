@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.oms.biz.sys.controller;
 
 import kr.co.kfs.asseterp.oms.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyRoleSaveReq;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.RoleRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.RoleSaveReq;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.RoleUserRes;
@@ -8,6 +9,7 @@ import kr.co.kfs.asseterp.oms.biz.sys.dto.RoleUserSaveReq;
 import kr.co.kfs.asseterp.oms.biz.sys.service.SysRoleService;
 import kr.co.kfs.asseterp.oms.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,6 +48,35 @@ public class SysRoleController {
     public ApiResponse<Integer> deleteRoles(@AuthenticationPrincipal UserPrincipal principal,
                                             @RequestBody List<Long> roleIds) {
         return ApiResponse.ok(sysRoleService.deleteRoles(principal, roleIds));
+    }
+
+    /** 메뉴별 권한그룹 (AS-IS Sys06_Tab_MenuView → sys.Sys04_Role.selectByMenuId) */
+    @GetMapping("/menus/{menuId}")
+    public ApiResponse<List<RoleRes>> searchRolesByMenu(@AuthenticationPrincipal UserPrincipal principal,
+                                                        @PathVariable Long menuId) {
+        return ApiResponse.ok(sysRoleService.searchRolesByMenu(principal, menuId));
+    }
+
+    // ── 고객사별 권한그룹 관리 (AS-IS Sys04_Tab_RoleAdmin) — 다른 고객사 데이터라 KFS 관리자(SYSADMIN)만 ──
+
+    @GetMapping("/companies/{companyId}")
+    @PreAuthorize("hasRole('SYSADMIN')")
+    public ApiResponse<List<RoleRes>> searchCompanyRoles(@PathVariable Long companyId,
+                                                         @RequestParam(required = false) String roleNm) {
+        return ApiResponse.ok(sysRoleService.searchCompanyRoles(companyId, roleNm));
+    }
+
+    @PutMapping("/companies/{companyId}")
+    @PreAuthorize("hasRole('SYSADMIN')")
+    public ApiResponse<List<RoleRes>> updateCompanyRoles(@PathVariable Long companyId,
+                                                         @RequestBody List<CompanyRoleSaveReq> rows) {
+        return ApiResponse.ok(sysRoleService.updateCompanyRoles(companyId, rows));
+    }
+
+    @DeleteMapping("/companies/{companyId}")
+    @PreAuthorize("hasRole('SYSADMIN')")
+    public ApiResponse<Integer> deleteCompanyRoles(@PathVariable Long companyId, @RequestBody List<Long> roleIds) {
+        return ApiResponse.ok(sysRoleService.deleteCompanyRoles(companyId, roleIds));
     }
 
     /** 사원별 권한그룹 (AS-IS Sys05_Tab_PersonRole → sys.Sys04_Role.selectByUserId) */

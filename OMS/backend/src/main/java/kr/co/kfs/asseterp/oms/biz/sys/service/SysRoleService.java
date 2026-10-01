@@ -1,6 +1,9 @@
 package kr.co.kfs.asseterp.oms.biz.sys.service;
 
 import kr.co.kfs.asseterp.oms.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyRoleRow;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyRoleSaveReq;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.RoleByMenuParam;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.RoleDeleteParam;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.RoleRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.RoleRow;
@@ -46,6 +49,11 @@ public class SysRoleService {
         return sysRoleMapper.searchByName(RoleSearchParam.of(user.getCompanyId(), roleNm));
     }
 
+    /** AS-IS selectByMenuId: 메뉴를 쓸 수 있는 로그인 회사의 권한그룹 (Sys06_Tab_MenuView) */
+    public List<RoleRes> searchRolesByMenu(UserPrincipal user, Long menuId) {
+        return sysRoleMapper.searchByMenuId(new RoleByMenuParam(user.getCompanyId(), menuId));
+    }
+
     /**
      * AS-IS update(UpdateDataModel): 행마다 신규면 INSERT, 아니면 UPDATE 후 다시 읽어 저장된 행을 요청 순서대로 돌려준다.
      */
@@ -78,6 +86,45 @@ public class SysRoleService {
             return 0;
         }
         return sysRoleMapper.delete(new RoleDeleteParam(user.getCompanyId(), roleIds));
+    }
+
+    // ── 고객사별 권한그룹 관리 (AS-IS Sys04_Tab_RoleAdmin, SYSADMIN) ──
+
+    /** AS-IS selectByName: 고객사의 권한그룹 중 권한명 LIKE (RoleAdmin은 전체, CompanyUserRole은 권한명 검색) */
+    public List<RoleRes> searchCompanyRoles(Long companyId, String roleNm) {
+        return sysRoleMapper.searchByName(RoleSearchParam.of(companyId, roleNm));
+    }
+
+    /** AS-IS update(UpdateDataModel): 고객사 권한그룹 저장 → 저장된 행 (요청 순서) */
+    @Transactional
+    public List<RoleRes> updateCompanyRoles(Long companyId, List<CompanyRoleSaveReq> rows) {
+        List<RoleRes> saved = new ArrayList<>(rows.size());
+        for (CompanyRoleSaveReq req : rows) {
+            if (req.roleNm() == null || req.roleNm().isBlank()) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "권한명을 입력하세요.");
+            }
+            Long roleId;
+            if (req.isNew()) {
+                roleId = sysRoleMapper.selectNextId();
+                sysRoleMapper.insertCompanyRole(CompanyRoleRow.of(roleId, companyId, req));
+            } else {
+                roleId = req.roleId();
+                if (sysRoleMapper.updateCompanyRole(CompanyRoleRow.of(roleId, companyId, req)) == 0) {
+                    throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+                }
+            }
+            saved.add(sysRoleMapper.selectById(roleId));
+        }
+        return saved;
+    }
+
+    /** AS-IS delete(UpdateDataModel.deleteModel): 고객사의 권한그룹만 지운다 */
+    @Transactional
+    public int deleteCompanyRoles(Long companyId, List<Long> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return 0;
+        }
+        return sysRoleMapper.delete(new RoleDeleteParam(companyId, roleIds));
     }
 
     /** AS-IS selectByUserId: 회사 권한그룹 전체 + 사원 보유 여부 */

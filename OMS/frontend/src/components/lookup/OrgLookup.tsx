@@ -14,10 +14,12 @@ interface OrgLookupProps {
   title?: string;
   /** 기준일 고정 (yyyy-MM-dd, AS-IS openFixDate — 발령일 기준 조직) */
   baseDate?: string;
+  /** 다른 회사 조직 (KFS 관리자 화면). 없으면 로그인 회사 */
+  companyId?: number;
 }
 
 /** 조직 선택 팝업 (AS-IS client/vi/org/Org00_Lookup_SelectSingle, 기본 모드 selectByKorName). 더블클릭으로 바로 선택 */
-export const OrgLookup: React.FC<OrgLookupProps> = ({ open, onCancel, onOk, title = '조직 선택', baseDate: fixedDate }) => {
+export const OrgLookup: React.FC<OrgLookupProps> = ({ open, onCancel, onOk, title = '조직 선택', baseDate: fixedDate, companyId }) => {
   const gridRef = useRef<AgGridReact<OrgInfo>>(null);
   const [baseDate, setBaseDate] = useState<Dayjs>(dayjs());
   const [korNm, setKorNm] = useState('');
@@ -27,13 +29,13 @@ export const OrgLookup: React.FC<OrgLookupProps> = ({ open, onCancel, onOk, titl
   const retrieve = useCallback(async () => {
     setLoading(true);
     try {
-      setRows(await orgApi.searchOrgInfos(korNm, baseDate.format('YYYY-MM-DD')));
+      setRows(await orgApi.searchOrgInfos(korNm, baseDate.format('YYYY-MM-DD'), companyId));
     } catch (err) {
       message.error(errorMessage(err, '조직 조회 실패'));
     } finally {
       setLoading(false);
     }
-  }, [korNm, baseDate]);
+  }, [korNm, baseDate, companyId]);
 
   // 기준일 고정이면 열 때 그 날짜로
   useEffect(() => { if (open && fixedDate) setBaseDate(dayjs(fixedDate)); }, [open, fixedDate]);

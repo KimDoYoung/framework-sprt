@@ -64,10 +64,10 @@ SQL 정합성(`tools/sql-check.py`, P2) — 2026-10-01 기준.
 | `Emp00_Tab_ChangeHistory` | 사원정보 변경조회 #1474 | 3 (2) | 1 | 2 | | 8 **완료** (일반발령 탭만) | AS-IS도 서비스 2개 서버 없음 → 동작하는 부분만 |
 | `Emp00_Tab_RoleMenu` | 사원별 메뉴권한(View) #1283 | 1 | 1 | 2 | | 8 **완료** | 조회 전용 |
 | `Emp01_Tab_UserInfo` | 사용자정보 조회 #1325 | 1 | 1 | 3 | 수정(collation) | 8 **완료** | 페이징 조회(ROW_NUMBER) — 서버 페이징 패턴 |
-| `Sys06_Tab_MenuView` | 메뉴별 그룹권한(View) #1284 | 3 | 3 | 7 | | 8 | 조회 전용 |
-| `Sys06_Tab_MenuGuide` | 화면안내등록 #1360 | 3 | 1 | 2 | | 8 | 에디터(안내문) 입력 |
-| `Sys04_Tab_RoleAdmin` | 권한그룹 관리(기초자료) #1112 | 4 | 1 | 2 | | 8 | Sys04 레퍼런스 변형 |
-| `Sys05_Tab_CompanyUserRole` | 고객사별 사용자권한그룹 관리 #1307 | 5 | 3 | 5 | | 8 | Sys05 변형 |
+| `Sys06_Tab_MenuView` | 메뉴별 그룹권한(View) #1284 | 3 | 3 | 7 | | 8 **완료** (권한그룹 중복행 제거 — 매퍼 주석) | 조회 전용 |
+| `Sys06_Tab_MenuGuide` | 화면안내등록 #1360 | 3 | 1 | 2 | | 8 **완료** (SYSADMIN) | 에디터(안내문) 입력 |
+| `Sys04_Tab_RoleAdmin` | 권한그룹 관리(기초자료) #1112 | 4 | 1 | 2 | | 8 **완료** (SYSADMIN) | Sys04 레퍼런스 변형 |
+| `Sys05_Tab_CompanyUserRole` | 고객사별 사용자권한그룹 관리 #1307 | 5 | 3 | 5 | | 8 **완료** (SYSADMIN, 사원·조직 Lookup에 고객사 지정) | Sys05 변형 |
 | `Sys07_Tab_Company` | 권한그룹별 메뉴권한 복사 #1247 | 5 | 5 | 5 | | 8 | 일괄 복사 처리(서비스 트랜잭션) |
 | `Sys07_Tab_CompanyRoleMenu` | 고객사별 메뉴권한 관리 #1286 | 4 | 3 | 5 | | 8 | Sys07 변형 |
 | `Sys10_Tab_TotalSize` | 고객별 서버사용량 #1306 | 3 | 2 | 2 | | 8 | 파일 저장소(sys10) 집계 — 파일 업로드 정책과 연결 |

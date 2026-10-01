@@ -4,8 +4,13 @@ import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuRow;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyMenuRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyMenuRow;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyMenuSearchParam;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyUseMenuRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuCopyRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuCopySearchParam;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuGuideRes;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuGuideSaveReq;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuGuideSearchParam;
+import kr.co.kfs.asseterp.oms.biz.sys.dto.TopMenuRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuItemRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuItemRow;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuSearchParam;
@@ -35,6 +40,9 @@ public interface SysMenuMapper {
     /** 회사 메뉴 중 parentId 바로 아래 메뉴 + 권한그룹 권한(sys07) */
     List<RoleMenuRes> searchRoleMenus(RoleMenuSearchParam param);
 
+    /** 회사가 사용하는 메뉴 중 parentId 바로 아래 메뉴 (companyId, parentId) */
+    List<CompanyUseMenuRes> searchCompanyUseMenus(CompanyMenuSearchParam param);
+
     Long selectNextId();
 
     int insertRoleMenu(RoleMenuRow row);
@@ -54,6 +62,15 @@ public interface SysMenuMapper {
 
     /** 일괄복사 대상 메뉴 */
     List<MenuCopyRes> searchCopyMenus(MenuCopySearchParam param);
+
+    /** 화면안내: 3차 메뉴 (1차 메뉴·메뉴/화면명 조건) */
+    List<MenuGuideRes> searchMenuGuides(MenuGuideSearchParam param);
+
+    /** 화면안내 저장. 반환: 수정 건수 */
+    int updateMenuGuide(MenuGuideSaveReq req);
+
+    /** 사용하는 1차 메뉴 */
+    List<TopMenuRes> searchTopMenus();
 
     /** 회사별 메뉴: parentId 바로 아래 전체 메뉴 + 회사 사용 여부 */
     List<CompanyMenuRes> searchCompanyMenus(CompanyMenuSearchParam param);

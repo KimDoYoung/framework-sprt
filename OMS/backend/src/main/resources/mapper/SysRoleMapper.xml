@@ -58,6 +58,20 @@
          ORDER BY sys04_seq, sys05_seq
     </select>
 
+    <!--
+      AS-IS sys04_role.selectByMenuId.
+      AS-IS는 sys05_user_role을 LEFT JOIN해 권한그룹이 사원 수만큼 중복됐다(asseterpdb 메뉴 5000: 7개 권한그룹 → 38행).
+      화면은 권한명·권한설명만 쓰고 사원은 따로 조회하므로 그 JOIN만 뺐다. 나머지 조건·정렬은 그대로.
+    -->
+    <select id="searchByMenuId" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.RoleRes">
+        SELECT <include refid="columns"/>
+          FROM sys04_role
+               INNER JOIN sys07_role_menu ON sys07_role_id = sys04_role_id AND sys07_menu_id = #{menuId} AND sys07_use_yn = 'true'
+         WHERE 1=1
+           AND sys04_company_id = #{companyId}
+         ORDER BY sys04_seq
+    </select>
+
     <!-- AS-IS UpdateDataModel INSERT (Sys04_RoleModel 기본값: defaultRole·adminYn = false) -->
     <insert id="insert">
         INSERT INTO sys04_role
@@ -82,4 +96,23 @@
            AND sys04_role_id IN
         <foreach collection="roleIds" item="id" open="(" separator="," close=")">#{id}</foreach>
     </delete>
+
+    <!-- AS-IS UpdateDataModel INSERT (Sys04_Tab_RoleAdmin: 고객사·기본권한·관리자권한을 화면에서 받는다) -->
+    <insert id="insertCompanyRole">
+        INSERT INTO sys04_role
+               (sys04_role_id, sys04_role_nm, sys04_note, sys04_seq, sys04_company_id, sys04_default_role, sys04_admin_yn)
+        VALUES (#{roleId}, #{roleNm}, #{note}, #{seq}, #{companyId}, #{defaultRole}, #{adminYn})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE (Sys04_Tab_RoleAdmin 편집 컬럼) -->
+    <update id="updateCompanyRole">
+        UPDATE sys04_role
+           SET sys04_role_nm      = #{roleNm},
+               sys04_seq          = #{seq},
+               sys04_note         = #{note},
+               sys04_default_role = #{defaultRole},
+               sys04_admin_yn     = #{adminYn}
+         WHERE sys04_role_id    = #{roleId}
+           AND sys04_company_id = #{companyId}
+    </update>
 </mapper>

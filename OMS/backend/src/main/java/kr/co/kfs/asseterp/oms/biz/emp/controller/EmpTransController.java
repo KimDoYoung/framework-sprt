@@ -34,8 +34,9 @@ public class EmpTransController {
     public ApiResponse<List<TransRes>> searchTrans(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false) String searchText,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate transDate) {
-        return ApiResponse.ok(empTransService.searchTrans(principal, searchText, transDate));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate transDate,
+            @RequestParam(required = false) Long companyId) {
+        return ApiResponse.ok(empTransService.searchTrans(principal, searchText, transDate, companyId));
     }
 
     /** 사원의 발령 (최근 순) */

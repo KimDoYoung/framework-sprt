@@ -13,10 +13,12 @@ interface PersonLookupProps {
   onOk: (rows: Trans[]) => void;
   multiple?: boolean;
   title?: string;
+  /** 다른 회사 사원 (KFS 관리자 화면, AS-IS open(companyId, …)). 없으면 로그인 회사 */
+  companyId?: number;
 }
 
 /** 사원 선택 팝업 (AS-IS client/vi/emp/Emp01_Lookup_PersonModel). 조직/직무/성명으로 검색 */
-export const PersonLookup: React.FC<PersonLookupProps> = ({ open, onCancel, onOk, multiple = true, title = '사원 선택' }) => {
+export const PersonLookup: React.FC<PersonLookupProps> = ({ open, onCancel, onOk, multiple = true, title = '사원 선택', companyId }) => {
   const gridRef = useRef<AgGridReact<Trans>>(null);
   const [text, setText] = useState('');
   const [rows, setRows] = useState<Trans[]>([]);
@@ -25,13 +27,13 @@ export const PersonLookup: React.FC<PersonLookupProps> = ({ open, onCancel, onOk
   const retrieve = useCallback(async () => {
     setLoading(true);
     try {
-      setRows(await empApi.searchTrans(text));
+      setRows(await empApi.searchTrans(text, undefined, companyId));
     } catch (err) {
       message.error(errorMessage(err, '사원 조회 실패'));
     } finally {
       setLoading(false);
     }
-  }, [text]);
+  }, [text, companyId]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (open) retrieve(); }, [open]);

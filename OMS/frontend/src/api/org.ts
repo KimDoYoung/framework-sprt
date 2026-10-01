@@ -4,8 +4,9 @@ import { OrgCode, OrgCodeSave, OrgHistory, OrgInfo } from '../types/org';
 
 export const orgApi = {
   /** 조직 Lookup: 기준일(yyyy-MM-dd, 없으면 오늘)의 조직 중 조직명 LIKE */
-  searchOrgInfos: async (korNm?: string, baseDate?: string): Promise<OrgInfo[]> => {
-    const res = await apiClient.get<ApiResponse<OrgInfo[]>>('v1/org/org-infos', { params: { korNm, baseDate } });
+  /** companyId: KFS 관리자가 다른 회사 조직을 찾을 때 (그 외에는 서버가 로그인 회사로 바꾼다) */
+  searchOrgInfos: async (korNm?: string, baseDate?: string, companyId?: number): Promise<OrgInfo[]> => {
+    const res = await apiClient.get<ApiResponse<OrgInfo[]>>('v1/org/org-infos', { params: { korNm, baseDate, companyId } });
     return res.data.data ?? [];
   },
 
