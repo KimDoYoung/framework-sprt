@@ -4,7 +4,7 @@ import kr.co.kfs.asseterp.oms.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuRes;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuRow;
 import kr.co.kfs.asseterp.oms.biz.sys.dto.MenuSearchParam;
-import kr.co.kfs.asseterp.oms.biz.sys.mapper.SysMapper;
+import kr.co.kfs.asseterp.oms.biz.sys.mapper.SysMenuMapper;
 import kr.co.kfs.asseterp.oms.biz.user.dto.LoginAccount;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,11 +20,11 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class SysService {
+public class SysMenuService {
 
     private static final long ROOT_MENU_ID = 0L;
 
-    private final SysMapper sysMapper;
+    private final SysMenuMapper sysMenuMapper;
 
     /**
      * 로그인 사용자의 메뉴 트리. AS-IS MainFrame(1차, selectByHeaderMenu*) + MenuGrid(3차, selectByTailMenu*)를 한 번에 만든다.
@@ -35,15 +35,15 @@ public class SysService {
         Long userId = employee ? user.getUserId() : null;
 
         List<MenuRow> level1Rows = employee
-                ? sysMapper.searchHeaderMenusByUser(new MenuSearchParam(user.getCompanyId(), userId, ROOT_MENU_ID))
-                : sysMapper.searchHeaderMenusByCompany(new MenuSearchParam(user.getCompanyId(), null, ROOT_MENU_ID));
+                ? sysMenuMapper.searchHeaderMenusByUser(new MenuSearchParam(user.getCompanyId(), userId, ROOT_MENU_ID))
+                : sysMenuMapper.searchHeaderMenusByCompany(new MenuSearchParam(user.getCompanyId(), null, ROOT_MENU_ID));
 
         List<MenuRes.Level1> menus = new ArrayList<>();
         for (MenuRow level1 : level1Rows) {
             MenuSearchParam param = new MenuSearchParam(user.getCompanyId(), userId, level1.menuId());
             List<MenuRow> tailRows = employee
-                    ? sysMapper.searchTailMenusByUser(param)
-                    : sysMapper.searchTailMenusByCompany(param);
+                    ? sysMenuMapper.searchTailMenusByUser(param)
+                    : sysMenuMapper.searchTailMenusByCompany(param);
             List<MenuRes.Level2> groups = toGroups(level1.menuId(), tailRows);
             if (!groups.isEmpty()) {
                 menus.add(new MenuRes.Level1(String.valueOf(level1.menuId()), level1.menuNm(), groups));

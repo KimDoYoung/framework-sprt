@@ -9,7 +9,7 @@
   - selectByHeaderMenuCompanyId: adminYn 분기의 두 SQL이 같아 하나로 합쳤다
   - 상위 메뉴 이름 앞의 '&#160;'(GXT 그리드 들여쓰기용)은 뺐다
 -->
-<mapper namespace="kr.co.kfs.asseterp.oms.biz.sys.mapper.SysMapper">
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.sys.mapper.SysMenuMapper">
 
     <!-- AS-IS selectByHeaderMenuCompanyId -->
     <select id="searchHeaderMenusByCompany" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.MenuRow">

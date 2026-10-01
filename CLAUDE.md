@@ -15,9 +15,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `antdesign/frontend/` — Vite + React 19 + TypeScript + Ant Design 5 UI 프로토타입. 실제 API 연동 없이 mock 데이터로 동작.
   - `antdesign/bm.sh`, `antdesign/fm.sh`, `antdesign/deploy.sh` — 각각 backend/frontend 관리 스크립트와 배포 스크립트.
 - `docs/TOBE-Framework.md` — backend/frontend 네이밍 및 레이어 규칙(신규 코드 작성 시 반드시 준수).
+- `docs/OMS-convert.md` — OMS(AS-IS GWT) → TOBE 화면 변환 규칙(호출·서버·세션·SQL 차이·화면 대응). OMS 화면을 변환할 때 반드시 따른다.
 - `docs/docker-compose.yml` — 로컬 PostgreSQL/Redis/Tomcat 개발 인프라 정의(호스트 경로가 특정 서버에 고정되어 있어 그대로는 다른 환경에서 재사용 불가).
 - `tools/init-sprt.sh` — `antdesign/`의 골격(디렉토리 구조, 설정 파일, 빈 앱 셸 `App.tsx`, `bm.sh`/`fm.sh`/`deploy.sh`)만 생성하는 스캐폴딩 스크립트. 화면 소스는 생성하지 않는다(추후 `git archive`로 `antdesign/`에서 가져오는 방식으로 전환 예정). 빈 디렉토리에서만 실행되며, `antdesign/`의 설정 파일·디렉토리 구조를 바꾸면 이 스크립트도 함께 갱신한다.
-- `tools/dbml-index.py`, `tools/src-index.py` — AS-IS DB 스키마·소스 색인 생성기. 출력은 `docs/as-is/`(git-ignored, 재생성 가능).
+- `tools/dbml-index.py`, `tools/src-index.py` — AS-IS DB 스키마·소스 색인 생성기. `tools/sql-check.py` — AS-IS 매퍼 SQL ↔ asseterpdb 정합성(EXPLAIN). 출력은 `docs/as-is/`(git-ignored, 재생성 가능).
 
 ## AS-IS 참조 (전환 작업 시)
 
@@ -37,6 +38,8 @@ python3 tools/dbml-index.py .yunhee/asseterp-dbml.md                            
 # 3) 소스 → 소스 색인. 출력은 docs/as-is/src/ 고정, 실행마다 비우고 다시 만든다(앱 패키지 myApp/myOms 자동 탐지)
 python3 tools/src-index.py ~/oms-data/src/Asset-ERP --menus docs/as-is/menus.tsv   # AssetERP
 python3 tools/src-index.py ~/workspace26/Asset-OMS --menus docs/as-is/menus.tsv    # OMS (AssetERP 색인을 덮어씀)
+# 4) 매퍼 SQL이 asseterpdb에서 도는지 EXPLAIN으로 확인 (읽기 전용, 실행 안 함) → docs/as-is/sql-check.md
+PGHOST=localhost PGUSER=kdy987 PGPASSWORD=... python3 tools/sql-check.py ~/workspace26/Asset-OMS
 ```
 - DB 스키마가 그대로면 1·2는 건너뛰고 3만 돌린다. 2를 다시 돌렸으면 3도 다시 돌린다(테이블 링크·`⚠DB없음` 판정이 DB 색인을 쓴다).
 - `docs/as-is/menus.tsv`는 asseterpdb `sys06_menu`에서 뽑는다(SQL은 `docs/as-is/src/README.md`). 출력 폴더 밖에 두어 지워지지 않게 한다.
@@ -85,7 +88,7 @@ frontend를 빌드해 `backend/src/main/resources/static`으로 복사한 뒤 `b
   - OMS(AssetERP subset): `kr.co.kfs.asseterp.oms` (예: `kr.co.kfs.asseterp.oms.common.jwt`, `kr.co.kfs.asseterp.oms.biz.auth`)
   - `antdesign/`(`com.asseterp.test`), `security-test/`(`com.asseterp.security`)는 이 규칙 이전의 프로토타입이다. 거기서 코드를 가져오면 패키지를 위 규칙으로 바꾼다.
 - 레이어: `common.*`(Security/Config/Error/Utils 공통 모듈), `biz.<domain>.*`(도메인별 업무 패키지) — `biz`는 **모든 업무 도메인을 담는 상위 네임스페이스**이며 도메인 코드 자체가 아니다. 각 도메인 패키지 아래 `controller`/`service`/`mapper`/`dto`로 나눈다.
-- REST 규칙: `/api/v1/{domain}/{resource}`, 컨트롤러/서비스/매퍼는 `{Domain}Controller`/`{Domain}Service`/`{Domain}Mapper`로 명명. 메서드 접두사는 조회 `get/search`, 등록 `create`, 수정 `update`, 삭제 `delete`.
+- REST 규칙: `/api/v1/{domain}/{resource}`, 컨트롤러/서비스/매퍼는 `{Domain}Controller`/`{Domain}Service`/`{Domain}Mapper`로 명명하되, 도메인이 크면 AS-IS 서버 클래스 단위 `{Domain}{Resource}Controller`(예: `Sys04_Role` → `SysRoleController`/`SysRoleService`/`SysRoleMapper`, `Sys06_Menu` → `SysMenu*`). 메서드 접두사는 조회 `get/search`, 등록 `create`, 수정 `update`, 삭제 `delete`.
 - 모든 API 응답은 공통 `ApiResponse<T>`로 감싸고, 업무 예외는 `BusinessException`으로 일원화해 `RestControllerAdvice`에서 처리.
 - DTO는 Lombok 클래스 대신 Java 21 `record` 사용을 권장. Lombok은 `@RequiredArgsConstructor`/`@Slf4j`/`@Getter`/`@Builder`만 허용, `@Setter`/`@Data`는 금지.
 - MyBatis 사용 시 파라미터는 Map 대신 전용 DTO/VO 사용. Service는 기본 읽기 전용 트랜잭션, CUD 메서드에만 쓰기 트랜잭션을 선언.

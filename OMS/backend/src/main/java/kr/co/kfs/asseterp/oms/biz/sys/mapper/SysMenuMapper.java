@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import java.util.List;
 
 @Mapper
-public interface SysMapper {
+public interface SysMenuMapper {
     /** 회사관리자: 회사 메뉴(sys03_company_menu) 중 parentId의 하위 메뉴 */
     List<MenuRow> searchHeaderMenusByCompany(MenuSearchParam param);
 

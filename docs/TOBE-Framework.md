@@ -39,6 +39,7 @@
 3. **API & 네이밍 컨벤션**
    - URL: `/api/v1/{domain}/{resource}` (RESTful 원칙)
    - 컨트롤러/서비스/매퍼 명명: `{Domain}Controller`, `{Domain}Service`, `{Domain}Mapper`
+     - 도메인이 크면 AS-IS 서버 클래스(리소스) 단위로 나눈다: `{Domain}{Resource}Controller` (예: AS-IS `Sys04_Role` → `SysRoleController`, `SysRoleService`, `SysRoleMapper`)
    - 메서드 접두사: 조회(`get/search`), 등록(`create`), 수정(`update`), 삭제(`delete`)
 
 4. **응답 및 예외 처리 표준**
