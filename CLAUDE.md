@@ -28,12 +28,19 @@ AS-IS 소스(`~/oms-data/src/Asset-ERP`, 약 3,000개 Java)와 DB 스키마 문�
 3. 테이블 정의·컬럼 한글 주석은 `docs/as-is/db/tables/{도메인}.md`, DB 함수는 `docs/as-is/db/functions/{이름}.md`.
 4. 실제 코드는 색인이 가리키는 소스 파일·줄만 연다.
 
-색인이 없거나 오래됐으면 다시 만든다:
+색인이 없거나 오래됐으면 다시 만든다. DB는 docker 안의 localhost `asseterpdb`로 고정이다(omsdb 등 다른 DB는 쓰지 않는다).
 ```bash
-python3 tools/dbml-index.py .yunhee/asseterp-dbml.md                          # → docs/as-is/db/
-python3 tools/src-index.py ~/oms-data/src/Asset-ERP --menus docs/as-is/menus.tsv  # → docs/as-is/src/ (menus.tsv 생성 SQL은 docs/as-is/src/README.md)
-python3 tools/src-index.py ~/workspace26/Asset-OMS                                # OMS도 같은 docs/as-is/src/로 (앱 패키지 myApp/myOms 자동 탐지, 실행마다 출력 폴더 재생성)
+# 1) asseterpdb 스키마 → DBML 마크다운 (yunhee, 읽기 전용). 인자는 asseterpdb 접속정보를 가진 환경변수 이름
+yunhee dbml LOCAL_DB -o .yunhee/asseterp-dbml.md
+# 2) DBML → DB 색인
+python3 tools/dbml-index.py .yunhee/asseterp-dbml.md                                # → docs/as-is/db/
+# 3) 소스 → 소스 색인. 출력은 docs/as-is/src/ 고정, 실행마다 비우고 다시 만든다(앱 패키지 myApp/myOms 자동 탐지)
+python3 tools/src-index.py ~/oms-data/src/Asset-ERP --menus docs/as-is/menus.tsv   # AssetERP
+python3 tools/src-index.py ~/workspace26/Asset-OMS --menus docs/as-is/menus.tsv    # OMS (AssetERP 색인을 덮어씀)
 ```
+- DB 스키마가 그대로면 1·2는 건너뛰고 3만 돌린다. 2를 다시 돌렸으면 3도 다시 돌린다(테이블 링크·`⚠DB없음` 판정이 DB 색인을 쓴다).
+- `docs/as-is/menus.tsv`는 asseterpdb `sys06_menu`에서 뽑는다(SQL은 `docs/as-is/src/README.md`). 출력 폴더 밖에 두어 지워지지 않게 한다.
+- 화면 파일의 `⚠DB없음` 테이블은 asseterpdb에 없는 테이블이다. 프레임 클래스(LoginPage, MainFrame, MyPage …)는 `docs/as-is/src/_frame/screens/`에 있다.
 
 ## 커맨드
 
