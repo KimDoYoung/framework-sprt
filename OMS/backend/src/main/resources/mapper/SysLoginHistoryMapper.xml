@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS sys26_login.selectByLoginDate. 조건은 그대로, SELECT 목록만 LoginHistoryRes에 맞췄다 (사원 / 회사관리자(sys02, 상태 '20') UNION).
+  코드명 함수를 행마다 부르면 asseterpdb에서 1년치 1.7만 행에 43초 → 안쪽에서는 코드값만 내고, 바깥에서 서로 다른 코드값마다
+  한 번씩 부른 결과와 조인한다 (같은 함수·같은 인자라 결과는 같다).
+-->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.sys.mapper.SysLoginHistoryMapper">
+
+    <select id="searchByLoginDate" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.LoginHistoryRes">
+        SELECT t.login_id, t.open_date, t.company_nm, t.person_nm,
+               st.nm AS status_nm, lm.nm AS login_mode_nm,
+               t.ip_address, t.os, t.browser
+          FROM (
+                SELECT sys26_login_id                                                  AS login_id
+                     , sys26_open_date
+                     , TO_CHAR(sys26_open_date, 'YYYY-MM-DD HH24:MI:SS')               AS open_date
+                     , (SELECT sys01_company_nm FROM sys01_company
+                         WHERE sys01_company_id = emp01_company_id)                   AS company_nm
+                     , emp01_kor_nm ||'('||emp01_emp_no||')'                           AS person_nm
+                     , sys26_status_cd                                                 AS status_cd
+                     , sys26_login_mode                                                AS login_mode
+                     , sys26_ip_address                                                AS ip_address
+                     , sys26_os                                                        AS os
+                     , sys26_browser                                                   AS browser
+                  FROM sys26_login
+                       INNER JOIN emp01_person ON emp01_person_id = sys26_person_id
+                 WHERE DATE_TRUNC('day', sys26_open_date) BETWEEN DATE_TRUNC('day', #{startDate}::timestamp) AND DATE_TRUNC('day', #{closeDate}::timestamp)
+                   AND CAST(emp01_company_id AS VARCHAR) LIKE #{companyId}
+                   AND COALESCE(sys26_login_mode, 'P') LIKE #{loginMode}
+                   AND sys26_status_cd != '20'
+                 UNION ALL
+                SELECT sys26_login_id
+                     , sys26_open_date
+                     , TO_CHAR(sys26_open_date, 'YYYY-MM-DD HH24:MI:SS')
+                     , (SELECT sys01_company_nm FROM sys01_company
+                         WHERE sys01_company_id = sys02_company_id)
+                     , sys02_kor_nm ||'('||sys02_login_id||')'
+                     , sys26_status_cd
+                     , sys26_login_mode
+                     , sys26_ip_address
+                     , sys26_os
+                     , sys26_browser
+                  FROM sys26_login
+                       INNER JOIN sys02_user ON sys02_user_id = sys26_person_id
+                 WHERE DATE_TRUNC('day', sys26_open_date) BETWEEN DATE_TRUNC('day', #{startDate}::timestamp) AND DATE_TRUNC('day', #{closeDate}::timestamp)
+                   AND CAST(sys02_company_id AS VARCHAR) LIKE #{companyId}
+                   AND COALESCE(sys26_login_mode, 'P') LIKE #{loginMode}
+                   AND sys26_status_cd = '20'
+               ) t
+               LEFT JOIN (SELECT cd, f_cdnm('LoginStatusCode', cd, 0, f_sysdate()) AS nm
+                            FROM (SELECT DISTINCT sys26_status_cd AS cd FROM sys26_login) x) st ON st.cd = t.status_cd
+               LEFT JOIN (SELECT cd, f_cdnm('LoginModeCode', cd, 0, f_sysdate()) AS nm
+                            FROM (SELECT DISTINCT sys26_login_mode AS cd FROM sys26_login) x) lm ON lm.cd = t.login_mode
+         ORDER BY t.sys26_open_date DESC
+    </select>
+</mapper>

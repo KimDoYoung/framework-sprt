@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
 import {
-  Code, CodeGroup, CodeKind, PersonMenu, CompanyDetail, CompanyMenu, CompanyUseMenu, MenuGuide, TopMenu, PasswordPerson, Calendar, FileUsage, FileUsagePeriod, TrashFile, CompanyMenuYn, CompanySave, LoginSecure, MenuCopy, MenuItem, MenuItemSave, Role, RoleMenu, RoleUser, SysCompany, UserRole,
+  Code, CodeGroup, CodeKind, PersonMenu, CompanyDetail, CompanyMenu, CompanyUseMenu, MenuGuide, TopMenu, LoginHistory, PasswordPerson, Calendar, FileUsage, FileUsagePeriod, TrashFile, CompanyMenuYn, CompanySave, LoginSecure, MenuCopy, MenuItem, MenuItemSave, Role, RoleMenu, RoleUser, SysCompany, UserRole,
 } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
@@ -194,6 +194,12 @@ export const sysApi = {
   /** 비밀번호를 비운다 → 다음 로그인 때 변경 요구 */
   resetPassword: async (personId: number): Promise<void> => {
     await apiClient.put(`v1/sys/passwords/persons/${personId}/reset`);
+  },
+
+  /** 로그인내역 (SYSADMIN). companyId·loginMode 없으면 전체 */
+  searchLoginHistories: async (params: { startDate: string; closeDate: string; companyId?: number; loginMode?: string }): Promise<LoginHistory[]> => {
+    const res = await apiClient.get<ApiResponse<LoginHistory[]>>('v1/sys/login-histories', { params });
+    return res.data.data ?? [];
   },
 
   /** 권한그룹의 사원 */

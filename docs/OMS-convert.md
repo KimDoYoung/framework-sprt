@@ -85,6 +85,9 @@ TOBE는 **테이블마다 명시적인 `insert` / `update` / `delete` SQL**을 �
 | `<choose>`의 Tibero 분기(`${isTibero}`) | 버리고 PostgreSQL 분기만 옮긴다 |
 | `mst01/02/06/07/08`, `tgt01/02`, `tb_ord_mst` | 테이블 없음 → 그 화면은 변환하지 않는다 |
 | `common.org00_org_info(_with)` / `common.emp00_trans_info` 를 Long 파라미터로 include (회사 0으로 `getOrg(0, …)`/`getPerson(0, …)`) | asseterpdb에는 회사 0 조직만 나와 결과가 빈다 → **로그인 회사 ID**를 넘긴다 (조각은 매퍼에 펼쳐 넣는다) |
+| `${companyId}` 등 문자열 치환 (`insertRole`, `insertAuto` …) | `#{}`로 바꾼다. `INSERT … SELECT`는 컬럼 목록을 적는다 |
+| 경로·문자열을 고정 길이로 자르는 SQL (`sys10_server_path`에서 앞 17자) | asseterpdb 데이터 모양이 달라 0행 → 의도(서브도메인 추출)대로 정규식으로 바꾸고 매퍼 주석에 남긴다 |
+| 대량 행에서 행마다 `f_cdnm(…)` (`sys26_login` 1.7만 행 43초) | 안쪽은 코드값만 내고, 바깥에서 `SELECT DISTINCT` 코드값마다 `f_cdnm`을 한 번 부른 결과와 조인한다 (0.2초, 결과 같음) |
 
 ## 5. 화면 (Frontend)
 

@@ -125,6 +125,20 @@ export interface PasswordPerson {
   lockYn: boolean;
 }
 
+/** 로그인내역 (GET /api/v1/sys/login-histories) */
+export interface LoginHistory {
+  loginId: number;
+  /** 접속일시 yyyy-MM-dd HH:mm:ss */
+  openDate: string;
+  companyNm: string | null;
+  personNm: string;
+  statusNm: string | null;
+  loginModeNm: string | null;
+  ipAddress: string | null;
+  os: string | null;
+  browser: string | null;
+}
+
 /** 메뉴 관리 트리 행 (GET /api/v1/sys/menu-items, 깊이 우선 순서) */
 export interface MenuItem {
   menuId: number;
