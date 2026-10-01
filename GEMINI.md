@@ -72,3 +72,14 @@ frontend를 빌드해 `backend/src/main/resources/static`으로 복사한 뒤 `b
 - `mock/data.ts`가 메뉴 트리와 모든 화면의 샘플 데이터를 생성하는 유일한 데이터 소스다. 실제 백엔드 연동 전까지 새 화면도 이 패턴을 따른다.
 - `docs/TOBE-Framework.md`의 frontend 규칙: 대시보드는 "MyPage" 용어 사용, 아이콘은 Ant Design 아이콘만 사용, Tailwind 사용 자제, StatusBar를 TopBar와 콘텐츠 사이에 배치, 뷰포트 피팅(no-scroll body + 내부 가상 스크롤 격리) 레이아웃 유지.
 - 대용량 그리드는 AG Grid(`LargeDataView`), 일반 폼/목록 화면은 Ant Design 컴포넌트를 사용하도록 구분되어 있다(기술 스택 표 기준).
+
+## yunhee의 이용 (local qwen2.5를 이용하는 agent)
+
+이 시스템에는 토큰 절약 로컬 CLI인 yunhee가 설치되어 있습니다. 실측 평가(`OMS/docs/yunhee-eval.md`, 2026-10-01)에 따라 아래 규칙을 따르세요:
+1. ASIS 화면 분석 시: `yunhee prepare`는 쓰지 않는다. **`docs/as-is/src` 색인 화면 파일**을 본다 — 서비스 → 서버 → SQL → 테이블과
+   `## UI` 절(레이아웃·툴바·그리드 컬럼·이벤트 → 메서드·메서드 줄 범위)이 있다. 원본은 처리 로직이 필요한 메서드의 줄 범위만 읽는다.
+2. 테이블 스키마 확인 시: 전체 DDL이나 DB 카탈로그를 뒤지지 말고 `yunhee table <테이블명>`(glob 가능) 또는 `docs/as-is/db/tables/{도메인}.md`를 본다.
+   둘은 같은 DBML이므로 하나만 본다. `yunhee table --page`는 쓰지 않는다(화면 파일의 '테이블' 절을 본다).
+3. 컴파일/빌드/테스트/배포 실행 시: 셸에서 직접 실행하지 말고 `yunhee run "<명령어>"` (예: `yunhee run "./bm.sh compile"`, `yunhee run "npx tsc -b --noEmit"`)로 실행하여 요약만 확인한다.
+   원시 로그는 `.yunhee/runs/`(git-ignored)에 남고, 직전 결과는 `yunhee last-run`.
+4. `yunhee agent-guide`의 prepare 규칙은 위 1번이 우선한다.
