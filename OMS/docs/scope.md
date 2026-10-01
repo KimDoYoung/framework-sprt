@@ -69,7 +69,7 @@ SQL 정합성(`tools/sql-check.py`, P2) — 2026-10-01 기준.
 | `Sys04_Tab_RoleAdmin` | 권한그룹 관리(기초자료) #1112 | 4 | 1 | 2 | | 8 **완료** (SYSADMIN) | Sys04 레퍼런스 변형 |
 | `Sys05_Tab_CompanyUserRole` | 고객사별 사용자권한그룹 관리 #1307 | 5 | 3 | 5 | | 8 **완료** (SYSADMIN, 사원·조직 Lookup에 고객사 지정) | Sys05 변형 |
 | `Sys07_Tab_Company` | 권한그룹별 메뉴권한 복사 #1247 | 5 | 5 | 5 | | 8 **완료** (SYSADMIN, `SysRoleMenu*`) | 일괄 복사 처리(서비스 트랜잭션) |
-| `Sys07_Tab_CompanyRoleMenu` | 고객사별 메뉴권한 관리 #1286 | 4 | 3 | 5 | | 8 | Sys07 변형 |
+| `Sys07_Tab_CompanyRoleMenu` | 고객사별 메뉴권한 관리 #1286 | 4 | 3 | 5 | | 8 **완료** (SYSADMIN, MenuCheckTree 재사용) | Sys07 변형 |
 | `Sys10_Tab_TotalSize` | 고객별 서버사용량 #1306 | 3 | 2 | 2 | | 8 | 파일 저장소(sys10) 집계 — 파일 업로드 정책과 연결 |
 | `Sys10_Tab_TrashFileList` | 미사용 파일조회 #1353 | 3 | 2 | 2 | | 8 | 위와 같음 |
 | `Sys12_Tab_Calendar` | 일자관리 #1080, #1113 | 9 (4) | 3 | 3 | | 8 | 휴일 Lookup(sys14) 서버 없음 → 일자 부분만 |

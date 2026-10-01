@@ -91,7 +91,7 @@ class SysMenuServiceTest {
 
         assertThat(rows).extracting(RoleMenuRes::menuId).containsExactly(1L, 11L, 111L, 2L);
         assertThat(rows).extracting(RoleMenuRes::level).containsExactly(0, 1, 2, 0);
-        verify(sysRoleService).requireRole(any(), eq(5L));
+        verify(sysRoleService).requireRole(any(UserPrincipal.class), eq(5L));
     }
 
     @Test

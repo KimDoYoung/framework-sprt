@@ -166,6 +166,14 @@ export const sysApi = {
   },
 
   /** 바꾼 메뉴만 저장 → 저장된 행(roleMenuId 포함, 요청 순서) */
+  /** 고객사 권한그룹의 메뉴 권한 저장 (SYSADMIN) → 저장된 행(요청 순서) */
+  updateCompanyRoleMenus: async (companyId: number, roleId: number, rows: RoleMenu[]): Promise<Pick<RoleMenu, 'menuId' | 'roleMenuId' | 'roleMenuYn'>[]> => {
+    const body = rows.map(({ menuId, roleMenuId, roleMenuYn }) => ({ menuId, roleMenuId, roleMenuYn }));
+    const res = await apiClient.put<ApiResponse<Pick<RoleMenu, 'menuId' | 'roleMenuId' | 'roleMenuYn'>[]>>(
+      `v1/sys/role-menus/companies/${companyId}`, body, { params: { roleId } });
+    return res.data.data ?? [];
+  },
+
   updateRoleMenus: async (roleId: number, rows: RoleMenu[]): Promise<Pick<RoleMenu, 'menuId' | 'roleMenuId' | 'roleMenuYn'>[]> => {
     const body = rows.map(({ menuId, roleMenuId, roleMenuYn }) => ({ menuId, roleMenuId, roleMenuYn }));
     const res = await apiClient.put<ApiResponse<Pick<RoleMenu, 'menuId' | 'roleMenuId' | 'roleMenuYn'>[]>>(

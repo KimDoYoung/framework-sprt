@@ -128,7 +128,13 @@ public class SysMenuService {
     /** AS-IS updateRoleMenu: 바꾼 메뉴만 받아 sys07 행이 없으면 INSERT, 있으면 사용여부 UPDATE → 저장된 행(요청 순서) */
     @Transactional
     public List<RoleMenuUse> updateRoleMenus(UserPrincipal user, Long roleId, List<RoleMenuUse> rows) {
-        sysRoleService.requireRole(user, roleId);
+        return updateCompanyRoleMenus(user.getCompanyId(), roleId, rows);
+    }
+
+    /** companyId 회사 권한그룹의 메뉴 권한 저장 (AS-IS Sys07_Tab_CompanyRoleMenu: KFS 관리자가 고른 회사) */
+    @Transactional
+    public List<RoleMenuUse> updateCompanyRoleMenus(Long companyId, Long roleId, List<RoleMenuUse> rows) {
+        sysRoleService.requireRole(companyId, roleId);
         List<RoleMenuUse> saved = new ArrayList<>(rows.size());
         for (RoleMenuUse req : rows) {
             String useYn = String.valueOf(req.roleMenuYn());

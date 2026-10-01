@@ -37,8 +37,13 @@ public class SysRoleService {
 
     /** 로그인 회사의 권한그룹인지 확인 (다른 회사 권한그룹의 매핑을 바꾸지 못하게) */
     public RoleRes requireRole(UserPrincipal user, Long roleId) {
+        return requireRole(user.getCompanyId(), roleId);
+    }
+
+    /** companyId 회사의 권한그룹인지 확인 (KFS 관리자가 고른 회사 화면) */
+    public RoleRes requireRole(Long companyId, Long roleId) {
         RoleRes role = roleId == null ? null : sysRoleMapper.selectById(roleId);
-        if (role == null || !user.getCompanyId().equals(role.companyId())) {
+        if (role == null || !companyId.equals(role.companyId())) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "권한그룹을 찾을 수 없습니다. 다시 조회해 주세요.");
         }
         return role;

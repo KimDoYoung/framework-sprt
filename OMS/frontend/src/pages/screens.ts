@@ -17,6 +17,7 @@ import { Sys06MenuGuideView } from './sys/Sys06MenuGuideView';
 import { Sys06MenuViewView } from './sys/Sys06MenuViewView';
 import { Sys07RoleMenuView } from './sys/Sys07RoleMenuView';
 import { Sys07CompanyView } from './sys/Sys07CompanyView';
+import { Sys07CompanyRoleMenuView } from './sys/Sys07CompanyRoleMenuView';
 import { Sys08CodeKindAdminView } from './sys/Sys08CodeKindAdminView';
 import { Sys08CodeKindClientView } from './sys/Sys08CodeKindClientView';
 
@@ -46,6 +47,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sys06_Tab_MenuView: Sys06MenuViewView,
   Sys07_Tab_RoleMenu: Sys07RoleMenuView,
   Sys07_Tab_Company: Sys07CompanyView,
+  Sys07_Tab_CompanyRoleMenu: Sys07CompanyRoleMenuView,
   Sys08_Tab_CodeKindAdmin: Sys08CodeKindAdminView,
   Sys08_Tab_CodeKindClient: Sys08CodeKindClientView,
 };
