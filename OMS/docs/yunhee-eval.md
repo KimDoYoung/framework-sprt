@@ -13,6 +13,17 @@
 
 토큰 절약의 실제 대상은 "원본 소스 읽기"인데, `prepare`가 그것을 대체하지 못했다. 색인 + 필요한 줄만 읽기가 더 싸고 정확하다.
 
+## 3차: yunhee 0.1.1 → 0.1.2 (outline·api 추가, prepare 삭제)
+
+| 명령 | 결과 | 판정 |
+|:---|:---|:---|
+| `run` | 성공 1줄 / 실패 시 원인·핵심 에러 원문 발췌 정확 | 사용 |
+| `outline` (0.1.2) | Java 102파일: 여러 줄 파라미터·중첩 타입·인터페이스 메서드 모두 정확. 남은 오류 3건 — enum 상수 목록이 1KB 한 줄로 나옴(`ErrorCode`), 레코드 본문 메서드 누락(`Tenant.isValid`), 중첩 레코드 2번 출력. MyBatis XML 정확. TS 객체 리터럴 멤버·`const X: React.FC` 정확. `SysMenuService` 15.6KB → 1.4KB | 사용 |
+| `api` (0.1.2) | sys 4화면 API: GET 8개 행 수가 직접 curl 검증 값과 모두 일치, 같은 값 PUT 200, 검증 오류 400 메시지 표시, 로그인 실패를 원문으로 표시하고 중단 | 사용 |
+| `api -t` | OMS는 Host(`kfstest.localhost`)로 테넌트를 판정해 `X-Tenant-Id`를 무시 → admin으로 호출됨 | 수정 필요: `-t`면 Host를 `{tenant}.localhost`로 |
+
+0.1.1에서 api가 전부 401이던 원인은 로그인 경로(`/api/auth/login`, yunhee 기본값 `/api/v1/auth/login`)였다.
+
 ## 2차: src-index.py UI 섹션 vs prepare (`Sys05_Tab_CompanyUserRole`, 2026-10-01)
 
 `tools/src-index.py`에 **`## UI` 절**을 추가했다 — 화면이 쓰는 클래스마다 레이아웃, 툴바 순서, 입력 위젯(콤보 서비스·빈칸 문구), 그리드 컬럼(필드·폭·헤더·종류·편집기, 체크박스·트리), 이벤트 → 메서드, 메서드 줄 범위·서비스 파라미터·메시지·세션 사용. LLM 없이 정규식·괄호 짝 파싱.

@@ -110,6 +110,11 @@ frontend를 빌드해 `backend/src/main/resources/static`으로 복사한 뒤 `b
    `## UI` 절(레이아웃·툴바·그리드 컬럼·이벤트 → 메서드·메서드 줄 범위)이 있다. 원본은 처리 로직이 필요한 메서드의 줄 범위만 읽는다.
 2. 테이블 스키마 확인 시: 전체 DDL이나 DB 카탈로그를 뒤지지 말고 `yunhee table <테이블명>`(glob 가능) 또는 `docs/as-is/db/tables/{도메인}.md`를 본다.
    둘은 같은 DBML이므로 하나만 본다. `yunhee table --page`는 쓰지 않는다(화면 파일의 '테이블' 절을 본다).
-3. 컴파일/빌드/테스트/배포 실행 시: 셸에서 직접 실행하지 말고 `yunhee run "<명령어>"` (예: `yunhee run "./bm.sh compile"`, `yunhee run "npx tsc -b --noEmit"`)로 실행하여 요약만 확인한다.
+3. TOBE 기존 코드 위치 파악 시: Service·Controller·Mapper·TS 파일을 통째로 읽지 말고 `yunhee outline <파일|디렉터리>`로
+   시그니처·매핑 경로·statement id·줄 번호를 본 뒤 필요한 줄만 읽는다. (0.1.2: enum 상수 목록·레코드 본문 메서드는 부정확)
+4. API 확인 시: curl로 직접 로그인하지 말고 `yunhee api <METHOD> <PATH> [-p k=v] [-b '<json>']`로 호출한다
+   (테스트 계정 자동 로그인, 응답은 상태·행 수·필드·첫 행만). 화면 변환 후 새 API는 이것으로 검증한다.
+   테넌트는 Host로 판정되므로 `-t`로는 바뀌지 않는다(0.1.2). 저장 API 시험은 같은 값 PUT 등 데이터를 바꾸지 않는 방식으로 한다.
+5. 컴파일/빌드/테스트/배포 실행 시: 셸에서 직접 실행하지 말고 `yunhee run "<명령어>"` (예: `yunhee run "./bm.sh compile"`, `yunhee run "npx tsc -b --noEmit"`)로 실행하여 요약만 확인한다.
    원시 로그는 `.yunhee/runs/`(git-ignored)에 남고, 직전 결과는 `yunhee last-run`.
-4. `yunhee agent-guide`의 prepare 규칙은 위 1번이 우선한다.
+6. `yunhee agent-guide`와 이 절이 다르면 이 절을 따른다.
