@@ -111,6 +111,24 @@ export const sysApi = {
     return res.data.data ?? 0;
   },
 
+  /** 고객사 권한그룹의 메뉴 트리 (SYSADMIN, 깊이 우선 + level) */
+  searchCompanyRoleMenus: async (companyId: number, roleId: number): Promise<RoleMenu[]> => {
+    const res = await apiClient.get<ApiResponse<RoleMenu[]>>(`v1/sys/role-menus/companies/${companyId}`, { params: { roleId } });
+    return res.data.data ?? [];
+  },
+
+  /** 권한그룹 복사: 원본 회사의 권한그룹(이름 기준)을 대상 회사들로 → 복사한 회사 수 */
+  copyRole: async (sourceCompanyId: number, roleNm: string, companyIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/sys/role-menus/copy-role', { sourceCompanyId, roleNm, companyIds });
+    return res.data.data ?? 0;
+  },
+
+  /** 메뉴권한 복사: 메뉴와 상위 메뉴의 회사 사용·권한그룹 권한을 대상 회사들로 → 처리한 회사 수 */
+  copyRoleMenu: async (sourceCompanyId: number, roleNm: string, menuId: number, companyIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/sys/role-menus/copy-menu', { sourceCompanyId, roleNm, menuId, companyIds });
+    return res.data.data ?? 0;
+  },
+
   /** 권한그룹의 사원 */
   searchUserRoles: async (roleId: number): Promise<UserRole[]> => {
     const res = await apiClient.get<ApiResponse<UserRole[]>>('v1/sys/user-roles', { params: { roleId } });

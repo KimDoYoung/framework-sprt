@@ -319,8 +319,9 @@ def ui_lines(cls):
             a = arg[0].replace("this.", "")
             s = _strings(a)
             if a.startswith("new LabelToolItem") or a.startswith("new FieldLabel"):
-                if s and s[-1].strip():
-                    items.append(f"{s[-1].strip()}:")
+                # 첫 문자열이 라벨 (setHtmlCheckBoxStyle("라벨", "색상") 같은 뒤 인자는 스타일)
+                if s and s[0].strip():
+                    items.append(f"{s[0].strip()}:")
                 inner = re.match(r"new FieldLabel\s*\(\s*(\w+)", a)
                 if inner:
                     items.append(f"{{{inner.group(1)}}}")

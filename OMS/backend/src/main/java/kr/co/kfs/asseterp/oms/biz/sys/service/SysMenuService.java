@@ -111,6 +111,13 @@ public class SysMenuService {
         return result;
     }
 
+    /** companyId 회사 권한그룹의 메뉴 트리 (AS-IS Sys07_TapPage_Menu: KFS 관리자가 고른 회사) */
+    public List<RoleMenuRes> searchCompanyRoleMenus(Long companyId, Long roleId) {
+        List<RoleMenuRes> result = new ArrayList<>();
+        addRoleMenus(result, companyId, roleId, ROOT_MENU_ID, 0);
+        return result;
+    }
+
     private void addRoleMenus(List<RoleMenuRes> result, Long companyId, Long roleId, Long parentId, int level) {
         for (RoleMenuRes menu : sysMenuMapper.searchRoleMenus(new RoleMenuSearchParam(companyId, roleId, parentId))) {
             result.add(menu.withLevel(level));

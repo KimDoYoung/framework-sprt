@@ -13,6 +13,20 @@
 
 토큰 절약의 실제 대상은 "원본 소스 읽기"인데, `prepare`가 그것을 대체하지 못했다. 색인 + 필요한 줄만 읽기가 더 싸고 정확하다.
 
+## 4차: 0.1.2로 화면 1개 전 과정 (`Sys07_Tab_Company`, 2026-10-01)
+
+화면 변환 전체를 새 규칙(색인 UI 절 → outline → table → run → api)으로 했다.
+
+| 단계 | 쓴 것 | 관찰 |
+|:---|:---|:---|
+| AS-IS 분석 | 색인 화면 파일(클래스 5개 UI 절) | 화면 구성은 색인만으로 충분. 복사 로직은 서버 메서드 100줄 + 클라이언트 처리 117줄 + SQL 8개를 색인 줄 번호로만 읽음 (화면 클래스 704줄은 열지 않음) |
+| TOBE 위치 | `outline api/sys.ts`, `SysCodeController` | 재사용 함수(`searchCompanies`·`searchCompanyRoles`·`copyCodes` 모양)를 파일을 열지 않고 찾음. `export function useTreeGrid<T>(`(제네릭 함수)는 못 잡음 |
+| 스키마 | `table sys03_company_menu sys07_role_menu` | INSERT 컬럼 순서 확인에 정확 |
+| 빌드 | `run` 5회 | 실패 1회(TS6133 미사용 import)를 요약만 보고 바로 고침 — 요약 정확 |
+| 검증 | `api` 8회 | 메뉴 트리 488행, 복사 API는 자기 회사로 복사(DB 스냅샷 동일 확인), 검증 오류 400. **응답 data가 숫자면 값을 안 보여 줌**(키 목록만) → `--raw` 필요 |
+
+src-index.py 버그 1건도 고침: 툴바 라벨을 마지막 문자열로 잡아 `setHtmlCheckBoxStyle("안내문", "4472C4")`의 색상이 라벨로 나왔다 → 첫 문자열로. 고친 뒤 AS-IS 안내 문구("※ 상단 : 출발지 회사 / 하단 : 목적지 회사")가 보여 TOBE 화면에도 넣었다.
+
 ## 3차: yunhee 0.1.1 → 0.1.2 (outline·api 추가, prepare 삭제)
 
 | 명령 | 결과 | 판정 |

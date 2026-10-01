@@ -52,6 +52,13 @@ public class SysMenuController {
         return ApiResponse.ok(sysMenuService.searchRoleMenus(principal, roleId));
     }
 
+    /** 고객사 권한그룹의 메뉴 트리 (AS-IS Sys07_TapPage_Menu → sys.Sys06_Menu.selectByRoleId). KFS 관리자만 */
+    @GetMapping("/role-menus/companies/{companyId}")
+    @PreAuthorize("hasRole('SYSADMIN')")
+    public ApiResponse<List<RoleMenuRes>> searchCompanyRoleMenus(@PathVariable Long companyId, @RequestParam Long roleId) {
+        return ApiResponse.ok(sysMenuService.searchCompanyRoleMenus(companyId, roleId));
+    }
+
     /** 권한그룹별 메뉴 권한 저장 (AS-IS sys.Sys06_Menu.updateRoleMenu) */
     @PutMapping("/role-menus")
     public ApiResponse<List<RoleMenuUse>> updateRoleMenus(@AuthenticationPrincipal UserPrincipal principal,

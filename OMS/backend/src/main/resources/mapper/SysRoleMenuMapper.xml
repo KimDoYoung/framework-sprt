@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS Sys07_RoleMenu.updateRole / updateMenu가 부르는 SQL (sys04_role, sys06_menu, sys03_company_menu, sys07_role_menu 매퍼).
+  조건은 그대로 두고 다음만 바꿨다.
+  - inCompanyId → sourceCompanyId, roleName → roleNm
+  - insertRole의 ${companyId}(문자열 치환) → #{companyId}
+  - INSERT ... SELECT에 컬럼 목록을 적었다 (AS-IS는 테이블 컬럼 순서에 기댐)
+-->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.sys.mapper.SysRoleMenuMapper">
+
+    <!-- AS-IS sys04_role.selectByName (건수만) -->
+    <select id="countRolesByName" resultType="int">
+        SELECT COUNT(*)
+          FROM sys04_role
+         WHERE sys04_role_nm LIKE #{roleNm}
+           AND sys04_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS sys04_role.insertRole -->
+    <insert id="insertRoleCopy">
+        INSERT INTO sys04_role
+               (sys04_role_id, sys04_role_nm, sys04_note, sys04_seq, sys04_company_id, sys04_default_role, sys04_admin_yn)
+        SELECT f_create_seq()
+             , a.sys04_role_nm
+             , a.sys04_note
+             , a.sys04_seq
+             , #{companyId}
+             , a.sys04_default_role
+             , a.sys04_admin_yn
+          FROM sys04_role a
+         WHERE 1=1
+           AND a.sys04_role_nm = #{roleNm}
+           AND a.sys04_company_id = #{sourceCompanyId}
+    </insert>
+
+    <!-- AS-IS sys06_menu.getMenuId: 메뉴에서 위로 올라가며 상위 메뉴 전부 -->
+    <select id="selectMenuPath" resultType="long">
+        WITH RECURSIVE sys_tree_up(
+                sys06_menu_id
+             ,  sys06_parent_id
+             ,  depth
+             ,  path
+             ,  cycle
+        ) AS (
+        SELECT  a.sys06_menu_id
+             ,  a.sys06_parent_id
+             ,  0
+             ,  ARRAY[a.sys06_menu_nm::text]
+             ,  false
+          FROM  sys06_menu a
+         WHERE  1=1
+           AND  sys06_menu_id = #{menuId}
+         UNION ALL
+        SELECT  a.sys06_menu_id
+             ,  a.sys06_parent_id
+             ,  b.depth + 1
+             ,  array_append(b.path, a.sys06_menu_nm::text)
+             ,  a.sys06_menu_nm = any(b.path)
+          FROM  sys06_menu a
+                INNER JOIN sys_tree_up b ON a.sys06_menu_id = b.sys06_parent_id
+         WHERE  1=1
+           AND  NOT CYCLE
+        )
+        SELECT  a.sys06_menu_id
+          FROM  sys_tree_up a
+    </select>
+
+    <!-- AS-IS sys03_company_menu.selectByMenu (건수만) -->
+    <select id="countCompanyMenu" resultType="int">
+        SELECT COUNT(*)
+          FROM sys03_company_menu
+         WHERE sys03_company_id = #{companyId}
+           AND sys03_menu_id = #{menuId}
+    </select>
+
+    <!-- AS-IS sys03_company_menu.updateMenu -->
+    <update id="updateCompanyMenuCopy">
+        UPDATE sys03_company_menu
+           SET sys03_use_yn = (
+                   SELECT a.sys03_use_yn
+                     FROM sys03_company_menu a
+                    WHERE a.sys03_menu_id = #{menuId}
+                      AND a.sys03_company_id = #{sourceCompanyId}
+               )
+         WHERE 1=1
+           AND sys03_menu_id = #{menuId}
+           AND sys03_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS sys03_company_menu.insertMenu -->
+    <insert id="insertCompanyMenuCopy">
+        INSERT INTO sys03_company_menu
+               (sys03_company_menu_id, sys03_company_id, sys03_menu_id, sys03_use_yn, sys03_note)
+        SELECT f_create_seq()
+             , #{companyId}
+             , a.sys03_menu_id
+             , a.sys03_use_yn
+             , a.sys03_note
+          FROM sys03_company_menu a
+         WHERE 1=1
+           AND a.sys03_menu_id = #{menuId}
+           AND a.sys03_company_id = #{sourceCompanyId}
+    </insert>
+
+    <!-- AS-IS sys07_role_menu.selectByMenuId (건수만) -->
+    <select id="countRoleMenu" resultType="int">
+        SELECT COUNT(*)
+          FROM sys07_role_menu
+         WHERE sys07_role_id IN (
+                   SELECT sys04_role_id
+                     FROM sys04_role
+                    WHERE sys04_company_id = #{companyId}
+                      AND sys04_role_nm = #{roleNm}
+               )
+           AND sys07_menu_id = #{menuId}
+    </select>
+
+    <!-- AS-IS sys07_role_menu.updateRoleMenu -->
+    <update id="updateRoleMenuCopy">
+        UPDATE sys07_role_menu
+           SET sys07_use_yn = (
+                   SELECT a.sys07_use_yn
+                     FROM sys07_role_menu a
+                    WHERE a.sys07_menu_id = #{menuId}
+                      AND a.sys07_role_id = (
+                              SELECT sys04_role_id
+                                FROM sys04_role
+                               WHERE sys04_company_id = #{sourceCompanyId}
+                                 AND sys04_role_nm LIKE #{roleNm}
+                          )
+               )
+         WHERE 1=1
+           AND sys07_menu_id = #{menuId}
+           AND sys07_role_id = (
+                   SELECT sys04_role_id
+                     FROM sys04_role
+                    WHERE sys04_company_id = #{companyId}
+                      AND sys04_role_nm LIKE #{roleNm}
+               )
+    </update>
+
+    <!-- AS-IS sys07_role_menu.insertRoleMenu -->
+    <insert id="insertRoleMenuCopy">
+        INSERT INTO sys07_role_menu
+               (sys07_role_menu_id, sys07_role_id, sys07_menu_id, sys07_use_yn, sys07_note)
+        SELECT f_create_seq()
+             , (
+                   SELECT sys04_role_id
+                     FROM sys04_role
+                    WHERE sys04_company_id = #{companyId}
+                      AND sys04_role_nm LIKE #{roleNm}
+               )
+             , a.sys07_menu_id
+             , a.sys07_use_yn
+             , a.sys07_note
+          FROM sys07_role_menu a
+         WHERE 1=1
+           AND a.sys07_menu_id = #{menuId}
+           AND a.sys07_role_id = (
+                   SELECT sys04_role_id
+                     FROM sys04_role
+                    WHERE sys04_company_id = #{sourceCompanyId}
+                      AND sys04_role_nm LIKE #{roleNm}
+               )
+    </insert>
+</mapper>
