@@ -139,4 +139,255 @@
          ORDER BY seq, menu_nm
     </select>
 
+    <!-- AS-IS sys06_menu.selectByRoleId (SELECT * → RoleMenuRes 컬럼) -->
+    <select id="searchRoleMenus" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.RoleMenuRes">
+        SELECT sys06_menu_id                                  AS menu_id,
+               sys06_parent_id                                AS parent_id,
+               0                                              AS level,
+               (CASE WHEN sys06_menu_no IS NULL
+                     THEN sys06_menu_nm
+                     ELSE sys06_menu_no||' '||sys06_menu_nm
+                 END)                                         AS menu_no_plus_nm,
+               sys06_seq                                      AS seq,
+               sys06_note                                     AS note,
+               sys07_role_menu_id                             AS role_menu_id,
+               COALESCE(sys07_use_yn = 'true', false)         AS role_menu_yn
+          FROM sys03_company_menu
+               INNER JOIN sys06_menu ON sys06_menu_id = sys03_menu_id
+               FULL JOIN sys07_role_menu ON sys06_menu_id = sys07_menu_id AND sys07_role_id = #{roleId}
+         WHERE 1=1
+           AND COALESCE(sys03_use_yn, 'false') = 'true'
+           AND sys03_company_id = #{companyId}
+           AND sys06_parent_id  = #{parentId}
+         ORDER BY sys06_seq
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS updateRoleMenu → UpdateDataModel(sys07_role_menu) INSERT -->
+    <insert id="insertRoleMenu">
+        INSERT INTO sys07_role_menu (sys07_role_menu_id, sys07_role_id, sys07_menu_id, sys07_use_yn)
+        VALUES (#{roleMenuId}, #{roleId}, #{menuId}, #{useYn})
+    </insert>
+
+    <!-- AS-IS updateRoleMenu → UpdateDataModel(sys07_role_menu) UPDATE -->
+    <update id="updateRoleMenu">
+        UPDATE sys07_role_menu
+           SET sys07_use_yn = #{useYn}
+         WHERE sys07_role_menu_id = #{roleMenuId}
+           AND sys07_role_id      = #{roleId}
+    </update>
+
+    <!-- ── 메뉴 관리 (Sys06_Tab_Menu) ─────────────────────────────── -->
+
+    <sql id="menuItemColumns">
+        sys06_menu_id                               AS menu_id,
+        sys06_parent_id                             AS parent_id,
+        0                                           AS level,
+        sys06_menu_nm                               AS menu_nm,
+        sys06_class_nm                              AS class_nm,
+        sys06_seq                                   AS seq,
+        COALESCE(sys06_use_yn, 'true') = 'true'     AS use_yn,
+        sys06_menu_no                               AS menu_no,
+        sys06_note                                  AS note
+    </sql>
+
+    <!-- AS-IS sys06_menu.selectByParentId -->
+    <select id="searchMenuItems" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.MenuItemRes">
+        SELECT <include refid="menuItemColumns"/>,
+               f_menu_nm_allpath(sys06_menu_id)     AS menu_full_nm
+          FROM sys06_menu
+         WHERE sys06_parent_id = #{parentId}
+         ORDER BY sys06_seq, sys06_menu_nm
+    </select>
+
+    <!-- AS-IS sys06_menu.selectById -->
+    <select id="selectMenuItem" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.MenuItemRes">
+        SELECT <include refid="menuItemColumns"/>,
+               f_menu_nm_allpath(sys06_menu_id)     AS menu_full_nm
+          FROM sys06_menu
+         WHERE sys06_menu_id = #{menuId}
+    </select>
+
+    <!-- AS-IS Sys06_Menu.update → UpdateDataModel(sys06_menu) INSERT -->
+    <insert id="insertMenuItem">
+        INSERT INTO sys06_menu
+               (sys06_menu_id, sys06_parent_id, sys06_menu_nm, sys06_class_nm, sys06_menu_no, sys06_seq, sys06_use_yn, sys06_note)
+        VALUES (#{menuId}, #{parentId}, #{menuNm}, #{classNm}, #{menuNo}, #{seq}, #{useYn}, #{note})
+    </insert>
+
+    <!-- AS-IS Sys06_Menu.update → UpdateDataModel(sys06_menu) UPDATE (편집 팝업 항목 + 이동 시 상위 메뉴) -->
+    <update id="updateMenuItem">
+        UPDATE sys06_menu
+           SET sys06_parent_id = #{parentId},
+               sys06_menu_nm   = #{menuNm},
+               sys06_class_nm  = #{classNm},
+               sys06_menu_no   = #{menuNo},
+               sys06_seq       = #{seq},
+               sys06_use_yn    = #{useYn},
+               sys06_note      = #{note}
+         WHERE sys06_menu_id = #{menuId}
+    </update>
+
+    <!-- AS-IS Sys06_Menu.delete → UpdateDataModel.deleteModel (메뉴 행만 지운다) -->
+    <delete id="deleteMenuItem">
+        DELETE FROM sys06_menu WHERE sys06_menu_id = #{menuId}
+    </delete>
+
+    <!-- AS-IS sys06_menu.getAllMenuList -->
+    <select id="searchCopyMenus" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.MenuCopyRes">
+        SELECT sys06_menu_id          AS menu_id,
+               sys06_parent_id        AS parent_id,
+               sys06_menu_no_plus_nm  AS menu_no_plus_nm,
+               sys06_parent_path_nm   AS parent_path_nm,
+               sys06_note             AS note
+          FROM (
+                SELECT a.*
+                     , f_menu_nm_allpath(a.sys06_menu_id)                                    AS sys06_menu_full_nm
+                     , TRIM(TRAILING sys06_menu_nm FROM f_menu_nm_allpath(a.sys06_menu_id))  AS sys06_parent_path_nm
+                     , (CASE WHEN sys06_menu_no IS NULL
+                             THEN sys06_menu_nm
+                             ELSE sys06_menu_no||' '||sys06_menu_nm
+                         END)                                                                AS sys06_menu_no_plus_nm
+                  FROM sys06_menu a
+                 WHERE sys06_parent_id != 0
+                   AND sys06_parent_id NOT IN (SELECT sys06_menu_id FROM sys06_menu WHERE sys06_parent_id = 0)
+               ) t
+         WHERE 1=1
+        <choose>
+            <when test="menuNameYn == 'true'">
+           AND sys06_menu_no_plus_nm ILIKE #{searchText}
+            </when>
+            <otherwise>
+           AND CONCAT(sys06_menu_full_nm, sys06_note, sys06_menu_no) ILIKE #{searchText}
+            </otherwise>
+        </choose>
+         ORDER BY sys06_parent_id, sys06_seq, sys06_menu_full_nm
+    </select>
+
+    <!-- ── 회사별 메뉴 (Sys03_Tab_CompanyMenu, 일괄복사) ─────────────────── -->
+
+    <!-- AS-IS sys06_menu.selectByCompanyIdAll -->
+    <select id="searchCompanyMenus" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.CompanyMenuRes">
+        SELECT sys06_menu_id                           AS menu_id,
+               sys06_parent_id                         AS parent_id,
+               0                                       AS level,
+               sys06_menu_nm                           AS menu_nm,
+               sys06_seq                               AS seq,
+               sys06_note                              AS note,
+               sys03_company_menu_id                   AS company_menu_id,
+               COALESCE(sys03_use_yn = 'true', false)  AS company_menu_yn
+          FROM sys06_menu
+               LEFT OUTER JOIN sys03_company_menu ON sys06_menu_id = sys03_menu_id AND sys03_company_id = #{companyId}
+         WHERE 1=1
+           AND sys06_parent_id = #{parentId}
+         ORDER BY sys06_seq, sys06_menu_nm
+    </select>
+
+    <!-- AS-IS sys01_company.getInfoByMenuId 중 sys03_company_menu_id -->
+    <select id="selectCompanyMenuId" resultType="long">
+        SELECT sys03_company_menu_id
+          FROM sys03_company_menu
+         WHERE sys03_company_id = #{companyId}
+           AND sys03_menu_id    = #{menuId}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS sys03_company_menu.countUseYn -->
+    <select id="countCompanyMenuUse" resultType="int">
+        SELECT COUNT(a.*)
+          FROM sys03_company_menu a
+               INNER JOIN sys06_menu b ON a.sys03_menu_id = b.sys06_menu_id
+         WHERE b.sys06_parent_id  = #{parentId}
+           AND a.sys03_company_id = #{companyId}
+           AND COALESCE(a.sys03_use_yn, 'false') = 'true'
+    </select>
+
+    <!-- AS-IS sys03_company_menu.insert -->
+    <insert id="insertCompanyMenu">
+        INSERT INTO sys03_company_menu (sys03_company_menu_id, sys03_company_id, sys03_menu_id, sys03_use_yn)
+        VALUES (#{companyMenuId}, #{companyId}, #{menuId}, #{useYn})
+    </insert>
+
+    <!-- AS-IS updateCompanyMenu → UpdateDataModel(sys03_company_menu) UPDATE -->
+    <update id="updateCompanyMenu">
+        UPDATE sys03_company_menu
+           SET sys03_use_yn = #{useYn}
+         WHERE sys03_company_menu_id = #{companyMenuId}
+           AND sys03_company_id      = #{companyId}
+    </update>
+
+    <!-- AS-IS sys03_company_menu.updateUseYn -->
+    <update id="updateCompanyMenuUse">
+        UPDATE sys03_company_menu
+           SET sys03_use_yn = #{useYn}
+         WHERE 1=1
+           AND sys03_menu_id    = #{menuId}
+           AND sys03_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS Sys01_Company.updateByMenuYn → UpdateDataModel.deleteModel(sys03_company_menu) -->
+    <delete id="deleteCompanyMenus">
+        DELETE FROM sys03_company_menu
+         WHERE sys03_company_menu_id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!--
+      AS-IS sys06_menu.selectUserMenu1Bang (personId > 1) + menu_tree_postgresql + person_menu_list.
+      ${companyId}/${personId} 문자열 치환은 #{}로, SELECT 목록만 PersonMenuRes에 맞췄다 (level = depth - 1).
+    -->
+    <select id="searchPersonMenus" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.PersonMenuRes">
+        WITH RECURSIVE menu_tree(sys06_menu_id, sys06_menu_nm, sys06_seq, sys06_note, sys06_parent_id, sys06_use_yn, sys06_class_nm,
+                                 depth, path, cycle, sys06_menu_no) AS (
+            SELECT a.sys06_menu_id, a.sys06_menu_nm, a.sys06_seq, a.sys06_note, a.sys06_parent_id, a.sys06_use_yn, a.sys06_class_nm,
+                   1, ARRAY[a.sys06_seq||a.sys06_menu_nm::text], false, a.sys06_menu_no
+              FROM sys06_menu a
+             WHERE 1=1
+               AND sys06_parent_id = 0
+               AND a.sys06_use_yn = 'true'
+             UNION ALL
+            SELECT a.sys06_menu_id, a.sys06_menu_nm, a.sys06_seq, a.sys06_note, a.sys06_parent_id, a.sys06_use_yn, a.sys06_class_nm,
+                   b.depth + 1, array_append(b.path, a.sys06_seq||a.sys06_menu_nm::text), a.sys06_seq||a.sys06_menu_nm = any(b.path), a.sys06_menu_no
+              FROM sys06_menu a
+                   INNER JOIN menu_tree b ON a.sys06_parent_id = b.sys06_menu_id
+             WHERE 1=1
+               AND a.sys06_use_yn = 'true'
+               AND NOT CYCLE
+        ),
+        person_menu_list AS (
+            SELECT sys07_role_id AS role_id
+                 , sys06_menu_id AS menu_id
+              FROM ( SELECT DISTINCT sys07_role_id, sys07_menu_id
+                       FROM sys07_role_menu
+                      WHERE 1=1
+                        AND sys07_use_yn = 'true'
+                        AND sys07_role_id IN ( /* 사용자가 가지고 있는 role 들 */
+                                               SELECT sys05_role_id FROM sys05_user_role WHERE sys05_user_id = #{personId}
+                                                UNION
+                                               /* 그 회사의 default role */
+                                               SELECT sys04_role_id FROM sys04_role
+                                                WHERE sys04_company_id = #{companyId} AND sys04_default_role = 'true' )
+                   ) A
+                   INNER JOIN ( /* 회사가 사용하는 전체 매뉴 */
+                       SELECT sys06_menu_id, sys06_menu_nm, sys06_parent_id
+                         FROM sys01_company
+                              INNER JOIN sys03_company_menu ON sys01_company_id = sys03_company_id
+                              INNER JOIN sys06_menu ON sys03_menu_id = sys06_menu_id AND sys03_use_yn = 'true'
+                        WHERE sys01_company_id = #{companyId}
+                          AND sys06_use_yn = 'true'
+                   ) B ON A.sys07_menu_id = B.sys06_menu_id
+        )
+        SELECT DISTINCT ON (B.path) B.sys06_menu_id   AS menu_id,
+               B.sys06_parent_id                      AS parent_id,
+               B.depth - 1                            AS level,
+               (CASE WHEN B.sys06_menu_no IS NULL THEN B.sys06_menu_nm ELSE B.sys06_menu_no||' '||B.sys06_menu_nm END) AS menu_no_plus_nm,
+               B.sys06_class_nm                       AS class_nm,
+               B.sys06_note                           AS note
+          FROM person_menu_list A
+               INNER JOIN menu_tree B ON A.menu_id = B.sys06_menu_id
+         ORDER BY B.path
+    </select>
 </mapper>

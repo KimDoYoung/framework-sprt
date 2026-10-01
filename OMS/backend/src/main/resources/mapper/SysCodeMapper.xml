@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS sys09_code 매퍼. 조회는 PostgreSQL 분기만 옮기고 SELECT 목록만 CodeRes에 맞췄다 (timestamp 일자는 ::date).
+  저장·삭제는 UpdateDataModel → 명시 SQL. UPDATE는 화면 편집 컬럼만, 회사 조건 포함.
+-->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.sys.mapper.SysCodeMapper">
+
+    <sql id="select">
+        SELECT A.sys09_code_id                           AS code_id,
+               A.sys09_company_id                        AS company_id,
+               A.sys09_code_kind_id                      AS code_kind_id,
+               A.sys09_code                              AS code,
+               A.sys09_name                              AS name,
+               A.sys09_seq                               AS seq,
+               COALESCE(A.sys09_close_yn = 'true', false) AS close_yn,
+               A.sys09_apply_date::date                  AS apply_date,
+               A.sys09_close_date::date                  AS close_date,
+               ( SELECT (MIN(X.sys09_apply_date) - INTERVAL '1 DAY')::date
+                   FROM sys09_code X
+                  WHERE 1=1
+                    AND X.sys09_company_id   = A.sys09_company_id
+                    AND X.sys09_code_kind_id = A.sys09_code_kind_id
+                    AND X.sys09_code         = A.sys09_code
+                    AND X.sys09_apply_date   > A.sys09_apply_date
+               )                                         AS last_date,
+               A.sys09_note                              AS note
+          FROM sys09_code A
+    </sql>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys09_code.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.CodeRes">
+        <include refid="select"/>
+         WHERE A.sys09_code_id = #{codeId}
+    </select>
+
+    <!-- AS-IS sys09_code.selectByCodeKindId -->
+    <select id="searchByCodeKindId" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.CodeRes">
+        <include refid="select"/>
+               INNER JOIN sys08_code_kind ON sys08_code_kind_id = sys09_code_kind_id
+         WHERE 1=1
+           AND A.sys09_code_kind_id = #{codeKindId}
+           AND A.sys09_company_id   = CASE WHEN sys08_sys_yn = 'true' THEN 0 ELSE #{companyId} END
+           AND CONCAT(A.sys09_code, A.sys09_name) ILIKE '%'||#{searchText}||'%'
+         ORDER BY A.sys09_seq
+    </select>
+
+    <insert id="insert">
+        INSERT INTO sys09_code
+               (sys09_code_id, sys09_company_id, sys09_code_kind_id, sys09_code, sys09_name, sys09_seq,
+                sys09_close_yn, sys09_apply_date, sys09_close_date, sys09_note)
+        VALUES (#{codeId}, #{companyId}, #{codeKindId}, #{code}, #{name}, #{seq},
+                #{closeYn}, #{applyDate}, #{closeDate}, #{note})
+    </insert>
+
+    <update id="update">
+        UPDATE sys09_code
+           SET sys09_code       = #{code},
+               sys09_name       = #{name},
+               sys09_seq        = #{seq},
+               sys09_close_yn   = #{closeYn},
+               sys09_apply_date = #{applyDate},
+               sys09_close_date = #{closeDate},
+               sys09_note       = #{note}
+         WHERE sys09_code_id    = #{codeId}
+           AND sys09_company_id = #{companyId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM sys09_code
+         WHERE sys09_code_id IN
+        <foreach collection="codeIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        <if test="companyId != null">
+           AND sys09_company_id = #{companyId}
+        </if>
+    </delete>
+
+    <!-- AS-IS sys09_code.codeInsert -->
+    <insert id="copy">
+        INSERT INTO sys09_code (sys09_code_id, sys09_code, sys09_name, sys09_seq, sys09_note, sys09_apply_date, sys09_close_yn,
+                                sys09_code_kind_id, sys09_company_id, sys09_close_date, sys09_desc)
+        SELECT f_create_seq(), sys09_code, sys09_name, sys09_seq, sys09_note, sys09_apply_date, sys09_close_yn,
+               sys09_code_kind_id, #{newCompanyId}, sys09_close_date, sys09_desc
+          FROM sys09_code
+         WHERE sys09_company_id   = #{targetCompanyId}
+           AND sys09_code_kind_id = #{codeKindId}
+    </insert>
+
+    <!-- AS-IS sys09_code.insertFromSys09: KFS 기본(회사 0) 코드 중 시스템 코드가 아닌 것을 새 회사로 -->
+    <insert id="insertCompanyDefaults">
+        INSERT INTO sys09_code
+               (sys09_code_id, sys09_code, sys09_name, sys09_seq, sys09_note, sys09_apply_date, sys09_close_yn,
+                sys09_code_kind_id, sys09_company_id, sys09_close_date, sys09_desc)
+        SELECT f_create_seq(), sys09_code, sys09_name, sys09_seq, sys09_note, sys09_apply_date, sys09_close_yn,
+               sys09_code_kind_id, #{companyId}, NULL, sys09_desc
+          FROM sys08_code_kind
+               INNER JOIN sys09_code ON sys08_code_kind_id = sys09_code_kind_id
+         WHERE 1=1
+           AND sys08_sys_yn = 'false'
+           AND sys09_company_id = 0
+    </insert>
+
+    <!-- AS-IS sys09_code.selectByCodeKind (ComboBoxField): 시스템 코드는 회사 0, 기준일에 유효한 이력, 미사용은 종료일까지 -->
+    <select id="searchByKindCd" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.CodeRes">
+        <include refid="select"/>
+             , sys08_code_kind k
+         WHERE sys08_code_kind_id = A.sys09_code_kind_id
+           AND ( ( COALESCE(sys08_sys_yn,'false') = 'true'  AND A.sys09_company_id = 0 ) OR
+                 ( COALESCE(sys08_sys_yn,'false') != 'true' AND A.sys09_company_id = #{companyId} ) )
+           AND sys08_kind_cd = #{kindCd}
+           AND ( ( COALESCE(A.sys09_close_yn  ,'false') = 'true' AND
+                   COALESCE(A.sys09_close_date,'1900-12-31') &gt;= #{applyDate}::date ) OR
+                 ( COALESCE(A.sys09_close_yn  ,'false') = 'false' ) )
+           AND A.sys09_apply_date = ( SELECT max(x.sys09_apply_date)
+                                        FROM sys09_code x
+                                       WHERE x.sys09_code_kind_id = A.sys09_code_kind_id
+                                         AND x.sys09_company_id   = A.sys09_company_id
+                                         AND x.sys09_code         = A.sys09_code
+                                         AND x.sys09_apply_date  &lt;= #{applyDate}::date )
+         ORDER BY A.sys09_seq
+    </select>
+</mapper>

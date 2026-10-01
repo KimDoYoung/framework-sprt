@@ -51,6 +51,11 @@ public class UserPrincipal implements UserDetails {
                 .build();
     }
 
+    /** KFS 관리자 (admin 회사의 회사관리자) — 전 고객사 데이터를 다룰 수 있다 */
+    public boolean isSysAdmin() {
+        return roles != null && roles.contains("ROLE_SYSADMIN");
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()

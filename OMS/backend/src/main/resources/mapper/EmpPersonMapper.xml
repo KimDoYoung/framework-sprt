@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS emp01_person 매퍼. 조회는 비밀번호(to_decrypts)를 빼고 SELECT 목록만, 저장·삭제는 UpdateDataModel → 명시 SQL (회사 조건) -->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.emp.mapper.EmpPersonMapper">
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS emp01_person.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.oms.biz.emp.dto.PersonRes">
+        SELECT emp01_person_id      AS person_id,
+               emp01_company_id     AS company_id,
+               emp01_emp_no         AS emp_no,
+               emp01_kor_nm         AS kor_nm,
+               emp01_hire_date      AS hire_date,
+               emp01_order_seq      AS order_seq,
+               emp01_email_addr     AS email_addr,
+               emp01_office_telno   AS office_telno,
+               emp01_office_detail  AS office_detail,
+               emp01_mobile_telno   AS mobile_telno,
+               emp01_note           AS note
+          FROM emp01_person
+         WHERE emp01_person_id  = #{personId}
+           AND emp01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(emp01_person) INSERT / emp01_person.insert -->
+    <insert id="insert">
+        INSERT INTO emp01_person (emp01_person_id, emp01_company_id, emp01_emp_no, emp01_kor_nm, emp01_hire_date, emp01_order_seq,
+                                  emp01_email_addr, emp01_office_telno, emp01_office_detail, emp01_mobile_telno, emp01_note)
+        VALUES (#{personId}, #{companyId}, #{empNo}, #{korNm}, #{hireDate}, #{orderSeq},
+                #{emailAddr}, #{officeTelno}, #{officeDetail}, #{mobileTelno}, #{note})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(emp01_person) UPDATE (기본정보 탭 편집 컬럼) -->
+    <update id="update">
+        UPDATE emp01_person
+           SET emp01_kor_nm        = #{korNm},
+               emp01_hire_date     = #{hireDate},
+               emp01_order_seq     = #{orderSeq},
+               emp01_email_addr    = #{emailAddr},
+               emp01_office_telno  = #{officeTelno},
+               emp01_office_detail = #{officeDetail},
+               emp01_mobile_telno  = #{mobileTelno},
+               emp01_note          = #{note}
+         WHERE emp01_person_id  = #{personId}
+           AND emp01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS Emp01_Person.deleteTarget (UpdateDataModel.deleteModel): 사원 행만 지운다 -->
+    <delete id="delete">
+        DELETE FROM emp01_person
+         WHERE emp01_person_id  = #{personId}
+           AND emp01_company_id = #{companyId}
+    </delete>
+
+    <!--
+      AS-IS emp01_person.selectBySearchTextPaging / selectBySearchTextTotal (사용자정보 조회, 전 고객사).
+      COLLATE "ko_KR.utf8" → "ko-KR-x-icu" (asseterpdb, OMS-convert §4). 비밀번호 등 화면에 안 쓰는 컬럼은 뺐다.
+    -->
+    <select id="searchUserInfos" resultType="kr.co.kfs.asseterp.oms.biz.emp.dto.UserInfoRes">
+        WITH paging_data AS (
+            SELECT emp01_person_id                                                       AS person_id,
+                   sys01_company_nm                                                      AS company_nm,
+                   emp01_kor_nm                                                          AS kor_nm,
+                   emp01_emp_no                                                          AS emp_no,
+                   f_get_empTrans(emp01_person_id, f_sysdate()::date, 'pos_nm')          AS pos_nm,
+                   f_get_empTrans(emp01_person_id, f_sysdate()::date, 'org_code_nm')     AS org_nm,
+                   emp01_office_telno                                                    AS office_telno,
+                   emp01_mobile_telno                                                    AS mobile_telno,
+                   emp01_email_addr                                                      AS email_addr,
+                   emp01_hire_date                                                       AS hire_date,
+                   emp01_note                                                            AS note,
+                   ROW_NUMBER() OVER (ORDER BY sys01_company_nm COLLATE "ko-KR-x-icu" ASC, emp01_kor_nm COLLATE "ko-KR-x-icu" ASC) AS row_num
+      FROM emp01_person
+           INNER JOIN emp03_trans ON emp03_person_id = emp01_person_id
+           INNER JOIN sys01_company ON sys01_company_id = emp01_company_id
+     WHERE UPPER(CONCAT(sys01_company_nm
+                      , emp01_kor_nm
+                      , f_get_empTrans(emp01_person_id, f_sysdate()::date, 'org_code_nm')
+                      , emp01_office_telno
+                      , emp01_mobile_telno)) LIKE UPPER(#{searchText})
+       AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                  FROM emp03_trans
+                                 WHERE emp03_person_id  = emp01_person_id
+                                   AND emp03_trans_date &lt;= f_today() )
+       AND emp03_trans_cd NOT IN ('800')
+    <if test="companyId != null">
+       AND emp01_company_id = #{companyId}
+    </if>
+    <if test="useYn == 'true'">
+       AND sys01_use_yn = 'true'
+    </if>
+    <if test="quitYn == 'true'">
+       AND emp03_trans_cd NOT IN ('900')
+    </if>
+        )
+        SELECT person_id, company_nm, kor_nm, emp_no, pos_nm, org_nm, office_telno, mobile_telno, email_addr, hire_date, note
+          FROM paging_data
+         WHERE row_num &gt; #{offset}
+         ORDER BY row_num
+         LIMIT #{limit}
+    </select>
+
+    <select id="countUserInfos" resultType="long">
+        SELECT count(*)
+      FROM emp01_person
+           INNER JOIN emp03_trans ON emp03_person_id = emp01_person_id
+           INNER JOIN sys01_company ON sys01_company_id = emp01_company_id
+     WHERE UPPER(CONCAT(sys01_company_nm
+                      , emp01_kor_nm
+                      , f_get_empTrans(emp01_person_id, f_sysdate()::date, 'org_code_nm')
+                      , emp01_office_telno
+                      , emp01_mobile_telno)) LIKE UPPER(#{searchText})
+       AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                  FROM emp03_trans
+                                 WHERE emp03_person_id  = emp01_person_id
+                                   AND emp03_trans_date &lt;= f_today() )
+       AND emp03_trans_cd NOT IN ('800')
+    <if test="companyId != null">
+       AND emp01_company_id = #{companyId}
+    </if>
+    <if test="useYn == 'true'">
+       AND sys01_use_yn = 'true'
+    </if>
+    <if test="quitYn == 'true'">
+       AND emp03_trans_cd NOT IN ('900')
+    </if>
+    </select>
+</mapper>

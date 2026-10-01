@@ -19,6 +19,7 @@ import { LeftMenuBar } from './components/LeftMenuBar';
 import { StatusBar } from './components/StatusBar';
 import { MyPageView } from './components/mypage';
 import { PendingScreenView } from './components/PendingScreenView';
+import { SCREENS } from './pages/screens';
 import { MenuLevel_1, MenuLevel_3 } from './types';
 import { appSettingsStorage, SavedLayoutItem } from './utils/storage';
 import { useAppSetting } from './hooks/useAppSetting';
@@ -26,6 +27,7 @@ import { getFontOption, applyGlobalFont, FontFamilyId } from './utils/font';
 import { authApi } from './api/auth';
 import { sysApi } from './api/sys';
 import { User } from './types/auth';
+import { LoginUserContext } from './hooks/useLoginUser';
 import { realtime } from './ws/stompClient';
 
 // ── 기본 레이아웃 정의 (초기 상태: My Page 1개 탭) ──
@@ -498,6 +500,12 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
       return <MyPageView />;
     }
 
+    // 변환한 화면 (화면 등록표)
+    const Screen = config.classNm ? SCREENS[config.classNm] : undefined;
+    if (Screen) {
+      return <Screen />;
+    }
+
     // 아직 변환하지 않은 화면 (메뉴는 실제 sys06_menu)
     return (
       <PendingScreenView
@@ -509,6 +517,7 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
   };
 
   return (
+    <LoginUserContext.Provider value={user}>
     <ConfigProvider
       locale={koKR}
       theme={{
@@ -588,5 +597,6 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
         <StatusBar />
       </div>
     </ConfigProvider>
+    </LoginUserContext.Provider>
   );
 }

@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS emp03_trans 매퍼(myOms server/emp/mapper/emp03_trans.xml). SELECT 목록만 TransRes에 맞췄다.
+  - ORDER BY org00_seq → org00_sort_order (asseterpdb getOrg 컬럼, OMS-convert §4)
+-->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.emp.mapper.EmpTransMapper">
+
+    <!-- AS-IS emp03_trans.selectByText -->
+    <select id="searchByText" resultType="kr.co.kfs.asseterp.oms.biz.emp.dto.TransRes">
+        WITH org00 AS (SELECT * FROM getOrg(#{companyId}, f_today()))
+        SELECT emp03_trans_id                                                    AS trans_id,
+               emp01_person_id                                                   AS person_id,
+               emp01_emp_no                                                      AS emp_no,
+               emp01_kor_nm                                                      AS kor_nm,
+               org00_org_id                                                      AS org_code_id,
+               org00_kor_nm                                                      AS org_kor_nm,
+               f_get_empTrans(emp03_person_id, emp03_trans_date::date, 'title_nm') AS title_nm
+          FROM emp03_trans
+               INNER JOIN emp01_person ON emp01_person_id = emp03_person_id
+               INNER JOIN org00        ON org00_org_id = emp03_org_code_id
+         WHERE emp01_company_id = #{companyId}
+           AND UPPER(CONCAT(emp01_kor_nm, org00_kor_nm, emp01_emp_no)) LIKE UPPER(#{searchText})
+           AND org00_mod_date = (
+                                  SELECT MAX(org00_mod_date)
+                                    FROM org00
+                                   WHERE org00_org_id = emp03_org_code_id
+                                     AND org00_mod_date &lt;= emp03_trans_date
+                                )
+           AND emp03_trans_date = (
+                                  SELECT MAX(x.emp03_trans_date)
+                                    FROM emp03_trans x
+                                   WHERE x.emp03_person_id = emp01_person_id
+                                     AND x.emp03_trans_date &lt;= #{transDate}
+                                )
+        <choose>
+            <when test="isSeparateAddTitle == true">
+           AND emp03_trans_cd NOT IN ('800','900') /** 겸직과 퇴직은 제외 */
+            </when>
+            <otherwise>
+           AND emp03_trans_cd NOT IN ('900') /** 퇴직만 제외 */
+            </otherwise>
+        </choose>
+           AND NOT EXISTS ( SELECT 1
+                              FROM emp04_add_title
+                             WHERE emp04_add_person_id = emp03_person_id
+                               AND ( emp04_start_date                        &gt; #{transDate} OR
+                                     COALESCE(emp04_close_date,'9999-12-31') &lt; #{transDate} ) )
+         ORDER BY COALESCE(org00_sort_order, org00_org_cd)
+                , f_code_seq(emp01_company_id, 'EmpTitleCode', emp03_title_cd)
+                , f_code_seq(emp01_company_id, 'EmpPosCode',   emp03_pos_cd)
+                , emp01_emp_no
+    </select>
+
+    <!-- ── 사원정보 관리: 일반발령 (AS-IS Emp03_Trans) ── -->
+
+    <!-- AS-IS emp03_trans.selectByPersonId (common.org00_org_info_with: 로그인 회사) -->
+    <select id="searchByPersonId" resultType="kr.co.kfs.asseterp.oms.biz.emp.dto.EmpTransRes">
+        WITH org00 AS (SELECT * FROM getOrg(#{companyId}, f_today()))
+        SELECT emp03_trans_id                                                               AS trans_id,
+               emp03_person_id                                                              AS person_id,
+               emp03_trans_date::date                                                       AS trans_date,
+               emp03_trans_cd                                                               AS trans_cd,
+               f_cdnm('EmpTransCode', emp03_trans_cd, emp01_company_id, emp03_trans_date)   AS trans_nm,
+               emp03_kind_cd                                                                AS kind_cd,
+               f_cdnm('EmpKindCode',  emp03_kind_cd,  emp01_company_id, emp03_trans_date)   AS kind_nm,
+               emp03_org_code_id                                                            AS org_code_id,
+               org00_kor_nm                                                                 AS org_nm,
+               emp03_title_cd                                                               AS title_cd,
+               f_get_empTrans(emp03_person_id, emp03_trans_date::date, 'title_nm')          AS title_nm,
+               emp03_pos_cd                                                                 AS pos_cd,
+               f_cdnm('EmpPosCode',   emp03_pos_cd,   emp01_company_id, emp03_trans_date)   AS pos_nm,
+               emp03_grade_cd                                                               AS grade_cd,
+               f_cdnm('EmpGradeCode', emp03_grade_cd, emp01_company_id, emp03_trans_date)   AS grade_nm,
+               emp03_trans_reason                                                           AS trans_reason,
+               COALESCE(emp03_org_head_yn = 'true', false)                                  AS org_head_yn
+          FROM emp03_trans
+               INNER JOIN emp01_person    ON emp01_person_id = emp03_person_id
+               LEFT OUTER JOIN org00 ON (    org00_org_id = emp03_org_code_id
+                                         AND org00_mod_date = ( SELECT MAX(org00_mod_date)
+                                                                  FROM org00
+                                                                 WHERE org00_org_id = emp03_org_code_id
+                                                                   AND org00_mod_date &lt;= emp03_trans_date ))
+         WHERE 1=1
+           AND emp03_person_id = #{personId}
+           AND emp01_company_id = #{companyId}
+         ORDER BY emp03_trans_date DESC
+    </select>
+
+    <!-- AS-IS emp03_trans.deleteCheck (건수) -->
+    <select id="countByPerson" resultType="int">
+        SELECT COUNT(*) FROM emp03_trans WHERE emp03_person_id = #{personId}
+    </select>
+
+    <select id="selectPersonOfTrans" resultType="long">
+        SELECT emp03_person_id FROM emp03_trans WHERE emp03_trans_id = #{transId}
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel(emp03_trans) INSERT / emp03_trans.insertAddTitle -->
+    <insert id="insert">
+        INSERT INTO emp03_trans (emp03_trans_id, emp03_person_id, emp03_trans_date, emp03_trans_cd, emp03_kind_cd,
+                                 emp03_org_code_id, emp03_pos_cd, emp03_title_cd, emp03_trans_reason, emp03_org_head_yn)
+        VALUES (#{transId}, #{personId}, #{transDate}, #{transCd}, #{kindCd},
+                #{orgCodeId}, #{posCd}, #{titleCd}, #{transReason}, #{orgHeadYn})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(emp03_trans) UPDATE (일반발령 탭 편집 컬럼) -->
+    <update id="update">
+        UPDATE emp03_trans
+           SET emp03_trans_date   = #{transDate},
+               emp03_trans_cd     = #{transCd},
+               emp03_kind_cd      = #{kindCd},
+               emp03_org_code_id  = #{orgCodeId},
+               emp03_title_cd     = #{titleCd},
+               emp03_pos_cd       = #{posCd},
+               emp03_trans_reason = #{transReason},
+               emp03_org_head_yn  = #{orgHeadYn}
+         WHERE emp03_trans_id = #{transId}
+    </update>
+
+    <!-- AS-IS emp03_trans.updateAddTitle: 겸직 파생 사원의 발령 -->
+    <update id="updateAddTitleTrans">
+        UPDATE emp03_trans
+           SET emp03_trans_date   = #{transDate}
+             , emp03_org_code_id  = #{orgCodeId}
+             , emp03_pos_cd       = #{posCd}
+             , emp03_title_cd     = #{titleCd}
+             , emp03_trans_reason = #{transReason}
+             , emp03_org_head_yn  = #{orgHeadYn}
+         WHERE emp03_person_id = #{personId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM emp03_trans WHERE emp03_trans_id = #{transId}
+    </delete>
+
+    <!-- AS-IS emp03_trans.selectByHistory (사원정보 변경조회 - 일반발령) -->
+    <select id="searchHistory" resultType="kr.co.kfs.asseterp.oms.biz.emp.dto.TransHistoryRes">
+        WITH org00 AS (SELECT * FROM getOrg(#{companyId}, f_today()))
+        SELECT emp03_trans_id                                                               AS trans_id,
+               emp03_trans_date::date                                                       AS trans_date,
+               emp01_emp_no                                                                 AS emp_no,
+               emp01_kor_nm                                                                 AS kor_nm,
+               f_cdnm('EmpTransCode', emp03_trans_cd, emp01_company_id, emp03_trans_date)   AS trans_nm,
+               f_cdnm('EmpKindCode',  emp03_kind_cd,  emp01_company_id, emp03_trans_date)   AS kind_nm,
+               org00_kor_nm                                                                 AS org_nm,
+               f_get_empTrans(emp03_person_id, emp03_trans_date::date, 'title_nm')          AS title_nm,
+               f_cdnm('EmpPosCode',   emp03_pos_cd,   emp01_company_id, emp03_trans_date)   AS pos_nm,
+               f_cdnm('EmpGradeCode', emp03_grade_cd, emp01_company_id, emp03_trans_date)   AS grade_nm,
+               COALESCE(emp03_org_head_yn = 'true', false)                                  AS org_head_yn,
+               emp03_trans_reason                                                           AS trans_reason
+          FROM emp03_trans
+               INNER JOIN emp01_person    ON emp01_person_id = emp03_person_id
+               LEFT OUTER JOIN org00 ON (    org00_org_id = emp03_org_code_id
+                                         AND org00_mod_date = ( SELECT MAX(org00_mod_date)
+                                                                  FROM org00
+                                                                 WHERE org00_org_id = emp03_org_code_id
+                                                                   AND org00_mod_date &lt;= emp03_trans_date ))
+         WHERE 1=1
+           AND emp01_company_id = #{companyId}
+           AND emp03_trans_date BETWEEN #{startDate} AND #{closeDate}
+           AND UPPER(CONCAT(emp01_kor_nm, emp01_emp_no)) LIKE UPPER(#{searchText})
+         ORDER BY emp03_trans_date, emp01_emp_no DESC
+    </select>
+</mapper>

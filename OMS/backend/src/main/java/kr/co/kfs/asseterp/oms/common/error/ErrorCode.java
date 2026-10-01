@@ -32,6 +32,11 @@ public enum ErrorCode {
     TENANT_NOT_FOUND(HttpStatus.NOT_FOUND, "유효하지 않은 고객정보입니다."),
     COMPANY_NOT_FOUND(HttpStatus.BAD_REQUEST, "선택한 회사를 찾을 수 없거나 사용 중지된 회사입니다."),
 
+    // 업무 데이터
+    INVALID_INPUT(HttpStatus.BAD_REQUEST, "입력값이 올바르지 않습니다."),
+    DATA_NOT_FOUND(HttpStatus.NOT_FOUND, "데이터를 찾을 수 없습니다. 다시 조회해 주세요."),
+    DUPLICATE_DATA(HttpStatus.CONFLICT, "이미 등록된 데이터입니다."),
+
     // 파일
     INVALID_FILE(HttpStatus.BAD_REQUEST, "허용되지 않는 파일입니다."),
     FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "파일을 찾을 수 없습니다."),

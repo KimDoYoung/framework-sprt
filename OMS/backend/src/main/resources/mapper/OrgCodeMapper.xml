@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS org01_code / org02_info 매퍼 (Org01_Code 서버 클래스가 쓰는 SQL).
+  - searchTree: org01_code.selectByParentId_1Bang + common.org_tree_down_postgresql(재귀 CTE) + common.emp00_trans_info.
+    조건·정렬은 그대로, ${companyId} 문자열 치환은 #{}로, SELECT 목록만 OrgCodeRes에 맞췄다 (전체 조회: parentCodeId = 0).
+  - 저장·삭제: UpdateDataModel → 명시 SQL
+-->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.org.mapper.OrgCodeMapper">
+
+    <sql id="codeColumns">
+        a.org01_code_id                                                              AS code_id,
+        b.org02_info_id                                                              AS info_id,
+        b.org02_parent_code_id                                                       AS parent_code_id,
+        a.org01_org_cd                                                               AS org_cd,
+        b.org02_kor_nm                                                               AS kor_nm,
+        b.org02_eng_nm                                                               AS eng_nm,
+        b.org02_level_cd                                                             AS level_cd,
+        f_cdnm('OrgLevelCode', b.org02_level_cd, a.org01_company_id, b.org02_mod_date) AS level_nm,
+        b.org02_sort_order                                                           AS sort_order,
+        b.org02_mod_date::date                                                       AS mod_date,
+        b.org02_mod_reason                                                           AS mod_reason,
+        a.org01_open_date::date                                                      AS open_date,
+        a.org01_open_reason                                                          AS open_reason,
+        a.org01_close_date::date                                                     AS close_date,
+        a.org01_close_reason                                                         AS close_reason,
+        b.org02_note                                                                 AS note
+    </sql>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS org01_code.selectByParentId_1Bang (전체 조직) -->
+    <select id="searchTree" resultType="kr.co.kfs.asseterp.oms.biz.org.dto.OrgCodeRes">
+        WITH RECURSIVE org_tree_down(org01_company_id, org02_code_id, org02_parent_code_id, depth, path, cycle) AS
+        (
+            SELECT a.org01_company_id
+                 , b.org02_code_id
+                 , b.org02_parent_code_id
+                 , 1
+                 , ARRAY[coalesce(b.org02_sort_order,'0')||b.org02_kor_nm::text]
+                 , false
+              FROM org01_code a
+                   INNER JOIN org02_info b ON org01_code_id = org02_code_id
+             WHERE 1=1
+               AND org01_company_id = #{companyId}
+               AND b.org02_parent_code_id = 0
+               AND f_trunc(#{baseDate}::date) BETWEEN f_trunc(org01_open_date) AND coalesce(org01_close_date, to_date('99991231', 'yyyymmdd'))
+               AND org02_mod_date = ( SELECT max(x.org02_mod_date)
+                                        FROM org02_info x
+                                       WHERE x.org02_code_id = b.org02_code_id
+                                         AND f_trunc(x.org02_mod_date) &lt;= f_trunc(#{baseDate}::date) )
+             UNION ALL
+            SELECT a.org01_company_id
+                 , b.org02_code_id
+                 , b.org02_parent_code_id
+                 , c.depth + 1
+                 , array_append(c.path, coalesce(b.org02_sort_order,'0')::text||b.org02_kor_nm::text)
+                 , coalesce(b.org02_sort_order,'0')||b.org02_kor_nm = any(c.path)
+              FROM org01_code a
+                   INNER JOIN org02_info b    ON a.org01_code_id = b.org02_code_id
+                   INNER JOIN org_tree_down c ON b.org02_parent_code_id = c.org02_code_id
+             WHERE 1=1
+               AND a.org01_company_id = #{companyId}
+               AND f_trunc(#{baseDate}::date) BETWEEN f_trunc(org01_open_date) AND coalesce(org01_close_date, to_date('99991231', 'yyyymmdd'))
+               AND org02_mod_date = ( SELECT max(x.org02_mod_date)
+                                        FROM org02_info x
+                                       WHERE x.org02_code_id = b.org02_code_id
+                                         AND f_trunc(x.org02_mod_date) &lt;= f_trunc(#{baseDate}::date) )
+               AND NOT cycle
+        )
+        SELECT <include refid="codeColumns"/>,
+               c.depth - 1                                                           AS level,
+               ( WITH emp00 AS (SELECT * FROM getPerson(#{companyId}, #{baseDate}::date))
+                 SELECT ARRAY_TO_STRING(ARRAY_AGG(f_emp_kor_nm(emp03_person_id)),', ')
+                   FROM emp00 x
+                        INNER JOIN emp03_trans ON x.emp00_trans_id = emp03_trans_id
+                  WHERE a.org01_code_id = x.emp00_org_code_id
+                    AND COALESCE(emp03_org_head_yn, 'false') LIKE 'true'
+                    AND emp03_trans_cd != '900'     /*(900:퇴직)*/
+                    AND NOT EXISTS ( SELECT 1
+                                       FROM emp04_add_title
+                                      WHERE emp04_add_person_id = emp00_person_id
+                                        AND ( emp04_start_date                        &gt; #{baseDate}::date OR
+                                              COALESCE(emp04_close_date,'9999-12-31') &lt; #{baseDate}::date ) )
+               )                                                                     AS org_head_list
+          FROM org01_code a
+               INNER JOIN org02_info b    ON org01_code_id = org02_code_id
+               INNER JOIN org_tree_down c ON b.org02_code_id = c.org02_code_id
+         WHERE f_trunc(#{baseDate}::date) BETWEEN f_trunc(a.org01_open_date) AND COALESCE(a.org01_close_date, to_date('99991231', 'yyyymmdd'))
+           AND b.org02_mod_date = ( SELECT MAX(x.org02_mod_date)
+                                      FROM org02_info x
+                                     WHERE x.org02_code_id = b.org02_code_id
+                                       AND f_trunc(x.org02_mod_date) &lt;= f_trunc(#{baseDate}::date) )
+         ORDER BY c.path
+    </select>
+
+    <!-- AS-IS org01_code.selectByBaseDate -->
+    <select id="selectByBaseDate" resultType="kr.co.kfs.asseterp.oms.biz.org.dto.OrgCodeRes">
+        SELECT <include refid="codeColumns"/>, 0 AS level, NULL AS org_head_list
+          FROM org01_code a
+             , org02_info b
+         WHERE a.org01_code_id = #{codeId}
+           AND #{baseDate}::date BETWEEN a.org01_open_date AND COALESCE(a.org01_close_date, to_date('99991231','yyyymmdd'))
+           AND b.org02_code_id = a.org01_code_id
+           AND b.org02_mod_date = ( SELECT MAX(x.org02_mod_date)
+                                      FROM org02_info x
+                                     WHERE x.org02_code_id = a.org01_code_id
+                                       AND x.org02_mod_date &lt;= #{baseDate}::date )
+    </select>
+
+    <select id="selectCompanyId" resultType="long">
+        SELECT org01_company_id FROM org01_code WHERE org01_code_id = #{codeId}
+    </select>
+
+    <!-- AS-IS org02_info.selectById -->
+    <select id="selectInfo" resultType="kr.co.kfs.asseterp.oms.biz.org.dto.OrgHistoryRes">
+        SELECT org02_info_id          AS info_id,
+               org02_code_id          AS code_id,
+               org02_parent_code_id   AS parent_code_id,
+               org02_mod_date::date   AS mod_date,
+               org02_mod_reason       AS mod_reason,
+               org02_kor_nm           AS kor_nm,
+               org02_eng_nm           AS eng_nm,
+               org02_level_cd         AS level_cd,
+               NULL                   AS level_nm,
+               org02_sort_order       AS sort_order,
+               org02_note             AS note
+          FROM org02_info a
+             , org01_code b
+         WHERE org02_info_id = #{infoId}
+           AND org01_code_id = org02_code_id
+    </select>
+
+    <!-- AS-IS org02_info.selectCountByCodeId -->
+    <select id="countInfos" resultType="long">
+        SELECT count(*) FROM org02_info WHERE org02_code_id = #{codeId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(org01_code) INSERT -->
+    <insert id="insertCode">
+        INSERT INTO org01_code (org01_code_id, org01_company_id, org01_org_cd, org01_open_date, org01_close_date,
+                                org01_open_reason, org01_close_reason, org01_note)
+        VALUES (#{orgCodeId}, #{companyId}, #{orgCd}, #{openDate}, #{closeDate}, #{openReason}, #{closeReason}, #{note})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(org01_code) UPDATE -->
+    <update id="updateCode">
+        UPDATE org01_code
+           SET org01_org_cd       = #{orgCd},
+               org01_open_date    = #{openDate},
+               org01_close_date   = #{closeDate},
+               org01_open_reason  = #{openReason},
+               org01_close_reason = #{closeReason}
+         WHERE org01_code_id    = #{orgCodeId}
+           AND org01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS org01_code.deleteOrg / UpdateDataModel.deleteModel(org01_code) -->
+    <delete id="deleteCode">
+        DELETE FROM org01_code WHERE org01_code_id = #{codeId}
+    </delete>
+
+    <!-- AS-IS UpdateDataModel(org02_info) INSERT -->
+    <insert id="insertInfo">
+        INSERT INTO org02_info (org02_info_id, org02_kor_nm, org02_mod_date, org02_mod_reason, org02_code_id, org02_parent_code_id,
+                                org02_eng_nm, org02_note, org02_level_cd, org02_sort_order, org02_mod_detail)
+        VALUES (#{orgInfoId}, #{korNm}, #{modDate}, #{modReason}, #{orgCodeId}, #{parentCodeId},
+                #{engNm}, #{note}, #{levelCd}, #{sortOrder}, #{modDetail})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(org02_info) UPDATE -->
+    <update id="updateInfo">
+        UPDATE org02_info
+           SET org02_kor_nm         = #{korNm},
+               org02_mod_date       = #{modDate},
+               org02_mod_reason     = #{modReason},
+               org02_parent_code_id = #{parentCodeId},
+               org02_eng_nm         = #{engNm},
+               org02_note           = #{note},
+               org02_level_cd       = #{levelCd},
+               org02_sort_order     = #{sortOrder}
+         WHERE org02_info_id = #{orgInfoId}
+    </update>
+</mapper>

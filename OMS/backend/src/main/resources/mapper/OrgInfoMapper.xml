@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS org00_org_info 매퍼(myOms server/org/mapper/org00_org_info.xml). SELECT 목록만 OrgInfoRes에 맞췄다 -->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.org.mapper.OrgInfoMapper">
+
+    <!-- AS-IS org00_org_info.selectByKorName -->
+    <select id="searchByKorName" resultType="kr.co.kfs.asseterp.oms.biz.org.dto.OrgInfoRes">
+        SELECT org00_org_id                                          AS org_code_id,
+               org00_org_cd                                          AS org_cd,
+               org00_kor_nm                                          AS kor_nm,
+               org00_parent_code_id                                  AS parent_code_id,
+               f_org_parent_full_nm(org00_org_id, org00_mod_date)    AS parent_full_nm,
+               org00_level_cd                                        AS level_cd
+          FROM getOrg(#{companyId}, #{baseDate}::date) o
+         WHERE org00_kor_nm LIKE #{korNm}
+         ORDER BY org00_org_cd, org00_sort_order
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS org01_code.insertOrg01Code -->
+    <insert id="insertOrgCode">
+        INSERT INTO org01_code (org01_code_id, org01_company_id, org01_org_cd, org01_open_date, org01_close_date,
+                                org01_open_reason, org01_close_reason, org01_note)
+        VALUES (#{orgCodeId}, #{companyId}, #{orgCd}, #{openDate}, #{closeDate}, #{openReason}, #{closeReason}, #{note})
+    </insert>
+
+    <!-- AS-IS org02_info.insertOrg02Info -->
+    <insert id="insertOrgInfo">
+        INSERT INTO org02_info (org02_info_id, org02_kor_nm, org02_mod_date, org02_mod_reason, org02_code_id, org02_parent_code_id,
+                                org02_eng_nm, org02_note, org02_level_cd, org02_sort_order, org02_mod_detail)
+        VALUES (#{orgInfoId}, #{korNm}, #{modDate}, #{modReason}, #{orgCodeId}, #{parentCodeId},
+                #{engNm}, #{note}, #{levelCd}, #{sortOrder}, #{modDetail})
+    </insert>
+</mapper>

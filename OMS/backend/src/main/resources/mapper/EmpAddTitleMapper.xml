@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS emp04_add_title 매퍼. 조회는 조건 그대로 SELECT 목록만, 저장·삭제는 UpdateDataModel → 명시 SQL -->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.emp.mapper.EmpAddTitleMapper">
+
+    <sql id="select">
+        SELECT emp04_add_title_id                                                       AS add_title_id,
+               emp04_person_id                                                          AS person_id,
+               emp04_add_person_id                                                      AS add_person_id,
+               emp01_emp_no                                                             AS emp_no,
+               emp04_start_date::date                                                   AS start_date,
+               emp04_close_date::date                                                   AS close_date,
+               emp04_org_code_id                                                        AS org_code_id,
+               f_org_nm(emp04_org_code_id, emp04_start_date)                            AS org_nm,
+               emp04_title_cd                                                           AS title_cd,
+               f_cdnm('EmpTitleCode', emp04_title_cd, emp01_company_id, emp04_start_date) AS title_nm,
+               emp03_pos_cd                                                             AS pos_cd,
+               f_cdnm('EmpPosCode', emp03_pos_cd, emp01_company_id, emp03_trans_date)   AS pos_nm,
+               COALESCE(emp03_org_head_yn = 'true', false)                              AS org_head_yn,
+               emp04_trans_reason                                                       AS trans_reason
+          FROM emp04_add_title
+               INNER JOIN emp03_trans  ON emp03_person_id = emp04_add_person_id
+               INNER JOIN emp01_person ON emp01_person_id = emp04_add_person_id
+    </sql>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS emp04_add_title.selectByPersonId -->
+    <select id="searchByPersonId" resultType="kr.co.kfs.asseterp.oms.biz.emp.dto.AddTitleRes">
+        <include refid="select"/>
+         WHERE emp04_person_id = #{personId}
+         ORDER BY emp04_start_date, emp04_close_date
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.oms.biz.emp.dto.AddTitleRes">
+        <include refid="select"/>
+         WHERE emp04_add_title_id = #{addTitleId}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS UpdateDataModel(emp04_add_title) INSERT -->
+    <insert id="insert">
+        INSERT INTO emp04_add_title (emp04_add_title_id, emp04_person_id, emp04_add_person_id, emp04_start_date, emp04_close_date,
+                                     emp04_org_code_id, emp04_title_cd, emp04_trans_reason)
+        VALUES (#{addTitleId}, #{personId}, #{addPersonId}, #{startDate}, #{closeDate}, #{orgCodeId}, #{titleCd}, #{transReason})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(emp04_add_title) UPDATE -->
+    <update id="update">
+        UPDATE emp04_add_title
+           SET emp04_start_date   = #{startDate},
+               emp04_close_date   = #{closeDate},
+               emp04_org_code_id  = #{orgCodeId},
+               emp04_title_cd     = #{titleCd},
+               emp04_trans_reason = #{transReason}
+         WHERE emp04_add_title_id = #{addTitleId}
+    </update>
+
+    <!-- AS-IS Emp04_AddTitle.delete: 겸직 행만 지운다 (파생 사원·발령은 남는다) -->
+    <delete id="delete">
+        DELETE FROM emp04_add_title WHERE emp04_add_title_id = #{addTitleId}
+    </delete>
+</mapper>

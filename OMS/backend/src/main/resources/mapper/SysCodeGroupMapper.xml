@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS sys13_code_group 매퍼. 조건 그대로, SELECT 목록만 CodeGroupRes에 맞췄다. UpdateDataModel 부분은 명시 SQL -->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.sys.mapper.SysCodeGroupMapper">
+
+    <sql id="columns">
+        a.sys13_code_group_id    AS code_group_id,
+        a.sys13_kind_group_cd    AS kind_group_cd,
+        a.sys13_kind_group_nm    AS kind_group_nm,
+        a.sys13_code_kind_id     AS code_kind_id,
+        a.sys13_code_id          AS code_id,
+        a.sys13_note             AS note
+    </sql>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys13_code_group.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.CodeGroupRes">
+        SELECT <include refid="columns"/>,
+               COALESCE(b.sys09_code, '')  AS code,
+               COALESCE(b.sys09_name, '')  AS name
+          FROM sys13_code_group a
+               LEFT OUTER JOIN sys09_code b ON a.sys13_code_id = b.sys09_code_id
+         WHERE sys13_code_group_id = #{codeGroupId}
+    </select>
+
+    <!-- AS-IS sys13_code_group.selectByGroupCodeKind -->
+    <select id="searchGroups" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.CodeGroupRes">
+        SELECT <include refid="columns"/>, NULL AS code, NULL AS name
+          FROM sys13_code_group a
+         WHERE sys13_code_kind_id = #{codeKindId}
+           AND sys13_code_id = 0
+         ORDER BY sys13_kind_group_cd, sys13_kind_group_nm
+    </select>
+
+    <!-- AS-IS sys13_code_group.selectByKindGroupCode -->
+    <select id="searchGroupCodes" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.CodeGroupRes">
+        SELECT <include refid="columns"/>,
+               COALESCE(b.sys09_code, '')  AS code,
+               COALESCE(b.sys09_name, '')  AS name
+          FROM sys13_code_group a
+               LEFT OUTER JOIN sys09_code b ON a.sys13_code_id = b.sys09_code_id
+         WHERE sys13_kind_group_cd = #{kindGroupCd}
+           AND sys13_code_kind_id = #{codeKindId}
+           AND sys13_code_id != 0
+           AND sys09_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS sys13_code_group.insert -->
+    <insert id="insert">
+        INSERT INTO sys13_code_group (sys13_code_group_id, sys13_kind_group_cd, sys13_kind_group_nm, sys13_code_kind_id, sys13_code_id, sys13_note)
+        VALUES (#{codeGroupId}, #{kindGroupCd}, #{kindGroupNm}, #{codeKindId}, #{codeId}, #{note})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(sys13_code_group) UPDATE -->
+    <update id="update">
+        UPDATE sys13_code_group
+           SET sys13_kind_group_cd = #{kindGroupCd},
+               sys13_kind_group_nm = #{kindGroupNm},
+               sys13_note          = #{note}
+         WHERE sys13_code_group_id = #{codeGroupId}
+    </update>
+
+    <!-- AS-IS sys13_code_group.update -->
+    <update id="updateGroup">
+        UPDATE sys13_code_group
+           SET sys13_kind_group_cd = #{kindGroupCd}
+             , sys13_kind_group_nm = #{kindGroupNm}
+         WHERE sys13_code_kind_id  = #{codeKindId}
+           AND sys13_kind_group_cd = #{oriKindGroupCd}
+           AND sys13_kind_group_nm = #{oriKindGroupNm}
+    </update>
+
+    <!-- AS-IS sys13_code_group.delete -->
+    <delete id="deleteGroup">
+        DELETE FROM sys13_code_group
+         WHERE sys13_code_kind_id  = #{codeKindId}
+           AND sys13_kind_group_cd = #{kindGroupCd}
+           AND sys13_kind_group_nm = #{kindGroupNm}
+    </delete>
+
+    <!-- AS-IS UpdateDataModel.deleteModel(sys13_code_group) -->
+    <delete id="delete">
+        DELETE FROM sys13_code_group WHERE sys13_code_group_id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

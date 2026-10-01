@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS sys04_role 매퍼(myOms server/sys/mapper/sys04_role.xml).
+  조회 SQL은 조건을 그대로 두고 SELECT 목록만 RoleRes에 맞췄다.
+  insert/update/delete는 AS-IS UpdateDataModel(컬럼 메타로 동적 생성)을 테이블 명시 SQL로 바꾼 것이다.
+  - update는 화면에서 편집하는 컬럼(권한명·조회순서·권한설명)만 바꾼다. 기본권한·관리자권한은 이 화면에서 편집하지 않는다
+  - 회사 조건(sys04_company_id)은 로그인 회사로 서버에서 넣는다
+-->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.sys.mapper.SysRoleMapper">
+
+    <sql id="columns">
+        sys04_role_id                                 AS role_id,
+        sys04_role_nm                                 AS role_nm,
+        sys04_seq                                     AS seq,
+        sys04_note                                    AS note,
+        sys04_company_id                              AS company_id,
+        f_get_company_nm(sys04_company_id)            AS company_nm,
+        COALESCE(sys04_default_role = 'true', false)  AS default_role,
+        COALESCE(sys04_admin_yn = 'true', false)      AS admin_yn
+    </sql>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys04_role.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.RoleRes">
+        SELECT <include refid="columns"/>
+          FROM sys04_role
+         WHERE sys04_role_id = #{roleId}
+    </select>
+
+    <!-- AS-IS sys04_role.selectByName -->
+    <select id="searchByName" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.RoleRes">
+        SELECT <include refid="columns"/>
+          FROM sys04_role
+         WHERE sys04_role_nm LIKE #{roleNm}
+           AND sys04_company_id = #{companyId}
+         ORDER BY sys04_seq
+    </select>
+
+    <!-- AS-IS sys04_role.selectByUserId -->
+    <select id="searchByUserId" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.RoleUserRes">
+        SELECT sys04_role_id                                                 AS role_id,
+               sys04_role_nm                                                 AS role_nm,
+               sys04_seq                                                     AS seq,
+               sys04_note                                                    AS note,
+               sys05_user_role_id IS NOT NULL                                AS user_role_yn,
+               sys05_user_role_id                                            AS user_role_id
+          FROM sys04_role LEFT OUTER JOIN sys05_user_role
+               ON sys04_role_id = sys05_role_id AND sys05_user_id = #{userId}
+         WHERE 1=1
+           AND sys04_company_id = #{companyId}
+         ORDER BY sys04_seq, sys05_seq
+    </select>
+
+    <!-- AS-IS UpdateDataModel INSERT (Sys04_RoleModel 기본값: defaultRole·adminYn = false) -->
+    <insert id="insert">
+        INSERT INTO sys04_role
+               (sys04_role_id, sys04_role_nm, sys04_note, sys04_seq, sys04_company_id, sys04_default_role, sys04_admin_yn)
+        VALUES (#{roleId}, #{roleNm}, #{note}, #{seq}, #{companyId}, 'false', 'false')
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE -->
+    <update id="update">
+        UPDATE sys04_role
+           SET sys04_role_nm = #{roleNm},
+               sys04_seq     = #{seq},
+               sys04_note    = #{note}
+         WHERE sys04_role_id    = #{roleId}
+           AND sys04_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel -->
+    <delete id="delete">
+        DELETE FROM sys04_role
+         WHERE sys04_company_id = #{companyId}
+           AND sys04_role_id IN
+        <foreach collection="roleIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

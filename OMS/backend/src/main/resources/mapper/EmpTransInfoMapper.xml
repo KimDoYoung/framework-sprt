@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS emp00_trans_info 매퍼(myOms server/emp/mapper/emp00_trans_info.xml).
+  조건·정렬은 그대로, SELECT 목록만 TransInfoRes에 맞췄다 (복호화 비밀번호 to_decrypts 등 화면에 안 쓰는 컬럼은 뺐다).
+  common.emp00_trans_info(getPerson) + common.org00_org_info(getOrg)를 펼쳐 넣었다.
+-->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.emp.mapper.EmpTransInfoMapper">
+
+    <sql id="columns">
+               emp00_trans_id                                                               AS trans_id,
+               emp01_person_id                                                              AS person_id,
+               emp01_emp_no                                                                 AS emp_no,
+               emp01_kor_nm                                                                 AS kor_nm,
+               emp00_org_code_id                                                            AS org_code_id,
+               org00_kor_nm                                                                 AS org_kor_nm,
+               f_org_parent_full_nm(emp00_org_code_id, emp00_trans_date)                    AS parent_full_nm,
+               emp00_trans_cd                                                               AS trans_cd,
+               emp00_kind_cd                                                                AS kind_cd,
+               f_cdnm('EmpKindCode', emp00_kind_cd, emp01_company_id, emp00_trans_date)     AS kind_nm,
+               emp00_pos_cd                                                                 AS pos_cd,
+               f_cdnm('EmpPosCode', emp00_pos_cd, emp01_company_id, emp00_trans_date)       AS pos_nm,
+               emp00_title_cd                                                               AS title_cd,
+               f_cdnm('EmpTitleCode', emp00_title_cd, emp01_company_id, emp00_trans_date)   AS title_nm,
+               emp01_hire_date                                                              AS hire_date,
+               emp01_office_detail                                                          AS office_detail,
+               emp01_mobile_telno                                                           AS mobile_telno,
+               emp01_email_addr                                                             AS email_addr,
+               emp01_order_seq                                                              AS order_seq,
+               false                                                                        AS finance_pro_yn
+    </sql>
+
+    <!-- AS-IS emp00_trans_info.selectByText -->
+    <select id="searchByText" resultType="kr.co.kfs.asseterp.oms.biz.emp.dto.TransInfoRes">
+        WITH emp00 AS (SELECT * FROM getPerson(#{companyId}, to_date(replace(#{transDate},'-',''),'yyyymmdd')))
+           , org00 AS (SELECT * FROM getOrg(#{companyId}, #{transDate}::date))
+        SELECT <include refid="columns"/>
+          FROM emp00 trans
+               INNER JOIN emp01_person ON emp00_person_id = emp01_person_id
+               INNER JOIN org00        ON emp00_org_code_id = org00_org_id
+         WHERE 1=1
+           AND emp00_trans_cd = (
+                CASE #{transCode} WHEN '100'
+                                  THEN (
+                                        <choose>
+                                          <when test="isSeparateAddTitle == true">
+                                          CASE WHEN emp00_trans_cd &lt;= '799' /** 겸직(800),퇴직(900)은 제외 */
+                                          </when>
+                                          <otherwise>
+                                          CASE WHEN emp00_trans_cd &lt;= '899' /** 퇴직(900)만 제외 (겸직자 재직자로 인식) */
+                                          </otherwise>
+                                        </choose>
+                                               THEN emp00_trans_cd
+                                               ELSE #{transCode}
+                                               END
+                                       )
+                                  WHEN '900' THEN '900'
+                                  WHEN '800' THEN '800'
+                                  ELSE emp00_trans_cd
+                                  END
+               )
+           AND (emp01_kor_nm||org00_kor_nm||emp01_emp_no) LIKE #{searchText}
+           AND NOT EXISTS ( SELECT 1
+                              FROM emp04_add_title
+                             WHERE emp04_add_person_id = emp00_person_id
+                               AND ( emp04_start_date                        &gt; to_date(#{transDate},'yyyy-mm-dd') OR
+                                     COALESCE(emp04_close_date,'9999-12-31') &lt; to_date(#{transDate},'yyyy-mm-dd') ) )
+        <if test="orgCodeId != null">
+           AND emp00_org_code_id = #{orgCodeId}
+        </if>
+        <choose>
+            <when test="transCode == '900'">
+         ORDER BY emp00_trans_date DESC, org00_org_cd, emp00_title_cd, emp00_pos_cd, emp01_order_seq
+            </when>
+            <otherwise>
+         ORDER BY org00_org_cd, emp00_title_cd, emp00_pos_cd, emp01_order_seq
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--
+      AS-IS emp00_trans_info.selectOneByPersonId (발령을 바꾼 뒤 목록 행 갱신). 조건 그대로.
+      common.emp00_trans_info / org00_org_info 는 회사 0으로 불렸는데 asseterpdb에서는 비어 로그인 회사를 넘긴다.
+    -->
+    <select id="selectOneByPersonId" resultType="kr.co.kfs.asseterp.oms.biz.emp.dto.TransInfoRes">
+        WITH emp00 AS (SELECT * FROM getPerson(#{companyId}, f_today()))
+           , org00 AS (SELECT * FROM getOrg(#{companyId}, f_today()))
+        SELECT <include refid="columns"/>
+          FROM emp00 trans
+               INNER JOIN org00        ON org00_org_id = emp00_org_code_id
+               INNER JOIN emp01_person ON emp01_person_id = emp00_person_id
+         WHERE 1=1
+           AND emp01_person_id = #{personId}
+           AND emp00_trans_cd LIKE #{transCode} /*  겸직을 제외하고는 %로 전달 */
+           AND emp00_trans_cd != CASE WHEN #{transCode} = '%' THEN '800' ELSE '%' END
+           AND emp00_trans_date = (
+                                   SELECT max(x.emp00_trans_date)
+                                     FROM emp00 x
+                                    WHERE x.emp00_person_id = trans.emp00_person_id
+                                      AND x.emp00_trans_cd LIKE #{transCode}
+                                      AND x.emp00_trans_cd != CASE WHEN #{transCode} = '%' THEN '800' ELSE '%' END
+                                  )
+         LIMIT 1
+    </select>
+
+    <!--
+      AS-IS emp00_trans_info.selectByAllOrgCodeId (조직별 사원조회): 조직 + 하위 조직(common.orgCodeDown) 사원.
+      asseterpdb getPerson()에 emp00_grade_nm이 없어 f_cdnm('EmpGradeCode', emp00_grade_cd …)로 구한다 (OMS-convert §4).
+    -->
+    <select id="searchByOrg" resultType="kr.co.kfs.asseterp.oms.biz.emp.dto.OrgPersonRes">
+        WITH emp00 AS (SELECT * FROM getPerson(#{companyId}, #{baseDate}::date))
+           , org00 AS (SELECT * FROM getOrg(#{companyId}, #{baseDate}::date))
+        SELECT emp01_person_id                                                              AS person_id,
+               emp01_emp_no                                                                 AS emp_no,
+               emp01_kor_nm                                                                 AS kor_nm,
+               f_cdnm('EmpPosCode', emp00_pos_cd, emp01_company_id, emp00_trans_date)       AS pos_nm,
+               org00_kor_nm                                                                 AS org_kor_nm,
+               COALESCE(f_cdnm('EmpGradeCode', emp00_grade_cd, emp01_company_id, emp00_trans_date),
+                        f_cdnm('EmpTitleCode', emp00_title_cd, emp01_company_id, emp00_trans_date)) AS title_nm2,
+               f_cdnm('EmpKindCode', emp00_kind_cd, emp01_company_id, emp00_trans_date)     AS kind_nm,
+               emp01_hire_date                                                              AS hire_date,
+               emp01_email_addr                                                             AS email_addr,
+               emp01_mobile_telno                                                           AS mobile_telno,
+               emp01_office_telno                                                           AS office_telno
+          FROM emp00
+               INNER JOIN emp01_person ON emp00_person_id = emp01_person_id
+               INNER JOIN org00        ON org00_org_id = emp00_org_code_id
+         WHERE 1=1
+           AND NOT EXISTS ( SELECT 1
+                              FROM emp04_add_title
+                             WHERE emp04_add_person_id = emp00_person_id
+                               AND ( emp04_start_date                        &gt; #{baseDate}::date OR
+                                     COALESCE(emp04_close_date,'9999-12-31') &lt; #{baseDate}::date ) )
+           AND emp00_org_code_id IN (
+                WITH RECURSIVE org_tree_down(org00_org_code_id, org00_parent_code_id, org00_kor_nm, depth, path, cycle) AS
+                (
+                    SELECT a.org00_org_id, a.org00_parent_code_id, a.org00_kor_nm, 0, ARRAY[a.org00_kor_nm::text], false
+                      FROM getOrg(#{companyId}, #{baseDate}::date) a
+                     WHERE 1=1
+                       AND org00_org_id = #{orgCodeId}
+                     UNION ALL
+                    SELECT a.org00_org_id, a.org00_parent_code_id, a.org00_kor_nm, b.depth + 1,
+                           array_append(b.path, a.org00_kor_nm::text), a.org00_kor_nm = any(b.path)
+                      FROM getOrg(#{companyId}, #{baseDate}::date) a
+                         , org_tree_down b
+                     WHERE 1=1
+                       AND a.org00_parent_code_id = b.org00_org_code_id
+                       AND NOT cycle
+                )
+                SELECT a.org00_org_code_id FROM org_tree_down a )
+         ORDER BY LPAD(COALESCE(CASE WHEN emp01_order_seq = '' THEN null ELSE emp01_order_seq END,'9999999999'), 10, '0')
+                , org00_org_cd
+                , org00_sort_order
+                , emp00_pos_cd
+                , emp01_hire_date
+    </select>
+</mapper>

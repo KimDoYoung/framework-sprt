@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS sys08_code_kind 매퍼. 조회는 조건 그대로 SELECT 목록만, 저장·삭제는 UpdateDataModel → 명시 SQL -->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.sys.mapper.SysCodeKindMapper">
+
+    <sql id="columns">
+        sys08_code_kind_id                        AS code_kind_id,
+        sys08_kind_cd                             AS kind_cd,
+        sys08_kind_nm                             AS kind_nm,
+        COALESCE(sys08_sys_yn = 'true', false)    AS sys_yn,
+        sys08_note                                AS note
+    </sql>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.CodeKindRes">
+        SELECT <include refid="columns"/> FROM sys08_code_kind WHERE sys08_code_kind_id = #{codeKindId}
+    </select>
+
+    <!-- AS-IS sys08_code_kind.selectByKindName -->
+    <select id="searchByKindName" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.CodeKindRes">
+        SELECT <include refid="columns"/>
+          FROM sys08_code_kind
+         WHERE sys08_sys_yn LIKE #{sysYn}
+           AND ( sys08_kind_nm LIKE #{kindNm} OR lower(sys08_kind_cd) LIKE lower(#{kindNm}) )
+         ORDER BY sys08_kind_cd
+    </select>
+
+    <insert id="insert">
+        INSERT INTO sys08_code_kind (sys08_code_kind_id, sys08_kind_cd, sys08_kind_nm, sys08_sys_yn, sys08_note)
+        VALUES (#{codeKindId}, #{kindCd}, #{kindNm}, #{sysYn}, #{note})
+    </insert>
+
+    <update id="update">
+        UPDATE sys08_code_kind
+           SET sys08_kind_cd = #{kindCd},
+               sys08_kind_nm = #{kindNm},
+               sys08_sys_yn  = #{sysYn},
+               sys08_note    = #{note}
+         WHERE sys08_code_kind_id = #{codeKindId}
+    </update>
+
+    <!-- AS-IS delete: 코드종류 행만 지운다 (AS-IS 주석: 하위코드 체크 필요) -->
+    <delete id="delete">
+        DELETE FROM sys08_code_kind WHERE sys08_code_kind_id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

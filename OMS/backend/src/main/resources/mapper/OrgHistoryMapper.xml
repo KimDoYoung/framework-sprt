@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS org02_info / emp03_trans 매퍼 (Org02_Info 서버 클래스가 쓰는 SQL). 조건 그대로 -->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.org.mapper.OrgHistoryMapper">
+
+    <!-- AS-IS org02_info.selectByOnlyOrgCodeId -->
+    <select id="searchByCodeId" resultType="kr.co.kfs.asseterp.oms.biz.org.dto.OrgHistoryRes">
+        SELECT a.org02_info_id                                                        AS info_id,
+               a.org02_code_id                                                        AS code_id,
+               a.org02_parent_code_id                                                 AS parent_code_id,
+               a.org02_mod_date::date                                                 AS mod_date,
+               a.org02_mod_reason                                                     AS mod_reason,
+               a.org02_kor_nm                                                         AS kor_nm,
+               a.org02_eng_nm                                                         AS eng_nm,
+               a.org02_level_cd                                                       AS level_cd,
+               f_cdnm('OrgLevelCode', org02_level_cd, org01_company_id, org02_mod_date) AS level_nm,
+               a.org02_sort_order                                                     AS sort_order,
+               a.org02_note                                                           AS note
+          FROM org02_info a
+             , org01_code b
+         WHERE 1=1
+           AND org02_code_id = #{codeId}
+           AND org01_code_id = org02_code_id
+         ORDER BY org02_mod_date DESC
+    </select>
+
+    <!-- AS-IS org02_info.deleteOrgCheck -->
+    <select id="countChildren" resultType="int">
+        SELECT COUNT(*)
+          FROM org02_info
+               INNER JOIN org01_code ON org01_code_id = org02_code_id
+         WHERE org02_parent_code_id = #{codeId}
+    </select>
+
+    <!-- AS-IS emp03_trans.deleteOrgCheck -->
+    <select id="countEmployees" resultType="int">
+        SELECT COUNT(*)
+          FROM emp03_trans
+               INNER JOIN emp01_person ON emp01_person_id = emp03_person_id
+         WHERE emp03_org_code_id = #{codeId}
+    </select>
+
+    <!-- AS-IS org02_info.deleteOrg -->
+    <delete id="deleteInfosByCode">
+        DELETE FROM org02_info WHERE org02_code_id = #{codeId}
+    </delete>
+
+    <!-- AS-IS Org02_Info.delete (UpdateDataModel.deleteModel) -->
+    <delete id="deleteInfo">
+        DELETE FROM org02_info WHERE org02_info_id = #{infoId}
+    </delete>
+</mapper>
