@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.asseterp.oms.biz.audit.mapper.AuditLogMapper">
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.audit.mapper.AuditLogMapper">
 
     <insert id="insert">
         INSERT INTO sys71_security_audit_log (
@@ -28,7 +28,7 @@
     </insert>
 
     <!-- 컬럼 순서 = AuditLogRecord 생성자 인자 순서 -->
-    <select id="findRecent" resultType="com.asseterp.oms.biz.audit.dto.AuditLogRecord">
+    <select id="findRecent" resultType="kr.co.kfs.asseterp.oms.biz.audit.dto.AuditLogRecord">
         SELECT
             audit_id,
             event_type,

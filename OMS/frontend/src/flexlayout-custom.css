@@ -1,0 +1,220 @@
+@import 'flexlayout-react/style/light.css';
+
+/* ── Ant Design Theme Tuning for FlexLayout ── */
+.flexlayout__layout {
+  --flexlayout-color-background: #eef2f6;
+  --flexlayout-color-tabset-background: #ffffff;
+  --flexlayout-color-tabset-background-selected: #ffffff;
+  --flexlayout-color-tab-selected-background: #ffffff;
+  --flexlayout-color-tab-selected: #1677ff;
+  --flexlayout-color-tab-unselected-background: #f8fafc;
+  --flexlayout-color-tab-unselected: #64748b;
+  --flexlayout-color-focus: #1677ff;
+  --flexlayout-color-drag1: #1677ff;
+  --flexlayout-color-drag1-background: rgba(22, 119, 255, 0.16);
+  --flexlayout-color-splitter: #d9dfe8;
+  --flexlayout-color-splitter-hover: #1677ff;
+  --flexlayout-color-splitter-drag: #1677ff;
+  --flexlayout-splitter-size: 6px;
+  --flexlayout-font-size: 12px;
+  --flexlayout-font-family: var(--app-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
+  height: 100%;
+  width: 100%;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* 탭 버튼 스타일: 모든 탭 동일 너비(160px - '1234 일이삼사오...' 수용), 선택된 탭만 테두리 표시 */
+.flexlayout__tab_button {
+  width: 160px !important;
+  min-width: 160px !important;
+  max-width: 160px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  border-radius: 4px 4px 0 0 !important;
+  margin-right: 2px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  padding: 4px 8px !important;
+  border: 1px solid transparent !important; /* 미선택 탭: 테두리 없음 */
+  background-color: transparent !important;
+  color: #64748b !important;
+  box-sizing: border-box !important;
+  transition: none !important; /* 불필요한 탭 전환 지연/애니메이션 제거 - 즉각 반응 */
+  animation: none !important;
+  cursor: pointer !important;
+}
+
+.flexlayout__tab_button_content {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  flex: 1 !important;
+  text-align: left !important;
+  user-select: none !important;
+}
+
+.flexlayout__tab_button:hover {
+  background-color: #f1f5f9 !important;
+  color: #1677ff !important;
+  border-color: transparent !important;
+  transition: background-color 0.08s ease !important;
+}
+
+/* 현재 선택된 탭만 테두리 선 표시 (상단 2px 포인트 블루, 배경 흰색, 하단 경계 일체화) */
+.flexlayout__tab_button--selected {
+  background-color: #ffffff !important;
+  border: 1px solid #d9dfe8 !important;
+  border-top: 2px solid #1677ff !important;
+  border-bottom: 1px solid #ffffff !important;
+  color: #1677ff !important;
+  font-weight: 600 !important;
+  position: relative !important;
+  z-index: 2 !important;
+  transition: none !important; /* 애니메이션 제거 */
+  animation: none !important;
+}
+
+.flexlayout__tab_button--selected:hover {
+  background-color: #ffffff !important;
+  border-color: #d9dfe8 !important;
+  border-top-color: #1677ff !important;
+  border-bottom-color: #ffffff !important;
+}
+
+/* 탭 바 헤더 (34px 슬림 헤더) */
+.flexlayout__tabset_header {
+  height: 34px !important;
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #d9dfe8 !important;
+  box-sizing: border-box !important;
+}
+
+.flexlayout__tabset_tabbar_outer {
+  background-color: #ffffff !important;
+}
+
+.flexlayout__tabset_tabbar_inner {
+  padding-top: 2px !important;
+}
+
+/* 스플리터 구분선 */
+.flexlayout__splitter {
+  background-color: #d9dfe8 !important;
+  transition: background-color 0.15s !important;
+}
+
+.flexlayout__splitter:hover {
+  background-color: #1677ff !important;
+}
+
+/* 탭 닫기 버튼 */
+.flexlayout__tab_button_trailing {
+  margin-left: 6px !important;
+  color: #94a3b8 !important;
+}
+
+.flexlayout__tab_button_trailing:hover {
+  color: #ef4444 !important;
+}
+
+/* 탭 내부 콘텐츠 영역: 브라우저/모니터 우측 외곽 스크롤바 방지 (뷰포트 피팅 및 탭 전환 즉각 반응) */
+.flexlayout__tab {
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+/* 탭셋 헤더 우측 툴바 (모든 탭 닫기, 최대화/복원 버튼) */
+.flexlayout__tab_toolbar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding-right: 8px !important;
+  --color-icon: #94a3b8;
+}
+
+.flexlayout-toolbar-custom-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 4px !important;
+  border: none !important;
+  background: transparent !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  transition: all 0.15s ease !important;
+  user-select: none !important;
+}
+
+.flexlayout-toolbar-custom-btn:hover {
+  background-color: #e2e8f0 !important;
+  color: #334155 !important;
+  --color-icon: #334155;
+}
+
+/* ── 글로벌 마우스 호버(Hover) 배경색 하이라이트 효과 ── */
+
+/* 1. AG Grid (1101 일반기안서, 1102 지출결의서, 1103 자산취득품의, 대용량 그리드 등) */
+.ag-theme-alpine {
+  --ag-row-hover-color: #dbeafe !important;
+  --ag-selected-row-background-color: #bfdbfe !important;
+}
+
+/* 일반 데이터 행 마우스 호버 시 배경색 변경 (확실하게 눈에 띄는 스카이블루 #dbeafe) */
+.ag-theme-alpine .ag-row:not(.ag-row-pinned):hover,
+.ag-theme-alpine .ag-row:not(.ag-row-pinned).ag-row-hover {
+  background-color: #dbeafe !important;
+  cursor: pointer !important;
+}
+
+/* 행 내부의 모든 셀(좌측 고정 컬럼 셀 포함)도 동일한 호버 배경색 적용 */
+.ag-theme-alpine .ag-row:not(.ag-row-pinned):hover .ag-cell,
+.ag-theme-alpine .ag-row:not(.ag-row-pinned).ag-row-hover .ag-cell {
+  background-color: #dbeafe !important;
+}
+
+/* 선택된 행 */
+.ag-theme-alpine .ag-row-selected:not(.ag-row-pinned),
+.ag-theme-alpine .ag-row-selected:not(.ag-row-pinned) .ag-cell {
+  background-color: #bfdbfe !important;
+}
+
+/* 선택된 행에 마우스 호버 시 더 짙은 하이라이트 */
+.ag-theme-alpine .ag-row-selected:not(.ag-row-pinned):hover,
+.ag-theme-alpine .ag-row-selected:not(.ag-row-pinned):hover .ag-cell,
+.ag-theme-alpine .ag-row-selected:not(.ag-row-pinned).ag-row-hover .ag-cell {
+  background-color: #93c5fd !important;
+}
+
+/* 2. Ant Design 일반 Table (MyPage 상세 일정, 전자결재함, 컴플라이언스 등) */
+.ant-table-wrapper .ant-table-tbody > tr {
+  transition: background-color 0.12s ease;
+}
+
+.ant-table-wrapper .ant-table-tbody > tr:not(.ant-table-placeholder):hover > td,
+.ant-table-wrapper .ant-table-tbody > tr.ant-table-row:hover > td,
+.ant-table-wrapper .ant-table-tbody > tr:hover > td,
+.schedule-table .ant-table-tbody > tr:hover > td,
+.schedule-table .ant-table-tbody > tr.ant-table-row:hover > td {
+  background-color: #dbeafe !important; /* 확실하게 식별 가능한 스카이블루 */
+  cursor: pointer !important;
+}
+
+/* 3. MyPage 달력 날짜 셀 호버 효과 */
+.mypage-calendar-day-cell {
+  transition: background-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.mypage-calendar-day-cell.is-current-month:not(.is-chosen):hover {
+  background-color: #dbeafe !important;
+  cursor: pointer !important;
+}
+
+
+

@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- AS-IS sys01_company 매퍼(sys01_company.selectByCompanyCode)와 같은 조건 -->
-<mapper namespace="com.asseterp.oms.biz.company.mapper.CompanyMapper">
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.company.mapper.CompanyMapper">
 
     <sql id="columns">
         sys01_company_id AS company_id,
@@ -13,13 +13,13 @@
         sys01_use_yn     AS use_yn
     </sql>
 
-    <select id="findByCompanyCode" resultType="com.asseterp.oms.biz.company.dto.CompanyRes">
+    <select id="findByCompanyCode" resultType="kr.co.kfs.asseterp.oms.biz.company.dto.CompanyRes">
         SELECT <include refid="columns"/>
         FROM sys01_company
         WHERE sys01_loc_nm = #{companyCode}
     </select>
 
-    <select id="findAllUsable" resultType="com.asseterp.oms.biz.company.dto.CompanyRes">
+    <select id="findAllUsable" resultType="kr.co.kfs.asseterp.oms.biz.company.dto.CompanyRes">
         SELECT <include refid="columns"/>
         FROM sys01_company
         WHERE sys01_use_yn = 'true'

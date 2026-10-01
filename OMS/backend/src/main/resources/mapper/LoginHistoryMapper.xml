@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- AS-IS sys26_login.insert 와 같은 형식 (mac/os는 서버에서 알 수 없어 비움) -->
-<mapper namespace="com.asseterp.oms.biz.auth.mapper.LoginHistoryMapper">
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.auth.mapper.LoginHistoryMapper">
 
     <insert id="insert">
         INSERT INTO sys26_login (

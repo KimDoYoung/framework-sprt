@@ -1,0 +1,109 @@
+package kr.co.kfs.asseterp.oms.common.config;
+
+import kr.co.kfs.asseterp.oms.common.config.properties.AuthProperties;
+import kr.co.kfs.asseterp.oms.common.config.properties.CorsProperties;
+import kr.co.kfs.asseterp.oms.common.config.properties.LogProperties;
+import kr.co.kfs.asseterp.oms.common.error.ErrorCode;
+import kr.co.kfs.asseterp.oms.common.jwt.JwtAccessDeniedHandler;
+import kr.co.kfs.asseterp.oms.common.jwt.JwtAuthenticationEntryPoint;
+import kr.co.kfs.asseterp.oms.common.jwt.JwtAuthenticationFilter;
+import kr.co.kfs.asseterp.oms.common.tenant.TenantFilter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final TenantFilter tenantFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    private final AuthProperties authProperties;
+    private final CorsProperties corsProperties;
+    private final LogProperties logProperties;
+
+    /**
+     * 요구사항 6: 테스트 용이를 위해 password는 평문을 비교
+     */
+    @Bean
+    @SuppressWarnings("deprecation")
+    public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler(jwtAccessDeniedHandler)
+                )
+                .authorizeHttpRequests(auth -> auth
+                        // 요구사항 5: WAR 정적 리소스, public 폴더, 인증 관련 공개 API (asseterp.auth.permit-all-paths)
+                        .requestMatchers(authProperties.permitAllPaths().toArray(String[]::new)).permitAll()
+                        // 나머지 모든 요청은 인증 필요
+                        .anyRequest().authenticated()
+                )
+                // 테넌트(서브도메인) 판별 → JWT 인증 순서. JWT 필터가 토큰의 테넌트와 요청 테넌트를 비교한다
+                .addFilterBefore(tenantFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(jwtAuthenticationFilter, TenantFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public FilterRegistrationBean<TenantFilter> tenantFilterRegistration(TenantFilter filter) {
+        FilterRegistrationBean<TenantFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    /**
+     * JwtAuthenticationFilter, TenantFilter는 @Component라 서블릿 필터로도 자동 등록된다.
+     * Security 필터 체인에서만 동작하도록 서블릿 컨테이너 등록은 비활성화한다.
+     */
+    @Bean
+    public FilterRegistrationBean<JwtAuthenticationFilter> jwtAuthenticationFilterRegistration(JwtAuthenticationFilter filter) {
+        FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // *.localhost:5173 처럼 서브도메인(테넌트) 패턴을 허용하기 위해 origin pattern으로 등록
+        configuration.setAllowedOriginPatterns(corsProperties.allowedOrigins());
+        configuration.setAllowedMethods(corsProperties.allowedMethods());
+        configuration.setAllowedHeaders(corsProperties.allowedHeaders());
+        configuration.setExposedHeaders(List.of(ErrorCode.AUTH_ERROR_HEADER, logProperties.traceHeader()));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(corsProperties.maxAge());
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+}

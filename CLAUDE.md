@@ -67,7 +67,7 @@ cd antdesign/backend
 gradle bootRun            # 개발 서버 실행
 gradle compileJava         # 컴파일만
 gradle test                # 전체 테스트
-gradle test --tests "com.asseterp.SomeTestClass"   # 단일 테스트
+gradle test --tests "com.asseterp.test.SomeTestClass"   # 단일 테스트 (antdesign은 규칙 이전 패키지)
 ```
 또는 `./bm.sh run` / `./bm.sh compile` (antdesign/ 루트에서).
 
@@ -80,7 +80,10 @@ frontend를 빌드해 `backend/src/main/resources/static`으로 복사한 뒤 `b
 
 ## Backend 아키텍처 (`docs/TOBE-Framework.md` 규칙)
 
-- Base package: `com.asseterp` (build.gradle group) / 규칙 문서상 목표 패키지는 `kr.co.kfs.asseterp`.
+- **Base package는 반드시 `kr.co.kfs.asseterp`** (build.gradle `group`도 동일). 신규 코드는 `com.asseterp`를 쓰지 않는다.
+  - AssetERP 원본 전환: `kr.co.kfs.asseterp` (예: `kr.co.kfs.asseterp.biz.emp.controller`)
+  - OMS(AssetERP subset): `kr.co.kfs.asseterp.oms` (예: `kr.co.kfs.asseterp.oms.common.jwt`, `kr.co.kfs.asseterp.oms.biz.auth`)
+  - `antdesign/`(`com.asseterp.test`), `security-test/`(`com.asseterp.security`)는 이 규칙 이전의 프로토타입이다. 거기서 코드를 가져오면 패키지를 위 규칙으로 바꾼다.
 - 레이어: `common.*`(Security/Config/Error/Utils 공통 모듈), `biz.<domain>.*`(도메인별 업무 패키지) — `biz`는 **모든 업무 도메인을 담는 상위 네임스페이스**이며 도메인 코드 자체가 아니다. 각 도메인 패키지 아래 `controller`/`service`/`mapper`/`dto`로 나눈다.
 - REST 규칙: `/api/v1/{domain}/{resource}`, 컨트롤러/서비스/매퍼는 `{Domain}Controller`/`{Domain}Service`/`{Domain}Mapper`로 명명. 메서드 접두사는 조회 `get/search`, 등록 `create`, 수정 `update`, 삭제 `delete`.
 - 모든 API 응답은 공통 `ApiResponse<T>`로 감싸고, 업무 예외는 `BusinessException`으로 일원화해 `RestControllerAdvice`에서 처리.

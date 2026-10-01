@@ -9,7 +9,7 @@
    - 관리자: sys02_user.selectByLoginId
   컬럼 순서는 LoginAccount 레코드 생성자 순서와 같아야 한다.
 -->
-<mapper namespace="com.asseterp.oms.biz.user.mapper.AccountMapper">
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.user.mapper.AccountMapper">
 
     <!-- 사원: 비밀번호는 sys25_password 최신 seq, 현재 발령은 오늘 기준 최신 emp03_trans -->
     <sql id="employeeSelect">
@@ -61,29 +61,29 @@
              INNER JOIN sys01_company c ON c.sys01_company_id = u.sys02_company_id
     </sql>
 
-    <select id="findEmployee" resultType="com.asseterp.oms.biz.user.dto.LoginAccount">
+    <select id="findEmployee" resultType="kr.co.kfs.asseterp.oms.biz.user.dto.LoginAccount">
         <include refid="employeeSelect"/>
         WHERE c.sys01_loc_nm  = #{companyCode}
           AND p.emp01_emp_no  = #{loginId}
     </select>
 
-    <select id="findManager" resultType="com.asseterp.oms.biz.user.dto.LoginAccount">
+    <select id="findManager" resultType="kr.co.kfs.asseterp.oms.biz.user.dto.LoginAccount">
         <include refid="managerSelect"/>
         WHERE c.sys01_loc_nm    = #{companyCode}
           AND u.sys02_login_id  = #{loginId}
     </select>
 
-    <select id="findEmployeeById" resultType="com.asseterp.oms.biz.user.dto.LoginAccount">
+    <select id="findEmployeeById" resultType="kr.co.kfs.asseterp.oms.biz.user.dto.LoginAccount">
         <include refid="employeeSelect"/>
         WHERE p.emp01_person_id = #{personId}
     </select>
 
-    <select id="findManagerById" resultType="com.asseterp.oms.biz.user.dto.LoginAccount">
+    <select id="findManagerById" resultType="kr.co.kfs.asseterp.oms.biz.user.dto.LoginAccount">
         <include refid="managerSelect"/>
         WHERE u.sys02_user_id = #{userId}
     </select>
 
-    <select id="findEmployeesByCompany" resultType="com.asseterp.oms.biz.user.dto.LoginAccount">
+    <select id="findEmployeesByCompany" resultType="kr.co.kfs.asseterp.oms.biz.user.dto.LoginAccount">
         SELECT 'E'                    AS account_type,
                p.emp01_person_id      AS account_id,
                c.sys01_company_id     AS company_id,
