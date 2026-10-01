@@ -22,7 +22,7 @@ AS-IS 호출 구조:
   README.md                       사용법, 도메인별 통계
   menus.md                        메뉴 → 화면 파일
   {도메인}/README.md              도메인 목차 (화면, 컴포넌트, 서버 클래스, 매퍼)
-  {도메인}/screens/{화면}.md      화면 하나: 함께 쓰는 클래스, 서비스 → 서버 → SQL ID, 테이블
+  {도메인}/screens/{화면}.md      화면 하나: 함께 쓰는 클래스, 서비스 → 서버 → SQL ID, 테이블, UI(위젯·그리드·이벤트·메서드 줄 범위)
   {도메인}/components/{클래스}.md 컴포넌트 (다른 도메인에서도 쓰는 클래스, 예: 전자결재 문서 편집). 화면은 여기까지만 링크
   {도메인}/services/{클래스}.md   서버 클래스 하나: 메서드별 SQL ID, 호출하는 클라이언트 클래스
   {도메인}/sql/{namespace}.md     매퍼 하나: SQL별 종류, 줄, 테이블, DB 함수, 사용하는 서버 메서드
@@ -200,9 +200,264 @@ def eval_string(expr, scopes, depth=0):
 
 # ---------------------------------------------------------------- 소스 파싱
 
+def paren_end(text, open_paren):
+    """'(' 위치에서 짝이 맞는 ')' 위치 (문자열 안의 괄호는 무시)"""
+    depth, i, in_str = 0, open_paren, None
+    while i < len(text):
+        c = text[i]
+        if in_str:
+            if c == "\\":
+                i += 2
+                continue
+            if c == in_str:
+                in_str = None
+        elif c in "\"'":
+            in_str = c
+        elif c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth -= 1
+            if depth == 0:
+                return i
+        i += 1
+    return len(text) - 1
+
+
+def split_args(args):
+    """최상위 ',' 기준으로 인자를 나눈다"""
+    out, depth, cur, in_str, i = [], 0, [], None, 0
+    while i < len(args):
+        c = args[i]
+        if in_str:
+            if c == "\\":
+                cur.append(args[i:i + 2]); i += 2
+                continue
+            if c == in_str:
+                in_str = None
+        elif c in "\"'":
+            in_str = c
+        elif c in "([{<":
+            depth += 1
+        elif c in ")]}>":
+            depth -= 1
+        elif c == "," and depth == 0:
+            out.append("".join(cur).strip()); cur = []; i += 1
+            continue
+        cur.append(c); i += 1
+    if "".join(cur).strip():
+        out.append("".join(cur).strip())
+    return out
+
+
+# ── 화면 UI 정적 추출 (GXT 위젯·그리드·이벤트·메서드). LLM 없이 소스 패턴만 본다 ──
+UI_NEW_RE = re.compile(r"(?<![\w.])(\w+)\s*=\s*new\s+(\w+)\s*(?:<[^>]*>)?\s*\(")
+UI_WIDGET_CLS_RE = re.compile(r"Button$|Field$|ComboBox|CheckBox$|TextArea$|Radio$|^Grid$|^TreeGrid$|^Grid<|Page_|Tab_|Lookup_|Edit_|Popup_|Tree_")
+UI_HANDLER_RE = re.compile(r"(?<![\w.])((?:this\.)?[\w.()]+?)\.add(\w+)Handler\s*\(")
+UI_REGION_RE = re.compile(r"\bset(West|Center|North|South|East)Widget\s*\(")
+UI_PARAM_RE = re.compile(r"\.addParam\s*\(")
+UI_MSG_RE = re.compile(r"(SimpleMessage\.\w+|new\s+ConfirmBox|Info\.display|Window\.alert|new\s+MessageBox|new\s+AlertMessageBox)\s*\(")
+UI_LOGIN_RE = re.compile(r"\bLoginUser\.(\w+)\s*\(")
+UI_STR_RE = re.compile(r'"((?:[^"\\]|\\.)*)"')
+UI_BUILDER_CALL_RE = re.compile(r"(?<![\w.])(\w+)\.(add\w+|setChecked|getTreeGrid|getGrid|setRowNumHidden|setDoubleClickEdit)\s*\(")
+
+
+def _short(expr, n=40):
+    expr = re.sub(r"\s+", " ", expr).strip()
+    return expr if len(expr) <= n else expr[:n - 1] + "…"
+
+
+def _strings(expr):
+    return UI_STR_RE.findall(expr)
+
+
+def ui_lines(cls):
+    """클래스 하나의 UI 요약 줄 (화면 파일 '## UI' 절). 모델·Properties는 없다"""
+    text = cls.path.read_text(encoding="utf-8", errors="replace")
+    code, bare = strip_java(text)
+    methods = find_methods(bare)
+    meth_names = {m[0] for m in methods}
+    total = text.count("\n") + 1
+
+    # 위젯: var = new Class(args)
+    widgets = {}
+    for m in UI_NEW_RE.finditer(code):
+        var, klass = m.group(1), m.group(2)
+        close = paren_end(code, m.end() - 1)
+        args = code[m.end():close]
+        widgets.setdefault(var, (klass, args))
+    builders = {v for v, (k, _) in widgets.items() if k == "GridBuilder"}
+    # 필드 (grid = this.buildGrid() 처럼 new가 아닌 것 포함) — 이벤트에서 부르는 대상
+    members = set(widgets) | set(re.findall(r"(?:private|protected|public)\s+(?:final\s+)?[\w<>,\s]+?\s+(\w+)\s*[=;]", code))
+
+    def label(var):
+        var = var.replace("this.", "")
+        w = widgets.get(var)
+        if not w:
+            return var
+        s = _strings(w[1])
+        if w[0].endswith("Button") and s:
+            return f"{var}[{s[0]}]"
+        return var
+
+    out = [f"### {cls.name} (`{cls.rel}`, {total}줄)", ""]
+
+    regions = []
+    for m in UI_REGION_RE.finditer(code):
+        arg = split_args(code[m.end():paren_end(code, m.end() - 1)])
+        if arg:
+            regions.append(f"{m.group(1).lower()}={arg[0].replace('this.', '')}")
+    if regions:
+        out.append("- 레이아웃: " + ", ".join(regions))
+
+    # 툴바: ButtonBar·ToolBar 변수에 add한 순서
+    for bar in [v for v, (k, _) in widgets.items() if k in ("ButtonBar", "ToolBar", "ColorButtonBar")]:
+        items = []
+        for m in re.finditer(rf"(?<![\w.]){bar}\.add\s*\(", code):
+            arg = split_args(code[m.end():paren_end(code, m.end() - 1)])
+            if not arg:
+                continue
+            a = arg[0].replace("this.", "")
+            s = _strings(a)
+            if a.startswith("new LabelToolItem") or a.startswith("new FieldLabel"):
+                if s and s[-1].strip():
+                    items.append(f"{s[-1].strip()}:")
+                inner = re.match(r"new FieldLabel\s*\(\s*(\w+)", a)
+                if inner:
+                    items.append(f"{{{inner.group(1)}}}")
+            elif a in widgets and widgets[a][0].endswith("Button"):
+                items.append(f"[{_strings(widgets[a][1])[0] if _strings(widgets[a][1]) else a}]")
+            elif re.fullmatch(r"\w+", a):
+                items.append(f"{{{a}}}")
+        if items:
+            out.append(f"- 툴바 `{bar}`: " + " ".join(items))
+
+    # 입력 위젯 (버튼·그리드·바 제외)
+    fields = []
+    for var, (klass, args) in widgets.items():
+        if klass.endswith("Button") or klass in ("GridBuilder", "ButtonBar", "ToolBar", "ColorButtonBar", "ContentPanel",
+                                                  "VerticalLayoutContainer", "HorizontalLayoutContainer", "FieldLabel",
+                                                  "BorderLayoutData", "VerticalLayoutData", "HorizontalLayoutData", "Margins",
+                                                  "ServiceRequest", "ServiceCall", "ArrayList", "HashMap"):
+            continue
+        if not UI_WIDGET_CLS_RE.search(klass) or klass.startswith("Grid"):
+            continue
+        desc = f"`{var}` {klass}"
+        s = [x for x in _strings(args) if x.strip()]
+        if s:
+            desc += "(" + ", ".join(f'"{x}"' for x in s) + ")"
+        empty = re.search(rf"(?<![\w.]){var}\.setEmptyText\s*\(\s*\"([^\"]*)\"", code)
+        if empty:
+            desc += f' 빈칸="{empty.group(1)}"'
+        fields.append(desc)
+    if fields:
+        out.append("- 입력·하위 화면: " + ", ".join(fields))
+    buttons = [label(v) for v, (k, _) in widgets.items() if k.endswith("Button") and k != "DialogButton"]
+    if buttons:
+        out.append("- 버튼: " + ", ".join(buttons))
+
+    # 그리드: GridBuilder를 쓰는 메서드마다
+    for name, decl, start, end, _pub, _params in methods:
+        body = code[start:end]
+        cols, flags = [], []
+        for m in UI_BUILDER_CALL_RE.finditer(body):
+            if m.group(1) not in builders:
+                continue
+            op = m.group(2)
+            args = split_args(body[m.end():paren_end(body, m.end() - 1)])
+            if op == "setChecked":
+                flags.append("체크박스" + ("(다중)" if args and "MULTI" in args[0] else ""))
+            elif op == "getTreeGrid":
+                flags.append("트리")
+            elif op == "setRowNumHidden":
+                flags.append("행번호숨김")
+            elif op == "setDoubleClickEdit":
+                flags.append("더블클릭편집")
+            elif op.startswith("add") and args:
+                fld = re.search(r"\.(\w+)\s*\(\s*\)", args[0])
+                fld = fld.group(1) if fld else _short(args[0], 20)
+                width = args[1] if len(args) > 1 else ""
+                head = _strings(args[2])[0] if len(args) > 2 and _strings(args[2]) else ""
+                edit = ""
+                if len(args) > 3:
+                    em = re.match(r"new\s+(\w+)", args[3])
+                    edit = f" 편집:{em.group(1) if em else _short(args[3], 20)}"
+                kind = op[3:] or "Text"
+                cols.append(f"{fld} {width} \"{head}\" {kind}{edit}")
+        if cols:
+            target = [v for v, (k, a) in widgets.items()]  # 필드 초기화 `grid = this.buildGrid()`
+            holder = re.search(rf"(\w+)\s*=\s*(?:this\.)?{name}\s*\(\s*\)", code)
+            hdr = f"- 그리드 `{holder.group(1) if holder else name}` ({name}()"
+            hdr += (", " + ", ".join(flags) if flags else "") + "):"
+            out.append(hdr)
+            out += [f"  - {c}" for c in cols]
+
+    # 이벤트: widget.addXxxHandler(...) → 본문에서 부르는 메서드
+    events, handler_spans = [], []
+    for m in UI_HANDLER_RE.finditer(code):
+        close = paren_end(code, m.end() - 1)
+        handler_spans.append((m.end(), close))
+        body = code[m.end():close]
+        calls = []
+        for c in re.finditer(r"(?<![\w])((?:\w+\.)?)(\w+)\s*\(", body):
+            recv, fn = c.group(1), c.group(2)
+            if recv in ("", "this.") and fn in meth_names:
+                calls.append(f"{fn}()")
+            elif recv and recv[:-1] in members and not fn.startswith(("get", "set", "is", "add")):
+                calls.append(f"{recv}{fn}()")
+        src = re.sub(r"\.getSelectionModel\(\)", "", m.group(1)).replace("this.", "")
+        if calls:
+            events.append(f"{label(src)}.{m.group(2)} → {', '.join(dict.fromkeys(calls))}")
+    if events:
+        out.append("- 이벤트: " + "; ".join(dict.fromkeys(events)))
+
+    # 메서드: 줄 범위, 서비스(파라미터), 부르는 메서드, 메시지, 세션
+    mlines = []
+    for name, decl, start, end, _pub, params in methods:
+        body = code[start:end]
+        if name == cls.name and not body.strip("{} \n\t"):
+            continue
+        parts = []
+        svcs = [s.group(0)[1:-1] for s in SERVICE_KEY_LITERAL_RE.finditer(body)]
+        prms = []
+        for p in UI_PARAM_RE.finditer(body):
+            a = split_args(body[p.end():paren_end(body, p.end() - 1)])
+            if len(a) >= 2:
+                prms.append(f"{_strings(a[0])[0] if _strings(a[0]) else a[0]}={_short(a[1], 30)}")
+        if svcs:
+            parts.append("서비스 " + ", ".join(f"`{s}`" for s in dict.fromkeys(svcs))
+                         + (f" ({', '.join(dict.fromkeys(prms))})" if prms else ""))
+        # 이벤트 핸들러 안의 호출은 '이벤트'에 있으므로 빼고, 메서드가 직접 부르는 것만 (생성자의 최초 조회 여부가 보이게)
+        own = list(bare[start:end])
+        for hs, he in handler_spans:
+            for i in range(max(hs, start), min(he, end)):
+                own[i - start] = " "
+        calls = [c.group(1) for c in re.finditer(r"(?<![\w.])(?:this\.)?(\w+)\s*\(", "".join(own))
+                 if c.group(1) in meth_names and c.group(1) != name]
+        if calls:
+            parts.append("→ " + ", ".join(f"{c}()" for c in dict.fromkeys(calls)))
+        msgs = []
+        for mm in UI_MSG_RE.finditer(body):
+            s = [x for x in _strings(body[mm.end():paren_end(body, mm.end() - 1)]) if x.strip()]
+            if s:
+                msgs.append(" / ".join(s))
+        if msgs:
+            parts.append("메시지 " + ", ".join(f'"{x}"' for x in dict.fromkeys(msgs)))
+        login = sorted({l.group(1) for l in UI_LOGIN_RE.finditer(body)})
+        if login:
+            parts.append("세션 " + ", ".join(login))
+        a, b = line_of(code, decl), line_of(code, end)
+        mlines.append(f"  - `{name}({_short(params, 30)})` L{a}-{b}" + (": " + "; ".join(parts) if parts else ""))
+    if mlines:
+        out.append("- 메서드:")
+        out += mlines
+    out.append("")
+    return out
+
+
 class ClientClass:
     def __init__(self, name, rel, domain, is_model):
         self.name, self.rel, self.domain, self.is_model = name, rel, domain, is_model
+        self.path = None
         self.services = []      # (service key, line)
         self.unresolved = []    # (expr, line)
         self.refs = set()       # 참조하는 vi 클래스 이름
@@ -253,6 +508,7 @@ def parse_client(app):
         rel = path.relative_to(app)
         no_comment, bare = strip_java(path.read_text(encoding="utf-8", errors="replace"))
         cls = ClientClass(path.stem, rel, client_domain(rel), "model" in rel.parts or path.stem.endswith("Properties"))
+        cls.path = path
         for m in SERVICE_REQ_RE.finditer(no_comment):
             arg = call_argument(no_comment, m.end() - 1)
             line = line_of(no_comment, m.start())
@@ -631,6 +887,11 @@ def write_unit(idx, out, name, menus_by_key, keys_by_class):
     unresolved = [(c.name, e, l) for c in classes for e, l in c.unresolved]
     if unresolved:
         lines += ["", "## 해석 못 한 서비스 호출", ""] + [f"- `{n}:{l}` `{md_cell(e)}`" for n, e, l in unresolved]
+    ui = [c for c in classes if idx.is_vi(c) and c.path]
+    if ui:
+        lines += ["", "## UI", "", "GXT 소스에서 정적으로 뽑은 화면 구성 (LLM 없음). 처리 로직은 메서드 줄 범위만 원본에서 읽는다.", ""]
+        for c in ui:
+            lines += ui_lines(c)
     write(out, idx.unit_path(name), lines)
     return len(others), len(calls)
 
