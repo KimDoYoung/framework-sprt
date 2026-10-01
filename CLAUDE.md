@@ -32,6 +32,7 @@ AS-IS 소스(`~/oms-data/src/Asset-ERP`, 약 3,000개 Java)와 DB 스키마 문�
 ```bash
 python3 tools/dbml-index.py .yunhee/asseterp-dbml.md                          # → docs/as-is/db/
 python3 tools/src-index.py ~/oms-data/src/Asset-ERP --menus docs/as-is/menus.tsv  # → docs/as-is/src/ (menus.tsv 생성 SQL은 docs/as-is/src/README.md)
+python3 tools/src-index.py ~/workspace26/Asset-OMS                                # OMS도 같은 docs/as-is/src/로 (앱 패키지 myApp/myOms 자동 탐지, 실행마다 출력 폴더 재생성)
 ```
 
 ## 커맨드

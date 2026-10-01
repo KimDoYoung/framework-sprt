@@ -12,7 +12,8 @@ AS-IS 호출 구조:
 화면 하나를 변환할 때 전체 소스를 읽지 않고, 이 색인에서 필요한 파일·SQL만 골라 읽기 위한 것이다.
 
 입력:
-  src_root        AS-IS 소스 루트 (application/src/main/java/myApp 가 있는 폴더, 예: ~/oms-data/src/Asset-ERP)
+  src_root        AS-IS 소스 루트 (예: ~/oms-data/src/Asset-ERP, ~/workspace26/Asset-OMS).
+                  application/src/main/java 아래에서 client/와 server/를 가진 앱 패키지(myApp, myOms)를 찾는다
   --menus FILE    메뉴 TSV (메뉴번호, 메뉴경로, 클래스명, 사용여부). 없으면 메뉴 이름 없이 MenuOpener 기준으로만 만든다
                   생성 SQL은 docs/as-is/src/README.md 참고
   --db-index DIR  dbml-index.py 출력 폴더 (기본 docs/as-is/db). 있으면 SQL에서 테이블·DB 함수를 정확히 찾고 링크를 건다
@@ -29,6 +30,8 @@ AS-IS 호출 구조:
 
 사용법:
   python3 tools/src-index.py ~/oms-data/src/Asset-ERP --menus docs/as-is/menus.tsv
+  python3 tools/src-index.py ~/workspace26/Asset-OMS
+  출력 폴더는 실행할 때마다 비우고 다시 만든다. 메뉴 TSV는 출력 폴더 밖에 둔다.
 """
 import argparse
 import re
@@ -39,21 +42,29 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUT = REPO_ROOT / "docs" / "as-is" / "src"
 DEFAULT_DB_INDEX = REPO_ROOT / "docs" / "as-is" / "db"
-APP_REL = Path("application/src/main/java/myApp")
+JAVA_REL = Path("application/src/main/java")
 
 COMMON_DOMAIN = "_common"   # client/vi 밖 (service, utils, grid ...)
-VI_ROOT_DOMAIN = "_vi"      # client/vi 바로 아래 (MainFrame, LoginPage ...)
+VIEW_DOMAIN = "_view"      # DB 색인 views.md의 뷰 (테이블처럼 취급)
+VI_ROOT_DOMAIN = "_vi"      # client/vi 바로 아래, OMS는 client/app (MainFrame, LoginPage ...)
 
 SQL_CALL_RE = re.compile(r"\bsqlSession\s*\.\s*(selectList|selectOne|selectMap|selectCursor|insert|update|delete)\s*\(")
 SERVICE_REQ_RE = re.compile(r"\bnew\s+ServiceRequest\s*\(")
+# OMS: service.retrieve("tgt.Tgt01_Model.selectByCondition"), updater.update(store, "tgt.Tgt01_Model.save", ...) 처럼
+# 헬퍼에 서비스 키를 문자열로 바로 넘긴다. 도메인이 server/{도메인}에 있을 때만 서비스 키로 본다
+SERVICE_KEY_LITERAL_RE = re.compile(r'"([a-z]\w*)\.([A-Z]\w*)\.(\w+)"')
 # 메서드 선언 후보: 이름(파라미터) [throws ...] {  - 앞부분(반환형·수식어)은 find_methods에서 확인한다
 METHOD_HEAD_RE = re.compile(r"\b(\w+)\s*\(([^()]*)\)\s*(?:throws\s+[\w.,\s]+?)?\s*\{")
 NOT_METHOD = {"if", "for", "while", "switch", "catch", "synchronized", "return", "new", "else", "try", "do"}
 ASSIGN_RE = re.compile(r"(?<![\w.])(\w+)\s*=(?!=)\s*([^;]+);")
 MENU_OPENER_RE = re.compile(
     r'"([^"]+)"\s*\.equals\(\s*className\s*\)\s*\)\s*\{\s*return[^;]*?(?:GWT\.create\(\s*([\w.]+)\.class|new\s+([\w.]+)\s*\()')
+# OMS: TAB_REGISTRY.put("키", () -> (Widget) GWT.create(myOms.client.vi.sys.Sys01_Tab_Company.class));
+MENU_REGISTRY_RE = re.compile(
+    r'\.put\(\s*"([^"]+)"\s*,\s*\(\s*\)\s*->[^;]*?(?:GWT\.create\(\s*([\w.]+)\.class|new\s+([\w.]+)\s*\()')
 STATEMENT_RE = re.compile(r"<(select|insert|update|delete|sql)\b[^>]*?\bid\s*=\s*\"([^\"]+)\"[^>]*>", re.I)
 INCLUDE_RE = re.compile(r"<include\s+refid\s*=\s*\"([^\"]+)\"", re.I)
+CTE_RE = re.compile(r"\b(\w+)\s+as\s*\(", re.I)  # WITH x AS ( - 테이블이 아니다
 TABLE_KEYWORD_RE = re.compile(r"\b(?:from|join|into|update)\s+([a-z_][a-z0-9_]*)", re.I)
 
 
@@ -219,7 +230,7 @@ class ServerClass:
 class Statement:
     def __init__(self, ns, sid, kind, rel, line, domain):
         self.ns, self.sid, self.kind, self.rel, self.line, self.domain = ns, sid, kind, rel, line, domain
-        self.tables, self.functions, self.includes = set(), set(), []
+        self.tables, self.functions, self.includes, self.ctes = set(), set(), [], set()
 
     @property
     def key(self):
@@ -230,11 +241,14 @@ def client_domain(rel):
     parts = rel.parts  # client/vi/emp/...
     if len(parts) >= 3 and parts[1] == "vi":
         return parts[2] if len(parts) >= 4 else VI_ROOT_DOMAIN
+    if len(parts) == 3 and parts[1] == "app":
+        return VI_ROOT_DOMAIN
     return COMMON_DOMAIN
 
 
 def parse_client(app):
     classes = {}
+    server_domains = {d.name for d in (app / "server").iterdir() if d.is_dir()}
     for path in sorted((app / "client").rglob("*.java")):
         rel = path.relative_to(app)
         no_comment, bare = strip_java(path.read_text(encoding="utf-8", errors="replace"))
@@ -257,6 +271,12 @@ def parse_client(app):
                 cls.services += [(v, line) for v in sorted(vals)]
             else:
                 cls.unresolved.append((arg, line))
+        found = {v for v, _ in cls.services}
+        for m in SERVICE_KEY_LITERAL_RE.finditer(no_comment):
+            key = m.group(0)[1:-1]
+            if m.group(1) in server_domains and key not in found:
+                found.add(key)
+                cls.services.append((key, line_of(no_comment, m.start())))
         cls._bare = bare
         classes.setdefault(cls.name, []).append(cls)
     # vi 클래스 간 참조 (모델·Properties 제외)
@@ -360,7 +380,7 @@ def strip_sql(text):
     return re.sub(r"--[^\n]*", "", text)
 
 
-def parse_mappers(app, known_tables, known_functions):
+def parse_mappers(app, known_tables, known_functions, known_columns=frozenset()):
     statements = {}
     for path in sorted(app.rglob("*.xml")):
         raw = path.read_text(encoding="utf-8", errors="replace")
@@ -376,10 +396,12 @@ def parse_mappers(app, known_tables, known_functions):
             body = text[m.end(): end if end > 0 else len(text)]
             st = Statement(ns.group(1), m.group(2), kind, rel, line_of(text, m.start()), domain)
             sql = re.sub(r"<[^>]+>", " ", body)
+            # FROM/JOIN 추정은 DB 색인이 있어도 합친다 - 색인(asseterpdb)에 없는 테이블을 table_link에서 표시하기 위해
+            st.ctes = {c.lower() for c in CTE_RE.findall(sql)}
+            st.tables = {t.lower() for t in TABLE_KEYWORD_RE.findall(sql)
+                         if re.match(r"[a-z]+\d", t.lower()) and t.lower() not in known_functions | known_columns}
             if known_tables:
-                st.tables = {t for t in re.findall(r"\b[a-z_][a-z0-9_]*\b", sql.lower()) if t in known_tables}
-            else:
-                st.tables = {t.lower() for t in TABLE_KEYWORD_RE.findall(sql) if re.match(r"[a-z]+\d", t.lower())}
+                st.tables |= {t for t in re.findall(r"\b[a-z_][a-z0-9_]*\b", sql.lower()) if t in known_tables}
             if known_functions:
                 st.functions = {f for f in re.findall(r"\b([a-z_][a-z0-9_]*)\s*\(", sql.lower()) if f in known_functions}
             st.includes = INCLUDE_RE.findall(body)
@@ -393,17 +415,21 @@ def parse_mappers(app, known_tables, known_functions):
                 resolve(target, seen)
                 st.tables |= target.tables
                 st.functions |= target.functions
+                st.ctes |= target.ctes
     for st in statements.values():
         resolve(st, {st.key})
+    for st in statements.values():
+        st.tables -= st.ctes  # WITH x AS ( 의 x는 테이블이 아니다 (include한 <sql>에 정의된 것 포함)
     return statements
 
 
 def parse_menu_opener(app):
-    path = app / "client" / "vi" / "MenuOpener.java"
-    if not path.is_file():
+    path = next((p for p in (app / "client" / "vi" / "MenuOpener.java", app / "client" / "app" / "MenuOpener.java") if p.is_file()), None)
+    if not path:
         return {}
     no_comment, _ = strip_java(path.read_text(encoding="utf-8", errors="replace"))
-    return {m.group(1): (m.group(2) or m.group(3)).split(".")[-1] for m in MENU_OPENER_RE.finditer(no_comment)}
+    matches = [*MENU_OPENER_RE.finditer(no_comment), *MENU_REGISTRY_RE.finditer(no_comment)]
+    return {m.group(1): (m.group(2) or m.group(3)).split(".")[-1] for m in matches}
 
 
 def load_menus(path):
@@ -418,16 +444,22 @@ def load_menus(path):
 
 
 def load_db_index(db_dir):
-    tables, functions = {}, set()
+    tables, functions, columns = {}, set(), set()
     if not db_dir or not Path(db_dir).is_dir():
-        return tables, functions
+        return tables, functions, columns
     for f in (Path(db_dir) / "tables").glob("*.md"):
-        for name in re.findall(r"^\| `([^`]+)` \|", f.read_text(encoding="utf-8"), re.M):
+        text = f.read_text(encoding="utf-8")
+        for name in re.findall(r"^\| `([^`]+)` \|", text, re.M):
             tables[name] = f.stem
+        columns |= set(re.findall(r'^\s+"(\w+)" "', text, re.M))
+    views = Path(db_dir) / "views.md"
+    if views.is_file():
+        for name in re.findall(r"^## \w+\.(\w+)", views.read_text(encoding="utf-8"), re.M):
+            tables[name] = VIEW_DOMAIN
     readme = Path(db_dir) / "functions" / "README.md"
     if readme.is_file():
         functions = set(re.findall(r"^\| \[`([^`]+)`\]", readme.read_text(encoding="utf-8"), re.M))
-    return tables, functions
+    return tables, functions, columns
 
 
 # ---------------------------------------------------------------- 출력
@@ -515,9 +547,12 @@ class Index:
 
     def table_link(self, table, up):
         dom = self.tables.get(table)
+        if self.tables and not dom:
+            return f"`{table}` ⚠DB없음"
         if not dom or not self.db_rel:
             return f"`{table}`"
-        return f"[`{table}`]({up}{self.db_rel}/tables/{dom}.md)"
+        doc = "views.md" if dom == VIEW_DOMAIN else f"tables/{dom}.md"
+        return f"[`{table}`]({up}{self.db_rel}/{doc})"
 
     def sql_link(self, sid, up):
         st = self.statements.get(sid)
@@ -742,7 +777,7 @@ def write_readme(idx, out, src_root, stats, menus_path, missing):
     lines = ["# AS-IS 소스 호출 경로 색인", "",
              "`tools/src-index.py`가 생성했다. 직접 수정하지 말고 스크립트를 다시 실행한다.", "",
              "## 원본", "",
-             f"- 소스: `{src_root}` (파일 경로는 `{APP_REL}/` 기준)",
+             f"- 소스: `{src_root}` (파일 경로는 `{idx.app.relative_to(src_root).as_posix()}/` 기준)",
              f"- 메뉴: `{menus_path or '(없음 - MenuOpener 기준)'}`",
              f"- DB 색인: `{idx.db_rel or '(없음)'}`", "",
              "## 읽는 방법 (화면 하나 변환할 때)", "",
@@ -785,6 +820,21 @@ def clean_generated(out):
             d.rmdir()
 
 
+def find_app(src_root):
+    """앱 패키지 폴더(client/와 server/를 가진 폴더): AssetERP는 myApp, OMS는 myOms"""
+    def is_app(d):
+        return (d / "client").is_dir() and (d / "server").is_dir()
+    if is_app(src_root):
+        return src_root
+    java = src_root / JAVA_REL
+    found = [d for d in sorted(java.iterdir()) if d.is_dir() and is_app(d)] if java.is_dir() else []
+    if len(found) != 1:
+        sys.exit(f"[ERROR] {java} 아래에서 client/와 server/를 가진 앱 패키지를 하나로 정하지 못했습니다: "
+                 f"{[d.name for d in found] or '없음'}. AS-IS 소스 루트를 확인하세요.")
+    print(f"[INFO] 앱 패키지: {found[0].relative_to(src_root)}")
+    return found[0]
+
+
 def main():
     parser = argparse.ArgumentParser(description="AS-IS 소스의 화면 → 서비스 → SQL → 테이블 호출 경로 색인을 만든다.")
     parser.add_argument("src_root", help="AS-IS 소스 루트 (예: ~/oms-data/src/Asset-ERP)")
@@ -794,14 +844,12 @@ def main():
     args = parser.parse_args()
 
     src_root = Path(args.src_root).expanduser()
-    app = src_root / APP_REL
-    if not app.is_dir():
-        sys.exit(f"[ERROR] {app} 가 없습니다. AS-IS 소스 루트를 확인하세요.")
+    app = find_app(src_root)
     if args.menus and not Path(args.menus).is_file():
         sys.exit(f"[ERROR] 메뉴 TSV가 없습니다: {args.menus}")
 
     out = Path(args.out)
-    tables, functions = load_db_index(args.db_index)
+    tables, functions, columns = load_db_index(args.db_index)
     db_rel = None
     if tables:
         db_rel = Path(__import__("os").path.relpath(Path(args.db_index).resolve(), out.resolve())).as_posix()
@@ -810,7 +858,7 @@ def main():
 
     client = parse_client(app)
     server = parse_server(app)
-    statements = parse_mappers(app, tables, functions)
+    statements = parse_mappers(app, tables, functions, columns)
     idx = Index(app, client, server, statements, parse_menu_opener(app), load_menus(args.menus), tables, db_rel)
 
     out.mkdir(parents=True, exist_ok=True)
