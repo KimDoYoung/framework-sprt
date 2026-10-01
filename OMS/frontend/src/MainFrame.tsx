@@ -18,13 +18,13 @@ import { TopBar } from './components/TopBar';
 import { LeftMenuBar } from './components/LeftMenuBar';
 import { StatusBar } from './components/StatusBar';
 import { MyPageView } from './components/mypage';
-import { LargeDataView } from './components/LargeDataView';
-import { DocDraftManageView, DocExpenseManageView, DocAssetAcquisitionView } from './pages/doc';
+import { PendingScreenView } from './components/PendingScreenView';
 import { MenuLevel_1, MenuLevel_3 } from './types';
 import { appSettingsStorage, SavedLayoutItem } from './utils/storage';
 import { useAppSetting } from './hooks/useAppSetting';
 import { getFontOption, applyGlobalFont, FontFamilyId } from './utils/font';
 import { authApi } from './api/auth';
+import { sysApi } from './api/sys';
 import { User } from './types/auth';
 import { realtime } from './ws/stompClient';
 
@@ -151,9 +151,21 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
     }
   };
 
-  const [activeMenuId, setActiveMenuId] = useState<string | null>('duty');
+  // ── 메뉴 (GET /api/v1/sys/menus, 로그인 사용자 권한 기준) ──
+  const [menus, setMenus] = useState<MenuLevel_1[]>([]);
+  useEffect(() => {
+    sysApi
+      .getMenus()
+      .then(setMenus)
+      .catch((err) => {
+        console.error(err);
+        message.error('메뉴를 불러오지 못했습니다.');
+      });
+  }, [user.userId, user.companyId]);
+
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [sidebarPinned, setSidebarPinned] = useState<boolean>(true);
-  const [selectedMenuLevel_3_Code, setSelectedMenuLevel_3_Code] = useState<string>('1495');
+  const [selectedMenuLevel_3_Code, setSelectedMenuLevel_3_Code] = useState<string>('');
 
   // ── 글꼴 설정 상태 (asseterp_settings 단일 저장소 연동) ──
   const [fontFamily, setFontFamily] = useAppSetting('font_family', 'pretendard');
@@ -197,23 +209,16 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
       const activeTabset = model.getActiveTabset() || model.getFirstTabSet();
       const targetTabsetId = activeTabset ? activeTabset.getId() : 'main-tabset';
 
-      const componentType =
-        item.code === '1101'
-          ? 'doc-1101'
-          : item.code === '1102'
-          ? 'doc-1102'
-          : item.code === '1103'
-          ? 'doc-1103'
-          : 'largedata';
+      const componentType = 'screen';
 
       model.doAction(
         Actions.addTab(
           {
             type: 'tab',
-            name: `${item.code} ${item.title}`,
+            name: `${item.menuNo ?? item.code} ${item.title}`,
             component: componentType,
             id: tabId,
-            config: { code: item.code, title: item.title },
+            config: { code: item.code, title: item.title, menuNo: item.menuNo, classNm: item.classNm },
             enableClose: true,
             enableScrollbars: false,
           },
@@ -487,37 +492,19 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
   // ── FlexLayout Tab 컴포넌트 렌더러 (factory) ──
   const factory = (node: TabNode) => {
     const component = node.getComponent();
-    const config = (node.getConfig() as { code?: string; title?: string }) || {};
+    const config = (node.getConfig() as { code?: string; title?: string; menuNo?: string; classNm?: string }) || {};
 
     if (component === 'mypage') {
       return <MyPageView />;
     }
 
-    const code = config.code || node.getId().replace('tab-', '');
-
-    // 1101 일반기안서 작성
-    if (code === '1101' || component === 'doc-1101') {
-      return <DocDraftManageView />;
-    }
-
-    // 1102 비용품의서 작성
-    if (code === '1102' || component === 'doc-1102') {
-      return <DocExpenseManageView />;
-    }
-
-    // 1103 자산취득품의서
-    if (code === '1103' || component === 'doc-1103') {
-      return <DocAssetAcquisitionView />;
-    }
-
-    // 기본 대용량 데이터 뷰 (AgGrid: 외부 스크롤 없이 AgGrid 내부 가상 스크롤만 동작하도록 격리)
+    // 아직 변환하지 않은 화면 (메뉴는 실제 sys06_menu)
     return (
-      <div style={{ flex: 1, overflow: 'hidden', height: '100%', minHeight: 0, boxSizing: 'border-box' }}>
-        <LargeDataView
-          title={config.title || node.getName()}
-          menuCode={code}
-        />
-      </div>
+      <PendingScreenView
+        title={config.title || node.getName()}
+        menuNo={config.menuNo}
+        classNm={config.classNm}
+      />
     );
   };
 
@@ -533,6 +520,7 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
     >
       <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <TopBar
+          menus={menus}
           sidebarPinned={sidebarPinned}
           onToggleSidebarPin={() => setSidebarPinned(!sidebarPinned)}
           onOpenScreen={handleSelectMenuLevel_3}
@@ -551,6 +539,7 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
           {/* ── 왼쪽 MenuLevel_1 아이콘 메뉴 및 MenuLevel_2/3 서브메뉴 ── */}
           <LeftMenuBar
+            menus={menus}
             activeMenuId={activeMenuId}
             onSelectMenuLevel_1={handleSelectMenuLevel_1}
             onSelectMenuLevel_3={handleSelectMenuLevel_3}

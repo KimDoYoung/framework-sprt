@@ -22,11 +22,11 @@ import {
   CheckOutlined,
 } from '@ant-design/icons';
 import { MenuLevel_1, MenuLevel_3 } from '../types';
-import { menuLevel_1_List } from '../mock/data';
 import { SavedLayoutItem } from '../utils/storage';
 import { FontFamilyId, FONT_OPTIONS, getFontOption } from '../utils/font';
 
 interface TopBarProps {
+  menus: MenuLevel_1[];
   sidebarPinned: boolean;
   onToggleSidebarPin: () => void;
   onOpenScreen?: (item: MenuLevel_3, parent: MenuLevel_1) => void;
@@ -50,6 +50,7 @@ interface ScreenSearchItem {
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
+  menus,
   sidebarPinned,
   onToggleSidebarPin,
   onOpenScreen,
@@ -70,11 +71,11 @@ export const TopBar: React.FC<TopBarProps> = ({
   // ── 전체 메뉴 평탄화 (화면번호/메뉴명 검색용) ──
   const allScreens: ScreenSearchItem[] = useMemo(() => {
     const list: ScreenSearchItem[] = [];
-    for (const m1 of menuLevel_1_List) {
+    for (const m1 of menus) {
       for (const grp of m1.groups) {
         for (const item of grp.items) {
           list.push({
-            code: item.code,
+            code: item.menuNo || item.code,
             title: item.title,
             categoryTitle: m1.title,
             parentLevel1: m1,
@@ -84,7 +85,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       }
     }
     return list;
-  }, []);
+  }, [menus]);
 
   // ── 화면번호/메뉴명 자동완성 옵션 목록 ──
   const searchOptions = useMemo(() => {

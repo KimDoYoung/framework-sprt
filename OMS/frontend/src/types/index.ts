@@ -1,7 +1,12 @@
 // ── Menu Hierarchy Types ──
 export interface MenuLevel_3 {
+  /** sys06_menu_id */
   code: string;
   title: string;
+  /** sys06_menu_no (화면번호) */
+  menuNo?: string;
+  /** sys06_class_nm (AS-IS 화면 클래스) */
+  classNm?: string;
   group?: string;
   badge?: string;
 }

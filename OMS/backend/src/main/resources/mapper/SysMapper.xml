@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS sys06_menu 매퍼(myOms server/sys/mapper/sys06_menu.xml)의 메뉴 조회 SQL.
+  조건(JOIN/WHERE/ORDER BY)은 그대로 두고 SELECT 목록만 MenuRow에 맞췄다.
+  - selectByHeaderMenuCompanyId: adminYn 분기의 두 SQL이 같아 하나로 합쳤다
+  - 상위 메뉴 이름 앞의 '&#160;'(GXT 그리드 들여쓰기용)은 뺐다
+-->
+<mapper namespace="kr.co.kfs.asseterp.oms.biz.sys.mapper.SysMapper">
+
+    <!-- AS-IS selectByHeaderMenuCompanyId -->
+    <select id="searchHeaderMenusByCompany" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.MenuRow">
+        SELECT a.sys06_menu_id   AS menu_id,
+               a.sys06_menu_nm   AS menu_nm,
+               a.sys06_menu_no   AS menu_no,
+               a.sys06_seq       AS seq,
+               a.sys06_parent_id AS parent_id,
+               a.sys06_class_nm  AS class_nm,
+               NULL              AS parent_menu_nm,
+               NULL              AS parent_seq
+          FROM sys06_menu a
+               INNER JOIN sys03_company_menu ON a.sys06_menu_id = sys03_menu_id
+         WHERE sys03_use_yn     = 'true'
+           AND sys03_company_id = #{companyId}
+           AND sys06_parent_id  = #{parentId}
+         ORDER BY sys06_seq, sys06_menu_nm
+    </select>
+
+    <!-- AS-IS selectByHeaderMenuUserId -->
+    <select id="searchHeaderMenusByUser" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.MenuRow">
+        SELECT a.sys06_menu_id   AS menu_id,
+               a.sys06_menu_nm   AS menu_nm,
+               a.sys06_menu_no   AS menu_no,
+               a.sys06_seq       AS seq,
+               a.sys06_parent_id AS parent_id,
+               a.sys06_class_nm  AS class_nm,
+               NULL              AS parent_menu_nm,
+               NULL              AS parent_seq
+          FROM (
+                SELECT a.sys06_menu_id, a.sys06_menu_nm, a.sys06_menu_no, a.sys06_seq, a.sys06_parent_id, a.sys06_class_nm
+                  FROM sys06_menu a
+                       INNER JOIN sys03_company_menu ON a.sys06_menu_id = sys03_menu_id
+                       INNER JOIN sys07_role_menu ON a.sys06_menu_id = sys07_menu_id AND sys07_use_yn = 'true'
+                     , sys05_user_role
+                 WHERE sys07_role_id    = sys05_role_id
+                   AND sys03_company_id = #{companyId}
+                   AND sys06_parent_id  = #{parentId}
+                   AND sys05_user_id    = #{userId}
+                 UNION
+                SELECT a.sys06_menu_id, a.sys06_menu_nm, a.sys06_menu_no, a.sys06_seq, a.sys06_parent_id, a.sys06_class_nm
+                  FROM sys06_menu a
+                       INNER JOIN sys03_company_menu ON a.sys06_menu_id = sys03_menu_id
+                       INNER JOIN sys07_role_menu ON a.sys06_menu_id = sys07_menu_id AND sys07_use_yn = 'true'
+                     , sys04_role
+                 WHERE sys04_role_id      = sys07_role_id
+                   AND sys04_company_id   = sys03_company_id
+                   AND sys04_default_role = 'true'
+                   AND sys03_company_id   = #{companyId}
+                   AND sys06_parent_id    = #{parentId}
+               ) a
+         ORDER BY a.sys06_seq, a.sys06_menu_nm
+    </select>
+
+    <!-- AS-IS selectByTailMenuCompanyId: parentId 아래 모든 깊이 -->
+    <select id="searchTailMenusByCompany" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.MenuRow">
+        SELECT sys.sys06_menu_id   AS menu_id,
+               sys.sys06_menu_nm   AS menu_nm,
+               sys.sys06_menu_no   AS menu_no,
+               sys.sys06_seq       AS seq,
+               sys.sys06_parent_id AS parent_id,
+               sys.sys06_class_nm  AS class_nm,
+               (SELECT sys06_menu_nm FROM sys06_menu WHERE sys06_menu_id = sys.sys06_parent_id) AS parent_menu_nm,
+               (SELECT sys06_seq     FROM sys06_menu WHERE sys06_menu_id = sys.sys06_parent_id) AS parent_seq
+          FROM sys06_menu sys
+               INNER JOIN sys03_company_menu ON sys.sys06_menu_id = sys03_menu_id
+         WHERE sys03_use_yn     = 'true'
+           AND sys03_company_id = #{companyId}
+           AND sys06_parent_id IN (
+                WITH RECURSIVE sys06_menu_down (sys06_menu_id, sys06_parent_id, depth, path) AS (
+                    SELECT a.sys06_menu_id, a.sys06_parent_id, 0, ARRAY[a.sys06_parent_id::text]
+                      FROM sys06_menu a
+                     WHERE sys06_parent_id = #{parentId}
+                     UNION ALL
+                    SELECT a.sys06_menu_id, a.sys06_parent_id, b.depth + 1, ARRAY_APPEND(b.path, a.sys06_parent_id::text)
+                      FROM sys06_menu a, sys06_menu_down b
+                     WHERE a.sys06_parent_id = b.sys06_menu_id
+                )
+                SELECT a.sys06_menu_id FROM sys06_menu_down a
+               )
+         ORDER BY sys06_seq, sys06_menu_nm
+    </select>
+
+    <!-- AS-IS selectByTailMenuUserId: parentId의 손자 메뉴(depth = 1) 중 권한이 있는 것 -->
+    <select id="searchTailMenusByUser" resultType="kr.co.kfs.asseterp.oms.biz.sys.dto.MenuRow">
+        WITH RECURSIVE subtree AS (
+            SELECT m.sys06_menu_id, m.sys06_parent_id, 0 AS depth, ARRAY[m.sys06_parent_id::text] AS path
+              FROM sys06_menu m
+             WHERE m.sys06_parent_id = #{parentId}
+             UNION ALL
+            SELECT m.sys06_menu_id, m.sys06_parent_id, s.depth + 1, array_append(s.path, m.sys06_parent_id::text)
+              FROM sys06_menu m
+                   INNER JOIN subtree s ON m.sys06_parent_id = s.sys06_menu_id
+        )
+        SELECT DISTINCT
+               m06.sys06_menu_id   AS menu_id,
+               m06.sys06_menu_nm   AS menu_nm,
+               m06.sys06_menu_no   AS menu_no,
+               m06.sys06_seq       AS seq,
+               m06.sys06_parent_id AS parent_id,
+               m06.sys06_class_nm  AS class_nm,
+               (SELECT sys06_menu_nm FROM sys06_menu WHERE sys06_menu_id = m06.sys06_parent_id) AS parent_menu_nm,
+               (SELECT sys06_seq     FROM sys06_menu WHERE sys06_menu_id = m06.sys06_parent_id) AS parent_seq
+          FROM sys06_menu m06
+               INNER JOIN sys07_role_menu rm    ON m06.sys06_menu_id = rm.sys07_menu_id AND rm.sys07_use_yn = 'true'
+               INNER JOIN sys03_company_menu cm ON m06.sys06_menu_id = cm.sys03_menu_id AND cm.sys03_use_yn = 'true'
+               INNER JOIN sys05_user_role ur    ON rm.sys07_role_id = ur.sys05_role_id
+         WHERE cm.sys03_company_id = #{companyId}
+           AND ur.sys05_user_id    = #{userId}
+           AND m06.sys06_menu_id IN (SELECT sys06_menu_id FROM subtree WHERE depth = 1)
+         UNION
+        SELECT DISTINCT
+               m06.sys06_menu_id,
+               m06.sys06_menu_nm,
+               m06.sys06_menu_no,
+               m06.sys06_seq,
+               m06.sys06_parent_id,
+               m06.sys06_class_nm,
+               (SELECT sys06_menu_nm FROM sys06_menu WHERE sys06_menu_id = m06.sys06_parent_id),
+               (SELECT sys06_seq     FROM sys06_menu WHERE sys06_menu_id = m06.sys06_parent_id)
+          FROM sys06_menu m06
+               INNER JOIN sys07_role_menu rm    ON m06.sys06_menu_id = rm.sys07_menu_id AND rm.sys07_use_yn = 'true'
+               INNER JOIN sys03_company_menu cm ON m06.sys06_menu_id = cm.sys03_menu_id AND cm.sys03_use_yn = 'true'
+               INNER JOIN sys04_role r          ON r.sys04_role_id = rm.sys07_role_id AND r.sys04_company_id = cm.sys03_company_id AND r.sys04_default_role = 'true'
+         WHERE cm.sys03_company_id = #{companyId}
+           AND m06.sys06_menu_id IN (SELECT sys06_menu_id FROM subtree WHERE depth = 1)
+         ORDER BY seq, menu_nm
+    </select>
+
+</mapper>

@@ -15,7 +15,6 @@ import {
   CaretRightOutlined,
 } from '@ant-design/icons';
 import { MenuLevel_1, MenuLevel_3 } from '../types';
-import { menuLevel_1_List } from '../mock/data';
 import { useAppSetting } from '../hooks/useAppSetting';
 
 // ── 설계 문서(설계-layout.md)에 제시된 Lucide 규격 아이콘 컴포넌트 ──
@@ -94,6 +93,7 @@ const PinOffIcon: React.FC<{ size?: number; style?: React.CSSProperties }> = ({ 
 );
 
 interface LeftMenuBarProps {
+  menus: MenuLevel_1[];
   activeMenuId: string | null;
   onSelectMenuLevel_1: (menuId: string | null) => void;
   onSelectMenuLevel_3: (item: MenuLevel_3, parentMenu: MenuLevel_1) => void;
@@ -107,6 +107,7 @@ interface LeftMenuBarProps {
 }
 
 export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
+  menus,
   activeMenuId,
   onSelectMenuLevel_1,
   onSelectMenuLevel_3,
@@ -159,7 +160,7 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
     }
   };
 
-  const activeMenuObj = menuLevel_1_List.find((m) => m.id === activeMenuId);
+  const activeMenuObj = menus.find((m) => m.id === activeMenuId);
 
   // 3차 메뉴(MenuLevel_3) 항목 클릭 핸들러
   // - 선택된 메뉴 항목을 상위로 전달하여 탭 열기/활성화
@@ -215,7 +216,7 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
           flexShrink: 0,
         }}
       >
-        {menuLevel_1_List.map((menu) => {
+        {menus.map((menu) => {
           const isActive = activeMenuId === menu.id;
           return (
             <div
@@ -449,7 +450,7 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                               <span style={{ color: '#8c9ba5', fontSize: 11, fontFamily: 'monospace' }}>
-                                {item.code}
+                                {item.menuNo}
                               </span>
                               <span>{item.title}</span>
                             </div>
