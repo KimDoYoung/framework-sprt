@@ -20,6 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `tools/init-sprt.sh` — `antdesign/`의 골격(디렉토리 구조, 설정 파일, 빈 앱 셸 `App.tsx`, `bm.sh`/`fm.sh`/`deploy.sh`)만 생성하는 스캐폴딩 스크립트. 화면 소스는 생성하지 않는다(추후 `git archive`로 `antdesign/`에서 가져오는 방식으로 전환 예정). 빈 디렉토리에서만 실행되며, `antdesign/`의 설정 파일·디렉토리 구조를 바꾸면 이 스크립트도 함께 갱신한다.
 - `tools/dbml-index.py`, `tools/src-index.py`, `tools/sql-check.py` — AS-IS 색인·SQL 정합성 생성기의 원본. 지금은 같은 기능의 `yunhee index-db` / `index-src` / `sql-check`를 쓴다. 출력은 `docs/as-is/`(git-ignored, 재생성 가능).
 - `docs/grid-types.md` — 공통 그리드 이름표(GridType·`gb.*`·옵션). yunhee 변환 명세와 TOBE 코드가 이 이름만 쓴다.
+- `docs/button-types.md` — 공통 버튼 이름표(`<Button type="search">` 등 type 약 30개, AS-IS `ColorButtonBar` 제목 → type). 컴포넌트는 아직 없음.
 
 ## AS-IS 참조 (전환 작업 시)
 
