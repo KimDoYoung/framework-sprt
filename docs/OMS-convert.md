@@ -11,6 +11,10 @@
 4. Backend → Frontend 순으로 만들고, 아래 화면 등록(§5)을 한다.
 5. 확인: `gradle test`, `npx tsc -b --noEmit`, `./deploy.sh` 후 메뉴에서 열어 조회·저장·삭제.
 
+(예정 — yunhee `events` 명령에 그리드 명세가 들어가면 2와 4 사이에 넣는다)
+- `yunhee events {화면}`: 이벤트 E0..En, 메서드 표(호출처·하는 일·구분), 그리드 만들기(GridType + `gb.*` 코드, `docs/grid-types.md` 이름).
+- 구현 시 핸들러 위에 `// [E3] retrieveButton[조회].Select`, 의도적으로 안 하면 `// [E3 생략] 사유`. 마지막에 event-check로 빠진 E-id가 없는지 확인.
+
 ## 1. 호출 (Client → Server)
 
 | AS-IS | TOBE |
@@ -93,9 +97,9 @@ TOBE는 **테이블마다 명시적인 `insert` / `update` / `delete` SQL**을 �
 
 | AS-IS | TOBE |
 |:---|:---|
-| `client/vi/{dom}/{Xxx}_Tab_{Name}.java` (GXT 탭) | `frontend/src/pages/{dom}/{Xxx}{Name}View.tsx` (예: `pages/sys/Sys04RoleView.tsx`) |
+| `client/vi/{dom}/{Xxx}_Tab_{Name}.java` (GXT 탭) | `frontend/src/pages/{dom}/{Xxx}_Tab_{Name}.tsx`, 컴포넌트 이름도 같게 (예: `pages/sys/Sys01_Tab_Company.tsx`). 이전 화면(`Sys04RoleView.tsx` 등)은 아직 옛 이름 |
 | `MenuOpener.TAB_REGISTRY.put("Sys04_Tab_Role", …)` | 화면 등록표: `sys06_class_nm` → 컴포넌트 (`MainFrame` 탭 factory가 메뉴의 `classNm`으로 찾고, 없으면 `PendingScreenView`) |
-| GXT `Grid` + `GridBuilder` | AG Grid (`LargeDataView` 패턴: 외부 스크롤 없이 그리드 내부 가상 스크롤) |
+| GXT `Grid` + `GridBuilder` | 공통 그리드 `components/grid` — GridType(`SingleGrid`/`MultiGrid`/`CellEditGrid`/`ModalEditGrid`) + `gb.*` 컬럼. **이름표·판정 신호는 [`grid-types.md`](grid-types.md)**, 변환 명세가 지정한 GridType·gb 코드를 그대로 쓴다 (레퍼런스 `Sys01_Tab_Company`) |
 | 검색바 `OmsTextField` + `OmsButton(조회/초기화/저장/행추가/삭제/등록)` | antd `Form`(inline) + `Button`. 버튼 구성·순서는 AS-IS 그대로 |
 | `*_Popup_*` / `*_Lookup_*` (Window) | antd `Modal` + `Form` |
 | `Model` / `ModelProperties` | `types/{domain}.ts` 의 interface (API 응답 record와 같은 필드) |
@@ -119,6 +123,18 @@ TOBE는 **테이블마다 명시적인 `insert` / `update` / `delete` SQL**을 �
   - `search`·`newRow`·`validate`는 `useCallback`으로 감싼다(검색 조건이 바뀔 때만 새로 만든다). `save`는 변경 행 → 저장된 행(**요청 순서**)을 돌려줘야 제자리 교체가 된다.
   - 편집 컬럼은 `editableCol({...})`(파란 글자). 체크박스 선택·Enter/Tab 이동·로딩 표시는 `gridProps`에 들어 있다.
   - API 함수는 `api/{domain}.ts`에서 저장 시 응답 record의 편집 필드만 골라 보낸다(`updateRoles` 참고).
+- 이름 맞추기 (레퍼런스 `pages/sys/Sys01_Tab_Company.tsx`):
+  - 파일 첫 주석: `[{메뉴번호}] {메뉴 경로}` (`docs/as-is/menus.tsv` = sys06_menu) + `AS-IS: myOms/client/vi/…/{클래스}.java`.
+  - 함수 이름 = AS-IS 메서드 이름(`buildGrid`, `retrieve`, `insert`, `retrieveTabpage`, `deleteCompany` …), 위에 `// AS-IS {메서드}() L{시작}-{끝}`.
+    JS 예약어(`delete`, `new`, `default` …)는 `on{Name}`(예: `onDelete`). UI 구성·유틸 메서드(`settings`, `setHtmlBarStyle`)는 만들지 않는다.
+  - `buildGrid`는 컴포넌트 밖 `const buildGrid = () => [gb.…]`, 컬럼마다 `// L{줄}`, DB에 없는 컬럼은 `// ⚠DB없음 L{줄} …`.
+- Splitter (레퍼런스 `Sys01_Tab_Company`):
+  - AS-IS `BorderLayoutData.setSplit(true)`인 경계에만 쓴다. 크기는 AS-IS 값(`new BorderLayoutData(450)` → `defaultSize={450}`, `setMaxSize(900)` → `max={900}`).
+  - **한 Splitter는 2분할.** 셋 이상이면 2분할을 중첩한다(AS-IS도 BorderLayout을 중첩).
+  - **Splitter 안에는 `Splitter.Panel`만 둔다.** 모달·Lookup을 안에 두면 빈 패널이 하나 더 생긴다 → `<>…</>`로 감싸 Splitter 밖에.
+- 그리드 컬럼 field = TOBE DTO 이름. AS-IS 프로퍼티(`companyName`)가 아니라 AS-IS 매퍼 resultMap의 컬럼(`sys01_company_nm`)에서
+  테이블 접두어를 뗀 camelCase(`companyNm`). 컬럼이 asseterpdb에 없으면 `// ⚠DB없음 L{줄} …`로 남기고 뺀다.
+- import: 새 코드는 `@/` 별칭(`@/api/client`, `@/components/grid`)을 쓴다 (`tsconfig.json` paths + `vite.config.ts` alias). 화면 파일 맨 위에 출처 주석 `/** AS-IS: myOms/client/vi/…/Xxx_Tab_Yyy.java (…) */`.
 - 화면 등록: `frontend/src/pages/screens.ts`의 `SCREENS`에 `'{AS-IS 클래스}': 컴포넌트`를 추가하면 메뉴에서 열린다.
 
 ### 공통 부품 (2번 묶음에서 추가)
@@ -129,7 +145,7 @@ TOBE는 **테이블마다 명시적인 `insert` / `update` / `delete` SQL**을 �
 | `components/lookup/PersonLookup` | `Emp01_Lookup_PersonModel` | 사원 다중 선택 → `crud.addRows(list.map(…))`. API `GET v1/emp/trans` |
 | `components/lookup/OrgLookup` | `Org00_Lookup_SelectSingle`(기본 모드) | 조직 단일 선택(더블클릭) → `crud.updateRow(id, patch)`. API `GET v1/org/org-infos` |
 | `components/sys/RoleSelectList` | Sys05/Sys07 왼쪽 권한그룹 그리드 | 권한명 검색 + 첫 행 자동 선택 → `onSelect(role)` |
-| 마스터-디테일 레이아웃 | `BorderLayoutContainer` west/center, south | antd `Splitter`(가로/`layout="vertical"`). 디테일은 `useEffect([master])`에서 `crud.retrieve()` |
+| 마스터-디테일 레이아웃 | `BorderLayoutContainer` west/center, south | `setSplit(true)`면 antd `Splitter`(가로/`layout="vertical"`), 아니면 고정 배치. 디테일은 `useEffect([master])`에서 `crud.retrieve()` |
 
 - `components/sys/MenuCheckTree` (3번 묶음): 메뉴 트리 + 권한 체크(켜면 상위도, 하위는 같은 값) + 바꾼 행만 저장. `load`/`save`/`nameField`/`checkField`만 넘긴다 (`Sys07RoleMenuView`, `Sys03CompanyMenuView`).
 - `components/sys/CompanySelectList`: 고객사 검색 + 첫 행 선택 (SYSADMIN 화면의 왼쪽).

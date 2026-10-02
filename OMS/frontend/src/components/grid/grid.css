@@ -1,0 +1,40 @@
+/* 공통 그리드(components/grid) 전용 — 색 값은 theme.ts GRID_COLORS와 맞춘다 */
+
+/* gb.*: 헤더 '<br>' → 줄바꿈 (AS-IS "ICAM<br>운용사코드" 두 줄 헤더) */
+.gb-hdr .ag-header-cell-text {
+  white-space: pre-line;
+  text-align: center;
+  line-height: 1.25;
+}
+.gb-hdr .ag-header-cell-label {
+  justify-content: center;
+}
+
+/* 행번호 컬럼 (AS-IS RowNumberer 40px) */
+.gb-rownum {
+  color: #8c8c8c;
+  text-align: center;
+}
+
+/* sumRow: pinnedBottomRowData 합계 행 */
+.summary-row,
+.summary-row .ag-cell {
+  background-color: #f8fafc;
+  font-weight: 700;
+}
+
+/* gb.textArea: AS-IS wrapString — 줄바꿈 유지 */
+.gb-wrap {
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+/* gb.boolean / gb.booleanYn2: 체크박스 가운데 */
+.ag-cell.gb-check {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.gb-check .ag-cell-wrapper {
+  justify-content: center;
+}

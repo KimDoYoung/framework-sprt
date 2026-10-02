@@ -13,11 +13,13 @@ AS-IS Asset-OMS(GWT/GXT)를 Spring Boot + React로 전환하는 프로젝트. As
 
 - AS-IS 원본: `~/workspace26/Asset-OMS` (패키지 `myOms`). 통째로 읽지 않고 색인이 가리키는 파일·줄만 연다.
 - 색인: `../docs/as-is/src/` — OMS로 생성되어 있어야 한다(README의 "소스"가 Asset-OMS인지 확인). 아니면
-  `python3 tools/src-index.py ~/workspace26/Asset-OMS --menus docs/as-is/menus.tsv` (저장소 루트에서)
-- SQL 정합성: `../docs/as-is/sql-check.md` (`tools/sql-check.py`)
+  `yunhee index-src ~/workspace26/Asset-OMS --menus docs/as-is/menus.tsv` (저장소 루트에서)
+- SQL 정합성: `../docs/as-is/sql-check.md` (`yunhee sql-check`)
 - DB: docker localhost의 **asseterpdb 고정** (omsdb 사용 안 함). 없는 테이블은 만들지 않고 그 화면은 변환하지 않는다.
 - 패키지: `kr.co.kfs.asseterp.oms`. AS-IS 서버 클래스 1개 → `biz.{도메인}`의 `{Domain}{Resource}Controller/Service/Mapper` 1벌.
-- 레퍼런스 화면: `Sys04_Tab_Role` (권한그룹 관리). 그리드 CRUD 공통 훅을 여기서 만들고, 이후 화면은 "레퍼런스와 같은 방식으로"
+- 레퍼런스 화면:
+  - `Sys01_Tab_Company` (`frontend/src/pages/sys/Sys01_Tab_Company.tsx`) — 공통 그리드(`components/grid`, `../docs/grid-types.md`)·파일/함수 이름·첫 주석·Splitter 규칙
+  - `Sys04_Tab_Role` (권한그룹 관리) — 그리드 CRUD 공통 훅 `useGridCrud` (아직 옛 파일 이름 `Sys04RoleView.tsx`)
 - 화면 1개 = 세션 1개(`/clear`). 지시에는 색인 화면 파일, 규칙서, 레퍼런스만 넘긴다.
 
 ## 구조

@@ -1,9 +1,14 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
   base: './',
   plugins: [react()],
+  resolve: {
+    // '@/api/client' → src/api/client (tsconfig paths와 같게)
+    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) }
+  },
   server: {
     port: 5173,
     proxy: {

@@ -18,7 +18,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `docs/OMS-convert.md` — OMS(AS-IS GWT) → TOBE 화면 변환 규칙(호출·서버·세션·SQL 차이·화면 대응). OMS 화면을 변환할 때 반드시 따른다.
 - `docs/docker-compose.yml` — 로컬 PostgreSQL/Redis/Tomcat 개발 인프라 정의(호스트 경로가 특정 서버에 고정되어 있어 그대로는 다른 환경에서 재사용 불가).
 - `tools/init-sprt.sh` — `antdesign/`의 골격(디렉토리 구조, 설정 파일, 빈 앱 셸 `App.tsx`, `bm.sh`/`fm.sh`/`deploy.sh`)만 생성하는 스캐폴딩 스크립트. 화면 소스는 생성하지 않는다(추후 `git archive`로 `antdesign/`에서 가져오는 방식으로 전환 예정). 빈 디렉토리에서만 실행되며, `antdesign/`의 설정 파일·디렉토리 구조를 바꾸면 이 스크립트도 함께 갱신한다.
-- `tools/dbml-index.py`, `tools/src-index.py` — AS-IS DB 스키마·소스 색인 생성기. `tools/sql-check.py` — AS-IS 매퍼 SQL ↔ asseterpdb 정합성(EXPLAIN). 출력은 `docs/as-is/`(git-ignored, 재생성 가능).
+- `tools/dbml-index.py`, `tools/src-index.py`, `tools/sql-check.py` — AS-IS 색인·SQL 정합성 생성기의 원본. 지금은 같은 기능의 `yunhee index-db` / `index-src` / `sql-check`를 쓴다. 출력은 `docs/as-is/`(git-ignored, 재생성 가능).
+- `docs/grid-types.md` — 공통 그리드 이름표(GridType·`gb.*`·옵션). yunhee 변환 명세와 TOBE 코드가 이 이름만 쓴다.
 
 ## AS-IS 참조 (전환 작업 시)
 
@@ -34,13 +35,15 @@ AS-IS 소스(`~/oms-data/src/Asset-ERP`, 약 3,000개 Java)와 DB 스키마 문�
 # 1) asseterpdb 스키마 → DBML 마크다운 (yunhee, 읽기 전용). 인자는 asseterpdb 접속정보를 가진 환경변수 이름
 yunhee dbml LOCAL_DB -o .yunhee/asseterp-dbml.md
 # 2) DBML → DB 색인
-python3 tools/dbml-index.py .yunhee/asseterp-dbml.md                                # → docs/as-is/db/
-# 3) 소스 → 소스 색인. 출력은 docs/as-is/src/ 고정, 실행마다 비우고 다시 만든다(앱 패키지 myApp/myOms 자동 탐지)
-python3 tools/src-index.py ~/oms-data/src/Asset-ERP --menus docs/as-is/menus.tsv   # AssetERP
-python3 tools/src-index.py ~/workspace26/Asset-OMS --menus docs/as-is/menus.tsv    # OMS (AssetERP 색인을 덮어씀)
+yunhee index-db .yunhee/asseterp-dbml.md                                 # → docs/as-is/db/
+# 3) 소스 → 소스 색인. 실행마다 출력 폴더의 *.md를 지우고 다시 만든다(앱 패키지 myApp/myOms 자동 탐지)
+yunhee index-src ~/oms-data/src/Asset-ERP --menus docs/as-is/menus.tsv   # AssetERP
+yunhee index-src ~/workspace26/Asset-OMS --menus docs/as-is/menus.tsv    # OMS (AssetERP 색인을 덮어씀)
 # 4) 매퍼 SQL이 asseterpdb에서 도는지 EXPLAIN으로 확인 (읽기 전용, 실행 안 함) → docs/as-is/sql-check.md
-PGHOST=localhost PGUSER=kdy987 PGPASSWORD=... python3 tools/sql-check.py ~/workspace26/Asset-OMS
+PGHOST=localhost PGUSER=kdy987 PGPASSWORD=... yunhee sql-check ~/workspace26/Asset-OMS
 ```
+- **저장소 루트에서** 실행한다(기본 출력이 `{현재 폴더}/docs/as-is/…`). 다른 곳에 만들려면 `-t <폴더>`. `-t`에는 색인 전용 폴더만 준다(그 아래 *.md를 지운다).
+- `tools/dbml-index.py`·`src-index.py`·`sql-check.py`는 yunhee로 옮기기 전 원본이다(2026-10-02 대조 결과 출력 동일).
 - DB 스키마가 그대로면 1·2는 건너뛰고 3만 돌린다. 2를 다시 돌렸으면 3도 다시 돌린다(테이블 링크·`⚠DB없음` 판정이 DB 색인을 쓴다).
 - `docs/as-is/menus.tsv`는 asseterpdb `sys06_menu`에서 뽑는다(SQL은 `docs/as-is/src/README.md`). 출력 폴더 밖에 두어 지워지지 않게 한다.
 - 화면 파일의 `⚠DB없음` 테이블은 asseterpdb에 없는 테이블이다. 프레임 클래스(LoginPage, MainFrame, MyPage …)는 `docs/as-is/src/_frame/screens/`에 있다.
