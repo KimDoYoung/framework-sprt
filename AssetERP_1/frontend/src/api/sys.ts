@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { Code, Company, CompanyCreateReq, CompanyManage, LoginSecure, Role } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, Company, CompanyCreateReq, CompanyManage, LoginSecure, Role } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -129,5 +129,37 @@ export const sysApi = {
   deleteLoginSecures: async (companyId: number, ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>(`v1/sys/companies/${companyId}/login-secures`, { data: ids });
     return res.data.data ?? 0;
+  },
+
+  // ── 고객별 관리자 (Sys02_Tab_User) ──
+
+  searchAdminUsers: async (companyId: number): Promise<AdminUser[]> => {
+    const res = await apiClient.get<ApiResponse<AdminUser[]>>(`v1/sys/companies/${companyId}/users`);
+    return res.data.data ?? [];
+  },
+
+  updateAdminUsers: async (companyId: number, rows: AdminUser[]): Promise<AdminUser[]> => {
+    const body = rows.map(({ userId, korNm, loginId, decPasswd, email, tel1, tel2, note, adminYn }) =>
+      ({ userId, korNm, loginId, decPasswd, email, tel1, tel2, note, adminYn: adminYn == null ? null : String(adminYn) }));
+    const res = await apiClient.put<ApiResponse<AdminUser[]>>(`v1/sys/companies/${companyId}/users`, body);
+    return res.data.data ?? [];
+  },
+
+  deleteAdminUsers: async (companyId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sys/companies/${companyId}/users`, { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  // ── 관리자별 메뉴 권한 (Sys82_Lookup_UserMenu) ──
+
+  searchAdminUserMenus: async (userId: number): Promise<AdminUserMenu[]> => {
+    const res = await apiClient.get<ApiResponse<AdminUserMenu[]>>(`v1/sys/admin-users/${userId}/menus`);
+    return res.data.data ?? [];
+  },
+
+  updateAdminUserMenus: async (userId: number, rows: AdminUserMenu[]): Promise<AdminUserMenu[]> => {
+    const body = rows.map(({ menuId, adminUserMenuId, useYn }) => ({ menuId, adminUserMenuId, useYn }));
+    const res = await apiClient.put<ApiResponse<AdminUserMenu[]>>(`v1/sys/admin-users/${userId}/menus`, body);
+    return res.data.data ?? [];
   },
 };

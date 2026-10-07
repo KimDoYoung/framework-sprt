@@ -99,3 +99,30 @@ export interface LoginSecure {
   publicIp?: string | null;
   note?: string | null;
 }
+
+/** 고객별 관리자 (GET /api/v1/sys/companies/{id}/users, AS-IS Sys02_UserModel) */
+export interface AdminUser {
+  userId: number;
+  companyId?: number;
+  korNm?: string | null;
+  loginId?: string | null;
+  decPasswd?: string | null;
+  email?: string | null;
+  tel1?: string | null;
+  tel2?: string | null;
+  note?: string | null;
+  adminYn?: string | boolean | null;
+}
+
+/** 관리자별 메뉴 권한 트리 행 (GET /api/v1/sys/admin-users/{userId}/menus) — 전위 순서, depth로 들여쓰기 */
+export interface AdminUserMenu {
+  menuId: number;
+  parentId: number;
+  depth: number;
+  menuNm: string;
+  seq?: string | null;
+  note?: string | null;
+  adminUserMenuId?: number | null;
+  /** 'true'/'false'/null(설정 없음) */
+  useYn?: string | null;
+}

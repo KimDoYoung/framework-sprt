@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS server/sys/mapper/sys02_user.xml selectByName + encryptsPasswd(to_encrypts) + UpdateDataModel(sys02_user)
+  yunhee port-sql sys02_user.selectByName / port-save sys02_user 결과에서: 암호화 컬럼(sys02_passwd)은 SELECT에서 뺐고,
+  비밀번호는 AS-IS처럼 화면 값(decPasswd)을 to_encrypts로 바꿔 저장한다(UPDATE는 값이 있을 때만)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysUserMapper">
+
+    <sql id="userColumns">
+        sys02_user_id               AS user_id,
+        sys02_company_id            AS company_id,
+        sys02_kor_nm                AS kor_nm,
+        sys02_login_id              AS login_id,
+        to_decrypts(sys02_passwd)   AS dec_passwd,
+        sys02_email                 AS email,
+        sys02_tel1                  AS tel1,
+        sys02_tel2                  AS tel2,
+        sys02_note                  AS note,
+        sys02_admin_yn              AS admin_yn
+    </sql>
+
+    <select id="searchUsers" resultType="kr.co.kfs.asseterp.biz.sys.dto.AdminUserRes">
+        SELECT <include refid="userColumns"/>
+          FROM sys02_user
+               INNER JOIN sys01_company ON sys02_company_id = sys01_company_id
+         WHERE sys02_company_id = #{companyId}
+           AND sys02_kor_nm LIKE #{korName}
+         ORDER BY sys02_kor_nm
+    </select>
+
+    <select id="selectUser" resultType="kr.co.kfs.asseterp.biz.sys.dto.AdminUserRes">
+        SELECT <include refid="userColumns"/>
+          FROM sys02_user
+         WHERE sys02_user_id = #{userId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="countByLoginId" resultType="int">
+        SELECT count(*) FROM sys02_user
+         WHERE sys02_company_id = #{companyId} AND sys02_login_id = #{loginId} AND sys02_user_id &lt;&gt; #{userId}
+    </select>
+
+    <insert id="insertUser">
+        INSERT INTO sys02_user (sys02_user_id, sys02_company_id, sys02_kor_nm, sys02_login_id, sys02_passwd,
+                                sys02_email, sys02_tel1, sys02_tel2, sys02_note, sys02_admin_yn)
+        VALUES (#{userId}, #{companyId}, #{korNm}, #{loginId}, to_encrypts(#{decPasswd}),
+                #{email}, #{tel1}, #{tel2}, #{note}, #{adminYn})
+    </insert>
+
+    <update id="updateUser">
+        UPDATE sys02_user
+           SET sys02_kor_nm   = #{korNm},
+               sys02_login_id = #{loginId},
+               <if test="decPasswd != null">sys02_passwd = to_encrypts(#{decPasswd}),</if>
+               sys02_email    = #{email},
+               sys02_tel1     = #{tel1},
+               sys02_tel2     = #{tel2},
+               sys02_note     = #{note},
+               sys02_admin_yn = #{adminYn}
+         WHERE sys02_user_id    = #{userId}
+           AND sys02_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteUsers">
+        DELETE FROM sys02_user
+         WHERE sys02_company_id = #{companyId}
+           AND sys02_user_id IN
+        <foreach collection="userIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

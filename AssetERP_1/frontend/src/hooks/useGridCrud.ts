@@ -25,8 +25,8 @@ export interface GridCrudOptions<T> {
   firstEditField?: string;
   /** 저장 전 검사. 메시지를 돌려주면 저장하지 않는다 */
   validate?: (changed: T[], all: T[]) => string | undefined;
-  /** 삭제 확인 문구. 함수면 체크한 행 수를 받는다 (AS-IS "n건을 삭제하시겠습니까?") */
-  deleteConfirm?: string | ((count: number) => string);
+  /** 삭제 확인 문구. 함수면 체크한 행 수를 받는다 (AS-IS "n건을 삭제하시겠습니까?"). false면 확인 없이 삭제 */
+  deleteConfirm?: string | ((count: number) => string) | false;
   /** 저장 응답이 저장된 행이 아니라 목록 전체일 때: 제자리 교체 대신 다시 조회 */
   reloadAfterSave?: boolean;
   /** 저장·삭제 후 (목록 밖의 화면 갱신용) */
@@ -144,25 +144,31 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
       message.warning('삭제할 행을 선택하세요.');
       return;
     }
+    const doDelete = async () => {
+      const ids = checked.map(getId);
+      const savedIds = ids.filter(id => id > 0);
+      try {
+        if (savedIds.length > 0) await remove(savedIds);
+        const removed = new Set(ids);
+        removed.forEach(id => dirty.current.delete(id));
+        setRows(prev => prev.filter(r => !removed.has(getId(r))));
+        message.success(`${ids.length}건 삭제되었습니다.`);
+        if (savedIds.length > 0) onChanged?.();
+      } catch (err) {
+        message.error(errorMessage(err, '삭제 실패'));
+      }
+    };
+    // deleteConfirm: false → 확인 없이 바로 (AS-IS가 확인 창 없이 GridDeleteData를 부르는 화면)
+    if (deleteConfirm === false) {
+      void doDelete();
+      return;
+    }
     Modal.confirm({
       title: '삭제',
       content: (typeof deleteConfirm === 'function' ? deleteConfirm(checked.length) : deleteConfirm) ?? '선택한 행을 삭제하시겠습니까?',
       okText: '예',
       cancelText: '아니오',
-      onOk: async () => {
-        const ids = checked.map(getId);
-        const savedIds = ids.filter(id => id > 0);
-        try {
-          if (savedIds.length > 0) await remove(savedIds);
-          const removed = new Set(ids);
-          removed.forEach(id => dirty.current.delete(id));
-          setRows(prev => prev.filter(r => !removed.has(getId(r))));
-          message.success(`${ids.length}건 삭제되었습니다.`);
-          if (savedIds.length > 0) onChanged?.();
-        } catch (err) {
-          message.error(errorMessage(err, '삭제 실패'));
-        }
-      },
+      onOk: doDelete,
     });
   }, [getId, remove, deleteConfirm, onChanged]);
 
