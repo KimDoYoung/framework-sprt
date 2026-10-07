@@ -25,7 +25,8 @@ export interface GridCrudOptions<T> {
   firstEditField?: string;
   /** 저장 전 검사. 메시지를 돌려주면 저장하지 않는다 */
   validate?: (changed: T[], all: T[]) => string | undefined;
-  deleteConfirm?: string;
+  /** 삭제 확인 문구. 함수면 체크한 행 수를 받는다 (AS-IS "n건을 삭제하시겠습니까?") */
+  deleteConfirm?: string | ((count: number) => string);
   /** 저장 응답이 저장된 행이 아니라 목록 전체일 때: 제자리 교체 대신 다시 조회 */
   reloadAfterSave?: boolean;
   /** 저장·삭제 후 (목록 밖의 화면 갱신용) */
@@ -145,7 +146,7 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
     }
     Modal.confirm({
       title: '삭제',
-      content: deleteConfirm ?? '선택한 행을 삭제하시겠습니까?',
+      content: (typeof deleteConfirm === 'function' ? deleteConfirm(checked.length) : deleteConfirm) ?? '선택한 행을 삭제하시겠습니까?',
       okText: '예',
       cancelText: '아니오',
       onOk: async () => {
@@ -181,5 +182,8 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
     stopEditingWhenCellsLoseFocus: true,
   };
 
-  return { gridRef, rows, loading, retrieve, addRow, addRows, updateRow, clear, saveRows, deleteChecked, gridProps };
+  /** 저장하지 않은 추가·변경 행이 있는지 (AS-IS grid.getStore().getModifiedRecords().size() > 0) */
+  const hasChanges = useCallback(() => dirty.current.size > 0, []);
+
+  return { gridRef, rows, loading, retrieve, addRow, addRows, updateRow, clear, saveRows, deleteChecked, hasChanges, gridProps };
 }

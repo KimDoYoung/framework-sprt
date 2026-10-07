@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { Code, Company, CompanyCreateReq, Role } from '../types/sys';
+import { Code, Company, CompanyCreateReq, CompanyManage, LoginSecure, Role } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -89,6 +89,45 @@ export const sysApi = {
   /** AS-IS dcr.Dcr01_ClassTree.commentInsert (문서개요복사: admin(0) → 회사) → 바뀐 행 수 */
   copyDcrComments: async (companyId: number): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>(`v1/dcr/class-trees/comments/copy/${companyId}`);
+    return res.data.data ?? 0;
+  },
+
+  // ── A15 관리정보 탭 (Sys01_TabPage_Info01) ──
+
+  /** AS-IS sys.Sys01_Company.selectById (관리정보 컬럼) */
+  getCompanyManage: async (companyId: number): Promise<CompanyManage> => {
+    const res = await apiClient.get<ApiResponse<CompanyManage>>(`v1/sys/companies/${companyId}/manage`);
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys01_Company.update → 저장된 행. 체크박스 값(true/false)은 'true'/'false'로 보낸다 */
+  updateCompanyManage: async (row: CompanyManage): Promise<CompanyManage> => {
+    const yn = (v: unknown) => (v == null ? null : String(v));
+    const body = { ...row, loginSecureYn: yn(row.loginSecureYn), assetYn: yn(row.assetYn), advisYn: yn(row.advisYn), pbsYn: yn(row.pbsYn), useYn: yn(row.useYn) };
+    const res = await apiClient.put<ApiResponse<CompanyManage>>(`v1/sys/companies/${row.companyId}/manage`, body);
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys01_Company.updateNote (비고 팝업) */
+  updateCompanyNote: async (companyId: number, note: string | null): Promise<void> => {
+    await apiClient.put(`v1/sys/companies/${companyId}/note`, { note });
+  },
+
+  // ── 공인IP (Sys29_Lookup_PublicIpList) ──
+
+  searchLoginSecures: async (companyId: number): Promise<LoginSecure[]> => {
+    const res = await apiClient.get<ApiResponse<LoginSecure[]>>(`v1/sys/companies/${companyId}/login-secures`);
+    return res.data.data ?? [];
+  },
+
+  updateLoginSecures: async (companyId: number, rows: LoginSecure[]): Promise<LoginSecure[]> => {
+    const body = rows.map(({ loginSecureId, startDate, closeDate, publicIp, note }) => ({ loginSecureId, startDate, closeDate, publicIp, note }));
+    const res = await apiClient.put<ApiResponse<LoginSecure[]>>(`v1/sys/companies/${companyId}/login-secures`, body);
+    return res.data.data ?? [];
+  },
+
+  deleteLoginSecures: async (companyId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sys/companies/${companyId}/login-secures`, { data: ids });
     return res.data.data ?? 0;
   },
 };

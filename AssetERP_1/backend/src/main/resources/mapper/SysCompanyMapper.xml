@@ -63,6 +63,67 @@
          WHERE sys01_company_id = #{companyId}
     </select>
 
+    <!-- 관리정보 탭: AS-IS selectById(L115) 중 Info01 그리드 컬럼 (yunhee port-sql, 화면 컬럼만). 날짜는 그리드 편집기에 맞춰 ::date -->
+    <select id="selectCompanyManage" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyManageRes">
+        SELECT sys01_company_id                                                               AS company_id,
+               sys01_login_secure_yn                                                          AS login_secure_yn,
+               sys01_company_nm                                                               AS company_nm,
+               sys01_loc_nm                                                                   AS loc_nm,
+               sys01_mail_info                                                                AS mail_info,
+               sys01_emgrcy_passwd                                                            AS emgrcy_passwd,
+               sys01_erp_product_cd                                                           AS erp_product_cd,
+               f_cdnm('ErpProductCode', sys01_erp_product_cd, sys01_company_id, f_sysdate())  AS erp_product_nm,
+               sys01_cont_type                                                                AS cont_type,
+               sys01_notice_date::date                                                        AS notice_date,
+               sys01_close_date::date                                                         AS close_date,
+               sys01_icam_company_cd                                                          AS icam_company_cd,
+               sys01_icam_advis_company_cd                                                    AS icam_advis_company_cd,
+               sys01_asset_yn                                                                 AS asset_yn,
+               sys01_advis_yn                                                                 AS advis_yn,
+               sys01_pbs_yn                                                                   AS pbs_yn,
+               sys01_use_yn                                                                   AS use_yn,
+               sys01_note                                                                     AS note,
+               sys01_biz_no                                                                   AS biz_no
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <select id="selectMainImageId" resultType="long">
+        SELECT sys01_main_image_id FROM sys01_company WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <update id="updateMainImageId">
+        UPDATE sys01_company SET sys01_main_image_id = #{mainImageId} WHERE sys01_company_id = #{companyId}
+    </update>
+
+    <update id="updateCompanyManage">
+        UPDATE sys01_company
+           SET sys01_login_secure_yn       = #{loginSecureYn},
+               sys01_company_nm            = #{companyNm},
+               sys01_loc_nm                = #{locNm},
+               sys01_mail_info             = #{mailInfo},
+               sys01_emgrcy_passwd         = #{emgrcyPasswd},
+               sys01_erp_product_cd        = #{erpProductCd},
+               sys01_cont_type             = #{contType},
+               sys01_notice_date           = #{noticeDate},
+               sys01_close_date            = #{closeDate},
+               sys01_icam_company_cd       = #{icamCompanyCd},
+               sys01_icam_advis_company_cd = #{icamAdvisCompanyCd},
+               sys01_asset_yn              = #{assetYn},
+               sys01_advis_yn              = #{advisYn},
+               sys01_pbs_yn                = #{pbsYn},
+               sys01_use_yn                = #{useYn}
+         WHERE sys01_company_id = #{companyId}
+    </update>
+
+    <update id="updateNote">
+        UPDATE sys01_company SET sys01_note = #{note} WHERE sys01_company_id = #{companyId}
+    </update>
+
+    <select id="countByLocNmExcept" resultType="int">
+        SELECT count(*) FROM sys01_company WHERE LOWER(sys01_loc_nm) = LOWER(#{locNm}) AND sys01_company_id &lt;&gt; #{companyId}
+    </select>
+
     <select id="selectNextId" resultType="long" flushCache="true">
         SELECT f_create_seq()
     </select>

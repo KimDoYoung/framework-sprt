@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS server/sys/mapper/sys29_login_secure.xml selectByCompanyId + UpdateDataModel(sys29_login_secure)
+  `yunhee port-sql sys29_login_secure.selectByCompanyId`, `yunhee port-save sys29_login_secure` (컬럼 start_date, close_date, public_ip, note) 결과에서
+  날짜는 그리드 날짜 편집기에 맞춰 ::date로 바꿨다(컬럼은 timestamp, 화면은 일자만)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysLoginSecureMapper">
+
+    <sql id="loginSecureColumns">
+        sys29_login_secure_id   AS login_secure_id,
+        sys29_company_id        AS company_id,
+        sys29_start_date::date  AS start_date,
+        sys29_close_date::date  AS close_date,
+        sys29_public_ip         AS public_ip,
+        sys29_note              AS note
+    </sql>
+
+    <select id="searchLoginSecures" resultType="kr.co.kfs.asseterp.biz.sys.dto.LoginSecureRes">
+        SELECT <include refid="loginSecureColumns"/>
+          FROM sys29_login_secure
+         WHERE sys29_company_id = #{companyId}
+         ORDER BY sys29_start_date, sys29_close_date, sys29_public_ip
+    </select>
+
+    <select id="selectLoginSecure" resultType="kr.co.kfs.asseterp.biz.sys.dto.LoginSecureRes">
+        SELECT <include refid="loginSecureColumns"/>
+          FROM sys29_login_secure
+         WHERE sys29_login_secure_id = #{loginSecureId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertLoginSecure">
+        INSERT INTO sys29_login_secure (sys29_login_secure_id, sys29_company_id, sys29_start_date, sys29_close_date, sys29_public_ip, sys29_note)
+        VALUES (#{loginSecureId}, #{companyId}, #{startDate}, #{closeDate}, #{publicIp}, #{note})
+    </insert>
+
+    <update id="updateLoginSecure">
+        UPDATE sys29_login_secure
+           SET sys29_start_date = #{startDate},
+               sys29_close_date = #{closeDate},
+               sys29_public_ip  = #{publicIp},
+               sys29_note       = #{note}
+         WHERE sys29_login_secure_id = #{loginSecureId}
+           AND sys29_company_id      = #{companyId}
+    </update>
+
+    <delete id="deleteLoginSecures">
+        DELETE FROM sys29_login_secure
+         WHERE sys29_company_id = #{companyId}
+           AND sys29_login_secure_id IN
+        <foreach collection="loginSecureIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

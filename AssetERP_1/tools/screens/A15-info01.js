@@ -1,0 +1,51 @@
+// A15 관리정보 탭(Sys01_TabPage_Info01) 화면 확인 — 공인IP 조회창·비고 팝업 열기, 체크박스 편집 후 비고 막기. 저장은 누르지 않는다(데이터 그대로).
+// 사용: NODE_PATH=<playwright-core 폴더>/node_modules node tools/screens/A15-info01.js <스크린샷 폴더>
+const { chromium } = require('playwright-core');
+const OUT = process.argv[2];
+(async () => {
+  const b = await chromium.launch({ executablePath: process.env.HOME + '/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome', args: ['--host-resolver-rules=MAP *.localhost 127.0.0.1'] });
+  const p = await b.newPage({ viewport: { width: 1400, height: 900 } });
+  const out = { errs: [] };
+  p.on('pageerror', e => out.errs.push(e.message));
+  p.on('console', m => { if (m.type() === 'error' && !m.text().includes('401')) out.errs.push(m.text().slice(0, 150)); });
+  await p.goto('http://admin.localhost:8082/AssetERP_1/', { waitUntil: 'networkidle' });
+  await p.fill('input[placeholder^="사번"]', 'admin'); await p.fill('input[type=password]', '1111');
+  await p.click('button[type=submit]'); await p.waitForTimeout(2500);
+  await p.getByText('관리자', { exact: true }).first().click(); await p.waitForTimeout(600);
+  await p.getByText('고객별 시스템정보 관리', { exact: true }).first().click(); await p.waitForTimeout(2000);
+  await p.locator('.ag-row[row-index="1"] .ag-cell[col-id="companyNm"]').first().click(); await p.waitForTimeout(1500);
+  const tab = p.locator('.ant-splitter-panel').last();
+  out.tabButtons = await tab.locator('button').filter({ hasText: /\S/ }).allInnerTexts();
+  out.tabHeaders = await tab.locator('.ag-header-cell-text').allInnerTexts();
+  out.tabRow = await tab.locator('.ag-row[row-index="0"] .ag-cell[col-id="companyNm"]').innerText();
+  await tab.locator('.ag-body-horizontal-scroll-viewport').last().evaluate(el => { el.scrollLeft = 900; });
+  await p.waitForTimeout(500);
+  out.useYnStyle = await tab.locator('.ag-row[row-index="0"] .ag-cell[col-id="useYn"] label').first().getAttribute('style');
+  out.modalsOpenBefore = await p.locator('.ant-modal-wrap:visible').count();
+  out.useYnChecked = await tab.locator('.ag-row[row-index="0"] .ag-cell[col-id="useYn"] input').isChecked();
+  await p.screenshot({ path: OUT + '/info01-1.png' });
+  await tab.locator('.ag-body-horizontal-scroll-viewport').last().evaluate(el => { el.scrollLeft = 0; }); await p.waitForTimeout(400);
+  await tab.locator('.ag-cell[col-id="actionView"] button').first().click(); await p.waitForTimeout(1200);
+  const ip = p.locator('.ant-modal').filter({ hasText: '공인IP 등록/수정' });
+  out.ipModal = await ip.isVisible();
+  out.ipButtons = await ip.locator('button').filter({ hasText: /\S/ }).allInnerTexts();
+  out.ipHeaders = await ip.locator('.ag-header-cell-text').allInnerTexts();
+  await ip.getByRole('button', { name: '닫기' }).click(); await p.waitForTimeout(500);
+  await tab.locator('.ag-body-horizontal-scroll-viewport').last().evaluate(el => { el.scrollLeft = 900; }); await p.waitForTimeout(400);
+  await tab.locator('.ag-cell[col-id="actionEdit"] button').first().click(); await p.waitForTimeout(800);
+  const nt = p.locator('.ant-modal').filter({ hasText: '비고' }).last();
+  out.noteText = (await nt.locator('textarea').inputValue()).slice(0, 30);
+  await p.screenshot({ path: OUT + '/info01-2-note.png' });
+  await nt.getByRole('button', { name: '닫기' }).click(); await p.waitForTimeout(400);
+  // 편집(보안로그인 체크) 후 비고 → "저장 후 시도해주세요" (저장은 하지 않는다)
+  await tab.locator('.ag-body-horizontal-scroll-viewport').last().evaluate(el => { el.scrollLeft = 0; }); await p.waitForTimeout(400);
+  out.loginSecureBefore = await tab.locator('.ag-row[row-index="0"] .ag-cell[col-id="loginSecureYn"] input').isChecked();
+  await tab.locator('.ag-row[row-index="0"] .ag-cell[col-id="loginSecureYn"] .ant-checkbox').click(); await p.waitForTimeout(400);
+  out.loginSecureAfter = await tab.locator('.ag-row[row-index="0"] .ag-cell[col-id="loginSecureYn"] input').isChecked();
+  await tab.locator('.ag-body-horizontal-scroll-viewport').last().evaluate(el => { el.scrollLeft = 900; }); await p.waitForTimeout(400);
+  await tab.locator('.ag-cell[col-id="actionEdit"] button').first().click(); await p.waitForTimeout(500);
+  out.dirtyNoteMsg = (await p.locator('.ant-message-notice').allInnerTexts()).join('/');
+  out.noteModalOpen = await p.locator('.ant-modal-wrap:visible').count();
+  console.log(JSON.stringify(out, null, 1));
+  await b.close();
+})().catch(e => { console.error(e.message); process.exit(1); });

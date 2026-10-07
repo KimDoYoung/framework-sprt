@@ -1,11 +1,14 @@
 package kr.co.kfs.asseterp.biz.sys.mapper;
 
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyOptionRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyOrgParam;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyRow;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanySearchParam;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -17,6 +20,24 @@ public interface SysCompanyMapper {
 
     /** AS-IS selectById */
     CompanyRes selectCompany(Long companyId);
+
+    /** 관리정보 탭 (AS-IS selectById 중 Info01 컬럼) */
+    CompanyManageRes selectCompanyManage(Long companyId);
+
+    /** AS-IS Sys01_Company.selectById L20-29: main_image_id가 비었으면 채번해 넣는다 */
+    Long selectMainImageId(Long companyId);
+
+    /** AS-IS updateMainImageId */
+    int updateMainImageId(@Param("companyId") Long companyId, @Param("mainImageId") Long mainImageId);
+
+    /** 관리정보 탭 저장 — UpdateDataModel 동적 UPDATE 중 그리드에서 바뀌는 컬럼만 */
+    int updateCompanyManage(CompanyManageReq req);
+
+    /** AS-IS updateNote */
+    int updateNote(@Param("companyId") Long companyId, @Param("note") String note);
+
+    /** 다른 회사가 같은 서브도메인을 쓰는지 */
+    int countByLocNmExcept(@Param("locNm") String locNm, @Param("companyId") Long companyId);
 
     /** AS-IS dbConfig.getSeq와 같은 식 */
     Long selectNextId();

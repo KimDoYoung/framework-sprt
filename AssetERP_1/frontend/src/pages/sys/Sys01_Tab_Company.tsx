@@ -13,6 +13,7 @@ import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { Sys01_Edit_Company } from './Sys01_Edit_Company';
 import { Sys03_Lookup_CompanyMenu } from './Sys03_Lookup_CompanyMenu';
+import { Sys01_TabPage_Info01 } from './Sys01_TabPage_Info01';
 
 const gb = gbFor<Company>();
 
@@ -63,7 +64,7 @@ const PendingTab = (name: string, step: string): React.FC<CompanyTabProps> => ({
 
 /** 생성자 L79-84: tabPanel.add(…) 순서 그대로 */
 const TABS: { key: string; label: string; page: React.FC<CompanyTabProps> }[] = [
-  { key: 'info01', label: '관리정보', page: PendingTab('Sys01_TabPage_Info01', '2단계') },
+  { key: 'info01', label: '관리정보', page: Sys01_TabPage_Info01 },
   { key: 'info02', label: '기본정보', page: PendingTab('Sys01_TabPage_Info02', '3단계') },
   { key: 'info03', label: '전자결재·내부통제', page: PendingTab('Sys01_TabPage_Info03', '3단계') },
   { key: 'info04', label: '경영·회계', page: PendingTab('Sys01_TabPage_Info04', '3단계') },

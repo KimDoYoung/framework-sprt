@@ -2,6 +2,9 @@ package kr.co.kfs.asseterp.biz.sys.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCreateReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyNoteReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyOptionRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyRes;
 import kr.co.kfs.asseterp.biz.sys.service.SysCompanyService;
@@ -10,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -52,5 +57,29 @@ public class SysCompanyController {
     @GetMapping("/options")
     public ApiResponse<List<CompanyOptionRes>> searchCompanyOptions(@AuthenticationPrincipal UserPrincipal principal) {
         return ApiResponse.ok(sysCompanyService.searchCompanyOptions(principal));
+    }
+
+    /** 관리정보 탭 (AS-IS Sys01_TabPage_Info01 → sys.Sys01_Company.selectById) */
+    @GetMapping("/{companyId}/manage")
+    public ApiResponse<CompanyManageRes> getCompanyManage(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long companyId) {
+        return ApiResponse.ok(sysCompanyService.getCompanyManage(principal, companyId));
+    }
+
+    /** 관리정보 탭 저장 (AS-IS sys.Sys01_Company.update) → 저장된 행 */
+    @PutMapping("/{companyId}/manage")
+    public ApiResponse<CompanyManageRes> updateCompanyManage(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long companyId,
+                                                             @RequestBody CompanyManageReq req) {
+        CompanyManageReq body = new CompanyManageReq(companyId, req.loginSecureYn(), req.companyNm(), req.locNm(), req.mailInfo(),
+                req.emgrcyPasswd(), req.erpProductCd(), req.contType(), req.noticeDate(), req.closeDate(), req.icamCompanyCd(),
+                req.icamAdvisCompanyCd(), req.assetYn(), req.advisYn(), req.pbsYn(), req.useYn());
+        return ApiResponse.ok(sysCompanyService.updateCompanyManage(principal, body));
+    }
+
+    /** 비고 팝업 (AS-IS sys.Sys01_Company.updateNote) */
+    @PutMapping("/{companyId}/note")
+    public ApiResponse<Void> updateNote(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long companyId,
+                                        @RequestBody CompanyNoteReq req) {
+        sysCompanyService.updateNote(principal, companyId, req.note());
+        return ApiResponse.ok(null);
     }
 }

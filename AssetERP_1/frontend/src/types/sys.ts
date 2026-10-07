@@ -66,3 +66,36 @@ export interface Code {
   code: string;
   name: string;
 }
+
+/** 관리정보 탭 행 (GET /api/v1/sys/companies/{id}/manage, AS-IS Sys01_TabPage_Info01). Y/N은 DB 값 그대로('true'/'false'/null) */
+export interface CompanyManage {
+  companyId: number;
+  loginSecureYn?: string | boolean | null;
+  companyNm: string;
+  locNm?: string | null;
+  mailInfo?: string | null;
+  emgrcyPasswd?: string | null;
+  erpProductCd?: string | null;
+  erpProductNm?: string | null;
+  contType?: string | null;
+  noticeDate?: string | null;
+  closeDate?: string | null;
+  icamCompanyCd?: string | null;
+  icamAdvisCompanyCd?: string | null;
+  assetYn?: string | boolean | null;
+  advisYn?: string | boolean | null;
+  pbsYn?: string | boolean | null;
+  useYn?: string | boolean | null;
+  note?: string | null;
+  bizNo?: string | null;
+}
+
+/** 공인IP (GET /api/v1/sys/companies/{id}/login-secures, AS-IS Sys29_LoginSecureModel) */
+export interface LoginSecure {
+  loginSecureId: number;
+  companyId?: number;
+  startDate?: string | null;
+  closeDate?: string | null;
+  publicIp?: string | null;
+  note?: string | null;
+}

@@ -68,6 +68,8 @@ export function gbFor<T>() {
   const date = (len: 7 | 10 | 19): ColDef<T> => ({ valueFormatter: p => fmtDate(p.value, len) });
   /** 네모 체크박스, 가운데, 선택·해제 두 상태. { editable: true }면 클릭으로 바꾼다 (셀 편집기는 쓰지 않는다) */
   const check = (o?: GbOpts<T>): ColDef<T> => ({
+    // 타입 추론을 끈다: 값이 'true'/'false' 문자열이라 AG Grid가 text로 추론하면 다른 타입 값을 setDataValue에서 조용히 거부한다(경고 #135)
+    cellDataType: false,
     cellClass: 'gb-check',
     cellRenderer: CheckCell,
     cellRendererParams: { editable: !!o?.editable },

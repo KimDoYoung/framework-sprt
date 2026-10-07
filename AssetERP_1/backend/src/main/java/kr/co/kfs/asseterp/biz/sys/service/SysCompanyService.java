@@ -2,6 +2,8 @@ package kr.co.kfs.asseterp.biz.sys.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCreateReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyOptionRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyOrgParam;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyRes;
@@ -62,6 +64,48 @@ public class SysCompanyService {
                 in.mailInfo(), in.bizNo(), in.leaveMonthCd(), in.taxType(), in.accountCloseMonth()));
         initCompany(companyId, in);
         return sysCompanyMapper.selectCompany(companyId);
+    }
+
+    /**
+     * 관리정보 탭 조회 (AS-IS Sys01_TabPage_Info01.retrieve → Sys01_Company.selectById L20-29).
+     * AS-IS selectById는 main_image_id가 비었으면 채번해 저장한다(조회인데 쓰기 — 그대로 옮김).
+     */
+    @Transactional
+    public CompanyManageRes getCompanyManage(UserPrincipal user, Long companyId) {
+        requireSysAdmin(user);
+        CompanyManageRes res = sysCompanyMapper.selectCompanyManage(companyId);
+        if (res == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        if (sysCompanyMapper.selectMainImageId(companyId) == null) {
+            sysCompanyMapper.updateMainImageId(companyId, sysCompanyMapper.selectNextId());
+        }
+        return res;
+    }
+
+    /** 관리정보 탭 저장 (AS-IS Sys01_Company.update L165-181: 고객명·접근코드 필수 → UpdateDataModel UPDATE → selectById) */
+    @Transactional
+    public CompanyManageRes updateCompanyManage(UserPrincipal user, CompanyManageReq req) {
+        requireSysAdmin(user);
+        required(req.companyNm() == null ? null : req.companyNm().trim(), "고객명은 필수 입력항목입니다.");
+        required(req.locNm() == null ? null : req.locNm().trim(), "접근코드는 필수 입력항목입니다.");
+        // TOBE 추가: 서브도메인은 테넌트 판정에 쓰이므로 다른 회사와 겹치지 않게 한다
+        if (sysCompanyMapper.countByLocNmExcept(req.locNm(), req.companyId()) > 0) {
+            throw new BusinessException(ErrorCode.DUPLICATE_DATA, "이미 사용 중인 서브도메인입니다.");
+        }
+        if (sysCompanyMapper.updateCompanyManage(req) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return sysCompanyMapper.selectCompanyManage(req.companyId());
+    }
+
+    /** AS-IS Sys01_Company.updateNote L109-116 (비고 팝업) */
+    @Transactional
+    public void updateNote(UserPrincipal user, Long companyId, String note) {
+        requireSysAdmin(user);
+        if (sysCompanyMapper.updateNote(companyId, note) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
     }
 
     /** AS-IS delete L189 (UpdateDataModel.deleteModel): 선택한 회사의 sys01_company 행만 지운다 → 지운 건수 */

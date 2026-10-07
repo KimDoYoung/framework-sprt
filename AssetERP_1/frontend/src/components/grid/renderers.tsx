@@ -72,7 +72,8 @@ export const CheckCell: React.FC<CustomCellRendererProps & { editable?: boolean 
       checked={value === true || value === 'Y' || value === 'true'}
       style={editable ? undefined : { pointerEvents: 'none' }}
       onChange={e => {
-        if (editable && colDef?.field) node.setDataValue(colDef.field, e.target.checked);
+        // DB 값은 'true'/'false' 문자열이다 → 원래 값이 boolean일 때만 boolean으로, 그 밖(문자열·null)은 문자열로 넣는다
+        if (editable && colDef?.field) node.setDataValue(colDef.field, typeof value === 'boolean' ? e.target.checked : String(e.target.checked));
       }}
     />
   );
