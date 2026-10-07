@@ -1,0 +1,87 @@
+select * from sys06_menu where sys06_class_nm like 'Sys%' and sys06_use_yn = 'true'
+order by sys06_menu_id;
+---
+4250	연차휴가 결산기준	4299	연차휴가 결산기준	202405031696894	true	Sys30_Tab_LeaveYear					1036
+8150	개선사항 및 오류 통보	8150	개선사항 및 오류 통보	202501032066354	true	Sys90_Tab_AfterService					1066
+9110	권한그룹 관리	9110	권한관리	9100	true	Sys04_Tab_Role					1069
+9120	권한그룹별 메뉴 맵핑	9120	권한별 메뉴 맵핑	9100	true	Sys07_Tab_RoleMenu					1070
+9130	권한그룹별 사용자 맵핑	9130	권한별 사용자 맵핑	9100	true	Sys05_Tab_UserRole					1071
+9140	사용자별 권한그룹 맵핑	9140	사용자별 권한그룹 맵핑	9100	true	Sys05_Tab_PersonRole					1072
+9511	고객별 시스템정보 관리	9501	고객별 시스템정보 관리	9510	true	Sys01_Tab_Company					1075
+9512	회사별 메뉴맵핑	9512	회사별로 메뉴 맵핑 등록,삭제	9510	true	Sys03_Tab_ComapnyMenu					1076
+9513	메뉴 관리	9513	메뉴 관리	9510	true	Sys06_Tab_Menu		false	false		1077
+9521	시스템 공통코드 관리	9521	시스템 공통코드 관리	9520	true	Sys08_Tab_CodeKindAdmin					1078
+9522	고객사 공통코드	9522	공통코드	9520	true	Sys08_Tab_CodeKindClient					1079
+9531	일자관리	9531	일자관리	9530	true	Sys12_Tab_Calendar					1080
+70649	권한그룹 관리	9771		70647	true	Sys04_Tab_RoleAdmin		false	false		1112
+70749	일자관리	9791		70748	true	Sys12_Tab_Calendar					1113
+82644	개선사항 및 오류 통보	9561	개선사항 및 오류 통보	82642	true	Sys90_Tab_AfterServiceAdmin					1121
+202203020092915	비밀번호 초기화	9550	비밀번호 초기화	9530	true	Sys25_Tab_ResetPassword					1182
+202203150096094	로그인내역 조회	9565	로그인내역 조회	82642	true	Sys26_Tab_LoginHistory					1140
+202203240096831	거래처 등록	6195	거래처 관리	9530	true	Sys15_Tab_Corp		true			1146
+202204180108340	거래처 관리	9753	거래처 관리	70646	true	Sys15_Tab_Corp					1155
+202208100437163	Admin 사용자 관리	9580	Admin 사용자 관리	82642	true	Sys80_Tab_AdminUserList					1197
+202208100437165	Admin 로그인내역 조회	9585	Admin 로그인내역 조회	82642	true	Sys81_Tab_AdminUserHistory					1198
+202302201362356	로그인 Mac 주소 관리	9565	로그인 Mac 주소 관리	82642	true	Sys27_Tab_LoginManage					1442
+202303061372801	권한그룹별 메뉴권한 복사	9772	권한그룹별 메뉴권한 복사	70647	true	Sys07_Tab_Company					1247
+202303081396396	공통코드	9540	공통코드	9530	true	Sys08_Tab_CodeKindClient					1248
+202308021563805	메뉴별 그룹권한(View)	9160	메뉴별 그룹권한(View)	9100	true	Sys06_Tab_MenuView					1284
+202308021563872	고객사별 메뉴권한 관리	9773	고객사별 메뉴권한 관리	70647	true	Sys07_Tab_CompanyRoleMenu					1286
+202308241571554	AssetERP 매뉴얼	0001	AssetERP 매뉴얼	202308241571552	true	Sys95_Tab_Manual					1297
+202308241571556	AssetERP 매뉴얼 등록	0001	-- 공통회사 관리자용 --	9530	true	Sys95_Tab_ManualAdmin					1298
+202309011584059	AssetERP 자문위원	0050	AssetERP 자문위원 정보 조회 및 등록(공통회사관리자로그인시만)	202308241571552	true	Sys91_Tab_AdviceMember					1301
+202309011584061	AssetERP 관리팀	0055	AssetERP 관리팀 정보 조회 및 등록(공통회사로그인시만)	202308241571552	true	Sys92_Tab_ManagementTeam					1303
+202309121585421	AssetERP 자문의원 관리	0002	AssetERP 자문의원 관리	9530	true	Sys91_Tab_AdviceMember					1302
+202309131585430	AssetERP 관리팀 등록	0003	AssetERP 관리팀 관리	9530	true	Sys92_Tab_ManagementTeam					1304
+202309131585526	고객별 서버사용량	9515	고객별 서버사용량	9510	true	Sys10_Tab_TotalSize					1306
+202309201588292	고객사별 사용자권한그룹 관리	9774	고객사별 권한그룹-사용자 맵핑 관리	70647	true	Sys05_Tab_CompanyUserRole					1307
+202410081988801	미사용 파일조회	9599	미사용 파일조회	82642	true	Sys10_Tab_TrashFileList		false	false		1353
+202411272035569	화면안내등록	9587		82642	true	Sys06_Tab_MenuGuide		false	false		1360
+202507162357374	로그아웃 알림 관리	9503	insert menu	9510	true	Sys86_Tab_Websocket		false	false		1404
+202508259010033	특정화면 사용요청	9170		9100	true	Sys53_Tab_SpecificMenuRequest		false	false		1409
+202508269012364	고객별 특정화면 관리	9570		9510	true	Sys53_Tab_SpecificMenuRequestAdmin		false	false		1410
+202510319170016	고객별 매뉴사용기록	9580	고객별 매뉴사용기록	9510	true	Sys96_Tab_OpenMenuLogAdmin		false	false		1429		false	false
+202607209796758	파일보안정책	1082		9530	true	Sys60_Tab_FilePolicy		false	false		1500
+---
+
+ D  ~/work/yunhee-cli  main  bat .env.local                                                              ✔  󰌠 3.14.7
+─────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     │ File: .env.local
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ TEST_DB="postgresql://idmsuser:idms8100@172.20.200.248:5433/idmsdb"
+   2 │ LOCAL_DB="postgresql://kdy987:kalpa987!@localhost:5432/asseterpdb"
+   3 │
+   4 │ YUNHEE_OLLAMA_URL="http://localhost:11434"
+   5 │ YUNHEE_OLLAMA_MODEL="qwen2.5-coder:14b"
+   6 │ YUNHEE_EMBED_MODEL="bge-m3:latest"
+   7 │
+   8 │ YUNHEE_CHROMA_HOST="localhost"
+   9 │ YUNHEE_CHROMA_PORT="8000"
+  10 │
+  11 │ YUNHEE_ASIS_SRC_DIR="/home/kdy987/oms-data/src/Asset-ERP"
+  12 │
+  13 │ YUNHEE_API_BASE_URL="http://localhost:8082/OMS"
+  14 │ YUNHEE_API_LOGIN_PATH="/api/auth/login"
+  15 │ YUNHEE_TEST_ADMIN_USER="admin"
+  16 │ YUNHEE_TEST_ADMIN_PASS="1111"
+  17 │ YUNHEE_TEST_COMPANY="admin"
+  18 │ YUNHEE_API_TENANT_HOST="{tenant}.localhost"
+  19 │ YUNHEE_TEST_USER="user"
+  20 │ YUNHEE_TEST_PASS="user1234!"
+
+---
+1. 변환목록 리스트가 있어야한다.
+2. 작업과정을 기록해야한다.
+3. 절대원칙이 있어야한다.
+4. 작업순서가 있어야한다.
+5. 4번의 각 작업 순서에 해당하는 방법이 있어야한다.
+6. 작업물의 결과를 확인할 수 있어야한다.
+
+
+우리는 OMS(AssetERP의 subset)을 가지고 테스트로 변환을 시도해 보았다. 그러나 이제는 실제 AssetERP(이것도 최신 git 으로 pull한 것은 아님. 그러나 기본적인 것 sys쪽은 별로 달라지지 않았음)을 가지고
+변환작업을 해 보려고 함.
+그래서
+원본소스 : /home/kdy987/oms-data/src/Asset-ERP/application/src 를 변환해 보기로 함.
+데이터베이스는 : LOCAL_DB="postgresql://kdy987:kalpa987!@localhost:5432/asseterpdb" 을 사용
+
+---
