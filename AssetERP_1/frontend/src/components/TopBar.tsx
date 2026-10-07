@@ -517,7 +517,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               </span>
             </Tooltip>
             <Tooltip title="로그아웃" placement="bottomRight">
-              <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', lineHeight: 1 }} onClick={() => onLogout?.()}>
                 <PoweroffOutlined style={{ fontSize: 17, color: '#fff' }} />
               </span>
             </Tooltip>
