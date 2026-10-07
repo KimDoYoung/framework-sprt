@@ -139,4 +139,56 @@
          ORDER BY seq, menu_nm
     </select>
 
+    <!--
+      A10 회사별 메뉴맵핑. AS-IS sys06_menu.selectByCompanyIdAll(L244): sys06_menu LEFT JOIN sys03_company_menu(그 회사), 부모별로 sys06_seq, sys06_menu_nm 순.
+      부모별 반복 대신 한 번에 읽고 서비스가 전위 순서로 편다. 같은 회사·메뉴 연결 행이 둘이면(DB에 3쌍) 작은 ID 하나만 쓴다(트리 행 ID가 메뉴 ID라서)
+    -->
+    <sql id="companyMenuTreeColumns">
+        m.sys06_menu_id          AS menu_id,
+        m.sys06_parent_id        AS parent_id,
+        0                        AS depth,
+        m.sys06_menu_nm          AS menu_nm,
+        m.sys06_seq              AS seq,
+        m.sys06_note             AS note,
+        c.sys03_company_menu_id  AS company_menu_id,
+        c.sys03_use_yn           AS use_yn
+    </sql>
+
+    <sql id="companyMenuOne">
+        LEFT JOIN LATERAL (SELECT sys03_company_menu_id, sys03_use_yn
+                             FROM sys03_company_menu
+                            WHERE sys03_menu_id = m.sys06_menu_id AND sys03_company_id = #{companyId}
+                            ORDER BY sys03_company_menu_id
+                            LIMIT 1) c ON true
+    </sql>
+
+    <select id="selectCompanyMenuTree" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuTreeRes">
+        SELECT <include refid="companyMenuTreeColumns"/>
+          FROM sys06_menu m
+               <include refid="companyMenuOne"/>
+         ORDER BY m.sys06_parent_id, m.sys06_seq, m.sys06_menu_nm
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertCompanyMenu">
+        INSERT INTO sys03_company_menu (sys03_company_menu_id, sys03_company_id, sys03_menu_id, sys03_use_yn)
+        VALUES (#{id}, #{companyId}, #{menuId}, #{useYn})
+    </insert>
+
+    <update id="updateCompanyMenuUseYn">
+        UPDATE sys03_company_menu
+           SET sys03_use_yn = #{useYn}
+         WHERE sys03_company_menu_id = #{id}
+           AND sys03_company_id      = #{companyId}
+    </update>
+
+    <select id="selectCompanyMenuNode" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuTreeRes">
+        SELECT <include refid="companyMenuTreeColumns"/>
+          FROM sys06_menu m
+               <include refid="companyMenuOne"/>
+         WHERE m.sys06_menu_id = #{menuId}
+    </select>
 </mapper>

@@ -1,11 +1,15 @@
 package kr.co.kfs.asseterp.biz.sys.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuSaveReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuTreeRes;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuRes;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuRow;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuSearchParam;
 import kr.co.kfs.asseterp.biz.sys.mapper.SysMenuMapper;
 import kr.co.kfs.asseterp.biz.user.dto.LoginAccount;
+import kr.co.kfs.asseterp.common.error.BusinessException;
+import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,5 +76,54 @@ public class SysMenuService {
                                 .map(r -> new MenuRes.Level3(String.valueOf(r.menuId()), r.menuNm(), r.menuNo(), r.classNm()))
                                 .toList()))
                 .toList();
+    }
+
+    // ── A10 회사별 메뉴맵핑 (AS-IS Sys06_Menu.selectByCompanyIdAll L83-116 / updateCompanyMenu L329-358) ──
+
+    /** 전체 메뉴 트리(parentId 0부터) + 그 회사의 연결 상태 → 전위 순서 평평한 목록 */
+    public List<CompanyMenuTreeRes> getCompanyMenuTree(UserPrincipal user, Long companyId) {
+        requireSysAdmin(user);
+        Map<Long, List<CompanyMenuTreeRes>> children = new LinkedHashMap<>();
+        for (CompanyMenuTreeRes r : sysMenuMapper.selectCompanyMenuTree(companyId)) {
+            children.computeIfAbsent(r.parentId(), k -> new ArrayList<>()).add(r); // SQL이 부모별 sys06_seq, sys06_menu_nm 순
+        }
+        List<CompanyMenuTreeRes> out = new ArrayList<>();
+        addTree(out, children, ROOT_MENU_ID, 0, new java.util.HashSet<>());
+        return out;
+    }
+
+    /** 부모에서 닿는 메뉴만(AS-IS도 parentId 0부터 내려가며 읽는다). 순환이 있으면 한 번만 */
+    private void addTree(List<CompanyMenuTreeRes> out, Map<Long, List<CompanyMenuTreeRes>> children, Long parentId, int depth,
+                         java.util.Set<Long> seen) {
+        for (CompanyMenuTreeRes r : children.getOrDefault(parentId, List.of())) {
+            if (!seen.add(r.menuId())) {
+                continue;
+            }
+            out.add(r.withDepth(depth));
+            addTree(out, children, r.menuId(), depth + 1, seen);
+        }
+    }
+
+    /** 바뀐 행마다 연결 행이 없으면 채번해 INSERT, 있으면 use_yn UPDATE → 저장된 행(다시 조회하지 않는다 — AS-IS 그대로) */
+    @Transactional
+    public List<CompanyMenuTreeRes> updateCompanyMenus(UserPrincipal user, Long companyId, List<CompanyMenuSaveReq> rows) {
+        requireSysAdmin(user);
+        List<CompanyMenuTreeRes> saved = new ArrayList<>();
+        for (CompanyMenuSaveReq r : rows) {
+            if (r.companyMenuId() == null) {
+                sysMenuMapper.insertCompanyMenu(sysMenuMapper.selectNextId(), companyId, r.menuId(), r.useYn());
+            } else if (sysMenuMapper.updateCompanyMenuUseYn(r.companyMenuId(), companyId, r.useYn()) == 0) {
+                throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+            }
+            saved.add(sysMenuMapper.selectCompanyMenuNode(companyId, r.menuId()));
+        }
+        return saved;
+    }
+
+    /** 회사별 메뉴맵핑은 KFS 관리자만 (AS-IS는 메뉴가 admin 회사에만 있어서 막았다) */
+    private static void requireSysAdmin(UserPrincipal user) {
+        if (!user.isSysAdmin()) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
     }
 }

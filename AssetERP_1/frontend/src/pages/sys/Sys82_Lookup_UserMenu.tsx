@@ -63,20 +63,9 @@ export const Sys82_Lookup_UserMenu: React.FC<Props> = ({ userId, onClose }) => {
   // [E7] treeGrid.CellMouseDown (L127) → getColumn() L139-167: 권한 칸이면 값을 뒤집고(null → true), true면 조상도 true, 자손은 같은 값
   const getColumn = (e: CellClickedEvent<AdminUserMenu>) => {
     if (!e.data) return;
-    const id = e.data.menuId;
-    tree.expandDeep(id);
+    tree.expandDeep(e.data.menuId);
     if (e.colDef.field !== 'useYn') return;
-    const next = e.data.useYn == null ? true : e.data.useYn !== 'true';
-    const value = String(next);
-    const targets = [...(next ? tree.ancestors(id) : []), id, ...tree.descendants(id)];
-    const api = e.api;
-    targets.forEach(t => {
-      const node = api.getRowNode(String(t));
-      if (node?.data) {
-        node.setDataValue('useYn', value);
-        changed.current.add(t);
-      }
-    });
+    tree.cascadeToggle(e.api, e.data, 'useYn').forEach(t => changed.current.add(t));
   };
 
   // update() L230-245: 바뀐 행 → 서비스 sys.Sys82_AdminUserMenu.updateMenu(userId) → 결과로 그 행을 바꾼다(다시 조회하지 않음)

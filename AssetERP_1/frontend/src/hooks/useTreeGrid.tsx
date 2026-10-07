@@ -6,9 +6,10 @@
  *   tree.setRows(list);
  *   <SingleGrid gridRef={tree.gridRef} {...tree.gridProps} columnDefs={[tree.treeCol('menuNm', 250, '매뉴명'), …]} />
  *   버튼: tree.expandAll / tree.collapseAll, 노드: tree.toggle(id) / tree.expandAncestors(id) / tree.descendants(id) / tree.ancestors(id)
+ *   권한 칸 클릭(AS-IS getColumn): tree.cascadeToggle(api, row, 'useYn') → 바꾼 행 ID
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ColDef, IRowNode } from 'ag-grid-community';
+import type { ColDef, GridApi, IRowNode } from 'ag-grid-community';
 import type { AgGridReact, CustomCellRendererProps } from 'ag-grid-react';
 import { CaretDownOutlined, CaretRightOutlined } from '@ant-design/icons';
 
@@ -99,12 +100,12 @@ export function useTreeGrid<T extends object>({ idField, parentField, depthField
       const depth = Number(p.data[depthField] ?? 0);
       const open = expandedRef.current.has(id);
       return (
-        <span style={{ paddingLeft: depth * 16, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+        <span style={{ paddingLeft: depth * 16, display: 'flex', alignItems: 'center', gap: 4, height: '100%' }}>
           {hasChildren(id) ? (
-            <span style={{ cursor: 'pointer', width: 14 }} onClick={e => { e.stopPropagation(); toggle(id); }}>
+            <span style={{ cursor: 'pointer', display: 'inline-flex', width: 14 }} onClick={e => { e.stopPropagation(); toggle(id); }}>
               {open ? <CaretDownOutlined /> : <CaretRightOutlined />}
             </span>
-          ) : <span style={{ width: 14 }} />}
+          ) : <span style={{ display: 'inline-block', width: 14 }} />}
           {p.value as React.ReactNode}
         </span>
       );
@@ -114,6 +115,26 @@ export function useTreeGrid<T extends object>({ idField, parentField, depthField
   // 펼침이 바뀌면 트리 컬럼 아이콘을 다시 그린다
   useEffect(() => { gridRef.current?.api?.refreshCells({ force: true }); }, [expanded]);
 
+  /**
+   * AS-IS 트리 권한 칸 클릭(getColumn): 값을 뒤집고(null → true), true면 조상도 true, 자손은 모두 같은 값.
+   * 바꾼 행 ID 목록을 돌려준다(저장할 변경 행). 값은 DB 형태 'true'/'false' 문자열
+   */
+  const cascadeToggle = useCallback((api: GridApi<T>, row: T, field: keyof T & string): number[] => {
+    const id = idOf(row);
+    const cur = row[field] as unknown;
+    const next = cur == null ? true : !(cur === true || cur === 'true');
+    const targets = [...(next ? ancestors(id) : []), id, ...descendants(id)];
+    const changed: number[] = [];
+    targets.forEach(t => {
+      const node = api.getRowNode(String(t));
+      if (node?.data) {
+        node.setDataValue(field, String(next));
+        changed.push(t);
+      }
+    });
+    return changed;
+  }, [idOf, ancestors, descendants]);
+
   const gridProps = {
     rowData: rows,
     getRowId: (p: { data: T }) => String(idOf(p.data)),
@@ -121,5 +142,5 @@ export function useTreeGrid<T extends object>({ idField, parentField, depthField
     doesExternalFilterPass: (node: IRowNode<T>) => !node.data || ancestors(idOf(node.data)).every(a => expandedRef.current.has(a)),
   };
 
-  return { gridRef, rows, setRows, setRowsState, expanded, expandAll, collapseAll, toggle, expandAncestors, expandDeep, ancestors, descendants, hasChildren, treeCol, gridProps };
+  return { gridRef, rows, setRows, setRowsState, expanded, expandAll, collapseAll, toggle, expandAncestors, expandDeep, ancestors, descendants, hasChildren, cascadeToggle, treeCol, gridProps };
 }

@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, Company, CompanyCreateReq, CompanyManage, LoginSecure, Role } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CompanyMenuNode, Company, CompanyCreateReq, CompanyManage, LoginSecure, Role } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -160,6 +160,21 @@ export const sysApi = {
   updateAdminUserMenus: async (userId: number, rows: AdminUserMenu[]): Promise<AdminUserMenu[]> => {
     const body = rows.map(({ menuId, adminUserMenuId, useYn }) => ({ menuId, adminUserMenuId, useYn }));
     const res = await apiClient.put<ApiResponse<AdminUserMenu[]>>(`v1/sys/admin-users/${userId}/menus`, body);
+    return res.data.data ?? [];
+  },
+
+  // ── A10 회사별 메뉴맵핑 (Sys03_Tab_CompanyMenu) ──
+
+  /** AS-IS sys.Sys06_Menu.selectByCompanyIdAll: 전체 메뉴 + 그 회사 연결 상태 */
+  getCompanyMenuTree: async (companyId: number): Promise<CompanyMenuNode[]> => {
+    const res = await apiClient.get<ApiResponse<CompanyMenuNode[]>>(`v1/sys/menus/companies/${companyId}`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys06_Menu.updateCompanyMenu: 바뀐 행 → 저장된 행 */
+  updateCompanyMenus: async (companyId: number, rows: CompanyMenuNode[]): Promise<CompanyMenuNode[]> => {
+    const body = rows.map(({ menuId, companyMenuId, useYn }) => ({ menuId, companyMenuId, useYn }));
+    const res = await apiClient.put<ApiResponse<CompanyMenuNode[]>>(`v1/sys/menus/companies/${companyId}`, body);
     return res.data.data ?? [];
   },
 };

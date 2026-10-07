@@ -126,3 +126,16 @@ export interface AdminUserMenu {
   /** 'true'/'false'/null(설정 없음) */
   useYn?: string | null;
 }
+
+/** 회사별 메뉴맵핑 트리 행 (GET /api/v1/sys/menus/companies/{companyId}) — 전위 순서, depth로 들여쓰기 */
+export interface CompanyMenuNode {
+  menuId: number;
+  parentId: number;
+  depth: number;
+  menuNm: string;
+  seq?: string | null;
+  note?: string | null;
+  companyMenuId?: number | null;
+  /** sys03_use_yn: 'true'/'false'/null(연결 없음) */
+  useYn?: string | null;
+}

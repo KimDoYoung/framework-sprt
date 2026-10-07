@@ -2,7 +2,9 @@ package kr.co.kfs.asseterp.biz.sys.mapper;
 
 import kr.co.kfs.asseterp.biz.sys.dto.MenuRow;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuSearchParam;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuTreeRes;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -20,4 +22,17 @@ public interface SysMenuMapper {
 
     /** 사원: parentId의 손자 메뉴(3차) 중 권한이 있는 메뉴 */
     List<MenuRow> searchTailMenusByUser(MenuSearchParam param);
+
+    // ── A10 회사별 메뉴맵핑 (AS-IS Sys06_Menu.selectByCompanyIdAll / updateCompanyMenu) ──
+
+    /** AS-IS selectByCompanyIdAll(부모별 반복)을 한 번에: 전체 메뉴 + 그 회사 연결, 부모·sys06_seq·sys06_menu_nm 순 */
+    List<CompanyMenuTreeRes> selectCompanyMenuTree(Long companyId);
+
+    Long selectNextId();
+
+    int insertCompanyMenu(@Param("id") Long id, @Param("companyId") Long companyId, @Param("menuId") Long menuId, @Param("useYn") String useYn);
+
+    int updateCompanyMenuUseYn(@Param("id") Long id, @Param("companyId") Long companyId, @Param("useYn") String useYn);
+
+    CompanyMenuTreeRes selectCompanyMenuNode(@Param("companyId") Long companyId, @Param("menuId") Long menuId);
 }
