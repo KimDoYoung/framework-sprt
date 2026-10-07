@@ -9,14 +9,12 @@ export const GRID_COLORS = {
   rowSelected: '#f3cdbb',
   oddRow: '#fafbfc',
   summaryRow: '#f8fafc',
-  /** 헤더 배경 (흐린 회색 — Ant Design Table 표준) */
-  header: '#fafafa',
+  /** 헤더 배경 (연회색 — 본문 흰 바탕과 구분되게 Ant Design 표준 #fafafa보다 약간 진하게) */
+  header: '#dde1e7',
   /** 헤더 경계선 */
   headerBorder: '#e8e8e8',
   /** 기본 테두리 / 행 하단 경계선 (글씨와 겹치지 않는 흐린 색) */
   border: '#f0f0f0',
-  /** 컬럼 세로 구분선 (은은한 색) */
-  columnBorder: '#f5f5f5',
   /** 헤더 글자색 */
   headerText: '#475569',
   /** 본문 글자색 (눈이 편안한 짙은 차콜) */
@@ -39,14 +37,16 @@ const base = {
   cellTextColor: GRID_COLORS.cellText,
   borderColor: GRID_COLORS.border,
   rowBorder: { color: GRID_COLORS.border, style: 'solid', width: 1 },
-  columnBorder: { color: GRID_COLORS.columnBorder, style: 'solid', width: 1 },
+  columnBorder: false, // 셀 좌우 세로선 없음
   headerRowBorder: { color: GRID_COLORS.headerBorder, style: 'solid', width: 1 },
-  headerColumnBorder: { color: GRID_COLORS.headerBorder, style: 'solid', width: 1 },
+  headerColumnBorder: false,
   rowHoverColor: GRID_COLORS.rowHover,
   selectedRowBackgroundColor: GRID_COLORS.rowSelected,
   oddRowBackgroundColor: GRID_COLORS.oddRow,
   cellHorizontalPadding: 10,
-  wrapperBorderRadius: 4,
+  wrapperBorder: false, // 외곽 테두리 없음
+  wrapperBorderRadius: 0,
+  rangeSelectionBorderColor: 'transparent', // 셀 클릭 시 포커스 박스 숨김 (키보드 이동은 유지)
 };
 
 export const gridThemes = {
