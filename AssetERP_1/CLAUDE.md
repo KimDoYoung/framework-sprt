@@ -26,9 +26,10 @@ TOBE는 새로 설계하지 않고 원본의 레이아웃·버튼·이벤트·�
 
 - 세션 시작에 `yunhee --version` → 05 §7 기준 버전보다 높으면 `yunhee changelog --since <기준>`으로 바뀐 것만 본다.
 - AS-IS는 **색인 → 메서드 줄 범위만**. 원본 Java·매퍼 XML·긴 색인을 통째로 읽지 않는다.
-- 테이블은 `yunhee table`, TOBE 코드는 `yunhee outline` → 필요한 줄만, 빌드·테스트·배포는 `yunhee run`, API는 `yunhee api`.
-- `yunhee api`는 **항상 `--base http://localhost:8082/AssetERP_1`**(개발 서버면 `http://localhost:8080`). 고객사 관리자로는 `-t admin -c <회사코드>`.
-- yunhee로 안 되는 것(DB 데이터 확인, 브라우저 확인)만 psql·`tools/`로 하고, 출력은 몇 줄로 줄인다. 다른 방법을 쓴 사유는 `{id}-작업기록`에 한 줄 남긴다.
+- 테이블은 `yunhee table`, DB 데이터는 `yunhee sql`(읽기 전용, 쓰기 시험은 `--rollback`), TOBE 코드는 `yunhee outline` → 필요한 줄만, 빌드·테스트·배포는 `yunhee run`.
+- 백엔드: SQL은 `yunhee port-sql`·`port-save`로 옮기고, 매퍼는 컴파일 전에 `yunhee sql-check --tobe backend/src/main/resources/mapper`.
+- 확인: API는 `yunhee api`, 조회 API와 AS-IS SQL 비교는 `yunhee compare`. 기본 주소는 `.env.local`(AssetERP_1 Tomcat), 고객사 관리자는 `-c <회사코드>`.
+- yunhee로 안 되는 것(브라우저 확인)만 `tools/`로 하고, 출력은 몇 줄로 줄인다. 다른 방법을 쓴 사유는 `{id}-작업기록`에 한 줄 남긴다.
 
 ## 고정 사항
 
