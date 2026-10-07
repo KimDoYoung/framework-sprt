@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS sys26_login.insert 와 같은 형식 (mac/os는 서버에서 알 수 없어 비움) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.auth.mapper.LoginHistoryMapper">
+
+    <insert id="insert">
+        INSERT INTO sys26_login (
+            sys26_login_id, sys26_person_id, sys26_open_date, sys26_ip_address,
+            sys26_status_cd, sys26_login_mode, sys26_mac_address, sys26_os, sys26_browser
+        ) VALUES (
+            f_create_seq(), #{personId}, f_sysdate(), #{ipAddress},
+            #{statusCode}, #{loginMode}, NULL, NULL, LEFT(#{browser}, 100)
+        )
+    </insert>
+
+</mapper>
