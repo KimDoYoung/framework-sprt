@@ -19,6 +19,13 @@ export interface TreeGridOptions<T> {
   depthField: keyof T & string;
 }
 
+/**
+ * 펼침 단추(▶/▼)에서 온 클릭인지. 그리드 셀 클릭(onCellClicked)은 React stopPropagation보다 먼저 받으므로,
+ * 셀 클릭 처리(AS-IS getColumn 등)는 이것으로 펼침 단추 클릭을 건너뛴다.
+ */
+export const isTreeToggleClick = (event: Event | null | undefined) =>
+  !!(event?.target instanceof Element && event.target.closest('[data-tree-toggle]'));
+
 export function useTreeGrid<T extends object>({ idField, parentField, depthField }: TreeGridOptions<T>) {
   const gridRef = useRef<AgGridReact<T>>(null);
   const [rows, setRowsState] = useState<T[]>([]);
@@ -102,7 +109,7 @@ export function useTreeGrid<T extends object>({ idField, parentField, depthField
       return (
         <span style={{ paddingLeft: depth * 16, display: 'flex', alignItems: 'center', gap: 4, height: '100%' }}>
           {hasChildren(id) ? (
-            <span style={{ cursor: 'pointer', display: 'inline-flex', width: 14 }} onClick={e => { e.stopPropagation(); toggle(id); }}>
+            <span data-tree-toggle style={{ cursor: 'pointer', display: 'inline-flex', width: 14 }} onClick={e => { e.stopPropagation(); toggle(id); }}>
               {open ? <CaretDownOutlined /> : <CaretRightOutlined />}
             </span>
           ) : <span style={{ display: 'inline-block', width: 14 }} />}

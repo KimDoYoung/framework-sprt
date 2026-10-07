@@ -10,7 +10,7 @@ import { errorMessage } from '@/api/client';
 import { CompanyMenuNode } from '@/types/sys';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
-import { useTreeGrid } from '@/hooks/useTreeGrid';
+import { isTreeToggleClick, useTreeGrid } from '@/hooks/useTreeGrid';
 
 const gb = gbFor<CompanyMenuNode>();
 
@@ -45,7 +45,7 @@ export const Sys03_Tree_CompanyMenu: React.FC<Props> = ({ companyId }) => {
 
   // [E5] treeGrid.CellMouseDown (L83) → getColumn() L95-133: 행을 깊게 펼치고, 권한 칸이면 값을 뒤집고 조상(true일 때)·자손에 같은 값
   const getColumn = (e: CellClickedEvent<CompanyMenuNode>) => {
-    if (!e.data) return;
+    if (!e.data || isTreeToggleClick(e.event)) return; // 펼침 단추 클릭은 접기·펼치기만
     tree.expandDeep(e.data.menuId);
     if (e.colDef.field !== 'useYn') return;
     tree.cascadeToggle(e.api, e.data, 'useYn').forEach(t => changed.current.add(t));

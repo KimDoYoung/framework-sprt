@@ -10,7 +10,7 @@ import { errorMessage } from '@/api/client';
 import { AdminUserMenu } from '@/types/sys';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
-import { useTreeGrid } from '@/hooks/useTreeGrid';
+import { isTreeToggleClick, useTreeGrid } from '@/hooks/useTreeGrid';
 
 const gb = gbFor<AdminUserMenu>();
 
@@ -62,7 +62,7 @@ export const Sys82_Lookup_UserMenu: React.FC<Props> = ({ userId, onClose }) => {
 
   // [E7] treeGrid.CellMouseDown (L127) → getColumn() L139-167: 권한 칸이면 값을 뒤집고(null → true), true면 조상도 true, 자손은 같은 값
   const getColumn = (e: CellClickedEvent<AdminUserMenu>) => {
-    if (!e.data) return;
+    if (!e.data || isTreeToggleClick(e.event)) return; // 펼침 단추 클릭은 접기·펼치기만
     tree.expandDeep(e.data.menuId);
     if (e.colDef.field !== 'useYn') return;
     tree.cascadeToggle(e.api, e.data, 'useYn').forEach(t => changed.current.add(t));

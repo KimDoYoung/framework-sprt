@@ -27,6 +27,12 @@ const [OUT, COMPANY = 'kfstest'] = process.argv.slice(2);
     out.treeExpandedRendered = await countRows(right);
     await right.getByRole('button', { name: '감추기' }).click(); await p.waitForTimeout(500);
     out.treeCollapsed = await countRows(right);
+    // 펼침 단추(▶) 두 번 → 펼쳤다가 다시 접힘 (셀 클릭의 '깊게 펼침'이 끼어들면 안 된다)
+    const toggle = right.locator('.ag-row[row-index="0"] [data-tree-toggle]');
+    await toggle.click(); await p.waitForTimeout(500);
+    out.toggleOpen = await countRows(right);
+    await right.locator('.ag-row[row-index="0"] [data-tree-toggle]').click(); await p.waitForTimeout(500);
+    out.toggleClosed = await countRows(right);
     // 첫 루트의 권한 칸 클릭 → 루트와 자손이 같은 값으로 (저장하지 않음)
     const first = right.locator('.ag-row[row-index="0"]');
     out.rootBefore = await first.locator('.ag-cell[col-id="useYn"] input').isChecked();
