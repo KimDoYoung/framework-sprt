@@ -1,6 +1,6 @@
 import { useCallback, useMemo, type CSSProperties, type Ref } from 'react';
 import { AgGridReact, type AgGridReactProps } from 'ag-grid-react';
-import type { ColDef, ColGroupDef, RowClassParams, SortChangedEvent, FilterChangedEvent } from 'ag-grid-community';
+import type { ColDef, ColGroupDef, RowClassParams, RowDataUpdatedEvent, SortChangedEvent, FilterChangedEvent } from 'ag-grid-community';
 import { GRID_COLORS, gridThemes, gridThemeWithHeader, type GridDensity } from './theme';
 import './grid.css';
 
@@ -66,6 +66,7 @@ export function BaseGrid<T>({
   getRowClass,
   onSortChanged,
   onFilterChanged,
+  onRowDataUpdated,
   ...rest
 }: BaseGridProps<T>) {
   const cols = useMemo<(ColDef<T> | ColGroupDef<T>)[]>(
@@ -100,7 +101,7 @@ export function BaseGrid<T>({
     [density, headerColor],
   );
 
-  // 정렬·필터 후 행번호 다시 그리기
+  // 정렬·필터·데이터 교체 후 행번호 다시 그리기 (getRowId로 행을 재사용하면 순서가 바뀌어도 셀이 그대로 남는다)
   const refreshRowNum = (api: SortChangedEvent<T>['api']) => {
     if (rowNumber) api.refreshCells({ columns: [ROWNUM_ID], force: true });
   };
@@ -122,6 +123,10 @@ export function BaseGrid<T>({
         onFilterChanged={(e: FilterChangedEvent<T>) => {
           refreshRowNum(e.api);
           onFilterChanged?.(e);
+        }}
+        onRowDataUpdated={(e: RowDataUpdatedEvent<T>) => {
+          refreshRowNum(e.api);
+          onRowDataUpdated?.(e);
         }}
         {...rest}
       />

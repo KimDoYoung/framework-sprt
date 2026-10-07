@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/sys/mapper/sys09_code.xml selectByCodeKind L99 (applyDate = 오늘) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysCodeMapper">
+
+    <select id="searchCodesByKind" resultType="kr.co.kfs.asseterp.biz.sys.dto.CodeRes">
+        SELECT sys09_code AS code,
+               sys09_name AS name
+          FROM sys09_code c, sys08_code_kind k
+         WHERE sys08_code_kind_id = sys09_code_kind_id
+           AND ( ( COALESCE(sys08_sys_yn,'false') = 'true'  AND sys09_company_id = 0 ) OR
+                 ( COALESCE(sys08_sys_yn,'false') != 'true' AND sys09_company_id = #{companyId} ) )
+           AND sys08_kind_cd = #{kindCode}
+           AND ( ( COALESCE(sys09_close_yn,'false') = 'true' AND COALESCE(sys09_close_date,'1900-12-31') <![CDATA[>=]]> f_trunc(f_sysdate()) ) OR
+                 ( COALESCE(sys09_close_yn,'false') = 'false' ) )
+           AND sys09_apply_date = ( SELECT max(x.sys09_apply_date)
+                                      FROM sys09_code x
+                                     WHERE x.sys09_code_kind_id = c.sys09_code_kind_id
+                                       AND x.sys09_company_id = c.sys09_company_id
+                                       AND x.sys09_code = c.sys09_code
+                                       AND x.sys09_apply_date <![CDATA[<=]]> f_trunc(f_sysdate()) )
+         ORDER BY sys09_seq
+    </select>
+</mapper>

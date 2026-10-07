@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS server/sys/mapper/sys01_company.xml (selectById L115, selectByName L169)
+  + UpdateDataModel(sys01_company)의 동적 INSERT를 명시 SQL로, 회사 추가 후 초기화 SQL(각 원본 매퍼 그대로) (A15-작업방법 "SQL 이식")
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysCompanyMapper">
+
+    <!-- 그리드 컬럼만. 이름 컬럼은 AS-IS SELECT의 f_cdnm 식 그대로, Y/N·숫자의 null은 AS-IS 모델 getter 기본값으로 -->
+    <sql id="companyColumns">
+        sys01_company_id                                                                  AS company_id,
+        sys01_company_nm                                                                  AS company_nm,
+        sys01_loc_nm                                                                      AS loc_nm,
+        sys01_biz_no                                                                      AS biz_no,
+        COALESCE(sys01_login_secure_yn, 'false')                                          AS login_secure_yn,
+        sys01_icam_company_cd                                                             AS icam_company_cd,
+        sys01_icam_advis_company_cd                                                       AS icam_advis_company_cd,
+        COALESCE(sys01_use_yn, 'false')                                                   AS use_yn,
+        sys01_note                                                                        AS note,
+        sys01_emp_info                                                                    AS emp_info,
+        sys01_mobile_tel_no                                                               AS mobile_tel_no,
+        sys01_office_tel_no                                                               AS office_tel_no,
+        CONCAT(sys01_zip_addr, ' ' || sys01_zip_detail)                                   AS full_address,
+        sys01_company_rep_nm                                                              AS company_rep_nm,
+        sys01_mail_info                                                                   AS mail_info,
+        COALESCE(sys01_mail_log_yn, 'false')                                              AS mail_log_yn,
+        COALESCE(sys01_appr_step_lock_yn, 'true')                                         AS appr_step_lock_yn,
+        f_cdnm('DcrNumberingCode', sys01_dcr_numbering_cd, sys01_company_id, f_sysdate()) AS dcr_numbering_nm,
+        COALESCE(sys01_dcr_detail_use_yn, 'false')                                        AS dcr_detail_use_yn,
+        COALESCE(sys01_apr_manager_info_yn, 'false')                                      AS apr_manager_info_yn,
+        f_cdnm('MonthsCode', sys01_leave_month_cd, sys01_company_id, f_sysdate())         AS leave_month_nm,
+        COALESCE(sys01_leave_yn, 'false')                                                 AS leave_yn,
+        COALESCE(sys01_leave_compulsion_rt, 100)                                          AS leave_compulsion_rt,
+        f_cdnm('IcsCheckListCycleType', sys01_ics_check_cycle_type, sys01_company_id, f_sysdate())  AS ics_check_cycle_nm,
+        f_cdnm('IcsCheckListCycleType', sys01_ics_comply_cycle_type, sys01_company_id, f_sysdate()) AS ics_comply_cycle_nm,
+        f_cdnm('TaxType', sys01_tax_type, sys01_company_id, f_sysdate())                  AS tax_type_nm,
+        f_cdnm('MonthsCode', sys01_account_close_month, sys01_company_id, f_sysdate())    AS account_close_month_nm,
+        f_cdnm('OwnerCapitalApplyDateType', sys01_owner_capital_apply_cd, sys01_company_id, f_sysdate()) AS owner_capital_apply_nm,
+        COALESCE(sys01_ast_manager_auto_yn, 'false')                                      AS ast_manager_auto_yn,
+        COALESCE(sys01_ics_guide_yn, 'false')                                             AS ics_guide_yn,
+        sys01_notice_date                                                                 AS notice_date,
+        sys01_start_date                                                                  AS start_date
+    </sql>
+
+    <!-- AS-IS selectByName: 고객명+서브도메인+비고 LIKE, useYn='true'면 사용고객(null은 사용으로 봄)만 -->
+    <select id="searchCompanies" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyRes">
+        SELECT <include refid="companyColumns"/>
+          FROM sys01_company
+         WHERE UPPER(CONCAT(sys01_company_nm, sys01_loc_nm, sys01_note)) LIKE UPPER(#{companyName})
+        <if test="useYn != null">
+           AND ( (#{useYn} = 'true' AND COALESCE(sys01_use_yn, 'true') = 'true') OR (#{useYn} = 'false') )
+        </if>
+         ORDER BY sys01_company_id
+    </select>
+
+    <!-- AS-IS selectById -->
+    <select id="selectCompany" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyRes">
+        SELECT <include refid="companyColumns"/>
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="countByLocNm" resultType="int">
+        SELECT count(*) FROM sys01_company WHERE LOWER(sys01_loc_nm) = LOWER(#{locNm})
+    </select>
+
+    <select id="countByBizNo" resultType="int">
+        SELECT count(*) FROM sys01_company WHERE sys01_biz_no = #{bizNo}
+    </select>
+
+    <!-- UpdateDataModel 동적 INSERT: 팝업이 채우는 값만 (나머지 매핑 컬럼은 AS-IS도 null) -->
+    <insert id="insertCompany">
+        INSERT INTO sys01_company (sys01_company_id, sys01_company_nm, sys01_loc_nm, sys01_emgrcy_passwd, sys01_start_date,
+                                   sys01_mail_info, sys01_biz_no, sys01_leave_month_cd, sys01_tax_type, sys01_account_close_month)
+        VALUES (#{companyId}, #{companyNm}, #{locNm}, #{emgrcyPasswd}, #{startDate},
+                #{mailInfo}, #{bizNo}, #{leaveMonthCd}, #{taxType}, #{accountCloseMonth})
+    </insert>
+
+    <!-- 1. AS-IS org01_code.insertOrg01Code (org_cd 10000, 개설일 = 설립일) -->
+    <insert id="insertOrgCode">
+        INSERT INTO org01_code (org01_code_id, org01_company_id, org01_org_cd, org01_open_date)
+        VALUES (#{orgCodeId}, #{companyId}, '10000', #{startDate})
+    </insert>
+
+    <!-- 1. AS-IS org02_info.insertOrg02Info (회사명, 최초등록, 상위 0, 레벨 0010, 정렬 0) -->
+    <insert id="insertOrgInfo">
+        INSERT INTO org02_info (org02_info_id, org02_kor_nm, org02_mod_date, org02_mod_reason, org02_code_id,
+                                org02_parent_code_id, org02_level_cd, org02_sort_order)
+        VALUES (#{orgInfoId}, #{companyNm}, #{startDate}, '최초등록', #{orgCodeId}, 0, '0010', '0')
+    </insert>
+
+    <!-- 2. AS-IS sys09_code.insertFromSys09: admin(0) 코드 중 시스템코드가 아닌 것 -->
+    <insert id="insertCodesFromAdmin">
+        INSERT INTO sys09_code (sys09_code_id, sys09_code, sys09_name, sys09_seq, sys09_note, sys09_apply_date,
+                                sys09_close_yn, sys09_code_kind_id, sys09_company_id, sys09_close_date, sys09_desc)
+        SELECT f_create_seq(), sys09_code, sys09_name, sys09_seq, sys09_note, sys09_apply_date,
+               sys09_close_yn, sys09_code_kind_id, #{companyId}, NULL, sys09_desc
+          FROM sys08_code_kind
+               INNER JOIN sys09_code ON sys08_code_kind_id = sys09_code_kind_id
+         WHERE sys08_sys_yn = 'false'
+           AND sys09_company_id = 0
+    </insert>
+
+    <!-- 4. AS-IS call dcr01_import_from_admin(?) : 문서분류(dcr01)를 admin(0)에서 복사 -->
+    <update id="importDcrFromAdmin">
+        CALL dcr01_import_from_admin(#{companyId})
+    </update>
+
+    <!-- 5. AS-IS ast02_detail.insertFromAst02 (classTreeId 0, useYn 'true') -->
+    <insert id="insertAstDetailFromAdmin">
+        INSERT INTO ast02_detail
+        SELECT f_create_seq(), ast02_ast_class_tree_id, ast02_seq, ast02_title, ast02_value, ast02_note,
+               ast02_use_yn, ast02_default_yn, ast02_tag, #{companyId}
+          FROM ast02_detail
+         WHERE ast02_company_id = 0
+           AND ast02_ast_class_tree_id = 0
+           AND ast02_use_yn = 'true'
+    </insert>
+
+    <!-- 6. AS-IS sys30_leave_year.insertFromSys30 -->
+    <insert id="insertLeaveYearFromAdmin">
+        INSERT INTO sys30_leave_year
+        SELECT f_create_seq(), #{companyId}, sys30_year, sys30_leave_days
+          FROM sys30_leave_year
+         WHERE sys30_company_id = 0
+    </insert>
+
+    <!-- 7. AS-IS pay04_formula.insertFromAdmin (itemTypeCodeName = 'PayFormulaCode') -->
+    <insert id="insertPayFormulaFromAdmin">
+        INSERT INTO pay04_formula (pay04_formula_id, pay04_company_id, pay04_start_date, pay04_formula_cd,
+                                   pay04_formula_form, pay04_rate, pay04_note)
+        SELECT f_create_seq(), #{companyId}, a.pay04_start_date, a.pay04_formula_cd, a.pay04_formula_form, a.pay04_rate, a.pay04_note
+          FROM pay04_formula a
+               INNER JOIN sys09_code b      ON a.pay04_formula_cd = b.sys09_code AND sys09_company_id = pay04_company_id
+               INNER JOIN sys08_code_kind c ON c.sys08_code_kind_id = b.sys09_code_kind_id
+         WHERE sys08_sys_yn = 'false'
+           AND pay04_company_id = 0
+           AND sys08_kind_cd = 'PayFormulaCode'
+           AND pay04_start_date = ( SELECT max(d.pay04_start_date)
+                                      FROM pay04_formula d
+                                     WHERE d.pay04_company_id = 0
+                                       AND d.pay04_start_date <![CDATA[<=]]> f_sysdate() )
+    </insert>
+
+    <!-- 8. AS-IS ics02_manager.insertFromIcs02 -->
+    <insert id="insertIcsManager">
+        INSERT INTO ics02_manager (ics02_manager_id, ics02_company_id, ics02_manager_group_nm, ics02_default_yn)
+        VALUES (f_create_seq(), #{companyId}, '미지정 통제그룹', 'true')
+    </insert>
+
+    <!-- 9. AS-IS act01_account_code.insertFromAct01 -->
+    <insert id="insertAccountCodesFromAdmin">
+        INSERT INTO act01_account_code
+        SELECT f_create_seq(), #{companyId}, act01_account_cd, act01_account_nm, act01_account_nm2, act01_account_enm,
+               act01_parent_cd, act01_attribute_cd, act01_drcr_type, act01_slip_yn, act01_use_yn, act01_content,
+               act01_fss_yn, act01_fss_account_nm, act01_fss_slip_yn, act01_print_yn
+          FROM act01_account_code
+         WHERE act01_company_id = 0
+    </insert>
+
+    <!-- 11. AS-IS ics30_compliance.insertFormIcs30 -->
+    <insert id="insertCompliancesFromAdmin">
+        INSERT INTO ics30_compliance
+        SELECT f_create_seq(), #{companyId}, ics30_start_date, ics30_compliance_type, ics30_sub_num, ics30_content,
+               ics30_na_use_yn, ics30_use_yn, ics30_use_close_date, ics30_note, ics30_date_fix_yn
+          FROM ics30_compliance
+         WHERE ics30_company_id = 0
+           AND ics30_use_yn = 'true'
+    </insert>
+
+    <!-- 12. AS-IS ics33_compliance_answer.insertFormIcs30 -->
+    <insert id="insertComplianceAnswersFromAdmin">
+        INSERT INTO ics33_compliance_answer
+        SELECT f_create_seq(), #{companyId}, ics33_start_date, ics33_compliance_type, ics33_case_no,
+               ics33_answer1_cd, ics33_answer2_cd, ics33_answer3_cd, ics33_answer4_cd, ics33_answer5_cd
+          FROM ics33_compliance_answer
+         WHERE ics33_company_id = 0
+    </insert>
+
+    <!-- 13. AS-IS bbs12_application_form.insertFormBbs12 -->
+    <insert id="insertApplicationFormsFromAdmin">
+        INSERT INTO bbs12_application_form
+        SELECT f_create_seq(), #{companyId}, bbs12_app_type, bbs12_content, bbs12_public_yn, bbs12_content_mobi
+          FROM bbs12_application_form
+         WHERE bbs12_company_id = 0
+    </insert>
+
+    <!-- 14. AS-IS pay51_expense_form.insertFormPay51 -->
+    <insert id="insertExpenseFormsFromAdmin">
+        INSERT INTO pay51_expense_form
+        SELECT f_create_seq(), #{companyId}, pay51_form_cd, pay51_content
+          FROM pay51_expense_form
+         WHERE pay51_company_id = 0
+    </insert>
+
+    <!-- 15. AS-IS com11_form_mapping_multi.insertFormCom11 -->
+    <insert id="insertFormMappingsFromAdmin">
+        INSERT INTO com11_form_mapping_multi
+        SELECT f_create_seq(), #{companyId}, com11_sys_kind_cd, com11_sys_detail_cd, com11_link_cd, com11_content, com11_note
+          FROM com11_form_mapping_multi
+         WHERE com11_company_id = 0
+    </insert>
+</mapper>

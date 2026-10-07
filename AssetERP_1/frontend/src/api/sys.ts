@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { Role } from '../types/sys';
+import { Code, Company, CompanyCreateReq, Role } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -45,5 +45,27 @@ export const sysApi = {
   deleteRoles: async (roleIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/sys/roles', { data: roleIds });
     return res.data.data ?? 0;
+  },
+
+  // ── 공통코드 콤보 (AS-IS ComboBoxField) ──
+
+  /** AS-IS sys.Sys09_Code.selectByCodeKind: 로그인 회사, 오늘 기준 */
+  searchCodes: async (kindCd: string): Promise<Code[]> => {
+    const res = await apiClient.get<ApiResponse<Code[]>>('v1/sys/codes', { params: { kindCd } });
+    return res.data.data ?? [];
+  },
+
+  // ── A15 고객별 시스템정보 관리 (Sys01_Tab_Company) ──
+
+  /** AS-IS sys.Sys01_Company.selectByName: 고객명·서브도메인·비고 LIKE, useYn 'true'면 사용고객만 */
+  searchCompanies: async (companyNm: string, useYn: boolean): Promise<Company[]> => {
+    const res = await apiClient.get<ApiResponse<Company[]>>('v1/sys/companies', { params: { companyNm, useYn: String(useYn) } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys01_Company.update(신규) → 등록 + 회사 초기화 후 등록된 회사 */
+  createCompany: async (req: CompanyCreateReq): Promise<Company> => {
+    const res = await apiClient.post<ApiResponse<Company>>('v1/sys/companies', req);
+    return res.data.data;
   },
 };
