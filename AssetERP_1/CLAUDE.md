@@ -15,6 +15,16 @@ OMS(`../OMS`, AssetERP subset)에서 해 본 변환을 실제 원본으로 다�
 7. `docs/08-회차인계.md` — 다음 회차(AssetERP_2 …)가 이 회차를 참조하는 방법과 교훈. ID를 끝낼 때 교훈을 추가한다.
 8. `docs/work/{id}-*.md` — 지금 하는 ID의 파일만 읽는다. 다른 ID 파일은 필요할 때만 연다.
 
+## yunhee 적극 사용 (토큰 절약)
+
+사용자 지시(2026-10-07): yunhee 사용법을 충분히 익히고 작업에 적극 활용해 토큰을 아낀다. 자세한 명령표는 `docs/05-작업방법.md` §7.
+
+- 세션 시작에 `yunhee --version` → 05 §7 기준 버전보다 높으면 `yunhee changelog --since <기준>`으로 바뀐 것만 본다.
+- AS-IS는 **색인 → 메서드 줄 범위만**. 원본 Java·매퍼 XML·긴 색인을 통째로 읽지 않는다.
+- 테이블은 `yunhee table`, TOBE 코드는 `yunhee outline` → 필요한 줄만, 빌드·테스트·배포는 `yunhee run`, API는 `yunhee api`.
+- `yunhee api`는 **항상 `--base http://localhost:8082/AssetERP_1`**(개발 서버면 `http://localhost:8080`). 고객사 관리자로는 `-t admin -c <회사코드>`.
+- yunhee로 안 되는 것(DB 데이터 확인, 브라우저 확인)만 psql·`tools/`로 하고, 출력은 몇 줄로 줄인다. 다른 방법을 쓴 사유는 `{id}-작업기록`에 한 줄 남긴다.
+
 ## 고정 사항
 
 - AS-IS 원본: `~/oms-data/src/Asset-ERP` (`application/src/main/java/myApp`). 최신 pull이 아니다.
