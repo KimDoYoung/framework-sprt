@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.sys.mapper;
 
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyOptionRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyOrgParam;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyRow;
@@ -27,6 +28,12 @@ public interface SysCompanyMapper {
     int countByBizNo(String bizNo);
 
     int insertCompany(CompanyRow row);
+
+    /** AS-IS Sys01_Company.delete → UpdateDataModel.deleteModel: sys01_company 행만 지운다(초기화로 만든 데이터는 남는다) */
+    int deleteCompanies(List<Long> companyIds);
+
+    /** AS-IS sys00_common.selectCompanyInfo (회사 콤보: 회사 ID / 서브도메인) */
+    List<CompanyOptionRes> selectCompanyOptions();
 
     // ── 회사 추가 후 초기화 (AS-IS UpdateDataModel L90-224, 순서 그대로) ──
 

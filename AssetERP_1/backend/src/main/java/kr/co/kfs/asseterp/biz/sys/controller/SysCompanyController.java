@@ -2,11 +2,13 @@ package kr.co.kfs.asseterp.biz.sys.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCreateReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyOptionRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyRes;
 import kr.co.kfs.asseterp.biz.sys.service.SysCompanyService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,5 +39,18 @@ public class SysCompanyController {
     public ApiResponse<CompanyRes> createCompany(@AuthenticationPrincipal UserPrincipal principal,
                                                  @RequestBody CompanyCreateReq req) {
         return ApiResponse.ok(sysCompanyService.createCompany(principal, req));
+    }
+
+    /** AS-IS sys.Sys01_Company.delete → 지운 건수 */
+    @DeleteMapping
+    public ApiResponse<Integer> deleteCompanies(@AuthenticationPrincipal UserPrincipal principal,
+                                                @RequestBody List<Long> companyIds) {
+        return ApiResponse.ok(sysCompanyService.deleteCompanies(principal, companyIds));
+    }
+
+    /** AS-IS sys.Sys00_Common.selectCompanyInfo (회사 콤보) */
+    @GetMapping("/options")
+    public ApiResponse<List<CompanyOptionRes>> searchCompanyOptions(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(sysCompanyService.searchCompanyOptions(principal));
     }
 }

@@ -83,6 +83,20 @@
                 #{mailInfo}, #{bizNo}, #{leaveMonthCd}, #{taxType}, #{accountCloseMonth})
     </insert>
 
+    <delete id="deleteCompanies">
+        DELETE FROM sys01_company
+         WHERE sys01_company_id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS sys00_common.selectCompanyInfo L66 -->
+    <select id="selectCompanyOptions" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyOptionRes">
+        SELECT CAST(sys01_company_id AS VARCHAR) AS code,
+               sys01_loc_nm                      AS name
+          FROM sys01_company
+         ORDER BY sys01_company_id, sys01_loc_nm
+    </select>
+
     <!-- 1. AS-IS org01_code.insertOrg01Code (org_cd 10000, 개설일 = 설립일) -->
     <insert id="insertOrgCode">
         INSERT INTO org01_code (org01_code_id, org01_company_id, org01_org_cd, org01_open_date)

@@ -41,6 +41,46 @@ const [OUT, BASE = 'http://admin.localhost:8082/AssetERP_1/', DUP_BIZ_NO = '300-
       .map(c => [Number(c.closest('.ag-row').getAttribute('row-index')), c.textContent]).sort((a, b) => a[0] - b[0]).slice(0, 6).map(x => x[1]).join(','));
     await p.screenshot({ path: OUT + '/A15-1-list.png' });
 
+    // 툴바 버튼(원본 5개)과 아래 탭(원본 6개)
+    out.toolbarButtons = await p.locator('.ant-splitter-panel').first().locator('.ant-space').first().locator('button').allInnerTexts();
+    out.tabs = await p.locator('.ant-tabs-tab').allInnerTexts();
+    // [E6] 문서개요복사 — 선택 없음 → 경고
+    await p.getByRole('button', { name: '문서개요복사' }).click();
+    await p.waitForTimeout(400);
+    out.msgs.push('문서개요복사(선택 없음): ' + await lastMsg());
+    // [E7] 행 선택 → 탭이 그 회사로
+    await p.locator('.ag-row[row-index="1"] .ag-cell[col-id="companyNm"]').first().click();
+    await p.waitForTimeout(400);
+    out.tabAfterSelect = (await p.locator('.ant-splitter-panel').last().innerText()).split('\n').pop();
+    // [E8] 탭 바꾸기
+    await p.locator('.ant-tabs-tab', { hasText: '고객별 관리자' }).click();
+    await p.waitForTimeout(400);
+    out.tabAfterChange = (await p.locator('.ant-splitter-panel').last().innerText()).split('\n').pop();
+    // [E6] 선택 후 문서개요복사 → 확인 문구 → 아니오
+    await p.getByRole('button', { name: '문서개요복사' }).click();
+    await p.waitForTimeout(400);
+    out.commentConfirm = await p.locator('.ant-modal-confirm-content').innerText().catch(() => '');
+    await p.getByRole('button', { name: '아니오' }).click();
+    await p.waitForTimeout(300);
+    // [E4] 삭제 → 확인 문구 → 아니오
+    await p.getByRole('button', { name: '삭제' }).click();
+    await p.waitForTimeout(400);
+    out.deleteConfirm = await p.locator('.ant-modal-confirm-content').innerText().catch(() => '');
+    await p.getByRole('button', { name: '아니오' }).click();
+    await p.waitForTimeout(300);
+    // [E5] 매뉴권한복사(초기) → 조회창, 빈 값 [복사] → 출발지 경고 → 닫기
+    await p.getByRole('button', { name: '매뉴권한복사(초기)' }).click();
+    await p.waitForTimeout(800);
+    const lk = p.locator('.ant-modal').filter({ hasText: '출발지' });
+    out.lookupCompanies = await lk.locator('.ant-select').count();
+    await lk.getByRole('button', { name: '복사' }).click();
+    await p.waitForTimeout(400);
+    out.msgs.push('매뉴권한복사(빈 값): ' + await lastMsg());
+    await p.screenshot({ path: OUT + '/A15-1b-copymenu.png' });
+    await lk.getByRole('button', { name: '닫기' }).click();
+    await p.waitForTimeout(400);
+    out.rowsAfterAll = await rowCount();
+
     // [E3] 등록 → 팝업, 빈 값으로 [등록] → 첫 필수 메시지
     await p.getByRole('button', { name: '등록' }).first().click();
     await p.waitForTimeout(800);

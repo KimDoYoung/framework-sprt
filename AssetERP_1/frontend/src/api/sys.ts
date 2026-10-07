@@ -68,4 +68,27 @@ export const sysApi = {
     const res = await apiClient.post<ApiResponse<Company>>('v1/sys/companies', req);
     return res.data.data;
   },
+
+  /** AS-IS sys.Sys01_Company.delete → 지운 건수 (sys01_company 행만) */
+  deleteCompanies: async (companyIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/companies', { data: companyIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys00_Common.selectCompanyInfo: 회사 콤보 (code = 회사 ID, name = 서브도메인) */
+  searchCompanyOptions: async (): Promise<Code[]> => {
+    const res = await apiClient.get<ApiResponse<Code[]>>('v1/sys/companies/options');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys03_CompanyMenu.insert (매뉴권한복사(초기)): 출발지 → 도착지 */
+  copyCompanyMenus: async (outPut: number, inPut: number): Promise<void> => {
+    await apiClient.post('v1/sys/company-menus/copy', { outPut, inPut });
+  },
+
+  /** AS-IS dcr.Dcr01_ClassTree.commentInsert (문서개요복사: admin(0) → 회사) → 바뀐 행 수 */
+  copyDcrComments: async (companyId: number): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>(`v1/dcr/class-trees/comments/copy/${companyId}`);
+    return res.data.data ?? 0;
+  },
 };

@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.sys.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCreateReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyOptionRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyOrgParam;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyRow;
@@ -61,6 +62,25 @@ public class SysCompanyService {
                 in.mailInfo(), in.bizNo(), in.leaveMonthCd(), in.taxType(), in.accountCloseMonth()));
         initCompany(companyId, in);
         return sysCompanyMapper.selectCompany(companyId);
+    }
+
+    /** AS-IS delete L189 (UpdateDataModel.deleteModel): 선택한 회사의 sys01_company 행만 지운다 → 지운 건수 */
+    @Transactional
+    public int deleteCompanies(UserPrincipal user, List<Long> companyIds) {
+        requireSysAdmin(user);
+        if (companyIds == null || companyIds.isEmpty()) {
+            return 0;
+        }
+        if (companyIds.contains(0L)) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "관리자 회사(0)는 삭제할 수 없습니다.");
+        }
+        return sysCompanyMapper.deleteCompanies(companyIds);
+    }
+
+    /** AS-IS sys.Sys00_Common.selectCompanyInfo — 회사 콤보 (매뉴권한복사 출발지·도착지) */
+    public List<CompanyOptionRes> searchCompanyOptions(UserPrincipal user) {
+        requireSysAdmin(user);
+        return sysCompanyMapper.selectCompanyOptions();
     }
 
     /** AS-IS UpdateDataModel L90-224 "ASP용으로 회사가 추가되면 관련된 DATA를 insert" — 번호·순서는 원본 주석 그대로(3·10은 원본에서 주석 처리) */
