@@ -11,6 +11,7 @@
   "dependencies": {
     "@ant-design/icons": "^5.6.0",
     "@ant-design/pro-components": "^2.8.10",
+    "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@stomp/stompjs": "^7.3.0",
     "ag-grid-community": "^36.1.0",
     "ag-grid-react": "^36.1.0",

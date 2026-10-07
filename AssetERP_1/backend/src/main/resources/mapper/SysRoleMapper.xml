@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS server/sys/mapper/sys04_role.xml (selectByName L31, selectById L24)
+  + UpdateDataModel(sys04_role)의 동적 INSERT/UPDATE/DELETE를 명시 SQL로 (A01-작업방법 "SQL 이식")
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysRoleMapper">
+
+    <sql id="roleColumns">
+        sys04_role_id                        AS role_id,
+        sys04_company_id                     AS company_id,
+        sys04_role_nm                        AS role_nm,
+        sys04_seq                            AS seq,
+        sys04_note                           AS note,
+        sys04_default_role                   AS default_role,
+        sys04_admin_yn                       AS admin_yn,
+        f_get_company_nm(sys04_company_id)   AS company_nm
+    </sql>
+
+    <!-- AS-IS selectByName -->
+    <select id="searchRoles" resultType="kr.co.kfs.asseterp.biz.sys.dto.RoleRes">
+        SELECT <include refid="roleColumns"/>
+          FROM sys04_role
+         WHERE sys04_role_nm LIKE #{roleName}
+           AND sys04_company_id = #{companyId}
+         ORDER BY sys04_seq
+    </select>
+
+    <!-- AS-IS selectById -->
+    <select id="selectRole" resultType="kr.co.kfs.asseterp.biz.sys.dto.RoleRes">
+        SELECT <include refid="roleColumns"/>
+          FROM sys04_role
+         WHERE sys04_role_id = #{roleId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertRole">
+        INSERT INTO sys04_role (sys04_role_id, sys04_company_id, sys04_role_nm, sys04_seq, sys04_note)
+        VALUES (#{roleId}, #{companyId}, #{roleNm}, #{seq}, #{note})
+    </insert>
+
+    <update id="updateRole">
+        UPDATE sys04_role
+           SET sys04_role_nm = #{roleNm},
+               sys04_seq     = #{seq},
+               sys04_note    = #{note}
+         WHERE sys04_role_id    = #{roleId}
+           AND sys04_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteRoles">
+        DELETE FROM sys04_role
+         WHERE sys04_company_id = #{companyId}
+           AND sys04_role_id IN
+        <foreach collection="roleIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

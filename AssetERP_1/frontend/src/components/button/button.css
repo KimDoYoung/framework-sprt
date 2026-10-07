@@ -1,0 +1,26 @@
+/* 공통 버튼 색 (docs/button-types.md "색" 표 = AS-IS color/styles.gss). 채운 버튼, 흰 글자 */
+.ant-btn.erp-btn {
+  border: 1px solid transparent;
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: 2px; /* AS-IS 글자 간격 */
+}
+.ant-btn.erp-btn:disabled { opacity: 0.5; }
+.ant-btn.erp-btn-blue { background: #456ea6; }
+.ant-btn.erp-btn-blue:not(:disabled):hover { background: #597eb1; color: #fff; }
+.ant-btn.erp-btn-mint { background: #17a2b8; }
+.ant-btn.erp-btn-mint:not(:disabled):hover { background: #3cc0d5; color: #fff; }
+.ant-btn.erp-btn-red { background: #dd5e5e; }
+.ant-btn.erp-btn-red:not(:disabled):hover { background: #d99191; color: #fff; }
+.ant-btn.erp-btn-orange { background: #e89646; }
+.ant-btn.erp-btn-orange:not(:disabled):hover { background: #dda977; color: #fff; }
+.ant-btn.erp-btn-green { background: #2eac7e; }
+.ant-btn.erp-btn-green:not(:disabled):hover { background: #4ebe95; color: #fff; }
+.ant-btn.erp-btn-lightBlue { background: #6ab6cf; }
+.ant-btn.erp-btn-lightBlue:not(:disabled):hover { background: #a9cdd8; color: #fff; }
+.ant-btn.erp-btn-darkGray { background: #646362; }
+.ant-btn.erp-btn-darkGray:not(:disabled):hover { background: #7b7977; color: #fff; }
+.ant-btn.erp-btn-dark { background: #343a40; border-color: #495057; }
+.ant-btn.erp-btn-dark:not(:disabled):hover { background: #495057; color: #fff; }
+.ant-btn.erp-btn-mainTheme { background: #f7f8fc; border-color: #e2e6ef; color: #333; }
+.ant-btn.erp-btn-mainTheme:not(:disabled):hover { background: #ebecf0; color: #333; }
