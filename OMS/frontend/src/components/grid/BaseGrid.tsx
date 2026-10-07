@@ -1,7 +1,7 @@
 import { useCallback, useMemo, type CSSProperties, type Ref } from 'react';
 import { AgGridReact, type AgGridReactProps } from 'ag-grid-react';
 import type { ColDef, ColGroupDef, RowClassParams, SortChangedEvent, FilterChangedEvent } from 'ag-grid-community';
-import { gridThemes, gridThemeWithHeader, type GridDensity } from './theme';
+import { GRID_COLORS, gridThemes, gridThemeWithHeader, type GridDensity } from './theme';
 import './grid.css';
 
 /**
@@ -33,6 +33,9 @@ export interface BaseGridProps<T> extends Omit<AgGridReactProps<T>, 'theme'> {
 }
 
 const ROWNUM_ID = '__rownum';
+
+/** grid.css가 쓰는 색 — theme.ts GRID_COLORS를 CSS 변수로 넘긴다 */
+const cssVars = { '--gb-summary-row': GRID_COLORS.summaryRow } as CSSProperties;
 
 const rowNumberCol: ColDef = {
   colId: ROWNUM_ID,
@@ -103,7 +106,7 @@ export function BaseGrid<T>({
   };
 
   return (
-    <div style={{ flex: '1 1 0', minHeight: 0, height: '100%', width: '100%', ...wrapperStyle }}>
+    <div style={{ flex: '1 1 0', minHeight: 0, height: '100%', width: '100%', ...cssVars, ...wrapperStyle }}>
       <AgGridReact<T>
         ref={gridRef}
         theme={theme}

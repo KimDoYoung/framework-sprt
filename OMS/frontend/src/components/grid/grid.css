@@ -1,4 +1,4 @@
-/* 공통 그리드(components/grid) 전용 — 색 값은 theme.ts GRID_COLORS와 맞춘다 */
+/* 공통 그리드(components/grid) 전용 — 색은 theme.ts GRID_COLORS가 BaseGrid에서 CSS 변수(--gb-*)로 넘어온다 */
 
 /* gb.*: 헤더 '<br>' → 줄바꿈 (AS-IS "ICAM<br>운용사코드" 두 줄 헤더) */
 .gb-hdr .ag-header-cell-text {
@@ -19,7 +19,7 @@
 /* sumRow: pinnedBottomRowData 합계 행 */
 .summary-row,
 .summary-row .ag-cell {
-  background-color: #f8fafc;
+  background-color: var(--gb-summary-row);
   font-weight: 700;
 }
 
