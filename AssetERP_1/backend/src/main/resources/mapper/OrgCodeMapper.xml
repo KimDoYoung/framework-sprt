@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/org/mapper/org01_code.xml, org02_info.xml (서버 클래스 Org01_Code) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.org.mapper.OrgCodeMapper">
+
+    <!-- Org01_CodeModel(+ @Path orgInfoModel.*) → OrgCodeRes -->
+    <sql id="codeColumns">
+        a.org01_code_id                                                              AS code_id,
+        b.org02_parent_code_id                                                       AS parent_code_id,
+        b.org02_info_id                                                              AS info_id,
+        a.org01_org_cd                                                               AS org_cd,
+        b.org02_kor_nm                                                               AS kor_nm,
+        b.org02_level_cd                                                             AS level_cd,
+        f_cdnm('OrgLevelCode', b.org02_level_cd, a.org01_company_id, b.org02_mod_date) AS level_nm,
+        b.org02_sort_order                                                           AS sort_order,
+        b.org02_mod_date                                                             AS mod_date,
+        b.org02_mod_reason                                                           AS mod_reason,
+        a.org01_open_date                                                            AS open_date,
+        a.org01_open_reason                                                          AS open_reason,
+        a.org01_close_date                                                           AS close_date,
+        a.org01_close_reason                                                         AS close_reason,
+        b.org02_eng_nm                                                               AS eng_nm,
+        b.org02_note                                                                 AS note,
+        b.org02_dcr_id_word                                                          AS dcr_id_word
+    </sql>
+
+    <!--
+      AS-IS org01_code.selectByParentId_1Bang (parentCodeId = 0, isPostgreSql) — 전체 조직을 한 번에 전위 순서(path)로.
+      include common.org_tree_down_postgresql, common.emp00_trans_info(조직 장)를 펼쳤다. ${companyId} → #{companyId}
+    -->
+    <select id="searchOrgCodes" resultType="kr.co.kfs.asseterp.biz.org.dto.OrgCodeRes">
+        WITH RECURSIVE org_tree_down(org01_company_id, org02_code_id, org02_parent_code_id, depth, path, cycle) AS (
+            SELECT a.org01_company_id
+                 , b.org02_code_id
+                 , b.org02_parent_code_id
+                 , 1
+                 , ARRAY[coalesce(b.org02_sort_order,'0')||b.org02_kor_nm::text]
+                 , false
+              FROM org01_code a
+                   INNER JOIN org02_info b ON org01_code_id = org02_code_id
+             WHERE org01_company_id = #{companyId}
+               AND b.org02_parent_code_id = 0
+               AND f_trunc(#{baseDate}) BETWEEN f_trunc(org01_open_date) AND coalesce(org01_close_date, to_date('99991231', 'yyyymmdd'))
+               AND org02_mod_date = ( SELECT max(x.org02_mod_date)
+                                        FROM org02_info x
+                                       WHERE x.org02_code_id = b.org02_code_id
+                                         AND f_trunc(x.org02_mod_date) <![CDATA[ <= ]]> f_trunc(#{baseDate}) )
+             UNION ALL
+            SELECT a.org01_company_id
+                 , b.org02_code_id
+                 , b.org02_parent_code_id
+                 , c.depth + 1
+                 , array_append(c.path, coalesce(b.org02_sort_order,'0')::text||b.org02_kor_nm::text)
+                 , coalesce(b.org02_sort_order,'0')||b.org02_kor_nm = any(c.path)
+              FROM org01_code a
+                   INNER JOIN org02_info b    ON a.org01_code_id = b.org02_code_id
+                   INNER JOIN org_tree_down c ON b.org02_parent_code_id = c.org02_code_id
+             WHERE a.org01_company_id = #{companyId}
+               AND f_trunc(#{baseDate}) BETWEEN f_trunc(org01_open_date) AND coalesce(org01_close_date, to_date('99991231', 'yyyymmdd'))
+               AND org02_mod_date = ( SELECT max(x.org02_mod_date)
+                                        FROM org02_info x
+                                       WHERE x.org02_code_id = b.org02_code_id
+                                         AND f_trunc(x.org02_mod_date) <![CDATA[ <= ]]> f_trunc(#{baseDate}) )
+               AND NOT cycle
+        )
+        SELECT <include refid="codeColumns"/>,
+               ( WITH emp00 AS (
+                     SELECT emp00_trans_id, emp00_person_id, emp00_org_code_id
+                       FROM ( SELECT emp03_trans_id    AS emp00_trans_id
+                                   , emp03_person_id   AS emp00_person_id
+                                   , emp03_org_code_id AS emp00_org_code_id
+                                FROM emp01_person t1
+                                     INNER JOIN emp03_trans t2 ON emp03_person_id = emp01_person_id
+                               WHERE emp01_company_id = #{companyId}
+                                 AND emp03_trans_date = ( SELECT max(emp03_trans_date)
+                                                            FROM emp03_trans x
+                                                           WHERE x.emp03_person_id = t1.emp01_person_id
+                                                             AND x.emp03_trans_date <![CDATA[ <= ]]> #{baseDate} )
+                                 AND 'Y' = (CASE WHEN (SELECT count(*) FROM emp04_add_title WHERE emp04_add_person_id = emp01_person_id) = 0 THEN 'Y'
+                                                 ELSE (CASE WHEN (SELECT count(*)
+                                                                    FROM emp01_person a
+                                                                         INNER JOIN emp04_add_title ON emp04_person_id = a.emp01_person_id
+                                                                   WHERE emp04_add_person_id = t1.emp01_person_id) = 0 THEN 'N'
+                                                            ELSE 'Y' END) END)
+                            ) t0
+                 )
+                 SELECT array_to_string(array_agg(f_emp_kor_nm(emp03_person_id)), ', ')
+                   FROM emp00 x
+                        INNER JOIN emp03_trans ON x.emp00_trans_id = emp03_trans_id
+                  WHERE a.org01_code_id = x.emp00_org_code_id
+                    AND coalesce(emp03_org_head_yn, 'false') LIKE 'true'
+                    AND emp03_trans_cd != '900'
+                    AND NOT EXISTS ( SELECT 1
+                                       FROM emp04_add_title
+                                      WHERE emp04_add_person_id = emp00_person_id
+                                        AND ( emp04_start_date <![CDATA[ > ]]> #{baseDate} OR
+                                              coalesce(emp04_close_date, '9999-12-31') <![CDATA[ < ]]> #{baseDate} ) )
+               )                                                                     AS org_head_list,
+               c.depth                                                               AS depth
+          FROM org01_code a
+               INNER JOIN org02_info b    ON org01_code_id = org02_code_id
+               INNER JOIN org_tree_down c ON b.org02_code_id = c.org02_code_id
+         WHERE f_trunc(#{baseDate}) BETWEEN f_trunc(a.org01_open_date) AND coalesce(a.org01_close_date, to_date('99991231', 'yyyymmdd'))
+           AND b.org02_mod_date = ( SELECT max(x.org02_mod_date)
+                                      FROM org02_info x
+                                     WHERE x.org02_code_id = b.org02_code_id
+                                       AND f_trunc(x.org02_mod_date) <![CDATA[ <= ]]> f_trunc(#{baseDate}) )
+         ORDER BY c.path
+    </select>
+
+    <!-- AS-IS org01_code.selectByBaseDate (+ 회사 조건) -->
+    <select id="selectByBaseDate" resultType="kr.co.kfs.asseterp.biz.org.dto.OrgCodeRes">
+        SELECT <include refid="codeColumns"/>,
+               NULL::text AS org_head_list,
+               NULL::int  AS depth
+          FROM org01_code a, org02_info b
+         WHERE a.org01_code_id = #{codeId}
+           AND a.org01_company_id = #{companyId}
+           AND #{baseDate} BETWEEN a.org01_open_date AND coalesce(a.org01_close_date, to_date('99991231','yyyymmdd'))
+           AND b.org02_code_id = a.org01_code_id
+           AND b.org02_mod_date = ( SELECT max(x.org02_mod_date)
+                                      FROM org02_info x
+                                     WHERE x.org02_code_id = a.org01_code_id
+                                       AND x.org02_mod_date <![CDATA[ <= ]]> #{baseDate} )
+    </select>
+
+    <!-- 이 회사의 조직인지 (회사 조건 — 05 §6) -->
+    <select id="countCode" resultType="int">
+        SELECT count(*) FROM org01_code WHERE org01_code_id = #{codeId} AND org01_company_id = #{companyId}
+    </select>
+
+    <!-- 같은 조직에 같은 변경일 이력이 있는지 (유일 인덱스 org02_code_id + org02_mod_date) -->
+    <select id="countInfoByModDate" resultType="int">
+        SELECT count(*) FROM org02_info
+         WHERE org02_code_id = #{codeId} AND org02_mod_date = #{modDate}
+           AND org02_info_id != #{infoId}
+    </select>
+
+    <!-- AS-IS org02_info.selectCountByCodeId -->
+    <select id="countInfoByCodeId" resultType="long">
+        SELECT count(*) FROM org02_info WHERE org02_code_id = #{codeId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel(org02_info) INSERT — 신규 조직 -->
+    <insert id="insertInfo">
+        INSERT INTO org02_info (org02_info_id, org02_kor_nm, org02_mod_date, org02_mod_reason, org02_code_id, org02_parent_code_id,
+                                org02_level_cd, org02_sort_order, org02_note, org02_dcr_id_word)
+        VALUES (#{infoId}, #{req.korNm}, #{req.modDate}, #{req.modReason}, #{req.codeId}, #{req.parentCodeId},
+                #{req.levelCd}, #{req.sortOrder}, #{req.note}, #{req.dcrIdWord})
+    </insert>
+
+    <!-- UpdateDataModel(org02_info) INSERT — 변경일이 바뀐 이력. 폼에 없는 컬럼은 원래 행(srcInfoId) 값 그대로 -->
+    <insert id="insertInfoHistory">
+        INSERT INTO org02_info (org02_info_id, org02_kor_nm, org02_mod_date, org02_mod_reason, org02_code_id, org02_parent_code_id,
+                                org02_level_cd, org02_sort_order, org02_note, org02_dcr_id_word,
+                                org02_inner_type, org02_eng_nm, org02_mod_detail, org02_tdm_yn)
+        SELECT #{infoId}, #{req.korNm}, #{req.modDate}, #{req.modReason}, s.org02_code_id, #{req.parentCodeId},
+               #{req.levelCd}, #{req.sortOrder}, #{req.note}, #{req.dcrIdWord},
+               s.org02_inner_type, s.org02_eng_nm, s.org02_mod_detail, s.org02_tdm_yn
+          FROM org02_info s
+         WHERE s.org02_info_id = #{srcInfoId}
+    </insert>
+
+    <!-- UpdateDataModel(org02_info) UPDATE — 폼에서 바뀌는 컬럼만 -->
+    <update id="updateInfo">
+        UPDATE org02_info
+           SET org02_kor_nm         = #{req.korNm},
+               org02_mod_date       = #{req.modDate},
+               org02_mod_reason     = #{req.modReason},
+               org02_parent_code_id = #{req.parentCodeId},
+               org02_level_cd       = #{req.levelCd},
+               org02_sort_order     = #{req.sortOrder},
+               org02_note           = #{req.note},
+               org02_dcr_id_word    = #{req.dcrIdWord}
+         WHERE org02_info_id = #{req.infoId}
+           AND org02_code_id IN (SELECT org01_code_id FROM org01_code WHERE org01_company_id = #{companyId})
+    </update>
+
+    <!-- UpdateDataModel(org01_code) INSERT -->
+    <insert id="insertCode">
+        INSERT INTO org01_code (org01_code_id, org01_company_id, org01_org_cd, org01_open_date, org01_open_reason, org01_close_date, org01_close_reason)
+        VALUES (#{req.codeId}, #{companyId}, #{req.orgCd}, #{req.openDate}, #{req.openReason}, #{req.closeDate}, #{req.closeReason})
+    </insert>
+
+    <!-- UpdateDataModel(org01_code) UPDATE — 수정 폼에서 바뀌는 것은 종료일·종료사유뿐(조직코드·개설일·개설사유 비활성) -->
+    <update id="updateCode">
+        UPDATE org01_code
+           SET org01_close_date   = #{req.closeDate},
+               org01_close_reason = #{req.closeReason}
+         WHERE org01_code_id = #{req.codeId}
+           AND org01_company_id = #{companyId}
+    </update>
+
+    <!-- UpdateDataModel(org02_info) DELETE (AS-IS Org01_Code.delete: 이력이 2건 이상이면 이 이력만) -->
+    <delete id="deleteInfo">
+        DELETE FROM org02_info
+         WHERE org02_info_id = #{infoId}
+           AND org02_code_id IN (SELECT org01_code_id FROM org01_code WHERE org01_company_id = #{companyId})
+    </delete>
+
+    <!-- UpdateDataModel(org01_code) DELETE (AS-IS Org01_Code.delete: 이력이 1건이면 org01_code 행만 — 원본 그대로) -->
+    <delete id="deleteCode">
+        DELETE FROM org01_code WHERE org01_code_id = #{codeId} AND org01_company_id = #{companyId}
+    </delete>
+</mapper>

@@ -92,6 +92,12 @@ export const sysApi = {
     return res.data.data ?? 0;
   },
 
+  /** AS-IS sys.Sys01_Company.selectById 중 로그인 회사의 문서번호 채번방식 (null → '1') — 조직 팝업(C02) */
+  getDcrNumberingCode: async (): Promise<string> => {
+    const res = await apiClient.get<ApiResponse<string>>('v1/sys/companies/current/dcr-numbering-code');
+    return res.data.data;
+  },
+
   // ── A15 관리정보 탭 (Sys01_TabPage_Info01) ──
 
   /** AS-IS sys.Sys01_Company.selectById (관리정보 컬럼) */

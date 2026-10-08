@@ -59,6 +59,12 @@ public class SysCompanyController {
         return ApiResponse.ok(sysCompanyService.searchCompanyOptions(principal));
     }
 
+    /** AS-IS sys.Sys01_Company.selectById (로그인 회사의 문서번호 채번방식만 — 조직 팝업 C02) */
+    @GetMapping("/current/dcr-numbering-code")
+    public ApiResponse<String> getDcrNumberingCode(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(sysCompanyService.getDcrNumberingCode(principal));
+    }
+
     /** 관리정보 탭 (AS-IS Sys01_TabPage_Info01 → sys.Sys01_Company.selectById) */
     @GetMapping("/{companyId}/manage")
     public ApiResponse<CompanyManageRes> getCompanyManage(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long companyId) {

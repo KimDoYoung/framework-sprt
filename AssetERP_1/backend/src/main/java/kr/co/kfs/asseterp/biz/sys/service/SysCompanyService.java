@@ -83,6 +83,23 @@ public class SysCompanyService {
         return res;
     }
 
+    /**
+     * 로그인 회사의 문서번호 채번방식 (AS-IS Org01_Edit_OrgCode·Org02_Edit_Info.editData → Sys01_Company.selectById L20-29 중 dcrNumberingCode).
+     * AS-IS selectById의 main_image_id 채번 부수효과도 그대로 둔다(getCompanyManage와 같음).
+     */
+    @Transactional
+    public String getDcrNumberingCode(UserPrincipal user) {
+        Long companyId = user.getCompanyId();
+        String code = sysCompanyMapper.selectDcrNumberingCode(companyId);
+        if (code == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        if (sysCompanyMapper.selectMainImageId(companyId) == null) {
+            sysCompanyMapper.updateMainImageId(companyId, sysCompanyMapper.selectNextId());
+        }
+        return code;
+    }
+
     /** 관리정보 탭 저장 (AS-IS Sys01_Company.update L165-181: 고객명·접근코드 필수 → UpdateDataModel UPDATE → selectById) */
     @Transactional
     public CompanyManageRes updateCompanyManage(UserPrincipal user, CompanyManageReq req) {

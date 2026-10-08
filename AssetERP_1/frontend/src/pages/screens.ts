@@ -1,5 +1,6 @@
 import React from 'react';
 import { Emp00_Tab_TransInfo } from './emp/Emp00_Tab_TransInfo';
+import { Org01_Tab_OrgCode } from './org/Org01_Tab_OrgCode';
 import { Sys01_Tab_Company } from './sys/Sys01_Tab_Company';
 import { Sys03_Tab_CompanyMenu } from './sys/Sys03_Tab_CompanyMenu';
 import { Sys04_Tab_Role } from './sys/Sys04_Tab_Role';
@@ -13,6 +14,7 @@ import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
  */
 export const SCREENS: Record<string, React.FC> = {
   Emp00_Tab_TransInfo, // C01 (1단계: 목록·등록·기본정보·일반발령)
+  Org01_Tab_OrgCode, // C02 (조직도보기 Org02_View_Chart 제외)
   Sys01_Tab_Company, // A15 (1단계: 목록·신규 등록)
   Sys03_Tab_ComapnyMenu: Sys03_Tab_CompanyMenu, // A10 (메뉴 키 오타 그대로)
   Sys04_Tab_Role, // A01

@@ -24,6 +24,9 @@ public interface SysCompanyMapper {
     /** 관리정보 탭 (AS-IS selectById 중 Info01 컬럼) */
     CompanyManageRes selectCompanyManage(Long companyId);
 
+    /** AS-IS selectById 중 문서번호 채번방식 (null → '1') */
+    String selectDcrNumberingCode(Long companyId);
+
     /** AS-IS Sys01_Company.selectById L20-29: main_image_id가 비었으면 채번해 넣는다 */
     Long selectMainImageId(Long companyId);
 
