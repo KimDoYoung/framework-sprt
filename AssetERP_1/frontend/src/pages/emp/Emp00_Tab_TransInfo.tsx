@@ -165,7 +165,7 @@ export const Emp00_Tab_TransInfo: React.FC = () => {
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0' }}>
           <Space wrap>
             <Typography.Text strong>조회일자</Typography.Text>
-            <DatePicker style={{ width: 120 }} value={transDate} onChange={setTransDate} format="YYYY-MM-DD" />
+            <DatePicker style={{ width: 140 }} value={transDate} onChange={setTransDate} format="YYYY-MM-DD" />
             <Typography.Text strong>조직/사번/성명</Typography.Text>
             {/* [E2] searchText.KeyPress [Enter] (L206) → retrieve() */}
             <Input style={{ width: 120 }} value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={() => retrieve()} />

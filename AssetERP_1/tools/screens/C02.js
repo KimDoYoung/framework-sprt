@@ -13,6 +13,8 @@ const NAME = '시험조직C02';
   p.on('console', m => { if (m.type() === 'error' && !m.text().includes('401')) out.errs.push(m.text().slice(0, 150)); });
   const countRows = loc => loc.evaluate(el => new Set([...el.querySelectorAll('.ag-row[row-index]')].map(r => r.getAttribute('row-index'))).size);
   const msg = async () => { await p.waitForTimeout(700); const t = await p.locator('.ant-message-notice').allInnerTexts(); out.msgs.push(...t); return t.join('|'); };
+  // 날짜 칸이 잘리지 않는지: [입력 폭, 글자 폭] — 글자 폭이 더 크면 잘림
+  const pickers = loc => loc.locator('.ant-picker input').evaluateAll(els => els.filter(e => e.offsetParent).map(e => [e.clientWidth, e.scrollWidth]));
   const modal = title => p.locator('.ant-modal', { has: p.locator('.ant-modal-title', { hasText: title }) });
   const field = (m, label) => m.locator('div', { has: p.locator(`span.ant-typography:text-is("${label}")`) }).last();
   try {
@@ -42,6 +44,7 @@ const NAME = '시험조직C02';
     const ed = modal('조직상세 정보');
     out.editButtons = await ed.locator('.ant-modal-footer button').allInnerTexts();
     out.editLabels = await ed.locator('.ant-modal-body span.ant-typography').allInnerTexts();
+    out.editPickers = await pickers(ed);
     out.editParent = await ed.locator('input[readonly]').first().inputValue();
     await ed.getByRole('button', { name: '저장' }).click(); out.saveEmpty = await msg();
     if (process.env.BASE) { const od = field(ed, '개설일').locator('input'); await od.click(); await od.fill(process.env.BASE); await od.press('Enter'); }
@@ -71,6 +74,7 @@ const NAME = '시험조직C02';
     out.lookupRows = await countRows(lk);
     out.lookupSelected = await lk.locator('.ag-row-selected').count();
     out.oldMsgs = out.msgs.length; await p.waitForTimeout(2500); // 앞 메시지가 사라지게
+    out.lookupPickers = await pickers(lk);
     out.formName = await field(lk, '조직명').locator('input').inputValue();
     out.formParent = await lk.locator('input[readonly]').first().inputValue();
     // [E2] 같은 값 저장

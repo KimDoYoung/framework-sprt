@@ -32,7 +32,7 @@ interface Props {
   onSaved: (model: Partial<OrgCode> | null) => void;
 }
 
-const DATE_W = 200; // HorizontalLayoutData(200, -1)
+const DATE_W = 210; // AS-IS HorizontalLayoutData(200, -1). 날짜 칸 최소 140 + 라벨 70이 들어가게 210
 
 export const Org01_Edit_OrgCode: React.FC<Props> = ({ target, onClose, onSaved }) => {
   const [f, setF] = useState<OrgForm | null>(null);

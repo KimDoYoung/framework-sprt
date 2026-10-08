@@ -89,7 +89,7 @@ export const Org00_Lookup_SelectSingle: React.FC<Props> = ({ baseDate: openDate,
         <Space>
           <Typography.Text strong>기준일</Typography.Text>
           {/* openFixDate L77-83: 기준일 읽기 전용 / open(date) L71-75: 바꿀 수 있다(조회를 눌러야 반영) */}
-          <DatePicker style={{ width: 120 }} value={baseDate ? dayjs(baseDate) : null} disabled={fixDate} format="YYYY-MM-DD"
+          <DatePicker style={{ width: 140 }} value={baseDate ? dayjs(baseDate) : null} disabled={fixDate} format="YYYY-MM-DD"
             allowClear={false} onChange={d => d && setBaseDate(d.format('YYYY-MM-DD'))} />
           <Typography.Text strong>조직명</Typography.Text>
           {/* [E1] korName.KeyPress [Enter] (L126) → retrieve() */}

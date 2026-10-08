@@ -23,7 +23,7 @@ export interface Org02_Edit_InfoRef {
   deleteCheck: (callback?: () => void) => void;
 }
 
-const DATE_W = 200; // HorizontalLayoutData(200, -1)
+const DATE_W = 210; // AS-IS HorizontalLayoutData(200, -1). 날짜 칸 최소 140 + 라벨 70이 들어가게 210
 const RED = '#CE4242'; // setHtmlStyle("변경일", "CE4242")
 
 export const Org02_Edit_Info = forwardRef<Org02_Edit_InfoRef>((_, ref) => {

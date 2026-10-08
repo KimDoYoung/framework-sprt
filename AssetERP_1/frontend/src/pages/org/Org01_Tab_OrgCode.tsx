@@ -115,7 +115,7 @@ export const Org01_Tab_OrgCode: React.FC = () => {
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 20, background: '#fff' }}>
       <Space wrap>
         <Typography.Text strong>기준일</Typography.Text>
-        <DatePicker style={{ width: 120 }} value={baseDate} onChange={setBaseDate} format="YYYY-MM-DD" />
+        <DatePicker style={{ width: 140 }} value={baseDate} onChange={setBaseDate} format="YYYY-MM-DD" />
         <Button type="search" onClick={retrieve}>조회</Button>
         <Button type="register" onClick={insertChild}>하위조직등록</Button>
         <Button type="org" onClick={viewOrgChart}>조직도보기</Button>
