@@ -39,6 +39,7 @@ tools/yunhee-018-check.sh --reindex A-3 A-9 # 색인을 다시 만든 뒤(index-
 |:---|:---|:---|:---|:---|
 | 2026-10-08 | 0.2.2 | ✅27 / ❌19 (+재색인 ❌1) | yunhee-cli `docs/수정사항019.md` | — |
 | 2026-10-08 | 0.2.3 | ✅47 / ❌0. 스크립트 밖 남은 문제 6개(tobe 렌더 트리 중첩, grid 조건부 숨김 표시, method 값식 괄호·mapperName, addBoolean 렌더, index-src 4분) | yunhee-cli `docs/수정사항020.md` | 05 §7 명령표·한계, `CLAUDE.md`·`../CLAUDE.md` yunhee 절 |
+| 2026-10-08 | 0.2.4 | ✅46 / ❌0, 재색인 후 Grid Spec ⚠DB없음 0. 020 6개 모두 해결(tobe 렌더 트리 중첩, grid 정적/조건부 숨김 분리, method 괄호·`addChange prop ← 값`·mapperName → `emp00_trans_info.selectById`, addBoolean 체크박스). index-src 4:06 → 1:47 | 이 표 | 05 §7 기준 0.2.4·한계 정리, 06 항목 6, `CLAUDE.md` 단서 삭제 |
 
 - 검증 스크립트 수정(0.2.2 시험 때): `--reindex`의 로그 폴더를 절대 경로로, `/usr/bin/time` 대신 bash `TIMEFORMAT`.
 - 다음 화면 작업에서 `analysis`를 실제로 쓰고, 토큰(Bash·파일 읽기 비율)을 C01·A03의 약 32%와 비교해 08 교훈에 적는다(§4 마지막 항목, 아직 안 함).
