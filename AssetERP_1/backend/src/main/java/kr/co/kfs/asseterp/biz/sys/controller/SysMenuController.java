@@ -4,6 +4,8 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuSaveReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuTreeRes;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuRes;
+import kr.co.kfs.asseterp.biz.sys.dto.RoleMenuSaveReq;
+import kr.co.kfs.asseterp.biz.sys.dto.RoleMenuTreeRes;
 import kr.co.kfs.asseterp.biz.sys.service.SysMenuService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -44,5 +46,20 @@ public class SysMenuController {
                                                                     @PathVariable Long companyId,
                                                                     @RequestBody List<CompanyMenuSaveReq> rows) {
         return ApiResponse.ok(sysMenuService.updateCompanyMenus(principal, companyId, rows));
+    }
+
+    /** A06 권한그룹별 메뉴 맵핑 트리 (AS-IS sys.Sys06_Menu.selectByRoleId) — 로그인 회사 */
+    @GetMapping("/roles/{roleId}/menus")
+    public ApiResponse<List<RoleMenuTreeRes>> getRoleMenuTree(@AuthenticationPrincipal UserPrincipal principal,
+                                                              @PathVariable Long roleId) {
+        return ApiResponse.ok(sysMenuService.getRoleMenuTree(principal, roleId));
+    }
+
+    /** A06 권한그룹별 메뉴 맵핑 저장 (AS-IS sys.Sys06_Menu.updateRoleMenu) → 저장된 행 */
+    @PutMapping("/roles/{roleId}/menus")
+    public ApiResponse<List<RoleMenuTreeRes>> updateRoleMenus(@AuthenticationPrincipal UserPrincipal principal,
+                                                              @PathVariable Long roleId,
+                                                              @RequestBody List<RoleMenuSaveReq> rows) {
+        return ApiResponse.ok(sysMenuService.updateRoleMenus(principal, roleId, rows));
     }
 }

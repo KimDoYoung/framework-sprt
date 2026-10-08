@@ -5,6 +5,7 @@ import kr.co.kfs.asseterp.biz.sys.dto.MenuRes;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuRow;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuSearchParam;
 import kr.co.kfs.asseterp.biz.sys.mapper.SysMenuMapper;
+import kr.co.kfs.asseterp.biz.sys.mapper.SysRoleMapper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -17,7 +18,7 @@ import static org.mockito.Mockito.*;
 class SysMenuServiceTest {
 
     private final SysMenuMapper sysMenuMapper = mock(SysMenuMapper.class);
-    private final SysMenuService sysMenuService = new SysMenuService(sysMenuMapper);
+    private final SysMenuService sysMenuService = new SysMenuService(sysMenuMapper, mock(SysRoleMapper.class));
 
     private static UserPrincipal user(long userId) {
         return UserPrincipal.builder().userId(userId).companyId(28000L).roles(List.of()).build();

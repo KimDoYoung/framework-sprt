@@ -2,6 +2,7 @@ import React from 'react';
 import { Sys01_Tab_Company } from './sys/Sys01_Tab_Company';
 import { Sys03_Tab_CompanyMenu } from './sys/Sys03_Tab_CompanyMenu';
 import { Sys04_Tab_Role } from './sys/Sys04_Tab_Role';
+import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
 
 /**
  * 화면 등록표 (AS-IS MenuOpener): sys06_menu.sys06_class_nm(메뉴 키) → 화면 컴포넌트.
@@ -12,4 +13,5 @@ export const SCREENS: Record<string, React.FC> = {
   Sys01_Tab_Company, // A15 (1단계: 목록·신규 등록)
   Sys03_Tab_ComapnyMenu: Sys03_Tab_CompanyMenu, // A10 (메뉴 키 오타 그대로)
   Sys04_Tab_Role, // A01
+  Sys07_Tab_RoleMenu, // A06
 };

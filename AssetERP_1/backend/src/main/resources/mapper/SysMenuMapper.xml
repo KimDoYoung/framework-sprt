@@ -191,4 +191,59 @@
                <include refid="companyMenuOne"/>
          WHERE m.sys06_menu_id = #{menuId}
     </select>
+
+    <!--
+      A06 권한그룹별 메뉴 맵핑. AS-IS sys06_menu.selectByRoleId(L253): sys03_company_menu(로그인 회사, use_yn 'true') JOIN sys06_menu
+      FULL JOIN sys07_role_menu(그 권한), 특정메뉴(sys50) 제외, 부모별 sys06_seq 순.
+      FULL JOIN은 WHERE의 sys03 조건 때문에 LEFT JOIN과 같다. sys03 같은 회사·메뉴 중복(DB 3쌍)으로 행이 둘이 되지 않게 EXISTS로 쓴다.
+      같은 seq의 순서는 원본에 없어 sys06_menu_id로 고정. 부모별 반복 대신 한 번에 읽고 서비스가 전위 순서로 편다
+    -->
+    <sql id="roleMenuTreeColumns">
+        m.sys06_menu_id          AS menu_id,
+        m.sys06_parent_id        AS parent_id,
+        0                        AS depth,
+        CASE WHEN m.sys06_menu_no IS NULL
+             THEN m.sys06_menu_nm
+             ELSE m.sys06_menu_no || ' ' || m.sys06_menu_nm
+        END                      AS menu_no_plus_nm,
+        m.sys06_seq              AS seq,
+        m.sys06_note             AS note,
+        r.sys07_role_menu_id     AS role_menu_id,
+        r.sys07_use_yn           AS use_yn
+    </sql>
+
+    <select id="selectRoleMenuTree" resultType="kr.co.kfs.asseterp.biz.sys.dto.RoleMenuTreeRes">
+        SELECT <include refid="roleMenuTreeColumns"/>
+          FROM sys06_menu m
+               LEFT JOIN sys07_role_menu r ON r.sys07_menu_id = m.sys06_menu_id AND r.sys07_role_id = #{roleId}
+         WHERE EXISTS (SELECT 1
+                         FROM sys03_company_menu c
+                        WHERE c.sys03_menu_id = m.sys06_menu_id
+                          AND c.sys03_company_id = #{companyId}
+                          AND COALESCE(c.sys03_use_yn, 'false') = 'true')
+           AND NOT EXISTS (SELECT 1
+                             FROM sys50_specific_menu s
+                            WHERE s.sys50_company_id = #{companyId}
+                              AND s.sys50_menu_id = m.sys06_menu_id)
+         ORDER BY m.sys06_parent_id, m.sys06_seq, m.sys06_menu_id
+    </select>
+
+    <insert id="insertRoleMenu">
+        INSERT INTO sys07_role_menu (sys07_role_menu_id, sys07_role_id, sys07_menu_id, sys07_use_yn)
+        VALUES (#{id}, #{roleId}, #{menuId}, #{useYn})
+    </insert>
+
+    <update id="updateRoleMenuUseYn">
+        UPDATE sys07_role_menu
+           SET sys07_use_yn = #{useYn}
+         WHERE sys07_role_menu_id = #{id}
+           AND sys07_role_id      = #{roleId}
+    </update>
+
+    <select id="selectRoleMenuNode" resultType="kr.co.kfs.asseterp.biz.sys.dto.RoleMenuTreeRes">
+        SELECT <include refid="roleMenuTreeColumns"/>
+          FROM sys06_menu m
+               LEFT JOIN sys07_role_menu r ON r.sys07_menu_id = m.sys06_menu_id AND r.sys07_role_id = #{roleId}
+         WHERE m.sys06_menu_id = #{menuId}
+    </select>
 </mapper>

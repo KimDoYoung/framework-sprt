@@ -139,3 +139,17 @@ export interface CompanyMenuNode {
   /** sys03_use_yn: 'true'/'false'/null(연결 없음) */
   useYn?: string | null;
 }
+
+/** 권한그룹별 메뉴 맵핑 트리 행 (GET /api/v1/sys/roles/{roleId}/menus) — 전위 순서, depth로 들여쓰기 */
+export interface RoleMenuNode {
+  menuId: number;
+  parentId: number;
+  depth: number;
+  /** 메뉴번호 + ' ' + 메뉴명 (번호 없으면 메뉴명) */
+  menuNoPlusNm: string;
+  seq?: string | null;
+  note?: string | null;
+  roleMenuId?: number | null;
+  /** sys07_use_yn: 'true'/'false'/null(연결 없음) */
+  useYn?: string | null;
+}

@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.sys.mapper;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuRow;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuSearchParam;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuTreeRes;
+import kr.co.kfs.asseterp.biz.sys.dto.RoleMenuTreeRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -35,4 +36,15 @@ public interface SysMenuMapper {
     int updateCompanyMenuUseYn(@Param("id") Long id, @Param("companyId") Long companyId, @Param("useYn") String useYn);
 
     CompanyMenuTreeRes selectCompanyMenuNode(@Param("companyId") Long companyId, @Param("menuId") Long menuId);
+
+    // ── A06 권한그룹별 메뉴 맵핑 (AS-IS Sys06_Menu.selectByRoleId / updateRoleMenu) ──
+
+    /** AS-IS selectByRoleId(부모별 반복)를 한 번에: 회사 메뉴(사용) 중 특정메뉴 아닌 것 + 그 권한 연결, 부모·sys06_seq 순 */
+    List<RoleMenuTreeRes> selectRoleMenuTree(@Param("companyId") Long companyId, @Param("roleId") Long roleId);
+
+    int insertRoleMenu(@Param("id") Long id, @Param("roleId") Long roleId, @Param("menuId") Long menuId, @Param("useYn") String useYn);
+
+    int updateRoleMenuUseYn(@Param("id") Long id, @Param("roleId") Long roleId, @Param("useYn") String useYn);
+
+    RoleMenuTreeRes selectRoleMenuNode(@Param("roleId") Long roleId, @Param("menuId") Long menuId);
 }
