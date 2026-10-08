@@ -1,7 +1,7 @@
 /**
- * 조직찾기 조회창 (C01에서 처음 씀) — openFixDate(기준일 고정)만 변환했다.
+ * 조직찾기 조회창 (C01에서 처음 씀) — open(baseDate)·openFixDate(기준일 고정)만 변환했다. openTwo/openThree(중앙·팀)는 아직 없다.
  * AS-IS: myApp/client/vi/org/Org00_Lookup_SelectSingle.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
- * 쓰는 곳: Emp03_Edit_Person(조직, 기준일 = 입사일), Emp03_TabPage_Trans(발령조직, 기준일 = 발령일)
+ * 쓰는 곳: Emp03_Edit_Person(조직, 기준일 = 입사일 고정), Emp03_TabPage_Trans(발령조직, 기준일 = 발령일 고정), Sys05_Page_UserRole(권한조직, 오늘·편집 가능)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Space, Typography } from 'antd';
@@ -16,7 +16,7 @@ import { BaseGrid } from '@/components/grid/BaseGrid';
 
 const gb = gbFor<OrgInfo>();
 
-/** AS-IS buildGrid() L193-203 (setChecked SINGLE). openFixDate는 setHidden(3) → parentFullName을 숨긴다(행번호0·체크1 다음 3번째) */
+/** AS-IS buildGrid() L193-203 (setChecked SINGLE). open(date)·openFixDate는 openCheck → setHidden(3) → parentFullName을 숨긴다(행번호0·체크1 다음 3번째) */
 const buildGrid = () => [
   gb.textCenter('orgCd', 80, '조직코드'),  // L198
   gb.text('parentFullNm', 270, '본부(실)명', { hide: true }),  // L199 (openFixDate L77-83 → open() L111 setHidden(3))
@@ -24,20 +24,23 @@ const buildGrid = () => [
 ];
 
 interface Props {
-  /** 'yyyy-MM-dd' 기준일 — 있으면 열린다 (AS-IS openFixDate(baseDate, callback)) */
+  /** 'yyyy-MM-dd' 기준일 — 있으면 열린다 (AS-IS open(baseDate, callback) / openFixDate) */
   baseDate?: string;
+  /** true(기본)면 openFixDate: 기준일 읽기 전용. false면 open(baseDate): 기준일을 바꿔 조회할 수 있다 */
+  fixDate?: boolean;
   onClose: () => void;
   /** AS-IS callback.execute(orgCodeModel) */
   onSelect: (org: OrgInfo) => void;
 }
 
-export const Org00_Lookup_SelectSingle: React.FC<Props> = ({ baseDate, onClose, onSelect }) => {
+export const Org00_Lookup_SelectSingle: React.FC<Props> = ({ baseDate: openDate, fixDate = true, onClose, onSelect }) => {
+  const [baseDate, setBaseDate] = useState(openDate);
   const gridRef = useRef<AgGridReact<OrgInfo>>(null);
   const [korName, setKorName] = useState('');
   const [rows, setRows] = useState<OrgInfo[]>([]);
   const columnDefs = useMemo(buildGrid, []);
 
-  // retrieve() L205-236: openFixDate는 selectByKorName(companyId, korName, baseDate)
+  // retrieve() L205-236: open·openFixDate는 selectByKorName(companyId, korName, baseDate)
   const retrieve = useCallback(async () => {
     if (!baseDate) return;
     try {
@@ -62,12 +65,13 @@ export const Org00_Lookup_SelectSingle: React.FC<Props> = ({ baseDate, onClose, 
   };
 
   // open() L103-191 끝: show() → retrieve()
+  useEffect(() => { setBaseDate(openDate); }, [openDate]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (baseDate) retrieve(); }, [baseDate]);
+  useEffect(() => { if (openDate && baseDate === openDate) retrieve(); }, [openDate, baseDate]);
 
   return (
     <Modal
-      open={!!baseDate}
+      open={!!openDate}
       title="조직찾기"
       width={450}
       maskClosable={false}
@@ -84,8 +88,9 @@ export const Org00_Lookup_SelectSingle: React.FC<Props> = ({ baseDate, onClose, 
       <div style={{ height: 420, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <Space>
           <Typography.Text strong>기준일</Typography.Text>
-          {/* openFixDate L77-83: 기준일 읽기 전용 */}
-          <DatePicker style={{ width: 120 }} value={baseDate ? dayjs(baseDate) : null} disabled format="YYYY-MM-DD" />
+          {/* openFixDate L77-83: 기준일 읽기 전용 / open(date) L71-75: 바꿀 수 있다(조회를 눌러야 반영) */}
+          <DatePicker style={{ width: 120 }} value={baseDate ? dayjs(baseDate) : null} disabled={fixDate} format="YYYY-MM-DD"
+            allowClear={false} onChange={d => d && setBaseDate(d.format('YYYY-MM-DD'))} />
           <Typography.Text strong>조직명</Typography.Text>
           {/* [E1] korName.KeyPress [Enter] (L126) → retrieve() */}
           <Input style={{ width: 100 }} value={korName} onChange={e => setKorName(e.target.value)} onPressEnter={retrieve} />

@@ -49,6 +49,50 @@
          ORDER BY emp03_trans_date DESC
     </select>
 
+    <!-- AS-IS selectByText L122 (사원찾기): 기준일의 최신 발령, isSeparateAddTitle=false → 퇴직만 제외 -->
+    <select id="searchTransPersons" resultType="kr.co.kfs.asseterp.biz.emp.dto.TransPersonRes">
+        WITH org00 AS (
+            SELECT org01_code_id     AS org00_org_code_id,
+                   org01_org_cd      AS org00_org_cd,
+                   org02_kor_nm      AS org00_kor_nm,
+                   org02_mod_date    AS org00_mod_date,
+                   org02_sort_order  AS org00_seq
+              FROM org01_code
+                   INNER JOIN org02_info ON org02_code_id = org01_code_id
+             WHERE org01_company_id = #{companyId}
+        )
+        SELECT emp03_trans_id                                                        AS trans_id,
+               emp03_person_id                                                       AS person_id,
+               emp03_org_code_id                                                     AS org_code_id,
+               org00_kor_nm                                                          AS org_nm,
+               emp01_emp_no                                                          AS emp_no,
+               emp01_kor_nm                                                          AS kor_nm,
+               f_get_empTrans(emp03_person_id, emp03_trans_date::date, 'title_nm')   AS title_nm
+          FROM emp03_trans
+               INNER JOIN emp01_person ON emp01_person_id   = emp03_person_id
+               INNER JOIN org00        ON org00_org_code_id = emp03_org_code_id
+         WHERE emp01_company_id = #{companyId}
+           AND UPPER(CONCAT(emp01_kor_nm, org00_kor_nm, emp01_emp_no)) LIKE UPPER(#{searchText})
+           AND org00_mod_date = ( SELECT MAX(org00_mod_date)
+                                    FROM org00
+                                   WHERE org00_org_code_id = emp03_org_code_id
+                                     AND org00_mod_date <![CDATA[ <= ]]> emp03_trans_date )
+           AND emp03_trans_date = ( SELECT MAX(x.emp03_trans_date)
+                                      FROM emp03_trans x
+                                     WHERE x.emp03_person_id = emp01_person_id
+                                       AND x.emp03_trans_date <![CDATA[ <= ]]> #{transDate} )
+           AND emp03_trans_cd NOT IN ('900') /** 퇴직만 제외 */
+           AND NOT EXISTS ( SELECT 1
+                              FROM emp04_add_title
+                             WHERE emp04_add_person_id = emp03_person_id
+                               AND ( emp04_start_date                        <![CDATA[ > ]]> #{transDate} OR
+                                     COALESCE(emp04_close_date,'9999-12-31') <![CDATA[ < ]]> #{transDate} ) )
+         ORDER BY COALESCE(org00_seq, org00_org_cd)
+                , f_code_seq(emp01_company_id, 'EmpTitleCode', emp03_title_cd)
+                , f_code_seq(emp01_company_id, 'EmpPosCode', emp03_pos_cd)
+                , emp01_emp_no
+    </select>
+
     <!-- AS-IS selectById L50 (저장 후 다시 읽기) -->
     <select id="selectTrans" resultType="kr.co.kfs.asseterp.biz.emp.dto.TransRes">
         SELECT <include refid="transColumns"/>

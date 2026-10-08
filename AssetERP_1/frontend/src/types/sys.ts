@@ -153,3 +153,18 @@ export interface RoleMenuNode {
   /** sys07_use_yn: 'true'/'false'/null(연결 없음) */
   useYn?: string | null;
 }
+
+/** 권한그룹별 사원 (GET /api/v1/sys/roles/{roleId}/user-roles, AS-IS Sys05_UserRoleModel) */
+export interface UserRole {
+  userRoleId: number;
+  userId: number;
+  roleId: number;
+  authOrgId?: number | null;
+  authOrgNm?: string | null;
+  orgNm?: string | null;
+  titleNm?: string | null;
+  empNo?: string | null;
+  korNm?: string | null;
+  /** 사원 조직의 상위 전체명 (AS-IS "권한조직" 칸이 보여 주는 값) */
+  parentFullNm?: string | null;
+}

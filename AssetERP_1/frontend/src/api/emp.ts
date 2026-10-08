@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { OrgInfo, PersonSaveReq, Trans, TransInfo, TransInfoCreateReq } from '../types/emp';
+import { OrgInfo, PersonSaveReq, Trans, TransInfo, TransInfoCreateReq, TransPerson } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -46,6 +46,12 @@ export const empApi = {
   searchTranses: async (personId: number): Promise<Trans[]> => {
     const res = await apiClient.get<ApiResponse<Trans[]>>(`v1/emp/persons/${personId}/trans`);
     return (res.data.data ?? []).map(toTrans);
+  },
+
+  /** AS-IS emp.Emp03_Trans.selectByText (사원찾기): 조직/직무/성명 '%검색어%' */
+  searchTransPersons: async (searchText: string): Promise<TransPerson[]> => {
+    const res = await apiClient.get<ApiResponse<TransPerson[]>>('v1/emp/trans', { params: { searchText } });
+    return res.data.data ?? [];
   },
 
   /** AS-IS emp.Emp03_Trans.update: 추가·변경 행 → 저장된 행(요청 순서) */

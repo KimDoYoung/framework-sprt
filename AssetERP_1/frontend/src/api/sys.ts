@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CompanyMenuNode, Company, CompanyCreateReq, CompanyManage, LoginSecure, Role, RoleMenuNode } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CompanyMenuNode, Company, CompanyCreateReq, CompanyManage, LoginSecure, Role, RoleMenuNode, UserRole } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -191,5 +191,26 @@ export const sysApi = {
     const body = rows.map(({ menuId, roleMenuId, useYn }) => ({ menuId, roleMenuId, useYn }));
     const res = await apiClient.put<ApiResponse<RoleMenuNode[]>>(`v1/sys/roles/${roleId}/menus`, body);
     return res.data.data ?? [];
+  },
+
+  // ── A03 권한그룹별 사용자 맵핑 (Sys05_Tab_UserRole) ──
+
+  /** AS-IS sys.Sys05_UserRole.selectByRoleId */
+  searchUserRoles: async (roleId: number): Promise<UserRole[]> => {
+    const res = await apiClient.get<ApiResponse<UserRole[]>>(`v1/sys/roles/${roleId}/user-roles`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys05_UserRole.update: 추가·변경 행 → 저장된 행(요청 순서) */
+  updateUserRoles: async (rows: UserRole[]): Promise<UserRole[]> => {
+    const body = rows.map(({ userRoleId, userId, roleId, authOrgId }) => ({ userRoleId, userId, roleId, authOrgId }));
+    const res = await apiClient.put<ApiResponse<UserRole[]>>('v1/sys/user-roles', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys05_UserRole.delete → 지운 건수 */
+  deleteUserRoles: async (userRoleIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/user-roles', { data: userRoleIds });
+    return res.data.data ?? 0;
   },
 };

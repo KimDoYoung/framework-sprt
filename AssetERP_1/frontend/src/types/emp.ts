@@ -103,3 +103,14 @@ export interface OrgInfo {
   levelNm?: string | null;
   modDate?: string | null;
 }
+
+/** 사원찾기 행 (GET /api/v1/emp/trans, AS-IS Emp01_Lookup_PersonModel) */
+export interface TransPerson {
+  transId: number;
+  personId: number;
+  orgCodeId?: number | null;
+  orgNm?: string | null;
+  empNo?: string | null;
+  korNm?: string | null;
+  titleNm?: string | null;
+}

@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.emp.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.dto.TransDeleteParam;
+import kr.co.kfs.asseterp.biz.emp.dto.TransPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRow;
 import kr.co.kfs.asseterp.biz.emp.dto.TransSaveReq;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +28,12 @@ public class EmpTransService {
     /** AS-IS selectByPersonId: 발령일 내림차순 */
     public List<TransRes> searchTranses(UserPrincipal user, Long personId) {
         return empTransMapper.searchTranses(user.getCompanyId(), personId);
+    }
+
+    /** AS-IS selectByText (사원찾기): '%검색어%', 기준일 = 지금(AS-IS new Date()) */
+    public List<TransPersonRes> searchTransPersons(UserPrincipal user, String searchText) {
+        String like = "%" + (searchText == null ? "" : searchText) + "%";
+        return empTransMapper.searchTransPersons(user.getCompanyId(), like, LocalDateTime.now());
     }
 
     /**

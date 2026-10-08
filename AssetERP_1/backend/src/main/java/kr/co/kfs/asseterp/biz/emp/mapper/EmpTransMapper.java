@@ -1,11 +1,13 @@
 package kr.co.kfs.asseterp.biz.emp.mapper;
 
 import kr.co.kfs.asseterp.biz.emp.dto.TransDeleteParam;
+import kr.co.kfs.asseterp.biz.emp.dto.TransPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRow;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /** AS-IS server/emp/mapper/emp03_trans.xml + UpdateDataModel(emp03_trans) */
@@ -13,6 +15,10 @@ import java.util.List;
 public interface EmpTransMapper {
     /** AS-IS selectByPersonId (deleteCheck도 이 행 수로 본다) */
     List<TransRes> searchTranses(@Param("companyId") Long companyId, @Param("personId") Long personId);
+
+    /** AS-IS selectByText (사원찾기) */
+    List<TransPersonRes> searchTransPersons(@Param("companyId") Long companyId, @Param("searchText") String searchText,
+                                            @Param("transDate") LocalDateTime transDate);
 
     /** AS-IS selectById */
     TransRes selectTrans(@Param("transId") Long transId);

@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import kr.co.kfs.asseterp.biz.emp.dto.TransPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransSaveReq;
 import kr.co.kfs.asseterp.biz.emp.service.EmpTransService;
@@ -30,6 +32,13 @@ public class EmpTransController {
     public ApiResponse<List<TransRes>> searchTranses(@AuthenticationPrincipal UserPrincipal principal,
                                                      @PathVariable Long personId) {
         return ApiResponse.ok(empTransService.searchTranses(principal, personId));
+    }
+
+    /** AS-IS emp.Emp03_Trans.selectByText (사원찾기 Emp01_Lookup_PersonModel) */
+    @GetMapping("/trans")
+    public ApiResponse<List<TransPersonRes>> searchTransPersons(@AuthenticationPrincipal UserPrincipal principal,
+                                                                @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(empTransService.searchTransPersons(principal, searchText));
     }
 
     /** AS-IS emp.Emp03_Trans.update → 저장된 행(요청 순서) */
