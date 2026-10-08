@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/org/mapper/org00_org_info.xml (org00_org_info는 org01_code + org02_info 이력 뷰) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.org.mapper.OrgInfoMapper">
+
+    <sql id="orgInfoColumns">
+        o.org00_org_code_id                                                          AS org_code_id,
+        o.org00_org_cd                                                               AS org_cd,
+        o.org00_kor_nm                                                               AS kor_nm,
+        o.org00_parent_full_nm                                                       AS parent_full_nm,
+        o.org00_level_cd                                                             AS level_cd,
+        f_cdnm('OrgLevelCode', o.org00_level_cd, o.org00_company_id, o.org00_mod_date) AS level_nm,
+        o.org00_mod_date                                                             AS mod_date
+    </sql>
+
+    <!-- AS-IS selectByKorName L50: 기준일에 살아 있는 조직의 그날 이름 -->
+    <select id="searchOrgInfos" resultType="kr.co.kfs.asseterp.biz.org.dto.OrgInfoRes">
+        SELECT <include refid="orgInfoColumns"/>
+          FROM org00_org_info o
+         WHERE org00_company_id = #{companyId}
+           AND org00_kor_nm LIKE #{korName}
+           AND org00_mod_date = ( SELECT max(x.org00_mod_date)
+                                    FROM org00_org_info x
+                                   WHERE x.org00_org_code_id = o.org00_org_code_id
+                                     AND x.org00_mod_date <![CDATA[ <= ]]> #{baseDate} )
+           AND #{baseDate} BETWEEN org00_mod_date AND coalesce(org00_close_date, to_date('29991231','yyyyMMdd'))
+         ORDER BY org00_org_cd, org00_seq
+    </select>
+
+    <!-- AS-IS selectByOrgCodeId L137: 기준일의 조직 이름 -->
+    <select id="selectOrgInfo" resultType="kr.co.kfs.asseterp.biz.org.dto.OrgInfoRes">
+        SELECT <include refid="orgInfoColumns"/>
+          FROM org00_org_info o
+         WHERE org00_org_code_id = #{orgCodeId}
+           AND org00_company_id = #{companyId}
+           AND org00_mod_date = ( SELECT max(x.org00_mod_date)
+                                    FROM org00_org_info x
+                                   WHERE x.org00_org_code_id = o.org00_org_code_id
+                                     AND x.org00_mod_date <![CDATA[ <= ]]> #{baseDate} )
+    </select>
+</mapper>

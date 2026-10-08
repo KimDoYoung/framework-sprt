@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/emp/Emp01_Person (update · deleteTarget) + UpdateDataModel(emp01_person) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpPersonMapper">
+
+    <!-- AS-IS UpdateDataModel UPDATE: 기본정보 탭 컬럼만, 로그인 회사 행만 -->
+    <update id="updatePerson">
+        UPDATE emp01_person
+           SET emp01_emp_no        = #{empNo},
+               emp01_kor_nm        = #{korNm},
+               emp01_hire_date     = #{hireDate},
+               emp01_hire_cd       = #{hireCd},
+               emp01_apply_cd      = #{applyCd},
+               emp01_order_seq     = #{orderSeq},
+               emp01_email_addr    = #{emailAddr},
+               emp01_office_telno  = #{officeTelNo},
+               emp01_office_detail = #{officeDetail},
+               emp01_mobile_telno  = #{mobileTelNo},
+               emp01_note          = #{note}
+         WHERE emp01_person_id  = #{personId}
+           AND emp01_company_id = #{companyId}
+    </update>
+
+    <!-- 사번 중복(같은 회사, 자기 제외) -->
+    <select id="countEmpNo" resultType="int">
+        SELECT COUNT(*) FROM emp01_person
+         WHERE emp01_company_id = #{companyId} AND emp01_emp_no = #{empNo} AND emp01_person_id != #{personId}
+    </select>
+
+    <!-- AS-IS emp04_add_title.selectByPersonId L47 (건수만: 그 사람에게 걸린 겸직발령) -->
+    <select id="countAddTitles" resultType="int">
+        SELECT COUNT(*)
+          FROM emp04_add_title
+               INNER JOIN emp03_trans  ON emp03_person_id = emp04_add_person_id
+               INNER JOIN emp01_person ON emp01_person_id = emp04_add_person_id
+         WHERE emp04_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS emp01_person.insertEmpDel L779: 지우기 전 emp99_person_del에 백업 -->
+    <insert id="insertEmpDel">
+        INSERT INTO emp99_person_del
+        SELECT f_create_seq()
+             , emp01_person_id
+             , emp01_emp_no
+             , emp01_order_seq
+             , emp01_kor_nm
+             , emp01_hire_cd
+             , emp01_apply_cd
+             , emp01_hire_date
+             , emp01_email_addr
+             , emp01_office_telno
+             , emp01_office_detail
+             , emp01_mobile_telno
+             , emp01_password
+             , emp01_company_id
+             , emp01_note
+             , emp01_location_cd
+             , emp01_theme_cd
+             , emp01_lock_yn
+             , emp01_menu_fix_yn
+             , f_sysdate()
+             , #{empId}
+          FROM emp01_person
+         WHERE emp01_person_id  = #{personId}
+           AND emp01_company_id = #{companyId}
+    </insert>
+
+    <!-- AS-IS UpdateDataModel DELETE (로그인 회사 행만) -->
+    <delete id="deletePerson">
+        DELETE FROM emp01_person
+         WHERE emp01_person_id  = #{personId}
+           AND emp01_company_id = #{companyId}
+    </delete>
+</mapper>

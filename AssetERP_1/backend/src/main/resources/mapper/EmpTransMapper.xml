@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS server/emp/mapper/emp03_trans.xml selectByPersonId(L73) · selectById(L50) + UpdateDataModel(emp03_trans).
+  emp03_trans에는 회사 컬럼이 없다 → 회사 조건은 사람(emp01_person)으로 건다.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpTransMapper">
+
+    <sql id="transColumns">
+        emp03_trans_id                                                                       AS trans_id,
+        emp03_person_id                                                                      AS person_id,
+        emp03_trans_date                                                                     AS trans_date,
+        emp03_trans_cd                                                                       AS trans_cd,
+        f_cdnm('EmpTransCode', emp03_trans_cd, emp01_company_id, emp03_trans_date)           AS trans_nm,
+        emp03_kind_cd                                                                        AS kind_cd,
+        f_cdnm('EmpKindCode',  emp03_kind_cd,  emp01_company_id, emp03_trans_date)           AS kind_nm,
+        emp03_org_code_id                                                                    AS org_code_id,
+        org00_kor_nm                                                                         AS org_nm,
+        emp03_title_cd                                                                       AS title_cd,
+        f_get_empTrans(emp03_person_id, emp03_trans_date::date, 'title_nm')                  AS title_nm,
+        emp03_pos_cd                                                                         AS pos_cd,
+        f_cdnm('EmpPosCode',   emp03_pos_cd,   emp01_company_id, emp03_trans_date)           AS pos_nm,
+        f_cdnm('EmpGradeCode', emp03_grade_cd, emp01_company_id, emp03_trans_date)           AS grade_nm,
+        emp03_duty                                                                           AS duty,
+        emp03_expiry_date                                                                    AS expiry_date,
+        emp03_trans_reason                                                                   AS trans_reason,
+        emp03_org_head_yn                                                                    AS org_head_yn,
+        emp03_officer_yn                                                                     AS officer_yn,
+        emp03_tdm_target_yn                                                                  AS tdm_target_yn,
+        emp03_non_stay_yn                                                                    AS non_stay_yn
+    </sql>
+
+    <!-- AS-IS selectByPersonId L73: 발령일 내림차순, 조직은 발령일 기준 이름 -->
+    <select id="searchTranses" resultType="kr.co.kfs.asseterp.biz.emp.dto.TransRes">
+        SELECT <include refid="transColumns"/>
+          FROM emp03_trans
+               INNER JOIN emp01_person ON emp01_person_id = emp03_person_id
+               LEFT OUTER JOIN org00_org_info ON (    org00_org_code_id = emp03_org_code_id
+                                                  AND org00_company_id  = #{companyId}
+                                                  AND org00_mod_date = ( SELECT MAX(org02_mod_date)
+                                                                           FROM org02_info
+                                                                          WHERE org02_code_id = emp03_org_code_id
+                                                                            AND org02_mod_date <![CDATA[ <= ]]> emp03_trans_date ))
+         WHERE emp03_person_id  = #{personId}
+           AND emp01_company_id = #{companyId}
+         ORDER BY emp03_trans_date DESC
+    </select>
+
+    <!-- AS-IS selectById L50 (저장 후 다시 읽기) -->
+    <select id="selectTrans" resultType="kr.co.kfs.asseterp.biz.emp.dto.TransRes">
+        SELECT <include refid="transColumns"/>
+          FROM emp03_trans
+               INNER JOIN emp01_person ON emp03_person_id = emp01_person_id
+               LEFT OUTER JOIN org00_org_info ON (    org00_org_code_id = emp03_org_code_id
+                                                  AND org00_mod_date = ( SELECT MAX(x.org00_mod_date)
+                                                                           FROM org00_org_info x
+                                                                          WHERE x.org00_org_code_id = emp03_org_code_id
+                                                                            AND x.org00_mod_date <![CDATA[ <= ]]> emp03_trans_date ))
+         WHERE emp03_trans_id = #{transId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- 사람이 로그인 회사 사람인지 -->
+    <select id="countPerson" resultType="int">
+        SELECT COUNT(*) FROM emp01_person WHERE emp01_person_id = #{personId} AND emp01_company_id = #{companyId}
+    </select>
+
+    <!-- 유일 인덱스(사람, 발령일, 발령구분)에 걸리는 다른 발령 -->
+    <select id="countSameTrans" resultType="int">
+        SELECT COUNT(*) FROM emp03_trans
+         WHERE emp03_person_id = #{personId} AND emp03_trans_date = #{transDate} AND emp03_trans_cd = #{transCd}
+           AND emp03_trans_id != #{transId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel INSERT: 일반발령 탭 컬럼 -->
+    <insert id="insertTrans">
+        INSERT INTO emp03_trans (emp03_trans_id, emp03_person_id, emp03_trans_date, emp03_trans_cd, emp03_kind_cd, emp03_org_code_id,
+                                 emp03_title_cd, emp03_pos_cd, emp03_duty, emp03_expiry_date, emp03_trans_reason)
+        VALUES (#{transId}, #{personId}, #{transDate}, #{transCd}, #{kindCd}, #{orgCodeId},
+                #{titleCd}, #{posCd}, #{duty}, #{expiryDate}, #{transReason})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE: 화면에서 바뀌는 컬럼만, 로그인 회사 사람의 발령만 -->
+    <update id="updateTrans">
+        UPDATE emp03_trans
+           SET emp03_trans_date   = #{transDate},
+               emp03_trans_cd     = #{transCd},
+               emp03_kind_cd      = #{kindCd},
+               emp03_org_code_id  = #{orgCodeId},
+               emp03_title_cd     = #{titleCd},
+               emp03_pos_cd       = #{posCd},
+               emp03_duty         = #{duty},
+               emp03_expiry_date  = #{expiryDate},
+               emp03_trans_reason = #{transReason}
+         WHERE emp03_trans_id = #{transId}
+           AND emp03_person_id IN (SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId})
+    </update>
+
+    <!-- AS-IS UpdateDataModel DELETE -->
+    <delete id="deleteTranses">
+        DELETE FROM emp03_trans
+         WHERE emp03_person_id IN (SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId})
+           AND emp03_trans_id IN
+        <foreach collection="transIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

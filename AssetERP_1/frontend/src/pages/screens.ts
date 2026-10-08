@@ -1,4 +1,5 @@
 import React from 'react';
+import { Emp00_Tab_TransInfo } from './emp/Emp00_Tab_TransInfo';
 import { Sys01_Tab_Company } from './sys/Sys01_Tab_Company';
 import { Sys03_Tab_CompanyMenu } from './sys/Sys03_Tab_CompanyMenu';
 import { Sys04_Tab_Role } from './sys/Sys04_Tab_Role';
@@ -10,6 +11,7 @@ import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
  * 메뉴 키는 DB 값 그대로 쓴다(오타 `Sys03_Tab_ComapnyMenu`도 그대로).
  */
 export const SCREENS: Record<string, React.FC> = {
+  Emp00_Tab_TransInfo, // C01 (1단계: 목록·등록·기본정보·일반발령)
   Sys01_Tab_Company, // A15 (1단계: 목록·신규 등록)
   Sys03_Tab_ComapnyMenu: Sys03_Tab_CompanyMenu, // A10 (메뉴 키 오타 그대로)
   Sys04_Tab_Role, // A01

@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS server/emp/mapper/emp00_trans_info.xml selectByText(L339) · selectById(L66) · selectOneByPersonId(L205)
+  + common.emp00_trans_info(Common.xml L1372) · common.org00_org_info(L1511).
+  조건·정렬은 원본 그대로, SELECT 목록은 TransInfoRes 컬럼만.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpTransInfoMapper">
+
+    <!-- common.emp00_trans_info: 사람별 발령(기준일 최신 발령 또는 transId 한 건) -->
+    <sql id="emp00With">
+        WITH emp00 AS (
+            SELECT t2.emp03_trans_id                                                             AS emp00_trans_id,
+                   t2.emp03_trans_date                                                           AS emp00_trans_date,
+                   t2.emp03_expiry_date                                                          AS emp00_expiry_date,
+                   t2.emp03_person_id                                                            AS emp00_person_id,
+                   CASE WHEN t2.emp03_trans_cd = '900' THEN t2.emp03_trans_date
+                        ELSE ( SELECT MIN(a.emp03_trans_date) - '1day'::interval
+                                 FROM emp03_trans a
+                                WHERE a.emp03_person_id = t2.emp03_person_id
+                                  AND a.emp03_trans_date <![CDATA[>]]> t2.emp03_trans_date )
+                        END                                                                      AS emp00_close_date,
+                   t2.emp03_trans_cd                                                             AS emp00_trans_cd,
+                   t2.emp03_kind_cd                                                              AS emp00_kind_cd,
+                   t2.emp03_pos_cd                                                               AS emp00_pos_cd,
+                   t2.emp03_title_cd                                                             AS emp00_title_cd,
+                   t2.emp03_grade_cd                                                             AS emp00_grade_cd,
+                   t2.emp03_org_code_id                                                          AS emp00_org_code_id,
+                   f_org_nm(t2.emp03_org_code_id, t2.emp03_trans_date)                           AS emp00_org_kor_nm,
+                   t2.emp03_officer_yn                                                           AS emp00_officer_yn
+              FROM emp01_person t1
+                   INNER JOIN emp03_trans t2 ON t2.emp03_person_id = t1.emp01_person_id
+             WHERE t1.emp01_company_id = #{companyId}
+            <if test="personId != null">
+               AND t1.emp01_person_id = #{personId}
+            </if>
+            <choose>
+                <when test="transId != null">
+               AND t2.emp03_trans_id = #{transId}
+                </when>
+                <when test="transDate != null">
+               AND t2.emp03_trans_date = ( SELECT MAX(x.emp03_trans_date)
+                                             FROM emp03_trans x
+                                            WHERE x.emp03_person_id = t1.emp01_person_id
+                                              AND to_char(x.emp03_trans_date,'yyyymmdd') <![CDATA[ <= ]]> replace(#{transDate},'-','') )
+                </when>
+            </choose>
+               <!-- (2025.06.30 CYY - 겸직사원정보인데 원사원정보가 없는 경우 체크) -->
+               AND 'Y' = (CASE WHEN (SELECT COUNT(*) FROM emp04_add_title WHERE emp04_add_person_id = t1.emp01_person_id) = 0 THEN 'Y'
+                               ELSE (CASE WHEN (SELECT COUNT(*)
+                                                  FROM emp01_person a
+                                                       INNER JOIN emp04_add_title ON emp04_person_id = a.emp01_person_id
+                                                 WHERE emp04_add_person_id = t1.emp01_person_id) = 0 THEN 'N'
+                                          ELSE 'Y' END) END)
+        ), org00 AS (
+            SELECT org01_code_id   AS org00_org_code_id,
+                   org01_org_cd    AS org00_org_cd,
+                   org02_kor_nm    AS org00_kor_nm,
+                   org02_mod_date  AS org00_mod_date
+              FROM org01_code
+                   INNER JOIN org02_info ON org02_code_id = org01_code_id
+             WHERE org01_company_id = #{companyId}
+        )
+    </sql>
+
+    <sql id="transInfoColumns">
+        emp00_trans_id                                                                       AS trans_id,
+        emp00_person_id                                                                      AS person_id,
+        emp00_trans_date                                                                     AS trans_date,
+        emp00_trans_cd                                                                       AS trans_cd,
+        f_cdnm('EmpTransCode', emp00_trans_cd, emp01_company_id, emp00_trans_date)           AS trans_nm,
+        emp00_kind_cd                                                                        AS kind_cd,
+        f_cdnm('EmpKindCode', emp00_kind_cd, emp01_company_id, emp00_trans_date)             AS kind_nm,
+        emp00_pos_cd                                                                         AS pos_cd,
+        f_cdnm('EmpPosCode', emp00_pos_cd, emp01_company_id, emp00_trans_date)               AS pos_nm,
+        emp00_title_cd                                                                       AS title_cd,
+        f_cdnm('EmpTitleCode', emp00_title_cd, emp01_company_id, emp00_trans_date)           AS title_nm,
+        emp00_org_code_id                                                                    AS org_code_id,
+        emp00_org_kor_nm                                                                     AS org_kor_nm,
+        f_org_parent_full_nm(emp00_org_code_id, emp00_trans_date)                            AS parent_full_nm,
+        emp00_officer_yn                                                                     AS officer_yn,
+        emp00_expiry_date                                                                    AS expiry_date,
+        emp01_emp_no                                                                         AS emp_no,
+        emp01_kor_nm                                                                         AS kor_nm,
+        emp01_order_seq                                                                      AS order_seq,
+        emp01_hire_cd                                                                        AS hire_cd,
+        f_cdnm('HireCode', emp01_hire_cd, emp01_company_id, emp00_trans_date)                AS hire_nm,
+        emp01_apply_cd                                                                       AS apply_cd,
+        f_cdnm('EmpApplyCode', emp01_apply_cd, emp01_company_id, emp00_trans_date)           AS apply_nm,
+        emp01_hire_date                                                                      AS hire_date,
+        f_get_emptrans(emp01_person_id, null, 'retire_date')                                 AS retire_date,
+        emp01_email_addr                                                                     AS email_addr,
+        emp01_office_telno                                                                   AS office_tel_no,
+        emp01_office_detail                                                                  AS office_detail,
+        emp01_mobile_telno                                                                   AS mobile_tel_no,
+        emp01_note                                                                           AS note,
+        CASE WHEN (SELECT COUNT(*)
+                     FROM emp08_license
+                    WHERE emp08_person_id = emp01_person_id
+                      AND COALESCE(emp08_finance_relate_yn,'false') = 'true') <![CDATA[ > ]]> 0
+             THEN 'true' ELSE 'false' END                                                    AS finance_pro_yn,
+        emp02_birthday                                                                       AS birthday,
+        f_cdnm('EmpGenderCode', emp02_gender_cd, emp01_company_id, emp00_trans_date)         AS gender_nm
+    </sql>
+
+    <!-- AS-IS selectByText L339 (isSeparateAddTitle = true: 재직은 799 이하) -->
+    <select id="searchTransInfos" resultType="kr.co.kfs.asseterp.biz.emp.dto.TransInfoRes">
+        <include refid="emp00With"/>
+        SELECT <include refid="transInfoColumns"/>
+          FROM emp00 trans
+               INNER JOIN emp01_person         ON emp00_person_id = emp01_person_id
+               INNER JOIN org00                ON emp00_org_code_id = org00_org_code_id
+               LEFT OUTER JOIN emp02_others    ON emp00_person_id = emp02_person_id
+         WHERE emp00_trans_cd = ( CASE #{transCode} WHEN '100'
+                                                    THEN ( CASE WHEN emp00_trans_cd <![CDATA[ <= ]]> '799' /** 겸직(800),퇴직(900)은 제외한다 */
+                                                                THEN emp00_trans_cd
+                                                                ELSE #{transCode}
+                                                                END )
+                                                    WHEN '900' THEN '900'
+                                                    WHEN '800' THEN '800'
+                                                    ELSE emp00_trans_cd
+                                                    END )
+           AND (emp01_kor_nm||org00_kor_nm||emp01_emp_no) LIKE #{searchText}
+           AND org00_mod_date = ( SELECT max(org00_mod_date)
+                                    FROM org00
+                                   WHERE org00_org_code_id = emp00_org_code_id
+                                     AND org00_mod_date <![CDATA[ <= ]]> emp00_trans_date )
+           AND NOT EXISTS ( SELECT 1
+                              FROM emp04_add_title
+                             WHERE emp04_add_person_id = emp00_person_id
+                               AND ( emp04_start_date                        <![CDATA[ > ]]> to_date(#{transDate},'yyyy-mm-dd') OR
+                                     COALESCE(emp04_close_date,'9999-12-31') <![CDATA[ < ]]> to_date(#{transDate},'yyyy-mm-dd') ) )
+        <choose>
+            <when test="transCode == '900'">
+         ORDER BY emp00_close_date DESC, org00_org_cd, emp00_title_cd, emp00_pos_cd, emp01_order_seq
+            </when>
+            <otherwise>
+         ORDER BY org00_org_cd, emp00_title_cd, emp00_pos_cd, emp01_order_seq
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- AS-IS selectById L66 (등록 후 다시 읽기, transId 한 건) -->
+    <select id="selectTransInfo" resultType="kr.co.kfs.asseterp.biz.emp.dto.TransInfoRes">
+        <include refid="emp00With"/>
+        SELECT <include refid="transInfoColumns"/>
+          FROM emp00
+               INNER JOIN emp01_person         ON emp00_person_id = emp01_person_id
+               LEFT OUTER JOIN emp02_others    ON emp00_person_id = emp02_person_id
+    </select>
+
+    <!-- AS-IS selectOneByPersonId L205, transCode '%' (일반발령: 겸직 800 제외한 최신 발령) -->
+    <select id="selectCurrentTransInfo" resultType="kr.co.kfs.asseterp.biz.emp.dto.TransInfoRes">
+        <include refid="emp00With"/>
+        SELECT <include refid="transInfoColumns"/>
+          FROM emp00 trans
+               INNER JOIN org00                ON org00_org_code_id = emp00_org_code_id
+               INNER JOIN emp01_person         ON emp01_person_id   = emp00_person_id
+               LEFT OUTER JOIN emp02_others    ON emp00_person_id = emp02_person_id
+         WHERE emp01_person_id = #{personId}
+           AND emp00_trans_cd != '800'
+           AND emp00_trans_date = ( SELECT max(x.emp00_trans_date)
+                                      FROM emp00 x
+                                     WHERE x.emp00_person_id = trans.emp00_person_id
+                                       AND x.emp00_trans_cd != '800' )
+           AND org00_mod_date = ( SELECT max(org00_mod_date)
+                                    FROM org00
+                                   WHERE org00_org_code_id = emp00_org_code_id
+                                     AND org00_mod_date <![CDATA[ <= ]]> emp00_trans_date )
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- 사번은 회사 안에서 유일하다(idx_emp01_company_id_emp_no) -->
+    <select id="countEmpNo" resultType="int">
+        SELECT COUNT(*) FROM emp01_person WHERE emp01_company_id = #{companyId} AND emp01_emp_no = #{empNo}
+    </select>
+
+    <!-- AS-IS emp02_others.insert L137: 기타정보 빈 행 (others_id = person_id) -->
+    <insert id="insertOthers">
+        INSERT INTO emp02_others (emp02_others_id, emp02_person_id)
+        VALUES (#{personId}, #{personId})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(emp01_person) INSERT: 신규사원 등록 팝업 컬럼 -->
+    <insert id="insertPerson">
+        INSERT INTO emp01_person (emp01_person_id, emp01_company_id, emp01_emp_no, emp01_kor_nm, emp01_hire_date, emp01_hire_cd,
+                                  emp01_email_addr, emp01_office_telno, emp01_office_detail, emp01_mobile_telno, emp01_note)
+        VALUES (#{personId}, #{companyId}, #{empNo}, #{korNm}, #{hireDate}, #{hireCd},
+                #{emailAddr}, #{officeTelNo}, #{officeDetail}, #{mobileTelNo}, #{note})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(emp03_trans) INSERT: 채용발령 -->
+    <insert id="insertTrans">
+        INSERT INTO emp03_trans (emp03_trans_id, emp03_person_id, emp03_trans_date, emp03_trans_cd, emp03_kind_cd,
+                                 emp03_org_code_id, emp03_pos_cd, emp03_title_cd, emp03_expiry_date)
+        VALUES (#{transId}, #{personId}, #{transDate}, #{transCd}, #{kindCd},
+                #{orgCodeId}, #{posCd}, #{titleCd}, #{expiryDate})
+    </insert>
+
+    <!-- AS-IS emp35_deduct.insert L119: insure true, 기본공제 1, 원천징수 100 -->
+    <insert id="insertDeduct">
+        INSERT INTO emp35_deduct (emp35_deduct_id, emp35_company_id, emp35_person_id, emp35_start_date,
+                                  emp35_basic_deduct_cnt, emp35_insure_yn, emp35_with_hold_rate)
+        VALUES (#{deductId}, #{companyId}, #{personId}, #{startDate}, 1, 'true', 100)
+    </insert>
+
+    <!-- AS-IS sys09_code.selectByCodeName L197 (companyId 0, 'AddDeductType', startDate = 입사일) -->
+    <select id="selectAddDeductTypes" resultType="string">
+        SELECT a.sys09_code
+          FROM sys09_code a, sys08_code_kind b
+         WHERE sys08_code_kind_id = sys09_code_kind_id
+           AND sys09_company_id = 0
+           AND sys08_kind_cd LIKE 'AddDeductType'
+           AND sys09_apply_date <![CDATA[ <= ]]> #{startDate}
+         ORDER BY sys09_seq
+    </select>
+
+    <!-- AS-IS emp36_add_deduct.insert L29 (cnt 0) -->
+    <insert id="insertAddDeduct">
+        INSERT INTO emp36_add_deduct (emp36_add_deduct_id, emp36_deduct_id, emp36_add_deduct_type, emp36_add_deduct_cnt)
+        VALUES (f_create_seq(), #{deductId}, #{type}, 0)
+    </insert>
+</mapper>
