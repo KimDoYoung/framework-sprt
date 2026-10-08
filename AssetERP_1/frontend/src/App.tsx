@@ -7,6 +7,7 @@ import { authApi } from './api/auth';
 import { onSessionTerminated, SessionTerminateReason } from './api/client';
 import { User } from './types/auth';
 import { realtime } from './ws/stompClient';
+import { appSettingsStorage } from './utils/storage';
 
 const SESSION_NOTICES: Record<SessionTerminateReason, LoginNotice> = {
   MULTI_LOGIN: {
@@ -126,6 +127,9 @@ export const App: React.FC = () => {
           notice={sessionNotice}
           onClearNotice={() => setSessionNotice(null)}
           onLoginSuccess={(u) => {
+            // 로그인할 때마다 열린 탭을 비우고 MyPage만 남긴다(다른 계정·권한의 탭이 남지 않도록).
+            // 추후 변환 완료 후에는 사용자별 탭 유지로 바꿀 예정. 새로고침(세션 복원)은 탭을 유지한다.
+            appSettingsStorage.remove('flexlayout_model');
             setSessionNotice(null);
             setUser(u);
           }}

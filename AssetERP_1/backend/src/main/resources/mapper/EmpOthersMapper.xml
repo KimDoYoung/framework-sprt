@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/emp/Emp02_Others (updateOne) · emp02_others.xml upsert(L66) + emp00_trans_info.selectByText(L339)의 emp02 컬럼 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpOthersMapper">
+
+    <!-- selectByText: LEFT OUTER JOIN emp02_others ON emp00_person_id = emp02_person_id, emp02_others.* + to_decrypts(emp02_ctz_no) -->
+    <select id="selectOthers" resultType="kr.co.kfs.asseterp.biz.emp.dto.OthersRes">
+        SELECT emp02_others_id                AS others_id,
+               emp01_person_id                AS person_id,
+               emp02_chn_nm                   AS chn_name,
+               emp02_eng_nm                   AS eng_name,
+               to_decrypts(emp02_ctz_no)      AS dec_ctz_no,
+               emp02_birthday                 AS birthday,
+               emp02_lunar_cd                 AS lunar_code,
+               emp02_gender_cd                AS gender_code,
+               emp02_nat_cd                   AS nation_code,
+               emp02_email_other              AS email_other,
+               emp02_military_cd              AS military_code,
+               emp02_family_dscr              AS family_dscr,
+               emp02_marriage_cd              AS marriage_code,
+               emp02_zip_cd                   AS zip_code,
+               emp02_zip_addr                 AS zip_address,
+               emp02_addr_detail              AS zip_detail,
+               emp02_home_telno               AS home_tel_no,
+               emp02_note                     AS note,
+               emp02_hire_date_group          AS hire_date_group,
+               emp02_hire_date_leave_calc     AS hire_date_leave_calc
+          FROM emp01_person
+               LEFT OUTER JOIN emp02_others ON emp02_person_id = emp01_person_id
+         WHERE emp01_person_id  = #{personId}
+           AND emp01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS emp02_others.upsert 그대로. 보강: UPDATE WHERE에 person_id(다른 사람 행을 덮지 않게) -->
+    <insert id="upsertOthers">
+        WITH upsert AS (
+                UPDATE emp02_others
+                   SET emp02_person_id              = #{personId}
+                     , emp02_chn_nm                 = #{chnName}
+                     , emp02_ctz_no                 = to_encrypts(#{decCtzNo})
+                     , emp02_birthday               = #{birthday}
+                     , emp02_lunar_cd               = #{lunarCode}
+                     , emp02_eng_nm                 = #{engName}
+                     , emp02_gender_cd              = #{genderCode}
+                     , emp02_nat_cd                 = #{nationCode}
+                     , emp02_email_other            = #{emailOther}
+                     , emp02_military_cd            = #{militaryCode}
+                     , emp02_family_dscr            = #{familyDscr}
+                     , emp02_marriage_cd            = #{marriageCode}
+                     , emp02_zip_cd                 = #{zipCode}
+                     , emp02_zip_addr               = #{zipAddress}
+                     , emp02_addr_detail            = #{zipDetail}
+                     , emp02_home_telno             = #{homeTelNo}
+                     , emp02_note                   = #{note}
+                     , emp02_hire_date_group        = #{hireDateGroup}
+                     , emp02_hire_date_leave_calc   = #{hireDateLeaveCalc}
+                 WHERE emp02_others_id = #{othersId}
+                   AND emp02_person_id = #{personId}
+             RETURNING *
+        )
+            INSERT
+              INTO emp02_others
+                 ( emp02_others_id
+                 , emp02_person_id
+                 , emp02_chn_nm
+                 , emp02_ctz_no
+                 , emp02_birthday
+                 , emp02_lunar_cd
+                 , emp02_eng_nm
+                 , emp02_gender_cd
+                 , emp02_nat_cd
+                 , emp02_email_other
+                 , emp02_military_cd
+                 , emp02_family_dscr
+                 , emp02_marriage_cd
+                 , emp02_zip_cd
+                 , emp02_zip_addr
+                 , emp02_addr_detail
+                 , emp02_home_telno
+                 , emp02_note
+                 , emp02_hire_date_group
+                 , emp02_hire_date_leave_calc
+                 )
+            SELECT f_create_seq()
+                 , #{personId}
+                 , #{chnName}
+                 , to_encrypts(#{decCtzNo})
+                 , #{birthday}
+                 , #{lunarCode}
+                 , #{engName}
+                 , #{genderCode}
+                 , #{nationCode}
+                 , #{emailOther}
+                 , #{militaryCode}
+                 , #{familyDscr}
+                 , #{marriageCode}
+                 , #{zipCode}
+                 , #{zipAddress}
+                 , #{zipDetail}
+                 , #{homeTelNo}
+                 , #{note}
+                 , #{hireDateGroup}
+                 , #{hireDateLeaveCalc}
+             WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </insert>
+</mapper>

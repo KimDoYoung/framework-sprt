@@ -15,6 +15,7 @@ import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { Emp03_Edit_Person } from './Emp03_Edit_Person';
 import { Emp01_TabPage_Person } from './Emp01_TabPage_Person';
+import { Emp02_TabPage_Others } from './Emp02_TabPage_Others';
 import { Emp03_TabPage_Trans } from './Emp03_TabPage_Trans';
 
 const gb = gbFor<TransInfo>();
@@ -61,7 +62,7 @@ const PendingTab = (name: string, step: string): React.FC<TransInfoTabProps> => 
 /** settings() L127-197: tabPanel.add(…) 순서 그대로 */
 const TABS: { key: string; label: string; page: React.FC<TransInfoTabProps> }[] = [
   { key: 'person', label: '기본정보', page: Emp01_TabPage_Person },
-  { key: 'others', label: '기타정보', page: PendingTab('Emp02_TabPage_Others', '2단계') },
+  { key: 'others', label: '기타정보', page: Emp02_TabPage_Others },
   { key: 'trans', label: '일반발령', page: Emp03_TabPage_Trans },
   { key: 'deduct', label: '급여공제', page: PendingTab('Emp35_TabPage_DeductDate', '3단계') },
   { key: 'account', label: '급여계좌관리', page: PendingTab('Emp14_TabPage_Account', '3단계') },

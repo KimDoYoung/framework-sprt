@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { OrgInfo, PersonSaveReq, Trans, TransInfo, TransInfoCreateReq, TransPerson } from '../types/emp';
+import { OrgInfo, Others, PersonSaveReq, Trans, TransInfo, TransInfoCreateReq, TransPerson } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -29,6 +29,18 @@ export const empApi = {
   /** AS-IS emp.Emp01_Person.update */
   updatePerson: async (personId: number, req: PersonSaveReq): Promise<void> => {
     await apiClient.put(`v1/emp/persons/${personId}`, req);
+  },
+
+  /** 기타정보 탭: AS-IS selectByText 행의 empOthersModel (사람 1명) */
+  getOthers: async (personId: number): Promise<Others> => {
+    const res = await apiClient.get<ApiResponse<Others>>(`v1/emp/persons/${personId}/others`);
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp02_Others.updateOne (emp02_others.upsert) → 다시 읽은 값 */
+  updateOthers: async (req: Others): Promise<Others> => {
+    const res = await apiClient.put<ApiResponse<Others>>('v1/emp/others', req);
+    return res.data.data;
   },
 
   /** AS-IS emp.Emp04_AddTitle.selectByPersonId → 건수 */

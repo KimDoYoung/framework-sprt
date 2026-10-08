@@ -114,3 +114,27 @@ export interface TransPerson {
   korNm?: string | null;
   titleNm?: string | null;
 }
+
+/** 기타정보 탭 (AS-IS Emp02_OthersModel) — GET 응답 = PUT body */
+export interface Others {
+  othersId?: number | null;
+  personId: number;
+  chnName?: string | null;
+  engName?: string | null;
+  decCtzNo?: string | null;
+  birthday?: string | null;
+  lunarCode?: string | null;
+  genderCode?: string | null;
+  nationCode?: string | null;
+  emailOther?: string | null;
+  militaryCode?: string | null;
+  familyDscr?: string | null;
+  marriageCode?: string | null;
+  zipCode?: string | null;
+  zipAddress?: string | null;
+  zipDetail?: string | null;
+  homeTelNo?: string | null;
+  note?: string | null;
+  hireDateGroup?: string | null;
+  hireDateLeaveCalc?: string | null;
+}
