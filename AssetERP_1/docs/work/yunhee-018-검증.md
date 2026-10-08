@@ -33,3 +33,12 @@ tools/yunhee-018-check.sh --reindex A-3 A-9 # 색인을 다시 만든 뒤(index-
 - 결과를 `~/work/yunhee-cli/docs/수정사항019.md`(018 시험 결과) 형식으로 남긴다: 통과한 것, 남은 ❌(증상·원인 추정·재현 명령).
 - 통과한 유형은 `docs/05-작업방법.md` §7 명령표의 분석 행을 `yunhee analysis <type>`으로 바꾸고 "한계(0.2.1, C01)" 줄을 지운다. `../CLAUDE.md` yunhee 절에도 `yunhee analysis --list`를 넣는다(03 원칙 10, 작업기록에 남김).
 - 그다음 화면 작업(A04 또는 C01 2단계)에서 `sed`·`grep`·`cat` 대신 `analysis`를 실제로 쓰고, 토큰(`/context`의 Bash·파일 읽기 비율)을 C01·A03(약 32%)과 비교해 08 교훈에 적는다.
+
+## 5. 결과 기록
+| 날짜 | 버전 | 결과 | 문서 | 반영 |
+|:---|:---|:---|:---|:---|
+| 2026-10-08 | 0.2.2 | ✅27 / ❌19 (+재색인 ❌1) | yunhee-cli `docs/수정사항019.md` | — |
+| 2026-10-08 | 0.2.3 | ✅47 / ❌0. 스크립트 밖 남은 문제 6개(tobe 렌더 트리 중첩, grid 조건부 숨김 표시, method 값식 괄호·mapperName, addBoolean 렌더, index-src 4분) | yunhee-cli `docs/수정사항020.md` | 05 §7 명령표·한계, `CLAUDE.md`·`../CLAUDE.md` yunhee 절 |
+
+- 검증 스크립트 수정(0.2.2 시험 때): `--reindex`의 로그 폴더를 절대 경로로, `/usr/bin/time` 대신 bash `TIMEFORMAT`.
+- 다음 화면 작업에서 `analysis`를 실제로 쓰고, 토큰(Bash·파일 읽기 비율)을 C01·A03의 약 32%와 비교해 08 교훈에 적는다(§4 마지막 항목, 아직 안 함).

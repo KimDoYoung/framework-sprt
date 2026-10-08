@@ -112,6 +112,9 @@ frontend를 빌드해 `backend/src/main/resources/static`으로 복사한 뒤 `b
 이 시스템에는 토큰 절약 로컬 CLI인 yunhee가 설치되어 있습니다. 실측 평가(`OMS/docs/yunhee-eval.md`, 2026-10-01)에 따라 아래 규칙을 따르세요:
 1. ASIS 화면 분석 시: `yunhee prepare`는 쓰지 않는다. **`docs/as-is/src` 색인 화면 파일**을 본다 — 서비스 → 서버 → SQL → 테이블과
    `## UI` 절(레이아웃·툴바·그리드 컬럼·이벤트 → 메서드·메서드 줄 범위)이 있다. 원본은 처리 로직이 필요한 메서드의 줄 범위만 읽는다.
+   원본·색인을 `sed`·`grep`·`cat`으로 직접 자르기 전에 **`yunhee analysis <type> <대상>`**(0.2.3~, `yunhee analysis --list`)으로 필요한 것만 뽑는다:
+   `screen <화면> --list`/`--class <클래스> --section …`, `method <클래스>.<메서드>`(요약, 원문은 `-o code`), `grid <클래스>`, `model <모델>`,
+   `sql <ns.id> [--param k=v --count | -o sql]`, `ui <화면> --done/--later/--tobe`, `tobe <TOBE 파일>`, `run last`. AssetERP_1 작업은 `AssetERP_1/`에서 실행한다(루트에서는 색인을 못 찾음). 한계와 단계별 사용법은 `AssetERP_1/docs/05-작업방법.md` §7.
 2. 테이블 스키마 확인 시: 전체 DDL이나 DB 카탈로그를 뒤지지 말고 `yunhee table <테이블명>`(glob 가능) 또는 `docs/as-is/db/tables/{도메인}.md`를 본다.
    둘은 같은 DBML이므로 하나만 본다. `yunhee table --page`는 쓰지 않는다(화면 파일의 '테이블' 절을 본다).
 3. TOBE 기존 코드 위치 파악 시: Service·Controller·Mapper·TS 파일을 통째로 읽지 말고 `yunhee outline <파일|디렉터리>`로

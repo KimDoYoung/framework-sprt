@@ -13,7 +13,7 @@ cd "$(dirname "$0")/.."            # AssetERP_1
 SRC=${SRC:-$HOME/oms-data/src/Asset-ERP}
 IDX=docs/as-is/src
 LOG=${LOG:-.yunhee/018-check}
-mkdir -p "$LOG"
+mkdir -p "$LOG"; LOG=$(cd "$LOG" && pwd)
 REINDEX=0; SECTIONS=()
 for a in "$@"; do [ "$a" = --reindex ] && REINDEX=1 || SECTIONS+=("$a"); done
 want() { [ ${#SECTIONS[@]} -eq 0 ] && return 0; for s in "${SECTIONS[@]}"; do [ "$s" = "$1" ] && return 0; done; return 1; }
@@ -136,7 +136,8 @@ fi
 # ── A-9 _index.json ──
 if want A-9; then
   chk "A-9 _index.json 있음" 0 "ls -la $IDX/_index.json" "_index.json"
-  chk "A-9 method 1초 이내" 0 "/usr/bin/time -f '%e s' yunhee analysis method Emp03_TabPage_Trans.insertRow $COMMON -o code" "^0\.[0-9]+ s$"
+  # /usr/bin/time이 없는 환경(CachyOS)이 있어 bash TIMEFORMAT으로 잰다
+  chk "A-9 method 1초 이내" 0 "TIMEFORMAT='%R s'; time (yunhee analysis method Emp03_TabPage_Trans.insertRow $COMMON -o code >/dev/null)" "^0\.[0-9]+ s$"
 fi
 
 # ── B 펼치기 통합: compare·port-sql ──

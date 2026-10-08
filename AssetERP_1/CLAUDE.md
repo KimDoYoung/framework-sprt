@@ -19,15 +19,15 @@ OMS(`../OMS`, AssetERP subset)에서 해 본 변환을 실제 원본으로 다�
 ## 원본 화면이 정답 (03 원칙 12)
 
 AssetERP는 오래 다듬어진 상용 서비스다. 테이블 CRUD는 이미 원본에서 동작하고, 화면은 그리드 중심(보기 그리드 + 편집 CRUD 그리드)이다.
-TOBE는 새로 설계하지 않고 원본의 레이아웃·버튼·이벤트·그리드·메시지·SQL을 그대로 따라간다. 결과확인에서 클래스마다(탭·팝업 포함) 버튼·이벤트·그리드 수를 `tools/ui-count.sh`로 세어 대조한다(06 항목 10).
+TOBE는 새로 설계하지 않고 원본의 레이아웃·버튼·이벤트·그리드·메시지·SQL을 그대로 따라간다. 결과확인에서 클래스마다(탭·팝업 포함) 버튼·이벤트·그리드 수를 `yunhee analysis ui <화면> --tobe …`로 세어 대조한다(06 항목 10, `tools/ui-count.sh`는 교차 확인용).
 
 ## yunhee 적극 사용 (토큰 절약)
 
 사용자 지시(2026-10-07): yunhee 사용법을 충분히 익히고 작업에 적극 활용해 토큰을 아낀다. 자세한 명령표는 `docs/05-작업방법.md` §7.
 
 - 세션 시작에 `yunhee --version` → 05 §7 기준 버전보다 높으면 `yunhee changelog --since <기준>`으로 바뀐 것만 본다.
-- AS-IS는 **색인 → 메서드 줄 범위만**. 원본 Java·매퍼 XML·긴 색인을 통째로 읽지 않는다.
-- 테이블은 `yunhee table`, DB 데이터는 `yunhee sql`(읽기 전용, 쓰기 시험은 `--rollback`), TOBE 코드는 `yunhee outline` → 필요한 줄만, 빌드·테스트·배포는 `yunhee run`.
+- AS-IS 분석은 **`yunhee analysis`**(screen·method·grid·model·sql·ui, `yunhee analysis --list`)로 필요한 것만 뽑는다. 원본 Java·매퍼 XML·긴 색인을 통째로 읽거나 `sed`·`grep`으로 자르지 않는다. 원문은 `analysis method … -o code`로 그 메서드만.
+- 테이블은 `yunhee table`, DB 데이터는 `yunhee sql`(읽기 전용, 쓰기 시험은 `--rollback`), TOBE 코드는 `yunhee outline`·`yunhee analysis tobe`(렌더 트리는 아직 믿지 않음) → 필요한 줄만, 빌드·테스트·배포는 `yunhee run`.
 - 백엔드: SQL은 `yunhee port-sql`·`port-save`로 옮기고, 매퍼는 컴파일 전에 `yunhee sql-check --tobe backend/src/main/resources/mapper`.
 - 확인: API는 `yunhee api`, 조회 API와 AS-IS SQL 비교는 `yunhee compare`. 기본 주소는 `.env.local`(AssetERP_1 Tomcat), 고객사 관리자는 `-c <회사코드>`.
 - yunhee로 안 되는 것(브라우저 확인)만 `tools/`로 하고, 출력은 몇 줄로 줄인다. 다른 방법을 쓴 사유는 `{id}-작업기록`에 한 줄 남긴다.
