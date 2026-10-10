@@ -8,7 +8,11 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FRONTEND_DIR="$PROJECT_ROOT/frontend"
 BACKEND_DIR="$PROJECT_ROOT/backend"
 STATIC_DIR="$BACKEND_DIR/src/main/resources/static"
-TOMCAT_WEBAPPS_DIR="${TOMCAT_WEBAPPS_DIR:-/data/docker/t3600-tomcat/webapps}"
+if [[ "$(hostname)" == "T3600" ]]; then
+    TOMCAT_WEBAPPS_DIR="${TOMCAT_WEBAPPS_DIR:-/data/docker/t3600-tomcat/webapps}"
+else
+    TOMCAT_WEBAPPS_DIR="${TOMCAT_WEBAPPS_DIR:-/data/docker/omen-tomcat/webapps}"
+fi
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
