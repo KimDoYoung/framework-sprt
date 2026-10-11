@@ -17,6 +17,16 @@ import { Emp03_Edit_Person } from './Emp03_Edit_Person';
 import { Emp01_TabPage_Person } from './Emp01_TabPage_Person';
 import { Emp02_TabPage_Others } from './Emp02_TabPage_Others';
 import { Emp03_TabPage_Trans } from './Emp03_TabPage_Trans';
+import { Emp35_TabPage_DeductDate } from './Emp35_TabPage_DeductDate';
+import { Emp14_TabPage_Account } from './Emp14_TabPage_Account';
+import { Emp06_TabPage_Family } from './Emp06_TabPage_Family';
+import { Emp07_TabPage_Career } from './Emp07_TabPage_Career';
+import { Emp05_TabPage_Academic } from './Emp05_TabPage_Academic';
+import { Emp08_TabPage_License } from './Emp08_TabPage_License';
+import { Emp11_TabPage_Reward } from './Emp11_TabPage_Reward';
+import { Emp09_TabPage_Evaluation } from './Emp09_TabPage_Evaluation';
+import { Emp12_TabPage_Event } from './Emp12_TabPage_Event';
+import { Emp13_TabPage_Project } from './Emp13_TabPage_Project';
 
 const gb = gbFor<TransInfo>();
 
@@ -64,16 +74,16 @@ const TABS: { key: string; label: string; page: React.FC<TransInfoTabProps> }[] 
   { key: 'person', label: '기본정보', page: Emp01_TabPage_Person },
   { key: 'others', label: '기타정보', page: Emp02_TabPage_Others },
   { key: 'trans', label: '일반발령', page: Emp03_TabPage_Trans },
-  { key: 'deduct', label: '급여공제', page: PendingTab('Emp35_TabPage_DeductDate', '3단계') },
-  { key: 'account', label: '급여계좌관리', page: PendingTab('Emp14_TabPage_Account', '3단계') },
-  { key: 'family', label: '가족사항', page: PendingTab('Emp06_TabPage_Family', '3단계') },
-  { key: 'career', label: '경력사항', page: PendingTab('Emp07_TabPage_Career', '3단계') },
-  { key: 'academic', label: '학력정보', page: PendingTab('Emp05_TabPage_Academic', '3단계') },
-  { key: 'license', label: '자격사항', page: PendingTab('Emp08_TabPage_License', '3단계') },
-  { key: 'reward', label: '상벌내역', page: PendingTab('Emp11_TabPage_Reward', '3단계') },
-  { key: 'evaluation', label: '고과(평가)내역', page: PendingTab('Emp09_TabPage_Evaluation', '3단계') },
-  { key: 'event', label: '행사내역', page: PendingTab('Emp12_TabPage_Event', '3단계') },
-  { key: 'project', label: '프로젝트', page: PendingTab('Emp13_TabPage_Project', '3단계') },
+  { key: 'deduct', label: '급여공제', page: Emp35_TabPage_DeductDate },
+  { key: 'account', label: '급여계좌관리', page: Emp14_TabPage_Account },
+  { key: 'family', label: '가족사항', page: Emp06_TabPage_Family },
+  { key: 'career', label: '경력사항', page: Emp07_TabPage_Career },
+  { key: 'academic', label: '학력정보', page: Emp05_TabPage_Academic },
+  { key: 'license', label: '자격사항', page: Emp08_TabPage_License },
+  { key: 'reward', label: '상벌내역', page: Emp11_TabPage_Reward },
+  { key: 'evaluation', label: '고과(평가)내역', page: Emp09_TabPage_Evaluation },
+  { key: 'event', label: '행사내역', page: Emp12_TabPage_Event },
+  { key: 'project', label: '프로젝트', page: Emp13_TabPage_Project },
   { key: 'addTitle', label: '겸직발령', page: PendingTab('Emp04_TabPage_AddTitle', '3단계') },
   { key: 'relateFile', label: '연관파일', page: PendingTab('Emp18_TabPage_RelateFile', '3단계') },
   { key: 'education', label: '교육사항', page: PendingTab('Emp19_TabPage_education', '3단계') },

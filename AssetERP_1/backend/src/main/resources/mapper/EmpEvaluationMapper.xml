@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/emp/emp09_evaluation.xml -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpEvaluationMapper">
+
+    <sql id="evaluationColumns">
+        emp09_evaluation_id    AS evaluation_id,
+        emp09_person_id        AS person_id,
+        TO_CHAR(emp09_evaluation_dt, 'YYYY-MM-DD') AS evaluation_dt,
+        emp09_evaluation_org   AS evaluation_org,
+        emp09_evaluation_emp   AS evaluation_emp,
+        emp09_evaluation_grade AS evaluation_grade,
+        emp09_evaluation_desc  AS evaluation_desc,
+        emp09_note             AS note
+    </sql>
+
+    <!-- AS-IS emp09_evaluation.selectByPersonId -->
+    <select id="selectEvaluations" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvaluationRes">
+        SELECT <include refid="evaluationColumns"/>
+          FROM emp09_evaluation
+          JOIN emp01_person ON emp09_person_id = emp01_person_id
+         WHERE emp01_company_id = #{companyId}
+           AND emp09_person_id  = #{personId}
+         ORDER BY emp09_evaluation_dt DESC
+    </select>
+
+    <select id="selectEvaluationById" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvaluationRes">
+        SELECT <include refid="evaluationColumns"/>
+          FROM emp09_evaluation
+          JOIN emp01_person ON emp09_person_id = emp01_person_id
+         WHERE emp09_evaluation_id = #{evaluationId}
+    </select>
+
+    <select id="selectNextEvaluationId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertEvaluation">
+        INSERT INTO emp09_evaluation
+               ( emp09_evaluation_id, emp09_person_id, emp09_evaluation_dt
+               , emp09_evaluation_org, emp09_evaluation_emp
+               , emp09_evaluation_grade, emp09_evaluation_desc, emp09_note )
+        VALUES ( #{evaluationId}, #{req.personId}, #{req.evaluationDt}::date
+               , #{req.evaluationOrg}, #{req.evaluationEmp}
+               , #{req.evaluationGrade}, #{req.evaluationDesc}, #{req.note} )
+    </insert>
+
+    <update id="updateEvaluation">
+        UPDATE emp09_evaluation
+           SET emp09_evaluation_dt    = #{req.evaluationDt}::date
+             , emp09_evaluation_org   = #{req.evaluationOrg}
+             , emp09_evaluation_emp   = #{req.evaluationEmp}
+             , emp09_evaluation_grade = #{req.evaluationGrade}
+             , emp09_evaluation_desc  = #{req.evaluationDesc}
+             , emp09_note             = #{req.note}
+         WHERE emp09_evaluation_id = #{evaluationId}
+           AND emp09_person_id IN (
+               SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId}
+           )
+    </update>
+
+    <delete id="deleteEvaluations">
+        DELETE FROM emp09_evaluation
+         WHERE emp09_evaluation_id IN
+        <foreach collection="evaluationIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+           AND emp09_person_id IN (
+               SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId}
+           )
+    </delete>
+
+</mapper>

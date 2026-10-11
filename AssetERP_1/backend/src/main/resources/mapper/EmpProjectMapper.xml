@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/emp/emp13_project.xml -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpProjectMapper">
+
+    <sql id="projectColumns">
+        emp13_project_id  AS project_id,
+        emp13_person_id   AS person_id,
+        emp13_fr_ym       AS fr_ym,
+        emp13_to_ym       AS to_ym,
+        emp13_project_nm  AS project_nm,
+        emp13_note        AS note
+    </sql>
+
+    <!-- AS-IS emp13_project.selectByPersonId -->
+    <select id="selectProjects" resultType="kr.co.kfs.asseterp.biz.emp.dto.ProjectRes">
+        SELECT <include refid="projectColumns"/>
+          FROM emp13_project
+          JOIN emp01_person ON emp13_person_id = emp01_person_id
+         WHERE emp01_company_id = #{companyId}
+           AND emp13_person_id  = #{personId}
+         ORDER BY emp13_fr_ym DESC
+    </select>
+
+    <select id="selectProjectById" resultType="kr.co.kfs.asseterp.biz.emp.dto.ProjectRes">
+        SELECT <include refid="projectColumns"/>
+          FROM emp13_project
+          JOIN emp01_person ON emp13_person_id = emp01_person_id
+         WHERE emp13_project_id = #{projectId}
+    </select>
+
+    <select id="selectNextProjectId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertProject">
+        INSERT INTO emp13_project
+               ( emp13_project_id, emp13_person_id, emp13_fr_ym, emp13_to_ym
+               , emp13_project_nm, emp13_note )
+        VALUES ( #{projectId}, #{req.personId}, #{req.frYm}, #{req.toYm}
+               , #{req.projectNm}, #{req.note} )
+    </insert>
+
+    <update id="updateProject">
+        UPDATE emp13_project
+           SET emp13_fr_ym      = #{req.frYm}
+             , emp13_to_ym      = #{req.toYm}
+             , emp13_project_nm = #{req.projectNm}
+             , emp13_note       = #{req.note}
+         WHERE emp13_project_id = #{projectId}
+           AND emp13_person_id IN (
+               SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId}
+           )
+    </update>
+
+    <delete id="deleteProjects">
+        DELETE FROM emp13_project
+         WHERE emp13_project_id IN
+        <foreach collection="projectIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+           AND emp13_person_id IN (
+               SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId}
+           )
+    </delete>
+
+</mapper>

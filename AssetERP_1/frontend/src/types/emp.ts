@@ -115,6 +115,109 @@ export interface TransPerson {
   titleNm?: string | null;
 }
 
+/** 급여공제 행 (GET /api/v1/emp/persons/{personId}/deducts, AS-IS Emp35_DeductModel) */
+export interface Deduct {
+  deductId: number;
+  companyId?: number | null;
+  personId?: number | null;
+  startDate?: string | null;
+  basicDeductCnt?: number | null;
+  addDeductYn?: string | null;
+  insureYn?: string | null;
+  reprYn?: string | null;
+  withHoldRate?: number | null;
+  note?: string | null;
+  childDeductCnt?: number | null;
+}
+
+/** 추가인적공제 행 (GET /api/v1/emp/deducts/{deductId}/add-deducts, AS-IS Emp36_AddDeductModel) */
+export interface AddDeduct {
+  addDeductId: number;
+  deductId: number;
+  addDeductType?: string | null;
+  addDeductTypeName?: string | null;
+  addDeductCnt?: number | null;
+}
+
+/** 급여계좌 행 (GET /api/v1/emp/persons/{personId}/accounts, AS-IS Emp14_AccountModel) */
+export interface Account {
+  accountId: number;
+  companyId?: number | null;
+  personId?: number | null;
+  startDate?: string | null;
+  bankCd?: string | null;
+  bankName?: string | null;
+  accountNoDec?: string | null;
+  note?: string | null;
+}
+
+/** 가족사항 행 (GET /api/v1/emp/persons/{personId}/families, AS-IS Emp06_FamilyModel) */
+export interface Family {
+  familyId: number;
+  personId?: number | null;
+  familyNm?: string | null;
+  relationCd?: string | null;
+  locateCd?: string | null;
+  locateNm?: string | null;
+  disabilityGrade?: string | null;
+  birthday?: string | null;
+  familySchool?: string | null;
+  familyJob?: string | null;
+  schoolLocation?: string | null;
+  familyLocation?: string | null;
+  note?: string | null;
+}
+
+/** 경력사항 행 (GET /api/v1/emp/persons/{personId}/careers, AS-IS Emp07_CareerModel) */
+export interface Career {
+  careerId: number;
+  personId?: number | null;
+  frYm?: string | null;
+  toYm?: string | null;
+  companyNm?: string | null;
+  industry?: string | null;
+  finalOrg?: string | null;
+  finalTitle?: string | null;
+  careerTyCd?: string | null;
+  careerTyNm?: string | null;
+  finalRole?: string | null;
+  financeRelateYn?: string | null;
+  mainCareerYn?: string | null;
+  extrAddTitleYn?: string | null;
+  note?: string | null;
+}
+
+/** 학력정보 행 (GET /api/v1/emp/persons/{personId}/academics, AS-IS Emp05_AcademicModel) */
+export interface Academic {
+  academicId: number;
+  personId?: number | null;
+  frYm?: string | null;
+  toYm?: string | null;
+  schoolName?: string | null;
+  bachelorDegree?: string | null;
+  bachelorDegreeNm?: string | null;
+  financeRelateYn?: string | null;
+  degreeCredit?: string | null;
+  graduateDegree?: string | null;
+  graduateDegreeNm?: string | null;
+  schoolLocation?: string | null;
+  note?: string | null;
+}
+
+/** 자격사항 행 (GET /api/v1/emp/persons/{personId}/licenses, AS-IS Emp08_LicenseModel) */
+export interface License {
+  licenseId: number;
+  personId?: number | null;
+  certifiedDt?: string | null;
+  certifiedNm?: string | null;
+  licenseNo?: string | null;
+  issuingAgency?: string | null;
+  issuingGrade?: string | null;
+  financeRelateYn?: string | null;
+  kofiaRegDate?: string | null;
+  note?: string | null;
+}
+
 /** 기타정보 탭 (AS-IS Emp02_OthersModel) — GET 응답 = PUT body */
 export interface Others {
   othersId?: number | null;
@@ -137,4 +240,50 @@ export interface Others {
   note?: string | null;
   hireDateGroup?: string | null;
   hireDateLeaveCalc?: string | null;
+}
+
+/** 상벌내역 행 (GET /api/v1/emp/persons/{personId}/rewards, AS-IS Emp11_RewardModel) */
+export interface Reward {
+  rewardId: number;
+  personId?: number | null;
+  rewardCd?: string | null;
+  rewardCdNm?: string | null;
+  rewardDt?: string | null;
+  rewardGroup?: string | null;
+  rewardNm?: string | null;
+  rewardDesc?: string | null;
+  note?: string | null;
+}
+
+/** 고과(평가)내역 행 (GET /api/v1/emp/persons/{personId}/evaluations, AS-IS Emp09_EvaluationModel) */
+export interface Evaluation {
+  evaluationId: number;
+  personId?: number | null;
+  evaluationDt?: string | null;
+  evaluationOrg?: string | null;
+  evaluationEmp?: string | null;
+  evaluationGrade?: string | null;
+  evaluationDesc?: string | null;
+  note?: string | null;
+}
+
+/** 행사내역 행 (GET /api/v1/emp/persons/{personId}/events, AS-IS Emp12_EventModel) */
+export interface EmpEvent {
+  eventId: number;
+  personId?: number | null;
+  eventDt?: string | null;
+  eventNm?: string | null;
+  eventPart?: string | null;
+  eventDesc?: string | null;
+  note?: string | null;
+}
+
+/** 프로젝트 행 (GET /api/v1/emp/persons/{personId}/projects, AS-IS Emp13_ProjectModel) */
+export interface Project {
+  projectId: number;
+  personId?: number | null;
+  frYm?: string | null;
+  toYm?: string | null;
+  projectNm?: string | null;
+  note?: string | null;
 }
