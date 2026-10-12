@@ -2,6 +2,7 @@
  * 사원찾기 조회창 (A03에서 처음 씀) — 여러 명 선택(체크 다중)해 돌려준다.
  * AS-IS: myApp/client/vi/emp/Emp01_Lookup_PersonModel.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * open(callback): 로그인 회사, isSeparateAddTitle=false(겸직 포함·퇴직 제외)
+ * open(companyId, callback) L59-62 (A05): companyId prop이 있으면 그 회사 사원(sys admin)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Modal, Space, Typography } from 'antd';
@@ -27,9 +28,11 @@ interface Props {
   onClose: () => void;
   /** AS-IS callback.execute(체크한 행 목록) */
   onSelect: (persons: TransPerson[]) => void;
+  /** AS-IS open(companyId, callback) — 없으면 로그인 회사 */
+  companyId?: number;
 }
 
-export const Emp01_Lookup_PersonModel: React.FC<Props> = ({ open, onClose, onSelect }) => {
+export const Emp01_Lookup_PersonModel: React.FC<Props> = ({ open, onClose, onSelect, companyId }) => {
   const gridRef = useRef<AgGridReact<TransPerson>>(null);
   const [korName, setKorName] = useState('');
   const [rows, setRows] = useState<TransPerson[]>([]);
@@ -38,11 +41,13 @@ export const Emp01_Lookup_PersonModel: React.FC<Props> = ({ open, onClose, onSel
   // retrieve() L140-153: 서비스 emp.Emp03_Trans.selectByText(companyId, '%' + korName + '%', isSeparateAddTitle)
   const retrieve = useCallback(async () => {
     try {
-      setRows(await empApi.searchTransPersons(korName));
+      setRows(companyId != null
+        ? await empApi.searchCompanyTransPersons(companyId, korName)
+        : await empApi.searchTransPersons(korName));
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, [korName]);
+  }, [korName, companyId]);
 
   // [E5] cancelButton[취소].Select (L102) → hide()
   const hide = () => { setKorName(''); setRows([]); onClose(); };

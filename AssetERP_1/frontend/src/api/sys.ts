@@ -267,4 +267,25 @@ export const sysApi = {
     const res = await apiClient.delete<ApiResponse<number>>('v1/sys/user-roles', { data: userRoleIds });
     return res.data.data ?? 0;
   },
+
+  // ── A05 고객사별 사용자권한그룹 관리 (Sys05_Tab_CompanyUserRole, sys admin) ──
+
+  /** AS-IS sys.Sys05_UserRole.selectByRoleId (고른 회사의 권한그룹) */
+  searchCompanyUserRoles: async (companyId: number, roleId: number): Promise<UserRole[]> => {
+    const res = await apiClient.get<ApiResponse<UserRole[]>>(`v1/sys/companies/${companyId}/roles/${roleId}/user-roles`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys05_UserRole.update: 추가·변경 행 → 저장된 행(요청 순서) */
+  updateCompanyUserRoles: async (companyId: number, rows: UserRole[]): Promise<UserRole[]> => {
+    const body = rows.map(({ userRoleId, userId, roleId, authOrgId }) => ({ userRoleId, userId, roleId, authOrgId }));
+    const res = await apiClient.put<ApiResponse<UserRole[]>>(`v1/sys/companies/${companyId}/user-roles`, body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys05_UserRole.delete → 지운 건수 */
+  deleteCompanyUserRoles: async (companyId: number, userRoleIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sys/companies/${companyId}/user-roles`, { data: userRoleIds });
+    return res.data.data ?? 0;
+  },
 };

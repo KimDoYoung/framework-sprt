@@ -66,6 +66,12 @@ export const empApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS emp.Emp03_Trans.selectByText — 사원찾기 open(companyId, …): 고른 고객사 사원 (A05, sys admin) */
+  searchCompanyTransPersons: async (companyId: number, searchText: string): Promise<TransPerson[]> => {
+    const res = await apiClient.get<ApiResponse<TransPerson[]>>(`v1/emp/companies/${companyId}/trans`, { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS emp.Emp03_Trans.update: 추가·변경 행 → 저장된 행(요청 순서) */
   updateTranses: async (rows: Trans[]): Promise<Trans[]> => {
     const body = rows.map(({ transId, personId, transDate, transCd, kindCd, orgCodeId, titleCd, posCd, duty, expiryDate, transReason, orgHeadYn, officerYn, tdmTargetYn, nonStayYn }) =>

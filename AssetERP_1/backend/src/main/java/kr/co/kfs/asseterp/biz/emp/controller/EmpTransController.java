@@ -41,6 +41,14 @@ public class EmpTransController {
         return ApiResponse.ok(empTransService.searchTransPersons(principal, searchText));
     }
 
+    /** AS-IS emp.Emp03_Trans.selectByText — 사원찾기 open(companyId, …): 고른 고객사 사원 (A05, sys admin만) */
+    @GetMapping("/companies/{companyId}/trans")
+    public ApiResponse<List<TransPersonRes>> searchCompanyTransPersons(@AuthenticationPrincipal UserPrincipal principal,
+                                                                       @PathVariable Long companyId,
+                                                                       @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(empTransService.searchCompanyTransPersons(principal, companyId, searchText));
+    }
+
     /** AS-IS emp.Emp03_Trans.update → 저장된 행(요청 순서) */
     @PutMapping("/trans")
     public ApiResponse<List<TransRes>> updateTranses(@AuthenticationPrincipal UserPrincipal principal,

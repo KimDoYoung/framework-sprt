@@ -45,4 +45,30 @@ public class SysUserRoleController {
                                                 @RequestBody List<Long> userRoleIds) {
         return ApiResponse.ok(sysUserRoleService.deleteUserRoles(principal, userRoleIds));
     }
+
+    // ── A05 Sys05_Tab_CompanyUserRole: 고른 고객사의 권한그룹 사원 (sys admin만) ──
+
+    /** AS-IS sys.Sys05_UserRole.selectByRoleId (Sys05_Page_CompanyUserRole) */
+    @GetMapping("/companies/{companyId}/roles/{roleId}/user-roles")
+    public ApiResponse<List<UserRoleRes>> searchCompanyUserRoles(@AuthenticationPrincipal UserPrincipal principal,
+                                                                 @PathVariable Long companyId,
+                                                                 @PathVariable Long roleId) {
+        return ApiResponse.ok(sysUserRoleService.searchCompanyUserRoles(principal, companyId, roleId));
+    }
+
+    /** AS-IS sys.Sys05_UserRole.update → 저장된 행(요청 순서) */
+    @PutMapping("/companies/{companyId}/user-roles")
+    public ApiResponse<List<UserRoleRes>> updateCompanyUserRoles(@AuthenticationPrincipal UserPrincipal principal,
+                                                                 @PathVariable Long companyId,
+                                                                 @RequestBody List<UserRoleSaveReq> rows) {
+        return ApiResponse.ok(sysUserRoleService.updateCompanyUserRoles(principal, companyId, rows));
+    }
+
+    /** AS-IS sys.Sys05_UserRole.delete → 지운 건수 */
+    @DeleteMapping("/companies/{companyId}/user-roles")
+    public ApiResponse<Integer> deleteCompanyUserRoles(@AuthenticationPrincipal UserPrincipal principal,
+                                                       @PathVariable Long companyId,
+                                                       @RequestBody List<Long> userRoleIds) {
+        return ApiResponse.ok(sysUserRoleService.deleteCompanyUserRoles(principal, companyId, userRoleIds));
+    }
 }

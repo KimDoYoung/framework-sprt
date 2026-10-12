@@ -6,6 +6,7 @@ import { Sys03_Tab_CompanyMenu } from './sys/Sys03_Tab_CompanyMenu';
 import { Sys04_Tab_Role } from './sys/Sys04_Tab_Role';
 import { Sys04_Tab_RoleAdmin } from './sys/Sys04_Tab_RoleAdmin';
 import { Sys05_Tab_UserRole } from './sys/Sys05_Tab_UserRole';
+import { Sys05_Tab_CompanyUserRole } from './sys/Sys05_Tab_CompanyUserRole';
 import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
 import { Sys07_Tab_Company } from './sys/Sys07_Tab_Company';
 import { Sys07_Tab_CompanyRoleMenu } from './sys/Sys07_Tab_CompanyRoleMenu';
@@ -23,6 +24,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sys04_Tab_Role, // A01
   Sys04_Tab_RoleAdmin, // A02
   Sys05_Tab_UserRole, // A03
+  Sys05_Tab_CompanyUserRole, // A05
   Sys07_Tab_RoleMenu, // A06
   Sys07_Tab_Company, // A08
   Sys07_Tab_CompanyRoleMenu, // A07

@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** A03 권한그룹별 사용자 맵핑: 조회·등록·중복·회사 조건·삭제를 asseterpdb에서 실제로 돌리고 롤백한다 */
+/** A03 권한그룹별 사용자 맵핑 · A05 고객사별(sys admin이 고른 회사): 조회·등록·중복·회사 조건·삭제를 asseterpdb에서 실제로 돌리고 롤백한다 */
 @MybatisTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({SysUserRoleService.class, EmpTransService.class})
@@ -66,5 +66,26 @@ class UserRoleDbTest {
 
         assertThat(service.deleteUserRoles(other, List.of(saved.get(0).userRoleId()))).isZero();
         assertThat(service.deleteUserRoles(kfstest, List.of(saved.get(0).userRoleId()))).isEqualTo(1);
+    }
+
+    @Test
+    void A05_sys_admin은_고른_회사의_권한그룹_사원을_등록하고_삭제한다() {
+        Long role = anyRole();
+        assertThat(service.searchCompanyUserRoles(other, KFSTEST, role)).hasSameSizeAs(service.searchUserRoles(kfstest, role));
+        assertThatThrownBy(() -> service.searchCompanyUserRoles(kfstest, KFSTEST, role)).isInstanceOf(BusinessException.class);
+        assertThatThrownBy(() -> service.searchCompanyUserRoles(other, 0L, role)).isInstanceOf(BusinessException.class);
+
+        Set<Long> linked = service.searchUserRoles(kfstest, role).stream().map(UserRoleRes::userId).collect(Collectors.toSet());
+        List<TransPersonRes> persons = transService.searchCompanyTransPersons(other, KFSTEST, "");
+        assertThat(persons).hasSameSizeAs(transService.searchTransPersons(kfstest, ""));
+        assertThatThrownBy(() -> transService.searchCompanyTransPersons(kfstest, KFSTEST, "")).isInstanceOf(BusinessException.class);
+        TransPersonRes p = persons.stream().filter(x -> !linked.contains(x.personId())).findFirst().orElseThrow();
+
+        List<UserRoleRes> saved = service.updateCompanyUserRoles(other, KFSTEST, List.of(new UserRoleSaveReq(-1L, p.personId(), role, p.orgCodeId())));
+        assertThat(saved.get(0).empNo()).isEqualTo(p.empNo());
+        assertThatThrownBy(() -> service.updateCompanyUserRoles(kfstest, KFSTEST, List.of(new UserRoleSaveReq(-1L, p.personId(), role, null))))
+                .isInstanceOf(BusinessException.class);
+        assertThat(service.deleteCompanyUserRoles(other, 0L, List.of(saved.get(0).userRoleId()))).isZero();
+        assertThat(service.deleteCompanyUserRoles(other, KFSTEST, List.of(saved.get(0).userRoleId()))).isEqualTo(1);
     }
 }

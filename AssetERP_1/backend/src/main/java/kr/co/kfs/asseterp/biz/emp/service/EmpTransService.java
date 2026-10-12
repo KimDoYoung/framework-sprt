@@ -36,6 +36,15 @@ public class EmpTransService {
         return empTransMapper.searchTransPersons(user.getCompanyId(), like, LocalDateTime.now());
     }
 
+    /** AS-IS selectByText(companyId = 클라이언트가 준 회사) — Emp01_Lookup_PersonModel.open(companyId, …). 다른 회사는 sys admin만 */
+    public List<TransPersonRes> searchCompanyTransPersons(UserPrincipal user, Long companyId, String searchText) {
+        if (!user.isSysAdmin()) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        String like = "%" + (searchText == null ? "" : searchText) + "%";
+        return empTransMapper.searchTransPersons(companyId, like, LocalDateTime.now());
+    }
+
     /**
      * AS-IS update(UpdateDataModel): 행마다 신규면 INSERT, 아니면 UPDATE 하고 selectById로 다시 읽어 요청 순서대로 돌려준다.
      * 사람은 로그인 회사 사람이어야 한다. 같은 사람·발령일·발령구분은 DB 유일 인덱스 → 미리 세어 화면 문구로 알린다(05 §6 DB 오류).
