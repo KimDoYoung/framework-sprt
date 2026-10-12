@@ -2,6 +2,10 @@ package kr.co.kfs.asseterp.biz.sys.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuSaveReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuUseReq;
+import kr.co.kfs.asseterp.biz.sys.dto.MenuCopyRes;
+import kr.co.kfs.asseterp.biz.sys.dto.MenuSaveReq;
+import kr.co.kfs.asseterp.biz.sys.dto.MenuTreeRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuTreeRes;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuRes;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleMenuSaveReq;
@@ -10,16 +14,19 @@ import kr.co.kfs.asseterp.biz.sys.service.SysMenuService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** B06: 프레임 메뉴 트리만 (OMS SysMenuController에서 가져옴). 메뉴 관리 API는 해당 A에서 추가한다 */
+/** B06 프레임 메뉴 트리(OMS SysMenuController에서 가져옴) + 메뉴 관련 A(A06·A07·A08·A09·A10) API */
 @RestController
 @RequestMapping("/api/v1/sys")
 @RequiredArgsConstructor
@@ -78,5 +85,45 @@ public class SysMenuController {
                                                                      @PathVariable Long roleId,
                                                                      @RequestBody List<RoleMenuSaveReq> rows) {
         return ApiResponse.ok(sysMenuService.updateCompanyRoleMenus(principal, companyId, roleId, rows));
+    }
+
+    /** A09 메뉴 관리 트리 (AS-IS sys.Sys06_Menu.selectByAll) — 전위 순서, sys admin만 */
+    @GetMapping("/menus/all")
+    public ApiResponse<List<MenuTreeRes>> getMenuTree(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(sysMenuService.getMenuTree(principal));
+    }
+
+    /** A09 매뉴 등록 (AS-IS sys.Sys06_Menu.update — 새 행) → 등록된 행 */
+    @PostMapping("/menus")
+    public ApiResponse<MenuTreeRes> createMenu(@AuthenticationPrincipal UserPrincipal principal, @RequestBody MenuSaveReq req) {
+        return ApiResponse.ok(sysMenuService.createMenu(principal, req));
+    }
+
+    /** A09 매뉴 수정·이동 (AS-IS sys.Sys06_Menu.update) → 저장된 행 */
+    @PutMapping("/menus/{menuId}")
+    public ApiResponse<MenuTreeRes> updateMenu(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long menuId,
+                                               @RequestBody MenuSaveReq req) {
+        return ApiResponse.ok(sysMenuService.updateMenu(principal, menuId, req));
+    }
+
+    /** A09 매뉴 삭제 (AS-IS sys.Sys06_Menu.delete) → 지운 건수 */
+    @DeleteMapping("/menus/{menuId}")
+    public ApiResponse<Integer> deleteMenu(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long menuId) {
+        return ApiResponse.ok(sysMenuService.deleteMenu(principal, menuId));
+    }
+
+    /** A09 일괄복사 매뉴 목록 (AS-IS sys.Sys06_Menu.getAllMenuList) */
+    @GetMapping("/menus/copy-list")
+    public ApiResponse<List<MenuCopyRes>> searchCopyMenus(@AuthenticationPrincipal UserPrincipal principal,
+                                                          @RequestParam(required = false) String searchText,
+                                                          @RequestParam(defaultValue = "false") boolean menuNameYn) {
+        return ApiResponse.ok(sysMenuService.searchCopyMenus(principal, searchText, menuNameYn));
+    }
+
+    /** A09 일괄 권한부여·삭제 (AS-IS sys.Sys06_Menu.updateByMenuYn) */
+    @PutMapping("/menus/company-use")
+    public ApiResponse<Void> updateCompanyMenuUse(@AuthenticationPrincipal UserPrincipal principal, @RequestBody CompanyMenuUseReq req) {
+        sysMenuService.updateCompanyMenuUse(principal, req);
+        return ApiResponse.ok(null);
     }
 }

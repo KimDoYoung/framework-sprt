@@ -178,3 +178,48 @@ export interface UserRole {
   /** 사원 조직의 상위 전체명 (AS-IS "권한조직" 칸이 보여 주는 값) */
   parentFullNm?: string | null;
 }
+
+// ── A09 메뉴 관리 (Sys06_Tab_Menu) ──
+
+/** 메뉴 관리 트리 행 (AS-IS Sys06_MenuModel). 전위 순서, Y/N은 'true'/'false' */
+export interface MenuNode {
+  menuId: number;
+  parentId: number;
+  depth: number;
+  menuNm: string;
+  seq?: string | null;
+  note?: string | null;
+  useYn: string;
+  classNm?: string | null;
+  menualUrl?: string | null;
+  addTitleUseYn: string;
+  mobiUseYn: string;
+  mobiClassNm?: string | null;
+  menuNo?: string | null;
+}
+
+/** 매뉴 편집 저장 (menuId 없으면 등록) */
+export type MenuSaveReq = Omit<MenuNode, 'depth' | 'menuId'> & { menuId?: number };
+
+/** 일괄복사 매뉴 목록 (getAllMenuList) */
+export interface MenuCopy {
+  menuId: number;
+  parentPathNm?: string | null;
+  menuNoPlusNm?: string | null;
+}
+
+/** 일괄복사 고객사 목록 (selectByCopyList) */
+export interface CompanyCopy {
+  companyId: number;
+  companyNm: string;
+  erpProductCd?: string | null;
+  assetYn?: string | null;
+  advisYn?: string | null;
+  icamCompanyCd?: string | null;
+}
+
+/** 메뉴를 쓰는 회사 (Sys01_Grid_CompanyMenu, selectByCode). 같은 회사가 두 줄일 수 있어 화면 행 ID = companyId + companyMenuId */
+export interface CompanyMenuYn extends CompanyCopy {
+  menuYn: string;
+  companyMenuId?: number | null;
+}

@@ -10,10 +10,12 @@ import { Code } from '@/types/sys';
  */
 export interface CodeSelectProps extends Omit<SelectProps<string>, 'options' | 'onChange'> {
   kindCd: string;
+  /** AS-IS ComboBoxField(kind, code, codeName)의 setAltCode — 맨 앞에 넣는 항목(예: ['%', '전체']) */
+  altCode?: [string, string];
   onChange?: (code: string | undefined, name?: string) => void;
 }
 
-export const CodeSelect: React.FC<CodeSelectProps> = ({ kindCd, onChange, ...rest }) => {
+export const CodeSelect: React.FC<CodeSelectProps> = ({ kindCd, altCode, onChange, ...rest }) => {
   const [codes, setCodes] = useState<Code[]>([]);
 
   useEffect(() => {
@@ -22,11 +24,13 @@ export const CodeSelect: React.FC<CodeSelectProps> = ({ kindCd, onChange, ...res
     return () => { alive = false; };
   }, [kindCd]);
 
+  const all = altCode ? [{ code: altCode[0], name: altCode[1] } as Code, ...codes] : codes;
+
   return (
     <Select<string>
-      allowClear
-      options={codes.map(c => ({ value: c.code, label: c.name }))}
-      onChange={v => onChange?.(v, codes.find(c => c.code === v)?.name)}
+      allowClear={!altCode}
+      options={all.map(c => ({ value: c.code, label: c.name }))}
+      onChange={v => onChange?.(v, all.find(c => c.code === v)?.name)}
       {...rest}
     />
   );

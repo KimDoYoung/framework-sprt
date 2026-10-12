@@ -247,4 +247,135 @@
                LEFT JOIN sys07_role_menu r ON r.sys07_menu_id = m.sys06_menu_id AND r.sys07_role_id = #{roleId}
          WHERE m.sys06_menu_id = #{menuId}
     </select>
+
+    <!--
+      A09 메뉴 관리. AS-IS sys06_menu.selectByParentId(L55)를 parentId 0부터 부모별로 반복 호출 → 한 번에 읽고 서비스가 전위 순서로 편다(A10과 같음).
+      부모별 정렬 sys06_seq, sys06_menu_nm 그대로. f_menu_nm_allpath(sys06_menu_full_nm)는 화면이 쓰지 않아 뺐다.
+      Y/N은 모델 getter 기본값(null → false)을 COALESCE로 맞춘다(05 §6)
+    -->
+    <sql id="menuTreeColumns">
+        sys06_menu_id                            AS menu_id,
+        sys06_parent_id                          AS parent_id,
+        0                                        AS depth,
+        sys06_menu_nm                            AS menu_nm,
+        sys06_seq                                AS seq,
+        sys06_note                               AS note,
+        COALESCE(sys06_use_yn, 'false')          AS use_yn,
+        sys06_class_nm                           AS class_nm,
+        sys06_menual_url                         AS menual_url,
+        COALESCE(sys06_add_title_use_yn, 'false') AS add_title_use_yn,
+        COALESCE(sys06_mobi_use_yn, 'false')     AS mobi_use_yn,
+        sys06_mobi_class_nm                      AS mobi_class_nm,
+        sys06_menu_no                            AS menu_no
+    </sql>
+
+    <select id="selectMenuTree" resultType="kr.co.kfs.asseterp.biz.sys.dto.MenuTreeRes">
+        SELECT <include refid="menuTreeColumns"/>
+          FROM sys06_menu
+         ORDER BY sys06_parent_id, sys06_seq, sys06_menu_nm
+    </select>
+
+    <!-- AS-IS sys06_menu.selectById(L49) -->
+    <select id="selectMenuNode" resultType="kr.co.kfs.asseterp.biz.sys.dto.MenuTreeRes">
+        SELECT <include refid="menuTreeColumns"/>
+          FROM sys06_menu
+         WHERE sys06_menu_id = #{menuId}
+    </select>
+
+    <select id="countByMenuNo" resultType="int">
+        SELECT COUNT(*) FROM sys06_menu WHERE sys06_menu_no = #{menuNo} AND sys06_menu_id &lt;&gt; #{menuId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(sys06_menu) — 모델 컬럼 11개 (port-save) -->
+    <insert id="insertMenu">
+        INSERT INTO sys06_menu (sys06_menu_id, sys06_menu_nm, sys06_seq, sys06_note, sys06_parent_id, sys06_use_yn, sys06_class_nm,
+                                sys06_menual_url, sys06_add_title_use_yn, sys06_mobi_use_yn, sys06_mobi_class_nm, sys06_menu_no)
+        VALUES (#{menuId}, #{menuNm}, #{seq}, #{note}, #{parentId}, #{useYn}, #{classNm},
+                #{menualUrl}, #{addTitleUseYn}, #{mobiUseYn}, #{mobiClassNm}, #{menuNo})
+    </insert>
+
+    <update id="updateMenu">
+        UPDATE sys06_menu
+           SET sys06_menu_nm          = #{menuNm},
+               sys06_seq              = #{seq},
+               sys06_note             = #{note},
+               sys06_parent_id        = #{parentId},
+               sys06_use_yn           = #{useYn},
+               sys06_class_nm         = #{classNm},
+               sys06_menual_url       = #{menualUrl},
+               sys06_add_title_use_yn = #{addTitleUseYn},
+               sys06_mobi_use_yn      = #{mobiUseYn},
+               sys06_mobi_class_nm    = #{mobiClassNm},
+               sys06_menu_no          = #{menuNo}
+         WHERE sys06_menu_id = #{menuId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel: ID로만 지운다(자식·연결 행은 원본도 남긴다) -->
+    <delete id="deleteMenu">
+        DELETE FROM sys06_menu WHERE sys06_menu_id = #{menuId}
+    </delete>
+
+    <!-- A09 일괄복사 매뉴 목록. AS-IS sys06_menu.getAllMenuList(L841) 그대로, 바깥 SELECT만 화면 컬럼 -->
+    <select id="selectCopyMenus" resultType="kr.co.kfs.asseterp.biz.sys.dto.MenuCopyRes">
+        SELECT sys06_menu_id          AS menu_id,
+               sys06_parent_path_nm   AS parent_path_nm,
+               sys06_menu_no_plus_nm  AS menu_no_plus_nm
+          FROM (
+                SELECT a.*
+                     , f_menu_nm_allpath(a.sys06_menu_id)                                     AS sys06_menu_full_nm
+                     , TRIM(TRAILING sys06_menu_nm FROM f_menu_nm_allpath(a.sys06_menu_id))   AS sys06_parent_path_nm
+                     , (CASE WHEN sys06_menu_no IS NULL
+                             THEN sys06_menu_nm
+                             ELSE sys06_menu_no || ' ' || sys06_menu_nm
+                        END)                                                                  AS sys06_menu_no_plus_nm
+                  FROM sys06_menu a
+                 WHERE sys06_parent_id != 0
+                   AND sys06_parent_id NOT IN (SELECT sys06_menu_id FROM sys06_menu WHERE sys06_parent_id = 0)
+               ) t
+         WHERE 1=1
+        <choose>
+            <when test="menuNameYn == 'true'">
+           AND sys06_menu_no_plus_nm ILIKE #{searchText}
+            </when>
+            <otherwise>
+           AND CONCAT(sys06_menu_full_nm, sys06_note, sys06_menu_no) ILIKE #{searchText}
+            </otherwise>
+        </choose>
+         ORDER BY sys06_parent_id, sys06_seq, sys06_menu_full_nm
+    </select>
+
+    <!--
+      A09 일괄 권한부여·삭제 (AS-IS Sys06_Menu.updateByMenuYn L572-631).
+      sys01_company.getInfoByMenuId: 원본 selectOne은 같은 회사·메뉴 연결이 둘이면 예외 → 작은 연결 ID 하나(A10과 같음)
+    -->
+    <select id="selectCompanyMenuLink" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuLinkRow">
+        SELECT co.sys01_company_id        AS company_id,
+               c.sys03_company_menu_id    AS company_menu_id,
+               c.sys03_use_yn             AS use_yn
+          FROM sys01_company co
+               LEFT JOIN LATERAL (SELECT sys03_company_menu_id, sys03_use_yn
+                                    FROM sys03_company_menu
+                                   WHERE sys03_company_id = co.sys01_company_id AND sys03_menu_id = #{menuId}
+                                   ORDER BY sys03_company_menu_id
+                                   LIMIT 1) c ON true
+         WHERE co.sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS sys03_company_menu.countUseYn (원본처럼 menuId 조건 없음) -->
+    <select id="countCompanyMenuUseYn" resultType="int">
+        SELECT COUNT(a.*)
+          FROM sys03_company_menu a
+               INNER JOIN sys06_menu b ON a.sys03_menu_id = b.sys06_menu_id
+         WHERE b.sys06_parent_id  = #{parentId}
+           AND a.sys03_company_id = #{companyId}
+           AND COALESCE(a.sys03_use_yn, 'false') = 'true'
+    </select>
+
+    <!-- AS-IS sys03_company_menu.updateUseYn: 메뉴·회사로 (연결 ID 아님) -->
+    <update id="updateCompanyMenuUseYnByMenu">
+        UPDATE sys03_company_menu
+           SET sys03_use_yn = #{useYn}
+         WHERE sys03_menu_id    = #{menuId}
+           AND sys03_company_id = #{companyId}
+    </update>
 </mapper>

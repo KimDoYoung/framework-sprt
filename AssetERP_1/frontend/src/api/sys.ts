@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CompanyMenuNode, Company, CompanyCreateReq, CompanyManage, LoginSecure, Role, RoleMenuCopyReq, RoleMenuNode, UserRole } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, LoginSecure, MenuCopy, MenuNode, MenuSaveReq, Role, RoleMenuCopyReq, RoleMenuNode, UserRole } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -287,5 +287,57 @@ export const sysApi = {
   deleteCompanyUserRoles: async (companyId: number, userRoleIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>(`v1/sys/companies/${companyId}/user-roles`, { data: userRoleIds });
     return res.data.data ?? 0;
+  },
+
+  // ── A09 메뉴 관리 (Sys06_Tab_Menu) ──
+
+  /** AS-IS sys.Sys06_Menu.selectByAll: 전체 메뉴 트리(전위 순서) */
+  getMenuTree: async (): Promise<MenuNode[]> => {
+    const res = await apiClient.get<ApiResponse<MenuNode[]>>('v1/sys/menus/all');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys06_Menu.update: menuId 없으면 등록(POST), 있으면 수정·이동(PUT) → 저장된 행 */
+  saveMenu: async (req: MenuSaveReq): Promise<MenuNode> => {
+    const res = req.menuId
+      ? await apiClient.put<ApiResponse<MenuNode>>(`v1/sys/menus/${req.menuId}`, req)
+      : await apiClient.post<ApiResponse<MenuNode>>('v1/sys/menus', req);
+    return res.data.data!;
+  },
+
+  /** AS-IS sys.Sys06_Menu.delete → 지운 건수 */
+  deleteMenu: async (menuId: number): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sys/menus/${menuId}`);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys06_Menu.getAllMenuList(searchText, menuNameYn) */
+  searchCopyMenus: async (searchText: string, menuNameYn: boolean): Promise<MenuCopy[]> => {
+    const res = await apiClient.get<ApiResponse<MenuCopy[]>>('v1/sys/menus/copy-list', { params: { searchText, menuNameYn } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys06_Menu.updateByMenuYn(menuIdList, companyIdList, useYn) */
+  updateCompanyMenuUse: async (menuIds: number[], companyIds: number[], useYn: boolean): Promise<void> => {
+    await apiClient.put('v1/sys/menus/company-use', { menuIds, companyIds, useYn });
+  },
+
+  /** AS-IS sys.Sys01_Company.selectByCopyList(searchText, erpProductCode) */
+  searchCopyCompanies: async (searchText: string, erpProductCd?: string): Promise<CompanyCopy[]> => {
+    const res = await apiClient.get<ApiResponse<CompanyCopy[]>>('v1/sys/companies/copy-list', { params: { searchText, erpProductCd } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys01_Company.selectByCode(menuId, erpProductCode) */
+  searchCompanyMenuYn: async (menuId: number, erpProductCd?: string): Promise<CompanyMenuYn[]> => {
+    const res = await apiClient.get<ApiResponse<CompanyMenuYn[]>>('v1/sys/companies/menu-yn', { params: { menuId, erpProductCd } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys01_Company.updateByMenuYn(menuId): 바뀐 행 → selectByMenuId 결과(전체 회사) */
+  updateCompanyMenuYn: async (menuId: number, rows: CompanyMenuYn[]): Promise<CompanyMenuYn[]> => {
+    const body = rows.map(({ companyId, companyMenuId, menuYn }) => ({ companyId, companyMenuId, menuYn }));
+    const res = await apiClient.put<ApiResponse<CompanyMenuYn[]>>('v1/sys/companies/menu-yn', body, { params: { menuId } });
+    return res.data.data ?? [];
   },
 };

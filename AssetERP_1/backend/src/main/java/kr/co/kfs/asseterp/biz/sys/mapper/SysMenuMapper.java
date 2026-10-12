@@ -2,7 +2,12 @@ package kr.co.kfs.asseterp.biz.sys.mapper;
 
 import kr.co.kfs.asseterp.biz.sys.dto.MenuRow;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuSearchParam;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuLinkRow;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuTreeRes;
+import kr.co.kfs.asseterp.biz.sys.dto.MenuCopyRes;
+import kr.co.kfs.asseterp.biz.sys.dto.MenuCopySearchParam;
+import kr.co.kfs.asseterp.biz.sys.dto.MenuSaveReq;
+import kr.co.kfs.asseterp.biz.sys.dto.MenuTreeRes;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleMenuTreeRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -47,4 +52,28 @@ public interface SysMenuMapper {
     int updateRoleMenuUseYn(@Param("id") Long id, @Param("roleId") Long roleId, @Param("useYn") String useYn);
 
     RoleMenuTreeRes selectRoleMenuNode(@Param("roleId") Long roleId, @Param("menuId") Long menuId);
+
+    // ── A09 메뉴 관리 (AS-IS Sys06_Menu.selectByAll / update / delete / getAllMenuList / updateByMenuYn) ──
+
+    /** AS-IS selectByAll(selectByParentId 부모별 반복)을 한 번에: 부모·sys06_seq·sys06_menu_nm 순 */
+    List<MenuTreeRes> selectMenuTree();
+
+    MenuTreeRes selectMenuNode(Long menuId);
+
+    /** 화면번호(unique) 중복 — 자기 자신 제외 */
+    int countByMenuNo(@Param("menuNo") String menuNo, @Param("menuId") Long menuId);
+
+    int insertMenu(MenuSaveReq req);
+
+    int updateMenu(MenuSaveReq req);
+
+    int deleteMenu(Long menuId);
+
+    List<MenuCopyRes> selectCopyMenus(MenuCopySearchParam param);
+
+    CompanyMenuLinkRow selectCompanyMenuLink(@Param("menuId") Long menuId, @Param("companyId") Long companyId);
+
+    int countCompanyMenuUseYn(@Param("parentId") Long parentId, @Param("companyId") Long companyId);
+
+    int updateCompanyMenuUseYnByMenu(@Param("menuId") Long menuId, @Param("companyId") Long companyId, @Param("useYn") String useYn);
 }

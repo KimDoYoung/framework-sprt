@@ -1,7 +1,13 @@
 package kr.co.kfs.asseterp.biz.sys.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuLinkRow;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuSaveReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuUseReq;
+import kr.co.kfs.asseterp.biz.sys.dto.MenuCopyRes;
+import kr.co.kfs.asseterp.biz.sys.dto.MenuCopySearchParam;
+import kr.co.kfs.asseterp.biz.sys.dto.MenuSaveReq;
+import kr.co.kfs.asseterp.biz.sys.dto.MenuTreeRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuTreeRes;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuRes;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuRow;
@@ -178,6 +184,112 @@ public class SysMenuService {
         return saveRoleMenus(roleId, rows);
     }
 
+    // ── A09 메뉴 관리 (AS-IS Sys06_Menu.selectByAll L24 / update L633 / delete L638 / getAllMenuList L477 / updateByMenuYn L572) ──
+
+    /** 전체 메뉴 트리(parentId 0부터) → 전위 순서 평평한 목록 */
+    public List<MenuTreeRes> getMenuTree(UserPrincipal user) {
+        requireSysAdmin(user);
+        return toPreorder(sysMenuMapper.selectMenuTree(), MenuTreeRes::menuId, MenuTreeRes::parentId, MenuTreeRes::withDepth);
+    }
+
+    /** 매뉴 등록 (AS-IS insertMenu: 클라이언트가 getSeq로 받던 ID를 서버가 채번) → 저장된 행 */
+    @Transactional
+    public MenuTreeRes createMenu(UserPrincipal user, MenuSaveReq req) {
+        requireSysAdmin(user);
+        MenuSaveReq row = req.withMenuId(sysMenuMapper.selectNextId());
+        checkMenu(row);
+        sysMenuMapper.insertMenu(row);
+        return sysMenuMapper.selectMenuNode(row.menuId());
+    }
+
+    /** 매뉴 수정·이동 (AS-IS UpdateDataModel UPDATE → selectById) */
+    @Transactional
+    public MenuTreeRes updateMenu(UserPrincipal user, Long menuId, MenuSaveReq req) {
+        requireSysAdmin(user);
+        MenuSaveReq row = req.withMenuId(menuId);
+        checkMenu(row);
+        if (sysMenuMapper.updateMenu(row) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return sysMenuMapper.selectMenuNode(menuId);
+    }
+
+    /** 원본은 DB 오류(not null·unique·길이)로 실패하던 것을 미리 막는다(05 §6 DB 오류) */
+    private void checkMenu(MenuSaveReq r) {
+        if (r.menuNm() == null || r.menuNm().isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "매뉴명을 입력하세요.");
+        }
+        if (r.parentId() == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "상위 매뉴가 없습니다.");
+        }
+        if (r.menuNo() != null) {
+            if (r.menuNo().length() > 4) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "화면번호는 4자까지입니다.");
+            }
+            if (sysMenuMapper.countByMenuNo(r.menuNo(), r.menuId()) > 0) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "이미 사용 중인 화면번호입니다: " + r.menuNo());
+            }
+        }
+    }
+
+    /** 매뉴 삭제 (AS-IS deleteModel: ID로만 — 자식·연결 행은 남는다) → 지운 건수 */
+    @Transactional
+    public int deleteMenu(UserPrincipal user, Long menuId) {
+        requireSysAdmin(user);
+        return sysMenuMapper.deleteMenu(menuId);
+    }
+
+    /** 일괄복사 매뉴 목록 (AS-IS retrieve01: '%' + 검색어 + '%', 매뉴명만 검색) */
+    public List<MenuCopyRes> searchCopyMenus(UserPrincipal user, String searchText, boolean menuNameYn) {
+        requireSysAdmin(user);
+        String like = "%" + (searchText == null ? "" : searchText) + "%";
+        return sysMenuMapper.selectCopyMenus(new MenuCopySearchParam(like, String.valueOf(menuNameYn)));
+    }
+
+    /**
+     * 일괄 권한부여·삭제 (AS-IS updateByMenuYn L572-631 그대로): 고른 메뉴마다 부모 쪽으로 올라가며(루트 0에서 멈춤) 고른 회사마다
+     * 연결이 없으면 채번해 INSERT(useYn), 있으면 use_yn UPDATE. 삭제(false)일 때는 그 메뉴의 부모 아래 사용 중 연결이 있으면 바꾸지 않는다
+     * (countUseYn에 menuId 조건이 없어 자기 자신도 센다 — 원본 그대로, 작업기록 제안)
+     */
+    @Transactional
+    public void updateCompanyMenuUse(UserPrincipal user, CompanyMenuUseReq req) {
+        requireSysAdmin(user);
+        if (req.menuIds() == null || req.menuIds().isEmpty() || req.companyIds() == null || req.companyIds().isEmpty()
+                || req.useYn() == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        boolean useYn = req.useYn();
+        String use = String.valueOf(useYn);
+        for (Long menuId : req.menuIds()) {
+            Long currentMenuId = menuId;
+            while (currentMenuId != null) {
+                MenuTreeRes menu = sysMenuMapper.selectMenuNode(currentMenuId);
+                if (menu == null) {
+                    break;
+                }
+                for (Long companyId : req.companyIds()) {
+                    CompanyMenuLinkRow link = sysMenuMapper.selectCompanyMenuLink(currentMenuId, companyId);
+                    if (link == null) {
+                        throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+                    }
+                    if (link.companyMenuId() == null) {
+                        sysMenuMapper.insertCompanyMenu(sysMenuMapper.selectNextId(), companyId, currentMenuId, use);
+                    } else {
+                        boolean updateParent = true;
+                        if (!useYn && menu.parentId() != null
+                                && sysMenuMapper.countCompanyMenuUseYn(menu.parentId(), companyId) > 0) {
+                            updateParent = false;
+                        }
+                        if (updateParent) {
+                            sysMenuMapper.updateCompanyMenuUseYnByMenu(currentMenuId, companyId, use);
+                        }
+                    }
+                }
+                currentMenuId = menu.parentId(); // 부모 메뉴로 이동
+            }
+        }
+    }
+
     /** sys admin이고 권한그룹이 그 회사 것인지 (A07·A08 — 메뉴가 admin 회사에만 있다) */
     private void requireCompanyRole(UserPrincipal user, Long companyId, Long roleId) {
         requireSysAdmin(user);
@@ -195,7 +307,7 @@ public class SysMenuService {
         }
     }
 
-    /** 회사별 메뉴맵핑은 KFS 관리자만 (AS-IS는 메뉴가 admin 회사에만 있어서 막았다) */
+    /** 회사별 메뉴맵핑·메뉴 관리는 KFS 관리자만 (AS-IS는 메뉴가 admin 회사에만 있어서 막았다) */
     private static void requireSysAdmin(UserPrincipal user) {
         if (!user.isSysAdmin()) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);

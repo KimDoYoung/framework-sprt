@@ -287,4 +287,73 @@
           FROM com11_form_mapping_multi
          WHERE com11_company_id = 0
     </insert>
+
+    <!-- A09 일괄복사 고객사 목록. AS-IS sys01_company.selectByCopyList: 조건·정렬 그대로, SELECT만 화면 컬럼 -->
+    <select id="selectCopyCompanies" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyCopyRes">
+        SELECT sys01_company_id       AS company_id,
+               sys01_company_nm       AS company_nm,
+               sys01_erp_product_cd   AS erp_product_cd,
+               sys01_asset_yn         AS asset_yn,
+               sys01_advis_yn         AS advis_yn,
+               sys01_icam_company_cd  AS icam_company_cd
+          FROM sys01_company
+         WHERE 1=1
+           AND sys01_use_yn = 'true'
+           AND UPPER(CONCAT(sys01_company_nm, sys01_loc_nm, sys01_note, sys01_icam_company_cd)) LIKE UPPER(#{searchText})
+           AND COALESCE(sys01_erp_product_cd, '%') LIKE #{erpProductCd}
+         ORDER BY sys01_company_id
+    </select>
+
+    <!-- A09 Sys01_Grid_CompanyMenu. AS-IS sys01_company.selectByCode: 연결이 있으면 그 use_yn, 같은 회사·메뉴 연결이 둘이면 두 행(원본 그대로) -->
+    <sql id="companyMenuYnColumns">
+        sys01_company_id        AS company_id,
+        sys01_company_nm        AS company_nm,
+        sys01_erp_product_cd    AS erp_product_cd,
+        sys01_asset_yn          AS asset_yn,
+        sys01_advis_yn          AS advis_yn,
+        sys01_icam_company_cd   AS icam_company_cd,
+        sys03_company_menu_id   AS company_menu_id
+    </sql>
+
+    <select id="selectCompanyMenuYn" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuYnRes">
+        SELECT <include refid="companyMenuYnColumns"/>,
+               (CASE WHEN sys03_company_menu_id IS NULL
+                     THEN 'false'
+                     ELSE COALESCE(sys03_use_yn, 'false')
+                END)                    AS menu_yn
+          FROM sys01_company
+               LEFT OUTER JOIN sys03_company_menu ON sys01_company_id = sys03_company_id AND sys03_menu_id = #{menuId}
+         WHERE 1=1
+           AND sys01_use_yn = 'true'
+           AND COALESCE(sys01_erp_product_cd, '%') LIKE #{erpProductCd}
+         ORDER BY sys01_company_id
+    </select>
+
+    <!-- AS-IS sys01_company.selectByMenuId: 저장 뒤 결과(상품 조건 없음, 연결이 있으면 'true') -->
+    <select id="selectCompanyMenuYnAll" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuYnRes">
+        SELECT <include refid="companyMenuYnColumns"/>,
+               (CASE WHEN sys03_company_menu_id IS NULL
+                     THEN 'false'
+                     ELSE 'true'
+                END)                    AS menu_yn
+          FROM sys01_company
+               LEFT OUTER JOIN sys03_company_menu ON sys01_company_id = sys03_company_id AND sys03_menu_id = #{menuId}
+         WHERE 1=1
+           AND sys01_use_yn = 'true'
+         ORDER BY sys01_company_id
+    </select>
+
+    <!-- AS-IS Sys01_Company.updateByMenuYn: UpdateDataModel(sys03_company_menu) — 새 ID라 INSERT -->
+    <insert id="insertCompanyMenuLink">
+        INSERT INTO sys03_company_menu (sys03_company_menu_id, sys03_company_id, sys03_menu_id, sys03_use_yn)
+        VALUES (#{id}, #{companyId}, #{menuId}, 'true')
+    </insert>
+
+    <!-- AS-IS UpdateDataModel.deleteModel(sys03_company_menu): 연결 ID로 (+ 회사·메뉴 조건, 05 §6 보안 보강) -->
+    <delete id="deleteCompanyMenuLink">
+        DELETE FROM sys03_company_menu
+         WHERE sys03_company_menu_id = #{companyMenuId}
+           AND sys03_company_id      = #{companyId}
+           AND sys03_menu_id         = #{menuId}
+    </delete>
 </mapper>

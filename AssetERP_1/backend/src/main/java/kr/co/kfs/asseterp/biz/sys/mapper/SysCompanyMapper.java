@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.sys.mapper;
 
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyCopyRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuYnRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyOptionRes;
@@ -102,4 +104,16 @@ public interface SysCompanyMapper {
 
     /** 15. com11_form_mapping_multi.insertFormCom11 */
     int insertFormMappingsFromAdmin(Long companyId);
+
+    // ── A09 메뉴 관리 (AS-IS Sys01_Company.selectByCopyList / selectByCode / updateByMenuYn) ──
+
+    List<CompanyCopyRes> selectCopyCompanies(@Param("searchText") String searchText, @Param("erpProductCd") String erpProductCd);
+
+    List<CompanyMenuYnRes> selectCompanyMenuYn(@Param("menuId") Long menuId, @Param("erpProductCd") String erpProductCd);
+
+    List<CompanyMenuYnRes> selectCompanyMenuYnAll(Long menuId);
+
+    int insertCompanyMenuLink(@Param("id") Long id, @Param("companyId") Long companyId, @Param("menuId") Long menuId);
+
+    int deleteCompanyMenuLink(@Param("companyMenuId") Long companyMenuId, @Param("companyId") Long companyId, @Param("menuId") Long menuId);
 }

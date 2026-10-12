@@ -1,9 +1,12 @@
 package kr.co.kfs.asseterp.biz.sys.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyCopyRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCreateReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuYnRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuYnSaveReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyOptionRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyOrgParam;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyRes;
@@ -19,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/** AS-IS server/sys/Sys01_Company.java (selectByName / update의 신규 등록) + UpdateDataModel의 회사 추가 후 초기화 */
+/** AS-IS server/sys/Sys01_Company.java (selectByName / update의 신규 등록 / A09 selectByCopyList·selectByCode·updateByMenuYn) + UpdateDataModel의 회사 추가 후 초기화 */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -142,6 +145,42 @@ public class SysCompanyService {
     public List<CompanyOptionRes> searchCompanyOptions(UserPrincipal user) {
         requireSysAdmin(user);
         return sysCompanyMapper.selectCompanyOptions();
+    }
+
+    // ── A09 메뉴 관리 (AS-IS Sys01_Company.selectByCopyList L75 / selectByCode L64 / updateByMenuYn L118) ──
+
+    /** 일괄복사 고객사 목록: '%' + 검색어 + '%', 상품 코드(없으면 '%') */
+    public List<CompanyCopyRes> searchCopyCompanies(UserPrincipal user, String searchText, String erpProductCd) {
+        requireSysAdmin(user);
+        return sysCompanyMapper.selectCopyCompanies("%" + (searchText == null ? "" : searchText) + "%", productOrAll(erpProductCd));
+    }
+
+    /** 메뉴를 쓰는 회사 그리드 (Sys01_Grid_CompanyMenu.retrieve) */
+    public List<CompanyMenuYnRes> searchCompanyMenuYn(UserPrincipal user, Long menuId, String erpProductCd) {
+        requireSysAdmin(user);
+        return sysCompanyMapper.selectCompanyMenuYn(menuId, productOrAll(erpProductCd));
+    }
+
+    /**
+     * 회사 그리드 저장 (AS-IS updateByMenuYn L118-153): 바뀐 행 중 menuYn true → 채번해 연결 INSERT(use_yn 'true'),
+     * false → 그 연결 DELETE(연결이 없으면 원본도 0건). 결과는 selectByMenuId(상품 조건 없음) — 원본 그대로
+     */
+    @Transactional
+    public List<CompanyMenuYnRes> updateCompanyMenuYn(UserPrincipal user, Long menuId, List<CompanyMenuYnSaveReq> rows) {
+        requireSysAdmin(user);
+        for (CompanyMenuYnSaveReq r : rows) {
+            if ("true".equals(r.menuYn())) {
+                sysCompanyMapper.insertCompanyMenuLink(sysCompanyMapper.selectNextId(), r.companyId(), menuId);
+            } else if (r.companyMenuId() != null) {
+                sysCompanyMapper.deleteCompanyMenuLink(r.companyMenuId(), r.companyId(), menuId);
+            }
+        }
+        return sysCompanyMapper.selectCompanyMenuYnAll(menuId);
+    }
+
+    /** AS-IS ComboBoxField("ErpProductCode", "%", "전체") — 전체(또는 미선택)는 '%' */
+    private static String productOrAll(String erpProductCd) {
+        return erpProductCd == null || erpProductCd.isEmpty() ? "%" : erpProductCd;
     }
 
     /** AS-IS UpdateDataModel L90-224 "ASP용으로 회사가 추가되면 관련된 DATA를 insert" — 번호·순서는 원본 주석 그대로(3·10은 원본에서 주석 처리) */

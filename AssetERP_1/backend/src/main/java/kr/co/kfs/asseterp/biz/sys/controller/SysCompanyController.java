@@ -1,9 +1,12 @@
 package kr.co.kfs.asseterp.biz.sys.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyCopyRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCreateReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuYnRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuYnSaveReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyNoteReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyOptionRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyRes;
@@ -87,5 +90,29 @@ public class SysCompanyController {
                                         @RequestBody CompanyNoteReq req) {
         sysCompanyService.updateNote(principal, companyId, req.note());
         return ApiResponse.ok(null);
+    }
+
+    /** A09 일괄복사 고객사 목록 (AS-IS sys.Sys01_Company.selectByCopyList), sys admin만 */
+    @GetMapping("/copy-list")
+    public ApiResponse<List<CompanyCopyRes>> searchCopyCompanies(@AuthenticationPrincipal UserPrincipal principal,
+                                                                 @RequestParam(required = false) String searchText,
+                                                                 @RequestParam(required = false) String erpProductCd) {
+        return ApiResponse.ok(sysCompanyService.searchCopyCompanies(principal, searchText, erpProductCd));
+    }
+
+    /** A09 메뉴를 쓰는 회사 그리드 (AS-IS sys.Sys01_Company.selectByCode), sys admin만 */
+    @GetMapping("/menu-yn")
+    public ApiResponse<List<CompanyMenuYnRes>> searchCompanyMenuYn(@AuthenticationPrincipal UserPrincipal principal,
+                                                                   @RequestParam Long menuId,
+                                                                   @RequestParam(required = false) String erpProductCd) {
+        return ApiResponse.ok(sysCompanyService.searchCompanyMenuYn(principal, menuId, erpProductCd));
+    }
+
+    /** A09 회사 그리드 저장 (AS-IS sys.Sys01_Company.updateByMenuYn) → selectByMenuId 결과 */
+    @PutMapping("/menu-yn")
+    public ApiResponse<List<CompanyMenuYnRes>> updateCompanyMenuYn(@AuthenticationPrincipal UserPrincipal principal,
+                                                                   @RequestParam Long menuId,
+                                                                   @RequestBody List<CompanyMenuYnSaveReq> rows) {
+        return ApiResponse.ok(sysCompanyService.updateCompanyMenuYn(principal, menuId, rows));
     }
 }
