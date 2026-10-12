@@ -79,7 +79,7 @@ export const Emp19_TabPage_education: React.FC<TransInfoTabProps> = ({ row }) =>
   const onPersons = async (persons: TransPerson[]) => {
     if (!shareRow) return;
     try {
-      await empEducationApi.copyEducation(shareRow.educationId, persons.map(p => p.personId));
+      await empEducationApi.copyEducation(shareRow, persons.map(p => p.personId));
       message.success('등록완료되었습니다.');
     } catch (err) {
       message.error(errorMessage(err, '일괄등록 실패'));

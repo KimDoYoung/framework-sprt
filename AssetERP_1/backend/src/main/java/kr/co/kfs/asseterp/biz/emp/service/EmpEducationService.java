@@ -55,14 +55,14 @@ public class EmpEducationService {
         return empEducationMapper.deleteEducations(educationIds, user.getCompanyId());
     }
 
-    /** multiUpdate L35-51: 고른 사람마다 getSeq로 새 ID를 받아 같은 교육행을 INSERT */
+    /** multiUpdate L35-51: 고른 사람마다 getSeq로 새 ID를 받아 educationModel 값으로 INSERT (UpdateDataModel INSERT) */
     @Transactional
     public int copyEducation(UserPrincipal user, EducationCopyReq req) {
         Long companyId = user.getCompanyId();
         int cnt = 0;
         for (Long personId : req.personIds()) {
             Long newId = empEducationMapper.selectNextEducationId();
-            int n = empEducationMapper.copyEducation(newId, req.educationId(), personId, companyId);
+            int n = empEducationMapper.copyEducation(newId, req, personId, companyId);
             if (n == 0) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
             cnt += n;
         }

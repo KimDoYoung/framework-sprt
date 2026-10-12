@@ -68,17 +68,15 @@
            )
     </delete>
 
-    <!-- AS-IS multiUpdate: educationModel(원본 행 전체)의 personId·educationId만 바꿔 INSERT -->
+    <!-- AS-IS multiUpdate: 클라이언트가 보낸 educationModel 값으로, 고른 사람(로그인 회사)마다 INSERT -->
     <insert id="copyEducation">
         INSERT INTO emp19_education
                ( emp19_education_id, emp19_person_id, emp19_issue_date, emp19_content
                , emp19_education_yn, emp19_note, emp19_education_corp_nm )
-        SELECT #{newId}, p.emp01_person_id, e.emp19_issue_date, e.emp19_content
-             , e.emp19_education_yn, e.emp19_note, e.emp19_education_corp_nm
-          FROM emp19_education e
-          JOIN emp01_person s ON s.emp01_person_id = e.emp19_person_id AND s.emp01_company_id = #{companyId}
-          JOIN emp01_person p ON p.emp01_person_id = #{personId} AND p.emp01_company_id = #{companyId}
-         WHERE e.emp19_education_id = #{educationId}
+        SELECT #{newId}, emp01_person_id, #{req.issueDate}::date, #{req.content}
+             , #{req.educationYn}, #{req.note}, #{req.educationCorpNm}
+          FROM emp01_person
+         WHERE emp01_person_id = #{personId} AND emp01_company_id = #{companyId}
     </insert>
 
 </mapper>

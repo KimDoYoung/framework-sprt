@@ -66,14 +66,17 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
   /**
    * 선택(포커스) 행 바로 아래에 임시 행들을 넣는다. inits는 행마다 newRow()에 덮어쓸 값(Lookup에서 고른 사원 등).
    * 한 행만 넣으면 firstEditField 편집을 시작한다.
+   * AS-IS GridInsertRow는 행을 store에 넣기만 하고 "변경"으로 치지 않는다 — 셀을 고치거나 콜백에서 record.addChange를 해야
+   * GridUpdate(getModifiedRecords)가 보낸다. markDirty: AS-IS가 넣은 뒤 addChange로 값을 채우면 true(Sys05 사원찾기 등),
+   * 모델 setter로만 채우면 false(빈 행·기본값 — 아무것도 고치지 않고 저장하면 저장되지 않는다).
    */
-  const addRows = useCallback((inits: Partial<T>[] = [{}]) => {
+  const addRows = useCallback((inits: Partial<T>[] = [{}], markDirty = true) => {
     const api = gridRef.current?.api;
     api?.stopEditing();
     const added = inits.map(init => ({ ...newRow(), ...init, [idField]: --tempSeq.current } as T));
     const focused = api?.getFocusedCell();
     const focusedRow = focused ? api?.getDisplayedRowAtIndex(focused.rowIndex)?.data : undefined;
-    added.forEach(r => dirty.current.add(getId(r)));
+    if (markDirty) added.forEach(r => dirty.current.add(getId(r)));
     setRows(prev => {
       const at = focusedRow ? prev.findIndex(r => getId(r) === getId(focusedRow)) : -1;
       return at < 0 ? [...prev, ...added] : [...prev.slice(0, at + 1), ...added, ...prev.slice(at + 1)];
@@ -90,7 +93,8 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
     });
   }, [newRow, idField, getId, firstEditField]);
 
-  const addRow = useCallback(() => addRows(), [addRows]);
+  /** [등록] 버튼: 빈 행(newRow 기본값만). 변경으로 치지 않는다 — AS-IS GridInsertRow */
+  const addRow = useCallback(() => addRows([{}], false), [addRows]);
 
   /** 코드로 행 값을 바꾼다 (Lookup 선택 등). 변경 행으로 표시된다 */
   const updateRow = useCallback((id: number, patch: Partial<T>) => {
@@ -108,10 +112,8 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
   const saveRows = useCallback(async () => {
     gridRef.current?.api?.stopEditing();
     const changed = rows.filter(r => dirty.current.has(getId(r)));
-    if (changed.length === 0) {
-      message.info('저장할 내용이 없습니다.');
-      return;
-    }
+    // AS-IS GridUpdate: getModifiedRecords()가 0건이면 서버를 부르지 않고 아무 메시지도 없다
+    if (changed.length === 0) return;
     const invalid = validate?.(changed, rows);
     if (invalid) {
       message.warning(invalid);

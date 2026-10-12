@@ -167,5 +167,29 @@ if want C-5; then
   chk "C-5 outline 경로 여러 개" 0 "yunhee outline frontend/src/pages/sys/Sys05_Tab_UserRole.tsx frontend/src/pages/sys/Sys05_Page_UserRole.tsx" "Sys05_Tab_UserRole" "Sys05_Page_UserRole"
 fi
 
+# ── 022 log 보정 검증 ──
+if want 022 || want D; then
+  FIX_LOG="$HOME/work/yunhee-cli/tests/fixtures/log"
+  chk "022-1 빈 첫 줄" 0 "yunhee log errors --file $FIX_LOG/AssetERP-backend-error.log --tz UTC --from '2026-10-12 09:00'" "Using generated security password: \*\*\*\*" "!70ea24fd"
+  chk "022-1 실서버" 0 "yunhee log errors --since 1h" "!list index"
+  chk "022-2 중복 제거" 0 "yunhee log trace b1e9fbe5f5f3021f" "WARN/ERROR 1:"
+
+  F022="$LOG/022_tail.log"
+  cat > "$F022" <<'EOF'
+2026-10-08 06:35:20.100 [c1e9fbe500000001] [admin] [kfstest:admin] [172.18.0.1] [http-nio-8080-exec-10] DEBUG k.c.k.a.b.e.m.E.selectOthers - ==>  Preparing: SELECT 1
+2026-10-08 06:35:20.105 [c1e9fbe500000001] [admin] [kfstest:admin] [172.18.0.1] [http-nio-8080-exec-10] WARN  k.c.k.a.c.e.GlobalExceptionHandler - 요청 처리 실패: status=405, Request method 'GET' is not supported
+2026-10-08 06:35:20.106 [c1e9fbe500000001] [admin] [kfstest:admin] [172.18.0.1] [http-nio-8080-exec-10] INFO  kr.co.kfs.asseterp.access - GET /AssetERP_1/api/v1/emp/educations 405 6ms
+2026-10-08 06:34:27.100 [afc00e8900000001] [admin] [kfstest:admin] [172.18.0.1] [http-nio-8080-exec-11] DEBUG k.c.k.a.b.e.m.E.selectCareers - ==>  Preparing: SELECT * FROM emp07_career WHERE person_id = ?
+2026-10-08 06:34:27.103 [afc00e8900000001] [admin] [kfstest:admin] [172.18.0.1] [http-nio-8080-exec-11] DEBUG k.c.k.a.b.e.m.E.selectCareers - ==>  Preparing: SELECT * FROM emp07_career WHERE person_id = ?
+2026-10-08 06:34:27.111 [afc00e8900000001] [admin] [kfstest:admin] [172.18.0.1] [http-nio-8080-exec-11] INFO  kr.co.kfs.asseterp.access - GET /AssetERP_1/api/v1/emp/persons/1/careers 200 11ms
+EOF
+
+  chk "022-3 level" 0 "yunhee log tail --file $F022 --level WARN" "educations" "!careers" "!200 "
+  chk "022-4 grep" 0 "yunhee log tail --file $F022 --grep careers" "SQL 2"
+  chk "022-5 tail 경고 표시" 0 "yunhee log tail --file $F022" "⚠WARN" "status=405"
+  chk "022-6 archived" 0 "yunhee log trace --help" "archived"
+  chk "022-7 trace ID" 2 "yunhee log trace xyz" "16진수"
+fi
+
 echo "합계: ✅ $PASS / ❌ $FAIL (전체 $N) · 원문 $LOG"
 [ $FAIL = 0 ]

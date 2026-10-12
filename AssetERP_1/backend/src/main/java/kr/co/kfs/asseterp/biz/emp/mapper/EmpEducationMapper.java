@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.emp.mapper;
 
+import kr.co.kfs.asseterp.biz.emp.dto.EducationCopyReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EducationRes;
 import kr.co.kfs.asseterp.biz.emp.dto.EducationSaveReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -23,7 +24,7 @@ public interface EmpEducationMapper {
 
     int deleteEducations(@Param("educationIds") List<Long> educationIds, @Param("companyId") Long companyId);
 
-    int copyEducation(@Param("newId") Long newId, @Param("educationId") Long educationId,
+    int copyEducation(@Param("newId") Long newId, @Param("req") EducationCopyReq req,
                       @Param("personId") Long personId, @Param("companyId") Long companyId);
 
     int countPersonInCompany(@Param("personId") Long personId, @Param("companyId") Long companyId);

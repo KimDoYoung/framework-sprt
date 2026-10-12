@@ -144,7 +144,7 @@ export const Emp03_TabPage_Trans: React.FC<TransInfoTabProps> = ({ row, onRowCha
       transDate: today,
       officerYn: row.officerYn,
       ...(org ? { orgCodeId: org.orgCodeId, orgNm: org.korNm } : {}),
-    }]);
+    }], !!org);  // 원본: 조직은 콜백에서 record.addChange → 그때만 변경 행(나머지는 모델 setter)
   };
 
   // [E4] searchBarBuilder[삭제].Delete (L80) → deleteRow() L326-343: 서비스 emp.Emp03_Trans.deleteCheck(personId) — DB 발령이 2건 이상일 때만

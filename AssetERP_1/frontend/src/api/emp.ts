@@ -358,8 +358,9 @@ export const empEducationApi = {
     return res.data.data ?? 0;
   },
   /** multiUpdate — 일괄등록 */
-  copyEducation: async (educationId: number, personIds: number[]): Promise<number> => {
-    const res = await apiClient.post<ApiResponse<number>>('v1/emp/educations/copy', { educationId, personIds });
+  copyEducation: async (src: Education, personIds: number[]): Promise<number> => {
+    const { issueDate, content, educationYn, note, educationCorpNm } = src;
+    const res = await apiClient.post<ApiResponse<number>>('v1/emp/educations/copy', { issueDate, content, educationYn, note, educationCorpNm, personIds });
     return res.data.data ?? 0;
   },
 };

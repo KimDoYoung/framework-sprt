@@ -94,19 +94,18 @@ class AddTitleDbTest {
     }
 
     @Test
-    void 교육사항_일괄등록은_고른_사람마다_같은_행을_만든다() {
-        Long src = jdbc.queryForObject("select emp19_education_id from emp19_education where emp19_person_id = 29045 limit 1", Long.class);
+    void 교육사항_일괄등록은_보낸_값으로_고른_사람마다_행을_만든다() {
         int before = educationService.getEducations(kfstest, PERSON_104).size();
-
-        assertThat(educationService.copyEducation(kfstest, new EducationCopyReq(src, List.of(PERSON_104)))).isEqualTo(1);
+        EducationCopyReq req = new EducationCopyReq("2026-10-01", "시험교육", "true", "비고", "기관", List.of(PERSON_104));
+        assertThat(educationService.copyEducation(kfstest, req)).isEqualTo(1);
         List<EducationRes> after = educationService.getEducations(kfstest, PERSON_104);
         assertThat(after).hasSize(before + 1);
-        EducationRes s = jdbc.queryForObject("select emp19_content, emp19_note from emp19_education where emp19_education_id = ?",
-                (rs, i) -> new EducationRes(null, null, null, rs.getString(1), null, rs.getString(2), null), src);
-        assertThat(after).anyMatch(r -> java.util.Objects.equals(r.content(), s.content()) && java.util.Objects.equals(r.note(), s.note()));
+        assertThat(after).anyMatch(r -> "시험교육".equals(r.content()) && "2026-10-01".equals(r.issueDate()) && "기관".equals(r.educationCorpNm()));
 
-        // 다른 회사 원본·사람은 거절
-        assertThatThrownBy(() -> educationService.copyEducation(other, new EducationCopyReq(src, List.of(PERSON_104))))
-                .isInstanceOf(BusinessException.class);
+        // 저장 안 한 빈 행(원본: 아무것도 안 고친 새 행)도 그대로 복사된다
+        assertThat(educationService.copyEducation(kfstest, new EducationCopyReq(null, null, null, null, null, List.of(PERSON_104)))).isEqualTo(1);
+
+        // 다른 회사 사람은 거절
+        assertThatThrownBy(() -> educationService.copyEducation(other, req)).isInstanceOf(BusinessException.class);
     }
 }
