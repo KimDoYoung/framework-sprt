@@ -4,6 +4,7 @@ import { Org01_Tab_OrgCode } from './org/Org01_Tab_OrgCode';
 import { Sys01_Tab_Company } from './sys/Sys01_Tab_Company';
 import { Sys03_Tab_CompanyMenu } from './sys/Sys03_Tab_CompanyMenu';
 import { Sys04_Tab_Role } from './sys/Sys04_Tab_Role';
+import { Sys04_Tab_RoleAdmin } from './sys/Sys04_Tab_RoleAdmin';
 import { Sys05_Tab_UserRole } from './sys/Sys05_Tab_UserRole';
 import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
 
@@ -18,6 +19,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sys01_Tab_Company, // A15 (1단계: 목록·신규 등록)
   Sys03_Tab_ComapnyMenu: Sys03_Tab_CompanyMenu, // A10 (메뉴 키 오타 그대로)
   Sys04_Tab_Role, // A01
+  Sys04_Tab_RoleAdmin, // A02
   Sys05_Tab_UserRole, // A03
   Sys07_Tab_RoleMenu, // A06
 };

@@ -61,4 +61,22 @@
            AND sys04_role_id IN
         <foreach collection="roleIds" item="id" open="(" separator="," close=")">#{id}</foreach>
     </delete>
+
+    <!-- A02 Sys04_Tab_RoleAdmin: 기본권한·관리자권한(addBoolean, 클릭 편집)까지 쓴다 -->
+    <insert id="insertRoleAdmin">
+        INSERT INTO sys04_role (sys04_role_id, sys04_company_id, sys04_role_nm, sys04_seq, sys04_note,
+                                sys04_default_role, sys04_admin_yn)
+        VALUES (#{roleId}, #{companyId}, #{roleNm}, #{seq}, #{note}, #{defaultRole}, #{adminYn})
+    </insert>
+
+    <update id="updateRoleAdmin">
+        UPDATE sys04_role
+           SET sys04_role_nm      = #{roleNm},
+               sys04_seq          = #{seq},
+               sys04_note         = #{note},
+               sys04_default_role = #{defaultRole},
+               sys04_admin_yn     = #{adminYn}
+         WHERE sys04_role_id    = #{roleId}
+           AND sys04_company_id = #{companyId}
+    </update>
 </mapper>

@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.sys.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.sys.dto.RoleAdminRow;
+import kr.co.kfs.asseterp.biz.sys.dto.RoleAdminSaveReq;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleDeleteParam;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleRes;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleRow;
@@ -61,5 +63,52 @@ public class SysRoleService {
             return 0;
         }
         return sysRoleMapper.deleteRoles(new RoleDeleteParam(user.getCompanyId(), roleIds));
+    }
+
+    // ── A02 Sys04_Tab_RoleAdmin: 화면에서 고른 고객사의 권한그룹 (admin 회사 메뉴) ──
+
+    /** AS-IS retrieveRole() L177-188 → selectByName(roleName = '%', companyId = 고른 고객사) */
+    public List<RoleRes> searchCompanyRoles(UserPrincipal user, Long companyId) {
+        requireSysAdmin(user);
+        return sysRoleMapper.searchRoles(new RoleSearchParam(companyId, "%"));
+    }
+
+    /** AS-IS update() L191-194 → Sys04_Role.update(UpdateDataModel). 저장 전 검사 없음(원본 그대로) */
+    @Transactional
+    public List<RoleRes> updateCompanyRoles(UserPrincipal user, Long companyId, List<RoleAdminSaveReq> rows) {
+        requireSysAdmin(user);
+        List<RoleRes> saved = new ArrayList<>();
+        for (RoleAdminSaveReq req : rows) {
+            if (req.roleNm() == null || req.roleNm().isBlank()) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "권한명을 입력하세요.");
+            }
+            boolean isNew = req.roleId() == null || req.roleId() <= 0;
+            Long roleId = isNew ? sysRoleMapper.selectNextId() : req.roleId();
+            RoleAdminRow row = new RoleAdminRow(roleId, companyId, req.roleNm(), req.seq(), req.note(),
+                    req.defaultRole(), req.adminYn());
+            if (isNew) {
+                sysRoleMapper.insertRoleAdmin(row);
+            } else if (sysRoleMapper.updateRoleAdmin(row) == 0) {
+                throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+            }
+            saved.add(sysRoleMapper.selectRole(roleId));
+        }
+        return saved;
+    }
+
+    /** AS-IS deleteRow() L238-242 → Sys04_Role.delete(UpdateDataModel): 체크한 행 삭제 → 지운 건수 */
+    @Transactional
+    public int deleteCompanyRoles(UserPrincipal user, Long companyId, List<Long> roleIds) {
+        requireSysAdmin(user);
+        if (roleIds == null || roleIds.isEmpty()) {
+            return 0;
+        }
+        return sysRoleMapper.deleteRoles(new RoleDeleteParam(companyId, roleIds));
+    }
+
+    private static void requireSysAdmin(UserPrincipal user) {
+        if (!user.isSysAdmin()) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
     }
 }

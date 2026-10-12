@@ -47,6 +47,27 @@ export const sysApi = {
     return res.data.data ?? 0;
   },
 
+  // ── A02 권한그룹 관리 — 고객사별 (Sys04_Tab_RoleAdmin) ──
+
+  /** AS-IS sys.Sys04_Role.selectByName(roleName '%', companyId = 고른 고객사) */
+  searchCompanyRoles: async (companyId: number): Promise<Role[]> => {
+    const res = await apiClient.get<ApiResponse<Role[]>>(`v1/sys/companies/${companyId}/roles`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys04_Role.update: 변경 행 → 저장된 행(요청 순서). 기본권한·관리자권한 포함 */
+  updateCompanyRoles: async (companyId: number, rows: Role[]): Promise<Role[]> => {
+    const body = rows.map(({ roleId, roleNm, seq, note, defaultRole, adminYn }) => ({ roleId, roleNm, seq, note, defaultRole, adminYn }));
+    const res = await apiClient.put<ApiResponse<Role[]>>(`v1/sys/companies/${companyId}/roles`, body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys04_Role.delete → 지운 건수 */
+  deleteCompanyRoles: async (companyId: number, roleIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sys/companies/${companyId}/roles`, { data: roleIds });
+    return res.data.data ?? 0;
+  },
+
   // ── 공통코드 콤보 (AS-IS ComboBoxField) ──
 
   /** AS-IS sys.Sys09_Code.selectByCodeKind: 로그인 회사, 오늘 기준 */
