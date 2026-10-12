@@ -41,6 +41,13 @@ const [OUT] = process.argv.slice(2);
     const search = tab.locator('input[placeholder^="고객사명"]');
     await search.fill('한국펀드'); await search.press('Enter'); await wait(1500);
     out.pagingSearch = await paging();
+    // 제안 ① 부서명 검색: '전체 N' = 목록 행 수 / 제안 ② 빈 사무실 칸 더블클릭 → 'null' 글자가 아님
+    await search.fill('경영관리'); await search.press('Enter'); await wait(1500);
+    out.pagingDept = await paging();
+    out.rowsDept = await countRows(grid);
+    await grid.locator('.ag-row[row-index="0"] .ag-cell[col-id="officeTelNo"]').dblclick(); await wait(300);
+    out.copyEmpty = await msgs();
+    await wait(1200);
     await search.fill('');
 
     // [E2] 고객사 트리거 → 고객찾기 → 더블클릭 선택 → [E3] 조회
@@ -97,10 +104,12 @@ const [OUT] = process.argv.slice(2);
     }
     out.noteAfter = await grid.locator('.ag-row[row-index="0"] .ag-cell[col-id="noteAdmin"]').innerText();
 
-    // 그리드 기본 점검(06 7-1) — 첫 행은 조회 뒤 자동 선택돼 있으므로 먼저 풀어 둔다(그대로 두면 체크 클릭이 해제가 된다)
+    // 그리드 기본 점검(06 7-1). 체크박스 열은 제안 ③으로 뺐다(SingleGrid) → 두 번째 행 클릭으로 선택이 옮겨지는지 본다
     await grid.locator('.ag-body-horizontal-scroll-viewport').evaluate(el => { el.scrollLeft = 0; }); await wait(300);
-    const sel0 = grid.locator('.ag-row[row-index="0"] .ag-selection-checkbox input').first();
-    if (await grid.locator('.ag-row[row-index="0"].ag-row-selected').count()) { await sel0.click({ force: true }); await wait(300); }
+    out.checkboxCol = await grid.locator('.ag-selection-checkbox').count();
+    await grid.locator('.ag-row[row-index="1"] .ag-cell[col-id="empNo"]').click(); await wait(300);
+    out.clickSelects = (await grid.locator('.ag-row[row-index="1"].ag-row-selected').count()) > 0
+      && (await grid.locator('.ag-row.ag-row-selected').count()) === 1;
     out.grid = await checkGrid(p, tab);
     out.gridOk = gridOk(out.grid);
     if (OUT) await p.screenshot({ path: `${OUT}/C03-end.png` });

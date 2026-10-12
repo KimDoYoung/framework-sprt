@@ -14,7 +14,7 @@ import { NoteAdmin, UserInfo } from '@/types/emp';
 import { Company } from '@/types/sys';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import { Button } from '@/components/button';
-import { MultiGrid, PagingToolBar, gbFor } from '@/components/grid';
+import { PagingToolBar, SingleGrid, gbFor } from '@/components/grid';
 import { Sys01_Lookup_Company } from '../sys/Sys01_Lookup_Company';
 import { Emp02_Edit_Note } from './Emp02_Edit_Note';
 
@@ -33,7 +33,10 @@ const EditImageCell: React.FC<CustomCellRendererProps<UserInfo> & { onEdit: (row
     />
   ) : null;
 
-/** AS-IS buildGrid() L177-222 (setChecked MULTI) */
+/**
+ * AS-IS buildGrid() L177-222 (setChecked MULTI).
+ * 수정(제안 ③ 사용자 승인 2026-10-12): 원본 체크박스 열은 쓰는 곳이 없어(체크 목록을 읽는 코드·일괄 버튼 없음) SingleGrid로 바꿨다
+ */
 const buildGrid = (onEdit: (row: UserInfo) => void): ColDef<UserInfo>[] => [
   gb.text('companyName', 220, '고객사'),  // L208
   gb.textCenter('korName', 80, '사원명'),  // L209
@@ -51,10 +54,13 @@ const buildGrid = (onEdit: (row: UserInfo) => void): ColDef<UserInfo>[] => [
     cellRenderer: EditImageCell, cellRendererParams: { onEdit } },
 ];
 
-/** getCellValue() L273-286: AS-IS colIndex 2~9(0 행번호, 1 체크) → 복사할 값. 사원명·직위·부서명은 '부서 이름 직위' (Java 문자열 연결이라 null은 "null") */
+/**
+ * getCellValue() L273-286: AS-IS colIndex 2~9(0 행번호, 1 체크) → 복사할 값. 사원명·직위·부서명은 '부서 이름 직위'.
+ * 수정(제안 ② 사용자 승인 2026-10-12): 원본은 Java 문자열 연결이라 빈 값이 "null" 글자로 복사됐다 → 빈 값은 빈 문자열, '부서 이름 직위'는 있는 것만 공백으로 잇는다
+ */
 const getCellValue = (model: UserInfo, field?: string): string | undefined => {
-  const s = (v?: string | null) => String(v ?? null);
-  const person = () => `${s(model.orgName)} ${s(model.korName)} ${s(model.posName)}`;
+  const s = (v?: string | null) => v ?? '';
+  const person = () => [model.orgName, model.korName, model.posName].filter(Boolean).join(' ');
   switch (field) {
     case 'companyName': return s(model.companyName);  // 고객사
     case 'korName': return person();
@@ -177,9 +183,7 @@ export const Emp01_Tab_UserInfo: React.FC = () => {
   // 원본은 선택 행(getSelectedItem)을 쓴다 — GXT는 칸 클릭으로 그 행이 선택되므로 누른 행을 선택하고 쓴다
   const editRow = useRef<UserInfo | undefined>(undefined);
   const onEdit = async (selectModel: UserInfo) => {
-    const api = gridRef.current?.api;
-    api?.deselectAll();
-    api?.getRowNode(String(selectModel.personId))?.setSelected(true);
+    gridRef.current?.api.getRowNode(String(selectModel.personId))?.setSelected(true, true);
     editRow.current = selectModel;
     try {
       setOthersModel(await empUserInfoApi.getNoteAdmin(selectModel.personId));
@@ -224,7 +228,7 @@ export const Emp01_Tab_UserInfo: React.FC = () => {
           <b style={{ marginLeft: 8, color: '#262d3f', fontSize: 12 }}>※ 복사하고싶은 정보를 더블클릭하시면 복사가 됩니다.</b>
         </div>
         <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-          <MultiGrid<UserInfo>
+          <SingleGrid<UserInfo>
             gridRef={gridRef}
             rowData={rows}
             columnDefs={columnDefs}

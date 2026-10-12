@@ -70,18 +70,20 @@
          LIMIT #{limit}
     </select>
 
-    <!-- AS-IS emp01_person.selectBySearchTextTotal 그대로 (검색 문자열에 조직명이 없는 것도 원본 그대로 — 작업기록 제안) -->
+    <!-- AS-IS emp01_person.selectBySearchTextTotal.
+         수정(제안 ① 사용자 승인 2026-10-12): 원본은 검색 문자열에 부서명이 없어 부서명으로 검색하면 '전체 N'이 목록과 달랐다 → 목록(searchUserInfos)과 같은 순서로 부서명을 넣음 -->
     <select id="countUserInfos" resultType="int">
         SELECT count(*)
           FROM (SELECT *
                      , sys01_company_nm                                                     AS emp01_company_nm
+                     , f_get_empTrans(emp01_person_id, f_sysdate()::date, 'org_code_nm')    AS emp01_org_nm
                      , emp02_note_admin                                                     AS emp01_note_admin
                   FROM emp01_person
                   INNER JOIN emp02_others ON emp02_person_id = emp01_person_id
                   INNER JOIN emp03_trans ON emp03_person_id = emp01_person_id
                   INNER JOIN sys01_company ON sys01_company_id = emp01_company_id
                ) t
-         WHERE UPPER(CONCAT(emp01_company_nm, emp01_kor_nm, emp01_office_telno, emp01_mobile_telno, emp01_note_admin)) LIKE UPPER(#{searchText})
+         WHERE UPPER(CONCAT(emp01_company_nm, emp01_kor_nm, emp01_org_nm, emp01_office_telno, emp01_mobile_telno, emp01_note_admin)) LIKE UPPER(#{searchText})
            AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
                                       FROM emp03_trans
                                      WHERE emp03_person_id  = emp01_person_id
