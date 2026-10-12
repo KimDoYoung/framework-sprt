@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { Academic, Account, AddDeduct, Career, Deduct, EmpEvent, Evaluation, Family, License, OrgInfo, Others, PersonSaveReq, Project, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson } from '../types/emp';
+import { Academic, Account, AddDeduct, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, Evaluation, Family, License, OrgInfo, Others, PersonSaveReq, Project, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -315,6 +315,51 @@ export const empProjectApi = {
   },
   deleteProjects: async (projectIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/emp/projects', { data: projectIds });
+    return res.data.data ?? 0;
+  },
+};
+
+/** AS-IS Emp04_TabPage_AddTitle, Emp04_Edit_AddTitle */
+export const empAddTitleApi = {
+  getAddTitles: async (personId: number): Promise<AddTitle[]> => {
+    const res = await apiClient.get<ApiResponse<AddTitle[]>>('v1/emp/add-titles', { params: { personId } });
+    return res.data.data ?? [];
+  },
+  /** updateList — 등록(transPersonId 없음)은 POST, 수정은 PUT */
+  updateList: async (req: AddTitleSaveReq): Promise<AddTitle> => {
+    const res = req.addTitleId
+      ? await apiClient.put<ApiResponse<AddTitle>>('v1/emp/add-titles', req)
+      : await apiClient.post<ApiResponse<AddTitle>>('v1/emp/add-titles', req);
+    return res.data.data;
+  },
+  /** deleteList + delete */
+  deleteAddTitle: async (addTitleId: number): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/emp/add-titles/${addTitleId}`);
+    return res.data.data ?? 0;
+  },
+};
+
+/** AS-IS Emp19_TabPage_education */
+export const empEducationApi = {
+  getEducations: async (personId: number): Promise<Education[]> => {
+    const res = await apiClient.get<ApiResponse<Education[]>>(`v1/emp/persons/${personId}/educations`);
+    return res.data.data ?? [];
+  },
+  updateEducations: async (rows: Education[]): Promise<Education[]> => {
+    const body = rows.map(r => ({
+      educationId: r.educationId, personId: r.personId, issueDate: r.issueDate,
+      content: r.content, educationYn: r.educationYn,
+    }));
+    const res = await apiClient.put<ApiResponse<Education[]>>('v1/emp/educations', body);
+    return res.data.data ?? [];
+  },
+  deleteEducations: async (educationIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/educations', { data: educationIds });
+    return res.data.data ?? 0;
+  },
+  /** multiUpdate — 일괄등록 */
+  copyEducation: async (educationId: number, personIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/emp/educations/copy', { educationId, personIds });
     return res.data.data ?? 0;
   },
 };

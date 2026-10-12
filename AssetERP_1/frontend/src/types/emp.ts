@@ -287,3 +287,47 @@ export interface Project {
   projectNm?: string | null;
   note?: string | null;
 }
+
+/** 겸직발령 행 (GET /api/v1/emp/add-titles?personId, AS-IS Emp04_AddTitleModel). transPersonId·posCd·posNm·orgHeadYn은 겸직사원 발령(transModel) */
+export interface AddTitle {
+  addTitleId: number;
+  personId?: number | null;
+  addPersonId?: number | null;
+  orgCodeId?: number | null;
+  startDate?: string | null;
+  closeDate?: string | null;
+  orgNm?: string | null;
+  titleCd?: string | null;
+  titleNm?: string | null;
+  transReason?: string | null;
+  empNo?: string | null;
+  transPersonId?: number | null;
+  posCd?: string | null;
+  posNm?: string | null;
+  orgHeadYn?: string | null;
+}
+
+/** 겸직 등록·수정 요청 (AS-IS Emp04_Edit_AddTitle.update) */
+export interface AddTitleSaveReq {
+  addTitleId?: number | null;
+  personId: number;
+  transPersonId?: number | null;
+  startDate: string;
+  closeDate?: string | null;
+  orgCodeId: number;
+  orgHeadYn: string;
+  titleCd: string;
+  posCd: string;
+  transReason?: string | null;
+}
+
+/** 교육사항 행 (GET /api/v1/emp/persons/{personId}/educations, AS-IS Emp19_EducationModel) */
+export interface Education {
+  educationId: number;
+  personId?: number | null;
+  issueDate?: string | null;
+  content?: string | null;
+  educationYn?: string | null;
+  note?: string | null;
+  educationCorpNm?: string | null;
+}

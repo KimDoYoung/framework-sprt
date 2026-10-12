@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/emp/emp19_education.xml -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpEducationMapper">
+
+    <sql id="educationColumns">
+        emp19_education_id      AS education_id,
+        emp19_person_id         AS person_id,
+        TO_CHAR(emp19_issue_date, 'YYYY-MM-DD') AS issue_date,
+        emp19_content           AS content,
+        emp19_education_yn      AS education_yn,
+        emp19_note              AS note,
+        emp19_education_corp_nm AS education_corp_nm
+    </sql>
+
+    <!-- AS-IS emp19_education.selectByPersonId (정렬 없음 — 원본 그대로) -->
+    <select id="selectEducations" resultType="kr.co.kfs.asseterp.biz.emp.dto.EducationRes">
+        SELECT <include refid="educationColumns"/>
+          FROM emp19_education
+          JOIN emp01_person ON emp19_person_id = emp01_person_id
+         WHERE emp19_person_id  = #{personId}
+           AND emp01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS emp19_education.selectById -->
+    <select id="selectEducationById" resultType="kr.co.kfs.asseterp.biz.emp.dto.EducationRes">
+        SELECT <include refid="educationColumns"/>
+          FROM emp19_education
+         WHERE emp19_education_id = #{educationId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextEducationId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="countPersonInCompany" resultType="int">
+        SELECT count(*) FROM emp01_person
+         WHERE emp01_person_id = #{personId} AND emp01_company_id = #{companyId}
+    </select>
+
+    <insert id="insertEducation">
+        INSERT INTO emp19_education
+               ( emp19_education_id, emp19_person_id, emp19_issue_date, emp19_content, emp19_education_yn )
+        VALUES ( #{educationId}, #{req.personId}, #{req.issueDate}::date, #{req.content}, #{req.educationYn} )
+    </insert>
+
+    <update id="updateEducation">
+        UPDATE emp19_education
+           SET emp19_issue_date   = #{req.issueDate}::date
+             , emp19_content      = #{req.content}
+             , emp19_education_yn = #{req.educationYn}
+         WHERE emp19_education_id = #{educationId}
+           AND emp19_person_id IN (
+               SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId}
+           )
+    </update>
+
+    <delete id="deleteEducations">
+        DELETE FROM emp19_education
+         WHERE emp19_education_id IN
+        <foreach collection="educationIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+           AND emp19_person_id IN (
+               SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId}
+           )
+    </delete>
+
+    <!-- AS-IS multiUpdate: educationModel(원본 행 전체)의 personId·educationId만 바꿔 INSERT -->
+    <insert id="copyEducation">
+        INSERT INTO emp19_education
+               ( emp19_education_id, emp19_person_id, emp19_issue_date, emp19_content
+               , emp19_education_yn, emp19_note, emp19_education_corp_nm )
+        SELECT #{newId}, p.emp01_person_id, e.emp19_issue_date, e.emp19_content
+             , e.emp19_education_yn, e.emp19_note, e.emp19_education_corp_nm
+          FROM emp19_education e
+          JOIN emp01_person s ON s.emp01_person_id = e.emp19_person_id AND s.emp01_company_id = #{companyId}
+          JOIN emp01_person p ON p.emp01_person_id = #{personId} AND p.emp01_company_id = #{companyId}
+         WHERE e.emp19_education_id = #{educationId}
+    </insert>
+
+</mapper>

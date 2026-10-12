@@ -27,6 +27,8 @@ import { Emp11_TabPage_Reward } from './Emp11_TabPage_Reward';
 import { Emp09_TabPage_Evaluation } from './Emp09_TabPage_Evaluation';
 import { Emp12_TabPage_Event } from './Emp12_TabPage_Event';
 import { Emp13_TabPage_Project } from './Emp13_TabPage_Project';
+import { Emp04_TabPage_AddTitle } from './Emp04_TabPage_AddTitle';
+import { Emp19_TabPage_education } from './Emp19_TabPage_education';
 
 const gb = gbFor<TransInfo>();
 
@@ -84,9 +86,9 @@ const TABS: { key: string; label: string; page: React.FC<TransInfoTabProps> }[] 
   { key: 'evaluation', label: '고과(평가)내역', page: Emp09_TabPage_Evaluation },
   { key: 'event', label: '행사내역', page: Emp12_TabPage_Event },
   { key: 'project', label: '프로젝트', page: Emp13_TabPage_Project },
-  { key: 'addTitle', label: '겸직발령', page: PendingTab('Emp04_TabPage_AddTitle', '3단계') },
-  { key: 'relateFile', label: '연관파일', page: PendingTab('Emp18_TabPage_RelateFile', '3단계') },
-  { key: 'education', label: '교육사항', page: PendingTab('Emp19_TabPage_education', '3단계') },
+  { key: 'addTitle', label: '겸직발령', page: Emp04_TabPage_AddTitle },
+  { key: 'relateFile', label: '연관파일', page: PendingTab('Emp18_TabPage_RelateFile', 'C01-7') },
+  { key: 'education', label: '교육사항', page: Emp19_TabPage_education },
 ];
 
 /** settings() L213-221: 재직구분 콤보 → retrieve() L389-402의 transCode */
