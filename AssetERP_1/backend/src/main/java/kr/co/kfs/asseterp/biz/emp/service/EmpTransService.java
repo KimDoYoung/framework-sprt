@@ -54,7 +54,8 @@ public class EmpTransService {
             boolean isNew = req.transId() == null || req.transId() <= 0;
             Long transId = isNew ? empTransMapper.selectNextId() : req.transId();
             TransRow row = new TransRow(transId, companyId, req.personId(), req.transDate(), req.transCd(), req.kindCd(),
-                    req.orgCodeId(), req.titleCd(), req.posCd(), req.duty(), req.expiryDate(), req.transReason());
+                    req.orgCodeId(), req.titleCd(), req.posCd(), req.duty(), req.expiryDate(), req.transReason(),
+                    req.orgHeadYn(), req.officerYn(), req.tdmTargetYn(), req.nonStayYn());
             if (empTransMapper.countSameTrans(row) > 0) {
                 throw new BusinessException(ErrorCode.DUPLICATE_DATA, "동일안 발령일에 이미 발령내용이 존재합니다");
             }

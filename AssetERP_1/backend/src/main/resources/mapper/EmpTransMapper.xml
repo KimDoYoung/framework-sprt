@@ -126,9 +126,11 @@
     <!-- AS-IS UpdateDataModel INSERT: 일반발령 탭 컬럼 -->
     <insert id="insertTrans">
         INSERT INTO emp03_trans (emp03_trans_id, emp03_person_id, emp03_trans_date, emp03_trans_cd, emp03_kind_cd, emp03_org_code_id,
-                                 emp03_title_cd, emp03_pos_cd, emp03_duty, emp03_expiry_date, emp03_trans_reason)
+                                 emp03_title_cd, emp03_pos_cd, emp03_duty, emp03_expiry_date, emp03_trans_reason,
+                                 emp03_org_head_yn, emp03_officer_yn, emp03_tdm_target_yn, emp03_non_stay_yn)
         VALUES (#{transId}, #{personId}, #{transDate}, #{transCd}, #{kindCd}, #{orgCodeId},
-                #{titleCd}, #{posCd}, #{duty}, #{expiryDate}, #{transReason})
+                #{titleCd}, #{posCd}, #{duty}, #{expiryDate}, #{transReason},
+                #{orgHeadYn}, #{officerYn}, #{tdmTargetYn}, #{nonStayYn})
     </insert>
 
     <!-- AS-IS UpdateDataModel UPDATE: 화면에서 바뀌는 컬럼만, 로그인 회사 사람의 발령만 -->
@@ -142,7 +144,11 @@
                emp03_pos_cd       = #{posCd},
                emp03_duty         = #{duty},
                emp03_expiry_date  = #{expiryDate},
-               emp03_trans_reason = #{transReason}
+               emp03_trans_reason = #{transReason},
+               emp03_org_head_yn  = #{orgHeadYn},
+               emp03_officer_yn   = #{officerYn},
+               emp03_tdm_target_yn = #{tdmTargetYn},
+               emp03_non_stay_yn  = #{nonStayYn}
          WHERE emp03_trans_id = #{transId}
            AND emp03_person_id IN (SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId})
     </update>

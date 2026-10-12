@@ -59,10 +59,10 @@ const buildGrid = (codes: Record<string, Code[]>, lookupOrgCode: (r: Trans) => v
   gb.text('duty', 150, '담당업무', { editor: 'text' }),  // L151
   gb.date('expiryDate', 100, '계약만료일', { editor: 'date' }),  // L152
   gb.text('transReason', 200, '비고', { editor: 'text' }),  // L153
-  gb.boolean('orgHeadYn', 80, '조직장'),  // L154
-  gb.boolean('officerYn', 80, '등기임원'),  // L155
-  gb.boolean('tdmTargetYn', 80, '책무대상'),  // L156
-  gb.boolean('nonStayYn', 80, '비상근'),  // L157
+  gb.boolean('orgHeadYn', 80, '조직장', { editable: true }),  // L154
+  gb.boolean('officerYn', 80, '등기임원', { editable: true }),  // L155
+  gb.boolean('tdmTargetYn', 80, '책무대상', { editable: true }),  // L156
+  gb.boolean('nonStayYn', 80, '비상근', { editable: true }),  // L157
 ];
 
 const CODE_KINDS = ['EmpTransCode', 'EmpKindCode', 'EmpTitleCode', 'EmpPosCode'];

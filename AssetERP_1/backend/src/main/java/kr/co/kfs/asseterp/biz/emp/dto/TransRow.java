@@ -15,6 +15,11 @@ public record TransRow(
         String posCd,
         String duty,
         LocalDate expiryDate,
-        String transReason
+        String transReason,
+        /* addBoolean 체크 컬럼 (조직장·등기임원·책무대상·비상근) — 'true'/'false' */
+        String orgHeadYn,
+        String officerYn,
+        String tdmTargetYn,
+        String nonStayYn
 ) {
 }

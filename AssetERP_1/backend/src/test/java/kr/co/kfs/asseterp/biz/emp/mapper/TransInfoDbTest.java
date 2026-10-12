@@ -86,13 +86,13 @@ class TransInfoDbTest {
                 .isInstanceOf(BusinessException.class);
 
         List<TransRes> saved = transService.updateTranses(kfstest, List.of(new TransSaveReq(-1L, pid, LocalDate.of(2026, 3, 1), "200", "10",
-                row.orgCodeId(), "100", "100", "업무", null, "이동")));
+                row.orgCodeId(), "100", "100", "업무", null, "이동", "true", "false", null, null)));
         assertThat(saved.get(0).transId()).isPositive();
         assertThat(transService.searchTranses(kfstest, pid)).hasSize(2);
         assertThat(transInfoService.getCurrentTransInfo(kfstest, pid).transId()).isEqualTo(saved.get(0).transId());
         // 같은 날 같은 발령구분은 유일 인덱스
         assertThatThrownBy(() -> transService.updateTranses(kfstest, List.of(new TransSaveReq(-1L, pid, LocalDate.of(2026, 3, 1), "200", "10",
-                row.orgCodeId(), "100", "100", null, null, null)))).isInstanceOf(BusinessException.class);
+                row.orgCodeId(), "100", "100", null, null, null, null, null, null, null)))).isInstanceOf(BusinessException.class);
 
         assertThat(transService.deleteTranses(other, List.of(saved.get(0).transId()))).isZero();
         assertThat(transService.deleteTranses(kfstest, List.of(saved.get(0).transId()))).isEqualTo(1);

@@ -5,7 +5,7 @@
  * 레이아웃(settings() L44-96): Horizontal { grid 0.15 | vlc(DeductInsertPage) 0.85 }
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, InputNumber, message, Modal, Space, Splitter, Typography } from 'antd';
+import { Checkbox, InputNumber, message, Modal, Space, Typography } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import { AgGridReact } from 'ag-grid-react';
 import { empApi } from '@/api/emp';
@@ -258,9 +258,10 @@ export const Emp35_TabPage_DeductDate: React.FC<TransInfoTabProps> = ({ row }) =
   };
 
   return (
-    <Splitter style={{ height: '100%' }}>
+    // AS-IS settings() L44-96: HorizontalLayoutContainer 0.15 / 0.85 — 고정 비율(분할 아님. 화면은 2단까지 — 05 §6)
+    <div style={{ height: '100%', display: 'flex' }}>
       {/* 좌 15%: 날짜 목록 */}
-      <Splitter.Panel defaultSize="15%" min={120}>
+      <div style={{ width: '15%', minWidth: 120, flex: 'none' }}>
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 4px' }}>
           <Space size="small">
             {/* [E1] */}
@@ -279,17 +280,17 @@ export const Emp35_TabPage_DeductDate: React.FC<TransInfoTabProps> = ({ row }) =
             />
           </div>
         </div>
-      </Splitter.Panel>
+      </div>
 
       {/* 우 85%: DeductInsert 폼 */}
-      <Splitter.Panel>
+      <div style={{ flex: 1, minWidth: 0 }}>
         <DeductInsertForm
           row={row}
           deduct={selectedDeduct}
           onSaved={onDeductSaved}
           onDeleted={onDeductDeleted}
         />
-      </Splitter.Panel>
+      </div>
 
       <Emp35_Popup_DeductCreate
         open={createOpen}
@@ -297,6 +298,6 @@ export const Emp35_TabPage_DeductDate: React.FC<TransInfoTabProps> = ({ row }) =
         onClose={() => setCreateOpen(false)}
         onCreated={onCreated}
       />
-    </Splitter>
+    </div>
   );
 };

@@ -132,7 +132,7 @@ export const Emp04_Edit_AddTitle: React.FC<Props> = ({ target, onClose, onSaved 
     >
       <Space direction="vertical" size={18} style={{ width: '100%', padding: '10px 0' }}>
         <Space size={20}>
-          <Field label="시작일자" width={220}>
+          <Field label="시작일자" width={240}>
             <DatePicker style={{ width: '100%' }} value={f.startDate} onChange={d => set('startDate', d)} format="YYYY-MM-DD" />
           </Field>
           <Field label="조직" width={400}>
@@ -145,7 +145,7 @@ export const Emp04_Edit_AddTitle: React.FC<Props> = ({ target, onClose, onSaved 
           </Field>
         </Space>
         <Space size={20}>
-          <Field label="종료일자" width={220}>
+          <Field label="종료일자" width={240}>
             <DatePicker style={{ width: '100%' }} value={f.closeDate} onChange={d => set('closeDate', d)} format="YYYY-MM-DD" />
           </Field>
           <Field label="직책" width={200}>

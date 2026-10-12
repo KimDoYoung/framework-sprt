@@ -21,7 +21,7 @@ const buildGrid = () => [
   gb.text('licenseNo', 240, '자격증번호', { editor: 'text' }),          // L97
   gb.text('issuingAgency', 240, '발급기관', { editor: 'text' }),        // L98
   gb.text('issuingGrade', 80, '발급등급', { editor: 'text' }),          // L99
-  gb.boolean('financeRelateYn', 120, '금융관련자격증'),                   // L100
+  gb.boolean('financeRelateYn', 120, '금융관련자격증', { editable: true }),                   // L100
   gb.date('kofiaRegDate', 100, '협회등록일', { editor: 'date' }),       // L101
   gb.text('note', 240, '비고', { editor: 'text' }),                    // L102
 ];

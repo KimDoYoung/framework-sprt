@@ -70,7 +70,7 @@ public class EmpTransInfoService {
         // 1-1: 발령일 = 입사일
         Long transId = empTransInfoMapper.selectNextId();
         empTransInfoMapper.insertTrans(new TransRow(transId, companyId, personId, req.hireDate(), TRANS_HIRE, req.kindCd(),
-                req.orgCodeId(), req.titleCd(), req.posCd(), null, req.expiryDate(), null));
+                req.orgCodeId(), req.titleCd(), req.posCd(), null, req.expiryDate(), null, null, null, null, null));
 
         // emp35(급여공제 자동 생성) + 회사 0의 AddDeductType 코드마다 emp36
         Long deductId = empTransInfoMapper.selectNextId();

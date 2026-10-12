@@ -6,7 +6,8 @@ import './grid.css';
 
 /**
  * 공통 그리드 기반 (직접 쓰지 않는다 — SingleGrid / MultiGrid / CellEditGrid / ModalEditGrid를 쓴다).
- * AS-IS GridBuilder.build()의 기본: 행번호 40px, 줄무늬, 컬럼선, 굵은 헤더, 헤더 메뉴 없음, 정렬·폭 조절 허용, px 고정 폭.
+ * AS-IS GridBuilder.build()의 기본: 행번호 40px, 줄무늬, 컬럼선, 굵은 헤더, 헤더 메뉴 없음, 폭 조절 허용, px 고정 폭.
+ * 헤더 클릭 정렬은 기본으로 끈다(03 원칙 13, 사용자 결정 2026-10-12) — 요청이 있는 그리드만 sortable을 준다.
  * 부모를 채운다(flex 컬럼이면 flex:1, 아니면 height 100%).
  */
 
@@ -24,7 +25,7 @@ export interface BaseGridProps<T> extends Omit<AgGridReactProps<T>, 'theme'> {
   /** 행번호 컬럼 (기본 true, AS-IS setRowNumHidden(true) → false) */
   rowNumber?: boolean;
   density?: GridDensity;
-  /** 컬럼 정렬 허용 (기본 true, AS-IS setSortable(false) → false) */
+  /** 헤더 클릭 정렬 (기본 false — 03 원칙 13. 사용자가 요청한 그리드만 true) */
   sortable?: boolean;
   /** 이 그리드만 헤더 배경색을 바꿀 때 (기본 theme.ts GRID_COLORS.header) */
   headerColor?: string;
@@ -56,7 +57,7 @@ export function BaseGrid<T>({
   gridRef,
   rowNumber = true,
   density = 'normal',
-  sortable = true,
+  sortable = false,
   headerColor,
   sumRow,
   wrapperStyle,

@@ -34,9 +34,9 @@ const buildGrid = (careerTypeCodes: Code[]) => [
     },
   }),
   gb.text('finalRole', 240, '역활(권한)', { editor: 'text' }),         // L94
-  gb.boolean('financeRelateYn', 110, '금융관련경력'),                    // L95
-  gb.boolean('mainCareerYn', 100, '주요경력'),                           // L96
-  gb.boolean('extrAddTitleYn', 100, '대외겸직'),                         // L97
+  gb.boolean('financeRelateYn', 110, '금융관련경력', { editable: true }),                    // L95
+  gb.boolean('mainCareerYn', 100, '주요경력', { editable: true }),                           // L96
+  gb.boolean('extrAddTitleYn', 100, '대외겸직', { editable: true }),                         // L97
   gb.text('note', 200, '비고', { editor: 'text' }),                    // L98
 ];
 

@@ -30,7 +30,7 @@ const buildGrid = (bachelorCodes: Code[], graduateCodes: Code[]) => [
       return true;
     },
   }),
-  gb.boolean('financeRelateYn', 110, '금융관련학력'),                    // L100
+  gb.boolean('financeRelateYn', 110, '금융관련학력', { editable: true }),                    // L100
   gb.text('degreeCredit', 80, '학점', { editor: 'text' }),             // L101
   gb.text('graduateDegreeNm', 80, '수료여부', {                          // L102
     editor: 'select',

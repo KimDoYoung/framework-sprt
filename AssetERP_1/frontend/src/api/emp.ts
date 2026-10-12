@@ -68,8 +68,8 @@ export const empApi = {
 
   /** AS-IS emp.Emp03_Trans.update: 추가·변경 행 → 저장된 행(요청 순서) */
   updateTranses: async (rows: Trans[]): Promise<Trans[]> => {
-    const body = rows.map(({ transId, personId, transDate, transCd, kindCd, orgCodeId, titleCd, posCd, duty, expiryDate, transReason }) =>
-      ({ transId, personId, transDate, transCd, kindCd, orgCodeId, titleCd, posCd, duty, expiryDate: expiryDate || null, transReason }));
+    const body = rows.map(({ transId, personId, transDate, transCd, kindCd, orgCodeId, titleCd, posCd, duty, expiryDate, transReason, orgHeadYn, officerYn, tdmTargetYn, nonStayYn }) =>
+      ({ transId, personId, transDate, transCd, kindCd, orgCodeId, titleCd, posCd, duty, expiryDate: expiryDate || null, transReason, orgHeadYn, officerYn, tdmTargetYn, nonStayYn }));
     const res = await apiClient.put<ApiResponse<Trans[]>>('v1/emp/trans', body);
     return (res.data.data ?? []).map(toTrans);
   },
