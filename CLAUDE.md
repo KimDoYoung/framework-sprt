@@ -124,7 +124,7 @@ frontend를 빌드해 `backend/src/main/resources/static`으로 복사한 뒤 `b
    테넌트는 Host로 판정되므로 `-t`로는 바뀌지 않는다(0.1.2). 저장 API 시험은 같은 값 PUT 등 데이터를 바꾸지 않는 방식으로 한다.
    API가 실패하거나 결과가 이상하면 `--log`를 붙여 서버가 실행한 SQL(매퍼 ID·파라미터·행 수)과 WARN/ERROR를 함께 본다.
 5. 서버 로그 확인 시: `docker logs`·로그 파일을 직접 grep하지 말고 `yunhee log`(0.2.5~)를 쓴다 —
-   `log errors --since-deploy`(배포 후), `log tail --since 10m`(스크립트 후, 0.2.5의 `--since-run`은 결함), `log req <METHOD> <경로 일부> --trace`(사용자가 알린 오류), `log trace <id> --sql`(바인딩된 SQL). 출력 시각은 UTC지만 `--from`/`--to`는 KST로 입력한다. 0.2.5 결함과 우회 방법은 AssetERP_1 05 §7에 있다.
+   `log errors --since-deploy`(배포 후), `log tail --since-run last`(스크립트 후), `log req <METHOD> <경로 일부> --trace`(사용자가 알린 오류), `log trace <id> --sql`(바인딩된 SQL). 출력 시각은 UTC지만 `--from`/`--to`는 KST로 입력한다. 남은 한계(0.2.6: `--archived`는 trace만)는 AssetERP_1 05 §7.
 6. 컴파일/빌드/테스트/배포 실행 시: 셸에서 직접 실행하지 말고 `yunhee run "<명령어>"` (예: `yunhee run "./bm.sh compile"`, `yunhee run "npx tsc -b --noEmit"`)로 실행하여 요약만 확인한다.
    원시 로그는 `.yunhee/runs/`(git-ignored)에 남고, 직전 결과는 `yunhee last-run`.
 7. `yunhee agent-guide`와 이 절이 다르면 이 절을 따른다.
