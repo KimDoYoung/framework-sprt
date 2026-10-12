@@ -163,8 +163,8 @@ fi
 
 # ── C 버전·문서 ──
 if want C; then
-  chk "C-1 버전 0.2.5" 0 "yunhee --version" "0\.2\.[56]"
-  chk "C-2 changelog 0.2.5" 0 "yunhee changelog --since 0.2.4" "0\.2\.[56]" "layout" "log"
+  chk "C-1 버전 0.2.5" 0 "yunhee --version" "0\.2\.[567]"
+  chk "C-2 changelog 0.2.5" 0 "yunhee changelog --since 0.2.4" "0\.2\.[567]" "layout" "log"
   chk "C-2 agent-guide 안내" 0 "yunhee agent-guide" "section layout" "yunhee log" "--log"
   echo "ℹ C-3 회귀: tools/yunhee-018-check.sh --reindex 가 ✅ 47 / ❌ 0 인지 따로 돌린다"
 fi

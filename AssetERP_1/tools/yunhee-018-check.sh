@@ -191,5 +191,13 @@ EOF
   chk "022-7 trace ID" 2 "yunhee log trace xyz" "16진수"
 fi
 
+# ── 023 log --archived 마무리 검증 ──
+if want 023 || want E; then
+  chk "023-1 archived 범위" 0 "yunhee log req GET /api/public/companies --archived --from '2026-10-08 16:30' --to '2026-10-08 16:45'" "abd1f652"
+  chk "023-1 안내" 0 "yunhee log req GET /api/public/companies --from '2026-10-08 16:30' --to '2026-10-08 16:45'" "그 전은 --archived"
+  chk "023-2 archived 안내" 0 "yunhee log trace abd1f6520f3647c6 --archived" "--raw --archived" "2026-10-08"
+  chk "023-3 archived 없음 문구" 1 "yunhee log trace deadbeef00000000 --archived" "archived gz" "!지난 날은"
+fi
+
 echo "합계: ✅ $PASS / ❌ $FAIL (전체 $N) · 원문 $LOG"
 [ $FAIL = 0 ]
