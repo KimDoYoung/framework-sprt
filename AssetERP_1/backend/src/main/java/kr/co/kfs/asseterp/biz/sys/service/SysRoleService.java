@@ -68,9 +68,10 @@ public class SysRoleService {
     // ── A02 Sys04_Tab_RoleAdmin: 화면에서 고른 고객사의 권한그룹 (admin 회사 메뉴) ──
 
     /** AS-IS retrieveRole() L177-188 → selectByName(roleName = '%', companyId = 고른 고객사) */
-    public List<RoleRes> searchCompanyRoles(UserPrincipal user, Long companyId) {
+    public List<RoleRes> searchCompanyRoles(UserPrincipal user, Long companyId, String roleNm) {
         requireSysAdmin(user);
-        return sysRoleMapper.searchRoles(new RoleSearchParam(companyId, "%"));
+        // A08 Sys07_TabPage_Role.retrieve() L102-114: '%' + 권한명 + '%' (A02는 권한명 없음 → '%%' = '%')
+        return sysRoleMapper.searchRoles(new RoleSearchParam(companyId, "%" + (roleNm == null ? "" : roleNm) + "%"));
     }
 
     /** AS-IS update() L191-194 → Sys04_Role.update(UpdateDataModel). 저장 전 검사 없음(원본 그대로) */

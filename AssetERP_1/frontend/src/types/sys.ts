@@ -154,6 +154,14 @@ export interface RoleMenuNode {
   useYn?: string | null;
 }
 
+/** 권한그룹별 메뉴권한 복사 (POST /api/v1/sys/role-menus/copy-role|copy-menu). inCompanyId = 출발지, companyIds = 목적지 */
+export interface RoleMenuCopyReq {
+  inCompanyId: number;
+  roleName: string;
+  menuId?: number;
+  companyIds: number[];
+}
+
 /** 권한그룹별 사원 (GET /api/v1/sys/roles/{roleId}/user-roles, AS-IS Sys05_UserRoleModel) */
 export interface UserRole {
   userRoleId: number;

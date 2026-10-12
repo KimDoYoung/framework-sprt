@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CompanyMenuNode, Company, CompanyCreateReq, CompanyManage, LoginSecure, Role, RoleMenuNode, UserRole } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CompanyMenuNode, Company, CompanyCreateReq, CompanyManage, LoginSecure, Role, RoleMenuCopyReq, RoleMenuNode, UserRole } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -49,9 +49,9 @@ export const sysApi = {
 
   // ── A02 권한그룹 관리 — 고객사별 (Sys04_Tab_RoleAdmin) ──
 
-  /** AS-IS sys.Sys04_Role.selectByName(roleName '%', companyId = 고른 고객사) */
-  searchCompanyRoles: async (companyId: number): Promise<Role[]> => {
-    const res = await apiClient.get<ApiResponse<Role[]>>(`v1/sys/companies/${companyId}/roles`);
+  /** AS-IS sys.Sys04_Role.selectByName(roleName '%' — A08은 '%권한명%', companyId = 고른 고객사) */
+  searchCompanyRoles: async (companyId: number, roleNm?: string): Promise<Role[]> => {
+    const res = await apiClient.get<ApiResponse<Role[]>>(`v1/sys/companies/${companyId}/roles`, { params: { roleNm } });
     return res.data.data ?? [];
   },
 
@@ -218,6 +218,26 @@ export const sysApi = {
     const body = rows.map(({ menuId, roleMenuId, useYn }) => ({ menuId, roleMenuId, useYn }));
     const res = await apiClient.put<ApiResponse<RoleMenuNode[]>>(`v1/sys/roles/${roleId}/menus`, body);
     return res.data.data ?? [];
+  },
+
+  // ── A08 권한그룹별 메뉴권한 복사 (Sys07_Tab_Company) ──
+
+  /** AS-IS sys.Sys06_Menu.selectByRoleId(roleId, companyId = 화면에서 고른 회사) */
+  getCompanyRoleMenuTree: async (companyId: number, roleId: number): Promise<RoleMenuNode[]> => {
+    const res = await apiClient.get<ApiResponse<RoleMenuNode[]>>(`v1/sys/companies/${companyId}/roles/${roleId}/menus`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys07_RoleMenu.updateRole (권한그룹복사) → 권한그룹을 넣은 회사 수 */
+  copyRole: async (req: RoleMenuCopyReq): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/sys/role-menus/copy-role', req);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys07_RoleMenu.updateMenu (매뉴권한복사) → 처리한 회사 수 */
+  copyMenu: async (req: RoleMenuCopyReq): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/sys/role-menus/copy-menu', req);
+    return res.data.data ?? 0;
   },
 
   // ── A03 권한그룹별 사용자 맵핑 (Sys05_Tab_UserRole) ──

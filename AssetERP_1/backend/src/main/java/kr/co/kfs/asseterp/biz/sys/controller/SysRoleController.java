@@ -50,11 +50,12 @@ public class SysRoleController {
 
     // ── A02 Sys04_Tab_RoleAdmin: 고른 고객사의 권한그룹 (sys admin만) ──
 
-    /** AS-IS sys.Sys04_Role.selectByName(roleName '%', companyId) */
+    /** AS-IS sys.Sys04_Role.selectByName(roleName '%' — A08은 '%입력값%', companyId) */
     @GetMapping("/companies/{companyId}/roles")
     public ApiResponse<List<RoleRes>> searchCompanyRoles(@AuthenticationPrincipal UserPrincipal principal,
-                                                         @PathVariable Long companyId) {
-        return ApiResponse.ok(sysRoleService.searchCompanyRoles(principal, companyId));
+                                                         @PathVariable Long companyId,
+                                                         @RequestParam(required = false) String roleNm) {
+        return ApiResponse.ok(sysRoleService.searchCompanyRoles(principal, companyId, roleNm));
     }
 
     /** AS-IS sys.Sys04_Role.update → 저장된 행(요청 순서) */

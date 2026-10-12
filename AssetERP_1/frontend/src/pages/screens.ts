@@ -7,6 +7,7 @@ import { Sys04_Tab_Role } from './sys/Sys04_Tab_Role';
 import { Sys04_Tab_RoleAdmin } from './sys/Sys04_Tab_RoleAdmin';
 import { Sys05_Tab_UserRole } from './sys/Sys05_Tab_UserRole';
 import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
+import { Sys07_Tab_Company } from './sys/Sys07_Tab_Company';
 
 /**
  * 화면 등록표 (AS-IS MenuOpener): sys06_menu.sys06_class_nm(메뉴 키) → 화면 컴포넌트.
@@ -22,4 +23,5 @@ export const SCREENS: Record<string, React.FC> = {
   Sys04_Tab_RoleAdmin, // A02
   Sys05_Tab_UserRole, // A03
   Sys07_Tab_RoleMenu, // A06
+  Sys07_Tab_Company, // A08
 };

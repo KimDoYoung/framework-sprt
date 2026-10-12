@@ -117,9 +117,9 @@ export function gbFor<T>() {
     // ── 논리 ──
     /** addBoolean: 체크박스 (정렬 안 함). 편집하려면 { editable: true } */
     boolean: (f: Field, w: number, h: string, o?: GbOpts<T>) => col(f, w, h, 'center', { ...check(o), sortable: false }, o),
-    /** addBooleanYn: O / X (null → X) */
+    /** addBooleanYn: O / X (null → X). 값은 DB 형태('true'/'false' 문자열) 또는 boolean — 'false' 문자열도 X (A08에서 고침) */
     booleanYn: (f: Field, w: number, h: string, o?: GbOpts<T>) =>
-      col(f, w, h, 'center', { valueFormatter: p => (p.value ? 'O' : 'X') }, o),
+      col(f, w, h, 'center', { valueFormatter: p => (p.value === true || p.value === 'true' ? 'O' : 'X') }, o),
     /** addBooleanYn2: 체크박스 표시 (AS-IS는 ✓/빈칸 글자) */
     booleanYn2: (f: Field, w: number, h: string, o?: GbOpts<T>) => col(f, w, h, 'center', check(o), o),
 

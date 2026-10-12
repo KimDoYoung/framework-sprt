@@ -160,6 +160,17 @@ public class SysMenuService {
         return saved;
     }
 
+    /** A08 Sys07_TapPage_Menu.retrieve(roleId, companyId) L88-113: 화면에서 고른 회사 기준 (A06과 같은 SQL, 회사만 다름) */
+    public List<RoleMenuTreeRes> getCompanyRoleMenuTree(UserPrincipal user, Long companyId, Long roleId) {
+        requireSysAdmin(user);
+        RoleRes role = sysRoleMapper.selectRole(roleId);
+        if (role == null || !Objects.equals(role.companyId(), companyId)) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return toPreorder(sysMenuMapper.selectRoleMenuTree(companyId, roleId), RoleMenuTreeRes::menuId, RoleMenuTreeRes::parentId,
+                RoleMenuTreeRes::withDepth);
+    }
+
     /** 권한그룹이 로그인 회사 것인지 (AS-IS는 화면이 자기 회사 권한만 보여 줘서 검사하지 않았다 — 05 §6 회사 조건) */
     private void requireOwnRole(UserPrincipal user, Long roleId) {
         RoleRes role = sysRoleMapper.selectRole(roleId);
