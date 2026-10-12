@@ -228,6 +228,13 @@ export const sysApi = {
     return res.data.data ?? [];
   },
 
+  /** A07 AS-IS sys.Sys06_Menu.updateRoleMenu(roleId) — 고른 회사의 권한그룹. 바뀐 행만 → 저장된 행 */
+  updateCompanyRoleMenus: async (companyId: number, roleId: number, rows: RoleMenuNode[]): Promise<RoleMenuNode[]> => {
+    const body = rows.map(({ menuId, roleMenuId, useYn }) => ({ menuId, roleMenuId, useYn }));
+    const res = await apiClient.put<ApiResponse<RoleMenuNode[]>>(`v1/sys/companies/${companyId}/roles/${roleId}/menus`, body);
+    return res.data.data ?? [];
+  },
+
   /** AS-IS sys.Sys07_RoleMenu.updateRole (권한그룹복사) → 권한그룹을 넣은 회사 수 */
   copyRole: async (req: RoleMenuCopyReq): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/sys/role-menus/copy-role', req);

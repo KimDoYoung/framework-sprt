@@ -148,6 +148,10 @@ public class SysMenuService {
     @Transactional
     public List<RoleMenuTreeRes> updateRoleMenus(UserPrincipal user, Long roleId, List<RoleMenuSaveReq> rows) {
         requireOwnRole(user, roleId);
+        return saveRoleMenus(roleId, rows);
+    }
+
+    private List<RoleMenuTreeRes> saveRoleMenus(Long roleId, List<RoleMenuSaveReq> rows) {
         List<RoleMenuTreeRes> saved = new ArrayList<>();
         for (RoleMenuSaveReq r : rows) {
             if (r.roleMenuId() == null) {
@@ -162,13 +166,25 @@ public class SysMenuService {
 
     /** A08 Sys07_TapPage_Menu.retrieve(roleId, companyId) L88-113: 화면에서 고른 회사 기준 (A06과 같은 SQL, 회사만 다름) */
     public List<RoleMenuTreeRes> getCompanyRoleMenuTree(UserPrincipal user, Long companyId, Long roleId) {
+        requireCompanyRole(user, companyId, roleId);
+        return toPreorder(sysMenuMapper.selectRoleMenuTree(companyId, roleId), RoleMenuTreeRes::menuId, RoleMenuTreeRes::parentId,
+                RoleMenuTreeRes::withDepth);
+    }
+
+    /** A07 Sys07_Tree_CompanyRoleMenu.update() L181-196: 고른 회사 권한으로 A06과 같은 저장 (AS-IS sys.Sys06_Menu.updateRoleMenu(roleId)) */
+    @Transactional
+    public List<RoleMenuTreeRes> updateCompanyRoleMenus(UserPrincipal user, Long companyId, Long roleId, List<RoleMenuSaveReq> rows) {
+        requireCompanyRole(user, companyId, roleId);
+        return saveRoleMenus(roleId, rows);
+    }
+
+    /** sys admin이고 권한그룹이 그 회사 것인지 (A07·A08 — 메뉴가 admin 회사에만 있다) */
+    private void requireCompanyRole(UserPrincipal user, Long companyId, Long roleId) {
         requireSysAdmin(user);
         RoleRes role = sysRoleMapper.selectRole(roleId);
         if (role == null || !Objects.equals(role.companyId(), companyId)) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
-        return toPreorder(sysMenuMapper.selectRoleMenuTree(companyId, roleId), RoleMenuTreeRes::menuId, RoleMenuTreeRes::parentId,
-                RoleMenuTreeRes::withDepth);
     }
 
     /** 권한그룹이 로그인 회사 것인지 (AS-IS는 화면이 자기 회사 권한만 보여 줘서 검사하지 않았다 — 05 §6 회사 조건) */

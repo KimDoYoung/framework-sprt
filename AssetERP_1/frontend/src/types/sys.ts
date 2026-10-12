@@ -147,6 +147,8 @@ export interface RoleMenuNode {
   depth: number;
   /** 메뉴번호 + ' ' + 메뉴명 (번호 없으면 메뉴명) */
   menuNoPlusNm: string;
+  /** 메뉴명(번호 없이) — A07 트리 */
+  menuNm?: string;
   seq?: string | null;
   note?: string | null;
   roleMenuId?: number | null;

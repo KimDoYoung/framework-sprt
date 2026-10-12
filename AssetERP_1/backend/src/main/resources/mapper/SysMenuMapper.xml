@@ -206,6 +206,7 @@
              THEN m.sys06_menu_nm
              ELSE m.sys06_menu_no || ' ' || m.sys06_menu_nm
         END                      AS menu_no_plus_nm,
+        m.sys06_menu_nm          AS menu_nm,
         m.sys06_seq              AS seq,
         m.sys06_note             AS note,
         r.sys07_role_menu_id     AS role_menu_id,

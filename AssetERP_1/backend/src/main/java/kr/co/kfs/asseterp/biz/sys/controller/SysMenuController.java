@@ -63,11 +63,20 @@ public class SysMenuController {
         return ApiResponse.ok(sysMenuService.updateRoleMenus(principal, roleId, rows));
     }
 
-    /** A08 권한그룹별 메뉴권한 복사 — 고른 회사·권한의 메뉴 트리 (AS-IS sys.Sys06_Menu.selectByRoleId(roleId, companyId)), sys admin만 */
+    /** A08 권한그룹별 메뉴권한 복사·A07 고객사별 메뉴권한 관리 — 고른 회사·권한의 메뉴 트리 (AS-IS sys.Sys06_Menu.selectByRoleId(roleId, companyId)), sys admin만 */
     @GetMapping("/companies/{companyId}/roles/{roleId}/menus")
     public ApiResponse<List<RoleMenuTreeRes>> getCompanyRoleMenuTree(@AuthenticationPrincipal UserPrincipal principal,
                                                                      @PathVariable Long companyId,
                                                                      @PathVariable Long roleId) {
         return ApiResponse.ok(sysMenuService.getCompanyRoleMenuTree(principal, companyId, roleId));
+    }
+
+    /** A07 고객사별 메뉴권한 관리 저장 (AS-IS sys.Sys06_Menu.updateRoleMenu) → 저장된 행, sys admin만 */
+    @PutMapping("/companies/{companyId}/roles/{roleId}/menus")
+    public ApiResponse<List<RoleMenuTreeRes>> updateCompanyRoleMenus(@AuthenticationPrincipal UserPrincipal principal,
+                                                                     @PathVariable Long companyId,
+                                                                     @PathVariable Long roleId,
+                                                                     @RequestBody List<RoleMenuSaveReq> rows) {
+        return ApiResponse.ok(sysMenuService.updateCompanyRoleMenus(principal, companyId, roleId, rows));
     }
 }
