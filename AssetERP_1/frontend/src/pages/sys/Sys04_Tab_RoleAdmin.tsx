@@ -42,7 +42,11 @@ export const Sys04_Tab_RoleAdmin: React.FC = () => {
   const companyColumnDefs = useMemo(buildGridCompany, []);
   const roleColumnDefs = useMemo(buildGridRole, []);
 
-  const selectedCompanyId = () => companyGridRef.current?.api.getSelectedRows()[0]?.companyId;
+  /** 조회 전에 선택돼 있던 고객사 — 조회 뒤 다시 선택한다 (사용자 결정 2026-10-12) */
+  const keepCompanyId = useRef<number | undefined>(undefined);
+
+  const selectedCompany = () => companyGridRef.current?.api?.getSelectedRows()[0];
+  const selectedCompanyId = () => selectedCompany()?.companyId;
   const targetCompanyId = () => (roleCompanyId.current ?? selectedCompanyId()) as number;
 
   const crud = useGridCrud<Role>({
@@ -54,8 +58,8 @@ export const Sys04_Tab_RoleAdmin: React.FC = () => {
     save: useCallback((rows: Role[]) => sysApi.updateCompanyRoles(targetCompanyId(), rows), []),
     // deleteRow() L238-242: GridDeleteData — 체크한 행
     remove: useCallback((ids: number[]) => sysApi.deleteCompanyRoles(targetCompanyId(), ids), []),
-    // insertRow() L197-209: 모델에 companyId만 넣는다(고객명은 저장 뒤 selectById로 채워짐)
-    newRow: () => ({ companyId: selectedCompanyId(), roleNm: '' }),
+    // insertRow() L197-209: 모델에 companyId를 넣는다. 고객명(보기 전용)도 선택 고객사로 보여 준다 (사용자 결정 2026-10-12 — 원본은 저장 뒤에 채워짐)
+    newRow: () => ({ companyId: selectedCompanyId(), companyNm: selectedCompany()?.companyNm, roleNm: '' }),
     firstEditField: 'roleNm',
     // deleteChk() L211-235
     deleteConfirm: '선택한 권한그룹을 삭제하시겠습니까?',
@@ -72,8 +76,9 @@ export const Sys04_Tab_RoleAdmin: React.FC = () => {
     crud.retrieve();
   };
 
-  // retrieve() L162-175: sys.Sys01_Company.selectByName(useYn = true, companyName) → 콜백에서 첫 행 선택 + retrieveRole()
+  // retrieve() L162-175: sys.Sys01_Company.selectByName(useYn = true, companyName) → 콜백에서 행 선택 + retrieveRole()
   const retrieve = useCallback(async () => {
+    keepCompanyId.current = selectedCompanyId();
     try {
       setCompanies(await sysApi.searchCompanies(searchText, true));
     } catch (err) {
@@ -81,12 +86,16 @@ export const Sys04_Tab_RoleAdmin: React.FC = () => {
     }
   }, [searchText]);
 
-  // retrieve() 콜백 L168-172: 첫 행이 있으면 select(0) → retrieveRole()
+  // retrieve() 콜백 L168-172: 원본은 첫 행 select(0) → retrieveRole().
+  // 사용자 결정(2026-10-12): 조회 전에 선택한 고객사가 결과에 있으면 그 고객사를 다시 선택해 조회한다(없으면 원본대로 첫 행)
   const onCompanyDataUpdated = () => {
-    const first = companyGridRef.current?.api.getDisplayedRowAtIndex(0);
-    if (!first?.data) return;
-    first.setSelected(true, true);
-    retrieveRole(first.data);
+    const api = companyGridRef.current?.api;
+    const kept = keepCompanyId.current != null ? api?.getRowNode(String(keepCompanyId.current)) : undefined;
+    const row = kept ?? api?.getDisplayedRowAtIndex(0);
+    if (!row?.data) return;
+    row.setSelected(true, true);
+    api?.ensureNodeVisible(row);
+    retrieveRole(row.data);
   };
 
   const update = crud.saveRows;

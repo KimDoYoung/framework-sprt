@@ -199,5 +199,12 @@ if want 023 || want E; then
   chk "023-3 archived 없음 문구" 1 "yunhee log trace deadbeef00000000 --archived" "archived gz" "!지난 날은"
 fi
 
+# ── 024 log --since-run 시작 시각 보정 검증 ──
+if want 024 || want F; then
+  chk "024-1 since-run 시작" 0 "yunhee run \"bash -c 'yunhee api GET /api/v1/emp/persons/1/careers >/dev/null; sleep 3'\" >/dev/null 2>&1 && yunhee log tail --since-run last" "persons/1/careers"
+  chk "024-1 runs 시각" 0 "yunhee runs -n 1 | awk -F'│' '/[0-9]{8}_[0-9]{6}/ {gsub(/[^0-9]/,\"\",\$2); gsub(/[^0-9]/,\"\",\$7); if (substr(\$2,9,6)==substr(\$7,9,6)) print \"time-matched\"}'" "time-matched"
+fi
+
 echo "합계: ✅ $PASS / ❌ $FAIL (전체 $N) · 원문 $LOG"
 [ $FAIL = 0 ]
+
