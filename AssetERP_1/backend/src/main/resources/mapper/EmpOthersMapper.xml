@@ -106,4 +106,36 @@
                  , #{hireDateLeaveCalc}
              WHERE NOT EXISTS ( SELECT * FROM upsert )
     </insert>
+
+    <!-- C03 비고 팝업: AS-IS emp02_others.selectById 중 noteAdmin.
+         수정: 원본 WHERE emp02_others_id = #{personId}(personId를 others ID로 비교하는 결함) → emp02_person_id (사용자 결정 2026-10-12) -->
+    <select id="selectNoteAdmin" resultType="kr.co.kfs.asseterp.biz.emp.dto.NoteAdminRes">
+        SELECT emp02_others_id    AS others_id,
+               emp02_person_id    AS person_id,
+               emp02_note_admin   AS note_admin
+          FROM emp01_person
+               INNER JOIN emp02_others ON emp02_person_id = emp01_person_id
+         WHERE emp02_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS modelUpdate: othersId 있으면 UpdateDataModel UPDATE. 팝업이 바꾸는 컬럼(emp02_note_admin)만 쓴다(05 §6 저장) -->
+    <update id="updateNoteAdmin">
+        UPDATE emp02_others
+           SET emp02_note_admin = #{noteAdmin}
+         WHERE emp02_others_id = #{othersId}
+           AND emp02_person_id = #{personId}
+    </update>
+
+    <!-- AS-IS modelUpdate: othersId 없으면 getSeq(f_create_seq) → UpdateDataModel INSERT -->
+    <insert id="insertNoteAdmin">
+        INSERT INTO emp02_others
+             ( emp02_others_id
+             , emp02_person_id
+             , emp02_note_admin
+             )
+        VALUES ( f_create_seq()
+             , #{personId}
+             , #{noteAdmin}
+             )
+    </insert>
 </mapper>

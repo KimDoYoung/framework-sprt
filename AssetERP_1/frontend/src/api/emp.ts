@@ -1,6 +1,6 @@
 import { apiClient } from './client';
-import { ApiResponse } from '../types/auth';
-import { Academic, Account, AddDeduct, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, Evaluation, Family, License, OrgInfo, Others, PersonSaveReq, Project, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson } from '../types/emp';
+import { ApiResponse, PageRes } from '../types/auth';
+import { Academic, Account, AddDeduct, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, Evaluation, Family, License, NoteAdmin, OrgInfo, Others, PersonSaveReq, Project, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -368,6 +368,26 @@ export const empEducationApi = {
     const { issueDate, content, educationYn, note, educationCorpNm } = src;
     const res = await apiClient.post<ApiResponse<number>>('v1/emp/educations/copy', { issueDate, content, educationYn, note, educationCorpNm, personIds });
     return res.data.data ?? 0;
+  },
+};
+
+/** C03 사용자정보 조회 (Emp01_Tab_UserInfo) — sys admin */
+export const empUserInfoApi = {
+  /** AS-IS emp.Emp01_Person.selectBySearchTextPaging (GridPagingLoader: offset·limit → 페이지 행 + 전체 건수) */
+  searchUserInfos: async (params: { companyId?: number | null; searchText: string; useYn: string; quitYn: string; offset: number; limit: number }): Promise<PageRes<UserInfo>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<UserInfo>>>('v1/emp/persons', { params });
+    return res.data.data ?? { total: 0, rows: [] };
+  },
+  /** AS-IS emp.Emp02_Others.selectById(personId) */
+  getNoteAdmin: async (personId: number): Promise<NoteAdmin> => {
+    const res = await apiClient.get<ApiResponse<NoteAdmin>>(`v1/emp/persons/${personId}/note-admin`);
+    return res.data.data;
+  },
+  /** AS-IS emp.Emp02_Others.modelUpdate → 다시 읽은 값 */
+  updateNoteAdmin: async (req: NoteAdmin): Promise<NoteAdmin> => {
+    const res = await apiClient.put<ApiResponse<NoteAdmin>>(`v1/emp/persons/${req.personId}/note-admin`,
+      { othersId: req.othersId, noteAdmin: req.noteAdmin });
+    return res.data.data;
   },
 };
 

@@ -6,6 +6,90 @@
 <!-- AS-IS server/emp/Emp01_Person (update · deleteTarget) + UpdateDataModel(emp01_person) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpPersonMapper">
 
+    <!-- C03 사용자정보 조회 공통 조건: AS-IS emp01_person.selectBySearchTextPaging(L115) WHERE 그대로 -->
+    <sql id="userInfoWhere">
+        <choose>
+            <when test="companyId != null">
+                AND emp01_company_id = #{companyId}
+            </when>
+        </choose>
+        <choose>
+            <when test="useYn == 'true'">
+                AND sys01_use_yn = 'true'
+            </when>
+        </choose>
+        <choose>
+            <when test="quitYn == 'true'">
+                AND emp03_trans_cd NOT IN ('900')
+            </when>
+        </choose>
+    </sql>
+
+    <!-- AS-IS emp01_person.selectBySearchTextPaging 그대로. 수정: COLLATE "ko_KR.utf8" → "ko-KR-x-icu"(B02), 바깥 SELECT를 * 대신 그리드 컬럼 별칭으로 -->
+    <select id="searchUserInfos" resultType="kr.co.kfs.asseterp.biz.emp.dto.UserInfoRes">
+        WITH paging_data AS (
+            SELECT *
+                 , ROW_NUMBER() OVER (ORDER BY sys01_company_nm COLLATE "ko-KR-x-icu" ASC, emp01_kor_nm COLLATE "ko-KR-x-icu" ASC) AS row_num
+                 , sys01_company_nm                                                     AS emp01_company_nm
+                 , f_get_empTrans(emp01_person_id, f_sysdate()::date, 'org_code_nm')    AS emp01_org_nm
+                 , f_get_empTrans(emp01_person_id, f_sysdate()::date, 'pos_nm')         AS emp01_pos_nm
+                 , f_get_emptrans(emp01_person_id, null, 'retire_date')                 AS emp01_retire_date
+                 , emp02_note_admin                                                     AS emp01_note_admin
+              FROM emp01_person
+                   INNER JOIN emp02_others ON emp02_person_id = emp01_person_id
+                   INNER JOIN emp03_trans ON emp03_person_id = emp01_person_id
+                   INNER JOIN sys01_company ON sys01_company_id = emp01_company_id
+             WHERE UPPER(CONCAT(sys01_company_nm
+                              , emp01_kor_nm
+                              , f_get_empTrans(emp01_person_id, f_sysdate()::date, 'org_code_nm')
+                              , emp01_office_telno
+                              , emp01_mobile_telno
+                              , emp02_note_admin)) LIKE UPPER(#{searchText})
+               AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                          FROM emp03_trans
+                                         WHERE emp03_person_id  = emp01_person_id
+                                           AND emp03_trans_date <![CDATA[ <= ]]> f_today() )
+               AND emp03_trans_cd NOT IN ('800')
+            <include refid="userInfoWhere"/>
+        )
+        SELECT emp01_person_id      AS person_id,
+               emp01_company_id     AS company_id,
+               emp01_company_nm     AS company_name,
+               emp01_kor_nm         AS kor_name,
+               emp01_emp_no         AS emp_no,
+               emp01_pos_nm         AS pos_name,
+               emp01_org_nm         AS org_name,
+               emp01_office_telno   AS office_tel_no,
+               emp01_mobile_telno   AS mobile_tel_no,
+               emp01_email_addr     AS email_address,
+               emp01_hire_date      AS hire_date,
+               emp01_retire_date    AS retire_date,
+               emp01_note_admin     AS note_admin
+          FROM paging_data
+         WHERE row_num <![CDATA[ > ]]> #{offset}
+         LIMIT #{limit}
+    </select>
+
+    <!-- AS-IS emp01_person.selectBySearchTextTotal 그대로 (검색 문자열에 조직명이 없는 것도 원본 그대로 — 작업기록 제안) -->
+    <select id="countUserInfos" resultType="int">
+        SELECT count(*)
+          FROM (SELECT *
+                     , sys01_company_nm                                                     AS emp01_company_nm
+                     , emp02_note_admin                                                     AS emp01_note_admin
+                  FROM emp01_person
+                  INNER JOIN emp02_others ON emp02_person_id = emp01_person_id
+                  INNER JOIN emp03_trans ON emp03_person_id = emp01_person_id
+                  INNER JOIN sys01_company ON sys01_company_id = emp01_company_id
+               ) t
+         WHERE UPPER(CONCAT(emp01_company_nm, emp01_kor_nm, emp01_office_telno, emp01_mobile_telno, emp01_note_admin)) LIKE UPPER(#{searchText})
+           AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                      FROM emp03_trans
+                                     WHERE emp03_person_id  = emp01_person_id
+                                       AND emp03_trans_date <![CDATA[ <= ]]> f_today() )
+           AND emp03_trans_cd NOT IN ('800')
+        <include refid="userInfoWhere"/>
+    </select>
+
     <!-- AS-IS UpdateDataModel UPDATE: 기본정보 탭 컬럼만, 로그인 회사 행만 -->
     <update id="updatePerson">
         UPDATE emp01_person

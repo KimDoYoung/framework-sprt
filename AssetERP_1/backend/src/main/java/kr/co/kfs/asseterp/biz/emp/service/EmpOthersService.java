@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.emp.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.NoteAdminRes;
+import kr.co.kfs.asseterp.biz.emp.dto.NoteAdminSaveReq;
 import kr.co.kfs.asseterp.biz.emp.dto.OthersRes;
 import kr.co.kfs.asseterp.biz.emp.dto.OthersSaveReq;
 import kr.co.kfs.asseterp.biz.emp.mapper.EmpOthersMapper;
@@ -35,5 +37,31 @@ public class EmpOthersService {
         }
         empOthersMapper.upsertOthers(req);
         return empOthersMapper.selectOthers(user.getCompanyId(), req.personId());
+    }
+
+    /** C03 비고 팝업: AS-IS emp.Emp02_Others.selectById(personId). 전 고객사 사원 → sys admin만 */
+    public NoteAdminRes getNoteAdmin(UserPrincipal user, Long personId) {
+        if (!user.isSysAdmin()) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        NoteAdminRes res = empOthersMapper.selectNoteAdmin(personId);
+        if (res == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return res;
+    }
+
+    /** C03 비고 팝업 저장: AS-IS emp.Emp02_Others.modelUpdate(othersId 없으면 getSeq → INSERT, 있으면 UPDATE). 다시 읽어 준다 */
+    @Transactional
+    public NoteAdminRes updateNoteAdmin(UserPrincipal user, Long personId, NoteAdminSaveReq req) {
+        if (!user.isSysAdmin()) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        if (req.othersId() == null) {
+            empOthersMapper.insertNoteAdmin(personId, req.noteAdmin());
+        } else if (empOthersMapper.updateNoteAdmin(personId, req.othersId(), req.noteAdmin()) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return empOthersMapper.selectNoteAdmin(personId);
     }
 }

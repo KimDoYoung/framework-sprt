@@ -4,6 +4,9 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.dto.PersonDeleteParam;
 import kr.co.kfs.asseterp.biz.emp.dto.PersonRow;
 import kr.co.kfs.asseterp.biz.emp.dto.PersonSaveReq;
+import kr.co.kfs.asseterp.biz.emp.dto.UserInfoRes;
+import kr.co.kfs.asseterp.biz.emp.dto.UserInfoSearchParam;
+import kr.co.kfs.asseterp.common.dto.PageRes;
 import kr.co.kfs.asseterp.biz.emp.mapper.EmpPersonMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
@@ -18,6 +21,20 @@ import org.springframework.transaction.annotation.Transactional;
 public class EmpPersonService {
 
     private final EmpPersonMapper empPersonMapper;
+
+    /**
+     * C03 사용자정보 조회: AS-IS emp.Emp01_Person.selectBySearchTextPaging(목록 + selectBySearchTextTotal 건수).
+     * 고객사 전체(companyId null)를 보는 관리자 화면 → sys admin만. LIKE '%검색어%'는 서버가 만든다(05 §6)
+     */
+    public PageRes<UserInfoRes> searchUserInfos(UserPrincipal user, Long companyId, String searchText, String useYn, String quitYn,
+                                                int offset, int limit) {
+        if (!user.isSysAdmin()) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        String like = "%" + (searchText == null ? "" : searchText) + "%";
+        UserInfoSearchParam param = new UserInfoSearchParam(companyId, like, useYn, quitYn, Math.max(offset, 0), limit > 0 ? limit : 100);
+        return new PageRes<>(empPersonMapper.countUserInfos(param), empPersonMapper.searchUserInfos(param));
+    }
 
     /** AS-IS update(UpdateDataModel): 기본정보 탭 1건 UPDATE. 화면은 목록 행을 다시 읽어 바꾼다 */
     @Transactional

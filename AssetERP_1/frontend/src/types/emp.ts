@@ -331,3 +331,27 @@ export interface Education {
   note?: string | null;
   educationCorpNm?: string | null;
 }
+
+/** 사용자정보 조회 행 (C03, GET /api/v1/emp/persons — AS-IS Emp01_PersonModel 중 그리드 컬럼) */
+export interface UserInfo {
+  personId: number;
+  companyId?: number | null;
+  companyName?: string | null;
+  korName?: string | null;
+  empNo?: string | null;
+  posName?: string | null;
+  orgName?: string | null;
+  officeTelNo?: string | null;
+  mobileTelNo?: string | null;
+  emailAddress?: string | null;
+  hireDate?: string | null;
+  retireDate?: string | null;
+  noteAdmin?: string | null;
+}
+
+/** 비고(시스템관리자전용) 팝업 (C03 Emp02_Edit_Note, GET/PUT /api/v1/emp/persons/{personId}/note-admin) */
+export interface NoteAdmin {
+  othersId?: number | null;
+  personId: number;
+  noteAdmin?: string | null;
+}

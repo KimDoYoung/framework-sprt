@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.emp.mapper;
 
+import kr.co.kfs.asseterp.biz.emp.dto.NoteAdminRes;
 import kr.co.kfs.asseterp.biz.emp.dto.OthersRes;
 import kr.co.kfs.asseterp.biz.emp.dto.OthersSaveReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -13,4 +14,13 @@ public interface EmpOthersMapper {
 
     /** AS-IS emp02_others.upsert */
     int upsertOthers(OthersSaveReq req);
+
+    /** C03 비고 팝업: AS-IS emp02_others.selectById (사람 기준으로 고침). 없으면 null */
+    NoteAdminRes selectNoteAdmin(@Param("personId") Long personId);
+
+    /** AS-IS modelUpdate → UpdateDataModel(emp02_others) UPDATE 중 emp02_note_admin. 그 사람의 그 행이 없으면 0 */
+    int updateNoteAdmin(@Param("personId") Long personId, @Param("othersId") Long othersId, @Param("noteAdmin") String noteAdmin);
+
+    /** AS-IS modelUpdate: othersId == null → getSeq + INSERT */
+    int insertNoteAdmin(@Param("personId") Long personId, @Param("noteAdmin") String noteAdmin);
 }

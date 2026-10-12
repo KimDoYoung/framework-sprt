@@ -94,3 +94,9 @@ export interface ApiResponse<T> {
   message: string;
   data: T;
 }
+
+/** 서버 페이징 응답 (백엔드 common.dto.PageRes — AS-IS GridPagingLoader: 목록 + 전체 건수) */
+export interface PageRes<T> {
+  total: number;
+  rows: T[];
+}
