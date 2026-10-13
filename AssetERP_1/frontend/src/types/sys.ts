@@ -223,3 +223,38 @@ export interface CompanyMenuYn extends CompanyCopy {
   menuYn: string;
   companyMenuId?: number | null;
 }
+
+/** 코드구분 한 행 (A13, AS-IS Sys08_CodeKindModel). sysYn은 DB 값 그대로('true'/'false') — 시스템 체크박스 */
+export interface CodeKind {
+  codeKindId: number;
+  kindCd: string;
+  kindNm: string;
+  sysYn: string;
+  note?: string | null;
+}
+
+/** 코드 관리 한 행 (A13, AS-IS Sys09_CodeModel). 날짜는 'yyyy-MM-dd', closeYn은 'true'/'false' */
+export interface CodeAdmin {
+  codeId: number;
+  codeKindId: number;
+  companyId: number;
+  code: string;
+  name: string;
+  seq?: string | null;
+  closeYn?: string | null;
+  applyDate?: string | null;
+  closeDate?: string | null;
+  note?: string | null;
+  lastDate?: string | null;
+}
+
+/** 코드 그룹 한 행 (A13, AS-IS Sys13_CodeGroupModel). codeId 0 = 그룹 헤더, 아니면 소속 코드(code·name) */
+export interface CodeGroup {
+  codeGroupId: number;
+  kindGroupCd: string;
+  kindGroupNm: string;
+  codeKindId: number;
+  codeId: number;
+  code?: string | null;
+  name?: string | null;
+}

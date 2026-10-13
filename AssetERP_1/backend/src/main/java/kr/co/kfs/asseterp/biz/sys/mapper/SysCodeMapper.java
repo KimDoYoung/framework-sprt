@@ -1,8 +1,13 @@
 package kr.co.kfs.asseterp.biz.sys.mapper;
 
+import kr.co.kfs.asseterp.biz.sys.dto.CodeAdminRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CodeAdminRow;
+import kr.co.kfs.asseterp.biz.sys.dto.CodeDeleteParam;
+import kr.co.kfs.asseterp.biz.sys.dto.CodeListParam;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeSearchParam;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -11,4 +16,20 @@ import java.util.List;
 public interface SysCodeMapper {
     /** AS-IS selectByCodeKind */
     List<CodeRes> searchCodesByKind(CodeSearchParam param);
+
+    // ── A13 Sys09_Grid_Code: 코드 관리 (AS-IS selectByCodeKindId, selectById + UpdateDataModel(sys09_code)) ──
+
+    /** AS-IS selectByCodeKindId */
+    List<CodeAdminRes> searchCodesByKindId(CodeListParam param);
+
+    /** AS-IS selectById */
+    CodeAdminRes selectCode(@Param("codeId") Long codeId);
+
+    Long selectNextId();
+
+    int insertCode(CodeAdminRow row);
+
+    int updateCode(CodeAdminRow row);
+
+    int deleteCodes(CodeDeleteParam param);
 }

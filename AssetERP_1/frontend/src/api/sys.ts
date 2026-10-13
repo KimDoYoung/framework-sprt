@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, LoginSecure, MenuCopy, MenuNode, MenuSaveReq, Role, RoleMenuCopyReq, RoleMenuNode, UserRole } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, LoginSecure, MenuCopy, MenuNode, MenuSaveReq, Role, RoleMenuCopyReq, RoleMenuNode, UserRole } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -339,5 +339,85 @@ export const sysApi = {
     const body = rows.map(({ companyId, companyMenuId, menuYn }) => ({ companyId, companyMenuId, menuYn }));
     const res = await apiClient.put<ApiResponse<CompanyMenuYn[]>>('v1/sys/companies/menu-yn', body, { params: { menuId } });
     return res.data.data ?? [];
+  },
+
+  // ── A13 시스템 공통코드 관리 (Sys08_Tab_CodeKindAdmin) ──
+
+  /** AS-IS sys.Sys08_CodeKind.selectByKindName(kindName, sysYn): 서버가 '%' + 이름 + '%' (비면 '%'), sysYn 비면 'false' */
+  searchCodeKinds: async (kindName: string, sysYn: string): Promise<CodeKind[]> => {
+    const res = await apiClient.get<ApiResponse<CodeKind[]>>('v1/sys/code-kinds', { params: { kindName, sysYn } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys08_CodeKind.update: 추가·변경 행 → 저장된 행(요청 순서) */
+  updateCodeKinds: async (rows: CodeKind[]): Promise<CodeKind[]> => {
+    const body = rows.map(({ codeKindId, kindCd, kindNm, sysYn, note }) => ({ codeKindId, kindCd, kindNm, sysYn, note: note || null }));
+    const res = await apiClient.put<ApiResponse<CodeKind[]>>('v1/sys/code-kinds', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys08_CodeKind.delete → 지운 건수 */
+  deleteCodeKinds: async (codeKindIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/code-kinds', { data: codeKindIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys09_Code.selectByCodeKindId: 시스템 코드구분이면 서버 SQL이 회사 0으로 바꾼다. 회사는 sys admin만 지정 */
+  searchCodesByKind: async (codeKindId: number, companyId: number | undefined, searchText: string): Promise<CodeAdmin[]> => {
+    const res = await apiClient.get<ApiResponse<CodeAdmin[]>>(`v1/sys/code-kinds/${codeKindId}/codes`, { params: { companyId, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys09_Code.update: 추가·변경 행 → 저장된 행(요청 순서). 빈 날짜·메모는 null(GXT 빈 값) */
+  updateCodeAdmins: async (rows: CodeAdmin[]): Promise<CodeAdmin[]> => {
+    const body = rows.map(({ codeId, codeKindId, companyId, code, name, seq, closeYn, applyDate, closeDate, note }) => ({
+      codeId, codeKindId, companyId, code, name, seq: seq || null, closeYn, applyDate: applyDate || null, closeDate: closeDate || null, note: note || null,
+    }));
+    const res = await apiClient.put<ApiResponse<CodeAdmin[]>>('v1/sys/codes', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys09_Code.delete → 지운 건수 (companyId 범위 안에서만) */
+  deleteCodeAdmins: async (companyId: number | undefined, codeIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/codes', { params: { companyId }, data: codeIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys13_CodeGroup.selectByGroupCodeKind: 코드구분의 그룹 헤더 */
+  searchCodeGroups: async (codeKindId: number): Promise<CodeGroup[]> => {
+    const res = await apiClient.get<ApiResponse<CodeGroup[]>>(`v1/sys/code-kinds/${codeKindId}/code-groups`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys13_CodeGroup.update: 헤더 행 → 저장된 행(요청 순서) */
+  updateCodeGroups: async (rows: CodeGroup[]): Promise<CodeGroup[]> => {
+    const body = rows.map(({ codeGroupId, codeKindId, kindGroupCd, kindGroupNm }) => ({ codeGroupId, codeKindId, kindGroupCd, kindGroupNm }));
+    const res = await apiClient.put<ApiResponse<CodeGroup[]>>('v1/sys/code-groups', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys13_CodeGroup.deleteAll → 지운 그룹 수 */
+  deleteCodeGroups: async (codeGroupIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/code-groups', { data: codeGroupIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys13_CodeGroup.selectByKindGroupCode: 그룹에 속한 코드(코드의 회사 = companyId) */
+  searchCodeGroupMembers: async (kindGroupCd: string, codeKindId: number, companyId: number): Promise<CodeGroup[]> => {
+    const res = await apiClient.get<ApiResponse<CodeGroup[]>>('v1/sys/code-groups/members', { params: { kindGroupCd, codeKindId, companyId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys13_CodeGroup.insert → 넣은 건수 */
+  insertCodeGroupMembers: async (rows: CodeGroup[]): Promise<number> => {
+    const body = rows.map(({ codeKindId, kindGroupCd, kindGroupNm, codeId }) => ({ codeKindId, kindGroupCd, kindGroupNm, codeId }));
+    const res = await apiClient.post<ApiResponse<number>>('v1/sys/code-groups/members', body);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys13_CodeGroup.delete → 지운 건수 */
+  deleteCodeGroupMembers: async (codeGroupIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/code-groups/members', { data: codeGroupIds });
+    return res.data.data ?? 0;
   },
 };
