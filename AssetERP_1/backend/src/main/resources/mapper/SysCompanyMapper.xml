@@ -125,6 +125,128 @@
         UPDATE sys01_company SET sys01_note = #{note} WHERE sys01_company_id = #{companyId}
     </update>
 
+    <!-- ── A15-3 탭 2~4: AS-IS selectById(L115) 중 탭 그리드 컬럼. 이름은 원본 f_cdnm 식 그대로, Y/N·코드는 모델 getter 기본값 COALESCE ── -->
+
+    <!-- 기본정보 탭 (Sys01_TabPage_Info02) -->
+    <select id="selectCompanyBasic" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyBasicRes">
+        SELECT sys01_company_id                AS company_id,
+               sys01_start_date::date          AS start_date,
+               sys01_biz_no                    AS biz_no,
+               to_decrypts(sys01_corp_reg_no)  AS dec_corp_reg_no,
+               sys01_emp_info                  AS emp_info,
+               sys01_mobile_tel_no             AS mobile_tel_no,
+               sys01_office_tel_no             AS office_tel_no,
+               sys01_office_fax_no             AS office_fax_no,
+               sys01_email_addr                AS email_addr,
+               sys01_zip_cd                    AS zip_cd,
+               sys01_zip_addr                  AS zip_addr,
+               sys01_zip_detail                AS zip_detail
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS getCorpRegNo(to_encrypts)는 법인등록번호가 있을 때만 불리고, 없으면 암호값을 그대로 둔다 -->
+    <update id="updateCompanyBasic">
+        UPDATE sys01_company
+           SET sys01_start_date    = #{startDate},
+               sys01_biz_no        = #{bizNo},
+               <if test="decCorpRegNo != null">
+               sys01_corp_reg_no   = to_encrypts(#{decCorpRegNo}),
+               </if>
+               sys01_emp_info      = #{empInfo},
+               sys01_mobile_tel_no = #{mobileTelNo},
+               sys01_office_tel_no = #{officeTelNo},
+               sys01_office_fax_no = #{officeFaxNo},
+               sys01_email_addr    = #{emailAddr},
+               sys01_zip_cd        = #{zipCd},
+               sys01_zip_addr      = #{zipAddr},
+               sys01_zip_detail    = #{zipDetail}
+         WHERE sys01_company_id = #{companyId}
+    </update>
+
+    <!-- 전자결재·내부통제 탭 (Sys01_TabPage_Info03) -->
+    <select id="selectCompanyApproval" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyApprovalRes">
+        SELECT sys01_company_id                                                                           AS company_id,
+               COALESCE(sys01_appr_step_lock_yn, 'true')                                                  AS appr_step_lock_yn,
+               sys01_company_rep_nm                                                                       AS company_rep_nm,
+               COALESCE(sys01_apr_manager_info_yn, 'false')                                               AS apr_manager_info_yn,
+               COALESCE(sys01_dcr_numbering_cd, '1')                                                      AS dcr_numbering_cd,
+               f_cdnm('DcrNumberingCode', sys01_dcr_numbering_cd, sys01_company_id, f_sysdate())          AS dcr_numbering_nm,
+               COALESCE(sys01_dcr_detail_use_yn, 'false')                                                 AS dcr_detail_use_yn,
+               sys01_ics_check_cycle_type                                                                 AS ics_check_cycle_type,
+               f_cdnm('IcsCheckListCycleType', sys01_ics_check_cycle_type, sys01_company_id, f_sysdate()) AS ics_check_cycle_nm,
+               sys01_ics_comply_cycle_type                                                                AS ics_comply_cycle_type,
+               f_cdnm('IcsCheckListCycleType', sys01_ics_comply_cycle_type, sys01_company_id, f_sysdate()) AS ics_comply_cycle_nm,
+               sys01_ics_non_stay_yn                                                                      AS ics_non_stay_yn,
+               COALESCE(sys01_flt_only_curr_yn, 'false')                                                  AS flt_only_curr_yn,
+               COALESCE(sys01_ics_guide_yn, 'false')                                                      AS ics_guide_yn
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <update id="updateCompanyApproval">
+        UPDATE sys01_company
+           SET sys01_appr_step_lock_yn     = #{apprStepLockYn},
+               sys01_company_rep_nm        = #{companyRepNm},
+               sys01_apr_manager_info_yn   = #{aprManagerInfoYn},
+               sys01_dcr_numbering_cd      = #{dcrNumberingCd},
+               sys01_dcr_detail_use_yn     = #{dcrDetailUseYn},
+               sys01_ics_check_cycle_type  = #{icsCheckCycleType},
+               sys01_ics_comply_cycle_type = #{icsComplyCycleType},
+               sys01_ics_non_stay_yn       = #{icsNonStayYn},
+               sys01_flt_only_curr_yn      = #{fltOnlyCurrYn},
+               sys01_ics_guide_yn          = #{icsGuideYn}
+         WHERE sys01_company_id = #{companyId}
+    </update>
+
+    <!-- 경영·회계 탭 (Sys01_TabPage_Info04) -->
+    <select id="selectCompanyAccount" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyAccountRes">
+        SELECT sys01_company_id                                                                              AS company_id,
+               sys01_leave_month_cd                                                                          AS leave_month_cd,
+               f_cdnm('MonthsCode', sys01_leave_month_cd, sys01_company_id, f_sysdate())                     AS leave_month_nm,
+               COALESCE(sys01_leave_yn, 'false')                                                             AS leave_yn,
+               COALESCE(sys01_leave_compulsion_rt, 100)                                                      AS leave_compulsion_rt,
+               sys01_tax_type                                                                                AS tax_type,
+               f_cdnm('TaxType', sys01_tax_type, sys01_company_id, f_sysdate())                              AS tax_type_nm,
+               COALESCE(sys01_card_real_user_yn, 'false')                                                    AS card_real_user_yn,
+               sys01_income_tax_filing_cd                                                                    AS income_tax_filing_cd,
+               f_cdnm('IncomeTaxFilingCode', sys01_income_tax_filing_cd, sys01_company_id, f_sysdate())      AS income_tax_filing_nm,
+               sys01_account_close_month                                                                     AS account_close_month,
+               f_cdnm('MonthsCode', sys01_account_close_month, sys01_company_id, f_sysdate())                AS account_close_month_nm,
+               sys01_owner_capital_apply_cd                                                                  AS owner_capital_apply_cd,
+               f_cdnm('OwnerCapitalApplyDateType', sys01_owner_capital_apply_cd, sys01_company_id, f_sysdate()) AS owner_capital_apply_nm,
+               COALESCE(sys01_ast_manager_auto_yn, 'false')                                                  AS ast_manager_auto_yn,
+               sys01_ast_eval_cycle_cd                                                                       AS ast_eval_cycle_cd,
+               f_cdnm('AssetEvalCycleCode', sys01_ast_eval_cycle_cd, sys01_company_id, f_sysdate())          AS ast_eval_cycle_nm,
+               sys01_emp_eval_cycle_cd                                                                       AS emp_eval_cycle_cd,
+               f_cdnm('CycleCode', sys01_emp_eval_cycle_cd, sys01_company_id, f_sysdate())                   AS emp_eval_cycle_nm,
+               sys01_emp_eval_month_cd                                                                       AS emp_eval_month_cd,
+               f_cdnm('MonthsCode', sys01_emp_eval_month_cd, sys01_company_id, f_sysdate())                  AS emp_eval_month_nm
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <update id="updateCompanyAccount">
+        UPDATE sys01_company
+           SET sys01_leave_month_cd         = #{leaveMonthCd},
+               sys01_leave_yn               = #{leaveYn},
+               sys01_leave_compulsion_rt    = #{leaveCompulsionRt},
+               sys01_tax_type               = #{taxType},
+               sys01_card_real_user_yn      = #{cardRealUserYn},
+               sys01_income_tax_filing_cd   = #{incomeTaxFilingCd},
+               sys01_account_close_month    = #{accountCloseMonth},
+               sys01_owner_capital_apply_cd = #{ownerCapitalApplyCd},
+               sys01_ast_manager_auto_yn    = #{astManagerAutoYn},
+               sys01_ast_eval_cycle_cd      = #{astEvalCycleCd},
+               sys01_emp_eval_cycle_cd      = #{empEvalCycleCd},
+               sys01_emp_eval_month_cd      = #{empEvalMonthCd}
+         WHERE sys01_company_id = #{companyId}
+    </update>
+
+    <select id="countByBizNoExcept" resultType="int">
+        SELECT count(*) FROM sys01_company WHERE sys01_biz_no = #{bizNo} AND sys01_company_id &lt;&gt; #{companyId}
+    </select>
+
     <select id="countByLocNmExcept" resultType="int">
         SELECT count(*) FROM sys01_company WHERE LOWER(sys01_loc_nm) = LOWER(#{locNm}) AND sys01_company_id &lt;&gt; #{companyId}
     </select>

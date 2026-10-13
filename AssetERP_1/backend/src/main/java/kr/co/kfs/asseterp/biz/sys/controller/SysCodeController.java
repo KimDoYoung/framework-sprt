@@ -32,6 +32,13 @@ public class SysCodeController {
         return ApiResponse.ok(sysCodeService.searchCodes(principal, kindCd));
     }
 
+    /** 코드그룹 콤보 (AS-IS CommonComboBoxField → sys.Sys00_Common.selectByKindGroupCode) */
+    @GetMapping("/by-group")
+    public ApiResponse<List<CodeRes>> searchCodesByKindGroup(@AuthenticationPrincipal UserPrincipal principal,
+                                                             @RequestParam String kindGroupCd) {
+        return ApiResponse.ok(sysCodeService.searchCodesByKindGroup(principal, kindGroupCd));
+    }
+
     /** AS-IS sys.Sys09_Code.update → 저장된 행(요청 순서). 회사는 행의 companyId(sys admin만 로그인 회사와 다르게) */
     @PutMapping
     public ApiResponse<List<CodeAdminRes>> updateCodes(@AuthenticationPrincipal UserPrincipal principal,

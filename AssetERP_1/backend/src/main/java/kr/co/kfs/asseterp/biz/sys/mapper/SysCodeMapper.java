@@ -17,6 +17,9 @@ public interface SysCodeMapper {
     /** AS-IS selectByCodeKind */
     List<CodeRes> searchCodesByKind(CodeSearchParam param);
 
+    /** AS-IS selectByKindGroupCode — param.kindCode에 코드그룹(sys13_kind_group_cd)을 넣는다 */
+    List<CodeRes> searchCodesByKindGroup(CodeSearchParam param);
+
     // ── A13 Sys09_Grid_Code: 코드 관리 (AS-IS selectByCodeKindId, selectById + UpdateDataModel(sys09_code)) ──
 
     /** AS-IS selectByCodeKindId */

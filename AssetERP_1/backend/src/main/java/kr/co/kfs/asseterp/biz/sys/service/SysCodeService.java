@@ -32,6 +32,11 @@ public class SysCodeService {
         return sysCodeMapper.searchCodesByKind(new CodeSearchParam(user.getCompanyId(), kindCd));
     }
 
+    /** AS-IS Sys00_Common.selectByKindGroupCode L91-94 (CommonComboBoxField): 로그인 회사, 코드그룹, 오늘 기준 */
+    public List<CodeRes> searchCodesByKindGroup(UserPrincipal user, String kindGroupCd) {
+        return sysCodeMapper.searchCodesByKindGroup(new CodeSearchParam(user.getCompanyId(), kindGroupCd));
+    }
+
     // ── A13 Sys09_Grid_Code: 코드 관리 ──
 
     /**

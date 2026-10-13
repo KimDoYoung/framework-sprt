@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, LoginSecure, MenuCopy, MenuNode, MenuSaveReq, Role, RoleMenuCopyReq, RoleMenuNode, UserRole } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuNode, MenuSaveReq, Role, RoleMenuCopyReq, RoleMenuNode, UserRole } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -133,6 +133,55 @@ export const sysApi = {
     const body = { ...row, loginSecureYn: yn(row.loginSecureYn), assetYn: yn(row.assetYn), advisYn: yn(row.advisYn), pbsYn: yn(row.pbsYn), useYn: yn(row.useYn) };
     const res = await apiClient.put<ApiResponse<CompanyManage>>(`v1/sys/companies/${row.companyId}/manage`, body);
     return res.data.data;
+  },
+
+  // ── A15-3 기본정보·전자결재/내부통제·경영/회계 탭 (Sys01_TabPage_Info02·03·04) ──
+
+  /** AS-IS sys.Sys01_Company.selectById (기본정보 컬럼) */
+  getCompanyBasic: async (companyId: number): Promise<CompanyBasic> => {
+    const res = await apiClient.get<ApiResponse<CompanyBasic>>(`v1/sys/companies/${companyId}/basic`);
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys01_Company.getCorpRegNo(법인등록번호 암호화) + update → 저장된 행 */
+  updateCompanyBasic: async (row: CompanyBasic): Promise<CompanyBasic> => {
+    const res = await apiClient.put<ApiResponse<CompanyBasic>>(`v1/sys/companies/${row.companyId}/basic`, row);
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys01_Company.selectById (전자결재·내부통제 컬럼) */
+  getCompanyApproval: async (companyId: number): Promise<CompanyApproval> => {
+    const res = await apiClient.get<ApiResponse<CompanyApproval>>(`v1/sys/companies/${companyId}/approval`);
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys01_Company.update → 저장된 행. 체크박스 값은 'true'/'false'로 보낸다 */
+  updateCompanyApproval: async (row: CompanyApproval): Promise<CompanyApproval> => {
+    const yn = (v: unknown) => (v == null ? null : String(v));
+    const body = { ...row, apprStepLockYn: yn(row.apprStepLockYn), aprManagerInfoYn: yn(row.aprManagerInfoYn), dcrDetailUseYn: yn(row.dcrDetailUseYn),
+      icsNonStayYn: yn(row.icsNonStayYn), fltOnlyCurrYn: yn(row.fltOnlyCurrYn), icsGuideYn: yn(row.icsGuideYn) };
+    const res = await apiClient.put<ApiResponse<CompanyApproval>>(`v1/sys/companies/${row.companyId}/approval`, body);
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys01_Company.selectById (경영·회계 컬럼) */
+  getCompanyAccount: async (companyId: number): Promise<CompanyAccount> => {
+    const res = await apiClient.get<ApiResponse<CompanyAccount>>(`v1/sys/companies/${companyId}/account`);
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys01_Company.update → 저장된 행. 체크박스 값은 'true'/'false'로 보낸다 */
+  updateCompanyAccount: async (row: CompanyAccount): Promise<CompanyAccount> => {
+    const yn = (v: unknown) => (v == null ? null : String(v));
+    const body = { ...row, leaveYn: yn(row.leaveYn), cardRealUserYn: yn(row.cardRealUserYn), astManagerAutoYn: yn(row.astManagerAutoYn) };
+    const res = await apiClient.put<ApiResponse<CompanyAccount>>(`v1/sys/companies/${row.companyId}/account`, body);
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys00_Common.selectByKindGroupCode (CommonComboBoxField): 로그인 회사, 코드그룹, 오늘 기준 */
+  searchCodesByKindGroup: async (kindGroupCd: string): Promise<Code[]> => {
+    const res = await apiClient.get<ApiResponse<Code[]>>('v1/sys/codes/by-group', { params: { kindGroupCd } });
+    return res.data.data ?? [];
   },
 
   /** AS-IS sys.Sys01_Company.updateNote (비고 팝업) */

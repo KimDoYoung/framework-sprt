@@ -90,6 +90,65 @@ export interface CompanyManage {
   bizNo?: string | null;
 }
 
+/** 기본정보 탭 행 (GET /api/v1/sys/companies/{id}/basic, AS-IS Sys01_TabPage_Info02). 법인등록번호는 복호화한 값 */
+export interface CompanyBasic {
+  companyId: number;
+  startDate?: string | null;
+  bizNo?: string | null;
+  decCorpRegNo?: string | null;
+  empInfo?: string | null;
+  mobileTelNo?: string | null;
+  officeTelNo?: string | null;
+  officeFaxNo?: string | null;
+  emailAddr?: string | null;
+  zipCd?: string | null;
+  zipAddr?: string | null;
+  zipDetail?: string | null;
+}
+
+/** 전자결재·내부통제 탭 행 (GET /api/v1/sys/companies/{id}/approval, AS-IS Sys01_TabPage_Info03). Y/N은 'true'/'false' */
+export interface CompanyApproval {
+  companyId: number;
+  apprStepLockYn?: string | boolean | null;
+  companyRepNm?: string | null;
+  aprManagerInfoYn?: string | boolean | null;
+  dcrNumberingCd?: string | null;
+  dcrNumberingNm?: string | null;
+  dcrDetailUseYn?: string | boolean | null;
+  icsCheckCycleType?: string | null;
+  icsCheckCycleNm?: string | null;
+  icsComplyCycleType?: string | null;
+  icsComplyCycleNm?: string | null;
+  icsNonStayYn?: string | boolean | null;
+  fltOnlyCurrYn?: string | boolean | null;
+  icsGuideYn?: string | boolean | null;
+}
+
+/** 경영·회계 탭 행 (GET /api/v1/sys/companies/{id}/account, AS-IS Sys01_TabPage_Info04). Y/N은 'true'/'false' */
+export interface CompanyAccount {
+  companyId: number;
+  leaveMonthCd?: string | null;
+  leaveMonthNm?: string | null;
+  leaveYn?: string | boolean | null;
+  leaveCompulsionRt?: number | null;
+  taxType?: string | null;
+  taxTypeNm?: string | null;
+  cardRealUserYn?: string | boolean | null;
+  incomeTaxFilingCd?: string | null;
+  incomeTaxFilingNm?: string | null;
+  accountCloseMonth?: string | null;
+  accountCloseMonthNm?: string | null;
+  ownerCapitalApplyCd?: string | null;
+  ownerCapitalApplyNm?: string | null;
+  astManagerAutoYn?: string | boolean | null;
+  astEvalCycleCd?: string | null;
+  astEvalCycleNm?: string | null;
+  empEvalCycleCd?: string | null;
+  empEvalCycleNm?: string | null;
+  empEvalMonthCd?: string | null;
+  empEvalMonthNm?: string | null;
+}
+
 /** 공인IP (GET /api/v1/sys/companies/{id}/login-secures, AS-IS Sys29_LoginSecureModel) */
 export interface LoginSecure {
   loginSecureId: number;

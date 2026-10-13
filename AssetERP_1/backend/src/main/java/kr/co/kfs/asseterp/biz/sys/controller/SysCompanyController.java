@@ -1,6 +1,12 @@
 package kr.co.kfs.asseterp.biz.sys.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyAccountReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyAccountRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyApprovalReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyApprovalRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyBasicReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyBasicRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCopyRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCreateReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageReq;
@@ -82,6 +88,53 @@ public class SysCompanyController {
                 req.emgrcyPasswd(), req.erpProductCd(), req.contType(), req.noticeDate(), req.closeDate(), req.icamCompanyCd(),
                 req.icamAdvisCompanyCd(), req.assetYn(), req.advisYn(), req.pbsYn(), req.useYn());
         return ApiResponse.ok(sysCompanyService.updateCompanyManage(principal, body));
+    }
+
+    /** 기본정보 탭 (AS-IS Sys01_TabPage_Info02 → sys.Sys01_Company.selectById) */
+    @GetMapping("/{companyId}/basic")
+    public ApiResponse<CompanyBasicRes> getCompanyBasic(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long companyId) {
+        return ApiResponse.ok(sysCompanyService.getCompanyBasic(principal, companyId));
+    }
+
+    /** 기본정보 탭 저장 (AS-IS sys.Sys01_Company.getCorpRegNo + update) → 저장된 행 */
+    @PutMapping("/{companyId}/basic")
+    public ApiResponse<CompanyBasicRes> updateCompanyBasic(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long companyId,
+                                                           @RequestBody CompanyBasicReq req) {
+        CompanyBasicReq body = new CompanyBasicReq(companyId, req.startDate(), req.bizNo(), req.decCorpRegNo(), req.empInfo(),
+                req.mobileTelNo(), req.officeTelNo(), req.officeFaxNo(), req.emailAddr(), req.zipCd(), req.zipAddr(), req.zipDetail());
+        return ApiResponse.ok(sysCompanyService.updateCompanyBasic(principal, body));
+    }
+
+    /** 전자결재·내부통제 탭 (AS-IS Sys01_TabPage_Info03 → sys.Sys01_Company.selectById) */
+    @GetMapping("/{companyId}/approval")
+    public ApiResponse<CompanyApprovalRes> getCompanyApproval(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long companyId) {
+        return ApiResponse.ok(sysCompanyService.getCompanyApproval(principal, companyId));
+    }
+
+    /** 전자결재·내부통제 탭 저장 (AS-IS sys.Sys01_Company.update) → 저장된 행 */
+    @PutMapping("/{companyId}/approval")
+    public ApiResponse<CompanyApprovalRes> updateCompanyApproval(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long companyId,
+                                                                 @RequestBody CompanyApprovalReq req) {
+        CompanyApprovalReq body = new CompanyApprovalReq(companyId, req.apprStepLockYn(), req.companyRepNm(), req.aprManagerInfoYn(),
+                req.dcrNumberingCd(), req.dcrDetailUseYn(), req.icsCheckCycleType(), req.icsComplyCycleType(), req.icsNonStayYn(),
+                req.fltOnlyCurrYn(), req.icsGuideYn());
+        return ApiResponse.ok(sysCompanyService.updateCompanyApproval(principal, body));
+    }
+
+    /** 경영·회계 탭 (AS-IS Sys01_TabPage_Info04 → sys.Sys01_Company.selectById) */
+    @GetMapping("/{companyId}/account")
+    public ApiResponse<CompanyAccountRes> getCompanyAccount(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long companyId) {
+        return ApiResponse.ok(sysCompanyService.getCompanyAccount(principal, companyId));
+    }
+
+    /** 경영·회계 탭 저장 (AS-IS sys.Sys01_Company.update) → 저장된 행 */
+    @PutMapping("/{companyId}/account")
+    public ApiResponse<CompanyAccountRes> updateCompanyAccount(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long companyId,
+                                                               @RequestBody CompanyAccountReq req) {
+        CompanyAccountReq body = new CompanyAccountReq(companyId, req.leaveMonthCd(), req.leaveYn(), req.leaveCompulsionRt(), req.taxType(),
+                req.cardRealUserYn(), req.incomeTaxFilingCd(), req.accountCloseMonth(), req.ownerCapitalApplyCd(), req.astManagerAutoYn(),
+                req.astEvalCycleCd(), req.empEvalCycleCd(), req.empEvalMonthCd());
+        return ApiResponse.ok(sysCompanyService.updateCompanyAccount(principal, body));
     }
 
     /** 비고 팝업 (AS-IS sys.Sys01_Company.updateNote) */

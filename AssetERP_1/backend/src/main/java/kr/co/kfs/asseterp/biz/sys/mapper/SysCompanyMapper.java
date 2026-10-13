@@ -1,5 +1,11 @@
 package kr.co.kfs.asseterp.biz.sys.mapper;
 
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyAccountReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyAccountRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyApprovalReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyApprovalRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyBasicReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyBasicRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCopyRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuYnRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageReq;
@@ -40,6 +46,25 @@ public interface SysCompanyMapper {
 
     /** AS-IS updateNote */
     int updateNote(@Param("companyId") Long companyId, @Param("note") String note);
+
+    /** 기본정보 탭 (AS-IS selectById 중 Info02 컬럼) */
+    CompanyBasicRes selectCompanyBasic(Long companyId);
+
+    /** 기본정보 탭 저장 — 법인등록번호가 있으면 to_encrypts (AS-IS getCorpRegNo) */
+    int updateCompanyBasic(CompanyBasicReq req);
+
+    /** 전자결재·내부통제 탭 (AS-IS selectById 중 Info03 컬럼) */
+    CompanyApprovalRes selectCompanyApproval(Long companyId);
+
+    int updateCompanyApproval(CompanyApprovalReq req);
+
+    /** 경영·회계 탭 (AS-IS selectById 중 Info04 컬럼) */
+    CompanyAccountRes selectCompanyAccount(Long companyId);
+
+    int updateCompanyAccount(CompanyAccountReq req);
+
+    /** 다른 회사가 같은 사업자등록번호를 쓰는지 (sys01_biz_no unique) */
+    int countByBizNoExcept(@Param("bizNo") String bizNo, @Param("companyId") Long companyId);
 
     /** 다른 회사가 같은 서브도메인을 쓰는지 */
     int countByLocNmExcept(@Param("locNm") String locNm, @Param("companyId") Long companyId);

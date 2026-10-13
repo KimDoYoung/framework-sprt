@@ -1,6 +1,12 @@
 package kr.co.kfs.asseterp.biz.sys.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyAccountReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyAccountRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyApprovalReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyApprovalRes;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyBasicReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CompanyBasicRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCopyRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyCreateReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CompanyManageReq;
@@ -128,6 +134,105 @@ public class SysCompanyService {
         }
     }
 
+    // ── A15-3 탭 2~4 (AS-IS Sys01_TabPage_Info02·03·04: selectById 조회 → Sys01_Company.update 저장) ──
+
+    /** 기본정보 탭 조회 (AS-IS Info02.retrieve → selectById L20-29, main_image_id 채번 포함) */
+    @Transactional
+    public CompanyBasicRes getCompanyBasic(UserPrincipal user, Long companyId) {
+        requireSysAdmin(user);
+        return withMainImageId(companyId, sysCompanyMapper.selectCompanyBasic(companyId));
+    }
+
+    /**
+     * 기본정보 탭 저장 (AS-IS Info02.updateCorpRegNo L88-115 → getCorpRegNo L92-98 → update L165-187).
+     * GXT는 비운 칸을 null로 보내므로 빈 문자열을 null로 본다 — 법인등록번호가 null이면 암호값을 그대로 둔다.
+     */
+    @Transactional
+    public CompanyBasicRes updateCompanyBasic(UserPrincipal user, CompanyBasicReq req) {
+        requireSysAdmin(user);
+        CompanyBasicReq in = new CompanyBasicReq(req.companyId(), req.startDate(), blankToNull(req.bizNo()),
+                blankToNull(req.decCorpRegNo()), req.empInfo(), req.mobileTelNo(), req.officeTelNo(), req.officeFaxNo(),
+                req.emailAddr(), req.zipCd(), req.zipAddr(), req.zipDetail());
+        requireUpdateFields(in.companyId(), in.bizNo());
+        // TOBE 추가: AS-IS는 DB unique 오류 원문을 보여 준다
+        if (sysCompanyMapper.countByBizNoExcept(in.bizNo(), in.companyId()) > 0) {
+            throw new BusinessException(ErrorCode.DUPLICATE_DATA, "이미 등록된 사업자등록번호입니다.");
+        }
+        sysCompanyMapper.updateCompanyBasic(in);
+        return sysCompanyMapper.selectCompanyBasic(in.companyId());
+    }
+
+    /** 전자결재·내부통제 탭 조회 (AS-IS Info03.retrieve → selectById) */
+    @Transactional
+    public CompanyApprovalRes getCompanyApproval(UserPrincipal user, Long companyId) {
+        requireSysAdmin(user);
+        return withMainImageId(companyId, sysCompanyMapper.selectCompanyApproval(companyId));
+    }
+
+    /** 전자결재·내부통제 탭 저장 (AS-IS Info03.update L112-115 → update L165-187) */
+    @Transactional
+    public CompanyApprovalRes updateCompanyApproval(UserPrincipal user, CompanyApprovalReq req) {
+        requireSysAdmin(user);
+        requireUpdateFields(req.companyId());
+        sysCompanyMapper.updateCompanyApproval(req);
+        return sysCompanyMapper.selectCompanyApproval(req.companyId());
+    }
+
+    /** 경영·회계 탭 조회 (AS-IS Info04.retrieve → selectById) */
+    @Transactional
+    public CompanyAccountRes getCompanyAccount(UserPrincipal user, Long companyId) {
+        requireSysAdmin(user);
+        return withMainImageId(companyId, sysCompanyMapper.selectCompanyAccount(companyId));
+    }
+
+    /** 경영·회계 탭 저장 (AS-IS Info04.update L169-172 → update L165-187) */
+    @Transactional
+    public CompanyAccountRes updateCompanyAccount(UserPrincipal user, CompanyAccountReq req) {
+        requireSysAdmin(user);
+        requireUpdateFields(req.companyId());
+        sysCompanyMapper.updateCompanyAccount(req);
+        return sysCompanyMapper.selectCompanyAccount(req.companyId());
+    }
+
+    /** AS-IS selectById L20-29: 행이 없으면 DATA_NOT_FOUND, main_image_id가 비었으면 채번해 넣는다(조회인데 쓰기 — 그대로) */
+    private <T> T withMainImageId(Long companyId, T res) {
+        if (res == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        if (sysCompanyMapper.selectMainImageId(companyId) == null) {
+            sysCompanyMapper.updateMainImageId(companyId, sysCompanyMapper.selectNextId());
+        }
+        return res;
+    }
+
+    /**
+     * AS-IS update L169-183 필수 검사(원본 문구·순서). 탭은 selectById로 읽은 행 전체를 보내므로
+     * 이 탭들이 바꾸지 않는 고객명·접근코드는 DB 값으로, 사업자번호는 기본정보 탭이면 입력값, 아니면 DB 값으로 본다.
+     */
+    private void requireUpdateFields(Long companyId) {
+        requireUpdateFields(companyId, false, null);
+    }
+
+    private void requireUpdateFields(Long companyId, String bizNo) {
+        requireUpdateFields(companyId, true, bizNo);
+    }
+
+    private void requireUpdateFields(Long companyId, boolean bizNoFromTab, String bizNo) {
+        CompanyRes c = sysCompanyMapper.selectCompany(companyId);
+        if (c == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        if (c.companyNm() == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "고객명은 필수 입력항목입니다.");
+        }
+        if (c.locNm() == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "접근코드는 필수 입력항목입니다.");
+        }
+        if ((bizNoFromTab ? bizNo : c.bizNo()) == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "사업자 등록번호는 필수 입력항목입니다.");
+        }
+    }
+
     /** AS-IS delete L189 (UpdateDataModel.deleteModel): 선택한 회사의 sys01_company 행만 지운다 → 지운 건수 */
     @Transactional
     public int deleteCompanies(UserPrincipal user, List<Long> companyIds) {
@@ -227,5 +332,10 @@ public class SysCompanyService {
 
     private static String t(String s) {
         return s == null ? null : s.trim();
+    }
+
+    /** GXT TextField는 비운 칸을 null로 준다 */
+    private static String blankToNull(String s) {
+        return s == null || s.isBlank() ? null : s;
     }
 }
