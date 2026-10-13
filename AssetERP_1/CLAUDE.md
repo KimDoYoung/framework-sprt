@@ -40,7 +40,7 @@ TOBE는 새로 설계하지 않고 원본의 레이아웃·버튼·이벤트·�
 
 ## 고정 사항
 
-- AS-IS 원본: `~/oms-data/src/Asset-ERP` (`application/src/main/java/myApp`). 최신 pull이 아니다.
+- AS-IS 원본: `~/work/IDMS-IC` (`application/src/main/java/myApp`, `yunhee config`의 Source(ASIS) = `YUNHEE_ASIS_SRC_DIR`). 2026-10-13에 `~/oms-data/src/Asset-ERP`(옛 버전)에서 바꿨다 — 그 전에 끝낸 ID의 원본 줄 번호는 옛 소스 기준이다.
 - DB: docker localhost의 `asseterpdb` (환경변수 `LOCAL_DB`). 다른 DB는 쓰지 않는다.
 - 색인(git-ignored, 다시 만들 수 있음):
   - 소스 `docs/as-is/src/` — `menus.md` → `sys/screens/{클래스}.md`
@@ -50,7 +50,8 @@ TOBE는 새로 설계하지 않고 원본의 레이아웃·버튼·이벤트·�
 - 색인 다시 만들기 (저장소 루트에서. 명령과 menus.tsv SQL은 `docs/05-작업방법.md` B01):
   ```bash
   yunhee index-db .yunhee/asseterp-dbml.md -t AssetERP_1/docs/as-is/db
-  yunhee index-src ~/oms-data/src/Asset-ERP -t AssetERP_1/docs/as-is/src
+  yunhee index-src -t AssetERP_1/docs/as-is/src      # 원본은 YUNHEE_ASIS_SRC_DIR
+  yunhee sql-check --src-index AssetERP_1/docs/as-is/src -t AssetERP_1/docs/as-is/sql-check.md
   ```
 - 패키지·네이밍: `../docs/TOBE-Framework.md` (`kr.co.kfs.asseterp`).
 - OMS 결과(`../OMS`, `../docs/OMS-convert.md`)는 **비교만** 한다. 코드를 복사하지 않는다.

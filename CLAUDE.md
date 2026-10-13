@@ -24,7 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## AS-IS 참조 (전환 작업 시)
 
-AS-IS 소스(`~/oms-data/src/Asset-ERP`, 약 3,000개 Java)와 DB 스키마 문서는 수 MB라 통째로 읽지 않는다. **색인에서 필요한 파일·줄만 골라 읽는다.**
+AS-IS 소스(`~/work/IDMS-IC` = `yunhee config`의 `YUNHEE_ASIS_SRC_DIR`, 약 3,600개 Java. 2026-10-13 전에는 `~/oms-data/src/Asset-ERP`)와 DB 스키마 문서는 수 MB라 통째로 읽지 않는다. **색인에서 필요한 파일·줄만 골라 읽는다.**
 
 1. `docs/as-is/src/menus.md`를 grep해 메뉴 → 화면 파일(`docs/as-is/src/{도메인}/screens/{화면}.md`)을 찾는다.
 2. 화면 파일에 함께 쓰는 클래스, 서비스 → 서버 메서드(파일:줄) → SQL ID → 테이블, UI(위젯·그리드 컬럼·이벤트·메서드 줄 범위)가 있다. 다른 도메인 컴포넌트(예: 전자결재 `Apr01_Edit_ApprDoc`)는 링크만 있다.
@@ -38,7 +38,7 @@ yunhee dbml LOCAL_DB -o .yunhee/asseterp-dbml.md
 # 2) DBML → DB 색인
 yunhee index-db .yunhee/asseterp-dbml.md                                 # → docs/as-is/db/
 # 3) 소스 → 소스 색인. 실행마다 출력 폴더의 *.md를 지우고 다시 만든다(앱 패키지 myApp/myOms 자동 탐지)
-yunhee index-src ~/oms-data/src/Asset-ERP --menus docs/as-is/menus.tsv   # AssetERP
+yunhee index-src ~/work/IDMS-IC --menus docs/as-is/menus.tsv             # AssetERP (AssetERP_1 색인은 AssetERP_1/CLAUDE.md)
 yunhee index-src ~/workspace26/Asset-OMS --menus docs/as-is/menus.tsv    # OMS (AssetERP 색인을 덮어씀)
 # 4) 매퍼 SQL이 asseterpdb에서 도는지 EXPLAIN으로 확인 (읽기 전용, 실행 안 함) → docs/as-is/sql-check.md
 PGHOST=localhost PGUSER=kdy987 PGPASSWORD=... yunhee sql-check ~/workspace26/Asset-OMS
