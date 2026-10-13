@@ -1,9 +1,10 @@
 // A15-4 고객별 시스템정보 관리 > 특정매뉴 권한 탭(Sys50) + 팝업(Sys51 사원권한·Sys52 문서권한·Sys54 요청이력/참고내용) + 조회창(매뉴찾기·사원찾기) 화면 확인.
 // admin 회사 admin, 회사 = 한국펀드서비스(주)(28000). 시험 행은 모두 스크립트가 지운다(03 원칙 2). **[일괄 권한설정]은 눌러 확인창까지만 가지 않는다**
 // (저장 전 변경이 있어 "저장 후 이용해주세요"로 막히는 것만 본다 — 실제로 실행하면 그 회사·업무의 사원권한이 모두 바뀐다).
-// 파일 첨부(등록·받기)는 B10 뒤라 안내 메시지만 본다.
+// 요청이력 첨부(B10 뒤 추가): 올리기 → 받기 → 재등록(확인창 → 기존 삭제 → 다른 파일) → 거부되는 파일로 재등록(기존은 지워지고 첨부 없음으로 끝남).
 // 사용: yunhee run "bash -c 'NODE_PATH=/home/kdy987/.npm/_npx/e41f203b7505f1fb/node_modules node tools/screens/A15-4.js <스크린샷 폴더>'"
 const { BASE, launch, checkGrid, gridOk } = require('./_common');
+const fs = require('fs');
 const [OUT] = process.argv.slice(2);
 
 (async () => {
@@ -144,7 +145,27 @@ const [OUT] = process.argv.slice(2);
     his.saveMsg = (await btn(hm, '저장').click(), await msg());
     const hsaved = rowOf(hm, 'a154test');
     his.rows1 = await delRows(hm);
-    await hsaved.locator('.ag-cell[col-id="actionCell01"] button').click(); his.uploadMsg = await msg();
+    // 첨부: 등록(↑) → 파일 창 → 올림 → 다시 조회
+    fs.writeFileSync(OUT + '/a154-첨부.txt', 'A15-4 첨부 시험\n'); fs.writeFileSync(OUT + '/a154-second.csv', 'a,b\n1,2\n'); fs.writeFileSync(OUT + '/a154-bad.sh', '#!/bin/sh\necho x\n');
+    const upIcon = () => rowOf(hm, 'a154test').locator('.ag-cell[col-id="actionCell01"] button');
+    const choose = async (click, file) => { const [fc] = await Promise.all([p.waitForEvent('filechooser', { timeout: 5000 }), click()]); await fc.setFiles(file); await p.waitForTimeout(1500); };
+    const fileNm = async () => (await rowOf(hm, 'a154test').locator('.ag-cell[col-id="fileNm"]').innerText()).trim();
+    await choose(() => upIcon().click(), OUT + '/a154-첨부.txt');
+    his.file1 = await fileNm();
+    const [dl] = await Promise.all([p.waitForEvent('download', { timeout: 5000 }), rowOf(hm, 'a154test').locator('.ag-cell[col-id="actionCell02"] button').click()]);
+    his.downloadName = dl.suggestedFilename();
+    his.downloadSame = fs.readFileSync(await dl.path(), 'utf8') === fs.readFileSync(OUT + '/a154-첨부.txt', 'utf8');
+    // 재등록: 확인창 문구 → 예 → 기존 첨부 삭제 → 파일 창
+    await upIcon().click(); await p.waitForTimeout(500);
+    his.reConfirm = await p.locator('.ant-modal-confirm-content').innerText();
+    await choose(() => confirmYes(), OUT + '/a154-second.csv');
+    his.file2 = await fileNm();
+    // 거부되는 형식으로 재등록 → 오류 메시지, 기존은 이미 지워져 첨부 없음
+    await upIcon().click(); await p.waitForTimeout(500);
+    await choose(() => confirmYes(), OUT + '/a154-bad.sh');
+    his.rejectMsg = await msg();
+    his.file3 = await fileNm();
+    await p.screenshot({ path: OUT + '/A15-4-history-file.png' });
     await hsaved.locator('.ag-cell[col-id="actionCell03"] button').click(); await p.waitForTimeout(1500);
     const nm = modal('참고내용'); his.note = { visible: await nm.count(), buttons: await nm.locator('button').filter({ hasText: /\S/ }).allInnerTexts() };
     await nm.locator('.ProseMirror').click(); await p.keyboard.type('A154 note'); await p.waitForTimeout(300);

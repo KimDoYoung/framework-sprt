@@ -47,4 +47,12 @@ public class SysSpecificMenuHistoryController {
         sysSpecificMenuHistoryService.updateByNote(principal, companyId, specificMenuHistoryId, req.note());
         return ApiResponse.ok(null);
     }
+
+    /** AS-IS sys.Sys54_SpecificMenuHistory.deleteFile (재등록 확인 [E9] YES → 기존 첨부 삭제) */
+    @DeleteMapping("/{specificMenuHistoryId}/file")
+    public ApiResponse<Void> deleteFile(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long companyId,
+                                        @PathVariable Long specificMenuHistoryId) {
+        sysSpecificMenuHistoryService.deleteFile(principal, companyId, specificMenuHistoryId);
+        return ApiResponse.ok(null);
+    }
 }

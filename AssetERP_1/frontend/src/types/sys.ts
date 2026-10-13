@@ -362,6 +362,20 @@ export interface SpecificMenuHistory {
   noteYnStr?: string | null;
 }
 
+/** 첨부 파일 한 행 (B10, AS-IS Sys10_FileModel / sys10_file). regDate는 ISO 일시 */
+export interface FileInfo {
+  fileId: number;
+  parentId: number;
+  fileNm: string;
+  regDate?: string | null;
+  size?: number | null;
+  note?: string | null;
+  fileExt?: string | null;
+  fileYn?: string | null;
+  titleYn?: string | null;
+  seq?: string | null;
+}
+
 /** 매뉴찾기 조회창 한 행 (A15-4, AS-IS Sys06_Lookup_SelectMulti → Sys06_MenuModel) */
 export interface MenuLookup {
   menuId: number;

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS server/sys/mapper/sys10_file.xml (selectById, selectByParentId, selectOneByParentId, insert, delete) — 파일 공통(B10)
+  ${…} 바인딩은 #{…}로, ORDER BY의 COLLATE "ko_KR.utf8"은 "ko-KR-x-icu"로(05 §6)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysFileMapper">
+
+    <sql id="fileColumns">
+        file.sys10_file_id      AS file_id,
+        file.sys10_parent_id    AS parent_id,
+        file.sys10_file_nm      AS file_nm,
+        file.sys10_reg_date     AS reg_date,
+        file.sys10_server_path  AS server_path,
+        file.sys10_size         AS size,
+        file.sys10_note         AS note,
+        file.sys10_file_ext     AS file_ext,
+        file.sys10_file_yn      AS file_yn,
+        file.sys10_title_yn     AS title_yn,
+        file.sys10_seq          AS seq
+    </sql>
+
+    <!-- AS-IS selectById L42 (연관파일 sys11_relate_file로 이어진 파일도 같은 행) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sys.dto.FileRes">
+        SELECT <include refid="fileColumns"/>
+          FROM (
+                SELECT *
+                  FROM sys10_file
+                 WHERE sys10_file_id = #{fileId}
+                 UNION
+                SELECT sys10_file.*
+                  FROM sys11_relate_file
+                       INNER JOIN sys10_file ON sys10_file_id = sys11_file_id
+                 WHERE sys11_file_id = #{fileId}
+               ) AS file
+    </select>
+
+    <!-- AS-IS selectByParentId L82 -->
+    <select id="selectByParentId" resultType="kr.co.kfs.asseterp.biz.sys.dto.FileRes">
+        SELECT <include refid="fileColumns"/>
+          FROM (
+                SELECT *
+                  FROM sys10_file
+                 WHERE sys10_parent_id = #{parentId}
+                 UNION
+                SELECT sys10_file.*
+                  FROM sys11_relate_file
+                       INNER JOIN sys10_file ON sys10_file_id = sys11_file_id
+                 WHERE sys11_parent_id = #{parentId}
+               ) AS file
+         ORDER BY LPAD(COALESCE(file.sys10_seq, '99999'), 5, '0'), COALESCE(file.sys10_title_yn, 'false') DESC, file.sys10_file_nm COLLATE "ko-KR-x-icu"
+    </select>
+
+    <!-- AS-IS selectOneByParentId L294 (최근 1건 — 사진) -->
+    <select id="selectOneByParentId" resultType="kr.co.kfs.asseterp.biz.sys.dto.FileRes">
+        SELECT <include refid="fileColumns"/>
+          FROM sys10_file file
+         WHERE file.sys10_parent_id = #{parentId}
+         ORDER BY file.sys10_reg_date DESC
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS FileUpload.uploadEmpFile L754: emp01_person.selectById 결과가 있는지만 본다 -->
+    <select id="countPersonById" resultType="int">
+        SELECT COUNT(*) FROM emp01_person WHERE emp01_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS IsNewData.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS insert L470 (person_id·seq·title_yn은 원본도 안 넣음) -->
+    <insert id="insertFile">
+        INSERT INTO sys10_file (sys10_file_id, sys10_parent_id, sys10_file_nm, sys10_reg_date, sys10_server_path, sys10_size,
+                                sys10_note, sys10_file_ext, sys10_file_yn, sys10_admin_yn, sys10_law_type, sys10_print_yn, sys10_ext_yn)
+        VALUES (#{fileId}, #{parentId}, #{fileNm}, f_sysdate(), #{serverPath}, #{size},
+                '', #{fileExt}, #{fileYn}, NULL, NULL, 'true', 'false')
+    </insert>
+
+    <!-- AS-IS delete L589 -->
+    <delete id="deleteById">
+        DELETE FROM sys10_file WHERE sys10_file_id = #{fileId}
+    </delete>
+</mapper>

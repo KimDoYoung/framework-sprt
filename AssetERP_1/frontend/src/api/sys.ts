@@ -565,6 +565,11 @@ export const sysApi = {
     await apiClient.put(`v1/sys/companies/${companyId}/specific-menu-histories/${specificMenuHistoryId}/note`, { note });
   },
 
+  /** AS-IS sys.Sys54_SpecificMenuHistory.deleteFile(parentId) — 재등록 전에 기존 첨부를 지운다 (B10) */
+  deleteSpecificMenuHistoryFile: async (companyId: number, specificMenuHistoryId: number): Promise<void> => {
+    await apiClient.delete(`v1/sys/companies/${companyId}/specific-menu-histories/${specificMenuHistoryId}/file`);
+  },
+
   /** AS-IS Sys06_Lookup_SelectMulti.retrieve → sys.Sys06_Menu.getAllMenuList ('%' + 검색어 + '%') */
   searchLookupMenus: async (searchText: string, menuNameYn: boolean): Promise<MenuLookup[]> => {
     const res = await apiClient.get<ApiResponse<MenuLookup[]>>('v1/sys/menus/lookup', { params: { searchText, menuNameYn } });

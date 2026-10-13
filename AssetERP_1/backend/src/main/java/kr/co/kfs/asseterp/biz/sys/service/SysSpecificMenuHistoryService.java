@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.sys.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.sys.dto.FileRes;
 import kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuHistoryRes;
 import kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuHistorySaveReq;
 import kr.co.kfs.asseterp.biz.sys.mapper.SysSpecificMenuHistoryMapper;
@@ -15,7 +16,7 @@ import java.util.List;
 
 /**
  * AS-IS server/sys/Sys54_SpecificMenuHistory.java (selectByCompanyId / update / delete / updateByNote) — sys admin만.
- * deleteFile(첨부 삭제)·파일 받기는 B10(sys10_file 공통) 뒤.
+ * deleteFile(첨부 삭제)는 파일 공통 SysFileService(B10)로 지운다.
  */
 @Service
 @RequiredArgsConstructor
@@ -23,6 +24,7 @@ import java.util.List;
 public class SysSpecificMenuHistoryService {
 
     private final SysSpecificMenuHistoryMapper sysSpecificMenuHistoryMapper;
+    private final SysFileService sysFileService;
 
     /** AS-IS selectByCompanyId L26 */
     public List<SpecificMenuHistoryRes> search(UserPrincipal user, Long companyId) {
@@ -65,6 +67,24 @@ public class SysSpecificMenuHistoryService {
         if (sysSpecificMenuHistoryMapper.updateByNote(companyId, specificMenuHistoryId, note) == 0) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
+    }
+
+    /**
+     * AS-IS deleteFile L34-49: 이력의 첨부(sys10_file.selectByParentId 1건)를 실제 파일과 함께 지운다 — 재등록 전에 부른다.
+     * 원본은 selectOne이라 첨부가 없으면 오류였다 → 없으면 DATA_NOT_FOUND. 이력이 그 회사 것인지는 TOBE에서 확인
+     */
+    @Transactional
+    public void deleteFile(UserPrincipal user, Long companyId, Long specificMenuHistoryId) {
+        requireSysAdmin(user);
+        SpecificMenuHistoryRes history = sysSpecificMenuHistoryMapper.selectById(specificMenuHistoryId);
+        if (history == null || !companyId.equals(history.companyId())) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        List<FileRes> files = sysFileService.searchByParentId(specificMenuHistoryId);
+        if (files.isEmpty()) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        sysFileService.delete(files.get(0).fileId());
     }
 
     private static void requireSysAdmin(UserPrincipal user) {
