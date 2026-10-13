@@ -18,6 +18,7 @@ import { Sys01_TabPage_Info02 } from './Sys01_TabPage_Info02';
 import { Sys01_TabPage_Info03 } from './Sys01_TabPage_Info03';
 import { Sys01_TabPage_Info04 } from './Sys01_TabPage_Info04';
 import { Sys02_Tab_User } from './Sys02_Tab_User';
+import { Sys50_TabPage_SpecificMenu } from './Sys50_TabPage_SpecificMenu';
 
 const gb = gbFor<Company>();
 
@@ -59,13 +60,6 @@ export interface CompanyTabProps {
   companyId?: number;
 }
 
-/** 아직 변환하지 않은 탭 — 단계가 끝나면 실제 탭 컴포넌트로 바꾼다 (A15-작업방법 "단계") */
-const PendingTab = (name: string, step: string): React.FC<CompanyTabProps> => ({ companyId }) => (
-  <div style={{ padding: 24, color: '#888' }}>
-    {name}({step}) — 아직 변환하지 않은 탭입니다. {companyId ? `선택한 회사 ID: ${companyId}` : ''}
-  </div>
-);
-
 /** 생성자 L79-84: tabPanel.add(…) 순서 그대로 */
 const TABS: { key: string; label: string; page: React.FC<CompanyTabProps> }[] = [
   { key: 'info01', label: '관리정보', page: Sys01_TabPage_Info01 },
@@ -73,7 +67,7 @@ const TABS: { key: string; label: string; page: React.FC<CompanyTabProps> }[] = 
   { key: 'info03', label: '전자결재·내부통제', page: Sys01_TabPage_Info03 },
   { key: 'info04', label: '경영·회계', page: Sys01_TabPage_Info04 },
   { key: 'user', label: '고객별 관리자', page: Sys02_Tab_User },
-  { key: 'specificMenu', label: '특정매뉴 권한', page: PendingTab('Sys50_TabPage_SpecificMenu', '3단계') },
+  { key: 'specificMenu', label: '특정매뉴 권한', page: Sys50_TabPage_SpecificMenu },
 ];
 
 export const Sys01_Tab_Company: React.FC = () => {

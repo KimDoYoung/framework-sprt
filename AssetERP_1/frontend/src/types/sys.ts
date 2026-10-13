@@ -317,3 +317,55 @@ export interface CodeGroup {
   code?: string | null;
   name?: string | null;
 }
+
+/** 특정매뉴 권한 한 행 (A15-4, AS-IS Sys50_SpecificMenuModel). specificMenuId ≤ 0 = 새 행 */
+export interface SpecificMenu {
+  specificMenuId: number;
+  companyId?: number;
+  specificWorkCd?: string | null;
+  specificWorkNm?: string | null;
+  menuId?: number | null;
+  menuNm?: string | null;
+  note?: string | null;
+}
+
+/** 특정매뉴 사원권한 한 행 (A15-4, AS-IS Sys51_SpecificMenuPersonModel). useYn은 'true'/'false' */
+export interface SpecificMenuPerson {
+  specificMenuPersonId: number;
+  specificMenuId?: number;
+  personId?: number;
+  personNm?: string | null;
+  useYn?: string | null;
+  note?: string | null;
+  specificWorkCd?: string | null;
+}
+
+/** 특정매뉴 문서권한(Link) 한 행 (A15-4, AS-IS Sys52_SpecificMenuLinkModel) */
+export interface SpecificMenuLink {
+  specificMenuLinkId: number;
+  companyId?: number;
+  specificWorkCd?: string | null;
+  linkCd?: string | null;
+  linkNm?: string | null;
+  note?: string | null;
+}
+
+/** 특정매뉴 요청이력 한 행 (A15-4, AS-IS Sys54_SpecificMenuHistoryModel). 날짜는 'yyyy-MM-dd' */
+export interface SpecificMenuHistory {
+  specificMenuHistoryId: number;
+  companyId?: number;
+  regDate?: string | null;
+  confirmDate?: string | null;
+  confirmNm?: string | null;
+  note?: string | null;
+  fileNm?: string | null;
+  noteYnStr?: string | null;
+}
+
+/** 매뉴찾기 조회창 한 행 (A15-4, AS-IS Sys06_Lookup_SelectMulti → Sys06_MenuModel) */
+export interface MenuLookup {
+  menuId: number;
+  parentPathNm: string;
+  menuNm: string;
+  menuFullNm: string;
+}

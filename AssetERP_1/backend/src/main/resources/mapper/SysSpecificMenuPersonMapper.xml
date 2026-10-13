@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS server/sys/mapper/sys51_specific_menu_person.xml (selectBySpecificMenuId, selectById, deleteSpecificMenuPerson, insertSpecificMenuPerson)
+  + UpdateDataModel(sys51_specific_menu_person)의 동적 INSERT/UPDATE/DELETE를 명시 SQL로 (A15-4-작업방법 "SQL 이식")
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysSpecificMenuPersonMapper">
+
+    <sql id="personColumns">
+        sys51_specific_menu_person_id                                                           AS specific_menu_person_id,
+        sys51_specific_menu_id                                                                  AS specific_menu_id,
+        sys51_person_id                                                                         AS person_id,
+        f_get_empTrans(sys51_person_id, f_sysdate()::date, 'org_code_nm')||' '||f_emp_kor_nm(sys51_person_id) AS person_nm,
+        sys51_use_yn                                                                            AS use_yn,
+        sys51_note                                                                              AS note,
+        sys51_specific_work_cd                                                                  AS specific_work_cd
+    </sql>
+
+    <!-- AS-IS selectBySpecificMenuId -->
+    <select id="selectBySpecificMenuId" resultType="kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuPersonRes">
+        SELECT <include refid="personColumns"/>
+          FROM sys51_specific_menu_person
+         WHERE sys51_specific_menu_id = #{specificMenuId}
+           AND sys51_specific_work_cd = #{specificWorkCd}
+         ORDER BY sys51_person_id
+    </select>
+
+    <!-- AS-IS selectById (저장 뒤 다시 읽기) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuPersonRes">
+        SELECT <include refid="personColumns"/>
+          FROM sys51_specific_menu_person
+         WHERE sys51_specific_menu_person_id = #{specificMenuPersonId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="countMenu" resultType="int">
+        SELECT COUNT(*)
+          FROM sys50_specific_menu
+         WHERE sys50_specific_menu_id = #{specificMenuId}
+           AND sys50_company_id       = #{companyId}
+    </select>
+
+    <insert id="insertSpecificMenuPerson">
+        INSERT INTO sys51_specific_menu_person (sys51_specific_menu_person_id, sys51_specific_menu_id, sys51_person_id, sys51_use_yn, sys51_note, sys51_specific_work_cd)
+        VALUES (#{specificMenuPersonId}, #{specificMenuId}, #{req.personId}, #{req.useYn}, #{req.note}, #{req.specificWorkCd})
+    </insert>
+
+    <update id="updateSpecificMenuPerson">
+        UPDATE sys51_specific_menu_person p
+           SET sys51_use_yn = #{req.useYn},
+               sys51_note   = #{req.note}
+         WHERE sys51_specific_menu_person_id = #{req.specificMenuPersonId}
+           AND sys51_specific_menu_id        = #{specificMenuId}
+           AND EXISTS (SELECT 1 FROM sys50_specific_menu m
+                        WHERE m.sys50_specific_menu_id = p.sys51_specific_menu_id AND m.sys50_company_id = #{companyId})
+    </update>
+
+    <delete id="deleteSpecificMenuPersons">
+        DELETE FROM sys51_specific_menu_person p
+         WHERE sys51_specific_menu_id = #{specificMenuId}
+           AND EXISTS (SELECT 1 FROM sys50_specific_menu m
+                        WHERE m.sys50_specific_menu_id = p.sys51_specific_menu_id AND m.sys50_company_id = #{companyId})
+           AND sys51_specific_menu_person_id IN
+        <foreach collection="specificMenuPersonIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS deleteSpecificMenuPerson -->
+    <delete id="deleteByWork">
+        DELETE FROM sys51_specific_menu_person p
+         WHERE sys51_specific_work_cd = #{specificWorkCd}
+           AND EXISTS (SELECT 1
+                         FROM sys50_specific_menu m
+                        WHERE m.sys50_specific_menu_id = p.sys51_specific_menu_id
+                          AND m.sys50_specific_work_cd = #{specificWorkCd}
+                          AND m.sys50_company_id       = #{companyId})
+    </delete>
+
+    <!-- AS-IS insertSpecificMenuPerson -->
+    <insert id="insertByWork">
+        INSERT INTO sys51_specific_menu_person
+               (sys51_specific_menu_person_id, sys51_specific_menu_id, sys51_person_id, sys51_use_yn, sys51_note, sys51_specific_work_cd)
+        SELECT f_create_seq(), m.sys50_specific_menu_id, #{personId}, #{useYn}, #{note}, #{specificWorkCd}
+          FROM sys50_specific_menu m
+         WHERE m.sys50_specific_work_cd = #{specificWorkCd}
+           AND m.sys50_company_id       = #{companyId}
+    </insert>
+</mapper>

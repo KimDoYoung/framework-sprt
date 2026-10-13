@@ -71,6 +71,8 @@ public interface SysMenuMapper {
 
     List<MenuCopyRes> selectCopyMenus(MenuCopySearchParam param);
 
+    List<kr.co.kfs.asseterp.biz.sys.dto.MenuLookupRes> selectLookupMenus(MenuCopySearchParam param);
+
     CompanyMenuLinkRow selectCompanyMenuLink(@Param("menuId") Long menuId, @Param("companyId") Long companyId);
 
     int countCompanyMenuUseYn(@Param("parentId") Long parentId, @Param("companyId") Long companyId);

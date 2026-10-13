@@ -246,6 +246,13 @@ public class SysMenuService {
         return sysMenuMapper.selectCopyMenus(new MenuCopySearchParam(like, String.valueOf(menuNameYn)));
     }
 
+    /** 매뉴찾기 조회창 (A15-4 Sys06_Lookup_SelectMulti.retrieve: '%' + 매뉴명 + '%', 매뉴명만 검색) — 같은 getAllMenuList */
+    public List<kr.co.kfs.asseterp.biz.sys.dto.MenuLookupRes> searchLookupMenus(UserPrincipal user, String searchText, boolean menuNameYn) {
+        requireSysAdmin(user);
+        String like = "%" + (searchText == null ? "" : searchText) + "%";
+        return sysMenuMapper.selectLookupMenus(new MenuCopySearchParam(like, String.valueOf(menuNameYn)));
+    }
+
     /**
      * 일괄 권한부여·삭제 (AS-IS updateByMenuYn L572-631 그대로): 고른 메뉴마다 부모 쪽으로 올라가며(루트 0에서 멈춤) 고른 회사마다
      * 연결이 없으면 채번해 INSERT(useYn), 있으면 use_yn UPDATE. 삭제(false)일 때는 그 메뉴의 부모 아래 사용 중 연결이 있으면 바꾸지 않는다

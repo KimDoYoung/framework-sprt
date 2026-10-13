@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuNode, MenuSaveReq, Role, RoleMenuCopyReq, RoleMenuNode, UserRole } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, UserRole } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -474,5 +474,100 @@ export const sysApi = {
   deleteCodeGroupMembers: async (codeGroupIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/sys/code-groups/members', { data: codeGroupIds });
     return res.data.data ?? 0;
+  },
+
+  // ── A15-4 특정매뉴 권한 (Sys50_TabPage_SpecificMenu · Sys51 · Sys52 · Sys54) ──
+
+  /** AS-IS sys.Sys50_SpecificMenu.selectBySpecificWorkCode: specificWorkCd '%' = 전체 */
+  searchSpecificMenus: async (companyId: number, specificWorkCd: string): Promise<SpecificMenu[]> => {
+    const res = await apiClient.get<ApiResponse<SpecificMenu[]>>(`v1/sys/companies/${companyId}/specific-menus`, { params: { specificWorkCd } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys50_SpecificMenu.update: 변경 행 → 저장된 행(요청 순서). specificMenuId ≤ 0 = 신규 */
+  updateSpecificMenus: async (companyId: number, rows: SpecificMenu[]): Promise<SpecificMenu[]> => {
+    const body = rows.map(({ specificMenuId, specificWorkCd, menuId, note }) => ({ specificMenuId, specificWorkCd, menuId, note }));
+    const res = await apiClient.put<ApiResponse<SpecificMenu[]>>(`v1/sys/companies/${companyId}/specific-menus`, body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys50_SpecificMenu.delete → 지운 건수 */
+  deleteSpecificMenus: async (companyId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sys/companies/${companyId}/specific-menus`, { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys51_SpecificMenuPerson.selectBySpecificMenuId */
+  searchSpecificMenuPersons: async (companyId: number, specificMenuId: number, specificWorkCd: string): Promise<SpecificMenuPerson[]> => {
+    const res = await apiClient.get<ApiResponse<SpecificMenuPerson[]>>(
+      `v1/sys/companies/${companyId}/specific-menus/${specificMenuId}/persons`, { params: { specificWorkCd } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys51_SpecificMenuPerson.update → 저장된 행(요청 순서) */
+  updateSpecificMenuPersons: async (companyId: number, specificMenuId: number, rows: SpecificMenuPerson[]): Promise<SpecificMenuPerson[]> => {
+    const body = rows.map(({ specificMenuPersonId, personId, useYn, note, specificWorkCd }) => ({ specificMenuPersonId, personId, useYn, note, specificWorkCd }));
+    const res = await apiClient.put<ApiResponse<SpecificMenuPerson[]>>(`v1/sys/companies/${companyId}/specific-menus/${specificMenuId}/persons`, body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys51_SpecificMenuPerson.delete → 지운 건수 */
+  deleteSpecificMenuPersons: async (companyId: number, specificMenuId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sys/companies/${companyId}/specific-menus/${specificMenuId}/persons`, { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys51_SpecificMenuPerson.updateGroup (일괄 권한설정) */
+  updateSpecificMenuPersonGroup: async (companyId: number, specificMenuId: number, specificWorkCd: string): Promise<void> => {
+    await apiClient.post(`v1/sys/companies/${companyId}/specific-menus/${specificMenuId}/persons/group`, null, { params: { specificWorkCd } });
+  },
+
+  /** AS-IS sys.Sys52_SpecificMenuLink.selectBySpecificWorkCode */
+  searchSpecificMenuLinks: async (companyId: number, specificWorkCd: string): Promise<SpecificMenuLink[]> => {
+    const res = await apiClient.get<ApiResponse<SpecificMenuLink[]>>(`v1/sys/companies/${companyId}/specific-menu-links`, { params: { specificWorkCd } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys52_SpecificMenuLink.update → 저장된 행(요청 순서) */
+  updateSpecificMenuLinks: async (companyId: number, rows: SpecificMenuLink[]): Promise<SpecificMenuLink[]> => {
+    const body = rows.map(({ specificMenuLinkId, specificWorkCd, linkCd, note }) => ({ specificMenuLinkId, specificWorkCd, linkCd, note }));
+    const res = await apiClient.put<ApiResponse<SpecificMenuLink[]>>(`v1/sys/companies/${companyId}/specific-menu-links`, body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys52_SpecificMenuLink.delete → 지운 건수 */
+  deleteSpecificMenuLinks: async (companyId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sys/companies/${companyId}/specific-menu-links`, { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys54_SpecificMenuHistory.selectByCompanyId */
+  searchSpecificMenuHistories: async (companyId: number): Promise<SpecificMenuHistory[]> => {
+    const res = await apiClient.get<ApiResponse<SpecificMenuHistory[]>>(`v1/sys/companies/${companyId}/specific-menu-histories`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys54_SpecificMenuHistory.update → 저장된 행(요청 순서) */
+  updateSpecificMenuHistories: async (companyId: number, rows: SpecificMenuHistory[]): Promise<SpecificMenuHistory[]> => {
+    const body = rows.map(({ specificMenuHistoryId, regDate, confirmDate, confirmNm }) => ({ specificMenuHistoryId, regDate, confirmDate, confirmNm }));
+    const res = await apiClient.put<ApiResponse<SpecificMenuHistory[]>>(`v1/sys/companies/${companyId}/specific-menu-histories`, body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys54_SpecificMenuHistory.delete → 지운 건수 */
+  deleteSpecificMenuHistories: async (companyId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sys/companies/${companyId}/specific-menu-histories`, { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys54_SpecificMenuHistory.updateByNote (Sys54_Edit_Note 저장) */
+  updateSpecificMenuHistoryNote: async (companyId: number, specificMenuHistoryId: number, note: string): Promise<void> => {
+    await apiClient.put(`v1/sys/companies/${companyId}/specific-menu-histories/${specificMenuHistoryId}/note`, { note });
+  },
+
+  /** AS-IS Sys06_Lookup_SelectMulti.retrieve → sys.Sys06_Menu.getAllMenuList ('%' + 검색어 + '%') */
+  searchLookupMenus: async (searchText: string, menuNameYn: boolean): Promise<MenuLookup[]> => {
+    const res = await apiClient.get<ApiResponse<MenuLookup[]>>('v1/sys/menus/lookup', { params: { searchText, menuNameYn } });
+    return res.data.data ?? [];
   },
 };

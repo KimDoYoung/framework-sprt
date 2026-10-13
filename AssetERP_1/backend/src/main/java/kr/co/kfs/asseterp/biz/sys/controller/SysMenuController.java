@@ -120,6 +120,14 @@ public class SysMenuController {
         return ApiResponse.ok(sysMenuService.searchCopyMenus(principal, searchText, menuNameYn));
     }
 
+    /** A15-4 매뉴찾기 조회창 (AS-IS Sys06_Lookup_SelectMulti → sys.Sys06_Menu.getAllMenuList) */
+    @GetMapping("/menus/lookup")
+    public ApiResponse<List<kr.co.kfs.asseterp.biz.sys.dto.MenuLookupRes>> searchLookupMenus(@AuthenticationPrincipal UserPrincipal principal,
+                                                                                            @RequestParam(required = false) String searchText,
+                                                                                            @RequestParam(defaultValue = "false") boolean menuNameYn) {
+        return ApiResponse.ok(sysMenuService.searchLookupMenus(principal, searchText, menuNameYn));
+    }
+
     /** A09 일괄 권한부여·삭제 (AS-IS sys.Sys06_Menu.updateByMenuYn) */
     @PutMapping("/menus/company-use")
     public ApiResponse<Void> updateCompanyMenuUse(@AuthenticationPrincipal UserPrincipal principal, @RequestBody CompanyMenuUseReq req) {

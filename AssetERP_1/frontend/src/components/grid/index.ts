@@ -9,3 +9,4 @@ export type { GbEditor, GbOpts } from './gb';
 export { StatusCell, SignColorCell, ValueWithRateCell, ActionCell, CheckCell } from './renderers';
 export { fmtLong, fmtDouble, fmtDate, numComparator, toNum } from './format';
 export { GRID_COLORS, GRID_DENSITY } from './theme';
+export { iconCell } from './iconCell';

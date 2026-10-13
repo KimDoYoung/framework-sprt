@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS server/sys/mapper/sys52_specific_menu_link.xml (selectBySpecificWorkCode, selectById)
+  + UpdateDataModel(sys52_specific_menu_link)의 동적 INSERT/UPDATE/DELETE를 명시 SQL로 (A15-4-작업방법 "SQL 이식")
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysSpecificMenuLinkMapper">
+
+    <sql id="linkColumns">
+        sys52_specific_menu_link_id                                         AS specific_menu_link_id,
+        sys52_company_id                                                    AS company_id,
+        sys52_specific_work_cd                                              AS specific_work_cd,
+        sys52_link_cd                                                       AS link_cd,
+        f_cdnm('LinkCode', sys52_link_cd, sys52_company_id, f_sysdate())    AS link_nm,
+        sys52_note                                                          AS note
+    </sql>
+
+    <!-- AS-IS selectBySpecificWorkCode -->
+    <select id="selectBySpecificWorkCode" resultType="kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuLinkRes">
+        SELECT <include refid="linkColumns"/>
+          FROM sys52_specific_menu_link
+         WHERE sys52_specific_work_cd = #{specificWorkCd}
+           AND sys52_company_id       = #{companyId}
+         ORDER BY sys52_link_cd
+    </select>
+
+    <!-- AS-IS selectById (저장 뒤 다시 읽기) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuLinkRes">
+        SELECT <include refid="linkColumns"/>
+          FROM sys52_specific_menu_link
+         WHERE sys52_specific_menu_link_id = #{specificMenuLinkId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertSpecificMenuLink">
+        INSERT INTO sys52_specific_menu_link (sys52_specific_menu_link_id, sys52_company_id, sys52_specific_work_cd, sys52_link_cd, sys52_note)
+        VALUES (#{specificMenuLinkId}, #{companyId}, #{req.specificWorkCd}, #{req.linkCd}, #{req.note})
+    </insert>
+
+    <update id="updateSpecificMenuLink">
+        UPDATE sys52_specific_menu_link
+           SET sys52_link_cd = #{req.linkCd},
+               sys52_note    = #{req.note}
+         WHERE sys52_specific_menu_link_id = #{req.specificMenuLinkId}
+           AND sys52_company_id            = #{companyId}
+    </update>
+
+    <delete id="deleteSpecificMenuLinks">
+        DELETE FROM sys52_specific_menu_link
+         WHERE sys52_company_id = #{companyId}
+           AND sys52_specific_menu_link_id IN
+        <foreach collection="specificMenuLinkIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

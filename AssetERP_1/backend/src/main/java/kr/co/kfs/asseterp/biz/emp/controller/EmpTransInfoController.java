@@ -36,6 +36,16 @@ public class EmpTransInfoController {
         return ApiResponse.ok(empTransInfoService.searchTransInfos(principal, transDate, searchText, transCode));
     }
 
+    /** AS-IS emp.Emp00_TransInfo.selectByText — 고른 회사의 사원(Emp00_Lookup_SelectMulti.open(companyId, …), sys admin만) */
+    @GetMapping("/companies/{companyId}/trans-infos")
+    public ApiResponse<List<TransInfoRes>> searchCompanyTransInfos(@AuthenticationPrincipal UserPrincipal principal,
+                                                                   @PathVariable Long companyId,
+                                                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate transDate,
+                                                                   @RequestParam(required = false) String searchText,
+                                                                   @RequestParam(required = false) String transCode) {
+        return ApiResponse.ok(empTransInfoService.searchCompanyTransInfos(principal, companyId, transDate, searchText, transCode));
+    }
+
     /** AS-IS emp.Emp00_TransInfo.update (신규사원 등록) → 등록된 행 */
     @PostMapping("/trans-infos")
     public ApiResponse<TransInfoRes> createTransInfo(@AuthenticationPrincipal UserPrincipal principal,

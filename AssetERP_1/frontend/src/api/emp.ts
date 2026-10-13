@@ -14,6 +14,12 @@ export const empApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS emp.Emp00_TransInfo.selectByText — 고른 회사의 사원 (Emp00_Lookup_SelectMulti.open(companyId, …), sys admin만) */
+  searchCompanyTransInfos: async (companyId: number, transDate: string | undefined, searchText: string, transCode: string): Promise<TransInfo[]> => {
+    const res = await apiClient.get<ApiResponse<TransInfo[]>>(`v1/emp/companies/${companyId}/trans-infos`, { params: { transDate, searchText, transCode } });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS emp.Emp00_TransInfo.update (신규사원 등록) → 등록된 행 */
   createTransInfo: async (req: TransInfoCreateReq): Promise<TransInfo> => {
     const res = await apiClient.post<ApiResponse<TransInfo>>('v1/emp/trans-infos', req);

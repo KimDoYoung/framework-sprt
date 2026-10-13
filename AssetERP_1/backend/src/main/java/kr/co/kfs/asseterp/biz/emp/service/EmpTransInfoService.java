@@ -39,6 +39,20 @@ public class EmpTransInfoService {
                 new TransInfoSearchParam(user.getCompanyId(), date, like, transCode == null ? "000" : transCode, null, null));
     }
 
+    /**
+     * 사원찾기(Emp00_Lookup_SelectMulti.open(companyId, date, cb))가 고른 회사의 사원을 찾을 때 (A15-4):
+     * AS-IS selectByText에 companyId를 직접 준다(sys admin만). isSeparateAddTitle은 true(SQL 반영).
+     */
+    public List<TransInfoRes> searchCompanyTransInfos(UserPrincipal user, Long companyId, LocalDate transDate, String searchText, String transCode) {
+        if (!user.isSysAdmin()) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        String date = (transDate == null ? LocalDate.now() : transDate).toString();
+        String like = "%" + (searchText == null ? "" : searchText) + "%";
+        return empTransInfoMapper.searchTransInfos(
+                new TransInfoSearchParam(companyId, date, like, transCode == null ? "000" : transCode, null, null));
+    }
+
     /** AS-IS selectOneByPersonId(personId, '%') — Emp00_Current_TransInfoModel: 겸직 아닌 최신 발령 */
     public TransInfoRes getCurrentTransInfo(UserPrincipal user, Long personId) {
         TransInfoRes row = empTransInfoMapper.selectCurrentTransInfo(TransInfoSearchParam.ofPersonId(user.getCompanyId(), personId));

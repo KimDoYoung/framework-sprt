@@ -193,5 +193,8 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
   /** 저장하지 않은 추가·변경 행이 있는지 (AS-IS grid.getStore().getModifiedRecords().size() > 0) */
   const hasChanges = useCallback(() => dirty.current.size > 0, []);
 
-  return { gridRef, rows, loading, retrieve, addRow, addRows, updateRow, clear, saveRows, deleteChecked, hasChanges, gridProps };
+  /** 저장하지 않은 추가·변경 행 (AS-IS grid.getStore().getModifiedRecords() — 저장 전 검사·Lookup 전 검사용) */
+  const getChanged = useCallback(() => rows.filter(r => dirty.current.has(getId(r))), [rows, getId]);
+
+  return { gridRef, rows, loading, retrieve, addRow, addRows, updateRow, clear, saveRows, deleteChecked, hasChanges, getChanged, gridProps };
 }
