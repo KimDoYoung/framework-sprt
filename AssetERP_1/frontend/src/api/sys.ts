@@ -383,6 +383,12 @@ export const sysApi = {
     return res.data.data ?? 0;
   },
 
+  /** AS-IS sys.Sys09_Code.codeInsert (A14 코드복사): companyId(원본 회사)의 코드를 companyIds로 복사 → 복사한 행 수 */
+  copyCodes: async (codeKindId: number, companyId: number, companyIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>(`v1/sys/code-kinds/${codeKindId}/codes/copy`, { companyId, companyIds });
+    return res.data.data ?? 0;
+  },
+
   /** AS-IS sys.Sys13_CodeGroup.selectByGroupCodeKind: 코드구분의 그룹 헤더 */
   searchCodeGroups: async (codeKindId: number): Promise<CodeGroup[]> => {
     const res = await apiClient.get<ApiResponse<CodeGroup[]>>(`v1/sys/code-kinds/${codeKindId}/code-groups`);

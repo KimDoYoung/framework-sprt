@@ -32,4 +32,8 @@ public interface SysCodeMapper {
     int updateCode(CodeAdminRow row);
 
     int deleteCodes(CodeDeleteParam param);
+
+    /** AS-IS codeInsert (A14 코드복사): 원본 회사의 그 코드구분 코드를 새 회사로 INSERT … SELECT */
+    int copyCodes(@Param("sourceCompanyId") Long sourceCompanyId, @Param("newCompanyId") Long newCompanyId,
+                  @Param("codeKindId") Long codeKindId);
 }

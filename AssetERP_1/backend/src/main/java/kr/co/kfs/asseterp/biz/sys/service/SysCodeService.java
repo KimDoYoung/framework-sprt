@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeAdminRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeAdminRow;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeAdminSaveReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CodeCopyReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeDeleteParam;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeListParam;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeRes;
@@ -84,5 +85,21 @@ public class SysCodeService {
             return 0;
         }
         return sysCodeMapper.deleteCodes(new CodeDeleteParam(user.companyOf(companyId), codeIds));
+    }
+
+    /**
+     * AS-IS codeInsert L271-310 (A14 코드복사): 고른 회사마다 원본 회사(화면의 현재 회사)의 코드를 복사 → 복사한 행 수.
+     * 버튼이 admin 회사에만 있으므로 sys admin만.
+     */
+    @Transactional
+    public int copyCodes(UserPrincipal user, Long codeKindId, CodeCopyReq req) {
+        if (!user.isSysAdmin()) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        int count = 0;
+        for (Long newCompanyId : req.companyIds()) {
+            count += sysCodeMapper.copyCodes(req.companyId(), newCompanyId, codeKindId);
+        }
+        return count;
     }
 }

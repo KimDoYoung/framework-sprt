@@ -94,4 +94,14 @@
            AND sys09_code_id IN
         <foreach collection="codeIds" item="id" open="(" separator="," close=")">#{id}</foreach>
     </delete>
+
+    <!-- A14 코드복사: AS-IS sys09_code.codeInsert (targetCompanyId → sourceCompanyId) -->
+    <insert id="copyCodes">
+        INSERT
+          INTO sys09_code (sys09_code_id, sys09_code, sys09_name, sys09_seq, sys09_note, sys09_apply_date, sys09_close_yn, sys09_code_kind_id, sys09_company_id, sys09_close_date, sys09_desc)
+        SELECT f_create_seq(), sys09_code, sys09_name, sys09_seq, sys09_note, sys09_apply_date, sys09_close_yn, sys09_code_kind_id, #{newCompanyId}, sys09_close_date, sys09_desc
+          FROM sys09_code
+         WHERE sys09_company_id = #{sourceCompanyId}
+           AND sys09_code_kind_id = #{codeKindId}
+    </insert>
 </mapper>

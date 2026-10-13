@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.sys.mapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeAdminRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeAdminSaveReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CodeCopyReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeGroupMemberSaveReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeGroupRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeGroupSaveReq;
@@ -103,6 +104,30 @@ class CodeAdminDbTest {
                 kind.codeKindId(), 0L, "T01", "바뀜", "1", "false", LocalDate.of(1910, 1, 1), null, "상세"))).get(0);
         assertThat(changed.name()).isEqualTo("바뀜");
         assertThat(codeService.deleteCodes(sysAdmin, 0L, List.of(saved.codeId(), list.get(1).codeId()))).isEqualTo(2);
+    }
+
+    @Test
+    void A14_고객사는_사용자_코드구분만_조회() {
+        int notSystem = jdbc.queryForObject("select count(*) from sys08_code_kind where sys08_sys_yn = 'false'", Integer.class);
+        assertThat(kindService.searchCodeKinds(customer, "", "false")).hasSize(notSystem);
+        assertThatThrownBy(() -> kindService.searchCodeKinds(customer, "", "true")).isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    void A14_코드복사는_원본_회사의_코드를_고른_회사마다_넣고_sys_admin만() {
+        CodeKindRes kind = newKind("false");
+        codeService.updateCodes(customer, List.of(
+                new CodeAdminSaveReq(null, kind.codeKindId(), null, "C01", "코드1", "1", "false", LocalDate.of(1910, 1, 1), null, "메모"),
+                new CodeAdminSaveReq(null, kind.codeKindId(), null, "C02", "코드2", "2", "true", LocalDate.of(2020, 1, 1), null, null)));
+        // 28000의 코드 2건 → 0·100 두 회사에 복사 = 4행
+        assertThat(codeService.copyCodes(sysAdmin, kind.codeKindId(), new CodeCopyReq(28000L, List.of(0L, 100L)))).isEqualTo(4);
+        List<CodeAdminRes> copied = codeService.searchCodesByKindId(sysAdmin, kind.codeKindId(), 100L, "");
+        assertThat(copied).extracting(CodeAdminRes::code).containsExactly("C01", "C02");
+        assertThat(copied.get(0).note()).isEqualTo("메모");
+        assertThat(copied.get(1).closeYn()).isEqualTo("true");
+        assertThat(codeService.searchCodesByKindId(sysAdmin, kind.codeKindId(), 0L, "")).hasSize(2);
+        assertThatThrownBy(() -> codeService.copyCodes(customer, kind.codeKindId(), new CodeCopyReq(28000L, List.of(100L))))
+                .isInstanceOf(BusinessException.class);
     }
 
     @Test

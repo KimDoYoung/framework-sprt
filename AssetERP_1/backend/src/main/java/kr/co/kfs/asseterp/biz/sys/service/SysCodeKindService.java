@@ -23,12 +23,15 @@ public class SysCodeKindService {
     private final SysCodeKindMapper sysCodeKindMapper;
 
     /**
-     * AS-IS selectByKindName L22-48: kindName 비면 '%', 아니면 '%값%'. sysYn 비면 'false'(화면은 '%' = 전체).
+     * AS-IS selectByKindName L22-48: kindName 비면 '%', 아니면 '%값%'. sysYn 비면 'false'(A13 화면은 '%' = 전체).
+     * 사용자 관리 코드구분(sysYn 'false')은 고객사 메뉴(A14 Sys08_Tab_CodeKindClient)도 조회하므로 누구나, 그 밖은 sys admin만.
      */
     public List<CodeKindRes> searchCodeKinds(UserPrincipal user, String kindName, String sysYn) {
-        requireSysAdmin(user);
         String like = kindName == null || kindName.isEmpty() ? "%" : "%" + kindName + "%";
         String sys = sysYn == null || sysYn.isEmpty() ? "false" : sysYn;
+        if (!"false".equals(sys)) {
+            requireSysAdmin(user);
+        }
         return sysCodeKindMapper.searchCodeKinds(new CodeKindSearchParam(like, sys));
     }
 
