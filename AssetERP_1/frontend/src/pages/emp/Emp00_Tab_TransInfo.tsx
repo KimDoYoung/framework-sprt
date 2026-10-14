@@ -28,6 +28,7 @@ import { Emp09_TabPage_Evaluation } from './Emp09_TabPage_Evaluation';
 import { Emp12_TabPage_Event } from './Emp12_TabPage_Event';
 import { Emp13_TabPage_Project } from './Emp13_TabPage_Project';
 import { Emp04_TabPage_AddTitle } from './Emp04_TabPage_AddTitle';
+import { Emp18_TabPage_RelateFile } from './Emp18_TabPage_RelateFile';
 import { Emp19_TabPage_education } from './Emp19_TabPage_education';
 
 const gb = gbFor<TransInfo>();
@@ -64,13 +65,6 @@ export interface TransInfoTabProps {
   onRowDeleted?: (row: TransInfo) => void;
 }
 
-/** 아직 변환하지 않은 탭 — 단계가 끝나면 실제 탭 컴포넌트로 바꾼다 (C01-작업방법 "단계") */
-const PendingTab = (name: string, step: string): React.FC<TransInfoTabProps> => ({ row }) => (
-  <div style={{ padding: 24, color: '#888' }}>
-    {name}({step}) — 아직 변환하지 않은 탭입니다. {row ? `선택한 사원: ${row.korNm} (${row.empNo})` : ''}
-  </div>
-);
-
 /** settings() L127-197: tabPanel.add(…) 순서 그대로 */
 const TABS: { key: string; label: string; page: React.FC<TransInfoTabProps> }[] = [
   { key: 'person', label: '기본정보', page: Emp01_TabPage_Person },
@@ -87,7 +81,7 @@ const TABS: { key: string; label: string; page: React.FC<TransInfoTabProps> }[] 
   { key: 'event', label: '행사내역', page: Emp12_TabPage_Event },
   { key: 'project', label: '프로젝트', page: Emp13_TabPage_Project },
   { key: 'addTitle', label: '겸직발령', page: Emp04_TabPage_AddTitle },
-  { key: 'relateFile', label: '연관파일', page: PendingTab('Emp18_TabPage_RelateFile', 'C01-7') },
+  { key: 'relateFile', label: '연관파일', page: Emp18_TabPage_RelateFile },
   { key: 'education', label: '교육사항', page: Emp19_TabPage_education },
 ];
 

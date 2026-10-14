@@ -49,8 +49,8 @@ class TransInfoDbTest {
 
     @Test
     void 재직구분별_목록() {
-        List<TransInfoRes> all = transInfoService.searchTransInfos(kfstest, LocalDate.now(), "", "000");
-        List<TransInfoRes> work = transInfoService.searchTransInfos(kfstest, LocalDate.now(), "", "100");
+        List<TransInfoRes> all = transInfoService.searchTransInfos(kfstest, LocalDate.now(), "", "000", true);
+        List<TransInfoRes> work = transInfoService.searchTransInfos(kfstest, LocalDate.now(), "", "100", true);
         assertThat(all.size()).isGreaterThanOrEqualTo(work.size());
         assertThat(work).allMatch(r -> r.transCd().compareTo("799") <= 0);
     }
@@ -68,7 +68,7 @@ class TransInfoDbTest {
         assertThat(jdbc.queryForObject("select count(*) from emp36_add_deduct join emp35_deduct on emp35_deduct_id = emp36_deduct_id "
                 + "where emp35_person_id = ?", Integer.class, pid)).isEqualTo(types);
         // 목록(재직)에 나오고, 현재 발령으로 다시 읽힌다
-        assertThat(transInfoService.searchTransInfos(kfstest, LocalDate.now(), "ZZTEST01", "100")).hasSize(1);
+        assertThat(transInfoService.searchTransInfos(kfstest, LocalDate.now(), "ZZTEST01", "100", true)).hasSize(1);
         assertThat(transInfoService.getCurrentTransInfo(kfstest, pid).transId()).isEqualTo(row.transId());
         // 사번 중복
         assertThatThrownBy(() -> transInfoService.createTransInfo(kfstest, req("ZZTEST01"))).isInstanceOf(BusinessException.class);

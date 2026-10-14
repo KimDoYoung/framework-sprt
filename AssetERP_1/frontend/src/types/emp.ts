@@ -151,6 +151,18 @@ export interface Account {
   note?: string | null;
 }
 
+/** 연관파일 행 (GET /api/v1/emp/persons/{personId}/relate-files, AS-IS Emp18_RelateFileModel — emp18 + sys10_file) */
+export interface RelateFile {
+  relateFileId: number;
+  personId?: number | null;
+  note?: string | null;
+  fileId?: number | null;
+  regDate?: string | null;
+  fileName?: string | null;
+  /** 용량(KB) — sys10_size */
+  size?: number | null;
+}
+
 /** 가족사항 행 (GET /api/v1/emp/persons/{personId}/families, AS-IS Emp06_FamilyModel) */
 export interface Family {
   familyId: number;

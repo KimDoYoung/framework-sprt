@@ -7,6 +7,7 @@ import kr.co.kfs.asseterp.biz.sys.dto.RoleRow;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleSaveReq;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleSearchParam;
 import kr.co.kfs.asseterp.biz.sys.mapper.SysRoleMapper;
+import kr.co.kfs.asseterp.biz.sys.mapper.SysUserRoleMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +22,7 @@ import static org.mockito.Mockito.*;
 class SysRoleServiceTest {
 
     private final SysRoleMapper mapper = mock(SysRoleMapper.class);
-    private final SysRoleService service = new SysRoleService(mapper);
+    private final SysRoleService service = new SysRoleService(mapper, mock(SysUserRoleMapper.class));
     private final UserPrincipal user = UserPrincipal.builder().userId(-1L).companyId(28000L).roles(List.of()).build();
 
     private static RoleRes res(long id, String nm) {

@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Academic, Account, AddDeduct, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, Evaluation, Family, License, NoteAdmin, OrgInfo, Others, PersonSaveReq, Project, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
+import { Academic, Account, AddDeduct, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, Evaluation, Family, License, NoteAdmin, OrgInfo, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -151,6 +151,25 @@ export const empApi = {
   /** AS-IS Emp14_Account.delete → UpdateDataModel.deleteModel */
   deleteAccounts: async (accountIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/emp/accounts', { data: accountIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS Emp18_RelateFile.selectByPersonId */
+  getRelateFiles: async (personId: number): Promise<RelateFile[]> => {
+    const res = await apiClient.get<ApiResponse<RelateFile[]>>(`v1/emp/persons/${personId}/relate-files`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS Emp18_RelateFile.update → UpdateDataModel */
+  updateRelateFiles: async (rows: RelateFile[]): Promise<RelateFile[]> => {
+    const body = rows.map(r => ({ relateFileId: r.relateFileId, personId: r.personId, note: r.note }));
+    const res = await apiClient.put<ApiResponse<RelateFile[]>>('v1/emp/relate-files', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS Emp18_RelateFile.delete → UpdateDataModel.deleteModel */
+  deleteRelateFiles: async (relateFileIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/relate-files', { data: relateFileIds });
     return res.data.data ?? 0;
   },
 

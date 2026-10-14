@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/emp/Emp18_RelateFile.java -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpRelateFileMapper">
+
+    <!-- AS-IS emp18_relate_file.selectByPersonId / selectById — SELECT는 모델 컬럼만(원본 emp18_relate_file.*, emp01_person.*) -->
+    <sql id="relateFileSelect">
+        SELECT emp18_relate_file_id   AS relate_file_id,
+               emp18_person_id        AS person_id,
+               emp18_note             AS note,
+               sys10_file_id          AS file_id,
+               sys10_reg_date         AS reg_date,
+               sys10_file_nm          AS file_name,
+               sys10_size             AS size
+          FROM emp18_relate_file
+               INNER JOIN emp01_person ON emp18_person_id = emp01_person_id
+               LEFT OUTER JOIN sys10_file ON emp18_relate_file_id = sys10_parent_id
+    </sql>
+
+    <!-- AS-IS emp18_relate_file.selectByPersonId (ORDER BY 없음 — 원본) -->
+    <select id="selectRelateFiles" resultType="kr.co.kfs.asseterp.biz.emp.dto.RelateFileRes">
+        <include refid="relateFileSelect"/>
+         WHERE emp18_person_id  = #{personId}
+           AND emp01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS emp18_relate_file.selectById -->
+    <select id="selectRelateFileById" resultType="kr.co.kfs.asseterp.biz.emp.dto.RelateFileRes">
+        <include refid="relateFileSelect"/>
+         WHERE emp18_relate_file_id = #{relateFileId}
+           AND emp01_company_id     = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel INSERT — 사원이 로그인 회사 사람일 때만 넣는다 -->
+    <insert id="insertRelateFile">
+        INSERT INTO emp18_relate_file (emp18_relate_file_id, emp18_note, emp18_person_id)
+        SELECT #{relateFileId}, #{req.note}, emp01_person_id
+          FROM emp01_person
+         WHERE emp01_person_id  = #{req.personId}
+           AND emp01_company_id = #{companyId}
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE -->
+    <update id="updateRelateFile">
+        UPDATE emp18_relate_file
+           SET emp18_note      = #{req.note},
+               emp18_person_id = #{req.personId}
+         WHERE emp18_relate_file_id = #{relateFileId}
+           AND emp18_person_id IN (SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId})
+    </update>
+
+    <!-- AS-IS UpdateDataModel(emp18_relate_file).deleteModel -->
+    <delete id="deleteRelateFiles">
+        DELETE FROM emp18_relate_file
+         WHERE emp18_person_id IN (SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId})
+           AND emp18_relate_file_id IN
+        <foreach collection="relateFileIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+</mapper>
