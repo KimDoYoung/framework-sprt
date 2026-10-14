@@ -62,6 +62,27 @@
         <foreach collection="roleIds" item="id" open="(" separator="," close=")">#{id}</foreach>
     </delete>
 
+    <!-- A04 Sys05_Tab_PersonRole: AS-IS selectByUserId L40 — 회사 권한그룹 + 사원 연결 여부 -->
+    <select id="searchPersonRoles" resultType="kr.co.kfs.asseterp.biz.sys.dto.PersonRoleRes">
+        SELECT sys04_role_id                                                        AS role_id,
+               sys04_role_nm                                                        AS role_nm,
+               sys04_seq                                                            AS seq,
+               sys04_note                                                           AS note,
+               case when sys05_user_role_id is null then 'false' else 'true' end    AS user_role_yn,
+               sys05_user_role_id                                                   AS user_role_id
+          FROM sys04_role LEFT OUTER JOIN sys05_user_role
+               ON sys04_role_id = sys05_role_id AND sys05_user_id = #{userId}
+         WHERE 1=1
+           AND sys04_company_id = #{companyId}
+         ORDER BY sys04_seq, sys05_seq
+    </select>
+
+    <!-- A04 AS-IS updateUserRole → UpdateDataModel(sys05_user_role) INSERT: 모델에 채운 컬럼(note = 권한명) -->
+    <insert id="insertPersonRole">
+        INSERT INTO sys05_user_role (sys05_user_role_id, sys05_user_id, sys05_role_id, sys05_note)
+        VALUES (#{userRoleId}, #{userId}, #{roleId}, #{note})
+    </insert>
+
     <!-- A02 Sys04_Tab_RoleAdmin: 기본권한·관리자권한(addBoolean, 클릭 편집)까지 쓴다 -->
     <insert id="insertRoleAdmin">
         INSERT INTO sys04_role (sys04_role_id, sys04_company_id, sys04_role_nm, sys04_seq, sys04_note,

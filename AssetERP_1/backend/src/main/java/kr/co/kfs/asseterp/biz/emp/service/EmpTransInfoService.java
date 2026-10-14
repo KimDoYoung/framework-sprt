@@ -30,13 +30,15 @@ public class EmpTransInfoService {
 
     /**
      * AS-IS selectByText: 검색어는 '%입력값%', 기준일이 없으면 오늘.
-     * transCode는 화면의 재직구분(전체 000, 재직 100, 겸직 800, 퇴직 900). isSeparateAddTitle은 화면이 늘 true로 보낸다(SQL에 반영).
+     * transCode는 화면의 재직구분(전체 000, 재직 100, 겸직 800, 퇴직 900).
+     * separateAddTitle은 AS-IS isSeparateAddTitle — C01 화면은 true, A04 Sys05_Tab_PersonRole은 안 보낸다(서버 기본 false).
      */
-    public List<TransInfoRes> searchTransInfos(UserPrincipal user, LocalDate transDate, String searchText, String transCode) {
+    public List<TransInfoRes> searchTransInfos(UserPrincipal user, LocalDate transDate, String searchText, String transCode,
+                                               boolean separateAddTitle) {
         String date = (transDate == null ? LocalDate.now() : transDate).toString();
         String like = "%" + (searchText == null ? "" : searchText) + "%";
         return empTransInfoMapper.searchTransInfos(
-                new TransInfoSearchParam(user.getCompanyId(), date, like, transCode == null ? "000" : transCode, null, null));
+                new TransInfoSearchParam(user.getCompanyId(), date, like, transCode == null ? "000" : transCode, separateAddTitle, null, null));
     }
 
     /**
@@ -50,7 +52,7 @@ public class EmpTransInfoService {
         String date = (transDate == null ? LocalDate.now() : transDate).toString();
         String like = "%" + (searchText == null ? "" : searchText) + "%";
         return empTransInfoMapper.searchTransInfos(
-                new TransInfoSearchParam(companyId, date, like, transCode == null ? "000" : transCode, null, null));
+                new TransInfoSearchParam(companyId, date, like, transCode == null ? "000" : transCode, true, null, null));
     }
 
     /** AS-IS selectOneByPersonId(personId, '%') — Emp00_Current_TransInfoModel: 겸직 아닌 최신 발령 */

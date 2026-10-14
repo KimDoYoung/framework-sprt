@@ -8,9 +8,12 @@ const toTrans = (t: Trans): Trans => ({ ...t, transDate: day(t.transDate), expir
 
 /** C01 사원정보 관리 (Emp00_Tab_TransInfo) */
 export const empApi = {
-  /** AS-IS emp.Emp00_TransInfo.selectByText: transCode 전체 000 / 재직 100 / 겸직 800 / 퇴직 900 */
-  searchTransInfos: async (transDate: string | undefined, searchText: string, transCode: string): Promise<TransInfo[]> => {
-    const res = await apiClient.get<ApiResponse<TransInfo[]>>('v1/emp/trans-infos', { params: { transDate, searchText, transCode } });
+  /**
+   * AS-IS emp.Emp00_TransInfo.selectByText: transCode 전체 000 / 재직 100 / 겸직 800 / 퇴직 900.
+   * separateAddTitle = isSeparateAddTitle (안 주면 true — C01. A04는 false: 겸직도 재직으로)
+   */
+  searchTransInfos: async (transDate: string | undefined, searchText: string, transCode: string, separateAddTitle?: boolean): Promise<TransInfo[]> => {
+    const res = await apiClient.get<ApiResponse<TransInfo[]>>('v1/emp/trans-infos', { params: { transDate, searchText, transCode, separateAddTitle } });
     return res.data.data ?? [];
   },
 

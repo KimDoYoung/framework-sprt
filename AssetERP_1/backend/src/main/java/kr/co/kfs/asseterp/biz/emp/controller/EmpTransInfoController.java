@@ -27,13 +27,14 @@ public class EmpTransInfoController {
 
     private final EmpTransInfoService empTransInfoService;
 
-    /** AS-IS emp.Emp00_TransInfo.selectByText */
+    /** AS-IS emp.Emp00_TransInfo.selectByText (separateAddTitle = isSeparateAddTitle, 안 주면 기존 호출처럼 true) */
     @GetMapping("/trans-infos")
     public ApiResponse<List<TransInfoRes>> searchTransInfos(@AuthenticationPrincipal UserPrincipal principal,
                                                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate transDate,
                                                             @RequestParam(required = false) String searchText,
-                                                            @RequestParam(required = false) String transCode) {
-        return ApiResponse.ok(empTransInfoService.searchTransInfos(principal, transDate, searchText, transCode));
+                                                            @RequestParam(required = false) String transCode,
+                                                            @RequestParam(defaultValue = "true") boolean separateAddTitle) {
+        return ApiResponse.ok(empTransInfoService.searchTransInfos(principal, transDate, searchText, transCode, separateAddTitle));
     }
 
     /** AS-IS emp.Emp00_TransInfo.selectByText — 고른 회사의 사원(Emp00_Lookup_SelectMulti.open(companyId, …), sys admin만) */

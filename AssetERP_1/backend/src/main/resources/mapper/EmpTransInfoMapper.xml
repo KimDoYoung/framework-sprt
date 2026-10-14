@@ -106,7 +106,7 @@
         f_cdnm('EmpGenderCode', emp02_gender_cd, emp01_company_id, emp00_trans_date)         AS gender_nm
     </sql>
 
-    <!-- AS-IS selectByText L339 (isSeparateAddTitle = true: 재직은 799 이하) -->
+    <!-- AS-IS selectByText L339 (isSeparateAddTitle = true: 재직은 799 이하, false: 899 이하). 검색어에 직책명은 새 원본(2026-10-13) L399 -->
     <select id="searchTransInfos" resultType="kr.co.kfs.asseterp.biz.emp.dto.TransInfoRes">
         <include refid="emp00With"/>
         SELECT <include refid="transInfoColumns"/>
@@ -115,7 +115,11 @@
                INNER JOIN org00                ON emp00_org_code_id = org00_org_code_id
                LEFT OUTER JOIN emp02_others    ON emp00_person_id = emp02_person_id
          WHERE emp00_trans_cd = ( CASE #{transCode} WHEN '100'
-                                                    THEN ( CASE WHEN emp00_trans_cd <![CDATA[ <= ]]> '799' /** 겸직(800),퇴직(900)은 제외한다 */
+                                                    THEN ( CASE WHEN emp00_trans_cd <![CDATA[ <= ]]>
+        <choose>
+            <when test="separateAddTitle">'799' /** 겸직(800),퇴직(900)은 제외한다 */</when>
+            <otherwise>'899' /** 퇴직(900)만 제외한다. (겸직자 재직자로 인식) */</otherwise>
+        </choose>
                                                                 THEN emp00_trans_cd
                                                                 ELSE #{transCode}
                                                                 END )
@@ -123,7 +127,7 @@
                                                     WHEN '800' THEN '800'
                                                     ELSE emp00_trans_cd
                                                     END )
-           AND (emp01_kor_nm||org00_kor_nm||emp01_emp_no) LIKE #{searchText}
+           AND (emp01_kor_nm||org00_kor_nm||emp01_emp_no||f_cdnm('EmpTitleCode', emp00_title_cd, emp01_company_id, emp00_trans_date)) LIKE #{searchText}
            AND org00_mod_date = ( SELECT max(org00_mod_date)
                                     FROM org00
                                    WHERE org00_org_code_id = emp00_org_code_id

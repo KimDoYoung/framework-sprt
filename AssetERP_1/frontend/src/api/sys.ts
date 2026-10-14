@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, UserRole } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, UserRole } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -315,6 +315,21 @@ export const sysApi = {
   deleteUserRoles: async (userRoleIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/sys/user-roles', { data: userRoleIds });
     return res.data.data ?? 0;
+  },
+
+  // ── A04 사용자별 권한그룹 맵핑 (Sys05_Tab_PersonRole) ──
+
+  /** AS-IS sys.Sys04_Role.selectByUserId: 로그인 회사 권한그룹 + 사원 연결 여부 */
+  searchPersonRoles: async (userId: number): Promise<PersonRole[]> => {
+    const res = await apiClient.get<ApiResponse<PersonRole[]>>(`v1/sys/persons/${userId}/roles`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys04_Role.updateUserRole: 바뀐 행 → selectByUserId 전체 */
+  updatePersonRoles: async (userId: number, rows: PersonRole[]): Promise<PersonRole[]> => {
+    const body = rows.map(({ roleId, roleNm, userRoleYn, userRoleId }) => ({ roleId, roleNm, userRoleYn, userRoleId }));
+    const res = await apiClient.put<ApiResponse<PersonRole[]>>(`v1/sys/persons/${userId}/roles`, body);
+    return res.data.data ?? [];
   },
 
   // ── A05 고객사별 사용자권한그룹 관리 (Sys05_Tab_CompanyUserRole, sys admin) ──

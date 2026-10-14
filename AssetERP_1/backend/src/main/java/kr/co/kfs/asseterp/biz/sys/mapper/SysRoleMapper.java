@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.sys.mapper;
 
+import kr.co.kfs.asseterp.biz.sys.dto.PersonRoleRes;
+import kr.co.kfs.asseterp.biz.sys.dto.PersonRoleRow;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleAdminRow;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleDeleteParam;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleRes;
@@ -35,4 +37,10 @@ public interface SysRoleMapper {
 
     /** A02 고객사 권한그룹: UpdateDataModel 동적 UPDATE (화면에서 바뀌는 컬럼만, 고른 고객사 행만) */
     int updateRoleAdmin(RoleAdminRow row);
+
+    /** A04 사원별 권한그룹: AS-IS selectByUserId (회사 권한그룹 + 사원 연결 여부) */
+    List<PersonRoleRes> searchPersonRoles(Long companyId, Long userId);
+
+    /** A04 AS-IS updateUserRole → UpdateDataModel(sys05_user_role) INSERT (note = 권한명) */
+    int insertPersonRole(PersonRoleRow row);
 }

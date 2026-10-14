@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.sys.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.sys.dto.PersonRoleRes;
+import kr.co.kfs.asseterp.biz.sys.dto.PersonRoleSaveReq;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleAdminSaveReq;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleRes;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleSaveReq;
@@ -19,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** 권한그룹 관리 (AS-IS Sys04_Tab_Role·Sys04_Tab_RoleAdmin → server/sys/Sys04_Role) */
+/** 권한그룹 관리 (AS-IS Sys04_Tab_Role·Sys04_Tab_RoleAdmin·Sys05_Tab_PersonRole → server/sys/Sys04_Role) */
 @RestController
 @RequestMapping("/api/v1/sys")
 @RequiredArgsConstructor
@@ -72,5 +74,20 @@ public class SysRoleController {
                                                    @PathVariable Long companyId,
                                                    @RequestBody List<Long> roleIds) {
         return ApiResponse.ok(sysRoleService.deleteCompanyRoles(principal, companyId, roleIds));
+    }
+
+    /** A04 AS-IS sys.Sys04_Role.selectByUserId: 사원(personId)의 권한그룹 연결 여부 */
+    @GetMapping("/persons/{userId}/roles")
+    public ApiResponse<List<PersonRoleRes>> searchPersonRoles(@AuthenticationPrincipal UserPrincipal principal,
+                                                              @PathVariable Long userId) {
+        return ApiResponse.ok(sysRoleService.searchPersonRoles(principal, userId));
+    }
+
+    /** A04 AS-IS sys.Sys04_Role.updateUserRole: 바뀐 행 → selectByUserId 전체 */
+    @PutMapping("/persons/{userId}/roles")
+    public ApiResponse<List<PersonRoleRes>> updatePersonRoles(@AuthenticationPrincipal UserPrincipal principal,
+                                                              @PathVariable Long userId,
+                                                              @RequestBody List<PersonRoleSaveReq> rows) {
+        return ApiResponse.ok(sysRoleService.updatePersonRoles(principal, userId, rows));
     }
 }

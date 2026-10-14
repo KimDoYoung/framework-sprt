@@ -238,6 +238,18 @@ export interface UserRole {
   parentFullNm?: string | null;
 }
 
+/** 사원별 권한그룹 (GET /api/v1/sys/persons/{userId}/roles, AS-IS Sys04_RoleModel ← sys04_role.selectByUserId) */
+export interface PersonRole {
+  roleId: number;
+  roleNm?: string | null;
+  seq?: string | null;
+  note?: string | null;
+  /** 'true' | 'false' (gb.boolean 편집) */
+  userRoleYn: string;
+  /** 연결이 있을 때만 — 해제 저장 때 삭제 키 */
+  userRoleId?: number | null;
+}
+
 // ── A09 메뉴 관리 (Sys06_Tab_Menu) ──
 
 /** 메뉴 관리 트리 행 (AS-IS Sys06_MenuModel). 전위 순서, Y/N은 'true'/'false' */
