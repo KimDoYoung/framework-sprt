@@ -88,3 +88,6 @@ frontend를 빌드해 `backend/src/main/resources/static`으로 복사한 뒤 `b
 5. 컴파일/빌드/테스트/배포 실행 시: 셸에서 직접 실행하지 말고 `yunhee run "<명령어>"` (예: `yunhee run "./bm.sh compile"`, `yunhee run "npx tsc -b --noEmit"`)로 실행하여 요약만 확인한다.
    원시 로그는 `.yunhee/runs/`(git-ignored)에 남고, 직전 결과는 `yunhee last-run`.
 6. `yunhee agent-guide`와 이 절이 다르면 이 절을 따른다.
+7. **작업 완료 알림 (ntfy)**: 사용자의 요청에 따른 작업(화면 변환, 버그 수정, 빌드/테스트 등)이 끝나면 **항상** 아래 `curl` 명령을 실행하여 ntfy 알림을 전송한다:
+   `curl -s -d "agy message: <작업내용 요약> 작업 끝 남" ntfy.sh/asseterp-framework-gwtgxt-2-sbreact-2026`
+
