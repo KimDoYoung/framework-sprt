@@ -349,6 +349,24 @@ export interface CodeGroup {
   name?: string | null;
 }
 
+/** 특정화면 사용요청 한 행 (A27, AS-IS Sys53_SpecificMenuRequestModel). specificMenuRequestId ≤ 0 = 새 행. 날짜는 'YYYY-MM-DD' */
+export interface SpecificMenuRequest {
+  specificMenuRequestId: number;
+  companyId?: number | null;
+  personId?: number | null;
+  personNm?: string | null;
+  regDate?: string | null;
+  stateCd?: string | null;
+  stateNm?: string | null;
+  specificWorkCd?: string | null;
+  specificWorkNm?: string | null;
+  apprId?: number | null;
+  /** 결재문서 상태 코드 (AprStatusCode: 10·20·30 진행중, 40·99 종결) */
+  aprStatusCd?: string | null;
+  aprStatusNm?: string | null;
+  confirmNm?: string | null;
+}
+
 /** 특정매뉴 권한 한 행 (A15-4, AS-IS Sys50_SpecificMenuModel). specificMenuId ≤ 0 = 새 행 */
 export interface SpecificMenu {
   specificMenuId: number;

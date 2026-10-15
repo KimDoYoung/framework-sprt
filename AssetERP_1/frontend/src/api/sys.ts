@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, UserRole } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, UserRole } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -508,6 +508,33 @@ export const sysApi = {
   /** AS-IS sys.Sys13_CodeGroup.delete → 지운 건수 */
   deleteCodeGroupMembers: async (codeGroupIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/sys/code-groups/members', { data: codeGroupIds });
+    return res.data.data ?? 0;
+  },
+
+  // ── A27 특정화면 사용요청 (Sys53_Tab_SpecificMenuRequest) ──
+
+  /** AS-IS sys.Sys53_SpecificMenuRequest.selectByText: stateCd·specificWorkCd '%' = 전체 (로그인 회사) */
+  searchSpecificMenuRequests: async (stateCd: string, specificWorkCd: string): Promise<SpecificMenuRequest[]> => {
+    const res = await apiClient.get<ApiResponse<SpecificMenuRequest[]>>('v1/sys/specific-menu-requests', { params: { stateCd, specificWorkCd } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS insertRow()의 새 행 기본값: 신청자(조직 + 성명)·신청일(오늘) */
+  newSpecificMenuRequestRow: async (): Promise<SpecificMenuRequest> => {
+    const res = await apiClient.get<ApiResponse<SpecificMenuRequest>>('v1/sys/specific-menu-requests/new-row');
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys53_SpecificMenuRequest.update: 변경 행 → 저장된 행(요청 순서). specificMenuRequestId ≤ 0 = 신규 */
+  updateSpecificMenuRequests: async (rows: SpecificMenuRequest[]): Promise<SpecificMenuRequest[]> => {
+    const body = rows.map(({ specificMenuRequestId, specificWorkCd, apprId }) => ({ specificMenuRequestId, specificWorkCd, apprId }));
+    const res = await apiClient.put<ApiResponse<SpecificMenuRequest[]>>('v1/sys/specific-menu-requests', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys53_SpecificMenuRequest.delete → 지운 건수 */
+  deleteSpecificMenuRequests: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/specific-menu-requests', { data: ids });
     return res.data.data ?? 0;
   },
 
