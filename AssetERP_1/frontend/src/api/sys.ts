@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, UserRole } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, UserRole } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -259,6 +259,12 @@ export const sysApi = {
   /** AS-IS sys.Sys06_Menu.selectByRoleId: 로그인 회사 메뉴 + 그 권한 연결 상태 */
   getRoleMenuTree: async (roleId: number): Promise<RoleMenuNode[]> => {
     const res = await apiClient.get<ApiResponse<RoleMenuNode[]>>(`v1/sys/roles/${roleId}/menus`);
+    return res.data.data ?? [];
+  },
+
+  /** C04 AS-IS sys.Sys06_Menu.selectByPersonId: 사원이 볼 수 있는 메뉴 트리(로그인 회사) */
+  getPersonMenuTree: async (personId: number): Promise<PersonMenuNode[]> => {
+    const res = await apiClient.get<ApiResponse<PersonMenuNode[]>>(`v1/sys/persons/${personId}/menus`);
     return res.data.data ?? [];
   },
 

@@ -62,6 +62,13 @@ public class SysMenuController {
         return ApiResponse.ok(sysMenuService.getRoleMenuTree(principal, roleId));
     }
 
+    /** C04 사원별 메뉴권한(View) 트리 (AS-IS sys.Sys06_Menu.selectByPersonId) — 로그인 회사 */
+    @GetMapping("/persons/{personId}/menus")
+    public ApiResponse<List<kr.co.kfs.asseterp.biz.sys.dto.PersonMenuRes>> getPersonMenus(@AuthenticationPrincipal UserPrincipal principal,
+                                                                                         @PathVariable Long personId) {
+        return ApiResponse.ok(sysMenuService.getPersonMenus(principal, personId));
+    }
+
     /** A06 권한그룹별 메뉴 맵핑 저장 (AS-IS sys.Sys06_Menu.updateRoleMenu) → 저장된 행 */
     @PutMapping("/roles/{roleId}/menus")
     public ApiResponse<List<RoleMenuTreeRes>> updateRoleMenus(@AuthenticationPrincipal UserPrincipal principal,

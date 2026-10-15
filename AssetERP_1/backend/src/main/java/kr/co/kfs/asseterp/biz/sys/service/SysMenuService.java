@@ -12,6 +12,8 @@ import kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuTreeRes;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuRes;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuRow;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuSearchParam;
+import kr.co.kfs.asseterp.biz.sys.dto.PersonMenuRes;
+import kr.co.kfs.asseterp.biz.sys.dto.PersonMenuRow;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleMenuSaveReq;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleMenuTreeRes;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleRes;
@@ -26,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -148,6 +151,35 @@ public class SysMenuService {
         // SQL이 부모별 sys06_seq, sys06_menu_id 순
         return toPreorder(sysMenuMapper.selectRoleMenuTree(user.getCompanyId(), roleId), RoleMenuTreeRes::menuId, RoleMenuTreeRes::parentId,
                 RoleMenuTreeRes::withDepth);
+    }
+
+    // ── C04 사원별 메뉴권한(View) (AS-IS Sys06_Menu.selectByPersonId L275-284 → TreeUtil.makeMenuTree L177-223) ──
+
+    /**
+     * 사원이 볼 수 있는 메뉴 트리(로그인 회사). 원본은 SQL의 menu_level로 TreeUtil.makeMenuTree가 부모를 찾는다:
+     * 레벨이 깊어지면 바로 앞 행이 부모, 같거나 얕아지면 (레벨 - 1)에서 마지막으로 본 행이 부모(없으면 루트).
+     * 권한그룹이 둘 이상이라 같은 메뉴가 여러 행이면 처음 한 번만 쓴다(원본 GXT 트리는 같은 키를 두 번 못 담는다).
+     */
+    public List<PersonMenuRes> getPersonMenus(UserPrincipal user, Long personId) {
+        List<PersonMenuRow> rows = sysMenuMapper.selectPersonMenus(user.getCompanyId(), personId, null);
+        List<PersonMenuRes> out = new ArrayList<>(rows.size());
+        Map<Integer, PersonMenuRes> pointMap = new HashMap<>();
+        java.util.Set<Long> seen = new java.util.HashSet<>();
+        int prevLevel = -1;
+        for (PersonMenuRow r : rows) {
+            if (!seen.add(r.menuId())) {
+                continue;
+            }
+            int nowLevel = r.menuLevel();
+            PersonMenuRes parent = prevLevel < 0 ? null : pointMap.get(nowLevel > prevLevel ? prevLevel : nowLevel - 1);
+            PersonMenuRes node = parent == null
+                    ? new PersonMenuRes(r.menuId(), null, 0, r.menuNoPlusNm())
+                    : new PersonMenuRes(r.menuId(), parent.menuId(), parent.depth() + 1, r.menuNoPlusNm());
+            out.add(node);
+            pointMap.put(nowLevel, node);
+            prevLevel = nowLevel;
+        }
+        return out;
     }
 
     /** 바뀐 행마다 연결 행이 없으면 채번해 INSERT, 있으면 use_yn UPDATE → 저장된 행(다시 조회하지 않는다 — AS-IS 그대로) */

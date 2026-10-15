@@ -8,6 +8,7 @@ import kr.co.kfs.asseterp.biz.sys.dto.MenuCopyRes;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuCopySearchParam;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuSaveReq;
 import kr.co.kfs.asseterp.biz.sys.dto.MenuTreeRes;
+import kr.co.kfs.asseterp.biz.sys.dto.PersonMenuRow;
 import kr.co.kfs.asseterp.biz.sys.dto.RoleMenuTreeRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -52,6 +53,11 @@ public interface SysMenuMapper {
     int updateRoleMenuUseYn(@Param("id") Long id, @Param("roleId") Long roleId, @Param("useYn") String useYn);
 
     RoleMenuTreeRes selectRoleMenuNode(@Param("roleId") Long roleId, @Param("menuId") Long menuId);
+
+    // ── C04 사원별 메뉴권한(View) (AS-IS Sys06_Menu.selectByPersonId) ──
+
+    /** AS-IS selectUserMenu1Bang: 사원의 권한그룹 + 회사 기본 권한그룹 메뉴. userId는 서비스가 안 넘긴다(AS-IS 그대로 null) */
+    List<PersonMenuRow> selectPersonMenus(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("userId") Long userId);
 
     // ── A09 메뉴 관리 (AS-IS Sys06_Menu.selectByAll / update / delete / getAllMenuList / updateByMenuYn) ──
 

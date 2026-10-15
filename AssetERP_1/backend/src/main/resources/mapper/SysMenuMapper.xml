@@ -249,6 +249,121 @@
     </select>
 
     <!--
+      C04 사원별 메뉴권한(View). AS-IS(IDMS-IC) sys06_menu.selectUserMenu1Bang L1003 + menu_tree_postgresql L894 + person_menu_list L959 그대로(Tibero 분기 제외).
+      personId > 1: 사원 권한그룹 + 회사 기본 권한그룹의 메뉴(겸직이 있으면 sys06_add_title_use_yn 메뉴만), personId == 0: 회사 메뉴 전체.
+      원본은 <if personId > 1>·<if personId == 0> 두 개라 personId == 1이면 FROM 절이 비어 SQL 오류다 → <choose>(0이면 전체, 아니면 권한 메뉴)로 옮겨 1도 사원으로 본다
+      (sql-check가 두 <if>를 함께 펼쳐 오류로 보기도 한다).
+      원본 결함 그대로: 서비스가 userId를 안 넘겨 p.sys51_person_id = NULL → 특정메뉴(sys50)는 항상 제외된다.
+    -->
+    <select id="selectPersonMenus" resultType="kr.co.kfs.asseterp.biz.sys.dto.PersonMenuRow">
+        WITH RECURSIVE menu_tree(
+            sys06_menu_id, sys06_menu_nm, sys06_seq, sys06_note, sys06_parent_id, sys06_use_yn, sys06_class_nm,
+            sys06_add_title_use_yn, depth, path, cycle, sys06_menu_no
+        ) AS (
+            SELECT a.sys06_menu_id, a.sys06_menu_nm, a.sys06_seq, a.sys06_note, a.sys06_parent_id, a.sys06_use_yn, a.sys06_class_nm,
+                   sys06_add_title_use_yn, 1, ARRAY[a.sys06_seq||a.sys06_menu_nm::text], false, a.sys06_menu_no
+              FROM sys06_menu a
+             WHERE 1=1
+               AND sys06_parent_id = 0
+               AND a.sys06_use_yn = 'true'
+             UNION ALL
+            SELECT a.sys06_menu_id, a.sys06_menu_nm, a.sys06_seq, a.sys06_note, a.sys06_parent_id, a.sys06_use_yn, a.sys06_class_nm,
+                   a.sys06_add_title_use_yn, b.depth + 1, array_append(b.path, a.sys06_seq||a.sys06_menu_nm::text),
+                   a.sys06_seq||a.sys06_menu_nm = any(b.path), a.sys06_menu_no
+              FROM sys06_menu a
+                   INNER JOIN menu_tree b ON a.sys06_parent_id = b.sys06_menu_id
+             WHERE 1=1
+               AND a.sys06_use_yn = 'true'
+               AND NOT CYCLE
+        ),
+        person_menu_list AS (
+            SELECT sys07_role_id    AS role_id,
+                   sys06_menu_id    AS menu_id,
+                   sys06_parent_id  AS parent_menu_id,
+                   sys06_menu_nm    AS menu_nm
+              FROM (
+                    SELECT DISTINCT sys07_role_id, sys07_menu_id
+                      FROM sys07_role_menu
+                     WHERE 1=1
+                       AND sys07_use_yn = 'true'
+                       AND sys07_role_id IN (
+                                SELECT sys05_role_id AS role_id
+                                  FROM sys05_user_role
+                                 WHERE sys05_user_id = #{personId}
+                                 UNION
+                                SELECT sys04_role_id AS role_id
+                                  FROM sys04_role
+                                 WHERE 1=1
+                                   AND sys04_company_id = #{companyId}
+                                   AND sys04_default_role = 'true'
+                            )
+                   ) A
+                   INNER JOIN (
+                        SELECT sys06_menu_id, sys06_menu_nm, sys06_parent_id
+                          FROM sys01_company
+                               INNER JOIN sys03_company_menu ON sys01_company_id = sys03_company_id
+                               INNER JOIN sys06_menu ON sys03_menu_Id = sys06_menu_Id AND sys03_use_yn = 'true'
+                         WHERE 1=1
+                           AND sys01_company_id = #{companyId}
+                           AND sys06_use_yn = 'true'
+                   ) B ON A.sys07_menu_id = B.sys06_menu_id
+        )
+        SELECT B.sys06_menu_id AS menu_id,
+               B.depth         AS menu_level,
+               (CASE WHEN b.sys06_menu_no IS NULL
+                     THEN b.sys06_menu_nm
+                     ELSE b.sys06_menu_no||' '||b.sys06_menu_nm
+                END)           AS menu_no_plus_nm
+          FROM <choose><when test="personId != 0">
+               person_menu_list A
+               INNER JOIN menu_tree B ON A.menu_id = B.sys06_menu_id
+         WHERE CASE WHEN (
+                        SELECT COUNT(emp04_add_title_id)
+                          FROM emp04_add_title
+                         WHERE emp04_add_person_id = #{personId}
+                    ) &gt; 0
+                    THEN COALESCE(B.sys06_add_title_use_yn,'false') = 'true'
+                    ELSE 1=1
+               END
+           AND sys06_menu_id NOT IN (
+                    SELECT COALESCE((
+                                SELECT 9999
+                                  FROM sys50_specific_menu m
+                                       LEFT JOIN sys51_specific_menu_person p ON p.sys51_specific_menu_id = m.sys50_specific_menu_id AND p.sys51_person_id = #{userId,jdbcType=BIGINT}
+                                 WHERE m.sys50_company_id = #{companyId}
+                                   AND COALESCE(p.sys51_use_yn, 'false') = 'true'
+                                 LIMIT 1
+                            ), m.sys50_menu_id)
+                      FROM sys50_specific_menu m
+                           LEFT JOIN sys51_specific_menu_person p ON p.sys51_specific_menu_id = m.sys50_specific_menu_id AND p.sys51_person_id = #{userId,jdbcType=BIGINT}
+                     WHERE m.sys50_company_id = #{companyId}
+               )
+        </when><otherwise>
+               menu_tree B
+         WHERE 1=1
+           AND sys06_menu_id NOT IN (
+                    SELECT COALESCE((
+                                SELECT 9999
+                                  FROM sys50_specific_menu m
+                                       LEFT JOIN sys51_specific_menu_person p ON p.sys51_specific_menu_id = m.sys50_specific_menu_id AND p.sys51_person_id = #{userId,jdbcType=BIGINT}
+                                 WHERE m.sys50_company_id = #{companyId}
+                                   AND COALESCE(p.sys51_use_yn, 'false') = 'true'
+                                 LIMIT 1
+                            ), m.sys50_menu_id)
+                      FROM sys50_specific_menu m
+                           LEFT JOIN sys51_specific_menu_person p ON p.sys51_specific_menu_id = m.sys50_specific_menu_id AND p.sys51_person_id = #{userId,jdbcType=BIGINT}
+                     WHERE m.sys50_company_id = #{companyId}
+               )
+           AND sys06_menu_id IN (
+                    SELECT sys03_menu_id
+                      FROM sys03_company_menu
+                     WHERE sys03_company_id = #{companyId}
+               )
+        </otherwise></choose>
+         ORDER BY B.path
+    </select>
+
+    <!--
       A09 메뉴 관리. AS-IS sys06_menu.selectByParentId(L55)를 parentId 0부터 부모별로 반복 호출 → 한 번에 읽고 서비스가 전위 순서로 편다(A10과 같음).
       부모별 정렬 sys06_seq, sys06_menu_nm 그대로. f_menu_nm_allpath(sys06_menu_full_nm)는 화면이 쓰지 않아 뺐다.
       Y/N은 모델 getter 기본값(null → false)을 COALESCE로 맞춘다(05 §6)

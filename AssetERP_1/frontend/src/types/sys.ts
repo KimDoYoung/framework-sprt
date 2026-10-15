@@ -215,6 +215,15 @@ export interface RoleMenuNode {
   useYn?: string | null;
 }
 
+/** 사원별 메뉴 트리 행 (GET /api/v1/sys/persons/{personId}/menus, C04) — 전위 순서, 루트는 parentId null·depth 0 */
+export interface PersonMenuNode {
+  menuId: number;
+  parentId: number | null;
+  depth: number;
+  /** 메뉴번호 + ' ' + 메뉴명 (번호 없으면 메뉴명) */
+  menuNoPlusNm: string;
+}
+
 /** 권한그룹별 메뉴권한 복사 (POST /api/v1/sys/role-menus/copy-role|copy-menu). inCompanyId = 출발지, companyIds = 목적지 */
 export interface RoleMenuCopyReq {
   inCompanyId: number;
