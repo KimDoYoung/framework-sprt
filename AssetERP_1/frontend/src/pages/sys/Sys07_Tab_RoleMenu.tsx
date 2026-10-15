@@ -42,7 +42,7 @@ export const Sys07_Tab_RoleMenu: React.FC = () => {
   return (
     <Splitter style={{ height: '100%', background: '#fff' }}>
       <Splitter.Panel defaultSize="55%" max={1000} min={200}>
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 4px 0 12px' }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 4px 0 12px', boxSizing: 'border-box' }}>
           <Space>
             <Typography.Text strong>권한명</Typography.Text>
             <Input style={{ width: 200 }} value={roleName} onChange={e => setRoleName(e.target.value)} />

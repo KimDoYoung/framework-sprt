@@ -52,7 +52,7 @@ export const Emp12_TabPage_Event: React.FC<TransInfoTabProps> = ({ row }) => {
   useEffect(() => { if (personId) void retrieve(); else crud.clear(); }, [personId]);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 12px' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 12px', boxSizing: 'border-box' }}>
       <Space>
         <Button type="search" onClick={retrieve}>조회</Button>
         <Button type="register" onClick={crud.addRow} disabled={!row}>등록</Button>

@@ -19,6 +19,7 @@ import { Sys06_Tab_MenuView } from './sys/Sys06_Tab_MenuView';
 import { Sys10_Tab_TotalSize } from './sys/Sys10_Tab_TotalSize';
 import { Sys53_Tab_SpecificMenuRequest } from './sys/Sys53_Tab_SpecificMenuRequest';
 import { Sys53_Tab_SpecificMenuRequestAdmin } from './sys/Sys53_Tab_SpecificMenuRequestAdmin';
+import { Sys96_Tab_OpenMenuLogAdmin } from './sys/Sys96_Tab_OpenMenuLogAdmin';
 import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
 import { Sys07_Tab_Company } from './sys/Sys07_Tab_Company';
 import { Sys07_Tab_CompanyRoleMenu } from './sys/Sys07_Tab_CompanyRoleMenu';
@@ -50,6 +51,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sys08_Tab_CodeKindAdmin, // A13
   Sys08_Tab_CodeKindClient, // A14
   Sys10_Tab_TotalSize, // A16
+  Sys96_Tab_OpenMenuLogAdmin, // A35
   Sys53_Tab_SpecificMenuRequestAdmin, // A28 (1단계: 문서보기 아이콘의 전자결재 제외)
   Sys53_Tab_SpecificMenuRequest, // A27 (1단계: 결재요청 아이콘의 전자결재·분류선택 제외)
 };

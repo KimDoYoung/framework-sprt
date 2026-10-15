@@ -486,7 +486,8 @@
         SELECT sys06_menu_id          AS menu_id,
                sys06_parent_path_nm   AS parent_path_nm,
                sys06_menu_nm          AS menu_nm,
-               sys06_menu_full_nm     AS menu_full_nm
+               sys06_menu_full_nm     AS menu_full_nm,
+               sys06_class_nm         AS class_name
           FROM (
                 SELECT a.*
                      , f_menu_nm_allpath(a.sys06_menu_id)                                     AS sys06_menu_full_nm

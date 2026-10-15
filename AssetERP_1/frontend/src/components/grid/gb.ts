@@ -1,6 +1,6 @@
 import type { ColDef, ColGroupDef } from 'ag-grid-community';
 import { fmtDate, fmtDouble, fmtLong, numComparator } from './format';
-import { CheckCell, SignColorCell, StatusCell } from './renderers';
+import { CheckCell, LongSecondCell, SignColorCell, StatusCell } from './renderers';
 
 /**
  * 컬럼 헬퍼 — AS-IS GridBuilder `addXxx(valueProvider, width, header)`와 이름·인자 순서를 1:1로 맞춘다.
@@ -98,6 +98,9 @@ export function gbFor<T>() {
     /** addLongColor: 음수 빨강 · 양수 파랑 (원본 그대로) */
     longColor: (f: Field, w: number, h: string, o?: GbOpts<T>) =>
       col(f, w, h, 'right', { ...num(fmtLong), cellRenderer: SignColorCell, cellRendererParams: { kind: 'long' } }, o),
+    /** addLongSecond(…, color): 굵은 글씨 정수(콤마 없음), 0은 회색. 오른쪽 정렬 */
+    longSecond: (f: Field, w: number, h: string, color: string, o?: GbOpts<T>) =>
+      col(f, w, h, 'right', { comparator: numComparator, cellRenderer: LongSecondCell, cellRendererParams: { color } }, o),
     /** addDouble: "#,###.######" */
     double: (f: Field, w: number, h: string, o?: GbOpts<T>) => col(f, w, h, 'right', num(fmtDouble), o),
     /** addDoubleCenter */

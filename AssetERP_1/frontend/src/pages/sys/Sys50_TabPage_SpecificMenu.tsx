@@ -154,7 +154,7 @@ export const Sys50_TabPage_SpecificMenu: React.FC<CompanyTabProps> = ({ companyI
   useEffect(() => { if (companyId) crud.retrieve(); else crud.clear(); }, [companyId]);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, boxSizing: 'border-box' }}>
       <Space>
         <Typography.Text strong>구분</Typography.Text>
         <CodeSelect kindCd="SpecificWorkCode" altCode={['%', '전체']} style={{ width: 150 }} value={specificWorkCd}

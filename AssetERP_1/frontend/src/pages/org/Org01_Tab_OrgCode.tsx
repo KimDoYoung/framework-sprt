@@ -112,7 +112,7 @@ export const Org01_Tab_OrgCode: React.FC = () => {
   const viewOrgChart = () => message.info('조직도보기(Org02_View_Chart)는 아직 변환 전입니다.');
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 20, background: '#fff' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 20, background: '#fff', boxSizing: 'border-box' }}>
       <Space wrap>
         <Typography.Text strong>기준일</Typography.Text>
         <DatePicker style={{ width: 160 }} value={baseDate} onChange={setBaseDate} format="YYYY-MM-DD" />

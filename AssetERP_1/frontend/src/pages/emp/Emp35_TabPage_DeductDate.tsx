@@ -104,7 +104,7 @@ const DeductInsertForm: React.FC<DeductFormProps> = ({ deduct, onSaved, onDelete
   const checked = (v: string | null | undefined) => v === 'true';
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '8px 12px', gap: 8 }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '8px 12px', gap: 8, boxSizing: 'border-box' }}>
       <Space>
         {/* [E1] */}
         <Button type="save" onClick={update} loading={saving} disabled={!isActive}>저장</Button>
@@ -262,7 +262,7 @@ export const Emp35_TabPage_DeductDate: React.FC<TransInfoTabProps> = ({ row }) =
     <div style={{ height: '100%', display: 'flex' }}>
       {/* 좌 15%: 날짜 목록 */}
       <div style={{ width: '15%', minWidth: 120, flex: 'none' }}>
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 4px' }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 4px', boxSizing: 'border-box' }}>
           <Space size="small">
             {/* [E1] */}
             <Button type="search" onClick={retrieve}>조회</Button>

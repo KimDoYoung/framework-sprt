@@ -61,7 +61,7 @@ export const Sms02_Tab_TotalCount: React.FC = () => {
     <>
     <Splitter style={{ height: '100%', background: '#fff' }}>
       <Splitter.Panel max={1000} min={300}>
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: 20 }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: 20, boxSizing: 'border-box' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 50, flex: 'none' }}>
             {/* [E1] retrieveButton[조회].Select (L72) → retrieve() */}
             <Button type="search" onClick={retrieve}>조회</Button>
@@ -81,7 +81,7 @@ export const Sms02_Tab_TotalCount: React.FC = () => {
         </div>
       </Splitter.Panel>
       <Splitter.Panel defaultSize={540} min={300}>
-        <div style={{ height: '100%', padding: '20px 20px 20px 0' }}>
+        <div style={{ height: '100%', padding: '20px 20px 20px 0', boxSizing: 'border-box' }}>
           <Sms02_TabPage_Detail ref={detailRef} />
         </div>
       </Splitter.Panel>

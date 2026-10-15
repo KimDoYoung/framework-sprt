@@ -86,7 +86,7 @@ export const Sys05_Page_UserRole: React.FC<Props> = ({ roleId }) => {
 
   // [E0] 화면 열림 (생성자 L50-90)
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0 4px' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0 4px', boxSizing: 'border-box' }}>
       <Space>
         <Typography.Text strong>권한별 사원정보</Typography.Text>
         {/* [E1] retrieveButton[조회].Select (L52) → retrieve() */}

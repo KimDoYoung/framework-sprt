@@ -53,6 +53,7 @@ const cols = [gb.text('companyNm', 200, '고객명'), gb.textCenter('icamCompany
 | `addLong` | `gb.long` | 오른쪽, 천단위 콤마 |
 | `addLongCenter` | `gb.longCenter` | 가운데, 천단위 콤마 |
 | `addLongColor` | `gb.longColor` | 오른쪽, **음수 빨강·양수 파랑** (원본 그대로) |
+| `addLongSecond(…, color)` | `gb.longSecond(f, w, h, color)` | 오른쪽, 굵은 정수(콤마 없음), 0·빈 값은 회색 0, 그 밖은 color |
 | `addDouble` | `gb.double` | 오른쪽, `#,###.######` |
 | `addDoubleCenter` | `gb.doubleCenter` | 가운데 |
 | `addDoubleColor` | `gb.doubleColor` | 오른쪽, **양수 빨강·음수 파랑** (원본 그대로) |

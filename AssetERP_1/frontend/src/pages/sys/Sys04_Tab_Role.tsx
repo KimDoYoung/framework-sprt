@@ -51,7 +51,7 @@ export const Sys04_Tab_Role: React.FC = () => {
   useEffect(() => { retrieve(); }, []);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 12, background: '#fff' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 12, background: '#fff', boxSizing: 'border-box' }}>
       <Space wrap>
         <Typography.Text strong>권한명</Typography.Text>
         <Input style={{ width: 180 }} value={roleName} allowClear onChange={e => setRoleName(e.target.value)} onPressEnter={retrieve} />

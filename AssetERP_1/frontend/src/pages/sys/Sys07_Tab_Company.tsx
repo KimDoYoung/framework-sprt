@@ -95,7 +95,7 @@ export const Sys07_Tab_Company: React.FC = () => {
 
   // [E0] 화면 열림 (생성자 L38-68) → settings()
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 12, background: '#fff' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 12, background: '#fff', boxSizing: 'border-box' }}>
       <Space style={{ height: 50, padding: '0 8px', border: '1px solid #d9d9d9', flex: 'none' }}>
         <Button type="change" onClick={copyRole}>권한그룹복사</Button>
         <Button type="change" onClick={copyMenu}>매뉴권한복사</Button>

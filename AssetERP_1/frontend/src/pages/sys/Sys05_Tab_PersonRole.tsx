@@ -117,7 +117,7 @@ export const Sys05_Tab_PersonRole: React.FC = () => {
   return (
     <Splitter layout="vertical" style={{ height: '100%', background: '#fff' }}>
       <Splitter.Panel min={150}>
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0' }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>
           <Space wrap>
             <Typography.Text strong>사원검색</Typography.Text>
             {/* [E2] searchText.KeyPress [Enter] (L70) → retrieve() */}
@@ -143,7 +143,7 @@ export const Sys05_Tab_PersonRole: React.FC = () => {
         </div>
       </Splitter.Panel>
       <Splitter.Panel defaultSize="40%" max={1000} min={120}>
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 12 }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 12, boxSizing: 'border-box' }}>
           <div style={{ flex: 1, minHeight: 0 }}>
             <SingleGrid<PersonRole>
               gridRef={roleGridRef}

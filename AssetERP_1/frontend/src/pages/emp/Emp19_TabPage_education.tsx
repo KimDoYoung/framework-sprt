@@ -87,7 +87,7 @@ export const Emp19_TabPage_education: React.FC<TransInfoTabProps> = ({ row }) =>
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 12px' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 12px', boxSizing: 'border-box' }}>
       <Space>
         <Typography.Text strong>교육사항</Typography.Text>
         <Button type="search" onClick={retrieve}>조회</Button>

@@ -131,7 +131,7 @@ export const Emp18_TabPage_RelateFile: React.FC<TransInfoTabProps> = ({ row }) =
   }, [saveAfterInsert, crud.saveRows]);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 12px' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 12px', boxSizing: 'border-box' }}>
       <Space>
         {/* LabelToolItem(setHtmlBarStyle("연관파일")) L64 */}
         <Typography.Text strong>연관파일</Typography.Text>

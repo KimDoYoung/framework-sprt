@@ -54,7 +54,7 @@ export const Emp00_Tab_RoleMenu: React.FC = () => {
     <>
       <Splitter style={{ height: '100%', background: '#fff' }}>
         <Splitter.Panel defaultSize="55%" max={1000} min={200}>
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0' }}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>
             <Space wrap>
               <Typography.Text strong>기준일</Typography.Text>
               <DatePicker style={{ width: 160 }} allowClear={false} format="YYYY-MM-DD" value={dayjs(baseDate)}

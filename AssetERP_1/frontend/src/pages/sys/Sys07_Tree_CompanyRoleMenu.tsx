@@ -87,7 +87,7 @@ export const Sys07_Tree_CompanyRoleMenu: React.FC<Props> = ({ roleModel }) => {
   useEffect(() => { refresh(); }, [roleModel]);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>
       <Space wrap>
         <Button type="search" onClick={refresh}>조회</Button>
         {/* [E2] expandAll[펼치기].Select (L64) → treeGrid.expandAll() */}

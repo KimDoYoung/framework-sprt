@@ -77,7 +77,7 @@ export const Sys03_Tree_CompanyMenu: React.FC<Props> = ({ companyId }) => {
   useEffect(() => { if (companyId) retrieve(); }, [companyId]);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>
       <Space wrap>
         <Typography.Text strong>고객별 매뉴조회</Typography.Text>
         {/* [E1] refreshButton[조회].Select [companyId != null] (L47) → retrieve() */}

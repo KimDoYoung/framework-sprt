@@ -157,7 +157,7 @@ export const Sys01_Tab_Company: React.FC = () => {
     <>
     <Splitter layout="vertical" style={{ height: '100%', background: '#fff' }}>
       <Splitter.Panel min={150}>
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0' }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>
           <Space wrap>
             <Typography.Text strong>고객명</Typography.Text>
             {/* [E1] companyName.KeyDown [Enter] (L113) → retrieve() */}
@@ -187,7 +187,7 @@ export const Sys01_Tab_Company: React.FC = () => {
         </div>
       </Splitter.Panel>
       <Splitter.Panel defaultSize={450} max={900} min={100}>
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '0 12px' }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '0 12px', boxSizing: 'border-box' }}>
           <Tabs
             activeKey={activeTab}
             onChange={setActiveTab}

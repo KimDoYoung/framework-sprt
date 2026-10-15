@@ -90,7 +90,7 @@ export const Org02_Edit_Info = forwardRef<Org02_Edit_InfoRef>((_, ref) => {
   };
 
   return (
-    <div style={{ border: '1px solid #d9d9d9', height: '100%', padding: '10px 20px', overflow: 'auto', background: '#fff' }}>
+    <div style={{ border: '1px solid #d9d9d9', height: '100%', padding: '10px 20px', overflow: 'auto', background: '#fff', boxSizing: 'border-box' }}>
       {f && (
         <Space direction="vertical" size={16} style={{ width: '100%' }}>
           <OrgRow>

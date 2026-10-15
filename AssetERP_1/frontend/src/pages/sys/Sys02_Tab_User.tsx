@@ -84,7 +84,7 @@ export const Sys02_Tab_User: React.FC<CompanyTabProps> = ({ companyId }) => {
   useEffect(() => { if (companyId) retrieve(); else crud.clear(); }, [companyId]);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, boxSizing: 'border-box' }}>
       <Space>
         {/* [E1] retrieveButton[조회].Select (L50) */}
         <Button type="search" onClick={retrieve}>조회</Button>

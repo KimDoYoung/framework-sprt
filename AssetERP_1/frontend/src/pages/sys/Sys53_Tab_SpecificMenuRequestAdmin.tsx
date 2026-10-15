@@ -83,7 +83,7 @@ export const Sys53_Tab_SpecificMenuRequestAdmin: React.FC = () => {
   useEffect(() => { if (pending) { setPending(false); void crud.retrieve(); } }, [pending]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 20 }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 20, boxSizing: 'border-box' }}>
       <Space>
         <Typography.Text strong>고객사</Typography.Text>
         <Select style={{ width: 200 }} value={companyCd}

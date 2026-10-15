@@ -165,7 +165,7 @@ export const Emp03_TabPage_Trans: React.FC<TransInfoTabProps> = ({ row, onRowCha
   // [E0] 화면 열림 (생성자 L64-86)
   // [E11 생략] gradeNameComboBox Collapse (L134): 특정직위 편집 컬럼이 원본에서 주석 처리 — 특정직위는 보기만
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, boxSizing: 'border-box' }}>
       <Space>
         <Typography.Text strong>일반발령</Typography.Text>
         {/* [E2] searchBarBuilder[조회].Retrieve (L78) → retrieve() */}

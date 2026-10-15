@@ -42,7 +42,7 @@ export const Sys03_Tab_CompanyMenu: React.FC = () => {
   return (
     <Splitter style={{ height: '100%', background: '#fff' }}>
       <Splitter.Panel defaultSize={480} max={1000} min={200}>
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 4px 0 12px' }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 4px 0 12px', boxSizing: 'border-box' }}>
           <Space>
             <Typography.Text strong>고객명</Typography.Text>
             {/* [E1] companyName.KeyDown [Enter] (L46) → retrieve() */}

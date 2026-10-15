@@ -121,7 +121,7 @@ export const Sys04_Tab_RoleAdmin: React.FC = () => {
   useEffect(() => { retrieve(); }, []);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 12, background: '#fff' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 12, background: '#fff', boxSizing: 'border-box' }}>
       <Space wrap>
         <Typography.Text strong>고객명</Typography.Text>
         {/* [E1] searchText.KeyPress [Enter] (L94) → retrieve() */}

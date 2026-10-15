@@ -51,7 +51,7 @@ export const Sys01_TabPage_Info02: React.FC<CompanyTabProps> = ({ companyId }) =
   useEffect(() => { if (companyId) crud.retrieve(); else crud.clear(); }, [companyId]);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, boxSizing: 'border-box' }}>
       <Space>
         {/* [E1] updateButton[저장].Select (L41) → updateCorpRegNo() */}
         <Button type="save" onClick={crud.saveRows}>저장</Button>

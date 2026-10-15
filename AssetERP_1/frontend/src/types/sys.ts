@@ -437,6 +437,8 @@ export interface MenuLookup {
   parentPathNm: string;
   menuNm: string;
   menuFullNm: string;
+  /** sys06_class_nm (A35 열람 로그 조회 조건) */
+  className?: string | null;
 }
 
 /** 고객별 서버사용량 한 행 (A16, AS-IS Sys10_FileModel — selectByTotalSize). 용량은 MB */
@@ -470,4 +472,16 @@ export interface ClientInfo {
   posName: string | null;
   clientName: string | null;
   moblieTelno: string | null;
+}
+
+/** 고객별 매뉴 열람 로그 한 행 (A35, AS-IS Sys96_OpenMenuLogModel). openMenuLogId는 18자리라 문자열 */
+export interface OpenMenuLog {
+  openMenuLogId: string;
+  companyNm?: string | null;
+  personInfo?: string | null;
+  menuNm?: string | null;
+  className?: string | null;
+  dateStr?: string | null;
+  second?: number | null;
+  loginInfo?: string | null;
 }

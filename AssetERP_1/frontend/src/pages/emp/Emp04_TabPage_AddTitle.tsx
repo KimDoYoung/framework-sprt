@@ -94,7 +94,7 @@ export const Emp04_TabPage_AddTitle: React.FC<TransInfoTabProps> = ({ row }) => 
   ], [personId]);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 12px' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 12px', boxSizing: 'border-box' }}>
       <Space>
         <Button type="search" onClick={retrieve}>조회</Button>
         <Button type="register" onClick={insertRow}>등록</Button>

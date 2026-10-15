@@ -62,7 +62,7 @@ export const Sys07_Tab_CompanyRoleMenu: React.FC = () => {
     <>
       <Splitter style={{ height: '100%', background: '#fff' }}>
         <Splitter.Panel defaultSize="55%" max={1000} min={200}>
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 4px 0 12px' }}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 4px 0 12px', boxSizing: 'border-box' }}>
             <Space>
               <Typography.Text strong>회사명</Typography.Text>
               {/* [E1] companyName.TriggerClick (L78) → Sys01_Lookup_SelectSingle.open() — 입력은 편집 불가(L77) */}

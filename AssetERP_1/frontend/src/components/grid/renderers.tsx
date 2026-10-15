@@ -29,6 +29,12 @@ export const SignColorCell: React.FC<CustomCellRendererProps & { kind: 'long' | 
   return <b style={{ color }}>{kind === 'long' ? fmtLong(n) : fmtDouble(n)}</b>;
 };
 
+/** AS-IS addLongSecond(…, color): 굵은 글씨, 0·빈 값은 회색 0, 그 밖은 color (콤마 없이 값 그대로) */
+export const LongSecondCell: React.FC<CustomCellRendererProps & { color: string }> = ({ value, color }) => {
+  const n = value === undefined || value === null || value === '' ? 0 : toNum(value);
+  return <b style={{ color: n === 0 ? '#635C5C' : color }}>{n}</b>;
+};
+
 /** 값 + 작은 비율 한 줄 우측 정렬 (예: 전일대비 1,200 (0.85)). rateField의 부호로 색을 정한다 */
 export const ValueWithRateCell: React.FC<CustomCellRendererProps & { rateField: string }> = ({ value, data, rateField }) => {
   if (value === undefined || value === null || value === '') return null;

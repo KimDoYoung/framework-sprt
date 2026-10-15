@@ -109,7 +109,7 @@ export const Sys53_Tab_SpecificMenuRequest: React.FC = () => {
   useEffect(() => { void crud.retrieve(); }, []);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 8 }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 8, boxSizing: 'border-box' }}>
       <Space>
         <Typography.Text strong>구분:</Typography.Text>
         <CodeSelect kindCd="SpecificStateCode" altCode={['%', '전체']} style={{ width: 100 }} value={stateCd}

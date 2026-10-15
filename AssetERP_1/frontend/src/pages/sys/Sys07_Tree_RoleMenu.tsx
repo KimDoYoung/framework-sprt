@@ -95,7 +95,7 @@ export const Sys07_Tree_RoleMenu: React.FC<Props> = ({ roleId }) => {
   useEffect(() => { if (roleId) retrieve(); }, [roleId]);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>
       <Space wrap>
         <Typography.Text strong>매뉴명</Typography.Text>
         {/* [E1] searchText.KeyPress [Enter] (L66) → search() */}

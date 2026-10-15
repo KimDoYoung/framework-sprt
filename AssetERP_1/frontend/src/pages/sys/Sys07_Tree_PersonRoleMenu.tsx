@@ -60,7 +60,7 @@ export const Sys07_Tree_PersonRoleMenu: React.FC<Props> = ({ personId }) => {
   useEffect(() => { retrieve(); }, [personId]);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>
       <Space wrap>
         {/* [E1] menuSearch.KeyPress [Enter] (L60) → search() */}
         <Input style={{ width: 200 }} placeholder="화면명" value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={() => search()} />

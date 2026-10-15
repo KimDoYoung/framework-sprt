@@ -1,7 +1,7 @@
 import { apiClient } from './client';
-import { ApiResponse } from '../types/auth';
+import { ApiResponse, PageRes } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, FileTotalYear, ClientInfo } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -698,5 +698,13 @@ export const sysApi = {
   searchFileTotalMonths: async (locName: string, year: string): Promise<FileTotalMonth[]> => {
     const res = await apiClient.get<ApiResponse<FileTotalMonth[]>>('v1/sys/files/totals/months', { params: { locName, year } });
     return res.data.data ?? [];
+  },
+
+  // ── A35 고객별 매뉴사용기록 (Sys96_Tab_OpenMenuLogAdmin, 관리자 전용) ──
+
+  /** AS-IS sys.Sys96_OpenMenuLog.selectByTextAdminPaging: companyId 없음 = 전체, className '%' = 전체 매뉴, useYn = 실사용 건만 */
+  searchOpenMenuLogs: async (params: { companyId?: number | null; searchText: string; className: string; useYn: boolean; offset: number; limit: number }): Promise<PageRes<OpenMenuLog>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<OpenMenuLog>>>('v1/sys/open-menu-logs', { params });
+    return res.data.data ?? { total: 0, rows: [] };
   },
 };

@@ -88,7 +88,7 @@ export const Sys01_Grid_CompanyMenu: React.FC<Props> = ({ menuId }) => {
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>
       <Space wrap>
         <Typography.Text strong>적용상품</Typography.Text>
         {/* [E1] erpProductComboBox[ErpProductCode].Collapse (L65) → retrieve(menuId) */}
