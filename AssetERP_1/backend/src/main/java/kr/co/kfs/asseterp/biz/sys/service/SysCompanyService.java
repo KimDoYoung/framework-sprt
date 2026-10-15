@@ -252,6 +252,12 @@ public class SysCompanyService {
         return sysCompanyMapper.selectCompanyOptions();
     }
 
+    /** AS-IS sys.Sys00_Common.selectCompanyName — 회사명 콤보 (C06 문자발송 고객사) */
+    public List<CompanyOptionRes> searchCompanyNames(UserPrincipal user) {
+        requireSysAdmin(user);
+        return sysCompanyMapper.selectCompanyNames();
+    }
+
     // ── A09 메뉴 관리 (AS-IS Sys01_Company.selectByCopyList L75 / selectByCode L64 / updateByMenuYn L118) ──
 
     /** 일괄복사 고객사 목록: '%' + 검색어 + '%', 상품 코드(없으면 '%') */

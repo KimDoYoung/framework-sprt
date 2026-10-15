@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.emp.mapper;
 
+import kr.co.kfs.asseterp.biz.emp.dto.CompanyPersonRes;
+import kr.co.kfs.asseterp.biz.emp.dto.CompanyPersonSearchParam;
 import kr.co.kfs.asseterp.biz.emp.dto.PersonDeleteParam;
 import kr.co.kfs.asseterp.biz.emp.dto.PersonRow;
 import kr.co.kfs.asseterp.biz.emp.dto.UserInfoRes;
@@ -19,6 +21,12 @@ public interface EmpPersonMapper {
 
     /** AS-IS UpdateDataModel(emp01_person) UPDATE */
     int updatePerson(PersonRow row);
+
+    /** AS-IS emp01_person.selectByCompanyIdPaging (C06) */
+    List<CompanyPersonRes> searchCompanyPersons(CompanyPersonSearchParam param);
+
+    /** AS-IS emp01_person.selectByCompanyIdTotal (C06) */
+    int countCompanyPersons(CompanyPersonSearchParam param);
 
     int countEmpNo(@Param("companyId") Long companyId, @Param("empNo") String empNo, @Param("personId") Long personId);
 

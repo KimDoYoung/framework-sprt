@@ -455,3 +455,13 @@ export interface FileTotalMonth {
   month: string;
   totalSize: number | null;
 }
+
+/** 고객사 정보 한 행 (C06, AS-IS Sys85_ClientInfoModel — 문자발송 기타고객사). moblieTelno는 원본 모델 이름(오타) 그대로. 새 행은 임시 음수 ID */
+export interface ClientInfo {
+  clientInfoId: number;
+  companyName: string | null;
+  orgName: string | null;
+  posName: string | null;
+  clientName: string | null;
+  moblieTelno: string | null;
+}

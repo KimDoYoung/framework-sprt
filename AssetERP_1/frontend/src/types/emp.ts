@@ -367,3 +367,14 @@ export interface NoteAdmin {
   personId: number;
   noteAdmin?: string | null;
 }
+
+/** 문자발송 대상 고르기 한 행 (C06, AS-IS Emp01_PersonModel — emp.Emp01_Person.selectByPaging) */
+export interface CompanyPerson {
+  personId: number;
+  companyId: number;
+  companyName: string | null;
+  orgName: string | null;
+  posName: string | null;
+  korName: string | null;
+  mobileTelNo: string | null;
+}

@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Academic, Account, AddDeduct, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, Evaluation, Family, License, NoteAdmin, OrgInfo, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
+import { Academic, Account, AddDeduct, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, Evaluation, Family, License, CompanyPerson, NoteAdmin, OrgInfo, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -404,6 +404,11 @@ export const empUserInfoApi = {
   /** AS-IS emp.Emp01_Person.selectBySearchTextPaging (GridPagingLoader: offset·limit → 페이지 행 + 전체 건수) */
   searchUserInfos: async (params: { companyId?: number | null; searchText: string; useYn: string; quitYn: string; offset: number; limit: number }): Promise<PageRes<UserInfo>> => {
     const res = await apiClient.get<ApiResponse<PageRes<UserInfo>>>('v1/emp/persons', { params });
+    return res.data.data ?? { total: 0, rows: [] };
+  },
+  /** C06 문자발송 대상 고르기: AS-IS emp.Emp01_Person.selectByPaging(selectByCompanyIdPaging) — companyId는 '%'(전체) 또는 회사 ID 문자열 */
+  searchCompanyPersons: async (params: { companyId: string; searchText: string; useYn: string; offset: number; limit: number }): Promise<PageRes<CompanyPerson>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<CompanyPerson>>>('v1/emp/persons/by-company', { params });
     return res.data.data ?? { total: 0, rows: [] };
   },
   /** AS-IS emp.Emp02_Others.selectById(personId) */

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import kr.co.kfs.asseterp.biz.emp.dto.CompanyPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.PersonSaveReq;
 import kr.co.kfs.asseterp.biz.emp.dto.UserInfoRes;
 import kr.co.kfs.asseterp.common.dto.PageRes;
@@ -35,6 +36,17 @@ public class EmpPersonController {
                                                             @RequestParam(defaultValue = "0") int offset,
                                                             @RequestParam(defaultValue = "100") int limit) {
         return ApiResponse.ok(empPersonService.searchUserInfos(principal, companyId, searchText, useYn, quitYn, offset, limit));
+    }
+
+    /** C06 문자발송 대상 고르기: AS-IS emp.Emp01_Person.selectByPaging — 고객사 사원 페이지 행 + 전체 건수 (sys admin만) */
+    @GetMapping("/by-company")
+    public ApiResponse<PageRes<CompanyPersonRes>> searchCompanyPersons(@AuthenticationPrincipal UserPrincipal principal,
+                                                                       @RequestParam(defaultValue = "%") String companyId,
+                                                                       @RequestParam(required = false) String searchText,
+                                                                       @RequestParam(defaultValue = "true") String useYn,
+                                                                       @RequestParam(defaultValue = "0") int offset,
+                                                                       @RequestParam(defaultValue = "100") int limit) {
+        return ApiResponse.ok(empPersonService.searchCompanyPersons(principal, companyId, searchText, useYn, offset, limit));
     }
 
     /** AS-IS emp.Emp01_Person.update */

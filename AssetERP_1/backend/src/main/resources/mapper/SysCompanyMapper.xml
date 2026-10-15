@@ -285,6 +285,15 @@
          ORDER BY sys01_company_id, sys01_loc_nm
     </select>
 
+    <!-- AS-IS(IDMS-IC) sys00_common.selectCompanyName (C06) -->
+    <select id="selectCompanyNames" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyOptionRes">
+        SELECT CAST(sys01_company_id AS VARCHAR) AS code,
+               sys01_company_nm                  AS name
+          FROM sys01_company
+         WHERE COALESCE(sys01_use_yn, 'true') = 'true'
+         ORDER BY sys01_company_id, sys01_loc_nm
+    </select>
+
     <!-- 1. AS-IS org01_code.insertOrg01Code (org_cd 10000, 개설일 = 설립일) -->
     <insert id="insertOrgCode">
         INSERT INTO org01_code (org01_code_id, org01_company_id, org01_org_cd, org01_open_date)

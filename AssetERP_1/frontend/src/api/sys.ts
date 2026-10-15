@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, UserRole, FileTotal, FileTotalMonth, FileTotalYear } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, UserRole, FileTotal, FileTotalMonth, FileTotalYear, ClientInfo } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -636,6 +636,33 @@ export const sysApi = {
   searchLookupMenus: async (searchText: string, menuNameYn: boolean): Promise<MenuLookup[]> => {
     const res = await apiClient.get<ApiResponse<MenuLookup[]>>('v1/sys/menus/lookup', { params: { searchText, menuNameYn } });
     return res.data.data ?? [];
+  },
+
+  // ── C06 고객별 문자발송 연결 (Sys00_Common.selectCompanyName · Sys85_Lookup_ClientInfoList) ──
+
+  /** AS-IS sys.Sys00_Common.selectCompanyName: 회사명 콤보 (code = 회사 ID, name = 회사명) */
+  searchCompanyNames: async (): Promise<Code[]> => {
+    const res = await apiClient.get<ApiResponse<Code[]>>('v1/sys/companies/names');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys85_ClientInfo.selectByText */
+  searchClientInfos: async (searchText: string): Promise<ClientInfo[]> => {
+    const res = await apiClient.get<ApiResponse<ClientInfo[]>>('v1/sys/client-infos', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys85_ClientInfo.update → 저장된 행(요청 순서) */
+  updateClientInfos: async (rows: ClientInfo[]): Promise<ClientInfo[]> => {
+    const body = rows.map(({ clientInfoId, companyName, orgName, posName, clientName, moblieTelno }) => ({ clientInfoId, companyName, orgName, posName, clientName, moblieTelno }));
+    const res = await apiClient.put<ApiResponse<ClientInfo[]>>('v1/sys/client-infos', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys85_ClientInfo.delete → 지운 건수 */
+  deleteClientInfos: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/client-infos', { data: ids });
+    return res.data.data ?? 0;
   },
 
   // ── A16 고객별 서버사용량 (Sys10_Tab_TotalSize) ──

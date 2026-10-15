@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.emp.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.CompanyPersonRes;
+import kr.co.kfs.asseterp.biz.emp.dto.CompanyPersonSearchParam;
 import kr.co.kfs.asseterp.biz.emp.dto.PersonDeleteParam;
 import kr.co.kfs.asseterp.biz.emp.dto.PersonRow;
 import kr.co.kfs.asseterp.biz.emp.dto.PersonSaveReq;
@@ -34,6 +36,21 @@ public class EmpPersonService {
         String like = "%" + (searchText == null ? "" : searchText) + "%";
         UserInfoSearchParam param = new UserInfoSearchParam(companyId, like, useYn, quitYn, Math.max(offset, 0), limit > 0 ? limit : 100);
         return new PageRes<>(empPersonMapper.countUserInfos(param), empPersonMapper.searchUserInfos(param));
+    }
+
+    /**
+     * C06 문자발송 대상 고르기: AS-IS emp.Emp01_Person.selectByPaging → selectByCompanyIdPaging + selectByCompanyIdTotal.
+     * 고객사 전체('%')를 볼 수 있는 관리자 화면 → sys admin만. LIKE '%검색어%'는 서버가 만든다(05 §6).
+     * companyId는 '%'(전체) 또는 회사 ID 문자열(AS-IS companyIdStr).
+     */
+    public PageRes<CompanyPersonRes> searchCompanyPersons(UserPrincipal user, String companyId, String searchText, String useYn, int offset, int limit) {
+        if (!user.isSysAdmin()) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        String like = "%" + (searchText == null ? "" : searchText) + "%";
+        CompanyPersonSearchParam param = new CompanyPersonSearchParam(companyId == null || companyId.isEmpty() ? "%" : companyId, like,
+                useYn, Math.max(offset, 0), limit > 0 ? limit : 100);
+        return new PageRes<>(empPersonMapper.countCompanyPersons(param), empPersonMapper.searchCompanyPersons(param));
     }
 
     /** AS-IS update(UpdateDataModel): 기본정보 탭 1건 UPDATE. 화면은 목록 행을 다시 읽어 바꾼다 */

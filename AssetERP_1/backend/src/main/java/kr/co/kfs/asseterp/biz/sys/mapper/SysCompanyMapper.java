@@ -86,6 +86,9 @@ public interface SysCompanyMapper {
     /** AS-IS sys00_common.selectCompanyInfo (회사 콤보: 회사 ID / 서브도메인) */
     List<CompanyOptionRes> selectCompanyOptions();
 
+    /** AS-IS sys00_common.selectCompanyName (C06 고객사 콤보: code = 회사 ID, name = 회사명) */
+    List<CompanyOptionRes> selectCompanyNames();
+
     // ── 회사 추가 후 초기화 (AS-IS UpdateDataModel L90-224, 순서 그대로) ──
 
     /** 1. org01_code.insertOrg01Code */
