@@ -432,3 +432,26 @@ export interface MenuLookup {
   menuNm: string;
   menuFullNm: string;
 }
+
+/** 고객별 서버사용량 한 행 (A16, AS-IS Sys10_FileModel — selectByTotalSize). 용량은 MB */
+export interface FileTotal {
+  fileId: number;
+  companyNm: string;
+  locNm: string;
+  totalSize: number | null;
+  runningTotalSize: number | null;
+}
+
+/** 서브도메인의 연도별 사용용량 (A16, selectByTotalSizeYear) */
+export interface FileTotalYear {
+  fileId: number;
+  year: string;
+  totalSize: number | null;
+}
+
+/** 서브도메인·연도의 월별 사용용량 (A16, selectByTotalSizeMonth) */
+export interface FileTotalMonth {
+  fileId: number;
+  month: string;
+  totalSize: number | null;
+}

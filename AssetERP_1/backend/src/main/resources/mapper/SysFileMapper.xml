@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!--
-  AS-IS server/sys/mapper/sys10_file.xml (selectById, selectByParentId, selectOneByParentId, insert, delete) — 파일 공통(B10)
+  AS-IS server/sys/mapper/sys10_file.xml (selectById, selectByParentId, selectOneByParentId, insert, delete) — 파일 공통(B10), selectByTotalSize·Year·Month — 고객별 서버사용량(A16)
   ${…} 바인딩은 #{…}로, ORDER BY의 COLLATE "ko_KR.utf8"은 "ko-KR-x-icu"로(05 §6)
 -->
 <mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysFileMapper">
@@ -85,4 +85,65 @@
     <delete id="deleteById">
         DELETE FROM sys10_file WHERE sys10_file_id = #{fileId}
     </delete>
+
+    <!-- AS-IS(IDMS-IC) sys10_file.selectByTotalSize L430 (A16): 서버 경로에서 고객(서브도메인)을 뽑아 묶는다 — 경로 앞 17자(`/data1/IDMS/docs/`)·뒤 7자(`/yyyyMM`)를 떼는 원본 방식 그대로 -->
+    <select id="selectByTotalSize" resultType="kr.co.kfs.asseterp.biz.sys.dto.FileTotalRes">
+        SELECT ROW_NUMBER() OVER()      AS file_id
+             , sys01_company_nm         AS company_nm
+             , sys01_loc_nm             AS loc_nm
+             , a.total_size             AS total_size
+             , (
+                   SELECT ROUND(SUM(sys10_size)*(0.001), 1)
+                     FROM sys10_file
+                    WHERE REPLACE(sys10_server_path, RIGHT(sys10_server_path, 7), '') = a.server_nm
+               )                        AS running_total_size
+          FROM (
+                   SELECT REPLACE(sys10_server_path, RIGHT(sys10_server_path, 7), '')  AS server_nm
+                        , ROUND(SUM(sys10_size)*(0.001), 1)                            AS total_size
+                     FROM sys10_file
+                    WHERE sys10_server_path NOT LIKE '%KIDMS%'
+                    GROUP BY REPLACE(sys10_server_path, RIGHT(sys10_server_path, 7), '')
+               ) a
+               INNER JOIN sys01_company ON sys01_loc_nm = REPLACE(a.server_nm, LEFT(a.server_nm, 17), '')
+         WHERE 1=1
+        <if test="useYn != null">
+           AND ((#{useYn} = 'true' AND COALESCE(sys01_use_yn,'true') = 'true')
+                OR
+                (#{useYn} = 'false'))
+        </if>
+         ORDER BY a.total_size DESC, a.server_nm
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys10_file.selectByTotalSizeYear L459 (A16) -->
+    <select id="selectByTotalSizeYear" resultType="kr.co.kfs.asseterp.biz.sys.dto.FileYearRes">
+        SELECT ROW_NUMBER() OVER()      AS file_id
+             , a.year                   AS year
+             , a.total_size             AS total_size
+          FROM (
+                   SELECT TO_CHAR(sys10_reg_date, 'yyyy')       AS year
+                        , ROUND(SUM(sys10_size)*(0.001), 1)     AS total_size
+                     FROM sys10_file
+                    WHERE sys10_server_path NOT LIKE '%KIDMS%'
+                      AND REPLACE(REPLACE(sys10_server_path, RIGHT(sys10_server_path, 7), ''), LEFT(REPLACE(sys10_server_path, RIGHT(sys10_server_path, 7), ''), 17), '') = #{locName}
+                    GROUP BY TO_CHAR(sys10_reg_date, 'yyyy')
+               ) a
+         ORDER BY a.year DESC
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys10_file.selectByTotalSizeMonth L474 (A16) -->
+    <select id="selectByTotalSizeMonth" resultType="kr.co.kfs.asseterp.biz.sys.dto.FileMonthRes">
+        SELECT ROW_NUMBER() OVER()      AS file_id
+             , a.month                  AS month
+             , a.total_size             AS total_size
+          FROM (
+                   SELECT TO_CHAR(sys10_reg_date, 'mm')         AS month
+                        , ROUND(SUM(sys10_size)*(0.001), 1)     AS total_size
+                     FROM sys10_file
+                    WHERE sys10_server_path NOT LIKE '%KIDMS%'
+                      AND TO_CHAR(sys10_reg_date, 'yyyy') = #{year}
+                      AND REPLACE(REPLACE(sys10_server_path, RIGHT(sys10_server_path, 7), ''), LEFT(REPLACE(sys10_server_path, RIGHT(sys10_server_path, 7), ''), 17), '') = #{locName}
+                    GROUP BY TO_CHAR(sys10_reg_date, 'mm')
+               ) a
+         ORDER BY a.month DESC
+    </select>
 </mapper>

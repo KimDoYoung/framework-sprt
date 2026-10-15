@@ -1,6 +1,10 @@
 package kr.co.kfs.asseterp.biz.sys.mapper;
 
+import kr.co.kfs.asseterp.biz.sys.dto.FileMonthRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileRes;
+import kr.co.kfs.asseterp.biz.sys.dto.FileTotalParam;
+import kr.co.kfs.asseterp.biz.sys.dto.FileTotalRes;
+import kr.co.kfs.asseterp.biz.sys.dto.FileYearRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -24,4 +28,13 @@ public interface SysFileMapper {
                    @Param("fileYn") String fileYn);
 
     int deleteById(@Param("fileId") Long fileId);
+
+    /** AS-IS selectByTotalSize (useYn = 'true'/'false', A16 고객별 서버사용량) */
+    List<FileTotalRes> selectByTotalSize(@Param("useYn") String useYn);
+
+    /** AS-IS selectByTotalSizeYear */
+    List<FileYearRes> selectByTotalSizeYear(FileTotalParam param);
+
+    /** AS-IS selectByTotalSizeMonth */
+    List<FileMonthRes> selectByTotalSizeMonth(FileTotalParam param);
 }

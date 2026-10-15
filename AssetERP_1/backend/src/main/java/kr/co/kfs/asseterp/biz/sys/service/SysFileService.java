@@ -4,7 +4,11 @@ import kr.co.kfs.asseterp.biz.audit.dto.AuditEventType;
 import kr.co.kfs.asseterp.biz.audit.dto.AuditResult;
 import kr.co.kfs.asseterp.biz.audit.service.AuditLogService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.sys.dto.FileMonthRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileRes;
+import kr.co.kfs.asseterp.biz.sys.dto.FileTotalParam;
+import kr.co.kfs.asseterp.biz.sys.dto.FileTotalRes;
+import kr.co.kfs.asseterp.biz.sys.dto.FileYearRes;
 import kr.co.kfs.asseterp.biz.sys.mapper.SysFileMapper;
 import kr.co.kfs.asseterp.common.config.properties.UploadProperties;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -57,6 +61,30 @@ public class SysFileService {
     /** AS-IS Sys10_File.selectByParentId L52 */
     public List<FileRes> searchByParentId(Long parentId) {
         return sysFileMapper.selectByParentId(parentId);
+    }
+
+    /** AS-IS Sys10_File.selectByTotalSize L180 (A16 고객별 서버사용량) — 관리자 메뉴라 sys admin만 */
+    public List<FileTotalRes> selectByTotalSize(UserPrincipal user, boolean useYn) {
+        requireSysAdmin(user);
+        return sysFileMapper.selectByTotalSize(String.valueOf(useYn));
+    }
+
+    /** AS-IS Sys10_File.selectByTotalSizeYear L188 */
+    public List<FileYearRes> selectByTotalSizeYear(UserPrincipal user, String locName) {
+        requireSysAdmin(user);
+        return sysFileMapper.selectByTotalSizeYear(new FileTotalParam(locName, null));
+    }
+
+    /** AS-IS Sys10_File.selectByTotalSizeMonth L196 */
+    public List<FileMonthRes> selectByTotalSizeMonth(UserPrincipal user, String locName, String year) {
+        requireSysAdmin(user);
+        return sysFileMapper.selectByTotalSizeMonth(new FileTotalParam(locName, year));
+    }
+
+    private void requireSysAdmin(UserPrincipal user) {
+        if (!user.isSysAdmin()) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
     }
 
     /**

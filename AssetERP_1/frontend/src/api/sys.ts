@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, UserRole } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, UserRole, FileTotal, FileTotalMonth, FileTotalYear } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -635,6 +635,26 @@ export const sysApi = {
   /** AS-IS Sys06_Lookup_SelectMulti.retrieve → sys.Sys06_Menu.getAllMenuList ('%' + 검색어 + '%') */
   searchLookupMenus: async (searchText: string, menuNameYn: boolean): Promise<MenuLookup[]> => {
     const res = await apiClient.get<ApiResponse<MenuLookup[]>>('v1/sys/menus/lookup', { params: { searchText, menuNameYn } });
+    return res.data.data ?? [];
+  },
+
+  // ── A16 고객별 서버사용량 (Sys10_Tab_TotalSize) ──
+
+  /** AS-IS sys.Sys10_File.selectByTotalSize: 고객별 누적 사용용량(MB) (useYn = 사용고객만) */
+  searchFileTotals: async (useYn: boolean): Promise<FileTotal[]> => {
+    const res = await apiClient.get<ApiResponse<FileTotal[]>>('v1/sys/files/totals', { params: { useYn } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys10_File.selectByTotalSizeYear: 서브도메인의 연도별 */
+  searchFileTotalYears: async (locName: string): Promise<FileTotalYear[]> => {
+    const res = await apiClient.get<ApiResponse<FileTotalYear[]>>('v1/sys/files/totals/years', { params: { locName } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys10_File.selectByTotalSizeMonth: 서브도메인·연도의 월별 */
+  searchFileTotalMonths: async (locName: string, year: string): Promise<FileTotalMonth[]> => {
+    const res = await apiClient.get<ApiResponse<FileTotalMonth[]>>('v1/sys/files/totals/months', { params: { locName, year } });
     return res.data.data ?? [];
   },
 };
