@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.sys.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuRequestAdminRes;
+import kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuRequestAdminSaveReq;
 import kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuRequestRes;
 import kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuRequestSaveReq;
 import kr.co.kfs.asseterp.biz.sys.mapper.SysSpecificMenuRequestMapper;
@@ -61,6 +63,32 @@ public class SysSpecificMenuRequestService {
             return 0;
         }
         return sysSpecificMenuRequestMapper.deleteSpecificMenuRequests(user.getCompanyId(), ids);
+    }
+
+    /** AS-IS selectByTextAdmin (관리자 화면): companyId '%' = 전체 고객사 */
+    public List<SpecificMenuRequestAdminRes> searchAdmin(UserPrincipal user, String companyId, String stateCd, String specificWorkCd) {
+        requireSysAdmin(user);
+        return sysSpecificMenuRequestMapper.selectByTextAdmin(likeOrAll(companyId), likeOrAll(stateCd), likeOrAll(specificWorkCd));
+    }
+
+    /** AS-IS 관리자 화면 update(UpdateDataModel): 처리자·처리일·처리상태를 저장하고 다시 읽어 요청 순서대로 */
+    @Transactional
+    public List<SpecificMenuRequestAdminRes> updateAdmin(UserPrincipal user, List<SpecificMenuRequestAdminSaveReq> rows) {
+        requireSysAdmin(user);
+        List<SpecificMenuRequestAdminRes> saved = new ArrayList<>();
+        for (SpecificMenuRequestAdminSaveReq req : rows) {
+            if (sysSpecificMenuRequestMapper.updateSpecificMenuRequestAdmin(req) == 0) {
+                throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+            }
+            saved.add(sysSpecificMenuRequestMapper.selectAdminById(req.specificMenuRequestId()));
+        }
+        return saved;
+    }
+
+    private static void requireSysAdmin(UserPrincipal user) {
+        if (!user.isSysAdmin()) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
     }
 
     private static String likeOrAll(String value) {

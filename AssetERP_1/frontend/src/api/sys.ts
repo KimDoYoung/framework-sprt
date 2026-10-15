@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, UserRole, FileTotal, FileTotalMonth, FileTotalYear, ClientInfo } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, FileTotalYear, ClientInfo } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -536,6 +536,21 @@ export const sysApi = {
   deleteSpecificMenuRequests: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/sys/specific-menu-requests', { data: ids });
     return res.data.data ?? 0;
+  },
+
+  // ── A28 고객별 특정화면 관리 (Sys53_Tab_SpecificMenuRequestAdmin, 관리자 전용) ──
+
+  /** AS-IS sys.Sys53_SpecificMenuRequest.selectByTextAdmin: companyId·stateCd·specificWorkCd '%' = 전체 (결재 완료 문서만) */
+  searchSpecificMenuRequestsAdmin: async (companyId: string, stateCd: string, specificWorkCd: string): Promise<SpecificMenuRequestAdmin[]> => {
+    const res = await apiClient.get<ApiResponse<SpecificMenuRequestAdmin[]>>('v1/sys/specific-menu-requests/admin', { params: { companyId, stateCd, specificWorkCd } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS 관리자 화면 update: 처리자·처리일·처리상태 → 저장된 행(요청 순서) */
+  updateSpecificMenuRequestsAdmin: async (rows: SpecificMenuRequestAdmin[]): Promise<SpecificMenuRequestAdmin[]> => {
+    const body = rows.map(({ specificMenuRequestId, stateCd, confirmNm, confirmDate }) => ({ specificMenuRequestId, stateCd, confirmNm, confirmDate }));
+    const res = await apiClient.put<ApiResponse<SpecificMenuRequestAdmin[]>>('v1/sys/specific-menu-requests/admin', body);
+    return res.data.data ?? [];
   },
 
   // ── A15-4 특정매뉴 권한 (Sys50_TabPage_SpecificMenu · Sys51 · Sys52 · Sys54) ──

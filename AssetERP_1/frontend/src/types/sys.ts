@@ -367,6 +367,12 @@ export interface SpecificMenuRequest {
   confirmNm?: string | null;
 }
 
+/** 고객별 특정화면 관리 한 행 (A28, AS-IS Sys53_SpecificMenuRequestModel 관리자 조회). 날짜는 'YYYY-MM-DD' */
+export interface SpecificMenuRequestAdmin extends SpecificMenuRequest {
+  companyNm?: string | null;
+  confirmDate?: string | null;
+}
+
 /** 특정매뉴 권한 한 행 (A15-4, AS-IS Sys50_SpecificMenuModel). specificMenuId ≤ 0 = 새 행 */
 export interface SpecificMenu {
   specificMenuId: number;

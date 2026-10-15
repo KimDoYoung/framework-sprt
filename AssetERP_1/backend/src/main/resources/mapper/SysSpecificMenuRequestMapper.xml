@@ -81,6 +81,55 @@
            AND sys53_company_id               = #{companyId}
     </update>
 
+    <sql id="adminColumns">
+        sys53_specific_menu_request_id                                                          AS specific_menu_request_id,
+        sys53_company_id                                                                        AS company_id,
+        sys01_company_nm                                                                        AS company_nm,
+        sys53_person_id                                                                         AS person_id,
+        f_get_empTrans(sys53_person_id, f_sysdate()::date, 'org_code_nm')||' '||f_emp_kor_nm(sys53_person_id) AS person_nm,
+        sys53_reg_date::date                                                                    AS reg_date,
+        sys53_state_cd                                                                          AS state_cd,
+        f_cdnm('SpecificStateCode', sys53_state_cd, sys53_company_id, f_sysdate())              AS state_nm,
+        sys53_specific_work_cd                                                                  AS specific_work_cd,
+        f_cdnm('SpecificWorkCode', sys53_specific_work_cd, sys53_company_id, f_sysdate())       AS specific_work_nm,
+        sys53_appr_id                                                                           AS appr_id,
+        apr01_status_cd                                                                         AS apr_status_cd,
+        f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)              AS apr_status_nm,
+        sys53_confirm_nm                                                                        AS confirm_nm,
+        sys53_confirm_date::date                                                                AS confirm_date
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) sys53_specific_menu_request.selectByTextAdmin — 결재 완료(30)된 문서만 -->
+    <select id="selectByTextAdmin" resultType="kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuRequestAdminRes">
+        SELECT <include refid="adminColumns"/>
+          FROM sys53_specific_menu_request
+               INNER JOIN sys01_company ON sys01_company_id = sys53_company_id
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = sys53_appr_id
+         WHERE 1=1
+           AND COALESCE(sys53_state_cd, ' ')         LIKE #{stateCd}
+           AND COALESCE(sys53_specific_work_cd, ' ') LIKE #{specificWorkCd}
+           AND CAST(sys53_company_id AS VARCHAR)     LIKE #{companyId}
+           AND COALESCE(apr01_status_cd, '99') = '30'
+         ORDER BY sys53_reg_date, sys53_specific_work_cd, sys53_state_cd
+    </select>
+
+    <select id="selectAdminById" resultType="kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuRequestAdminRes">
+        SELECT <include refid="adminColumns"/>
+          FROM sys53_specific_menu_request
+               INNER JOIN sys01_company ON sys01_company_id = sys53_company_id
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = sys53_appr_id
+         WHERE sys53_specific_menu_request_id = #{specificMenuRequestId}
+    </select>
+
+    <!-- 관리자 화면 update(UpdateDataModel): 고칠 수 있는 열 = 처리자·처리일·처리상태 -->
+    <update id="updateSpecificMenuRequestAdmin">
+        UPDATE sys53_specific_menu_request
+           SET sys53_state_cd     = #{req.stateCd},
+               sys53_confirm_nm   = #{req.confirmNm},
+               sys53_confirm_date = #{req.confirmDate}
+         WHERE sys53_specific_menu_request_id = #{req.specificMenuRequestId}
+    </update>
+
     <delete id="deleteSpecificMenuRequests">
         DELETE FROM sys53_specific_menu_request
          WHERE sys53_company_id = #{companyId}

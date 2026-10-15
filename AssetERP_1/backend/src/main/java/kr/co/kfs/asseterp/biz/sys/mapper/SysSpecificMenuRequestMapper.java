@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.sys.mapper;
 
+import kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuRequestAdminRes;
+import kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuRequestAdminSaveReq;
 import kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuRequestRes;
 import kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuRequestSaveReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -26,4 +28,12 @@ public interface SysSpecificMenuRequestMapper {
     int updateSpecificMenuRequest(@Param("companyId") Long companyId, @Param("req") SpecificMenuRequestSaveReq req);
 
     int deleteSpecificMenuRequests(@Param("companyId") Long companyId, @Param("ids") List<Long> ids);
+
+    /** 관리자 화면: selectByTextAdmin (companyId는 '%'이거나 회사 ID 문자열) */
+    List<SpecificMenuRequestAdminRes> selectByTextAdmin(@Param("companyId") String companyId, @Param("stateCd") String stateCd,
+                                                        @Param("specificWorkCd") String specificWorkCd);
+
+    SpecificMenuRequestAdminRes selectAdminById(@Param("specificMenuRequestId") Long specificMenuRequestId);
+
+    int updateSpecificMenuRequestAdmin(@Param("req") SpecificMenuRequestAdminSaveReq req);
 }
