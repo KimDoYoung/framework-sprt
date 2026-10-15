@@ -36,6 +36,13 @@ public class SysRoleController {
         return ApiResponse.ok(sysRoleService.searchRoles(principal, roleNm));
     }
 
+    /** A11 AS-IS sys.Sys04_Role.selectByMenuId */
+    @GetMapping("/menus/{menuId}/roles")
+    public ApiResponse<List<RoleRes>> searchRolesByMenuId(@AuthenticationPrincipal UserPrincipal principal,
+                                                          @PathVariable Long menuId) {
+        return ApiResponse.ok(sysRoleService.searchRolesByMenuId(principal, menuId));
+    }
+
     /** AS-IS sys.Sys04_Role.update → 저장된 행(요청 순서) */
     @PutMapping("/roles")
     public ApiResponse<List<RoleRes>> updateRoles(@AuthenticationPrincipal UserPrincipal principal,

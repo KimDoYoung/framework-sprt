@@ -13,6 +13,7 @@ import { Sys05_Tab_CompanyUserRole } from './sys/Sys05_Tab_CompanyUserRole';
 import { Sys05_Tab_PersonRole } from './sys/Sys05_Tab_PersonRole';
 import { Sys08_Tab_CodeKindAdmin } from './sys/Sys08_Tab_CodeKindAdmin';
 import { Sys08_Tab_CodeKindClient } from './sys/Sys08_Tab_CodeKindClient';
+import { Sys06_Tab_MenuView } from './sys/Sys06_Tab_MenuView';
 import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
 import { Sys07_Tab_Company } from './sys/Sys07_Tab_Company';
 import { Sys07_Tab_CompanyRoleMenu } from './sys/Sys07_Tab_CompanyRoleMenu';
@@ -30,6 +31,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sys01_Tab_Company, // A15 (1단계: 목록·신규 등록)
   Sys03_Tab_ComapnyMenu: Sys03_Tab_CompanyMenu, // A10 (메뉴 키 오타 그대로)
   Sys06_Tab_Menu, // A09
+  Sys06_Tab_MenuView, // A11
   Sys04_Tab_Role, // A01
   Sys04_Tab_RoleAdmin, // A02
   Sys05_Tab_UserRole, // A03

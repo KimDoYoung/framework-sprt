@@ -162,6 +162,28 @@
                             LIMIT 1) c ON true
     </sql>
 
+    <!--
+      A11 메뉴별 그룹권한(View). AS-IS sys06_menu.selectByCompanyId(L66) 그대로 — 부모별로 반복하던 것을 한 번에 읽고 서비스가 전위 순서로 편다.
+      (sys03_use_yn = 'true'인 회사 메뉴, 그 회사의 특정메뉴(sys50)는 제외)
+    -->
+    <select id="selectCompanyViewMenus" resultType="kr.co.kfs.asseterp.biz.sys.dto.MenuViewRes">
+        SELECT sys06_menu_id    AS menu_id,
+               sys06_parent_id  AS parent_id,
+               0                AS depth,
+               (CASE WHEN sys06_menu_no IS NULL
+                     THEN sys06_menu_nm
+                     ELSE sys06_menu_no||' '||sys06_menu_nm
+                END)            AS menu_no_plus_nm
+          FROM sys06_menu
+               INNER JOIN sys03_company_menu ON sys06_menu_id = sys03_menu_id
+         WHERE COALESCE(sys03_use_yn, 'false') = 'true'
+           AND sys03_company_id = #{companyId}
+           AND sys06_menu_id NOT IN (SELECT sys50_menu_id
+                                       FROM sys50_specific_menu
+                                      WHERE sys50_company_id = #{companyId})
+         ORDER BY sys06_parent_id, sys06_seq, sys06_menu_nm
+    </select>
+
     <select id="selectCompanyMenuTree" resultType="kr.co.kfs.asseterp.biz.sys.dto.CompanyMenuTreeRes">
         SELECT <include refid="companyMenuTreeColumns"/>
           FROM sys06_menu m

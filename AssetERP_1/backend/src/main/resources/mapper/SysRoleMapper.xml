@@ -29,6 +29,19 @@
          ORDER BY sys04_seq
     </select>
 
+    <!--
+      A11 AS-IS sys04_role.selectByMenuId 그대로(sys04_role.* + sys05_user_role.* 중 그리드가 쓰는 권한명·설명만 읽는다).
+      sys05_user_role을 LEFT JOIN하므로 사원이 연결된 권한그룹은 사원 수만큼 나온다(원본 그대로)
+    -->
+    <select id="searchRolesByMenuId" resultType="kr.co.kfs.asseterp.biz.sys.dto.RoleRes">
+        SELECT <include refid="roleColumns"/>
+          FROM sys04_role
+               INNER JOIN sys07_role_menu ON sys07_role_id = sys04_role_id AND sys07_menu_id = #{menuId} AND sys07_use_yn = 'true'
+               LEFT OUTER JOIN sys05_user_role ON sys04_role_id = sys05_role_id
+         WHERE sys04_company_id = #{companyId}
+         ORDER BY sys04_seq, sys05_seq
+    </select>
+
     <!-- AS-IS selectById -->
     <select id="selectRole" resultType="kr.co.kfs.asseterp.biz.sys.dto.RoleRes">
         SELECT <include refid="roleColumns"/>

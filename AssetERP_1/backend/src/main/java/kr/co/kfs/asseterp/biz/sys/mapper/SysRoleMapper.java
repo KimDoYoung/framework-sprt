@@ -17,6 +17,10 @@ public interface SysRoleMapper {
     /** AS-IS selectByName */
     List<RoleRes> searchRoles(RoleSearchParam param);
 
+    /** A11 AS-IS selectByMenuId (그 메뉴를 쓰는 권한그룹) */
+    List<RoleRes> searchRolesByMenuId(@org.apache.ibatis.annotations.Param("companyId") Long companyId,
+                                      @org.apache.ibatis.annotations.Param("menuId") Long menuId);
+
     /** AS-IS selectById (저장 후 다시 읽기) */
     RoleRes selectRole(Long roleId);
 

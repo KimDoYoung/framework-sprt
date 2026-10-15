@@ -35,6 +35,9 @@ public interface SysMenuMapper {
     /** AS-IS selectByCompanyIdAll(부모별 반복)을 한 번에: 전체 메뉴 + 그 회사 연결, 부모·sys06_seq·sys06_menu_nm 순 */
     List<CompanyMenuTreeRes> selectCompanyMenuTree(Long companyId);
 
+    /** A11 AS-IS selectByCompanyId(부모별 반복)을 한 번에: 그 회사가 쓰는 메뉴(특정메뉴 제외), 부모·sys06_seq·sys06_menu_nm 순 */
+    List<kr.co.kfs.asseterp.biz.sys.dto.MenuViewRes> selectCompanyViewMenus(Long companyId);
+
     Long selectNextId();
 
     int insertCompanyMenu(@Param("id") Long id, @Param("companyId") Long companyId, @Param("menuId") Long menuId, @Param("useYn") String useYn);

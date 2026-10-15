@@ -215,6 +215,16 @@ export interface RoleMenuNode {
   useYn?: string | null;
 }
 
+/** 메뉴별 그룹권한(View) 메뉴 트리 행 (GET /api/v1/sys/menus/view, AS-IS Sys06_MenuModel ← sys06_menu.selectByCompanyId) */
+export interface MenuViewNode {
+  menuId: number;
+  /** 루트는 0 */
+  parentId: number;
+  depth: number;
+  /** 메뉴번호 + ' ' + 메뉴명 (번호 없으면 메뉴명) */
+  menuNoPlusNm: string;
+}
+
 /** 사원별 메뉴 트리 행 (GET /api/v1/sys/persons/{personId}/menus, C04) — 전위 순서, 루트는 parentId null·depth 0 */
 export interface PersonMenuNode {
   menuId: number;

@@ -104,6 +104,12 @@ public class SysMenuService {
                 CompanyMenuTreeRes::withDepth);
     }
 
+    /** A11 메뉴별 그룹권한(View) 메뉴 트리 (AS-IS selectByCompanyId — 로그인 회사) */
+    public List<kr.co.kfs.asseterp.biz.sys.dto.MenuViewRes> getCompanyViewMenus(UserPrincipal user) {
+        return toPreorder(sysMenuMapper.selectCompanyViewMenus(user.getCompanyId()), kr.co.kfs.asseterp.biz.sys.dto.MenuViewRes::menuId,
+                kr.co.kfs.asseterp.biz.sys.dto.MenuViewRes::parentId, kr.co.kfs.asseterp.biz.sys.dto.MenuViewRes::withDepth);
+    }
+
     /** 부모 순으로 정렬된 평평한 행 → parentId 0부터 전위 순서(depth 채움). 루트에서 닿는 메뉴만(AS-IS도 parentId 0부터 내려가며 읽는다) */
     private static <T> List<T> toPreorder(List<T> rows, Function<T, Long> id, Function<T, Long> parentId, BiFunction<T, Integer, T> withDepth) {
         Map<Long, List<T>> children = new LinkedHashMap<>();

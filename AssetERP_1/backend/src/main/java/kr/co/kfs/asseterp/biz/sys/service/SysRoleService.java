@@ -38,6 +38,11 @@ public class SysRoleService {
         return sysRoleMapper.searchRoles(new RoleSearchParam(user.getCompanyId(), like));
     }
 
+    /** A11 AS-IS selectByMenuId: 그 메뉴(sys07_use_yn = true)를 쓰는 로그인 회사 권한그룹 */
+    public List<RoleRes> searchRolesByMenuId(UserPrincipal user, Long menuId) {
+        return sysRoleMapper.searchRolesByMenuId(user.getCompanyId(), menuId);
+    }
+
     /**
      * AS-IS update(UpdateDataModel): 행마다 신규면 INSERT, 아니면 UPDATE 하고 selectById로 다시 읽어 요청 순서대로 돌려준다.
      * 신규 판정은 화면 임시 ID(0 이하)로 한다(AS-IS는 클라이언트가 getSeq로 받은 ID가 테이블에 있는지로 판정).
