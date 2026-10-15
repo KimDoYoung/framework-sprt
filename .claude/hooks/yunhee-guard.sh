@@ -15,7 +15,12 @@ idx_re='docs/as-is/'
 cmd=$(echo "$cmd" | sed -E 's/(^|[;&|(]\s*)yunhee\s+(run\s+("[^"]*"|'"'"'[^'"'"']*'"'"')|[^;&|]*)//g')
 
 deny() {
-  jq -n --arg r "$1" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$r}}'
+  local trigger="$2"
+  local msg="$1"
+  if [ -n "$trigger" ]; then
+    msg="[차단 원인: $trigger] $msg"
+  fi
+  jq -n --arg r "$msg" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$r}}'
   exit 0
 }
 
@@ -35,20 +40,22 @@ if [ -n "$idx_paths" ] && echo "$idx_paths" | grep -Evq '/menus\.(md|tsv)$'; the
 # grep 문맥 출력(-A/-B/-C, --context 등)은 줄 범위 읽기와 같다 — 파일을 여는 grep(파이프 앞)만
 first_grep=$(echo "$cmd" | sed -E 's/\|\s*grep\b[^|;&]*//g')
 if echo "$first_grep" | grep -Eq '(^|[;&(`]\s*|\s)(grep|rg)\s([^|;&]*\s)?(-[a-zA-Z]*[ABC][0-9]*|--(after|before)?-?context)'; then
-  deny "$reason"
+  m_trig=$(echo "$first_grep" | grep -Eo '(grep|rg)\s([^|;&]*\s)?(-[a-zA-Z]*[ABC][0-9]*|--(after|before)?-?context)' | head -1)
+  deny "$reason" "$m_trig"
 fi
 # 색인 화면·SQL·서비스 파일은 grep으로도 열지 않는다(analysis가 절을 뽑아 준다)
 if [ $has_idx = 1 ] && echo "$first_grep" | grep -Eq '(^|[;&(`]\s*|\s)(grep|rg)\s'; then
-  deny "$reason"
+  m_trig=$(echo "$first_grep" | grep -Eo '(grep|rg)\s[^|;&]*' | head -1)
+  deny "$reason" "$m_trig"
 fi
 
-# 읽기 도구가 파일을 직접 여는 경우만 막는다. 파이프 뒤(git diff … | head)는 출력 자르기라 통과
+# 읽기 도구가 소스/색인 파일을 직접 여는 경우만 막는다. 파이프 뒤(yunhee ... | tail, git diff ... | head)는 출력 자르기라 통과
 echo "$cmd" | grep -Eq '(^|[;&(`]\s*|&&\s*|\s)(cat|sed|head|tail|less|more|awk|bat)\s' || exit 0
 stripped=$(echo "$cmd" | sed -E 's/\|\s*(cat|sed|head|tail|less|more|awk|bat)\b[^|;&]*//g')
-echo "$stripped" | grep -Eq '(^|[;&(`]\s*|\s)(cat|sed|head|tail|less|more|awk|bat)\s' || exit 0
-# 쓰기는 통과: cat > 파일, heredoc, sed -i
-if echo "$cmd" | grep -Eq '(cat\s*>|<<|sed\s+(-[a-zA-Z]*i|--in-place))'; then
-  echo "$cmd" | grep -Eq '(^|[;&|]\s*)(head|tail|less|more|awk|bat)\s' || exit 0
-fi
 
-deny "$reason"
+# 쓰기는 통과: cat > 파일, heredoc, sed -i
+stripped_no_write=$(echo "$stripped" | sed -E 's/cat\s*>[^;&|]*//g; s/sed\s+(-[a-zA-Z]*i|--in-place)[^;&|]*//g')
+echo "$stripped_no_write" | grep -Eq '(^|[;&(`]\s*|\s)(cat|sed|head|tail|less|more|awk|bat)\s' || exit 0
+
+matched=$(echo "$stripped_no_write" | grep -Eo '(^|[;&(`]\s*|\s)(cat|sed|head|tail|less|more|awk|bat)\s+[^|;&]+' | head -1)
+deny "$reason" "$(echo "$matched" | xargs)"
