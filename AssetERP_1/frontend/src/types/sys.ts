@@ -561,3 +561,24 @@ export interface MenuGuide {
   menuName: string | null;
   note: string | null;
 }
+
+/** 일자 한 행 (A18, AS-IS Sys12_CalendarModel). day 'YYYY-MM-DD', workingYn 'true'/'false'(영업일 체크박스), companyName은 고객사반영 조회창만 */
+export interface Calendar {
+  calendarId: number;
+  companyId: number;
+  companyName?: string | null;
+  day: string;
+  weekday: string;
+  workingYn: string;
+  offReason: string | null;
+  note: string | null;
+}
+
+/** 휴일 한 행 (A18, AS-IS Sys14_HolidayModel). day 'YYYY-MM-DD'. 새 행은 임시 음수 ID */
+export interface Holiday {
+  holidayId: number;
+  companyId: number;
+  day: string | null;
+  holidayName: string | null;
+  note: string | null;
+}

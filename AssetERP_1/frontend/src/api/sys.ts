@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -778,6 +778,64 @@ export const sysApi = {
   /** AS-IS sys.Sys80_AdminUserList.delete → 지운 건수 */
   deleteAdminUserLists: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/sys/admin-user-lists', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  // ── A18 일자관리 (Sys12_Tab_Calendar · Sys14_Lookup_Holiday · Sys12_Lookup_Customer) ──
+
+  /** AS-IS sys.Sys12_Calendar.selectByYear: month '%' = 전체 */
+  searchCalendars: async (year: string, month: string): Promise<Calendar[]> => {
+    const res = await apiClient.get<ApiResponse<Calendar[]>>('v1/sys/calendars', { params: { year, month } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys12_Calendar.update → 저장된 행(요청 순서) */
+  updateCalendars: async (rows: Calendar[]): Promise<Calendar[]> => {
+    const body = rows.map(({ calendarId, workingYn, offReason, note }) => ({ calendarId, workingYn, offReason, note }));
+    const res = await apiClient.put<ApiResponse<Calendar[]>>('v1/sys/calendars', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys12_Calendar.insertAuto: 그 해의 일자를 지우고 다시 만든다 (실패하면 서버 문구로 throw) */
+  generateCalendars: async (year: string): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/sys/calendars/generate', null, { params: { year } });
+  },
+
+  /** AS-IS sys.Sys12_Calendar.selectByDay: 고객사반영 조회창 (관리자) */
+  searchCalendarCustomers: async (day: string): Promise<Calendar[]> => {
+    const res = await apiClient.get<ApiResponse<Calendar[]>>('v1/sys/calendars/customers', { params: { day } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys12_Calendar.update·updateList: 고객사 일자의 영업일·휴일사유 (관리자) → 저장한 행 수 */
+  updateCalendarCustomers: async (rows: Calendar[]): Promise<number> => {
+    const body = rows.map(({ calendarId, workingYn, offReason }) => ({ calendarId, workingYn, offReason }));
+    const res = await apiClient.put<ApiResponse<number>>('v1/sys/calendars/customers', body);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys14_Holiday.selectByYear: year는 화면의 조회연도 그대로(LIKE) */
+  searchHolidays: async (year: string): Promise<Holiday[]> => {
+    const res = await apiClient.get<ApiResponse<Holiday[]>>('v1/sys/holidays', { params: { year } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys14_Holiday.update → 저장된 행(요청 순서) */
+  updateHolidays: async (rows: Holiday[]): Promise<Holiday[]> => {
+    const body = rows.map(({ holidayId, day, holidayName, note }) => ({ holidayId, day, holidayName, note }));
+    const res = await apiClient.put<ApiResponse<Holiday[]>>('v1/sys/holidays', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys14_Holiday.delete → 지운 건수 */
+  deleteHolidays: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/holidays', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys14_Holiday.insertInitData: 고른 일자의 admin 휴일을 고객사로 복사 (관리자) */
+  insertHolidayInitData: async (companyId: number | null, days: string[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/sys/holidays/init-data', { companyId, days });
     return res.data.data ?? 0;
   },
 

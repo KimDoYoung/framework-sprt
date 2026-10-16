@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/sys/mapper/sys14_holiday.xml + UpdateDataModel(sys14_holiday)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysHolidayMapper">
+
+    <sql id="holidayColumns">
+        sys14_holiday_id                    AS holiday_id,
+        sys14_company_id                    AS company_id,
+        TO_CHAR(sys14_day, 'YYYY-MM-DD')    AS day,
+        sys14_holiday_nm                    AS holiday_name,
+        sys14_note                          AS note
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) sys14_holiday.selectByYear (SELECT *는 DTO 열로 명시) -->
+    <select id="selectByYear" resultType="kr.co.kfs.asseterp.biz.sys.dto.HolidayRes">
+        SELECT <include refid="holidayColumns"/>
+          FROM sys14_holiday
+         WHERE sys14_company_id = #{companyId}
+           AND to_char(sys14_day,'yyyy') LIKE #{year}
+         ORDER BY sys14_day
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sys.dto.HolidayRes">
+        SELECT <include refid="holidayColumns"/>
+          FROM sys14_holiday
+         WHERE sys14_holiday_id = #{holidayId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertHoliday">
+        INSERT INTO sys14_holiday (sys14_holiday_id, sys14_company_id, sys14_day, sys14_holiday_nm, sys14_note)
+        VALUES (#{holidayId}, #{companyId}, #{req.day}::timestamp, #{req.holidayName}, #{req.note})
+    </insert>
+
+    <update id="updateHoliday">
+        UPDATE sys14_holiday
+           SET sys14_day        = #{req.day}::timestamp,
+               sys14_holiday_nm = #{req.holidayName},
+               sys14_note       = #{req.note}
+         WHERE sys14_holiday_id = #{req.holidayId}
+           AND sys14_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteHolidays">
+        DELETE FROM sys14_holiday
+         WHERE sys14_company_id = #{companyId}
+           AND sys14_holiday_id IN
+        <foreach collection="holidayIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) sys14_holiday.deleteByDay -->
+    <delete id="deleteByDay">
+        DELETE FROM sys14_holiday
+         WHERE sys14_company_id = #{companyId}
+           AND sys14_day        = #{day}::timestamp
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) sys14_holiday.insertInitData -->
+    <insert id="insertInitData">
+        INSERT INTO sys14_holiday (sys14_holiday_id, sys14_company_id, sys14_day, sys14_holiday_nm, sys14_note)
+        SELECT f_create_seq()
+             , #{companyId}
+             , sys14_day
+             , sys14_holiday_nm
+             , sys14_note
+          FROM sys14_holiday
+         WHERE sys14_company_id = 0
+           AND sys14_day        = #{day}::timestamp
+    </insert>
+</mapper>

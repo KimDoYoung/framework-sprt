@@ -27,6 +27,7 @@ import { Sys80_Tab_AdminUserList } from './sys/Sys80_Tab_AdminUserList';
 import { Sys81_Tab_AdminUserHistory } from './sys/Sys81_Tab_AdminUserHistory';
 import { Sys06_Tab_MenuGuide } from './sys/Sys06_Tab_MenuGuide';
 import { Sys10_Tab_TrashFileList } from './sys/Sys10_Tab_TrashFileList';
+import { Sys12_Tab_Calendar } from './sys/Sys12_Tab_Calendar';
 import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
 import { Sys07_Tab_Company } from './sys/Sys07_Tab_Company';
 import { Sys07_Tab_CompanyRoleMenu } from './sys/Sys07_Tab_CompanyRoleMenu';
@@ -61,6 +62,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sys08_Tab_CodeKindClient, // A14
   Sys10_Tab_TotalSize, // A16
   Sys10_Tab_TrashFileList, // A17
+  Sys12_Tab_Calendar, // A18 (메뉴 #1080 관리자·#1113 기초자료 둘 다)
   Sys96_Tab_OpenMenuLogAdmin, // A35
   Sys90_Tab_AfterServiceAdmin, // A30
   Sys27_Tab_LoginManage, // A21
