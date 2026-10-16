@@ -4,13 +4,14 @@
  * 쓰는 곳: Emp03_Edit_Person(조직, 기준일 = 입사일 고정), Emp03_TabPage_Trans(발령조직, 기준일 = 발령일 고정), Sys05_Page_UserRole(권한조직, 오늘·편집 가능)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DatePicker, Input, message, Modal, Space, Typography } from 'antd';
+import { DatePicker, message, Modal, Space } from 'antd';
 import dayjs from 'dayjs';
 import { AgGridReact } from 'ag-grid-react';
 import { orgApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { OrgInfo } from '@/types/emp';
 import { Button } from '@/components/button';
+import { SearchBar } from '@/components/search';
 import { gbFor } from '@/components/grid';
 import { BaseGrid } from '@/components/grid/BaseGrid';
 
@@ -86,17 +87,18 @@ export const Org00_Lookup_SelectSingle: React.FC<Props> = ({ baseDate: openDate,
       }
     >
       <div style={{ height: 420, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Space>
-          <Typography.Text strong>기준일</Typography.Text>
-          {/* openFixDate L77-83: 기준일 읽기 전용 / open(date) L71-75: 바꿀 수 있다(조회를 눌러야 반영) */}
-          <DatePicker style={{ width: 140 }} value={baseDate ? dayjs(baseDate) : null} disabled={fixDate} format="YYYY-MM-DD"
-            allowClear={false} onChange={d => d && setBaseDate(d.format('YYYY-MM-DD'))} />
-          <Typography.Text strong>조직명</Typography.Text>
-          {/* [E1] korName.KeyPress [Enter] (L126) → retrieve() */}
-          <Input style={{ width: 100 }} value={korName} onChange={e => setKorName(e.target.value)} onPressEnter={retrieve} />
-          {/* [E2] retrieveButton[조회].Select (L135) → retrieve() */}
-          <Button type="search" onClick={retrieve}>조회</Button>
-        </Space>
+        {/* [E2] retrieveButton[조회].Select (L135) → retrieve(). 폭 450 한 줄이라 초기화(UX-02)는 넣지 않는다 */}
+        <SearchBar onSearch={retrieve} style={{ flexWrap: 'nowrap' }}>
+          <SearchBar.Field label="기준일">
+            {/* openFixDate L77-83: 기준일 읽기 전용 / open(date) L71-75: 바꿀 수 있다(조회를 눌러야 반영) */}
+            <DatePicker style={{ width: 140 }} value={baseDate ? dayjs(baseDate) : null} disabled={fixDate} format="YYYY-MM-DD"
+              allowClear={false} onChange={d => d && setBaseDate(d.format('YYYY-MM-DD'))} />
+          </SearchBar.Field>
+          <SearchBar.Field label="조직명">
+            {/* [E1] korName.KeyPress [Enter] (L126) → retrieve() */}
+            <SearchBar.Input style={{ width: 100 }} value={korName} onChange={e => setKorName(e.target.value)} />
+          </SearchBar.Field>
+        </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           <BaseGrid<OrgInfo>
             gridRef={gridRef}

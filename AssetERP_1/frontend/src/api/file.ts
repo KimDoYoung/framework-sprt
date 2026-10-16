@@ -71,6 +71,16 @@ export const fileApi = {
     }
   },
 
+  /** 미리보기용: 파일 내용을 blob으로 받는다(저장하지 않음). 형식은 부르는 쪽이 확장자로 정한다 */
+  fetchBlob: async (fileId: number): Promise<Blob> => {
+    try {
+      const res = await apiClient.get<Blob>(`v1/sys/files/${fileId}`, { responseType: 'blob' });
+      return res.data;
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
   /**
    * AS-IS FileDownload?fileType=image&(fileId=|parentId=)&time= — `<img src>`에 넣는 주소 (인증은 쿠키).
    * time은 원본처럼 캐시를 피하려고 붙인다 — 사진을 바꾼 뒤 다시 부르면 새 주소가 된다

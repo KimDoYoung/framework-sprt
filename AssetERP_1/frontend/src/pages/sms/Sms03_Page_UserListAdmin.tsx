@@ -6,7 +6,7 @@
  * 실제 문자 발송은 서버 SmsSender가 하며, 지금은 사용자 지시로 보내지 않는다(서버가 거절 문구를 돌려준다).
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, Input, message, Modal, Select, Typography } from 'antd';
+import { Checkbox, message, Modal, Select, Typography } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { empUserInfoApi } from '@/api/emp';
 import { smsApi } from '@/api/sms';
@@ -17,6 +17,7 @@ import { CompanyPerson } from '@/types/emp';
 import { GroupSendTarget } from '@/types/sms';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import { Button } from '@/components/button';
+import { SearchBar } from '@/components/search';
 import { PagingToolBar, SingleGrid, gbFor, iconCell } from '@/components/grid';
 import { Sys85_Lookup_ClientInfoList } from '../sys/Sys85_Lookup_ClientInfoList';
 
@@ -118,7 +119,7 @@ export const Sms03_Page_UserListAdmin: React.FC<Props> = ({ groupSendId }) => {
       searchText,  // 원본은 "%" + 검색어 + "%" — 서버가 만든다(05 §6)
       useYn: useYn ? 'true' : 'false',
     };
-    getPaging(1);
+    return getPaging(1);
   };
 
   // [E0] 화면 열림 (생성자 L92-134) → settings(), retrieve(): 회사 콤보를 읽어 '한국펀드서비스(주)'로 두고 처음 한 번 조회
@@ -173,21 +174,25 @@ export const Sms03_Page_UserListAdmin: React.FC<Props> = ({ groupSendId }) => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#fff', border: '1px solid #d9d9d9' }}>
-      <div style={{ flex: 'none', minHeight: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px', flexWrap: 'wrap' }}>
-        <Typography.Text strong>고객사</Typography.Text>
-        {/* [E1] companyName[sys.Sys00_Common.selectCompanyName].Collapse (L140) → retrieve() */}
-        <Select style={{ width: 200 }} value={companyCode}
-          options={[{ value: ALL, label: '전체' }, ...companies.map(c => ({ value: c.code, label: c.name }))]}
-          onChange={code => { setCompanyCode(code); retrieve(code); }} />
-        <Typography.Text strong>검색</Typography.Text>
-        {/* [E2] searchText.KeyPress [Enter] (L148) → retrieve() */}
-        <Input style={{ width: 200 }} placeholder="고객사명/사원명/휴대폰/비고" value={searchText}
-          onChange={e => setSearchText(e.target.value)} onPressEnter={() => retrieve()} />
-        <Checkbox disabled={disabled} checked={useYn} onChange={e => setUseYn(e.target.checked)}>사용고객만 보기</Checkbox>
-        {/* [E3] retrieveButton[조회].Select (L158) → retrieve() */}
-        <Button type="search" disabled={disabled} onClick={() => retrieve()}>조회</Button>
-        {/* [E5] listButton[기타고객사 추가].Select (L170) → Sys85_Lookup_ClientInfoList.open(callback) */}
-        <Button type="assign" disabled={disabled} onClick={() => setLookupOpen(true)}>기타고객사 추가</Button>
+      <div style={{ flex: 'none', minHeight: 50, display: 'flex', alignItems: 'center', padding: '4px 8px' }}>
+        {/* [E3] retrieveButton[조회].Select (L158) → retrieve(). 초기화(UX-02)는 조건 3개가 이미 한 줄을 채워 넣으면 줄바꿈이 늘어 넣지 않는다 */}
+        <SearchBar disabled={disabled} loading={loading} onSearch={() => retrieve()} extra={
+          /* [E5] listButton[기타고객사 추가].Select (L170) → Sys85_Lookup_ClientInfoList.open(callback) */
+          <Button type="assign" disabled={disabled} onClick={() => setLookupOpen(true)}>기타고객사 추가</Button>
+        }>
+          <SearchBar.Field label="고객사">
+            {/* [E1] companyName[sys.Sys00_Common.selectCompanyName].Collapse (L140) → retrieve() */}
+            <Select style={{ width: 200 }} value={companyCode}
+              options={[{ value: ALL, label: '전체' }, ...companies.map(c => ({ value: c.code, label: c.name }))]}
+              onChange={code => { setCompanyCode(code); retrieve(code); }} />
+          </SearchBar.Field>
+          <SearchBar.Field label="검색">
+            {/* [E2] searchText.KeyPress [Enter] (L148) → retrieve() */}
+            <SearchBar.Input style={{ width: 200 }} placeholder="고객사명/사원명/휴대폰/비고" value={searchText}
+              onChange={e => setSearchText(e.target.value)} />
+          </SearchBar.Field>
+          <Checkbox disabled={disabled} checked={useYn} onChange={e => setUseYn(e.target.checked)}>사용고객만 보기</Checkbox>
+        </SearchBar>
       </div>
       <div style={{ flex: 4, minHeight: 0, display: 'flex', flexDirection: 'column', opacity: disabled ? 0.5 : 1, pointerEvents: disabled ? 'none' : undefined }}>
         <div style={{ flex: 1, minHeight: 0 }}>

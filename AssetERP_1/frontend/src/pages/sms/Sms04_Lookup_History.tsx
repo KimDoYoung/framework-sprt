@@ -4,11 +4,12 @@
  * 레이아웃 L42-67: 모달 600×500 "전송기록", 툴바(검색 + 조회) + 그리드, 하단 닫기
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Input, message, Modal, Space, Typography } from 'antd';
+import { Input, message, Modal } from 'antd';
 import { smsApi } from '@/api/sms';
 import { errorMessage } from '@/api/client';
 import { GroupSendHistory } from '@/types/sms';
 import { Button } from '@/components/button';
+import { SearchBar } from '@/components/search';
 import { SingleGrid, gbFor } from '@/components/grid';
 
 const gb = gbFor<GroupSendHistory>();
@@ -65,12 +66,13 @@ export const Sms04_Lookup_History: React.FC<Props> = ({ open, groupSendId, onClo
       }
     >
       <div style={{ height: 380, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Space>
-          <Typography.Text strong>검색</Typography.Text>
-          <Input style={{ width: 200 }} value={searchText} onChange={e => setSearchText(e.target.value)} />
-          {/* [E1] retrieveButton[조회].Select (L72) → retrieve() */}
-          <Button type="search" onClick={() => retrieve(searchText)}>조회</Button>
-        </Space>
+        {/* [E1] retrieveButton[조회].Select (L72) → retrieve(). 조건이 1개라 초기화(UX-02) 없음 */}
+        <SearchBar onSearch={() => retrieve(searchText)}>
+          <SearchBar.Field label="검색">
+            {/* 원본에 Enter 이벤트가 없어 SearchBar.Input 대신 Input allowClear(UX-04만) */}
+            <Input allowClear style={{ width: 200 }} value={searchText} onChange={e => setSearchText(e.target.value)} />
+          </SearchBar.Field>
+        </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           <SingleGrid<GroupSendHistory>
             rowData={rows}

@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -651,6 +651,58 @@ export const sysApi = {
   searchLookupMenus: async (searchText: string, menuNameYn: boolean): Promise<MenuLookup[]> => {
     const res = await apiClient.get<ApiResponse<MenuLookup[]>>('v1/sys/menus/lookup', { params: { searchText, menuNameYn } });
     return res.data.data ?? [];
+  },
+
+  // ── A30 개선사항 및 오류 통보 (Sys90_Tab_AfterServiceAdmin) ──
+
+  /** AS-IS sys.Sys90_AfterService.selectByAdmin / selectByIncomplete(incompleteOnly): companyText는 회사명('%' = 전체) */
+  searchAfterServicesAdmin: async (params: {
+    happenStartDate: string; happenEndDate: string; companyText: string; typeYn: string; stateCd: string;
+    unconfirmedOnly: boolean; incompleteOnly: boolean; searchText: string;
+  }): Promise<AfterService[]> => {
+    const res = await apiClient.get<ApiResponse<AfterService[]>>('v1/sys/after-services/admin', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys90_AfterService.adminUpdate → 저장된 행 (담당자·완료예정·완료여부·처리방안·비고) */
+  updateAfterServiceAdmin: async (row: AfterService): Promise<AfterService> => {
+    const { afterServiceId, worker, dueDate, stateCd, happenRemedy, remarks } = row;
+    const res = await apiClient.put<ApiResponse<AfterService>>('v1/sys/after-services/admin', { afterServiceId, worker, dueDate, stateCd, happenRemedy, remarks });
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys90_AfterService.updateRemarks → 저장된 행 */
+  updateAfterServiceRemarks: async (afterServiceId: number, remarks: string): Promise<AfterService> => {
+    const res = await apiClient.put<ApiResponse<AfterService>>(`v1/sys/after-services/${afterServiceId}/remarks`, { remarks });
+    return res.data.data;
+  },
+
+  // ── A21 로그인 Mac 주소 관리 (Sys27_Tab_LoginManage) ──
+
+  /** AS-IS sys.Sys27_LoginManage.selectByText: companyId·personId '%' = 전체 (18자리 아님 — 숫자 문자열) */
+  searchLoginManages: async (companyId: string, personId: string): Promise<LoginManage[]> => {
+    const res = await apiClient.get<ApiResponse<LoginManage[]>>('v1/sys/login-manages', { params: { companyId, personId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys27_LoginManage.updateConfirmYn → 저장된 행 (승인이면 서버가 승인 문자를 시도) */
+  updateLoginManageConfirm: async (loginManageId: number, personId: number, confirmYn: boolean): Promise<LoginManage> => {
+    const res = await apiClient.put<ApiResponse<LoginManage>>(`v1/sys/login-manages/${loginManageId}/confirm`, { personId, confirmYn: String(confirmYn) });
+    return res.data.data;
+  },
+
+  // ── A20 로그인내역 조회 (Sys26_Tab_LoginHistory) ──
+
+  /** AS-IS sys.Sys26_Login.selectByLoginDate: companyId·loginMode '%' = 전체 */
+  searchLoginHistories: async (params: { startDate: string; closeDate: string; companyId: string; loginMode: string }): Promise<LoginHistory[]> => {
+    const res = await apiClient.get<ApiResponse<LoginHistory[]>>('v1/sys/login-histories', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys26_Login.delete (UpdateDataModel.deleteModel) → 지운 건수 */
+  deleteLoginHistories: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/login-histories', { data: ids });
+    return res.data.data;
   },
 
   // ── C06 고객별 문자발송 연결 (Sys00_Common.selectCompanyName · Sys85_Lookup_ClientInfoList) ──

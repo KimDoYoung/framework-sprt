@@ -4,12 +4,13 @@
  * 레이아웃 L51-80: 모달 700×500 "발신기록 (최근 300건)", 툴바(조회기간 시작일 ~ 종료일, 검색 내용, 조회) + 그리드, 하단 닫기
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { DatePicker, Input, message, Modal, Space, Typography } from 'antd';
+import { DatePicker, message, Modal, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { smsApi } from '@/api/sms';
 import { errorMessage } from '@/api/client';
 import { SmsHistory } from '@/types/sms';
 import { Button } from '@/components/button';
+import { SearchBar } from '@/components/search';
 import { SingleGrid, gbFor } from '@/components/grid';
 
 const gb = gbFor<SmsHistory>();
@@ -74,18 +75,18 @@ export const Sms02_Lookup_History: React.FC<Props> = ({ open, companyId, onClose
       }
     >
       <div style={{ height: 380, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Space wrap>
-          <Typography.Text strong>조회기간</Typography.Text>
-          <DatePicker style={{ width: 140 }} allowClear={false} value={startDate} onChange={setStartDate} format={FORMAT} />
-          <Typography.Text>~</Typography.Text>
-          <DatePicker style={{ width: 140 }} allowClear={false} value={closeDate} onChange={setCloseDate} format={FORMAT} />
-          <Typography.Text strong>검색</Typography.Text>
-          {/* [E1] searchText.KeyPress [Enter] (L90) → retrieve() */}
-          <Input style={{ width: 200 }} placeholder="내용" value={searchText} onChange={e => setSearchText(e.target.value)}
-            onPressEnter={() => retrieve(startDate, closeDate, searchText)} />
-          {/* [E2] retrieveButton[조회].Select (L98) → retrieve() */}
-          <Button type="search" onClick={() => retrieve(startDate, closeDate, searchText)}>조회</Button>
-        </Space>
+        {/* [E2] retrieveButton[조회].Select (L98) → retrieve(). 초기화(UX-02)는 넣으면 줄바꿈이 늘어(폭 700) 넣지 않는다 */}
+        <SearchBar onSearch={() => retrieve(startDate, closeDate, searchText)}>
+          <SearchBar.Field label="조회기간">
+            <DatePicker style={{ width: 140 }} allowClear={false} value={startDate} onChange={setStartDate} format={FORMAT} />
+            <Typography.Text>~</Typography.Text>
+            <DatePicker style={{ width: 140 }} allowClear={false} value={closeDate} onChange={setCloseDate} format={FORMAT} />
+          </SearchBar.Field>
+          <SearchBar.Field label="검색">
+            {/* [E1] searchText.KeyPress [Enter] (L90) → retrieve() */}
+            <SearchBar.Input style={{ width: 200 }} placeholder="내용" value={searchText} onChange={e => setSearchText(e.target.value)} />
+          </SearchBar.Field>
+        </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           <SingleGrid<SmsHistory>
             rowData={rows}

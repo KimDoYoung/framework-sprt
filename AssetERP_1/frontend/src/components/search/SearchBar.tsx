@@ -33,11 +33,13 @@ export interface SearchBarProps {
   extra?: React.ReactNode;
   /** 바깥에서 주는 조회 중 표시 (페이징 툴바 이동 등 SearchBar 밖에서 조회할 때) */
   loading?: boolean;
+  /** 원본이 조회 버튼을 비활성으로 두는 화면(부모 선택 전 등) — 조회·초기화 버튼을 함께 끈다 */
+  disabled?: boolean;
   style?: React.CSSProperties;
   children?: React.ReactNode;
 }
 
-const SearchBarBase: React.FC<SearchBarProps> = ({ onSearch, onReset, searchText = '조회', extra, loading, style, children }) => {
+const SearchBarBase: React.FC<SearchBarProps> = ({ onSearch, onReset, searchText = '조회', extra, loading, disabled, style, children }) => {
   const [busy, run] = usePromiseLoading(onSearch);
   const isLoading = loading || busy;
   const search = useCallback(() => { if (!isLoading) run(); }, [isLoading, run]);
@@ -46,8 +48,8 @@ const SearchBarBase: React.FC<SearchBarProps> = ({ onSearch, onReset, searchText
     <SearchContext.Provider value={{ search, loading: isLoading }}>
       <Space wrap style={style}>
         {children}
-        <Button type="search" loading={isLoading} onClick={search}>{searchText}</Button>
-        {showReset && <Button type="reset" disabled={isLoading} onClick={onReset}>초기화</Button>}
+        <Button type="search" loading={isLoading} disabled={disabled} onClick={search}>{searchText}</Button>
+        {showReset && <Button type="reset" disabled={isLoading || disabled} onClick={onReset}>초기화</Button>}
         {extra}
       </Space>
     </SearchContext.Provider>

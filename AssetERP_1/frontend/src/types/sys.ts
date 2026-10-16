@@ -431,6 +431,55 @@ export interface FileInfo {
   seq?: string | null;
 }
 
+/** 개선사항 및 오류 통보 한 행 (A30, AS-IS Sys90_AfterServiceModel / sys90_after_service). 날짜는 'YYYY-MM-DD', confirmYn은 'true'/'false' */
+export interface AfterService {
+  afterServiceId: number;
+  companyId?: number | null;
+  companyNm?: string | null;
+  happenDate?: string | null;
+  regEmpNm?: string | null;
+  typeYn?: string | null;
+  afterServiceNm?: string | null;
+  happenReason?: string | null;
+  organizeHappenReason?: string | null;
+  happenRemedy?: string | null;
+  stateCd?: string | null;
+  afterStateNm?: string | null;
+  worker?: string | null;
+  dueDate?: string | null;
+  remarks?: string | null;
+  confirmYn?: string | null;
+}
+
+/** 로그인 Mac 주소 신청 한 행 (A21, AS-IS Sys27_LoginManageModel / sys27_login_manage). 일시는 'YYYY-MM-DD HH24:MI:SS', confirmYn은 'true'/'false' */
+export interface LoginManage {
+  loginManageId: number;
+  companyId: number;
+  personId: number;
+  companyNm?: string | null;
+  personNm?: string | null;
+  openDateString?: string | null;
+  placeCd?: string | null;
+  placeNm?: string | null;
+  macAddress?: string | null;
+  reason?: string | null;
+  confirmYn?: string | null;
+  confirmDateString?: string | null;
+}
+
+/** 로그인 내역 한 행 (A20, AS-IS Sys26_LoginModel / sys26_login). 일시는 'YYYY-MM-DD HH24:MI:SS' */
+export interface LoginHistory {
+  loginId: number;
+  openDateString?: string | null;
+  companyNm?: string | null;
+  personNm?: string | null;
+  statusNm?: string | null;
+  loginModeNm?: string | null;
+  ipAddress?: string | null;
+  os?: string | null;
+  browser?: string | null;
+}
+
 /** 매뉴찾기 조회창 한 행 (A15-4, AS-IS Sys06_Lookup_SelectMulti → Sys06_MenuModel) */
 export interface MenuLookup {
   menuId: number;
