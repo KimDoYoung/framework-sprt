@@ -6,7 +6,8 @@ import { Button, usePromiseLoading } from '../button';
  * 검색 영역 — UX보강(docs/10-UX보강.md) UX-01·02·04를 부품 안에서만 넣는다.
  *   필드들 → [조회] → [초기화] → extra(저장 등 원본 툴바의 나머지 버튼)
  * - UX-01 조회 버튼과 SearchBar.Input의 Enter가 같은 loading을 쓴다: onSearch가 Promise를 돌려주면 끝날 때까지 스피너·중복 조회 무시
- * - UX-02 onReset을 주면 조회 다음에 초기화. 자동 조회는 하지 않는다. 값은 useSearchParams의 reset()(화면을 처음 열었을 때의 값)
+ * - UX-02 onReset을 주고 검색 조건(children — 라벨 묶음·입력·콤보 하나가 1개)이 2개 이상이면 조회 다음에 초기화(1개면 그리지 않는다).
+ *   자동 조회는 하지 않는다. 값은 useSearchParams의 reset()(화면을 처음 열었을 때의 값). 넣어서 툴바가 줄바꿈되면 화면에서 onReset을 뺀다(10 UX-02)
  * - UX-04 SearchBar.Input은 allowClear 기본 true (편집 폼에는 쓰지 않는다)
  *
  *   const sp = useSearchParams(() => ({ companyCd: ALL, searchText: '' }));
@@ -40,13 +41,13 @@ const SearchBarBase: React.FC<SearchBarProps> = ({ onSearch, onReset, searchText
   const [busy, run] = usePromiseLoading(onSearch);
   const isLoading = loading || busy;
   const search = useCallback(() => { if (!isLoading) run(); }, [isLoading, run]);
-  const hasFields = React.Children.toArray(children).length > 0;
+  const showReset = !!onReset && React.Children.toArray(children).length >= 2;
   return (
     <SearchContext.Provider value={{ search, loading: isLoading }}>
       <Space wrap style={style}>
         {children}
         <Button type="search" loading={isLoading} onClick={search}>{searchText}</Button>
-        {onReset && hasFields && <Button type="reset" disabled={isLoading} onClick={onReset}>초기화</Button>}
+        {showReset && <Button type="reset" disabled={isLoading} onClick={onReset}>초기화</Button>}
         {extra}
       </Space>
     </SearchContext.Provider>

@@ -1,15 +1,17 @@
 /**
  * 사원별 메뉴 트리 (C04) — Emp00_Tab_RoleMenu 오른쪽(center). 컬럼 없는 GXT Tree(메뉴번호+메뉴명만 보인다).
  * AS-IS: myApp/client/vi/sys/Sys07_Tree_PersonRoleMenu.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
+ * UX보강(10) B12-1: 툴바 = SearchBar(UX-01). 화면명 Enter는 조회가 아니라 트리 안 검색(search)이라 antd Input + allowClear(UX-04). 초기화(UX-02)는 조건이 1개라 없음
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Input, message, Space } from 'antd';
+import { Input, message } from 'antd';
 import type { CellClickedEvent } from 'ag-grid-community';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { PersonMenuNode } from '@/types/sys';
 import { Button } from '@/components/button';
 import { SingleGrid } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 import { isTreeToggleClick, useTreeGrid } from '@/hooks/useTreeGrid';
 
 interface Props {
@@ -61,16 +63,16 @@ export const Sys07_Tree_PersonRoleMenu: React.FC<Props> = ({ personId }) => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>
-      <Space wrap>
-        {/* [E1] menuSearch.KeyPress [Enter] (L60) → search() */}
-        <Input style={{ width: 200 }} placeholder="화면명" value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={() => search()} />
-        {/* [E2] refreshButton[조회].Select (L68) → refresh() */}
-        <Button type="search" onClick={refresh}>조회</Button>
+      {/* [E2] refreshButton[조회].Select (L68) → refresh() */}
+      <SearchBar onSearch={refresh} extra={<>
         {/* [E3] expandAll[펼치기].Select (L74) → tree.expandAll() */}
         <Button type="expand" onClick={tree.expandAll}>펼치기</Button>
         {/* [E4] collapseAll[감추기].Select (L80) → tree.collapseAll() */}
         <Button type="collapse" onClick={tree.collapseAll}>감추기</Button>
-      </Space>
+      </>}>
+        {/* [E1] menuSearch.KeyPress [Enter] (L60) → search() */}
+        <Input style={{ width: 200 }} allowClear placeholder="화면명" value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={() => search()} />
+      </SearchBar>
       <div style={{ flex: 1, minHeight: 0 }}>
         <SingleGrid<PersonMenuNode>
           gridRef={tree.gridRef}

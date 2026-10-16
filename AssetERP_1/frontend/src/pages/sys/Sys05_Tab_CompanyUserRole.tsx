@@ -2,16 +2,17 @@
  * [1307] 기초자료 > 50. 권한 > 고객사별 사용자권한그룹 관리  (A05) — admin 회사 메뉴(sys admin만)
  * AS-IS: myApp/client/vi/sys/Sys05_Tab_CompanyUserRole.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(생성자 L42-116): 왼쪽(55%, 최대 1000, 분할) = 회사명(트리거)·권한명 조회 + 권한 그리드, 가운데(45%) = 권한별 사원정보
+ * UX보강(10) B12-1: 툴바 = SearchBar(UX-01·02, 초기화 = 회사·권한명 비움 — 회사가 비므로 조회창 취소처럼 권한 목록도 비운다). 권한명은 원본에 Enter가 없어 antd Input + allowClear(UX-04)
  */
 import React, { useMemo, useRef, useState } from 'react';
-import { Input, message, Space, Splitter, Typography } from 'antd';
+import { Input, message, Splitter } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { Company, Role } from '@/types/sys';
-import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
+import { SearchBar, useSearchParams } from '@/components/search';
 import { Sys01_Lookup_SelectSingle } from './Sys01_Lookup_SelectSingle';
 import { Sys05_Page_CompanyUserRole } from './Sys05_Page_CompanyUserRole';
 
@@ -27,9 +28,8 @@ const buildGrid = () => [
 
 export const Sys05_Tab_CompanyUserRole: React.FC = () => {
   const gridRef = useRef<AgGridReact<Role>>(null);
-  const [companyName, setCompanyName] = useState('');
-  const [companyId, setCompanyId] = useState<number>();
-  const [roleName, setRoleName] = useState('');
+  const sp = useSearchParams(() => ({ companyName: '', companyId: undefined as number | undefined, roleName: '' }));
+  const { companyName, companyId, roleName } = sp.values;
   const [lookupOpen, setLookupOpen] = useState(false);
   const [rows, setRows] = useState<Role[]>([]);
   const [roleModel, setRoleModel] = useState<Role>();
@@ -52,9 +52,15 @@ export const Sys05_Tab_CompanyUserRole: React.FC = () => {
   // Sys01_Lookup_SelectSingle 결과(L62-73) → 결과가 있으면 회사명·ID, 없으면(취소) 둘 다 비움 → 어느 쪽이든 retrieve()
   const onLookupResult = (resultModel: Company | null) => {
     setLookupOpen(false);
-    setCompanyName(resultModel?.companyNm ?? '');
-    setCompanyId(resultModel?.companyId);
+    sp.set('companyName', resultModel?.companyNm ?? '');
+    sp.set('companyId', resultModel?.companyId);
     retrieve(resultModel?.companyId);
+  };
+
+  // 초기화(UX-02): 조회창 취소(retrieve(undefined) → 0행)와 같은 결과로 목록을 비운다
+  const reset = () => {
+    sp.reset();
+    setRows([]);
   };
 
   // retrieve() 콜백: grid.getSelectionModel().select(0) — rowData가 그리드에 반영된 뒤 첫 행 선택
@@ -71,16 +77,17 @@ export const Sys05_Tab_CompanyUserRole: React.FC = () => {
       <Splitter style={{ height: '100%', background: '#fff' }}>
         <Splitter.Panel defaultSize="55%" max={1000} min={200}>
           <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 4px 0 12px', boxSizing: 'border-box' }}>
-            <Space>
-              <Typography.Text strong>회사명</Typography.Text>
-              {/* [E2] companyName.TriggerClick (L56) → Sys01_Lookup_SelectSingle.open() — 입력은 편집 불가(L55) */}
-              <Input style={{ width: 150, cursor: 'pointer' }} readOnly value={companyName}
-                suffix={<SearchOutlined />} onClick={() => setLookupOpen(true)} />
-              <Typography.Text strong>권한명</Typography.Text>
-              <Input style={{ width: 100 }} value={roleName} onChange={e => setRoleName(e.target.value)} />
-              {/* [E1] retrieveButton[조회].Select (L47) → retrieve() */}
-              <Button type="search" onClick={() => retrieve(companyId)}>조회</Button>
-            </Space>
+            {/* [E1] retrieveButton[조회].Select (L47) → retrieve(). 초기화는 UX-02 */}
+            <SearchBar onSearch={() => retrieve(companyId)} onReset={reset}>
+              <SearchBar.Field label="회사명">
+                {/* [E2] companyName.TriggerClick (L56) → Sys01_Lookup_SelectSingle.open() — 입력은 편집 불가(L55) */}
+                <Input style={{ width: 150, cursor: 'pointer' }} readOnly value={companyName}
+                  suffix={<SearchOutlined />} onClick={() => setLookupOpen(true)} />
+              </SearchBar.Field>
+              <SearchBar.Field label="권한명">
+                <Input style={{ width: 100 }} allowClear value={roleName} onChange={e => sp.set('roleName', e.target.value)} />
+              </SearchBar.Field>
+            </SearchBar>
             <div style={{ flex: 1, minHeight: 0 }}>
               {/* [E3] grid.SelectionChanged (L89) → retrieveUserRole() L128-133: 선택한 권한으로 오른쪽 조회 */}
               <SingleGrid<Role>

@@ -2,6 +2,7 @@
  * 권한별 사원정보 (A03) — Sys05_Tab_UserRole 오른쪽.
  * AS-IS: myApp/client/vi/sys/Sys05_Page_UserRole.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 선택한 권한그룹의 사원(sys05_user_role)을 셀 편집 그리드(체크 다중)로 조회·등록·저장·삭제한다.
+ * UX보강(10) B12-1: 저장 = 저장(n)(UX-03). 검색 칸이 없어 SearchBar는 쓰지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Space, Typography, Button as AntButton } from 'antd';
@@ -93,8 +94,8 @@ export const Sys05_Page_UserRole: React.FC<Props> = ({ roleId }) => {
         <Button type="search" onClick={crud.retrieve} disabled={!roleId}>조회</Button>
         {/* [E2] insertButton[등록].Select (L59) → insertRow(): 사원찾기 */}
         <Button type="register" onClick={() => setPersonOpen(true)} disabled={!roleId}>등록</Button>
-        {/* [E3] updateButton[저장].Select (L66) → update() */}
-        <Button type="save" onClick={crud.saveRows}>저장</Button>
+        {/* [E3] updateButton[저장].Select (L66) → update(). 저장(n)은 UX-03 */}
+        <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E4] deleteButton[삭제].Select (L73) → deleteChk() → [E6] msgBox.DialogHide [YES] (L216) → deleteRow() */}
         <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
       </Space>

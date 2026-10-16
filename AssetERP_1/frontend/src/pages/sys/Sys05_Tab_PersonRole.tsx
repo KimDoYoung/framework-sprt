@@ -2,9 +2,10 @@
  * [1072] 관리자 > 01. 화면권한관리 > 사용자별 권한그룹 맵핑  (A04)
  * AS-IS: myApp/client/vi/sys/Sys05_Tab_PersonRole.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃(생성자 L53-127): center = 툴바(높이 50) + 사원 그리드, south(40%, 분할, 최대 1000) = 권한 그리드 + 가운데 저장 버튼
+ * UX보강(10) B12-1: 사원 툴바 = SearchBar(UX-01·02·04, 초기화 = 검색어 비움·재직), 저장 = 저장(n)(UX-03, 권한 칸이 바뀐 행 수)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message, Select, Space, Splitter, Typography } from 'antd';
+import { message, Select, Splitter } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { empApi } from '@/api/emp';
 import { sysApi } from '@/api/sys';
@@ -12,6 +13,7 @@ import { errorMessage } from '@/api/client';
 import { TransInfo } from '@/types/emp';
 import { PersonRole } from '@/types/sys';
 import { Button } from '@/components/button';
+import { SearchBar, useSearchParams } from '@/components/search';
 import { SingleGrid, gbFor } from '@/components/grid';
 
 const gbUser = gbFor<TransInfo>();
@@ -50,19 +52,29 @@ const selectOne = { mode: 'singleRow' as const, checkboxes: true, enableClickSel
 export const Sys05_Tab_PersonRole: React.FC = () => {
   const userGridRef = useRef<AgGridReact<TransInfo>>(null);
   const roleGridRef = useRef<AgGridReact<PersonRole>>(null);
-  const [searchText, setSearchText] = useState('');
-  const [transCode, setTransCode] = useState('100');
+  const sp = useSearchParams(() => ({ searchText: '', transCode: '100' }));
+  const { searchText, transCode } = sp.values;
   const [users, setUsers] = useState<TransInfo[]>([]);
   const [user, setUser] = useState<TransInfo>();
   const [roles, setRoles] = useState<PersonRole[]>([]);
   /** 조회·저장 때의 userRoleYn — 다르면 바뀐 행(GXT getModifiedRecords) */
   const orig = useRef(new Map<number, string>());
+  const [changedCount, setChangedCount] = useState(0);  // 저장(n) (UX-03)
   const userColumns = useMemo(buildUserGrid, []);
   const roleColumns = useMemo(buildRoleGrid, []);
 
   const showRoles = (list: PersonRole[]) => {
     orig.current = new Map(list.map(r => [r.roleId, r.userRoleYn]));
+    setChangedCount(0);
     setRoles(list);
+  };
+
+  const getChanged = () => {
+    const changed: PersonRole[] = [];
+    roleGridRef.current?.api.forEachNode(n => {
+      if (n.data && orig.current.get(n.data.roleId) !== n.data.userRoleYn) changed.push(n.data);
+    });
+    return changed;
   };
 
   // retrieve() L180-222: 서비스 emp.Emp00_TransInfo.selectByText(companyId, searchText, transCode)
@@ -96,10 +108,7 @@ export const Sys05_Tab_PersonRole: React.FC = () => {
       message.warning('선택된 사원이 없습니다');
       return;
     }
-    const changed: PersonRole[] = [];
-    roleGridRef.current?.api.forEachNode(n => {
-      if (n.data && orig.current.get(n.data.roleId) !== n.data.userRoleYn) changed.push(n.data);
-    });
+    const changed = getChanged();
     if (changed.length === 0) return;
     try {
       // 결과 = selectByUserId 전체 → store 갱신
@@ -118,16 +127,16 @@ export const Sys05_Tab_PersonRole: React.FC = () => {
     <Splitter layout="vertical" style={{ height: '100%', background: '#fff' }}>
       <Splitter.Panel min={150}>
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>
-          <Space wrap>
-            <Typography.Text strong>사원검색</Typography.Text>
-            {/* [E2] searchText.KeyPress [Enter] (L70) → retrieve() */}
-            <Input style={{ width: 150 }} value={searchText} onChange={e => setSearchText(e.target.value)}
-              onPressEnter={retrieve} />
-            <Typography.Text strong>재직구분</Typography.Text>
-            <Select style={{ width: 150 }} value={transCode} options={WORK_TYPES} onChange={setTransCode} />
-            {/* [E1] retrieveButton[조회].Select (L64) → retrieve() */}
-            <Button type="search" onClick={retrieve}>조회</Button>
-          </Space>
+          {/* [E1] retrieveButton[조회].Select (L64) → retrieve(). 초기화는 UX-02 */}
+          <SearchBar onSearch={retrieve} onReset={sp.reset}>
+            <SearchBar.Field label="사원검색">
+              {/* [E2] searchText.KeyPress [Enter] (L70) → retrieve() — SearchBar.Input의 Enter */}
+              <SearchBar.Input style={{ width: 150 }} value={searchText} onChange={e => sp.set('searchText', e.target.value)} />
+            </SearchBar.Field>
+            <SearchBar.Field label="재직구분">
+              <Select style={{ width: 150 }} value={transCode} options={WORK_TYPES} onChange={v => sp.set('transCode', v)} />
+            </SearchBar.Field>
+          </SearchBar>
           <div style={{ flex: 1, minHeight: 0 }}>
             {/* [E3] userGrid.SelectionChanged (L97) → retrieveUserRole() */}
             <SingleGrid<TransInfo>
@@ -151,11 +160,12 @@ export const Sys05_Tab_PersonRole: React.FC = () => {
               columnDefs={roleColumns}
               getRowId={p => String(p.data.roleId)}
               rowSelection={selectOne}
+              onCellValueChanged={() => setChangedCount(getChanged().length)}
             />
           </div>
           <div style={{ textAlign: 'center' }}>
-            {/* [E4] updateButton[저장].Select (L109) → update() */}
-            <Button type="save" onClick={update}>저장</Button>
+            {/* [E4] updateButton[저장].Select (L109) → update(). 저장(n)은 UX-03 */}
+            <Button type="save" count={changedCount} onClick={update}>저장</Button>
           </div>
         </div>
       </Splitter.Panel>

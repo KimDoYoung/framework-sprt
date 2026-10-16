@@ -2,14 +2,16 @@
  * [1284] 관리자 > 01. 화면권한관리 > 메뉴별 그룹권한(View)  (A11)
  * AS-IS: myApp/client/vi/sys/Sys06_Tab_MenuView.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(생성자 L47-80): 왼쪽(고정 500, 최소 500, 분할, 여백 20,0,20,20) = 툴바(높이 50) + 메뉴 트리, 가운데 = Sys04_Page_RoleView(여백 20,20,20,-2)
+ * UX보강(10) B12-1: 트리 툴바 = SearchBar(검색 문구, UX-04). 초기화(UX-02)는 조건이 1개라 없음
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Input, message, Space, Splitter } from 'antd';
+import { message, Splitter } from 'antd';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { MenuViewNode } from '@/types/sys';
 import { Button } from '@/components/button';
 import { SingleGrid } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 import { useTreeGrid } from '@/hooks/useTreeGrid';
 import { Sys04_Page_RoleView } from './Sys04_Page_RoleView';
 
@@ -53,16 +55,16 @@ export const Sys06_Tab_MenuView: React.FC = () => {
     <Splitter style={{ height: '100%', background: '#fff' }}>
       <Splitter.Panel defaultSize={500} min={500} max={1000}>
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', margin: '20px 0 20px 20px', border: '1px solid #d9d9d9' }}>
-          <Space style={{ height: 50, flex: 'none', padding: '0 8px' }}>
-            {/* [E1] searchText.KeyPress [Enter] (L85) → search() */}
-            <Input style={{ width: 150 }} value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={search} />
-            {/* [E2] retrieveButton[검색].Select (L93) → search() */}
-            <Button type="search" onClick={search}>검색</Button>
+          {/* [E2] retrieveButton[검색].Select (L93) → search() */}
+          <SearchBar style={{ height: 50, flex: 'none', padding: '0 8px' }} searchText="검색" onSearch={search} extra={<>
             {/* [E3] expandAll[펼치기].Select (L100) → treeGrid.expandAll() */}
             <Button type="expand" onClick={tree.expandAll}>펼치기</Button>
             {/* [E4] collapseAll[감추기].Select (L106) → treeGrid.collapseAll() */}
             <Button type="collapse" onClick={tree.collapseAll}>감추기</Button>
-          </Space>
+          </>}>
+            {/* [E1] searchText.KeyPress [Enter] (L85) → search() — SearchBar.Input의 Enter */}
+            <SearchBar.Input style={{ width: 150 }} value={searchText} onChange={e => setSearchText(e.target.value)} />
+          </SearchBar>
           <div style={{ flex: 1, minHeight: 0 }}>
             {/* [E5] treeGrid.SelectionChanged [data != null] (L113) → roleViewPage.retrieve(menuId), 선택이 없으면 retrieve(null) */}
             <SingleGrid<MenuViewNode>

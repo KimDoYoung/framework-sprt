@@ -2,8 +2,9 @@
  * 고객사 권한그룹별 매뉴 트리 (A07) — Sys07_Tab_CompanyRoleMenu 오른쪽(center).
  * AS-IS: myApp/client/vi/sys/Sys07_Tree_CompanyRoleMenu.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * A06 Sys07_Tree_RoleMenu와 같은 트리 패턴. 다른 점: 매뉴명 검색 없음, 회사는 왼쪽에서 고른 회사, 셀 클릭은 권한 칸만 처리
+ * UX보강(10) B12-1: 저장 = 저장(n)(UX-03, 바뀐 행 수). 검색 칸이 없어 SearchBar는 쓰지 않는다
  */
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';
 import type { CellClickedEvent } from 'ag-grid-community';
 import { sysApi } from '@/api/sys';
@@ -23,6 +24,7 @@ interface Props {
 export const Sys07_Tree_CompanyRoleMenu: React.FC<Props> = ({ roleModel }) => {
   const tree = useTreeGrid<RoleMenuNode>({ idField: 'menuId', parentField: 'parentId', depthField: 'depth' });
   const changed = useRef(new Set<number>());
+  const [changedCount, setChangedCount] = useState(0);  // 저장(n) (UX-03)
 
   // buildTreeGrid() L124-132 (getTreeGrid(1): 트리 컬럼 1번 = 매뉴명)
   const columnDefs = useMemo(() => [
@@ -37,6 +39,7 @@ export const Sys07_Tree_CompanyRoleMenu: React.FC<Props> = ({ roleModel }) => {
     try {
       const list = await sysApi.getCompanyRoleMenuTree(role.companyId!, role.roleId);
       changed.current.clear();
+      setChangedCount(0);
       tree.setRows(list);
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
@@ -46,7 +49,7 @@ export const Sys07_Tree_CompanyRoleMenu: React.FC<Props> = ({ roleModel }) => {
   // [E1] refreshButton[조회].Select (L58) → refresh() L134-140: 권한이 있으면 retrieve, 없으면 트리를 비운다
   const refresh = () => {
     if (roleModel) retrieve(roleModel);
-    else { changed.current.clear(); tree.setRows([]); }
+    else { changed.current.clear(); setChangedCount(0); tree.setRows([]); }
   };
 
   // [E5] treeGrid.CellMouseDown [rowIndex >= 0 && cellIndex == 2] (L82-90) → getColumn() L94-122:
@@ -56,6 +59,7 @@ export const Sys07_Tree_CompanyRoleMenu: React.FC<Props> = ({ roleModel }) => {
     if (e.colDef.field !== 'useYn') return;
     tree.expandDeep(e.data.menuId);
     tree.cascadeToggle(e.api, e.data, 'useYn').forEach(t => changed.current.add(t));
+    setChangedCount(changed.current.size);
   };
 
   // [E4] updateButton[저장].Select (L76) → update() L181-196: 바뀐 행 → 서비스 sys.Sys06_Menu.updateRoleMenu(roleId)
@@ -75,6 +79,7 @@ export const Sys07_Tree_CompanyRoleMenu: React.FC<Props> = ({ roleModel }) => {
         if (node?.data) node.setData({ ...node.data, roleMenuId: s.roleMenuId, useYn: s.useYn });
       });
       changed.current.clear();
+      setChangedCount(0);
       message.success(`${saved.length}건 저장되었습니다.`);
     } catch (err) {
       message.error(errorMessage(err, '저장 실패'));
@@ -94,7 +99,8 @@ export const Sys07_Tree_CompanyRoleMenu: React.FC<Props> = ({ roleModel }) => {
         <Button type="expand" onClick={tree.expandAll}>펼치기</Button>
         {/* [E3] collapseAll[감추기].Select (L70) → treeGrid.collapseAll() */}
         <Button type="collapse" onClick={tree.collapseAll}>감추기</Button>
-        <Button type="save" onClick={update}>저장</Button>
+        {/* 저장(n)은 UX-03 */}
+        <Button type="save" count={changedCount} onClick={update}>저장</Button>
       </Space>
       <div style={{ flex: 1, minHeight: 0 }}>
         <SingleGrid<RoleMenuNode>

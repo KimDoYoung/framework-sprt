@@ -1,15 +1,17 @@
 /**
  * 권한그룹별 매뉴 트리 (A06) — Sys07_Tab_RoleMenu 오른쪽(center).
  * AS-IS: myApp/client/vi/sys/Sys07_Tree_RoleMenu.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
+ * UX보강(10) B12-1: 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03). 매뉴명 Enter는 조회가 아니라 트리 안 검색(search)이라 antd Input + allowClear(UX-04). 초기화(UX-02)는 조건이 1개라 없음
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message, Space, Typography } from 'antd';
+import { Input, message } from 'antd';
 import type { CellClickedEvent } from 'ag-grid-community';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { RoleMenuNode } from '@/types/sys';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 import { isTreeToggleClick, useTreeGrid } from '@/hooks/useTreeGrid';
 
 const gb = gbFor<RoleMenuNode>();
@@ -23,6 +25,7 @@ export const Sys07_Tree_RoleMenu: React.FC<Props> = ({ roleId }) => {
   const tree = useTreeGrid<RoleMenuNode>({ idField: 'menuId', parentField: 'parentId', depthField: 'depth' });
   const [searchText, setSearchText] = useState('');
   const changed = useRef(new Set<number>());
+  const [changedCount, setChangedCount] = useState(0);  // 저장(n) (UX-03)
 
   // buildTreeGrid() L141-149 (트리 컬럼 1번 = 매뉴명)
   const columnDefs = useMemo(() => [
@@ -50,6 +53,7 @@ export const Sys07_Tree_RoleMenu: React.FC<Props> = ({ roleId }) => {
     try {
       const list = await sysApi.getRoleMenuTree(roleId);
       changed.current.clear();
+      setChangedCount(0);
       tree.setRows(list);
       search(list);
     } catch (err) {
@@ -66,6 +70,7 @@ export const Sys07_Tree_RoleMenu: React.FC<Props> = ({ roleId }) => {
     tree.expandDeep(e.data.menuId);
     if (e.colDef.field !== 'useYn') return;
     tree.cascadeToggle(e.api, e.data, 'useYn').forEach(t => changed.current.add(t));
+    setChangedCount(changed.current.size);
   };
 
   // update() L196-211: 바뀐 행 → 서비스 sys.Sys06_Menu.updateRoleMenu(roleId) → 결과로 그 행을 바꾼다(다시 조회하면 트리가 깨진다 — 원본 주석)
@@ -84,6 +89,7 @@ export const Sys07_Tree_RoleMenu: React.FC<Props> = ({ roleId }) => {
         if (node?.data) node.setData({ ...node.data, roleMenuId: s.roleMenuId, useYn: s.useYn });
       });
       changed.current.clear();
+      setChangedCount(0);
       message.success(`${saved.length}건 저장되었습니다.`);
     } catch (err) {
       message.error(errorMessage(err, '저장 실패'));
@@ -96,19 +102,20 @@ export const Sys07_Tree_RoleMenu: React.FC<Props> = ({ roleId }) => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>
-      <Space wrap>
-        <Typography.Text strong>매뉴명</Typography.Text>
-        {/* [E1] searchText.KeyPress [Enter] (L66) → search() */}
-        <Input style={{ width: 160 }} value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={() => search()} />
-        {/* [E2] refreshButton[조회].Select (L74) → refresh() */}
-        <Button type="search" onClick={refresh}>조회</Button>
+      {/* [E2] refreshButton[조회].Select (L74) → refresh() */}
+      <SearchBar onSearch={refresh} extra={<>
         {/* [E3] expandAll[펼치기].Select (L80) → treeGrid.expandAll() */}
         <Button type="expand" onClick={tree.expandAll}>펼치기</Button>
         {/* [E4] collapseAll[감추기].Select (L86) → treeGrid.collapseAll() */}
         <Button type="collapse" onClick={tree.collapseAll}>감추기</Button>
-        {/* [E5] updateButton[저장].Select (L93) → update() */}
-        <Button type="save" onClick={update}>저장</Button>
-      </Space>
+        {/* [E5] updateButton[저장].Select (L93) → update(). 저장(n)은 UX-03 */}
+        <Button type="save" count={changedCount} onClick={update}>저장</Button>
+      </>}>
+        <SearchBar.Field label="매뉴명">
+          {/* [E1] searchText.KeyPress [Enter] (L66) → search() */}
+          <Input style={{ width: 160 }} allowClear value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={() => search()} />
+        </SearchBar.Field>
+      </SearchBar>
       <div style={{ flex: 1, minHeight: 0 }}>
         <SingleGrid<RoleMenuNode>
           gridRef={tree.gridRef}

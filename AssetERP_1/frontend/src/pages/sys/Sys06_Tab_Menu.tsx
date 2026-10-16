@@ -2,6 +2,7 @@
  * [1077] 관리자 > 메뉴 관리  (A09)
  * AS-IS: myApp/client/vi/sys/Sys06_Tab_Menu.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(생성자 L58-96): center = 툴바(높이 50) + 매뉴 트리 그리드, east = Sys01_Grid_CompanyMenu(폭 600, 최대 1000, 분할), 여백 20
+ * UX보강(10) B12-1: 검색어 칸 x(UX-04)만. 원본 툴바에 조회 버튼이 없어(Enter 검색·새로고침) SearchBar는 쓰지 않는다(조회·초기화 버튼이 생기므로)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Splitter, Typography } from 'antd';
@@ -158,7 +159,7 @@ export const Sys06_Tab_Menu: React.FC = () => {
           <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
             <div style={{ height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', flex: 'none', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
               <Typography.Text strong style={{ flex: 'none' }}>매뉴구성</Typography.Text>
-              <Input style={{ width: 200, flex: 'none' }} value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={search} />
+              <Input style={{ width: 200, flex: 'none' }} allowClear value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={search} />
               {/* [E2] retrieveButton[새로고침].Select (L108) → retrieve() */}
               <Button type="reset" onClick={() => retrieve()}>새로고침</Button>
               {/* [E3] createRoot[루트매뉴 등록].Select (L114) → insertMenu(0) — root menu는 parentId가 0 */}

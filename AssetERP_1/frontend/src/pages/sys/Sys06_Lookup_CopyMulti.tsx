@@ -2,9 +2,10 @@
  * 일괄복사 팝업 (A09) — Sys06_Tab_Menu [일괄복사]에서 연다. 고른 매뉴(와 그 상위 매뉴)를 고른 고객사에 일괄 권한부여·삭제
  * AS-IS: myApp/client/vi/sys/Sys06_Lookup_CopyMulti.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * open() L69-117: 제목 "일괄복사", 1200×600, 모달, 닫기(X) 없음. 왼쪽 반 = 매뉴 검색 + grid01, 오른쪽 반 = 고객사 검색 + grid02, 아래 가운데 권한부여·권한삭제·닫기
+ * UX보강(10) B12-1: 왼쪽·오른쪽 검색 줄 = SearchBar 2개(UX-01·04). 초기화(UX-02)는 조건이 2개(검색어·상품)인 오른쪽 줄만 — 왼쪽은 검색어 1개(체크는 조회 뒤 extra)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, Input, message, Modal, Space, Typography } from 'antd';
+import { Checkbox, message, Modal, Space } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
@@ -12,6 +13,7 @@ import { CompanyCopy, MenuCopy } from '@/types/sys';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { MultiGrid, gbFor } from '@/components/grid';
+import { SearchBar, useSearchParams } from '@/components/search';
 
 const gb1 = gbFor<MenuCopy>();
 const gb2 = gbFor<CompanyCopy>();
@@ -42,12 +44,12 @@ export const Sys06_Lookup_CopyMulti: React.FC<Props> = ({ open, onClose }) => {
   const grid02 = useRef<AgGridReact<CompanyCopy>>(null);
   const [menus, setMenus] = useState<MenuCopy[]>([]);
   const [companies, setCompanies] = useState<CompanyCopy[]>([]);
-  const [searchText01, setSearchText01] = useState('');
-  const [searchText02, setSearchText02] = useState('');
   // settings() L141: menuNameYn 처음 false("매뉴명만 검색")
+  const [searchText01, setSearchText01] = useState('');
   const [menuNameYn, setMenuNameYn] = useState(false);
   // L143-145: erpProductComboBox 폭 90, 처음 "전체"(%)
-  const [erpProductCd, setErpProductCd] = useState('%');
+  const sp02 = useSearchParams(() => ({ searchText02: '', erpProductCd: '%' }));
+  const { searchText02, erpProductCd } = sp02.values;
   const cols01 = useMemo(buildGrid01, []);
   const cols02 = useMemo(buildGrid02, []);
 
@@ -124,29 +126,29 @@ export const Sys06_Lookup_CopyMulti: React.FC<Props> = ({ open, onClose }) => {
     >
       <div style={{ display: 'flex', height: 520 }}>
         <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Space style={{ height: 42 }}>
-            <Typography.Text strong>검색</Typography.Text>
-            {/* [E1] searchText01.KeyPress [Enter] (L123) → retrieve01() */}
-            <Input style={{ width: 200 }} value={searchText01} onChange={e => setSearchText01(e.target.value)} onPressEnter={() => retrieve01()} autoFocus />
-            {/* [E4] retrieveButton01[조회].Select (L151) → retrieve01() */}
-            <Button type="search" onClick={() => retrieve01()}>조회</Button>
-            <Checkbox checked={menuNameYn} onChange={e => setMenuNameYn(e.target.checked)}>매뉴명만 검색</Checkbox>
-          </Space>
+          {/* [E4] retrieveButton01[조회].Select (L151) → retrieve01(). 체크는 원본처럼 조회 뒤 */}
+          <SearchBar style={{ height: 42 }} onSearch={() => retrieve01()}
+            extra={<Checkbox checked={menuNameYn} onChange={e => setMenuNameYn(e.target.checked)}>매뉴명만 검색</Checkbox>}>
+            <SearchBar.Field label="검색">
+              {/* [E1] searchText01.KeyPress [Enter] (L123) → retrieve01() — SearchBar.Input의 Enter */}
+              <SearchBar.Input style={{ width: 200 }} value={searchText01} onChange={e => setSearchText01(e.target.value)} autoFocus />
+            </SearchBar.Field>
+          </SearchBar>
           <div style={{ flex: 1, minHeight: 0 }}>
             <MultiGrid<MenuCopy> gridRef={grid01} rowData={menus} columnDefs={cols01} getRowId={p => String(p.data.menuId)} />
           </div>
         </div>
         <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Space style={{ height: 42 }}>
-            <Typography.Text strong>검색</Typography.Text>
-            {/* [E2] searchText02.KeyPress [Enter] (L132) → retrieve02() */}
-            <Input style={{ width: 200 }} value={searchText02} onChange={e => setSearchText02(e.target.value)} onPressEnter={() => retrieve02()} />
+          {/* [E5] retrieveButton02[조회].Select (L157) → retrieve02(). 초기화는 UX-02(자동 조회 없음) */}
+          <SearchBar style={{ height: 42 }} onSearch={() => retrieve02()} onReset={sp02.reset}>
+            <SearchBar.Field label="검색">
+              {/* [E2] searchText02.KeyPress [Enter] (L132) → retrieve02() — SearchBar.Input의 Enter */}
+              <SearchBar.Input style={{ width: 200 }} value={searchText02} onChange={e => sp02.set('searchText02', e.target.value)} />
+            </SearchBar.Field>
             {/* [E3] erpProductComboBox[ErpProductCode].Collapse (L145) → retrieve02() */}
             <SystemCodeComboBox kindCd="ErpProductCode" altCode={['%', '전체']} style={{ width: 90 }} value={erpProductCd}
-              onChange={v => { const code = v ?? '%'; setErpProductCd(code); retrieve02(code); }} />
-            {/* [E5] retrieveButton02[조회].Select (L157) → retrieve02() */}
-            <Button type="search" onClick={() => retrieve02()}>조회</Button>
-          </Space>
+              onChange={v => { const code = v ?? '%'; sp02.set('erpProductCd', code); retrieve02(code); }} />
+          </SearchBar>
           <div style={{ flex: 1, minHeight: 0 }}>
             <MultiGrid<CompanyCopy> gridRef={grid02} rowData={companies} columnDefs={cols02} getRowId={p => String(p.data.companyId)} />
           </div>

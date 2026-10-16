@@ -1,13 +1,14 @@
 /**
  * [1069] 관리자 > 01. 화면권한관리 > 권한그룹 관리  (A01)
  * AS-IS: myApp/client/vi/sys/Sys04_Tab_Role.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
+ * UX보강(10) B12-1: 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 초기화(UX-02)는 조건이 1개라 없음
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Input, Space, Typography } from 'antd';
 import { sysApi } from '@/api/sys';
 import { Role } from '@/types/sys';
 import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { useLoginUser } from '@/hooks/useLoginUser';
 
@@ -52,18 +53,19 @@ export const Sys04_Tab_Role: React.FC = () => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 12, background: '#fff', boxSizing: 'border-box' }}>
-      <Space wrap>
-        <Typography.Text strong>권한명</Typography.Text>
-        <Input style={{ width: 180 }} value={roleName} allowClear onChange={e => setRoleName(e.target.value)} onPressEnter={retrieve} />
-        {/* [E1] retrieveButton[조회].Select (L55) */}
-        <Button type="search" onClick={retrieve}>조회</Button>
-        {/* [E2] updateButton[저장].Select (L61) */}
-        <Button type="save" onClick={update}>저장</Button>
+      {/* [E1] retrieveButton[조회].Select (L55) */}
+      <SearchBar onSearch={retrieve} loading={crud.loading} extra={<>
+        {/* [E2] updateButton[저장].Select (L61). 저장(n)은 UX-03 */}
+        <Button type="save" count={crud.changes} onClick={update}>저장</Button>
         {/* [E3] insertButton[등록].Select (L67) */}
         <Button type="register" onClick={insertRow}>등록</Button>
         {/* [E4] deleteButton[삭제].Select (L73) */}
         <Button type="delete" onClick={deleteChk}>삭제</Button>
-      </Space>
+      </>}>
+        <SearchBar.Field label="권한명">
+          <SearchBar.Input style={{ width: 180 }} value={roleName} onChange={e => setRoleName(e.target.value)} />
+        </SearchBar.Field>
+      </SearchBar>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<Role> crud={crud} columnDefs={columnDefs} sortable={false} />
       </div>

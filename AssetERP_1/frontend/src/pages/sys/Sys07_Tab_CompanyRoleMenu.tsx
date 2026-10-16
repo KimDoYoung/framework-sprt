@@ -2,15 +2,16 @@
  * [1286] 기초자료 > 50. 권한 > 고객사별 메뉴권한 관리  (A07) — admin 회사 메뉴(sys admin만)
  * AS-IS: myApp/client/vi/sys/Sys07_Tab_CompanyRoleMenu.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(생성자 L41-73): 왼쪽(55%, 최대 1000, 분할) = 회사명(트리거) 조회 + 권한 그리드, 가운데(45%) = 권한그룹별 매뉴 트리
+ * UX보강(10) B12-1: 툴바 = SearchBar(UX-01). 초기화(UX-02)는 조건이 1개라 없음
  */
 import React, { useMemo, useState } from 'react';
-import { Input, message, Space, Splitter, Typography } from 'antd';
+import { Input, message, Splitter } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { Company, Role } from '@/types/sys';
-import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 import { Sys01_Lookup_SelectSingle } from './Sys01_Lookup_SelectSingle';
 import { Sys07_Tree_CompanyRoleMenu } from './Sys07_Tree_CompanyRoleMenu';
 
@@ -63,14 +64,14 @@ export const Sys07_Tab_CompanyRoleMenu: React.FC = () => {
       <Splitter style={{ height: '100%', background: '#fff' }}>
         <Splitter.Panel defaultSize="55%" max={1000} min={200}>
           <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 4px 0 12px', boxSizing: 'border-box' }}>
-            <Space>
-              <Typography.Text strong>회사명</Typography.Text>
-              {/* [E1] companyName.TriggerClick (L78) → Sys01_Lookup_SelectSingle.open() — 입력은 편집 불가(L77) */}
-              <Input style={{ width: 150, cursor: 'pointer' }} readOnly value={companyName}
-                suffix={<SearchOutlined />} onClick={() => setLookupOpen(true)} />
-              {/* [E2] retrieveButton[조회].Select (L99) → retrieve() */}
-              <Button type="search" onClick={retrieve}>조회</Button>
-            </Space>
+            {/* [E2] retrieveButton[조회].Select (L99) → retrieve() */}
+            <SearchBar onSearch={retrieve}>
+              <SearchBar.Field label="회사명">
+                {/* [E1] companyName.TriggerClick (L78) → Sys01_Lookup_SelectSingle.open() — 입력은 편집 불가(L77) */}
+                <Input style={{ width: 150, cursor: 'pointer' }} readOnly value={companyName}
+                  suffix={<SearchOutlined />} onClick={() => setLookupOpen(true)} />
+              </SearchBar.Field>
+            </SearchBar>
             <div style={{ flex: 1, minHeight: 0 }}>
               {/* [E3] roleGrid.SelectionChanged (L105-111) → roleMenuTree.retrieve(선택 권한) */}
               <SingleGrid<Role>

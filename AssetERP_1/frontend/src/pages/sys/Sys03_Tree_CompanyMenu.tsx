@@ -1,8 +1,9 @@
 /**
  * 고객별 매뉴 트리 (A10) — Sys03_Tab_CompanyMenu 오른쪽(center).
  * AS-IS: myApp/client/vi/sys/Sys03_Tree_CompanyMenu.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
+ * UX보강(10) B12-1: 저장 = 저장(n)(UX-03, 바뀐 행 수). 검색 칸이 없어 SearchBar는 쓰지 않는다
  */
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space, Typography } from 'antd';
 import type { CellClickedEvent } from 'ag-grid-community';
 import { sysApi } from '@/api/sys';
@@ -22,6 +23,7 @@ interface Props {
 export const Sys03_Tree_CompanyMenu: React.FC<Props> = ({ companyId }) => {
   const tree = useTreeGrid<CompanyMenuNode>({ idField: 'menuId', parentField: 'parentId', depthField: 'depth' });
   const changed = useRef(new Set<number>());
+  const [changedCount, setChangedCount] = useState(0);  // 저장(n) (UX-03)
 
   // buildTreeGrid() L135-145 (트리 컬럼 1번 = 매뉴명)
   const columnDefs = useMemo(() => [
@@ -37,6 +39,7 @@ export const Sys03_Tree_CompanyMenu: React.FC<Props> = ({ companyId }) => {
     try {
       const list = await sysApi.getCompanyMenuTree(companyId);
       changed.current.clear();
+      setChangedCount(0);
       tree.setRows(list);
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
@@ -49,6 +52,7 @@ export const Sys03_Tree_CompanyMenu: React.FC<Props> = ({ companyId }) => {
     tree.expandDeep(e.data.menuId);
     if (e.colDef.field !== 'useYn') return;
     tree.cascadeToggle(e.api, e.data, 'useYn').forEach(t => changed.current.add(t));
+    setChangedCount(changed.current.size);
   };
 
   // update() L190-211: 바뀐 행 → 서비스 sys.Sys06_Menu.updateCompanyMenu(companyId) → 결과로 그 행을 바꾼다(다시 조회하지 않음)
@@ -67,6 +71,7 @@ export const Sys03_Tree_CompanyMenu: React.FC<Props> = ({ companyId }) => {
         if (node?.data) node.setData({ ...node.data, companyMenuId: s.companyMenuId, useYn: s.useYn });
       });
       changed.current.clear();
+      setChangedCount(0);
       message.success(`${saved.length}건 저장되었습니다.`);
     } catch (err) {
       message.error(errorMessage(err, '저장 실패'));
@@ -86,8 +91,8 @@ export const Sys03_Tree_CompanyMenu: React.FC<Props> = ({ companyId }) => {
         <Button type="expand" onClick={tree.expandAll}>펼치기</Button>
         {/* [E3] collapseAll[감추기].Select (L65) → treeGrid.collapseAll() */}
         <Button type="collapse" onClick={tree.collapseAll}>감추기</Button>
-        {/* [E4] updateButton[저장].Select (L73) → update() */}
-        <Button type="save" onClick={update}>저장</Button>
+        {/* [E4] updateButton[저장].Select (L73) → update(). 저장(n)은 UX-03 */}
+        <Button type="save" count={changedCount} onClick={update}>저장</Button>
       </Space>
       <div style={{ flex: 1, minHeight: 0 }}>
         <SingleGrid<CompanyMenuNode>

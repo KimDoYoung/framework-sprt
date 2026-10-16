@@ -2,15 +2,17 @@
  * 매뉴찾기 조회창 (A15-4) — Sys50_TabPage_SpecificMenu의 매뉴명 칸에서 연다.
  * AS-IS: myApp/client/vi/sys/Sys06_Lookup_SelectMulti.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * open(searchText, callback) L49-52 / open(callback) L54-84: 제목 "매뉴찾기", 600×600, 모달. 매뉴명 입력(300)·조회·"매뉴명만 검색" 체크 + 체크박스 다중 그리드
+ * UX보강(10) B12-1: 검색 줄 = SearchBar(UX-01·04). 초기화(UX-02)는 조건(매뉴명)이 1개라 없음 — 체크는 원본처럼 조회 뒤(extra)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, Input, message, Modal, Space, Typography } from 'antd';
+import { Checkbox, message, Modal, Space } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { MenuLookup } from '@/types/sys';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 
 const gb = gbFor<MenuLookup>();
 
@@ -83,15 +85,14 @@ export const Sys06_Lookup_SelectMulti: React.FC<Props> = ({ open, searchText, on
       }
     >
       <div style={{ height: 480, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Space>
-          <Typography.Text strong>매뉴명</Typography.Text>
-          {/* [E1] menuName.KeyPress [Enter] (L92) → retrieve() */}
-          <Input autoFocus style={{ width: 300 }} value={menuName} onChange={e => setMenuName(e.target.value)}
-            onPressEnter={() => retrieve(menuName, menuNameYn)} />
-          {/* [E2] retrieveButton[조회].Select (L100) → retrieve() */}
-          <Button type="search" onClick={() => retrieve(menuName, menuNameYn)}>조회</Button>
-          <Checkbox checked={menuNameYn} onChange={e => setMenuNameYn(e.target.checked)}>매뉴명만 검색</Checkbox>
-        </Space>
+        {/* [E2] retrieveButton[조회].Select (L100) → retrieve(). 체크는 원본처럼 조회 뒤 */}
+        <SearchBar onSearch={() => retrieve(menuName, menuNameYn)}
+          extra={<Checkbox checked={menuNameYn} onChange={e => setMenuNameYn(e.target.checked)}>매뉴명만 검색</Checkbox>}>
+          <SearchBar.Field label="매뉴명">
+            {/* [E1] menuName.KeyPress [Enter] (L92) → retrieve() — SearchBar.Input의 Enter */}
+            <SearchBar.Input autoFocus style={{ width: 300 }} value={menuName} onChange={e => setMenuName(e.target.value)} />
+          </SearchBar.Field>
+        </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           {/* [E5] grid.CellDoubleClick (L119) → confirm() */}
           <MultiGrid<MenuLookup>
