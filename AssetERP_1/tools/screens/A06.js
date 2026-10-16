@@ -12,7 +12,7 @@ const [OUT, COMPANY = 'kfstest', ROLE = '일반 사용자'] = process.argv.slice
   const countRows = loc => loc.evaluate(el => new Set([...el.querySelectorAll('.ag-row[row-index]')].map(r => r.getAttribute('row-index'))).size);
   const selected = loc => loc.evaluate(el => new Set([...el.querySelectorAll('.ag-row-selected[row-index]')].map(r => r.getAttribute('row-index'))).size);
   try {
-    await p.goto('http://admin.localhost:8082/AssetERP_1/', { waitUntil: 'networkidle' });
+    await p.goto('http://admin.localhost:8082/AssetERP/', { waitUntil: 'networkidle' });
     await p.locator('.ant-select').first().click(); await p.keyboard.type(COMPANY); await p.waitForTimeout(500); await p.keyboard.press('Enter');
     await p.fill('input[placeholder^="사번"]', 'admin'); await p.fill('input[type=password]', '1111');
     await p.click('button[type=submit]'); await p.waitForTimeout(2500);

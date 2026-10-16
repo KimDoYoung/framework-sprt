@@ -2,7 +2,7 @@
 // 준비·사용은 tools/smoke-frame.js와 같다: NODE_PATH=<playwright-core 폴더>/node_modules node tools/screens/A01.js <스크린샷 폴더> [base] [회사]
 // 이 메뉴(#1069)는 고객사 메뉴라 admin 회사(0)에는 없다 → admin 테넌트 로그인 화면에서 회사(기본 kfstest)를 골라 그 회사 관리자로 들어간다.
 const { chromium } = require('playwright-core');
-const [OUT, BASE = 'http://admin.localhost:8082/AssetERP_1/', COMPANY = 'kfstest'] = process.argv.slice(2);
+const [OUT, BASE = 'http://admin.localhost:8082/AssetERP/', COMPANY = 'kfstest'] = process.argv.slice(2);
 const TEST_NM = 'ZZ_A01_화면시험';
 
 (async () => {

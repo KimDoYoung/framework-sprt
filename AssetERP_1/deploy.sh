@@ -8,11 +8,12 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FRONTEND_DIR="$PROJECT_ROOT/frontend"
 BACKEND_DIR="$PROJECT_ROOT/backend"
 STATIC_DIR="$BACKEND_DIR/src/main/resources/static"
-if [[ "$(hostname)" == "T3600" ]]; then
-    TOMCAT_WEBAPPS_DIR="${TOMCAT_WEBAPPS_DIR:-/data/docker/t3600-tomcat/webapps}"
-else
-    TOMCAT_WEBAPPS_DIR="${TOMCAT_WEBAPPS_DIR:-/data/docker/omen-tomcat/webapps}"
-fi
+APP_NAME="AssetERP"   # WAR 파일명 = Tomcat 컨텍스트 경로 (build.gradle archiveFileName과 일치)
+case "$(hostname)" in
+    OMEN)  TOMCAT_WEBAPPS_DIR="${TOMCAT_WEBAPPS_DIR:-/data/docker/omen-tomcat/webapps}" ;;
+    T3600) TOMCAT_WEBAPPS_DIR="${TOMCAT_WEBAPPS_DIR:-/data/docker/t3600-tomcat/webapps}" ;;
+    *)     TOMCAT_WEBAPPS_DIR="${TOMCAT_WEBAPPS_DIR:-}" ;;
+esac
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -78,17 +79,18 @@ if [[ -n "$WAR_PATH" && -f "$WAR_PATH" ]]; then
     echo -e "  - 파일 크기: ${BOLD}${WAR_SIZE}${NC}"
     echo ""
     header "Step 4: Tomcat webapps 복사 및 배포"
-    if [[ -d "$TOMCAT_WEBAPPS_DIR" ]]; then
+    if [[ -n "$TOMCAT_WEBAPPS_DIR" && -d "$TOMCAT_WEBAPPS_DIR" ]]; then
         # 기존 war 및 디렉터리 정리 (root 권한으로 생성된 압축 해제 디렉터리는 권한 에러 무시)
-        rm -rf "$TOMCAT_WEBAPPS_DIR/AssetERP_1" 2>/dev/null || true
-        rm -f "$TOMCAT_WEBAPPS_DIR/$WAR_NAME"
+        # 옛 컨텍스트(AssetERP_1)도 함께 정리
+        rm -rf "$TOMCAT_WEBAPPS_DIR/$APP_NAME" "$TOMCAT_WEBAPPS_DIR/AssetERP_1" 2>/dev/null || true
+        rm -f "$TOMCAT_WEBAPPS_DIR/$WAR_NAME" "$TOMCAT_WEBAPPS_DIR/AssetERP_1.war"
         cp "$WAR_PATH" "$TOMCAT_WEBAPPS_DIR/"
         info "복사 완료: $TOMCAT_WEBAPPS_DIR/$WAR_NAME"
         echo ""
         header "🚀 Tomcat 배포 완료!"
-        echo -e "  접속 URL: ${BOLD}${CYAN}http://localhost:8082/AssetERP_1/${NC}"
+        echo -e "  접속 URL: ${BOLD}${CYAN}http://localhost:8082/${APP_NAME}/${NC}"
     else
-        warn "배포 디렉토리($TOMCAT_WEBAPPS_DIR)가 존재하지 않아 복사를 건너뜁니다."
+        warn "배포 디렉토리가 없어 복사를 건너뜁니다 (host=$(hostname), TOMCAT_WEBAPPS_DIR='${TOMCAT_WEBAPPS_DIR}')."
     fi
     echo ""
     echo -e "  ${CYAN}[안내]${NC}"

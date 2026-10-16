@@ -4,7 +4,7 @@
 // 계정은 kfstest admin만 쓴다(사용자가 쓰는 계정으로 돌리면 중복 로그인 차단으로 사용자 세션이 끊긴다).
 const { chromium } = require('playwright-core');
 
-const BASE = 'http://admin.localhost:8082/AssetERP_1/';
+const BASE = 'http://admin.localhost:8082/AssetERP/';
 
 async function launch() {
   const b = await chromium.launch({ executablePath: process.env.HOME + '/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome', args: ['--host-resolver-rules=MAP *.localhost 127.0.0.1'] });

@@ -10,7 +10,7 @@ const [OUT, COMPANY = 'kfstest'] = process.argv.slice(2);
   p.on('console', m => { if (m.type() === 'error' && !m.text().includes('401')) out.errs.push(m.text().slice(0, 150)); });
   const lastMsg = async () => (await p.locator('.ant-message-notice').allInnerTexts()).pop() ?? '';
   try {
-    await p.goto('http://admin.localhost:8082/AssetERP_1/', { waitUntil: 'networkidle' });
+    await p.goto('http://admin.localhost:8082/AssetERP/', { waitUntil: 'networkidle' });
     await p.fill('input[placeholder^="사번"]', 'admin'); await p.fill('input[type=password]', '1111');
     await p.click('button[type=submit]'); await p.waitForTimeout(2500);
     await p.getByText('관리자', { exact: true }).first().click(); await p.waitForTimeout(600);

@@ -1,10 +1,10 @@
 // 배포본 화면 확인(06 항목 6·7 일부): 로그인 → MyPage → 1차 메뉴 → 3차 메뉴 탭, STOMP 연결, 콘솔 에러, 스크린샷 4장
 // 준비: 저장소 밖 폴더에서 `npm i playwright-core@1.56` (브라우저는 ~/.cache/ms-playwright/chromium-1243 사용)
 // 사용: NODE_PATH=<그 폴더>/node_modules node tools/smoke-frame.js <스크린샷 폴더> [base] [1차 메뉴] [3차 메뉴]
-//   예) node tools/smoke-frame.js /tmp/shots http://admin.localhost:8082/AssetERP_1/ 관리자 '메뉴 관리'
+//   예) node tools/smoke-frame.js /tmp/shots http://admin.localhost:8082/AssetERP/ 관리자 '메뉴 관리'
 // 로그인 전 세션 복원 시도에서 나는 401 두 건은 정상이다.
 const { chromium } = require('playwright-core');
-const [OUT, BASE = 'http://admin.localhost:8082/AssetERP_1/', L1 = '관리자', L3 = '메뉴 관리'] = process.argv.slice(2);
+const [OUT, BASE = 'http://admin.localhost:8082/AssetERP/', L1 = '관리자', L3 = '메뉴 관리'] = process.argv.slice(2);
 
 (async () => {
   const b = await chromium.launch({

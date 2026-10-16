@@ -68,5 +68,5 @@ tasks.named('test') {
 }
 
 bootWar {
-    archiveFileName = 'AssetERP_1.war'
+    archiveFileName = 'AssetERP.war'
 }

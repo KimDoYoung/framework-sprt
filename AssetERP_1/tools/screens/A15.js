@@ -4,7 +4,7 @@
 // 사용: NODE_PATH=<playwright-core 폴더>/node_modules node tools/screens/A15.js <스크린샷 폴더> [base] [중복 사업자번호]
 // 이 메뉴(#1075)는 admin 회사 메뉴 → 회사 선택 없이 admin으로 로그인한다.
 const { chromium } = require('playwright-core');
-const [OUT, BASE = 'http://admin.localhost:8082/AssetERP_1/', DUP_BIZ_NO = '300-30-31234'] = process.argv.slice(2);
+const [OUT, BASE = 'http://admin.localhost:8082/AssetERP/', DUP_BIZ_NO = '300-30-31234'] = process.argv.slice(2);
 
 (async () => {
   const b = await chromium.launch({

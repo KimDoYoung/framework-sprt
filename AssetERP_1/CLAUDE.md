@@ -1,6 +1,6 @@
 # AssetERP_1/CLAUDE.md
 
-실제 AssetERP 원본의 **sys 메뉴 화면**을 Spring Boot + React로 변환하는 작업 폴더(브랜치 `AssetERP_1`).
+실제 AssetERP 원본의 **sys 메뉴 화면**을 Spring Boot + React로 변환하는 작업 폴더(브랜치 `AssetERP`).
 OMS(`../OMS`, AssetERP subset)에서 해 본 변환을 실제 원본으로 다시 해 보고, AssetERP 전체 전환에 드는 비용을 가늠하는 것이 목적이다.
 상위 `../CLAUDE.md`(저장소 공통 규칙, yunhee 사용 규칙)도 함께 적용된다.
 

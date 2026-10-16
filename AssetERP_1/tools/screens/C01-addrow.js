@@ -12,7 +12,7 @@ const [OUT, COMPANY = 'kfstest', SEARCH = '천영임'] = process.argv.slice(2);
   p.on('request', r => { if (r.url().includes('/emp/educations') && r.method() !== 'GET') out.puts.push(r.method() + ' ' + (r.postData() || '').slice(0, 120)); });
   const msg = async () => { await p.waitForTimeout(700); out.msgs.push((await p.locator('.ant-message-notice').allInnerTexts().catch(() => [])).join(' | ')); await p.waitForTimeout(2600); };
   try {
-    await p.goto('http://admin.localhost:8082/AssetERP_1/', { waitUntil: 'networkidle' });
+    await p.goto('http://admin.localhost:8082/AssetERP/', { waitUntil: 'networkidle' });
     await p.locator('.ant-select').first().click(); await p.keyboard.type(COMPANY); await p.waitForTimeout(500); await p.keyboard.press('Enter');
     await p.fill('input[placeholder^="사번"]', 'admin'); await p.fill('input[type=password]', '1111');
     await p.click('button[type=submit]'); await p.waitForTimeout(2500);
