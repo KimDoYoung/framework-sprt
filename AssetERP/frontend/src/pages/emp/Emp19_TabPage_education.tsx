@@ -12,7 +12,7 @@ import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { TransInfoTabProps } from './Emp00_Tab_TransInfo';
-import { Emp01_Lookup_PersonModel } from './Emp01_Lookup_PersonModel';
+import { Emp01_Lookup_PersonModel } from '@/components/lookup/Emp01_Lookup_PersonModel';
 
 const gb = gbFor<Education>();
 

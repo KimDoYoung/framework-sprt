@@ -14,7 +14,7 @@ import { TransInfo } from '@/types/emp';
 import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { useGridCrud } from '@/hooks/useGridCrud';
-import { Emp00_Lookup_SelectMulti } from '../emp/Emp00_Lookup_SelectMulti';
+import { Emp00_Lookup_SelectMulti } from '@/components/lookup/Emp00_Lookup_SelectMulti';
 
 type Row = SpecificMenuPerson;
 const gb = gbFor<Row>();

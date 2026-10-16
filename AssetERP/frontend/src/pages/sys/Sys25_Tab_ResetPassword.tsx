@@ -13,7 +13,7 @@ import { errorMessage } from '@/api/client';
 import { PasswordPerson } from '@/types/sys';
 import { SingleGrid, gbFor, iconCell } from '@/components/grid';
 import { SearchBar } from '@/components/search';
-import { Emp00_Lookup_SelectSingle } from '../emp/Emp00_Lookup_SelectSingle';
+import { Emp00_Lookup_SelectSingle } from '@/components/lookup/Emp00_Lookup_SelectSingle';
 
 const gb = gbFor<PasswordPerson>();
 

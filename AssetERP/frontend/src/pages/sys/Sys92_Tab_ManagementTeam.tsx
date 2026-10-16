@@ -18,7 +18,7 @@ import { CellEditGrid, SingleGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { isSysAdmin, useLoginUser } from '@/hooks/useLoginUser';
-import { Emp00_Lookup_SelectSingle } from '../emp/Emp00_Lookup_SelectSingle';
+import { Emp00_Lookup_SelectSingle } from '@/components/lookup/Emp00_Lookup_SelectSingle';
 
 type Row = ManagementTeam;
 const gb = gbFor<Row>();

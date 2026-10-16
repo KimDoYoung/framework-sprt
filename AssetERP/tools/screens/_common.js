@@ -7,7 +7,7 @@ const { chromium } = require('playwright-core');
 const BASE = 'http://admin.localhost:8082/AssetERP/';
 
 async function launch() {
-  const b = await chromium.launch({ executablePath: process.env.HOME + '/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome', args: ['--host-resolver-rules=MAP *.localhost 127.0.0.1'] });
+  const b = await chromium.launch({ executablePath: process.env.CHROME_PATH || process.env.HOME + '/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome', args: ['--host-resolver-rules=MAP *.localhost 127.0.0.1'] });
   const p = await b.newPage({ viewport: { width: 1600, height: 1000 } });
   const errs = [];
   p.on('pageerror', e => errs.push(e.message));

@@ -6,7 +6,7 @@
  * 실제 문자 발송은 서버 SmsSender가 하며, 지금은 사용자 지시로 보내지 않는다(서버가 거절 문구를 돌려준다).
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, message, Modal, Select, Typography } from 'antd';
+import { Checkbox, message, Modal, Typography } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { empUserInfoApi } from '@/api/emp';
 import { smsApi } from '@/api/sms';
@@ -19,7 +19,8 @@ import { useLoginUser } from '@/hooks/useLoginUser';
 import { Button } from '@/components/button';
 import { SearchBar } from '@/components/search';
 import { PagingToolBar, SingleGrid, gbFor, iconCell } from '@/components/grid';
-import { Sys85_Lookup_ClientInfoList } from '../sys/Sys85_Lookup_ClientInfoList';
+import { CompanyPopupField } from '@/components/lookup/CompanyPopupField';
+import { Sys85_Lookup_ClientInfoList } from '@/components/lookup/Sys85_Lookup_ClientInfoList';
 
 const LIMIT = 100;                       // grid01ToolBar.setToolBar(100)
 const ALL = '%';                         // CommonComboBoxField("sys.Sys00_Common.selectCompanyName", "%", "전체")
@@ -182,8 +183,7 @@ export const Sms03_Page_UserListAdmin: React.FC<Props> = ({ groupSendId }) => {
         }>
           <SearchBar.Field label="고객사">
             {/* [E1] companyName[sys.Sys00_Common.selectCompanyName].Collapse (L140) → retrieve() */}
-            <Select style={{ width: 200 }} value={companyCode}
-              options={[{ value: ALL, label: '전체' }, ...companies.map(c => ({ value: c.code, label: c.name }))]}
+            <CompanyPopupField value={companyCode} label={companies.find(c => c.code === companyCode)?.name}
               onChange={code => { setCompanyCode(code); retrieve(code); }} />
           </SearchBar.Field>
           <SearchBar.Field label="검색">

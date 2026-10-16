@@ -16,8 +16,8 @@ import { TransPerson } from '@/types/emp';
 import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { useGridCrud } from '@/hooks/useGridCrud';
-import { Emp01_Lookup_PersonModel } from '../emp/Emp01_Lookup_PersonModel';
-import { Org00_Lookup_SelectSingle } from '../org/Org00_Lookup_SelectSingle';
+import { Emp01_Lookup_PersonModel } from '@/components/lookup/Emp01_Lookup_PersonModel';
+import { Org00_Lookup_SelectSingle } from '@/components/lookup/Org00_Lookup_SelectSingle';
 
 const gb = gbFor<UserRole>();
 

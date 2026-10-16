@@ -85,8 +85,8 @@ export const Sys01_Lookup_Company: React.FC<Props> = ({ open, onResult, onClose 
   return (
     <Modal
       open={open}
-      title="고객찾기"
-      width={500}
+      title="고객사 찾기"
+      width={550}
       maskClosable={false}
       onCancel={hide}
       footer={
@@ -100,7 +100,7 @@ export const Sys01_Lookup_Company: React.FC<Props> = ({ open, onResult, onClose 
         </div>
       }
     >
-      <div style={{ height: 300, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: 400, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E2] retrieveButton[조회].Select (L99) → retrieve(). 초기화(UX-02)는 조건이 1개라 없음 */}
         <SearchBar onSearch={() => retrieve(korName)}>
           <SearchBar.Field label="고객명">

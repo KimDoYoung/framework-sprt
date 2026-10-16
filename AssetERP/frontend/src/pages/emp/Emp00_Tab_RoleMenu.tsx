@@ -13,7 +13,7 @@ import { TransInfo } from '@/types/emp';
 import { SearchBar, useSearchParams } from '@/components/search';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
-import { Sys05_Lookup_PersonRole } from '@/pages/sys/Sys05_Lookup_PersonRole';
+import { Sys05_Lookup_PersonRole } from '@/components/lookup/Sys05_Lookup_PersonRole';
 import { Sys07_Tree_PersonRoleMenu } from '@/pages/sys/Sys07_Tree_PersonRoleMenu';
 
 const gb = gbFor<TransInfo>();

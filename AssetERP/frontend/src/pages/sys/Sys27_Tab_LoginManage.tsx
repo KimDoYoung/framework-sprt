@@ -4,18 +4,19 @@
  * 레이아웃 L61-93: 툴바(회사명 콤보 · 사원명 돋보기 칸 · 조회 · 감추기) + 그리드(행번호, 체크박스 다중). 승인여부 체크박스를 바꾸면 확인창 → 저장.
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 조건 2개 → 초기화 UX-02)
  */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message, Modal, Select } from 'antd';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Input, message, Modal } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import type { AgGridReact } from 'ag-grid-react';
 import dayjs from 'dayjs';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
-import { Code, LoginManage } from '@/types/sys';
+import { LoginManage } from '@/types/sys';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
-import { Emp00_Lookup_SelectSingle } from '../emp/Emp00_Lookup_SelectSingle';
+import { Emp00_Lookup_SelectSingle } from '@/components/lookup/Emp00_Lookup_SelectSingle';
+import { CompanyPopupField } from '@/components/lookup/CompanyPopupField';
 
 const gb = gbFor<LoginManage>();
 const ALL = '%';  // companyName: "전체" 또는 "%"이면 모든 고객사
@@ -35,7 +36,6 @@ const columnDefs = [
 
 export const Sys27_Tab_LoginManage: React.FC = () => {
   const gridRef = useRef<AgGridReact<LoginManage>>(null);
-  const [companies, setCompanies] = useState<Code[]>([]);
   const [companyCd, setCompanyCd] = useState(ALL);
   // settings() L95-: personName = "전체", personId = null (돋보기 → 사원찾기)
   const [personName, setPersonName] = useState(ALL_PERSON);
@@ -43,9 +43,6 @@ export const Sys27_Tab_LoginManage: React.FC = () => {
   const [lookupOpen, setLookupOpen] = useState(false);
   const [rows, setRows] = useState<LoginManage[]>([]);
 
-  useEffect(() => {
-    sysApi.searchCompanyNames().then(setCompanies).catch(err => message.error(errorMessage(err, '조회 실패')));
-  }, []);
 
   // retrieve() L202-230: 서비스 sys.Sys27_LoginManage.selectByText(companyId '%'|ID, personId '%'|ID)
   const retrieve = useCallback(async () => {
@@ -100,7 +97,6 @@ export const Sys27_Tab_LoginManage: React.FC = () => {
     });
   };
 
-  const companyOptions = useMemo(() => [{ value: ALL, label: '전체' }, ...companies.map(c => ({ value: c.code, label: c.name }))], [companies]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: 20, gap: 8, background: '#fff', boxSizing: 'border-box' }}>
@@ -108,7 +104,7 @@ export const Sys27_Tab_LoginManage: React.FC = () => {
       <SearchBar onSearch={retrieve} onReset={() => { setCompanyCd(ALL); setPersonName(ALL_PERSON); setPersonId(null); }}
         extra={<Button type="collapse" onClick={collapse}>감추기</Button>}>
         <SearchBar.Field label="회사명">
-          <Select style={{ width: 200 }} value={companyCd} options={companyOptions} onChange={setCompanyCd} />
+          <CompanyPopupField value={companyCd} onChange={setCompanyCd} />
         </SearchBar.Field>
         <SearchBar.Field label="사원명">
           <Input readOnly style={{ width: 100, cursor: 'pointer' }} value={personName} suffix={<SearchOutlined />} onClick={openPersonLookup} />

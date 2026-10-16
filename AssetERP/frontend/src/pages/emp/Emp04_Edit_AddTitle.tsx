@@ -11,7 +11,7 @@ import { errorMessage } from '@/api/client';
 import { AddTitle } from '@/types/emp';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
-import { Org00_Lookup_SelectSingle } from '../org/Org00_Lookup_SelectSingle';
+import { Org00_Lookup_SelectSingle } from '@/components/lookup/Org00_Lookup_SelectSingle';
 
 /** insert(personId) = { personId }, edit(personId, 행) = { personId, row } */
 export interface AddTitleTarget {

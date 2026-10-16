@@ -5,16 +5,17 @@
  * 이 화면은 **지금 WebSocket에 접속한 사원**만 보여 주고(AS-IS BroadcastWebsocket.getInfoList()), 알림을 보내거나 강제 로그아웃시킨다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 넣지 않는다 — 버튼이 많아 줄바꿈이 생긴다
  */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Select, Typography } from 'antd';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { message, Modal, Typography } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
-import { Code, WebsocketPerson, WebsocketResult } from '@/types/sys';
+import { WebsocketPerson, WebsocketResult } from '@/types/sys';
 import { Button } from '@/components/button';
 import { MultiGrid, PagingToolBar, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { SendMessage } from '../utils/SendMessage';
+import { CompanyPopupField } from '@/components/lookup/CompanyPopupField';
 
 const LIMIT = 100;   // gridToolBar.setToolBar(100)
 const ALL = '%';     // companyName "전체" 또는 "%"
@@ -34,7 +35,6 @@ const columnDefs = [
 
 export const Sys86_Tab_Websocket: React.FC = () => {
   const gridRef = useRef<AgGridReact<WebsocketPerson>>(null);
-  const [companies, setCompanies] = useState<Code[]>([]);
   // settings() L116-234: 고객사 = 전체, 검색 빈칸(힌트 "고객사명/사원명/휴대폰")
   const [companyCd, setCompanyCd] = useState(ALL);
   const [searchText, setSearchText] = useState('');
@@ -77,7 +77,6 @@ export const Sys86_Tab_Websocket: React.FC = () => {
 
   // [E0] 화면 열림 (생성자 L65-114) → settings(), retrieve()
   useEffect(() => {
-    sysApi.searchCompanyNames().then(setCompanies).catch(err => message.error(errorMessage(err, '조회 실패')));
     retrieve();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -182,7 +181,6 @@ export const Sys86_Tab_Websocket: React.FC = () => {
     });
   };
 
-  const companyOptions = useMemo(() => [{ value: ALL, label: '전체' }, ...companies.map(c => ({ value: c.code, label: c.name }))], [companies]);
   const onRowDataUpdated = useCallback((e: { api: { getDisplayedRowAtIndex: (i: number) => { setSelected: (s: boolean, c?: boolean) => void } | undefined } }) => {
     e.api.getDisplayedRowAtIndex(0)?.setSelected(true, false);  // 콜백: 첫 행이 있으면 select(0, false)
   }, []);
@@ -199,8 +197,7 @@ export const Sys86_Tab_Websocket: React.FC = () => {
       </>}>
         <SearchBar.Field label="고객사">
           {/* [E2] companyName[sys.Sys00_Common.selectCompanyName].Collapse (L132) → retrieve() — 고르면 바로 조회 */}
-          <Select style={{ width: 200 }} value={companyCd} options={companyOptions}
-            onChange={code => { setCompanyCd(code); retrieve(code); }} />
+          <CompanyPopupField value={companyCd} onChange={code => { setCompanyCd(code); retrieve(code); }} />
         </SearchBar.Field>
         <SearchBar.Field label="검색">
           {/* [E1] searchText.KeyPress [Enter] (L124) → retrieve() */}

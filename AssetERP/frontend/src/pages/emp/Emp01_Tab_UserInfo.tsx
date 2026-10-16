@@ -16,7 +16,7 @@ import { Company } from '@/types/sys';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import { SearchBar, useSearchParams } from '@/components/search';
 import { PagingToolBar, SingleGrid, gbFor } from '@/components/grid';
-import { Sys01_Lookup_Company } from '../sys/Sys01_Lookup_Company';
+import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { Emp02_Edit_Note } from './Emp02_Edit_Note';
 
 const gb = gbFor<UserInfo>();

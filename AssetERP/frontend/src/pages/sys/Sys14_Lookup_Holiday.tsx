@@ -15,7 +15,7 @@ import { CellEditGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { useLoginUser } from '@/hooks/useLoginUser';
-import { Sys01_Lookup_Company } from './Sys01_Lookup_Company';
+import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 
 const gb = gbFor<Holiday>();
 

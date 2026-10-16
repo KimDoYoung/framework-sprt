@@ -5,17 +5,18 @@
  *   south = Sys90_Edit_BoardAdmin (편집 폼)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 줄바꿈이 늘어 넣지 않는다
  */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, DatePicker, message, Select } from 'antd';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Checkbox, DatePicker, message } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import dayjs, { Dayjs } from 'dayjs';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
-import { AfterService, Code } from '@/types/sys';
+import { AfterService } from '@/types/sys';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { Sys90_Edit_BoardAdmin } from './Sys90_Edit_BoardAdmin';
+import { CompanyPopupField } from '@/components/lookup/CompanyPopupField';
 
 const gb = gbFor<AfterService>();
 const ALL = '%';  // companyComboBox·typeNameComboBox·afterStateComboBox: "전체" 또는 "%"
@@ -37,11 +38,11 @@ export const Sys90_Tab_AfterServiceAdmin: React.FC = () => {
   const gridRef = useRef<AgGridReact<AfterService>>(null);
   /** 조회 뒤 그리드가 행을 채우면 선택할 개선사항 */
   const keepId = useRef<number | null>(null);
-  const [companies, setCompanies] = useState<Code[]>([]);
   // settings() L119-153: 발생일 = 올해 1월 1일 ~ 오늘, 회사·구분·완료여부 = 전체, 미완료건만·미확인건만 = true
   const [happenStartDate, setHappenStartDate] = useState<Dayjs>(() => dayjs().startOf('year'));
   const [happenEndDate, setHappenEndDate] = useState<Dayjs>(() => dayjs());
   const [companyCd, setCompanyCd] = useState(ALL);
+  const [companyNm, setCompanyNm] = useState(ALL);
   const [typeYn, setTypeYn] = useState(ALL);
   const [stateCd, setStateCd] = useState(ALL);
   const [searchText, setSearchText] = useState('');
@@ -52,9 +53,6 @@ export const Sys90_Tab_AfterServiceAdmin: React.FC = () => {
   /** 조회·행 선택마다 편집 폼을 다시 만든다 (AS-IS retrieveEditPage → editDriver.edit(model)) */
   const [formSeq, setFormSeq] = useState(0);
 
-  useEffect(() => {
-    sysApi.searchCompanyNames().then(setCompanies).catch(err => message.error(errorMessage(err, '조회 실패')));
-  }, []);
 
   // retrieveEditPage() L173-186: 선택 행이 있으면 editBoard.retrieve(model), 없으면 비운다
   const retrieveEditPage = (row: AfterService | null) => {
@@ -64,7 +62,7 @@ export const Sys90_Tab_AfterServiceAdmin: React.FC = () => {
 
   // retrieve() L188-241: 서비스 sys.Sys90_AfterService.selectByAdmin / selectByIncomplete
   const retrieve = useCallback(async () => {
-    const companyText = companyCd === ALL ? ALL : companies.find(c => c.code === companyCd)?.name ?? ALL;
+    const companyText = companyCd === ALL ? ALL : companyNm;
     try {
       const list = await sysApi.searchAfterServicesAdmin({
         happenStartDate: happenStartDate.format('YYYY-MM-DD'),
@@ -79,7 +77,7 @@ export const Sys90_Tab_AfterServiceAdmin: React.FC = () => {
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, [happenStartDate, happenEndDate, companyCd, companies, typeYn, stateCd, unconfirmedOnly, incompleteOnly, searchText, selected]);
+  }, [happenStartDate, happenEndDate, companyCd, companyNm, typeYn, stateCd, unconfirmedOnly, incompleteOnly, searchText, selected]);
 
   // [E0] 화면 열림 (생성자 L62-117) → settings(), retrieve()
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -91,7 +89,6 @@ export const Sys90_Tab_AfterServiceAdmin: React.FC = () => {
     setSelected(row);
   };
 
-  const companyOptions = useMemo(() => [{ value: ALL, label: '전체' }, ...companies.map(c => ({ value: c.code, label: c.name }))], [companies]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#fff' }}>
@@ -104,7 +101,7 @@ export const Sys90_Tab_AfterServiceAdmin: React.FC = () => {
             <DatePicker style={{ width: 140 }} allowClear={false} value={happenEndDate} onChange={setHappenEndDate} format="YYYY-MM-DD" />
           </SearchBar.Field>
           <SearchBar.Field label="회사명">
-            <Select style={{ width: 200 }} value={companyCd} options={companyOptions} onChange={setCompanyCd} />
+            <CompanyPopupField value={companyCd} onChange={(code, name) => { setCompanyCd(code); setCompanyNm(name); }} />
           </SearchBar.Field>
           <SearchBar.Field label="구분">
             <SystemCodeComboBox kindCd="AfterServiceCode" altCode={[ALL, '전체']} style={{ width: 100 }} value={typeYn} onChange={c => setTypeYn(c ?? ALL)} />

@@ -5,13 +5,14 @@
  * UX보강(10) B12-2: 툴바 = SearchBar(UX-01·02, 조건 5개 → 초기화는 전체·빈 사원명·전체 매뉴·체크 해제, 자동 조회 없음). 사원명은 SearchBar.Input(Enter = 조회, x)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, Input, message, Select } from 'antd';
+import { Checkbox, Input, message } from 'antd';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
-import { Code, MenuLookup, OpenMenuLog } from '@/types/sys';
+import { MenuLookup, OpenMenuLog } from '@/types/sys';
 import { PagingToolBar, SingleGrid, gbFor } from '@/components/grid';
 import { SearchBar, useSearchParams } from '@/components/search';
 import { Sys06_Lookup_SelectMulti } from './Sys06_Lookup_SelectMulti';
+import { CompanyPopupField } from '@/components/lookup/CompanyPopupField';
 
 const LIMIT = 100;   // gridToolBar.setToolBar(100)
 const ALL = '%';     // companyName "전체" / className "%"
@@ -30,7 +31,6 @@ const columnDefs = [
 ];
 
 export const Sys96_Tab_OpenMenuLogAdmin: React.FC = () => {
-  const [companies, setCompanies] = useState<Code[]>([]);
   // useYn: settings() L97 "실사용 건만 조회" 처음엔 해제, menuLabel·className: lookupMenuInfo 처음 "전체"·"%"
   const sp = useSearchParams(() => ({ companyCd: ALL, searchText: '', useYn: false, menuLabel: '전체', className: ALL }));
   const { companyCd, searchText, useYn, menuLabel, className } = sp.values;
@@ -72,7 +72,6 @@ export const Sys96_Tab_OpenMenuLogAdmin: React.FC = () => {
 
   // [E0] 화면 열림 (생성자 L55-94) → settings(), retrieve()
   useEffect(() => {
-    sysApi.searchCompanyNames().then(setCompanies).catch(err => message.error(errorMessage(err, '조회 실패')));
     retrieve();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -93,9 +92,7 @@ export const Sys96_Tab_OpenMenuLogAdmin: React.FC = () => {
       <SearchBar style={{ minHeight: 50 }} onSearch={() => retrieve()} onReset={sp.reset} loading={loading}>
         <SearchBar.Field label="고객사">
           {/* [E1] companyName[sys.Sys00_Common.selectCompanyName].Collapse (L115) → retrieve() */}
-          <Select style={{ width: 200 }} value={companyCd}
-            options={[{ value: ALL, label: '전체' }, ...companies.map(c => ({ value: c.code, label: c.name }))]}
-            onChange={code => { sp.set('companyCd', code); retrieve(code); }} />
+          <CompanyPopupField value={companyCd} onChange={code => { sp.set('companyCd', code); retrieve(code); }} />
         </SearchBar.Field>
         {/* [E2] searchText.KeyDown [Enter] (L123) → retrieve() */}
         <SearchBar.Input style={{ width: 100 }} placeholder="사원명" value={searchText}

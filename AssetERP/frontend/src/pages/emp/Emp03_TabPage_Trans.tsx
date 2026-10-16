@@ -17,7 +17,7 @@ import { Trans } from '@/types/emp';
 import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { useGridCrud } from '@/hooks/useGridCrud';
-import { Org00_Lookup_SelectSingle } from '../org/Org00_Lookup_SelectSingle';
+import { Org00_Lookup_SelectSingle } from '@/components/lookup/Org00_Lookup_SelectSingle';
 import type { TransInfoTabProps } from './Emp00_Tab_TransInfo';
 
 const gb = gbFor<Trans>();

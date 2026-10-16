@@ -5,17 +5,18 @@
  * UX보강(10): 툴바 = SearchBar(UX-01·02 — 초기화는 줄바꿈이 없을 때만)
  * 삭제: 원본 GridDeleteData는 확인창 없이 체크 행을 지운다 — 공통 규칙(05 §8)대로 "n건 삭제되었습니다."·선택 없음 경고를 더했다
  */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DatePicker, message, Select } from 'antd';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { DatePicker, message } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import dayjs, { Dayjs } from 'dayjs';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
-import { Code, LoginHistory } from '@/types/sys';
+import { LoginHistory } from '@/types/sys';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { MultiGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
+import { CompanyPopupField } from '@/components/lookup/CompanyPopupField';
 
 const gb = gbFor<LoginHistory>();
 const ALL = '%';  // loginModeComboBox·companyComboBox: "전체" 또는 "%"
@@ -34,7 +35,6 @@ const columnDefs = [
 
 export const Sys26_Tab_LoginHistory: React.FC = () => {
   const gridRef = useRef<AgGridReact<LoginHistory>>(null);
-  const [companies, setCompanies] = useState<Code[]>([]);
   // settings() L80-115: 조회기간 = 오늘 ~ 오늘, 접속구분·회사명 = 전체
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs());
   const [closeDate, setCloseDate] = useState<Dayjs>(() => dayjs());
@@ -42,9 +42,6 @@ export const Sys26_Tab_LoginHistory: React.FC = () => {
   const [companyCd, setCompanyCd] = useState(ALL);
   const [rows, setRows] = useState<LoginHistory[]>([]);
 
-  useEffect(() => {
-    sysApi.searchCompanyNames().then(setCompanies).catch(err => message.error(errorMessage(err, '조회 실패')));
-  }, []);
 
   // retrieve() L133-167: 서비스 sys.Sys26_Login.selectByLoginDate → 첫 행 선택
   const retrieve = useCallback(async () => {
@@ -78,7 +75,6 @@ export const Sys26_Tab_LoginHistory: React.FC = () => {
     }
   };
 
-  const companyOptions = useMemo(() => [{ value: ALL, label: '전체' }, ...companies.map(c => ({ value: c.code, label: c.name }))], [companies]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: 20, gap: 8, background: '#fff', boxSizing: 'border-box' }}>
@@ -94,7 +90,7 @@ export const Sys26_Tab_LoginHistory: React.FC = () => {
           <SystemCodeComboBox kindCd="LoginModeCode" altCode={[ALL, '전체']} style={{ width: 100 }} value={loginMode} onChange={c => setLoginMode(c ?? ALL)} />
         </SearchBar.Field>
         <SearchBar.Field label="회사명">
-          <Select style={{ width: 200 }} value={companyCd} options={companyOptions} onChange={setCompanyCd} />
+          <CompanyPopupField value={companyCd} onChange={setCompanyCd} />
         </SearchBar.Field>
       </SearchBar>
       <div style={{ flex: 1, minHeight: 0 }}>

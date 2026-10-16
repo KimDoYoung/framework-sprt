@@ -17,7 +17,7 @@ import { SearchBar, useSearchParams } from '@/components/search';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { useLoginUser } from '@/hooks/useLoginUser';
-import { Sys01_Lookup_Company } from './Sys01_Lookup_Company';
+import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { Sys15_Edit_Corp } from './Sys15_Edit_Corp';
 
 const gb = gbFor<Corp>();

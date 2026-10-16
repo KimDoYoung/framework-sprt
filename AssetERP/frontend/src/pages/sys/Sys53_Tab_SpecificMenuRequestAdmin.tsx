@@ -6,15 +6,15 @@
  * 문서보기 아이콘이 여는 전자결재(Apr01_Edit_ApprDoc)는 다른 도메인이라 이 단계에서 제외 — 작업기록 "의존"
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { message, Select } from 'antd';
+import { message } from 'antd';
 import { sysApi } from '@/api/sys';
-import { errorMessage } from '@/api/client';
 import { Code, SpecificMenuRequestAdmin } from '@/types/sys';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { CellEditGrid, gbFor, iconCell } from '@/components/grid';
 import { SearchBar, useSearchParams } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
+import { CompanyPopupField } from '@/components/lookup/CompanyPopupField';
 
 type Row = SpecificMenuRequestAdmin;
 const gb = gbFor<Row>();
@@ -43,7 +43,6 @@ const buildGrid = (states: Code[], viewDocument: (r: Row) => void) => [
 ];
 
 export const Sys53_Tab_SpecificMenuRequestAdmin: React.FC = () => {
-  const [companies, setCompanies] = useState<Code[]>([]);
   const [states, setStates] = useState<Code[]>([]);
   // companyName 콤보, specificStateComboBoxField ("SpecificStateCode", 전체), specificWorkComboBoxField ("SpecificWorkCode", 전체)
   const sp = useSearchParams(() => ({ companyCd: ALL, stateCd: ALL, specificWorkCd: ALL }));
@@ -73,7 +72,6 @@ export const Sys53_Tab_SpecificMenuRequestAdmin: React.FC = () => {
 
   // [E0] 화면 열림 (생성자 L56-75) → settings(), retrieve()
   useEffect(() => {
-    sysApi.searchCompanyNames().then(setCompanies).catch(err => message.error(errorMessage(err, '조회 실패')));
     sysApi.searchCodes('SpecificStateCode').then(setStates).catch(() => setStates([]));
     void crud.retrieve();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -91,9 +89,7 @@ export const Sys53_Tab_SpecificMenuRequestAdmin: React.FC = () => {
         // [E3] updateButton[저장].Select (L111) → update(). 저장(n)은 UX-03
         extra={<Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>}>
         <SearchBar.Field label="고객사">
-          <Select style={{ width: 200 }} value={companyCd}
-            options={[{ value: ALL, label: '전체' }, ...companies.map(c => ({ value: c.code, label: c.name }))]}
-            onChange={v => { sp.set('companyCd', v); setPending(true); }} />
+          <CompanyPopupField value={companyCd} onChange={v => { sp.set('companyCd', v); setPending(true); }} />
         </SearchBar.Field>
         <SearchBar.Field label="구분">
           <SystemCodeComboBox kindCd="SpecificStateCode" altCode={[ALL, '전체']} style={{ width: 100 }} value={stateCd}
