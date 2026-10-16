@@ -551,3 +551,11 @@ export interface AdminUserHistory {
   user: string | null;
   smsContent: string | null;
 }
+
+/** 화면안내 한 행 (A12, AS-IS Sys06_MenuModel 중 화면안내 열). menuFullName = 1차 > 2차 > 3차 메뉴 경로 */
+export interface MenuGuide {
+  menuId: number;
+  menuFullName: string | null;
+  menuName: string | null;
+  note: string | null;
+}

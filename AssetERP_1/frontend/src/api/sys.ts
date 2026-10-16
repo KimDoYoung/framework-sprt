@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -730,6 +730,26 @@ export const sysApi = {
   deleteClientInfos: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/sys/client-infos', { data: ids });
     return res.data.data ?? 0;
+  },
+
+  // ── A12 화면안내등록 (Sys06_Tab_MenuGuide) ──
+
+  /** AS-IS sys.Sys00_Common.selectMenuName: 1차 메뉴 콤보 (code = 메뉴 ID, name = 메뉴명) */
+  searchMenuNames: async (): Promise<Code[]> => {
+    const res = await apiClient.get<ApiResponse<Code[]>>('v1/sys/menu-guides/menu-names');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys06_Menu.selectByMenuId: menuId 없음 = 전체 */
+  searchMenuGuides: async (menuId: number | undefined, searchText: string): Promise<MenuGuide[]> => {
+    const res = await apiClient.get<ApiResponse<MenuGuide[]>>('v1/sys/menu-guides', { params: { menuId, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys06_Menu.update — 화면안내(note)만. 저장한 뒤 목록은 화면이 다시 조회한다(AS-IS retrieveFocus) */
+  updateMenuGuides: async (rows: MenuGuide[]): Promise<MenuGuide[]> => {
+    await apiClient.put<ApiResponse<number>>('v1/sys/menu-guides', rows.map(({ menuId, note }) => ({ menuId, note })));
+    return [];
   },
 
   // ── A23 Admin 로그인내역 조회 (Sys81_Tab_AdminUserHistory) ──

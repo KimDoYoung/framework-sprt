@@ -25,6 +25,7 @@ import { Sys27_Tab_LoginManage } from './sys/Sys27_Tab_LoginManage';
 import { Sys26_Tab_LoginHistory } from './sys/Sys26_Tab_LoginHistory';
 import { Sys80_Tab_AdminUserList } from './sys/Sys80_Tab_AdminUserList';
 import { Sys81_Tab_AdminUserHistory } from './sys/Sys81_Tab_AdminUserHistory';
+import { Sys06_Tab_MenuGuide } from './sys/Sys06_Tab_MenuGuide';
 import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
 import { Sys07_Tab_Company } from './sys/Sys07_Tab_Company';
 import { Sys07_Tab_CompanyRoleMenu } from './sys/Sys07_Tab_CompanyRoleMenu';
@@ -46,6 +47,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sys03_Tab_ComapnyMenu: Sys03_Tab_CompanyMenu, // A10 (메뉴 키 오타 그대로)
   Sys06_Tab_Menu, // A09
   Sys06_Tab_MenuView, // A11
+  Sys06_Tab_MenuGuide, // A12
   Sys04_Tab_Role, // A01
   Sys04_Tab_RoleAdmin, // A02
   Sys05_Tab_UserRole, // A03
