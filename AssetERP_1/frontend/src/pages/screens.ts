@@ -20,6 +20,7 @@ import { Sys10_Tab_TotalSize } from './sys/Sys10_Tab_TotalSize';
 import { Sys53_Tab_SpecificMenuRequest } from './sys/Sys53_Tab_SpecificMenuRequest';
 import { Sys53_Tab_SpecificMenuRequestAdmin } from './sys/Sys53_Tab_SpecificMenuRequestAdmin';
 import { Sys96_Tab_OpenMenuLogAdmin } from './sys/Sys96_Tab_OpenMenuLogAdmin';
+import { Sys90_Tab_AfterService } from './sys/Sys90_Tab_AfterService';
 import { Sys90_Tab_AfterServiceAdmin } from './sys/Sys90_Tab_AfterServiceAdmin';
 import { Sys27_Tab_LoginManage } from './sys/Sys27_Tab_LoginManage';
 import { Sys26_Tab_LoginHistory } from './sys/Sys26_Tab_LoginHistory';
@@ -29,6 +30,7 @@ import { Sys06_Tab_MenuGuide } from './sys/Sys06_Tab_MenuGuide';
 import { Sys10_Tab_TrashFileList } from './sys/Sys10_Tab_TrashFileList';
 import { Sys12_Tab_Calendar } from './sys/Sys12_Tab_Calendar';
 import { Sys15_Tab_Corp } from './sys/Sys15_Tab_Corp';
+import { Sys30_Tab_LeaveYear } from './sys/Sys30_Tab_LeaveYear';
 import { Sys25_Tab_ResetPassword } from './sys/Sys25_Tab_ResetPassword';
 import { Sys86_Tab_Websocket } from './sys/Sys86_Tab_Websocket';
 import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
@@ -69,7 +71,9 @@ export const SCREENS: Record<string, React.FC> = {
   Sys25_Tab_ResetPassword, // A19
   Sys12_Tab_Calendar, // A18 (메뉴 #1080 관리자·#1113 기초자료 둘 다)
   Sys15_Tab_Corp, // A25 (메뉴 #1146 거래처 등록·#1155 거래처 관리 둘 다)
+  Sys30_Tab_LeaveYear, // A26 (메뉴 #1036)
   Sys96_Tab_OpenMenuLogAdmin, // A35
+  Sys90_Tab_AfterService, // A29
   Sys90_Tab_AfterServiceAdmin, // A30
   Sys27_Tab_LoginManage, // A21
   Sys26_Tab_LoginHistory, // A20

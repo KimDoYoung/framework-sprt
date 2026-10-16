@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday, PasswordPerson, WebsocketPerson, WebsocketResult, Corp, CorpAccount } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday, PasswordPerson, WebsocketPerson, WebsocketResult, Corp, CorpAccount, LeaveSetting, LeaveYear } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -677,6 +677,34 @@ export const sysApi = {
     return res.data.data;
   },
 
+  // ── A29 개선사항 및 오류 통보 (Sys90_Tab_AfterService, 로그인한 회사) ──
+
+  /** AS-IS sys.Sys90_AfterService.selectBySearchText: typeYn '%' = 전체, stateCd '%' = 전체(없으면 완료·취소 제외) */
+  searchAfterServices: async (params: {
+    happenStartDate: string; happenEndDate: string; typeYn: string; stateCd: string; unconfirmedOnly: boolean; searchText: string;
+  }): Promise<AfterService[]> => {
+    const res = await apiClient.get<ApiResponse<AfterService[]>>('v1/sys/after-services', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS GridInsertRow.insertRow(getSeq) — 새 ID와 기본값(요청자·발생일)만 받는다. DB에는 쓰지 않는다 */
+  newAfterServiceRow: async (): Promise<AfterService> => {
+    const res = await apiClient.post<ApiResponse<AfterService>>('v1/sys/after-services/new');
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys90_AfterService.userUpdate → 저장된 행 (요청자·구분·발생일·본문·확인여부) */
+  updateAfterService: async (row: AfterService): Promise<AfterService> => {
+    const { afterServiceId, regEmpNm, typeYn, happenDate, happenReason, confirmYn } = row;
+    const res = await apiClient.put<ApiResponse<AfterService>>('v1/sys/after-services', { afterServiceId, regEmpNm, typeYn, happenDate, happenReason, confirmYn });
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys90_AfterService.delete */
+  deleteAfterService: async (afterServiceId: number): Promise<void> => {
+    await apiClient.delete(`v1/sys/after-services/${afterServiceId}`);
+  },
+
   // ── A21 로그인 Mac 주소 관리 (Sys27_Tab_LoginManage) ──
 
   /** AS-IS sys.Sys27_LoginManage.selectByText: companyId·personId '%' = 전체 (18자리 아님 — 숫자 문자열) */
@@ -934,6 +962,39 @@ export const sysApi = {
   /** AS-IS sys.Sys17_CorpAccount.delete → 지운 건수 */
   deleteCorpAccounts: async (corpId: number, ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>(`v1/sys/corps/${corpId}/accounts`, { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  // ── A26 연차휴가 결산기준 (Sys30_Tab_LeaveYear · Sys30_Grid_LeaveYear) ──
+
+  /** AS-IS sys.Sys01_Company.selectById (휴가초과허용여부·휴가결산월) */
+  getLeaveSetting: async (): Promise<LeaveSetting> => {
+    const res = await apiClient.get<ApiResponse<LeaveSetting>>('v1/sys/leave-years/setting');
+    return res.data.data as LeaveSetting;
+  },
+
+  /** AS-IS sys.Sys01_Company.update → 저장된 행 */
+  updateLeaveSetting: async (row: LeaveSetting): Promise<LeaveSetting> => {
+    const res = await apiClient.put<ApiResponse<LeaveSetting>>('v1/sys/leave-years/setting', { leaveYn: row.leaveYn, leaveMonthCode: row.leaveMonthCode });
+    return res.data.data as LeaveSetting;
+  },
+
+  /** AS-IS sys.Sys30_LeaveYear.selectByAll */
+  searchLeaveYears: async (): Promise<LeaveYear[]> => {
+    const res = await apiClient.get<ApiResponse<LeaveYear[]>>('v1/sys/leave-years');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys30_LeaveYear.update → 저장된 행(요청 순서) */
+  updateLeaveYears: async (rows: LeaveYear[]): Promise<LeaveYear[]> => {
+    const body = rows.map(({ leaveYearId, year, leaveDays }) => ({ leaveYearId, year, leaveDays }));
+    const res = await apiClient.put<ApiResponse<LeaveYear[]>>('v1/sys/leave-years', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys30_LeaveYear.delete → 지운 건수 */
+  deleteLeaveYears: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/leave-years', { data: ids });
     return res.data.data ?? 0;
   },
 

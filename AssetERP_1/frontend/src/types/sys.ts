@@ -637,3 +637,20 @@ export interface CorpAccount {
   accountName: string | null;
   mainAccountYn: string | null;
 }
+
+/** 연차휴가 결산기준 왼쪽 그리드 한 행 (A26, AS-IS Sys01_CompanyModel 중 휴가 열). leaveYn 'true'/'false'(없으면 null) */
+export interface LeaveSetting {
+  companyId: number;
+  leaveYn: string | null;
+  leaveMonthCode: string | null;
+  leaveMonthName: string | null;
+}
+
+/** 근속연수별 연차개수 한 행 (A26, AS-IS Sys30_LeaveYearModel). 새 행은 임시 음수 ID */
+export interface LeaveYear {
+  leaveYearId: number;
+  companyId: number | null;
+  year: string | null;
+  leaveDays: string | null;
+}
+

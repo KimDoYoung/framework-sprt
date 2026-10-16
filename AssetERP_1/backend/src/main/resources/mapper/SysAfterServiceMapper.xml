@@ -5,6 +5,7 @@
 
 <!--
   AS-IS(IDMS-IC) server/sys/mapper/sys90_after_service.xml (selectByAdmin, selectByIncomplete, selectById, adminUpdate, updateRemarks)  (A30)
+  (selectBySearchText, userUpdate, 삭제, 채번)  (A29)
 -->
 <mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysAfterServiceMapper">
 
@@ -80,5 +81,56 @@
            SET sys90_remarks = #{remarks}
          WHERE sys90_after_service_id = #{afterServiceId}
     </update>
+
+    <!-- AS-IS(IDMS-IC) sys90_after_service.selectBySearchText L46 (A29) -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.sys.dto.AfterServiceRes">
+        SELECT <include refid="afterServiceColumns"/>
+          FROM sys90_after_service a
+               INNER JOIN sys01_company b ON a.sys90_company_id = b.sys01_company_id
+         WHERE a.sys90_company_id = #{p.companyId}
+        <choose>
+            <when test="p.stateCode != null">
+           AND COALESCE(a.sys90_state_cd, ' ') LIKE #{p.stateCode}
+            </when>
+            <otherwise>
+           AND COALESCE(a.sys90_state_cd, ' ') NOT IN ('10', '90')
+            </otherwise>
+        </choose>
+           AND COALESCE(a.sys90_type_yn, ' ') LIKE #{p.typeYn}
+           AND CONCAT(a.sys90_happen_reason, a.sys90_reg_emp_nm) LIKE #{p.searchText}
+           AND COALESCE(a.sys90_confirm_yn, 'false') LIKE #{p.confirmYn}
+           AND f_trunc(a.sys90_happen_date) BETWEEN #{p.happenStartDate} AND #{p.happenEndDate}
+         ORDER BY a.sys90_happen_date DESC
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys90_after_service.userUpdate L116 (A29) — UPDATE 하고 없으면 INSERT -->
+    <insert id="userUpdate">
+        WITH upsert AS
+        (
+            UPDATE sys90_after_service
+               SET sys90_company_id = #{companyId}
+                 , sys90_reg_emp_nm = #{r.regEmpNm}
+                 , sys90_type_yn = #{r.typeYn}
+                 , sys90_happen_date = #{r.happenDate}
+                 , sys90_happen_reason = #{r.happenReason}
+                 , sys90_confirm_yn = #{r.confirmYn}
+             WHERE sys90_after_service_id = #{r.afterServiceId}
+            RETURNING *
+        )
+        INSERT INTO sys90_after_service
+               (sys90_after_service_id, sys90_company_id, sys90_reg_emp_nm, sys90_type_yn, sys90_happen_date, sys90_happen_reason, sys90_confirm_yn)
+        SELECT #{r.afterServiceId}, #{companyId}, #{r.regEmpNm}, #{r.typeYn}, #{r.happenDate}, #{r.happenReason}, #{r.confirmYn}
+         WHERE NOT EXISTS (SELECT * FROM upsert)
+    </insert>
+
+    <!-- AS-IS UpdateDataModel.deleteModel: DELETE FROM sys90_after_service WHERE sys90_after_service_id = ? (A29) -->
+    <delete id="deleteById">
+        DELETE FROM sys90_after_service WHERE sys90_after_service_id = #{afterServiceId}
+    </delete>
+
+    <!-- AS-IS getSeq (= f_create_seq) (A29) -->
+    <select id="selectNewId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
 
 </mapper>
