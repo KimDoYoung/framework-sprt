@@ -11,7 +11,7 @@ import { empApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { Others } from '@/types/emp';
 import { Button } from '@/components/button';
-import { CodeSelect } from '@/components/form/CodeSelect';
+import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import type { TransInfoTabProps } from './Emp00_Tab_TransInfo';
 
 /** AS-IS Emp02_OthersModel.getKorAge() L243-253: 올해 - 생년 + 1 */
@@ -93,9 +93,9 @@ export const Emp02_TabPage_Others: React.FC<TransInfoTabProps> = ({ row, onRowCh
   const text = (k: keyof Others) => (
     <Input value={(f?.[k] as string | null | undefined) ?? ''} disabled={disabled} onChange={e => set(k, e.target.value)} />
   );
-  // [E5]·[E6]·[E7]·[E8]·[E9] lunarName·genderName·nationName·militaryName·marriageName Collapse → 코드 칸에 코드 (L189-231): CodeSelect가 코드를 바로 준다
+  // [E5]·[E6]·[E7]·[E8]·[E9] lunarName·genderName·nationName·militaryName·marriageName Collapse → 코드 칸에 코드 (L189-231): SystemCodeComboBox가 코드를 바로 준다
   const code = (k: keyof Others, kindCd: string, readOnly = false) => (
-    <CodeSelect kindCd={kindCd} style={{ width: '100%' }} value={(f?.[k] as string | null | undefined) ?? undefined}
+    <SystemCodeComboBox kindCd={kindCd} style={{ width: '100%' }} value={(f?.[k] as string | null | undefined) ?? undefined}
       disabled={disabled || readOnly} onChange={v => set(k, v ?? null)} />
   );
 

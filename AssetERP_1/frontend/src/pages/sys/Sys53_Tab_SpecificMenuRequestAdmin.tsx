@@ -11,7 +11,7 @@ import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { Code, SpecificMenuRequestAdmin } from '@/types/sys';
 import { Button } from '@/components/button';
-import { CodeSelect } from '@/components/form/CodeSelect';
+import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { CellEditGrid, gbFor, iconCell } from '@/components/grid';
 import { SearchBar, useSearchParams } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
@@ -96,11 +96,11 @@ export const Sys53_Tab_SpecificMenuRequestAdmin: React.FC = () => {
             onChange={v => { sp.set('companyCd', v); setPending(true); }} />
         </SearchBar.Field>
         <SearchBar.Field label="구분">
-          <CodeSelect kindCd="SpecificStateCode" altCode={[ALL, '전체']} style={{ width: 100 }} value={stateCd}
+          <SystemCodeComboBox kindCd="SpecificStateCode" altCode={[ALL, '전체']} style={{ width: 100 }} value={stateCd}
             onChange={v => sp.set('stateCd', v ?? ALL)} />
         </SearchBar.Field>
         <SearchBar.Field label="특정업무구분">
-          <CodeSelect kindCd="SpecificWorkCode" altCode={[ALL, '전체']} style={{ width: 120 }} value={specificWorkCd}
+          <SystemCodeComboBox kindCd="SpecificWorkCode" altCode={[ALL, '전체']} style={{ width: 120 }} value={specificWorkCd}
             onChange={v => sp.set('specificWorkCd', v ?? ALL)} />
         </SearchBar.Field>
       </SearchBar>

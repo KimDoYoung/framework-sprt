@@ -10,7 +10,7 @@ import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { CompanyCopy, MenuCopy } from '@/types/sys';
 import { Button } from '@/components/button';
-import { CodeSelect } from '@/components/form/CodeSelect';
+import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { MultiGrid, gbFor } from '@/components/grid';
 
 const gb1 = gbFor<MenuCopy>();
@@ -142,7 +142,7 @@ export const Sys06_Lookup_CopyMulti: React.FC<Props> = ({ open, onClose }) => {
             {/* [E2] searchText02.KeyPress [Enter] (L132) → retrieve02() */}
             <Input style={{ width: 200 }} value={searchText02} onChange={e => setSearchText02(e.target.value)} onPressEnter={() => retrieve02()} />
             {/* [E3] erpProductComboBox[ErpProductCode].Collapse (L145) → retrieve02() */}
-            <CodeSelect kindCd="ErpProductCode" altCode={['%', '전체']} style={{ width: 90 }} value={erpProductCd}
+            <SystemCodeComboBox kindCd="ErpProductCode" altCode={['%', '전체']} style={{ width: 90 }} value={erpProductCd}
               onChange={v => { const code = v ?? '%'; setErpProductCd(code); retrieve02(code); }} />
             {/* [E5] retrieveButton02[조회].Select (L157) → retrieve02() */}
             <Button type="search" onClick={() => retrieve02()}>조회</Button>

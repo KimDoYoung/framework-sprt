@@ -11,7 +11,7 @@ import { empApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { TransInfo } from '@/types/emp';
 import { Button } from '@/components/button';
-import { CodeSelect } from '@/components/form/CodeSelect';
+import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import type { TransInfoTabProps } from './Emp00_Tab_TransInfo';
 
@@ -125,7 +125,7 @@ export const Emp01_TabPage_Person: React.FC<TransInfoTabProps> = ({ row, onRowCh
   };
 
   // [E0] 화면 열림 (생성자 L100-117) → settings(), getEditor(). 사번은 읽기 전용, 년차·근속년수는 표시만
-  // [E1]·[E2] hireName[채용구분]·applyName[지원경로] Collapse → 코드 저장 (L124-135): CodeSelect가 코드를 바로 준다
+  // [E1]·[E2] hireName[채용구분]·applyName[지원경로] Collapse → 코드 저장 (L124-135): SystemCodeComboBox가 코드를 바로 준다
   return (
     <div style={{ height: '100%', overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', gap: 30, padding: '20px 30px', flex: 1 }}>
@@ -139,8 +139,8 @@ export const Emp01_TabPage_Person: React.FC<TransInfoTabProps> = ({ row, onRowCh
               <Field label="사원번호"><Input value={f.empNo} readOnly /></Field>
               <Field label="출력순서"><Input value={f.orderSeq} placeholder="미입력시 자동정렬" onChange={e => set('orderSeq', e.target.value)} /></Field>
               <Field label="한글명"><Input value={f.korNm} onChange={e => set('korNm', e.target.value)} /></Field>
-              <Field label="채용구분"><CodeSelect kindCd="HireCode" style={{ width: '100%' }} value={f.hireCd} onChange={v => set('hireCd', v)} /></Field>
-              <Field label="지원경로"><CodeSelect kindCd="EmpApplyCode" style={{ width: '100%' }} value={f.applyCd} onChange={v => set('applyCd', v)} /></Field>
+              <Field label="채용구분"><SystemCodeComboBox kindCd="HireCode" style={{ width: '100%' }} value={f.hireCd} onChange={v => set('hireCd', v)} /></Field>
+              <Field label="지원경로"><SystemCodeComboBox kindCd="EmpApplyCode" style={{ width: '100%' }} value={f.applyCd} onChange={v => set('applyCd', v)} /></Field>
             </Space>
           </Col>
           <Col flex="350px">

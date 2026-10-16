@@ -10,7 +10,7 @@ import { empApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { TransInfo } from '@/types/emp';
 import { Button } from '@/components/button';
-import { CodeSelect } from '@/components/form/CodeSelect';
+import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Org00_Lookup_SelectSingle } from '../org/Org00_Lookup_SelectSingle';
 
 interface Props {
@@ -103,7 +103,7 @@ export const Emp03_Edit_Person: React.FC<Props> = ({ open, onClose, onSaved }) =
   };
 
   // [E0] 화면 열림 (생성자 L142-176) → getEditor(), show()
-  // [E3]·[E5]~[E7] 사원구분·직위·직책·채용구분 Collapse → 코드 저장 (L179-212): CodeSelect가 코드를 바로 준다
+  // [E3]·[E5]~[E7] 사원구분·직위·직책·채용구분 Collapse → 코드 저장 (L179-212): SystemCodeComboBox가 코드를 바로 준다
   // [E4 생략] transName[발령구분] Collapse (L186): 원본도 폼에 넣지 않은 콤보 — 서버가 채용(100)으로 정한다
   return (
     <Modal
@@ -126,7 +126,7 @@ export const Emp03_Edit_Person: React.FC<Props> = ({ open, onClose, onSaved }) =
           <Field label="사원번호" required><Input value={f.empNo} onChange={e => set('empNo', e.target.value)} /></Field>
           <Field label="한글명" required><Input value={f.korNm} onChange={e => set('korNm', e.target.value)} /></Field>
           <Field label="사원구분" required>
-            <CodeSelect kindCd="EmpKindCode" style={{ width: '100%' }} value={f.kindCd} onChange={v => set('kindCd', v)} />
+            <SystemCodeComboBox kindCd="EmpKindCode" style={{ width: '100%' }} value={f.kindCd} onChange={v => set('kindCd', v)} />
           </Field>
         </Row>
         <Row gutter={20} style={{ marginTop: 10 }}>
@@ -144,16 +144,16 @@ export const Emp03_Edit_Person: React.FC<Props> = ({ open, onClose, onSaved }) =
         </Row>
         <Row gutter={20} style={{ marginTop: 10 }}>
           <Field label="채용구분">
-            <CodeSelect kindCd="HireCode" style={{ width: '100%' }} value={f.hireCd} onChange={v => set('hireCd', v)} />
+            <SystemCodeComboBox kindCd="HireCode" style={{ width: '100%' }} value={f.hireCd} onChange={v => set('hireCd', v)} />
           </Field>
           <Field label="이메일" required span={16}><Input value={f.emailAddr} onChange={e => set('emailAddr', e.target.value)} /></Field>
         </Row>
         <Row gutter={20}>
           <Field label="직책" required>
-            <CodeSelect kindCd="EmpTitleCode" style={{ width: '100%' }} value={f.titleCd} onChange={v => set('titleCd', v)} />
+            <SystemCodeComboBox kindCd="EmpTitleCode" style={{ width: '100%' }} value={f.titleCd} onChange={v => set('titleCd', v)} />
           </Field>
           <Field label="직위" required>
-            <CodeSelect kindCd="EmpPosCode" style={{ width: '100%' }} value={f.posCd} onChange={v => set('posCd', v)} />
+            <SystemCodeComboBox kindCd="EmpPosCode" style={{ width: '100%' }} value={f.posCd} onChange={v => set('posCd', v)} />
           </Field>
           <Field label="조직" required>
             {/* LookupTriggerField(편집 불가) */}

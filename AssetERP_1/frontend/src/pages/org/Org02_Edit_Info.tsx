@@ -10,7 +10,7 @@ import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { OrgCode } from '@/types/org';
 import { Button } from '@/components/button';
-import { CodeSelect } from '@/components/form/CodeSelect';
+import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Org01_Move_OrgCode } from './Org01_Move_OrgCode';
 import { OrgField, OrgForm, OrgRow, toForm, toReq, ymd } from './orgForm';
 
@@ -107,7 +107,7 @@ export const Org02_Edit_Info = forwardRef<Org02_Edit_InfoRef>((_, ref) => {
           </OrgRow>
           <OrgRow>
             {/* [E1] levelName[조직레벨].Collapse (L96) → levelCode = 선택 코드 */}
-            <OrgField label="조직레벨" width={DATE_W}><CodeSelect kindCd="OrgLevelCode" style={{ width: '100%' }} value={f.levelCd} onChange={v => set('levelCd', v)} /></OrgField>
+            <OrgField label="조직레벨" width={DATE_W}><SystemCodeComboBox kindCd="OrgLevelCode" style={{ width: '100%' }} value={f.levelCd} onChange={v => set('levelCd', v)} /></OrgField>
             <OrgField label="정렬순서" width={DATE_W}><Input value={f.sortOrder} onChange={e => set('sortOrder', e.target.value)} /></OrgField>
           </OrgRow>
           <OrgRow>

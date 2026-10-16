@@ -9,7 +9,7 @@ import { message, Space, Typography } from 'antd';
 import { sysApi } from '@/api/sys';
 import { Code, SpecificMenuRequest } from '@/types/sys';
 import { Button } from '@/components/button';
-import { CodeSelect } from '@/components/form/CodeSelect';
+import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { CellEditGrid, gbFor, iconCell } from '@/components/grid';
 import { useGridCrud } from '@/hooks/useGridCrud';
 
@@ -112,10 +112,10 @@ export const Sys53_Tab_SpecificMenuRequest: React.FC = () => {
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 8, boxSizing: 'border-box' }}>
       <Space>
         <Typography.Text strong>구분:</Typography.Text>
-        <CodeSelect kindCd="SpecificStateCode" altCode={['%', '전체']} style={{ width: 100 }} value={stateCd}
+        <SystemCodeComboBox kindCd="SpecificStateCode" altCode={['%', '전체']} style={{ width: 100 }} value={stateCd}
           onChange={v => setStateCd(v ?? '%')} />
         <Typography.Text strong>특정업무구분:</Typography.Text>
-        <CodeSelect kindCd="SpecificWorkCode" altCode={['%', '전체']} style={{ width: 150 }} value={specificWorkCd}
+        <SystemCodeComboBox kindCd="SpecificWorkCode" altCode={['%', '전체']} style={{ width: 150 }} value={specificWorkCd}
           onChange={v => setSpecificWorkCd(v ?? '%')} />
         {/* [E1] retrieveButton[조회].Select (L103) → retrieve() */}
         <Button type="search" onClick={crud.retrieve}>조회</Button>

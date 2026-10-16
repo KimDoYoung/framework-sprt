@@ -2,6 +2,7 @@
  * 테스트매뉴 > 공통 컴포넌트 테스트 (B11) — AS-IS 원본 없음. 공통 부품을 mock 데이터로 시험하는 화면이다.
  * 위: SearchBar(UX-01 조회 로딩·UX-02 초기화·UX-04 입력 x) + SingleGrid + PagingToolBar
  * 아래: CellEditGrid + useGridCrud + 저장(n)(UX-03)
+ * 시스템공통코드 콤보: SystemCodeComboBox(B14) — 콤보만 실제 API(/api/v1/sys/codes), 그리드는 mock
  * 데이터: mock/reactComponents.ts (조회·저장 600ms 지연)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -10,6 +11,7 @@ import dayjs from 'dayjs';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { Button } from '@/components/button';
+import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { CellEditGrid, PagingToolBar, SingleGrid, gbFor } from '@/components/grid';
 import { SearchBar, useSearchParams } from '@/components/search';
 import {
@@ -18,6 +20,9 @@ import {
 } from '@/mock/reactComponents';
 
 const LIMIT = 20;
+/** SystemCodeComboBox 예시 — AS-IS setAddCode / removeCode */
+const ADD_CODES: [string, string][] = [['13', '13월']];
+const REMOVE_NAMES = ['12월'];
 const gb = gbFor<MockPerson>();
 const gm = gbFor<MockMemo>();
 
@@ -48,7 +53,10 @@ export const Test_Tab_ReactComponents: React.FC = () => {
     stateCd: '',
     searchText: '',
     useOnly: true,
+    monthCd: '%',
   }));
+  const [monthLoaded, setMonthLoaded] = useState<number>();
+  const [demoCode, setDemoCode] = useState<string>();
   const [rows, setRows] = useState<MockPerson[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -103,12 +111,16 @@ export const Test_Tab_ReactComponents: React.FC = () => {
             onChange={val => sp.set('companyNm', val)} />
         </SearchBar.Field>
         <SearchBar.Field label="기준일">
-          <DatePicker style={{ width: 130 }} value={v.baseDate ? dayjs(v.baseDate) : null}
+          <DatePicker style={{ width: 140 }} value={v.baseDate ? dayjs(v.baseDate) : null}
             onChange={d => sp.set('baseDate', d ? d.format('YYYY-MM-DD') : '')} />
         </SearchBar.Field>
         <SearchBar.Field label="상태">
           <Select style={{ width: 90 }} value={v.stateCd} options={[{ value: '', label: '전체' }, ...MOCK_STATES]}
             onChange={val => sp.set('stateCd', val)} />
+        </SearchBar.Field>
+        <SearchBar.Field label="월">
+          <SystemCodeComboBox kindCd="MonthsCode" altCode={['%', '전체']} style={{ width: 90 }} value={v.monthCd}
+            onChange={val => sp.set('monthCd', val ?? '%')} />
         </SearchBar.Field>
         <SearchBar.Field label="검색">
           <SearchBar.Input style={{ width: 220 }} placeholder="성명/사번/부서/비고" value={v.searchText}
@@ -116,6 +128,16 @@ export const Test_Tab_ReactComponents: React.FC = () => {
         </SearchBar.Field>
         <Checkbox checked={v.useOnly} onChange={e => sp.set('useOnly', e.target.checked)}>사용만 보기</Checkbox>
       </SearchBar>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Typography.Text strong>SystemCodeComboBox</Typography.Text>
+        {/* 기준일 = 위 검색 영역의 기준일(applyDate, 바뀌면 다시 조회), 추가 코드·이름으로 빼기, 조회 끝 콜백 */}
+        <SystemCodeComboBox kindCd="MonthsCode" applyDate={v.baseDate} style={{ width: 120 }} placeholder="월(기준일)"
+          addCodes={ADD_CODES} removeNames={REMOVE_NAMES} onLoad={list => setMonthLoaded(list.length)}
+          value={demoCode} onChange={setDemoCode} />
+        <Typography.Text type="secondary">
+          applyDate={v.baseDate || '(오늘)'} · 조회 {monthLoaded ?? '-'}건 · addCodes 13월 · removeNames 12월 · 값 {demoCode ?? '-'}
+        </Typography.Text>
+      </div>
       <div style={{ flex: 3, minHeight: 0, display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
         <SingleGrid<MockPerson> rowData={rows} columnDefs={PERSON_COLUMNS} loading={loading}
           getRowId={p => String(p.data.personId)} />

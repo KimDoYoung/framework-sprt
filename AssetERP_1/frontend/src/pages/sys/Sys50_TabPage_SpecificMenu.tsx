@@ -10,7 +10,7 @@ import type { CustomCellRendererProps } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { Code, MenuLookup, SpecificMenu } from '@/types/sys';
 import { Button } from '@/components/button';
-import { CodeSelect } from '@/components/form/CodeSelect';
+import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { CellEditGrid, gbFor, iconCell } from '@/components/grid';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import type { CompanyTabProps } from './Sys01_Tab_Company';
@@ -157,7 +157,7 @@ export const Sys50_TabPage_SpecificMenu: React.FC<CompanyTabProps> = ({ companyI
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, boxSizing: 'border-box' }}>
       <Space>
         <Typography.Text strong>구분</Typography.Text>
-        <CodeSelect kindCd="SpecificWorkCode" altCode={['%', '전체']} style={{ width: 150 }} value={specificWorkCd}
+        <SystemCodeComboBox kindCd="SpecificWorkCode" altCode={['%', '전체']} style={{ width: 150 }} value={specificWorkCd}
           onChange={v => setSpecificWorkCd(v ?? '%')} />
         {/* [E1] retrieveButton[조회].Select (L69) → retrieve() */}
         <Button type="search" onClick={crud.retrieve}>조회</Button>

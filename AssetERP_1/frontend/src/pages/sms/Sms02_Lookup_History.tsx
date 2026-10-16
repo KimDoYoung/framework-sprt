@@ -76,9 +76,9 @@ export const Sms02_Lookup_History: React.FC<Props> = ({ open, companyId, onClose
       <div style={{ height: 380, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <Space wrap>
           <Typography.Text strong>조회기간</Typography.Text>
-          <DatePicker style={{ width: 130 }} allowClear={false} value={startDate} onChange={setStartDate} format={FORMAT} />
+          <DatePicker style={{ width: 140 }} allowClear={false} value={startDate} onChange={setStartDate} format={FORMAT} />
           <Typography.Text>~</Typography.Text>
-          <DatePicker style={{ width: 130 }} allowClear={false} value={closeDate} onChange={setCloseDate} format={FORMAT} />
+          <DatePicker style={{ width: 140 }} allowClear={false} value={closeDate} onChange={setCloseDate} format={FORMAT} />
           <Typography.Text strong>검색</Typography.Text>
           {/* [E1] searchText.KeyPress [Enter] (L90) → retrieve() */}
           <Input style={{ width: 200 }} placeholder="내용" value={searchText} onChange={e => setSearchText(e.target.value)}

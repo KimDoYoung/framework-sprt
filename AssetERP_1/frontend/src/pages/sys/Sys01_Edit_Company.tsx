@@ -9,7 +9,7 @@ import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { Company, CompanyCreateReq } from '@/types/sys';
 import { Button } from '@/components/button';
-import { CodeSelect } from '@/components/form/CodeSelect';
+import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 
 interface Props {
   open: boolean;
@@ -90,7 +90,7 @@ export const Sys01_Edit_Company: React.FC<Props> = ({ open, onClose, onSaved }) 
   };
 
   // [E0] 화면 열림 (생성자 L69-101) → settings(), getEditor(), show()
-  // [E1]~[E3] 콤보 Collapse → 코드값 저장 (L104-121): CodeSelect가 코드를 바로 준다
+  // [E1]~[E3] 콤보 Collapse → 코드값 저장 (L104-121): SystemCodeComboBox가 코드를 바로 준다
   return (
     <Modal
       open={open}
@@ -133,13 +133,13 @@ export const Sys01_Edit_Company: React.FC<Props> = ({ open, onClose, onSaved }) 
         </Row>
         <Row gutter={20}>
           <Field label="휴가결산(월)">
-            <CodeSelect kindCd="MonthsCode" style={{ width: '100%' }} value={f.leaveMonthCd} onChange={v => set('leaveMonthCd', v)} />
+            <SystemCodeComboBox kindCd="MonthsCode" style={{ width: '100%' }} value={f.leaveMonthCd} onChange={v => set('leaveMonthCd', v)} />
           </Field>
           <Field label="과세구분">
-            <CodeSelect kindCd="TaxType" style={{ width: '100%' }} value={f.taxType} onChange={v => set('taxType', v)} />
+            <SystemCodeComboBox kindCd="TaxType" style={{ width: '100%' }} value={f.taxType} onChange={v => set('taxType', v)} />
           </Field>
           <Field label="회계결산(월)">
-            <CodeSelect kindCd="MonthsCode" style={{ width: '100%' }} value={f.accountCloseMonth} onChange={v => set('accountCloseMonth', v)} />
+            <SystemCodeComboBox kindCd="MonthsCode" style={{ width: '100%' }} value={f.accountCloseMonth} onChange={v => set('accountCloseMonth', v)} />
           </Field>
         </Row>
       </Space>

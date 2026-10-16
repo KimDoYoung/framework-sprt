@@ -10,7 +10,7 @@ import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { CompanyMenuYn } from '@/types/sys';
 import { Button } from '@/components/button';
-import { CodeSelect } from '@/components/form/CodeSelect';
+import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { SingleGrid, gbFor } from '@/components/grid';
 
 const gb = gbFor<CompanyMenuYn>();
@@ -92,7 +92,7 @@ export const Sys01_Grid_CompanyMenu: React.FC<Props> = ({ menuId }) => {
       <Space wrap>
         <Typography.Text strong>적용상품</Typography.Text>
         {/* [E1] erpProductComboBox[ErpProductCode].Collapse (L65) → retrieve(menuId) */}
-        <CodeSelect kindCd="ErpProductCode" altCode={['%', '전체']} style={{ width: 90 }} value={erpProductCd}
+        <SystemCodeComboBox kindCd="ErpProductCode" altCode={['%', '전체']} style={{ width: 90 }} value={erpProductCd}
           onChange={v => { const code = v ?? '%'; setErpProductCd(code); retrieve(code); }} />
         {/* [E2] selectAllButton[전체선택].Select (L71) → 모든 행 menuYn = true */}
         <Button type="addRow" onClick={() => setAll(true)}>전체선택</Button>

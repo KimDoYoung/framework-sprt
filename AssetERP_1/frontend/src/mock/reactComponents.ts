@@ -23,6 +23,8 @@ export interface MockSearch {
   stateCd: string;
   searchText: string;
   useOnly: boolean;
+  /** 실제 공통코드 콤보(SystemCodeComboBox MonthsCode) 시험용 — mock 조회에는 쓰지 않는다 */
+  monthCd: string;
 }
 
 export const MOCK_COMPANIES = ['한국펀드서비스(주)', '칼파자산운용', '한빛투자자문', '누리자산운용'];

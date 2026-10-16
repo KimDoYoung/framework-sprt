@@ -10,7 +10,7 @@ import { empAddTitleApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { AddTitle } from '@/types/emp';
 import { Button } from '@/components/button';
-import { CodeSelect } from '@/components/form/CodeSelect';
+import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Org00_Lookup_SelectSingle } from '../org/Org00_Lookup_SelectSingle';
 
 /** insert(personId) = { personId }, edit(personId, 행) = { personId, row } */
@@ -113,7 +113,7 @@ export const Emp04_Edit_AddTitle: React.FC<Props> = ({ target, onClose, onSaved 
     }
   };
 
-  // [E3]·[E4] posName[직위]·titleName[직책] Collapse → 코드 저장 (L133-144): CodeSelect가 코드를 바로 준다
+  // [E3]·[E4] posName[직위]·titleName[직책] Collapse → 코드 저장 (L133-144): SystemCodeComboBox가 코드를 바로 준다
   return (
     <Modal
       open={!!target}
@@ -149,10 +149,10 @@ export const Emp04_Edit_AddTitle: React.FC<Props> = ({ target, onClose, onSaved 
             <DatePicker style={{ width: '100%' }} value={f.closeDate} onChange={d => set('closeDate', d)} format="YYYY-MM-DD" />
           </Field>
           <Field label="직책" width={200}>
-            <CodeSelect kindCd="EmpTitleCode" style={{ width: '100%' }} value={f.titleCd} onChange={v => set('titleCd', v)} />
+            <SystemCodeComboBox kindCd="EmpTitleCode" style={{ width: '100%' }} value={f.titleCd} onChange={v => set('titleCd', v)} />
           </Field>
           <Field label="직위" width={200}>
-            <CodeSelect kindCd="EmpPosCode" style={{ width: '100%' }} value={f.posCd} onChange={v => set('posCd', v)} />
+            <SystemCodeComboBox kindCd="EmpPosCode" style={{ width: '100%' }} value={f.posCd} onChange={v => set('posCd', v)} />
           </Field>
         </Space>
         <Field label="겸직사유" width={800}>

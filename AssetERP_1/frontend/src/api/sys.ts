@@ -70,9 +70,9 @@ export const sysApi = {
 
   // ── 공통코드 콤보 (AS-IS ComboBoxField) ──
 
-  /** AS-IS sys.Sys09_Code.selectByCodeKind: 로그인 회사, 오늘 기준 */
-  searchCodes: async (kindCd: string): Promise<Code[]> => {
-    const res = await apiClient.get<ApiResponse<Code[]>>('v1/sys/codes', { params: { kindCd } });
+  /** AS-IS sys.Sys09_Code.selectByCodeKind: 로그인 회사, 기준일 applyDate('YYYY-MM-DD', 없으면 오늘) */
+  searchCodes: async (kindCd: string, applyDate?: string): Promise<Code[]> => {
+    const res = await apiClient.get<ApiResponse<Code[]>>('v1/sys/codes', { params: { kindCd, applyDate } });
     return res.data.data ?? [];
   },
 

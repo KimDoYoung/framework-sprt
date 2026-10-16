@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,9 +28,9 @@ public class SysCodeService {
 
     private final SysCodeMapper sysCodeMapper;
 
-    /** 로그인 회사의 코드(시스템 코드는 admin 회사 0의 것), 오늘 기준 */
-    public List<CodeRes> searchCodes(UserPrincipal user, String kindCd) {
-        return sysCodeMapper.searchCodesByKind(new CodeSearchParam(user.getCompanyId(), kindCd));
+    /** 로그인 회사의 코드(시스템 코드는 admin 회사 0의 것), 기준일(null이면 오늘) — AS-IS ComboBoxField.retrieve(applyDate) */
+    public List<CodeRes> searchCodes(UserPrincipal user, String kindCd, LocalDate applyDate) {
+        return sysCodeMapper.searchCodesByKind(new CodeSearchParam(user.getCompanyId(), kindCd, applyDate));
     }
 
     /** AS-IS Sys00_Common.selectByKindGroupCode L91-94 (CommonComboBoxField): 로그인 회사, 코드그룹, 오늘 기준 */
