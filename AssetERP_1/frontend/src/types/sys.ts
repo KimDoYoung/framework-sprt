@@ -591,3 +591,20 @@ export interface PasswordPerson {
   empKorName: string | null;
   lockYn: string | null;
 }
+
+/** 접속 중인 사원 한 행 (A24, AS-IS Emp01_PersonModel 중 화면 열) */
+export interface WebsocketPerson {
+  personId: number;
+  companyName: string | null;
+  korName: string | null;
+  empNo: string | null;
+  posName: string | null;
+  officeTelno: string | null;
+  mobileTelno: string | null;
+}
+
+/** 알림 전송·강제 로그아웃 결과: 처리한(접속 중이던) 사원 수와 오프라인이라 건너뛴 사원 이름 */
+export interface WebsocketResult {
+  processed: number;
+  offlineNames: string[];
+}

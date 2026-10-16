@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday, PasswordPerson } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday, PasswordPerson, WebsocketPerson, WebsocketResult } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -779,6 +779,38 @@ export const sysApi = {
   deleteAdminUserLists: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/sys/admin-user-lists', { data: ids });
     return res.data.data ?? 0;
+  },
+
+  // ── A24 로그아웃 알림 관리 (Sys86_Tab_Websocket) ──
+
+  /** AS-IS emp.Emp01_Person.selectByLoginUserPaging: 접속 중인 사원 (companyId 없음 = 전체) */
+  searchWebsocketPersons: async (params: { companyId?: number | null; searchText: string; offset: number; limit: number }): Promise<PageRes<WebsocketPerson>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<WebsocketPerson>>>('v1/sys/websocket/persons', { params });
+    return res.data.data;
+  },
+
+  /** 고른 사원에게 알림 (AS-IS SendMessage.sendMessage) — 오프라인 사원 이름을 돌려준다 */
+  sendWebsocketAlarm: async (personIds: number[], message: string): Promise<WebsocketResult> => {
+    const res = await apiClient.post<ApiResponse<WebsocketResult>>('v1/sys/websocket/alarms', { personIds, message });
+    return res.data.data;
+  },
+
+  /** 접속한 모두에게 알림 (AS-IS SendMessage.sendMessageAll) */
+  sendWebsocketAlarmAll: async (message: string): Promise<WebsocketResult> => {
+    const res = await apiClient.post<ApiResponse<WebsocketResult>>('v1/sys/websocket/alarms/all', { message });
+    return res.data.data;
+  },
+
+  /** 고른 사원 강제 로그아웃 (AS-IS sendForceLogout) */
+  forceLogoutPersons: async (personIds: number[]): Promise<WebsocketResult> => {
+    const res = await apiClient.post<ApiResponse<WebsocketResult>>('v1/sys/websocket/force-logouts', { personIds });
+    return res.data.data;
+  },
+
+  /** 접속한 모든 사용자 강제 로그아웃 — 요청한 관리자 자신도 포함 (AS-IS sendForceLogoutAll) */
+  forceLogoutAllPersons: async (): Promise<WebsocketResult> => {
+    const res = await apiClient.post<ApiResponse<WebsocketResult>>('v1/sys/websocket/force-logouts/all');
+    return res.data.data;
   },
 
   // ── A19 비밀번호 초기화 (Sys25_Tab_ResetPassword) ──

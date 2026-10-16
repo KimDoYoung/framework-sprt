@@ -29,6 +29,7 @@ import { Sys06_Tab_MenuGuide } from './sys/Sys06_Tab_MenuGuide';
 import { Sys10_Tab_TrashFileList } from './sys/Sys10_Tab_TrashFileList';
 import { Sys12_Tab_Calendar } from './sys/Sys12_Tab_Calendar';
 import { Sys25_Tab_ResetPassword } from './sys/Sys25_Tab_ResetPassword';
+import { Sys86_Tab_Websocket } from './sys/Sys86_Tab_Websocket';
 import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
 import { Sys07_Tab_Company } from './sys/Sys07_Tab_Company';
 import { Sys07_Tab_CompanyRoleMenu } from './sys/Sys07_Tab_CompanyRoleMenu';
@@ -63,6 +64,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sys08_Tab_CodeKindClient, // A14
   Sys10_Tab_TotalSize, // A16
   Sys10_Tab_TrashFileList, // A17
+  Sys86_Tab_Websocket, // A24 (실제 알림·강제 로그아웃은 시험하지 않음)
   Sys25_Tab_ResetPassword, // A19
   Sys12_Tab_Calendar, // A18 (메뉴 #1080 관리자·#1113 기초자료 둘 다)
   Sys96_Tab_OpenMenuLogAdmin, // A35
