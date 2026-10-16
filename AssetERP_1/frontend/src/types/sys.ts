@@ -684,3 +684,15 @@ export interface ManagementTeam {
   mainCareer: string | null;
   note?: string | null;
 }
+
+/** AssetERP 매뉴얼 한 건 (A33, AS-IS Sys95_ManualModel). regDate는 YYYY-MM-DD */
+export interface Manual {
+  manualId: number;
+  regDate: string;
+  manualType?: string | null;
+  manualTypeNm?: string | null;
+  fileId: number;
+  fileNm: string;
+  fileExt?: string | null;
+  note?: string | null;
+}

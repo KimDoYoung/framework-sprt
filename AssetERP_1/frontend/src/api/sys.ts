@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday, PasswordPerson, WebsocketPerson, WebsocketResult, Corp, CorpAccount, LeaveSetting, LeaveYear, AdviceMember, ManagementTeam } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday, PasswordPerson, WebsocketPerson, WebsocketResult, Corp, CorpAccount, LeaveSetting, LeaveYear, AdviceMember, ManagementTeam, Manual } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -778,6 +778,14 @@ export const sysApi = {
   updateMenuGuides: async (rows: MenuGuide[]): Promise<MenuGuide[]> => {
     await apiClient.put<ApiResponse<number>>('v1/sys/menu-guides', rows.map(({ menuId, note }) => ({ menuId, note })));
     return [];
+  },
+
+  // ── A33 AssetERP 매뉴얼 (Sys95_Tab_Manual) ──
+
+  /** AS-IS sys.Sys95_Manual.selectByText (공개된 매뉴얼만) */
+  searchManuals: async (params: { manualType: string; searchText: string }): Promise<Manual[]> => {
+    const res = await apiClient.get<ApiResponse<Manual[]>>('v1/sys/manuals', { params });
+    return res.data.data ?? [];
   },
 
   // ── A23 Admin 로그인내역 조회 (Sys81_Tab_AdminUserHistory) ──
