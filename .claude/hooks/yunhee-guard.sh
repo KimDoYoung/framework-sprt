@@ -2,6 +2,7 @@
 # PreToolUse(Bash) 훅: AS-IS Java·색인·TOBE 소스를 cat/sed/head/tail/less/more/awk(와 grep 문맥 출력)로 직접 읽으면 막고 yunhee를 쓰게 한다.
 # 사용자 지시(2026-10-12, A05 뒤): "yunhee를 계속 수정하고 업그레이드 해 가는데, 그대가 사용하지 않으면 무슨 소용일까?"
 # 보강(2026-10-12, C03 뒤): AS-IS 색인(docs/as-is)도 대상, grep -A/-B/-C(문맥 출력)도 막음. 색인 화면 파일은 grep도 막는다(menus는 허용).
+# 추가(2026-10-16): psql·pg_dump·pg_restore 직접 실행도 막고 yunhee sql로 안내한다(비밀번호 대기로 멈춤).
 # 쓰기(cat > / heredoc, sed -i)와 yunhee 명령 자체는 막지 않는다. 끄려면 /hooks 또는 .claude/settings.json에서 뺀다.
 cmd=$(jq -r '.tool_input.command // empty')
 [ -z "$cmd" ] && exit 0
@@ -23,6 +24,19 @@ deny() {
   jq -n --arg r "$msg" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$r}}'
   exit 0
 }
+
+# psql 직접 실행 금지(2026-10-16): 이 환경은 비밀번호를 줄 터미널이 없어 psql이 입력을 기다리며 멈춘다(120초 낭비).
+# yunhee sql은 접속 정보를 알고 있고 읽기 전용을 강제한다. 명령 위치의 psql과 docker exec … psql을 막는다.
+psql_re='(^|[;&|(`]\s*|&&\s*)(sudo\s+([^;&|]*\s)?)?(psql|pg_dump|pg_restore)(\s|$)|(docker|podman)\s+(compose\s+)?exec\s[^;&|]*\s(psql|pg_dump)(\s|$)'
+if echo "$cmd" | grep -Eq "$psql_re"; then
+  m_trig=$(echo "$cmd" | grep -Eo "$psql_re" | head -1 | xargs)
+  deny 'psql 직접 실행은 비밀번호 대기로 멈춘다(터미널 없음). 읽기 쿼리는 yunhee를 쓴다(05 §7):
+- 조회·행 수·중복: yunhee sql "<SELECT>" [-n 행수] [--timeout 초]  (읽기 전용 강제, 기본 5행, 결과는 마크다운 표)
+- 쓰기 SQL 시험: yunhee sql -f x.sql --rollback  (항상 ROLLBACK)
+- 테이블 구조: yunhee table <이름>  /  스키마 문서: yunhee dbml
+- 파일로 받기(예: menus.tsv): yunhee sql … -n 2000 → 표를 변환. -o tsv --out 은 수정사항033(0.3.9)에서 제안 중
+DDL·DML을 실제로 실행해야 하면 사용자에게 `! psql …`로 직접 실행해 달라고 요청한다.' "$m_trig"
+fi
 
 reason='AS-IS 원본·색인과 TOBE 소스를 cat/sed/head/tail/awk나 grep 문맥 출력(-A/-B/-C)으로 직접 읽지 않는다(05 §7, 사용자 지시 2026-10-12). 대신:
 - AS-IS: yunhee analysis screen <화면> --class <클래스> --section …, analysis method <클래스>.<메서드> [-o code], analysis grid <클래스>, analysis sql <ns.id>, yunhee table <테이블>
