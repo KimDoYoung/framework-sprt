@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 메뉴 트리 비교: 로그인 → GET /api/v1/sys/menus의 1·2·3차 개수와 JSON 해시 → 로그아웃
 # 사용: tools/menus.sh <base> <host:port> <user> <pass> <company>
-#   예) tools/menus.sh http://localhost:8082/AssetERP_1 localhost:8082 admin 1111 admin
+#   예) tools/menus.sh http://localhost:8082/AssetERP localhost:8082 admin 1111 admin
 #       tools/menus.sh http://localhost:8082/OMS        localhost:8082 admin 1111 admin   # 이전 회차와 비교
 # 주의: 같은 계정으로 로그인하므로 그 계정의 다른 세션은 중복 로그인 차단으로 끊길 수 있다
 B=$1; H="Host: admin.$2"; J=$(mktemp)

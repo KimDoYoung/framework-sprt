@@ -2,7 +2,7 @@
 # yunhee 수정사항 018(`yunhee analysis`, MyBatis 펼치기 통합, 작은 것 C-1~C-5) 검증.
 # 문서: ~/work/yunhee-cli/docs/수정사항018.md  절차: docs/work/yunhee-018-검증.md
 #
-# 사용 (AssetERP_1 폴더에서, Tomcat 배포본이 떠 있어야 함 — 기대값을 TOBE API로 다시 센다):
+# 사용 (AssetERP 폴더에서, Tomcat 배포본이 떠 있어야 함 — 기대값을 TOBE API로 다시 센다):
 #   tools/yunhee-018-check.sh                 # 전체 (C-3 gradle test 포함, 약 1분)
 #   tools/yunhee-018-check.sh A-2 B           # 고른 절만 (A-0 A-1 … A-9 B C-1 … C-5, 022 023 024, 027 028 029)
 #   tools/yunhee-018-check.sh --reindex A-3   # A-3·A-9: 옛 원본 색인($IDX)을 다시 만든 뒤 확인
@@ -12,7 +12,7 @@
 # 결과: 항목마다 ✅/❌ 한 줄 + 끝에 합계. 각 명령의 원문 출력은 $LOG 폴더에 남는다(❌만 열어 본다).
 # 데이터를 바꾸지 않는다(조회·EXPLAIN·롤백 테스트만).
 set -uo pipefail
-cd "$(dirname "$0")/.."            # AssetERP_1
+cd "$(dirname "$0")/.."            # AssetERP
 SRC=${SRC:-$HOME/oms-data/src/Asset-ERP}
 IDX=${IDX:-.yunhee/018-old-index}   # 옛 원본 색인(작업 색인을 덮지 않음)
 LOG=${LOG:-.yunhee/018-check}
@@ -60,7 +60,7 @@ P100="--param companyId=28000 --param searchText=%% --param transDate=2026-10-08
 
 if [ $REINDEX = 1 ] || [ ! -f "$IDX/_index.json" ]; then
   echo "… 옛 원본 색인 만들기 → $IDX"; mkdir -p "$IDX"; IDX_ABS=$(cd "$IDX" && pwd)
-  (cd .. && yunhee index-src "$SRC" -t "$IDX_ABS" --menus AssetERP_1/docs/as-is/menus.tsv >"$LOG/00-index-src.txt" 2>&1) || echo "❌ index-src 실패 ($LOG/00-index-src.txt)"
+  (cd .. && yunhee index-src "$SRC" -t "$IDX_ABS" --menus AssetERP/docs/as-is/menus.tsv >"$LOG/00-index-src.txt" 2>&1) || echo "❌ index-src 실패 ($LOG/00-index-src.txt)"
 fi
 
 # ── A-0 공통 ──
@@ -167,7 +167,7 @@ if want C-3; then
 fi
 if want C-4; then
   (cd frontend && yunhee run "npx tsc -b --noEmit" >/dev/null 2>&1)
-  chk "C-4 frontend 실행이 AssetERP_1 runs에 보임" 0 "yunhee runs" "tsc" "frontend"
+  chk "C-4 frontend 실행이 AssetERP runs에 보임" 0 "yunhee runs" "tsc" "frontend"
 fi
 if want C-5; then
   chk "C-5 outline 경로 여러 개" 0 "yunhee outline frontend/src/pages/sys/Sys05_Tab_UserRole.tsx frontend/src/pages/sys/Sys05_Page_UserRole.tsx" "Sys05_Tab_UserRole" "Sys05_Page_UserRole"

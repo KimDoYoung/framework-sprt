@@ -1,4 +1,4 @@
-# AssetERP_1/CLAUDE.md
+# AssetERP/CLAUDE.md
 
 실제 AssetERP 원본의 **sys 메뉴 화면**을 Spring Boot + React로 변환하는 작업 폴더(브랜치 `AssetERP`).
 OMS(`../OMS`, AssetERP subset)에서 해 본 변환을 실제 원본으로 다시 해 보고, AssetERP 전체 전환에 드는 비용을 가늠하는 것이 목적이다.
@@ -36,7 +36,7 @@ TOBE는 새로 설계하지 않고 원본의 레이아웃·버튼·이벤트·�
 - AS-IS 분석은 **`yunhee analysis`**(screen·method·grid·model·sql·ui, `yunhee analysis --list`)로 필요한 것만 뽑는다. 원본 Java·매퍼 XML·긴 색인을 통째로 읽거나 `sed`·`grep`으로 자르지 않는다. 원문은 `analysis method … -o code`로 그 메서드만.
 - 테이블은 `yunhee table`, DB 데이터는 `yunhee sql`(읽기 전용, 쓰기 시험은 `--rollback`), TOBE 코드는 `yunhee outline`·`yunhee analysis tobe` → 필요한 줄만, 빌드·테스트·배포는 `yunhee run`.
 - 백엔드: SQL은 `yunhee port-sql`·`port-save`로 옮기고, 매퍼는 컴파일 전에 `yunhee sql-check --tobe backend/src/main/resources/mapper`.
-- 확인: API는 `yunhee api`(SQL·예외까지 보려면 `--log`), 조회 API와 AS-IS SQL 비교는 `yunhee compare`. 서버 로그는 `docker logs` 대신 `yunhee log`(errors·tail·req·trace, 05 §7 "서버 로그") — 배포 후 `log errors --since-deploy`, 사용자 신고 오류는 재현 전에 `log req … --trace`. 기본 주소는 `.env.local`(AssetERP_1 Tomcat), 고객사 관리자는 `-c <회사코드>`.
+- 확인: API는 `yunhee api`(SQL·예외까지 보려면 `--log`), 조회 API와 AS-IS SQL 비교는 `yunhee compare`. 서버 로그는 `docker logs` 대신 `yunhee log`(errors·tail·req·trace, 05 §7 "서버 로그") — 배포 후 `log errors --since-deploy`, 사용자 신고 오류는 재현 전에 `log req … --trace`. 기본 주소는 `.env.local`(AssetERP Tomcat), 고객사 관리자는 `-c <회사코드>`.
 - yunhee로 안 되는 것(브라우저 확인)만 `tools/`로 하고, 출력은 몇 줄로 줄인다. 다른 방법을 쓴 사유는 `{id}-작업기록`에 한 줄 남긴다.
 
 ## 고정 사항
@@ -50,9 +50,9 @@ TOBE는 새로 설계하지 않고 원본의 레이아웃·버튼·이벤트·�
   - 저장소 루트의 `../docs/as-is/`는 OMS 색인이다. **섞어 쓰지 않는다.**
 - 색인 다시 만들기 (저장소 루트에서. 명령과 menus.tsv SQL은 `docs/05-작업방법.md` B01):
   ```bash
-  yunhee index-db .yunhee/asseterp-dbml.md -t AssetERP_1/docs/as-is/db
-  yunhee index-src -t AssetERP_1/docs/as-is/src      # 원본은 YUNHEE_ASIS_SRC_DIR
-  yunhee sql-check --src-index AssetERP_1/docs/as-is/src -t AssetERP_1/docs/as-is/sql-check.md
+  yunhee index-db .yunhee/asseterp-dbml.md -t AssetERP/docs/as-is/db
+  yunhee index-src -t AssetERP/docs/as-is/src      # 원본은 YUNHEE_ASIS_SRC_DIR
+  yunhee sql-check --src-index AssetERP/docs/as-is/src -t AssetERP/docs/as-is/sql-check.md
   ```
 - 패키지·네이밍: `../docs/TOBE-Framework.md` (`kr.co.kfs.asseterp`).
 - OMS 결과(`../OMS`, `../docs/OMS-convert.md`)는 **비교만** 한다. 코드를 복사하지 않는다.

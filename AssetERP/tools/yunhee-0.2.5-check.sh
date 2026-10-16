@@ -2,14 +2,14 @@
 # yunhee-0.2.5 수정사항체크 — 수정사항 021(analysis ui·sql·method·events·layout, run 실패 메시지, 새 명령 yunhee log) 검증.
 # 문서: ~/work/yunhee-cli/docs/수정사항021.md  절차: docs/work/yunhee-0.2.5-수정사항체크.md
 #
-# 사용 (AssetERP_1 폴더에서. B 절은 Tomcat 배포본(docker t3600-tomcat)이 떠 있어야 함):
+# 사용 (AssetERP 폴더에서. B 절은 Tomcat 배포본(docker t3600-tomcat)이 떠 있어야 함):
 #   tools/yunhee-0.2.5-check.sh                 # 전체 (약 1분)
 #   tools/yunhee-0.2.5-check.sh A-3 B           # 고른 절만 (A-1 … A-7, B, C)
 #   tools/yunhee-0.2.5-check.sh --reindex       # A-5 색인 확인 포함(index-src 다시 실행, 약 2~4분)
 # 결과: 항목마다 ✅/❌ 한 줄 + 끝에 합계. 원문 출력은 $LOG 폴더(❌만 열어 본다).
 # 데이터를 바꾸지 않는다(GET·정적 분석·임시 폴더 픽스처만). 회귀는 tools/yunhee-018-check.sh로 따로 본다(C-3).
 set -uo pipefail
-cd "$(dirname "$0")/.."            # AssetERP_1
+cd "$(dirname "$0")/.."            # AssetERP
 SRC=${SRC:-$HOME/oms-data/src/Asset-ERP}
 JAVA=$SRC/application/src/main/java/myApp
 IDX=docs/as-is/src
@@ -74,7 +74,7 @@ fi
 if want A-5; then
   chk "A-5 events 반복 호출" 0 "yunhee events $JAVA/client/vi/emp/Emp02_TabPage_Others.java" "update\(\), autodecCtzNo\(\), update\(\)"
   if [ $REINDEX = 1 ]; then
-    echo "… index-src 다시 실행"; (cd .. && yunhee index-src "$SRC" -t AssetERP_1/docs/as-is/src >"$LOG/00-index-src.txt" 2>&1) || echo "❌ index-src 실패 ($LOG/00-index-src.txt)"
+    echo "… index-src 다시 실행"; (cd .. && yunhee index-src "$SRC" -t AssetERP/docs/as-is/src >"$LOG/00-index-src.txt" 2>&1) || echo "❌ index-src 실패 ($LOG/00-index-src.txt)"
     chk "A-5 색인 반복 호출" 0 "yunhee analysis screen Emp00_Tab_TransInfo --class Emp02_TabPage_Others --section events" "\[E4\].*update\(\), autodecCtzNo\(\), update\(\)" "\[E9\]"
   else echo "ℹ A-5 색인 확인은 --reindex 때만"; fi
 fi
