@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -729,6 +729,27 @@ export const sysApi = {
   /** AS-IS sys.Sys85_ClientInfo.delete → 지운 건수 */
   deleteClientInfos: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/sys/client-infos', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  // ── A22 Admin 사용자 관리 (Sys80_Tab_AdminUserList) ──
+
+  /** AS-IS sys.Sys80_AdminUserList.selectByAll */
+  searchAdminUserLists: async (): Promise<AdminUserList[]> => {
+    const res = await apiClient.get<ApiResponse<AdminUserList[]>>('v1/sys/admin-user-lists');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys80_AdminUserList.update → 저장된 행(요청 순서) */
+  updateAdminUserLists: async (rows: AdminUserList[]): Promise<AdminUserList[]> => {
+    const body = rows.map(({ adminUserListId, userPhone, userName, note }) => ({ adminUserListId, userPhone, userName, note }));
+    const res = await apiClient.put<ApiResponse<AdminUserList[]>>('v1/sys/admin-user-lists', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys80_AdminUserList.delete → 지운 건수 */
+  deleteAdminUserLists: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/admin-user-lists', { data: ids });
     return res.data.data ?? 0;
   },
 

@@ -534,3 +534,11 @@ export interface OpenMenuLog {
   second?: number | null;
   loginInfo?: string | null;
 }
+
+/** Admin 사용자 한 행 (A22, AS-IS Sys80_AdminUserListModel). 새 행은 임시 음수 ID */
+export interface AdminUserList {
+  adminUserListId: number;
+  userPhone: string | null;
+  userName: string | null;
+  note: string | null;
+}
