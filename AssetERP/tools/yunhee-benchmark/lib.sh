@@ -68,7 +68,12 @@ skip()   { echo "SKIP	$1" >"$RESULT"; exit 0; }
 # ── 시나리오 공용 검사 (독립 계산: yunhee 출력이 아니라 소스·DB에서 직접 센다) ──
 _java() { find "$SRC" -name "$1.java" -print -quit 2>/dev/null; }
 # $YH_ONLY의 "클래스 | 줄 수 | 버튼 …" 표 행: "클래스<TAB>버튼"
-_list_rows() { awk -F'|' '/^\| /&&$2!~/클래스|:---|합계/{c=$2; b=$4; gsub(/^ +| +$/,"",c); sub(/ \(.*/,"",c); gsub(/ /,"",b); print c"\t"b}' "$YH_ONLY"; }
+# 열 위치가 아니라 머리글 이름("버튼")으로 찾는다 — yunhee 0.4.0이 "줄(원본)·줄(UI절)" 열을 넣어 위치가 밀렸다
+_list_rows() {
+  awk -F'|' '
+    /^\| 클래스/ { for (i=1;i<=NF;i++) { h=$i; gsub(/ /,"",h); if (h=="버튼") bc=i } next }
+    /^\| /&&$2!~/:---|합계/&&bc { c=$2; b=$bc; gsub(/^ +| +$/,"",c); sub(/ \(.*/,"",c); gsub(/ /,"",b); print c"\t"b }' "$YH_ONLY"
+}
 chk_classes_exist() { local c b f bad=0; while IFS=$'\t' read -r c b; do f=$(_java "$c"); [ -n "$f" ] || { echo "소스에 없음: $c"; bad=1; }; done < <(_list_rows); return $bad; }
 # 버튼 수 ≥ 소스의 `new ColorButtonBar(` 직접 생성 수 (누락 확인).
 # 등호로 비교하지 않는다: 부모 클래스·헬퍼가 만드는 버튼을 yunhee가 더 세므로 소스 직접 생성 수는 하한일 뿐이다(2026-10-17 시험에서 확인).

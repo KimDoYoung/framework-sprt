@@ -163,7 +163,7 @@ def cmd_compare(path, a, b):
         n += 1
         xa, xb = num(ra["ratio"]), num(rb["ratio"])
         sa, sb = num(ra["score"]), num(rb["score"])
-        dx = f"{xb - xa:+.2f}" if xa is not None and xb is not None else "-"
+        dx = f"{xb - xa:+.4f}" if xa is not None and xb is not None else "-"
         ds = f"{(sb - sa) * 100:+.0f}p" if sa is not None and sb is not None else "-"
         print(f"{c:8} {rv:>3} | {fmt(xa):>10} {fmt(xb):>10} {dx:>6} | {fmt(sa, 'pct'):>10} {fmt(sb, 'pct'):>10} {ds:>6}")
     only = sorted({c for (v, c, rv) in d if v in (a, b)} - {c for c, rv in keys if d.get((a, c, rv)) and d.get((b, c, rv))})
