@@ -3,14 +3,16 @@
  * AS-IS: myApp/client/vi/emp/Emp01_Lookup_PersonModel.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * open(callback): 로그인 회사, isSeparateAddTitle=false(겸직 포함·퇴직 제외)
  * open(companyId, callback) L59-62 (A05): companyId prop이 있으면 그 회사 사원(sys admin)
+ * UX보강(10) B12-3: 검색 줄 = SearchBar(UX-01·04). 조건이 1개라 초기화(UX-02) 없음
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message, Modal, Space, Typography } from 'antd';
+import { message, Modal, Space } from 'antd';
 import { AgGridReact } from 'ag-grid-react';
 import { empApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { TransPerson } from '@/types/emp';
 import { Button } from '@/components/button';
+import { SearchBar } from '@/components/search';
 import { MultiGrid, gbFor } from '@/components/grid';
 
 const gb = gbFor<TransPerson>();
@@ -84,13 +86,13 @@ export const Emp01_Lookup_PersonModel: React.FC<Props> = ({ open, onClose, onSel
       }
     >
       <div style={{ height: 400, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Space>
-          <Typography.Text strong>조직/직무/성명</Typography.Text>
-          {/* [E1] korName.KeyPress [Enter] (L76) → retrieve() */}
-          <Input style={{ width: 150 }} value={korName} onChange={e => setKorName(e.target.value)} onPressEnter={retrieve} />
-          {/* [E3] retrieveButton[조회].Select (L90) → retrieve() */}
-          <Button type="search" onClick={retrieve}>조회</Button>
-        </Space>
+        {/* [E3] retrieveButton[조회].Select (L90) → retrieve() */}
+        <SearchBar onSearch={retrieve}>
+          <SearchBar.Field label="조직/직무/성명">
+            {/* [E1] korName.KeyPress [Enter] (L76) → retrieve() */}
+            <SearchBar.Input style={{ width: 150 }} value={korName} onChange={e => setKorName(e.target.value)} />
+          </SearchBar.Field>
+        </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           <MultiGrid<TransPerson>
             gridRef={gridRef}

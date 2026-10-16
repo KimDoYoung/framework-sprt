@@ -1,15 +1,16 @@
 /**
  * [1283] 관리자 > 01. 화면권한관리 > 사원별 메뉴권한(View)  (C04)
  * AS-IS: myApp/client/vi/emp/Emp00_Tab_RoleMenu.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
+ * UX보강(10) B12-3: 툴바 = SearchBar(UX-01·02·04, 조건 2개: 기준일·조직/직무/성명 → 초기화는 오늘·'', 자동 조회 없음)
  * 레이아웃(생성자 L44-80): west(55%, 분할, 최대 1000) = 툴바(높이 50) + 사원 그리드, center(45%) = 사원 메뉴 트리(Sys07_Tree_PersonRoleMenu)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { DatePicker, Input, message, Space, Splitter, Typography } from 'antd';
+import { DatePicker, message, Splitter } from 'antd';
 import dayjs from 'dayjs';
 import { empApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { TransInfo } from '@/types/emp';
-import { Button } from '@/components/button';
+import { SearchBar, useSearchParams } from '@/components/search';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { Sys05_Lookup_PersonRole } from '@/pages/sys/Sys05_Lookup_PersonRole';
@@ -20,8 +21,8 @@ const gb = gbFor<TransInfo>();
 const selectOne = { mode: 'singleRow' as const, checkboxes: true, enableClickSelection: true };
 
 export const Emp00_Tab_RoleMenu: React.FC = () => {
-  const [baseDate, setBaseDate] = useState(() => dayjs().format('YYYY-MM-DD')); // settings() L82-102: LoginUser.getToday()
-  const [findText, setFindText] = useState('');
+  const sp = useSearchParams(() => ({ baseDate: dayjs().format('YYYY-MM-DD'), findText: '' })); // settings() L82-102: LoginUser.getToday()
+  const { baseDate, findText } = sp.values;
   const [rows, setRows] = useState<TransInfo[]>([]);
   const [personId, setPersonId] = useState<number>();
   const [lookupPersonId, setLookupPersonId] = useState<number>();
@@ -55,15 +56,16 @@ export const Emp00_Tab_RoleMenu: React.FC = () => {
       <Splitter style={{ height: '100%', background: '#fff' }}>
         <Splitter.Panel defaultSize="55%" max={1000} min={200}>
           <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>
-            <Space wrap>
-              <Typography.Text strong>기준일</Typography.Text>
-              <DatePicker style={{ width: 140 }} allowClear={false} format="YYYY-MM-DD" value={dayjs(baseDate)}
-                onChange={d => d && setBaseDate(d.format('YYYY-MM-DD'))} />
-              <Typography.Text strong>조직/직무/성명</Typography.Text>
-              <Input style={{ width: 200 }} value={findText} onChange={e => setFindText(e.target.value)} />
-              {/* [E1] retrieveButton[조회].Select (L89) → retrieve() */}
-              <Button type="search" onClick={retrieve}>조회</Button>
-            </Space>
+            {/* [E1] retrieveButton[조회].Select (L89) → retrieve(). 초기화는 UX-02 */}
+            <SearchBar onSearch={retrieve} onReset={sp.reset}>
+              <SearchBar.Field label="기준일">
+                <DatePicker style={{ width: 140 }} allowClear={false} format="YYYY-MM-DD" value={dayjs(baseDate)}
+                  onChange={d => d && sp.set('baseDate', d.format('YYYY-MM-DD'))} />
+              </SearchBar.Field>
+              <SearchBar.Field label="조직/직무/성명">
+                <SearchBar.Input style={{ width: 200 }} value={findText} onChange={e => sp.set('findText', e.target.value)} />
+              </SearchBar.Field>
+            </SearchBar>
             <div style={{ flex: 1, minHeight: 0 }}>
               {/* [E2] grid.SelectionChanged (L95-101) → meneTree.retrieve(선택 사원 personId) */}
               <SingleGrid<TransInfo>

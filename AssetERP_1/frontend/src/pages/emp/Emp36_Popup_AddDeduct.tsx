@@ -68,7 +68,7 @@ export const Emp36_Popup_AddDeduct: React.FC<Props> = ({ open, deductId, onClose
       <Space direction="vertical" style={{ width: '100%' }}>
         <Space>
           <Button type="search" onClick={retrieve}>조회</Button>
-          <Button type="save" onClick={crud.saveRows}>저장</Button>
+          <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           <Button type="close" onClick={onClose}>닫기</Button>
         </Space>
         <div style={{ height: 200 }}>

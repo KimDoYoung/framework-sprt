@@ -59,7 +59,7 @@ export const Emp09_TabPage_Evaluation: React.FC<TransInfoTabProps> = ({ row }) =
         <Button type="search" onClick={retrieve}>조회</Button>
         <Button type="register" onClick={crud.addRow} disabled={!row}>등록</Button>
         <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
-        <Button type="save" onClick={crud.saveRows}>저장</Button>
+        <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
       </Space>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<Evaluation>

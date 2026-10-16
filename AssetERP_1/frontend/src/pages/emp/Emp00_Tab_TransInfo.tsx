@@ -1,17 +1,19 @@
 /**
  * [1029] 경영관리 > 01. 조직 및 사원관리 > 사원정보 관리, [1452] 기본정보 > 기본정보 > 사원정보 등록  (C01)
  * AS-IS: myApp/client/vi/emp/Emp00_Tab_TransInfo.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
+ * UX보강(10) B12-3: 툴바 = SearchBar(UX-01·02·04, 조건 3개: 조회일자·조직/사번/성명·재직구분 → 초기화는 오늘·''·재직, 자동 조회 없음)
  * 레이아웃(생성자 L75-125): 가운데 = 툴바 + 사원 그리드, 아래 = 탭 16개(높이 450, 최대 900, 분할 조절)
  * 단계(C01-작업방법): 1단계 = 목록·등록·기본정보·일반발령. 엑셀(E1·E6~E9·E12)과 나머지 탭은 2·3단계.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DatePicker, Input, message, Select, Space, Splitter, Tabs, Typography } from 'antd';
+import { DatePicker, message, Select, Splitter, Tabs } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { AgGridReact } from 'ag-grid-react';
 import { empApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { TransInfo } from '@/types/emp';
 import { Button } from '@/components/button';
+import { SearchBar, useSearchParams } from '@/components/search';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { Emp03_Edit_Person } from './Emp03_Edit_Person';
 import { Emp01_TabPage_Person } from './Emp01_TabPage_Person';
@@ -95,9 +97,9 @@ const TRANS_NAMES: { label: string; code: string }[] = [
 
 export const Emp00_Tab_TransInfo: React.FC = () => {
   const gridRef = useRef<AgGridReact<TransInfo>>(null);
-  const [transDate, setTransDate] = useState<Dayjs | null>(dayjs()); // settings() L204: 조회일자 = 오늘
-  const [searchText, setSearchText] = useState('');
-  const [transCode, setTransCode] = useState('100'); // settings() L220: "재직"
+  // settings() L204: 조회일자 = 오늘, L220: 재직구분 "재직"
+  const sp = useSearchParams(() => ({ transDate: dayjs() as Dayjs | null, searchText: '', transCode: '100' }));
+  const { transDate, searchText, transCode } = sp.values;
   const [rows, setRows] = useState<TransInfo[]>([]);
   const [selected, setSelected] = useState<TransInfo>();
   const [loading, setLoading] = useState(false);
@@ -170,26 +172,29 @@ export const Emp00_Tab_TransInfo: React.FC = () => {
     <Splitter layout="vertical" style={{ height: '100%', background: '#fff' }}>
       <Splitter.Panel min={150}>
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>
-          <Space wrap>
-            <Typography.Text strong>조회일자</Typography.Text>
-            <DatePicker style={{ width: 140 }} value={transDate} onChange={setTransDate} format="YYYY-MM-DD" />
-            <Typography.Text strong>조직/사번/성명</Typography.Text>
-            {/* [E2] searchText.KeyPress [Enter] (L206) → retrieve() */}
-            <Input style={{ width: 120 }} value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={() => retrieve()} />
-            <Typography.Text strong>재직구분</Typography.Text>
-            {/* [E3] transName[재직].Collapse (L222) → retrieve() */}
-            <Select style={{ width: 100 }} value={transCode}
-              options={TRANS_NAMES.map(t => ({ value: t.code, label: t.label }))}
-              onChange={v => { setTransCode(v); retrieve(v); }} />
-            {/* [E4] retrieveButton[조회].Select (L228) → retrieve() */}
-            <Button type="search" onClick={() => retrieve()}>조회</Button>
+          {/* [E4] retrieveButton[조회].Select (L228) → retrieve(). 초기화는 UX-02 */}
+          <SearchBar onSearch={() => retrieve()} onReset={sp.reset} extra={<>
             {/* [E5] insertButton[등록].Select (L234) → insert() */}
             <Button type="register" onClick={insert}>등록</Button>
             {/* [E6 생략] tempDownloadButton[템플릿] — 원본도 툴바에 넣지 않음(L91 주석) */}
             {/* [E7 생략] excelUploadButton[엑셀업로드](관리자만)·[E1]·[E12] 업로드 — 2단계 */}
             {/* [E9 생략] excelDownloadButton[다운로드]·[E8] — 2단계 */}
             <Button type="download" disabled title="2단계">다운로드</Button>
-          </Space>
+          </>}>
+            <SearchBar.Field label="조회일자">
+              <DatePicker style={{ width: 140 }} value={transDate} onChange={d => sp.set('transDate', d)} format="YYYY-MM-DD" />
+            </SearchBar.Field>
+            <SearchBar.Field label="조직/사번/성명">
+              {/* [E2] searchText.KeyPress [Enter] (L206) → retrieve() */}
+              <SearchBar.Input style={{ width: 120 }} value={searchText} onChange={e => sp.set('searchText', e.target.value)} />
+            </SearchBar.Field>
+            <SearchBar.Field label="재직구분">
+              {/* [E3] transName[재직].Collapse (L222) → retrieve() */}
+              <Select style={{ width: 100 }} value={transCode}
+                options={TRANS_NAMES.map(t => ({ value: t.code, label: t.label }))}
+                onChange={v => { sp.set('transCode', v); retrieve(v); }} />
+            </SearchBar.Field>
+          </SearchBar>
           <div style={{ flex: 1, minHeight: 0 }}>
             <SingleGrid<TransInfo>
               gridRef={gridRef}

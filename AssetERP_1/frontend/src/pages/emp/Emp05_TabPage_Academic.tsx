@@ -94,7 +94,7 @@ export const Emp05_TabPage_Academic: React.FC<TransInfoTabProps> = ({ row }) => 
         {/* [E3] searchBarBuilder[삭제].Delete → deleteRow() */}
         <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
         {/* [E4] searchBarBuilder[저장].Update → update() */}
-        <Button type="save" onClick={crud.saveRows}>저장</Button>
+        <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
       </Space>
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<Academic>

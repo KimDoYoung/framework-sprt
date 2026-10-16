@@ -173,7 +173,7 @@ export const Emp03_TabPage_Trans: React.FC<TransInfoTabProps> = ({ row, onRowCha
         <Button type="register" onClick={insertRow}>등록</Button>
         <Button type="delete" onClick={deleteRow}>삭제</Button>
         {/* [E5] searchBarBuilder[저장].Update (L81) → update() */}
-        <Button type="save" onClick={crud.saveRows}>저장</Button>
+        <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E1 생략] gradeCodeButton[특정직위 및 알림설정].Select (L68) → Emp03_Lookup_Grade — 2단계 */}
         <Button type="org" disabled title="2단계">특정직위 및 알림설정</Button>
       </Space>

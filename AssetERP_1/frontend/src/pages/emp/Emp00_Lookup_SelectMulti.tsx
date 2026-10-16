@@ -3,15 +3,17 @@
  * AS-IS: myApp/client/vi/emp/Emp00_Lookup_SelectMulti.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * open(companyId, transDate, callback) L57-61: companyId를 주면 그 회사 사원(sys admin만, isSeparateAddTitle=true → 겸직 항목도 있다).
  * 아직 없는 것: open(transDate, isSeparateAddTitle=false, …) — 회사를 안 주면 로그인 회사(C01 목록과 같은 API, 서버가 늘 겸직 포함)
+ * UX보강(10) B12-3: 검색 줄 = SearchBar(UX-01·02·04, 조건 3개 → 초기화는 열 때 값: 받은 기준일·''·재직, 자동 조회 없음)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DatePicker, Input, message, Modal, Select, Space, Typography } from 'antd';
+import { DatePicker, message, Modal, Select, Space } from 'antd';
 import dayjs from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { empApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { TransInfo } from '@/types/emp';
 import { Button } from '@/components/button';
+import { SearchBar, useSearchParams } from '@/components/search';
 import { MultiGrid, gbFor } from '@/components/grid';
 
 const gb = gbFor<TransInfo>();
@@ -42,9 +44,10 @@ interface Props {
 
 export const Emp00_Lookup_SelectMulti: React.FC<Props> = ({ open, companyId, transDate, onResult, onClose }) => {
   const gridRef = useRef<AgGridReact<TransInfo>>(null);
-  const [baseDate, setBaseDate] = useState(transDate);
-  const [findText, setFindText] = useState('');
-  const [transName, setTransName] = useState('재직'); // L125: setText("재직")
+  // L125: transName setText("재직"). 처음 값은 열 때마다 받은 transDate라 초기화는 openValues로 한다
+  const openValues = useMemo(() => ({ baseDate: transDate, findText: '', transName: '재직' }), [transDate]);
+  const sp = useSearchParams(() => openValues);
+  const { baseDate, findText, transName } = sp.values;
   const [rows, setRows] = useState<TransInfo[]>([]);
   const columnDefs = useMemo(buildGrid, []);
 
@@ -66,11 +69,10 @@ export const Emp00_Lookup_SelectMulti: React.FC<Props> = ({ open, companyId, tra
   // open() L68-164: 원본은 열 때마다 새 창 → 입력을 정하고 바로 retrieve()
   useEffect(() => {
     if (!open) return;
-    setBaseDate(transDate);
-    setFindText('');
-    setTransName('재직');
+    sp.setValues(openValues);
     setRows([]);
     retrieve(transDate, '', '재직');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, transDate, retrieve]);
 
   // [E3] oKButton[확인].Select (L104) / [E6] grid.CellDoubleClick (L151) → confirm() L218-227
@@ -96,21 +98,22 @@ export const Emp00_Lookup_SelectMulti: React.FC<Props> = ({ open, companyId, tra
       }
     >
       <div style={{ height: 380, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Space wrap>
-          <Typography.Text strong>기준일</Typography.Text>
-          <DatePicker style={{ width: 140 }} allowClear={false} format="YYYY-MM-DD" value={dayjs(baseDate)}
-            onChange={d => d && setBaseDate(d.format('YYYY-MM-DD'))} />
-          <Typography.Text strong>조직/직무/성명</Typography.Text>
-          {/* [E1] findTextField.KeyPress [Enter] (L89) → retrieve() */}
-          <Input style={{ width: 100 }} value={findText} onChange={e => setFindText(e.target.value)}
-            onPressEnter={() => retrieve(baseDate, findText, transName)} />
-          <Typography.Text strong>재직구분</Typography.Text>
-          {/* [E5] transName[재직].Collapse (L127) → retrieve() */}
-          <Select style={{ width: 100 }} value={transName} options={transNames.map(n => ({ value: n, label: n }))}
-            onChange={v => { setTransName(v); retrieve(baseDate, findText, v); }} />
-          {/* [E2] retrieveButton[조회].Select (L98) → retrieve() */}
-          <Button type="search" onClick={() => retrieve(baseDate, findText, transName)}>조회</Button>
-        </Space>
+        {/* [E2] retrieveButton[조회].Select (L98) → retrieve(). 초기화는 UX-02 */}
+        <SearchBar onSearch={() => retrieve(baseDate, findText, transName)} onReset={() => sp.setValues(openValues)}>
+          <SearchBar.Field label="기준일">
+            <DatePicker style={{ width: 140 }} allowClear={false} format="YYYY-MM-DD" value={dayjs(baseDate)}
+              onChange={d => d && sp.set('baseDate', d.format('YYYY-MM-DD'))} />
+          </SearchBar.Field>
+          <SearchBar.Field label="조직/직무/성명">
+            {/* [E1] findTextField.KeyPress [Enter] (L89) → retrieve() */}
+            <SearchBar.Input style={{ width: 100 }} value={findText} onChange={e => sp.set('findText', e.target.value)} />
+          </SearchBar.Field>
+          <SearchBar.Field label="재직구분">
+            {/* [E5] transName[재직].Collapse (L127) → retrieve() */}
+            <Select style={{ width: 100 }} value={transName} options={transNames.map(n => ({ value: n, label: n }))}
+              onChange={v => { sp.set('transName', v); retrieve(baseDate, findText, v); }} />
+          </SearchBar.Field>
+        </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           <MultiGrid<TransInfo>
             gridRef={gridRef}

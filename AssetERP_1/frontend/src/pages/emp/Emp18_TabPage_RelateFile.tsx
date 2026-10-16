@@ -140,7 +140,7 @@ export const Emp18_TabPage_RelateFile: React.FC<TransInfoTabProps> = ({ row }) =
         <Button type="register" onClick={insertRow}>등록</Button>
         {/* [E3] searchBarBuilder[삭제].Delete (L67) → deleteRow() L201-223 */}
         <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
-        <Button type="save" onClick={crud.saveRows}>저장</Button>
+        <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* 숨은 fileDownloadForm·fileDeleteForm·fileUploadForm (L72-77) — 받기·지우기는 fileApi, 올리기는 FileUpdownForm */}
         <FileUpdownForm ref={fileUpdownForm} onChange={onFileChange} />
       </Space>

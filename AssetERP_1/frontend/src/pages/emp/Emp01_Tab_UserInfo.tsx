@@ -1,10 +1,11 @@
 /**
  * [1325] 관리자 > 01. 고객관리 > 사용자정보 조회  (C03) — admin 회사 메뉴(sys admin만, 전 고객사 사원)
  * AS-IS: myApp/client/vi/emp/Emp01_Tab_UserInfo.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
+ * UX보강(10) B12-3: 툴바 = SearchBar(UX-01·02·04, 조건 4개: 고객사·검색·사용고객만·퇴사자 제외 → 초기화는 '전체'·''·체크·체크, 자동 조회 없음)
  * 레이아웃(생성자 L62-107): 툴바(높이 50) = 고객사(트리거)·검색·사용고객만 보기·퇴사자 제외·조회·안내문 / 그리드 + 페이징 툴바(100행)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, Input, message, Typography } from 'antd';
+import { Checkbox, Input, message } from 'antd';
 import { EditOutlined, SearchOutlined } from '@ant-design/icons';
 import type { AgGridReact, CustomCellRendererProps } from 'ag-grid-react';
 import type { CellDoubleClickedEvent, ColDef } from 'ag-grid-community';
@@ -13,7 +14,7 @@ import { errorMessage } from '@/api/client';
 import { NoteAdmin, UserInfo } from '@/types/emp';
 import { Company } from '@/types/sys';
 import { useLoginUser } from '@/hooks/useLoginUser';
-import { Button } from '@/components/button';
+import { SearchBar, useSearchParams } from '@/components/search';
 import { PagingToolBar, SingleGrid, gbFor } from '@/components/grid';
 import { Sys01_Lookup_Company } from '../sys/Sys01_Lookup_Company';
 import { Emp02_Edit_Note } from './Emp02_Edit_Note';
@@ -108,11 +109,8 @@ export const Emp01_Tab_UserInfo: React.FC = () => {
   const loginUser = useLoginUser();
   const gridRef = useRef<AgGridReact<UserInfo>>(null);
   // settings() L109-120: 고객사 '전체'(편집 불가), 사용고객만 보기·퇴사자 제외 체크
-  const [companyField, setCompanyField] = useState('전체');
-  const [companyId, setCompanyId] = useState<number | null>(null);
-  const [searchText, setSearchText] = useState('');
-  const [useYn, setUseYn] = useState(true);
-  const [quitYn, setQuitYn] = useState(true);
+  const sp = useSearchParams(() => ({ companyField: '전체', companyId: null as number | null, searchText: '', useYn: true, quitYn: true }));
+  const { companyField, companyId, searchText, useYn, quitYn } = sp.values;
   const [lookupOpen, setLookupOpen] = useState(false);
   const [rows, setRows] = useState<UserInfo[]>([]);
   const [total, setTotal] = useState(0);
@@ -171,11 +169,9 @@ export const Emp01_Tab_UserInfo: React.FC = () => {
   const onLookupResult = (companyModel: Company | null) => {
     setLookupOpen(false);
     if (companyModel != null) {
-      setCompanyField(companyModel.companyNm);
-      setCompanyId(companyModel.companyId);
+      sp.setValues(v => ({ ...v, companyField: companyModel.companyNm, companyId: companyModel.companyId }));
     } else {
-      setCompanyField('전체');
-      setCompanyId(null);
+      sp.setValues(v => ({ ...v, companyField: '전체', companyId: null }));
     }
   };
 
@@ -213,19 +209,23 @@ export const Emp01_Tab_UserInfo: React.FC = () => {
     <div style={{ height: '100%', padding: 20, background: '#fff', boxSizing: 'border-box' }}>
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
         <div style={{ height: 50, flex: 'none', display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px' }}>
-          <Typography.Text strong>고객사</Typography.Text>
-          <Input style={{ width: 200, cursor: 'pointer' }} readOnly value={companyField}
-            suffix={<SearchOutlined />} onClick={() => setLookupOpen(true)} />
-          <Typography.Text strong style={{ marginLeft: 8 }}>검색</Typography.Text>
-          {/* [E1] searchText.KeyPress [Enter] (L122) → retrieve() */}
-          <Input style={{ width: 270 }} placeholder="고객사명/부서명/사원명/사무실/휴대폰/비고" value={searchText}
-            onChange={e => setSearchText(e.target.value)} onPressEnter={retrieve} />
-          <Checkbox style={{ marginLeft: 8 }} checked={useYn} onChange={e => setUseYn(e.target.checked)}>사용고객만 보기</Checkbox>
-          <Checkbox checked={quitYn} onChange={e => setQuitYn(e.target.checked)}>퇴사자 제외</Checkbox>
-          {/* [E3] retrieveButton[조회].Select (L152) → retrieve() */}
-          <Button type="search" onClick={retrieve}>조회</Button>
-          {/* setHtmlCheckBoxStyle: 굵게, #262d3f, 12px */}
-          <b style={{ marginLeft: 8, color: '#262d3f', fontSize: 12 }}>※ 복사하고싶은 정보를 더블클릭하시면 복사가 됩니다.</b>
+          {/* [E3] retrieveButton[조회].Select (L152) → retrieve(). 초기화는 UX-02 */}
+          <SearchBar onSearch={retrieve} onReset={sp.reset} extra={
+            /* setHtmlCheckBoxStyle: 굵게, #262d3f, 12px */
+            <b style={{ marginLeft: 8, color: '#262d3f', fontSize: 12 }}>※ 복사하고싶은 정보를 더블클릭하시면 복사가 됩니다.</b>
+          }>
+            <SearchBar.Field label="고객사">
+              <Input style={{ width: 200, cursor: 'pointer' }} readOnly value={companyField}
+                suffix={<SearchOutlined />} onClick={() => setLookupOpen(true)} />
+            </SearchBar.Field>
+            <SearchBar.Field label="검색">
+              {/* [E1] searchText.KeyPress [Enter] (L122) → retrieve() */}
+              <SearchBar.Input style={{ width: 270 }} placeholder="고객사명/부서명/사원명/사무실/휴대폰/비고" value={searchText}
+                onChange={e => sp.set('searchText', e.target.value)} />
+            </SearchBar.Field>
+            <Checkbox checked={useYn} onChange={e => sp.set('useYn', e.target.checked)}>사용고객만 보기</Checkbox>
+            <Checkbox checked={quitYn} onChange={e => sp.set('quitYn', e.target.checked)}>퇴사자 제외</Checkbox>
+          </SearchBar>
         </div>
         <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           <SingleGrid<UserInfo>
