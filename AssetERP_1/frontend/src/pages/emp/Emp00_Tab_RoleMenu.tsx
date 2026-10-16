@@ -57,7 +57,7 @@ export const Emp00_Tab_RoleMenu: React.FC = () => {
           <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>
             <Space wrap>
               <Typography.Text strong>기준일</Typography.Text>
-              <DatePicker style={{ width: 160 }} allowClear={false} format="YYYY-MM-DD" value={dayjs(baseDate)}
+              <DatePicker style={{ width: 130 }} allowClear={false} format="YYYY-MM-DD" value={dayjs(baseDate)}
                 onChange={d => d && setBaseDate(d.format('YYYY-MM-DD'))} />
               <Typography.Text strong>조직/직무/성명</Typography.Text>
               <Input style={{ width: 200 }} value={findText} onChange={e => setFindText(e.target.value)} />

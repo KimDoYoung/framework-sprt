@@ -219,7 +219,7 @@
 
 
 
-/* ── 날짜 칸(DatePicker) 최소 폭: 'YYYY-MM-DD'가 잘리지 않게 (C02 사용자 결정 2026-10-08 — 모든 달력 140px) ── */
+/* ── 날짜 칸(DatePicker) 최소 폭: 'YYYY-MM-DD'가 잘리지 않게 (C02 사용자 결정 2026-10-08 — 모든 달력 140px → 2026-10-12 160 → 2026-10-16 140 → 같은 날 130) ── */
 .ant-picker:not(.ant-picker-range) {
-  min-width: 160px;
+  min-width: 130px;
 }

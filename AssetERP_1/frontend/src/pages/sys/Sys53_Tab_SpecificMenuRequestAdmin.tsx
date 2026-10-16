@@ -2,16 +2,18 @@
  * [1410] 관리자 > 01. 고객관리 > 고객별 특정화면 관리 (A28)
  * AS-IS: myApp/client/vi/sys/Sys53_Tab_SpecificMenuRequestAdmin.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L56-75: 툴바(고객사·구분·특정업무구분 콤보·조회·저장) + 셀 편집 그리드(행번호, 체크박스 단일)
+ * UX보강(10) 시범(B11): 툴바 = SearchBar(UX-01 조회 로딩·UX-02 초기화), 저장 = 저장(n)(UX-03)
  * 문서보기 아이콘이 여는 전자결재(Apr01_Edit_ApprDoc)는 다른 도메인이라 이 단계에서 제외 — 작업기록 "의존"
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { message, Select, Space, Typography } from 'antd';
+import { message, Select } from 'antd';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { Code, SpecificMenuRequestAdmin } from '@/types/sys';
 import { Button } from '@/components/button';
 import { CodeSelect } from '@/components/form/CodeSelect';
 import { CellEditGrid, gbFor, iconCell } from '@/components/grid';
+import { SearchBar, useSearchParams } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 
 type Row = SpecificMenuRequestAdmin;
@@ -43,9 +45,9 @@ const buildGrid = (states: Code[], viewDocument: (r: Row) => void) => [
 export const Sys53_Tab_SpecificMenuRequestAdmin: React.FC = () => {
   const [companies, setCompanies] = useState<Code[]>([]);
   const [states, setStates] = useState<Code[]>([]);
-  const [companyCd, setCompanyCd] = useState(ALL);
-  const [stateCd, setStateCd] = useState(ALL);                // specificStateComboBoxField ("SpecificStateCode", 전체)
-  const [specificWorkCd, setSpecificWorkCd] = useState(ALL);  // specificWorkComboBoxField ("SpecificWorkCode", 전체)
+  // companyName 콤보, specificStateComboBoxField ("SpecificStateCode", 전체), specificWorkComboBoxField ("SpecificWorkCode", 전체)
+  const sp = useSearchParams(() => ({ companyCd: ALL, stateCd: ALL, specificWorkCd: ALL }));
+  const { companyCd, stateCd, specificWorkCd } = sp.values;
 
   const crud = useGridCrud<Row>({
     idField: 'specificMenuRequestId',
@@ -84,22 +86,24 @@ export const Sys53_Tab_SpecificMenuRequestAdmin: React.FC = () => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 20, boxSizing: 'border-box' }}>
-      <Space>
-        <Typography.Text strong>고객사</Typography.Text>
-        <Select style={{ width: 200 }} value={companyCd}
-          options={[{ value: ALL, label: '전체' }, ...companies.map(c => ({ value: c.code, label: c.name }))]}
-          onChange={v => { setCompanyCd(v); setPending(true); }} />
-        <Typography.Text strong>구분</Typography.Text>
-        <CodeSelect kindCd="SpecificStateCode" altCode={[ALL, '전체']} style={{ width: 100 }} value={stateCd}
-          onChange={v => setStateCd(v ?? ALL)} />
-        <Typography.Text strong>특정업무구분</Typography.Text>
-        <CodeSelect kindCd="SpecificWorkCode" altCode={[ALL, '전체']} style={{ width: 120 }} value={specificWorkCd}
-          onChange={v => setSpecificWorkCd(v ?? ALL)} />
-        {/* [E2] retrieveButton[조회].Select (L105) → retrieve() */}
-        <Button type="search" onClick={crud.retrieve}>조회</Button>
-        {/* [E3] updateButton[저장].Select (L111) → update() */}
-        <Button type="save" onClick={crud.saveRows}>저장</Button>
-      </Space>
+      {/* [E2] retrieveButton[조회].Select (L105) → retrieve(). 초기화는 UX-02(원본 없음, 자동 조회 안 함) */}
+      <SearchBar onSearch={crud.retrieve} onReset={sp.reset} loading={crud.loading}
+        // [E3] updateButton[저장].Select (L111) → update(). 저장(n)은 UX-03
+        extra={<Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>}>
+        <SearchBar.Field label="고객사">
+          <Select style={{ width: 200 }} value={companyCd}
+            options={[{ value: ALL, label: '전체' }, ...companies.map(c => ({ value: c.code, label: c.name }))]}
+            onChange={v => { sp.set('companyCd', v); setPending(true); }} />
+        </SearchBar.Field>
+        <SearchBar.Field label="구분">
+          <CodeSelect kindCd="SpecificStateCode" altCode={[ALL, '전체']} style={{ width: 100 }} value={stateCd}
+            onChange={v => sp.set('stateCd', v ?? ALL)} />
+        </SearchBar.Field>
+        <SearchBar.Field label="특정업무구분">
+          <CodeSelect kindCd="SpecificWorkCode" altCode={[ALL, '전체']} style={{ width: 120 }} value={specificWorkCd}
+            onChange={v => sp.set('specificWorkCd', v ?? ALL)} />
+        </SearchBar.Field>
+      </SearchBar>
       <div style={{ flex: 1, minHeight: 0 }}>
         {/* setChecked(SINGLE) = 체크박스 단일 선택 */}
         <CellEditGrid<Row> crud={crud} columnDefs={columnDefs} sortable={false}

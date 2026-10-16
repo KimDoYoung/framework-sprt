@@ -23,6 +23,7 @@ import { Sys96_Tab_OpenMenuLogAdmin } from './sys/Sys96_Tab_OpenMenuLogAdmin';
 import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
 import { Sys07_Tab_Company } from './sys/Sys07_Tab_Company';
 import { Sys07_Tab_CompanyRoleMenu } from './sys/Sys07_Tab_CompanyRoleMenu';
+import { Test_Tab_ReactComponents } from './test/Test_Tab_ReactComponents';
 
 /**
  * 화면 등록표 (AS-IS MenuOpener): sys06_menu.sys06_class_nm(메뉴 키) → 화면 컴포넌트.
@@ -54,4 +55,5 @@ export const SCREENS: Record<string, React.FC> = {
   Sys96_Tab_OpenMenuLogAdmin, // A35
   Sys53_Tab_SpecificMenuRequestAdmin, // A28 (1단계: 문서보기 아이콘의 전자결재 제외)
   Sys53_Tab_SpecificMenuRequest, // A27 (1단계: 결재요청 아이콘의 전자결재·분류선택 제외)
+  Test_Tab_ReactComponents, // B11 공통 컴포넌트 테스트 (원본 없음, mock)
 };

@@ -98,7 +98,7 @@ export const Emp00_Lookup_SelectMulti: React.FC<Props> = ({ open, companyId, tra
       <div style={{ height: 380, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <Space wrap>
           <Typography.Text strong>기준일</Typography.Text>
-          <DatePicker style={{ width: 160 }} allowClear={false} format="YYYY-MM-DD" value={dayjs(baseDate)}
+          <DatePicker style={{ width: 130 }} allowClear={false} format="YYYY-MM-DD" value={dayjs(baseDate)}
             onChange={d => d && setBaseDate(d.format('YYYY-MM-DD'))} />
           <Typography.Text strong>조직/직무/성명</Typography.Text>
           {/* [E1] findTextField.KeyPress [Enter] (L89) → retrieve() */}

@@ -1,7 +1,8 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Modal, message } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import type { CellValueChangedEvent, ColDef, GetRowIdParams, GridOptions } from 'ag-grid-community';
+import type { ChangeCount } from '../components/button';
 import { errorMessage } from '../api/client';
 
 /**
@@ -11,6 +12,7 @@ import { errorMessage } from '../api/client';
  * 사용법: `const crud = useGridCrud({...})` → `<AgGridReact ref={crud.gridRef} columnDefs={…} {...crud.gridProps} />`,
  * 버튼에 `crud.retrieve / addRow / saveRows / deleteChecked`. 편집 컬럼은 `editableCol({...})`로 만든다.
  * Lookup으로 행을 넣을 때는 `addRows([...])`, 셀 값을 코드로 바꿀 때는 `updateRow(id, patch)`.
+ * 저장 버튼은 UX-03(10-UX보강)으로 `<Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>`.
  */
 export interface GridCrudOptions<T> {
   /** 숫자 ID 필드 */
@@ -46,6 +48,10 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
   const [loading, setLoading] = useState(false);
   const dirty = useRef(new Set<number>());
   const tempSeq = useRef(0);
+  // dirty는 ref라 바뀌어도 다시 그려지지 않는다 — UX-03 저장(n) 표시를 위해 바꿀 때마다 version을 올린다
+  const [version, setVersion] = useState(0);
+  const bump = useCallback(() => setVersion(v => v + 1), []);
+  const [editing, setEditing] = useState(false);
 
   const getId = useCallback((row: T) => row[idField] as unknown as number, [idField]);
 
@@ -55,13 +61,14 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
     try {
       const data = await search();
       dirty.current.clear();
+      bump();
       setRows(data);
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [search, bump]);
 
   /**
    * 선택(포커스) 행 바로 아래에 임시 행들을 넣는다. inits는 행마다 newRow()에 덮어쓸 값(Lookup에서 고른 사원 등).
@@ -76,7 +83,7 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
     const added = inits.map(init => ({ ...newRow(), ...init, [idField]: --tempSeq.current } as T));
     const focused = api?.getFocusedCell();
     const focusedRow = focused ? api?.getDisplayedRowAtIndex(focused.rowIndex)?.data : undefined;
-    if (markDirty) added.forEach(r => dirty.current.add(getId(r)));
+    if (markDirty) { added.forEach(r => dirty.current.add(getId(r))); bump(); }
     setRows(prev => {
       const at = focusedRow ? prev.findIndex(r => getId(r) === getId(focusedRow)) : -1;
       return at < 0 ? [...prev, ...added] : [...prev.slice(0, at + 1), ...added, ...prev.slice(at + 1)];
@@ -91,7 +98,7 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
         api.startEditingCell({ rowIndex, colKey: firstEditField });
       }
     });
-  }, [newRow, idField, getId, firstEditField]);
+  }, [newRow, idField, getId, firstEditField, bump]);
 
   /** [등록] 버튼: 빈 행(newRow 기본값만). 변경으로 치지 않는다 — AS-IS GridInsertRow */
   const addRow = useCallback(() => addRows([{}], false), [addRows]);
@@ -99,14 +106,16 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
   /** 코드로 행 값을 바꾼다 (Lookup 선택 등). 변경 행으로 표시된다 */
   const updateRow = useCallback((id: number, patch: Partial<T>) => {
     dirty.current.add(id);
+    bump();
     setRows(prev => prev.map(r => (getId(r) === id ? { ...r, ...patch } : r)));
-  }, [getId]);
+  }, [getId, bump]);
 
   /** 목록 비우기 (마스터 선택 해제 시) */
   const clear = useCallback(() => {
     dirty.current.clear();
+    bump();
     setRows([]);
-  }, []);
+  }, [bump]);
 
   /** 추가·변경된 행만 저장하고, 저장된 행으로 제자리 교체(재조회하지 않음) */
   const saveRows = useCallback(async () => {
@@ -124,10 +133,12 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
       const saved = await save(changed);
       if (reloadAfterSave) {
         dirty.current.clear();
+        bump();
         setRows(await search());
       } else {
         const replace = new Map(changed.map((r, i) => [getId(r), saved[i]]));
         replace.forEach((_, id) => dirty.current.delete(id));
+        bump();
         setRows(prev => prev.map(r => replace.get(getId(r)) ?? r));
       }
       message.success(`${changed.length}건 저장되었습니다.`);
@@ -137,7 +148,7 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
     } finally {
       setLoading(false);
     }
-  }, [rows, getId, validate, save, reloadAfterSave, search, onChanged]);
+  }, [rows, getId, validate, save, reloadAfterSave, search, onChanged, bump]);
 
   /** 체크된 행 삭제 (확인 후). 임시 행은 서버 호출 없이 뺀다 */
   const deleteChecked = useCallback(() => {
@@ -153,6 +164,7 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
         if (savedIds.length > 0) await remove(savedIds);
         const removed = new Set(ids);
         removed.forEach(id => dirty.current.delete(id));
+        bump();
         setRows(prev => prev.filter(r => !removed.has(getId(r))));
         message.success(`${ids.length}건 삭제되었습니다.`);
         if (savedIds.length > 0) onChanged?.();
@@ -172,17 +184,23 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
       cancelText: '아니오',
       onOk: doDelete,
     });
-  }, [getId, remove, deleteConfirm, onChanged]);
+  }, [getId, remove, deleteConfirm, onChanged, bump]);
 
   const onCellValueChanged = useCallback((e: CellValueChangedEvent<T>) => {
-    if (e.data && e.oldValue !== e.newValue) dirty.current.add(getId(e.data));
-  }, [getId]);
+    if (e.data && e.oldValue !== e.newValue && !dirty.current.has(getId(e.data))) {
+      dirty.current.add(getId(e.data));
+      bump();
+    }
+  }, [getId, bump]);
 
   const gridProps: GridOptions<T> = {
     rowData: rows,
     loading,
     getRowId: (p: GetRowIdParams<T>) => String(getId(p.data)),
     onCellValueChanged,
+    // 셀 편집 중(아직 값이 확정 안 됨)에도 저장(n)을 누를 수 있게 한다 — saveRows가 stopEditing으로 확정한 뒤 모은다
+    onCellEditingStarted: () => setEditing(true),
+    onCellEditingStopped: () => setEditing(false),
     rowSelection: { mode: 'multiRow', checkboxes: true, headerCheckbox: true, enableClickSelection: false },
     // Enter → 아래 행 같은 컬럼, Tab → 오른쪽 셀(기본)
     enterNavigatesVertically: true,
@@ -196,5 +214,16 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
   /** 저장하지 않은 추가·변경 행 (AS-IS grid.getStore().getModifiedRecords() — 저장 전 검사·Lookup 전 검사용) */
   const getChanged = useCallback(() => rows.filter(r => dirty.current.has(getId(r))), [rows, getId]);
 
-  return { gridRef, rows, loading, retrieve, addRow, addRows, updateRow, clear, saveRows, deleteChecked, hasChanges, getChanged, gridProps };
+  /** UX-03 저장(n): 저장하지 않은 추가(임시 음수 ID)·수정 행 수. 셀 편집 중이면 editing=true(버튼을 끄지 않음) */
+  const changes = useMemo<ChangeCount>(() => {
+    let added = 0;
+    let modified = 0;
+    rows.forEach(r => {
+      if (!dirty.current.has(getId(r))) return;
+      if (getId(r) <= 0) added++; else modified++;
+    });
+    return { added, modified, editing };
+  }, [rows, getId, editing, version]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  return { gridRef, rows, loading, retrieve, addRow, addRows, updateRow, clear, saveRows, deleteChecked, hasChanges, getChanged, changes, gridProps };
 }
