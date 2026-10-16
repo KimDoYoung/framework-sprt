@@ -150,6 +150,17 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
     }
   }, [rows, getId, validate, save, reloadAfterSave, search, onChanged, bump]);
 
+  /**
+   * 서버를 부르지 않고 행만 뺀다 (AS-IS 삭제를 deleteList에 모았다가 저장 때 보내는 화면 — 거래처 계좌 `Sys17_Grid_CorpAccount`).
+   * 부른 쪽이 지운 ID를 기억해 저장 때 보낸다
+   */
+  const removeRows = useCallback((ids: number[]) => {
+    const removed = new Set(ids);
+    removed.forEach(id => dirty.current.delete(id));
+    bump();
+    setRows(prev => prev.filter(r => !removed.has(getId(r))));
+  }, [getId, bump]);
+
   /** 체크된 행 삭제 (확인 후). 임시 행은 서버 호출 없이 뺀다 */
   const deleteChecked = useCallback(() => {
     const checked = gridRef.current?.api?.getSelectedRows() ?? [];
@@ -225,5 +236,5 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
     return { added, modified, editing };
   }, [rows, getId, editing, version]);  // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { gridRef, rows, loading, retrieve, addRow, addRows, updateRow, clear, saveRows, deleteChecked, hasChanges, getChanged, changes, gridProps };
+  return { gridRef, rows, loading, retrieve, addRow, addRows, updateRow, removeRows, clear, saveRows, deleteChecked, hasChanges, getChanged, changes, gridProps };
 }

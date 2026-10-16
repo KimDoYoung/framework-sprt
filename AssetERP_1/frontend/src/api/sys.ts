@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday, PasswordPerson, WebsocketPerson, WebsocketResult } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday, PasswordPerson, WebsocketPerson, WebsocketResult, Corp, CorpAccount } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -886,6 +886,54 @@ export const sysApi = {
   /** AS-IS sys.Sys14_Holiday.insertInitData: 고른 일자의 admin 휴일을 고객사로 복사 (관리자) */
   insertHolidayInitData: async (companyId: number | null, days: string[]): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/sys/holidays/init-data', { companyId, days });
+    return res.data.data ?? 0;
+  },
+
+  // ── A25 거래처 등록·관리 (Sys15_Tab_Corp · Sys15_Edit_Corp · Sys17_Grid_CorpAccount) ──
+
+  /** AS-IS sys.Sys15_Corp.selectByCompanyId: corpType은 콤보 코드('%'면 전체), searchText는 거래처명·코드 포함 검색, useYn=사용 거래처만 */
+  searchCorps: async (corpType: string, searchText: string, useYn: boolean): Promise<Corp[]> => {
+    const res = await apiClient.get<ApiResponse<Corp[]>>('v1/sys/corps', { params: { corpType, searchText, useYn } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys15_Corp.update → 저장된 행(요청 순서) */
+  updateCorps: async (rows: Corp[]): Promise<Corp[]> => {
+    const body = rows.map(({ corpId, corpType, corpName, bizNo, corpCode, seq, useYn, note, tel, addr, issCorpCode }) =>
+      ({ corpId, corpType, corpName, bizNo, corpCode, seq, useYn, note, tel, addr, issCorpCode }));
+    const res = await apiClient.put<ApiResponse<Corp[]>>('v1/sys/corps', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys15_Corp.delete → 지운 건수 */
+  deleteCorps: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/corps', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys15_Corp.insertInitData: 관리자(회사 0)의 거래처를 고른 고객사로 복사 (관리자) */
+  insertCorpInitData: async (companyId: number | null): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/sys/corps/init-data', null, { params: { companyId } });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys17_CorpAccount.selectByCorpId */
+  searchCorpAccounts: async (corpId: number): Promise<CorpAccount[]> => {
+    const res = await apiClient.get<ApiResponse<CorpAccount[]>>(`v1/sys/corps/${corpId}/accounts`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys17_CorpAccount.update → 저장된 행(요청 순서) */
+  updateCorpAccounts: async (corpId: number, rows: CorpAccount[]): Promise<CorpAccount[]> => {
+    const body = rows.map(({ corpAccountId, bankCode, accountNoDec, accountName, mainAccountYn }) =>
+      ({ corpAccountId, bankCode, accountNoDec, accountName, mainAccountYn }));
+    const res = await apiClient.put<ApiResponse<CorpAccount[]>>(`v1/sys/corps/${corpId}/accounts`, body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys17_CorpAccount.delete → 지운 건수 */
+  deleteCorpAccounts: async (corpId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sys/corps/${corpId}/accounts`, { data: ids });
     return res.data.data ?? 0;
   },
 

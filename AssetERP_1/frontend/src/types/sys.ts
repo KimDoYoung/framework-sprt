@@ -608,3 +608,32 @@ export interface WebsocketResult {
   processed: number;
   offlineNames: string[];
 }
+
+/** 거래처 한 행 (A25, AS-IS Sys15_CorpModel). useYn 'true'/'false'. 새 행은 임시 음수 ID */
+export interface Corp {
+  corpId: number;
+  companyId: number | null;
+  corpType: string | null;
+  corpTypeName: string | null;
+  corpName: string | null;
+  bizNo: string | null;
+  corpCode: string | null;
+  seq: number | null;
+  useYn: string | null;
+  note: string | null;
+  tel: string | null;
+  addr: string | null;
+  issCorpCode: string | null;
+  corpAccountCnt: string | null;
+}
+
+/** 거래처 계좌 한 행 (A25, AS-IS Sys17_CorpAccountModel). mainAccountYn 'true'/'false'. 새 행은 임시 음수 ID */
+export interface CorpAccount {
+  corpAccountId: number;
+  corpId: number;
+  bankCode: string | null;
+  bankName: string | null;
+  accountNoDec: string | null;
+  accountName: string | null;
+  mainAccountYn: string | null;
+}

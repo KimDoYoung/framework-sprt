@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/sys/mapper/sys15_corp.xml + UpdateDataModel(sys15_corp)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysCorpMapper">
+
+    <sql id="corpColumns">
+        sys15_corp.sys15_corp_id        AS corp_id,
+        sys15_corp.sys15_company_id     AS company_id,
+        sys15_corp.sys15_corp_type      AS corp_type,
+        f_cdnm('CorpType', sys15_corp_type, sys15_company_id, f_sysdate())  AS corp_type_name,
+        sys15_corp.sys15_corp_nm        AS corp_name,
+        sys15_corp.sys15_biz_no         AS biz_no,
+        sys15_corp.sys15_corp_cd        AS corp_code,
+        sys15_corp.sys15_seq            AS seq,
+        sys15_corp.sys15_use_yn         AS use_yn,
+        sys15_corp.sys15_note           AS note,
+        sys15_corp.sys15_tel            AS tel,
+        sys15_corp.sys15_addr           AS addr,
+        sys15_corp.sys15_iss_corp_cd    AS iss_corp_code,
+        (
+            SELECT COUNT(*) || '건'
+              FROM sys17_corp_account
+             WHERE sys17_corp_id = sys15_corp_id
+        )                               AS corp_account_cnt
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) sys15_corp.selectByCompanyId (SELECT *는 DTO 열로 명시). 수정: collate "ko_KR.utf8" → "ko-KR-x-icu"(B02, 05 §6) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.sys.dto.CorpRes">
+        SELECT <include refid="corpColumns"/>
+          FROM sys15_corp
+         WHERE sys15_company_id = #{companyId}
+           AND COALESCE(sys15_corp_type,'9') LIKE #{corpType}
+           AND CONCAT(sys15_corp_nm, sys15_corp_cd) ILIKE #{searchText}
+        <if test="useYn">
+           AND COALESCE(sys15_use_yn,'false') = 'true'
+        </if>
+         ORDER BY sys15_corp_type, COALESCE(sys15_seq, 999999999), sys15_corp_nm collate "ko-KR-x-icu" asc
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys15_corp.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sys.dto.CorpRes">
+        SELECT <include refid="corpColumns"/>
+          FROM sys15_corp
+         WHERE sys15_corp_id = #{corpId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys15_corp.selectCorpCodeCheck -->
+    <select id="selectCorpCodeCheck" resultType="long">
+        SELECT COUNT(*)
+          FROM sys15_corp
+         WHERE sys15_company_id = #{companyId}
+           AND sys15_corp_cd = #{corpCode}
+           AND sys15_corp_id != #{corpId}
+           AND sys15_use_yn = 'true'
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys15_corp.selectNewCorpCodeByBizNo -->
+    <select id="selectNewCorpCodeByBizNo" resultType="string">
+        SELECT #{bizNo}||
+               lpad(cast(coalesce(max(case when length(substr(sys15_corp_cd,11)) = 0 then 0
+                                           else cast(trim(substr(sys15_corp_cd,11)) as numeric) end),0) + 1 as varchar), 2, '00')
+          FROM sys15_corp
+         WHERE sys15_company_id = #{companyId}
+           AND replace(sys15_biz_no,'-','') = #{bizNo}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys15_corp.checkUseCorpId -->
+    <select id="checkUseCorpId" resultType="int">
+        SELECT f_check_use_corp_id(#{corpId})
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys15_corp.insert -->
+    <insert id="insertCorp">
+        INSERT INTO sys15_corp (sys15_corp_id, sys15_company_id, sys15_corp_nm, sys15_corp_type, sys15_iss_corp_cd,
+                                sys15_use_yn, sys15_seq, sys15_note, sys15_corp_cd, sys15_biz_no, sys15_tel, sys15_addr)
+        VALUES (#{req.corpId}, #{companyId}, #{req.corpName}, #{req.corpType}, #{req.issCorpCode},
+                #{req.useYn}, #{req.seq}, #{req.note}, #{req.corpCode}, #{req.bizNo}, #{req.tel}, #{req.addr})
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) sys15_corp.update -->
+    <update id="updateCorp">
+        UPDATE sys15_corp
+           SET sys15_corp_nm     = #{req.corpName},
+               sys15_corp_type   = #{req.corpType},
+               sys15_iss_corp_cd = #{req.issCorpCode},
+               sys15_use_yn      = #{req.useYn},
+               sys15_seq         = #{req.seq},
+               sys15_note        = #{req.note},
+               sys15_corp_cd     = #{req.corpCode},
+               sys15_biz_no      = #{req.bizNo},
+               sys15_tel         = #{req.tel},
+               sys15_addr        = #{req.addr}
+         WHERE sys15_corp_id    = #{req.corpId}
+           AND sys15_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteCorps">
+        DELETE FROM sys15_corp
+         WHERE sys15_company_id = #{companyId}
+           AND sys15_corp_id IN
+        <foreach collection="corpIds" item="corpId" open="(" separator="," close=")">#{corpId}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) sys15_corp.insertInitData (열을 명시) -->
+    <insert id="insertInitData">
+        INSERT INTO sys15_corp (sys15_corp_id, sys15_company_id, sys15_corp_nm, sys15_corp_type, sys15_iss_corp_cd,
+                                sys15_use_yn, sys15_seq, sys15_note, sys15_corp_cd, sys15_biz_no, sys15_tel, sys15_addr)
+        SELECT f_create_seq(), #{companyId}, sys15_corp_nm, sys15_corp_type, sys15_iss_corp_cd,
+               sys15_use_yn, sys15_seq, sys15_note, sys15_corp_cd, sys15_biz_no, sys15_tel, sys15_addr
+          FROM sys15_corp
+         WHERE sys15_company_id = 0
+    </insert>
+</mapper>
