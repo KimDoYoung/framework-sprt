@@ -24,6 +24,7 @@ import { Sys90_Tab_AfterServiceAdmin } from './sys/Sys90_Tab_AfterServiceAdmin';
 import { Sys27_Tab_LoginManage } from './sys/Sys27_Tab_LoginManage';
 import { Sys26_Tab_LoginHistory } from './sys/Sys26_Tab_LoginHistory';
 import { Sys80_Tab_AdminUserList } from './sys/Sys80_Tab_AdminUserList';
+import { Sys81_Tab_AdminUserHistory } from './sys/Sys81_Tab_AdminUserHistory';
 import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
 import { Sys07_Tab_Company } from './sys/Sys07_Tab_Company';
 import { Sys07_Tab_CompanyRoleMenu } from './sys/Sys07_Tab_CompanyRoleMenu';
@@ -61,6 +62,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sys27_Tab_LoginManage, // A21
   Sys26_Tab_LoginHistory, // A20
   Sys80_Tab_AdminUserList, // A22
+  Sys81_Tab_AdminUserHistory, // A23
   Sys53_Tab_SpecificMenuRequestAdmin, // A28 (1단계: 문서보기 아이콘의 전자결재 제외)
   Sys53_Tab_SpecificMenuRequest, // A27 (1단계: 결재요청 아이콘의 전자결재·분류선택 제외)
   Test_Tab_ReactComponents, // B11 공통 컴포넌트 테스트 (원본 없음, mock)

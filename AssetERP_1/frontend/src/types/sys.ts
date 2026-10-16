@@ -542,3 +542,12 @@ export interface AdminUserList {
   userName: string | null;
   note: string | null;
 }
+
+/** Admin 로그인내역 한 행 (A23, AS-IS Sys81_AdminUserHistoryModel). regDate 'YYYY-MM-DD', regTime 'HH:mm' */
+export interface AdminUserHistory {
+  adminUserHistoryId: number;
+  regDate: string | null;
+  regTime: string | null;
+  user: string | null;
+  smsContent: string | null;
+}
