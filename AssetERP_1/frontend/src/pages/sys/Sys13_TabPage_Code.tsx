@@ -2,6 +2,7 @@
  * 그룹별 코드 (A13 — Sys13_Lookup_CodeGroup 오른쪽 반)
  * AS-IS: myApp/client/vi/sys/Sys13_TabPage_Code.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 원본은 MultiGrid(편집기 없음)이지만 등록·저장·삭제를 `useGridCrud`로 묶으려고 CellEditGrid를 쓴다(컬럼은 편집 불가).
+ * UX보강(10) B12-2: 저장 = 저장(n)(UX-03). 검색 조건이 없어 SearchBar는 쓰지 않는다
  */
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Input, message, Space } from 'antd';
@@ -124,7 +125,7 @@ export const Sys13_TabPage_Code = forwardRef<Sys13_TabPage_CodeHandle>((_props, 
           <Button type="search" onClick={retrieve}>조회</Button>
           <Button type="register" disabled={!isAdminCompany} onClick={insertRow}>등록</Button>
           {/* [E4] updateButton[저장].Select (L130) → update() */}
-          <Button type="save" disabled={!isAdminCompany} onClick={crud.saveRows}>저장</Button>
+          <Button type="save" count={crud.changes} disabled={!isAdminCompany} onClick={crud.saveRows}>저장</Button>
           {/* [E5] deleteButton[삭제].Select (L136) → deleteRow() */}
           <Button type="delete" disabled={!isAdminCompany} onClick={crud.deleteChecked}>삭제</Button>
         </Space>

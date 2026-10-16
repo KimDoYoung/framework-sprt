@@ -2,15 +2,17 @@
  * 코드 목록 조회창 (A13 — Sys13_TabPage_Code 등록에서 연다)
  * AS-IS: myApp/client/vi/sys/Sys09_Lookup_CodeKind.java — open(codeKindId, companyId, callback) 만 옮김
  * (open(kindCode, …)·tdmLawOpen(taskId, …)의 TdmLawCode 법규목록은 이 화면에서 안 쓴다 — 쓰는 화면에서 더한다)
+ * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01·04). 조건이 1개라 초기화(UX-02) 없음
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message, Modal, Space, Typography } from 'antd';
+import { message, Modal, Space } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { CodeAdmin } from '@/types/sys';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 
 const gb = gbFor<CodeAdmin>();
 
@@ -81,14 +83,13 @@ export const Sys09_Lookup_CodeKind: React.FC<Props> = ({ open, codeKindId, compa
       }
     >
       <div style={{ height: 450, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Space>
-          <Typography.Text strong>검색</Typography.Text>
-          {/* searchText.KeyPress [Enter] (L127) → retrieve() */}
-          <Input autoFocus style={{ width: 200 }} value={searchText} onChange={e => setSearchText(e.target.value)}
-            onPressEnter={() => retrieve(searchText)} />
-          {/* retrieveButton[조회].Select (L136) → retrieve() */}
-          <Button type="search" onClick={() => retrieve(searchText)}>조회</Button>
-        </Space>
+        {/* retrieveButton[조회].Select (L136) → retrieve() */}
+        <SearchBar onSearch={() => retrieve(searchText)}>
+          <SearchBar.Field label="검색">
+            {/* searchText.KeyPress [Enter] (L127) → retrieve() */}
+            <SearchBar.Input autoFocus style={{ width: 200 }} value={searchText} onChange={e => setSearchText(e.target.value)} />
+          </SearchBar.Field>
+        </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           <MultiGrid<CodeAdmin> gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.codeId)} />
         </div>

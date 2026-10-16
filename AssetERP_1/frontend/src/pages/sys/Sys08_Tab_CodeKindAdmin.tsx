@@ -3,15 +3,17 @@
  * AS-IS: myApp/client/vi/sys/Sys08_Tab_CodeKindAdmin.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(생성자 L50-130): west = 툴바(높이 50) + 코드구분 그리드 (폭 820, 최대 1000, 분할, 여백 20/-2/22/20),
  *   center = Sys09_Grid_Code(isAdmin = true, 여백 20/20/20/0, 분할)
+ * UX보강(10) B12-2: 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 조건이 1개라 초기화(UX-02) 없음. 툴바는 원본처럼 줄바꿈 없이 가로 스크롤
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Input, Space, Splitter, Typography } from 'antd';
+import { Splitter } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import type { CustomCellRendererProps } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { CodeKind } from '@/types/sys';
 import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { Sys09_Grid_Code } from './Sys09_Grid_Code';
 import { Sys13_Lookup_CodeGroup } from './Sys13_Lookup_CodeGroup';
@@ -72,20 +74,20 @@ export const Sys08_Tab_CodeKindAdmin: React.FC = () => {
         <Splitter.Panel defaultSize={820} min={300} max={1000}>
           <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
             <div style={{ height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', flex: 'none', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
-              <Space>
-                <Typography.Text strong>코드구분명</Typography.Text>
-                {/* [E1] codeKindName.KeyPress [Enter] (L63) → retrieve() */}
-                <Input style={{ width: 150 }} value={codeKindName} allowClear
-                  onChange={e => setCodeKindName(e.target.value)} onPressEnter={retrieve} />
-                {/* [E2] retrieveButton[조회].Select (L71) → retrieve() */}
-                <Button type="search" onClick={retrieve}>조회</Button>
-                {/* [E4] updateButton[저장].Select (L83) → update() */}
-                <Button type="save" onClick={update}>저장</Button>
+              {/* [E2] retrieveButton[조회].Select (L71) → retrieve() */}
+              <SearchBar style={{ flexWrap: 'nowrap' }} onSearch={retrieve} extra={<>
+                {/* [E4] updateButton[저장].Select (L83) → update(). 저장(n)은 UX-03 */}
+                <Button type="save" count={crud.changes} onClick={update}>저장</Button>
                 {/* [E3] insertButton[등록].Select (L77) → insertRow() */}
                 <Button type="register" onClick={insertRow}>등록</Button>
                 {/* [E5] deleteButton[삭제].Select (L89) → deleteRow() */}
                 <Button type="delete" onClick={deleteRow}>삭제</Button>
-              </Space>
+              </>}>
+                <SearchBar.Field label="코드구분명">
+                  {/* [E1] codeKindName.KeyPress [Enter] (L63) → retrieve() */}
+                  <SearchBar.Input style={{ width: 150 }} value={codeKindName} onChange={e => setCodeKindName(e.target.value)} />
+                </SearchBar.Field>
+              </SearchBar>
             </div>
             <div style={{ flex: 1, minHeight: 0 }}>
               {/* [E6] grid.SelectionChanged (L121) → gridCode.retrieveCode(선택한 코드구분). 체크박스 없음 = 단일 선택 */}

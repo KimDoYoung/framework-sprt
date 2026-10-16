@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys54_Lookup_SpecificMenuHistory.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * open(companyId) L73-77 / 생성자 L79-105: 제목 "요청이력", 960×500, 모달, 크기 고정. 툴바 조회·저장·등록·삭제 + 체크(단일) 셀 편집 그리드
  * 파일 첨부(등록·받기·재등록 삭제, E6·E7·E9)는 파일 공통(B10) `fileApi`·`FileUpdownForm`으로 한다
+ * UX보강(10) B12-2: 저장 = 저장(n)(UX-03). 검색 칸이 없어 SearchBar는 쓰지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';
@@ -159,7 +160,7 @@ export const Sys54_Lookup_SpecificMenuHistory: React.FC<Props> = ({ companyId, o
             {/* [E1] retrieveButton[조회].Select (L108) → retrieve() */}
             <Button type="search" onClick={retrieve}>조회</Button>
             {/* [E2] updateButton[저장].Select (L114) → update() */}
-            <Button type="save" onClick={crud.saveRows}>저장</Button>
+            <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
             <Button type="register" onClick={insert}>등록</Button>
             {/* [E4] deleteButton[삭제].Select (L126) → delete() */}
             <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>

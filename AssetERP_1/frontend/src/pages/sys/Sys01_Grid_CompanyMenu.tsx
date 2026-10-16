@@ -2,6 +2,7 @@
  * 매뉴를 쓰는 고객사 그리드 (A09) — Sys06_Tab_Menu 오른쪽(east).
  * AS-IS: myApp/client/vi/sys/Sys01_Grid_CompanyMenu.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 생성자 L40-59: 툴바(적용상품 콤보·전체선택·전체취소·저장, 높이 50) + 그리드
+ * UX보강(10) B12-2: 저장 = 저장(n)(UX-03, menuYn이 바뀐 행 수). 원본 툴바에 조회 버튼이 없고(콤보 변경 = 조회) 조건이 1개라 SearchBar는 쓰지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space, Typography } from 'antd';
@@ -40,9 +41,17 @@ export const Sys01_Grid_CompanyMenu: React.FC<Props> = ({ menuId }) => {
   const [erpProductCd, setErpProductCd] = useState('%');
   /** 조회·저장 때의 menuYn — 다르면 바뀐 행(GXT getModifiedRecords) */
   const orig = useRef(new Map<string, string>());
+  const [changedCount, setChangedCount] = useState(0);  // 저장(n) (UX-03)
   const columnDefs = useMemo(buildGrid, []);
 
-  const baseline = (list: CompanyMenuYn[]) => { orig.current = new Map(list.map(r => [rowId(r), r.menuYn])); };
+  const getChanged = () => {
+    const changed: CompanyMenuYn[] = [];
+    gridRef.current?.api.forEachNode(n => {
+      if (n.data && orig.current.get(rowId(n.data)) !== n.data.menuYn) changed.push(n.data);
+    });
+    return changed;
+  };
+  const baseline = (list: CompanyMenuYn[]) => { orig.current = new Map(list.map(r => [rowId(r), r.menuYn])); setChangedCount(0); };
 
   // retrieve(menuId) L116-122: 서비스 sys.Sys01_Company.selectByCode(menuId, erpProductCode)
   const retrieve = useCallback(async (code = erpProductCd) => {
@@ -66,10 +75,7 @@ export const Sys01_Grid_CompanyMenu: React.FC<Props> = ({ menuId }) => {
   // update() L124-128: GridUpdate(menuId) → sys.Sys01_Company.updateByMenuYn — 바뀐 행만, 0건이면 조용히(05 §8)
   const update = async () => {
     if (!menuId) return;
-    const changed: CompanyMenuYn[] = [];
-    gridRef.current?.api.forEachNode(n => {
-      if (n.data && orig.current.get(rowId(n.data)) !== n.data.menuYn) changed.push(n.data);
-    });
+    const changed = getChanged();
     if (changed.length === 0) return;
     try {
       const saved = await sysApi.updateCompanyMenuYn(menuId, changed);
@@ -99,7 +105,7 @@ export const Sys01_Grid_CompanyMenu: React.FC<Props> = ({ menuId }) => {
         {/* [E3] deSelectAllButton[전체취소].Select (L79) → 모든 행 menuYn = false */}
         <Button type="cancel" onClick={() => setAll(false)}>전체취소</Button>
         {/* [E4] updateButton[저장].Select (L87) → update() */}
-        <Button type="save" onClick={update}>저장</Button>
+        <Button type="save" count={changedCount} onClick={update}>저장</Button>
       </Space>
       <div style={{ flex: 1, minHeight: 0 }}>
         {/* [E5 생략] grid.CellMouseDown [cellIndex >= 4] (L93) → return 만 있다(동작 없음) */}
@@ -108,6 +114,7 @@ export const Sys01_Grid_CompanyMenu: React.FC<Props> = ({ menuId }) => {
           rowData={rows}
           columnDefs={columnDefs}
           getRowId={p => rowId(p.data)}
+          onCellValueChanged={() => setChangedCount(getChanged().length)}
         />
       </div>
     </div>

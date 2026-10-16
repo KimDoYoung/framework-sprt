@@ -2,6 +2,7 @@
  * 코드 그룹 팝업 (A13 — 코드구분 그리드의 '그룹' 칸에서 연다)
  * AS-IS: myApp/client/vi/sys/Sys13_Lookup_CodeGroup.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * open(selectModel): 제목 "코드 그룹", 1100×600 모달, 왼쪽 반 그룹 그리드 / 오른쪽 반 Sys13_TabPage_Code, 아래 가운데 닫기.
+ * UX보강(10) B12-2: 저장 = 저장(n)(UX-03). 검색 칸이 없어 SearchBar는 쓰지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Modal } from 'antd';
@@ -75,7 +76,7 @@ export const Sys13_Lookup_CodeGroup: React.FC<Props> = ({ open, codeKind, onClos
             {/* [E2] insertButton[등록].Select (L106) → insertRow() */}
             <Button type="register" disabled={!isAdminCompany} onClick={crud.addRow}>등록</Button>
             {/* [E3] updateButton[저장].Select (L112) → update() */}
-            <Button type="save" disabled={!isAdminCompany} onClick={crud.saveRows}>저장</Button>
+            <Button type="save" count={crud.changes} disabled={!isAdminCompany} onClick={crud.saveRows}>저장</Button>
             {/* [E4] deleteButton[삭제].Select (L118) → deleteRow(), [E7] msgBox YES → sys.Sys13_CodeGroup.deleteAll (useGridCrud 안) */}
             <Button type="delete" disabled={!isAdminCompany} onClick={crud.deleteChecked}>삭제</Button>
           </div>

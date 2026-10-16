@@ -3,14 +3,16 @@
  * AS-IS: myApp/client/vi/sys/Sys53_Tab_SpecificMenuRequest.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L67-95: 툴바(구분·특정업무구분 콤보·조회·등록·저장·삭제) + 셀 편집 그리드(행번호, 체크박스 단일)
  * 결재요청 아이콘이 여는 전자결재(Apr01_Edit_ApprDoc)·분류선택(Dcr01_Lookup_Class)은 다른 도메인이라 이 단계에서 제외 — 작업기록 "의존"
+ * UX보강(10) B12-2: 툴바 = SearchBar(UX-01·02, 조건 2개 콤보 → 초기화는 전체·전체, 자동 조회 없음), 저장 = 저장(n)(UX-03). 1410과 같은 패턴
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { message, Space, Typography } from 'antd';
+import { message } from 'antd';
 import { sysApi } from '@/api/sys';
 import { Code, SpecificMenuRequest } from '@/types/sys';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { CellEditGrid, gbFor, iconCell } from '@/components/grid';
+import { SearchBar, useSearchParams } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 
 type Row = SpecificMenuRequest;
@@ -38,8 +40,9 @@ const buildGrid = (works: Code[], requestApproval: (r: Row) => void) => [
 
 export const Sys53_Tab_SpecificMenuRequest: React.FC = () => {
   const [works, setWorks] = useState<Code[]>([]);
-  const [stateCd, setStateCd] = useState('%');         // specificStateComboBoxField ComboBoxField("SpecificStateCode", "%", "전체")
-  const [specificWorkCd, setSpecificWorkCd] = useState('%'); // specificWorkComboBoxField ComboBoxField("SpecificWorkCode", "%", "전체")
+  // specificStateComboBoxField ComboBoxField("SpecificStateCode", "%", "전체"), specificWorkComboBoxField ComboBoxField("SpecificWorkCode", "%", "전체")
+  const sp = useSearchParams(() => ({ stateCd: '%', specificWorkCd: '%' }));
+  const { stateCd, specificWorkCd } = sp.values;
   const [defaults, setDefaults] = useState<Partial<Row>>({}); // insertRow() L266-274: 신청자·신청일
 
   const crud = useGridCrud<Row>({
@@ -110,21 +113,23 @@ export const Sys53_Tab_SpecificMenuRequest: React.FC = () => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 8, boxSizing: 'border-box' }}>
-      <Space>
-        <Typography.Text strong>구분:</Typography.Text>
-        <SystemCodeComboBox kindCd="SpecificStateCode" altCode={['%', '전체']} style={{ width: 100 }} value={stateCd}
-          onChange={v => setStateCd(v ?? '%')} />
-        <Typography.Text strong>특정업무구분:</Typography.Text>
-        <SystemCodeComboBox kindCd="SpecificWorkCode" altCode={['%', '전체']} style={{ width: 150 }} value={specificWorkCd}
-          onChange={v => setSpecificWorkCd(v ?? '%')} />
-        {/* [E1] retrieveButton[조회].Select (L103) → retrieve() */}
-        <Button type="search" onClick={crud.retrieve}>조회</Button>
+      {/* [E1] retrieveButton[조회].Select (L103) → retrieve(). 초기화는 UX-02 */}
+      <SearchBar onSearch={crud.retrieve} onReset={sp.reset} loading={crud.loading} extra={<>
         {/* [E2] insertButton[등록].Select (L109) → insertRow() L266-274 */}
         <Button type="register" onClick={crud.addRow}>등록</Button>
-        {/* [E3] updateButton[저장].Select (L115) → update() L276-295 */}
-        <Button type="save" onClick={crud.saveRows}>저장</Button>
+        {/* [E3] updateButton[저장].Select (L115) → update() L276-295. 저장(n)은 UX-03 */}
+        <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         <Button type="delete" onClick={deleteChk}>삭제</Button>
-      </Space>
+      </>}>
+        <SearchBar.Field label="구분:">
+          <SystemCodeComboBox kindCd="SpecificStateCode" altCode={['%', '전체']} style={{ width: 100 }} value={stateCd}
+            onChange={v => sp.set('stateCd', v ?? '%')} />
+        </SearchBar.Field>
+        <SearchBar.Field label="특정업무구분:">
+          <SystemCodeComboBox kindCd="SpecificWorkCode" altCode={['%', '전체']} style={{ width: 150 }} value={specificWorkCd}
+            onChange={v => sp.set('specificWorkCd', v ?? '%')} />
+        </SearchBar.Field>
+      </SearchBar>
       <div style={{ flex: 1, minHeight: 0 }}>
         {/* setChecked(SINGLE) = 체크박스 단일 선택 */}
         <CellEditGrid<Row> crud={crud} columnDefs={columnDefs} sortable={false}

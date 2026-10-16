@@ -2,9 +2,10 @@
  * 고객찾기 조회창 (C03) — Emp01_Tab_UserInfo 고객사 트리거에서 연다.
  * AS-IS: myApp/client/vi/sys/Sys01_Lookup_Company.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * open(callback) L55-84만 옮겼다(SINGLE: 선택 1건을 돌려줌). open("MULTI", …)는 쓰는 화면에서 더한다.
+ * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01·04)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message, Modal, Space, Typography } from 'antd';
+import { message, Modal, Space } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import type { CellDoubleClickedEvent } from 'ag-grid-community';
 import { sysApi } from '@/api/sys';
@@ -12,6 +13,7 @@ import { errorMessage } from '@/api/client';
 import { Company } from '@/types/sys';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 
 const gb = gbFor<Company>();
 
@@ -99,14 +101,13 @@ export const Sys01_Lookup_Company: React.FC<Props> = ({ open, onResult, onClose 
       }
     >
       <div style={{ height: 300, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Space>
-          <Typography.Text strong style={{ width: 50, display: 'inline-block' }}>고객명</Typography.Text>
-          {/* [E1] korName[고객명].KeyPress [Enter] (L91) → retrieve() */}
-          <Input autoFocus style={{ width: 120 }} value={korName} onChange={e => setKorName(e.target.value)}
-            onPressEnter={() => retrieve(korName)} />
-          {/* [E2] retrieveButton[조회].Select (L99) → retrieve() */}
-          <Button type="search" onClick={() => retrieve(korName)}>조회</Button>
-        </Space>
+        {/* [E2] retrieveButton[조회].Select (L99) → retrieve(). 초기화(UX-02)는 조건이 1개라 없음 */}
+        <SearchBar onSearch={() => retrieve(korName)}>
+          <SearchBar.Field label="고객명">
+            {/* [E1] korName[고객명].KeyPress [Enter] (L91) → retrieve() */}
+            <SearchBar.Input autoFocus style={{ width: 120 }} value={korName} onChange={e => setKorName(e.target.value)} />
+          </SearchBar.Field>
+        </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           <MultiGrid<Company>
             gridRef={gridRef}

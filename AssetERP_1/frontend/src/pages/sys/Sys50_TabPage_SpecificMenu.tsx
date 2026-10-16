@@ -2,9 +2,10 @@
  * 특정매뉴 권한 탭 (A15-4) — Sys01_Tab_Company 아래 탭 6번째.
  * AS-IS: myApp/client/vi/sys/Sys50_TabPage_SpecificMenu.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃 getEditor() L1-337: 툴바(구분 콤보·조회·저장·등록·삭제·요청이력) + 셀 편집 그리드(행번호, 체크박스 없음)
+ * UX보강(10) B12-2: 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03). 조건이 1개(구분 콤보)라 초기화(UX-02) 없음
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { message, Space, Typography, Button as AntButton } from 'antd';
+import { message, Button as AntButton } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import type { CustomCellRendererProps } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
@@ -12,6 +13,7 @@ import { Code, MenuLookup, SpecificMenu } from '@/types/sys';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { CellEditGrid, gbFor, iconCell } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import type { CompanyTabProps } from './Sys01_Tab_Company';
 import { Sys06_Lookup_SelectMulti } from './Sys06_Lookup_SelectMulti';
@@ -155,19 +157,20 @@ export const Sys50_TabPage_SpecificMenu: React.FC<CompanyTabProps> = ({ companyI
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, boxSizing: 'border-box' }}>
-      <Space>
-        <Typography.Text strong>구분</Typography.Text>
-        <SystemCodeComboBox kindCd="SpecificWorkCode" altCode={['%', '전체']} style={{ width: 150 }} value={specificWorkCd}
-          onChange={v => setSpecificWorkCd(v ?? '%')} />
-        {/* [E1] retrieveButton[조회].Select (L69) → retrieve() */}
-        <Button type="search" onClick={crud.retrieve}>조회</Button>
-        {/* [E2] updateButton[저장].Select (L75) → update() */}
-        <Button type="save" onClick={crud.saveRows}>저장</Button>
+      {/* [E1] retrieveButton[조회].Select (L69) → retrieve() */}
+      <SearchBar onSearch={crud.retrieve} loading={crud.loading} extra={<>
+        {/* [E2] updateButton[저장].Select (L75) → update(). 저장(n)은 UX-03 */}
+        <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         <Button type="register" onClick={insertRow}>등록</Button>
         {/* [E4] deleteButton[삭제].Select (L87) → deleteRow() */}
         <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
         <Button type="view" onClick={openHistory}>요청이력</Button>
-      </Space>
+      </>}>
+        <SearchBar.Field label="구분">
+          <SystemCodeComboBox kindCd="SpecificWorkCode" altCode={['%', '전체']} style={{ width: 150 }} value={specificWorkCd}
+            onChange={v => setSpecificWorkCd(v ?? '%')} />
+        </SearchBar.Field>
+      </SearchBar>
       <div style={{ flex: 1, minHeight: 0 }}>
         {/* 체크박스 없음(setChecked 없음) = 단일 선택, 삭제는 선택한 행 */}
         <CellEditGrid<Row> crud={crud} columnDefs={columnDefs} sortable={false}

@@ -2,13 +2,14 @@
  * 코드 그리드 (A13 시스템 공통코드 관리 오른쪽 / A14 고객사 공통코드가 같은 클래스를 쓴다)
  * AS-IS: myApp/client/vi/sys/Sys09_Grid_Code.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * isAdmin = 생성자 인자. codeKind를 주면 retrieveCode(codeKind), companyId도 주면 retrieveCode(codeKind, companyId)(A14용).
+ * UX보강(10) B12-2: 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 조건이 1개라 초기화(UX-02) 없음. 툴바는 원본처럼 줄바꿈 없이 가로 스크롤
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Input, Space, Typography } from 'antd';
 import { sysApi } from '@/api/sys';
 import { CodeAdmin, CodeKind } from '@/types/sys';
 import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { useLoginUser } from '@/hooks/useLoginUser';
 
@@ -81,20 +82,20 @@ export const Sys09_Grid_Code: React.FC<Props> = ({ isAdmin, codeKind, companyId:
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', flex: 'none', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
-        <Space>
-          <Typography.Text strong>상세코드구분명</Typography.Text>
-          {/* [E1] detailCodeKindName.KeyPress [Enter] (L55) → retrieve() */}
-          <Input style={{ width: 150 }} value={detailCodeKindName} allowClear
-            onChange={e => setDetailCodeKindName(e.target.value)} onPressEnter={retrieve} />
-          {/* [E2] retrieveButton[조회].Select (L63) → retrieve() */}
-          <Button type="search" onClick={retrieve}>조회</Button>
-          {/* [E4] updateButton[저장].Select (L75) → update() */}
-          <Button type="save" disabled={!editable} onClick={update}>저장</Button>
+        {/* [E2] retrieveButton[조회].Select (L63) → retrieve() */}
+        <SearchBar style={{ flexWrap: 'nowrap' }} onSearch={retrieve} extra={<>
+          {/* [E4] updateButton[저장].Select (L75) → update(). 저장(n)은 UX-03 */}
+          <Button type="save" count={crud.changes} disabled={!editable} onClick={update}>저장</Button>
           {/* [E3] insertButton[등록].Select (L69) → insertRow() */}
           <Button type="register" disabled={!editable} onClick={insertRow}>등록</Button>
           {/* [E5] deleteButton[삭제].Select (L81) → deleteRow() */}
           <Button type="delete" disabled={!editable} onClick={deleteRow}>삭제</Button>
-        </Space>
+        </>}>
+          <SearchBar.Field label="상세코드구분명">
+            {/* [E1] detailCodeKindName.KeyPress [Enter] (L55) → retrieve() */}
+            <SearchBar.Input style={{ width: 150 }} value={detailCodeKindName} onChange={e => setDetailCodeKindName(e.target.value)} />
+          </SearchBar.Field>
+        </SearchBar>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         {/* 체크박스 없음(setChecked 없음) = 단일 선택, 삭제는 선택한 행 */}

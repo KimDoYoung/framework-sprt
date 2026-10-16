@@ -1,15 +1,17 @@
 /**
  * 고객사 다중 선택 조회창 (A14) — Sys08_Tab_CodeKindClient 코드복사에서 연다.
  * AS-IS: myApp/client/vi/sys/Sys01_Lookup_SelectMulti.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
+ * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01·04)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message, Modal, Space, Typography } from 'antd';
+import { message, Modal, Space } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { Company } from '@/types/sys';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 
 const gb = gbFor<Company>();
 
@@ -79,14 +81,13 @@ export const Sys01_Lookup_SelectMulti: React.FC<Props> = ({ open, onResult, onCl
       }
     >
       <div style={{ height: 300, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Space>
-          <Typography.Text strong style={{ display: 'inline-block', width: 50 }}>고객명</Typography.Text>
-          {/* [E1] korName.KeyPress [Enter] (L77) → retrieve() */}
-          <Input autoFocus style={{ width: 120 }} value={korName} onChange={e => setKorName(e.target.value)}
-            onPressEnter={() => retrieve(korName)} />
-          {/* [E3] retrieveButton[조회].Select (L91) → retrieve() */}
-          <Button type="search" onClick={() => retrieve(korName)}>조회</Button>
-        </Space>
+        {/* [E3] retrieveButton[조회].Select (L91) → retrieve(). 초기화(UX-02)는 조건이 1개라 없음 */}
+        <SearchBar onSearch={() => retrieve(korName)}>
+          <SearchBar.Field label="고객명">
+            {/* [E1] korName.KeyPress [Enter] (L77) → retrieve() */}
+            <SearchBar.Input autoFocus style={{ width: 120 }} value={korName} onChange={e => setKorName(e.target.value)} />
+          </SearchBar.Field>
+        </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           {/* [E2] grid.RowDoubleClick (L85) → confirm() */}
           <MultiGrid<Company>

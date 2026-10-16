@@ -1,6 +1,7 @@
 /**
  * 공인IP 등록/수정 조회창 (A15) — 관리정보 탭(Sys01_TabPage_Info01)의 보안로그인 옆 [View]에서 연다.
  * AS-IS: myApp/client/vi/sys/Sys29_Lookup_PublicIpList.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
+ * UX보강(10) B12-2: 저장 = 저장(n)(UX-03). 검색 칸이 없어 SearchBar는 쓰지 않는다
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import dayjs from 'dayjs';
@@ -71,7 +72,7 @@ export const Sys29_Lookup_PublicIpList: React.FC<Props> = ({ companyId, onClose 
           {/* [E2] insertButton[등록].Select (L87) */}
           <Button type="register" onClick={insertRow}>등록</Button>
           {/* [E3] updateButton[저장].Select (L93) */}
-          <Button type="save" onClick={update}>저장</Button>
+          <Button type="save" count={crud.changes} onClick={update}>저장</Button>
           {/* [E4] deleteButton[삭제].Select (L99) */}
           <Button type="delete" onClick={remove}>삭제</Button>
         </Space>

@@ -1,15 +1,17 @@
 /**
  * 매뉴권한(관리자별 메뉴 권한) 조회창 (A15) — 고객별 관리자 탭(Sys02_Tab_User)의 [권한설정]에서 연다.
  * AS-IS: myApp/client/vi/sys/Sys82_Lookup_UserMenu.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
+ * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01), 저장 = 저장(n)(UX-03, 바뀐 행 수). 매뉴명 Enter는 조회가 아니라 트리 안 검색(search)이라 antd Input + allowClear(UX-04). 조건 1개라 초기화(UX-02) 없음
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message, Modal, Space, Typography } from 'antd';
+import { Input, message, Modal, Space } from 'antd';
 import type { CellClickedEvent } from 'ag-grid-community';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { AdminUserMenu } from '@/types/sys';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 import { isTreeToggleClick, useTreeGrid } from '@/hooks/useTreeGrid';
 
 const gb = gbFor<AdminUserMenu>();
@@ -24,6 +26,7 @@ export const Sys82_Lookup_UserMenu: React.FC<Props> = ({ userId, onClose }) => {
   const tree = useTreeGrid<AdminUserMenu>({ idField: 'menuId', parentField: 'parentId', depthField: 'depth' });
   const [searchText, setSearchText] = useState('');
   const changed = useRef(new Set<number>());
+  const [changedCount, setChangedCount] = useState(0);  // 저장(n) (UX-03)
 
   // buildTreeGrid() L169-177 (트리 컬럼 1번 = 매뉴명)
   const columnDefs = useMemo(() => [
@@ -50,6 +53,7 @@ export const Sys82_Lookup_UserMenu: React.FC<Props> = ({ userId, onClose }) => {
     try {
       const list = await sysApi.searchAdminUserMenus(userId);
       changed.current.clear();
+      setChangedCount(0);
       tree.setRows(list);
       search(list);
     } catch (err) {
@@ -66,6 +70,7 @@ export const Sys82_Lookup_UserMenu: React.FC<Props> = ({ userId, onClose }) => {
     tree.expandDeep(e.data.menuId);
     if (e.colDef.field !== 'useYn') return;
     tree.cascadeToggle(e.api, e.data, 'useYn').forEach(t => changed.current.add(t));
+    setChangedCount(changed.current.size);
   };
 
   // update() L230-245: 바뀐 행 → 서비스 sys.Sys82_AdminUserMenu.updateMenu(userId) → 결과로 그 행을 바꾼다(다시 조회하지 않음)
@@ -84,6 +89,7 @@ export const Sys82_Lookup_UserMenu: React.FC<Props> = ({ userId, onClose }) => {
         if (node?.data) node.setData({ ...node.data, adminUserMenuId: s.adminUserMenuId, useYn: s.useYn });
       });
       changed.current.clear();
+      setChangedCount(0);
       message.success(`${saved.length}건 저장되었습니다.`);
     } catch (err) {
       message.error(errorMessage(err, '저장 실패'));
@@ -104,8 +110,8 @@ export const Sys82_Lookup_UserMenu: React.FC<Props> = ({ userId, onClose }) => {
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
-            {/* [E5] updateButton[저장].Select (L115) → update() */}
-            <Button type="save" onClick={update}>저장</Button>
+            {/* [E5] updateButton[저장].Select (L115) → update(). 저장(n)은 UX-03 */}
+            <Button type="save" count={changedCount} onClick={update}>저장</Button>
             {/* [E6] closeButton[닫기].Select (L121) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>
@@ -113,17 +119,18 @@ export const Sys82_Lookup_UserMenu: React.FC<Props> = ({ userId, onClose }) => {
       }
     >
       <div style={{ height: 560, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Space>
-          <Typography.Text strong>매뉴명</Typography.Text>
-          {/* [E1] searchText.KeyPress [Enter] (L89) → search() */}
-          <Input style={{ width: 160 }} value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={() => search()} />
-          {/* [E2] refreshButton[조회].Select (L97) → refresh() */}
-          <Button type="search" onClick={refresh}>조회</Button>
+        {/* [E2] refreshButton[조회].Select (L97) → refresh() */}
+        <SearchBar onSearch={refresh} extra={<>
           {/* [E3] expandAll[펼치기].Select (L103) → treeGrid.expandAll() */}
           <Button type="expand" onClick={tree.expandAll}>펼치기</Button>
           {/* [E4] collapseAll[감추기].Select (L109) → treeGrid.collapseAll() */}
           <Button type="collapse" onClick={tree.collapseAll}>감추기</Button>
-        </Space>
+        </>}>
+          <SearchBar.Field label="매뉴명">
+            {/* [E1] searchText.KeyPress [Enter] (L89) → search() */}
+            <Input style={{ width: 160 }} allowClear value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={() => search()} />
+          </SearchBar.Field>
+        </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           <SingleGrid<AdminUserMenu>
             gridRef={tree.gridRef}

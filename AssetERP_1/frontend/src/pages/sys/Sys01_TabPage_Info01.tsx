@@ -2,6 +2,7 @@
  * 관리정보 탭 (A15) — Sys01_Tab_Company 아래 탭 1번째.
  * AS-IS: myApp/client/vi/sys/Sys01_TabPage_Info01.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 선택한 회사 1행을 셀 편집 그리드로 보여 주고 저장한다(행번호 숨김, 정렬 없음, 체크박스 없음).
+ * UX보강(10) B12-2: 저장 = 저장(n)(UX-03). 검색 칸이 없어 SearchBar는 쓰지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Space, Button as AntButton } from 'antd';
@@ -110,7 +111,7 @@ export const Sys01_TabPage_Info01: React.FC<CompanyTabProps> = ({ companyId }) =
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, boxSizing: 'border-box' }}>
       <Space>
         {/* [E1] updateButton[저장].Select (L45) → update() */}
-        <Button type="save" onClick={crud.saveRows}>저장</Button>
+        <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
         {/* [E2] clipBoardButton[회사ID 복사].Select (L51) → copyToClipboard(companyId) */}
         <Button type="change" onClick={() => copyToClipboard(String(companyId ?? ''))}>회사ID 복사</Button>
       </Space>

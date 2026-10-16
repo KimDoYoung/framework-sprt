@@ -2,6 +2,7 @@
  * 문서권한설정 조회창 (A15-4) — Sys50_TabPage_SpecificMenu의 '문서권한' 칸에서 연다.
  * AS-IS: myApp/client/vi/sys/Sys52_Lookup_SpecificMenuLink.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * open(companyId, specificMenuModel) L53-80: 제목 "문서권한설정", 900×350, 모달. 툴바 조회·등록·저장·삭제 + 체크(단일) 셀 편집 그리드
+ * UX보강(10) B12-2: 저장 = 저장(n)(UX-03). 검색 칸이 없어 SearchBar는 쓰지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, Space } from 'antd';
@@ -84,7 +85,7 @@ export const Sys52_Lookup_SpecificMenuLink: React.FC<Props> = ({ companyId, spec
           {/* [E2] insertButton[등록].Select (L89) → insertRow() */}
           <Button type="register" onClick={crud.addRow}>등록</Button>
           {/* [E3] updateButton[저장].Select (L95) → update() */}
-          <Button type="save" onClick={crud.saveRows}>저장</Button>
+          <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           {/* [E4] deleteButton[삭제].Select (L101) → deleteRow() */}
           <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
         </Space>

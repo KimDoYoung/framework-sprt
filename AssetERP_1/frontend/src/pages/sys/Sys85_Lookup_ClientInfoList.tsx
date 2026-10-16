@@ -2,13 +2,15 @@
  * 고객사 정보 조회창 (C06 연결, sys 도메인) — Sms03_Page_UserListAdmin의 "기타고객사 추가"에서 연다
  * AS-IS: myApp/client/vi/sys/Sys85_Lookup_ClientInfoList.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L55-86: 모달 900×500 "고객사 정보", 툴바(검색 + 조회·저장·등록·삭제 + 안내문) + 셀 편집 그리드(체크박스 다중), 하단 확인·닫기
+ * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 조건이 1개라 초기화(UX-02) 없음
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Input, message, Modal, Space, Typography } from 'antd';
+import { message, Modal, Space, Typography } from 'antd';
 import { sysApi } from '@/api/sys';
 import { ClientInfo } from '@/types/sys';
 import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 
 const gb = gbFor<ClientInfo>();
@@ -85,20 +87,21 @@ export const Sys85_Lookup_ClientInfoList: React.FC<Props> = ({ open, onResult, o
       }
     >
       <div style={{ height: 380, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Space wrap>
-          <Typography.Text strong>검색</Typography.Text>
-          <Input style={{ width: 300 }} placeholder="고객사/부서명/직위/사원명/휴대폰/비고"
-            value={searchText} onChange={e => setSearchText(e.target.value)} />
-          {/* [E1] retrieveButton[조회].Select (L91) → retrieve() */}
-          <Button type="search" onClick={crud.retrieve}>조회</Button>
-          {/* [E2] updateButton[저장].Select (L97) → update() */}
-          <Button type="save" onClick={crud.saveRows}>저장</Button>
+        {/* [E1] retrieveButton[조회].Select (L91) → retrieve() */}
+        <SearchBar onSearch={crud.retrieve} loading={crud.loading} extra={<>
+          {/* [E2] updateButton[저장].Select (L97) → update(). 저장(n)은 UX-03 */}
+          <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
           {/* [E3] insertButton[등록].Select (L103) → insert() */}
           <Button type="register" onClick={crud.addRow}>등록</Button>
           {/* [E4] deleteButton[삭제].Select (L109) → delete() */}
           <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
           <Typography.Text style={{ color: '#4472C4' }}>※  '가나다' 순으로 정렬</Typography.Text>
-        </Space>
+        </>}>
+          <SearchBar.Field label="검색">
+            <SearchBar.Input style={{ width: 300 }} placeholder="고객사/부서명/직위/사원명/휴대폰/비고"
+              value={searchText} onChange={e => setSearchText(e.target.value)} />
+          </SearchBar.Field>
+        </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<ClientInfo> crud={crud} columnDefs={columnDefs} />
         </div>

@@ -1,15 +1,17 @@
 /**
  * 고객사 선택 조회창 (A07) — Sys07_Tab_CompanyRoleMenu 회사명 트리거에서 연다.
  * AS-IS: myApp/client/vi/sys/Sys01_Lookup_SelectSingle.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
+ * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01·04)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message, Modal, Space, Typography } from 'antd';
+import { message, Modal, Space } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { Company } from '@/types/sys';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 
 const gb = gbFor<Company>();
 
@@ -79,14 +81,13 @@ export const Sys01_Lookup_SelectSingle: React.FC<Props> = ({ open, onResult }) =
       }
     >
       <div style={{ height: 300, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Space>
-          <Typography.Text strong>고객명</Typography.Text>
-          {/* [E1] korName.KeyPress [Enter] (L74) → retrieve() */}
-          <Input autoFocus style={{ width: 150 }} value={korName} onChange={e => setKorName(e.target.value)}
-            onPressEnter={() => retrieve(korName)} />
-          {/* [E3] retrieveButton[조회].Select (L88) → retrieve() */}
-          <Button type="search" onClick={() => retrieve(korName)}>조회</Button>
-        </Space>
+        {/* [E3] retrieveButton[조회].Select (L88) → retrieve(). 초기화(UX-02)는 조건이 1개라 없음 */}
+        <SearchBar onSearch={() => retrieve(korName)}>
+          <SearchBar.Field label="고객명">
+            {/* [E1] korName.KeyPress [Enter] (L74) → retrieve() */}
+            <SearchBar.Input autoFocus style={{ width: 150 }} value={korName} onChange={e => setKorName(e.target.value)} />
+          </SearchBar.Field>
+        </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           {/* [E2] grid.RowDoubleClick (L82) → confirm() */}
           <SingleGrid<Company>

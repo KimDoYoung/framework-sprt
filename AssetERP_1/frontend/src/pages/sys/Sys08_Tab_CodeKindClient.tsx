@@ -4,9 +4,10 @@
  * 레이아웃(생성자 L60-164): west = 툴바(높이 50) + 코드구분 그리드 (폭 750, 최대 1100, 분할, 여백 20/-2/22/20),
  *   center = Sys09_Grid_Code(isAdmin = false, retrieveCode(codeKind, companyId) — 항상 편집 가능, 여백 20/20/20/0, 분할)
  * 회사명 칸·코드복사 버튼은 로그인 회사가 0(admin)일 때만 (L103-124).
+ * UX보강(10) B12-2: 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 넣지 않는다 — 회사명(admin만) 바꾸면 오른쪽 코드 그리드가 자동 조회돼 "초기화 뒤 자동 조회 없음"이 깨진다. 줄바꿈 없이 가로 스크롤
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message, Modal, Space, Splitter, Typography } from 'antd';
+import { Input, message, Modal, Splitter } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import type { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
@@ -14,6 +15,7 @@ import { errorMessage } from '@/api/client';
 import { CodeKind, Company } from '@/types/sys';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
+import { SearchBar } from '@/components/search';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import { Sys09_Grid_Code } from './Sys09_Grid_Code';
 import { Sys01_Lookup_SelectSingle } from './Sys01_Lookup_SelectSingle';
@@ -114,24 +116,22 @@ export const Sys08_Tab_CodeKindClient: React.FC = () => {
         <Splitter.Panel defaultSize={750} min={300} max={1100}>
           <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
             <div style={{ height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', flex: 'none', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
-              <Space>
+              {/* [E1] retrieveButton[조회].Select (L67) → retrieve() */}
+              <SearchBar style={{ flexWrap: 'nowrap' }} onSearch={retrieve}
+                /* [E2] codeCopyButton[코드복사].Select (L73) → copyChk() — admin 회사만(L122) */
+                extra={isAdminCompany && <Button type="change" onClick={copyChk}>코드복사</Button>}>
                 {isAdminCompany && (
-                  <>
-                    <Typography.Text strong>회사명</Typography.Text>
+                  <SearchBar.Field label="회사명">
                     {/* [E3] companyName.TriggerClick (L83) → Sys01_Lookup_SelectSingle — 입력은 편집 불가(L81) */}
                     <Input style={{ width: 150, cursor: 'pointer' }} readOnly value={companyName}
                       suffix={<SearchOutlined />} onClick={() => setSingleOpen(true)} />
-                  </>
+                  </SearchBar.Field>
                 )}
-                <Typography.Text strong>코드구분명</Typography.Text>
-                {/* [E4] codeKindName.KeyPress [Enter] (L115) → retrieve() */}
-                <Input style={{ width: 150 }} value={codeKindName}
-                  onChange={e => setCodeKindName(e.target.value)} onPressEnter={retrieve} />
-                {/* [E1] retrieveButton[조회].Select (L67) → retrieve() */}
-                <Button type="search" onClick={retrieve}>조회</Button>
-                {/* [E2] codeCopyButton[코드복사].Select (L73) → copyChk() — admin 회사만(L122) */}
-                {isAdminCompany && <Button type="change" onClick={copyChk}>코드복사</Button>}
-              </Space>
+                <SearchBar.Field label="코드구분명">
+                  {/* [E4] codeKindName.KeyPress [Enter] (L115) → retrieve() */}
+                  <SearchBar.Input style={{ width: 150 }} value={codeKindName} onChange={e => setCodeKindName(e.target.value)} />
+                </SearchBar.Field>
+              </SearchBar>
             </div>
             <div style={{ flex: 1, minHeight: 0 }}>
               {/* [E5] grid.SelectionChanged (L155) → gridCode.retrieveCode(선택한 코드구분, companyId) */}

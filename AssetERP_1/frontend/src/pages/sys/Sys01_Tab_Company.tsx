@@ -2,14 +2,16 @@
  * [1075] 관리자 > 01. 고객관리 > 고객별 시스템정보 관리  (A15)
  * AS-IS: myApp/client/vi/sys/Sys01_Tab_Company.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(생성자 L63-107): 가운데 = 툴바 + 고객 그리드, 아래 = 탭 6개(높이 450, 최대 900, 분할 조절)
+ * UX보강(10) B12-2: 툴바 = SearchBar(UX-01·02·04, 조건 2개: 고객명·사용고객만 보기 → 초기화는 ''·체크)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, Input, message, Modal, Space, Splitter, Tabs, Typography } from 'antd';
+import { Checkbox, message, Modal, Splitter, Tabs } from 'antd';
 import { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { Company } from '@/types/sys';
 import { Button } from '@/components/button';
+import { SearchBar, useSearchParams } from '@/components/search';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { Sys01_Edit_Company } from './Sys01_Edit_Company';
 import { Sys03_Lookup_CompanyMenu } from './Sys03_Lookup_CompanyMenu';
@@ -72,8 +74,9 @@ const TABS: { key: string; label: string; page: React.FC<CompanyTabProps> }[] = 
 
 export const Sys01_Tab_Company: React.FC = () => {
   const gridRef = useRef<AgGridReact<Company>>(null);
-  const [companyName, setCompanyName] = useState('');
-  const [useYn, setUseYn] = useState(true); // settings() 초기값: "사용고객만 보기" 체크
+  // useYn: settings() 초기값 "사용고객만 보기" 체크
+  const sp = useSearchParams(() => ({ companyName: '', useYn: true }));
+  const { companyName, useYn } = sp.values;
   const [rows, setRows] = useState<Company[]>([]);
   const [selected, setSelected] = useState<Company>();
   const [activeTab, setActiveTab] = useState(TABS[0].key);
@@ -158,13 +161,8 @@ export const Sys01_Tab_Company: React.FC = () => {
     <Splitter layout="vertical" style={{ height: '100%', background: '#fff' }}>
       <Splitter.Panel min={150}>
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>
-          <Space wrap>
-            <Typography.Text strong>고객명</Typography.Text>
-            {/* [E1] companyName.KeyDown [Enter] (L113) → retrieve() */}
-            <Input style={{ width: 180 }} value={companyName} allowClear onChange={e => setCompanyName(e.target.value)} onPressEnter={retrieve} />
-            <Checkbox checked={useYn} onChange={e => setUseYn(e.target.checked)}>사용고객만 보기</Checkbox>
-            {/* [E2] retrieveButton[조회].Select (L121) */}
-            <Button type="search" onClick={retrieve}>조회</Button>
+          {/* [E2] retrieveButton[조회].Select (L121). 초기화는 UX-02 */}
+          <SearchBar onSearch={retrieve} onReset={sp.reset} extra={<>
             {/* [E3] insertButton[등록].Select (L127) */}
             <Button type="register" onClick={insert}>등록</Button>
             {/* [E4] deleteButton[삭제].Select (L133) */}
@@ -173,7 +171,13 @@ export const Sys01_Tab_Company: React.FC = () => {
             <Button type="change" onClick={copyMenu}>매뉴권한복사(초기)</Button>
             {/* [E6] addDcrComment[문서개요복사].Select (L145) */}
             <Button type="change" onClick={commentUpdate}>문서개요복사</Button>
-          </Space>
+          </>}>
+            <SearchBar.Field label="고객명">
+              {/* [E1] companyName.KeyDown [Enter] (L113) → retrieve() */}
+              <SearchBar.Input style={{ width: 180 }} value={companyName} onChange={e => sp.set('companyName', e.target.value)} />
+            </SearchBar.Field>
+            <Checkbox checked={useYn} onChange={e => sp.set('useYn', e.target.checked)}>사용고객만 보기</Checkbox>
+          </SearchBar>
           <div style={{ flex: 1, minHeight: 0 }}>
             <SingleGrid<Company>
               gridRef={gridRef}
