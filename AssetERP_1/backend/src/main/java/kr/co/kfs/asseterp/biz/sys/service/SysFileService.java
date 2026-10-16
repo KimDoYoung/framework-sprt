@@ -9,6 +9,7 @@ import kr.co.kfs.asseterp.biz.sys.dto.FileRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileTotalParam;
 import kr.co.kfs.asseterp.biz.sys.dto.FileTotalRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileYearRes;
+import kr.co.kfs.asseterp.biz.sys.dto.TrashFileRes;
 import kr.co.kfs.asseterp.biz.sys.mapper.SysFileMapper;
 import kr.co.kfs.asseterp.common.config.properties.UploadProperties;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -79,6 +80,12 @@ public class SysFileService {
     public List<FileMonthRes> selectByTotalSizeMonth(UserPrincipal user, String locName, String year) {
         requireSysAdmin(user);
         return sysFileMapper.selectByTotalSizeMonth(new FileTotalParam(locName, year));
+    }
+
+    /** AS-IS Sys10_File.findTrashFile L257 (A17 미사용 파일조회) — 관리자 메뉴라 sys admin만 */
+    public List<TrashFileRes> findTrashFile(UserPrincipal user) {
+        requireSysAdmin(user);
+        return sysFileMapper.findTrashFile();
     }
 
     private void requireSysAdmin(UserPrincipal user) {

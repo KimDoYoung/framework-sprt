@@ -146,4 +146,19 @@
                ) a
          ORDER BY a.month DESC
     </select>
+
+    <!-- AS-IS(IDMS-IC) sys10_file.findTrashFile L509 (A17) — 어디에서도 참조하지 않는 첨부(DB 함수 find_orphan_sys10_files).
+         함수가 돌려주지 않는 확장자(파일보기 조회창용)만 sys10_file에서 더했다 -->
+    <select id="findTrashFile" resultType="kr.co.kfs.asseterp.biz.sys.dto.TrashFileRes">
+        SELECT t.sys10_file_id      AS file_id
+             , t.sys10_parent_id    AS parent_id
+             , t.sys10_file_nm      AS file_nm
+             , t.sys10_reg_date     AS reg_date
+             , t.sys10_server_path  AS server_path
+             , t.sys10_size         AS size
+             , f.sys10_file_ext     AS file_ext
+          FROM find_orphan_sys10_files() t
+               INNER JOIN sys10_file f ON f.sys10_file_id = t.sys10_file_id
+         ORDER BY t.sys10_reg_date, t.sys10_file_nm
+    </select>
 </mapper>

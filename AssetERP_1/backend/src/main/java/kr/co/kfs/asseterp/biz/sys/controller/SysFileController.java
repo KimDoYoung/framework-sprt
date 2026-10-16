@@ -5,6 +5,7 @@ import kr.co.kfs.asseterp.biz.sys.dto.FileMonthRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileTotalRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileYearRes;
+import kr.co.kfs.asseterp.biz.sys.dto.TrashFileRes;
 import kr.co.kfs.asseterp.biz.sys.service.SysFileService;
 import kr.co.kfs.asseterp.biz.sys.service.SysRelateFileService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -45,6 +46,12 @@ public class SysFileController {
     public ApiResponse<List<FileTotalRes>> getTotals(@AuthenticationPrincipal UserPrincipal principal,
                                                      @RequestParam(defaultValue = "true") boolean useYn) {
         return ApiResponse.ok(sysFileService.selectByTotalSize(principal, useYn));
+    }
+
+    /** AS-IS sys.Sys10_File.findTrashFile (A17 미사용 파일조회 — sys admin만) */
+    @GetMapping("/trash")
+    public ApiResponse<List<TrashFileRes>> findTrashFile(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(sysFileService.findTrashFile(principal));
     }
 
     /** AS-IS sys.Sys10_File.selectByTotalSizeYear */

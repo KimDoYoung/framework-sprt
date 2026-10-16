@@ -34,7 +34,7 @@ AS-IS 줄은 `ColorButtonBar.java` 기준. 색 이름은 아래 "색" 표.
 | `bookmark` | mint | `BookOutlined` ← fa-bookmark (antd에 bookmark 없음) | 북마크 | L116-119 |
 | `plus` | mint | `PlusOutlined` ← fa-plus, **아이콘만** | "+" | L121-124 |
 | `minus` | mint | `MinusOutlined` ← fa-minus, **아이콘만** | "-" | L126-129 |
-| `delete` | red | `DeleteOutlined` ← fa-trash | 삭제, 전체삭제, 연결제거, 전표삭제, 제거 | L133-137 |
+| `delete` | red | `DeleteOutlined` ← fa-trash | 삭제, 전체삭제, 일괄삭제, 연결제거, 전표삭제, 제거 | L133-137 |
 | `removeRow` | red | `MinusOutlined` ← fa-minus | 행 삭제, 전체해제, 차단해제, 알림해제 | L139-142 |
 | `cancel` | red | `StopOutlined` ← fa-ban | 취소, 마감취소, 확정취소, 승인취소, 반려, 차단, 잠금해제, 전체로그아웃 | L144-152 |
 | `move` | red | `SwapOutlined` ← fa-exchange-alt | 문서이동(내부통제) | L272-275 |

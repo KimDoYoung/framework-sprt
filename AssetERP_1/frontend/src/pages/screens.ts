@@ -26,6 +26,7 @@ import { Sys26_Tab_LoginHistory } from './sys/Sys26_Tab_LoginHistory';
 import { Sys80_Tab_AdminUserList } from './sys/Sys80_Tab_AdminUserList';
 import { Sys81_Tab_AdminUserHistory } from './sys/Sys81_Tab_AdminUserHistory';
 import { Sys06_Tab_MenuGuide } from './sys/Sys06_Tab_MenuGuide';
+import { Sys10_Tab_TrashFileList } from './sys/Sys10_Tab_TrashFileList';
 import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
 import { Sys07_Tab_Company } from './sys/Sys07_Tab_Company';
 import { Sys07_Tab_CompanyRoleMenu } from './sys/Sys07_Tab_CompanyRoleMenu';
@@ -59,6 +60,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sys08_Tab_CodeKindAdmin, // A13
   Sys08_Tab_CodeKindClient, // A14
   Sys10_Tab_TotalSize, // A16
+  Sys10_Tab_TrashFileList, // A17
   Sys96_Tab_OpenMenuLogAdmin, // A35
   Sys90_Tab_AfterServiceAdmin, // A30
   Sys27_Tab_LoginManage, // A21

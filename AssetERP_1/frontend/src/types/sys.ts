@@ -429,6 +429,8 @@ export interface FileInfo {
   fileYn?: string | null;
   titleYn?: string | null;
   seq?: string | null;
+  /** 미사용 파일조회(A17)만: 서버 저장 폴더 */
+  serverPath?: string | null;
 }
 
 /** 개선사항 및 오류 통보 한 행 (A30, AS-IS Sys90_AfterServiceModel / sys90_after_service). 날짜는 'YYYY-MM-DD', confirmYn은 'true'/'false' */

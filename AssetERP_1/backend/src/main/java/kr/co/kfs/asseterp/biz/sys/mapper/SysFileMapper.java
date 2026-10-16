@@ -5,6 +5,7 @@ import kr.co.kfs.asseterp.biz.sys.dto.FileRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileTotalParam;
 import kr.co.kfs.asseterp.biz.sys.dto.FileTotalRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileYearRes;
+import kr.co.kfs.asseterp.biz.sys.dto.TrashFileRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -37,4 +38,7 @@ public interface SysFileMapper {
 
     /** AS-IS selectByTotalSizeMonth */
     List<FileMonthRes> selectByTotalSizeMonth(FileTotalParam param);
+
+    /** AS-IS findTrashFile (A17 미사용 파일조회) */
+    List<TrashFileRes> findTrashFile();
 }
