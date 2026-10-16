@@ -1,2 +1,5 @@
 [api]
 tenant = "admin"
+
+[drift]
+baseline = "docs/baseline.json"
