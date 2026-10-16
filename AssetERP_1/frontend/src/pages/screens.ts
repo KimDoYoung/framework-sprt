@@ -21,6 +21,7 @@ import { Sys53_Tab_SpecificMenuRequest } from './sys/Sys53_Tab_SpecificMenuReque
 import { Sys53_Tab_SpecificMenuRequestAdmin } from './sys/Sys53_Tab_SpecificMenuRequestAdmin';
 import { Sys96_Tab_OpenMenuLogAdmin } from './sys/Sys96_Tab_OpenMenuLogAdmin';
 import { Sys91_Tab_AdviceMember } from './sys/Sys91_Tab_AdviceMember';
+import { Sys92_Tab_ManagementTeam } from './sys/Sys92_Tab_ManagementTeam';
 import { Sys90_Tab_AfterService } from './sys/Sys90_Tab_AfterService';
 import { Sys90_Tab_AfterServiceAdmin } from './sys/Sys90_Tab_AfterServiceAdmin';
 import { Sys27_Tab_LoginManage } from './sys/Sys27_Tab_LoginManage';
@@ -76,6 +77,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sys96_Tab_OpenMenuLogAdmin, // A35
   Sys90_Tab_AfterService, // A29
   Sys91_Tab_AdviceMember, // A31
+  Sys92_Tab_ManagementTeam, // A32
   Sys90_Tab_AfterServiceAdmin, // A30
   Sys27_Tab_LoginManage, // A21
   Sys26_Tab_LoginHistory, // A20

@@ -669,3 +669,18 @@ export interface AdviceMember {
   address: string | null;
   note: string | null;
 }
+
+/** AssetERP 관리팀 한 행 (A32, AS-IS Sys92_ManagementTeamModel). 새 행은 임시 음수 ID, companyId는 신규일 때 1. 사원 정보(성명·직위·내선·이메일)는 조회로만 온다 */
+export interface ManagementTeam {
+  managementTeamId: number;
+  companyId: number | null;
+  personId: number | null;
+  personNm: string | null;
+  posNm: string | null;
+  officeTelNo: string | null;
+  emailAddr: string | null;
+  chargePart: string | null;
+  workYear: string | null;
+  mainCareer: string | null;
+  note?: string | null;
+}

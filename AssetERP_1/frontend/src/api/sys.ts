@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday, PasswordPerson, WebsocketPerson, WebsocketResult, Corp, CorpAccount, LeaveSetting, LeaveYear, AdviceMember } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday, PasswordPerson, WebsocketPerson, WebsocketResult, Corp, CorpAccount, LeaveSetting, LeaveYear, AdviceMember, ManagementTeam } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -828,6 +828,28 @@ export const sysApi = {
   /** AS-IS sys.Sys91_AdviceMember.delete → 지운 건수 */
   deleteAdviceMembers: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/sys/advice-members', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  // ── A32 AssetERP 관리팀 (Sys92_Tab_ManagementTeam) ──
+
+  /** AS-IS sys.Sys92_ManagementTeam.selectByAll */
+  searchManagementTeams: async (): Promise<ManagementTeam[]> => {
+    const res = await apiClient.get<ApiResponse<ManagementTeam[]>>('v1/sys/management-teams');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys92_ManagementTeam.update → 저장된 행(요청 순서) */
+  updateManagementTeams: async (rows: ManagementTeam[]): Promise<ManagementTeam[]> => {
+    const body = rows.map(({ managementTeamId, companyId, personId, chargePart, workYear, mainCareer }) =>
+      ({ managementTeamId, companyId, personId, chargePart, workYear, mainCareer }));
+    const res = await apiClient.put<ApiResponse<ManagementTeam[]>>('v1/sys/management-teams', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys92_ManagementTeam.delete → 지운 건수 */
+  deleteManagementTeams: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/management-teams', { data: ids });
     return res.data.data ?? 0;
   },
 
