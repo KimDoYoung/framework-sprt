@@ -654,3 +654,18 @@ export interface LeaveYear {
   leaveDays: string | null;
 }
 
+
+/** AssetERP 자문위원 한 행 (A31, AS-IS Sys91_AdviceMemberModel). 새 행은 임시 음수 ID, companyId는 신규일 때 1 */
+export interface AdviceMember {
+  adviceMemberId: number;
+  companyId: number | null;
+  field: string | null;
+  companyNm: string | null;
+  memberNm: string | null;
+  career: string | null;
+  homepage: string | null;
+  telno: string | null;
+  email: string | null;
+  address: string | null;
+  note: string | null;
+}
