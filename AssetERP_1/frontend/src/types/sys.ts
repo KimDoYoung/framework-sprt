@@ -582,3 +582,12 @@ export interface Holiday {
   holidayName: string | null;
   note: string | null;
 }
+
+/** 비밀번호 초기화 대상 사원 한 행 (A19, AS-IS Emp03_TransModel 중 화면 열). lockYn 'true'/'false' */
+export interface PasswordPerson {
+  personId: number;
+  empNo: string | null;
+  orgName: string | null;
+  empKorName: string | null;
+  lockYn: string | null;
+}

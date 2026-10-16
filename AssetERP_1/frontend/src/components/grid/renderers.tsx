@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, Checkbox } from 'antd';
+import { LockOutlined } from '@ant-design/icons';
 import type { CustomCellRendererProps } from 'ag-grid-react';
 import { fmtDouble, fmtLong, toNum } from './format';
 
@@ -12,6 +13,10 @@ const STATUS_COLORS: Record<string, string> = {
   미흡: '#D49208',
   개선: '#D49208',
 };
+
+/** AS-IS addBooleanIcon: true면 잠금 아이콘(lock.png), 그 밖(null·false)은 빈칸. 값은 boolean 또는 DB 형태('true'/'false' 문자열) */
+export const LockCell: React.FC<CustomCellRendererProps> = ({ value }) =>
+  value === true || value === 'true' ? <LockOutlined style={{ color: '#CE4242' }} /> : null;
 
 export const StatusCell: React.FC<CustomCellRendererProps> = ({ value }) =>
   value ? <b style={{ color: STATUS_COLORS[String(value)] }}>{String(value)}</b> : null;

@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday, PasswordPerson } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -779,6 +779,24 @@ export const sysApi = {
   deleteAdminUserLists: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/sys/admin-user-lists', { data: ids });
     return res.data.data ?? 0;
+  },
+
+  // ── A19 비밀번호 초기화 (Sys25_Tab_ResetPassword) ──
+
+  /** AS-IS emp.Emp03_Trans.selectByGrade(전체) / selectByPasswordPersonId(personId) — 로그인 회사, 기준일 오늘 */
+  searchPasswordPersons: async (personId?: number): Promise<PasswordPerson[]> => {
+    const res = await apiClient.get<ApiResponse<PasswordPerson[]>>('v1/sys/passwords/persons', { params: { personId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp01_Person.updateLockYn(lockYn = false): 잠금해제 */
+  unlockPerson: async (personId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/sys/passwords/persons/${personId}/unlock`);
+  },
+
+  /** AS-IS sys.Sys25_Password.insert(password = null): 비밀번호 초기화 */
+  resetPassword: async (personId: number): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>(`v1/sys/passwords/persons/${personId}/reset`);
   },
 
   // ── A18 일자관리 (Sys12_Tab_Calendar · Sys14_Lookup_Holiday · Sys12_Lookup_Customer) ──

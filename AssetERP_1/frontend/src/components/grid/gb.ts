@@ -1,6 +1,6 @@
 import type { ColDef, ColGroupDef } from 'ag-grid-community';
 import { fmtDate, fmtDouble, fmtLong, numComparator } from './format';
-import { CheckCell, LongSecondCell, SignColorCell, StatusCell } from './renderers';
+import { CheckCell, LockCell, LongSecondCell, SignColorCell, StatusCell } from './renderers';
 
 /**
  * 컬럼 헬퍼 — AS-IS GridBuilder `addXxx(valueProvider, width, header)`와 이름·인자 순서를 1:1로 맞춘다.
@@ -125,6 +125,8 @@ export function gbFor<T>() {
       col(f, w, h, 'center', { valueFormatter: p => (p.value === true || p.value === 'true' ? 'O' : 'X') }, o),
     /** addBooleanYn2: 체크박스 표시 (AS-IS는 ✓/빈칸 글자) */
     booleanYn2: (f: Field, w: number, h: string, o?: GbOpts<T>) => col(f, w, h, 'center', check(o), o),
+    /** addBooleanIcon: true면 잠금 아이콘, 아니면 빈칸 (읽기 전용) */
+    booleanIcon: (f: Field, w: number, h: string, o?: GbOpts<T>) => col(f, w, h, 'center', { cellRenderer: LockCell }, o),
 
     // ── 헤더 묶음 (AS-IS addHeaderGroupMap) ──
     group: (header: string, children: (ColDef<T> | ColGroupDef<T>)[]): ColGroupDef<T> => ({

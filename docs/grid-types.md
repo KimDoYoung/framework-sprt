@@ -62,6 +62,7 @@ const cols = [gb.text('companyNm', 200, '고객명'), gb.textCenter('icamCompany
 | `addDateTime` | `gb.dateTime` | 가운데, `yyyy-MM-dd HH:mm:ss` |
 | `addBoolean` | `gb.boolean` | 네모 체크박스, 가운데, 두 상태, 정렬 안 함 (`{ editable: true }`면 클릭으로 바꿈) |
 | `addBooleanYn` | `gb.booleanYn` | `O` / `X` |
+| `addBooleanIcon` | `gb.booleanIcon` | 잠금 아이콘(`LockOutlined`)만 — true면 아이콘, null·false는 빈칸. 가운데, 읽기 전용 (AS-IS `lock.png`. A19) |
 | `addBooleanYn2` | `gb.booleanYn2` | 네모 체크박스, 가운데, 선택·해제 두 상태(null은 해제). 읽기 전용, `{ editable: true }`면 클릭으로 바꿈 (AS-IS는 ✓/빈칸 글자) |
 | `addHeaderGroupMap` | `gb.group` | 헤더 묶음 |
 
