@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ics/mapper/ics30_compliance.xml + ics31_compliance_write.xml + ics33_compliance_answer.xml
+     + UpdateDataModel(ics30_compliance·ics33_compliance_answer)  (E05) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsComplianceMapper">
+
+    <!-- AS-IS ics30_compliance.groupByStartDate L240 (IDMS-IC) -->
+    <select id="selectDates" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceDateRes">
+        SELECT ROW_NUMBER() OVER (ORDER BY ics30_start_date, ics30_date_fix_yn) AS compliance_id,
+               ics30_start_date    AS start_date,
+               ics30_date_fix_yn   AS date_fix_yn
+          FROM ics30_compliance
+         WHERE ics30_company_id = #{companyId}
+         GROUP BY ics30_start_date, ics30_date_fix_yn
+         ORDER BY ics30_start_date DESC, ics30_date_fix_yn
+    </select>
+
+    <!-- AS-IS ics30_compliance.selectByStartDate L189 (IDMS-IC) — common.sys_codeByDate(stdDate = startDate) -->
+    <select id="selectByStartDate" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceRes">
+        WITH sys_code AS ( SELECT a.*
+                             FROM sys08_code_kind
+                                  INNER JOIN sys09_code a ON sys09_code_kind_id = sys08_code_kind_id
+                            WHERE sys08_kind_cd    = #{kindCode}
+                              AND sys09_company_id = #{companyId}
+                              AND sys09_apply_date = ( SELECT MAX(b.sys09_apply_date)
+                                                         FROM sys09_code b
+                                                        WHERE b.sys09_code_kind_id = a.sys09_code_kind_id
+                                                          AND b.sys09_company_id   = a.sys09_company_id
+                                                          AND b.sys09_code         = a.sys09_code
+                                                          AND b.sys09_apply_date <![CDATA[<=]]> #{startDate} )
+                              AND ( ( COALESCE(sys09_close_yn,'false') = 'true'                         AND
+                                      COALESCE(sys09_close_date,'1900-12-31') <![CDATA[>=]]> #{startDate} ) OR
+                                    ( COALESCE(sys09_close_yn,'false') != 'true'                        ) )
+        )
+        SELECT ics30_compliance_id     AS compliance_id,
+               ics30_company_id        AS company_id,
+               ics30_start_date        AS start_date,
+               ics30_compliance_type   AS compliance_type,
+               sys09_name              AS compliance_type_name,
+               ics30_sub_num           AS sub_num,
+               ics30_content           AS content,
+               ics30_na_use_yn         AS na_use_yn,
+               ics30_use_yn            AS use_yn,
+               ics30_use_close_date    AS use_close_date,
+               ics30_note              AS note,
+               ics30_date_fix_yn       AS date_fix_yn
+          FROM ics30_compliance
+               INNER JOIN sys_code ON sys09_code = ics30_compliance_type
+         WHERE ics30_company_id = #{companyId}
+           AND ics30_start_date = #{startDate}
+         ORDER BY COALESCE(sys09_seq, sys09_code), ics30_sub_num
+    </select>
+
+    <!-- AS-IS ics30_compliance.selectByMaxCompanyId L201 (IDMS-IC) -->
+    <select id="selectLatest" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceRes">
+        SELECT ics30_compliance_id     AS compliance_id,
+               ics30_company_id        AS company_id,
+               ics30_start_date        AS start_date,
+               ics30_compliance_type   AS compliance_type,
+               f_cdnm('IcsComplianceType', ics30_compliance_type, ics30_company_id, f_sysdate()) AS compliance_type_name,
+               ics30_sub_num           AS sub_num,
+               ics30_content           AS content,
+               ics30_na_use_yn         AS na_use_yn,
+               ics30_use_yn            AS use_yn,
+               ics30_use_close_date    AS use_close_date,
+               ics30_note              AS note,
+               ics30_date_fix_yn       AS date_fix_yn
+          FROM ics30_compliance
+         WHERE ics30_start_date = ( SELECT MAX(ics30_start_date)
+                                      FROM ics30_compliance
+                                     WHERE ics30_company_id = #{companyId}
+                                       AND ics30_start_date <![CDATA[ <= ]]> f_today() )
+           AND ics30_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS ics30_compliance.insert L257 (IDMS-IC) -->
+    <insert id="insert">
+        INSERT INTO ics30_compliance
+               ( ics30_compliance_id, ics30_company_id, ics30_start_date, ics30_compliance_type, ics30_sub_num, ics30_content,
+                 ics30_na_use_yn, ics30_use_yn, ics30_use_close_date, ics30_note, ics30_date_fix_yn )
+        VALUES ( #{complianceId}, #{companyId}, #{startDate}, #{complianceType}, #{subNum}, #{content},
+                 #{naUseYn}, #{useYn}, #{useCloseDate}, #{note}, #{dateFixYn} )
+    </insert>
+
+    <!-- UpdateDataModel(ics30_compliance) UPDATE — 화면이 바꾸는 열만 -->
+    <update id="update">
+        UPDATE ics30_compliance
+           SET ics30_compliance_type  = #{row.complianceType},
+               ics30_sub_num          = #{row.subNum},
+               ics30_content          = #{row.content},
+               ics30_na_use_yn        = #{row.naUseYn},
+               ics30_use_yn           = #{row.useYn},
+               ics30_use_close_date   = #{row.useCloseDate},
+               ics30_note             = #{row.note}
+         WHERE ics30_compliance_id = #{row.complianceId}
+           AND ics30_company_id    = #{companyId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM ics30_compliance
+         WHERE ics30_compliance_id = #{complianceId}
+           AND ics30_company_id    = #{companyId}
+    </delete>
+
+    <!-- AS-IS ics30_compliance.updateDateFixYn L250 (IDMS-IC) -->
+    <update id="updateDateFixYn">
+        UPDATE ics30_compliance
+           SET ics30_date_fix_yn = #{dateFixYn}
+         WHERE ics30_company_id = #{companyId}
+           AND ics30_start_date = #{startDate}
+    </update>
+
+    <!-- AS-IS ics30_compliance.deleteByDate L304 (IDMS-IC) -->
+    <delete id="deleteByDate">
+        DELETE FROM ics30_compliance
+         WHERE ics30_company_id = #{companyId}
+           AND ics30_start_date = #{startDate}
+    </delete>
+
+    <!-- AS-IS ics31_compliance_write.selectByComplianceId L34 (IDMS-IC) — 행 목록 크기만 쓰므로 건수로 -->
+    <select id="countWriteByComplianceId" resultType="int">
+        SELECT COUNT(*)
+          FROM ics31_compliance_write
+         WHERE ics31_compliance_id = #{complianceId}
+    </select>
+
+    <!-- AS-IS ics31_compliance_write.selectByStartDate L50 (IDMS-IC) — 건수만 -->
+    <select id="countWriteByStartDate" resultType="int">
+        SELECT COUNT(*)
+          FROM ics31_compliance_write
+         WHERE ics31_company_id = #{companyId}
+           AND TO_DATE(ics31_yyyymm, 'YYYY.MM') <![CDATA[>=]]> #{startDate}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS ics33_compliance_answer.selectByCompanyId L36 (IDMS-IC) -->
+    <select id="selectAnswers" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceAnswerRes">
+        SELECT ics33_compliance_answer_id AS compliance_answer_id,
+               ics33_company_id           AS company_id,
+               ics33_start_date           AS start_date,
+               ics33_compliance_type      AS compliance_type,
+               ics33_case_no              AS case_no,
+               ics33_answer1_cd           AS answer1_cd,
+               f_cdnm('AnswerCode', ics33_answer1_cd, ics33_company_id, f_sysdate()) AS answer1_name,
+               ics33_answer2_cd           AS answer2_cd,
+               f_cdnm('AnswerCode', ics33_answer2_cd, ics33_company_id, f_sysdate()) AS answer2_name,
+               ics33_answer3_cd           AS answer3_cd,
+               f_cdnm('AnswerCode', ics33_answer3_cd, ics33_company_id, f_sysdate()) AS answer3_name,
+               ics33_answer4_cd           AS answer4_cd,
+               f_cdnm('AnswerCode', ics33_answer4_cd, ics33_company_id, f_sysdate()) AS answer4_name,
+               ics33_answer5_cd           AS answer5_cd,
+               f_cdnm('AnswerCode', ics33_answer5_cd, ics33_company_id, f_sysdate()) AS answer5_name
+          FROM ics33_compliance_answer
+         WHERE ics33_company_id      = #{companyId}
+           AND ics33_start_date      = #{startDate}
+           AND ics33_compliance_type = #{complianceType}
+         ORDER BY ics33_case_no
+    </select>
+
+    <!-- AS-IS ics33_compliance_answer.insert L50 (IDMS-IC) — 열 목록 명시 -->
+    <insert id="copyAnswers">
+        WITH chkUpdate AS (
+                            UPDATE ics33_compliance_answer
+                               SET ics33_compliance_type = #{complianceType}
+                             WHERE ics33_company_id      = #{companyId}
+                               AND ics33_compliance_type = #{complianceType}
+                               AND ics33_start_date      = #{startDate}
+                         RETURNING *
+                          )
+        INSERT INTO ics33_compliance_answer
+               ( ics33_compliance_answer_id, ics33_company_id, ics33_start_date, ics33_compliance_type, ics33_case_no,
+                 ics33_answer1_cd, ics33_answer2_cd, ics33_answer3_cd, ics33_answer4_cd, ics33_answer5_cd )
+        SELECT f_create_seq()
+             , ics33_company_id
+             , #{startDate}
+             , ics33_compliance_type
+             , ics33_case_no
+             , ics33_answer1_cd
+             , ics33_answer2_cd
+             , ics33_answer3_cd
+             , ics33_answer4_cd
+             , ics33_answer5_cd
+          FROM ics33_compliance_answer
+         WHERE ics33_company_id      = #{companyId}
+           AND ics33_compliance_type = #{complianceType}
+           AND ics33_start_date      = ( SELECT MAX(a.ics33_start_date)
+                                           FROM ics33_compliance_answer a
+                                          WHERE a.ics33_company_id      = #{companyId}
+                                            AND a.ics33_compliance_type = #{complianceType}
+                                            AND a.ics33_start_date <![CDATA[ <= ]]> #{startDate} )
+           AND NOT EXISTS (SELECT * FROM chkUpdate)
+    </insert>
+
+    <!-- UpdateDataModel(ics33_compliance_answer) UPDATE — 화면이 바꾸는 열만 -->
+    <update id="updateAnswer">
+        UPDATE ics33_compliance_answer
+           SET ics33_case_no   = #{row.caseNo},
+               ics33_answer1_cd = #{row.answer1Cd},
+               ics33_answer2_cd = #{row.answer2Cd},
+               ics33_answer3_cd = #{row.answer3Cd},
+               ics33_answer4_cd = #{row.answer4Cd},
+               ics33_answer5_cd = #{row.answer5Cd}
+         WHERE ics33_compliance_answer_id = #{row.complianceAnswerId}
+           AND ics33_company_id           = #{companyId}
+    </update>
+
+    <insert id="insertAnswer">
+        INSERT INTO ics33_compliance_answer
+               ( ics33_compliance_answer_id, ics33_company_id, ics33_start_date, ics33_compliance_type, ics33_case_no,
+                 ics33_answer1_cd, ics33_answer2_cd, ics33_answer3_cd, ics33_answer4_cd, ics33_answer5_cd )
+        VALUES ( #{row.complianceAnswerId}, #{companyId}, #{row.startDate}, #{row.complianceType}, #{row.caseNo},
+                 #{row.answer1Cd}, #{row.answer2Cd}, #{row.answer3Cd}, #{row.answer4Cd}, #{row.answer5Cd} )
+    </insert>
+
+    <delete id="deleteAnswerById">
+        DELETE FROM ics33_compliance_answer
+         WHERE ics33_compliance_answer_id = #{complianceAnswerId}
+           AND ics33_company_id           = #{companyId}
+    </delete>
+
+    <!-- AS-IS ics33_compliance_answer.deleteByDate L100 (IDMS-IC) -->
+    <delete id="deleteAnswersByDate">
+        DELETE FROM ics33_compliance_answer
+         WHERE ics33_company_id = #{companyId}
+           AND ics33_start_date = #{startDate}
+    </delete>
+</mapper>

@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Academic, Account, AddDeduct, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, Evaluation, Family, License, CompanyPerson, NoteAdmin, OrgInfo, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
+import { Academic, Account, AddDeduct, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, Evaluation, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -288,6 +288,27 @@ export const empRewardApi = {
   },
   deleteRewards: async (rewardIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/emp/rewards', { data: rewardIds });
+    return res.data.data ?? 0;
+  },
+};
+
+/** E05-1 AS-IS Emp33_Lookup_ExceptBiz (사원별 예외업무) */
+export const empExceptBizApi = {
+  /** AS-IS emp.Emp33_ExceptBiz.selectByExceptBizCode */
+  searchExceptBiz: async (exceptBizCode: string): Promise<ExceptBiz[]> => {
+    const res = await apiClient.get<ApiResponse<ExceptBiz[]>>('v1/emp/except-biz', { params: { exceptBizCode } });
+    return res.data.data ?? [];
+  },
+  /** AS-IS emp.Emp33_ExceptBiz.update → 저장된 행(요청 순서). 새 행(id ≤ 0)은 id를 빼고 보낸다 */
+  saveExceptBiz: async (rows: ExceptBiz[]): Promise<ExceptBiz[]> => {
+    const body = rows.map(({ exceptBizId, personId, exceptBizCode, startDate, closeDate, reason, unvisibleYn }) =>
+      ({ exceptBizId: exceptBizId > 0 ? exceptBizId : null, personId, exceptBizCode, startDate, closeDate, reason, unvisibleYn }));
+    const res = await apiClient.put<ApiResponse<ExceptBiz[]>>('v1/emp/except-biz', body);
+    return res.data.data ?? [];
+  },
+  /** AS-IS emp.Emp33_ExceptBiz.delete → 지운 건수 */
+  deleteExceptBiz: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/except-biz', { data: ids });
     return res.data.data ?? 0;
   },
 };

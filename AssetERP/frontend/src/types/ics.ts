@@ -193,3 +193,47 @@ export interface IcsLawDeadline {
   deadlineFullName?: string | null;
   cycleName?: string | null;
 }
+
+// ── E05 임직원 내부통제 준수리스트 (Ics30_Tab_Compliance) ──
+
+/** 기준 적용일 한 행 (AS-IS ics30_compliance.groupByStartDate). 날짜는 'YYYY-MM-DD' */
+export interface IcsComplianceDate {
+  complianceId: number
+  startDate: string
+  dateFixYn?: string | null
+}
+
+/** 준수항목 한 행 (AS-IS ics30_compliance.selectByStartDate). 사용여부 등은 'true'/'false' 문자열 */
+export interface IcsCompliance {
+  complianceId: number
+  companyId?: number | null
+  startDate: string
+  complianceType?: string | null
+  complianceTypeName?: string | null
+  subNum?: string | null
+  content?: string | null
+  naUseYn?: string | null
+  useYn?: string | null
+  useCloseDate?: string | null
+  note?: string | null
+  dateFixYn?: string | null
+}
+
+/** 준수답변 한 행 (AS-IS ics33_compliance_answer.selectByCompanyId) */
+export interface IcsComplianceAnswer {
+  complianceAnswerId: number
+  companyId?: number | null
+  startDate?: string | null
+  complianceType?: string | null
+  caseNo?: number | null
+  answer1Cd?: string | null
+  answer1Name?: string | null
+  answer2Cd?: string | null
+  answer2Name?: string | null
+  answer3Cd?: string | null
+  answer3Name?: string | null
+  answer4Cd?: string | null
+  answer4Name?: string | null
+  answer5Cd?: string | null
+  answer5Name?: string | null
+}

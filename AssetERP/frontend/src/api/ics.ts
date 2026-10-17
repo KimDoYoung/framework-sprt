@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { ClassTreeNode, IcsChecklist, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw } from '../types/ics';
+import { ClassTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 export const icsApi = {
@@ -286,4 +286,90 @@ export const icsApi = {
     const res = await apiClient.get<ApiResponse<IcsLawDeadline[]>>('v1/ics/laws/with-deadlines', { params: { classTreeIds: classTreeIds.join(',') } });
     return res.data.data ?? [];
   },
+
+  // ── E05 임직원 내부통제 준수리스트 (Ics30_Tab_Compliance·Ics30_Lookup_Insert·Ics33_TabPage_ComplianceAnswer) ──
+
+  /** AS-IS ics.Ics30_Compliance.groupByStartDate: 기준 적용일 목록 */
+  searchComplianceDates: async (): Promise<IcsComplianceDate[]> => {
+    const res = await apiClient.get<ApiResponse<IcsComplianceDate[]>>('v1/ics/compliances/dates');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics30_Compliance.insert (Ics30_Lookup_Insert): 새 기준 적용일('YYYY-MM-DD') — 이전 준수항목·답변을 복사 */
+  createComplianceDate: async (startDate: string): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>('v1/ics/compliances/dates', { startDate });
+  },
+
+  /** AS-IS ics.Ics30_Compliance.deleteByDate: 작성 기록이 있으면 서버가 거절한다 */
+  deleteComplianceDate: async (startDate: string): Promise<void> => {
+    await apiClient.delete<ApiResponse<null>>('v1/ics/compliances/dates', { params: { startDate } });
+  },
+
+  /** AS-IS ics.Ics30_Compliance.updateDateFixYn: 확정('true')·확정취소('false') */
+  updateComplianceDateFix: async (startDate: string, dateFixYn: 'true' | 'false'): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>('v1/ics/compliances/dates/fix', { startDate, dateFixYn });
+  },
+
+  /** AS-IS ics.Ics31_ComplianceWrite.selectByStartDate: 기준 적용일 이후 작성 기록이 있는가 */
+  hasComplianceWriteAfter: async (startDate: string): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/ics/compliances/dates/has-write-after', { params: { startDate } });
+    return !!res.data.data;
+  },
+
+  /** AS-IS ics.Ics30_Compliance.checkDate: 그 기준 적용일의 준수항목에 작성 기록이 있는가 */
+  hasComplianceWrite: async (startDate: string): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/ics/compliances/dates/has-write', { params: { startDate } });
+    return !!res.data.data;
+  },
+
+  /** AS-IS ics.Ics30_Compliance.selectByStartDate */
+  searchCompliances: async (startDate: string): Promise<IcsCompliance[]> => {
+    const res = await apiClient.get<ApiResponse<IcsCompliance[]>>('v1/ics/compliances', { params: { startDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics30_Compliance.updateList(actionCode "check"): 1 그대로 / 1 초과 확인 창 / 1 미만 못 지움. 새 행(id ≤ 0)은 id를 빼고 보낸다 */
+  checkSaveCompliances: async (rows: IcsCompliance[], deleteIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ics/compliances/save-check', { rows: complianceBody(rows), deleteIds });
+    return res.data.data ?? 1;
+  },
+
+  /** AS-IS ics.Ics30_Compliance.updateList(actionCode "yes") → 저장·삭제한 건수 */
+  saveCompliances: async (rows: IcsCompliance[], deleteIds: number[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/ics/compliances', { rows: complianceBody(rows), deleteIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS ics.Ics33_ComplianceAnswer.selectByCompanyId */
+  searchComplianceAnswers: async (startDate: string, complianceType: string): Promise<IcsComplianceAnswer[]> => {
+    const res = await apiClient.get<ApiResponse<IcsComplianceAnswer[]>>('v1/ics/compliance-answers', { params: { startDate, complianceType } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics33_ComplianceAnswer.update. 새 행(id ≤ 0)은 id를 빼고 보낸다 */
+  saveComplianceAnswers: async (rows: IcsComplianceAnswer[]): Promise<number> => {
+    const body = rows.map(({ complianceAnswerId, startDate, complianceType, caseNo, answer1Cd, answer2Cd, answer3Cd, answer4Cd, answer5Cd }) =>
+      ({ complianceAnswerId: complianceAnswerId > 0 ? complianceAnswerId : null, startDate, complianceType, caseNo, answer1Cd, answer2Cd, answer3Cd, answer4Cd, answer5Cd }));
+    const res = await apiClient.put<ApiResponse<number>>('v1/ics/compliance-answers', body);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS ics.Ics33_ComplianceAnswer.delete → 지운 건수 */
+  deleteComplianceAnswers: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/ics/compliance-answers', { data: ids });
+    return res.data.data ?? 0;
+  },
 };
+
+/** 준수항목 저장 본문: 서버가 쓰는 열만, 새 행(id ≤ 0)은 id를 뺀다 */
+const complianceBody = (rows: IcsCompliance[]) => rows.map(r => ({
+  complianceId: r.complianceId > 0 ? r.complianceId : null,
+  startDate: r.startDate,
+  complianceType: r.complianceType,
+  subNum: r.subNum,
+  content: r.content,
+  naUseYn: r.naUseYn,
+  useYn: r.useYn,
+  useCloseDate: r.useCloseDate,
+  note: r.note,
+}));

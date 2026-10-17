@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/chk/mapper/chk02_daily_list.xml (selectByAdmin, selectById, selectByAdminDailyListId, insertFromAdmin, updateFromAdmin) + UpdateDataModel(chk02_daily_list)  (E07) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.chk.mapper.ChkDailyListMapper">
+
+    <sql id="dailyListColumns">
+        chk02_daily_list_id         AS daily_list_id,
+        chk02_company_id            AS company_id,
+        chk02_class_tree_id         AS class_tree_id,
+        chk01_class_tree_nm         AS class_tree_name,
+        chk02_content               AS content,
+        chk02_explan                AS explan,
+        CAST(NULL AS varchar)       AS reason,
+        chk02_cutoff                AS cutoff,
+        chk02_window_no             AS window_no,
+        chk02_seq                   AS seq,
+        chk02_use_yn                AS use_yn,
+        chk02_admin_daily_list_id   AS admin_daily_list_id,
+        (chk02_company_id = 0 OR COALESCE(chk02_admin_daily_list_id, 0) &lt;&gt; 0) AS admin_yn
+    </sql>
+
+    <!-- AS-IS chk02_daily_list.selectByAdmin (IDMS-IC) — common.chkTreeDown(기준 분류와 그 아래, 회사 0·로그인 회사)을 펼쳐 넣음 -->
+    <select id="selectByAdmin" resultType="kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListRes">
+        SELECT <include refid="dailyListColumns"/>
+          FROM chk02_daily_list
+               INNER JOIN chk01_class_tree ON chk01_class_tree_id = chk02_class_tree_id
+         WHERE 1=1
+           AND chk02_class_tree_id IN (
+               WITH RECURSIVE chk_tree_down(chk01_class_tree_id, chk01_parent_tree_id, depth, path, cycle) AS (
+                   SELECT a.chk01_class_tree_id, a.chk01_parent_tree_id, 0, ARRAY[a.chk01_class_tree_nm::text], false
+                     FROM chk01_class_tree a
+                    WHERE 1=1
+                      AND chk01_company_id IN (0, #{companyId})
+                      AND chk01_class_tree_id = #{parentTreeId}
+                    UNION ALL
+                   SELECT a.chk01_class_tree_id, a.chk01_parent_tree_id, b.depth + 1,
+                          array_append(b.path, a.chk01_class_tree_nm::text),
+                          a.chk01_class_tree_nm = any(b.path)
+                     FROM chk01_class_tree a, chk_tree_down b
+                    WHERE 1=1
+                      AND a.chk01_parent_tree_id = b.chk01_class_tree_id
+                      AND a.chk01_company_id IN (0, #{companyId})
+                      AND NOT cycle
+               )
+               SELECT a.chk01_class_tree_id FROM chk_tree_down a
+           )
+           AND chk02_company_id = #{companyId}
+           AND chk02_use_yn LIKE #{useYn}
+           AND UPPER(CONCAT(chk01_class_tree_nm, chk02_content, chk02_explan)) LIKE UPPER(#{searchText})
+         ORDER BY chk01_seq, chk02_seq
+    </select>
+
+    <!-- AS-IS chk02_daily_list.selectById (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListRes">
+        SELECT <include refid="dailyListColumns"/>
+          FROM chk02_daily_list
+               INNER JOIN chk01_class_tree ON chk01_class_tree_id = chk02_class_tree_id
+         WHERE chk02_daily_list_id = #{dailyListId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel INSERT — 새 행의 adminDailyListId는 원본 insertRow가 0을 넣는다 -->
+    <insert id="insert">
+        INSERT INTO chk02_daily_list
+               ( chk02_daily_list_id, chk02_company_id, chk02_class_tree_id, chk02_content, chk02_explan, chk02_cutoff, chk02_window_no, chk02_seq, chk02_use_yn, chk02_admin_daily_list_id )
+        VALUES ( #{dailyListId}, #{companyId}, #{req.classTreeId}, #{req.content}, #{req.explan}, #{req.cutoff}, #{req.windowNo}, #{req.seq}, #{req.useYn}, 0 )
+    </insert>
+
+    <!-- UpdateDataModel UPDATE — 화면이 바꾸는 열만 -->
+    <update id="update">
+        UPDATE chk02_daily_list
+           SET chk02_class_tree_id = #{req.classTreeId},
+               chk02_content       = #{req.content},
+               chk02_explan        = #{req.explan},
+               chk02_cutoff        = #{req.cutoff},
+               chk02_window_no     = #{req.windowNo},
+               chk02_seq           = #{req.seq},
+               chk02_use_yn        = #{req.useYn}
+         WHERE chk02_daily_list_id = #{dailyListId}
+           AND chk02_company_id    = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM chk02_daily_list
+         WHERE chk02_company_id = #{companyId}
+           AND chk02_daily_list_id IN
+        <foreach collection="dailyListIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS chk02_daily_list.selectByAdminDailyListId (IDMS-IC) — 건수만 쓴다 -->
+    <select id="countByAdminDailyListId" resultType="int">
+        SELECT COUNT(*)
+          FROM chk02_daily_list
+         WHERE chk02_company_id = #{companyId}
+           AND chk02_admin_daily_list_id = #{adminDailyListId}
+    </select>
+
+    <!-- AS-IS chk02_daily_list.updateFromAdmin (IDMS-IC) -->
+    <update id="updateFromAdmin">
+        UPDATE chk02_daily_list
+           SET chk02_class_tree_id = #{classTreeId},
+               chk02_content       = #{content},
+               chk02_explan        = #{explan}
+         WHERE chk02_company_id    = #{companyId}
+           AND chk02_daily_list_id = #{dailyListId}
+    </update>
+
+    <!-- AS-IS chk02_daily_list.insertFromAdmin (IDMS-IC) — 관리자(회사 0) 행을 그 고객사로 복사, 새 행의 관리자 id = 원래 id -->
+    <insert id="insertFromAdmin">
+        INSERT INTO chk02_daily_list
+        SELECT f_create_seq(), #{companyId}, chk02_class_tree_id, chk02_content, chk02_explan, chk02_cutoff, chk02_window_no,
+               chk02_seq, chk02_use_yn, chk02_write_group_id, #{dailyListId}
+          FROM chk02_daily_list
+         WHERE chk02_daily_list_id = #{dailyListId}
+           AND chk02_company_id = 0
+    </insert>
+</mapper>

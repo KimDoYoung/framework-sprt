@@ -378,3 +378,20 @@ export interface CompanyPerson {
   korName: string | null;
   mobileTelNo: string | null;
 }
+
+// ── E05-1 사원별 예외업무 (Emp33_Lookup_ExceptBiz) ──
+
+/** 사원별 예외업무 한 행 (AS-IS emp33_except_biz.selectByExceptBizCode). 표시안함 여부는 'true'/'false' 문자열 */
+export interface ExceptBiz {
+  exceptBizId: number
+  companyId?: number | null
+  personId: number
+  exceptBizCode?: string | null
+  exceptBizName?: string | null
+  startDate?: string | null
+  closeDate?: string | null
+  reason?: string | null
+  unvisibleYn?: string | null
+  personName?: string | null
+  personInfo?: string | null
+}

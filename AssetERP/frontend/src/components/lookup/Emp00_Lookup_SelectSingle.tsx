@@ -34,6 +34,8 @@ interface Props {
   open: boolean;
   /** open(companyId, …): 그 회사 사원(sys admin만) */
   companyId?: number;
+  /** open(transDate, isSeparateAddTitle, callback) L139: true면 재직구분에 "겸직"이 더해진다(로그인 회사). 회사를 준 열기는 늘 겸직 포함 */
+  separateAddTitle?: boolean;
   /** 기준일 'yyyy-MM-dd' (open의 transDate) */
   transDate: string;
   /** callback.execute(result): 확인이면 고른 사원, [전체]면 null */
@@ -42,7 +44,7 @@ interface Props {
   onClose: () => void;
 }
 
-export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, transDate, onResult, onClose }) => {
+export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, separateAddTitle = false, transDate, onResult, onClose }) => {
   const gridRef = useRef<AgGridReact<TransInfo>>(null);
   // L233-244: transName setText("재직"). 처음 값은 열 때마다 받은 transDate라 초기화는 openValues로 한다
   const openValues = useMemo(() => ({ baseDate: transDate, findText: '', transName: '재직' }), [transDate]);
@@ -52,7 +54,7 @@ export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, tr
   const columnDefs = useMemo(buildGrid, []);
 
   // 재직구분 항목 (L228-238): 전체·재직·겸직(isSeparateAddTitle)·퇴직 — 회사를 준 열기는 겸직 포함
-  const transNames = companyId !== undefined ? ['전체', '재직', '겸직', '퇴직'] : ['전체', '재직', '퇴직'];
+  const transNames = companyId !== undefined || separateAddTitle ? ['전체', '재직', '겸직', '퇴직'] : ['전체', '재직', '퇴직'];
 
   // retrieve() L307-351: searchText '%' + 입력 + '%'(서버가 만든다), transDate, transCode → emp.Emp00_TransInfo.selectByText
   const retrieve = useCallback(async (date: string, text: string, name: string) => {
@@ -60,11 +62,11 @@ export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, tr
     try {
       setRows(companyId !== undefined
         ? await empApi.searchCompanyTransInfos(companyId, date, text, transCode)
-        : await empApi.searchTransInfos(date, text, transCode));
+        : await empApi.searchTransInfos(date, text, transCode, separateAddTitle));
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, [companyId]);
+  }, [companyId, separateAddTitle]);
 
   // open() L165-289 끝: show() → retrieve()
   useEffect(() => {

@@ -1803,5 +1803,115 @@
     "note": "docs/work/E04-작업기록.md",
     "history": [],
     "id": "E04"
+  },
+  "Ics30_Tab_Compliance": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ics/Ics30_Lookup_Insert.java": "1f3505c2af2cb113f1ab89129ffec09471e04c07",
+      "application/src/main/java/myApp/client/vi/ics/Ics30_Tab_Compliance.java": "2e30c9b8da09b117c834e7bf82daaeee9a409394",
+      "application/src/main/java/myApp/client/vi/ics/Ics33_TabPage_ComplianceAnswer.java": "c638f87c074eb03e1c65c80d302281513c5144c1",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics30_ComplianceModel.java": "5aff9a82a0b0bcb9cd7393059bcf0f6143e446ed",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics30_ComplianceModelProperties.java": "e208b1b771152991a5756fd0bb7147b3c4558305",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics31_ComplianceWriteModel.java": "eea367808090559a22c151f88f699ccb88b36ae6",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics33_ComplianceAnswerModel.java": "3e6b1661ff0b1c24a16b90c4ec4b0f4e40fc2707",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics33_ComplianceAnswerModelProperties.java": "9909584934a49a4704c8397c8dd3dbc794c484fe",
+      "application/src/main/java/myApp/server/ics/Ics30_Compliance.java": "6705bdd78b9f01bc86159e7f050e53272965965a",
+      "application/src/main/java/myApp/server/ics/Ics31_ComplianceWrite.java": "33504a6cf4f975d3ea12f7b368a96b4bbc9defde",
+      "application/src/main/java/myApp/server/ics/Ics33_ComplianceAnswer.java": "b80c92a8224f75d7068928249baa1bfe6d59fc64",
+      "application/src/main/java/myApp/server/ics/mapper/ics30_compliance.xml": "594c48a24f5e1b13328d669cecbee7e5b2fdb1e4",
+      "application/src/main/java/myApp/server/ics/mapper/ics31_compliance_write.xml": "7ba1c41b9d0f2d1848188ae7bf7cbce0bc9af41e",
+      "application/src/main/java/myApp/server/ics/mapper/ics33_compliance_answer.xml": "a24d88094bd7ba3bc85aefa1cd495e502c078ee2",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Emp33_Lookup_ExceptBiz"
+    ],
+    "recorded_at": "2026-10-17T22:18:44+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/E05-작업기록.md",
+    "history": [],
+    "id": "E05"
+  },
+  "Emp33_Lookup_ExceptBiz": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp33_Lookup_ExceptBiz.java": "13785fbf1878c234db25cd296e536c5e818a3403",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp00_TransInfoModel.java": "dc29160bc09265170d01009c5353bd56081484c3",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp01_PersonModel.java": "160580be7d796c5dfc4ec0bd64b3846e3325e294",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp02_OthersModel.java": "361f61b4bebfd1073f0769db40e42327748e6897",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp20_LeaveModel.java": "08d4fe0e87a0e52d15d517f341428f632a6b3ef0",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp33_ExceptBizModel.java": "fc55cc91efacba3fb822bbc625fc3edae9cb2c40",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp33_ExceptBizModelProperties.java": "75d12c12cd0d964cf9b11cbebd47ec9917ed06d7",
+      "application/src/main/java/myApp/server/emp/Emp33_ExceptBiz.java": "de9d61f86a46b2d48d3c98bf64d2a4410f144da9",
+      "application/src/main/java/myApp/server/emp/mapper/emp33_except_biz.xml": "c6b17f5d21767b0bbe28105b712417bf94691bcc"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-17T22:18:44+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/E05-1-작업기록.md",
+    "history": [],
+    "id": "E05-1"
+  },
+  "Chk01_Tab_ClassTree": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/chk/Chk01_Edit_ClassTree.java": "4f7599427a2f11c396ae862580241d617f57c744",
+      "application/src/main/java/myApp/client/vi/chk/Chk01_Tab_ClassTree.java": "fcf174d625ca1de14dba66cb5dc0c089209457cb",
+      "application/src/main/java/myApp/client/vi/chk/model/Chk01_ClassTreeModel.java": "9797c982cfac60def6daab9bf251e9f45f04dd7b",
+      "application/src/main/java/myApp/client/vi/chk/model/Chk01_ClassTreeModelProperties.java": "736bb99d1c7b9cab5b7a2a2dd30f4d9e659d32e2",
+      "application/src/main/java/myApp/server/chk/Chk01_ClassTree.java": "0b8dceca88295445d4e4ce7543f671d1b2180c4c",
+      "application/src/main/java/myApp/server/chk/mapper/chk01_class_tree.xml": "c642cfb8e9e1c4f650fa26c0f91bc5ba7f0b6e72"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-17T22:26:15+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/E06-작업기록.md",
+    "history": [],
+    "id": "E06"
+  },
+  "Chk02_Tab_DailyListAdmin": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/chk/Chk01_Edit_ClassTree.java": "4f7599427a2f11c396ae862580241d617f57c744",
+      "application/src/main/java/myApp/client/vi/chk/Chk01_Lookup_ClassTree.java": "e229f21301fb6f6904cb027d5ada252f262113d9",
+      "application/src/main/java/myApp/client/vi/chk/Chk02_Edit_DailyList.java": "1d2fc640449bc6fe4c2371370435d3f69559a989",
+      "application/src/main/java/myApp/client/vi/chk/Chk02_Tab_DailyListAdmin.java": "f96e4398a29449f6eda2d5efd7c6f8d58258bd98",
+      "application/src/main/java/myApp/client/vi/chk/model/Chk01_ClassTreeModel.java": "9797c982cfac60def6daab9bf251e9f45f04dd7b",
+      "application/src/main/java/myApp/client/vi/chk/model/Chk01_ClassTreeModelProperties.java": "736bb99d1c7b9cab5b7a2a2dd30f4d9e659d32e2",
+      "application/src/main/java/myApp/client/vi/chk/model/Chk02_DailyListModel.java": "7a4a5ec44f9753219f887bdd97127363ed0712f1",
+      "application/src/main/java/myApp/client/vi/chk/model/Chk02_DailyListModelProperties.java": "bad30ab8225b34272c3331faa70f6bee120bb560",
+      "application/src/main/java/myApp/server/chk/Chk01_ClassTree.java": "0b8dceca88295445d4e4ce7543f671d1b2180c4c",
+      "application/src/main/java/myApp/server/chk/Chk02_DailyList.java": "6bfce21fc36429e06048df66cbabcdc13c10122f",
+      "application/src/main/java/myApp/server/chk/mapper/chk01_class_tree.xml": "c642cfb8e9e1c4f650fa26c0f91bc5ba7f0b6e72",
+      "application/src/main/java/myApp/server/chk/mapper/chk02_daily_list.xml": "579bdbdb81d44f8f6dbe0988671d24eedf71004f",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Sys01_Lookup_SelectMulti"
+    ],
+    "recorded_at": "2026-10-17T22:43:49+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/E07-작업기록.md",
+    "history": [],
+    "id": "E07"
   }
 }

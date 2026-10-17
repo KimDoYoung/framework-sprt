@@ -1,4 +1,6 @@
 import React from 'react';
+import { Chk01_Tab_ClassTree } from './chk/Chk01_Tab_ClassTree';
+import { Chk02_Tab_DailyListAdmin } from './chk/Chk02_Tab_DailyListAdmin';
 import { Dbm01_Tab_TabComments } from './dbm/Dbm01_Tab_TabComments';
 import { Dbm10_Tab_MakePdf } from './dbm/Dbm10_Tab_MakePdf';
 import { Emp00_Tab_TransInfo } from './emp/Emp00_Tab_TransInfo';
@@ -10,6 +12,7 @@ import { Fnd09_Tab_TrustBankManager } from './fnd/Fnd09_Tab_TrustBankManager';
 import { Ics01_Tab_ClassTree } from './ics/Ics01_Tab_ClassTree';
 import { Ics01_Tab_IcsFileUpload } from './ics/Ics01_Tab_IcsFileUpload';
 import { Ics10_Tab_ChecklistAdmin } from './ics/Ics10_Tab_ChecklistAdmin';
+import { Ics30_Tab_Compliance } from './ics/Ics30_Tab_Compliance';
 import { Ics20_Tab_RevisionHistoryAdmin } from './ics/Ics20_Tab_RevisionHistoryAdmin';
 import { Icam03_Tab_Fund } from './icam/Icam03_Tab_Fund';
 import { Icam10_Tab_FeeAdmin } from './icam/Icam10_Tab_FeeAdmin';
@@ -63,6 +66,8 @@ import { Test_Tab_ReactComponents } from './test/Test_Tab_ReactComponents';
  * 메뉴 키는 DB 값 그대로 쓴다(오타 `Sys03_Tab_ComapnyMenu`도 그대로).
  */
 export const SCREENS: Record<string, React.FC> = {
+  Chk01_Tab_ClassTree, // E06
+  Chk02_Tab_DailyListAdmin, // E07
   Dbm01_Tab_TabComments, // C08 (주석 저장·소스 생성은 DB 프로시저가 없어 서버가 거절)
   Dbm10_Tab_MakePdf, // C07 (PDF 생성은 서버 연동 없음 — PdfMaker 기본 구현)
   Emp00_Tab_TransInfo, // C01 (1단계: 목록·등록·기본정보·일반발령)
@@ -75,6 +80,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ics01_Tab_IcsFileUpload, // E02
   Ics20_Tab_RevisionHistoryAdmin, // E03
   Ics10_Tab_ChecklistAdmin, // E04
+  Ics30_Tab_Compliance, // E05 (+ E05-1 예외사원 등록 Emp33_Lookup_ExceptBiz)
   Icam03_Tab_Fund, // D07 (ICAM Get·타사무 Get은 외부 ICAM DB 연동이 없어 서버가 거절)
   Icam10_Tab_FeeAdmin, // D08 (ICAM 발생보수 가져오기도 같은 연동이 없어 서버가 거절)
   Icam50_Tab_DbSource, // D09 (DB소스 가져오기도 같은 연동이 없어 서버가 거절)

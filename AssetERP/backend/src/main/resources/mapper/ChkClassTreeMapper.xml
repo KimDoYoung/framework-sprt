@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/chk/mapper/chk01_class_tree.xml (selectByParentId, selectById, selectByLinkCode, selectByCompanyId) + UpdateDataModel(chk01_class_tree)  (E06·E07) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.chk.mapper.ChkClassTreeMapper">
+
+    <!-- AS-IS chk01_class_tree.selectByParentId L35 (IDMS-IC) -->
+    <select id="selectByParentId" resultType="kr.co.kfs.asseterp.biz.chk.dto.ChkClassTreeRes">
+        SELECT chk01_class_tree_id     AS class_tree_id,
+               chk01_company_id        AS company_id,
+               chk01_parent_tree_id    AS parent_tree_id,
+               chk01_class_tree_nm     AS class_tree_name,
+               chk01_seq               AS seq,
+               chk01_use_yn            AS use_yn,
+               chk01_note              AS note,
+               chk01_link_cd           AS link_code,
+               f_cdnm('ChkLinkCode', chk01_link_cd, chk01_company_id, f_sysdate()) AS link_name,
+               0                       AS depth
+          FROM chk01_class_tree
+         WHERE chk01_parent_tree_id = #{parentTreeId}
+         ORDER BY chk01_seq, chk01_class_tree_nm COLLATE "ko-KR-x-icu" ASC
+    </select>
+
+    <!-- AS-IS chk01_class_tree.selectById L18 (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.chk.dto.ChkClassTreeRes">
+        SELECT chk01_class_tree_id     AS class_tree_id,
+               chk01_company_id        AS company_id,
+               chk01_parent_tree_id    AS parent_tree_id,
+               chk01_class_tree_nm     AS class_tree_name,
+               chk01_seq               AS seq,
+               chk01_use_yn            AS use_yn,
+               chk01_note              AS note,
+               chk01_link_cd           AS link_code,
+               f_cdnm('ChkLinkCode', chk01_link_cd, chk01_company_id, f_sysdate()) AS link_name,
+               0                       AS depth
+          FROM chk01_class_tree
+         WHERE chk01_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- AS-IS chk01_class_tree.selectByLinkCode (IDMS-IC) -->
+    <select id="selectByLinkCode" resultType="kr.co.kfs.asseterp.biz.chk.dto.ChkClassTreeRes">
+        SELECT chk01_class_tree_id     AS class_tree_id,
+               chk01_company_id        AS company_id,
+               chk01_parent_tree_id    AS parent_tree_id,
+               chk01_class_tree_nm     AS class_tree_name,
+               chk01_seq               AS seq,
+               chk01_use_yn            AS use_yn,
+               chk01_note              AS note,
+               chk01_link_cd           AS link_code,
+               f_cdnm('ChkLinkCode', chk01_link_cd, chk01_company_id, f_sysdate()) AS link_name,
+               0                       AS depth
+          FROM chk01_class_tree
+         WHERE chk01_link_cd = #{linkCode}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS chk01_class_tree.selectByCompanyId (IDMS-IC) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.chk.dto.ChkClassTreeRes">
+        SELECT chk01_class_tree_id     AS class_tree_id,
+               chk01_company_id        AS company_id,
+               chk01_parent_tree_id    AS parent_tree_id,
+               chk01_class_tree_nm     AS class_tree_name,
+               chk01_seq               AS seq,
+               chk01_use_yn            AS use_yn,
+               chk01_note              AS note,
+               chk01_link_cd           AS link_code,
+               f_cdnm('ChkLinkCode', chk01_link_cd, chk01_company_id, f_sysdate()) AS link_name,
+               0                       AS depth
+          FROM chk01_class_tree
+         WHERE 1=1
+           AND chk01_use_yn = 'true'
+           AND chk01_company_id IN (0, #{companyId})
+           AND chk01_parent_tree_id = #{parentTreeId}
+         ORDER BY chk01_seq, chk01_class_tree_nm COLLATE "ko-KR-x-icu" ASC
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO chk01_class_tree
+               ( chk01_class_tree_id, chk01_company_id, chk01_parent_tree_id, chk01_class_tree_nm, chk01_seq, chk01_use_yn, chk01_note, chk01_link_cd )
+        VALUES ( #{classTreeId}, #{companyId}, #{req.parentTreeId}, #{req.classTreeName}, #{req.seq}, #{req.useYn}, #{req.note}, #{req.linkCode} )
+    </insert>
+
+    <!-- UpdateDataModel UPDATE — 화면이 바꾸는 열만 (상위 분류·회사는 그대로) -->
+    <update id="update">
+        UPDATE chk01_class_tree
+           SET chk01_class_tree_nm = #{req.classTreeName},
+               chk01_seq           = #{req.seq},
+               chk01_use_yn        = #{req.useYn},
+               chk01_note          = #{req.note},
+               chk01_link_cd       = #{req.linkCode}
+         WHERE chk01_class_tree_id = #{classTreeId}
+           AND chk01_company_id    = #{companyId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM chk01_class_tree
+         WHERE chk01_class_tree_id = #{classTreeId}
+           AND chk01_company_id    = #{companyId}
+    </delete>
+</mapper>
