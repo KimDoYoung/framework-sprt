@@ -5,21 +5,73 @@
 
 <mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysManualMapper">
 
-    <!-- AS-IS(IDMS-IC) sys95_manual.selectByText (SELECT sys95_manual.*는 DTO 열로 명시, publicCheck=true 분기 고정, 날짜는 ::date) -->
+    <sql id="manualColumns">
+        sys95_manual_id                                                        AS manual_id,
+        sys95_reg_date::date                                                   AS reg_date,
+        sys95_manual_type                                                      AS manual_type,
+        f_cdnm('ManualType', sys95_manual_type, sys95_company_id, f_today())   AS manual_type_nm,
+        sys10_file_id                                                          AS file_id,
+        sys10_file_nm                                                          AS file_nm,
+        sys10_file_ext                                                         AS file_ext,
+        sys95_public_yn                                                        AS public_yn,
+        sys95_note                                                             AS note
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) sys95_manual.selectByText L56 (SELECT sys95_manual.*는 DTO 열로 명시, publicCheck는 A33=true·A34=false, 날짜는 ::date) -->
     <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.sys.dto.ManualRes">
-        SELECT sys95_manual_id                                                        AS manual_id,
-               sys95_reg_date::date                                                   AS reg_date,
-               sys95_manual_type                                                      AS manual_type,
-               f_cdnm('ManualType', sys95_manual_type, sys95_company_id, f_today())   AS manual_type_nm,
-               sys10_file_id                                                          AS file_id,
-               sys10_file_nm                                                          AS file_nm,
-               sys10_file_ext                                                         AS file_ext,
-               sys95_note                                                             AS note
+        SELECT <include refid="manualColumns"/>
           FROM sys95_manual
                INNER JOIN sys10_file ON sys10_parent_id = sys95_manual_id
          WHERE sys95_manual_type LIKE #{manualType}
            AND CONCAT(sys10_file_nm, sys95_note) ILIKE #{searchText}
+        <if test="publicCheck">
            AND COALESCE(sys95_public_yn, 'false') = 'true'
+        </if>
          ORDER BY sys10_reg_date DESC
     </select>
+
+    <!-- AS-IS(IDMS-IC) sys95_manual.selectById L21 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sys.dto.ManualRes">
+        SELECT <include refid="manualColumns"/>
+          FROM sys95_manual
+               INNER JOIN sys10_file ON sys10_parent_id = sys95_manual_id
+         WHERE sys95_manual_id = #{manualId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys95_manual.insert: 공개 'false', 등록일 f_sysdate() -->
+    <insert id="insertManual">
+        INSERT INTO sys95_manual
+               (sys95_manual_id, sys95_company_id, sys95_reg_date, sys95_manual_type, sys95_public_yn)
+        VALUES (#{manualId}, #{companyId}, f_sysdate(), #{manualType}, 'false')
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE (화면이 바꾸는 분류·공개·비고) -->
+    <update id="updateManual">
+        UPDATE sys95_manual
+           SET sys95_manual_type = #{r.manualType}
+             , sys95_public_yn = #{r.publicYn}
+             , sys95_note = #{r.note}
+         WHERE sys95_manual_id = #{r.manualId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel -->
+    <delete id="deleteManuals">
+        DELETE FROM sys95_manual
+         WHERE sys95_manual_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) sys95_manual.checkManualType -->
+    <select id="checkManualType" resultType="int">
+        SELECT count(*)
+          FROM sys95_manual
+         WHERE sys95_company_id  = #{companyId}
+           AND sys95_manual_type = #{manualType}
+    </select>
+
 </mapper>

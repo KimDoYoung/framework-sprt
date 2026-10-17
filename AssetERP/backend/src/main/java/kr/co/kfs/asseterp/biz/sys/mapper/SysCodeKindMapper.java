@@ -15,6 +15,9 @@ public interface SysCodeKindMapper {
 
     CodeKindRes selectCodeKind(@Param("codeKindId") Long codeKindId);
 
+    /** AS-IS sys08_code_kind.selectByKindCode */
+    CodeKindRes selectByKindCode(@Param("kindCode") String kindCode);
+
     Long selectNextId();
 
     int insertCodeKind(CodeKindSaveReq req);

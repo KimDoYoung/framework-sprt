@@ -20,6 +20,7 @@ import { Sys10_Tab_TotalSize } from './sys/Sys10_Tab_TotalSize';
 import { Sys53_Tab_SpecificMenuRequest } from './sys/Sys53_Tab_SpecificMenuRequest';
 import { Sys53_Tab_SpecificMenuRequestAdmin } from './sys/Sys53_Tab_SpecificMenuRequestAdmin';
 import { Sys96_Tab_OpenMenuLogAdmin } from './sys/Sys96_Tab_OpenMenuLogAdmin';
+import { Sys60_Tab_FilePolicy } from './sys/Sys60_Tab_FilePolicy';
 import { Sys91_Tab_AdviceMember } from './sys/Sys91_Tab_AdviceMember';
 import { Sys92_Tab_ManagementTeam } from './sys/Sys92_Tab_ManagementTeam';
 import { Sys90_Tab_AfterService } from './sys/Sys90_Tab_AfterService';
@@ -29,6 +30,7 @@ import { Sys26_Tab_LoginHistory } from './sys/Sys26_Tab_LoginHistory';
 import { Sys80_Tab_AdminUserList } from './sys/Sys80_Tab_AdminUserList';
 import { Sys81_Tab_AdminUserHistory } from './sys/Sys81_Tab_AdminUserHistory';
 import { Sys95_Tab_Manual } from './sys/Sys95_Tab_Manual';
+import { Sys95_Tab_ManualAdmin } from './sys/Sys95_Tab_ManualAdmin';
 import { Sys06_Tab_MenuGuide } from './sys/Sys06_Tab_MenuGuide';
 import { Sys10_Tab_TrashFileList } from './sys/Sys10_Tab_TrashFileList';
 import { Sys12_Tab_Calendar } from './sys/Sys12_Tab_Calendar';
@@ -77,6 +79,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sys30_Tab_LeaveYear, // A26 (메뉴 #1036)
   Sys96_Tab_OpenMenuLogAdmin, // A35
   Sys90_Tab_AfterService, // A29
+  Sys60_Tab_FilePolicy, // A36
   Sys91_Tab_AdviceMember, // A31
   Sys92_Tab_ManagementTeam, // A32
   Sys90_Tab_AfterServiceAdmin, // A30
@@ -85,6 +88,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sys80_Tab_AdminUserList, // A22
   Sys81_Tab_AdminUserHistory, // A23
   Sys95_Tab_Manual, // A33
+  Sys95_Tab_ManualAdmin, // A34
   Sys53_Tab_SpecificMenuRequestAdmin, // A28 (1단계: 문서보기 아이콘의 전자결재 제외)
   Sys53_Tab_SpecificMenuRequest, // A27 (1단계: 결재요청 아이콘의 전자결재·분류선택 제외)
   Test_Tab_ReactComponents, // B11 공통 컴포넌트 테스트 (원본 없음, mock)

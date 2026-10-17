@@ -33,6 +33,13 @@
          WHERE sys08_code_kind_id = #{codeKindId}
     </select>
 
+    <!-- AS-IS(IDMS-IC) sys08_code_kind.selectByKindCode L46 (A34 Sys09_Lookup_Code.edit) -->
+    <select id="selectByKindCode" resultType="kr.co.kfs.asseterp.biz.sys.dto.CodeKindRes">
+        SELECT <include refid="kindColumns"/>
+          FROM sys08_code_kind
+         WHERE sys08_kind_cd = #{kindCode}
+    </select>
+
     <!-- AS-IS dbConfig.getSeq와 같은 식 -->
     <select id="selectNextId" resultType="long" flushCache="true">
         SELECT f_create_seq()

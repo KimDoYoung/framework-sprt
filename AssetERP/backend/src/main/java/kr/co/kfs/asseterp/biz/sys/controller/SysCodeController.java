@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.sys.controller;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeAdminRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeAdminSaveReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CodeCheckReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeRes;
 import kr.co.kfs.asseterp.biz.sys.service.SysCodeService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -11,6 +12,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,6 +42,20 @@ public class SysCodeController {
     public ApiResponse<List<CodeRes>> searchCodesByKindGroup(@AuthenticationPrincipal UserPrincipal principal,
                                                              @RequestParam String kindGroupCd) {
         return ApiResponse.ok(sysCodeService.searchCodesByKindGroup(principal, kindGroupCd));
+    }
+
+    /** AS-IS sys.Sys09_Code.selectByCodeKind(Sys09_Lookup_Code) — 코드구분 코드로, 로그인 회사 오늘 기준 전체 열 */
+    @GetMapping("/by-kind-code")
+    public ApiResponse<List<CodeAdminRes>> searchByKindCode(@AuthenticationPrincipal UserPrincipal principal,
+                                                            @RequestParam String kindCode) {
+        return ApiResponse.ok(sysCodeService.searchByCodeKindCode(principal, kindCode));
+    }
+
+    /** AS-IS sys.Sys09_Code.checkCode — 코드 변경 전 사용이력·중복 검사 (실패하면 오류 문구) */
+    @PostMapping("/check")
+    public ApiResponse<Void> checkCodes(@AuthenticationPrincipal UserPrincipal principal, @RequestBody CodeCheckReq req) {
+        sysCodeService.checkCodes(principal, req);
+        return ApiResponse.ok(null);
     }
 
     /** AS-IS sys.Sys09_Code.update → 저장된 행(요청 순서). 회사는 행의 companyId(sys admin만 로그인 회사와 다르게) */

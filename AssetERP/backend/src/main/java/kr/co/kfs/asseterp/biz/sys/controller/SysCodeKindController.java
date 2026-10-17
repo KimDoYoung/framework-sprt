@@ -42,6 +42,12 @@ public class SysCodeKindController {
         return ApiResponse.ok(sysCodeKindService.searchCodeKinds(principal, kindName, sysYn));
     }
 
+    /** AS-IS sys.Sys08_CodeKind.selectByKindCode — 코드구분 코드로 한 건 (로그인만) */
+    @GetMapping("/by-code")
+    public ApiResponse<CodeKindRes> getByKindCode(@RequestParam String kindCode) {
+        return ApiResponse.ok(sysCodeKindService.getByKindCode(kindCode));
+    }
+
     /** AS-IS sys.Sys08_CodeKind.update → 저장된 행(요청 순서) */
     @PutMapping
     public ApiResponse<List<CodeKindRes>> updateCodeKinds(@AuthenticationPrincipal UserPrincipal principal,

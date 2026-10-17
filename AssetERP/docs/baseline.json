@@ -1326,5 +1326,50 @@
     "note": "docs/work/C06-작업기록.md",
     "history": [],
     "id": "C06"
+  },
+  "Sys60_Tab_FilePolicy": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/sys/Sys60_Tab_FilePolicy.java": "efd393b60423b63cd395a88ba9da7330f48cff1d",
+      "application/src/main/java/myApp/client/vi/sys/model/Sys60_FilePolicyModel.java": "94be1be29564468e13eb28ec012e2312130649cc",
+      "application/src/main/java/myApp/client/vi/sys/model/Sys60_FilePolicyModelProperties.java": "2353f20c7734cf0c95e4e53cf298319c9425ee2e",
+      "application/src/main/java/myApp/server/sys/Sys60_FilePolicy.java": "96472f178f2545b7708d5868171ba1eeaac0a68f",
+      "application/src/main/java/myApp/server/sys/mapper/sys60_file_policy.xml": "ab13168a924f8534944af85e9f988c1567bc2410"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-17T08:44:25+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/A36-작업기록.md",
+    "history": [],
+    "id": "A36"
+  },
+  "Sys95_Tab_ManualAdmin": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/sys/Sys95_PDFViewer.java": "815b66158948d117856a2ae323497c86443578cd",
+      "application/src/main/java/myApp/client/vi/sys/Sys95_Tab_ManualAdmin.java": "2a307a488bf656402bfc9b8812f4a56fed609a60",
+      "application/src/main/java/myApp/client/vi/sys/model/Sys95_ManualModel.java": "2e61afbd46e84a7ca8a540eb7dec8f06d13febdd",
+      "application/src/main/java/myApp/client/vi/sys/model/Sys95_ManualModelProperties.java": "7adeaaa68241961d55128bd83fd90a26e9f98691",
+      "application/src/main/java/myApp/server/sys/Sys11_RelateFile.java": "3aa633bf0b24c8da3c85ea2f505fb68616f92a11",
+      "application/src/main/java/myApp/server/sys/Sys95_Manual.java": "2e50215b593d98beb2d6cc141ea0c6bb5e134435",
+      "application/src/main/java/myApp/server/sys/mapper/sys11_relate_file.xml": "35c5b410b79c0d900e2332f08e15c5f024b05aa6",
+      "application/src/main/java/myApp/server/sys/mapper/sys95_manual.xml": "ade24be8f990766ff19411fcb39be0cfac0017ef"
+    },
+    "shared_links": [
+      "Sys09_Lookup_Code"
+    ],
+    "recorded_at": "2026-10-17T08:59:14+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/A34-작업기록.md",
+    "history": [],
+    "id": "A34"
   }
 }

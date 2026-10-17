@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { MenuLevel_1 } from '../types';
-import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday, PasswordPerson, WebsocketPerson, WebsocketResult, Corp, CorpAccount, LeaveSetting, LeaveYear, AdviceMember, ManagementTeam, Manual } from '../types/sys';
+import { AdminUser, AdminUserMenu, Code, CodeAdmin, CodeGroup, CodeKind, CompanyCopy, CompanyMenuNode, CompanyMenuYn, Company, CompanyCreateReq, CompanyManage, CompanyBasic, CompanyApproval, CompanyAccount, LoginSecure, MenuCopy, MenuLookup, MenuNode, MenuSaveReq, MenuViewNode, PersonMenuNode, PersonRole, Role, RoleMenuCopyReq, RoleMenuNode, SpecificMenu, SpecificMenuHistory, SpecificMenuLink, SpecificMenuPerson, SpecificMenuRequest, SpecificMenuRequestAdmin, UserRole, FileTotal, FileTotalMonth, OpenMenuLog, FileTotalYear, ClientInfo, AfterService, LoginManage, LoginHistory, AdminUserList, AdminUserHistory, MenuGuide, FileInfo, Calendar, Holiday, PasswordPerson, WebsocketPerson, WebsocketResult, Corp, CorpAccount, LeaveSetting, LeaveYear, AdviceMember, ManagementTeam, Manual, FilePolicy } from '../types/sys';
 
 /** GET /api/v1/sys/menus 응답 (1차 메뉴에는 아이콘이 없다 - sys06_menu에 아이콘 컬럼이 없음) */
 type MenuLevel_1Res = Omit<MenuLevel_1, 'iconName'>;
@@ -788,6 +788,62 @@ export const sysApi = {
     return res.data.data ?? [];
   },
 
+  // ── A34 AssetERP 매뉴얼 등록 (Sys95_Tab_ManualAdmin) ──
+
+  /** AS-IS sys.Sys95_Manual.selectByText (publicCheck=false: 공개 안 된 것까지 전부 — 관리자만) */
+  searchManualsAdmin: async (params: { manualType: string; searchText: string }): Promise<Manual[]> => {
+    const res = await apiClient.get<ApiResponse<Manual[]>>('v1/sys/manuals', { params: { ...params, publicCheck: false } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS FileUpload?mode=sys95&manualType= : 파일 하나마다 매뉴얼 행 + 첨부를 만든다 → 만들어진 매뉴얼 */
+  uploadManual: async (manualType: string, file: File): Promise<Manual> => {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await apiClient.post<ApiResponse<Manual>>('v1/sys/manuals', form, {
+      params: { manualType },
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys95_Manual.update → 저장된 행(요청 순서) */
+  updateManuals: async (rows: Manual[]): Promise<Manual[]> => {
+    const body = rows.map(({ manualId, manualType, publicYn, note }) => ({ manualId, manualType, publicYn, note: note || null }));
+    const res = await apiClient.put<ApiResponse<Manual[]>>('v1/sys/manuals', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys95_Manual.delete → 지운 건수 (첨부 파일은 fileApi로 먼저 지운다) */
+  deleteManuals: async (manualIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/manuals', { data: manualIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys95_Manual.checkManualType — 사용 중인 분류면 서버가 오류 문구로 거절한다 */
+  checkManualType: async (manualType: string): Promise<void> => {
+    await apiClient.get('v1/sys/manuals/check-type', { params: { manualType } });
+  },
+
+  // ── A34 Sys09_Lookup_Code (코드추가 팝업) ──
+
+  /** AS-IS sys.Sys08_CodeKind.selectByKindCode */
+  getCodeKindByCode: async (kindCode: string): Promise<CodeKind | null> => {
+    const res = await apiClient.get<ApiResponse<CodeKind | null>>('v1/sys/code-kinds/by-code', { params: { kindCode } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS sys.Sys09_Code.selectByCodeKind(Sys09_Lookup_Code.retrieve): 로그인 회사·오늘 기준 코드 */
+  searchCodesByKindCode: async (kindCode: string): Promise<CodeAdmin[]> => {
+    const res = await apiClient.get<ApiResponse<CodeAdmin[]>>('v1/sys/codes/by-kind-code', { params: { kindCode } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys09_Code.checkCode — 코드가 바뀐 행의 사용이력·중복 검사 (실패하면 서버가 오류 문구로 거절) */
+  checkCodes: async (codeKind: string, rows: { codeId: number; code: string }[]): Promise<void> => {
+    await apiClient.post('v1/sys/codes/check', { codeKind, rows });
+  },
+
   // ── A23 Admin 로그인내역 조회 (Sys81_Tab_AdminUserHistory) ──
 
   /** AS-IS sys.Sys81_AdminUserHistory.selectByDate */
@@ -814,6 +870,27 @@ export const sysApi = {
   /** AS-IS sys.Sys80_AdminUserList.delete → 지운 건수 */
   deleteAdminUserLists: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/sys/admin-user-lists', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  // ── A36 파일보안정책 (Sys60_Tab_FilePolicy) ──
+
+  /** AS-IS sys.Sys60_FilePolicy.selectByText: 확장자/MIME/비고 LIKE */
+  searchFilePolicies: async (searchText?: string): Promise<FilePolicy[]> => {
+    const res = await apiClient.get<ApiResponse<FilePolicy[]>>('v1/sys/file-policies', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys60_FilePolicy.update → 저장된 행(요청 순서) */
+  updateFilePolicies: async (rows: FilePolicy[]): Promise<FilePolicy[]> => {
+    const body = rows.map(({ filePolicyId, ext, mimeType, note }) => ({ filePolicyId, ext, mimeType, note }));
+    const res = await apiClient.put<ApiResponse<FilePolicy[]>>('v1/sys/file-policies', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys60_FilePolicy.delete → 지운 건수 */
+  deleteFilePolicies: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sys/file-policies', { data: ids });
     return res.data.data ?? 0;
   },
 

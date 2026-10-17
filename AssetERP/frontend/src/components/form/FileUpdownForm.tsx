@@ -13,11 +13,13 @@ export interface FileUpdownFormHandle {
 
 interface Props {
   onChange: (file: File | undefined) => void;
+  /** AS-IS FileUploadMulti: 여러 파일을 한 번에 고른다. 있으면 onChange 대신 이쪽으로 고른 파일 목록을 준다 */
+  onChangeFiles?: (files: File[]) => void;
   /** input accept (예: 'image/*') */
   accept?: string;
 }
 
-export const FileUpdownForm = forwardRef<FileUpdownFormHandle, Props>(({ onChange, accept }, ref) => {
+export const FileUpdownForm = forwardRef<FileUpdownFormHandle, Props>(({ onChange, onChangeFiles, accept }, ref) => {
   const input = useRef<HTMLInputElement>(null);
   useImperativeHandle(ref, () => ({ click: () => input.current?.click() }), []);
   return (
@@ -26,11 +28,13 @@ export const FileUpdownForm = forwardRef<FileUpdownFormHandle, Props>(({ onChang
       type="file"
       name="fileField"
       accept={accept}
+      multiple={!!onChangeFiles}
       style={{ display: 'none' }}
       onChange={e => {
-        const file = e.target.files?.[0];
+        const files = Array.from(e.target.files ?? []);
         e.target.value = '';
-        onChange(file);
+        if (onChangeFiles) onChangeFiles(files);
+        else onChange(files[0]);
       }}
     />
   );

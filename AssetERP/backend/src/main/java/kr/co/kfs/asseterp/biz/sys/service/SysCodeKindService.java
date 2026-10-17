@@ -35,6 +35,11 @@ public class SysCodeKindService {
         return sysCodeKindMapper.searchCodeKinds(new CodeKindSearchParam(like, sys));
     }
 
+    /** AS-IS selectByKindCode: 코드구분 코드로 한 건(없으면 null) — A34 Sys09_Lookup_Code.edit */
+    public CodeKindRes getByKindCode(String kindCode) {
+        return sysCodeKindMapper.selectByKindCode(kindCode);
+    }
+
     /**
      * AS-IS update(UpdateDataModel) L60-63: 행마다 신규면 INSERT, 아니면 UPDATE 하고 selectById로 다시 읽어 요청 순서대로.
      * 신규 판정은 화면 임시 ID(0 이하). 코드구분·코드구분명은 DB NOT NULL이라 미리 막는다(05 §6 DB 오류).

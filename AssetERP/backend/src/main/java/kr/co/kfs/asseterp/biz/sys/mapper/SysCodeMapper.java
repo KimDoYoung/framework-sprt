@@ -28,6 +28,12 @@ public interface SysCodeMapper {
     /** AS-IS selectById */
     CodeAdminRes selectCode(@Param("codeId") Long codeId);
 
+    /** AS-IS selectByCodeKind(Sys09_Lookup_Code.retrieve): 로그인 회사(시스템 코드구분은 회사 0)의 오늘 기준 코드 전체 열 */
+    List<CodeAdminRes> selectByCodeKindCode(@Param("companyId") Long companyId, @Param("kindCode") String kindCode);
+
+    /** AS-IS sys09_code.checkByCode: 같은 회사·코드구분에 그 코드가 있는 수 */
+    int checkByCode(@Param("companyId") Long companyId, @Param("code") String code, @Param("kindCode") String kindCode);
+
     Long selectNextId();
 
     int insertCode(CodeAdminRow row);

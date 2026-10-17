@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/sys/mapper/sys60_file_policy.xml (selectByText, selectById) + UpdateDataModel 저장·삭제를 명시 SQL로  (A36)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysFilePolicyMapper">
+
+    <sql id="filePolicyColumns">
+        sys60_file_policy_id AS file_policy_id,
+        sys60_ext            AS ext,
+        sys60_mime_type      AS mime_type,
+        sys60_note           AS note
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) sys60_file_policy.selectByText L19 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.sys.dto.FilePolicyRes">
+        SELECT <include refid="filePolicyColumns"/>
+          FROM sys60_file_policy
+         WHERE UPPER(CONCAT(sys60_ext, sys60_mime_type, sys60_note)) LIKE UPPER(#{searchText})
+         ORDER BY sys60_ext, sys60_mime_type, sys60_note
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys60_file_policy.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sys.dto.FilePolicyRes">
+        SELECT <include refid="filePolicyColumns"/>
+          FROM sys60_file_policy
+         WHERE sys60_file_policy_id = #{filePolicyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel INSERT -->
+    <insert id="insertFilePolicy">
+        INSERT INTO sys60_file_policy
+               (sys60_file_policy_id, sys60_ext, sys60_mime_type, sys60_note)
+        VALUES (#{id}, #{r.ext}, #{r.mimeType}, #{r.note})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE (화면이 바꾸는 3열) -->
+    <update id="updateFilePolicy">
+        UPDATE sys60_file_policy
+           SET sys60_ext = #{r.ext}
+             , sys60_mime_type = #{r.mimeType}
+             , sys60_note = #{r.note}
+         WHERE sys60_file_policy_id = #{r.filePolicyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel -->
+    <delete id="deleteFilePolicies">
+        DELETE FROM sys60_file_policy
+         WHERE sys60_file_policy_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+</mapper>

@@ -4,12 +4,14 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeAdminRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeAdminRow;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeAdminSaveReq;
+import kr.co.kfs.asseterp.biz.sys.dto.CodeCheckReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeCopyReq;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeDeleteParam;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeListParam;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeSearchParam;
 import kr.co.kfs.asseterp.biz.sys.mapper.SysCodeMapper;
+import kr.co.kfs.asseterp.biz.sys.mapper.SysManualMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ import java.util.List;
 public class SysCodeService {
 
     private final SysCodeMapper sysCodeMapper;
+    private final SysManualMapper sysManualMapper;
 
     /** 로그인 회사의 코드(시스템 코드는 admin 회사 0의 것), 기준일(null이면 오늘) — AS-IS ComboBoxField.retrieve(applyDate) */
     public List<CodeRes> searchCodes(UserPrincipal user, String kindCd, LocalDate applyDate) {
@@ -36,6 +39,41 @@ public class SysCodeService {
     /** AS-IS Sys00_Common.selectByKindGroupCode L91-94 (CommonComboBoxField): 로그인 회사, 코드그룹, 오늘 기준 */
     public List<CodeRes> searchCodesByKindGroup(UserPrincipal user, String kindGroupCd) {
         return sysCodeMapper.searchCodesByKindGroup(new CodeSearchParam(user.getCompanyId(), kindGroupCd));
+    }
+
+    // ── A34 Sys09_Lookup_Code: 코드추가 팝업 ──
+
+    /** AS-IS retrieve() L198-215: 로그인 회사(시스템 코드구분은 회사 0)의 오늘 기준 코드 */
+    public List<CodeAdminRes> searchByCodeKindCode(UserPrincipal user, String kindCode) {
+        return sysCodeMapper.selectByCodeKindCode(user.getCompanyId(), kindCode);
+    }
+
+    /**
+     * AS-IS Sys09_Code.checkCode L317-384: 코드가 바뀐 행마다 ① 바꾸기 전 코드가 사용 중이면 실패 ② 새 코드가 이미 있으면 실패.
+     * 사용 중 검사는 코드구분마다 다르다 — ManualType만 옮겼고(A34), 다른 도메인의 SpecialLeaveCode·DocFormClassCode·WeekBizType는
+     * 그 도메인(emp·dcr·rpt)을 변환할 때 더한다(그전에는 검사를 건너뛰지 않고 거절한다)
+     */
+    public void checkCodes(UserPrincipal user, CodeCheckReq req) {
+        Long companyId = user.getCompanyId();
+        String codeKind = req.codeKind();
+        for (CodeCheckReq.Row row : req.rows()) {
+            CodeAdminRes before = row.codeId() == null || row.codeId() <= 0 ? null : sysCodeMapper.selectCode(row.codeId());
+            if (before != null) {
+                int cnt = switch (codeKind == null ? "" : codeKind) {
+                    case "ManualType" -> sysManualMapper.checkManualType(companyId, before.code());
+                    case "SpecialLeaveCode", "DocFormClassCode", "WeekBizType" ->
+                            throw new BusinessException(ErrorCode.INVALID_INPUT, "이 코드구분(" + codeKind + ")의 사용이력 검사는 아직 변환되지 않았습니다");
+                    default -> 0;
+                };
+                if (cnt != 0) {
+                    throw new BusinessException(ErrorCode.INVALID_INPUT,
+                            "[" + before.code() + "] 코드는 사용중인 코드로, [" + row.code() + "] 코드로 변경이 불가합니다");
+                }
+            }
+            if (sysCodeMapper.checkByCode(companyId, row.code(), codeKind) != 0) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "[" + row.code() + "] 코드는 사용중인 코드입니다");
+            }
+        }
     }
 
     // ── A13 Sys09_Grid_Code: 코드 관리 ──

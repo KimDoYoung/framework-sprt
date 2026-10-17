@@ -655,6 +655,14 @@ export interface LeaveYear {
 }
 
 
+/** 파일보안정책 한 행 (A36, AS-IS Sys60_FilePolicyModel). 새 행은 임시 음수 ID */
+export interface FilePolicy {
+  filePolicyId: number;
+  ext: string | null;
+  mimeType: string | null;
+  note: string | null;
+}
+
 /** AssetERP 자문위원 한 행 (A31, AS-IS Sys91_AdviceMemberModel). 새 행은 임시 음수 ID, companyId는 신규일 때 1 */
 export interface AdviceMember {
   adviceMemberId: number;
@@ -694,5 +702,7 @@ export interface Manual {
   fileId: number;
   fileNm: string;
   fileExt?: string | null;
+  /** 공개 체크박스 (A34 관리 그리드). 'true'/'false' */
+  publicYn?: string | null;
   note?: string | null;
 }
