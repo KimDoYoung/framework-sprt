@@ -237,3 +237,46 @@ export interface IcsComplianceAnswer {
   answer5Cd?: string | null
   answer5Name?: string | null
 }
+
+/** 법규등록요청 (ics17_user_request, E09) — confirmYn은 DB 형태('true'/'false' 문자열), 일자는 YYYY-MM-DD */
+export interface IcsUserRequest {
+  userRequestId: number;
+  companyId: number;
+  companyName: string;
+  personId: number;
+  personName: string;
+  regDate: string;
+  lawTitle: string;
+  lawContent: string | null;
+  submitTo: string | null;
+  relatedLaw: string | null;
+  reportCycle: string | null;
+  result: string | null;
+  note: string | null;
+  stateCode: string | null;
+  stateName: string | null;
+  closeDate: string | null;
+  confirmYn: string | null;
+}
+
+export interface IcsUserRequestSaveReq {
+  regDate: string;
+  confirmYn: string;
+  stateCode: string | null;
+  closeDate: string | null;
+  result: string | null;
+  note: string | null;
+}
+
+/** 법규등록요청 조회 조건 (Ics17_Tab_UserRequestAdmin.retrieve) */
+export interface IcsUserRequestSearch {
+  startDate: string;
+  closeDate: string;
+  /** 회사명 또는 '%'(전체) */
+  companyText: string;
+  /** 진행상태 코드 또는 '%'(전체) */
+  stateCode: string;
+  unconfirmedOnly: boolean;
+  incompleteOnly: boolean;
+  searchText: string;
+}

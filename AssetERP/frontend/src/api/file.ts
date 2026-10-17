@@ -18,7 +18,7 @@ export const FILE_DELETE_STATUS = {
 } as const;
 
 /** blob 응답의 오류 본문(JSON)을 읽어 errorMessage()가 쓰는 모양으로 바꾼다 */
-const readBlobError = async (err: any) => {
+export const readBlobError = async (err: any) => {
   const data = err?.response?.data;
   if (data instanceof Blob) {
     try {

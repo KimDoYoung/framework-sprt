@@ -49,7 +49,7 @@ AS-IS 줄은 `ColorButtonBar.java` 기준. 색 이름은 아래 "색" 표.
 | `attach` | darkGray | `FolderAddOutlined` ← fa-folder-plus | 첨부파일등록 | L208-211 |
 | `org` | darkGray | `TeamOutlined` ← fa-users | 조직도보기, 담당자 관리, 초기설정 휴가일수 | L213-216 |
 | `reset` | lightBlue | `UndoOutlined` ← fa-undo-alt | 초기화, 재생성, 새로고침, 복구, 조건 초기화 | L220-224 |
-| `change` | lightBlue | `SwapOutlined` ← fa-exchange-alt | 변경, 상위조직변경, 매뉴권한복사, 문서개요복사, 코드복사 | L226-231 |
+| `change` | lightBlue | `SwapOutlined` ← fa-exchange-alt | 변경, 상위조직변경, 매뉴권한복사, 문서개요복사, 코드복사, 내보내기 | L226-231 |
 | `register` | green | `EditOutlined` ← fa-edit | 등록, 등록(복사), 추가, 불러오기, 신규등록, 상신, 결재요청 | L235-256 |
 | `generate` | green | `AimOutlined` ← fa-bullseye | 생성, PDF 생성, 일괄생성, 건별생성 | L258-262 |
 | `select` | green | `LeftCircleOutlined` ← fa-arrow-alt-circle-left | 선택 | L264-268 |

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/bbs/mapper/bbs15_company_rule.xml + UpdateDataModel(bbs15_company_rule)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.bbs.mapper.BbsCompanyRuleMapper">
+
+    <sql id="companyRuleColumns">
+        bbs15_company_rule_id                                       AS company_rule_id,
+        bbs15_company_id                                            AS company_id,
+        bbs15_rule_type                                             AS rule_type,
+        f_cdnm('CompanyRuleType', bbs15_rule_type, bbs15_company_id, f_sysdate()) AS rule_type_name,
+        bbs15_company_rule_cd                                       AS company_rule_code,
+        bbs15_title                                                 AS title,
+        bbs15_content                                               AS content,
+        bbs15_note                                                  AS note,
+        bbs15_seq                                                   AS seq,
+        TO_CHAR(bbs15_revision_date, 'YYYY-MM-DD')                  AS revision_date,
+        bbs15_revision_no                                           AS revision_no,
+        (bbs15_public_yn = 'true')                                  AS public_yn,
+        TO_CHAR(bbs15_close_date, 'YYYY-MM-DD')                     AS close_date,
+        bbs15_cre_nm                                                AS cre_name,
+        bbs15_upd_nm                                                AS upd_name,
+        COALESCE(TO_CHAR(bbs15_upd_date, 'yyyy-mm-dd HH24:MI:SS'), ''::text) AS upd_date_str,
+        (SELECT COUNT(*) FROM sys10_file WHERE sys10_parent_id = bbs15_company_rule_id) AS file_cnt
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) bbs15_company_rule.selectById L32 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.bbs.dto.CompanyRuleRes">
+        SELECT <include refid="companyRuleColumns"/>
+          FROM bbs15_company_rule
+         WHERE bbs15_company_rule_id = #{companyRuleId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) bbs15_company_rule.selectBySearchTextManager L87 -->
+    <select id="selectBySearchTextManager" resultType="kr.co.kfs.asseterp.biz.bbs.dto.CompanyRuleRes">
+        SELECT <include refid="companyRuleColumns"/>
+          FROM bbs15_company_rule
+         WHERE bbs15_company_id = #{companyId}
+           AND bbs15_rule_type LIKE #{ruleType}
+           AND CONCAT(bbs15_title, bbs15_company_rule_cd) ILIKE #{searchText}
+         ORDER BY bbs15_company_rule_cd, bbs15_revision_no
+    </select>
+
+    <!-- AS-IS(IDMS-IC) bbs15_company_rule.countUseByCompanyRuleCode L103 -->
+    <select id="countUseByCompanyRuleCode" resultType="int">
+        SELECT COUNT(*)
+          FROM bbs15_company_rule
+         WHERE bbs15_company_id       = #{companyId}
+           AND bbs15_company_rule_cd  = #{companyRuleCode}
+           AND bbs15_revision_no      = #{revisionNo}
+           AND bbs15_company_rule_id != #{companyRuleId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm11_task_relate_rule.countRelateByRuleCode L78 -->
+    <select id="countRelateByRuleCode" resultType="int">
+        SELECT COUNT(*)
+          FROM tdm11_task_relate_rule
+               INNER JOIN tdm10_task ON tdm10_task_id = tdm11_task_id
+         WHERE tdm10_company_id  = #{companyId}
+           AND tdm11_relate_type = #{relateType}
+           AND tdm11_rule_cd     = #{ruleCode}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) bbs15_company_rule.countLastCheck L139 (GROUP BY: 규정코드 행이 없으면 행 없음) -->
+    <select id="countLastCheck" resultType="kr.co.kfs.asseterp.biz.bbs.dto.CompanyRuleLastCheck">
+        SELECT COUNT(*)                                             AS all_cnt
+             , ( SELECT COUNT(*)
+                   FROM tdm11_task_relate_rule
+                  WHERE tdm11_company_id  = bbs15_company_id
+                    AND tdm11_relate_type = '2'
+                    AND tdm11_rule_cd     = bbs15_company_rule_cd ) AS relate_cnt
+          FROM bbs15_company_rule
+         WHERE bbs15_company_id      = #{companyId}
+           AND bbs15_company_rule_cd = #{companyRuleCode}
+         GROUP BY bbs15_company_id, bbs15_company_rule_cd
+    </select>
+
+    <!-- AS-IS(IDMS-IC) bbs15_company_rule.countRelateTask L112 -->
+    <select id="countRelateTask" resultType="int">
+        SELECT COUNT(*)
+          FROM tdm11_task_relate_rule
+               INNER JOIN tdm10_task             ON tdm10_task_id = tdm11_task_id
+               INNER JOIN tdm21_role_relate_task ON tdm21_task_id = tdm10_task_id
+               INNER JOIN tdm20_role             ON tdm20_role_id = tdm21_role_id
+         WHERE tdm11_company_id  = #{companyId}
+           AND tdm11_relate_type = #{relateType}
+           AND tdm11_rule_cd     = #{ruleCode}
+           AND EXISTS (   WITH tdm30 AS ( SELECT *
+                                            FROM tdm30_role_allc
+                                                 INNER JOIN tdm34_role_allc_detail ON tdm34_role_allc_id = tdm30_role_allc_id
+                                           WHERE tdm30_company_id = tdm11_company_id
+                                             AND tdm30_role_id    = tdm20_role_id
+                          ) /*--개정일 이후 책무배분이 일어난 경우--*/
+                            SELECT 1
+                              FROM tdm30
+                             WHERE tdm34_role_allc_date <![CDATA[>=]]> #{revisionDate}::date
+                             UNION ALL
+                            /*--개정일 이후 책무기술서가 등록된 경우--*/
+                            SELECT 2
+                              FROM tdm30
+                                   INNER JOIN tdm31_role_desc ON tdm31_person_id = tdm30_person_id
+                             WHERE tdm31_reg_date <![CDATA[>=]]> #{revisionDate}::date
+                      )
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel INSERT: 작성자·변경자 = 로그인 사용자 이름, 변경일시 now() -->
+    <insert id="insertCompanyRule">
+        INSERT INTO bbs15_company_rule (bbs15_company_rule_id, bbs15_company_id, bbs15_rule_type, bbs15_title, bbs15_content,
+                                        bbs15_note, bbs15_seq, bbs15_work_date, bbs15_revision_date, bbs15_revision_no,
+                                        bbs15_public_yn, bbs15_company_rule_cd, bbs15_close_date, bbs15_cre_nm, bbs15_upd_nm, bbs15_upd_date)
+        VALUES (#{companyRuleId}, #{companyId}, #{ruleType}, #{title}, #{content},
+                #{note}, #{seq}, f_sysdate(), #{revisionDate}::date, #{revisionNo},
+                #{publicYn}::text, #{companyRuleCode}, #{closeDate}::date, #{creName}, #{creName}, now())
+    </insert>
+
+    <update id="updateCompanyRule">
+        UPDATE bbs15_company_rule
+           SET bbs15_rule_type       = #{ruleType},
+               bbs15_title           = #{title},
+               bbs15_content         = #{content},
+               bbs15_note            = #{note},
+               bbs15_seq             = #{seq},
+               bbs15_work_date       = f_sysdate(),
+               bbs15_revision_date   = #{revisionDate}::date,
+               bbs15_revision_no     = #{revisionNo},
+               bbs15_public_yn       = #{publicYn}::text,
+               bbs15_company_rule_cd = #{companyRuleCode},
+               bbs15_close_date      = #{closeDate}::date,
+               bbs15_upd_nm          = #{creName},
+               bbs15_upd_date        = now()
+         WHERE bbs15_company_rule_id = #{companyRuleId}
+    </update>
+
+    <delete id="deleteCompanyRule">
+        DELETE FROM bbs15_company_rule WHERE bbs15_company_rule_id = #{companyRuleId}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) bbs15_company_rule.insertRequest L192 (내보내기). 변경자는 원본이 세션 변수를 쓰므로 작성자와 같은 로그인 이름 -->
+    <insert id="insertRequest">
+        INSERT INTO bbs15_company_rule (bbs15_company_rule_id, bbs15_company_id, bbs15_rule_type, bbs15_title, bbs15_content,
+                                        bbs15_note, bbs15_seq, bbs15_work_date, bbs15_revision_date, bbs15_revision_no,
+                                        bbs15_public_yn, bbs15_company_rule_cd, bbs15_close_date, bbs15_cre_nm, bbs15_upd_nm, bbs15_upd_date)
+        VALUES (#{companyRuleId}, #{companyId}, #{ruleType}, #{title}, #{content},
+                #{note}, #{seq}, f_sysdate(), #{revisionDate}::date, #{revisionNo},
+                #{publicYn}::text, #{companyRuleCode}, #{closeDate}::date, #{creName}, #{creName}, now())
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) bbs15_company_rule.excelInsert L152 (엑셀 업로드) -->
+    <insert id="excelInsert">
+        INSERT INTO bbs15_company_rule (bbs15_company_rule_id, bbs15_company_id, bbs15_rule_type, bbs15_title, bbs15_content,
+                                        bbs15_note, bbs15_seq, bbs15_work_date, bbs15_revision_date, bbs15_revision_no,
+                                        bbs15_public_yn, bbs15_company_rule_cd, bbs15_close_date, bbs15_cre_nm, bbs15_upd_nm, bbs15_upd_date)
+        VALUES (f_create_seq(), #{companyId}, #{ruleType}, #{title}, #{content},
+                #{note}, #{seq}, f_sysdate(), #{revisionDate}::date, #{revisionNo},
+                #{publicYn}::text, #{companyRuleCode}, #{closeDate}::date, #{creName}, #{creName}, now())
+    </insert>
+</mapper>

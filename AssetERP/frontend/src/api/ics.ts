@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { ClassTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw } from '../types/ics';
+import { ClassTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 export const icsApi = {
@@ -358,6 +358,26 @@ export const icsApi = {
   deleteComplianceAnswers: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/ics/compliance-answers', { data: ids });
     return res.data.data ?? 0;
+  },
+
+  // ── E09 법규등록신청확인 (Ics17_Tab_UserRequestAdmin) ──
+
+  /** AS-IS ics.Ics17_UserRequest.selectBySearchTextAdmin (관리자) */
+  searchUserRequestsAdmin: async (params: IcsUserRequestSearch): Promise<IcsUserRequest[]> => {
+    const res = await apiClient.get<ApiResponse<IcsUserRequest[]>>('v1/ics/user-requests/admin', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics17_UserRequest.update → 저장된 행 */
+  updateUserRequest: async (userRequestId: number, req: IcsUserRequestSaveReq): Promise<IcsUserRequest> => {
+    const res = await apiClient.put<ApiResponse<IcsUserRequest>>(`v1/ics/user-requests/${userRequestId}`, req);
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics17_UserRequest.updateLawContent → 저장된 행 */
+  updateUserRequestLawContent: async (userRequestId: number, lawContent: string): Promise<IcsUserRequest> => {
+    const res = await apiClient.put<ApiResponse<IcsUserRequest>>(`v1/ics/user-requests/${userRequestId}/law-content`, { lawContent });
+    return res.data.data;
   },
 };
 

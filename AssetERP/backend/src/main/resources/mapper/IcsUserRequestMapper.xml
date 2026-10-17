@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/ics/mapper/ics17_user_request.xml + UpdateDataModel(ics17_user_request)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsUserRequestMapper">
+
+    <sql id="userRequestColumns">
+        ics17_user_request_id                                                         AS user_request_id,
+        ics17_company_id                                                              AS company_id,
+        ics17_person_id                                                               AS person_id,
+        TO_CHAR(ics17_reg_date, 'YYYY-MM-DD')                                         AS reg_date,
+        ics17_law_title                                                               AS law_title,
+        ics17_law_content                                                             AS law_content,
+        ics17_submit_to                                                               AS submit_to,
+        ics17_related_law                                                             AS related_law,
+        ics17_report_cycle                                                            AS report_cycle,
+        ics17_result                                                                  AS result,
+        ics17_note                                                                    AS note,
+        ics17_state_cd                                                                AS state_code,
+        TO_CHAR(ics17_close_date, 'YYYY-MM-DD')                                       AS close_date,
+        ics17_confirm_yn                                                              AS confirm_yn
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) ics17_user_request.selectBySearchTextAdmin (SELECT *는 DTO 열로 명시) -->
+    <select id="selectBySearchTextAdmin" resultType="kr.co.kfs.asseterp.biz.ics.dto.UserRequestRes">
+        SELECT <include refid="userRequestColumns"/>
+             , f_cdnm('AfterStateCode', ics17_state_cd, ics17_company_id, f_sysdate()) AS state_name
+             , f_emp_kor_nm(ics17_person_id)                                           AS person_name
+             , sys01_company_nm                                                        AS company_name
+          FROM ics17_user_request
+               INNER JOIN sys01_company ON ics17_company_id = sys01_company_id
+         WHERE sys01_company_nm LIKE #{companyText}
+        <if test="completeYn == 'true'">
+           AND COALESCE(ics17_state_cd, ' ') NOT IN ('10','90')
+        </if>
+        <if test="stateCode != null">
+           AND COALESCE(ics17_state_cd, ' ') LIKE #{stateCode}
+        </if>
+           AND COALESCE(ics17_confirm_yn, 'false') LIKE #{confirmYn}
+           AND f_trunc(ics17_reg_date) BETWEEN #{startDate}::date AND #{closeDate}::date
+           AND CONCAT(f_emp_kor_nm(ics17_person_id), ics17_law_title, ics17_law_content) LIKE #{searchText}
+         ORDER BY ics17_reg_date DESC
+    </select>
+
+    <!-- AS-IS(IDMS-IC) ics17_user_request.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ics.dto.UserRequestRes">
+        SELECT <include refid="userRequestColumns"/>
+             , f_cdnm('AfterStateCode', ics17_state_cd, ics17_company_id, f_sysdate()) AS state_name
+             , f_emp_kor_nm(ics17_person_id)                                           AS person_name
+             , f_get_company_nm(ics17_company_id)                                      AS company_name
+          FROM ics17_user_request
+         WHERE ics17_user_request_id = #{userRequestId}
+    </select>
+
+    <update id="updateUserRequest">
+        UPDATE ics17_user_request
+           SET ics17_confirm_yn  = #{req.confirmYn},
+               ics17_state_cd    = #{req.stateCode},
+               ics17_close_date  = #{req.closeDate}::date,
+               ics17_result      = #{req.result},
+               ics17_note        = #{req.note}
+         WHERE ics17_user_request_id = #{userRequestId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) ics17_user_request.updateLawContent -->
+    <update id="updateLawContent">
+        UPDATE ics17_user_request
+           SET ics17_law_content = #{lawContent}
+         WHERE ics17_user_request_id = #{userRequestId}
+    </update>
+</mapper>

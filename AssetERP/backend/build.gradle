@@ -48,6 +48,9 @@ dependencies {
     // Apache Tika (MIME Type Magic Number Detection)
     implementation 'org.apache.tika:tika-core:2.9.2'
 
+    // Apache POI (엑셀 다운로드·업로드 — AS-IS ExcelUpload와 같은 라이브러리)
+    implementation 'org.apache.poi:poi-ooxml:5.2.5'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

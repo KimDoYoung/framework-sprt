@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/flt/mapper/flt05_item_type.xml + UpdateDataModel(flt05_item_type)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.flt.mapper.FltItemTypeMapper">
+
+    <sql id="itemTypeColumns">
+        flt05_item_type_id                  AS item_type_id,
+        flt05_company_id                    AS company_id,
+        sys01_company_nm                    AS company_name,
+        flt05_item_type_cd                  AS item_type_code,
+        flt05_item_type_nm                  AS item_type_name,
+        flt05_seq                           AS seq,
+        TO_CHAR(flt05_start_date, 'YYYY-MM-DD') AS start_date,
+        flt05_target_yn                     AS target_yn,
+        flt05_sell_pre_appr_yn              AS sell_pre_appr_yn,
+        flt05_lock_up_check_yn              AS lock_up_check_yn,
+        flt05_stk_price_yn                  AS stk_price_yn,
+        flt05_list_stk_yn                   AS list_stk_yn
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) flt05_item_type.selectBySearchText (SELECT *는 DTO 열로 명시) -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.flt.dto.ItemTypeRes">
+        SELECT <include refid="itemTypeColumns"/>
+          FROM flt05_item_type
+               INNER JOIN sys01_company ON sys01_company_id = flt05_company_id
+         WHERE flt05_company_id = #{companyId}
+           AND UPPER(flt05_item_type_nm) LIKE UPPER(#{searchText})
+         ORDER BY flt05_seq, flt05_start_date
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt05_item_type.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.flt.dto.ItemTypeRes">
+        SELECT <include refid="itemTypeColumns"/>
+          FROM flt05_item_type
+               INNER JOIN sys01_company ON sys01_company_id = flt05_company_id
+         WHERE flt05_item_type_id = #{itemTypeId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertItemType">
+        INSERT INTO flt05_item_type (flt05_item_type_id, flt05_company_id, flt05_item_type_cd, flt05_item_type_nm, flt05_seq,
+                                     flt05_start_date, flt05_target_yn, flt05_sell_pre_appr_yn, flt05_lock_up_check_yn,
+                                     flt05_stk_price_yn, flt05_list_stk_yn)
+        VALUES (#{itemTypeId}, #{companyId}, #{req.itemTypeCode}, #{req.itemTypeName}, #{req.seq},
+                #{req.startDate}::date, #{req.targetYn}, #{req.sellPreApprYn}, #{req.lockUpCheckYn},
+                #{req.stkPriceYn}, #{req.listStkYn})
+    </insert>
+
+    <update id="updateItemType">
+        UPDATE flt05_item_type
+           SET flt05_item_type_cd     = #{req.itemTypeCode},
+               flt05_item_type_nm     = #{req.itemTypeName},
+               flt05_seq              = #{req.seq},
+               flt05_start_date       = #{req.startDate}::date,
+               flt05_target_yn        = #{req.targetYn},
+               flt05_sell_pre_appr_yn = #{req.sellPreApprYn},
+               flt05_lock_up_check_yn = #{req.lockUpCheckYn},
+               flt05_stk_price_yn     = #{req.stkPriceYn},
+               flt05_list_stk_yn      = #{req.listStkYn}
+         WHERE flt05_item_type_id     = #{req.itemTypeId}
+           AND flt05_company_id       = #{companyId}
+    </update>
+
+    <delete id="deleteItemTypes">
+        DELETE FROM flt05_item_type
+         WHERE flt05_company_id = #{companyId}
+           AND flt05_item_type_id IN
+        <foreach collection="itemTypeIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) flt05_item_type.insertInitData (원본은 열 목록 없는 INSERT … SELECT, 열 순서대로 적었다) -->
+    <insert id="insertInitData">
+        INSERT INTO flt05_item_type (flt05_item_type_id, flt05_company_id, flt05_item_type_cd, flt05_item_type_nm, flt05_seq,
+                                     flt05_target_yn, flt05_start_date, flt05_stk_price_yn, flt05_lock_up_check_yn,
+                                     flt05_sell_pre_appr_yn, flt05_list_stk_yn)
+        SELECT f_create_seq()
+             , #{companyId}
+             , flt05_item_type_cd
+             , flt05_item_type_nm
+             , flt05_seq
+             , flt05_target_yn
+             , flt05_start_date
+             , flt05_stk_price_yn
+             , flt05_lock_up_check_yn
+             , flt05_sell_pre_appr_yn
+             , flt05_list_stk_yn
+          FROM flt05_item_type
+         WHERE flt05_item_type_id = #{itemTypeId}
+    </insert>
+</mapper>
