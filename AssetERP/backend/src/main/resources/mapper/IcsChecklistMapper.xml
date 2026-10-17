@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ics/mapper/ics10_checklist.xml (selectByAdmin, selectById) + ics11_checklist_company.xml (updateUseYn) + server/sys/mapper/sys09_code.xml (selectByIcs21, selectByIcs23)
+     + server/utils/db/mapper/Common.xml (ics_checklist_class) + UpdateDataModel(ics10_checklist)  (E04) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsChecklistMapper">
+
+    <!-- AS-IS common.ics_checklist_class (IDMS-IC): 사용 중인 대분류·중분류(고객사별 설정 포함, 종료일이 기준일 이전이면 뺀다) -->
+    <sql id="icsClass">
+        WITH ics_class AS ( SELECT *
+                              FROM ics21_checklist_l_class
+                                   LEFT OUTER JOIN ics22_checklist_l_class_company ON ( ics22_checklist_l_class_id = ics21_checklist_l_class_id AND
+                                                                                        ics22_company_id IN (0, #{companyId}) )
+                                   INNER JOIN      ics23_checklist_m_class         ON ( ics23_checklist_l_class_id = ics21_checklist_l_class_id AND
+                                                                                        ics23_company_id IN (0, #{companyId}) )
+                                   LEFT OUTER JOIN ics24_checklist_m_class_company ON ( ics24_checklist_m_class_id = ics23_checklist_m_class_id AND
+                                                                                        ics24_company_id IN (0, #{companyId}) )
+                             WHERE ics21_company_id IN (0, #{companyId})
+                               AND ( ( COALESCE(ics21_use_yn,'true')           = 'false'                    AND
+                                       COALESCE(ics21_close_date,'1999-12-31') <![CDATA[>=]]> #{stdDate}    ) OR
+                                     ( COALESCE(ics21_use_yn,'true')           = 'true'                     ) )
+                               AND ( ( COALESCE(ics22_use_yn,'true')           = 'false'                    AND
+                                       COALESCE(ics22_close_date,'1999-12-31') <![CDATA[>=]]> #{stdDate}    ) OR
+                                     ( COALESCE(ics22_use_yn,'true')           = 'true'                     ) )
+                               AND ( ( COALESCE(ics23_use_yn,'true')           = 'false'                    AND
+                                       COALESCE(ics23_close_date,'1999-12-31') <![CDATA[>=]]> #{stdDate}    ) OR
+                                     ( COALESCE(ics23_use_yn,'true')           = 'true'                     ) )
+                               AND ( ( COALESCE(ics24_use_yn,'true')           = 'false'                    AND
+                                       COALESCE(ics24_close_date,'1999-12-31') <![CDATA[>=]]> #{stdDate}    ) OR
+                                     ( COALESCE(ics24_use_yn,'true')           = 'true'                     ) )
+        )
+    </sql>
+
+    <!-- AS-IS ics10_checklist.selectByAdmin L115 (IDMS-IC) — 열은 그리드 열 + 편집 창 값(대분류 id 포함) -->
+    <select id="selectByAdmin" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistRes">
+        <include refid="icsClass"/>
+        SELECT ics10_checklist_id                 AS checklist_id,
+               ics10_company_id                   AS company_id,
+               ics10_content                      AS content,
+               ics10_criterion                    AS criterion,
+               ics10_use_yn                       AS use_yn,
+               ics10_checklist_m_class_id         AS checklist_m_class_id,
+               ics10_seq                          AS seq,
+               ics21_checklist_l_class_nm         AS check_l_class_name,
+               ics23_checklist_m_class_nm         AS check_m_class_name,
+               ics21_checklist_l_class_id         AS check_l_class_id,
+               ics21_seq                          AS check_l_class_seq,
+               ics23_seq                          AS check_m_class_seq
+          FROM ics10_checklist
+               INNER JOIN ics_class ON ics23_checklist_m_class_id = ics10_checklist_m_class_id
+         WHERE 1=1
+           AND ics10_company_id = #{companyId}
+           AND ics10_use_yn LIKE #{useYn}
+        <if test="checklistLClassId != null">
+           AND ics21_checklist_l_class_id = #{checklistLClassId}
+        </if>
+        <if test="checklistMClassId != null">
+           AND ics23_checklist_m_class_id = #{checklistMClassId}
+        </if>
+           AND CONCAT( ics21_checklist_l_class_nm
+                     , ics23_checklist_m_class_nm
+                     , ics10_content
+                     , ics10_criterion
+                     ) LIKE #{searchText}
+         ORDER BY ics21_seq, ics23_seq, ics10_seq, ics10_content
+    </select>
+
+    <!-- AS-IS ics10_checklist.selectById L34 (IDMS-IC) — 저장 결과. 중분류가 공통(0)·로그인 회사 것인 행만 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistRes">
+        SELECT ics10_checklist_id          AS checklist_id,
+               ics10_company_id            AS company_id,
+               ics10_content               AS content,
+               ics10_criterion             AS criterion,
+               ics10_use_yn                AS use_yn,
+               ics10_checklist_m_class_id  AS checklist_m_class_id,
+               ics10_seq                   AS seq,
+               a.ics23_checklist_l_class_nm AS check_l_class_name,
+               a.ics23_checklist_m_class_nm AS check_m_class_name,
+               a.ics23_checklist_l_class_id AS check_l_class_id,
+               a.ics23_checklist_l_class_seq AS check_l_class_seq,
+               a.ics23_seq                 AS check_m_class_seq
+          FROM ics10_checklist
+               INNER JOIN (
+                            SELECT ics23_checklist_m_class.*
+                                 , ( SELECT ics21_checklist_l_class_nm
+                                       FROM ics21_checklist_l_class
+                                      WHERE ics21_checklist_l_class_id = ics23_checklist_l_class_id ) AS ics23_checklist_l_class_nm
+                                 , ( SELECT ics21_seq
+                                       FROM ics21_checklist_l_class
+                                      WHERE ics21_checklist_l_class_id = ics23_checklist_l_class_id ) AS ics23_checklist_l_class_seq
+                              FROM ics23_checklist_m_class
+                             WHERE ics23_company_id IN (0, #{companyId})
+                          ) a ON ics23_checklist_m_class_id = ics10_checklist_m_class_id
+         WHERE ics10_checklist_id = #{checklistId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO ics10_checklist
+               ( ics10_checklist_id, ics10_company_id, ics10_content, ics10_criterion, ics10_use_yn, ics10_checklist_m_class_id, ics10_seq )
+        VALUES ( #{req.checklistId}, #{companyId}, #{req.content}, #{req.criterion}, #{req.useYn}, #{req.checklistMClassId}, #{req.seq} )
+    </insert>
+
+    <update id="update">
+        UPDATE ics10_checklist
+           SET ics10_content               = #{req.content},
+               ics10_criterion             = #{req.criterion},
+               ics10_use_yn                = #{req.useYn},
+               ics10_checklist_m_class_id  = #{req.checklistMClassId},
+               ics10_seq                   = #{req.seq}
+         WHERE ics10_checklist_id = #{req.checklistId}
+           AND ics10_company_id   = #{companyId}
+    </update>
+
+    <!-- AS-IS ics11_checklist_company.updateUseYn (IDMS-IC) -->
+    <update id="updateCompanyUseYn">
+        UPDATE ics11_checklist_company
+           SET ics11_use_yn = #{useYn}
+         WHERE ics11_company_id   = #{companyId}
+           AND ics11_checklist_id = #{checklistId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM ics10_checklist
+         WHERE ics10_checklist_id = #{checklistId}
+           AND ics10_company_id   = #{companyId}
+    </delete>
+
+    <!-- AS-IS sys09_code.selectByIcs21 L311 (IDMS-IC) -->
+    <select id="selectLCodes" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistClassCodeRes">
+        <include refid="icsClass"/>
+        SELECT CAST(ics21_checklist_l_class_id AS VARCHAR) AS code,
+               ics21_checklist_l_class_nm                  AS name
+          FROM ics_class
+         GROUP BY ics21_company_id, ics21_checklist_l_class_id, ics21_checklist_l_class_nm, ics21_seq
+         ORDER BY ics21_seq
+    </select>
+
+    <!-- AS-IS sys09_code.selectByIcs23 L378 (IDMS-IC) -->
+    <select id="selectMCodes" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistClassCodeRes">
+        <include refid="icsClass"/>
+        SELECT CAST(ics23_checklist_m_class_id AS VARCHAR) AS code,
+               ics23_checklist_m_class_nm                  AS name
+          FROM ics_class
+         WHERE 1=1
+        <if test="checklistLClassId != null">
+           AND ics23_checklist_l_class_id = #{checklistLClassId}
+        </if>
+         GROUP BY ics23_company_id, ics23_checklist_m_class_id, ics23_checklist_m_class_nm, ics23_seq
+         ORDER BY ics23_seq
+    </select>
+</mapper>

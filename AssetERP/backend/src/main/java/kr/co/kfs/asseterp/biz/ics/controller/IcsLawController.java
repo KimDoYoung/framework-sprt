@@ -3,11 +3,15 @@ package kr.co.kfs.asseterp.biz.ics.controller;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.ics.dto.ClassTreeMoveReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawContentReq;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDeadlineRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDetailRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawLookupRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawSaveReq;
 import kr.co.kfs.asseterp.biz.ics.service.IcsClassTreeService;
 import kr.co.kfs.asseterp.biz.ics.service.IcsLawService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
+import kr.co.kfs.asseterp.common.dto.PageRes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +34,30 @@ public class IcsLawController {
                                                @RequestParam(required = false) String searchText,
                                                @RequestParam(defaultValue = "false") boolean advisYn) {
         return ApiResponse.ok(service.search(principal, classTreeId, publicType, searchText, advisYn));
+    }
+
+    /** AS-IS ics.Ics01_ClassTree.selectByTypeCodePaging (Ics01_Lookup_SelectMulti, E03) — 법규(IT) 페이징 조회 */
+    @GetMapping("/lookup")
+    public ApiResponse<PageRes<IcsLawLookupRes>> searchLookup(@AuthenticationPrincipal UserPrincipal principal,
+                                                              @RequestParam(required = false) Long classTreeId,
+                                                              @RequestParam(defaultValue = "") String lawSearch,
+                                                              @RequestParam(defaultValue = "") String statuteSearch,
+                                                              @RequestParam(defaultValue = "false") boolean detailSearchYn,
+                                                              @RequestParam(defaultValue = "0") long offset,
+                                                              @RequestParam(defaultValue = "50") long limit) {
+        return ApiResponse.ok(service.searchLookup(principal, classTreeId, lawSearch, statuteSearch, detailSearchYn, offset, limit));
+    }
+
+    /** AS-IS ics.Ics01_ClassTree.selectByListIcsId (Ics01_Lookup_SelectMulti "deadline", E04) — 법규와 그 기한 */
+    @GetMapping("/with-deadlines")
+    public ApiResponse<List<IcsLawDeadlineRes>> deadlines(@RequestParam List<Long> classTreeIds) {
+        return ApiResponse.ok(service.deadlines(classTreeIds));
+    }
+
+    /** AS-IS ics.Ics01_ClassTree.selectById (Ics01_Lookup_ClassTreeDetail, E03-1) */
+    @GetMapping("/{classTreeId}/detail")
+    public ApiResponse<IcsLawDetailRes> detail(@PathVariable Long classTreeId) {
+        return ApiResponse.ok(service.detail(classTreeId));
     }
 
     /** AS-IS ics.Ics01_ClassTree.refresh */

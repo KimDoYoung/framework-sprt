@@ -12,6 +12,7 @@ import { Code } from '@/types/sys';
  *
  * AS-IS ↔ prop
  * - new ComboBoxField(kind)                        → kindCd (만들 때 조회 = retrieve())
+ * - new CommonComboBoxField("sys.Sys00_Common.selectByKindGroupCode", {kindGroupCode})  → kindGroupCd (코드그룹의 코드, 로그인 회사·오늘 기준. kindCd 대신)
  * - ComboBoxField(kind, code, codeName) / setAltCode → altCode — 맨 앞 항목, 있으면 지우기(X) 없음
  * - retrieve(applyDate) / setCodeList(applyDate)     → applyDate('YYYY-MM-DD') — 바뀌면 다시 조회. 없으면 서버가 오늘
  * - setAddCode(code, name)                          → addCodes — 목록 끝에
@@ -20,7 +21,10 @@ import { Code } from '@/types/sys';
  * - getServiceResult L163-193: 코드명이 같은 항목은 처음 것만 넣는다 — 여기서도 같게
  */
 export interface SystemCodeComboBoxProps extends Omit<SelectProps<string>, 'options' | 'onChange'> {
-  kindCd: string;
+  /** 종류코드. kindGroupCd를 주면 쓰지 않는다 */
+  kindCd?: string;
+  /** 코드그룹(sys13) — AS-IS selectByKindGroupCode */
+  kindGroupCd?: string;
   altCode?: [string, string];
   applyDate?: string;
   addCodes?: [string, string][];
@@ -30,7 +34,7 @@ export interface SystemCodeComboBoxProps extends Omit<SelectProps<string>, 'opti
 }
 
 export const SystemCodeComboBox: React.FC<SystemCodeComboBoxProps> = ({
-  kindCd, altCode, applyDate, addCodes, removeNames, onLoad, onChange, ...rest
+  kindCd, kindGroupCd, altCode, applyDate, addCodes, removeNames, onLoad, onChange, ...rest
 }) => {
   const [codes, setCodes] = useState<Code[]>([]);
   const [loading, setLoading] = useState(false);
@@ -38,12 +42,12 @@ export const SystemCodeComboBox: React.FC<SystemCodeComboBoxProps> = ({
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    sysApi.searchCodes(kindCd, applyDate || undefined)
+    (kindGroupCd ? sysApi.searchCodesByKindGroup(kindGroupCd) : sysApi.searchCodes(kindCd ?? '', applyDate || undefined))
       .then(list => { if (alive) { setCodes(list); onLoad?.(list); } })
       .catch(() => { if (alive) setCodes([]); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [kindCd, applyDate]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [kindCd, kindGroupCd, applyDate]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const all = useMemo(() => {
     const byName = new Map<string, Code>();

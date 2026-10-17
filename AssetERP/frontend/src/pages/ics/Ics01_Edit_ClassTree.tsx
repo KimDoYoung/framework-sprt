@@ -8,7 +8,9 @@ import { Input, message, Modal, Space } from 'antd';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
 import { ClassTreeNode } from '@/types/ics';
+import { schApi } from '@/api/sch';
 import { Button } from '@/components/button';
+import { Sch03_Lookup_Ics } from '@/components/lookup/Sch03_Lookup_Ics';
 
 export interface ClassEditTarget {
   /** editData(treeGrid, classTreeModel, actionCode, titleName, callback) L67-154 */
@@ -39,6 +41,7 @@ export const Ics01_Edit_ClassTree: React.FC<Props> = ({ target, onClose, onSaved
   const [seq, setSeq] = useState('');
   const [name, setName] = useState('');
   const [deadline, setDeadline] = useState('');
+  const [deadlineId, setDeadlineId] = useState<number | null>(null);
 
   // editData() L67-154: 폼에 모델 값을 채운다 (원본 이벤트 아님)
   useEffect(() => {
@@ -91,10 +94,27 @@ export const Ics01_Edit_ClassTree: React.FC<Props> = ({ target, onClose, onSaved
     });
   };
 
-  // [E1] deadlineButton[설정].Select (L106): Sch03_Lookup_Ics(다른 도메인 Sch03 — 별도 ID) 뒤 sch.Sch03_Deadline.selectDeadlineName
-  const setDeadlineFullName = () => message.info('수시알림 설정(Sch03_Lookup_Ics)은 아직 변환 전입니다.');
+  // [E1] deadlineButton[설정].Select (L106): Sch03_Lookup_Ics.open(classTreeId, "2", callback) → 닫으면 sch.Sch03_Deadline.selectDeadlineName(infoId)로 수시알림 칸을 채운다.
+  // 원본은 새로 만드는 분류(id 없음)에서도 창을 열지만 기한을 걸 법규가 없어 아무것도 할 수 없다 — 분류를 먼저 저장하도록 안내한다
+  const setDeadlineFullName = () => {
+    const id = target?.classTreeModel.classTreeId;
+    if (id == null) {
+      message.warning('분류를 먼저 저장한 뒤에 설정할 수 있습니다.');
+      return;
+    }
+    setDeadlineId(id);
+  };
+  const reloadDeadlineName = async () => {
+    if (deadlineId == null) return;
+    try {
+      setDeadline(await schApi.getDeadlineName(deadlineId));
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
 
   return (
+    <>
     <Modal
       open={!!target}
       title={target?.titleName}
@@ -128,5 +148,12 @@ export const Ics01_Edit_ClassTree: React.FC<Props> = ({ target, onClose, onSaved
         </div>
       </div>
     </Modal>
+      <Sch03_Lookup_Ics
+        classTreeId={deadlineId}
+        scheduleCode="2"
+        onClosed={() => { void reloadDeadlineName(); }}
+        onClose={() => setDeadlineId(null)}
+      />
+    </>
   );
 };

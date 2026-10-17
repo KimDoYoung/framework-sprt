@@ -64,3 +64,132 @@ export interface IcsFormFile {
   note?: string | null;
   fileName?: string | null;
 }
+
+/** 법규보고 서식파일 한 행 (AS-IS Sys10_FileModel 중 Ics01_Tab_IcsFileUpload 그리드 열, E02) */
+export interface IcsFormFileAdmin {
+  fileId: number;
+  /** 법령구분 코드(LawType) */
+  lawType?: string | null;
+  lawName?: string | null;
+  note?: string | null;
+  regDate?: string | null;
+  fileName?: string | null;
+}
+
+/** 법규 개정내역 한 행 (AS-IS Ics20_RevisionHistoryModel 중 Ics20_Tab_RevisionHistoryAdmin 그리드 열 + 편집 폼 값, E03). 날짜는 'YYYY-MM-DDT…' 또는 'YYYY-MM-DD' */
+export interface IcsRevisionHistoryAdmin {
+  revisionHistoryId: number;
+  regDate?: string | null;
+  submissionDate?: string | null;
+  effectDate?: string | null;
+  reflectionDate?: string | null;
+  /** 소관부처 코드(FinanceAgencyCode) */
+  financeAgencyCode?: string | null;
+  financeAgencyName?: string | null;
+  title?: string | null;
+  relatedLaw?: string | null;
+  note?: string | null;
+  icsCount?: number | null;
+  fileCount?: number | null;
+}
+
+/** 개정내역 저장 값 (revisionHistoryId가 없거나 0 이하면 새로 등록) */
+export interface IcsRevisionHistoryAdminSaveReq {
+  revisionHistoryId?: number | null;
+  regDate?: string | null;
+  submissionDate?: string | null;
+  effectDate?: string | null;
+  reflectionDate?: string | null;
+  financeAgencyCode?: string | null;
+  title?: string | null;
+  relatedLaw?: string | null;
+  note?: string | null;
+}
+
+/** 개정내역에 연결된 법규 한 행 (AS-IS Ics19_RevisionRelateIcsModel 중 ics19_Grid_IcsList 그리드 열, E03). 저장 전 새 행은 임시 음수 ID */
+export interface IcsRevisionLaw {
+  revisionRelateIcsId: number;
+  revisionHistoryId?: number | null;
+  classTreeId: number;
+  classTreeName?: string | null;
+}
+
+/** 법규 분류 조회창 한 행 (AS-IS Ics01_ClassTreeModel 중 Ics01_Lookup_SelectMulti 그리드 열, E03) */
+export interface IcsLawLookup {
+  classTreeId: number;
+  classTreeCode?: string | null;
+  classTreeName?: string | null;
+  content?: string | null;
+  submitTo?: string | null;
+  cycleName?: string | null;
+  relatedLaw?: string | null;
+  classTreeFullName?: string | null;
+}
+
+/** 법규상세 창 값 (AS-IS Ics01_ClassTreeModel 중 Ics01_Lookup_ClassTreeDetail 폼, E03-1) */
+export interface IcsLawDetail {
+  classTreeId: number;
+  classTreeCode?: string | null;
+  classTreeName?: string | null;
+  /** 분류 경로를 이은 이름 */
+  classTreeFullName?: string | null;
+  content?: string | null;
+  relatedLaw?: string | null;
+  submitTo?: string | null;
+  /** 기한 이름을 ', '로 이은 문자열 */
+  deadlineName?: string | null;
+}
+
+/** 내부통제 체크리스트 한 행 (AS-IS Ics10_ChecklistModel, E04). useYn은 DB 형태('true'/'false') 그대로 */
+export interface IcsChecklist {
+  checklistId: number;
+  companyId?: number | null;
+  content?: string | null;
+  criterion?: string | null;
+  useYn?: string | null;
+  checklistMClassId?: number | null;
+  seq?: number | null;
+  checkLClassName?: string | null;
+  checkMClassName?: string | null;
+  checkLClassId?: number | null;
+  checkLClassSeq?: number | null;
+  checkMClassSeq?: number | null;
+}
+
+/** 체크리스트 분류 콤보 항목 (AS-IS sys.Sys09_Code.selectByIcs21·selectByIcs23) */
+export interface IcsChecklistClassCode {
+  code: string;
+  name: string;
+}
+
+/** 체크리스트 대분류 한 행 (AS-IS Ics21_ChecklistLClassModel, E04) */
+export interface IcsChecklistLClass {
+  checklistLClassId: number;
+  checklistLClassName?: string | null;
+  companyId?: number | null;
+  note?: string | null;
+  seq?: number | null;
+  useYn?: string | null;
+  closeDate?: string | null;
+}
+
+/** 체크리스트 중분류 한 행 (AS-IS Ics23_ChecklistMClassModel, E04) */
+export interface IcsChecklistMClass {
+  checklistMClassId: number;
+  checklistMClassName?: string | null;
+  checklistLClassId?: number | null;
+  companyId?: number | null;
+  note?: string | null;
+  seq?: number | null;
+  useYn?: string | null;
+  closeDate?: string | null;
+}
+
+/** 법규 + 그 기한 한 쌍 (AS-IS Ics01_Lookup_SelectMulti "deadline", E04) */
+export interface IcsLawDeadline {
+  classTreeId: number;
+  classTreeFullName?: string | null;
+  deadlineId?: number | null;
+  deadlineFullName?: string | null;
+  cycleName?: string | null;
+}

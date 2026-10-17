@@ -6,6 +6,7 @@
 #   tools/yunhee-benchmark.sh                  # 전체 시나리오
 #   tools/yunhee-benchmark.sh --fast           # FAST=1 시나리오만 (Qwen·느린 것 제외)
 #   tools/yunhee-benchmark.sh 03 grid          # id/범주/이름에 포함된 시나리오만
+#   tools/yunhee-benchmark.sh 취약             # 알려진 취약점(범주 "취약", 15~20) 확인 — 수정사항036이 반영되면 100%가 되어야 한다
 #   tools/yunhee-benchmark.sh --list           # 시나리오 목록과 개정(rev)
 #   tools/yunhee-benchmark.sh --no-save        # results.tsv·runs/ 에 쓰지 않음(시험 실행)
 #   tools/yunhee-benchmark.sh --history        # 버전별 추세
@@ -24,7 +25,7 @@ FAST=0; SAVE=1; LIST=0; HIST=0; CMP=(); REINDEX=0; SEL=()
 while [ $# -gt 0 ]; do case $1 in
   --fast) FAST=1;; --no-save) SAVE=0;; --list) LIST=1;; --history) HIST=1;; --reindex) REINDEX=1;;
   --compare) CMP=("${2:?버전 둘}" "${3:?버전 둘}"); shift 2;;
-  -h|--help) sed -n 2,14p "$0"; exit 0;;
+  -h|--help) sed -n 2,15p "$0"; exit 0;;
   *) SEL+=("$1");; esac; shift; done
 
 [ $HIST = 1 ] && { python3 -I "$BENCH/report.py" history "$RES/results.tsv"; exit $?; }

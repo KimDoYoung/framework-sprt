@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ics/mapper/ics21_checklist_l_class.xml·ics22_checklist_l_class_company.xml·ics23_checklist_m_class.xml·ics24_checklist_m_class_company.xml·ics15_checklist_write.xml
+     (deleteLClassIdCheck·deleteMClassIdCheck) + UpdateDataModel(ics21·ics23)  (E04) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsChecklistClassMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS ics21_checklist_l_class.selectByCompanyId (IDMS-IC) -->
+    <select id="selectLClasses" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistLClassRes">
+        SELECT ics21_checklist_l_class_id    AS checklist_l_class_id,
+               ics21_checklist_l_class_nm    AS checklist_l_class_name,
+               ics21_company_id              AS company_id,
+               ics21_note                    AS note,
+               ics21_seq                     AS seq,
+               COALESCE(ics22_use_yn, ics21_use_yn) AS use_yn,
+               ( CASE WHEN ics22_use_yn IS NULL
+                      THEN ics21_close_date
+                      ELSE ics22_close_date
+                  END )                      AS close_date
+          FROM ics21_checklist_l_class
+               LEFT OUTER JOIN ics22_checklist_l_class_company ON ics22_checklist_l_class_id = ics21_checklist_l_class_id AND ics22_company_id = #{companyId}
+         WHERE ics21_company_id IN (#{companyId}, 0)
+         ORDER BY ics21_seq
+    </select>
+
+    <select id="selectLClassCompany" resultType="long">
+        SELECT ics21_company_id FROM ics21_checklist_l_class WHERE ics21_checklist_l_class_id = #{checklistLClassId}
+    </select>
+
+    <insert id="insertLClass">
+        INSERT INTO ics21_checklist_l_class
+               ( ics21_checklist_l_class_id, ics21_checklist_l_class_nm, ics21_company_id, ics21_use_yn, ics21_note, ics21_seq, ics21_close_date )
+        VALUES ( #{checklistLClassId}, #{req.checklistLClassName}, #{companyId}, #{req.useYn}, #{req.note}, #{req.seq}, #{req.closeDate} )
+    </insert>
+
+    <update id="updateLClass">
+        UPDATE ics21_checklist_l_class
+           SET ics21_checklist_l_class_nm = #{req.checklistLClassName},
+               ics21_use_yn               = #{req.useYn},
+               ics21_note                 = #{req.note},
+               ics21_seq                  = #{req.seq},
+               ics21_close_date           = #{req.closeDate}
+         WHERE ics21_checklist_l_class_id = #{req.checklistLClassId}
+           AND ics21_company_id           = #{companyId}
+    </update>
+
+    <!-- AS-IS ics22_checklist_l_class_company.insertUpdate (IDMS-IC) — 있으면 고치고 없으면 넣는다 -->
+    <insert id="upsertLClassCompany">
+        WITH upsert AS ( UPDATE ics22_checklist_l_class_company
+                            SET ics22_close_date = #{closeDate},
+                                ics22_use_yn     = #{useYn}
+                          WHERE ics22_company_id          = #{companyId}
+                            AND ics22_checklist_l_class_id = #{checklistLClassId}
+                      RETURNING * )
+        INSERT INTO ics22_checklist_l_class_company
+               ( ics22_checklist_l_class_company_id, ics22_company_id, ics22_checklist_l_class_id, ics22_use_yn, ics22_note, ics22_close_date )
+        SELECT f_create_seq(), #{companyId}, #{checklistLClassId}, #{useYn}, NULL, #{closeDate}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </insert>
+
+    <!-- AS-IS ics15_checklist_write.deleteLClassIdCheck (IDMS-IC) -->
+    <select id="countLClassWrites" resultType="int">
+        SELECT COUNT(*)
+          FROM ics15_checklist_write
+               INNER JOIN ics10_checklist ON ics10_checklist_id = ics15_checklist_id
+         WHERE 1=1
+           AND ics15_company_id = #{companyId}
+           AND ics10_checklist_m_class_id IN ( SELECT ics23_checklist_m_class_id
+                                                 FROM ics23_checklist_m_class
+                                                WHERE ics23_checklist_l_class_id = #{checklistLClassId} )
+    </select>
+
+    <delete id="deleteLClass">
+        DELETE FROM ics21_checklist_l_class
+         WHERE ics21_checklist_l_class_id = #{checklistLClassId}
+           AND ics21_company_id           = #{companyId}
+    </delete>
+
+    <!-- AS-IS ics23_checklist_m_class.selectByCompanyId (IDMS-IC) -->
+    <select id="selectMClasses" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistMClassRes">
+        SELECT ics23_checklist_m_class_id    AS checklist_m_class_id,
+               ics23_checklist_m_class_nm    AS checklist_m_class_name,
+               ics23_checklist_l_class_id    AS checklist_l_class_id,
+               ics23_company_id              AS company_id,
+               ics23_note                    AS note,
+               ics23_seq                     AS seq,
+               COALESCE(ics24_use_yn, ics23_use_yn) AS use_yn,
+               ( CASE WHEN ics24_use_yn IS NULL
+                      THEN ics23_close_date
+                      ELSE ics24_close_date
+                  END )                      AS close_date
+          FROM ics23_checklist_m_class
+               LEFT OUTER JOIN ics24_checklist_m_class_company ON ics24_checklist_m_class_id = ics23_checklist_m_class_id AND ics24_company_id = #{companyId}
+         WHERE ics23_company_id IN (#{companyId}, 0)
+           AND ics23_checklist_l_class_id = #{checklistLClassId}
+         ORDER BY ics23_seq
+    </select>
+
+    <select id="selectMClassCompany" resultType="long">
+        SELECT ics23_company_id FROM ics23_checklist_m_class WHERE ics23_checklist_m_class_id = #{checklistMClassId}
+    </select>
+
+    <insert id="insertMClass">
+        INSERT INTO ics23_checklist_m_class
+               ( ics23_checklist_m_class_id, ics23_checklist_m_class_nm, ics23_checklist_l_class_id, ics23_company_id, ics23_use_yn, ics23_note, ics23_seq, ics23_close_date )
+        VALUES ( #{checklistMClassId}, #{req.checklistMClassName}, #{req.checklistLClassId}, #{companyId}, #{req.useYn}, #{req.note}, #{req.seq}, #{req.closeDate} )
+    </insert>
+
+    <update id="updateMClass">
+        UPDATE ics23_checklist_m_class
+           SET ics23_checklist_m_class_nm = #{req.checklistMClassName},
+               ics23_use_yn               = #{req.useYn},
+               ics23_note                 = #{req.note},
+               ics23_seq                  = #{req.seq},
+               ics23_close_date           = #{req.closeDate}
+         WHERE ics23_checklist_m_class_id = #{req.checklistMClassId}
+           AND ics23_company_id           = #{companyId}
+    </update>
+
+    <!-- AS-IS ics24_checklist_m_class_company.insertUpdate (IDMS-IC) -->
+    <insert id="upsertMClassCompany">
+        WITH upsert AS ( UPDATE ics24_checklist_m_class_company
+                            SET ics24_close_date = #{closeDate},
+                                ics24_use_yn     = #{useYn}
+                          WHERE ics24_company_id          = #{companyId}
+                            AND ics24_checklist_m_class_id = #{checklistMClassId}
+                      RETURNING * )
+        INSERT INTO ics24_checklist_m_class_company
+               ( ics24_checklist_m_class_company_id, ics24_company_id, ics24_checklist_m_class_id, ics24_use_yn, ics24_note, ics24_close_date )
+        SELECT f_create_seq(), #{companyId}, #{checklistMClassId}, #{useYn}, NULL, #{closeDate}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </insert>
+
+    <!-- AS-IS ics15_checklist_write.deleteMClassIdCheck (IDMS-IC) -->
+    <select id="countMClassWrites" resultType="int">
+        SELECT COUNT(*)
+          FROM ics15_checklist_write
+               INNER JOIN ics10_checklist ON ics10_checklist_id = ics15_checklist_id
+         WHERE 1=1
+           AND ics15_company_id = #{companyId}
+           AND ics10_checklist_m_class_id = #{checklistMClassId}
+    </select>
+
+    <delete id="deleteMClass">
+        DELETE FROM ics23_checklist_m_class
+         WHERE ics23_checklist_m_class_id = #{checklistMClassId}
+           AND ics23_company_id           = #{companyId}
+    </delete>
+</mapper>

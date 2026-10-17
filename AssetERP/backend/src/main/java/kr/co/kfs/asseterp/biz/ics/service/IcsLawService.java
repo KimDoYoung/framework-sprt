@@ -2,9 +2,13 @@ package kr.co.kfs.asseterp.biz.ics.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawContentReq;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDeadlineRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDetailRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawLookupRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawSaveReq;
 import kr.co.kfs.asseterp.biz.ics.mapper.IcsClassTreeMapper;
+import kr.co.kfs.asseterp.common.dto.PageRes;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +36,33 @@ public class IcsLawService {
         String like = (searchText == null || searchText.isEmpty()) ? null : "%" + searchText + "%";
         String type = (publicType == null || publicType.isEmpty()) ? "%" : publicType;
         return mapper.selectLaws(classTreeId, user.getCompanyId(), TYPE_CODE, type, like, advisYn);
+    }
+
+    /**
+     * AS-IS Ics01_Lookup_SelectMulti.retrieve → selectByTypeCodePaging + selectByTypeCodePagingTotal: 법규(IT) 목록을 페이지로.
+     * 법규검색·조문검색은 %…%, classTreeId가 있으면 그 분류와 모든 하위
+     */
+    public PageRes<IcsLawLookupRes> searchLookup(UserPrincipal user, Long classTreeId, String lawSearch, String statuteSearch,
+                                                 boolean detailSearchYn, long offset, long limit) {
+        String law = "%" + (lawSearch == null ? "" : lawSearch) + "%";
+        String statute = "%" + (statuteSearch == null ? "" : statuteSearch) + "%";
+        Long companyId = user.getCompanyId();
+        return new PageRes<>(mapper.selectLawLookupTotal(companyId, classTreeId, TYPE_CODE, law, statute, detailSearchYn),
+                mapper.selectLawLookup(companyId, classTreeId, TYPE_CODE, law, statute, detailSearchYn, limit, offset));
+    }
+
+    /** AS-IS selectByListIcsId: 고른 법규마다 그 기한(여럿이면 여러 행)을 붙인다 */
+    public List<IcsLawDeadlineRes> deadlines(List<Long> classTreeIds) {
+        return classTreeIds.isEmpty() ? List.of() : mapper.selectLawDeadlines(classTreeIds);
+    }
+
+    /** AS-IS Ics01_ClassTree.selectById: 법규상세 창(읽기 전용)의 값 */
+    public IcsLawDetailRes detail(Long classTreeId) {
+        IcsLawDetailRes row = mapper.selectLawDetail(classTreeId);
+        if (row == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return row;
     }
 
     /** AS-IS refresh: 한 행을 다시 읽는다(조회창을 닫은 뒤) */

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sys/mapper/sys10_file.xml (getIcsFile, update L627) + FileUpload.uploadIcs01 L542  (E02) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsFormFileAdminMapper">
+
+    <sql id="columns">
+        sys10_file_id   AS file_id,
+        sys10_law_type  AS law_type,
+        f_cdnm('LawType', sys10_law_type, 0, f_sysdate()) AS law_name,
+        sys10_note      AS note,
+        sys10_reg_date  AS reg_date,
+        sys10_file_nm   AS file_name
+    </sql>
+
+    <!-- AS-IS sys10_file.getIcsFile (IDMS-IC) — lawType은 전체면 '%', 검색어는 %…% -->
+    <select id="selectIcsFile" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsFormFileAdminRes">
+        SELECT <include refid="columns"/>
+          FROM sys10_file
+         WHERE sys10_parent_id = 0
+           AND COALESCE(sys10_law_type,'') LIKE #{lawType}
+           AND COALESCE(sys10_note,'')||sys10_file_nm LIKE #{searchText}
+         ORDER BY sys10_law_type, sys10_note, sys10_reg_date DESC
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsFormFileAdminRes">
+        SELECT <include refid="columns"/>
+          FROM sys10_file
+         WHERE sys10_file_id = #{fileId}
+    </select>
+
+    <!-- AS-IS sys10_file.update (IDMS-IC) — sys10_reg_date = f_sysdate() 포함. 경로·크기·확장자·파일명은 클라이언트 값 대신 DB 값을 둔다 -->
+    <update id="updateNote">
+        UPDATE sys10_file
+           SET sys10_reg_date = f_sysdate(),
+               sys10_note     = #{note}
+         WHERE sys10_file_id = #{fileId}
+           AND sys10_parent_id = 0
+    </update>
+
+    <!-- AS-IS FileUpload.uploadIcs01 (IDMS-IC): setLawType(lawName)·setAdminYn("true")·setNote(content) -->
+    <update id="updateUploadMeta">
+        UPDATE sys10_file
+           SET sys10_law_type = #{lawType},
+               sys10_admin_yn = 'true',
+               sys10_note     = #{note}
+         WHERE sys10_file_id = #{fileId}
+    </update>
+</mapper>

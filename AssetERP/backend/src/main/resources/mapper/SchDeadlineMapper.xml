@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sch/mapper/sch03_deadline.xml (selectByClassTreeId, selectById, insert, selectDeadlineName) + server/sys/mapper/sys00_common.xml (selectDeadLine)
+     + UpdateDataModel(sch03_deadline) UPDATE/DELETE  (E01-1) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sch.mapper.SchDeadlineMapper">
+
+    <sql id="columns">
+        sch03_deadline_id        AS deadline_id,
+        sch03_info_id            AS info_id,
+        sch03_company_id         AS company_id,
+        sch03_schedule_cd        AS schedule_code,
+        sch03_cycle_cd           AS cycle_code,
+        f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate()) AS cycle_name,
+        sch03_cycle_calc_type    AS cycle_calc_type,
+        sch03_period_cd          AS period_code,
+        sch03_year_cd            AS year_code,
+        sch03_year_type_cd       AS year_type_code,
+        sch03_month_cd           AS month_code,
+        sch03_month_type_cd      AS month_type_code,
+        sch03_day_cd             AS day_code,
+        sch03_day_type_cd        AS day_type_code,
+        sch03_week_cd            AS week_code,
+        sch03_day_week_cd        AS day_week_code,
+        sch03_holiday_cd         AS holiday_code,
+        sch03_num1               AS num1,
+        sch03_num2               AS num2,
+        sch03_num3               AS num3,
+        sch03_fix_date           AS fix_date,
+        sch03_note               AS note,
+        sch03_start_date         AS start_date,
+        sch03_close_date         AS close_date,
+        f_get_deadline_nm(sch03_deadline_id, '2') AS deadline_full_name
+    </sql>
+
+    <!-- AS-IS sch03_deadline.selectByClassTreeId (IDMS-IC) — 원본은 법규 분류(ics01_class_tree)를 같은 회사로 LEFT JOIN해 그 열까지 가져오지만 화면은 안 쓴다 -->
+    <select id="selectByClassTreeId" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch03DeadlineRes">
+        SELECT <include refid="columns"/>
+          FROM sch03_deadline
+         WHERE sch03_info_id = #{infoId}
+           AND sch03_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS sch03_deadline.selectById (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch03DeadlineRes">
+        SELECT <include refid="columns"/>
+          FROM sch03_deadline
+         WHERE sch03_deadline_id = #{deadlineId}
+    </select>
+
+    <!-- AS-IS sys00_common.selectDeadLine (IDMS-IC) -->
+    <select id="selectTemplates" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch03DeadlineTemplateRes">
+        SELECT CAST(sch03_deadline_id AS VARCHAR)       AS code,
+               f_get_deadline_nm(sch03_deadline_id,'2') AS name
+          FROM sch03_deadline
+         WHERE sch03_company_id = 0
+           AND sch03_info_id    = 0
+         ORDER BY sch03_cycle_cd, sch03_cycle_calc_type
+    </select>
+
+    <!-- AS-IS sch03_deadline.selectDeadlineName (IDMS-IC) -->
+    <select id="selectDeadlineName" resultType="string">
+        SELECT MAX(f_get_deadline_nm(sch03_deadline_id,'2')) || CASE WHEN COUNT(*) = 1 THEN ''
+                                                                     ELSE ' 외 '||COUNT(*)-1||'건' END
+          FROM sch03_deadline
+         WHERE sch03_info_id = #{infoId}
+           AND sch03_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sch03_deadline.insert (IDMS-IC) -->
+    <insert id="insert">
+        INSERT INTO sch03_deadline
+               ( sch03_deadline_id, sch03_info_id, sch03_company_id, sch03_schedule_cd, sch03_cycle_cd, sch03_cycle_calc_type,
+                 sch03_period_cd, sch03_year_cd, sch03_year_type_cd, sch03_month_cd, sch03_month_type_cd, sch03_day_cd,
+                 sch03_day_type_cd, sch03_week_cd, sch03_day_week_cd, sch03_holiday_cd, sch03_num1, sch03_num2, sch03_num3,
+                 sch03_fix_date, sch03_note, sch03_start_date, sch03_close_date )
+        VALUES ( #{deadlineId}, #{req.infoId}, #{companyId}, #{req.scheduleCode}, #{req.cycleCode}, #{req.cycleCalcType},
+                 #{req.periodCode}, #{req.yearCode}, #{req.yearTypeCode}, #{req.monthCode}, #{req.monthTypeCode}, #{req.dayCode},
+                 #{req.dayTypeCode}, #{req.weekCode}, #{req.dayWeekCode}, #{req.holidayCode}, #{req.num1}, #{req.num2}, #{req.num3},
+                 #{req.fixDate}, #{req.note}, #{req.startDate}, #{req.closeDate} )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(sch03_deadline) UPDATE: 모델 값 그대로(회사는 로그인 회사, 법규·스케줄 구분은 호출한 값) -->
+    <update id="update">
+        UPDATE sch03_deadline
+           SET sch03_info_id         = #{req.infoId},
+               sch03_schedule_cd     = #{req.scheduleCode},
+               sch03_cycle_cd        = #{req.cycleCode},
+               sch03_cycle_calc_type = #{req.cycleCalcType},
+               sch03_period_cd       = #{req.periodCode},
+               sch03_year_cd         = #{req.yearCode},
+               sch03_year_type_cd    = #{req.yearTypeCode},
+               sch03_month_cd        = #{req.monthCode},
+               sch03_month_type_cd   = #{req.monthTypeCode},
+               sch03_day_cd          = #{req.dayCode},
+               sch03_day_type_cd     = #{req.dayTypeCode},
+               sch03_week_cd         = #{req.weekCode},
+               sch03_day_week_cd     = #{req.dayWeekCode},
+               sch03_holiday_cd      = #{req.holidayCode},
+               sch03_num1            = #{req.num1},
+               sch03_num2            = #{req.num2},
+               sch03_num3            = #{req.num3},
+               sch03_fix_date        = #{req.fixDate},
+               sch03_note            = #{req.note},
+               sch03_start_date      = #{req.startDate},
+               sch03_close_date      = #{req.closeDate}
+         WHERE sch03_deadline_id = #{deadlineId}
+           AND sch03_company_id  = #{companyId}
+    </update>
+
+    <!-- AS-IS Sch03_Deadline.updateModel (IDMS-IC): selectById로 읽은 기본 기한에 새 id·법규·회사·스케줄 구분을 넣고 메모는 비우고 시작일은 오늘로 INSERT -->
+    <insert id="insertCopy">
+        INSERT INTO sch03_deadline
+               ( sch03_deadline_id, sch03_info_id, sch03_company_id, sch03_schedule_cd, sch03_cycle_cd, sch03_cycle_calc_type,
+                 sch03_period_cd, sch03_year_cd, sch03_year_type_cd, sch03_month_cd, sch03_month_type_cd, sch03_day_cd,
+                 sch03_day_type_cd, sch03_week_cd, sch03_day_week_cd, sch03_holiday_cd, sch03_num1, sch03_num2, sch03_num3,
+                 sch03_fix_date, sch03_note, sch03_start_date, sch03_close_date )
+        SELECT #{newId}, #{infoId}, #{companyId}, #{scheduleCode}, sch03_cycle_cd, sch03_cycle_calc_type,
+               sch03_period_cd, sch03_year_cd, sch03_year_type_cd, sch03_month_cd, sch03_month_type_cd, sch03_day_cd,
+               sch03_day_type_cd, sch03_week_cd, sch03_day_week_cd, sch03_holiday_cd, sch03_num1, sch03_num2, sch03_num3,
+               sch03_fix_date, NULL, CURRENT_DATE, sch03_close_date
+          FROM sch03_deadline
+         WHERE sch03_deadline_id = #{sourceId}
+           AND sch03_company_id  = 0
+           AND sch03_info_id     = 0
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM sch03_deadline
+         WHERE sch03_deadline_id = #{deadlineId}
+           AND sch03_company_id  = #{companyId}
+    </delete>
+</mapper>

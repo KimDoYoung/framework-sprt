@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sch/mapper/sch05_relate_ics.xml (selectByInfoId, selectById) + UpdateDataModel(sch05_relate_ics) INSERT/DELETE  (E04) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sch.mapper.SchRelateIcsMapper">
+
+    <sql id="columns">
+        sch05_relate_ics_id       AS relate_ics_id,
+        sch05_info_id             AS info_id,
+        sch05_ics_class_tree_id   AS ics_class_tree_id,
+        sch05_deadline_id         AS deadline_id,
+        f_ics_class_tree_nm_allpath(ics01_class_tree_id)                      AS ics_class_tree_full_name,
+        f_get_deadline_nm(sch05_deadline_id, '2')                             AS deadline_name,
+        f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate())    AS cycle_name
+    </sql>
+
+    <!-- AS-IS sch05_relate_ics.selectByInfoId (IDMS-IC) -->
+    <select id="selectByInfoId" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch05RelateIcsRes">
+        SELECT <include refid="columns"/>
+          FROM sch05_relate_ics
+               INNER JOIN ics01_class_tree ON sch05_ics_class_tree_id = ics01_class_tree_id
+               INNER JOIN sch03_deadline   ON sch05_deadline_id = sch03_deadline_id
+         WHERE 1=1
+           AND sch05_info_id = #{infoId}
+    </select>
+
+    <!-- AS-IS sch05_relate_ics.selectById (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch05RelateIcsRes">
+        SELECT <include refid="columns"/>
+          FROM sch05_relate_ics
+               INNER JOIN ics01_class_tree ON sch05_ics_class_tree_id = ics01_class_tree_id
+               INNER JOIN sch03_deadline   ON sch05_deadline_id = sch03_deadline_id
+         WHERE 1=1
+           AND sch05_relate_ics_id = #{relateIcsId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO sch05_relate_ics
+               ( sch05_relate_ics_id, sch05_info_id, sch05_ics_class_tree_id, sch05_deadline_id )
+        VALUES ( #{relateIcsId}, #{infoId}, #{icsClassTreeId}, #{deadlineId} )
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM sch05_relate_ics
+         WHERE sch05_relate_ics_id = #{relateIcsId}
+    </delete>
+</mapper>

@@ -19,6 +19,7 @@ import { Ics01_Lookup_IcsFile } from './Ics01_Lookup_IcsFile';
 import { Ics01_Lookup_RelateTdm } from './Ics01_Lookup_RelateTdm';
 import { Ics01_Move_Grid } from './Ics01_Move_Grid';
 import { Ics20_Lookup_RevisionHistory } from './Ics20_Lookup_RevisionHistory';
+import { Sch03_Lookup_Ics } from '@/components/lookup/Sch03_Lookup_Ics';
 
 const gb = gbFor<IcsLaw>();
 
@@ -43,6 +44,7 @@ export const Ics01_Grid_IcsType: React.FC<Props> = ({ classTreeId }) => {
   const [fileLaw, setFileLaw] = useState<IcsLaw | null>(null);
   const [revisionId, setRevisionId] = useState<number | null>(null);
   const [tdmLaw, setTdmLaw] = useState<IcsLaw | null>(null);
+  const [deadlineId, setDeadlineId] = useState<number | null>(null);
   const classTreeIdRef = useRef(classTreeId);
   classTreeIdRef.current = classTreeId;
 
@@ -93,7 +95,7 @@ export const Ics01_Grid_IcsType: React.FC<Props> = ({ classTreeId }) => {
     iconCell<IcsLaw>('edit', 'actionCellContent', 30, ' ', row => setContentLaw(row)),  // L213 contentEdit(): modified()로 고치던 값을 모델에 넣고 Ics01_Lookup_Content.open
     gb.textArea('submitTo', 170, '제출처', { editor: 'largeText' }),  // L214
     gb.text('cycleName', 100, '주기'),  // L215
-    iconCell<IcsLaw>('edit', 'actionCellDeadline', 30, '기한', () => message.info('기한(Sch03_Lookup_Ics)은 아직 변환 전입니다.')),  // L216 deadlineList()
+    iconCell<IcsLaw>('edit', 'actionCellDeadline', 30, '기한', row => setDeadlineId(row.classTreeId)),  // L216 deadlineList(): modified() 뒤 Sch03_Lookup_Ics.open(classTreeId, "2", callback → refresh)
     gb.textCenter('fileCount', 60, '서식파일'),  // L217
     iconCell<IcsLaw>('add', 'actionCellFile', 30, ' ', row => setFileLaw(row)),  // L218 fileAddList() → Ics01_Lookup_IcsFile.open
     gb.textArea('relatedLaw', 150, '관련조문', { editor: 'largeText' }),  // L219
@@ -144,6 +146,12 @@ export const Ics01_Grid_IcsType: React.FC<Props> = ({ classTreeId }) => {
         onClose={() => setFileLaw(null)}
       />
       <Ics20_Lookup_RevisionHistory classTreeId={revisionId} onClose={() => setRevisionId(null)} />
+      <Sch03_Lookup_Ics
+        classTreeId={deadlineId}
+        scheduleCode="2"
+        onClosed={() => { if (deadlineId != null) void refresh(deadlineId); }}
+        onClose={() => setDeadlineId(null)}
+      />
       <Ics01_Lookup_RelateTdm
         icsId={tdmLaw?.classTreeId ?? null}
         icsName={tdmLaw?.classTreeName ?? ''}

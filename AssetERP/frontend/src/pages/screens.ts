@@ -8,6 +8,9 @@ import { Fnd03_Tab_ConsignmentManager } from './fnd/Fnd03_Tab_ConsignmentManager
 import { Fnd06_Tab_OfficeWorkManager } from './fnd/Fnd06_Tab_OfficeWorkManager';
 import { Fnd09_Tab_TrustBankManager } from './fnd/Fnd09_Tab_TrustBankManager';
 import { Ics01_Tab_ClassTree } from './ics/Ics01_Tab_ClassTree';
+import { Ics01_Tab_IcsFileUpload } from './ics/Ics01_Tab_IcsFileUpload';
+import { Ics10_Tab_ChecklistAdmin } from './ics/Ics10_Tab_ChecklistAdmin';
+import { Ics20_Tab_RevisionHistoryAdmin } from './ics/Ics20_Tab_RevisionHistoryAdmin';
 import { Icam03_Tab_Fund } from './icam/Icam03_Tab_Fund';
 import { Icam10_Tab_FeeAdmin } from './icam/Icam10_Tab_FeeAdmin';
 import { Icam50_Tab_DbSource } from './icam/Icam50_Tab_DbSource';
@@ -69,6 +72,9 @@ export const SCREENS: Record<string, React.FC> = {
   Fnd06_Tab_OfficeWorkManager, // D12 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)
   Fnd09_Tab_TrustBankManager, // D13 (저장은 원본 서버에 insertCheck가 없어 원본에서도 실패 — 서버가 거절, ICAM가져오기도 거절)
   Ics01_Tab_ClassTree, // E01 (기한 설정 Sch03_Lookup_Ics는 다른 도메인이라 별도 ID)
+  Ics01_Tab_IcsFileUpload, // E02
+  Ics20_Tab_RevisionHistoryAdmin, // E03
+  Ics10_Tab_ChecklistAdmin, // E04
   Icam03_Tab_Fund, // D07 (ICAM Get·타사무 Get은 외부 ICAM DB 연동이 없어 서버가 거절)
   Icam10_Tab_FeeAdmin, // D08 (ICAM 발생보수 가져오기도 같은 연동이 없어 서버가 거절)
   Icam50_Tab_DbSource, // D09 (DB소스 가져오기도 같은 연동이 없어 서버가 거절)

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ics/mapper/ics20_revision_history.xml (selectByDate, selectById) + ics19_revision_relate_ics.xml (selectByRevisionHistoryId, selectById)
+     + UpdateDataModel(ics20_revision_history·ics19_revision_relate_ics) INSERT/UPDATE/DELETE  (E03) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsRevisionHistoryAdminMapper">
+
+    <sql id="columns">
+        ics20_revision_history_id AS revision_history_id,
+        ics20_reg_date            AS reg_date,
+        ics20_submission_date     AS submission_date,
+        ics20_effect_date         AS effect_date,
+        ics20_reflection_date     AS reflection_date,
+        ics20_finance_agency_cd   AS finance_agency_code,
+        f_cdnm('FinanceAgencyCode', ics20_finance_agency_cd, 0, ics20_reg_date) AS finance_agency_name,
+        ics20_title               AS title,
+        ics20_related_law         AS related_law,
+        ics20_note                AS note,
+        ( SELECT COUNT(*)
+            FROM ics19_revision_relate_ics
+           WHERE ics19_revision_history_id = ics20_revision_history_id )  AS ics_count,
+        ( SELECT COUNT(*)
+            FROM sys10_file
+           WHERE sys10_parent_id = ics20_revision_history_id )            AS file_count
+    </sql>
+
+    <!-- AS-IS ics20_revision_history.selectByDate L40 (IDMS-IC) — 검색어·조문은 서버가 %…%로 만든다 -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsRevisionHistoryAdminRes">
+        SELECT <include refid="columns"/>
+          FROM ics20_revision_history
+         WHERE COALESCE(ics20_finance_agency_cd, '') LIKE #{financeAgencyCode}
+        <choose>
+            <when test="dateType == 'reg'">
+           AND ics20_reg_date BETWEEN #{startDate} AND COALESCE(#{closeDate}, to_date('29991231','yyyyMMdd'))
+            </when>
+            <otherwise>
+           AND ics20_effect_date BETWEEN #{startDate} AND COALESCE(#{closeDate}, to_date('29991231','yyyyMMdd'))
+            </otherwise>
+        </choose>
+           AND UPPER(CONCAT(f_cdnm('FinanceAgencyCode', ics20_finance_agency_cd, 0, ics20_reg_date), ics20_title, ics20_note)) LIKE UPPER(#{searchText})
+           AND UPPER(COALESCE(ics20_related_law, '')) LIKE UPPER(#{relatedLawSearchText})
+        <choose>
+            <when test="dateType == 'reg'">
+         ORDER BY ics20_reg_date DESC, ics20_finance_agency_cd, ics20_title, ics20_note
+            </when>
+            <otherwise>
+         ORDER BY ics20_effect_date DESC, ics20_finance_agency_cd, ics20_title, ics20_note
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- AS-IS ics20_revision_history.selectById L23 (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsRevisionHistoryAdminRes">
+        SELECT <include refid="columns"/>
+          FROM ics20_revision_history
+         WHERE ics20_revision_history_id = #{revisionHistoryId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO ics20_revision_history
+               ( ics20_revision_history_id, ics20_reg_date, ics20_submission_date, ics20_effect_date, ics20_reflection_date,
+                 ics20_finance_agency_cd, ics20_title, ics20_related_law, ics20_note )
+        VALUES ( #{revisionHistoryId}, #{req.regDate}, #{req.submissionDate}, #{req.effectDate}, #{req.reflectionDate},
+                 #{req.financeAgencyCode}, #{req.title}, #{req.relatedLaw}, #{req.note} )
+    </insert>
+
+    <update id="update">
+        UPDATE ics20_revision_history
+           SET ics20_reg_date          = #{req.regDate},
+               ics20_submission_date   = #{req.submissionDate},
+               ics20_effect_date       = #{req.effectDate},
+               ics20_reflection_date   = #{req.reflectionDate},
+               ics20_finance_agency_cd = #{req.financeAgencyCode},
+               ics20_title             = #{req.title},
+               ics20_related_law       = #{req.relatedLaw},
+               ics20_note              = #{req.note}
+         WHERE ics20_revision_history_id = #{revisionHistoryId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM ics20_revision_history
+         WHERE ics20_revision_history_id = #{revisionHistoryId}
+    </delete>
+
+    <sql id="lawColumns">
+        ics19_revision_relate_ics_id AS revision_relate_ics_id,
+        ics19_revision_history_id    AS revision_history_id,
+        ics19_class_tree_id          AS class_tree_id,
+        ics01_class_tree_nm          AS class_tree_name
+    </sql>
+
+    <!-- AS-IS ics19_revision_relate_ics.selectByRevisionHistoryId L24 (IDMS-IC) — 원본은 정렬이 없다 -->
+    <select id="selectLaws" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsRevisionLawRes">
+        SELECT <include refid="lawColumns"/>
+          FROM ics19_revision_relate_ics
+               INNER JOIN ics01_class_tree ON ics01_class_tree_id = ics19_class_tree_id
+         WHERE ics19_revision_history_id = #{revisionHistoryId}
+    </select>
+
+    <!-- AS-IS ics19_revision_relate_ics.selectById L16 (IDMS-IC) -->
+    <select id="selectLawById" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsRevisionLawRes">
+        SELECT <include refid="lawColumns"/>
+          FROM ics19_revision_relate_ics
+               INNER JOIN ics01_class_tree ON ics01_class_tree_id = ics19_class_tree_id
+         WHERE ics19_revision_relate_ics_id = #{revisionRelateIcsId}
+    </select>
+
+    <insert id="insertLaw">
+        INSERT INTO ics19_revision_relate_ics
+               ( ics19_revision_relate_ics_id, ics19_revision_history_id, ics19_class_tree_id )
+        VALUES ( #{revisionRelateIcsId}, #{revisionHistoryId}, #{classTreeId} )
+    </insert>
+
+    <delete id="deleteLawById">
+        DELETE FROM ics19_revision_relate_ics
+         WHERE ics19_revision_relate_ics_id = #{revisionRelateIcsId}
+    </delete>
+</mapper>

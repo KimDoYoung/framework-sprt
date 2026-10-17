@@ -3,6 +3,9 @@ package kr.co.kfs.asseterp.biz.ics.mapper;
 import kr.co.kfs.asseterp.biz.ics.dto.ClassTreeRes;
 import kr.co.kfs.asseterp.biz.ics.dto.ClassTreeSaveReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawContentReq;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDeadlineRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDetailRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawLookupRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawSaveReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -45,6 +48,22 @@ public interface IcsClassTreeMapper {
     /** AS-IS ics01_class_tree.selectByClassTreeId */
     List<IcsLawRes> selectLaws(@Param("classTreeId") Long classTreeId, @Param("companyId") Long companyId, @Param("typeCode") String typeCode,
                                @Param("publicType") String publicType, @Param("searchText") String searchText, @Param("advisYn") boolean advisYn);
+
+    /** AS-IS ics01_class_tree.selectByTypeCodePaging (Ics01_Lookup_SelectMulti, E03) */
+    List<IcsLawLookupRes> selectLawLookup(@Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId, @Param("typeCode") String typeCode,
+                                          @Param("lawSearch") String lawSearch, @Param("statuteSearch") String statuteSearch,
+                                          @Param("detailSearchYn") boolean detailSearchYn, @Param("limit") long limit, @Param("offset") long offset);
+
+    /** AS-IS ics01_class_tree.selectByTypeCodePagingTotal */
+    long selectLawLookupTotal(@Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId, @Param("typeCode") String typeCode,
+                              @Param("lawSearch") String lawSearch, @Param("statuteSearch") String statuteSearch,
+                              @Param("detailSearchYn") boolean detailSearchYn);
+
+    /** AS-IS ics01_class_tree.selectById (Ics01_Lookup_ClassTreeDetail, E03-1) */
+    IcsLawDetailRes selectLawDetail(@Param("classTreeId") Long classTreeId);
+
+    /** AS-IS ics01_class_tree.selectByListIcsId (Ics01_Lookup_SelectMulti "deadline", E04) */
+    List<IcsLawDeadlineRes> selectLawDeadlines(@Param("classTreeIds") List<Long> classTreeIds);
 
     /** AS-IS ics01_class_tree.refresh */
     IcsLawRes selectLawRefresh(@Param("classTreeId") Long classTreeId, @Param("companyId") Long companyId);

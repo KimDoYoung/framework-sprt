@@ -292,6 +292,100 @@
          ORDER BY ics01_class_tree_cd
     </select>
 
+    <!-- lawSubSelects 중 주기 열만 (조회창 그리드에 파일·개정이력·책무 건수 열은 없다) -->
+    <sql id="lawCycleName">
+         ,  (
+                SELECT  CASE WHEN COUNT(*)=1
+                        THEN MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate()))
+                        ELSE MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate())) || ' 외 ' || COUNT(sch03_deadline.*) - 1 || '건'
+                        END
+                  FROM  sch03_deadline
+                 WHERE  sch03_schedule_cd IN ('2','3') /* 스케줄 (1) / 내부통제-반복 (2) / 내부통제-수시 (3) */
+                   AND  ics01_class_tree_id = sch03_info_id
+                   AND  ics01_company_id = sch03_company_id
+                 LIMIT 1
+            )                                                                       AS cycle_name
+    </sql>
+
+    <!-- AS-IS ics01_class_tree.pagingCondition L202 (IDMS-IC) — Ics01_Lookup_SelectMulti가 쓰는 분기만: advisYn은 항상 false(조건이 항상 참)라 생략,
+         mngGroupId·relateTable(openUnConn)은 이 조회창에서 안 쓴다 -->
+    <sql id="lawLookupCondition">
+           AND ics01_type_cd = #{typeCode}
+           AND COALESCE(ics03_except_yn, 'false') != 'true'
+        <choose>
+            <when test="!detailSearchYn">
+           AND REPLACE(UPPER(CONCAT(ics01_class_tree_cd, ics01_class_tree_nm)), ' ', '') LIKE REPLACE(UPPER(#{lawSearch}), ' ', '')
+           AND REPLACE(UPPER(ics01_related_law), ' ', '') LIKE REPLACE(UPPER(#{statuteSearch}), ' ', '')
+            </when>
+            <otherwise>
+           AND REPLACE(UPPER(CONCAT(ics01_class_tree_cd, ics01_class_tree_nm, ics01_content)), ' ', '') LIKE REPLACE(UPPER(#{lawSearch}), ' ', '')
+           AND REPLACE(UPPER(CONCAT(ics01_related_law, ics01_content)), ' ', '') LIKE REPLACE(UPPER(#{statuteSearch}), ' ', '')
+            </otherwise>
+        </choose>
+        <if test="classTreeId != null">
+           AND ics01_class_tree_id IN (<include refid="icsTreeDown"/>)
+        </if>
+    </sql>
+
+    <!-- AS-IS ics01_class_tree.selectByTypeCodePaging L254 (IDMS-IC) — 열은 조회창 그리드 열 + id -->
+    <select id="selectLawLookup" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsLawLookupRes">
+        SELECT ics01_class_tree_id      AS class_tree_id,
+               ics01_class_tree_cd      AS class_tree_code,
+               ics01_class_tree_nm      AS class_tree_name,
+               ics01_content            AS content,
+               ics01_submit_to          AS submit_to,
+               ics01_related_law        AS related_law,
+               f_ics_class_tree_nm_allpath(ics01_class_tree_id) AS class_tree_full_name
+               <include refid="lawCycleName"/>
+          FROM ics01_class_tree
+               LEFT OUTER JOIN ics03_company_info ON (ics03_ics_class_tree_id = ics01_class_tree_id AND ics03_company_id = #{companyId})
+         WHERE 1=1
+        <include refid="lawLookupCondition"/>
+         ORDER BY ics01_class_tree_cd
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <!-- AS-IS ics01_class_tree.selectByTypeCodePagingTotal L305 (IDMS-IC) -->
+    <select id="selectLawLookupTotal" resultType="long">
+        SELECT count(ics01_class_tree.*)
+          FROM ics01_class_tree
+               LEFT OUTER JOIN ics03_company_info ON (ics03_ics_class_tree_id = ics01_class_tree_id AND ics03_company_id = #{companyId})
+         WHERE 1=1
+        <include refid="lawLookupCondition"/>
+    </select>
+
+    <!-- AS-IS ics01_class_tree.selectById L52 (IDMS-IC) — 법규상세 창 폼 값만. 기한은 sch03_deadline 이름을 ', '로 -->
+    <select id="selectLawDetail" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsLawDetailRes">
+        SELECT ics01_class_tree_id  AS class_tree_id,
+               ics01_class_tree_cd  AS class_tree_code,
+               ics01_class_tree_nm  AS class_tree_name,
+               f_ics_class_tree_nm_allpath(ics01_class_tree_id) AS class_tree_full_name,
+               ics01_content        AS content,
+               ics01_related_law    AS related_law,
+               ics01_submit_to      AS submit_to,
+               ( SELECT STRING_AGG(f_get_deadline_nm(sch03_deadline_id, '2'), ', ')
+                   FROM sch03_deadline
+                  WHERE sch03_info_id = ics01_class_tree_id )  AS deadline_name
+          FROM ics01_class_tree
+         WHERE ics01_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- AS-IS ics01_class_tree.selectByListIcsId L414 (IDMS-IC) — ${classTreeIdList}는 #{} 목록으로. 법규마다 그 법규의 회사 기한(스케줄 구분 2·3)을 붙인다(기한이 여럿이면 여러 행, 없으면 기한 열이 비어 한 행) -->
+    <select id="selectLawDeadlines" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsLawDeadlineRes">
+        SELECT a.ics01_class_tree_id                                              AS class_tree_id,
+               f_ics_class_tree_nm_allpath(a.ics01_class_tree_id)                 AS class_tree_full_name,
+               c.sch03_deadline_id                                                AS deadline_id,
+               f_get_deadline_nm(c.sch03_deadline_id, '2')                        AS deadline_full_name,
+               f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate()) AS cycle_name
+          FROM ics01_class_tree a
+               LEFT OUTER JOIN sch03_deadline c ON (c.sch03_info_id     = a.ics01_class_tree_id AND
+                                                    c.sch03_schedule_cd IN ('2','3')            AND /* 스케줄 (1) / 내부통제-반복 (2) / 내부통제-수시 (3) */
+                                                    c.sch03_company_id  = a.ics01_company_id    )
+         WHERE a.ics01_class_tree_id IN
+        <foreach collection="classTreeIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
     <!-- AS-IS ics01_class_tree.refresh L498 (IDMS-IC) -->
     <select id="selectLawRefresh" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsLawRes">
         SELECT <include refid="lawColumns"/>
