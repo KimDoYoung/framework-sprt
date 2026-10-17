@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/fnd/mapper/fnd09_trust_bank.xml (selectByCompanyId0)  (D13)
+  화면의 저장이 부르는 insertCheck가 원본 서버에 없어(원본에서도 실패) 저장 SQL은 옮기지 않았다. 외부 ICAM DB를 읽는 selectIcamTrustBank도 옮기지 않았다
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.fnd.mapper.FndTrustBankMapper">
+
+    <!-- AS-IS fnd09_trust_bank.selectByCompanyId0 L60 (IDMS-IC) — 원본의 ${companyId}는 #{companyId} -->
+    <select id="selectByCompanyId0" resultType="kr.co.kfs.asseterp.biz.fnd.dto.TrustBankRes">
+        SELECT fnd09_trust_bank_id AS trust_bank_id,
+               fnd09_trust_bank_cd AS trust_bank_code,
+               fnd09_trust_bank_nm AS trust_bank_name,
+               fnd09_use_yn        AS use_yn,
+               fnd09_note          AS note,
+               fnd09_company_id    AS company_id
+          FROM fnd09_trust_bank
+         WHERE fnd09_company_id = 0
+           AND fnd09_company_id = #{companyId}
+           AND ( ( #{useYn} = 'true'                        AND
+                   COALESCE(fnd09_use_yn,'true') = 'true'   ) OR
+                 ( #{useYn} = 'false'                       ) )
+           AND fnd09_trust_bank_cd||fnd09_trust_bank_nm LIKE '%'||#{searchText}||'%'
+         ORDER BY fnd09_trust_bank_cd
+    </select>
+</mapper>

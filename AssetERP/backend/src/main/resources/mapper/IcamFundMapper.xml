@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/icam/mapper/icam03_fund.xml (selectRecentFund, selectByNamePaging, selectByNameTotal)  (D07)
+  조건·정렬은 원본 그대로, SELECT 목록만 DTO에 맞춰 별칭(icam03_fund_cd AS fund_cd …)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.icam.mapper.IcamFundMapper">
+
+    <sql id="fundColumns">
+        icam03_fund_id            AS fund_id,
+        icam03_std_date           AS std_date,
+        icam03_fund_cd            AS fund_cd,
+        icam03_fund_nm            AS fund_nm,
+        icam03_kofia_fund_cd      AS kofia_fund_cd,
+        icam03_ksd_fund_cd        AS ksd_fund_cd,
+        icam03_ksd_item_cd        AS ksd_item_cd,
+        icam03_trust_nm           AS trust_nm,
+        icam03_fund_type_nm       AS fund_type_nm,
+        icam03_public_nm          AS public_nm,
+        icam03_parent_nm          AS parent_nm,
+        icam03_class_type_nm      AS class_type_nm,
+        icam03_fund_unit_nm       AS fund_unit_nm,
+        icam03_char_class_nm      AS char_class_nm,
+        icam03_diff_div_yn        AS diff_div_yn,
+        icam03_set_date           AS set_date,
+        icam03_end_date           AS end_date,
+        icam03_end_expect_date    AS end_expect_date,
+        icam03_operator1          AS operator1,
+        icam03_operator2          AS operator2,
+        icam03_consignment_nm     AS consignment_nm,
+        icam03_trust_bank_nm      AS trust_bank_nm,
+        icam03_office_work_nm     AS office_work_nm,
+        icam03_cur                AS cur,
+        icam03_close_date         AS close_date,
+        icam03_fee_date           AS fee_date,
+        icam03_management_rate    AS management_rate,
+        icam03_sales_rate         AS sales_rate,
+        icam03_consignment_rate   AS consignment_rate,
+        icam03_office_work_rate   AS office_work_rate,
+        icam03_set_amt            AS set_amt,
+        icam03_nav                AS nav,
+        icam03_work_date_string   AS work_date_string,
+        icam03_worker             AS worker
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) icam03_fund.selectRecentFund. 서브쿼리의 a.icam03_icam_company_cd = icam03_icam_company_cd는 원본 그대로(안쪽 컬럼이 a의 것이라 항상 참 → 펀드별 전체 최대 기준일) -->
+    <select id="selectRecentFund" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamFundRes">
+        SELECT <include refid="fundColumns"/>
+          FROM (
+                SELECT icam03_fund.*
+                     , f_cdnm('IcamTrustCode'    , icam03_trust_cd      , sys01_company_id, f_sysdate()) as icam03_trust_nm
+                     , f_cdnm('IcamFundType'     , icam03_fund_type_cd  , sys01_company_id, f_sysdate()) as icam03_fund_type_nm
+                     , f_cdnm('IcamPublicCode'   , icam03_public_cd     , sys01_company_id, f_sysdate()) as icam03_public_nm
+                     , f_cdnm('IcamParentCode'   , icam03_parent_cd     , sys01_company_id, f_sysdate()) as icam03_parent_nm
+                     , f_cdnm('IcamClassType'    , icam03_class_type_cd , sys01_company_id, f_sysdate()) as icam03_class_type_nm
+                     , f_cdnm('IcamFundUnitCode' , icam03_fund_unit_cd  , sys01_company_id, f_sysdate()) as icam03_fund_unit_nm
+                     , f_cdnm('IcamCharClassCode', icam03_char_class_cd , sys01_company_id, f_sysdate()) as icam03_char_class_nm
+                     , to_char(icam03_work_date,'yyyy-mm-dd HH24:MI:SS')                                 as icam03_work_date_string
+                  FROM icam03_fund
+                     , sys01_company
+                 WHERE icam03_icam_company_cd = sys01_icam_company_cd
+                   AND sys01_company_id = #{companyId}
+                   AND (icam03_fund_cd, icam03_std_date) IN ( SELECT icam03_fund_cd, MAX(icam03_std_date)
+                                                                FROM icam03_fund a
+                                                               WHERE a.icam03_icam_company_cd = icam03_icam_company_cd
+                                                               GROUP BY icam03_fund_cd )
+               ) t
+         ORDER BY fund_cd
+    </select>
+
+    <!-- AS-IS(IDMS-IC) icam03_fund.selectByNamePaging -->
+    <select id="selectByNamePaging" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamFundRes">
+        SELECT <include refid="fundColumns"/>
+          FROM (
+                SELECT icam03_fund.*
+                     , f_cdnm('IcamTrustCode'    , icam03_trust_cd      , sys01_company_id, f_sysdate()) as icam03_trust_nm
+                     , f_cdnm('IcamFundType'     , icam03_fund_type_cd  , sys01_company_id, f_sysdate()) as icam03_fund_type_nm
+                     , f_cdnm('IcamPublicCode'   , icam03_public_cd     , sys01_company_id, f_sysdate()) as icam03_public_nm
+                     , f_cdnm('IcamParentCode'   , icam03_parent_cd     , sys01_company_id, f_sysdate()) as icam03_parent_nm
+                     , f_cdnm('IcamClassType'    , icam03_class_type_cd , sys01_company_id, f_sysdate()) as icam03_class_type_nm
+                     , f_cdnm('IcamFundUnitCode' , icam03_fund_unit_cd  , sys01_company_id, f_sysdate()) as icam03_fund_unit_nm
+                     , f_cdnm('IcamCharClassCode', icam03_char_class_cd , sys01_company_id, f_sysdate()) as icam03_char_class_nm
+                     , to_char(icam03_work_date,'yyyy-mm-dd HH24:MI:SS')                                 as icam03_work_date_string
+                  FROM icam03_fund
+                       INNER JOIN sys01_company ON sys01_icam_company_cd = icam03_icam_company_cd
+                 WHERE sys01_company_id = #{p.companyId}
+                   AND icam03_fund_cd = #{p.fundCode}
+                 ORDER BY icam03_std_date DESC
+                 LIMIT #{p.limit}
+                OFFSET #{p.offset}
+               ) t
+         ORDER BY std_date DESC
+    </select>
+
+    <!-- AS-IS(IDMS-IC) icam03_fund.selectByNameTotal -->
+    <select id="selectByNameTotal" resultType="int">
+        SELECT count(*)
+          FROM icam03_fund
+               INNER JOIN sys01_company ON sys01_icam_company_cd = icam03_icam_company_cd
+         WHERE icam03_icam_company_cd = sys01_icam_company_cd
+           AND sys01_company_id = #{p.companyId}
+           AND icam03_fund_cd = #{p.fundCode}
+    </select>
+
+</mapper>

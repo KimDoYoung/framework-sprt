@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/fnd/mapper/fnd06_office_work.xml (selectByCompanyId0, selectById)  (D12)
+  저장은 UpdateDataModel(동적 UPDATE/INSERT)이라 명시 UPDATE·INSERT 둘로 옮겼다. 외부 ICAM DB를 읽는 selectIcamOfficeWork는 옮기지 않았다
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.fnd.mapper.FndOfficeWorkMapper">
+
+    <!-- AS-IS fnd06_office_work.selectByCompanyId0 L63 (IDMS-IC) — 원본의 ${companyId}는 #{companyId} -->
+    <select id="selectByCompanyId0" resultType="kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkRes">
+        SELECT fnd06_office_work_id       AS office_work_id,
+               fnd06_office_work_nm       AS office_work_name,
+               fnd06_office_work_cd       AS office_work_code,
+               fnd06_kofia_cd             AS kofia_code,
+               fnd06_etc_office_work_cd01 AS etc_office_work_code01,
+               fnd06_office_work_use_yn   AS use_yn,
+               fnd06_office_work_note     AS note,
+               fnd06_company_id           AS company_id
+          FROM fnd06_office_work
+         WHERE fnd06_company_id = 0
+           AND fnd06_company_id = #{companyId}
+           AND ( ( #{useYn} = 'true'                                  AND
+                   COALESCE(fnd06_office_work_use_yn,'true') = 'true' ) OR
+                 ( #{useYn} = 'false'                                 ) )
+           AND fnd06_office_work_cd||fnd06_office_work_nm LIKE '%'||#{searchText}||'%'
+         ORDER BY fnd06_office_work_cd
+    </select>
+
+    <!-- AS-IS fnd06_office_work.selectById L29 (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkRes">
+        SELECT fnd06_office_work_id       AS office_work_id,
+               fnd06_office_work_nm       AS office_work_name,
+               fnd06_office_work_cd       AS office_work_code,
+               fnd06_kofia_cd             AS kofia_code,
+               fnd06_etc_office_work_cd01 AS etc_office_work_code01,
+               fnd06_office_work_use_yn   AS use_yn,
+               fnd06_office_work_note     AS note,
+               fnd06_company_id           AS company_id
+          FROM fnd06_office_work
+         WHERE fnd06_office_work_id = #{officeWorkId}
+    </select>
+
+    <!-- AS-IS Fnd06_OfficeWork.update(UpdateDataModel) 의 UPDATE 부분 — 화면이 고치는 열만 -->
+    <update id="updateOfficeWork">
+        UPDATE fnd06_office_work
+           SET fnd06_office_work_cd       = #{req.officeWorkCode},
+               fnd06_kofia_cd             = #{req.kofiaCode},
+               fnd06_etc_office_work_cd01 = #{req.etcOfficeWorkCode01},
+               fnd06_office_work_note     = #{req.note}
+         WHERE fnd06_office_work_id = #{req.officeWorkId}
+    </update>
+
+    <!-- AS-IS dbConfig.getSeq (IDMS-IC) -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Fnd06_OfficeWork.update(UpdateDataModel) 의 INSERT 부분 -->
+    <insert id="insertOfficeWork">
+        INSERT INTO fnd06_office_work
+               ( fnd06_office_work_id, fnd06_office_work_cd, fnd06_office_work_nm, fnd06_office_work_use_yn, fnd06_office_work_note,
+                 fnd06_company_id, fnd06_etc_office_work_cd01, fnd06_kofia_cd )
+        VALUES ( #{officeWorkId}, #{req.officeWorkCode}, #{req.officeWorkName}, #{req.useYn}, #{req.note},
+                 #{companyId}, #{req.etcOfficeWorkCode01}, #{req.kofiaCode} )
+    </insert>
+</mapper>

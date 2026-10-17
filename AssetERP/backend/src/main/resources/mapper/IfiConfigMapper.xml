@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/ifi/mapper/ifi90_config.xml (selectByIfType, selectById, checkConfigId) + UpdateDataModel 저장·삭제를 명시 SQL로  (D01)
+  - 이 DB(asseterpdb)에는 ifi90_target_key가 없고 ifi90_target_key1·key2만 있다 → targetKey는 ifi90_target_key1 (사용자 결정 2026-10-17)
+  - 저장은 계정PW(ifi90_local_pw·ifi90_target_pw)를 건드리지 않는다: 원본 UpdateDataModel은 화면이 고치는 *_pw_dec(컬럼 아님)를 저장하지 않고
+    *_pw는 읽어 온 값을 그대로 되쓰기 때문 (신규 행은 NULL)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.ifi.mapper.IfiConfigMapper">
+
+    <sql id="configColumns">
+        ifi90_config_id        AS config_id,
+        ifi90_if_cd            AS if_code,
+        ifi90_if_nm            AS if_name,
+        ifi90_if_type          AS if_type,
+        ifi90_if_type_nm       AS if_type_name,
+        ifi90_local_host       AS local_host,
+        ifi90_local_port       AS local_port,
+        ifi90_local_account    AS local_account,
+        ifi90_local_pw_dec     AS local_pw_dec,
+        ifi90_local_path       AS local_path,
+        ifi90_local_key        AS local_key,
+        ifi90_target_host      AS target_host,
+        ifi90_target_port      AS target_port,
+        ifi90_target_account   AS target_account,
+        ifi90_target_pw_dec    AS target_pw_dec,
+        ifi90_target_path      AS target_path,
+        ifi90_target_key1      AS target_key,
+        ifi90_note             AS note
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) ifi90_config.selectByIfType L39 -->
+    <select id="selectByIfType" resultType="kr.co.kfs.asseterp.biz.ifi.dto.IfiConfigRes">
+        SELECT <include refid="configColumns"/>
+          FROM (
+                SELECT ifi90_config.*
+                     , f_cdnm('InterfaceType', ifi90_if_type, 0, f_today()) AS ifi90_if_type_nm
+                     , to_decrypts(ifi90_local_pw)                          AS ifi90_local_pw_dec
+                     , to_decrypts(ifi90_target_pw)                         AS ifi90_target_pw_dec
+                  FROM ifi90_config
+                 WHERE ifi90_if_type LIKE #{p.ifType}
+               ) t
+         WHERE UPPER(CONCAT( ifi90_if_cd, ifi90_if_nm, ifi90_if_type_nm, ifi90_local_host, ifi90_target_host
+                           , ifi90_note )) LIKE UPPER(#{p.searchText})
+         ORDER BY ifi90_if_cd, ifi90_if_type
+    </select>
+
+    <!-- AS-IS(IDMS-IC) ifi90_config.selectById L30 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ifi.dto.IfiConfigRes">
+        SELECT <include refid="configColumns"/>
+          FROM (
+                SELECT ifi90_config.*
+                     , f_cdnm('InterfaceType', ifi90_if_type, 0, f_today()) AS ifi90_if_type_nm
+                     , to_decrypts(ifi90_local_pw)                          AS ifi90_local_pw_dec
+                     , to_decrypts(ifi90_target_pw)                         AS ifi90_target_pw_dec
+                  FROM ifi90_config
+                 WHERE ifi90_config_id = #{configId}
+               ) t
+    </select>
+
+    <!-- AS-IS(IDMS-IC) ifi90_config.checkConfigId L54 -->
+    <select id="checkConfigId" resultType="int">
+        SELECT count(*)
+          FROM (
+                 SELECT ifi91_config_id
+                   FROM ifi91_config_api
+                  WHERE ifi91_config_id = #{configId}
+                  UNION ALL
+                 SELECT ifi95_config_file_id
+                   FROM ifi95_config_file
+                  WHERE ifi95_config_id = #{configId}
+               ) t
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel INSERT (계정PW 열 제외 — 파일 머리 설명) -->
+    <insert id="insertConfig">
+        INSERT INTO ifi90_config
+               (ifi90_config_id, ifi90_if_cd, ifi90_if_nm, ifi90_if_type,
+                ifi90_local_host, ifi90_local_port, ifi90_local_account, ifi90_local_path, ifi90_local_key,
+                ifi90_target_host, ifi90_target_port, ifi90_target_account, ifi90_target_path, ifi90_target_key1,
+                ifi90_note)
+        VALUES (#{id}, #{r.ifCode}, #{r.ifName}, #{r.ifType},
+                #{r.localHost}, #{r.localPort}, #{r.localAccount}, #{r.localPath}, #{r.localKey},
+                #{r.targetHost}, #{r.targetPort}, #{r.targetAccount}, #{r.targetPath}, #{r.targetKey},
+                #{r.note})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE (계정PW 열 제외) -->
+    <update id="updateConfig">
+        UPDATE ifi90_config
+           SET ifi90_if_cd          = #{r.ifCode}
+             , ifi90_if_nm          = #{r.ifName}
+             , ifi90_if_type        = #{r.ifType}
+             , ifi90_local_host     = #{r.localHost}
+             , ifi90_local_port     = #{r.localPort}
+             , ifi90_local_account  = #{r.localAccount}
+             , ifi90_local_path     = #{r.localPath}
+             , ifi90_local_key      = #{r.localKey}
+             , ifi90_target_host    = #{r.targetHost}
+             , ifi90_target_port    = #{r.targetPort}
+             , ifi90_target_account = #{r.targetAccount}
+             , ifi90_target_path    = #{r.targetPath}
+             , ifi90_target_key1    = #{r.targetKey}
+             , ifi90_note           = #{r.note}
+         WHERE ifi90_config_id = #{r.configId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel -->
+    <delete id="deleteConfigs">
+        DELETE FROM ifi90_config
+         WHERE ifi90_config_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+</mapper>

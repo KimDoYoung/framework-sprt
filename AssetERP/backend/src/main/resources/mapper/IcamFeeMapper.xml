@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/icam/mapper/icam10_fee.xml (selectByFeeTypePaging, selectByFeeTypePagingTotal)  (D08)
+  조건·정렬은 원본 그대로, SELECT 목록만 그리드 DTO에 맞춰 별칭. whereCondition의 fundCode 분기는 이 화면이 넘기지 않아 뺐다
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.icam.mapper.IcamFeeMapper">
+
+    <!-- AS-IS icam10_fee.whereCondition L97 (IDMS-IC) -->
+    <sql id="whereCondition">
+        AND icam10_company_id = #{p.companyId}
+        AND ( ( #{p.feeType} = '20407'                 AND   /* 사무관리보수 */
+                icam10_fee_type IN ('20407','24926') ) OR
+              ( #{p.feeType} = '20402'                 AND   /* 운용보수 */
+                icam10_fee_type IN ('20402','24923') ) OR
+              ( #{p.feeType} NOT IN ('20407','20402')  AND
+                icam10_fee_type = #{p.feeType}         ) )
+        AND icam10_std_date  BETWEEN #{p.startDate} AND #{p.closeDate}
+        AND upper(concat(icam10_icam_company_cd,icam10_icam_company_nm,icam10_fund_cd,icam10_fund_nm,icam10_rmk_nm)) LIKE '%'||upper(#{p.searchText})||'%'
+    </sql>
+
+    <!-- AS-IS icam10_fee.selectByFeeTypePaging L114 (IDMS-IC) -->
+    <select id="selectByFeeTypePaging" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamFeeRes">
+        SELECT icam10_fee_id                                          AS fee_id,
+               icam10_std_date                                        AS std_date,
+               icam10_icam_company_cd                                 AS icam_company_code,
+               icam10_icam_company_nm                                 AS icam_company_name,
+               icam10_fund_nm                                         AS fund_name,
+               icam10_rmk_nm                                          AS rmk_name,
+               icam10_fee                                             AS fee,
+               icam10_af_pay_date                                     AS af_pay_date,
+               icam10_bf_pay_date                                     AS bf_pay_date,
+               to_char(icam10_work_date,'yyyy-mm-dd HH24:MI:SS')      AS work_date_string,
+               icam10_worker                                          AS worker
+          FROM icam10_fee
+         WHERE 1=1
+            <include refid="whereCondition"/>
+         ORDER BY icam10_std_date, icam10_icam_company_cd, icam10_rmk_cd, icam10_fund_cd
+         LIMIT #{p.limit}
+        OFFSET #{p.offset}
+    </select>
+
+    <!-- AS-IS icam10_fee.selectByFeeTypePagingTotal L125 (IDMS-IC) -->
+    <select id="selectByFeeTypePagingTotal" resultType="int">
+        SELECT count(*)
+          FROM icam10_fee
+         WHERE 1=1
+            <include refid="whereCondition"/>
+    </select>
+</mapper>

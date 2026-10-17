@@ -8,7 +8,7 @@ interface PendingScreenViewProps {
   classNm?: string;
 }
 
-/** 아직 변환하지 않은 화면의 탭 내용 (메뉴는 실제 sys06_menu, 화면은 docs/01-변환목록의 A 순서대로 채운다) */
+/** 아직 변환하지 않은 화면의 탭 내용 (메뉴는 실제 sys06_menu, 화면은 docs/01a-변환목록의 A 순서대로 채운다) */
 export const PendingScreenView: React.FC<PendingScreenViewProps> = ({ title, menuNo, classNm }) => (
   <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
     <Result

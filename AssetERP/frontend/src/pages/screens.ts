@@ -4,6 +4,14 @@ import { Dbm10_Tab_MakePdf } from './dbm/Dbm10_Tab_MakePdf';
 import { Emp00_Tab_TransInfo } from './emp/Emp00_Tab_TransInfo';
 import { Emp00_Tab_RoleMenu } from './emp/Emp00_Tab_RoleMenu';
 import { Emp01_Tab_UserInfo } from './emp/Emp01_Tab_UserInfo';
+import { Fnd03_Tab_ConsignmentManager } from './fnd/Fnd03_Tab_ConsignmentManager';
+import { Fnd06_Tab_OfficeWorkManager } from './fnd/Fnd06_Tab_OfficeWorkManager';
+import { Fnd09_Tab_TrustBankManager } from './fnd/Fnd09_Tab_TrustBankManager';
+import { Icam03_Tab_Fund } from './icam/Icam03_Tab_Fund';
+import { Icam10_Tab_FeeAdmin } from './icam/Icam10_Tab_FeeAdmin';
+import { Icam50_Tab_DbSource } from './icam/Icam50_Tab_DbSource';
+import { Icam99_Tab_Test } from './icam/Icam99_Tab_Test';
+import { Ifi90_Tab_Config } from './ifi/Ifi90_Tab_Config';
 import { Org01_Tab_OrgCode } from './org/Org01_Tab_OrgCode';
 import { Sms02_Tab_TotalCount } from './sms/Sms02_Tab_TotalCount';
 import { Sms03_Tab_SendAdmin } from './sms/Sms03_Tab_SendAdmin';
@@ -56,6 +64,14 @@ export const SCREENS: Record<string, React.FC> = {
   Emp00_Tab_TransInfo, // C01 (1단계: 목록·등록·기본정보·일반발령)
   Emp00_Tab_RoleMenu, // C04
   Emp01_Tab_UserInfo, // C03
+  Fnd03_Tab_ConsignmentManager, // D11 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)
+  Fnd06_Tab_OfficeWorkManager, // D12 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)
+  Fnd09_Tab_TrustBankManager, // D13 (저장은 원본 서버에 insertCheck가 없어 원본에서도 실패 — 서버가 거절, ICAM가져오기도 거절)
+  Icam03_Tab_Fund, // D07 (ICAM Get·타사무 Get은 외부 ICAM DB 연동이 없어 서버가 거절)
+  Icam10_Tab_FeeAdmin, // D08 (ICAM 발생보수 가져오기도 같은 연동이 없어 서버가 거절)
+  Icam50_Tab_DbSource, // D09 (DB소스 가져오기도 같은 연동이 없어 서버가 거절)
+  Icam99_Tab_Test, // D10 (작업 버튼은 BatchMain 연동이 없어 서버가 거절)
+  Ifi90_Tab_Config, // D01 (계정PW 저장은 원본도 안 함 — 작업기록 제안)
   Org01_Tab_OrgCode, // C02 (조직도보기 Org02_View_Chart 제외)
   Sms02_Tab_TotalCount, // C05
   Sms03_Tab_SendAdmin, // C06 (실제 문자 발송은 하지 않음 — SmsSender 기본 구현)
