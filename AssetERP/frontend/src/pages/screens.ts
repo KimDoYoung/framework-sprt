@@ -1,4 +1,6 @@
 import React from 'react';
+import { Dbm01_Tab_TabComments } from './dbm/Dbm01_Tab_TabComments';
+import { Dbm10_Tab_MakePdf } from './dbm/Dbm10_Tab_MakePdf';
 import { Emp00_Tab_TransInfo } from './emp/Emp00_Tab_TransInfo';
 import { Emp00_Tab_RoleMenu } from './emp/Emp00_Tab_RoleMenu';
 import { Emp01_Tab_UserInfo } from './emp/Emp01_Tab_UserInfo';
@@ -49,6 +51,8 @@ import { Test_Tab_ReactComponents } from './test/Test_Tab_ReactComponents';
  * 메뉴 키는 DB 값 그대로 쓴다(오타 `Sys03_Tab_ComapnyMenu`도 그대로).
  */
 export const SCREENS: Record<string, React.FC> = {
+  Dbm01_Tab_TabComments, // C08 (주석 저장·소스 생성은 DB 프로시저가 없어 서버가 거절)
+  Dbm10_Tab_MakePdf, // C07 (PDF 생성은 서버 연동 없음 — PdfMaker 기본 구현)
   Emp00_Tab_TransInfo, // C01 (1단계: 목록·등록·기본정보·일반발령)
   Emp00_Tab_RoleMenu, // C04
   Emp01_Tab_UserInfo, // C03

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/apr/mapper/apr01_appr.xml selectPdfMakeTarget L1559
+  조건·정렬은 그대로, SELECT 목록은 그리드 컬럼(Dbm10_Tab_MakePdf.buildGrid)만. 대안 DB 분기(minusExcept)는 PostgreSQL의 except
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.dbm.mapper.DbmPdfMapper">
+
+    <!-- AS-IS(IDMS-IC) apr01_appr.selectPdfMakeTarget L1559 -->
+    <select id="selectPdfMakeTarget" resultType="kr.co.kfs.asseterp.biz.dbm.dto.PdfTargetRes">
+        SELECT apr01_appr_id                                AS appr_id
+             , apr01_reg_date                               AS reg_date
+             , apr01_effect_date                            AS effect_date
+             , f_class_tree_nm_allpath(dcr01_class_tree_id) AS class_tree_name_all_path
+             , apr01_title                                  AS title
+             , f_emp_kor_nm(emp00_person_id)                AS reg_emp_name
+             , emp00_org_kor_nm                             AS org_name
+          FROM apr01_appr
+             , dcr01_class_tree
+             , emp00_trans_info
+         WHERE apr01_class_tree_id = dcr01_class_tree_id
+           AND apr01_reg_emp_id    = emp00_person_id
+           AND apr01_reg_date BETWEEN emp00_trans_date AND coalesce(emp00_close_date, to_date('29991231', 'yyyyMMdd'))
+           AND emp00_all_title     = 0
+           AND emp00_company_id    = #{companyId}
+           AND apr01_appr_id IN (
+                   SELECT apr01_appr_id
+                     FROM apr01_appr
+                    WHERE apr01_status_cd = '30'
+                      AND apr01_inout_cd  = '10'
+                   EXCEPT
+                   SELECT apr01_appr_id
+                     FROM apr01_appr
+                        , sys10_file
+                    WHERE apr01_appr_id  = sys10_parent_id
+                      AND sys10_title_yn = 'true'
+               )
+    </select>
+</mapper>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/dbm/mapper/dbm01_tab_comments.xml selectByTableName L61 (PostgreSQL 분기만),
+                 server/dbm/mapper/dbm02_col_comments.xml selectByTableName
+  조건·정렬은 그대로, SELECT 목록만 DTO 별칭(camelCase 자동 매핑)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.dbm.mapper.DbmTableMapper">
+
+    <!-- AS-IS(IDMS-IC) dbm01_tab_comments.selectByTableName L61 (table_comments_postgresql L27) -->
+    <select id="selectTables" resultType="kr.co.kfs.asseterp.biz.dbm.dto.DbTableRes">
+        WITH tablecomments AS (
+            SELECT c.relname               AS table_name
+                 , 'Table'                 AS table_type
+                 , obj_description(c.oid)  AS comments
+              FROM pg_catalog.pg_class c
+                   INNER JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+                   INNER JOIN pg_tables d ON c.relname = d.tablename
+             WHERE c.relkind = 'r'
+               AND nspname = 'public'
+        ), viewcomments AS (
+            SELECT table_name
+                 , 'View' AS table_type
+                 , ''     AS comments
+              FROM INFORMATION_SCHEMA.views
+             WHERE table_schema = 'public'
+        )
+        SELECT row_number() OVER (ORDER BY table_name) AS table_id
+             , table_name                              AS table_name
+             , comments                                AS table_comments
+             , 'PUBLIC'                                AS tablespace_name
+             , table_type                              AS table_type
+          FROM (
+                   SELECT * FROM tablecomments
+                   UNION ALL
+                   SELECT * FROM viewcomments
+               ) A
+         WHERE 1 = 1
+           AND upper(A.table_name) LIKE upper(#{tableName})
+         ORDER BY table_name
+    </select>
+
+    <!-- AS-IS(IDMS-IC) dbm02_col_comments.selectByTableName -->
+    <select id="selectColumns" resultType="kr.co.kfs.asseterp.biz.dbm.dto.DbColumnRes">
+        WITH tabledesc AS (
+            SELECT c.ordinal_position AS column_id
+                 , c.column_name      AS column_name
+                 , CASE data_type
+                       WHEN 'character varying' THEN 'Varchar'
+                       WHEN 'timestamp without time zone' THEN 'Date'
+                       WHEN 'numeric' THEN 'Number'
+                       WHEN 'text' THEN 'Text'
+                       ELSE data_type
+                   END                AS data_type
+                 , pgd.description    AS column_comment
+                 , CASE is_nullable WHEN 'NO' THEN 'Not Null' ELSE '' END AS null_able
+                 , c.character_maximum_length AS column_length
+                 , upper(c.table_name) AS table_name
+              FROM pg_catalog.pg_statio_all_tables AS st
+                   INNER JOIN pg_catalog.pg_description pgd ON (pgd.objoid = st.relid)
+                   INNER JOIN information_schema.columns c ON (pgd.objsubid = c.ordinal_position
+                       AND c.table_schema = st.schemaname AND c.table_name = st.relname)
+             ORDER BY table_name, ordinal_position
+        )
+        SELECT *
+          FROM tabledesc
+         WHERE table_name = upper(#{tableName})
+         ORDER BY table_name, column_id
+    </select>
+</mapper>

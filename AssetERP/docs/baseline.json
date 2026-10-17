@@ -1371,5 +1371,55 @@
     "note": "docs/work/A34-작업기록.md",
     "history": [],
     "id": "A34"
+  },
+  "Dbm10_Tab_MakePdf": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/dbm/Dbm10_Tab_MakePdf.java": "0a909c63164ad8093301352a4e168fd362702f1a",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "ec2e1b8d30204b370115db8f4a4009b721f12088",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "490cfa74239bbac67406ebb07d53662a9fadf0fd",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/pdf/PDFCreate.java": "758ddae91d27bfb2bf4be5877abe3607663809a3"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-17T09:17:33+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/C07-작업기록.md",
+    "history": [],
+    "id": "C07"
+  },
+  "Dbm01_Tab_TabComments": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/dbm/Dbm01_Lookup_Tables.java": "a3670bcecbbd13dcd1ac6e9457950735c29be200",
+      "application/src/main/java/myApp/client/vi/dbm/Dbm01_Tab_TabComments.java": "6dc144f724d322c14ff52a19976bc458d646a76d",
+      "application/src/main/java/myApp/client/vi/dbm/Dbm02_PopupSourceGenerator.java": "af617955834bce433f6090b45a0fc485e60a6a7d",
+      "application/src/main/java/myApp/client/vi/dbm/Dbm02_TabPage_ColComments.java": "6fd5c138bc28ea49dd51530f328eccadc5ba5a7a",
+      "application/src/main/java/myApp/client/vi/dbm/model/Dbm01_TabCommentsModel.java": "bfa31258c4b5cac4df61be7fb3f737b699f68bfa",
+      "application/src/main/java/myApp/client/vi/dbm/model/Dbm01_TabCommentsModelProperties.java": "e20c53edcf6c38611e858bcdd9f8768f9f8cc157",
+      "application/src/main/java/myApp/client/vi/dbm/model/Dbm02_ColCommentsModel.java": "3e052226b6f2ba68b244fcfa9d42bac5d0cc0499",
+      "application/src/main/java/myApp/client/vi/dbm/model/Dbm02_ColCommentsModelProperties.java": "246a4fc78b9d579df3dbbb6ff5db48b397f7d4fb",
+      "application/src/main/java/myApp/server/dbm/Dbm00_DDLRun.java": "b6e1bcf45a2b1cc252a56485d55c5c866e4edbef",
+      "application/src/main/java/myApp/server/dbm/Dbm01_TabComments.java": "b862e51b22c8b02fd87d500221eef6353ab7a6f4",
+      "application/src/main/java/myApp/server/dbm/Dbm02_ColComments.java": "0505abeabddf36000c5bbc7ce0b50106ba155f29",
+      "application/src/main/java/myApp/server/dbm/Dbm03_TabColumns.java": "3c1a5cbf77991323687b719cc54c04f09997accb",
+      "application/src/main/java/myApp/server/dbm/mapper/dbm01_tab_comments.xml": "1cd68d2ce5e33d186a54bc8f61615a674c731bbf",
+      "application/src/main/java/myApp/server/dbm/mapper/dbm02_col_comments.xml": "f85bc1bf5061d5feea414996de45eca015097f42",
+      "application/src/main/java/myApp/server/dbm/mapper/dbm03_tab_columns.xml": "4e6d211ff9f05365b2aa33c8a0d93c0f55cab326"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-17T09:25:24+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/C08-작업기록.md",
+    "history": [],
+    "id": "C08"
   }
 }
