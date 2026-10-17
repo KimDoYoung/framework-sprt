@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/tdm/mapper/tdm45_manl_relate_ics.xml (selectByIcsId, insert) + tdm43_manl.xml (selectByExceptIcsId)  (E01) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmManlRelateIcsMapper">
+
+    <!-- AS-IS tdm45_manl_relate_ics.selectByIcsId (IDMS-IC) — COLLATE "ko_KR.utf8"는 "ko-KR-x-icu"(B02) -->
+    <select id="selectByIcsId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlRelateIcsRes">
+        SELECT tdm45_manl_relate_ics_id                              AS manl_relate_ics_id,
+               tdm45_manl_id                                         AS manl_id,
+               tdm45_ics_class_tree_id                               AS ics_class_tree_id,
+               tdm43_role_nm                                         AS role_name,
+               tdm43_task_nm                                         AS task_name,
+               tdm43_task_relate_detail_nm                           AS task_detail_name,
+               tdm43_task_relate_duty_nm                             AS task_duty_name,
+               CONCAT('('||tdm43_manl_cd||') ', tdm43_check_item)    AS task_check_item,
+               tdm43_check_how                                       AS task_check_how
+          FROM tdm42_manl_org
+               INNER JOIN tdm43_manl            ON tdm43_manl_org_id = tdm42_manl_org_id
+               INNER JOIN tdm45_manl_relate_ics ON tdm45_manl_id     = tdm43_manl_id
+         WHERE tdm42_company_id IN (1, 28000)
+           AND #{companyId} = 0
+           AND f_today() BETWEEN tdm42_start_date AND COALESCE(tdm42_end_date,'2999-12-31'::date)
+           AND tdm45_ics_class_tree_id = #{icsId}
+           AND CONCAT(tdm43_role_nm, tdm43_task_nm, tdm43_task_relate_detail_nm, tdm43_task_relate_duty_nm, tdm43_manl_cd, tdm43_check_item) ILIKE #{searchText}
+         ORDER BY tdm43_role_nm COLLATE "ko-KR-x-icu"
+                , tdm43_task_nm COLLATE "ko-KR-x-icu"
+                , tdm43_task_relate_detail_nm COLLATE "ko-KR-x-icu"
+                , tdm43_task_relate_duty_nm COLLATE "ko-KR-x-icu"
+                , tdm43_manl_cd
+    </select>
+
+    <!-- AS-IS tdm43_manl.selectByExceptIcsId (IDMS-IC) -->
+    <select id="selectByExceptIcsId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlRes">
+        SELECT tdm43_manl_id                                         AS manl_id,
+               tdm43_manl_cd                                         AS manl_code,
+               tdm43_role_nm                                         AS role_name,
+               tdm43_task_relate_duty_nm                             AS task_relate_duty_name,
+               CASE WHEN tdm43_manl_cd IS NULL THEN NULL
+                    ELSE '(' || tdm43_manl_cd || ') ' || tdm43_check_item END AS check_item_add_code,
+               tdm43_check_how                                       AS check_how
+          FROM tdm42_manl_org
+               INNER JOIN tdm43_manl ON tdm43_manl_org_id = tdm42_manl_org_id
+         WHERE tdm42_company_id IN (1, 28000)
+           AND #{companyId} = 0
+           AND f_today() BETWEEN tdm42_start_date AND COALESCE(tdm42_end_date,'2999-12-31'::date)
+           AND CONCAT(tdm43_role_nm, tdm43_task_nm, tdm43_task_relate_detail_nm, tdm43_task_relate_duty_nm, tdm43_manl_cd, tdm43_check_item) ILIKE #{searchText}
+           AND NOT EXISTS ( SELECT 1
+                              FROM tdm45_manl_relate_ics
+                             WHERE tdm45_ics_class_tree_id  = #{icsId}
+                               AND tdm45_manl_id            = tdm43_manl_id )
+         ORDER BY tdm43_role_nm COLLATE "ko-KR-x-icu"
+                , tdm43_task_nm COLLATE "ko-KR-x-icu"
+                , tdm43_task_relate_detail_nm COLLATE "ko-KR-x-icu"
+                , tdm43_task_relate_duty_nm COLLATE "ko-KR-x-icu"
+                , tdm43_manl_cd
+    </select>
+
+    <!-- AS-IS tdm45_manl_relate_ics.insert (IDMS-IC) -->
+    <insert id="insert">
+        INSERT INTO tdm45_manl_relate_ics
+               ( tdm45_manl_relate_ics_id, tdm45_manl_id, tdm45_ics_class_tree_id )
+        SELECT f_create_seq(), #{manlId}, #{icsClassTreeId}
+         WHERE NOT EXISTS (
+               SELECT 1
+                 FROM tdm45_manl_relate_ics
+                WHERE tdm45_manl_id = #{manlId}
+                  AND tdm45_ics_class_tree_id = #{icsClassTreeId}
+         )
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM tdm45_manl_relate_ics
+         WHERE tdm45_manl_relate_ics_id = #{manlRelateIcsId}
+           AND tdm45_ics_class_tree_id = #{icsClassTreeId}
+    </delete>
+</mapper>

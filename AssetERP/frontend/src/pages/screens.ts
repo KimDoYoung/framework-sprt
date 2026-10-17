@@ -7,6 +7,7 @@ import { Emp01_Tab_UserInfo } from './emp/Emp01_Tab_UserInfo';
 import { Fnd03_Tab_ConsignmentManager } from './fnd/Fnd03_Tab_ConsignmentManager';
 import { Fnd06_Tab_OfficeWorkManager } from './fnd/Fnd06_Tab_OfficeWorkManager';
 import { Fnd09_Tab_TrustBankManager } from './fnd/Fnd09_Tab_TrustBankManager';
+import { Ics01_Tab_ClassTree } from './ics/Ics01_Tab_ClassTree';
 import { Icam03_Tab_Fund } from './icam/Icam03_Tab_Fund';
 import { Icam10_Tab_FeeAdmin } from './icam/Icam10_Tab_FeeAdmin';
 import { Icam50_Tab_DbSource } from './icam/Icam50_Tab_DbSource';
@@ -67,6 +68,7 @@ export const SCREENS: Record<string, React.FC> = {
   Fnd03_Tab_ConsignmentManager, // D11 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)
   Fnd06_Tab_OfficeWorkManager, // D12 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)
   Fnd09_Tab_TrustBankManager, // D13 (저장은 원본 서버에 insertCheck가 없어 원본에서도 실패 — 서버가 거절, ICAM가져오기도 거절)
+  Ics01_Tab_ClassTree, // E01 (기한 설정 Sch03_Lookup_Ics는 다른 도메인이라 별도 ID)
   Icam03_Tab_Fund, // D07 (ICAM Get·타사무 Get은 외부 ICAM DB 연동이 없어 서버가 거절)
   Icam10_Tab_FeeAdmin, // D08 (ICAM 발생보수 가져오기도 같은 연동이 없어 서버가 거절)
   Icam50_Tab_DbSource, // D09 (DB소스 가져오기도 같은 연동이 없어 서버가 거절)

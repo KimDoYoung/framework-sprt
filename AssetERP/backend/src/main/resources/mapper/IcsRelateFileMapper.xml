@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sys/mapper/sys11_relate_file.xml (selectByParentId, insertCheck, insert) + sys10_file.xml (getIcsFile)  (E01) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsRelateFileMapper">
+
+    <!-- AS-IS sys11_relate_file.selectByParentId (IDMS-IC) — ${parentId}는 #{parentId}, COLLATE "ko_KR.utf8"는 "ko-KR-x-icu"(B02) -->
+    <select id="selectByParentId" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsRelateFileRes">
+        SELECT sys11_relate_file_id AS relate_file_id,
+               sys11_file_id        AS file_id,
+               sys11_parent_id      AS parent_id,
+               sys10_file_nm        AS file_name,
+               sys10_reg_date       AS reg_date
+          FROM sys11_relate_file
+               INNER JOIN sys10_file ON sys10_file_id = sys11_file_id
+         WHERE sys11_parent_id = #{parentId}
+         ORDER BY sys10_reg_date DESC, sys10_file_nm COLLATE "ko-KR-x-icu"
+    </select>
+
+    <!-- AS-IS sys10_file.getIcsFile (IDMS-IC) — lawType null 가지 + firstRegDateYn 정렬 -->
+    <select id="selectIcsFormFiles" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsFormFileRes">
+        SELECT sys10_file_id AS file_id,
+               sys10_reg_date AS reg_date,
+               f_cdnm('LawType', sys10_law_type, 0, f_sysdate()) AS law_name,
+               sys10_note     AS note,
+               sys10_file_nm  AS file_name
+          FROM sys10_file
+         WHERE sys10_parent_id = 0
+           AND COALESCE(f_cdnm('LawType', sys10_law_type, 0, f_sysdate()),'')||COALESCE(sys10_note,'')||sys10_file_nm LIKE #{searchText}
+         ORDER BY sys10_reg_date DESC, sys10_law_type, sys10_note
+    </select>
+
+    <select id="countRelate" resultType="int">
+        SELECT COUNT(*)
+          FROM sys11_relate_file
+         WHERE sys11_file_id = #{fileId}
+           AND sys11_parent_id = #{parentId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq (IDMS-IC) -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys11_relate_file.insert (IDMS-IC) -->
+    <insert id="insertRelate">
+        INSERT INTO sys11_relate_file ( sys11_relate_file_id, sys11_file_id, sys11_parent_id, sys11_parent_table )
+        VALUES ( #{relateFileId}, #{fileId}, #{parentId}, #{parentTable} )
+    </insert>
+
+    <delete id="deleteRelate">
+        DELETE FROM sys11_relate_file
+         WHERE sys11_relate_file_id = #{relateFileId}
+           AND sys11_parent_id = #{parentId}
+    </delete>
+</mapper>

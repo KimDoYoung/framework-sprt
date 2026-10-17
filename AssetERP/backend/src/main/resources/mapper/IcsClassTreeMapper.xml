@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/ics/mapper/ics01_class_tree.xml (selectByCompanyId, selectById, selectByClassTreeId, refresh, getDownTreeId, insertIcsDel, deleteByClassTreeId)  (E01)
+  common.xml의 ics_tree_all_postgresql(트리 CTE)·icsTreeDown(하위 id CTE)·rownumLimit1(LIMIT 1)을 펼쳐 넣었다.
+  저장은 UpdateDataModel(동적 UPDATE/INSERT)이라 명시 UPDATE·INSERT로 옮겼다 — 화면이 고치는 열만 쓴다(원본은 화면이 안 불러온 열을 null로 덮는다, 작업기록 참고)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsClassTreeMapper">
+
+    <!-- AS-IS ics01_class_tree.selectByCompanyId L401 → selectByCompanyId_postgresql L372 + common.ics_tree_all_postgresql (IDMS-IC)
+         companyId·parentId(=0)는 원본이 넘기던 값을 고정했다. 원본은 회사를 조건에 쓰지 않는다 -->
+    <select id="selectTree" resultType="kr.co.kfs.asseterp.biz.ics.dto.ClassTreeRes">
+        WITH RECURSIVE ics_tree(
+                ics01_class_tree_id
+            ,   ics01_company_id
+            ,   ics01_class_tree_nm
+            ,   ics01_parent_tree_id
+            ,   ics01_seq
+            ,   ics01_class_tree_cd
+            ,   ics01_type_cd
+            ,   ics01_use_yn
+            ,   depth
+            ,   path
+            ,   cycle
+        ) AS
+        (
+            SELECT  ics01_class_tree_id
+                 ,  ics01_company_id
+                 ,  ics01_class_tree_nm
+                 ,  ics01_parent_tree_id
+                 ,  ics01_seq
+                 ,  ics01_class_tree_cd
+                 ,  ics01_type_cd
+                 ,  ics01_use_yn
+                 ,  1
+                 ,  ARRAY[CAST(a.ics01_parent_tree_id AS varchar) || LPAD(CAST(a.ics01_seq AS varchar),10,'0')||a.ics01_class_tree_cd||LPAD(CAST(a.ics01_class_tree_id AS varchar),15,'0')]
+                 ,  false
+              FROM  ics01_class_tree a
+             WHERE  ics01_parent_tree_id = 0
+               AND  ics01_use_yn = 'true'
+            <if test="typeCode != null and typeCode != ''">
+               AND  ics01_type_cd LIKE #{typeCode}
+            </if>
+             UNION ALL
+            SELECT  a.ics01_class_tree_id
+                 ,  a.ics01_company_id
+                 ,  a.ics01_class_tree_nm
+                 ,  a.ics01_parent_tree_id
+                 ,  a.ics01_seq
+                 ,  a.ics01_class_tree_cd
+                 ,  a.ics01_type_cd
+                 ,  a.ics01_use_yn
+                 ,  b.depth + 1
+                 ,  array_append(b.path, CAST(a.ics01_parent_tree_id AS varchar) || LPAD(CAST(a.ics01_seq AS varchar),10,'0')||a.ics01_class_tree_cd||LPAD(CAST(a.ics01_class_tree_id AS varchar),15,'0'))
+                 ,  a.ics01_class_tree_nm = any(b.path)
+              FROM  ics01_class_tree a
+                    INNER JOIN ics_tree b ON a.ics01_parent_tree_id = b.ics01_class_tree_id
+             WHERE  a.ics01_use_yn = 'true'
+            <if test="typeCode != null and typeCode != ''">
+               AND  a.ics01_type_cd LIKE #{typeCode}
+            </if>
+               AND  NOT cycle
+        )
+        SELECT a.ics01_class_tree_id    AS class_tree_id,
+               a.ics01_parent_tree_id   AS parent_tree_id,
+               a.ics01_class_tree_cd    AS class_tree_code,
+               a.ics01_class_tree_nm    AS class_tree_name,
+               a.ics01_seq              AS seq,
+               ( SELECT MAX(f_get_deadline_nm(sch03_deadline_id,'2'))
+                        || CASE WHEN COUNT(*) = 1 THEN ''
+                                ELSE ' 외 '||COUNT(*)-1||'건' END
+                   FROM sch03_deadline
+                  WHERE sch03_info_id = a.ics01_class_tree_id )  AS deadline_full_name,
+               a.depth                  AS depth
+          FROM ics_tree a
+         ORDER BY path
+    </select>
+
+    <!-- AS-IS ics01_class_tree.selectById L52 중 트리 열 (IDMS-IC) -->
+    <select id="selectTreeNodeById" resultType="kr.co.kfs.asseterp.biz.ics.dto.ClassTreeRes">
+        SELECT ics01_class_tree_id  AS class_tree_id,
+               ics01_parent_tree_id AS parent_tree_id,
+               ics01_class_tree_cd  AS class_tree_code,
+               ics01_class_tree_nm  AS class_tree_name,
+               ics01_seq            AS seq,
+               ( SELECT STRING_AGG(f_get_deadline_nm(sch03_deadline_id, '2'), ', ')
+                   FROM sch03_deadline
+                  WHERE sch03_info_id = ics01_class_tree_id )  AS deadline_full_name,
+               NULL::int            AS depth
+          FROM ics01_class_tree
+         WHERE ics01_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq (IDMS-IC) -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel INSERT: 화면이 채우는 값(분류코드·조회순서·분류명·회사·상위·구분 IC·사용 true) + 나머지는 모델 기본값 -->
+    <insert id="insertTreeNode">
+        INSERT INTO ics01_class_tree
+               ( ics01_class_tree_id, ics01_parent_tree_id, ics01_class_tree_cd, ics01_class_tree_nm, ics01_seq,
+                 ics01_company_id, ics01_type_cd, ics01_use_yn, ics01_advis_yn )
+        VALUES ( #{classTreeId}, #{req.parentTreeId}, #{req.classTreeCode}, #{req.classTreeName}, #{req.seq},
+                 #{companyId}, 'IC', 'true', 'false' )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE: 화면이 고치는 열만 (원본은 모델의 다른 열도 되써서 트리가 안 불러온 열이 null이 된다) -->
+    <update id="updateTreeNode">
+        UPDATE ics01_class_tree
+           SET ics01_class_tree_cd = #{req.classTreeCode},
+               ics01_class_tree_nm = #{req.classTreeName},
+               ics01_seq           = #{req.seq}
+         WHERE ics01_class_tree_id = #{classTreeId}
+    </update>
+
+    <update id="updateParent">
+        UPDATE ics01_class_tree
+           SET ics01_parent_tree_id = #{parentTreeId}
+         WHERE ics01_class_tree_id = #{classTreeId}
+    </update>
+
+    <!-- AS-IS ics01_class_tree.getDownTreeId L558 (IDMS-IC) — id만 -->
+    <select id="selectDownTreeIds" resultType="long">
+        WITH RECURSIVE ics_down_tree(
+                ics01_class_tree_id
+            ,   ics01_company_id
+            ,   ics01_parent_tree_id
+            ,   depth
+            ,   path
+            ,   cycle
+            ) AS
+        (
+            SELECT  ics01_class_tree_id
+                 ,  ics01_company_id
+                 ,  ics01_parent_tree_id
+                 ,  1
+                 ,  ARRAY[a.ics01_parent_tree_id || a.ics01_seq::text]
+                 ,  false
+              FROM  ics01_class_tree a
+             WHERE  ics01_class_tree_id = #{classTreeId}
+             UNION ALL
+            SELECT  a.ics01_class_tree_id
+                 ,  a.ics01_company_id
+                 ,  a.ics01_parent_tree_id
+                 ,  b.depth + 1
+                 ,  array_append(b.path, a.ics01_parent_tree_id || a.ics01_seq::text)
+                 ,  a.ics01_class_tree_nm = any(b.path)
+              FROM  ics01_class_tree a
+                    INNER JOIN ics_down_tree b ON a.ics01_parent_tree_id = b.ics01_class_tree_id
+             WHERE  NOT CYCLE
+        )
+        SELECT ics01_class_tree_id
+          FROM ics_down_tree
+    </select>
+
+    <!-- AS-IS ics01_class_tree.insertIcsDel L684 (IDMS-IC): common.sequenceNextVal → f_create_seq() -->
+    <insert id="insertDeleteHistory">
+        INSERT INTO ics99_class_tree_del
+        SELECT f_create_seq()
+             , #{empId}
+             , f_sysdate()
+             , ics01_class_tree_id
+             , ics01_parent_tree_id
+             , ics01_class_tree_cd
+             , ics01_class_tree_nm
+             , ics01_seq
+             , ics01_related_law
+             , ics01_submit_to
+             , ics01_company_id
+             , ics01_type_cd
+             , ics01_use_yn
+             , ics01_content
+             , ics01_public_type
+             , ics01_advis_yn
+          FROM ics01_class_tree
+         WHERE ics01_class_tree_id = #{classTreeId}
+    </insert>
+
+    <!-- AS-IS ics01_class_tree.deleteByClassTreeId L708 (IDMS-IC) -->
+    <delete id="deleteById">
+        DELETE FROM ics01_class_tree
+         WHERE ics01_class_tree_id = #{classTreeId}
+    </delete>
+
+    <!-- AS-IS ics01_class_tree.selectByClassTreeId L73 + common.icsTreeDown (IDMS-IC) — ${companyId}는 #{companyId}, rownumLimit1은 LIMIT 1.
+         icsTreeDown(선택한 분류와 모든 하위 id)을 서브쿼리로 펼쳤다. 열 목록은 그리드 열 + id·상위·회사 -->
+    <sql id="icsTreeDown">
+        WITH RECURSIVE ics_tree_down(
+                ics01_class_tree_id
+            ,   ics01_parent_tree_id
+            ,   ics01_class_tree_cd
+            ,   depth
+            ,   path
+            ,   cycle
+        ) AS
+        (
+            SELECT  a.ics01_class_tree_id
+                 ,  a.ics01_parent_tree_id
+                 ,  a.ics01_class_tree_cd
+                 ,  0
+                 ,  ARRAY[a.ics01_class_tree_cd::text]
+                 ,  false
+              FROM  ics01_class_tree a
+             WHERE  ics01_company_id in (#{companyId},0)
+               AND  ics01_class_tree_id = #{classTreeId}
+             UNION ALL
+            SELECT  a.ics01_class_tree_id
+                 ,  a.ics01_parent_tree_id
+                 ,  a.ics01_class_tree_cd
+                 ,  b.depth + 1
+                 ,  array_append(b.path, a.ics01_class_tree_cd::text)
+                 ,  a.ics01_class_tree_cd = any(b.path)
+              FROM  ics01_class_tree a
+                  , ics_tree_down b
+             WHERE  a.ics01_parent_tree_id = b.ics01_class_tree_id
+               AND  a.ics01_company_id in (#{companyId},0)
+               AND  not cycle
+        )
+        SELECT  a.ics01_class_tree_id
+          FROM  ics_tree_down a
+    </sql>
+
+    <sql id="lawColumns">
+          ics01_class_tree_id      AS class_tree_id,
+          ics01_parent_tree_id     AS parent_tree_id,
+          ics01_class_tree_cd      AS class_tree_code,
+          ics01_class_tree_nm      AS class_tree_name,
+          ics01_content            AS content,
+          ics01_submit_to          AS submit_to,
+          ics01_related_law        AS related_law,
+          ics01_company_id         AS company_id
+    </sql>
+
+    <sql id="lawSubSelects">
+         ,  (
+                SELECT  CASE WHEN COUNT(*)=1
+                        THEN MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate()))
+                        ELSE MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate())) || ' 외 ' || COUNT(sch03_deadline.*) - 1 || '건'
+                        END
+                  FROM  sch03_deadline
+                 WHERE  sch03_schedule_cd IN ('2','3') /* 스케줄 (1) / 내부통제-반복 (2) / 내부통제-수시 (3) */
+                   AND  ics01_class_tree_id = sch03_info_id
+                   AND  ics01_company_id = sch03_company_id
+                 LIMIT 1
+            )                                                                       AS cycle_name
+         ,  (
+                SELECT  count(sys11_relate_file.*) || '건'
+                  FROM  sys11_relate_file
+                        INNER JOIN sys10_file ON sys11_file_id = sys10_file_id
+                 WHERE  sys11_parent_id = ics01_class_tree_id
+            )                                                                       AS file_count
+         ,  (
+                SELECT  count(*) || '건'
+                  FROM  ics19_revision_relate_ics
+                 WHERE  ics19_class_tree_id = ics01_class_tree_id
+            )                                                                       AS revision_count
+        <if test="companyId == 0">
+         ,  (
+                SELECT count(*) || '건'
+                  FROM tdm42_manl_org
+                       INNER JOIN tdm43_manl            ON tdm43_manl_org_id = tdm42_manl_org_id
+                       INNER JOIN tdm45_manl_relate_ics ON tdm45_manl_id     = tdm43_manl_id
+                 WHERE tdm42_company_id IN (1, 28000)   /*(연관법령 관리회사 : 한국펀드서비스(KFS)*/
+                   AND f_today() BETWEEN tdm42_start_date AND COALESCE(tdm42_end_date,'2999-12-31'::date)
+                   AND tdm45_ics_class_tree_id = ics01_class_tree_id
+            )                                                                       AS tdm_count
+        </if>
+        <if test="companyId != 0">
+         ,  NULL::text                                                              AS tdm_count
+        </if>
+    </sql>
+
+    <select id="selectLaws" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsLawRes">
+        SELECT <include refid="lawColumns"/>
+             , COALESCE(ics01_advis_yn,'false')                                     AS advis_yn
+             <include refid="lawSubSelects"/>
+          FROM ics01_class_tree
+               LEFT OUTER JOIN ics03_company_info ON (ics03_ics_class_tree_id = ics01_class_tree_id AND ics03_company_id = #{companyId})
+         WHERE ics01_class_tree_id IN (<include refid="icsTreeDown"/>)
+           AND ics01_type_cd = #{typeCode}
+           AND coalesce(ics01_public_type,'0') like #{publicType}
+           AND ( ( #{advisYn}  = true                                                 AND
+                   coalesce(coalesce(ics03_advis_yn, ics01_advis_yn),'false') = 'true' ) OR
+                 ( #{advisYn} != true                                                 ) )
+        <if test="searchText != null">
+           AND CONCAT(ics01_class_tree_cd, ics01_class_tree_nm) LIKE #{searchText}
+        </if>
+         ORDER BY ics01_class_tree_cd
+    </select>
+
+    <!-- AS-IS ics01_class_tree.refresh L498 (IDMS-IC) -->
+    <select id="selectLawRefresh" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsLawRes">
+        SELECT <include refid="lawColumns"/>
+             , COALESCE(COALESCE(ics03_advis_yn, ics01_advis_yn), 'false')          AS advis_yn
+             <include refid="lawSubSelects"/>
+          FROM ics01_class_tree
+               LEFT OUTER JOIN ics03_company_info ON (ics03_ics_class_tree_id = ics01_class_tree_id AND ics03_company_id = #{companyId})
+         WHERE ics01_class_tree_id = #{classTreeId}
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT COUNT(*) FROM ics01_class_tree WHERE ics01_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- AS-IS Ics01_ClassTree.update(UpdateDataModel) 의 UPDATE 부분 — 화면이 고치는 열만 -->
+    <update id="updateLaw">
+        UPDATE ics01_class_tree
+           SET ics01_class_tree_cd = #{req.classTreeCode},
+               ics01_class_tree_nm = #{req.classTreeName},
+               ics01_submit_to     = #{req.submitTo},
+               ics01_related_law   = #{req.relatedLaw},
+               ics01_advis_yn      = #{req.advisYn}
+         WHERE ics01_class_tree_id = #{req.classTreeId}
+    </update>
+
+    <!-- AS-IS GridInsertRow 의 모델(회사·상위·구분 IT·사용 true·업무분류 '0') + UpdateDataModel INSERT -->
+    <insert id="insertLaw">
+        INSERT INTO ics01_class_tree
+               ( ics01_class_tree_id, ics01_parent_tree_id, ics01_class_tree_cd, ics01_class_tree_nm, ics01_related_law, ics01_submit_to,
+                 ics01_company_id, ics01_type_cd, ics01_use_yn, ics01_public_type, ics01_advis_yn )
+        VALUES ( #{classTreeId}, #{req.parentTreeId}, #{req.classTreeCode}, #{req.classTreeName}, #{req.relatedLaw}, #{req.submitTo},
+                 #{companyId}, 'IT', 'true', '0', #{req.advisYn} )
+    </insert>
+
+    <!-- AS-IS ics.Ics01_ClassTree.modelUpdate(UpdateDataModel) — 상세내용 + 열기 전에 반영된 편집 열 -->
+    <update id="updateLawContent">
+        UPDATE ics01_class_tree
+           SET ics01_content       = #{req.content},
+               ics01_class_tree_cd = #{req.classTreeCode},
+               ics01_class_tree_nm = #{req.classTreeName},
+               ics01_submit_to     = #{req.submitTo},
+               ics01_related_law   = #{req.relatedLaw},
+               ics01_advis_yn      = #{req.advisYn}
+         WHERE ics01_class_tree_id = #{classTreeId}
+    </update>
+
+    <delete id="deleteLaw">
+        DELETE FROM ics01_class_tree
+         WHERE ics01_class_tree_id = #{classTreeId}
+    </delete>
+</mapper>

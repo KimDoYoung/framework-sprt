@@ -110,6 +110,13 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
     setRows(prev => prev.map(r => (getId(r) === id ? { ...r, ...patch } : r)));
   }, [getId, bump]);
 
+  /** 서버에서 다시 읽은 한 행으로 바꾼다 (AS-IS grid.getStore().update(model) — 조회창을 닫은 뒤 refresh). 변경 표시는 지운다 */
+  const replaceRow = useCallback((id: number, row: T) => {
+    dirty.current.delete(id);
+    bump();
+    setRows(prev => prev.map(r => (getId(r) === id ? row : r)));
+  }, [getId, bump]);
+
   /** 목록 비우기 (마스터 선택 해제 시) */
   const clear = useCallback(() => {
     dirty.current.clear();
@@ -236,5 +243,5 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
     return { added, modified, editing };
   }, [rows, getId, editing, version]);  // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { gridRef, rows, loading, retrieve, addRow, addRows, updateRow, removeRows, clear, saveRows, deleteChecked, hasChanges, getChanged, changes, gridProps };
+  return { gridRef, rows, loading, retrieve, addRow, addRows, updateRow, replaceRow, removeRows, clear, saveRows, deleteChecked, hasChanges, getChanged, changes, gridProps };
 }
