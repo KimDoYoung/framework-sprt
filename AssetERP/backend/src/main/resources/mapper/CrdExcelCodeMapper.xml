@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/crd/mapper/crd11_excel_code.xml (selectByCompanyId, selectById) + UpdateDataModel(crd11_excel_code) 저장  (E24)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.crd.mapper.CrdExcelCodeMapper">
+
+    <sql id="excelCodeColumns">
+        crd11_excel_code_id AS excel_code_id,
+        crd11_company_id    AS company_id,
+        crd11_bank_cd       AS bank_code,
+        f_cdnm('CreditCardCompany', crd11_bank_cd, crd11_company_id, f_sysdate())           AS bank_name,
+        crd11_bank_excel_cd AS bank_excel_code,
+        f_cdnm('CreditCardExcelCode', crd11_bank_excel_cd, crd11_company_id, f_sysdate())   AS bank_excel_name,
+        crd11_seq           AS seq,
+        crd11_note          AS text
+    </sql>
+
+    <!-- AS-IS crd11_excel_code.selectByCompanyId (IDMS-IC) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdExcelCodeRes">
+        SELECT <include refid="excelCodeColumns"/>
+          FROM crd11_excel_code
+         WHERE crd11_company_id = #{companyId}
+           AND crd11_bank_cd = #{bankCode}
+         ORDER BY crd11_seq
+    </select>
+
+    <!-- AS-IS crd11_excel_code.selectById (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdExcelCodeRes">
+        SELECT <include refid="excelCodeColumns"/>
+          FROM crd11_excel_code
+         WHERE crd11_excel_code_id = #{excelCodeId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO crd11_excel_code (crd11_excel_code_id, crd11_company_id, crd11_bank_cd, crd11_bank_excel_cd, crd11_seq, crd11_note)
+        VALUES (#{excelCodeId}, #{companyId}, #{req.bankCode}, #{req.bankExcelCode}, #{req.seq}, #{req.text})
+    </insert>
+
+    <update id="update">
+        UPDATE crd11_excel_code
+           SET crd11_bank_cd       = #{req.bankCode},
+               crd11_bank_excel_cd = #{req.bankExcelCode},
+               crd11_seq           = #{req.seq},
+               crd11_note          = #{req.text}
+         WHERE crd11_excel_code_id = #{req.excelCodeId}
+           AND crd11_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM crd11_excel_code
+         WHERE crd11_company_id = #{companyId}
+           AND crd11_excel_code_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

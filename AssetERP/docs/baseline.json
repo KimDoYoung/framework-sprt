@@ -2547,5 +2547,30 @@
     "note": "docs/work/E/E23-작업기록.md",
     "history": [],
     "id": "E23"
+  },
+  "Crd10_Tab_ExcelCompanyAdmin": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/crd/Crd10_Tab_ExcelCompanyAdmin.java": "53ba06967db6955efac8bbc574872f8556f1af8e",
+      "application/src/main/java/myApp/client/vi/crd/Crd11_Lookup_ExcelCodeAdmin.java": "58c9937ac0b01c3903813f9ca429ba2ba5ee9ce5",
+      "application/src/main/java/myApp/client/vi/crd/model/Crd10_ExcelCompanyModel.java": "7cdf05d7eefe7f8c7406a8a2f6201386abcc0564",
+      "application/src/main/java/myApp/client/vi/crd/model/Crd10_ExcelCompanyModelProperties.java": "2d6dc8612d145bf4b1acb983ff913775b21f66b3",
+      "application/src/main/java/myApp/client/vi/crd/model/Crd11_ExcelCodeModel.java": "8f1511cac82b7e380f3ba57b96d9e4e71a18383e",
+      "application/src/main/java/myApp/client/vi/crd/model/Crd11_ExcelCodeModelProperties.java": "cddc9e13b4df889904dbaa069a022a049d4afcd0",
+      "application/src/main/java/myApp/server/crd/Crd10_ExcelCompany.java": "6e4fa3eacf8ee05409d76c4f2e44a48d0c766cf9",
+      "application/src/main/java/myApp/server/crd/Crd11_ExcelCode.java": "e5994e0237effab49506b86b1b6e786c59d1076d",
+      "application/src/main/java/myApp/server/crd/mapper/crd10_excel_company.xml": "54a5cc6256ffa566bab81138df9e76e7d68bd29b",
+      "application/src/main/java/myApp/server/crd/mapper/crd11_excel_code.xml": "b238667d98de79f1d7c533e70c6b48aeee8ef31a"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-18T22:50:20+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/E/E24-작업기록.md",
+    "history": [],
+    "id": "E24"
   }
 }

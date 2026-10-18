@@ -87,6 +87,17 @@ function helpers(p) {
   h.buttons = async scope => (await scope.locator('button').filter({ hasText: /\S/ }).allInnerTexts()).map(t => t.replace(/\s/g, '')).join(',');
   /** Modal.confirm 창의 제목·내용 / 예 / 아니오 */
   h.confirmText = () => p.locator('.ant-modal-confirm:visible .ant-modal-confirm-title, .ant-modal-confirm:visible .ant-modal-confirm-content').allInnerTexts().then(a => a.join(' / ').replace(/\s+/g, ' '));
+  /**
+   * 삭제 확인창의 글자를 돌려주되, "1건"이 아니면 [아니오]를 누르고 throw한다.
+   * 다중 체크박스 그리드는 조회 뒤 첫 행이 이미 체크돼 있어 확인창이 "2건"이 되고, 그대로 [예]를 누르면 기존 행이 지워진다(E24 사고).
+   * 지울 행만 체크한 뒤(다른 체크는 풀고) [삭제]를 눌러 이것을 부르고, 통과하면 `h.confirmYes()`.
+   * 확인창에 건수가 없는 화면(단일 선택·고정 문구)은 쓰지 않는다.
+   */
+  h.confirmDeleteOne = async () => {
+    const text = await h.confirmText();
+    if (!/(^|\D)1건/.test(text)) { await h.confirmNo(); throw new Error('삭제 확인창이 1건이 아님: ' + text); }
+    return text;
+  };
   h.confirmYes = async () => { await p.locator('.ant-modal-confirm .ant-btn-primary').click(); await wait(2000); };
   h.confirmNo = async () => { await p.locator('.ant-modal-confirm .ant-btn-default').click(); await wait(600); };
   /** 제목에 글자가 든 열려 있는 모달 (여러 개면 마지막) */
