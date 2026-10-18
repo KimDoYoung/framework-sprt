@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm43_Page_Relate.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L90-121: 위 [추가] 버튼 + 5개 탭(관련조문 TextArea · 연관법규·연관내규·연관양식(그리드 법규명/내규명/파일명 350 + 보기 35 + 삭제 35) · 연관문서분류(문서분류명 450 + 삭제 35))
  * 탭 제목 옆 건수 배지(clearPanel L709-767) — 건수가 있으면 파랑. 열리면 건수가 있는 첫 탭을 보인다
- * 연관내규·연관문서분류의 [추가]·내규 보기는 ICR·DCR 조회창(다른 도메인, TOBE 없음)이 없어 안내만 한다. 이미 연결된 것의 조회·삭제는 한다
+ * 연관내규 [추가]·내규 보기·연관문서분류 [추가]는 E13-3의 `Icr01_Lookup_SelectMulti`·`Icr01_Lookup_ClassTreeDetail`·`Dcr01_Lookup_SelectMulti`가 연다
  */
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Input, message, Modal, Tabs } from 'antd';
@@ -14,6 +14,9 @@ import { TdmManlFormFile, TdmManlItem, TdmManlRelates } from '@/types/tdm';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor, iconCell } from '@/components/grid';
 import { Ics01_Lookup_ClassTreeDetail } from '@/components/lookup/Ics01_Lookup_ClassTreeDetail';
+import { Icr01_Lookup_ClassTreeDetail } from '@/components/lookup/Icr01_Lookup_ClassTreeDetail';
+import { Dcr01_Lookup_SelectMulti } from '../dcr/Dcr01_Lookup_SelectMulti';
+import { Icr01_Lookup_SelectMulti } from '../icr/Icr01_Lookup_SelectMulti';
 import { Ics01_Lookup_SelectMulti } from '../ics/Ics01_Lookup_SelectMulti';
 import { Sys10_Lookup_FileViewer } from '../sys/Sys10_Lookup_FileViewer';
 import { Tdm43_Lookup_RelateFormFileList } from './Tdm43_Lookup_RelateFormFileList';
@@ -51,7 +54,6 @@ const icsGb = gbFor<IcsRow>();
 const icrGb = gbFor<IcrRow>();
 const formGb = gbFor<FormRow>();
 const dcrGb = gbFor<DcrRow>();
-const NEXT_STEP = '내규(ICR)·문서분류(DCR) 조회창은 아직 변환하지 않았습니다(별도 ID).';
 
 export const Tdm43_Page_Relate = forwardRef<Tdm43_Page_RelateHandle, Props>(({ manl, updateYn }, ref) => {
   // [E0] 화면 열림 (생성자 L90-121) → settings(): 5개 탭(관련조문·연관법규·연관내규·연관양식·연관문서분류)과 [추가] 버튼. 목록은 아래 load()가 연다(retrieve)
@@ -62,8 +64,11 @@ export const Tdm43_Page_Relate = forwardRef<Tdm43_Page_RelateHandle, Props>(({ m
   const [forms, setForms] = useState<FormRow[]>([]);
   const [dcrs, setDcrs] = useState<DcrRow[]>([]);
   const [icsLookup, setIcsLookup] = useState(false);
+  const [icrLookup, setIcrLookup] = useState(false);
   const [formLookup, setFormLookup] = useState(false);
+  const [dcrLookup, setDcrLookup] = useState(false);
   const [icsDetail, setIcsDetail] = useState<number | null>(null);
+  const [icrDetail, setIcrDetail] = useState<number | null>(null);
   const [viewFile, setViewFile] = useState<FileInfo | null>(null);
   const loadedFor = useRef<number | null>(null);
   const loadRef = useRef<(keepTab?: boolean) => Promise<void>>(async () => undefined);
@@ -132,10 +137,10 @@ export const Tdm43_Page_Relate = forwardRef<Tdm43_Page_RelateHandle, Props>(({ m
       confirmDelete('법규', undefined, row.manlRelateIcsId, 'ics', () => setIcs(p => p.filter(r => r !== row))))] : []),
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [updateYn]);
-  // buildRelateIcrGrid() L403-437 — 보기(Icr01_Lookup_ClassTreeDetail)는 ICR 조회창이 없어 안내
+  // buildRelateIcrGrid() L403-437
   const icrCols = useMemo(() => [
     icrGb.text('icrClassTreeName', 350, '내규명'),  // L432
-    iconCell<IcrRow>('view', 'view', 35, '보기', () => message.info(NEXT_STEP)),  // L433
+    iconCell<IcrRow>('view', 'view', 35, '보기', row => setIcrDetail(row.icrClassTreeId)),  // L433 → Icr01_Lookup_ClassTreeDetail.open
     ...(updateYn ? [iconCell<IcrRow>('delete', 'del', 35, '삭제', row =>  // L434 [E12]
       confirmDelete('내규', undefined, row.manlRelateIcrId, 'icr', () => setIcr(p => p.filter(r => r !== row))))] : []),
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -157,12 +162,11 @@ export const Tdm43_Page_Relate = forwardRef<Tdm43_Page_RelateHandle, Props>(({ m
   ], [updateYn]);
 
   // [E2] insertButton[추가].Select (L181) → insert() L245-255: 활성 탭에 따라 연관법규·내규·양식·문서분류 조회창을 연다
-  // [E5 생략] relateIcrGrid.StoreAdd (L203)·[E9 생략] relateDcrGrid.StoreAdd (L231): ICR·DCR 조회창이 없어 연관내규·연관문서분류에 새 연결을 더하는 곳이 없다
   const insert = () => {
     if (tab === 'ics') setIcsLookup(true);                    // insertRelateIcsList() L569-602 → Ics01_Lookup_SelectMulti.openUnConn("classTree", "TDM45", manlId)
-    else if (tab === 'icr') message.info(NEXT_STEP);          // insertRelateIcrList() L604-637 → Icr01_Lookup_SelectMulti
+    else if (tab === 'icr') setIcrLookup(true);               // insertRelateIcrList() L604-637 → Icr01_Lookup_SelectMulti.openUnConn("classTree", "TDM46", manlId)
     else if (tab === 'form') setFormLookup(true);             // insertRelateFormList() L639-672 → Tdm43_Lookup_RelateFormFileList.open(manlId)
-    else if (tab === 'dcr') message.info(NEXT_STEP);          // insertRelateDcrList() L674-708 → Dcr01_Lookup_SelectMulti
+    else if (tab === 'dcr') setDcrLookup(true);               // insertRelateDcrList() L674-708 → Dcr01_Lookup_SelectMulti.open("TDM47", manlId)
   };
 
   // inputIcsLine·inputFormLine L315-352: 고른 행을 그리드에 더하고 그 탭을 보인다 (저장은 Tdm43_Edit_Manl [저장]에서)
@@ -172,11 +176,23 @@ export const Tdm43_Page_Relate = forwardRef<Tdm43_Page_RelateHandle, Props>(({ m
       .map(m => ({ icsClassTreeId: m.classTreeId, icsClassTreeCode: m.classTreeCode, icsClassTreeName: m.classTreeName }))]);
     setTab('ics');
   };
+  // [E5] relateIcrGrid.StoreAdd (L203) → clearPanel(2)
+  const addIcr = (list: { classTreeId: number; classTreeCode?: string | null; classTreeName?: string | null }[]) => {
+    setIcr(prev => [...prev, ...list.filter(m => !prev.some(r => r.icrClassTreeId === m.classTreeId))
+      .map(m => ({ icrClassTreeId: m.classTreeId, icrClassTreeCode: m.classTreeCode, icrClassTreeName: m.classTreeName }))]);
+    setTab('icr');
+  };
   // [E7] relateFormGrid.StoreAdd (L217) → clearPanel(3)
   const addForms = (list: TdmManlFormFile[]) => {
     setForms(prev => [...prev, ...list.filter(m => !prev.some(r => r.fileId === m.fileId))
       .map(m => ({ fileId: m.fileId, fileName: m.fileName, regDate: m.regDate }))]);
     setTab('form');
+  };
+  // [E9] relateDcrGrid.StoreAdd (L231) → clearPanel(4)
+  const addDcrs = (list: { classTreeId: number; classTreeCode?: string | null; classTreeFullName?: string | null }[]) => {
+    setDcrs(prev => [...prev, ...list.filter(m => !prev.some(r => r.dcrClassTreeId === m.classTreeId))
+      .map(m => ({ dcrClassTreeId: m.classTreeId, dcrClassTreeCode: m.classTreeCode, dcrClassTreeName: m.classTreeFullName, dcrClassTreeFullName: m.classTreeFullName }))]);
+    setTab('dcr');
   };
 
   // [E1] plainTabPanel.Selection (L163) → buttonSettings(): 연관 탭이 아니면(관련조문) [추가]를 끈다
@@ -204,8 +220,13 @@ export const Tdm43_Page_Relate = forwardRef<Tdm43_Page_RelateHandle, Props>(({ m
       />
       <Ics01_Lookup_SelectMulti open={icsLookup} actionCode="classTree" relateTable="TDM45" relateId={manl.manlId}
         onResult={addIcs} onClose={() => setIcsLookup(false)} />
+      <Icr01_Lookup_SelectMulti open={icrLookup} actionCode="classTree" relateTable="TDM46" relateId={manl.manlId}
+        onResult={addIcr} onClose={() => setIcrLookup(false)} />
+      <Dcr01_Lookup_SelectMulti open={dcrLookup} relateTable="TDM47" relateId={manl.manlId}
+        onResult={addDcrs} onClose={() => setDcrLookup(false)} />
       <Tdm43_Lookup_RelateFormFileList relateId={formLookup ? manl.manlId : null} onResult={addForms} onClose={() => setFormLookup(false)} />
       <Ics01_Lookup_ClassTreeDetail classTreeId={icsDetail} onClose={() => setIcsDetail(null)} />
+      <Icr01_Lookup_ClassTreeDetail classTreeId={icrDetail} onClose={() => setIcrDetail(null)} />
       <Sys10_Lookup_FileViewer file={viewFile} onClose={() => setViewFile(null)} />
     </div>
   );

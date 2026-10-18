@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/icr/mapper/icr01_class_tree.xml (selectByCompanyId, selectByTypeCodePaging(+Total), selectById, selectByListIcrId)  (E13-3)
+  common.xml의 rownumLimit1(LIMIT 1)과 pagingCondition·트리 CTE를 펼쳐 넣었다. 조회는 모두 읽기 전용
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.icr.mapper.IcrClassTreeMapper">
+
+    <!-- AS-IS icr01_class_tree.selectByCompanyId L351 → selectByCompanyId_postgresql L322 (IDMS-IC)
+         isPostgreSql=true·parentId(=0)는 원본이 넘기던 값을 고정했다 -->
+    <select id="selectTree" resultType="kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeRes">
+        WITH RECURSIVE icr_tree(
+                icr01_class_tree_id
+            ,   icr01_company_id
+            ,   icr01_class_tree_nm
+            ,   icr01_parent_tree_id
+            ,   icr01_seq
+            ,   icr01_class_tree_cd
+            ,   icr01_type_cd
+            ,   icr01_use_yn
+            ,   depth
+            ,   path
+            ,   cycle
+        ) AS
+        (
+            SELECT  icr01_class_tree_id
+                 ,  icr01_company_id
+                 ,  icr01_class_tree_nm
+                 ,  icr01_parent_tree_id
+                 ,  icr01_seq
+                 ,  icr01_class_tree_cd
+                 ,  icr01_type_cd
+                 ,  icr01_use_yn
+                 ,  1
+                 ,  ARRAY[CAST(a.icr01_parent_tree_id AS varchar) || LPAD(CAST(a.icr01_seq AS varchar),10,'0')||a.icr01_class_tree_cd||LPAD(CAST(a.icr01_class_tree_id AS varchar),15,'0')]
+                 ,  false
+              FROM  icr01_class_tree a
+             WHERE  1=1
+               AND  icr01_company_id = #{companyId}
+               AND  icr01_parent_tree_id = 0
+               AND  icr01_use_yn = 'true'
+               AND  icr01_type_cd LIKE #{typeCode}
+             UNION ALL
+            SELECT  a.icr01_class_tree_id
+                 ,  a.icr01_company_id
+                 ,  a.icr01_class_tree_nm
+                 ,  a.icr01_parent_tree_id
+                 ,  a.icr01_seq
+                 ,  a.icr01_class_tree_cd
+                 ,  a.icr01_type_cd
+                 ,  a.icr01_use_yn
+                 ,  b.depth + 1
+                 ,  array_append(b.path, CAST(a.icr01_parent_tree_id AS varchar) || LPAD(CAST(a.icr01_seq AS varchar),10,'0')||a.icr01_class_tree_cd||LPAD(CAST(a.icr01_class_tree_id AS varchar),15,'0'))
+                 ,  a.icr01_class_tree_nm = any(b.path)
+              FROM  icr01_class_tree a
+                    INNER JOIN icr_tree b ON a.icr01_parent_tree_id = b.icr01_class_tree_id
+             WHERE  1=1
+               AND  a.icr01_company_id = #{companyId}
+               AND  a.icr01_use_yn = 'true'
+               AND  a.icr01_type_cd LIKE #{typeCode}
+               AND  NOT cycle
+        )
+        SELECT a.icr01_class_tree_id    AS class_tree_id,
+               a.icr01_parent_tree_id   AS parent_tree_id,
+               a.icr01_class_tree_cd    AS class_tree_code,
+               a.icr01_class_tree_nm    AS class_tree_name,
+               a.icr01_seq              AS seq,
+               ( SELECT MAX(f_get_deadline_nm(sch03_deadline_id,'2'))
+                        || CASE WHEN COUNT(*) = 1 THEN ''
+                                ELSE ' 외 '||COUNT(*)-1||'건' END
+                   FROM sch03_deadline
+                  WHERE sch03_info_id = a.icr01_class_tree_id )  AS deadline_full_name,
+               a.depth                  AS depth
+          FROM icr_tree a
+         ORDER BY path
+    </select>
+
+    <!-- AS-IS icr01_class_tree.pagingCondition L170 (IDMS-IC) — Icr01_Lookup_SelectMulti가 쓰는 분기만.
+         relateTable "TDM46"(openUnConn, Tdm43_Page_Relate)은 점검항목에 연결 안 된 내규만. classTreeId는 그 분류와 모든 하위 -->
+    <sql id="lookupCondition">
+           AND icr01_company_id = #{companyId}
+           AND icr01_type_cd = #{typeCode}
+           AND COALESCE(icr01_use_yn, 'false') = 'true'
+        <choose>
+            <when test="!detailSearchYn">
+           AND UPPER(CONCAT(icr01_class_tree_cd, icr01_class_tree_nm)) LIKE UPPER(#{lawSearch})
+           AND UPPER(CONCAT(icr01_related_law)) LIKE UPPER(#{statuteSearch})
+            </when>
+            <otherwise>
+           AND UPPER(CONCAT(icr01_class_tree_cd, icr01_class_tree_nm, icr01_content)) LIKE UPPER(#{lawSearch})
+           AND UPPER(CONCAT(icr01_related_law, icr01_content)) LIKE UPPER(#{statuteSearch})
+            </otherwise>
+        </choose>
+        <if test="classTreeId != null">
+           AND icr01_class_tree_id IN (
+                WITH RECURSIVE icr_tree_down(
+                        icr01_class_tree_id
+                    ,   icr01_parent_tree_id
+                    ,   icr01_class_tree_cd
+                    ,   depth
+                    ,   path
+                    ,   cycle
+                ) AS
+                (
+                    SELECT  a.icr01_class_tree_id
+                         ,  a.icr01_parent_tree_id
+                         ,  a.icr01_class_tree_cd
+                         ,  0
+                         ,  ARRAY[a.icr01_class_tree_cd::text]
+                         ,  false
+                      FROM  icr01_class_tree a
+                     WHERE  icr01_company_id    = #{companyId}
+                       AND  icr01_class_tree_id = #{classTreeId}
+                     UNION ALL
+                    SELECT  a.icr01_class_tree_id
+                         ,  a.icr01_parent_tree_id
+                         ,  a.icr01_class_tree_cd
+                         ,  b.depth + 1
+                         ,  array_append(b.path, a.icr01_class_tree_cd::text)
+                         ,  a.icr01_class_tree_cd = any(b.path)
+                      FROM  icr01_class_tree a
+                          , icr_tree_down b
+                     WHERE  a.icr01_parent_tree_id = b.icr01_class_tree_id
+                       AND  a.icr01_company_id     = #{companyId}
+                       AND  not cycle
+                )
+                SELECT  a.icr01_class_tree_id
+                  FROM  icr_tree_down a
+           )
+        </if>
+        <if test="relateTable == 'TDM46' and relateId != null">
+           AND NOT EXISTS ( SELECT 1
+                              FROM tdm46_manl_relate_icr
+                             WHERE tdm46_icr_class_tree_id = icr01_class_tree_id
+                               AND tdm46_manl_id           = #{relateId} )
+        </if>
+    </sql>
+
+    <!-- AS-IS icr01_class_tree.selectByTypeCodePaging L219 (IDMS-IC) — 열은 조회창 그리드 열 + id.
+         원본의 `SELECT *`와 파일 건수·관리그룹·상위 전체명 서브쿼리는 이 조회창이 안 쓴다 -->
+    <select id="selectLookup" resultType="kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeLookupRes">
+        SELECT icr01_class_tree_id      AS class_tree_id,
+               icr01_class_tree_cd      AS class_tree_code,
+               icr01_class_tree_nm      AS class_tree_name,
+               icr01_content            AS content,
+               icr01_submit_to          AS submit_to,
+               icr01_related_law        AS related_law,
+               f_icr_class_tree_nm_allpath(icr01_class_tree_id) AS class_tree_full_name,
+               (
+                    SELECT  CASE WHEN COUNT(*)=1
+                            THEN MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate()))
+                            ELSE MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate())) || ' 외 ' || COUNT(sch03_deadline.*) - 1 || '건'
+                            END
+                      FROM  sch03_deadline
+                     WHERE  sch03_schedule_cd IN ('6','7') /* 내규담당 (6) / 문서작성(내규) (7) */
+                       AND  icr01_class_tree_id = sch03_info_id
+                       AND  icr01_company_id = sch03_company_id
+                     LIMIT 1
+               )                        AS cycle_name
+          FROM icr01_class_tree
+         WHERE 1=1
+        <include refid="lookupCondition"/>
+         ORDER BY icr01_class_tree_cd
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <!-- AS-IS icr01_class_tree.selectByTypeCodePagingTotal (IDMS-IC) -->
+    <select id="selectLookupTotal" resultType="long">
+        SELECT count(*)
+          FROM icr01_class_tree
+         WHERE 1=1
+        <include refid="lookupCondition"/>
+    </select>
+
+    <!-- AS-IS icr01_class_tree.selectById L46 (IDMS-IC) — 내규상세 창 폼 값만. 기한은 sch03_deadline 이름을 ', '로 -->
+    <select id="selectDetail" resultType="kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeDetailRes">
+        SELECT icr01_class_tree_id  AS class_tree_id,
+               icr01_class_tree_cd  AS class_tree_code,
+               icr01_class_tree_nm  AS class_tree_name,
+               icr01_content        AS content,
+               icr01_related_law    AS related_law,
+               icr01_submit_to      AS submit_to,
+               ( SELECT STRING_AGG(f_get_deadline_nm(sch03_deadline_id, '2'), ', ')
+                   FROM sch03_deadline
+                  WHERE sch03_info_id = icr01_class_tree_id )  AS deadline_name
+          FROM icr01_class_tree
+         WHERE icr01_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- AS-IS icr01_class_tree.selectByListIcrId (IDMS-IC) — ${classTreeIdList}는 #{} 목록으로. 내규마다 그 내규의 회사 기한(스케줄 구분 6·7)을 붙인다(기한이 여럿이면 여러 행, 없으면 기한 열이 비어 한 행) -->
+    <select id="selectDeadlines" resultType="kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeDeadlineRes">
+        SELECT a.icr01_class_tree_id                                              AS class_tree_id,
+               f_icr_class_tree_nm_allpath(a.icr01_class_tree_id)                 AS class_tree_full_name,
+               c.sch03_deadline_id                                                AS deadline_id,
+               f_get_deadline_nm(c.sch03_deadline_id, '2')                        AS deadline_full_name,
+               f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate()) AS cycle_name
+          FROM icr01_class_tree a
+               LEFT OUTER JOIN sch03_deadline c ON (c.sch03_info_id     = a.icr01_class_tree_id AND
+                                                    c.sch03_schedule_cd IN ('6','7')            AND /* 내규담당 (6) / 문서작성(내규) (7) */
+                                                    c.sch03_company_id  = a.icr01_company_id    )
+         WHERE a.icr01_class_tree_id IN
+        <foreach collection="classTreeIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+</mapper>
