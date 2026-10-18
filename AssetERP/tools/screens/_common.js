@@ -70,6 +70,18 @@ function helpers(p) {
   /** AG Grid가 그린 행 수·행 글자 (가상화라 화면 밖 행은 빠진다 — 전체 행 수는 API compare로) */
   h.rows = g => g.locator('.ag-row[row-index]').count();
   h.rowsText = async g => (await g.locator('.ag-row[row-index]').allInnerTexts()).map(t => t.replace(/\s+/g, ' '));
+  /**
+   * 셀 글자가 모두 맞는 행의 DOM `row-index`(없으면 -1). 예: `h.findRowIdx(grid, { dayWorkHours: '77', startDate: '2099-01-01' })`, 빈 새 행은 `''`.
+   * 시험 행을 `rowsText` 배열 순서로 찾지 않는다 — 새 행이 정렬로 위에 오면 인덱스가 어긋나 [삭제]가 기존 행을 지운다(E21·E23 사고).
+   * 수정·삭제 직전에 이것으로 다시 찾고, -1이면 throw한다. 가상화라 화면 밖 행은 찾지 못한다.
+   */
+  h.findRowIdx = (g, cells) => g.evaluate((root, want) => {
+    for (const r of root.querySelectorAll('.ag-row[row-index]')) {
+      const ok = Object.entries(want).every(([col, text]) => (r.querySelector(`[col-id="${col}"]`)?.textContent ?? '').trim() === text);
+      if (ok) return Number(r.getAttribute('row-index'));
+    }
+    return -1;
+  }, cells);
   h.headers = async g => (await g.locator('.ag-header-cell-text').allInnerTexts()).join('|');
   /** scope 안의 글자 있는 버튼들 (공백 제거) */
   h.buttons = async scope => (await scope.locator('button').filter({ hasText: /\S/ }).allInnerTexts()).map(t => t.replace(/\s/g, '')).join(',');

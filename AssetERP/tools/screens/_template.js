@@ -6,6 +6,7 @@
 // 헬퍼: _common.js helpers(). 함정은 아래 "함정" 절과 08-회차인계 E17~E19 줄.
 //
 // 함정 (겪은 순서)
+//  0. 수정·삭제할 시험 행은 rowsText 배열 순서로 찾지 않는다 → `h.findRowIdx(grid, { col: '글자' })`(DOM row-index)로 직접 찾고 -1이면 throw (E21·E23 사고: 기존 행을 지움).
 //  1. checkGrid()는 행 하나를 선택한 채 끝난다 → "선택 없음" 검사(삭제·내보내기 안내)를 checkGrid 앞에 하거나, 뒤에 다시 조회해 선택을 푼다.
 //  2. 아이콘 열(수정·상세보기)이 화면 밖이면 DOM에 없다(열 가상화) → 클릭 전 `h.scrollX(grid, 5000)`, 뒤에 `h.scrollX(grid, 0)`.
 //  3. 조회창·모달은 Esc로 안 닫힌다 → `h.btn(h.modal('제목'), /취\s*소|닫\s*기/).click()`.

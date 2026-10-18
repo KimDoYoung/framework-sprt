@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxDeductLimit } from '../types/pay';
+import { PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxDeductLimit, PayWorkTime } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -366,6 +366,25 @@ export const payApi = {
   /** AS-IS pay.Pay29_OtherSetup.delete → 지운 건수 */
   deleteOtherSetups: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/pay/other-setups', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS pay.Pay34_WorkTimeConfig.selectByCompanyId (E23 근로시간기준관리) — 회사는 서버가 0으로 고정 */
+  searchWorkTimes: async (): Promise<PayWorkTime[]> => {
+    const res = await apiClient.get<ApiResponse<PayWorkTime[]>>('v1/pay/work-times');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay34_WorkTimeConfig.update → 저장된 행(요청 순서) */
+  saveWorkTimes: async (rows: PayWorkTime[]): Promise<PayWorkTime[]> => {
+    const body = rows.map(({ workTimeConfigId, startDate, dayWorkHours, weekMaxAddHours, ntStartTime, ntEndTime, otMultRate, ntMultRate, holiStdMultRate, holiOverMultRate }) => ({ workTimeConfigId, startDate, dayWorkHours, weekMaxAddHours, ntStartTime, ntEndTime, otMultRate, ntMultRate, holiStdMultRate, holiOverMultRate }));
+    const res = await apiClient.put<ApiResponse<PayWorkTime[]>>('v1/pay/work-times', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay34_WorkTimeConfig.delete → 지운 건수 */
+  deleteWorkTimes: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/pay/work-times', { data: ids });
     return res.data.data ?? 0;
   },
 };

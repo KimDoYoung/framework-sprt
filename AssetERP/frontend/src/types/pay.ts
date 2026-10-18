@@ -146,3 +146,17 @@ export interface PayOtherSetup {
   stdTaxDeduct?: number;
   note?: string;
 }
+
+/** 근로시간 기준(pay34_work_time_config) — 근로시간기준관리 */
+export interface PayWorkTime {
+  workTimeConfigId: number;
+  startDate?: string;
+  dayWorkHours?: number;
+  weekMaxAddHours?: number;
+  ntStartTime?: string;
+  ntEndTime?: string;
+  otMultRate?: number;
+  ntMultRate?: number;
+  holiStdMultRate?: number;
+  holiOverMultRate?: number;
+}
