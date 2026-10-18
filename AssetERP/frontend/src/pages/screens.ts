@@ -61,6 +61,7 @@ import { Sys86_Tab_Websocket } from './sys/Sys86_Tab_Websocket';
 import { Sys07_Tab_RoleMenu } from './sys/Sys07_Tab_RoleMenu';
 import { Sys07_Tab_Company } from './sys/Sys07_Tab_Company';
 import { Sys07_Tab_CompanyRoleMenu } from './sys/Sys07_Tab_CompanyRoleMenu';
+import { Tdm31_Tab_RoleDescAdmin } from './tdm/Tdm31_Tab_RoleDescAdmin';
 import { Test_Tab_ReactComponents } from './test/Test_Tab_ReactComponents';
 
 /**
@@ -93,6 +94,7 @@ export const SCREENS: Record<string, React.FC> = {
   Icam99_Tab_Test, // D10 (작업 버튼은 BatchMain 연동이 없어 서버가 거절)
   Ifi90_Tab_Config, // D01 (계정PW 저장은 원본도 안 함 — 작업기록 제안)
   Org01_Tab_OrgCode, // C02 (조직도보기 Org02_View_Chart 제외)
+  Tdm31_Tab_RoleDescAdmin, // E11 (재생성은 RD 리포트 연동이 없어 서버가 거절 — RoleDescPdfMaker 기본 구현)
   Sms02_Tab_TotalCount, // C05
   Sms03_Tab_SendAdmin, // C06 (실제 문자 발송은 하지 않음 — SmsSender 기본 구현)
   Sys01_Tab_Company, // A15 (1단계: 목록·신규 등록)

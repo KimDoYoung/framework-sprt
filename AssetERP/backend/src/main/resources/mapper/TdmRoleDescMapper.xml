@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm31_role_desc.xml (E11 책무기술서 재생성)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmRoleDescMapper">
+
+    <!-- 재생성 대상 행의 회사 확인용(TOBE 추가 — 서버가 요청한 id의 회사를 직접 읽어 권한 범위를 검사) -->
+    <select id="selectCompanyId" resultType="java.lang.Long">
+        SELECT tdm31_company_id
+          FROM tdm31_role_desc
+         WHERE tdm31_role_desc_id = #{roleDescId}
+    </select>
+
+    <!--
+      AS-IS(IDMS-IC) tdm31_role_desc.selectByRegDateAdmin L108
+      수정: ORDER BY의 COLLATE "ko_KR.utf8" → "ko-KR-x-icu"(이 DB에 ko_KR.utf8가 없음, 05 §6), 바깥 SELECT t.*를 그리드·재생성 열로, 일자는 TO_CHAR
+    -->
+    <select id="selectByRegDateAdmin" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleDescRes">
+        SELECT  tdm31_role_desc_id                                 AS role_desc_id,
+                TO_CHAR(tdm31_reg_date, 'YYYY-MM-DD')              AS reg_date,
+                tdm31_reason_nm                                    AS reason_name,
+                tdm31_company_id                                   AS company_id,
+                tdm31_company_nm                                   AS company_name,
+                tdm31_person_id                                    AS person_id,
+                tdm31_person_nm                                    AS person_name,
+                TO_CHAR(tdm31_allc_std_date, 'YYYY-MM-DD')         AS allc_std_date,
+                tdm31_role_nm                                      AS role_name,
+                tdm31_add_title                                    AS add_title,
+                tdm31_appr_id                                      AS appr_id,
+                tdm31_appr_status_cd                               AS appr_status_code,
+                tdm31_appr_status_nm                               AS appr_status_name
+          FROM (
+                SELECT  tdm31_role_desc.*
+                     ,  f_cdnm('TdmDescRegReason', tdm31_reason_cd, tdm31_company_id, tdm31_reg_date)    AS tdm31_reason_nm          --생성사유
+                     ,  tdm01_person_nm                                                                  AS tdm31_person_nm          --임원명
+                     ,  f_get_company_nm(tdm31_company_id)                                               AS tdm31_company_nm         --회사명
+                     ,  tdm20_role_id                                                                    AS tdm31_role_id            --직책ID
+                     ,  tdm20_role_nm                                                                    AS tdm31_role_nm            --직책
+                     ,  f_get_tdmPersonInfo(tdm31_person_id, tdm31_allc_std_date, '1')                   AS tdm31_add_title          --겸직사항
+                     ,  COALESCE(apr01_status_cd, '00')                                                  AS tdm31_appr_status_cd     --결재상태코드
+                     ,  f_cdnm('AprStatusCode', apr01_status_cd, tdm31_company_id, tdm31_reg_date)       AS tdm31_appr_status_nm     --결재상태명
+                  FROM  tdm31_role_desc
+                        INNER JOIN LATERAL getTdm30RoleAllc(tdm31_company_id, tdm31_allc_std_date, true) ON tdm30_role_allc_id = tdm31_role_allc_id
+                        INNER JOIN       tdm20_role      ON tdm20_role_id        = tdm30_role_id
+                        INNER JOIN       tdm01_hr        ON tdm01_person_id      = tdm31_person_id
+                        LEFT OUTER JOIN  sys10_file      ON sys10_parent_id      = tdm31_role_desc_id
+                        LEFT OUTER JOIN  apr01_appr      ON apr01_appr_id        = tdm31_appr_id
+                 WHERE  1=1
+                <if test="companyId != null">
+                   AND tdm31_company_id = #{companyId}
+                </if>
+                <if test="!notPeriodYn">
+                   AND tdm31_reg_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+                </if>
+                <if test="endYn">
+                   AND COALESCE(apr01_status_cd, '00') IN ('10','20','30')
+                </if>
+               ) t
+         WHERE CONCAT(tdm31_role_nm, tdm31_add_title, tdm31_person_nm) ILIKE #{searchText}
+         ORDER BY tdm31_company_id, tdm31_reg_date, tdm31_person_nm COLLATE "ko-KR-x-icu"
+    </select>
+</mapper>
