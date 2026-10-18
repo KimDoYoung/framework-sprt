@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/pay/mapper/pay22_simple_tax_table.xml, pay23_simple_tax_table_other.xml + UpdateDataModel(pay23) 저장  (E22-2)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PaySimpleTaxMapper">
+
+    <sql id="taxColumns">
+        pay22_simple_tax_table_id AS simple_tax_table_id,
+        pay22_start_date          AS start_date,
+        pay22_from_amt            AS from_amt,
+        pay22_to_amt              AS to_amt,
+        pay22_deduct_cnt1         AS deduct_cnt1,
+        pay22_deduct_cnt2         AS deduct_cnt2,
+        pay22_deduct_cnt3         AS deduct_cnt3,
+        pay22_deduct_cnt4         AS deduct_cnt4,
+        pay22_deduct_cnt5         AS deduct_cnt5,
+        pay22_deduct_cnt6         AS deduct_cnt6,
+        pay22_deduct_cnt7         AS deduct_cnt7,
+        pay22_deduct_cnt8         AS deduct_cnt8,
+        pay22_deduct_cnt9         AS deduct_cnt9,
+        pay22_deduct_cnt10        AS deduct_cnt10,
+        pay22_deduct_cnt11        AS deduct_cnt11
+    </sql>
+
+    <sql id="otherColumns">
+        pay23_simple_tax_table_other_id AS simple_tax_table_other_id,
+        pay23_start_date                AS start_date,
+        pay23_from_amt                  AS from_amt,
+        pay23_to_amt                    AS to_amt,
+        pay23_rate1                     AS rate1,
+        pay23_rate2                     AS rate2,
+        pay23_add_tax                   AS add_tax,
+        pay23_note                      AS note
+    </sql>
+
+    <!-- AS-IS pay23_simple_tax_table_other.selectByAll (IDMS-IC) — 적용일별 첫 행 -->
+    <select id="selectDates" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayStartDateRes">
+        SELECT pay23_simple_tax_table_other_id AS id,
+               pay23_start_date                AS start_date
+          FROM (SELECT *
+                     , ROW_NUMBER() OVER(PARTITION BY pay23_start_date) AS rn
+                  FROM pay23_simple_tax_table_other) t
+         WHERE rn = 1
+         ORDER BY pay23_start_date DESC
+    </select>
+
+    <!-- AS-IS pay22_simple_tax_table.selectByDate (IDMS-IC): 검색 금액이 있으면 그 금액이 속한 구간만 -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.PaySimpleTaxRes">
+        SELECT <include refid="taxColumns"/>
+          FROM pay22_simple_tax_table
+         WHERE pay22_start_date = #{startDate}
+        <if test="searchLong != null">
+           AND #{searchLong} <![CDATA[>=]]> pay22_from_amt
+           AND #{searchLong} <![CDATA[<]]> pay22_to_amt
+        </if>
+         ORDER BY pay22_from_amt
+    </select>
+
+    <!-- AS-IS pay22_simple_tax_table.deleteByDate (IDMS-IC) -->
+    <delete id="deleteTableByDate">
+        DELETE FROM pay22_simple_tax_table
+         WHERE pay22_start_date = #{startDate}
+    </delete>
+
+    <!-- AS-IS pay22_simple_tax_table.excelInsert (IDMS-IC) -->
+    <insert id="excelInsert">
+        INSERT INTO pay22_simple_tax_table
+             ( pay22_simple_tax_table_id, pay22_start_date, pay22_from_amt, pay22_to_amt
+             , pay22_deduct_cnt1, pay22_deduct_cnt2, pay22_deduct_cnt3, pay22_deduct_cnt4, pay22_deduct_cnt5, pay22_deduct_cnt6
+             , pay22_deduct_cnt7, pay22_deduct_cnt8, pay22_deduct_cnt9, pay22_deduct_cnt10, pay22_deduct_cnt11)
+        VALUES ( #{row.simpleTaxTableId}, #{row.startDate}, #{row.fromAmt}, #{row.toAmt}
+             , #{row.deductCnt1}, #{row.deductCnt2}, #{row.deductCnt3}, #{row.deductCnt4}, #{row.deductCnt5}, #{row.deductCnt6}
+             , #{row.deductCnt7}, #{row.deductCnt8}, #{row.deductCnt9}, #{row.deductCnt10}, #{row.deductCnt11})
+    </insert>
+
+    <!-- AS-IS pay23_simple_tax_table_other.selectByDate (IDMS-IC) -->
+    <select id="selectOtherByDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.PaySimpleTaxOtherRes">
+        SELECT <include refid="otherColumns"/>
+          FROM pay23_simple_tax_table_other
+         WHERE pay23_start_date = #{startDate}
+         ORDER BY pay23_from_amt
+    </select>
+
+    <!-- AS-IS pay23_simple_tax_table_other.selectByStartDate (IDMS-IC) -->
+    <select id="selectOtherByStartDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.PaySimpleTaxOtherRes">
+        SELECT <include refid="otherColumns"/>
+          FROM pay23_simple_tax_table_other
+         WHERE pay23_start_date = (SELECT max(pay23_start_date)
+                                     FROM pay23_simple_tax_table_other
+                                    WHERE pay23_start_date <![CDATA[<=]]> #{startDate})
+    </select>
+
+    <select id="selectOtherById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PaySimpleTaxOtherRes">
+        SELECT <include refid="otherColumns"/>
+          FROM pay23_simple_tax_table_other
+         WHERE pay23_simple_tax_table_other_id = #{id}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS pay23_simple_tax_table_other.insert (IDMS-IC) -->
+    <insert id="insertOther">
+        INSERT INTO pay23_simple_tax_table_other
+             ( pay23_simple_tax_table_other_id, pay23_start_date, pay23_from_amt, pay23_to_amt
+             , pay23_rate1, pay23_rate2, pay23_add_tax, pay23_note)
+        VALUES ( #{id}, #{req.startDate}, #{req.fromAmt}, #{req.toAmt}
+             , #{req.rate1}, #{req.rate2}, #{req.addTax}, #{req.note})
+    </insert>
+
+    <update id="updateOther">
+        UPDATE pay23_simple_tax_table_other
+           SET pay23_from_amt = #{req.fromAmt},
+               pay23_to_amt   = #{req.toAmt},
+               pay23_rate1    = #{req.rate1},
+               pay23_rate2    = #{req.rate2},
+               pay23_add_tax  = #{req.addTax},
+               pay23_note     = #{req.note}
+         WHERE pay23_simple_tax_table_other_id = #{req.simpleTaxTableOtherId}
+    </update>
+
+    <delete id="deleteOtherByIds">
+        DELETE FROM pay23_simple_tax_table_other
+         WHERE pay23_simple_tax_table_other_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS pay23_simple_tax_table_other.deleteByDate (IDMS-IC) -->
+    <delete id="deleteOtherByDate">
+        DELETE FROM pay23_simple_tax_table_other
+         WHERE pay23_start_date = #{startDate}
+    </delete>
+</mapper>

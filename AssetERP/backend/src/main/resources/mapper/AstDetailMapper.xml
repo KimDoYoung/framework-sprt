@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/ast/mapper/ast02_detail.xml (selectByCompanyId0, selectById) + UpdateDataModel(ast02_detail) 저장  (E21)
+  화면이 안 다루는 열(ast02_value·ast02_note)은 건드리지 않는다
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstDetailMapper">
+
+    <!-- AS-IS ast02_detail.selectByCompanyId0 L37 (IDMS-IC) — 원본의 company 조건 둘(= 로그인 회사 AND = 0)을 그대로 둔다. 화면이 "%검색어%"로 감싼다 -->
+    <select id="selectByCompanyId0" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstDetailRes">
+        SELECT ast02_detail_id                      AS detail_id,
+               ast02_seq                            AS seq,
+               ast02_title                          AS title,
+               ast02_tag                            AS tag,
+               COALESCE(ast02_use_yn, 'true')       AS use_yn
+          FROM ast02_detail
+         WHERE ast02_default_yn = #{defaultYn}
+           AND ast02_company_id = #{companyId}
+           AND ast02_company_id = 0
+           AND ast02_ast_class_tree_id = 0
+           AND upper(coalesce(ast02_title,'')||coalesce(ast02_tag,'')) LIKE upper(#{searchText})
+           AND ( ( #{useYn} = 'true'                        AND
+                   COALESCE(ast02_use_yn,'true') = 'true' ) OR
+                 ( #{useYn} = 'false'                       ) )
+         ORDER BY ast02_seq
+    </select>
+
+    <!-- AS-IS ast02_detail.selectById L19 (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstDetailRes">
+        SELECT ast02_detail_id AS detail_id,
+               ast02_seq       AS seq,
+               ast02_title     AS title,
+               ast02_tag       AS tag,
+               ast02_use_yn    AS use_yn
+          FROM ast02_detail
+         WHERE ast02_detail_id = #{detailId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel INSERT: 화면 insertRow()가 넣는 값(자산분류ID 0 · 디폴트 true · 회사 · 사용여부) -->
+    <insert id="insert">
+        INSERT INTO ast02_detail (ast02_detail_id, ast02_ast_class_tree_id, ast02_company_id, ast02_default_yn,
+                                  ast02_seq, ast02_title, ast02_tag, ast02_use_yn)
+        VALUES (#{detailId}, 0, #{companyId}, 'true',
+                #{req.seq}, #{req.title}, #{req.tag}, #{req.useYn})
+    </insert>
+
+    <update id="update">
+        UPDATE ast02_detail
+           SET ast02_seq    = #{req.seq},
+               ast02_title  = #{req.title},
+               ast02_tag    = #{req.tag},
+               ast02_use_yn = #{req.useYn}
+         WHERE ast02_detail_id = #{req.detailId}
+           AND ast02_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM ast02_detail
+         WHERE ast02_company_id = #{companyId}
+           AND ast02_detail_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

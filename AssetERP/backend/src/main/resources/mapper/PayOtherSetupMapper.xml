@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/pay/mapper/pay29_other_setup.xml + UpdateDataModel(pay29_other_setup) 저장  (E22-3)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayOtherSetupMapper">
+
+    <sql id="columns">
+        pay29_other_setup_id AS other_setup_id,
+        pay29_start_date     AS start_date,
+        pay29_hi_max_div     AS hi_max_div,
+        pay29_ei_max_div     AS ei_max_div,
+        pay29_hi_min_amt     AS hi_min_amt,
+        pay29_hi_max_amt     AS hi_max_amt,
+        pay29_np_min_amt     AS np_min_amt,
+        pay29_np_max_amt     AS np_max_amt,
+        pay29_std_tax_deduct AS std_tax_deduct,
+        pay29_note           AS note
+    </sql>
+
+    <!-- AS-IS pay29_other_setup.selectByAll (IDMS-IC) — 적용일별 첫 행 -->
+    <select id="selectDates" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayStartDateRes">
+        SELECT pay29_other_setup_id AS id,
+               pay29_start_date     AS start_date
+          FROM (SELECT *
+                     , ROW_NUMBER() OVER(PARTITION BY pay29_start_date) AS rn
+                  FROM pay29_other_setup) t
+         WHERE rn = 1
+         ORDER BY pay29_start_date DESC
+    </select>
+
+    <!-- AS-IS pay29_other_setup.selectByDate (IDMS-IC) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayOtherSetupRes">
+        SELECT <include refid="columns"/>
+          FROM pay29_other_setup
+         WHERE pay29_start_date = #{startDate}
+         ORDER BY pay29_hi_max_div
+    </select>
+
+    <!-- AS-IS pay29_other_setup.selectByStartDate (IDMS-IC) -->
+    <select id="selectByStartDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayOtherSetupRes">
+        SELECT <include refid="columns"/>
+          FROM pay29_other_setup
+         WHERE pay29_start_date = (SELECT max(pay29_start_date)
+                                     FROM pay29_other_setup
+                                    WHERE pay29_start_date <![CDATA[<=]]> #{startDate})
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayOtherSetupRes">
+        SELECT <include refid="columns"/>
+          FROM pay29_other_setup
+         WHERE pay29_other_setup_id = #{id}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS pay29_other_setup.insert (IDMS-IC) -->
+    <insert id="insert">
+        INSERT INTO pay29_other_setup
+             ( pay29_other_setup_id, pay29_start_date, pay29_hi_max_div, pay29_ei_max_div
+             , pay29_hi_min_amt, pay29_hi_max_amt, pay29_np_min_amt, pay29_np_max_amt
+             , pay29_std_tax_deduct, pay29_note)
+        VALUES ( #{id}, #{row.startDate}, #{row.hiMaxDiv}, #{row.eiMaxDiv}
+             , #{row.hiMinAmt}, #{row.hiMaxAmt}, #{row.npMinAmt}, #{row.npMaxAmt}
+             , #{row.stdTaxDeduct}, #{row.note})
+    </insert>
+
+    <update id="update">
+        UPDATE pay29_other_setup
+           SET pay29_hi_max_div     = #{req.hiMaxDiv},
+               pay29_ei_max_div     = #{req.eiMaxDiv},
+               pay29_hi_min_amt     = #{req.hiMinAmt},
+               pay29_hi_max_amt     = #{req.hiMaxAmt},
+               pay29_np_min_amt     = #{req.npMinAmt},
+               pay29_np_max_amt     = #{req.npMaxAmt},
+               pay29_std_tax_deduct = #{req.stdTaxDeduct},
+               pay29_note           = #{req.note}
+         WHERE pay29_other_setup_id = #{req.otherSetupId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM pay29_other_setup
+         WHERE pay29_other_setup_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS pay29_other_setup.deleteByDate (IDMS-IC) -->
+    <delete id="deleteByDate">
+        DELETE FROM pay29_other_setup
+         WHERE pay29_start_date = #{startDate}
+    </delete>
+</mapper>

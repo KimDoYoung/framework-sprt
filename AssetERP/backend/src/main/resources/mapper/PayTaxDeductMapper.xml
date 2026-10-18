@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/pay/mapper/pay27_tax_deduct_table.xml·pay28_tax_deduct_limit.xml + UpdateDataModel 저장  (E22-3)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayTaxDeductMapper">
+
+    <sql id="columns">
+        pay27_tax_deduct_table_id AS tax_deduct_table_id,
+        pay27_start_date          AS start_date,
+        pay27_from_amt            AS from_amt,
+        pay27_to_amt              AS to_amt,
+        pay27_deduct_amt          AS deduct_amt,
+        pay27_rate                AS rate,
+        pay27_note                AS note
+    </sql>
+
+    <sql id="limitColumns">
+        pay28_tax_deduct_limit_id AS tax_deduct_limit_id,
+        pay28_start_date          AS start_date,
+        pay28_from_amt            AS from_amt,
+        pay28_to_amt              AS to_amt,
+        pay28_min_limit           AS min_limit,
+        pay28_max_limit           AS max_limit,
+        pay28_rate                AS rate,
+        pay28_note                AS note
+    </sql>
+
+    <!-- AS-IS pay27_tax_deduct_table.selectByAll (IDMS-IC) — 적용일별 첫 행 -->
+    <select id="selectDates" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayStartDateRes">
+        SELECT pay27_tax_deduct_table_id AS id,
+               pay27_start_date          AS start_date
+          FROM (SELECT *
+                     , ROW_NUMBER() OVER(PARTITION BY pay27_start_date) AS rn
+                  FROM pay27_tax_deduct_table) t
+         WHERE rn = 1
+         ORDER BY pay27_start_date DESC
+    </select>
+
+    <!-- AS-IS pay27_tax_deduct_table.selectByDate (IDMS-IC) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayTaxDeductRes">
+        SELECT <include refid="columns"/>
+          FROM pay27_tax_deduct_table
+         WHERE pay27_start_date = #{startDate}
+         ORDER BY pay27_from_amt
+    </select>
+
+    <!-- AS-IS pay27_tax_deduct_table.selectByStartDate (IDMS-IC) -->
+    <select id="selectByStartDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayTaxDeductRes">
+        SELECT <include refid="columns"/>
+          FROM pay27_tax_deduct_table
+         WHERE pay27_start_date = (SELECT max(pay27_start_date)
+                                     FROM pay27_tax_deduct_table
+                                    WHERE pay27_start_date <![CDATA[<=]]> #{startDate})
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayTaxDeductRes">
+        SELECT <include refid="columns"/>
+          FROM pay27_tax_deduct_table
+         WHERE pay27_tax_deduct_table_id = #{id}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS pay27_tax_deduct_table.insert (IDMS-IC) -->
+    <insert id="insert">
+        INSERT INTO pay27_tax_deduct_table
+             ( pay27_tax_deduct_table_id, pay27_start_date, pay27_from_amt, pay27_to_amt
+             , pay27_deduct_amt, pay27_rate, pay27_note)
+        VALUES ( #{id}, #{row.startDate}, #{row.fromAmt}, #{row.toAmt}
+             , #{row.deductAmt}, #{row.rate}, #{row.note})
+    </insert>
+
+    <update id="update">
+        UPDATE pay27_tax_deduct_table
+           SET pay27_from_amt   = #{req.fromAmt},
+               pay27_to_amt     = #{req.toAmt},
+               pay27_deduct_amt = #{req.deductAmt},
+               pay27_rate       = #{req.rate},
+               pay27_note       = #{req.note}
+         WHERE pay27_tax_deduct_table_id = #{req.taxDeductTableId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM pay27_tax_deduct_table
+         WHERE pay27_tax_deduct_table_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS pay27_tax_deduct_table.deleteByDate (IDMS-IC) -->
+    <delete id="deleteByDate">
+        DELETE FROM pay27_tax_deduct_table
+         WHERE pay27_start_date = #{startDate}
+    </delete>
+
+    <!-- AS-IS pay28_tax_deduct_limit.selectByDate (IDMS-IC) -->
+    <select id="selectLimitByDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayTaxDeductLimitRes">
+        SELECT <include refid="limitColumns"/>
+          FROM pay28_tax_deduct_limit
+         WHERE pay28_start_date = #{startDate}
+         ORDER BY pay28_from_amt
+    </select>
+
+    <!-- AS-IS pay28_tax_deduct_limit.selectByStartDate (IDMS-IC) -->
+    <select id="selectLimitByStartDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayTaxDeductLimitRes">
+        SELECT <include refid="limitColumns"/>
+          FROM pay28_tax_deduct_limit
+         WHERE pay28_start_date = (SELECT max(pay28_start_date)
+                                     FROM pay28_tax_deduct_limit
+                                    WHERE pay28_start_date <![CDATA[<=]]> #{startDate})
+    </select>
+
+    <select id="selectLimitById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayTaxDeductLimitRes">
+        SELECT <include refid="limitColumns"/>
+          FROM pay28_tax_deduct_limit
+         WHERE pay28_tax_deduct_limit_id = #{id}
+    </select>
+
+    <!-- AS-IS pay28_tax_deduct_limit.insert (IDMS-IC) -->
+    <insert id="insertLimit">
+        INSERT INTO pay28_tax_deduct_limit
+             ( pay28_tax_deduct_limit_id, pay28_start_date, pay28_from_amt, pay28_to_amt
+             , pay28_min_limit, pay28_max_limit, pay28_rate, pay28_note)
+        VALUES ( #{id}, #{row.startDate}, #{row.fromAmt}, #{row.toAmt}
+             , #{row.minLimit}, #{row.maxLimit}, #{row.rate}, #{row.note})
+    </insert>
+
+    <update id="updateLimit">
+        UPDATE pay28_tax_deduct_limit
+           SET pay28_from_amt  = #{req.fromAmt},
+               pay28_to_amt    = #{req.toAmt},
+               pay28_min_limit = #{req.minLimit},
+               pay28_max_limit = #{req.maxLimit},
+               pay28_rate      = #{req.rate},
+               pay28_note      = #{req.note}
+         WHERE pay28_tax_deduct_limit_id = #{req.taxDeductLimitId}
+    </update>
+
+    <delete id="deleteLimitByIds">
+        DELETE FROM pay28_tax_deduct_limit
+         WHERE pay28_tax_deduct_limit_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS pay28_tax_deduct_limit.deleteByDate (IDMS-IC) -->
+    <delete id="deleteLimitByDate">
+        DELETE FROM pay28_tax_deduct_limit
+         WHERE pay28_start_date = #{startDate}
+    </delete>
+</mapper>

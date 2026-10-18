@@ -10,6 +10,7 @@ import { Emp01_Tab_UserInfo } from './emp/Emp01_Tab_UserInfo';
 import { Flt05_Tab_ItemTypeAdmin } from './flt/Flt05_Tab_ItemTypeAdmin';
 import { Fnd03_Tab_ConsignmentManager } from './fnd/Fnd03_Tab_ConsignmentManager';
 import { Fnd06_Tab_OfficeWorkManager } from './fnd/Fnd06_Tab_OfficeWorkManager';
+import { Ast01_Tab_InfoManager } from './ast/Ast01_Tab_InfoManager';
 import { Fnd09_Tab_TrustBankManager } from './fnd/Fnd09_Tab_TrustBankManager';
 import { Ics01_Tab_ClassTree } from './ics/Ics01_Tab_ClassTree';
 import { Ics01_Tab_IcsFileUpload } from './ics/Ics01_Tab_IcsFileUpload';
@@ -23,6 +24,7 @@ import { Icam50_Tab_DbSource } from './icam/Icam50_Tab_DbSource';
 import { Icam99_Tab_Test } from './icam/Icam99_Tab_Test';
 import { Ifi90_Tab_Config } from './ifi/Ifi90_Tab_Config';
 import { Org01_Tab_OrgCode } from './org/Org01_Tab_OrgCode';
+import { Pay20_Tab_DeductAdmin } from './pay/Pay20_Tab_DeductAdmin';
 import { Sms02_Tab_TotalCount } from './sms/Sms02_Tab_TotalCount';
 import { Sms03_Tab_SendAdmin } from './sms/Sms03_Tab_SendAdmin';
 import { Sys01_Tab_Company } from './sys/Sys01_Tab_Company';
@@ -112,6 +114,8 @@ export const SCREENS: Record<string, React.FC> = {
   Dcr30_Tab_LinkAdmin, // E17 (열 때 Link 없는 회사에 채우는 linkCheck가 쓰기 — AS-IS 그대로. + Dcr30_TabPage_Company·Dcr30_Lookup_LinkNote·Dcr30_Move_DcrClass·Com10_Lookup_CommonMapping·Pay06_Popup_Example)
   Rpt10_Tab_FssSubmit, // E19 (+ Rpt10_Edit_WriteGuide)
   Sch10_Tab_IpoAdmin, // E20 (+ Sch12_Lookup_IpoCorp·Sch14_Lookup_IpoMismatch·Sch15_Lookup_IpoItemMatching·Com50_Lookup_StkItem)
+  Ast01_Tab_InfoManager, // E21
+  Pay20_Tab_DeductAdmin, // E22 1단계 (탭 1~3: Pay20_TabPage_Item·Pay04_TabPage_Formula·Pay21_TabPage_Rate + Pay20_Lookup_ItemList·Pay04_Lookup_Insert. 탭 4~9는 자리만)
   Tdm50_Tab_DutyReconAdmin, // E15 (조회마다 DB 함수 f_recon_tdm('DB_CHK')이 sys99_print의 사용자 몫 행을 다시 만든다 — AS-IS 그대로)
   Sms02_Tab_TotalCount, // C05
   Sms03_Tab_SendAdmin, // C06 (실제 문자 발송은 하지 않음 — SmsSender 기본 구현)

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/pay/mapper/pay26_tax_calc_table.xml + UpdateDataModel(pay26_tax_calc_table) 저장  (E22-3)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayTaxCalcMapper">
+
+    <sql id="columns">
+        pay26_tax_calc_table_id AS tax_calc_table_id,
+        pay26_start_date        AS start_date,
+        pay26_from_amt          AS from_amt,
+        pay26_to_amt            AS to_amt,
+        pay26_basic_tax         AS basic_tax,
+        pay26_rate              AS rate,
+        pay26_note              AS note
+    </sql>
+
+    <!-- AS-IS pay26_tax_calc_table.selectByAll (IDMS-IC) — 적용일별 첫 행 -->
+    <select id="selectDates" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayStartDateRes">
+        SELECT pay26_tax_calc_table_id AS id,
+               pay26_start_date        AS start_date
+          FROM (SELECT *
+                     , ROW_NUMBER() OVER(PARTITION BY pay26_start_date) AS rn
+                  FROM pay26_tax_calc_table) t
+         WHERE rn = 1
+         ORDER BY pay26_start_date DESC
+    </select>
+
+    <!-- AS-IS pay26_tax_calc_table.selectByDate (IDMS-IC) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayTaxCalcRes">
+        SELECT <include refid="columns"/>
+          FROM pay26_tax_calc_table
+         WHERE pay26_start_date = #{startDate}
+         ORDER BY pay26_from_amt
+    </select>
+
+    <!-- AS-IS pay26_tax_calc_table.selectByStartDate (IDMS-IC) -->
+    <select id="selectByStartDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayTaxCalcRes">
+        SELECT <include refid="columns"/>
+          FROM pay26_tax_calc_table
+         WHERE pay26_start_date = (SELECT max(pay26_start_date)
+                                     FROM pay26_tax_calc_table
+                                    WHERE pay26_start_date <![CDATA[<=]]> #{startDate})
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayTaxCalcRes">
+        SELECT <include refid="columns"/>
+          FROM pay26_tax_calc_table
+         WHERE pay26_tax_calc_table_id = #{id}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS pay26_tax_calc_table.insert (IDMS-IC) -->
+    <insert id="insert">
+        INSERT INTO pay26_tax_calc_table
+             ( pay26_tax_calc_table_id, pay26_start_date, pay26_from_amt, pay26_to_amt
+             , pay26_basic_tax, pay26_rate, pay26_note)
+        VALUES ( #{id}, #{row.startDate}, #{row.fromAmt}, #{row.toAmt}
+             , #{row.basicTax}, #{row.rate}, #{row.note})
+    </insert>
+
+    <update id="update">
+        UPDATE pay26_tax_calc_table
+           SET pay26_from_amt  = #{req.fromAmt},
+               pay26_to_amt    = #{req.toAmt},
+               pay26_basic_tax = #{req.basicTax},
+               pay26_rate      = #{req.rate},
+               pay26_note      = #{req.note}
+         WHERE pay26_tax_calc_table_id = #{req.taxCalcTableId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM pay26_tax_calc_table
+         WHERE pay26_tax_calc_table_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS pay26_tax_calc_table.deleteByDate (IDMS-IC) -->
+    <delete id="deleteByDate">
+        DELETE FROM pay26_tax_calc_table
+         WHERE pay26_start_date = #{startDate}
+    </delete>
+</mapper>

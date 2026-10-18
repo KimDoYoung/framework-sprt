@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/pay/mapper/pay04_formula.xml (selectByCompanyId, selectByDate, selectByMaxCompanyId, selectById, insert, deleteByDate)
+  + UpdateDataModel(pay04_formula) 저장  (E22)
+  ※ 같은 namespace의 pay04_formula_20230620.xml은 ConfigMyBatis에 등록되지 않은 옛 파일이라 쓰지 않는다(색인은 그쪽을 보여 준다)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayFormulaMapper">
+
+    <sql id="formulaColumns">
+        pay04_formula_id    AS formula_id,
+        pay04_company_id    AS company_id,
+        pay04_start_date    AS start_date,
+        pay04_item_cd       AS item_cd,
+        pay20_item_nm       AS item_name,
+        pay04_formula_form  AS formula_form,
+        pay04_note          AS note
+    </sql>
+
+    <!-- AS-IS pay04_formula.selectByCompanyId L26 (IDMS-IC) -->
+    <select id="selectDates" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayFormulaDateRes">
+        SELECT row_number() OVER (ORDER BY pay04_start_date) AS formula_id,
+               pay04_start_date                              AS start_date
+          FROM pay04_formula
+         WHERE pay04_company_id = #{companyId}
+         GROUP BY pay04_start_date
+         ORDER BY pay04_start_date DESC
+    </select>
+
+    <!-- AS-IS pay04_formula.selectByDate L49 (IDMS-IC) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayFormulaRes">
+        SELECT <include refid="formulaColumns"/>
+          FROM pay04_formula
+               INNER JOIN pay20_item ON pay20_item_cd = pay04_item_cd
+         WHERE pay04_company_id = #{companyId}
+           AND pay04_start_date = #{startDate}
+    </select>
+
+    <!-- AS-IS pay04_formula.selectByMaxCompanyId L35 (IDMS-IC) -->
+    <select id="selectByMaxCompanyId" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayFormulaRes">
+        SELECT <include refid="formulaColumns"/>
+          FROM pay04_formula
+               INNER JOIN pay20_item ON pay20_item_cd = pay04_item_cd
+         WHERE pay04_start_date = (
+                   SELECT max(pay04_start_date)
+                     FROM pay04_formula
+                          INNER JOIN pay20_item ON pay20_item_cd = pay04_item_cd
+                    WHERE pay04_company_id = #{companyId}
+                      AND pay04_start_date <![CDATA[ <= ]]> current_date)
+           AND pay04_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS pay04_formula.selectById L20 (IDMS-IC) — 저장 뒤 다시 읽을 때 구분(itemName)이 필요해 조인한다 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayFormulaRes">
+        SELECT pay04_formula_id    AS formula_id,
+               pay04_company_id    AS company_id,
+               pay04_start_date    AS start_date,
+               pay04_item_cd       AS item_cd,
+               (SELECT pay20_item_nm FROM pay20_item WHERE pay20_item_cd = pay04_item_cd LIMIT 1) AS item_name,
+               pay04_formula_form  AS formula_form,
+               pay04_note          AS note
+          FROM pay04_formula
+         WHERE pay04_formula_id = #{formulaId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS pay04_formula.insert L96 (IDMS-IC) — 적용일 생성·기초데이터생성의 복사는 비고를 넣지 않는다(note null), 화면 저장은 비고까지 -->
+    <insert id="insert">
+        INSERT INTO pay04_formula (pay04_formula_id, pay04_company_id, pay04_start_date,
+                                   pay04_formula_form, pay04_note, pay04_item_cd)
+        VALUES (#{formulaId}, #{companyId}, #{req.startDate},
+                #{req.formulaForm}, #{req.note}, #{req.itemCd})
+    </insert>
+
+    <!-- UpdateDataModel UPDATE: 화면이 고치는 열은 산출식·비고뿐 -->
+    <update id="update">
+        UPDATE pay04_formula
+           SET pay04_formula_form = #{req.formulaForm},
+               pay04_note         = #{req.note}
+         WHERE pay04_formula_id = #{req.formulaId}
+           AND pay04_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS pay04_formula.deleteByDate L146 (IDMS-IC) -->
+    <delete id="deleteByDate">
+        DELETE FROM pay04_formula
+         WHERE pay04_company_id = #{companyId}
+           AND pay04_start_date = #{startDate}
+    </delete>
+
+    <delete id="deleteByIds">
+        DELETE FROM pay04_formula
+         WHERE pay04_company_id = #{companyId}
+           AND pay04_formula_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/pay/mapper/pay20_item.xml (selectBySearchText, selectByText, selectById) + UpdateDataModel(pay20_item) 저장  (E22)
+  화면이 안 다루는 열(pay20_note)은 건드리지 않는다
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayItemMapper">
+
+    <sql id="itemColumns">
+        pay20_item_id        AS item_id,
+        pay20_item_type      AS item_type,
+        pay20_item_cd        AS item_cd,
+        pay20_item_nm        AS item_name,
+        pay20_non_tax_type   AS non_tax_type,
+        pay20_seq            AS seq,
+        pay20_use_yn         AS use_yn,
+        pay20_note           AS note,
+        f_cdnm('PayItemType',  pay20_item_type,     1, f_sysdate()) AS item_type_name,
+        f_cdnm('NonTaxType',   pay20_non_tax_type,  1, f_sysdate()) AS non_tax_type_name
+    </sql>
+
+    <!-- AS-IS pay20_item.selectBySearchText L36 (IDMS-IC) -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayItemRes">
+        SELECT <include refid="itemColumns"/>
+          FROM pay20_item
+         WHERE pay20_item_type LIKE #{itemType}
+           AND pay20_item_nm LIKE #{searchText}
+         ORDER BY pay20_item_cd, pay20_seq
+    </select>
+
+    <!-- AS-IS pay20_item.selectByText L28 (IDMS-IC) -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayItemRes">
+        SELECT <include refid="itemColumns"/>
+          FROM pay20_item
+         WHERE UPPER(pay20_item_nm) LIKE UPPER(#{searchText})
+    </select>
+
+    <!-- AS-IS pay20_item.selectById L20 (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayItemRes">
+        SELECT <include refid="itemColumns"/>
+          FROM pay20_item
+         WHERE pay20_item_id = #{itemId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO pay20_item (pay20_item_id, pay20_item_type, pay20_item_cd, pay20_item_nm,
+                                pay20_non_tax_type, pay20_seq, pay20_use_yn)
+        VALUES (#{itemId}, #{req.itemType}, #{req.itemCd}, #{req.itemName},
+                #{req.nonTaxType}, #{req.seq}, #{req.useYn})
+    </insert>
+
+    <update id="update">
+        UPDATE pay20_item
+           SET pay20_item_type    = #{req.itemType},
+               pay20_item_cd      = #{req.itemCd},
+               pay20_item_nm      = #{req.itemName},
+               pay20_non_tax_type = #{req.nonTaxType},
+               pay20_seq          = #{req.seq},
+               pay20_use_yn       = #{req.useYn}
+         WHERE pay20_item_id = #{req.itemId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM pay20_item
+         WHERE pay20_item_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

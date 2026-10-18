@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/pay/mapper/pay21_rate.xml (selectByCode, selectById) + UpdateDataModel(pay21_rate) 저장  (E22)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayRateMapper">
+
+    <sql id="rateColumns">
+        pay21_rate_id     AS rate_id,
+        pay21_rate_cd     AS rate_code,
+        pay21_start_date  AS start_date,
+        pay21_apply_rate  AS apply_rate,
+        pay21_note        AS note,
+        f_cdnm('RateCode', pay21_rate_cd, 1, f_sysdate()) AS rate_name
+    </sql>
+
+    <!-- AS-IS pay21_rate.selectByCode L23 (IDMS-IC) -->
+    <select id="selectByCode" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRateRes">
+        SELECT <include refid="rateColumns"/>
+          FROM pay21_rate
+         WHERE pay21_rate_cd LIKE #{rateCode}
+    </select>
+
+    <!-- AS-IS pay21_rate.selectById L16 (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRateRes">
+        SELECT <include refid="rateColumns"/>
+          FROM pay21_rate
+         WHERE pay21_rate_id = #{rateId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO pay21_rate (pay21_rate_id, pay21_rate_cd, pay21_start_date, pay21_apply_rate, pay21_note)
+        VALUES (#{rateId}, #{req.rateCode}, #{req.startDate}, #{req.applyRate}, #{req.note})
+    </insert>
+
+    <update id="update">
+        UPDATE pay21_rate
+           SET pay21_rate_cd    = #{req.rateCode},
+               pay21_start_date = #{req.startDate},
+               pay21_apply_rate = #{req.applyRate},
+               pay21_note       = #{req.note}
+         WHERE pay21_rate_id = #{req.rateId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM pay21_rate
+         WHERE pay21_rate_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

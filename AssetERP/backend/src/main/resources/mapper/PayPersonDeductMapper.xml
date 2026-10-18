@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/pay/mapper/pay25_person_deduct.xml + UpdateDataModel(pay25_person_deduct) 저장  (E22-2)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayPersonDeductMapper">
+
+    <sql id="columns">
+        pay25_person_deduct_id AS person_deduct_id,
+        pay25_start_date       AS start_date,
+        pay25_person_deduct_cd AS person_deduct_code,
+        pay25_deduct_amt       AS deduct_amt,
+        pay25_note             AS note,
+        f_cdnm('PersonDeductCode', pay25_person_deduct_cd, 1, f_sysdate()) AS person_deduct_name
+    </sql>
+
+    <!-- AS-IS pay25_person_deduct.selectByAll (IDMS-IC) — 적용일별 첫 행 -->
+    <select id="selectDates" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayStartDateRes">
+        SELECT pay25_person_deduct_id AS id,
+               pay25_start_date       AS start_date
+          FROM (SELECT *
+                     , ROW_NUMBER() OVER(PARTITION BY pay25_start_date) AS rn
+                  FROM pay25_person_deduct) t
+         WHERE rn = 1
+         ORDER BY pay25_start_date DESC
+    </select>
+
+    <!-- AS-IS pay25_person_deduct.selectByDate (IDMS-IC) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayPersonDeductRes">
+        SELECT <include refid="columns"/>
+          FROM pay25_person_deduct
+         WHERE pay25_start_date = #{startDate}
+    </select>
+
+    <!-- AS-IS pay25_person_deduct.selectByStartDate (IDMS-IC) -->
+    <select id="selectByStartDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayPersonDeductRes">
+        SELECT <include refid="columns"/>
+          FROM pay25_person_deduct
+         WHERE pay25_start_date = (SELECT max(pay25_start_date)
+                                     FROM pay25_person_deduct
+                                    WHERE pay25_start_date <![CDATA[<=]]> #{startDate})
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayPersonDeductRes">
+        SELECT <include refid="columns"/>
+          FROM pay25_person_deduct
+         WHERE pay25_person_deduct_id = #{id}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS pay25_person_deduct.insert (IDMS-IC) -->
+    <insert id="insert">
+        INSERT INTO pay25_person_deduct
+             ( pay25_person_deduct_id, pay25_start_date, pay25_person_deduct_cd, pay25_deduct_amt, pay25_note)
+        VALUES ( #{id}, #{req.startDate}, #{req.personDeductCode}, #{req.deductAmt}, #{req.note})
+    </insert>
+
+    <update id="update">
+        UPDATE pay25_person_deduct
+           SET pay25_person_deduct_cd = #{req.personDeductCode},
+               pay25_deduct_amt       = #{req.deductAmt},
+               pay25_note             = #{req.note}
+         WHERE pay25_person_deduct_id = #{req.personDeductId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM pay25_person_deduct
+         WHERE pay25_person_deduct_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS pay25_person_deduct.deleteByDate (IDMS-IC) -->
+    <delete id="deleteByDate">
+        DELETE FROM pay25_person_deduct
+         WHERE pay25_start_date = #{startDate}
+    </delete>
+</mapper>
