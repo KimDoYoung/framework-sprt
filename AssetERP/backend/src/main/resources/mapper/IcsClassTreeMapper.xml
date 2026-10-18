@@ -308,7 +308,7 @@
     </sql>
 
     <!-- AS-IS ics01_class_tree.pagingCondition L202 (IDMS-IC) — Ics01_Lookup_SelectMulti가 쓰는 분기만: advisYn은 항상 false(조건이 항상 참)라 생략,
-         mngGroupId·relateTable(openUnConn)은 이 조회창에서 안 쓴다 -->
+         mngGroupId는 이 조회창에서 안 쓴다. relateTable "TDM45"(openUnConn, Tdm43_Page_Relate)는 점검항목에 연결 안 된 법규만 -->
     <sql id="lawLookupCondition">
            AND ics01_type_cd = #{typeCode}
            AND COALESCE(ics03_except_yn, 'false') != 'true'
@@ -324,6 +324,12 @@
         </choose>
         <if test="classTreeId != null">
            AND ics01_class_tree_id IN (<include refid="icsTreeDown"/>)
+        </if>
+        <if test="relateTable == 'TDM45' and relateId != null">
+           AND NOT EXISTS ( SELECT 1
+                              FROM tdm45_manl_relate_ics
+                             WHERE tdm45_ics_class_tree_id = ics01_class_tree_id
+                               AND tdm45_manl_id           = #{relateId} )
         </if>
     </sql>
 

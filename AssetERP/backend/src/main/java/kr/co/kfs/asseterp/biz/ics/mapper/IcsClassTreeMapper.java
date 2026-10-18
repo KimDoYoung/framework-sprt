@@ -52,12 +52,14 @@ public interface IcsClassTreeMapper {
     /** AS-IS ics01_class_tree.selectByTypeCodePaging (Ics01_Lookup_SelectMulti, E03) */
     List<IcsLawLookupRes> selectLawLookup(@Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId, @Param("typeCode") String typeCode,
                                           @Param("lawSearch") String lawSearch, @Param("statuteSearch") String statuteSearch,
-                                          @Param("detailSearchYn") boolean detailSearchYn, @Param("limit") long limit, @Param("offset") long offset);
+                                          @Param("detailSearchYn") boolean detailSearchYn, @Param("limit") long limit, @Param("offset") long offset,
+                                          @Param("relateTable") String relateTable, @Param("relateId") Long relateId);
 
     /** AS-IS ics01_class_tree.selectByTypeCodePagingTotal */
     long selectLawLookupTotal(@Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId, @Param("typeCode") String typeCode,
                               @Param("lawSearch") String lawSearch, @Param("statuteSearch") String statuteSearch,
-                              @Param("detailSearchYn") boolean detailSearchYn);
+                              @Param("detailSearchYn") boolean detailSearchYn,
+                              @Param("relateTable") String relateTable, @Param("relateId") Long relateId);
 
     /** AS-IS ics01_class_tree.selectById (Ics01_Lookup_ClassTreeDetail, E03-1) */
     IcsLawDetailRes selectLawDetail(@Param("classTreeId") Long classTreeId);

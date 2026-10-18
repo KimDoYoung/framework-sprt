@@ -16,6 +16,7 @@
     <select id="selectByManlOrgId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlItemRes">
         SELECT  t.tdm43_manl_id                                                   AS manl_id,
                 t.tdm43_manl_org_id                                               AS manl_org_id,
+                t.tdm43_company_id                                                AS company_id,
                 t.tdm43_org_id                                                    AS org_id,
                 t.tdm43_exct_id                                                   AS exct_id,
                 t.tdm43_role_id                                                   AS role_id,
@@ -23,9 +24,21 @@
                 t.tdm43_task_id                                                   AS task_id,
                 t.tdm43_task_nm                                                   AS task_name,
                 t.tdm43_task_relate_detail_id                                     AS task_relate_detail_id,
+                t.tdm43_task_relate_detail_nm                                     AS task_relate_detail_name,
                 t.tdm43_task_relate_duty_id                                       AS task_relate_duty_id,
+                t.tdm43_task_relate_duty_nm                                       AS task_relate_duty_name,
                 t.tdm43_manl_duty_id                                              AS manl_duty_id,
                 t.tdm43_manl_cd                                                   AS manl_code,
+                t.tdm43_check_item                                                AS check_item,
+                t.tdm43_check_cycle_cd                                            AS check_cycle_code,
+                t.tdm43_check_month                                               AS check_month,
+                t.tdm43_check_how                                                 AS check_how,
+                t.tdm43_ref_basis                                                 AS ref_basis,
+                TO_CHAR(t.tdm43_start_date, 'YYYY-MM-DD')                         AS start_date,
+                t.tdm43_ceo_duty_cd                                               AS ceo_duty_code,
+                t.tdm43_exct_duty_map                                             AS exct_duty_map,
+                f_get_exctDutyMap_nm(t.tdm43_exct_duty_map)                       AS exct_duty_name,
+                t.tdm43_import_level_cd                                           AS import_level_code,
                 CASE WHEN t.tdm43_task_relate_detail_nm IS NULL THEN NULL
                      ELSE t.tdm43_task_relate_detail_seq || '. ' || t.tdm43_task_relate_detail_nm END   AS task_detail_add_seq,
                 CASE WHEN t.tdm43_task_relate_duty_nm IS NULL THEN NULL
@@ -146,4 +159,171 @@
     <delete id="deleteById">
         DELETE FROM tdm43_manl WHERE tdm43_manl_id = #{manlId}
     </delete>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm43_manl.getNewManlCode -->
+    <select id="selectNewManlCode" resultType="java.lang.String">
+        SELECT TO_CHAR(NOW(),'YY')||
+               LPAD((COALESCE( (SELECT SUBSTR(MAX(tdm43_manl_cd),3)::numeric
+                                  FROM tdm43_manl
+                                 WHERE tdm43_company_id = #{companyId}
+                                   AND SUBSTR(tdm43_manl_cd,1,2) = TO_CHAR(NOW(),'YY')), 0) + 1)::text, 5, '0')
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT count(*) FROM tdm43_manl WHERE tdm43_manl_id = #{manlId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel 신규 입력(tdm43_manl). 화면이 비운 코드 콤보 값('')은 null로 -->
+    <insert id="insertManl">
+        INSERT INTO tdm43_manl (tdm43_manl_id, tdm43_manl_org_id, tdm43_company_id, tdm43_org_id, tdm43_exct_id, tdm43_role_id, tdm43_role_nm,
+                                tdm43_task_id, tdm43_task_nm, tdm43_task_relate_detail_id, tdm43_task_relate_detail_nm,
+                                tdm43_task_relate_duty_id, tdm43_task_relate_duty_nm, tdm43_manl_duty_id,
+                                tdm43_check_item, tdm43_check_cycle_cd, tdm43_check_month, tdm43_check_evid_doc_nm, tdm43_check_how,
+                                tdm43_ref_basis, tdm43_start_date, tdm43_ceo_duty_cd, tdm43_exct_duty_map, tdm43_import_level_cd,
+                                tdm43_first_reg_emp_id, tdm43_manl_cd, tdm43_upd_nm, tdm43_upd_date)
+        VALUES (#{req.manlId}, #{req.manlOrgId}, #{companyId}, #{req.orgId}, #{req.exctId}, #{req.roleId}, #{req.roleName},
+                #{req.taskId}, #{req.taskName}, #{req.taskRelateDetailId}, #{req.taskRelateDetailName},
+                #{req.taskRelateDutyId}, #{req.taskRelateDutyName}, #{req.manlDutyId},
+                #{req.checkItem}, #{req.checkCycleCode}, #{req.checkMonth}, #{req.checkEvidDocName}, #{req.checkHow},
+                #{req.refBasis}, CAST(NULLIF(#{req.startDate}, '') AS date), NULLIF(#{req.ceoDutyCode}, ''), NULLIF(#{req.exctDutyMap}, ''), NULLIF(#{req.importLevelCode}, ''),
+                #{firstRegEmpId}, #{manlCode}, #{updName}, now())
+    </insert>
+
+    <!-- AS-IS UpdateDataModel 변경(tdm43_manl) — 화면이 고치는 열만 -->
+    <update id="updateManl">
+        UPDATE tdm43_manl
+           SET tdm43_check_item         = #{req.checkItem},
+               tdm43_check_cycle_cd     = #{req.checkCycleCode},
+               tdm43_check_month        = #{req.checkMonth},
+               tdm43_check_evid_doc_nm  = #{req.checkEvidDocName},
+               tdm43_check_how          = #{req.checkHow},
+               tdm43_ref_basis          = #{req.refBasis},
+               tdm43_start_date         = CAST(NULLIF(#{req.startDate}, '') AS date),
+               tdm43_ceo_duty_cd        = NULLIF(#{req.ceoDutyCode}, ''),
+               tdm43_exct_duty_map      = NULLIF(#{req.exctDutyMap}, ''),
+               tdm43_import_level_cd    = NULLIF(#{req.importLevelCode}, ''),
+               tdm43_manl_cd            = COALESCE(tdm43_manl_cd, #{manlCode}),
+               tdm43_upd_nm             = #{updName},
+               tdm43_upd_date           = now()
+         WHERE tdm43_manl_id = #{req.manlId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm45_manl_relate_ics.selectByManlId -->
+    <select id="selectRelateIcs" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlRelatesRes$Ics">
+        SELECT tdm45_manl_relate_ics_id     AS manl_relate_ics_id,
+               tdm45_ics_class_tree_id      AS ics_class_tree_id,
+               ics01_class_tree_cd          AS ics_class_tree_code,
+               ics01_class_tree_nm          AS ics_class_tree_name
+          FROM tdm45_manl_relate_ics
+               INNER JOIN ics01_class_tree ON tdm45_ics_class_tree_id = ics01_class_tree_id
+         WHERE tdm45_manl_id = #{manlId}
+         ORDER BY tdm45_ics_class_tree_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm46_manl_relate_icr.selectByManlId -->
+    <select id="selectRelateIcr" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlRelatesRes$Icr">
+        SELECT tdm46_manl_relate_icr_id     AS manl_relate_icr_id,
+               tdm46_icr_class_tree_id      AS icr_class_tree_id,
+               icr01_class_tree_cd          AS icr_class_tree_code,
+               icr01_class_tree_nm          AS icr_class_tree_name
+          FROM tdm46_manl_relate_icr
+               INNER JOIN icr01_class_tree ON tdm46_icr_class_tree_id = icr01_class_tree_id
+         WHERE tdm46_manl_id = #{manlId}
+         ORDER BY tdm46_icr_class_tree_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys11_relate_file.selectByParentId — 정렬 COLLATE "ko_KR.utf8" → "ko-KR-x-icu"(05 §6) -->
+    <select id="selectRelateForm" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlRelatesRes$Form">
+        SELECT sys11_relate_file_id                       AS relate_file_id,
+               sys11_file_id                              AS file_id,
+               sys10_file_nm                              AS file_name,
+               TO_CHAR(sys10_reg_date, 'YYYY-MM-DD')      AS reg_date
+          FROM sys11_relate_file
+               INNER JOIN sys10_file ON sys10_file_id = sys11_file_id
+         WHERE sys11_parent_id = #{manlId}
+         ORDER BY sys10_reg_date DESC, sys10_file_nm COLLATE "ko-KR-x-icu"
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm47_manl_relate_dcr.selectByManlId -->
+    <select id="selectRelateDcr" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlRelatesRes$Dcr">
+        SELECT tdm47_manl_relate_dcr_id                       AS manl_relate_dcr_id,
+               tdm47_dcr_class_tree_id                        AS dcr_class_tree_id,
+               dcr01_class_tree_cd                            AS dcr_class_tree_code,
+               dcr01_class_tree_nm                            AS dcr_class_tree_name,
+               f_class_tree_nm_allpath(tdm47_dcr_class_tree_id) AS dcr_class_tree_full_name
+          FROM tdm47_manl_relate_dcr
+               INNER JOIN dcr01_class_tree ON dcr01_class_tree_id = tdm47_dcr_class_tree_id
+         WHERE tdm47_manl_id = #{manlId}
+         ORDER BY dcr01_class_tree_cd
+    </select>
+
+    <!-- AS-IS UpdateDataModel 신규 입력(연결 4종) — 이미 연결된 것은 건너뛴다 -->
+    <insert id="insertRelateIcs">
+        INSERT INTO tdm45_manl_relate_ics (tdm45_manl_relate_ics_id, tdm45_manl_id, tdm45_ics_class_tree_id)
+        SELECT f_create_seq(), #{manlId}, #{classTreeId}
+         WHERE NOT EXISTS (SELECT 1 FROM tdm45_manl_relate_ics WHERE tdm45_manl_id = #{manlId} AND tdm45_ics_class_tree_id = #{classTreeId})
+    </insert>
+
+    <insert id="insertRelateIcr">
+        INSERT INTO tdm46_manl_relate_icr (tdm46_manl_relate_icr_id, tdm46_manl_id, tdm46_icr_class_tree_id)
+        SELECT f_create_seq(), #{manlId}, #{classTreeId}
+         WHERE NOT EXISTS (SELECT 1 FROM tdm46_manl_relate_icr WHERE tdm46_manl_id = #{manlId} AND tdm46_icr_class_tree_id = #{classTreeId})
+    </insert>
+
+    <insert id="insertRelateForm">
+        INSERT INTO sys11_relate_file (sys11_relate_file_id, sys11_file_id, sys11_parent_id, sys11_parent_table)
+        SELECT f_create_seq(), #{fileId}, #{manlId}, 'tdm43_manl'
+         WHERE NOT EXISTS (SELECT 1 FROM sys11_relate_file WHERE sys11_parent_id = #{manlId} AND sys11_file_id = #{fileId})
+    </insert>
+
+    <insert id="insertRelateDcr">
+        INSERT INTO tdm47_manl_relate_dcr (tdm47_manl_relate_dcr_id, tdm47_manl_id, tdm47_dcr_class_tree_id)
+        SELECT f_create_seq(), #{manlId}, #{classTreeId}
+         WHERE NOT EXISTS (SELECT 1 FROM tdm47_manl_relate_dcr WHERE tdm47_manl_id = #{manlId} AND tdm47_dcr_class_tree_id = #{classTreeId})
+    </insert>
+
+    <!-- AS-IS 연결 삭제(UpdateDataModel 키 삭제) — 요청한 점검항목의 연결만 -->
+    <delete id="deleteRelateIcsById">
+        DELETE FROM tdm45_manl_relate_ics WHERE tdm45_manl_relate_ics_id = #{relateId} AND tdm45_manl_id = #{manlId}
+    </delete>
+
+    <delete id="deleteRelateIcrById">
+        DELETE FROM tdm46_manl_relate_icr WHERE tdm46_manl_relate_icr_id = #{relateId} AND tdm46_manl_id = #{manlId}
+    </delete>
+
+    <delete id="deleteRelateFormById">
+        DELETE FROM sys11_relate_file WHERE sys11_relate_file_id = #{relateId} AND sys11_parent_id = #{manlId}
+    </delete>
+
+    <delete id="deleteRelateDcrById">
+        DELETE FROM tdm47_manl_relate_dcr WHERE tdm47_manl_relate_dcr_id = #{relateId} AND tdm47_manl_id = #{manlId}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) sys10_file.selectUnConnTdmFormFile L271 — 정렬 COLLATE → "ko-KR-x-icu", 바깥 열을 그리드 열로, 일자는 TO_CHAR -->
+    <select id="selectUnConnFormFiles" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlFormFileRes">
+        SELECT  sys10_file_id                                                                           AS file_id,
+                f_cdnm('TdmCheckFormType', sys10_tdm_check_form_type, sys10_parent_id, f_today())       AS tdm_check_form_type_name,
+                sys10_file_nm                                                                           AS file_name,
+                sys10_note                                                                              AS note,
+                TO_CHAR(sys10_reg_date, 'YYYY-MM-DD')                                                   AS reg_date
+          FROM  sys10_file
+         WHERE  sys10_parent_id = #{companyId}
+           AND  sys10_tdm_check_form_type LIKE #{formType}
+           AND  CONCAT(sys10_file_nm, sys10_note) ILIKE #{searchText}
+        <if test="relateId != null">
+           AND NOT EXISTS ( SELECT 1
+                              FROM sys11_relate_file
+                             WHERE sys11_parent_id = #{relateId}
+                               AND sys11_file_id   = sys10_file_id )
+        </if>
+         ORDER BY sys10_tdm_check_form_type
+                , sys10_file_nm COLLATE "ko-KR-x-icu"
+                , sys10_note COLLATE "ko-KR-x-icu"
+                , sys10_reg_date
+    </select>
 </mapper>

@@ -40,15 +40,17 @@ public class IcsLawService {
 
     /**
      * AS-IS Ics01_Lookup_SelectMulti.retrieve → selectByTypeCodePaging + selectByTypeCodePagingTotal: 법규(IT) 목록을 페이지로.
-     * 법규검색·조문검색은 %…%, classTreeId가 있으면 그 분류와 모든 하위
+     * 법규검색·조문검색은 %…%, classTreeId가 있으면 그 분류와 모든 하위.
+     * openUnConn(relateTable "TDM45", relateId=점검항목): 그 점검항목에 아직 연결 안 된 법규만(E13-2)
      */
     public PageRes<IcsLawLookupRes> searchLookup(UserPrincipal user, Long classTreeId, String lawSearch, String statuteSearch,
-                                                 boolean detailSearchYn, long offset, long limit) {
+                                                 boolean detailSearchYn, long offset, long limit,
+                                                 String relateTable, Long relateId) {
         String law = "%" + (lawSearch == null ? "" : lawSearch) + "%";
         String statute = "%" + (statuteSearch == null ? "" : statuteSearch) + "%";
         Long companyId = user.getCompanyId();
-        return new PageRes<>(mapper.selectLawLookupTotal(companyId, classTreeId, TYPE_CODE, law, statute, detailSearchYn),
-                mapper.selectLawLookup(companyId, classTreeId, TYPE_CODE, law, statute, detailSearchYn, limit, offset));
+        return new PageRes<>(mapper.selectLawLookupTotal(companyId, classTreeId, TYPE_CODE, law, statute, detailSearchYn, relateTable, relateId),
+                mapper.selectLawLookup(companyId, classTreeId, TYPE_CODE, law, statute, detailSearchYn, limit, offset, relateTable, relateId));
     }
 
     /** AS-IS selectByListIcsId: 고른 법규마다 그 기한(여럿이면 여러 행)을 붙인다 */

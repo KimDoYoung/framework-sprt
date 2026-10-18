@@ -176,6 +176,8 @@ export const icsApi = {
   /** AS-IS ics.Ics01_ClassTree.selectByTypeCodePaging(typeCode IT): 법규 분류 조회창 페이징. classTreeId가 있으면 그 분류와 모든 하위 */
   searchLawLookup: async (params: {
     classTreeId: number | null; lawSearch: string; statuteSearch: string; detailSearchYn: boolean; offset: number; limit: number;
+    /** openUnConn: 'TDM45' + 점검항목 ID — 그 점검항목에 아직 연결 안 된 법규만 */
+    relateTable?: string; relateId?: number;
   }): Promise<PageRes<IcsLawLookup>> => {
     const res = await apiClient.get<ApiResponse<PageRes<IcsLawLookup>>>('v1/ics/laws/lookup', { params });
     return res.data.data;

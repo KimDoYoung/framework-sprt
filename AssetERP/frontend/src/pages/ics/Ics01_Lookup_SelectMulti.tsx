@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/ics/Ics01_Lookup_SelectMulti.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L71-131: 모달 1500×700 "법규 분류", 위 툴바(분류 200 "전체" · 법규검색 200 "법규코드/법규명" · 조문검색 200 "관련조문" · [검색] · 상세내용 포함)
  *   + 체크박스 다중 그리드 + 페이징 툴바(50), 아래 가운데 [확인][닫기]
- * actionCode: "classTree"(고른 법규 목록을 그대로 돌려줌, 1→1, E03)·"deadline"(고른 법규마다 그 기한을 selectByListIcsId로 읽어 돌려줌, 1→n, E04). openUnConn(relateTable)은 쓰는 화면(tdm)에서 더한다
+ * actionCode: "classTree"(고른 법규 목록을 그대로 돌려줌, 1→1, E03)·"deadline"(고른 법규마다 그 기한을 selectByListIcsId로 읽어 돌려줌, 1→n, E04). openUnConn(relateTable, relateId)는 E13-2에서 더했다
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, Input, message, Modal, Space } from 'antd';
@@ -38,10 +38,13 @@ interface Props {
   onResult?: (list: IcsLawLookup[]) => void;
   /** callback.execute(result.getResult()) — actionCode "deadline": 법규 하나에 기한이 여럿이면 여러 행 */
   onResultDeadlines?: (list: IcsLawDeadline[]) => void;
+  /** openUnConn(actionCode, relateTable, relateId, callback) L79-83 — 'TDM45'(책무매뉴얼 점검항목)과 그 ID: 그 점검항목에 아직 연결 안 된 법규만 (E13-2 Tdm43_Page_Relate) */
+  relateTable?: string;
+  relateId?: number;
   onClose: () => void;
 }
 
-export const Ics01_Lookup_SelectMulti: React.FC<Props> = ({ open, actionCode = 'classTree', onResult, onResultDeadlines, onClose }) => {
+export const Ics01_Lookup_SelectMulti: React.FC<Props> = ({ open, actionCode = 'classTree', onResult, onResultDeadlines, relateTable, relateId, onClose }) => {
   // settings() L133-198: 분류 "전체"(classTreeId null), 법규검색·조문검색 빈칸, 상세내용 포함 해제
   const [classTreeId, setClassTreeId] = useState<number | null>(null);
   const [classTreeName, setClassTreeName] = useState('전체');
@@ -63,7 +66,7 @@ export const Ics01_Lookup_SelectMulti: React.FC<Props> = ({ open, actionCode = '
     if (!paramRef.current) return;
     setLoading(true);  // grid.mask("Loading")
     try {
-      const res = await icsApi.searchLawLookup({ ...paramRef.current, offset: (p - 1) * LIMIT, limit: LIMIT });
+      const res = await icsApi.searchLawLookup({ ...paramRef.current, offset: (p - 1) * LIMIT, limit: LIMIT, relateTable, relateId });
       setRows(res.rows);
       setTotal(res.total);
       setPage(p);

@@ -2,7 +2,7 @@
  * 책무매뉴얼 점검항목 조회창 (E13) — Tdm42_Tab_ManlManagerAdmin 그리드의 아이콘(actionCell)에서 연다.
  * AS-IS: myApp/client/vi/tdm/Tdm43_Lookup_ManlItem.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L60-66: 모달 1600×800, 최대화·크기 조절 가능, 닫기 아이콘 없음. open() L68-105: 툴바(검색 · 사용여부 · [조회] · 잠금이 아니면 [등록][삭제]) + 점검항목 그리드(체크박스 단일)
- * 등록·수정·보기 창 Tdm43_Edit_Manl(+Tdm43_Page_Relate 등)은 다음 단계(E13-2)라 [등록]·점검항목 보기 아이콘은 안내만 한다
+ * 등록·수정·보기 창 Tdm43_Edit_Manl(+Tdm43_Page_Relate 등)은 E13-2에서 변환 — [등록]·점검항목 보기 아이콘에서 연다
  * UX보강(10): 툴바 = SearchBar(UX-01)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -15,6 +15,7 @@ import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { SearchBar } from '@/components/search';
+import { Tdm43_Edit_Manl, ManlEditMode } from './Tdm43_Edit_Manl';
 import { dynamicViewCell } from './tdmGridCells';
 
 type Row = TdmManlItem & { rowKey: string };
@@ -33,6 +34,7 @@ export const Tdm43_Lookup_ManlItem: React.FC<Props> = ({ manlOrg, onClose }) => 
   const [useYn, setUseYn] = useState('%');                     // useComboBox "UseYnCode" 전체('%')
   const [rows, setRows] = useState<Row[]>([]);
   const lockYn = !!manlOrg?.lockYn;
+  const [editor, setEditor] = useState<{ mode: ManlEditMode; manl: TdmManlItem } | null>(null);   // Tdm43_Edit_Manl
 
   // [E3] retrieveButton[조회].Select (L128) → retrieve() L178-191: 서비스 tdm.Tdm43_Manl.selectByManlOrgId(manlOrgId, useYn(code), "%검색어%")
   const retrieve = async (over?: { useYn?: string }) => {
@@ -54,15 +56,14 @@ export const Tdm43_Lookup_ManlItem: React.FC<Props> = ({ manlOrg, onClose }) => 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [manlOrg?.manlOrgId]);
 
-  // lookupManl() L193-206: 잠금이면 Tdm43_Edit_Manl.view(model), 아니면 edit(model) — Tdm43_Edit_Manl은 다음 단계(E13-2)
-  const lookupManl = () => {
-    message.info('점검항목 입력 창(Tdm43_Edit_Manl)은 다음 단계(E13-2)에서 변환합니다.');
-  };
+  // lookupManl() L193-206: 잠금이면 Tdm43_Edit_Manl.view(model), 아니면 edit(model, false, callback → retrieve())
+  const lookupManl = (row: Row) => setEditor({ mode: lockYn ? 'view' : 'edit', manl: row });
 
-  // [E4] insertButton[등록].Select (L134) → insert() L208-236: 관리의무를 고르고 Tdm43_Edit_Manl.insert(…) — Tdm43_Edit_Manl은 다음 단계(E13-2)
+  // [E4] insertButton[등록].Select (L134) → insert() L208-236: 관리의무를 고르고 Tdm43_Edit_Manl.insert(관리의무 값, orgId, callback → retrieve())
   const insert = () => {
-    if ((gridRef.current?.api?.getSelectedRows().length ?? 0) === 0) return void message.warning('점검항목을 등록할 관리의무를 선택해주세요');
-    message.info('점검항목 입력 창(Tdm43_Edit_Manl)은 다음 단계(E13-2)에서 변환합니다.');
+    const row = gridRef.current?.api?.getSelectedRows()[0];
+    if (!row) return void message.warning('점검항목을 등록할 관리의무를 선택해주세요');
+    setEditor({ mode: 'insert', manl: row });
   };
 
   // [E5] deleteButton[삭제].Select (L140) → delete() L238-272 → [E7] messageBox.DialogHide [YES] (L252): tdm.Tdm43_Manl.delete → 그리드에서 뺀다
@@ -94,12 +95,13 @@ export const Tdm43_Lookup_ManlItem: React.FC<Props> = ({ manlOrg, onClose }) => 
     gb.textArea('taskDetailAddSeq', 300, '책무세부'),  // L166
     gb.textArea('taskDutyAddSeq', 300, '관리의무'),  // L167
     gb.textArea('checkItemAddCode', 300, '점검항목'),  // L168
-    dynamicViewCell<Row>('checkItemAddCode', 'viewCell', 35, '', () => lookupManl()),  // L169 addDynamicCell(viewCell)
+    dynamicViewCell<Row>('checkItemAddCode', 'viewCell', 35, '', row => lookupManl(row)),  // L169 addDynamicCell(viewCell)
     gb.textArea('checkHowLimit', 350, '점검방법'),  // L170
     gb.text('checkCycleName', 60, '점검주기'),  // L171
     gb.textArea('checkEvidDocName', 150, '증빙자료'),  // L172
     gb.booleanYn2('unuseYn', 50, '미사용'),  // L173
-  ], []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [lockYn]);
 
   return (
     <Modal
@@ -139,6 +141,7 @@ export const Tdm43_Lookup_ManlItem: React.FC<Props> = ({ manlOrg, onClose }) => 
           />
         </div>
       </div>
+      <Tdm43_Edit_Manl mode={editor?.mode ?? 'edit'} manl={editor?.manl ?? null} onSaved={() => { void retrieve(); }} onClose={() => setEditor(null)} />
     </Modal>
   );
 };

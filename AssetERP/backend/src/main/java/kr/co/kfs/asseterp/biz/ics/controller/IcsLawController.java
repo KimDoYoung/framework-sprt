@@ -44,8 +44,10 @@ public class IcsLawController {
                                                               @RequestParam(defaultValue = "") String statuteSearch,
                                                               @RequestParam(defaultValue = "false") boolean detailSearchYn,
                                                               @RequestParam(defaultValue = "0") long offset,
-                                                              @RequestParam(defaultValue = "50") long limit) {
-        return ApiResponse.ok(service.searchLookup(principal, classTreeId, lawSearch, statuteSearch, detailSearchYn, offset, limit));
+                                                              @RequestParam(defaultValue = "50") long limit,
+                                                              @RequestParam(required = false) String relateTable,
+                                                              @RequestParam(required = false) Long relateId) {
+        return ApiResponse.ok(service.searchLookup(principal, classTreeId, lawSearch, statuteSearch, detailSearchYn, offset, limit, relateTable, relateId));
     }
 
     /** AS-IS ics.Ics01_ClassTree.selectByListIcsId (Ics01_Lookup_SelectMulti "deadline", E04) — 법규와 그 기한 */

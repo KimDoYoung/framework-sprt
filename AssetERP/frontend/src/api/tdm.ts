@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { Manl, ManlRelateIcs, TdmManlItem, TdmManlOrg, TdmRoleDesc, TdmRoleDigm } from '../types/tdm';
+import { Manl, ManlRelateIcs, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmManlSaveReq, TdmRoleDesc, TdmRoleDigm } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
 export const tdmApi = {
@@ -78,6 +78,36 @@ export const tdmApi = {
   /** AS-IS tdm.Tdm43_Manl.selectByManlOrgId (useYn: '%' 전체 / 'true' 사용 / 'false' 미사용) */
   searchManlItems: async (manlOrgId: number, useYn: string, searchText: string): Promise<TdmManlItem[]> => {
     const res = await apiClient.get<ApiResponse<TdmManlItem[]>>('v1/tdm/manls', { params: { manlOrgId, useYn, searchText } });
+    return res.data.data ?? [];
+  },
+
+  // ── E13-2 점검항목 등록·수정창(Tdm43_Edit_Manl)·연관 페이지(Tdm43_Page_Relate) ──
+
+  /** 등록창을 열 때 받는 새 점검항목 번호 (AS-IS DBUtil.setSeq) */
+  nextManlId: async (manlOrgId: number): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/tdm/manls/next-id', { params: { manlOrgId } });
+    return res.data.data;
+  },
+
+  /** AS-IS Tdm45·46·47_…selectByManlId·Sys11_RelateFile.selectByParentId (등록 직후 번호는 빈 목록) */
+  getManlRelates: async (manlOrgId: number, manlId: number): Promise<TdmManlRelates> => {
+    const res = await apiClient.get<ApiResponse<TdmManlRelates>>(`v1/tdm/manls/${manlId}/relates`, { params: { manlOrgId } });
+    return res.data.data;
+  },
+
+  /** AS-IS tdm.Tdm43_Manl.modelUpdate (manlId가 이미 있으면 수정, 없으면 등록) */
+  saveManl: async (req: TdmManlSaveReq): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>('v1/tdm/manls', req);
+  },
+
+  /** 연결 한 건 삭제 — kind: ics·icr·form·dcr */
+  deleteManlRelate: async (manlOrgId: number, manlId: number, kind: 'ics' | 'icr' | 'form' | 'dcr', relateId: number): Promise<void> => {
+    await apiClient.delete<ApiResponse<null>>(`v1/tdm/manls/${manlId}/relates/${kind}/${relateId}`, { params: { manlOrgId } });
+  },
+
+  /** AS-IS sys.Sys10_File.selectUnConnTdmFormFile (formType: '%' 전체 / 코드) */
+  searchManlFormFiles: async (formType: string, searchText: string, relateId: number): Promise<TdmManlFormFile[]> => {
+    const res = await apiClient.get<ApiResponse<TdmManlFormFile[]>>('v1/tdm/manls/form-files', { params: { formType, searchText, relateId } });
     return res.data.data ?? [];
   },
 

@@ -69,8 +69,52 @@ export interface TdmManlOrg {
   lockYn?: boolean | null;
 }
 
-/** 부서 책무매뉴얼의 점검항목 한 행 (AS-IS Tdm43_ManlModel 중 Tdm43_Lookup_ManlItem 그리드·삭제와 등록/수정창이 넘겨받는 속성) */
+/** 부서 책무매뉴얼의 점검항목 한 행 (AS-IS Tdm43_ManlModel 중 Tdm43_Lookup_ManlItem 그리드·삭제와 Tdm43_Edit_Manl 등록·수정·보기가 쓰는 속성) */
 export interface TdmManlItem {
+  manlId: number;
+  manlOrgId: number;
+  companyId?: number | null;
+  orgId?: number | null;
+  exctId?: number | null;
+  roleId?: number | null;
+  roleName?: string | null;
+  taskId?: number | null;
+  taskName?: string | null;
+  taskRelateDetailId?: number | null;
+  taskRelateDetailName?: string | null;
+  taskRelateDutyId?: number | null;
+  taskRelateDutyName?: string | null;
+  manlDutyId?: number | null;
+  manlCode?: string | null;
+  taskDetailAddSeq?: string | null;
+  taskDutyAddSeq?: string | null;
+  checkItem?: string | null;
+  checkItemAddCode?: string | null;
+  checkCycleCode?: string | null;
+  checkMonth?: string | null;
+  checkHow?: string | null;
+  checkHowLimit?: string | null;
+  checkCycleName?: string | null;
+  checkEvidDocName?: string | null;
+  refBasis?: string | null;
+  startDate?: string | null;
+  ceoDutyCode?: string | null;
+  exctDutyMap?: string | null;
+  exctDutyName?: string | null;
+  importLevelCode?: string | null;
+  unuseYn?: boolean | null;
+}
+
+/** 점검항목에 연결된 법규·내규·양식·문서분류 (AS-IS Tdm43_Page_Relate 그리드 4개). id가 없는 행은 아직 저장 안 한 새 연결 */
+export interface TdmManlRelates {
+  ics: { manlRelateIcsId?: number; icsClassTreeId: number; icsClassTreeCode?: string | null; icsClassTreeName?: string | null }[];
+  icr: { manlRelateIcrId?: number; icrClassTreeId: number; icrClassTreeCode?: string | null; icrClassTreeName?: string | null }[];
+  forms: { relateFileId?: number; fileId: number; fileName?: string | null; regDate?: string | null }[];
+  dcrs: { manlRelateDcrId?: number; dcrClassTreeId: number; dcrClassTreeCode?: string | null; dcrClassTreeName?: string | null; dcrClassTreeFullName?: string | null }[];
+}
+
+/** 점검항목 저장 요청 (AS-IS tdm.Tdm43_Manl.modelUpdate) */
+export interface TdmManlSaveReq {
   manlId: number;
   manlOrgId: number;
   orgId?: number | null;
@@ -80,16 +124,33 @@ export interface TdmManlItem {
   taskId?: number | null;
   taskName?: string | null;
   taskRelateDetailId?: number | null;
+  taskRelateDetailName?: string | null;
   taskRelateDutyId?: number | null;
+  taskRelateDutyName?: string | null;
   manlDutyId?: number | null;
-  manlCode?: string | null;
-  taskDetailAddSeq?: string | null;
-  taskDutyAddSeq?: string | null;
-  checkItemAddCode?: string | null;
-  checkHowLimit?: string | null;
-  checkCycleName?: string | null;
+  checkItem: string;
+  checkCycleCode: string;
+  checkMonth: string;
   checkEvidDocName?: string | null;
-  unuseYn?: boolean | null;
+  checkHow?: string | null;
+  refBasis?: string | null;
+  startDate?: string | null;
+  ceoDutyCode?: string | null;
+  exctDutyMap?: string | null;
+  importLevelCode?: string | null;
+  relateIcsClassTreeIds: number[];
+  relateIcrClassTreeIds: number[];
+  relateFormFileIds: number[];
+  relateDcrClassTreeIds: number[];
+}
+
+/** 연결할 책무점검 양식 파일 한 행 (AS-IS Sys10_FileModel 중 Tdm43_Lookup_RelateFormFileList 그리드 열) */
+export interface TdmManlFormFile {
+  fileId: number;
+  tdmCheckFormTypeName?: string | null;
+  fileName?: string | null;
+  note?: string | null;
+  regDate?: string | null;
 }
 
 /** 연결할 책무이행점검항목 한 행 (AS-IS Tdm43_ManlModel 중 Ics01_Lookup_SelectTdm 그리드 열) */
