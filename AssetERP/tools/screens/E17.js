@@ -2,34 +2,17 @@
 // 열 때 부르는 POST /dcr/links/check는 모든 회사에 Link를 채우는 쓰기라 응답을 0건으로 대체한다(실제 동작은 DcrLinkDbTest가 롤백으로 확인).
 // 쓰기는 비고 한 칸을 바꿔 저장했다가 원래 값으로 되돌리는 것뿐이다. 되돌리지 못하고 끝나면 마지막 줄 restore를 보고 `yunhee api PUT /api/v1/dcr/links …`로 되돌린다.
 // 사용: CHROME_PATH=/usr/bin/google-chrome-stable NODE_PATH=frontend/node_modules node tools/screens/E17.js <스크린샷 폴더> [회사]
-const { launch, login, openMenu, checkGrid, gridOk } = require('./_common');
+const { launch, login, openMenu, checkGrid, gridOk, helpers } = require('./_common');
 const [OUT, COMPANY = 'admin'] = process.argv.slice(2);
 (async () => {
   const { b, p, errs } = await launch();
   const out = { errs, steps: {} };
-  const wait = ms => p.waitForTimeout(ms);
-  const writes = [];
-  const gets = [];
-  let checkCalls = 0;
-  await p.route('**/api/v1/dcr/links/check', route => {
-    checkCalls++;
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, message: 'ok', data: 0 }) });
-  });
-  p.on('response', r => {
-    const u = r.url();
-    if (!u.includes('/api/v1/dcr/') && !u.includes('/api/v1/com/') && !u.includes('/api/v1/sys/companies')) return;
-    const m = r.request().method();
-    const pathq = decodeURIComponent(u.split('/api/v1/')[1]);
-    if (['PUT', 'POST', 'DELETE'].includes(m)) writes.push(m + ' ' + pathq + ' ' + r.status()); else gets.push(pathq);
-  });
-  const msgs = async () => { await wait(500); return (await p.locator('.ant-message-notice').allInnerTexts()).join('|').replace(/\s+/g, ' '); };
-  const btn = (scope, re, n = 0) => scope.locator('button').filter({ hasText: re }).nth(n);
-  const rows = g => g.locator('.ag-row[row-index]').count();
-  const rowsText = async g => (await g.locator('.ag-row[row-index]').allInnerTexts()).map(t => t.replace(/\s+/g, ' '));
-  const headers = async g => (await g.locator('.ag-header-cell-text').allInnerTexts()).join('|');
-  const confirmText = () => p.locator('.ant-modal-confirm:visible .ant-modal-confirm-title, .ant-modal-confirm:visible .ant-modal-confirm-content').allInnerTexts().then(a => a.join(' / ').replace(/\s+/g, ' '));
-  const modal = title => p.locator('.ant-modal:visible', { has: p.locator('.ant-modal-title', { hasText: title }) }).last();
-  const scrollX = (g, x) => g.locator('.ag-body-horizontal-scroll-viewport').evaluate((el, v) => { el.scrollLeft = v; }, x).then(() => wait(400));
+  const h = helpers(p);
+  const { wait, msgs, btn, rows, rowsText, headers, confirmText, modal, scrollX } = h;
+  const api = h.trackApi(['dcr/', 'com/', 'sys/companies']);
+  const { writes, gets } = api;
+  // 열 때 부르는 POST /dcr/links/check는 모든 회사에 Link를 채우는 쓰기라 응답을 대체한다
+  const check = await h.mockWrite('**/api/v1/dcr/links/check');
   const restore = [];
   try {
     await login(p, COMPANY);
@@ -38,7 +21,7 @@ const [OUT, COMPANY = 'admin'] = process.argv.slice(2);
     await wait(2500);
     const grids = scr.locator('.ag-root-wrapper');
     const gm = grids.nth(0), gc = grids.nth(1), gd = grids.nth(2);
-    out.checkCalls = checkCalls;
+    out.checkCalls = check.calls;
     out.getsOpen = gets.slice();
     out.buttonsAll = (await scr.locator('button').filter({ hasText: /\S/ }).allInnerTexts()).map(t => t.replace(/\s/g, '')).join(',');
     out.label = (await scr.getByText('※ 상단').count()) > 0;
@@ -59,7 +42,7 @@ const [OUT, COMPANY = 'admin'] = process.argv.slice(2);
     out.gridMainOk = gridOk(out.gridMain);
 
     // [E3] 변경이 없으면 저장(0)은 눌리지 않는다(UX-03)
-    out.saveDisabledNoChange = await btn(scr, /저\s*장/).first().isDisabled();
+    out.saveDisabledNoChange = await h.saveDisabled(scr);
 
     // [E4]/[E6] 목적지 회사 없이 복사 → 안내
     await btn(scr, /문서분류지정복사/).click(); out.msgDocCopyNoCo = await msgs(); await wait(2800);
@@ -103,7 +86,7 @@ const [OUT, COMPANY = 'admin'] = process.argv.slice(2);
     await rowWithTree.locator('[col-id="classTreeFullName"] button').click(); await wait(1800);
     const mv = modal('문서분류');
     out.moveTitle = await mv.locator('.ant-modal-title').innerText();
-    out.moveButtons = (await mv.locator('button').filter({ hasText: /\S/ }).allInnerTexts()).map(t => t.replace(/\s/g, '')).join(',');
+    out.moveButtons = await h.buttons(mv);
     out.moveNodes = await mv.locator('.ant-tree-node-content-wrapper').count();
     out.getsMove = gets.slice(-1);
     await p.screenshot({ path: `${OUT}/E17-move.png` });

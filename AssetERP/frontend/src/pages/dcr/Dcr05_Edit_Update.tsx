@@ -17,6 +17,8 @@ interface Props {
   model: DcrDocType | null;
   /** retrieveReadOnly(model, callback) L159-167: [수정]을 숨기고 구분·제목·비고를 읽기 전용으로 */
   readOnly?: boolean;
+  /** 문서양식이 속한 회사(문서양식등록의 고객사 칸 — KFS 관리자만 다른 회사를 고친다). 없으면 로그인 회사 */
+  companyId?: number;
   /** callback.execute() — updateEdit() 성공 뒤 */
   onSaved?: () => void;
   onClose: () => void;
@@ -32,7 +34,7 @@ const Row: React.FC<{ label: string; children: React.ReactNode }> = ({ label, ch
 /** GXT TextField 빈 값 = null */
 const n = (s: string | null | undefined) => (s == null || s === '' ? null : s);
 
-export const Dcr05_Edit_Update: React.FC<Props> = ({ model, readOnly = false, onSaved, onClose }) => {
+export const Dcr05_Edit_Update: React.FC<Props> = ({ model, readOnly = false, companyId, onSaved, onClose }) => {
   const [f, setF] = useState<DcrDocType | null>(model);
   const [saving, setSaving] = useState(false);
   useEffect(() => setF(model), [model]);
@@ -47,7 +49,7 @@ export const Dcr05_Edit_Update: React.FC<Props> = ({ model, readOnly = false, on
     if (!n(f.content)) return message.warning('내용은 필수입력 항목입니다');
     setSaving(true);
     try {
-      await dcrApi.updateDocType(f.docTypeId, { title: n(f.title), content: f.content ?? null, note: n(f.note), docFormClassCode: n(f.docFormClassCode) });
+      await dcrApi.updateDocType(f.docTypeId, { title: n(f.title), content: f.content ?? null, note: n(f.note), docFormClassCode: n(f.docFormClassCode) }, companyId);
       onSaved?.();
       onClose();
     } catch (err) {

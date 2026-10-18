@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.sys.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.dcr.mapper.DcrDocTypeMapper;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeAdminRes;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeAdminRow;
 import kr.co.kfs.asseterp.biz.sys.dto.CodeAdminSaveReq;
@@ -30,6 +31,7 @@ public class SysCodeService {
 
     private final SysCodeMapper sysCodeMapper;
     private final SysManualMapper sysManualMapper;
+    private final DcrDocTypeMapper dcrDocTypeMapper;
 
     /** 로그인 회사의 코드(시스템 코드는 admin 회사 0의 것), 기준일(null이면 오늘) — AS-IS ComboBoxField.retrieve(applyDate) */
     public List<CodeRes> searchCodes(UserPrincipal user, String kindCd, LocalDate applyDate) {
@@ -50,8 +52,8 @@ public class SysCodeService {
 
     /**
      * AS-IS Sys09_Code.checkCode L317-384: 코드가 바뀐 행마다 ① 바꾸기 전 코드가 사용 중이면 실패 ② 새 코드가 이미 있으면 실패.
-     * 사용 중 검사는 코드구분마다 다르다 — ManualType만 옮겼고(A34), 다른 도메인의 SpecialLeaveCode·DocFormClassCode·WeekBizType는
-     * 그 도메인(emp·dcr·rpt)을 변환할 때 더한다(그전에는 검사를 건너뛰지 않고 거절한다)
+     * 사용 중 검사는 코드구분마다 다르다 — ManualType(A34)·DocFormClassCode(E18)를 옮겼고, 다른 도메인의 SpecialLeaveCode·WeekBizType는
+     * 그 도메인(emp·rpt)을 변환할 때 더한다(그전에는 검사를 건너뛰지 않고 거절한다)
      */
     public void checkCodes(UserPrincipal user, CodeCheckReq req) {
         Long companyId = user.getCompanyId();
@@ -61,7 +63,8 @@ public class SysCodeService {
             if (before != null) {
                 int cnt = switch (codeKind == null ? "" : codeKind) {
                     case "ManualType" -> sysManualMapper.checkManualType(companyId, before.code());
-                    case "SpecialLeaveCode", "DocFormClassCode", "WeekBizType" ->
+                    case "DocFormClassCode" -> dcrDocTypeMapper.checkDocFormClassCode(companyId, before.code());
+                    case "SpecialLeaveCode", "WeekBizType" ->
                             throw new BusinessException(ErrorCode.INVALID_INPUT, "이 코드구분(" + codeKind + ")의 사용이력 검사는 아직 변환되지 않았습니다");
                     default -> 0;
                 };

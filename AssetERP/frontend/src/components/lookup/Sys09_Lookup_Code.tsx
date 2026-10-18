@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys09_Lookup_Code.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * edit(codeKind, callback) L76-112: 모달 650×500 "코드추가", 툴바(행 추가 · 행 삭제 · 새로고침 아이콘) + 셀 편집 그리드(코드·코드명·조회순서),
  *   하단 저장 · 닫기. 읽기 전용 두 열(index 1·2)은 edit에서 숨겨진다. 삭제는 deleteList에 모았다가 저장 때 보낸다.
- * 아직 없음: 코드구분별 사용이력 검사 중 SpecialLeaveCode·DocFormClassCode·WeekBizType(다른 도메인 emp·dcr·rpt) — 서버가 거절한다.
+ * 아직 없음: 코드구분별 사용이력 검사 중 SpecialLeaveCode·WeekBizType(다른 도메인 emp·rpt) — 서버가 거절한다. DocFormClassCode는 E18에서 옮겼다.
  *   `open(…)`(선택 모드)의 확인(okButton, E6)도 edit에서는 버튼이 없어 옮기지 않았다.
  * UX보강(10): 해당 없음(검색 조건이 없다). 저장(n)도 안 쓴다 — deleteList만 있어도 저장해야 하고 0건이면 원본 안내문을 띄운다
  */
@@ -11,6 +11,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { message, Modal, Space } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { sysApi } from '@/api/sys';
+import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
 import { CodeAdmin, CodeKind } from '@/types/sys';
 import { Button } from '@/components/button';
@@ -29,8 +30,8 @@ const buildGrid = () => [
 
 /** updateEnd() L427-436: 이 코드구분들은 저장·삭제 뒤 callback.execute(null) */
 const NOTIFY_KINDS = ['DocFormClassCode', 'ManualType', 'WeekBizType'];
-/** deleteRow() L234-324: 사용이력을 검사하는 코드구분 — ManualType만 옮겼다 */
-const CHECK_UNSUPPORTED = ['SpecialLeaveCode', 'DocFormClassCode', 'WeekBizType'];
+/** deleteRow() L234-324: 사용이력을 검사하는 코드구분 — ManualType·DocFormClassCode만 옮겼다 */
+const CHECK_UNSUPPORTED = ['SpecialLeaveCode', 'WeekBizType'];
 
 interface Props {
   open: boolean;
@@ -105,6 +106,14 @@ export const Sys09_Lookup_Code: React.FC<Props> = ({ open, codeKind, onResult, o
       if (codeKind === 'ManualType') {  // sys.Sys95_Manual.checkManualType
         try {
           await sysApi.checkManualType(model.code);
+        } catch (err) {
+          message.warning(errorMessage(err, '사용중인 코드는 삭제 불가합니다'));
+          break;
+        }
+      }
+      if (codeKind === 'DocFormClassCode') {  // dcr.Dcr05_DocType.checkDocFormClassCode
+        try {
+          await dcrApi.checkDocFormClassCode(model.code);
         } catch (err) {
           message.warning(errorMessage(err, '사용중인 코드는 삭제 불가합니다'));
           break;

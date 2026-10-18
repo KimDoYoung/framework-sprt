@@ -2333,5 +2333,35 @@
     "note": "docs/work/E/E17-작업기록.md",
     "history": [],
     "id": "E17"
+  },
+  "Dcr05_Tab_DocType": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/dcr/Dcr05_Edit_DocType.java": "5daac178efe1b5c7b03bc8f1b6f8a99c9707f153",
+      "application/src/main/java/myApp/client/vi/dcr/Dcr05_Edit_Update.java": "d07b3e7ced7b0592b9e9b803b2b7baef07761f74",
+      "application/src/main/java/myApp/client/vi/dcr/Dcr05_Tab_DocType.java": "8b7fae6f09a51d154f5728c8f54d29c7595b72da",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr05_DocTypeModel.java": "c78ba980c876b6789c275bc415ca85ad229c76f9",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr05_DocTypeModelProperties.java": "9a5ec2d7578c8e9a1a002b028a9599f004dba0f1",
+      "application/src/main/java/myApp/server/apr/Apr01_ApprTemp.java": "5e9c53aaa457fcd009141b847f9bbff7973347c4",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr_temp.xml": "d031ad70b2092dfd4a4766ac7b63a1f63510a8b1",
+      "application/src/main/java/myApp/server/apr/mapper/apr03_relate_fund.xml": "a29728d21792d0b243e983cdced2a038ec516408",
+      "application/src/main/java/myApp/server/dcr/Dcr05_DocType.java": "b4a4a0162f7f444687c4773f369f842d98d746d0",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr05_doc_type.xml": "d4ff69a5141911a52a300fb259e88e3a4af6ff45",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr06_relate_doc_Type.xml": "f966db85cc1261163ac1ff82122bf09c7f37a50d",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Sys01_Lookup_Company",
+      "Sys09_Lookup_Code"
+    ],
+    "recorded_at": "2026-10-18T19:19:23+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/E/E18-작업기록.md",
+    "history": [],
+    "id": "E18"
   }
 }

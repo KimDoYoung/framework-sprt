@@ -168,16 +168,39 @@ export const dcrApi = {
 
   // ── 문서양식 (Dcr05_Lookup_DocType·Dcr05_Edit_Update) ──
 
-  /** AS-IS dcr.Dcr05_DocType.selectByName */
-  searchDocTypes: async (searchText: string, formClassCode?: string): Promise<DcrDocType[]> => {
-    const res = await apiClient.get<ApiResponse<DcrDocType[]>>('v1/dcr/doc-types', { params: { searchText, formClassCode } });
+  /** AS-IS dcr.Dcr05_DocType.selectByName — companyId는 KFS 관리자만 다른 회사를 고를 수 있다(없으면 로그인 회사) */
+  searchDocTypes: async (searchText: string, formClassCode?: string, companyId?: number): Promise<DcrDocType[]> => {
+    const res = await apiClient.get<ApiResponse<DcrDocType[]>>('v1/dcr/doc-types', { params: { searchText, formClassCode, companyId } });
     return res.data.data ?? [];
   },
 
   /** AS-IS dcr.Dcr05_DocType.updateEdit → 저장된 행 */
-  updateDocType: async (docTypeId: number, req: DcrDocTypeUpdateReq): Promise<DcrDocType> => {
-    const res = await apiClient.put<ApiResponse<DcrDocType>>(`v1/dcr/doc-types/${docTypeId}`, req);
+  updateDocType: async (docTypeId: number, req: DcrDocTypeUpdateReq, companyId?: number): Promise<DcrDocType> => {
+    const res = await apiClient.put<ApiResponse<DcrDocType>>(`v1/dcr/doc-types/${docTypeId}`, req, { params: { companyId } });
     return res.data.data;
+  },
+
+  /** AS-IS dcr.Dcr05_DocType.update (Dcr05_Edit_DocType) → 로그인 회사에 새 양식 */
+  createDocType: async (req: DcrDocTypeUpdateReq): Promise<DcrDocType> => {
+    const res = await apiClient.post<ApiResponse<DcrDocType>>('v1/dcr/doc-types', req);
+    return res.data.data;
+  },
+
+  /** AS-IS dcr.Dcr05_DocType.delete — 문서분류에 지정된 양식이 있으면 서버가 거절 */
+  deleteDocTypes: async (ids: number[], companyId?: number): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/dcr/doc-types', { data: ids, params: { companyId } });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS dcr.Dcr05_DocType.pushData — 고른 양식을 목적지 회사로 복사 */
+  pushDocTypes: async (targetCompanyId: number, sourceCompanyId: number | undefined, docTypeIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/dcr/doc-types/push', { targetCompanyId, sourceCompanyId, docTypeIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS dcr.Dcr05_DocType.checkDocFormClassCode — 쓰는 양식이 있으면 서버가 오류 문구로 거절 */
+  checkDocFormClassCode: async (docFormClassCode: string): Promise<void> => {
+    await apiClient.get<ApiResponse<void>>('v1/dcr/doc-types/check-form-class', { params: { docFormClassCode } });
   },
 
   // ── E17 문서분류지정 (Dcr30_Tab_LinkAdmin) ──

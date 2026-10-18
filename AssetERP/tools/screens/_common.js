@@ -57,4 +57,65 @@ async function checkGrid(p, scope) {
 // checkGrid 결과 판정: 정렬 없음·체크박스 동작. 없는 요소(null)는 통과로 본다.
 const gridOk = r => r.headerSorted !== true && r.boolToggled !== false && r.rowSelected !== false;
 
-module.exports = { BASE, launch, login, openMenu, checkGrid, gridOk };
+// 화면 스크립트마다 복붙하던 헬퍼 (E17 정리). `const h = helpers(p);` 뒤 `h.msgs()`·`h.btn(scope, /조회/)` …
+// 기존 스크립트(A01~E16)는 바꾸지 않는다 — 이 함수는 추가일 뿐이다.
+function helpers(p) {
+  const wait = ms => p.waitForTimeout(ms);
+  const h = { wait };
+
+  /** 화면에 뜬 메시지 토스트 글자(0.5초 기다린 뒤). 다음 단계 전에 토스트가 사라지도록 부른 쪽이 `await wait(2800)` */
+  h.msgs = async () => { await wait(500); return (await p.locator('.ant-message-notice').allInnerTexts()).join('|').replace(/\s+/g, ' '); };
+  /** scope 안에서 글자가 맞는 n번째 버튼. 두 글자 버튼은 공백이 끼므로 /^\s*조\s*회\s*$/처럼 쓴다 */
+  h.btn = (scope, re, n = 0) => scope.locator('button').filter({ hasText: re }).nth(n);
+  /** AG Grid가 그린 행 수·행 글자 (가상화라 화면 밖 행은 빠진다 — 전체 행 수는 API compare로) */
+  h.rows = g => g.locator('.ag-row[row-index]').count();
+  h.rowsText = async g => (await g.locator('.ag-row[row-index]').allInnerTexts()).map(t => t.replace(/\s+/g, ' '));
+  h.headers = async g => (await g.locator('.ag-header-cell-text').allInnerTexts()).join('|');
+  /** scope 안의 글자 있는 버튼들 (공백 제거) */
+  h.buttons = async scope => (await scope.locator('button').filter({ hasText: /\S/ }).allInnerTexts()).map(t => t.replace(/\s/g, '')).join(',');
+  /** Modal.confirm 창의 제목·내용 / 예 / 아니오 */
+  h.confirmText = () => p.locator('.ant-modal-confirm:visible .ant-modal-confirm-title, .ant-modal-confirm:visible .ant-modal-confirm-content').allInnerTexts().then(a => a.join(' / ').replace(/\s+/g, ' '));
+  h.confirmYes = async () => { await p.locator('.ant-modal-confirm .ant-btn-primary').click(); await wait(2000); };
+  h.confirmNo = async () => { await p.locator('.ant-modal-confirm .ant-btn-default').click(); await wait(600); };
+  /** 제목에 글자가 든 열려 있는 모달 (여러 개면 마지막) */
+  h.modal = title => p.locator('.ant-modal:visible', { has: p.locator('.ant-modal-title', { hasText: title }) }).last();
+
+  /** AG Grid 가로 스크롤 — 화면 밖 열은 DOM에 없으므로(열 가상화) 그 열의 셀을 누르기 전에 민다. x가 크면 끝까지 */
+  h.scrollX = (g, x) => g.locator('.ag-body-horizontal-scroll-viewport').evaluate((el, v) => { el.scrollLeft = v; }, x).then(() => wait(400));
+  /** antd/rc-tree 노드 — 가상 목록은 숨은 측정용 `.ant-tree-treenode`가 앞에 있어 그것으로 세거나 first()를 누르면 안 된다 */
+  h.treeNodes = scope => scope.locator('.ant-tree-node-content-wrapper');
+  /** UX-03: 변경이 없으면 `저장(0)`이 비활성이라 클릭하면 30초 대기한다 — 눌러 보기 전에 이것으로 */
+  h.saveDisabled = (scope, n = 0) => h.btn(scope, /저\s*장/, n).isDisabled();
+
+  /**
+   * 부작용이 큰 쓰기 호출(예: 모든 회사에 행을 채우는 linkCheck)의 응답을 대체한다 — 지울 API가 없어 실제로 부르면 데이터가 남을 때.
+   * 반환 `{ calls }`는 대체된 호출 수. 대체한 사실과 실제 동작을 확인한 방법(DB 테스트 등)은 결과확인에 적는다.
+   */
+  h.mockWrite = async (urlGlob, data = 0) => {
+    const state = { calls: 0 };
+    await p.route(urlGlob, route => {
+      state.calls++;
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, message: 'ok', data }) });
+    });
+    return state;
+  };
+
+  /**
+   * 도메인 API 호출 기록. prefixes에 든 경로(`/api/v1/` 뒤)만 모은다.
+   * `api.writes`: 'PUT dcr/links 200' 꼴, `api.gets`: 조회 경로(쿼리 포함, 디코딩)
+   */
+  h.trackApi = prefixes => {
+    const api = { writes: [], gets: [] };
+    p.on('response', r => {
+      const u = r.url();
+      if (!prefixes.some(x => u.includes('/api/v1/' + x))) return;
+      const m = r.request().method();
+      const pathq = decodeURIComponent(u.split('/api/v1/')[1]);
+      if (['PUT', 'POST', 'DELETE'].includes(m)) api.writes.push(m + ' ' + pathq + ' ' + r.status()); else api.gets.push(pathq);
+    });
+    return api;
+  };
+  return h;
+}
+
+module.exports = { BASE, launch, login, openMenu, checkGrid, gridOk, helpers };

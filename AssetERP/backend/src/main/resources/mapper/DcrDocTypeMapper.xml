@@ -63,4 +63,36 @@
          WHERE dcr05_doc_type_id = #{docTypeId}
            AND dcr05_company_id  = #{companyId}
     </update>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO dcr05_doc_type (dcr05_doc_type_id, dcr05_company_id, dcr05_title, dcr05_content, dcr05_note, dcr05_doc_form_class_cd)
+        VALUES (#{docTypeId}, #{companyId}, #{req.title}, #{req.content}, #{req.note}, #{req.docFormClassCode})
+    </insert>
+
+    <!-- AS-IS dcr06_relate_doc_Type.selectByDocTypeId (L62) — 행 수만 -->
+    <select id="countRelate" resultType="int">
+        SELECT COUNT(*)
+          FROM dcr06_relate_doc_type
+               INNER JOIN dcr05_doc_type ON dcr05_doc_type_id = dcr06_doc_type_id
+         WHERE dcr06_doc_type_id = #{docTypeId}
+    </select>
+
+    <delete id="deleteByIds">
+        DELETE FROM dcr05_doc_type
+         WHERE dcr05_company_id = #{companyId}
+           AND dcr05_doc_type_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS dcr05_doc_type.checkDocFormClassCode (L95) -->
+    <select id="checkDocFormClassCode" resultType="int">
+        SELECT COUNT(*)
+          FROM dcr05_doc_type
+         WHERE dcr05_company_id        = #{companyId}
+           AND dcr05_doc_form_class_cd = #{docFormClassCode}
+    </select>
 </mapper>

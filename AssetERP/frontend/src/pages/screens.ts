@@ -67,6 +67,7 @@ import { Tdm42_Tab_ManlManagerAdmin } from './tdm/Tdm42_Tab_ManlManagerAdmin';
 import { Tdm50_Tab_DutyProgressAdmin } from './tdm/Tdm50_Tab_DutyProgressAdmin';
 import { Tdm50_Tab_DutyReconAdmin } from './tdm/Tdm50_Tab_DutyReconAdmin';
 import { Dcr01_Tab_ClassTree } from './dcr/Dcr01_Tab_ClassTree';
+import { Dcr05_Tab_DocType } from './dcr/Dcr05_Tab_DocType';
 import { Dcr30_Tab_LinkAdmin } from './dcr/Dcr30_Tab_LinkAdmin';
 import { Test_Tab_ReactComponents } from './test/Test_Tab_ReactComponents';
 
@@ -105,6 +106,7 @@ export const SCREENS: Record<string, React.FC> = {
   Tdm42_Tab_ManlManagerAdmin, // E13 1단계 (+ Tdm43_Lookup_ManlItem·Org00_Lookup_SelectTdm, 재생성은 RD 연동이 없어 서버가 거절 — ManlOrgPdfMaker 기본 구현, 점검항목 등록/수정창은 E13-2)
   Tdm50_Tab_DutyProgressAdmin, // E14 (조회마다 DB 함수 f_recon_tdm이 sys99_print의 사용자 몫 행을 다시 만든다 — AS-IS 그대로)
   Dcr01_Tab_ClassTree, // E16 (메뉴 #1110·#1001 — 같은 클래스. + Dcr01_Grid_DocType·Dcr01_Edit_ClassTree·Dcr01_Move_*·Dcr01_Lookup_UseYn·DcrCopyAdmin·Dcr05~07·Dcr20·Dcr21, apr 조회창 둘)
+  Dcr05_Tab_DocType, // E18 (메뉴 #1482·#1007 — 같은 클래스. + Dcr05_Edit_DocType·Dcr05_Edit_Update(E16)·Sys09_Lookup_Code(구분추가)·Sys01_Lookup_Company)
   Dcr30_Tab_LinkAdmin, // E17 (열 때 Link 없는 회사에 채우는 linkCheck가 쓰기 — AS-IS 그대로. + Dcr30_TabPage_Company·Dcr30_Lookup_LinkNote·Dcr30_Move_DcrClass·Com10_Lookup_CommonMapping·Pay06_Popup_Example)
   Tdm50_Tab_DutyReconAdmin, // E15 (조회마다 DB 함수 f_recon_tdm('DB_CHK')이 sys99_print의 사용자 몫 행을 다시 만든다 — AS-IS 그대로)
   Sms02_Tab_TotalCount, // C05
