@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/rpt/mapper/rpt10_fss_submit.xml + UpdateDataModel(rpt10_fss_submit) (E19) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.rpt.mapper.RptFssSubmitMapper">
+
+    <sql id="columns">
+        rpt10_fss_submit_id     AS submit_id,
+        rpt10_report_cd         AS report_code,
+        rpt10_report_nm         AS report_name,
+        rpt10_submit_cycle_cd   AS submit_cycle_code,
+        rpt10_write_target      AS write_target,
+        rpt10_write_guide       AS write_guide,
+        rpt10_revise_history    AS revise_history
+    </sql>
+
+    <!-- AS-IS rpt10_fss_submit.selectBySearchText (SELECT *를 DTO 열로) -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.rpt.dto.RptFssSubmitRes">
+        SELECT <include refid="columns"/>,
+               f_cdnm('CycleCode', rpt10_submit_cycle_cd, 0, f_sysdate()) AS submit_cycle_name
+          FROM rpt10_fss_submit
+         WHERE UPPER(rpt10_report_cd) LIKE UPPER(#{searchText})
+    </select>
+
+    <!-- AS-IS rpt10_fss_submit.selectById — 저장 뒤 다시 읽기(제출주기 이름은 selectBySearchText와 같게) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.rpt.dto.RptFssSubmitRes">
+        SELECT <include refid="columns"/>,
+               f_cdnm('CycleCode', rpt10_submit_cycle_cd, 0, f_sysdate()) AS submit_cycle_name
+          FROM rpt10_fss_submit
+         WHERE rpt10_fss_submit_id = #{submitId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="countByReportCode" resultType="int">
+        SELECT COUNT(*)
+          FROM rpt10_fss_submit
+         WHERE rpt10_report_cd = #{reportCode}
+        <if test="submitId != null">
+           AND rpt10_fss_submit_id &lt;&gt; #{submitId}
+        </if>
+    </select>
+
+    <insert id="insert">
+        INSERT INTO rpt10_fss_submit (rpt10_fss_submit_id, rpt10_report_cd, rpt10_report_nm, rpt10_submit_cycle_cd,
+                                      rpt10_write_target, rpt10_write_guide, rpt10_revise_history)
+        VALUES (#{submitId}, #{req.reportCode}, #{req.reportName}, #{req.submitCycleCode},
+                #{req.writeTarget}, #{req.writeGuide}, #{req.reviseHistory})
+    </insert>
+
+    <update id="update">
+        UPDATE rpt10_fss_submit
+           SET rpt10_report_cd       = #{req.reportCode},
+               rpt10_report_nm       = #{req.reportName},
+               rpt10_submit_cycle_cd = #{req.submitCycleCode},
+               rpt10_write_target    = #{req.writeTarget},
+               rpt10_write_guide     = #{req.writeGuide},
+               rpt10_revise_history  = #{req.reviseHistory}
+         WHERE rpt10_fss_submit_id = #{req.submitId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM rpt10_fss_submit
+         WHERE rpt10_fss_submit_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

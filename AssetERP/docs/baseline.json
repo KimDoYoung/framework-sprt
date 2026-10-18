@@ -2363,5 +2363,29 @@
     "note": "docs/work/E/E18-작업기록.md",
     "history": [],
     "id": "E18"
+  },
+  "Rpt10_Tab_FssSubmit": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/rpt/Rpt10_Edit_WriteGuide.java": "3f2e3a782a2d8f3e0fbc771a1ae8d426753bb64f",
+      "application/src/main/java/myApp/client/vi/rpt/Rpt10_Tab_FssSubmit.java": "3df6cc75d7ad4963efab5defefee40d601fa65c7",
+      "application/src/main/java/myApp/client/vi/rpt/model/Rpt10_FssSubmitModel.java": "c1ae8430c28f320708eb169830756104ced6af95",
+      "application/src/main/java/myApp/client/vi/rpt/model/Rpt10_FssSubmitModelProperties.java": "57b5b51af2ff7dacb2edba85f8499256868dcc62",
+      "application/src/main/java/myApp/server/rpt/Rpt10_FssSubmit.java": "c737577b5dcca2070e35e7bcc0d5b55c10fecee3",
+      "application/src/main/java/myApp/server/rpt/mapper/rpt10_fss_submit.xml": "e642e74f2dce40eba5c17e1c03f12ce43ab9580f",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "746b4e51e3ec7c63704e9ea3eea51cc6e41b0b12",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-18T19:29:43+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/E/E19-작업기록.md",
+    "history": [],
+    "id": "E19"
   }
 }
