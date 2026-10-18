@@ -403,3 +403,18 @@ export interface ExceptBiz {
   personName?: string | null
   personInfo?: string | null
 }
+
+// ── E25 복리후생비 코드관리 (Emp55_Tab_benefitInfoManager) ──
+
+/** 복리후생비 고객사별 설정 한 행 (AS-IS emp55_benefit_info.selectBySearchText). 미사용은 'true'/'false' 문자열 */
+export interface BenefitInfo {
+  benefitInfoId: number;
+  companyId: number;
+  benefitCode: string;
+  benefitName: string;
+  issueLinkCode: string;
+  expenseLinkCode: string;
+  accountCode: string;
+  accountName: string;
+  unUseYn: string;
+}

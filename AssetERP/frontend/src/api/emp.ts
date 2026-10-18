@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Academic, Account, AddDeduct, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, Evaluation, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
+import { Academic, Account, AddDeduct, BenefitInfo, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, Evaluation, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -463,5 +463,34 @@ export const orgApi = {
   getOrgInfo: async (orgCodeId: number, baseDate: string): Promise<OrgInfo | null> => {
     const res = await apiClient.get<ApiResponse<OrgInfo | null>>(`v1/org/org-infos/${orgCodeId}`, { params: { baseDate } });
     return res.data.data ?? null;
+  },
+};
+
+/** E25 AS-IS Emp55_Tab_benefitInfoManager (복리후생비 코드관리) */
+export const empBenefitInfoApi = {
+  /** AS-IS emp.Emp55_BenefitInfo.selectBySearchText: companyId가 없으면 로그인 회사, 다른 회사는 관리자 회사만 */
+  searchBenefitInfos: async (searchText: string, companyId?: number): Promise<BenefitInfo[]> => {
+    const res = await apiClient.get<ApiResponse<BenefitInfo[]>>('v1/emp/benefit-infos', { params: { companyId, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp55_BenefitInfo.update → 저장된 행(요청 순서) */
+  updateBenefitInfos: async (rows: BenefitInfo[], companyId?: number): Promise<BenefitInfo[]> => {
+    const body = rows.map(({ benefitInfoId, benefitCode, issueLinkCode, expenseLinkCode, accountCode, unUseYn }) =>
+      ({ benefitInfoId, benefitCode, issueLinkCode, expenseLinkCode, accountCode, unUseYn }));
+    const res = await apiClient.put<ApiResponse<BenefitInfo[]>>('v1/emp/benefit-infos', body, { params: { companyId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp55_BenefitInfo.delete → 지운 건수 */
+  deleteBenefitInfos: async (ids: number[], companyId?: number): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/benefit-infos', { data: ids, params: { companyId } });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp55_BenefitInfo.insertInitData: 고른 설정을 고른 고객사들로 복사 (관리자) → 복사한 건수 */
+  copyBenefitInfos: async (companyIds: number[], benefitInfoIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/emp/benefit-infos/copy', { companyIds, benefitInfoIds });
+    return res.data.data ?? 0;
   },
 };

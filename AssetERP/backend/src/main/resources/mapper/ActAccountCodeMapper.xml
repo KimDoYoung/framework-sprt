@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/act/mapper/act01_account_code.xml (selectBySlipYn)  (E25 — 조회창만, 계정코드 관리 화면은 E27)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActAccountCodeMapper">
+
+    <!-- AS-IS act01_account_code.selectBySlipYn (IDMS-IC, SELECT *는 DTO 열로 명시) -->
+    <select id="selectBySlipYn" resultType="kr.co.kfs.asseterp.biz.act.dto.AccountCodeRes">
+        SELECT act01_account_code_id AS account_code_id
+             , act01_company_id      AS company_id
+             , act01_attribute_cd    AS attribute_code
+             , f_cdnm('AccountAttributeCode', act01_attribute_cd, act01_company_id, f_sysdate()) AS attribute_name
+             , act01_account_cd      AS account_code
+             , CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END
+               || act01_account_nm   AS account_name
+             , CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END
+               || act01_account_nm2  AS account_name2
+          FROM act01_account_code
+         WHERE act01_company_id                  = #{companyId}
+           AND COALESCE(act01_use_yn , 'false')  = 'true'
+           AND COALESCE(act01_slip_yn, 'false')  = 'true'
+           AND COALESCE(act01_attribute_cd, '%') LIKE #{attributeCode}
+           AND UPPER(CONCAT(act01_account_cd, act01_account_nm, act01_account_enm)) LIKE UPPER(#{searchText})
+         ORDER BY act01_attribute_cd, act01_print_seq
+    </select>
+</mapper>

@@ -27,6 +27,7 @@ import { Org01_Tab_OrgCode } from './org/Org01_Tab_OrgCode';
 import { Pay20_Tab_DeductAdmin } from './pay/Pay20_Tab_DeductAdmin';
 import { Pay34_Tab_WorkTimeConfig } from './pay/Pay34_Tab_WorkTimeConfig';
 import { Crd10_Tab_ExcelCompanyAdmin } from './crd/Crd10_Tab_ExcelCompanyAdmin';
+import { Emp55_Tab_benefitInfoManager } from './emp/Emp55_Tab_benefitInfoManager';
 import { Sms02_Tab_TotalCount } from './sms/Sms02_Tab_TotalCount';
 import { Sms03_Tab_SendAdmin } from './sms/Sms03_Tab_SendAdmin';
 import { Sys01_Tab_Company } from './sys/Sys01_Tab_Company';
@@ -120,6 +121,7 @@ export const SCREENS: Record<string, React.FC> = {
   Pay20_Tab_DeductAdmin, // E22 1단계 (탭 1~3: Pay20_TabPage_Item·Pay04_TabPage_Formula·Pay21_TabPage_Rate + Pay20_Lookup_ItemList·Pay04_Lookup_Insert. 탭 4~9는 자리만)
   Pay34_Tab_WorkTimeConfig, // E23
   Crd10_Tab_ExcelCompanyAdmin, // E24 (+ Crd11_Lookup_ExcelCodeAdmin)
+  Emp55_Tab_benefitInfoManager, // E25 (+ Act01_Lookup_AccountCode)
   Tdm50_Tab_DutyReconAdmin, // E15 (조회마다 DB 함수 f_recon_tdm('DB_CHK')이 sys99_print의 사용자 몫 행을 다시 만든다 — AS-IS 그대로)
   Sms02_Tab_TotalCount, // C05
   Sms03_Tab_SendAdmin, // C06 (실제 문자 발송은 하지 않음 — SmsSender 기본 구현)

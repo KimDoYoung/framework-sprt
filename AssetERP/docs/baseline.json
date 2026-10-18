@@ -2572,5 +2572,48 @@
     "note": "docs/work/E/E24-작업기록.md",
     "history": [],
     "id": "E24"
+  },
+  "Emp55_Tab_benefitInfoManager": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp55_Tab_benefitInfoManager.java": "7d3fbb0f53e77d7e0f1905c7512f3104dcf3284c",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp55_BenefitInfoModel.java": "1e57371f25b1d4f7fe9f72ab6ff12bff711c1198",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp55_BenefitInfoModelProperties.java": "3ed5cdaf4e48a50aea483a82f55b8d2205aab7cf",
+      "application/src/main/java/myApp/server/emp/Emp55_BenefitInfo.java": "7b515f50b5d75fd23485adfdc242f43d3c90f824",
+      "application/src/main/java/myApp/server/emp/mapper/emp55_benefit_info.xml": "413aaf366d1c1b248c7ede6bb0943b0c47df5dec"
+    },
+    "shared_links": [
+      "Act01_Lookup_AccountCode",
+      "Sys01_Lookup_Company"
+    ],
+    "recorded_at": "2026-10-18T23:05:52+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/E/E25-작업기록.md",
+    "history": [],
+    "id": "E25"
+  },
+  "Act01_Lookup_AccountCode": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/act/Act01_Lookup_AccountCode.java": "dd85e417d354ab46382d222ef7ce80551f836bfb",
+      "application/src/main/java/myApp/client/vi/act/model/Act01_AccountCodeModel.java": "1e12e3a1f4c0727dbeb9618f0fb51b046437a877",
+      "application/src/main/java/myApp/client/vi/act/model/Act01_AccountCodeModelProperties.java": "ffa273bcb78d30269c04be240c42eddb4dce5cd6",
+      "application/src/main/java/myApp/server/act/Act01_AccountCode.java": "078feadfbddfbb2a463c7ca3677326aa61d015a3",
+      "application/src/main/java/myApp/server/act/mapper/act01_account_code.xml": "da207c7feec4680d136e33d9582b5f815ff7a7bd"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-18T23:05:52+09:00",
+    "recorded_by": "kdy987",
+    "note": null,
+    "history": [],
+    "id": "E25"
   }
 }

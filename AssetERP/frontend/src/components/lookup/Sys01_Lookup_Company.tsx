@@ -1,7 +1,7 @@
 /**
  * 고객찾기 조회창 (C03) — Emp01_Tab_UserInfo 고객사 트리거에서 연다.
  * AS-IS: myApp/client/vi/sys/Sys01_Lookup_Company.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
- * open(callback) L55-84만 옮겼다(SINGLE: 선택 1건을 돌려줌). open("MULTI", …)는 쓰는 화면에서 더한다.
+ * open(callback) L55-84(SINGLE: 선택 1건을 돌려줌)와 open("MULTI", callback)(E25: `multi`·`onMultiResult`, 체크한 회사 목록)
  * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01·04)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -30,9 +30,12 @@ interface Props {
   onResult: (company: Company | null) => void;
   /** 취소: callback 없이 hide() */
   onClose: () => void;
+  /** AS-IS open("MULTI", callback) (E25): 확인이면 체크한 회사 목록을 onMultiResult로 준다. 선택안함은 그대로 onResult(null) */
+  multi?: boolean;
+  onMultiResult?: (companies: Company[]) => void;
 }
 
-export const Sys01_Lookup_Company: React.FC<Props> = ({ open, onResult, onClose }) => {
+export const Sys01_Lookup_Company: React.FC<Props> = ({ open, onResult, onClose, multi, onMultiResult }) => {
   const gridRef = useRef<AgGridReact<Company>>(null);
   const lastSelected = useRef<Company | undefined>(undefined);
   const [korName, setKorName] = useState('');
@@ -63,6 +66,11 @@ export const Sys01_Lookup_Company: React.FC<Props> = ({ open, onResult, onClose 
     const companyModel = selected ?? (selectedRows.includes(lastSelected.current!) ? lastSelected.current : selectedRows[selectedRows.length - 1]);
     if (!companyModel) {
       message.warning('고객사를 선택하세요');
+      return;
+    }
+    // MULTI: getSelectedItems() 전부 (L170-173)
+    if (multi) {
+      onMultiResult?.(selected ? [selected] : selectedRows);
       return;
     }
     onResult(companyModel);
