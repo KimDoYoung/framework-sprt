@@ -50,3 +50,58 @@ export interface Sch05RelateIcs {
   deadlineName?: string | null;
   cycleName?: string | null;
 }
+
+/** 공모주 일정 (AS-IS Sch10_IpoModel — sch10_ipo.selectBySearchTextAdmin, E20). 날짜는 yyyy-MM-dd, cancelYn은 'true'/'false' */
+export interface Sch10Ipo {
+  ipoId: number;
+  companyId?: number | null;
+  marketCode?: string | null;
+  marketName?: string | null;
+  itemName?: string | null;
+  issCorpCode?: string | null;
+  demandStartDate?: string | null;
+  demandCloseDate?: string | null;
+  subscriptionStartDate?: string | null;
+  subscriptionCloseDate?: string | null;
+  payDate?: string | null;
+  listDate?: string | null;
+  priceBracket?: string | null;
+  price?: number | null;
+  note?: string | null;
+  cancelYn?: string | null;
+  shareCount?: number | null;
+}
+
+/** 공모주 일정 조회 조건 (AS-IS retrieve()) */
+export interface Sch10IpoSearch {
+  dateType: string;
+  startDate: string;
+  closeDate: string;
+  searchText: string;
+  marketCode: string;
+}
+
+/** 주간사 (AS-IS Sch12_IpoCorpModel, E20) */
+export interface Sch12IpoCorp {
+  ipoCorpId: number;
+  corpName?: string | null;
+  homepage?: string | null;
+}
+
+/** 공모주일정 미일치내역 (AS-IS Sch14_IpoMismatchModel, E20). checkYn은 'true'/'false'. ID는 18자리라 JS 숫자로 못 담아 글자로 받는다 */
+export interface Sch14IpoMismatch {
+  ipoMismatchId: string;
+  stkCode?: string | null;
+  target1?: string | null;
+  target2?: string | null;
+  insertDateTimeStr?: string | null;
+  checkYn?: string | null;
+}
+
+/** IPO 종목코드 매칭 (AS-IS Sch15_IpoItemMatchingModel, E20) */
+export interface Sch15IpoItemMatching {
+  ipoItemMatchingId: number;
+  itemCode?: string | null;
+  validItemCode?: string | null;
+  itemName?: string | null;
+}

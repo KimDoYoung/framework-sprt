@@ -8,3 +8,11 @@ export interface FormMapping {
   defaultYn?: string | null;
   note?: string | null;
 }
+
+/** 종목정보 (AS-IS Com50_ItemModel — com50_item.selectByTextPaging, E20). itemType 2010=주식 */
+export interface Com50Item {
+  itemId: number;
+  itemCode?: string | null;
+  itemName?: string | null;
+  itemType?: string | null;
+}

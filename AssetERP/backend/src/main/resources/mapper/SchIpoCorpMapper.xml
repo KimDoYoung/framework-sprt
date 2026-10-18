@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sch/mapper/sch12_ipo_corp.xml + UpdateDataModel(sch12_ipo_corp) (E20) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sch.mapper.SchIpoCorpMapper">
+
+    <sql id="columns">
+        sch12_ipo_corp_id AS ipo_corp_id,
+        sch12_corp_nm     AS corp_name,
+        sch12_homepage    AS homepage
+    </sql>
+
+    <!-- AS-IS sch12_ipo_corp.selectBySearchText (SELECT *를 DTO 열로) -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch12IpoCorpRes">
+        SELECT <include refid="columns"/>
+          FROM sch12_ipo_corp
+         WHERE upper(CONCAT(sch12_corp_nm, sch12_homepage)) LIKE upper(#{searchText})
+    </select>
+
+    <!-- AS-IS sch12_ipo_corp.selectById — 저장 뒤 다시 읽기 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch12IpoCorpRes">
+        SELECT <include refid="columns"/>
+          FROM sch12_ipo_corp
+         WHERE sch12_ipo_corp_id = #{ipoCorpId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertIpoCorp">
+        INSERT INTO sch12_ipo_corp (sch12_ipo_corp_id, sch12_corp_nm, sch12_homepage)
+        VALUES (#{ipoCorpId}, #{req.corpName}, #{req.homepage})
+    </insert>
+
+    <update id="updateIpoCorp">
+        UPDATE sch12_ipo_corp
+           SET sch12_corp_nm  = #{req.corpName},
+               sch12_homepage = #{req.homepage}
+         WHERE sch12_ipo_corp_id = #{req.ipoCorpId}
+    </update>
+
+    <delete id="deleteIpoCorps">
+        DELETE FROM sch12_ipo_corp
+         WHERE sch12_ipo_corp_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sch/mapper/sch14_ipo_mismatch.xml + UpdateDataModel(sch14_ipo_mismatch) (E20) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sch.mapper.SchIpoMismatchMapper">
+
+    <sql id="columns">
+        sch14_ipo_mismatch_id                                      AS ipo_mismatch_id,
+        sch14_stk_cd                                               AS stk_code,
+        sch14_target1                                              AS target1,
+        sch14_target2                                              AS target2,
+        to_char(sch14_insert_date_time,'yyyy-mm-dd HH24:MI:SS')    AS insert_date_time_str,
+        sch14_check_yn                                             AS check_yn
+    </sql>
+
+    <!-- AS-IS sch14_ipo_mismatch.createIpoMismatch: DB 함수가 미일치내역을 만들고 'Y' 또는 오류 메시지를 돌려준다 (조회 전에 부른다) -->
+    <select id="createIpoMismatch" resultType="string" flushCache="true">
+        SELECT f_create_ipoMismatch()
+    </select>
+
+    <!-- AS-IS sch14_ipo_mismatch.selectByCheckYn -->
+    <select id="selectByCheckYn" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch14IpoMismatchRes">
+        SELECT <include refid="columns"/>
+          FROM sch14_ipo_mismatch
+         WHERE ( ( #{checkYn} = true  AND COALESCE(sch14_check_yn,'false') != 'true' ) OR
+                 ( #{checkYn} = false                                                ) )
+         ORDER BY sch14_stk_nm COLLATE "ko_KR.utf8", sch14_insert_date_time DESC
+    </select>
+
+    <!-- AS-IS sch14_ipo_mismatch.selectById — 저장 뒤 다시 읽기 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch14IpoMismatchRes">
+        SELECT <include refid="columns"/>
+          FROM sch14_ipo_mismatch
+         WHERE sch14_ipo_mismatch_id = #{id}
+    </select>
+
+    <!-- UpdateDataModel UPDATE — 화면이 바꾸는 열은 확인완료뿐 -->
+    <update id="updateCheckYn">
+        UPDATE sch14_ipo_mismatch
+           SET sch14_check_yn = #{checkYn}
+         WHERE sch14_ipo_mismatch_id = #{id}
+    </update>
+</mapper>

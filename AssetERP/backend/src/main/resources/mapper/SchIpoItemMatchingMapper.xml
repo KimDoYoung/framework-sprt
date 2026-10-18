@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sch/mapper/sch15_ipo_item_matching.xml + UpdateDataModel(sch15_ipo_item_matching) (E20) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sch.mapper.SchIpoItemMatchingMapper">
+
+    <sql id="columns">
+        sch15_ipo_item_matching_id AS ipo_item_matching_id,
+        sch15_item_cd              AS item_code,
+        sch15_valid_item_cd        AS valid_item_code,
+        sch15_item_nm              AS item_name
+    </sql>
+
+    <!-- AS-IS sch15_ipo_item_matching.selectByText -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch15IpoItemMatchingRes">
+        SELECT <include refid="columns"/>
+          FROM sch15_ipo_item_matching
+         WHERE UPPER(CONCAT(sch15_item_cd, sch15_valid_item_cd, sch15_item_nm)) LIKE UPPER(#{searchText})
+         ORDER BY sch15_item_cd
+    </select>
+
+    <!-- AS-IS sch15_ipo_item_matching.selectById — 저장 뒤 다시 읽기 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch15IpoItemMatchingRes">
+        SELECT <include refid="columns"/>
+          FROM sch15_ipo_item_matching
+         WHERE sch15_ipo_item_matching_id = #{id}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertMatching">
+        INSERT INTO sch15_ipo_item_matching (sch15_ipo_item_matching_id, sch15_item_cd, sch15_valid_item_cd, sch15_item_nm)
+        VALUES (#{id}, #{req.itemCode}, #{req.validItemCode}, #{req.itemName})
+    </insert>
+
+    <update id="updateMatching">
+        UPDATE sch15_ipo_item_matching
+           SET sch15_item_cd       = #{req.itemCode},
+               sch15_valid_item_cd = #{req.validItemCode},
+               sch15_item_nm       = #{req.itemName}
+         WHERE sch15_ipo_item_matching_id = #{req.ipoItemMatchingId}
+    </update>
+
+    <delete id="deleteMatchings">
+        DELETE FROM sch15_ipo_item_matching
+         WHERE sch15_ipo_item_matching_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/com/mapper/com50_item.xml + UpdateDataModel(com50_item) (E20) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.com.mapper.ComItemMapper">
+
+    <sql id="columns">
+        com50_item_id   AS item_id,
+        com50_item_cd   AS item_code,
+        com50_item_nm   AS item_name,
+        com50_item_type AS item_type
+    </sql>
+
+    <!-- AS-IS com50_item.selectByTextPaging (SELECT *를 DTO 열로) -->
+    <select id="selectByTextPaging" resultType="kr.co.kfs.asseterp.biz.com.dto.Com50ItemRes">
+        SELECT <include refid="columns"/>
+          FROM com50_item
+         WHERE 1=1
+           AND com50_item_type = #{itemType}
+           AND CONCAT(com50_item_cd, com50_item_nm) ILIKE #{searchText}
+         ORDER BY com50_item_cd
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <!-- AS-IS com50_item.selectByTextPagingTotal -->
+    <select id="selectByTextPagingTotal" resultType="long">
+        SELECT COUNT(*)
+          FROM com50_item
+         WHERE 1=1
+           AND com50_item_type = #{itemType}
+           AND CONCAT(com50_item_cd, com50_item_nm) ILIKE #{searchText}
+    </select>
+
+    <!-- AS-IS com50_item.selectById — 저장 뒤 다시 읽기 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.com.dto.Com50ItemRes">
+        SELECT <include refid="columns"/>
+          FROM com50_item
+         WHERE com50_item_id = #{itemId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS com50_item.checkItemCode -->
+    <select id="checkItemCode" resultType="int">
+        SELECT COUNT(*)
+          FROM com50_item
+         WHERE com50_item_cd  = #{itemCode}
+           AND com50_item_id != #{itemId}
+    </select>
+
+    <insert id="insertItem">
+        INSERT INTO com50_item (com50_item_id, com50_item_cd, com50_item_nm, com50_item_type)
+        VALUES (#{itemId}, #{req.itemCode}, #{req.itemName}, #{req.itemType})
+    </insert>
+
+    <update id="updateItem">
+        UPDATE com50_item
+           SET com50_item_cd = #{req.itemCode},
+               com50_item_nm = #{req.itemName}
+         WHERE com50_item_id = #{req.itemId}
+    </update>
+
+    <delete id="deleteItems">
+        DELETE FROM com50_item
+         WHERE com50_item_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

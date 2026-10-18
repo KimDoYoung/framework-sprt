@@ -2387,5 +2387,38 @@
     "note": "docs/work/E/E19-작업기록.md",
     "history": [],
     "id": "E19"
+  },
+  "Sch10_Tab_IpoAdmin": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/sch/Sch10_Tab_IpoAdmin.java": "6cfe66d39950c41e8acf68e985d764a985b89986",
+      "application/src/main/java/myApp/client/vi/sch/Sch12_Lookup_IpoCorp.java": "a05eb14b81cc955db6010adbf3beea82797d4db2",
+      "application/src/main/java/myApp/client/vi/sch/Sch15_Lookup_IpoItemMatching.java": "ee134ec5c95f81d8b14df630d2871b23a6dc905d",
+      "application/src/main/java/myApp/client/vi/sch/model/Sch10_IpoModel.java": "824c6b72eb310a83edb5c74607268590e4667cf3",
+      "application/src/main/java/myApp/client/vi/sch/model/Sch10_IpoModelProperties.java": "998da36a0adb4c895709ac4795f734a95623bf2d",
+      "application/src/main/java/myApp/client/vi/sch/model/Sch12_IpoCorpModel.java": "d664eaf44a52ddad9869c81500426c9addc29f43",
+      "application/src/main/java/myApp/client/vi/sch/model/Sch12_IpoCorpModelProperties.java": "687886713e4cd3adb2016f309087fddef1bdf059",
+      "application/src/main/java/myApp/client/vi/sch/model/Sch15_IpoItemMatchingModel.java": "237c012408606ea4905d5e2efb21c288b33f7688",
+      "application/src/main/java/myApp/client/vi/sch/model/Sch15_IpoItemMatchingModelProperties.java": "88778e3cf549847aec11582c692e7ff19575d0be",
+      "application/src/main/java/myApp/server/sch/Sch10_Ipo.java": "3f528440c6e69083c5584213e1f9a611a844330c",
+      "application/src/main/java/myApp/server/sch/Sch12_IpoCorp.java": "0fd4bc44fc74d0627b96d145b67dd62a8a0e14c4",
+      "application/src/main/java/myApp/server/sch/Sch15_IpoItemMatching.java": "4c05e956baf4633b4e494a04deccd56f9d8913a1",
+      "application/src/main/java/myApp/server/sch/mapper/sch10_ipo.xml": "66a3b2d1d059ceaabb9f5220605c0fa2ea56a092",
+      "application/src/main/java/myApp/server/sch/mapper/sch12_ipo_corp.xml": "cb0a48c66322500e94326d08b700c7403ae61a36",
+      "application/src/main/java/myApp/server/sch/mapper/sch15_ipo_item_matching.xml": "f4a4b08180b8fb176d62e5ba70463a7aa91535d5"
+    },
+    "shared_links": [
+      "Com50_Lookup_StkItem",
+      "Sch14_Lookup_IpoMismatch"
+    ],
+    "recorded_at": "2026-10-18T20:20:33+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/E/E20-작업기록.md",
+    "history": [],
+    "id": "E20"
   }
 }

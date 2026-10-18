@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sch/mapper/sch10_ipo.xml + UpdateDataModel(sch10_ipo) (E20) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sch.mapper.SchIpoMapper">
+
+    <sql id="columns">
+        sch10_ipo_id                                       AS ipo_id,
+        sch10_company_id                                   AS company_id,
+        sch10_market_cd                                    AS market_code,
+        f_cdnm('MarketCode', sch10_market_cd, sch10_company_id, f_sysdate()) AS market_name,
+        sch10_item_nm                                      AS item_name,
+        sch10_iss_corp_cd                                  AS iss_corp_code,
+        TO_CHAR(sch10_demand_start_date, 'YYYY-MM-DD')       AS demand_start_date,
+        TO_CHAR(sch10_demand_close_date, 'YYYY-MM-DD')       AS demand_close_date,
+        TO_CHAR(sch10_subscription_start_date, 'YYYY-MM-DD') AS subscription_start_date,
+        TO_CHAR(sch10_subscription_close_date, 'YYYY-MM-DD') AS subscription_close_date,
+        TO_CHAR(sch10_pay_date, 'YYYY-MM-DD')                AS pay_date,
+        TO_CHAR(sch10_list_date, 'YYYY-MM-DD')               AS list_date,
+        sch10_price_bracket                                AS price_bracket,
+        COALESCE(sch10_price, 0)                           AS price,
+        sch10_note                                         AS note,
+        sch10_cancel_yn                                    AS cancel_yn,
+        ( SELECT COUNT(*)
+            FROM sch02_share
+           WHERE sch02_info_id = sch10_ipo_id )            AS share_count
+    </sql>
+
+    <!-- AS-IS sch10_ipo.selectBySearchTextAdmin (ManagerYn=true: 수요예측시작일 내림차순 + ID 내림차순).
+         화면이 쓰지 않는 열(관심 ★·철회 O·공유정보·청약률)은 뺐다 -->
+    <select id="selectBySearchTextAdmin" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch10IpoRes">
+        SELECT <include refid="columns"/>
+          FROM sch10_ipo
+         WHERE sch10_company_id = 0
+           AND upper(CONCAT(sch10_item_nm, sch10_note, sch10_iss_corp_cd)) LIKE upper(#{p.searchText})
+           AND sch10_market_cd LIKE #{p.marketCode}
+           AND ( ( #{p.dateType} = '1'                                                  AND
+                   sch10_demand_start_date &gt;= #{p.startDate}::date                    AND
+                   sch10_demand_close_date &lt;= #{p.closeDate}::date                    ) OR
+                 ( #{p.dateType} = '2'                                                  AND
+                   sch10_subscription_start_date &gt;= #{p.startDate}::date              AND
+                   sch10_subscription_close_date &lt;= #{p.closeDate}::date              ) OR
+                 ( #{p.dateType} = '3'                                                  AND
+                   sch10_div_date BETWEEN #{p.startDate}::date AND #{p.closeDate}::date    ) OR
+                 ( #{p.dateType} = '4'                                                  AND
+                   sch10_pay_date BETWEEN #{p.startDate}::date AND #{p.closeDate}::date    ) OR
+                 ( #{p.dateType} = '5'                                                  AND
+                   sch10_refund_date BETWEEN #{p.startDate}::date AND #{p.closeDate}::date ) OR
+                 ( #{p.dateType} = '6'                                                  AND
+                   sch10_list_date BETWEEN #{p.startDate}::date AND #{p.closeDate}::date   ) )
+         ORDER BY sch10_demand_start_date DESC, sch10_ipo_id DESC
+    </select>
+
+    <!-- AS-IS sch10_ipo.selectById — 저장 뒤 다시 읽기 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch10IpoRes">
+        SELECT <include refid="columns"/>
+          FROM sch10_ipo
+         WHERE sch10_ipo_id = #{ipoId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertIpo">
+        INSERT INTO sch10_ipo (sch10_ipo_id, sch10_company_id, sch10_market_cd, sch10_item_nm, sch10_iss_corp_cd,
+                               sch10_demand_start_date, sch10_demand_close_date, sch10_subscription_start_date, sch10_subscription_close_date,
+                               sch10_pay_date, sch10_list_date, sch10_price_bracket, sch10_price, sch10_note, sch10_cancel_yn)
+        VALUES (#{ipoId}, #{companyId}, #{req.marketCode}, #{req.itemName}, #{req.issCorpCode},
+                #{req.demandStartDate}::date, #{req.demandCloseDate}::date, #{req.subscriptionStartDate}::date, #{req.subscriptionCloseDate}::date,
+                #{req.payDate}::date, #{req.listDate}::date, #{req.priceBracket}, #{req.price}, #{req.note}, #{req.cancelYn})
+    </insert>
+
+    <update id="updateIpo">
+        UPDATE sch10_ipo
+           SET sch10_market_cd               = #{req.marketCode},
+               sch10_item_nm                 = #{req.itemName},
+               sch10_iss_corp_cd             = #{req.issCorpCode},
+               sch10_demand_start_date       = #{req.demandStartDate}::date,
+               sch10_demand_close_date       = #{req.demandCloseDate}::date,
+               sch10_subscription_start_date = #{req.subscriptionStartDate}::date,
+               sch10_subscription_close_date = #{req.subscriptionCloseDate}::date,
+               sch10_pay_date                = #{req.payDate}::date,
+               sch10_list_date               = #{req.listDate}::date,
+               sch10_price_bracket           = #{req.priceBracket},
+               sch10_price                   = #{req.price},
+               sch10_note                    = #{req.note},
+               sch10_cancel_yn               = #{req.cancelYn}
+         WHERE sch10_ipo_id     = #{req.ipoId}
+           AND sch10_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteIpos">
+        DELETE FROM sch10_ipo
+         WHERE sch10_company_id = #{companyId}
+           AND sch10_ipo_id IN
+        <foreach collection="ipoIds" item="ipoId" open="(" separator="," close=")">#{ipoId}</foreach>
+    </delete>
+
+    <!-- AS-IS sch10_ipo.excelInsert — 시장구분·종목명(대소문자 무시)이 같은 행이 있으면 UPDATE, 없으면 INSERT -->
+    <insert id="excelInsert">
+        WITH upsert AS
+        (
+            UPDATE sch10_ipo
+               SET sch10_demand_start_date       = #{row.demandStartDate},
+                   sch10_demand_close_date       = #{row.demandCloseDate},
+                   sch10_subscription_start_date = #{row.subscriptionStartDate},
+                   sch10_subscription_close_date = #{row.subscriptionCloseDate},
+                   sch10_pay_date                = #{row.payDate},
+                   sch10_list_date               = #{row.listDate},
+                   sch10_note                    = #{row.note},
+                   sch10_price_bracket           = #{row.priceBracket},
+                   sch10_price                   = #{row.price},
+                   sch10_iss_corp_cd             = #{row.issCorpCode}
+             WHERE sch10_market_cd               = #{row.marketCode}
+               AND UPPER(sch10_item_nm)          = UPPER(#{row.itemName})
+         RETURNING *
+        )
+        INSERT INTO sch10_ipo
+               (sch10_ipo_id, sch10_item_nm, sch10_demand_start_date, sch10_demand_close_date,
+                sch10_subscription_start_date, sch10_subscription_close_date, sch10_div_date, sch10_pay_date,
+                sch10_refund_date, sch10_list_date, sch10_company_id, sch10_market_cd, sch10_note,
+                sch10_cancel_yn, sch10_price_bracket, sch10_price, sch10_iss_corp_cd)
+        SELECT #{row.ipoId}::numeric, #{row.itemName}::varchar, #{row.demandStartDate}::date, #{row.demandCloseDate}::date,
+               #{row.subscriptionStartDate}::date, #{row.subscriptionCloseDate}::date, NULL::date, #{row.payDate}::date,
+               NULL::date, #{row.listDate}::date, #{row.companyId}::numeric, #{row.marketCode}::varchar, #{row.note}::text,
+               #{row.cancelYn}::varchar, #{row.priceBracket}::varchar, #{row.price}::numeric, #{row.issCorpCode}::varchar
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </insert>
+</mapper>

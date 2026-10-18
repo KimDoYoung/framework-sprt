@@ -70,6 +70,7 @@ import { Dcr01_Tab_ClassTree } from './dcr/Dcr01_Tab_ClassTree';
 import { Dcr05_Tab_DocType } from './dcr/Dcr05_Tab_DocType';
 import { Dcr30_Tab_LinkAdmin } from './dcr/Dcr30_Tab_LinkAdmin';
 import { Rpt10_Tab_FssSubmit } from './rpt/Rpt10_Tab_FssSubmit';
+import { Sch10_Tab_IpoAdmin } from './sch/Sch10_Tab_IpoAdmin';
 import { Test_Tab_ReactComponents } from './test/Test_Tab_ReactComponents';
 
 /**
@@ -110,6 +111,7 @@ export const SCREENS: Record<string, React.FC> = {
   Dcr05_Tab_DocType, // E18 (메뉴 #1482·#1007 — 같은 클래스. + Dcr05_Edit_DocType·Dcr05_Edit_Update(E16)·Sys09_Lookup_Code(구분추가)·Sys01_Lookup_Company)
   Dcr30_Tab_LinkAdmin, // E17 (열 때 Link 없는 회사에 채우는 linkCheck가 쓰기 — AS-IS 그대로. + Dcr30_TabPage_Company·Dcr30_Lookup_LinkNote·Dcr30_Move_DcrClass·Com10_Lookup_CommonMapping·Pay06_Popup_Example)
   Rpt10_Tab_FssSubmit, // E19 (+ Rpt10_Edit_WriteGuide)
+  Sch10_Tab_IpoAdmin, // E20 (+ Sch12_Lookup_IpoCorp·Sch14_Lookup_IpoMismatch·Sch15_Lookup_IpoItemMatching·Com50_Lookup_StkItem)
   Tdm50_Tab_DutyReconAdmin, // E15 (조회마다 DB 함수 f_recon_tdm('DB_CHK')이 sys99_print의 사용자 몫 행을 다시 만든다 — AS-IS 그대로)
   Sms02_Tab_TotalCount, // C05
   Sms03_Tab_SendAdmin, // C06 (실제 문자 발송은 하지 않음 — SmsSender 기본 구현)
