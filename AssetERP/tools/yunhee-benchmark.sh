@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # yunhee 가치 측정(벤치마크): ① 토큰 절감(추정) ② 정확성. 결과는 누적한다.
-# 설계: docs/work/yunhee-benchmark-설계.md   시나리오: tools/yunhee-benchmark/cases/*.sh   (회귀 시험 yunhee-0.x-check.sh와 다름)
+# 설계: docs/work/yunhee/yunhee-benchmark-설계.md   시나리오: tools/yunhee-benchmark/cases/*.sh   (회귀 시험 yunhee-0.x-check.sh와 다름)
 #
 # 사용 (AssetERP 폴더 어디서든):
 #   tools/yunhee-benchmark.sh                  # 전체 시나리오
@@ -16,7 +16,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."                      # AssetERP
 ROOT=$(pwd); BENCH=$ROOT/tools/yunhee-benchmark; LIB=$BENCH/lib.sh
-RES=$ROOT/docs/work/yunhee-benchmark; WORK=$ROOT/.yunhee/bench
+RES=$ROOT/docs/work/yunhee/yunhee-benchmark; WORK=$ROOT/.yunhee/bench
 SUITE_REV=1
 export ROOT LIB WORK SUITE_REV
 mkdir -p "$RES/runs" "$WORK/out"
@@ -91,6 +91,6 @@ if [ $SAVE = 1 ] && [ "$n_run" -gt 0 ]; then
   [ -f "$RES/results.tsv" ] || echo "$HDR" >"$RES/results.tsv"
   cat "$ROWS" >>"$RES/results.tsv"
   python3 -I "$BENCH/report.py" run-md "$ROWS" "$VER" "$HOST" "$PIN" "$RES/results.tsv" >"$RES/runs/$(date +%Y%m%d-%H%M)-$VER.md"
-  echo "→ 누적: docs/work/yunhee-benchmark/results.tsv (+${n_run}줄), runs/$(date +%Y%m%d-%H%M)-$VER.md"
+  echo "→ 누적: docs/work/yunhee/yunhee-benchmark/results.tsv (+${n_run}줄), runs/$(date +%Y%m%d-%H%M)-$VER.md"
 fi
 rm -f "$ROWS"

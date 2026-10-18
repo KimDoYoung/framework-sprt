@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# yunhee-benchmark 공용 함수. cases/*.sh 가 source 한 뒤 쓴다. 설계: docs/work/yunhee-benchmark-설계.md
+# yunhee-benchmark 공용 함수. cases/*.sh 가 source 한 뒤 쓴다. 설계: docs/work/yunhee/yunhee-benchmark-설계.md
 #
 # 시나리오(cases/NN-*.sh)가 정의하는 것
 #   ID=01a CASE_REV=1 CAT=분석 DESC="…" FAST=1 NEEDS=""      # NEEDS: db | realsrc | tomcat (없으면 SKIP)

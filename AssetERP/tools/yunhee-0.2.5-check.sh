@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # yunhee-0.2.5 수정사항체크 — 수정사항 021(analysis ui·sql·method·events·layout, run 실패 메시지, 새 명령 yunhee log) 검증.
-# 문서: ~/work/yunhee-cli/docs/수정사항021.md  절차: docs/work/yunhee-0.2.5-수정사항체크.md
+# 문서: ~/work/yunhee-cli/docs/수정사항021.md  절차: docs/work/yunhee/yunhee-0.2.5-수정사항체크.md
 #
 # 사용 (AssetERP 폴더에서. B 절은 Tomcat 배포본(docker t3600-tomcat)이 떠 있어야 함):
 #   tools/yunhee-0.2.5-check.sh                 # 전체 (약 1분)

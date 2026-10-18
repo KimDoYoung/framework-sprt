@@ -13,13 +13,13 @@ OMS(`../OMS`, AssetERP subset)에서 해 본 변환을 실제 원본으로 다�
 | 세션 시작 | `03-절대원칙.md` 전체 | — |
 | 세션 시작 | `01a-변환목록.md`: 머리 설명(상태 값) + "우선 순서" 표의 첫 `대기` 행(`grep -n '대기' docs/01a-변환목록.md \| head`)과 그 ID의 A표 행. **다음 작업은 01a "우선 순서" 표에서 상태가 `대기`인 첫 줄**, 표가 끝나면 `01b-변환목록.md`(I/F·ICAM·기관정보, ID D01~D13)의 첫 `대기` 행, 그 뒤는 `01c-변환목록.md`(기초자료 관리자 화면, ID E01~E32)의 첫 `대기` 행 | 끝난 ID 행, B표 |
 | 세션 시작 | `05-작업방법.md` §0(시작·끝), §7 "세션 시작"·"A 작업 단계별 명령" 표 | §1 B 작업, §7의 버전별 한계 문단(막힐 때만) |
-| 분석 | 05 §2 표·§3 템플릿·§6 대응표, 비슷한 완료 ID의 `docs/work/{id}-작업방법.md` 1개 | 다른 ID의 작업기록·결과확인 |
+| 분석 | 05 §2 표·§3 템플릿·§6 대응표, 비슷한 완료 ID의 `docs/work/{ID 첫 글자}/{id}-작업방법.md` 1개 | 다른 ID의 작업기록·결과확인 |
 | 백엔드·프론트 | 05 §5 공통 부품표, §8(그리드 CRUD를 쓸 때), `10-UX보강.md` 등록표(상태 `부품완료` 항목) | |
 | 확인 | `06-결과확인.md` 확인 항목 표·템플릿 | |
 | 끝낼 때 | 05 §4 템플릿. `08-회차인계.md`는 교훈 표 형식만(`tail -3`) 보고 한 줄 추가 | 08 전체 |
 | 필요할 때만 | `04-작업순서.md`(순서·상태 흐름을 바꿀 때), `09-업무흐름.md`(권한·메뉴·회사의 업무 조건이 궁금할 때), `07-기반이식.md`(B04~B08) | |
 
-- `docs/work/{id}-*.md`는 지금 하는 ID의 파일만 읽는다. 다른 ID 파일은 필요할 때만 연다.
+- `docs/work/{ID 첫 글자}/{id}-*.md`는 지금 하는 ID의 파일만 읽는다. 다른 ID 파일은 필요할 때만 연다.
 - 앞에서 읽은 절은 다시 읽지 않는다. 참고할 TOBE 파일은 `yunhee analysis tobe`·`outline`으로 본 뒤 필요한 줄만 읽는다.
 
 ## 원본 화면이 정답 (03 원칙 12)
@@ -37,7 +37,7 @@ TOBE는 새로 설계하지 않고 원본의 레이아웃·버튼·이벤트·�
 - 테이블은 `yunhee table`, DB 데이터는 `yunhee sql`(읽기 전용, 쓰기 시험은 `--rollback`), TOBE 코드는 `yunhee outline`·`yunhee analysis tobe` → 필요한 줄만, 빌드·테스트·배포는 `yunhee run`.
 - 백엔드: SQL은 `yunhee port-sql`·`port-save`로 옮기고, 매퍼는 컴파일 전에 `yunhee sql-check --tobe backend/src/main/resources/mapper`.
 - 확인: API는 `yunhee api`(SQL·예외까지 보려면 `--log`), 조회 API와 AS-IS SQL 비교는 `yunhee compare`. 서버 로그는 `docker logs` 대신 `yunhee log`(errors·tail·req·trace, 05 §7 "서버 로그") — 배포 후 `log errors --since-deploy`, 사용자 신고 오류는 재현 전에 `log req … --trace`. 기본 주소는 `.env.local`(AssetERP Tomcat), 고객사 관리자는 `-c <회사코드>`.
-- **원본 변경 점검**(0.3.8~): AS-IS 원본은 매일 바뀐다. `git pull` 뒤 `index-src`를 다시 돌리고 `yunhee drift --all --done-only --base baseline`으로 완료 화면 중 변환 뒤 바뀐 것만 본다(`-o diff`로 상세). ID를 `완료`로 바꿀 때 `yunhee drift --record <클래스> --id <ID> --note-file docs/work/<ID>-작업기록.md`로 기준을 남긴다. 기준 파일 `docs/baseline.json`은 git으로 공유한다(05 §7 "원본 변경 점검").
+- **원본 변경 점검**(0.3.8~): AS-IS 원본은 매일 바뀐다. `git pull` 뒤 `index-src`를 다시 돌리고 `yunhee drift --all --done-only --base baseline`으로 완료 화면 중 변환 뒤 바뀐 것만 본다(`-o diff`로 상세). ID를 `완료`로 바꿀 때 `yunhee drift --record <클래스> --id <ID> --note-file docs/work/<ID 첫 글자>/<ID>-작업기록.md`로 기준을 남긴다. 기준 파일 `docs/baseline.json`은 git으로 공유한다(05 §7 "원본 변경 점검").
 - yunhee로 안 되는 것(브라우저 확인)만 `tools/`로 하고, 출력은 몇 줄로 줄인다. 다른 방법을 쓴 사유는 `{id}-작업기록`에 한 줄 남긴다.
 
 ## 고정 사항

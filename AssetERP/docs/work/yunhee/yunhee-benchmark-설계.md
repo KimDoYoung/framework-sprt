@@ -4,7 +4,7 @@
 
 사용자 위임("가장 현명한 방법으로 판단")에 따라 아래로 정했고 구현했다. 아래 8절의 질문은 이 결정으로 닫는다.
 - **기준선**: 보수적 — "그 정보를 얻으려면 열어야 하는 파일 전체"(화면 클래스 + 색인 source 절 의존 파일, 매퍼 XML 전체, 도메인 DBML 파일 전체, drift는 구간 diff 전체). 절감률이 높게(98%대) 나오므로 **절대값보다 버전 간 추세**로 읽는다.
-- **누적**: `docs/work/yunhee-benchmark/results.tsv`를 git에 올려 두 PC가 공유(`union` 병합), 실행마다 `runs/<일시>-<버전>.md` 리포트.
+- **누적**: `docs/work/yunhee/yunhee-benchmark/results.tsv`를 git에 올려 두 PC가 공유(`union` 병합), 실행마다 `runs/<일시>-<버전>.md` 리포트.
 - **3단계(훅 차단 횟수·세션 토큰)**: 이번 범위에서 제외. 필요해지면 추가.
 - **시나리오 11개**(`--list`): 01a·01b 화면 구성(작은/큰), 01c 화면 구성 JSON(0.4.0~), 03 그리드, 06 SQL, 06j SQL JSON(0.4.0~), 07 테이블, 08 outline, 12 drift, 13 `sql -o` 형식(0.3.9~), 14 가드 훅. 나머지(02 method, 04 model, 05 ui, 09 run, 10 compare, 11 log)는 추가 예정.
 - **0.4.0 확인(2026-10-17)**: 033·034가 대부분 기대대로 동작한다. 벤치마크가 `analysis sql -o json` 실패(`PosixPath is not JSON serializable`)를 잡았다(06j 0%) → 수정사항035.
@@ -59,7 +59,7 @@ AssetERP/tools/
     cases/NN-<범주>-<이름>.sh      # 시나리오 1개 = 파일 1개 (명령·기준선·정답표)
     golden/<case>.expect           # (선택) 길어지는 정답표
     lib.sh                         # 토큰 추정, 시간 측정, 채점, 결과 쓰기
-docs/work/yunhee-benchmark/
+docs/work/yunhee/yunhee-benchmark/
   results.tsv                      # 누적 결과 (git 추적, 한 줄 = 시나리오 한 번 실행)
   runs/<yyyymmdd-hhmm>-<버전>.md   # 실행 1회 요약 리포트 (git 추적)
 .yunhee/bench/                     # 원문 출력, 고정 소스 색인 (git-ignored)
@@ -108,7 +108,7 @@ tools/yunhee-benchmark.sh --list           # 시나리오 목록과 rev
 
 ## 4. 결과 누적 (핵심 요구)
 
-`docs/work/yunhee-benchmark/results.tsv` — 한 줄 = 시나리오 1회 실행, **추가만 한다**(줄을 고치지 않는다).
+`docs/work/yunhee/yunhee-benchmark/results.tsv` — 한 줄 = 시나리오 1회 실행, **추가만 한다**(줄을 고치지 않는다).
 
 | 열 | 뜻 |
 |:---|:---|

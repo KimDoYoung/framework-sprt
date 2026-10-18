@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # yunhee 수정사항 018(`yunhee analysis`, MyBatis 펼치기 통합, 작은 것 C-1~C-5) 검증.
-# 문서: ~/work/yunhee-cli/docs/수정사항018.md  절차: docs/work/yunhee-018-검증.md
+# 문서: ~/work/yunhee-cli/docs/수정사항018.md  절차: docs/work/yunhee/yunhee-018-검증.md
 #
 # 사용 (AssetERP 폴더에서, Tomcat 배포본이 떠 있어야 함 — 기대값을 TOBE API로 다시 센다):
 #   tools/yunhee-018-check.sh                 # 전체 (C-3 gradle test 포함, 약 1분)
