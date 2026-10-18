@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.org.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.org.dto.OrgInfoRes;
+import kr.co.kfs.asseterp.biz.org.dto.OrgTdmRes;
 import kr.co.kfs.asseterp.biz.org.service.OrgInfoService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,14 @@ public class OrgInfoController {
                                                         @RequestParam(required = false) String korName,
                                                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
         return ApiResponse.ok(orgInfoService.searchOrgInfos(principal, korName, baseDate));
+    }
+
+    /** AS-IS org.Org00_OrgInfo.selectByTdmYn (Org00_Lookup_SelectTdm) */
+    @GetMapping("/tdm")
+    public ApiResponse<List<OrgTdmRes>> searchTdmOrgs(@AuthenticationPrincipal UserPrincipal principal,
+                                                      @RequestParam(required = false) String searchText,
+                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate) {
+        return ApiResponse.ok(orgInfoService.searchTdmOrgs(principal, stdDate, searchText));
     }
 
     /** AS-IS org.Org00_OrgInfo.selectByOrgCodeId */

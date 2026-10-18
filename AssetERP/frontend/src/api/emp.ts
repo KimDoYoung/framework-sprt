@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Academic, Account, AddDeduct, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, Evaluation, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
+import { Academic, Account, AddDeduct, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, Evaluation, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -450,6 +450,12 @@ export const orgApi = {
   /** AS-IS org.Org00_OrgInfo.selectByKorName */
   searchOrgInfos: async (korName: string | undefined, baseDate: string): Promise<OrgInfo[]> => {
     const res = await apiClient.get<ApiResponse<OrgInfo[]>>('v1/org/org-infos', { params: { korName: korName || undefined, baseDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS org.Org00_OrgInfo.selectByTdmYn (Org00_Lookup_SelectTdm — 기준일의 책무 대상 조직) */
+  searchTdmOrgs: async (stdDate: string, searchText: string): Promise<OrgTdm[]> => {
+    const res = await apiClient.get<ApiResponse<OrgTdm[]>>('v1/org/org-infos/tdm', { params: { stdDate, searchText } });
     return res.data.data ?? [];
   },
 

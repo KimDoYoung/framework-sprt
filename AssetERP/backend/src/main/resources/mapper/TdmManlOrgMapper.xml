@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm42_manl_org.xml (E13 책무매뉴얼 재생성)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmManlOrgMapper">
+
+    <!-- 재생성·점검항목 대상 행의 회사 확인용(TOBE 추가 — 서버가 요청한 id의 회사를 직접 읽어 권한 범위를 검사) -->
+    <select id="selectCompanyId" resultType="java.lang.Long">
+        SELECT tdm42_company_id
+          FROM tdm42_manl_org
+         WHERE tdm42_manl_org_id = #{manlOrgId}
+    </select>
+
+    <!--
+      AS-IS(IDMS-IC) tdm42_manl_org.selectByText L62
+      수정: ① ORDER BY의 COLLATE "ko_KR.utf8" → "ko-KR-x-icu"(이 DB에 없음, 05 §6) ② 바깥 SELECT t.*를 그리드·재생성·점검항목 조회창 열로, 일자는 TO_CHAR
+            ③ 이 화면이 늘 보내는 값이라 useYn(false)=조건 없음, adminYn(true)=상신건만을 고정 ④ 날짜 비교는 CAST(… AS date) ⑤ 숫자 인자는 null일 때를 위해 CAST
+    -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgRes">
+        SELECT  tdm42_manl_org_id                                  AS manl_org_id,
+                tdm42_company_id                                   AS company_id,
+                tdm42_company_nm                                   AS company_name,
+                tdm42_org_nm                                       AS org_name,
+                tdm42_role_nm                                      AS role_name,
+                tdm42_exct_id                                      AS exct_id,
+                tdm42_exct_nm                                      AS exct_name,
+                tdm42_manl_duty_end_yn                             AS manl_duty_end_yn,
+                TO_CHAR(tdm42_manl_duty_end_date, 'YYYY-MM-DD')    AS manl_duty_end_date,
+                tdm42_task_cnt                                     AS task_cnt,
+                tdm42_task_relate_detail_cnt                       AS task_relate_detail_cnt,
+                tdm42_task_relate_duty_cnt                         AS task_relate_duty_cnt,
+                tdm42_manl_cnt                                     AS manl_cnt,
+                TO_CHAR(tdm42_start_date, 'YYYY-MM-DD')            AS start_date,
+                TO_CHAR(tdm42_end_date, 'YYYY-MM-DD')              AS end_date,
+                tdm42_start_date_str                               AS start_date_yn_str,
+                tdm42_appr_status_cd                               AS appr_status_code,
+                tdm42_appr_status_nm                               AS appr_status_name,
+                tdm42_job_nm                                       AS job_name,
+                COALESCE(tdm42_lock_yn, 'false') = 'true'          AS lock_yn
+          FROM (
+                SELECT  tdm42_manl_org.*
+                     ,  COALESCE(role_nm, tdm20_role_nm)                                            AS tdm42_role_nm
+                     ,  f_emp_kor_nm(tdm42_exct_id)                                                 AS tdm42_exct_nm
+                     ,  f_get_company_nm(tdm42_company_id)                                          AS tdm42_company_nm
+                     ,  org00_kor_nm                                                                AS tdm42_org_nm
+                     ,  CASE WHEN end_yn THEN end_date ELSE null END                                AS tdm42_manl_duty_end_date
+                     ,  end_yn                                                                      AS tdm42_manl_duty_end_yn
+                     ,  task_cnt                                                                    AS tdm42_task_cnt
+                     ,  task_detail_cnt                                                             AS tdm42_task_relate_detail_cnt
+                     ,  task_duty_cnt                                                               AS tdm42_task_relate_duty_cnt
+                     ,  task_check_cnt                                                              AS tdm42_manl_cnt
+                     ,  COALESCE(apr01_status_cd, '00')                                             AS tdm42_appr_status_cd
+                     ,  f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)  AS tdm42_appr_status_nm
+                     ,  tdm40_job_nm                                                                AS tdm42_job_nm
+                     ,  org00_sort_order                                                            AS org_seq
+                     ,  CASE WHEN tdm42_start_date IS NOT NULL
+                             THEN 'true'
+                             ELSE NULL END                                                          AS tdm42_start_date_str
+                  FROM  tdm42_manl_org
+                        INNER JOIN tdm40_manl_job  ON tdm40_manl_job_id = tdm42_manl_job_id
+                        LEFT OUTER JOIN LATERAL ( SELECT tdm43_role_nm                  role_nm
+                                                       , COUNT(*)                       task_check_cnt
+                                                    FROM tdm43_manl
+                                                   WHERE tdm43_manl_org_id = tdm42_manl_org_id
+                                                   GROUP BY tdm43_role_nm
+                                                ) tdm43 ON TRUE
+                        INNER JOIN tdm20_role ON tdm20_role_id = tdm42_role_id
+                        INNER JOIN LATERAL ( SELECT CASE WHEN SUM(CASE WHEN tdm44_end_yn = 'true' THEN 1 ELSE 0 END) = COUNT(*)
+                                                         THEN true ELSE false END               end_yn
+                                                  , MAX(tdm44_end_date)                         end_date
+                                                  , COUNT(DISTINCT tdm41_task_id)               task_cnt
+                                                  , COUNT(DISTINCT tdm41_task_relate_detail_id) task_detail_cnt
+                                                  , COUNT(DISTINCT tdm41_task_relate_duty_id)   task_duty_cnt
+                                               FROM tdm41_manl_duty
+                                                    INNER JOIN tdm44_manl_duty_org ON tdm44_manl_duty_id = tdm41_manl_duty_id
+                                              WHERE tdm41_manl_job_id = tdm42_manl_job_id
+                                                AND tdm41_role_id     = tdm42_role_id
+                                                AND tdm44_org_id      = tdm42_org_id
+                                           ) tdm41 ON TRUE
+                        LEFT OUTER JOIN apr01_appr ON apr01_appr_id = tdm42_appr_id
+                        INNER JOIN LATERAL getOrg(tdm42_company_id, COALESCE(tdm42_start_date, f_today())) ON org00_org_id = tdm42_org_id
+                <if test="orgId != null">
+                      , ( SELECT f_get_tdmOrg_id2(CAST(#{companyId} AS numeric), CAST(#{orgId} AS numeric), f_today()) tdmOrg_id ) o
+                </if>
+                 WHERE  1=1
+                <if test="companyId != null">
+                   AND  tdm42_company_id = #{companyId}
+                </if>
+                <if test="orgId != null">
+                   AND  tdm42_org_id = tdmOrg_id
+                </if>
+               ) t
+         WHERE  1=1
+           AND  COALESCE(tdm42_appr_status_cd, '00') IN ('10','20','30')
+        <if test="!notPeriodYn">
+           AND  tdm42_manl_duty_end_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+        </if>
+           AND  CONCAT(tdm42_role_nm, tdm42_exct_nm) ILIKE #{searchText}
+         ORDER BY tdm42_company_id, org_seq, tdm42_role_nm COLLATE "ko-KR-x-icu", tdm42_start_date
+    </select>
+</mapper>

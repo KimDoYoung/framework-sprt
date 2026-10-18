@@ -104,6 +104,14 @@ export interface OrgInfo {
   modDate?: string | null;
 }
 
+/** 책무 대상 조직 (GET /api/v1/org/org-infos/tdm, AS-IS Org00_OrgInfoModel 중 Org00_Lookup_SelectTdm 그리드·선택 속성) */
+export interface OrgTdm {
+  orgCodeId: number;
+  orgCd?: string | null;
+  korNm?: string | null;
+  korNmWithSubOrg?: string | null;
+}
+
 /** 사원찾기 행 (GET /api/v1/emp/trans, AS-IS Emp01_Lookup_PersonModel) */
 export interface TransPerson {
   transId: number;

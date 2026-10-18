@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm32_role_digm.xml · tdm33_role_digm_file.xml (E12 책무체계도 재생성)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmRoleDigmMapper">
+
+    <!-- 재생성 대상 행의 회사 확인용(TOBE 추가 — 서버가 요청한 id의 회사를 직접 읽어 권한 범위를 검사) -->
+    <select id="selectCompanyId" resultType="java.lang.Long">
+        SELECT tdm32_company_id
+          FROM tdm32_role_digm
+         WHERE tdm32_role_digm_id = #{roleDigmId}
+    </select>
+
+    <!--
+      AS-IS(IDMS-IC) tdm32_role_digm.selectByRegDateAdmin L94
+      수정: ORDER BY의 COLLATE "ko_KR.utf8" → "ko-KR-x-icu"(이 DB에 없음, 05 §6), 바깥 SELECT t.*를 그리드·재생성·보기 열로, 일자는 TO_CHAR
+    -->
+    <select id="selectByRegDateAdmin" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleDigmRes">
+        SELECT  tdm32_role_digm_id                                 AS role_digm_id,
+                tdm32_company_id                                   AS company_id,
+                tdm32_company_nm                                   AS company_name,
+                TO_CHAR(tdm32_reg_date, 'YYYY-MM-DD')              AS reg_date,
+                TO_CHAR(tdm32_allc_std_date, 'YYYY-MM-DD')         AS allc_std_date,
+                tdm32_reason_nm                                    AS reason_name,
+                tdm32_use_file_type                                AS use_file_type,
+                tdm32_use_file_type_nm                             AS use_file_type_name,
+                tdm32_appr_id                                      AS appr_id,
+                tdm32_appr_status_cd                               AS appr_status_code,
+                tdm32_appr_status_nm                               AS appr_status_name,
+                tdm32_role_digm_file_id                            AS role_digm_file_id
+          FROM (
+                SELECT  tdm32_role_digm.*
+                     ,  f_get_company_nm(tdm32_company_id)                                                  AS tdm32_company_nm
+                     ,  f_cdnm('TdmDescRegReason',  tdm32_reason_cd,    tdm32_company_id, tdm32_reg_date)   AS tdm32_reason_nm
+                     ,  f_cdnm('TdmUseFileType',    tdm32_use_file_type, tdm32_company_id, tdm32_reg_date)  AS tdm32_use_file_type_nm
+                     ,  COALESCE(apr01_status_cd, '00')                                                     AS tdm32_appr_status_cd
+                     ,  f_cdnm('AprStatusCode', apr01_status_cd, tdm32_company_id, tdm32_reg_date)          AS tdm32_appr_status_nm
+                     ,  (
+                            CASE WHEN b.tdm33_role_digm_file_id IS NOT NULL
+                                 THEN b.tdm33_role_digm_file_id
+                                 ELSE a.tdm33_role_digm_file_id
+                                 END
+                        )                                                                                   AS tdm32_role_digm_file_id
+                  FROM  tdm32_role_digm
+                        LEFT OUTER JOIN apr01_appr ON apr01_appr_id = tdm32_appr_id
+                        LEFT OUTER JOIN tdm33_role_digm_file a ON a.tdm33_role_digm_id = tdm32_role_digm_id AND a.tdm33_file_type = '1'
+                        LEFT OUTER JOIN tdm33_role_digm_file b ON b.tdm33_role_digm_id = tdm32_role_digm_id AND b.tdm33_file_type = '2'
+                        LEFT OUTER JOIN sys10_file c ON c.sys10_parent_id = a.tdm33_role_digm_file_id
+                        LEFT OUTER JOIN sys10_file d ON d.sys10_parent_id = b.tdm33_role_digm_file_id
+                 WHERE  1=1
+                   AND  tdm32_use_file_type = '1'
+                <if test="companyId != null">
+                   AND tdm32_company_id = #{companyId}
+                </if>
+                <if test="!notPeriodYn">
+                   AND tdm32_reg_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+                </if>
+                <if test="endYn">
+                   AND COALESCE(apr01_status_cd, '00') IN ('10','20','30')
+                </if>
+               ) t
+         ORDER BY tdm32_company_nm COLLATE "ko-KR-x-icu", tdm32_reg_date DESC
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm33_role_digm_file.selectByFileType L25 — 화면은 첫 행의 파일정보ID만 쓴다 -->
+    <select id="selectFileIdByFileType" resultType="java.lang.Long">
+        SELECT  tdm33_role_digm_file_id
+          FROM  tdm33_role_digm_file
+         WHERE  tdm33_role_digm_id = #{roleDigmId}
+           AND  tdm33_file_type LIKE #{fileType}
+    </select>
+</mapper>

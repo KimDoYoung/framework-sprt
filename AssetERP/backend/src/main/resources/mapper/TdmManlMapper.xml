@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm43_manl.xml (E13 점검항목 조회창 Tdm43_Lookup_ManlItem)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmManlMapper">
+
+    <!--
+      AS-IS(IDMS-IC) tdm43_manl.selectByManlOrgId L210
+      수정: ① ORDER BY의 COLLATE "ko_KR.utf8" → "ko-KR-x-icu"(이 DB에 없음, 05 §6) ② 바깥 SELECT t.*를 그리드·등록/수정창이 쓰는 열로
+            ③ 모델의 계산 getter(Tdm43_ManlModel L515-546)를 SQL로: taskDetailAddSeq=「순번. 내용」, taskDutyAddSeq, checkItemAddCode=「(점검항목코드) 점검항목」
+    -->
+    <select id="selectByManlOrgId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlItemRes">
+        SELECT  t.tdm43_manl_id                                                   AS manl_id,
+                t.tdm43_manl_org_id                                               AS manl_org_id,
+                t.tdm43_org_id                                                    AS org_id,
+                t.tdm43_exct_id                                                   AS exct_id,
+                t.tdm43_role_id                                                   AS role_id,
+                t.tdm43_role_nm                                                   AS role_name,
+                t.tdm43_task_id                                                   AS task_id,
+                t.tdm43_task_nm                                                   AS task_name,
+                t.tdm43_task_relate_detail_id                                     AS task_relate_detail_id,
+                t.tdm43_task_relate_duty_id                                       AS task_relate_duty_id,
+                t.tdm43_manl_duty_id                                              AS manl_duty_id,
+                t.tdm43_manl_cd                                                   AS manl_code,
+                CASE WHEN t.tdm43_task_relate_detail_nm IS NULL THEN NULL
+                     ELSE t.tdm43_task_relate_detail_seq || '. ' || t.tdm43_task_relate_detail_nm END   AS task_detail_add_seq,
+                CASE WHEN t.tdm43_task_relate_duty_nm IS NULL THEN NULL
+                     ELSE t.tdm43_task_relate_duty_seq || '. ' || t.tdm43_task_relate_duty_nm END        AS task_duty_add_seq,
+                CASE WHEN t.tdm43_manl_cd IS NULL THEN NULL
+                     ELSE '(' || t.tdm43_manl_cd || ') ' || t.tdm43_check_item END                       AS check_item_add_code,
+                CASE WHEN length(t.tdm43_check_how) > 300
+                     THEN SUBSTR(t.tdm43_check_how,1,300)||'...'
+                     ELSE t.tdm43_check_how END                                   AS check_how_limit,
+                f_cdnm('CycleCode', t.tdm43_check_cycle_cd, t.tdm43_company_id, f_sysdate())  AS check_cycle_name,
+                t.tdm43_check_evid_doc_nm                                         AS check_evid_doc_name,
+                CASE WHEN (   t.tdm43_start_date IS NULL
+                           OR t.tdm43_start_date <![CDATA[ <= ]]> COALESCE(t.std_date, f_today()) )
+                     THEN false
+                     ELSE true END                                                AS unuse_yn
+          FROM (
+                SELECT tdm43_manl.*
+                     , tdm12_seq            AS tdm43_task_relate_detail_seq
+                     , tdm13_seq            AS tdm43_task_relate_duty_seq
+                     , tdm42_end_date       AS std_date
+                  FROM tdm42_manl_org
+                       INNER JOIN tdm43_manl               ON tdm43_manl_org_id           = tdm42_manl_org_id
+                       LEFT  JOIN tdm12_task_relate_detail ON tdm12_task_relate_detail_id = tdm43_task_relate_detail_id
+                       LEFT  JOIN tdm13_task_relate_duty   ON tdm13_task_relate_duty_id   = tdm43_task_relate_duty_id
+                 WHERE tdm42_manl_org_id = #{manlOrgId}
+                   AND COALESCE(tdm42_lock_yn,'false') = 'true'
+                 UNION ALL
+                SELECT COALESCE(tdm43_manl_id, ROW_NUMBER() OVER())     AS tdm43_manl_id
+                     , tdm42_manl_org_id                                AS tdm43_manl_org_id
+                     , tdm42_company_id                                 AS tdm43_company_id
+                     , tdm42_org_id                                     AS tdm43_org_id
+                     , tdm42_exct_id                                    AS tdm43_exct_id
+                     , tdm42_role_id                                    AS tdm43_role_id
+                     , tdm20_role_nm                                    AS tdm43_role_nm
+                     , tdm41_task_id                                    AS tdm43_task_id
+                     , tdm10_task_nm                                    AS tdm43_task_nm
+                     , tdm41_task_relate_detail_id                      AS tdm43_task_relate_detail_id
+                     , tdm12_content                                    AS tdm43_task_relate_detail_nm
+                     , tdm41_task_relate_duty_id                        AS tdm43_task_relate_duty_id
+                     , tdm13_content                                    AS tdm43_task_relate_duty_nm
+                     , tdm43_check_item
+                     , tdm43_check_cycle_cd
+                     , tdm43_check_month
+                     , tdm43_check_evid_type
+                     , tdm43_check_evid_etc
+                     , tdm43_check_how
+                     , tdm43_ref_basis
+                     , tdm43_start_date
+                     , tdm41_manl_duty_id                               AS tdm43_manl_duty_id
+                     , tdm43_first_reg_emp_id
+                     , tdm43_manl_cd
+                     , tdm43_upd_nm
+                     , tdm43_upd_date
+                     , tdm43_check_evid_doc_nm
+                     , tdm43_ceo_duty_cd
+                     , tdm43_exct_duty_cd
+                     , tdm43_import_level_cd
+                     , tdm43_exct_duty_map
+                     , tdm12_seq                                        AS tdm43_task_relate_detail_seq
+                     , tdm13_seq                                        AS tdm43_task_relate_duty_seq
+                     , tdm42_end_date                                   AS std_date
+                  FROM tdm42_manl_org
+                       INNER JOIN tdm20_role ON tdm20_role_id = tdm42_role_id
+                       INNER JOIN LATERAL ( SELECT *
+                                              FROM tdm41_manl_duty
+                                                   INNER JOIN tdm44_manl_duty_org       ON tdm44_manl_duty_id           = tdm41_manl_duty_id
+                                                   INNER JOIN tdm10_task                ON tdm10_task_id                = tdm41_task_id
+                                                   INNER JOIN tdm12_task_relate_detail  ON tdm12_task_relate_detail_id  = tdm41_task_relate_detail_id
+                                                   INNER JOIN tdm13_task_relate_duty    ON tdm13_task_relate_duty_id    = tdm41_task_relate_duty_id
+                                             WHERE tdm41_manl_job_id = tdm42_manl_job_id
+                                               AND tdm41_role_id     = tdm42_role_id
+                                               AND tdm44_org_id      = tdm42_org_id             ) tdm41 ON TRUE
+                       LEFT  JOIN tdm43_manl ON (    tdm43_manl_org_id  = tdm42_manl_org_id
+                                                 AND tdm43_manl_duty_id = tdm41_manl_duty_id    )
+                 WHERE tdm42_manl_org_id = #{manlOrgId}
+                   AND COALESCE(tdm42_lock_yn,'false') = 'false'
+               ) t
+         WHERE 1=1
+           AND CONCAT(tdm43_task_nm, tdm43_task_relate_detail_nm, tdm43_task_relate_duty_nm, tdm43_manl_cd, tdm43_check_item) ILIKE #{searchText}
+        <if test="useYn == 'true'">
+           AND COALESCE(tdm43_start_date, '1999-01-01'::date) <![CDATA[ <= ]]> COALESCE(std_date, f_today())
+        </if>
+        <if test="useYn == 'false'">
+           AND COALESCE(tdm43_start_date, '1999-01-01'::date) > COALESCE(std_date, f_today())
+        </if>
+         ORDER BY tdm43_task_nm COLLATE "ko-KR-x-icu"
+                , tdm43_task_relate_detail_seq, tdm43_task_relate_duty_seq, tdm43_manl_cd
+    </select>
+
+    <!-- 삭제 대상 점검항목이 속한 부서 책무매뉴얼 확인용(TOBE 추가) -->
+    <select id="selectManlOrgIdByManlId" resultType="java.lang.Long">
+        SELECT tdm43_manl_org_id
+          FROM tdm43_manl
+         WHERE tdm43_manl_id = #{manlId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm45_manl_relate_ics.deleteByManlId -->
+    <delete id="deleteRelateIcsByManlId">
+        DELETE FROM tdm45_manl_relate_ics WHERE tdm45_manl_id = #{manlId}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm46_manl_relate_icr.deleteByManlId -->
+    <delete id="deleteRelateIcrByManlId">
+        DELETE FROM tdm46_manl_relate_icr WHERE tdm46_manl_id = #{manlId}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm47_manl_relate_dcr.deleteByManlId -->
+    <delete id="deleteRelateDcrByManlId">
+        DELETE FROM tdm47_manl_relate_dcr WHERE tdm47_manl_id = #{manlId}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) sys11_relate_file.deleteByParentId -->
+    <delete id="deleteRelateFileByParentId">
+        DELETE FROM sys11_relate_file WHERE sys11_parent_id = #{parentId}
+    </delete>
+
+    <!-- AS-IS UpdateDataModel.deleteModel(tdm43_manl) — 기본 삭제는 키로 한 행 -->
+    <delete id="deleteById">
+        DELETE FROM tdm43_manl WHERE tdm43_manl_id = #{manlId}
+    </delete>
+</mapper>

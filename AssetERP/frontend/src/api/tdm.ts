@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { Manl, ManlRelateIcs, TdmRoleDesc } from '../types/tdm';
+import { Manl, ManlRelateIcs, TdmManlItem, TdmManlOrg, TdmRoleDesc, TdmRoleDigm } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
 export const tdmApi = {
@@ -41,5 +41,48 @@ export const tdmApi = {
   /** 한 건 재생성 (AS-IS createRd 한 건 분량). RD 연동이 없는 동안 서버가 거절한다 */
   recreateRoleDesc: async (roleDescId: number): Promise<void> => {
     await apiClient.post<ApiResponse<null>>(`v1/tdm/role-descs/${roleDescId}/recreate`);
+  },
+
+  // ── E12 책무체계도 재생성(Tdm32_Tab_RoleDigmAdmin) ──
+
+  /** AS-IS tdm.Tdm32_RoleDigm.selectByRegDateAdmin (companyId 없음 = 전체, 관리자 회사만. 일자는 전체보기가 아닐 때만 건다. 원본은 상신건만(endYn=true) 고정) */
+  searchRoleDigms: async (p: { companyId?: number; startDate: string; closeDate: string; endYn: boolean; notPeriodYn: boolean }): Promise<TdmRoleDigm[]> => {
+    const res = await apiClient.get<ApiResponse<TdmRoleDigm[]>>('v1/tdm/role-digms', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm33_RoleDigmFile.selectByFileType: 책무체계도의 파일정보 ID들 (fileType 1 시스템 생성 / 2 사용자 업로드) */
+  getRoleDigmFileIds: async (roleDigmId: number, fileType: string): Promise<number[]> => {
+    const res = await apiClient.get<ApiResponse<number[]>>(`v1/tdm/role-digms/${roleDigmId}/file-ids`, { params: { fileType } });
+    return res.data.data ?? [];
+  },
+
+  /** 한 건 재생성 (AS-IS createRd 한 건 분량). RD 연동이 없는 동안 서버가 거절한다 */
+  recreateRoleDigm: async (roleDigmId: number): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>(`v1/tdm/role-digms/${roleDigmId}/recreate`);
+  },
+
+  // ── E13 책무매뉴얼 재생성(Tdm42_Tab_ManlManagerAdmin) · 점검항목 조회창(Tdm43_Lookup_ManlItem) ──
+
+  /** AS-IS tdm.Tdm42_ManlOrg.selectByText (companyId 없음 = 전체. 원본은 상신건만(adminYn=true)·useYn=false 고정. 일자는 전체보기가 아닐 때만 건다) */
+  searchManlOrgs: async (p: { companyId?: number; orgId?: number; searchText: string; notPeriodYn: boolean; startDate: string; closeDate: string }): Promise<TdmManlOrg[]> => {
+    const res = await apiClient.get<ApiResponse<TdmManlOrg[]>>('v1/tdm/manl-orgs', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** 한 건 재생성 (AS-IS createRd 한 건 분량). RD 연동이 없는 동안 서버가 거절한다 */
+  recreateManlOrg: async (manlOrgId: number): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>(`v1/tdm/manl-orgs/${manlOrgId}/recreate`);
+  },
+
+  /** AS-IS tdm.Tdm43_Manl.selectByManlOrgId (useYn: '%' 전체 / 'true' 사용 / 'false' 미사용) */
+  searchManlItems: async (manlOrgId: number, useYn: string, searchText: string): Promise<TdmManlItem[]> => {
+    const res = await apiClient.get<ApiResponse<TdmManlItem[]>>('v1/tdm/manls', { params: { manlOrgId, useYn, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm43_Manl.delete (선택한 한 건 + 연결 법규·내규·양식·첨부) */
+  deleteManlItem: async (manlOrgId: number, manlId: number): Promise<void> => {
+    await apiClient.delete<ApiResponse<null>>(`v1/tdm/manls/${manlId}`, { params: { manlOrgId } });
   },
 };

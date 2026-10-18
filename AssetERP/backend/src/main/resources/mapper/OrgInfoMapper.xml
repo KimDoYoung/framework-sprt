@@ -41,4 +41,27 @@
                                    WHERE x.org00_org_code_id = o.org00_org_code_id
                                      AND x.org00_mod_date <![CDATA[ <= ]]> #{baseDate} )
     </select>
+
+    <!--
+      AS-IS(IDMS-IC) org00_org_info.selectByTdmYn L241 (E13 Org00_Lookup_SelectTdm)
+      수정: 화면이 roleId를 넘기지 않아(null) roleId 분기는 옮기지 않았다. 바깥 열은 그리드·선택에 쓰는 것(org_code_id·org_cd·kor_nm·kor_nm_with_subOrg)
+    -->
+    <select id="selectByTdmYn" resultType="kr.co.kfs.asseterp.biz.org.dto.OrgTdmRes">
+        SELECT org00_org_id                             AS org_code_id
+             , org00_org_cd                             AS org_cd
+             , org00_kor_nm                             AS kor_nm
+             , org00_kor_nm
+               ||COALESCE(( SELECT CASE WHEN COUNT(*) = 0 THEN ''
+                                        ELSE '('||STRING_AGG(org_nm,', ')||')' END
+                              FROM ( SELECT *
+                                       FROM getSubOrg(org00_org_id, CAST(#{stdDate} AS date))
+                                      WHERE org_id != org00_org_id
+                                        AND tdm_yn != 'true' ) t
+                          ),'') AS kor_nm_with_sub_org
+          FROM getOrg(#{companyId}, CAST(#{stdDate} AS date))
+         WHERE 1=1
+           AND CONCAT(org00_org_cd, org00_kor_nm) ILIKE #{searchText}
+           AND org00_tdm_yn = 'true'
+         ORDER BY org00_org_cd
+    </select>
 </mapper>

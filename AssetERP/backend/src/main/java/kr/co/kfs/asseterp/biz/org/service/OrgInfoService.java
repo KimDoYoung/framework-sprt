@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.org.service;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.org.dto.OrgInfoRes;
 import kr.co.kfs.asseterp.biz.org.dto.OrgInfoSearchParam;
+import kr.co.kfs.asseterp.biz.org.dto.OrgTdmRes;
 import kr.co.kfs.asseterp.biz.org.mapper.OrgInfoMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,12 @@ public class OrgInfoService {
     public List<OrgInfoRes> searchOrgInfos(UserPrincipal user, String korName, LocalDate baseDate) {
         String like = korName == null ? "%" : "%" + korName + "%";
         return orgInfoMapper.searchOrgInfos(new OrgInfoSearchParam(user.getCompanyId(), like, baseDate, null));
+    }
+
+    /** AS-IS selectByTdmYn: 기준일의 책무 대상 조직(로그인 회사). 검색어는 조직코드/조직명 */
+    public List<OrgTdmRes> searchTdmOrgs(UserPrincipal user, LocalDate stdDate, String searchText) {
+        String like = "%" + (searchText == null ? "" : searchText) + "%";
+        return orgInfoMapper.selectByTdmYn(user.getCompanyId(), stdDate, like);
     }
 
     /** AS-IS selectByOrgCodeId: 기준일의 조직 (없으면 null — 화면이 조직을 채우지 않는다) */
