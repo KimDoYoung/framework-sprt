@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr30_appr_step_group.xml selectByCompanyId (E16, Apr30_Lookup_ApprStepGroup) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprApprStepGroupMapper">
+
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprApprStepGroupRes">
+        SELECT apr30_appr_step_group_id AS appr_step_group_id,
+               apr30_appr_step_group_nm AS appr_step_group_name,
+               apr30_note               AS note
+          FROM apr30_appr_step_group
+         WHERE apr30_company_id = #{companyId}
+         ORDER BY apr30_appr_step_group_nm
+    </select>
+</mapper>

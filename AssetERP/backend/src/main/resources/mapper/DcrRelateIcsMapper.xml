@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/dcr/mapper/dcr20_relate_ics.xml + UpdateDataModel(dcr20_relate_ics) (E16) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.dcr.mapper.DcrRelateIcsMapper">
+
+    <!-- AS-IS selectByDcrClassTreeId의 SELECT a.*, b.*를 DTO 열로. 기한 요약(ics01_cycle_nm)은 원본 그대로 -->
+    <sql id="relateColumns">
+        a.dcr20_relate_ics_id       AS relate_ics_id,
+        a.dcr20_dcr_class_tree_id   AS dcr_class_tree_id,
+        a.dcr20_ics_class_tree_id   AS ics_class_tree_id,
+        f_ics_class_tree_nm_allpath(b.ics01_class_tree_id) AS class_tree_full_name,
+        b.ics01_content             AS content,
+        b.ics01_submit_to           AS submit_to,
+        ( SELECT CASE WHEN COUNT(*) = 1
+                      THEN MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate()))
+                      ELSE MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate())) || ' 외 ' || COUNT(sch03_deadline.*) - 1 || '건'
+                 END
+            FROM sch03_deadline
+           WHERE sch03_schedule_cd IN ('2','3')
+             AND b.ics01_class_tree_id = sch03_info_id
+             AND b.ics01_company_id    = sch03_company_id
+           LIMIT 1 )                AS cycle_name,
+        b.ics01_related_law         AS related_law,
+        b.ics01_class_tree_cd       AS class_tree_code,
+        a.dcr20_note                AS note
+    </sql>
+
+    <select id="selectByDcrClassTreeId" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrRelateIcsRes">
+        SELECT <include refid="relateColumns"/>
+          FROM dcr20_relate_ics a
+               INNER JOIN ics01_class_tree b ON a.dcr20_ics_class_tree_id = b.ics01_class_tree_id
+         WHERE a.dcr20_dcr_class_tree_id = #{dcrClassTreeId}
+         ORDER BY a.dcr20_relate_ics_id
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrRelateIcsRes">
+        SELECT <include refid="relateColumns"/>
+          FROM dcr20_relate_ics a
+               INNER JOIN ics01_class_tree b ON a.dcr20_ics_class_tree_id = b.ics01_class_tree_id
+         WHERE a.dcr20_relate_ics_id = #{relateIcsId}
+    </select>
+
+    <select id="selectByIds" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrRelateIcsRes">
+        SELECT <include refid="relateColumns"/>
+          FROM dcr20_relate_ics a
+               INNER JOIN ics01_class_tree b ON a.dcr20_ics_class_tree_id = b.ics01_class_tree_id
+         WHERE a.dcr20_company_id = #{companyId}
+           AND a.dcr20_relate_ics_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO dcr20_relate_ics (dcr20_relate_ics_id, dcr20_dcr_class_tree_id, dcr20_ics_class_tree_id, dcr20_company_id, dcr20_note)
+        VALUES (#{relateIcsId}, #{dcrClassTreeId}, #{icsClassTreeId}, #{companyId}, #{note})
+    </insert>
+
+    <!-- AS-IS dcr20_relate_ics.deleteAll -->
+    <delete id="deleteAll">
+        DELETE FROM dcr20_relate_ics
+         WHERE dcr20_dcr_class_tree_id = #{dcrClassTreeId}
+           AND dcr20_ics_class_tree_id = #{icsClassTreeId}
+           AND dcr20_company_id        = #{companyId}
+    </delete>
+
+    <delete id="deleteByIds">
+        DELETE FROM dcr20_relate_ics
+         WHERE dcr20_company_id = #{companyId}
+           AND dcr20_relate_ics_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

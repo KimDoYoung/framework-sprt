@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/dcr/mapper/dcr07_class_detail.xml + UpdateDataModel(dcr07_class_detail) (E16) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.dcr.mapper.DcrClassDetailMapper">
+
+    <sql id="detailColumns">
+        dcr07_class_detail_id AS class_detail_id,
+        dcr07_class_tree_id   AS class_tree_id,
+        dcr07_class_detail_nm AS class_detail_name,
+        dcr07_keyword         AS keyword,
+        dcr07_guide           AS guide,
+        dcr07_seq             AS seq,
+        COALESCE(dcr07_link_yn, 'false') AS link_yn,
+        COALESCE(dcr07_use_yn, 'false')  AS use_yn
+    </sql>
+
+    <!-- AS-IS dcr07_class_detail.selectByClassTreeId -->
+    <select id="selectByClassTreeId" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrClassDetailRes">
+        SELECT <include refid="detailColumns"/>
+          FROM dcr07_class_detail
+         WHERE dcr07_class_tree_id = #{classTreeId}
+         ORDER BY dcr07_seq
+    </select>
+
+    <!-- AS-IS dcr07_class_detail.selectById (저장 뒤 다시 읽기) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrClassDetailRes">
+        SELECT <include refid="detailColumns"/>
+          FROM dcr07_class_detail
+         WHERE dcr07_class_detail_id = #{classDetailId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO dcr07_class_detail (dcr07_class_detail_id, dcr07_class_tree_id, dcr07_class_detail_nm, dcr07_seq,
+                                        dcr07_keyword, dcr07_guide, dcr07_use_yn, dcr07_link_yn)
+        VALUES (#{classDetailId}, #{req.classTreeId}, #{req.classDetailName}, #{req.seq},
+                #{req.keyword}, #{req.guide}, #{req.useYn}, #{req.linkYn})
+    </insert>
+
+    <update id="update">
+        UPDATE dcr07_class_detail
+           SET dcr07_class_detail_nm = #{req.classDetailName},
+               dcr07_seq             = #{req.seq},
+               dcr07_keyword         = #{req.keyword},
+               dcr07_guide           = #{req.guide},
+               dcr07_use_yn          = #{req.useYn},
+               dcr07_link_yn         = #{req.linkYn}
+         WHERE dcr07_class_detail_id = #{req.classDetailId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM dcr07_class_detail
+         WHERE dcr07_class_detail_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

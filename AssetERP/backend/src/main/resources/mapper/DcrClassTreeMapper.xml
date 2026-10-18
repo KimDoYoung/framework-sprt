@@ -49,4 +49,544 @@
          WHERE CONCAT(t.dcr01_class_tree_cd, t.dcr01_class_tree_f_nm) ILIKE #{searchText}
          ORDER BY t.dcr01_class_tree_cd
     </select>
+
+    <!-- ===== E16 문서분류 관리 (Dcr01_Tab_ClassTree 외) — AS-IS dcr01_class_tree.xml (IDMS-IC) ===== -->
+
+    <!-- AS-IS dcr01_class_tree.selectByParentId1Bang (selectByCompanyId): 루트(상위 0)부터 사용 중인 분류를 한 번에. 열은 DTO에 맞춰 줄였고 depth는 0부터 -->
+    <select id="selectTree" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeRes">
+        WITH RECURSIVE dcr_tree(
+              dcr01_class_tree_id, dcr01_company_id, dcr01_class_tree_nm, dcr01_parent_tree_id, dcr01_seq, dcr01_note,
+              dcr01_class_tree_cd, dcr01_type_cd, dcr01_use_yn, dcr01_admin_yn, depth, path, cycle
+        ) AS (
+            SELECT a.dcr01_class_tree_id, a.dcr01_company_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, a.dcr01_seq, a.dcr01_note,
+                   a.dcr01_class_tree_cd, a.dcr01_type_cd, a.dcr01_use_yn, a.dcr01_admin_yn,
+                   1,
+                   ARRAY[CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar),10,'0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id],
+                   false
+              FROM dcr01_class_tree a
+             WHERE a.dcr01_company_id     = #{companyId}
+               AND a.dcr01_parent_tree_id = 0
+               AND a.dcr01_use_yn         = 'true'
+               AND a.dcr01_type_cd LIKE #{typeCode}
+            UNION ALL
+            SELECT a.dcr01_class_tree_id, a.dcr01_company_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, a.dcr01_seq, a.dcr01_note,
+                   a.dcr01_class_tree_cd, a.dcr01_type_cd, a.dcr01_use_yn, a.dcr01_admin_yn,
+                   b.depth + 1,
+                   array_append(b.path, CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar),10,'0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id),
+                   a.dcr01_class_tree_nm = any(b.path)
+              FROM dcr01_class_tree a
+                   INNER JOIN dcr_tree b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+             WHERE a.dcr01_company_id = #{companyId}
+               AND a.dcr01_use_yn     = 'true'
+               AND a.dcr01_type_cd LIKE #{typeCode}
+               AND NOT cycle
+        )
+        SELECT a.dcr01_class_tree_id    AS class_tree_id,
+               a.dcr01_company_id       AS company_id,
+               a.dcr01_parent_tree_id   AS parent_tree_id,
+               a.dcr01_class_tree_nm    AS class_tree_name,
+               a.dcr01_class_tree_cd    AS class_tree_code,
+               a.dcr01_seq              AS seq,
+               a.dcr01_note             AS note,
+               a.dcr01_type_cd          AS type_code,
+               COALESCE(a.dcr01_use_yn, 'false')   AS use_yn,
+               COALESCE(a.dcr01_admin_yn, 'false') AS admin_yn,
+               a.depth - 1              AS depth
+          FROM dcr_tree a
+         WHERE a.dcr01_type_cd IN ('T','C')
+         ORDER BY a.path
+    </select>
+
+    <!-- AS-IS dcr01_class_tree.selectByAll: 사용 여부 조건 없이 전체 + 문서구분(T)별 상신문서 건수 -->
+    <select id="selectTreeAll" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeAllRes">
+        WITH RECURSIVE dcr_tree(
+              dcr01_class_tree_id, dcr01_company_id, dcr01_class_tree_nm, dcr01_parent_tree_id, dcr01_seq,
+              dcr01_class_tree_cd, dcr01_type_cd, dcr01_use_yn, depth, path, cycle
+        ) AS (
+            SELECT a.dcr01_class_tree_id, a.dcr01_company_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, a.dcr01_seq,
+                   a.dcr01_class_tree_cd, a.dcr01_type_cd, a.dcr01_use_yn,
+                   1,
+                   ARRAY[CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar),10,'0') || a.dcr01_class_tree_cd || LPAD(CAST(a.dcr01_class_tree_id AS varchar),15,'0')],
+                   false
+              FROM dcr01_class_tree a
+             WHERE a.dcr01_company_id     = #{companyId}
+               AND a.dcr01_parent_tree_id = 0
+               AND a.dcr01_type_cd LIKE #{typeCode}
+            UNION ALL
+            SELECT a.dcr01_class_tree_id, a.dcr01_company_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, a.dcr01_seq,
+                   a.dcr01_class_tree_cd, a.dcr01_type_cd, a.dcr01_use_yn,
+                   b.depth + 1,
+                   array_append(b.path, CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar),10,'0') || a.dcr01_class_tree_cd || LPAD(CAST(a.dcr01_class_tree_id AS varchar),15,'0')),
+                   a.dcr01_class_tree_nm = any(b.path)
+              FROM dcr01_class_tree a
+                   INNER JOIN dcr_tree b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+             WHERE a.dcr01_company_id = #{companyId}
+               AND a.dcr01_type_cd LIKE #{typeCode}
+               AND NOT cycle
+        )
+        SELECT a.dcr01_class_tree_id AS class_tree_id,
+               a.dcr01_parent_tree_id AS parent_tree_id,
+               a.dcr01_class_tree_nm AS class_tree_name,
+               a.dcr01_type_cd       AS type_code,
+               COALESCE(a.dcr01_use_yn, 'false') AS use_yn,
+               CASE WHEN a.dcr01_type_cd = 'T' THEN COALESCE(apr.apr_count, 0) ELSE NULL END AS appr_count,
+               a.depth - 1           AS depth
+          FROM dcr_tree a
+               LEFT OUTER JOIN ( SELECT apr01_class_tree_id, COUNT(*) AS apr_count
+                                   FROM apr01_appr
+                                  WHERE apr01_company_id = #{companyId}
+                                  GROUP BY apr01_class_tree_id ) apr ON apr.apr01_class_tree_id = a.dcr01_class_tree_id
+         WHERE a.dcr01_type_cd IN ('T','C')
+         ORDER BY a.path
+    </select>
+
+    <!-- 문서구분(T) 한 행의 열 — AS-IS selectByParentId·selectById의 SELECT 목록(dcr01 열 + 이름·건수 계산) -->
+    <sql id="docTypeColumns">
+        a.dcr01_class_tree_id    AS class_tree_id,
+        a.dcr01_company_id       AS company_id,
+        a.dcr01_parent_tree_id   AS parent_tree_id,
+        a.dcr01_class_tree_nm    AS class_tree_name,
+        a.dcr01_class_tree_cd    AS class_tree_code,
+        a.dcr01_seq              AS seq,
+        a.dcr01_note             AS note,
+        COALESCE(a.dcr01_admin_yn, 'false') AS admin_yn,
+        a.dcr01_approval_type_cd AS approval_type_code,
+        f_cdnm('ApprovalTypeCode', a.dcr01_approval_type_cd, a.dcr01_company_id, f_sysdate()) AS approval_type_name,
+        a.dcr01_appr_step_group_id AS appr_step_group_id,
+        ( SELECT apr30_appr_step_group_nm
+            FROM apr30_appr_step_group
+           WHERE apr30_appr_step_group_id = a.dcr01_appr_step_group_id ) AS appr_step_group_name,
+        a.dcr01_seal_cd          AS seal_code,
+        ( SELECT apr10_stamp_nm
+            FROM apr10_stamp
+           WHERE apr10_stamp_id = f_to_number(a.dcr01_seal_cd)
+           LIMIT 1 )             AS seal_name,
+        a.dcr01_comp_yn          AS comp_yn,
+        a.dcr01_mngm_yn          AS mngm_yn,
+        a.dcr01_print_fund_yn    AS print_fund_yn,
+        ( SELECT count(*) || ' 건'
+            FROM dcr06_relate_doc_type, dcr05_doc_type
+           WHERE dcr06_class_tree_id = a.dcr01_class_tree_id
+             AND dcr06_doc_type_id   = dcr05_doc_type_id ) AS form_count_str,
+        ( SELECT count(*) || ' 건'
+            FROM dcr20_relate_ics r
+                 INNER JOIN ics01_class_tree b ON r.dcr20_ics_class_tree_id = b.ics01_class_tree_id
+           WHERE r.dcr20_dcr_class_tree_id = a.dcr01_class_tree_id ) AS ics_count_str,
+        ( SELECT count(*) || ' 건'
+            FROM dcr21_relate_icr r
+                 INNER JOIN icr01_class_tree b ON r.dcr21_icr_class_tree_id = b.icr01_class_tree_id
+           WHERE r.dcr21_dcr_class_tree_id = a.dcr01_class_tree_id ) AS icr_count_str,
+        f_class_tree_nm_allpath(a.dcr01_class_tree_id) AS class_tree_full_name
+    </sql>
+
+    <!-- AS-IS dcr01_class_tree.selectByParentId: 고른 분류의 하위 전체(자기 포함) 중 사용 중인 문서구분(T). 구분코드+문서구분명 LIKE, 조회순 -->
+    <select id="selectDocTypes" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeRowRes">
+        SELECT <include refid="docTypeColumns"/>
+          FROM dcr01_class_tree a
+         WHERE a.dcr01_company_id = #{companyId}
+           AND a.dcr01_class_tree_id IN (
+                WITH RECURSIVE ics_tree_down(dcr01_class_tree_id, dcr01_parent_tree_id, dcr01_class_tree_cd, depth, path, cycle) AS (
+                    SELECT b.dcr01_class_tree_id, b.dcr01_parent_tree_id, b.dcr01_class_tree_cd, 0, ARRAY[b.dcr01_class_tree_cd::text], false
+                      FROM dcr01_class_tree b
+                     WHERE b.dcr01_company_id    = #{companyId}
+                       AND b.dcr01_class_tree_id = #{parentId}
+                    UNION ALL
+                    SELECT b.dcr01_class_tree_id, b.dcr01_parent_tree_id, b.dcr01_class_tree_cd, c.depth + 1,
+                           array_append(c.path, b.dcr01_class_tree_cd::text), b.dcr01_class_tree_cd = any(c.path)
+                      FROM dcr01_class_tree b, ics_tree_down c
+                     WHERE b.dcr01_parent_tree_id = c.dcr01_class_tree_id
+                       AND b.dcr01_company_id     = #{companyId}
+                       AND NOT cycle
+                )
+                SELECT d.dcr01_class_tree_id FROM ics_tree_down d
+           )
+           AND a.dcr01_type_cd LIKE 'T'
+           AND a.dcr01_use_yn = 'true'
+        <if test="searchText != null">
+           AND CONCAT(a.dcr01_class_tree_cd, a.dcr01_class_tree_nm) LIKE #{searchText}
+        </if>
+         ORDER BY a.dcr01_seq
+    </select>
+
+    <!-- AS-IS dcr01_class_tree.selectById (저장 뒤 다시 읽기). 사용 중 조건은 두지 않는다 -->
+    <select id="selectDocTypeById" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeRowRes">
+        SELECT <include refid="docTypeColumns"/>
+          FROM dcr01_class_tree a
+         WHERE a.dcr01_class_tree_id = #{classTreeId}
+    </select>
+
+    <select id="selectTreeRowById" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeRes">
+        SELECT dcr01_class_tree_id    AS class_tree_id,
+               dcr01_company_id       AS company_id,
+               dcr01_parent_tree_id   AS parent_tree_id,
+               dcr01_class_tree_nm    AS class_tree_name,
+               dcr01_class_tree_cd    AS class_tree_code,
+               dcr01_seq              AS seq,
+               dcr01_note             AS note,
+               dcr01_type_cd          AS type_code,
+               COALESCE(dcr01_use_yn, 'false')   AS use_yn,
+               COALESCE(dcr01_admin_yn, 'false') AS admin_yn,
+               NULL::int              AS depth
+          FROM dcr01_class_tree
+         WHERE dcr01_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel(dcr01_class_tree) 새 문서분류(C): 화면이 정하는 값(회사·상위·유형 C·사용 true·관리자 여부) + 편집 창 4칸 -->
+    <insert id="insertClassTree">
+        INSERT INTO dcr01_class_tree (dcr01_class_tree_id, dcr01_company_id, dcr01_class_tree_nm, dcr01_parent_tree_id, dcr01_seq,
+                                      dcr01_note, dcr01_class_tree_cd, dcr01_type_cd, dcr01_use_yn, dcr01_admin_yn)
+        VALUES (#{classTreeId}, #{companyId}, #{req.classTreeName}, #{req.parentTreeId}, #{req.seq},
+                #{req.note}, #{req.classTreeCode}, 'C', 'true', #{adminYn})
+    </insert>
+
+    <update id="updateClassTree">
+        UPDATE dcr01_class_tree
+           SET dcr01_class_tree_nm = #{req.classTreeName},
+               dcr01_class_tree_cd = #{req.classTreeCode},
+               dcr01_seq           = #{req.seq},
+               dcr01_note          = #{req.note}
+         WHERE dcr01_class_tree_id = #{classTreeId}
+           AND dcr01_company_id    = #{companyId}
+    </update>
+
+    <!-- UpdateDataModel(dcr01_class_tree) 새 문서구분(T) -->
+    <insert id="insertDocType">
+        INSERT INTO dcr01_class_tree (dcr01_class_tree_id, dcr01_company_id, dcr01_class_tree_nm, dcr01_parent_tree_id, dcr01_seq,
+                                      dcr01_note, dcr01_class_tree_cd, dcr01_type_cd, dcr01_approval_type_cd, dcr01_seal_cd,
+                                      dcr01_use_yn, dcr01_comp_yn, dcr01_mngm_yn, dcr01_admin_yn, dcr01_print_fund_yn,
+                                      dcr01_appr_step_group_id)
+        VALUES (#{classTreeId}, #{companyId}, #{req.classTreeName}, #{req.parentTreeId}, #{req.seq},
+                #{req.note}, #{req.classTreeCode}, 'T', #{req.approvalTypeCode}, #{req.sealCode},
+                'true', #{req.compYn}, #{req.mngmYn}, #{adminYn}, #{req.printFundYn},
+                #{req.apprStepGroupId})
+    </insert>
+
+    <update id="updateDocType">
+        UPDATE dcr01_class_tree
+           SET dcr01_class_tree_nm      = #{req.classTreeName},
+               dcr01_class_tree_cd      = #{req.classTreeCode},
+               dcr01_note               = #{req.note},
+               dcr01_seq                = #{req.seq},
+               dcr01_approval_type_cd   = #{req.approvalTypeCode},
+               dcr01_appr_step_group_id = #{req.apprStepGroupId},
+               dcr01_seal_cd            = #{req.sealCode},
+               dcr01_comp_yn            = #{req.compYn},
+               dcr01_mngm_yn            = #{req.mngmYn},
+               dcr01_print_fund_yn      = #{req.printFundYn}
+         WHERE dcr01_class_tree_id = #{req.classTreeId}
+           AND dcr01_company_id    = #{companyId}
+    </update>
+
+    <update id="updateParent">
+        UPDATE dcr01_class_tree
+           SET dcr01_parent_tree_id = #{parentTreeId}
+         WHERE dcr01_class_tree_id = #{classTreeId}
+           AND dcr01_company_id    = #{companyId}
+    </update>
+
+    <update id="updateUseYn">
+        UPDATE dcr01_class_tree
+           SET dcr01_use_yn = #{useYn}
+         WHERE dcr01_class_tree_id = #{classTreeId}
+           AND dcr01_company_id    = #{companyId}
+    </update>
+
+    <!-- AS-IS dcr01_class_tree.selectByClassTreeCode (admin 회사의 같은 구분코드) -->
+    <select id="selectAdminByCode" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrAdminTreeRow">
+        SELECT dcr01_class_tree_id  AS class_tree_id,
+               dcr01_parent_tree_id AS parent_tree_id,
+               dcr01_class_tree_nm  AS class_tree_name,
+               dcr01_seq            AS seq,
+               dcr01_note           AS note,
+               dcr01_class_tree_cd  AS class_tree_code,
+               dcr01_type_cd        AS type_code,
+               COALESCE(dcr01_admin_yn, 'false') AS admin_yn
+          FROM dcr01_class_tree
+         WHERE dcr01_company_id = 0
+           AND dcr01_class_tree_cd = #{classTreeCode}
+    </select>
+
+    <!-- AS-IS dcr01_class_tree.selectById 중 updateCheck가 비교하는 열 -->
+    <select id="selectCheckRow" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrAdminTreeRow">
+        SELECT dcr01_class_tree_id  AS class_tree_id,
+               dcr01_parent_tree_id AS parent_tree_id,
+               dcr01_class_tree_nm  AS class_tree_name,
+               dcr01_seq            AS seq,
+               dcr01_note           AS note,
+               dcr01_class_tree_cd  AS class_tree_code,
+               dcr01_type_cd        AS type_code,
+               COALESCE(dcr01_admin_yn, 'false') AS admin_yn
+          FROM dcr01_class_tree
+         WHERE dcr01_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- 자기 자신과 아래 전체 (AS-IS linkCheck·apprCheck·getDownTreeId가 같은 CTE) -->
+    <sql id="downTree">
+        WITH RECURSIVE dcr_down_tree(dcr01_class_tree_id, dcr01_company_id, dcr01_parent_tree_id, depth, path, cycle) AS (
+            SELECT a.dcr01_class_tree_id, a.dcr01_company_id, a.dcr01_parent_tree_id, 1,
+                   ARRAY[a.dcr01_parent_tree_id || a.dcr01_seq::text], false
+              FROM dcr01_class_tree a
+             WHERE a.dcr01_class_tree_id = #{classTreeId}
+            UNION ALL
+            SELECT a.dcr01_class_tree_id, a.dcr01_company_id, a.dcr01_parent_tree_id, b.depth + 1,
+                   array_append(b.path, a.dcr01_parent_tree_id || a.dcr01_seq::text),
+                   a.dcr01_class_tree_nm = any(b.path)
+              FROM dcr01_class_tree a
+                   INNER JOIN dcr_down_tree b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+             WHERE NOT cycle
+        )
+    </sql>
+
+    <!-- AS-IS dcr01_class_tree.linkCheck -->
+    <select id="countLinks" resultType="int">
+        <include refid="downTree"/>
+        SELECT count(*)
+          FROM dcr_down_tree a
+               INNER JOIN dcr30_link ON dcr30_class_tree_id = a.dcr01_class_tree_id
+    </select>
+
+    <!-- AS-IS dcr01_class_tree.apprCheck -->
+    <select id="countApprs" resultType="int">
+        <include refid="downTree"/>
+        SELECT count(*)
+          FROM dcr_down_tree a
+               INNER JOIN apr01_appr ON apr01_class_tree_id = a.dcr01_class_tree_id
+    </select>
+
+    <!-- AS-IS dcr01_class_tree.getDownTreeId -->
+    <select id="selectDownTreeIds" resultType="long">
+        <include refid="downTree"/>
+        SELECT dcr01_class_tree_id FROM dcr_down_tree
+    </select>
+
+    <!-- AS-IS apr01_appr.selectByClassTreeId (SELECT *에서 ID만) -->
+    <select id="selectApprIds" resultType="long">
+        SELECT apr01_appr_id
+          FROM apr01_appr
+         WHERE apr01_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- AS-IS apr01_appr.insertApprDel (열 순서 그대로) -->
+    <insert id="insertApprDel">
+        INSERT INTO apr99_appr_del
+        SELECT f_create_seq()
+             , apr01_appr_id
+             , apr01_title
+             , apr01_reg_date
+             , apr01_status_cd
+             , apr01_content
+             , apr01_note
+             , apr01_reg_emp_id
+             , apr01_effect_date
+             , apr01_class_tree_id
+             , apr01_stamp_id
+             , apr01_receive_nm
+             , apr01_reference_nm
+             , apr01_stamp_seq
+             , apr01_inout_cd
+             , f_sysdate()
+             , #{empId}
+             , apr01_company_id
+             , apr01_form_type
+             , apr01_dcr_id_word
+             , apr01_sign_company
+             , apr01_sign_ceo
+             , apr01_stamp_position
+             , apr01_link_cd
+          FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </insert>
+
+    <delete id="deleteAppr">
+        DELETE FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </delete>
+
+    <!-- AS-IS dcr01_class_tree.insertDcrDel (열 순서 그대로) -->
+    <insert id="insertDcrDel">
+        INSERT INTO dcr99_class_tree_del
+        SELECT f_create_seq()
+             , #{empId}
+             , f_sysdate()
+             , dcr01_class_tree_id
+             , dcr01_company_id
+             , dcr01_class_tree_nm
+             , dcr01_parent_tree_id
+             , dcr01_seq
+             , dcr01_note
+             , dcr01_class_tree_cd
+             , dcr01_type_cd
+             , dcr01_approval_type_cd
+             , dcr01_item_type_cd
+             , dcr01_seal_cd
+             , dcr01_use_yn
+             , dcr01_resrch_use_yn
+             , dcr01_advert_yn
+             , dcr01_comp_yn
+             , dcr01_risk_yn
+             , dcr01_mngm_yn
+             , dcr01_insert_bak_dcr_id
+             , dcr01_admin_yn
+          FROM dcr01_class_tree
+         WHERE dcr01_class_tree_id = #{classTreeId}
+    </insert>
+
+    <delete id="deleteByClassTreeId">
+        DELETE FROM dcr01_class_tree
+         WHERE dcr01_class_tree_id = #{classTreeId}
+    </delete>
+
+    <!-- AS-IS sys01_company.selectByUseYn -->
+    <select id="selectCopyCompanies" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrCopyCompanyRes">
+        SELECT sys01_company_id AS company_id,
+               sys01_company_nm AS company_name,
+               sys01_loc_nm     AS location_name,
+               COALESCE(sys01_ics_guide_yn, 'false') AS ics_guide_yn
+          FROM sys01_company
+         WHERE COALESCE(sys01_use_yn, 'false') = 'true'
+           AND sys01_company_id != 0
+         ORDER BY sys01_company_id
+    </select>
+
+    <!-- AS-IS dcr01_class_tree.selectAdminDcrClassTree: admin 회사에서 고른 분류와 그 조상 (level 큰 쪽 = 위쪽부터) -->
+    <select id="selectAdminTree" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrAdminTreeRow">
+        WITH RECURSIVE dcr_list(dcr01_class_tree_id, dcr01_parent_tree_id, dcr01_level) AS (
+            SELECT dcr01_class_tree_id, dcr01_parent_tree_id, 1
+              FROM dcr01_class_tree
+             WHERE dcr01_company_id    = 0
+               AND dcr01_class_tree_id = #{classTreeId}
+            UNION
+            SELECT a.dcr01_class_tree_id, a.dcr01_parent_tree_id, b.dcr01_level + 1
+              FROM dcr01_class_tree a, dcr_list b
+             WHERE a.dcr01_company_id    = 0
+               AND a.dcr01_class_tree_id = b.dcr01_parent_tree_id
+        )
+        SELECT t.dcr01_class_tree_id  AS class_tree_id,
+               t.dcr01_parent_tree_id AS parent_tree_id,
+               t.dcr01_class_tree_nm  AS class_tree_name,
+               t.dcr01_seq            AS seq,
+               t.dcr01_note           AS note,
+               t.dcr01_class_tree_cd  AS class_tree_code,
+               t.dcr01_type_cd        AS type_code,
+               COALESCE(t.dcr01_admin_yn, 'false') AS admin_yn
+          FROM dcr_list
+               INNER JOIN dcr01_class_tree t ON t.dcr01_class_tree_id = dcr_list.dcr01_class_tree_id
+         ORDER BY dcr_list.dcr01_level DESC
+    </select>
+
+    <!-- AS-IS dcr01_class_tree.selectByInsertBakDcrId (목록 → 건수) -->
+    <select id="countByInsertBak" resultType="int">
+        SELECT count(*)
+          FROM dcr01_class_tree
+         WHERE dcr01_company_id        = #{companyId}
+           AND dcr01_insert_bak_dcr_id = #{insertBakDcrId}
+    </select>
+
+    <!-- AS-IS dcr01_class_tree.insertAdminDcrClassTree (원본은 열 목록 없는 INSERT … SELECT, 열 순서대로 적었다. 앞 19열) -->
+    <insert id="insertAdminTree">
+        INSERT INTO dcr01_class_tree (dcr01_class_tree_id, dcr01_company_id, dcr01_class_tree_nm, dcr01_parent_tree_id, dcr01_seq,
+                                      dcr01_note, dcr01_class_tree_cd, dcr01_type_cd, dcr01_approval_type_cd, dcr01_item_type_cd,
+                                      dcr01_seal_cd, dcr01_use_yn, dcr01_resrch_use_yn, dcr01_advert_yn, dcr01_comp_yn,
+                                      dcr01_risk_yn, dcr01_mngm_yn, dcr01_insert_bak_dcr_id, dcr01_admin_yn)
+        SELECT f_create_seq()
+             , #{companyId}
+             , dcr01_class_tree_nm
+             , CASE WHEN dcr01_parent_tree_id = 0 THEN 0
+                    ELSE ( SELECT b.dcr01_class_tree_id
+                             FROM dcr01_class_tree b
+                            WHERE b.dcr01_company_id        = #{companyId}
+                              AND b.dcr01_insert_bak_dcr_id = a.dcr01_parent_tree_id ) END
+             , dcr01_seq
+             , dcr01_note
+             , dcr01_class_tree_cd
+             , dcr01_type_cd
+             , dcr01_approval_type_cd
+             , dcr01_item_type_cd
+             , null
+             , dcr01_use_yn
+             , dcr01_resrch_use_yn
+             , dcr01_advert_yn
+             , dcr01_comp_yn
+             , dcr01_risk_yn
+             , dcr01_mngm_yn
+             , dcr01_class_tree_id
+             , 'true'
+          FROM dcr01_class_tree a
+         WHERE dcr01_company_id    = 0
+           AND dcr01_class_tree_id = #{classTreeId}
+    </insert>
+
+    <!-- AS-IS dcr01_class_tree.updateAdminDcrClassTree -->
+    <update id="updateAdminTree">
+        UPDATE dcr01_class_tree
+           SET dcr01_class_tree_nm  = #{row.classTreeName}
+             , dcr01_parent_tree_id = CASE WHEN dcr01_parent_tree_id = 0 THEN 0
+                                           ELSE ( SELECT dcr01_class_tree_id
+                                                    FROM dcr01_class_tree
+                                                   WHERE dcr01_company_id        = #{companyId}
+                                                     AND dcr01_insert_bak_dcr_id = #{row.parentTreeId} ) END
+             , dcr01_seq            = #{row.seq}
+             , dcr01_note           = #{row.note}
+             , dcr01_class_tree_cd  = #{row.classTreeCode}
+             , dcr01_type_cd        = #{row.typeCode}
+         WHERE dcr01_company_id        = #{companyId}
+           AND dcr01_insert_bak_dcr_id = #{insertBakDcrId}
+           AND COALESCE(dcr01_admin_yn, 'false') = 'true'
+    </update>
+
+    <!-- AS-IS dcr20_relate_ics.deleteByInsertBakDcrId -->
+    <delete id="deleteRelateIcsByInsertBak">
+        DELETE FROM dcr20_relate_ics
+         WHERE dcr20_company_id = #{companyId}
+           AND dcr20_dcr_class_tree_id IN ( SELECT dcr01_class_tree_id
+                                              FROM dcr01_class_tree
+                                             WHERE dcr01_company_id        = #{companyId}
+                                               AND dcr01_insert_bak_dcr_id = #{insertBakDcrId} )
+    </delete>
+
+    <!-- AS-IS dcr20_relate_ics.insertByInsertBakDcrId (열 순서: id, 문서분류, 내부통제, 회사, 비고) -->
+    <insert id="insertRelateIcsByInsertBak">
+        INSERT INTO dcr20_relate_ics (dcr20_relate_ics_id, dcr20_dcr_class_tree_id, dcr20_ics_class_tree_id, dcr20_company_id, dcr20_note)
+        SELECT f_create_seq()
+             , ( SELECT dcr01_class_tree_id
+                   FROM dcr01_class_tree
+                  WHERE dcr01_company_id        = #{companyId}
+                    AND dcr01_insert_bak_dcr_id = #{insertBakDcrId} )
+             , dcr20_ics_class_tree_id
+             , #{companyId}
+             , dcr20_note
+          FROM dcr20_relate_ics
+         WHERE dcr20_company_id        = 0
+           AND dcr20_dcr_class_tree_id = #{insertBakDcrId}
+    </insert>
+
+    <!-- AS-IS dcr01_class_tree.getAdminYn -->
+    <select id="selectAdminCopiesByCode" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeRes">
+        SELECT dcr01_class_tree_id    AS class_tree_id,
+               dcr01_company_id       AS company_id,
+               dcr01_parent_tree_id   AS parent_tree_id,
+               dcr01_class_tree_nm    AS class_tree_name,
+               dcr01_class_tree_cd    AS class_tree_code,
+               dcr01_seq              AS seq,
+               dcr01_note             AS note,
+               dcr01_type_cd          AS type_code,
+               COALESCE(dcr01_use_yn, 'false')   AS use_yn,
+               COALESCE(dcr01_admin_yn, 'false') AS admin_yn,
+               NULL::int              AS depth
+          FROM dcr01_class_tree
+         WHERE dcr01_class_tree_cd = #{classTreeCode}
+           AND dcr01_admin_yn = 'true'
+           AND dcr01_company_id NOT IN (0)
+    </select>
+
+    <select id="selectErpProductCode" resultType="string">
+        SELECT sys01_erp_product_cd
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
 </mapper>

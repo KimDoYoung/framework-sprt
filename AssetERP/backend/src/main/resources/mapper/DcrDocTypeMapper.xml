@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/dcr/mapper/dcr05_doc_type.xml + UpdateDataModel(dcr05_doc_type) (E16) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.dcr.mapper.DcrDocTypeMapper">
+
+    <!-- AS-IS dcr05_doc_type.selectByName (SELECT a.*를 DTO 열로) -->
+    <select id="selectByName" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeRes">
+        SELECT a.dcr05_doc_type_id       AS doc_type_id,
+               a.dcr05_company_id        AS company_id,
+               a.dcr05_title             AS title,
+               a.dcr05_content           AS content,
+               a.dcr05_note              AS note,
+               a.dcr05_doc_form_class_cd AS doc_form_class_code,
+               b.sys09_name              AS doc_form_class_name
+          FROM dcr05_doc_type a
+               INNER JOIN (
+                    SELECT c.*
+                      FROM sys08_code_kind
+                           INNER JOIN sys09_code c ON sys09_code_kind_id = sys08_code_kind_id AND sys09_company_id = #{companyId}
+                     WHERE sys08_kind_cd = 'DocFormClassCode'
+                       AND sys09_apply_date = (
+                            SELECT MAX(sys09_apply_date)
+                              FROM sys09_code
+                             WHERE sys09_code_kind_id = sys08_code_kind_id
+                               AND sys09_company_id   = #{companyId}
+                               AND sys09_code         = c.sys09_code
+                               AND sys09_apply_date  &lt;= f_today()
+                       )
+               ) b ON b.sys09_code = a.dcr05_doc_form_class_cd
+         WHERE a.dcr05_company_id = #{companyId}
+           AND a.dcr05_doc_form_class_cd LIKE #{formClassCode}
+           AND UPPER(CONCAT(a.dcr05_title, a.dcr05_note)) LIKE UPPER(#{titleName})
+         ORDER BY COALESCE(LPAD(b.sys09_seq,3,'0'),'000'), b.sys09_code, a.dcr05_title
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeRes">
+        SELECT a.dcr05_doc_type_id       AS doc_type_id,
+               a.dcr05_company_id        AS company_id,
+               a.dcr05_title             AS title,
+               a.dcr05_content           AS content,
+               a.dcr05_note              AS note,
+               a.dcr05_doc_form_class_cd AS doc_form_class_code,
+               ( SELECT c.sys09_name
+                   FROM sys08_code_kind
+                        INNER JOIN sys09_code c ON sys09_code_kind_id = sys08_code_kind_id AND sys09_company_id = #{companyId}
+                  WHERE sys08_kind_cd = 'DocFormClassCode'
+                    AND c.sys09_code  = a.dcr05_doc_form_class_cd
+                  ORDER BY c.sys09_apply_date DESC
+                  LIMIT 1 )              AS doc_form_class_name
+          FROM dcr05_doc_type a
+         WHERE a.dcr05_doc_type_id = #{docTypeId}
+    </select>
+
+    <update id="updateEdit">
+        UPDATE dcr05_doc_type
+           SET dcr05_title             = #{req.title},
+               dcr05_content           = #{req.content},
+               dcr05_note              = #{req.note},
+               dcr05_doc_form_class_cd = #{req.docFormClassCode}
+         WHERE dcr05_doc_type_id = #{docTypeId}
+           AND dcr05_company_id  = #{companyId}
+    </update>
+</mapper>

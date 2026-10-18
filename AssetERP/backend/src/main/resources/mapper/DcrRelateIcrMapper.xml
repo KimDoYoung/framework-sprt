@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/dcr/mapper/dcr21_relate_icr.xml + UpdateDataModel(dcr21_relate_icr) (E16) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.dcr.mapper.DcrRelateIcrMapper">
+
+    <!-- AS-IS selectByDcrClassTreeId의 SELECT a.*, b.*를 DTO 열로. 기한 요약(icr01_cycle_nm)은 원본 그대로 -->
+    <sql id="relateColumns">
+        a.dcr21_relate_icr_id       AS relate_icr_id,
+        a.dcr21_dcr_class_tree_id   AS dcr_class_tree_id,
+        a.dcr21_icr_class_tree_id   AS icr_class_tree_id,
+        f_icr_class_tree_nm_allpath(b.icr01_class_tree_id) AS class_tree_full_name,
+        b.icr01_content             AS content,
+        b.icr01_submit_to           AS submit_to,
+        ( SELECT CASE WHEN COUNT(*) = 1
+                      THEN MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate()))
+                      ELSE MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate())) || ' 외 ' || COUNT(sch03_deadline.*) - 1 || '건'
+                 END
+            FROM sch03_deadline
+           WHERE sch03_schedule_cd IN ('6','7')
+             AND b.icr01_class_tree_id = sch03_info_id
+             AND b.icr01_company_id    = sch03_company_id
+           LIMIT 1 )                AS cycle_name,
+        b.icr01_related_law         AS related_law,
+        b.icr01_class_tree_cd       AS class_tree_code,
+        a.dcr21_note                AS note
+    </sql>
+
+    <select id="selectByDcrClassTreeId" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrRelateIcrRes">
+        SELECT <include refid="relateColumns"/>
+          FROM dcr21_relate_icr a
+               INNER JOIN icr01_class_tree b ON a.dcr21_icr_class_tree_id = b.icr01_class_tree_id
+         WHERE a.dcr21_dcr_class_tree_id = #{dcrClassTreeId}
+         ORDER BY a.dcr21_relate_icr_id
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrRelateIcrRes">
+        SELECT <include refid="relateColumns"/>
+          FROM dcr21_relate_icr a
+               INNER JOIN icr01_class_tree b ON a.dcr21_icr_class_tree_id = b.icr01_class_tree_id
+         WHERE a.dcr21_relate_icr_id = #{relateIcrId}
+    </select>
+
+    <select id="selectByIds" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrRelateIcrRes">
+        SELECT <include refid="relateColumns"/>
+          FROM dcr21_relate_icr a
+               INNER JOIN icr01_class_tree b ON a.dcr21_icr_class_tree_id = b.icr01_class_tree_id
+         WHERE a.dcr21_company_id = #{companyId}
+           AND a.dcr21_relate_icr_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO dcr21_relate_icr (dcr21_relate_icr_id, dcr21_dcr_class_tree_id, dcr21_icr_class_tree_id, dcr21_company_id, dcr21_note)
+        VALUES (#{relateIcrId}, #{dcrClassTreeId}, #{icrClassTreeId}, #{companyId}, #{note})
+    </insert>
+
+    <!-- AS-IS dcr21_relate_icr.deleteAll -->
+    <delete id="deleteAll">
+        DELETE FROM dcr21_relate_icr
+         WHERE dcr21_dcr_class_tree_id = #{dcrClassTreeId}
+           AND dcr21_icr_class_tree_id = #{icrClassTreeId}
+           AND dcr21_company_id        = #{companyId}
+    </delete>
+
+    <delete id="deleteByIds">
+        DELETE FROM dcr21_relate_icr
+         WHERE dcr21_company_id = #{companyId}
+           AND dcr21_relate_icr_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

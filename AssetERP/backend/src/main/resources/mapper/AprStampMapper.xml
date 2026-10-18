@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr10_stamp.xml selectBySearchText2 (E16, Apr10_Lookup_DocStamp) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprStampMapper">
+
+    <!-- AS-IS apr10_stamp.selectBySearchText2 (SELECT a.*를 DTO 열로) -->
+    <select id="selectBySearchText2" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStampRes">
+        SELECT a.apr10_stamp_id AS stamp_id,
+               a.apr10_stamp_id || '' AS stamp_id_string,
+               a.apr10_stamp_nm AS stamp_name,
+               a.apr10_use_nm   AS use_name,
+               f_org_nm(a.apr10_org_id, COALESCE(a.apr10_close_date, to_date('99991231','yyyymmdd'))) AS org_name
+          FROM apr10_stamp a
+         WHERE a.apr10_company_id = #{companyId}
+           AND a.apr10_stamp_id NOT IN (
+                    SELECT dcr40_stamp_id
+                      FROM dcr40_stamp_auth
+                     WHERE dcr40_class_tree_id = #{classTreeId}
+                       AND COALESCE(dcr40_except_yn, 'false') = 'true'
+               )
+           AND UPPER(CONCAT(a.apr10_stamp_nm, a.apr10_use_nm, a.apr10_note,
+                            f_org_nm(a.apr10_org_id, COALESCE(a.apr10_close_date, to_date('99991231','yyyymmdd'))))) LIKE UPPER(#{searchText})
+           AND (
+                    a.apr10_all_use_yn = 'true'
+                    OR
+                    a.apr10_stamp_id IN (
+                            SELECT org10_stamp_id
+                              FROM org10_role_stamp
+                             WHERE org10_org_code_id = #{orgId}
+                       )
+               )
+           AND f_today() BETWEEN a.apr10_start_date AND COALESCE(a.apr10_close_date, to_date('29991231','yyyymmdd'))
+         ORDER BY a.apr10_stamp_nm
+    </select>
+
+    <select id="selectOrgCodeId" resultType="long">
+        SELECT emp03_org_code_id
+          FROM emp03_trans
+         WHERE emp03_person_id = #{personId}
+           AND emp03_trans_cd != '800'
+         ORDER BY emp03_trans_date DESC
+         LIMIT 1
+    </select>
+</mapper>
