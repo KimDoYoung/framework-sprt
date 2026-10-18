@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/sys/mapper/sys99_print.xml (E15 책무마감 검증)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmDutyReconMapper">
+
+    <!-- AS-IS(IDMS-IC) sys99_print.insertReconTdm L303 — 그대로(기준일은 date로 바꿔 넘김) -->
+    <select id="insertReconTdm" resultType="java.lang.String">
+        SELECT  f_recon_tdm(#{windowClassName}, CAST(#{baseDate} AS DATE), #{companyId}, #{groupId})
+    </select>
+
+    <!--
+      AS-IS(IDMS-IC) sys99_print.selectByWindowClassName L283
+      수정: ORDER BY의 COLLATE "ko_KR.utf8" → "ko-KR-x-icu"(05 §6), SELECT *를 그리드 열(DB_CHK 결과 컬럼, f_recon_tdm 머리 주석)로
+    -->
+    <select id="selectByWindowClassName" resultType="kr.co.kfs.asseterp.biz.tdm.dto.DutyReconRes">
+        SELECT  sys99_print_id          AS print_id
+             ,  CASE WHEN sys99_company_id = 0
+                     THEN '-'
+                     ELSE f_get_company_nm(sys99_company_id)
+                END                     AS company_name
+             ,  sys99_string01          AS string01
+             ,  sys99_string02          AS string02
+             ,  sys99_string03          AS string03
+          FROM  sys99_print
+         WHERE  1=1
+           AND  sys99_group_id = #{groupId}
+           AND  sys99_window_class_nm = #{windowClassName}
+         ORDER BY CASE WHEN sys99_company_id = 0 THEN 1 ELSE 2 END
+                , sys99_string01 COLLATE "ko-KR-x-icu"
+                , sys99_company_id
+                , sys99_string02 COLLATE "ko-KR-x-icu"
+    </select>
+</mapper>

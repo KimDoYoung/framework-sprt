@@ -44,6 +44,59 @@ export interface TdmRoleDigm {
   roleDigmFileId?: number | null;
 }
 
+/** 책무진행 상태 한 행 (AS-IS Sys99_PrintModel 중 Tdm50_Tab_DutyProgressAdmin 그리드에 쓰는 속성, f_recon_tdm 'CHCK_STATUS' 결과). m00~m11은 조회 기준월부터 12개월 */
+export interface TdmDutyProgress {
+  printId: number;
+  companyName?: string | null;
+  roleName?: string | null;
+  exctName?: string | null;
+  orgName?: string | null;
+  name1454?: string | null;
+  apprList1463?: string | null;
+  manlCnt?: number | null;
+  endCnt?: number | null;
+  lockCnt?: number | null;
+  approveCnt?: number | null;
+  unusedCnt?: number | null;
+  manlAnnually?: number | null;
+  manlSemiannually?: number | null;
+  manlQuarterly?: number | null;
+  manlMonthly?: number | null;
+  manlAnytime?: number | null;
+  manlEtc?: number | null;
+  thisMonthYn?: string | null;
+  nextMonthYn?: string | null;
+  m00Cnt?: number | null;
+  m01Cnt?: number | null;
+  m02Cnt?: number | null;
+  m03Cnt?: number | null;
+  m04Cnt?: number | null;
+  m05Cnt?: number | null;
+  m06Cnt?: number | null;
+  m07Cnt?: number | null;
+  m08Cnt?: number | null;
+  m09Cnt?: number | null;
+  m10Cnt?: number | null;
+  m11Cnt?: number | null;
+  itemCnt1455?: number | null;
+  checker1456?: string | null;
+  apprList1456?: string | null;
+  apprStatus?: string | null;
+  exctApproveYn?: string | null;
+  chckLockYn?: string | null;
+  chckCloseYn?: string | null;
+  chckApprStatus?: string | null;
+}
+
+/** 책무마감 검증 한 행 (AS-IS Sys99_PrintModel 중 Tdm50_Tab_DutyReconAdmin 그리드에 쓰는 속성, f_recon_tdm 'DB_CHK' 결과) */
+export interface TdmDutyRecon {
+  printId: number;
+  companyName?: string | null;
+  string01?: string | null;
+  string02?: string | null;
+  string03?: string | null;
+}
+
 /** 부서 책무매뉴얼 한 행 (AS-IS Tdm42_ManlOrgModel 중 Tdm42_Tab_ManlManagerAdmin 그리드·재생성·보기·점검항목 조회창에 쓰는 속성) */
 export interface TdmManlOrg {
   manlOrgId: number;

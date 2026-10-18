@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/sys/mapper/sys99_print.xml (E14 책무진행 상태)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmDutyProgressMapper">
+
+    <!-- AS-IS(IDMS-IC) sys99_print.insertReconTdm L303 — 그대로(기준일은 date로 바꿔 넘김) -->
+    <select id="insertReconTdm" resultType="java.lang.String">
+        SELECT  f_recon_tdm(#{windowClassName}, CAST(#{baseDate} AS DATE), #{companyId}, #{groupId})
+    </select>
+
+    <!--
+      AS-IS(IDMS-IC) sys99_print.selectByWindowClassName L283
+      수정: ORDER BY의 COLLATE "ko_KR.utf8" → "ko-KR-x-icu"(이 DB에 없음, 05 §6), SELECT *를 그리드 열(CHCK_STATUS 결과 컬럼, f_recon_tdm 머리 주석)로
+    -->
+    <select id="selectByWindowClassName" resultType="kr.co.kfs.asseterp.biz.tdm.dto.DutyProgressRes">
+        SELECT  sys99_print_id          AS print_id
+             ,  sys99_string01          AS company_name
+             ,  sys99_string02          AS role_name
+             ,  sys99_string03          AS exct_name
+             ,  sys99_string04          AS org_name
+             ,  sys99_string05          AS name1454
+             ,  sys99_string06          AS appr_list1463
+             ,  sys99_long01            AS manl_cnt
+             ,  sys99_long02            AS end_cnt
+             ,  sys99_long03            AS lock_cnt
+             ,  sys99_long04            AS approve_cnt
+             ,  sys99_long05            AS unused_cnt
+             ,  sys99_long06            AS manl_annually
+             ,  sys99_long07            AS manl_semiannually
+             ,  sys99_long08            AS manl_quarterly
+             ,  sys99_long09            AS manl_monthly
+             ,  sys99_long10            AS manl_anytime
+             ,  sys99_long11            AS manl_etc
+             ,  sys99_string07          AS this_month_yn
+             ,  sys99_string08          AS next_month_yn
+             ,  sys99_long21            AS m00_cnt
+             ,  sys99_long22            AS m01_cnt
+             ,  sys99_long23            AS m02_cnt
+             ,  sys99_long24            AS m03_cnt
+             ,  sys99_long25            AS m04_cnt
+             ,  sys99_long26            AS m05_cnt
+             ,  sys99_long27            AS m06_cnt
+             ,  sys99_long28            AS m07_cnt
+             ,  sys99_long29            AS m08_cnt
+             ,  sys99_long30            AS m09_cnt
+             ,  sys99_long31            AS m10_cnt
+             ,  sys99_long32            AS m11_cnt
+             ,  sys99_long33            AS item_cnt1455
+             ,  sys99_string11          AS checker1456
+             ,  sys99_string12          AS appr_list1456
+             ,  sys99_string13          AS appr_status
+             ,  sys99_string14          AS exct_approve_yn
+             ,  sys99_string15          AS chck_lock_yn
+             ,  sys99_string16          AS chck_close_yn
+             ,  sys99_string17          AS chck_appr_status
+          FROM  sys99_print
+         WHERE  1=1
+           AND  sys99_group_id = #{groupId}
+           AND  sys99_window_class_nm = #{windowClassName}
+         ORDER BY CASE WHEN sys99_company_id = 0 THEN 1 ELSE 2 END
+                , sys99_string01 COLLATE "ko-KR-x-icu"
+                , sys99_company_id
+                , sys99_string02 COLLATE "ko-KR-x-icu"
+    </select>
+</mapper>

@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { Manl, ManlRelateIcs, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmManlSaveReq, TdmRoleDesc, TdmRoleDigm } from '../types/tdm';
+import { Manl, ManlRelateIcs, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmManlSaveReq, TdmRoleDesc, TdmRoleDigm } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
 export const tdmApi = {
@@ -60,6 +60,32 @@ export const tdmApi = {
   /** 한 건 재생성 (AS-IS createRd 한 건 분량). RD 연동이 없는 동안 서버가 거절한다 */
   recreateRoleDigm: async (roleDigmId: number): Promise<void> => {
     await apiClient.post<ApiResponse<null>>(`v1/tdm/role-digms/${roleDigmId}/recreate`);
+  },
+
+  // ── E15 책무마감 검증(Tdm50_Tab_DutyReconAdmin) ──
+
+  /** AS-IS sys.Sys99_Print.insertReconTdm(windowClassName "DB_CHK"): 사용자 몫의 점검 행을 기준월(그 달 1일)로 다시 만든다 (companyId 0 = 전체, KFS 관리자 외에는 로그인 회사) */
+  createDutyReconData: async (p: { companyId?: number; baseDate: string }): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>('v1/tdm/duty-recon/data', null, { params: p });
+  },
+
+  /** AS-IS sys.Sys99_Print.selectByWindowClassName: createDutyReconData가 만든 행 */
+  searchDutyRecon: async (): Promise<TdmDutyRecon[]> => {
+    const res = await apiClient.get<ApiResponse<TdmDutyRecon[]>>('v1/tdm/duty-recon');
+    return res.data.data ?? [];
+  },
+
+  // ── E14 책무진행 상태(Tdm50_Tab_DutyProgressAdmin) ──
+
+  /** AS-IS sys.Sys99_Print.insertReconTdm: 사용자 몫의 점검상태 행을 기준월(그 달 1일)로 다시 만든다 (companyId 0 = 전체, KFS 관리자 외에는 로그인 회사) */
+  createDutyProgressData: async (p: { companyId?: number; baseDate: string }): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>('v1/tdm/duty-progress/data', null, { params: p });
+  },
+
+  /** AS-IS sys.Sys99_Print.selectByWindowClassName: createDutyProgressData가 만든 행 */
+  searchDutyProgress: async (): Promise<TdmDutyProgress[]> => {
+    const res = await apiClient.get<ApiResponse<TdmDutyProgress[]>>('v1/tdm/duty-progress');
+    return res.data.data ?? [];
   },
 
   // ── E13 책무매뉴얼 재생성(Tdm42_Tab_ManlManagerAdmin) · 점검항목 조회창(Tdm43_Lookup_ManlItem) ──
