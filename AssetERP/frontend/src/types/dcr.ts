@@ -170,3 +170,27 @@ export interface DcrDocTypeUpdateReq {
   note: string | null;
   docFormClassCode: string | null;
 }
+
+// ── E17 문서분류지정 (Dcr30_Tab_LinkAdmin) ──
+
+/** Link 한 행 (AS-IS Dcr30_LinkModel — dcr30_link.selectBySearchId) */
+export interface DcrLink {
+  linkId: number;
+  linkCode: string;
+  linkName: string;
+  companyId: number;
+  classTreeId?: number | null;
+  classTreeFullName?: string | null;
+  formMappingId?: number | null;
+  /** A 데이터연결 지원 고정 · B 양식 있음 · ' ' 양식 없음 */
+  gubun?: string | null;
+  note?: string | null;
+}
+
+/** 저장할 때 보내는 열 (UpdateDataModel(dcr30_link)이 바꾸는 문서분류ID·비고) */
+export interface DcrLinkSaveReq {
+  linkId: number;
+  classTreeId?: number | null;
+  note?: string | null;
+}
+

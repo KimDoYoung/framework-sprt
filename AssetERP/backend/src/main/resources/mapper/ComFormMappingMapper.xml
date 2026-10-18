@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/com/mapper/com10_form_mapping.xml(selectById) + dcr30_link.updateFormMappingId + UpdateDataModel(com10_form_mapping)
+  (E17 Com10_Lookup_CommonMapping)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.com.mapper.ComFormMappingMapper">
+
+    <!-- AS-IS(IDMS-IC) com10_form_mapping.selectById (SELECT *는 DTO 열로 명시) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.com.dto.FormMappingRes">
+        SELECT com10_form_mapping_id            AS form_mapping_id,
+               com10_company_id                 AS company_id,
+               COALESCE(dcr30_link_cd, '0')     AS link_code,
+               com10_title                      AS title,
+               com10_content                    AS content,
+               com10_default_yn                 AS default_yn,
+               com10_note                       AS note
+          FROM com10_form_mapping
+               INNER JOIN dcr30_link ON dcr30_form_mapping_id = com10_form_mapping_id
+         WHERE 1=1
+           AND com10_form_mapping_id = #{formMappingId}
+    </select>
+
+    <select id="selectCompanyIdById" resultType="long">
+        SELECT com10_company_id
+          FROM com10_form_mapping
+         WHERE com10_form_mapping_id = #{formMappingId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel(com10_form_mapping) INSERT: 이 화면이 채우는 열(번호·회사·내용)만 -->
+    <insert id="insertFormMapping">
+        INSERT INTO com10_form_mapping (com10_form_mapping_id, com10_company_id, com10_content)
+        VALUES (#{formMappingId}, #{companyId}, #{content})
+    </insert>
+
+    <!-- UpdateDataModel(com10_form_mapping) UPDATE: 내용만 -->
+    <update id="updateContent">
+        UPDATE com10_form_mapping
+           SET com10_content = #{content}
+         WHERE com10_form_mapping_id = #{formMappingId}
+    </update>
+
+    <select id="selectLinkCompanyId" resultType="long">
+        SELECT dcr30_company_id
+          FROM dcr30_link
+         WHERE dcr30_link_id = #{linkId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) dcr30_link.updateFormMappingId -->
+    <update id="updateFormMappingId">
+        UPDATE dcr30_link
+           SET dcr30_form_mapping_id = #{formMappingId}
+         WHERE dcr30_link_id = #{linkId}
+    </update>
+</mapper>

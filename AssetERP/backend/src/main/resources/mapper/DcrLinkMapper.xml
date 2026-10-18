@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/dcr/mapper/dcr30_link.xml + dcr03_org_auth.xml(update·updateByBakDcr) + sys01_company.selectByAll + sys09_code.linkCheck
+  + com10_form_mapping.insertForm (E17 Dcr30_Tab_LinkAdmin)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.dcr.mapper.DcrLinkMapper">
+
+    <!-- AS-IS(IDMS-IC) sys01_company.selectByAll (id만) -->
+    <select id="selectCompanyIds" resultType="long">
+        SELECT sys01_company_id
+          FROM sys01_company
+         ORDER BY sys01_company_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys09_code.linkCheck (sys09_code.* → 코드만) -->
+    <select id="selectLinkCodes" resultType="string">
+        SELECT sys09_code
+          FROM sys09_code
+               INNER JOIN sys08_code_kind ON sys09_code_kind_id = sys08_code_kind_id
+         WHERE sys08_kind_cd = #{kindCode}
+         ORDER BY sys09_seq
+    </select>
+
+    <!-- AS-IS(IDMS-IC) dcr30_link.selectByLinkCode (행 수만) -->
+    <select id="countByLinkCode" resultType="int">
+        SELECT COUNT(*)
+          FROM dcr30_link
+         WHERE dcr30_company_id = #{companyId}
+           AND dcr30_link_cd    = #{linkCode}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS(IDMS-IC) dcr30_link.insert -->
+    <insert id="insertLink">
+        INSERT INTO dcr30_link
+               (dcr30_link_id, dcr30_link_cd, dcr30_class_tree_id, dcr30_company_id)
+        VALUES (#{linkId}, #{linkCode}, NULL, #{companyId})
+    </insert>
+
+    <sql id="linkColumns">
+        dcr30_link_id                                   AS link_id,
+        dcr30_link_cd                                   AS link_code,
+        sys09_name                                      AS link_name,
+        dcr30_company_id                                AS company_id,
+        dcr30_class_tree_id                             AS class_tree_id,
+        f_class_tree_nm_allpath(dcr30_class_tree_id)    AS class_tree_full_name,
+        dcr30_form_mapping_id                           AS form_mapping_id,
+        CASE WHEN dcr30_link_cd IN ('A02','A05','A08','A09','A13','A24','A25','A26','A27','A29','A30','A34','B05','B06')
+             THEN 'A'
+             WHEN dcr30_form_mapping_id IS NULL
+             THEN ' '
+             ELSE 'B'
+        END                                             AS gubun,
+        dcr30_note                                      AS note
+    </sql>
+
+    <sql id="linkFrom">
+          FROM dcr30_link
+               INNER JOIN ( SELECT sys09_code.*
+                              FROM sys08_code_kind
+                                   INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+                             WHERE sys08_kind_cd    = 'LinkCode'
+                               AND sys09_company_id = 0 ) sys ON sys09_code = dcr30_link_cd
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) dcr30_link.selectBySearchId (SELECT *는 DTO 열로 명시) -->
+    <select id="selectBySearchId" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkRes">
+        SELECT <include refid="linkColumns"/>
+        <include refid="linkFrom"/>
+         WHERE 1=1
+           AND dcr30_company_id = #{companyId}
+           AND CONCAT(sys09_name, f_class_tree_nm_allpath(dcr30_class_tree_id)) LIKE #{searchText}
+         ORDER BY sys09_seq, link_name
+    </select>
+
+    <!-- AS-IS(IDMS-IC) dcr30_link.selectById (UpdateDataModel 뒤 다시 읽기) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkRes">
+        SELECT <include refid="linkColumns"/>
+        <include refid="linkFrom"/>
+         WHERE dcr30_link_id = #{linkId}
+    </select>
+
+    <select id="selectLinkCompanyId" resultType="long">
+        SELECT dcr30_company_id
+          FROM dcr30_link
+         WHERE dcr30_link_id = #{linkId}
+    </select>
+
+    <!-- UpdateDataModel(dcr30_link): 화면이 바꾸는 열(문서분류ID·비고)만. 회사 조건을 더했다 -->
+    <update id="updateLinkRow">
+        UPDATE dcr30_link
+           SET dcr30_class_tree_id = #{classTreeId},
+               dcr30_note          = #{note}
+         WHERE dcr30_link_id    = #{linkId}
+           AND dcr30_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) dcr30_link.updateNote -->
+    <update id="updateNote">
+        UPDATE dcr30_link
+           SET dcr30_note = #{note}
+         WHERE dcr30_link_id = #{linkId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) dcr30_link.selectByCompanyId (문서분류ID만) -->
+    <select id="selectClassTreeIdsByCompanyId" resultType="long">
+        SELECT dcr30_class_tree_id
+        <include refid="linkFrom"/>
+         WHERE 1=1
+           AND dcr30_company_id = #{companyId}
+         ORDER BY sys09_seq, sys09_name
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys01_company.selectById (dcrDetailUseYn만) -->
+    <select id="selectDcrDetailUseYn" resultType="string">
+        SELECT sys01_dcr_detail_use_yn
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) dcr03_org_auth.update -->
+    <update id="updateOrgAuth">
+        UPDATE dcr03_org_auth
+           SET dcr03_update_yn = 'false'
+         WHERE dcr03_class_tree_id = #{classTreeId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) dcr03_org_auth.updateByBakDcr -->
+    <update id="updateOrgAuthByBakDcr">
+        UPDATE dcr03_org_auth
+           SET dcr03_update_yn = 'false'
+         WHERE dcr03_class_tree_id = ( SELECT dcr01_class_tree_id
+                                         FROM dcr01_class_tree
+                                        WHERE dcr01_company_id = #{companyId}
+                                          AND dcr01_insert_bak_dcr_id = #{classTreeId} )
+    </update>
+
+    <!-- AS-IS(IDMS-IC) dcr30_link.updateLink -->
+    <insert id="upsertLink">
+        WITH upsert AS ( UPDATE dcr30_link
+                            SET dcr30_class_tree_id = ( SELECT dcr01_class_tree_id
+                                                          FROM dcr01_class_tree
+                                                         WHERE dcr01_company_id = #{companyId}
+                                                           AND dcr01_insert_bak_dcr_id = #{classTreeId} ),
+                                dcr30_note = #{note}
+                          WHERE dcr30_company_id = #{companyId}
+                            AND dcr30_link_cd    = #{linkCode}
+                      RETURNING * )
+        INSERT INTO dcr30_link
+        SELECT f_create_seq(),
+               #{linkCode},
+               ( SELECT dcr01_class_tree_id
+                   FROM dcr01_class_tree
+                  WHERE dcr01_company_id = #{companyId}
+                    AND dcr01_insert_bak_dcr_id = #{classTreeId} ),
+               #{companyId},
+               #{formMappingId},
+               #{note}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) dcr30_link.updateFormDcr30 -->
+    <insert id="upsertFormLink">
+        WITH upsert AS ( UPDATE dcr30_link
+                            SET dcr30_form_mapping_id = #{formMappingId}
+                          WHERE dcr30_company_id = #{companyId}
+                            AND dcr30_link_cd    = #{linkCode}
+                      RETURNING * )
+        INSERT INTO dcr30_link
+        SELECT f_create_seq(),
+               #{linkCode},
+               ( SELECT dcr01_class_tree_id
+                   FROM dcr01_class_tree
+                  WHERE dcr01_company_id = #{companyId}
+                    AND dcr01_insert_bak_dcr_id = #{classTreeId} ),
+               #{companyId},
+               #{formMappingId},
+               #{note}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) com10_form_mapping.insertForm -->
+    <insert id="insertForm">
+        INSERT INTO com10_form_mapping
+        SELECT #{formMappingId},
+               #{companyId},
+               a.com10_title,
+               a.com10_content,
+               a.com10_default_yn,
+               a.com10_note
+          FROM com10_form_mapping a
+               INNER JOIN dcr30_link b ON b.dcr30_company_id = 0 AND a.com10_form_mapping_id = b.dcr30_form_mapping_id
+         WHERE com10_company_id = 0
+           AND dcr30_link_cd    = #{linkCode}
+    </insert>
+</mapper>

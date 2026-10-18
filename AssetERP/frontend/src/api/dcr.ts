@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import {
   DcrCheckRes, DcrCheckRowReq, DcrClassDetail, DcrClassTree, DcrClassTreeAll, DcrClassTreeLookup, DcrClassTreeSaveReq,
-  DcrCopyCompany, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrRelateDocType, DcrRelateIcr,
+  DcrCopyCompany, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrLink, DcrLinkSaveReq, DcrRelateDocType, DcrRelateIcr,
   DcrRelateIcs, DcrRelateSaveReq, DcrUseYnReq,
 } from '../types/dcr';
 
@@ -16,9 +16,9 @@ export const dcrApi = {
 
   // ── E16 문서분류 (Dcr01_Tab_ClassTree 외) ──
 
-  /** AS-IS dcr.Dcr01_ClassTree.selectByCompanyId: 사용 중인 분류 트리(전위 순서, depth). typeCode 기본 'C', 이동·반영 창은 '%' */
-  searchClassTree: async (typeCode = 'C'): Promise<DcrClassTree[]> => {
-    const res = await apiClient.get<ApiResponse<DcrClassTree[]>>('v1/dcr/class-trees', { params: { typeCode } });
+  /** AS-IS dcr.Dcr01_ClassTree.selectByCompanyId: 사용 중인 분류 트리(전위 순서, depth). typeCode 기본 'C', 이동·반영 창은 '%'. companyId(E17)는 다른 회사 지정 — 관리자 회사만 */
+  searchClassTree: async (typeCode = 'C', companyId?: number): Promise<DcrClassTree[]> => {
+    const res = await apiClient.get<ApiResponse<DcrClassTree[]>>('v1/dcr/class-trees', { params: { typeCode, companyId } });
     return res.data.data ?? [];
   },
 
@@ -178,5 +178,42 @@ export const dcrApi = {
   updateDocType: async (docTypeId: number, req: DcrDocTypeUpdateReq): Promise<DcrDocType> => {
     const res = await apiClient.put<ApiResponse<DcrDocType>>(`v1/dcr/doc-types/${docTypeId}`, req);
     return res.data.data;
+  },
+
+  // ── E17 문서분류지정 (Dcr30_Tab_LinkAdmin) ──
+
+  /** AS-IS dcr.Dcr30_Link.selectBySearchId: companyId가 없으면 로그인 회사, 다른 회사는 관리자 회사만. searchText는 서버가 %…%로 감싼다 */
+  searchLinks: async (searchText: string, companyId?: number): Promise<DcrLink[]> => {
+    const res = await apiClient.get<ApiResponse<DcrLink[]>>('v1/dcr/links', { params: { companyId, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr30_Link.linkCheck: 없는 Link를 모든 회사에 넣는다(조회가 쓰기, 관리자 회사만) → 새로 넣은 건수 */
+  linkCheck: async (): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/dcr/links/check');
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS dcr.Dcr30_Link.update + updateDcrAuth → 저장한 건수 */
+  updateLinks: async (rows: DcrLinkSaveReq[], companyId?: number): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/dcr/links', rows, { params: { companyId } });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS dcr.Dcr30_Link.updateNote */
+  updateLinkNote: async (linkId: number, note: string | null): Promise<void> => {
+    await apiClient.put(`v1/dcr/links/${linkId}/note`, { note });
+  },
+
+  /** AS-IS dcr.Dcr30_Link.updateLink: 문서분류지정복사 → 처리한 건수 */
+  copyLinks: async (companyIds: number[], linkIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/dcr/links/copy-link', { companyIds, linkIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS dcr.Dcr30_Link.updateForm: 양식복사 → 처리한 건수 */
+  copyLinkForms: async (companyIds: number[], linkIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/dcr/links/copy-form', { companyIds, linkIds });
+    return res.data.data ?? 0;
   },
 };

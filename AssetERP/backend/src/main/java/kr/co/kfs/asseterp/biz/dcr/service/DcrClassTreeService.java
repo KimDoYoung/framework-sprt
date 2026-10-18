@@ -64,7 +64,17 @@ public class DcrClassTreeService {
 
     /** AS-IS selectByCompanyId: 로그인 회사의 사용 중인 분류 트리(전위 순서 평평한 목록). typeCode는 'C'(문서분류)·'%'(문서구분 포함) */
     public List<DcrClassTreeRes> searchTree(UserPrincipal user, String typeCode) {
-        return mapper.selectTree(user.getCompanyId(), typeCode == null || typeCode.isEmpty() ? "C" : typeCode);
+        return searchTree(user, typeCode, null);
+    }
+
+    /** E17 Dcr30_Move_DcrClass.openNull(companyId, …): 고른 회사의 트리. 다른 회사는 관리자 회사만 */
+    public List<DcrClassTreeRes> searchTree(UserPrincipal user, String typeCode, Long companyId) {
+        Long target = user.getCompanyId();
+        if (companyId != null && !companyId.equals(target)) {
+            requireSysAdmin(user);
+            target = companyId;
+        }
+        return mapper.selectTree(target, typeCode == null || typeCode.isEmpty() ? "C" : typeCode);
     }
 
     /** AS-IS selectByAll: 사용 여부와 관계없는 전체 트리 + 문서구분별 상신문서 건수 (Dcr01_Lookup_UseYn) */

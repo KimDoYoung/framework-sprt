@@ -57,8 +57,9 @@ public class DcrClassTreeController {
     /** AS-IS dcr.Dcr01_ClassTree.selectByCompanyId — 사용 중인 분류 트리(전위 평평한 목록 + depth). typeCode 기본 C, 이동·반영 창은 % */
     @GetMapping
     public ApiResponse<List<DcrClassTreeRes>> searchTree(@AuthenticationPrincipal UserPrincipal principal,
-                                                         @RequestParam(required = false) String typeCode) {
-        return ApiResponse.ok(dcrClassTreeService.searchTree(principal, typeCode));
+                                                         @RequestParam(required = false) String typeCode,
+                                                         @RequestParam(required = false) Long companyId) {
+        return ApiResponse.ok(dcrClassTreeService.searchTree(principal, typeCode, companyId));
     }
 
     /** AS-IS dcr.Dcr01_ClassTree.selectByAll — 사용 여부와 관계없는 전체 트리(사용여부 설정 창) */
