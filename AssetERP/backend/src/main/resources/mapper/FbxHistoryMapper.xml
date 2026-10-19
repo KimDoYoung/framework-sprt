@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/fbx/mapper/fbx02_history.xml selectByBoxId·insert (F11, Fbx02_Popup_History) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.fbx.mapper.FbxHistoryMapper">
+
+    <!-- AS-IS fbx02_history.selectByBoxId L29 (IDMS-IC) — b.*·모델 열 중 그리드가 쓰는 열만, 조인·조건·정렬은 그대로 -->
+    <select id="selectByBoxId" resultType="kr.co.kfs.asseterp.biz.fbx.dto.FbxHistoryRes">
+        SELECT b.fbx02_history_id                                                          AS history_id
+             , b.fbx02_act_date                                                            AS act_date
+             , f_cdnm('FbxHistoryAct', b.fbx02_act_cd, a.fbx01_company_id, f_sysdate())    AS act_name
+             , b.fbx02_act_content                                                         AS act_content
+             , f_emp_kor_nm(b.fbx02_act_emp_id)                                            AS act_emp_name
+             , f_org_nm(b.fbx02_act_org_code_id, b.fbx02_act_date)                         AS act_org_name
+          FROM fbx01_box a
+               INNER JOIN fbx02_history b ON a.fbx01_box_id = b.fbx02_box_id
+         WHERE 1=1
+           AND a.fbx01_company_id = #{companyId}
+           AND b.fbx02_box_id = #{boxId}
+         ORDER BY fbx02_act_date DESC
+    </select>
+
+    <!-- AS-IS fbx02_history.insert L43·insertHistory L71 (IDMS-IC) — seq 식과 일시 그대로(업로드·삭제는 new Date(), 다운로드는 f_sysdate()) -->
+    <insert id="insertHistory">
+        INSERT INTO fbx02_history (fbx02_history_id, fbx02_box_id, fbx02_seq, fbx02_act_cd, fbx02_act_emp_id, fbx02_act_date, fbx02_act_content, fbx02_act_org_code_id)
+        VALUES (f_create_seq()
+              , #{boxId}
+              , (SELECT coalesce(max(fbx02_seq), 1) FROM fbx02_history WHERE fbx02_box_id = #{boxId})
+              , #{actCode}
+              , #{actEmpId}
+              , f_sysdate()
+              , #{actContent}
+              , #{actOrgCodeId})
+    </insert>
+</mapper>

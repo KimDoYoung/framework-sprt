@@ -18,6 +18,7 @@ import { Apr90_Tab_DisposalAppr } from './apr/Apr90_Tab_DisposalAppr';
 import { Apr90_Tab_DisposalList } from './apr/Apr90_Tab_DisposalList';
 import { Dcr00_Tab_DocList } from './dcr/Dcr00_Tab_DocList';
 import { Dcr00_Tab_FileList } from './dcr/Dcr00_Tab_FileList';
+import { Fbx01_Tab_Document } from './fbx/Fbx01_Tab_Document';
 import { Dcr00_Tab_ApprList } from './dcr/Dcr00_Tab_ApprList';
 import { Apr01_Tab_FundDocument } from './apr/Apr01_Tab_FundDocument';
 import { Apr01_Tab_ItemDocument } from './apr/Apr01_Tab_ItemDocument';
@@ -195,5 +196,6 @@ export const SCREENS: Record<string, React.FC> = {
   Sys95_Tab_ManualAdmin, // A34
   Sys53_Tab_SpecificMenuRequestAdmin, // A28 (1단계: 문서보기 아이콘의 전자결재 제외)
   Sys53_Tab_SpecificMenuRequest, // A27 (1단계: 결재요청 아이콘의 전자결재·분류선택 제외)
+  Fbx01_Tab_Document, // F11 (메뉴 #1116 파일등록 + Fbx01_TabPage_DocList·Fbx02_Popup_History. 미리보기는 Sys10_Lookup_FileViewer 재사용)
   Test_Tab_ReactComponents, // B11 공통 컴포넌트 테스트 (원본 없음, mock)
 };

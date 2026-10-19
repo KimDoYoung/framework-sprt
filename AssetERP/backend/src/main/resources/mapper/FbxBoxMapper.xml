@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/fbx/mapper/fbx01_box.xml selectByCompanyId·selectById (F11, Fbx01_Tab_Document). insert·update·delete는 UpdateDataModel이 만드는 동적 SQL을 명시 SQL로 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.fbx.mapper.FbxBoxMapper">
+
+    <!-- AS-IS fbx01_box.selectByCompanyId L38 (IDMS-IC) — a.*·문서분류 열 중 그리드가 쓰는 열만, 조인·조건·정렬은 그대로 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.fbx.dto.FbxBoxRes">
+        SELECT a.fbx01_box_id                                                                AS box_id
+             , a.fbx01_crt_date                                                              AS crt_date
+             , a.fbx01_crt_emp_id                                                            AS crt_emp_id
+             , a.fbx01_title                                                                 AS title
+             , a.fbx01_note                                                                  AS note
+             , a.fbx01_status_cd                                                             AS status_cd
+             , f_cdnm('FbxBoxStatus', a.fbx01_status_cd, a.fbx01_company_id, f_sysdate())    AS status_name
+             , (SELECT coalesce(count(*), 0) FROM fbx03_file WHERE fbx03_box_id = a.fbx01_box_id) AS file_count
+          FROM fbx01_box a
+         WHERE 1=1
+           AND fbx01_company_id = #{companyId}
+           AND fbx01_title LIKE #{searchText}
+         ORDER BY fbx01_crt_date DESC
+                , fbx01_title
+    </select>
+
+    <!-- AS-IS fbx01_box.selectById L23 (IDMS-IC) — 저장한 행을 다시 읽는다. 문서분류 조인은 이 화면이 쓰지 않아 뺐다 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.fbx.dto.FbxBoxRes">
+        SELECT a.fbx01_box_id                                                                AS box_id
+             , a.fbx01_crt_date                                                              AS crt_date
+             , a.fbx01_crt_emp_id                                                            AS crt_emp_id
+             , a.fbx01_title                                                                 AS title
+             , a.fbx01_note                                                                  AS note
+             , a.fbx01_status_cd                                                             AS status_cd
+             , f_cdnm('FbxBoxStatus', a.fbx01_status_cd, a.fbx01_company_id, f_sysdate())    AS status_name
+             , (SELECT coalesce(count(*), 0) FROM fbx03_file WHERE fbx03_box_id = a.fbx01_box_id) AS file_count
+          FROM fbx01_box a
+         WHERE fbx01_box_id = #{boxId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel INSERT: 모델 열 중 화면이 채우는 값(조직·생성자·상태·등록일·제목·비고·회사) -->
+    <insert id="insertBox">
+        INSERT INTO fbx01_box (fbx01_box_id, fbx01_company_id, fbx01_org_code_id, fbx01_crt_emp_id, fbx01_crt_date, fbx01_title, fbx01_status_cd, fbx01_note)
+        VALUES (#{boxId}, #{companyId}, #{orgCodeId}, #{crtEmpId}, #{r.crtDate}, #{r.title}, coalesce(#{r.statusCd}, '01'), #{r.note})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE: 화면에서 고칠 수 있는 열(등록일·상태·제목·비고) -->
+    <update id="updateBox">
+        UPDATE fbx01_box
+           SET fbx01_crt_date  = #{r.crtDate}
+             , fbx01_status_cd = #{r.statusCd}
+             , fbx01_title     = #{r.title}
+             , fbx01_note      = #{r.note}
+         WHERE fbx01_box_id     = #{r.boxId}
+           AND fbx01_company_id = #{companyId}
+    </update>
+
+    <select id="selectCrtEmpIds" resultType="long">
+        SELECT fbx01_crt_emp_id
+          FROM fbx01_box
+         WHERE fbx01_company_id = #{companyId}
+           AND fbx01_box_id IN
+        <foreach collection="boxIds" item="boxId" open="(" separator="," close=")">#{boxId}</foreach>
+    </select>
+
+    <!-- AS-IS UpdateDataModel DELETE (회사 조건을 더했다) -->
+    <delete id="deleteBoxes">
+        DELETE FROM fbx01_box
+         WHERE fbx01_company_id = #{companyId}
+           AND fbx01_box_id IN
+        <foreach collection="boxIds" item="boxId" open="(" separator="," close=")">#{boxId}</foreach>
+    </delete>
+</mapper>
