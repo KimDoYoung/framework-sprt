@@ -81,6 +81,7 @@ import { Tdm50_Tab_DutyReconAdmin } from './tdm/Tdm50_Tab_DutyReconAdmin';
 import { Dcr01_Tab_ClassTree } from './dcr/Dcr01_Tab_ClassTree';
 import { Dcr05_Tab_DocType } from './dcr/Dcr05_Tab_DocType';
 import { Dcr30_Tab_LinkAdmin } from './dcr/Dcr30_Tab_LinkAdmin';
+import { Dcr01_Tab_DcrUser } from './dcr/Dcr01_Tab_DcrUser';
 import { Dcr01_Tab_DcrWrite } from './dcr/Dcr01_Tab_DcrWrite';
 import { Rpt10_Tab_FssSubmit } from './rpt/Rpt10_Tab_FssSubmit';
 import { Sch10_Tab_IpoAdmin } from './sch/Sch10_Tab_IpoAdmin';
@@ -123,6 +124,7 @@ export const SCREENS: Record<string, React.FC> = {
   Dcr01_Tab_ClassTree, // E16 (메뉴 #1110·#1001 — 같은 클래스. + Dcr01_Grid_DocType·Dcr01_Edit_ClassTree·Dcr01_Move_*·Dcr01_Lookup_UseYn·DcrCopyAdmin·Dcr05~07·Dcr20·Dcr21, apr 조회창 둘)
   Dcr05_Tab_DocType, // E18 (메뉴 #1482·#1007 — 같은 클래스. + Dcr05_Edit_DocType·Dcr05_Edit_Update(E16)·Sys09_Lookup_Code(구분추가)·Sys01_Lookup_Company)
   Dcr30_Tab_LinkAdmin, // E17 (열 때 Link 없는 회사에 채우는 linkCheck가 쓰기 — AS-IS 그대로. + Dcr30_TabPage_Company·Dcr30_Lookup_LinkNote·Dcr30_Move_DcrClass·Com10_Lookup_CommonMapping·Pay06_Popup_Example)
+  Dcr01_Tab_DcrUser, // F02 1단계 (메뉴 #1002 + Dcr01_Tab_DcrManager·Apr01_Grid_DocList·Apr03_TabPage_Relate. 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList·메일 Dcr10_Lookup_MailSender는 다음 단계)
   Dcr01_Tab_DcrWrite, // F01 1단계 (메뉴 #1318 + Dcr08_Lookup_SelectSingle. 전자결재 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList는 F01-2)
   Rpt10_Tab_FssSubmit, // E19 (+ Rpt10_Edit_WriteGuide)
   Sch10_Tab_IpoAdmin, // E20 (+ Sch12_Lookup_IpoCorp·Sch14_Lookup_IpoMismatch·Sch15_Lookup_IpoItemMatching·Com50_Lookup_StkItem)

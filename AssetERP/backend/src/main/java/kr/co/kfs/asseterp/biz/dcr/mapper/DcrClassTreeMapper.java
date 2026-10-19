@@ -9,6 +9,7 @@ import kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeSaveReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrCopyCompanyRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeRowRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeSaveReq;
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrWriteTreeRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -29,6 +30,9 @@ public interface DcrClassTreeMapper {
 
     /** AS-IS selectByParentId1Bang (selectByCompanyId): 사용 중인 분류의 전위 순서 목록. typeCode는 LIKE 패턴('C'·'%') */
     List<DcrClassTreeRes> selectTree(@Param("companyId") Long companyId, @Param("typeCode") String typeCode);
+
+    /** AS-IS selectByOrgIdRoleWrite_1Bang (F02): 조직이 작성권한을 가진 문서구분과 그 조상·하위의 전위 순서 목록 */
+    List<DcrWriteTreeRes> selectWriteTree(@Param("companyId") Long companyId, @Param("orgId") Long orgId, @Param("personId") Long personId);
 
     /** AS-IS selectByAll: 사용 여부와 관계없이 전체, 문서구분(T)은 상신문서 건수 */
     List<DcrClassTreeAllRes> selectTreeAll(@Param("companyId") Long companyId, @Param("typeCode") String typeCode);

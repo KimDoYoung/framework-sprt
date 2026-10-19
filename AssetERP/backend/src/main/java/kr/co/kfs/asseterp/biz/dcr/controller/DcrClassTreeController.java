@@ -13,6 +13,7 @@ import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeRowRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeSaveReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrParentReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrUseYnReq;
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrWriteTreeRes;
 import kr.co.kfs.asseterp.biz.dcr.service.DcrClassTreeService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +61,12 @@ public class DcrClassTreeController {
                                                          @RequestParam(required = false) String typeCode,
                                                          @RequestParam(required = false) Long companyId) {
         return ApiResponse.ok(dcrClassTreeService.searchTree(principal, typeCode, companyId));
+    }
+
+    /** AS-IS dcr.Dcr01_ClassTree.selectByOrgIdRoleWrite — 업무별 문서작성(F02): 내 조직이 작성권한을 가진 분류 트리(전위 평평한 목록 + depth) */
+    @GetMapping("/write")
+    public ApiResponse<List<DcrWriteTreeRes>> searchWriteTree(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(dcrClassTreeService.searchWriteTree(principal));
     }
 
     /** AS-IS dcr.Dcr01_ClassTree.selectByAll — 사용 여부와 관계없는 전체 트리(사용여부 설정 창) */

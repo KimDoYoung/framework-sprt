@@ -14,7 +14,9 @@ import kr.co.kfs.asseterp.biz.dcr.dto.DcrCopyReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeRowRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeSaveReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrUseYnReq;
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrWriteTreeRes;
 import kr.co.kfs.asseterp.biz.dcr.mapper.DcrClassTreeMapper;
+import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoService;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,7 @@ public class DcrClassTreeService {
     private static final String TYPE_CODE = "T";
 
     private final DcrClassTreeMapper mapper;
+    private final EmpTransInfoService transInfoService;
 
     /**
      * AS-IS selectByText: 사용 중인 문서분류(T) 중 분류코드+문서분류명에 검색어가 든 것.
@@ -75,6 +78,12 @@ public class DcrClassTreeService {
             target = companyId;
         }
         return mapper.selectTree(target, typeCode == null || typeCode.isEmpty() ? "C" : typeCode);
+    }
+
+    /** AS-IS selectByOrgIdRoleWrite (F02): 로그인 사용자의 조직이 작성권한을 가진 분류 트리(전위 순서 평평한 목록). 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0 */
+    public List<DcrWriteTreeRes> searchWriteTree(UserPrincipal user) {
+        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        return mapper.selectWriteTree(user.getCompanyId(), orgId, user.getUserId());
     }
 
     /** AS-IS selectByAll: 사용 여부와 관계없는 전체 트리 + 문서구분별 상신문서 건수 (Dcr01_Lookup_UseYn) */

@@ -211,3 +211,25 @@ export interface DcrOftenUse {
   classDetailName?: string | null;
   count?: number | null;
 }
+
+// ── F02 업무별 문서작성 (Dcr01_Tab_DcrUser) ──
+
+/** 업무별 문서작성 트리 한 행 (AS-IS Dcr01_ClassTreeModel — selectByOrgIdRoleWrite). 전위 순서 평평한 목록 + depth(1부터) */
+export interface DcrWriteTree {
+  classTreeId: number;
+  parentTreeId: number;
+  classTreeName: string;
+  /** C 문서분류 · T 문서구분 */
+  typeCode: string;
+  /** 작성 Tip (없으면 null 또는 ' ') */
+  note?: string | null;
+  depth: number;
+  /** 작성권한 (dcr03_update_yn) */
+  updateYn: boolean;
+}
+
+/** 문서분류에 걸린 Link (AS-IS Dcr30_LinkModel 중 note) */
+export interface DcrClassLink {
+  linkId: number;
+  note?: string | null;
+}

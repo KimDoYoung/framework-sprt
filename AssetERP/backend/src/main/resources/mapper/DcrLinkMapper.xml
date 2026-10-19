@@ -201,4 +201,13 @@
          WHERE com10_company_id = 0
            AND dcr30_link_cd    = #{linkCode}
     </insert>
+
+    <!-- AS-IS dcr30_link.selectByClassTreeId L159 (IDMS-IC) — F02. 열은 화면이 쓰는 link_id·note만 -->
+    <select id="selectByClassTreeId" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrClassLinkRes">
+        SELECT dcr30_link_id AS link_id
+             , dcr30_note    AS note
+          FROM dcr30_link
+         WHERE dcr30_company_id = #{companyId}
+           AND dcr30_class_tree_id = #{classTreeId}
+    </select>
 </mapper>

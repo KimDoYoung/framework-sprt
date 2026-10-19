@@ -10,7 +10,7 @@ import { errorMessage } from '@/api/client';
 import { DcrClassTree } from '@/types/dcr';
 
 /** getServiceResult() + addChild(): 전위 순서 목록(depth) → 중첩 트리 (AS-IS TreeUtil.makeDcrTree) */
-export const toTree = (list: DcrClassTree[]): DataNode[] => {
+export const toTree = (list: Pick<DcrClassTree, 'classTreeId' | 'classTreeName' | 'depth'>[]): DataNode[] => {
   const roots: DataNode[] = [];
   const stack: { depth: number; node: DataNode }[] = [];
   list.forEach(r => {
@@ -89,7 +89,7 @@ export const DcrClassTreePicker: React.FC<PickerProps> = ({ open, typeCode, sele
 };
 
 /** 검색 결과로 트리를 펼치고 고르기 위한 도우미: 조상 key 목록 */
-export const ancestorKeys = (rows: DcrClassTree[], id: number): number[] => {
+export const ancestorKeys = (rows: Pick<DcrClassTree, 'classTreeId' | 'parentTreeId'>[], id: number): number[] => {
   const byId = new Map(rows.map(r => [r.classTreeId, r]));
   const out: number[] = [];
   let cur = byId.get(id);

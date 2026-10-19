@@ -589,4 +589,64 @@
           FROM sys01_company
          WHERE sys01_company_id = #{companyId}
     </select>
+
+    <!-- AS-IS dcr01_class_tree.selectByOrgIdRoleWrite_1Bang (IDMS-IC) + common.dcr_auth_all_postgresql — F02.
+         작성권한이 있는 문서구분(T)과 그 조상, 그 아래 전체. 화면이 쓰는 열만 고르고(seal·결재유형·전체경로는 편집창용 → 다음 단계) 회사 ID는 ${}가 아니라 #{} -->
+    <select id="selectWriteTree" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrWriteTreeRes">
+        WITH RECURSIVE dcr_tree(dcr01_class_tree_id, dcr01_class_tree_nm, dcr01_parent_tree_id, dcr01_seq, dcr01_note, dcr01_class_tree_cd,
+                                dcr01_type_cd, dcr01_use_yn, depth, path, cycle) AS (
+            SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, a.dcr01_seq, a.dcr01_note, a.dcr01_class_tree_cd,
+                   a.dcr01_type_cd, a.dcr01_use_yn,
+                   1,
+                   ARRAY[CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id],
+                   false
+              FROM dcr01_class_tree a
+             WHERE a.dcr01_company_id = #{companyId}
+               AND a.dcr01_parent_tree_id = 0
+               AND a.dcr01_use_yn = 'true'
+               AND a.dcr01_class_tree_id IN ( <include refid="writeAuthTreeIds"/> )
+            UNION ALL
+            SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, a.dcr01_seq, a.dcr01_note, a.dcr01_class_tree_cd,
+                   a.dcr01_type_cd, a.dcr01_use_yn,
+                   b.depth + 1,
+                   array_append(b.path, CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id),
+                   a.dcr01_class_tree_nm = any(b.path)
+              FROM dcr01_class_tree a
+                   INNER JOIN dcr_tree b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+             WHERE a.dcr01_company_id = #{companyId}
+               AND a.dcr01_class_tree_id IN ( <include refid="writeAuthTreeIds"/> )
+               AND NOT cycle
+        )
+        SELECT a.dcr01_class_tree_id                                  AS class_tree_id
+             , a.dcr01_parent_tree_id                                 AS parent_tree_id
+             , a.dcr01_class_tree_nm                                  AS class_tree_name
+             , a.dcr01_type_cd                                        AS type_code
+             , a.dcr01_note                                           AS note
+             , a.depth                                                AS depth
+             , COALESCE(b.dcr03_update_yn, 'false') = 'true'          AS update_yn
+          FROM dcr_tree a
+               LEFT OUTER JOIN dcr03_org_auth b ON dcr03_class_tree_id = dcr01_class_tree_id AND dcr03_org_code_id = #{orgId}
+               LEFT OUTER JOIN dcr04_emp_auth c ON dcr01_class_tree_id = dcr04_class_tree_id AND dcr04_person_id = #{personId}
+         WHERE a.dcr01_use_yn = 'true'
+         ORDER BY path
+    </select>
+
+    <!-- 조직(orgId)이 작성권한(dcr03_update_yn)을 가진 문서구분(T)에서 부모 쪽으로 올라간 분류 ID 전체 -->
+    <sql id="writeAuthTreeIds">
+        WITH RECURSIVE tree_structure AS (
+            SELECT dcr01_class_tree_id, dcr01_parent_tree_id
+              FROM dcr01_class_tree
+             WHERE dcr01_company_id = #{companyId}
+               AND dcr01_class_tree_id IN ( SELECT dcr03_class_tree_id
+                                              FROM dcr03_org_auth
+                                                   INNER JOIN dcr01_class_tree ON dcr01_class_tree_id = dcr03_class_tree_id AND dcr01_type_cd = 'T'
+                                             WHERE dcr03_org_code_id = #{orgId}
+                                               AND dcr03_update_yn = 'true' )
+            UNION ALL
+            SELECT ct.dcr01_class_tree_id, ct.dcr01_parent_tree_id
+              FROM tree_structure t
+                   JOIN dcr01_class_tree ct ON t.dcr01_parent_tree_id = ct.dcr01_class_tree_id
+        )
+        SELECT tree_structure.dcr01_class_tree_id FROM tree_structure
+    </sql>
 </mapper>

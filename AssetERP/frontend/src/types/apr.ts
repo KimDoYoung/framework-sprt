@@ -43,3 +43,31 @@ export interface AprDcrWriteParams {
   limit: number;
 }
 
+/** 업무별 문서작성 문서 목록 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Grid_DocList 그리드 열, F02) */
+export interface AprDoc {
+  apprId: number;
+  /** 'true' | 'false' */
+  bookmarkYn: string;
+  title?: string | null;
+  /** 연관 펀드·일임 건수 ("2건", 없으면 '') */
+  relateDisplayName?: string | null;
+  /** `<b style=color:…;>상태</b>` */
+  statusName?: string | null;
+  /** '30'이 완료 */
+  statusCode?: string | null;
+  regDate?: string | null;
+  effectDate?: string | null;
+  regEmpName?: string | null;
+}
+
+/** 연관펀드 (AS-IS Apr03_RelateFundModel, Apr03_TabPage_Relate) */
+export interface AprRelateFund {
+  fundId: number;
+  fundName?: string | null;
+}
+
+/** 연관일임 (AS-IS Apr12_RelateAdvModel, Apr03_TabPage_Relate) */
+export interface AprRelateAdv {
+  advId: number;
+  manageName?: string | null;
+}

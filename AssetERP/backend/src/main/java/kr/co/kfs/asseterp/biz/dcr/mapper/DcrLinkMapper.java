@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.dcr.mapper;
 
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrClassLinkRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -10,6 +11,9 @@ import java.util.List;
 @Mapper
 public interface DcrLinkMapper {
     List<Long> selectCompanyIds();
+
+    /** AS-IS dcr30_link.selectByClassTreeId (F02): 문서분류에 걸린 Link */
+    List<DcrClassLinkRes> selectByClassTreeId(@Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId);
 
     /** AS-IS sys09_code.linkCheck: 코드 종류의 코드 목록(순번 순) */
     List<String> selectLinkCodes(@Param("kindCode") String kindCode);

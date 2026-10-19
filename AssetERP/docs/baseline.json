@@ -2793,5 +2793,26 @@
     "note": "docs/work/F/F01-작업기록.md",
     "history": [],
     "id": "F01"
+  },
+  "Dcr01_Tab_DcrUser": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/dcr/Dcr01_Tab_DcrUser.java": "0afce76beec79a1a47cfdf72eecd4b9718f27135",
+      "application/src/main/java/myApp/server/dcr/Dcr01_ClassTree.java": "5da5a4d3ddaf00433d72f012858df89306345b21",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Dcr01_Tab_DcrManager"
+    ],
+    "recorded_at": "2026-10-19T20:00:02+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/F/F02-작업기록.md",
+    "history": [],
+    "id": "F02"
   }
 }

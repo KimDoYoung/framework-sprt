@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!-- AS-IS(IDMS-IC) server/apr/mapper/apr01_appr.xml conditionDcrWrite L2357·selectByDcrWritePaging L2383·selectByDcrWriteTotal L2439 (F01) -->
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr01_appr.xml conditionDcrWrite L2357·selectByDcrWritePaging L2383·selectByDcrWriteTotal L2439 (F01), selectByClassTreeId2 L139 (F02) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprApprMapper">
 
     <!-- AS-IS apr01_appr.conditionDcrWrite L2357 (IDMS-IC). 분류 조건은 common.dcr_tree_down(자기 + 아래 전체, 사용 중인 분류만)을 그대로 푼 것 -->
@@ -106,5 +106,159 @@
                INNER JOIN dcr01_class_tree ON dcr01_class_tree_id = apr01_class_tree_id
          WHERE 1=1
         <include refid="conditionDcrWrite"/>
+    </select>
+
+    <!-- AS-IS apr01_appr.selectByClassTreeId2 L139 (IDMS-IC) — F02. 이 메뉴는 admin == 'false' 분기만(DcrUser.managerYn=false). SELECT *·모델 열 중 그리드가 쓰는 열만.
+         collate "ko_KR.utf8" → "ko-KR-x-icu"(05 §6) -->
+    <select id="selectByClassTreeId2" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprDocRes">
+        WITH fund_count AS (
+            SELECT apr03_appr_id
+                 , MAX(COALESCE(fnd01_r.fnd01_fund_code_id, fnd01.fnd01_fund_code_id))                                                      AS fund_id
+                 , COUNT(DISTINCT apr03_fund_id)                                                                                            AS fund_cnt
+                 , STRING_AGG(COALESCE(fnd01_r.fnd01_fund_cd, fnd01.fnd01_fund_cd), ', ')                                                   AS fund_code_all
+                 , STRING_AGG(f_get_fund_nm2(COALESCE(fnd01_r.fnd01_fund_code_id, fnd01.fnd01_fund_code_id), f_today()::date), ', ')       AS fund_name_all
+              FROM apr03_relate_fund
+                   INNER JOIN fnd01_fund_code fnd01 ON fnd01.fnd01_fund_code_id = apr03_fund_id
+                   LEFT JOIN fnd01_fund_code fnd01_r ON fnd01_r.fnd01_fund_code_id = fnd01.fnd01_real_fund_id
+             GROUP BY apr03_appr_id
+        ),
+        adv_count AS (
+            SELECT apr12_appr_id
+                 , MAX(adv02_manage_nm)               AS adv_nm
+                 , COUNT(DISTINCT apr12_adv_id)       AS adv_cnt
+                 , STRING_AGG(adv02_manage_cd, ', ')  AS adv_code_all
+                 , STRING_AGG(adv02_manage_nm, ', ')  AS adv_name_all
+              FROM apr12_relate_adv
+                   INNER JOIN adv02_account ON adv02_account_id = apr12_adv_id
+             GROUP BY apr12_appr_id
+        )
+        SELECT apr01_appr_id                                                                    AS appr_id
+             , (
+                   SELECT CASE WHEN COUNT(*) > 0 THEN 'true' ELSE 'false' END
+                     FROM apr50_bookmark
+                    WHERE apr50_appr_id = apr01_appr_id
+                      AND ( apr50_person_id = #{c.personId} OR apr50_public_yn = 'true' )
+               )                                                                                AS bookmark_yn
+             , apr01_title                                                                      AS title
+             , CASE WHEN COALESCE(fc.fund_cnt, 0) + COALESCE(ac.adv_cnt, 0) = 0
+                    THEN ''
+                    ELSE COALESCE(fc.fund_cnt, 0) + COALESCE(ac.adv_cnt, 0) || '건'
+               END                                                                              AS relate_display_name
+             , (
+                   CASE WHEN apr01_status_cd = '40'
+                        THEN '&lt;' || 'b style=color:#E33E31;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                        WHEN apr01_status_cd = '99'
+                        THEN '&lt;' || 'b style=color:#4B81B9;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                        ELSE '&lt;' || 'b style=color:#404040;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                   END
+               )                                                                                AS status_name
+             , apr01_status_cd                                                                  AS status_code
+             , apr01_reg_date                                                                   AS reg_date
+             , apr01_effect_date                                                                AS effect_date
+             , f_emp_kor_nm(apr01_reg_emp_id)                                                   AS reg_emp_name
+          FROM apr01_appr
+               INNER JOIN dcr01_class_tree ON dcr01_class_tree_id = apr01_class_tree_id
+               LEFT OUTER JOIN apr10_stamp ON apr10_stamp_id = apr01_stamp_id
+               LEFT OUTER JOIN fund_count fc ON fc.apr03_appr_id = apr01_appr_id
+               LEFT OUTER JOIN adv_count ac ON ac.apr12_appr_id = apr01_appr_id
+         WHERE 1=1
+           AND ((
+                (
+                    fc.fund_id IN ( SELECT fnd08_fund_code_id
+                                      FROM fnd08_org_auth
+                                     WHERE fnd08_org_code_id = #{c.orgId}
+                                       AND fnd08_auth_yn = 'true' )
+                    OR
+                    fc.fund_id IS NULL
+                )
+                AND
+                (
+                    'Y' = CASE WHEN ( SELECT COUNT(*)
+                                        FROM dcr04_emp_auth
+                                       WHERE dcr04_class_tree_id = apr01_class_tree_id
+                                         AND dcr04_person_id = #{c.personId}
+                                         AND dcr04_retrieve_yn = 'false' ) != 0
+                               THEN 'N'
+                               WHEN ( SELECT COUNT(*)
+                                        FROM dcr03_org_auth
+                                       WHERE dcr03_class_tree_id = apr01_class_tree_id
+                                         AND dcr03_org_code_id = #{c.orgId}
+                                         AND dcr03_retrieve_yn = 'true' ) != 0
+                               THEN 'Y'
+                               ELSE 'N'
+                          END
+                )
+                AND
+                (
+                    (
+                        apr01_link_cd IS NULL
+                        OR
+                        NOT EXISTS ( SELECT 1
+                                       FROM sys52_specific_menu_link l
+                                      WHERE l.sys52_company_id = apr01_company_id
+                                        AND l.sys52_link_cd = apr01_link_cd )
+                        OR
+                        EXISTS ( SELECT 1
+                                   FROM sys52_specific_menu_link l
+                                        INNER JOIN sys50_specific_menu m ON l.sys52_specific_work_cd = m.sys50_specific_work_cd AND m.sys50_company_id = apr01_company_id
+                                        INNER JOIN sys51_specific_menu_person p ON p.sys51_specific_menu_id = m.sys50_specific_menu_id AND p.sys51_person_id = #{c.personId}
+                                  WHERE l.sys52_company_id = apr01_company_id
+                                    AND l.sys52_link_cd = apr01_link_cd )
+                    )
+                )
+               )
+               OR
+               ( #{c.personId} IN ( SELECT apr04_step_emp_id
+                                      FROM apr04_appr_step
+                                     WHERE apr04_appr_id = apr01_appr_id ) )
+               OR
+               ( #{c.personId} IN ( SELECT apr13_person_id
+                                      FROM apr13_person_auth
+                                     WHERE apr13_appr_id = apr01_appr_id ) ))
+           AND apr01_class_tree_id = #{c.classTreeId}
+           AND f_trunc(apr01_reg_date) BETWEEN #{c.startDate} AND #{c.endDate}
+           AND UPPER(CONCAT( f_emp_kor_nm(apr01_reg_emp_id)
+                           , f_get_empTrans(apr01_reg_emp_id, apr01_reg_date::date, 'org_code_nm')
+                           , apr01_title
+                           , fc.fund_code_all
+                           , fc.fund_name_all
+                           , ac.adv_code_all
+                           , ac.adv_name_all
+                           )) LIKE UPPER(#{c.searchText})
+         ORDER BY apr01_reg_date DESC
+                , apr01_appr_id DESC
+                , apr01_title COLLATE "ko-KR-x-icu" ASC
+                , apr01_status_cd
+                , apr01_effect_date
+    </select>
+
+    <!-- AS-IS apr03_relate_fund.selectByApprId (IDMS-IC) — F02. 행을 정하는 조인(펀드·그 시점의 펀드정보·실제펀드)만 남기고 열은 fundId·펀드명(fnd00_fund_nm) -->
+    <select id="selectRelateFunds" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes">
+        SELECT apr03_fund_id                                         AS fund_id
+             , COALESCE(fnd02_r.fnd02_fund_nm, fnd02.fnd02_fund_nm)  AS fund_name
+          FROM apr01_appr
+               INNER JOIN apr03_relate_fund ON apr03_appr_id = apr01_appr_id
+               INNER JOIN fnd01_fund_code fnd01 ON fnd01.fnd01_fund_code_id = apr03_fund_id
+               INNER JOIN fnd02_fund_info fnd02 ON ( fnd02.fnd02_fund_code_id = apr03_fund_id
+                                                     AND fnd02.fnd02_work_date = ( SELECT MAX(x.fnd02_work_date)
+                                                                                     FROM fnd02_fund_info x
+                                                                                    WHERE x.fnd02_fund_code_id = apr03_fund_id
+                                                                                      AND x.fnd02_work_date &lt;= apr01_reg_date ) )
+               LEFT OUTER JOIN fnd01_fund_code fnd01_r ON fnd01_r.fnd01_fund_code_id = fnd01.fnd01_real_fund_id
+               LEFT OUTER JOIN fnd02_fund_info fnd02_r ON ( fnd02_r.fnd02_fund_code_id = fnd01.fnd01_real_fund_id
+                                                            AND fnd02_r.fnd02_work_date = ( SELECT MAX(x.fnd02_work_date)
+                                                                                              FROM fnd02_fund_info x
+                                                                                             WHERE x.fnd02_fund_code_id = fnd01.fnd01_real_fund_id
+                                                                                               AND x.fnd02_work_date &lt;= f_today() ) )
+         WHERE apr01_appr_id = #{apprId}
+    </select>
+
+    <!-- AS-IS apr12_relate_adv.selectByApprId (IDMS-IC) — F02 -->
+    <select id="selectRelateAdvs" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes">
+        SELECT apr12_adv_id     AS adv_id
+             , adv02_manage_nm  AS manage_name
+          FROM apr12_relate_adv a
+               INNER JOIN adv02_account b ON a.apr12_adv_id = b.adv02_account_id
+         WHERE apr12_appr_id = #{apprId}
     </select>
 </mapper>

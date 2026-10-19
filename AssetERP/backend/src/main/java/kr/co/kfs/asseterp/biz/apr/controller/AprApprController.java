@@ -1,6 +1,9 @@
 package kr.co.kfs.asseterp.biz.apr.controller;
 
 import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprDocRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes;
 import kr.co.kfs.asseterp.biz.apr.service.AprApprService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -9,11 +12,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /** 상신문서 (AS-IS server/apr/Apr01_Appr) */
 @RestController
@@ -34,5 +39,27 @@ public class AprApprController {
                                                                @RequestParam(defaultValue = "0") long offset,
                                                                @RequestParam(defaultValue = "100") long limit) {
         return ApiResponse.ok(service.searchDcrWrite(principal, startDate, closeDate, searchText, receiveName, classTreeId, offset, limit));
+    }
+
+    /** AS-IS apr.Apr01_Appr.selectByClassTreeId2 (Apr01_Grid_DocList, F02 업무별 문서작성 목록) */
+    @GetMapping("/doc-list")
+    public ApiResponse<List<AprDocRes>> searchDocList(@AuthenticationPrincipal UserPrincipal principal,
+                                                      @RequestParam Long classTreeId,
+                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                                                      @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchDocList(principal, classTreeId, startDate, endDate, searchText));
+    }
+
+    /** AS-IS apr.Apr03_RelateFund.selectByApprId (Apr03_TabPage_Relate 연관펀드) */
+    @GetMapping("/{apprId}/relate-funds")
+    public ApiResponse<List<AprRelateFundRes>> searchRelateFunds(@PathVariable Long apprId) {
+        return ApiResponse.ok(service.searchRelateFunds(apprId));
+    }
+
+    /** AS-IS apr.Apr12_RelateAdv.selectByApprId (Apr03_TabPage_Relate 연관일임) */
+    @GetMapping("/{apprId}/relate-advs")
+    public ApiResponse<List<AprRelateAdvRes>> searchRelateAdvs(@PathVariable Long apprId) {
+        return ApiResponse.ok(service.searchRelateAdvs(apprId));
     }
 }

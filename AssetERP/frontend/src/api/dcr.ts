@@ -2,11 +2,11 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import {
   DcrCheckRes, DcrCheckRowReq, DcrClassDetail, DcrClassTree, DcrClassTreeAll, DcrClassTreeLookup, DcrClassTreeSaveReq,
-  DcrCopyCompany, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrLink, DcrLinkSaveReq, DcrRelateDocType, DcrRelateIcr,
-  DcrOftenUse, DcrRelateIcs, DcrRelateSaveReq, DcrUseYnReq, DcrWriteCode,
+  DcrCopyCompany, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrClassLink, DcrLink, DcrLinkSaveReq, DcrRelateDocType, DcrRelateIcr,
+  DcrOftenUse, DcrRelateIcs, DcrRelateSaveReq, DcrUseYnReq, DcrWriteCode, DcrWriteTree,
 } from '../types/dcr';
 
-/** dcr(문서분류) API (E13-3 조회창, E16 문서분류) */
+/** dcr(문서분류) API (E13-3 조회창, E16 문서분류, F02 업무별 문서작성) */
 export const dcrApi = {
   /** AS-IS dcr.Dcr01_ClassTree.selectByText(typeCode T, useYn true): 문서분류 조회창. relateTable 'TDM47'+점검항목 ID면 그 점검항목에 연결 안 된 것만 */
   searchLookup: async (searchText: string, relateTable?: string, relateId?: number): Promise<DcrClassTreeLookup[]> => {
@@ -92,6 +92,18 @@ export const dcrApi = {
   adminCopy: async (dcrClassTreeId: number, companyIds: number[]): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/dcr/class-trees/admin-copy', { dcrClassTreeId, companyIds });
     return res.data.data ?? 0;
+  },
+
+  /** AS-IS dcr.Dcr01_ClassTree.selectByOrgIdRoleWrite (Dcr01_Tab_DcrUser): 내 조직이 작성권한을 가진 분류 트리 (전위 순서 평평한 목록 + depth) */
+  searchWriteTree: async (): Promise<DcrWriteTree[]> => {
+    const res = await apiClient.get<ApiResponse<DcrWriteTree[]>>('v1/dcr/class-trees/write');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr30_Link.selectByClassTreeId (Apr01_Grid_DocList): 문서분류에 걸린 Link (없으면 빈 목록) */
+  searchLinksByClassTree: async (classTreeId: number): Promise<DcrClassLink[]> => {
+    const res = await apiClient.get<ApiResponse<DcrClassLink[]>>('v1/dcr/links/by-class-tree', { params: { classTreeId } });
+    return res.data.data ?? [];
   },
 
   /** 로그인 회사의 AssetERP 상품코드 (S1이면 사용여부설정 버튼을 숨김) */

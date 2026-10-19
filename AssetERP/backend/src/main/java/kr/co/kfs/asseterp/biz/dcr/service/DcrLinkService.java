@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.dcr.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrClassLinkRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkCopyReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkSaveReq;
@@ -25,6 +26,11 @@ public class DcrLinkService {
     private static final String LINK_KIND_CODE = "LinkCode";
 
     private final DcrLinkMapper mapper;
+
+    /** AS-IS selectByClassTreeId (F02): 로그인 회사의 문서분류에 걸린 Link (없으면 빈 목록) */
+    public List<DcrClassLinkRes> searchByClassTree(UserPrincipal user, Long classTreeId) {
+        return mapper.selectByClassTreeId(user.getCompanyId(), classTreeId);
+    }
 
     /** AS-IS selectBySearchId: searchText는 LIKE 패턴("%검색어%") */
     public List<DcrLinkRes> search(UserPrincipal user, Long companyId, String searchText) {

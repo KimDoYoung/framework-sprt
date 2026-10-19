@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.dcr.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrClassLinkRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkCopyReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkNoteReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkRes;
@@ -27,6 +28,12 @@ import java.util.List;
 public class DcrLinkController {
 
     private final DcrLinkService service;
+
+    /** AS-IS dcr.Dcr30_Link.selectByClassTreeId (Apr01_Grid_DocList, F02) — 문서분류에 Link가 있는지(있으면 신규 작성 대신 안내) */
+    @GetMapping("/by-class-tree")
+    public ApiResponse<List<DcrClassLinkRes>> searchByClassTree(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long classTreeId) {
+        return ApiResponse.ok(service.searchByClassTree(principal, classTreeId));
+    }
 
     /** AS-IS dcr.Dcr30_Link.selectBySearchId (companyId 없으면 로그인 회사) */
     @GetMapping
