@@ -51,7 +51,10 @@ const rowNumberCol: ColDef = {
   valueGetter: p => (p.node?.rowPinned ? '' : (p.node?.rowIndex ?? 0) + 1),
 };
 
-const sumOf = (rows: Record<string, unknown>[], f: string) => rows.reduce((s, r) => s + (Number(r[f]) || 0), 0);
+/** AG Grid 기본 영어 문구 → 한글. 렌더마다 새 객체가 되지 않게 모듈에 둔다(화면에서 localeText를 주면 그쪽이 우선) */
+const LOCALE_TEXT = { noRowsToShow: '조회된 내용이 없습니다.' };
+
+const sumOf =(rows: Record<string, unknown>[], f: string) => rows.reduce((s, r) => s + (Number(r[f]) || 0), 0);
 
 export function BaseGrid<T>({
   gridRef,
@@ -115,6 +118,7 @@ export function BaseGrid<T>({
         columnDefs={cols}
         defaultColDef={colDef}
         rowData={rowData}
+        localeText={LOCALE_TEXT}
         pinnedBottomRowData={pinnedBottom}
         getRowClass={rowClass}
         onSortChanged={(e: SortChangedEvent<T>) => {
