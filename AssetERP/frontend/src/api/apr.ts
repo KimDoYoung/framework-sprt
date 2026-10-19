@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprRelateAdv, AprRelateFund, AprStamp } from '../types/apr';
+import { AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprRelateAdv, AprRelateFund, AprStamp } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -49,6 +49,17 @@ export const aprApi = {
   searchDisposalListMine: async (params: { startDate: string; closeDate: string }): Promise<AprDisposalList[]> => {
     const res = await apiClient.get<ApiResponse<AprDisposalList[]>>('v1/apr/disposal-lists/mine', { params });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr90_DisposalList.selectByCompanyId (Apr90_Tab_DisposalAppr): 내게 지정된 폐기 승인 건. companyId·confirmEmpId는 서버가 세션에서, disposalCode '%'=전체 */
+  searchDisposalAppr: async (params: { startDate: string; closeDate: string; disposalCode: string }): Promise<AprDisposalAppr[]> => {
+    const res = await apiClient.get<ApiResponse<AprDisposalAppr[]>>('v1/apr/disposal-lists/approvals', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr90_DisposalList.updateAppr: 선택한 폐기 신청을 승인(20)·반려(99) */
+  updateDisposalCode: async (disposalCode: '20' | '99', disposalListIds: number[]): Promise<void> => {
+    await apiClient.put('v1/apr/disposal-lists/disposal-code', { disposalCode, disposalListIds });
   },
 
   /** AS-IS apr.Apr01_Appr.selectByText2 (Dcr00_Tab_DocList): 통합 문서검색. 검색어·수신처는 서버가 %…%로, 상태·문서구분은 '%'가 전체 */

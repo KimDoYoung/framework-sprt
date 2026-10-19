@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!-- AS-IS(IDMS-IC) server/apr/mapper/apr90_disposal_list.xml selectByPersonId (F04, Apr90_Tab_DisposalList) -->
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr90_disposal_list.xml selectByPersonId (F04, Apr90_Tab_DisposalList), selectByCompanyId·updateDisposalCode 등 (F10, Apr90_Tab_DisposalAppr) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprDisposalListMapper">
 
     <!-- AS-IS apr90_disposal_list.selectByPersonId L88 (IDMS-IC) — SELECT *·모델 열 중 그리드가 쓰는 열만, 조인·조건·정렬은 그대로 -->
@@ -39,4 +39,131 @@
          ORDER BY apr90_reg_date
                 , appr.title DESC
     </select>
+
+    <!-- AS-IS apr90_disposal_list.selectByCompanyId L53 (IDMS-IC) — SELECT *·모델 열 중 그리드가 쓰는 열만, 조인·조건·정렬은 그대로.
+         confirmEmpId 조건(<choose>)은 화면이 늘 로그인 사용자 id를 보내므로 항상 걸린다 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprDisposalApprRes">
+        SELECT apr90_disposal_list_id                                                          AS disposal_list_id
+             , apr90_appr_id                                                                   AS appr_id
+             , apr90_disposal_cd                                                               AS disposal_code
+             , f_cdnm('DisposalCode', apr90_disposal_cd, apr90_company_id, apr90_reg_date)     AS disposal_name
+             , apr90_reg_date                                                                  AS reg_date
+             , f_emp_kor_nm(apr90_reg_emp_id)                                                  AS reg_emp_name
+             , appr.title                                                                      AS title
+             , f_cdnm('AprStatusCode', appr.status_cd, apr90_company_id, appr.reg_date)        AS status_name
+             , apr90_reason                                                                    AS reason
+             , apr90_confirm_yn                                                                AS confirm_yn
+             , f_emp_kor_nm(apr90_confirm_emp_id)                                              AS confirm_emp_name
+             , apr90_confirm_date                                                              AS confirm_date
+          FROM apr90_disposal_list
+               LEFT OUTER JOIN (
+                                 SELECT apr01_appr_id    AS appr_id
+                                      , apr01_title      AS title
+                                      , apr01_status_cd  AS status_cd
+                                      , apr01_reg_date   AS reg_date
+                                   FROM apr01_appr
+                                  WHERE 1=1
+                                  UNION ALL
+                                 SELECT apr99_appr_id    AS appr_id
+                                      , apr99_title      AS title
+                                      , apr99_status_cd  AS status_cd
+                                      , apr99_reg_date   AS reg_date
+                                   FROM apr99_appr_del
+                                  WHERE 1=1
+                               ) appr ON appr.appr_id = apr90_appr_id
+         WHERE 1=1
+           AND apr90_company_id = #{c.companyId}
+           AND apr90_disposal_cd LIKE #{c.disposalCode}
+           AND apr90_reg_date BETWEEN #{c.startDate} AND #{c.closeDate}
+        <if test="c.confirmEmpId != null">
+           AND apr90_confirm_emp_id = #{c.confirmEmpId}
+        </if>
+         ORDER BY apr90_reg_date
+                , appr.title DESC
+    </select>
+
+    <select id="selectApprId" resultType="long">
+        SELECT apr90_appr_id
+          FROM apr90_disposal_list
+         WHERE apr90_disposal_list_id = #{disposalListId}
+           AND apr90_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS apr90_disposal_list.updateDisposalCode L131 (IDMS-IC) -->
+    <update id="updateDisposalCode">
+        UPDATE apr90_disposal_list
+           SET apr90_disposal_cd     = #{disposalCode}
+             , apr90_confirm_emp_id  = #{confirmEmpId}
+             , apr90_confirm_date    = #{confirmDate}
+             , apr90_confirm_yn      = #{confirmYn}
+         WHERE apr90_disposal_list_id = #{disposalListId}
+    </update>
+
+    <!-- AS-IS apr91_disposal_history.insert L24 (IDMS-IC) -->
+    <insert id="insertHistory">
+        INSERT INTO apr91_disposal_history
+        SELECT f_create_seq()
+             , #{companyId}
+             , #{regEmpId}
+             , #{regDate}
+             , #{apprId}
+             , #{disposalCode}
+    </insert>
+
+    <!-- AS-IS apr01_appr.insertApprDel (IDMS-IC, 열 순서 그대로) -->
+    <insert id="insertApprDel">
+        INSERT INTO apr99_appr_del
+        SELECT f_create_seq()
+             , apr01_appr_id
+             , apr01_title
+             , apr01_reg_date
+             , apr01_status_cd
+             , apr01_content
+             , apr01_note
+             , apr01_reg_emp_id
+             , apr01_effect_date
+             , apr01_class_tree_id
+             , apr01_stamp_id
+             , apr01_receive_nm
+             , apr01_reference_nm
+             , apr01_stamp_seq
+             , apr01_inout_cd
+             , f_sysdate()
+             , #{empId}
+             , apr01_company_id
+             , apr01_form_type
+             , apr01_dcr_id_word
+             , apr01_sign_company
+             , apr01_sign_ceo
+             , apr01_stamp_position
+             , apr01_link_cd
+          FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </insert>
+
+    <!-- AS-IS apr01_appr.deleteAppr (IDMS-IC) -->
+    <delete id="deleteAppr">
+        DELETE FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </delete>
+
+    <!-- AS-IS opr01_create.updateApprIdByApprId (IDMS-IC) -->
+    <update id="clearOprCreateAppr">
+        UPDATE opr01_create
+           SET opr01_appr_id = NULL
+         WHERE opr01_appr_id = #{apprId}
+    </update>
+
+    <!-- AS-IS pln02_plan.updateApprIdByApprId (IDMS-IC) -->
+    <update id="clearPlanAppr">
+        UPDATE pln02_plan
+           SET pln02_appr_id = NULL
+         WHERE pln02_appr_id = #{apprId}
+    </update>
+
+    <!-- AS-IS apr11_advert_book.deleteByApprId (IDMS-IC) -->
+    <delete id="deleteAdvertBook">
+        DELETE FROM apr11_advert_book
+         WHERE apr11_appr_id = #{apprId}
+    </delete>
 </mapper>

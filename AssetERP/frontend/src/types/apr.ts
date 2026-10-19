@@ -114,6 +114,22 @@ export interface AprDisposalList {
   confirmDate?: string | null;
 }
 
+/** 폐기문서 승인 한 행 (AS-IS Apr90_DisposalListModel 중 Apr90_Tab_DisposalAppr가 쓰는 열) */
+export interface AprDisposalAppr {
+  disposalListId: number;
+  apprId?: number | null;
+  disposalCode?: string | null;
+  disposalName?: string | null;
+  regDate?: string | null;
+  regEmpName?: string | null;
+  title?: string | null;
+  statusName?: string | null;
+  reason?: string | null;
+  confirmYn?: boolean | null;
+  confirmEmpName?: string | null;
+  confirmDate?: string | null;
+}
+
 /** 펀드별 문서검색 문서 목록 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Grid_FundDocList가 쓰는 열) */
 export interface AprFundDoc {
   apprId: number;
