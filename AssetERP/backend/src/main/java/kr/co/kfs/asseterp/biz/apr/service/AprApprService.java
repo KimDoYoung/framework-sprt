@@ -6,8 +6,12 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocSearchCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocSearchRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprFundDocListCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprFundDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprItemDocListCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprItemDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprApprMapper;
@@ -76,6 +80,25 @@ public class AprApprService {
         String admin = String.valueOf(SysMenuSearchService.isManager(user));
         return mapper.selectByText2(new AprDocSearchCond(user.getCompanyId(), classTreeId, orgId, user.getUserId(), admin, startDate, endDate,
                 like(searchText), like(receiveName), blankToAny(statusCode), blankToAny(inoutCode), "%"));
+    }
+
+    /**
+     * AS-IS Apr01_Appr.selectByFundDocList (F06 Apr01_Grid_FundDocList). 고른 펀드(와 그 실제펀드)에 연결된 완료(30) 문서 중 내 조직이 열람할 수 있거나 내가 결재선·열람자인 문서.
+     * 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0
+     */
+    public List<AprFundDocRes> searchFundDocList(UserPrincipal user, Long fundCodeId) {
+        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        return mapper.selectByFundDocList(new AprFundDocListCond(fundCodeId, orgId, user.getUserId()));
+    }
+
+    /**
+     * AS-IS Apr01_Appr.selectByItemDocList (F07 Apr01_Grid_ItemDocList). 고른 종목에 연결된 문서(searchType 2면 그 종목을 운용하는 펀드의 문서 포함) 중
+     * 완료(30)이고 내 조직이 열람할 수 있거나 내가 결재선·열람자인 문서. 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0
+     */
+    public List<AprItemDocRes> searchItemDocList(UserPrincipal user, Long astClassTreeId, String searchType, String searchText) {
+        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        return mapper.selectByItemDocList(new AprItemDocListCond(astClassTreeId, user.getCompanyId(), orgId, user.getUserId(),
+                "2".equals(searchType) ? "2" : "1", nvl(searchText)));
     }
 
     /** AS-IS createRdExcel(sys.Sys99_Print.insertRdDocList + RD 리포트 Dcr00_Rd_DocList) — 같은 조회 결과를 그리드 열 순서로 xlsx에 쓴다 */

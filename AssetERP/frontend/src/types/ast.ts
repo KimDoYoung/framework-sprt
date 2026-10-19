@@ -34,3 +34,12 @@ export interface TrCodeWindow {
   trName?: string | null;
   note?: string | null;
 }
+
+/** 종목별 문서검색 왼쪽 트리 노드 (AS-IS Ast01_ClassTreeModel 중 Apr01_Tab_ItemDocument 트리 열). typeCode IT면 종목(이름 뒤에 표준코드) */
+export interface AstItemTreeNode {
+  classTreeId: number;
+  parentTreeId: number;
+  classTreeName?: string | null;
+  typeCode?: string | null;
+  depth?: number | null;
+}

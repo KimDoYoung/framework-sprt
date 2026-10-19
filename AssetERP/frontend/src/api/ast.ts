@@ -1,9 +1,15 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { AstDetail, TrCode, TrCodeWindow } from '../types/ast';
+import { AstDetail, AstItemTreeNode, TrCode, TrCodeWindow } from '../types/ast';
 
 /** ast(자산) API (E21 자산상세 항목관리, E29 거래유형 등록) */
 export const astApi = {
+  /** AS-IS ast.Ast01_ClassTree.selectByCompanyId (Apr01_Tab_ItemDocument, F07): 종목별 문서검색 트리. assetType 1 고유자산·2 운용자산(펀드자산) */
+  searchItemTree: async (assetType: string): Promise<AstItemTreeNode[]> => {
+    const res = await apiClient.get<ApiResponse<AstItemTreeNode[]>>('v1/ast/class-trees/item-doc', { params: { assetType } });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS ast.Ast02_Detail.selectByCompanyId0: 공통 회사(0) 전용 — 서버가 "%검색어%"로 감싼다 */
   searchDetails: async (searchText: string, useYn: boolean): Promise<AstDetail[]> => {
     const res = await apiClient.get<ApiResponse<AstDetail[]>>('v1/ast/details', { params: { searchText, useYn } });

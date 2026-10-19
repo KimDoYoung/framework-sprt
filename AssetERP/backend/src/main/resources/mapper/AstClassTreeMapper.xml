@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ast/mapper/ast01_class_tree.xml selectByCompanyId L162 + common.ast_tree_all_postgresql (Common.xml) (F07) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstClassTreeMapper">
+
+    <!-- 재귀 CTE는 정렬 경로(path)에 필요한 열(부모·순번·코드·id)과 그리드 열만 남겼다. 조건은 그대로: parent 0, 사용 중, typeCode·assetType LIKE, 회사 -->
+    <select id="selectItemTree" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstItemTreeRes">
+        WITH RECURSIVE ast_tree(
+                ast01_class_tree_id
+            ,   ast01_class_tree_nm
+            ,   ast01_parent_tree_id
+            ,   ast01_seq
+            ,   ast01_class_tree_cd
+            ,   ast01_type_cd
+            ,   ast01_isin
+            ,   depth
+            ,   path
+            ,   cycle
+        ) AS
+        (
+            SELECT  ast01_class_tree_id
+                 ,  ast01_class_tree_nm
+                 ,  ast01_parent_tree_id
+                 ,  ast01_seq
+                 ,  ast01_class_tree_cd
+                 ,  ast01_type_cd
+                 ,  ast01_isin
+                 ,  1
+                 ,  ARRAY[CAST(a.ast01_parent_tree_id AS varchar) || LPAD(CAST(a.ast01_seq AS varchar),10,'0')||a.ast01_class_tree_cd||LPAD(CAST(a.ast01_class_tree_id AS varchar),15,'0')]
+                 ,  false
+              FROM  ast01_class_tree a
+             WHERE  1=1
+               AND  ast01_parent_tree_id = 0
+               AND  ast01_use_yn = 'true'
+               AND  ast01_type_cd LIKE #{c.typeCode}
+               AND  ast01_asset_type LIKE #{c.assetType}
+               AND  ast01_company_id = #{c.companyId}
+             UNION ALL
+            SELECT  a.ast01_class_tree_id
+                 ,  a.ast01_class_tree_nm
+                 ,  a.ast01_parent_tree_id
+                 ,  a.ast01_seq
+                 ,  a.ast01_class_tree_cd
+                 ,  a.ast01_type_cd
+                 ,  a.ast01_isin
+                 ,  b.depth + 1
+                 ,  array_append(b.path, CAST(a.ast01_parent_tree_id AS varchar) || LPAD(CAST(a.ast01_seq AS varchar),10,'0')||a.ast01_class_tree_cd||LPAD(CAST(a.ast01_class_tree_id AS varchar),15,'0'))
+                 ,  a.ast01_class_tree_nm = any(b.path)
+              FROM  ast01_class_tree a
+                    INNER JOIN ast_tree b ON a.ast01_parent_tree_id = b.ast01_class_tree_id
+             WHERE  1=1
+               AND  a.ast01_use_yn = 'true'
+               AND  a.ast01_type_cd LIKE #{c.typeCode}
+               AND  a.ast01_asset_type LIKE #{c.assetType}
+               AND  a.ast01_company_id = #{c.companyId}
+               AND  not cycle
+        )
+        SELECT  a.ast01_class_tree_id                 AS class_tree_id
+             ,  a.ast01_parent_tree_id                AS parent_tree_id
+             ,  a.ast01_class_tree_nm
+                ||CASE WHEN a.ast01_type_cd != 'IT' THEN ''
+                       ELSE (CASE WHEN COALESCE(a.ast01_isin,'X') != 'X' THEN ' ('||a.ast01_isin||')' ELSE '' END) END AS class_tree_name
+             ,  a.ast01_type_cd                       AS type_code
+             ,  a.depth                               AS depth
+          FROM  ast_tree a
+         WHERE  1=1
+           AND  (
+                    ( a.ast01_type_cd = 'IT'
+                      AND (
+                              ( #{c.userId} IN ( SELECT ast10_person_id
+                                                   FROM ast10_manager
+                                                  WHERE ast10_manager_type = '1'
+                                                    AND ast10_link_id      = a.ast01_class_tree_id ) )
+                              OR
+                              ( #{c.orgId}  IN ( SELECT ast10_org_id
+                                                   FROM ast10_manager
+                                                  WHERE ast10_manager_type = '2'
+                                                    AND ast10_link_id      = a.ast01_class_tree_id ) )
+                          ) )
+                    OR ( a.ast01_type_cd != 'IT' )
+                )
+         ORDER BY path
+    </select>
+</mapper>

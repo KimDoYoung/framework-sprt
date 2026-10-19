@@ -3,7 +3,9 @@ package kr.co.kfs.asseterp.biz.apr.controller;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocSearchRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprFundDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprItemDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes;
 import kr.co.kfs.asseterp.biz.apr.service.AprApprService;
@@ -97,6 +99,19 @@ public class AprApprController {
                                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
                                                             @RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.searchIcsDocList(principal, classTreeId, startDate, endDate, searchText));
+    }
+
+    /** AS-IS apr.Apr01_Appr.selectByFundDocList (Apr01_Grid_FundDocList, F06 펀드별 문서검색 문서 목록) */
+    @GetMapping("/fund-doc-list")
+    public ApiResponse<List<AprFundDocRes>> searchFundDocList(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long fundCodeId) {
+        return ApiResponse.ok(service.searchFundDocList(principal, fundCodeId));
+    }
+
+    /** AS-IS apr.Apr01_Appr.selectByItemDocList (Apr01_Grid_ItemDocList, F07 종목별 문서검색 문서 목록) */
+    @GetMapping("/item-doc-list")
+    public ApiResponse<List<AprItemDocRes>> searchItemDocList(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long astClassTreeId,
+                                                              @RequestParam(defaultValue = "1") String searchType, @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchItemDocList(principal, astClassTreeId, searchType, searchText));
     }
 
     /** AS-IS apr.Apr03_RelateFund.selectByApprId (Apr03_TabPage_Relate 연관펀드) */

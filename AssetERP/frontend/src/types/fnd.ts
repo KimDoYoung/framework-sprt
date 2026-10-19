@@ -29,3 +29,21 @@ export interface TrustBank {
   note?: string | null;
   companyId?: number | null;
 }
+
+/** 펀드별 문서검색 펀드 목록 한 행 (AS-IS Fnd01_FundCodeModel 중 Apr01_Tab_FundDocument가 쓰는 열) */
+export interface FundCode {
+  fundCodeId: number;
+  fundCode?: string | null;
+  fundName?: string | null;
+  kofiaFundTypeName?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  closeName?: string | null;
+  kofiaTrustName?: string | null;
+  kofiaPublicName?: string | null;
+  orgCodeName?: string | null;
+  operator1?: string | null;
+  operator2?: string | null;
+  note?: string | null;
+  apprCount?: number | null;
+}

@@ -453,6 +453,140 @@
                 , apr01_effect_date
     </select>
 
+    <!-- AS-IS apr01_appr.selectByFundDocList L2100 (IDMS-IC) — F06. SELECT * → 그리드 열(+ appr_id)만. companyId는 원본 SQL에서도 안 쓴다. 행 정렬 apr01_reg_date DESC, apr01_appr_id DESC 그대로 -->
+    <select id="selectByFundDocList" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprFundDocRes">
+        SELECT A.apr01_appr_id                                       AS appr_id
+             , A.apr01_reg_date                                      AS reg_date
+             , A.apr01_effect_date                                   AS effect_date
+             , f_class_tree_nm_allpath(A.apr01_class_tree_id)        AS class_tree_name_all_path
+             , A.apr01_title                                         AS title
+             , A.apr01_receive_nm                                    AS receive_name
+             , B.sys10_file_nm                                       AS file_name
+          FROM apr01_appr A
+               LEFT OUTER JOIN sys10_file B ON A.apr01_appr_id = B.sys10_parent_id AND B.sys10_title_yn = 'true'
+               LEFT OUTER JOIN apr10_stamp E ON A.apr01_stamp_id = E.apr10_stamp_id
+               INNER JOIN apr03_relate_fund C ON A.apr01_appr_id = C.apr03_appr_id
+               INNER JOIN (
+                              SELECT *
+                                FROM fnd00_fund
+                               WHERE 1=1
+                                 AND fnd00_fund_id = #{c.fundCodeId}
+                                 AND fnd00_work_date = f_max_workdate(fnd00_fund_id, f_sysdate())
+                               UNION ALL
+                              SELECT *
+                                FROM fnd00_fund
+                               WHERE 1=1
+                                 AND fnd00_real_fund_id = #{c.fundCodeId}
+                                 AND fnd00_work_date = f_max_workdate(fnd00_fund_id, f_sysdate())
+                          ) D ON C.apr03_fund_id = D.fnd00_fund_id
+         WHERE 1=1
+           AND apr01_appr_id IN (
+                                    SELECT apr01_appr_id
+                                      FROM apr01_appr
+                                           INNER JOIN apr03_relate_fund   ON apr03_appr_id = apr01_appr_id
+                                           INNER JOIN dcr01_class_tree    ON dcr01_class_tree_id = apr01_class_tree_id
+                                           LEFT OUTER JOIN dcr03_org_auth ON (dcr03_class_tree_id = dcr01_class_tree_id AND dcr03_org_code_id = #{c.orgId})
+                                           LEFT OUTER JOIN dcr04_emp_auth ON (dcr04_class_tree_id = dcr01_class_tree_id AND dcr04_person_id = #{c.personId})
+                                     WHERE 1=1
+                                       AND dcr01_use_yn = 'true'
+                                       AND (
+                                               COALESCE(dcr04_retrieve_yn, dcr03_retrieve_yn, 'false') = 'true'
+                                               OR (
+                                                      #{c.personId} IN (
+                                                                           SELECT UNNEST(ARRAY[apr04_step_emp_id, apr04_appr_emp_id])
+                                                                             FROM apr04_appr_step
+                                                                            WHERE apr04_appr_id = apr01_appr_id
+                                                                            UNION
+                                                                           SELECT apr13_person_id
+                                                                             FROM apr13_person_auth
+                                                                            WHERE apr13_appr_id = apr01_appr_id
+                                                                       )
+                                                  )
+                                           )
+                                       AND apr01_status_cd = '30'
+                                       AND apr03_fund_id IN ( #{c.fundCodeId}, ( SELECT fnd01_fund_code_id
+                                                                                   FROM fnd01_fund_code
+                                                                                  WHERE fnd01_real_fund_id = #{c.fundCodeId} ) )
+                                )
+         ORDER BY apr01_reg_date DESC, apr01_appr_id DESC
+    </select>
+
+    <!-- AS-IS apr01_appr.selectByItemDocList L2153 (IDMS-IC) — F07. 안쪽 SELECT apr01_appr.* → 그리드 열 + apprId(UNION이라 행 구분은 apprId가 맡는다). 정렬 없음(원본 그대로).
+         '1' = #{searchType} 같은 상수 조건은 원본이 searchType으로 두 UNION 가지 중 하나만 켜는 방식이라 그대로 둔다. 검색어는 %…%로 감싸 제목+문서분류 경로+비고에서 찾는다(비고가 null이면 행이 빠지는 것도 원본 그대로) -->
+    <select id="selectByItemDocList" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprItemDocRes">
+        SELECT A.apr01_appr_id                  AS appr_id
+             , A.apr01_reg_date                 AS reg_date
+             , A.apr01_effect_date              AS effect_date
+             , A.class_tree_nm_allpath          AS class_tree_name_all_path
+             , A.apr01_title                    AS title
+             , A.apr01_note                     AS note
+             , B.sys10_file_nm                  AS file_name
+          FROM (
+                    SELECT apr01_appr.apr01_appr_id
+                         , apr01_appr.apr01_reg_date
+                         , apr01_appr.apr01_effect_date
+                         , apr01_appr.apr01_title
+                         , apr01_appr.apr01_note
+                         , apr01_appr.apr01_stamp_id
+                         , f_class_tree_nm_allpath(apr01_class_tree_id) AS class_tree_nm_allpath
+                      FROM apr01_appr
+                           INNER JOIN apr14_relate_ast ON apr14_appr_id = apr01_appr_id
+                     WHERE 1=1
+                       AND apr14_ast_id = #{c.astClassTreeId}
+                       AND apr01_company_id = #{c.companyId}
+                       AND '1' = #{c.searchType} /* 1:연결종목으로만 조회 */
+                     UNION
+                    SELECT apr01_appr.apr01_appr_id
+                         , apr01_appr.apr01_reg_date
+                         , apr01_appr.apr01_effect_date
+                         , apr01_appr.apr01_title
+                         , apr01_appr.apr01_note
+                         , apr01_appr.apr01_stamp_id
+                         , f_class_tree_nm_allpath(apr01_class_tree_id) AS class_tree_nm_allpath
+                      FROM apr01_appr
+                         , apr03_relate_fund INNER JOIN fnd08_org_auth ON (
+                                                                              fnd08_fund_code_id = apr03_fund_id
+                                                                              AND fnd08_org_code_id = #{c.orgId}
+                                                                              AND fnd08_auth_yn = 'true'
+                                                                          )
+                         , fnd10_book
+                     WHERE apr01_appr_id = apr03_appr_id
+                       AND apr03_fund_id = fnd10_fund_code_id
+                       AND fnd10_std_date = f_get_biz_date(apr01_company_id, apr01_reg_date::date, '-1')
+                       AND fnd10_ast_class_tree_id = #{c.astClassTreeId}
+                       AND apr01_company_id = #{c.companyId}
+                       AND '2' = #{c.searchType} /* 2:연결펀드의 운용종목으로 조회 */
+               ) A
+               LEFT OUTER JOIN sys10_file B ON A.apr01_appr_id = B.sys10_parent_id AND B.sys10_title_yn = 'true'
+               LEFT OUTER JOIN apr10_stamp E ON A.apr01_stamp_id = E.apr10_stamp_id
+         WHERE UPPER(apr01_title||class_tree_nm_allpath||apr01_note) LIKE '%'||UPPER(#{c.searchText})||'%'
+           AND apr01_appr_id IN (
+                                    SELECT apr01_appr_id
+                                      FROM apr01_appr
+                                           INNER JOIN dcr01_class_tree ON dcr01_class_tree_id = apr01_class_tree_id
+                                           LEFT OUTER JOIN dcr03_org_auth ON (dcr03_class_tree_id = dcr01_class_tree_id AND dcr03_org_code_id = #{c.orgId})
+                                           LEFT OUTER JOIN dcr04_emp_auth ON (dcr04_class_tree_id = dcr01_class_tree_id AND dcr04_person_id = #{c.personId})
+                                     WHERE 1=1
+                                       AND apr01_status_cd = '30' /* 30:결재완료 */
+                                       AND apr01_company_id = #{c.companyId}
+                                       AND dcr01_use_yn = 'true'
+                                       AND (
+                                               COALESCE(dcr04_retrieve_yn, dcr03_retrieve_yn, 'false') = 'true'
+                                               OR (
+                                                      #{c.personId} IN (
+                                                                           SELECT apr04_step_emp_id
+                                                                             FROM apr04_appr_step
+                                                                            WHERE apr04_appr_id = apr01_appr_id
+                                                                            UNION
+                                                                           SELECT apr13_person_id
+                                                                             FROM apr13_person_auth
+                                                                            WHERE apr13_appr_id = apr01_appr_id
+                                                                       )
+                                                  )
+                                           )
+                                )
+    </select>
+
     <!-- AS-IS apr03_relate_fund.selectByApprId (IDMS-IC) — F02. 행을 정하는 조인(펀드·그 시점의 펀드정보·실제펀드)만 남기고 열은 fundId·펀드명(fnd00_fund_nm) -->
     <select id="selectRelateFunds" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes">
         SELECT apr03_fund_id                                         AS fund_id

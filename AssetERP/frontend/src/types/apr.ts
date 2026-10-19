@@ -113,3 +113,25 @@ export interface AprDisposalList {
   confirmEmpName?: string | null;
   confirmDate?: string | null;
 }
+
+/** 펀드별 문서검색 문서 목록 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Grid_FundDocList가 쓰는 열) */
+export interface AprFundDoc {
+  apprId: number;
+  regDate?: string | null;
+  effectDate?: string | null;
+  classTreeNameAllPath?: string | null;
+  title?: string | null;
+  receiveName?: string | null;
+  fileName?: string | null;
+}
+
+/** 종목별 문서검색 문서 목록 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Grid_ItemDocList가 쓰는 열) */
+export interface AprItemDoc {
+  apprId: number;
+  regDate?: string | null;
+  effectDate?: string | null;
+  classTreeNameAllPath?: string | null;
+  title?: string | null;
+  note?: string | null;
+  fileName?: string | null;
+}

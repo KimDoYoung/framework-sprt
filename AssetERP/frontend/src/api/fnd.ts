@@ -1,9 +1,25 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { Consignment, OfficeWork, TrustBank } from '../types/fnd';
+import { Consignment, FundCode, OfficeWork, TrustBank } from '../types/fnd';
 
 /** fnd(기관정보) 화면 API (D11~) */
+export interface FundOrgAuthParams {
+  closeYn: boolean;
+  classFundExceptYn: boolean;
+  fundName: string;
+  fundTypeCode: string;
+  classTypeCode: string;
+}
+
 export const fndApi = {
+  // ── F06 펀드별 문서검색 (Apr01_Tab_FundDocument) ──
+
+  /** AS-IS fnd.Fnd01_FundCode.selectByFundOrgAuth: 내 조직이 권한을 가진 펀드. 펀드명은 서버가 %…%로, 유형·클래스 구분은 '%'가 전체 */
+  searchFundCodesByOrgAuth: async (params: FundOrgAuthParams): Promise<FundCode[]> => {
+    const res = await apiClient.get<ApiResponse<FundCode[]>>('v1/fnd/fund-codes/org-auth', { params });
+    return res.data.data ?? [];
+  },
+
   // ── D11 수탁사정보 관리(관리자) (Fnd03_Tab_ConsignmentManager) ──
 
   /** AS-IS fnd.Fnd03_Consignment.selectByCompanyId0: 공통 회사(0) 전용 — 사용여부 체크면 사용 중인 것만 */

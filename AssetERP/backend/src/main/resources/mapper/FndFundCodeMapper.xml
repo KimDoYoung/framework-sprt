@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/fnd/mapper/fnd01_fund_code.xml selectByFundOrgAuth L392 (F06) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.fnd.mapper.FndFundCodeMapper">
+
+    <!-- AS-IS fnd01_fund_code.getSystemCodeName L129 중 이 화면 열에 쓰는 것(해지구분·신탁구분·펀드유형·구분)만. 코드 종류별 CTE를 한 조각으로 반복 -->
+    <sql id="codeName">
+        SELECT sys09_code AS cd
+             , sys09_name AS nm
+          FROM sys08_code_kind
+               INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+         WHERE sys08_kind_cd = '${kind}'
+           AND ( ( COALESCE(sys08_sys_yn,'false')  = 'true' AND sys09_company_id = 0                  ) OR
+                 ( COALESCE(sys08_sys_yn,'false') != 'true' AND sys09_company_id = #{c.companyId} ) )
+           AND sys09_apply_date &lt;= f_today()
+           AND ( ( COALESCE(sys09_close_yn,'false')  = 'true' AND sys09_close_date >= f_today() ) OR
+                 ( COALESCE(sys09_close_yn,'false') != 'true'                                    ) )
+    </sql>
+
+    <select id="selectByFundOrgAuth" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundCodeRes">
+        WITH closeFund AS ( <include refid="codeName"><property name="kind" value="ClosedFundCode"/></include> )
+           , kofiaTrust AS ( <include refid="codeName"><property name="kind" value="IcamTrustCode"/></include> )
+           , kofiaFundType AS ( <include refid="codeName"><property name="kind" value="IcamFundType"/></include> )
+           , kofiaPublic AS ( <include refid="codeName"><property name="kind" value="IcamPublicCode"/></include> )
+        SELECT tt.fnd01_fund_code_id         AS fund_code_id
+             , tt.fnd01_fund_cd              AS fund_code
+             , tt.fnd02_fund_nm              AS fund_name
+             , kofiaFundType.nm              AS kofia_fund_type_name
+             , tt.fnd01_start_date           AS start_date
+             , tt.fnd01_end_date             AS end_date
+             , closeFund.nm                  AS close_name
+             , kofiaTrust.nm                 AS kofia_trust_name
+             , kofiaPublic.nm                AS kofia_public_name
+             , tt.fnd02_org_code_nm          AS org_code_name
+             , tt.fnd02_operator1            AS operator1
+             , tt.fnd02_operator2            AS operator2
+             , tt.fnd01_note                 AS note
+             , (
+                   SELECT COUNT(*)
+                     FROM apr01_appr
+                          INNER JOIN apr03_relate_fund ON apr03_appr_id = apr01_appr_id
+                    WHERE 1=1
+                      AND apr01_company_id = tt.fnd01_company_id
+                      AND apr01_status_cd = '30'
+                      AND apr03_fund_id IN (
+                                               SELECT tt.fnd01_fund_code_id
+                                                UNION
+                                               SELECT a.fnd01_fund_code_id
+                                                 FROM fnd01_fund_code a
+                                                WHERE a.fnd01_real_fund_id = tt.fnd01_fund_code_id
+                                           )
+                      AND (
+                              (
+                                  #{c.empId} IN (
+                                                    SELECT UNNEST(ARRAY[apr04_step_emp_id, apr04_appr_emp_id])
+                                                      FROM apr04_appr_step
+                                                     WHERE apr04_appr_id = apr01_appr_id
+                                                     UNION ALL
+                                                    SELECT apr13_person_id
+                                                      FROM apr13_person_auth
+                                                     WHERE apr13_appr_id = apr01_appr_id
+                                                )
+                              )
+                              OR
+                              (
+                                  #{c.orgId} IN (
+                                                    SELECT dcr03_org_code_id
+                                                      FROM dcr03_org_auth
+                                                     WHERE dcr03_class_tree_id = apr01_class_tree_id
+                                                       AND dcr03_retrieve_yn = 'true'
+                                                       AND dcr03_class_tree_id NOT IN (
+                                                                                          SELECT dcr04_class_tree_id
+                                                                                            FROM dcr04_emp_auth
+                                                                                           WHERE dcr04_person_id = #{c.empId}
+                                                                                             AND COALESCE(dcr04_retrieve_yn, 'true') = 'false'
+                                                                                      )
+                                                )
+                              )
+                          )
+               )                             AS appr_count
+          FROM (
+                SELECT DISTINCT t.*
+                     , fnd02_fund_info.*
+                  FROM fnd01_fund_code t
+                       INNER JOIN fnd02_fund_info ON ( fnd02_fund_code_id = fnd01_fund_code_id
+                                                       AND fnd02_work_date = ( SELECT MAX(fnd02_work_date)
+                                                                                 FROM fnd02_fund_info
+                                                                                WHERE fnd02_fund_code_id = fnd01_fund_code_id
+                                                                                  AND fnd02_work_date &lt;= f_today() ) )
+                       INNER JOIN fnd08_org_auth ON fnd08_fund_code_id = fnd01_fund_code_id
+                 WHERE fnd01_company_id = #{c.companyId}
+                <if test="c.admin == 'false'">
+                   AND fnd08_org_code_id = #{c.orgId}
+                </if>
+                   AND fnd08_auth_yn = 'true'
+                   AND fnd01_close_yn IN ('false', #{c.closeYn})
+                   AND fnd01_plan_yn = COALESCE(NULL, fnd01_plan_yn)
+                   AND fnd02_kofia_fund_type_cd LIKE #{c.fundTypeCode}
+                   AND COALESCE(fnd02_kofia_class_type_cd, '%') LIKE #{c.classTypeCode}
+                <if test="c.classFundExceptYn == 'true'">
+                   AND fnd02_kofia_class_type_cd IN ('1','Z')
+                   AND COALESCE(fnd02_diff_div_yn,'false') != 'true'
+                </if>
+                   AND CONCAT(fnd01_fund_cd, fnd02_fund_nm) ILIKE #{c.fundName}
+               ) tt
+               LEFT OUTER JOIN closeFund      ON closeFund.cd      = tt.fnd01_close_yn
+               LEFT OUTER JOIN kofiaTrust     ON kofiaTrust.cd     = tt.fnd02_kofia_trust_cd
+               LEFT OUTER JOIN kofiaFundType  ON kofiaFundType.cd  = tt.fnd02_kofia_fund_type_cd
+               LEFT OUTER JOIN kofiaPublic    ON kofiaPublic.cd    = tt.fnd02_kofia_public_cd
+         ORDER BY fnd01_fund_cd
+    </select>
+</mapper>

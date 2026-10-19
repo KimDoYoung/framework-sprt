@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalList, AprDoc, AprDocSearch, AprIcsDoc, AprRelateAdv, AprRelateFund, AprStamp } from '../types/apr';
+import { AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalList, AprDoc, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprRelateAdv, AprRelateFund, AprStamp } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -72,6 +72,18 @@ export const aprApi = {
     } catch (err) {
       throw await readBlobError(err);
     }
+  },
+
+  /** AS-IS apr.Apr01_Appr.selectByFundDocList (Apr01_Grid_FundDocList, F06): 고른 펀드의 문서 목록 */
+  searchFundDocList: async (fundCodeId: number): Promise<AprFundDoc[]> => {
+    const res = await apiClient.get<ApiResponse<AprFundDoc[]>>('v1/apr/apprs/fund-doc-list', { params: { fundCodeId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr01_Appr.selectByItemDocList (Apr01_Grid_ItemDocList, F07): 고른 종목의 문서 목록. searchType 1 연관종목만·2 연관종목운용펀드포함, searchText는 서버가 %…%로 */
+  searchItemDocList: async (params: { astClassTreeId: number; searchType: string; searchText: string }): Promise<AprItemDoc[]> => {
+    const res = await apiClient.get<ApiResponse<AprItemDoc[]>>('v1/apr/apprs/item-doc-list', { params });
+    return res.data.data ?? [];
   },
 
   /** AS-IS apr.Apr03_RelateFund.selectByApprId (Apr03_TabPage_Relate) */
