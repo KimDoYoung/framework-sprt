@@ -3104,5 +3104,39 @@
     "note": "docs/work/F/F11-작업기록.md",
     "history": [],
     "id": "F11"
+  },
+  "Fbx01_Tab_Search": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/fbx/Fbx01_Grid_DocList.java": "4c41056079b88fdc22207ccd44b7f09295212b5b",
+      "application/src/main/java/myApp/client/vi/fbx/Fbx01_Tab_Search.java": "cc8e0bc6f05abefb77f0627382981490331287d5",
+      "application/src/main/java/myApp/client/vi/fbx/Fbx02_Popup_History.java": "ee6f0d135eb4a61d26d4cd5968cb233250fbeb91",
+      "application/src/main/java/myApp/client/vi/fbx/model/Fbx01_BoxModel.java": "c22be350789e1875b04d3cada0b7c02182b16030",
+      "application/src/main/java/myApp/client/vi/fbx/model/Fbx01_BoxModelProperties.java": "94d93ddcc9f5d4ed540c48369770d3c037a973c8",
+      "application/src/main/java/myApp/client/vi/fbx/model/Fbx02_HistoryModel.java": "ca4169d2fe64bc1079b766b11df9351511588c37",
+      "application/src/main/java/myApp/client/vi/fbx/model/Fbx02_HistoryModelProperties.java": "ea924dfd45ed54b88a5e9a63b5f397224ac53069",
+      "application/src/main/java/myApp/client/vi/fbx/model/Fbx03_FileModel.java": "7022c7fc23e778748855aba3c94dc2fe4b0815cd",
+      "application/src/main/java/myApp/client/vi/fbx/model/Fbx03_FileModelProperties.java": "8d4a249cd512e41ffc02f6dd7444ce88ec89b836",
+      "application/src/main/java/myApp/server/fbx/Fbx01_Box.java": "659499d4be95e4f4e91d9dbaee6c0bd7d218992a",
+      "application/src/main/java/myApp/server/fbx/Fbx02_History.java": "60bca8750e02b9ab6b86af1cd52012a493c4da77",
+      "application/src/main/java/myApp/server/fbx/Fbx03_File.java": "5c14ba5ba05780625a8516ee96107e3e413a5201",
+      "application/src/main/java/myApp/server/fbx/mapper/fbx01_box.xml": "538c52c33d3f8f9a62414041e8b3d39886b93668",
+      "application/src/main/java/myApp/server/fbx/mapper/fbx02_history.xml": "fe15a34c81e1c32c923602256b30e6a080064754",
+      "application/src/main/java/myApp/server/fbx/mapper/fbx03_file.xml": "b925a948bb7181b2e922e01e04445a44fdfecd37",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893"
+    },
+    "shared_links": [
+      "Sys10_Lookup_FileViewer"
+    ],
+    "recorded_at": "2026-10-19T22:12:55+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/F/F12-작업기록.md",
+    "history": [],
+    "id": "F12"
   }
 }

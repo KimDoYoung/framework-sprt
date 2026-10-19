@@ -40,6 +40,14 @@ public class FbxFileController {
         return ApiResponse.ok(service.search(principal, boxId, classTreeId));
     }
 
+    /** AS-IS fbx.Fbx03_File.selectByBoxId (F12 파일조회) */
+    @GetMapping("/by-box")
+    public ApiResponse<List<FbxFileRes>> searchByBoxId(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long boxId,
+                                                       @RequestParam(required = false) String fileName,
+                                                       @RequestParam(required = false) String regEmpName) {
+        return ApiResponse.ok(service.searchByBoxId(principal, boxId, fileName, regEmpName));
+    }
+
     /** AS-IS FileUpload?mode=filebox&boxId&classId (파일 여러 개) → 올린 건수 */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<Integer> upload(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long boxId,

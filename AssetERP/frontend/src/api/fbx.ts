@@ -39,6 +39,12 @@ export const fbxApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS fbx.Fbx03_File.selectByBoxId (F12 파일조회): 보관함의 파일 전체, 문서분류/파일명·등록자 "%검색어%" */
+  searchFilesByBox: async (boxId: number, fileName: string, regEmpName: string): Promise<FbxFile[]> => {
+    const res = await apiClient.get<ApiResponse<FbxFile[]>>('v1/fbx/files/by-box', { params: { boxId, fileName, regEmpName } });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS FileUpload?mode=filebox&boxId&classId (파일 여러 개) → 올린 건수 */
   uploadFiles: async (boxId: number, classTreeId: number, files: File[]): Promise<number> => {
     const form = new FormData();

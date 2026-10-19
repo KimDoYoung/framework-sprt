@@ -13,6 +13,10 @@ public interface FbxFileMapper {
     List<FbxFileRes> selectByOrgAuth(@Param("companyId") Long companyId, @Param("boxId") Long boxId, @Param("dcrClassId") Long dcrClassId,
                                      @Param("orgId") Long orgId, @Param("empId") Long empId);
 
+    /** AS-IS selectByBoxId L87 (F12) */
+    List<FbxFileRes> selectByBoxId(@Param("companyId") Long companyId, @Param("boxId") Long boxId, @Param("orgId") Long orgId,
+                                   @Param("empId") Long empId, @Param("fileName") String fileName, @Param("regEmpName") String regEmpName);
+
     /** 새 파일 ID. AS-IS IsNewData.getSeq와 같은 식 */
     Long selectNextId();
 

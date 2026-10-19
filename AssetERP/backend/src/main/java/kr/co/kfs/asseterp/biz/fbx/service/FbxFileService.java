@@ -38,6 +38,15 @@ public class FbxFileService {
         return fileMapper.selectByOrgAuth(user.getCompanyId(), boxId, classTreeId, orgIdOf(user), user.getUserId());
     }
 
+    /** AS-IS Fbx03_File.selectByBoxId L124 (F12): 보관함의 파일 전체, 파일명(문서분류 경로 포함)·등록자명 "%검색어%"(빈 값은 %) */
+    public List<FbxFileRes> searchByBoxId(UserPrincipal user, Long boxId, String fileName, String regEmpName) {
+        return fileMapper.selectByBoxId(user.getCompanyId(), boxId, orgIdOf(user), user.getUserId(), like(fileName), like(regEmpName));
+    }
+
+    private String like(String text) {
+        return text == null || text.isEmpty() ? "%" : "%" + text + "%";
+    }
+
     /** AS-IS uploadFbx03 L250-327: 파일마다 fbx03 + 첨부 + 기록(01). 빈 파일은 건너뛴다. 하나라도 실패하면 모두 되돌린다 → 올린 건수 */
     @Transactional
     public int upload(UserPrincipal user, Long boxId, Long classTreeId, List<MultipartFile> files) {

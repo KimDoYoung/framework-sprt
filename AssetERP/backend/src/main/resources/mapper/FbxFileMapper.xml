@@ -53,6 +53,42 @@
            )
     </select>
 
+    <!-- AS-IS fbx03_file.selectByBoxId L87 (IDMS-IC, F12 Fbx01_Grid_DocList) — 조인·조건 그대로, 문서분류 하위 재귀 없음. 그리드가 쓰는 열만. fileName은 문서분류 경로||파일명, regEmpName은 사원명 LIKE (서버가 %…%로 감싼다) -->
+    <select id="selectByBoxId" resultType="kr.co.kfs.asseterp.biz.fbx.dto.FbxFileRes">
+        SELECT *
+          FROM (
+                SELECT a.fbx03_file_id                                       AS file_id
+                     , a.fbx03_box_id                                        AS box_id
+                     , a.fbx03_dcr_class_id                                  AS dcr_class_id
+                     , f_class_tree_nm_allpath(a.fbx03_dcr_class_id)         AS dcr_class_name
+                     , a.fbx03_emp_id                                        AS emp_id
+                     , f_emp_kor_nm(a.fbx03_emp_id)                          AS emp_name
+                     , a.fbx03_crt_date                                      AS crt_date
+                     , c.sys10_file_nm                                       AS file_name
+                  FROM fbx01_box b
+                       INNER JOIN fbx03_file a             ON b.fbx01_box_id = a.fbx03_box_id
+                       INNER JOIN sys10_file c             ON a.fbx03_file_id = c.sys10_parent_id
+                       INNER JOIN dcr01_class_tree d       ON a.fbx03_dcr_class_id = d.dcr01_class_tree_id
+                       LEFT OUTER JOIN dcr03_org_auth e    ON (a.fbx03_dcr_class_id = e.dcr03_class_tree_id AND e.dcr03_org_code_id = #{orgId})
+                       LEFT OUTER JOIN dcr04_emp_auth f    ON (a.fbx03_dcr_class_id = f.dcr04_class_tree_id AND f.dcr04_person_id = #{empId})
+                 WHERE 1=1
+                   AND fbx03_box_id = #{boxId}
+                   AND fbx01_company_id = #{companyId}
+                   AND fbx03_emp_id IN (
+                           SELECT emp01_person_id
+                             FROM emp01_person
+                            WHERE emp01_company_id = #{companyId}
+                              AND emp01_kor_nm LIKE #{regEmpName}
+                       )
+                   AND (
+                           COALESCE(dcr04_retrieve_yn, dcr03_retrieve_yn, 'false') = 'true'
+                           OR
+                           fbx03_emp_id = #{empId}
+                       )
+               ) a
+         WHERE UPPER(dcr_class_name || file_name) LIKE UPPER(#{fileName})
+    </select>
+
     <!-- AS-IS IsNewData.getSeq와 같은 식 -->
     <select id="selectNextId" resultType="long" flushCache="true">
         SELECT f_create_seq()
