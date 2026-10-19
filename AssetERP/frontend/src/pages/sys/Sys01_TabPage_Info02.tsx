@@ -37,7 +37,7 @@ export const Sys01_TabPage_Info02: React.FC<CompanyTabProps> = ({ companyId }) =
   const crud = useGridCrud<CompanyBasic>({
     idField: 'companyId',
     // retrieve() L82-86: 서비스 sys.Sys01_Company.selectById(companyId)
-    search: useCallback(async () => (companyId ? [await sysApi.getCompanyBasic(companyId)] : []), [companyId]),
+    search: useCallback(async () => (companyId != null ? [await sysApi.getCompanyBasic(companyId)] : []), [companyId]),
     // updateCorpRegNo() L88-115 → update() L117-120: 변경 행만. 법인등록번호가 있으면 getCorpRegNo(to_encrypts)로
     // 암호값을 넣고 저장 — TOBE는 서버가 한 번에 한다(값이 없으면 암호값 그대로)
     save: useCallback((rows: CompanyBasic[]) => Promise.all(rows.map(sysApi.updateCompanyBasic)), []),
@@ -49,7 +49,7 @@ export const Sys01_TabPage_Info02: React.FC<CompanyTabProps> = ({ companyId }) =
 
   // [E0] 화면 열림 (생성자 L38-55) / retrieve(param) L122-125 ← Sys01_Tab_Company.retrieveTabpage (회사 선택·탭 전환)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (companyId) crud.retrieve(); else crud.clear(); }, [companyId]);
+  useEffect(() => { if (companyId != null) crud.retrieve(); else crud.clear(); }, [companyId]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, boxSizing: 'border-box' }}>

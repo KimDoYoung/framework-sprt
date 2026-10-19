@@ -71,7 +71,7 @@ export const Sys50_TabPage_SpecificMenu: React.FC<CompanyTabProps> = ({ companyI
     idField: 'specificMenuId',
     // retrieve() L251-256: companyId, specificWorkCode → sys.Sys50_SpecificMenu.selectBySpecificWorkCode
     search: useCallback(
-      () => (companyId ? sysApi.searchSpecificMenus(companyId, specificWorkCd) : Promise.resolve([])),
+      () => (companyId != null ? sysApi.searchSpecificMenus(companyId, specificWorkCd) : Promise.resolve([])),
       [companyId, specificWorkCd]),
     // update() L259-278: GridUpdate → sys.Sys50_SpecificMenu.update
     save: useCallback((rows: Row[]) => sysApi.updateSpecificMenus(companyId!, rows), [companyId]),
@@ -93,7 +93,7 @@ export const Sys50_TabPage_SpecificMenu: React.FC<CompanyTabProps> = ({ companyI
 
   // [E5] historyButton[요청이력].Select (L93) → openHistory() L240-248: 회사가 없으면 막는다
   const openHistory = () => {
-    if (!companyId) {
+    if (companyId == null) {
       message.warning('회사를 선택해주세요');
       return;
     }
@@ -102,7 +102,7 @@ export const Sys50_TabPage_SpecificMenu: React.FC<CompanyTabProps> = ({ companyI
 
   // [E3] insertButton[등록].Select (L81) → insertRow() L281-291
   const insertRow = () => {
-    if (!companyId) {
+    if (companyId == null) {
       message.warning('회사를 선택해주세요');
       return;
     }
@@ -153,7 +153,7 @@ export const Sys50_TabPage_SpecificMenu: React.FC<CompanyTabProps> = ({ companyI
 
   // [E0] 화면 열림 / retrieve(param) L318-321 → retrieve(companyId) L235-238 ← Sys01_Tab_Company.retrieveTabpage (회사 선택·탭 전환)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (companyId) crud.retrieve(); else crud.clear(); }, [companyId]);
+  useEffect(() => { if (companyId != null) crud.retrieve(); else crud.clear(); }, [companyId]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, boxSizing: 'border-box' }}>

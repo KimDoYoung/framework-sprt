@@ -44,7 +44,7 @@ export const Sys02_Tab_User: React.FC<CompanyTabProps> = ({ companyId }) => {
   const crud = useGridCrud<AdminUser>({
     idField: 'userId',
     // retrieve() L121-125: 서비스 sys.Sys02_User.selectByName(companyId)
-    search: useCallback(() => (companyId ? sysApi.searchAdminUsers(companyId) : Promise.resolve([])), [companyId]),
+    search: useCallback(() => (companyId != null ? sysApi.searchAdminUsers(companyId) : Promise.resolve([])), [companyId]),
     // update() L128-131: GridUpdate → sys.Sys02_User.update
     save: useCallback((rows: AdminUser[]) => sysApi.updateAdminUsers(companyId!, rows), [companyId]),
     // deleteRow() L148-152: GridDeleteData(선택 행) — 확인 창 없음
@@ -72,7 +72,7 @@ export const Sys02_Tab_User: React.FC<CompanyTabProps> = ({ companyId }) => {
   const retrieve = crud.retrieve;
   const update = crud.saveRows;
   const insertRow = () => {
-    if (!companyId) {
+    if (companyId == null) {
       message.warning('회사를 선택해주세요');
       return;
     }
@@ -82,7 +82,7 @@ export const Sys02_Tab_User: React.FC<CompanyTabProps> = ({ companyId }) => {
 
   // retrieve(companyId) L115-118 ← Sys01_Tab_Company.retrieveTabpage
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (companyId) retrieve(); else crud.clear(); }, [companyId]);
+  useEffect(() => { if (companyId != null) retrieve(); else crud.clear(); }, [companyId]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, boxSizing: 'border-box' }}>

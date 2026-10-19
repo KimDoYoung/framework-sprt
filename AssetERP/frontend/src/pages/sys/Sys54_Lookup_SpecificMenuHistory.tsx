@@ -29,7 +29,7 @@ interface Props {
 }
 
 export const Sys54_Lookup_SpecificMenuHistory: React.FC<Props> = ({ companyId, onClose }) => {
-  const open = !!companyId;
+  const open = companyId != null;
   const [noteRow, setNoteRow] = useState<Row>();
   const fileUpdownForm = useRef<FileUpdownFormHandle>(null);
   // fileParentId: 파일을 올릴 이력 ID (fileUploadChk·deleteFile이 정하고 [E7]이 쓴다)
@@ -176,7 +176,7 @@ export const Sys54_Lookup_SpecificMenuHistory: React.FC<Props> = ({ companyId, o
         </div>
       </LookupModal>
       {/* 참고내용 [Edit]: lookup.open(selectModel, callback → retrieve()) */}
-      {companyId && <Sys54_Edit_Note companyId={companyId} history={noteRow} onClose={() => setNoteRow(undefined)} onSaved={retrieve} />}
+      {companyId != null && <Sys54_Edit_Note companyId={companyId} history={noteRow} onClose={() => setNoteRow(undefined)} onSaved={retrieve} />}
     </>
   );
 };

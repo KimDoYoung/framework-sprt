@@ -39,7 +39,7 @@ interface Props {
 
 export const Sys52_Lookup_SpecificMenuLink: React.FC<Props> = ({ companyId, specificMenu, onClose }) => {
   const [links, setLinks] = useState<Code[]>([]);
-  const open = !!companyId && !!specificMenu;
+  const open = companyId != null && !!specificMenu;
   const specificWorkCd = specificMenu?.specificWorkCd ?? '';
 
   const crud = useGridCrud<Row>({

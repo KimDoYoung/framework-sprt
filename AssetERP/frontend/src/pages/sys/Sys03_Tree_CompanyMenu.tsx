@@ -35,7 +35,7 @@ export const Sys03_Tree_CompanyMenu: React.FC<Props> = ({ companyId }) => {
 
   // retrieve(companyId) L147-177: 서비스 sys.Sys06_Menu.selectByCompanyIdAll → 트리 구성
   const retrieve = useCallback(async () => {
-    if (!companyId) return;
+    if (companyId == null) return;
     try {
       const list = await sysApi.getCompanyMenuTree(companyId);
       changed.current.clear();
@@ -57,7 +57,7 @@ export const Sys03_Tree_CompanyMenu: React.FC<Props> = ({ companyId }) => {
 
   // update() L190-211: 바뀐 행 → 서비스 sys.Sys06_Menu.updateCompanyMenu(companyId) → 결과로 그 행을 바꾼다(다시 조회하지 않음)
   const update = async () => {
-    if (!companyId) return;
+    if (companyId == null) return;
     const rows = tree.rows.filter(r => changed.current.has(r.menuId));
     if (rows.length === 0) {
       message.info('저장할 내용이 없습니다.');
@@ -79,7 +79,7 @@ export const Sys03_Tree_CompanyMenu: React.FC<Props> = ({ companyId }) => {
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (companyId) retrieve(); }, [companyId]);
+  useEffect(() => { if (companyId != null) retrieve(); }, [companyId]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 12px 0', boxSizing: 'border-box' }}>

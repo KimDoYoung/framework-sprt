@@ -34,7 +34,7 @@ export const Sys29_Lookup_PublicIpList: React.FC<Props> = ({ companyId, onClose 
   const crud = useGridCrud<LoginSecure>({
     idField: 'loginSecureId',
     // retrieve() L124-133: 서비스 sys.Sys29_LoginSecure.selectByCompanyId(companyId)
-    search: useCallback(() => (companyId ? sysApi.searchLoginSecures(companyId) : Promise.resolve([])), [companyId]),
+    search: useCallback(() => (companyId != null ? sysApi.searchLoginSecures(companyId) : Promise.resolve([])), [companyId]),
     save: useCallback((rows: LoginSecure[]) => sysApi.updateLoginSecures(companyId!, rows), [companyId]),
     remove: useCallback((ids: number[]) => sysApi.deleteLoginSecures(companyId!, ids), [companyId]),
     // insertRow() L135-141: 회사 = 연 회사, 시작일 = 오늘
@@ -50,11 +50,11 @@ export const Sys29_Lookup_PublicIpList: React.FC<Props> = ({ companyId, onClose 
 
   // open() L50-78 → settings(), retrieve()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (companyId) retrieve(); }, [companyId]);
+  useEffect(() => { if (companyId != null) retrieve(); }, [companyId]);
 
   return (
     <LookupModal
-      open={!!companyId}
+      open={companyId != null}
       title="공인IP 등록/수정"
       width={700}
       maskClosable={false}

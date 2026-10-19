@@ -64,7 +64,7 @@ export const Sys01_TabPage_Info04: React.FC<CompanyTabProps> = ({ companyId }) =
   const crud = useGridCrud<Row>({
     idField: 'companyId',
     // retrieve() L163-167: 서비스 sys.Sys01_Company.selectById(companyId)
-    search: useCallback(async () => (companyId ? [await sysApi.getCompanyAccount(companyId)] : []), [companyId]),
+    search: useCallback(async () => (companyId != null ? [await sysApi.getCompanyAccount(companyId)] : []), [companyId]),
     // update() L169-172: GridUpdate → sys.Sys01_Company.update
     save: useCallback((rows: Row[]) => Promise.all(rows.map(sysApi.updateCompanyAccount)), []),
     remove: async () => undefined, // 이 탭에는 삭제가 없다
@@ -90,7 +90,7 @@ export const Sys01_TabPage_Info04: React.FC<CompanyTabProps> = ({ companyId }) =
 
   // [E0] 화면 열림 (생성자 L38-55) / retrieve(param) L174-177 ← Sys01_Tab_Company.retrieveTabpage (회사 선택·탭 전환)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (companyId) crud.retrieve(); else crud.clear(); }, [companyId]);
+  useEffect(() => { if (companyId != null) crud.retrieve(); else crud.clear(); }, [companyId]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, boxSizing: 'border-box' }}>

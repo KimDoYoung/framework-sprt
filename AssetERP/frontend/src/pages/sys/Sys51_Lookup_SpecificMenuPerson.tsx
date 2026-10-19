@@ -36,7 +36,7 @@ interface Props {
 
 export const Sys51_Lookup_SpecificMenuPerson: React.FC<Props> = ({ companyId, specificMenu, onClose }) => {
   const [empOpen, setEmpOpen] = useState(false);
-  const open = !!companyId && !!specificMenu;
+  const open = companyId != null && !!specificMenu;
   const specificMenuId = specificMenu?.specificMenuId;
   const specificWorkCd = specificMenu?.specificWorkCd ?? '';
 
