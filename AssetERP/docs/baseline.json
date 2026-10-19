@@ -2736,5 +2736,26 @@
     "note": "docs/work/E/E31-작업기록.md",
     "history": [],
     "id": "E31"
+  },
+  "Act15_Tab_CloseCheck": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/act/Act15_Tab_CloseCheck.java": "163d74748b87aeccab5abd0ae2bd3eda58c8379b",
+      "application/src/main/java/myApp/client/vi/act/model/Act15_CloseCheckModel.java": "d1089d3ef89cbd5f4d85d5887b9efc3b2354ab6b",
+      "application/src/main/java/myApp/client/vi/act/model/Act15_CloseCheckModelProperties.java": "d991476399eb66a7e838259bd9c744a9f48eac87",
+      "application/src/main/java/myApp/server/act/Act15_CloseCheck.java": "656a19b0198e2631728be461cc7e51d903587b06",
+      "application/src/main/java/myApp/server/act/mapper/act15_close_check.xml": "2c537477e05c68c289ba1e3a23b883a5a54a74e6",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-19T14:06:21+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/E/E32-작업기록.md",
+    "history": [],
+    "id": "E32"
   }
 }

@@ -1,0 +1,8 @@
+{
+  "id": "E32",
+  "menu": ["기초자료", "마감검증 체크항목"],
+  "api": ["act/close-checks"],
+  "opens": { "rows": "12", "headers": "고객사" },
+  "grid": true,
+  "notes": "등록·삭제 버튼이 없다(cellCrud 없음). 체크박스 한 칸을 눌러 저장(1)이 켜지는지 보고, 저장하지 말고 조회로 버린다. 저장 실행은 행이 없는 고객사에 INSERT가 생겨 지울 API가 없다 → DB 테스트(ActCloseCheckDbTest)로 대체, 화면에서는 이미 행이 있는 28000(한국펀드서비스) 행만 같은 값으로 저장"
+}

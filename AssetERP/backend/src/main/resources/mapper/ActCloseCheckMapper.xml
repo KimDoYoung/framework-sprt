@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/act/mapper/act15_close_check.xml (selectByText, selectById) + UpdateDataModel(act15_close_check) 저장  (E32)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActCloseCheckMapper">
+
+    <!-- AS-IS act15_close_check.selectByText (IDMS-IC) — 활성 고객사 전부(회사 0 제외). 아직 없는 회사의 행 ID는 row_number() 임시 값, 값이 없으면 'true' -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseCheckRes">
+        SELECT COALESCE(act15_close_check_id, row_number() over())  AS close_check_id
+             , sys01_company_id                                     AS company_id
+             , sys01_company_nm                                     AS company_name
+             , COALESCE(act15_deposit_real_match_yn     , 'true')   AS deposit_real_match_yn
+             , COALESCE(act15_deposit_appr_yn           , 'true')   AS deposit_appr_yn
+             , COALESCE(act15_deposit_ledger_match_yn   , 'true')   AS deposit_ledger_match_yn
+             , COALESCE(act15_finance_eval_yn           , 'true')   AS finance_eval_yn
+             , COALESCE(act15_finance_ledger_match_yn   , 'true')   AS finance_ledger_match_yn
+             , COALESCE(act15_fx_eval_yn                , 'true')   AS fx_eval_yn
+             , COALESCE(act15_depn_yn                   , 'true')   AS depn_yn
+             , COALESCE(act15_tangible_match_yn         , 'true')   AS tangible_match_yn
+             , COALESCE(act15_intangible_match_yn       , 'true')   AS intangible_match_yn
+             , COALESCE(act15_fund_fee_match_yn         , 'true')   AS fund_fee_match_yn
+             , COALESCE(act15_fund_fee_eval_yn          , 'true')   AS fund_fee_eval_yn
+             , COALESCE(act15_unfix_yn                  , 'true')   AS unfix_yn
+             , COALESCE(act15_supply_match_yn           , 'true')   AS supply_match_yn
+          FROM sys01_company
+               LEFT OUTER JOIN act15_close_check ON act15_company_id = sys01_company_id
+         WHERE COALESCE(sys01_use_yn,'false') = 'true'
+           AND sys01_company_id != 0
+           AND sys01_company_nm LIKE #{searchText}
+         ORDER BY sys01_company_id
+    </select>
+
+    <!-- AS-IS act15_close_check.selectById (IDMS-IC) — act15_close_check.*를 DTO 열로 풀었다. 저장 직후 읽는 용도라 값 그대로 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseCheckRes">
+        SELECT act15_close_check_id                 AS close_check_id
+             , act15_company_id                     AS company_id
+             , f_get_company_nm(act15_company_id)   AS company_name
+             , act15_deposit_real_match_yn          AS deposit_real_match_yn
+             , act15_deposit_appr_yn                AS deposit_appr_yn
+             , act15_deposit_ledger_match_yn        AS deposit_ledger_match_yn
+             , act15_finance_eval_yn                AS finance_eval_yn
+             , act15_finance_ledger_match_yn        AS finance_ledger_match_yn
+             , act15_fx_eval_yn                     AS fx_eval_yn
+             , act15_depn_yn                        AS depn_yn
+             , act15_tangible_match_yn              AS tangible_match_yn
+             , act15_intangible_match_yn            AS intangible_match_yn
+             , act15_fund_fee_match_yn              AS fund_fee_match_yn
+             , act15_fund_fee_eval_yn               AS fund_fee_eval_yn
+             , act15_unfix_yn                       AS unfix_yn
+             , act15_supply_match_yn                AS supply_match_yn
+          FROM act15_close_check
+         WHERE act15_close_check_id = #{closeCheckId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel INSERT: 화면 모델이 가진 열 전부(회사 ID 포함) -->
+    <insert id="insert">
+        INSERT INTO act15_close_check (act15_close_check_id, act15_company_id,
+                                       act15_deposit_real_match_yn, act15_deposit_appr_yn, act15_deposit_ledger_match_yn,
+                                       act15_finance_eval_yn, act15_finance_ledger_match_yn, act15_fx_eval_yn, act15_depn_yn,
+                                       act15_tangible_match_yn, act15_intangible_match_yn, act15_fund_fee_match_yn,
+                                       act15_fund_fee_eval_yn, act15_unfix_yn, act15_supply_match_yn)
+        VALUES (#{closeCheckId}, #{req.companyId},
+                #{req.depositRealMatchYn}, #{req.depositApprYn}, #{req.depositLedgerMatchYn},
+                #{req.financeEvalYn}, #{req.financeLedgerMatchYn}, #{req.fxEvalYn}, #{req.depnYn},
+                #{req.tangibleMatchYn}, #{req.intangibleMatchYn}, #{req.fundFeeMatchYn},
+                #{req.fundFeeEvalYn}, #{req.unfixYn}, #{req.supplyMatchYn})
+    </insert>
+
+    <update id="update">
+        UPDATE act15_close_check
+           SET act15_deposit_real_match_yn   = #{req.depositRealMatchYn},
+               act15_deposit_appr_yn         = #{req.depositApprYn},
+               act15_deposit_ledger_match_yn = #{req.depositLedgerMatchYn},
+               act15_finance_eval_yn         = #{req.financeEvalYn},
+               act15_finance_ledger_match_yn = #{req.financeLedgerMatchYn},
+               act15_fx_eval_yn              = #{req.fxEvalYn},
+               act15_depn_yn                 = #{req.depnYn},
+               act15_tangible_match_yn       = #{req.tangibleMatchYn},
+               act15_intangible_match_yn     = #{req.intangibleMatchYn},
+               act15_fund_fee_match_yn       = #{req.fundFeeMatchYn},
+               act15_fund_fee_eval_yn        = #{req.fundFeeEvalYn},
+               act15_unfix_yn                = #{req.unfixYn},
+               act15_supply_match_yn         = #{req.supplyMatchYn}
+         WHERE act15_close_check_id = #{req.closeCheckId}
+    </update>
+</mapper>

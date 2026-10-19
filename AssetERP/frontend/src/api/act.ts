@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, JournalMap, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, JournalMap, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { readBlobError } from './file';
 
 /** act(관리회계) 화면 API (E25~) */
@@ -158,6 +158,21 @@ export const actApi = {
   initRealAccountMaps: async (companyIds: number[], items: { reprAccountCode: string; accountMap: string | null }[]): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/act/real-account-maps/init-data', { companyIds, items });
     return res.data.data;
+  },
+
+  // ── E32 마감검증 체크항목 (Act15_Tab_CloseCheck) ──
+
+  /** AS-IS act.Act15_CloseCheck.selectByText: 활성 고객사 전부, 검색어는 서버가 "%검색어%" */
+  searchCloseChecks: async (searchText: string): Promise<CloseCheck[]> => {
+    const res = await apiClient.get<ApiResponse<CloseCheck[]>>('v1/act/close-checks', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act15_CloseCheck.update: 바뀐 행 → 저장된 행(요청 순서). 관리자 회사만 */
+  updateCloseChecks: async (rows: CloseCheck[]): Promise<CloseCheck[]> => {
+    const body = rows.map(({ companyName: _name, ...rest }) => rest);
+    const res = await apiClient.put<ApiResponse<CloseCheck[]>>('v1/act/close-checks', body);
+    return res.data.data ?? [];
   },
 
   // ── E30 거래유형별 분개맵핑 (Act11_Tab_TrJournalMap·Act11_Grid_TrJournalMap) ──

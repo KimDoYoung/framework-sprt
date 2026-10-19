@@ -107,6 +107,26 @@ export interface RealAccountMap {
   note: string | null;
 }
 
+/** 마감검증 체크항목 한 행 (act15_close_check.selectByText, E32). 여부는 DB 형태('true'/'false') 그대로 — 행이 없는 고객사의 closeCheckId는 SQL이 준 임시 번호 */
+export interface CloseCheck {
+  closeCheckId: number;
+  companyId: number;
+  companyName: string;
+  depositRealMatchYn: string;
+  depositApprYn: string;
+  depositLedgerMatchYn: string;
+  financeEvalYn: string;
+  financeLedgerMatchYn: string;
+  fxEvalYn: string;
+  depnYn: string;
+  tangibleMatchYn: string;
+  intangibleMatchYn: string;
+  fundFeeMatchYn: string;
+  fundFeeEvalYn: string;
+  unfixYn: string;
+  supplyMatchYn: string;
+}
+
 /** 거래맵핑 한 행 (act11_tr_map.selectByCompanyId, E30). 여부는 DB 형태('true'/'false') 그대로 — 거래명·입출고구분명·손익대표계정명은 SQL 계산 열 */
 export interface TrMap {
   trMapId: number;
