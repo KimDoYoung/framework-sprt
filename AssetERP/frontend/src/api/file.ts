@@ -103,4 +103,21 @@ export const fileApi = {
   deleteFile: async (fileId: number): Promise<void> => {
     await apiClient.delete(`v1/sys/files/${fileId}`);
   },
+
+  /** AS-IS FileDownload?fileType=selectList&selectList=id,id,… → "Asset-ERP.zip" 브라우저 저장 */
+  downloadZip: async (fileIds: number[]): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/sys/files/zip', { params: { fileIds: fileIds.join(',') }, responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileNameOf(res.headers['content-disposition'], 'Asset-ERP.zip');
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
 };

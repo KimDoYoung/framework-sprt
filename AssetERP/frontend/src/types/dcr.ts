@@ -233,3 +233,16 @@ export interface DcrClassLink {
   linkId: number;
   note?: string | null;
 }
+
+/** 문서별 첨부파일 검색 한 행 (AS-IS Dcr00_DocListModel 중 Dcr00_Tab_FileList 그리드 열, F08). fileId = AS-IS docId(sys10_file_id) */
+export interface DcrDocFile {
+  fileId: number;
+  apprId: number;
+  classTreeName?: string | null;
+  regDate?: string | null;
+  inoutName?: string | null;
+  aprTitle?: string | null;
+  fileName?: string | null;
+  note?: string | null;
+  empName?: string | null;
+}

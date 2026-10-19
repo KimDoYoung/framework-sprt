@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -150,6 +151,30 @@ public class SysFileService {
         }
         auditLogService.record(AuditEventType.FILE_DOWNLOAD, AuditResult.SUCCESS, user.getUsername(), fileId.toString(), fileModel.fileNm());
         return new StoredFile(file, fileModel.fileNm(), "application/octet-stream");
+    }
+
+    /**
+     * AS-IS FileDownload.downloadSelectList L257-280 (fileType=selectList): 고른 파일들을 zip 하나로. 없는 파일·서버에 없는 파일은 건너뛰고,
+     * 이름은 "(번호) 파일명"(번호는 실제로 담긴 순서)
+     */
+    public List<StoredFile> getZipEntries(UserPrincipal user, List<Long> fileIds) {
+        if (fileIds == null || fileIds.isEmpty()) {
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND, "파일 리스트가 없습니다.");
+        }
+        List<StoredFile> entries = new ArrayList<>();
+        for (Long fileId : fileIds) {
+            FileRes fileModel = sysFileMapper.selectById(fileId);
+            if (fileModel == null) {
+                continue;
+            }
+            File file = new File(fileModel.serverPath(), fileModel.fileId().toString());
+            if (!file.exists()) {
+                continue;
+            }
+            auditLogService.record(AuditEventType.FILE_DOWNLOAD, AuditResult.SUCCESS, user.getUsername(), fileId.toString(), fileModel.fileNm());
+            entries.add(new StoredFile(file, "(" + (entries.size() + 1) + ") " + fileModel.fileNm(), "application/octet-stream"));
+        }
+        return entries;
     }
 
     /** AS-IS FileDownload.downloadGenericImage L195-215 (fileType=image): fileId 또는 parentId의 최근 1건, 없으면 {업로드 폴더}/nonamed.jpg */

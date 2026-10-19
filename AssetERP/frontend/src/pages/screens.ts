@@ -16,6 +16,7 @@ import { Ics01_Tab_ClassTree } from './ics/Ics01_Tab_ClassTree';
 import { Ics01_Tab_ApprList } from './ics/Ics01_Tab_ApprList';
 import { Apr90_Tab_DisposalList } from './apr/Apr90_Tab_DisposalList';
 import { Dcr00_Tab_DocList } from './dcr/Dcr00_Tab_DocList';
+import { Dcr00_Tab_FileList } from './dcr/Dcr00_Tab_FileList';
 import { Apr01_Tab_FundDocument } from './apr/Apr01_Tab_FundDocument';
 import { Apr01_Tab_ItemDocument } from './apr/Apr01_Tab_ItemDocument';
 import { Ics01_Tab_IcsFileUpload } from './ics/Ics01_Tab_IcsFileUpload';
@@ -112,6 +113,7 @@ export const SCREENS: Record<string, React.FC> = {
   Fnd09_Tab_TrustBankManager, // D13 (저장은 원본 서버에 insertCheck가 없어 원본에서도 실패 — 서버가 거절, ICAM가져오기도 거절)
   Ics01_Tab_ApprList, // F03 1단계 (메뉴 #1014 + Ics01_Grid_ApprList. 편집창 Apr01_Edit_ApprDoc·문서분류 조회창 Dcr01_Lookup_Class는 다음 단계)
   Dcr00_Tab_DocList, // F05 1단계 (메뉴 #1006 + Dcr01_Lookup_DcrClass·Apr03_TabPage_Relate. 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList·댓글 Apr42_Lookup_CommentView는 다음 단계)
+  Dcr00_Tab_FileList, // F08 1단계 (메뉴 #1224 문서별 첨부파일 검색 + Dcr01_Lookup_DcrClass. 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Apr01_Tab_ItemDocument, // F07 1단계 (메뉴 #1137 (X)종목별 문서검색 + Apr01_Grid_ItemDocList. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Apr01_Tab_FundDocument, // F06 1단계 (메뉴 #1005 + Apr01_Grid_FundDocList. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Apr90_Tab_DisposalList, // F04 1단계 (메뉴 #1443. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)

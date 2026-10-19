@@ -18,10 +18,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.net.URLEncoder;
+import java.nio.file.Files;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * 파일 공통 (B10) — AS-IS 서블릿 FileUpload·FileDownload·FileDelete, 서비스 sys.Sys10_File.selectByParentId·sys.Sys11_RelateFile.checkFileDelete.
@@ -79,6 +83,28 @@ public class SysFileController {
     @GetMapping("/image")
     public ResponseEntity<Resource> getImage(@RequestParam(required = false) Long fileId, @RequestParam(required = false) Long parentId) {
         return toResponse(sysFileService.getImage(fileId, parentId), "inline");
+    }
+
+    /** AS-IS FileDownload?fileType=selectList&selectList=id,id,… — 고른 파일들의 zip ("Asset-ERP.zip") */
+    @GetMapping("/zip")
+    public ResponseEntity<StreamingResponseBody> downloadZip(@AuthenticationPrincipal UserPrincipal principal, @RequestParam List<Long> fileIds) {
+        List<SysFileService.StoredFile> entries = sysFileService.getZipEntries(principal, fileIds);
+        StreamingResponseBody body = out -> {
+            try (ZipOutputStream zip = new ZipOutputStream(out)) {
+                zip.setLevel(8);
+                for (SysFileService.StoredFile entry : entries) {
+                    ZipEntry zipEntry = new ZipEntry(entry.fileNm());
+                    zipEntry.setTime(entry.file().lastModified());
+                    zip.putNextEntry(zipEntry);
+                    Files.copy(entry.file().toPath(), zip);
+                    zip.closeEntry();
+                }
+            }
+        };
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, "application/zip")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Asset-ERP.zip\"")
+                .body(body);
     }
 
     /** AS-IS FileDownload?fileType=file&fileId= */

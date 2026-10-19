@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/dcr/mapper/dcr00_doc_list.xml getFile (F08, Dcr00_Tab_FileList) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.dcr.mapper.DcrDocListMapper">
+
+    <!-- AS-IS dcr00_doc_list.getFile L421 (IDMS-IC) — SELECT apr.*·모델 열 중 그리드가 쓰는 열만, 조인·조건·정렬은 그대로.
+         admin == 'false' 분기(조직·문서권한 조인)와 관리자 분기 둘 다 옮김. ${orgId}·${empId}는 #{}로. 분류 조건은 common.dcr_tree_down을 푼 것(typeCode '%') -->
+    <select id="selectFiles" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrDocFileRes">
+        SELECT sys10_file_id                                                                      AS file_id
+             , apr.apr01_appr_id                                                                  AS appr_id
+             , f_class_tree_nm_allpath(dcr.dcr01_class_tree_id)                                   AS class_tree_name
+             , apr.apr01_reg_date                                                                 AS reg_date
+             , f_cdnm('AprInOutTypeCode', apr.apr01_inout_cd, apr.apr01_company_id, f_sysdate())  AS inout_name
+             , apr.apr01_title                                                                    AS apr_title
+             , sys10_file_nm                                                                      AS file_name
+             , apr.apr01_note                                                                     AS note
+             , emp01_kor_nm                                                                       AS emp_name
+          FROM sys10_file
+               INNER JOIN apr01_appr apr ON apr.apr01_appr_id = sys10_parent_id
+               INNER JOIN dcr01_class_tree dcr ON apr.apr01_class_tree_id = dcr.dcr01_class_tree_id AND dcr.dcr01_use_yn = 'true'
+               INNER JOIN emp01_person ON apr.apr01_reg_emp_id = emp01_person_id
+        <choose>
+        <when test="c.admin == 'false'">
+               LEFT OUTER JOIN dcr03_org_auth ON apr.apr01_class_tree_id = dcr03_class_tree_id AND dcr03_org_code_id = #{c.orgId}
+               LEFT OUTER JOIN dcr04_emp_auth ON apr.apr01_class_tree_id = dcr04_class_tree_id AND dcr04_person_id = #{c.empId}
+        </when>
+        </choose>
+         WHERE 1=1
+           AND apr01_company_id = #{c.companyId}
+        <choose>
+        <when test="c.admin == 'false'">
+           AND (
+                COALESCE(dcr04_retrieve_yn, dcr03_retrieve_yn, 'false') = 'true'
+                OR ( #{c.empId} IN ( SELECT apr04_step_emp_id
+                                       FROM apr04_appr_step
+                                      WHERE apr04_appr_id = apr.apr01_appr_id ) )
+                OR ( #{c.empId} IN ( SELECT apr13_person_id
+                                       FROM apr13_person_auth
+                                      WHERE apr13_appr_id = apr.apr01_appr_id ) )
+           )
+        </when>
+        </choose>
+           AND apr01_status_cd = '30'
+           AND f_trunc(apr01_reg_date) BETWEEN COALESCE(#{c.startDate}, to_date('19000101', 'yyyyMMdd'))
+                                           AND COALESCE(#{c.endDate}, to_date('29991231', 'yyyyMMdd'))
+           AND UPPER(CONCAT( apr01_title
+                           , sys10_file_nm
+                           , apr01_note
+                           , f_emp_kor_nm(emp01_person_id)
+                           )) LIKE UPPER(#{c.searchText})
+        <if test="c.classTreeId != null">
+           AND dcr.dcr01_class_tree_id IN (
+            WITH RECURSIVE dcr_tree_down(dcr01_class_tree_id, dcr01_class_tree_nm, dcr01_parent_tree_id, depth, path, cycle) AS (
+                SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, 1,
+                       ARRAY[CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id],
+                       false
+                  FROM dcr01_class_tree a
+                 WHERE a.dcr01_company_id = #{c.companyId}
+                   AND a.dcr01_class_tree_id = #{c.classTreeId}
+                   AND a.dcr01_use_yn = 'true'
+                   AND a.dcr01_type_cd LIKE #{c.typeCode}
+                UNION ALL
+                SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, b.depth + 1,
+                       array_append(b.path, CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || LPAD(CAST(a.dcr01_class_tree_id AS varchar), 15, '0')),
+                       a.dcr01_class_tree_nm = any(b.path)
+                  FROM dcr01_class_tree a
+                       INNER JOIN dcr_tree_down b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+                 WHERE a.dcr01_company_id = #{c.companyId}
+                   AND a.dcr01_use_yn = 'true'
+                   AND a.dcr01_type_cd LIKE #{c.typeCode}
+                   AND NOT cycle
+            )
+            SELECT a.dcr01_class_tree_id FROM dcr_tree_down a )
+        </if>
+         ORDER BY f_class_tree_nm_allpath(dcr.dcr01_class_tree_id)
+                , apr01_reg_date
+                , apr01_title
+                , sys10_file_nm
+    </select>
+</mapper>

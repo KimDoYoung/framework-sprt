@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import {
   DcrCheckRes, DcrCheckRowReq, DcrClassDetail, DcrClassTree, DcrClassTreeAll, DcrClassTreeLookup, DcrClassTreeSaveReq,
-  DcrCopyCompany, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrClassLink, DcrLink, DcrLinkSaveReq, DcrRelateDocType, DcrRelateIcr,
+  DcrCopyCompany, DcrDocFile, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrClassLink, DcrLink, DcrLinkSaveReq, DcrRelateDocType, DcrRelateIcr,
   DcrOftenUse, DcrRelateIcs, DcrRelateSaveReq, DcrUseYnReq, DcrWriteCode, DcrWriteTree,
 } from '../types/dcr';
 
@@ -275,6 +275,12 @@ export const dcrApi = {
   /** AS-IS dcr.Dcr08_OftenUse.selectByPersonId: 로그인 사용자가 최근 쓴 문서분류 (사용횟수순) */
   searchOftenUses: async (): Promise<DcrOftenUse[]> => {
     const res = await apiClient.get<ApiResponse<DcrOftenUse[]>>('v1/dcr/often-uses');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr00_DocList.getFile (Dcr00_Tab_FileList, F08): 문서별 첨부파일 검색. searchText는 서버가 %…%로 */
+  searchDocFiles: async (params: { classTreeId?: number; startDate: string; endDate: string; searchText: string }): Promise<DcrDocFile[]> => {
+    const res = await apiClient.get<ApiResponse<DcrDocFile[]>>('v1/dcr/doc-lists/files', { params });
     return res.data.data ?? [];
   },
 };
