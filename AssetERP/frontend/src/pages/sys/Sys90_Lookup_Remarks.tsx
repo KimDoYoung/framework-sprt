@@ -4,7 +4,8 @@
  * open(afterServiceModel, callback) L37-72: 모달 1000×500 "비고내용", 크기 고정, 글상자 하나, 저장·닫기
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal, Space } from 'antd';
+import { Input, message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { AfterService } from '@/types/sys';
@@ -34,7 +35,7 @@ export const Sys90_Lookup_Remarks: React.FC<Props> = ({ model, onSaved, onClose 
   };
 
   return (
-    <Modal
+    <LookupModal
       open={!!model}
       title="비고내용"
       width={1000}
@@ -52,6 +53,6 @@ export const Sys90_Lookup_Remarks: React.FC<Props> = ({ model, onSaved, onClose 
       }
     >
       <Input.TextArea style={{ height: 340, resize: 'none' }} value={remarks} onChange={e => setRemarks(e.target.value)} />
-    </Modal>
+    </LookupModal>
   );
 };

@@ -5,7 +5,8 @@
  * UX보강(10) B12-1: 검색 줄 = SearchBar(UX-01·04). 초기화(UX-02)는 조건(매뉴명)이 1개라 없음 — 체크는 원본처럼 조회 뒤(extra)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, message, Modal, Space } from 'antd';
+import { Checkbox, message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
@@ -67,7 +68,7 @@ export const Sys06_Lookup_SelectMulti: React.FC<Props> = ({ open, searchText, on
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="매뉴찾기"
       width={600}
@@ -95,7 +96,7 @@ export const Sys06_Lookup_SelectMulti: React.FC<Props> = ({ open, searchText, on
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           {/* [E5] grid.CellDoubleClick (L119) → confirm() */}
-          <MultiGrid<MenuLookup>
+          <MultiGrid<MenuLookup> rowClick
             gridRef={gridRef}
             rowData={rows}
             columnDefs={columnDefs}
@@ -104,6 +105,6 @@ export const Sys06_Lookup_SelectMulti: React.FC<Props> = ({ open, searchText, on
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

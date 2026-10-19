@@ -6,7 +6,8 @@
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04). 조건이 둘뿐이라 초기화(UX-02)는 넣지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { actApi } from '@/api/act';
 import { errorMessage } from '@/api/client';
@@ -73,7 +74,7 @@ export const Act01_Lookup_AccountCode: React.FC<Props> = ({ open, companyId, sea
   };
 
   return (
-    <Modal open={open} title="계정코드" width={800} maskClosable={false} onCancel={onClose} destroyOnHidden
+    <LookupModal open={open} title="계정코드" width={800} maskClosable={false} onCancel={onClose} destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -109,7 +110,7 @@ export const Act01_Lookup_AccountCode: React.FC<Props> = ({ open, companyId, sea
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };
 

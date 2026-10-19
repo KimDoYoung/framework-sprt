@@ -6,6 +6,7 @@
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { message, Modal, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { Calendar } from '@/types/sys';
@@ -80,7 +81,7 @@ export const Sys12_Lookup_Customer: React.FC<Props> = ({ open, calendar, onClose
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="고객사반영"
       width={1000}
@@ -105,6 +106,6 @@ export const Sys12_Lookup_Customer: React.FC<Props> = ({ open, calendar, onClose
           <CellEditGrid<Calendar> crud={crud} columnDefs={columnDefs} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

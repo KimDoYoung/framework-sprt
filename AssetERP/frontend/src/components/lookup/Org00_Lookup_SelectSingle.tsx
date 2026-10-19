@@ -4,7 +4,8 @@
  * 쓰는 곳: Emp03_Edit_Person(조직, 기준일 = 입사일 고정), Emp03_TabPage_Trans(발령조직, 기준일 = 발령일 고정), Sys05_Page_UserRole(권한조직, 오늘·편집 가능)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DatePicker, message, Modal, Space } from 'antd';
+import { DatePicker, message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import dayjs from 'dayjs';
 import { AgGridReact } from 'ag-grid-react';
 import { orgApi } from '@/api/emp';
@@ -71,7 +72,7 @@ export const Org00_Lookup_SelectSingle: React.FC<Props> = ({ baseDate: openDate,
   useEffect(() => { if (openDate && baseDate === openDate) retrieve(); }, [openDate, baseDate]);
 
   return (
-    <Modal
+    <LookupModal
       open={!!openDate}
       title="조직찾기"
       width={450}
@@ -110,6 +111,6 @@ export const Org00_Lookup_SelectSingle: React.FC<Props> = ({ baseDate: openDate,
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

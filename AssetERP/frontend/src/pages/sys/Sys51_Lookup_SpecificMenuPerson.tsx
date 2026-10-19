@@ -6,6 +6,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Modal, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import dayjs from 'dayjs';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
@@ -95,7 +96,7 @@ export const Sys51_Lookup_SpecificMenuPerson: React.FC<Props> = ({ companyId, sp
 
   return (
     <>
-      <Modal
+      <LookupModal
         open={open}
         title="사원권한설정"
         width={900}
@@ -130,7 +131,7 @@ export const Sys51_Lookup_SpecificMenuPerson: React.FC<Props> = ({ companyId, sp
               rowSelection={{ mode: 'singleRow', checkboxes: true, enableClickSelection: false }} />
           </div>
         </div>
-      </Modal>
+      </LookupModal>
       {/* insertRow() L164: Emp00_Lookup_SelectMulti.open(companyId, new Date(), callback) */}
       <Emp00_Lookup_SelectMulti open={open && empOpen} companyId={companyId} transDate={dayjs().format('YYYY-MM-DD')}
         onResult={onEmployees} onClose={() => setEmpOpen(false)} />

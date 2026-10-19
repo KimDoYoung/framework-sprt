@@ -4,7 +4,8 @@
  * 생성자 L14-29: 닫기 버튼 + 1100×550 TextArea에 서버가 준 문자열
  */
 import React from 'react';
-import { Input, Modal } from 'antd';
+import { Input } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { Button } from '@/components/button';
 
 interface Props {
@@ -15,7 +16,7 @@ interface Props {
 
 // [E0] 화면 열림 (생성자 L14-29) → 초기화 (닫기 버튼 + TextArea)
 export const Dbm02_PopupSourceGenerator: React.FC<Props> = ({ text, onClose }) => (
-  <Modal
+  <LookupModal
     open={text != null}
     title="Generating"
     width={1150}
@@ -29,5 +30,5 @@ export const Dbm02_PopupSourceGenerator: React.FC<Props> = ({ text, onClose }) =
     }
   >
     <Input.TextArea value={text ?? ''} readOnly style={{ width: '100%', height: 550, fontFamily: 'monospace' }} />
-  </Modal>
+  </LookupModal>
 );

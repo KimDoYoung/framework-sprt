@@ -4,7 +4,8 @@
  * 레이아웃 L74-115: 모달 "이동시킬 상위 법규관리를 선택하세요.", GXT Tree(분류명 420×350), 아래 가운데 [확인][닫기]. 트리는 Ics01_Move_Grid와 같이 쓰는 ics01Tree.tsx
  */
 import React, { useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
 import { ClassTreeNode } from '@/types/ics';
@@ -36,7 +37,7 @@ export const Ics01_Move_TreeGrid: React.FC<Props> = ({ classTreeModel, onMoved, 
   };
 
   return (
-    <Modal
+    <LookupModal
       open={!!classTreeModel}
       title="이동시킬 상위 법규관리를 선택하세요."
       width={460}
@@ -53,6 +54,6 @@ export const Ics01_Move_TreeGrid: React.FC<Props> = ({ classTreeModel, onMoved, 
       }
     >
       <ClassTreePicker open={!!classTreeModel} selected={target?.classTreeId ?? null} onSelect={setTarget} />
-    </Modal>
+    </LookupModal>
   );
 };

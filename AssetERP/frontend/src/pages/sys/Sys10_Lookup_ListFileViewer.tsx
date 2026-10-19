@@ -7,6 +7,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { fileApi, FILE_DELETE_STATUS } from '@/api/file';
 import { errorMessage } from '@/api/client';
 import { FileInfo } from '@/types/sys';
@@ -93,7 +94,7 @@ export const Sys10_Lookup_ListFileViewer: React.FC<Props> = ({ parentId, onClose
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="파일보기"
       width={1300}
@@ -127,6 +128,6 @@ export const Sys10_Lookup_ListFileViewer: React.FC<Props> = ({ parentId, onClose
           <FilePreview file={selected} height="100%" />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

@@ -7,6 +7,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Checkbox, message, Modal } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { CellValueChangedEvent } from 'ag-grid-community';
 import { schApi } from '@/api/sch';
 import { errorMessage } from '@/api/client';
@@ -76,7 +77,7 @@ export const Sch14_Lookup_IpoMismatch: React.FC<Props> = ({ open, onClose }) => 
   ], []);
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="공모주일정 미일치내역"
       width={1500}
@@ -107,6 +108,6 @@ export const Sch14_Lookup_IpoMismatch: React.FC<Props> = ({ open, onClose }) => 
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

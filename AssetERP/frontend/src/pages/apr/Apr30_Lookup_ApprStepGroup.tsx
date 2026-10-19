@@ -4,7 +4,8 @@
  * 생성자 L47-71: 모달 700×500 "지정그룹", 위 툴바([조회]) + 그리드(문서결재선 그룹명 250 · 비고 350), 아래 가운데 [확인][선택안함][취소]
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { aprApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
@@ -64,7 +65,7 @@ export const Apr30_Lookup_ApprStepGroup: React.FC<Props> = ({ open, onResult, on
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="지정그룹"
       width={700}
@@ -92,6 +93,6 @@ export const Apr30_Lookup_ApprStepGroup: React.FC<Props> = ({ open, onResult, on
             getRowId={p => String(p.data.apprStepGroupId)} onRowDoubleClicked={e => { if (e.data) confirm(e.data); }} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

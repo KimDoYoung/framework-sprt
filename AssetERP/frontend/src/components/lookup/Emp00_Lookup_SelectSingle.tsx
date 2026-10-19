@@ -6,7 +6,8 @@
  * 모달 700×500, UX보강(10): 검색 줄 = SearchBar(UX-01·02·04, 초기화는 열 때 값, 자동 조회 없음)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DatePicker, message, Modal, Select, Space } from 'antd';
+import { DatePicker, message, Select, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import dayjs from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { empApi } from '@/api/emp';
@@ -88,7 +89,7 @@ export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, se
   };
 
   return (
-    <Modal open={open} title="사원찾기(조직/직무/성명)" width={700} maskClosable={false} onCancel={onClose} destroyOnHidden
+    <LookupModal open={open} title="사원찾기(조직/직무/성명)" width={700} maskClosable={false} onCancel={onClose} destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -129,6 +130,6 @@ export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, se
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

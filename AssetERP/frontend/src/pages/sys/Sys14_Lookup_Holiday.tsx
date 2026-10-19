@@ -5,7 +5,8 @@
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03). 조건이 1개라 초기화(UX-02) 없음. 툴바는 원본처럼 줄바꿈 없이 가로 스크롤
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { message, Modal } from 'antd';
+import { message } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { Holiday } from '@/types/sys';
@@ -77,7 +78,7 @@ export const Sys14_Lookup_Holiday: React.FC<Props> = ({ open, onClose }) => {
 
   return (
     <>
-      <Modal
+      <LookupModal
         open={open}
         title="휴일관리"
         width={800}
@@ -116,7 +117,7 @@ export const Sys14_Lookup_Holiday: React.FC<Props> = ({ open, onClose }) => {
             <CellEditGrid<Holiday> crud={crud} columnDefs={columnDefs} />
           </div>
         </div>
-      </Modal>
+      </LookupModal>
       <Sys01_Lookup_Company open={lookupCompany}
         onResult={c => { if (c) { setCompanyName(c.companyNm); setCompanyId(c.companyId); } setLookupCompany(false); }}
         onClose={() => setLookupCompany(false)} />

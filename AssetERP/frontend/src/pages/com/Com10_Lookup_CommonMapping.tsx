@@ -5,7 +5,8 @@
  * 편집기는 AS-IS CKEditor 대신 HtmlEditor(Tiptap, 05 §5)
  */
 import React, { useEffect, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { comApi } from '@/api/com';
 import { errorMessage } from '@/api/client';
 import { FormMapping } from '@/types/com';
@@ -56,7 +57,7 @@ export const Com10_Lookup_CommonMapping: React.FC<Props> = ({ model, linkId, lin
 
   return (
     <>
-      <Modal
+      <LookupModal
         open={model != null && tags != null}
         title="양식 & 태그"
         width={950}
@@ -87,7 +88,7 @@ export const Com10_Lookup_CommonMapping: React.FC<Props> = ({ model, linkId, lin
             {(tags ?? []).map(t => <div key={t}>{`#{${t}}`}</div>)}
           </div>
         </div>
-      </Modal>
+      </LookupModal>
       <Pay06_Popup_Example open={example} onClose={() => setExample(false)} />
     </>
   );

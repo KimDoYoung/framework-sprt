@@ -4,7 +4,8 @@
  * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01·04)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
@@ -63,7 +64,7 @@ export const Sys01_Lookup_SelectMulti: React.FC<Props> = ({ open, onResult, onCl
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="고객사"
       width={500}
@@ -90,7 +91,7 @@ export const Sys01_Lookup_SelectMulti: React.FC<Props> = ({ open, onResult, onCl
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           {/* [E2] grid.RowDoubleClick (L85) → confirm() */}
-          <MultiGrid<Company>
+          <MultiGrid<Company> rowClick
             gridRef={gridRef}
             rowData={rows}
             columnDefs={columnDefs}
@@ -99,6 +100,6 @@ export const Sys01_Lookup_SelectMulti: React.FC<Props> = ({ open, onResult, onCl
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

@@ -5,7 +5,8 @@
  * UX보강(10): 툴바 = SearchBar(UX-01)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { errorMessage } from '@/api/client';
 import { fileApi } from '@/api/file';
@@ -69,7 +70,7 @@ export const Tdm43_Lookup_RelateFormFileList: React.FC<Props> = ({ relateId, onR
   ], []);
 
   return (
-    <Modal
+    <LookupModal
       open={relateId != null}
       title={<b>불러오기</b>}
       width="min(1200px, calc(100vw - 32px))"
@@ -99,9 +100,9 @@ export const Tdm43_Lookup_RelateFormFileList: React.FC<Props> = ({ relateId, onR
           </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <MultiGrid<TdmManlFormFile> gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.fileId)} />
+          <MultiGrid<TdmManlFormFile> rowClick gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.fileId)} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

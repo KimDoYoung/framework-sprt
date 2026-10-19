@@ -5,7 +5,8 @@
  * 아래 가운데 [확인][해당사항 없음][닫기]. flag=true는 서비스 apr.Apr10_Stamp.selectBySearchText2
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import type { CustomCellRendererProps } from 'ag-grid-react';
 import { aprApi } from '@/api/apr';
@@ -75,7 +76,7 @@ export const Apr10_Lookup_DocStamp: React.FC<Props> = ({ classTreeId, onResult, 
   };
 
   return (
-    <Modal
+    <LookupModal
       open={classTreeId != null}
       title="인감종류"
       width={580}
@@ -106,6 +107,6 @@ export const Apr10_Lookup_DocStamp: React.FC<Props> = ({ classTreeId, onResult, 
             getRowId={p => String(p.data.stampId)} onRowDoubleClicked={e => { if (e.data) confirm(e.data); }} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

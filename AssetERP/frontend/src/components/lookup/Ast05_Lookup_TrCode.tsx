@@ -7,7 +7,8 @@
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03, 지운 행도 건수에 센다). 초기화(UX-02)는 모달 폭 600에서 줄바꿈이 생겨 넣지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { astApi } from '@/api/ast';
 import { errorMessage } from '@/api/client';
 import { sysApi } from '@/api/sys';
@@ -169,7 +170,7 @@ export const Ast05_Lookup_TrCode: React.FC<Props> = ({ open, mode, assetType, fi
   };
 
   return (
-    <Modal open={open} title="거래유형" width={620} maskClosable={false} onCancel={onClose} destroyOnHidden
+    <LookupModal open={open} title="거래유형" width={620} maskClosable={false} onCancel={onClose} destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -210,6 +211,6 @@ export const Ast05_Lookup_TrCode: React.FC<Props> = ({ open, mode, assetType, fi
           <CellEditGrid<TrCode> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_CLICK} onRowDoubleClicked={confirm} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

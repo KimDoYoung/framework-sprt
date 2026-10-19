@@ -5,7 +5,8 @@
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04). 초기화(UX-02)는 모달 폭 600에서 줄바꿈이 생겨 넣지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { actApi } from '@/api/act';
 import { errorMessage } from '@/api/client';
@@ -74,7 +75,7 @@ export const Act10_Lookup_ReprAccount: React.FC<Props> = ({ open, searchText, on
   };
 
   return (
-    <Modal open={open} title="대표계정코드" width={600} maskClosable={false} onCancel={onClose} destroyOnHidden
+    <LookupModal open={open} title="대표계정코드" width={600} maskClosable={false} onCancel={onClose} destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -107,6 +108,6 @@ export const Act10_Lookup_ReprAccount: React.FC<Props> = ({ open, searchText, on
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

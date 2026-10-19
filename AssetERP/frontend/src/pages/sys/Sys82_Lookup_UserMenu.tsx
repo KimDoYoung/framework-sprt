@@ -4,7 +4,8 @@
  * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01), 저장 = 저장(n)(UX-03, 바뀐 행 수). 매뉴명 Enter는 조회가 아니라 트리 안 검색(search)이라 antd Input + allowClear(UX-04). 조건 1개라 초기화(UX-02) 없음
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message, Modal, Space } from 'antd';
+import { Input, message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { CellClickedEvent } from 'ag-grid-community';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
@@ -101,7 +102,7 @@ export const Sys82_Lookup_UserMenu: React.FC<Props> = ({ userId, onClose }) => {
   useEffect(() => { if (userId) { setSearchText(''); retrieve(); } }, [userId]);
 
   return (
-    <Modal
+    <LookupModal
       open={!!userId}
       title="매뉴권한"
       width={650}
@@ -142,6 +143,6 @@ export const Sys82_Lookup_UserMenu: React.FC<Props> = ({ userId, onClose }) => {
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

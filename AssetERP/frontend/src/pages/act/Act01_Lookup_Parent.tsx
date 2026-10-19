@@ -5,7 +5,8 @@
  * UX보강(10): 검색 줄 = SearchBar(UX-01·02·04)
  */
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { message, Modal, Select, Space } from 'antd';
+import { message, Select, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { actApi } from '@/api/act';
 import { errorMessage } from '@/api/client';
@@ -68,7 +69,7 @@ export const Act01_Lookup_Parent: React.FC<Props> = ({ open, onResult, onClose }
   };
 
   return (
-    <Modal open={open} title="상위계정" width={800} maskClosable={false} onCancel={onClose} destroyOnHidden
+    <LookupModal open={open} title="상위계정" width={800} maskClosable={false} onCancel={onClose} destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -104,6 +105,6 @@ export const Act01_Lookup_Parent: React.FC<Props> = ({ open, onResult, onClose }
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

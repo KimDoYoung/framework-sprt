@@ -5,6 +5,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { icsApi } from '@/api/ics';
 import { fileApi } from '@/api/file';
@@ -75,7 +76,7 @@ export const Ics01_Lookup_IcsFileAdmin: React.FC<Props> = ({ open, onSelect, onC
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="불러오기"
       width={940}
@@ -99,9 +100,9 @@ export const Ics01_Lookup_IcsFileAdmin: React.FC<Props> = ({ open, onSelect, onC
           </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <MultiGrid<IcsFormFile> gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.fileId)} loading={loading} />
+          <MultiGrid<IcsFormFile> rowClick gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.fileId)} loading={loading} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

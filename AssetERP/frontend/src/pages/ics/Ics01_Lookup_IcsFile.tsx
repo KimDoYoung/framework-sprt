@@ -5,7 +5,8 @@
  * 파일 올리기 입력은 원본에서 보이지 않는 폼(setVisible(false))에 있어 화면에서 실행되지 않는다 — 같은 모양으로 숨은 입력만 둔다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { icsApi } from '@/api/ics';
 import { fileApi } from '@/api/file';
 import { errorMessage } from '@/api/client';
@@ -95,7 +96,7 @@ export const Ics01_Lookup_IcsFile: React.FC<Props> = ({ law, onClosed, onClose }
   const confirm = () => { onClosed(); onClose(); };
 
   return (
-    <Modal
+    <LookupModal
       open={!!law}
       title="서식파일"
       width={940}
@@ -120,6 +121,6 @@ export const Ics01_Lookup_IcsFile: React.FC<Props> = ({ law, onClosed, onClose }
       </div>
       <FileUpdownForm ref={uploadRef} onChange={file => { if (file) void uploadFiles([file]); }} onChangeFiles={uploadFiles} />
       <Ics01_Lookup_IcsFileAdmin open={listOpen} onSelect={listLookup} onClose={() => setListOpen(false)} />
-    </Modal>
+    </LookupModal>
   );
 };

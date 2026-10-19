@@ -4,7 +4,8 @@
  * 생성자 L83-148: 모달 550×420(크기 고정) "임원의 상당한 주의의무", 체크박스 6개, 아래 가운데 [선택완료][닫기]
  */
 import React, { useEffect, useState } from 'react';
-import { Checkbox, Modal, Space } from 'antd';
+import { Checkbox, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { Button } from '@/components/button';
 
 /** L88-118 box01Name~box06Name */
@@ -44,7 +45,7 @@ export const Tdm43_Lookup_ExctDuty: React.FC<Props> = ({ exctDutyMap, onResult, 
   };
 
   return (
-    <Modal
+    <LookupModal
       open={exctDutyMap != null}
       title={<b>임원의 상당한 주의의무</b>}
       width={550}
@@ -67,6 +68,6 @@ export const Tdm43_Lookup_ExctDuty: React.FC<Props> = ({ exctDutyMap, onResult, 
           </Checkbox>
         ))}
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

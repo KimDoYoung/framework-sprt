@@ -6,7 +6,8 @@
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04). 조건이 1개라 초기화(UX-02) 없음
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import type { CellDoubleClickedEvent } from 'ag-grid-community';
 import { dbmApi } from '@/api/dbm';
@@ -79,7 +80,7 @@ export const Dbm01_Lookup_Tables: React.FC<Props> = ({ open, onResult, onClose }
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="Table Finder..."
       width={800}
@@ -105,7 +106,7 @@ export const Dbm01_Lookup_Tables: React.FC<Props> = ({ open, onResult, onClose }
           </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <MultiGrid<DbTable>
+          <MultiGrid<DbTable> rowClick
             gridRef={gridRef}
             rowData={rows}
             columnDefs={columnDefs}
@@ -115,6 +116,6 @@ export const Dbm01_Lookup_Tables: React.FC<Props> = ({ open, onResult, onClose }
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

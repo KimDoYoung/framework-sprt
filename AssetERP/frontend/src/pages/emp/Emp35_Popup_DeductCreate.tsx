@@ -3,7 +3,8 @@
  * AS-IS: myApp/client/vi/emp/Emp35_Popup_DeductCreate.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  */
 import React, { useState } from 'react';
-import { DatePicker, message, Modal, Space } from 'antd';
+import { DatePicker, message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { Dayjs } from 'dayjs';
 import { empApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
@@ -46,7 +47,7 @@ export const Emp35_Popup_DeductCreate: React.FC<Props> = ({ open, row, onClose, 
 
   // [E2] closeButton[닫기].Select (L65) → hide()
   return (
-    <Modal
+    <LookupModal
       title="급여공제 생성"
       open={open}
       onCancel={onClose}
@@ -65,6 +66,6 @@ export const Emp35_Popup_DeductCreate: React.FC<Props> = ({ open, row, onClose, 
           <Button type="close" onClick={onClose}>닫기</Button>
         </div>
       </Space>
-    </Modal>
+    </LookupModal>
   );
 };

@@ -6,7 +6,7 @@
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { schApi } from '@/api/sch';
 import { Sch12IpoCorp } from '@/types/sch';
 import { Button } from '@/components/button';
@@ -56,7 +56,7 @@ export const Sch12_Lookup_IpoCorp: React.FC<Props> = ({ open, onClose }) => {
   ], []);
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="주간사 등록"
       width={720}
@@ -86,6 +86,6 @@ export const Sch12_Lookup_IpoCorp: React.FC<Props> = ({ open, onClose }) => {
           <CellEditGrid<Sch12IpoCorp> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_SELECTION} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

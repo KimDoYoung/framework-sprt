@@ -5,7 +5,8 @@
  * 그리드: getTreeGrid(1) — 행번호 없음, 분류명 450(트리) · 순서 40 · 잠금 40(adminYn) · 수정 50
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { chkApi } from '@/api/chk';
 import { errorMessage } from '@/api/client';
 import { ChkClassTree } from '@/types/chk';
@@ -120,7 +121,7 @@ export const Chk01_Lookup_ClassTree: React.FC<Props> = ({ open, mode, classTreeI
   ], [tree.treeCol, isEdit, user.companyId]);
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="분류"
       width={isEdit ? 610 : 570}
@@ -156,6 +157,6 @@ export const Chk01_Lookup_ClassTree: React.FC<Props> = ({ open, mode, classTreeI
         </div>
       </div>
       <Chk01_Edit_ClassTree model={editing} onClose={() => setEditing(null)} onDone={id => { void retrieve(id); }} />
-    </Modal>
+    </LookupModal>
   );
 };

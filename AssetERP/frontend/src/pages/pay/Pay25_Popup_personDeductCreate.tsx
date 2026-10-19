@@ -4,7 +4,8 @@
  * show() L42-71: 모달 250×150 "생성", 적용일 날짜칸(라벨 폭 60), 아래 가운데 [생성][닫기]
  */
 import React, { useEffect, useState } from 'react';
-import { DatePicker, message, Modal, Space } from 'antd';
+import { DatePicker, message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { Dayjs } from 'dayjs';
 import { payApi } from '@/api/pay';
 import { errorMessage } from '@/api/client';
@@ -40,7 +41,7 @@ export const Pay25_Popup_personDeductCreate: React.FC<Props> = ({ open, onCreate
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="생성"
       width={250}
@@ -60,6 +61,6 @@ export const Pay25_Popup_personDeductCreate: React.FC<Props> = ({ open, onCreate
         <span style={{ width: 60 }}>적용일</span>
         <DatePicker style={{ flex: 1 }} format="YYYY-MM-DD" value={startDate} onChange={setStartDate} />
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

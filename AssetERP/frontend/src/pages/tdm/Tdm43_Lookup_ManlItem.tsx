@@ -7,6 +7,7 @@
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { errorMessage } from '@/api/client';
 import { tdmApi } from '@/api/tdm';
@@ -104,7 +105,7 @@ export const Tdm43_Lookup_ManlItem: React.FC<Props> = ({ manlOrg, onClose }) => 
   ], [lockYn]);
 
   return (
-    <Modal
+    <LookupModal
       open={!!manlOrg}
       title={<b>{manlOrg?.roleName}-{manlOrg?.orgName} 점검항목</b>}
       width="min(1600px, calc(100vw - 32px))"
@@ -137,11 +138,11 @@ export const Tdm43_Lookup_ManlItem: React.FC<Props> = ({ manlOrg, onClose }) => 
             rowData={rows}
             columnDefs={columnDefs}
             getRowId={p => p.data.rowKey}
-            rowSelection={{ mode: 'singleRow', checkboxes: true, enableClickSelection: false }}
+            rowSelection={{ mode: 'singleRow', checkboxes: true, enableClickSelection: true }}
           />
         </div>
       </div>
       <Tdm43_Edit_Manl mode={editor?.mode ?? 'edit'} manl={editor?.manl ?? null} onSaved={() => { void retrieve(); }} onClose={() => setEditor(null)} />
-    </Modal>
+    </LookupModal>
   );
 };

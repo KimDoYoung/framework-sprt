@@ -5,7 +5,8 @@
  * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01·04). 조건이 1개라 초기화(UX-02) 없음
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
@@ -65,7 +66,7 @@ export const Sys09_Lookup_CodeKind: React.FC<Props> = ({ open, codeKindId, compa
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="코드목록"
       width={400}
@@ -91,9 +92,9 @@ export const Sys09_Lookup_CodeKind: React.FC<Props> = ({ open, codeKindId, compa
           </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <MultiGrid<CodeAdmin> gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.codeId)} />
+          <MultiGrid<CodeAdmin> rowClick gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.codeId)} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

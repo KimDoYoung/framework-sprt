@@ -8,7 +8,8 @@
  * UX보강(10): 해당 없음(검색 조건이 없다). 저장(n)도 안 쓴다 — deleteList만 있어도 저장해야 하고 0건이면 원본 안내문을 띄운다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { ReloadOutlined } from '@ant-design/icons';
 import { sysApi } from '@/api/sys';
 import { dcrApi } from '@/api/dcr';
@@ -174,7 +175,7 @@ export const Sys09_Lookup_Code: React.FC<Props> = ({ open, codeKind, onResult, o
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="코드추가"
       width={650}
@@ -205,6 +206,6 @@ export const Sys09_Lookup_Code: React.FC<Props> = ({ open, codeKind, onResult, o
             onRowDoubleClicked={e => { if (e.data) { onResult(e.data); onClose(); } }} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

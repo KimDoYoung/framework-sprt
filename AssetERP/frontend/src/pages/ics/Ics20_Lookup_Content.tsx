@@ -4,7 +4,8 @@
  * 레이아웃 L39-80: 모달 1000×500 "내용", 내용 입력, 아래 가운데 [저장](userType이 "admin"일 때만)·[닫기]
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal, Space } from 'antd';
+import { Input, message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
 import { IcsRevisionHistory } from '@/types/ics';
@@ -38,7 +39,7 @@ export const Ics20_Lookup_Content: React.FC<Props> = ({ revision, userType, onSa
   };
 
   return (
-    <Modal
+    <LookupModal
       open={!!revision}
       title="내용"
       width={1040}
@@ -55,6 +56,6 @@ export const Ics20_Lookup_Content: React.FC<Props> = ({ revision, userType, onSa
       }
     >
       <Input.TextArea style={{ height: 380, resize: 'none' }} value={note} readOnly={userType !== 'admin'} onChange={e => setNote(e.target.value)} />
-    </Modal>
+    </LookupModal>
   );
 };

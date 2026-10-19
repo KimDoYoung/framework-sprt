@@ -5,7 +5,7 @@
  * UX보강(10) B12-2: 저장 = 저장(n)(UX-03). 검색 칸이 없어 SearchBar는 쓰지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Modal } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { sysApi } from '@/api/sys';
 import { CodeGroup, CodeKind } from '@/types/sys';
 import { Button } from '@/components/button';
@@ -54,7 +54,7 @@ export const Sys13_Lookup_CodeGroup: React.FC<Props> = ({ open, codeKind, onClos
   useEffect(() => { if (open) crud.retrieve(); }, [open]);
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="코드 그룹"
       width={1100}
@@ -91,6 +91,6 @@ export const Sys13_Lookup_CodeGroup: React.FC<Props> = ({ open, codeKind, onClos
           <Sys13_TabPage_Code ref={tabPageCode} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

@@ -5,7 +5,8 @@
  * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 조건이 1개라 초기화(UX-02) 없음
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { message, Modal, Space, Typography } from 'antd';
+import { message, Space, Typography } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { sysApi } from '@/api/sys';
 import { ClientInfo } from '@/types/sys';
 import { Button } from '@/components/button';
@@ -70,7 +71,7 @@ export const Sys85_Lookup_ClientInfoList: React.FC<Props> = ({ open, onResult, o
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="고객사 정보"
       width={900}
@@ -106,6 +107,6 @@ export const Sys85_Lookup_ClientInfoList: React.FC<Props> = ({ open, onResult, o
           <CellEditGrid<ClientInfo> crud={crud} columnDefs={columnDefs} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

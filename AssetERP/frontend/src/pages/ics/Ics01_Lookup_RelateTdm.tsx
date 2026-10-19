@@ -5,6 +5,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { tdmApi } from '@/api/tdm';
 import { errorMessage } from '@/api/client';
@@ -98,7 +99,7 @@ export const Ics01_Lookup_RelateTdm: React.FC<Props> = ({ icsId, icsName, onChan
   };
 
   return (
-    <Modal
+    <LookupModal
       open={icsId != null}
       title={`${icsName} - 연결 책무이행점검(기준회사:KFS)`}
       width="min(1540px, 96vw)"
@@ -121,10 +122,10 @@ export const Ics01_Lookup_RelateTdm: React.FC<Props> = ({ icsId, icsName, onChan
           </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <MultiGrid<ManlRelateIcs> gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.manlRelateIcsId)} loading={loading} />
+          <MultiGrid<ManlRelateIcs> rowClick gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.manlRelateIcsId)} loading={loading} />
         </div>
       </div>
       <Ics01_Lookup_SelectTdm icsId={selectOpen ? icsId : null} onSelect={lookupSelectTdm} onClose={() => setSelectOpen(false)} />
-    </Modal>
+    </LookupModal>
   );
 };

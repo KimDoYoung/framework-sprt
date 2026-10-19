@@ -7,7 +7,8 @@
  * `FilePreview`는 Sys10_Lookup_ListFileViewer도 쓴다.
  */
 import React, { useEffect, useState } from 'react';
-import { message, Modal } from 'antd';
+import { message } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { fileApi } from '@/api/file';
 import { errorMessage } from '@/api/client';
 import { FileInfo } from '@/types/sys';
@@ -58,7 +59,7 @@ interface Props {
 }
 
 export const Sys10_Lookup_FileViewer: React.FC<Props> = ({ file, onClose }) => (
-  <Modal
+  <LookupModal
     open={!!file}
     title="파일보기"
     width={1200}
@@ -74,5 +75,5 @@ export const Sys10_Lookup_FileViewer: React.FC<Props> = ({ file, onClose }) => (
     }
   >
     <FilePreview file={file} height={650} />
-  </Modal>
+  </LookupModal>
 );

@@ -4,7 +4,8 @@
  * open() L70-150: 모달 "첨부파일" 950×400, 툴바 [파일업로드] + 그리드(buildApprFileGrid L152-189: 체크박스 단일 선택, 첨부파일명 640 · 다운로드 80 · 삭제 80 · 미리보기 80), 아래 가운데 [닫기]
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { fileApi, FILE_DELETE_STATUS } from '@/api/file';
 import { errorMessage } from '@/api/client';
 import { FileInfo } from '@/types/sys';
@@ -81,7 +82,7 @@ export const Bbs15_Lookup_File: React.FC<Props> = ({ open, parentId, onClose }) 
   ], [retrieve]);
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="첨부파일"
       width={950}
@@ -110,6 +111,6 @@ export const Bbs15_Lookup_File: React.FC<Props> = ({ open, parentId, onClose }) 
         </div>
       </div>
       <Sys10_Lookup_FileViewer file={viewFile} onClose={() => setViewFile(null)} />
-    </Modal>
+    </LookupModal>
   );
 };

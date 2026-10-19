@@ -4,7 +4,8 @@
  * 레이아웃 L53-121: 모달 600×700 "법규 분류", 위 툴바(검색칸 250 · [찾기]) + 트리 그리드(분류명 500 · 법규코드 80, 행번호 없음), 아래 가운데 [확인][전체][닫기]
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
 import { ClassTreeNode } from '@/types/ics';
@@ -94,7 +95,7 @@ export const Ics01_Lookup_SelectParent: React.FC<Props> = ({ open, onResult, onC
   ], [tree.treeCol]);
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="법규 분류"
       width={640}
@@ -127,6 +128,6 @@ export const Ics01_Lookup_SelectParent: React.FC<Props> = ({ open, onResult, onC
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

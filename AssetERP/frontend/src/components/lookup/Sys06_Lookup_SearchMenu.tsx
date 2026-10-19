@@ -5,7 +5,8 @@
  * 그 밖에는 "화면찾기" 1300×600에 북마크·화면경로·화면명·화면번호·화면설명·북마크 아이콘 열과 [북마크]·"화면명만 검색". 툴바 `화면명: [조회][북마크][화면명만 검색]`, 아래 [닫기]
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, Input, message, Modal, Space } from 'antd';
+import { Checkbox, Input, message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { StarFilled, StarOutlined } from '@ant-design/icons';
 import type { AgGridReact } from 'ag-grid-react';
 import { errorMessage } from '@/api/client';
@@ -123,7 +124,7 @@ export const Sys06_Lookup_SearchMenu: React.FC<Props> = ({ open, companyId, onRe
   };
 
   return (
-    <Modal open={open} title={manager ? '화면찾기(관리자)' : '화면찾기'} width={manager ? 620 : 1300} maskClosable={false} onCancel={onClose} destroyOnHidden
+    <LookupModal open={open} title={manager ? '화면찾기(관리자)' : '화면찾기'} width={manager ? 620 : 1300} maskClosable={false} onCancel={onClose} destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -158,6 +159,6 @@ export const Sys06_Lookup_SearchMenu: React.FC<Props> = ({ open, companyId, onRe
         </div>
       </div>
       <Sys40_Lookup_Bookmark open={bookmarkOpen} onClose={() => { setBookmarkOpen(false); void retrieve(); }} />
-    </Modal>
+    </LookupModal>
   );
 };

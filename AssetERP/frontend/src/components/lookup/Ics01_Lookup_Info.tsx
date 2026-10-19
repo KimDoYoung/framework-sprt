@@ -4,7 +4,8 @@
  * 레이아웃 getEditor() L108-145: 모달 650×690 "법규", 라벨 폭 80, 제출처·법규명·상세내용·기한·서식파일(그리드)·비고(모두 읽기 전용), 아래 가운데 [닫기]
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal, Typography } from 'antd';
+import { Input, message, Typography } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { icsApi } from '@/api/ics';
 import { schApi } from '@/api/sch';
 import { errorMessage } from '@/api/client';
@@ -50,7 +51,7 @@ export const Ics01_Lookup_Info: React.FC<Props> = ({ relate, classTreeId, onClos
     : <Input readOnly style={{ flex: 1 }} value={value} />;
 
   return (
-    <Modal
+    <LookupModal
       open={treeId != null}
       title="법규"
       width={690}
@@ -75,6 +76,6 @@ export const Ics01_Lookup_Info: React.FC<Props> = ({ relate, classTreeId, onClos
         </div>
         <div style={ROW}><Label>비고</Label>{ro(note)}</div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

@@ -4,6 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { message, Modal, Select, Space, Typography } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { Code } from '@/types/sys';
@@ -69,7 +70,7 @@ export const Sys03_Lookup_CompanyMenu: React.FC<Props> = ({ open, onClose }) => 
   );
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="매뉴권한복사(초기)"
       width={550}
@@ -89,6 +90,6 @@ export const Sys03_Lookup_CompanyMenu: React.FC<Props> = ({ open, onClose }) => 
         {combo('출발지', outPut, setOutPut)}
         {combo('도착지', inPut, setInPut)}
       </Space>
-    </Modal>
+    </LookupModal>
   );
 };

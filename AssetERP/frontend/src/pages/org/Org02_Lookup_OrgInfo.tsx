@@ -5,6 +5,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { orgCodeApi } from '@/api/org';
 import { errorMessage } from '@/api/client';
@@ -157,7 +158,7 @@ export const Org02_Lookup_OrgInfo: React.FC<Props> = ({ target, onClose, onChang
   };
 
   return (
-    <Modal
+    <LookupModal
       open={!!target}
       title="조직정보 History"
       width={1010}
@@ -193,6 +194,6 @@ export const Org02_Lookup_OrgInfo: React.FC<Props> = ({ target, onClose, onChang
           <Org02_Edit_Info ref={editRef} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

@@ -40,15 +40,19 @@ export function SingleGrid<T>({ onSelect, onSelectionChanged, onCellFocused, ...
   );
 }
 
-/** 체크박스 다중 선택, 읽기 전용. 체크가 바뀌면 onCheckedChange */
+/**
+ * 체크박스 다중 선택, 읽기 전용. 체크가 바뀌면 onCheckedChange
+ * rowClick(UX-06): 체크박스뿐 아니라 행 아무 곳이나 클릭해도 선택·해제된다(클릭마다 누적). 조회창용 — 일반 화면 그리드에는 쓰지 않는다
+ */
 export interface MultiGridProps<T> extends BaseGridProps<T> {
   onCheckedChange?: (rows: T[]) => void;
+  rowClick?: boolean;
 }
 
-export function MultiGrid<T>({ onCheckedChange, onSelectionChanged, ...rest }: MultiGridProps<T>) {
+export function MultiGrid<T>({ onCheckedChange, onSelectionChanged, rowClick, ...rest }: MultiGridProps<T>) {
   return (
     <BaseGrid<T>
-      rowSelection={{ mode: 'multiRow', checkboxes: true, headerCheckbox: true, enableClickSelection: false }}
+      rowSelection={{ mode: 'multiRow', checkboxes: true, headerCheckbox: true, enableClickSelection: !!rowClick, enableSelectionWithoutKeys: !!rowClick }}
       onSelectionChanged={(e: SelectionChangedEvent<T>) => {
         onCheckedChange?.(e.api.getSelectedRows());
         onSelectionChanged?.(e);

@@ -5,7 +5,8 @@
  *   사용여부 100 · 사용종료일 100), 오른쪽 반 = 중분류(Ics23_TabPage_CheckList), 아래 가운데 [닫기]
  */
 import React, { useCallback, useMemo, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { SelectionChangedEvent } from 'ag-grid-community';
 import { icsApi } from '@/api/ics';
 import { IcsChecklistLClass } from '@/types/ics';
@@ -103,7 +104,7 @@ export const Ics21_Lookup_CheckList: React.FC<Props> = ({ open, onClosed, onClos
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="분류관리"
       width={1490}
@@ -140,6 +141,6 @@ export const Ics21_Lookup_CheckList: React.FC<Props> = ({ open, onClosed, onClos
           <Ics23_TabPage_CheckList parent={parent} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

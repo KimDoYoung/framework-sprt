@@ -4,7 +4,8 @@
  * 레이아웃 L38-65: 모달 680×300 "첨부파일", 그리드(첨부파일명 440·다운로드 80·미리보기 80, 체크박스 단일), 아래 가운데 [닫기]
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { message, Modal } from 'antd';
+import { message } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { fileApi } from '@/api/file';
 import { errorMessage } from '@/api/client';
 import { FileInfo } from '@/types/sys';
@@ -43,7 +44,7 @@ export const Ics20_Lookup_File: React.FC<Props> = ({ parentId, onClose }) => {
   ], []);
 
   return (
-    <Modal
+    <LookupModal
       open={parentId != null}
       title="첨부파일"
       width={720}
@@ -60,6 +61,6 @@ export const Ics20_Lookup_File: React.FC<Props> = ({ parentId, onClose }) => {
         />
       </div>
       <Sys10_Lookup_FileViewer file={viewFile} onClose={() => setViewFile(null)} />
-    </Modal>
+    </LookupModal>
   );
 };

@@ -4,7 +4,8 @@
  * Dcr01_Lookup_DcrCopyAdmin() L61-67·open() L69-114: 모달 900×700 "운용사별 문서분류 반영", 왼쪽 55% (문서분류 + 검색 250 + [찾기] / 트리), 오른쪽 45% ([문서분류복사] / 체크 그리드 운용사 200 · " " 100), 아래 가운데 [닫기]
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message, Modal, Space, Tree } from 'antd';
+import { Input, message, Space, Tree } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
@@ -80,7 +81,7 @@ export const Dcr01_Lookup_DcrCopyAdmin: React.FC<Props> = ({ open, onClose }) =>
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="운용사별 문서분류 반영"
       width={900}
@@ -122,10 +123,10 @@ export const Dcr01_Lookup_DcrCopyAdmin: React.FC<Props> = ({ open, onClose }) =>
             <Button type="change" onClick={update}>문서분류복사</Button>
           </Space>
           <div style={{ flex: 1, minHeight: 0, borderTop: '1px solid #d9d9d9' }}>
-            <MultiGrid<DcrCopyCompany> gridRef={gridRef} rowData={companies} columnDefs={columnDefs} getRowId={p => String(p.data.companyId)} />
+            <MultiGrid<DcrCopyCompany> rowClick gridRef={gridRef} rowData={companies} columnDefs={columnDefs} getRowId={p => String(p.data.companyId)} />
           </div>
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

@@ -4,7 +4,8 @@
  * 레이아웃 L42-67: 모달 600×500 "전송기록", 툴바(검색 + 조회) + 그리드, 하단 닫기
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Input, message, Modal } from 'antd';
+import { Input, message } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { smsApi } from '@/api/sms';
 import { errorMessage } from '@/api/client';
 import { GroupSendHistory } from '@/types/sms';
@@ -52,7 +53,7 @@ export const Sms04_Lookup_History: React.FC<Props> = ({ open, groupSendId, onClo
   }, [open, retrieve]);
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="전송기록"
       width={600}
@@ -81,6 +82,6 @@ export const Sms04_Lookup_History: React.FC<Props> = ({ open, groupSendId, onClo
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

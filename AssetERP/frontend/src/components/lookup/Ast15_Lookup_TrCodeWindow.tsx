@@ -6,6 +6,7 @@
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { message, Modal } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { astApi } from '@/api/ast';
 import { errorMessage } from '@/api/client';
@@ -117,7 +118,7 @@ export const Ast15_Lookup_TrCodeWindow: React.FC<Props> = ({ open, onClose }) =>
   };
 
   return (
-    <Modal open={open} title="화면별 거래유형 등록" width={1500} maskClosable={false} onCancel={onClose} destroyOnHidden footer={null}>
+    <LookupModal open={open} title="화면별 거래유형 등록" width={1500} maskClosable={false} onCancel={onClose} destroyOnHidden footer={null}>
       <div style={{ height: 650, display: 'flex', gap: 8 }}>
         <div style={{ width: 680, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -172,6 +173,6 @@ export const Ast15_Lookup_TrCodeWindow: React.FC<Props> = ({ open, onClose }) =>
         }}
         onClose={() => setSearchMenuOpen(false)}
       />
-    </Modal>
+    </LookupModal>
   );
 };

@@ -5,7 +5,8 @@
  * open() L47-52("내규 상세내용 수정")와 [저장]은 부르는 화면이 아직 없어 만들지 않았다(다음 단계)
  */
 import React from 'react';
-import { Input, Modal } from 'antd';
+import { Input } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { IcrClassTreeLookup } from '@/types/icr';
 import { Button } from '@/components/button';
 
@@ -17,7 +18,7 @@ interface Props {
 
 export const Icr01_Lookup_Content: React.FC<Props> = ({ row, onClose }) => (
   // [E0] 화면 열림 (생성자 L54-79) → getEditor(), show()
-  <Modal
+  <LookupModal
     open={!!row}
     title="내규 상세내용"
     width={690}
@@ -32,5 +33,5 @@ export const Icr01_Lookup_Content: React.FC<Props> = ({ row, onClose }) => (
     }
   >
     <Input.TextArea style={{ height: 590, resize: 'none' }} readOnly value={row?.content ?? ''} />
-  </Modal>
+  </LookupModal>
 );

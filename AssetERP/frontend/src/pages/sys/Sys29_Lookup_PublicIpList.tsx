@@ -5,7 +5,8 @@
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import dayjs from 'dayjs';
-import { Modal, Space } from 'antd';
+import { Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { sysApi } from '@/api/sys';
 import { LoginSecure } from '@/types/sys';
 import { Button } from '@/components/button';
@@ -52,7 +53,7 @@ export const Sys29_Lookup_PublicIpList: React.FC<Props> = ({ companyId, onClose 
   useEffect(() => { if (companyId) retrieve(); }, [companyId]);
 
   return (
-    <Modal
+    <LookupModal
       open={!!companyId}
       title="공인IP 등록/수정"
       width={700}
@@ -80,6 +81,6 @@ export const Sys29_Lookup_PublicIpList: React.FC<Props> = ({ companyId, onClose 
           <CellEditGrid<LoginSecure> crud={crud} columnDefs={columnDefs} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

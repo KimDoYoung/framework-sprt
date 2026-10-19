@@ -4,7 +4,8 @@
  * 생성자 L65-127: 모달 800×500 "문서양식 연결", 위 툴바([행 추가][행 삭제] + 오른쪽 새로고침 아이콘) + 체크박스 다중 그리드(양식 제목 450 · 대표양식 60 · 비고 180), 아래 가운데 [저장][닫기]
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { ReloadOutlined } from '@ant-design/icons';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
@@ -94,7 +95,7 @@ export const Dcr06_Lookup_Form: React.FC<Props> = ({ classTreeId, onChanged, onC
 
   return (
     <>
-      <Modal
+      <LookupModal
         open={classTreeId != null}
         title="문서양식 연결"
         width={800}
@@ -124,7 +125,7 @@ export const Dcr06_Lookup_Form: React.FC<Props> = ({ classTreeId, onChanged, onC
             <CellEditGrid<DcrRelateDocType> crud={crud} columnDefs={columnDefs} />
           </div>
         </div>
-      </Modal>
+      </LookupModal>
       <Dcr05_Lookup_DocType open={lookupOpen} onResult={insertRow} onClose={() => setLookupOpen(false)} />
     </>
   );

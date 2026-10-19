@@ -4,7 +4,8 @@
  * open() L37-72: 1000×500 모달 "비고", MyTextArea 하나 + 저장·닫기
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal, Space } from 'antd';
+import { Input, message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
 import { DcrLink } from '@/types/dcr';
@@ -36,7 +37,7 @@ export const Dcr30_Lookup_LinkNote: React.FC<Props> = ({ link, onSaved, onClose 
   };
 
   return (
-    <Modal
+    <LookupModal
       open={link != null}
       title="비고"
       width={1000}
@@ -54,6 +55,6 @@ export const Dcr30_Lookup_LinkNote: React.FC<Props> = ({ link, onSaved, onClose 
       }
     >
       <Input.TextArea value={note} onChange={e => setNote(e.target.value)} style={{ height: 360, resize: 'none' }} />
-    </Modal>
+    </LookupModal>
   );
 };

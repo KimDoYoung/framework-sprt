@@ -5,7 +5,8 @@
  * open(relateTable, relateId, callback): 'TDM47' + 점검항목 ID면 그 점검항목에 아직 연결 안 된 문서분류만
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
@@ -72,7 +73,7 @@ export const Dcr01_Lookup_SelectMulti: React.FC<Props> = ({ open, onResult, rela
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="문서분류"
       width={750}
@@ -96,9 +97,9 @@ export const Dcr01_Lookup_SelectMulti: React.FC<Props> = ({ open, onResult, rela
           </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <MultiGrid<DcrClassTreeLookup> gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.classTreeId)} loading={loading} />
+          <MultiGrid<DcrClassTreeLookup> rowClick gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.classTreeId)} loading={loading} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

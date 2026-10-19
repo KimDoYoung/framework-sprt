@@ -3,7 +3,8 @@
  * AS-IS: myApp/client/vi/emp/Emp36_Popup_AddDeduct.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { Modal, Space } from 'antd';
+import { Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { empApi } from '@/api/emp';
 import { AddDeduct } from '@/types/emp';
 import { Button } from '@/components/button';
@@ -57,7 +58,7 @@ export const Emp36_Popup_AddDeduct: React.FC<Props> = ({ open, deductId, onClose
   // [E2] updateButton[저장].Select (L77) → update() L115-123
   // [E3] closeButton[닫기].Select (L83) → hide()
   return (
-    <Modal
+    <LookupModal
       title="추가인적공제"
       open={open}
       onCancel={onClose}
@@ -79,6 +80,6 @@ export const Emp36_Popup_AddDeduct: React.FC<Props> = ({ open, deductId, onClose
           />
         </div>
       </Space>
-    </Modal>
+    </LookupModal>
   );
 };

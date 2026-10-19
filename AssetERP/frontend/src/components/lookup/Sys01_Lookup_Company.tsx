@@ -5,7 +5,8 @@
  * UX보강(10) B12-2: 검색 줄 = SearchBar(UX-01·04)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import type { CellDoubleClickedEvent } from 'ag-grid-community';
 import { sysApi } from '@/api/sys';
@@ -37,8 +38,7 @@ interface Props {
 
 export const Sys01_Lookup_Company: React.FC<Props> = ({ open, onResult, onClose, multi, onMultiResult }) => {
   const gridRef = useRef<AgGridReact<Company>>(null);
-  const lastSelected = useRef<Company | undefined>(undefined);
-  const [korName, setKorName] = useState('');
+  const lastSelected = useRef<Company | undefined>(undefined);  const [korName, setKorName] = useState('');
   const [rows, setRows] = useState<Company[]>([]);
   const columnDefs = useMemo(buildGrid, []);
 
@@ -91,7 +91,7 @@ export const Sys01_Lookup_Company: React.FC<Props> = ({ open, onResult, onClose,
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="고객사 찾기"
       width={550}
@@ -113,7 +113,7 @@ export const Sys01_Lookup_Company: React.FC<Props> = ({ open, onResult, onClose,
         <SearchBar onSearch={() => retrieve(korName)}>
           <SearchBar.Field label="고객명">
             {/* [E1] korName[고객명].KeyPress [Enter] (L91) → retrieve() */}
-            <SearchBar.Input autoFocus style={{ width: 120 }} value={korName} onChange={e => setKorName(e.target.value)} />
+            <SearchBar.Input style={{ width: 120 }} value={korName} onChange={e => setKorName(e.target.value)} />
           </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
@@ -121,12 +121,14 @@ export const Sys01_Lookup_Company: React.FC<Props> = ({ open, onResult, onClose,
             gridRef={gridRef}
             rowData={rows}
             columnDefs={columnDefs}
+            // 행 아무 곳이나 클릭해서 선택(UX). 단일은 클릭한 행만, 다중은 클릭할 때마다 누적
+            rowSelection={{ mode: 'multiRow', checkboxes: true, headerCheckbox: true, enableClickSelection: true, enableSelectionWithoutKeys: !!multi }}
             getRowId={p => String(p.data.companyId)}
             onRowSelected={e => { if (e.node.isSelected() && e.data) lastSelected.current = e.data; }}
             onCellDoubleClicked={onCellDoubleClicked}
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

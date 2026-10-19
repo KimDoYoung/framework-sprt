@@ -5,7 +5,8 @@
  * UX보강(10): 툴바 = SearchBar(UX-01)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DatePicker, message, Modal, Space } from 'antd';
+import { DatePicker, message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import dayjs from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { orgApi } from '@/api/emp';
@@ -73,7 +74,7 @@ export const Org00_Lookup_SelectTdm: React.FC<Props> = ({ stdDate: openDate, sin
   useEffect(() => { if (openDate && stdDate === openDate) retrieve(); }, [openDate, stdDate]);
 
   return (
-    <Modal
+    <LookupModal
       open={!!openDate}
       title="조직찾기"
       width={560}
@@ -102,7 +103,7 @@ export const Org00_Lookup_SelectTdm: React.FC<Props> = ({ stdDate: openDate, sin
           </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <MultiGrid<OrgTdm>
+          <MultiGrid<OrgTdm> rowClick
             gridRef={gridRef}
             rowData={rows}
             columnDefs={columnDefs}
@@ -111,6 +112,6 @@ export const Org00_Lookup_SelectTdm: React.FC<Props> = ({ stdDate: openDate, sin
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

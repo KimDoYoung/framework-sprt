@@ -4,7 +4,8 @@
  * open() L52-128: 모달 760×600 "문서양식", 위 툴바(구분 콤보 150 "전체" · 검색 200 "양식제목을 입력해주세요" · [조회]) + 체크박스 다중 그리드(구분 150 · 양식 제목 450 · 수정 80), 아래 가운데 [확인][취소]
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
@@ -73,7 +74,7 @@ export const Dcr05_Lookup_DocType: React.FC<Props> = ({ open, onResult, onClose 
 
   return (
     <>
-      <Modal
+      <LookupModal
         open={open}
         title="문서양식"
         width={760}
@@ -103,11 +104,11 @@ export const Dcr05_Lookup_DocType: React.FC<Props> = ({ open, onResult, onClose 
             </SearchBar.Field>
           </SearchBar>
           <div style={{ flex: 1, minHeight: 0 }}>
-            <MultiGrid<DcrDocType> gridRef={gridRef} rowData={rows} columnDefs={columnDefs} loading={loading}
+            <MultiGrid<DcrDocType> rowClick gridRef={gridRef} rowData={rows} columnDefs={columnDefs} loading={loading}
               getRowId={p => String(p.data.docTypeId)} onRowDoubleClicked={e => { if (e.data) confirm(e.data); }} />
           </div>
         </div>
-      </Modal>
+      </LookupModal>
       <Dcr05_Edit_Update model={viewRow} readOnly onClose={() => setViewRow(null)} />
     </>
   );

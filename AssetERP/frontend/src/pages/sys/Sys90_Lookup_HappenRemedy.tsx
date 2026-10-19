@@ -6,7 +6,8 @@
  * onConfirm을 주면 편집(A30), 안 주면 읽기 전용(A29)
  */
 import React, { useEffect, useState } from 'react';
-import { Modal, Space } from 'antd';
+import { Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { Button } from '@/components/button';
 import { HtmlEditor } from '@/components/form/HtmlEditor';
 import { HtmlView } from '@/components/form/HtmlView';
@@ -24,7 +25,7 @@ export const Sys90_Lookup_HappenRemedy: React.FC<Props> = ({ html, onConfirm, on
   useEffect(() => { if (html != null) setText(html); }, [html]);
 
   return (
-    <Modal
+    <LookupModal
       open={html != null}
       title="처리방안"
       width={900}
@@ -43,6 +44,6 @@ export const Sys90_Lookup_HappenRemedy: React.FC<Props> = ({ html, onConfirm, on
       }
     >
       {onConfirm ? <HtmlEditor value={html} onChange={setText} height={560} /> : <HtmlView html={html} height={560} />}
-    </Modal>
+    </LookupModal>
   );
 };

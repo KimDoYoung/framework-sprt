@@ -4,7 +4,8 @@
  * 레이아웃 L51-80: 모달 700×500 "발신기록 (최근 300건)", 툴바(조회기간 시작일 ~ 종료일, 검색 내용, 조회) + 그리드, 하단 닫기
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { DatePicker, message, Modal, Typography } from 'antd';
+import { DatePicker, message, Typography } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import dayjs, { Dayjs } from 'dayjs';
 import { smsApi } from '@/api/sms';
 import { errorMessage } from '@/api/client';
@@ -61,7 +62,7 @@ export const Sms02_Lookup_History: React.FC<Props> = ({ open, companyId, onClose
   }, [open, retrieve]);
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="발신기록 (최근 300건)"
       width={700}
@@ -95,6 +96,6 @@ export const Sms02_Lookup_History: React.FC<Props> = ({ open, companyId, onClose
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

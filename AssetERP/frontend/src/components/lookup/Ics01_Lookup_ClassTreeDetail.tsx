@@ -5,7 +5,8 @@
  *   세로 줄, 오른쪽 반 = 개정이력 그리드(255)·서식파일 그리드(195), 아래 가운데 [닫기]
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal, Typography } from 'antd';
+import { Input, message, Typography } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
 import { IcsLawDetail } from '@/types/ics';
@@ -38,7 +39,7 @@ export const Ics01_Lookup_ClassTreeDetail: React.FC<Props> = ({ classTreeId, onC
     <Input.TextArea readOnly style={{ height, resize: 'none', flex: 1 }} value={value ?? ''} />;
 
   return (
-    <Modal
+    <LookupModal
       open={classTreeId != null}
       title="법규상세"
       width={1340}
@@ -72,6 +73,6 @@ export const Ics01_Lookup_ClassTreeDetail: React.FC<Props> = ({ classTreeId, onC
           </div>
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

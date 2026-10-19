@@ -5,7 +5,8 @@
  * open()/openUser() L56-67은 같은 일을 한다(openUser의 단추 숨김은 원본에서 주석 처리) — 관리자 연결의 전파는 서버가 한다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { ReloadOutlined } from '@ant-design/icons';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
@@ -99,7 +100,7 @@ export const Dcr20_Lookup_Ics: React.FC<Props> = ({ dcrClassTreeId, onChanged, o
 
   return (
     <>
-      <Modal
+      <LookupModal
         open={dcrClassTreeId != null}
         title="법규 연결"
         width={1200}
@@ -129,7 +130,7 @@ export const Dcr20_Lookup_Ics: React.FC<Props> = ({ dcrClassTreeId, onChanged, o
             <CellEditGrid<DcrRelateIcs> crud={crud} columnDefs={columnDefs} />
           </div>
         </div>
-      </Modal>
+      </LookupModal>
       <Ics01_Lookup_SelectMulti open={lookupOpen} actionCode="classTree" onResult={insertRow} onClose={() => setLookupOpen(false)} />
     </>
   );

@@ -6,6 +6,7 @@
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Modal, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
@@ -104,7 +105,7 @@ export const Sys06_Lookup_CopyMulti: React.FC<Props> = ({ open, onClose }) => {
   });
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="일괄복사"
       width={1200}
@@ -135,7 +136,7 @@ export const Sys06_Lookup_CopyMulti: React.FC<Props> = ({ open, onClose }) => {
             </SearchBar.Field>
           </SearchBar>
           <div style={{ flex: 1, minHeight: 0 }}>
-            <MultiGrid<MenuCopy> gridRef={grid01} rowData={menus} columnDefs={cols01} getRowId={p => String(p.data.menuId)} />
+            <MultiGrid<MenuCopy> rowClick gridRef={grid01} rowData={menus} columnDefs={cols01} getRowId={p => String(p.data.menuId)} />
           </div>
         </div>
         <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -150,10 +151,10 @@ export const Sys06_Lookup_CopyMulti: React.FC<Props> = ({ open, onClose }) => {
               onChange={v => { const code = v ?? '%'; sp02.set('erpProductCd', code); retrieve02(code); }} />
           </SearchBar>
           <div style={{ flex: 1, minHeight: 0 }}>
-            <MultiGrid<CompanyCopy> gridRef={grid02} rowData={companies} columnDefs={cols02} getRowId={p => String(p.data.companyId)} />
+            <MultiGrid<CompanyCopy> rowClick gridRef={grid02} rowData={companies} columnDefs={cols02} getRowId={p => String(p.data.companyId)} />
           </div>
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

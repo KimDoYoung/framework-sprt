@@ -5,7 +5,8 @@
  *   사원명 250 · 예외시작일 100 · 예외종료일 100 · 예외사유 350 · 보고서에서 제거 250), 아래 가운데 [닫기]
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import dayjs from 'dayjs';
 import { empExceptBizApi } from '@/api/emp';
 import { ExceptBiz, TransInfo } from '@/types/emp';
@@ -79,7 +80,7 @@ export const Emp33_Lookup_ExceptBiz: React.FC<Props> = ({ exceptBizCode, onClose
 
   return (
     <>
-      <Modal
+      <LookupModal
         open={open}
         title="예외사원 등록"
         width={1200}
@@ -106,7 +107,7 @@ export const Emp33_Lookup_ExceptBiz: React.FC<Props> = ({ exceptBizCode, onClose
             <CellEditGrid<ExceptBiz> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_SELECTION} />
           </div>
         </div>
-      </Modal>
+      </LookupModal>
       <Emp00_Lookup_SelectSingle open={pickOpen} separateAddTitle transDate={dayjs().format('YYYY-MM-DD')} onResult={onPick} onClose={() => setPickOpen(false)} />
     </>
   );

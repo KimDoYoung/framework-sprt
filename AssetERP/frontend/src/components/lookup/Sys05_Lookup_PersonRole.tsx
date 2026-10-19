@@ -4,7 +4,8 @@
  * 모달 850×450(크기 고정), 제목 "권한그룹", 그리드 + 가운데 [닫기]
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { message, Modal } from 'antd';
+import { message } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { PersonRole } from '@/types/sys';
@@ -45,7 +46,7 @@ export const Sys05_Lookup_PersonRole: React.FC<Props> = ({ open, personId, onClo
   }, [open, personId]);
 
   return (
-    <Modal open={open} title="권한그룹" width={850} maskClosable={false} onCancel={onClose} destroyOnHidden
+    <LookupModal open={open} title="권한그룹" width={850} maskClosable={false} onCancel={onClose} destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
           <Button type="close" onClick={onClose}>닫기</Button>
@@ -60,6 +61,6 @@ export const Sys05_Lookup_PersonRole: React.FC<Props> = ({ open, personId, onClo
           rowSelection={selectOne}
         />
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

@@ -6,7 +6,8 @@
  * actionCode: "classTree"(고른 법규 목록을 그대로 돌려줌, 1→1, E03)·"deadline"(고른 법규마다 그 기한을 selectByListIcsId로 읽어 돌려줌, 1→n, E04). openUnConn(relateTable, relateId)는 E13-2에서 더했다
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, Input, message, Modal, Space } from 'antd';
+import { Checkbox, Input, message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
@@ -145,7 +146,7 @@ export const Ics01_Lookup_SelectMulti: React.FC<Props> = ({ open, actionCode = '
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="법규 분류"
       width={1540}
@@ -180,12 +181,12 @@ export const Ics01_Lookup_SelectMulti: React.FC<Props> = ({ open, actionCode = '
           </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <MultiGrid<IcsLawLookup> gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.classTreeId)} loading={loading} />
+          <MultiGrid<IcsLawLookup> rowClick gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.classTreeId)} loading={loading} />
         </div>
         <PagingToolBar page={page} limit={LIMIT} total={total} loading={loading} onChange={getPaging} />
       </div>
       <Ics01_Lookup_SelectParent open={parentOpen} onResult={selectParent} onClose={() => setParentOpen(false)} />
       <Ics01_Lookup_Content law={detailLaw} readOnly onClosed={() => undefined} onClose={() => setDetailLaw(null)} />
-    </Modal>
+    </LookupModal>
   );
 };

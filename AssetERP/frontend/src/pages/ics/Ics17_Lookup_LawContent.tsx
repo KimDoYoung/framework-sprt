@@ -4,7 +4,8 @@
  * 레이아웃 L39-80: 모달 1000×500 "법규내용", 본문 = 법규내용 텍스트 영역, 하단 가운데 [저장](userType "user"만)·[닫기]. "admin"이면 읽기 전용
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal } from 'antd';
+import { Input, message } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
 import { IcsUserRequest } from '@/types/ics';
@@ -35,7 +36,7 @@ export const Ics17_Lookup_LawContent: React.FC<Props> = ({ model, userType, onSa
   };
 
   return (
-    <Modal
+    <LookupModal
       open={!!model}
       title="법규내용"
       width={1000}
@@ -52,6 +53,6 @@ export const Ics17_Lookup_LawContent: React.FC<Props> = ({ model, userType, onSa
     >
       <Input.TextArea style={{ height: 400, resize: 'none' }} readOnly={userType === 'admin'} value={lawContent}
         onChange={e => setLawContent(e.target.value)} />
-    </Modal>
+    </LookupModal>
   );
 };

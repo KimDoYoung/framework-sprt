@@ -5,7 +5,8 @@
  * 오른쪽(35%) = 툴바 [계정과목복사] + 고객사 체크박스 그리드(고객사 200 · " " 100), 아래 가운데 [닫기]
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message, Modal, Space, Splitter } from 'antd';
+import { Input, message, Space, Splitter } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { actApi } from '@/api/act';
 import { errorMessage } from '@/api/client';
@@ -138,7 +139,7 @@ export const Act01_Lookup_CopyAdmin: React.FC<Props> = ({ open, onClose }) => {
   };
 
   return (
-    <Modal open={open} title="고객사별 계정과목 반영" width={1100} maskClosable={false} onCancel={onClose} destroyOnHidden
+    <LookupModal open={open} title="고객사별 계정과목 반영" width={1100} maskClosable={false} onCancel={onClose} destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
           {/* [E6] closeButton[닫기].Select (L183) → hide() */}
@@ -184,7 +185,7 @@ export const Act01_Lookup_CopyAdmin: React.FC<Props> = ({ open, onClose }) => {
                 <Button type="change" onClick={update}>계정과목복사</Button>
               </Space>
               <div style={{ flex: 1, minHeight: 0 }}>
-                <MultiGrid<ActCompany>
+                <MultiGrid<ActCompany> rowClick
                   gridRef={companyGridRef}
                   rowData={companies}
                   columnDefs={columnDefs}
@@ -196,6 +197,6 @@ export const Act01_Lookup_CopyAdmin: React.FC<Props> = ({ open, onClose }) => {
         </Splitter>
       </div>
       <Sys01_Lookup_Company open={companyOpen} onResult={onCompanyResult} onClose={() => setCompanyOpen(false)} />
-    </Modal>
+    </LookupModal>
   );
 };

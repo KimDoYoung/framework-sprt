@@ -4,7 +4,8 @@
  * Dcr01_Lookup_UseYn() L62-100: 모달 520×750 "문서분류", 위 툴바(검색 300 + [조회]) + 트리 그리드(문서분류 345 · 등록문서건수 75 · 사용여부 80), 아래 가운데 [저장][닫기]
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { CellClickedEvent } from 'ag-grid-community';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
@@ -100,7 +101,7 @@ export const Dcr01_Lookup_UseYn: React.FC<Props> = ({ open, onClosed, onClose })
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="문서분류"
       width={520}
@@ -127,6 +128,6 @@ export const Dcr01_Lookup_UseYn: React.FC<Props> = ({ open, onClosed, onClose })
           <SingleGrid<DcrClassTreeAll> gridRef={tree.gridRef} {...tree.gridProps} rowNumber={false} columnDefs={columnDefs} onCellClicked={getColumn} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

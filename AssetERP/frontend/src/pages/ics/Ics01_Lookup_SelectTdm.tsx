@@ -4,7 +4,8 @@
  * 레이아웃 L55-81: 모달 1500×800 "책무이행점검항목(기준회사:KFS)", 위 툴바(검색 · 검색칸 350 · [조회]) + 그리드(체크박스 다중, 직책·주요관리의무·점검항목·점검방법), 아래 가운데 [확인][닫기]
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { tdmApi } from '@/api/tdm';
 import { errorMessage } from '@/api/client';
@@ -65,7 +66,7 @@ export const Ics01_Lookup_SelectTdm: React.FC<Props> = ({ icsId, onSelect, onClo
   };
 
   return (
-    <Modal
+    <LookupModal
       open={icsId != null}
       title="책무이행점검항목(기준회사:KFS)"
       width="min(1540px, 96vw)"
@@ -89,9 +90,9 @@ export const Ics01_Lookup_SelectTdm: React.FC<Props> = ({ icsId, onSelect, onClo
           </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <MultiGrid<Manl> gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.manlId)} loading={loading} />
+          <MultiGrid<Manl> rowClick gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.manlId)} loading={loading} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

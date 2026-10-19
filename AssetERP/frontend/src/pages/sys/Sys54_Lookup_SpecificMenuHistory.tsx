@@ -7,6 +7,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import dayjs from 'dayjs';
 import { sysApi } from '@/api/sys';
 import { fileApi } from '@/api/file';
@@ -141,7 +142,7 @@ export const Sys54_Lookup_SpecificMenuHistory: React.FC<Props> = ({ companyId, o
 
   return (
     <>
-      <Modal
+      <LookupModal
         open={open}
         title="요청이력"
         width={960}
@@ -173,7 +174,7 @@ export const Sys54_Lookup_SpecificMenuHistory: React.FC<Props> = ({ companyId, o
               rowSelection={{ mode: 'singleRow', checkboxes: true, enableClickSelection: false }} />
           </div>
         </div>
-      </Modal>
+      </LookupModal>
       {/* 참고내용 [Edit]: lookup.open(selectModel, callback → retrieve()) */}
       {companyId && <Sys54_Edit_Note companyId={companyId} history={noteRow} onClose={() => setNoteRow(undefined)} onSaved={retrieve} />}
     </>

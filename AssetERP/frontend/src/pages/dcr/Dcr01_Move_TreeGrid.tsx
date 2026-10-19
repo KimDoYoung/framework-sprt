@@ -4,7 +4,8 @@
  * open() L74-115: 모달 "이동시킬 상위 문서분류를 선택하세요.", 420×350 트리(서비스 dcr.Dcr01_ClassTree.selectByCompanyId, typeCode C) + 확인·닫기
  */
 import React, { useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
 import { DcrClassTree } from '@/types/dcr';
@@ -35,7 +36,7 @@ export const Dcr01_Move_TreeGrid: React.FC<Props> = ({ model, onMoved, onClose }
   };
 
   return (
-    <Modal
+    <LookupModal
       open={model != null}
       title="이동시킬 상위 문서분류를 선택하세요."
       width={460}
@@ -53,6 +54,6 @@ export const Dcr01_Move_TreeGrid: React.FC<Props> = ({ model, onMoved, onClose }
       }
     >
       <DcrClassTreePicker open={model != null} typeCode="C" selected={target?.classTreeId ?? null} onSelect={setTarget} />
-    </Modal>
+    </LookupModal>
   );
 };

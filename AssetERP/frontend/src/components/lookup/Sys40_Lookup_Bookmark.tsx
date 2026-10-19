@@ -6,6 +6,7 @@
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { message, Modal, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { errorMessage } from '@/api/client';
 import { sysApi } from '@/api/sys';
 import { Bookmark } from '@/types/sys';
@@ -69,7 +70,7 @@ export const Sys40_Lookup_Bookmark: React.FC<Props> = ({ open, onClose }) => {
   };
 
   return (
-    <Modal open={open} title="북마크 목록(그룹설정)" width={710} maskClosable={false} onCancel={onClose} destroyOnHidden
+    <LookupModal open={open} title="북마크 목록(그룹설정)" width={710} maskClosable={false} onCancel={onClose} destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -91,6 +92,6 @@ export const Sys40_Lookup_Bookmark: React.FC<Props> = ({ open, onClose }) => {
           <CellEditGrid<Bookmark> crud={crud} columnDefs={columnDefs} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

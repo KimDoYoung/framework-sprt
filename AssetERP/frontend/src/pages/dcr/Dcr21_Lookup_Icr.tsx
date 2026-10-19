@@ -4,7 +4,8 @@
  * 생성자 L66-132: Dcr20_Lookup_Ics와 같은 창. 모달 1200×500 "내규 연결", 위 툴바([행 추가][행 삭제] + 오른쪽 새로고침 아이콘) + 체크박스 다중 그리드(내규명 300 · 상세내용 400 · 제출처 150 · 주기 100 · 관련조문 200 · 분류코드 70), 아래 가운데 [저장][닫기]
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { ReloadOutlined } from '@ant-design/icons';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
@@ -98,7 +99,7 @@ export const Dcr21_Lookup_Icr: React.FC<Props> = ({ dcrClassTreeId, onChanged, o
 
   return (
     <>
-      <Modal
+      <LookupModal
         open={dcrClassTreeId != null}
         title="내규 연결"
         width={1200}
@@ -128,7 +129,7 @@ export const Dcr21_Lookup_Icr: React.FC<Props> = ({ dcrClassTreeId, onChanged, o
             <CellEditGrid<DcrRelateIcr> crud={crud} columnDefs={columnDefs} />
           </div>
         </div>
-      </Modal>
+      </LookupModal>
       <Icr01_Lookup_SelectMulti open={lookupOpen} actionCode="classTree" onResult={insertRow} onClose={() => setLookupOpen(false)} />
     </>
   );

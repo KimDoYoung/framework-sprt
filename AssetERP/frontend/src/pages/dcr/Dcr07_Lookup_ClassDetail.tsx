@@ -4,7 +4,8 @@
  * 생성자 L60-113: 모달 1280×500 (제목 "문서분류 : {문서분류 전체 경로}"), 위 툴바([조회][등록][저장][삭제]) + 셀 편집 그리드(세부분류 350 · 키워드 350 · 작성요령 270 · 조회순서 80 · 특정화면 연결여부 80 · 사용여부 80), 아래 가운데 [닫기]
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { Modal, Space } from 'antd';
+import { Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { dcrApi } from '@/api/dcr';
 import { DcrClassDetail } from '@/types/dcr';
 import { Button } from '@/components/button';
@@ -65,7 +66,7 @@ export const Dcr07_Lookup_ClassDetail: React.FC<Props> = ({ model, onChanged, on
   }, [classTreeId]);
 
   return (
-    <Modal
+    <LookupModal
       open={model != null}
       title={`문서분류 : ${model?.classTreeFullName ?? ''}`}
       width={1280}
@@ -95,6 +96,6 @@ export const Dcr07_Lookup_ClassDetail: React.FC<Props> = ({ model, onChanged, on
             rowSelection={{ mode: 'singleRow', checkboxes: false, enableClickSelection: true }} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

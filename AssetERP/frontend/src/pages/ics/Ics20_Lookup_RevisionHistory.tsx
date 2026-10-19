@@ -4,7 +4,8 @@
  * 레이아웃 L50-87: 모달 1150×450 "개정이력", 위 오른쪽 새로고침 아이콘(retrieve) + 그리드(체크박스 단일), 아래 가운데 [닫기]
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { message, Modal } from 'antd';
+import { message } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { ReloadOutlined } from '@ant-design/icons';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
@@ -58,7 +59,7 @@ export const Ics20_Lookup_RevisionHistory: React.FC<Props> = ({ classTreeId, onC
   ], []);
 
   return (
-    <Modal
+    <LookupModal
       open={classTreeId != null}
       title="개정이력"
       width={1190}
@@ -82,6 +83,6 @@ export const Ics20_Lookup_RevisionHistory: React.FC<Props> = ({ classTreeId, onC
       </div>
       <Ics20_Lookup_Content revision={contentTarget} userType="user" onClose={() => setContentTarget(null)} />
       <Ics20_Lookup_File parentId={fileParentId} onClose={() => setFileParentId(null)} />
-    </Modal>
+    </LookupModal>
   );
 };

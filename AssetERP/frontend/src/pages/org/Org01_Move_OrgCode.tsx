@@ -4,7 +4,8 @@
  * 원본은 그리드가 아닌 GXT Tree(조직명) → antd Tree
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { message, Modal, Space, Tree } from 'antd';
+import { message, Space, Tree } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { DataNode } from 'antd/es/tree';
 import { orgCodeApi } from '@/api/org';
 import { errorMessage } from '@/api/client';
@@ -60,7 +61,7 @@ export const Org01_Move_OrgCode: React.FC<Props> = ({ baseDate, onSelect, onClos
   };
 
   return (
-    <Modal
+    <LookupModal
       open={!!baseDate}
       title="이동시킬 상위조직을 선택하세요."
       width={400}
@@ -86,6 +87,6 @@ export const Org01_Move_OrgCode: React.FC<Props> = ({ baseDate, onSelect, onClos
           />
         )}
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

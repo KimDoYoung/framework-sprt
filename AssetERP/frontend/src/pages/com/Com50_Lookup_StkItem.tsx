@@ -8,6 +8,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { comApi } from '@/api/com';
 import { Com50Item } from '@/types/com';
 import { Button } from '@/components/button';
@@ -134,7 +135,7 @@ export const Com50_Lookup_StkItem: React.FC<Props> = ({ mode, initialSearchText,
     ]), [edit]);
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title={edit ? '상장주식 종목 등록' : '종목(주식/ETF) 찾기'}
       width={720}
@@ -167,6 +168,6 @@ export const Com50_Lookup_StkItem: React.FC<Props> = ({ mode, initialSearchText,
         </div>
         <PagingToolBar page={page} limit={LIMIT} total={total} loading={crud.loading} onChange={getPaging} />
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

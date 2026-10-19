@@ -4,7 +4,8 @@
  * 레이아웃 L42-67·L73-97: 모달 400×300 "수시", 탭 하나("수시" = Sch03_TabPage_Short99), 아래 가운데 [저장][닫기]
  */
 import React, { useRef } from 'react';
-import { message, Modal, Space, Tabs } from 'antd';
+import { message, Space, Tabs } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { schApi } from '@/api/sch';
 import { errorMessage } from '@/api/client';
 import { Sch03Deadline } from '@/types/sch';
@@ -47,7 +48,7 @@ export const Sch03_Lookup_Short: React.FC<Props> = ({ deadline, classTreeId, sch
   };
 
   return (
-    <Modal
+    <LookupModal
       open
       title="수시"
       width={440}
@@ -64,6 +65,6 @@ export const Sch03_Lookup_Short: React.FC<Props> = ({ deadline, classTreeId, sch
       }
     >
       <Tabs items={[{ key: '99', label: '수시', children: <Sch03_TabPage_Short99 ref={tab} model={deadline} scheduleCode={scheduleCode} /> }]} />
-    </Modal>
+    </LookupModal>
   );
 };

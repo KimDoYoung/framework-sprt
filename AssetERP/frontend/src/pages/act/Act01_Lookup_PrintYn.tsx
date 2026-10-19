@@ -6,7 +6,8 @@
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03)
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { Modal, Select } from 'antd';
+import { Select } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { actApi } from '@/api/act';
 import { AccountCodeAdmin } from '@/types/act';
 import { Button } from '@/components/button';
@@ -75,7 +76,7 @@ export const Act01_Lookup_PrintYn: React.FC<Props> = ({ open, param, onClose }) 
   const init = () => sp.setValues({ searchText: '', attributeCode: ALL, useYn: ALL });
 
   return (
-    <Modal open={open} title="출력정보 및 사용여부 변경" width={1000} maskClosable={false} onCancel={onClose} destroyOnHidden
+    <LookupModal open={open} title="출력정보 및 사용여부 변경" width={1000} maskClosable={false} onCancel={onClose} destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
           {/* [E5] cancleButton[닫기].Select (L114) → hide() */}
@@ -110,6 +111,6 @@ export const Act01_Lookup_PrintYn: React.FC<Props> = ({ open, param, onClose }) 
           <CellEditGrid<AccountCodeAdmin> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_ROW_SELECTION} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

@@ -7,7 +7,8 @@
  * 삭제는 서버를 부르지 않고 삭제대기에 모았다가 [저장]에서 모든 행과 함께 보낸다 (L112-120·L206-238)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { empEvalApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { sysApi } from '@/api/sys';
@@ -119,7 +120,7 @@ export const Emp42_Lookup_EvalGrade: React.FC<Props> = ({ target, onClose }) => 
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="평가등급"
       width={650}
@@ -146,6 +147,6 @@ export const Emp42_Lookup_EvalGrade: React.FC<Props> = ({ target, onClose }) => 
           <CellEditGrid<EvalGrade> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_ROW_SELECTION} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

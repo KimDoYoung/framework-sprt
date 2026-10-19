@@ -7,7 +7,8 @@
  * openUnConn(relateTable, relateId) L78은 relateTable/relateId props로
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, Input, message, Modal, Space } from 'antd';
+import { Checkbox, Input, message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { icrApi } from '@/api/icr';
 import { errorMessage } from '@/api/client';
@@ -141,7 +142,7 @@ export const Icr01_Lookup_SelectMulti: React.FC<Props> = ({ open, actionCode = '
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="내규 분류"
       width={1540}
@@ -176,12 +177,12 @@ export const Icr01_Lookup_SelectMulti: React.FC<Props> = ({ open, actionCode = '
           </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <MultiGrid<IcrClassTreeLookup> gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.classTreeId)} loading={loading} />
+          <MultiGrid<IcrClassTreeLookup> rowClick gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.classTreeId)} loading={loading} />
         </div>
         <PagingToolBar page={page} limit={LIMIT} total={total} loading={loading} onChange={getPaging} />
       </div>
       <Icr01_Lookup_SelectParent open={parentOpen} onResult={selectParent} onClose={() => setParentOpen(false)} />
       <Icr01_Lookup_Content row={detailRow} onClose={() => setDetailRow(null)} />
-    </Modal>
+    </LookupModal>
   );
 };

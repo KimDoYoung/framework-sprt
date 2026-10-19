@@ -5,7 +5,8 @@
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import type { AgGridReact } from 'ag-grid-react';
 import { payApi } from '@/api/pay';
 import { errorMessage } from '@/api/client';
@@ -64,7 +65,7 @@ export const Pay20_Lookup_ItemList: React.FC<Props> = ({ open, onResult, onClose
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="급여항목"
       width={370}
@@ -91,7 +92,7 @@ export const Pay20_Lookup_ItemList: React.FC<Props> = ({ open, onResult, onClose
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
           {/* [E2] grid.RowDoubleClick (L64) → confirm() */}
-          <MultiGrid<PayItem>
+          <MultiGrid<PayItem> rowClick
             gridRef={gridRef}
             rowData={rows}
             columnDefs={columnDefs}
@@ -100,6 +101,6 @@ export const Pay20_Lookup_ItemList: React.FC<Props> = ({ open, onResult, onClose
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

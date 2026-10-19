@@ -5,7 +5,8 @@
  *   업로드 구분코드 200(콤보 CreditCardExcelCode) · 위치(세로줄) 100 · 비고 280), 아래 가운데 [닫기]
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, Space } from 'antd';
+import { Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { crdApi } from '@/api/crd';
 import { sysApi } from '@/api/sys';
 import { CrdExcelCode, CrdExcelCompany } from '@/types/crd';
@@ -78,7 +79,7 @@ export const Crd11_Lookup_ExcelCodeAdmin: React.FC<Props> = ({ excelCompany, onC
   }, [open]);
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title={`${excelCompany?.bankName ?? ''} 매핑`}
       width={700}
@@ -106,6 +107,6 @@ export const Crd11_Lookup_ExcelCodeAdmin: React.FC<Props> = ({ excelCompany, onC
           <CellEditGrid<CrdExcelCode> crud={crud} columnDefs={columnDefs} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

@@ -4,7 +4,8 @@
  * 레이아웃 L46-124: 모달 320×210 "서식파일등록", 법령구분 콤보(빈칸 "선택") · 내용(빈칸 "내용작성"), 아래 가운데 [업로드][닫기]
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { Input, message, Modal, Space } from 'antd';
+import { Input, message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
 import { Button } from '@/components/button';
@@ -49,7 +50,7 @@ export const Ics01_Lookup_IcsFileMultiUpload: React.FC<Props> = ({ open, onUploa
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="서식파일등록"
       width={320}
@@ -77,6 +78,6 @@ export const Ics01_Lookup_IcsFileMultiUpload: React.FC<Props> = ({ open, onUploa
         </Space>
       </div>
       <FileUpdownForm ref={fileForm} onChange={() => undefined} onChangeFiles={files => { void upload(files); }} />
-    </Modal>
+    </LookupModal>
   );
 };

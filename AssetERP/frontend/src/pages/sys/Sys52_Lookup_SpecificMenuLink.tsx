@@ -5,7 +5,8 @@
  * UX보강(10) B12-2: 저장 = 저장(n)(UX-03). 검색 칸이 없어 SearchBar는 쓰지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, Space } from 'antd';
+import { Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { sysApi } from '@/api/sys';
 import { Code, SpecificMenu, SpecificMenuLink } from '@/types/sys';
 import { Button } from '@/components/button';
@@ -64,7 +65,7 @@ export const Sys52_Lookup_SpecificMenuLink: React.FC<Props> = ({ companyId, spec
   useEffect(() => { if (open) crud.retrieve(); else crud.clear(); }, [open, companyId, specificWorkCd]);
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="문서권한설정"
       width={900}
@@ -95,6 +96,6 @@ export const Sys52_Lookup_SpecificMenuLink: React.FC<Props> = ({ companyId, spec
             rowSelection={{ mode: 'singleRow', checkboxes: true, enableClickSelection: false }} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

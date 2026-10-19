@@ -6,7 +6,8 @@
  * UX보강(10) B12-3: 검색 줄 = SearchBar(UX-01·04). 조건이 1개라 초기화(UX-02) 없음
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { AgGridReact } from 'ag-grid-react';
 import { empApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
@@ -70,7 +71,7 @@ export const Emp01_Lookup_PersonModel: React.FC<Props> = ({ open, onClose, onSel
   useEffect(() => { if (open) retrieve(); }, [open]);
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="사원찾기(조직/직무/성명)"
       width={500}
@@ -94,7 +95,7 @@ export const Emp01_Lookup_PersonModel: React.FC<Props> = ({ open, onClose, onSel
           </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <MultiGrid<TransPerson>
+          <MultiGrid<TransPerson> rowClick
             gridRef={gridRef}
             rowData={rows}
             columnDefs={columnDefs}
@@ -103,6 +104,6 @@ export const Emp01_Lookup_PersonModel: React.FC<Props> = ({ open, onClose, onSel
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

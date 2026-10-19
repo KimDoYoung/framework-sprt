@@ -5,7 +5,8 @@
  *   처음 값 = 오늘 기준 한 달 전의 년·월 (L64-71)
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal } from 'antd';
+import { Input, message } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { empEvalApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { Button } from '@/components/button';
@@ -67,7 +68,7 @@ export const Emp40_Lookup_Insert: React.FC<Props> = ({ open, dateList, onSaved, 
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="생성"
       width={350}
@@ -88,6 +89,6 @@ export const Emp40_Lookup_Insert: React.FC<Props> = ({ open, dateList, onSaved, 
         <span>년</span>
         <SystemCodeComboBox kindCd="MonthsCode" allowClear={false} style={{ width: 80 }} value={month} onChange={v => setMonth(v)} />
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

@@ -4,7 +4,8 @@
  * 레이아웃 L61-114·L116-168: 모달 800×400 "반복주기", 탭 6개(일·주·월·분기·반기·년), 아래 "※ 적용기간" 시작일 ~ 종료일, 아래 가운데 [저장][닫기]
  */
 import React, { useRef, useState } from 'react';
-import { DatePicker, message, Modal, Space, Tabs, Typography } from 'antd';
+import { DatePicker, message, Space, Tabs, Typography } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import dayjs from 'dayjs';
 import { schApi } from '@/api/sch';
 import { errorMessage } from '@/api/client';
@@ -58,7 +59,7 @@ export const Sch03_Lookup_Cycle: React.FC<Props> = ({ deadline, classTreeId, sch
 
   const model = deadline ?? null;
   return (
-    <Modal
+    <LookupModal
       open
       title="반복주기"
       width={840}
@@ -96,6 +97,6 @@ export const Sch03_Lookup_Cycle: React.FC<Props> = ({ deadline, classTreeId, sch
           <DatePicker style={{ width: 140 }} format="YYYY-MM-DD" value={closeDate ? dayjs(closeDate) : null} onChange={d => setCloseDate(d ? d.format('YYYY-MM-DD') : null)} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

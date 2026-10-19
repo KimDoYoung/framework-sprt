@@ -7,6 +7,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Select, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { ReloadOutlined } from '@ant-design/icons';
 import type { AgGridReact } from 'ag-grid-react';
 import { schApi } from '@/api/sch';
@@ -106,7 +107,7 @@ export const Sch03_Lookup_Ics: React.FC<Props> = ({ classTreeId, scheduleCode, o
   if (classTreeId == null) return null;
   return (
     <>
-      <Modal
+      <LookupModal
         open
         title="법규 기한"
         width={940}
@@ -144,7 +145,7 @@ export const Sch03_Lookup_Ics: React.FC<Props> = ({ classTreeId, scheduleCode, o
             />
           </div>
         </div>
-      </Modal>
+      </LookupModal>
       {target?.kind === 'short' && (
         <Sch03_Lookup_Short deadline={target.deadline} classTreeId={classTreeId} scheduleCode={target.scheduleCode}
           onSaved={() => void retrieve()} onClose={() => setTarget(null)} />

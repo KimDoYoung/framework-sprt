@@ -6,7 +6,8 @@
  * UX보강(10) B12-3: 검색 줄 = SearchBar(UX-01·02·04, 조건 3개 → 초기화는 열 때 값: 받은 기준일·''·재직, 자동 조회 없음)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DatePicker, message, Modal, Select, Space } from 'antd';
+import { DatePicker, message, Select, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import dayjs from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { empApi } from '@/api/emp';
@@ -86,7 +87,7 @@ export const Emp00_Lookup_SelectMulti: React.FC<Props> = ({ open, companyId, tra
   };
 
   return (
-    <Modal open={open} title="사원찾기(조직/직무/성명)" width={700} maskClosable={false} onCancel={onClose} destroyOnHidden
+    <LookupModal open={open} title="사원찾기(조직/직무/성명)" width={700} maskClosable={false} onCancel={onClose} destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -115,7 +116,7 @@ export const Emp00_Lookup_SelectMulti: React.FC<Props> = ({ open, companyId, tra
           </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <MultiGrid<TransInfo>
+          <MultiGrid<TransInfo> rowClick
             gridRef={gridRef}
             rowData={rows}
             columnDefs={columnDefs}
@@ -124,6 +125,6 @@ export const Emp00_Lookup_SelectMulti: React.FC<Props> = ({ open, companyId, tra
           />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

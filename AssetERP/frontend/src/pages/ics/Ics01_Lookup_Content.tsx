@@ -4,7 +4,8 @@
  * 레이아웃 L59-95: 모달 650×680, 상세내용 입력(640×590), 아래 가운데 [저장][닫기]. open()은 "법규 상세내용 수정", view()(sch 도메인이 씀)는 읽기 전용 "법규 상세내용"에 저장 버튼 없음
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal, Space } from 'antd';
+import { Input, message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
 import { IcsLaw } from '@/types/ics';
@@ -42,7 +43,7 @@ export const Ics01_Lookup_Content: React.FC<Props> = ({ law, readOnly, onClosed,
   const close = () => { onClosed(); onClose(); };
 
   return (
-    <Modal
+    <LookupModal
       open={!!law}
       title={readOnly ? '법규 상세내용' : '법규 상세내용 수정'}
       width={690}
@@ -58,6 +59,6 @@ export const Ics01_Lookup_Content: React.FC<Props> = ({ law, readOnly, onClosed,
       }
     >
       <Input.TextArea style={{ height: 590, resize: 'none' }} value={content} readOnly={readOnly} onChange={e => setContent(e.target.value)} />
-    </Modal>
+    </LookupModal>
   );
 };

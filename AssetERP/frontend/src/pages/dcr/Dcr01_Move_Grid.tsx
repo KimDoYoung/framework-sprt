@@ -5,7 +5,8 @@
  * Dcr01_Move_TreeGrid와 같은 창 — 이동 뒤 부른 쪽이 그리드를 다시 읽는다(callback.execute())
  */
 import React, { useState } from 'react';
-import { message, Modal, Space } from 'antd';
+import { message, Space } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
 import { DcrClassTree } from '@/types/dcr';
@@ -36,7 +37,7 @@ export const Dcr01_Move_Grid: React.FC<Props> = ({ model, onMoved, onClose }) =>
   };
 
   return (
-    <Modal
+    <LookupModal
       open={model != null}
       title="이동시킬 상위 문서분류를 선택하세요."
       width={460}
@@ -54,6 +55,6 @@ export const Dcr01_Move_Grid: React.FC<Props> = ({ model, onMoved, onClose }) =>
       }
     >
       <DcrClassTreePicker open={model != null} typeCode="C" selected={target?.classTreeId ?? null} onSelect={setTarget} />
-    </Modal>
+    </LookupModal>
   );
 };

@@ -6,7 +6,7 @@
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal } from 'antd';
+import { LookupModal } from '@/components/lookup/LookupModal';
 import { schApi } from '@/api/sch';
 import { Sch15IpoItemMatching } from '@/types/sch';
 import { Button } from '@/components/button';
@@ -55,7 +55,7 @@ export const Sch15_Lookup_IpoItemMatching: React.FC<Props> = ({ open, onClose })
   ], []);
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title="종목코드 매칭"
       width={720}
@@ -85,6 +85,6 @@ export const Sch15_Lookup_IpoItemMatching: React.FC<Props> = ({ open, onClose })
           <CellEditGrid<Sch15IpoItemMatching> crud={crud} columnDefs={columnDefs} />
         </div>
       </div>
-    </Modal>
+    </LookupModal>
   );
 };
