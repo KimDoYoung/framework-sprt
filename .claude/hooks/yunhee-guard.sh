@@ -3,9 +3,18 @@
 # 사용자 지시(2026-10-12, A05 뒤): "yunhee를 계속 수정하고 업그레이드 해 가는데, 그대가 사용하지 않으면 무슨 소용일까?"
 # 보강(2026-10-12, C03 뒤): AS-IS 색인(docs/as-is)도 대상, grep -A/-B/-C(문맥 출력)도 막음. 색인 화면 파일은 grep도 막는다(menus는 허용).
 # 추가(2026-10-16): psql·pg_dump·pg_restore 직접 실행도 막고 yunhee sql로 안내한다(비밀번호 대기로 멈춤).
-# 쓰기(cat > / heredoc, sed -i)와 yunhee 명령 자체는 막지 않는다. 끄려면 /hooks 또는 .claude/settings.json에서 뺀다.
+# 쓰기(cat > / heredoc, sed -i)와 yunhee 명령 자체는 막지 않는다. heredoc 본문·echo·-m 인자는 검사하지 않는다(2026-10-19). 끄려면 /hooks 또는 .claude/settings.json에서 뺀다.
 cmd=$(jq -r '.tool_input.command // empty')
 [ -z "$cmd" ] && exit 0
+
+# 완화(2026-10-19, F10 뒤): 검사는 "명령"만 본다. 파일에 쓸 본문(heredoc <<EOF … EOF)과 echo·printf·-m·-d 따옴표 인자는 지운다.
+# 문서 본문에 적힌 `tail -3 docs/…`·`grep -A` 문구 때문에 쓰기 명령 전체가 막혀 다시 쓰던 문제(수정사항038 #1·039 #5).
+cmd=$(printf '%s\n' "$cmd" | awk '
+  skip { t=$0; gsub(/^[ \t]+|[ \t]+$/, "", t); if (t == end) skip=0; next }
+  { print
+    if (match($0, /<<-?[ \t]*[\047"]?[A-Za-z_][A-Za-z0-9_]*[\047"]?/)) {
+      d=substr($0, RSTART, RLENGTH); sub(/^<<-?[ \t]*/, "", d); gsub(/[\047"]/, "", d); end=d; skip=1 } }')
+cmd=$(printf '%s' "$cmd" | sed -E "s/(^|[;&|(]\s*)(echo|printf)\s+(\"[^\"]*\"|'[^']*')//g; s/\s-(m|d|-data|-message)\s+(\"[^\"]*\"|'[^']*')//g")
 
 # 대상 경로: AS-IS 원본·색인, TOBE 백엔드·매퍼·프론트 소스
 # (cd 로 들어간 뒤 상대 경로, 변수에 담은 경로도 잡도록 디렉터리 이름만 본다)
