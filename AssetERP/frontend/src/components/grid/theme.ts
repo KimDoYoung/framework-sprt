@@ -7,7 +7,8 @@ import { themeAlpine } from 'ag-grid-community';
 export const GRID_COLORS = {
   rowHover: '#c4d7eb',
   rowSelected: '#f3cdbb',
-  oddRow: '#fafbfc',
+  /** 얼룩말(홀수 행) 배경 — 흰 바탕과 구분되되 선택·hover·편집 글자(파랑)를 가리지 않게 연하게 */
+  oddRow: '#f5f7fa',
   summaryRow: '#f8fafc',
   /** 헤더 배경 (연회색 — 본문 흰 바탕과 구분되게 Ant Design 표준 #fafafa보다 약간 진하게) */
   header: '#dde1e7',

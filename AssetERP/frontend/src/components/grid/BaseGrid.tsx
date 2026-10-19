@@ -27,6 +27,8 @@ export interface BaseGridProps<T> extends Omit<AgGridReactProps<T>, 'theme'> {
   density?: GridDensity;
   /** 헤더 클릭 정렬 (기본 false — 03 원칙 13. 사용자가 요청한 그리드만 true) */
   sortable?: boolean;
+  /** 얼룩말(홀수 행 배경) 줄무늬 (기본 true — AS-IS setStripeRows(true)). 트리 그리드는 `useTreeGrid().gridProps`가 false로 넣는다 */
+  zebra?: boolean;
   /** 이 그리드만 헤더 배경색을 바꿀 때 (기본 theme.ts GRID_COLORS.header) */
   headerColor?: string;
   sumRow?: SumRow;
@@ -61,6 +63,7 @@ export function BaseGrid<T>({
   rowNumber = true,
   density = 'normal',
   sortable = false,
+  zebra = true,
   headerColor,
   sumRow,
   wrapperStyle,
@@ -100,10 +103,10 @@ export function BaseGrid<T>({
     [getRowClass, sumRow],
   );
 
-  const theme = useMemo(
-    () => (headerColor ? gridThemeWithHeader(density, headerColor) : gridThemes[density]),
-    [density, headerColor],
-  );
+  const theme = useMemo(() => {
+    const t = headerColor ? gridThemeWithHeader(density, headerColor) : gridThemes[density];
+    return zebra ? t : t.withParams({ oddRowBackgroundColor: 'transparent' });
+  }, [density, headerColor, zebra]);
 
   // 정렬·필터·데이터 교체 후 행번호 다시 그리기 (getRowId로 행을 재사용하면 순서가 바뀌어도 셀이 그대로 남는다)
   const refreshRowNum = (api: SortChangedEvent<T>['api']) => {

@@ -143,6 +143,7 @@ export function useTreeGrid<T extends object>({ idField, parentField, depthField
   }, [idOf, ancestors, descendants]);
 
   const gridProps = {
+    zebra: false,  // 트리는 들여쓰기·펼침이 있어 줄무늬를 끈다(BaseGrid zebra). 화면에서 zebra를 따로 주면 그쪽이 우선
     rowData: rows,
     getRowId: (p: { data: T }) => String(idOf(p.data)),
     isExternalFilterPresent: () => true,
