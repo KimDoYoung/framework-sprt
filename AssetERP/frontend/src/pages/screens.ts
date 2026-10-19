@@ -14,6 +14,7 @@ import { Ast01_Tab_InfoManager } from './ast/Ast01_Tab_InfoManager';
 import { Fnd09_Tab_TrustBankManager } from './fnd/Fnd09_Tab_TrustBankManager';
 import { Ics01_Tab_ClassTree } from './ics/Ics01_Tab_ClassTree';
 import { Ics01_Tab_ApprList } from './ics/Ics01_Tab_ApprList';
+import { Apr90_Tab_DisposalList } from './apr/Apr90_Tab_DisposalList';
 import { Ics01_Tab_IcsFileUpload } from './ics/Ics01_Tab_IcsFileUpload';
 import { Ics10_Tab_ChecklistAdmin } from './ics/Ics10_Tab_ChecklistAdmin';
 import { Ics17_Tab_UserRequestAdmin } from './ics/Ics17_Tab_UserRequestAdmin';
@@ -107,6 +108,7 @@ export const SCREENS: Record<string, React.FC> = {
   Fnd06_Tab_OfficeWorkManager, // D12 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)
   Fnd09_Tab_TrustBankManager, // D13 (저장은 원본 서버에 insertCheck가 없어 원본에서도 실패 — 서버가 거절, ICAM가져오기도 거절)
   Ics01_Tab_ApprList, // F03 1단계 (메뉴 #1014 + Ics01_Grid_ApprList. 편집창 Apr01_Edit_ApprDoc·문서분류 조회창 Dcr01_Lookup_Class는 다음 단계)
+  Apr90_Tab_DisposalList, // F04 1단계 (메뉴 #1443. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Ics01_Tab_ClassTree, // E01 (기한 설정 Sch03_Lookup_Ics는 다른 도메인이라 별도 ID)
   Ics01_Tab_IcsFileUpload, // E02
   Ics20_Tab_RevisionHistoryAdmin, // E03

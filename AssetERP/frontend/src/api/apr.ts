@@ -1,8 +1,8 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDoc, AprIcsDoc, AprRelateAdv, AprRelateFund, AprStamp } from '../types/apr';
+import { AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalList, AprDoc, AprIcsDoc, AprRelateAdv, AprRelateFund, AprStamp } from '../types/apr';
 
-/** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록) */
+/** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export const aprApi = {
   /** AS-IS apr.Apr10_Stamp.selectBySearchText2: 문서분류에서 쓸 수 있는 인감 (Apr10_Lookup_DocStamp) */
   searchDocStamps: async (classTreeId: number, searchText: string): Promise<AprStamp[]> => {
@@ -31,6 +31,12 @@ export const aprApi = {
   /** AS-IS apr.Apr03_RelateFund.selectByIcsClassTreeId (Ics01_Grid_ApprList): 법규분류에 연결된 문서 목록. searchText는 서버가 %…%로 */
   searchIcsDocList: async (params: { classTreeId: number; startDate: string; endDate: string; searchText: string }): Promise<AprIcsDoc[]> => {
     const res = await apiClient.get<ApiResponse<AprIcsDoc[]>>('v1/apr/apprs/ics-list', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr90_DisposalList.selectByPersonId (Apr90_Tab_DisposalList): 내가 신청한 폐기문서. personId는 서버가 세션에서 */
+  searchDisposalListMine: async (params: { startDate: string; closeDate: string }): Promise<AprDisposalList[]> => {
+    const res = await apiClient.get<ApiResponse<AprDisposalList[]>>('v1/apr/disposal-lists/mine', { params });
     return res.data.data ?? [];
   },
 

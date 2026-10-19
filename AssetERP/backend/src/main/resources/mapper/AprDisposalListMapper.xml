@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr90_disposal_list.xml selectByPersonId (F04, Apr90_Tab_DisposalList) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprDisposalListMapper">
+
+    <!-- AS-IS apr90_disposal_list.selectByPersonId L88 (IDMS-IC) — SELECT *·모델 열 중 그리드가 쓰는 열만, 조인·조건·정렬은 그대로 -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprDisposalListRes">
+        SELECT apr90_disposal_list_id                                                     AS disposal_list_id
+             , apr90_appr_id                                                              AS appr_id
+             , apr90_reg_date                                                             AS reg_date
+             , appr.title                                                                 AS title
+             , f_cdnm('AprStatusCode', appr.status_cd, apr90_company_id, appr.reg_date)   AS status_name
+             , apr90_reason                                                               AS reason
+             , apr90_confirm_yn                                                           AS confirm_yn
+             , f_emp_kor_nm(apr90_confirm_emp_id)                                         AS confirm_emp_name
+             , apr90_confirm_date                                                         AS confirm_date
+          FROM apr90_disposal_list
+               LEFT OUTER JOIN (
+                                 SELECT apr01_appr_id    AS appr_id
+                                      , apr01_title      AS title
+                                      , apr01_status_cd  AS status_cd
+                                      , apr01_reg_date   AS reg_date
+                                   FROM apr01_appr
+                                  WHERE 1=1
+                                  UNION ALL
+                                 SELECT apr99_appr_id    AS appr_id
+                                      , apr99_title      AS title
+                                      , apr99_status_cd  AS status_cd
+                                      , apr99_reg_date   AS reg_date
+                                   FROM apr99_appr_del
+                                  WHERE 1=1
+                               ) appr ON appr.appr_id = apr90_appr_id
+         WHERE 1=1
+           AND apr90_reg_emp_id = #{c.personId}
+           AND apr90_reg_date BETWEEN #{c.startDate} AND #{c.closeDate}
+         ORDER BY apr90_reg_date
+                , appr.title DESC
+    </select>
+</mapper>

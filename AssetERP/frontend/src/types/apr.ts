@@ -81,3 +81,16 @@ export interface AprIcsDoc {
   regEmpName?: string | null;
   title?: string | null;
 }
+
+/** 폐기문서 신청현황 한 행 (AS-IS Apr90_DisposalListModel 중 Apr90_Tab_DisposalList가 쓰는 열) */
+export interface AprDisposalList {
+  disposalListId: number;
+  apprId?: number | null;
+  regDate?: string | null;
+  title?: string | null;
+  statusName?: string | null;
+  reason?: string | null;
+  confirmYn?: boolean | null;
+  confirmEmpName?: string | null;
+  confirmDate?: string | null;
+}
