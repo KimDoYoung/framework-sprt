@@ -60,6 +60,25 @@ export interface AprDoc {
   regEmpName?: string | null;
 }
 
+/** 통합 문서검색 목록 한 행 (AS-IS Apr01_ApprModel 중 Dcr00_Tab_DocList 그리드 열, F05) */
+export interface AprDocSearch {
+  apprId: number;
+  /** 'true' | 'false' */
+  bookmarkYn: string;
+  regDate?: string | null;
+  regEmpName?: string | null;
+  /** `<b style=color:…;>상태</b>` */
+  statusName?: string | null;
+  title?: string | null;
+  inOutTypeName?: string | null;
+  classTreeName?: string | null;
+  receiveName?: string | null;
+  stampSeq?: string | null;
+  /** 연관 펀드·일임 건수 ("2건", 없으면 '') */
+  relateDisplayName?: string | null;
+  note?: string | null;
+}
+
 /** 연관펀드 (AS-IS Apr03_RelateFundModel, Apr03_TabPage_Relate) */
 export interface AprRelateFund {
   fundId: number;

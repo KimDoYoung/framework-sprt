@@ -1,8 +1,19 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalList, AprDoc, AprIcsDoc, AprRelateAdv, AprRelateFund, AprStamp } from '../types/apr';
+import { readBlobError } from './file';
+import { AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalList, AprDoc, AprDocSearch, AprIcsDoc, AprRelateAdv, AprRelateFund, AprStamp } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
+export interface DocTextParams {
+  classTreeId?: number;
+  startDate: string;
+  endDate: string;
+  searchText: string;
+  receiveName: string;
+  statusCode: string;
+  inoutCode: string;
+}
+
 export const aprApi = {
   /** AS-IS apr.Apr10_Stamp.selectBySearchText2: 문서분류에서 쓸 수 있는 인감 (Apr10_Lookup_DocStamp) */
   searchDocStamps: async (classTreeId: number, searchText: string): Promise<AprStamp[]> => {
@@ -38,6 +49,29 @@ export const aprApi = {
   searchDisposalListMine: async (params: { startDate: string; closeDate: string }): Promise<AprDisposalList[]> => {
     const res = await apiClient.get<ApiResponse<AprDisposalList[]>>('v1/apr/disposal-lists/mine', { params });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr01_Appr.selectByText2 (Dcr00_Tab_DocList): 통합 문서검색. 검색어·수신처는 서버가 %…%로, 상태·문서구분은 '%'가 전체 */
+  searchDocText: async (params: DocTextParams): Promise<AprDocSearch[]> => {
+    const res = await apiClient.get<ApiResponse<AprDocSearch[]>>('v1/apr/apprs/search', { params });
+    return res.data.data ?? [];
+  },
+
+  /** 엑셀다운로드 (AS-IS sys.Sys99_Print.insertRdDocList + RD 리포트 → xlsx) — 조회 조건 그대로, 브라우저 저장 */
+  downloadDocTextExcel: async (params: DocTextParams, fileName: string): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/apr/apprs/search/excel', { params, responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
   },
 
   /** AS-IS apr.Apr03_RelateFund.selectByApprId (Apr03_TabPage_Relate) */

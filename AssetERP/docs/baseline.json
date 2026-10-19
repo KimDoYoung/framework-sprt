@@ -2869,5 +2869,35 @@
     "note": "docs/work/F/F04-작업기록.md",
     "history": [],
     "id": "F04"
+  },
+  "Dcr00_Tab_DocList": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/dcr/Dcr00_Tab_DocList.java": "7b68bd0affef1a603a778a0dfa63bc7acbc6e776",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr01_ClassTreeModel.java": "b11f72ec7b9f373dd86ec5303bac1785335febf4",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr03_OrgAuthModel.java": "9d159b0f64709f2e044abe12af5c0cc6308ddeaf",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "ec2e1b8d30204b370115db8f4a4009b721f12088",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "490cfa74239bbac67406ebb07d53662a9fadf0fd",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "91bd64f3831e2be155785ec89373020b1f573b3f",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Apr03_TabPage_Relate",
+      "Apr42_Lookup_CommentView",
+      "Apr50_Lookup_ApprList",
+      "Dcr01_Lookup_DcrClass"
+    ],
+    "recorded_at": "2026-10-19T20:28:37+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/F/F05-작업기록.md",
+    "history": [],
+    "id": "F05"
   }
 }

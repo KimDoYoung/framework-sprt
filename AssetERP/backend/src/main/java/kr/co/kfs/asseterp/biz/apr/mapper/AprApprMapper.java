@@ -4,6 +4,8 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprDocSearchCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprDocSearchRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes;
@@ -26,6 +28,9 @@ public interface AprApprMapper {
     List<AprDocRes> selectByClassTreeId2(@Param("c") AprDocListCond cond);
 
     /** AS-IS apr03_relate_fund.selectByIcsClassTreeId L106 (F03, admin=false) */
+    /** AS-IS apr01_appr.selectByText2 (F05 통합 문서검색) */
+    List<AprDocSearchRes> selectByText2(@Param("c") AprDocSearchCond cond);
+
     List<AprIcsDocRes> selectByIcsClassTreeId(@Param("c") AprIcsDocListCond cond);
 
     /** AS-IS apr03_relate_fund.selectByApprId (F02) */

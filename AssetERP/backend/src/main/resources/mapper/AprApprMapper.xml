@@ -232,6 +232,191 @@
                 , apr01_effect_date
     </select>
 
+    <!-- AS-IS apr01_appr.selectByText2 L357 (IDMS-IC) — F05(Dcr00_Tab_DocList 통합 문서검색). SELECT *·모델 열 중 그리드가 쓰는 열만, 행을 정하는 조인·조건·정렬은 그대로.
+         admin == 'false' 분기(조직·문서권한·Link 조건)와 관리자 분기(Link 제외만) 둘 다 옮김. 분류 조건은 common.dcr_tree_down을 푼 것(typeCode '%').
+         collate "ko_KR.utf8" → "ko-KR-x-icu"(05 §6) -->
+    <select id="selectByText2" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprDocSearchRes">
+        WITH fund_count AS (
+            SELECT apr03_appr_id
+                 , MAX(COALESCE(fnd01_r.fnd01_fund_code_id, fnd01.fnd01_fund_code_id))                                                      AS fund_id
+                 , COUNT(DISTINCT apr03_fund_id)                                                                                            AS fund_cnt
+                 , STRING_AGG(COALESCE(fnd01_r.fnd01_fund_cd, ' '), ', ')                                                                   AS fund_real_code_all
+                 , STRING_AGG(COALESCE(fnd01.fnd01_fund_cd, ' '), ', ')                                                                     AS fund_code_all
+                 , STRING_AGG(COALESCE(f_get_fund_nm2(fnd01_r.fnd01_fund_code_id, f_today()::date), ' '), ', ')                             AS fund_real_name_all
+                 , STRING_AGG(COALESCE(f_get_fund_nm2(fnd01.fnd01_fund_code_id, f_today()::date), ' '), ', ')                               AS fund_name_all
+              FROM apr03_relate_fund
+                   INNER JOIN fnd01_fund_code fnd01 ON fnd01.fnd01_fund_code_id = apr03_fund_id
+                   LEFT JOIN fnd01_fund_code fnd01_r ON fnd01_r.fnd01_fund_code_id = fnd01.fnd01_real_fund_id
+             GROUP BY apr03_appr_id
+        ),
+        adv_count AS (
+            SELECT apr12_appr_id
+                 , MAX(adv02_manage_nm)               AS adv_nm
+                 , COUNT(DISTINCT apr12_adv_id)       AS adv_cnt
+                 , STRING_AGG(adv02_manage_cd, ', ')  AS adv_code_all
+                 , STRING_AGG(adv02_manage_nm, ', ')  AS adv_name_all
+              FROM apr12_relate_adv
+                   INNER JOIN adv02_account ON adv02_account_id = apr12_adv_id
+             GROUP BY apr12_appr_id
+        )
+        SELECT apr01_appr_id                                                                    AS appr_id
+             , (
+                   SELECT CASE WHEN COUNT(*) > 0 THEN 'true' ELSE 'false' END
+                     FROM apr50_bookmark
+                    WHERE apr50_appr_id = apr01_appr_id
+                      AND ( apr50_person_id = #{c.empId} OR apr50_public_yn = 'true' )
+               )                                                                                AS bookmark_yn
+             , apr01_reg_date                                                                   AS reg_date
+             , emp01_kor_nm                                                                     AS reg_emp_name
+             , (
+                   CASE WHEN apr01_status_cd = '40'
+                        THEN '&lt;' || 'b style=color:#E33E31;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                        WHEN apr01_status_cd = '99'
+                        THEN '&lt;' || 'b style=color:#4B81B9;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                        ELSE '&lt;' || 'b style=color:#404040;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                   END
+               )                                                                                AS status_name
+             , apr01_title                                                                      AS title
+             , f_cdnm('AprInOutTypeCode', apr01_inout_cd, apr01_company_id, f_sysdate())        AS in_out_type_name
+             , f_class_tree_nm_allpath(dcr01_class_tree_id)                                     AS class_tree_name
+             , apr01_receive_nm                                                                 AS receive_name
+             , apr01_stamp_seq                                                                  AS stamp_seq
+             , CASE WHEN COALESCE(fc.fund_cnt, 0) + COALESCE(ac.adv_cnt, 0) = 0
+                    THEN ''
+                    ELSE COALESCE(fc.fund_cnt, 0) + COALESCE(ac.adv_cnt, 0) || '건'
+               END                                                                              AS relate_display_name
+             , apr01_note                                                                       AS note
+          FROM apr01_appr
+               INNER JOIN dcr01_class_tree ON dcr01_class_tree_id = apr01_class_tree_id
+               LEFT OUTER JOIN apr10_stamp ON apr10_stamp_id = apr01_stamp_id
+               LEFT OUTER JOIN fund_count fc ON fc.apr03_appr_id = apr01_appr_id
+               LEFT OUTER JOIN adv_count ac ON ac.apr12_appr_id = apr01_appr_id
+               INNER JOIN emp01_person ON emp01_person_id = apr01_reg_emp_id
+         WHERE 1=1
+           AND apr01_company_id = #{c.companyId}
+        <choose>
+        <when test="c.admin == 'false'">
+           AND ((
+                (
+                    fc.fund_id IN ( SELECT fnd08_fund_code_id
+                                      FROM fnd08_org_auth
+                                     WHERE fnd08_org_code_id = #{c.orgId}
+                                       AND fnd08_auth_yn = 'true' )
+                    OR
+                    fc.fund_id IS NULL
+                )
+                AND
+                (
+                    'Y' = CASE WHEN ( SELECT COUNT(*)
+                                        FROM dcr04_emp_auth
+                                       WHERE dcr04_class_tree_id = apr01_class_tree_id
+                                         AND dcr04_person_id = #{c.empId}
+                                         AND dcr04_retrieve_yn = 'false' ) != 0
+                               THEN 'N'
+                               WHEN ( SELECT COUNT(*)
+                                        FROM dcr03_org_auth
+                                       WHERE dcr03_class_tree_id = apr01_class_tree_id
+                                         AND dcr03_org_code_id = #{c.orgId}
+                                         AND dcr03_retrieve_yn = 'true' ) != 0
+                               THEN 'Y'
+                               ELSE 'N'
+                          END
+                )
+                AND
+                (
+                    (
+                        apr01_link_cd IS NULL
+                        OR
+                        NOT EXISTS ( SELECT 1
+                                       FROM sys52_specific_menu_link l
+                                      WHERE l.sys52_company_id = apr01_company_id
+                                        AND l.sys52_link_cd = apr01_link_cd )
+                        OR
+                        EXISTS ( SELECT 1
+                                   FROM sys52_specific_menu_link l
+                                        INNER JOIN sys50_specific_menu m ON l.sys52_specific_work_cd = m.sys50_specific_work_cd AND m.sys50_company_id = apr01_company_id
+                                        INNER JOIN sys51_specific_menu_person p ON p.sys51_specific_menu_id = m.sys50_specific_menu_id AND p.sys51_person_id = #{c.empId}
+                                  WHERE l.sys52_company_id = apr01_company_id
+                                    AND l.sys52_link_cd = apr01_link_cd )
+                    )
+                )
+               )
+               OR
+               ( #{c.empId} IN ( SELECT apr04_step_emp_id
+                                   FROM apr04_appr_step
+                                  WHERE apr04_appr_id = apr01_appr_id ) )
+               OR
+               ( #{c.empId} IN ( SELECT apr13_person_id
+                                   FROM apr13_person_auth
+                                  WHERE apr13_appr_id = apr01_appr_id ) ))
+        </when>
+        <otherwise>
+           AND COALESCE(apr01_link_cd, ' ') NOT IN ( SELECT sys52_link_cd
+                                                       FROM sys52_specific_menu_link
+                                                      WHERE sys52_company_id = apr01_company_id
+                                                      GROUP BY sys52_link_cd )
+        </otherwise>
+        </choose>
+        <if test="c.classTreeId != null">
+           AND apr01_class_tree_id IN (
+            WITH RECURSIVE dcr_tree_down(dcr01_class_tree_id, dcr01_class_tree_nm, dcr01_parent_tree_id, depth, path, cycle) AS (
+                SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, 1,
+                       ARRAY[CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id],
+                       false
+                  FROM dcr01_class_tree a
+                 WHERE a.dcr01_company_id = #{c.companyId}
+                   AND a.dcr01_class_tree_id = #{c.classTreeId}
+                   AND a.dcr01_use_yn = 'true'
+                   AND a.dcr01_type_cd LIKE #{c.typeCode}
+                UNION ALL
+                SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, b.depth + 1,
+                       array_append(b.path, CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || LPAD(CAST(a.dcr01_class_tree_id AS varchar), 15, '0')),
+                       a.dcr01_class_tree_nm = any(b.path)
+                  FROM dcr01_class_tree a
+                       INNER JOIN dcr_tree_down b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+                 WHERE a.dcr01_company_id = #{c.companyId}
+                   AND a.dcr01_use_yn = 'true'
+                   AND a.dcr01_type_cd LIKE #{c.typeCode}
+                   AND NOT cycle
+            )
+            SELECT a.dcr01_class_tree_id FROM dcr_tree_down a )
+        </if>
+        <if test="c.receiveName != null">
+           AND CONCAT(apr01_receive_nm) ILIKE #{c.receiveName}
+        </if>
+        <if test="c.aprInoutCode != null">
+           AND apr01_inout_cd ILIKE #{c.aprInoutCode}
+        </if>
+        <choose>
+        <when test="c.aprStatusCode == null">
+           AND apr01_status_cd = '30'
+        </when>
+        <otherwise>
+           AND apr01_status_cd LIKE #{c.aprStatusCode}
+           AND (apr01_status_cd != '99' OR apr01_reg_emp_id = #{c.empId})
+        </otherwise>
+        </choose>
+           AND f_trunc(apr01_reg_date) BETWEEN #{c.startDate} AND #{c.endDate}
+           AND CONCAT( apr01_title
+                     , REGEXP_REPLACE(apr01_content, E'&lt;[^&gt;]+&gt;', '', 'gi')
+                     , emp01_kor_nm
+                     , fc.fund_real_code_all
+                     , fc.fund_code_all
+                     , fc.fund_real_name_all
+                     , fc.fund_name_all
+                     , ac.adv_code_all
+                     , ac.adv_name_all
+                     , apr01_note
+                     , apr01_stamp_seq
+                     ) ILIKE #{c.searchText}
+         ORDER BY apr01_reg_date DESC
+                , f_class_tree_nm_allpath(dcr01_class_tree_id) COLLATE "ko-KR-x-icu" ASC
+                , apr01_appr_id DESC
+                , apr01_title COLLATE "ko-KR-x-icu" ASC
+                , apr01_status_cd
+                , apr01_effect_date
+    </select>
+
     <!-- AS-IS apr03_relate_fund.selectByIcsClassTreeId L106 (IDMS-IC) — F03. admin == 'false' 분기만(Ics01_Grid_ApprList.isAdmin=false). SELECT *·모델 열 중 그리드가 쓰는 열만, 행을 정하는 조인·조건·정렬은 그대로 -->
     <select id="selectByIcsClassTreeId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocRes">
         SELECT CASE
