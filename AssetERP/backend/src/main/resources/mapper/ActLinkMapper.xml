@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/act/mapper/act14_link.xml (selectByAccountCode, insert, insertUpdate) + UpdateDataModel(act14_link) 저장·삭제
+  + sys09_code.selectByKindCode(ProvideContentCode)  (E27)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActLinkMapper">
+
+    <sql id="linkColumns">
+        act14_link_id            AS link_id
+      , act14_company_id         AS company_id
+      , act14_account_cd         AS account_code
+      , act14_provide_content_cd AS provide_content_code
+      , act14_seq                AS seq
+      , f_cdnm('ProvidePurCode'    , SUBSTR(act14_provide_content_cd,1,2), act14_company_id, f_today()) || '-' ||
+        f_cdnm('ProvideContentCode', act14_provide_content_cd            , act14_company_id, f_today()) AS provide_name
+    </sql>
+
+    <!-- AS-IS act14_link.selectByAccountCode (IDMS-IC) -->
+    <select id="selectByAccountCode" resultType="kr.co.kfs.asseterp.biz.act.dto.ActLinkRes">
+        SELECT <include refid="linkColumns"/>
+          FROM act14_link
+         WHERE act14_company_id = #{companyId}
+           AND act14_account_cd = #{accountCode}
+         ORDER BY act14_seq, act14_provide_content_cd
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.act.dto.ActLinkRes">
+        SELECT <include refid="linkColumns"/>
+          FROM act14_link
+         WHERE act14_link_id = #{linkId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS act14_link.insert (IDMS-IC, 열 목록 없는 INSERT … SELECT를 열 순서대로 적음) -->
+    <insert id="insert">
+        INSERT INTO act14_link (act14_link_id, act14_company_id, act14_account_cd, act14_provide_content_cd, act14_seq)
+        SELECT #{linkId}
+             , #{companyId}
+             , #{accountCode}
+             , #{provideContentCode}
+             , ( SELECT MAX(act14_seq) + 1
+                   FROM act14_link
+                  WHERE act14_company_id = #{companyId}
+                    AND act14_account_cd = #{accountCode} )
+    </insert>
+
+    <!-- AS-IS act14_link.insertUpdate (IDMS-IC) -->
+    <insert id="insertUpdate">
+        WITH upsert AS ( UPDATE act14_link
+                            SET act14_provide_content_cd = #{provideContentCode}
+                          WHERE act14_company_id         = #{companyId}
+                            AND act14_account_cd         = #{accountCode}
+                            AND act14_provide_content_cd = #{provideContentCode}
+                         RETURNING *
+        ) INSERT INTO act14_link (act14_link_id, act14_company_id, act14_account_cd, act14_provide_content_cd)
+          SELECT f_create_seq()
+               , #{companyId}
+               , #{accountCode}
+               , #{provideContentCode}
+           WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </insert>
+
+    <update id="updateSeq">
+        UPDATE act14_link
+           SET act14_seq = #{seq}
+         WHERE act14_link_id    = #{linkId}
+           AND act14_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM act14_link
+         WHERE act14_company_id = #{companyId}
+           AND act14_link_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS sys09_code.selectByKindCode (IDMS-IC): kindCode ProvideContentCode, code LIKE 목적코드% -->
+    <select id="selectProvideContents" resultType="kr.co.kfs.asseterp.biz.act.dto.ActCodeOptionRes">
+        SELECT sys09_code.sys09_code AS code
+             , sys09_code.sys09_name AS name
+          FROM sys09_code
+             , sys08_code_kind
+         WHERE sys08_kind_cd = 'ProvideContentCode'
+           AND sys09_code_kind_id = sys08_code_kind_id
+           AND sys09_code LIKE #{code}
+           AND COALESCE(sys09_close_yn, 'false') = 'false'
+         ORDER BY sys09_seq
+    </select>
+</mapper>

@@ -29,6 +29,8 @@ import { Pay34_Tab_WorkTimeConfig } from './pay/Pay34_Tab_WorkTimeConfig';
 import { Crd10_Tab_ExcelCompanyAdmin } from './crd/Crd10_Tab_ExcelCompanyAdmin';
 import { Emp55_Tab_benefitInfoManager } from './emp/Emp55_Tab_benefitInfoManager';
 import { Emp41_Tab_EvalList } from './emp/Emp41_Tab_EvalList';
+import { Act01_Tab_AccountCode } from './act/Act01_Tab_AccountCode';
+import { Act10_Tab_ReprAccount } from './act/Act10_Tab_ReprAccount';
 import { Sms02_Tab_TotalCount } from './sms/Sms02_Tab_TotalCount';
 import { Sms03_Tab_SendAdmin } from './sms/Sms03_Tab_SendAdmin';
 import { Sys01_Tab_Company } from './sys/Sys01_Tab_Company';
@@ -124,6 +126,8 @@ export const SCREENS: Record<string, React.FC> = {
   Crd10_Tab_ExcelCompanyAdmin, // E24 (+ Crd11_Lookup_ExcelCodeAdmin)
   Emp55_Tab_benefitInfoManager, // E25 (+ Act01_Lookup_AccountCode)
   Emp41_Tab_EvalList, // E26 (+ Emp40_Lookup_Insert·Emp42_Lookup_EvalGrade)
+  Act01_Tab_AccountCode, // E27 (+ Act01_Edit_AccountCode·Act01_Lookup_Parent·Act01_Lookup_PrintYn·Act01_Lookup_CopyAdmin)
+  Act10_Tab_ReprAccount, // E28 (+ Act10_Lookup_ReprAccount)
   Tdm50_Tab_DutyReconAdmin, // E15 (조회마다 DB 함수 f_recon_tdm('DB_CHK')이 sys99_print의 사용자 몫 행을 다시 만든다 — AS-IS 그대로)
   Sms02_Tab_TotalCount, // C05
   Sms03_Tab_SendAdmin, // C06 (실제 문자 발송은 하지 않음 — SmsSender 기본 구현)

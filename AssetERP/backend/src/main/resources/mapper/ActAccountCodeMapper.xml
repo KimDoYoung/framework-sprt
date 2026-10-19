@@ -4,7 +4,9 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!--
-  AS-IS(IDMS-IC) server/act/mapper/act01_account_code.xml (selectBySlipYn)  (E25 — 조회창만, 계정코드 관리 화면은 E27)
+  AS-IS(IDMS-IC) server/act/mapper/act01_account_code.xml
+  selectBySlipYn (E25 조회창), selectByCompanyId·selectById·selectTreeByCompanyId·selectTreeByAccountCode·selectByAccountCode·
+  insertAdminAccountCode·updateAdminAccountCode + UpdateDataModel(act01_account_code) 저장·삭제 (E27)
 -->
 <mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActAccountCodeMapper">
 
@@ -26,5 +28,243 @@
            AND COALESCE(act01_attribute_cd, '%') LIKE #{attributeCode}
            AND UPPER(CONCAT(act01_account_cd, act01_account_nm, act01_account_enm)) LIKE UPPER(#{searchText})
          ORDER BY act01_attribute_cd, act01_print_seq
+    </select>
+
+    <!-- 계정 한 행 (selectByCompanyId·selectById·selectByAccountCode의 SELECT a.*를 DTO 열로 풀었다) -->
+    <sql id="accountColumns">
+        a.act01_account_code_id AS account_code_id
+      , a.act01_company_id      AS company_id
+      , a.act01_account_cd      AS account_code
+      , a.act01_account_nm      AS account_name
+      , a.act01_account_nm2     AS account_name2
+      , a.act01_account_enm     AS account_e_name
+      , a.act01_parent_cd       AS parent_code
+      , (SELECT act01_account_cd || ' '
+                || CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END
+                || act01_account_nm
+           FROM act01_account_code
+          WHERE act01_company_id = a.act01_company_id
+            AND act01_account_cd = a.act01_parent_cd
+          LIMIT 1)              AS parent_name
+      , a.act01_attribute_cd    AS attribute_code
+      , f_cdnm('AccountAttributeCode', a.act01_attribute_cd, a.act01_company_id, f_sysdate()) AS attribute_name
+      , a.act01_drcr_type       AS drcr_type
+      , f_cdnm('DrcrType', a.act01_drcr_type, a.act01_company_id, f_sysdate()) AS drcr_name
+      , a.act01_slip_yn         AS slip_yn
+      , a.act01_print_yn        AS print_yn
+      , a.act01_use_yn          AS use_yn
+      , a.act01_fss_yn          AS fss_yn
+      , a.act01_fss_account_nm  AS fss_account_name
+      , a.act01_fss_slip_yn     AS fss_slip_yn
+      , a.act01_print_seq       AS print_seq
+      , a.act01_content         AS content
+    </sql>
+
+    <!-- AS-IS act01_account_code.selectByCompanyId (IDMS-IC) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.act.dto.AccountCodeAdminRes">
+        SELECT <include refid="accountColumns"/>
+          FROM act01_account_code a
+         WHERE a.act01_company_id                   = #{companyId}
+           AND COALESCE(a.act01_use_yn, 'false')    LIKE #{useYn}
+           AND COALESCE(a.act01_attribute_cd, '%')  LIKE #{attributeCode}
+           AND a.act01_account_cd || a.act01_account_nm || COALESCE(a.act01_account_nm2, '') || COALESCE(a.act01_account_enm, '') LIKE #{searchText}
+         ORDER BY a.act01_print_seq
+    </select>
+
+    <!-- AS-IS act01_account_code.selectById (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.act.dto.AccountCodeAdminRes">
+        SELECT <include refid="accountColumns"/>
+          FROM act01_account_code a
+         WHERE a.act01_account_code_id = #{accountCodeId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel INSERT: 편집창 insert()가 회사 ID(로그인 회사)를 넣는다 -->
+    <insert id="insert">
+        INSERT INTO act01_account_code (act01_account_code_id, act01_company_id, act01_account_cd, act01_account_nm, act01_account_nm2,
+                                        act01_account_enm, act01_parent_cd, act01_attribute_cd, act01_drcr_type, act01_slip_yn,
+                                        act01_use_yn, act01_content, act01_fss_yn, act01_fss_account_nm, act01_fss_slip_yn,
+                                        act01_print_yn, act01_print_seq)
+        VALUES (#{accountCodeId}, #{companyId}, #{req.accountCode}, #{req.accountName}, #{req.accountName2},
+                #{req.accountEName}, #{req.parentCode}, #{req.attributeCode}, #{req.drcrType}, #{req.slipYn},
+                #{req.useYn}, #{req.content}, #{req.fssYn}, #{req.fssAccountName}, #{req.fssSlipYn},
+                #{req.printYn}, #{req.printSeq})
+    </insert>
+
+    <update id="update">
+        UPDATE act01_account_code
+           SET act01_account_cd       = #{req.accountCode},
+               act01_account_nm       = #{req.accountName},
+               act01_account_nm2      = #{req.accountName2},
+               act01_account_enm      = #{req.accountEName},
+               act01_parent_cd        = #{req.parentCode},
+               act01_attribute_cd     = #{req.attributeCode},
+               act01_drcr_type        = #{req.drcrType},
+               act01_slip_yn          = #{req.slipYn},
+               act01_use_yn           = #{req.useYn},
+               act01_content          = #{req.content},
+               act01_fss_yn           = #{req.fssYn},
+               act01_fss_account_nm   = #{req.fssAccountName},
+               act01_fss_slip_yn      = #{req.fssSlipYn},
+               act01_print_yn         = #{req.printYn},
+               act01_print_seq        = #{req.printSeq}
+         WHERE act01_account_code_id  = #{req.accountCodeId}
+           AND act01_company_id       = #{companyId}
+    </update>
+
+    <update id="updatePrint">
+        UPDATE act01_account_code
+           SET act01_account_nm2 = #{req.accountName2},
+               act01_print_yn    = #{req.printYn},
+               act01_use_yn      = #{req.useYn}
+         WHERE act01_account_code_id = #{req.accountCodeId}
+           AND act01_company_id      = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM act01_account_code
+         WHERE act01_company_id = #{companyId}
+           AND act01_account_code_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS act01_account_code.selectTreeByCompanyId (IDMS-IC, SELECT a.*는 DTO 열로) -->
+    <select id="selectTreeByCompanyId" resultType="kr.co.kfs.asseterp.biz.act.dto.AccountCodeTreeRes">
+        WITH RECURSIVE act_list ( act01_account_cd, act01_parent_cd, act01_level, act01_path, act01_cycle ) AS (
+            SELECT a.act01_account_cd
+                 , a.act01_parent_cd
+                 , 0
+                 , ARRAY[a.act01_account_cd::text]
+                 , false
+              FROM act01_account_code a
+             WHERE 1=1
+               AND act01_company_id = #{companyId}
+               AND act01_parent_cd = '0'
+               AND COALESCE(a.act01_use_yn,'false') = 'true'
+             UNION ALL
+            SELECT a.act01_account_cd
+                 , a.act01_parent_cd
+                 , b.act01_level + 1
+                 , array_append(b.act01_path, a.act01_account_cd::text)
+                 , a.act01_account_cd = ANY(b.act01_path)
+              FROM act01_account_code a
+                 , act_list b
+             WHERE 1=1
+               AND a.act01_company_id = #{companyId}
+               AND a.act01_parent_cd = b.act01_account_cd
+               AND COALESCE(a.act01_use_yn,'false') = 'true'
+               AND NOT act01_cycle
+        )
+        SELECT a.act01_account_code_id AS account_code_id
+             , a.act01_company_id      AS company_id
+             , a.act01_account_cd      AS account_code
+             , a.act01_account_nm      AS account_name
+             , a.act01_account_nm2     AS account_name2
+             , a.act01_parent_cd       AS parent_code
+             , a.act01_slip_yn         AS slip_yn
+             , act_list.act01_level    AS level
+          FROM act_list
+               INNER JOIN act01_account_code a ON ( a.act01_company_id = #{companyId}
+                                                AND a.act01_account_cd = act_list.act01_account_cd )
+         ORDER BY act_list.act01_path
+    </select>
+
+    <!-- AS-IS act01_account_code.selectTreeByAccountCode (IDMS-IC): 계정에서 위로 올라가며 최상위부터 -->
+    <select id="selectTreeByAccountCode" resultType="kr.co.kfs.asseterp.biz.act.dto.AccountCodeAdminRes">
+        WITH RECURSIVE act_list ( act01_account_cd, act01_parent_cd, act01_level ) AS (
+            SELECT act01_account_cd
+                 , act01_parent_cd
+                 , 0
+              FROM act01_account_code
+             WHERE act01_company_id = #{companyId}
+               AND act01_account_cd = #{accountCode}
+               AND COALESCE(act01_use_yn,'false') = 'true'
+             UNION ALL
+            SELECT a.act01_account_cd
+                 , a.act01_parent_cd
+                 , b.act01_level + 1
+              FROM act01_account_code a
+                 , act_list b
+             WHERE a.act01_company_id = #{companyId}
+               AND a.act01_account_cd = b.act01_parent_cd
+               AND COALESCE(a.act01_use_yn,'false') = 'true'
+        )
+        SELECT <include refid="accountColumns"/>
+          FROM act_list
+               INNER JOIN act01_account_code a ON ( a.act01_company_id = #{companyId}
+                                                AND a.act01_account_cd = act_list.act01_account_cd )
+         ORDER BY act_list.act01_level DESC
+    </select>
+
+    <!-- AS-IS act01_account_code.selectByAccountCode (IDMS-IC, 복사 때 대상 회사에 계정이 있는지만 본다) -->
+    <select id="selectByAccountCode" resultType="kr.co.kfs.asseterp.biz.act.dto.AccountCodeAdminRes">
+        SELECT <include refid="accountColumns"/>
+          FROM act01_account_code a
+         WHERE a.act01_company_id = #{companyId}
+           AND a.act01_account_cd = #{accountCode}
+    </select>
+
+    <!-- AS-IS act01_account_code.insertAdminAccountCode (IDMS-IC, 열 목록 없는 INSERT … SELECT를 열 순서대로 적음) -->
+    <insert id="insertAdminAccountCode">
+        INSERT INTO act01_account_code (act01_account_code_id, act01_company_id, act01_account_cd, act01_account_nm, act01_account_nm2,
+                                        act01_account_enm, act01_parent_cd, act01_attribute_cd, act01_drcr_type, act01_slip_yn,
+                                        act01_use_yn, act01_content, act01_fss_yn, act01_fss_account_nm, act01_fss_slip_yn,
+                                        act01_print_yn, act01_print_seq)
+        SELECT f_create_seq()
+             , #{companyId}
+             , act01_account_cd
+             , act01_account_nm
+             , act01_account_nm2
+             , act01_account_enm
+             , act01_parent_cd
+             , act01_attribute_cd
+             , act01_drcr_type
+             , act01_slip_yn
+             , act01_use_yn
+             , act01_content
+             , act01_fss_yn
+             , act01_fss_account_nm
+             , act01_fss_slip_yn
+             , act01_print_yn
+             , act01_print_seq
+          FROM act01_account_code
+         WHERE act01_company_id = #{stdCompanyId}
+           AND act01_account_cd = #{accountCode}
+    </insert>
+
+    <!-- AS-IS act01_account_code.updateAdminAccountCode (IDMS-IC): 원본은 printSeq를 넘기지 않아 정렬코드가 NULL이 된다 -->
+    <update id="updateAdminAccountCode">
+        UPDATE act01_account_code
+           SET act01_account_nm     = #{std.accountName}
+             , act01_account_nm2    = #{std.accountName2}
+             , act01_account_enm    = #{std.accountEName}
+             , act01_parent_cd      = #{std.parentCode}
+             , act01_attribute_cd   = #{std.attributeCode}
+             , act01_drcr_type      = #{std.drcrType}
+             , act01_slip_yn        = #{std.slipYn}
+             , act01_use_yn         = #{std.useYn}
+             , act01_content        = #{std.content}
+             , act01_fss_yn         = #{std.fssYn}
+             , act01_fss_account_nm = #{std.fssAccountName}
+             , act01_fss_slip_yn    = #{std.fssSlipYn}
+             , act01_print_yn       = #{std.printYn}
+             , act01_print_seq      = NULL
+         WHERE act01_company_id = #{companyId}
+           AND act01_account_cd = #{std.accountCode}
+    </update>
+
+    <!-- AS-IS sys01_company.selectByUseYn (IDMS-IC, SELECT *는 DTO 열로) -->
+    <select id="selectUseCompanies" resultType="kr.co.kfs.asseterp.biz.act.dto.ActCompanyRes">
+        SELECT sys01_company_id AS company_id
+             , sys01_company_nm AS company_name
+             , sys01_loc_nm     AS location_name
+          FROM sys01_company
+         WHERE COALESCE(sys01_use_yn,'false') = 'true'
+           AND sys01_company_id != 0
+         ORDER BY sys01_company_id
     </select>
 </mapper>
