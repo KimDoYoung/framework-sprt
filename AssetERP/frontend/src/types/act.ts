@@ -94,3 +94,34 @@ export interface ReprAccount {
   tgtReprAccountName: string | null;
   note: string | null;
 }
+
+/** 거래맵핑 한 행 (act11_tr_map.selectByCompanyId, E30). 여부는 DB 형태('true'/'false') 그대로 — 거래명·입출고구분명·손익대표계정명은 SQL 계산 열 */
+export interface TrMap {
+  trMapId: number;
+  companyId: number;
+  trCode: string | null;
+  trName: string | null;
+  journalGroup: string | null;
+  bookIoType: string | null;
+  bookIoTypeName: string | null;
+  plReprAccountCode: string | null;
+  plReprAccountName: string | null;
+  useYn: string | null;
+  note: string | null;
+}
+
+/** 분개맵핑 한 행 (act12_journal_map.selectByJournalGroup, E30) — 대표계정명·차대구분명은 SQL 계산 열 */
+export interface JournalMap {
+  journalMapId: number;
+  companyId: number;
+  journalGroup: string | null;
+  seq: number | null;
+  reprAccountCode: string | null;
+  reprAccountName: string | null;
+  drcrType: string | null;
+  drcrTypeName: string | null;
+  formula: string | null;
+  forFormula: string | null;
+  note: string | null;
+  useYn: string | null;
+}

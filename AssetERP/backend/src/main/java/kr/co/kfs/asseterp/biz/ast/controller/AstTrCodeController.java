@@ -35,6 +35,16 @@ public class AstTrCodeController {
         return ApiResponse.ok(service.search(principal, searchText, useYn));
     }
 
+    /** AS-IS ast.Ast05_TrCode.selectBySearchText (Ast05_Lookup_TrCode 조회창, 로그인 회사) */
+    @GetMapping("/lookup")
+    public ApiResponse<List<TrCodeRes>> lookup(@AuthenticationPrincipal UserPrincipal principal,
+                                               @RequestParam(required = false) String searchText,
+                                               @RequestParam(required = false) String rcvPayCode,
+                                               @RequestParam(defaultValue = "1") String assetType,
+                                               @RequestParam(required = false) Boolean financeYn) {
+        return ApiResponse.ok(service.lookup(principal, searchText, rcvPayCode, assetType, financeYn));
+    }
+
     /** AS-IS ast.Ast05_TrCode.update → 저장된 행(요청 순서) */
     @PutMapping
     public ApiResponse<List<TrCodeRes>> update(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<TrCodeSaveReq> rows) {

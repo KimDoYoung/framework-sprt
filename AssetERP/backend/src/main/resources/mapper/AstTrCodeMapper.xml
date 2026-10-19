@@ -37,6 +37,19 @@
          ORDER BY a.ast05_tr_cd
     </select>
 
+    <!-- AS-IS ast05_tr_code.selectBySearchText (IDMS-IC, E30). 조회창은 사용 중인 코드만(useYn "true" 고정). 그리드에 없는 계산 열(입출고구분·분류명)은 뺐다 -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrCodeRes">
+        SELECT <include refid="trCodeColumns"/>
+          FROM ast05_tr_code a
+         WHERE a.ast05_company_id = #{companyId}
+           AND a.ast05_asset_type LIKE #{assetType}
+           AND COALESCE(a.ast05_use_yn,'true') = 'true'
+           AND ( a.ast05_tr_cd LIKE #{searchText} OR a.ast05_tr_nm LIKE #{searchText} )
+           AND a.ast05_rcv_pay_cd LIKE #{rcvPayCode}
+           AND COALESCE(a.ast05_finance_yn,'false') LIKE COALESCE(CAST(#{financeYn} AS VARCHAR),'%')
+         ORDER BY a.ast05_tr_cd
+    </select>
+
     <!-- AS-IS ast05_tr_code.selectById (IDMS-IC) -->
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrCodeRes">
         SELECT <include refid="trCodeColumns"/>

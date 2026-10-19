@@ -31,6 +31,12 @@ export const astApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS ast.Ast05_TrCode.selectBySearchText (Ast05_Lookup_TrCode): 로그인 회사, 사용 중인 코드만. rcvPayCode '%'는 전체, 서버가 검색어를 "%…%"로 감싼다 */
+  lookupTrCodes: async (searchText: string, rcvPayCode: string, assetType: string, financeYn?: boolean | null): Promise<TrCode[]> => {
+    const res = await apiClient.get<ApiResponse<TrCode[]>>('v1/ast/tr-codes/lookup', { params: { searchText, rcvPayCode, assetType, financeYn: financeYn ?? undefined } });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS ast.Ast05_TrCode.update → 저장된 행(요청 순서) */
   updateTrCodes: async (rows: TrCode[]): Promise<TrCode[]> => {
     const body = rows.map(({ trCodeId, trCode, trName, rcvPayCode, trOccType, itemClassGroupCode, financeYn, lockYn, useYn, note }) =>

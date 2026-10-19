@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, ReprAccount } from '../types/act';
+import { AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, JournalMap, ReprAccount, TrMap } from '../types/act';
 import { readBlobError } from './file';
 
 /** act(관리회계) 화면 API (E25~) */
@@ -129,6 +129,54 @@ export const actApi = {
   /** AS-IS act.Act10_ReprAccount.insertInitData (기초데이터생성, 관리자만) → 처리한 고객사 수 */
   initReprAccounts: async (companyIds: number[], reprAccountCodes: string[]): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/act/repr-accounts/init-data', { companyIds, reprAccountCodes });
+    return res.data.data;
+  },
+
+  // ── E30 거래유형별 분개맵핑 (Act11_Tab_TrJournalMap·Act11_Grid_TrJournalMap) ──
+
+  /** AS-IS act.Act11_TrMap.selectByCompanyId: 로그인 회사, 거래코드/명·분개그룹은 서버가 "%검색어%"(없으면 전체) */
+  searchTrMaps: async (searchText: string, journalGroup: string): Promise<TrMap[]> => {
+    const res = await apiClient.get<ApiResponse<TrMap[]>>('v1/act/tr-maps', { params: { searchText, journalGroup } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act11_TrMap.update: 추가·변경 행 → 저장된 행(요청 순서) */
+  updateTrMaps: async (rows: TrMap[]): Promise<TrMap[]> => {
+    const body = rows.map(({ trMapId, trCode, journalGroup, bookIoType, plReprAccountCode, useYn, note }) =>
+      ({ trMapId, trCode, journalGroup: journalGroup || null, bookIoType: bookIoType || null, plReprAccountCode: plReprAccountCode || null, useYn, note: note || null }));
+    const res = await apiClient.put<ApiResponse<TrMap[]>>('v1/act/tr-maps', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act11_TrMap.delete → 지운 건수 */
+  deleteTrMaps: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/act/tr-maps', { data: ids });
+    return res.data.data;
+  },
+
+  /** AS-IS act.Act11_TrMap.insertInitData (기초데이터생성, 관리자만): 고른 (거래코드, 분개그룹)과 그 분개맵핑을 고객사로 복사 → 처리한 고객사 수 */
+  initTrMaps: async (companyIds: number[], items: { trCode: string; journalGroup: string | null }[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/act/tr-maps/init-data', { companyIds, items });
+    return res.data.data;
+  },
+
+  /** AS-IS act.Act12_JournalMap.selectByJournalGroup: 로그인 회사 */
+  searchJournalMaps: async (journalGroup: string): Promise<JournalMap[]> => {
+    const res = await apiClient.get<ApiResponse<JournalMap[]>>('v1/act/journal-maps', { params: { journalGroup } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act12_JournalMap.update → 저장된 행(요청 순서) */
+  updateJournalMaps: async (rows: JournalMap[]): Promise<JournalMap[]> => {
+    const body = rows.map(({ journalMapId, journalGroup, seq, reprAccountCode, drcrType, formula, forFormula, note, useYn }) =>
+      ({ journalMapId, journalGroup, seq, reprAccountCode: reprAccountCode || null, drcrType: drcrType || null, formula: formula || null, forFormula: forFormula || null, note: note || null, useYn }));
+    const res = await apiClient.put<ApiResponse<JournalMap[]>>('v1/act/journal-maps', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act12_JournalMap.delete → 지운 건수 */
+  deleteJournalMaps: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/act/journal-maps', { data: ids });
     return res.data.data;
   },
 };

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/act/mapper/act11_tr_map.xml (selectByCompanyId, selectById, deleteByJournalGroup, insertInitData) + UpdateDataModel(act11_tr_map) 저장·삭제  (E30)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActTrMapMapper">
+
+    <!-- selectByCompanyId·selectById의 act11_tr_map.*를 DTO 열로 풀었다 (입출고구분명·손익대표계정명은 원본 SQL 그대로) -->
+    <sql id="trMapColumns">
+        act11_tr_map_id          AS tr_map_id
+      , act11_company_id         AS company_id
+      , act11_tr_cd              AS tr_code
+      , ast05_tr_nm              AS tr_name
+      , act11_journal_group      AS journal_group
+      , act11_book_io_type       AS book_io_type
+      , f_cdnm('BookInOutType', act11_book_io_type, act11_company_id, f_sysdate()) AS book_io_type_name
+      , act11_pl_repr_account_cd AS pl_repr_account_code
+      , ( SELECT act10_repr_account_nm
+            FROM act10_repr_account
+           WHERE act10_company_id      = act11_company_id
+             AND act10_repr_account_cd = act11_pl_repr_account_cd )                 AS pl_repr_account_name
+      , act11_use_yn             AS use_yn
+      , act11_note               AS note
+    </sql>
+
+    <!-- AS-IS act11_tr_map.selectByCompanyId (IDMS-IC) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.act.dto.TrMapRes">
+        SELECT <include refid="trMapColumns"/>
+          FROM act11_tr_map
+               LEFT OUTER JOIN ast05_tr_code ON (ast05_company_id = act11_company_id AND ast05_tr_cd = act11_tr_cd)
+         WHERE act11_company_id = #{companyId}
+           AND upper(act11_tr_cd||COALESCE(ast05_tr_nm,'')) LIKE upper(#{trSearchText})
+           AND COALESCE(act11_journal_group,'') LIKE #{jnlGroupSearchText}
+         ORDER BY act11_tr_cd, COALESCE(act11_journal_group,'')
+    </select>
+
+    <!-- AS-IS act11_tr_map.selectById (IDMS-IC). 원본은 INNER JOIN이라 거래코드가 없으면 저장 뒤 행이 비었다 → LEFT JOIN으로 항상 돌려준다 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.act.dto.TrMapRes">
+        SELECT <include refid="trMapColumns"/>
+          FROM act11_tr_map
+               LEFT OUTER JOIN ast05_tr_code ON (ast05_company_id = act11_company_id AND ast05_tr_cd = act11_tr_cd)
+         WHERE act11_tr_map_id = #{trMapId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel INSERT: 화면 insertRow()가 회사 ID(로그인 회사)를 넣는다 -->
+    <insert id="insert">
+        INSERT INTO act11_tr_map (act11_tr_map_id, act11_company_id, act11_tr_cd, act11_journal_group, act11_use_yn,
+                                  act11_note, act11_book_io_type, act11_pl_repr_account_cd)
+        VALUES (#{trMapId}, #{companyId}, #{req.trCode}, #{req.journalGroup}, #{req.useYn},
+                #{req.note}, #{req.bookIoType}, #{req.plReprAccountCode})
+    </insert>
+
+    <update id="update">
+        UPDATE act11_tr_map
+           SET act11_tr_cd              = #{req.trCode},
+               act11_journal_group      = #{req.journalGroup},
+               act11_use_yn             = #{req.useYn},
+               act11_note               = #{req.note},
+               act11_book_io_type       = #{req.bookIoType},
+               act11_pl_repr_account_cd = #{req.plReprAccountCode}
+         WHERE act11_tr_map_id = #{req.trMapId}
+           AND act11_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM act11_tr_map
+         WHERE act11_company_id = #{companyId}
+           AND act11_tr_map_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS act11_tr_map.deleteByJournalGroup (IDMS-IC) -->
+    <delete id="deleteByJournalGroup">
+        DELETE FROM act11_tr_map
+         WHERE act11_company_id     = #{companyId}
+           AND act11_tr_cd          = #{trCode}
+           AND act11_journal_group  = #{journalGroup}
+    </delete>
+
+    <!-- AS-IS act11_tr_map.insertInitData (IDMS-IC, 열 목록 없는 INSERT … SELECT를 열 순서대로 적음. 원본은 ${companyId}가 아니라 #{companyId}) -->
+    <insert id="insertInitData">
+        INSERT INTO act11_tr_map (act11_tr_map_id, act11_company_id, act11_tr_cd, act11_journal_group, act11_use_yn,
+                                  act11_note, act11_book_io_type, act11_pl_repr_account_cd)
+        SELECT f_create_seq()
+             , #{companyId}
+             , act11_tr_cd
+             , act11_journal_group
+             , act11_use_yn
+             , act11_note
+             , act11_book_io_type
+             , act11_pl_repr_account_cd
+          FROM act11_tr_map
+         WHERE act11_company_id     = 0
+           AND act11_tr_cd          = #{trCode}
+           AND act11_journal_group  = #{journalGroup}
+    </insert>
+</mapper>

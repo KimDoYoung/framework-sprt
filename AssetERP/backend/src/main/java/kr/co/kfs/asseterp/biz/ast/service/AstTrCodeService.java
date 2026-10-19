@@ -30,6 +30,15 @@ public class AstTrCodeService {
     }
 
     /**
+     * AS-IS Ast05_Lookup_TrCode.retrieve() L329-363: 로그인 회사, 사용 중인 코드만, "%검색어%", 수령/지급(없으면 "%"), 자산구분, 금융상품거래(없으면 전체).
+     * 자산구분은 원본 SQL처럼 LIKE로 맞춘다(호출한 화면이 "1"을 넘긴다)
+     */
+    public List<TrCodeRes> lookup(UserPrincipal user, String searchText, String rcvPayCode, String assetType, Boolean financeYn) {
+        return mapper.selectBySearchText(user.getCompanyId(), "%" + (searchText == null ? "" : searchText) + "%",
+                isBlank(rcvPayCode) ? "%" : rcvPayCode, assetType, financeYn == null ? null : String.valueOf(financeYn));
+    }
+
+    /**
      * AS-IS update L66-92: 같은 회사에 같은 거래코드가 다른 행으로 있으면 막고, UpdateDataModel처럼 신규(ID 0 이하)는 INSERT, 아니면 UPDATE 후
      * selectById로 다시 읽어 요청 순서대로 돌려준다. 필수 검사(거래코드·거래명·수령/지급)는 화면 update() L303-315와 같은 문구
      */

@@ -17,7 +17,7 @@ OMS(`../OMS`, AssetERP subset)에서 해 본 변환을 실제 원본으로 다�
 | 프론트 | **`11-프론트부품.md` 전체**(공통 부품 사용법 — 이것만 읽고 `components/`·`hooks/` 소스는 열지 않는다, 03 원칙 15), `10-UX보강.md` 등록표(상태 `부품완료` 항목) | 부품 소스·참고 화면 통독 |
 | 백엔드 | 05 §8(그리드 CRUD를 쓸 때) | |
 | 공통 부품을 만들거나 바꿀 때 | 11의 해당 절 + 05 §5 등록표(이력) — 같은 ID 안에서 둘 다 고친다 | |
-| 확인 | `06-결과확인.md` 확인 항목 표·템플릿 | |
+| 확인 | `06-결과확인.md` 확인 항목 표·템플릿("화면시험 지연" 절 포함) | |
 | 끝낼 때 | 05 §4 템플릿. `08-회차인계.md`는 교훈 표 형식만(`tail -3`) 보고 한 줄 추가 | 08 전체 |
 | 필요할 때만 | `04-작업순서.md`(순서·상태 흐름을 바꿀 때), `09-업무흐름.md`(권한·메뉴·회사의 업무 조건이 궁금할 때), `07-기반이식.md`(B04~B08) | |
 
@@ -40,6 +40,7 @@ TOBE는 새로 설계하지 않고 원본의 레이아웃·버튼·이벤트·�
 - 백엔드: SQL은 `yunhee port-sql`·`port-save`로 옮기고, 매퍼는 컴파일 전에 `yunhee sql-check --tobe backend/src/main/resources/mapper`.
 - 확인: API는 `yunhee api`(SQL·예외까지 보려면 `--log`), 조회 API와 AS-IS SQL 비교는 `yunhee compare`. 서버 로그는 `docker logs` 대신 `yunhee log`(errors·tail·req·trace, 05 §7 "서버 로그") — 배포 후 `log errors --since-deploy`, 사용자 신고 오류는 재현 전에 `log req … --trace`. 기본 주소는 `.env.local`(AssetERP Tomcat), 고객사 관리자는 `-c <회사코드>`.
 - **원본 변경 점검**(0.3.8~): AS-IS 원본은 매일 바뀐다. `git pull` 뒤 `index-src`를 다시 돌리고 `yunhee drift --all --done-only --base baseline`으로 완료 화면 중 변환 뒤 바뀐 것만 본다(`-o diff`로 상세). ID를 `완료`로 바꿀 때 `yunhee drift --record <클래스> --id <ID> --note-file docs/work/<ID 첫 글자>/<ID>-작업기록.md`로 기준을 남긴다. 기준 파일 `docs/baseline.json`은 git으로 공유한다(05 §7 "원본 변경 점검").
+- **브라우저 화면 시험은 ID 변환 중 쓰지 않는다**(사용자 결정 2026-10-19). 변환 때는 `docs/work/{첫글자}/{id}-화면시험.json` 명세만 남기고 결과확인 7·7-1은 `대기(일괄)`로 적는다. 도메인을 끝낸 뒤 `tools/screens/gen.js --all-pending`으로 일괄 시험한다(06 "화면시험 지연"). 기존 `tools/screens/{id}.js`는 단건 재현용으로 남긴다.
 - yunhee로 안 되는 것(브라우저 확인)만 `tools/`로 하고, 출력은 몇 줄로 줄인다. 다른 방법을 쓴 사유는 `{id}-작업기록`에 한 줄 남긴다.
 
 ## 고정 사항

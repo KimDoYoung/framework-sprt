@@ -14,6 +14,11 @@ public interface AstTrCodeMapper {
     List<TrCodeRes> selectByCompanyId(@Param("companyId") Long companyId, @Param("searchText") String searchText,
                                       @Param("useYn") String useYn, @Param("assetType") String assetType);
 
+    /** AS-IS selectBySearchText (Ast05_Lookup_TrCode 조회창) */
+    List<TrCodeRes> selectBySearchText(@Param("companyId") Long companyId, @Param("searchText") String searchText,
+                                       @Param("rcvPayCode") String rcvPayCode, @Param("assetType") String assetType,
+                                       @Param("financeYn") String financeYn);
+
     /** AS-IS selectById */
     TrCodeRes selectById(@Param("trCodeId") Long trCodeId);
 

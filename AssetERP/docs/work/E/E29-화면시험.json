@@ -1,0 +1,19 @@
+{
+  "id": "E29",
+  "menu": ["기초자료", "거래유형 등록(관리자)"],
+  "api": ["ast/"],
+  "opens": { "rows": "[1-9]", "headers": "거래" },
+  "grid": true,
+  "cellCrud": {
+    "key": { "trCode": "Z9", "trName": "E29시험" },
+    "searchText": "Z9",
+    "cells": [
+      { "col": "trCode", "kind": "type", "value": "Z9" },
+      { "col": "trName", "kind": "type", "value": "E29시험" },
+      { "col": "rcvPayName", "kind": "pick", "value": "수령" },
+      { "col": "trOccTypeName", "kind": "pick", "value": "거래" }
+    ],
+    "required": [ { "fill": 1, "msg": "거래명" }, { "fill": 2, "msg": "수입|수령|지급" } ],
+    "edit": { "col": "note", "value": "E29시험비고" }
+  }
+}

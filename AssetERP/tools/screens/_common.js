@@ -138,6 +138,69 @@ function helpers(p) {
     });
     return api;
   };
+
+  // ── E31 이관: 화면마다 다시 쓰던 헬퍼 (E29 상단 40줄) ──
+  /** 현재 열린(마지막) 탭 영역 */
+  h.scr = () => p.locator('.flexlayout__tab:visible').last();
+  /** 행을 못 찾으면(-1) throw — 찾은 DOM row-index를 그대로 돌려준다 */
+  h.need = (i, what) => { if (i < 0) throw new Error('행 못 찾음: ' + what); return i; };
+  h.cell = (g, idx, col) => g.locator(`.ag-row[row-index="${idx}"] [col-id="${col}"]`).first();
+  /** 텍스트 셀 편집: 더블클릭 → 전체 선택 → 입력 → Enter (등록 직후 첫 글자가 편집기를 여는 문제를 피함) */
+  h.type = async (g, idx, col, text) => {
+    await h.cell(g, idx, col).dblclick(); await wait(300);
+    await p.keyboard.press('Control+A'); await p.keyboard.type(text); await p.keyboard.press('Enter'); await wait(600);
+  };
+  /** 콤보 셀: 더블클릭 → 목록에서 글자로 고르기 */
+  h.pick = async (g, idx, col, text) => {
+    await h.cell(g, idx, col).dblclick(); await wait(300);
+    await p.locator('.ag-picker-field-wrapper:visible').first().click(); await wait(300);
+    await p.locator('.ag-popup .ag-list-item').filter({ hasText: new RegExp('^\\s*' + text + '\\s*$') }).first().click(); await wait(400);
+  };
+  /** 체크된 행을 모두 풀고 idx 행만 체크 (E24 사고: 기존 행이 함께 지워짐) */
+  h.checkOnly = async (g, idx) => {
+    for (const c of await g.locator('.ag-row .ag-checkbox-input:checked').all()) await c.uncheck();
+    await g.locator(`.ag-row[row-index="${idx}"] .ag-checkbox-input`).first().check();
+  };
+  /** [조회] 누르고 대기 */
+  h.retrieve = async () => { await h.btn(h.scr(), /^\s*조\s*회\s*$/).click(); await wait(1500); };
+  /** 첫 편집 가능 입력칸에 글자를 넣고 조회 */
+  h.searchFor = async text => { await h.scr().locator('.ant-input:not([readonly])').first().fill(text); await h.retrieve(); };
+  /** 고객사 찾기(단일) 모달: 검색 → 첫 행 → 확인 */
+  h.pickCompany = async nameLike => {
+    const m = h.modal('고객사 찾기'); await m.waitFor(); await wait(1200);
+    await m.locator('input').first().fill(nameLike); await p.keyboard.press('Enter'); await wait(1200);
+    await m.locator('.ag-root-wrapper').first().locator('.ag-row[row-index="0"] .ag-checkbox-input').first().check();
+    await h.btn(m, /확\s*인/).click(); await wait(800);
+  };
+  /** 행 끌기(마우스 이벤트): fromGrid의 fromIdx 행의 col 셀 → toBox 가운데 */
+  h.drag = async (fromGrid, fromIdx, col, toBox) => {
+    const sb = await h.cell(fromGrid, fromIdx, col).boundingBox(); const tb = await toBox.boundingBox();
+    await p.mouse.move(sb.x + 20, sb.y + sb.height / 2); await p.mouse.down();
+    await p.mouse.move(sb.x + 40, sb.y + sb.height / 2 + 5, { steps: 4 });
+    await p.mouse.move(tb.x + tb.width / 2, tb.y + tb.height / 2, { steps: 12 }); await wait(200);
+    await p.mouse.up(); await wait(600);
+  };
+
+  /**
+   * 기대값 누적. `h.expect('rowsOpen', actual, expected)` — expected가 RegExp면 test, 함수면 호출, 아니면 JSON 동일.
+   * 끝에서 `h.report(OUT, out)`: 전체 결과는 `$OUT/result.json`, stdout에는 `PASS n / FAIL m`과 실패 항목만.
+   */
+  const checks = [];
+  h.expect = (name, actual, expected) => {
+    const ok = expected instanceof RegExp ? expected.test(String(actual))
+      : typeof expected === 'function' ? !!expected(actual)
+      : JSON.stringify(actual) === JSON.stringify(expected);
+    checks.push({ name, ok, actual, expected: String(expected) });
+    return ok;
+  };
+  h.report = (outDir, out) => {
+    const fs = require('fs');
+    const fails = checks.filter(c => !c.ok);
+    try { fs.writeFileSync(`${outDir}/result.json`, JSON.stringify({ checks, out }, null, 1)); } catch {}
+    console.log(`PASS ${checks.length - fails.length} / FAIL ${fails.length}` + (out && out.errs && out.errs.length ? ` / 콘솔오류 ${out.errs.length}` : ''));
+    for (const c of fails) console.log(`  ✗ ${c.name}: ${JSON.stringify(c.actual)} (기대 ${c.expected})`);
+    return fails.length === 0;
+  };
   return h;
 }
 
