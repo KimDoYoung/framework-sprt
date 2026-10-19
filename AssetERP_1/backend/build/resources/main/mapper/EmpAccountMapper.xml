@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/emp/Emp14_Account.java -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpAccountMapper">
+
+    <sql id="accountColumns">
+        emp14_account_id   AS account_id,
+        emp14_company_id   AS company_id,
+        emp14_person_id    AS person_id,
+        emp14_start_date   AS start_date,
+        emp14_bank_cd      AS bank_cd,
+        f_cdnm('BankCode', emp14_bank_cd, emp14_company_id, f_sysdate()) AS bank_name,
+        TO_DECRYPTS(emp14_account_no)                                    AS account_no_dec,
+        emp14_note         AS note
+    </sql>
+
+    <!-- AS-IS emp14_account.selectByPersonId -->
+    <select id="selectAccounts" resultType="kr.co.kfs.asseterp.biz.emp.dto.AccountRes">
+        SELECT <include refid="accountColumns"/>
+          FROM emp14_account
+         WHERE emp14_company_id = #{companyId}
+           AND emp14_person_id  = #{personId}
+         ORDER BY emp14_start_date DESC
+    </select>
+
+    <!-- AS-IS emp14_account.selectById -->
+    <select id="selectAccountById" resultType="kr.co.kfs.asseterp.biz.emp.dto.AccountRes">
+        SELECT <include refid="accountColumns"/>
+          FROM emp14_account
+         WHERE emp14_account_id = #{accountId}
+           AND emp14_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq -->
+    <select id="selectNextAccountId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- INSERT — TO_ENCRYPTS(accountNoDec) -->
+    <insert id="insertAccount">
+        INSERT INTO emp14_account
+               ( emp14_account_id, emp14_company_id, emp14_person_id, emp14_start_date
+               , emp14_bank_cd, emp14_account_no, emp14_note )
+        VALUES ( #{accountId}, #{companyId}, #{personId}, #{req.startDate}
+               , #{req.bankCd}, TO_ENCRYPTS(#{req.accountNoDec}), #{req.note} )
+    </insert>
+
+    <!-- UPDATE — accountNoDec 있으면 TO_ENCRYPTS, 없으면 기존 값 유지 -->
+    <update id="updateAccount">
+        UPDATE emp14_account
+           SET emp14_start_date = #{req.startDate}
+             , emp14_bank_cd    = #{req.bankCd}
+             , emp14_account_no = CASE WHEN #{req.accountNoDec} IS NOT NULL
+                                       THEN TO_ENCRYPTS(#{req.accountNoDec})
+                                       ELSE emp14_account_no END
+             , emp14_note       = #{req.note}
+         WHERE emp14_account_id = #{accountId}
+           AND emp14_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel(emp14_account).deleteModel -->
+    <delete id="deleteAccounts">
+        DELETE FROM emp14_account
+         WHERE emp14_company_id = #{companyId}
+           AND emp14_account_id IN
+        <foreach collection="accountIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+</mapper>

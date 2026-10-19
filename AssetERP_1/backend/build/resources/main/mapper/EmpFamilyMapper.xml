@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/emp/Emp06_Family.java + emp06_family.xml -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpFamilyMapper">
+
+    <sql id="familyColumns">
+        emp06_family_id   AS family_id,
+        emp06_person_id   AS person_id,
+        emp06_family_nm   AS family_nm,
+        emp06_relation_cd AS relation_cd,
+        emp06_locate_cd   AS locate_cd,
+        f_cdnm('EmpLocationCode', emp06_locate_cd, emp01_company_id, f_sysdate()) AS locate_nm,
+        emp06_disability_grade AS disability_grade,
+        emp06_birthday    AS birthday,
+        emp06_family_school AS family_school,
+        emp06_family_job  AS family_job,
+        emp06_school_location AS school_location,
+        emp06_family_location AS family_location,
+        emp06_note        AS note
+    </sql>
+
+    <!-- AS-IS emp06_family.selectByPersonId -->
+    <select id="selectFamilies" resultType="kr.co.kfs.asseterp.biz.emp.dto.FamilyRes">
+        SELECT <include refid="familyColumns"/>
+          FROM emp06_family
+          JOIN emp01_person ON emp06_person_id = emp01_person_id
+         WHERE emp01_company_id = #{companyId}
+           AND emp06_person_id  = #{personId}
+    </select>
+
+    <select id="selectFamilyById" resultType="kr.co.kfs.asseterp.biz.emp.dto.FamilyRes">
+        SELECT <include refid="familyColumns"/>
+          FROM emp06_family
+          JOIN emp01_person ON emp06_person_id = emp01_person_id
+         WHERE emp06_family_id = #{familyId}
+    </select>
+
+    <select id="selectNextFamilyId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertFamily">
+        INSERT INTO emp06_family
+               ( emp06_family_id, emp06_person_id, emp06_family_nm, emp06_relation_cd
+               , emp06_locate_cd, emp06_disability_grade, emp06_birthday
+               , emp06_family_school, emp06_family_job, emp06_school_location
+               , emp06_family_location, emp06_note )
+        VALUES ( #{familyId}, #{req.personId}, #{req.familyNm}, #{req.relationCd}
+               , #{req.locateCd}, #{req.disabilityGrade}, #{req.birthday}
+               , #{req.familySchool}, #{req.familyJob}, #{req.schoolLocation}
+               , #{req.familyLocation}, #{req.note} )
+    </insert>
+
+    <update id="updateFamily">
+        UPDATE emp06_family
+           SET emp06_family_nm      = #{req.familyNm}
+             , emp06_relation_cd    = #{req.relationCd}
+             , emp06_locate_cd      = #{req.locateCd}
+             , emp06_disability_grade = #{req.disabilityGrade}
+             , emp06_birthday       = #{req.birthday}
+             , emp06_family_school  = #{req.familySchool}
+             , emp06_family_job     = #{req.familyJob}
+             , emp06_school_location = #{req.schoolLocation}
+             , emp06_family_location = #{req.familyLocation}
+             , emp06_note           = #{req.note}
+         WHERE emp06_family_id = #{familyId}
+           AND emp06_person_id IN (
+               SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId}
+           )
+    </update>
+
+    <delete id="deleteFamilies">
+        DELETE FROM emp06_family
+         WHERE emp06_family_id IN
+        <foreach collection="familyIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+           AND emp06_person_id IN (
+               SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId}
+           )
+    </delete>
+
+</mapper>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS server/sys/mapper/sys08_code_kind.xml (selectByKindName L40, selectById L16)
+  + UpdateDataModel(sys08_code_kind)의 동적 INSERT/UPDATE/DELETE를 명시 SQL로 (A13-작업방법 "SQL 이식")
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysCodeKindMapper">
+
+    <sql id="kindColumns">
+        sys08_code_kind_id                 AS code_kind_id,
+        sys08_kind_cd                      AS kind_cd,
+        sys08_kind_nm                      AS kind_nm,
+        COALESCE(sys08_sys_yn, 'false')    AS sys_yn,
+        sys08_note                         AS note
+    </sql>
+
+    <!-- AS-IS selectByKindName: 코드구분명 또는 코드구분(대소문자 무시)에 패턴 -->
+    <select id="searchCodeKinds" resultType="kr.co.kfs.asseterp.biz.sys.dto.CodeKindRes">
+        SELECT <include refid="kindColumns"/>
+          FROM sys08_code_kind
+         WHERE sys08_sys_yn LIKE #{sysYn}
+           AND ( sys08_kind_nm LIKE #{kindName} OR lower(sys08_kind_cd) LIKE lower(#{kindName}) )
+         ORDER BY sys08_kind_cd
+    </select>
+
+    <!-- AS-IS selectById -->
+    <select id="selectCodeKind" resultType="kr.co.kfs.asseterp.biz.sys.dto.CodeKindRes">
+        SELECT <include refid="kindColumns"/>
+          FROM sys08_code_kind
+         WHERE sys08_code_kind_id = #{codeKindId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertCodeKind">
+        INSERT INTO sys08_code_kind (sys08_code_kind_id, sys08_kind_cd, sys08_kind_nm, sys08_sys_yn, sys08_note)
+        VALUES (#{codeKindId}, #{kindCd}, #{kindNm}, #{sysYn}, #{note})
+    </insert>
+
+    <update id="updateCodeKind">
+        UPDATE sys08_code_kind
+           SET sys08_kind_cd = #{kindCd},
+               sys08_kind_nm = #{kindNm},
+               sys08_sys_yn  = #{sysYn},
+               sys08_note    = #{note}
+         WHERE sys08_code_kind_id = #{codeKindId}
+    </update>
+
+    <delete id="deleteCodeKinds">
+        DELETE FROM sys08_code_kind
+         WHERE sys08_code_kind_id IN
+        <foreach collection="codeKindIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

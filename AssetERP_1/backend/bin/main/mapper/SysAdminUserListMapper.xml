@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/sys/mapper/sys80_admin_user_list.xml selectByAll·selectById + UpdateDataModel(sys80_admin_user_list)
+  `yunhee port-save sys80_admin_user_list` (컬럼 user_phone, user_nm, note) 결과를 썼다
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysAdminUserListMapper">
+
+    <sql id="adminUserListColumns">
+        sys80_admin_user_list_id AS admin_user_list_id,
+        sys80_user_phone         AS user_phone,
+        sys80_user_nm            AS user_name,
+        sys80_note               AS note
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) sys80_admin_user_list.selectByAll L20 (SELECT *는 DTO 열로 명시) -->
+    <select id="selectByAll" resultType="kr.co.kfs.asseterp.biz.sys.dto.AdminUserListRes">
+        SELECT <include refid="adminUserListColumns"/>
+          FROM sys80_admin_user_list
+         ORDER BY sys80_user_nm, sys80_user_phone
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sys.dto.AdminUserListRes">
+        SELECT <include refid="adminUserListColumns"/>
+          FROM sys80_admin_user_list
+         WHERE sys80_admin_user_list_id = #{adminUserListId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertAdminUserList">
+        INSERT INTO sys80_admin_user_list (sys80_admin_user_list_id, sys80_user_phone, sys80_user_nm, sys80_note)
+        VALUES (#{adminUserListId}, #{req.userPhone}, #{req.userName}, #{req.note})
+    </insert>
+
+    <update id="updateAdminUserList">
+        UPDATE sys80_admin_user_list
+           SET sys80_user_phone = #{req.userPhone},
+               sys80_user_nm    = #{req.userName},
+               sys80_note       = #{req.note}
+         WHERE sys80_admin_user_list_id = #{req.adminUserListId}
+    </update>
+
+    <delete id="deleteAdminUserLists">
+        DELETE FROM sys80_admin_user_list
+         WHERE sys80_admin_user_list_id IN
+        <foreach collection="adminUserListIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

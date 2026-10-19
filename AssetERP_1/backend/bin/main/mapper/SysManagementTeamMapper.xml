@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/sys/mapper/sys92_management_team.xml (selectByAll, selectById) + UpdateDataModel 저장·삭제를 명시 SQL로  (A32)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysManagementTeamMapper">
+
+    <sql id="managementTeamColumns">
+        t.sys92_management_team_id AS management_team_id,
+        t.sys92_company_id         AS company_id,
+        t.sys92_person_id          AS person_id,
+        t.sys92_charge_part        AS charge_part,
+        t.sys92_work_year          AS work_year,
+        t.sys92_main_career        AS main_career,
+        t.sys92_note               AS note
+    </sql>
+
+    <!-- 사원 정보 칸: 현재 발령(emp03)·조직(org00)·사원(emp01) — AS-IS selectByAll/selectById의 같은 서브쿼리 (회사 1 고정) -->
+    <sql id="empJoin">
+        INNER JOIN (
+            SELECT emp03_trans.*
+                 , emp01_person.*
+                 , f_cdnm('EmpPosCode', emp03_pos_cd, emp01_company_id, emp03_trans_date) AS emp01_pos_nm
+              FROM emp03_trans
+                   INNER JOIN emp01_person ON emp03_person_id = emp01_person_id
+                   INNER JOIN org00_org_info ON emp03_org_code_id = org00_org_code_id
+             WHERE emp01_company_id = 1
+               AND org00_mod_date = (
+                       SELECT MAX(org00_mod_date)
+                         FROM org00_org_info
+                        WHERE org00_org_code_id = emp03_org_code_id
+                          AND org00_mod_date &lt;= emp03_trans_date
+                   )
+               AND emp03_trans_date = (
+                       SELECT MAX(x.emp03_trans_date)
+                         FROM emp03_trans x
+                        WHERE x.emp03_person_id = emp01_person_id
+                          AND x.emp03_trans_date &lt;= f_sysdate()
+                   )
+               AND emp03_trans_cd NOT IN ('800', '900')
+        ) emp ON t.sys92_person_id = emp.emp01_person_id
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) sys92_management_team.selectByAll L53 -->
+    <select id="selectByAll" resultType="kr.co.kfs.asseterp.biz.sys.dto.ManagementTeamRes">
+        SELECT <include refid="managementTeamColumns"/>
+             , emp.emp01_kor_nm        AS person_nm
+             , emp.emp01_pos_nm        AS pos_nm
+             , emp.emp01_office_telno  AS office_tel_no
+             , emp.emp01_email_addr    AS email_addr
+          FROM sys92_management_team t
+               <include refid="empJoin"/>
+         ORDER BY emp.emp03_pos_cd, emp.emp01_kor_nm
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys92_management_team.selectById L21 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sys.dto.ManagementTeamRes">
+        SELECT <include refid="managementTeamColumns"/>
+             , emp.emp01_kor_nm        AS person_nm
+             , emp.emp01_pos_nm        AS pos_nm
+             , emp.emp01_office_telno  AS office_tel_no
+             , emp.emp01_email_addr    AS email_addr
+          FROM sys92_management_team t
+               <include refid="empJoin"/>
+         WHERE t.sys92_management_team_id = #{managementTeamId}
+    </select>
+
+    <!-- TOBE 보강: 사원을 안 고른 행을 저장한 값 그대로 -->
+    <select id="selectRawById" resultType="kr.co.kfs.asseterp.biz.sys.dto.ManagementTeamRes">
+        SELECT <include refid="managementTeamColumns"/>
+             , NULL AS person_nm, NULL AS pos_nm, NULL AS office_tel_no, NULL AS email_addr
+          FROM sys92_management_team t
+         WHERE t.sys92_management_team_id = #{managementTeamId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel INSERT. 회사 ID는 insertRow()가 넣은 1 (sys92_company_id NOT NULL) -->
+    <insert id="insertManagementTeam">
+        INSERT INTO sys92_management_team
+               (sys92_management_team_id, sys92_company_id, sys92_person_id, sys92_charge_part, sys92_work_year, sys92_main_career)
+        VALUES (#{id}, COALESCE(#{r.companyId}, 1), #{r.personId}, #{r.chargePart}, #{r.workYear}, #{r.mainCareer})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE (화면이 바꾸는 4열) -->
+    <update id="updateManagementTeam">
+        UPDATE sys92_management_team
+           SET sys92_person_id = #{r.personId}
+             , sys92_charge_part = #{r.chargePart}
+             , sys92_work_year = #{r.workYear}
+             , sys92_main_career = #{r.mainCareer}
+         WHERE sys92_management_team_id = #{r.managementTeamId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel -->
+    <delete id="deleteManagementTeams">
+        DELETE FROM sys92_management_team
+         WHERE sys92_management_team_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+</mapper>

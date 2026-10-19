@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysMenuGuideMapper">
+
+    <!-- AS-IS(IDMS-IC) sys00_common.selectMenuName (sys09_code_id/code/name 별칭은 DTO에 맞춤) -->
+    <select id="selectMenuNames" resultType="kr.co.kfs.asseterp.biz.sys.dto.MenuNameRes">
+        SELECT sys06_menu_id::varchar AS code
+             , sys06_menu_nm          AS name
+          FROM sys06_menu
+         WHERE sys06_parent_id = 0
+           AND sys06_use_yn = 'true'
+         ORDER BY sys06_seq
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys06_menu.selectByMenuId L802 (최종 SELECT 목록만 화면 열로 명시) -->
+    <select id="selectByMenuId" resultType="kr.co.kfs.asseterp.biz.sys.dto.MenuGuideRes">
+        WITH RECURSIVE menu_path AS (
+          SELECT *
+               , sys06_parent_id AS parent_id_level1
+               , sys06_menu_nm::varchar(1000) AS path
+               , sys06_menu_nm::varchar(1000) AS total_menu_nm
+               , 1 AS level
+               , sys06_seq::varchar AS level1_seq
+               , NULL::varchar AS level2_seq
+               , NULL::varchar AS level3_seq
+            FROM sys06_menu
+           WHERE sys06_parent_id = 0 AND sys06_use_yn = 'true'
+           UNION ALL
+          SELECT m.*
+               , CASE
+                   WHEN mp.level = 1 THEN mp.sys06_menu_id
+                   ELSE mp.parent_id_level1
+                 END AS parent_id_level1
+               , (mp.path || ' > ' || m.sys06_menu_nm)::varchar(1000)
+               , CASE
+                   WHEN mp.level = 1 THEN (mp.total_menu_nm || ' > ' || m.sys06_menu_nm)::varchar(1000)
+                   ELSE mp.total_menu_nm
+                 END
+               , mp.level + 1
+               , CASE WHEN mp.level = 1 THEN mp.level1_seq ELSE mp.level1_seq END
+               , CASE WHEN mp.level = 1 THEN m.sys06_seq::varchar ELSE mp.level2_seq END
+               , CASE WHEN mp.level = 2 THEN m.sys06_seq::varchar ELSE NULL END
+            FROM sys06_menu m
+            JOIN menu_path mp ON m.sys06_parent_id = mp.sys06_menu_id
+           WHERE m.sys06_use_yn = 'true' AND mp.level &lt; 3
+        )
+        SELECT sys06_menu_id    AS menu_id
+             , total_menu_nm    AS menu_full_name
+             , sys06_menu_nm    AS menu_name
+             , sys06_note       AS note
+          FROM menu_path
+         WHERE level = 3
+           AND UPPER(CONCAT(total_menu_nm, sys06_menu_nm)) LIKE UPPER(#{searchText})
+        <if test="menuId != null">
+           AND parent_id_level1 = #{menuId}
+        </if>
+         ORDER BY level1_seq, level2_seq, level3_seq
+    </select>
+
+    <!-- UpdateDataModel(sys06_menu) — 화면이 바꾸는 컬럼(sys06_note)만 (yunhee port-save) -->
+    <update id="updateNote">
+        UPDATE sys06_menu
+           SET sys06_note = #{req.note}
+         WHERE sys06_menu_id = #{req.menuId}
+    </update>
+</mapper>

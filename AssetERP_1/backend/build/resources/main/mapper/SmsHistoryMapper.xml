@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/sms/mapper/sms02_history.xml selectByTotalCount L49, selectByTotalCountYear L85, selectByTotalCountMonth L101, selectByDate L38
+  조건·정렬은 그대로, SELECT 목록만 DTO 별칭(camelCase 자동 매핑)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sms.mapper.SmsHistoryMapper">
+
+    <!-- AS-IS(IDMS-IC) sms02_history.selectByTotalCount L49 -->
+    <select id="selectByTotalCount" resultType="kr.co.kfs.asseterp.biz.sms.dto.HistoryTotalRes">
+        SELECT ROW_NUMBER() OVER()      AS history_id
+             , sys01_company_id         AS company_id
+             , sys01_company_nm         AS company_nm
+             , sys01_loc_nm             AS loc_nm
+             , a.total_count            AS total_count
+             , (
+                   SELECT count(sms02_history_id)
+                     FROM sms02_history
+                    WHERE sms02_company_id = a.sms02_company_id
+               )                        AS running_total_count
+          FROM (
+                   SELECT sms02_company_id
+                        , count(*)      AS total_count
+                     FROM sms02_history
+                    GROUP BY sms02_company_id
+               ) a
+               INNER JOIN sys01_company ON sys01_company_id = sms02_company_id
+        <if test="useYn != null">
+           AND ((#{useYn} = 'true' AND COALESCE(sys01_use_yn,'true') = 'true')
+                OR
+                (#{useYn} = 'false'))
+        </if>
+         ORDER BY a.total_count DESC, sys01_company_nm
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sms02_history.selectByTotalCountYear L85 -->
+    <select id="selectByTotalCountYear" resultType="kr.co.kfs.asseterp.biz.sms.dto.HistoryYearRes">
+        SELECT ROW_NUMBER() OVER()      AS history_id
+             , a.year                   AS year
+             , a.total_count            AS total_count
+             , a.total_pay_count        AS total_pay_count
+          FROM (
+                   SELECT TO_CHAR(sms02_send_date, 'yyyy')  AS year
+                        , count(sms02_send_date)            AS total_count
+                        , (count(sms02_send_date) * 9.5)    AS total_pay_count
+                     FROM sms02_history
+                          INNER JOIN sys01_company ON sys01_company_id = sms02_company_id AND sys01_loc_nm = #{locName}
+                    GROUP BY TO_CHAR(sms02_send_date, 'yyyy')
+               ) a
+         ORDER BY a.year DESC
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sms02_history.selectByTotalCountMonth L101 -->
+    <select id="selectByTotalCountMonth" resultType="kr.co.kfs.asseterp.biz.sms.dto.HistoryMonthRes">
+        SELECT ROW_NUMBER() OVER()      AS history_id
+             , a.month                  AS month
+             , a.total_count            AS total_count
+             , a.total_pay_count        AS total_pay_count
+          FROM (
+                   SELECT TO_CHAR(sms02_send_date, 'mm')    AS month
+                        , count(sms02_send_date)            AS total_count
+                        , (count(sms02_send_date) * 9.5)    AS total_pay_count
+                     FROM sms02_history
+                          INNER JOIN sys01_company ON sys01_company_id = sms02_company_id AND sys01_loc_nm = #{locName}
+                    WHERE TO_CHAR(sms02_send_date, 'yyyy') = #{year}
+                    GROUP BY TO_CHAR(sms02_send_date, 'mm')
+               ) a
+         ORDER BY a.month DESC
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sms02_history.selectByDate L38 (SELECT *는 DTO 열로 명시) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.sms.dto.HistoryRes">
+        SELECT sms02_history_id                                         AS history_id
+             , sms02_company_id                                         AS company_id
+             , TO_CHAR(sms02_send_date, 'yyyy-mm-dd hh24:mi:ss')        AS send_date_str
+             , sms02_content                                            AS content
+             , sms02_note                                               AS note
+          FROM sms02_history
+         WHERE sms02_company_id = #{companyId}
+           AND sms02_send_date BETWEEN #{startDate} AND #{closeDate}
+           AND CONCAT(sms02_content) ILIKE #{searchText}
+         ORDER BY sms02_send_date DESC
+         LIMIT #{limit}
+    </select>
+
+</mapper>

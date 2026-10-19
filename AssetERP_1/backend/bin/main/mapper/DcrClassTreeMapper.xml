@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/dcr/mapper/dcr01_class_tree.xml selectByCompanyId L1018, commentInsert L1245 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.dcr.mapper.DcrClassTreeMapper">
+
+    <!-- AS-IS는 SELECT * 후 Java에서 note != null만 쓴다. 순서가 없는 SQL이라 같은 구분코드가 둘이면 결과가 정해지지 않는다 → ID 순으로 고정 -->
+    <select id="selectNotesByCompany" resultType="kr.co.kfs.asseterp.biz.dcr.dto.ClassTreeNoteRow">
+        SELECT dcr01_company_id    AS company_id,
+               dcr01_class_tree_cd AS class_tree_code,
+               dcr01_note          AS note
+          FROM dcr01_class_tree
+         WHERE dcr01_company_id = #{companyId}
+           AND dcr01_note IS NOT NULL
+         ORDER BY dcr01_class_tree_id
+    </select>
+
+    <update id="updateNote">
+        UPDATE dcr01_class_tree
+           SET dcr01_note = #{note}
+         WHERE dcr01_class_tree_cd = #{classTreeCode}
+           AND dcr01_company_id = #{companyId}
+    </update>
+</mapper>

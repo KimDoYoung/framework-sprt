@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sms/mapper/sms04_group_send_history.xml selectByText (SELECT *는 DTO 열로 명시) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sms.mapper.SmsGroupSendHistoryMapper">
+
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.sms.dto.GroupSendHistoryRes">
+        SELECT sms04_group_send_history_id                              AS history_id
+             , sms04_company_id                                         AS company_id
+             , sms04_group_send_id                                      AS group_send_id
+             , TO_CHAR(sms04_send_date, 'yyyy-mm-dd hh24:mi:ss')        AS send_date_str
+             , sms04_target_nm                                          AS target_name
+             , sms04_target_tel_no                                      AS target_tel_no
+          FROM sms04_group_send_history
+         WHERE sms04_group_send_id = #{groupSendId}
+           AND sms04_company_id    = #{companyId}
+           AND UPPER(CONCAT(sms04_target_tel_no, sms04_target_nm)) LIKE UPPER(#{searchText})
+         ORDER BY sms04_send_date DESC, sms04_target_nm, sms04_target_tel_no
+    </select>
+</mapper>

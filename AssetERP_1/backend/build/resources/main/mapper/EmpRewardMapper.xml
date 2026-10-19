@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/emp/emp11_reward.xml -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpRewardMapper">
+
+    <sql id="rewardColumns">
+        emp11_reward_id        AS reward_id,
+        emp11_person_id        AS person_id,
+        emp11_reward_cd        AS reward_cd,
+        f_cdnm('EmpRewardCode', emp11_reward_cd, emp01_company_id, f_sysdate()) AS reward_cd_nm,
+        TO_CHAR(emp11_reward_dt, 'YYYY-MM-DD') AS reward_dt,
+        emp11_reward_group     AS reward_group,
+        emp11_reward_nm        AS reward_nm,
+        emp11_reward_desc      AS reward_desc,
+        emp11_note             AS note
+    </sql>
+
+    <!-- AS-IS emp11_reward.selectByPersonId -->
+    <select id="selectRewards" resultType="kr.co.kfs.asseterp.biz.emp.dto.RewardRes">
+        SELECT <include refid="rewardColumns"/>
+          FROM emp11_reward
+          JOIN emp01_person ON emp11_person_id = emp01_person_id
+         WHERE emp01_company_id = #{companyId}
+           AND emp11_person_id  = #{personId}
+         ORDER BY emp11_reward_dt DESC
+    </select>
+
+    <select id="selectRewardById" resultType="kr.co.kfs.asseterp.biz.emp.dto.RewardRes">
+        SELECT <include refid="rewardColumns"/>
+          FROM emp11_reward
+          JOIN emp01_person ON emp11_person_id = emp01_person_id
+         WHERE emp11_reward_id = #{rewardId}
+    </select>
+
+    <select id="selectNextRewardId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertReward">
+        INSERT INTO emp11_reward
+               ( emp11_reward_id, emp11_person_id, emp11_reward_cd, emp11_reward_dt
+               , emp11_reward_group, emp11_reward_nm, emp11_reward_desc, emp11_note )
+        VALUES ( #{rewardId}, #{req.personId}, #{req.rewardCd}
+               , #{req.rewardDt}::date
+               , #{req.rewardGroup}, #{req.rewardNm}, #{req.rewardDesc}, #{req.note} )
+    </insert>
+
+    <update id="updateReward">
+        UPDATE emp11_reward
+           SET emp11_reward_cd    = #{req.rewardCd}
+             , emp11_reward_dt    = #{req.rewardDt}::date
+             , emp11_reward_group = #{req.rewardGroup}
+             , emp11_reward_nm    = #{req.rewardNm}
+             , emp11_reward_desc  = #{req.rewardDesc}
+             , emp11_note         = #{req.note}
+         WHERE emp11_reward_id = #{rewardId}
+           AND emp11_person_id IN (
+               SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId}
+           )
+    </update>
+
+    <delete id="deleteRewards">
+        DELETE FROM emp11_reward
+         WHERE emp11_reward_id IN
+        <foreach collection="rewardIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+           AND emp11_person_id IN (
+               SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId}
+           )
+    </delete>
+
+</mapper>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/sys/mapper/sys12_calendar.xml + UpdateDataModel(sys12_calendar)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysCalendarMapper">
+
+    <sql id="calendarColumns">
+        sys12_calendar_id                       AS calendar_id,
+        sys12_company_id                        AS company_id,
+        TO_CHAR(sys12_day, 'YYYY-MM-DD')        AS day,
+        sys12_weekday                           AS weekday,
+        sys12_working_yn                        AS working_yn,
+        sys12_off_reason                        AS off_reason,
+        sys12_note                              AS note
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) sys12_calendar.selectByYear (SELECT *는 DTO 열로 명시) -->
+    <select id="selectByYear" resultType="kr.co.kfs.asseterp.biz.sys.dto.CalendarRes">
+        SELECT <include refid="calendarColumns"/>, NULL AS company_name
+          FROM sys12_calendar
+         WHERE sys12_company_id = #{companyId}
+           AND to_char(sys12_day,'yyyy') = #{year}
+           AND (
+                   (#{month} != '%' AND to_char(sys12_day,'MM') = #{month})
+                   OR
+                   (#{month} = '%')
+               )
+         ORDER BY sys12_day
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys12_calendar.selectByDay -->
+    <select id="selectByDay" resultType="kr.co.kfs.asseterp.biz.sys.dto.CalendarRes">
+        SELECT <include refid="calendarColumns"/>, sys01_company_nm AS company_name
+          FROM sys12_calendar
+               INNER JOIN sys01_company ON sys01_company_id = sys12_company_id
+         WHERE 1=1
+           AND sys12_company_id != 0
+           AND sys12_day = #{day}::timestamp
+           AND sys01_use_yn = 'true'
+         ORDER BY sys01_company_id
+    </select>
+
+    <!-- AS-IS selectById (UpdateDataModel이 저장 뒤 다시 읽음) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sys.dto.CalendarRes">
+        SELECT <include refid="calendarColumns"/>, NULL AS company_name
+          FROM sys12_calendar
+         WHERE sys12_calendar_id = #{calendarId}
+    </select>
+
+    <update id="updateCalendar">
+        UPDATE sys12_calendar
+           SET sys12_working_yn  = #{req.workingYn},
+               sys12_off_reason  = #{req.offReason},
+               sys12_note        = #{req.note}
+         WHERE sys12_calendar_id = #{req.calendarId}
+           AND sys12_company_id  = #{companyId}
+    </update>
+
+    <update id="updateOff">
+        UPDATE sys12_calendar
+           SET sys12_working_yn  = #{req.workingYn},
+               sys12_off_reason  = #{req.offReason}
+         WHERE sys12_calendar_id = #{req.calendarId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) sys12_calendar.deleteByDay -->
+    <delete id="deleteByDay">
+        DELETE FROM sys12_calendar
+         WHERE sys12_company_id = #{companyId}
+           AND to_char(sys12_day,'yyyymmdd') BETWEEN #{startYmd} AND #{endYmd}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) sys12_calendar.insertAuto (INSERT 열 목록을 명시, 값은 그대로) -->
+    <insert id="insertAuto">
+        INSERT INTO sys12_calendar (sys12_calendar_id, sys12_company_id, sys12_day, sys12_weekday, sys12_working_yn, sys12_off_reason, sys12_note)
+        SELECT seq
+             , company_id
+             , dt
+             , CASE to_char(dt, 'D')
+               WHEN '1' THEN '일요일'
+               WHEN '2' THEN '월요일'
+               WHEN '3' THEN '화요일'
+               WHEN '4' THEN '수요일'
+               WHEN '5' THEN '목요일'
+               WHEN '6' THEN '금요일'
+               WHEN '7' THEN '토요일' END                      AS yoil
+             , CASE to_char(dt, 'D')
+               WHEN '1' THEN 'false'
+               WHEN '7' THEN 'false'
+               ELSE (
+                       CASE WHEN sys14_holiday_id IS NOT NULL
+                       THEN 'false'
+                       ELSE 'true' END
+                     ) END                                     AS working_yn
+             , sys14_holiday_nm                                AS sys12_off_reason
+             , ''
+          FROM (
+                SELECT f_create_seq()    AS seq
+                     , #{companyId}::numeric AS company_id
+                     , generate_series(to_date(#{startYmd},'yyyymmdd'), to_date(#{endYmd},'yyyymmdd'), '1 day'::interval)::date AS dt
+               ) a
+               LEFT OUTER JOIN sys14_holiday ON ( sys14_company_id = company_id AND sys14_day = dt )
+    </insert>
+</mapper>

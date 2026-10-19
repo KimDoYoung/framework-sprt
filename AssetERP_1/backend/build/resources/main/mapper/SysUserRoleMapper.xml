@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/sys/mapper/sys05_user_role.xml selectByRoleId(L62) · selectById(L32) + UpdateDataModel(sys05_user_role) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysUserRoleMapper">
+
+    <!-- 사원의 오늘 기준 최신 발령과 그 발령일의 조직 -->
+    <sql id="userRoleSelect">
+        SELECT sys05_user_role_id                                                  AS user_role_id,
+               sys05_user_id                                                       AS user_id,
+               sys05_role_id                                                       AS role_id,
+               sys05_auth_org_id                                                   AS auth_org_id,
+               f_org_nm(sys05_auth_org_id, f_sysdate())                            AS auth_org_nm,
+               org00_kor_nm                                                        AS org_nm,
+               f_get_empTrans(emp01_person_id, emp03_trans_date::date, 'title_nm') AS title_nm,
+               emp01_emp_no                                                        AS emp_no,
+               emp01_kor_nm                                                        AS kor_nm,
+               org00_parent_full_nm                                                AS parent_full_nm
+          FROM sys05_user_role
+             , emp01_person
+             , emp03_trans
+             , org00_org_info
+         WHERE sys05_user_id = emp01_person_id
+           AND emp03_trans_date = ( SELECT max(emp03_trans_date)
+                                      FROM emp03_trans x
+                                     WHERE x.emp03_person_id = emp01_person_id
+                                       AND x.emp03_trans_date <![CDATA[ <= ]]> f_sysdate() )
+           AND emp03_person_id = emp01_person_id
+           AND emp03_org_code_id = org00_org_code_id
+           AND org00_mod_date = ( SELECT max(org00_mod_date)
+                                    FROM org00_org_info
+                                   WHERE org00_org_code_id = emp03_org_code_id
+                                     AND org00_mod_date <![CDATA[ <= ]]> emp03_trans_date )
+    </sql>
+
+    <!-- AS-IS selectByRoleId L62 -->
+    <select id="searchUserRoles" resultType="kr.co.kfs.asseterp.biz.sys.dto.UserRoleRes">
+        <include refid="userRoleSelect"/>
+           AND sys05_role_id = #{roleId}
+         ORDER BY org00_org_cd,
+                  f_org_seq(org00_org_code_id, emp03_trans_date, emp01_company_id),
+                  f_code_seq(emp01_company_id, 'EmpTitleCode', emp03_title_cd),
+                  f_code_seq(emp01_company_id, 'EmpPosCode', emp03_pos_cd)
+    </select>
+
+    <!-- AS-IS selectById L32 (저장 후 다시 읽기) -->
+    <select id="selectUserRole" resultType="kr.co.kfs.asseterp.biz.sys.dto.UserRoleRes">
+        <include refid="userRoleSelect"/>
+           AND sys05_user_role_id = #{userRoleId}
+    </select>
+
+    <!-- 권한그룹이 로그인 회사 것인지 -->
+    <select id="countRole" resultType="int">
+        SELECT COUNT(*) FROM sys04_role WHERE sys04_role_id = #{roleId} AND sys04_company_id = #{companyId}
+    </select>
+
+    <!-- 사원이 로그인 회사 사원인지 -->
+    <select id="countPerson" resultType="int">
+        SELECT COUNT(*) FROM emp01_person WHERE emp01_person_id = #{userId} AND emp01_company_id = #{companyId}
+    </select>
+
+    <!-- 유일 인덱스(사원, 권한그룹)에 걸리는 다른 행 -->
+    <select id="countSameUserRole" resultType="int">
+        SELECT COUNT(*) FROM sys05_user_role
+         WHERE sys05_user_id = #{userId} AND sys05_role_id = #{roleId} AND sys05_user_role_id != #{userRoleId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel INSERT -->
+    <insert id="insertUserRole">
+        INSERT INTO sys05_user_role (sys05_user_role_id, sys05_user_id, sys05_role_id, sys05_auth_org_id)
+        VALUES (#{userRoleId}, #{userId}, #{roleId}, #{authOrgId})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE: 화면에서 바뀌는 컬럼만, 로그인 회사 권한그룹의 행만 -->
+    <update id="updateUserRole">
+        UPDATE sys05_user_role
+           SET sys05_user_id     = #{userId},
+               sys05_role_id     = #{roleId},
+               sys05_auth_org_id = #{authOrgId}
+         WHERE sys05_user_role_id = #{userRoleId}
+           AND sys05_role_id IN (SELECT sys04_role_id FROM sys04_role WHERE sys04_company_id = #{companyId})
+    </update>
+
+    <!-- AS-IS UpdateDataModel DELETE -->
+    <delete id="deleteUserRoles">
+        DELETE FROM sys05_user_role
+         WHERE sys05_role_id IN (SELECT sys04_role_id FROM sys04_role WHERE sys04_company_id = #{companyId})
+           AND sys05_user_role_id IN
+        <foreach collection="userRoleIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

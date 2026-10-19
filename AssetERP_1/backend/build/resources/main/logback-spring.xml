@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  로그 파일 분리 (docs/log-설계.md)
+   - {app}-info.log  : INFO 이상 전체 (보관 asseterp.log.info.*)
+   - {app}-error.log : WARN/ERROR 전용 (보관 asseterp.log.error.*)
+   - {app}-audit.log : 보안 감사 전용, "AUDIT" 로거 (보관 asseterp.log.audit.*)
+  모든 파일은 AsyncAppender를 거쳐 기록하고, 지난 로그는 archived/yyyy-MM/ 아래 gzip으로 보관한다.
+  scan은 사용하지 않는다 (재적재 시 springProperty/springProfile이 재해석되지 않음). 레벨 변경은 properties 수정 후 재시작.
+-->
+<configuration>
+    <springProperty scope="context" name="LOG_PATH" source="logging.file.path" defaultValue="./logs"/>
+    <springProperty scope="context" name="APP_NAME" source="asseterp.log.app-name" defaultValue="AssetERP-backend"/>
+
+    <springProperty scope="context" name="INFO_MAX_HISTORY" source="asseterp.log.info.max-history" defaultValue="30"/>
+    <springProperty scope="context" name="INFO_MAX_FILE_SIZE" source="asseterp.log.info.max-file-size" defaultValue="100MB"/>
+    <springProperty scope="context" name="INFO_TOTAL_SIZE_CAP" source="asseterp.log.info.total-size-cap" defaultValue="20GB"/>
+
+    <springProperty scope="context" name="ERROR_MAX_HISTORY" source="asseterp.log.error.max-history" defaultValue="90"/>
+    <springProperty scope="context" name="ERROR_MAX_FILE_SIZE" source="asseterp.log.error.max-file-size" defaultValue="100MB"/>
+    <springProperty scope="context" name="ERROR_TOTAL_SIZE_CAP" source="asseterp.log.error.total-size-cap" defaultValue="10GB"/>
+
+    <springProperty scope="context" name="AUDIT_MAX_HISTORY" source="asseterp.log.audit.max-history" defaultValue="1095"/>
+    <springProperty scope="context" name="AUDIT_MAX_FILE_SIZE" source="asseterp.log.audit.max-file-size" defaultValue="100MB"/>
+    <springProperty scope="context" name="AUDIT_TOTAL_SIZE_CAP" source="asseterp.log.audit.total-size-cap" defaultValue="50GB"/>
+
+    <springProperty scope="context" name="ASYNC_QUEUE_SIZE" source="asseterp.log.async.queue-size" defaultValue="1024"/>
+    <springProperty scope="context" name="ASYNC_MAX_FLUSH_TIME" source="asseterp.log.async.max-flush-time" defaultValue="5000"/>
+
+    <!-- 추적ID / 사용자 / 클라이언트 IP는 MDC(MdcLoggingFilter, JwtAuthenticationFilter)에서 채운다 -->
+    <property name="MDC_PATTERN" value="[%X{traceId:-SYSTEM}] [%X{tenant:--}] [%X{userId:--}] [%X{clientIp:--}]"/>
+    <property name="FILE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} ${MDC_PATTERN} [%thread] %-5level %logger{36} - %msg%n"/>
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) ${MDC_PATTERN} %cyan([%thread]) %boldGreen(%logger{36}) - %msg%n"/>
+    <!-- 감사 로그: 로거/스레드 정보 없이 이벤트 한 줄 -->
+    <property name="AUDIT_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} ${MDC_PATTERN} %msg%n"/>
+
+    <appender name="FILE_INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${APP_NAME}-info.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- %d가 둘이면 하나를 제외하고 aux로 표시해야 한다 (롤링 주기는 aux가 아닌 일 단위 %d가 결정) -->
+            <fileNamePattern>${LOG_PATH}/archived/%d{yyyy-MM,aux}/${APP_NAME}-info-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>${INFO_MAX_FILE_SIZE}</maxFileSize>
+            <maxHistory>${INFO_MAX_HISTORY}</maxHistory>
+            <totalSizeCap>${INFO_TOTAL_SIZE_CAP}</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <appender name="FILE_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${APP_NAME}-error.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/archived/%d{yyyy-MM,aux}/${APP_NAME}-error-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>${ERROR_MAX_FILE_SIZE}</maxFileSize>
+            <maxHistory>${ERROR_MAX_HISTORY}</maxHistory>
+            <totalSizeCap>${ERROR_TOTAL_SIZE_CAP}</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <appender name="FILE_AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${APP_NAME}-audit.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/archived/%d{yyyy-MM,aux}/${APP_NAME}-audit-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>${AUDIT_MAX_FILE_SIZE}</maxFileSize>
+            <maxHistory>${AUDIT_MAX_HISTORY}</maxHistory>
+            <totalSizeCap>${AUDIT_TOTAL_SIZE_CAP}</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${AUDIT_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!--
+      비동기 래퍼: 업무 스레드는 큐에 적재만 하고 디스크 쓰기는 별도 스레드가 담당
+       - discardingThreshold=0 : 큐가 차도 INFO 이하를 버리지 않음 (대신 큐가 가득 차면 잠시 대기)
+       - includeCallerData=false : 패턴에 호출 위치(%L/%M/%C)가 없으므로 수집 비용만 드는 옵션은 끔
+       - maxFlushTime : 종료 시 큐에 남은 로그를 기록하기 위해 기다리는 최대 시간(ms)
+    -->
+    <appender name="ASYNC_INFO" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FILE_INFO"/>
+        <queueSize>${ASYNC_QUEUE_SIZE}</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+        <maxFlushTime>${ASYNC_MAX_FLUSH_TIME}</maxFlushTime>
+    </appender>
+
+    <appender name="ASYNC_ERROR" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FILE_ERROR"/>
+        <queueSize>${ASYNC_QUEUE_SIZE}</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+        <maxFlushTime>${ASYNC_MAX_FLUSH_TIME}</maxFlushTime>
+    </appender>
+
+    <appender name="ASYNC_AUDIT" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FILE_AUDIT"/>
+        <queueSize>${ASYNC_QUEUE_SIZE}</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+        <maxFlushTime>${ASYNC_MAX_FLUSH_TIME}</maxFlushTime>
+    </appender>
+
+    <!-- 감사 로그는 audit 파일에만 기록 (info/error 파일과 섞지 않음) -->
+    <logger name="AUDIT" level="INFO" additivity="false">
+        <appender-ref ref="ASYNC_AUDIT"/>
+    </logger>
+
+    <!-- 로그 레벨은 application.properties의 logging.level.* 로 설정 -->
+    <root level="INFO">
+        <appender-ref ref="ASYNC_INFO"/>
+        <appender-ref ref="ASYNC_ERROR"/>
+    </root>
+
+    <!--
+      콘솔 출력은 prod 외 프로필에서만 추가한다.
+      WAR를 Tomcat에 배포하면 콘솔 출력이 롤링되지 않는 catalina.out에 쌓이므로 prod에서는 끈다.
+      (springProfile은 root/logger 안에 중첩할 수 없어 같은 이름으로 다시 선언해 appender만 추가.
+       CONSOLE appender도 이 안에서 정의해야 prod에서 "참조되지 않은 appender" 경고가 나지 않는다)
+    -->
+    <springProfile name="!prod">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+        <root>
+            <appender-ref ref="CONSOLE"/>
+        </root>
+        <logger name="AUDIT">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+    </springProfile>
+</configuration>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/emp/Emp35_Deduct.java + Emp36_AddDeduct.java -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpDeductMapper">
+
+    <sql id="deductColumns">
+        emp35_deduct_id        AS deduct_id,
+        emp35_company_id       AS company_id,
+        emp35_person_id        AS person_id,
+        emp35_start_date       AS start_date,
+        emp35_basic_deduct_cnt AS basic_deduct_cnt,
+        emp35_add_deduct_yn    AS add_deduct_yn,
+        emp35_insure_yn        AS insure_yn,
+        emp35_repr_yn          AS repr_yn,
+        emp35_with_hold_rate   AS with_hold_rate,
+        emp35_note             AS note,
+        emp35_child_deduct_cnt AS child_deduct_cnt
+    </sql>
+
+    <!-- AS-IS emp35_deduct.selectByPersonId (SELECT *) -->
+    <select id="selectDeducts" resultType="kr.co.kfs.asseterp.biz.emp.dto.DeductRes">
+        SELECT <include refid="deductColumns"/>
+          FROM emp35_deduct
+         WHERE emp35_company_id = #{companyId}
+           AND emp35_person_id  = #{personId}
+         ORDER BY emp35_start_date DESC
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq -->
+    <select id="selectNextDeductId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS emp35_deduct.selectByCompanyId — 요청 startDate 이전 최신 이력 -->
+    <select id="selectCurrentDeduct" resultType="kr.co.kfs.asseterp.biz.emp.dto.DeductRes">
+        SELECT <include refid="deductColumns"/>
+          FROM emp35_deduct
+         WHERE emp35_start_date = (
+                   SELECT MAX(emp35_start_date)
+                     FROM emp35_deduct
+                    WHERE emp35_company_id = #{companyId}
+                      AND emp35_start_date &lt;= #{startDate}
+                      AND emp35_person_id  = #{personId}
+               )
+           AND emp35_company_id = #{companyId}
+           AND emp35_person_id  = #{personId}
+    </select>
+
+    <!-- AS-IS emp35_deduct.insert -->
+    <insert id="insertDeduct">
+        INSERT INTO emp35_deduct
+               ( emp35_deduct_id, emp35_company_id, emp35_person_id, emp35_start_date
+               , emp35_basic_deduct_cnt, emp35_add_deduct_yn, emp35_insure_yn, emp35_repr_yn
+               , emp35_with_hold_rate, emp35_note, emp35_child_deduct_cnt )
+        VALUES ( #{deductId}, #{companyId}, #{personId}, #{startDate}
+               , #{basicDeductCnt}, #{addDeductYn}, #{insureYn}, #{reprYn}
+               , #{withHoldRate}, #{note}, #{childDeductCnt} )
+    </insert>
+
+    <!-- AS-IS emp36_add_deduct.addDeductTypeInsert — 이전 이력 복사 + 빠진 타입 0 삽입 -->
+    <insert id="insertAddDeductTypes">
+        INSERT INTO emp36_add_deduct
+               ( emp36_add_deduct_id, emp36_deduct_id, emp36_add_deduct_type, emp36_add_deduct_cnt )
+        WITH emp36 AS (
+            SELECT *
+              FROM emp36_add_deduct
+             WHERE emp36_deduct_id = (
+                       SELECT emp35_deduct_id
+                         FROM emp35_deduct
+                        WHERE emp35_person_id   = #{personId}
+                          AND emp35_start_date &lt;= #{startDate}
+                          AND emp35_deduct_id  != #{deductId}
+                        ORDER BY emp35_start_date DESC
+                        LIMIT 1
+                   )
+        )
+        SELECT f_create_seq(), #{deductId}, emp36_add_deduct_type, emp36_add_deduct_cnt
+          FROM emp36
+        UNION
+        SELECT f_create_seq(), #{deductId}, sys09_code, 0
+          FROM (
+              SELECT sys09_code, sys09_name
+                FROM sys08_code_kind
+                     INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+               WHERE sys08_kind_cd = #{itemTypeCodeName}
+              EXCEPT
+              SELECT emp36_add_deduct_type
+                   , f_cdnm('AddDeductType', emp36_add_deduct_type, NULL, f_today())
+                FROM emp36
+          ) t
+    </insert>
+
+    <!-- AS-IS emp35_deduct.selectById -->
+    <select id="selectDeductById" resultType="kr.co.kfs.asseterp.biz.emp.dto.DeductRes">
+        SELECT <include refid="deductColumns"/>
+          FROM emp35_deduct
+         WHERE emp35_deduct_id  = #{deductId}
+           AND emp35_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(emp35_deduct) — 폼 필드 7개 UPDATE -->
+    <update id="updateDeduct">
+        UPDATE emp35_deduct
+           SET emp35_basic_deduct_cnt = #{req.basicDeductCnt}
+             , emp35_add_deduct_yn    = #{req.addDeductYn}
+             , emp35_insure_yn        = #{req.insureYn}
+             , emp35_repr_yn          = #{req.reprYn}
+             , emp35_with_hold_rate   = #{req.withHoldRate}
+             , emp35_note             = #{req.note}
+             , emp35_child_deduct_cnt = #{req.childDeductCnt}
+         WHERE emp35_deduct_id  = #{deductId}
+           AND emp35_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS emp35_deduct.deleteByDeductId + company 조건 추가 -->
+    <delete id="deleteDeduct">
+        DELETE FROM emp35_deduct
+         WHERE emp35_deduct_id  = #{deductId}
+           AND emp35_company_id = #{companyId}
+    </delete>
+
+    <!-- AS-IS emp36_add_deduct.deleteByDeductId -->
+    <delete id="deleteAddDeducts">
+        DELETE FROM emp36_add_deduct
+         WHERE emp36_deduct_id = #{deductId}
+    </delete>
+
+    <!-- AS-IS emp36_add_deduct.selectByDeductId -->
+    <select id="selectAddDeducts" resultType="kr.co.kfs.asseterp.biz.emp.dto.AddDeductRes">
+        SELECT emp36_add_deduct_id   AS add_deduct_id,
+               emp36_deduct_id       AS deduct_id,
+               emp36_add_deduct_type AS add_deduct_type,
+               f_cdnm('AddDeductType', emp36_add_deduct_type, NULL, f_sysdate()) AS add_deduct_type_name,
+               emp36_add_deduct_cnt  AS add_deduct_cnt
+          FROM emp36_add_deduct
+         WHERE emp36_deduct_id = #{deductId}
+         ORDER BY emp36_add_deduct_type
+    </select>
+
+    <!-- AS-IS UpdateDataModel(emp36_add_deduct) — addDeductCnt UPDATE -->
+    <update id="updateAddDeduct">
+        UPDATE emp36_add_deduct
+           SET emp36_add_deduct_cnt = #{addDeductCnt}
+         WHERE emp36_add_deduct_id = #{addDeductId}
+    </update>
+
+</mapper>

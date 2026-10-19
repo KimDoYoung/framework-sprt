@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/sys/mapper/sys06_menu.xml selectByAdminUserId (조건·정렬 그대로) + UpdateDataModel(sys82_admin_user_menu) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysAdminUserMenuMapper">
+
+    <select id="selectChildren" resultType="kr.co.kfs.asseterp.biz.sys.dto.AdminUserMenuRes">
+        SELECT sys06_menu_id             AS menu_id,
+               sys06_parent_id           AS parent_id,
+               0                         AS depth,
+               sys06_menu_nm             AS menu_nm,
+               sys06_seq                 AS seq,
+               sys06_note                AS note,
+               sys82_admin_user_menu_id  AS admin_user_menu_id,
+               sys82_use_yn              AS use_yn
+          FROM sys03_company_menu
+               INNER JOIN sys06_menu ON sys06_menu_id = sys03_menu_id
+               FULL JOIN sys82_admin_user_menu ON sys06_menu_id = sys82_menu_id AND sys82_user_id = #{userId}
+         WHERE sys03_company_id = #{companyId}
+           AND sys06_parent_id  = #{parentId}
+           AND sys06_use_yn     = 'true'
+         ORDER BY sys06_seq, sys06_menu_nm
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertAdminUserMenu">
+        INSERT INTO sys82_admin_user_menu (sys82_admin_user_menu_id, sys82_user_id, sys82_menu_id, sys82_use_yn)
+        VALUES (#{id}, #{userId}, #{menuId}, #{useYn})
+    </insert>
+
+    <update id="updateAdminUserMenu">
+        UPDATE sys82_admin_user_menu
+           SET sys82_use_yn = #{useYn}
+         WHERE sys82_admin_user_menu_id = #{id}
+           AND sys82_user_id = #{userId}
+    </update>
+
+    <select id="selectSaved" resultType="kr.co.kfs.asseterp.biz.sys.dto.AdminUserMenuRes">
+        SELECT m.sys06_menu_id AS menu_id, m.sys06_parent_id AS parent_id, 0 AS depth, m.sys06_menu_nm AS menu_nm,
+               m.sys06_seq AS seq, m.sys06_note AS note, a.sys82_admin_user_menu_id AS admin_user_menu_id, a.sys82_use_yn AS use_yn
+          FROM sys06_menu m
+               LEFT JOIN sys82_admin_user_menu a ON a.sys82_menu_id = m.sys06_menu_id AND a.sys82_user_id = #{userId}
+         WHERE m.sys06_menu_id = #{menuId}
+    </select>
+
+    <select id="countUser" resultType="int">
+        SELECT count(*) FROM sys02_user WHERE sys02_user_id = #{userId}
+    </select>
+</mapper>

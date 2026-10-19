@@ -1,0 +1,21 @@
+# emp43_eval_target
+
+`server/emp/mapper/emp43_eval_target.xml`
+
+테이블·DB 함수는 `<include>`한 SQL 조각의 것까지 포함한다.
+
+| SQL ID | 종류 | 줄 | 테이블 | DB 함수 | 사용 서버 메서드 |
+|:---|:---|---:|:---|:---|:---|
+| `selectById` | select | 79 | [`apr01_appr`](../../../db/tables/apr.md), [`emp03_trans`](../../../db/tables/emp.md), [`emp43_eval_target`](../../../db/tables/emp.md), [`emp44_eval_write`](../../../db/tables/emp.md), [`emp45_eval_relate_appr`](../../../db/tables/emp.md) | `f_cdnm`, `f_emp_kor_nm`, `f_get_emptrans`, `f_sysdate` | `emp.Emp43_EvalTarget.deleteList`, `emp.Emp43_EvalTarget.selectById`, `emp.Emp43_EvalTarget.updateList` |
+| `selectByCompanyId` | select | 155 | [`apr01_appr`](../../../db/tables/apr.md), [`emp03_trans`](../../../db/tables/emp.md), [`emp43_eval_target`](../../../db/tables/emp.md), [`emp44_eval_write`](../../../db/tables/emp.md), [`emp45_eval_relate_appr`](../../../db/tables/emp.md) | `f_cdnm`, `f_emp_kor_nm`, `f_get_emptrans`, `f_sysdate` | `emp.Emp43_EvalTarget.selectByCompanyId` |
+| `selectByTermCode` | select | 204 | [`apr01_appr`](../../../db/tables/apr.md), [`emp03_trans`](../../../db/tables/emp.md), [`emp43_eval_target`](../../../db/tables/emp.md), [`emp44_eval_write`](../../../db/tables/emp.md), [`emp45_eval_relate_appr`](../../../db/tables/emp.md) | `f_cdnm`, `f_emp_kor_nm`, `f_get_emptrans`, `f_sysdate` | `emp.Emp43_EvalTarget.selectByTermCode` |
+| `selectByText` | select | 276 | [`emp01_person`](../../../db/tables/emp.md), [`emp03_trans`](../../../db/tables/emp.md), [`emp40_eval_list_std`](../../../db/tables/emp.md), [`emp42_eval_grade`](../../../db/tables/emp.md), [`emp43_eval_target`](../../../db/tables/emp.md), [`emp44_eval_write`](../../../db/tables/emp.md) | `f_cdnm`, `f_emp_kor_nm`, `f_get_datediff`, `f_get_empevalgradeid`, `f_get_emptrans`, `f_sysdate` | `emp.Emp43_EvalTarget.selectByText` |
+| `selectByTextAdmin` | select | 400 | [`apr01_appr`](../../../db/tables/apr.md), [`emp01_person`](../../../db/tables/emp.md), [`emp03_trans`](../../../db/tables/emp.md), [`emp40_eval_list_std`](../../../db/tables/emp.md), [`emp42_eval_grade`](../../../db/tables/emp.md), [`emp43_eval_target`](../../../db/tables/emp.md), [`emp44_eval_write`](../../../db/tables/emp.md), [`emp45_eval_relate_appr`](../../../db/tables/emp.md) | `f_cdnm`, `f_emp_kor_nm`, `f_get_empevalgradeid`, `f_get_emptrans`, `f_sysdate` | `emp.Emp43_EvalTarget.selectByTextAdmin` |
+| `selectByTextAdminAll` | select | 604 | [`apr01_appr`](../../../db/tables/apr.md), [`emp01_person`](../../../db/tables/emp.md), [`emp03_trans`](../../../db/tables/emp.md), [`emp40_eval_list_std`](../../../db/tables/emp.md), [`emp42_eval_grade`](../../../db/tables/emp.md), [`emp43_eval_target`](../../../db/tables/emp.md), [`emp44_eval_write`](../../../db/tables/emp.md), [`emp45_eval_relate_appr`](../../../db/tables/emp.md) | `f_cdnm`, `f_emp_kor_nm`, `f_get_empevalgradeid`, `f_get_emptrans`, `f_sysdate` | `emp.Emp43_EvalTarget.selectByTextAdminAll` |
+| `getWrite` | select | 805 | [`emp01_person`](../../../db/tables/emp.md), [`emp40_eval_list_std`](../../../db/tables/emp.md), [`emp43_eval_target`](../../../db/tables/emp.md), [`emp44_eval_write`](../../../db/tables/emp.md) | `f_cdnm`, `f_sysdate` | `emp.Emp43_EvalTarget.getWrite` |
+| `getEventChk` | select | 846 | [`emp43_eval_target`](../../../db/tables/emp.md) |  | `emp.Emp40_EvalListStd.deleteByEvalListStdId`, `emp.Emp43_EvalTarget.getEventChk` |
+| `getEventChk2` | select | 852 | [`apr01_appr`](../../../db/tables/apr.md), [`emp40_eval_list_std`](../../../db/tables/emp.md), [`emp43_eval_target`](../../../db/tables/emp.md), [`emp45_eval_relate_appr`](../../../db/tables/emp.md) |  | `emp.Emp40_EvalListStd.updateFixYn` |
+| `getDateChk` | select | 872 | [`emp43_eval_target`](../../../db/tables/emp.md) |  | `emp.Emp40_EvalListStd.insert` |
+| `updateEval` | update | 879 | [`emp43_eval_target`](../../../db/tables/emp.md) |  | `emp.Emp43_EvalTarget.updateEval` |
+| `updateReason` | update | 888 | [`emp43_eval_target`](../../../db/tables/emp.md) |  | `emp.Emp43_EvalTarget.updateReason` |
+| `updateEndYn` | update | 901 | [`emp43_eval_target`](../../../db/tables/emp.md), [`emp44_eval_write`](../../../db/tables/emp.md) |  | `emp.Emp43_EvalTarget.updateEndYn` |

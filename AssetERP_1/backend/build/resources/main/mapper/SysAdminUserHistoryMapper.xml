@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysAdminUserHistoryMapper">
+
+    <!-- AS-IS(IDMS-IC) sys81_admin_user_history.selectByDate (SELECT *는 DTO 열로 명시) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.sys.dto.AdminUserHistoryRes">
+        SELECT sys81_admin_user_history_id            AS admin_user_history_id,
+               TO_CHAR(sys81_reg_date, 'YYYY-MM-DD')  AS reg_date,
+               TO_CHAR(sys81_reg_date, 'HH24:MI')     AS reg_time,
+               sys81_user                             AS "user",
+               sys81_sms_content                      AS sms_content
+          FROM sys81_admin_user_history
+         WHERE f_trunc(sys81_reg_date) BETWEEN #{startDate}::timestamp AND #{closeDate}::timestamp
+         ORDER BY sys81_reg_date DESC, reg_time DESC
+    </select>
+</mapper>

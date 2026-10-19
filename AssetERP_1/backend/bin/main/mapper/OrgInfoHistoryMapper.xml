@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/org/mapper/org02_info.xml, emp03_trans.xml (서버 클래스 Org02_Info) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.org.mapper.OrgInfoHistoryMapper">
+
+    <!-- Org02_InfoModel → OrgInfoHistRes (a = org02_info, b = org01_code) -->
+    <sql id="infoColumns">
+        a.org02_info_id                                                              AS info_id,
+        a.org02_code_id                                                              AS code_id,
+        a.org02_parent_code_id                                                       AS parent_code_id,
+        a.org02_kor_nm                                                               AS kor_nm,
+        a.org02_mod_date                                                             AS mod_date,
+        a.org02_mod_reason                                                           AS mod_reason,
+        a.org02_level_cd                                                             AS level_cd,
+        f_cdnm('OrgLevelCode', a.org02_level_cd, b.org01_company_id, a.org02_mod_date) AS level_nm,
+        a.org02_sort_order                                                           AS sort_order,
+        a.org02_eng_nm                                                               AS eng_nm,
+        a.org02_note                                                                 AS note,
+        a.org02_dcr_id_word                                                          AS dcr_id_word
+    </sql>
+
+    <!-- AS-IS org02_info.selectByOnlyOrgCodeId (+ 회사 조건) -->
+    <select id="searchInfos" resultType="kr.co.kfs.asseterp.biz.org.dto.OrgInfoHistRes">
+        SELECT <include refid="infoColumns"/>
+          FROM org02_info a, org01_code b
+         WHERE a.org02_code_id = #{codeId}
+           AND b.org01_code_id = a.org02_code_id
+           AND b.org01_company_id = #{companyId}
+         ORDER BY a.org02_mod_date DESC
+    </select>
+
+    <!-- AS-IS org02_info.selectById (+ 회사 조건) — Org01_Code.update가 INSERT/UPDATE를 가를 때 -->
+    <select id="selectInfoById" resultType="kr.co.kfs.asseterp.biz.org.dto.OrgInfoHistRes">
+        SELECT <include refid="infoColumns"/>
+          FROM org02_info a, org01_code b
+         WHERE a.org02_info_id = #{infoId}
+           AND b.org01_code_id = a.org02_code_id
+           AND b.org01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS org02_info.deleteOrgCheck: 이 조직을 상위로 가진 이력이 있는지 -->
+    <select id="countChildInfos" resultType="int">
+        SELECT count(*)
+          FROM org02_info
+               INNER JOIN org01_code ON org01_code_id = org02_code_id
+         WHERE org02_parent_code_id = #{codeId}
+    </select>
+
+    <!-- AS-IS emp03_trans.deleteOrgCheck: 이 조직으로 발령된 사원이 있는지 -->
+    <select id="countTrans" resultType="int">
+        SELECT count(*)
+          FROM emp03_trans
+               INNER JOIN emp01_person ON emp01_person_id = emp03_person_id
+         WHERE emp03_org_code_id = #{codeId}
+    </select>
+
+    <!-- AS-IS org02_info.deleteOrg -->
+    <delete id="deleteOrgInfos">
+        DELETE FROM org02_info WHERE org02_code_id = #{codeId}
+    </delete>
+
+    <!-- AS-IS org01_code.deleteOrg (+ 회사 조건) -->
+    <delete id="deleteOrgCode">
+        DELETE FROM org01_code WHERE org01_code_id = #{codeId} AND org01_company_id = #{companyId}
+    </delete>
+
+    <!-- AS-IS Org02_Info.delete: UpdateDataModel(org02_info) DELETE (선택 이력, + 이 조직·회사 조건) -->
+    <delete id="deleteInfos">
+        DELETE FROM org02_info
+         WHERE org02_code_id = #{codeId}
+           AND org02_code_id IN (SELECT org01_code_id FROM org01_code WHERE org01_company_id = #{companyId})
+           AND org02_info_id IN
+        <foreach collection="infoIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

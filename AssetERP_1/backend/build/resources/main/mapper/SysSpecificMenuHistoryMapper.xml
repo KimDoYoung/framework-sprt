@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS server/sys/mapper/sys54_specific_menu_history.xml (selectByCompanyId, selectById, updateByNote)
+  + UpdateDataModel(sys54_specific_menu_history)의 동적 INSERT/UPDATE/DELETE를 명시 SQL로 (A15-4-작업방법 "SQL 이식")
+  요청일·처리일은 timestamp 컬럼이지만 화면은 날짜(yyyy-MM-dd)만 다룬다 → ::date 로 읽는다
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysSpecificMenuHistoryMapper">
+
+    <sql id="historyColumns">
+        a.sys54_specific_menu_history_id    AS specific_menu_history_id,
+        a.sys54_company_id                  AS company_id,
+        a.sys54_reg_date::date              AS reg_date,
+        a.sys54_confirm_date::date          AS confirm_date,
+        a.sys54_confirm_nm                  AS confirm_nm,
+        a.sys54_note                        AS note,
+        sys10_file_nm                       AS file_nm,
+        (CASE WHEN sys54_note IS NOT NULL THEN '있음' ELSE '' END) AS note_yn_str
+    </sql>
+
+    <!-- AS-IS selectByCompanyId (첨부 파일명은 sys10_file 조인 — 파일 첨부 자체는 B10 뒤) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuHistoryRes">
+        SELECT <include refid="historyColumns"/>
+          FROM sys54_specific_menu_history a
+               LEFT OUTER JOIN sys10_file b ON sys10_parent_id = sys54_specific_menu_history_id
+         WHERE sys54_company_id = #{companyId}
+         ORDER BY sys54_reg_date
+    </select>
+
+    <!-- AS-IS selectById (저장 뒤 다시 읽기) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuHistoryRes">
+        SELECT <include refid="historyColumns"/>
+          FROM sys54_specific_menu_history a
+               LEFT OUTER JOIN sys10_file b ON sys10_parent_id = sys54_specific_menu_history_id
+         WHERE sys54_specific_menu_history_id = #{specificMenuHistoryId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertSpecificMenuHistory">
+        INSERT INTO sys54_specific_menu_history (sys54_specific_menu_history_id, sys54_company_id, sys54_reg_date, sys54_confirm_date, sys54_confirm_nm)
+        VALUES (#{specificMenuHistoryId}, #{companyId}, #{req.regDate}::date, #{req.confirmDate}::date, #{req.confirmNm})
+    </insert>
+
+    <update id="updateSpecificMenuHistory">
+        UPDATE sys54_specific_menu_history
+           SET sys54_reg_date     = #{req.regDate}::date,
+               sys54_confirm_date = #{req.confirmDate}::date,
+               sys54_confirm_nm   = #{req.confirmNm}
+         WHERE sys54_specific_menu_history_id = #{req.specificMenuHistoryId}
+           AND sys54_company_id               = #{companyId}
+    </update>
+
+    <delete id="deleteSpecificMenuHistories">
+        DELETE FROM sys54_specific_menu_history
+         WHERE sys54_company_id = #{companyId}
+           AND sys54_specific_menu_history_id IN
+        <foreach collection="specificMenuHistoryIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS updateByNote (회사 조건은 보강) -->
+    <update id="updateByNote">
+        UPDATE sys54_specific_menu_history
+           SET sys54_note = #{note}
+         WHERE sys54_specific_menu_history_id = #{specificMenuHistoryId}
+           AND sys54_company_id               = #{companyId}
+    </update>
+</mapper>

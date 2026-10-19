@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/emp/Emp04_AddTitle.java — emp04_add_title.xml + emp01_person·emp02_others·emp03_trans·apr01·apr04 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpAddTitleMapper">
+
+    <!-- AS-IS emp04_add_title.selectByPersonId: emp04.* + emp03_trans.*(겸직사원) 중 그리드·팝업이 쓰는 컬럼 -->
+    <sql id="addTitleColumns">
+        emp04_add_title_id    AS add_title_id,
+        emp04_person_id       AS person_id,
+        emp04_add_person_id   AS add_person_id,
+        emp04_org_code_id     AS org_code_id,
+        TO_CHAR(emp04_start_date, 'YYYY-MM-DD') AS start_date,
+        TO_CHAR(emp04_close_date, 'YYYY-MM-DD') AS close_date,
+        f_org_nm(emp04_org_code_id, emp04_start_date) AS org_nm,
+        emp04_title_cd        AS title_cd,
+        f_cdnm('EmpTitleCode', emp04_title_cd, emp01_company_id, emp04_start_date) AS title_nm,
+        emp04_trans_reason    AS trans_reason,
+        emp01_emp_no          AS emp_no,
+        emp03_person_id       AS trans_person_id,
+        emp03_pos_cd          AS pos_cd,
+        f_cdnm('EmpPosCode', emp03_pos_cd, emp01_company_id, emp03_trans_date) AS pos_nm,
+        emp03_org_head_yn     AS org_head_yn
+    </sql>
+
+    <select id="selectAddTitles" resultType="kr.co.kfs.asseterp.biz.emp.dto.AddTitleRes">
+        SELECT <include refid="addTitleColumns"/>
+          FROM emp04_add_title
+               INNER JOIN emp03_trans  ON emp03_person_id = emp04_add_person_id
+               INNER JOIN emp01_person ON emp01_person_id = emp04_add_person_id
+         WHERE emp04_person_id  = #{personId}
+           AND emp01_company_id = #{companyId}
+         ORDER BY emp04_start_date, emp04_close_date
+    </select>
+
+    <!-- AS-IS emp04_add_title.selectById (emp01은 겸직사원 기준으로 붙임 — 회사가 같아 코드명 결과 같음) -->
+    <select id="selectAddTitleById" resultType="kr.co.kfs.asseterp.biz.emp.dto.AddTitleRes">
+        SELECT <include refid="addTitleColumns"/>
+          FROM emp04_add_title
+               INNER JOIN emp03_trans  ON emp03_person_id = emp04_add_person_id
+               INNER JOIN emp01_person ON emp01_person_id = emp04_add_person_id
+         WHERE emp04_add_title_id = #{addTitleId}
+           AND emp01_company_id   = #{companyId}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS emp01_person.selectById → personModel.getEmpNo() -->
+    <select id="selectEmpNo" resultType="string">
+        SELECT emp01_emp_no FROM emp01_person
+         WHERE emp01_person_id = #{personId} AND emp01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS emp01_person.insert(selectById로 읽은 원사원 모델, personId·empNo만 바꿈) -->
+    <insert id="insertAddPerson">
+        INSERT INTO emp01_person
+               ( emp01_person_id, emp01_company_id, emp01_emp_no, emp01_kor_nm
+               , emp01_hire_date, emp01_email_addr, emp01_mobile_telno )
+        SELECT #{newPersonId}, emp01_company_id, #{empNo}, emp01_kor_nm
+             , emp01_hire_date, emp01_email_addr, emp01_mobile_telno
+          FROM emp01_person
+         WHERE emp01_person_id = #{personId} AND emp01_company_id = #{companyId}
+    </insert>
+
+    <!-- AS-IS emp03_trans.insertAddTitle (kind 10 정규직, trans 800 겸직, 임원·비상근 false — Emp04_Edit_AddTitle.update L224-234) -->
+    <insert id="insertAddTrans">
+        INSERT INTO emp03_trans
+               ( emp03_trans_id, emp03_person_id, emp03_trans_date, emp03_trans_cd, emp03_kind_cd
+               , emp03_org_code_id, emp03_pos_cd, emp03_title_cd, emp03_trans_reason
+               , emp03_officer_yn, emp03_org_head_yn, emp03_non_stay_yn )
+        VALUES ( #{transId}, #{personId}, #{req.startDate}::date, '800', '10'
+               , #{req.orgCodeId}, #{req.posCd}, #{req.titleCd}, #{req.transReason}
+               , 'false', #{req.orgHeadYn}, 'false' )
+    </insert>
+
+    <!-- AS-IS emp03_trans.updateAddTitle -->
+    <update id="updateAddTrans">
+        UPDATE emp03_trans
+           SET emp03_trans_date   = #{req.startDate}::date
+             , emp03_org_code_id  = #{req.orgCodeId}
+             , emp03_pos_cd       = #{req.posCd}
+             , emp03_title_cd     = #{req.titleCd}
+             , emp03_trans_reason = #{req.transReason}
+             , emp03_org_head_yn  = #{req.orgHeadYn}
+         WHERE emp03_person_id = #{req.transPersonId}
+           AND emp03_person_id IN (SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId})
+    </update>
+
+    <!-- AS-IS emp02_others.insertCopy -->
+    <insert id="insertOthersCopy">
+        INSERT INTO emp02_others
+             ( emp02_others_id, emp02_person_id, emp02_eng_nm, emp02_chn_nm, emp02_ctz_no, emp02_birthday
+             , emp02_lunar_cd, emp02_gender_cd, emp02_nat_cd, emp02_email_other, emp02_military_cd
+             , emp02_family_dscr, emp02_marriage_cd, emp02_zip_cd, emp02_zip_addr, emp02_addr_detail
+             , emp02_home_telno, emp02_note, emp02_note_admin, emp02_hire_date_group, emp02_hire_date_leave_calc )
+        SELECT #{newPersonId}, #{newPersonId}, emp02_eng_nm, emp02_chn_nm, emp02_ctz_no, emp02_birthday
+             , emp02_lunar_cd, emp02_gender_cd, emp02_nat_cd, emp02_email_other, emp02_military_cd
+             , emp02_family_dscr, emp02_marriage_cd, emp02_zip_cd, emp02_zip_addr, emp02_addr_detail
+             , emp02_home_telno, emp02_note, emp02_note_admin, emp02_hire_date_group, emp02_hire_date_leave_calc
+          FROM emp02_others
+         WHERE emp02_person_id = #{personId}
+    </insert>
+
+    <!-- UpdateDataModel(emp04_add_title) INSERT (port-save) -->
+    <insert id="insertAddTitle">
+        INSERT INTO emp04_add_title
+               ( emp04_add_title_id, emp04_org_code_id, emp04_person_id, emp04_start_date
+               , emp04_close_date, emp04_title_cd, emp04_trans_reason, emp04_add_person_id )
+        VALUES ( #{addTitleId}, #{req.orgCodeId}, #{req.personId}, #{req.startDate}::date
+               , #{req.closeDate}::date, #{req.titleCd}, #{req.transReason}, #{addPersonId} )
+    </insert>
+
+    <!-- UpdateDataModel(emp04_add_title) UPDATE — 팝업이 바꾸는 컬럼만 -->
+    <update id="updateAddTitle">
+        UPDATE emp04_add_title
+           SET emp04_org_code_id  = #{req.orgCodeId}
+             , emp04_start_date   = #{req.startDate}::date
+             , emp04_close_date   = #{req.closeDate}::date
+             , emp04_title_cd     = #{req.titleCd}
+             , emp04_trans_reason = #{req.transReason}
+         WHERE emp04_add_title_id = #{req.addTitleId}
+           AND emp04_person_id IN (SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId})
+    </update>
+
+    <!-- AS-IS apr01_appr.selectByPersonId + apr04_appr_step.selectByPersonId (목록 size > 0 → 건수) -->
+    <select id="countApprByPersonId" resultType="int">
+        SELECT (SELECT count(*) FROM apr01_appr WHERE apr01_reg_emp_id = #{personId})
+             + (SELECT count(*) FROM apr04_appr_step
+                 WHERE apr04_step_emp_id = #{personId} OR apr04_add_emp_id = #{personId} OR apr04_appr_emp_id = #{personId})
+    </select>
+
+    <!-- AS-IS emp01_person.deleteByPersonId -->
+    <delete id="deletePerson">
+        DELETE FROM emp01_person WHERE emp01_person_id = #{personId}
+    </delete>
+
+    <!-- AS-IS emp02_others.deleteByPersonId -->
+    <delete id="deleteOthers">
+        DELETE FROM emp02_others WHERE emp02_person_id = #{personId}
+    </delete>
+
+    <!-- AS-IS emp03_trans.deleteByPersonId -->
+    <delete id="deleteTrans">
+        DELETE FROM emp03_trans WHERE emp03_person_id = #{personId}
+    </delete>
+
+    <!-- UpdateDataModel(emp04_add_title) DELETE -->
+    <delete id="deleteAddTitle">
+        DELETE FROM emp04_add_title
+         WHERE emp04_add_title_id = #{addTitleId}
+           AND emp04_person_id IN (SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId})
+    </delete>
+
+</mapper>
