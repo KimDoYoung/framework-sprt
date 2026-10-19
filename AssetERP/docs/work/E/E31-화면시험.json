@@ -1,0 +1,18 @@
+{
+  "id": "E31",
+  "menu": ["기초자료", "실계정맵핑"],
+  "api": ["act/real-account-maps"],
+  "opens": { "rows": "[1-9]", "headers": "대표계정코드" },
+  "grid": true,
+  "cellCrud": {
+    "key": { "reprAccountCode": "1100", "accountMap": "ZZTEST" },
+    "searchText": "ZZTEST",
+    "cells": [
+      { "col": "reprAccountCode", "kind": "type", "value": "1100" },
+      { "col": "accountMap", "kind": "type", "value": "ZZTEST" }
+    ],
+    "required": [ { "fill": 0, "msg": "대표계정코드" } ],
+    "edit": { "col": "note", "value": "E31시험비고" }
+  },
+  "notes": "대표계정코드·실계정코드는 글자를 넣으면 조회 후 이름이 따라오는 조회창 트리거 열. 고객사 칸·기초데이터생성은 회사 0만(고객사 선택 후 기초데이터생성은 kfstest 시험 행을 API로 지울 것)"
+}

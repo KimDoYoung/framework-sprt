@@ -95,6 +95,18 @@ export interface ReprAccount {
   note: string | null;
 }
 
+/** 실계정맵핑 한 행 (act13_real_account_map.selectByCompanyId, E31) — 대표계정명·실계정과목은 SQL 계산 열 */
+export interface RealAccountMap {
+  realAccountMapId: number;
+  companyId: number;
+  reprAccountCode: string | null;
+  reprAccountName: string | null;
+  accountMap: string | null;
+  realAccountCode: string | null;
+  realAccountName: string | null;
+  note: string | null;
+}
+
 /** 거래맵핑 한 행 (act11_tr_map.selectByCompanyId, E30). 여부는 DB 형태('true'/'false') 그대로 — 거래명·입출고구분명·손익대표계정명은 SQL 계산 열 */
 export interface TrMap {
   trMapId: number;

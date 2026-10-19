@@ -33,6 +33,7 @@ import { Act01_Tab_AccountCode } from './act/Act01_Tab_AccountCode';
 import { Act10_Tab_ReprAccount } from './act/Act10_Tab_ReprAccount';
 import { Ast05_Tab_TrCodeAdmin } from './ast/Ast05_Tab_TrCodeAdmin';
 import { Act11_Tab_TrJournalMap } from './act/Act11_Tab_TrJournalMap';
+import { Act13_Tab_RealAccountMap } from './act/Act13_Tab_RealAccountMap';
 import { Sms02_Tab_TotalCount } from './sms/Sms02_Tab_TotalCount';
 import { Sms03_Tab_SendAdmin } from './sms/Sms03_Tab_SendAdmin';
 import { Sys01_Tab_Company } from './sys/Sys01_Tab_Company';
@@ -132,6 +133,7 @@ export const SCREENS: Record<string, React.FC> = {
   Act10_Tab_ReprAccount, // E28 (+ Act10_Lookup_ReprAccount)
   Ast05_Tab_TrCodeAdmin, // E29 (+ Ast15_Lookup_TrCodeWindow·Ast15_Page_TrCodeWindow·Sys06_Lookup_SearchMenu·Sys40_Lookup_Bookmark)
   Act11_Tab_TrJournalMap, // E30 (+ Act11_Grid_TrJournalMap·Ast05_Lookup_TrCode)
+  Act13_Tab_RealAccountMap, // E31 (+ Act10_Lookup_ReprAccount·Act01_Lookup_AccountCode)
   Tdm50_Tab_DutyReconAdmin, // E15 (조회마다 DB 함수 f_recon_tdm('DB_CHK')이 sys99_print의 사용자 몫 행을 다시 만든다 — AS-IS 그대로)
   Sms02_Tab_TotalCount, // C05
   Sms03_Tab_SendAdmin, // C06 (실제 문자 발송은 하지 않음 — SmsSender 기본 구현)

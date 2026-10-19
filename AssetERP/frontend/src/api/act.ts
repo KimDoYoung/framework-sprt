@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, JournalMap, ReprAccount, TrMap } from '../types/act';
+import { AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, JournalMap, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { readBlobError } from './file';
 
 /** act(관리회계) 화면 API (E25~) */
@@ -129,6 +129,34 @@ export const actApi = {
   /** AS-IS act.Act10_ReprAccount.insertInitData (기초데이터생성, 관리자만) → 처리한 고객사 수 */
   initReprAccounts: async (companyIds: number[], reprAccountCodes: string[]): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/act/repr-accounts/init-data', { companyIds, reprAccountCodes });
+    return res.data.data;
+  },
+
+  // ── E31 실계정맵핑 (Act13_Tab_RealAccountMap) ──
+
+  /** AS-IS act.Act13_RealAccountMap.selectByCompanyId: 로그인 회사, 검색어는 서버가 "%검색어%"(없으면 전체) */
+  searchRealAccountMaps: async (searchText: string): Promise<RealAccountMap[]> => {
+    const res = await apiClient.get<ApiResponse<RealAccountMap[]>>('v1/act/real-account-maps', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act13_RealAccountMap.update: 추가·변경 행 → 저장된 행(요청 순서) */
+  updateRealAccountMaps: async (rows: RealAccountMap[]): Promise<RealAccountMap[]> => {
+    const body = rows.map(({ realAccountMapId, reprAccountCode, accountMap, realAccountCode, note }) =>
+      ({ realAccountMapId, reprAccountCode, accountMap: accountMap || null, realAccountCode: realAccountCode || null, note: note || null }));
+    const res = await apiClient.put<ApiResponse<RealAccountMap[]>>('v1/act/real-account-maps', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act13_RealAccountMap.delete → 지운 건수 */
+  deleteRealAccountMaps: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/act/real-account-maps', { data: ids });
+    return res.data.data;
+  },
+
+  /** AS-IS act.Act13_RealAccountMap.insertInitData (기초데이터생성, 관리자만) → 처리한 고객사 수 */
+  initRealAccountMaps: async (companyIds: number[], items: { reprAccountCode: string; accountMap: string | null }[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/act/real-account-maps/init-data', { companyIds, items });
     return res.data.data;
   },
 

@@ -2705,5 +2705,36 @@
     "note": "docs/work/E/E29-작업기록.md",
     "history": [],
     "id": "E29"
+  },
+  "Act13_Tab_RealAccountMap": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/act/Act10_Lookup_ReprAccount.java": "ba4fa492f854681efe5ea618c5436169eda3b3b6",
+      "application/src/main/java/myApp/client/vi/act/Act13_Tab_RealAccountMap.java": "4f833484cf8828c79dc1c3aba513066d872eaa3f",
+      "application/src/main/java/myApp/client/vi/act/model/Act01_AccountCodeModel.java": "1e12e3a1f4c0727dbeb9618f0fb51b046437a877",
+      "application/src/main/java/myApp/client/vi/act/model/Act10_ReprAccountModel.java": "f155436caf8114e9b9aef1b0d6f49917f3a5a5cf",
+      "application/src/main/java/myApp/client/vi/act/model/Act10_ReprAccountModelProperties.java": "6a1a4f031a98a3478319ee750c41aee3a6abfa1b",
+      "application/src/main/java/myApp/client/vi/act/model/Act13_RealAccountMapModel.java": "8d990d22d46efcf8006566222db157cc59ca097b",
+      "application/src/main/java/myApp/client/vi/act/model/Act13_RealAccountMapModelProperties.java": "c9282e502c64a250a04d8ef08c6859f1941eb2a2",
+      "application/src/main/java/myApp/server/act/Act01_AccountCode.java": "078feadfbddfbb2a463c7ca3677326aa61d015a3",
+      "application/src/main/java/myApp/server/act/Act10_ReprAccount.java": "534e41dc9d8ccc41ff528528d11d0aa7d06a684e",
+      "application/src/main/java/myApp/server/act/Act13_RealAccountMap.java": "5276c56a1a94a469c56effafa65c446c967635d8",
+      "application/src/main/java/myApp/server/act/mapper/act01_account_code.xml": "da207c7feec4680d136e33d9582b5f815ff7a7bd",
+      "application/src/main/java/myApp/server/act/mapper/act10_repr_account.xml": "302b5c5b20cc4ddecb26bd2192e5112ae8d7e927",
+      "application/src/main/java/myApp/server/act/mapper/act13_real_account_map.xml": "dfe4709309a9016dad6b54591cf970bea4faa980"
+    },
+    "shared_links": [
+      "Act01_Lookup_AccountCode",
+      "Sys01_Lookup_Company"
+    ],
+    "recorded_at": "2026-10-19T13:57:24+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/E/E31-작업기록.md",
+    "history": [],
+    "id": "E31"
   }
 }

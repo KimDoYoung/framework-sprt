@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/act/mapper/act13_real_account_map.xml (selectByCompanyId, selectById, insertInitData, deleteByAccountMap) + UpdateDataModel(act13_real_account_map) 저장·삭제  (E31)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActRealAccountMapMapper">
+
+    <!-- selectByCompanyId·selectById의 act13_real_account_map.*를 DTO 열로 풀었다 (대표계정명·실계정과목은 원본 SQL 그대로) -->
+    <sql id="realAccountMapColumns">
+        act13_real_account_map_id AS real_account_map_id
+      , act13_company_id          AS company_id
+      , act13_repr_account_cd     AS repr_account_code
+      , act10_repr_account_nm     AS repr_account_name
+      , act13_account_map         AS account_map
+      , act13_real_account_cd     AS real_account_code
+      , CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||act01_account_nm AS real_account_name
+      , act13_note                AS note
+    </sql>
+
+    <!-- AS-IS act13_real_account_map.selectByCompanyId (IDMS-IC) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.act.dto.RealAccountMapRes">
+        SELECT <include refid="realAccountMapColumns"/>
+          FROM act13_real_account_map
+               INNER JOIN act10_repr_account ON (act10_company_id = act13_company_id AND act10_repr_account_cd = act13_repr_account_cd)
+               LEFT OUTER JOIN act01_account_code ON (act01_company_id = act13_company_id AND act01_account_cd = act13_real_account_cd)
+         WHERE act13_company_id = #{companyId}
+           AND concat(act13_repr_account_cd, act10_repr_account_nm, act13_account_map, act13_real_account_cd
+                    , CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||act01_account_nm
+                    , upper(act13_note)) LIKE upper(#{searchText})
+         ORDER BY act13_repr_account_cd, act13_account_map
+    </select>
+
+    <!-- AS-IS act13_real_account_map.selectById (IDMS-IC). 원본은 INNER JOIN이라 없는 대표계정코드를 저장하면 응답 행이 비어 LEFT OUTER JOIN으로 바꿨다(E30 selectById와 같은 처리) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.act.dto.RealAccountMapRes">
+        SELECT <include refid="realAccountMapColumns"/>
+          FROM act13_real_account_map
+               LEFT OUTER JOIN act10_repr_account ON (act10_company_id = act13_company_id AND act10_repr_account_cd = act13_repr_account_cd)
+               LEFT OUTER JOIN act01_account_code ON (act01_company_id = act13_company_id AND act01_account_cd = act13_real_account_cd)
+         WHERE act13_real_account_map_id = #{realAccountMapId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel INSERT: 화면 insertRow()가 회사 ID(로그인 회사)를 넣는다 -->
+    <insert id="insert">
+        INSERT INTO act13_real_account_map (act13_real_account_map_id, act13_company_id, act13_repr_account_cd,
+                                            act13_account_map, act13_real_account_cd, act13_note)
+        VALUES (#{realAccountMapId}, #{companyId}, #{req.reprAccountCode},
+                #{req.accountMap}, #{req.realAccountCode}, #{req.note})
+    </insert>
+
+    <update id="update">
+        UPDATE act13_real_account_map
+           SET act13_repr_account_cd = #{req.reprAccountCode},
+               act13_account_map     = #{req.accountMap},
+               act13_real_account_cd = #{req.realAccountCode},
+               act13_note            = #{req.note}
+         WHERE act13_real_account_map_id = #{req.realAccountMapId}
+           AND act13_company_id          = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM act13_real_account_map
+         WHERE act13_company_id = #{companyId}
+           AND act13_real_account_map_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS act13_real_account_map.deleteByAccountMap (IDMS-IC) -->
+    <delete id="deleteByAccountMap">
+        DELETE FROM act13_real_account_map
+         WHERE act13_company_id      = #{companyId}
+           AND act13_repr_account_cd = #{reprAccountCode}
+           AND act13_account_map     = #{accountMap}
+    </delete>
+
+    <!-- AS-IS act13_real_account_map.insertInitData (IDMS-IC): 열 목록 없는 INSERT … SELECT를 열 순서대로 적었다 -->
+    <insert id="insertInitData">
+        INSERT INTO act13_real_account_map (act13_real_account_map_id, act13_company_id, act13_repr_account_cd,
+                                            act13_account_map, act13_real_account_cd, act13_note)
+        SELECT f_create_seq()
+             , #{companyId}
+             , act13_repr_account_cd
+             , act13_account_map
+             , act13_real_account_cd
+             , act13_note
+          FROM act13_real_account_map
+         WHERE act13_company_id      = 0
+           AND act13_repr_account_cd = #{reprAccountCode}
+           AND act13_account_map     = #{accountMap}
+    </insert>
+</mapper>

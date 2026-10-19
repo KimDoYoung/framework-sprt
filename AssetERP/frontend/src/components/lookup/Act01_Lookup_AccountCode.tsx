@@ -1,7 +1,7 @@
 /**
  * 계정코드 조회창 (E25) — Emp55_Tab_benefitInfoManager 계정코드 칸에서 연다 (다른 도메인에서도 쓰는 조회창).
  * AS-IS: myApp/client/vi/act/Act01_Lookup_AccountCode.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
- * open(callback) L73-111만 옮겼다(SINGLE: 선택 1건). openMulti·openCompanyId·open(searchText, callback)은 쓰는 화면이 생기면 더한다(`companyId`는 prop으로 이미 받는다).
+ * open(callback) L73-111과 open(searchText, callback) L53-56(E31, `searchText` prop)을 옮겼다(SINGLE: 선택 1건). openMulti·openCompanyId는 쓰는 화면이 생기면 더한다(`companyId`는 prop으로 이미 받는다).
  * 모달 800×500, 툴바(계정속성 콤보 · 계정코드/명 · 조회) + 체크박스 단일 그리드(속성 80 · 계정코드 100 · 계정과목 500) + [확인] [취소]
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04). 조건이 둘뿐이라 초기화(UX-02)는 넣지 않는다
  */
@@ -29,13 +29,15 @@ interface Props {
   open: boolean;
   /** AS-IS openCompanyId(companyId): 없으면 로그인 회사 */
   companyId?: number;
+  /** AS-IS open(searchText, callback) L53-56: 검색칸에 미리 넣고 그 글자로 조회한다 */
+  searchText?: string;
   /** callback.execute(result): 확인이면 고른 계정 */
   onResult: (row: AccountCode) => void;
   /** 취소: hide()만 */
   onClose: () => void;
 }
 
-export const Act01_Lookup_AccountCode: React.FC<Props> = ({ open, companyId, onResult, onClose }) => {
+export const Act01_Lookup_AccountCode: React.FC<Props> = ({ open, companyId, searchText: initialText, onResult, onClose }) => {
   const gridRef = useRef<AgGridReact<AccountCode>>(null);
   const [attributeCode, setAttributeCode] = useState('%');
   const [searchText, setSearchText] = useState('');
@@ -55,10 +57,10 @@ export const Act01_Lookup_AccountCode: React.FC<Props> = ({ open, companyId, onR
   useEffect(() => {
     if (!open) return;
     setAttributeCode('%');
-    setSearchText('');
+    setSearchText(initialText ?? '');
     setRows([]);
-    retrieve('%', '');
-  }, [open, retrieve]);
+    retrieve('%', initialText ?? '');
+  }, [open, retrieve, initialText]);
 
   // [E1] grid.CellDoubleClick (L104) / [E5] oKButton[확인].Select (L150) → confirm() L218-232
   const confirm = () => {
