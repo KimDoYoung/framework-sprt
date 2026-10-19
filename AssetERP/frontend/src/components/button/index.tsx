@@ -77,7 +77,8 @@ export function usePromiseLoading<A extends unknown[]>(fn: ((...args: A) => unkn
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const alive = useRef(true);
-  useEffect(() => () => { alive.current = false; }, []);
+  // StrictMode(개발)는 마운트 직후 cleanup을 한 번 돌리므로 effect에서 다시 true로 되돌린다
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const run = (...args: A) => {
     if (busyRef.current || !fn) return;
     const result = fn(...args);

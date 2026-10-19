@@ -64,10 +64,20 @@ const Field: React.FC<{ label: React.ReactNode; children: React.ReactNode }> = (
   </Space>
 );
 
-/** 검색어 입력 — Enter = 조회(UX-01, 조회 중이면 무시), allowClear 기본 true(UX-04) */
-const SearchInput: React.FC<InputProps> = ({ allowClear = true, onPressEnter, ...rest }) => {
+/** 검색어 입력 — Enter = 조회(UX-01, 조회 중이면 무시), allowClear 기본 true(UX-04), Ctrl+Delete = 내용 전체 비움 */
+const SearchInput: React.FC<InputProps> = ({ allowClear = true, onPressEnter, onKeyDown, ...rest }) => {
   const { search } = useContext(SearchContext);
-  return <Input allowClear={allowClear} {...rest} onPressEnter={e => { onPressEnter?.(e); search(); }} />;
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    onKeyDown?.(e);
+    if (e.key !== 'Delete' || !e.ctrlKey || e.defaultPrevented) return;
+    const el = e.currentTarget;
+    if (!el.value) return;
+    e.preventDefault();
+    // 제어 컴포넌트의 onChange가 불리도록 네이티브 setter + input 이벤트로 비운다
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(el, '');
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  return <Input allowClear={allowClear} {...rest} onKeyDown={handleKeyDown} onPressEnter={e => { onPressEnter?.(e); search(); }} />;
 };
 
 export const SearchBar = Object.assign(SearchBarBase, { Field, Input: SearchInput });

@@ -1,0 +1,513 @@
+43066	급여명세서(old)	4350	급여명세서	4300	true	Pay02_Tab_PersonList					1085
+86390	매도 사전신고	4530	자기매매 사전신고(매도)	86387	true	Flt10_Tab_SellReport		false	true	Mobi_Flt10_Tab_SellReport	1127
+202410252002851	업무일정 체크내역	5210	기간별 나의 체크리스트 현황	202410252002850	true	Sch04_Tab_DailyCheckListStatus		false	false		1356
+202602099474807	사원정보 변경조회	4121		4100	true	Emp00_Tab_ChangeHistory		true	false		1474
+202206230253852	급여명세서(경영관리팀)(old)	4351	급여명세서(경영관리팀)	4300	true	Pay02_Tab_PersonListManager					1183
+202205270193012	분개장(외화)	6552	분개장(외화)	202206070228982	true	Act02_Tab_ForJournal					1177
+202205030122387	예금잔고대사	6531	예금잔고	202206070228981	true	Ast09_Tab_DepositBook		true			1159
+65927	폐기문서 복구	1190	폐기문서 복구	202303081396400	true	Apr01_Tab_Restore					1098
+58410	고유자산 거래처리	6520	고유자산 거래처리	202207040257393	true	Ast06_Tab_TrIntrinsic		true			1091
+66256	상품기획일정 등록	6122	상품기획일정 등록	67525	true	Fnd20_Tab_Plan					1105
+6230	발행기관정보 관리	6240	발행기관정보 관리	6200	true	Fnd07_Tab_IssuingEntity					1053
+6220	사무수탁사정보 관리	6220	사무수탁사정보 관리	6200	true	Fnd06_Tab_OfficeWork					1052
+65936	연봉조회	4321	연봉내역조회	202504102260350	true	Pay01_Tab_AnnualPerson					1104
+6110	신규기획펀드 등록	5110	신규기획펀드등록 (임시펀드 등록)	67525	true	Fnd01_Tab_FundPlan		true			1046
+202207040257399	공용차량 운행등록	4535	공용차량 운행일지 등록	202207120260597	true	Car04_Tab_PublicJournal		false	false		1190
+202207040257267	공용차량 예약관리	4530	공용차량 예약관리	202207120260597	true	Car03_Tab_List		false	false		1187
+202504172263885	사업비 회계처리	3000		202504042257022	true	Pay50_Tab_ExpenseJournal		false	false		1387
+202206100230970	감가상각대장	6330	구 비품대장	202205030122380	true	Ast13_Tab_DepnBook		true	false		1181
+6140	펀드 조회	5310	펀드정보 조회	6100	true	Fnd01_Tab_FundSearch		true			1049
+202203150096118	법인카드 내역관리	4430	법인카드 내역관리	86433	true	Biz01_Tab_CardManagement					1141
+4440	(X)법인카드 내역 관리	9991	내역 관리	86433	false	Crd05_Tab_Slip					1041
+4220	휴가관리(경영관리팀)	4220	휴가관리(경영관리팀)	202405031696894	true	Emp20_Tab_LeaveManager					1033
+82644	개선사항 및 오류 통보	9561	개선사항 및 오류 통보	82642	true	Sys90_Tab_AfterServiceAdmin					1121
+202205250177162	PC장비상세	6365	PC장비상세	202205030122380	true	Bmt12_Tab_PcList					1170
+6130	펀드 등록 및 변경	1000	펀드정보 관리	6100	true	Fnd01_Tab_FundCode		true	false		1048
+202604149643299	근로시간기준관리	9753		70646	true	Pay34_Tab_WorkTimeConfig		false	false		1489
+202606059746574	월별 펀드보수현황	2020		202211210746947	true	Icam10_Tab_CurrentFeeByFund		true	false		1494
+82359	펀드자산 종목기본	6210	운용자산 종목기본	82353	true	Ast01_Tab_ClassTreeManagement		true			1117
+43722	고유자산 상세등록 ②	6120	고유자산 종목상세	43719	true	Ast01_Tab_InfoIntrinsic		true			1088
+82360	펀드자산 종목상세	6220	운용자산 종목상세	82353	true	Ast01_Tab_InfoManagement		true			1118
+58528	미수/미지급	6521	고유자산 미수/미지급 처리	202207040257393	true	Ast06_Tab_AccruedIntrinsic		true			1092
+5110	업무일정 등록	5110	스케줄 관리	5100	true	Sch01_Tab_Info		true	false		1042
+4420	법인카드 내역 업로드	4420	"Crd10_Tab_Slip -> Crd02_Tab_DataUpload
+법인카드 사용내역 업로드"	86433	true	Crd02_Tab_DataUpload					1039
+202512319245428	외출관리	5010		202405031696894	true	Emp54_Tab_ErrandManager		true	false		1465
+202603069501582	이행점검 연관양식 등록	9500		202601209261861	true	Tdm43_Tab_RelateFormFileUpload		true	false		1481
+70649	권한그룹 관리	9771		70647	true	Sys04_Tab_RoleAdmin		false	false		1112
+202205310193913	전표입력(외화)	6512	정정분개(외화)	202303101397100	true	Act02_Tab_CreateForJournal					1176
+4430	(X)법인카드 내역 복사	9990	내역 복사	86433	false	Crd00_Tab_SlipCopy					1040
+58777	거래유형 등록	6513	거래유형 코드관리(고유)	72476	true	Ast05_Tab_TrCodeIntrinsic					1090
+86455	이익제공 입력(법인카드)	4520	이익제공 입력(법인카드)	4400	true	Biz01_Tab_Card		true			1131
+202410081988801	미사용 파일조회	9599	미사용 파일조회	82642	true	Sys10_Tab_TrashFileList		false	false		1353
+202305091511270	월간회의자료	8305	월간회의자료	202301260940357	true	Rpt02_Tab_MonthWrite					1260
+202410252002849	부서별 업무일정 조회	5180	부서별 스케줄 조회 (기간조회)	5100	true	Sch01_Tab_ListOrg		false	false		1357
+202411222034558	출장품의 및 결과보고	4280	insert menu	4200	true	Emp53_Tab_BizTrip		false	false		1359
+202411222034556	외출등록	4270		4200	true	Emp54_Tab_Errand		false	false		1358
+202411272035569	화면안내등록	9587		82642	true	Sys06_Tab_MenuGuide		false	false		1360
+202308041565334	기간별 입퇴사현황	3000	기간별 입퇴사현황	202308041565328	true	Emp01_Tab_InoutState		false	false		1287
+202402141656220	기타신청서 작성	9000	재직증명서, 경력증명서, 퇴직증명서, 징계내역확인서, 갑근세원천징수확인서 등 신청	202302060976617	true	Bbs11_Tab_Application		false	true	Mobi_Bbs11_Tab_Application	1331
+202412192051014	화환 신청	5000		202302060976617	true	Bbs20_Tab_FloralRequest		true	true	Mobi_Bbs20_Tab_FloralRequest	1363
+202205130127045	금융상품 평가처리	6540	고유자산 평가처리	202308031565044	true	Ast06_Tab_EvalFinance		true	false		1167
+1230	통합 문서검색	1201	통합 문서검색	1200	true	Dcr00_Tab_DocList		true	false		1006
+202305081511056	법규공지	0010	법규정보 공지사항	202405311707037	true	Bbs02_Tab_NoticeViewLaw		true			1258
+202408121755005	내규관리	2121		2100	true	Icr01_Tab_ClassTree		true	false		1347
+202308241571239	공모주일정	6209	공모주 일정조회 	202308031565044	true	Sch10_Tab_Ipo2		true			1296
+202408211870688	여비교통비 신청	0016	여비교통비 신청	202505292294256	true	Emp50_Tab_TransportExpense		false	false		1349
+202408211870692	여비교통비 관리	1300	여비교통비 관리	202504042257022	true	Emp50_Tab_TransportExpenseMng		false	false		1348
+4250	연차휴가 결산기준	4299	연차휴가 결산기준	202405031696894	true	Sys30_Tab_LeaveYear					1036
+7120	매매처정보관리	7120	매매처정보관리	7100	true	Tgt01_Tab_Co					1055
+7130	비용관리	7130	비용관리	7100	true	Est03_Tab_Contract_C					1056
+7140	임대계약정보등록	7140	임대계약정보등록	7100	true	Est03_Tab_Contract					1057
+7150	임대보증금 입출금관리	7150	임대보증금 입출금관리	7100	true	Est03_Tab_Deposit					1058
+7160	예상 현금흐름표조회	7160	예상 현금흐름표조회	7100	true	Est08_Tab_Schedule					1059
+7170	수익/비용 입출금관리	7170	수익/비용 입출금관리	7100	true	Est05_Tab_Flow					1060
+9512	회사별 메뉴맵핑	9512	회사별로 메뉴 맵핑 등록,삭제	9510	true	Sys03_Tab_ComapnyMenu					1076
+9521	시스템 공통코드 관리	9521	시스템 공통코드 관리	9520	true	Sys08_Tab_CodeKindAdmin					1078
+9532	Table Spec,(Model)Properties	9532	Table Spec,(Model)Properties	9530	true	Dbm01_Tab_TabComments					1081
+93300	PDF 생성 테스트	93300	PDF 생성 테스트	9530	true	Dbm10_Tab_MakePdf					1108
+8220	X	8220	공용차량 관리 Pcd01_Tab_Pickup	8200	false	Pcd01_Tab_Pickup					1068
+43822	ICAM 펀드정보	9915	ICAM 펀드정보 가져오기	9910	true	Icam03_Tab_Fund					1096
+9110	권한그룹 관리	9110	권한관리	9100	true	Sys04_Tab_Role					1069
+58537	ICAM 연계정보구분 관리	9911	ICAM 연계정보구분 관리	9910	true	Icam01_Tab_DataInfo					1095
+65957	수탁은행정보 관리	6230	수탁은행정보 관리	6200	true	Fnd09_Tab_TrustBank					1100
+9120	권한그룹별 메뉴 맵핑	9120	권한별 메뉴 맵핑	9100	true	Sys07_Tab_RoleMenu					1070
+202204060099625	일일자금관리	0010	일일자금현황표	202505292294259	true	Act02_Tab_DepositIoList		true			1164
+202507252359533	업무활동등록	1000		202501032066353	true	Mkt01_Tab_TargetCompany		false	false		1405
+202205270193011	계좌이체(외화)	6531	계좌이체(외화)	202303101397100	true	Ast06_Tab_TrForDeposit					1172
+9160	조직별 문서분류 맵핑	9160	조직(부서)별 문서분류 맵핑	202211230747155	true	Dcr03_Tab_OrgAuth					1074
+59296	참조내역 조회	3130	참조내역 조회	3100	true	Apr01_Tab_MyReferenceList		true	true	Mobi_Apr01_Tab_MyReferenceList	1093
+202309201588445	내부통제 준수리스트 관리	0010	임직원 내부통제 준수 리스트	202309201588443	true	Ics30_Tab_Compliance		true	false		1309
+202203240096826	기관정보	9792	기관정보	70748	false	Sys15_Tab_Corp					1434
+202503052143194	위반내역조회	4581		202601299445440	true	Flt10_Tab_Violate		true	false		1157
+202602029452568	일일자금관리	1000		202602029452567	true	Act02_Tab_DepositIoList	2026.01.26 마일스톤에서 예금관련 화면들을 고유자산 메뉴에 이동을 원하여 별도로 추가했음	true	false		1470
+202602259484174	회사규정	1000		202602259484173	true	Bbs15_Tab_CompanyRule		true	false		1476
+202602259484204	법인카드 내역 업로드	2000		202602259484202	true	Crd02_Tab_DataUpload		true	false		1479
+202603129524322	문서양식등록	2000		70645	true	Dcr05_Tab_DocType		false	false		1482
+202603189528470	근태관리(관리자)	1000		202603189528469	true	Att02_Tab_CommuteAdmin		false	false		1485
+202601209261865	책무조회	2000	직책 배정이 확정된 책무-세무-관리의무 조회	202601209261861	true	Tdm35_Tab_TaskList		true	false		1467
+202601209261867	매뉴얼 규정/양식 연결	3000		202601209261861	true	Tdm43_Tab_ManlItemList		true	false		1468
+202601209261863	조치대상조회(변화관리)	1000		202601209261861	true	Tdm00_Tab_ChangeList		true	false		1466
+202603309583070	계좌신고현황	1000		202601299445440	true	Flt03_Tab_AccountAdmin		true	false		1488
+202604289693151	조회권한 예외사원 등록	9170		202211230747155	true	Dcr04_Tab_EmpAuth		true	false		1491
+202604249692638	폐기문서 승인	3129		1200	true	Apr90_Tab_DisposalAppr		true	false		1490
+202606229764225	책무체계도 재생성	1200	완료된 문서의 책무체계도를 재생성 하는 화면	202603129524326	true	Tdm32_Tab_RoleDigmAdmin		false	false		1498
+83531	펀드별 자산 조회(ICAM)	5330	펀드별 운용자산	6100	true	Fnd10_Tab_RelateAst					1123
+42453	연봉계약관리	4310	연봉계약관리	202504102260350	true	Pay01_Tab_Annual					1037
+202202110086723	이익제공 상세현황	4590	이익제공(수령) 현황	4400	true	Biz01_Tab_PriorApproval		true			1136
+2210	법규통제 운영현황표	2210	운영현황표	2200	true	Ics02_Tab_IcsList					1016
+2130	법규별 문서작성	2130	내부통제 관리	1100	true	Ics01_Tab_ApprList					1014
+1140	문서이동	1140	상신된 문서 문서분류코드 변경	202303081396400	true	Dcr01_Tab_DcrClassModify					1004
+3110	결재내역 조회	3110	결재내역 조회	3100	true	Apr01_Tab_MyApproveList		true	true	Mobi_Apr01_Tab_MyApproveList	1018
+3120	상신내역 조회	3120	상신내역 조회	3100	true	Apr01_Tab_MyRequestList		true	true	Mobi_Apr01_Tab_MyRequestList	1019
+58763	사무수탁사정보 관리(관리자)	6320	사무수탁사정보 관리(관리자)	58762	true	Fnd06_Tab_OfficeWorkManager		false	false		1094
+86532	이익제공 한도초과현황	4570	이익제공(수령) 한도초과현황	4400	true	Biz01_Tab_LimitCheckList		true			1133
+202205300193142	미수/미지급(외화)	6525	미수/미지급(외화)	202303101397100	true	Ast06_Tab_AccruedForIntrinsic					1173
+202512319245416	책임자보고	4700	임직원 자기매매 대표이사 보고용 화면	202601299445440	true	Flt10_Tab_CeoReport		true	false		1464
+202602029453049	예금/예치금 이자수령	3000		202602029452567	true	Ast06_Tab_TrDepositInt	2026.01.26 마일스톤에서 예금관련 화면들을 고유자산 메뉴에 이동을 원하여 별도로 추가했음	true	false		1472
+202602259484175	회사규정(관리자)	2000		202602259484173	true	Bbs15_Tab_CompanyRuleManager	회사규정 등록/수정/삭제	true	false		1477
+202601209261873	책무관리 시스템설정	9900		202601209261861	true	Tdm91_Tab_CompanySetup		true	false		1469
+202603129524328	회사규정관리	1000		202603129524326	true	Bbs15_Tab_CompanyRuleManager		true	false		1483
+202607209796758	파일보안정책	1082		9530	true	Sys60_Tab_FilePolicy		false	false		1500
+202204250114182	대표계정관리	9762	대표계정관리	77725	true	Act10_Tab_ReprAccount					1156
+202204250114185	거래유형별 분개맵핑	6514	거래별 분개맵핑	72476	true	Act11_Tab_TrJournalMap					1162
+202204250114187	실계정맵핑	6515	실계정맵핑	72476	true	Act13_Tab_RealAccountMap					1163
+202205170128173	실계정맵핑	9765	실계정맵핑	77725	true	Act13_Tab_RealAccountMap					1169
+202403181662054	임직원 내부통제 준수리스트	0050	임직원 내부통제 준수리스트(관리자전용) (관리자 메뉴등록)	202403181662050	true	Ics30_Tab_Compliance					1313
+202303081396396	공통코드	9540	공통코드	9530	true	Sys08_Tab_CodeKindClient					1248
+202203240096831	거래처 등록	6195	거래처 관리	9530	true	Sys15_Tab_Corp		true			1146
+202204180108340	거래처 관리	9753	거래처 관리	70646	true	Sys15_Tab_Corp					1155
+202309011584059	AssetERP 자문위원	0050	AssetERP 자문위원 정보 조회 및 등록(공통회사관리자로그인시만)	202308241571552	true	Sys91_Tab_AdviceMember					1301
+202309121585421	AssetERP 자문의원 관리	0002	AssetERP 자문의원 관리	9530	true	Sys91_Tab_AdviceMember					1302
+202309131585430	AssetERP 관리팀 등록	0003	AssetERP 관리팀 관리	9530	true	Sys92_Tab_ManagementTeam					1304
+202205300193139	고유자산 거래처리(외화)	6521	고유자산 거래처리(외화)	202303101397100	true	Ast06_Tab_TrForIntrinsic					1171
+82651	파일조회	1390	파일조회	1300	true	Fbx01_Tab_Search		true			1122
+202203030092942	법인카드 사용내역 조회	4530	법인카드 사용내역 조회	4400	true	Biz01_Tab_CardContents		true			1138
+202309011584061	AssetERP 관리팀	0055	AssetERP 관리팀 정보 조회 및 등록(공통회사로그인시만)	202308241571552	true	Sys92_Tab_ManagementTeam					1303
+202603209578308	연장근무관리	2000		202603189528469	true	Att03_Tab_OvertimeReq		false	false		1486
+202605139705340	근태현황	4000		202603189528469	true	Att02_Tab_PersonStatus		false	false		1492
+202608119820988	펀드규약 등록	7000		6100	true	Fnd25_Tab_FundTermsManager		true	false		1503
+202602029453048	예금잔고조회	2000		202602029452567	true	Ast09_Tab_DepositBookPeriod	"예금잔고조회(기간조회)
+2026.01.26 마일스톤에서 예금관련 화면들을 고유자산 메뉴에 이동을 원하여 별도로 추가했음"	true	false		1471
+202205170128171	거래유형별 분개맵핑	9764	거래별 분개맵핑	77725	true	Act11_Tab_TrJournalMap					1168
+70586	ICAM 연계정보(관리자용)	9913	ICAM 연계정보(관리자용)	9910	true	Icam02_Tab_DataAdmin					1109
+202207040257200	차량정보관리	4510	차량정보관리	202207120260597	true	Car01_Tab_Info					1188
+202207060257840	차량 운행일지	4560	차량 운행일지	202207120260597	true	Car04_Tab_Journal					1193
+202206280254718	연월차휴가 지정통보	4260	미사용 연차휴가지정통보	4200	true	Emp21_Tab_PersonList		false	false		1184
+202207040257398	전용차량 운행등록	4520	전용차량 운행일지 등록	202207120260597	true	Car04_Tab_PrivateJournal					1189
+9130	권한그룹별 사용자 맵핑	9130	권한별 사용자 맵핑	9100	true	Sys05_Tab_UserRole					1071
+9140	사용자별 권한그룹 맵핑	9140	사용자별 권한그룹 맵핑	9100	true	Sys05_Tab_PersonRole					1072
+202205120123793	계좌이체	6530	계좌이체(원화)	202207040257393	true	Ast06_Tab_TrDeposit		true			1166
+86329	펀드자산 미수/미지급	6240	펀드자산 미수/미지급	82353	false	Ast06_Tab_AccruedManagement					1129
+5990	(X) 스케줄 등록	5990	스케줄 등록	5000	true	Msc01_Tab_Schedule					1044
+5991	(X) 주간 스케줄	5991	주간 스케줄	5000	true	Msc01_HTML_Week					1045
+6210	수탁사정보 관리	6210	수탁사정보 관리	6200	true	Fnd03_Tab_Consignment					1051
+7110	물건정보관리	7110	물건정보관리	7100	true	Ppt01_Tab_Info					1054
+202203020092915	비밀번호 초기화	9550	비밀번호 초기화	9530	true	Sys25_Tab_ResetPassword					1182
+4310	급여관리(old)	4330	급여관리	4300	true	Pay02_Tab_Month					1083
+202204210110343	상세 주소록관리	2	insert menu	202204200110006	true	Test02_Tab_AddrBookDetail					1436
+202204260114420	PC관리(대장)	3	insert menu	202204200110006	true	Imt02_Tab_PcManagement					1437
+202603209578359	근태현황(관리자)	3000		202603189528469	true	Att02_Tab_CommuteStatus		false	false		1487
+202605279728359	책무기술서 재생성	1100	결재가 완료된 기술서를 재생성하여 다시 첨부	202603129524326	true	Tdm31_Tab_RoleDescAdmin		false	false		1493
+202607219800823	결재서명관리	3230		3100	true	Emp60_Tab_Sign		false	false		1501
+202608119820989	펀드규약	7500		6100	true	Fnd25_Tab_FundTerms		true	false		1504
+202608279853973	기준가 정정내역 보고	1000		202608279853972	true	Biz60_Tab_FundPriceModiReport		true	false		1505
+202609029859727	추가 대표명의 등록	3225		3100	true	Apr15_Tab_ReprCorp		true	false		1506		false	false
+202609089863904	구)법인서류 매수관리	9900		202308101568228	true	Apr17_Tab_CorpDoc		true	false		1507		false	false
+202606189756122	책무진행 상태	2000		202606169755299	true	Tdm50_Tab_DutyProgress		true	false		1496		false	false
+202203280097111	분개장	6551	분개장	202206070228982	true	Act02_Tab_Journal		true			1149
+202206020228671	손익계산서	6551	손익계산서	202206070228983	true	Act04_Tab_ReportPL		true			1178
+82366	펀드자산 거래관리	6230	운용자산 거래관리	82353	false	Ast06_Tab_TrManagement					1119
+202202110086722	판촉물 구매 및 제공내역	4550	판촉물 구매 및 제공내역	4400	true	Bmt01_Tab_Buy					1135
+202205030122385	금융상품 보유내역	6320	금융상품 보유내역	202205030122380	true	Ast09_Tab_FinanceBook		true			1160
+42906	회사계좌관리(X)	4395	회사계좌관리	4300	false	Pay03_Tab_Account					1086
+202208080325915	ICAM 펀드보수 월말잔액	6532	ICAM 사무관리 펀드보수 월말잔액	202207290319913	true	Icam12_Tab_OfficeMngFeeBook					1200
+5120	업무일정 처리	5198	특정일의 스케줄 조회 및 처리여부 저장	5100	true	Sch04_Tab_ToDoList		true	false		1043
+66257	상품기획문서 등록	6124	상품기획문서 등록	67525	true	Fnd20_Tab_PlanEmp					1106
+9150	문서분류별 조직 맵핑	9150	문서별 조직(부서) 맵핑	202211230747155	true	Dcr03_Tab_DcrAuth					1073
+202209210445859	공용주소록 관리	3211	공용주소록 관리	3200	true	Emp10_Tab_PublicAddrBook					1211
+202207290319910	ICAM 계약사 관리	4601	계약사 관리	202204080100425	true	Biz10_Tab_ContCorp		false	false		1209
+202211210746939	복리후생비 신청	0015	복리후생비 신청	202505292294256	true	Emp17_Tab_Benefit					1221
+202207080259732	전용차량 운행변경(경영관리팀)	4525	전용차량 운행일지(관리자)	202207120260597	true	Car04_Tab_PrivateJournalAdmin		false	false		1191
+202211210746953	ICAM 운용보수 월말잔액	1010	ICAM 운용보수 월말잔액	202211210746947	true	Icam12_Tab_FundMngFeeBook		false	false		1215
+202211210746952	ICAM 운용보수 발생내역	1000	ICAM 펀드운용보수 적요별 발생내역	202211210746947	true	Icam10_Tab_FundMngFee		false	false		1214
+202211210746957	운용보수 회계처리	5000	운용보수 월/연말 결산처리 - 미수보수 발생	202211210746947	true	Ast30_Tab_FundMngFeeClose		false	false		1218
+202208030320244	ICAM 펀드보수 발생내역	6531	ICAM 사무관리 펀드보수 적요별 내역	202207290319913	true	Icam10_Tab_OfficeMngFee					1199
+202209060440183	전표승인처리	6515	전표승인처리	202203240096903	true	Act02_Tab_JournalFix		true			1207
+202301180938341	내부통제 체크리스트 관리	2301	내부통제 체크리스트 - 사용여부 및 작성자그룹지정	202301180938340	true	Ics10_Tab_Checklist		true			1228
+202301260940365	기간별 업무확인	8302	일일업무확인	202301260940357	true	Rpt01_Tab_DailyConfirm					1237
+1330	법규보고 서식파일	1330	"Ics01_Tab_FileList -> Ics01_Tab_IcsFileUser
+내부통제 서식파일"	202405311707037	true	Ics01_Tab_IcsFileUser		false	false		1009
+202403181662052	법규개정내역 등록	0030	법규정보 개정내역 (관리자 메뉴등록)	202403181662050	true	Ics20_Tab_RevisionHistoryAdmin		false	false		1257
+202309201588447	내부통제 준수확인서 작성	1000	임직원별 작성 및 확정처리	202309201588443	true	Ics31_Tab_ComplianceWrite		false	false		1310
+202301180938349	내부통제내역 현황(준감인)	2310	내부통제 월/분기 체크리스트 현황판	202301180938340	true	Ics15_Tab_ChecklistStatus		true	false		1231
+202209080445206	금융상품 계좌대체	6535	금융자산 계좌대체	202308031565044	true	Ast06_Tab_TrAcntTransfer		true	false		1208
+202204180108433	보유내역조회	4571	임직원매매 보유내역(관리자)	202601299445440	true	Flt11_Tab_BookListAdmin		true	false		1154
+86391	사전승인	4540	자기매매 사전승인	202601299445440	true	Flt10_Tab_PreApprove		true	true	Mobi_Flt10_Tab_PreApprove	1128
+202203020092389	KFS공지등록	9570	시스템/법규/경영 공지사항	202501032066352	true	Bbs02_Tab_NoticeAdmin		false	false		1246
+70749	일자관리	9791		70748	true	Sys12_Tab_Calendar					1113
+202503262253368	펀드예정일정보	4610	펀드 설정/상환 예정일 정보 조회 (ICAM 2700 화면)	202204080100425	true	Icam00_Tab_FundExpectDate		false	false		1374
+202504012255802	게시판	01	insert menu	202504012255801	true	Bbs30_Tab_ClassTree		false	false		1379
+202503312255656	부동산PF 수수료	1000		202503312255655	true	Est01_Tab_PfFeeType		false	false		1375
+202503312255658	용역계약체결	2000		202503312255655	true	Est02_Tab_PfContract		false	false		1376
+202503312255659	용역수행내역 등록	3000		202503312255655	true	Est03_Tab_PfHistory		false	false		1377
+202211070741325	원천징수영수증(사본)	0040	원천징수영수증	202306141542480	true	Pay08_Tab_TaxWithholding		false	false		1219
+9522	고객사 공통코드	9522	공통코드	9520	true	Sys08_Tab_CodeKindClient					1079
+202602029453050	예금잔고대사	1500		202602029452567	true	Ast09_Tab_DepositBook	2026.01.26 마일스톤에서 예금관련 화면들을 고유자산 메뉴에 이동을 원하여 별도로 추가했음	true	false		1473
+202602259484203	법인카드 및 사용자등록	1000		202602259484202	true	Crd01_Tab_Card		true	false		1478
+202504242267306	조직정보 등록	1000		202504242267417	true	Org01_Tab_OrgCode		false	false		1451
+9511	고객별 시스템정보 관리	9501	고객별 시스템정보 관리	9510	true	Sys01_Tab_Company					1075
+202209210445862	공용메일 관리	3216	공용메일 관리	3200	true	Cmp10_Tab_MailBook					1212
+202207220289294	결산회기관리	6517	결산회기관리	72476	true	Act09_Tab_AccountNum					1206
+202208160438987	펀드별 보수입금계좌 등록	6535	펀드별 사무관리보수 입금계좌 등록	202207290319913	true	Icam11_Tab_OfficeMngFeeDeposit					1204
+202208020320238	ICAM 보수(관리자용)	9920	ICAM 보수(관리자용)	9910	true	Icam10_Tab_FeeAdmin					1203
+202211100742238	법규 관리그룹 등록	2150	법규 공유자 지정	2100	true	Ics02_Tab_Manager		true			1213
+202207130260799	회계마감	6548	계정원장,자산원장의 정리 및 대사작업, 마감작업	202206070228981	true	Act04_Tab_Close		true			1195
+202212020756994	공모주 일정조회	0010	공모주 일정조회	202301110935960	true	Sch10_Tab_Ipo		true			1223
+202212070759588	금감원보고용 재무제표	6553	금감원보고용 재무제표	202206070228983	true	Act04_Tab_ReportFSS		true			1225
+202211210746945	복리후생비 관리	1200	복리후생비 관리	202504042257022	true	Emp17_Tab_BenefitManager		false	false		1222
+202207110259766	공용차량 운행변경(경영관리팀)	4550	공용차량 운행일지(관리자)	202207120260597	true	Car04_Tab_PublicJournalAdmin		false	false		1192
+202211210746954	펀드보수원장	2000	일별 운용보수 현황	202211210746947	true	Ast30_Tab_FundMngFeeState		false	false		1216
+202504042257024	지출결의서(경영관리)	1000	지출요청, 화환신청 지출결의서 작성	202504042257022	true	Pay50_Tab_ExpenseManager		true	false		1385
+202504102260742	일임계좌 등록	1000		83530	true	Adv02_Tab_Account		false	false		1388
+202302281366587	일일점검내역 분류(관리자)	0070	일일점검내역 분류관리(관리자)	202403181662050	true	Chk01_Tab_ClassTree					1244
+202305191514497	시스템 개발 의뢰	9911	시스템 개발 의뢰	202305191514491	true	Scm01_Tab_Sr					1261
+202303061372801	권한그룹별 메뉴권한 복사	9772	권한그룹별 메뉴권한 복사	70647	true	Sys07_Tab_Company					1247
+202305191514504	배포처리	9921	프로그램 배포처리	202305191514495	true	Scm13_Tab_Deploy		false	false		1266
+202305191514499	시스템 개발 관리	9913	시스템 개발 관리 (관리자용)	202305191514491	true	Scm01_Tab_DevMng					1262
+202302241366209	일일점검내역 작성	5503	일일점검내역 작성	202302241366206	true	Chk03_Tab_DailyListWrite		true			1241
+202504242267317	공지사항	1500		202504242267410	true			false	false
+202508269012894	직책별 책무 등록	6000		202508052363062	true	Tdm20_Tab_Role		true	false		1414
+202303081396402	06. 경영관리	9580		9500	true
+202302241366210	일일점검내역 확인	5505	일일점검내역 확인	202302241366206	true	Chk03_Tab_DailyListConfirm		true			1242
+202301020801540	(X)기간별 스케줄 조회	5199	나의 기간별 스케줄 조회	5100	false	Sch04_Tab_List		true	false		1440
+202305191514500	시스템 개발	9915	시스템 개발 (개발자용)	202305191514491	true	Scm10_Tab_Dev					1263
+202303141397697	폐기문서 승인(관리자)	1180	폐기문서 승인	202303081396400	true	Apr90_Tab_DisposalListAdmin		false	false		1253
+202303141397593	이관펀드 등록(사무관리)	6536	이관펀드 정보등록 (사무관리사용)	202207290319913	true	Ast33_Tab_OfficeMngFundTrans					1251
+202302271366536	일일점검내역 관리(관리자)	0080	일일점검내역 체크리스트(관리자)	202403181662050	true	Chk02_Tab_DailyListAdmin					1245
+202607079774526	심사필 확인대장	2000		202509119027810	true	Ics40_Tab_DcrReviewConfirm		false	false		1499
+202609089863908	구)인감날인본 업로드확인	9902		202308101568228	true	Apr19_Tab_StampFileCheck		false	false		1509		false	false
+202401301651847	법인서류 매수관리	0010	법인인감증명서, 법인등기부등본 관리	202308101568228	true	Apr16_Tab_StampDocManager		false	false		1328	Apr17_Tab_CorpDoc => Apr16_Tab_StampDocManager	false	false
+202603139525230	부서 인감날인대장	0021	부서(사용권한체크) 인감날인내역 조회	202308101568228	true	Apr16_Tab_StampListOrg		true	false		1484	Apr19_Tab_OrgStampList => Apr16_Tab_StampListOrg	false	false
+202606189756121	책무점검 현황	1000		202606169755299	true	Tdm50_Tab_TotalDashboard		true	false		1495		false	false
+202502252137672	화면사용순서	1000		86387	true	Flt00_Tab_Info		false	false		1369
+202208100437163	Admin 사용자 관리	9580	Admin 사용자 관리	82642	true	Sys80_Tab_AdminUserList					1197
+202301110935962	공모주청약 운용지시	0050	공모주청약 운용지시서 작성	202301110935960	true	Fnd30_Tab_Opr		true			1227
+202208080325917	펀드보수 결산처리	6539	사무관리 펀드보수 월/연말 결산처리 - 미수보수 발생	202206070228981	true	Ast30_Tab_OfficeMngFeeClose					1202
+202209280511264	최저보수 청구	6538	최저보수 청구	202204080100425	true	Biz20_Tab_FeeCharge					1210
+202301180938345	내부통제 체크리스트 작성	2303	내부통제 체크리스트 작성	202301180938340	true	Ics15_Tab_ChecklistWrite		true			1229
+202208100437165	Admin 로그인내역 조회	9585	Admin 로그인내역 조회	82642	true	Sys81_Tab_AdminUserHistory					1198
+202306011540567	펀드별 기준가 현황	5601	펀드별 기준가 현황	202306011540565	true	Icam06_Tab_FundPrice		true	true	Mobi_Icam06_Tab_FundPrice	1475
+202606189756123	책무마감 검증	3000		202606169755299	true	Tdm50_Tab_DutyRecon		true	false		1497		false	false
+202609089863906	구)인감날인대장	9901		202308101568228	true	Apr19_Tab_StampList		false	false		1508		false	false
+202607309819044	책무매뉴얼 재생성	1300	책무 매뉴얼을 재생성하여 문서에 다시 연결해주는 화면입니다.	202603129524326	true	Tdm42_Tab_ManlManagerAdmin		false	false		1502
+202508089000010	지출결의서	2200	발생직원 직접 지출결의서 작성용	202505292294256	true	Pay50_Tab_Expense		false	false		1407	운용사별 사업비 지출요청/지출승인 or 지출결의서 둘중 사용 (동시사용 지양)
+202511079191137	직책별 부서승인선 등록	8000		202508052363062	true	Tdm09_Tab_ApprStep		true	false		1463
+202609119867676	책무진행 상태	1511	insert menu	202603129524326	true	Tdm50_Tab_DutyProgressAdmin		false	false		1511		false	false
+202401311652244	인감날인대장	0020	전체 인감날인내역 조회	202308101568228	true	Apr16_Tab_StampList		false	false		1329	Apr19_Tab_StampList => Apr16_Tab_StampList	false	false
+202301020801560	공동연차관리	4280	공동연차관리	202405031696894	true	Emp24_Tab_JointLeave					1233
+202301030851306	포상휴가관리	4281	포상휴가관리	202405031696894	true	Emp22_Tab_EtcLeave					1234
+202212060759562	문서별 첨부파일 검색	1240	문서별 첨부파일 검색	1200	true	Dcr00_Tab_FileList		true			1224
+202408121754997	내규조회	0016	내규조회전용	202405311707037	true	Icr01_Tab_ClassTreeView		true	false		1346
+202403181662053	내부통제 체크리스트(관리자)	0040	내부통제 체크리스트 (관리자 메뉴등록)	202403181662050	true	Ics10_Tab_ChecklistAdmin					1232
+202302241366211	일일점검내역	5507	일일점검내역	202302241366206	true	Chk03_Tab_DailyListStatus		true			1243
+202302241366208	일일점검내역 관리	5501	일일점검내역 관리	202302241366206	true	Chk02_Tab_DailyList		true			1240
+202305251539218	임직원매매 종목유형관리	0090	자기매매 종목유형설정(관리자)	202403181662050	true	Flt05_Tab_ItemTypeAdmin		false	false		1267
+202305191514503	시스템 QA/UAT	9917	시스템 품질검사 및 사용자 테스트 결과반영 test	202305191514491	true	Scm11_Tab_DevTest		false	false		1264
+202609089863910	구)법인서류 및 날인 신청	0011		202302060976617	true	Apr17_Tab_CorpDocApp		false	false		1510		false	false
+202204270114576	PC관리(대장) 서브	4	insert menu	202204200110006	true	Imt20_Tab_PcHistory					1438
+202508269012896	임원별 직책배정	1000		202508052363064	true	Tdm30_Tab_RoleAllc		true	false		1417
+202204180108434	매매내역조회	4561	임직원 매매내역(관리자)	202601299445440	true	Flt10_Tab_TrListAdmin		true	false		1153
+202203240096914	기준관리	4900	임직원 자기매매 기준관리	202601299445440	true	Flt01_Tab_CompanyStd		true	false		1145
+202203240096913	매매내역조회	4560	자기매매 매매내역 조회	86387	true	Flt10_Tab_TrList		false	false		1144
+202205030122383	금융상품 거래처리	6525	금융상품 거래처리	202308031565044	true	Ast06_Tab_TrFinance		true	false		1158
+202206030228873	감가상각처리	6550	감가상각처리	202308031565044	true	Ast06_Tab_EvalDepn		true	false		1175
+202412192051018	화환신청 확인	9006		202211210746938	true	Bbs20_Tab_FloralRequestMng		true	false		1362
+202308101568180	업무보고서	1000	금감원 업무보고서(Ⅶ. 지점, 그 밖의 영업소 및 임직원 등에 관한 사항)	202308041565328	true	Rpt10_Tab_FssOrg					1289
+202308141568775	임원정보 관리	4125	임원정보 관리	4100	true	Emp31_Tab_Director					1294
+202308171568948	공모주 일정등록	0050	공모주 일정등록	70646	true	Sch10_Tab_IpoAdmin					1293
+202308281572351	자기자본/투자한도 등록	6150	자기자본 및 투자한도 등록	43719	true	Ast40_Tab_OwnerCapital		true			1299
+202310101591517	미사용ID 권한정지 신청	0200	ICAM 미사용 사용자ID 권한정지 신청서 작성	202310101591515	true	Icam55_Tab_UserStopAuthAppr					1315
+202308281582186	금융상품 운용내역	6325	금융상품 운용내역	202205030122380	true	Ast09_Tab_FinanceBookOpr		true			1300
+202308241571056	금감원 업무보고서	0002	금감원 업무보고서 작성요령, 변경이력 등 관리	70646	true	Rpt10_Tab_FssSubmit					1292
+202207050257577	사원별 문자발송	8160	사원별 문자발송	202501032066354	true	Sms03_Tab_GroupSend					1186
+4130	조직별 사원조회	4130	조직별 사원조회	4100	true	Emp00_Tab_OrgPerson					1030
+6120	신규기획펀드 권한설정	6120	신규기획펀드 권한설정 (임시펀드권한 관리)	67525	true	Fnd08_Tab_OrgAuthTempFund		true			1047
+82367	거래코드 관리(운용)	6290	거래코드 관리(펀드)	82353	false	Ast05_Tab_TrCodeManagement					1120
+202511069190967	책무담당자 등록	7000		202508052363062	true	Tdm08_Tab_Manager		true	false		1454
+202602269485893	책무구조도 제출	4000		202508052363064	true	Tdm36_Tab_RoleReport		true	false		1480
+202207080259661	법인인감증명서 관리(X)	9991	인감증명서 관리	202308101568228	true	Apr15_Tab_StampCert		false	false		1194		false	false
+42455	급여대장(old)	4340	급여대장	4300	true	Pay02_Tab_List					1084
+70650	임금계산방법(x)	9752	임금계산방법	70646	false	Pay04_Tab_Formula					1111
+77525	파일등록	1380	자료보관함 -> 파일등록	1300	true	Fbx01_Tab_Document		true			1116
+4410	법인카드 및 사용자등록	4410	법인카드 및 사용자등록	86433	true	Crd01_Tab_Card					1038
+6150	펀드 권한설정	1100	펀드별 권한 등록	6100	true	Fnd08_Tab_OrgAuth		true	false		1050
+1220	(X)종목별 문서검색	1220	종목별 문서검색	1200	false	Apr01_Tab_ItemDocument		false	false		1137
+4210	휴가신청	4210	휴가신청	4200	true	Emp20_Tab_Leave		false	true	Mobi_Emp20_Tab_Leave	1032
+202408081754073	회사규정	8145	회사규정 조회	8100	true	Bbs15_Tab_CompanyRule		true	false		1344
+202408081754074	회사규정(관리자)	8146	회사규정 등록/수정/삭제	8100	true	Bbs15_Tab_CompanyRuleManager		true	false		1345
+202405081697550	접대비 현황	7450	접대비 현황 화면	86433	true	Biz01_Tab_EntertmExpenseReport					1335
+202310201595084	펀드운용현황(펀드합계)	5605	펀드운용현황(펀드합계)  - ICAM TR 9985	202306011540565	true	Icam06_Tab_FundOperateStatus		true			1323
+43720	고유자산 기본등록 ①	6110	고유자산 종목기본	43719	true	Ast01_Tab_ClassTreeIntrinsic		true			1087
+202208290439284	예금/예치금 이자수령	6527	예금/예치금 이자수령	202207040257393	true	Ast06_Tab_TrDepositInt		true			1205
+202305081511061	경영공지	4010	경영정보 공지사항	202305081511058	true	Bbs02_Tab_NoticeViewMgt		false			1259
+202301260940364	일일업무 입력	8301	일일업무보고	202301260940357	true	Rpt01_Tab_DailyWrite					1236
+202305261539724	ICAM DB Source Get	9950	ICAM DB Source Get (Function, Procedure, Trigger)	9910	true	Icam50_Tab_DbSource					1269
+202303171400774	업무공유	8170	업무공유	202501032066353	true	Bbs10_Tab_BizShare					1254
+202305191514507	프로그램 관리	9931	프로그램 소스 및 버전관리	202305191514493	true	Scm30_Tab_Program					1265
+202306141542483	급여관리	0010	급여, 상여금, 퇴직정산 등록	202306141542480	true	Pay10_Tab_Month					1270
+202306141542485	급여명세서	0030	사원용 급여명세서	202306141542480	true	Pay10_Tab_PersonList					1272
+202306141542491	급여명세서(경영관리팀)	0031	급여명세서(경영관리팀)	202306141542480	true	Pay10_Tab_PersonListManager					1273
+202306141542497	급여공제정보	0070	사원별 급여공제 정보관리	202306141542480	true	Emp35_Tab_DeductPerson					1277
+202306141542502	급여기초정보	0071	급여 기초정보 관리	202306141542480	true	Pay20_Tab_Deduct					1278
+202306141542505	급여기초정보관리	9752	급여기초정보관리	70646	true	Pay20_Tab_DeductAdmin					1279
+202306141542513	4대보험 정산내역	0061	4대보험 정산내역	202306141542480	true	Pay32_Tab_InsurePay					1276
+202303101397096	계정과목 관리	6990	계정코드 관리	202206070228982	true	Act01_Tab_AccountCode	https://dusty-casquette-8e6.notion.site/a43e5ef674024c80b8998b3107d9e573	true			1250
+202506122334923	인사평가보고(대표이사)	5100		202506122334911	true	Emp43_Tab_FinalAppr		true	false		1395
+202511069190984	책무이행점검 승인	3700	**상위조직~임원**은 이행내역 승인 및 의견입력	202508052363067	true	Tdm59_Tab_CheckAppr	aman_opener.jsp?aka=1458	true	false		1458
+202204190108638	정기보고현황	4590	자기매매 주기보고현황	202601299445440	true	Flt10_Tab_EmpAppr		true	false		1152
+202304251476998	법규개정내역	0030	법규정보 개정내역	202405311707037	true	Ics20_Tab_RevisionHistory		true			1256
+202303311451202	월별 법규조회	0020	기간별 법규정보내역	202405311707037	true	Ics01_Tab_PeriodList		true			1255
+202303101396618	보수원장(기간조회)	6534	일별보수현황(기간조회)	202207290319913	true	Ast30_Tab_OfficeMngFeeStatePeriod		false	false		1249
+202306141542486	급여대장	0015	급여대장	202306141542480	true	Pay10_Tab_List		false	false		1271
+202306141542492	퇴직정산	0035	퇴직정산	202306141542480	true	Pay10_Tab_Retire		false	false		1274
+202303231432420	이관펀드 등록	4000	이관펀드 정보등록 (운용사용)	202211210746947	true	Ast33_Tab_FundMngTrans		false	false		1252
+2140	법규 담당자 변경(일회성)	2140	내부통제 업무담당자 변경	2100	false	Sch04_Tab_BizReClass		true			1015
+202609119867926	책무마감 검증	1512	insert menu	202603129524326	true	Tdm50_Tab_DutyReconAdmin		false	false		1512		false	false
+77726	계정코드 관리	9761		77725	true	Act01_Tab_AccountCode					1114
+1110	문서분류	1110	문서분류	202303081396400	true	Dcr01_Tab_ClassTree	123				1001
+70644	문서분류	0010	문서분류	70645	true	Dcr01_Tab_ClassTree					1110
+4120	사원정보 관리	4120	사원정보 관리	4100	true	Emp00_Tab_TransInfo					1029
+4110	조직정보 등록	4110	조직정보 등록	4100	true	Org01_Tab_OrgCode					1028
+202202210088349	ICAM 현금흐름	9917	ICAM 현금흐름	9910	true	Icam02_Tab_CashFlow					1433
+86388	계좌신고	4510	계좌 개설 및 폐쇄 신고	86387	true	Flt03_Tab_AccountReport		false			1125
+52531	작업용	9999	작업용	9910	true	Icam99_Tab_Test					1097
+1210	펀드별 문서검색	1210	펀드별 문서검색	1200	true	Apr01_Tab_FundDocument		true			1005
+202203080095619	퇴직정산서(old)	4360	퇴직정산서	4300	true	Pay07_Tab_Retire					1139
+65924	ICAM 연계정보	9912	ICAM 연계정보(기일 등)	9910	true	Icam02_Tab_Data					1101
+86389	매수 사전신고	4520	자기매매 사전신고(매수)	86387	true	Flt10_Tab_BuyReport		false	true	Mobi_Flt10_Tab_BuyReport	1126
+65959	수탁사정보 관리(관리자)	6310	수탁사정보 관리(관리자)	58762	true	Fnd03_Tab_ConsignmentManager					1102
+3150	대결자 지정(관리자)	3150	대결자 지정(관리자)	202303081396401	true	Apr07_Tab_AltApprMgr					1022
+3140	대결자 지정	3140	대결자 지정	3100	true	Apr07_Tab_AltAppr		true	true	Mobi_Apr07_Tab_AltAppr	1021
+2120	법규관리	2120	내부통제 분류	2100	true	Ics01_Tab_ClassTreeUser		true			1013
+3170	발신메일 목록(관리자)	3180	발신메일 목록(관리자)	202303081396401	true	Dcr10_Tab_MailHistory_Manager					1024
+1320	파일보관함	1320	파일보관함	1300	false	Fbx01_Tab_BoxDocument					1008
+1130	업무별 문서작성(관리자)	1130	문서작성 및 관리(관리자)	202303081396400	true	Dcr01_Tab_DcrManager					1003
+1310	문서양식등록	1310	문서양식등록	1300	true	Dcr05_Tab_DocType					1007
+1410	운영현황표	1410	운영현황표	1400	true	Apr01_Tab_TotalList					1010
+1420	건별명세	1420	건별명세	1400	true	Apr01_Tab_SubList					1011
+3210	주소록 관리	3210	주소록 관리	3200	true	Emp10_Tab_AddrBook					1025
+2220	법규통제 상세내역	2220	내부통제 체크리스트	2200	true	Sch04_Tab_CheckList					1017
+65961	수탁은행정보 관리(관리자)	6330	수탁은행정보 관리(관리자)	58762	true	Fnd09_Tab_TrustBankManager		false	false		1103
+202402261660055	법인카드 현황	7440	법인카드 현황	86433	true	Biz01_Tab_CardReport					1333
+202306091541283	펀드별 발생보수현황	5603	펀드별 발생보수현황	202306011540565	true	Icam10_Tab_CurrentFeeByFund		true			1268
+202309131585490	고객별 문자사용량	9514	고객별 문자사용량	9510	true	Sms02_Tab_TotalCount					1305
+202308011563124	문서결재선 그룹관리	1120	문서결재선 그룹관리	202303081396400	true	Apr30_Tab_ApprStepGroup					1282
+202308021563805	메뉴별 그룹권한(View)	9160	메뉴별 그룹권한(View)	9100	true	Sys06_Tab_MenuView					1284
+202308021563872	고객사별 메뉴권한 관리	9773	고객사별 메뉴권한 관리	70647	true	Sys07_Tab_CompanyRoleMenu					1286
+202211080741605	원천징수영수증 업로드	0041	원천징수업로드	202306141542480	true	Pay08_Tab_TaxWithholdingAdmin		false	false		1220
+202401101650630	펀드 조회(변경이력)	5321		6100	true	Fnd01_Tab_FundIcamHistory		true			1327
+202309201588292	고객사별 사용자권한그룹 관리	9774	고객사별 권한그룹-사용자 맵핑 관리	70647	true	Sys05_Tab_CompanyUserRole					1307
+86458	대외활동신청	1000	대외활동 승인신청	86514	true	Ics35_Tab_ExtrActivity		false	false		1431
+202204200109999	주소록관리	1	insert menu	202204200110006	true	Test01_Tab_AddrBook					1435
+202202110086724	대외활동 신청내역	2000	대외활동 신청내역조회	86514	true	Ics35_Tab_ExtrActivityList		true	false		1432
+202301110935968	(X)체크리스트 생성	4501	체크리스트 생성	202301110935967	false	Sch20_Tab_AddChecklist		false	false		1441
+9531	일자관리	9531	일자관리	9530	true	Sys12_Tab_Calendar					1080
+202212010752020	결재선 예외처리	3240	결재선 예외처리	3100	true	Emp30_Tab_ApprStepExcept					1439
+202504242267309	사원정보 등록	1100		202504242267417	true	Emp00_Tab_TransInfo		false	false		1452
+202302201362356	로그인 Mac 주소 관리	9565	로그인 Mac 주소 관리	82642	true	Sys27_Tab_LoginManage					1442
+202303141397543	폐기문서 신청현황	3130	폐기문서 신청현황	1100	true	Apr90_Tab_DisposalList					1443
+202401261651676	법인서류 및 날인 신청	0010	법인서류 및 인감날인 신청	202302060976617	true	Apr16_Tab_StampDocAppl		false	false		1330	Apr17_Tab_CorpDocApp => Apr16_Tab_StampDocAppl	false	false
+202506122334917	인사평가 대상자	3000		202506122334911	true	Emp43_Tab_EvalTarget		true	false		1392
+202203150096131	대표계정 관리	6512	대표계정코드 관리	72476	true	Act10_Tab_ReprAccount					1147
+202508269012893	책무 등록	2000		202508052363062	true	Tdm10_Tab_Task		true	false		1412
+8140	공지사항	8140	공지사항	202501032066352	true	Bbs02_Tab_NoticeView					1065
+8110	(X)영업활동관리	8120	영업활동관리	202501032066353	false	Crm01_Tab_ItemTreeGrid		false	false		1062
+202307111557129	문서분류지정	0100	문서분류지정화면	70645	true	Dcr30_Tab_LinkAdmin					1280
+202308241571556	AssetERP 매뉴얼 등록	0001	-- 공통회사 관리자용 --	9530	true	Sys95_Tab_ManualAdmin					1298
+202308241571554	AssetERP 매뉴얼	0001	AssetERP 매뉴얼	202308241571552	true	Sys95_Tab_Manual					1297
+202308221569856	금융상품 시세관리	6545	금융상품 시세관리	202308031565044	true	Ast25_Tab_Price		true	false		1295
+202310101591518	사용자ID 처리결과 등록	0300	ICAM 사용자ID 신청서 처리결과 등록	202310101591515	true	Icam55_Tab_UserApprResult					1316
+202310131592523	(s)이익제공입력(카드)	5001	이익제공 입력(법인카드) 간소화 버전 : 거래상대방, 인원 직접입력	4400	true	Biz01_Tab_CardSimple		true			1319
+202310131592529	(s)법인카드사용내역	5010	법인카드 사용내역 조회 간소화 버전	4400	true	Biz01_Tab_CardContentsSimple		true			1321
+202310131592531	(s)이익제공 상세현황	5011	이익제공 상세현황 간호화 버전	4400	true	Biz01_Tab_PriorApprovalSimple		true			1322
+202310261602896	인력현황	4000	인력현황	202308041565328	true	Emp01_Tab_DueDiligence					1324
+202311201647242	사용자정보 조회	9502	사용자 연락처 조회	9510	true	Emp01_Tab_UserInfo					1325
+202312111648390	문서 다운로드	1250	문서 다운로드	1200	true	Dcr00_Tab_ApprList					1326
+202309251589405	데일리 체크리스트(상신)	5201	나의 스케줄 + 공모주(공유지정자)	202410252002850	true	Sch04_Tab_DailyCheckList		true	false		1308
+202308081567988	공모주 참여계좌 관리	0090	공모주 참여계좌 관리	202301110935960	true	Fnd32_Tab_Account		true			1290
+202308031565046	청약처리	6210	공모주,채권,유상 청약금 납입/환불, 입고 거래처리	202308031565044	true	Ast06_Tab_TrIPO		true	false		1288
+202310101591516	사용자ID 신청서 작성	0100	ICAM 사용자ID 신청서 작성 test112	202310101591515	true	Icam55_Tab_UserRegAppr		false	false		1314
+202310101591519	미사용ID 기록관리	0400	ICAM 미사용ID 기록 관리 TE211111	202310101591515	true	Icam55_Tab_UserStopAuth		false	false		1317
+202409061967594	법인카드 업로드 기초자료(관리자)	9793	카드업로드 기초자료	70646	true	Crd10_Tab_ExcelCompanyAdmin		false	false		1352
+202403181662051	법규관리(관리자)	0020	내부통제 분류 (관리자 메뉴등록)	202403181662050	true	Ics01_Tab_ClassTree					1012
+202407301747065	대외활동 신청서 작성	3000		202302060976617	true	Apr01_Tab_ExternalBiz		false	false		1343
+202406271714962	공모주 수요예측	0030	공모주 수요예측 신청화면	202301110935960	true	Fnd30_Tab_DemandOpr		false			1341
+202409301988074	주간업무보고	8310		202301260940357	true	Rpt03_Tab_WeekWrite		false	false		1354
+4230	휴가신청조회	4230	휴가신청조회	4200	true	Emp20_Tab_LeaveList		false	true	Mobi_Emp20_Tab_LeaveList	1034
+202409301988076	주간업무보고 확인	8311		202301260940357	true	Rpt04_Tab_WeekConfirm		true	false		1355
+202406031707145	법규등록신청확인	0095	법규등록신청확인 화면	202403181662050	true	Ics17_Tab_UserRequestAdmin		false	false		1339
+202411072013989	기간별 업무일정 조회	5150		5100	true	Sch01_Tab_List		false	false		1226
+202404301694894	리모트뷰 사용기록관리	8180	리모트뷰 사용기록관리	202501032066354	true	Kfs01_Tab_RemoteView					1334
+8130	사내공지등록	8130	공지사항(관리자)	202501032066352	true	Bbs02_Tab_NoticeManager		false	false		1064
+202506092333684	AssetERP 사용료청구	5000		202506092333679	true	Biz55_Tab_ErpFeeCharge		true	false		1403
+202207250289720	세금/4대보험 등록	1100	원천세, 부가세, 4대보험 납부	202504042257022	true	Ast06_Tab_TrTax		true	false		1196
+202508259010033	특정화면 사용요청	9170		9100	true	Sys53_Tab_SpecificMenuRequest		false	false		1409
+202508269012364	고객별 특정화면 관리	9570		9510	true	Sys53_Tab_SpecificMenuRequestAdmin		false	false		1410
+202508269012898	책무체계도	3000		202508052363064	true	Tdm32_Tab_RoleDigm		true	false		1419
+202504102260743	일임계좌 권한설정	1100		83530	true	Adv05_Tab_OrgAuth		false	false		1389
+202508269012889	임원 등록	1000		202508052363062	true	Tdm01_Tab_Hr	aman_opener.jsp?aka=1411	true	false		1411
+202409091968631	인감날인본 업로드확인	0030	인감날인본 사후업로드 확인	202308101568228	true	Apr16_Tab_StampFileCheck		true	false		1350	Apr19_Tab_StampFileCheck => Apr16_Tab_StampFileCheck	false	false
+202308101568230	법인등기부등본 관리(X)	9992	법인등기부등본 관리	202308101568228	true	Apr15_Tab_CcorCert		false	false		1291		false	false
+202508269012897	임원별 책무기술서	2000		202508052363064	true	Tdm31_Tab_RoleDesc		true	false		1418
+202509119027812	준감인 사전확인대장	1000		202509119027810	true	Ics40_Tab_DcrPreConfirm		false	false		1425
+202409121970004	임직원매매현황	4600	임직원매매 정보조회	202601299445440	true	Flt02_Tab_EmpInfo		true	false		1351
+202508052363070	관리의무 등록	2010		202508052363062	true	Tdm13_Tab_TaskDuty		true	false		1413
+202508269012890	회의체 등록	4000		202508052363062	true	Tdm05_Tab_Cncl		true	false		1415
+202406071707533	관리그룹별 법규조회(????)	2130	관리그룹별 법규조회	2100	false	Ics01_Tab_ClassTreeByGroup		true	false		1444
+202410151991136	I/F 설정	0010		202410151991127	true	Ifi90_Tab_Config		false	false		1445
+202410151991143	API 레이아웃	0020		202410151991139	true	Ifi92_Tab_ApiLayout		false	false		1447
+202410151991144	고객사Key 등록	0030		202410151991139	true	Ifi01_Tab_ApiCompany		false	false		1448
+202410151991147	파일송수신관리	0020		202410151991127	true	Ifi95_Tab_FileConfig		false	false		1449
+202410151991149	파일레이아웃	0030		202410151991127	true	Ifi96_Tab_FileLayout		false	false		1450
+202503182155714	권리행사/기타입출고	4556	권리행사로 인한 입고처리 및 기타 입출고 처리	86387	true	Flt10_Tab_RightsExercise		false	false		1372
+202506122334913	인사평가 항목	1000		202506122334911	true	Emp41_Tab_EvalList		true	false		1391
+202506232337445	인사평가 항목(Admin)	9795		70646	true	Emp41_Tab_EvalList		false	false		1398
+202507172357655	사무수탁사 확인서 작성	3010		202302060976617	true	Apr01_Tab_OfficeWorkCert		false	false		1453
+202511069190986	대표이행점검 보고	4000	반기or분기별 대표이사 총괄관리의무 이행점검 보고서 상신	202508052363067	false	Tdm57_Tab_CeoReport		true	false		1460
+202511069190969	이행점검 작업지시 및 보고	1000	회사책무담당자가 부서별 책무이행점검 작업등록 및 임원별 이행점검보고서  생성, 대표상신	202508052363067	true	Tdm50_Tab_CheckJob	aman_opener.jsp?aka=1455	true	false		1455
+202511069190975	책무이행점검	3000	점검자가 책무이행점검 등록	202508052363067	true	Tdm52_Tab_CheckManl	aman_opener.jsp?aka=1457	true	false		1457
+202511069190974	업무점검자 지정 및 승인요청	2000	부서책무담당자가 점검항목별 점검자지정 및 임원보고	202508052363067	true	Tdm51_Tab_CheckOrg	aman_opener.jsp?aka=1456	true	false		1456
+202511069190988	미흡내역 조치	3900	미흡/개선내역 조치등록	202508052363067	true	Tdm54_Tab_CheckInsuff	aman_opener.jsp?aka=1459	true	false		1459
+202506122334919	인사평가수행(평가자)	4000		202506122334911	true	Emp43_Tab_EvalExecute		true	false		1393
+202506122334920	인사평가결과(인사부)	5000		202506122334911	true	Emp43_Tab_FirstAppr		true	false		1394
+202505302296646	사업비발생현황	6000		202504042257022	true	Pay50_Tab_AccountSumList		true	false		1399
+202507072342519	펀드보수현황	2010		202211210746947	true	Ast30_Tab_FundMngFee		false	false		1401
+202211210746955	운용보수 입금계좌 관리	3000	펀드별 운용보수  입금계좌 관리	202211210746947	true	Icam11_Tab_FundMngFeeDeposit		false	false		1217
+202507162357374	로그아웃 알림 관리	9503	insert menu	9510	true	Sys86_Tab_Websocket		false	false		1404
+202504042257025	자금집행결의서	2000		202504042257022	true	Pay50_Tab_ExpensePayWrite		false	false		1386
+202507012341548	자금집행결의서 조회	2100		202504042257022	true	Pay50_Tab_ExpensePay		false	false		1400
+202508052363190	법인카드 실사용자 배분	4440	insert menu	86433	true	Biz01_Tab_CardUserAllocation		false	false		1406
+202508149001812	업무활동등록(관리자)	1010	전체 업무활동내역 조회, 공유지정 기능	202501032066353	true	Mkt03_Tab_HistoryManager		true	false		1408
+8120	(X)거래처 및 업무활동 등록	8110		202501032066353	false	Crm09_Tab_ContactPointTreeGrid		false	false		1063
+202510149106506	펀드보유주식등록(타사무)	6000	타사무수탁사에서 관리되는 펀드의 상장주식 보유종목을 등록합니다. (임직원매매 펀드보유종목 체크용)	6100	true	Fnd11_Tab_BookExtr		false	false		1426
+202510149106509	일임보유주식등록(타사무)	2000	타시스템에서 관리되는 일임/자문 상장주식 보유종목을 등록합니다. (임직원매매 펀드보유종목 체크용)	83530	true	Adv11_Tab_BookExtr		false	false		1427
+202410151991141	API 관리	0010		202410151991139	true	Ifi91_Tab_ApiConfig		false	false		1446
+202509089027219	매뉴얼 작업대상 선정	1000		202508052363066	true	Tdm40_Tab_ManlJob	aman_opener.jsp?aka=1420	true	false		1420
+202509089027213	매뉴얼 부서지정	2000	책무매뉴얼 작업을 위해 관리의무별 담당부서를 지정한다	202508052363066	true	Tdm41_Tab_ManlDutyOrg	aman_opener.jsp?aka=1421	true	false		1421
+202509089027215	매뉴얼(점검항목) 작성	3000	부서별 매뉴얼 점검항목을 등록(작성)한다	202508052363066	true	Tdm43_Tab_ManlItemReg	aman_opener.jsp?aka=1422	true	false		1422
+202509089027216	매뉴얼 보고(부서별)	4000		202508052363066	true	Tdm42_Tab_ManlOrgAppr	aman_opener.jsp?aka=1423	true	false		1423
+202509199050169	매뉴얼 관리(관리자)	4500	책무매뉴얼 작성현황 확인 및 사용기간을 관리한다	202508052363066	true	Tdm42_Tab_ManlManager	aman_opener.jsp?aka=1424	true	false		1424
+202205270193010	외화예금 환평가처리	6532	고유자산 외화예금 환평가	202206070228981	true	Ast06_Tab_FxEvalDeposit		true			1174
+202205030122386	전산장비관리	6360	전산장비관리	202205030122380	true	Bmt10_Tab_Info					1161
+8210	회의실 예약관리	8210	회의실 예약관리	8200	true	Mrb01_Tab_List					1067
+202203280097112	계정별원장	6560	계정보조부	202206070228982	true	Act02_Tab_JournalSub		true			1150
+202405311707045	법규조회	0015	법규조회전용	202405311707037	true	Ics01_Tab_ClassTreeUserView		true			1336
+202405311707057	법규등록신청	2160	법규정보 등록 신청	2100	true	Ics17_Tab_UserRequest		true			1338
+8150	개선사항 및 오류 통보	8150	개선사항 및 오류 통보	202501032066354	true	Sys90_Tab_AfterService					1066
+77524	증명서 발급	4150	재직증명서, 경력증명서, 퇴직증명서, 징계내역 확인서를 발급하는 화면	4100	true	Emp15_Tab_Cert					1115
+202402141656217	기타신청서 확인	9061	재직증명서, 경력증명서, 퇴직증명서, 징계내역확인서, 갑근세원천징수확인서 등 신청내역 확인	202211210746938	true	Bbs11_Tab_ApplicationMng		false	false		1332
+3230	(X)직책별 결재자 등록	3230	직책별 결재자 등록	3200	false	Apr08_Tab_ApprRole		false	false		1027
+3160	발신메일목록	3217	결재메일 목록	3200	true	Dcr10_Tab_MailHistory		true	false		1023
+3220	사용인감등록	3220	사용인감등록	3100	true	Apr10_Tab_Stamp		true			1026
+3130	(X)인감대장	3160	인감대장	3100	false	Apr01_Tab_StampSeq		false	false		1020
+202501172093357	금융상품 거래처리(외화)	6530		202308031565044	true	Ast06_Tab_TrForFinance		true	false		1365
+202501202093644	금융상품 보유내역(외화)	6321		202205030122380	true	Ast09_Tab_FinanceForBook		false	false		1366
+202302151350562	금융상품 보유내역(기간조회)	6323	금융상품 잔고조회(기간조회)	202205030122380	true	Ast09_Tab_FinanceBookPeriod		true	false		1239
+202501212114439	고객별 문자발송	9560	고객별 문자발송	9510	true	Sms03_Tab_SendAdmin		false	false		1367
+202502132121223	마감검증 체크항목	9767		77725	true	Act15_Tab_CloseCheck		false	false		1368
+69243	법규보고 서식파일 등록	0021	내부통제 서식파일 등록(관리자)	202403181662050	true	Ics01_Tab_IcsFileUpload		false	false		1107
+202309201588449	내부통제 준수점검(준감인)	2000	준법감시인 점검 및 확인처리	202309201588443	true	Ics31_Tab_ComplianceConfirm		true	false		1311
+202309201588451	내부통제 준수보고(준감인)	3000	준수현황 조회 및 상신처리	202309201588443	true	Ics31_Tab_ComplianceReport		true	false		1312
+202301200939518	내부통제내역 확인(부서장)	2304	내부통제 체크리스트 확인 및 문서상신	202301180938340	true	Ics15_Tab_ChecklistConfirm		true	false		1230
+202301180938348	내부통제내역 상세(준감인)	2311	내부통제 체크리스트 상세현황	202301180938340	true	Ics15_Tab_ChecklistStatusDetail		true	false		1235
+86422	이익제공 기준관리(준감인)	4510	이익제공(수령) 기준관리	4400	true	Biz90_Tab_Limit		true	false		1130
+1120	업무별 문서작성	1120	문서관리	1100	true	Dcr01_Tab_DcrUser	https://outlook.cloud.microsoft/mail/	true	true	Mobi_Apr01_Edit_ApprDoc	1002
+86457	이익제공 입력(현금,물품)	4525	로그인한 사용자가 등록한 건만 조회	4400	true	Biz01_Tab_Other		true	false		1132
+202503192155965	복리후생비 코드관리	9794	Emp55_Tab_benefitInfoManager	70646	true	Emp55_Tab_benefitInfoManager		false	false		1373
+202503312255660	용역결과보고서	4000		202503312255655	true	Est02_Tab_PfResultReport		false	false		1378
+202504032256492	용역수행내역 승인	3500		202503312255655	true	Est03_Tab_PfHistoryConfirm		true	false		1382
+202504072257072	출장관리	5000		202405031696894	true	Emp53_Tab_BizTripManager		true	false		1381
+202406111707862	법규보고 점검(관리자)	2170	법규보고 발생내역(관리자)	2100	true	Sch04_Tab_IcsListManager		true	false		1340
+202504042256969	사업비 지출승인(부서장)	2100		202505292294256	true	Pay50_Tab_ExpenseConfirm		false	false		1384
+202405311707051	법규보고 점검	0050	법규보고 발생내역	202405311707037	true	Sch04_Tab_IcsList		true	false		1337
+202506122334925	인사평가 결과조회	8000		202506122334911	true	Emp43_Tab_EvalResult		true	false		1396
+202407041722239	선급금/선급비용 조회	6580		202206070228982	true	Ast09_Tab_PreDepositBook		true	false		1342
+202207290319915	보수원장	6533	"일별보수현황 (보수유보분 포함)
+=> 미수사무관리보수 + 현금미지급사무보수"	202207290319913	true	Ast30_Tab_OfficeMngFeeState		false	false		1201
+202308021563838	급여항목조회	0020	급여항목조회	202306141542480	true	Pay10_Tab_MonthSearch		false	false		1285
+202501102068228	갑근세확인서 발급	0037		202306141542480	true	Pay40_Tab_TaxWithholding		true	false		1364
+202504042256845	사업비 지출요청	2000		202505292294256	true	Pay50_Tab_ExpenseRequest		false	false		1383
+202302141346429	예금잔고조회	0020	예금잔고조회(기간조회)	202505292294259	true	Ast09_Tab_DepositBookPeriod		true			1238
+4240	연월차휴가 현황	4240	연차/월차 휴가 현황-연차수당 산정내역	202405031696894	true	Emp20_Tab_YearList		false	false		1035
+202506172335432	비품관리대장	6329		202205030122380	true	Ast13_Tab_OfficeAssets		false	false		1397
+202206270254502	연차휴가 사용촉진	4250	미사용 연차휴가관리 (잔여 연월차 사용촉진, 지정통보)	202405031696894	true	Emp21_Tab_UnLeaveList		false			1185
+202205030122409	거래유형 등록(관리자)	9763	거래코드 관리(관리자)	77725	true	Ast05_Tab_TrCodeAdmin					1165
+202203240096905	전표입력	6511	분개 생성	202203240096903	true	Act02_Tab_CreateJournal		true			1148
+202206020228670	재무상태표	6552	재무상태표	202206070228983	true	Act04_Tab_ReportBS		true			1179
+202203240096911	정기보고	4550	자기매매 실거래 보고	86387	true	Flt10_Tab_RealTransaction		false	false		1142
+202503182155713	계좌대체	4555		86387	true	Flt10_Tab_AcntTransfer		false	false		1371
+202203240096912	보유내역조회	4570	자기매매 보유내역 조회	86387	true	Flt11_Tab_BookList		false	false		1143
+202412182050230	임직원 정보통신수단	5000	금감원 감사 요청 자료입니다.	202308041565328	true	Bmt12_Tab_EmpIct	Information and Communication Tool	true	false		1361
+86533	이익제공 사전승인신청	4560	이익제공(수령) 사전승인 신청	4400	true	Apr01_Tab_BizPriorApproval					1134
+202203150096094	로그인내역 조회	9565	로그인내역 조회	82642	true	Sys26_Tab_LoginHistory					1140
+4140	조직별 사원조회(관리자)	4140	조직별 사원조회(관리자)	202303081396402	true	Emp00_Tab_OrgEmpManager					1031
+58772	자산상세 항목관리	9751	자산상세 디폴트 항목 관리	70646	true	Ast01_Tab_InfoManager					1089
+43136	연봉계약현황	4320	연봉계약현황	202504102260350	true	Pay01_Tab_AnnualList					1082
+202203280097113	계정과목집계표	6570	계정원장	202206070228982	true	Act04_Tab_GenLedger		true	false		1151
+66134	펀드 조회 (ICAM)	5320	ICAM에서 관리하는 펀드 상세조회	6100	false	Fnd01_Tab_FundSearchIcam		true			1099
+83532	자산별 펀드 조회(ICAM)	5340	자산별 운용펀드	6100	true	Fnd10_Tab_RelateFnd					1124
+9513	메뉴 관리	9513	메뉴 관리	9510	true	Sys06_Tab_Menu		false	false		1077
+202310131592526	(s)이익제공입력(현금,물품)	5002	이익제공 입력 간소화 버전 : 거래상대방, 인원 직접입력	4400	true	Biz01_Tab_OtherSimple		true	false		1320
+202204220112584	위반내역조회	4580	자기매매 위반내역	86387	true	Flt10_Tab_ViolateUser		true	false		1370
+202309131585526	고객별 서버사용량	9515	고객별 서버사용량	9510	true	Sys10_Tab_TotalSize					1306
+202306141542508	4대보험신고(EDI)	0060	4대보험 자격취득/보수변동/착오정정/보수총액신고/납부방법변경 처리	202306141542480	true	Pay31_Tab_InsureApply					1275
+202307201560435	급여관리(항목별)	0011	급여관리(항목별)	202306141542480	true	Pay10_Tab_MonthItem					1281
+202307311562916	사원별 메뉴권한(View)	9150	사원별 메뉴권한(View)	9100	true	Emp00_Tab_RoleMenu					1283
+202206070228985	급여/카드 회계처리	4000	업무단(급여, 법카사용, 최저보수)에서 발생한 회계처리	202504042257022	true	Act02_Tab_CreateJournalBiz		true	false		1180
+202505302296644	미지급반제처리	5000		202504042257022	true	Pay50_Tab_ExpenseSettle		true	false		1390
+202506092333682	AssetERP 계약사관리	1000	AssetERP 계약사관리	202506092333679	true	Biz51_Tab_ErpContCorp		true	false		1402
+202510289154973	공람내역 조회	3135	공람내역 조회	3100	true	Apr01_Tab_MyAuthList		true	false		1428
+202510319170016	고객별 매뉴사용기록	9580	고객별 매뉴사용기록	9510	true	Sys96_Tab_OpenMenuLogAdmin		false	false		1429		false	false
+202610129943474	공통 컴포넌트 테스트		공통 컴포넌트 테스트 	202610129943473	true	Test_Tab_ReactComponents		false	false
+202309261590566	신규 문서작성	1110	신규 문서작성 (문서분류 세부분류 관리시 사용가능)	1100	true	Dcr01_Tab_DcrWrite		false	false		1318
