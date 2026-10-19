@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr40_download_history.xml selectByTextPaging·selectByTextPagingTotal·insert (F09, Dcr00_Tab_ApprList·Apr40_Lookup_DownloadHistory) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprDownloadHistoryMapper">
+
+    <!-- AS-IS apr40_download_history.selectByTextPaging L48 (IDMS-IC) — SELECT *·모델 열 중 그리드가 쓰는 열만, 조인·조건·정렬·페이징은 그대로 -->
+    <select id="selectByTextPaging" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprDownloadHistoryRes">
+        SELECT apr40_download_history_id                                    AS download_history_id
+             , apr40_appr_id                                                AS appr_id
+             , TO_CHAR(apr40_reg_date, 'YYYY-MM-DD HH24:MI:SS')             AS reg_date_string
+             , apr01_title                                                  AS title
+             , f_emp_kor_nm(apr40_person_id)                                AS person_name
+          FROM apr40_download_history
+               INNER JOIN apr01_appr ON apr40_appr_id = apr01_appr_id AND apr01_company_id = #{c.companyId}
+         WHERE 1=1
+           AND f_trunc(apr40_reg_date) BETWEEN #{c.startDate} AND #{c.closeDate}
+           AND UPPER(CONCAT(apr01_title, f_emp_kor_nm(apr40_person_id))) LIKE UPPER(#{c.searchText})
+         ORDER BY apr40_reg_date DESC, apr01_title, f_emp_kor_nm(apr40_person_id)
+         LIMIT #{c.limit}
+        OFFSET #{c.offset}
+    </select>
+
+    <!-- AS-IS apr40_download_history.selectByTextPagingTotal (IDMS-IC) -->
+    <select id="selectByTextPagingTotal" resultType="long">
+        SELECT count(apr40_download_history.*)
+          FROM apr40_download_history
+               INNER JOIN apr01_appr ON apr40_appr_id = apr01_appr_id AND apr01_company_id = #{c.companyId}
+         WHERE 1=1
+           AND f_trunc(apr40_reg_date) BETWEEN #{c.startDate} AND #{c.closeDate}
+           AND UPPER(CONCAT(apr01_title, f_emp_kor_nm(apr40_person_id))) LIKE UPPER(#{c.searchText})
+    </select>
+
+    <!-- AS-IS apr40_download_history.insert L73 (IDMS-IC) — INSERT … SELECT 위치 열을 열 이름으로 풀어 씀 -->
+    <insert id="insert">
+        INSERT INTO apr40_download_history (apr40_download_history_id, apr40_company_id, apr40_person_id, apr40_appr_id, apr40_reg_date)
+        SELECT f_create_seq()
+             , #{companyId}
+             , #{personId}
+             , #{apprId}
+             , f_sysdate()
+    </insert>
+</mapper>

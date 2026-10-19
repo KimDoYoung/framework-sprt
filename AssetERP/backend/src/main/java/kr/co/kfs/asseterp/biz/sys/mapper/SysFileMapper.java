@@ -18,6 +18,9 @@ public interface SysFileMapper {
 
     List<FileRes> selectByParentId(@Param("parentId") Long parentId);
 
+    /** F09: FileDownload apprList의 정렬(파일 구분이 먼저) */
+    List<FileRes> selectByApprId(@Param("parentId") Long parentId);
+
     FileRes selectOneByParentId(@Param("parentId") Long parentId);
 
     int countPersonById(@Param("personId") Long personId);

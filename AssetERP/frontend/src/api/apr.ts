@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalList, AprDoc, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprRelateAdv, AprRelateFund, AprStamp } from '../types/apr';
+import { AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprRelateAdv, AprRelateFund, AprStamp } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -96,5 +96,16 @@ export const aprApi = {
   searchRelateAdvs: async (apprId: number): Promise<AprRelateAdv[]> => {
     const res = await apiClient.get<ApiResponse<AprRelateAdv[]>>(`v1/apr/apprs/${apprId}/relate-advs`);
     return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr40_DownloadHistory.selectByTextPaging (Apr40_Lookup_DownloadHistory, F09): 다운로드 기록, 페이징. searchText는 서버가 %…%로 */
+  searchDownloadHistories: async (params: { startDate: string; closeDate: string; searchText: string; offset: number; limit: number }): Promise<PageRes<AprDownloadHistory>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<AprDownloadHistory>>>('v1/apr/download-histories', { params });
+    return res.data.data as PageRes<AprDownloadHistory>;
+  },
+
+  /** AS-IS apr.Apr40_DownloadHistory.updateList (Dcr00_Tab_ApprList.insertHistory, F09): 내려받은 문서마다 기록 1건 */
+  createDownloadHistories: async (apprIds: number[]): Promise<void> => {
+    await apiClient.post('v1/apr/download-histories', { apprIds });
   },
 };

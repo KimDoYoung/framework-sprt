@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.dcr.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocApprRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocFileCond;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocFileRes;
 import kr.co.kfs.asseterp.biz.dcr.mapper.DcrDocListMapper;
@@ -13,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 
-/** AS-IS server/dcr/Dcr00_DocList.java (F08 문서별 첨부파일 검색) */
+/** AS-IS server/dcr/Dcr00_DocList.java (F08 문서별 첨부파일 검색, F09 문서 다운로드) */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -30,6 +31,14 @@ public class DcrDocListService {
         Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         String admin = String.valueOf(SysMenuSearchService.isManager(user));
         return mapper.selectFiles(new DcrDocFileCond(user.getCompanyId(), classTreeId, orgId, user.getUserId(), admin, startDate, endDate,
+                "%" + (searchText == null ? "" : searchText) + "%", "%"));
+    }
+
+    /** AS-IS Dcr00_DocList.getAppr L222 (F09). 조건·권한은 getFile과 같다. 검색어는 상신제목/등록자/부서명/비고 */
+    public List<DcrDocApprRes> searchApprs(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate endDate, String searchText) {
+        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        String admin = String.valueOf(SysMenuSearchService.isManager(user));
+        return mapper.selectApprs(new DcrDocFileCond(user.getCompanyId(), classTreeId, orgId, user.getUserId(), admin, startDate, endDate,
                 "%" + (searchText == null ? "" : searchText) + "%", "%"));
     }
 }

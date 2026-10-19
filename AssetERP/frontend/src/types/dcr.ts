@@ -246,3 +246,16 @@ export interface DcrDocFile {
   note?: string | null;
   empName?: string | null;
 }
+
+/** 문서 다운로드 한 행 (AS-IS Dcr00_DocListModel 중 Dcr00_Tab_ApprList 그리드 열, F09). inoutCode·titleCount는 PDF 만들기 대상 판정용 */
+export interface DcrDocAppr {
+  apprId: number;
+  classTreeName?: string | null;
+  regDate?: string | null;
+  inoutName?: string | null;
+  inoutCode?: string | null;
+  aprTitle?: string | null;
+  empName?: string | null;
+  fileCount?: number | null;
+  titleCount?: number | null;
+}

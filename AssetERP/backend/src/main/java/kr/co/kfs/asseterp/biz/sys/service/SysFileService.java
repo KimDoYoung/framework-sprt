@@ -177,6 +177,45 @@ public class SysFileService {
         return entries;
     }
 
+    /**
+     * AS-IS FileDownload.downloadApprList L281-310 (fileType=apprList, F09): 고른 문서들의 본문·첨부파일을 zip 하나로("Asset-ERP_DOC.zip").
+     * 본문(titleYn=true)은 "(번호) [본문] 파일명", 첨부는 "(번호-순번) [첨부파일] 파일명"이고 그 앞에 담긴 순서 "(n) "이 한 번 더 붙는다. 서버에 없는 파일은 건너뛴다
+     */
+    public List<StoredFile> getApprZipEntries(UserPrincipal user, List<Long> apprIds) {
+        if (apprIds == null || apprIds.isEmpty()) {
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND, "파일 리스트가 없습니다.");
+        }
+        List<FileRes> files = new ArrayList<>();
+        List<String> names = new ArrayList<>();
+        int mainNumber = 1;
+        int subNumber = 1;
+        for (Long apprId : apprIds) {
+            for (FileRes fileModel : sysFileMapper.selectByApprId(apprId)) {
+                if ("true".equals(fileModel.titleYn())) {
+                    subNumber = 1;
+                    names.add("(" + mainNumber + ") [본문] " + fileModel.fileNm());
+                } else {
+                    mainNumber--;
+                    names.add("(" + mainNumber + "-" + subNumber + ") [첨부파일] " + fileModel.fileNm());
+                    subNumber++;
+                }
+                files.add(fileModel);
+                mainNumber++;
+            }
+        }
+        List<StoredFile> entries = new ArrayList<>();
+        for (int i = 0; i < files.size(); i++) {
+            FileRes fileModel = files.get(i);
+            File file = new File(fileModel.serverPath(), fileModel.fileId().toString());
+            if (!file.exists()) {
+                continue;
+            }
+            auditLogService.record(AuditEventType.FILE_DOWNLOAD, AuditResult.SUCCESS, user.getUsername(), fileModel.fileId().toString(), fileModel.fileNm());
+            entries.add(new StoredFile(file, "(" + (entries.size() + 1) + ") " + names.get(i), "application/octet-stream"));
+        }
+        return entries;
+    }
+
     /** AS-IS FileDownload.downloadGenericImage L195-215 (fileType=image): fileId 또는 parentId의 최근 1건, 없으면 {업로드 폴더}/nonamed.jpg */
     public StoredFile getImage(Long fileId, Long parentId) {
         FileRes fileModel = null;

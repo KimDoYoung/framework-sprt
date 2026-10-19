@@ -88,7 +88,16 @@ public class SysFileController {
     /** AS-IS FileDownload?fileType=selectList&selectList=id,id,… — 고른 파일들의 zip ("Asset-ERP.zip") */
     @GetMapping("/zip")
     public ResponseEntity<StreamingResponseBody> downloadZip(@AuthenticationPrincipal UserPrincipal principal, @RequestParam List<Long> fileIds) {
-        List<SysFileService.StoredFile> entries = sysFileService.getZipEntries(principal, fileIds);
+        return toZipResponse(sysFileService.getZipEntries(principal, fileIds), "Asset-ERP");
+    }
+
+    /** AS-IS FileDownload?fileType=apprList&selectList=apprId,apprId,… — 고른 문서들의 본문·첨부파일 zip ("Asset-ERP_DOC.zip", F09) */
+    @GetMapping("/appr-zip")
+    public ResponseEntity<StreamingResponseBody> downloadApprZip(@AuthenticationPrincipal UserPrincipal principal, @RequestParam List<Long> apprIds) {
+        return toZipResponse(sysFileService.getApprZipEntries(principal, apprIds), "Asset-ERP_DOC");
+    }
+
+    private ResponseEntity<StreamingResponseBody> toZipResponse(List<SysFileService.StoredFile> entries, String outputName) {
         StreamingResponseBody body = out -> {
             try (ZipOutputStream zip = new ZipOutputStream(out)) {
                 zip.setLevel(8);
@@ -103,7 +112,7 @@ public class SysFileController {
         };
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, "application/zip")
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Asset-ERP.zip\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + outputName + ".zip\"")
                 .body(body);
     }
 

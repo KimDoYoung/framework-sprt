@@ -135,3 +135,12 @@ export interface AprItemDoc {
   note?: string | null;
   fileName?: string | null;
 }
+
+/** 다운로드 기록 한 행 (AS-IS Apr40_DownloadHistoryModel 중 Apr40_Lookup_DownloadHistory 그리드 열, F09) */
+export interface AprDownloadHistory {
+  downloadHistoryId: number;
+  apprId: number;
+  regDateString?: string | null;
+  title?: string | null;
+  personName?: string | null;
+}

@@ -2980,5 +2980,60 @@
     "note": "docs/work/F/F08-작업기록.md",
     "history": [],
     "id": "F08"
+  },
+  "Dcr00_Tab_ApprList": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/dcr/Dcr00_Tab_ApprList.java": "4d34f2c2866821bcad8fd624cfcd6087cfc4688e",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr00_DocListModel.java": "b963245262f570d85b45022cf2e6b1219e632ac0",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr00_DocListModelProperties.java": "d348f28173d104807f29df8384d1a10741dfb095",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr01_ClassTreeModel.java": "b11f72ec7b9f373dd86ec5303bac1785335febf4",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr03_OrgAuthModel.java": "9d159b0f64709f2e044abe12af5c0cc6308ddeaf",
+      "application/src/main/java/myApp/server/apr/Apr40_DownloadHistory.java": "b70e08e4ebc4cf46670be0e74fe124471b8df3a8",
+      "application/src/main/java/myApp/server/apr/mapper/apr40_download_history.xml": "dcefc0e65193cf1e72163a10bc887693658ff0e7",
+      "application/src/main/java/myApp/server/dcr/Dcr00_DocList.java": "f0ee8c24d013a23a3dfb7e16e994a4df6b0387be",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr00_doc_list.xml": "b7965816009c462abe4a85880423788ce8f5f956",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/pdf/PDFCreate.java": "758ddae91d27bfb2bf4be5877abe3607663809a3"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Apr40_Lookup_DownloadHistory",
+      "Dcr01_Lookup_DcrClass"
+    ],
+    "recorded_at": "2026-10-19T21:24:22+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/F/F09-작업기록.md",
+    "history": [],
+    "id": "F09"
+  },
+  "Apr40_Lookup_DownloadHistory": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/apr/Apr40_Lookup_DownloadHistory.java": "8b1a5ce8efabb94b33e641f1b30a166b86149eee",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr01_ApprModel.java": "4ca7472ada54858472b793f34b0776284ba61880",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr04_ApprStepModel.java": "61621aff816c6816233c4b2eefcffeb9c5adc7a2",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr10_StampModel.java": "fa1aa3c58166aa91762dc8131e7e15934bb83857",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr40_DownloadHistoryModel.java": "5f16a63e14ed12d7c68132d503200dcea007fc0a",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr40_DownloadHistoryModelProperties.java": "94cc57dba3290a382b7c55878fae1e66bb2d59ad",
+      "application/src/main/java/myApp/server/apr/Apr40_DownloadHistory.java": "b70e08e4ebc4cf46670be0e74fe124471b8df3a8",
+      "application/src/main/java/myApp/server/apr/mapper/apr40_download_history.xml": "dcefc0e65193cf1e72163a10bc887693658ff0e7"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc"
+    ],
+    "recorded_at": "2026-10-19T21:24:23+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/F/F09-작업기록.md",
+    "history": [],
+    "id": "F09"
   }
 }

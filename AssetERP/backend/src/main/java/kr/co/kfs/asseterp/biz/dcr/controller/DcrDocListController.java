@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.dcr.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocApprRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocFileRes;
 import kr.co.kfs.asseterp.biz.dcr.service.DcrDocListService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -31,5 +32,15 @@ public class DcrDocListController {
                                                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
                                                         @RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.searchFiles(principal, classTreeId, startDate, endDate, searchText));
+    }
+
+    /** AS-IS dcr.Dcr00_DocList.getAppr (Dcr00_Tab_ApprList, F09 문서 다운로드). 검색어는 서버가 %…%로 */
+    @GetMapping("/apprs")
+    public ApiResponse<List<DcrDocApprRes>> searchApprs(@AuthenticationPrincipal UserPrincipal principal,
+                                                        @RequestParam(required = false) Long classTreeId,
+                                                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                                                        @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchApprs(principal, classTreeId, startDate, endDate, searchText));
     }
 }

@@ -36,6 +36,22 @@ const fileNameOf = (disposition: string | undefined, fallback: string) => {
   return m ? decodeURIComponent(m[1]) : fallback;
 };
 
+const saveZip = async (url: string, params: Record<string, string>, defaultName: string): Promise<void> => {
+  try {
+    const res = await apiClient.get<Blob>(url, { params, responseType: 'blob' });
+    const objectUrl = URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = fileNameOf(res.headers['content-disposition'], defaultName);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  } catch (err) {
+    throw await readBlobError(err);
+  }
+};
+
 export const fileApi = {
   /** AS-IS sys.Sys10_File.selectByParentId */
   searchByParentId: async (parentId: number): Promise<FileInfo[]> => {
@@ -105,19 +121,8 @@ export const fileApi = {
   },
 
   /** AS-IS FileDownload?fileType=selectList&selectList=id,id,… → "Asset-ERP.zip" 브라우저 저장 */
-  downloadZip: async (fileIds: number[]): Promise<void> => {
-    try {
-      const res = await apiClient.get<Blob>('v1/sys/files/zip', { params: { fileIds: fileIds.join(',') }, responseType: 'blob' });
-      const url = URL.createObjectURL(res.data);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileNameOf(res.headers['content-disposition'], 'Asset-ERP.zip');
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (err) {
-      throw await readBlobError(err);
-    }
-  },
+  downloadZip: async (fileIds: number[]): Promise<void> => saveZip('v1/sys/files/zip', { fileIds: fileIds.join(',') }, 'Asset-ERP.zip'),
+
+  /** AS-IS FileDownload?fileType=apprList&selectList=apprId,apprId,… → "Asset-ERP_DOC.zip" 브라우저 저장 (F09) */
+  downloadApprZip: async (apprIds: number[]): Promise<void> => saveZip('v1/sys/files/appr-zip', { apprIds: apprIds.join(',') }, 'Asset-ERP_DOC.zip'),
 };
