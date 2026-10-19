@@ -706,3 +706,26 @@ export interface Manual {
   publicYn?: string | null;
   note?: string | null;
 }
+
+/** 화면 찾기 한 행 (AS-IS Sys06_MenuModel, Sys06_Lookup_SearchMenu). bookmark는 이 사용자의 북마크 ID — 관리자용 조회에는 bookmark·parentPathNm이 없다 */
+export interface MenuSearch {
+  menuId: number;
+  bookmark?: number | null;
+  parentPathNm?: string | null;
+  menuNm: string;
+  menuNo?: string | null;
+  note?: string | null;
+  className?: string | null;
+  menuFullNm?: string | null;
+}
+
+/** 북마크 한 행 (AS-IS Sys40_BookmarkModel, Sys40_Lookup_Bookmark) */
+export interface Bookmark {
+  bookmarkId: number;
+  companyId?: number | null;
+  personId?: number | null;
+  menuId?: number | null;
+  menuNm?: string | null;
+  parentTitleNm?: string | null;
+  seq?: string | null;
+}

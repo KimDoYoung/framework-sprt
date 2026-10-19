@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/ast/mapper/ast05_tr_code.xml (selectByCompanyId, selectById, checkTrCode, deleteByTrCode, insertInitData) + UpdateDataModel(ast05_tr_code) 저장·삭제  (E29)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstTrCodeMapper">
+
+    <!-- selectByCompanyId·selectById의 select *를 DTO 열로 풀었다. 그리드에 없는 계산 열(act11 장부구분·자산/문서 분류명)과 그 JOIN은 뺐다 -->
+    <sql id="trCodeColumns">
+        a.ast05_tr_code_id          AS tr_code_id
+      , a.ast05_company_id          AS company_id
+      , a.ast05_tr_cd               AS tr_code
+      , a.ast05_tr_nm               AS tr_name
+      , a.ast05_rcv_pay_cd          AS rcv_pay_code
+      , f_cdnm('RcvPayCode', a.ast05_rcv_pay_cd, a.ast05_company_id, f_sysdate()) AS rcv_pay_name
+      , a.ast05_tr_occ_type         AS tr_occ_type
+      , f_cdnm('TrOccType', a.ast05_tr_occ_type, a.ast05_company_id, f_sysdate()) AS tr_occ_type_name
+      , a.ast05_item_class_group_cd AS item_class_group_code
+      , a.ast05_finance_yn          AS finance_yn
+      , a.ast05_lock_yn             AS lock_yn
+      , a.ast05_use_yn              AS use_yn
+      , a.ast05_note                AS note
+    </sql>
+
+    <!-- AS-IS ast05_tr_code.selectByCompanyId (IDMS-IC) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrCodeRes">
+        SELECT <include refid="trCodeColumns"/>
+          FROM ast05_tr_code a
+         WHERE a.ast05_company_id = #{companyId}
+           AND a.ast05_tr_cd || UPPER(a.ast05_tr_nm) LIKE UPPER(#{searchText})
+           AND a.ast05_asset_type LIKE #{assetType}
+           AND ( ( #{useYn} = 'true'  AND COALESCE(a.ast05_use_yn,'true') = 'true' ) OR
+                 ( #{useYn} = 'false' ) )
+         ORDER BY a.ast05_tr_cd
+    </select>
+
+    <!-- AS-IS ast05_tr_code.selectById (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrCodeRes">
+        SELECT <include refid="trCodeColumns"/>
+          FROM ast05_tr_code a
+         WHERE a.ast05_tr_code_id = #{trCodeId}
+    </select>
+
+    <!-- AS-IS ast05_tr_code.checkTrCode (IDMS-IC) -->
+    <select id="checkTrCode" resultType="long">
+        SELECT ast05_tr_code_id
+          FROM ast05_tr_code
+         WHERE ast05_company_id = #{companyId}
+           AND ast05_tr_cd      = #{trCode}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel INSERT: 화면 insertRow()가 회사 ID·자산구분 "1"을 넣는다 -->
+    <insert id="insert">
+        INSERT INTO ast05_tr_code (ast05_tr_code_id, ast05_company_id, ast05_tr_cd, ast05_tr_nm, ast05_rcv_pay_cd, ast05_use_yn,
+                                   ast05_note, ast05_asset_type, ast05_finance_yn, ast05_lock_yn, ast05_tr_occ_type, ast05_item_class_group_cd)
+        VALUES (#{trCodeId}, #{companyId}, #{req.trCode}, #{req.trName}, #{req.rcvPayCode}, #{req.useYn},
+                #{req.note}, '1', #{req.financeYn}, #{req.lockYn}, #{req.trOccType}, #{req.itemClassGroupCode})
+    </insert>
+
+    <update id="update">
+        UPDATE ast05_tr_code
+           SET ast05_tr_cd               = #{req.trCode},
+               ast05_tr_nm               = #{req.trName},
+               ast05_rcv_pay_cd          = #{req.rcvPayCode},
+               ast05_use_yn              = #{req.useYn},
+               ast05_note                = #{req.note},
+               ast05_finance_yn          = #{req.financeYn},
+               ast05_lock_yn             = #{req.lockYn},
+               ast05_tr_occ_type         = #{req.trOccType},
+               ast05_item_class_group_cd = #{req.itemClassGroupCode}
+         WHERE ast05_tr_code_id = #{req.trCodeId}
+           AND ast05_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM ast05_tr_code
+         WHERE ast05_company_id = #{companyId}
+           AND ast05_tr_code_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS ast05_tr_code.deleteByTrCode (IDMS-IC) -->
+    <delete id="deleteByTrCode">
+        DELETE FROM ast05_tr_code
+         WHERE ast05_company_id = #{companyId}
+           AND ast05_tr_cd      = #{trCode}
+    </delete>
+
+    <!-- AS-IS ast05_tr_code.insertInitData (IDMS-IC, 열 목록 없는 INSERT … SELECT를 열 순서대로 적음. 원본은 ${companyId}를 문자열로 넣었다) -->
+    <insert id="insertInitData">
+        INSERT INTO ast05_tr_code (ast05_tr_code_id, ast05_company_id, ast05_tr_cd, ast05_tr_nm, ast05_rcv_pay_cd, ast05_use_yn,
+                                   ast05_note, ast05_asset_type, ast05_finance_yn, ast05_lock_yn, ast05_ast_class_tree_id,
+                                   ast05_dcr_class_tree_id, ast05_tr_occ_type, ast05_item_class_group_cd)
+        SELECT f_create_seq()
+             , #{companyId}
+             , ast05_tr_cd
+             , ast05_tr_nm
+             , ast05_rcv_pay_cd
+             , ast05_use_yn
+             , ast05_note
+             , ast05_asset_type
+             , ast05_finance_yn
+             , ast05_lock_yn
+             , ast05_ast_class_tree_id
+             , ast05_dcr_class_tree_id
+             , ast05_tr_occ_type
+             , ast05_item_class_group_cd
+          FROM ast05_tr_code
+         WHERE ast05_company_id = 0
+           AND ast05_tr_cd      = #{trCode}
+    </insert>
+</mapper>

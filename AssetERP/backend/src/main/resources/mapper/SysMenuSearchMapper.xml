@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/sys/mapper/sys06_menu.xml 의 selectByText, selectByTextManager — 화면 찾기 (Sys06_Lookup_SearchMenu)  (E29)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysMenuSearchMapper">
+
+    <!-- AS-IS sys06_menu.selectByText (IDMS-IC). a.*를 DTO 열로 풀었다. 두 SELECT(권한 역할 / 회사 기본 역할)의 UNION -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.sys.dto.MenuSearchRes">
+        SELECT a.sys06_menu_id AS menu_id
+             , sys40_bookmark_id AS bookmark
+             , TRIM(TRAILING sys06_menu_nm FROM f_menu_nm_allpath(a.sys06_menu_id)) AS parent_path_nm
+             , a.sys06_menu_nm AS menu_nm
+             , a.sys06_menu_no AS menu_no
+             , a.sys06_note AS note
+             , a.sys06_class_nm AS class_name
+             , f_menu_nm_allpath(a.sys06_menu_id) AS menu_full_nm
+             , a.sys06_parent_id
+             , a.sys06_seq
+          FROM sys06_menu a
+               LEFT OUTER JOIN sys40_bookmark b ON (b.sys40_menu_id = a.sys06_menu_id AND b.sys40_person_id = #{userId} AND b.sys40_company_id = #{companyId})
+               INNER JOIN sys07_role_menu c    ON a.sys06_menu_id = c.sys07_menu_id AND c.sys07_use_yn = 'true'
+               INNER JOIN sys03_company_menu d ON a.sys06_menu_id = d.sys03_menu_id AND d.sys03_use_yn = 'true'
+               INNER JOIN sys04_role e         ON e.sys04_role_id = c.sys07_role_id AND e.sys04_company_id = #{companyId}
+               INNER JOIN sys05_user_role f    ON f.sys05_role_id = e.sys04_role_id
+         WHERE sys07_role_id = sys05_role_id
+           AND sys05_user_id = #{userId}
+           AND sys03_company_id = #{companyId}
+           AND NOT EXISTS (SELECT 1
+                             FROM sys50_specific_menu m
+                                  LEFT JOIN sys51_specific_menu_person p ON p.sys51_specific_menu_id = m.sys50_specific_menu_id AND p.sys51_person_id = #{userId}
+                            WHERE m.sys50_company_id = #{companyId}
+                              AND m.sys50_menu_id = a.sys06_menu_id
+                              AND p.sys51_person_id IS NULL)
+           AND sys06_parent_id != 0
+           AND CASE WHEN (SELECT COUNT(emp04_add_title_id) FROM emp04_add_title WHERE emp04_add_person_id = #{userId}) > 0
+                    THEN COALESCE(a.sys06_add_title_use_yn,'false') = 'true'
+                    ELSE 1=1
+               END
+           AND sys06_parent_id NOT IN (SELECT sys06_menu_id FROM sys06_menu WHERE sys06_parent_id = 0)
+        <choose>
+            <when test="menuNameYn == 'true'">
+           AND UPPER(CONCAT(a.sys06_menu_no,a.sys06_menu_nm)) LIKE UPPER(#{searchText})
+            </when>
+            <otherwise>
+           AND UPPER(CONCAT(a.sys06_menu_no,a.sys06_menu_nm,a.sys06_note)) LIKE UPPER(#{searchText})
+            </otherwise>
+        </choose>
+        UNION
+        SELECT a.sys06_menu_id AS menu_id
+             , sys40_bookmark_id AS bookmark
+             , TRIM(TRAILING sys06_menu_nm FROM f_menu_nm_allpath(a.sys06_menu_id)) AS parent_path_nm
+             , a.sys06_menu_nm AS menu_nm
+             , a.sys06_menu_no AS menu_no
+             , a.sys06_note AS note
+             , a.sys06_class_nm AS class_name
+             , f_menu_nm_allpath(a.sys06_menu_id) AS menu_full_nm
+             , a.sys06_parent_id
+             , a.sys06_seq
+          FROM sys06_menu a
+               LEFT OUTER JOIN sys40_bookmark b ON (b.sys40_menu_id = a.sys06_menu_id AND b.sys40_person_id = #{userId} AND b.sys40_company_id = #{companyId})
+               INNER JOIN sys07_role_menu c    ON a.sys06_menu_id = c.sys07_menu_id AND c.sys07_use_yn = 'true'
+               INNER JOIN sys03_company_menu d ON a.sys06_menu_id = d.sys03_menu_id AND d.sys03_use_yn = 'true'
+               INNER JOIN sys04_role e         ON e.sys04_role_id = c.sys07_role_id AND e.sys04_company_id = #{companyId}
+         WHERE sys03_company_id = #{companyId}
+           AND sys04_company_id = sys03_company_id
+           AND sys04_role_id = sys07_role_id
+           AND sys04_default_role = 'true'
+           AND sys06_parent_id != 0
+           AND CASE WHEN (SELECT COUNT(emp04_add_title_id) FROM emp04_add_title WHERE emp04_add_person_id = #{userId}) > 0
+                    THEN COALESCE(a.sys06_add_title_use_yn,'false') = 'true'
+                    ELSE 1=1
+               END
+           AND sys06_parent_id NOT IN (SELECT sys06_menu_id FROM sys06_menu WHERE sys06_parent_id = 0)
+        <choose>
+            <when test="menuNameYn == 'true'">
+           AND UPPER(CONCAT(a.sys06_menu_no,a.sys06_menu_nm)) LIKE UPPER(#{searchText})
+            </when>
+            <otherwise>
+           AND UPPER(CONCAT(a.sys06_menu_no,a.sys06_menu_nm,a.sys06_note)) LIKE UPPER(#{searchText})
+            </otherwise>
+        </choose>
+         ORDER BY sys06_parent_id, sys06_seq, menu_full_nm
+    </select>
+
+    <!-- AS-IS sys06_menu.selectByTextManager (IDMS-IC). 원본은 userId를 넘기지 않아 sys51 조건이 null 비교다(서비스가 null로 부른다) -->
+    <select id="selectByTextManager" resultType="kr.co.kfs.asseterp.biz.sys.dto.MenuSearchRes">
+        SELECT a.sys06_menu_id AS menu_id
+             , NULL::numeric AS bookmark
+             , NULL::text AS parent_path_nm
+             , a.sys06_menu_nm AS menu_nm
+             , a.sys06_menu_no AS menu_no
+             , a.sys06_note AS note
+             , a.sys06_class_nm AS class_name
+             , f_menu_nm_allpath(a.sys06_menu_id) AS menu_full_nm
+          FROM sys06_menu a
+         WHERE sys06_parent_id != 0
+           AND NOT EXISTS (SELECT 1
+                             FROM sys50_specific_menu m
+                                  LEFT JOIN sys51_specific_menu_person p ON p.sys51_specific_menu_id = m.sys50_specific_menu_id AND p.sys51_person_id = #{userId}
+                            WHERE m.sys50_company_id = #{companyId}
+                              AND m.sys50_menu_id = a.sys06_menu_id
+                              AND p.sys51_person_id IS NULL)
+           AND sys06_parent_id NOT IN (SELECT sys06_menu_id FROM sys06_menu WHERE sys06_parent_id = 0)
+        <choose>
+            <when test="menuNameYn == 'true'">
+           AND UPPER(CONCAT(sys06_menu_no,f_menu_nm_allpath(sys06_menu_id),sys06_class_nm)) LIKE UPPER(#{searchText})
+            </when>
+            <otherwise>
+           AND UPPER(CONCAT(sys06_menu_no,f_menu_nm_allpath(sys06_menu_id),sys06_class_nm,sys06_note)) LIKE UPPER(#{searchText})
+            </otherwise>
+        </choose>
+         ORDER BY sys06_parent_id, sys06_seq, menu_full_nm
+    </select>
+</mapper>

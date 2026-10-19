@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/sys/mapper/sys40_bookmark.xml (selectBySearchText, selectByMenuId, insertMenuId, deleteMenuId, deleteAll) + UpdateDataModel(sys40_bookmark) 그룹명·순서 저장  (E29)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysBookmarkMapper">
+
+    <!-- AS-IS sys40_bookmark.selectBySearchText (IDMS-IC). a.*를 DTO 열로 풀었다 -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.sys.dto.BookmarkRes">
+        SELECT a.sys40_bookmark_id      AS bookmark_id
+             , a.sys40_company_id       AS company_id
+             , a.sys40_person_id        AS person_id
+             , a.sys40_menu_id          AS menu_id
+             , a.sys40_parent_title_nm  AS parent_title_nm
+             , a.sys40_seq              AS seq
+             , f_menu_nm_allpath(b.sys06_menu_id) AS menu_nm
+          FROM sys40_bookmark a
+               INNER JOIN (SELECT a.*
+                             FROM sys06_menu a
+                                , sys07_role_menu
+                                , sys05_user_role
+                                , sys03_company_menu
+                            WHERE sys07_use_yn       = 'true'
+                              AND sys06_menu_id      = sys07_menu_id
+                              AND sys07_role_id      = sys05_role_id
+                              AND sys06_menu_id      = sys03_menu_id
+                              AND sys05_user_id      = #{userId}
+                              AND sys03_company_id   = #{companyId}
+                              AND sys06_parent_id   != 0
+                              AND sys06_parent_id NOT IN (SELECT sys06_menu_id
+                                                            FROM sys06_menu
+                                                           WHERE sys06_parent_id = 0)
+                            UNION
+                           SELECT a.*
+                             FROM sys03_company_menu
+                                , sys04_role
+                                , sys06_menu a
+                                , sys07_role_menu
+                            WHERE sys07_use_yn        = 'true'
+                              AND sys04_default_role  = 'true'
+                              AND sys04_company_id    = sys03_company_id
+                              AND sys03_menu_id       = sys06_menu_id
+                              AND sys04_role_id       = sys07_role_id
+                              AND sys06_menu_id       = sys07_menu_id
+                              AND sys03_company_id    = #{companyId}
+                              AND sys06_parent_id    != 0
+                              AND sys06_parent_id NOT IN (SELECT sys06_menu_id
+                                                            FROM sys06_menu
+                                                           WHERE sys06_parent_id = 0)
+                            ORDER BY sys06_parent_id, sys06_seq) b ON b.sys06_menu_id = a.sys40_menu_id
+         WHERE a.sys40_person_id  = #{userId}
+           AND a.sys40_company_id = #{companyId}
+           AND f_menu_nm_allpath(b.sys06_menu_id) LIKE #{searchText}
+         ORDER BY COALESCE(a.sys40_parent_title_nm,''), a.sys40_seq, b.sys06_parent_id, menu_nm
+    </select>
+
+    <!-- AS-IS sys40_bookmark.selectByMenuId (IDMS-IC) -->
+    <select id="selectByMenuId" resultType="kr.co.kfs.asseterp.biz.sys.dto.BookmarkRes">
+        SELECT a.sys40_bookmark_id      AS bookmark_id
+             , a.sys40_company_id       AS company_id
+             , a.sys40_person_id        AS person_id
+             , a.sys40_menu_id          AS menu_id
+             , a.sys40_parent_title_nm  AS parent_title_nm
+             , a.sys40_seq              AS seq
+             , NULL::text               AS menu_nm
+          FROM sys40_bookmark a
+         WHERE a.sys40_company_id = #{companyId}
+           AND a.sys40_person_id  = #{userId}
+           AND a.sys40_menu_id    = #{menuId}
+    </select>
+
+    <!-- AS-IS sys40_bookmark.insertMenuId (IDMS-IC) -->
+    <insert id="insertMenuId">
+        INSERT INTO sys40_bookmark (sys40_bookmark_id, sys40_company_id, sys40_person_id, sys40_menu_id)
+        VALUES (nextval('bookmarkseq'), #{companyId}, #{userId}, #{menuId})
+    </insert>
+
+    <!-- AS-IS sys40_bookmark.deleteMenuId (IDMS-IC) -->
+    <delete id="deleteMenuId">
+        DELETE FROM sys40_bookmark
+         WHERE sys40_company_id = #{companyId}
+           AND sys40_person_id  = #{userId}
+           AND sys40_menu_id    = #{menuId}
+    </delete>
+
+    <!-- AS-IS sys40_bookmark.deleteAll (IDMS-IC) -->
+    <delete id="deleteAll">
+        DELETE FROM sys40_bookmark
+         WHERE sys40_company_id = #{companyId}
+           AND sys40_person_id  = #{userId}
+    </delete>
+
+    <update id="update">
+        UPDATE sys40_bookmark
+           SET sys40_parent_title_nm = #{req.parentTitleNm},
+               sys40_seq             = #{req.seq}
+         WHERE sys40_bookmark_id = #{req.bookmarkId}
+           AND sys40_company_id  = #{companyId}
+           AND sys40_person_id   = #{userId}
+    </update>
+</mapper>

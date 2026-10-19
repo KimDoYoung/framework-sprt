@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/ast/mapper/ast15_tr_code_window.xml (selectByAll, selectByClassName, getTrCode, selectById, deleteClassName) + UpdateDataModel(ast15_tr_code_window) 저장·삭제  (E29)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstTrCodeWindowMapper">
+
+    <!-- AS-IS ast15_tr_code_window.selectByAll (IDMS-IC). select *를 DTO 열로 풀었다 -->
+    <select id="selectByAll" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrCodeWindowRes">
+        SELECT a.ast15_tr_code_window_id AS tr_code_window_id
+             , a.ast15_company_id        AS company_id
+             , a.ast15_window_class_nm   AS window_class_name
+             , a.ast15_tr_cd             AS tr_code
+             , a.ast15_note              AS note
+             , (
+                  SELECT f_menu_nm_allpath(sys06_menu_id)
+                    FROM sys06_menu
+                         LEFT OUTER JOIN sys03_company_menu ON sys06_menu_id = sys03_menu_id AND sys03_company_id = a.ast15_company_id
+                   WHERE sys06_class_nm LIKE a.ast15_window_class_nm
+                   LIMIT 1
+               )                         AS menu_full_name
+             , (
+                  SELECT ast05_tr_nm
+                    FROM ast05_tr_code
+                   WHERE ast05_company_id = a.ast15_company_id
+                     AND ast05_tr_cd = a.ast15_tr_cd
+                   LIMIT 1
+               )                         AS tr_name
+          FROM ast15_tr_code_window a
+         WHERE a.ast15_company_id = #{companyId}
+           AND a.ast15_tr_cd IS NULL
+         ORDER BY menu_full_name
+    </select>
+
+    <!-- AS-IS ast15_tr_code_window.selectByClassName (IDMS-IC) -->
+    <select id="selectByClassName" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrCodeWindowRes">
+        SELECT a.ast15_tr_code_window_id AS tr_code_window_id
+             , a.ast15_company_id        AS company_id
+             , a.ast15_window_class_nm   AS window_class_name
+             , a.ast15_tr_cd             AS tr_code
+             , a.ast15_note              AS note
+             , NULL::text                AS menu_full_name
+             , (
+                  SELECT ast05_tr_nm
+                    FROM ast05_tr_code
+                   WHERE ast05_company_id = a.ast15_company_id
+                     AND ast05_tr_cd = a.ast15_tr_cd
+                   LIMIT 1
+               )                         AS tr_name
+          FROM ast15_tr_code_window a
+         WHERE a.ast15_tr_cd IS NOT NULL
+           AND a.ast15_company_id = #{companyId}
+           AND a.ast15_window_class_nm LIKE #{className}
+         ORDER BY a.ast15_tr_cd
+    </select>
+
+    <!-- AS-IS ast15_tr_code_window.getTrCode (IDMS-IC) -->
+    <select id="getTrCode" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrCodeWindowRes">
+        SELECT ast05_tr_code_id AS tr_code_window_id
+             , ast05_company_id AS company_id
+             , NULL::text       AS window_class_name
+             , ast05_tr_cd      AS tr_code
+             , NULL::text       AS menu_full_name
+             , ast05_tr_nm      AS tr_name
+             , NULL::text       AS note
+          FROM ast05_tr_code
+         WHERE ast05_company_id = #{companyId}
+           AND ast05_tr_cd NOT IN (
+                                    SELECT COALESCE(ast15_tr_cd, '')
+                                      FROM ast15_tr_code_window
+                                     WHERE ast15_company_id      = #{companyId}
+                                       AND ast15_window_class_nm = #{className}
+                                  )
+         ORDER BY ast05_tr_cd
+    </select>
+
+    <!-- AS-IS ast15_tr_code_window.selectById (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrCodeWindowRes">
+        SELECT a.ast15_tr_code_window_id AS tr_code_window_id
+             , a.ast15_company_id        AS company_id
+             , a.ast15_window_class_nm   AS window_class_name
+             , a.ast15_tr_cd             AS tr_code
+             , a.ast15_note              AS note
+             , (
+                  SELECT f_menu_nm_allpath(sys06_menu_id)
+                    FROM sys06_menu
+                         LEFT OUTER JOIN sys03_company_menu ON sys06_menu_id = sys03_menu_id AND sys03_company_id = a.ast15_company_id
+                   WHERE sys06_class_nm LIKE a.ast15_window_class_nm
+                   LIMIT 1
+               )                         AS menu_full_name
+             , (
+                  SELECT ast05_tr_nm
+                    FROM ast05_tr_code
+                   WHERE ast05_company_id = a.ast15_company_id
+                     AND ast05_tr_cd = a.ast15_tr_cd
+                   LIMIT 1
+               )                         AS tr_name
+          FROM ast15_tr_code_window a
+         WHERE a.ast15_tr_code_window_id = #{trCodeWindowId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO ast15_tr_code_window (ast15_tr_code_window_id, ast15_company_id, ast15_window_class_nm, ast15_tr_cd, ast15_note)
+        VALUES (#{trCodeWindowId}, #{companyId}, #{className}, #{trCode}, #{note})
+    </insert>
+
+    <delete id="deleteByIds">
+        DELETE FROM ast15_tr_code_window
+         WHERE ast15_company_id = #{companyId}
+           AND ast15_tr_code_window_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS ast15_tr_code_window.deleteClassName (IDMS-IC) -->
+    <delete id="deleteClassName">
+        DELETE FROM ast15_tr_code_window
+         WHERE ast15_company_id      = #{companyId}
+           AND ast15_window_class_nm = #{className}
+           AND ast15_tr_cd IS NOT NULL
+    </delete>
+</mapper>

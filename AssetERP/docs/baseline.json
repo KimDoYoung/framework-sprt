@@ -2675,5 +2675,35 @@
     "note": "docs/work/E/E28-작업기록.md",
     "history": [],
     "id": "E28"
+  },
+  "Ast05_Tab_TrCodeAdmin": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ast/Ast05_Tab_TrCodeAdmin.java": "b8add7e3b2d9c75e6d9aa34e12da366239fa77e7",
+      "application/src/main/java/myApp/client/vi/ast/Ast15_Lookup_TrCodeWindow.java": "96d78a9fca02b367539515f7ad1a80eaaae693f2",
+      "application/src/main/java/myApp/client/vi/ast/Ast15_Page_TrCodeWindow.java": "0034ddd38638f31bbff51ad08c3d58f09055cbfd",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast05_TrCodeModel.java": "88bd761018ed03deeb4032296eb60cce02d28f83",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast05_TrCodeModelProperties.java": "f038cc0656fc2304ccabae9ee202ade9916cdb91",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast15_TrCodeWindowModel.java": "f0f35680f1bd562c51b0b7fe2f83ee7a866c5c62",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast15_TrCodeWindowModelProperties.java": "e331d0909d057c94eba91f50d1a4b4fac10b3cd7",
+      "application/src/main/java/myApp/server/ast/Ast05_TrCode.java": "c9e256f098331c1c98bb8da7f3232fa3e934b898",
+      "application/src/main/java/myApp/server/ast/Ast15_TrCodeWindow.java": "1145d703e83980822cf968d8260572069b39cfc2",
+      "application/src/main/java/myApp/server/ast/mapper/ast05_tr_code.xml": "2672ce2593c624e22879a20aba3414ab34ffc728",
+      "application/src/main/java/myApp/server/ast/mapper/ast15_tr_code_window.xml": "94cad9286962b3818a6428b564371b8e23644c8d",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Sys01_Lookup_Company",
+      "Sys06_Lookup_SearchMenu"
+    ],
+    "recorded_at": "2026-10-19T12:43:39+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/E/E29-작업기록.md",
+    "history": [],
+    "id": "E29"
   }
 }
