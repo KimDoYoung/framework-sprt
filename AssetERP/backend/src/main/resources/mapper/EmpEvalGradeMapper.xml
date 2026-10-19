@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/emp/mapper/emp42_eval_grade.xml (selectByEvalListStdId, selectByMaxCompanyId, selectByMaxCompanyIdAdmin, insert, deleteByEvalListStdId)
+  + UpdateDataModel(emp42_eval_grade) 저장  (E26)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpEvalGradeMapper">
+
+    <sql id="gradeColumns">
+        emp42_eval_grade_id     AS eval_grade_id,
+        emp42_eval_list_std_id  AS eval_list_std_id,
+        emp42_grade             AS grade,
+        emp42_grade_weight      AS grade_weight,
+        emp42_grade_score       AS grade_score,
+        emp42_compare_cd        AS compare_code,
+        f_cdnm('CompareCode', emp42_compare_cd, emp40_company_id, f_sysdate()) AS compare_name,
+        emp42_reason_yn         AS reason_yn
+    </sql>
+
+    <!-- AS-IS emp42_eval_grade.selectByEvalListStdId (IDMS-IC) -->
+    <select id="selectByEvalListStdId" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvalGradeRes">
+        SELECT <include refid="gradeColumns"/>
+          FROM emp42_eval_grade
+               INNER JOIN emp40_eval_list_std ON emp40_eval_list_std_id = emp42_eval_list_std_id
+         WHERE emp42_eval_list_std_id = #{evalListStdId}
+         ORDER BY emp42_grade_score DESC
+    </select>
+
+    <!-- AS-IS emp42_eval_grade.selectByMaxCompanyId (IDMS-IC) -->
+    <select id="selectByMaxCompanyId" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvalGradeRes">
+        SELECT <include refid="gradeColumns"/>
+          FROM emp42_eval_grade
+               INNER JOIN emp40_eval_list_std ON emp40_eval_list_std_id = emp42_eval_list_std_id
+         WHERE emp40_start_date = (
+                                    SELECT MAX(emp40_start_date)
+                                      FROM emp41_eval_list
+                                           INNER JOIN emp40_eval_list_std ON emp41_eval_list_std_id = emp40_eval_list_std_id
+                                     WHERE emp40_company_id = #{companyId}
+                                       AND emp40_start_date  &lt;=  f_today()
+                                  )
+           AND emp40_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS emp42_eval_grade.selectByMaxCompanyIdAdmin (IDMS-IC) — 관리자 회사(0)의 최근 등급 -->
+    <select id="selectByMaxCompanyIdAdmin" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvalGradeRes">
+        SELECT <include refid="gradeColumns"/>
+          FROM emp42_eval_grade
+               INNER JOIN emp40_eval_list_std ON emp40_eval_list_std_id = emp42_eval_list_std_id
+         WHERE emp40_start_date = (
+                                    SELECT MAX(emp40_start_date)
+                                      FROM emp41_eval_list
+                                           INNER JOIN emp40_eval_list_std ON emp41_eval_list_std_id = emp40_eval_list_std_id
+                                     WHERE emp40_company_id = 0
+                                       AND emp40_start_date  &lt;=  f_today()
+                                  )
+           AND emp40_company_id = 0
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS emp42_eval_grade.insert (IDMS-IC) / UpdateDataModel INSERT -->
+    <insert id="insert">
+        INSERT INTO emp42_eval_grade (emp42_eval_grade_id, emp42_eval_list_std_id, emp42_grade, emp42_grade_weight, emp42_grade_score, emp42_compare_cd, emp42_reason_yn)
+        VALUES (#{evalGradeId}, #{evalListStdId}, #{req.grade}, #{req.gradeWeight}, #{req.gradeScore}, #{req.compareCode}, #{req.reasonYn})
+    </insert>
+
+    <update id="update">
+        UPDATE emp42_eval_grade
+           SET emp42_grade        = #{req.grade},
+               emp42_grade_weight = #{req.gradeWeight},
+               emp42_grade_score  = #{req.gradeScore},
+               emp42_compare_cd   = #{req.compareCode},
+               emp42_reason_yn    = #{req.reasonYn}
+         WHERE emp42_eval_grade_id    = #{req.evalGradeId}
+           AND emp42_eval_list_std_id = #{evalListStdId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM emp42_eval_grade
+         WHERE emp42_eval_list_std_id = #{evalListStdId}
+           AND emp42_eval_grade_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS emp42_eval_grade.deleteByEvalListStdId (IDMS-IC) -->
+    <delete id="deleteByEvalListStdId">
+        DELETE FROM emp42_eval_grade
+         WHERE emp42_eval_list_std_id = #{evalListStdId}
+    </delete>
+</mapper>

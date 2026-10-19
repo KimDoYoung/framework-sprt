@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/emp/mapper/emp40_eval_list_std.xml (selectByCompanyId, selectByStartDate, insert, updateFixYn, deleteByEvalListStdId)
+  + emp43_eval_target.xml (getEventChk, getEventChk2, getDateChk)  (E26)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpEvalListStdMapper">
+
+    <sql id="stdColumns">
+        emp40_eval_list_std_id AS eval_list_std_id,
+        emp40_company_id       AS company_id,
+        emp40_start_date       AS start_date,
+        emp40_fix_yn           AS fix_yn
+    </sql>
+
+    <!-- AS-IS emp40_eval_list_std.selectByCompanyId (IDMS-IC) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvalListStdRes">
+        SELECT <include refid="stdColumns"/>
+          FROM emp40_eval_list_std
+         WHERE emp40_company_id = #{companyId}
+         ORDER BY emp40_start_date DESC
+    </select>
+
+    <!-- AS-IS emp40_eval_list_std.selectByStartDate (IDMS-IC) — 건수만 쓴다 -->
+    <select id="countByStartDate" resultType="int">
+        SELECT COUNT(*)
+          FROM emp40_eval_list_std
+         WHERE emp40_company_id = #{companyId}
+           AND emp40_start_date = #{startDate}
+    </select>
+
+    <!-- 원본 SQL에 없는 회사 조건: 로그인 회사의 적용기준만 다룬다 -->
+    <select id="countByIdAndCompany" resultType="int">
+        SELECT COUNT(*)
+          FROM emp40_eval_list_std
+         WHERE emp40_eval_list_std_id = #{evalListStdId}
+           AND emp40_company_id       = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS emp40_eval_list_std.insert (IDMS-IC) — 서비스가 확정 = false로 넣는다 -->
+    <insert id="insert">
+        INSERT INTO emp40_eval_list_std (emp40_eval_list_std_id, emp40_company_id, emp40_start_date, emp40_fix_yn)
+        VALUES (#{evalListStdId}, #{companyId}, #{startDate}, 'false')
+    </insert>
+
+    <!-- AS-IS emp40_eval_list_std.updateFixYn (IDMS-IC) -->
+    <update id="updateFixYn">
+        UPDATE emp40_eval_list_std
+           SET emp40_fix_yn = #{fixYn}
+         WHERE emp40_company_id = #{companyId}
+           AND emp40_start_date = #{startDate}
+    </update>
+
+    <!-- AS-IS emp40_eval_list_std.deleteByEvalListStdId (IDMS-IC) + 회사 조건 -->
+    <delete id="deleteByEvalListStdId">
+        DELETE FROM emp40_eval_list_std
+         WHERE emp40_eval_list_std_id = #{evalListStdId}
+           AND emp40_company_id       = #{companyId}
+    </delete>
+
+    <!-- AS-IS emp43_eval_target.getEventChk (IDMS-IC) — 건수만 쓴다 -->
+    <select id="countEventChk" resultType="int">
+        SELECT COUNT(*)
+          FROM emp43_eval_target
+         WHERE emp43_eval_list_std_id = #{evalListStdId}
+    </select>
+
+    <!-- AS-IS emp43_eval_target.getEventChk2 (IDMS-IC) -->
+    <select id="countEventChk2" resultType="int">
+        SELECT COUNT(*)
+          FROM emp43_eval_target
+               LEFT OUTER JOIN ( SELECT *
+                                   FROM emp45_eval_relate_appr
+                                        INNER JOIN apr01_appr ON apr01_appr_id = emp45_final_appr_id
+                               ) emp45 ON ( emp45_company_id   = emp43_company_id  AND
+                                            emp45_std_year     = emp43_std_year    AND
+                                            emp45_std_term_cd  = emp43_std_term_cd )
+         WHERE emp43_eval_list_std_id = ( SELECT emp40_eval_list_std_id
+                                            FROM emp40_eval_list_std
+                                           WHERE emp40_company_id = #{companyId}
+                                             AND emp40_start_date  &lt;  #{startDate}
+                                             AND emp40_fix_yn = 'true'
+                                           ORDER BY emp40_start_date DESC
+                                           LIMIT 1 )
+           AND COALESCE(apr01_status_cd,'99') != '30'
+           AND emp43_eval_close_date  >=  #{startDate}
+    </select>
+
+    <!-- AS-IS emp43_eval_target.getDateChk (IDMS-IC) — 건수만 쓴다 -->
+    <select id="countDateChk" resultType="int">
+        SELECT COUNT(*)
+          FROM emp43_eval_target
+         WHERE emp43_company_id = #{companyId}
+           AND #{startDate}  &lt;=  emp43_eval_close_date
+    </select>
+</mapper>

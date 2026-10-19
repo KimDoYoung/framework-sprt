@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Academic, Account, AddDeduct, BenefitInfo, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, Evaluation, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
+import { Academic, Account, AddDeduct, BenefitInfo, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -491,6 +491,73 @@ export const empBenefitInfoApi = {
   /** AS-IS emp.Emp55_BenefitInfo.insertInitData: 고른 설정을 고른 고객사들로 복사 (관리자) → 복사한 건수 */
   copyBenefitInfos: async (companyIds: number[], benefitInfoIds: number[]): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/emp/benefit-infos/copy', { companyIds, benefitInfoIds });
+    return res.data.data ?? 0;
+  },
+};
+
+/** E26 AS-IS Emp41_Tab_EvalList (인사평가 항목) · Emp42_Lookup_EvalGrade · Emp40_Lookup_Insert */
+export const empEvalApi = {
+  /** AS-IS emp.Emp40_EvalListStd.selectByCompanyId (로그인 회사, 적용일 최근 순) */
+  searchEvalListStds: async (): Promise<EvalListStd[]> => {
+    const res = await apiClient.get<ApiResponse<EvalListStd[]>>('v1/emp/eval-list-stds');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp40_EvalListStd.insert → 새 적용기준 ID. 이미 있거나 평가기간이 걸치면 서버가 원본 메시지로 거절 */
+  createEvalListStd: async (startDate: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/emp/eval-list-stds', { startDate });
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp40_EvalListStd.updateFixYn (확정 true·확정취소 false) */
+  updateEvalListStdFix: async (startDate: string, fixYn: boolean): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/emp/eval-list-stds/fix', { startDate, fixYn });
+  },
+
+  /** AS-IS emp.Emp40_EvalListStd.deleteByEvalListStdId — 사용중이면 서버가 "이미 사용중인 적용일입니다"로 거절 */
+  deleteEvalListStd: async (evalListStdId: number): Promise<void> => {
+    await apiClient.delete<ApiResponse<void>>(`v1/emp/eval-list-stds/${evalListStdId}`);
+  },
+
+  /** AS-IS emp.Emp43_EvalTarget.getEventChk — 이 적용일로 작성중·완료된 평가 대상자가 있으면 true */
+  isEvalListStdInUse: async (evalListStdId: number): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>(`v1/emp/eval-list-stds/${evalListStdId}/in-use`);
+    return res.data.data ?? false;
+  },
+
+  /** AS-IS emp.Emp41_EvalList.selectByEvalListStdId (조회순번 순) */
+  searchEvalLists: async (evalListStdId: number): Promise<EvalList[]> => {
+    const res = await apiClient.get<ApiResponse<EvalList[]>>('v1/emp/eval-lists', { params: { evalListStdId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp41_EvalList.updateList: 변경·추가 행 + 삭제대기 ID를 한 번에 → 저장한 행 수 */
+  updateEvalLists: async (evalListStdId: number, rows: EvalList[], deleteIds: number[]): Promise<number> => {
+    const body = {
+      evalListStdId,
+      rows: rows.map(({ evalListId, evalClassCode, content, weightMember, weightLeader, seq }) =>
+        ({ evalListId, evalClassCode, content, weightMember, weightLeader, seq })),
+      deleteIds,
+    };
+    const res = await apiClient.put<ApiResponse<number>>('v1/emp/eval-lists', body);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp42_EvalGrade.selectByEvalListStdId (등급기준점수 큰 순) */
+  searchEvalGrades: async (evalListStdId: number): Promise<EvalGrade[]> => {
+    const res = await apiClient.get<ApiResponse<EvalGrade[]>>('v1/emp/eval-grades', { params: { evalListStdId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp42_EvalGrade.updateList: 화면의 모든 행 + 삭제대기 ID를 한 번에 → 저장한 행 수 */
+  updateEvalGrades: async (evalListStdId: number, rows: EvalGrade[], deleteIds: number[]): Promise<number> => {
+    const body = {
+      evalListStdId,
+      rows: rows.map(({ evalGradeId, grade, gradeWeight, gradeScore, compareCode, reasonYn }) =>
+        ({ evalGradeId, grade, gradeWeight, gradeScore, compareCode, reasonYn })),
+      deleteIds,
+    };
+    const res = await apiClient.put<ApiResponse<number>>('v1/emp/eval-grades', body);
     return res.data.data ?? 0;
   },
 };

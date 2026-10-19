@@ -418,3 +418,37 @@ export interface BenefitInfo {
   accountName: string;
   unUseYn: string;
 }
+
+// ── E26 인사평가 항목 (Emp41_Tab_EvalList) ──
+
+/** 인사평가 항목리스트 기준 적용일 한 행 (AS-IS emp40_eval_list_std.selectByCompanyId). 확정은 'true'/'false' 문자열 */
+export interface EvalListStd {
+  evalListStdId: number;
+  companyId: number;
+  startDate: string;
+  fixYn: string;
+}
+
+/** 인사평가 항목 한 행 (AS-IS emp41_eval_list.selectByEvalListStdId) */
+export interface EvalList {
+  evalListId: number;
+  evalListStdId: number;
+  evalClassCode: string;
+  evalClassName: string;
+  content: string;
+  weightMember: number | null;
+  weightLeader: number | null;
+  seq: number | null;
+}
+
+/** 평가등급 한 행 (AS-IS emp42_eval_grade.selectByEvalListStdId). 평정사유 필수는 'true'/'false' 문자열 */
+export interface EvalGrade {
+  evalGradeId: number;
+  evalListStdId: number;
+  grade: string;
+  gradeWeight: number | null;
+  gradeScore: number | null;
+  compareCode: string;
+  compareName: string;
+  reasonYn: string;
+}

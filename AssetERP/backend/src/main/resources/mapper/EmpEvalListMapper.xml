@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/emp/mapper/emp41_eval_list.xml (selectByEvalListStdId, selectByMaxCompanyId, selectByMaxCompanyIdAdmin, insert, deleteByEvalListStdId)
+  + UpdateDataModel(emp41_eval_list) 저장  (E26)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpEvalListMapper">
+
+    <sql id="listColumns">
+        emp41_eval_list_id      AS eval_list_id,
+        emp41_eval_list_std_id  AS eval_list_std_id,
+        emp41_eval_class_cd     AS eval_class_code,
+        f_cdnm('EmpEvalClassCode', emp41_eval_class_cd, emp40_company_id, f_sysdate()) AS eval_class_name,
+        emp41_content           AS content,
+        emp41_weight_member     AS weight_member,
+        emp41_weight_leader     AS weight_leader,
+        emp41_seq               AS seq
+    </sql>
+
+    <!-- AS-IS emp41_eval_list.selectByEvalListStdId (IDMS-IC) -->
+    <select id="selectByEvalListStdId" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvalListRes">
+        SELECT <include refid="listColumns"/>
+          FROM emp41_eval_list
+               INNER JOIN emp40_eval_list_std ON emp41_eval_list_std_id = emp40_eval_list_std_id
+         WHERE emp41_eval_list_std_id = #{evalListStdId}
+         ORDER BY emp41_seq
+    </select>
+
+    <!-- AS-IS emp41_eval_list.selectByMaxCompanyId (IDMS-IC) -->
+    <select id="selectByMaxCompanyId" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvalListRes">
+        SELECT <include refid="listColumns"/>
+          FROM emp41_eval_list
+               INNER JOIN emp40_eval_list_std ON emp41_eval_list_std_id = emp40_eval_list_std_id
+         WHERE emp40_start_date = (
+                                    SELECT MAX(emp40_start_date)
+                                      FROM emp41_eval_list
+                                           INNER JOIN emp40_eval_list_std ON emp41_eval_list_std_id = emp40_eval_list_std_id
+                                     WHERE emp40_company_id = #{companyId}
+                                       AND emp40_start_date  &lt;=  f_today()
+                                  )
+           AND emp40_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS emp41_eval_list.selectByMaxCompanyIdAdmin (IDMS-IC) — 관리자 회사(0)의 최근 항목 -->
+    <select id="selectByMaxCompanyIdAdmin" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvalListRes">
+        SELECT <include refid="listColumns"/>
+          FROM emp41_eval_list
+               INNER JOIN emp40_eval_list_std ON emp41_eval_list_std_id = emp40_eval_list_std_id
+         WHERE emp40_start_date = (
+                                    SELECT MAX(emp40_start_date)
+                                      FROM emp41_eval_list
+                                           INNER JOIN emp40_eval_list_std ON emp41_eval_list_std_id = emp40_eval_list_std_id
+                                     WHERE emp40_company_id = 0
+                                       AND emp40_start_date  &lt;=  f_today()
+                                  )
+           AND emp40_company_id = 0
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS emp41_eval_list.insert (IDMS-IC) / UpdateDataModel INSERT -->
+    <insert id="insert">
+        INSERT INTO emp41_eval_list (emp41_eval_list_id, emp41_eval_list_std_id, emp41_eval_class_cd, emp41_content, emp41_weight_member, emp41_weight_leader, emp41_seq)
+        VALUES (#{evalListId}, #{evalListStdId}, #{req.evalClassCode}, #{req.content}, #{req.weightMember}, #{req.weightLeader}, #{req.seq})
+    </insert>
+
+    <update id="update">
+        UPDATE emp41_eval_list
+           SET emp41_eval_class_cd = #{req.evalClassCode},
+               emp41_content       = #{req.content},
+               emp41_weight_member = #{req.weightMember},
+               emp41_weight_leader = #{req.weightLeader},
+               emp41_seq           = #{req.seq}
+         WHERE emp41_eval_list_id     = #{req.evalListId}
+           AND emp41_eval_list_std_id = #{evalListStdId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM emp41_eval_list
+         WHERE emp41_eval_list_std_id = #{evalListStdId}
+           AND emp41_eval_list_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS emp41_eval_list.deleteByEvalListStdId (IDMS-IC) -->
+    <delete id="deleteByEvalListStdId">
+        DELETE FROM emp41_eval_list
+         WHERE emp41_eval_list_std_id = #{evalListStdId}
+    </delete>
+</mapper>
