@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { message, Dropdown, MenuProps, ConfigProvider } from 'antd';
+import { message, Dropdown, MenuProps, ConfigProvider, Tooltip } from 'antd';
 import koKR from 'antd/locale/ko_KR';
 import {
   Layout,
@@ -9,6 +9,7 @@ import {
   TabSetNode,
   BorderNode,
   ITabSetRenderValues,
+  ITabRenderValues,
   IJsonModel,
   DockLocation,
 } from 'flexlayout-react';
@@ -29,6 +30,9 @@ import { sysApi } from './api/sys';
 import { User } from './types/auth';
 import { LoginUserContext } from './hooks/useLoginUser';
 import { realtime } from './ws/stompClient';
+
+/** 탭 헤더 hover 툴팁 내용. 지금(개발 중)은 클래스명. 끝나면 undefined(없음) 또는 `${menuNo} ${title}` 등으로 바꾼다 */
+const tabTooltip = (config: { classNm?: string; title?: string; menuNo?: string }): string | undefined => config.classNm;
 
 // ── 기본 레이아웃 정의 (초기 상태: My Page 1개 탭) ──
 const defaultLayoutJson: IJsonModel = {
@@ -285,6 +289,18 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
     closeableTabs.forEach((tab) => {
       model.doAction(Actions.deleteTab(tab.getId()));
     });
+  };
+
+  // ── 탭 헤더 hover 툴팁 (내용은 tabTooltip). 복원된 탭도 config.classNm이 있으므로 같이 적용된다 ──
+  const onRenderTab = (node: TabNode, renderValues: ITabRenderValues) => {
+    const tip = tabTooltip((node.getConfig() as { classNm?: string; title?: string; menuNo?: string }) || {});
+    if (tip) {
+      renderValues.content = (
+        <Tooltip title={tip} mouseEnterDelay={0.3}>
+          <span>{renderValues.content}</span>
+        </Tooltip>
+      );
+    }
   };
 
   // ── TabSet 우측 툴바 버튼 커스텀 렌더: '모든 탭 닫기' & '최대화/복원(F4)' ──
@@ -565,6 +581,7 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
                 model={model}
                 factory={factory}
                 onModelChange={handleModelChange}
+                onRenderTab={onRenderTab}
                 onRenderTabSet={onRenderTabSet}
                 onContextMenu={handleContextMenu}
                 realtimeResize
