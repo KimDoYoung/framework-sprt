@@ -79,6 +79,73 @@
          ORDER BY path
     </select>
 
+    <!-- AS-IS ics01_class_tree.selectByCompanyId L401 (IDMS-IC) — F03. selectTree와 같은 트리(typeCode %)에 구분·상세내용(ics01_content)을 더했다. 그리드는 분류명·분류코드만 쓰고 구분·내용은 작성도움말(?)용 -->
+    <select id="selectWriteTree" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsWriteTreeRes">
+        WITH RECURSIVE ics_tree(
+                ics01_class_tree_id
+            ,   ics01_company_id
+            ,   ics01_class_tree_nm
+            ,   ics01_parent_tree_id
+            ,   ics01_seq
+            ,   ics01_class_tree_cd
+            ,   ics01_type_cd
+            ,   ics01_use_yn
+            ,   ics01_content
+            ,   depth
+            ,   path
+            ,   cycle
+        ) AS
+        (
+            SELECT  ics01_class_tree_id
+                 ,  ics01_company_id
+                 ,  ics01_class_tree_nm
+                 ,  ics01_parent_tree_id
+                 ,  ics01_seq
+                 ,  ics01_class_tree_cd
+                 ,  ics01_type_cd
+                 ,  ics01_use_yn
+                 ,  ics01_content
+                 ,  1
+                 ,  ARRAY[CAST(a.ics01_parent_tree_id AS varchar) || LPAD(CAST(a.ics01_seq AS varchar),10,'0')||a.ics01_class_tree_cd||LPAD(CAST(a.ics01_class_tree_id AS varchar),15,'0')]
+                 ,  false
+              FROM  ics01_class_tree a
+             WHERE  ics01_parent_tree_id = 0
+               AND  ics01_use_yn = 'true'
+            <if test="typeCode != null and typeCode != ''">
+               AND  ics01_type_cd LIKE #{typeCode}
+            </if>
+             UNION ALL
+            SELECT  a.ics01_class_tree_id
+                 ,  a.ics01_company_id
+                 ,  a.ics01_class_tree_nm
+                 ,  a.ics01_parent_tree_id
+                 ,  a.ics01_seq
+                 ,  a.ics01_class_tree_cd
+                 ,  a.ics01_type_cd
+                 ,  a.ics01_use_yn
+                 ,  a.ics01_content
+                 ,  b.depth + 1
+                 ,  array_append(b.path, CAST(a.ics01_parent_tree_id AS varchar) || LPAD(CAST(a.ics01_seq AS varchar),10,'0')||a.ics01_class_tree_cd||LPAD(CAST(a.ics01_class_tree_id AS varchar),15,'0'))
+                 ,  a.ics01_class_tree_nm = any(b.path)
+              FROM  ics01_class_tree a
+                    INNER JOIN ics_tree b ON a.ics01_parent_tree_id = b.ics01_class_tree_id
+             WHERE  a.ics01_use_yn = 'true'
+            <if test="typeCode != null and typeCode != ''">
+               AND  a.ics01_type_cd LIKE #{typeCode}
+            </if>
+               AND  NOT cycle
+        )
+        SELECT a.ics01_class_tree_id    AS class_tree_id,
+               a.ics01_parent_tree_id   AS parent_tree_id,
+               a.ics01_class_tree_cd    AS class_tree_code,
+               a.ics01_class_tree_nm    AS class_tree_name,
+               a.ics01_type_cd          AS type_code,
+               a.ics01_content          AS content,
+               a.depth                  AS depth
+          FROM ics_tree a
+         ORDER BY path
+    </select>
+
     <!-- AS-IS ics01_class_tree.selectById L52 중 트리 열 (IDMS-IC) -->
     <select id="selectTreeNodeById" resultType="kr.co.kfs.asseterp.biz.ics.dto.ClassTreeRes">
         SELECT ics01_class_tree_id  AS class_tree_id,

@@ -2814,5 +2814,32 @@
     "note": "docs/work/F/F02-작업기록.md",
     "history": [],
     "id": "F02"
+  },
+  "Ics01_Tab_ApprList": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ics/Ics01_Grid_ApprList.java": "07f346ae4517b0f3f5f73ff13e1910e5d6619239",
+      "application/src/main/java/myApp/client/vi/ics/Ics01_Tab_ApprList.java": "8299cd8ff54bd3ad549c8b224d5ad5a81f330e13",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics01_ClassTreeModel.java": "1aebbfba565e28daa85a3635de9bcf5ff658460a",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics01_ClassTreeModelProperties.java": "6ea79fbeb0e4b7c228d7d547cfef16a6c3a0a049",
+      "application/src/main/java/myApp/server/apr/Apr03_RelateFund.java": "e39da8d945fc44cb48fecd08dfe4d4a9f46a25e9",
+      "application/src/main/java/myApp/server/apr/mapper/apr03_relate_fund.xml": "a29728d21792d0b243e983cdced2a038ec516408",
+      "application/src/main/java/myApp/server/ics/Ics01_ClassTree.java": "be1292de65687c0282d993107d4aa55ba1ba9b41",
+      "application/src/main/java/myApp/server/ics/mapper/ics01_class_tree.xml": "1e1665331f4f169416fc65466fd4e3f48a7d37cd",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Dcr01_Lookup_Class"
+    ],
+    "recorded_at": "2026-10-19T20:10:23+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/F/F03-작업기록.md",
+    "history": [],
+    "id": "F03"
   }
 }

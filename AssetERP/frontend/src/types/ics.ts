@@ -9,6 +9,17 @@ export interface ClassTreeNode {
   depth?: number | null;
 }
 
+/** 법규별 문서작성 왼쪽 트리 노드 (AS-IS Ics01_ClassTreeModel 중 Ics01_Tab_ApprList 트리 열). typeCode IC 법규분류·IT 법규구분, content는 작성 Tip */
+export interface IcsWriteTreeNode {
+  classTreeId: number;
+  parentTreeId: number;
+  classTreeCode?: string | null;
+  classTreeName?: string | null;
+  typeCode?: string | null;
+  content?: string | null;
+  depth?: number | null;
+}
+
 /** 분류 등록·수정 창 값 */
 export interface ClassTreeSaveReq {
   parentTreeId?: number | null;

@@ -4,6 +4,8 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocListCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprApprMapper;
@@ -41,6 +43,15 @@ public class AprApprService {
     public List<AprDocRes> searchDocList(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate endDate, String searchText) {
         Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         return mapper.selectByClassTreeId2(new AprDocListCond(classTreeId, orgId, user.getUserId(), startDate, endDate, like(searchText)));
+    }
+
+    /**
+     * AS-IS Apr03_RelateFund.selectByIcsClassTreeId (F03, 이 메뉴는 admin=false). 법규분류에 연결된 문서 중 내 조직이 열람할 수 있는 연관펀드만.
+     * 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0. searchText는 서비스가 %…%로 만든다(빈 글자면 %%)
+     */
+    public List<AprIcsDocRes> searchIcsDocList(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate endDate, String searchText) {
+        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        return mapper.selectByIcsClassTreeId(new AprIcsDocListCond(classTreeId, user.getCompanyId(), orgId, startDate, endDate, like(searchText)));
     }
 
     /** AS-IS Apr03_RelateFund.selectByApprId */

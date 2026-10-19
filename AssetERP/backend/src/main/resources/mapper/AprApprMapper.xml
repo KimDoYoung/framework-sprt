@@ -232,6 +232,42 @@
                 , apr01_effect_date
     </select>
 
+    <!-- AS-IS apr03_relate_fund.selectByIcsClassTreeId L106 (IDMS-IC) — F03. admin == 'false' 분기만(Ics01_Grid_ApprList.isAdmin=false). SELECT *·모델 열 중 그리드가 쓰는 열만, 행을 정하는 조인·조건·정렬은 그대로 -->
+    <select id="selectByIcsClassTreeId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocRes">
+        SELECT CASE
+                   WHEN apr03_relate_fund_id IS NULL THEN apr01_appr_id
+                   ELSE apr03_relate_fund_id
+               END                                                       AS relate_fund_id
+             , apr01_appr_id                                             AS appr_id
+             , apr01_reg_date                                            AS reg_date
+             , apr01_effect_date                                         AS effect_date
+             , emp01_kor_nm                                              AS reg_emp_name
+             , apr01_title                                               AS title
+          FROM apr01_appr
+               INNER JOIN emp01_person ON emp01_person_id = apr01_reg_emp_id
+               INNER JOIN emp03_trans ON emp03_person_id = emp01_person_id
+               INNER JOIN apr20_relate_ics ON apr20_appr_id = apr01_appr_id
+               LEFT OUTER JOIN apr03_relate_fund ON apr01_appr_id = apr03_appr_id
+               LEFT OUTER JOIN apr14_relate_ast ON apr01_appr_id = apr14_appr_id
+         WHERE 1=1
+           AND ( apr03_fund_id IN ( SELECT fnd08_fund_code_id
+                                      FROM fnd08_org_auth
+                                     WHERE fnd08_org_code_id = #{c.orgId}
+                                       AND fnd08_auth_yn = 'true' )
+                 OR apr03_fund_id IS NULL )
+           AND apr20_class_tree_id = #{c.classTreeId}
+           AND emp01_company_id = #{c.companyId}
+           AND f_trunc(apr01_reg_date) BETWEEN f_trunc(#{c.startDate}) AND f_trunc(#{c.endDate})
+           AND CONCAT( emp01_kor_nm
+                     , f_org_nm(emp03_org_code_id, #{c.startDate})
+                     , f_org_nm(emp03_org_code_id, #{c.endDate})
+                     , apr01_title ) LIKE #{c.searchText}
+         ORDER BY apr01_reg_date DESC
+                , apr01_title
+                , apr01_status_cd
+                , apr01_effect_date
+    </select>
+
     <!-- AS-IS apr03_relate_fund.selectByApprId (IDMS-IC) — F02. 행을 정하는 조인(펀드·그 시점의 펀드정보·실제펀드)만 남기고 열은 fundId·펀드명(fnd00_fund_nm) -->
     <select id="selectRelateFunds" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes">
         SELECT apr03_fund_id                                         AS fund_id

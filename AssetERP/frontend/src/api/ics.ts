@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { ClassTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch } from '../types/ics';
+import { ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 export const icsApi = {
@@ -9,6 +9,12 @@ export const icsApi = {
   /** AS-IS ics.Ics01_ClassTree.selectByCompanyId(typeCode IC): 사용 중인 분류를 전위 순서로(depth 포함) */
   searchClassTree: async (typeCode = 'IC'): Promise<ClassTreeNode[]> => {
     const res = await apiClient.get<ApiResponse<ClassTreeNode[]>>('v1/ics/class-trees', { params: { typeCode } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics01_ClassTree.selectByCompanyId(typeCode %) (Ics01_Tab_ApprList, F03): 법규분류(IC)·법규구분(IT) 전위 순서(depth 포함) */
+  searchWriteTree: async (): Promise<IcsWriteTreeNode[]> => {
+    const res = await apiClient.get<ApiResponse<IcsWriteTreeNode[]>>('v1/ics/class-trees/write');
     return res.data.data ?? [];
   },
 

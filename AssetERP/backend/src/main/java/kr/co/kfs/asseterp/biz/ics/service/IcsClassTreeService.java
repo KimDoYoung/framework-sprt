@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.ics.service;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.ics.dto.ClassTreeRes;
 import kr.co.kfs.asseterp.biz.ics.dto.ClassTreeSaveReq;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsWriteTreeRes;
 import kr.co.kfs.asseterp.biz.ics.mapper.IcsClassTreeMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
@@ -26,6 +27,11 @@ public class IcsClassTreeService {
     /** AS-IS selectByCompanyId(typeCode): 사용 중인 분류를 전위 순서로(IC 내부통제 분류, IT 내부통제 구분) */
     public List<ClassTreeRes> searchTree(String typeCode) {
         return mapper.selectTree(typeCode);
+    }
+
+    /** AS-IS Ics01_Tab_ApprList.retrieve: selectByCompanyId(typeCode %) — 법규분류(IC)와 법규구분(IT) 모두 */
+    public List<IcsWriteTreeRes> searchWriteTree() {
+        return mapper.selectWriteTree("%");
     }
 
     /** AS-IS Ics01_Tab_ClassTree.insertIcsClass → Ics01_Edit_ClassTree.update: 새 id·회사·구분 IC·사용 true, 조회순서 = 분류코드 */

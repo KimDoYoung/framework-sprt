@@ -4,6 +4,8 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocListCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes;
 import org.apache.ibatis.annotations.Mapper;
@@ -22,6 +24,9 @@ public interface AprApprMapper {
 
     /** AS-IS selectByClassTreeId2 L139 (F02, admin=false) */
     List<AprDocRes> selectByClassTreeId2(@Param("c") AprDocListCond cond);
+
+    /** AS-IS apr03_relate_fund.selectByIcsClassTreeId L106 (F03, admin=false) */
+    List<AprIcsDocRes> selectByIcsClassTreeId(@Param("c") AprIcsDocListCond cond);
 
     /** AS-IS apr03_relate_fund.selectByApprId (F02) */
     List<AprRelateFundRes> selectRelateFunds(@Param("apprId") Long apprId);

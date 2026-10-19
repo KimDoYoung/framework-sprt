@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.apr.controller;
 
 import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes;
 import kr.co.kfs.asseterp.biz.apr.service.AprApprService;
@@ -49,6 +50,16 @@ public class AprApprController {
                                                       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
                                                       @RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.searchDocList(principal, classTreeId, startDate, endDate, searchText));
+    }
+
+    /** AS-IS apr.Apr03_RelateFund.selectByIcsClassTreeId (Ics01_Grid_ApprList, F03 법규별 문서작성 목록) */
+    @GetMapping("/ics-list")
+    public ApiResponse<List<AprIcsDocRes>> searchIcsDocList(@AuthenticationPrincipal UserPrincipal principal,
+                                                            @RequestParam Long classTreeId,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                                                            @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchIcsDocList(principal, classTreeId, startDate, endDate, searchText));
     }
 
     /** AS-IS apr.Apr03_RelateFund.selectByApprId (Apr03_TabPage_Relate 연관펀드) */

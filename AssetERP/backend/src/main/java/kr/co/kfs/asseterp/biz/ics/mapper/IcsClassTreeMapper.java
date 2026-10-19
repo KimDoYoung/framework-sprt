@@ -8,6 +8,7 @@ import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDetailRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawLookupRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawSaveReq;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsWriteTreeRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -18,6 +19,9 @@ public interface IcsClassTreeMapper {
 
     /** AS-IS ics01_class_tree.selectByCompanyId (ics_tree_all_postgresql) — 최상위(parent 0)부터 사용 중인 노드를 전위 순서로 */
     List<ClassTreeRes> selectTree(@Param("typeCode") String typeCode);
+
+    /** AS-IS ics01_class_tree.selectByCompanyId (F03) — selectTree와 같은 트리에 구분(typeCode)·상세내용(content)까지 */
+    List<IcsWriteTreeRes> selectWriteTree(@Param("typeCode") String typeCode);
 
     /** AS-IS ics01_class_tree.selectById 중 트리 열 */
     ClassTreeRes selectTreeNodeById(@Param("classTreeId") Long classTreeId);

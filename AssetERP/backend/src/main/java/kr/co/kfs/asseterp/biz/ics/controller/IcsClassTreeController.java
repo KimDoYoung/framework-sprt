@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.ics.dto.ClassTreeMoveReq;
 import kr.co.kfs.asseterp.biz.ics.dto.ClassTreeRes;
 import kr.co.kfs.asseterp.biz.ics.dto.ClassTreeSaveReq;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsWriteTreeRes;
 import kr.co.kfs.asseterp.biz.ics.service.IcsClassTreeService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,12 @@ public class IcsClassTreeController {
     @GetMapping
     public ApiResponse<List<ClassTreeRes>> searchTree(@RequestParam(defaultValue = "IC") String typeCode) {
         return ApiResponse.ok(service.searchTree(typeCode));
+    }
+
+    /** AS-IS ics.Ics01_ClassTree.selectByCompanyId(typeCode %) (Ics01_Tab_ApprList 법규별 문서작성 트리, F03) */
+    @GetMapping("/write")
+    public ApiResponse<List<IcsWriteTreeRes>> searchWriteTree() {
+        return ApiResponse.ok(service.searchWriteTree());
     }
 
     /** AS-IS ics.Ics01_ClassTree.update (등록) */

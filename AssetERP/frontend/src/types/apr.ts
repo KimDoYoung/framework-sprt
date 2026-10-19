@@ -71,3 +71,13 @@ export interface AprRelateAdv {
   advId: number;
   manageName?: string | null;
 }
+
+/** 법규별 문서작성 목록 한 행 (AS-IS Apr03_RelateFundModel 중 Ics01_Grid_ApprList가 쓰는 열). relateFundId는 연관펀드가 없으면 상신문서 id */
+export interface AprIcsDoc {
+  relateFundId: number;
+  apprId: number;
+  regDate?: string | null;
+  effectDate?: string | null;
+  regEmpName?: string | null;
+  title?: string | null;
+}
