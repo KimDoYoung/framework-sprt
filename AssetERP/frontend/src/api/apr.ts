@@ -1,8 +1,8 @@
 import { apiClient } from './client';
-import { ApiResponse } from '../types/auth';
-import { AprApprStepGroup, AprStamp } from '../types/apr';
+import { ApiResponse, PageRes } from '../types/auth';
+import { AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprStamp } from '../types/apr';
 
-/** apr(전자결재) 조회창 API (E16) */
+/** apr(전자결재) API (E16 조회창, F01 문서작성 목록) */
 export const aprApi = {
   /** AS-IS apr.Apr10_Stamp.selectBySearchText2: 문서분류에서 쓸 수 있는 인감 (Apr10_Lookup_DocStamp) */
   searchDocStamps: async (classTreeId: number, searchText: string): Promise<AprStamp[]> => {
@@ -14,5 +14,11 @@ export const aprApi = {
   searchApprStepGroups: async (): Promise<AprApprStepGroup[]> => {
     const res = await apiClient.get<ApiResponse<AprApprStepGroup[]>>('v1/apr/appr-step-groups');
     return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr01_Appr.selectByPaging (Dcr01_Tab_DcrWrite): 내가 등록·결재·열람하는 문서, 페이징 */
+  searchDcrWrite: async (params: AprDcrWriteParams): Promise<PageRes<AprDcrWrite>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<AprDcrWrite>>>('v1/apr/apprs/dcr-write', { params });
+    return res.data.data as PageRes<AprDcrWrite>;
   },
 };

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sys/mapper/sys09_code.xml selectByDcr01 L397·selectByDcrDetail L452 (F01) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.dcr.mapper.DcrWriteCodeMapper">
+
+    <!-- AS-IS sys09_code.selectByDcr01 L397 (IDMS-IC). 시작 분류의 부모(parentId)는 항상 0 -->
+    <select id="selectClassCodes" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrWriteCodeRes">
+        WITH RECURSIVE dcr_tree(dcr01_class_tree_id, dcr01_company_id, dcr01_class_tree_nm, dcr01_parent_tree_id, depth, path, cycle) AS (
+            SELECT a.dcr01_class_tree_id, a.dcr01_company_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, 1,
+                   ARRAY[CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id],
+                   false
+              FROM dcr01_class_tree a
+             WHERE a.dcr01_company_id = #{companyId}
+               AND a.dcr01_parent_tree_id = 0
+               AND a.dcr01_use_yn = 'true'
+            UNION ALL
+            SELECT a.dcr01_class_tree_id, a.dcr01_company_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, b.depth + 1,
+                   array_append(b.path, CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id),
+                   a.dcr01_class_tree_nm = any(b.path)
+              FROM dcr01_class_tree a
+                   INNER JOIN dcr_tree b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+             WHERE a.dcr01_company_id = #{companyId}
+               AND a.dcr01_use_yn = 'true'
+               AND NOT cycle
+        )
+        SELECT a.dcr01_class_tree_id AS code
+             , a.dcr01_class_tree_nm AS name
+          FROM dcr_tree a
+               INNER JOIN dcr03_org_auth b ON (dcr01_class_tree_id = dcr03_class_tree_id
+                                               AND b.dcr03_org_code_id = #{orgId}
+                                               AND COALESCE(dcr03_update_yn, 'false') = 'true')
+         WHERE a.depth = #{level}
+        <if test="dcrParentId != null">
+           AND a.dcr01_parent_tree_id = #{dcrParentId}
+        </if>
+         ORDER BY path
+    </select>
+
+    <!-- AS-IS sys09_code.selectByDcrDetail L452 (IDMS-IC) -->
+    <select id="selectDetailCodes" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrWriteCodeRes">
+        SELECT dcr07_class_detail_id AS code
+             , dcr07_class_detail_nm AS name
+          FROM dcr07_class_detail
+               INNER JOIN dcr01_class_tree ON dcr01_class_tree_id = dcr07_class_tree_id
+         WHERE dcr07_class_tree_id = #{classTreeId}
+         ORDER BY dcr07_seq
+    </select>
+</mapper>

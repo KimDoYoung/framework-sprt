@@ -14,3 +14,32 @@ export interface AprApprStepGroup {
   apprStepGroupName?: string | null;
   note?: string | null;
 }
+
+/** 문서작성 목록 한 행 (AS-IS Apr01_ApprModel 중 Dcr01_Tab_DcrWrite 그리드 열) */
+export interface AprDcrWrite {
+  apprId: number;
+  /** 'true' | 'false' */
+  bookmarkYn: string;
+  regDate?: string | null;
+  effectDate?: string | null;
+  regEmpName?: string | null;
+  classTreeName?: string | null;
+  /** HTML이 섞여 있을 수 있다(폐기 표시 등) — gb.textHtml로 그린다 */
+  title?: string | null;
+  receiveName?: string | null;
+  relateDisplayName?: string | null;
+  /** `<b style=color:…;>상태</b>` */
+  statusNameBold?: string | null;
+  note?: string | null;
+}
+
+export interface AprDcrWriteParams {
+  startDate: string;
+  closeDate: string;
+  searchText: string;
+  receiveName: string;
+  classTreeId?: number | null;
+  offset: number;
+  limit: number;
+}
+

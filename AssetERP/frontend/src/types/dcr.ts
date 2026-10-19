@@ -194,3 +194,20 @@ export interface DcrLinkSaveReq {
   note?: string | null;
 }
 
+/** 문서작성 분류 콤보 한 항목 (AS-IS sys09 코드 — Dcr01_Tab_DcrWrite) */
+export interface DcrWriteCode {
+  code: number;
+  name: string;
+}
+
+/** 최근 사용한 문서분류 (AS-IS Dcr08_OftenUseModel — Dcr08_Lookup_SelectSingle). 대분류·중분류 ID는 전체 경로 글자 대신 ID로 돌려준다 */
+export interface DcrOftenUse {
+  oftenUseId: number;
+  lClassTreeId?: number | null;
+  mClassTreeId?: number | null;
+  classTreeId: number;
+  classDetailId?: number | null;
+  classTreeFullName?: string | null;
+  classDetailName?: string | null;
+  count?: number | null;
+}

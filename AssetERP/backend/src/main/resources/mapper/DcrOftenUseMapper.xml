@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/dcr/mapper/dcr08_often_use.xml selectByPersonId L52 (F01) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.dcr.mapper.DcrOftenUseMapper">
+
+    <!-- AS-IS dcr08_often_use.selectByPersonId L52 (IDMS-IC). 화면이 쓰는 열만 고르고, 중분류·대분류 ID는 부모를 두 번 거슬러 올라 구한다 -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrOftenUseRes">
+        SELECT dcr08_often_use_id                                  AS often_use_id
+             , m.dcr01_parent_tree_id                              AS l_class_tree_id
+             , s.dcr01_parent_tree_id                              AS m_class_tree_id
+             , dcr08_class_tree_id                                 AS class_tree_id
+             , dcr08_class_detail_id                               AS class_detail_id
+             , f_class_tree_nm_allpath(dcr08_class_tree_id)        AS class_tree_full_name
+             , dcr07_class_detail_nm                               AS class_detail_name
+             , dcr08_count                                         AS count
+          FROM dcr08_often_use
+               INNER JOIN dcr01_class_tree s ON s.dcr01_class_tree_id = dcr08_class_tree_id
+               LEFT OUTER JOIN dcr01_class_tree m ON m.dcr01_class_tree_id = s.dcr01_parent_tree_id
+               LEFT OUTER JOIN dcr07_class_detail ON dcr07_class_detail_id = dcr08_class_detail_id
+         WHERE dcr08_person_id = #{personId}
+         ORDER BY dcr08_count DESC
+    </select>
+</mapper>

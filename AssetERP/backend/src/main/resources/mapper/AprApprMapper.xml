@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr01_appr.xml conditionDcrWrite L2357·selectByDcrWritePaging L2383·selectByDcrWriteTotal L2439 (F01) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprApprMapper">
+
+    <!-- AS-IS apr01_appr.conditionDcrWrite L2357 (IDMS-IC). 분류 조건은 common.dcr_tree_down(자기 + 아래 전체, 사용 중인 분류만)을 그대로 푼 것 -->
+    <sql id="conditionDcrWrite">
+        AND apr01_reg_date BETWEEN #{c.startDate} AND #{c.closeDate}
+        AND ( apr01_reg_emp_id = #{c.personId}
+              OR
+              #{c.personId} IN ( SELECT apr04_step_emp_id
+                                   FROM apr04_appr_step
+                                  WHERE apr04_appr_id = apr01_appr_id
+                                  UNION
+                                 SELECT apr13_person_id
+                                   FROM apr13_person_auth
+                                  WHERE apr13_appr_id = apr01_appr_id ) )
+        <if test="c.classTreeId != null">
+        AND dcr01_class_tree_id IN (
+            WITH RECURSIVE dcr_tree_down(dcr01_class_tree_id, dcr01_class_tree_nm, dcr01_parent_tree_id, depth, path, cycle) AS (
+                SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, 1,
+                       ARRAY[CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id],
+                       false
+                  FROM dcr01_class_tree a
+                 WHERE a.dcr01_company_id = #{c.companyId}
+                   AND a.dcr01_class_tree_id = #{c.classTreeId}
+                   AND a.dcr01_use_yn = 'true'
+                   AND a.dcr01_type_cd LIKE #{c.typeCode}
+                UNION ALL
+                SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, b.depth + 1,
+                       array_append(b.path, CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || LPAD(CAST(a.dcr01_class_tree_id AS varchar), 15, '0')),
+                       a.dcr01_class_tree_nm = any(b.path)
+                  FROM dcr01_class_tree a
+                       INNER JOIN dcr_tree_down b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+                 WHERE a.dcr01_company_id = #{c.companyId}
+                   AND a.dcr01_use_yn = 'true'
+                   AND a.dcr01_type_cd LIKE #{c.typeCode}
+                   AND NOT cycle
+            )
+            SELECT a.dcr01_class_tree_id FROM dcr_tree_down a )
+        </if>
+        <if test="c.receiveName != null">
+        AND CONCAT(apr01_receive_nm) ILIKE #{c.receiveName}
+        </if>
+        AND CONCAT(f_emp_kor_nm(apr01_reg_emp_id), apr01_title, dcr01_class_tree_nm, apr01_note) ILIKE #{c.searchText}
+    </sql>
+
+    <!-- AS-IS apr01_appr.selectByDcrWritePaging L2383 (IDMS-IC). apr01_appr.*·dcr01_class_tree.*에서 화면이 쓰는 열만 고름 -->
+    <select id="selectByDcrWritePaging" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteRes">
+        SELECT apr01_appr_id                                                                   AS appr_id
+             , (
+                   SELECT CASE WHEN COUNT(*) > 0 THEN 'true' ELSE 'false' END
+                     FROM apr50_bookmark
+                    WHERE apr50_appr_id = apr01_appr_id
+                      AND ( apr50_person_id = #{c.personId} OR apr50_public_yn = 'true' )
+               )                                                                               AS bookmark_yn
+             , apr01_reg_date                                                                  AS reg_date
+             , apr01_effect_date                                                               AS effect_date
+             , f_emp_kor_nm(apr01_reg_emp_id)                                                  AS reg_emp_name
+             , dcr01_class_tree_nm                                                             AS class_tree_name
+             , apr01_title                                                                     AS title
+             , apr01_receive_nm                                                                AS receive_name
+             , (
+                   SELECT CASE WHEN COUNT(relateInfo.*) = 0 THEN ''
+                               ELSE (CASE WHEN COALESCE(MIN(relate_nm), '') = '' THEN f_get_fund_nm2(MIN(relate_id), apr01_reg_date::date)
+                                          ELSE MIN(relate_nm) END)
+                                    || (CASE WHEN COUNT(relateInfo.*) = 1 THEN ''
+                                             ELSE ' 외 ' || (COUNT(relateInfo.*) - 1) END) END
+                     FROM ( SELECT apr03_fund_id   relate_id
+                                 , ''              relate_nm
+                              FROM apr03_relate_fund
+                             WHERE apr03_appr_id = apr01_appr_id
+                             UNION ALL
+                            SELECT apr12_adv_id    relate_id
+                                 , adv02_manage_nm relate_nm
+                              FROM apr12_relate_adv
+                                   INNER JOIN adv02_account ON adv02_account_id = apr12_adv_id
+                             WHERE apr12_appr_id = apr01_appr_id
+                          ) relateInfo
+               )                                                                               AS relate_display_name
+             , (
+                   CASE WHEN apr01_status_cd = '40'
+                        THEN '&lt;' || 'b style=color:#E33E31;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                        WHEN apr01_status_cd = '99'
+                        THEN '&lt;' || 'b style=color:#4B81B9;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                        ELSE '&lt;' || 'b style=color:#404040;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                   END
+               )                                                                               AS status_name_bold
+             , apr01_note                                                                      AS note
+          FROM apr01_appr
+               INNER JOIN dcr01_class_tree ON dcr01_class_tree_id = apr01_class_tree_id
+         WHERE 1=1
+        <include refid="conditionDcrWrite"/>
+         ORDER BY apr01_reg_date DESC, apr01_appr_id DESC
+         LIMIT #{c.limit}
+        OFFSET #{c.offset}
+    </select>
+
+    <!-- AS-IS apr01_appr.selectByDcrWriteTotal L2439 (IDMS-IC) -->
+    <select id="selectByDcrWriteTotal" resultType="long">
+        SELECT count(*)
+          FROM apr01_appr
+               INNER JOIN dcr01_class_tree ON dcr01_class_tree_id = apr01_class_tree_id
+         WHERE 1=1
+        <include refid="conditionDcrWrite"/>
+    </select>
+</mapper>

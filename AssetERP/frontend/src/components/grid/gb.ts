@@ -1,6 +1,6 @@
 import type { ColDef, ColGroupDef } from 'ag-grid-community';
 import { fmtDate, fmtDouble, fmtLong, numComparator } from './format';
-import { CheckCell, LockCell, LongSecondCell, SignColorCell, StatusCell } from './renderers';
+import { BookmarkCell, CheckCell, HtmlCell, LockCell, LongSecondCell, SignColorCell, StatusCell } from './renderers';
 
 /**
  * 컬럼 헬퍼 — AS-IS GridBuilder `addXxx(valueProvider, width, header)`와 이름·인자 순서를 1:1로 맞춘다.
@@ -89,6 +89,11 @@ export function gbFor<T>() {
       col(f, w, h, 'left', { cellClass: 'gb-wrap', wrapText: true, autoHeight: true }, o),
     /** addTextStatus: 완료/반려/미흡 … 굵은 색 글씨 */
     textStatus: (f: Field, w: number, h: string, o?: GbOpts<T>) => col(f, w, h, 'left', { cellRenderer: StatusCell }, o),
+
+    /** addTextHtml: 값의 HTML(굵은 색 글씨 등)을 그대로 보여 준다(위험한 태그는 글자로) */
+    textHtml: (f: Field, w: number, h: string, o?: GbOpts<T>) => col(f, w, h, 'left', { cellRenderer: HtmlCell }, o),
+    /** addBookMarkYn: true면 노란 별 (가운데, 읽기 전용) */
+    bookmarkYn: (f: Field, w: number, h: string, o?: GbOpts<T>) => col(f, w, h, 'center', { cellRenderer: BookmarkCell, sortable: false }, o),
 
     // ── 숫자 ──
     /** addLong: 오른쪽 정렬, 천단위 콤마 */

@@ -63,6 +63,8 @@ const cols = [gb.text('companyNm', 200, '고객명'), gb.textCenter('icamCompany
 | `addBoolean` | `gb.boolean` | 네모 체크박스, 가운데, 두 상태, 정렬 안 함 (`{ editable: true }`면 클릭으로 바꿈) |
 | `addBooleanYn` | `gb.booleanYn` | `O` / `X` |
 | `addBooleanIcon` | `gb.booleanIcon` | 잠금 아이콘(`LockOutlined`)만 — true면 아이콘, null·false는 빈칸. 가운데, 읽기 전용 (AS-IS `lock.png`. A19) |
+| `addTextHtml` | `gb.textHtml` | 왼쪽, 값의 HTML(굵은 색 글씨 등)을 보여 줌 — 위험한 태그는 글자로 (`sanitizeHtml`, F01) |
+| `addBookMarkYn` | `gb.bookmarkYn` | 가운데, true면 노란 별 (F01) |
 | `addBooleanYn2` | `gb.booleanYn2` | 네모 체크박스, 가운데, 선택·해제 두 상태(null은 해제). 읽기 전용, `{ editable: true }`면 클릭으로 바꿈 (AS-IS는 ✓/빈칸 글자) |
 | `addHeaderGroupMap` | `gb.group` | 헤더 묶음 |
 
@@ -70,6 +72,6 @@ const cols = [gb.text('companyNm', 200, '고객명'), gb.textCenter('icamCompany
 
 ## 아직 대응 없음
 
-`addCell`/`addCellFix`/`addCellNotSort`(사용자 정의 Cell: LookupTriggerCell 등), `addLongHtml`/`addTextHtml`류, `addLongCnt`, `addTextLink`,
+`addCell`/`addCellFix`/`addCellNotSort`(사용자 정의 Cell: LookupTriggerCell 등), `addLongHtml`류, `addLongCnt`, `addTextLink`,
 `addApprStep`/`addStopLoss`/`addIcamUserState` 등 업무 전용 렌더러, `getAggregationGrid`/`getTotalGrid`, `GridGroupBuilder`/`GridExpandBuilder`.
 나오면 원본 줄을 보고 화면에서 ColDef로 쓰고, 여러 화면에서 반복되면 여기에 gb를 추가한다.

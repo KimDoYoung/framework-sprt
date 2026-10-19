@@ -7,6 +7,7 @@ import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +28,12 @@ public class DcrClassDetailController {
     @GetMapping
     public ApiResponse<List<DcrClassDetailRes>> search(@RequestParam Long classTreeId) {
         return ApiResponse.ok(service.search(classTreeId));
+    }
+
+    /** AS-IS dcr.Dcr07_ClassDetail.selectById (문서작성 getClassDetailModel) */
+    @GetMapping("/{classDetailId}")
+    public ApiResponse<DcrClassDetailRes> get(@PathVariable Long classDetailId) {
+        return ApiResponse.ok(service.get(classDetailId));
     }
 
     /** AS-IS dcr.Dcr07_ClassDetail.update → 저장된 행(요청 순서) */

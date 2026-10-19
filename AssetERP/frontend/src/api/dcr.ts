@@ -3,7 +3,7 @@ import { ApiResponse } from '../types/auth';
 import {
   DcrCheckRes, DcrCheckRowReq, DcrClassDetail, DcrClassTree, DcrClassTreeAll, DcrClassTreeLookup, DcrClassTreeSaveReq,
   DcrCopyCompany, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrLink, DcrLinkSaveReq, DcrRelateDocType, DcrRelateIcr,
-  DcrRelateIcs, DcrRelateSaveReq, DcrUseYnReq,
+  DcrOftenUse, DcrRelateIcs, DcrRelateSaveReq, DcrUseYnReq, DcrWriteCode,
 } from '../types/dcr';
 
 /** dcr(문서분류) API (E13-3 조회창, E16 문서분류) */
@@ -105,6 +105,12 @@ export const dcrApi = {
   searchClassDetails: async (classTreeId: number): Promise<DcrClassDetail[]> => {
     const res = await apiClient.get<ApiResponse<DcrClassDetail[]>>('v1/dcr/class-details', { params: { classTreeId } });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr07_ClassDetail.selectById (Dcr01_Tab_DcrWrite getClassDetailModel) */
+  getClassDetail: async (classDetailId: number): Promise<DcrClassDetail> => {
+    const res = await apiClient.get<ApiResponse<DcrClassDetail>>(`v1/dcr/class-details/${classDetailId}`);
+    return res.data.data as DcrClassDetail;
   },
 
   saveClassDetails: async (rows: DcrClassDetail[]): Promise<DcrClassDetail[]> => {
@@ -238,5 +244,25 @@ export const dcrApi = {
   copyLinkForms: async (companyIds: number[], linkIds: number[]): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/dcr/links/copy-form', { companyIds, linkIds });
     return res.data.data ?? 0;
+  },
+
+  // ── 문서작성 (Dcr01_Tab_DcrWrite · Dcr08_Lookup_SelectSingle) ──
+
+  /** AS-IS sys.Sys09_Code.selectByDcrLv1~3: level 1=대분류, 2=중분류, 3=문서분류 (2·3은 부모 분류 ID). 조직이 수정 권한을 가진 분류만 */
+  searchWriteClasses: async (level: 1 | 2 | 3, dcrParentId?: number): Promise<DcrWriteCode[]> => {
+    const res = await apiClient.get<ApiResponse<DcrWriteCode[]>>('v1/dcr/write-codes/classes', { params: { level, dcrParentId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys09_Code.selectByDcrDetail: 문서분류의 세부분류 */
+  searchWriteDetails: async (classTreeId: number): Promise<DcrWriteCode[]> => {
+    const res = await apiClient.get<ApiResponse<DcrWriteCode[]>>('v1/dcr/write-codes/details', { params: { classTreeId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr08_OftenUse.selectByPersonId: 로그인 사용자가 최근 쓴 문서분류 (사용횟수순) */
+  searchOftenUses: async (): Promise<DcrOftenUse[]> => {
+    const res = await apiClient.get<ApiResponse<DcrOftenUse[]>>('v1/dcr/often-uses');
+    return res.data.data ?? [];
   },
 };
