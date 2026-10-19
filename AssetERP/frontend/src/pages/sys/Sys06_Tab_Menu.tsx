@@ -156,7 +156,8 @@ export const Sys06_Tab_Menu: React.FC = () => {
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter style={{ height: '100%' }}>
         <Splitter.Panel min={300}>
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
+          {/* border-box: 테두리(2px)가 높이 100%에 더해져 패널보다 커지면 스크롤바가 2개 생긴다 */}
+          <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
             <div style={{ height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', flex: 'none', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
               <Typography.Text strong style={{ flex: 'none' }}>매뉴구성</Typography.Text>
               <Input style={{ width: 200, flex: 'none' }} allowClear value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={search} />
@@ -184,7 +185,7 @@ export const Sys06_Tab_Menu: React.FC = () => {
           </div>
         </Splitter.Panel>
         <Splitter.Panel defaultSize={600} max={1000} min={200}>
-          <div style={{ height: '100%', border: '1px solid #d9d9d9' }}>
+          <div style={{ height: '100%', boxSizing: 'border-box', border: '1px solid #d9d9d9' }}>
             <Sys01_Grid_CompanyMenu menuId={menuId} />
           </div>
         </Splitter.Panel>
