@@ -6,7 +6,7 @@
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03). 초기화(UX-02)는 원본에 없는 동작이라 넣지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button as AntButton, Input, message, Splitter } from 'antd';
+import { Button as AntButton, message, Splitter } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { empBenefitInfoApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
@@ -16,6 +16,7 @@ import { CellEditGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { useLoginUser } from '@/hooks/useLoginUser';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { Act01_Lookup_AccountCode } from '@/components/lookup/Act01_Lookup_AccountCode';
 
@@ -193,7 +194,8 @@ export const Emp55_Tab_benefitInfoManager: React.FC = () => {
                 <Button type="delete" onClick={deleteWithCheck(tgtCrud)}>삭제</Button>
               </>}>
                 <SearchBar.Field label="고객사">
-                  <Input readOnly style={{ width: 150 }} value={companyName} suffix={<SearchOutlined />} onClick={() => setCompanyLookup('single')} />
+                  <LookupInput width={150} value={companyName} onOpen={() => setCompanyLookup('single')}
+                    onClear={() => { setCompanyId(null); setCompanyName(''); }} />
                 </SearchBar.Field>
                 <SearchBar.Field label="검색">
                   <SearchBar.Input style={{ width: 200 }} value={searchText2} onChange={e => setSearchText2(e.target.value)} />

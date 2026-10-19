@@ -8,13 +8,14 @@
  * ICAM Get·타사무 Get(BatchMain 서블릿)은 외부 ICAM DB를 읽는 작업이라 서버가 거절한다 — 작업기록 의존
  */
 import React, { useCallback, useState } from 'react';
-import { Input, message, Modal, Space, Splitter } from 'antd';
+import { message, Modal, Space, Splitter } from 'antd';
 import { icamApi } from '@/api/icam';
 import { errorMessage } from '@/api/client';
 import { Company } from '@/types/sys';
 import { IcamFund } from '@/types/icam';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { SearchBar } from '@/components/search';
 import { Icam03_Grid_Fund } from './Icam03_Grid_Fund';
@@ -100,7 +101,7 @@ export const Icam03_Tab_Fund: React.FC = () => {
           {/* [E2] retrieveButton[조회].Select (L84) → retrieve() */}
           <SearchBar onSearch={retrieve}>
             <SearchBar.Field label="운용사">
-              <Input style={{ width: 250, cursor: 'pointer' }} readOnly value={companyText} onClick={() => setLookupOpen(true)} />
+              <LookupInput width={250} value={companyText} onOpen={() => setLookupOpen(true)} onClear={() => onCompany(null)} />
             </SearchBar.Field>
           </SearchBar>
           <Space>

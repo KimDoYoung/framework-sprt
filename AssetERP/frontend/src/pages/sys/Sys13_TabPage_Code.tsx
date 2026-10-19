@@ -5,14 +5,14 @@
  * UX보강(10) B12-2: 저장 = 저장(n)(UX-03). 검색 조건이 없어 SearchBar는 쓰지 않는다
  */
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { Input, message, Space } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { message, Space } from 'antd';
 import { sysApi } from '@/api/sys';
 import { CodeAdmin, CodeGroup } from '@/types/sys';
 import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { useLoginUser } from '@/hooks/useLoginUser';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_SelectSingle } from './Sys01_Lookup_SelectSingle';
 import { Sys09_Lookup_CodeKind } from './Sys09_Lookup_CodeKind';
 
@@ -119,8 +119,7 @@ export const Sys13_TabPage_Code = forwardRef<Sys13_TabPage_CodeHandle>((_props, 
       <div style={{ height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', flex: 'none', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
         <Space>
           {/* companyName LookupTriggerField (L58, L96-116): admin 회사만 켜짐, 입력은 편집 불가 */}
-          <Input style={{ width: 150, cursor: isAdminCompany ? 'pointer' : 'default' }} readOnly disabled={!isAdminCompany}
-            value={companyName} suffix={<SearchOutlined />} onClick={() => isAdminCompany && setCompanyLookupOpen(true)} />
+          <LookupInput width={150} disabled={!isAdminCompany} value={companyName} onOpen={() => setCompanyLookupOpen(true)} />
           {/* [E2] retrieveButton[조회].Select (L118) → retrieve(codeGroupModel, codeKindId) */}
           <Button type="search" onClick={retrieve}>조회</Button>
           <Button type="register" disabled={!isAdminCompany} onClick={insertRow}>등록</Button>

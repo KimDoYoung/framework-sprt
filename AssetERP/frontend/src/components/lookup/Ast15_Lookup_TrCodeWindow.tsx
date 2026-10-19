@@ -5,8 +5,7 @@
  * 가운데 = Ast15_Page_TrCodeWindow. 회사 0이 아니면 로그인 회사로 열자마자 조회
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { Input, message, Modal } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { message, Modal } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { astApi } from '@/api/ast';
 import { errorMessage } from '@/api/client';
@@ -14,6 +13,7 @@ import { TrCodeWindow } from '@/types/ast';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { Ast15_Page_TrCodeWindow, TrCodeWindowTarget } from '@/components/lookup/Ast15_Page_TrCodeWindow';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { Sys06_Lookup_SearchMenu } from '@/components/lookup/Sys06_Lookup_SearchMenu';
 import { useLoginUser } from '@/hooks/useLoginUser';
@@ -123,8 +123,8 @@ export const Ast15_Lookup_TrCodeWindow: React.FC<Props> = ({ open, onClose }) =>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {/* 생성자 L72-78: 회사 0만 운용사 칸. [E1] companyField.TriggerClick [result != null] (L122) → settings() L118-135: Sys01_Lookup_Company, 고르면 칸과 companyId */}
             {user.companyId === 0 && (
-              <Input readOnly style={{ width: 150, cursor: 'pointer' }} placeholder="운용사 선택" value={companyName}
-                suffix={<SearchOutlined />} onClick={() => setCompanyOpen(true)} />
+              <LookupInput width={150} placeholder="운용사 선택" value={companyName} onOpen={() => setCompanyOpen(true)}
+                onClear={() => { setCompanyName(''); setCompanyId(null); }} />
             )}
             {/* [E3] retrieveButton[조회].Select (L145) → retrieve() */}
             <Button type="search" onClick={() => retrieve()}>조회</Button>

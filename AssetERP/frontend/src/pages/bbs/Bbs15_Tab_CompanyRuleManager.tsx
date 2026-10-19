@@ -6,8 +6,7 @@
  * UX보강(10): 툴바 = SearchBar(UX-01)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message, Modal } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { message, Modal } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { bbsApi } from '@/api/bbs';
 import { errorMessage } from '@/api/client';
@@ -16,6 +15,7 @@ import { Button } from '@/components/button';
 import { FileUpdownForm, FileUpdownFormHandle } from '@/components/form/FileUpdownForm';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { MultiGrid, gbFor, iconCell } from '@/components/grid';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { SearchBar } from '@/components/search';
 import { isSysAdmin, useLoginUser } from '@/hooks/useLoginUser';
@@ -190,7 +190,7 @@ export const Bbs15_Tab_CompanyRuleManager: React.FC = () => {
       >
         {isAdminCompany && (
           <SearchBar.Field label="고객사">
-            <Input readOnly style={{ width: 200, cursor: 'pointer' }} value={companyName} suffix={<SearchOutlined />} onClick={() => setLookupCompany(true)} />
+            <LookupInput value={companyName} empty={[ADMIN_COMPANY_NAME]} onOpen={() => setLookupCompany(true)} onClear={() => onCompanyResult(null)} />
           </SearchBar.Field>
         )}
         <SearchBar.Field label="구분">

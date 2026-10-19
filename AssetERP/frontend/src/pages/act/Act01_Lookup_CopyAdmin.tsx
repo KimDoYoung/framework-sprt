@@ -6,7 +6,6 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Modal, Space, Splitter } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
 import type { AgGridReact } from 'ag-grid-react';
 import { actApi } from '@/api/act';
 import { errorMessage } from '@/api/client';
@@ -15,6 +14,7 @@ import { Company } from '@/types/sys';
 import { Button } from '@/components/button';
 import { MultiGrid, SingleGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { useTreeGrid } from '@/hooks/useTreeGrid';
 
@@ -164,7 +164,7 @@ export const Act01_Lookup_CopyAdmin: React.FC<Props> = ({ open, onClose }) => {
                 }
               >
                 <SearchBar.Field label="기준고객사">
-                  <Input readOnly style={{ width: 150, cursor: 'pointer' }} value={stdCompanyName} suffix={<SearchOutlined />} onClick={() => setCompanyOpen(true)} />
+                  <LookupInput width={150} value={stdCompanyName} onOpen={() => setCompanyOpen(true)} onClear={() => onCompanyResult(null)} />
                 </SearchBar.Field>
               </SearchBar>
               <div style={{ flex: 1, minHeight: 0 }}>

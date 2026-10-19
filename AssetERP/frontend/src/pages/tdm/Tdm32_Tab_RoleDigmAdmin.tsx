@@ -6,8 +6,7 @@
  * UX보강(10): 툴바 = SearchBar(UX-01)
  */
 import React, { useMemo, useRef, useState } from 'react';
-import { Checkbox, DatePicker, Input, message, Modal } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { Checkbox, DatePicker, message, Modal } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { errorMessage } from '@/api/client';
@@ -17,6 +16,7 @@ import { FileInfo } from '@/types/sys';
 import { TdmRoleDigm } from '@/types/tdm';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor, iconCell } from '@/components/grid';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { SearchBar } from '@/components/search';
 import { Sys10_Lookup_FileViewer } from '../sys/Sys10_Lookup_FileViewer';
@@ -137,7 +137,7 @@ export const Tdm32_Tab_RoleDigmAdmin: React.FC = () => {
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <SearchBar onSearch={() => retrieve()} extra={<Button type="reset" onClick={reCreateFile}>재생성</Button>}>
         <SearchBar.Field label="고객사">
-          <Input readOnly style={{ width: 200, cursor: 'pointer' }} value={companyName} suffix={<SearchOutlined />} onClick={() => setLookupCompany(true)} />
+          <LookupInput value={companyName} onOpen={() => setLookupCompany(true)} onClear={() => onCompanyResult(null)} />
         </SearchBar.Field>
         <SearchBar.Field label="조회기간">
           <DatePicker style={{ width: 140 }} allowClear={false} disabled={notPeriodYn} value={startDate} format={FORMAT} onChange={d => d && setStartDate(d)} />

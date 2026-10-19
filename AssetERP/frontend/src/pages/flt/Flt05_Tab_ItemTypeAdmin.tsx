@@ -6,8 +6,7 @@
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03). 초기화(UX-02)는 원본에 없는 동작이라 넣지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Input, message, Splitter } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { message, Splitter } from 'antd';
 import { fltApi } from '@/api/flt';
 import { errorMessage } from '@/api/client';
 import { FltItemType } from '@/types/flt';
@@ -15,6 +14,7 @@ import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 
 const gb = gbFor<FltItemType>();
@@ -172,7 +172,8 @@ export const Flt05_Tab_ItemTypeAdmin: React.FC = () => {
                 <Button type="delete" onClick={deleteWithCheck(tgtCrud)}>삭제</Button>
               </>}>
                 <SearchBar.Field label="고객사">
-                  <Input readOnly style={{ width: 150 }} value={companyName} suffix={<SearchOutlined />} onClick={() => setLookupCompany(true)} />
+                  <LookupInput width={150} value={companyName} onOpen={() => setLookupCompany(true)}
+                    onClear={() => { setCompanyId(null); setCompanyName(''); }} />
                 </SearchBar.Field>
               </SearchBar>
             </div>

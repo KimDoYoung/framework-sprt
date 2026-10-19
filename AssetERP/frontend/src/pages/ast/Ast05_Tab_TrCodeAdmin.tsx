@@ -5,8 +5,7 @@
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 초기화(UX-02)는 툴바가 두 줄로 넘어가(높이 72) 넣지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, Input, message } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { Checkbox, message } from 'antd';
 import { astApi } from '@/api/ast';
 import { errorMessage } from '@/api/client';
 import { sysApi } from '@/api/sys';
@@ -16,6 +15,7 @@ import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { SearchBar, useSearchParams } from '@/components/search';
 import { Ast15_Lookup_TrCodeWindow } from '@/components/lookup/Ast15_Lookup_TrCodeWindow';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { useLoginUser } from '@/hooks/useLoginUser';
@@ -143,7 +143,7 @@ export const Ast05_Tab_TrCodeAdmin: React.FC = () => {
             <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
             {/* [E6] windowUseButton[화면별 거래유형 등록].Select (L114) → lookupWindowUse() L270-273 */}
             <Button type="register" onClick={() => setWindowOpen(true)}>화면별 거래유형 등록</Button>
-            <Input readOnly style={{ width: 200, cursor: 'pointer' }} value={companyText} suffix={<SearchOutlined />} onClick={() => setCompanyOpen(true)} />
+            <LookupInput value={companyText} onOpen={() => setCompanyOpen(true)} onClear={() => setCompanyList(null)} />
             <Button type="generate" onClick={initData}>기초데이터생성</Button>
           </>
         }

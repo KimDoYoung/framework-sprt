@@ -7,7 +7,7 @@
  * 가져오기(BatchMain 서블릿)는 외부 ICAM DB를 읽는 작업이라 서버가 거절한다 — 작업기록 의존
  */
 import React, { useCallback, useRef, useState } from 'react';
-import { DatePicker, Input, message, Modal, Space } from 'antd';
+import { DatePicker, message, Modal, Space } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { icamApi } from '@/api/icam';
@@ -17,6 +17,7 @@ import { IcamFee } from '@/types/icam';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { PagingToolBar, SingleGrid, gbFor } from '@/components/grid';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { SearchBar } from '@/components/search';
 
@@ -165,13 +166,13 @@ export const Icam10_Tab_FeeAdmin: React.FC = () => {
           <SystemCodeComboBox kindCd="FundFeeType" style={{ width: 140 }} allowClear={false} value={feeType} onChange={onFeeType} />
         </SearchBar.Field>
         <SearchBar.Field label="ICAM운용사">
-          <Input
-            style={{ width: 100, cursor: feeType === OFFICE_FEE ? 'default' : 'pointer' }}
-            readOnly
+          <LookupInput
+            width={100}
             placeholder="전체"
             disabled={feeType === OFFICE_FEE}
             value={companyText}
-            onClick={() => setLookupOpen(true)}
+            onOpen={() => setLookupOpen(true)}
+            onClear={() => onCompany(null)}
           />
         </SearchBar.Field>
         <SearchBar.Field label="검색">

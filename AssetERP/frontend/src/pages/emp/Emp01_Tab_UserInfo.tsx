@@ -5,8 +5,8 @@
  * 레이아웃(생성자 L62-107): 툴바(높이 50) = 고객사(트리거)·검색·사용고객만 보기·퇴사자 제외·조회·안내문 / 그리드 + 페이징 툴바(100행)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Checkbox, Input, message } from 'antd';
-import { EditOutlined, SearchOutlined } from '@ant-design/icons';
+import { Checkbox, message } from 'antd';
+import { EditOutlined } from '@ant-design/icons';
 import type { AgGridReact, CustomCellRendererProps } from 'ag-grid-react';
 import type { CellDoubleClickedEvent, ColDef } from 'ag-grid-community';
 import { empUserInfoApi } from '@/api/emp';
@@ -16,6 +16,7 @@ import { Company } from '@/types/sys';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import { SearchBar, useSearchParams } from '@/components/search';
 import { PagingToolBar, SingleGrid, gbFor } from '@/components/grid';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { Emp02_Edit_Note } from './Emp02_Edit_Note';
 
@@ -215,8 +216,7 @@ export const Emp01_Tab_UserInfo: React.FC = () => {
             <b style={{ marginLeft: 8, color: '#262d3f', fontSize: 12 }}>※ 복사하고싶은 정보를 더블클릭하시면 복사가 됩니다.</b>
           }>
             <SearchBar.Field label="고객사">
-              <Input style={{ width: 200, cursor: 'pointer' }} readOnly value={companyField}
-                suffix={<SearchOutlined />} onClick={() => setLookupOpen(true)} />
+              <LookupInput value={companyField} onOpen={() => setLookupOpen(true)} onClear={() => onLookupResult(null)} />
             </SearchBar.Field>
             <SearchBar.Field label="검색">
               {/* [E1] searchText.KeyPress [Enter] (L122) → retrieve() */}

@@ -5,13 +5,13 @@
  * UX보강(10) B12-1: 툴바 = SearchBar(UX-01). 초기화(UX-02)는 조건이 1개라 없음
  */
 import React, { useMemo, useState } from 'react';
-import { Input, message, Splitter } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { message, Splitter } from 'antd';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { Company, Role } from '@/types/sys';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_SelectSingle } from './Sys01_Lookup_SelectSingle';
 import { Sys07_Tree_CompanyRoleMenu } from './Sys07_Tree_CompanyRoleMenu';
 
@@ -68,8 +68,7 @@ export const Sys07_Tab_CompanyRoleMenu: React.FC = () => {
             <SearchBar onSearch={retrieve}>
               <SearchBar.Field label="회사명">
                 {/* [E1] companyName.TriggerClick (L78) → Sys01_Lookup_SelectSingle.open() — 입력은 편집 불가(L77) */}
-                <Input style={{ width: 150, cursor: 'pointer' }} readOnly value={companyName}
-                  suffix={<SearchOutlined />} onClick={() => setLookupOpen(true)} />
+                <LookupInput width={150} value={companyName} onOpen={() => setLookupOpen(true)} />
               </SearchBar.Field>
             </SearchBar>
             <div style={{ flex: 1, minHeight: 0 }}>

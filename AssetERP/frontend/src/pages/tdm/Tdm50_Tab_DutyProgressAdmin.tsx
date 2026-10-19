@@ -6,8 +6,7 @@
  * UX보강(10): 툴바 = SearchBar(UX-01)
  */
 import React, { useMemo, useState } from 'react';
-import { Input, message } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { message } from 'antd';
 import dayjs from 'dayjs';
 import { errorMessage } from '@/api/client';
 import { tdmApi } from '@/api/tdm';
@@ -17,6 +16,7 @@ import { QuickMoveField, YearMonth } from '@/components/form/QuickMoveField';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { useLoginUser } from '@/hooks/useLoginUser';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_SelectSingle } from '../sys/Sys01_Lookup_SelectSingle';
 
 type Row = TdmDutyProgress & { rowKey: string };
@@ -114,7 +114,7 @@ export const Tdm50_Tab_DutyProgressAdmin: React.FC = () => {
           <QuickMoveField {...ym} onChange={setYm} onCommit={v => void createData(v)} />
         </SearchBar.Field>
         <SearchBar.Field label="고객사">
-          <Input readOnly style={{ width: 200, cursor: 'pointer' }} value={companyName} suffix={<SearchOutlined />} onClick={() => setLookupCompany(true)} />
+          <LookupInput value={companyName} onOpen={() => setLookupCompany(true)} />
         </SearchBar.Field>
       </SearchBar>
       <div style={{ flex: 1, minHeight: 0 }}>

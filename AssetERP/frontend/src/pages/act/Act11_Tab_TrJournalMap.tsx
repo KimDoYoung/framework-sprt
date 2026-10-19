@@ -6,7 +6,7 @@
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03). 초기화(UX-02)는 툴바가 두 줄로 넘어가 넣지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button as AntButton, Input, message } from 'antd';
+import { Button as AntButton, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { actApi } from '@/api/act';
 import { errorMessage } from '@/api/client';
@@ -18,6 +18,7 @@ import { CellEditGrid, gbFor } from '@/components/grid';
 import { SearchBar, useSearchParams } from '@/components/search';
 import { Act10_Lookup_ReprAccount } from '@/components/lookup/Act10_Lookup_ReprAccount';
 import { Ast05_Lookup_TrCode } from '@/components/lookup/Ast05_Lookup_TrCode';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { useLoginUser } from '@/hooks/useLoginUser';
@@ -218,7 +219,7 @@ export const Act11_Tab_TrJournalMap: React.FC = () => {
               {/* 생성자 L103-107: 관리자 회사(0)만 고객사 칸과 [기초데이터생성] */}
               {user.companyId === 0 && (
                 <>
-                  <Input readOnly style={{ width: 200, cursor: 'pointer' }} value={companyText} suffix={<SearchOutlined />} onClick={() => setCompanyOpen(true)} />
+                  <LookupInput value={companyText} onOpen={() => setCompanyOpen(true)} onClear={() => setCompanyList(null)} />
                   <Button type="generate" onClick={initData}>기초데이터생성</Button>
                 </>
               )}

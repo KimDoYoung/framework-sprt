@@ -2,11 +2,11 @@
  * 고객사 선택 칸 (IM-01, B13) — 입력 + x. 누르면 Sys01_Lookup_Company 조회창을 연다.
  * AS-IS CommonComboBoxField("sys.Sys00_Common.selectCompanyName", "%", "전체") 대신 쓴다.
  * 값은 회사 ID 문자열, 전체는 all('%')로 화면의 기존 ALL 규약을 그대로 쓴다.
- * 조회창에서 선택안함 / x = 전체.
+ * 조회창에서 선택안함 / x = 전체. 칸·돋보기를 누르면 조회창이 열린다(LookupInput).
  */
 import React, { useState } from 'react';
-import { Input } from 'antd';
 import { Company } from '@/types/sys';
+import { LookupInput } from './LookupInput';
 import { Sys01_Lookup_Company } from './Sys01_Lookup_Company';
 
 interface Props {
@@ -40,17 +40,7 @@ export const CompanyPopupField: React.FC<Props> = ({ value, label, onChange, all
 
   return (
     <>
-      <Input
-        style={{ width, cursor: disabled ? 'not-allowed' : 'pointer' }}
-        // readOnly면 antd가 x를 숨기므로 키 입력·붙여넣기만 막는다
-        onKeyDown={e => { if (e.key !== 'Tab') e.preventDefault(); }}
-        onPaste={e => e.preventDefault()}
-        disabled={disabled}
-        value={text}
-        allowClear={!isAll && !disabled}
-        onChange={e => { if (e.target.value === '') onChange(all, '전체'); }}
-        onClick={() => !disabled && setOpen(true)}
-      />
+      <LookupInput width={width} disabled={disabled} value={text} onOpen={() => setOpen(true)} onClear={() => onChange(all, '전체')} />
       <Sys01_Lookup_Company open={open} onResult={onResult} onClose={() => setOpen(false)} />
     </>
   );

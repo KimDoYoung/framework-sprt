@@ -6,13 +6,13 @@
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { Input, message, Splitter } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
 import { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { Company, Role } from '@/types/sys';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { SearchBar, useSearchParams } from '@/components/search';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_SelectSingle } from './Sys01_Lookup_SelectSingle';
 import { Sys05_Page_CompanyUserRole } from './Sys05_Page_CompanyUserRole';
 
@@ -81,8 +81,7 @@ export const Sys05_Tab_CompanyUserRole: React.FC = () => {
             <SearchBar onSearch={() => retrieve(companyId)} onReset={reset}>
               <SearchBar.Field label="회사명">
                 {/* [E2] companyName.TriggerClick (L56) → Sys01_Lookup_SelectSingle.open() — 입력은 편집 불가(L55) */}
-                <Input style={{ width: 150, cursor: 'pointer' }} readOnly value={companyName}
-                  suffix={<SearchOutlined />} onClick={() => setLookupOpen(true)} />
+                <LookupInput width={150} value={companyName} onOpen={() => setLookupOpen(true)} />
               </SearchBar.Field>
               <SearchBar.Field label="권한명">
                 <Input style={{ width: 100 }} allowClear value={roleName} onChange={e => sp.set('roleName', e.target.value)} />

@@ -6,9 +6,8 @@
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없는 동작이라 넣지 않는다
  */
 import React, { useMemo, useRef, useState } from 'react';
-import { Input, message, Modal } from 'antd';
+import { message, Modal } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
-import { SearchOutlined } from '@ant-design/icons';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
 import { DcrDocType } from '@/types/dcr';
@@ -18,6 +17,7 @@ import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { MultiGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { Sys09_Lookup_Code } from '@/components/lookup/Sys09_Lookup_Code';
 import { useLoginUser } from '@/hooks/useLoginUser';
@@ -146,7 +146,7 @@ export const Dcr05_Tab_DocType: React.FC = () => {
       }>
         {isAdminCompany && (
           <SearchBar.Field label="고객사">
-            <Input readOnly style={{ width: 200, cursor: 'pointer' }} value={companyName} suffix={<SearchOutlined />} onClick={() => setCompanyOpen(true)} />
+            <LookupInput value={companyName} empty={[ADMIN_TEXT]} onOpen={() => setCompanyOpen(true)} onClear={() => onCompanyResult(null)} />
           </SearchBar.Field>
         )}
         <SearchBar.Field label="구분">

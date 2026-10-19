@@ -20,6 +20,7 @@ import { TdmManlOrg } from '@/types/tdm';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor, iconCell } from '@/components/grid';
 import { Org00_Lookup_SelectTdm } from '@/components/lookup/Org00_Lookup_SelectTdm';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { SearchBar } from '@/components/search';
 import { Sys10_Lookup_FileViewer } from '../sys/Sys10_Lookup_FileViewer';
@@ -170,7 +171,7 @@ export const Tdm42_Tab_ManlManagerAdmin: React.FC = () => {
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <SearchBar onSearch={() => retrieve()} extra={<Button type="reset" onClick={reCreateFile}>재생성</Button>}>
         <SearchBar.Field label="고객사">
-          <Input readOnly style={{ width: 200, cursor: 'pointer' }} value={companyName} suffix={<SearchOutlined />} onClick={() => setLookupCompany(true)} />
+          <LookupInput value={companyName} onOpen={() => setLookupCompany(true)} onClear={() => onCompanyResult(null)} />
         </SearchBar.Field>
         <SearchBar.Field label="부서">
           <Input readOnly style={{ width: 270, cursor: 'pointer' }} placeholder="전체" value={orgName} suffix={<SearchOutlined />} onClick={() => setLookupOrg(true)} />

@@ -6,8 +6,7 @@
  * UX보강(10) B12-2: 툴바 = SearchBar(UX-01·02·04, 조건 3개: 거래처구분·거래처명·사용거래처만 보기 → 초기화는 '%'·''·체크)
  */
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { Checkbox, Input, message, Modal, Splitter } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { Checkbox, message, Modal, Splitter } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
@@ -17,6 +16,7 @@ import { SearchBar, useSearchParams } from '@/components/search';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { useLoginUser } from '@/hooks/useLoginUser';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { Sys15_Edit_Corp } from './Sys15_Edit_Corp';
 
@@ -140,7 +140,7 @@ export const Sys15_Tab_Corp: React.FC = () => {
               <Button type="delete" onClick={deleteRow}>삭제</Button>
               {user.companyId === 0 && <>
                 {/* [E3] companyField.TriggerClick [result != null] (L150) → Sys01_Lookup_Company: 고른 회사명·ID */}
-                <Input readOnly style={{ width: 150 }} value={companyName} suffix={<SearchOutlined />} onClick={() => setLookupOpen(true)} />
+                <LookupInput width={150} value={companyName} onOpen={() => setLookupOpen(true)} onClear={() => { setCompanyName(''); setCompanyId(null); }} />
                 <Button type="register" onClick={initData}>기초데이터생성</Button>
               </>}
             </>}>

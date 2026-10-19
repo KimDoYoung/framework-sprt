@@ -9,14 +9,14 @@
  * 부모(Pay20_Tab_DeductAdmin)가 forwardRef 핸들로 retrieve()를 부른다(탭을 고를 때 retrieveTabpage)
  */
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { Input, message, Modal, Space, Splitter } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { message, Modal, Space, Splitter } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { payApi } from '@/api/pay';
 import { errorMessage } from '@/api/client';
 import { PayFormula, PayFormulaDate } from '@/types/pay';
 import { Button } from '@/components/button';
 import { CellEditGrid, SingleGrid, gbFor } from '@/components/grid';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { useLoginUser } from '@/hooks/useLoginUser';
@@ -265,7 +265,7 @@ export const Pay04_TabPage_Formula = forwardRef<PayTabPageHandle>((_props, ref) 
             <Space wrap style={{ flex: 'none' }}>
               <span>고객사</span>
               {/* [E3] companyField.TriggerClick [result != null] (L100) */}
-              <Input readOnly style={{ width: 150 }} value={companyName} suffix={<SearchOutlined />} onClick={() => setLookupCompany(true)} />
+              <LookupInput width={150} value={companyName} onOpen={() => setLookupCompany(true)} onClear={() => onCompany(null)} />
               {/* [E10] eastRetrieveButton[조회].Select (L153) → eastRetrieve() */}
               <Button type="search" onClick={() => eastRetrieve(companyId)}>조회</Button>
               <Button type="generate" onClick={basicDataCreate}>기초데이터생성</Button>

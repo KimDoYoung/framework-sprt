@@ -5,7 +5,7 @@
  * UX보강(10): 툴바 = SearchBar(UX-01·02·04, 조건 2개: 코드/명·계정속성 → 초기화는 ''·전체), 저장 = 저장(n)(UX-03)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Input, message } from 'antd';
+import { message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { Button as AntButton } from 'antd';
 import { actApi } from '@/api/act';
@@ -18,6 +18,7 @@ import { CellEditGrid, gbFor } from '@/components/grid';
 import { SearchBar, useSearchParams } from '@/components/search';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Act10_Lookup_ReprAccount } from '@/components/lookup/Act10_Lookup_ReprAccount';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { useLoginUser } from '@/hooks/useLoginUser';
@@ -174,7 +175,7 @@ export const Act10_Tab_ReprAccount: React.FC = () => {
             {/* 생성자 L103-107: 관리자 회사(0)만 고객사 칸과 [기초데이터생성] */}
             {user.companyId === 0 && (
               <>
-                <Input readOnly style={{ width: 200, cursor: 'pointer' }} value={companyText} suffix={<SearchOutlined />} onClick={() => setCompanyOpen(true)} />
+                <LookupInput value={companyText} onOpen={() => setCompanyOpen(true)} onClear={() => setCompanyList(null)} />
                 <Button type="generate" onClick={initData}>기초데이터생성</Button>
               </>
             )}

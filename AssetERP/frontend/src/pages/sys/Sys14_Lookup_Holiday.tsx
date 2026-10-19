@@ -5,8 +5,7 @@
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03). 조건이 1개라 초기화(UX-02) 없음. 툴바는 원본처럼 줄바꿈 없이 가로 스크롤
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Input, message, Modal } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { message, Modal } from 'antd';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { Holiday } from '@/types/sys';
@@ -15,6 +14,7 @@ import { CellEditGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { useLoginUser } from '@/hooks/useLoginUser';
+import { LookupInput } from '@/components/lookup/LookupInput';
 import { Sys01_Lookup_Company } from '@/components/lookup/Sys01_Lookup_Company';
 
 const gb = gbFor<Holiday>();
@@ -103,7 +103,7 @@ export const Sys14_Lookup_Holiday: React.FC<Props> = ({ open, onClose }) => {
               <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
               {user.companyId === 0 && <>
                 {/* [E7] companyField.TriggerClick [result != null] (L129) → Sys01_Lookup_Company: 고른 회사명·ID */}
-                <Input readOnly style={{ width: 150 }} value={companyName} suffix={<SearchOutlined />} onClick={() => setLookupCompany(true)} />
+                <LookupInput width={150} value={companyName} onOpen={() => setLookupCompany(true)} onClear={() => { setCompanyName(''); setCompanyId(null); }} />
                 <Button type="register" onClick={initData}>기초데이터생성</Button>
               </>}
             </>}>
