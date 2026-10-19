@@ -52,11 +52,12 @@ export const Sms03_Tab_SendAdmin: React.FC = () => {
     try {
       const init = await smsApi.newGroupSendRow();
       const row: GroupSend = { ...init, groupSendId: --tempSeq.current };
-      setRows(prev => {
-        const at = selected ? prev.findIndex(r => r.groupSendId === selected.groupSendId) : -1;
-        return at < 0 ? [...prev, row] : [...prev.slice(0, at + 1), row, ...prev.slice(at + 1)];
+      setRows(prev => [...prev, row]);  // 맨 아래(03 원칙 17)
+      setTimeout(() => {
+        const node = gridRef.current?.api.getRowNode(String(row.groupSendId));
+        node?.setSelected(true, true);
+        if (node?.rowIndex != null) gridRef.current?.api.ensureIndexVisible(node.rowIndex);
       });
-      setTimeout(() => gridRef.current?.api.getRowNode(String(row.groupSendId))?.setSelected(true, true));
     } catch (err) {
       message.error(errorMessage(err, '등록 실패'));
     }

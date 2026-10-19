@@ -25,6 +25,11 @@ export interface GridCrudOptions<T> {
   newRow: () => Omit<T, keyof T & string> | Partial<T>;
   /** 행추가 후 편집을 시작할 컬럼 */
   firstEditField?: string;
+  /**
+   * 행추가 위치 (03 원칙 17). 기본 'last' = 항상 맨 아래. 'first' = 맨 위, 'afterSelected' = 선택한 행 아래(없으면 포커스된 행, 그것도 없으면 맨 아래 — AS-IS GridInsertRow 기본).
+   * 어느 쪽이든 새 행이 화면 밖이면 자동으로 스크롤한다
+   */
+  insertAt?: 'last' | 'first' | 'afterSelected';
   /** 저장 전 검사. 메시지를 돌려주면 저장하지 않는다 */
   validate?: (changed: T[], all: T[]) => string | undefined;
   /** 삭제 확인 문구. 함수면 체크한 행 수를 받는다 (AS-IS "n건을 삭제하시겠습니까?"). false면 확인 없이 삭제 */
@@ -42,7 +47,7 @@ export const editableCol = <T,>(col: ColDef<T>): ColDef<T> =>
     : { editable: true, ...col, cellStyle: { color: '#1677ff', ...(col.cellStyle as object) } };
 
 export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
-  const { idField, search, save, remove, newRow, firstEditField, validate, deleteConfirm, reloadAfterSave, onChanged } = options;
+  const { idField, search, save, remove, newRow, firstEditField, insertAt = 'last', validate, deleteConfirm, reloadAfterSave, onChanged } = options;
   const gridRef = useRef<AgGridReact<T>>(null);
   const [rows, setRows] = useState<T[]>([]);
   const [loading, setLoading] = useState(false);
@@ -71,7 +76,7 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
   }, [search, bump]);
 
   /**
-   * 선택(포커스) 행 바로 아래에 임시 행들을 넣는다. inits는 행마다 newRow()에 덮어쓸 값(Lookup에서 고른 사원 등).
+   * 임시 행들을 insertAt 위치(기본 맨 아래)에 넣고, 화면 밖이면 스크롤한다. inits는 행마다 newRow()에 덮어쓸 값(Lookup에서 고른 사원 등).
    * 한 행만 넣으면 firstEditField 편집을 시작한다.
    * AS-IS GridInsertRow는 행을 store에 넣기만 하고 "변경"으로 치지 않는다 — 셀을 고치거나 콜백에서 record.addChange를 해야
    * GridUpdate(getModifiedRecords)가 보낸다. markDirty: AS-IS가 넣은 뒤 addChange로 값을 채우면 true(Sys05 사원찾기 등),
@@ -81,24 +86,32 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
     const api = gridRef.current?.api;
     api?.stopEditing();
     const added = inits.map(init => ({ ...newRow(), ...init, [idField]: --tempSeq.current } as T));
-    const focused = api?.getFocusedCell();
-    const focusedRow = focused ? api?.getDisplayedRowAtIndex(focused.rowIndex)?.data : undefined;
+    if (added.length === 0) return;
+    // afterSelected만 기준 행이 필요하다: 선택한 행 → 없으면 포커스된 행
+    let anchor: T | undefined;
+    if (insertAt === 'afterSelected') {
+      const focused = api?.getFocusedCell();
+      anchor = api?.getSelectedRows()[0] ?? (focused ? api?.getDisplayedRowAtIndex(focused.rowIndex)?.data : undefined);
+    }
     if (markDirty) { added.forEach(r => dirty.current.add(getId(r))); bump(); }
     setRows(prev => {
-      const at = focusedRow ? prev.findIndex(r => getId(r) === getId(focusedRow)) : -1;
+      if (insertAt === 'first') return [...added, ...prev];
+      const at = anchor ? prev.findIndex(r => getId(r) === getId(anchor!)) : -1;
       return at < 0 ? [...prev, ...added] : [...prev.slice(0, at + 1), ...added, ...prev.slice(at + 1)];
     });
-    if (added.length !== 1) return;
-    const tempId = getId(added[0]);
+    const lastId = getId(added[added.length - 1]);
     setTimeout(() => {
-      const rowIndex = api?.getRowNode(String(tempId))?.rowIndex;
-      if (api && rowIndex != null && firstEditField) {
-        api.ensureIndexVisible(rowIndex);
+      // 새 행이 화면 밖이면 보이게 스크롤 (여러 행이면 마지막 행 기준)
+      const lastIndex = api?.getRowNode(String(lastId))?.rowIndex;
+      if (api && lastIndex != null) api.ensureIndexVisible(lastIndex);
+      if (added.length !== 1 || !firstEditField) return;
+      const rowIndex = api?.getRowNode(String(getId(added[0])))?.rowIndex;
+      if (api && rowIndex != null) {
         api.setFocusedCell(rowIndex, firstEditField);
         api.startEditingCell({ rowIndex, colKey: firstEditField });
       }
     });
-  }, [newRow, idField, getId, firstEditField, bump]);
+  }, [newRow, idField, getId, firstEditField, insertAt, bump]);
 
   /** [등록] 버튼: 빈 행(newRow 기본값만). 변경으로 치지 않는다 — AS-IS GridInsertRow */
   const addRow = useCallback(() => addRows([{}], false), [addRows]);

@@ -82,12 +82,13 @@ export const Sys90_Tab_AfterService: React.FC = () => {
     try {
       const row = await sysApi.newAfterServiceRow();
       keepId.current = row.afterServiceId;
-      // GridInsertRow: 선택 행 아래(없으면 끝)에 넣는다
-      setRows(prev => {
-        const at = prev.findIndex(r => r.afterServiceId === selected?.afterServiceId);
-        return at < 0 ? [...prev, row] : [...prev.slice(0, at + 1), row, ...prev.slice(at + 1)];
-      });
+      // GridInsertRow: 맨 아래(03 원칙 17)에 넣고 스크롤한다
+      setRows(prev => [...prev, row]);
       retrieveEditPage(row);
+      setTimeout(() => {
+        const index = gridRef.current?.api?.getRowNode(String(row.afterServiceId))?.rowIndex;
+        if (index != null) gridRef.current?.api.ensureIndexVisible(index);
+      });
     } catch (err) {
       message.error(errorMessage(err, '등록 실패'));
     }

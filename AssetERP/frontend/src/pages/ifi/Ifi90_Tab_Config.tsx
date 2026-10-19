@@ -82,15 +82,16 @@ export const Ifi90_Tab_Config: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { retrieve(); }, []);
 
-  // [E4] insertButton[등록].Select (L129) → insertRow() L206-209: GridInsertRow — 선택 행 아래(없으면 끝)에 빈 행(임시 ID)을 넣고 선택 (DB에는 저장하지 않는다)
+  // [E4] insertButton[등록].Select (L129) → insertRow() L206-209: GridInsertRow — 맨 아래(03 원칙 17)에 빈 행(임시 ID)을 넣고 선택·스크롤 (DB에는 저장하지 않는다)
   const insertRow = () => {
     const row: IfiConfig = { configId: --tempSeq.current };
     keepId.current = row.configId;
-    setRows(prev => {
-      const at = prev.findIndex(r => r.configId === selected?.configId);
-      return at < 0 ? [...prev, row] : [...prev.slice(0, at + 1), row, ...prev.slice(at + 1)];
-    });
+    setRows(prev => [...prev, row]);
     retrieveEditPage(row);
+    setTimeout(() => {
+      const index = gridRef.current?.api?.getRowNode(String(row.configId))?.rowIndex;
+      if (index != null) gridRef.current?.api.ensureIndexVisible(index);
+    });
   };
 
   // [E5] deleteButton[삭제].Select (L135) → deleteRow() L212-250: 선택이 없으면 "삭제대상을 선택하세요", 있으면 확인창 → [E6] YES → 서비스 ifi.Ifi90_Config.delete

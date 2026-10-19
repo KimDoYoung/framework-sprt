@@ -69,18 +69,19 @@ export const Sys15_Tab_Corp: React.FC = () => {
     }
   }, [corpType, searchText, useYn]);
 
-  // [E5] insertButton[등록].Select (L173) → insertRow() L283-291: 구분 '0'(일반)·사용 true인 빈 행을 선택 행 아래에 (GridInsertRow)
+  // [E5] insertButton[등록].Select (L173) → insertRow() L283-291: 구분 '0'(일반)·사용 true인 빈 행을 맨 아래에 (GridInsertRow, 03 원칙 17)
   const insertRow = () => {
     const id = --tempSeq.current;
     const row: Corp = {
       corpId: id, companyId: user.companyId, corpType: '0', corpTypeName: '일반', corpName: null, bizNo: null, corpCode: null,
       seq: null, useYn: 'true', note: null, tel: null, addr: null, issCorpCode: null, corpAccountCnt: null,
     };
-    setRows(prev => {
-      const at = selected ? prev.findIndex(r => r.corpId === selected.corpId) : -1;
-      return at < 0 ? [...prev, row] : [...prev.slice(0, at + 1), row, ...prev.slice(at + 1)];
-    });
+    setRows(prev => [...prev, row]);  // 맨 아래(03 원칙 17)
     selectRow(id);
+    setTimeout(() => {
+      const index = gridRef.current?.api?.getRowNode(String(id))?.rowIndex;
+      if (index != null) gridRef.current?.api.ensureIndexVisible(index);
+    });
   };
 
   // [E6] deleteButton[삭제].Select (L179) → deleteRow() L294-329: 미선택이면 알림, 확인 → [E9] msgBox.DialogHide [YES] (L302) → sys.Sys15_Corp.delete
