@@ -122,6 +122,7 @@ export function BaseGrid<T>({
         defaultColDef={colDef}
         rowData={rowData}
         localeText={LOCALE_TEXT}
+        animateRows={false}
         pinnedBottomRowData={pinnedBottom}
         getRowClass={rowClass}
         onSortChanged={(e: SortChangedEvent<T>) => {
