@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# usage: .claude/hooks/yunhee-guard.test.sh  — psql 가드 시험. 기대: block / allow
+# usage: .claude/hooks/yunhee-guard.test.sh  — psql/읽기도구 가드 시험. 기대: block / allow
 H="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/yunhee-guard.sh"
 fail=0
 t() {
@@ -25,7 +25,7 @@ t allow 'ls /usr/bin | grep psql'
 t allow 'which psql'
 t allow 'echo "use psql later"'
 t allow 'curl -s -d "psql ok" ntfy.sh/x'
-# 2026-10-19 완화: heredoc 본문·따옴표 인자 안의 문구는 통과, 실제 읽기 명령은 계속 차단
+# 2026-10-19 / 10-20 완화: heredoc 본문·따옴표 인자 안의 문구는 통과, 실제 읽기 명령은 계속 차단
 t allow $'cat > docs/work/F/x.md <<\'EOF\'\ntail -3 docs/08-회차인계.md\ngrep -A3 x frontend/src/a.tsx\nEOF'
 t allow $'python3 - <<\'EOF\'\n# sed -n 1,5p backend/src/main/java/A.java\nEOF'
 t allow 'echo "tail -3 frontend/src/a.tsx"'
@@ -34,4 +34,13 @@ t block 'cat frontend/src/pages/apr/A.tsx'
 t block 'tail -3 docs/as-is/src/apr/screens/A.md'
 t block $'cat > x.md <<\'EOF\'\nhi\nEOF\ncat frontend/src/a.tsx'
 t block 'grep -n x frontend/src/a.tsx -A3'
+
+# 039 #5 케이스
+t allow $'cat > a.md <<\'EOF\'\ntail -3 docs/x.md\nEOF'
+t allow 'echo "tail -3 x"'
+t allow $'python3 - <<\'EOF\'\n# tail of file\nEOF'
+t block 'tail -3 docs/08-회차인계.md'
+t allow 'ls | tail -3'
+t block 'cat docs/as-is/src/x.md'
+t allow $'cat <<\'EOF\' > backend/src/main/java/A.java\npublic class A {}\nEOF'
 exit $fail

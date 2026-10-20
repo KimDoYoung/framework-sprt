@@ -1,84 +1,152 @@
 #!/usr/bin/env bash
 # PreToolUse(Bash) 훅: AS-IS Java·색인·TOBE 소스를 cat/sed/head/tail/less/more/awk(와 grep 문맥 출력)로 직접 읽으면 막고 yunhee를 쓰게 한다.
-# 사용자 지시(2026-10-12, A05 뒤): "yunhee를 계속 수정하고 업그레이드 해 가는데, 그대가 사용하지 않으면 무슨 소용일까?"
-# 보강(2026-10-12, C03 뒤): AS-IS 색인(docs/as-is)도 대상, grep -A/-B/-C(문맥 출력)도 막음. 색인 화면 파일은 grep도 막는다(menus는 허용).
-# 추가(2026-10-16): psql·pg_dump·pg_restore 직접 실행도 막고 yunhee sql로 안내한다(비밀번호 대기로 멈춤).
-# 쓰기(cat > / heredoc, sed -i)와 yunhee 명령 자체는 막지 않는다. heredoc 본문·echo·-m 인자는 검사하지 않는다(2026-10-19). 끄려면 /hooks 또는 .claude/settings.json에서 뺀다.
-cmd=$(jq -r '.tool_input.command // empty')
-[ -z "$cmd" ] && exit 0
+# 2026-10-20 (수정사항 039 #5): 명령 위치만 검사하며 heredoc 본문, 따옴표 안 문자열, echo, -m 인자는 검사에서 완전 제외.
 
-# 완화(2026-10-19, F10 뒤): 검사는 "명령"만 본다. 파일에 쓸 본문(heredoc <<EOF … EOF)과 echo·printf·-m·-d 따옴표 인자는 지운다.
-# 문서 본문에 적힌 `tail -3 docs/…`·`grep -A` 문구 때문에 쓰기 명령 전체가 막혀 다시 쓰던 문제(수정사항038 #1·039 #5).
-cmd=$(printf '%s\n' "$cmd" | awk '
-  skip { t=$0; gsub(/^[ \t]+|[ \t]+$/, "", t); if (t == end) skip=0; next }
-  { print
-    if (match($0, /<<-?[ \t]*[\047"]?[A-Za-z_][A-Za-z0-9_]*[\047"]?/)) {
-      d=substr($0, RSTART, RLENGTH); sub(/^<<-?[ \t]*/, "", d); gsub(/[\047"]/, "", d); end=d; skip=1 } }')
-cmd=$(printf '%s' "$cmd" | sed -E "s/(^|[;&|(]\s*)(echo|printf)\s+(\"[^\"]*\"|'[^']*')//g; s/\s-(m|d|-data|-message)\s+(\"[^\"]*\"|'[^']*')//g")
+read -r -d '' PY_GUARD << 'EOF'
+import sys, json, re
 
-# 대상 경로: AS-IS 원본·색인, TOBE 백엔드·매퍼·프론트 소스
-# (cd 로 들어간 뒤 상대 경로, 변수에 담은 경로도 잡도록 디렉터리 이름만 본다)
-src_re='(oms-data/src|backend/src/main/java|backend/src/main/resources/mapper|backend/src/test/java|frontend/src)(/|[[:space:];&|]|$)'
-idx_re='docs/as-is/'
+def strip_heredocs(cmd: str) -> str:
+    lines = cmd.splitlines(keepends=True)
+    out_lines = []
+    in_heredoc = False
+    delimiter = None
+    hd_start_re = re.compile(r"<<-?[ \t]*['\"]?([A-Za-z0-9_]+)['\"]?")
+    for l in lines:
+        if in_heredoc:
+            if l.strip() == delimiter:
+                in_heredoc = False
+                out_lines.append("\n")
+            continue
+        m = hd_start_re.search(l)
+        if m:
+            in_heredoc = True
+            delimiter = m.group(1)
+            out_lines.append(l)
+        else:
+            out_lines.append(l)
+    return "".join(out_lines)
 
-# yunhee 명령 구간은 지우고 본다 (yunhee run "…" 안의 경로는 통과, 그 앞뒤에 붙인 cat은 잡는다)
-cmd=$(echo "$cmd" | sed -E 's/(^|[;&|(]\s*)yunhee\s+(run\s+("[^"]*"|'"'"'[^'"'"']*'"'"')|[^;&|]*)//g')
+def mask_string_literals(text: str) -> str:
+    chars = list(text)
+    in_q = None
+    escape = False
+    for i, c in enumerate(chars):
+        if escape:
+            escape = False
+            chars[i] = " "
+            continue
+        if in_q:
+            if c == "\\":
+                escape = True
+                chars[i] = " "
+            elif c == in_q:
+                in_q = None
+            else:
+                chars[i] = " "
+        elif c in ("'", '"'):
+            in_q = c
+    return "".join(chars)
 
-deny() {
-  local trigger="$2"
-  local msg="$1"
-  if [ -n "$trigger" ]; then
-    msg="[차단 원인: $trigger] $msg"
-  fi
-  jq -n --arg r "$msg" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$r}}'
-  exit 0
-}
+def split_shell_commands(cmd: str) -> list[tuple[str, bool, str]]:
+    clean = strip_heredocs(cmd)
+    masked = mask_string_literals(clean)
+    sep_pattern = re.compile(r"(\n|;|&&|\|\||\|)")
+    splits = []
+    last_idx = 0
+    is_pipe = False
+    for m in sep_pattern.finditer(masked):
+        start, end = m.span()
+        splits.append((clean[last_idx:start].strip(), is_pipe, masked[last_idx:start].strip()))
+        is_pipe = (m.group(1) == "|")
+        last_idx = end
+    if last_idx < len(clean):
+        splits.append((clean[last_idx:].strip(), is_pipe, masked[last_idx:].strip()))
+    return [(r, p, m) for r, p, m in splits if r]
 
-# psql 직접 실행 금지(2026-10-16): 이 환경은 비밀번호를 줄 터미널이 없어 psql이 입력을 기다리며 멈춘다(120초 낭비).
-# yunhee sql은 접속 정보를 알고 있고 읽기 전용을 강제한다. 명령 위치의 psql과 docker exec … psql을 막는다.
-psql_re='(^|[;&|(`]\s*|&&\s*)(sudo\s+([^;&|]*\s)?)?(psql|pg_dump|pg_restore)(\s|$)|(docker|podman)\s+(compose\s+)?exec\s[^;&|]*\s(psql|pg_dump)(\s|$)'
-if echo "$cmd" | grep -Eq "$psql_re"; then
-  m_trig=$(echo "$cmd" | grep -Eo "$psql_re" | head -1 | xargs)
-  deny 'psql 직접 실행은 비밀번호 대기로 멈춘다(터미널 없음). 읽기 쿼리는 yunhee를 쓴다(05 §7):
-- 조회·행 수·중복: yunhee sql "<SELECT>" [-n 행수] [--timeout 초]  (읽기 전용 강제, 기본 5행, 결과는 마크다운 표)
-- 쓰기 SQL 시험: yunhee sql -f x.sql --rollback  (항상 ROLLBACK)
-- 테이블 구조: yunhee table <이름>  /  스키마 문서: yunhee dbml
-- 파일로 받기(예: menus.tsv): yunhee sql … -n 2000 → 표를 변환. -o tsv --out 은 수정사항033(0.3.9)에서 제안 중
-DDL·DML을 실제로 실행해야 하면 사용자에게 `! psql …`로 직접 실행해 달라고 요청한다.' "$m_trig"
-fi
+PROT_PATHS_RE = re.compile(
+    r"(oms-data/src|backend/src/main/java|backend/src/main/resources/mapper|backend/src/test/java|frontend/src|docs/as-is/|docs/[0-9]+-)"
+)
+PSQL_RE = re.compile(
+    r"(^|[;&|(`]\s*|&&\s*)(sudo\s+([^;&|]*\s)?)?(psql|pg_dump|pg_restore)(\s|$)|(docker|podman)\s+(compose\s+)?exec\s[^;&|]*\s(psql|pg_dump)(\s|$)"
+)
 
-reason='AS-IS 원본·색인과 TOBE 소스를 cat/sed/head/tail/awk나 grep 문맥 출력(-A/-B/-C)으로 직접 읽지 않는다(05 §7, 사용자 지시 2026-10-12). 대신:
-- AS-IS: yunhee analysis screen <화면> --class <클래스> --section …, analysis method <클래스>.<메서드> [-o code], analysis grid <클래스>, analysis sql <ns.id>, yunhee table <테이블>
-- TOBE: yunhee outline <파일…> 또는 yunhee analysis tobe <파일> → 필요한 줄만 Read(offset/limit)
-- 메뉴 찾기(docs/as-is/**/menus.md·menus.tsv)의 grep은 된다
-yunhee로 정말 안 되면 작업기록에 사유를 쓰지 말고 yunhee 수정사항으로 제안할 것.'
+def inspect_command(cmd: str) -> tuple[bool, str, str]:
+    if not cmd or not cmd.strip():
+        return False, "", ""
 
-has_src=0; has_idx=0
-echo "$cmd" | grep -Eq "$src_re" && has_src=1
-# 색인 경로 중 menus.md·menus.tsv만 가리키면 색인 대상이 아니다
-idx_paths=$(echo "$cmd" | grep -Eo "[^[:space:];&|'\"]*${idx_re}[^[:space:];&|'\"]*")
-if [ -n "$idx_paths" ] && echo "$idx_paths" | grep -Evq '/menus\.(md|tsv)$'; then has_idx=1; fi
-[ $has_src = 0 ] && [ $has_idx = 0 ] && exit 0
+    clean_no_hd = strip_heredocs(cmd)
+    masked_for_psql = mask_string_literals(clean_no_hd)
+    check_psql = re.sub(r"yunhee\s+(run\s+.*|[^;&|]*)", "", masked_for_psql)
+    check_psql = re.sub(r"\b(echo|printf|curl)\b[^;&|\n]*", "", check_psql)
+    check_psql = re.sub(r"\bgit\s+commit\b[^;&|\n]*", "", check_psql)
 
-# grep 문맥 출력(-A/-B/-C, --context 등)은 줄 범위 읽기와 같다 — 파일을 여는 grep(파이프 앞)만
-first_grep=$(echo "$cmd" | sed -E 's/\|\s*grep\b[^|;&]*//g')
-if echo "$first_grep" | grep -Eq '(^|[;&(`]\s*|\s)(grep|rg)\s([^|;&]*\s)?(-[a-zA-Z]*[ABC][0-9]*|--(after|before)?-?context)'; then
-  m_trig=$(echo "$first_grep" | grep -Eo '(grep|rg)\s([^|;&]*\s)?(-[a-zA-Z]*[ABC][0-9]*|--(after|before)?-?context)' | head -1)
-  deny "$reason" "$m_trig"
-fi
-# 색인 화면·SQL·서비스 파일은 grep으로도 열지 않는다(analysis가 절을 뽑아 준다)
-if [ $has_idx = 1 ] && echo "$first_grep" | grep -Eq '(^|[;&(`]\s*|\s)(grep|rg)\s'; then
-  m_trig=$(echo "$first_grep" | grep -Eo '(grep|rg)\s[^|;&]*' | head -1)
-  deny "$reason" "$m_trig"
-fi
+    if PSQL_RE.search(check_psql):
+        m = PSQL_RE.search(check_psql)
+        return True, m.group(0).strip(), (
+            "psql 직접 실행은 비밀번호 대기로 멈춘다(터미널 없음). 읽기 쿼리는 yunhee를 쓴다(05 §7):\n"
+            "- 조회·행 수·중복: yunhee sql \"<SELECT>\" [-n 행수] [--timeout 초]  (읽기 전용 강제, 기본 5행, 결과는 마크다운 표)\n"
+            "- 쓰기 SQL 시험: yunhee sql -f x.sql --rollback  (항상 ROLLBACK)\n"
+            "- 테이블 구조: yunhee table <이름>  /  스키마 문서: yunhee dbml\n"
+            "- 파일로 받기(예: menus.tsv): yunhee sql … -n 2000 → 표를 변환.\n"
+            "DDL·DML을 실제로 실행해야 하면 사용자에게 `! psql …`로 직접 실행해 달라고 요청한다."
+        )
 
-# 읽기 도구가 소스/색인 파일을 직접 여는 경우만 막는다. 파이프 뒤(yunhee ... | tail, git diff ... | head)는 출력 자르기라 통과
-echo "$cmd" | grep -Eq '(^|[;&(`]\s*|&&\s*|\s)(cat|sed|head|tail|less|more|awk|bat)\s' || exit 0
-stripped=$(echo "$cmd" | sed -E 's/\|\s*(cat|sed|head|tail|less|more|awk|bat)\b[^|;&]*//g')
+    read_reason = (
+        "AS-IS 원본·색인과 TOBE 소스를 cat/sed/head/tail/awk나 grep 문맥 출력(-A/-B/-C)으로 직접 읽지 않는다(05 §7, 사용자 지시 2026-10-12). 대신:\n"
+        "- AS-IS: yunhee analysis screen <화면> --class <클래스> --section …, analysis method <클래스>.<메서드> [-o code], analysis grid <클래스>, analysis sql <ns.id>, yunhee table <테이블>\n"
+        "- TOBE: yunhee outline <파일…> 또는 yunhee analysis tobe <파일> → 필요한 줄만 Read(offset/limit)\n"
+        "- 메뉴 찾기(docs/as-is/**/menus.md·menus.tsv)의 grep은 된다\n"
+        "yunhee로 정말 안 되면 작업기록에 사유를 쓰지 말고 yunhee 수정사항으로 제안할 것."
+    )
 
-# 쓰기는 통과: cat > 파일, heredoc, sed -i
-stripped_no_write=$(echo "$stripped" | sed -E 's/cat\s*>[^;&|]*//g; s/sed\s+(-[a-zA-Z]*i|--in-place)[^;&|]*//g')
-echo "$stripped_no_write" | grep -Eq '(^|[;&(`]\s*|\s)(cat|sed|head|tail|less|more|awk|bat)\s' || exit 0
+    for seg_raw, is_pipe, seg_mask in split_shell_commands(cmd):
+        if re.match(r"^yunhee\b", seg_mask) or re.match(r"^(echo|printf|python3?|bash|sh|node)\b", seg_mask):
+            continue
+        if re.search(r"\bcat\b.*?(>|>>)", seg_mask) or re.search(r"\bcat\s*(>|>>)", seg_mask):
+            continue
+        if re.search(r"\bsed\b.*(-i|--in-place)", seg_mask):
+            continue
 
-matched=$(echo "$stripped_no_write" | grep -Eo '(^|[;&(`]\s*|\s)(cat|sed|head|tail|less|more|awk|bat)\s+[^|;&]+' | head -1)
-deny "$reason" "$(echo "$matched" | xargs)"
+        m_tool = re.match(r"^(sudo\s+)?(cat|sed|head|tail|less|more|awk|bat|grep|rg)\b", seg_mask)
+        if not m_tool:
+            continue
+        tool = m_tool.group(2)
+
+        if is_pipe and not PROT_PATHS_RE.search(seg_raw):
+            continue
+
+        if PROT_PATHS_RE.search(seg_raw):
+            if "menus.md" in seg_raw or "menus.tsv" in seg_raw:
+                cleaned = re.sub(r"[^ \t]*menus\.(md|tsv)", "", seg_raw)
+                if not PROT_PATHS_RE.search(cleaned):
+                    continue
+            if tool in ("grep", "rg"):
+                has_ctx = bool(re.search(r"(-[a-zA-Z]*[ABC][0-9]*|--(after|before)?-?context)", seg_mask))
+                is_idx_screen = "docs/as-is/" in seg_raw
+                if has_ctx or is_idx_screen:
+                    return True, seg_raw.splitlines()[0][:80], read_reason
+                continue
+            return True, seg_raw.splitlines()[0][:80], read_reason
+
+    return False, "", ""
+
+try:
+    data = json.loads(sys.stdin.read())
+except Exception:
+    sys.exit(0)
+
+cmd = (data.get("tool_input") or {}).get("command", "")
+blocked, trigger, reason = inspect_command(cmd)
+if blocked:
+    msg = f"[차단 원인: {trigger}] {reason}" if trigger else reason
+    print(json.dumps({
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "deny",
+            "permissionDecisionReason": msg,
+        }
+    }, ensure_ascii=False))
+sys.exit(0)
+EOF
+
+python3 -c "$PY_GUARD"
