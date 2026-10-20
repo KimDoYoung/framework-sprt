@@ -32,6 +32,11 @@ public class OrgInfoService {
         return orgInfoMapper.selectByTdmYn(user.getCompanyId(), stdDate, like);
     }
 
+    /** AS-IS selectByIgnoreStamp (G06 인감대장): 로그인 사용자 조직이 인감무시 조직인가. 회사관리자는 조직이 없어 false */
+    public boolean hasIgnoreStamp(UserPrincipal user) {
+        return user.getUserId() != null && user.getUserId() > 0 && orgInfoMapper.countIgnoreStamp(user.getUserId()) > 0;
+    }
+
     /** AS-IS selectByOrgCodeId: 기준일의 조직 (없으면 null — 화면이 조직을 채우지 않는다) */
     public OrgInfoRes getOrgInfo(UserPrincipal user, Long orgCodeId, LocalDate baseDate) {
         return orgInfoMapper.selectOrgInfo(new OrgInfoSearchParam(user.getCompanyId(), null, baseDate, orgCodeId));

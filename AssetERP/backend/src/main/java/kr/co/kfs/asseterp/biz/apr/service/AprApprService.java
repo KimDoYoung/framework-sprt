@@ -20,8 +20,11 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprMyReferenceCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyReferenceRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyRequestCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyRequestRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprPutSealRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprStampSeqCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprStampSeqRes;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprApprMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoService;
@@ -279,6 +282,21 @@ public class AprApprService {
     public List<AprMyAuthRes> searchMyAuth(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate closeDate, String statusCode, String searchText) {
         return mapper.selectByAuthEmpId(new AprMyAuthCond(user.getCompanyId(), user.getUserId(), startDate, closeDate, blankToAny(statusCode),
                 like(searchText), classTreeId, "%"));
+    }
+
+    /** AS-IS Apr01_Appr.selectByApprDate (G06 Apr01_Tab_StampSeq 인감대장). stampId가 null·0이면 모든 인감(AS-IS 서버가 0을 null로 바꿈) */
+    public List<AprStampSeqRes> searchStampSeq(UserPrincipal user, LocalDate startDate, LocalDate endDate, Long stampId) {
+        return mapper.selectByApprDate(new AprStampSeqCond(user.getCompanyId(), startDate, endDate,
+                stampId == null || stampId == 0L ? null : stampId));
+    }
+
+    /** AS-IS Apr01_Appr.updatePutSealEmpId (G06 [확인자입력]). 인감확인자는 로그인 사용자, 확인일시는 DB 시각. 바뀐 값을 돌려준다 */
+    @Transactional
+    public AprPutSealRes updatePutSeal(UserPrincipal user, Long apprId) {
+        if (mapper.updatePutSeal(apprId, user.getUserId(), user.getCompanyId()) == 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "문서를 찾을 수 없습니다.");
+        }
+        return mapper.selectPutSeal(apprId);
     }
 
     /** AS-IS Apr03_RelateFund.selectByApprId */

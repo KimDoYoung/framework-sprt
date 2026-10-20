@@ -464,6 +464,12 @@ export const orgApi = {
     const res = await apiClient.get<ApiResponse<OrgInfo | null>>(`v1/org/org-infos/${orgCodeId}`, { params: { baseDate } });
     return res.data.data ?? null;
   },
+
+  /** AS-IS org.Org00_OrgInfo.selectByIgnoreStamp (Apr01_Tab_StampSeq, G06 — 내 조직이 인감무시 조직인가) */
+  hasIgnoreStamp: async (): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/org/org-infos/ignore-stamp');
+    return res.data.data === true;
+  },
 };
 
 /** E25 AS-IS Emp55_Tab_benefitInfoManager (복리후생비 코드관리) */

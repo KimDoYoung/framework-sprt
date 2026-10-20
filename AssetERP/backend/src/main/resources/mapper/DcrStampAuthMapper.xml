@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/dcr/mapper/dcr01_class_tree.xml selectByAllWithStampAuth + dcr40_stamp_auth.xml (G07, Dcr40_Lookup_StampAuth) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.dcr.mapper.DcrStampAuthMapper">
+
+    <!-- AS-IS dcr01_class_tree.selectByAllWithStampAuth: 그리드가 쓰는 열만. 서버가 typeCode '%', parentId 0으로 부른다 -->
+    <select id="selectTree" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrStampAuthTreeRes">
+        WITH RECURSIVE dcr_tree(
+              dcr01_class_tree_id, dcr01_company_id, dcr01_class_tree_nm, dcr01_parent_tree_id, dcr01_seq,
+              dcr01_class_tree_cd, dcr01_type_cd, depth, path, cycle
+        ) AS (
+            SELECT a.dcr01_class_tree_id, a.dcr01_company_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, a.dcr01_seq,
+                   a.dcr01_class_tree_cd, a.dcr01_type_cd,
+                   1,
+                   ARRAY[CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar),10,'0') || a.dcr01_class_tree_cd || LPAD(CAST(a.dcr01_class_tree_id AS varchar),15,'0')],
+                   false
+              FROM dcr01_class_tree a
+             WHERE a.dcr01_company_id     = #{companyId}
+               AND a.dcr01_parent_tree_id = 0
+               AND a.dcr01_type_cd LIKE '%'
+            UNION ALL
+            SELECT a.dcr01_class_tree_id, a.dcr01_company_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, a.dcr01_seq,
+                   a.dcr01_class_tree_cd, a.dcr01_type_cd,
+                   b.depth + 1,
+                   array_append(b.path, CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar),10,'0') || a.dcr01_class_tree_cd || LPAD(CAST(a.dcr01_class_tree_id AS varchar),15,'0')),
+                   a.dcr01_class_tree_nm = any(b.path)
+              FROM dcr01_class_tree a
+                   INNER JOIN dcr_tree b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+             WHERE a.dcr01_company_id = #{companyId}
+               AND a.dcr01_type_cd LIKE '%'
+               AND NOT cycle
+        )
+        SELECT a.dcr01_class_tree_id    AS class_tree_id,
+               a.dcr01_parent_tree_id   AS parent_tree_id,
+               a.dcr01_class_tree_nm
+               || ' ('
+               || COALESCE((WITH RECURSIVE child_tree AS (
+                                    SELECT dcr01_class_tree_id
+                                      FROM dcr_tree
+                                     WHERE dcr01_class_tree_id = a.dcr01_class_tree_id
+                                     UNION ALL
+                                    SELECT t.dcr01_class_tree_id
+                                      FROM dcr_tree t
+                                           INNER JOIN child_tree ct ON t.dcr01_parent_tree_id = ct.dcr01_class_tree_id
+                                )
+                            SELECT COUNT(*)
+                              FROM child_tree c
+                                   JOIN dcr40_stamp_auth s ON s.dcr40_class_tree_id = c.dcr01_class_tree_id
+                             WHERE s.dcr40_stamp_id = #{stampId}
+                               AND s.dcr40_except_yn = 'true'
+                           ), 0)
+               || ')'                   AS class_tree_name,
+               a.dcr01_type_cd          AS type_code,
+               COALESCE((SELECT dcr40_except_yn
+                           FROM dcr40_stamp_auth
+                          WHERE dcr40_class_tree_id = a.dcr01_class_tree_id
+                            AND dcr40_stamp_id = #{stampId}
+                          LIMIT 1), 'false')  AS stamp_except_yn,
+               a.depth - 1              AS depth
+          FROM dcr_tree a
+         WHERE a.dcr01_type_cd IN ('T','C')
+         ORDER BY a.path
+    </select>
+
+    <select id="countStamp" resultType="int">
+        SELECT COUNT(*)
+          FROM apr10_stamp
+         WHERE apr10_stamp_id = #{stampId}
+           AND apr10_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <update id="updateExcept">
+        UPDATE dcr40_stamp_auth
+           SET dcr40_except_yn = #{exceptYn}
+         WHERE dcr40_stamp_id = #{stampId}
+           AND dcr40_class_tree_id = #{classTreeId}
+    </update>
+
+    <insert id="insertExcept">
+        INSERT INTO dcr40_stamp_auth (dcr40_stamp_auth_id, dcr40_stamp_id, dcr40_class_tree_id, dcr40_except_yn)
+        VALUES (#{stampAuthId}, #{stampId}, #{classTreeId}, #{exceptYn})
+    </insert>
+</mapper>

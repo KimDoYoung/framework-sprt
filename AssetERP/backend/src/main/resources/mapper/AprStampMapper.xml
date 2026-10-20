@@ -36,6 +36,118 @@
          ORDER BY a.apr10_stamp_nm
     </select>
 
+    <!-- AS-IS apr10_stamp.selectByCodeName (IDMS-IC) — G07(Apr10_Tab_Stamp 인감 등록). SELECT a.*를 DTO 열로, 계산 열·조건·정렬은 그대로. 날짜는 ::date(DTO가 LocalDate) -->
+    <sql id="manageColumns">
+        a.apr10_stamp_id                                                                                     AS stamp_id
+      , a.apr10_org_id                                                                                       AS org_id
+      , f_org_nm(a.apr10_org_id, COALESCE(a.apr10_close_date, to_date('99991231','yyyyMMdd')))               AS org_name
+      , a.apr10_emp_id                                                                                       AS apr_emp_id
+      , f_emp_kor_nm(a.apr10_emp_id) || ' ' || f_get_empTrans(a.apr10_emp_id, f_today()::date, 'pos_nm')    AS apr_emp_name
+      , a.apr10_second_emp_id                                                                                AS second_emp_id
+      , f_emp_kor_nm(a.apr10_second_emp_id) || ' ' || f_get_empTrans(a.apr10_second_emp_id, f_today()::date, 'pos_nm') AS second_emp_name
+      , a.apr10_stamp_nm                                                                                     AS stamp_name
+      , a.apr10_start_date::date                                                                             AS start_date
+      , a.apr10_close_date::date                                                                             AS close_date
+      , a.apr10_use_nm                                                                                       AS use_name
+      , a.apr10_stamp_id || ''                                                                               AS stamp_id_string
+      , a.apr10_corp_stamp_yn                                                                                AS corp_stamp_yn
+      , a.apr10_step_use_yn                                                                                  AS step_use_yn
+      , a.apr10_all_use_yn                                                                                   AS all_use_yn
+      , (
+            SELECT (
+                        CASE WHEN COUNT(org10_role_stamp.*) = 0
+                             THEN ''
+                             WHEN COUNT(org10_role_stamp.*) = 1
+                             THEN MIN(f_org_nm(org10_org_code_id, f_sysdate()))
+                             ELSE MIN(f_org_nm(org10_org_code_id, f_sysdate())) || ' 외 ' || COUNT(org10_role_stamp.*) - 1 || '건'
+                        END
+                   )
+              FROM org10_role_stamp
+             WHERE org10_stamp_id = a.apr10_stamp_id
+        )                                                                                                    AS role_name
+      , (
+            SELECT COUNT(*) || '건'
+              FROM dcr40_stamp_auth
+             WHERE COALESCE(dcr40_except_yn, 'false') = 'true'
+               AND dcr40_stamp_id = a.apr10_stamp_id
+        )                                                                                                    AS stamp_auth_cnt_str
+      , a.apr10_note                                                                                         AS note
+    </sql>
+
+    <select id="selectByCodeName" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStampManageRes">
+        SELECT <include refid="manageColumns"/>
+          FROM apr10_stamp a
+         WHERE a.apr10_company_id = #{companyId}
+         ORDER BY a.apr10_stamp_nm
+    </select>
+
+    <select id="selectManageById" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStampManageRes">
+        SELECT <include refid="manageColumns"/>
+          FROM apr10_stamp a
+         WHERE a.apr10_company_id = #{companyId}
+           AND a.apr10_stamp_id = #{stampId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Apr10_Stamp.update → UpdateDataModel(apr10_stamp) 동적 INSERT/UPDATE, 화면이 바꾸는 열만 -->
+    <insert id="insertStamp">
+        INSERT INTO apr10_stamp (apr10_stamp_id, apr10_company_id, apr10_org_id, apr10_emp_id, apr10_second_emp_id, apr10_stamp_nm,
+                                 apr10_start_date, apr10_close_date, apr10_use_nm, apr10_corp_stamp_yn, apr10_step_use_yn, apr10_all_use_yn, apr10_note)
+        VALUES (#{r.stampId}, #{companyId}, #{r.orgId}, #{r.aprEmpId}, #{r.secondEmpId}, #{r.stampName},
+                #{r.startDate, jdbcType=DATE}, #{r.closeDate, jdbcType=DATE}, #{r.useName}, #{r.corpStampYn}, #{r.stepUseYn}, #{r.allUseYn}, #{r.note})
+    </insert>
+
+    <update id="updateStamp">
+        UPDATE apr10_stamp
+           SET apr10_org_id        = #{r.orgId},
+               apr10_emp_id        = #{r.aprEmpId},
+               apr10_second_emp_id = #{r.secondEmpId},
+               apr10_stamp_nm      = #{r.stampName},
+               apr10_start_date    = #{r.startDate, jdbcType=DATE},
+               apr10_close_date    = #{r.closeDate, jdbcType=DATE},
+               apr10_use_nm        = #{r.useName},
+               apr10_corp_stamp_yn = #{r.corpStampYn},
+               apr10_step_use_yn   = #{r.stepUseYn},
+               apr10_all_use_yn    = #{r.allUseYn},
+               apr10_note          = #{r.note}
+         WHERE apr10_stamp_id   = #{r.stampId}
+           AND apr10_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteStamp">
+        DELETE FROM apr10_stamp
+         WHERE apr10_stamp_id   = #{stampId}
+           AND apr10_company_id = #{companyId}
+    </delete>
+
+    <!-- AS-IS apr10_stamp.selectBySearchText (IDMS-IC) — G06 Apr10_Lookup_Stamp(flag=true). SELECT a.*를 DTO 열로 -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStampRes">
+        SELECT a.apr10_stamp_id AS stamp_id,
+               a.apr10_stamp_id || '' AS stamp_id_string,
+               a.apr10_stamp_nm AS stamp_name,
+               a.apr10_use_nm   AS use_name,
+               f_org_nm(a.apr10_org_id, COALESCE(a.apr10_close_date, to_date('99991231','yyyymmdd'))) AS org_name
+          FROM apr10_stamp a
+         WHERE a.apr10_company_id = #{companyId}
+           AND UPPER(CONCAT(a.apr10_stamp_nm, a.apr10_use_nm, a.apr10_note,
+                            f_org_nm(a.apr10_org_id, COALESCE(a.apr10_close_date, to_date('99991231','yyyymmdd'))))) LIKE UPPER(#{searchText})
+           AND (
+                    a.apr10_all_use_yn = 'true'
+                    OR
+                    a.apr10_stamp_id IN (
+                            SELECT org10_stamp_id
+                              FROM org10_role_stamp
+                             WHERE org10_org_code_id = #{orgId}
+                       )
+               )
+           AND f_today() BETWEEN a.apr10_start_date AND COALESCE(a.apr10_close_date, to_date('29991231','yyyymmdd'))
+         ORDER BY a.apr10_stamp_nm
+    </select>
+
     <select id="selectOrgCodeId" resultType="long">
         SELECT emp03_org_code_id
           FROM emp03_trans

@@ -10,8 +10,10 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprMyApproveRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyAuthRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyReferenceRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyRequestRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprPutSealRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprStampSeqRes;
 import kr.co.kfs.asseterp.biz.apr.service.AprApprService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -25,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -193,6 +196,21 @@ public class AprApprController {
                                                         @RequestParam(required = false) String statusCode,
                                                         @RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.searchMyAuth(principal, classTreeId, startDate, closeDate, statusCode, searchText));
+    }
+
+    /** AS-IS apr.Apr01_Appr.selectByApprDate (Apr01_Tab_StampSeq, G06 인감대장). stampId 0·없음은 모든 인감 */
+    @GetMapping("/stamp-seq")
+    public ApiResponse<List<AprStampSeqRes>> searchStampSeq(@AuthenticationPrincipal UserPrincipal principal,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                                                            @RequestParam(required = false) Long stampId) {
+        return ApiResponse.ok(service.searchStampSeq(principal, startDate, endDate, stampId));
+    }
+
+    /** AS-IS apr.Apr01_Appr.updatePutSealEmpId (G06 [확인자입력]) — 인감확인자는 로그인 사용자 */
+    @PutMapping("/{apprId}/put-seal")
+    public ApiResponse<AprPutSealRes> updatePutSeal(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long apprId) {
+        return ApiResponse.ok(service.updatePutSeal(principal, apprId));
     }
 
     /** AS-IS apr.Apr03_RelateFund.selectByIcsClassTreeId (Ics01_Grid_ApprList, F03 법규별 문서작성 목록) */

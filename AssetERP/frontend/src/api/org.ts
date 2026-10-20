@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { OrgCode, OrgCodeSaveReq, OrgInfoHist } from '../types/org';
+import { OrgCode, OrgCodeSaveReq, OrgInfoHist, OrgRoleStamp } from '../types/org';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss') */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -53,6 +53,27 @@ export const orgCodeApi = {
   /** AS-IS org.Org02_Info.deleteOrg (조직 전체) */
   deleteOrg: async (codeId: number): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>(`v1/org/org-codes/${codeId}/all`);
+    return res.data.data;
+  },
+};
+
+/** G07 인감별 사용 가능 부서 (Org10_Lookup_RoleStamp → server/org/Org10_RoleStamp) */
+export const orgRoleStampApi = {
+  /** AS-IS org.Org10_RoleStamp.selectByStampId */
+  searchRoleStamps: async (stampId: number): Promise<OrgRoleStamp[]> => {
+    const res = await apiClient.get<ApiResponse<OrgRoleStamp[]>>('v1/org/role-stamps', { params: { stampId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS org.Org10_RoleStamp.update (새 행은 roleStampId 0 이하) → 저장된 행 */
+  saveRoleStamps: async (rows: OrgRoleStamp[]): Promise<OrgRoleStamp[]> => {
+    const res = await apiClient.put<ApiResponse<OrgRoleStamp[]>>('v1/org/role-stamps', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS org.Org10_RoleStamp.delete → 지운 건수 */
+  deleteRoleStamps: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/org/role-stamps', { data: ids });
     return res.data.data;
   },
 };

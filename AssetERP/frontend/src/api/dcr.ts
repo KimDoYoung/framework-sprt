@@ -3,11 +3,22 @@ import { ApiResponse } from '../types/auth';
 import {
   DcrCheckRes, DcrCheckRowReq, DcrClassDetail, DcrClassTree, DcrClassTreeAll, DcrClassTreeLookup, DcrClassTreeSaveReq,
   DcrCopyCompany, DcrDocAppr, DcrDocFile, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrClassLink, DcrLink, DcrLinkSaveReq, DcrRelateDocType, DcrRelateIcr,
-  DcrOftenUse, DcrRelateIcs, DcrRelateSaveReq, DcrUseYnReq, DcrWriteCode, DcrWriteTree,
+  DcrOftenUse, DcrRelateIcs, DcrRelateSaveReq, DcrStampAuthTree, DcrUseYnReq, DcrWriteCode, DcrWriteTree,
 } from '../types/dcr';
 
 /** dcr(문서분류) API (E13-3 조회창, E16 문서분류, F02 업무별 문서작성) */
 export const dcrApi = {
+  /** AS-IS dcr.Dcr01_ClassTree.selectByAllWithStampAuth (Dcr40_Lookup_StampAuth, G07): 인감별 미사용 문서분류 트리 */
+  searchStampAuthTree: async (stampId: number): Promise<DcrStampAuthTree[]> => {
+    const res = await apiClient.get<ApiResponse<DcrStampAuthTree[]>>(`v1/dcr/stamp-auths/${stampId}`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr40_StampAuth.updateList (G07): 트리의 모든 행의 미사용 여부 */
+  saveStampAuths: async (stampId: number, rows: { classTreeId: number; stampExceptYn: string }[]): Promise<void> => {
+    await apiClient.put(`v1/dcr/stamp-auths/${stampId}`, rows);
+  },
+
   /** AS-IS dcr.Dcr01_ClassTree.selectByText(typeCode T, useYn true): 문서분류 조회창. relateTable 'TDM47'+점검항목 ID면 그 점검항목에 연결 안 된 것만 */
   searchLookup: async (searchText: string, relateTable?: string, relateId?: number): Promise<DcrClassTreeLookup[]> => {
     const res = await apiClient.get<ApiResponse<DcrClassTreeLookup[]>>('v1/dcr/class-trees/lookup', { params: { searchText, relateTable, relateId } });

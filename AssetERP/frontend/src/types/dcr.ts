@@ -35,6 +35,16 @@ export interface DcrClassTreeAll {
   depth: number;
 }
 
+/** 인감별 미사용 문서분류 트리 한 행 (AS-IS selectByAllWithStampAuth — Dcr40_Lookup_StampAuth, G07). classTreeName 끝의 "(n)"은 하위 포함 미사용 수. stampExceptYn은 'true'/'false' */
+export interface DcrStampAuthTree {
+  classTreeId: number;
+  parentTreeId: number;
+  classTreeName: string;
+  typeCode: string;
+  stampExceptYn: string;
+  depth: number;
+}
+
 /** 문서구분(T) 그리드 행 (AS-IS Dcr01_ClassTreeModel — selectByClassTreeId). 새 행은 classTreeId가 0 이하 */
 export interface DcrDocTypeRow {
   classTreeId: number;

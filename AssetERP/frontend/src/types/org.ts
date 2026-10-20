@@ -59,3 +59,12 @@ export interface OrgCodeSaveReq {
   dcrIdWord?: string | null;
   baseDate: string;
 }
+
+/** 인감별 사용 가능 부서 한 행 (AS-IS Org10_RoleStampModel — Org10_Lookup_RoleStamp 그리드, G07). roleStampId가 0 이하면 아직 저장 안 된 행 */
+export interface OrgRoleStamp {
+  roleStampId: number;
+  stampId?: number | null;
+  orgCodeId?: number | null;
+  orgName?: string | null;
+  useYn?: string | null;
+}

@@ -564,6 +564,90 @@
          ORDER BY apr01_reg_date DESC, apr01_appr_id DESC
     </select>
 
+    <!-- AS-IS apr01_appr.selectByApprDate L1699 (IDMS-IC) — G06(Apr01_Tab_StampSeq 인감대장). apr.*는 그리드가 쓰는 열만, 조인·조건·정렬은 그대로.
+         서버(Apr01_Appr.selectByApprDate)가 stampId 0을 null로 바꿔 넘기므로 stampId가 null이면 인감 조건이 없다. collate "ko_KR.utf8" → "ko-KR-x-icu"(05 §6) -->
+    <select id="selectByApprDate" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStampSeqRes">
+        SELECT apr.apr01_appr_id                          AS appr_id
+             , apr.apr01_stamp_seq                        AS stamp_seq_text
+             , apr04_appr_date                            AS appr_date
+             , f_emp_kor_nm(apr.apr01_reg_emp_id)         AS reg_emp_name
+             , f_emp_kor_nm(apr04_appr_emp_id)            AS appr_emp_name
+             , apr.apr01_title                            AS title
+             , apr10_stamp_nm                             AS stamp_name
+             , apr.apr01_receive_nm                       AS receive_name
+             , f_emp_kor_nm(apr.apr01_put_seal_emp_id)    AS put_seal_emp_name
+             , apr.apr01_put_seal_dt                      AS put_seal_date
+          FROM (
+                SELECT apr01_appr_id
+                     , apr01_title
+                     , apr01_receive_nm
+                     , apr01_put_seal_emp_id
+                     , apr01_put_seal_dt
+                     , apr01_company_id
+                     , apr01_status_cd
+                     , apr01_stamp_seq
+                     , apr01_stamp_id
+                     , apr01_reg_date
+                     , apr01_reg_emp_id
+                  FROM apr01_appr
+                 WHERE apr01_stamp_id IS NOT NULL
+                   AND apr01_company_id = #{c.companyId}
+                   AND apr01_reg_date BETWEEN f_trunc(#{c.startDate, jdbcType=DATE}) AND f_trunc(#{c.endDate, jdbcType=DATE})
+                 UNION ALL
+                SELECT apr99_appr_id
+                     , '&lt;' || 'b '  || 'style=color:#E33E31;' || '&gt;' ||
+                       '[폐기] ' ||
+                       '&lt;' || '/b' || '&gt;' ||
+                       apr99_title                 AS apr99_title
+                     , apr99_receive_nm
+                     , null
+                     , null
+                     , apr99_company_id
+                     , apr99_status_cd
+                     , apr99_stamp_seq
+                     , apr99_stamp_id
+                     , apr99_reg_date
+                     , apr99_reg_emp_id
+                  FROM apr99_appr_del
+                 WHERE apr99_stamp_id IS NOT NULL
+                   AND apr99_company_id = #{c.companyId}
+                   AND apr99_reg_date BETWEEN f_trunc(#{c.startDate, jdbcType=DATE}) AND f_trunc(#{c.endDate, jdbcType=DATE})
+               ) apr
+               INNER JOIN apr04_appr_step ON apr01_appr_id = apr04_appr_id
+               INNER JOIN apr10_stamp ON apr01_stamp_id = apr10_stamp_id
+         WHERE 1=1
+        <if test="c.stampId != null">
+           AND apr01_stamp_id = #{c.stampId}
+        </if>
+           AND apr01_status_cd = '30'
+           AND apr04_appr_step_id = (
+                                      SELECT MAX(apr04_appr_step_id)
+                                        FROM apr04_appr_step x
+                                       WHERE x.apr04_appr_id = apr01_appr_id
+                                         AND x.apr04_step_status_cd = '20'
+                                         AND x.apr04_step_type_cd IN ('00','10')
+                                    )
+           AND apr01_stamp_seq IS NOT NULL
+         ORDER BY apr01_stamp_seq COLLATE "ko-KR-x-icu" DESC
+    </select>
+
+    <!-- AS-IS apr01_appr.updatePutSeal L2874 (IDMS-IC) — G06 [확인자입력]. 원본은 문서 ID만 조건이지만 회사 조건을 더했다(G05와 같은 보안 보강, 작업기록 제안) -->
+    <update id="updatePutSeal">
+        UPDATE apr01_appr
+           SET apr01_put_seal_emp_id = #{empId}
+             , apr01_put_seal_dt = f_sysdate()
+         WHERE apr01_appr_id = #{apprId}
+           AND apr01_company_id = #{companyId}
+    </update>
+
+    <select id="selectPutSeal" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprPutSealRes">
+        SELECT apr01_appr_id                          AS appr_id
+             , f_emp_kor_nm(apr01_put_seal_emp_id)    AS put_seal_emp_name
+             , apr01_put_seal_dt                      AS put_seal_date
+          FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </select>
+
     <!-- AS-IS apr01_appr.selectByText2 L357 (IDMS-IC) — F05(Dcr00_Tab_DocList 통합 문서검색). SELECT *·모델 열 중 그리드가 쓰는 열만, 행을 정하는 조인·조건·정렬은 그대로.
          admin == 'false' 분기(조직·문서권한·Link 조건)와 관리자 분기(Link 제외만) 둘 다 옮김. 분류 조건은 common.dcr_tree_down을 푼 것(typeCode '%').
          collate "ko_KR.utf8" → "ko-KR-x-icu"(05 §6) -->

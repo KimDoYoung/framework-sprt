@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprAltAppr, AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprRelateAdv, AprRelateFund, AprStamp } from '../types/apr';
+import { AprAltAppr, AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPutSeal, AprRelateAdv, AprRelateFund, AprStamp, AprStampManage, AprStampSeq } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -63,6 +63,48 @@ export const aprApi = {
   searchDocStamps: async (classTreeId: number, searchText: string): Promise<AprStamp[]> => {
     const res = await apiClient.get<ApiResponse<AprStamp[]>>('v1/apr/stamps/doc', { params: { classTreeId, searchText } });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr10_Stamp.selectBySearchText: 내 조직이 쓸 수 있는 인감 (Apr10_Lookup_Stamp, G06) */
+  searchStamps: async (searchText: string): Promise<AprStamp[]> => {
+    const res = await apiClient.get<ApiResponse<AprStamp[]>>('v1/apr/stamps', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr10_Stamp.selectByCodeName (Apr10_Tab_Stamp, G07): 회사의 모든 인감 */
+  searchStampManage: async (): Promise<AprStampManage[]> => {
+    const res = await apiClient.get<ApiResponse<AprStampManage[]>>('v1/apr/stamps/manage');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS LoginUser.getOrgCodeId() (G07): 새 행의 부서 기본값. 회사관리자는 0 */
+  getMyOrgCodeId: async (): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/apr/stamps/manage/my-org-code-id');
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS apr.Apr10_Stamp.update (G07): 새 행(stampId 0 이하)은 서버가 채번. 저장한 행을 요청 순서로 */
+  saveStampManage: async (rows: AprStampManage[]): Promise<AprStampManage[]> => {
+    const res = await apiClient.put<ApiResponse<AprStampManage[]>>('v1/apr/stamps/manage', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr10_Stamp.delete (G07) → 지운 건수 */
+  deleteStampManage: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/apr/stamps/manage', { data: ids });
+    return res.data.data;
+  },
+
+  /** AS-IS apr.Apr01_Appr.selectByApprDate (Apr01_Tab_StampSeq, G06): 인감대장. stampId 없음·0이면 모든 인감 */
+  searchStampSeq: async (params: { startDate: string; endDate: string; stampId?: number }): Promise<AprStampSeq[]> => {
+    const res = await apiClient.get<ApiResponse<AprStampSeq[]>>('v1/apr/apprs/stamp-seq', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr01_Appr.updatePutSealEmpId (G06 [확인자입력]): 인감확인자 = 로그인 사용자, 확인일시 = 서버 시각 */
+  updatePutSeal: async (apprId: number): Promise<AprPutSeal> => {
+    const res = await apiClient.put<ApiResponse<AprPutSeal>>(`v1/apr/apprs/${apprId}/put-seal`);
+    return res.data.data;
   },
 
   /** AS-IS apr.Apr30_ApprStepGroup.selectByCompanyId (Apr30_Lookup_ApprStepGroup) */

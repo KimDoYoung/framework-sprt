@@ -41,6 +41,12 @@ public class OrgInfoController {
         return ApiResponse.ok(orgInfoService.searchTdmOrgs(principal, stdDate, searchText));
     }
 
+    /** AS-IS org.Org00_OrgInfo.selectByIgnoreStamp (Apr01_Tab_StampSeq, G06) — 내 조직이 인감무시 조직인가 */
+    @GetMapping("/ignore-stamp")
+    public ApiResponse<Boolean> hasIgnoreStamp(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(orgInfoService.hasIgnoreStamp(principal));
+    }
+
     /** AS-IS org.Org00_OrgInfo.selectByOrgCodeId */
     @GetMapping("/{orgCodeId}")
     public ApiResponse<OrgInfoRes> getOrgInfo(@AuthenticationPrincipal UserPrincipal principal,

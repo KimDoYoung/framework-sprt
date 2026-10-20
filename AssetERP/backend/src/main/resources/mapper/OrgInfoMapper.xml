@@ -64,4 +64,19 @@
            AND org00_tdm_yn = 'true'
          ORDER BY org00_org_cd
     </select>
+
+    <!-- AS-IS org00_org_info.selectByIgnoreStamp (IDMS-IC) — G06. orgCodeId는 AS-IS LoginUser.getOrgCodeId(가장 최근 발령, 겸직 제외)와 같게 구한다 -->
+    <select id="countIgnoreStamp" resultType="int">
+        SELECT COUNT(*)
+          FROM org00_org_info a
+         WHERE a.org00_ignore_stamp = 'true'
+           AND a.org00_org_code_id = (
+                    SELECT emp03_org_code_id
+                      FROM emp03_trans
+                     WHERE emp03_person_id = #{personId}
+                       AND emp03_trans_cd != '800'
+                     ORDER BY emp03_trans_date DESC
+                     LIMIT 1
+               )
+    </select>
 </mapper>

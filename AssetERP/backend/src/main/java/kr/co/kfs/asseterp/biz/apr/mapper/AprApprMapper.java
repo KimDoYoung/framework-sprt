@@ -20,8 +20,11 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprMyReferenceCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyReferenceRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyRequestCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyRequestRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprPutSealRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprStampSeqCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprStampSeqRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -30,6 +33,15 @@ import java.util.List;
 /** AS-IS server/apr/mapper/apr01_appr.xml */
 @Mapper
 public interface AprApprMapper {
+    /** AS-IS selectByApprDate L1699 (G06 인감대장) */
+    List<AprStampSeqRes> selectByApprDate(@Param("c") AprStampSeqCond cond);
+
+    /** AS-IS updatePutSeal L2874 (G06 [확인자입력]) */
+    int updatePutSeal(@Param("apprId") Long apprId, @Param("empId") Long empId, @Param("companyId") Long companyId);
+
+    /** updatePutSeal 뒤 화면에 돌려줄 인감확인자·확인일시 */
+    AprPutSealRes selectPutSeal(@Param("apprId") Long apprId);
+
     /** AS-IS selectByDcrWritePaging L2383 */
     List<AprDcrWriteRes> selectByDcrWritePaging(@Param("c") AprDcrWriteCond cond);
 

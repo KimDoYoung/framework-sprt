@@ -260,3 +260,49 @@ export interface AprAltAppr {
   reasonCd?: string | null;
   emgrPoint?: string | null;
 }
+
+/** 인감대장 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Tab_StampSeq 그리드 열, G06). title은 HTML(폐기 문서는 빨간 [폐기]). 날짜는 'yyyy-MM-ddTHH:mm:ss' */
+export interface AprStampSeq {
+  apprId: number;
+  stampSeqText?: string | null;
+  apprDate?: string | null;
+  regEmpName?: string | null;
+  apprEmpName?: string | null;
+  title?: string | null;
+  stampName?: string | null;
+  receiveName?: string | null;
+  putSealEmpName?: string | null;
+  putSealDate?: string | null;
+}
+
+/** 인감확인 저장 결과 (AS-IS Apr01_Appr.updatePutSealEmpId) */
+export interface AprPutSeal {
+  apprId: number;
+  putSealEmpName?: string | null;
+  putSealDate?: string | null;
+}
+
+/** 인감 한 행 (AS-IS Apr10_StampModel — Apr10_Tab_Stamp 그리드, G07). 책임자 이름은 "이름 직책", 날짜는 'yyyy-MM-dd', 논리 값은 'true'/'false' 문자열 */
+export interface AprStampManage {
+  stampId: number;
+  orgId?: number | null;
+  orgName?: string | null;
+  aprEmpId?: number | null;
+  aprEmpName?: string | null;
+  secondEmpId?: number | null;
+  secondEmpName?: string | null;
+  stampName?: string | null;
+  startDate?: string | null;
+  closeDate?: string | null;
+  useName?: string | null;
+  /** 이미지 URL용 문자열 ID */
+  stampIdString?: string | null;
+  corpStampYn?: string | null;
+  stepUseYn?: string | null;
+  allUseYn?: string | null;
+  /** 사용가능 부서 요약 ('', '부서', '부서 외 n건') */
+  roleName?: string | null;
+  /** 미사용 문서분류 건수 ('n건') */
+  stampAuthCntStr?: string | null;
+  note?: string | null;
+}
