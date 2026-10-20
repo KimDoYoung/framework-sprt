@@ -110,6 +110,20 @@ export const icsApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS ics.Ics20_RevisionHistory.selectByDate (Ics20_Tab_RevisionHistory, H05): 관리자 화면과 같은 SQL, 조회만 */
+  searchRevisionPeriod: async (params: {
+    startDate: string; closeDate: string; financeAgencyCode: string; searchText: string; relatedLawSearchText: string; dateType: 'reg' | 'effect';
+  }): Promise<IcsRevisionHistoryAdmin[]> => {
+    const res = await apiClient.get<ApiResponse<IcsRevisionHistoryAdmin[]>>('v1/ics/revision-histories/period', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics19_RevisionRelateIcs.selectByRevisionHistoryId (Ics20_Edit_RevisionHistory, H05) */
+  searchRevisionLawsView: async (revisionHistoryId: number): Promise<IcsRevisionLaw[]> => {
+    const res = await apiClient.get<ApiResponse<IcsRevisionLaw[]>>(`v1/ics/revision-histories/${revisionHistoryId}/laws`);
+    return res.data.data ?? [];
+  },
+
   /** AS-IS ics.Ics20_RevisionHistory.updateContent */
   updateRevisionContent: async (revisionHistoryId: number, content: string): Promise<void> => {
     await apiClient.put<ApiResponse<null>>(`v1/ics/revision-histories/${revisionHistoryId}/content`, { content });

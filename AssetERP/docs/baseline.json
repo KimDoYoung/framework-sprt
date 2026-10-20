@@ -3697,5 +3697,27 @@
     "note": "docs/work/H/H04-작업기록.md",
     "history": [],
     "id": "H04"
+  },
+  "Ics20_Tab_RevisionHistory": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ics/Ics20_Edit_RevisionHistory.java": "33df9f1a220db6cde659c514e20309d67ef66535",
+      "application/src/main/java/myApp/client/vi/ics/Ics20_Lookup_Content.java": "12f5f6ad3885c050463b58d07d72162afe6fc2c7",
+      "application/src/main/java/myApp/client/vi/ics/Ics20_Tab_RevisionHistory.java": "fb603131f1a41291ab0aea7d2753436ca69edd09",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics20_RevisionHistoryModel.java": "f801ddcc3fb4512654c0d39c270d0b324affeed7",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics20_RevisionHistoryModelProperties.java": "8519e459d0f8f73b8cea526ac8e61b20f5070eab",
+      "application/src/main/java/myApp/server/ics/Ics20_RevisionHistory.java": "42453198ed1ca7457ab9f72e37ff4671ceee74b7",
+      "application/src/main/java/myApp/server/ics/mapper/ics20_revision_history.xml": "aac1a574cf988f47ec6782c6bb4ad6d563511f8b"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-20T19:48:48+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/H/H05-작업기록.md",
+    "history": [],
+    "id": "H05"
   }
 }

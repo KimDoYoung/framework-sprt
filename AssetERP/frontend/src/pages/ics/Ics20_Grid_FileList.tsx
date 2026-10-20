@@ -20,9 +20,11 @@ export interface Ics20_Grid_FileListHandle {
 interface Props {
   /** AS-IS retrieve(revisionHistoryModel) — 개정내역 ID. 없거나 저장 전(0 이하)이면 비운다 */
   parentId?: number | null;
+  /** AS-IS retrieve(model, userType): "user"면 삭제 칸을 숨긴다(Ics20_Edit_RevisionHistory, H05). 기본 "admin" */
+  userType?: 'user' | 'admin';
 }
 
-export const Ics20_Grid_FileList = forwardRef<Ics20_Grid_FileListHandle, Props>(({ parentId }, ref) => {
+export const Ics20_Grid_FileList = forwardRef<Ics20_Grid_FileListHandle, Props>(({ parentId, userType = 'admin' }, ref) => {
   const [rows, setRows] = useState<FileInfo[]>([]);
 
   // retrieve() L90-110: 서비스 sys.Sys10_File.selectByParentId(parentId)
@@ -63,7 +65,7 @@ export const Ics20_Grid_FileList = forwardRef<Ics20_Grid_FileListHandle, Props>(
     iconCell<FileInfo>('down', 'downloadCell', 50, '받기', row => {  // L106 downloadCell → FileDownload?fileType=file&fileId=
       fileApi.download(row.fileId).catch(err => message.error(errorMessage(err, '다운로드 실패')));
     }),
-    iconCell<FileInfo>('delete', 'deleteCell', 50, '삭제', row => {  // L107 deleteCell → msgBox "선택한 파일을 삭제하시겠습니까?" → checkFileDelete()
+    ...(userType === 'user' ? [] : [iconCell<FileInfo>('delete', 'deleteCell', 50, '삭제', row => {  // L107 deleteCell → msgBox "선택한 파일을 삭제하시겠습니까?" → checkFileDelete()
       Modal.confirm({
         title: '삭제',
         content: '선택한 파일을 삭제하시겠습니까?',
@@ -71,9 +73,9 @@ export const Ics20_Grid_FileList = forwardRef<Ics20_Grid_FileListHandle, Props>(
         cancelText: '아니오',
         onOk: () => checkFileDelete(row),
       });
-    }),
+    })]),
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [retrieve]);
+  ], [retrieve, userType]);
 
   return (
     <SingleGrid<FileInfo>

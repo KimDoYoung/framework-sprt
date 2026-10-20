@@ -33,9 +33,11 @@ interface Props {
   revisionHistoryId?: number | null;
   /** 상세보기 아이콘 → Ics01_Lookup_ClassTreeDetail.open(classTreeId) (부르는 쪽이 연다) */
   onDetail: (row: IcsRevisionLaw) => void;
+  /** 사용자용(Ics20_Edit_RevisionHistory, H05): 조회 전용 API로 읽는다 */
+  view?: boolean;
 }
 
-export const Ics19_Grid_IcsList = forwardRef<Ics19_Grid_IcsListHandle, Props>(({ revisionHistoryId, onDetail }, ref) => {
+export const Ics19_Grid_IcsList = forwardRef<Ics19_Grid_IcsListHandle, Props>(({ revisionHistoryId, onDetail, view }, ref) => {
   const [rows, setRows] = useState<IcsRevisionLaw[]>([]);
   const gridRef = useRef<AgGridReact<IcsRevisionLaw>>(null);
   const tempSeq = useRef(0);
@@ -47,11 +49,11 @@ export const Ics19_Grid_IcsList = forwardRef<Ics19_Grid_IcsListHandle, Props>(({
       return;
     }
     try {
-      setRows(await icsApi.searchRevisionLaws(revisionHistoryId));
+      setRows(await (view ? icsApi.searchRevisionLawsView : icsApi.searchRevisionLaws)(revisionHistoryId));
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, [revisionHistoryId]);
+  }, [revisionHistoryId, view]);
 
   useEffect(() => { void retrieve(); }, [retrieve]);
 
