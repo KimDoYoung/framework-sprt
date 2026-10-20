@@ -1032,4 +1032,85 @@
                INNER JOIN adv02_account b ON a.apr12_adv_id = b.adv02_account_id
          WHERE apr12_appr_id = #{apprId}
     </select>
+
+    <!-- AS-IS apr01_appr.selectByTotalList L1765 (IDMS-IC) — G16(Apr01_Tab_TotalList 운영현황표). 그대로. 기간은 시행일(apr01_effect_date, timestamp) 기준이라 끝 날짜는 00:00까지(원본도 같음) -->
+    <select id="selectByTotalList" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprTotalListRes">
+        SELECT (ROW_NUMBER() OVER())            AS appr_id
+             , org_nm                           AS apr_org_name
+             , person_nm                        AS apr_person_name
+             , SUM(genCnt                     ) AS gen_cnt
+             , SUM(icsCnt                     ) AS ics_cnt
+             , SUM(genCnt + icsCnt            ) AS total_cnt
+             , SUM(procGenCnt                 ) AS proc_gen_cnt
+             , SUM(procIcsCnt                 ) AS proc_ics_cnt
+             , SUM(procGenCnt + procIcsCnt    ) AS proc_total_cnt
+             , SUM(unProcGenCnt               ) AS un_proc_gen_cnt
+             , SUM(unProcIcsCnt               ) AS un_proc_ics_cnt
+             , SUM(unProcGenCnt + unProcIcsCnt) AS un_proc_total_cnt
+          FROM ( SELECT f_emp_kor_nm(apr01_reg_emp_id)                                                     person_nm
+                      , f_get_empTrans(apr01_reg_emp_id, apr01_reg_date::date, 'org_code_nm')              org_nm
+                      , f_get_empTrans(apr01_reg_emp_id, apr01_reg_date::date, 'org_cd')                   org_cd
+                      , CASE WHEN COALESCE(ics_cnt,0) = 0 THEN 1 ELSE 0 END                                genCnt
+                      , CASE WHEN COALESCE(ics_cnt,0) = 0 THEN 0 ELSE 1 END                                icsCnt
+                      , CASE WHEN COALESCE(ics_cnt,0)  = 0 AND apr01_status_cd  = '30' THEN 1 ELSE 0 END   procGenCnt
+                      , CASE WHEN COALESCE(ics_cnt,0) != 0 AND apr01_status_cd  = '30' THEN 1 ELSE 0 END   procIcsCnt
+                      , CASE WHEN COALESCE(ics_cnt,0)  = 0 AND apr01_status_cd != '30' THEN 1 ELSE 0 END   unProcGenCnt
+                      , CASE WHEN COALESCE(ics_cnt,0) != 0 AND apr01_status_cd != '30' THEN 1 ELSE 0 END   unProcIcsCnt
+                   FROM apr01_appr
+                        LEFT OUTER JOIN ( SELECT COUNT(*) ics_cnt
+                                               , apr20_appr_id
+                                            FROM apr20_relate_ics
+                                           GROUP BY apr20_appr_id ) ics ON apr20_appr_id = apr01_appr_id
+                WHERE apr01_company_id  = #{c.companyId}
+                  AND apr01_status_cd   NOT IN ('40','99') /* (40:반려/99:임시저장) */
+                  AND apr01_effect_date BETWEEN #{c.startDate, jdbcType=DATE} AND #{c.closeDate, jdbcType=DATE}
+               ) apr
+         WHERE org_nm    LIKE #{c.orgName}
+           AND person_nm LIKE #{c.personName}
+        GROUP BY org_cd, org_nm, person_nm
+        ORDER BY org_cd, person_nm collate "ko_KR.utf8" asc
+    </select>
+
+    <!-- AS-IS apr01_appr.selectBySubList L1803 (IDMS-IC) — G17(Apr01_Tab_SubList 건별명세). 안쪽 apr01_appr.*는 그리드가 쓰는 열만, 조건·정렬은 그대로 -->
+    <select id="selectBySubList" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprSubListRes">
+        SELECT apr01_appr_id          AS appr_id
+             , apr01_effect_date      AS effect_date
+             , apr01_doc_type_nm      AS doc_type_name
+             , class_tree_nm_allpath  AS class_tree_name_all_path
+             , apr01_title            AS title
+             , apr01_org_nm           AS apr_org_name
+             , apr01_person_nm        AS apr_person_name
+             , apr01_status_nm        AS status_name
+          FROM ( SELECT apr01_appr.apr01_appr_id
+                      , apr01_appr.apr01_effect_date
+                      , apr01_appr.apr01_title
+                      , (CASE WHEN COALESCE(ics_cnt,0) = 0 THEN '일반' ELSE '내부통제' END)         AS apr01_doc_type_nm
+                      , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) AS apr01_status_nm
+                      , f_get_empTrans(apr01_reg_emp_id, apr01_reg_date::date, 'org_code_nm')      AS apr01_org_nm
+                      , f_get_empTrans(apr01_reg_emp_id, apr01_reg_date::date, 'org_cd')           AS apr01_org_cd
+                      , f_emp_kor_nm(apr01_reg_emp_id)                                             AS apr01_person_nm
+                      , f_class_tree_nm_allpath(dcr01_class_tree_id)                               AS class_tree_nm_allpath
+                   FROM apr01_appr
+                        INNER JOIN dcr01_class_tree ON dcr01_class_tree_id = apr01_class_tree_id
+                        LEFT OUTER JOIN ( SELECT COUNT(*) ics_cnt
+                                               , apr20_appr_id
+                                            FROM apr20_relate_ics
+                                           GROUP BY apr20_appr_id ) ics ON apr20_appr_id = apr01_appr_id
+                  WHERE apr01_company_id  = #{c.companyId}
+                    AND apr01_status_cd   NOT IN ('40','99') /* (40:반려/99:임시저장) */
+                    AND ( ( #{c.statusCode} = 'true'   AND
+                            apr01_status_cd = '30'     ) OR
+                          ( #{c.statusCode} = 'false'  AND
+                            apr01_status_cd != '30'    ) OR
+                          ( #{c.statusCode} = '%'      ) )
+                    AND apr01_effect_date BETWEEN #{c.startDate, jdbcType=DATE} AND #{c.closeDate, jdbcType=DATE}
+               ) a
+         WHERE apr01_doc_type_nm LIKE #{c.docType}
+           AND apr01_org_nm      LIKE #{c.orgName}
+           AND apr01_person_nm   LIKE #{c.personName}
+         ORDER BY apr01_effect_date
+                , apr01_doc_type_nm collate "ko_KR.utf8" asc
+                , apr01_org_cd
+                , apr01_person_nm collate "ko_KR.utf8" asc
+    </select>
 </mapper>

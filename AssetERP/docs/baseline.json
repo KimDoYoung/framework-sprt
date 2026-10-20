@@ -3515,5 +3515,53 @@
     "note": "docs/work/G/G14-작업기록.md",
     "history": [],
     "id": "G14"
+  },
+  "Apr01_Tab_TotalList": {
+    "commit": "9dd3b12c43700f827e2d874d37b66ab865fa1cd8",
+    "commit_short": "9dd3b12",
+    "branch": "ioc",
+    "commit_date": "2026-10-19",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/apr/Apr01_Tab_TotalList.java": "475a94889b17e937d8ae4abaa4fb4fc440c12541",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr01_ApprModel.java": "4ca7472ada54858472b793f34b0776284ba61880",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr01_ApprModelProperties.java": "29b3a7dcdfa3298de5ec7d5127871cfac7791903",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr04_ApprStepModel.java": "61621aff816c6816233c4b2eefcffeb9c5adc7a2",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr10_StampModel.java": "fa1aa3c58166aa91762dc8131e7e15934bb83857",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "ec2e1b8d30204b370115db8f4a4009b721f12088",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "490cfa74239bbac67406ebb07d53662a9fadf0fd"
+    },
+    "shared_links": [
+      "Apr01_Tab_SubList"
+    ],
+    "recorded_at": "2026-10-20T15:00:36+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/G/G16-작업기록.md",
+    "history": [],
+    "id": "G16"
+  },
+  "Apr01_Tab_SubList": {
+    "commit": "9dd3b12c43700f827e2d874d37b66ab865fa1cd8",
+    "commit_short": "9dd3b12",
+    "branch": "ioc",
+    "commit_date": "2026-10-19",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/apr/Apr01_Tab_SubList.java": "8faf251c2a814318bb8935e89e4c4a607c72489f",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr01_ApprModel.java": "4ca7472ada54858472b793f34b0776284ba61880",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr01_ApprModelProperties.java": "29b3a7dcdfa3298de5ec7d5127871cfac7791903",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr04_ApprStepModel.java": "61621aff816c6816233c4b2eefcffeb9c5adc7a2",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr10_StampModel.java": "fa1aa3c58166aa91762dc8131e7e15934bb83857",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "ec2e1b8d30204b370115db8f4a4009b721f12088",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "490cfa74239bbac67406ebb07d53662a9fadf0fd"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc"
+    ],
+    "recorded_at": "2026-10-20T15:00:36+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/G/G17-작업기록.md",
+    "history": [],
+    "id": "G17"
   }
 }

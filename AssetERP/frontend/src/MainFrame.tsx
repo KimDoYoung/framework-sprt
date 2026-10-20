@@ -22,6 +22,7 @@ import { MyPageView } from './components/mypage';
 import { PendingScreenView } from './components/PendingScreenView';
 import { SCREENS } from './pages/screens';
 import { MenuLevel_1, MenuLevel_3 } from './types';
+import { registerMenuOpener } from './utils/tempData';
 import { appSettingsStorage, SavedLayoutItem } from './utils/storage';
 import { useAppSetting } from './hooks/useAppSetting';
 import { getFontOption, applyGlobalFont, FontFamilyId } from './utils/font';
@@ -236,6 +237,22 @@ export default function MainFrame({ user, onLogout }: MainFrameProps) {
       );
     }
   };
+
+  // ── 화면에서 다른 메뉴 탭 열기 (AS-IS MenuOpener.openTabCallback, utils/tempData.ts) ──
+  const openMenuRef = useRef<(menuNo: string) => boolean>(() => false);
+  openMenuRef.current = (menuNo: string) => {
+    for (const level1 of menus) {
+      for (const group of level1.groups) {
+        const item = group.items.find(i => i.menuNo === menuNo);
+        if (item) {
+          handleSelectMenuLevel_3(item, level1);
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+  useEffect(() => registerMenuOpener(menuNo => openMenuRef.current(menuNo)), []);
 
   // ── 레이아웃 변경 시 자동 로컬 스토리지(asseterp_settings) 디바운스 비동기 저장 ──
   const saveLayoutTimerRef = useRef<number | null>(null);

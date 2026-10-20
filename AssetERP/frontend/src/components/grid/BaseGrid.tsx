@@ -18,6 +18,8 @@ export interface SumRow {
   label?: string;
   sum?: string[];
   avg?: string[];
+  /** 행 개수를 넣을 컬럼 field들 (AS-IS getAggregationGrid의 CountSummaryType, G17) */
+  count?: string[];
 }
 
 export interface BaseGridProps<T> extends Omit<AgGridReactProps<T>, 'theme'> {
@@ -92,6 +94,7 @@ export function BaseGrid<T>({
     const total: Record<string, unknown> = { [sumRow.labelField]: sumRow.label ?? '합계' };
     sumRow.sum?.forEach(f => (total[f] = sumOf(rows, f)));
     sumRow.avg?.forEach(f => (total[f] = rows.length ? sumOf(rows, f) / rows.length : 0));
+    sumRow.count?.forEach(f => (total[f] = rows.length));
     return [total as T];
   }, [sumRow, rowData]);
 

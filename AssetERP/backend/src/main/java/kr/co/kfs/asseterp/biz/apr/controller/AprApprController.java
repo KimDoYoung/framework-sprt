@@ -14,6 +14,8 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprPutSealRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampSeqRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprSubListRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprTotalListRes;
 import kr.co.kfs.asseterp.biz.apr.service.AprApprService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -196,6 +198,28 @@ public class AprApprController {
                                                         @RequestParam(required = false) String statusCode,
                                                         @RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.searchMyAuth(principal, classTreeId, startDate, closeDate, statusCode, searchText));
+    }
+
+    /** AS-IS apr.Apr01_Appr.selectByTotalList (Apr01_Tab_TotalList, G16 운영현황표). 기간은 시행일 기준, 담당부서·담당자는 포함 검색 */
+    @GetMapping("/total-list")
+    public ApiResponse<List<AprTotalListRes>> searchTotalList(@AuthenticationPrincipal UserPrincipal principal,
+                                                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                              @RequestParam(defaultValue = "") String orgName,
+                                                              @RequestParam(defaultValue = "") String personName) {
+        return ApiResponse.ok(service.searchTotalList(principal, startDate, closeDate, orgName, personName));
+    }
+
+    /** AS-IS apr.Apr01_Appr.selectBySubList (Apr01_Tab_SubList, G17 건별명세). docType 일반·내부통제, statusCode true(완료)·false(미처리), 비면 전체 */
+    @GetMapping("/sub-list")
+    public ApiResponse<List<AprSubListRes>> searchSubList(@AuthenticationPrincipal UserPrincipal principal,
+                                                          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                          @RequestParam(defaultValue = "") String orgName,
+                                                          @RequestParam(defaultValue = "") String personName,
+                                                          @RequestParam(required = false) String docType,
+                                                          @RequestParam(required = false) String statusCode) {
+        return ApiResponse.ok(service.searchSubList(principal, startDate, closeDate, orgName, personName, docType, statusCode));
     }
 
     /** AS-IS apr.Apr01_Appr.selectByApprDate (Apr01_Tab_StampSeq, G06 인감대장). stampId 0·없음은 모든 인감 */

@@ -245,6 +245,34 @@ export interface AprMyAuth {
   note?: string | null;
 }
 
+/** 운영현황표 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Tab_TotalList 그리드 열, G16). apprId는 SQL의 행번호(행 키) */
+export interface AprTotalList {
+  apprId: number;
+  aprOrgName?: string | null;
+  aprPersonName?: string | null;
+  genCnt: number;
+  icsCnt: number;
+  totalCnt: number;
+  procGenCnt: number;
+  procIcsCnt: number;
+  procTotalCnt: number;
+  unProcGenCnt: number;
+  unProcIcsCnt: number;
+  unProcTotalCnt: number;
+}
+
+/** 건별명세 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Tab_SubList 그리드 열, G17). effectDate는 시행일 */
+export interface AprSubList {
+  apprId: number;
+  effectDate?: string | null;
+  docTypeName?: string | null;
+  classTreeNameAllPath?: string | null;
+  title?: string | null;
+  aprOrgName?: string | null;
+  aprPersonName?: string | null;
+  statusName?: string | null;
+}
+
 /** 대결자 지정 한 행 (AS-IS Apr07_AltApprModel, G05). 날짜는 'yyyy-MM-dd', stampYn은 'true'/'false' 문자열 */
 export interface AprAltAppr {
   altApprId: number;

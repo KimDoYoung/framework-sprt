@@ -25,6 +25,10 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampSeqCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampSeqRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprSubListCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprSubListRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprTotalListCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprTotalListRes;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprApprMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoService;
@@ -282,6 +286,23 @@ public class AprApprService {
     public List<AprMyAuthRes> searchMyAuth(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate closeDate, String statusCode, String searchText) {
         return mapper.selectByAuthEmpId(new AprMyAuthCond(user.getCompanyId(), user.getUserId(), startDate, closeDate, blankToAny(statusCode),
                 like(searchText), classTreeId, "%"));
+    }
+
+    /** AS-IS Apr01_Appr.selectByTotalList (G16 Apr01_Tab_TotalList 운영현황표). 회사는 세션, 담당자·담당부서는 %…%(빈 글자면 전체) */
+    public List<AprTotalListRes> searchTotalList(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String orgName, String personName) {
+        return mapper.selectByTotalList(new AprTotalListCond(user.getCompanyId(), like(personName), like(orgName), startDate, closeDate));
+    }
+
+    /**
+     * AS-IS Apr01_Appr.selectBySubList (G17 Apr01_Tab_SubList 건별명세). 회사는 세션, 담당자·담당부서는 %…%.
+     * docType은 일반·내부통제(그 밖은 전체 '%'), statusCode는 true(완료)·false(미처리)(그 밖은 전체 '%') — AS-IS 화면이 콤보 글자를 바꿔 보내던 값
+     */
+    public List<AprSubListRes> searchSubList(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String orgName, String personName,
+                                             String docType, String statusCode) {
+        String docTypeText = "일반".equals(docType) || "내부통제".equals(docType) ? docType : "%";
+        String statusText = "true".equals(statusCode) || "false".equals(statusCode) ? statusCode : "%";
+        return mapper.selectBySubList(new AprSubListCond(user.getCompanyId(), like(personName), like(orgName), startDate, closeDate,
+                docTypeText, statusText));
     }
 
     /** AS-IS Apr01_Appr.selectByApprDate (G06 Apr01_Tab_StampSeq 인감대장). stampId가 null·0이면 모든 인감(AS-IS 서버가 0을 null로 바꿈) */

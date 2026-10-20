@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprAltAppr, AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq } from '../types/apr';
+import { AprAltAppr, AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -24,6 +24,20 @@ export interface MyAuthParams {
   closeDate: string;
   statusCode: string;
   searchText: string;
+}
+
+/** 운영현황표(G16) 조건. 기간은 시행일 기준, orgName·personName은 포함 검색(서버가 %…%) */
+export interface TotalListParams {
+  startDate: string;
+  closeDate: string;
+  orgName: string;
+  personName: string;
+}
+
+/** 건별명세(G17) 조건. docType 일반·내부통제, statusCode true(완료)·false(미처리) — 비면 전체 */
+export interface SubListParams extends TotalListParams {
+  docType?: string;
+  statusCode?: string;
 }
 
 /** 상신내역 조회(G02) 조건. statusCode '%'가 전체, aprYn 완료/반려건 포함 */
@@ -240,6 +254,18 @@ export const aprApi = {
   /** AS-IS apr.Apr01_Appr.selectByAuthEmpId (Apr01_Tab_MyAuthList, G04): 내가 공람 대상인 완료·반려 문서. 검색어는 서버가 %…%로 */
   searchMyAuth: async (params: MyAuthParams): Promise<AprMyAuth[]> => {
     const res = await apiClient.get<ApiResponse<AprMyAuth[]>>('v1/apr/apprs/my-auth', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr01_Appr.selectByTotalList (Apr01_Tab_TotalList, G16): 시행일 기준 담당자별 발생·처리·미처리 건수 */
+  searchTotalList: async (params: TotalListParams): Promise<AprTotalList[]> => {
+    const res = await apiClient.get<ApiResponse<AprTotalList[]>>('v1/apr/apprs/total-list', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr01_Appr.selectBySubList (Apr01_Tab_SubList, G17): 시행일 기준 건별 명세. docType 일반·내부통제, statusCode true(완료)·false(미처리), 비면 전체 */
+  searchSubList: async (params: SubListParams): Promise<AprSubList[]> => {
+    const res = await apiClient.get<ApiResponse<AprSubList[]>>('v1/apr/apprs/sub-list', { params });
     return res.data.data ?? [];
   },
 
