@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Academic, Account, AddDeduct, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
+import { Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -613,6 +613,78 @@ export const empApprStepExceptApi = {
   /** AS-IS emp.Emp30_ApprStepExcept.delete (G10) → 지운 건수 */
   deleteApprStepExcepts: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/emp/appr-step-excepts', { data: ids });
+    return res.data.data ?? 0;
+  },
+};
+
+/** G11·G12 주소록 (Emp10_Tab_AddrBook·Emp10_Tab_PublicAddrBook, 그룹설정 Emp10_Lookup_List) */
+export const empAddrBookApi = {
+  /** AS-IS emp.Emp10_AddrBook.selectByText (G11): 내 개인 주소록. searchText는 서버가 %…%로 감싼다 */
+  searchAddrBooks: async (searchText: string): Promise<EmpAddrBook[]> => {
+    const res = await apiClient.get<ApiResponse<EmpAddrBook[]>>('v1/emp/addr-books', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp10_AddrBook.selectByPublicText (G12): 로그인 회사의 공용 주소록 */
+  searchPublicAddrBooks: async (searchText: string): Promise<EmpAddrBook[]> => {
+    const res = await apiClient.get<ApiResponse<EmpAddrBook[]>>('v1/emp/addr-books/public', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp10_AddrBook.update (G11·G12): 새 행(ID 0 이하)은 서버가 채번·등록자 = 로그인 사원. 저장한 행을 요청 순서로 */
+  saveAddrBooks: async (rows: EmpAddrBook[]): Promise<EmpAddrBook[]> => {
+    const body = rows.map(({ addrBookId, contactName, emailAddress, mobileTelNo, officeTelNo, companyName, posName, note, publicYn }) =>
+      ({ addrBookId, contactName, emailAddress, mobileTelNo, officeTelNo, companyName, posName, note, publicYn }));
+    const res = await apiClient.put<ApiResponse<EmpAddrBook[]>>('v1/emp/addr-books', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp10_AddrBook.delete (G11·G12) → 지운 건수 */
+  deleteAddrBooks: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/addr-books', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp57_AddrBookGroup.getPersonList (G11): 내 회사의 공개 그룹 + 내가 만든 비공개 그룹 */
+  searchGroups: async (): Promise<EmpAddrBookGroup[]> => {
+    const res = await apiClient.get<ApiResponse<EmpAddrBookGroup[]>>('v1/emp/addr-book-groups');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp57_AddrBookGroup.modelUpdate (G11): 새 그룹 */
+  createGroup: async (groupName: string, publicYn: string): Promise<EmpAddrBookGroup> => {
+    const res = await apiClient.post<ApiResponse<EmpAddrBookGroup>>('v1/emp/addr-book-groups', { groupName, publicYn });
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp57_AddrBookGroup.modelUpdate (G11): 고친 그룹 */
+  updateGroup: async (addrBookGroupId: number, groupName: string, publicYn: string): Promise<EmpAddrBookGroup> => {
+    const res = await apiClient.put<ApiResponse<EmpAddrBookGroup>>(`v1/emp/addr-book-groups/${addrBookGroupId}`, { groupName, publicYn });
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp57_AddrBookGroup.deleteAll (G11): 그룹과 그 안의 담당자 전부 */
+  deleteGroup: async (addrBookGroupId: number): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/emp/addr-book-groups/${addrBookGroupId}`);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp57_AddrBookGroup.selectByParentId (G11) */
+  searchGroupMembers: async (parentId: number): Promise<EmpAddrBookMember[]> => {
+    const res = await apiClient.get<ApiResponse<EmpAddrBookMember[]>>(`v1/emp/addr-book-groups/${parentId}/members`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp57_AddrBookGroup.update (G11): 새 행(ID 0 이하)은 서버가 채번. 저장한 행을 요청 순서로 */
+  saveGroupMembers: async (rows: EmpAddrBookMember[]): Promise<EmpAddrBookMember[]> => {
+    const body = rows.map(({ addrBookGroupId, parentId, relateId, note }) => ({ addrBookGroupId, parentId, relateId, note }));
+    const res = await apiClient.put<ApiResponse<EmpAddrBookMember[]>>('v1/emp/addr-book-groups/members', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp57_AddrBookGroup.delete (G11) → 지운 건수 */
+  deleteGroupMembers: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/addr-book-groups/members', { data: ids });
     return res.data.data ?? 0;
   },
 };

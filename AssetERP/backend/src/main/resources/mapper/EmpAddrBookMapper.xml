@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/emp/mapper/emp10_addr_book.xml (G11 Emp10_Tab_AddrBook, G12 Emp10_Tab_PublicAddrBook) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpAddrBookMapper">
+
+    <sql id="addrBookColumns">
+          emp10_addr_book_id AS addr_book_id
+        , emp10_contacter_nm AS contact_name
+        , emp10_email_addr   AS email_address
+        , emp10_mobile_telno AS mobile_tel_no
+        , emp10_office_telno AS office_tel_no
+        , emp10_company_nm   AS company_name
+        , emp10_pos_nm       AS pos_name
+        , emp10_note         AS note
+        , emp10_public_yn    AS public_yn
+        , emp10_person_id    AS person_id
+    </sql>
+
+    <!-- AS-IS emp10_addr_book.selectByText (IDMS-IC) — 내 개인 주소록(공용 제외). searchText는 서비스가 %…%로 감싼다. person_name은 AS-IS에도 채워지지 않는다 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookRes">
+        SELECT <include refid="addrBookColumns"/>
+             , NULL AS person_name
+          FROM emp10_addr_book
+         WHERE emp10_person_id = #{personId}
+           AND (
+                UPPER(emp10_contacter_nm) LIKE UPPER(#{searchText})
+             OR UPPER(emp10_email_addr)   LIKE UPPER(#{searchText})
+             OR UPPER(emp10_company_nm)   LIKE UPPER(#{searchText})
+               )
+           AND COALESCE(emp10_public_yn, 'false') LIKE 'false'
+         ORDER BY emp10_contacter_nm collate "ko_KR.utf8" asc
+    </select>
+
+    <!-- AS-IS emp10_addr_book.selectByPublicText (IDMS-IC) — 로그인 회사 사원이 올린 공용 주소록 -->
+    <select id="selectByPublicText" resultType="kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookRes">
+        SELECT <include refid="addrBookColumns"/>
+             , f_emp_kor_nm(emp10_person_id) AS person_name
+          FROM emp10_addr_book
+               INNER JOIN emp01_person ON emp10_person_id = emp01_person_id
+         WHERE emp01_company_id = #{companyId}
+           AND (
+                UPPER(emp10_contacter_nm) LIKE UPPER(#{searchText})
+             OR UPPER(emp10_email_addr)   LIKE UPPER(#{searchText})
+             OR UPPER(emp10_company_nm)   LIKE UPPER(#{searchText})
+             OR UPPER(emp10_note)         LIKE UPPER(#{searchText})
+               )
+           AND emp10_public_yn = 'true'
+         ORDER BY emp10_contacter_nm collate "ko_KR.utf8" asc
+    </select>
+
+    <!-- 저장한 행을 다시 읽는다 (AS-IS UpdateDataModel → emp10_addr_book.selectById (IDMS-IC)), 회사 조건 추가 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookRes">
+        SELECT <include refid="addrBookColumns"/>
+             , f_emp_kor_nm(emp10_person_id) AS person_name
+          FROM emp10_addr_book
+         WHERE emp10_addr_book_id = #{addrBookId}
+           AND EXISTS ( SELECT 1 FROM emp01_person WHERE emp01_person_id = emp10_person_id AND emp01_company_id = #{companyId} )
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Emp10_AddrBook.update → UpdateDataModel(emp10_addr_book) 동적 INSERT/UPDATE, 화면이 바꾸는 열만 -->
+    <insert id="insertAddrBook">
+        INSERT INTO emp10_addr_book (emp10_addr_book_id, emp10_contacter_nm, emp10_email_addr, emp10_mobile_telno, emp10_office_telno,
+                                     emp10_company_nm, emp10_pos_nm, emp10_note, emp10_public_yn, emp10_person_id)
+        VALUES (#{r.addrBookId}, #{r.contactName}, #{r.emailAddress}, #{r.mobileTelNo}, #{r.officeTelNo},
+                #{r.companyName}, #{r.posName}, #{r.note}, #{r.publicYn}, #{personId})
+    </insert>
+
+    <update id="updateAddrBook">
+        UPDATE emp10_addr_book
+           SET emp10_contacter_nm = #{r.contactName},
+               emp10_email_addr   = #{r.emailAddress},
+               emp10_mobile_telno = #{r.mobileTelNo},
+               emp10_office_telno = #{r.officeTelNo},
+               emp10_company_nm   = #{r.companyName},
+               emp10_pos_nm       = #{r.posName},
+               emp10_note         = #{r.note}
+         WHERE emp10_addr_book_id = #{r.addrBookId}
+           AND EXISTS ( SELECT 1 FROM emp01_person WHERE emp01_person_id = emp10_person_id AND emp01_company_id = #{companyId} )
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel: {table}_id = 로 행마다 DELETE, 회사 조건 추가 -->
+    <delete id="deleteAddrBook">
+        DELETE FROM emp10_addr_book
+         WHERE emp10_addr_book_id = #{addrBookId}
+           AND EXISTS ( SELECT 1 FROM emp01_person WHERE emp01_person_id = emp10_person_id AND emp01_company_id = #{companyId} )
+    </delete>
+</mapper>

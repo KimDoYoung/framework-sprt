@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/emp/mapper/emp57_addr_book_group.xml (G11 Emp57_Lookup_Insert·Emp57_TabPage_Insert·Emp57_Edit_GroupName) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpAddrBookGroupMapper">
+
+    <!-- AS-IS emp57_addr_book_group.getPersonList (IDMS-IC) — 내 회사의 공개 그룹 + 내가 만든 비공개 그룹 -->
+    <select id="getPersonList" resultType="kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookGroupRes">
+        SELECT addr_book_group_id, group_name, public_yn, person_id, person_name
+          FROM (
+                SELECT emp57_addr_book_group_id       AS addr_book_group_id
+                     , emp57_group_nm                 AS group_name
+                     , emp57_public_yn                AS public_yn
+                     , emp57_person_id                AS person_id
+                     , f_emp_kor_nm(emp57_person_id)  AS person_name
+                  FROM emp57_addr_book_group
+                 WHERE emp57_parent_id = 0
+                   AND COALESCE(emp57_public_yn, 'false') = 'true'
+                   AND EXISTS ( SELECT 1
+                                  FROM emp01_person
+                                 WHERE emp01_person_id  = #{personId}
+                                   AND emp01_company_id = emp57_company_id )
+                 UNION ALL
+                SELECT emp57_addr_book_group_id
+                     , emp57_group_nm
+                     , emp57_public_yn
+                     , emp57_person_id
+                     , f_emp_kor_nm(emp57_person_id)
+                  FROM emp57_addr_book_group
+                 WHERE emp57_parent_id = 0
+                   AND COALESCE(emp57_public_yn, 'false') = 'false'
+                   AND emp57_person_id = #{personId}
+               ) g
+         ORDER BY group_name
+    </select>
+
+    <!-- 저장한 그룹을 다시 읽는다 (회사 조건) -->
+    <select id="selectGroupById" resultType="kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookGroupRes">
+        SELECT emp57_addr_book_group_id       AS addr_book_group_id
+             , emp57_group_nm                 AS group_name
+             , emp57_public_yn                AS public_yn
+             , emp57_person_id                AS person_id
+             , f_emp_kor_nm(emp57_person_id)  AS person_name
+          FROM emp57_addr_book_group
+         WHERE emp57_addr_book_group_id = #{addrBookGroupId}
+           AND emp57_company_id         = #{companyId}
+    </select>
+
+    <!-- 외부(주소록)·사내(사원) 담당자 두 갈래를 합친 조각 (AS-IS selectByParentId / selectById 공통) -->
+    <sql id="memberUnion">
+        SELECT emp57_addr_book_group_id, emp57_company_id, emp57_parent_id, emp57_relate_id, emp57_note
+             , '외부'                                                          AS parent_gubun
+             , emp10_company_nm||' '||emp10_contacter_nm||' '||emp10_pos_nm   AS parent_nm
+             , emp10_email_addr                                               AS email_addr
+             , emp10_mobile_telno                                             AS mobile_telno
+          FROM emp57_addr_book_group
+               INNER JOIN emp10_addr_book ON emp10_addr_book_id = emp57_relate_id
+         UNION ALL
+        SELECT emp57_addr_book_group_id, emp57_company_id, emp57_parent_id, emp57_relate_id, emp57_note
+             , '사내'                                                          AS parent_gubun
+             , emp01_kor_nm||' ('||f_get_emptrans(emp01_person_id, f_sysdate()::date, 'org_code_nm')||')' AS parent_nm
+             , emp01_email_addr                                               AS email_addr
+             , emp01_mobile_telno                                             AS mobile_telno
+          FROM emp57_addr_book_group
+               INNER JOIN emp01_person ON emp01_person_id = emp57_relate_id
+    </sql>
+
+    <!-- AS-IS emp57_addr_book_group.selectByParentId (IDMS-IC) — 서버는 parentId만 쓴다(companyId는 클라이언트가 보내도 SQL에 없다) -->
+    <select id="selectByParentId" resultType="kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookMemberRes">
+        SELECT emp57_addr_book_group_id AS addr_book_group_id
+             , emp57_parent_id          AS parent_id
+             , emp57_relate_id          AS relate_id
+             , emp57_note               AS note
+             , parent_gubun
+             , parent_nm                AS parent_name
+             , email_addr               AS email_address
+             , mobile_telno             AS mobile_tel_no
+          FROM ( <include refid="memberUnion"/> ) emp57
+         WHERE emp57_parent_id = #{parentId}
+         ORDER BY parent_gubun, parent_nm
+    </select>
+
+    <!-- 저장한 담당자를 다시 읽는다 (AS-IS emp57_addr_book_group.selectById (IDMS-IC)), 회사 조건 추가 -->
+    <select id="selectMemberById" resultType="kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookMemberRes">
+        SELECT emp57_addr_book_group_id AS addr_book_group_id
+             , emp57_parent_id          AS parent_id
+             , emp57_relate_id          AS relate_id
+             , emp57_note               AS note
+             , parent_gubun
+             , parent_nm                AS parent_name
+             , email_addr               AS email_address
+             , mobile_telno             AS mobile_tel_no
+          FROM ( <include refid="memberUnion"/> ) emp57
+         WHERE emp57_addr_book_group_id = #{addrBookGroupId}
+           AND emp57_company_id         = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Emp57_AddrBookGroup.modelUpdate → UpdateDataModel 동적 INSERT: 새 그룹은 회사·등록자 = 로그인, 상위·연결 = 0 (Emp57_Edit_GroupName.insert L58-62) -->
+    <insert id="insertGroup">
+        INSERT INTO emp57_addr_book_group (emp57_addr_book_group_id, emp57_company_id, emp57_parent_id, emp57_relate_id, emp57_group_nm, emp57_public_yn, emp57_person_id)
+        VALUES (#{id}, #{companyId}, 0, 0, #{r.groupName}, #{r.publicYn}, #{personId})
+    </insert>
+
+    <update id="updateGroup">
+        UPDATE emp57_addr_book_group
+           SET emp57_group_nm  = #{r.groupName},
+               emp57_public_yn = #{r.publicYn}
+         WHERE emp57_addr_book_group_id = #{id}
+           AND emp57_company_id         = #{companyId}
+           AND emp57_parent_id          = 0
+    </update>
+
+    <!-- AS-IS Emp57_AddrBookGroup.update → UpdateDataModel: 새 담당자는 회사·등록자 = 로그인, 상위 = 선택한 그룹, 연결 = 주소록/사원 ID (Emp57_TabPage_Insert.insertRow L99-134) -->
+    <insert id="insertMember">
+        INSERT INTO emp57_addr_book_group (emp57_addr_book_group_id, emp57_company_id, emp57_parent_id, emp57_relate_id, emp57_person_id, emp57_note)
+        VALUES (#{id}, #{companyId}, #{r.parentId}, #{r.relateId}, #{personId}, #{r.note})
+    </insert>
+
+    <update id="updateMember">
+        UPDATE emp57_addr_book_group
+           SET emp57_note = #{r.note}
+         WHERE emp57_addr_book_group_id = #{r.addrBookGroupId}
+           AND emp57_company_id         = #{companyId}
+           AND emp57_parent_id          &lt;&gt; 0
+    </update>
+
+    <!-- AS-IS emp57_addr_book_group.deleteAll (IDMS-IC) — 그룹과 그 안의 담당자 전부, 회사 조건 추가 -->
+    <delete id="deleteAll">
+        DELETE FROM emp57_addr_book_group
+         WHERE emp57_company_id = #{companyId}
+           AND ( emp57_addr_book_group_id = #{addrBookGroupId} OR emp57_parent_id = #{addrBookGroupId} )
+    </delete>
+
+    <!-- AS-IS Emp57_AddrBookGroup.delete → UpdateDataModel.deleteModel, 회사 조건 추가 -->
+    <delete id="deleteMember">
+        DELETE FROM emp57_addr_book_group
+         WHERE emp57_addr_book_group_id = #{addrBookGroupId}
+           AND emp57_company_id         = #{companyId}
+    </delete>
+</mapper>

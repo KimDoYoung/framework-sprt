@@ -472,3 +472,41 @@ export interface EmpApprStepExcept {
   useYn: string;
   note?: string | null;
 }
+
+/** 주소록 한 행 (AS-IS Emp10_AddrBookModel — Emp10_Tab_AddrBook·PublicAddrBook 그리드, G11·G12). 논리 값은 'true'/'false' 문자열 */
+export interface EmpAddrBook {
+  addrBookId: number;
+  contactName?: string | null;
+  emailAddress?: string | null;
+  mobileTelNo?: string | null;
+  officeTelNo?: string | null;
+  companyName?: string | null;
+  posName?: string | null;
+  note?: string | null;
+  publicYn?: string | null;
+  /** 등록자 사원 ID */
+  personId?: number | null;
+  personName?: string | null;
+}
+
+/** 주소록 그룹 한 행 (AS-IS Emp57_AddrBookGroupModel — Emp57_Lookup_Insert 왼쪽 그리드, G11). personId = 등록자 */
+export interface EmpAddrBookGroup {
+  addrBookGroupId: number;
+  groupName?: string | null;
+  publicYn?: string | null;
+  personId?: number | null;
+  personName?: string | null;
+}
+
+/** 그룹 안의 담당자·사원 한 행 (AS-IS Emp57_AddrBookGroupModel — Emp57_TabPage_Insert 그리드, G11). parentGubun = 외부/사내 */
+export interface EmpAddrBookMember {
+  addrBookGroupId: number;
+  parentId?: number | null;
+  /** 외부 = 주소록 ID, 사내 = 사원 ID */
+  relateId?: number | null;
+  note?: string | null;
+  parentGubun?: string | null;
+  parentName?: string | null;
+  emailAddress?: string | null;
+  mobileTelNo?: string | null;
+}

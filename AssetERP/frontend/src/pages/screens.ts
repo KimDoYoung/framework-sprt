@@ -26,6 +26,8 @@ import { Apr10_Tab_Stamp } from './apr/Apr10_Tab_Stamp';
 import { Apr15_Tab_ReprCorp } from './apr/Apr15_Tab_ReprCorp';
 import { Emp60_Tab_Sign } from './emp/Emp60_Tab_Sign';
 import { Emp30_Tab_ApprStepExcept } from './emp/Emp30_Tab_ApprStepExcept';
+import { Emp10_Tab_AddrBook } from './emp/Emp10_Tab_AddrBook';
+import { Emp10_Tab_PublicAddrBook } from './emp/Emp10_Tab_PublicAddrBook';
 import { Dcr00_Tab_DocList } from './dcr/Dcr00_Tab_DocList';
 import { Dcr00_Tab_FileList } from './dcr/Dcr00_Tab_FileList';
 import { Fbx01_Tab_Document } from './fbx/Fbx01_Tab_Document';
@@ -140,6 +142,8 @@ export const SCREENS: Record<string, React.FC> = {
   Apr10_Tab_Stamp, // G07 (메뉴 #1026. 조회창 Apr10_Move_OrgCode·Org10_Lookup_RoleStamp·Dcr40_Lookup_StampAuth·Org00_Lookup_SelectMulti를 함께 변환)
   Emp60_Tab_Sign, // G09 (메뉴 #1501)
   Emp30_Tab_ApprStepExcept, // G10 (메뉴 #1439. 사원찾기 Emp00_Lookup_SelectSingle 재사용)
+  Emp10_Tab_AddrBook, // G11 (메뉴 #1025. 그룹설정 Emp57_Lookup_Insert 외 3개 클래스 함께)
+  Emp10_Tab_PublicAddrBook, // G12 (메뉴 #1211. 그룹설정 재사용)
   Apr15_Tab_ReprCorp, // G08 (메뉴 #1506. 인감 조회창 Apr10_Lookup_Stamp 재사용)
   Apr07_Tab_AltAppr, // G05 (메뉴 #1021. 사원찾기 Emp00_Lookup_SelectSingle 재사용)
   Apr90_Tab_DisposalList, // F04 1단계 (메뉴 #1443. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)

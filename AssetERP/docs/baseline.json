@@ -3411,5 +3411,49 @@
     "note": "docs/work/G/G10-작업기록.md",
     "history": [],
     "id": "G10"
+  },
+  "Emp10_Tab_AddrBook": {
+    "commit": "9dd3b12c43700f827e2d874d37b66ab865fa1cd8",
+    "commit_short": "9dd3b12",
+    "branch": "ioc",
+    "commit_date": "2026-10-19",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp10_Tab_AddrBook.java": "0764ea2dba69a2454adf9ef92301f31ec76c978a",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp10_AddrBookModel.java": "90c1428f292f9bd53836e7063eee61659ca0fe78",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp10_AddrBookModelProperties.java": "f37c3578bd4785cb9f365a0f1fc06c6e630c69f9",
+      "application/src/main/java/myApp/server/emp/Emp10_AddrBook.java": "3a0acc57231a3413731cc8be08cbe23a0fb71a22",
+      "application/src/main/java/myApp/server/emp/mapper/emp10_addr_book.xml": "4d11d518ead931b634635afd84dd29ebad572c9c"
+    },
+    "shared_links": [
+      "Emp57_Lookup_Insert"
+    ],
+    "recorded_at": "2026-10-20T14:15:35+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/G/G11-작업기록.md",
+    "history": [],
+    "id": "G11"
+  },
+  "Emp10_Tab_PublicAddrBook": {
+    "commit": "9dd3b12c43700f827e2d874d37b66ab865fa1cd8",
+    "commit_short": "9dd3b12",
+    "branch": "ioc",
+    "commit_date": "2026-10-19",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp10_Tab_PublicAddrBook.java": "5e5b7c792b5fee602ea9577aab82b38b7e1bbfd6",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp10_AddrBookModel.java": "90c1428f292f9bd53836e7063eee61659ca0fe78",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp10_AddrBookModelProperties.java": "f37c3578bd4785cb9f365a0f1fc06c6e630c69f9",
+      "application/src/main/java/myApp/server/emp/Emp10_AddrBook.java": "3a0acc57231a3413731cc8be08cbe23a0fb71a22",
+      "application/src/main/java/myApp/server/emp/mapper/emp10_addr_book.xml": "4d11d518ead931b634635afd84dd29ebad572c9c"
+    },
+    "shared_links": [
+      "Emp57_Lookup_Insert"
+    ],
+    "recorded_at": "2026-10-20T14:16:55+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/G/G12-작업기록.md",
+    "history": [],
+    "id": "G12"
   }
 }
