@@ -12,6 +12,14 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprItemDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprItemDocRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprMyApproveCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprMyAuthCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprMyAuthRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprMyApproveRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprMyReferenceCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprMyReferenceRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprMyRequestCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprMyRequestRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes;
 import org.apache.ibatis.annotations.Mapper;
@@ -36,6 +44,18 @@ public interface AprApprMapper {
     List<AprDocSearchRes> selectByText2(@Param("c") AprDocSearchCond cond);
 
     List<AprIcsDocRes> selectByIcsClassTreeId(@Param("c") AprIcsDocListCond cond);
+
+    /** AS-IS apr01_appr.selectApprListByEmpId L1119 (G01 결재내역 조회) */
+    List<AprMyApproveRes> selectApprListByEmpId(@Param("c") AprMyApproveCond cond);
+
+    /** AS-IS apr01_appr.selectByRequestEmpId (G02 상신내역 조회) */
+    List<AprMyRequestRes> selectByRequestEmpId(@Param("c") AprMyRequestCond cond);
+
+    /** AS-IS apr01_appr.selectByReferenceEmpId (G03 참조내역 조회) */
+    List<AprMyReferenceRes> selectByReferenceEmpId(@Param("c") AprMyReferenceCond cond);
+
+    /** AS-IS apr01_appr.selectByAuthEmpId (G04 공람내역 조회) */
+    List<AprMyAuthRes> selectByAuthEmpId(@Param("c") AprMyAuthCond cond);
 
     /** AS-IS apr01_appr.selectByFundDocList (F06 펀드별 문서검색) */
     List<AprFundDocRes> selectByFundDocList(@Param("c") AprFundDocListCond cond);

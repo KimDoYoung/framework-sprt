@@ -16,5 +16,5 @@ export const Dcr01_Tab_DcrUser: React.FC = () => {
 
   // [E1] docList[등록].Insert (L30) → insertRow(): addInsertButton()이 단 [신규문서 작성] 버튼의 클릭 — Apr01_Grid_DocList의 [E3]에서 처리한다
   // retrieve() L36-51: dcr.Dcr01_ClassTree.selectByOrgIdRoleWrite (회사·조직·사원은 서버가 세션에서)
-  return <Dcr01_Tab_DcrManager loadTree={dcrApi.searchWriteTree} showInsert={showInsert} />;
+  return <Dcr01_Tab_DcrManager loadTree={dcrApi.searchWriteTree} showInsert={showInsert} padded />;
 };

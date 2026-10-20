@@ -232,6 +232,338 @@
                 , apr01_effect_date
     </select>
 
+    <!-- AS-IS apr01_appr.selectApprListByEmpId L1119 (IDMS-IC) — G01(Apr01_Tab_MyApproveList 결재내역 조회). SELECT *·모델 열 중 그리드가 쓰는 열만, 행을 정하는 조인·조건은 그대로.
+         내가 결재자이거나 내가 대결자인 사람의 결재 단계가 있는 문서. 분류 조건은 common.dcr_tree_down을 푼 것(typeCode '%'). 정렬은 원본에 없음 -->
+    <select id="selectApprListByEmpId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprMyApproveRes">
+        SELECT x.apr01_appr_id                                      AS appr_id
+             , x.apr01_status_cd                                    AS status_code
+             , x.apr01_status_nm                                    AS status_name
+             , x.apr01_reg_date                                     AS reg_date
+             , x.apr01_inout_nm                                     AS in_out_type_name
+             , x.apr01_title                                        AS title
+             , f_emp_kor_nm(x.apr01_reg_emp_id)                     AS reg_emp_name
+             , x.next_appr_nm                                       AS next_appr_name
+             , x.apr01_effect_date                                  AS effect_date
+             , x.dcr01_class_tree_nm                                AS class_tree_name
+             , CASE WHEN ( SELECT COUNT(*)
+                             FROM dcr10_mail_history
+                            WHERE dcr10_apr_id = x.apr01_appr_id ) > 0 THEN '송신'
+                    ELSE ''
+               END                                                  AS mail_yn
+             , x.my_approval_date                                   AS my_approval_date
+             , x.final_approval_date                                AS final_approval_date
+             , x.apr01_note                                         AS note
+          FROM (
+                SELECT a.apr01_appr_id, a.apr01_status_cd, a.apr01_reg_date, a.apr01_effect_date, a.apr01_title, a.apr01_note, a.apr01_reg_emp_id,
+                       c.dcr01_class_tree_id, c.dcr01_class_tree_nm,
+                       b.apr04_appr_date                                                            AS my_approval_date,
+                       f_cdnm('AprStatusCode', a.apr01_status_cd, #{c.companyId}, a.apr01_reg_date) AS apr01_status_nm,
+                       f_cdnm('AprInOutTypeCode', a.apr01_inout_cd, #{c.companyId}, f_sysdate())    AS apr01_inout_nm,
+                       CASE WHEN a.apr01_status_cd = '30'
+                            THEN ( SELECT apr04_appr_date
+                                     FROM apr04_appr_step
+                                    WHERE apr04_appr_id = a.apr01_appr_id
+                                      AND apr04_step_status_cd = '20'
+                                    ORDER BY LPAD(apr04_seq, 4, '0') DESC
+                                    LIMIT 1 )
+                            ELSE NULL
+                       END                                                                          AS final_approval_date,
+                       CASE WHEN a.apr01_status_cd IN ('00','10','20')
+                            THEN ( SELECT COALESCE(( SELECT CASE WHEN s.apr04_step_type_cd = '40' AND COALESCE(aa.apr07_stamp_yn,'false') = 'true'
+                                                                 THEN f_get_empTrans(d.apr10_second_emp_id, a.apr01_reg_date::date, 'title_nm')||' '||f_emp_kor_nm(d.apr10_second_emp_id)
+                                                                 ELSE f_get_empTrans(aa.apr07_target_emp_id, a.apr01_reg_date::date, 'title_nm')||' '||f_emp_kor_nm(aa.apr07_target_emp_id)
+                                                            END
+                                                       FROM apr07_alt_appr aa
+                                                      WHERE aa.apr07_target_emp_id = s.apr04_step_emp_id
+                                                        AND a.apr01_reg_date BETWEEN aa.apr07_start_date AND aa.apr07_close_date
+                                                      LIMIT 1 ),
+                                                    f_get_empTrans(s.apr04_step_emp_id, a.apr01_reg_date::date, 'title_nm')||' '||f_emp_kor_nm(s.apr04_step_emp_id))
+                                     FROM apr04_appr_step s
+                                    WHERE s.apr04_appr_id = a.apr01_appr_id
+                                      AND s.apr04_step_type_cd NOT IN ('30')
+                                      AND s.apr04_seq = ( SELECT MIN(s2.apr04_seq)
+                                                            FROM apr04_appr_step s2
+                                                           WHERE s2.apr04_appr_id = a.apr01_appr_id
+                                                             AND s2.apr04_step_type_cd NOT IN ('30')
+                                                             AND s2.apr04_step_status_cd = '10' )
+                                    LIMIT 1 )
+                            ELSE ''
+                       END                                                                          AS next_appr_nm
+                  FROM apr01_appr a
+                       INNER JOIN apr04_appr_step b ON a.apr01_appr_id = b.apr04_appr_id
+                       INNER JOIN dcr01_class_tree c ON a.apr01_class_tree_id = c.dcr01_class_tree_id
+                       LEFT OUTER JOIN apr10_stamp d ON a.apr01_stamp_id = d.apr10_stamp_id
+                 WHERE 1=1
+                   AND a.apr01_status_cd LIKE #{c.status}
+                   AND a.apr01_status_cd &lt;= (CASE WHEN #{c.status} = '%' THEN '90' ELSE '99' END)
+                   AND ( CASE WHEN #{c.dateType} = 'reg' THEN f_trunc(a.apr01_reg_date)
+                              ELSE f_trunc(a.apr01_effect_date) END
+                       ) BETWEEN f_trunc(#{c.startDate, jdbcType=DATE}) AND f_trunc(#{c.closeDate, jdbcType=DATE})
+                   AND ( b.apr04_step_emp_id IN ( SELECT CAST(#{c.empId} AS numeric)
+                                                  UNION ALL
+                                                  SELECT apr07_target_emp_id
+                                                    FROM apr07_alt_appr
+                                                   WHERE apr07_alt_emp_id = #{c.empId}
+                                                     AND f_sysdate() BETWEEN apr07_start_date AND apr07_close_date )
+                      OR b.apr04_appr_emp_id = #{c.empId} )
+               ) x
+         WHERE ((#{c.aprYn} = 'false' AND x.apr01_status_cd NOT IN ('30','40')) OR (#{c.aprYn} = 'true'))
+           AND UPPER(CONCAT(x.apr01_title, x.dcr01_class_tree_nm, x.apr01_note)) LIKE UPPER(#{c.searchText})
+        <if test="c.classTreeId != null">
+           AND x.dcr01_class_tree_id IN (
+            WITH RECURSIVE dcr_tree_down(dcr01_class_tree_id, dcr01_class_tree_nm, dcr01_parent_tree_id, depth, path, cycle) AS (
+                SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, 1,
+                       ARRAY[CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id],
+                       false
+                  FROM dcr01_class_tree a
+                 WHERE a.dcr01_company_id = #{c.companyId}
+                   AND a.dcr01_class_tree_id = #{c.classTreeId}
+                   AND a.dcr01_use_yn = 'true'
+                   AND a.dcr01_type_cd LIKE #{c.typeCode}
+                UNION ALL
+                SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, b.depth + 1,
+                       array_append(b.path, CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || LPAD(CAST(a.dcr01_class_tree_id AS varchar), 15, '0')),
+                       a.dcr01_class_tree_nm = any(b.path)
+                  FROM dcr01_class_tree a
+                       INNER JOIN dcr_tree_down b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+                 WHERE a.dcr01_company_id = #{c.companyId}
+                   AND a.dcr01_use_yn = 'true'
+                   AND a.dcr01_type_cd LIKE #{c.typeCode}
+                   AND NOT cycle
+            )
+            SELECT a.dcr01_class_tree_id FROM dcr_tree_down a )
+        </if>
+    </select>
+
+    <!-- AS-IS apr01_appr.selectByRequestEmpId L935 (IDMS-IC) — G02(Apr01_Tab_MyRequestList 상신내역 조회). SELECT *·모델 열 중 그리드가 쓰는 열만, 행을 정하는 조인·조건·정렬은 그대로.
+         emp00 CTE(common.emp00_trans_info, 회사 조건)는 DB 뷰 emp00_trans_info(emp00_all_title = 0)로 — 상신자의 상신일 기준 발령 구간을 잇는 용도.
+         분류 조건은 common.dcr_tree_down을 푼 것(typeCode '%') -->
+    <select id="selectByRequestEmpId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprMyRequestRes">
+        SELECT apr01_appr.apr01_appr_id                                                   AS appr_id
+             , apr01_appr.apr01_status_cd                                                 AS status_code
+             , apr01_appr.apr01_reg_date                                                  AS reg_date
+             , apr01_appr.apr01_effect_date                                               AS effect_date
+             , f_cdnm('AprStatusCode', apr01_appr.apr01_status_cd, emp00_company_id, apr01_appr.apr01_reg_date) AS status_name
+             , dcr01_class_tree_nm                                                        AS class_tree_name
+             , f_cdnm('AprInOutTypeCode', apr01_appr.apr01_inout_cd, emp00_company_id, f_sysdate())             AS in_out_type_name
+             , apr01_appr.apr01_title                                                     AS title
+             , f_cdnm('StatusCode', ics40_status_cd, ics40_company_id, ics40_reg_date)    AS preconfirm_status_name
+             , CASE WHEN ics40_confirm_msg IS NOT NULL THEN '있음'
+                    WHEN ics40_reg_emp_msg IS NOT NULL THEN '있음'
+                    ELSE ''
+               END                                                                        AS preconfirm_msg_yn_str
+             , CASE WHEN ( SELECT COUNT(*)
+                             FROM dcr10_mail_history
+                            WHERE dcr10_apr_id = apr01_appr.apr01_appr_id ) > 0 THEN '송신'
+                    ELSE ''
+               END                                                                        AS mail_yn
+             , f_apr_get_title_nm(
+                   ( SELECT apr04_step_emp_id
+                       FROM apr04_appr_step
+                      WHERE apr04_appr_id = apr01_appr.apr01_appr_id
+                        AND apr04_step_type_cd IN ('00','10','20')
+                        AND apr04_appr_date = ( SELECT MAX(apr04_appr_date)
+                                                  FROM apr04_appr_step
+                                                 WHERE apr04_appr_id = apr01_appr.apr01_appr_id )
+                      LIMIT 1 ),
+                   ( SELECT apr04_appr_date
+                       FROM apr04_appr_step
+                      WHERE apr04_appr_id = apr01_appr.apr01_appr_id
+                        AND apr04_step_type_cd IN ('00','10','20')
+                        AND apr04_appr_date = ( SELECT MAX(apr04_appr_date)
+                                                  FROM apr04_appr_step
+                                                 WHERE apr04_appr_id = apr01_appr.apr01_appr_id )
+                      LIMIT 1 )
+               )                                                                          AS recent_approval_name
+             , ( SELECT apr04_appr_date
+                   FROM apr04_appr_step
+                  WHERE apr04_appr_id = apr01_appr.apr01_appr_id
+                    AND apr04_step_type_cd IN ('00','10','20')
+                    AND apr04_appr_date = ( SELECT MAX(apr04_appr_date)
+                                              FROM apr04_appr_step
+                                             WHERE apr04_appr_id = apr01_appr.apr01_appr_id )
+                  LIMIT 1 )                                                               AS recent_approval_date
+             , apr01_appr.apr01_note                                                      AS note
+          FROM apr01_appr
+               INNER JOIN dcr01_class_tree ON apr01_class_tree_id = dcr01_class_tree_id
+               INNER JOIN emp00_trans_info ON apr01_reg_emp_id = emp00_person_id
+               LEFT OUTER JOIN apr10_stamp ON apr01_stamp_id = apr10_stamp_id
+               LEFT OUTER JOIN ics40_dcr_preconfirm ON apr01_appr_id = ics40_appr_id
+         WHERE 1=1
+           AND emp00_all_title = 0
+           AND emp00_company_id = #{c.companyId}
+           AND apr01_reg_date BETWEEN emp00_trans_date AND COALESCE(emp00_close_date, to_date('29991231','yyyyMMdd'))
+           AND apr01_reg_emp_id = #{c.regEmpId}
+           AND apr01_status_cd LIKE #{c.status}
+           AND apr01_reg_date BETWEEN #{c.startDate, jdbcType=DATE} AND #{c.closeDate, jdbcType=DATE}
+           AND ((#{c.aprYn} = 'false' AND apr01_status_cd NOT IN ('30','40')) OR (#{c.aprYn} = 'true'))
+           AND ( UPPER(CONCAT(apr01_title)) LIKE UPPER(#{c.searchText})
+              OR UPPER(CONCAT(dcr01_class_tree_nm)) LIKE UPPER(#{c.searchText})
+              OR UPPER(CONCAT(apr01_note)) LIKE UPPER(#{c.searchText}) )
+        <if test="c.classTreeId != null">
+           AND dcr01_class_tree_id IN (
+            WITH RECURSIVE dcr_tree_down(dcr01_class_tree_id, dcr01_class_tree_nm, dcr01_parent_tree_id, depth, path, cycle) AS (
+                SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, 1,
+                       ARRAY[CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id],
+                       false
+                  FROM dcr01_class_tree a
+                 WHERE a.dcr01_company_id = #{c.companyId}
+                   AND a.dcr01_class_tree_id = #{c.classTreeId}
+                   AND a.dcr01_use_yn = 'true'
+                   AND a.dcr01_type_cd LIKE #{c.typeCode}
+                UNION ALL
+                SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, b.depth + 1,
+                       array_append(b.path, CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || LPAD(CAST(a.dcr01_class_tree_id AS varchar), 15, '0')),
+                       a.dcr01_class_tree_nm = any(b.path)
+                  FROM dcr01_class_tree a
+                       INNER JOIN dcr_tree_down b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+                 WHERE a.dcr01_company_id = #{c.companyId}
+                   AND a.dcr01_use_yn = 'true'
+                   AND a.dcr01_type_cd LIKE #{c.typeCode}
+                   AND NOT cycle
+            )
+            SELECT a.dcr01_class_tree_id FROM dcr_tree_down a )
+        </if>
+         ORDER BY apr01_reg_date DESC, apr01_appr_id DESC
+    </select>
+
+    <!-- 문서분류 하위 전체(common.dcr_tree_down을 푼 것, typeCode '%') — G03·G04 -->
+    <sql id="conditionClassTreeDown">
+        <if test="c.classTreeId != null">
+           AND dcr01_class_tree_id IN (
+            WITH RECURSIVE dcr_tree_down(dcr01_class_tree_id, dcr01_class_tree_nm, dcr01_parent_tree_id, depth, path, cycle) AS (
+                SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, 1,
+                       ARRAY[CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id],
+                       false
+                  FROM dcr01_class_tree a
+                 WHERE a.dcr01_company_id = #{c.companyId}
+                   AND a.dcr01_class_tree_id = #{c.classTreeId}
+                   AND a.dcr01_use_yn = 'true'
+                   AND a.dcr01_type_cd LIKE #{c.typeCode}
+                UNION ALL
+                SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, b.depth + 1,
+                       array_append(b.path, CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || LPAD(CAST(a.dcr01_class_tree_id AS varchar), 15, '0')),
+                       a.dcr01_class_tree_nm = any(b.path)
+                  FROM dcr01_class_tree a
+                       INNER JOIN dcr_tree_down b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+                 WHERE a.dcr01_company_id = #{c.companyId}
+                   AND a.dcr01_use_yn = 'true'
+                   AND a.dcr01_type_cd LIKE #{c.typeCode}
+                   AND NOT cycle
+            )
+            SELECT a.dcr01_class_tree_id FROM dcr_tree_down a )
+        </if>
+    </sql>
+
+    <!-- 최근 결재 단계(00·10·20 중 가장 늦은 결재일) — G03·G04 -->
+    <sql id="recentApproval">
+        f_apr_get_title_nm(
+                   ( SELECT apr04_step_emp_id
+                       FROM apr04_appr_step
+                      WHERE apr04_appr_id = apr01_appr.apr01_appr_id
+                        AND apr04_step_type_cd IN ('00','10','20')
+                        AND apr04_appr_date = ( SELECT MAX(apr04_appr_date)
+                                                  FROM apr04_appr_step
+                                                 WHERE apr04_appr_id = apr01_appr.apr01_appr_id )
+                      LIMIT 1 ),
+                   ( SELECT apr04_appr_date
+                       FROM apr04_appr_step
+                      WHERE apr04_appr_id = apr01_appr.apr01_appr_id
+                        AND apr04_step_type_cd IN ('00','10','20')
+                        AND apr04_appr_date = ( SELECT MAX(apr04_appr_date)
+                                                  FROM apr04_appr_step
+                                                 WHERE apr04_appr_id = apr01_appr.apr01_appr_id )
+                      LIMIT 1 )
+               ) AS recent_approval_name
+             , ( SELECT apr04_appr_date
+                   FROM apr04_appr_step
+                  WHERE apr04_appr_id = apr01_appr.apr01_appr_id
+                    AND apr04_step_type_cd IN ('00','10','20')
+                    AND apr04_appr_date = ( SELECT MAX(apr04_appr_date)
+                                              FROM apr04_appr_step
+                                             WHERE apr04_appr_id = apr01_appr.apr01_appr_id )
+                  LIMIT 1 ) AS recent_approval_date
+    </sql>
+
+    <!-- AS-IS apr01_appr.selectByReferenceEmpId (IDMS-IC) — G03(Apr01_Tab_MyReferenceList 참조내역 조회). SELECT *·모델 열 중 그리드가 쓰는 열만, 행을 정하는 조인·조건·정렬은 그대로.
+         emp00 CTE(common.emp00_trans_info, 원본은 회사 조건 분기가 빠져 있음)는 DB 뷰 emp00_trans_info(emp00_all_title = 0)로 — 상신자의 상신일 기준 발령 구간을 잇는 용도 -->
+    <select id="selectByReferenceEmpId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprMyReferenceRes">
+        SELECT apr01_appr.apr01_appr_id                                                   AS appr_id
+             , apr01_appr.apr01_status_cd                                                 AS status_code
+             , apr01_appr.apr01_reg_date                                                  AS reg_date
+             , apr01_appr.apr01_effect_date                                               AS effect_date
+             , f_cdnm('AprStatusCode', apr01_appr.apr01_status_cd, emp00_company_id, apr01_appr.apr01_reg_date) AS status_name
+             , dcr01_class_tree_nm                                                        AS class_tree_name
+             , f_cdnm('AprInOutTypeCode', apr01_appr.apr01_inout_cd, emp00_company_id, f_sysdate())             AS in_out_type_name
+             , apr01_appr.apr01_title                                                     AS title
+             , CASE WHEN ( SELECT COUNT(*)
+                             FROM dcr10_mail_history
+                            WHERE dcr10_apr_id = apr01_appr.apr01_appr_id ) > 0 THEN '송신'
+                    ELSE ''
+               END                                                                        AS mail_yn
+             , f_emp_kor_nm(apr01_appr.apr01_reg_emp_id)                                  AS reg_emp_name
+             , <include refid="recentApproval"/>
+             , apr01_appr.apr01_note                                                      AS note
+          FROM apr01_appr
+               INNER JOIN dcr01_class_tree ON apr01_class_tree_id = dcr01_class_tree_id
+               INNER JOIN apr04_appr_step ON apr04_appr_id = apr01_appr.apr01_appr_id AND apr04_step_emp_id = #{c.regEmpId} AND apr04_step_type_cd = '30'
+               INNER JOIN emp00_trans_info ON apr01_reg_emp_id = emp00_person_id
+               LEFT OUTER JOIN emp25_mypage_notice ON emp25_person_id = #{c.regEmpId}
+               LEFT OUTER JOIN apr10_stamp ON apr01_stamp_id = apr10_stamp_id
+         WHERE 1=1
+           AND emp00_all_title = 0
+           AND emp00_company_id = #{c.companyId}
+           AND apr01_status_cd != '99'
+           AND apr01_status_cd LIKE #{c.status}
+           AND ( (COALESCE(emp25_appr_yn, 'false') = 'true' AND apr04_step_emp_id = apr04_step_emp_id)
+              OR (COALESCE(emp25_appr_yn, 'false') = 'false' AND apr04_step_emp_id = #{c.regEmpId} AND apr04_step_type_cd = '30') )
+           AND apr01_reg_date BETWEEN emp00_trans_date AND COALESCE(emp00_close_date, to_date('99991231','yyyyMMdd'))
+           AND apr01_reg_date BETWEEN #{c.startDate, jdbcType=DATE} AND #{c.closeDate, jdbcType=DATE}
+           AND ((#{c.aprYn} = 'false' AND apr01_status_cd NOT IN ('30','40')) OR (#{c.aprYn} = 'true'))
+           AND UPPER(CONCAT(apr01_title, dcr01_class_tree_nm, apr01_note)) LIKE UPPER(#{c.searchText})
+        <include refid="conditionClassTreeDown"/>
+         ORDER BY apr01_reg_date DESC, apr01_appr_id DESC
+    </select>
+
+    <!-- AS-IS apr01_appr.selectByAuthEmpId (IDMS-IC) — G04(Apr01_Tab_MyAuthList 공람내역 조회). 조인·조건·정렬은 그대로(apr04_appr_step을 조건 없이 조인해 같은 문서가 결재 단계마다 한 행씩 나온다 — 원본도 같음).
+         emp00 CTE는 G03과 같이 DB 뷰 emp00_trans_info로. 폐기문서 UNION은 원본에서도 주석 처리되어 있음 -->
+    <select id="selectByAuthEmpId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprMyAuthRes">
+        SELECT apr01_appr.apr01_appr_id                                                   AS appr_id
+             , apr01_appr.apr01_status_cd                                                 AS status_code
+             , apr01_appr.apr01_reg_date                                                  AS reg_date
+             , apr01_appr.apr01_effect_date                                               AS effect_date
+             , f_cdnm('AprStatusCode', apr01_appr.apr01_status_cd, emp00_company_id, apr01_appr.apr01_reg_date) AS status_name
+             , dcr01_class_tree_nm                                                        AS class_tree_name
+             , f_cdnm('AprInOutTypeCode', apr01_appr.apr01_inout_cd, emp00_company_id, f_sysdate())             AS in_out_type_name
+             , apr01_appr.apr01_title                                                     AS title
+             , CASE WHEN ( SELECT COUNT(*)
+                             FROM dcr10_mail_history
+                            WHERE dcr10_apr_id = apr01_appr.apr01_appr_id ) > 0 THEN '송신'
+                    ELSE ''
+               END                                                                        AS mail_yn
+             , <include refid="recentApproval"/>
+             , apr01_appr.apr01_note                                                      AS note
+          FROM apr01_appr
+               INNER JOIN apr13_person_auth ON apr01_appr_id = apr13_appr_id
+               INNER JOIN dcr01_class_tree ON apr01_class_tree_id = dcr01_class_tree_id
+               INNER JOIN apr04_appr_step ON apr04_appr_id = apr01_appr_id
+               INNER JOIN emp00_trans_info ON apr01_reg_emp_id = emp00_person_id
+               LEFT OUTER JOIN emp25_mypage_notice ON emp25_person_id = #{c.regEmpId}
+               LEFT OUTER JOIN apr10_stamp ON apr01_stamp_id = apr10_stamp_id
+         WHERE 1=1
+           AND emp00_all_title = 0
+           AND emp00_company_id = #{c.companyId}
+           AND apr13_person_id = #{c.regEmpId}
+           AND apr01_status_cd != '99'
+           AND apr01_status_cd LIKE #{c.status}
+           AND apr01_reg_date BETWEEN emp00_trans_date AND COALESCE(emp00_close_date, to_date('99991231','yyyyMMdd'))
+           AND apr01_reg_date BETWEEN #{c.startDate, jdbcType=DATE} AND #{c.closeDate, jdbcType=DATE}
+           AND apr01_status_cd IN ('30','40')
+           AND UPPER(CONCAT(apr01_title, dcr01_class_tree_nm, apr01_note)) LIKE UPPER(#{c.searchText})
+        <include refid="conditionClassTreeDown"/>
+         ORDER BY apr01_reg_date DESC, apr01_appr_id DESC
+    </select>
+
     <!-- AS-IS apr01_appr.selectByText2 L357 (IDMS-IC) — F05(Dcr00_Tab_DocList 통합 문서검색). SELECT *·모델 열 중 그리드가 쓰는 열만, 행을 정하는 조인·조건·정렬은 그대로.
          admin == 'false' 분기(조직·문서권한·Link 조건)와 관리자 분기(Link 제외만) 둘 다 옮김. 분류 조건은 common.dcr_tree_down을 푼 것(typeCode '%').
          collate "ko_KR.utf8" → "ko-KR-x-icu"(05 §6) -->

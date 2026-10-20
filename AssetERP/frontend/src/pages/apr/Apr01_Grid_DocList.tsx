@@ -31,9 +31,11 @@ interface Props {
   admin?: boolean;
   /** addInsertButton() L141-143: [신규문서 작성] 버튼 표시 (S1 고객사는 숨김) */
   showInsert: boolean;
+  /** 안쪽 여백(padding 10·gap 8) — 호출한 화면이 켠다 */
+  padded?: boolean;
 }
 
-export const Apr01_Grid_DocList: React.FC<Props> = ({ node, showInsert }) => {
+export const Apr01_Grid_DocList: React.FC<Props> = ({ node, showInsert, padded }) => {
   // [E0] 화면 열림 (생성자 L69-71) → init() L77-139, settings() L145-176
   // settings() L145-176: 등록기간 = 올해 1월 1일 ~ 오늘(LoginUser.getToday())
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().startOf('year'));
@@ -143,7 +145,7 @@ export const Apr01_Grid_DocList: React.FC<Props> = ({ node, showInsert }) => {
   ], []);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', ...(padded && { boxSizing: 'border-box', padding: 10, gap: 8 }) }}>
       {/* [E4] searchTextField.KeyPress [Enter] (L156)·[E5] retrieveButton[검색].Select (L164) → retrieve() */}
       <SearchBar onSearch={() => void retrieve()} searchText="검색" loading={loading} disabled={!enabled}
         extra={(

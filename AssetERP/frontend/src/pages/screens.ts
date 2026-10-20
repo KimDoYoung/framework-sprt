@@ -16,6 +16,10 @@ import { Ics01_Tab_ClassTree } from './ics/Ics01_Tab_ClassTree';
 import { Ics01_Tab_ApprList } from './ics/Ics01_Tab_ApprList';
 import { Apr90_Tab_DisposalAppr } from './apr/Apr90_Tab_DisposalAppr';
 import { Apr90_Tab_DisposalList } from './apr/Apr90_Tab_DisposalList';
+import { Apr01_Tab_MyApproveList } from './apr/Apr01_Tab_MyApproveList';
+import { Apr01_Tab_MyRequestList } from './apr/Apr01_Tab_MyRequestList';
+import { Apr01_Tab_MyReferenceList } from './apr/Apr01_Tab_MyReferenceList';
+import { Apr01_Tab_MyAuthList } from './apr/Apr01_Tab_MyAuthList';
 import { Dcr00_Tab_DocList } from './dcr/Dcr00_Tab_DocList';
 import { Dcr00_Tab_FileList } from './dcr/Dcr00_Tab_FileList';
 import { Fbx01_Tab_Document } from './fbx/Fbx01_Tab_Document';
@@ -122,6 +126,10 @@ export const SCREENS: Record<string, React.FC> = {
   Apr01_Tab_ItemDocument, // F07 1단계 (메뉴 #1137 (X)종목별 문서검색 + Apr01_Grid_ItemDocList. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Apr01_Tab_FundDocument, // F06 1단계 (메뉴 #1005 + Apr01_Grid_FundDocList. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Apr90_Tab_DisposalAppr, // F10 1단계 (메뉴 #1490. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
+  Apr01_Tab_MyApproveList, // G01 1단계 (메뉴 #1018. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기가 여는 Dcr10_Lookup_MailSender는 다음 단계)
+  Apr01_Tab_MyRequestList, // G02 1단계 (메뉴 #1019. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·신청의 Ics40_Edit_DcrPreconfirm·준감인의견의 Ics40_Edit_Msg·메일보내기가 여는 Dcr10_Lookup_MailSender는 다음 단계)
+  Apr01_Tab_MyReferenceList, // G03 1단계 (메뉴 #1093. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기가 여는 Dcr10_Lookup_MailSender는 다음 단계)
+  Apr01_Tab_MyAuthList, // G04 1단계 (메뉴 #1428. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기가 여는 Dcr10_Lookup_MailSender는 다음 단계)
   Apr90_Tab_DisposalList, // F04 1단계 (메뉴 #1443. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Ics01_Tab_ClassTree, // E01 (기한 설정 Sch03_Lookup_Ics는 다른 도메인이라 별도 ID)
   Ics01_Tab_IcsFileUpload, // E02

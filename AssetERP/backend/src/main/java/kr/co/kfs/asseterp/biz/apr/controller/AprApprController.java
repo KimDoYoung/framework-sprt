@@ -6,6 +6,10 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprDocSearchRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprFundDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprItemDocRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprMyApproveRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprMyAuthRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprMyReferenceRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprMyRequestRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes;
 import kr.co.kfs.asseterp.biz.apr.service.AprApprService;
@@ -89,6 +93,106 @@ public class AprApprController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(body);
+    }
+
+    /** AS-IS apr.Apr01_Appr.selectApprListByEmpId (Apr01_Tab_MyApproveList, G01 결재내역 조회). dateType은 reg(상신일)/effect(시행일), 결재상태는 비면 전체 */
+    @GetMapping("/my-approve")
+    public ApiResponse<List<AprMyApproveRes>> searchMyApprove(@AuthenticationPrincipal UserPrincipal principal,
+                                                              @RequestParam(required = false) Long classTreeId,
+                                                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                              @RequestParam(required = false) String statusCode,
+                                                              @RequestParam(defaultValue = "true") boolean aprYn,
+                                                              @RequestParam(defaultValue = "reg") String dateType,
+                                                              @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchMyApprove(principal, classTreeId, startDate, closeDate, statusCode, aprYn, dateType, searchText));
+    }
+
+    /** 출력/다운로드 (AS-IS sys.Sys99_Print.insertRdApproveList + RD 리포트 Apr01_Rd_MyApproveList → 조회 결과 xlsx) */
+    @GetMapping("/my-approve/excel")
+    public ResponseEntity<byte[]> downloadMyApprove(@AuthenticationPrincipal UserPrincipal principal,
+                                                    @RequestParam(required = false) Long classTreeId,
+                                                    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                    @RequestParam(required = false) String statusCode,
+                                                    @RequestParam(defaultValue = "true") boolean aprYn,
+                                                    @RequestParam(defaultValue = "reg") String dateType,
+                                                    @RequestParam(defaultValue = "") String searchText) {
+        byte[] body = service.downloadMyApprove(principal, classTreeId, startDate, closeDate, statusCode, aprYn, dateType, searchText);
+        String fileName = "결재내역 조회(" + startDate + " ~ " + closeDate + ").xlsx";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(body);
+    }
+
+    /** AS-IS apr.Apr01_Appr.selectByRequestEmpId (Apr01_Tab_MyRequestList, G02 상신내역 조회). 결재상태는 비면 전체 */
+    @GetMapping("/my-request")
+    public ApiResponse<List<AprMyRequestRes>> searchMyRequest(@AuthenticationPrincipal UserPrincipal principal,
+                                                              @RequestParam(required = false) Long classTreeId,
+                                                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                              @RequestParam(required = false) String statusCode,
+                                                              @RequestParam(defaultValue = "true") boolean aprYn,
+                                                              @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchMyRequest(principal, classTreeId, startDate, closeDate, statusCode, aprYn, searchText));
+    }
+
+    /** 출력/다운로드 (AS-IS sys.Sys99_Print.insertRdRequestList + RD 리포트 Apr01_Rd_MyRequestList → 조회 결과 xlsx) */
+    @GetMapping("/my-request/excel")
+    public ResponseEntity<byte[]> downloadMyRequest(@AuthenticationPrincipal UserPrincipal principal,
+                                                    @RequestParam(required = false) Long classTreeId,
+                                                    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                    @RequestParam(required = false) String statusCode,
+                                                    @RequestParam(defaultValue = "true") boolean aprYn,
+                                                    @RequestParam(defaultValue = "") String searchText) {
+        byte[] body = service.downloadMyRequest(principal, classTreeId, startDate, closeDate, statusCode, aprYn, searchText);
+        String fileName = "상신내역 조회(" + startDate + " ~ " + closeDate + ").xlsx";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(body);
+    }
+
+    /** AS-IS apr.Apr01_Appr.selectByReferenceEmpId (Apr01_Tab_MyReferenceList, G03 참조내역 조회). 결재상태는 비면 전체 */
+    @GetMapping("/my-reference")
+    public ApiResponse<List<AprMyReferenceRes>> searchMyReference(@AuthenticationPrincipal UserPrincipal principal,
+                                                                  @RequestParam(required = false) Long classTreeId,
+                                                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                                  @RequestParam(required = false) String statusCode,
+                                                                  @RequestParam(defaultValue = "true") boolean aprYn,
+                                                                  @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchMyReference(principal, classTreeId, startDate, closeDate, statusCode, aprYn, searchText));
+    }
+
+    /** 출력/다운로드 (AS-IS sys.Sys99_Print.insertRdReferenceList + RD 리포트 Apr01_Rd_MyReferenceList → 조회 결과 xlsx) */
+    @GetMapping("/my-reference/excel")
+    public ResponseEntity<byte[]> downloadMyReference(@AuthenticationPrincipal UserPrincipal principal,
+                                                      @RequestParam(required = false) Long classTreeId,
+                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                      @RequestParam(required = false) String statusCode,
+                                                      @RequestParam(defaultValue = "true") boolean aprYn,
+                                                      @RequestParam(defaultValue = "") String searchText) {
+        byte[] body = service.downloadMyReference(principal, classTreeId, startDate, closeDate, statusCode, aprYn, searchText);
+        String fileName = "참조내역 조회(" + startDate + " ~ " + closeDate + ").xlsx";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(body);
+    }
+
+    /** AS-IS apr.Apr01_Appr.selectByAuthEmpId (Apr01_Tab_MyAuthList, G04 공람내역 조회). 결재상태는 비면 전체 */
+    @GetMapping("/my-auth")
+    public ApiResponse<List<AprMyAuthRes>> searchMyAuth(@AuthenticationPrincipal UserPrincipal principal,
+                                                        @RequestParam(required = false) Long classTreeId,
+                                                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                        @RequestParam(required = false) String statusCode,
+                                                        @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchMyAuth(principal, classTreeId, startDate, closeDate, statusCode, searchText));
     }
 
     /** AS-IS apr.Apr03_RelateFund.selectByIcsClassTreeId (Ics01_Grid_ApprList, F03 법규별 문서작성 목록) */

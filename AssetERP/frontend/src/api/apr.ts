@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprRelateAdv, AprRelateFund, AprStamp } from '../types/apr';
+import { AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprRelateAdv, AprRelateFund, AprStamp } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -12,6 +12,50 @@ export interface DocTextParams {
   receiveName: string;
   statusCode: string;
   inoutCode: string;
+}
+
+/** 참조내역 조회(G03) 조건. statusCode '%'가 전체, aprYn 완료/반려건 포함 */
+export type MyReferenceParams = MyRequestParams;
+
+/** 공람내역 조회(G04) 조건. statusCode '%'가 전체 (완료·반려만 보는 조건은 서버 SQL 고정) */
+export interface MyAuthParams {
+  classTreeId?: number;
+  startDate: string;
+  closeDate: string;
+  statusCode: string;
+  searchText: string;
+}
+
+/** 상신내역 조회(G02) 조건. statusCode '%'가 전체, aprYn 완료/반려건 포함 */
+export interface MyRequestParams {
+  classTreeId?: number;
+  startDate: string;
+  closeDate: string;
+  statusCode: string;
+  aprYn: boolean;
+  searchText: string;
+}
+
+/** 결재내역 조회(G01) 조건. dateType reg(상신일)/effect(시행일), statusCode '%'가 전체, aprYn 완료/반려건 포함 */
+export interface MyApproveParams {
+  classTreeId?: number;
+  startDate: string;
+  closeDate: string;
+  statusCode: string;
+  aprYn: boolean;
+  dateType: 'reg' | 'effect';
+  searchText: string;
+}
+
+function saveBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export const aprApi = {
@@ -83,6 +127,60 @@ export const aprApi = {
     } catch (err) {
       throw await readBlobError(err);
     }
+  },
+
+  /** AS-IS apr.Apr01_Appr.selectApprListByEmpId (Apr01_Tab_MyApproveList, G01): 내가 결재자(대결 포함)인 문서. 검색어는 서버가 %…%로 */
+  searchMyApprove: async (params: MyApproveParams): Promise<AprMyApprove[]> => {
+    const res = await apiClient.get<ApiResponse<AprMyApprove[]>>('v1/apr/apprs/my-approve', { params });
+    return res.data.data ?? [];
+  },
+
+  /** 출력/다운로드 (AS-IS sys.Sys99_Print.insertRdApproveList + RD 리포트 Apr01_Rd_MyApproveList → xlsx) — 조회 조건 그대로, 브라우저 저장 */
+  downloadMyApproveExcel: async (params: MyApproveParams, fileName: string): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/apr/apprs/my-approve/excel', { params, responseType: 'blob' });
+      saveBlob(res.data, fileName);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** AS-IS apr.Apr01_Appr.selectByRequestEmpId (Apr01_Tab_MyRequestList, G02): 내가 상신한 문서. 검색어는 서버가 %…%로 */
+  searchMyRequest: async (params: MyRequestParams): Promise<AprMyRequest[]> => {
+    const res = await apiClient.get<ApiResponse<AprMyRequest[]>>('v1/apr/apprs/my-request', { params });
+    return res.data.data ?? [];
+  },
+
+  /** 출력/다운로드 (AS-IS sys.Sys99_Print.insertRdRequestList + RD 리포트 Apr01_Rd_MyRequestList → xlsx) — 조회 조건 그대로, 브라우저 저장 */
+  downloadMyRequestExcel: async (params: MyRequestParams, fileName: string): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/apr/apprs/my-request/excel', { params, responseType: 'blob' });
+      saveBlob(res.data, fileName);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** AS-IS apr.Apr01_Appr.selectByReferenceEmpId (Apr01_Tab_MyReferenceList, G03): 내가 참조자인 문서. 검색어는 서버가 %…%로 */
+  searchMyReference: async (params: MyReferenceParams): Promise<AprMyReference[]> => {
+    const res = await apiClient.get<ApiResponse<AprMyReference[]>>('v1/apr/apprs/my-reference', { params });
+    return res.data.data ?? [];
+  },
+
+  /** 출력/다운로드 (AS-IS sys.Sys99_Print.insertRdReferenceList + RD 리포트 Apr01_Rd_MyReferenceList → xlsx) — 조회 조건 그대로, 브라우저 저장 */
+  downloadMyReferenceExcel: async (params: MyReferenceParams, fileName: string): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/apr/apprs/my-reference/excel', { params, responseType: 'blob' });
+      saveBlob(res.data, fileName);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** AS-IS apr.Apr01_Appr.selectByAuthEmpId (Apr01_Tab_MyAuthList, G04): 내가 공람 대상인 완료·반려 문서. 검색어는 서버가 %…%로 */
+  searchMyAuth: async (params: MyAuthParams): Promise<AprMyAuth[]> => {
+    const res = await apiClient.get<ApiResponse<AprMyAuth[]>>('v1/apr/apprs/my-auth', { params });
+    return res.data.data ?? [];
   },
 
   /** AS-IS apr.Apr01_Appr.selectByFundDocList (Apr01_Grid_FundDocList, F06): 고른 펀드의 문서 목록 */

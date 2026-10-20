@@ -160,3 +160,87 @@ export interface AprDownloadHistory {
   title?: string | null;
   personName?: string | null;
 }
+
+/** 상신내역 조회 목록 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Tab_MyRequestList 그리드 열, G02). title은 HTML(폐기 문서는 빨간 [폐기]) */
+export interface AprMyRequest {
+  apprId: number;
+  /** 완료 '30' 만 [신청]·[메일보내기] 가능 */
+  statusCode?: string | null;
+  regDate?: string | null;
+  effectDate?: string | null;
+  statusName?: string | null;
+  classTreeName?: string | null;
+  inOutTypeName?: string | null;
+  title?: string | null;
+  preconfirmStatusName?: string | null;
+  /** '있음' 또는 '' */
+  preconfirmMsgYnStr?: string | null;
+  /** '송신' 또는 '' */
+  mailYn?: string | null;
+  recentApprovalName?: string | null;
+  recentApprovalDate?: string | null;
+  note?: string | null;
+}
+
+/** 결재내역 조회 목록 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Tab_MyApproveList 그리드 열, G01). title은 HTML(폐기 문서는 빨간 [폐기]) */
+export interface AprMyApprove {
+  apprId: number;
+  /** 화면에서만 붙이는 행 키 — AS-IS SQL이 같은 문서를 결재 단계마다 한 행씩 돌려줘 apprId가 겹칠 수 있다(대결·여러 단계) */
+  rowKey?: string;
+  /** 완료 '30' 만 [메일보내기] 가능 */
+  statusCode?: string | null;
+  statusName?: string | null;
+  regDate?: string | null;
+  inOutTypeName?: string | null;
+  title?: string | null;
+  regEmpName?: string | null;
+  nextApprName?: string | null;
+  effectDate?: string | null;
+  classTreeName?: string | null;
+  /** '송신' 또는 '' */
+  mailYn?: string | null;
+  myApprovalDate?: string | null;
+  finalApprovalDate?: string | null;
+  note?: string | null;
+}
+
+/** 참조내역 조회 목록 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Tab_MyReferenceList 그리드 열, G03). title은 HTML(폐기 문서는 빨간 [폐기]) */
+export interface AprMyReference {
+  apprId: number;
+  /** 화면에서만 붙이는 행 키 — AS-IS SQL이 같은 문서를 한 행 이상 돌려줄 수 있다 */
+  rowKey?: string;
+  /** 완료 '30' 만 [메일보내기] 가능 */
+  statusCode?: string | null;
+  regDate?: string | null;
+  effectDate?: string | null;
+  statusName?: string | null;
+  classTreeName?: string | null;
+  inOutTypeName?: string | null;
+  title?: string | null;
+  /** '송신' 또는 '' */
+  mailYn?: string | null;
+  regEmpName?: string | null;
+  recentApprovalName?: string | null;
+  recentApprovalDate?: string | null;
+  note?: string | null;
+}
+
+/** 공람내역 조회 목록 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Tab_MyAuthList 그리드 열, G04). title은 HTML(폐기 문서는 빨간 [폐기]) */
+export interface AprMyAuth {
+  apprId: number;
+  /** 화면에서만 붙이는 행 키 — AS-IS SQL이 같은 문서를 결재 단계마다 한 행씩 돌려줘 apprId가 겹친다 */
+  rowKey?: string;
+  /** 완료 '30' 만 [메일보내기] 가능 */
+  statusCode?: string | null;
+  regDate?: string | null;
+  effectDate?: string | null;
+  statusName?: string | null;
+  classTreeName?: string | null;
+  inOutTypeName?: string | null;
+  title?: string | null;
+  /** '송신' 또는 '' */
+  mailYn?: string | null;
+  recentApprovalName?: string | null;
+  recentApprovalDate?: string | null;
+  note?: string | null;
+}

@@ -22,9 +22,11 @@ interface Props {
   admin?: boolean;
   /** S1 고객사는 문서작성 금지 → [신규문서 작성]을 숨긴다 (DcrUser 생성자 L29-31) */
   showInsert: boolean;
+  /** 문서 목록 영역에 안쪽 여백(padding 10·gap 8, Dcr01_Tab_DcrWrite와 같은 값) — #1002만 켠다 */
+  padded?: boolean;
 }
 
-export const Dcr01_Tab_DcrManager: React.FC<Props> = ({ loadTree, admin = false, showInsert }) => {
+export const Dcr01_Tab_DcrManager: React.FC<Props> = ({ loadTree, admin = false, showInsert, padded }) => {
   const [rows, setRows] = useState<DcrWriteTree[]>([]);
   const [expanded, setExpanded] = useState<React.Key[]>([]);
   const [selected, setSelected] = useState<DcrWriteTree | null>(null);
@@ -99,7 +101,7 @@ export const Dcr01_Tab_DcrManager: React.FC<Props> = ({ loadTree, admin = false,
         </Splitter.Panel>
         <Splitter.Panel>
           <div style={{ height: '100%', boxSizing: 'border-box', border: '1px solid #d9d9d9' }}>
-            <Apr01_Grid_DocList node={selected} admin={admin} showInsert={showInsert} />
+            <Apr01_Grid_DocList node={selected} admin={admin} showInsert={showInsert} padded={padded} />
           </div>
         </Splitter.Panel>
       </Splitter>
