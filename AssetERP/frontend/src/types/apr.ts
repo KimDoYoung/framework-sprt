@@ -306,3 +306,18 @@ export interface AprStampManage {
   stampAuthCntStr?: string | null;
   note?: string | null;
 }
+
+/** 추가 대표명의 한 행 (AS-IS Apr15_ReprCorpModel — Apr15_Tab_ReprCorp 그리드, G08). 논리 값은 'true'/'false' 문자열 */
+export interface AprReprCorp {
+  reprCorpId: number;
+  /** 구분 코드 (ReprCorpType: 10 PEF / 20 리츠) */
+  corpType?: string | null;
+  corpTypeName?: string | null;
+  corpName?: string | null;
+  reprName?: string | null;
+  corpRegYn?: string | null;
+  stampId?: number | null;
+  stampName?: string | null;
+  note?: string | null;
+  useYn?: string | null;
+}

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/emp/mapper/emp60_sign.xml (G09 Emp60_Tab_Sign) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpSignMapper">
+
+    <!-- AS-IS emp60_sign.selectByPersonId L30 (IDMS-IC) — 서명 이미지 파일 ID는 sys10_file 부모 ID로 찾는다 -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.emp.dto.EmpSignRes">
+        SELECT a.emp60_sign_id                                    AS sign_id
+             , emp60_sign_id || ''                                AS sign_id_string
+             , (SELECT MAX(sys10_file_id)
+                  FROM sys10_file
+                 WHERE sys10_parent_id = emp60_sign_id)           AS sign_file_id
+             , a.emp60_use_yn                                     AS use_yn
+             , a.emp60_note                                       AS note
+          FROM emp60_sign a
+         WHERE emp60_person_id = #{personId}
+         ORDER BY emp60_sign_id DESC
+    </select>
+
+    <!-- 저장한 행을 다시 읽는다 (AS-IS UpdateDataModel → emp60_sign.selectById L17 (IDMS-IC)) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.emp.dto.EmpSignRes">
+        SELECT a.emp60_sign_id                                    AS sign_id
+             , emp60_sign_id || ''                                AS sign_id_string
+             , (SELECT MAX(sys10_file_id)
+                  FROM sys10_file
+                 WHERE sys10_parent_id = emp60_sign_id)           AS sign_file_id
+             , a.emp60_use_yn                                     AS use_yn
+             , a.emp60_note                                       AS note
+          FROM emp60_sign a
+         WHERE emp60_sign_id = #{signId}
+           AND emp60_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS emp60_sign.notSignIdList L53 (IDMS-IC) — 화면이 목록 밖 행을 받아 사용 개수를 세던 것을 서버에서 센다 -->
+    <select id="countUsedNotIn" resultType="int">
+        SELECT COUNT(*)
+          FROM emp60_sign
+         WHERE emp60_company_id = #{companyId}
+           AND emp60_person_id = #{personId}
+           AND emp60_use_yn = 'true'
+        <if test="signIds != null and signIds.size() != 0">
+           AND emp60_sign_id NOT IN
+            <foreach collection="signIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        </if>
+    </select>
+
+    <!-- AS-IS Emp60_Sign.update → UpdateDataModel(emp60_sign) 동적 INSERT/UPDATE, 화면이 바꾸는 열만 -->
+    <insert id="insertSign">
+        INSERT INTO emp60_sign (emp60_sign_id, emp60_person_id, emp60_company_id, emp60_use_yn, emp60_note)
+        VALUES (#{r.signId}, #{personId}, #{companyId}, #{r.useYn}, #{r.note})
+    </insert>
+
+    <update id="updateSign">
+        UPDATE emp60_sign
+           SET emp60_use_yn = #{r.useYn},
+               emp60_note   = #{r.note}
+         WHERE emp60_sign_id    = #{r.signId}
+           AND emp60_person_id  = #{personId}
+           AND emp60_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel: {table}_id = 로 행마다 DELETE, 본인·회사 조건 추가 -->
+    <delete id="deleteSign">
+        DELETE FROM emp60_sign
+         WHERE emp60_sign_id    = #{signId}
+           AND emp60_person_id  = #{personId}
+           AND emp60_company_id = #{companyId}
+    </delete>
+
+    <!-- AS-IS apr04_appr_step.signIdListChk L426 (IDMS-IC) — 결재선에서 쓴 서명 건수 -->
+    <select id="countApprStepBySignIds" resultType="int">
+        SELECT COUNT(*)
+          FROM apr04_appr_step
+               INNER JOIN emp60_sign ON emp60_sign_id = apr04_sign_id
+         WHERE emp60_company_id = #{companyId}
+        <if test="signIds != null and signIds.size() != 0">
+           AND apr04_sign_id IN
+            <foreach collection="signIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        </if>
+    </select>
+</mapper>

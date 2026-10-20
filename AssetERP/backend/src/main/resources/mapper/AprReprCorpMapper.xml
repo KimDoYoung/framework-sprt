@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr15_repr_corp.xml (G08 Apr15_Tab_ReprCorp) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprReprCorpMapper">
+
+    <sql id="reprCorpColumns">
+          apr15_repr_corp_id AS repr_corp_id
+        , apr15_corp_type    AS corp_type
+        , apr15_corp_type_nm AS corp_type_name
+        , apr15_corp_nm      AS corp_name
+        , apr15_repr_nm      AS repr_name
+        , apr15_corp_reg_yn  AS corp_reg_yn
+        , apr15_stamp_id     AS stamp_id
+        , apr15_stamp_nm     AS stamp_name
+        , apr15_note         AS note
+        , apr15_use_yn       AS use_yn
+    </sql>
+
+    <!-- AS-IS apr15_repr_corp.selectByCompanyId L30 (IDMS-IC) — 화면은 companyId만 준다(searchText·corpRegYn·useYn·companyAddYn 분기는 쓰지 않음) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprReprCorpRes">
+        SELECT <include refid="reprCorpColumns"/>
+          FROM (
+                SELECT apr15_repr_corp.*
+                     , f_cdnm('ReprCorpType', apr15_corp_type, apr15_company_id, f_today()) AS apr15_corp_type_nm
+                     , apr10_stamp_nm                                                       AS apr15_stamp_nm
+                  FROM apr15_repr_corp
+                       LEFT JOIN apr10_stamp ON apr10_stamp_id = apr15_stamp_id
+                 WHERE apr15_company_id = #{companyId}
+               ) t
+         ORDER BY apr15_corp_type, apr15_corp_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- 저장한 행을 다시 읽는다 (AS-IS UpdateDataModel → apr15_repr_corp.selectById) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprReprCorpRes">
+        SELECT <include refid="reprCorpColumns"/>
+          FROM (
+                SELECT apr15_repr_corp.*
+                     , f_cdnm('ReprCorpType', apr15_corp_type, apr15_company_id, f_today()) AS apr15_corp_type_nm
+                     , apr10_stamp_nm                                                       AS apr15_stamp_nm
+                  FROM apr15_repr_corp
+                       LEFT JOIN apr10_stamp ON apr10_stamp_id = apr15_stamp_id
+                 WHERE apr15_company_id = #{companyId}
+                   AND apr15_repr_corp_id = #{reprCorpId}
+               ) t
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Apr15_ReprCorp.update → UpdateDataModel(apr15_repr_corp) 동적 INSERT/UPDATE, 화면이 바꾸는 열만 -->
+    <insert id="insertReprCorp">
+        INSERT INTO apr15_repr_corp (apr15_repr_corp_id, apr15_company_id, apr15_corp_type, apr15_corp_nm, apr15_repr_nm,
+                                     apr15_corp_reg_yn, apr15_stamp_id, apr15_note, apr15_use_yn)
+        VALUES (#{r.reprCorpId}, #{companyId}, #{r.corpType}, #{r.corpName}, #{r.reprName},
+                #{r.corpRegYn}, #{r.stampId}, #{r.note}, #{r.useYn})
+    </insert>
+
+    <update id="updateReprCorp">
+        UPDATE apr15_repr_corp
+           SET apr15_corp_type   = #{r.corpType},
+               apr15_corp_nm     = #{r.corpName},
+               apr15_repr_nm     = #{r.reprName},
+               apr15_corp_reg_yn = #{r.corpRegYn},
+               apr15_stamp_id    = #{r.stampId},
+               apr15_note        = #{r.note},
+               apr15_use_yn      = #{r.useYn}
+         WHERE apr15_repr_corp_id = #{r.reprCorpId}
+           AND apr15_company_id   = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel: {table}_id = 로 행마다 DELETE, 회사 조건 추가 -->
+    <delete id="deleteReprCorp">
+        DELETE FROM apr15_repr_corp
+         WHERE apr15_repr_corp_id = #{reprCorpId}
+           AND apr15_company_id   = #{companyId}
+    </delete>
+
+    <!-- AS-IS apr16_stamp_doc.selectByReprCorpId L382 (IDMS-IC) — 삭제 전 사용이력 체크 -->
+    <select id="countStampDocByReprCorpId" resultType="int">
+        SELECT COUNT(*)
+          FROM apr16_stamp_doc
+         WHERE apr16_repr_corp_id = #{reprCorpId}
+    </select>
+</mapper>

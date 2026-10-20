@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprAltAppr, AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPutSeal, AprRelateAdv, AprRelateFund, AprStamp, AprStampManage, AprStampSeq } from '../types/apr';
+import { AprAltAppr, AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -92,6 +92,24 @@ export const aprApi = {
   /** AS-IS apr.Apr10_Stamp.delete (G07) → 지운 건수 */
   deleteStampManage: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/apr/stamps/manage', { data: ids });
+    return res.data.data;
+  },
+
+  /** AS-IS apr.Apr15_ReprCorp.selectByCompanyId (Apr15_Tab_ReprCorp, G08): 로그인 회사의 추가 대표명의 */
+  searchReprCorps: async (): Promise<AprReprCorp[]> => {
+    const res = await apiClient.get<ApiResponse<AprReprCorp[]>>('v1/apr/repr-corps');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr15_ReprCorp.update (G08): 새 행(reprCorpId 0 이하)은 서버가 채번. 저장한 행을 요청 순서로 */
+  saveReprCorps: async (rows: AprReprCorp[]): Promise<AprReprCorp[]> => {
+    const res = await apiClient.put<ApiResponse<AprReprCorp[]>>('v1/apr/repr-corps', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr15_ReprCorp.delete (G08) → 지운 건수. 사용이력이 있으면 서버가 거절 */
+  deleteReprCorps: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/apr/repr-corps', { data: ids });
     return res.data.data;
   },
 

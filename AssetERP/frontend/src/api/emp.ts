@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Academic, Account, AddDeduct, BenefitInfo, AddTitle, AddTitleSaveReq, Education, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
+import { Academic, Account, AddDeduct, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -564,6 +564,55 @@ export const empEvalApi = {
       deleteIds,
     };
     const res = await apiClient.put<ApiResponse<number>>('v1/emp/eval-grades', body);
+    return res.data.data ?? 0;
+  },
+};
+
+/** G09 결재서명관리 (Emp60_Tab_Sign) */
+export const empSignApi = {
+  /** AS-IS emp.Emp60_Sign.selectByPersonId (Emp60_Tab_Sign, G09): 로그인 사원의 결재서명 */
+  searchSigns: async (): Promise<EmpSign[]> => {
+    const res = await apiClient.get<ApiResponse<EmpSign[]>>('v1/emp/signs');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp60_Sign.update (G09): 새 행(signId 0 이하)은 서버가 채번. 저장한 행을 요청 순서로 */
+  saveSigns: async (rows: EmpSign[]): Promise<EmpSign[]> => {
+    const res = await apiClient.put<ApiResponse<EmpSign[]>>('v1/emp/signs', rows.map(({ signId, useYn, note }) => ({ signId, useYn, note })));
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp60_Sign.deleteChk (G09): 결재선에서 쓴 서명이 있으면 true */
+  isSignUsed: async (ids: number[]): Promise<boolean> => {
+    const res = await apiClient.post<ApiResponse<boolean>>('v1/emp/signs/used', ids);
+    return res.data.data ?? false;
+  },
+
+  /** AS-IS emp.Emp60_Sign.delete (G09) → 지운 건수. 사용 중이면 서버가 거절 */
+  deleteSigns: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/signs', { data: ids });
+    return res.data.data ?? 0;
+  },
+};
+
+/** G10 결재선 예외처리 (Emp30_Tab_ApprStepExcept) */
+export const empApprStepExceptApi = {
+  /** AS-IS emp.Emp30_ApprStepExcept.selectByCompanyId (G10): 로그인 회사의 결재선 예외 */
+  searchApprStepExcepts: async (): Promise<EmpApprStepExcept[]> => {
+    const res = await apiClient.get<ApiResponse<EmpApprStepExcept[]>>('v1/emp/appr-step-excepts');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp30_ApprStepExcept.update (G10): 새 행(ID 0 이하)은 서버가 채번. 저장한 행을 요청 순서로 */
+  saveApprStepExcepts: async (rows: EmpApprStepExcept[]): Promise<EmpApprStepExcept[]> => {
+    const body = rows.map(({ apprStepExceptId, regDate, personId, useYn, note }) => ({ apprStepExceptId, regDate, personId, useYn, note }));
+    const res = await apiClient.put<ApiResponse<EmpApprStepExcept[]>>('v1/emp/appr-step-excepts', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp30_ApprStepExcept.delete (G10) → 지운 건수 */
+  deleteApprStepExcepts: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/appr-step-excepts', { data: ids });
     return res.data.data ?? 0;
   },
 };

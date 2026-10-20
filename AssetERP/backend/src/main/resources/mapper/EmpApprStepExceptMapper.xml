@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/emp/mapper/emp30_appr_step_except.xml (G10 Emp30_Tab_ApprStepExcept) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpApprStepExceptMapper">
+
+    <sql id="apprStepExceptColumns">
+          emp30_appr_step_except_id AS appr_step_except_id
+        , emp30_reg_date            AS reg_date
+        , emp30_person_id           AS person_id
+        , f_emp_kor_nm(emp30_person_id) AS person_name
+        , emp30_use_yn              AS use_yn
+        , emp30_note                AS note
+    </sql>
+
+    <!-- AS-IS emp30_appr_step_except.selectByCompanyId (IDMS-IC) — 화면의 담당자명 칸은 retrieve()가 넘기지 않아 조건에 쓰이지 않는다 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.emp.dto.EmpApprStepExceptRes">
+        SELECT <include refid="apprStepExceptColumns"/>
+          FROM emp30_appr_step_except
+         WHERE emp30_company_id = #{companyId}
+    </select>
+
+    <!-- 저장한 행을 다시 읽는다 (AS-IS UpdateDataModel → emp30_appr_step_except.selectById (IDMS-IC)) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.emp.dto.EmpApprStepExceptRes">
+        SELECT <include refid="apprStepExceptColumns"/>
+          FROM emp30_appr_step_except
+         WHERE emp30_appr_step_except_id = #{apprStepExceptId}
+           AND emp30_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Emp30_ApprStepExcept.update → UpdateDataModel(emp30_appr_step_except) 동적 INSERT/UPDATE, 화면이 바꾸는 열만 -->
+    <insert id="insertApprStepExcept">
+        INSERT INTO emp30_appr_step_except (emp30_appr_step_except_id, emp30_company_id, emp30_reg_date, emp30_person_id, emp30_use_yn, emp30_note)
+        VALUES (#{r.apprStepExceptId}, #{companyId}, #{r.regDate}, #{r.personId}, #{r.useYn}, #{r.note})
+    </insert>
+
+    <update id="updateApprStepExcept">
+        UPDATE emp30_appr_step_except
+           SET emp30_person_id = #{r.personId},
+               emp30_use_yn    = #{r.useYn},
+               emp30_note      = #{r.note}
+         WHERE emp30_appr_step_except_id = #{r.apprStepExceptId}
+           AND emp30_company_id          = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel: {table}_id = 로 행마다 DELETE, 회사 조건 추가 -->
+    <delete id="deleteApprStepExcept">
+        DELETE FROM emp30_appr_step_except
+         WHERE emp30_appr_step_except_id = #{apprStepExceptId}
+           AND emp30_company_id          = #{companyId}
+    </delete>
+</mapper>

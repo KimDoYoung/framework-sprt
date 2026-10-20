@@ -452,3 +452,23 @@ export interface EvalGrade {
   compareName: string;
   reasonYn: string;
 }
+
+/** 결재서명 한 행 (AS-IS Emp60_SignModel — Emp60_Tab_Sign 그리드, G09). 논리 값은 'true'/'false' 문자열 */
+export interface EmpSign {
+  signId: number;
+  /** 서명 이미지 칸(sys10_file 부모 ID) */
+  signIdString?: string;
+  signFileId?: number | null;
+  useYn: string;
+  note?: string | null;
+}
+
+/** 결재선 예외 한 행 (AS-IS Emp30_ApprStepExceptModel — Emp30_Tab_ApprStepExcept 그리드, G10). 논리 값은 'true'/'false' 문자열, 날짜는 'yyyy-MM-dd' */
+export interface EmpApprStepExcept {
+  apprStepExceptId: number;
+  regDate: string;
+  personId?: number | null;
+  personName?: string | null;
+  useYn: string;
+  note?: string | null;
+}

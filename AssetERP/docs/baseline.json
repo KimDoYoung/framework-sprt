@@ -3340,5 +3340,76 @@
     "note": "docs/work/G/G07-작업기록.md",
     "history": [],
     "id": "G07"
+  },
+  "Apr15_Tab_ReprCorp": {
+    "commit": "9dd3b12c43700f827e2d874d37b66ab865fa1cd8",
+    "commit_short": "9dd3b12",
+    "branch": "ioc",
+    "commit_date": "2026-10-19",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/apr/Apr15_Tab_ReprCorp.java": "1b33c2ce8c65a11536f50264db468ce50d9600d0",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr10_StampModel.java": "fa1aa3c58166aa91762dc8131e7e15934bb83857",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr15_ReprCorpModel.java": "7fbbbcdc478a5e0b61d63adef48a8ff2b68ff054",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr15_ReprCorpModelProperties.java": "90a17886ce9658736a817a6c53f45deb15c0f32e",
+      "application/src/main/java/myApp/server/apr/Apr15_ReprCorp.java": "e20f53832dd1ee3d6dc9a8c2dc7ca652e62e49d1",
+      "application/src/main/java/myApp/server/apr/mapper/apr15_repr_corp.xml": "5a394b5b68235514bee88a621b8a41ae3fff1e87",
+      "application/src/main/java/myApp/server/apr/mapper/apr16_stamp_doc.xml": "af9b5ef665c181090786468a1d6af5c935a797a8"
+    },
+    "shared_links": [
+      "Apr10_Lookup_Stamp"
+    ],
+    "recorded_at": "2026-10-20T13:39:52+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/G/G08-작업기록.md",
+    "history": [],
+    "id": "G08"
+  },
+  "Emp60_Tab_Sign": {
+    "commit": "9dd3b12c43700f827e2d874d37b66ab865fa1cd8",
+    "commit_short": "9dd3b12",
+    "branch": "ioc",
+    "commit_date": "2026-10-19",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp60_Tab_Sign.java": "dea5ec9e12015fc7ff88c5494ee2757320e97f4c",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp60_SignModel.java": "cfbee665807d43d01c950eb11204a6b95e956b9f",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp60_SignModelProperties.java": "79baa78e5885b6cefe58e7f9731fefca4e8afa5c",
+      "application/src/main/java/myApp/server/apr/mapper/apr04_appr_step.xml": "d2ad02a8dc784aa55ac38dd915c3c1450954fddf",
+      "application/src/main/java/myApp/server/emp/Emp60_Sign.java": "8061079f4959c9b943610d71761ab8c49c39f5fb",
+      "application/src/main/java/myApp/server/emp/mapper/emp60_sign.xml": "257e6ff005fabfd56a3b801b508613392211f2a3"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-20T13:56:42+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/G/G09-작업기록.md",
+    "history": [],
+    "id": "G09"
+  },
+  "Emp30_Tab_ApprStepExcept": {
+    "commit": "9dd3b12c43700f827e2d874d37b66ab865fa1cd8",
+    "commit_short": "9dd3b12",
+    "branch": "ioc",
+    "commit_date": "2026-10-19",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp30_Tab_ApprStepExcept.java": "d48eabd94f4fd125bb78d4a6868897231e668795",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp00_TransInfoModel.java": "dc29160bc09265170d01009c5353bd56081484c3",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp01_PersonModel.java": "f4478d406df99853f5315401fc09f28e760101fe",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp02_OthersModel.java": "361f61b4bebfd1073f0769db40e42327748e6897",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp20_LeaveModel.java": "08d4fe0e87a0e52d15d517f341428f632a6b3ef0",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp30_ApprStepExceptModel.java": "bc8be4cd3e31828a7421f69da0c76837c9efd6b9",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp30_ApprStepExceptModelProperties.java": "6bc135e9295dbf5e072a6d3b992de261e7b4160a",
+      "application/src/main/java/myApp/server/emp/Emp30_ApprStepExcept.java": "152c3380a6a55e41d9e630fa9bee83de6b2e2cd6",
+      "application/src/main/java/myApp/server/emp/mapper/emp30_appr_step_except.xml": "3dbfde5d142e4aacc5a27e882b8793b300488bdc"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-20T14:00:26+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/G/G10-작업기록.md",
+    "history": [],
+    "id": "G10"
   }
 }
