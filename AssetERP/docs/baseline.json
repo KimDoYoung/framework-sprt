@@ -3905,5 +3905,34 @@
     "note": "docs/work/H/H10-작업기록.md",
     "history": [],
     "id": "H10"
+  },
+  "Ics17_Tab_UserRequest": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ics/Ics17_Edit_UserRequest.java": "b4c32ba8ff007568f3acee79e47f99922f4d01c8",
+      "application/src/main/java/myApp/client/vi/ics/Ics17_Grid_FileList.java": "aca5b02e402520b33489bc0a390680cb66d2ea33",
+      "application/src/main/java/myApp/client/vi/ics/Ics17_Lookup_LawContent.java": "09979af0dc82420b97c6e996cba79ab1f5a0ad95",
+      "application/src/main/java/myApp/client/vi/ics/Ics17_Tab_UserRequest.java": "858cd0d218a6c6f4d7b0325e074ac1cbbd8e632b",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics17_UserRequestModel.java": "0727d50435c28b909f033f1eb5b890a683f5e595",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics17_UserRequestModelProperties.java": "113d3905ebee35d6e11bd8d49bf1f6628980ca7c",
+      "application/src/main/java/myApp/server/ics/Ics17_UserRequest.java": "bf0d63f714212a834c0a5e535210271acb3605ae",
+      "application/src/main/java/myApp/server/ics/mapper/ics17_user_request.xml": "82fef315c8b2e534293a35fb6b0a427f9db0ae04",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/Sys11_RelateFile.java": "3aa633bf0b24c8da3c85ea2f505fb68616f92a11",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/sys/mapper/sys11_relate_file.xml": "35c5b410b79c0d900e2332f08e15c5f024b05aa6"
+    },
+    "shared_links": [
+      "Sys10_Lookup_FileViewer"
+    ],
+    "recorded_at": "2026-10-20T21:24:49+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/H/H11-작업기록.md",
+    "history": [],
+    "id": "H11"
   }
 }

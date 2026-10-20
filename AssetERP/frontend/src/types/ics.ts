@@ -386,6 +386,27 @@ export interface IcsUserRequestSearch {
   searchText: string;
 }
 
+/** 법규등록신청 조회 조건 (Ics17_Tab_UserRequest.retrieve) */
+export interface IcsUserRequestMySearch {
+  startDate: string;
+  closeDate: string;
+  /** 진행상태 코드 또는 '%'(전체) */
+  stateCode: string;
+  unconfirmedOnly: boolean;
+  searchText: string;
+}
+
+/** 법규등록신청 저장 (H11, 서버 UserRequestMyReq) — 신청자 화면이 고치는 칸 */
+export interface IcsUserRequestMyReq {
+  regDate: string;
+  confirmYn: string;
+  lawTitle: string | null;
+  lawContent: string | null;
+  reportCycle: string | null;
+  submitTo: string | null;
+  relatedLaw: string | null;
+}
+
 /** 관리그룹 저장 한 행 (H10, 서버 IcsManagerSaveReq) — 새 행은 managerId ≤ 0 */
 export interface IcsManagerSaveReq {
   managerId: number;

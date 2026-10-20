@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.ics.mapper;
 
+import kr.co.kfs.asseterp.biz.ics.dto.UserRequestMyReq;
 import kr.co.kfs.asseterp.biz.ics.dto.UserRequestRes;
 import kr.co.kfs.asseterp.biz.ics.dto.UserRequestSaveReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -15,6 +16,21 @@ public interface IcsUserRequestMapper {
                                                  @Param("searchText") String searchText, @Param("stateCode") String stateCode,
                                                  @Param("confirmYn") String confirmYn, @Param("completeYn") String completeYn,
                                                  @Param("companyText") String companyText);
+
+    /** AS-IS selectBySearchText (searchText·stateCode·confirmYn은 LIKE 패턴) — 로그인 회사의 신청만 */
+    List<UserRequestRes> selectBySearchText(@Param("startDate") String startDate, @Param("closeDate") String closeDate,
+                                            @Param("searchText") String searchText, @Param("stateCode") String stateCode,
+                                            @Param("confirmYn") String confirmYn, @Param("companyId") Long companyId);
+
+    Long selectNextId();
+
+    int insertUserRequest(@Param("userRequestId") Long userRequestId, @Param("companyId") Long companyId,
+                          @Param("personId") Long personId, @Param("req") UserRequestMyReq req);
+
+    int updateMyUserRequest(@Param("userRequestId") Long userRequestId, @Param("companyId") Long companyId,
+                            @Param("req") UserRequestMyReq req);
+
+    int deleteMyUserRequest(@Param("userRequestId") Long userRequestId, @Param("companyId") Long companyId);
 
     UserRequestRes selectById(@Param("userRequestId") Long userRequestId);
 

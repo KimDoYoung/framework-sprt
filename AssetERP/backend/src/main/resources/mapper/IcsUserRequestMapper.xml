@@ -66,6 +66,62 @@
          WHERE ics17_user_request_id = #{userRequestId}
     </update>
 
+    <!-- AS-IS(IDMS-IC) ics17_user_request.selectBySearchText (SELECT *는 DTO 열로 명시, 일자는 TO_CHAR, 날짜 파라미터는 ::date) -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.ics.dto.UserRequestRes">
+        SELECT <include refid="userRequestColumns"/>
+             , f_cdnm('AfterStateCode', ics17_state_cd, ics17_company_id, f_sysdate()) AS state_name
+             , f_emp_kor_nm(ics17_person_id)                                           AS person_name
+             , f_get_company_nm(ics17_company_id)                                      AS company_name
+          FROM ics17_user_request
+         WHERE ics17_company_id = #{companyId}
+        <choose>
+            <when test="stateCode != null">
+           AND COALESCE(ics17_state_cd, ' ') LIKE #{stateCode}
+            </when>
+            <otherwise>
+           AND COALESCE(ics17_state_cd, ' ') NOT IN ('10','90')
+            </otherwise>
+        </choose>
+           AND CONCAT(ics17_law_title, ics17_law_content) LIKE #{searchText}
+           AND COALESCE(ics17_confirm_yn, 'false') LIKE #{confirmYn}
+           AND f_trunc(ics17_reg_date) BETWEEN #{startDate}::date AND #{closeDate}::date
+         ORDER BY ics17_reg_date DESC
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel(ics17_user_request) INSERT: 화면(GridInsertRow)이 채우던 회사·요청자는 서버가 로그인 정보로 넣는다 -->
+    <insert id="insertUserRequest">
+        INSERT INTO ics17_user_request (ics17_user_request_id, ics17_company_id, ics17_person_id, ics17_reg_date, ics17_law_title,
+                                        ics17_law_content, ics17_submit_to, ics17_related_law, ics17_report_cycle, ics17_confirm_yn)
+        VALUES (#{userRequestId}, #{companyId}, #{personId}, #{req.regDate}::date, #{req.lawTitle},
+                #{req.lawContent}, #{req.submitTo}, #{req.relatedLaw}, #{req.reportCycle}, #{req.confirmYn})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE: 신청자 화면이 고치는 7열만, 회사 범위 조건 추가(보안) -->
+    <update id="updateMyUserRequest">
+        UPDATE ics17_user_request
+           SET ics17_reg_date     = #{req.regDate}::date,
+               ics17_law_title    = #{req.lawTitle},
+               ics17_law_content  = #{req.lawContent},
+               ics17_submit_to    = #{req.submitTo},
+               ics17_related_law  = #{req.relatedLaw},
+               ics17_report_cycle = #{req.reportCycle},
+               ics17_confirm_yn   = #{req.confirmYn}
+         WHERE ics17_user_request_id = #{userRequestId}
+           AND ics17_company_id      = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel, 회사 범위 조건 추가(보안) -->
+    <delete id="deleteMyUserRequest">
+        DELETE FROM ics17_user_request
+         WHERE ics17_user_request_id = #{userRequestId}
+           AND ics17_company_id      = #{companyId}
+    </delete>
+
     <!-- AS-IS(IDMS-IC) ics17_user_request.updateLawContent -->
     <update id="updateLawContent">
         UPDATE ics17_user_request

@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch } from '../types/ics';
+import { ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 export const icsApi = {
@@ -431,6 +431,31 @@ export const icsApi = {
   updateUserRequestLawContent: async (userRequestId: number, lawContent: string): Promise<IcsUserRequest> => {
     const res = await apiClient.put<ApiResponse<IcsUserRequest>>(`v1/ics/user-requests/${userRequestId}/law-content`, { lawContent });
     return res.data.data;
+  },
+
+  // ── H11 법규등록신청 (Ics17_Tab_UserRequest, 로그인 회사) ──
+
+  /** AS-IS ics.Ics17_UserRequest.selectBySearchText */
+  searchUserRequests: async (params: IcsUserRequestMySearch): Promise<IcsUserRequest[]> => {
+    const res = await apiClient.get<ApiResponse<IcsUserRequest[]>>('v1/ics/user-requests/my', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics17_UserRequest.update (새 행) → 저장된 행 */
+  createUserRequest: async (req: IcsUserRequestMyReq): Promise<IcsUserRequest> => {
+    const res = await apiClient.post<ApiResponse<IcsUserRequest>>('v1/ics/user-requests/my', req);
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics17_UserRequest.update (기존 행) → 저장된 행 */
+  updateMyUserRequest: async (userRequestId: number, req: IcsUserRequestMyReq): Promise<IcsUserRequest> => {
+    const res = await apiClient.put<ApiResponse<IcsUserRequest>>(`v1/ics/user-requests/my/${userRequestId}`, req);
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics17_UserRequest.delete */
+  deleteUserRequest: async (userRequestId: number): Promise<void> => {
+    await apiClient.delete(`v1/ics/user-requests/my/${userRequestId}`);
   },
 
   // ── H08 법규관리 (Ics01_Tab_ClassTreeUser) ──

@@ -43,6 +43,7 @@ import { Apr01_Tab_ItemDocument } from './apr/Apr01_Tab_ItemDocument';
 import { Ics01_Tab_IcsFileUpload } from './ics/Ics01_Tab_IcsFileUpload';
 import { Ics10_Tab_ChecklistAdmin } from './ics/Ics10_Tab_ChecklistAdmin';
 import { Ics17_Tab_UserRequestAdmin } from './ics/Ics17_Tab_UserRequestAdmin';
+import { Ics17_Tab_UserRequest } from './ics/Ics17_Tab_UserRequest';
 import { Ics30_Tab_Compliance } from './ics/Ics30_Tab_Compliance';
 import { Ics20_Tab_RevisionHistoryAdmin } from './ics/Ics20_Tab_RevisionHistoryAdmin';
 import { Ics01_Tab_ClassTreeUser } from './ics/Ics01_Tab_ClassTreeUser';
@@ -179,6 +180,7 @@ export const SCREENS: Record<string, React.FC> = {
   Icr01_Tab_ClassTreeView, // H03 (+ Icr01_Lookup_Content view·IcrFile period·SelectParent·Sch03_Lookup_IcsUser)
   Ics10_Tab_ChecklistAdmin, // E04
   Ics17_Tab_UserRequestAdmin, // E09 (+ Ics17_Edit_UserRequestAdmin·Ics17_Lookup_LawContent·Ics17_Grid_FileList)
+  Ics17_Tab_UserRequest, // H11 (+ Ics17_Edit_UserRequest, Ics17_Lookup_LawContent user·Ics17_Grid_FileList 재사용)
   Ics30_Tab_Compliance, // E05 (+ E05-1 예외사원 등록 Emp33_Lookup_ExceptBiz)
   Icam03_Tab_Fund, // D07 (ICAM Get·타사무 Get은 외부 ICAM DB 연동이 없어 서버가 거절)
   Icam10_Tab_FeeAdmin, // D08 (ICAM 발생보수 가져오기도 같은 연동이 없어 서버가 거절)

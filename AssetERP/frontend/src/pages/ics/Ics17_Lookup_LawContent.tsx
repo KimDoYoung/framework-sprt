@@ -28,7 +28,8 @@ export const Ics17_Lookup_LawContent: React.FC<Props> = ({ model, userType, onSa
   const update = async () => {
     if (!model) return;
     try {
-      onSaved?.(await icsApi.updateUserRequestLawContent(model.userRequestId, lawContent));
+      // 아직 저장하지 않은 새 신청(임시 ID ≤ 0, 신청자 화면)은 서버에 보내지 않고 입력한 내용만 돌려준다 (AS-IS 서버는 ID가 없어 갱신 0건)
+      onSaved?.(model.userRequestId > 0 ? await icsApi.updateUserRequestLawContent(model.userRequestId, lawContent) : { ...model, lawContent });
       onClose();
     } catch (err) {
       message.error(errorMessage(err, '저장 실패'));
