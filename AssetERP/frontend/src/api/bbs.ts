@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
-import { ApiResponse } from '../types/auth';
-import { BbsCompanyRule, BbsCompanyRuleSaveReq } from '../types/bbs';
+import { ApiResponse, PageRes } from '../types/auth';
+import { BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsNotice } from '../types/bbs';
 
 /** bbs 화면 API (E10~) */
 export const bbsApi = {
@@ -66,5 +66,36 @@ export const bbsApi = {
     form.append('excelUpload', file);
     const res = await apiClient.post<ApiResponse<number>>('v1/bbs/company-rules/excel', form, { headers: { 'Content-Type': 'multipart/form-data' } });
     return res.data.data ?? 0;
+  },
+};
+
+/** H01 공지사항 (Bbs02_Tab_NoticeViewLaw·Bbs02_Popup_NoticeAdmin·Bbs07_TapPage_Comment) */
+export const bbsNoticeApi = {
+  /** AS-IS bbs.Bbs02_Notice.selectByNoticeDetailCodePaging. 법규공지는 noticeType 10, 구분상세 전체는 '%' */
+  searchNotices: async (params: { noticeType: string; noticeDetailCode: string; searchText: string; offset: number; limit: number }): Promise<PageRes<BbsNotice>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<BbsNotice>>>('v1/bbs/notices', { params });
+    return res.data.data as PageRes<BbsNotice>;
+  },
+
+  /** AS-IS bbs.Bbs05_History.updatePersonId: "해당 공지사항 그만보기" */
+  updateNoticeHistory: async (noticeId: number): Promise<void> => {
+    await apiClient.post(`v1/bbs/notices/${noticeId}/history`);
+  },
+
+  /** AS-IS bbs.Bbs07_Comment.selectByNoticeId */
+  searchComments: async (noticeId: number): Promise<BbsComment[]> => {
+    const res = await apiClient.get<ApiResponse<BbsComment[]>>(`v1/bbs/notices/${noticeId}/comments`);
+    return res.data.data as BbsComment[];
+  },
+
+  /** AS-IS bbs.Bbs07_Comment.modelUpdate: 새 댓글 ID */
+  createComment: async (noticeId: number, comment: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>(`v1/bbs/notices/${noticeId}/comments`, { comment });
+    return res.data.data as number;
+  },
+
+  /** AS-IS bbs.Bbs07_Comment.delete */
+  deleteComment: async (commentId: number): Promise<void> => {
+    await apiClient.delete(`v1/bbs/comments/${commentId}`);
   },
 };

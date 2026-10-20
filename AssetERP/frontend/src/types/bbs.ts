@@ -36,3 +36,26 @@ export interface BbsCompanyRuleSaveReq {
   publicYn: boolean | null;
   closeDate: string | null;
 }
+
+/** H01 법규공지 한 행 (AS-IS Bbs02_NoticeModel). notice는 본문 HTML */
+export interface BbsNotice {
+  noticeId: number;
+  fromDate: string;
+  noticeTypeName: string;
+  noticeNo: string;
+  noticeDetailName: string;
+  title: string;
+  publicYnName: string;
+  notice: string | null;
+  commentYn: boolean;
+}
+
+/** H01 공지사항 댓글 한 행 (AS-IS Bbs07_CommentModel). deleteStr은 내 댓글이면 '✕' */
+export interface BbsComment {
+  commentId: number;
+  personId: number;
+  commentFullStr: string;
+  fileStr: string;
+  deleteStr: string;
+  comment: string;
+}

@@ -3563,5 +3563,30 @@
     "note": "docs/work/G/G17-작업기록.md",
     "history": [],
     "id": "G17"
+  },
+  "Bbs02_Tab_NoticeViewLaw": {
+    "commit": "9dd3b12c43700f827e2d874d37b66ab865fa1cd8",
+    "commit_short": "9dd3b12",
+    "branch": "ioc",
+    "commit_date": "2026-10-19",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/bbs/Bbs02_Tab_NoticeViewLaw.java": "058068dfc2dc5aaffad7c42bca580a14e7763baf",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs02_NoticeModel.java": "f53f949e944d83507fa7c7382e3ff2334a113cae",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs02_NoticeModelProperties.java": "95798a6de9b18ca64adac0f74aa3dc4f2d4e6948",
+      "application/src/main/java/myApp/server/bbs/Bbs02_Notice.java": "cb6bad5a4ac23171c279c3c3f8c2e2e9a0ed34d0",
+      "application/src/main/java/myApp/server/bbs/mapper/bbs02_notice.xml": "c4664317cdb39070b24d4dad8cc7543e9184afb0",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "746b4e51e3ec7c63704e9ea3eea51cc6e41b0b12",
+      "application/src/main/java/myApp/server/sys/Sys09_Code.java": "28d486d654b122ebef05ff7d0c2e7c8f8fd59e2d",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9"
+    },
+    "shared_links": [
+      "Bbs02_Popup_NoticeAdmin"
+    ],
+    "recorded_at": "2026-10-20T15:26:12+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/H/H01-작업기록.md",
+    "history": [],
+    "id": "H01"
   }
 }

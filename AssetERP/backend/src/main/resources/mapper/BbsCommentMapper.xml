@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/bbs/mapper/bbs07_comment.xml selectByNoticeId + UpdateDataModel(bbs07_comment) (H01 Bbs07_TapPage_Comment) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.bbs.mapper.BbsCommentMapper">
+
+    <!-- AS-IS bbs07_comment.selectByNoticeId (IDMS-IC) — SELECT *·화면이 쓰는 열만(bbs07_delete_master_str은 안 씀) -->
+    <select id="selectByNoticeId" resultType="kr.co.kfs.asseterp.biz.bbs.dto.CommentRes">
+        SELECT bbs07_comment_id                                       AS comment_id
+             , bbs07_person_id                                        AS person_id
+             , (
+                  '&lt;'||'b'||'&gt;'||
+                  f_emp_kor_nm(bbs07_person_id)
+                  ||' ('||
+                  f_get_empTrans(bbs07_person_id, bbs07_date::date, 'org_code_nm')
+                  ||' '||
+                  f_get_empTrans(bbs07_person_id, bbs07_date::date, 'pos_nm')
+                  ||') '||
+                  '&lt;'||'/b'||'&gt;'||
+                  TO_CHAR(bbs07_date,'YY.MM.DD')
+                  ||' '||
+                  bbs07_time
+               )                                                      AS comment_full_str
+             , (
+                  SELECT '파일('||COUNT(sys10_file_id)||')'
+                    FROM sys10_file
+                   WHERE sys10_parent_id = bbs07_comment_id
+               )                                                      AS file_str
+             , (
+                  CASE WHEN bbs07_person_id = #{personId}
+                       THEN '✕'
+                       ELSE ''
+                       END
+               )                                                      AS delete_str
+             , bbs07_comment                                          AS comment
+          FROM bbs07_comment
+         WHERE bbs07_notice_id = #{noticeId}
+           AND bbs07_company_id = #{companyId}
+         ORDER BY bbs07_date, bbs07_time
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Bbs07_Comment.modelUpdate L50 → UpdateDataModel INSERT. 날짜·시각(HH:mm:ss)은 DB의 f_sysdate() -->
+    <insert id="insertComment">
+        INSERT INTO bbs07_comment (bbs07_comment_id, bbs07_company_id, bbs07_person_id, bbs07_notice_id, bbs07_date, bbs07_time, bbs07_comment)
+        VALUES (#{commentId}, #{companyId}, #{personId}, #{noticeId}, f_sysdate(), TO_CHAR(f_sysdate(), 'HH24:MI:SS'), #{comment})
+    </insert>
+
+    <!-- AS-IS Bbs07_Comment.delete L84 → UpdateDataModel DELETE (회사 범위를 더 건다) -->
+    <delete id="deleteComment">
+        DELETE FROM bbs07_comment
+         WHERE bbs07_company_id = #{companyId}
+           AND bbs07_comment_id = #{commentId}
+    </delete>
+</mapper>

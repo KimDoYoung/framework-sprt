@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/bbs/mapper/bbs02_notice.xml selectByNoticeDetailCodePaging·selectByNoticeDetailCodeTotal + bbs05_history.xml selectByNoticeId·insert (H01 Bbs02_Tab_NoticeViewLaw·Bbs02_Popup_NoticeAdmin) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.bbs.mapper.BbsNoticeMapper">
+
+    <!-- 두 SQL이 같이 쓰는 안쪽 조회 (AS-IS selectByNoticeDetailCode L732 include) -->
+    <sql id="selectByNoticeDetailCode">
+        WITH noticeType AS ( SELECT sys09_code noticeType_cd
+                                  , sys09_name noticeType_nm
+                               FROM sys08_code_kind
+                                    INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+                              WHERE sys08_kind_cd    = 'NoticeType'
+                                AND sys09_company_id = CASE WHEN COALESCE(sys08_sys_yn,'false') = 'true' THEN 0 ELSE #{c.companyId} END
+        ), noticeDetail AS ( SELECT sys09_code noticeDetail_cd
+                                  , sys09_name noticeDetail_nm
+                               FROM sys08_code_kind
+                                    INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+                              WHERE sys08_kind_cd    = 'NoticeDetailCode'
+                                AND sys09_company_id = CASE WHEN COALESCE(sys08_sys_yn,'false') = 'true' THEN 0 ELSE #{c.companyId} END
+        )
+        SELECT  bbs02_notice.*
+             ,  noticeType_nm                                                                           AS bbs02_notice_type_nm
+             ,  noticeDetail_nm                                                                         AS bbs02_notice_detail_nm
+             ,  CASE WHEN COALESCE(bbs02_public_yn,'false') = 'true' THEN '공개' ELSE '비공개' END         AS bbs02_public_yn_nm
+          FROM  bbs02_notice
+                LEFT OUTER JOIN bbs04_target_company ON ( bbs04_notice_id  = bbs02_notice_id AND
+                                                          bbs04_company_id = #{c.companyId}    )
+                LEFT OUTER JOIN noticeType   ON noticeType_cd   = bbs02_notice_type
+                LEFT OUTER JOIN noticeDetail ON noticeDetail_cd = bbs02_notice_detail_cd
+         WHERE ( bbs02_public_company_yn = 'true' OR bbs04_target_company IS NOT NULL )
+           AND  bbs02_open_yn = '알림'
+           AND  bbs02_from_date &lt;= f_today()
+           AND  bbs02_notice_type       LIKE #{c.noticeType}
+           AND  bbs02_notice_detail_cd  LIKE #{c.noticeDetailCode}
+    </sql>
+
+    <!-- AS-IS bbs02_notice.selectByNoticeDetailCodePaging L717 (IDMS-IC) — SELECT t.*·모델 열 중 화면이 쓰는 열만. 상단고정(bbs02_top_yn)은 이 화면이 안 써서 뺌 -->
+    <select id="selectByNoticeDetailCodePaging" resultType="kr.co.kfs.asseterp.biz.bbs.dto.NoticeRes">
+        SELECT bbs02_notice_id                                  AS notice_id
+             , TO_CHAR(bbs02_from_date, 'YYYY-MM-DD')           AS from_date
+             , bbs02_notice_type_nm                             AS notice_type_name
+             , bbs02_notice_no                                  AS notice_no
+             , bbs02_notice_detail_nm                           AS notice_detail_name
+             , bbs02_title                                      AS title
+             , bbs02_public_yn_nm                               AS public_yn_name
+             , bbs02_notice                                     AS notice
+             , (COALESCE(bbs02_comment_yn, 'false') = 'true')   AS comment_yn
+          FROM (
+        <include refid="selectByNoticeDetailCode"/>
+        ) t
+         WHERE UPPER(CONCAT(bbs02_open_yn, bbs02_notice_type_nm, bbs02_title, bbs02_note)) LIKE UPPER(#{c.searchText})
+         ORDER BY bbs02_from_date DESC, bbs02_notice_id DESC
+         LIMIT #{c.limit}
+        OFFSET #{c.offset}
+    </select>
+
+    <!-- AS-IS bbs02_notice.selectByNoticeDetailCodeTotal (IDMS-IC) -->
+    <select id="selectByNoticeDetailCodeTotal" resultType="long">
+        SELECT count(*)
+          FROM (
+        <include refid="selectByNoticeDetailCode"/>
+        ) t
+         WHERE UPPER(CONCAT(bbs02_open_yn, bbs02_notice_type_nm, bbs02_title, bbs02_note)) LIKE UPPER(#{c.searchText})
+    </select>
+
+    <!-- AS-IS bbs05_history.selectByNoticeId (IDMS-IC) — 행이 있는지만 본다 -->
+    <select id="countHistory" resultType="int">
+        SELECT count(*)
+          FROM bbs05_history
+         WHERE bbs05_notice_id = #{noticeId}
+           AND bbs05_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS bbs05_history.insert (IDMS-IC). 날짜는 로그인 날짜(LoginUser.getToday) 대신 서버 오늘 -->
+    <insert id="insertHistory">
+        INSERT INTO bbs05_history (bbs05_history_id, bbs05_notice_id, bbs05_date, bbs05_person_id)
+        VALUES (#{historyId}, #{noticeId}, f_sysdate(), #{personId})
+    </insert>
+</mapper>
