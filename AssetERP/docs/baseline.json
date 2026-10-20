@@ -3588,5 +3588,45 @@
     "note": "docs/work/H/H01-작업기록.md",
     "history": [],
     "id": "H01"
+  },
+  "Ics01_Tab_ClassTreeUserView": {
+    "commit": "9dd3b12c43700f827e2d874d37b66ab865fa1cd8",
+    "commit_short": "9dd3b12",
+    "branch": "ioc",
+    "commit_date": "2026-10-19",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ics/Ics01_Lookup_IcsFile.java": "af41234c8a66a24c91dbb98507f87545b475830a",
+      "application/src/main/java/myApp/client/vi/ics/Ics01_Lookup_IcsFileAdmin.java": "9b219311677a65c761e2be6654204fa7baf1d6b7",
+      "application/src/main/java/myApp/client/vi/ics/Ics01_Tab_ClassTreeUserView.java": "a8ad935a2c5ce25d66414880c2a375215f042576",
+      "application/src/main/java/myApp/client/vi/ics/Ics20_Lookup_Content.java": "12f5f6ad3885c050463b58d07d72162afe6fc2c7",
+      "application/src/main/java/myApp/client/vi/ics/Ics20_Lookup_File.java": "8da93ba50a6e015c3f67f1135330d9960c6f95ea",
+      "application/src/main/java/myApp/client/vi/ics/Ics20_Lookup_RevisionHistory.java": "48fcc07c6ba64404641364477a218fad828c9966",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics01_ClassTreeModel.java": "1aebbfba565e28daa85a3635de9bcf5ff658460a",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics01_ClassTreeModelProperties.java": "6ea79fbeb0e4b7c228d7d547cfef16a6c3a0a049",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics20_RevisionHistoryModel.java": "f801ddcc3fb4512654c0d39c270d0b324affeed7",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics20_RevisionHistoryModelProperties.java": "8519e459d0f8f73b8cea526ac8e61b20f5070eab",
+      "application/src/main/java/myApp/server/ics/Ics01_ClassTree.java": "be1292de65687c0282d993107d4aa55ba1ba9b41",
+      "application/src/main/java/myApp/server/ics/Ics20_RevisionHistory.java": "42453198ed1ca7457ab9f72e37ff4671ceee74b7",
+      "application/src/main/java/myApp/server/ics/mapper/ics01_class_tree.xml": "1e1665331f4f169416fc65466fd4e3f48a7d37cd",
+      "application/src/main/java/myApp/server/ics/mapper/ics20_revision_history.xml": "aac1a574cf988f47ec6782c6bb4ad6d563511f8b",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/Sys11_RelateFile.java": "3aa633bf0b24c8da3c85ea2f505fb68616f92a11",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/sys/mapper/sys11_relate_file.xml": "35c5b410b79c0d900e2332f08e15c5f024b05aa6",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Ics01_Lookup_Content",
+      "Ics01_Lookup_SelectParent",
+      "Sch03_Lookup_IcsUser",
+      "Sys10_Lookup_FileViewer"
+    ],
+    "recorded_at": "2026-10-20T15:57:33+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/H/H02-작업기록.md",
+    "history": [],
+    "id": "H02"
   }
 }

@@ -5,6 +5,7 @@ import kr.co.kfs.asseterp.biz.ics.dto.IcsLawContentReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDeadlineRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDetailRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawLookupRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawViewRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawSaveReq;
 import kr.co.kfs.asseterp.biz.ics.mapper.IcsClassTreeMapper;
@@ -51,6 +52,19 @@ public class IcsLawService {
         Long companyId = user.getCompanyId();
         return new PageRes<>(mapper.selectLawLookupTotal(companyId, classTreeId, TYPE_CODE, law, statute, detailSearchYn, relateTable, relateId),
                 mapper.selectLawLookup(companyId, classTreeId, TYPE_CODE, law, statute, detailSearchYn, limit, offset, relateTable, relateId));
+    }
+
+    /**
+     * AS-IS Ics01_Tab_ClassTreeUserView.retrieve → selectByTypeCodePaging + selectByTypeCodePagingTotal (H02): 법규조회.
+     * 법규검색·조문검색은 %…%, classTreeId가 있으면 그 분류와 모든 하위, advisYn이면 일임(자문) 법규만
+     */
+    public PageRes<IcsLawViewRes> searchView(UserPrincipal user, Long classTreeId, String lawSearch, String statuteSearch,
+                                             boolean detailSearchYn, boolean advisYn, long offset, long limit) {
+        String law = "%" + (lawSearch == null ? "" : lawSearch) + "%";
+        String statute = "%" + (statuteSearch == null ? "" : statuteSearch) + "%";
+        Long companyId = user.getCompanyId();
+        return new PageRes<>(mapper.selectLawViewTotal(companyId, classTreeId, TYPE_CODE, law, statute, detailSearchYn, advisYn),
+                mapper.selectLawView(companyId, classTreeId, TYPE_CODE, law, statute, detailSearchYn, advisYn, limit, offset));
     }
 
     /** AS-IS selectByListIcsId: 고른 법규마다 그 기한(여럿이면 여러 행)을 붙인다 */

@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch } from '../types/ics';
+import { ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawView, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 export const icsApi = {
@@ -186,6 +186,14 @@ export const icsApi = {
     relateTable?: string; relateId?: number;
   }): Promise<PageRes<IcsLawLookup>> => {
     const res = await apiClient.get<ApiResponse<PageRes<IcsLawLookup>>>('v1/ics/laws/lookup', { params });
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics01_ClassTree.selectByTypeCodePaging(typeCode IT): 법규조회(H02) 페이징. 개정이력·서식파일 건수·분류·일임 열까지 */
+  searchLawView: async (params: {
+    classTreeId: number | null; lawSearch: string; statuteSearch: string; detailSearchYn: boolean; advisYn: boolean; offset: number; limit: number;
+  }): Promise<PageRes<IcsLawView>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<IcsLawView>>>('v1/ics/laws/view', { params });
     return res.data.data;
   },
 

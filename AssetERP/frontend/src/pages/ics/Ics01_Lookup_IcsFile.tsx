@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/ics/Ics01_Lookup_IcsFile.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L88-158: 모달 900×400 "서식파일", 그리드(서식파일 580·등록일 100·다운로드 80·삭제 80, 체크박스 단일), 아래 가운데 [불러오기][닫기].
  * 파일 올리기 입력은 원본에서 보이지 않는 폼(setVisible(false))에 있어 화면에서 실행되지 않는다 — 같은 모양으로 숨은 입력만 둔다
+ * openPeriod()(법규조회 H02 등 `period`): 삭제 열을 감추고 서식파일 열을 650으로, [불러오기]를 감춘다(L68-78)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';
@@ -26,9 +27,11 @@ interface Props {
   onClosed: () => void;
   /** 창의 닫기(X) */
   onClose: () => void;
+  /** openPeriod() L68-78: 삭제 열(5번)을 감추고 서식파일 열을 650으로, [불러오기]를 감춘다 */
+  period?: boolean;
 }
 
-export const Ics01_Lookup_IcsFile: React.FC<Props> = ({ law, onClosed, onClose }) => {
+export const Ics01_Lookup_IcsFile: React.FC<Props> = ({ law, onClosed, onClose, period }) => {
   const [rows, setRows] = useState<IcsRelateFile[]>([]);
   const [listOpen, setListOpen] = useState(false);
   const parentId = law?.classTreeId ?? null;
@@ -49,14 +52,14 @@ export const Ics01_Lookup_IcsFile: React.FC<Props> = ({ law, onClosed, onClose }
 
   // buildApprFileGrid() L160-190
   const columnDefs = useMemo(() => [
-    gb.text('fileName', 580, '서식파일'),  // L184
+    gb.text('fileName', period ? 650 : 580, '서식파일'),  // L184 (openPeriod: setColumnWidth(2, 650))
     gb.date('regDate', 100, '등록일'),  // L185
     // L186 downloadCell: FileDownload?fileType=file&fileId=
     iconCell<IcsRelateFile>('down', 'actionCellDown', 80, '다운로드', row => {
       fileApi.download(row.fileId).catch(err => message.error(errorMessage(err, '다운로드 실패')));
     }),
     // L187 deleteCell: GridDeleteData sys.Sys11_RelateFile.delete(고른 행) — 확인 창 없이 연결을 지운다
-    iconCell<IcsRelateFile>('delete', 'actionCellDelete', 80, '삭제', async row => {
+    ...(period ? [] : [iconCell<IcsRelateFile>('delete', 'actionCellDelete', 80, '삭제', async row => {
       if (parentId == null) return;
       try {
         await icsApi.deleteLawFiles(parentId, [row.relateFileId]);
@@ -64,8 +67,8 @@ export const Ics01_Lookup_IcsFile: React.FC<Props> = ({ law, onClosed, onClose }
       } catch (err) {
         message.error(errorMessage(err, '삭제 실패'));
       }
-    }),
-  ], [parentId]);
+    })]),
+  ], [parentId, period]);
 
   // [E2] listButton[불러오기].Select (L100) → listLookup() L205-227: Ics01_Lookup_IcsFileAdmin → sys.Sys11_RelateFile.insert(relateId, tableName ics01_class_tree) → retrieve()
   const listLookup = async (selected: IcsFormFile[]) => {
@@ -105,7 +108,7 @@ export const Ics01_Lookup_IcsFile: React.FC<Props> = ({ law, onClosed, onClose }
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
-            <Button type="register" onClick={() => setListOpen(true)}>불러오기</Button>
+            {!period && <Button type="register" onClick={() => setListOpen(true)}>불러오기</Button>}
             <Button type="close" onClick={confirm}>닫기</Button>
           </Space>
         </div>

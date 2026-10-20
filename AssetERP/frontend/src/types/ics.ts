@@ -125,6 +125,21 @@ export interface IcsRevisionLaw {
   classTreeName?: string | null;
 }
 
+/** 법규조회 한 행 (AS-IS Ics01_ClassTreeModel 중 Ics01_Tab_ClassTreeUserView 그리드 열 + id, H02). advisYn은 'true'/'false' */
+export interface IcsLawView {
+  classTreeId: number;
+  classTreeCode?: string | null;
+  classTreeName?: string | null;
+  content?: string | null;
+  submitTo?: string | null;
+  relatedLaw?: string | null;
+  revisionCount?: string | null;
+  cycleName?: string | null;
+  fileCount?: string | null;
+  parentTreeFullName?: string | null;
+  advisYn?: string | null;
+}
+
 /** 법규 분류 조회창 한 행 (AS-IS Ics01_ClassTreeModel 중 Ics01_Lookup_SelectMulti 그리드 열, E03) */
 export interface IcsLawLookup {
   classTreeId: number;

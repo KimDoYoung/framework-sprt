@@ -8,6 +8,7 @@ import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDetailRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawLookupRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawSaveReq;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawViewRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsWriteTreeRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -64,6 +65,17 @@ public interface IcsClassTreeMapper {
                               @Param("lawSearch") String lawSearch, @Param("statuteSearch") String statuteSearch,
                               @Param("detailSearchYn") boolean detailSearchYn,
                               @Param("relateTable") String relateTable, @Param("relateId") Long relateId);
+
+    /** AS-IS ics01_class_tree.selectByTypeCodePaging (Ics01_Tab_ClassTreeUserView, H02) */
+    List<IcsLawViewRes> selectLawView(@Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId, @Param("typeCode") String typeCode,
+                                      @Param("lawSearch") String lawSearch, @Param("statuteSearch") String statuteSearch,
+                                      @Param("detailSearchYn") boolean detailSearchYn, @Param("advisYn") boolean advisYn,
+                                      @Param("limit") long limit, @Param("offset") long offset);
+
+    /** AS-IS ics01_class_tree.selectByTypeCodePagingTotal (H02) */
+    long selectLawViewTotal(@Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId, @Param("typeCode") String typeCode,
+                            @Param("lawSearch") String lawSearch, @Param("statuteSearch") String statuteSearch,
+                            @Param("detailSearchYn") boolean detailSearchYn, @Param("advisYn") boolean advisYn);
 
     /** AS-IS ics01_class_tree.selectById (Ics01_Lookup_ClassTreeDetail, E03-1) */
     IcsLawDetailRes selectLawDetail(@Param("classTreeId") Long classTreeId);

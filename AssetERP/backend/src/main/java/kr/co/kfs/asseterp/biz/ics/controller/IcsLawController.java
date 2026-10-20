@@ -8,6 +8,7 @@ import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDetailRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawLookupRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawSaveReq;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawViewRes;
 import kr.co.kfs.asseterp.biz.ics.service.IcsClassTreeService;
 import kr.co.kfs.asseterp.biz.ics.service.IcsLawService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -48,6 +49,19 @@ public class IcsLawController {
                                                               @RequestParam(required = false) String relateTable,
                                                               @RequestParam(required = false) Long relateId) {
         return ApiResponse.ok(service.searchLookup(principal, classTreeId, lawSearch, statuteSearch, detailSearchYn, offset, limit, relateTable, relateId));
+    }
+
+    /** AS-IS ics.Ics01_ClassTree.selectByTypeCodePaging (Ics01_Tab_ClassTreeUserView, H02) — 법규조회 페이징 */
+    @GetMapping("/view")
+    public ApiResponse<PageRes<IcsLawViewRes>> searchView(@AuthenticationPrincipal UserPrincipal principal,
+                                                          @RequestParam(required = false) Long classTreeId,
+                                                          @RequestParam(defaultValue = "") String lawSearch,
+                                                          @RequestParam(defaultValue = "") String statuteSearch,
+                                                          @RequestParam(defaultValue = "false") boolean detailSearchYn,
+                                                          @RequestParam(defaultValue = "false") boolean advisYn,
+                                                          @RequestParam(defaultValue = "0") long offset,
+                                                          @RequestParam(defaultValue = "100") long limit) {
+        return ApiResponse.ok(service.searchView(principal, classTreeId, lawSearch, statuteSearch, detailSearchYn, advisYn, offset, limit));
     }
 
     /** AS-IS ics.Ics01_ClassTree.selectByListIcsId (Ics01_Lookup_SelectMulti "deadline", E04) — 법규와 그 기한 */
