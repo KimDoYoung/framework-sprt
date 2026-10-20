@@ -52,6 +52,7 @@ export const Apr10_Tab_Stamp: React.FC = () => {
   const [myOrgCodeId, setMyOrgCodeId] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadRowRef = useRef<AprStampManage | null>(null);
+  const imageVerRef = useRef(0);
   // 행 안 아이콘 콜백이 늘 최신 crud를 보게 한다 (columnDefs는 한 번만 만든다)
   const crudRef = useRef<ReturnType<typeof useGridCrud<AprStampManage>> | null>(null);
 
@@ -122,8 +123,10 @@ export const Apr10_Tab_Stamp: React.FC = () => {
     {  // L215 addCell(stampId_string, 60, "인감", CustomImageCell) — FileDownload?fileType=image&parentId={stampId}
       ...gb.textCenter('stampIdString', 60, '인감'),
       autoHeight: true,
+      // 올리기 뒤 재조회해도 stampIdString은 같아 AG Grid가 셀을 다시 그리지 않으므로, 올린 횟수를 값에 섞어 이미지를 다시 요청하게 한다
+      valueGetter: (p: { data?: AprStampManage }) => p.data?.stampIdString ? `${p.data.stampIdString}|${imageVerRef.current}` : '',
       cellRenderer: (p: CustomCellRendererProps<AprStampManage>) =>
-        p.value ? <img alt="" style={{ height: 50, width: 50, margin: '5px 5px' }} src={fileApi.imageUrl({ parentId: Number(p.value) })} /> : null,
+        p.value ? <img alt="" style={{ height: 50, width: 50, margin: '5px 5px' }} src={fileApi.imageUrl({ parentId: Number(String(p.value).split('|')[0]) })} /> : null,
     },
     // L216 actionCell01(Upload) → fileUpdownForm.click(). 저장 안 된 새 행은 올릴 ID가 없어 안내한다(원본은 parentId=null로 올려 실패)
     iconCell<AprStampManage>('upload', 'actionCell01', 30, ' ', row => {
@@ -168,6 +171,7 @@ export const Apr10_Tab_Stamp: React.FC = () => {
     if (!file || !row) return;
     try {
       await fileApi.upload(row.stampId, file);
+      imageVerRef.current += 1;
       if (crud.hasChanges()) await crud.saveRows();
       else await crud.retrieve();
     } catch (err) {
