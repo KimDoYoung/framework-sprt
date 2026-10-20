@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprRelateAdv, AprRelateFund, AprStamp } from '../types/apr';
+import { AprAltAppr, AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprRelateAdv, AprRelateFund, AprStamp } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -216,5 +216,26 @@ export const aprApi = {
   /** AS-IS apr.Apr40_DownloadHistory.updateList (Dcr00_Tab_ApprList.insertHistory, F09): 내려받은 문서마다 기록 1건 */
   createDownloadHistories: async (apprIds: number[]): Promise<void> => {
     await apiClient.post('v1/apr/download-histories', { apprIds });
+  },
+};
+
+/** G05 AS-IS Apr07_Tab_AltAppr (대결자 지정) */
+export const aprAltApprApi = {
+  /** AS-IS apr.Apr07_AltAppr.selectByEmpId */
+  searchAltApprs: async (): Promise<AprAltAppr[]> => {
+    const res = await apiClient.get<ApiResponse<AprAltAppr[]>>('v1/apr/alt-apprs');
+    return res.data.data ?? [];
+  },
+  /** AS-IS apr.Apr07_AltAppr.notAltApprIdList + update → 저장된 행(요청 순서). 새 행(id ≤ 0)은 id를 빼고 보낸다 */
+  saveAltApprs: async (rows: AprAltAppr[]): Promise<AprAltAppr[]> => {
+    const body = rows.map(({ altApprId, altEmpId, altEmpName, startDate, closeDate, stampYn, reasonCd, emgrPoint }) =>
+      ({ altApprId: altApprId > 0 ? altApprId : null, altEmpId, altEmpName, startDate, closeDate, stampYn, reasonCd, emgrPoint }));
+    const res = await apiClient.put<ApiResponse<AprAltAppr[]>>('v1/apr/alt-apprs', body);
+    return res.data.data ?? [];
+  },
+  /** AS-IS apr.Apr07_AltAppr.delete → 지운 건수 */
+  deleteAltApprs: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/apr/alt-apprs', { data: ids });
+    return res.data.data ?? 0;
   },
 };

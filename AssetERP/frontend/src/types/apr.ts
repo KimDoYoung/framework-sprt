@@ -244,3 +244,19 @@ export interface AprMyAuth {
   recentApprovalDate?: string | null;
   note?: string | null;
 }
+
+/** 대결자 지정 한 행 (AS-IS Apr07_AltApprModel, G05). 날짜는 'yyyy-MM-dd', stampYn은 'true'/'false' 문자열 */
+export interface AprAltAppr {
+  altApprId: number;
+  targetEmpId?: number | null;
+  altEmpId?: number | null;
+  altEmpNo?: string | null;
+  altEmpName?: string | null;
+  altOrgName?: string | null;
+  altTitleName?: string | null;
+  startDate?: string | null;
+  closeDate?: string | null;
+  stampYn?: string | null;
+  reasonCd?: string | null;
+  emgrPoint?: string | null;
+}

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr07_alt_appr.xml (selectByEmpId, notAltApprIdList, selectById) + UpdateDataModel(apr07_alt_appr)  (G05) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprAltApprMapper">
+
+    <!-- 그리드가 쓰는 열만. 날짜는 timestamp라 ::date -->
+    <sql id="altApprColumns">
+        apr07_alt_appr_id                                                            AS alt_appr_id,
+        apr07_target_emp_id                                                          AS target_emp_id,
+        apr07_alt_emp_id                                                             AS alt_emp_id,
+        org.emp01_emp_no                                                             AS alt_emp_no,
+        org.emp01_kor_nm                                                             AS alt_emp_name,
+        f_get_empTrans(org.emp01_person_id, apr07_close_date::date, 'org_code_nm')   AS alt_org_name,
+        f_get_empTrans(org.emp01_person_id, apr07_close_date::date, 'title_nm')      AS alt_title_name,
+        apr07_start_date::date                                                       AS start_date,
+        apr07_close_date::date                                                       AS close_date,
+        COALESCE(apr07_stamp_yn, 'false')                                            AS stamp_yn,
+        apr07_reason_cd                                                              AS reason_cd,
+        apr07_emgr_point                                                             AS emgr_point
+    </sql>
+
+    <!-- AS-IS apr07_alt_appr.selectByEmpId L52 (IDMS-IC) -->
+    <select id="selectByEmpId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprAltApprRes">
+        SELECT <include refid="altApprColumns"/>
+          FROM apr07_alt_appr
+               INNER JOIN emp01_person tgt ON tgt.emp01_person_id = apr07_target_emp_id
+               INNER JOIN emp01_person org ON org.emp01_person_id = apr07_alt_emp_id
+         WHERE apr07_target_emp_id = #{empId}
+         ORDER BY apr07_start_date
+    </select>
+
+    <!-- AS-IS apr07_alt_appr.notAltApprIdList L71 (IDMS-IC) -->
+    <select id="selectNotInIds" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprAltApprRes">
+        SELECT <include refid="altApprColumns"/>
+          FROM apr07_alt_appr
+               INNER JOIN emp01_person tgt ON tgt.emp01_person_id = apr07_target_emp_id AND tgt.emp01_company_id = #{companyId}
+               INNER JOIN emp01_person org ON org.emp01_person_id = apr07_alt_emp_id AND org.emp01_company_id = #{companyId}
+         WHERE 1=1
+           AND apr07_target_emp_id = #{empId}
+        <if test="altApprIds != null and altApprIds.size() != 0">
+           AND apr07_alt_appr_id NOT IN
+            <foreach collection="altApprIds" item="item" open="(" separator="," close=")">#{item}</foreach>
+        </if>
+         ORDER BY apr07_start_date
+    </select>
+
+    <!-- AS-IS apr07_alt_appr.selectById (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprAltApprRes">
+        SELECT <include refid="altApprColumns"/>
+          FROM apr07_alt_appr
+               INNER JOIN emp01_person tgt ON tgt.emp01_person_id = apr07_target_emp_id
+               INNER JOIN emp01_person org ON org.emp01_person_id = apr07_alt_emp_id
+         WHERE apr07_alt_appr_id   = #{altApprId}
+           AND apr07_target_emp_id = #{empId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO apr07_alt_appr
+               ( apr07_alt_appr_id, apr07_target_emp_id, apr07_start_date, apr07_close_date, apr07_alt_emp_id,
+                 apr07_reason_cd, apr07_emgr_point, apr07_stamp_yn )
+        VALUES ( #{req.altApprId}, #{empId}, #{req.startDate}, #{req.closeDate}, #{req.altEmpId},
+                 #{req.reasonCd}, #{req.emgrPoint}, #{req.stampYn} )
+    </insert>
+
+    <!-- UpdateDataModel UPDATE — 화면이 바꾸는 열만 -->
+    <update id="update">
+        UPDATE apr07_alt_appr
+           SET apr07_start_date = #{req.startDate},
+               apr07_close_date = #{req.closeDate},
+               apr07_alt_emp_id = #{req.altEmpId},
+               apr07_reason_cd  = #{req.reasonCd},
+               apr07_emgr_point = #{req.emgrPoint},
+               apr07_stamp_yn   = #{req.stampYn}
+         WHERE apr07_alt_appr_id   = #{req.altApprId}
+           AND apr07_target_emp_id = #{empId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM apr07_alt_appr
+         WHERE apr07_alt_appr_id   = #{altApprId}
+           AND apr07_target_emp_id = #{empId}
+    </delete>
+</mapper>

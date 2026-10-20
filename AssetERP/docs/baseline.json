@@ -3262,5 +3262,27 @@
     "note": "docs/work/G/G04-작업기록.md",
     "history": [],
     "id": "G04"
+  },
+  "Apr07_Tab_AltAppr": {
+    "commit": "9dd3b12c43700f827e2d874d37b66ab865fa1cd8",
+    "commit_short": "9dd3b12",
+    "branch": "ioc",
+    "commit_date": "2026-10-19",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/apr/Apr07_Tab_AltAppr.java": "44f41c941e85716b68b175cf39c81f477f1e6754",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr07_AltApprModel.java": "49cd7086d8cb346e13a22a42230c85603a4ebac7",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr07_AltApprModelProperties.java": "8cb000841ddf8b346d686ead64b8fba975911def",
+      "application/src/main/java/myApp/server/apr/Apr07_AltAppr.java": "f872a82e5c4452519a676c7a9539a113cd3eb2f7",
+      "application/src/main/java/myApp/server/apr/mapper/apr07_alt_appr.xml": "5b159372dacfefa13963f603c30707b5702651ad"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-20T12:29:18+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/G/G05-작업기록.md",
+    "history": [],
+    "id": "G05"
   }
 }
