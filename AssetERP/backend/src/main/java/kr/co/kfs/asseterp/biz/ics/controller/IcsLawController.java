@@ -2,10 +2,13 @@ package kr.co.kfs.asseterp.biz.ics.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.ics.dto.ClassTreeMoveReq;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsCompanyInfoSaveReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawContentReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDeadlineRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDetailRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawExceptRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawLookupRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawManageRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawSaveReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawPeriodRes;
@@ -52,6 +55,43 @@ public class IcsLawController {
                                                               @RequestParam(required = false) String relateTable,
                                                               @RequestParam(required = false) Long relateId) {
         return ApiResponse.ok(service.searchLookup(principal, classTreeId, lawSearch, statuteSearch, detailSearchYn, offset, limit, relateTable, relateId));
+    }
+
+    /** AS-IS ics.Ics01_ClassTree.selectByTypeCodePaging (Ics01_Tab_ClassTreeUser, H08) — 법규관리(회사별 제외·일임·관리그룹) 페이징 */
+    @GetMapping("/manage")
+    public ApiResponse<PageRes<IcsLawManageRes>> searchManage(@AuthenticationPrincipal UserPrincipal principal,
+                                                              @RequestParam(required = false) Long classTreeId,
+                                                              @RequestParam(defaultValue = "") String lawSearch,
+                                                              @RequestParam(defaultValue = "") String statuteSearch,
+                                                              @RequestParam(defaultValue = "false") boolean detailSearchYn,
+                                                              @RequestParam(defaultValue = "false") boolean advisYn,
+                                                              @RequestParam(required = false) Long mngGroupId,
+                                                              @RequestParam(defaultValue = "0") long offset,
+                                                              @RequestParam(defaultValue = "100") long limit) {
+        return ApiResponse.ok(service.searchManage(principal, classTreeId, lawSearch, statuteSearch, detailSearchYn, advisYn, mngGroupId, offset, limit));
+    }
+
+    /** AS-IS ics.Ics01_ClassTree.refresh (H08) — 법규관리 한 행 */
+    @GetMapping("/{classTreeId}/manage")
+    public ApiResponse<IcsLawManageRes> refreshManage(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long classTreeId) {
+        return ApiResponse.ok(service.refreshManage(principal, classTreeId));
+    }
+
+    /** AS-IS ics.Ics01_ClassTree.selectByExcept (Ics01_Lookup_Except, H08) — 법규 사용여부 설정 창. exceptYn 'true'/'false', 비면 전체 */
+    @GetMapping("/except")
+    public ApiResponse<List<IcsLawExceptRes>> searchExcept(@AuthenticationPrincipal UserPrincipal principal,
+                                                           @RequestParam(required = false) Long classTreeId,
+                                                           @RequestParam(required = false) String exceptYn,
+                                                           @RequestParam(defaultValue = "") String searchText,
+                                                           @RequestParam(defaultValue = "false") boolean detailSearchYn) {
+        return ApiResponse.ok(service.searchExcept(principal, classTreeId, exceptYn, searchText, detailSearchYn));
+    }
+
+    /** AS-IS ics.Ics03_CompanyInfo.modelUpdate (Ics01_Tab_ClassTreeUser.updateCheck·Ics01_Lookup_Except.update, H08) — 법규별 제외·자동·일임을 회사 설정에 저장 */
+    @PutMapping("/company-info")
+    public ApiResponse<Integer> saveCompanyInfo(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<IcsCompanyInfoSaveReq> rows) {
+        service.saveCompanyInfo(principal, rows);
+        return ApiResponse.ok(rows.size());
     }
 
     /** AS-IS ics.Ics01_ClassTree.selectByTypeCodePaging (Ics01_Tab_ClassTreeUserView, H02) — 법규조회 페이징 */

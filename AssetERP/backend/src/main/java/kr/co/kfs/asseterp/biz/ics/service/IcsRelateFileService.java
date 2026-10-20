@@ -33,6 +33,11 @@ public class IcsRelateFileService {
         return mapper.selectIcsFormFiles("%" + (searchText == null ? "" : searchText) + "%");
     }
 
+    /** AS-IS sys.Sys10_File.getIcsFile(parentId 0, lawType null): 법규보고 서식파일 목록(H07) — 법령구분·내용 순. 검색어는 서비스가 %…%로 */
+    public List<IcsFormFileRes> searchFormFilesUser(String searchText) {
+        return mapper.selectIcsFormFilesUser("%" + (searchText == null ? "" : searchText) + "%");
+    }
+
     /** AS-IS sys.Sys11_RelateFile.insert: 이미 연결된 파일은 건너뛰고 새 연결만 만든다 → 새로 연결한 건수 */
     @Transactional
     public int insert(UserPrincipal user, Long relateId, List<Long> fileIds) {

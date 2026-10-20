@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch } from '../types/ics';
+import { ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsShare, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 export const icsApi = {
@@ -101,6 +101,12 @@ export const icsApi = {
   /** AS-IS sys.Sys10_File.getIcsFile: 불러올 서식파일 */
   searchFormFiles: async (searchText: string): Promise<IcsFormFile[]> => {
     const res = await apiClient.get<ApiResponse<IcsFormFile[]>>('v1/ics/form-files', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys10_File.getIcsFile(lawType null) (Ics01_Tab_IcsFileUser, H07): 법규보고 서식파일 목록 */
+  searchFormFilesUser: async (searchText: string): Promise<IcsFormFile[]> => {
+    const res = await apiClient.get<ApiResponse<IcsFormFile[]>>('v1/ics/form-files/user', { params: { searchText } });
     return res.data.data ?? [];
   },
 
@@ -425,6 +431,58 @@ export const icsApi = {
   updateUserRequestLawContent: async (userRequestId: number, lawContent: string): Promise<IcsUserRequest> => {
     const res = await apiClient.put<ApiResponse<IcsUserRequest>>(`v1/ics/user-requests/${userRequestId}/law-content`, { lawContent });
     return res.data.data;
+  },
+
+  // ── H08 법규관리 (Ics01_Tab_ClassTreeUser) ──
+
+  /** AS-IS ics.Ics01_ClassTree.selectByTypeCodePaging(typeCode IT): 법규관리(H08) 페이징. mngGroupId = 관리그룹 */
+  searchLawManage: async (params: {
+    classTreeId: number | null; lawSearch: string; statuteSearch: string; detailSearchYn: boolean; advisYn: boolean; mngGroupId: number | null; offset: number; limit: number;
+  }): Promise<PageRes<IcsLawManage>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<IcsLawManage>>>('v1/ics/laws/manage', { params });
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics01_ClassTree.refresh (H08): 서식파일 창을 닫은 뒤 한 행 */
+  refreshLawManage: async (classTreeId: number): Promise<IcsLawManage> => {
+    const res = await apiClient.get<ApiResponse<IcsLawManage>>(`v1/ics/laws/${classTreeId}/manage`);
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics01_ClassTree.selectByExcept (Ics01_Lookup_Except, H08). exceptYn 'true'(미사용)·'false'(사용)·비우면 전체 */
+  searchLawExcept: async (params: { classTreeId: number | null; exceptYn?: string; searchText: string; detailSearchYn: boolean }): Promise<IcsLawExcept[]> => {
+    const res = await apiClient.get<ApiResponse<IcsLawExcept[]>>('v1/ics/laws/except', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics03_CompanyInfo.modelUpdate (H08): 법규별 제외·자동·일임을 회사 설정에 저장 */
+  saveCompanyInfo: async (rows: IcsCompanyInfoSave[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/ics/laws/company-info', rows);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS ics.Ics02_Manager.selectByCompanyId (Ics02_Lookup_Manager, H08): 로그인 회사의 관리그룹 */
+  searchManagers: async (): Promise<IcsManager[]> => {
+    const res = await apiClient.get<ApiResponse<IcsManager[]>>('v1/ics/managers');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics04_Share.selectByManagerId (Ics01_Lookup_Share, H08): 관리그룹의 공유 */
+  searchManagerShares: async (managerId: number): Promise<IcsShare[]> => {
+    const res = await apiClient.get<ApiResponse<IcsShare[]>>(`v1/ics/managers/${managerId}/shares`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics05_RelateManager.selectByClassTreeId (없으면 ics.Ics02_Manager.getDefaultYn) (Ics01_Lookup_Share, H08) */
+  getRelateManager: async (classTreeId: number): Promise<IcsManager> => {
+    const res = await apiClient.get<ApiResponse<IcsManager>>('v1/ics/relate-managers', { params: { classTreeId } });
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics05_RelateManager.relateUpdate (H08): 고른 법규들을 관리그룹에 연결 → 바뀐 법규관리 행들 */
+  relateManager: async (managerId: number, classTreeIds: number[]): Promise<IcsLawManage[]> => {
+    const res = await apiClient.put<ApiResponse<IcsLawManage[]>>('v1/ics/relate-managers', { managerId, classTreeIds });
+    return res.data.data ?? [];
   },
 };
 

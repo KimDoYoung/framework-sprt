@@ -651,6 +651,154 @@
          WHERE ics01_class_tree_id = #{classTreeId}
     </select>
 
+    <!-- AS-IS ics01_class_tree.pagingCondition L202 (IDMS-IC) — Ics01_Tab_ClassTreeUser(H08)가 쓰는 분기: 법규조회(lawViewCondition)에 mngGroupId(관리그룹) 조건을 더한다 -->
+    <sql id="lawManageCondition">
+        <include refid="lawViewCondition"/>
+        <if test="mngGroupId != null">
+           AND EXISTS ( /* 미지정그룹이 아닌 경우 */
+                        SELECT 1
+                          FROM ics05_relate_manager
+                               INNER JOIN ics02_manager ON ics02_manager_id = ics05_manager_id
+                         WHERE ics05_ics_class_tree_id             = ics01_class_tree_id
+                           AND ics05_manager_id                    = #{mngGroupId}
+                           AND COALESCE(ics02_default_yn,'false') != 'true'
+                         UNION
+                        /* 미지정그룹인 경우 */
+                        SELECT 1
+                          FROM ics02_manager
+                         WHERE ics02_manager_id                   = #{mngGroupId}
+                           AND COALESCE(ics02_default_yn,'false') = 'true'
+                           AND NOT EXISTS ( SELECT 1
+                                              FROM ics05_relate_manager
+                                             WHERE ics05_ics_class_tree_id = ics01_class_tree_id
+                                               AND ics05_manager_id       != #{mngGroupId} ) )
+        </if>
+    </sql>
+
+    <!-- 법규관리(H08) 그리드 열 — selectByTypeCodePaging·refresh의 같은 식 (관리그룹명·제외·자동 포함) -->
+    <sql id="lawManageColumns">
+               ics01_class_tree_id      AS class_tree_id,
+               ics01_class_tree_cd      AS class_tree_code,
+               ics01_class_tree_nm      AS class_tree_name,
+               ics01_content            AS content,
+               ics01_submit_to          AS submit_to,
+               ics01_related_law        AS related_law,
+               COALESCE(COALESCE(ics03_advis_yn, ics01_advis_yn), 'false') AS advis_yn,
+               f_get_ics_nm(ics01_class_tree_id, '3')                       AS parent_tree_full_name,
+               ( SELECT ics02_manager_group_nm
+                   FROM ics02_manager
+                  WHERE ics02_manager_id = ( SELECT ics05_manager_id
+                                               FROM ics05_relate_manager
+                                              WHERE ics05_ics_class_tree_id = ics01_class_tree_id
+                                                AND ics05_company_id = #{companyId} ) )  AS manager_group_name,
+               COALESCE(ics03_except_yn, 'false')                           AS except_yn,
+               COALESCE(ics03_auto_yn  , 'false')                           AS auto_yn
+               <include refid="lawSubSelectsView"/>
+    </sql>
+
+    <!-- AS-IS ics01_class_tree.selectByTypeCodePaging L254 (IDMS-IC) — 법규관리(H08) -->
+    <select id="selectLawManage" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsLawManageRes">
+        SELECT <include refid="lawManageColumns"/>
+          FROM ics01_class_tree
+               LEFT OUTER JOIN ics03_company_info ON (ics03_ics_class_tree_id = ics01_class_tree_id AND ics03_company_id = #{companyId})
+         WHERE 1=1
+        <include refid="lawManageCondition"/>
+         ORDER BY ics01_class_tree_cd
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <!-- AS-IS ics01_class_tree.selectByTypeCodePagingTotal L305 (IDMS-IC) -->
+    <select id="selectLawManageTotal" resultType="long">
+        SELECT count(ics01_class_tree.*)
+          FROM ics01_class_tree
+               LEFT OUTER JOIN ics03_company_info ON (ics03_ics_class_tree_id = ics01_class_tree_id AND ics03_company_id = #{companyId})
+         WHERE 1=1
+        <include refid="lawManageCondition"/>
+    </select>
+
+    <!-- AS-IS ics01_class_tree.refresh L498 (IDMS-IC) — 법규관리(H08) 한 행 -->
+    <select id="selectLawManageById" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsLawManageRes">
+        SELECT <include refid="lawManageColumns"/>
+          FROM ics01_class_tree
+               LEFT OUTER JOIN ics03_company_info ON (ics03_ics_class_tree_id = ics01_class_tree_id AND ics03_company_id = #{companyId})
+         WHERE ics01_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- AS-IS ics01_class_tree.selectByExcept L448 (IDMS-IC) — 법규 사용여부 설정 창(H08 Ics01_Lookup_Except). 안쪽은 그대로(sch03_deadline 조인이 법규마다 기한 수만큼 행을 늘리는 것도 원본과 같다),
+         바깥 SELECT *만 창 그리드 열로 풀었다. publicType은 서버가 항상 '%', 회사 0의 법규만(ics01_company_id = 0) -->
+    <select id="selectLawExcept" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsLawExceptRes">
+        SELECT ics01_class_tree_id      AS class_tree_id,
+               ics01_class_tree_cd      AS class_tree_code,
+               ics01_class_tree_full_nm AS class_tree_full_name,
+               ics01_cycle_nm           AS cycle_name,
+               ics01_except_yn          AS except_yn
+          FROM ( SELECT  a.*
+                      ,  f_ics_class_tree_nm_allpath(a.ics01_class_tree_id)                            AS ics01_class_tree_full_nm
+                      ,  COALESCE(ics03_except_yn, 'false')                                            AS ics01_except_yn
+                      ,  f_get_ics_nm(a.ics01_class_tree_id, '1')                                      AS ics01_level0_nm
+                      ,  ( SELECT CASE WHEN COUNT(*)=1 THEN MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate()))
+                                       ELSE MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate())) || ' 외 ' || COUNT(sch03_deadline.*) - 1 || '건'
+                                  END AS ics01_cycle_nm
+                             FROM sch03_deadline
+                            WHERE sch03_info_id    = ics01_class_tree_id
+                              AND sch03_company_id = ics01_company_id
+                            LIMIT 1 )                                                                  AS ics01_cycle_nm
+                   FROM  ics01_class_tree a
+                         LEFT OUTER JOIN ics03_company_info ON (ics03_ics_class_tree_id = ics01_class_tree_id AND ics03_company_id = #{companyId})
+                         LEFT OUTER JOIN sch03_deadline b ON ( b.sch03_info_id = ics01_class_tree_id AND
+                                                               b.sch03_info_id = ( SELECT sch03_info_id
+                                                                                     FROM sch03_deadline
+                                                                                    WHERE sch03_info_id    = ics01_class_tree_id
+                                                                                      AND sch03_company_id = ics01_company_id
+                                                                                      AND sch03_cycle_cd   like #{cycleCode}
+                                                                                    LIMIT 1 ) )
+                  WHERE  1=1
+                    AND  coalesce(a.ics01_public_type, '0') like #{publicType}
+                    AND  coalesce(ics03_except_yn, 'false') like #{exceptYn}
+                    AND  a.ics01_type_cd like #{typeCode}
+                    AND  a.ics01_company_id = 0
+                    AND  a.ics01_type_cd    = 'IT'
+                    AND  b.sch03_deadline_id IS NOT NULL
+               ) ics
+         WHERE  COALESCE(ics.ics01_level0_nm,'X') != 'X'
+           AND  ( ( #{detailSearchYn} = 'false'                                                     AND
+                    ics01_class_tree_cd||ics01_class_tree_full_nm LIKE #{searchText}                ) OR
+                  ( #{detailSearchYn} = 'true'                                                      AND
+                    ics01_class_tree_cd||ics01_class_tree_full_nm||ics01_content LIKE #{searchText} ) )
+        <if test="classTreeId != null">
+           AND  ics01_class_tree_id IN (<include refid="icsTreeDown"/>)
+        </if>
+         ORDER BY ics01_class_tree_cd, ics01_seq
+    </select>
+
+    <!-- AS-IS ics03_company_info.selectByClassTreeId (IDMS-IC) -->
+    <select id="selectCompanyInfo" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsCompanyInfoRes">
+        SELECT ics03_company_info_id     AS company_info_id,
+               ics03_except_yn           AS except_yn,
+               ics03_auto_yn             AS auto_yn,
+               ics03_advis_yn            AS advis_yn
+          FROM ics03_company_info
+         WHERE ics03_company_id = #{companyId}
+           AND ics03_ics_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- AS-IS ics.Ics03_CompanyInfo.modelUpdate → UpdateDataModel(ics03_company_info) INSERT — 화면이 바꾸는 열(제외·자동·일임) -->
+    <insert id="insertCompanyInfo">
+        INSERT INTO ics03_company_info (ics03_company_info_id, ics03_company_id, ics03_ics_class_tree_id, ics03_auto_yn, ics03_except_yn, ics03_advis_yn)
+        VALUES (#{companyInfoId}, #{companyId}, #{classTreeId}, #{autoYn}, #{exceptYn}, #{advisYn})
+    </insert>
+
+    <!-- 같은 UPDATE -->
+    <update id="updateCompanyInfo">
+        UPDATE ics03_company_info
+           SET ics03_auto_yn   = #{autoYn},
+               ics03_except_yn = #{exceptYn},
+               ics03_advis_yn  = #{advisYn}
+         WHERE ics03_company_info_id = #{companyInfoId}
+           AND ics03_company_id      = #{companyId}
+    </update>
+
     <select id="countById" resultType="int">
         SELECT COUNT(*) FROM ics01_class_tree WHERE ics01_class_tree_id = #{classTreeId}
     </select>

@@ -45,4 +45,10 @@ public class IcsRelateFileController {
     public ApiResponse<List<IcsFormFileRes>> searchFormFiles(@RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.searchFormFiles(searchText));
     }
+
+    /** AS-IS sys.Sys10_File.getIcsFile(lawType null): 법규보고 서식파일 화면(Ics01_Tab_IcsFileUser, H07)의 목록 */
+    @GetMapping("/form-files/user")
+    public ApiResponse<List<IcsFormFileRes>> searchFormFilesUser(@RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchFormFilesUser(searchText));
+    }
 }

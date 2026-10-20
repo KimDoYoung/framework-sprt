@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ics/mapper/ics02_manager.xml (selectByCompanyId, getDefaultYn) + ics04_share.xml (selectByManagerId)  (H08 Ics02_Lookup_Manager·Ics01_Lookup_Share) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsManagerMapper">
+
+    <sql id="managerColumns">
+        ics02_manager_id                          AS manager_id,
+        ics02_manager_group_nm                    AS manager_group_name,
+        ics02_person_id                           AS person_id,
+        f_emp_kor_nm(ics02_person_id)             AS person_name,
+        ics02_note                                AS note,
+        COALESCE(ics02_default_yn, 'false')       AS default_yn
+    </sql>
+
+    <!-- AS-IS ics02_manager.selectByCompanyId (IDMS-IC) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsManagerRes">
+        SELECT <include refid="managerColumns"/>
+          FROM ics02_manager
+         WHERE ics02_company_id = #{companyId}
+         ORDER BY COALESCE(ics02_default_yn, 'false') DESC
+    </select>
+
+    <!-- AS-IS ics02_manager.getDefaultYn (IDMS-IC) — 미지정 관리그룹 -->
+    <select id="selectDefault" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsManagerRes">
+        SELECT <include refid="managerColumns"/>
+          FROM ics02_manager
+         WHERE ics02_company_id = #{companyId}
+           AND COALESCE(ics02_default_yn, 'false') LIKE 'true'
+         LIMIT 1
+    </select>
+
+    <!-- 관리그룹이 이 회사 것인지 확인 (보안 보강, AS-IS에는 없음) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsManagerRes">
+        SELECT <include refid="managerColumns"/>
+          FROM ics02_manager
+         WHERE ics02_company_id = #{companyId}
+           AND ics02_manager_id = #{managerId}
+    </select>
+
+    <!-- AS-IS ics04_share.selectByManagerId (IDMS-IC) -->
+    <select id="selectSharesByManagerId" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsShareRes">
+        SELECT ics04_share_id                                                      AS share_id,
+               ics04_share_cd                                                      AS share_code,
+               f_cdnm('ShareCode', ics04_share_cd, ics04_company_id, f_sysdate())  AS share_name,
+               ics04_person_id                                                     AS person_id,
+               f_emp_kor_nm(ics04_person_id)                                       AS person_name,
+               ics04_org_id                                                        AS org_id,
+               f_org_nm(ics04_org_id, f_sysdate())                                 AS org_name,
+               ics04_company_id                                                    AS company_id
+          FROM ics04_share a
+         WHERE ics04_manager_id = #{managerId}
+           AND ics04_company_id = #{companyId}
+         ORDER BY ics04_share_cd, ics04_org_id
+    </select>
+</mapper>

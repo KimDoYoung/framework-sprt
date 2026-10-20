@@ -16,6 +16,9 @@ public interface IcsRelateFileMapper {
     /** AS-IS sys10_file.getIcsFile (parentId 0, lawType null, firstRegDateYn true) */
     List<IcsFormFileRes> selectIcsFormFiles(@Param("searchText") String searchText);
 
+    /** AS-IS sys10_file.getIcsFile (parentId 0, lawType null, firstRegDateYn 없음) — 법규보고 서식파일 H07 */
+    List<IcsFormFileRes> selectIcsFormFilesUser(@Param("searchText") String searchText);
+
     /** AS-IS sys11_relate_file.insertCheck — 같은 파일·부모가 이미 연결됐는지 */
     int countRelate(@Param("fileId") Long fileId, @Param("parentId") Long parentId);
 

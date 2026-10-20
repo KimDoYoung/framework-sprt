@@ -140,6 +140,63 @@ export interface IcsLawView {
   advisYn?: string | null;
 }
 
+/** 법규관리 한 행 (AS-IS Ics01_ClassTreeModel 중 Ics01_Tab_ClassTreeUser 그리드 열 + id, H08). advisYn·exceptYn·autoYn은 'true'/'false' */
+export interface IcsLawManage {
+  classTreeId: number;
+  classTreeCode?: string | null;
+  classTreeName?: string | null;
+  content?: string | null;
+  submitTo?: string | null;
+  relatedLaw?: string | null;
+  revisionCount?: string | null;
+  cycleName?: string | null;
+  fileCount?: string | null;
+  parentTreeFullName?: string | null;
+  advisYn?: string | null;
+  managerGroupName?: string | null;
+  exceptYn?: string | null;
+  autoYn?: string | null;
+}
+
+/** 법규 사용여부 설정 창 한 행 (AS-IS Ics01_ClassTreeModel 중 Ics01_Lookup_Except 그리드 열, H08). exceptYn은 'true'(미사용)/'false' */
+export interface IcsLawExcept {
+  classTreeId: number;
+  classTreeCode?: string | null;
+  classTreeFullName?: string | null;
+  cycleName?: string | null;
+  exceptYn?: string | null;
+}
+
+/** 법규 관리그룹 (AS-IS Ics02_ManagerModel, H08) */
+export interface IcsManager {
+  managerId: number;
+  managerGroupName?: string | null;
+  personId?: number | null;
+  personName?: string | null;
+  note?: string | null;
+  defaultYn?: boolean | null;
+}
+
+/** 관리그룹 공유 한 행 (AS-IS Ics04_ShareModel, H08) */
+export interface IcsShare {
+  shareId: number;
+  shareCode?: string | null;
+  shareName?: string | null;
+  personId?: number | null;
+  personName?: string | null;
+  orgId?: number | null;
+  orgName?: string | null;
+  companyId?: number | null;
+}
+
+/** 법규 회사별 설정 저장 한 행 (AS-IS ics.Ics03_CompanyInfo.modelUpdate, H08) */
+export interface IcsCompanyInfoSave {
+  classTreeId: number;
+  exceptYn?: boolean;
+  autoYn?: boolean;
+  advisYn?: boolean;
+}
+
 /** 월별 법규조회 한 행 (AS-IS Ics01_ClassTreeModel 중 Ics01_Tab_PeriodList 그리드 열, H04). rowNo = 행 키, realClassTreeId = 진짜 법규 id. advisYn은 'true'/'false' */
 export interface IcsLawPeriod {
   rowNo: number;

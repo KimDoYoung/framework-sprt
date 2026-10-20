@@ -1,10 +1,14 @@
 package kr.co.kfs.asseterp.biz.ics.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsCompanyInfoRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsCompanyInfoSaveReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawContentReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDeadlineRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDetailRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawExceptRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawLookupRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawManageRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawPeriodRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawViewRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawRes;
@@ -161,5 +165,58 @@ public class IcsLawService {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
         return mapper.selectLawRefresh(classTreeId, user.getCompanyId());
+    }
+
+    /**
+     * AS-IS Ics01_Tab_ClassTreeUser.retrieve → ics.Ics01_ClassTree.selectByTypeCodePaging (H08): 회사별 법규관리 목록.
+     * 검색어는 서비스가 %…%로, typeCode "IT"는 서버. mngGroupId(관리그룹)가 있으면 그 그룹에 연결된(미지정 그룹이면 어느 그룹에도 안 묶인) 법규만
+     */
+    public PageRes<IcsLawManageRes> searchManage(UserPrincipal user, Long classTreeId, String lawSearch, String statuteSearch, boolean detailSearchYn,
+                                                 boolean advisYn, Long mngGroupId, long offset, long limit) {
+        String law = "%" + (lawSearch == null ? "" : lawSearch) + "%";
+        String statute = "%" + (statuteSearch == null ? "" : statuteSearch) + "%";
+        Long companyId = user.getCompanyId();
+        return new PageRes<>(mapper.selectLawManageTotal(companyId, classTreeId, TYPE_CODE, law, statute, detailSearchYn, advisYn, mngGroupId),
+                mapper.selectLawManage(companyId, classTreeId, TYPE_CODE, law, statute, detailSearchYn, advisYn, mngGroupId, limit, offset));
+    }
+
+    /** AS-IS ics.Ics01_ClassTree.refresh (H08): 서식파일 창을 닫은 뒤 한 행을 다시 읽는다 */
+    public IcsLawManageRes refreshManage(UserPrincipal user, Long classTreeId) {
+        IcsLawManageRes row = mapper.selectLawManageById(classTreeId, user.getCompanyId());
+        if (row == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return row;
+    }
+
+    /**
+     * AS-IS ics.Ics01_ClassTree.selectByExcept (Ics01_Lookup_Except, H08): 법규 사용여부 설정 창 목록.
+     * exceptYn은 'true'(미사용)·'false'(사용)·비면 전체('%'), 검색어는 분류코드+분류명(상세내용 포함이면 상세내용까지) %…%. cycleCode·publicType은 '%'
+     */
+    public List<IcsLawExceptRes> searchExcept(UserPrincipal user, Long classTreeId, String exceptYn, String searchText, boolean detailSearchYn) {
+        String except = exceptYn == null || exceptYn.isBlank() ? "%" : exceptYn;
+        return mapper.selectLawExcept(user.getCompanyId(), classTreeId, TYPE_CODE, "%", "%", except,
+                "%" + (searchText == null ? "" : searchText) + "%", String.valueOf(detailSearchYn));
+    }
+
+    /**
+     * AS-IS Ics01_Tab_ClassTreeUser.updateCheck / Ics01_Lookup_Except.update → ics.Ics03_CompanyInfo.selectByClassTreeId + modelUpdate (H08).
+     * 고친 법규마다 회사 설정 행(ics03_company_info)이 있으면 UPDATE, 없으면 새 ID로 INSERT. 안 보낸 값은 AS-IS 모델(boolean)처럼 자동처리 false, 일임 기존 값(없으면 false)
+     */
+    @Transactional
+    public void saveCompanyInfo(UserPrincipal user, List<IcsCompanyInfoSaveReq> rows) {
+        Long companyId = user.getCompanyId();
+        for (IcsCompanyInfoSaveReq r : rows) {
+            List<IcsCompanyInfoRes> found = mapper.selectCompanyInfo(r.classTreeId(), companyId);
+            IcsCompanyInfoRes existing = found.isEmpty() ? null : found.get(0);
+            String except = String.valueOf(Boolean.TRUE.equals(r.exceptYn()));
+            String auto = String.valueOf(Boolean.TRUE.equals(r.autoYn()));
+            String advis = r.advisYn() != null ? String.valueOf(r.advisYn()) : String.valueOf(existing != null && "true".equals(existing.advisYn()));
+            if (existing != null) {
+                mapper.updateCompanyInfo(existing.companyInfoId(), companyId, auto, except, advis);
+            } else {
+                mapper.insertCompanyInfo(mapper.selectNextId(), companyId, r.classTreeId(), auto, except, advis);
+            }
+        }
     }
 }

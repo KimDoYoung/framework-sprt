@@ -105,3 +105,49 @@ export interface Sch15IpoItemMatching {
   validItemCode?: string | null;
   itemName?: string | null;
 }
+
+/** 법규보고 점검 한 행 (AS-IS Sch04_ListModel, H06). noneDataYn이면 아직 저장 안 된 건(listId는 UNION이 만든 임시 번호) */
+export interface Sch04List {
+  listId: number;
+  companyId?: number | null;
+  closeDate?: string | null;
+  mngOrgId?: number | null;
+  mngOrgName?: string | null;
+  managerId?: number | null;
+  managerName?: string | null;
+  personId?: number | null;
+  personName?: string | null;
+  statusCode?: string | null;
+  statusName?: string | null;
+  manageDate?: string | null;
+  confirmYn?: boolean | null;
+  title?: string | null;
+  icsClassTreeId?: number | null;
+  relatedLaw?: string | null;
+  apprTitle?: string | null;
+  issApprId?: number | null;
+  issDate?: string | null;
+  scheduleCode?: string | null;
+  scheduleName?: string | null;
+  cycleCode?: string | null;
+  cycleName?: string | null;
+  advisYn?: boolean | null;
+  infoId?: number | null;
+  deadlineId?: number | null;
+  note?: string | null;
+  confirmDate?: string | null;
+  confirmerId?: number | null;
+  confirmerName?: string | null;
+  noneDataYn?: boolean | null;
+}
+
+/** 법규보고 점검 조회 조건. 발생구분·주기구분은 전체면 '%' */
+export interface Sch04ListSearch {
+  startDate: string;
+  closeDate: string;
+  doneExceptYn: boolean;
+  scheduleCode: string;
+  cycleCode: string;
+  searchText: string;
+  advisYn: boolean;
+}

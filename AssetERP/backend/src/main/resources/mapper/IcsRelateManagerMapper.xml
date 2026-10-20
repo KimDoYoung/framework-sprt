@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ics/mapper/ics05_relate_manager.xml (selectByClassTreeId, delete, insert) + sch02_share.xml (delete, insert)  (H08 Ics01_Lookup_Share) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsRelateManagerMapper">
+
+    <!-- AS-IS ics05_relate_manager.selectByClassTreeId (IDMS-IC) — 법규에 연결된 관리그룹 (ics02_manager 열만) -->
+    <select id="selectByClassTreeId" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsManagerRes">
+        SELECT ics02_manager_id                          AS manager_id,
+               ics02_manager_group_nm                    AS manager_group_name,
+               ics02_person_id                           AS person_id,
+               f_emp_kor_nm(ics02_person_id)             AS person_name,
+               ics02_note                                AS note,
+               COALESCE(ics02_default_yn, 'false')       AS default_yn
+          FROM ics05_relate_manager
+               INNER JOIN ics02_manager ON ics05_manager_id = ics02_manager_id
+         WHERE 1=1
+           AND ics05_company_id = #{companyId}
+           AND ics05_ics_class_tree_id = #{icsClassTreeId}
+    </select>
+
+    <!-- AS-IS ics05_relate_manager.delete (IDMS-IC) -->
+    <delete id="deleteByClassTreeId">
+        DELETE
+          FROM ics05_relate_manager
+         WHERE ics05_ics_class_tree_id = #{icsClassTreeId}
+           AND ics05_company_id = #{companyId}
+    </delete>
+
+    <!-- AS-IS ics05_relate_manager.insert (IDMS-IC) -->
+    <insert id="insert">
+        INSERT INTO ics05_relate_manager
+               ( ics05_relate_manager_id, ics05_company_id, ics05_ics_class_tree_id, ics05_manager_id )
+        VALUES ( f_create_seq(), #{companyId}, #{icsClassTreeId}, #{managerId} )
+    </insert>
+
+    <!-- AS-IS sch02_share.delete (IDMS-IC) -->
+    <delete id="deleteShare">
+        DELETE
+          FROM sch02_share
+         WHERE sch02_info_id    = #{icsClassTreeId}
+           AND sch02_company_id = #{companyId}
+    </delete>
+
+    <!-- AS-IS sch02_share.insert (IDMS-IC) — 시작일·종료일은 AS-IS도 안 보낸다(null) -->
+    <insert id="insertShare">
+        INSERT INTO sch02_share
+               ( sch02_share_id, sch02_info_id, sch02_company_id, sch02_share_cd, sch02_person_id, sch02_org_id, sch02_start_date, sch02_close_date )
+        VALUES ( f_create_seq(), #{infoId}, #{companyId}, #{shareCode}, #{personId}, #{orgId}, NULL, NULL )
+    </insert>
+</mapper>

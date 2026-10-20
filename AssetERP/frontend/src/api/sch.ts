@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import {
   Sch03Deadline, Sch03DeadlineSaveReq, Sch03DeadlineTemplate, Sch05RelateIcs,
-  Sch10Ipo, Sch10IpoSearch, Sch12IpoCorp, Sch14IpoMismatch, Sch15IpoItemMatching,
+  Sch04List, Sch04ListSearch, Sch10Ipo, Sch10IpoSearch, Sch12IpoCorp, Sch14IpoMismatch, Sch15IpoItemMatching,
 } from '../types/sch';
 import { readBlobError } from './file';
 
@@ -173,5 +173,44 @@ export const schApi = {
     const body = rows.map(({ ipoMismatchId, checkYn }) => ({ ipoMismatchId, checkYn }));
     const res = await apiClient.put<ApiResponse<Sch14IpoMismatch[]>>('v1/sch/ipo-mismatches', body);
     return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch04_List.selectByIcs (H06 법규보고 점검): 발생구분·주기구분은 전체면 '%' */
+  searchIcsList: async (cond: Sch04ListSearch): Promise<Sch04List[]> => {
+    const res = await apiClient.get<ApiResponse<Sch04List[]>>('v1/sch/lists/ics', { params: cond });
+    return res.data.data ?? [];
+  },
+
+  /** 출력/다운로드 (AS-IS sys.Sys99_Print.insertRdIcsList + RD 리포트 Sch04_Rd_IcsList → xlsx) — 조회 조건 그대로, 브라우저 저장 */
+  downloadIcsListExcel: async (cond: Sch04ListSearch, fileName: string): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/sch/lists/ics/excel', { params: cond, responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** AS-IS sch.Sch04_List.upsert: 고친 행(처리구분·처리일)을 저장한다 */
+  upsertIcsList: async (rows: Sch04List[]): Promise<number> => {
+    const body = rows.map(r => ({
+      listId: r.listId, closeDate: r.closeDate, manageDate: r.manageDate, infoId: r.infoId, title: r.title, scheduleCode: r.scheduleCode,
+      cycleCode: r.cycleCode, managerId: r.managerId, statusCode: r.statusCode, note: r.note, deadlineId: r.deadlineId, apprId: null, mngOrgId: r.mngOrgId,
+    }));
+    const res = await apiClient.put<ApiResponse<number>>('v1/sch/lists', body);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sch.Sch04_List.updateConfirm: type U 처리결과 저장 / P 확인 / C 확인취소 → 바뀐 한 행 */
+  updateIcsListResult: async (listId: number, type: 'U' | 'P' | 'C', note?: string | null): Promise<Sch04List> => {
+    const res = await apiClient.put<ApiResponse<Sch04List>>(`v1/sch/lists/${listId}/result`, { type, note });
+    return res.data.data;
   },
 };

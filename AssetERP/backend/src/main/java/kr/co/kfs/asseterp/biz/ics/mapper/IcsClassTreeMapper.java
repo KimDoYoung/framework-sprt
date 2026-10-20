@@ -3,11 +3,14 @@ package kr.co.kfs.asseterp.biz.ics.mapper;
 import kr.co.kfs.asseterp.biz.ics.dto.ClassTreeRes;
 import kr.co.kfs.asseterp.biz.ics.dto.ClassTreeSaveReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsClassTreeItemRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsCompanyInfoRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawPeriodRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawContentReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDeadlineRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDetailRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawExceptRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawLookupRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawManageRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawSaveReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawViewRes;
@@ -91,6 +94,37 @@ public interface IcsClassTreeMapper {
     long selectLawViewTotal(@Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId, @Param("typeCode") String typeCode,
                             @Param("lawSearch") String lawSearch, @Param("statuteSearch") String statuteSearch,
                             @Param("detailSearchYn") boolean detailSearchYn, @Param("advisYn") boolean advisYn);
+
+    /** AS-IS ics01_class_tree.selectByTypeCodePaging (Ics01_Tab_ClassTreeUser, H08) — mngGroupId(관리그룹)가 있으면 그 그룹의 법규만 */
+    List<IcsLawManageRes> selectLawManage(@Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId, @Param("typeCode") String typeCode,
+                                          @Param("lawSearch") String lawSearch, @Param("statuteSearch") String statuteSearch,
+                                          @Param("detailSearchYn") boolean detailSearchYn, @Param("advisYn") boolean advisYn,
+                                          @Param("mngGroupId") Long mngGroupId, @Param("limit") long limit, @Param("offset") long offset);
+
+    /** AS-IS ics01_class_tree.selectByTypeCodePagingTotal (H08) */
+    long selectLawManageTotal(@Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId, @Param("typeCode") String typeCode,
+                              @Param("lawSearch") String lawSearch, @Param("statuteSearch") String statuteSearch,
+                              @Param("detailSearchYn") boolean detailSearchYn, @Param("advisYn") boolean advisYn,
+                              @Param("mngGroupId") Long mngGroupId);
+
+    /** AS-IS ics01_class_tree.refresh (H08) — 한 행 */
+    IcsLawManageRes selectLawManageById(@Param("classTreeId") Long classTreeId, @Param("companyId") Long companyId);
+
+    /** AS-IS ics01_class_tree.selectByExcept (Ics01_Lookup_Except, H08). exceptYn은 'true'/'false'/'%', cycleCode·publicType은 '%', 검색어는 %…% */
+    List<IcsLawExceptRes> selectLawExcept(@Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId, @Param("typeCode") String typeCode,
+                                          @Param("cycleCode") String cycleCode, @Param("publicType") String publicType, @Param("exceptYn") String exceptYn,
+                                          @Param("searchText") String searchText, @Param("detailSearchYn") String detailSearchYn);
+
+    /** AS-IS ics03_company_info.selectByClassTreeId */
+    List<IcsCompanyInfoRes> selectCompanyInfo(@Param("classTreeId") Long classTreeId, @Param("companyId") Long companyId);
+
+    /** AS-IS ics.Ics03_CompanyInfo.modelUpdate INSERT (제외·자동·일임 글자 'true'/'false') */
+    int insertCompanyInfo(@Param("companyInfoId") Long companyInfoId, @Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId,
+                          @Param("autoYn") String autoYn, @Param("exceptYn") String exceptYn, @Param("advisYn") String advisYn);
+
+    /** AS-IS ics.Ics03_CompanyInfo.modelUpdate UPDATE */
+    int updateCompanyInfo(@Param("companyInfoId") Long companyInfoId, @Param("companyId") Long companyId,
+                          @Param("autoYn") String autoYn, @Param("exceptYn") String exceptYn, @Param("advisYn") String advisYn);
 
     /** AS-IS ics01_class_tree.selectById (Ics01_Lookup_ClassTreeDetail, E03-1) */
     IcsLawDetailRes selectLawDetail(@Param("classTreeId") Long classTreeId);

@@ -1,0 +1,509 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sch/mapper/sch04_list.xml (selectByIcs, selectById, insert, updatePersonId, updateNote, updateConfirm) + dbConfig.getBizDate/getSeq  (H06 Sch04_Tab_IcsList) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sch.mapper.SchListMapper">
+
+    <!-- AS-IS dbConfig.getBizDate (IDMS-IC) -->
+    <select id="selectBizDate" resultType="java.time.LocalDate">
+        SELECT f_get_biz_date(#{companyId}, #{stdDate}::date, #{type})
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sch04_list.selectByIcs L792 (IDMS-IC) — 안쪽 UNION은 그대로, 바깥 SELECT *만 DTO 열로 풀었다 -->
+    <select id="selectByIcs" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch04ListRes">
+        SELECT
+        sch04_list_id                                   AS list_id,
+        sch04_company_id                                AS company_id,
+        sch04_close_date                                AS close_date,
+        sch04_mng_org_id                                AS mng_org_id,
+        sch04_mng_org_nm                                AS mng_org_name,
+        sch04_manager_id                                AS manager_id,
+        sch04_manager_nm                                AS manager_name,
+        sch04_person_id                                 AS person_id,
+        sch04_person_nm                                 AS person_name,
+        sch04_status_cd                                 AS status_code,
+        sch04_status_nm                                 AS status_name,
+        sch04_manage_date                               AS manage_date,
+        COALESCE(sch04_confirm_yn, 'false')             AS confirm_yn,
+        sch04_title                                     AS title,
+        sch04_ics_class_tree_id                         AS ics_class_tree_id,
+        sch04_related_law                               AS related_law,
+        sch04_appr_title                                AS appr_title,
+        sch04_iss_appr_id                               AS iss_appr_id,
+        sch04_iss_date::date                            AS iss_date,
+        sch04_schedule_cd                               AS schedule_code,
+        sch04_schedule_nm                               AS schedule_name,
+        sch04_cycle_cd                                  AS cycle_code,
+        sch04_cycle_nm                                  AS cycle_name,
+        COALESCE(sch04_advis_yn, 'false')               AS advis_yn,
+        sch04_info_id                                   AS info_id,
+        sch04_deadline_id                               AS deadline_id,
+        sch04_note                                      AS note,
+        sch04_confirm_date                              AS confirm_date,
+        sch04_confirmer_id                              AS confirmer_id,
+        sch04_confirmer_nm                              AS confirmer_name,
+        sch04_none_data_yn                              AS none_data_yn
+          FROM (
+        SELECT sch04_schedule_cd                                                                               AS sch04_schedule_cd
+        , f_cdnm('ScheduleCode',sch04_schedule_cd,sch04_company_id,sch04_close_date)                      AS sch04_schedule_nm
+        , sch04_list_id                                                                                   AS sch04_list_id
+        , sch04_company_id                                                                                AS sch04_company_id
+        , sch04_cycle_cd                                                                                  AS sch04_cycle_cd
+        , f_cdnm('CycleCode',sch04_cycle_cd,sch04_company_id,sch04_close_date)                            AS sch04_cycle_nm
+        , sch04_info_id                                                                                   AS sch04_info_id
+        , sch04_title                                                                                     AS sch04_title
+        , sch04_mng_org_id                                                                                AS sch04_mng_org_id
+        , f_org_nm(sch04_mng_org_id, sch04_close_date)                                                    AS sch04_mng_org_nm
+        , sch04_manager_id                                                                                AS sch04_manager_id
+        , f_emp_kor_nm(sch04_manager_id)                                                                  AS sch04_manager_nm
+        , CASE WHEN sch04_status_cd = '0' THEN null ELSE sch04_person_id END                              AS sch04_person_id
+        , CASE WHEN sch04_status_cd = '0' THEN null ELSE f_emp_kor_nm(sch04_person_id) END                AS sch04_person_nm
+        , COALESCE(icsApr.apr01_reg_date, icrApr.apr01_reg_date)                                          AS sch04_iss_date
+        , sch04_close_date                                                                                AS sch04_close_date
+        , CASE WHEN sch04_status_cd = '0' THEN null ELSE sch04_manage_date END                            AS sch04_manage_date
+        , sch04_status_cd                                                                                 AS sch04_status_cd
+        , f_cdnm('ScheduleStatusCode',sch04_status_cd,sch04_company_id,sch04_close_date)                  AS sch04_status_nm
+        , sch04_deadline_id                                                                               AS sch04_deadline_id
+        , CASE WHEN sch04_schedule_cd IN ('2','3') THEN COALESCE(ics01_class_tree_id, apr20_class_tree_id)
+        WHEN sch04_schedule_cd IN ('6','7') THEN COALESCE(icr01_class_tree_id, apr22_class_tree_id)
+        END                                                                                             AS sch04_ics_class_tree_id
+        , CASE WHEN sch04_schedule_cd IN ('2','3') THEN
+        ( SELECT ics2.ics01_related_law
+        FROM ics01_class_tree ics2
+        WHERE ics2.ics01_class_tree_id = COALESCE(ics1.ics01_class_tree_id, apr20_class_tree_id)
+        )
+        WHEN sch04_schedule_cd IN ('6','7') THEN
+        ( SELECT icr2.icr01_related_law
+        FROM icr01_class_tree icr2
+        WHERE icr2.icr01_class_tree_id = COALESCE(icr1.icr01_class_tree_id, apr22_class_tree_id)
+        )
+        END                                                                                             AS sch04_related_law
+        , COALESCE(icsApr.apr01_title, icrApr.apr01_title)                                                AS sch04_appr_title
+        , COALESCE(apr20_appr_id, apr22_appr_id)                                                          AS sch04_iss_appr_id
+        , COALESCE(ics1.ics01_advis_yn, 'false')                                                          AS sch04_advis_yn
+        , sch04_note                                                                                      AS sch04_note
+        , sch04_confirm_yn                                                                                AS sch04_confirm_yn
+        , sch04_confirm_date                                                                              AS sch04_confirm_date
+        , sch04_confirmer_id                                                                              AS sch04_confirmer_id
+        , f_emp_kor_nm(sch04_confirmer_id)                                                                AS sch04_confirmer_nm
+        , false                                                                                           AS sch04_none_data_yn
+        FROM sch04_list
+        -----------------------------------------------------------------------------
+        LEFT OUTER JOIN ics01_class_tree ics1 ON ics01_class_tree_id  = sch04_info_id
+        LEFT OUTER JOIN apr20_relate_ics      ON apr20_relate_ics_id  = sch04_info_id
+        LEFT OUTER JOIN apr01_appr icsApr     ON icsApr.apr01_appr_id = apr20_appr_id
+        -----------------------------------------------------------------------------
+        LEFT OUTER JOIN icr01_class_tree icr1 ON icr01_class_tree_id  = sch04_info_id
+        LEFT OUTER JOIN apr22_relate_icr      ON apr22_relate_icr_id  = sch04_info_id
+        LEFT OUTER JOIN apr01_appr icrApr     ON icrApr.apr01_appr_id = apr22_appr_id
+        -----------------------------------------------------------------------------
+        WHERE sch04_company_id = #{companyId}
+        AND sch04_close_date BETWEEN #{startDate}::date AND #{closeDate}::date
+        AND sch04_schedule_cd IN ('2','3','6','7')
+        -------------------------------------------------------------
+        -- 문서작성(법규)
+        -------------------------------------------------------------
+        UNION ALL
+        SELECT '3'                                                                                                     AS sch04_schedule_cd
+        , f_cdnm('ScheduleCode','3',apr01_company_id,apr01_reg_date::date)                                        AS sch04_schedule_nm
+        , row_number() over() + 3000000                                                                           AS sch04_list_id
+        , apr01_company_id                                                                                        AS sch04_company_id
+        , sch03_cycle_cd                                                                                          AS sch04_cycle_cd
+        , f_cdnm('CycleCode',sch03_cycle_cd,apr01_company_id,apr01_reg_date::date)                                AS sch04_cycle_nm
+        , apr20_relate_ics_id                                                                                     AS sch04_info_id
+        , ics01_class_tree_nm                                                                                     AS sch04_title
+        , CAST(f_get_empTrans(apr01_reg_emp_id, apr01_reg_date::date, 'org_code_id') AS NUMERIC)                  AS sch04_mng_org_id
+        , f_get_empTrans(apr01_reg_emp_id, apr01_reg_date::date, 'org_code_nm')                                   AS sch04_mng_org_nm
+        , apr01_reg_emp_id                                                                                        AS sch04_manager_id
+        , f_emp_kor_nm(apr01_reg_emp_id)                                                                          AS sch04_manager_nm
+        , null                                                                                                    AS sch04_person_id
+        , null                                                                                                    AS sch04_person_nm
+        , apr01_reg_date                                                                                          AS sch04_iss_date
+        , coalesce(apr20_close_date, f_get_appr_close_date(apr01_appr_id, apr20_deadline_id, apr01_company_id))   AS sch04_close_date
+        , null                                                                                                    AS sch04_manage_date
+        , '0'                                                                                                     AS sch04_status_cd
+        , '미처리'                                                                                                  AS sch04_status_nm
+        , apr20_deadline_id                                                                                       AS sch04_deadline_id
+        , ics01_class_tree_id                                                                                     AS sch04_ics_class_tree_id
+        , ics01_related_law                                                                                       AS sch04_related_law
+        , apr01_title                                                                                             AS sch04_appr_title
+        , apr20_appr_id                                                                                           AS sch04_iss_appr_id
+        , COALESCE(ics01_advis_yn, 'false')                                                                       AS sch04_advis_yn
+        , null                                                                                                    AS sch04_note
+        , 'false'                                                                                                 AS sch04_confirm_yn
+        , null                                                                                                    AS sch04_confirm_date
+        , null                                                                                                    AS sch04_confirmer_id
+        , null                                                                                                    AS sch04_confirmer_nm
+        , true                                                                                                    AS sch04_none_data_yn
+        FROM apr20_relate_ics apr20
+        INNER JOIN ics01_class_tree ON ics01_class_tree_id = apr20_class_tree_id
+        INNER JOIN apr01_appr       ON apr01_appr_id       = apr20_appr_id
+        INNER JOIN sch03_deadline   ON sch03_deadline_id   = apr20_deadline_id
+        WHERE #{scheduleCode} IN ('%','3')
+        AND apr01_company_id = #{companyId}
+        AND apr01_status_cd NOT IN ('99','40')
+        AND coalesce(apr20_close_date, f_get_appr_close_date(apr01_appr_id, apr20_deadline_id, apr01_company_id)) BETWEEN #{startDate}::date AND #{closeDate}::date
+        AND NOT EXISTS ( SELECT 1
+        FROM sch04_list
+        WHERE sch04_schedule_cd = '3'
+        AND sch04_company_id  = apr01_company_id
+        AND sch04_info_id     = apr20_relate_ics_id
+        AND sch04_close_date  = coalesce(apr20_close_date, f_get_appr_close_date(apr01_appr_id, apr20_deadline_id, apr01_company_id)) )
+        -------------------------------------------------------------
+        -- 법규담당
+        -------------------------------------------------------------
+        UNION ALL
+        SELECT '2'                                                                 AS sch04_schedule_cd
+        , f_cdnm('ScheduleCode','2',#{companyId},#{startDate})                AS sch04_schedule_nm
+        , row_number() over() + 2000000                                       AS sch04_list_id
+        , #{companyId}                                                        AS sch04_company_id
+        , sch03_cycle_cd                                                      AS sch04_cycle_cd
+        , f_cdnm('CycleCode',sch03_cycle_cd,#{companyId},#{startDate})        AS sch04_cycle_nm
+        , ics01_class_tree_id                                                 AS sch04_info_id
+        , ics01_class_tree_nm                                                 AS sch04_title
+        , ics04_org_id                                                        AS sch04_mng_org_id
+        , f_org_nm(ics04_org_id, sch04_close_date)                            AS sch04_mng_org_nm
+        , null                                                                AS sch04_manager_id
+        , null                                                                AS sch04_manager_nm
+        , null                                                                AS sch04_person_id
+        , null                                                                AS sch04_person_nm
+        , null                                                                AS sch04_iss_date
+        , sch04_close_date                                                    AS sch04_close_date
+        , null                                                                AS sch04_manage_date
+        , '0'                                                                 AS sch04_status_cd
+        , '미처리'                                                              AS sch04_status_nm
+        , sch03_deadline_id                                                   AS sch04_deadline_id
+        , ics01_class_tree_id                                                 AS sch04_ics_class_tree_id
+        , ics01_related_law                                                   AS sch04_related_law
+        , null                                                                AS sch04_appr_title
+        , null                                                                AS sch04_iss_appr_id
+        , COALESCE(ics01_advis_yn, 'false')                                   AS sch04_advis_yn
+        , null                                                                AS sch04_note
+        , 'false'                                                             AS sch04_confirm_yn
+        , null                                                                AS sch04_confirm_date
+        , null                                                                AS sch04_confirmer_id
+        , null                                                                AS sch04_confirmer_nm
+        , true                                                                AS sch04_none_data_yn
+        FROM (
+        SELECT ics04_org_id
+        , t.*
+        FROM ( SELECT CASE WHEN sch03_cycle_cd = '01' THEN f_today()
+        ELSE f_get_biz_date(#{companyId},#{closeDate},'-0') END  sch04_close_date
+        , ics01_class_tree.*
+        , sch03_deadline.*
+        FROM ics01_class_tree
+        INNER JOIN sch03_deadline ON ( sch03_info_id    = ics01_class_tree_id   AND
+        sch03_company_id = ics01_company_id      )
+        LEFT OUTER JOIN ics03_company_info ON ( ics03_ics_class_tree_id = ics01_class_tree_id AND
+        ics03_company_id        = #{companyId}        )
+        WHERE #{scheduleCode} IN ('%','2')
+        AND ics01_type_cd = 'IT'
+        AND COALESCE(ics03_except_yn,'false') != 'true'
+        AND COALESCE(ics03_auto_yn,'false')   != 'true' /* 시스템 자동처리 제외 */
+        AND COALESCE(f_get_ics_nm(ics01_class_tree_id, '1'),'X') != 'X'
+        AND sch03_cycle_cd IN ('01','99') /*(일별/수시)*/
+        UNION
+        SELECT DISTINCT
+        f_get_std_date(sch03_deadline_id, sys12_day::date, sys12_company_id) sch04_close_date
+        , ics01_class_tree.*
+        , sch03_deadline.*
+        FROM ics01_class_tree
+        INNER JOIN sch03_deadline ON ( sch03_info_id    = ics01_class_tree_id   AND
+        sch03_company_id = ics01_company_id      )
+        LEFT OUTER JOIN ics03_company_info ON ( ics03_ics_class_tree_id = ics01_class_tree_id AND
+        ics03_company_id        = #{companyId}        )
+        , sys12_calendar
+        WHERE #{scheduleCode} IN ('%','2')
+        AND ics01_type_cd = 'IT'
+        AND COALESCE(ics03_except_yn,'false') != 'true'
+        AND COALESCE(ics03_auto_yn,'false')   != 'true' /* 시스템 자동처리 제외 */
+        AND COALESCE(f_get_ics_nm(ics01_class_tree_id, '1'),'X') != 'X'
+        AND sch03_cycle_cd NOT IN ('01','99') /*(일별/수시 제외)*/
+        AND sys12_company_id = #{companyId}
+        AND sys12_day BETWEEN #{startDateCalc} AND #{closeDateCalc}
+        ) t
+        INNER JOIN ics05_relate_manager    ON ( ics05_ics_class_tree_id = ics01_class_tree_id AND
+        ics05_company_id        = #{companyId}        )
+        INNER JOIN ics04_share   ON ics04_manager_id = ics05_manager_id
+        INNER JOIN ics02_manager ON ics02_manager_id = ics05_manager_id
+        WHERE sch04_close_date BETWEEN #{startDate}::date AND #{closeDate}::date
+        AND NOT EXISTS ( SELECT 1
+        FROM sch04_list x
+        WHERE x.sch04_schedule_cd = '2'
+        AND x.sch04_company_id  = #{companyId}
+        AND x.sch04_info_id     = t.ics01_class_tree_id
+        AND x.sch04_close_date  = t.sch04_close_date
+        AND x.sch04_mng_org_id  = ics04_org_id )
+        ) t1
+        -------------------------------------------------------------
+        -- 문서작성(내규)
+        -------------------------------------------------------------
+        UNION ALL
+        SELECT '7'                                                                                                     AS sch04_schedule_cd
+        , f_cdnm('ScheduleCode','7',apr01_company_id,apr01_reg_date::date)                                        AS sch04_schedule_nm
+        , row_number() over() + 7000000                                                                           AS sch04_list_id
+        , apr01_company_id                                                                                        AS sch04_company_id
+        , sch03_cycle_cd                                                                                          AS sch04_cycle_cd
+        , f_cdnm('CycleCode',sch03_cycle_cd,apr01_company_id,apr01_reg_date::date)                                AS sch04_cycle_nm
+        , apr22_relate_icr_id                                                                                     AS sch04_info_id
+        , icr01_class_tree_nm                                                                                     AS sch04_title
+        , CAST(f_get_empTrans(apr01_reg_emp_id, apr01_reg_date::date, 'org_code_id') AS NUMERIC)                  AS sch04_mng_org_id
+        , f_get_empTrans(apr01_reg_emp_id, apr01_reg_date::date, 'org_code_nm')                                   AS sch04_mng_org_nm
+        , apr01_reg_emp_id                                                                                        AS sch04_manager_id
+        , f_emp_kor_nm(apr01_reg_emp_id)                                                                          AS sch04_manager_nm
+        , null                                                                                                    AS sch04_person_id
+        , null                                                                                                    AS sch04_person_nm
+        , apr01_reg_date                                                                                          AS sch04_iss_date
+        , coalesce(apr22_close_date, f_get_appr_close_date(apr01_appr_id, apr22_deadline_id, apr01_company_id))   AS sch04_close_date
+        , null                                                                                                    AS sch04_manage_date
+        , '0'                                                                                                     AS sch04_status_cd
+        , '미처리'                                                                                                  AS sch04_status_nm
+        , apr22_deadline_id                                                                                       AS sch04_deadline_id
+        , icr01_class_tree_id                                                                                     AS sch04_ics_class_tree_id
+        , icr01_related_law                                                                                       AS sch04_related_law
+        , apr01_title                                                                                             AS sch04_appr_title
+        , apr22_appr_id                                                                                           AS sch04_iss_appr_id
+        , 'false'                                                                                                 AS sch04_advis_yn
+        , null                                                                                                    AS sch04_note
+        , 'false'                                                                                                 AS sch04_confirm_yn
+        , null                                                                                                    AS sch04_confirm_date
+        , null                                                                                                    AS sch04_confirmer_id
+        , null                                                                                                    AS sch04_confirmer_nm
+        , true                                                                                                    AS sch04_none_data_yn
+        FROM apr22_relate_icr apr22
+        INNER JOIN icr01_class_tree ON icr01_class_tree_id = apr22_class_tree_id
+        INNER JOIN apr01_appr       ON apr01_appr_id       = apr22_appr_id
+        INNER JOIN sch03_deadline   ON sch03_deadline_id   = apr22_deadline_id
+        WHERE #{scheduleCode} IN ('%','7')
+        AND apr01_company_id = #{companyId}
+        AND apr01_status_cd NOT IN ('99','40')
+        AND coalesce(apr22_close_date, f_get_appr_close_date(apr01_appr_id, apr22_deadline_id, apr01_company_id)) BETWEEN #{startDate}::date AND #{closeDate}::date
+        AND NOT EXISTS ( SELECT 1
+        FROM sch04_list
+        WHERE sch04_schedule_cd = '7'
+        AND sch04_company_id  = apr01_company_id
+        AND sch04_info_id     = apr22_relate_icr_id
+        AND sch04_close_date  = coalesce(apr22_close_date, f_get_appr_close_date(apr01_appr_id, apr22_deadline_id, apr01_company_id)) )
+        -------------------------------------------------------------
+        -- 내규담당
+        -------------------------------------------------------------
+        UNION ALL
+        SELECT '6'                                                                 AS sch04_schedule_cd
+        , f_cdnm('ScheduleCode','6',#{companyId},#{startDate})                AS sch04_schedule_nm
+        , row_number() over() + 6000000                                       AS sch04_list_id
+        , icr01_company_id                                                    AS sch04_company_id
+        , sch03_cycle_cd                                                      AS sch04_cycle_cd
+        , f_cdnm('CycleCode',sch03_cycle_cd,#{companyId},#{startDate})        AS sch04_cycle_nm
+        , icr01_class_tree_id                                                 AS sch04_info_id
+        , icr01_class_tree_nm                                                 AS sch04_title
+        , ics04_org_id                                                        AS sch04_mng_org_id
+        , f_org_nm(ics04_org_id, sch04_close_date)                            AS sch04_mng_org_nm
+        , null                                                                AS sch04_manager_id
+        , null                                                                AS sch04_manager_nm
+        , null                                                                AS sch04_person_id
+        , null                                                                AS sch04_person_nm
+        , null                                                                AS sch04_iss_date
+        , sch04_close_date                                                    AS sch04_close_date
+        , null                                                                AS sch04_manage_date
+        , '0'                                                                 AS sch04_status_cd
+        , '미처리'                                                              AS sch04_status_nm
+        , sch03_deadline_id                                                   AS sch04_deadline_id
+        , icr01_class_tree_id                                                 AS sch04_ics_class_tree_id
+        , icr01_related_law                                                   AS sch04_related_law
+        , null                                                                AS sch04_appr_title
+        , null                                                                AS sch04_iss_appr_id
+        , 'false'                                                             AS sch04_advis_yn
+        , null                                                                AS sch04_note
+        , 'false'                                                             AS sch04_confirm_yn
+        , null                                                                AS sch04_confirm_date
+        , null                                                                AS sch04_confirmer_id
+        , null                                                                AS sch04_confirmer_nm
+        , true                                                                AS sch04_none_data_yn
+        FROM (
+        SELECT ics04_org_id
+        , t.*
+        FROM ( SELECT CASE WHEN sch03_cycle_cd = '01' THEN f_today()
+        ELSE f_get_biz_date(#{companyId},#{closeDate},'-0') END  sch04_close_date
+        , icr01_class_tree.*
+        , sch03_deadline.*
+        FROM icr01_class_tree
+        INNER JOIN sch03_deadline ON ( sch03_info_id    = icr01_class_tree_id   AND
+        sch03_company_id = icr01_company_id      )
+        WHERE icr01_company_id = #{companyId}
+        AND #{scheduleCode} IN ('%','6')
+        AND icr01_type_cd = 'IT'
+        AND COALESCE(icr01_use_yn, 'false') = 'true'
+        AND sch03_cycle_cd IN ('01','99') /*(일별/수시)*/
+        UNION
+        SELECT DISTINCT
+        f_get_std_date(sch03_deadline_id, sys12_day::date, sys12_company_id) sch04_close_date
+        , icr01_class_tree.*
+        , sch03_deadline.*
+        FROM icr01_class_tree
+        INNER JOIN sch03_deadline ON ( sch03_info_id    = icr01_class_tree_id   AND
+        sch03_company_id = icr01_company_id      )
+        , sys12_calendar
+        WHERE icr01_company_id = #{companyId}
+        AND #{scheduleCode} IN ('%','6')
+        AND icr01_type_cd = 'IT'
+        AND COALESCE(icr01_use_yn, 'false') = 'true'
+        AND sch03_cycle_cd NOT IN ('01','99') /*(일별/수시 제외)*/
+        AND sys12_company_id = #{companyId}
+        AND sys12_day BETWEEN #{startDateCalc} AND #{closeDateCalc}
+        ) t
+        INNER JOIN icr05_relate_manager    ON ( icr05_icr_class_tree_id = icr01_class_tree_id AND
+        icr05_company_id        = icr01_company_id    )
+        INNER JOIN ics04_share   ON ics04_manager_id = icr05_manager_id
+        INNER JOIN ics02_manager ON ics02_manager_id = icr05_manager_id
+        WHERE sch04_close_date BETWEEN #{startDate}::date AND #{closeDate}::date
+        AND NOT EXISTS ( SELECT 1
+        FROM sch04_list x
+        WHERE x.sch04_schedule_cd = '6'
+        AND x.sch04_company_id  = #{companyId}
+        AND x.sch04_info_id     = t.icr01_class_tree_id
+        AND x.sch04_close_date  = t.sch04_close_date
+        AND x.sch04_mng_org_id  = ics04_org_id )
+        ) t1
+        ) ics
+        WHERE 1=1
+        <choose>
+        <when test="managerYn == true">
+        <choose>
+        <when test="orgId != null">
+        AND sch04_mng_org_id = #{orgId}
+        </when>
+        </choose>
+        </when>
+        <otherwise>
+        AND ( ( sch04_schedule_cd IN ('3','7')                      AND     /* 문서작성으로 발생된 건의 조회권한 => 상신자와 동일부서 또는 상신문서의 결재선에 포함 */
+        ( #{orgId} = sch04_mng_org_id
+        OR
+        #{personId} IN ( SELECT unnest(array[apr04_step_emp_id, apr04_appr_emp_id])
+        FROM apr04_appr_step
+        WHERE apr04_appr_id = sch04_iss_appr_id
+        UNION
+        SELECT apr13_person_id
+        FROM apr13_person_auth
+        WHERE apr13_appr_id = sch04_iss_appr_id )
+        )                                                    ) OR
+        ( sch04_schedule_cd IN ('2','6')                       AND     /* 법규담당으로 발생된 건의 조회권한 => 법규 통제그룹 */
+        #{orgId}          = sch04_mng_org_id                 ) )
+        </otherwise>
+        </choose>
+        <choose>
+        <when test="doneExceptYn == true">
+        AND COALESCE(sch04_status_cd,'0') NOT IN ('1','2','5')
+        </when>
+        </choose>
+        <choose>
+        <when test="advisYn != null and advisYn == true">
+        AND COALESCE(sch04_advis_yn,'false') = 'true'
+        </when>
+        </choose>
+        AND sch04_schedule_cd LIKE #{scheduleCode}
+        AND ( ( #{cycleCode}   = '1'     AND     /*(1:정기)*/
+        sch04_cycle_cd != '99'   ) OR
+        ( #{cycleCode}   = '2'     AND     /*(2:수시)*/
+        sch04_cycle_cd = '99'    ) OR
+        ( #{cycleCode}   = '%'     ) )
+        AND REPLACE(CONCAT(sch04_mng_org_nm, sch04_person_nm, sch04_title, sch04_related_law, sch04_appr_title),' ','') ILIKE REPLACE(#{searchText},' ','')
+        ORDER BY sch04_close_date, sch04_title COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS sch04_list.selectById (IDMS-IC) — 안쪽은 원본 그대로, 바깥 SELECT로 selectByIcs와 같은 DTO 열을 맞췄다(없는 열은 NULL, DTO가 안 쓰는 계산 열·appr 조인은 뺐다). 회사 범위(sch04_company_id)를 더했다 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch04ListRes">
+        SELECT sch04_list_id                                   AS list_id,
+               sch04_company_id                                AS company_id,
+               sch04_close_date                                AS close_date,
+               sch04_mng_org_id                                AS mng_org_id,
+               sch04_mng_org_nm                                AS mng_org_name,
+               sch04_manager_id                                AS manager_id,
+               sch04_manager_nm                                AS manager_name,
+               sch04_person_id                                 AS person_id,
+               sch04_person_nm                                 AS person_name,
+               sch04_status_cd                                 AS status_code,
+               sch04_status_nm                                 AS status_name,
+               sch04_manage_date                               AS manage_date,
+               COALESCE(sch04_confirm_yn, 'false')             AS confirm_yn,
+               sch04_title                                     AS title,
+               sch04_ics_class_tree_id                         AS ics_class_tree_id,
+               NULL::text                                      AS related_law,
+               NULL::text                                      AS appr_title,
+               NULL::numeric                                   AS iss_appr_id,
+               NULL::date                                      AS iss_date,
+               sch04_schedule_cd                               AS schedule_code,
+               sch04_schedule_nm                               AS schedule_name,
+               sch04_cycle_cd                                  AS cycle_code,
+               sch04_cycle_nm                                  AS cycle_name,
+               NULL::text                                      AS advis_yn,
+               sch04_info_id                                   AS info_id,
+               sch04_deadline_id                               AS deadline_id,
+               sch04_note                                      AS note,
+               sch04_confirm_date                              AS confirm_date,
+               sch04_confirmer_id                              AS confirmer_id,
+               sch04_confirmer_nm                              AS confirmer_name,
+               sch04_none_data_yn                              AS none_data_yn
+          FROM (
+                SELECT  sch04_list.*
+                    ,   f_cdnm('CycleCode', sch04_cycle_cd, sch04_company_id, f_sysdate())                  AS sch04_cycle_nm
+                    ,   f_cdnm('ScheduleStatusCode', sch04_status_cd, sch04_company_id, f_sysdate())        AS sch04_status_nm
+                    ,   f_emp_kor_nm(sch04_manager_id)                                                      AS sch04_manager_nm
+                    ,   CASE WHEN sch04_status_cd = '0' THEN null ELSE f_emp_kor_nm(sch04_person_id) END    AS sch04_person_nm
+                    ,   f_cdnm('ScheduleCode', sch04_schedule_cd, sch04_company_id, f_sysdate())            AS sch04_schedule_nm
+                    ,   f_org_nm(sch04_mng_org_id, sch04_close_date)                                        AS sch04_mng_org_nm
+                    ,   CASE WHEN sch04_schedule_cd = '2' THEN sch04_info_id
+                             WHEN sch04_schedule_cd = '3' THEN apr20_class_tree_id
+                             ELSE NULL END                                                                  AS sch04_ics_class_tree_id
+                    ,   f_emp_kor_nm(sch04_confirmer_id)                                                    AS sch04_confirmer_nm
+                    ,   false                                                                               AS sch04_none_data_yn
+                FROM    sch04_list
+                        LEFT OUTER JOIN apr20_relate_ics ON apr20_relate_ics_id = sch04_info_id
+               WHERE    sch04_list_id    = #{listId}
+                 AND    sch04_company_id = #{companyId}
+               ) x
+    </select>
+
+    <!-- AS-IS sch04_list.insert (IDMS-IC) -->
+    <insert id="insert">
+        INSERT INTO sch04_list
+               ( sch04_list_id, sch04_close_date, sch04_manage_date, sch04_info_id, sch04_title, sch04_schedule_cd, sch04_cycle_cd, sch04_manager_id,
+                 sch04_person_id, sch04_status_cd, sch04_note, sch04_company_id, sch04_deadline_id, sch04_appr_id, sch04_mng_org_id )
+        VALUES ( #{listId}, #{r.closeDate}, #{r.manageDate}, #{r.infoId}, #{r.title}, #{r.scheduleCode}, #{r.cycleCode}, #{r.managerId},
+                 #{personId}, #{r.statusCode}, #{r.note}, #{companyId}, #{r.deadlineId}, #{r.apprId}, #{r.mngOrgId} )
+    </insert>
+
+    <!-- AS-IS sch04_list.updatePersonId (IDMS-IC) — 회사 범위를 더했다 -->
+    <update id="updatePersonId">
+        UPDATE sch04_list
+           SET sch04_person_id   = #{personId}
+             , sch04_manage_date = #{manageDate}
+             , sch04_status_cd   = #{statusCode}
+         WHERE sch04_list_id    = #{listId}
+           AND sch04_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS sch04_list.updateNote (IDMS-IC) — 회사 범위를 더했다 -->
+    <update id="updateNote">
+        UPDATE sch04_list
+           SET sch04_note = #{note}
+         WHERE sch04_list_id    = #{listId}
+           AND sch04_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS sch04_list.updateConfirm (IDMS-IC) — 회사 범위를 더했다. confirm_yn은 varchar라 'true'/'false' 글자로 쓴다 -->
+    <update id="updateConfirm">
+        UPDATE sch04_list
+           SET sch04_confirm_yn   = #{confirmYn}
+             , sch04_confirm_date = #{confirmDate}
+             , sch04_confirmer_id = #{confirmerId}
+         WHERE sch04_list_id    = #{listId}
+           AND sch04_company_id = #{companyId}
+    </update>
+</mapper>
