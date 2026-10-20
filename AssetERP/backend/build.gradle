@@ -51,6 +51,9 @@ dependencies {
     // Apache POI (엑셀 다운로드·업로드 — AS-IS ExcelUpload와 같은 라이브러리)
     implementation 'org.apache.poi:poi-ooxml:5.2.5'
 
+    // 메일 발송 (공용메일 검증 Cmp10 — AS-IS SendMailSMTP와 같은 JavaMail. 서버 설정은 resources/config/mail/)
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

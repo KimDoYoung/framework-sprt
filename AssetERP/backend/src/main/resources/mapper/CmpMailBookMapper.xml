@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/cmp/mapper/cmp10_mail_book.xml (G13 Cmp10_Tab_MailBook·Cmp10_Edit_Tab_MailBook) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.cmp.mapper.CmpMailBookMapper">
+
+    <!-- AS-IS cmp10_mail_book.selectByCompanyId (IDMS-IC) L22 — cmp10_mail_book.* + 복호화한 비밀번호 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.cmp.dto.CmpMailBookRes">
+        SELECT cmp10_mail_book_id           AS mail_book_id
+             , cmp10_email_addr             AS email_addr
+             , cmp10_note                   AS note
+             , to_decrypts(cmp10_password)  AS dec_password
+          FROM cmp10_mail_book
+         WHERE cmp10_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS cmp10_mail_book.selectById (IDMS-IC) L16 — 저장한 행을 다시 읽는다, 회사 조건 추가 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.cmp.dto.CmpMailBookRes">
+        SELECT cmp10_mail_book_id           AS mail_book_id
+             , cmp10_email_addr             AS email_addr
+             , cmp10_note                   AS note
+             , to_decrypts(cmp10_password)  AS dec_password
+          FROM cmp10_mail_book
+         WHERE cmp10_mail_book_id = #{mailBookId}
+           AND cmp10_company_id   = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS cmp10_mail_book.createPassword (IDMS-IC) L35 -->
+    <select id="createPassword" resultType="string">
+        SELECT to_encrypts(#{password})
+    </select>
+
+    <!-- AS-IS Cmp10_MailBook.modelUpdate → UpdateDataModel 동적 INSERT (새 메일: 회사 = 로그인, 비밀번호 = createPassword) -->
+    <insert id="insertMailBook">
+        INSERT INTO cmp10_mail_book (cmp10_mail_book_id, cmp10_company_id, cmp10_email_addr, cmp10_password, cmp10_note)
+        VALUES (#{id}, #{companyId}, #{emailAddr}, #{password}, #{note})
+    </insert>
+
+    <!-- AS-IS Cmp10_MailBook.modelUpdate → UpdateDataModel 동적 UPDATE (고칠 때: 메일주소는 잠겨 있고 비밀번호는 모델에 안 바뀌어 비고만 바뀐다) -->
+    <update id="updateNote">
+        UPDATE cmp10_mail_book
+           SET cmp10_note = #{note}
+         WHERE cmp10_mail_book_id = #{mailBookId}
+           AND cmp10_company_id   = #{companyId}
+    </update>
+
+    <!-- AS-IS cmp11_mail_role.deleteByMailBookId (IDMS-IC) L63 — 회사 조건 추가 -->
+    <delete id="deleteRolesByMailBookId">
+        DELETE FROM cmp11_mail_role
+         WHERE cmp11_mail_book_id = #{mailBookId}
+           AND cmp11_mail_book_id IN ( SELECT cmp10_mail_book_id FROM cmp10_mail_book WHERE cmp10_company_id = #{companyId} )
+    </delete>
+
+    <!-- AS-IS Cmp10_MailBook.delete → UpdateDataModel.deleteModel, 회사 조건 추가 -->
+    <delete id="deleteMailBook">
+        DELETE FROM cmp10_mail_book
+         WHERE cmp10_mail_book_id = #{mailBookId}
+           AND cmp10_company_id   = #{companyId}
+    </delete>
+
+    <!-- AS-IS sys01_company.selectById (IDMS-IC) 중 메일서버정보 (checkCompanyMail이 쓴다) -->
+    <select id="selectMailInfo" resultType="string">
+        SELECT sys01_mail_info
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+</mapper>

@@ -1,0 +1,11 @@
+#
+# office365 메일서버 설정
+#
+
+mail.smtp.starttls.enable = true
+mail.smtp.port = 587
+mail.smtp.host = smtp-mail.outlook.com
+mail.smtp.auth = true
+mail.smtp.ssl.enable = false
+mail.smtp.ssl.trust = *
+   

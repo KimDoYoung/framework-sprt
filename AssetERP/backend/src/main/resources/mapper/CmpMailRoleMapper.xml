@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/cmp/mapper/cmp11_mail_role.xml (G13 Cmp10_Tab_MailBookList) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.cmp.mapper.CmpMailRoleMapper">
+
+    <!-- AS-IS cmp11_mail_role.selectByRoleId (IDMS-IC) L32 — 권한을 가진 사원과 소속·직책, 공용메일이 내 회사 것인지 조건 추가 -->
+    <select id="selectByRoleId" resultType="kr.co.kfs.asseterp.biz.cmp.dto.CmpMailRoleRes">
+        SELECT cmp11_mail_role_id                                                          AS mail_role_id
+             , cmp11_mail_book_id                                                          AS mail_book_id
+             , cmp11_person_id                                                             AS person_id
+             , org00_kor_nm                                                                AS org_name
+             , f_get_empTrans(emp01_person_id, emp03_trans_date::date, 'title_nm')         AS title_name
+             , emp01_emp_no                                                                AS emp_no
+             , emp01_kor_nm                                                                AS emp_kor_name
+          FROM cmp11_mail_role
+               INNER JOIN emp01_person   ON cmp11_person_id = emp01_person_id
+               INNER JOIN emp03_trans    ON emp03_person_id = emp01_person_id
+               INNER JOIN org00_org_info ON emp03_org_code_id = org00_org_code_id
+         WHERE cmp11_mail_book_id = #{mailBookId}
+           AND cmp11_mail_book_id IN ( SELECT cmp10_mail_book_id FROM cmp10_mail_book WHERE cmp10_company_id = #{companyId} )
+           AND emp03_trans_date = (
+                                    SELECT MAX(emp03_trans_date)
+                                      FROM emp03_trans x
+                                     WHERE x.emp03_person_id = emp01_person_id
+                                       AND x.emp03_trans_date &lt;= f_sysdate()
+                                  )
+           AND org00_mod_date = (
+                                  SELECT MAX(org00_mod_date)
+                                    FROM org00_org_info
+                                   WHERE org00_org_code_id = emp03_org_code_id
+                                     AND org00_mod_date &lt;= emp03_trans_date
+                                )
+         ORDER BY org00_org_cd
+                , f_org_seq(org00_org_code_id, emp03_trans_date, emp01_company_id)
+                , f_code_seq(emp01_company_id, 'EmpTitleCode', emp03_title_cd)
+                , f_code_seq(emp01_company_id, 'EmpPosCode', emp03_pos_cd)
+    </select>
+
+    <!-- 공용메일이 내 회사 것인지 (AS-IS에는 없는 회사 조건) -->
+    <select id="countMailBook" resultType="long">
+        SELECT count(*)
+          FROM cmp10_mail_book
+         WHERE cmp10_mail_book_id = #{mailBookId}
+           AND cmp10_company_id   = #{companyId}
+    </select>
+
+    <!-- AS-IS cmp11_mail_role.checkPerson (IDMS-IC) L69 -->
+    <select id="checkPerson" resultType="long">
+        SELECT count(*)
+          FROM cmp11_mail_role
+         WHERE cmp11_mail_book_id = #{mailBookId}
+           AND cmp11_person_id    = #{personId}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS cmp11_mail_role.insert (IDMS-IC) L77 -->
+    <insert id="insertRole">
+        INSERT INTO cmp11_mail_role (cmp11_mail_role_id, cmp11_mail_book_id, cmp11_person_id)
+        VALUES (#{id}, #{mailBookId}, #{personId})
+    </insert>
+
+    <!-- AS-IS Cmp11_MailRole.delete → UpdateDataModel.deleteModel, 회사 조건 추가 -->
+    <delete id="deleteRoles">
+        DELETE FROM cmp11_mail_role
+         WHERE cmp11_mail_book_id IN ( SELECT cmp10_mail_book_id FROM cmp10_mail_book WHERE cmp10_company_id = #{companyId} )
+           AND cmp11_mail_role_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/dcr/mapper/dcr10_mail_history.xml (G14 Dcr10_Tab_MailHistory) + server/sys/mapper/sys10_file.xml selectMailFileHistory (Dcr10_Lookup_MailViwer) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.dcr.mapper.DcrMailHistoryMapper">
+
+    <!-- AS-IS dcr10_mail_history.selectBySenderEmail (IDMS-IC) — 내가 보낸 메일(dcr10_person_id = empId).
+         fundId가 있으면 그 펀드에 연관된 결재의 메일, mailGubun 개인메일 = 보낸 주소가 내 이메일, 공용메일 = 내가 권한자인 공용메일 주소 -->
+    <select id="selectBySenderEmail" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrMailHistoryRes">
+        SELECT dcr10_mail_history_id                                  AS mail_history_id
+             , dcr10_apr_id                                           AS apr_id
+             , to_char(dcr10_send_time,'yyyy-mm-dd hh24:mi:ss')       AS send_time_string
+             , f_emp_kor_nm(dcr10_person_id)                          AS person_name
+             , dcr10_sender_email                                     AS sender_email
+             , dcr10_receiver_email                                   AS receiver_email
+             , dcr10_referencer_email                                 AS referencer_email
+             , dcr10_title_text                                       AS title_text
+             , dcr10_body_text                                        AS body_text
+          FROM dcr10_mail_history
+         WHERE 1=1
+        <if test="fundId != null">
+           AND dcr10_apr_id IN (
+                                 SELECT apr03_appr_id
+                                   FROM apr03_relate_fund
+                                  WHERE apr03_fund_id = #{fundId}
+                               )
+        </if>
+        <if test="mailGubun == '개인메일'">
+           AND dcr10_sender_email LIKE (
+                                         SELECT emp01_email_addr
+                                           FROM emp01_person
+                                          WHERE emp01_person_id = #{empId}
+                                          LIMIT 1
+                                       )
+        </if>
+        <if test="mailGubun == '공용메일'">
+           AND dcr10_sender_email IN (
+                                       SELECT cmp10_email_addr
+                                         FROM cmp10_mail_book
+                                              INNER JOIN cmp11_mail_role ON cmp11_mail_book_id = cmp10_mail_book_id
+                                        WHERE cmp11_person_id = #{empId}
+                                     )
+        </if>
+           AND dcr10_person_id = #{empId}
+           AND to_char(dcr10_send_time,'yyyymmdd') BETWEEN replace(#{startDate},'-','') AND replace(#{endDate},'-','')
+           AND UPPER(dcr10_title_text) LIKE UPPER(#{titleText})
+         ORDER BY dcr10_send_time DESC
+    </select>
+
+    <!-- AS-IS sys10_file.selectMailFileHistory (IDMS-IC) — 내가 보낸 메일의 첨부파일만(AS-IS에는 없는 소유자 조건) -->
+    <select id="selectMailFileHistory" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrMailFileRes">
+        SELECT sys10_file_id   AS file_id
+             , sys10_file_nm   AS file_name
+          FROM sys10_file
+               INNER JOIN dcr11_mail_file_history ON dcr11_file_id = sys10_file_id
+         WHERE dcr11_mail_history_id = #{mailHistoryId}
+           AND dcr11_mail_history_id IN ( SELECT dcr10_mail_history_id FROM dcr10_mail_history WHERE dcr10_person_id = #{empId} )
+    </select>
+</mapper>

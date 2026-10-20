@@ -1,0 +1,8 @@
+#
+# naverworks 네이버웍스
+#
+mail.smtp.host=smtp.worksmobile.com
+mail.smtp.port=465
+mail.smtp.auth=true
+mail.smtp.ssl.enable=true
+mail.smtp.ssl.trust=smtp.worksmobile.com

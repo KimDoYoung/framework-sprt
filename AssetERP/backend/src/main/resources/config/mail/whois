@@ -1,0 +1,10 @@
+#
+# 후이즈
+#
+mail.transport.protocol =smtp
+mail.smtp.host=smart.whoismail.net
+mail.smtp.port=587
+mail.smtp.auth=true
+mail.smtp.ssl.enable = false
+mail.smtp.ssl.trust = *
+mail.debug = false

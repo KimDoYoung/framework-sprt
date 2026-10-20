@@ -28,6 +28,8 @@ import { Emp60_Tab_Sign } from './emp/Emp60_Tab_Sign';
 import { Emp30_Tab_ApprStepExcept } from './emp/Emp30_Tab_ApprStepExcept';
 import { Emp10_Tab_AddrBook } from './emp/Emp10_Tab_AddrBook';
 import { Emp10_Tab_PublicAddrBook } from './emp/Emp10_Tab_PublicAddrBook';
+import { Cmp10_Tab_MailBook } from './cmp/Cmp10_Tab_MailBook';
+import { Dcr10_Tab_MailHistory } from './dcr/Dcr10_Tab_MailHistory';
 import { Dcr00_Tab_DocList } from './dcr/Dcr00_Tab_DocList';
 import { Dcr00_Tab_FileList } from './dcr/Dcr00_Tab_FileList';
 import { Fbx01_Tab_Document } from './fbx/Fbx01_Tab_Document';
@@ -144,6 +146,8 @@ export const SCREENS: Record<string, React.FC> = {
   Emp30_Tab_ApprStepExcept, // G10 (메뉴 #1439. 사원찾기 Emp00_Lookup_SelectSingle 재사용)
   Emp10_Tab_AddrBook, // G11 (메뉴 #1025. 그룹설정 Emp57_Lookup_Insert 외 3개 클래스 함께)
   Emp10_Tab_PublicAddrBook, // G12 (메뉴 #1211. 그룹설정 재사용)
+  Dcr10_Tab_MailHistory, // G14 (메뉴 #1023. 상세보기 Dcr10_Lookup_MailViwer 함께, 전자결재 편집창·펀드 조회창은 다음 단계)
+  Cmp10_Tab_MailBook, // G13 (메뉴 #1212. 권한자 Cmp10_Tab_MailBookList·등록창 Cmp10_Edit_Tab_MailBook 함께)
   Apr15_Tab_ReprCorp, // G08 (메뉴 #1506. 인감 조회창 Apr10_Lookup_Stamp 재사용)
   Apr07_Tab_AltAppr, // G05 (메뉴 #1021. 사원찾기 Emp00_Lookup_SelectSingle 재사용)
   Apr90_Tab_DisposalList, // F04 1단계 (메뉴 #1443. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)

@@ -1,0 +1,10 @@
+#
+# mailplug
+#
+mail.transport.protocol =smtp
+mail.smtp.host=smtp.mailplug.co.kr
+mail.smtp.port=465
+mail.smtp.auth=true
+mail.smtp.ssl.enable = true
+mail.smtp.ssl.trust = *
+mail.debug = false

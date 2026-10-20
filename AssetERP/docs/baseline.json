@@ -3455,5 +3455,65 @@
     "note": "docs/work/G/G12-작업기록.md",
     "history": [],
     "id": "G12"
+  },
+  "Cmp10_Tab_MailBook": {
+    "commit": "9dd3b12c43700f827e2d874d37b66ab865fa1cd8",
+    "commit_short": "9dd3b12",
+    "branch": "ioc",
+    "commit_date": "2026-10-19",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/cmp/Cmp10_Edit_Tab_MailBook.java": "1526fc99907e456fccf067795a2a55032b3a2a68",
+      "application/src/main/java/myApp/client/vi/cmp/Cmp10_Tab_MailBook.java": "2c2725ab7cb27090eff21f8c23fa9d60780d220a",
+      "application/src/main/java/myApp/client/vi/cmp/Cmp10_Tab_MailBookList.java": "1b9169795250e3e1494bdf51addd6398b739e013",
+      "application/src/main/java/myApp/client/vi/cmp/model/Cmp10_MailBookModel.java": "ef11313fa099213c7545f61bb8f9740f7a1af413",
+      "application/src/main/java/myApp/client/vi/cmp/model/Cmp10_MailBookModelProperties.java": "fc1a8ac825f05da0e9bcf7f3f0299c06de27aa50",
+      "application/src/main/java/myApp/client/vi/cmp/model/Cmp11_MailRoleModel.java": "bd907e728e42c697f48b48f0d8cf7c2cf275b271",
+      "application/src/main/java/myApp/client/vi/cmp/model/Cmp11_MailRoleModelProperties.java": "66e90e023b242fe3247ad8ebcde705d464567b37",
+      "application/src/main/java/myApp/server/cmp/Cmp10_MailBook.java": "9a54e6e69623f6b0c9a8f64c8279a425d86c5074",
+      "application/src/main/java/myApp/server/cmp/Cmp11_MailRole.java": "8a3983333512d3c4f013469eece3754f11e3deee",
+      "application/src/main/java/myApp/server/cmp/mapper/cmp10_mail_book.xml": "431a2d269cc3005056cf4373167a4cc273623acd",
+      "application/src/main/java/myApp/server/cmp/mapper/cmp11_mail_role.xml": "5e3cd134a0db9b272cf3dda88ee538c7acae0af3",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603",
+      "application/src/main/java/myApp/server/utils/mail/SendMailSMTP.java": "2d430f36543108847b0910be4321eeb1c0770d65"
+    },
+    "shared_links": [
+      "Emp01_Lookup_PersonModel"
+    ],
+    "recorded_at": "2026-10-20T14:33:57+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/G/G13-작업기록.md",
+    "history": [],
+    "id": "G13"
+  },
+  "Dcr10_Tab_MailHistory": {
+    "commit": "9dd3b12c43700f827e2d874d37b66ab865fa1cd8",
+    "commit_short": "9dd3b12",
+    "branch": "ioc",
+    "commit_date": "2026-10-19",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/dcr/Dcr10_Lookup_MailViwer.java": "af35594acf1f450f17c17a70ada97ea81950feec",
+      "application/src/main/java/myApp/client/vi/dcr/Dcr10_Tab_MailHistory.java": "c83937541d7c068bee5f634feda66dd833af3989",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr10_MailHistoryModel.java": "142040c675f3b8bb999b16a49fcf82ab768407e1",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr10_MailHistoryModelProperties.java": "60ec108b222bacc87c391fdc4303e36cdd58f83f",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "ec2e1b8d30204b370115db8f4a4009b721f12088",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "490cfa74239bbac67406ebb07d53662a9fadf0fd",
+      "application/src/main/java/myApp/server/dcr/Dcr10_MailHistory.java": "f7093c79f305133fe4ef2ab571079976d6bec16a",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr10_mail_history.xml": "7c2ab0641997bf1b98a115eb7484e1485481fc3a",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Fnd01_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-20T14:40:44+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/G/G14-작업기록.md",
+    "history": [],
+    "id": "G14"
   }
 }

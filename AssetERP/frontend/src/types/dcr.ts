@@ -269,3 +269,22 @@ export interface DcrDocAppr {
   fileCount?: number | null;
   titleCount?: number | null;
 }
+
+/** 발신메일 한 행 (GET /api/v1/dcr/mail-histories, AS-IS Dcr10_MailHistoryModel, G14) */
+export interface DcrMailHistory {
+  mailHistoryId: number;
+  aprId?: number | null;
+  sendTimeString?: string | null;
+  personName?: string | null;
+  senderEmail?: string | null;
+  receiverEmail?: string | null;
+  referencerEmail?: string | null;
+  titleText?: string | null;
+  bodyText?: string | null;
+}
+
+/** 발신메일 첨부파일 (GET /api/v1/dcr/mail-histories/{id}/files, AS-IS Sys10_FileModel 일부, G14) */
+export interface DcrMailFile {
+  fileId: number;
+  fileName?: string | null;
+}

@@ -1,0 +1,10 @@
+#
+# dothome 닷홈
+#
+mail.transport.protocol=smtp
+mail.smtp.host=smtp.mail-server.kr
+mail.smtp.port=465
+mail.smtp.auth=true
+mail.smtp.ssl.enable=true
+mail.smtp.ssl.trust=*
+mail.debug=false

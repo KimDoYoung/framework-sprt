@@ -4,6 +4,7 @@ import {
   DcrCheckRes, DcrCheckRowReq, DcrClassDetail, DcrClassTree, DcrClassTreeAll, DcrClassTreeLookup, DcrClassTreeSaveReq,
   DcrCopyCompany, DcrDocAppr, DcrDocFile, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrClassLink, DcrLink, DcrLinkSaveReq, DcrRelateDocType, DcrRelateIcr,
   DcrOftenUse, DcrRelateIcs, DcrRelateSaveReq, DcrStampAuthTree, DcrUseYnReq, DcrWriteCode, DcrWriteTree,
+  DcrMailFile, DcrMailHistory,
 } from '../types/dcr';
 
 /** dcr(문서분류) API (E13-3 조회창, E16 문서분류, F02 업무별 문서작성) */
@@ -298,6 +299,23 @@ export const dcrApi = {
   /** AS-IS dcr.Dcr00_DocList.getAppr (Dcr00_Tab_ApprList, F09): 문서 다운로드 목록. searchText는 서버가 %…%로 */
   searchDocApprs: async (params: { classTreeId?: number; startDate: string; endDate: string; searchText: string }): Promise<DcrDocAppr[]> => {
     const res = await apiClient.get<ApiResponse<DcrDocAppr[]>>('v1/dcr/doc-lists/apprs', { params });
+    return res.data.data ?? [];
+  },
+};
+
+/** G14 발신메일목록 (Dcr10_Tab_MailHistory·Dcr10_Lookup_MailViwer) */
+export const dcrMailHistoryApi = {
+  /** AS-IS dcr.Dcr10_MailHistory.selectBySenderEmail: 내가 보낸 메일. 날짜는 'yyyy-MM-dd', mailGubun = 전체/개인메일/공용메일, fundId는 연관펀드(없으면 전체) */
+  searchMailHistories: async (p: { startDate: string; endDate: string; titleText: string; fundId?: number | null; mailGubun: string }): Promise<DcrMailHistory[]> => {
+    const res = await apiClient.get<ApiResponse<DcrMailHistory[]>>('v1/dcr/mail-histories', {
+      params: { startDate: p.startDate, endDate: p.endDate, titleText: p.titleText, mailGubun: p.mailGubun, ...(p.fundId != null ? { fundId: p.fundId } : {}) },
+    });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys10_File.selectMailFileHistory: 메일의 첨부파일 */
+  searchMailFiles: async (mailHistoryId: number): Promise<DcrMailFile[]> => {
+    const res = await apiClient.get<ApiResponse<DcrMailFile[]>>(`v1/dcr/mail-histories/${mailHistoryId}/files`);
     return res.data.data ?? [];
   },
 };
