@@ -121,6 +121,7 @@ import { Dcr01_Tab_DcrUser } from './dcr/Dcr01_Tab_DcrUser';
 import { Dcr01_Tab_DcrWrite } from './dcr/Dcr01_Tab_DcrWrite';
 import { Rpt10_Tab_FssSubmit } from './rpt/Rpt10_Tab_FssSubmit';
 import { Sch04_Tab_IcsList } from './sch/Sch04_Tab_IcsList';
+import { Sch04_Tab_IcsListManager } from './sch/Sch04_Tab_IcsListManager';
 import { Sch10_Tab_IpoAdmin } from './sch/Sch10_Tab_IpoAdmin';
 import { Test_Tab_ReactComponents } from './test/Test_Tab_ReactComponents';
 
@@ -199,6 +200,7 @@ export const SCREENS: Record<string, React.FC> = {
   Dcr01_Tab_DcrWrite, // F01 1단계 (메뉴 #1318 + Dcr08_Lookup_SelectSingle. 전자결재 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList는 F01-2)
   Rpt10_Tab_FssSubmit, // E19 (+ Rpt10_Edit_WriteGuide)
   Sch04_Tab_IcsList, // H06 (+ Sch04_Lookup_IcsMsg·Ics01/Icr01_Lookup_ClassTreeDetail. Apr01_Edit_ApprDoc은 다른 도메인이라 안내만)
+  Sch04_Tab_IcsListManager, // H12 (H06의 관리자용 짝. Sch04_Lookup_IcsMsg actionType "2"·Org00_Lookup_SelectMulti 재사용. Apr01_Edit_ApprDoc은 안내만)
   Sch10_Tab_IpoAdmin, // E20 (+ Sch12_Lookup_IpoCorp·Sch14_Lookup_IpoMismatch·Sch15_Lookup_IpoItemMatching·Com50_Lookup_StkItem)
   Ast01_Tab_InfoManager, // E21
   Pay20_Tab_DeductAdmin, // E22 1단계 (탭 1~3: Pay20_TabPage_Item·Pay04_TabPage_Formula·Pay21_TabPage_Rate + Pay20_Lookup_ItemList·Pay04_Lookup_Insert. 탭 4~9는 자리만)

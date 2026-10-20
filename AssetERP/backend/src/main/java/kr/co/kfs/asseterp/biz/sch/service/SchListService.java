@@ -40,10 +40,24 @@ public class SchListService {
     public List<Sch04ListRes> searchIcs(UserPrincipal user, LocalDate startDate, LocalDate closeDate, boolean doneExceptYn, String scheduleCode,
                                         String cycleCode, String searchText, boolean advisYn) {
         Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        return select(user, orgId, false, startDate, closeDate, doneExceptYn, scheduleCode, cycleCode, searchText, advisYn);
+    }
+
+    /**
+     * AS-IS Sch04_Tab_IcsListManager.retrieve (managerYn=true): 같은 selectByIcs를 관리자 모드로 부른다.
+     * orgId는 화면의 담당부서 조회창에서 고른 조직 — 없으면(null, "전체") 조직·권한 조건 없이 회사 전체 건을 읽는다
+     */
+    public List<Sch04ListRes> searchIcsManager(UserPrincipal user, Long orgId, LocalDate startDate, LocalDate closeDate, boolean doneExceptYn,
+                                               String scheduleCode, String cycleCode, String searchText, boolean advisYn) {
+        return select(user, orgId, true, startDate, closeDate, doneExceptYn, scheduleCode, cycleCode, searchText, advisYn);
+    }
+
+    private List<Sch04ListRes> select(UserPrincipal user, Long orgId, boolean managerYn, LocalDate startDate, LocalDate closeDate, boolean doneExceptYn,
+                                      String scheduleCode, String cycleCode, String searchText, boolean advisYn) {
         LocalDate startDateCalc = mapper.selectBizDate(user.getCompanyId(), startDate, "-1");
         LocalDate closeDateCalc = mapper.selectBizDate(user.getCompanyId(), closeDate, "+1");
         return mapper.selectByIcs(new Sch04ListSearchCond(user.getCompanyId(), user.getUserId(), orgId, startDate, closeDate, startDateCalc, closeDateCalc,
-                doneExceptYn, blankToAny(scheduleCode), blankToAny(cycleCode), false, "%" + (searchText == null ? "" : searchText) + "%", advisYn));
+                doneExceptYn, blankToAny(scheduleCode), blankToAny(cycleCode), managerYn, "%" + (searchText == null ? "" : searchText) + "%", advisYn));
     }
 
     /**
@@ -86,7 +100,16 @@ public class SchListService {
     /** AS-IS rdButton(sys.Sys99_Print.insertRdIcsList + RD 리포트 Sch04_Rd_IcsList) — 같은 조회 결과를 그리드 열 순서로 xlsx에 쓴다 */
     public byte[] downloadIcs(UserPrincipal user, LocalDate startDate, LocalDate closeDate, boolean doneExceptYn, String scheduleCode,
                               String cycleCode, String searchText, boolean advisYn) {
-        List<Sch04ListRes> rows = searchIcs(user, startDate, closeDate, doneExceptYn, scheduleCode, cycleCode, searchText, advisYn);
+        return toExcel(searchIcs(user, startDate, closeDate, doneExceptYn, scheduleCode, cycleCode, searchText, advisYn));
+    }
+
+    /** AS-IS Sch04_Tab_IcsListManager.rdButton (managerYn=true) — 관리자 조회 결과 xlsx */
+    public byte[] downloadIcsManager(UserPrincipal user, Long orgId, LocalDate startDate, LocalDate closeDate, boolean doneExceptYn, String scheduleCode,
+                                     String cycleCode, String searchText, boolean advisYn) {
+        return toExcel(searchIcsManager(user, orgId, startDate, closeDate, doneExceptYn, scheduleCode, cycleCode, searchText, advisYn));
+    }
+
+    private byte[] toExcel(List<Sch04ListRes> rows) {
         try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = wb.createSheet("법규보고 점검");
             Row header = sheet.createRow(0);

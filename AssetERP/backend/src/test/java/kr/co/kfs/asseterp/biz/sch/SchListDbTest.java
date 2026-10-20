@@ -103,4 +103,18 @@ class SchListDbTest {
         assertThat(xlsx.length).isGreaterThan(100);
         assertThat(new String(xlsx, 0, 2)).isEqualTo("PK");
     }
+
+    @Test
+    void 관리자_조회는_조직이_없으면_전체_있으면_그_담당부서만_읽고_xlsx를_만든다() {
+        LocalDate from = LocalDate.of(2025, 10, 1);
+        LocalDate to = LocalDate.of(2026, 9, 30);
+        List<Sch04ListRes> all = service.searchIcsManager(ADMIN, null, from, to, false, "%", "%", "", false);
+        List<Sch04ListRes> byOrg = service.searchIcsManager(ADMIN, 202205090122582L, from, to, false, "%", "%", "", false);
+        assertThat(all).isNotEmpty();
+        assertThat(byOrg).isNotEmpty().hasSizeLessThan(all.size());
+        assertThat(byOrg).allMatch(r -> Long.valueOf(202205090122582L).equals(r.mngOrgId()));
+
+        byte[] xlsx = service.downloadIcsManager(ADMIN, null, from, to, false, "%", "%", "", false);
+        assertThat(new String(xlsx, 0, 2)).isEqualTo("PK");
+    }
 }

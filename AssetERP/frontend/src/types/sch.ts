@@ -151,3 +151,8 @@ export interface Sch04ListSearch {
   searchText: string;
   advisYn: boolean;
 }
+
+/** 법규보고 점검(관리자) 조회 조건 — orgId 없음 = 담당부서 전체 */
+export interface Sch04ListManagerSearch extends Sch04ListSearch {
+  orgId?: number | null;
+}

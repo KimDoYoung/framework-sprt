@@ -58,6 +58,39 @@ public class SchListController {
                 .body(body);
     }
 
+    /** AS-IS sch.Sch04_List.selectByIcs (managerYn=true, 관리자 화면 Sch04_Tab_IcsListManager). orgId가 없으면 전체 담당부서 */
+    @GetMapping("/ics/manager")
+    public ApiResponse<List<Sch04ListRes>> searchIcsManager(@AuthenticationPrincipal UserPrincipal principal,
+                                                            @RequestParam(required = false) Long orgId,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                            @RequestParam(defaultValue = "false") boolean doneExceptYn,
+                                                            @RequestParam(required = false) String scheduleCode,
+                                                            @RequestParam(required = false) String cycleCode,
+                                                            @RequestParam(defaultValue = "") String searchText,
+                                                            @RequestParam(defaultValue = "false") boolean advisYn) {
+        return ApiResponse.ok(service.searchIcsManager(principal, orgId, startDate, closeDate, doneExceptYn, scheduleCode, cycleCode, searchText, advisYn));
+    }
+
+    /** 관리자 출력/다운로드 (AS-IS rdButton managerYn=true → xlsx) */
+    @GetMapping("/ics/manager/excel")
+    public ResponseEntity<byte[]> downloadIcsManager(@AuthenticationPrincipal UserPrincipal principal,
+                                                     @RequestParam(required = false) Long orgId,
+                                                     @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                     @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                     @RequestParam(defaultValue = "false") boolean doneExceptYn,
+                                                     @RequestParam(required = false) String scheduleCode,
+                                                     @RequestParam(required = false) String cycleCode,
+                                                     @RequestParam(defaultValue = "") String searchText,
+                                                     @RequestParam(defaultValue = "false") boolean advisYn) {
+        byte[] body = service.downloadIcsManager(principal, orgId, startDate, closeDate, doneExceptYn, scheduleCode, cycleCode, searchText, advisYn);
+        String fileName = "법규보고 점검(관리자)(" + startDate + " ~ " + closeDate + ").xlsx";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(body);
+    }
+
     /** AS-IS sch.Sch04_List.upsert — 고친 행(처리구분·처리일)을 저장한다 */
     @PutMapping
     public ApiResponse<Integer> upsert(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Sch04ListSaveReq> rows) {

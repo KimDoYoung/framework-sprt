@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import {
   Sch03Deadline, Sch03DeadlineSaveReq, Sch03DeadlineTemplate, Sch05RelateIcs,
-  Sch04List, Sch04ListSearch, Sch10Ipo, Sch10IpoSearch, Sch12IpoCorp, Sch14IpoMismatch, Sch15IpoItemMatching,
+  Sch04List, Sch04ListManagerSearch, Sch04ListSearch, Sch10Ipo, Sch10IpoSearch, Sch12IpoCorp, Sch14IpoMismatch, Sch15IpoItemMatching,
 } from '../types/sch';
 import { readBlobError } from './file';
 
@@ -185,6 +185,29 @@ export const schApi = {
   downloadIcsListExcel: async (cond: Sch04ListSearch, fileName: string): Promise<void> => {
     try {
       const res = await apiClient.get<Blob>('v1/sch/lists/ics/excel', { params: cond, responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** AS-IS sch.Sch04_List.selectByIcs (managerYn=true, H12 법규보고 점검(관리자)): orgId가 없으면 담당부서 전체 */
+  searchIcsListManager: async (cond: Sch04ListManagerSearch): Promise<Sch04List[]> => {
+    const res = await apiClient.get<ApiResponse<Sch04List[]>>('v1/sch/lists/ics/manager', { params: cond });
+    return res.data.data ?? [];
+  },
+
+  /** 관리자 출력/다운로드 (AS-IS rdButton managerYn=true → xlsx) */
+  downloadIcsListManagerExcel: async (cond: Sch04ListManagerSearch, fileName: string): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/sch/lists/ics/manager/excel', { params: cond, responseType: 'blob' });
       const url = URL.createObjectURL(res.data);
       const a = document.createElement('a');
       a.href = url;
