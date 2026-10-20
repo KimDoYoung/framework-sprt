@@ -109,7 +109,7 @@
     </select>
 
     <!-- AS-IS apr01_appr.selectByClassTreeId2 L139 (IDMS-IC) — F02. 이 메뉴는 admin == 'false' 분기만(DcrUser.managerYn=false). SELECT *·모델 열 중 그리드가 쓰는 열만.
-         collate "ko_KR.utf8" → "ko-KR-x-icu"(05 §6) -->
+         AS-IS와 같은 collate "ko_KR.utf8"(03 원칙 19) -->
     <select id="selectByClassTreeId2" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprDocRes">
         WITH fund_count AS (
             SELECT apr03_appr_id
@@ -628,7 +628,7 @@
                                          AND x.apr04_step_type_cd IN ('00','10')
                                     )
            AND apr01_stamp_seq IS NOT NULL
-         ORDER BY apr01_stamp_seq COLLATE "ko-KR-x-icu" DESC
+         ORDER BY apr01_stamp_seq COLLATE "ko_KR.utf8" DESC
     </select>
 
     <!-- AS-IS apr01_appr.updatePutSeal L2874 (IDMS-IC) — G06 [확인자입력]. 원본은 문서 ID만 조건이지만 회사 조건을 더했다(G05와 같은 보안 보강, 작업기록 제안) -->

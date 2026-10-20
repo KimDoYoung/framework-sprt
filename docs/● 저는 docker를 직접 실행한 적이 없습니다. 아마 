@@ -1,0 +1,31 @@
+● 저는 docker를 직접 실행한 적이 없습니다. 아마 yunhee log errors --since-deploy를 두 번 돌린 것이 원인입니다. 이 명령은
+  내부에서 Tomcat 컨테이너(t3600-tomcat)에 docker exec를 부르고, 배포 뒤 기동 오류가 있는지 읽는 용도입니다. 두 번 모두
+  이런 메시지가 나왔습니다.
+
+  docker exec 실패 (t3600-tomcat): sh: 0: cannot open  -c: No such file
+
+  즉 yunhee가 컨테이너 안에서 로그를 읽으려다 실패했습니다. 그래서 배포 직후의 기동 오류 확인은 제대로 되지 않았고, 결과
+  문서에는 "서버 로그 오류 없음"이라고 쓰지 않았습니다. 대신 yunhee api … --log로 각 호출의 SQL과 WARN/ERROR를 확인했고,
+  거기서는 오류가 없었습니다.
+
+  docker logs를 직접 grep하지 않고 yunhee log를 쓰라는 프로젝트 규칙(CLAUDE.md 5번)을 따른 것입니다. 이 실패는 yunhee 쪽
+  문제로 보이는데, 정리해서 yunhee 수정사항으로 올릴까요?
+
+✻ Cogitated for 5s · done 오후 12:58
+
+❯ 'yunhee log errors --since-deploy' 를 고쳐야겠구나
+
+● 재현 방법과 원인으로 보이는 단서를 정리합니다.
+
+  재현
+  - AssetERP/에서 ./deploy.sh를 돌린 직후 yunhee log errors --since-deploy를 실행합니다.
+  - 이번 세션에서 두 번 모두 아래 메시지가 나왔습니다.
+
+  docker exec 실패 (t3600-tomcat): sh: 0: cannot open  -c: No such file
+
+  단서
+  - cannot open  -c의 -c 앞에 공백이 두 칸입니다. sh가 -c 옵션이 아니라  -c라는 이름의 스크립트 파일을 열려고 한 것입니다.
+  - 그래서 docker exec t3600-tomcat sh -c "<명령>"을 만드는 부분에서 인자가 잘못 나뉘거나, 앞에 공백이 붙었을 가능성이
+    큽니다.
+  - yunhee log tail, log req, api --log는 같은 환경에서 정상이었습니다. --since-deploy 경로(마지막 배포 시각과 앱 기동
+    기록을 찾는 부분)만 의심하면 됩니다.
