@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawView, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch } from '../types/ics';
+import { ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 export const icsApi = {
@@ -195,6 +195,23 @@ export const icsApi = {
   }): Promise<PageRes<IcsLawView>> => {
     const res = await apiClient.get<ApiResponse<PageRes<IcsLawView>>>('v1/ics/laws/view', { params });
     return res.data.data;
+  },
+
+  /** AS-IS ics.Ics01_ClassTree.selectByPeriod: 월별 법규조회(H04). 날짜는 yyyy-MM-dd, 비운 대분류·중분류·주기·구분은 보내지 않는다(서버가 전체) */
+  searchLawPeriod: async (params: {
+    startDate: string; closeDate: string; searchText: string; level1Name?: string; level2Name?: string;
+    cycleCode?: string; lawPublicType?: string; exceptDailyYn: boolean; advisYn: boolean;
+  }): Promise<IcsLawPeriod[]> => {
+    const res = await apiClient.get<ApiResponse<IcsLawPeriod[]>>('v1/ics/laws/period', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics01_ClassTree.selectByParentTreeId(parentTreeId 있음) / selectByAll(없음): 대분류 콤보·중분류 조회창(H04) */
+  searchClassTreeItems: async (parentTreeId: number | null, searchText = ''): Promise<IcsClassTreeItem[]> => {
+    const res = await apiClient.get<ApiResponse<IcsClassTreeItem[]>>('v1/ics/class-trees/items', {
+      params: { ...(parentTreeId != null ? { parentTreeId } : {}), searchText },
+    });
+    return res.data.data ?? [];
   },
 
   // ── E03-1 법규상세 창 (Ics01_Lookup_ClassTreeDetail) ──

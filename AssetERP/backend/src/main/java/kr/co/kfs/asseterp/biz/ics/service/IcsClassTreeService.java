@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.ics.service;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.ics.dto.ClassTreeRes;
 import kr.co.kfs.asseterp.biz.ics.dto.ClassTreeSaveReq;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsClassTreeItemRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsWriteTreeRes;
 import kr.co.kfs.asseterp.biz.ics.mapper.IcsClassTreeMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -27,6 +28,15 @@ public class IcsClassTreeService {
     /** AS-IS selectByCompanyId(typeCode): 사용 중인 분류를 전위 순서로(IC 내부통제 분류, IT 내부통제 구분) */
     public List<ClassTreeRes> searchTree(String typeCode) {
         return mapper.selectTree(typeCode);
+    }
+
+    /**
+     * AS-IS IcsComboBoxField.retrieve·Ics01_Lookup_CheckList.retrieve (H04): parentTreeId가 있으면 selectByParentTreeId(바로 아래 분류),
+     * 없으면 selectByAll(최상위를 뺀 모든 분류). 검색어는 분류명 %…%
+     */
+    public List<IcsClassTreeItemRes> searchItems(Long parentTreeId, String searchText) {
+        String like = "%" + (searchText == null ? "" : searchText) + "%";
+        return parentTreeId != null ? mapper.selectChildren(parentTreeId, like) : mapper.selectAllItems(like);
     }
 
     /** AS-IS Ics01_Tab_ApprList.retrieve: selectByCompanyId(typeCode %) — 법규분류(IC)와 법규구분(IT) 모두 */

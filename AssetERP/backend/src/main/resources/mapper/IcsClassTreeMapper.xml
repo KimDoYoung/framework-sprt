@@ -450,6 +450,111 @@
         </if>
     </sql>
 
+    <!-- AS-IS ics01_class_tree.selectByPeriod L593 (IDMS-IC) — 월별 법규조회(H04). 기간·조건은 원본 그대로. 상신문서에 의한 수시공시보고 절은 원본에서 주석 처리돼 비어 있다.
+         열은 월별 그리드 열 + 행 키(row_no, 원본은 ics01_class_tree_id 자리에 ROW_NUMBER)·진짜 법규 id. 원본의 t.*(안 쓰는 열)·deadline_nm은 뺐다 -->
+    <select id="selectLawPeriod" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsLawPeriodRes">
+        WITH ics AS (
+              -- 수시공시보고
+              SELECT #{closeDate}::date     ics01_close_date
+                   , sch03_cycle_cd         sch03_cycle_cd
+                   , sch03_deadline_id      sch03_deadline_id
+                   , 0                      ics01_appr_id
+                   , ics01_class_tree.*
+                FROM ics01_class_tree
+                     INNER JOIN sch03_deadline ON sch03_info_id = ics01_class_tree_id
+                     LEFT OUTER JOIN ics03_company_info ON ( ics03_ics_class_tree_id = ics01_class_tree_id  AND
+                                                             ics03_company_id        = #{companyId}         )
+               WHERE ics01_type_cd      = 'IT'
+                 AND sch03_cycle_cd     = '99'
+                 AND COALESCE(ics03_except_yn,'false') != 'true'
+               UNION ALL
+              -- 정기공시보고
+              SELECT DISTINCT
+                     f_get_std_date(sch03_deadline_id, sys12_day::date, sys12_company_id)   ics01_close_date
+                   , sch03_cycle_cd                                                         sch03_cycle_cd
+                   , sch03_deadline_id                                                      sch03_deadline_id
+                   , 0                                                                      ics01_appr_id
+                   , ics01_class_tree.*
+                FROM sys12_calendar
+                   , ics01_class_tree
+                     INNER JOIN sch03_deadline ON sch03_info_id = ics01_class_tree_id
+                     LEFT OUTER JOIN ics03_company_info ON ( ics03_ics_class_tree_id = ics01_class_tree_id AND
+                                                             ics03_company_id        = #{companyId}        )
+               WHERE ics01_type_cd   = 'IT'
+                 AND sch03_cycle_cd != '99'                                         /* (99:수시)제외 */
+                 AND COALESCE(ics03_except_yn,'false') != 'true'
+                 AND COALESCE(f_get_ics_nm(ics01_class_tree_id, '1'),'X') != 'X'
+                 AND sys12_company_id = #{companyId}
+                 AND sys12_day BETWEEN f_get_biz_date(sys12_company_id, #{startDate}, '-1')::timestamp AND f_get_biz_date(sys12_company_id, #{closeDate}, '+1')::timestamp
+                 AND ( ( sch03_cycle_cd   = '01' and sys12_working_yn = 'true' ) or /* 매일인 경우 영업일에만 */
+                       ( sch03_cycle_cd  != '01' ) )
+        )
+        SELECT ROW_NUMBER() OVER(ORDER BY ics01_close_date, sch03_cycle_cd, ics01_class_tree_cd)    AS row_no
+             , ics01_class_tree_id                                                                  AS real_class_tree_id
+             , ics01_close_date                                                                     AS close_date
+             , ics01_level1_nm                                                                      AS level1_name
+             , ics01_level2_nm                                                                      AS level2_name
+             , CASE WHEN COALESCE(ics01_appr_id,0) = 0 THEN ics01_class_tree_nm
+                    ELSE ics01_class_tree_nm
+                         || '&lt;' || 'b '  || 'style=color:#2B579A;' || '&gt;'
+                         ||' (원인문서:'||(SELECT apr01_title FROM apr01_appr WHERE apr01_appr_id = ics01_appr_id)||')'|| '&lt;' || '/b' || '&gt;'
+                    END                                                                             AS class_tree_name_add_appr
+             , ics01_submit_to                                                                      AS submit_to
+             , f_cdnm('CycleCode', sch03_cycle_cd, #{companyId}, ics01_close_date)                  AS cycle_name
+             , regexp_replace(ics01_related_law, E'[\\n\\r]+', ', ', 'g' )                          AS related_law
+             , ( SELECT COUNT(*)||'건'
+                   FROM sys11_relate_file
+                        INNER JOIN sys10_file ON sys10_file_id = sys11_file_id
+                  WHERE sys11_parent_id = ics01_class_tree_id )                                     AS file_count
+             , ics01_advis_yn                                                                       AS advis_yn
+          FROM (
+                 SELECT ics.*
+                      , f_get_ics_nm(ics01_class_tree_id, '1') ics01_level1_nm
+                      , f_get_ics_nm(ics01_class_tree_id, '2') ics01_level2_nm
+                   FROM ics
+                  WHERE ics01_close_date BETWEEN #{startDate}::date AND #{closeDate}::date
+               ) t
+         WHERE COALESCE(ics01_level1_nm,'%') LIKE #{level1Name}
+           AND COALESCE(ics01_level2_nm,'%') LIKE #{level2Name}
+           AND sch03_cycle_cd                LIKE #{cycleCode}
+           AND ( ( #{advisYn} = 'true'                       AND
+                   COALESCE(ics01_advis_yn,'false') = 'true' ) OR
+                 ( #{advisYn} != 'true'                      ) )
+           AND ( ( #{exceptDailyYn} = 'true'    AND
+                   sch03_cycle_cd  != '01'      ) OR   /* (01:일별)제외 */
+                 ( #{exceptDailyYn} = 'false'   ) )
+           AND ( ( #{lawPublicType} = '01'      AND
+                   sch03_cycle_cd  != '99'      ) OR
+                 ( #{lawPublicType} = '02'      AND
+                   sch03_cycle_cd   = '99'      ) OR
+                 ( #{lawPublicType} = '%'       ) )
+           AND UPPER(CONCAT(ics01_level1_nm, ics01_level2_nm, ics01_class_tree_nm, ics01_submit_to, ics01_related_law)) LIKE UPPER(#{searchText})
+    </select>
+
+    <!-- AS-IS ics01_class_tree.selectByParentTreeId L313 (IDMS-IC) — 원본은 ${parentTreeId}(글자 끼워 넣기)를 #{}로. 열은 대분류 콤보·중분류 조회창이 쓰는 것만 -->
+    <select id="selectChildren" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsClassTreeItemRes">
+        SELECT ics01_class_tree_id                              AS class_tree_id,
+               ics01_class_tree_nm                              AS class_tree_name,
+               f_ics_class_tree_nm(ics01_parent_tree_id)        AS parent_tree_name
+          FROM ics01_class_tree
+         WHERE ics01_parent_tree_id = #{parentTreeId}
+           AND ics01_class_tree_nm LIKE #{searchText}
+         ORDER BY ics01_class_tree_cd
+    </select>
+
+    <!-- AS-IS ics01_class_tree.selectByAll L326 (IDMS-IC) -->
+    <select id="selectAllItems" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsClassTreeItemRes">
+        SELECT a.ics01_class_tree_id                            AS class_tree_id,
+               a.ics01_class_tree_nm                            AS class_tree_name,
+               f_ics_class_tree_nm(a.ics01_parent_tree_id)      AS parent_tree_name
+          FROM ics01_class_tree a
+         WHERE a.ics01_parent_tree_id NOT IN (0)
+           AND a.ics01_class_tree_nm LIKE #{searchText}
+         ORDER BY ( SELECT ics01_class_tree_cd
+                      FROM ics01_class_tree
+                     WHERE ics01_class_tree_id = a.ics01_parent_tree_id )
+    </select>
+
     <!-- AS-IS ics01_class_tree.selectByTypeCodePaging L254 (IDMS-IC) — 열은 법규조회 그리드 열 + id (관리그룹명·제외·자동·공개구분명·전체경로는 이 화면이 안 씀) -->
     <select id="selectLawView" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsLawViewRes">
         SELECT ics01_class_tree_id      AS class_tree_id,

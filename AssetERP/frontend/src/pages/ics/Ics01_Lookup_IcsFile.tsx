@@ -22,7 +22,7 @@ const gb = gbFor<IcsRelateFile>();
 
 interface Props {
   /** open(classTreeModel, callback) L80-86 — 값이 있으면 열린다 */
-  law: IcsLaw | null;
+  law: Pick<IcsLaw, 'classTreeId'> | null;
   /** confirm() L229-234: callback.execute() — 부른 쪽이 그 법규 행을 다시 읽는다 */
   onClosed: () => void;
   /** 창의 닫기(X) */

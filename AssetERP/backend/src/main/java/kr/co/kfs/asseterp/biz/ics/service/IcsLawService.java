@@ -5,6 +5,7 @@ import kr.co.kfs.asseterp.biz.ics.dto.IcsLawContentReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDeadlineRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDetailRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawLookupRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawPeriodRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawViewRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawSaveReq;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -65,6 +67,22 @@ public class IcsLawService {
         Long companyId = user.getCompanyId();
         return new PageRes<>(mapper.selectLawViewTotal(companyId, classTreeId, TYPE_CODE, law, statute, detailSearchYn, advisYn),
                 mapper.selectLawView(companyId, classTreeId, TYPE_CODE, law, statute, detailSearchYn, advisYn, limit, offset));
+    }
+
+    /**
+     * AS-IS Ics01_Tab_PeriodList.retrieve → ics.Ics01_ClassTree.selectByPeriod (H04): 월별 법규조회.
+     * 클라이언트가 만들던 조건을 서버에서 만든다 — 검색어 %…%, 대분류·중분류·주기·구분이 비면 전체('%'), 끝일이 없으면 시작일(서버 L228)
+     */
+    public List<IcsLawPeriodRes> searchPeriod(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText,
+                                              String level1Name, String level2Name, String cycleCode, String lawPublicType,
+                                              boolean exceptDailyYn, boolean advisYn) {
+        return mapper.selectLawPeriod(user.getCompanyId(), startDate, closeDate == null ? startDate : closeDate,
+                "%" + (searchText == null ? "" : searchText) + "%", allIfBlank(level1Name), allIfBlank(level2Name),
+                allIfBlank(cycleCode), allIfBlank(lawPublicType), String.valueOf(exceptDailyYn), String.valueOf(advisYn));
+    }
+
+    private static String allIfBlank(String value) {
+        return value == null || value.isBlank() ? "%" : value;
     }
 
     /** AS-IS selectByListIcsId: 고른 법규마다 그 기한(여럿이면 여러 행)을 붙인다 */

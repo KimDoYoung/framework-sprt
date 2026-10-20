@@ -2,6 +2,8 @@ package kr.co.kfs.asseterp.biz.ics.mapper;
 
 import kr.co.kfs.asseterp.biz.ics.dto.ClassTreeRes;
 import kr.co.kfs.asseterp.biz.ics.dto.ClassTreeSaveReq;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsClassTreeItemRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawPeriodRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawContentReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDeadlineRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDetailRes;
@@ -13,10 +15,23 @@ import kr.co.kfs.asseterp.biz.ics.dto.IcsWriteTreeRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Mapper
 public interface IcsClassTreeMapper {
+
+    /** AS-IS ics01_class_tree.selectByPeriod (H04) — 월별 법규조회. advisYn·exceptDailyYn은 AS-IS처럼 'true'/'false' 글자 */
+    List<IcsLawPeriodRes> selectLawPeriod(@Param("companyId") Long companyId, @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate,
+                                          @Param("searchText") String searchText, @Param("level1Name") String level1Name, @Param("level2Name") String level2Name,
+                                          @Param("cycleCode") String cycleCode, @Param("lawPublicType") String lawPublicType,
+                                          @Param("exceptDailyYn") String exceptDailyYn, @Param("advisYn") String advisYn);
+
+    /** AS-IS ics01_class_tree.selectByParentTreeId (H04) — 바로 아래 분류 */
+    List<IcsClassTreeItemRes> selectChildren(@Param("parentTreeId") Long parentTreeId, @Param("searchText") String searchText);
+
+    /** AS-IS ics01_class_tree.selectByAll (H04) — 최상위(parent 0)를 뺀 모든 분류 */
+    List<IcsClassTreeItemRes> selectAllItems(@Param("searchText") String searchText);
 
     /** AS-IS ics01_class_tree.selectByCompanyId (ics_tree_all_postgresql) — 최상위(parent 0)부터 사용 중인 노드를 전위 순서로 */
     List<ClassTreeRes> selectTree(@Param("typeCode") String typeCode);

@@ -8,15 +8,18 @@ import kr.co.kfs.asseterp.biz.ics.dto.IcsLawDetailRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawLookupRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawSaveReq;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsLawPeriodRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsLawViewRes;
 import kr.co.kfs.asseterp.biz.ics.service.IcsClassTreeService;
 import kr.co.kfs.asseterp.biz.ics.service.IcsLawService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import kr.co.kfs.asseterp.common.dto.PageRes;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /** 법규관리(관리자) 법규 그리드 (AS-IS Ics01_Grid_IcsType·Ics01_Move_Grid → server/ics/Ics01_ClassTree) — 메뉴 #1012 */
@@ -62,6 +65,22 @@ public class IcsLawController {
                                                           @RequestParam(defaultValue = "0") long offset,
                                                           @RequestParam(defaultValue = "100") long limit) {
         return ApiResponse.ok(service.searchView(principal, classTreeId, lawSearch, statuteSearch, detailSearchYn, advisYn, offset, limit));
+    }
+
+    /** AS-IS ics.Ics01_ClassTree.selectByPeriod (Ics01_Tab_PeriodList, H04) — 월별 법규조회 */
+    @GetMapping("/period")
+    public ApiResponse<List<IcsLawPeriodRes>> searchPeriod(@AuthenticationPrincipal UserPrincipal principal,
+                                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                           @RequestParam(defaultValue = "") String searchText,
+                                                           @RequestParam(required = false) String level1Name,
+                                                           @RequestParam(required = false) String level2Name,
+                                                           @RequestParam(required = false) String cycleCode,
+                                                           @RequestParam(required = false) String lawPublicType,
+                                                           @RequestParam(defaultValue = "true") boolean exceptDailyYn,
+                                                           @RequestParam(defaultValue = "false") boolean advisYn) {
+        return ApiResponse.ok(service.searchPeriod(principal, startDate, closeDate, searchText, level1Name, level2Name,
+                cycleCode, lawPublicType, exceptDailyYn, advisYn));
     }
 
     /** AS-IS ics.Ics01_ClassTree.selectByListIcsId (Ics01_Lookup_SelectMulti "deadline", E04) — 법규와 그 기한 */

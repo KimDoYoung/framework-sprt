@@ -140,6 +140,28 @@ export interface IcsLawView {
   advisYn?: string | null;
 }
 
+/** 월별 법규조회 한 행 (AS-IS Ics01_ClassTreeModel 중 Ics01_Tab_PeriodList 그리드 열, H04). rowNo = 행 키, realClassTreeId = 진짜 법규 id. advisYn은 'true'/'false' */
+export interface IcsLawPeriod {
+  rowNo: number;
+  realClassTreeId: number;
+  closeDate?: string | null;
+  level1Name?: string | null;
+  level2Name?: string | null;
+  classTreeNameAddAppr?: string | null;
+  submitTo?: string | null;
+  cycleName?: string | null;
+  relatedLaw?: string | null;
+  fileCount?: string | null;
+  advisYn?: string | null;
+}
+
+/** 법규 분류 한 노드 (AS-IS Ics01_ClassTreeModel 중 IcsComboBoxField·Ics01_Lookup_CheckList 열, H04) */
+export interface IcsClassTreeItem {
+  classTreeId: number;
+  classTreeName?: string | null;
+  parentTreeName?: string | null;
+}
+
 /** 법규 분류 조회창 한 행 (AS-IS Ics01_ClassTreeModel 중 Ics01_Lookup_SelectMulti 그리드 열, E03) */
 export interface IcsLawLookup {
   classTreeId: number;
