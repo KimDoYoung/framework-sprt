@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeDeadlineRes;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeDetailRes;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeLookupRes;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeRes;
+import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeViewRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -20,6 +21,12 @@ public interface IcrClassTreeMapper {
                                              @Param("lawSearch") String lawSearch, @Param("statuteSearch") String statuteSearch,
                                              @Param("detailSearchYn") boolean detailSearchYn, @Param("limit") long limit, @Param("offset") long offset,
                                              @Param("relateTable") String relateTable, @Param("relateId") Long relateId);
+
+    /** AS-IS icr01_class_tree.selectByTypeCodePaging (Icr01_Tab_ClassTreeView, H03) — 내규조회 그리드 열. 건수는 selectLookupTotal을 그대로 쓴다 */
+    List<IcrClassTreeViewRes> selectView(@Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId, @Param("typeCode") String typeCode,
+                                         @Param("lawSearch") String lawSearch, @Param("statuteSearch") String statuteSearch,
+                                         @Param("detailSearchYn") boolean detailSearchYn, @Param("limit") long limit, @Param("offset") long offset,
+                                         @Param("relateTable") String relateTable, @Param("relateId") Long relateId);
 
     /** AS-IS icr01_class_tree.selectByTypeCodePagingTotal */
     long selectLookupTotal(@Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId, @Param("typeCode") String typeCode,

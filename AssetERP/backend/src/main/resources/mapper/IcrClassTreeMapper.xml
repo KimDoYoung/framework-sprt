@@ -168,6 +168,40 @@
         OFFSET #{offset}
     </select>
 
+    <!-- AS-IS icr01_class_tree.selectByTypeCodePaging L219 (IDMS-IC) — 내규조회(H03) 그리드 열 + id. 조건은 lookupCondition(원본 pagingCondition과 같은 분기).
+         원본의 `SELECT *`와 관리그룹명 서브쿼리는 이 화면이 안 쓴다. 서식파일 건수·분류(상위 전체명)는 원본 그대로 -->
+    <select id="selectView" resultType="kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeViewRes">
+        SELECT icr01_class_tree_id      AS class_tree_id,
+               icr01_class_tree_cd      AS class_tree_code,
+               icr01_class_tree_nm      AS class_tree_name,
+               icr01_content            AS content,
+               icr01_submit_to          AS submit_to,
+               icr01_related_law        AS related_law,
+               (
+                    SELECT  CASE WHEN COUNT(*)=1
+                            THEN MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate()))
+                            ELSE MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate())) || ' 외 ' || COUNT(sch03_deadline.*) - 1 || '건'
+                            END
+                      FROM  sch03_deadline
+                     WHERE  sch03_schedule_cd IN ('6','7') /* 내규담당 (6) / 문서작성(내규) (7) */
+                       AND  icr01_class_tree_id = sch03_info_id
+                       AND  icr01_company_id = sch03_company_id
+                     LIMIT 1
+               )                        AS cycle_name,
+               (
+                    SELECT  count(sys10_file.*) || '건'
+                      FROM  sys10_file
+                     WHERE  sys10_parent_id = icr01_class_tree_id
+               )                        AS file_count,
+               f_get_icr_nm(icr01_class_tree_id, '3') AS parent_tree_full_name
+          FROM icr01_class_tree
+         WHERE 1=1
+        <include refid="lookupCondition"/>
+         ORDER BY icr01_class_tree_cd
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
     <!-- AS-IS icr01_class_tree.selectByTypeCodePagingTotal (IDMS-IC) -->
     <select id="selectLookupTotal" resultType="long">
         SELECT count(*)
@@ -186,7 +220,8 @@
                icr01_submit_to      AS submit_to,
                ( SELECT STRING_AGG(f_get_deadline_nm(sch03_deadline_id, '2'), ', ')
                    FROM sch03_deadline
-                  WHERE sch03_info_id = icr01_class_tree_id )  AS deadline_name
+                  WHERE sch03_info_id = icr01_class_tree_id )  AS deadline_name,
+               f_icr_class_tree_nm_allpath(icr01_class_tree_id) AS class_tree_full_name
           FROM icr01_class_tree
          WHERE icr01_class_tree_id = #{classTreeId}
     </select>

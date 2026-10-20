@@ -12,7 +12,7 @@ import { Button } from '@/components/button';
 
 interface Props {
   /** view(selectModel, callback) L38 — 값이 있으면 열린다 */
-  row: IcrClassTreeLookup | null;
+  row: Pick<IcrClassTreeLookup, 'content'> | null;
   onClose: () => void;
 }
 

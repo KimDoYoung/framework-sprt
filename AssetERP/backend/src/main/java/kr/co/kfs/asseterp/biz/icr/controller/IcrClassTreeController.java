@@ -5,6 +5,7 @@ import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeDeadlineRes;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeDetailRes;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeLookupRes;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeRes;
+import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeViewRes;
 import kr.co.kfs.asseterp.biz.icr.service.IcrClassTreeService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import kr.co.kfs.asseterp.common.dto.PageRes;
@@ -41,6 +42,18 @@ public class IcrClassTreeController {
                                                                     @RequestParam(required = false) String relateTable,
                                                                     @RequestParam(required = false) Long relateId) {
         return ApiResponse.ok(service.searchLookup(principal, classTreeId, lawSearch, statuteSearch, detailSearchYn, offset, limit, relateTable, relateId));
+    }
+
+    /** AS-IS icr.Icr01_ClassTree.selectByTypeCodePaging (Icr01_Tab_ClassTreeView, H03) — 내규조회 페이징. typeCode IT는 서버 */
+    @GetMapping("/view")
+    public ApiResponse<PageRes<IcrClassTreeViewRes>> searchView(@AuthenticationPrincipal UserPrincipal principal,
+                                                                @RequestParam(required = false) Long classTreeId,
+                                                                @RequestParam(defaultValue = "") String lawSearch,
+                                                                @RequestParam(defaultValue = "") String statuteSearch,
+                                                                @RequestParam(defaultValue = "false") boolean detailSearchYn,
+                                                                @RequestParam(defaultValue = "0") long offset,
+                                                                @RequestParam(defaultValue = "100") long limit) {
+        return ApiResponse.ok(service.searchView(principal, classTreeId, lawSearch, statuteSearch, detailSearchYn, offset, limit));
     }
 
     /** AS-IS icr.Icr01_ClassTree.selectByListIcrId (Icr01_Lookup_SelectMulti "deadline") — 내규와 그 기한 */

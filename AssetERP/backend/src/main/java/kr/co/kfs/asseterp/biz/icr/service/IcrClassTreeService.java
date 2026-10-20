@@ -5,6 +5,7 @@ import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeDeadlineRes;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeDetailRes;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeLookupRes;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeRes;
+import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeViewRes;
 import kr.co.kfs.asseterp.biz.icr.mapper.IcrClassTreeMapper;
 import kr.co.kfs.asseterp.common.dto.PageRes;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -43,6 +44,19 @@ public class IcrClassTreeService {
         Long companyId = user.getCompanyId();
         return new PageRes<>(mapper.selectLookupTotal(companyId, classTreeId, RULE_TYPE_CODE, law, statute, detailSearchYn, relateTable, relateId),
                 mapper.selectLookup(companyId, classTreeId, RULE_TYPE_CODE, law, statute, detailSearchYn, limit, offset, relateTable, relateId));
+    }
+
+    /**
+     * AS-IS Icr01_Tab_ClassTreeView.retrieve(H03) → selectByTypeCodePaging + Total: 내규(IT) 목록을 페이지로.
+     * 조회창과 같은 조건(내규검색·조문검색 %…%, 상세내용 포함, 분류와 모든 하위)에 열만 내규조회 그리드 것
+     */
+    public PageRes<IcrClassTreeViewRes> searchView(UserPrincipal user, Long classTreeId, String lawSearch, String statuteSearch,
+                                                   boolean detailSearchYn, long offset, long limit) {
+        String law = "%" + (lawSearch == null ? "" : lawSearch) + "%";
+        String statute = "%" + (statuteSearch == null ? "" : statuteSearch) + "%";
+        Long companyId = user.getCompanyId();
+        return new PageRes<>(mapper.selectLookupTotal(companyId, classTreeId, RULE_TYPE_CODE, law, statute, detailSearchYn, null, null),
+                mapper.selectView(companyId, classTreeId, RULE_TYPE_CODE, law, statute, detailSearchYn, limit, offset, null, null));
     }
 
     /** AS-IS selectByListIcrId: 고른 내규마다 그 기한(여럿이면 여러 행)을 붙인다 */

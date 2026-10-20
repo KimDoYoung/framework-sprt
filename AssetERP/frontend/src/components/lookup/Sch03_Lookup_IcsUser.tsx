@@ -50,7 +50,7 @@ export const Sch03_Lookup_IcsUser: React.FC<Props> = ({ classTreeId, onClose }) 
     <LookupModal
       open={classTreeId != null}
       title="법규 기한"
-      width={940}
+      width={980}
       maskClosable={false}
       onCancel={onClose}
       footer={<div style={{ textAlign: 'center' }}>{/* [E2] closeButton[닫기].Select (L62) → hide() */}<Button type="close" onClick={onClose}>닫기</Button></div>}

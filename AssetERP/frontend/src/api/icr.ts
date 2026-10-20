@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { IcrClassTreeDeadline, IcrClassTreeDetail, IcrClassTreeLookup, IcrClassTreeNode } from '../types/icr';
+import { IcrClassTreeDeadline, IcrClassTreeDetail, IcrClassTreeLookup, IcrClassTreeNode, IcrClassTreeView } from '../types/icr';
 
 /** icr(내규) 조회창 API (E13-3) */
 export const icrApi = {
@@ -17,6 +17,14 @@ export const icrApi = {
     relateTable?: string; relateId?: number;
   }): Promise<PageRes<IcrClassTreeLookup>> => {
     const res = await apiClient.get<ApiResponse<PageRes<IcrClassTreeLookup>>>('v1/icr/class-trees/lookup', { params });
+    return res.data.data;
+  },
+
+  /** AS-IS icr.Icr01_ClassTree.selectByTypeCodePaging(typeCode IT): 내규조회(H03) 페이징. 서식파일 건수·분류 열까지 */
+  searchView: async (params: {
+    classTreeId: number | null; lawSearch: string; statuteSearch: string; detailSearchYn: boolean; offset: number; limit: number;
+  }): Promise<PageRes<IcrClassTreeView>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<IcrClassTreeView>>>('v1/icr/class-trees/view', { params });
     return res.data.data;
   },
 

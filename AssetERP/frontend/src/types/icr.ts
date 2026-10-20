@@ -31,6 +31,21 @@ export interface IcrClassTreeDetail {
   submitTo?: string | null;
   /** 기한 이름을 ', '로 이은 문자열 */
   deadlineName?: string | null;
+  /** 분류 전체 경로 이름 (내규조회 H03의 분류 칸) */
+  classTreeFullName?: string | null;
+}
+
+/** 내규조회 한 행 (AS-IS Icr01_ClassTreeModel 중 Icr01_Tab_ClassTreeView 그리드 열 + id, H03) */
+export interface IcrClassTreeView {
+  classTreeId: number;
+  classTreeCode?: string | null;
+  classTreeName?: string | null;
+  content?: string | null;
+  submitTo?: string | null;
+  relatedLaw?: string | null;
+  cycleName?: string | null;
+  fileCount?: string | null;
+  parentTreeFullName?: string | null;
 }
 
 /** 내규 + 그 기한 한 쌍 (AS-IS Icr01_Lookup_SelectMulti "deadline", E13-3) */

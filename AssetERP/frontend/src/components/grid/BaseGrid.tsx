@@ -34,6 +34,8 @@ export interface BaseGridProps<T> extends Omit<AgGridReactProps<T>, 'theme'> {
   /** 이 그리드만 헤더 배경색을 바꿀 때 (기본 theme.ts GRID_COLORS.header) */
   headerColor?: string;
   sumRow?: SumRow;
+  /** 모든 셀을 세로 가운데로 (AS-IS는 전부 vertical center — 03 원칙 20, 기본 true. 끄려면 `vCenter={false}`) */
+  vCenter?: boolean;
   wrapperStyle?: CSSProperties;
 }
 
@@ -68,6 +70,7 @@ export function BaseGrid<T>({
   zebra = true,
   headerColor,
   sumRow,
+  vCenter = true,
   wrapperStyle,
   columnDefs,
   defaultColDef,
@@ -117,7 +120,7 @@ export function BaseGrid<T>({
   };
 
   return (
-    <div style={{ flex: '1 1 0', minHeight: 0, height: '100%', width: '100%', ...cssVars, ...wrapperStyle }}>
+    <div className={vCenter ? 'gb-vcenter' : undefined} style={{ flex: '1 1 0', minHeight: 0, height: '100%', width: '100%', ...cssVars, ...wrapperStyle }}>
       <AgGridReact<T>
         ref={gridRef}
         theme={theme}

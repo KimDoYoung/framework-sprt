@@ -3628,5 +3628,43 @@
     "note": "docs/work/H/H02-작업기록.md",
     "history": [],
     "id": "H02"
+  },
+  "Icr01_Tab_ClassTreeView": {
+    "commit": "9dd3b12c43700f827e2d874d37b66ab865fa1cd8",
+    "commit_short": "9dd3b12",
+    "branch": "ioc",
+    "commit_date": "2026-10-19",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/icr/Icr01_Lookup_Content.java": "fd38db1d025eecb28b1150897623ff462fd8c2d0",
+      "application/src/main/java/myApp/client/vi/icr/Icr01_Lookup_IcrFile.java": "b78d7e0c5ae01bf5c6a0ee12a9da2da508c8a8fc",
+      "application/src/main/java/myApp/client/vi/icr/Icr01_Lookup_SelectParent.java": "2fcd5db475342c02109e204ececdc7d8235ba4f6",
+      "application/src/main/java/myApp/client/vi/icr/Icr01_Lookup_Share.java": "5385a308e6dc68d9d76548fb295bc64706b657d6",
+      "application/src/main/java/myApp/client/vi/icr/Icr01_Tab_ClassTreeView.java": "dea872f1a3291c790a4daa77e65cf80acce78c5b",
+      "application/src/main/java/myApp/client/vi/icr/Icr02_Lookup_Manager.java": "72f413551ae60106acacef78bf3747b4e652bce2",
+      "application/src/main/java/myApp/client/vi/icr/model/Icr01_ClassTreeModel.java": "cf2f2e24e6a90b06bb620d6cde871cd5cf6e5c7e",
+      "application/src/main/java/myApp/client/vi/icr/model/Icr01_ClassTreeModelProperties.java": "8a21042fdba9e8b08cf826e79ae3c2e7b363f945",
+      "application/src/main/java/myApp/client/vi/icr/model/Icr05_RelateManagerModel.java": "800a5cdeee375af03afea5407ffbf4f126c80c40",
+      "application/src/main/java/myApp/server/icr/Icr01_ClassTree.java": "41c9258d64d76e458b3efb91339456d51409d8c5",
+      "application/src/main/java/myApp/server/icr/Icr05_RelateManager.java": "d1bd177839233ab68506d69735872d6f4c3d15ee",
+      "application/src/main/java/myApp/server/icr/mapper/icr01_class_tree.xml": "703e54bbba9df82f90b6a0bb169217508e340710",
+      "application/src/main/java/myApp/server/icr/mapper/icr05_relate_manager.xml": "fd1090a2266bb6947a4a592395ebaf72912fd46b",
+      "application/src/main/java/myApp/server/ics/Ics02_Manager.java": "c4d05baead758487eca400ba8d766ef443d69cb2",
+      "application/src/main/java/myApp/server/ics/Ics04_Share.java": "1e430deaf4da921679455a96fc51bb8f8e2b7fc2",
+      "application/src/main/java/myApp/server/ics/mapper/ics02_manager.xml": "3725afedd828a02471d41da7a800c09f667c9714",
+      "application/src/main/java/myApp/server/ics/mapper/ics04_share.xml": "0451a1b719396994862ec783cc925a170ca824e8",
+      "application/src/main/java/myApp/server/sch/mapper/sch02_share.xml": "566b93aab68814295ac8220f3d5b7c7223e11ad0",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Sch03_Lookup_IcsUser"
+    ],
+    "recorded_at": "2026-10-20T16:08:28+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/H/H03-작업기록.md",
+    "history": [],
+    "id": "H03"
   }
 }

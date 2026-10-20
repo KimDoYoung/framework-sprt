@@ -102,7 +102,7 @@ export const Ics01_Lookup_IcsFile: React.FC<Props> = ({ law, onClosed, onClose, 
     <LookupModal
       open={!!law}
       title="서식파일"
-      width={940}
+      width={1000}
       maskClosable={false}
       onCancel={onClose}
       footer={

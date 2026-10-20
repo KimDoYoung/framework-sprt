@@ -62,7 +62,7 @@ export const Ics20_Lookup_RevisionHistory: React.FC<Props> = ({ classTreeId, onC
     <LookupModal
       open={classTreeId != null}
       title="개정이력"
-      width={1190}
+      width={1250}
       maskClosable={false}
       onCancel={onClose}
       footer={<div style={{ textAlign: 'center' }}>{/* [E2] closeButton[닫기].Select (L66) → hide() */}<Button type="close" onClick={onClose}>닫기</Button></div>}

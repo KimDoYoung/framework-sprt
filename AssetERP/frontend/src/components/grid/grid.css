@@ -38,3 +38,16 @@
 .gb-check .ag-cell-wrapper {
   justify-content: center;
 }
+
+/* vCenter: 모든 셀 세로 가운데 (AS-IS는 전부 vertical center). 글자 정렬은 셀 인라인 text-align을 따라 가로 위치로 옮긴다 */
+.gb-vcenter .ag-cell:not(.gb-check) {
+  display: flex;
+  align-items: center;
+}
+.gb-vcenter .ag-cell[style*="text-align: center"],
+.gb-vcenter .ag-cell.gb-rownum {
+  justify-content: center;
+}
+.gb-vcenter .ag-cell[style*="text-align: right"] {
+  justify-content: flex-end;
+}
