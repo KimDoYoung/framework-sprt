@@ -3,7 +3,8 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!-- AS-IS(IDMS-IC) server/ics/mapper/ics02_manager.xml (selectByCompanyId, getDefaultYn) + ics04_share.xml (selectByManagerId)  (H08 Ics02_Lookup_Manager·Ics01_Lookup_Share) -->
+<!-- AS-IS(IDMS-IC) server/ics/mapper/ics02_manager.xml (selectByCompanyId, getDefaultYn) + ics04_share.xml (selectByManagerId)  (H08 Ics02_Lookup_Manager·Ics01_Lookup_Share)
+     + ics05_relate_manager.xml (checkRelateIcs) + UpdateDataModel 저장 SQL (H10 Ics02_Tab_Manager·Ics04_Page_Share) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsManagerMapper">
 
     <sql id="managerColumns">
@@ -55,4 +56,78 @@
            AND ics04_company_id = #{companyId}
          ORDER BY ics04_share_cd, ics04_org_id
     </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel INSERT ics02_manager (IDMS-IC) — 화면이 채우는 열: 회사·그룹명 -->
+    <insert id="insertManager">
+        INSERT INTO ics02_manager (ics02_manager_id, ics02_company_id, ics02_manager_group_nm)
+        VALUES (#{managerId}, #{companyId}, #{managerGroupName})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE ics02_manager (IDMS-IC) — 회사 조건은 보안 보강 -->
+    <update id="updateManager">
+        UPDATE ics02_manager
+           SET ics02_manager_group_nm = #{managerGroupName}
+         WHERE ics02_manager_id = #{managerId}
+           AND ics02_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel DELETE ics02_manager (IDMS-IC) — 회사 조건은 보안 보강 -->
+    <delete id="deleteManagers">
+        DELETE FROM ics02_manager
+         WHERE ics02_company_id = #{companyId}
+           AND ics02_manager_id IN
+        <foreach collection="managerIds" item="managerId" open="(" separator="," close=")">#{managerId}</foreach>
+    </delete>
+
+    <!-- AS-IS ics05_relate_manager.checkRelateIcs (IDMS-IC) -->
+    <select id="countRelate" resultType="int">
+        SELECT COUNT(*)
+          FROM ics05_relate_manager
+         WHERE ics05_manager_id = #{managerId}
+    </select>
+
+    <!-- AS-IS ics04_share.selectById (IDMS-IC) — 저장한 행을 다시 읽는다 -->
+    <select id="selectShareById" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsShareRes">
+        SELECT ics04_share_id                                                      AS share_id,
+               ics04_share_cd                                                      AS share_code,
+               f_cdnm('ShareCode', ics04_share_cd, ics04_company_id, f_sysdate())  AS share_name,
+               ics04_person_id                                                     AS person_id,
+               f_emp_kor_nm(ics04_person_id)                                       AS person_name,
+               ics04_org_id                                                        AS org_id,
+               f_org_nm(ics04_org_id, f_sysdate())                                 AS org_name,
+               ics04_company_id                                                    AS company_id
+          FROM ics04_share a
+         WHERE ics04_share_id = #{shareId}
+           AND ics04_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel INSERT ics04_share (IDMS-IC) — 화면이 채우는 열: 회사·관리그룹·구분·부서 -->
+    <insert id="insertShare">
+        INSERT INTO ics04_share (ics04_share_id, ics04_company_id, ics04_manager_id, ics04_share_cd, ics04_org_id)
+        VALUES (#{shareId}, #{companyId}, #{managerId}, #{shareCode}, #{orgId})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE ics04_share (IDMS-IC) -->
+    <update id="updateShare">
+        UPDATE ics04_share
+           SET ics04_share_cd = #{shareCode},
+               ics04_org_id   = #{orgId}
+         WHERE ics04_share_id   = #{shareId}
+           AND ics04_manager_id = #{managerId}
+           AND ics04_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel DELETE ics04_share (IDMS-IC) — 로그인 회사의 그 관리그룹 것만 -->
+    <delete id="deleteShares">
+        DELETE FROM ics04_share
+         WHERE ics04_company_id = #{companyId}
+           AND ics04_manager_id = #{managerId}
+           AND ics04_share_id IN
+        <foreach collection="shareIds" item="shareId" open="(" separator="," close=")">#{shareId}</foreach>
+    </delete>
 </mapper>

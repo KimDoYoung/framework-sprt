@@ -3872,5 +3872,38 @@
     "note": "docs/work/H/H09-작업기록.md",
     "history": [],
     "id": "H09"
+  },
+  "Ics02_Tab_Manager": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ics/Ics02_Tab_Manager.java": "954e79b0dfb3bfd1c4af2eb0ce133f27bbd47d15",
+      "application/src/main/java/myApp/client/vi/ics/Ics04_Page_Share.java": "7cefc2c59e27921906298c42f37f8d7602f64e16",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics01_ClassTreeModel.java": "1aebbfba565e28daa85a3635de9bcf5ff658460a",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics02_ManagerModel.java": "c6049905411afbf73aff93fd09f1f00ce083b7c8",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics02_ManagerModelProperties.java": "e0c715fd2da5786bab2303a1a35be1c4835dafe9",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics04_ShareModel.java": "bab35cb364bf7289e5b3daca380869f31b61e6cc",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics04_ShareModelProperties.java": "075bb4fe9d7c0ffac8c00d6a2a92cf7254c04986",
+      "application/src/main/java/myApp/server/ics/Ics02_Manager.java": "c4d05baead758487eca400ba8d766ef443d69cb2",
+      "application/src/main/java/myApp/server/ics/Ics04_Share.java": "1e430deaf4da921679455a96fc51bb8f8e2b7fc2",
+      "application/src/main/java/myApp/server/ics/mapper/ics02_manager.xml": "3725afedd828a02471d41da7a800c09f667c9714",
+      "application/src/main/java/myApp/server/ics/mapper/ics04_share.xml": "0451a1b719396994862ec783cc925a170ca824e8",
+      "application/src/main/java/myApp/server/ics/mapper/ics05_relate_manager.xml": "4ad62e74541c2afd8619743fa6bc3d37d9742485",
+      "application/src/main/java/myApp/server/sch/mapper/sch02_share.xml": "566b93aab68814295ac8220f3d5b7c7223e11ad0"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectMulti",
+      "Emp00_Lookup_SelectSingle",
+      "Org00_Lookup_SelectMulti",
+      "Org00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-20T21:09:42+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/H/H10-작업기록.md",
+    "history": [],
+    "id": "H10"
   }
 }

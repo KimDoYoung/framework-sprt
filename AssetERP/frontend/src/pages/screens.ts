@@ -48,6 +48,7 @@ import { Ics20_Tab_RevisionHistoryAdmin } from './ics/Ics20_Tab_RevisionHistoryA
 import { Ics01_Tab_ClassTreeUser } from './ics/Ics01_Tab_ClassTreeUser';
 import { Ics01_Tab_IcsFileUser } from './ics/Ics01_Tab_IcsFileUser';
 import { Ics01_Tab_ClassTreeUserView } from './ics/Ics01_Tab_ClassTreeUserView';
+import { Ics02_Tab_Manager } from './ics/Ics02_Tab_Manager';
 import { Ics01_Tab_PeriodList } from './ics/Ics01_Tab_PeriodList';
 import { Ics20_Tab_RevisionHistory } from './ics/Ics20_Tab_RevisionHistory';
 import { Icr01_Tab_ClassTreeView } from './icr/Icr01_Tab_ClassTreeView';
@@ -170,6 +171,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ics20_Tab_RevisionHistoryAdmin, // E03
   Ics01_Tab_IcsFileUser, // H07
   Ics01_Tab_ClassTreeUser, // H08 (+ Ics02_Lookup_Manager·Ics01_Lookup_Share·Ics01_Lookup_Except, 나머지 조회창은 H02·H03 재사용)
+  Ics02_Tab_Manager, // H10 (+ Ics04_Page_Share, Org00_Lookup_SelectMulti 재사용)
   Ics01_Tab_ClassTreeUserView, // H02 (+ Ics01_Lookup_Content view·IcsFile period·SelectParent·Ics20_Lookup_*·Sch03_Lookup_IcsUser)
   Ics20_Tab_RevisionHistory, // H05 (+ Ics20_Edit_RevisionHistory, Ics19_Grid_IcsList view·Ics20_Grid_FileList user, Ics20_Lookup_Content user)
   Ics01_Tab_PeriodList, // H04 (+ components/lookup Ics01_Lookup_CheckList·IcsComboBoxField, ClassTreeDetail·IcsFile period 재사용)

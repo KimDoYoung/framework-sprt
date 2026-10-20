@@ -385,3 +385,16 @@ export interface IcsUserRequestSearch {
   incompleteOnly: boolean;
   searchText: string;
 }
+
+/** 관리그룹 저장 한 행 (H10, 서버 IcsManagerSaveReq) — 새 행은 managerId ≤ 0 */
+export interface IcsManagerSaveReq {
+  managerId: number;
+  managerGroupName?: string | null;
+}
+
+/** 관리그룹 공유 저장 한 행 (H10, 서버 IcsShareSaveReq) — 새 행은 shareId ≤ 0 */
+export interface IcsShareSaveReq {
+  shareId: number;
+  shareCode?: string | null;
+  orgId?: number | null;
+}

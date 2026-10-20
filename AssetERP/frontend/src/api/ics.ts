@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsShare, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch } from '../types/ics';
+import { ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 export const icsApi = {
@@ -471,6 +471,36 @@ export const icsApi = {
   searchManagerShares: async (managerId: number): Promise<IcsShare[]> => {
     const res = await apiClient.get<ApiResponse<IcsShare[]>>(`v1/ics/managers/${managerId}/shares`);
     return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics02_Manager.update (Ics02_Tab_Manager, H10): 관리그룹 저장(새 행 id ≤ 0) → 저장된 행 */
+  saveManagers: async (rows: IcsManagerSaveReq[]): Promise<IcsManager[]> => {
+    const res = await apiClient.put<ApiResponse<IcsManager[]>>('v1/ics/managers', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics02_Manager.checkRelateIcs (H10): 하나라도 법규에 연결돼 있으면 true */
+  isManagersInUse: async (managerIds: number[]): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/ics/managers/in-use', { params: { managerIds: managerIds.join(',') } });
+    return res.data.data ?? false;
+  },
+
+  /** AS-IS ics.Ics02_Manager.delete (H10) → 지운 수 */
+  deleteManagers: async (managerIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/ics/managers', { data: managerIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS ics.Ics04_Share.update (Ics04_Page_Share, H10): 관리그룹의 공유 부서 저장 → 저장된 행 */
+  saveManagerShares: async (managerId: number, rows: IcsShareSaveReq[]): Promise<IcsShare[]> => {
+    const res = await apiClient.put<ApiResponse<IcsShare[]>>(`v1/ics/managers/${managerId}/shares`, rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics04_Share.delete (H10) → 지운 수 */
+  deleteManagerShares: async (managerId: number, shareIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/ics/managers/${managerId}/shares`, { data: shareIds });
+    return res.data.data ?? 0;
   },
 
   /** AS-IS ics.Ics05_RelateManager.selectByClassTreeId (없으면 ics.Ics02_Manager.getDefaultYn) (Ics01_Lookup_Share, H08) */
