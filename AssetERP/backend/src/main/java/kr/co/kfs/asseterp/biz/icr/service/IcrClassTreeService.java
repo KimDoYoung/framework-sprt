@@ -5,6 +5,7 @@ import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeDeadlineRes;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeDetailRes;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeLookupRes;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeRes;
+import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeSaveReq;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeViewRes;
 import kr.co.kfs.asseterp.biz.icr.mapper.IcrClassTreeMapper;
 import kr.co.kfs.asseterp.common.dto.PageRes;
@@ -16,7 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/** AS-IS server/icr/Icr01_ClassTree.java 중 조회창이 쓰는 것 (selectByCompanyId L28 / selectById L22 / selectByTypeCodePaging L85 / selectByListIcrId L186) */
+/**
+ * AS-IS server/icr/Icr01_ClassTree.java 중 조회창이 쓰는 것 (selectByCompanyId L28 / selectById L22 / selectByTypeCodePaging L85 / selectByListIcrId L186)
+ * + 내규관리(H09) 분류 트리 쓰기 (update L295 / deleteAll L253) — Icr01_Edit_ClassTree·Icr01_Move_TreeGrid.
+ * 쓰기는 모두 로그인 회사의 분류만 다룬다(AS-IS는 클라이언트가 보낸 id를 그대로 믿는다)
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -71,5 +76,74 @@ public class IcrClassTreeService {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
         return row;
+    }
+
+    /** AS-IS Icr01_Tab_ClassTree.insertIcsClass → Icr01_Edit_ClassTree.update: 새 id·회사·구분 IC·사용 true, 조회순서 = 분류코드 */
+    @Transactional
+    public IcrClassTreeRes create(UserPrincipal user, IcrClassTreeSaveReq req) {
+        validate(req);
+        Long companyId = user.getCompanyId();
+        if (req.parentTreeId() == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "상위분류가 없습니다");
+        }
+        if (req.parentTreeId() != 0 && mapper.countById(companyId, req.parentTreeId()) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        long newId = mapper.selectNextId();
+        mapper.insertTreeNode(newId, withSeq(req), companyId);
+        return mapper.selectTreeNodeById(companyId, newId);
+    }
+
+    /** AS-IS Icr01_Edit_ClassTree.update (edit): 분류코드·분류명, 조회순서 = 분류코드 */
+    @Transactional
+    public IcrClassTreeRes update(UserPrincipal user, Long classTreeId, IcrClassTreeSaveReq req) {
+        validate(req);
+        Long companyId = user.getCompanyId();
+        if (mapper.updateTreeNode(companyId, classTreeId, withSeq(req)) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return mapper.selectTreeNodeById(companyId, classTreeId);
+    }
+
+    /** AS-IS Icr01_Move_TreeGrid.moveTree / Icr01_Move_Grid.moveTree: 상위 분류를 바꾼다 */
+    @Transactional
+    public void move(UserPrincipal user, Long classTreeId, Long parentTreeId) {
+        Long companyId = user.getCompanyId();
+        if (parentTreeId == null || mapper.countById(companyId, parentTreeId) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        // 원본에는 없는 보호: 자기 자신이나 자기 하위로 옮기면 트리에서 사라진다
+        if (mapper.selectDownTreeIds(companyId, classTreeId).contains(parentTreeId)) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "자기 자신이나 하위 분류로는 이동할 수 없습니다");
+        }
+        if (mapper.updateParent(companyId, classTreeId, parentTreeId) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+    }
+
+    /** AS-IS Icr01_ClassTree.deleteAll: 자신과 모든 하위(내규 포함)를 삭제 이력(icr99)에 남기고 지운다 → 지운 건수 */
+    @Transactional
+    public int deleteAll(UserPrincipal user, Long classTreeId) {
+        Long companyId = user.getCompanyId();
+        List<Long> ids = mapper.selectDownTreeIds(companyId, classTreeId);
+        for (Long id : ids) {
+            mapper.insertDeleteHistory(id, user.getUserId());
+            mapper.deleteById(companyId, id);
+        }
+        return ids.size();
+    }
+
+    private static IcrClassTreeSaveReq withSeq(IcrClassTreeSaveReq req) {
+        return new IcrClassTreeSaveReq(req.parentTreeId(), req.classTreeCode(), req.classTreeName(), req.classTreeCode());
+    }
+
+    /** 분류코드·분류명은 DB가 필수(원본은 DB 오류 "update fail"로 알림 → 미리 막는다) */
+    private static void validate(IcrClassTreeSaveReq req) {
+        if (req.classTreeCode() == null || req.classTreeCode().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "분류코드를 입력해주세요");
+        }
+        if (req.classTreeName() == null || req.classTreeName().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "분류명을 입력해주세요");
+        }
     }
 }

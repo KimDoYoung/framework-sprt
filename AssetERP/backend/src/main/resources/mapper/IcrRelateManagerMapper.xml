@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/icr/mapper/icr05_relate_manager.xml (selectByClassTreeId, delete, insert)  (H09 Icr01_Lookup_Share) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.icr.mapper.IcrRelateManagerMapper">
+
+    <!-- AS-IS icr05_relate_manager.selectByClassTreeId (IDMS-IC) — 내규에 연결된 관리그룹 (ics02_manager 열만) -->
+    <select id="selectByClassTreeId" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsManagerRes">
+        SELECT ics02_manager_id                          AS manager_id,
+               ics02_manager_group_nm                    AS manager_group_name,
+               ics02_person_id                           AS person_id,
+               f_emp_kor_nm(ics02_person_id)             AS person_name,
+               ics02_note                                AS note,
+               COALESCE(ics02_default_yn, 'false')       AS default_yn
+          FROM icr05_relate_manager
+               INNER JOIN ics02_manager ON icr05_manager_id = ics02_manager_id
+         WHERE 1=1
+           AND icr05_company_id = #{companyId}
+           AND icr05_icr_class_tree_id = #{icrClassTreeId}
+    </select>
+
+    <!-- AS-IS icr05_relate_manager.delete (IDMS-IC) -->
+    <delete id="deleteByClassTreeId">
+        DELETE
+          FROM icr05_relate_manager
+         WHERE icr05_icr_class_tree_id = #{icrClassTreeId}
+           AND icr05_company_id = #{companyId}
+    </delete>
+
+    <!-- AS-IS icr05_relate_manager.insert (IDMS-IC) -->
+    <insert id="insert">
+        INSERT INTO icr05_relate_manager
+               ( icr05_relate_manager_id, icr05_company_id, icr05_icr_class_tree_id, icr05_manager_id )
+        VALUES ( f_create_seq(), #{companyId}, #{icrClassTreeId}, #{managerId} )
+    </insert>
+</mapper>

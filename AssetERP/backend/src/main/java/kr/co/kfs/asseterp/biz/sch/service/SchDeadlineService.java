@@ -25,8 +25,10 @@ import java.util.Set;
 @Transactional(readOnly = true)
 public class SchDeadlineService {
 
-    /** 스케줄 구분: 1 스케줄 / 2 내부통제-반복 / 3 내부통제-수시 */
-    private static final Set<String> SCHEDULE_CODES = Set.of("1", "2", "3");
+    /** 스케줄 구분: 1 스케줄 / 2 내부통제-반복 / 3 내부통제-수시 / 6 내규담당 / 7 문서작성(내규) */
+    private static final Set<String> SCHEDULE_CODES = Set.of("1", "2", "3", "6", "7");
+    /** 기본 기한 복사(updateModel)가 쓰는 스케줄 구분: 법규 "2", 내규 "6" (Sch03_Lookup_Ics·Sch03_Lookup_Icr.load) */
+    private static final Set<String> COPY_SCHEDULE_CODES = Set.of("2", "6");
 
     private final SchDeadlineMapper mapper;
 
@@ -80,14 +82,18 @@ public class SchDeadlineService {
         return mapper.selectById(id);
     }
 
-    /** AS-IS updateModel(Sch03_Lookup_Ics.load): 기본 기한을 이 법규에 복사해 새 행으로 (스케줄 구분 "2") → 새 행 */
+    /** AS-IS updateModel(Sch03_Lookup_Ics·Sch03_Lookup_Icr.load): 기본 기한을 이 법규·내규에 복사해 새 행으로 (스케줄 구분 "2", 내규는 "6") → 새 행 */
     @Transactional
     public Sch03DeadlineRes copy(UserPrincipal user, Sch03DeadlineCopyReq req) {
         if (req.deadlineId() == null || req.infoId() == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "상단 메뉴바의 좌측구분값을 선택해주세요");
         }
+        String scheduleCode = req.scheduleCode() == null ? "2" : req.scheduleCode();
+        if (!COPY_SCHEDULE_CODES.contains(scheduleCode)) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "스케줄 구분이 올바르지 않습니다.");
+        }
         long newId = mapper.selectNextId();
-        if (mapper.insertCopy(newId, req.deadlineId(), req.infoId(), user.getCompanyId(), "2") == 0) {
+        if (mapper.insertCopy(newId, req.deadlineId(), req.infoId(), user.getCompanyId(), scheduleCode) == 0) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "기본 기한을 찾을 수 없습니다.");
         }
         return mapper.selectById(newId);

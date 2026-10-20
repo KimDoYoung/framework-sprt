@@ -32,9 +32,9 @@ export const schApi = {
     return res.data.data;
   },
 
-  /** AS-IS sch.Sch03_Deadline.updateModel: 기본 기한을 법규에 복사 → 새 행 */
-  copyDeadline: async (deadlineId: number, infoId: number): Promise<Sch03Deadline> => {
-    const res = await apiClient.post<ApiResponse<Sch03Deadline>>('v1/sch/deadlines/copy', { deadlineId, infoId });
+  /** AS-IS sch.Sch03_Deadline.updateModel: 기본 기한을 법규·내규에 복사 → 새 행 (scheduleCode: 법규 "2", 내규 "6") */
+  copyDeadline: async (deadlineId: number, infoId: number, scheduleCode = '2'): Promise<Sch03Deadline> => {
+    const res = await apiClient.post<ApiResponse<Sch03Deadline>>('v1/sch/deadlines/copy', { deadlineId, infoId, scheduleCode });
     return res.data.data;
   },
 

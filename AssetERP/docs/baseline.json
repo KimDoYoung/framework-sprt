@@ -3826,5 +3826,51 @@
     "note": "docs/work/H/H08-작업기록.md",
     "history": [],
     "id": "H08"
+  },
+  "Icr01_Tab_ClassTree": {
+    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+    "commit_short": "546a87d",
+    "branch": "ioc",
+    "commit_date": "2026-10-16",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/icr/Icr01_Edit_ClassTree.java": "6b7af3ff1f417b70422187969523b158fe215771",
+      "application/src/main/java/myApp/client/vi/icr/Icr01_Grid_IcrType.java": "b3efa7d76110b9214a2df41ec8a314c499eed517",
+      "application/src/main/java/myApp/client/vi/icr/Icr01_Lookup_Content.java": "fd38db1d025eecb28b1150897623ff462fd8c2d0",
+      "application/src/main/java/myApp/client/vi/icr/Icr01_Lookup_IcrFile.java": "b78d7e0c5ae01bf5c6a0ee12a9da2da508c8a8fc",
+      "application/src/main/java/myApp/client/vi/icr/Icr01_Lookup_Manager.java": "20280748cdeec5b25189eb024ad5a481c1f98db3",
+      "application/src/main/java/myApp/client/vi/icr/Icr01_Lookup_Share.java": "5385a308e6dc68d9d76548fb295bc64706b657d6",
+      "application/src/main/java/myApp/client/vi/icr/Icr01_Move_Grid.java": "885af4ba454a5707c654f3d3821d9de3133eb949",
+      "application/src/main/java/myApp/client/vi/icr/Icr01_Move_TreeGrid.java": "3432b87ecee42b5ae5dfa54b85f88cc930a5f8b0",
+      "application/src/main/java/myApp/client/vi/icr/Icr01_Tab_ClassTree.java": "833edb882b15ad6807ff4d3cd5a20bca55335ca1",
+      "application/src/main/java/myApp/client/vi/icr/Icr02_Lookup_Manager.java": "72f413551ae60106acacef78bf3747b4e652bce2",
+      "application/src/main/java/myApp/client/vi/icr/model/Icr01_ClassTreeModel.java": "cf2f2e24e6a90b06bb620d6cde871cd5cf6e5c7e",
+      "application/src/main/java/myApp/client/vi/icr/model/Icr01_ClassTreeModelProperties.java": "8a21042fdba9e8b08cf826e79ae3c2e7b363f945",
+      "application/src/main/java/myApp/client/vi/icr/model/Icr05_RelateManagerModel.java": "800a5cdeee375af03afea5407ffbf4f126c80c40",
+      "application/src/main/java/myApp/server/icr/Icr01_ClassTree.java": "41c9258d64d76e458b3efb91339456d51409d8c5",
+      "application/src/main/java/myApp/server/icr/Icr05_RelateManager.java": "d1bd177839233ab68506d69735872d6f4c3d15ee",
+      "application/src/main/java/myApp/server/icr/mapper/icr01_class_tree.xml": "703e54bbba9df82f90b6a0bb169217508e340710",
+      "application/src/main/java/myApp/server/icr/mapper/icr05_relate_manager.xml": "fd1090a2266bb6947a4a592395ebaf72912fd46b",
+      "application/src/main/java/myApp/server/ics/Ics02_Manager.java": "c4d05baead758487eca400ba8d766ef443d69cb2",
+      "application/src/main/java/myApp/server/ics/Ics04_Share.java": "1e430deaf4da921679455a96fc51bb8f8e2b7fc2",
+      "application/src/main/java/myApp/server/ics/mapper/ics02_manager.xml": "3725afedd828a02471d41da7a800c09f667c9714",
+      "application/src/main/java/myApp/server/ics/mapper/ics04_share.xml": "0451a1b719396994862ec783cc925a170ca824e8",
+      "application/src/main/java/myApp/server/sch/Sch03_Deadline.java": "2fbc409f50388a70a24ea4e21e802e98886ade76",
+      "application/src/main/java/myApp/server/sch/mapper/sch02_share.xml": "566b93aab68814295ac8220f3d5b7c7223e11ad0",
+      "application/src/main/java/myApp/server/sch/mapper/sch03_deadline.xml": "9076e139c8c3b0fc0a2b7046ec191ac9565573fc",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle",
+      "Sch03_Lookup_Icr",
+      "Sch03_Lookup_Ics"
+    ],
+    "recorded_at": "2026-10-20T20:59:57+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/H/H09-작업기록.md",
+    "history": [],
+    "id": "H09"
   }
 }

@@ -1,6 +1,7 @@
 /**
- * 법규 기한 창 (E01-1) — 법규관리의 기한 아이콘(Ics01_Grid_IcsType)·분류 등록 창의 수시알림 [설정](Ics01_Edit_ClassTree·Icr01_Edit_ClassTree)에서 연다.
- * ics·icr 도메인이 쓰는 공통 조회창(IM-02)
+ * 법규 기한 창 (E01-1) — 법규관리의 기한 아이콘(Ics01_Grid_IcsType)·분류 등록 창의 수시알림 [설정](Ics01_Edit_ClassTree)에서 연다.
+ * ics·icr 도메인이 쓰는 공통 조회창(IM-02). 내규관리(H09 Icr01_Grid_IcrType)는 AS-IS `Sch03_Lookup_Icr`(같은 코드, 스케줄 구분만 "6"·"7"·"6")로
+ * 이 부품을 `scheduleCode="6"`으로 쓴다 — 제목만 "내규 기한"
  * AS-IS: myApp/client/vi/sch/Sch03_Lookup_Ics.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 makeLayout() L79-157: 모달 900×300 "법규 기한", 위 툴바(기본 기한 콤보 250 "선택하세요" · [선택] · [일회성조건] · [반복주기조건] · [삭제]) + 오른쪽 새로고침 아이콘,
  *   그리드(체크박스 단일: 주기구분 120 · 처리일 정보 450 · 시작일 100 · 종료일 100 · 수정 아이콘 50), 아래 가운데 [닫기]
@@ -23,7 +24,7 @@ const gb = gbFor<Sch03Deadline>();
 interface Props {
   /** open(classTreeId, scheduleCode, callback) L71-77 — 값이 있으면 열린다 */
   classTreeId: number | null;
-  /** 스케줄 구분 (호출하는 화면은 모두 "2") */
+  /** 스케줄 구분: 법규 "2"(일회성 "3"), 내규 "6"(일회성 "7") */
   scheduleCode: string;
   /** closeButton[닫기]의 callback.execute() — 부른 쪽이 법규·분류 행을 다시 읽는다 */
   onClosed: () => void;
@@ -60,14 +61,14 @@ export const Sch03_Lookup_Ics: React.FC<Props> = ({ classTreeId, scheduleCode, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classTreeId]);
 
-  // [E2] loadButton[선택].Select (L98) → load() L202-220: 콤보를 안 골랐으면 안내, 골랐으면 서비스 sch.Sch03_Deadline.updateModel(기본 기한을 이 법규에 복사, 스케줄 구분 "2") → retrieve()
+  // [E2] loadButton[선택].Select (L98) → load() L202-220: 콤보를 안 골랐으면 안내, 골랐으면 서비스 sch.Sch03_Deadline.updateModel(기본 기한을 이 법규·내규에 복사, 스케줄 구분 "2"·내규 "6") → retrieve()
   const load = async () => {
     if (templateId == null || classTreeId == null) {
       message.warning('상단 메뉴바의 좌측구분값을 선택해주세요');
       return;
     }
     try {
-      await schApi.copyDeadline(Number(templateId), classTreeId);
+      await schApi.copyDeadline(Number(templateId), classTreeId, scheduleCode);
       await retrieve();
     } catch (err) {
       message.error(errorMessage(err, '저장 실패'));
@@ -105,11 +106,13 @@ export const Sch03_Lookup_Ics: React.FC<Props> = ({ classTreeId, scheduleCode, o
   ], [scheduleCode]);
 
   if (classTreeId == null) return null;
+  // shortInsert()·cycleInsert()가 새 기한에 쓰는 스케줄 구분: 법규 일회성 "3"·반복 "2", 내규 일회성 "7"·반복 "6" (Sch03_Lookup_Ics L222-240 / Sch03_Lookup_Icr L224-240)
+  const shortCode = scheduleCode === '6' ? '7' : '3';
   return (
     <>
       <LookupModal
         open
-        title="법규 기한"
+        title={scheduleCode === '6' ? '내규 기한' : '법규 기한'}
         width={940}
         maskClosable={false}
         onCancel={onClose}
@@ -126,10 +129,10 @@ export const Sch03_Lookup_Ics: React.FC<Props> = ({ classTreeId, scheduleCode, o
               <Select style={{ width: 250 }} placeholder="선택하세요" value={templateId} onChange={setTemplateId}
                 options={templates.map(t => ({ value: t.code, label: t.name }))} />
               <Button type="select" onClick={load}>선택</Button>
-              {/* [E4] shortButton[일회성조건].Select (L110) → shortInsert() L222-230: Sch03_Lookup_Short(classTreeId, "3") → retrieve() */}
-              <Button type="addRow" onClick={() => setTarget({ kind: 'short', deadline: null, scheduleCode: '3' })}>일회성조건</Button>
-              {/* [E5] cycleButton[반복주기조건].Select (L116) → cycleInsert() L232-240: Sch03_Lookup_Cycle(classTreeId, "2") → retrieve() */}
-              <Button type="addRow" onClick={() => setTarget({ kind: 'cycle', deadline: null, scheduleCode: '2' })}>반복주기조건</Button>
+              {/* [E4] shortButton[일회성조건].Select (L110) → shortInsert() L222-230: Sch03_Lookup_Short(classTreeId, "3"·내규 "7") → retrieve() */}
+              <Button type="addRow" onClick={() => setTarget({ kind: 'short', deadline: null, scheduleCode: shortCode })}>일회성조건</Button>
+              {/* [E5] cycleButton[반복주기조건].Select (L116) → cycleInsert() L232-240: Sch03_Lookup_Cycle(classTreeId, "2"·내규 "6") → retrieve() */}
+              <Button type="addRow" onClick={() => setTarget({ kind: 'cycle', deadline: null, scheduleCode })}>반복주기조건</Button>
               <Button type="delete" onClick={deleteRow}>삭제</Button>
             </Space>
             {/* [E1] anchor.MouseDown (L88) → retrieve() */}

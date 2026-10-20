@@ -5,6 +5,7 @@
 
 <!--
   AS-IS(IDMS-IC) server/icr/mapper/icr01_class_tree.xml (selectByCompanyId, selectByTypeCodePaging(+Total), selectById, selectByListIcrId)  (E13-3)
+  + 내규관리(H09): selectByClassTreeId, refresh, getDownTreeId, insertIcrDel, deleteByClassTreeId와 UpdateDataModel 저장(update·modelUpdate·delete)을 명시 SQL로
   common.xml의 rownumLimit1(LIMIT 1)과 pagingCondition·트리 CTE를 펼쳐 넣었다. 조회는 모두 읽기 전용
 -->
 <mapper namespace="kr.co.kfs.asseterp.biz.icr.mapper.IcrClassTreeMapper">
@@ -240,4 +241,271 @@
          WHERE a.icr01_class_tree_id IN
         <foreach collection="classTreeIds" item="id" open="(" separator="," close=")">#{id}</foreach>
     </select>
+
+    <!-- ======================= 내규관리 (H09) ======================= -->
+
+    <!-- AS-IS icr01_class_tree.selectById 중 트리 열 (IDMS-IC) — 로그인 회사 것만 -->
+    <select id="selectTreeNodeById" resultType="kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeRes">
+        SELECT icr01_class_tree_id  AS class_tree_id,
+               icr01_parent_tree_id AS parent_tree_id,
+               icr01_class_tree_cd  AS class_tree_code,
+               icr01_class_tree_nm  AS class_tree_name,
+               icr01_seq            AS seq,
+               ( SELECT STRING_AGG(f_get_deadline_nm(sch03_deadline_id, '2'), ', ')
+                   FROM sch03_deadline
+                  WHERE sch03_info_id = icr01_class_tree_id )  AS deadline_full_name,
+               NULL::int            AS depth
+          FROM icr01_class_tree
+         WHERE icr01_class_tree_id = #{classTreeId}
+           AND icr01_company_id    = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq (IDMS-IC) -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT COUNT(*) FROM icr01_class_tree
+         WHERE icr01_class_tree_id = #{classTreeId}
+           AND icr01_company_id    = #{companyId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel INSERT: 화면이 채우는 값(분류코드·조회순서·분류명·회사·상위·구분 IC·사용 true) -->
+    <insert id="insertTreeNode">
+        INSERT INTO icr01_class_tree
+               ( icr01_class_tree_id, icr01_parent_tree_id, icr01_class_tree_cd, icr01_class_tree_nm, icr01_seq,
+                 icr01_company_id, icr01_type_cd, icr01_use_yn )
+        VALUES ( #{classTreeId}, #{req.parentTreeId}, #{req.classTreeCode}, #{req.classTreeName}, #{req.seq},
+                 #{companyId}, 'IC', 'true' )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE: 화면이 고치는 열만 (원본은 모델의 다른 열도 되써서 트리가 안 불러온 열이 null이 된다) -->
+    <update id="updateTreeNode">
+        UPDATE icr01_class_tree
+           SET icr01_class_tree_cd = #{req.classTreeCode},
+               icr01_class_tree_nm = #{req.classTreeName},
+               icr01_seq           = #{req.seq}
+         WHERE icr01_class_tree_id = #{classTreeId}
+           AND icr01_company_id    = #{companyId}
+    </update>
+
+    <update id="updateParent">
+        UPDATE icr01_class_tree
+           SET icr01_parent_tree_id = #{parentTreeId}
+         WHERE icr01_class_tree_id  = #{classTreeId}
+           AND icr01_company_id     = #{companyId}
+    </update>
+
+    <!-- AS-IS icr01_class_tree.getDownTreeId (IDMS-IC) — id만. 로그인 회사 조건은 TOBE 보안 보강 -->
+    <select id="selectDownTreeIds" resultType="long">
+        WITH RECURSIVE icr_down_tree(
+                icr01_class_tree_id
+            ,   icr01_company_id
+            ,   icr01_parent_tree_id
+            ,   depth
+            ,   path
+            ,   cycle
+            ) AS
+        (
+            SELECT  icr01_class_tree_id
+                 ,  icr01_company_id
+                 ,  icr01_parent_tree_id
+                 ,  1
+                 ,  ARRAY[a.icr01_parent_tree_id || a.icr01_seq::text]
+                 ,  false
+              FROM  icr01_class_tree a
+             WHERE  icr01_class_tree_id = #{classTreeId}
+               AND  icr01_company_id    = #{companyId}
+             UNION ALL
+            SELECT  a.icr01_class_tree_id
+                 ,  a.icr01_company_id
+                 ,  a.icr01_parent_tree_id
+                 ,  b.depth + 1
+                 ,  array_append(b.path, a.icr01_parent_tree_id || a.icr01_seq::text)
+                 ,  a.icr01_class_tree_nm = any(b.path)
+              FROM  icr01_class_tree a
+                    INNER JOIN icr_down_tree b ON a.icr01_parent_tree_id = b.icr01_class_tree_id
+             WHERE  a.icr01_company_id = #{companyId}
+               AND  NOT CYCLE
+        )
+        SELECT icr01_class_tree_id
+          FROM icr_down_tree
+    </select>
+
+    <!-- AS-IS icr01_class_tree.insertIcrDel (IDMS-IC): common.sequenceNextVal → f_create_seq() -->
+    <insert id="insertDeleteHistory">
+        INSERT INTO icr99_class_tree_del
+        SELECT f_create_seq()
+             , #{empId}
+             , f_sysdate()
+             , icr01_class_tree_id
+             , icr01_parent_tree_id
+             , icr01_class_tree_cd
+             , icr01_class_tree_nm
+             , icr01_seq
+             , icr01_related_law
+             , icr01_submit_to
+             , icr01_company_id
+             , icr01_type_cd
+             , icr01_use_yn
+             , icr01_content
+          FROM icr01_class_tree
+         WHERE icr01_class_tree_id = #{classTreeId}
+    </insert>
+
+    <!-- AS-IS icr01_class_tree.deleteByClassTreeId (IDMS-IC) -->
+    <delete id="deleteById">
+        DELETE FROM icr01_class_tree
+         WHERE icr01_class_tree_id = #{classTreeId}
+           AND icr01_company_id    = #{companyId}
+    </delete>
+
+    <sql id="ruleColumns">
+          icr01_class_tree_id      AS class_tree_id,
+          icr01_parent_tree_id     AS parent_tree_id,
+          icr01_class_tree_cd      AS class_tree_code,
+          icr01_class_tree_nm      AS class_tree_name,
+          icr01_content            AS content,
+          icr01_submit_to          AS submit_to,
+          icr01_related_law        AS related_law,
+          icr01_use_yn             AS use_yn,
+          icr01_company_id         AS company_id
+    </sql>
+
+    <!-- AS-IS icr01_class_tree.selectByClassTreeId·refresh의 서브쿼리 3개 (IDMS-IC) — 주기(스케줄 구분 6·7)·서식파일 건수·관리그룹.
+         ${companyId}는 #{companyId}, rownumLimit1은 LIMIT 1 -->
+    <sql id="ruleSubSelects">
+         ,  (
+                SELECT  CASE WHEN COUNT(*)=1
+                        THEN MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate()))
+                        ELSE MAX(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate())) || ' 외 ' || COUNT(sch03_deadline.*) - 1 || '건'
+                        END
+                  FROM  sch03_deadline
+                 WHERE  sch03_schedule_cd IN ('6','7') /* 내규담당 (6) / 문서작성(내규) (7) */
+                   AND  icr01_class_tree_id = sch03_info_id
+                   AND  icr01_company_id = sch03_company_id
+                 LIMIT 1
+            )                                                                       AS cycle_name
+         ,  (
+                SELECT  ics02_manager_group_nm
+                  FROM  ics02_manager
+                 WHERE  ics02_manager_id = (
+                                                SELECT  icr05_manager_id
+                                                  FROM  icr05_relate_manager
+                                                 WHERE  icr05_icr_class_tree_id = icr01_class_tree_id
+                                                   AND  icr05_company_id = #{companyId}
+                                            )
+            )                                                                       AS manager_group_name
+         ,  (
+                SELECT  count(sys10_file.*) || '건'
+                  FROM  sys10_file
+                 WHERE  sys10_parent_id = icr01_class_tree_id
+            )                                                                       AS file_count
+    </sql>
+
+    <!-- AS-IS icr01_class_tree.selectByClassTreeId (IDMS-IC) + common.icrTreeDown — 고른 분류와 모든 하위 id를 서브쿼리로 펼쳤다. 정렬은 원본 그대로 -->
+    <select id="selectRules" resultType="kr.co.kfs.asseterp.biz.icr.dto.IcrRuleRes">
+        SELECT <include refid="ruleColumns"/>
+               <include refid="ruleSubSelects"/>
+          FROM icr01_class_tree
+         WHERE icr01_class_tree_id IN (
+                WITH RECURSIVE icr_tree_down(
+                        icr01_class_tree_id
+                    ,   icr01_parent_tree_id
+                    ,   icr01_class_tree_cd
+                    ,   depth
+                    ,   path
+                    ,   cycle
+                ) AS
+                (
+                    SELECT  a.icr01_class_tree_id
+                         ,  a.icr01_parent_tree_id
+                         ,  a.icr01_class_tree_cd
+                         ,  0
+                         ,  ARRAY[a.icr01_class_tree_cd::text]
+                         ,  false
+                      FROM  icr01_class_tree a
+                     WHERE  icr01_company_id    = #{companyId}
+                       AND  icr01_class_tree_id = #{classTreeId}
+                     UNION ALL
+                    SELECT  a.icr01_class_tree_id
+                         ,  a.icr01_parent_tree_id
+                         ,  a.icr01_class_tree_cd
+                         ,  b.depth + 1
+                         ,  array_append(b.path, a.icr01_class_tree_cd::text)
+                         ,  a.icr01_class_tree_cd = any(b.path)
+                      FROM  icr01_class_tree a
+                          , icr_tree_down b
+                     WHERE  a.icr01_parent_tree_id = b.icr01_class_tree_id
+                       AND  a.icr01_company_id     = #{companyId}
+                       AND  not cycle
+                )
+                SELECT  a.icr01_class_tree_id
+                  FROM  icr_tree_down a
+           )
+           AND icr01_company_id = #{companyId}
+           AND icr01_type_cd = #{typeCode}
+        <if test="searchText != null">
+           AND CONCAT(icr01_class_tree_cd, icr01_class_tree_nm) LIKE #{searchText}
+        </if>
+         ORDER BY icr01_class_tree_cd
+    </select>
+
+    <!-- AS-IS icr01_class_tree.refresh (IDMS-IC) -->
+    <select id="selectRuleRefresh" resultType="kr.co.kfs.asseterp.biz.icr.dto.IcrRuleRes">
+        SELECT <include refid="ruleColumns"/>
+               <include refid="ruleSubSelects"/>
+          FROM icr01_class_tree
+         WHERE icr01_class_tree_id = #{classTreeId}
+           AND icr01_company_id    = #{companyId}
+    </select>
+
+    <!-- AS-IS Icr01_ClassTree.update(UpdateDataModel) 의 UPDATE 부분 — 화면이 고치는 열만 -->
+    <update id="updateRule">
+        UPDATE icr01_class_tree
+           SET icr01_class_tree_cd = #{req.classTreeCode},
+               icr01_class_tree_nm = #{req.classTreeName},
+               icr01_submit_to     = #{req.submitTo},
+               icr01_related_law   = #{req.relatedLaw},
+               icr01_use_yn        = COALESCE(#{req.useYn}, icr01_use_yn)
+         WHERE icr01_class_tree_id = #{req.classTreeId}
+           AND icr01_company_id    = #{companyId}
+    </update>
+
+    <!-- AS-IS GridInsertRow 의 모델(회사·상위·구분 IT·사용 true) + UpdateDataModel INSERT -->
+    <insert id="insertRule">
+        INSERT INTO icr01_class_tree
+               ( icr01_class_tree_id, icr01_parent_tree_id, icr01_class_tree_cd, icr01_class_tree_nm, icr01_related_law, icr01_submit_to,
+                 icr01_company_id, icr01_type_cd, icr01_use_yn )
+        VALUES ( #{classTreeId}, #{req.parentTreeId}, #{req.classTreeCode}, #{req.classTreeName}, #{req.relatedLaw}, #{req.submitTo},
+                 #{companyId}, 'IT', COALESCE(#{req.useYn}, 'true') )
+    </insert>
+
+    <!-- AS-IS icr.Icr01_ClassTree.modelUpdate(UpdateDataModel) — 상세내용 + 열기 전에 반영된 편집 열 -->
+    <update id="updateRuleContent">
+        UPDATE icr01_class_tree
+           SET icr01_content       = #{req.content},
+               icr01_class_tree_cd = #{req.classTreeCode},
+               icr01_class_tree_nm = #{req.classTreeName},
+               icr01_submit_to     = #{req.submitTo},
+               icr01_related_law   = #{req.relatedLaw},
+               icr01_use_yn        = COALESCE(#{req.useYn}, icr01_use_yn)
+         WHERE icr01_class_tree_id = #{classTreeId}
+           AND icr01_company_id    = #{companyId}
+    </update>
+
+    <delete id="deleteRule">
+        DELETE FROM icr01_class_tree
+         WHERE icr01_class_tree_id = #{classTreeId}
+           AND icr01_company_id    = #{companyId}
+           AND icr01_type_cd       = 'IT'
+    </delete>
+
+    <!-- AS-IS sys.Sys10_File.delete (UpdateDataModel.deleteModel) — sys10_file 행만 -->
+    <delete id="deleteFileRow">
+        DELETE FROM sys10_file
+         WHERE sys10_file_id   = #{fileId}
+           AND sys10_parent_id = #{classTreeId}
+    </delete>
 </mapper>

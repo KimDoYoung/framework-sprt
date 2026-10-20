@@ -56,3 +56,27 @@ export interface IcrClassTreeDeadline {
   deadlineFullName?: string | null;
   cycleName?: string | null;
 }
+
+/** 내규분류 등록·수정 요청 (AS-IS Icr01_Edit_ClassTree.update, H09) — 조회순서(seq)는 저장 때 분류코드로 채운다 */
+export interface IcrClassTreeSaveReq {
+  parentTreeId?: number | null;
+  classTreeCode: string;
+  classTreeName: string;
+  seq: string;
+}
+
+/** 내규관리 한 행 (AS-IS Icr01_ClassTreeModel 중 Icr01_Grid_IcrType 그리드 열 + 저장·이동에 쓰는 id, H09). useYn은 DB 형태('true'/'false') 그대로 */
+export interface IcrRule {
+  classTreeId: number;
+  parentTreeId?: number | null;
+  classTreeCode?: string | null;
+  classTreeName?: string | null;
+  content?: string | null;
+  submitTo?: string | null;
+  cycleName?: string | null;
+  managerGroupName?: string | null;
+  fileCount?: string | null;
+  relatedLaw?: string | null;
+  useYn?: string | null;
+  companyId?: number | null;
+}

@@ -4,7 +4,9 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeDeadlineRes;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeDetailRes;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeLookupRes;
+import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeMoveReq;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeRes;
+import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeSaveReq;
 import kr.co.kfs.asseterp.biz.icr.dto.IcrClassTreeViewRes;
 import kr.co.kfs.asseterp.biz.icr.service.IcrClassTreeService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -15,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** 내규 분류·조회창 (AS-IS server/icr/Icr01_ClassTree) — 메뉴 없음, 책무매뉴얼 점검항목(E13-3) 등이 연다 */
+/** 내규 분류·조회창 (AS-IS server/icr/Icr01_ClassTree) — 책무매뉴얼 점검항목(E13-3) 등이 연다. 분류 쓰기는 내규관리 #1347(H09) */
 @RestController
 @RequestMapping("/api/v1/icr/class-trees")
 @RequiredArgsConstructor
@@ -66,5 +68,31 @@ public class IcrClassTreeController {
     @GetMapping("/{classTreeId}/detail")
     public ApiResponse<IcrClassTreeDetailRes> detail(@PathVariable Long classTreeId) {
         return ApiResponse.ok(service.detail(classTreeId));
+    }
+
+    /** AS-IS icr.Icr01_ClassTree.update (등록) */
+    @PostMapping
+    public ApiResponse<IcrClassTreeRes> create(@AuthenticationPrincipal UserPrincipal principal, @RequestBody IcrClassTreeSaveReq req) {
+        return ApiResponse.ok(service.create(principal, req));
+    }
+
+    /** AS-IS icr.Icr01_ClassTree.update (수정) */
+    @PutMapping("/{classTreeId}")
+    public ApiResponse<IcrClassTreeRes> update(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long classTreeId,
+                                               @RequestBody IcrClassTreeSaveReq req) {
+        return ApiResponse.ok(service.update(principal, classTreeId, req));
+    }
+
+    /** AS-IS icr.Icr01_ClassTree.update (상위 분류 이동) */
+    @PutMapping("/{classTreeId}/parent")
+    public ApiResponse<Void> move(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long classTreeId, @RequestBody IcrClassTreeMoveReq req) {
+        service.move(principal, classTreeId, req.parentTreeId());
+        return ApiResponse.ok(null);
+    }
+
+    /** AS-IS icr.Icr01_ClassTree.deleteAll → 지운 건수(하위 포함) */
+    @DeleteMapping("/{classTreeId}")
+    public ApiResponse<Integer> deleteAll(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long classTreeId) {
+        return ApiResponse.ok(service.deleteAll(principal, classTreeId));
     }
 }

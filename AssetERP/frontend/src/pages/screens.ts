@@ -51,6 +51,7 @@ import { Ics01_Tab_ClassTreeUserView } from './ics/Ics01_Tab_ClassTreeUserView';
 import { Ics01_Tab_PeriodList } from './ics/Ics01_Tab_PeriodList';
 import { Ics20_Tab_RevisionHistory } from './ics/Ics20_Tab_RevisionHistory';
 import { Icr01_Tab_ClassTreeView } from './icr/Icr01_Tab_ClassTreeView';
+import { Icr01_Tab_ClassTree } from './icr/Icr01_Tab_ClassTree';
 import { Icam03_Tab_Fund } from './icam/Icam03_Tab_Fund';
 import { Icam10_Tab_FeeAdmin } from './icam/Icam10_Tab_FeeAdmin';
 import { Icam50_Tab_DbSource } from './icam/Icam50_Tab_DbSource';
@@ -172,6 +173,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ics01_Tab_ClassTreeUserView, // H02 (+ Ics01_Lookup_Content view·IcsFile period·SelectParent·Ics20_Lookup_*·Sch03_Lookup_IcsUser)
   Ics20_Tab_RevisionHistory, // H05 (+ Ics20_Edit_RevisionHistory, Ics19_Grid_IcsList view·Ics20_Grid_FileList user, Ics20_Lookup_Content user)
   Ics01_Tab_PeriodList, // H04 (+ components/lookup Ics01_Lookup_CheckList·IcsComboBoxField, ClassTreeDetail·IcsFile period 재사용)
+  Icr01_Tab_ClassTree, // H09 (+ Icr01_Grid_IcrType·Edit_ClassTree·Move_TreeGrid·Move_Grid·Lookup_Share·Lookup_IcrFile(admin)·Lookup_Content(editable)·Sch03_Lookup_Ics 6, Icr02_Lookup_Manager=Ics02_Lookup_Manager)
   Icr01_Tab_ClassTreeView, // H03 (+ Icr01_Lookup_Content view·IcrFile period·SelectParent·Sch03_Lookup_IcsUser)
   Ics10_Tab_ChecklistAdmin, // E04
   Ics17_Tab_UserRequestAdmin, // E09 (+ Ics17_Edit_UserRequestAdmin·Ics17_Lookup_LawContent·Ics17_Grid_FileList)
