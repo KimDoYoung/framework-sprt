@@ -22,7 +22,7 @@ const gbCode = gbFor<Code>();
 
 /** buildGrid() L197-206 — 행번호 숨김 */
 const typeColumns = [
-  gbType.textCenter('itemTypeCode', 90, '종목유형코드'),
+  gbType.textCenter('itemTypeCode', 95, '종목유형코드'),
   gbType.text('itemTypeName', 250, '종목유형명'),
 ];
 /** trTypebuildGrid() L208-217 — 행번호 숨김 */
@@ -115,7 +115,7 @@ export const Flt05_Lookup_ItemTypeConfirm: React.FC<Props> = ({ open, groupCode,
             />
           </div>
           {groupCode && (
-            <div style={{ flex: 1, minWidth: 0, marginLeft: -1 }}>
+            <div style={{ flex: 1, minWidth: 0, marginLeft: 8 }}>
               <SingleGrid<Code>
                 rowNumber={false}
                 rowData={trTypes}

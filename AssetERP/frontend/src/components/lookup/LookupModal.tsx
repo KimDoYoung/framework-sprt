@@ -13,11 +13,16 @@ interface Props extends ModalProps {
   focusFirst?: boolean;
 }
 
-export const LookupModal: React.FC<Props> = ({ focusFirst = true, afterOpenChange, children, ...rest }) => {
+/** 푸터(닫기·확인 버튼 줄) 위에 구분선 — 푸터가 있는 조회창 공통 */
+const FOOTER_STYLE: React.CSSProperties = { borderTop: '1px solid #d9d9d9', paddingTop: 10 };
+
+export const LookupModal: React.FC<Props> = ({ focusFirst = true, afterOpenChange, children, styles, ...rest }) => {
   const bodyRef = useRef<HTMLDivElement>(null);
+  const hasFooter = rest.footer !== null && rest.footer !== false;
   return (
     <Modal
       {...rest}
+      styles={hasFooter ? { ...styles, footer: { ...FOOTER_STYLE, ...(styles as { footer?: React.CSSProperties } | undefined)?.footer } } : styles}
       afterOpenChange={opened => {
         afterOpenChange?.(opened);
         if (!opened || !focusFirst) return;
