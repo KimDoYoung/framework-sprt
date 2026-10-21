@@ -59,6 +59,19 @@ class FltTrListDbTest {
     }
 
     @Test
+    void 준감인_매매내역은_전체와_사원_하나가_읽히고_엑셀이_두_종류로_나온다() throws IOException {
+        // J03: 같은 SQL에 personId 생략(회사 전체)·unApprYn "false". 기대 행 수는 같은 조건을 SQL로 따로 센 값(전체 149·사원 29049 101, yunhee sql)
+        List<TrListRes> all = trService.searchListAdmin(user, null, "2025-01-01", "2026-10-21", true, "%", "%", "");
+        assertThat(all).hasSize(149);
+        assertThat(all.get(0).personOrgName()).contains("(");
+        assertThat(trService.searchListAdmin(user, 29049L, "2025-01-01", "2026-10-21", true, "%", "%", "")).hasSize(101);
+        // 개인용(unApprYn "true")은 미신청 사전신고 행까지 나와 같은 사원도 준감인용(101)보다 많다 (SQL로 센 값 114)
+        assertThat(trService.searchList(user, "2025-01-01", "2026-10-21", true, "%", "%", "")).hasSize(114);
+        assertThat(headerCount(trService.downloadListAdmin(user, null, "2025-01-01", "2026-10-21", false, null, null, ""))).isEqualTo(15);
+        assertThat(headerCount(trService.downloadListAdmin(user, null, "2025-01-01", "2026-10-21", true, null, null, ""))).isEqualTo(11);
+    }
+
+    @Test
     void 보유내역은_기준일_본인_것이_읽히고_엑셀로_나온다() throws IOException {
         // 대조: AS-IS selectByBookList 2025-12-22 → 50행, 검색 '삼성' → 27행 (mapper-run --compare)
         List<BookListRes> list = bookService.searchList(user, "2025-12-22", "");

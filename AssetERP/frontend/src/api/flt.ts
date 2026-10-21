@@ -375,6 +375,19 @@ export const fltApi = {
     await downloadBlob('v1/flt/trs/list/excel', params, fileName);
   },
 
+  // ── J03 준감인 매매내역조회 (Flt10_Tab_TrListAdmin) ──
+
+  /** AS-IS flt.Flt10_Tr.selectByTrList (준감인). personId null = 회사 전체 사원, trType·ioType '%'=전체 */
+  searchTrListAdmin: async (params: { personId: number | null; startDate: string; closeDate: string; preTrYn: boolean; trType: string; ioType: string; searchText: string }): Promise<FltTrList[]> => {
+    const res = await apiClient.get<ApiResponse<FltTrList[]>>('v1/flt/trs/admin/list', { params: { ...params, personId: params.personId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** 엑셀다운로드 (AS-IS Sys99_Print.insertRdTrListAdmin + RD 리포트 → xlsx). report=true가 [엑셀다운로드(금감원양식)] */
+  downloadTrListAdminExcel: async (params: { personId: number | null; startDate: string; closeDate: string; report: boolean; preTrYn: boolean; trType: string; ioType: string; searchText: string }, fileName: string): Promise<void> => {
+    await downloadBlob('v1/flt/trs/admin/list/excel', { ...params, personId: params.personId ?? undefined }, fileName);
+  },
+
   /** AS-IS flt.Flt11_Book.selectByBookList (로그인 사용자 본인). 검색어는 서버가 %…%로 */
   searchBookList: async (baseDate: string, searchText: string): Promise<FltBookList[]> => {
     const res = await apiClient.get<ApiResponse<FltBookList[]>>('v1/flt/books/list', { params: { baseDate, searchText } });

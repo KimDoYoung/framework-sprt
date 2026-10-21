@@ -1075,12 +1075,20 @@
     </select>
 
     <!-- AS-IS(IDMS-IC) flt10_tr.flt10Condition (selectByTrList 안쪽 UNION 두 곳이 같이 쓰는 WHERE 조각).
-         unApprYn 가지는 뺐다 — 이 화면은 항상 "true"를 보내 가지가 꺼진다 -->
+         personId 가지(null이면 회사 전체 — J03 준감인용)·unApprYn 가지("false"면 미신청·00 상태의 사전신고 제외 — J03, I08은 "true"라 꺼짐)를 되살렸다.
+         trType 가지는 두 화면 모두 항상 값을 주므로 뺐다 -->
     <sql id="trListCondition">
         AND  flt10_company_id = #{companyId}
         AND  COALESCE(flt10_unfill_yn, 'false') != 'true'  /*미체결 사전신고거래 제외*/
+        <if test="personId != null">
         AND  flt10_person_id  = #{personId}
+        </if>
         AND  flt10_tr_type LIKE #{trType}
+        <if test="unApprYn == 'false'">
+        AND  ( ( flt10_tr_date IS NULL                               AND
+                 COALESCE(flt10_status_cd,'00') NOT IN ('00')        ) OR
+               ( flt10_tr_date IS NOT NULL                           ) )
+        </if>
         AND  ( ( #{preTrYn} = 'true' AND
                  ( flt10_tr_date  BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date) OR
                    flt10_reg_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date) )
@@ -1089,13 +1097,13 @@
                  flt10_tr_date  BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date) ) )
     </sql>
 
-    <!-- AS-IS(IDMS-IC) flt10_tr.selectByTrList L488 — 로그인 사용자 본인의 매매내역(사전신고 포함). 바깥 SELECT는 그리드 열만 DTO 열로 명시, 날짜 TO_CHAR.
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectByTrList L488 — 매매내역(사전신고 포함). I08은 로그인 사용자 본인(personId), J03은 personId 생략 시 회사 전체 + unApprYn "false". 바깥 SELECT는 그리드 열만 DTO 열로 명시, 날짜 TO_CHAR.
          TOBE 변경 ① 안쪽의 부호 곱한 금액·수량 별칭을 sign_* 로 바꿨다(원본은 같은 이름 flt10_tr_amt 등이 `*`와 겹쳐 바깥에서 참조할 수 없다 — 값은 같다)
-         ② asseterpdb의 flt10_tr에는 협의승인 열(flt10_add_confirmer_id·flt10_add_confirm_reason)이 없어 원본 SQL이 돌지 않는다 → 두 열은 NULL로 본다
-            (사전승인 칸의 '미승인'·협의승인 가지가 빠지고, 협의승인 사유는 항상 빈 값). 03 원칙 4의 예외, 사유는 work/I/I08-작업방법.md
+         ② 협의승인 열(flt10_add_confirmer_id·flt10_add_confirm_reason)을 원본대로 쓴다(2026-10-21 사용자가 DB에 추가, I08에서는 NULL로 봤던 것을 되돌림)
          ③ 열에 안 쓰는 apr01_appr·flt05(신고 종목유형) LEFT JOIN은 뺐다(행 수 불변) -->
     <select id="selectTrList" resultType="kr.co.kfs.asseterp.biz.flt.dto.TrListRes">
         SELECT  row_number() over()                              AS tr_id
+             ,  CONCAT(flt10_person_nm, '(' || flt10_org_nm || ')') AS person_org_name
              ,  flt10_account_no                                 AS account_no
              ,  flt10_in_out_nm                                  AS in_out_name
              ,  flt10_tr_type_nm                                 AS tr_type_name
@@ -1114,7 +1122,7 @@
              ,  flt10_tr_note                                    AS tr_note
              ,  flt10_tr_reason                                  AS tr_reason
              ,  flt10_reject_reason                              AS reject_reason
-             ,  CAST(NULL AS text)                               AS add_confirm_reason
+             ,  flt10_add_confirm_reason                            AS add_confirm_reason
           FROM (
                 SELECT  sign_tr_amt
                      ,  sign_tr_qty
@@ -1131,7 +1139,7 @@
                      ,  order_id
                      ,  io_type
                      ,  flt10_reg_date, flt10_tr_date, flt10_item_nm, flt10_tr_item_nm
-                     ,  flt10_status_cd, flt10_tr_note, flt10_tr_reason, flt10_reject_reason
+                     ,  flt10_status_cd, flt10_tr_note, flt10_tr_reason, flt10_reject_reason, flt10_add_confirm_reason
                   FROM (
                         SELECT  flt10_tr_amt        * CASE WHEN io_type = '2' THEN -1 ELSE 1 END                                AS sign_tr_amt
                              ,  flt10_tr_qty        * CASE WHEN io_type = '2' THEN -1 ELSE 1 END                                AS sign_tr_qty
@@ -1144,14 +1152,20 @@
                              ,  f_get_empTrans(flt10_person_id, COALESCE(flt10_tr_date,flt10_reg_date), 'org_code_nm')          AS flt10_org_nm
                              ,  f_cdnm('FloorTrCode',   flt10_tr_type,      flt10_company_id, f_sysdate())                      AS flt10_tr_type_nm
                              ,  flt05_tr.flt05_item_type_nm                                                                     AS flt10_tr_item_type_nm
-                             ,  CASE WHEN flt10_status_cd = '20' AND coalesce(flt10_reject_reason,'') != ''
-                                     THEN '조건부승인'
-                                     ELSE f_cdnm('FloorTrStatusCode', flt10_status_cd, flt10_company_id, f_today())
+                             ,  CASE WHEN flt10_add_confirmer_id IS NOT NULL
+                                     THEN (CASE WHEN flt10_status_cd = '25' AND (coalesce(flt10_reject_reason,'') != '' OR coalesce(flt10_add_confirm_reason,'') != '') THEN '조건부승인'
+                                                WHEN flt10_status_cd = '20' THEN '미승인'
+                                                ELSE f_cdnm('FloorTrStatusCode', flt10_status_cd, flt10_company_id, f_today())
+                                           END)
+                                     ELSE (CASE WHEN flt10_status_cd = '20' AND coalesce(flt10_reject_reason,'') != ''
+                                                THEN '조건부승인'
+                                                ELSE f_cdnm('FloorTrStatusCode', flt10_status_cd, flt10_company_id, f_today())
+                                           END)
                                 END                                                                                             AS flt10_status_nm
                              ,  f_cdnm('BookInOutType', io_type, flt10_company_id, f_today())                                   AS flt10_in_out_nm
                              ,  flt10_tr_id                                                                                     AS order_id
                              ,  io_type, flt10_account_no, flt10_reg_date, flt10_tr_date, flt10_item_nm, flt10_tr_item_nm
-                             ,  flt10_status_cd, flt10_tr_note, flt10_tr_reason, flt10_reject_reason
+                             ,  flt10_status_cd, flt10_tr_note, flt10_tr_reason, flt10_reject_reason, flt10_add_confirm_reason
                           FROM (
                                 SELECT *
                                      , TO_DECRYPTS(flt03_account_no) || ' (' || sys15_corp_nm || ')'    AS flt10_account_no
@@ -1196,12 +1210,11 @@
     <!-- AS-IS(IDMS-IC) flt10_tr.selectViolate (I10) — 위반내역조회 (Flt10_Tab_Violate / Flt10_Tab_ViolateUser).
          조각 두 개는 원본 flt10_tr.xml L1184-1287(selectEmp), L1406-1899(selectViolate)를 그대로 옮기고 아래만 바꿨다 (모두 03 원칙 4의 예외, 사유는 work/I/I10-작업방법.md).
          ① `#{stdDate}` → CAST(#{stdDate} AS date) (원본은 java.util.Date를 바인딩, 여기는 문자열이라 날짜 형변환)
-         ② asseterpdb의 flt10_tr에는 협의승인 열(flt10_add_confirmer_id·flt10_add_confirm_reason)이 없어 원본 SQL이 돌지 않는다 → 아래 두 조각이 NULL 값을 낸다(I08과 같음).
-            이 열이 있는 DB(운영)에서는 두 조각을 `flt10_add_confirmer_id`·`flt10_add_confirm_reason` 으로 되돌린다.
+         ② 협의승인 열이 DB에 추가되어(2026-10-21) 아래 두 조각을 `flt10_add_confirmer_id`·`flt10_add_confirm_reason` 으로 되돌렸다.
          ③ 조각 이름 selectEmp → violateEmp, selectViolate → violateBody (다른 SQL 조각과 겹치지 않게)
          ④ violateEmp의 `noAccountSkipYnCheck` 가지를 뺐다 (이 화면은 값을 안 줘 꺼져 있고, MyBatis는 @Param에 없는 이름을 오류로 본다) -->
-    <sql id="addConfirmerId">CAST(NULL AS bigint)</sql>
-    <sql id="addConfirmReason">CAST(NULL AS text)</sql>
+    <sql id="addConfirmerId">flt10_add_confirmer_id</sql>
+    <sql id="addConfirmReason">flt10_add_confirm_reason</sql>
 
     <sql id="violateEmp">
         WITH emp AS ( SELECT *

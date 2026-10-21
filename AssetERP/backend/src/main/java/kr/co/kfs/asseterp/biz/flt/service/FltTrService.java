@@ -176,7 +176,40 @@ public class FltTrService {
     public List<TrListRes> searchList(UserPrincipal user, String startDate, String closeDate, boolean preTrYn,
                                       String trType, String ioType, String searchText) {
         return mapper.selectTrList(user.getCompanyId(), user.getUserId(), startDate, closeDate, String.valueOf(preTrYn),
-                blankToAll(trType), blankToAll(ioType), like(searchText));
+                "true", blankToAll(trType), blankToAll(ioType), like(searchText));
+    }
+
+    /** AS-IS Flt10_Tab_TrListAdmin.retrieve (J03 준감인) — personId 생략 = 회사 전체 사원, unApprYn "false" */
+    public List<TrListRes> searchListAdmin(UserPrincipal user, Long personId, String startDate, String closeDate, boolean preTrYn,
+                                           String trType, String ioType, String searchText) {
+        return mapper.selectTrList(user.getCompanyId(), personId, startDate, closeDate, String.valueOf(preTrYn),
+                "false", blankToAll(trType), blankToAll(ioType), like(searchText));
+    }
+
+    /**
+     * 엑셀다운로드 (J03) — AS-IS는 Sys99_Print.insertRdTrListAdmin + RD 리포트. 일반(Flt10_Rd_TrListAdmin)은 preTrYn=true 고정,
+     * 금감원양식(Flt10_Rd_TrListAdminReport, report=true)은 preTrYn=false라 사전신고 열 4개를 쓰지 않는다. RD 양식 대신 그리드 열 순서의 단순 xlsx.
+     */
+    public byte[] downloadListAdmin(UserPrincipal user, Long personId, String startDate, String closeDate, boolean report,
+                                    String trType, String ioType, String searchText) {
+        boolean preTrYn = !report;
+        List<TrListRes> list = searchListAdmin(user, personId, startDate, closeDate, preTrYn, trType, ioType, searchText);
+        List<String> headers = new ArrayList<>(List.of("사원명", "입/출", "매매구분"));
+        if (preTrYn) {
+            headers.addAll(List.of("사전신고일", "사전신고종목명", "사전신고수량", "사전신고금액"));
+        }
+        headers.add("사전승인");
+        headers.addAll(List.of("매매일자", "종목유형", "종목명", "매매수량", "매매총액", "손익율(%)", "비고"));
+        List<List<Object>> rows = new ArrayList<>();
+        for (TrListRes r : list) {
+            List<Object> v = new ArrayList<>(Arrays.asList(r.personOrgName(), r.inOutName(), r.trTypeName()));
+            if (preTrYn) {
+                v.addAll(Arrays.asList(r.regDate(), r.itemName(), r.expectTrQty(), r.expectTrAmt()));
+            }
+            v.addAll(Arrays.asList(r.statusName(), r.trDate(), r.trItemTypeName(), r.trItemName(), r.trQty(), r.trAmt(), r.trPlRate(), r.trNote()));
+            rows.add(v);
+        }
+        return FltExcelWriter.write("임직원 매매내역", headers, rows);
     }
 
     /**

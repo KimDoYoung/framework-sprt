@@ -18,6 +18,7 @@ import { Flt10_Tab_AcntTransfer } from './flt/Flt10_Tab_AcntTransfer';
 import { Flt10_Tab_RightsExercise } from './flt/Flt10_Tab_RightsExercise';
 import { Flt10_Tab_PreApprove } from './flt/Flt10_Tab_PreApprove';
 import { Flt10_Tab_TrList } from './flt/Flt10_Tab_TrList';
+import { Flt10_Tab_TrListAdmin } from './flt/Flt10_Tab_TrListAdmin';
 import { Flt11_Tab_BookList } from './flt/Flt11_Tab_BookList';
 import { Flt10_Tab_ViolateUser } from './flt/Flt10_Tab_ViolateUser';
 import { Flt05_Tab_ItemTypeAdmin } from './flt/Flt05_Tab_ItemTypeAdmin';
@@ -160,6 +161,7 @@ export const SCREENS: Record<string, React.FC> = {
   Flt10_Tab_RightsExercise, // I07 (1단계=전체: 본 화면 + 등록·변경 창 + 보유내역·계좌·종목 조회창. 다른 도메인 의존 없음)
   Flt10_Tab_PreApprove, // J02 (1단계: 본 화면 + 사유 창. 알림수신인 설정·펀드보유종목 확인은 다른 도메인 조회창이라 다음 단계. 일괄 알림발송은 발송 연동이 없어 대상이 있으면 안내 오류)
   Flt10_Tab_TrList, // I08 (1단계=전체: 본 화면 하나, 엑셀은 RD 대신 서버 xlsx. 다른 도메인 의존 없음)
+  Flt10_Tab_TrListAdmin, // J03 (1단계=전체: 본 화면 하나, 사원찾기 Emp00 기존 부품, 엑셀 2종은 RD 대신 서버 xlsx)
   Flt11_Tab_BookList, // I09 (1단계=전체: 본 화면 하나. [최초원장 등록]은 원본에서 툴바에 연결이 없어 화면에 없다)
   Flt10_Tab_ViolateUser, // I10 (1단계=전체: 본 화면 하나, 엑셀은 RD 대신 서버 xlsx. 사원찾기 Emp00 기존 부품. 본 화면 Flt10_Tab_Violate는 J05가 fixedUser 없이 같이 쓴다)
   Flt03_Tab_AccountAdmin, // J01 (1단계=전체 본 화면 하나. 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)

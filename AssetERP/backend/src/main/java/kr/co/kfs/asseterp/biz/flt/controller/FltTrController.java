@@ -81,6 +81,37 @@ public class FltTrController {
                 .body(body);
     }
 
+    /** AS-IS flt.Flt10_Tr.selectByTrList (J03 준감인 매매내역조회) — personId 생략 = 회사 전체 사원, trType·ioType 생략 = 전체 */
+    @GetMapping("/admin/list")
+    public ApiResponse<List<TrListRes>> searchListAdmin(@AuthenticationPrincipal UserPrincipal principal,
+                                                        @RequestParam(required = false) Long personId,
+                                                        @RequestParam String startDate,
+                                                        @RequestParam String closeDate,
+                                                        @RequestParam(defaultValue = "true") boolean preTrYn,
+                                                        @RequestParam(required = false) String trType,
+                                                        @RequestParam(required = false) String ioType,
+                                                        @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchListAdmin(principal, personId, startDate, closeDate, preTrYn, trType, ioType, searchText));
+    }
+
+    /** 엑셀다운로드 (AS-IS sys.Sys99_Print.insertRdTrListAdmin + RD 리포트 → xlsx). report=true가 [엑셀다운로드(금감원양식)] */
+    @GetMapping("/admin/list/excel")
+    public ResponseEntity<byte[]> downloadListAdmin(@AuthenticationPrincipal UserPrincipal principal,
+                                                    @RequestParam(required = false) Long personId,
+                                                    @RequestParam String startDate,
+                                                    @RequestParam String closeDate,
+                                                    @RequestParam(defaultValue = "false") boolean report,
+                                                    @RequestParam(required = false) String trType,
+                                                    @RequestParam(required = false) String ioType,
+                                                    @RequestParam(required = false) String searchText) {
+        byte[] body = service.downloadListAdmin(principal, personId, startDate, closeDate, report, trType, ioType, searchText);
+        String fileName = "임직원 매매내역(" + startDate + " ~ " + closeDate + ").xlsx";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(body);
+    }
+
     /** AS-IS flt.Flt10_Tr.selectViolate (I10 위반내역조회) — personId 생략 = 회사 전체 사원 */
     @GetMapping("/violate")
     public ApiResponse<List<ViolateRes>> searchViolate(@AuthenticationPrincipal UserPrincipal principal,

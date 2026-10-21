@@ -28,10 +28,10 @@ import java.util.List;
 public interface FltTrMapper {
 
     // flt10_tr
-    /** AS-IS flt10_tr.selectByTrList (I08 매매내역조회) — ioType·trType은 `%`가 전체 */
+    /** AS-IS flt10_tr.selectByTrList (I08 매매내역조회·J03 준감인) — ioType·trType은 `%`가 전체, personId null = 회사 전체, unApprYn "true"/"false" */
     List<TrListRes> selectTrList(@Param("companyId") Long companyId, @Param("personId") Long personId,
                                  @Param("startDate") String startDate, @Param("closeDate") String closeDate,
-                                 @Param("preTrYn") String preTrYn, @Param("trType") String trType,
+                                 @Param("preTrYn") String preTrYn, @Param("unApprYn") String unApprYn, @Param("trType") String trType,
                                  @Param("ioType") String ioType, @Param("searchText") String searchText);
 
     List<TrRes> selectTrs(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("trType") String trType,

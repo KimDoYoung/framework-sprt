@@ -336,6 +336,8 @@ export interface FltRightsExercise {
 /** 매매내역조회 한 행 (I08 Flt10_Tab_TrList, flt10_tr.selectByTrList). 출고는 수량·금액이 음수 */
 export interface FltTrList {
   trId: number;
+  /** 사원명(부서) — J03 준감인 화면의 첫 열 */
+  personOrgName: string | null;
   accountNo: string | null;
   inOutName: string | null;
   trTypeName: string | null;
