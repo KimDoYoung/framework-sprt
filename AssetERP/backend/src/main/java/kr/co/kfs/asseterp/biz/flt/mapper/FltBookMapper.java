@@ -16,6 +16,11 @@ public interface FltBookMapper {
                                     @Param("accountId") Long accountId, @Param("stdDate") String stdDate,
                                     @Param("searchText") String searchText);
 
+    /** AS-IS flt11_book.selectByText (expectYn=false: 기준일 보유잔고) */
+    List<BookRes> selectBooks(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                              @Param("accountId") Long accountId, @Param("stdDate") String stdDate,
+                              @Param("searchText") String searchText);
+
     /** AS-IS flt01_company_std.selectByDate 에서 의무보유기간 열 */
     LockupStdRes selectLockupStd(@Param("companyId") Long companyId, @Param("stdDate") String stdDate);
 }

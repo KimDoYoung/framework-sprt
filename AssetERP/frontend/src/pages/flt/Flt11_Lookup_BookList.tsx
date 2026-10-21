@@ -2,7 +2,7 @@
  * 보유내역 조회창 (I04) — Flt10_Tab_SellReport [등록]에서 연다(매도할 종목 선택). 보유내역조회 화면(I09)도 이 창을 쓴다.
  * AS-IS: myApp/client/vi/flt/Flt11_Lookup_BookList.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(accountId, personId, stdDate, expectYn, callback) L63-99: 1310×450 모달, 툴바 "검색"(150, "종목코드/명") + [조회], 체크박스 다중 그리드, [선택][닫기]
- * 지금은 expectYn=true(사전신고 반영 `selectByText2`)만 — expectYn=false(`selectByText`)는 I09에서 더한다
+ * expectYn=true(사전신고 반영 `selectByText2`, 기본) / expectYn=false(기준일 보유잔고 `selectByText`, I06 계좌대체가 쓴다)
  * 열 폭 합계가 1120을 넘어(03 원칙 21) 모달을 AS-IS 폭(1310)에 두고 가로 스크롤을 허용한다
  * UX보강(10): 툴바 = SearchBar(UX-01), 조회창 UX-05·06, 날짜 열 UX-08
  */
@@ -38,6 +38,8 @@ interface Props {
   accountId: number | null;
   /** open(…, stdDate, …): 기준일(YYYY-MM-DD) */
   stdDate: string;
+  /** open(…, expectYn, …): true(기본)면 사전신고 반영 보유내역(selectByText2), false면 기준일 보유잔고(selectByText) */
+  expectYn?: boolean;
   /** open(…, searchText, …): 검색칸에 미리 넣는 글자 */
   searchText?: string | null;
   /** callback.execute(selectList) — confirmEnd() L331-337 */
@@ -45,20 +47,20 @@ interface Props {
   onClose: () => void;
 }
 
-export const Flt11_Lookup_BookList: React.FC<Props> = ({ open, accountId, stdDate, searchText: initialText, onResult, onClose }) => {
+export const Flt11_Lookup_BookList: React.FC<Props> = ({ open, accountId, stdDate, expectYn = true, searchText: initialText, onResult, onClose }) => {
   const [searchText, setSearchText] = useState('');
   const [rows, setRows] = useState<FltBook[]>([]);
   const [checked, setChecked] = useState<FltBook[]>([]);
   const columnDefs = useMemo(buildGrid, []);
 
-  // retrieve() L187-210: 서비스 flt.Flt11_Book.selectByText2(companyId, personId, accountId, stdDate, searchText "%…%")
+  // retrieve() L187-210: expectYn이면 flt.Flt11_Book.selectByText2, 아니면 selectByText (companyId, personId, accountId, stdDate, searchText "%…%")
   const retrieve = useCallback(async (text: string) => {
     try {
-      setRows(await fltApi.searchBooksExpect(accountId, stdDate, text));
+      setRows(expectYn ? await fltApi.searchBooksExpect(accountId, stdDate, text) : await fltApi.searchBooks(accountId, stdDate, text));
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, [accountId, stdDate]);
+  }, [accountId, stdDate, expectYn]);
 
   // open() L99-127: 열 때 retrieve()
   useEffect(() => {

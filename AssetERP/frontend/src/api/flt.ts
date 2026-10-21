@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import {
   FltAccount, FltAccountClose, FltAccountStatus, FltBook, FltBuyLockup, FltLockupStd, FltDocClass, FltInvestLimit, FltItemType, FltItemTypeCode,
-  FltBookMonth, FltEmpLimit, FltRealTr, FltRelateAppr, FltReportCheck, FltTr, FltTrAccount, FltTrCheck, FltTrItem,
+  FltAcntTransfer, FltBookMonth, FltEmpLimit, FltRealTr, FltRelateAppr, FltReportCheck, FltTr, FltTrAccount, FltTrCheck, FltTrItem,
 } from '../types/flt';
 
 /** flt(임직원매매) 화면 API (E08~) */
@@ -294,5 +294,38 @@ export const fltApi = {
   evaluateBookMonths: async (req: { accountId: number | null; startDate: string; closeDate: string; searchText: string; type: '1' | '2' }): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/flt/book-months/evaluate', req);
     return res.data.data ?? 0;
+  },
+
+  // ── I06 임직원매매 계좌대체 (Flt10_Tab_AcntTransfer · Flt10_Lookup_AcntTransfer) ──
+
+  /** AS-IS flt.Flt11_Book.selectByText: 기준일 보유잔고(expectYn=false). 검색어는 서버가 %…%로 */
+  searchBooks: async (accountId: number | null, stdDate: string, searchText: string): Promise<FltBook[]> => {
+    const res = await apiClient.get<ApiResponse<FltBook[]>>('v1/flt/books', { params: { accountId, stdDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt10_Tr.selectByTrType (로그인 사용자 본인, 계좌대체). 검색어는 서버가 %…%로 */
+  searchAcntTransfers: async (params: { accountId?: number | null; startDate: string; closeDate: string; searchText?: string }): Promise<FltAcntTransfer[]> => {
+    const res = await apiClient.get<ApiResponse<FltAcntTransfer[]>>('v1/flt/acnt-transfers', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt10_Tr.update → 저장된 행(요청 순서). trId 0 이하는 신규 */
+  updateAcntTransfers: async (rows: FltAcntTransfer[]): Promise<FltAcntTransfer[]> => {
+    const body = rows.map(({ trId, regDate, trItemType, trItemName, trItemCode, trQty, trAmt, outAccountId, accountId }) =>
+      ({ trId, regDate, trItemType, trItemName, trItemCode, trQty, trAmt, outAccountId, accountId }));
+    const res = await apiClient.put<ApiResponse<FltAcntTransfer[]>>('v1/flt/acnt-transfers', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt10_Tr.delete2 → 지운 건수(행마다 그 종목의 원장을 다시 만든다) */
+  deleteAcntTransfers: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/flt/acnt-transfers', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS flt.Flt10_Tr.insertFloorTrBook (createBook, 종목 한정) — 실패하면 서버 메시지로 예외 */
+  createAcntTransferBook: async (row: { trItemType: string | null; trItemName: string | null; trItemCode: string | null; regDate: string }): Promise<void> => {
+    await apiClient.post<ApiResponse<number>>('v1/flt/acnt-transfers/book', row);
   },
 };

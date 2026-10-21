@@ -898,4 +898,102 @@
          ORDER BY flt02_start_date DESC
          LIMIT 1
     </select>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectByTrType 바깥 SELECT (SELECT *를 DTO 열로 명시, 날짜 TO_CHAR) — 계좌대체(30N) -->
+    <sql id="acntTransferColumns">
+        flt10_tr_id                                                        AS tr_id,
+        flt10_tr_type                                                      AS tr_type,
+        TO_CHAR(flt10_reg_date, 'YYYY-MM-DD')                              AS reg_date,
+        TO_CHAR(flt10_tr_date, 'YYYY-MM-DD')                               AS tr_date,
+        flt10_tr_item_type                                                 AS tr_item_type,
+        flt10_tr_item_type_nm                                              AS tr_item_type_name,
+        flt10_tr_item_nm                                                   AS tr_item_name,
+        flt10_tr_item_cd                                                   AS tr_item_code,
+        flt10_tr_qty                                                       AS tr_qty,
+        flt10_tr_amt                                                       AS tr_amt,
+        flt10_out_account_id                                               AS out_account_id,
+        flt10_out_account_info                                             AS out_account_info,
+        flt10_account_id                                                   AS account_id,
+        flt10_account_info                                                 AS account_info
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectByTrType 안쪽 SELECT (WHERE는 쓰는 문장이 붙인다) -->
+    <sql id="acntTransferInner">
+        SELECT flt10_tr.*
+             , flt05_item_type_nm                                                                                         AS flt10_tr_item_type_nm
+             , CONCAT(TO_DECRYPTS(acnt1.flt03_account_no), ' (' || corp1.sys15_corp_nm || ') ', acnt1.flt03_account_nm)   AS flt10_account_info
+             , CONCAT(TO_DECRYPTS(acnt2.flt03_account_no), ' (' || corp2.sys15_corp_nm || ') ', acnt2.flt03_account_nm)   AS flt10_out_account_info
+          FROM flt10_tr
+               INNER JOIN flt03_account acnt1 ON acnt1.flt03_account_id = flt10_account_id
+               INNER JOIN sys15_corp    corp1 ON corp1.sys15_corp_id    = acnt1.flt03_corp_id
+               LEFT OUTER JOIN flt03_account acnt2 ON acnt2.flt03_account_id = flt10_out_account_id
+               LEFT OUTER JOIN sys15_corp    corp2 ON corp2.sys15_corp_id    = acnt2.flt03_corp_id
+               INNER JOIN flt05_item_type ON (    flt05_company_id   = flt10_company_id
+                                              AND flt05_item_type_cd = flt10_tr_item_type
+                                              AND flt05_start_date = (SELECT MAX(flt05_start_date)
+                                                                        FROM flt05_item_type
+                                                                       WHERE flt05_company_id   = flt10_company_id
+                                                                         AND flt05_item_type_cd = flt10_tr_item_type
+                                                                         AND flt05_start_date <![CDATA[<=]]> flt10_reg_date) )
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectByTrType L2002 — 로그인 사용자 본인, 매매구분은 FloorTrCode0003 그룹(계좌대체). trType 파라미터는 이 화면이 안 줘서(COALESCE → '%') 뺐다 -->
+    <select id="selectAcntTransfers" resultType="kr.co.kfs.asseterp.biz.flt.dto.AcntTransferRes">
+        SELECT <include refid="acntTransferColumns"/>
+          FROM ( <include refid="acntTransferInner"/>
+                  WHERE flt10_company_id = #{companyId}
+                    AND flt10_person_id  = #{personId}
+                    AND flt10_tr_type IN ( SELECT sys09_code
+                                             FROM sys13_code_group
+                                                  INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+                                            WHERE sys13_kind_group_cd = 'FloorTrCode0003' )
+                    AND flt10_reg_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+        <if test="accountId != null">
+                    AND flt10_account_id = #{accountId}
+        </if>
+               ) t
+         WHERE CONCAT(flt10_account_info, flt10_out_account_info, flt10_tr_item_type_nm, flt10_tr_item_cd, flt10_tr_item_nm) ILIKE #{searchText}
+         ORDER BY flt10_reg_date, flt10_tr_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectById (저장 뒤 다시 읽기 · 삭제 전 종목 읽기) -->
+    <select id="selectAcntTransferById" resultType="kr.co.kfs.asseterp.biz.flt.dto.AcntTransferRes">
+        SELECT <include refid="acntTransferColumns"/>
+          FROM ( <include refid="acntTransferInner"/>
+                  WHERE flt10_company_id = #{companyId}
+                    AND flt10_person_id  = #{personId}
+                    AND flt10_tr_id      = #{trId} ) t
+    </select>
+
+    <!-- UpdateDataModel(flt10_tr) INSERT — 계좌대체: 구분은 30N, 실거래일 = 대체일 -->
+    <insert id="insertAcntTransfer">
+        INSERT INTO flt10_tr (flt10_tr_id, flt10_company_id, flt10_person_id, flt10_tr_type, flt10_reg_date, flt10_tr_date,
+                              flt10_tr_item_type, flt10_tr_item_nm, flt10_tr_item_cd, flt10_tr_qty, flt10_tr_amt,
+                              flt10_out_account_id, flt10_account_id)
+        VALUES (#{trId}, #{companyId}, #{personId}, '30N', CAST(#{req.regDate} AS date), CAST(#{req.regDate} AS date),
+                #{req.trItemType}, #{req.trItemName}, #{req.trItemCode}, #{req.trQty}, #{req.trAmt},
+                #{req.outAccountId}, #{req.accountId})
+    </insert>
+
+    <!-- UpdateDataModel(flt10_tr) UPDATE — 변경 창이 바꾸는 열(대체일·종목은 창에서 잠겨 있다). 수정: 회사·사원 조건을 더했다 -->
+    <update id="updateAcntTransfer">
+        UPDATE flt10_tr
+           SET flt10_reg_date       = CAST(#{req.regDate} AS date),
+               flt10_tr_date        = CAST(#{req.regDate} AS date),
+               flt10_tr_item_type   = #{req.trItemType},
+               flt10_tr_item_nm     = #{req.trItemName},
+               flt10_tr_item_cd     = #{req.trItemCode},
+               flt10_tr_qty         = #{req.trQty},
+               flt10_tr_amt         = #{req.trAmt},
+               flt10_out_account_id = #{req.outAccountId},
+               flt10_account_id     = #{req.accountId}
+         WHERE flt10_tr_id      = #{req.trId}
+           AND flt10_company_id = #{companyId}
+           AND flt10_person_id  = #{personId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.insertFloorTrBook (함수 f_insert_floorTrBook) 종목 한정 — 계좌는 전체(%) → 'Y' 또는 오류 메시지 -->
+    <select id="insertFloorTrBookItem" resultType="string" flushCache="true">
+        SELECT f_insert_floorTrBook(#{companyId}, #{personId}, '%', #{itemType}, #{itemName}, #{itemCode}, CAST(#{startDate} AS date))
+    </select>
 </mapper>

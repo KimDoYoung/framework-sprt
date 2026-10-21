@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.flt.mapper;
 
+import kr.co.kfs.asseterp.biz.flt.dto.AcntTransferRes;
+import kr.co.kfs.asseterp.biz.flt.dto.AcntTransferSaveReq;
 import kr.co.kfs.asseterp.biz.flt.dto.EmpLimitRes;
 import kr.co.kfs.asseterp.biz.flt.dto.InvestLimitRes;
 import kr.co.kfs.asseterp.biz.flt.dto.ItemTypeCodeRes;
@@ -122,4 +124,20 @@ public interface FltTrMapper {
                       @Param("trDate") java.time.LocalDate trDate, @Param("trType") String trType, @Param("trItemType") String trItemType,
                       @Param("trItemName") String trItemName, @Param("trItemCode") String trItemCode,
                       @Param("trQty") Double trQty, @Param("trAmt") Long trAmt);
+
+    /** AS-IS flt10_tr.selectByTrType (계좌대체 30N) */
+    List<AcntTransferRes> selectAcntTransfers(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                              @Param("accountId") Long accountId, @Param("startDate") String startDate,
+                                              @Param("closeDate") String closeDate, @Param("searchText") String searchText);
+
+    AcntTransferRes selectAcntTransferById(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("trId") Long trId);
+
+    int insertAcntTransfer(@Param("trId") Long trId, @Param("companyId") Long companyId, @Param("personId") Long personId,
+                           @Param("req") AcntTransferSaveReq req);
+
+    int updateAcntTransfer(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("req") AcntTransferSaveReq req);
+
+    /** AS-IS flt10_tr.insertFloorTrBook — 종목 한정 */
+    String insertFloorTrBookItem(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("itemType") String itemType,
+                                 @Param("itemName") String itemName, @Param("itemCode") String itemCode, @Param("startDate") String startDate);
 }

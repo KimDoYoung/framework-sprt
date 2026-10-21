@@ -150,7 +150,7 @@ export const Sch04_Tab_IcsListManager: React.FC = () => {
     gb.textCenter('statusName', 100, '처리구분'),  // L313 (편집기 주석 처리)
     gb.date('manageDate', 90, '처리일'),  // L314 (편집기 주석 처리)
     // L315 actionCell(Edit) → editResult()
-    iconCell<Sch04List>('edit', 'actionCellResult', 70, '처리결과<br>확인처리', editResult),
+    iconCell<Sch04List>('edit', 'actionCellResult', 70, '처리결과확인처리', editResult),
     gb.booleanYn2('confirmYn', 70, '확인여부'),  // L316
     gb.textArea('title', 350, '법규명'),  // L317
     iconCell<Sch04List>('view', 'actionCellLaw', 30, '', viewLaw),  // L318 → viewLaw()

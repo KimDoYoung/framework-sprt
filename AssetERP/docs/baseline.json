@@ -4293,5 +4293,40 @@
     "note": "docs/work/I/I05-작업기록.md",
     "history": [],
     "id": "I05"
+  },
+  "Flt10_Tab_AcntTransfer": {
+    "commit": "eb386248de736f38dbee261a928cd4592c8b7175",
+    "commit_short": "eb38624",
+    "branch": "ioc",
+    "commit_date": "2026-10-20",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/flt/Flt03_Lookup_Account.java": "02becaa8e65ce91960387f0e20fcee3e71eda32c",
+      "application/src/main/java/myApp/client/vi/flt/Flt10_Lookup_AcntTransfer.java": "8f398e48a3cbe7061ddfcfb9b2a221474ec765b9",
+      "application/src/main/java/myApp/client/vi/flt/Flt10_Tab_AcntTransfer.java": "41ec6696ffb98f2c3e421eee4e3706caa295fea9",
+      "application/src/main/java/myApp/client/vi/flt/Flt11_Lookup_BookList.java": "2181e3f6b44f3c3a1a5b51809abb45c3b0ec7cea",
+      "application/src/main/java/myApp/client/vi/flt/model/Flt01_CompanyStdModel.java": "b26644e35cf49db8f2842fce320b1d0bb5843e46",
+      "application/src/main/java/myApp/client/vi/flt/model/Flt03_AccountModel.java": "48978725998c1959da49297d94957911a68780db",
+      "application/src/main/java/myApp/client/vi/flt/model/Flt03_AccountModelProperties.java": "e6c4ad37e901df9892f91e61553bf09d22bfcf03",
+      "application/src/main/java/myApp/client/vi/flt/model/Flt10_TrModel.java": "6bb4e197d02a67e61bdee53f50195983363ffcce",
+      "application/src/main/java/myApp/client/vi/flt/model/Flt10_TrModelProperties.java": "840c26adbc6961f7bf3d4e079da9442fd321e1c5",
+      "application/src/main/java/myApp/client/vi/flt/model/Flt11_BookModel.java": "87e4bf10786b674823cce319b6fcbe053654529c",
+      "application/src/main/java/myApp/client/vi/flt/model/Flt11_BookModelProperties.java": "ff8e06c06b46d229e3dd6e14d7b0f00135303290",
+      "application/src/main/java/myApp/server/flt/Flt01_CompanyStd.java": "6c98eb16f1477d58c08922667114dac1a0781485",
+      "application/src/main/java/myApp/server/flt/Flt03_Account.java": "6da31f752f367088aeb8d7fd9f7a7895aa6128dd",
+      "application/src/main/java/myApp/server/flt/Flt10_Tr.java": "2ea7ade9c47c344daad782b66813154a5a178387",
+      "application/src/main/java/myApp/server/flt/Flt11_Book.java": "42cc5fa82071d2b0f93e9cb213678db1566a3594",
+      "application/src/main/java/myApp/server/flt/mapper/flt01_company_std.xml": "91ad0eed52a43b22de9fe5d09820441a94312093",
+      "application/src/main/java/myApp/server/flt/mapper/flt03_account.xml": "254ddc7206c76953a6f937689eecb69a415bd2f2",
+      "application/src/main/java/myApp/server/flt/mapper/flt10_tr.xml": "c84c7d6396dc02e5cdbe6788762dfb2324570066",
+      "application/src/main/java/myApp/server/flt/mapper/flt11_book.xml": "1bc6d205fe9c41431d67365908683d89832e0ac2",
+      "application/src/main/java/myApp/server/flt/mapper/flt13_book_init.xml": "de70bfdcf4c141163afd0dc49523ea36e341c9f9"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-21T14:25:03+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/I/I06-작업기록.md",
+    "history": [],
+    "id": "I06"
   }
 }

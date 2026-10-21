@@ -68,3 +68,9 @@
   border-top: 7px solid #f08a24;
   border-right: 7px solid transparent;
 }
+
+
+.ag-header-group-cell.gb-hdr .ag-header-group-cell-label {
+  justify-content: center;
+  text-align: center;
+}

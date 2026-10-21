@@ -173,7 +173,7 @@ export interface FltItemTypeCode {
   targetYn: boolean;
 }
 
-/** 보유내역 한 행 (I04 Flt11_Lookup_BookList, flt11_book.selectByText2) */
+/** 보유내역 한 행 (I04 Flt11_Lookup_BookList, flt11_book.selectByText2 · I06 selectByText) */
 export interface FltBook {
   bookId: number;
   bookDate: string;
@@ -190,6 +190,9 @@ export interface FltBook {
   lockupCheckYn: boolean | null;
   lockupDate: string | null;
   familyRelateCode: string | null;
+  /** 계좌대체(I06)가 출고계좌로 쓴다 */
+  accountId: number;
+  accountInfo: string | null;
 }
 
 /** 의무보유기간 기준 — lockUpCode '1'이면 보유기간 체크, lockUpCalcStdCode 'M'은 개월·그 밖은 영업일 */
@@ -274,4 +277,22 @@ export interface FltBookMonth {
   bookQty: number | null;
   bookAmt: number | null;
   stkPriceYn: boolean | null;
+}
+
+/** 계좌대체 한 행 (I06 Flt10_Tab_AcntTransfer, flt10_tr.selectByTrType) — 출고계좌 → 입고계좌 */
+export interface FltAcntTransfer {
+  trId: number;
+  trType: string | null;
+  regDate: string;
+  trDate: string | null;
+  trItemType: string | null;
+  trItemTypeName: string | null;
+  trItemName: string | null;
+  trItemCode: string | null;
+  trQty: number | null;
+  trAmt: number | null;
+  outAccountId: number | null;
+  outAccountInfo: string | null;
+  accountId: number | null;
+  accountInfo: string | null;
 }

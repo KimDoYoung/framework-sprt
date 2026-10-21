@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!-- AS-IS(IDMS-IC) server/flt/mapper/flt11_book.xml (selectByText2), flt01_company_std.xml (selectByDate) -->
+<!-- AS-IS(IDMS-IC) server/flt/mapper/flt11_book.xml (selectByText, selectByText2), flt01_company_std.xml (selectByDate) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.flt.mapper.FltBookMapper">
 
     <!-- AS-IS(IDMS-IC) flt11_book.selectByText2 L122 — SELECT a.*를 DTO 열로 명시, 날짜 TO_CHAR, #{stdDate}는 CAST. 쓰는 계좌·사원은 로그인 사용자 -->
@@ -63,6 +63,8 @@
                                        ELSE f_get_biz_date(flt11_company_id, flt11_buy_date, COALESCE(flt01_lock_up_days,0)::text)
                                        END) END, 'YYYY-MM-DD')        AS lockup_date
              , flt11_family_relate_cd                                 AS family_relate_code
+             , flt11_account_id                                       AS account_id
+             , flt11_account_info                                     AS account_info
           FROM (
                  SELECT  *
                       ,  flt05_item_type_nm                                                                     AS flt11_item_type_nm
@@ -133,6 +135,66 @@
                             LIMIT 1 ) flt01
                ) a
          WHERE CONCAT(flt11_item_nm, flt11_item_cd) ILIKE #{searchText}
+         ORDER BY flt11_account_no, flt11_item_nm collate "ko_KR.utf8" asc, flt11_item_type
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt11_book.selectByText — 기준일 보유잔고(expectYn=false). accountId가 있으면 그 계좌만. 쓰는 사원은 로그인 사용자 -->
+    <select id="selectBooks" resultType="kr.co.kfs.asseterp.biz.flt.dto.BookRes">
+        SELECT flt11_book_id                                          AS book_id
+             , TO_CHAR(flt11_book_date, 'YYYY-MM-DD')                 AS book_date
+             , flt11_account_no                                       AS account_no
+             , flt11_item_type                                        AS item_type
+             , flt11_item_type_nm                                     AS item_type_name
+             , flt11_item_nm                                          AS item_name
+             , flt11_item_cd                                          AS item_code
+             , flt11_book_amt                                         AS book_amt
+             , flt11_book_qty                                         AS book_qty
+             , CASE WHEN flt11_buy_date IS NULL THEN ''
+                    ELSE f_get_biz_days(flt11_company_id, flt11_buy_date, flt11_book_date)-1||' 영업일' END   AS book_days
+             , TO_CHAR(flt11_buy_date, 'YYYY-MM-DD')                  AS buy_date
+             , f_get_floorTrFundHoldCheck( flt11_company_id, flt11_item_cd, flt11_book_date)  AS check_fund_hold_yn
+             , COALESCE(flt05_lock_up_check_yn::boolean, false)       AS lockup_check_yn
+             , TO_CHAR(CASE WHEN flt01_lock_up_cd != '1' THEN null
+                            ELSE (CASE WHEN flt01_lock_up_calc_std_cd = 'M'
+                                       THEN flt11_buy_date + INTERVAL '1month' * COALESCE(flt01_lock_up_days,0)
+                                       ELSE f_get_biz_date(flt11_company_id, flt11_buy_date, COALESCE(flt01_lock_up_days,0)::text)
+                                       END) END, 'YYYY-MM-DD')        AS lockup_date
+             , flt11_family_relate_cd                                 AS family_relate_code
+             , flt11_account_id                                       AS account_id
+             , flt11_account_info                                     AS account_info
+          FROM (
+                 SELECT  *
+                      ,  flt05_item_type_nm                                                                     AS flt11_item_type_nm
+                      ,  TO_DECRYPTS(flt03_account_no) || ' (' || sys15_corp_nm || ')'                          AS flt11_account_no
+                      ,  TO_DECRYPTS(flt03_account_no) || ' (' || sys15_corp_nm || ') ' || flt03_account_nm     AS flt11_account_info
+                      ,  f_get_floorTrRcntBuyDate( flt11_company_id, flt11_person_id, flt11_account_id
+                                                 , flt11_item_type, flt11_item_nm, flt11_item_cd
+                                                 , flt11_book_date, true )                                      AS flt11_buy_date
+                      ,  flt03_family_relate_cd                                                                 AS flt11_family_relate_cd
+                   FROM  flt11_book
+                         INNER JOIN flt03_account ON flt03_account_id = flt11_account_id
+                         INNER JOIN sys15_corp    ON sys15_corp_id    = flt03_corp_id
+                         INNER JOIN flt05_item_type  ON ( flt05_company_id   = flt11_company_id      AND
+                                                          flt05_item_type_cd = flt11_item_type       AND
+                                                          flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                                   FROM flt05_item_type
+                                                                                  WHERE flt05_company_id   = flt11_company_id
+                                                                                    AND flt05_item_type_cd = flt11_item_type
+                                                                                    AND flt05_start_date <![CDATA[<=]]> flt11_book_date ) )
+                      ,  ( SELECT *
+                             FROM flt01_company_std
+                            WHERE flt01_company_id = #{companyId}
+                              AND flt01_start_date <![CDATA[<=]]> CAST(#{stdDate} AS date)
+                            ORDER BY flt01_start_date DESC
+                            LIMIT 1 ) flt01
+                  WHERE  flt11_company_id    = #{companyId}
+                    AND  flt11_person_id     = #{personId}
+                    AND  flt11_book_date     = CAST(#{stdDate} AS date)
+        <if test="accountId != null">
+                    AND  flt11_account_id    = #{accountId}
+        </if>
+                    AND  CONCAT(flt11_item_nm, flt11_item_cd) ILIKE #{searchText}
+               ) a
          ORDER BY flt11_account_no, flt11_item_nm collate "ko_KR.utf8" asc, flt11_item_type
     </select>
 

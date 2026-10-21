@@ -14,13 +14,22 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** 임직원매매 보유내역 (AS-IS Flt11_Lookup_BookList → server/flt/Flt11_Book). 보유내역조회 화면(I09)의 selectByText는 그때 더한다 */
+/** 임직원매매 보유내역 (AS-IS Flt11_Lookup_BookList → server/flt/Flt11_Book). */
 @RestController
 @RequestMapping("/api/v1/flt/books")
 @RequiredArgsConstructor
 public class FltBookController {
 
     private final FltBookService service;
+
+    /** AS-IS flt.Flt11_Book.selectByText (expectYn=false) — 기준일 보유잔고, 로그인 사용자 본인 */
+    @GetMapping
+    public ApiResponse<List<BookRes>> search(@AuthenticationPrincipal UserPrincipal principal,
+                                             @RequestParam(required = false) Long accountId,
+                                             @RequestParam String stdDate,
+                                             @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.search(principal, accountId, stdDate, searchText));
+    }
 
     /** AS-IS flt.Flt11_Book.selectByText2 (expectYn=true) — 로그인 사용자 본인 */
     @GetMapping("/expect")
