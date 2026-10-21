@@ -55,7 +55,7 @@ export function gbFor<T>() {
     if (editor) {
       def.editable = rest.editable ?? true;
       def.cellEditor = rest.cellEditor ?? EDITORS[editor];
-      if (editor === 'select') def.cellEditorParams = rest.cellEditorParams ?? { values: values ?? [] };
+      if (editor === 'select') def.cellEditorParams = rest.cellEditorParams ?? { values: values?.includes('') ? values : ['', ...(values ?? [])] };  // 빈 값도 고를 수 있게(빈 셀은 '' 선택 상태)
       if (editor === 'largeText') def.cellEditorPopup = rest.cellEditorPopup ?? true;
     }
     return def;

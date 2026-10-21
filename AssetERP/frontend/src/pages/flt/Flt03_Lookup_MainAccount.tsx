@@ -50,7 +50,7 @@ export const Flt03_Lookup_MainAccount: React.FC<Props> = ({ open, onClose }) => 
     <LookupModal
       open={open}
       title="주계좌 설정"
-      width={650}
+      width={750}
       maskClosable={false}
       closable={false}
       onCancel={onClose}

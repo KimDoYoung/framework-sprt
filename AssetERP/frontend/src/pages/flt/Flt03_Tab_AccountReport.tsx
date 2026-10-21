@@ -137,14 +137,14 @@ export const Flt03_Tab_AccountReport: React.FC = () => {
 
   // buildGrid() L330-425: setChecked(MULTI)
   const columnDefs = useMemo(() => [
-    gb.date('setupDate', 90, '계좌개설일', { editor: 'date' }),  // L410
+    gb.date('setupDate', 120, '계좌개설일', { editor: 'date' }),  // L410
     // [E11] AccountRegReasonComboBox[AccountRegReason].Collapse (L335) → regReason 동기화
     gb.text('regReasonName', 100, '신고사유', {  // L411
       editor: 'select',
       values: regReasons.map(c => c.name),
       valueSetter: p => {
         p.data.regReasonName = p.newValue;
-        p.data.regReason = regReasons.find(c => c.name === p.newValue)?.code ?? p.data.regReason;
+        p.data.regReason = regReasons.find(c => c.name === p.newValue)?.code ?? null;
         return true;
       },
     }),
@@ -154,7 +154,7 @@ export const Flt03_Tab_AccountReport: React.FC = () => {
       values: familyRelates.map(c => c.name),
       valueSetter: p => {
         p.data.familyRelateName = p.newValue;
-        p.data.familyRelateCode = familyRelates.find(c => c.name === p.newValue)?.code ?? p.data.familyRelateCode;
+        p.data.familyRelateCode = familyRelates.find(c => c.name === p.newValue)?.code ?? null;
         return true;
       },
     }),

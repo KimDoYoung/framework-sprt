@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, message } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
-import type { CellValueChangedEvent, ColDef, GetRowIdParams, GridOptions } from 'ag-grid-community';
+import type { CellClassParams, CellValueChangedEvent, ColDef, GetRowIdParams, GridOptions, RowClassParams } from 'ag-grid-community';
 import type { ChangeCount } from '../components/button';
 import { errorMessage } from '../api/client';
 
@@ -53,6 +53,8 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
   const [loading, setLoading] = useState(false);
   const dirty = useRef(new Set<number>());
   const tempSeq = useRef(0);
+  // UX-07 변경 셀 표시: 행ID → (바뀐 필드 → 처음 값). 처음 값으로 되돌리면 표시를 지운다
+  const cellDirty = useRef(new Map<number, Map<string, unknown>>());
   // dirty는 ref라 바뀌어도 다시 그려지지 않는다 — UX-03 저장(n) 표시를 위해 바꿀 때마다 version을 올린다
   const [version, setVersion] = useState(0);
   const bump = useCallback(() => setVersion(v => v + 1), []);
@@ -66,6 +68,7 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
     try {
       const data = await search();
       dirty.current.clear();
+      cellDirty.current.clear();
       bump();
       setRows(data);
     } catch (err) {
@@ -116,16 +119,29 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
   /** [등록] 버튼: 빈 행(newRow 기본값만). 변경으로 치지 않는다 — AS-IS GridInsertRow */
   const addRow = useCallback(() => addRows([{}], false), [addRows]);
 
+  /** UX-07: 셀 값이 처음 값과 달라지면 표시, 같아지면 지운다 */
+  const markCell = useCallback((id: number, field: string, oldValue: unknown, newValue: unknown) => {
+    const fields = cellDirty.current.get(id) ?? new Map<string, unknown>();
+    const orig = fields.has(field) ? fields.get(field) : oldValue;
+    if ((orig ?? '') === (newValue ?? '')) fields.delete(field); else fields.set(field, orig);
+    if (fields.size > 0) cellDirty.current.set(id, fields); else cellDirty.current.delete(id);
+  }, []);
+
   /** 코드로 행 값을 바꾼다 (Lookup 선택 등). 변경 행으로 표시된다 */
   const updateRow = useCallback((id: number, patch: Partial<T>) => {
     dirty.current.add(id);
+    setRows(prev => prev.map(r => {
+      if (getId(r) !== id) return r;
+      Object.entries(patch).forEach(([f, v]) => markCell(id, f, (r as Record<string, unknown>)[f], v));
+      return { ...r, ...patch };
+    }));
     bump();
-    setRows(prev => prev.map(r => (getId(r) === id ? { ...r, ...patch } : r)));
   }, [getId, bump]);
 
   /** 서버에서 다시 읽은 한 행으로 바꾼다 (AS-IS grid.getStore().update(model) — 조회창을 닫은 뒤 refresh). 변경 표시는 지운다 */
   const replaceRow = useCallback((id: number, row: T) => {
     dirty.current.delete(id);
+    cellDirty.current.delete(id);
     bump();
     setRows(prev => prev.map(r => (getId(r) === id ? row : r)));
   }, [getId, bump]);
@@ -133,6 +149,7 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
   /** 목록 비우기 (마스터 선택 해제 시) */
   const clear = useCallback(() => {
     dirty.current.clear();
+    cellDirty.current.clear();
     bump();
     setRows([]);
   }, [bump]);
@@ -153,11 +170,12 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
       const saved = await save(changed);
       if (reloadAfterSave) {
         dirty.current.clear();
+        cellDirty.current.clear();
         bump();
         setRows(await search());
       } else {
         const replace = new Map(changed.map((r, i) => [getId(r), saved[i]]));
-        replace.forEach((_, id) => dirty.current.delete(id));
+        replace.forEach((_, id) => { dirty.current.delete(id); cellDirty.current.delete(id); });
         bump();
         setRows(prev => prev.map(r => replace.get(getId(r)) ?? r));
       }
@@ -176,7 +194,7 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
    */
   const removeRows = useCallback((ids: number[]) => {
     const removed = new Set(ids);
-    removed.forEach(id => dirty.current.delete(id));
+    removed.forEach(id => { dirty.current.delete(id); cellDirty.current.delete(id); });
     bump();
     setRows(prev => prev.filter(r => !removed.has(getId(r))));
   }, [getId, bump]);
@@ -194,7 +212,7 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
       try {
         if (savedIds.length > 0) await remove(savedIds);
         const removed = new Set(ids);
-        removed.forEach(id => dirty.current.delete(id));
+        removed.forEach(id => { dirty.current.delete(id); cellDirty.current.delete(id); });
         bump();
         setRows(prev => prev.filter(r => !removed.has(getId(r))));
         message.success(`${ids.length}건 삭제되었습니다.`);
@@ -218,17 +236,33 @@ export function useGridCrud<T extends object>(options: GridCrudOptions<T>) {
   }, [getId, remove, deleteConfirm, onChanged, bump]);
 
   const onCellValueChanged = useCallback((e: CellValueChangedEvent<T>) => {
-    if (e.data && e.oldValue !== e.newValue && !dirty.current.has(getId(e.data))) {
-      dirty.current.add(getId(e.data));
-      bump();
-    }
-  }, [getId, bump]);
+    if (!e.data || e.oldValue === e.newValue) return;
+    const id = getId(e.data);
+    const field = e.colDef.field;
+    if (field) markCell(id, field, e.oldValue, e.newValue);
+    if (!dirty.current.has(id)) dirty.current.add(id);
+    bump();
+  }, [getId, bump, markCell]);
+
+  // UX-07: 다시 그려도 값이 안 바뀐 셀은 갱신되지 않으므로 표시 상태가 바뀔 때 셀 클래스를 다시 계산한다
+  useEffect(() => { gridRef.current?.api?.refreshCells({ force: true }); }, [version, rows]);
 
   const gridProps: GridOptions<T> = {
     rowData: rows,
     loading,
     getRowId: (p: GetRowIdParams<T>) => String(getId(p.data)),
     onCellValueChanged,
+    // UX-07 변경 표시: 추가 행 = 연초록 행, 수정 행 = 바뀐 셀만 연노랑
+    getRowClass: (p: RowClassParams<T>) => (p.data && getId(p.data) <= 0 && dirty.current.has(getId(p.data)) ? 'gb-row-new' : undefined),
+    defaultColDef: {
+      cellClassRules: {
+        'gb-cell-changed': (p: CellClassParams<T>) => {
+          const field = p.colDef.field;
+          // 추가 행은 행 전체가 초록이므로 셀 표시는 저장된 행(ID > 0)에만 한다
+          return !!p.data && !!field && getId(p.data) > 0 && !!cellDirty.current.get(getId(p.data))?.has(field);
+        },
+      },
+    } as ColDef<T>,
     // 셀 편집 중(아직 값이 확정 안 됨)에도 저장(n)을 누를 수 있게 한다 — saveRows가 stopEditing으로 확정한 뒤 모은다
     onCellEditingStarted: () => setEditing(true),
     onCellEditingStopped: () => setEditing(false),

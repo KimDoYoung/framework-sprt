@@ -51,3 +51,21 @@
 .gb-vcenter .ag-cell[style*="text-align: right"] {
   justify-content: flex-end;
 }
+
+/* UX-07 변경 표시: 추가 행(연초록) / 수정 셀(연노랑 + 왼쪽 위 주황 삼각형) */
+.gb-row-new,
+.gb-row-new .ag-cell {
+  background-color: #e8f6e4;
+}
+.gb-cell-changed {
+  background-color: #fff6cc !important;
+  position: relative;
+}
+.gb-cell-changed::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-top: 7px solid #f08a24;
+  border-right: 7px solid transparent;
+}
