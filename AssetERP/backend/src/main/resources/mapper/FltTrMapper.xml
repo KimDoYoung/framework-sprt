@@ -992,6 +992,83 @@
            AND flt10_person_id  = #{personId}
     </update>
 
+    <!-- ===== 권리행사/기타입출고 (I07, Flt10_Tab_RightsExercise) ===== -->
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectByTrType 바깥 SELECT (SELECT *를 DTO 열로 명시, 날짜 TO_CHAR) — 거래구분명은 안쪽 f_cdnm과 같다 -->
+    <sql id="rightsExerciseColumns">
+        flt10_tr_id                                                        AS tr_id,
+        flt10_tr_type                                                      AS tr_type,
+        f_cdnm('FloorTrCode', flt10_tr_type, flt10_company_id, flt10_reg_date) AS tr_type_name,
+        TO_CHAR(flt10_reg_date, 'YYYY-MM-DD')                              AS reg_date,
+        TO_CHAR(flt10_tr_date, 'YYYY-MM-DD')                               AS tr_date,
+        flt10_account_id                                                   AS account_id,
+        flt10_account_info                                                 AS account_info,
+        flt10_tr_item_type                                                 AS tr_item_type,
+        flt10_tr_item_type_nm                                              AS tr_item_type_name,
+        flt10_tr_item_nm                                                   AS tr_item_name,
+        flt10_tr_item_cd                                                   AS tr_item_code,
+        flt10_tr_qty                                                       AS tr_qty,
+        flt10_tr_amt                                                       AS tr_amt,
+        flt10_tr_note                                                      AS tr_note
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectByTrType L2002 — 로그인 사용자 본인, 매매구분은 FloorTrCode0002 그룹, 거래구분 콤보 '%'=전체 -->
+    <select id="selectRightsExercises" resultType="kr.co.kfs.asseterp.biz.flt.dto.RightsExerciseRes">
+        SELECT <include refid="rightsExerciseColumns"/>
+          FROM ( <include refid="acntTransferInner"/>
+                  WHERE flt10_company_id = #{companyId}
+                    AND flt10_person_id  = #{personId}
+                    AND flt10_tr_type LIKE COALESCE(#{trType}, '%')
+                    AND flt10_tr_type IN ( SELECT sys09_code
+                                             FROM sys13_code_group
+                                                  INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+                                            WHERE sys13_kind_group_cd = 'FloorTrCode0002' )
+                    AND flt10_reg_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+        <if test="accountId != null">
+                    AND flt10_account_id = #{accountId}
+        </if>
+               ) t
+         WHERE CONCAT(flt10_account_info, flt10_out_account_info, flt10_tr_item_type_nm, flt10_tr_item_cd, flt10_tr_item_nm) ILIKE #{searchText}
+         ORDER BY flt10_reg_date, flt10_tr_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectById (저장 뒤 다시 읽기 · 삭제 전 종목 읽기) -->
+    <select id="selectRightsExerciseById" resultType="kr.co.kfs.asseterp.biz.flt.dto.RightsExerciseRes">
+        SELECT <include refid="rightsExerciseColumns"/>
+          FROM ( <include refid="acntTransferInner"/>
+                  WHERE flt10_company_id = #{companyId}
+                    AND flt10_person_id  = #{personId}
+                    AND flt10_tr_id      = #{trId} ) t
+    </select>
+
+    <!-- UpdateDataModel(flt10_tr) INSERT — 창이 정하는 열(실거래일 = 거래일) -->
+    <insert id="insertRightsExercise">
+        INSERT INTO flt10_tr (flt10_tr_id, flt10_company_id, flt10_person_id, flt10_tr_type, flt10_reg_date, flt10_tr_date,
+                              flt10_account_id, flt10_tr_item_type, flt10_tr_item_nm, flt10_tr_item_cd, flt10_tr_qty, flt10_tr_amt,
+                              flt10_tr_note)
+        VALUES (#{trId}, #{companyId}, #{personId}, #{req.trType}, CAST(#{req.regDate} AS date), CAST(#{req.regDate} AS date),
+                #{req.accountId}, #{req.trItemType}, #{req.trItemName}, #{req.trItemCode}, #{req.trQty}, #{req.trAmt},
+                #{req.trNote})
+    </insert>
+
+    <!-- UpdateDataModel(flt10_tr) UPDATE. 수정: 회사·사원 조건을 더했다 -->
+    <update id="updateRightsExercise">
+        UPDATE flt10_tr
+           SET flt10_tr_type      = #{req.trType},
+               flt10_reg_date     = CAST(#{req.regDate} AS date),
+               flt10_tr_date      = CAST(#{req.regDate} AS date),
+               flt10_account_id   = #{req.accountId},
+               flt10_tr_item_type = #{req.trItemType},
+               flt10_tr_item_nm   = #{req.trItemName},
+               flt10_tr_item_cd   = #{req.trItemCode},
+               flt10_tr_qty       = #{req.trQty},
+               flt10_tr_amt       = #{req.trAmt},
+               flt10_tr_note      = #{req.trNote}
+         WHERE flt10_tr_id      = #{req.trId}
+           AND flt10_company_id = #{companyId}
+           AND flt10_person_id  = #{personId}
+    </update>
+
     <!-- AS-IS(IDMS-IC) flt10_tr.insertFloorTrBook (함수 f_insert_floorTrBook) 종목 한정 — 계좌는 전체(%) → 'Y' 또는 오류 메시지 -->
     <select id="insertFloorTrBookItem" resultType="string" flushCache="true">
         SELECT f_insert_floorTrBook(#{companyId}, #{personId}, '%', #{itemType}, #{itemName}, #{itemCode}, CAST(#{startDate} AS date))

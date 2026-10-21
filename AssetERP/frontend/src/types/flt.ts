@@ -296,3 +296,21 @@ export interface FltAcntTransfer {
   accountId: number | null;
   accountInfo: string | null;
 }
+
+/** 권리행사/기타입출고 한 행 (I07 Flt10_Tab_RightsExercise, flt10_tr.selectByTrType · 매매구분 FloorTrCode0002) */
+export interface FltRightsExercise {
+  trId: number;
+  trType: string | null;
+  trTypeName: string | null;
+  regDate: string;
+  trDate: string | null;
+  accountId: number | null;
+  accountInfo: string | null;
+  trItemType: string | null;
+  trItemTypeName: string | null;
+  trItemName: string | null;
+  trItemCode: string | null;
+  trQty: number | null;
+  trAmt: number | null;
+  trNote: string | null;
+}

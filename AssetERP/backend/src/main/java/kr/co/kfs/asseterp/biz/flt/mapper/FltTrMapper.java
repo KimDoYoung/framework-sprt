@@ -9,6 +9,8 @@ import kr.co.kfs.asseterp.biz.flt.dto.RealTrRes;
 import kr.co.kfs.asseterp.biz.flt.dto.RealTrSaveReq;
 import kr.co.kfs.asseterp.biz.flt.dto.RelateApprRes;
 import kr.co.kfs.asseterp.biz.flt.dto.ReportEmpRes;
+import kr.co.kfs.asseterp.biz.flt.dto.RightsExerciseRes;
+import kr.co.kfs.asseterp.biz.flt.dto.RightsExerciseSaveReq;
 import kr.co.kfs.asseterp.biz.flt.dto.TrAccountRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrCheckRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrItemRes;
@@ -136,6 +138,19 @@ public interface FltTrMapper {
                            @Param("req") AcntTransferSaveReq req);
 
     int updateAcntTransfer(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("req") AcntTransferSaveReq req);
+
+    /** AS-IS flt10_tr.selectByTrType (권리행사/기타입출고, 매매구분 FloorTrCode0002 그룹) */
+    List<RightsExerciseRes> selectRightsExercises(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                                  @Param("trType") String trType, @Param("accountId") Long accountId,
+                                                  @Param("startDate") String startDate, @Param("closeDate") String closeDate,
+                                                  @Param("searchText") String searchText);
+
+    RightsExerciseRes selectRightsExerciseById(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("trId") Long trId);
+
+    int insertRightsExercise(@Param("trId") Long trId, @Param("companyId") Long companyId, @Param("personId") Long personId,
+                             @Param("req") RightsExerciseSaveReq req);
+
+    int updateRightsExercise(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("req") RightsExerciseSaveReq req);
 
     /** AS-IS flt10_tr.insertFloorTrBook — 종목 한정 */
     String insertFloorTrBookItem(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("itemType") String itemType,

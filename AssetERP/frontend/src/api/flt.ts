@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import {
   FltAccount, FltAccountClose, FltAccountStatus, FltBook, FltBuyLockup, FltLockupStd, FltDocClass, FltInvestLimit, FltItemType, FltItemTypeCode,
-  FltAcntTransfer, FltBookMonth, FltEmpLimit, FltRealTr, FltRelateAppr, FltReportCheck, FltTr, FltTrAccount, FltTrCheck, FltTrItem,
+  FltAcntTransfer, FltBookMonth, FltEmpLimit, FltRealTr, FltRelateAppr, FltReportCheck, FltRightsExercise, FltTr, FltTrAccount, FltTrCheck, FltTrItem,
 } from '../types/flt';
 
 /** flt(임직원매매) 화면 API (E08~) */
@@ -327,5 +327,30 @@ export const fltApi = {
   /** AS-IS flt.Flt10_Tr.insertFloorTrBook (createBook, 종목 한정) — 실패하면 서버 메시지로 예외 */
   createAcntTransferBook: async (row: { trItemType: string | null; trItemName: string | null; trItemCode: string | null; regDate: string }): Promise<void> => {
     await apiClient.post<ApiResponse<number>>('v1/flt/acnt-transfers/book', row);
+  },
+
+  /** AS-IS flt.Flt10_Tr.selectByTrType (로그인 사용자 본인, 권리행사/기타입출고 FloorTrCode0002). trType '%'=전체, 검색어는 서버가 %…%로 */
+  searchRightsExercises: async (params: { trType?: string; accountId?: number | null; startDate: string; closeDate: string; searchText?: string }): Promise<FltRightsExercise[]> => {
+    const res = await apiClient.get<ApiResponse<FltRightsExercise[]>>('v1/flt/rights-exercises', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt10_Tr.update → 저장된 행(요청 순서). trId 0 이하는 신규 */
+  updateRightsExercises: async (rows: FltRightsExercise[]): Promise<FltRightsExercise[]> => {
+    const body = rows.map(({ trId, trType, regDate, accountId, trItemType, trItemName, trItemCode, trQty, trAmt, trNote }) =>
+      ({ trId, trType, regDate, accountId, trItemType, trItemName, trItemCode, trQty, trAmt, trNote }));
+    const res = await apiClient.put<ApiResponse<FltRightsExercise[]>>('v1/flt/rights-exercises', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt10_Tr.delete2 → 지운 건수(행마다 그 종목의 원장을 다시 만든다) */
+  deleteRightsExercises: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/flt/rights-exercises', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS flt.Flt10_Tr.insertFloorTrBook (createBook, 종목 한정) — 실패하면 서버 메시지로 예외 */
+  createRightsExerciseBook: async (row: { trItemType: string | null; trItemName: string | null; trItemCode: string | null; regDate: string }): Promise<void> => {
+    await apiClient.post<ApiResponse<number>>('v1/flt/rights-exercises/book', row);
   },
 };
