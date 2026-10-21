@@ -17,6 +17,7 @@ import kr.co.kfs.asseterp.biz.flt.dto.TrItemRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrListRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrSaveReq;
+import kr.co.kfs.asseterp.biz.flt.dto.ViolateRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -162,4 +163,7 @@ public interface FltTrMapper {
     /** AS-IS flt10_tr.insertFloorTrBook — 종목 한정 */
     String insertFloorTrBookItem(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("itemType") String itemType,
                                  @Param("itemName") String itemName, @Param("itemCode") String itemCode, @Param("startDate") String startDate);
+
+    /** AS-IS flt10_tr.selectViolate (I10 위반내역조회) — personId가 null이면 회사 전체 사원 */
+    List<ViolateRes> selectViolate(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("stdDate") String stdDate);
 }

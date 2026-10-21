@@ -13,6 +13,7 @@ import kr.co.kfs.asseterp.biz.flt.dto.TrRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrSaveReq;
 import kr.co.kfs.asseterp.biz.flt.dto.TrStatusReq;
 import kr.co.kfs.asseterp.biz.flt.dto.TrUnfillReq;
+import kr.co.kfs.asseterp.biz.flt.dto.ViolateRes;
 import kr.co.kfs.asseterp.biz.flt.mapper.FltAccountMapper;
 import kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -201,6 +202,22 @@ public class FltTrService {
             rows.add(v);
         }
         return FltExcelWriter.write("임직원 매매내역", headers, rows);
+    }
+
+    /** AS-IS Flt10_Tr.selectViolate (I10 위반내역조회) — personId를 생략하면 회사 전체 사원 */
+    public List<ViolateRes> searchViolate(UserPrincipal user, String stdDate, Long personId) {
+        return mapper.selectViolate(user.getCompanyId(), personId, stdDate);
+    }
+
+    /** 엑셀다운로드 — AS-IS는 Sys99_Print.insertRdViolate + RD 리포트(Flt10_Rd_Violate). 같은 조회 결과를 그리드 열 순서로 xlsx에 쓴다 */
+    public byte[] downloadViolate(UserPrincipal user, String stdDate, Long personId) {
+        List<String> headers = List.of("본부(부서)", "사원명", "위반내역", "기준정보", "위반정보", "위반거래일", "위반종목명", "사전승인의견", "매매사유");
+        List<List<Object>> rows = new ArrayList<>();
+        for (ViolateRes r : searchViolate(user, stdDate, personId)) {
+            rows.add(Arrays.asList(r.orgName(), r.personName(), r.checkName(), r.checkStd(), r.checkViolate(),
+                    r.trDate(), r.trItemName(), r.rejectReason(), r.trNote()));
+        }
+        return FltExcelWriter.write("임직원매매 위반내역", headers, rows);
     }
 
     private static String blankToAll(String code) {

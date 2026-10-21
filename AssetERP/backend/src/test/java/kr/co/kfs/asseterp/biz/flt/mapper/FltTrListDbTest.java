@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.flt.mapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.flt.dto.BookListRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrListRes;
+import kr.co.kfs.asseterp.biz.flt.dto.ViolateRes;
 import kr.co.kfs.asseterp.biz.flt.service.FltBookService;
 import kr.co.kfs.asseterp.biz.flt.service.FltTrService;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -67,6 +68,17 @@ class FltTrListDbTest {
         assertThat(bookService.searchList(user, "2025-12-22", "삼성")).hasSize(27);
         assertThat(bookService.searchList(other, "2025-12-22", "")).isEmpty();
         assertThat(headerCount(bookService.downloadList(user, "2025-12-22", ""))).isEqualTo(10);
+    }
+
+    @Test
+    void 위반내역은_전체와_사원_하나가_읽히고_엑셀로_나온다() throws IOException {
+        // I10: 원본 조각을 그대로 옮겼고(대조 불가 — 05 작업방법 I10), 같은 SQL을 mapper-run으로 돌려 전체 70행·사원 29049 16행
+        List<ViolateRes> all = trService.searchViolate(user, "2025-12-22", null);
+        assertThat(all).hasSize(70);
+        assertThat(all).extracting(ViolateRes::trId).doesNotHaveDuplicates();
+        List<ViolateRes> mine = trService.searchViolate(user, "2025-12-22", 29049L);
+        assertThat(mine).hasSize(16).allMatch(r -> r.personName() != null && r.checkName() != null);
+        assertThat(headerCount(trService.downloadViolate(user, "2025-12-22", 29049L))).isEqualTo(9);
     }
 
     private static int headerCount(byte[] xlsx) throws IOException {

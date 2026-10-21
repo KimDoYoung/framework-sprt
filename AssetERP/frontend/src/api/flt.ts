@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
 import {
-  FltAccount, FltAccountClose, FltAccountStatus, FltBook, FltBookList, FltBuyLockup, FltLockupStd, FltDocClass, FltInvestLimit, FltItemType, FltItemTypeCode,
+  FltViolate, FltAccount, FltAccountClose, FltAccountStatus, FltBook, FltBookList, FltBuyLockup, FltLockupStd, FltDocClass, FltInvestLimit, FltItemType, FltItemTypeCode,
   FltAcntTransfer, FltBookMonth, FltEmpLimit, FltRealTr, FltRelateAppr, FltReportCheck, FltRightsExercise, FltTr, FltTrAccount, FltTrCheck, FltTrItem, FltTrList,
 } from '../types/flt';
 
@@ -377,6 +377,19 @@ export const fltApi = {
   /** 엑셀다운로드 (AS-IS Sys99_Print.insertRdBookList + RD 리포트 → xlsx) */
   downloadBookListExcel: async (baseDate: string, searchText: string, fileName: string): Promise<void> => {
     await downloadBlob('v1/flt/books/list/excel', { baseDate, searchText }, fileName);
+  },
+
+  // ── I10 위반내역조회 (Flt10_Tab_ViolateUser · Flt10_Tab_Violate) ──
+
+  /** AS-IS flt.Flt10_Tr.selectViolate. personId 생략(null) = 회사 전체 사원 */
+  searchViolate: async (stdDate: string, personId: number | null): Promise<FltViolate[]> => {
+    const res = await apiClient.get<ApiResponse<FltViolate[]>>('v1/flt/trs/violate', { params: { stdDate, personId: personId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** 엑셀다운로드 (AS-IS Sys99_Print.insertRdViolate + RD 리포트 Flt10_Rd_Violate → xlsx) */
+  downloadViolateExcel: async (stdDate: string, personId: number | null, fileName: string): Promise<void> => {
+    await downloadBlob('v1/flt/trs/violate/excel', { stdDate, personId: personId ?? undefined }, fileName);
   },
 };
 

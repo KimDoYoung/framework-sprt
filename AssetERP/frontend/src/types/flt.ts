@@ -339,6 +339,20 @@ export interface FltTrList {
   addConfirmReason: string | null;
 }
 
+/** 위반내역조회 한 행 (I10 Flt10_Tab_ViolateUser · J05 Flt10_Tab_Violate, flt10_tr.selectViolate). trId는 조회 순서 행번호 */
+export interface FltViolate {
+  trId: number;
+  orgName: string | null;
+  personName: string | null;
+  checkName: string | null;
+  checkStd: string | null;
+  checkViolate: string | null;
+  trDate: string | null;
+  trItemName: string | null;
+  rejectReason: string | null;
+  trNote: string | null;
+}
+
 /** 보유내역조회 한 행 (I09 Flt11_Tab_BookList, flt11_book.selectByBookList) */
 export interface FltBookList {
   bookId: number;

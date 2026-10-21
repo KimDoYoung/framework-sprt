@@ -66,7 +66,7 @@ export const Flt10_Tab_TrList: React.FC = () => {
 
   // buildGrid() L220-245 — setPreTrColumn() L247-259: 사전신고 포함이 꺼지면 4~7번 열(사전신고일·종목명·수량·금액)을 가린다
   const columnDefs = useMemo(() => [
-    gb.text('accountNo', 200, '계좌'),
+    gb.text('accountNo', 200, '계좌', { pinned: 'left' }),  // 가로 스크롤해도 계좌는 항상 보이게 왼쪽 고정
     gb.textCenter('inOutName', 60, '입/출'),
     gb.textCenter('trTypeName', 100, '매매구분'),
     gb.date('regDate', 90, '사전신고일', { hide: !preTr }),  // 원본 100 → UX-08

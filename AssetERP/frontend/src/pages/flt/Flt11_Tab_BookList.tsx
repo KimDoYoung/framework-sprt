@@ -32,7 +32,12 @@ export const Flt11_Tab_BookList: React.FC = () => {
   useEffect(() => {
     const initDate = dayjs().startOf('month').subtract(1, 'day').format(DATE_FORMAT);
     fltApi.getBizDate(initDate)
-      .then(d => { if (d) setBaseDate(dayjs(d)); })
+      .then(d => { 
+        const base = d ? dayjs(d) : dayjs(initDate);   // 영업일을 못 받으면 전월 말일로
+        setBaseDate(base);
+        paramRef.current = { ...paramRef.current, baseDate: base };   // ★ 이 줄이 핵심
+        void retrieve();        
+      })
       .catch(() => undefined);
   }, []);
 
@@ -48,7 +53,7 @@ export const Flt11_Tab_BookList: React.FC = () => {
 
   // buildGrid() L147-161
   const columnDefs = useMemo(() => [
-    gb.text('accountNo', 200, '계좌'),
+    gb.text('accountNo', 200, '계좌', {pinned: 'left'}),
     gb.text('itemTypeName', 150, '종목유형'),
     gb.text('itemName', 250, '종목명'),
     gb.double('bookQty', 120, '보유수량'),
@@ -57,7 +62,7 @@ export const Flt11_Tab_BookList: React.FC = () => {
     gb.date('buyDate', 90, '최근매매일'),  // 원본 100 → UX-08
     gb.long('yearInvestLimit', 120, '연간투자금액'),
     gb.long('totalInvestAmt', 120, '총누적투자금액'),
-    gb.double('turnoverRate', 120, '월간매매회전율(%)'),
+    gb.double('turnoverRate', 125, '월간매매회전율(%)'),
   ], []);
 
   // [E3] arrangeButton[보유원장 정리].Select (L126) → preArrange() L179-204

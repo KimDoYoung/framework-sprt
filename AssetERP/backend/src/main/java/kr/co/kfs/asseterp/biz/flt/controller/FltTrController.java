@@ -12,6 +12,7 @@ import kr.co.kfs.asseterp.biz.flt.dto.TrRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrSaveReq;
 import kr.co.kfs.asseterp.biz.flt.dto.TrStatusReq;
 import kr.co.kfs.asseterp.biz.flt.dto.TrUnfillReq;
+import kr.co.kfs.asseterp.biz.flt.dto.ViolateRes;
 import kr.co.kfs.asseterp.biz.flt.service.FltTrService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -74,6 +75,27 @@ public class FltTrController {
                                                @RequestParam(required = false) String searchText) {
         byte[] body = service.downloadList(principal, startDate, closeDate, preTrYn, trType, ioType, searchText);
         String fileName = "임직원 매매내역(" + startDate + " ~ " + closeDate + ").xlsx";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(body);
+    }
+
+    /** AS-IS flt.Flt10_Tr.selectViolate (I10 위반내역조회) — personId 생략 = 회사 전체 사원 */
+    @GetMapping("/violate")
+    public ApiResponse<List<ViolateRes>> searchViolate(@AuthenticationPrincipal UserPrincipal principal,
+                                                       @RequestParam String stdDate,
+                                                       @RequestParam(required = false) Long personId) {
+        return ApiResponse.ok(service.searchViolate(principal, stdDate, personId));
+    }
+
+    /** 엑셀다운로드 (AS-IS sys.Sys99_Print.insertRdViolate + RD 리포트 Flt10_Rd_Violate → 조회 결과 xlsx) */
+    @GetMapping("/violate/excel")
+    public ResponseEntity<byte[]> downloadViolate(@AuthenticationPrincipal UserPrincipal principal,
+                                                  @RequestParam String stdDate,
+                                                  @RequestParam(required = false) Long personId) {
+        byte[] body = service.downloadViolate(principal, stdDate, personId);
+        String fileName = "임직원매매 위반내역(" + stdDate + ").xlsx";
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))

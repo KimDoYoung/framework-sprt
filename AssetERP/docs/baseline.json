@@ -4446,5 +4446,48 @@
     "note": "docs/work/I/I09-작업기록.md",
     "history": [],
     "id": "I09"
+  },
+  "Flt10_Tab_ViolateUser": {
+    "commit": "eb386248de736f38dbee261a928cd4592c8b7175",
+    "commit_short": "eb38624",
+    "branch": "ioc",
+    "commit_date": "2026-10-20",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/flt/Flt10_Tab_ViolateUser.java": "bbef14156299c5f3cbd908aec8f6671e2b283748"
+    },
+    "shared_links": [
+      "Flt10_Tab_Violate"
+    ],
+    "recorded_at": "2026-10-21T15:26:34+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/I/I10-작업기록.md",
+    "history": [],
+    "id": "I10"
+  },
+  "Flt10_Tab_Violate": {
+    "commit": "eb386248de736f38dbee261a928cd4592c8b7175",
+    "commit_short": "eb38624",
+    "branch": "ioc",
+    "commit_date": "2026-10-20",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/flt/Flt10_Tab_Violate.java": "66769d00851052c9413004c2e01d2756b2da4ee8",
+      "application/src/main/java/myApp/client/vi/flt/model/Flt10_TrModel.java": "6bb4e197d02a67e61bdee53f50195983363ffcce",
+      "application/src/main/java/myApp/client/vi/flt/model/Flt10_TrModelProperties.java": "840c26adbc6961f7bf3d4e079da9442fd321e1c5",
+      "application/src/main/java/myApp/server/flt/Flt10_Tr.java": "2ea7ade9c47c344daad782b66813154a5a178387",
+      "application/src/main/java/myApp/server/flt/mapper/flt10_tr.xml": "c84c7d6396dc02e5cdbe6788762dfb2324570066",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-21T15:26:39+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/I/I10-작업기록.md",
+    "history": [],
+    "id": "I10"
   }
 }
