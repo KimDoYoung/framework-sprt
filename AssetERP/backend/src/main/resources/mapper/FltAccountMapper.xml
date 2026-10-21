@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/flt/mapper/flt03_account.xml, flt06_account_close.xml, flt02_emp.xml, flt04_oath.xml
+  + UpdateDataModel(flt03_account, flt06_account_close)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.flt.mapper.FltAccountMapper">
+
+    <sql id="accountColumns">
+        flt03_account_id                                                                    AS account_id,
+        flt03_company_id                                                                    AS company_id,
+        flt03_person_id                                                                     AS person_id,
+        TO_CHAR(flt03_setup_date, 'YYYY-MM-DD')                                             AS setup_date,
+        flt03_reg_reason                                                                    AS reg_reason,
+        f_cdnm('AccountRegReason', flt03_reg_reason,       flt03_company_id, f_sysdate())   AS reg_reason_name,
+        flt03_family_relate_cd                                                              AS family_relate_code,
+        f_cdnm('FamilyRelateCode', flt03_family_relate_cd, flt03_company_id, f_sysdate())   AS family_relate_name,
+        CASE flt03_main_account_yn WHEN 'true' THEN TRUE WHEN 'false' THEN FALSE END        AS main_account_yn,
+        flt03_account_nm                                                                    AS account_name,
+        TO_DECRYPTS(flt03_account_no)                                                       AS account_no_dec,
+        flt03_corp_id                                                                       AS corp_id,
+        sys15_corp_nm                                                                       AS corp_name,
+        flt03_corp_branch_nm                                                                AS corp_branch_name,
+        flt03_item_type                                                                     AS item_type,
+        f_get_itemtype_nm(flt03_item_type, flt03_company_id)                                AS item_type_name,
+        flt03_note                                                                          AS note,
+        flt03_appr_id                                                                       AS appr_id,
+        TO_CHAR(apr01_reg_date, 'YYYY-MM-DD')                                               AS appr_reg_date,
+        apr01_status_cd                                                                     AS appr_status_code,
+        f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)          AS appr_status_name,
+        (SELECT count(*) FROM flt10_tr        WHERE flt10_account_id = flt03_account_id)    AS tr_cnt,
+        (SELECT count(*) FROM flt11_book      WHERE flt11_account_id = flt03_account_id)    AS book_cnt,
+        (SELECT count(*) FROM flt13_book_init WHERE flt13_account_id = flt03_account_id)    AS book_init_cnt
+    </sql>
+
+    <sql id="accountFrom">
+          FROM flt03_account
+               LEFT OUTER JOIN sys15_corp ON sys15_corp_id = flt03_corp_id AND sys15_company_id = flt03_company_id
+               LEFT OUTER JOIN apr01_appr ON flt03_appr_id = apr01_appr_id
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) flt03_account.selectByPersonId (SELECT *는 DTO 열로 명시, 폐쇄된 계좌는 뺀다) -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.flt.dto.AccountRes">
+        SELECT <include refid="accountColumns"/>
+        <include refid="accountFrom"/>
+         WHERE flt03_company_id = #{companyId}
+           AND flt03_person_id = #{personId}
+           AND flt03_account_id NOT IN (
+                   SELECT flt06_account_id
+                     FROM flt06_account_close
+                          INNER JOIN flt03_account ON flt03_account_id = flt06_account_id
+                    WHERE flt03_person_id = #{personId}
+               )
+         ORDER BY flt03_setup_date, sys15_corp_nm collate "ko_KR.utf8" asc, TO_DECRYPTS(flt03_account_no)
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt03_account.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.flt.dto.AccountRes">
+        SELECT <include refid="accountColumns"/>
+        <include refid="accountFrom"/>
+         WHERE flt03_account_id = #{accountId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS(IDMS-IC) dbConfig.getEncrypts -->
+    <select id="selectEncrypted" resultType="string">
+        SELECT TO_ENCRYPTS(#{text})
+    </select>
+
+    <insert id="insertAccount">
+        INSERT INTO flt03_account (flt03_account_id, flt03_company_id, flt03_person_id, flt03_setup_date, flt03_reg_reason,
+                                   flt03_family_relate_cd, flt03_main_account_yn, flt03_account_nm, flt03_account_no,
+                                   flt03_corp_id, flt03_corp_branch_nm, flt03_item_type, flt03_note)
+        VALUES (#{accountId}, #{companyId}, #{personId}, #{req.setupDate}::date, #{req.regReason},
+                #{req.familyRelateCode}, CAST(#{req.mainAccountYn} AS varchar), #{req.accountName}, #{accountNo},
+                #{req.corpId}, #{req.corpBranchName}, #{req.itemType}, #{req.note})
+    </insert>
+
+    <update id="updateAccount">
+        UPDATE flt03_account
+           SET flt03_setup_date       = #{req.setupDate}::date,
+               flt03_reg_reason       = #{req.regReason},
+               flt03_family_relate_cd = #{req.familyRelateCode},
+               flt03_main_account_yn  = CAST(#{req.mainAccountYn} AS varchar),
+               flt03_account_nm       = #{req.accountName},
+               flt03_account_no       = #{accountNo},
+               flt03_corp_id          = #{req.corpId},
+               flt03_corp_branch_nm   = #{req.corpBranchName},
+               flt03_item_type        = #{req.itemType},
+               flt03_note             = #{req.note}
+         WHERE flt03_account_id = #{req.accountId}
+           AND flt03_company_id = #{companyId}
+           AND flt03_person_id  = #{personId}
+    </update>
+
+    <delete id="deleteAccounts">
+        DELETE FROM flt03_account
+         WHERE flt03_company_id = #{companyId}
+           AND flt03_person_id  = #{personId}
+           AND flt03_account_id IN
+        <foreach collection="accountIds" item="accountId" open="(" separator="," close=")">#{accountId}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.checkTrByAccountId -->
+    <select id="countTrByAccountId" resultType="int">
+        SELECT count(*)
+          FROM flt10_tr
+         WHERE flt10_account_id = #{accountId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt03_account.getItemTypeName -->
+    <select id="selectItemTypeName" resultType="string">
+        SELECT f_get_itemtype_nm(#{itemType}, #{companyId})
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt06_account_close.selectByPersonId (SELECT flt06_account_close.*는 DTO 열로 명시) -->
+    <select id="selectCloseByPersonId" resultType="kr.co.kfs.asseterp.biz.flt.dto.AccountCloseRes">
+        SELECT flt06_account_close_id                                                        AS account_close_id,
+               flt06_account_id                                                              AS account_id,
+               TO_CHAR(flt06_close_date, 'YYYY-MM-DD')                                       AS close_date,
+               f_cdnm('FamilyRelateCode', flt03_family_relate_cd, flt03_company_id, f_sysdate()) AS family_relate_name,
+               flt03_account_nm                                                              AS account_name,
+               TO_DECRYPTS(flt03_account_no)                                                 AS account_no_dec,
+               sys15_corp_nm                                                                 AS corp_name,
+               flt03_corp_branch_nm                                                          AS corp_branch_name,
+               f_get_itemtype_nm(flt03_item_type, flt03_company_id)                          AS item_type_name,
+               flt06_appr_id                                                                 AS appr_id,
+               TO_CHAR(apr01_reg_date, 'YYYY-MM-DD')                                         AS appr_reg_date,
+               apr01_status_cd                                                               AS appr_status_code,
+               f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)    AS appr_status_name
+          FROM flt06_account_close
+               INNER JOIN flt03_account ON flt03_account_id = flt06_account_id
+               LEFT OUTER JOIN sys15_corp ON sys15_corp_id = flt03_corp_id AND sys15_company_id = flt03_company_id
+               LEFT OUTER JOIN apr01_appr ON flt06_appr_id = apr01_appr_id
+         WHERE flt03_company_id = #{companyId}
+           AND flt03_person_id = #{personId}
+         ORDER BY flt03_setup_date, sys15_corp_nm collate "ko_KR.utf8" asc, TO_DECRYPTS(flt03_account_no)
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt11_book.checkBookQtyByAccountId -->
+    <select id="countBookQty" resultType="int">
+        SELECT count(*)
+          FROM flt11_book
+         WHERE flt11_account_id = #{accountId}
+           AND flt11_book_date  = #{closeDate}::date
+           AND flt11_book_qty  != 0
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt06_account_close.insert -->
+    <insert id="insertAccountClose">
+        INSERT INTO flt06_account_close
+        SELECT f_create_seq(), #{accountId}, #{closeDate}::date, NULL, NULL
+    </insert>
+
+    <!-- AS-IS UpdateDataModel.deleteModel(flt06_account_close). 회사·사원 조건을 더했다(05 §6) -->
+    <delete id="deleteAccountCloses">
+        DELETE FROM flt06_account_close
+         WHERE flt06_account_close_id IN
+        <foreach collection="accountCloseIds" item="accountCloseId" open="(" separator="," close=")">#{accountCloseId}</foreach>
+           AND flt06_account_id IN (SELECT flt03_account_id
+                                      FROM flt03_account
+                                     WHERE flt03_company_id = #{companyId}
+                                       AND flt03_person_id  = #{personId})
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) flt02_emp.selectByDate 에서 보고주기만 (toDay = f_today()). 수정: asseterpdb에 없는 flt16_except_person LEFT JOIN은 보고주기에 쓰이지 않아 뺐다 -->
+    <select id="selectCheckCycle" resultType="string">
+        SELECT flt02_check_cycle
+          FROM flt02_emp
+               INNER JOIN emp01_person ON emp01_person_id = flt02_person_id
+               INNER JOIN ( SELECT *
+                              FROM flt01_company_std
+                             WHERE flt01_company_id = #{companyId}
+                               AND flt01_start_date <![CDATA[<=]]> f_today()
+                               AND flt01_rpt_start_date IS NOT NULL
+                             ORDER BY flt01_start_date DESC
+                             LIMIT 1 ) flt01 ON TRUE
+         WHERE flt02_company_id = #{companyId}
+           AND flt02_person_id = #{personId}
+           AND flt02_start_date <![CDATA[<=]]> f_today()
+         ORDER BY flt02_start_date DESC
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt04_oath.selectByDate (toDay = f_today()) -->
+    <select id="selectOath" resultType="kr.co.kfs.asseterp.biz.flt.dto.AccountStatusRes">
+        SELECT NULL                                                                         AS check_cycle,
+               apr01_status_cd                                                              AS oath_status_code,
+               f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)   AS oath_status_name
+          FROM flt04_oath
+               LEFT OUTER JOIN apr01_appr ON flt04_appr_id = apr01_appr_id
+         WHERE flt04_company_id = #{companyId}
+           AND flt04_person_id = #{personId}
+           AND flt04_start_date <![CDATA[<=]]> f_today()
+         ORDER BY flt04_start_date DESC
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS(IDMS-IC) dcr01_class_tree.selectByLinkCode (class_tree_f_nm = f_class_tree_nm_allpath) -->
+    <select id="selectDocClassByLinkCode" resultType="kr.co.kfs.asseterp.biz.flt.dto.DocClassRes">
+        SELECT a.dcr01_class_tree_id                              AS class_tree_id,
+               f_class_tree_nm_allpath(a.dcr01_class_tree_id)     AS class_tree_full_name
+          FROM dcr01_class_tree a,
+               dcr30_link b
+         WHERE dcr01_company_id = #{companyId}
+           AND dcr30_class_tree_id = dcr01_class_tree_id
+           AND dcr30_link_cd = #{linkCode}
+         LIMIT 1
+    </select>
+</mapper>

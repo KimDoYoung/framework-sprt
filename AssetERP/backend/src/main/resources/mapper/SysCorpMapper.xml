@@ -42,6 +42,17 @@
          ORDER BY sys15_corp_type, COALESCE(sys15_seq, 999999999), sys15_corp_nm collate "ko-KR-x-icu" asc
     </select>
 
+    <!-- AS-IS(IDMS-IC) sys15_corp.selectByUseYn (empYn=false 가지만. SELECT *는 DTO 열로 명시, 검색은 거래처명·기관코드·비고) -->
+    <select id="selectLookup" resultType="kr.co.kfs.asseterp.biz.sys.dto.CorpRes">
+        SELECT <include refid="corpColumns"/>
+          FROM sys15_corp
+         WHERE sys15_company_id = #{companyId}
+           AND COALESCE(sys15_use_yn,'false') = 'true'
+           AND COALESCE(sys15_corp_type,'9') LIKE #{corpType}
+           AND CONCAT(sys15_corp_nm, sys15_corp_cd, sys15_note) ILIKE #{searchText}
+         ORDER BY sys15_corp_type, COALESCE(sys15_seq, 999999999), sys15_corp_nm collate "ko_KR.utf8" asc
+    </select>
+
     <!-- AS-IS(IDMS-IC) sys15_corp.selectById -->
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sys.dto.CorpRes">
         SELECT <include refid="corpColumns"/>

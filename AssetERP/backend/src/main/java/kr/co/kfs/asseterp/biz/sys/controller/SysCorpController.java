@@ -40,6 +40,14 @@ public class SysCorpController {
         return ApiResponse.ok(service.search(principal, corpType, searchText, useYn));
     }
 
+    /** AS-IS sys.Sys15_Corp.selectByUseYn (거래처 조회창 Sys15_Lookup_Corp) */
+    @GetMapping("/lookup")
+    public ApiResponse<List<CorpRes>> lookup(@AuthenticationPrincipal UserPrincipal principal,
+                                             @RequestParam(required = false) String corpType,
+                                             @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.lookup(principal, corpType, searchText));
+    }
+
     /** AS-IS sys.Sys15_Corp.update → 저장된 행(요청 순서) */
     @PutMapping
     public ApiResponse<List<CorpRes>> update(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<CorpSaveReq> rows) {

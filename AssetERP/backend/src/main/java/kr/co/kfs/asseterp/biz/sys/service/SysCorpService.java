@@ -28,6 +28,13 @@ public class SysCorpService {
         return mapper.selectByCompanyId(user.getCompanyId(), type, text, useYn);
     }
 
+    /** AS-IS selectByUseYn(거래처 조회창, empYn=false): 구분 콤보 코드('%'면 전체), 검색어는 "%"+값+"%" (거래처명·기관코드·비고) */
+    public List<CorpRes> lookup(UserPrincipal user, String corpType, String searchText) {
+        String type = corpType == null || corpType.isEmpty() ? "%" : corpType;
+        String text = searchText == null || searchText.isEmpty() ? "%" : "%" + searchText + "%";
+        return mapper.selectLookup(user.getCompanyId(), type, text);
+    }
+
     /** AS-IS update L45-126: 필수·자릿수·중복 검사 → 있으면 UPDATE, 없으면 INSERT → 저장된 행(요청 순서) */
     @Transactional
     public List<CorpRes> update(UserPrincipal user, List<CorpSaveReq> rows) {

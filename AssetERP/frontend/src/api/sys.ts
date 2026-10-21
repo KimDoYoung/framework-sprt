@@ -1054,6 +1054,12 @@ export const sysApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS sys.Sys15_Corp.selectByUseYn (거래처 조회창 Sys15_Lookup_Corp): corpType 코드('%'면 전체), searchText는 거래처명·코드·비고 포함 */
+  lookupCorps: async (corpType: string, searchText: string): Promise<Corp[]> => {
+    const res = await apiClient.get<ApiResponse<Corp[]>>('v1/sys/corps/lookup', { params: { corpType, searchText } });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS sys.Sys15_Corp.update → 저장된 행(요청 순서) */
   updateCorps: async (rows: Corp[]): Promise<Corp[]> => {
     const body = rows.map(({ corpId, corpType, corpName, bizNo, corpCode, seq, useYn, note, tel, addr, issCorpCode }) =>

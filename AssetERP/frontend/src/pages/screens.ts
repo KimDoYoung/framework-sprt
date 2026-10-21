@@ -8,6 +8,8 @@ import { Dbm10_Tab_MakePdf } from './dbm/Dbm10_Tab_MakePdf';
 import { Emp00_Tab_TransInfo } from './emp/Emp00_Tab_TransInfo';
 import { Emp00_Tab_RoleMenu } from './emp/Emp00_Tab_RoleMenu';
 import { Emp01_Tab_UserInfo } from './emp/Emp01_Tab_UserInfo';
+import { Flt00_Tab_Info } from './flt/Flt00_Tab_Info';
+import { Flt03_Tab_AccountReport } from './flt/Flt03_Tab_AccountReport';
 import { Flt05_Tab_ItemTypeAdmin } from './flt/Flt05_Tab_ItemTypeAdmin';
 import { Fnd03_Tab_ConsignmentManager } from './fnd/Fnd03_Tab_ConsignmentManager';
 import { Fnd06_Tab_OfficeWorkManager } from './fnd/Fnd06_Tab_OfficeWorkManager';
@@ -140,6 +142,8 @@ export const SCREENS: Record<string, React.FC> = {
   Emp00_Tab_TransInfo, // C01 (1단계: 목록·등록·기본정보·일반발령)
   Emp00_Tab_RoleMenu, // C04
   Emp01_Tab_UserInfo, // C03
+  Flt00_Tab_Info, // I01 (1단계: 안내문·메뉴 링크. 링크 01·02·09의 조회창 Flt02_Lookup_Emp·Flt13_Lookup_BookInit은 다음 단계)
+  Flt03_Tab_AccountReport, // I02 (1단계: 본 화면 + 폐쇄계좌 탭 + 계좌 조회창. 보고주기·서약서 창 Flt02_Lookup_Emp, 최초원장 Flt13_Lookup_BookInit, 전자결재 상신·상세보기 Apr01_Edit_ApprDoc는 다음 단계)
   Flt05_Tab_ItemTypeAdmin, // E08
   Fnd03_Tab_ConsignmentManager, // D11 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)
   Fnd06_Tab_OfficeWorkManager, // D12 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)
