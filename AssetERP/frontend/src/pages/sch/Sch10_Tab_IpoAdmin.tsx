@@ -19,7 +19,7 @@ import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
-import { Com50_Lookup_StkItem } from '../com/Com50_Lookup_StkItem';
+import { Com50_Lookup_StkItem } from '@/components/lookup/Com50_Lookup_StkItem';
 import { Sch12_Lookup_IpoCorp } from './Sch12_Lookup_IpoCorp';
 import { Sch14_Lookup_IpoMismatch } from './Sch14_Lookup_IpoMismatch';
 import { Sch15_Lookup_IpoItemMatching } from './Sch15_Lookup_IpoItemMatching';

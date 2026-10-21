@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/com/Com50_Lookup_StkItem.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L66-136: 모달 550×500, 위 = 툴바(검색 150 "종목코드/명" · [조회] · EDIT면 [등록][저장][삭제]), 아래 = 그리드(행번호) + 페이징 툴바(300건),
  *   아래 가운데 [선택][닫기]. VIEW("종목(주식/ETF) 찾기")는 읽기 전용 열(종목코드 120 · 종목명 350), EDIT("상장주식 종목 등록")는 셀 편집 열(같은 폭)
- * VIEW 모드는 아직 쓰는 화면이 없다(Sch10 admin이 EDIT만 연다) — 다른 도메인이 쓰면 components/lookup/으로 옮긴다(IM-02)
+ * EDIT는 Sch10_Tab_IpoAdmin, VIEW는 Flt10_Tab_BuyReport(I03, 매수 종목 선택)가 쓴다 — 두 도메인이 쓰게 되어 pages/com에서 components/lookup/으로 옮겼다(IM-02, I03)
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
