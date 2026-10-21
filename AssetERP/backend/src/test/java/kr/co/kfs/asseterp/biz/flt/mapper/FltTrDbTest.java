@@ -85,4 +85,13 @@ class FltTrDbTest {
         BuyLockupRes none = service.buyLockup(user, "ZZ-NO-SUCH-ITEM", check.today());
         assertThat(none.status()).isEqualTo("OK");
     }
+
+    @Test
+    void 매도_사전신고는_보유_열과_함께_읽힌다() {
+        TrRes saved = service.update(user, List.of(new TrSaveReq(-1L, "20O", ACCOUNT_ID, "2026-08-20", "2026-08-21", "10", "KCC", "KR7002380004", 5.0, 1000L, null))).get(0);
+        assertThat(saved.trTypeName()).isEqualTo("매도");
+        assertThat(saved.bookQty()).isNotNull();
+        assertThat(saved.bookAmt()).isNotNull();
+        assertThat(service.search(user, "20O", ACCOUNT_ID, "2026-08-20", null, null, null)).extracting(TrRes::trId).contains(saved.trId());
+    }
 }

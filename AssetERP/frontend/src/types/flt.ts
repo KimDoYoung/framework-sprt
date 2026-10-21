@@ -106,6 +106,10 @@ export interface FltTr {
   unfillYn: boolean | null;
   stkPriceYn: boolean | null;
   checkTargetYn: boolean | null;
+  /** 매도 사전신고(I04) 보유 열 */
+  bookQty: number | null;
+  bookAmt: number | null;
+  bookDays: string | null;
 }
 
 /** 사전신고 화면 위 안내 (flt02_emp·flt04_oath) + 서버 오늘 + 회사의 사전신고 소급 설정 */
@@ -166,4 +170,30 @@ export interface FltItemTypeCode {
   name: string;
   stkPriceYn: boolean;
   targetYn: boolean;
+}
+
+/** 보유내역 한 행 (I04 Flt11_Lookup_BookList, flt11_book.selectByText2) */
+export interface FltBook {
+  bookId: number;
+  bookDate: string;
+  accountNo: string | null;
+  itemType: string | null;
+  itemTypeName: string | null;
+  itemName: string | null;
+  itemCode: string | null;
+  bookAmt: number | null;
+  bookQty: number | null;
+  bookDays: string | null;
+  buyDate: string | null;
+  checkFundHoldYn: boolean | null;
+  lockupCheckYn: boolean | null;
+  lockupDate: string | null;
+  familyRelateCode: string | null;
+}
+
+/** 의무보유기간 기준 — lockUpCode '1'이면 보유기간 체크, lockUpCalcStdCode 'M'은 개월·그 밖은 영업일 */
+export interface FltLockupStd {
+  lockUpCode: string | null;
+  lockUpDays: number | null;
+  lockUpCalcStdCode: string | null;
 }

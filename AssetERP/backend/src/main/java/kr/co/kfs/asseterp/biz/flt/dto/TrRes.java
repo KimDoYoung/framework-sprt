@@ -27,5 +27,8 @@ public record TrRes(
         String trDate,
         Boolean unfillYn,
         Boolean stkPriceYn,
-        Boolean checkTargetYn) {
+        Boolean checkTargetYn,
+        Double bookQty,
+        Long bookAmt,
+        String bookDays) {
 }

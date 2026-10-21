@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/flt/mapper/flt11_book.xml (selectByText2), flt01_company_std.xml (selectByDate) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.flt.mapper.FltBookMapper">
+
+    <!-- AS-IS(IDMS-IC) flt11_book.selectByText2 L122 — SELECT a.*를 DTO 열로 명시, 날짜 TO_CHAR, #{stdDate}는 CAST. 쓰는 계좌·사원은 로그인 사용자 -->
+    <select id="selectBooksExpect" resultType="kr.co.kfs.asseterp.biz.flt.dto.BookRes">
+        WITH std AS ( SELECT (CASE WHEN rcnt_appr_date = (CASE WHEN check_cycle = '1'    /*(1:분기/2:월)*/
+                                                               THEN pre_quarter_last_day
+                                                               ELSE pre_month_last_day END)
+                                   THEN (CASE WHEN check_cycle = '1'
+                                              THEN pre_quarter_last_day
+                                              ELSE pre_month_last_day END)
+                                   ELSE (CASE WHEN check_cycle = '1'
+                                              THEN ppre_quarter_last_day
+                                              ELSE ppre_month_last_day END)
+                              END) + 1  AS start_date
+                        FROM (
+                                SELECT ( SELECT MAX(apr01_effect_date)
+                                           FROM apr01_appr
+                                          WHERE apr01_company_id = #{companyId}
+                                            AND apr01_reg_emp_id = #{personId}
+                                            AND apr01_effect_date  <![CDATA[<=]]> CAST(#{stdDate} AS date)
+                                            AND apr01_status_cd NOT IN ('40','99')  --(40:반려/99:임시저장)
+                                            AND apr01_class_tree_id IN ( SELECT dcr30_class_tree_id
+                                                                           FROM dcr30_link
+                                                                          WHERE dcr30_company_id = apr01_company_id
+                                                                            AND dcr30_link_cd    = 'A09' ) /* (A09:자기매매 실거래 보고) */
+                                        )                                                                   AS rcnt_appr_date
+                                      , ( SELECT flt02_check_cycle
+                                            FROM flt02_emp
+                                           WHERE flt02_company_id  = #{companyId}
+                                             AND flt02_person_id   = #{personId}
+                                             AND flt02_start_date <![CDATA[<=]]> CAST(#{stdDate} AS date)
+                                           ORDER BY flt02_start_date DESC
+                                           LIMIT 1 )                                                                AS check_cycle
+                                      , f_get_quarter_date(CAST(#{stdDate} AS date),'1')                            AS pre_quarter_last_day
+                                      , f_get_quarter_date(CAST(#{stdDate} AS date),'2')                            AS ppre_quarter_last_day
+                                      , (date_trunc('month', CAST(#{stdDate} AS date)) + INTERVAL '-1day')::date            AS pre_month_last_day
+                                      , (date_trunc('month', CAST(#{stdDate} AS date)) + INTERVAL '-1month -1day')::date    AS ppre_month_last_day
+                             ) t
+        )
+        SELECT flt11_book_id                                          AS book_id
+             , TO_CHAR(flt11_book_date, 'YYYY-MM-DD')                 AS book_date
+             , flt11_account_no                                       AS account_no
+             , flt11_item_type                                        AS item_type
+             , flt11_item_type_nm                                     AS item_type_name
+             , flt11_item_nm                                          AS item_name
+             , flt11_item_cd                                          AS item_code
+             , flt11_book_amt                                         AS book_amt
+             , flt11_book_qty                                         AS book_qty
+             , CASE WHEN flt11_buy_date IS NULL THEN ''
+                    ELSE f_get_biz_days(flt11_company_id, flt11_buy_date, flt11_book_date)-1||' 영업일' END   AS book_days
+             , TO_CHAR(flt11_buy_date, 'YYYY-MM-DD')                  AS buy_date
+             , f_get_floorTrFundHoldCheck( flt11_company_id, flt11_item_cd, flt11_book_date)  AS check_fund_hold_yn
+             , COALESCE(flt05_lock_up_check_yn::boolean, false)       AS lockup_check_yn
+             , TO_CHAR(CASE WHEN flt01_lock_up_cd != '1' THEN null
+                            ELSE (CASE WHEN flt01_lock_up_calc_std_cd = 'M'
+                                       THEN flt11_buy_date + INTERVAL '1month' * COALESCE(flt01_lock_up_days,0)
+                                       ELSE f_get_biz_date(flt11_company_id, flt11_buy_date, COALESCE(flt01_lock_up_days,0)::text)
+                                       END) END, 'YYYY-MM-DD')        AS lockup_date
+             , flt11_family_relate_cd                                 AS family_relate_code
+          FROM (
+                 SELECT  *
+                      ,  flt05_item_type_nm                                                                     AS flt11_item_type_nm
+                      ,  TO_DECRYPTS(flt03_account_no) || ' (' || sys15_corp_nm || ')'                          AS flt11_account_no
+                      ,  TO_DECRYPTS(flt03_account_no) || ' (' || sys15_corp_nm || ') ' || flt03_account_nm     AS flt11_account_info
+                      ,  f_get_floorTrRcntBuyDate( flt11_company_id, flt11_person_id, flt11_account_id
+                                                 , flt11_item_type, flt11_item_nm, flt11_item_cd
+                                                 , flt11_book_date, true )                                      AS flt11_buy_date
+                      ,  flt03_family_relate_cd                                                                 AS flt11_family_relate_cd
+                   FROM  ( SELECT ROW_NUMBER() OVER()       as flt11_book_id
+                                , flt11_company_id
+                                , flt11_person_id
+                                , flt11_account_id
+                                , flt11_item_cd
+                                , flt11_item_nm
+                                , flt11_item_type
+                                , flt11_book_date
+                                , SUM(flt11_book_amt)       as flt11_book_amt
+                                , SUM(flt11_book_qty)       as flt11_book_qty
+                                , MIN(flt11_init_buy_date)  as flt11_init_buy_date
+                             FROM ( SELECT *
+                                      FROM flt11_book
+                                     WHERE flt11_company_id    = #{companyId}
+                                       AND flt11_person_id     = #{personId}
+                                       AND flt11_account_id    = #{accountId}
+                                       AND flt11_book_date     = CAST(#{stdDate} AS date)
+                                     UNION
+                                    SELECT flt10_tr_id                                                                          as flt11_book_id
+                                         , flt10_company_id                                                                     as flt11_company_id
+                                         , flt10_person_id                                                                      as flt11_person_id
+                                         , flt10_account_id                                                                     as flt11_account_id
+                                         , flt10_item_nm                                                                        as flt11_item_nm
+                                         , flt10_item_type                                                                      as flt11_item_type
+                                         , CAST(#{stdDate} AS date)                                                             as flt11_book_date
+                                         , flt10_expect_tr_amt * CASE WHEN SUBSTR(flt10_tr_type,3,1) = 'O' THEN -1 ELSE 1 END   as flt11_book_amt
+                                         , flt10_expect_tr_qty * CASE WHEN SUBSTR(flt10_tr_type,3,1) = 'O' THEN -1 ELSE 1 END   as flt11_book_qty
+                                         , null                                                                                 as flt11_note
+                                         , flt10_reg_date                                                                       as flt11_init_buy_date
+                                         , TRUNC(flt10_expect_tr_amt / flt10_expect_tr_qty)                                     as flt11_pur_price
+                                         , flt10_expect_tr_amt                                                                  as flt11_pur_amt
+                                         , flt10_item_cd                                                                        as flt11_item_cd
+                                      FROM flt10_tr
+                                         , std
+                                     WHERE flt10_company_id  = #{companyId}
+                                       AND flt10_person_id   = #{personId}
+                                       AND flt10_account_id  = #{accountId}
+                                       AND flt10_reg_date    BETWEEN std.start_date AND CAST(#{stdDate} AS date)
+                                       AND flt10_tr_date is null
+                                       AND COALESCE(flt10_status_cd,'00') IN ('10','20')
+                                       AND COALESCE(flt10_unfill_yn,'false') != 'true'  /*미체결 사전신고거래 제외*/
+                                  ) book
+                            GROUP BY flt11_company_id, flt11_person_id, flt11_account_id, flt11_item_cd, flt11_item_nm, flt11_item_type, flt11_book_date
+                         ) t
+                         INNER JOIN flt03_account ON flt03_account_id = flt11_account_id
+                         INNER JOIN sys15_corp    ON sys15_corp_id    = flt03_corp_id
+                         INNER JOIN flt05_item_type  ON ( flt05_company_id   = flt11_company_id      AND
+                                                          flt05_item_type_cd = flt11_item_type       AND
+                                                          flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                                   FROM flt05_item_type
+                                                                                  WHERE flt05_company_id   = flt11_company_id
+                                                                                    AND flt05_item_type_cd = flt11_item_type
+                                                                                    AND flt05_start_date <![CDATA[<=]]> flt11_book_date ) )
+                      ,  ( SELECT *
+                             FROM flt01_company_std
+                            WHERE flt01_company_id = #{companyId}
+                              AND flt01_start_date <![CDATA[<=]]> CAST(#{stdDate} AS date)
+                            ORDER BY flt01_start_date DESC
+                            LIMIT 1 ) flt01
+               ) a
+         WHERE CONCAT(flt11_item_nm, flt11_item_cd) ILIKE #{searchText}
+         ORDER BY flt11_account_no, flt11_item_nm collate "ko_KR.utf8" asc, flt11_item_type
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt01_company_std.selectByDate 에서 의무보유기간 기준 열만 -->
+    <select id="selectLockupStd" resultType="kr.co.kfs.asseterp.biz.flt.dto.LockupStdRes">
+        SELECT flt01_lock_up_cd           AS lock_up_code
+             , flt01_lock_up_days         AS lock_up_days
+             , flt01_lock_up_calc_std_cd  AS lock_up_calc_std_code
+          FROM flt01_company_std
+         WHERE flt01_company_id = #{companyId}
+           AND flt01_start_date <![CDATA[<=]]> CAST(#{stdDate} AS date)
+         ORDER BY flt01_start_date DESC
+         LIMIT 1
+    </select>
+</mapper>

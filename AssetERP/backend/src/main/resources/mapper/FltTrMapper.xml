@@ -41,10 +41,14 @@
         TO_CHAR(flt10_tr_date, 'YYYY-MM-DD')                                                 AS tr_date,
         COALESCE(flt10_unfill_yn, 'false') = 'true'                                          AS unfill_yn,
         flt10_stk_price_yn = 'true'                                                          AS stk_price_yn,
-        flt10_check_target_yn = 'true'                                                       AS check_target_yn
+        flt10_check_target_yn = 'true'                                                       AS check_target_yn,
+        flt10_book_qty                                                                       AS book_qty,
+        flt10_book_amt                                                                       AS book_amt,
+        CASE WHEN rcnt_buy_date IS NULL THEN NULL
+             ELSE f_get_biz_days(flt10_company_id, rcnt_buy_date, flt10_reg_date)-1||'영업일' END AS book_days
     </sql>
 
-    <!-- AS-IS(IDMS-IC) flt10_tr.selectByAccountId 안쪽 SELECT (WHERE는 쓰는 문장이 붙인다). 이 화면이 안 쓰는 열(소속·예치금·잔고·상신 등)은 뺐다 -->
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectByAccountId 안쪽 SELECT (WHERE는 쓰는 문장이 붙인다). 매도 사전신고(I04)가 쓰는 보유 열(잔고·보유기간)을 더했다. 소속·상신 등 안 쓰는 열은 뺐다 -->
     <sql id="trInner">
         SELECT flt10_tr.*
              , flt05.flt05_item_type_nm                                                                        AS flt10_item_type_nm
@@ -53,6 +57,11 @@
              , TO_DECRYPTS(flt03_account_no) || ' (' || sys15_corp_nm || ') ' || flt03_account_nm              AS flt10_account_info
              , f_cdnm('BuyLockupType', flt08_lockup_type, flt10_company_id, f_today())                         AS flt10_check_buy_lockup
              , flt03_family_relate_cd                                                                          AS flt10_account_relate_cd
+             , COALESCE(flt11_book_amt,0)                                                                      AS flt10_book_amt
+             , COALESCE(flt11_book_qty,0)                                                                      AS flt10_book_qty
+             , f_get_floorTrRcntBuyDate( flt10_company_id, flt10_person_id, flt10_account_id
+                                       , flt10_item_type, flt10_item_nm, flt10_item_cd
+                                       , flt10_reg_date, true )                                                AS rcnt_buy_date
           FROM flt10_tr
                INNER JOIN flt03_account ON flt03_account_id = flt10_account_id
                INNER JOIN sys15_corp    ON sys15_corp_id    = flt03_corp_id
@@ -70,6 +79,13 @@
                                                                                                  WHERE flt05_company_id   = flt10_company_id
                                                                                                    AND flt05_item_type_cd = flt10_tr_item_type
                                                                                                    AND flt05_start_date <![CDATA[<=]]> flt10_tr_date ) )
+               LEFT OUTER JOIN flt11_book ON (    flt11_company_id = flt10_company_id
+                                              AND flt11_person_id  = flt10_person_id
+                                              AND flt11_account_id = flt10_account_id
+                                              AND flt11_item_type  = flt10_item_type
+                                              AND ( ( COALESCE(flt05.flt05_stk_price_yn,'false')  = 'true' AND flt11_item_cd = flt10_item_cd ) OR
+                                                    ( COALESCE(flt05.flt05_stk_price_yn,'false') != 'true' AND flt11_item_nm = flt10_item_nm ) )
+                                              AND flt11_book_date  = f_get_biz_date(flt10_company_id,flt10_reg_date,'-1') )
                LEFT OUTER JOIN flt08_buy_lockup ON (    flt08_company_id = flt10_company_id
                                                     AND flt08_item_cd    = flt10_item_cd
                                                     AND flt10_reg_date   BETWEEN flt08_start_date AND COALESCE(flt08_close_date,'9999-12-31') )

@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import {
-  FltAccount, FltAccountClose, FltAccountStatus, FltBuyLockup, FltDocClass, FltInvestLimit, FltItemType, FltItemTypeCode,
+  FltAccount, FltAccountClose, FltAccountStatus, FltBook, FltBuyLockup, FltLockupStd, FltDocClass, FltInvestLimit, FltItemType, FltItemTypeCode,
   FltTr, FltTrAccount, FltTrCheck, FltTrItem,
 } from '../types/flt';
 
@@ -167,5 +167,19 @@ export const fltApi = {
   updateTrUnfill: async (trIds: number[], unfill: boolean): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>('v1/flt/trs/unfill', { trIds, unfill });
     return res.data.data ?? 0;
+  },
+
+  // ── I04 임직원매매 매도 사전신고 (Flt10_Tab_SellReport · Flt11_Lookup_BookList) ──
+
+  /** AS-IS flt.Flt11_Book.selectByText2: 기준일 보유내역(사전신고 반영). 검색어는 서버가 %…%로 */
+  searchBooksExpect: async (accountId: number | null, stdDate: string, searchText: string): Promise<FltBook[]> => {
+    const res = await apiClient.get<ApiResponse<FltBook[]>>('v1/flt/books/expect', { params: { accountId, stdDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt01_CompanyStd.selectByDate: 의무보유기간 기준, 기준관리가 없으면 null */
+  getLockupStd: async (stdDate: string): Promise<FltLockupStd | null> => {
+    const res = await apiClient.get<ApiResponse<FltLockupStd | null>>('v1/flt/books/lockup-std', { params: { stdDate } });
+    return res.data.data ?? null;
   },
 };
