@@ -399,6 +399,19 @@ export const fltApi = {
     await downloadBlob('v1/flt/books/list/excel', { baseDate, searchText }, fileName);
   },
 
+  // ── J04 준감인 보유내역조회 (Flt11_Tab_BookListAdmin) ──
+
+  /** AS-IS flt.Flt11_Book.selectByBookList (준감인). personId null = 회사 전체 사원, 검색어는 서버가 %…%로 */
+  searchBookListAdmin: async (personId: number | null, baseDate: string, searchText: string): Promise<FltBookList[]> => {
+    const res = await apiClient.get<ApiResponse<FltBookList[]>>('v1/flt/books/admin/list', { params: { personId: personId ?? undefined, baseDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** 엑셀다운로드 (AS-IS Sys99_Print.insertRdBookListAdmin + RD 리포트 → xlsx) */
+  downloadBookListAdminExcel: async (personId: number | null, baseDate: string, searchText: string, fileName: string): Promise<void> => {
+    await downloadBlob('v1/flt/books/admin/list/excel', { personId: personId ?? undefined, baseDate, searchText }, fileName);
+  },
+
   // ── I10 위반내역조회 (Flt10_Tab_ViolateUser · Flt10_Tab_Violate) ──
 
   /** AS-IS flt.Flt10_Tr.selectViolate. personId 생략(null) = 회사 전체 사원 */

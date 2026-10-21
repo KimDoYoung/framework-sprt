@@ -51,6 +51,24 @@ public class FltBookService {
                 rows);
     }
 
+    /** AS-IS Flt11_Book.selectByBookList (J04 준감인 보유내역조회) — personId가 null이면 회사 전체 사원 */
+    public List<BookListRes> searchListAdmin(UserPrincipal user, Long personId, String baseDate, String searchText) {
+        return mapper.selectBookList(user.getCompanyId(), personId, baseDate,
+                "%" + (searchText == null ? "" : searchText) + "%");
+    }
+
+    /** 엑셀다운로드 (준감인) — AS-IS는 Sys99_Print.insertRdBookListAdmin + RD 리포트. 같은 조회 결과를 그리드 열 순서로 xlsx에 쓴다. */
+    public byte[] downloadListAdmin(UserPrincipal user, Long personId, String baseDate, String searchText) {
+        List<List<Object>> rows = new ArrayList<>();
+        for (BookListRes r : searchListAdmin(user, personId, baseDate, searchText)) {
+            rows.add(Arrays.asList(r.personOrgName(), r.checkCycleName(), r.buyDate(), r.accountNo(), r.itemTypeName(), r.itemName(),
+                    r.bookQty(), r.bookAmt(), r.bookDays(), r.yearInvestLimit(), r.totalInvestAmt(), r.turnoverRate()));
+        }
+        return FltExcelWriter.write("임직원매매 보유내역",
+                List.of("사원명", "점검주기", "최근매매일", "계좌", "종목유형", "종목명", "보유수량", "보유금액", "보유기간", "연간투자금액", "총누적투자금액", "월간매매회전율(%)"),
+                rows);
+    }
+
     /** AS-IS Flt01_CompanyStd.selectByDate — 의무보유기간 기준, 기준관리가 없으면 null */
     public LockupStdRes lockupStd(UserPrincipal user, String stdDate) {
         return mapper.selectLockupStd(user.getCompanyId(), stdDate);

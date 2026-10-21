@@ -198,15 +198,19 @@
          ORDER BY flt11_account_no, flt11_item_nm collate "ko_KR.utf8" asc, flt11_item_type
     </select>
 
-    <!-- AS-IS(IDMS-IC) flt11_book.selectByBookList L242 (I09 보유내역조회) — 로그인 사용자 본인의 기준일 보유내역 + 연간투자금액·누적투자금액·월간회전율.
-         바깥 SELECT는 그리드 열만 DTO 열로 명시, 날짜 TO_CHAR (personId·searchText 가지는 이 화면이 항상 값을 줘서 조건 없이 쓴다) -->
+    <!-- AS-IS(IDMS-IC) flt11_book.selectByBookList L242 (I09 보유내역조회, J04 준감인 보유내역조회 공유) — 기준일 보유내역 + 연간투자금액·누적투자금액·월간회전율.
+         바깥 SELECT는 그리드 열만 DTO 열로 명시, 날짜 TO_CHAR. personId 가지: I09는 로그인 사용자 본인, J04는 null이면 회사 전체 사원(원본과 같음).
+         J04 열 추가: person_org_name(= 사원명(부서)), check_cycle_name(점검주기, f_cdnm) -->
     <select id="selectBookList" resultType="kr.co.kfs.asseterp.biz.flt.dto.BookListRes">
         WITH invest_limit AS ( SELECT emp00_person_id
                                     , f_get_floorTrCheck('1', emp00_company_id, emp00_person_id, CAST(#{baseDate} AS date), false)  AS flt11_year_invest_limit
                                     , f_get_floorTrCheck('2', emp00_company_id, emp00_person_id, CAST(#{baseDate} AS date), false)  AS flt11_total_invest_amt
                                     , f_get_floorTrCheck('3', emp00_company_id, emp00_person_id, CAST(#{baseDate} AS date), false)  AS flt11_turnover_rate
                                  FROM getPerson(#{companyId}, CAST(#{baseDate} AS date))
-                                WHERE emp00_person_id  = #{personId}
+                                WHERE 1=1
+                                <if test="personId != null">
+                                  AND emp00_person_id  = #{personId}
+                                </if>
                                   AND (   emp00_retire_date IS NULL
                                        OR emp00_retire_date >= CAST(#{baseDate} AS date) )
                                   AND NOT EXISTS ( SELECT 1
@@ -214,6 +218,8 @@
                                                     WHERE emp04_add_person_id = emp00_person_id )
         )
         SELECT flt11_book_id                                  AS book_id
+             , CONCAT(flt11_person_nm, '('||flt11_org_nm||')') AS person_org_name
+             , f_cdnm('FloorTrCheckCycle', flt11_check_cycle, flt11_company_id, flt11_book_date) AS check_cycle_name
              , flt11_account_no                               AS account_no
              , flt11_item_type_nm                             AS item_type_name
              , flt11_item_nm                                  AS item_name
@@ -234,6 +240,13 @@
                      ,  f_get_floorTrRcntBuyDate( flt11_company_id, flt11_person_id, flt11_account_id
                                                 , flt11_item_type, flt11_item_nm, flt11_item_cd
                                                 , flt11_book_date, false )                                     AS flt11_buy_date
+                     ,  ( SELECT flt02_check_cycle
+                            FROM flt02_emp
+                           WHERE flt02_company_id  = flt11_company_id
+                             AND flt02_person_id   = flt11_person_id
+                             AND flt02_start_date <![CDATA[<=]]> flt11_book_date
+                           ORDER BY flt02_start_date DESC
+                           LIMIT 1 )                                                                           AS flt11_check_cycle
                   FROM  flt11_book
                         INNER JOIN flt03_account    ON flt03_account_id = flt11_account_id
                         INNER JOIN sys15_corp       ON sys15_corp_id = flt03_corp_id
@@ -246,7 +259,9 @@
                                                                                    AND flt05_start_date <![CDATA[<=]]> flt11_book_date ) )
                  WHERE  flt11_company_id = #{companyId}
                    AND  flt11_book_date  = CAST(#{baseDate} AS date)
+                <if test="personId != null">
                    AND  flt11_person_id  = #{personId}
+                </if>
                ) a
                INNER JOIN invest_limit ON emp00_person_id = flt11_person_id
          WHERE CONCAT(flt11_account_no, flt11_item_type_nm, flt11_item_nm) ILIKE #{searchText}

@@ -20,6 +20,7 @@ import { Flt10_Tab_PreApprove } from './flt/Flt10_Tab_PreApprove';
 import { Flt10_Tab_TrList } from './flt/Flt10_Tab_TrList';
 import { Flt10_Tab_TrListAdmin } from './flt/Flt10_Tab_TrListAdmin';
 import { Flt11_Tab_BookList } from './flt/Flt11_Tab_BookList';
+import { Flt11_Tab_BookListAdmin } from './flt/Flt11_Tab_BookListAdmin';
 import { Flt10_Tab_ViolateUser } from './flt/Flt10_Tab_ViolateUser';
 import { Flt05_Tab_ItemTypeAdmin } from './flt/Flt05_Tab_ItemTypeAdmin';
 import { Fnd03_Tab_ConsignmentManager } from './fnd/Fnd03_Tab_ConsignmentManager';
@@ -163,6 +164,7 @@ export const SCREENS: Record<string, React.FC> = {
   Flt10_Tab_TrList, // I08 (1단계=전체: 본 화면 하나, 엑셀은 RD 대신 서버 xlsx. 다른 도메인 의존 없음)
   Flt10_Tab_TrListAdmin, // J03 (1단계=전체: 본 화면 하나, 사원찾기 Emp00 기존 부품, 엑셀 2종은 RD 대신 서버 xlsx)
   Flt11_Tab_BookList, // I09 (1단계=전체: 본 화면 하나. [최초원장 등록]은 원본에서 툴바에 연결이 없어 화면에 없다)
+  Flt11_Tab_BookListAdmin, // J04 (1단계=전체: 본 화면 하나, 사원찾기 Emp00 기존 부품, 엑셀은 RD 대신 서버 xlsx)
   Flt10_Tab_ViolateUser, // I10 (1단계=전체: 본 화면 하나, 엑셀은 RD 대신 서버 xlsx. 사원찾기 Emp00 기존 부품. 본 화면 Flt10_Tab_Violate는 J05가 fixedUser 없이 같이 쓴다)
   Flt03_Tab_AccountAdmin, // J01 (1단계=전체 본 화면 하나. 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Flt10_Tab_SellReport, // I04 (1단계: 본 화면 + 보유내역 조회창 Flt11_Lookup_BookList(I09 공유). 보고주기·서약서 창 Flt02_Lookup_Emp는 다음 단계)

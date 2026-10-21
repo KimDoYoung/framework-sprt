@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.flt.mapper;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.flt.dto.BookListRes;
 import kr.co.kfs.asseterp.biz.flt.dto.BookRes;
 import kr.co.kfs.asseterp.biz.flt.service.FltBookService;
 import org.junit.jupiter.api.Test;
@@ -34,5 +35,17 @@ class FltBookDbTest {
         UserPrincipal other = UserPrincipal.builder().userId(1L).companyId(28000L).roles(List.of("ROLE_USER")).build();
         assertThat(service.searchExpect(other, 202204070100311L, "2026-08-20", null)).isEmpty();
         assertThat(service.lockupStd(user, "2026-08-20")).isNotNull();
+    }
+
+    /** J04 준감인 보유내역조회 — personId 없으면 회사 전체 사원(2026-08-20: 2명 50행), 사원을 주면 그 사원만 */
+    @Test
+    void 준감인_보유내역은_회사_전체_또는_선택_사원이다() {
+        List<BookListRes> all = service.searchListAdmin(user, null, "2026-08-20", null);
+        assertThat(all).hasSize(50);
+        assertThat(all).allMatch(b -> b.personOrgName() != null && b.personOrgName().contains("("));
+        List<BookListRes> one = service.searchListAdmin(user, 29049L, "2026-08-20", null);
+        assertThat(one).isNotEmpty().hasSizeLessThan(all.size());
+        assertThat(service.searchList(user, "2026-08-20", null)).hasSameSizeAs(one);
+        assertThat(service.downloadListAdmin(user, null, "2026-08-20", null)).isNotEmpty();
     }
 }

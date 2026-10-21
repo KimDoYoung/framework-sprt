@@ -67,6 +67,29 @@ public class FltBookController {
                 .body(body);
     }
 
+    /** AS-IS flt.Flt11_Book.selectByBookList (J04 준감인 보유내역조회) — personId 생략 = 회사 전체 사원 */
+    @GetMapping("/admin/list")
+    public ApiResponse<List<BookListRes>> searchListAdmin(@AuthenticationPrincipal UserPrincipal principal,
+                                                          @RequestParam(required = false) Long personId,
+                                                          @RequestParam String baseDate,
+                                                          @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchListAdmin(principal, personId, baseDate, searchText));
+    }
+
+    /** 엑셀다운로드 (AS-IS sys.Sys99_Print.insertRdBookListAdmin + RD 리포트 → 조회 결과 xlsx) */
+    @GetMapping("/admin/list/excel")
+    public ResponseEntity<byte[]> downloadListAdmin(@AuthenticationPrincipal UserPrincipal principal,
+                                                    @RequestParam(required = false) Long personId,
+                                                    @RequestParam String baseDate,
+                                                    @RequestParam(required = false) String searchText) {
+        byte[] body = service.downloadListAdmin(principal, personId, baseDate, searchText);
+        String fileName = "임직원매매 보유내역(" + baseDate + ").xlsx";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(body);
+    }
+
     /** AS-IS flt.Flt01_CompanyStd.selectByDate (의무보유기간 기준) → 없으면 null */
     @GetMapping("/lockup-std")
     public ApiResponse<LockupStdRes> lockupStd(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String stdDate) {

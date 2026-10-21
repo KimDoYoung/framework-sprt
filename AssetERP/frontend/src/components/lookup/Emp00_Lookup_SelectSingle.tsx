@@ -106,7 +106,7 @@ export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, se
     >
       <div style={{ height: 380, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E5] retrieveButton[조회].Select (L196) → retrieve() */}
-        <SearchBar onSearch={() => retrieve(baseDate, findText, transName)} onReset={() => sp.setValues(openValues)}>
+        <SearchBar onSearch={() => retrieve(baseDate, findText, transName)}>
           <SearchBar.Field label="기준일">
             <DatePicker style={{ width: 140 }} allowClear={false} format="YYYY-MM-DD" value={dayjs(baseDate)}
               onChange={d => d && sp.set('baseDate', d.format('YYYY-MM-DD'))} />

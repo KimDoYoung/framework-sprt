@@ -373,9 +373,11 @@ export interface FltViolate {
   trNote: string | null;
 }
 
-/** 보유내역조회 한 행 (I09 Flt11_Tab_BookList, flt11_book.selectByBookList) */
+/** 보유내역조회 한 행 (I09 Flt11_Tab_BookList · J04 Flt11_Tab_BookListAdmin, flt11_book.selectByBookList) */
 export interface FltBookList {
   bookId: number;
+  personOrgName: string | null;    // J04: 사원명(부서)
+  checkCycleName: string | null;   // J04: 점검주기
   accountNo: string | null;
   itemTypeName: string | null;
   itemName: string | null;
