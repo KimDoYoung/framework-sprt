@@ -161,6 +161,7 @@ export interface FltTrAccount {
   accountNoDec: string | null;
   accountName: string | null;
   itemTypeName: string | null;
+  setupDate: string | null;
 }
 
 /** 종목유형 콤보 한 행 (sys00_common.selectByFltItemType) */
@@ -196,4 +197,81 @@ export interface FltLockupStd {
   lockUpCode: string | null;
   lockUpDays: number | null;
   lockUpCalcStdCode: string | null;
+}
+
+/** 정기보고 매매내역 한 행 (I05 Flt10_Tab_RealTransaction, flt10_tr.selectByPeriod) — 사전신고 열은 [Copy]가 실거래 열로 옮기는 값 */
+export interface FltRealTr {
+  trId: number;
+  accountId: number | null;
+  accountInfo: string | null;
+  accountNo: string | null;
+  accountRelateName: string | null;
+  accountRelateCode: string | null;
+  trType: string | null;
+  trTypeName: string | null;
+  statusName: string | null;
+  checkPeriod: string | null;
+  regDate: string | null;
+  itemType: string | null;
+  itemTypeName: string | null;
+  itemName: string | null;
+  itemCode: string | null;
+  expectTrQty: number | null;
+  expectTrAmt: number | null;
+  trReason: string | null;
+  trDate: string | null;
+  trItemType: string | null;
+  trItemTypeName: string | null;
+  trItemName: string | null;
+  trItemCode: string | null;
+  trQty: number | null;
+  trAmt: number | null;
+  trNote: string | null;
+  befTrAmt: number | null;
+  stkPriceYn: string | null;
+  checkTargetYn: string | null;
+  apprId: number | null;
+  apprRegDate: string | null;
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+}
+
+/** 투자한도·현재 투자금액 (flt02_emp.selectInvestLimit) */
+export interface FltEmpLimit {
+  investAmtOverCheckYn: boolean | null;
+  yearInvestLimit: number | null;
+  yearInvestAmt: number | null;
+  totalInvestLimit: number | null;
+  totalInvestAmt: number | null;
+}
+
+/** 정기보고 상신문서 연결 (flt14_relate_appr.selectByStdDate) */
+export interface FltRelateAppr {
+  relateApprId: number;
+  apprId: number;
+  apprRegDate: string | null;
+  apprTitle: string | null;
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+}
+
+/** 정기보고서 작성 전 점검 결과 — ok=false면 message를 보여 주고 멈춘다 */
+export interface FltReportCheck {
+  ok: boolean;
+  message: string | null;
+}
+
+/** 월말 평가금액 한 행 (flt12_book_month.selectByBookDate). bookMonthId는 평가금액을 아직 안 넣은 행이면 행번호 */
+export interface FltBookMonth {
+  bookMonthId: number;
+  accountId: number;
+  accountNo: string | null;
+  bookDate: string | null;
+  itemType: string | null;
+  itemTypeName: string | null;
+  itemName: string | null;
+  itemCode: string | null;
+  bookQty: number | null;
+  bookAmt: number | null;
+  stkPriceYn: boolean | null;
 }

@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/flt/mapper/flt12_book_month.xml, flt11_book.xml(updateBookAmt) + UpdateDataModel(flt12_book_month)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.flt.mapper.FltBookMonthMapper">
+
+    <!-- AS-IS(IDMS-IC) flt12_book_month.selectByBookDate. 월말 보유(flt11_book)에 이미 입력한 평가금액(flt12)을 붙인다.
+         SELECT *를 DTO 열로 명시, 날짜 TO_CHAR. 평가금액을 아직 안 넣은 행은 flt12 ID가 없어 행번호가 ID 자리에 들어온다 -->
+    <select id="selectBookMonths" resultType="kr.co.kfs.asseterp.biz.flt.dto.BookMonthRes">
+        SELECT COALESCE(flt12_book_month_id, rownum)       AS book_month_id
+             , flt12_account_id                            AS account_id
+             , flt12_account_no                            AS account_no
+             , TO_CHAR(flt12_book_date, 'YYYY-MM-DD')      AS book_date
+             , flt12_item_type                             AS item_type
+             , flt12_item_type_nm                          AS item_type_name
+             , flt12_item_nm                               AS item_name
+             , flt12_item_cd                               AS item_code
+             , flt12_book_qty                              AS book_qty
+             , flt12_book_amt                              AS book_amt
+             , flt12_stk_price_yn = 'true'                 AS stk_price_yn
+          FROM (
+                SELECT ROW_NUMBER() OVER ()                                               AS rownum
+                     , flt12_book_month_id                                                AS flt12_book_month_id
+                     , flt11_company_id                                                   AS flt12_company_id
+                     , flt11_person_id                                                    AS flt12_person_id
+                     , flt11_account_id                                                   AS flt12_account_id
+                     , flt11_item_nm                                                      AS flt12_item_nm
+                     , flt11_item_type                                                    AS flt12_item_type
+                     , flt11_book_date                                                    AS flt12_book_date
+                     , flt12_book_amt                                                     AS flt12_book_amt
+                     , flt11_book_qty                                                     AS flt12_book_qty
+                     , flt05_item_type_nm                                                 AS flt12_item_type_nm
+                     , COALESCE(flt05_stk_price_yn,'false')                               AS flt12_stk_price_yn
+                     , TO_DECRYPTS(flt03_account_no) || ' (' || sys15_corp_nm || ')'      AS flt12_account_no
+                     , flt11_item_cd                                                      AS flt12_item_cd
+                  FROM flt11_book
+                       INNER JOIN flt03_account ON flt03_account_id = flt11_account_id
+                       INNER JOIN sys15_corp    ON sys15_corp_id    = flt03_corp_id
+                       INNER JOIN flt05_item_type  ON (    flt05_company_id   = flt11_company_id
+                                                       AND flt05_item_type_cd = flt11_item_type
+                                                       AND flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                                    FROM flt05_item_type
+                                                                                   WHERE flt05_company_id   = flt11_company_id
+                                                                                     AND flt05_item_type_cd = flt11_item_type
+                                                                                     AND flt05_start_date &lt;= flt11_book_date ) )
+                       LEFT OUTER JOIN flt12_book_month ON (    flt12_company_id   = flt11_company_id
+                                                            AND flt12_person_id    = flt11_person_id
+                                                            AND flt12_account_id   = flt11_account_id
+                                                            AND flt12_item_type    = flt11_item_type
+                                                            AND ( ( COALESCE(flt05_stk_price_yn,'false')  = 'true' AND flt12_item_cd = flt11_item_cd ) OR
+                                                                  ( COALESCE(flt05_stk_price_yn,'false') != 'true' AND flt12_item_nm = flt11_item_nm ) )
+                                                            AND flt12_book_date    = flt11_book_date   )
+                 WHERE flt11_company_id = #{companyId}
+                   AND flt11_person_id  = #{personId}
+                   AND flt11_book_date  = f_get_biz_date(flt11_company_id, f_get_last_day(flt11_book_date),'-0')
+                   AND flt11_book_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+                   AND flt11_item_type != '99' /*(99:예치금)제외*/
+                   AND flt11_book_qty  != 0
+        <if test="accountId != null">
+                   AND flt11_account_id = #{accountId}
+        </if>
+        <if test="myAccountYn">
+                   AND flt03_family_relate_cd = '1'
+        </if>
+               ) a
+         WHERE 1=1
+        <if test="searchText != null">
+           AND UPPER(CONCAT(flt12_item_type_nm, flt12_item_nm, flt12_item_cd)) LIKE UPPER(#{searchText})
+        </if>
+         ORDER BY flt12_account_no, flt12_book_date, flt12_item_type, flt12_item_nm collate "ko_KR.utf8" asc
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt12_book_month.selectById (저장 뒤 다시 읽기) -->
+    <select id="selectBookMonthById" resultType="kr.co.kfs.asseterp.biz.flt.dto.BookMonthRes">
+        SELECT flt12_book_month_id                                          AS book_month_id
+             , flt12_account_id                                             AS account_id
+             , TO_DECRYPTS(flt03_account_no) || ' (' || sys15_corp_nm || ')' AS account_no
+             , TO_CHAR(flt12_book_date, 'YYYY-MM-DD')                       AS book_date
+             , flt12_item_type                                              AS item_type
+             , flt05_item_type_nm                                           AS item_type_name
+             , flt12_item_nm                                                AS item_name
+             , flt12_item_cd                                                AS item_code
+             , flt11_book_qty                                               AS book_qty
+             , flt12_book_amt                                               AS book_amt
+             , COALESCE(flt05_stk_price_yn,'false') = 'true'                AS stk_price_yn
+          FROM flt12_book_month
+               INNER JOIN flt03_account ON flt03_account_id = flt12_account_id
+               INNER JOIN sys15_corp    ON sys15_corp_id    = flt03_corp_id
+               INNER JOIN flt05_item_type  ON (    flt05_company_id   = flt12_company_id
+                                               AND flt05_item_type_cd = flt12_item_type
+                                               AND flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                            FROM flt05_item_type
+                                                                           WHERE flt05_company_id   = flt12_company_id
+                                                                             AND flt05_item_type_cd = flt12_item_type
+                                                                             AND flt05_start_date &lt;= flt12_book_date ) )
+               INNER JOIN flt11_book    ON (    flt11_company_id   = flt12_company_id
+                                            AND flt11_person_id    = flt12_person_id
+                                            AND flt11_account_id   = flt12_account_id
+                                            AND flt11_item_type    = flt12_item_type
+                                            AND ( ( COALESCE(flt05_stk_price_yn,'false')  = 'true' AND flt11_item_cd = flt12_item_cd ) OR
+                                                  ( COALESCE(flt05_stk_price_yn,'false') != 'true' AND flt11_item_nm = flt12_item_nm ) )
+                                            AND flt11_book_date    = flt12_book_date   )
+         WHERE flt12_book_month_id = #{bookMonthId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt12_book_month.selectById로 있는지 확인(Flt12_BookMonth.update L47). 회사·사원 조건을 더했다 -->
+    <select id="countBookMonth" resultType="int">
+        SELECT COUNT(*)
+          FROM flt12_book_month
+         WHERE flt12_book_month_id = #{bookMonthId}
+           AND flt12_company_id    = #{companyId}
+           AND flt12_person_id     = #{personId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt12_book_month.checkBookMonth — 평가금액이 비어 있는 월말 보유 건수 -->
+    <select id="countEmptyBookAmt" resultType="int">
+        SELECT COUNT(*)
+          FROM flt11_book
+               INNER JOIN flt03_account ON flt03_account_id = flt11_account_id
+               INNER JOIN flt05_item_type  ON (    flt05_company_id   = flt11_company_id
+                                               AND flt05_item_type_cd = flt11_item_type
+                                               AND flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                            FROM flt05_item_type
+                                                                           WHERE flt05_company_id   = flt11_company_id
+                                                                             AND flt05_item_type_cd = flt11_item_type
+                                                                             AND flt05_start_date &lt;= flt11_book_date ) )
+               LEFT OUTER JOIN flt12_book_month ON (    flt12_company_id   = flt11_company_id
+                                                    AND flt12_person_id    = flt11_person_id
+                                                    AND flt12_account_id   = flt11_account_id
+                                                    AND flt12_item_type    = flt11_item_type
+                                                    AND ( ( COALESCE(flt05_stk_price_yn,'false')  = 'true' AND flt12_item_cd = flt11_item_cd ) OR
+                                                          ( COALESCE(flt05_stk_price_yn,'false') != 'true' AND flt12_item_nm = flt11_item_nm ) )
+                                                    AND flt12_book_date    = flt11_book_date   )
+         WHERE flt11_company_id = #{companyId}
+           AND flt11_person_id  = #{personId}
+           AND flt11_book_date  = f_get_biz_date(flt11_company_id, f_get_last_day(flt11_book_date),'-0')
+           AND flt11_book_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+           AND flt11_item_type != '99' /*(99:예치금)제외*/
+           AND flt11_book_qty  > 0
+           AND flt12_book_amt IS NULL
+        <if test="myAccountYn">
+           AND flt03_family_relate_cd = '1'
+        </if>
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt12_book_month.selectInsertBookAmtTarget. type '1' = 취득금액, '2' = 상장주식 수량 × 종가 -->
+    <select id="selectInsertBookAmtTarget" resultType="kr.co.kfs.asseterp.biz.flt.dto.BookMonthTargetRes">
+        SELECT flt12_book_month_id                       AS book_month_id
+             , flt12_company_id                          AS company_id
+             , flt12_person_id                           AS person_id
+             , flt12_account_id                          AS account_id
+             , flt12_item_nm                             AS item_name
+             , flt12_item_type                           AS item_type
+             , TO_CHAR(flt12_book_date, 'YYYY-MM-DD')    AS book_date
+             , flt12_book_amt                            AS book_amt
+             , flt12_item_cd                             AS item_code
+             , flt12_stk_price_yn                        AS stk_price_yn
+          FROM (
+                 SELECT COALESCE(flt12_book_month_id, f_create_seq())                                                   as flt12_book_month_id
+                      , flt11_company_id                                                                                as flt12_company_id
+                      , flt11_person_id                                                                                 as flt12_person_id
+                      , flt11_account_id                                                                                as flt12_account_id
+                      , flt11_item_nm                                                                                   as flt12_item_nm
+                      , flt11_item_type                                                                                 as flt12_item_type
+                      , flt11_book_date                                                                                 as flt12_book_date
+                      , CASE WHEN #{type} = '1' THEN flt11_pur_amt
+                             ELSE (CASE WHEN COALESCE(flt05_stk_price_yn,'false') != 'true' THEN null
+                                        ELSE flt11_book_qty * f_get_price_stk(flt11_book_date, flt11_item_cd) END) END  as flt12_book_amt
+                      , flt11_item_cd                                                                                   as flt12_item_cd
+                      , COALESCE(flt05_stk_price_yn,'false')                                                            as flt12_stk_price_yn
+                   FROM flt11_book
+                        INNER JOIN flt03_account ON flt03_account_id = flt11_account_id
+                        INNER JOIN flt05_item_type  ON (    flt05_company_id   = flt11_company_id
+                                                        AND flt05_item_type_cd = flt11_item_type
+                                                        AND flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                                     FROM flt05_item_type
+                                                                                    WHERE flt05_company_id   = flt11_company_id
+                                                                                      AND flt05_item_type_cd = flt11_item_type
+                                                                                      AND flt05_start_date &lt;= flt11_book_date ) )
+                        LEFT OUTER JOIN flt12_book_month ON (    flt12_company_id   = flt11_company_id
+                                                             AND flt12_person_id    = flt11_person_id
+                                                             AND flt12_account_id   = flt11_account_id
+                                                             AND flt12_item_type    = flt11_item_type
+                                                             AND ( ( COALESCE(flt05_stk_price_yn,'false')  = 'true' AND flt12_item_cd = flt11_item_cd ) OR
+                                                                   ( COALESCE(flt05_stk_price_yn,'false') != 'true' AND flt12_item_nm = flt11_item_nm ) )
+                                                             AND flt12_book_date    = flt11_book_date   )
+                  WHERE flt11_company_id = #{companyId}
+                    AND flt11_person_id  = #{personId}
+                    AND flt11_book_date  = f_get_biz_date(flt11_company_id, f_get_last_day(flt11_book_date),'-0')
+                    AND flt11_book_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+                    AND flt11_item_type != '99' /*(99:예치금)제외*/
+                    AND flt11_book_qty  > 0
+                    AND flt12_book_amt IS NULL
+                    AND UPPER(CONCAT(flt05_item_type_nm, flt11_item_nm, flt11_item_cd)) LIKE UPPER(#{searchText})
+        <if test="accountId != null">
+                    AND flt11_account_id = #{accountId}
+        </if>
+               ) t
+         WHERE flt12_book_amt IS NOT NULL
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel(flt12_book_month) INSERT -->
+    <insert id="insertBookMonth">
+        INSERT INTO flt12_book_month (flt12_book_month_id, flt12_company_id, flt12_person_id, flt12_account_id, flt12_item_nm,
+                                      flt12_item_type, flt12_book_date, flt12_book_amt, flt12_item_cd)
+        VALUES (#{bookMonthId}, #{companyId}, #{personId}, #{accountId}, #{itemName},
+                #{itemType}, CAST(#{bookDate} AS date), #{bookAmt}, #{itemCode})
+    </insert>
+
+    <!-- UpdateDataModel(flt12_book_month) UPDATE — 평가금액만. 회사·사원 조건을 더했다 -->
+    <update id="updateBookMonth">
+        UPDATE flt12_book_month
+           SET flt12_book_amt = #{bookAmt}
+         WHERE flt12_book_month_id = #{bookMonthId}
+           AND flt12_company_id    = #{companyId}
+           AND flt12_person_id     = #{personId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) flt11_book.updateBookAmt. 수정: 날짜 CAST -->
+    <update id="updateBookAmt">
+        UPDATE flt11_book
+           SET flt11_book_amt = #{bookAmt}
+         WHERE flt11_company_id = #{companyId}
+           AND flt11_person_id  = #{personId}
+           AND flt11_account_id = #{accountId}
+           AND flt11_item_type  = #{itemType}
+           AND ( ( #{stkPriceYn}  = 'true' AND flt11_item_cd = #{itemCode} ) OR
+                 ( #{stkPriceYn} != 'true' AND flt11_item_nm = #{itemName} ) )
+           AND flt11_book_date  = CAST(#{bookDate} AS date)
+    </update>
+</mapper>

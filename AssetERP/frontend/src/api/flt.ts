@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import {
   FltAccount, FltAccountClose, FltAccountStatus, FltBook, FltBuyLockup, FltLockupStd, FltDocClass, FltInvestLimit, FltItemType, FltItemTypeCode,
-  FltTr, FltTrAccount, FltTrCheck, FltTrItem,
+  FltBookMonth, FltEmpLimit, FltRealTr, FltRelateAppr, FltReportCheck, FltTr, FltTrAccount, FltTrCheck, FltTrItem,
 } from '../types/flt';
 
 /** flt(임직원매매) 화면 API (E08~) */
@@ -181,5 +181,118 @@ export const fltApi = {
   getLockupStd: async (stdDate: string): Promise<FltLockupStd | null> => {
     const res = await apiClient.get<ApiResponse<FltLockupStd | null>>('v1/flt/books/lockup-std', { params: { stdDate } });
     return res.data.data ?? null;
+  },
+
+  // ── I05 임직원매매 정기보고 (Flt10_Tab_RealTransaction · Flt03_Lookup_Account · Flt05_Lookup_ItemTypeConfirm) ──
+
+  /** AS-IS flt.Flt10_Tr.selectByPeriod (로그인 사용자 본인). 검색어는 서버가 %…%로 */
+  searchRealTrs: async (params: { accountId?: number | null; startDate: string; closeDate: string; searchText?: string; myAccountYn: boolean; preTrYn: boolean }): Promise<FltRealTr[]> => {
+    const res = await apiClient.get<ApiResponse<FltRealTr[]>>('v1/flt/real-trs', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt10_Tr.update → 저장된 행(요청 순서). trId 0 이하는 신규 */
+  updateRealTrs: async (rows: FltRealTr[]): Promise<FltRealTr[]> => {
+    const body = rows.map(({ trId, trType, accountId, trDate, trItemType, trItemName, trItemCode, trQty, trAmt, trNote }) =>
+      ({ trId, trType, accountId, trDate, trItemType, trItemName, trItemCode, trQty, trAmt, trNote }));
+    const res = await apiClient.put<ApiResponse<FltRealTr[]>>('v1/flt/real-trs', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt10_Tr.delete (GridDeleteData) → 지운 건수 */
+  deleteRealTrs: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/flt/real-trs', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS flt.Flt10_Tr.deleteUpdate: 사전신고가 있는 행은 실거래 열만 비운다 → 처리한 건수 */
+  clearRealTrs: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/flt/real-trs/clear', ids);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS flt.Flt10_Tr.deleteApprList: 상신문서 폐기 */
+  discardApprs: async (apprIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/flt/real-trs/apprs', { data: apprIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS flt.Flt10_Tr.getBizDate: 기준일(말일)의 영업일 */
+  getBizDate: async (baseDate: string): Promise<string> => {
+    const res = await apiClient.get<ApiResponse<string>>('v1/flt/real-trs/biz-date', { params: { baseDate } });
+    return res.data.data;
+  },
+
+  /** AS-IS flt.Flt02_Emp.selectInvestLimit: 투자한도 설정이 없으면 null */
+  getEmpLimit: async (stdDate: string): Promise<FltEmpLimit | null> => {
+    const res = await apiClient.get<ApiResponse<FltEmpLimit | null>>('v1/flt/real-trs/emp-limit', { params: { stdDate } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS flt.Flt14_RelateAppr.selectByStdDate */
+  searchRelateApprs: async (stdDate: string): Promise<FltRelateAppr[]> => {
+    const res = await apiClient.get<ApiResponse<FltRelateAppr[]>>('v1/flt/real-trs/relate-apprs', { params: { stdDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys12_Calendar.selectByDay: 영업일 여부, 일자 정보가 없으면 null */
+  getWorkingDay: async (stdDate: string): Promise<boolean | null> => {
+    const res = await apiClient.get<ApiResponse<boolean | null>>('v1/flt/real-trs/working-day', { params: { stdDate } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS flt.Flt10_Tr.insertFloorTrBook: 원장생성 (실패하면 서버 메시지로 오류) */
+  insertFloorTrBook: async (startDate: string): Promise<void> => {
+    await apiClient.post<ApiResponse<number>>('v1/flt/real-trs/book', null, { params: { startDate } });
+  },
+
+  /** AS-IS flt.Flt10_Tr.checkPreAppr → checkNextAppr */
+  checkReport: async (stdDate: string): Promise<FltReportCheck> => {
+    const res = await apiClient.get<ApiResponse<FltReportCheck>>('v1/flt/real-trs/report-check', { params: { stdDate } });
+    return res.data.data;
+  },
+
+  /** 템플릿 받기 (AS-IS downloadForm → ./excelTemplete/Template_임직원자기매매.xlsx) */
+  downloadRealTrTemplate: async (): Promise<void> => {
+    const res = await apiClient.get<Blob>('v1/flt/real-trs/template', { responseType: 'blob' });
+    const url = URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Template_임직원자기매매.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
+  /** 엑셀업로드 (AS-IS ExcelUpload?uploadType=fltUpload) → 등록한 건수 */
+  uploadRealTrsExcel: async (file: File): Promise<number> => {
+    const form = new FormData();
+    form.append('excelUpload', file);
+    const res = await apiClient.post<ApiResponse<number>>('v1/flt/real-trs/excel', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS flt.Flt12_BookMonth.selectByBookDate. 검색어는 서버가 %…%로 */
+  searchBookMonths: async (params: { accountId?: number | null; startDate: string; closeDate: string; searchText?: string; myAccountYn: boolean }): Promise<FltBookMonth[]> => {
+    const res = await apiClient.get<ApiResponse<FltBookMonth[]>>('v1/flt/book-months', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt12_BookMonth.checkBookMonth: 평가금액이 비어 있으면 서버 메시지로 오류 */
+  checkBookMonth: async (startDate: string, closeDate: string, myAccountYn: boolean): Promise<void> => {
+    await apiClient.get<ApiResponse<number>>('v1/flt/book-months/check', { params: { startDate, closeDate, myAccountYn } });
+  },
+
+  /** AS-IS flt.Flt12_BookMonth.update → 저장된 행(요청 순서) */
+  updateBookMonths: async (rows: FltBookMonth[]): Promise<FltBookMonth[]> => {
+    const body = rows.map(({ bookMonthId, accountId, bookDate, itemType, itemName, itemCode, bookAmt, stkPriceYn }) =>
+      ({ bookMonthId, accountId, bookDate, itemType, itemName, itemCode, bookAmt, stkPriceYn }));
+    const res = await apiClient.put<ApiResponse<FltBookMonth[]>>('v1/flt/book-months', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt12_BookMonth.insertBookAmt: type "1" 평가금액을 취득금액으로 / "2" 상장주식 평가처리 → 처리한 건수 */
+  evaluateBookMonths: async (req: { accountId: number | null; startDate: string; closeDate: string; searchText: string; type: '1' | '2' }): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/flt/book-months/evaluate', req);
+    return res.data.data ?? 0;
   },
 };

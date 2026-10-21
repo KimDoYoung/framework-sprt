@@ -469,7 +469,8 @@
                CASE WHEN COALESCE(flt06_close_date,'9999-12-31') <![CDATA[<]]> CAST(#{setupDate} AS date)
                     THEN '(폐쇄) ' ELSE '' END || TO_DECRYPTS(flt03_account_no)                  AS account_no_dec,
                flt03_account_nm                                                                  AS account_name,
-               f_get_itemtype_nm(flt03_item_type, flt03_company_id)                              AS item_type_name
+               f_get_itemtype_nm(flt03_item_type, flt03_company_id)                              AS item_type_name,
+               TO_CHAR(flt03_setup_date, 'YYYY-MM-DD')                                           AS setup_date
           FROM flt03_account
                LEFT OUTER JOIN sys15_corp ON sys15_corp_id = flt03_corp_id AND sys15_company_id = flt03_company_id
                LEFT OUTER JOIN flt06_account_close ON flt06_account_id = flt03_account_id
@@ -497,5 +498,404 @@
                                                               AND flt05_start_date <![CDATA[<=]]> CAST(#{startDate} AS date)
                                                             GROUP BY flt05_item_type_cd )
          ORDER BY flt05_seq
+    </select>
+    <!-- ===== 정기보고 (I05, Flt10_Tab_RealTransaction) ===== -->
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectByPeriod 바깥 SELECT (SELECT *를 DTO 열로 명시, 날짜 TO_CHAR). check_period = 위반사항(CONCAT 세 메시지) -->
+    <sql id="realTrColumns">
+        flt10_tr_id                                                                          AS tr_id,
+        flt10_account_id                                                                     AS account_id,
+        flt10_account_info                                                                   AS account_info,
+        flt10_account_no                                                                     AS account_no,
+        flt10_account_relate_nm                                                              AS account_relate_name,
+        flt10_account_relate_cd                                                              AS account_relate_code,
+        flt10_tr_type                                                                        AS tr_type,
+        flt10_tr_type_nm                                                                     AS tr_type_name,
+        flt10_status_nm                                                                      AS status_name,
+        CONCAT( over_amt_msg
+              , CASE WHEN over_amt_msg IS NOT NULL AND over_qty_msg IS NOT NULL THEN ', ' ELSE '' END
+              , over_qty_msg
+              , CASE WHEN (over_amt_msg IS NOT NULL OR over_qty_msg IS NOT NULL) AND over_period_msg IS NOT NULL THEN ', ' ELSE '' END
+              , over_period_msg )                                                            AS check_period,
+        TO_CHAR(flt10_reg_date, 'YYYY-MM-DD')                                                AS reg_date,
+        flt10_item_type                                                                      AS item_type,
+        flt10_item_type_nm                                                                   AS item_type_name,
+        flt10_item_nm                                                                        AS item_name,
+        flt10_item_cd                                                                        AS item_code,
+        flt10_expect_tr_qty                                                                  AS expect_tr_qty,
+        flt10_expect_tr_amt                                                                  AS expect_tr_amt,
+        flt10_tr_reason                                                                      AS tr_reason,
+        TO_CHAR(flt10_tr_date, 'YYYY-MM-DD')                                                 AS tr_date,
+        flt10_tr_item_type                                                                   AS tr_item_type,
+        flt10_tr_item_type_nm                                                                AS tr_item_type_name,
+        flt10_tr_item_nm                                                                     AS tr_item_name,
+        flt10_tr_item_cd                                                                     AS tr_item_code,
+        flt10_tr_qty                                                                         AS tr_qty,
+        flt10_tr_amt                                                                         AS tr_amt,
+        flt10_tr_note                                                                        AS tr_note,
+        flt10_bef_tr_amt                                                                     AS bef_tr_amt,
+        flt10_stk_price_yn                                                                   AS stk_price_yn,
+        flt10_check_target_yn                                                                AS check_target_yn,
+        flt10_appr_id                                                                        AS appr_id,
+        TO_CHAR(flt10_appr_reg_date, 'YYYY-MM-DD')                                           AS appr_reg_date,
+        flt10_appr_status_cd                                                                 AS appr_status_code,
+        flt10_appr_status_nm                                                                 AS appr_status_name
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectByPeriod 안쪽 SELECT (WHERE는 쓰는 문장이 붙인다). 쓰지 않는 열(소속·상신제목·사원명)은 뺐다.
+         수정: asseterpdb의 flt10_tr에 flt10_add_confirmer_id 열이 없어(추가승인 기능) 상태명 CASE의 '20 + 추가승인자' 가지를 뺐다 -->
+    <sql id="realTrInner">
+        SELECT flt10_tr.*
+             , f_cdnm('FloorTrCode', flt10_tr_type, flt10_company_id, f_sysdate())                                   AS flt10_tr_type_nm
+             , flt05.flt05_item_type_nm                                                                              AS flt10_item_type_nm
+             , flt05_tr.flt05_item_type_nm                                                                           AS flt10_tr_item_type_nm
+             , b.apr01_reg_date                                                                                      AS flt10_appr_reg_date
+             , b.apr01_status_cd                                                                                     AS flt10_appr_status_cd
+             , f_cdnm('AprStatusCode', b.apr01_status_cd, b.apr01_company_id, b.apr01_reg_date)                      AS flt10_appr_status_nm
+             , TO_DECRYPTS(flt03_account_no) || ' (' || sys15_corp_nm || ') ' || flt03_account_nm                    AS flt10_account_info
+             , f_cdnm('FamilyRelateCode', flt03_family_relate_cd, flt03_company_id, f_sysdate())                     AS flt10_account_relate_nm
+             , TO_DECRYPTS(flt03_account_no) || ' (' || sys15_corp_nm || ')'                                         AS flt10_account_no
+             , flt03_family_relate_cd                                                                                AS flt10_account_relate_cd
+             , COALESCE(COALESCE(flt05_tr.flt05_target_yn, flt05.flt05_target_yn), 'false')                          AS flt10_check_target_yn
+             , COALESCE(COALESCE(flt05_tr.flt05_stk_price_yn, flt05.flt05_stk_price_yn)::varchar, 'false')           AS flt10_stk_price_yn
+             , CASE WHEN COALESCE(flt10_status_cd,'00') = '00' THEN '미신고'
+                    WHEN COALESCE(flt10_status_cd,'00') = '10' THEN '미승인'
+                    ELSE f_cdnm('FloorTrStatusCode', flt10_status_cd, flt10_company_id, f_today()) END               AS flt10_status_nm
+             , flt10_tr_amt                                                                                          AS flt10_bef_tr_amt
+             , CASE WHEN flt01_appr_over_rate &lt; (flt10_tr_amt - flt10_expect_tr_amt) / f_nvl(flt10_expect_tr_amt,1) * 100
+                    THEN '사전승인금액초과' ELSE null END                                                              AS over_amt_msg
+             , CASE WHEN COALESCE(flt01_appr_qty_over_rate,0) != 0 AND
+                         flt01_appr_qty_over_rate &lt; (flt10_tr_qty - flt10_expect_tr_qty) / f_nvl(flt10_expect_tr_qty,1) * 100
+                    THEN '사전승인수량초과' ELSE null END                                                              AS over_qty_msg
+             , CASE WHEN flt10_expect_tr_date &lt; flt10_tr_date
+                    THEN '유효기간초과' ELSE null END                                                                  AS over_period_msg
+          FROM flt10_tr
+               INNER JOIN flt03_account ON flt03_account_id = flt10_account_id
+               INNER JOIN sys15_corp ON sys15_corp_id = flt03_corp_id
+               LEFT OUTER JOIN apr01_appr b ON flt10_appr_id = b.apr01_appr_id
+               LEFT OUTER JOIN emp03_trans ON (    flt10_person_id = emp03_person_id
+                                               AND emp03_trans_cd NOT IN ('800','900')
+                                               AND emp03_trans_date = (SELECT max(x.emp03_trans_date)
+                                                                         FROM emp03_trans x
+                                                                        WHERE x.emp03_person_id = emp03_person_id
+                                                                          AND x.emp03_trans_date &lt;= CAST(#{closeDate} AS date)))
+               LEFT OUTER JOIN flt05_item_type flt05 ON ( flt05.flt05_company_id   = flt10_company_id      AND
+                                                          flt05.flt05_item_type_cd = flt10_item_type       AND
+                                                          flt05.flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                                         FROM flt05_item_type
+                                                                                        WHERE flt05_company_id   = flt10_company_id
+                                                                                          AND flt05_item_type_cd = flt10_item_type
+                                                                                          AND flt05_start_date &lt;= flt10_expect_tr_date ) )
+               LEFT OUTER JOIN flt05_item_type flt05_tr ON ( flt05_tr.flt05_company_id   = flt10_company_id    AND
+                                                             flt05_tr.flt05_item_type_cd = flt10_tr_item_type  AND
+                                                             flt05_tr.flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                                               FROM flt05_item_type
+                                                                                              WHERE flt05_company_id   = flt10_company_id
+                                                                                                AND flt05_item_type_cd = flt10_tr_item_type
+                                                                                                AND flt05_start_date &lt;= flt10_tr_date ) )
+               LEFT OUTER JOIN ( SELECT *
+                                   FROM flt01_company_std
+                                  WHERE flt01_company_id = #{companyId}
+                                    AND flt01_start_date &lt;= CAST(#{closeDate} AS date)
+                                  ORDER BY flt01_start_date DESC
+                                  LIMIT 1 ) flt01 ON flt01_company_id = flt10_company_id
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectByPeriod. 수정: preTrYn은 문자열 'true'/'false'로 비교(원본 :preTrYn = 'true'), 추가승인자 가지 제거(realTrInner 참고) -->
+    <select id="selectRealTrs" resultType="kr.co.kfs.asseterp.biz.flt.dto.RealTrRes">
+        SELECT <include refid="realTrColumns"/>
+          FROM ( <include refid="realTrInner"/>
+                  WHERE 1=1
+                    AND flt10_company_id = #{companyId}
+                    AND flt10_person_id  = #{personId}
+        <if test="accountId != null">
+                    AND flt10_account_id = #{accountId}
+        </if>
+        <if test="myAccountYn">
+                    AND flt03_family_relate_cd = '1'
+        </if>
+                    AND flt10_tr_type LIKE #{trType}
+                    AND flt10_tr_type IN ( SELECT sys09_code
+                                             FROM sys13_code_group
+                                                  INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+                                            WHERE sys13_kind_group_cd IN ('FloorTrCode0001','FloorTrCode0004') )
+                    AND ( ( flt10_tr_date IS NULL AND
+                            'Y' = CASE WHEN COALESCE(flt10_status_cd,'00') IN ('20','25') THEN 'Y'
+                                       ELSE 'N' END ) OR    /*(2026.05.15 CYY - 승인건만 조회)*/
+                          ( flt10_tr_date IS NOT NULL ) )
+                    AND ( ( #{preTrYn} = 'true' AND
+                            ( ( flt10_tr_date IS NOT NULL AND
+                                flt10_tr_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date) ) OR
+                              ( flt10_tr_date IS NULL AND
+                                flt10_reg_date       &lt;= CAST(#{closeDate} AS date) AND
+                                flt10_expect_tr_date &gt;= CAST(#{startDate} AS date) ) )
+                          ) OR
+                          ( #{preTrYn} = 'false' AND
+                            flt10_tr_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date) ) )
+                    AND COALESCE(flt10_unfill_yn, 'false') != 'true'                    /*미체결 사전신고거래 제외*/
+               ) a
+         WHERE 1=1
+        <if test="searchText != null">
+           AND CONCAT(flt10_tr_item_type_nm, flt10_tr_item_nm, flt10_tr_item_cd, flt10_item_nm) ILIKE #{searchText}
+        </if>
+         ORDER BY COALESCE(flt10_reg_date, flt10_tr_date) desc, flt10_account_no, flt10_item_nm collate "ko_KR.utf8" asc, flt10_tr_type
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectById (저장 뒤 다시 읽기). 수정: 정기보고 목록과 같은 열로 읽는다(기준일은 오늘) -->
+    <select id="selectRealTrById" resultType="kr.co.kfs.asseterp.biz.flt.dto.RealTrRes">
+        SELECT <include refid="realTrColumns"/>
+          FROM ( <include refid="realTrInner"/>
+                  WHERE flt10_tr_id = #{trId} ) a
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt13_book_init.getInitDate -->
+    <select id="selectInitDate" resultType="string">
+        SELECT TO_CHAR(MAX(flt13_book_date), 'YYYY-MM-DD')
+          FROM flt13_book_init
+         WHERE flt13_company_id = #{companyId}
+           AND flt13_person_id  = #{personId}
+    </select>
+
+    <!-- UpdateDataModel(flt10_tr) INSERT — 정기보고 화면이 채우는 열(실거래 열 + 계좌·구분·승인여부 false) -->
+    <insert id="insertRealTr">
+        INSERT INTO flt10_tr (flt10_tr_id, flt10_company_id, flt10_person_id, flt10_appr_yn, flt10_account_id, flt10_tr_type,
+                              flt10_tr_date, flt10_tr_item_type, flt10_tr_item_nm, flt10_tr_item_cd, flt10_tr_qty, flt10_tr_amt, flt10_tr_note)
+        VALUES (#{trId}, #{companyId}, #{personId}, 'false', #{req.accountId}, #{req.trType},
+                CAST(#{req.trDate} AS date), #{req.trItemType}, #{req.trItemName}, #{req.trItemCode}, #{req.trQty}, #{req.trAmt}, #{req.trNote})
+    </insert>
+
+    <!-- UpdateDataModel(flt10_tr) UPDATE — 정기보고 화면이 고치는 열만. 회사·사원 조건을 더했다 -->
+    <update id="updateRealTr">
+        UPDATE flt10_tr
+           SET flt10_account_id   = #{req.accountId},
+               flt10_tr_type      = #{req.trType},
+               flt10_tr_date      = CAST(#{req.trDate} AS date),
+               flt10_tr_item_type = #{req.trItemType},
+               flt10_tr_item_nm   = #{req.trItemName},
+               flt10_tr_item_cd   = #{req.trItemCode},
+               flt10_tr_qty       = #{req.trQty},
+               flt10_tr_amt       = #{req.trAmt},
+               flt10_tr_note      = #{req.trNote}
+         WHERE flt10_tr_id      = #{req.trId}
+           AND flt10_company_id = #{companyId}
+           AND flt10_person_id  = #{personId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.updateTrData — 사전신고가 있는 행의 실거래 열만 비운다. 수정: 회사·사원 조건과 `사전승인금액 있음` 조건을 더했다(원본은 화면이 expectTrAmt != null인 행만 보냄) -->
+    <update id="clearRealTr">
+        UPDATE flt10_tr
+           SET flt10_tr_date      = null
+             , flt10_tr_item_cd   = null
+             , flt10_tr_item_nm   = null
+             , flt10_tr_item_type = null
+             , flt10_tr_qty       = null
+             , flt10_tr_amt       = null
+         WHERE flt10_tr_id      = #{trId}
+           AND flt10_company_id = #{companyId}
+           AND flt10_person_id  = #{personId}
+           AND flt10_expect_tr_amt IS NOT NULL
+    </update>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.getBizDate -->
+    <select id="selectBizDate" resultType="string">
+        SELECT TO_CHAR(f_get_biz_date(#{companyId}, CAST(#{baseDate} AS date), '-0'), 'YYYY-MM-DD')
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt02_emp.selectInvestLimit — 적용 시작일이 기준일 이전인 가장 늦은 설정 한 건 -->
+    <select id="selectEmpLimit" resultType="kr.co.kfs.asseterp.biz.flt.dto.EmpLimitRes">
+        SELECT COALESCE(flt01_invest_amt_over_check_yn, 'false') = 'true'                       AS invest_amt_over_check_yn
+             , COALESCE(flt02_year_invest_limit,0)                                              AS year_invest_limit
+             , f_get_floorTrCheck('1', flt02_company_id, flt02_person_id, CAST(#{stdDate} AS date), false)  AS year_invest_amt
+             , COALESCE(flt01_total_invest_amt ,0)                                              AS total_invest_limit
+             , f_get_floorTrCheck('2', flt02_company_id, flt02_person_id, CAST(#{stdDate} AS date), false)  AS total_invest_amt
+          FROM flt02_emp
+               INNER JOIN LATERAL ( SELECT *
+                                      FROM flt01_company_std
+                                     WHERE flt01_company_id = flt02_company_id
+                                       AND flt01_start_date &lt;= CAST(#{stdDate} AS date)
+                                     ORDER BY flt01_start_date DESC
+                                     LIMIT 1
+                                  ) t ON TRUE
+         WHERE flt02_company_id = #{companyId}
+           AND flt02_person_id  = #{personId}
+           AND flt02_start_date &lt;= CAST(#{stdDate} AS date)
+         ORDER BY flt02_start_date DESC
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt14_relate_appr.selectByStdDate. 수정: 읽는 순서가 정해지도록 ID 순을 더했다 -->
+    <select id="selectRelateApprs" resultType="kr.co.kfs.asseterp.biz.flt.dto.RelateApprRes">
+        SELECT flt14_relate_appr_id                                                             AS relate_appr_id
+             , flt14_appr_id                                                                    AS appr_id
+             , TO_CHAR(apr01_reg_date, 'YYYY-MM-DD')                                            AS appr_reg_date
+             , apr01_title                                                                      AS appr_title
+             , apr01_status_cd                                                                  AS appr_status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, emp01_company_id, apr01_reg_date)       AS appr_status_name
+          FROM flt14_relate_appr
+               INNER JOIN emp01_person ON emp01_person_id = flt14_person_id
+               INNER JOIN apr01_appr ON apr01_appr_id = flt14_appr_id
+         WHERE 1=1
+           AND flt14_person_id = #{personId}
+           AND flt14_std_date  = CAST(#{stdDate} AS date)
+         ORDER BY flt14_relate_appr_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys12_calendar.selectByDay 첫 행의 영업일 여부. 원본 SQL은 회사 조건이 없다(사용 중인 첫 회사의 일자) — 그대로 -->
+    <select id="selectWorkingYn" resultType="string">
+        SELECT sys12_working_yn
+          FROM sys12_calendar
+               INNER JOIN sys01_company ON sys01_company_id = sys12_company_id
+         WHERE sys12_company_id != 0
+           AND sys12_day = CAST(#{stdDate} AS timestamp)
+           AND sys01_use_yn = 'true'
+         ORDER BY sys01_company_id
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.getPreReportDate -->
+    <select id="selectPreReportDate" resultType="string">
+        SELECT TO_CHAR(f_get_biz_date( #{companyId}
+                                     , CASE WHEN #{checkCycle} = '1' THEN f_get_quarter_date(CAST(#{stdDate} AS date), '1')
+                                            WHEN #{checkCycle} = '2' THEN f_get_last_day((CAST(#{stdDate} AS date) + interval '-1month')::date)
+                                            ELSE null END
+                                     , '-0'), 'YYYY-MM-DD')
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt03_account.countAccount -->
+    <select id="countAccount" resultType="int">
+        SELECT COUNT(*)
+          FROM flt03_account
+         WHERE flt03_company_id = #{companyId}
+           AND flt03_person_id  = #{personId}
+           AND flt03_setup_date &lt; CAST(#{preStdDate} AS date)
+           AND NOT EXISTS ( SELECT 1
+                              FROM flt06_account_close
+                                   INNER JOIN apr01_appr ON apr01_appr_id = flt06_appr_id
+                             WHERE flt06_account_id = flt03_account_id
+                               AND COALESCE(apr01_status_cd,'99') NOT IN ('99','40') )
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.checkReport — 전 보고 상신 여부 -->
+    <select id="countReport" resultType="int">
+        SELECT count(*)
+          FROM apr01_appr
+         WHERE apr01_company_id = #{companyId}
+           AND apr01_reg_emp_id = #{personId}
+           AND apr01_status_cd NOT IN ('40','99')
+           AND apr01_class_tree_id IN ( SELECT dcr30_class_tree_id
+                                          FROM dcr30_link
+                                         WHERE dcr30_company_id = apr01_company_id
+                                           AND dcr30_link_cd    = 'A09' )   /* (A09:자기매매 실거래 보고) */
+           AND apr01_effect_date BETWEEN CAST(#{stdDate} AS date) AND f_get_last_day(CAST(#{stdDate} AS date))
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.checkNextReport — 다음 보고 상신 여부 -->
+    <select id="countNextReport" resultType="int">
+        SELECT count(*)
+          FROM apr01_appr
+         WHERE apr01_company_id = #{companyId}
+           AND apr01_reg_emp_id = #{personId}
+           AND apr01_status_cd NOT IN ('40','99')
+           AND apr01_class_tree_id IN ( SELECT dcr30_class_tree_id
+                                          FROM dcr30_link
+                                         WHERE dcr30_company_id = apr01_company_id
+                                           AND dcr30_link_cd    = 'A09' )   /* (A09:자기매매 실거래 보고) */
+           AND apr01_effect_date &gt; f_get_biz_date(#{companyId}, f_get_last_day(CAST(#{stdDate} AS date)), '-0')
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.insertFloorTrBook (함수 f_insert_floorTrBook) → 'Y' 또는 오류 메시지 -->
+    <select id="insertFloorTrBook" resultType="string" flushCache="true">
+        SELECT f_insert_floorTrBook(#{companyId}, #{personId}, '%', '%', '%', '%', CAST(#{startDate} AS date))
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.updateByApprId. 수정: 회사·사원 조건을 더했다 -->
+    <update id="clearApprId">
+        UPDATE flt10_tr
+           SET flt10_appr_id = null
+         WHERE flt10_appr_id    = #{apprId}
+           AND flt10_company_id = #{companyId}
+           AND flt10_person_id  = #{personId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) apr01_appr.insertApprDel — 폐기 보관(apr99_appr_del). 수정: 본인이 상신한 문서만 -->
+    <insert id="insertApprDel">
+        INSERT INTO apr99_appr_del
+        SELECT f_create_seq()
+             , apr01_appr_id, apr01_title, apr01_reg_date, apr01_status_cd, apr01_content, apr01_note, apr01_reg_emp_id, apr01_effect_date
+             , apr01_class_tree_id, apr01_stamp_id, apr01_receive_nm, apr01_reference_nm, apr01_stamp_seq, apr01_inout_cd
+             , f_sysdate(), #{personId}
+             , apr01_company_id, apr01_form_type, apr01_dcr_id_word, apr01_sign_company, apr01_sign_ceo, apr01_stamp_position, apr01_link_cd
+          FROM apr01_appr
+         WHERE apr01_appr_id    = #{apprId}
+           AND apr01_company_id = #{companyId}
+           AND apr01_reg_emp_id = #{personId}
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) apr01_appr.deleteAppr. 수정: 본인이 상신한 문서만 -->
+    <delete id="deleteAppr">
+        DELETE FROM apr01_appr
+         WHERE apr01_appr_id    = #{apprId}
+           AND apr01_company_id = #{companyId}
+           AND apr01_reg_emp_id = #{personId}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) flt03_account.selectByAccountNo (엑셀업로드의 계좌 찾기). 계좌번호는 입력 그대로 비교(원본이 `%`를 붙이지 않는다) -->
+    <select id="selectAccountIdsByNo" resultType="long">
+        SELECT flt03_account_id
+          FROM flt03_account
+               LEFT OUTER JOIN sys15_corp ON sys15_corp_id = flt03_corp_id AND sys15_company_id = flt03_company_id
+         WHERE flt03_company_id = #{companyId}
+           AND flt03_person_id  = #{personId}
+           AND TO_DECRYPTS(flt03_account_no) LIKE #{accountNo}
+         ORDER BY flt03_setup_date, sys15_corp_nm collate "ko_KR.utf8" asc, TO_DECRYPTS(flt03_account_no)
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt05_item_type.selectByItemType — 엑셀업로드의 주식시세적용 여부 -->
+    <select id="selectStkPriceYn" resultType="boolean">
+        SELECT COALESCE(flt05_stk_price_yn::varchar, 'false') = 'true'
+          FROM flt05_item_type
+         WHERE flt05_company_id   = #{companyId}
+           AND flt05_item_type_cd = #{itemTypeCode}
+           AND flt05_start_date &lt;= CAST(#{stdDate} AS date)
+         ORDER BY flt05_start_date DESC
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS(IDMS-IC) com50_item.selectItemCode — 종목코드로 종목명 -->
+    <select id="selectItemNamesByCode" resultType="string">
+        SELECT com50_item_nm
+          FROM com50_item
+         WHERE com50_item_cd = #{itemCode}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.excelInsert -->
+    <insert id="insertExcelTr">
+        INSERT INTO flt10_tr (flt10_tr_id, flt10_company_id, flt10_person_id, flt10_appr_yn, flt10_account_id, flt10_tr_date,
+                              flt10_tr_type, flt10_tr_item_type, flt10_tr_item_nm, flt10_tr_item_cd, flt10_tr_qty, flt10_tr_amt)
+        VALUES (f_create_seq(), #{companyId}, #{personId}, 'false', #{accountId}, #{trDate},
+                #{trType}, #{trItemType}, #{trItemName}, #{trItemCode}, #{trQty}, #{trAmt})
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) flt02_emp.selectByDate 중 정기보고 점검(checkPreAppr·checkNextAppr)이 쓰는 열.
+         수정: asseterpdb에 없는 flt16_except_person(예외자 보고시작일)은 뺐다 — 보고시작일은 회사 기준만 -->
+    <select id="selectReportEmp" resultType="kr.co.kfs.asseterp.biz.flt.dto.ReportEmpRes">
+        SELECT flt02_check_cycle                                                              AS check_cycle
+             , TO_CHAR(COALESCE(flt01_rpt_start_date, '1900-01-01'::date), 'YYYY-MM-DD')      AS rpt_start_date
+             , TO_CHAR(emp01_hire_date, 'YYYY-MM-DD')                                         AS hire_date
+             , COALESCE(flt01_no_account_skip_yn, 'false') = 'true'                           AS no_account_skip_yn
+          FROM flt02_emp
+               INNER JOIN emp01_person ON emp01_person_id = flt02_person_id
+               INNER JOIN ( SELECT *
+                              FROM flt01_company_std
+                             WHERE flt01_company_id = #{companyId}
+                               AND flt01_start_date &lt;= CAST(#{stdDate} AS date)
+                               AND flt01_rpt_start_date IS NOT NULL
+                             ORDER BY flt01_start_date DESC
+                             LIMIT 1 ) flt01 ON TRUE
+         WHERE flt02_company_id = #{companyId}
+           AND flt02_person_id  = #{personId}
+           AND flt02_start_date &lt;= CAST(#{stdDate} AS date)
+         ORDER BY flt02_start_date DESC
+         LIMIT 1
     </select>
 </mapper>

@@ -1,7 +1,12 @@
 package kr.co.kfs.asseterp.biz.flt.mapper;
 
+import kr.co.kfs.asseterp.biz.flt.dto.EmpLimitRes;
 import kr.co.kfs.asseterp.biz.flt.dto.InvestLimitRes;
 import kr.co.kfs.asseterp.biz.flt.dto.ItemTypeCodeRes;
+import kr.co.kfs.asseterp.biz.flt.dto.RealTrRes;
+import kr.co.kfs.asseterp.biz.flt.dto.RealTrSaveReq;
+import kr.co.kfs.asseterp.biz.flt.dto.RelateApprRes;
+import kr.co.kfs.asseterp.biz.flt.dto.ReportEmpRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrAccountRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrCheckRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrItemRes;
@@ -64,4 +69,57 @@ public interface FltTrMapper {
     List<TrAccountRes> selectAccountsByDate(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("setupDate") String setupDate);
 
     List<ItemTypeCodeRes> selectItemTypeCodes(@Param("companyId") Long companyId, @Param("startDate") String startDate);
+
+    // 정기보고 (I05, Flt10_Tab_RealTransaction)
+    List<RealTrRes> selectRealTrs(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("accountId") Long accountId,
+                                  @Param("trType") String trType, @Param("startDate") String startDate, @Param("closeDate") String closeDate,
+                                  @Param("searchText") String searchText, @Param("myAccountYn") boolean myAccountYn,
+                                  @Param("preTrYn") String preTrYn);
+
+    RealTrRes selectRealTrById(@Param("companyId") Long companyId, @Param("closeDate") String closeDate, @Param("trId") Long trId);
+
+    String selectInitDate(@Param("companyId") Long companyId, @Param("personId") Long personId);
+
+    int insertRealTr(@Param("trId") Long trId, @Param("companyId") Long companyId, @Param("personId") Long personId, @Param("req") RealTrSaveReq req);
+
+    int updateRealTr(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("req") RealTrSaveReq req);
+
+    int clearRealTr(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("trId") Long trId);
+
+    String selectBizDate(@Param("companyId") Long companyId, @Param("baseDate") String baseDate);
+
+    EmpLimitRes selectEmpLimit(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("stdDate") String stdDate);
+
+    List<RelateApprRes> selectRelateApprs(@Param("personId") Long personId, @Param("stdDate") String stdDate);
+
+    ReportEmpRes selectReportEmp(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("stdDate") String stdDate);
+
+    String selectWorkingYn(@Param("stdDate") String stdDate);
+
+    String selectPreReportDate(@Param("companyId") Long companyId, @Param("checkCycle") String checkCycle, @Param("stdDate") String stdDate);
+
+    int countAccount(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("preStdDate") String preStdDate);
+
+    int countReport(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("stdDate") String stdDate);
+
+    int countNextReport(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("stdDate") String stdDate);
+
+    String insertFloorTrBook(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("startDate") String startDate);
+
+    int clearApprId(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("apprId") Long apprId);
+
+    int insertApprDel(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("apprId") Long apprId);
+
+    int deleteAppr(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("apprId") Long apprId);
+
+    List<Long> selectAccountIdsByNo(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("accountNo") String accountNo);
+
+    Boolean selectStkPriceYn(@Param("companyId") Long companyId, @Param("itemTypeCode") String itemTypeCode, @Param("stdDate") String stdDate);
+
+    List<String> selectItemNamesByCode(@Param("itemCode") String itemCode);
+
+    int insertExcelTr(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("accountId") Long accountId,
+                      @Param("trDate") java.time.LocalDate trDate, @Param("trType") String trType, @Param("trItemType") String trItemType,
+                      @Param("trItemName") String trItemName, @Param("trItemCode") String trItemCode,
+                      @Param("trQty") Double trQty, @Param("trAmt") Long trAmt);
 }
