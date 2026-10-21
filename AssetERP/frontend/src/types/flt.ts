@@ -314,3 +314,42 @@ export interface FltRightsExercise {
   trAmt: number | null;
   trNote: string | null;
 }
+
+/** 매매내역조회 한 행 (I08 Flt10_Tab_TrList, flt10_tr.selectByTrList). 출고는 수량·금액이 음수 */
+export interface FltTrList {
+  trId: number;
+  accountNo: string | null;
+  inOutName: string | null;
+  trTypeName: string | null;
+  regDate: string | null;
+  itemName: string | null;
+  expectTrQty: number | null;
+  expectTrAmt: number | null;
+  statusCode: string | null;
+  statusName: string | null;
+  trDate: string | null;
+  trItemTypeName: string | null;
+  trItemName: string | null;
+  trQty: number | null;
+  trAmt: number | null;
+  trPlRate: number | null;
+  trNote: string | null;
+  trReason: string | null;
+  rejectReason: string | null;
+  addConfirmReason: string | null;
+}
+
+/** 보유내역조회 한 행 (I09 Flt11_Tab_BookList, flt11_book.selectByBookList) */
+export interface FltBookList {
+  bookId: number;
+  accountNo: string | null;
+  itemTypeName: string | null;
+  itemName: string | null;
+  bookQty: number | null;
+  bookAmt: number | null;
+  bookDays: string | null;
+  buyDate: string | null;
+  yearInvestLimit: number | null;
+  totalInvestAmt: number | null;
+  turnoverRate: number | null;
+}

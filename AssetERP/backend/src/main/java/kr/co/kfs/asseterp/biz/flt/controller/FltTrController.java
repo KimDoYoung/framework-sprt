@@ -7,6 +7,7 @@ import kr.co.kfs.asseterp.biz.flt.dto.ItemTypeCodeRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrAccountRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrCheckRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrItemRes;
+import kr.co.kfs.asseterp.biz.flt.dto.TrListRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrSaveReq;
 import kr.co.kfs.asseterp.biz.flt.dto.TrStatusReq;
@@ -14,6 +15,10 @@ import kr.co.kfs.asseterp.biz.flt.dto.TrUnfillReq;
 import kr.co.kfs.asseterp.biz.flt.service.FltTrService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /** 임직원매매 사전신고 (AS-IS Flt10_Tab_BuyReport, Flt10_Lookup_Item, Flt10_Lookup_ExpectTr → server/flt/Flt10_Tr 외) */
@@ -43,6 +49,35 @@ public class FltTrController {
                                            @RequestParam(required = false) String closeDate,
                                            @RequestParam(required = false) String searchText) {
         return ApiResponse.ok(service.search(principal, trType, accountId, regDate, startDate, closeDate, searchText));
+    }
+
+    /** AS-IS flt.Flt10_Tr.selectByTrList (I08 매매내역조회) — 로그인 사용자 본인, trType·ioType 생략 = 전체 */
+    @GetMapping("/list")
+    public ApiResponse<List<TrListRes>> searchList(@AuthenticationPrincipal UserPrincipal principal,
+                                                   @RequestParam String startDate,
+                                                   @RequestParam String closeDate,
+                                                   @RequestParam(defaultValue = "true") boolean preTrYn,
+                                                   @RequestParam(required = false) String trType,
+                                                   @RequestParam(required = false) String ioType,
+                                                   @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchList(principal, startDate, closeDate, preTrYn, trType, ioType, searchText));
+    }
+
+    /** 엑셀다운로드 (AS-IS sys.Sys99_Print.insertRdTrList + RD 리포트 Flt10_Rd_TrList → 조회 결과 xlsx) */
+    @GetMapping("/list/excel")
+    public ResponseEntity<byte[]> downloadList(@AuthenticationPrincipal UserPrincipal principal,
+                                               @RequestParam String startDate,
+                                               @RequestParam String closeDate,
+                                               @RequestParam(defaultValue = "true") boolean preTrYn,
+                                               @RequestParam(required = false) String trType,
+                                               @RequestParam(required = false) String ioType,
+                                               @RequestParam(required = false) String searchText) {
+        byte[] body = service.downloadList(principal, startDate, closeDate, preTrYn, trType, ioType, searchText);
+        String fileName = "임직원 매매내역(" + startDate + " ~ " + closeDate + ").xlsx";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(body);
     }
 
     /** AS-IS flt.Flt02_Emp.selectByDate + flt.Flt04_Oath.selectByDate (화면 위 안내) */

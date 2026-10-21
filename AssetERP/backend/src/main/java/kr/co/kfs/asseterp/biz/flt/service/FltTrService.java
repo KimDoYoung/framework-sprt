@@ -8,6 +8,7 @@ import kr.co.kfs.asseterp.biz.flt.dto.ItemTypeCodeRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrAccountRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrCheckRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrItemRes;
+import kr.co.kfs.asseterp.biz.flt.dto.TrListRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrSaveReq;
 import kr.co.kfs.asseterp.biz.flt.dto.TrStatusReq;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -167,6 +169,42 @@ public class FltTrService {
     /** AS-IS Sys00_Common.selectByFltItemType(종목유형 콤보) */
     public List<ItemTypeCodeRes> itemTypeCodes(UserPrincipal user, String startDate) {
         return mapper.selectItemTypeCodes(user.getCompanyId(), startDate);
+    }
+
+    /** AS-IS Flt10_Tr.selectByTrList (I08) — trType·ioType은 생략하면 전체(`%`), 검색어는 `%검색어%`(클라이언트가 붙이던 것) */
+    public List<TrListRes> searchList(UserPrincipal user, String startDate, String closeDate, boolean preTrYn,
+                                      String trType, String ioType, String searchText) {
+        return mapper.selectTrList(user.getCompanyId(), user.getUserId(), startDate, closeDate, String.valueOf(preTrYn),
+                blankToAll(trType), blankToAll(ioType), like(searchText));
+    }
+
+    /**
+     * 엑셀다운로드 — AS-IS는 Sys99_Print.insertRdTrList + RD 리포트(Flt10_Rd_TrList)에 맡겼다. 같은 조회 결과를 그리드 열 순서로 xlsx에 쓴다.
+     * "사전신고 포함"을 끄면 그리드가 가리는 열 4개(사전신고일·사전신고종목명·사전신고수량·사전신고금액, setPreTrColumn L247-259)는 쓰지 않는다.
+     */
+    public byte[] downloadList(UserPrincipal user, String startDate, String closeDate, boolean preTrYn,
+                               String trType, String ioType, String searchText) {
+        List<TrListRes> list = searchList(user, startDate, closeDate, preTrYn, trType, ioType, searchText);
+        List<String> headers = new ArrayList<>(List.of("계좌", "입/출", "매매구분"));
+        if (preTrYn) {
+            headers.addAll(List.of("사전신고일", "사전신고종목명", "사전신고수량", "사전신고금액"));
+        }
+        headers.add("사전승인");
+        headers.addAll(List.of("매매일자", "종목유형", "종목명", "매매수량", "매매총액", "손익율(%)", "비고"));
+        List<List<Object>> rows = new ArrayList<>();
+        for (TrListRes r : list) {
+            List<Object> v = new ArrayList<>(Arrays.asList(r.accountNo(), r.inOutName(), r.trTypeName()));
+            if (preTrYn) {
+                v.addAll(Arrays.asList(r.regDate(), r.itemName(), r.expectTrQty(), r.expectTrAmt()));
+            }
+            v.addAll(Arrays.asList(r.statusName(), r.trDate(), r.trItemTypeName(), r.trItemName(), r.trQty(), r.trAmt(), r.trPlRate(), r.trNote()));
+            rows.add(v);
+        }
+        return FltExcelWriter.write("임직원 매매내역", headers, rows);
+    }
+
+    private static String blankToAll(String code) {
+        return code == null || code.isBlank() ? "%" : code;
     }
 
     private static String like(String text) {

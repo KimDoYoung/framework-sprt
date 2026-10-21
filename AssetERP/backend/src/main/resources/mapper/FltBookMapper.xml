@@ -198,6 +198,65 @@
          ORDER BY flt11_account_no, flt11_item_nm collate "ko_KR.utf8" asc, flt11_item_type
     </select>
 
+    <!-- AS-IS(IDMS-IC) flt11_book.selectByBookList L242 (I09 보유내역조회) — 로그인 사용자 본인의 기준일 보유내역 + 연간투자금액·누적투자금액·월간회전율.
+         바깥 SELECT는 그리드 열만 DTO 열로 명시, 날짜 TO_CHAR (personId·searchText 가지는 이 화면이 항상 값을 줘서 조건 없이 쓴다) -->
+    <select id="selectBookList" resultType="kr.co.kfs.asseterp.biz.flt.dto.BookListRes">
+        WITH invest_limit AS ( SELECT emp00_person_id
+                                    , f_get_floorTrCheck('1', emp00_company_id, emp00_person_id, CAST(#{baseDate} AS date), false)  AS flt11_year_invest_limit
+                                    , f_get_floorTrCheck('2', emp00_company_id, emp00_person_id, CAST(#{baseDate} AS date), false)  AS flt11_total_invest_amt
+                                    , f_get_floorTrCheck('3', emp00_company_id, emp00_person_id, CAST(#{baseDate} AS date), false)  AS flt11_turnover_rate
+                                 FROM getPerson(#{companyId}, CAST(#{baseDate} AS date))
+                                WHERE emp00_person_id  = #{personId}
+                                  AND (   emp00_retire_date IS NULL
+                                       OR emp00_retire_date >= CAST(#{baseDate} AS date) )
+                                  AND NOT EXISTS ( SELECT 1
+                                                     FROM emp04_add_title
+                                                    WHERE emp04_add_person_id = emp00_person_id )
+        )
+        SELECT flt11_book_id                                  AS book_id
+             , flt11_account_no                               AS account_no
+             , flt11_item_type_nm                             AS item_type_name
+             , flt11_item_nm                                  AS item_name
+             , flt11_book_qty                                 AS book_qty
+             , flt11_book_amt                                 AS book_amt
+             , CASE WHEN flt11_buy_date IS NULL THEN ''
+                    ELSE f_get_biz_days(flt11_company_id, flt11_buy_date, flt11_book_date)-1||' 영업일' END  AS book_days
+             , TO_CHAR(flt11_buy_date, 'YYYY-MM-DD')          AS buy_date
+             , flt11_year_invest_limit                        AS year_invest_limit
+             , flt11_total_invest_amt                         AS total_invest_amt
+             , flt11_turnover_rate                            AS turnover_rate
+          FROM (
+                SELECT  *
+                     ,  f_emp_kor_nm(flt11_person_id)                                                          AS flt11_person_nm
+                     ,  f_get_empTrans(flt11_person_id, flt11_book_date, 'org_code_nm')                        AS flt11_org_nm
+                     ,  flt05_item_type_nm                                                                     AS flt11_item_type_nm
+                     ,  TO_DECRYPTS(flt03_account_no) || ' (' || sys15_corp_nm || ')'                          AS flt11_account_no
+                     ,  f_get_floorTrRcntBuyDate( flt11_company_id, flt11_person_id, flt11_account_id
+                                                , flt11_item_type, flt11_item_nm, flt11_item_cd
+                                                , flt11_book_date, false )                                     AS flt11_buy_date
+                  FROM  flt11_book
+                        INNER JOIN flt03_account    ON flt03_account_id = flt11_account_id
+                        INNER JOIN sys15_corp       ON sys15_corp_id = flt03_corp_id
+                        INNER JOIN flt05_item_type  ON ( flt05_company_id   = flt11_company_id      AND
+                                                         flt05_item_type_cd = flt11_item_type       AND
+                                                         flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                                  FROM flt05_item_type
+                                                                                 WHERE flt05_company_id   = flt11_company_id
+                                                                                   AND flt05_item_type_cd = flt11_item_type
+                                                                                   AND flt05_start_date <![CDATA[<=]]> flt11_book_date ) )
+                 WHERE  flt11_company_id = #{companyId}
+                   AND  flt11_book_date  = CAST(#{baseDate} AS date)
+                   AND  flt11_person_id  = #{personId}
+               ) a
+               INNER JOIN invest_limit ON emp00_person_id = flt11_person_id
+         WHERE CONCAT(flt11_account_no, flt11_item_type_nm, flt11_item_nm) ILIKE #{searchText}
+         ORDER BY flt11_org_nm collate "ko_KR.utf8" asc
+                , flt11_person_nm collate "ko_KR.utf8" asc
+                , flt11_account_no
+                , flt11_item_nm collate "ko_KR.utf8" asc
+                , flt11_item_type
+    </select>
+
     <!-- AS-IS(IDMS-IC) flt01_company_std.selectByDate 에서 의무보유기간 기준 열만 -->
     <select id="selectLockupStd" resultType="kr.co.kfs.asseterp.biz.flt.dto.LockupStdRes">
         SELECT flt01_lock_up_cd           AS lock_up_code

@@ -1,8 +1,9 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
+import { readBlobError } from './file';
 import {
-  FltAccount, FltAccountClose, FltAccountStatus, FltBook, FltBuyLockup, FltLockupStd, FltDocClass, FltInvestLimit, FltItemType, FltItemTypeCode,
-  FltAcntTransfer, FltBookMonth, FltEmpLimit, FltRealTr, FltRelateAppr, FltReportCheck, FltRightsExercise, FltTr, FltTrAccount, FltTrCheck, FltTrItem,
+  FltAccount, FltAccountClose, FltAccountStatus, FltBook, FltBookList, FltBuyLockup, FltLockupStd, FltDocClass, FltInvestLimit, FltItemType, FltItemTypeCode,
+  FltAcntTransfer, FltBookMonth, FltEmpLimit, FltRealTr, FltRelateAppr, FltReportCheck, FltRightsExercise, FltTr, FltTrAccount, FltTrCheck, FltTrItem, FltTrList,
 } from '../types/flt';
 
 /** flt(임직원매매) 화면 API (E08~) */
@@ -353,4 +354,45 @@ export const fltApi = {
   createRightsExerciseBook: async (row: { trItemType: string | null; trItemName: string | null; trItemCode: string | null; regDate: string }): Promise<void> => {
     await apiClient.post<ApiResponse<number>>('v1/flt/rights-exercises/book', row);
   },
+
+  // ── I08 매매내역조회 (Flt10_Tab_TrList) · I09 보유내역조회 (Flt11_Tab_BookList) ──
+
+  /** AS-IS flt.Flt10_Tr.selectByTrList (로그인 사용자 본인). trType·ioType '%'=전체, 검색어는 서버가 %…%로 */
+  searchTrList: async (params: { startDate: string; closeDate: string; preTrYn: boolean; trType: string; ioType: string; searchText: string }): Promise<FltTrList[]> => {
+    const res = await apiClient.get<ApiResponse<FltTrList[]>>('v1/flt/trs/list', { params });
+    return res.data.data ?? [];
+  },
+
+  /** 엑셀다운로드 (AS-IS Sys99_Print.insertRdTrList + RD 리포트 → xlsx) — 조회 조건 그대로, 브라우저 저장 */
+  downloadTrListExcel: async (params: { startDate: string; closeDate: string; preTrYn: boolean; trType: string; ioType: string; searchText: string }, fileName: string): Promise<void> => {
+    await downloadBlob('v1/flt/trs/list/excel', params, fileName);
+  },
+
+  /** AS-IS flt.Flt11_Book.selectByBookList (로그인 사용자 본인). 검색어는 서버가 %…%로 */
+  searchBookList: async (baseDate: string, searchText: string): Promise<FltBookList[]> => {
+    const res = await apiClient.get<ApiResponse<FltBookList[]>>('v1/flt/books/list', { params: { baseDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** 엑셀다운로드 (AS-IS Sys99_Print.insertRdBookList + RD 리포트 → xlsx) */
+  downloadBookListExcel: async (baseDate: string, searchText: string, fileName: string): Promise<void> => {
+    await downloadBlob('v1/flt/books/list/excel', { baseDate, searchText }, fileName);
+  },
 };
+
+/** 엑셀 응답(blob)을 브라우저로 저장한다. 서버 오류는 blob 안의 메시지를 읽어 던진다 */
+async function downloadBlob(path: string, params: object, fileName: string): Promise<void> {
+  try {
+    const res = await apiClient.get<Blob>(path, { params, responseType: 'blob' });
+    const url = URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (err) {
+    throw await readBlobError(err);
+  }
+}

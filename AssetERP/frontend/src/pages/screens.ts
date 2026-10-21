@@ -15,6 +15,8 @@ import { Flt10_Tab_RealTransaction } from './flt/Flt10_Tab_RealTransaction';
 import { Flt10_Tab_SellReport } from './flt/Flt10_Tab_SellReport';
 import { Flt10_Tab_AcntTransfer } from './flt/Flt10_Tab_AcntTransfer';
 import { Flt10_Tab_RightsExercise } from './flt/Flt10_Tab_RightsExercise';
+import { Flt10_Tab_TrList } from './flt/Flt10_Tab_TrList';
+import { Flt11_Tab_BookList } from './flt/Flt11_Tab_BookList';
 import { Flt05_Tab_ItemTypeAdmin } from './flt/Flt05_Tab_ItemTypeAdmin';
 import { Fnd03_Tab_ConsignmentManager } from './fnd/Fnd03_Tab_ConsignmentManager';
 import { Fnd06_Tab_OfficeWorkManager } from './fnd/Fnd06_Tab_OfficeWorkManager';
@@ -153,6 +155,8 @@ export const SCREENS: Record<string, React.FC> = {
   Flt10_Tab_RealTransaction, // I05 (1단계: 본 화면 + 계좌정보·코드설정 창 + 엑셀업로드. 상신 창 Apr01_Edit_ApprDoc·문서보기 Flt14_Lookup_RelateAppr는 다음 단계)
   Flt10_Tab_AcntTransfer, // I06 (1단계=전체: 본 화면 + 등록·변경 창 + 보유내역 조회창 expectYn=false)
   Flt10_Tab_RightsExercise, // I07 (1단계=전체: 본 화면 + 등록·변경 창 + 보유내역·계좌·종목 조회창. 다른 도메인 의존 없음)
+  Flt10_Tab_TrList, // I08 (1단계=전체: 본 화면 하나, 엑셀은 RD 대신 서버 xlsx. 다른 도메인 의존 없음)
+  Flt11_Tab_BookList, // I09 (1단계=전체: 본 화면 하나. [최초원장 등록]은 원본에서 툴바에 연결이 없어 화면에 없다)
   Flt10_Tab_SellReport, // I04 (1단계: 본 화면 + 보유내역 조회창 Flt11_Lookup_BookList(I09 공유). 보고주기·서약서 창 Flt02_Lookup_Emp는 다음 단계)
   Flt05_Tab_ItemTypeAdmin, // E08
   Fnd03_Tab_ConsignmentManager, // D11 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)

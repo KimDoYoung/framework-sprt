@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.flt.mapper;
 
+import kr.co.kfs.asseterp.biz.flt.dto.BookListRes;
 import kr.co.kfs.asseterp.biz.flt.dto.BookRes;
 import kr.co.kfs.asseterp.biz.flt.dto.LockupStdRes;
 import org.apache.ibatis.annotations.Mapper;
@@ -20,6 +21,10 @@ public interface FltBookMapper {
     List<BookRes> selectBooks(@Param("companyId") Long companyId, @Param("personId") Long personId,
                               @Param("accountId") Long accountId, @Param("stdDate") String stdDate,
                               @Param("searchText") String searchText);
+
+    /** AS-IS flt11_book.selectByBookList (I09 보유내역조회) */
+    List<BookListRes> selectBookList(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                     @Param("baseDate") String baseDate, @Param("searchText") String searchText);
 
     /** AS-IS flt01_company_std.selectByDate 에서 의무보유기간 열 */
     LockupStdRes selectLockupStd(@Param("companyId") Long companyId, @Param("stdDate") String stdDate);

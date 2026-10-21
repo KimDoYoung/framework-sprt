@@ -14,6 +14,7 @@ import kr.co.kfs.asseterp.biz.flt.dto.RightsExerciseSaveReq;
 import kr.co.kfs.asseterp.biz.flt.dto.TrAccountRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrCheckRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrItemRes;
+import kr.co.kfs.asseterp.biz.flt.dto.TrListRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrSaveReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -26,6 +27,12 @@ import java.util.List;
 public interface FltTrMapper {
 
     // flt10_tr
+    /** AS-IS flt10_tr.selectByTrList (I08 매매내역조회) — ioType·trType은 `%`가 전체 */
+    List<TrListRes> selectTrList(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                 @Param("startDate") String startDate, @Param("closeDate") String closeDate,
+                                 @Param("preTrYn") String preTrYn, @Param("trType") String trType,
+                                 @Param("ioType") String ioType, @Param("searchText") String searchText);
+
     List<TrRes> selectTrs(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("trType") String trType,
                           @Param("accountId") Long accountId, @Param("regDate") String regDate,
                           @Param("startDate") String startDate, @Param("closeDate") String closeDate,
