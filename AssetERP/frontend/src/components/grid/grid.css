@@ -59,7 +59,6 @@
 }
 .gb-cell-changed {
   background-color: #fff6cc !important;
-  position: relative;
 }
 .gb-cell-changed::before {
   content: '';
