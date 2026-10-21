@@ -37,7 +37,12 @@ public class FltAccountService {
 
     /** AS-IS Flt03_Account.selectByDate L50(companyId, personId=null, setupDate, closeAccountYn) — 계좌신고현황(J01), 회사 전체 */
     public List<AccountAdminRes> searchByDate(UserPrincipal user, String setupDate, boolean closeAccountYn) {
-        return mapper.selectByDate(user.getCompanyId(), setupDate, closeAccountYn);
+        return mapper.selectByDate(user.getCompanyId(), null, setupDate, closeAccountYn);
+    }
+
+    /** AS-IS Flt03_Account.selectByDate L50(companyId, personId, setupDate, closeAccountYn) — 사원 한 명의 계좌(J07 Flt03_Lookup_AccountView) */
+    public List<AccountAdminRes> searchByDate(UserPrincipal user, Long personId, String setupDate, boolean closeAccountYn) {
+        return mapper.selectByDate(user.getCompanyId(), personId, setupDate, closeAccountYn);
     }
 
     /** AS-IS update(UpdateDataModel): 계좌번호를 암호화해 저장, ID가 0 이하면 INSERT 아니면 UPDATE → selectById로 다시 읽어 요청 순서대로 */

@@ -65,6 +65,11 @@ public class SysFileService {
         return sysFileMapper.selectByParentId(parentId);
     }
 
+    /** AS-IS Sys10_File.selectByFamilyConsentId L252 (J07 가족동의서 조회창) — 로그인 회사의 사원만 */
+    public List<FileRes> searchByFamilyConsent(UserPrincipal user, Long personId) {
+        return sysFileMapper.selectByFamilyConsentId(user.getCompanyId(), personId);
+    }
+
     /** AS-IS Sys10_File.selectByTotalSize L180 (A16 고객별 서버사용량) — 관리자 메뉴라 sys admin만 */
     public List<FileTotalRes> selectByTotalSize(UserPrincipal user, boolean useYn) {
         requireSysAdmin(user);

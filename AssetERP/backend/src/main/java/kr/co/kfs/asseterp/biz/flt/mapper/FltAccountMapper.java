@@ -18,8 +18,8 @@ public interface FltAccountMapper {
     // flt03_account
     List<AccountRes> selectByPersonId(@Param("companyId") Long companyId, @Param("personId") Long personId);
 
-    /** AS-IS flt03_account.selectByDate — 회사 전체(personId 분기 없음), 기준일에 재직 중인 사원의 계좌 */
-    List<AccountAdminRes> selectByDate(@Param("companyId") Long companyId, @Param("setupDate") String setupDate,
+    /** AS-IS flt03_account.selectByDate — 기준일에 재직 중인 사원의 계좌. personId가 null이면 회사 전체(J01), 값이 있으면 그 사원(J07) */
+    List<AccountAdminRes> selectByDate(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("setupDate") String setupDate,
                                        @Param("closeAccountYn") boolean closeAccountYn);
 
     AccountRes selectById(@Param("accountId") Long accountId);

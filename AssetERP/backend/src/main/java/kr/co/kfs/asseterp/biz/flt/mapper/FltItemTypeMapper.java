@@ -23,6 +23,9 @@ public interface FltItemTypeMapper {
 
     int deleteItemTypes(@Param("companyId") Long companyId, @Param("itemTypeIds") List<Long> itemTypeIds);
 
+    /** AS-IS selectUseCount (J09 종목유형설정 조회창의 삭제 검사) — 같은 코드가 다른 행에 없을 때만 매매·보유 내역의 사용 건수 */
+    int selectUseCount(@Param("companyId") Long companyId, @Param("itemTypeId") Long itemTypeId, @Param("itemTypeCode") String itemTypeCode);
+
     /** AS-IS insertInitData: 고른 종목유형 한 건을 고객사로 복사 */
     int insertInitData(@Param("companyId") Long companyId, @Param("itemTypeId") Long itemTypeId);
 }

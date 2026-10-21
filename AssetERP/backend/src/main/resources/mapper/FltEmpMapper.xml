@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS server/flt/mapper/flt02_emp.xml (selectByCompanyId L57, selectByCompanyId2 L95), flt01_company_std.xml (selectByDate)
+  J07 임직원매매현황. 안쪽 사원 기준 CTE(원본 flt10_tr.selectEmp)와 위반 건수용 위반 쿼리(원본 flt10_tr.selectViolate)는 I10에서 옮긴
+  FltTrMapper의 violateEmp·violateBody 조각을 그대로 쓴다.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.flt.mapper.FltEmpMapper">
+
+    <!-- AS-IS(IDMS-IC) flt02_emp.selectByCompanyId / selectByCompanyId2 를 한 문장으로 — 두 문장은 flt02_note 한 열만 다르다
+         (화면: CASE … '있음' / 엑셀(Report Designer 전용 selectByCompanyId2): 준감인의견 글 전체 서브쿼리).
+         바깥 SELECT는 그리드 열을 DTO 열로 명시, 날짜 TO_CHAR, `#{stdDate}::date` → CAST, 끝에 ORDER BY flt02_emp_id(원본은 바깥 정렬이 없으나 ROW_NUMBER 순서로 나온다) -->
+    <select id="selectEmpInfos" resultType="kr.co.kfs.asseterp.biz.flt.dto.EmpInfoRes">
+        <include refid="kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper.violateEmp"/>
+        SELECT flt02_emp_id                       AS emp_id
+             , flt02_person_id                    AS person_id
+             , flt02_org_nm                       AS org_name
+             , flt02_person_nm                    AS person_name
+             , flt02_oath_yn_nm                   AS oath_yn_name
+             , flt02_family_yn_nm                 AS family_yn_name
+             , flt02_account_cnt_str              AS account_cnt_str
+             , flt02_check_cycle                  AS check_cycle
+             , flt02_check_cycle_nm               AS check_cycle_name
+             , TO_CHAR(flt02_rcnt_report_date, 'YYYY-MM-DD') AS rcnt_report_date
+             , flt02_year_invest_limit            AS year_invest_limit
+             , flt02_year_invest_amt              AS year_invest_amt
+             , flt02_total_invest_amt             AS total_invest_amt
+             , flt02_turnover_rate                AS turnover_rate
+             , flt02_daily_avg                    AS daily_avg
+             , flt02_violate_cnt_str              AS violate_cnt_str
+             , flt02_note                         AS note
+             , TO_CHAR(flt02_note_date, 'YYYY-MM-DD') AS note_date
+          FROM (
+    SELECT row_number() over(ORDER BY org02_sort_order, emp03_pos_cd, emp01_emp_no)         AS flt02_emp_id
+         , emp01_company_id                                                                 AS flt02_company_id
+         , org02_kor_nm                                                                     AS flt02_org_nm
+         , emp01_person_id                                                                  AS flt02_person_id
+         , emp01_kor_nm                                                                     AS flt02_person_nm
+         , flt02_check_cycle                                                                AS flt02_check_cycle
+         , check_cycle_nm                                                                   AS flt02_check_cycle_nm
+         , oath_yn_nm                                                                       AS flt02_oath_yn_nm
+         , family_yn_nm                                                                     AS flt02_family_yn_nm
+         , account_cnt_str                                                                  AS flt02_account_cnt_str
+         , flt02_year_invest_limit                                                          AS flt02_year_invest_limit
+         , emp01_year_invest_limit                                                          AS flt02_year_invest_amt
+         , emp01_total_invest_amt                                                           AS flt02_total_invest_amt
+         , emp01_turnover_rate                                                              AS flt02_turnover_rate
+         , f_get_floorTrCheck('4', emp01_company_id, emp01_person_id, CAST(#{stdDate} AS date), false)    AS flt02_daily_avg
+         , rcnt_report_date                                                                 AS flt02_rcnt_report_date
+         , COALESCE(violate_cnt, 0)||'건'                                                    AS flt02_violate_cnt_str
+        <choose>
+            <when test="noteFull">
+         , (SELECT COALESCE(flt15_note, '')
+              FROM flt15_tr_status
+             WHERE flt15_company_id = emp01_company_id
+               AND flt15_person_id = emp01_person_id
+               AND flt15_date = (CASE WHEN flt02_check_cycle = '2'
+                                      THEN f_get_last_day(CAST(#{stdDate} AS date))
+                                      ELSE f_get_last_day((f_get_quarter_date(CAST(#{stdDate} AS date),'1') + interval '3month')::date)
+                                 END))                                                      AS flt02_note
+            </when>
+            <otherwise>
+         , CASE WHEN length(COALESCE(flt15_note,'')) = 0 THEN '' ELSE '있음' END             AS flt02_note
+            </otherwise>
+        </choose>
+         , CASE WHEN flt02_check_cycle = '2'
+                THEN f_get_last_day(CAST(#{stdDate} AS date))
+                ELSE f_get_last_day((f_get_quarter_date(CAST(#{stdDate} AS date),'1') + interval '3month')::date)
+           END                                                                              AS flt02_note_date
+      FROM emp
+           LEFT OUTER JOIN ( SELECT emp01_person_id as person_id
+                                  , count(*)        as violate_cnt
+                               FROM (<include refid="kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper.violateBody"/>) ta
+                              GROUP BY emp01_person_id ) tb ON person_id = emp01_person_id
+           LEFT OUTER JOIN flt15_tr_status ON (    flt15_company_id = emp01_company_id
+                                               AND flt15_person_id  = emp01_person_id
+                                               AND flt15_date       = (CASE WHEN flt02_check_cycle = '2' THEN f_get_last_day(CAST(#{stdDate} AS date))
+                                                                            ELSE f_get_last_day((f_get_quarter_date(CAST(#{stdDate} AS date),'1') + interval '3month')::date)
+                                                                       END) )
+     WHERE UPPER(CONCAT(org02_kor_nm,emp01_kor_nm)) LIKE UPPER(#{searchText})
+               ) e
+         ORDER BY flt02_emp_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt01_company_std.selectByDate 에서 investLimitUnvisibleYn 열만 -->
+    <select id="selectInvestLimitUnvisible" resultType="boolean">
+        SELECT COALESCE(flt01_invest_limit_unvisible_yn, 'false') = 'true'
+          FROM flt01_company_std
+         WHERE flt01_company_id = #{companyId}
+           AND flt01_start_date <![CDATA[<=]]> CAST(#{stdDate} AS date)
+         ORDER BY flt01_start_date DESC
+         LIMIT 1
+    </select>
+</mapper>

@@ -37,12 +37,13 @@ public class FltAccountController {
         return ApiResponse.ok(service.search(principal));
     }
 
-    /** AS-IS flt.Flt03_Account.selectByDate (J01 계좌신고현황, 회사 전체) */
+    /** AS-IS flt.Flt03_Account.selectByDate (J01 계좌신고현황 — personId 생략 = 회사 전체, J07 계좌정보 조회창 — 사원 한 명) */
     @GetMapping("/status-by-date")
     public ApiResponse<List<AccountAdminRes>> searchByDate(@AuthenticationPrincipal UserPrincipal principal,
+                                                           @RequestParam(required = false) Long personId,
                                                            @RequestParam String setupDate,
                                                            @RequestParam(defaultValue = "true") boolean closeAccountYn) {
-        return ApiResponse.ok(service.searchByDate(principal, setupDate, closeAccountYn));
+        return ApiResponse.ok(service.searchByDate(principal, personId, setupDate, closeAccountYn));
     }
 
     /** AS-IS flt.Flt03_Account.update → 저장된 행(요청 순서) */

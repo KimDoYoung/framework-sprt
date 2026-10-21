@@ -57,7 +57,7 @@
          ORDER BY flt03_setup_date, sys15_corp_nm collate "ko_KR.utf8" asc, TO_DECRYPTS(flt03_account_no)
     </select>
 
-    <!-- AS-IS(IDMS-IC) flt03_account.selectByDate L149 (J01 계좌신고현황). personId 분기는 쓰지 않는다(전 사원). SELECT *는 DTO 열로 명시.
+    <!-- AS-IS(IDMS-IC) flt03_account.selectByDate L149 (J01 계좌신고현황·J07 계좌정보 조회창). personId가 null이면 전 사원, 값이 있으면 그 사원(정렬도 원본이 가른다). SELECT *는 DTO 열로 명시.
          closeAccountYn=false(폐쇄계좌 포함 해제)면 기준일 전에 폐쇄된 계좌를 뺀다 -->
     <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.flt.dto.AccountAdminRes">
         SELECT flt03_account_id                                                             AS account_id,
@@ -71,6 +71,7 @@
                f_get_itemtype_nm(flt03_item_type, flt03_company_id)                         AS item_type_name,
                TO_CHAR(flt03_setup_date, 'YYYY-MM-DD')                                      AS setup_date,
                flt03_appr_id                                                                AS appr_id,
+               TO_CHAR(appr.apr01_reg_date, 'YYYY-MM-DD')                                   AS appr_reg_date,
                f_cdnm('AprStatusCode', appr.apr01_status_cd, appr.apr01_company_id, appr.apr01_reg_date) AS appr_status_name,
                TO_CHAR(flt06_close_date, 'YYYY-MM-DD')                                      AS close_date,
                flt06_appr_id                                                                AS close_appr_id,
@@ -82,13 +83,25 @@
                LEFT OUTER JOIN flt06_account_close ON flt06_account_id = flt03_account_id
                LEFT OUTER JOIN apr01_appr closeAppr ON flt06_appr_id = closeAppr.apr01_appr_id
          WHERE flt03_company_id = #{companyId}
+        <if test="personId != null">
+           AND flt03_person_id = #{personId}
+        </if>
            AND flt03_setup_date &lt;= CAST(#{setupDate} AS date)
         <if test="!closeAccountYn">
            AND COALESCE(flt06_close_date, DATE '9999-12-31') &gt;= CAST(#{setupDate} AS date)
         </if>
+        <choose>
+            <when test="personId != null">
+         ORDER BY CASE WHEN flt03_main_account_yn = 'true' THEN 0 ELSE 1 END,
+                  sys15_corp_nm collate "ko_KR.utf8" asc,
+                  account_no_dec
+            </when>
+            <otherwise>
          ORDER BY emp00_org_code_nm collate "ko_KR.utf8" asc,
                   emp00_kor_nm,
                   CASE WHEN flt03_main_account_yn = 'true' THEN 0 ELSE 1 END
+            </otherwise>
+        </choose>
     </select>
 
     <!-- AS-IS(IDMS-IC) flt03_account.selectById -->

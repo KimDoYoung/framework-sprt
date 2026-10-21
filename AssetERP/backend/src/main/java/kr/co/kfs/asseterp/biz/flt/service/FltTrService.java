@@ -3,6 +3,8 @@ package kr.co.kfs.asseterp.biz.flt.service;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountStatusRes;
 import kr.co.kfs.asseterp.biz.flt.dto.BuyLockupRes;
+import kr.co.kfs.asseterp.biz.flt.dto.EmpApprDocRes;
+import kr.co.kfs.asseterp.biz.flt.dto.EmpApprRes;
 import kr.co.kfs.asseterp.biz.flt.dto.InvestLimitRes;
 import kr.co.kfs.asseterp.biz.flt.dto.ItemTypeCodeRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrAccountRes;
@@ -251,6 +253,24 @@ public class FltTrService {
                     r.trDate(), r.trItemName(), r.rejectReason(), r.trNote()));
         }
         return FltExcelWriter.write("임직원매매 위반내역", headers, rows);
+    }
+
+    /** AS-IS Flt10_Tr.selectEmpAppr (J06 정기보고현황) — 기준일 시점 재직 사원의 서약서·점검주기·상신상태. 검색어는 `%검색어%`(클라이언트가 붙이던 것) */
+    public List<EmpApprRes> searchEmpApprs(UserPrincipal user, String stdDate, boolean unApprYn, String searchText) {
+        return mapper.selectEmpAppr(user.getCompanyId(), stdDate, unApprYn, like(searchText));
+    }
+
+    /** AS-IS Flt10_Tr.selectByApprId (J06 Flt10_Grid_EmpAppr) — 사원의 기간 내 정기보고 상신문서 */
+    public List<EmpApprDocRes> searchEmpApprDocs(UserPrincipal user, Long personId, String startDate, String closeDate) {
+        return mapper.selectEmpApprDocs(user.getCompanyId(), personId, startDate, closeDate);
+    }
+
+    /** AS-IS Flt10_Tr.deleteAppr (L647) — 폐기 보관(apr99) → 상신문서 삭제 → 매매내역 연결 끊기. 원본과 같이 본인 문서 제한은 없고 회사만 본다 */
+    @Transactional
+    public void deleteAppr(UserPrincipal user, Long apprId) {
+        mapper.insertApprDelAdmin(user.getCompanyId(), user.getUserId(), apprId);
+        mapper.deleteApprAdmin(user.getCompanyId(), apprId);
+        mapper.clearApprIdAdmin(user.getCompanyId(), apprId);
     }
 
     private static String blankToAll(String code) {

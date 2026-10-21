@@ -2,6 +2,8 @@ package kr.co.kfs.asseterp.biz.flt.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.flt.dto.BuyLockupRes;
+import kr.co.kfs.asseterp.biz.flt.dto.EmpApprDocRes;
+import kr.co.kfs.asseterp.biz.flt.dto.EmpApprRes;
 import kr.co.kfs.asseterp.biz.flt.dto.InvestLimitRes;
 import kr.co.kfs.asseterp.biz.flt.dto.ItemTypeCodeRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrAccountRes;
@@ -23,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -131,6 +134,31 @@ public class FltTrController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(body);
+    }
+
+    /** AS-IS flt.Flt10_Tr.selectEmpAppr (J06 정기보고현황) — 기준일 시점 사원별 서약서·점검주기·상신상태. unApprYn=true면 미보고건만 */
+    @GetMapping("/emp-apprs")
+    public ApiResponse<List<EmpApprRes>> searchEmpApprs(@AuthenticationPrincipal UserPrincipal principal,
+                                                        @RequestParam String stdDate,
+                                                        @RequestParam(defaultValue = "false") boolean unApprYn,
+                                                        @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchEmpApprs(principal, stdDate, unApprYn, searchText));
+    }
+
+    /** AS-IS flt.Flt10_Tr.selectByApprId (J06 Flt10_Grid_EmpAppr) — 사원의 기간 내 정기보고 상신문서 */
+    @GetMapping("/emp-apprs/docs")
+    public ApiResponse<List<EmpApprDocRes>> searchEmpApprDocs(@AuthenticationPrincipal UserPrincipal principal,
+                                                              @RequestParam Long personId,
+                                                              @RequestParam String startDate,
+                                                              @RequestParam String closeDate) {
+        return ApiResponse.ok(service.searchEmpApprDocs(principal, personId, startDate, closeDate));
+    }
+
+    /** AS-IS flt.Flt10_Tr.deleteAppr (J06 삭제 아이콘) — 상신문서를 삭제(폐기 보관 포함)하고 매매내역 연결을 끊는다 */
+    @DeleteMapping("/emp-apprs/docs/{apprId}")
+    public ApiResponse<Void> deleteEmpAppr(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long apprId) {
+        service.deleteAppr(principal, apprId);
+        return ApiResponse.ok(null);
     }
 
     /** AS-IS flt.Flt02_Emp.selectByDate + flt.Flt04_Oath.selectByDate (화면 위 안내) */

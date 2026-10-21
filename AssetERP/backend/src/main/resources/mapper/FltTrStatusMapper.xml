@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS server/flt/mapper/flt15_tr_status.xml (J07 임직원매매현황 메모 Flt15_Lookup_Note) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.flt.mapper.FltTrStatusMapper">
+
+    <sql id="trStatusColumns">
+        flt15_tr_status_id                  AS tr_status_id,
+        flt15_person_id                     AS person_id,
+        TO_CHAR(flt15_date, 'YYYY-MM-DD')   AS date,
+        flt15_note                          AS note
+    </sql>
+
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.flt.dto.TrStatusRes">
+        SELECT <include refid="trStatusColumns"/>
+          FROM flt15_tr_status
+         WHERE flt15_company_id = #{companyId}
+           AND flt15_person_id  = #{personId}
+           AND flt15_date       = CAST(#{stdDate} AS date)
+    </select>
+
+    <!-- AS-IS flt15_tr_status.insert: INSERT … SELECT f_create_seq(), 회사, 사원, 기준일 (메모는 NULL) -->
+    <insert id="insert">
+        INSERT INTO flt15_tr_status (flt15_tr_status_id, flt15_company_id, flt15_person_id, flt15_date)
+        SELECT f_create_seq(), #{companyId}, #{personId}, CAST(#{stdDate} AS date)
+    </insert>
+
+    <update id="updateNote">
+        UPDATE flt15_tr_status
+           SET flt15_note = #{note}
+         WHERE flt15_tr_status_id = #{trStatusId}
+           AND flt15_company_id   = #{companyId}
+    </update>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.flt.dto.TrStatusRes">
+        SELECT <include refid="trStatusColumns"/>
+          FROM flt15_tr_status
+         WHERE flt15_tr_status_id = #{trStatusId}
+           AND flt15_company_id   = #{companyId}
+    </select>
+</mapper>

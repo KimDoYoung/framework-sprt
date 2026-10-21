@@ -51,6 +51,12 @@ public class FltItemTypeController {
         return ApiResponse.ok(service.delete(principal, companyId, ids));
     }
 
+    /** AS-IS flt.Flt05_ItemType.selectUseCount (J09 종목유형설정 조회창의 삭제 검사) → 사용 중인 유형 이름(`/` 구분), 없으면 null */
+    @PostMapping("/use-check")
+    public ApiResponse<String> useCheck(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> ids) {
+        return ApiResponse.ok(service.selectUsedNames(principal, ids));
+    }
+
     /** AS-IS flt.Flt05_ItemType.insertInitData (등록(복사) — 관리자만) → 복사한 건수 */
     @PostMapping("/copy")
     public ApiResponse<Integer> insertInitData(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ItemTypeCopyReq req) {

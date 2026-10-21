@@ -58,6 +58,30 @@ public class FltItemTypeService {
         return mapper.deleteItemTypes(target, ids);
     }
 
+    /**
+     * AS-IS Flt05_ItemType.selectUseCount (J09 종목유형설정 조회창이 삭제 전에 부른다) — 사용 중인 유형 이름을 `/`로 이은 것. 없으면 null.
+     * 원본은 클라이언트가 보낸 코드·이름을 믿었지만 여기서는 ID로 다시 읽고, 로그인 회사 행만 본다
+     */
+    public String selectUsedNames(UserPrincipal user, List<Long> ids) {
+        StringBuilder names = new StringBuilder();
+        int sum = 0;
+        for (Long id : ids == null ? List.<Long>of() : ids) {
+            ItemTypeRes row = mapper.selectById(id);
+            if (row == null || !user.getCompanyId().equals(row.companyId())) {
+                continue;
+            }
+            int useCount = mapper.selectUseCount(user.getCompanyId(), row.itemTypeId(), row.itemTypeCode());
+            if (useCount > 0) {
+                if (sum > 0) {
+                    names.append('/');
+                }
+                names.append(row.itemTypeName());
+            }
+            sum += useCount;
+        }
+        return sum > 0 ? names.toString() : null;
+    }
+
     /** AS-IS insertInitData: 고른 종목유형을 고객사로 복사(기존 행은 지우지 않는다 — 원본 동작) → 복사한 건수. 관리자 회사만 */
     @Transactional
     public int insertInitData(UserPrincipal user, ItemTypeCopyReq req) {

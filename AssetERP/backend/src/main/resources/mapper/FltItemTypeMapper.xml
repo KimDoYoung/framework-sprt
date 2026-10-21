@@ -41,6 +41,42 @@
          WHERE flt05_item_type_id = #{itemTypeId}
     </select>
 
+    <!-- AS-IS(IDMS-IC) flt05_item_type.selectUseCount (J09 종목유형설정 조회창) -->
+    <select id="selectUseCount" resultType="int">
+        SELECT COALESCE(CASE WHEN ( SELECT count(*)
+                                      FROM flt05_item_type
+                                     WHERE flt05_company_id    = #{companyId}
+                                       AND flt05_item_type_cd  = #{itemTypeCode}
+                                       AND flt05_item_type_id != #{itemTypeId}
+                                  ) = 0 THEN SUM(useCount) ELSE 0 END, 0)
+          FROM (
+                 SELECT COUNT(*) AS useCount
+                   FROM flt10_tr
+                  WHERE flt10_company_id = #{companyId}
+                    AND flt10_item_type  = #{itemTypeCode}
+                  UNION ALL
+                 SELECT COUNT(*) AS useCount
+                   FROM flt10_tr
+                  WHERE flt10_company_id   = #{companyId}
+                    AND flt10_tr_item_type = #{itemTypeCode}
+                  UNION ALL
+                 SELECT COUNT(*) AS useCount
+                   FROM flt11_book
+                  WHERE flt11_company_id = #{companyId}
+                    AND flt11_item_type  = #{itemTypeCode}
+                  UNION ALL
+                 SELECT COUNT(*) AS useCount
+                   FROM flt12_book_month
+                  WHERE flt12_company_id = #{companyId}
+                    AND flt12_item_type  = #{itemTypeCode}
+                  UNION ALL
+                 SELECT COUNT(*) AS useCount
+                   FROM flt13_book_init
+                  WHERE flt13_company_id = #{companyId}
+                    AND flt13_item_type  = #{itemTypeCode}
+               ) t
+    </select>
+
     <!-- AS-IS dbConfig.getSeq와 같은 식 -->
     <select id="selectNextId" resultType="long" flushCache="true">
         SELECT f_create_seq()

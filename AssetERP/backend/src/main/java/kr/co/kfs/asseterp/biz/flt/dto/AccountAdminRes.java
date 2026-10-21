@@ -12,6 +12,7 @@ public record AccountAdminRes(
         String itemTypeName,
         String setupDate,
         Long apprId,
+        String apprRegDate,
         String apprStatusName,
         String closeDate,
         Long closeApprId,

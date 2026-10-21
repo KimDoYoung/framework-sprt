@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- AS-IS(IDMS-IC) server/flt/mapper/flt03_account.xml · flt10_tr.xml · apr01_appr.xml — J08 책임자보고(Flt10_Tab_CeoReport)
+     기준일: stdDate = 기준월 말일, startDate = 기준월 1일(AS-IS getStdDateEnd / getStdDate) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.flt.mapper.FltCeoReportMapper">
+
+    <!-- AS-IS flt03_account.selectByStdDate — 임직원계좌신고내역. 바깥 SELECT는 DTO 열 명시, 날짜 TO_CHAR(+ 계좌 ID로 행 구분) -->
+    <select id="selectAccounts" resultType="kr.co.kfs.asseterp.biz.flt.dto.CeoAccountRes">
+        SELECT flt03_account_id                                                                  AS account_id
+             , TO_CHAR(apr01_effect_date, 'YYYY-MM-DD')                                          AS appr_effect_date
+             , (select f_cdnm('FloorTrCheckCycle', flt02_check_cycle,	flt02_company_id, f_sysdate())
+                  from flt02_emp
+                 where flt02_person_id = flt03_person_id
+                   and flt02_start_date &lt;= CAST(#{stdDate} AS date)
+                 order by flt02_start_date DESC
+                 limit 1)                                                                        AS check_cycle_name
+             , emp00_kor_nm                                                                      AS person_name
+             , emp00_org_code_nm                                                                 AS org_name
+             , sys15_corp_nm                                                                     AS corp_name
+             , TO_DECRYPTS(flt03_account_no)                                                     AS account_no_dec
+             , flt03_account_nm                                                                  AS account_name
+             , f_cdnm('FamilyRelateCode', flt03_family_relate_cd,	flt03_company_id, f_sysdate()) AS family_relate_name
+          FROM flt03_account
+               INNER JOIN getPerson(#{companyId}, CAST(#{stdDate} AS date)) ON emp00_person_id = flt03_person_id
+               INNER JOIN emp03_trans  ON emp03_person_id = emp00_person_id AND emp03_trans_date = ( SELECT MAX(t.emp03_trans_date)
+                                                                                                       FROM emp03_trans t
+                                                                                                      WHERE t.emp03_person_id = emp00_person_id
+                                                                                                        AND t.emp03_trans_date &lt; CAST(#{startDate} AS date))
+               LEFT OUTER JOIN sys15_corp ON sys15_corp_id = flt03_corp_id AND sys15_company_id = flt03_company_id
+               LEFT OUTER JOIN apr01_appr ON flt03_appr_id = apr01_appr_id
+         WHERE flt03_company_id = #{companyId}
+           AND emp03_trans_cd = ( CASE #{transCode}  WHEN '100'
+                                                      THEN (  CASE WHEN emp03_trans_cd  &lt;=  '899' /** 퇴직(900)만  제외한다. (겸직자 재직자로 인식)-*/
+                                                                   THEN emp03_trans_cd
+                                                                   ELSE #{transCode}
+                                                                   END)
+                                                      WHEN '900'
+                                                      THEN '900'
+                                                      WHEN '800'
+                                                      THEN '800'
+                                                      ELSE emp03_trans_cd
+                                                      END)
+           AND apr01_effect_date IS NOT NULL
+           AND apr01_effect_date &lt;= CAST(#{stdDate} AS date)
+         ORDER BY emp00_kor_nm collate "ko_KR.utf8" asc, apr01_effect_date DESC
+    </select>
+
+    <!-- AS-IS flt10_tr.selectEmp2 (selectByStdDate·selectByStdDate2의 안쪽 사원 CTE) — I10 violateEmp와 달리 startDate·transCode로 사원을 고르고
+         퇴사일 조건이 없다(원본에서 주석 처리됨). `noAccountSkipYnCheck`가 true면 신고 계좌가 없는 사원 제외. `personId` 가지는 이 화면이 안 줘서 뺐다 -->
+    <sql id="ceoEmp">
+        WITH emp AS ( SELECT *
+                           , COALESCE(f_get_floorTrCheck('1', emp01_company_id, emp01_person_id, CAST(#{stdDate} AS date), false),0)  as emp01_year_invest_limit
+                           , COALESCE(f_get_floorTrCheck('2', emp01_company_id, emp01_person_id, CAST(#{stdDate} AS date), false),0)  as emp01_total_invest_amt
+                           , COALESCE(f_get_floorTrCheck('3', emp01_company_id, emp01_person_id, CAST(#{stdDate} AS date), false),0)  as emp01_turnover_rate
+                           , CASE WHEN flt02_check_cycle = '1'
+                                  THEN f_get_quarter_date(CAST(#{stdDate} AS date),'1') + 1       -- 분기초일
+                                  ELSE DATE_TRUNC('month', CAST(#{stdDate} AS date))::date  -- 월초일
+                                  END                                                                                   as emp01_tr_start_date
+                           , CAST(#{stdDate} AS date)                                                                  as emp01_tr_close_date
+                           , CASE WHEN flt02_check_cycle = '1'
+                                  THEN f_get_quarter_date(f_today(),'1')            -- 전분기말
+                                  ELSE DATE_TRUNC('month', f_today())::date -1      -- 전월말
+                                  END                                                                                   as rpt_std_date
+                           , f_cdnm('FloorTrCheckCycle', flt02_check_cycle,  emp01_company_id, CAST(#{stdDate} AS date)) as check_cycle_nm
+                           , COALESCE(account_cnt, 0)||'건'                                                             as account_cnt_str
+                           , CASE WHEN COALESCE(flt04_person_id,0) = 0 THEN '' ELSE '○' END                             as oath_yn_nm
+                           , CASE WHEN ( SELECT COUNT(*)
+                                           FROM flt07_family_consent
+                                                INNER JOIN sys10_file ON sys10_parent_id = flt07_family_consent_id
+                                          WHERE flt07_person_id = emp01_person_id ) = 0 THEN '' ELSE '○' END            as family_yn_nm
+                           , ( SELECT MAX(apr01_effect_date)
+                                 FROM (
+                                        SELECT DISTINCT apr01_appr.*
+                                          FROM flt10_tr
+                                               INNER JOIN apr01_appr ON apr01_appr_id = flt10_appr_id
+                                         WHERE flt10_company_id = emp01_company_id
+                                           AND flt10_person_id  = emp01_person_id
+                                           AND apr01_status_cd NOT IN ('40','99')
+                                           AND apr01_effect_date &lt;= CAST(#{stdDate} AS date)
+                                         UNION
+                                        SELECT *
+                                          FROM apr01_appr
+                                         WHERE apr01_company_id = emp01_company_id
+                                           AND apr01_reg_emp_id = emp01_person_id
+                                           AND apr01_status_cd NOT IN ('40','99')
+                                           AND apr01_effect_date &lt;= CAST(#{stdDate} AS date)
+                                           AND apr01_class_tree_id IN ( SELECT dcr30_class_tree_id
+                                                                          FROM dcr30_link
+                                                                         WHERE dcr30_company_id = apr01_company_id
+                                                                           AND dcr30_link_cd    = 'A09' )    /* (A09:자기매매 실거래 보고) */
+                                      ) apr ) AS rcnt_report_date
+                        FROM ------------------------------------------------------------------------
+                             emp01_person
+                             INNER JOIN emp03_trans ON (    emp03_person_id = emp01_person_id
+                                                        AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                                                                   FROM emp03_trans
+                                                                                  WHERE emp03_person_id = emp01_person_id
+                                                                                    AND emp03_trans_date &lt; CAST(#{startDate} AS date) ) )
+                             INNER JOIN ( SELECT *
+                                            FROM org01_code
+                                                 INNER JOIN org02_info ON (    org02_code_id = org01_code_id
+                                                                           AND org02_mod_date = ( SELECT MAX(org02_mod_date)
+                                                                                                    FROM org02_info
+                                                                                                   WHERE org02_code_id = org01_code_id
+                                                                                                     AND org02_mod_date &lt;= CAST(#{stdDate} AS date) ) )
+                                           WHERE org01_company_id = #{companyId} ) org ON org01_code_id = emp03_org_code_id
+                             ------------------------------------------------------------------------
+                             LEFT OUTER JOIN flt01_company_std ON (    flt01_company_id = emp01_company_id
+                                                                   AND flt01_start_date = ( SELECT MAX(flt01_start_date)
+                                                                                              FROM flt01_company_std
+                                                                                             WHERE flt01_company_id = emp01_company_id
+                                                                                               AND flt01_start_date &lt;= CAST(#{stdDate} AS date) ) )
+                             LEFT OUTER JOIN flt02_emp ON (    flt02_person_id = emp01_person_id
+                                                           AND flt02_start_date = ( SELECT MAX(flt02_start_date)
+                                                                                      FROM flt02_emp
+                                                                                     WHERE flt02_person_id = emp01_person_id
+                                                                                       AND flt02_start_date &lt;= GREATEST(CAST(#{stdDate} AS date), COALESCE(flt01_rpt_start_date,'1900-01-01')) ) )
+                             LEFT OUTER JOIN ( SELECT flt03_person_id, COUNT(*) account_cnt
+                                                 FROM flt03_account
+                                                      INNER JOIN apr01_appr ON apr01_appr_id = flt03_appr_id
+                                                WHERE flt03_company_id = #{companyId}
+                                                  AND apr01_status_cd NOT IN ('40','99')
+                                                GROUP BY flt03_person_id ) flt03 ON flt03_person_id = emp01_person_id
+                             LEFT OUTER JOIN ( SELECT flt04_person_id, COUNT(*) oath_cnt
+                                                 FROM flt04_oath
+                                                      INNER JOIN apr01_appr ON apr01_appr_id = flt04_appr_id
+                                                WHERE flt04_company_id = #{companyId}
+                                                  AND apr01_status_cd NOT IN ('40','99')
+                                                GROUP BY flt04_person_id ) flt04 ON flt04_person_id = emp01_person_id
+                             INNER JOIN sys01_company ON sys01_company_id = emp01_company_id
+                       WHERE emp01_company_id  = #{companyId}
+                         AND  emp03_trans_cd = ( CASE #{transCode}  WHEN '100'
+                                                                    THEN (  CASE WHEN emp03_trans_cd  &lt;=  '899' /** 퇴직(900)만  제외한다. (겸직자 재직자로 인식)-*/
+                                                                                 THEN emp03_trans_cd
+                                                                                 ELSE #{transCode}
+                                                                                 END)
+                                                                    WHEN '900'
+                                                                    THEN '900'
+                                                                    WHEN '800'
+                                                                    THEN '800'
+                                                                    ELSE emp03_trans_cd
+                                                                    END)
+                        <if test="noAccountSkipYnCheck">
+                         AND COALESCE(flt03.account_cnt, 0) != 0
+                        </if>
+                         AND ( ( COALESCE(sys01_ics_non_stay_yn,'false') = 'false'  AND     /*비상근 제외*/
+                                 emp03_title_cd    != '900'                         AND
+                                 COALESCE(emp03_non_stay_yn,'false') != 'true'      ) OR
+                               ( COALESCE(sys01_ics_non_stay_yn,'false') = 'true'   ) )     /*비상근 포함*/
+                         AND NOT EXISTS ( SELECT 1
+                                            FROM emp04_add_title
+                                           WHERE emp04_add_person_id = emp01_person_id ) /*겸직 제외*/
+        )
+    </sql>
+
+    <!-- AS-IS flt10_tr.selectByStdDate — 매월신고대상임직원(보고주기 월 '2'인 사원의 신고일자). 원본 `ROW_NUMBER() … AS flt10_tr_id`가 행 번호 -->
+    <select id="selectReportPersons" resultType="kr.co.kfs.asseterp.biz.flt.dto.CeoReportPersonRes">
+        <include refid="ceoEmp"/>
+        SELECT ROW_NUMBER() OVER(ORDER BY emp01_kor_nm collate "ko_KR.utf8" asc) AS tr_id
+             , x.emp01_person_id                                                 AS person_id
+             , x.emp01_kor_nm                                                    AS person_name
+             , x.org02_kor_nm                                                    AS org_name
+             , TO_CHAR(x.flt10_appr_effect_date::date, 'YYYY-MM-DD')             AS appr_effect_date
+          FROM (select *
+                     , (select apr01_effect_date
+                          from flt03_account
+                          left outer join apr01_appr on flt03_appr_id = apr01_appr_id
+                         where flt03_person_id = flt02_person_id
+                         order by apr01_effect_date
+                         limit 1)                                                AS flt10_appr_effect_date
+                  from emp
+                 where emp.flt02_check_cycle = '2') x
+         WHERE flt10_appr_effect_date &lt;= CAST(#{stdDate} AS date)
+         ORDER BY emp01_kor_nm collate "ko_KR.utf8" asc
+    </select>
+
+    <!-- AS-IS flt10_tr.selectByStdDate2 — 임직원매매명세. 월 보고자('2')는 기준월 매매, 분기 보고자('1')는 3·6·9·12월일 때 그 분기 매매.
+         바깥 SELECT는 DTO 열 명시, 날짜 TO_CHAR. 안쪽 UNION ALL 두 갈래는 원본 그대로 -->
+    <select id="selectTrs" resultType="kr.co.kfs.asseterp.biz.flt.dto.CeoTrRes">
+        <include refid="ceoEmp"/>
+        SELECT ROW_NUMBER() OVER(ORDER BY flt10_person_nm collate "ko_KR.utf8" asc) AS tr_id
+             , flt10_person_id                                                      AS person_id
+             , flt10_person_nm                                                      AS person_name
+             , flt10_org_nm                                                         AS org_name
+             , flt10_check_cycle_nm                                                 AS check_cycle_name
+             , flt10_tr_yn                                                          AS tr_yn
+             , flt10_deposit_amt                                                    AS deposit_amt
+             , flt10_total_invest_amt                                               AS total_invest_amt
+             , flt10_corp_nm                                                        AS corp_name
+             , flt10_account_no                                                     AS account_no
+             , flt10_account_nm                                                     AS account_name
+             , flt10_tr_item_nm                                                     AS tr_item_name
+             , flt10_tr_type_nm                                                     AS tr_type_name
+             , TO_CHAR(flt10_reg_date, 'YYYY-MM-DD')                                AS reg_date
+             , flt10_expect_tr_qty                                                  AS expect_tr_qty
+             , TO_CHAR(flt10_tr_date, 'YYYY-MM-DD')                                 AS tr_date
+             , flt10_tr_qty                                                         AS tr_qty
+             , flt10_unit_price                                                     AS unit_price
+             , flt10_tr_amt                                                         AS tr_amt
+          FROM (select emp.emp01_person_id                                                              AS flt10_person_id
+                     , emp.emp01_kor_nm                                                                 AS flt10_person_nm
+                     , (select CASE WHEN COUNT(*) > 0 THEN '' ELSE '매매없음' END
+                          from flt10_tr
+                         where flt10_person_id = emp.emp01_person_id
+                           and EXTRACT(YEAR FROM flt10_tr_date)  = EXTRACT(YEAR FROM CAST(#{stdDate} AS date))
+                           and EXTRACT(MONTH FROM flt10_tr_date) = EXTRACT(MONTH FROM CAST(#{stdDate} AS date))) AS flt10_tr_yn
+                     , (select COALESCE(SUM(flt10_tr_amt),0)
+                          from flt10_tr
+                         where flt10_tr_type = '50I'
+                           and flt10_person_id = emp.emp01_person_id
+                           and EXTRACT(YEAR FROM flt10_tr_date) = EXTRACT(YEAR FROM CAST(#{stdDate} AS date))
+                           and flt10_tr_date &lt;= CAST(#{stdDate} AS date))                               AS flt10_deposit_amt
+                     , emp.org02_kor_nm                                                                 AS flt10_org_nm
+                     , emp.emp01_total_invest_amt                                                       AS flt10_total_invest_amt
+                     , sys15_corp_nm                                                                    AS flt10_corp_nm
+                     , TO_DECRYPTS(flt03_account_no)                                                    AS flt10_account_no
+                     , flt03_account_nm                                                                 AS flt10_account_nm
+                     , flt10_tr_item_nm
+                     , f_cdnm('FloorTrCode', flt10_tr_type, flt10_company_id, f_sysdate())              AS flt10_tr_type_nm
+                     , flt10_reg_date
+                     , COALESCE(flt10_expect_tr_qty,0)                                                  AS flt10_expect_tr_qty
+                     , flt10_tr_date
+                     , COALESCE(flt10_tr_qty,0)                                                         AS flt10_tr_qty
+                     , COALESCE(flt10_tr_amt,0)                                                         AS flt10_tr_amt
+                     , CASE WHEN flt10_tr_qty > 0 THEN TRUNC(flt10_tr_amt / flt10_tr_qty) ELSE 0 END    AS flt10_unit_price
+                     , emp.flt02_check_cycle                                                            AS flt10_check_cycle
+                     , f_cdnm('FloorTrCheckCycle', emp.flt02_check_cycle, emp01_company_id, CAST(#{stdDate} AS date)) AS flt10_check_cycle_nm
+                  from emp
+                  left outer join (select *
+                                     from flt10_tr
+                                     LEFT OUTER JOIN flt05_item_type flt05 ON ( flt05.flt05_company_id   = flt10_company_id      AND
+                                                                                flt05.flt05_item_type_cd = flt10_item_type       AND
+                                                                                flt05.flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                                                               FROM flt05_item_type
+                                                                                                              WHERE flt05_company_id   = flt10_company_id
+                                                                                                                AND flt05_item_type_cd = flt10_item_type
+                                                                                                                AND flt05_start_date  &lt;= flt10_expect_tr_date ) )
+                                     left outer join flt03_account on flt03_account_id = flt10_account_id
+                                     left outer join sys15_corp on sys15_corp_id = flt03_corp_id AND sys15_company_id = flt03_company_id
+                                    where EXTRACT(YEAR FROM flt10_tr_date) = EXTRACT(YEAR FROM CAST(#{stdDate} AS date))
+                                      and EXTRACT(MONTH FROM flt10_tr_date) = EXTRACT(MONTH FROM CAST(#{stdDate} AS date))) flt10 ON flt10.flt10_person_id = emp.emp01_person_id
+                 where emp.flt02_check_cycle = '2'
+                 UNION ALL
+                select emp.emp01_person_id                                                              AS flt10_person_id
+                     , emp.emp01_kor_nm                                                                 AS flt10_person_nm
+                     , (select CASE WHEN COUNT(*) > 0 THEN '' ELSE '매매없음' END
+                          from flt10_tr
+                         where flt10_person_id = emp.emp01_person_id
+                           and EXTRACT(YEAR FROM flt10_tr_date)  = EXTRACT(YEAR FROM CAST(#{stdDate} AS date))
+                           and EXTRACT(MONTH FROM flt10_tr_date) = EXTRACT(MONTH FROM CAST(#{stdDate} AS date))) AS flt10_tr_yn
+                     , (select COALESCE(SUM(flt10_tr_amt),0)
+                          from flt10_tr
+                         where flt10_tr_type = '50I'
+                           and flt10_person_id = emp.emp01_person_id
+                           and EXTRACT(YEAR FROM flt10_tr_date) = EXTRACT(YEAR FROM CAST(#{stdDate} AS date))) AS flt10_deposit_amt
+                     , emp.org02_kor_nm                                                                 AS flt10_org_nm
+                     , emp.emp01_total_invest_amt                                                       AS flt10_total_invest_amt
+                     , sys15_corp_nm                                                                    AS flt10_corp_nm
+                     , TO_DECRYPTS(flt03_account_no)                                                    AS flt10_account_no
+                     , flt03_account_nm                                                                 AS flt10_account_nm
+                     , flt10_tr_item_nm
+                     , f_cdnm('FloorTrCode', flt10_tr_type, flt10_company_id, f_sysdate())              AS flt10_tr_type_nm
+                     , flt10_reg_date
+                     , COALESCE(flt10_expect_tr_qty,0)                                                  AS flt10_expect_tr_qty
+                     , flt10_tr_date
+                     , COALESCE(flt10_tr_qty,0)                                                         AS flt10_tr_qty
+                     , COALESCE(flt10_tr_amt,0)                                                         AS flt10_tr_amt
+                     , CASE WHEN flt10_tr_qty > 0 THEN TRUNC(flt10_tr_amt / flt10_tr_qty) ELSE 0 END    AS flt10_unit_price
+                     , emp.flt02_check_cycle                                                            AS flt10_check_cycle
+                     , f_cdnm('FloorTrCheckCycle', emp.flt02_check_cycle, emp01_company_id, CAST(#{stdDate} AS date)) AS flt10_check_cycle_nm
+                  from emp
+                  left outer join (select *
+                                     from flt10_tr
+                                     LEFT OUTER JOIN flt05_item_type flt05 ON ( flt05.flt05_company_id   = flt10_company_id      AND
+                                                                                flt05.flt05_item_type_cd = flt10_item_type       AND
+                                                                                flt05.flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                                                               FROM flt05_item_type
+                                                                                                              WHERE flt05_company_id   = flt10_company_id
+                                                                                                                AND flt05_item_type_cd = flt10_item_type
+                                                                                                                AND flt05_start_date  &lt;= flt10_expect_tr_date ) )
+                                     left outer join flt03_account on flt03_account_id = flt10_account_id
+                                     left outer join sys15_corp on sys15_corp_id = flt03_corp_id AND sys15_company_id = flt03_company_id
+                                    where EXTRACT(YEAR FROM flt10_tr_date) = EXTRACT(YEAR FROM CAST(#{stdDate} AS date))
+                                      and EXTRACT(MONTH FROM flt10_tr_date) BETWEEN CASE EXTRACT(MONTH FROM CAST(#{stdDate} AS date))
+                                                                                       WHEN 3  THEN 1
+                                                                                       WHEN 6  THEN 4
+                                                                                       WHEN 9  THEN 7
+                                                                                       WHEN 12 THEN 10
+                                                                                       ELSE 1 END
+                                                                                 and CASE EXTRACT(MONTH FROM CAST(#{stdDate} AS date))
+                                                                                       WHEN 3  THEN 3
+                                                                                       WHEN 6  THEN 6
+                                                                                       WHEN 9  THEN 9
+                                                                                       WHEN 12 THEN 12
+                                                                                       ELSE 12 END) flt10 ON flt10.flt10_person_id = emp.emp01_person_id
+                 where emp.flt02_check_cycle = '1'
+                   and EXTRACT(MONTH FROM CAST(#{stdDate} AS date)) IN (3, 6, 9, 12)) x
+         ORDER BY flt10_person_nm collate "ko_KR.utf8" asc
+    </select>
+
+    <!-- AS-IS apr01_appr.selectByLinkCode — 기준월(startDate의 연·월)의 상신 문서. 원본은 `SELECT *` + 상태명 -->
+    <select id="selectApprsByLinkCode" resultType="kr.co.kfs.asseterp.biz.flt.dto.CeoApprRes">
+        SELECT apr01_appr_id                                                          AS appr_id
+             , apr01_status_cd                                                        AS status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, #{companyId}, f_sysdate())    AS status_name
+          FROM apr01_appr
+         WHERE apr01_company_id = #{companyId}
+           AND EXTRACT(YEAR FROM apr01_effect_date) = EXTRACT(YEAR FROM CAST(#{stdDate} AS date))
+           AND EXTRACT(MONTH FROM apr01_effect_date) = EXTRACT(MONTH FROM CAST(#{stdDate} AS date))
+           AND apr01_class_tree_id IN ( SELECT dcr30_class_tree_id
+                                          FROM dcr30_link
+                                         WHERE dcr30_company_id = apr01_company_id
+                                           AND dcr30_link_cd    = #{linkCode} )
+    </select>
+</mapper>

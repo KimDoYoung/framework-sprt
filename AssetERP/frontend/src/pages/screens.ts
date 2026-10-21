@@ -23,6 +23,10 @@ import { Flt11_Tab_BookList } from './flt/Flt11_Tab_BookList';
 import { Flt11_Tab_BookListAdmin } from './flt/Flt11_Tab_BookListAdmin';
 import { Flt10_Tab_ViolateUser } from './flt/Flt10_Tab_ViolateUser';
 import { Flt10_Tab_Violate } from './flt/Flt10_Tab_Violate';
+import { Flt10_Tab_EmpAppr } from './flt/Flt10_Tab_EmpAppr';
+import { Flt02_Tab_EmpInfo } from './flt/Flt02_Tab_EmpInfo';
+import { Flt10_Tab_CeoReport } from './flt/Flt10_Tab_CeoReport';
+import { Flt01_Tab_CompanyStd } from './flt/Flt01_Tab_CompanyStd';
 import { Flt05_Tab_ItemTypeAdmin } from './flt/Flt05_Tab_ItemTypeAdmin';
 import { Fnd03_Tab_ConsignmentManager } from './fnd/Fnd03_Tab_ConsignmentManager';
 import { Fnd06_Tab_OfficeWorkManager } from './fnd/Fnd06_Tab_OfficeWorkManager';
@@ -168,6 +172,10 @@ export const SCREENS: Record<string, React.FC> = {
   Flt11_Tab_BookListAdmin, // J04 (1단계=전체: 본 화면 하나, 사원찾기 Emp00 기존 부품, 엑셀은 RD 대신 서버 xlsx)
   Flt10_Tab_ViolateUser, // I10 (1단계=전체: 본 화면 하나, 엑셀은 RD 대신 서버 xlsx. 사원찾기 Emp00 기존 부품. 본 화면 Flt10_Tab_Violate는 J05가 fixedUser 없이 같이 쓴다)
   Flt10_Tab_Violate, // J05 (I10과 같은 컴포넌트를 fixedUser 없이 등록: 사원 선택·열릴 때 조회 안 함)
+  Flt10_Tab_EmpAppr, // J06 (1단계=본 화면 + Flt10_Grid_EmpAppr. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
+  Flt02_Tab_EmpInfo, // J07 (1단계=전체: 본 화면 + 메모 Flt15_Lookup_Note + 조회창 3개(가족동의서·계좌정보·위반내역). 파일보기 Sys10_Lookup_FileViewer 재사용)
+  Flt10_Tab_CeoReport, // J08 (1단계: 본 화면 + 탭 3개(Flt03_TabPage_Account·Flt10_TabPage_ReportPerson·Flt10_TabPage_TrList). 엑셀은 RD 대신 서버 xlsx. 결재요청·문서보기가 여는 전자결재 Apr01_Edit_ApprDoc·Apr01_Lookup_ApprLink·Dcr01_Lookup_Class와 RD 첨부파일 생성은 다음 단계)
+  Flt01_Tab_CompanyStd, // J09 (1단계: 본 화면 + 조회창 3개(Flt01_Lookup_LockUpCheckType·Flt05_Lookup_ItemType·Flt08_Lookup_LockupItem). 예외사원 Flt16_Lookup_ExceptPerson은 asseterpdb에 flt16_except_person 테이블이 없어 변환 못 함 — 안내만)
   Flt03_Tab_AccountAdmin, // J01 (1단계=전체 본 화면 하나. 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Flt10_Tab_SellReport, // I04 (1단계: 본 화면 + 보유내역 조회창 Flt11_Lookup_BookList(I09 공유). 보고주기·서약서 창 Flt02_Lookup_Emp는 다음 단계)
   Flt05_Tab_ItemTypeAdmin, // E08

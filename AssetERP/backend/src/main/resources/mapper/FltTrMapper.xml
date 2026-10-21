@@ -839,6 +839,115 @@
            AND apr01_reg_emp_id = #{personId}
     </delete>
 
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectEmpAppr (J06 정기보고현황) — 사원별 서약서 서명·점검주기·정기보고 상신상태.
+         바깥 SELECT는 그리드 열을 DTO 열로 명시, 끝에 ORDER BY flt10_tr_id(안쪽 ROW_NUMBER와 같은 순서: 원본은 바깥 정렬이 없어도 이 순서로 나옴) -->
+    <select id="selectEmpAppr" resultType="kr.co.kfs.asseterp.biz.flt.dto.EmpApprRes">
+        SELECT flt10_tr_id          AS tr_id
+             , flt10_person_id      AS person_id
+             , flt10_org_nm         AS org_name
+             , flt10_person_nm      AS person_name
+             , flt10_oath_yn_nm     AS oath_yn_name
+             , flt10_check_cycle    AS check_cycle
+             , flt10_check_cycle_nm AS check_cycle_name
+             , flt10_check_appr_nm  AS check_appr_name
+          FROM (
+                SELECT ROW_NUMBER() OVER (ORDER BY org00_sort_order, emp00_pos_cd, emp00_emp_no)                 AS flt10_tr_id
+                     , emp00_kor_nm||'('||emp00_emp_no||')'                                                      AS flt10_person_nm
+                     , org00_kor_nm                                                                              AS flt10_org_nm
+                     , COALESCE(( SELECT CASE WHEN COALESCE(apr01_status_cd,'99') IN ('30')      THEN '서명완료'
+                                              WHEN COALESCE(apr01_status_cd,'99') IN ('10','20') THEN '결재중'
+                                              ELSE '미서명' END
+                                    FROM flt04_oath
+                                         LEFT JOIN apr01_appr ON apr01_appr_id = flt04_appr_id
+                                   WHERE flt04_company_id = emp00_company_id
+                                     AND flt04_person_id  = emp00_person_id
+                                   ORDER BY flt04_start_date DESC
+                                   LIMIT 1 ), '미서명')                                                            AS flt10_oath_yn_nm
+                     , flt02_check_cycle                                                                         AS flt10_check_cycle
+                     , f_cdnm('FloorTrCheckCycle', flt02_check_cycle, emp00_company_id, CAST(#{stdDate} AS date))        AS flt10_check_cycle_nm
+                     , f_get_floorTrAppr(emp00_company_id, emp00_person_id, CAST(#{stdDate} AS date), flt02_check_cycle) AS flt10_check_appr_nm
+                     , emp00_person_id                                                                           AS flt10_person_id
+                  FROM getPerson(#{companyId}, CAST(#{stdDate} AS date))
+                       INNER JOIN getOrg(#{companyId}, CAST(#{stdDate} AS date)) ON org00_org_id = emp00_org_code_id
+                       LEFT  JOIN LATERAL ( SELECT *
+                                              FROM flt02_emp
+                                             WHERE flt02_company_id  = emp00_company_id
+                                               AND flt02_person_id   = emp00_person_id
+                                               AND flt02_start_date <![CDATA[<=]]> CAST(#{stdDate} AS date)
+                                             ORDER BY flt02_start_date DESC
+                                             LIMIT 1 ) flt02 ON TRUE
+                 WHERE CAST(#{stdDate} AS date) BETWEEN emp00_hire_date AND COALESCE(emp00_retire_date, '2999-12-31')
+                   AND CONCAT(org00_kor_nm, emp00_kor_nm, emp00_emp_no) ILIKE #{searchText}
+                   AND NOT EXISTS ( SELECT 1
+                                      FROM emp04_add_title
+                                     WHERE emp04_add_person_id = emp00_person_id )
+               ) t
+         WHERE 1=1
+        <if test="unApprYn">
+           AND COALESCE(flt10_check_appr_nm,'') != '완료'
+           AND COALESCE(flt10_check_appr_nm,'') NOT LIKE '대상아님%'
+        </if>
+         ORDER BY flt10_tr_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectByApprId (J06 사원의 상신문서). 날짜 TO_CHAR, 읽는 순서는 안쪽 ROW_NUMBER와 같은 상신일·문서 ID 순 -->
+    <select id="selectEmpApprDocs" resultType="kr.co.kfs.asseterp.biz.flt.dto.EmpApprDocRes">
+        SELECT ROW_NUMBER() OVER (ORDER BY apr01_reg_date, apr01_appr_id)                   AS tr_id
+             , apr01_appr_id                                                                AS appr_id
+             , TO_CHAR(apr01_reg_date, 'YYYY-MM-DD')                                        AS appr_reg_date
+             , apr01_status_cd                                                              AS appr_status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)   AS appr_status_name
+             , apr01_title                                                                  AS appr_title
+          FROM (
+                 SELECT apr01_appr.*
+                   FROM flt14_relate_appr
+                        INNER JOIN apr01_appr ON apr01_appr_id = flt14_appr_id
+                  WHERE flt14_person_id = #{personId}
+                    AND flt14_std_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+                    AND apr01_status_cd != '99'   /*(99:임시저장)*/
+                  UNION
+                 SELECT *
+                   FROM apr01_appr
+                  WHERE apr01_company_id = #{companyId}
+                    AND apr01_reg_emp_id = #{personId}
+                    AND apr01_effect_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+                    AND apr01_status_cd != '99'   /*(99:임시저장)*/
+                    AND apr01_class_tree_id IN ( SELECT dcr30_class_tree_id
+                                                   FROM dcr30_link
+                                                  WHERE dcr30_company_id = apr01_company_id
+                                                    AND dcr30_link_cd    = 'A09' )    /* (A09:자기매매 실거래 보고) */
+               ) a
+         ORDER BY tr_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) apr01_appr.insertApprDel — 폐기 보관(apr99_appr_del). 수정: 로그인 회사의 문서만(원본은 회사 조건 없음). 삭제자 = 로그인 사용자 -->
+    <insert id="insertApprDelAdmin">
+        INSERT INTO apr99_appr_del
+        SELECT f_create_seq()
+             , apr01_appr_id, apr01_title, apr01_reg_date, apr01_status_cd, apr01_content, apr01_note, apr01_reg_emp_id, apr01_effect_date
+             , apr01_class_tree_id, apr01_stamp_id, apr01_receive_nm, apr01_reference_nm, apr01_stamp_seq, apr01_inout_cd
+             , f_sysdate(), #{deleterId}
+             , apr01_company_id, apr01_form_type, apr01_dcr_id_word, apr01_sign_company, apr01_sign_ceo, apr01_stamp_position, apr01_link_cd
+          FROM apr01_appr
+         WHERE apr01_appr_id    = #{apprId}
+           AND apr01_company_id = #{companyId}
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) apr01_appr.deleteAppr. 수정: 로그인 회사의 문서만 -->
+    <delete id="deleteApprAdmin">
+        DELETE FROM apr01_appr
+         WHERE apr01_appr_id    = #{apprId}
+           AND apr01_company_id = #{companyId}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.updateByApprId. 수정: 로그인 회사만 -->
+    <update id="clearApprIdAdmin">
+        UPDATE flt10_tr
+           SET flt10_appr_id = null
+         WHERE flt10_appr_id    = #{apprId}
+           AND flt10_company_id = #{companyId}
+    </update>
+
     <!-- AS-IS(IDMS-IC) flt03_account.selectByAccountNo (엑셀업로드의 계좌 찾기). 계좌번호는 입력 그대로 비교(원본이 `%`를 붙이지 않는다) -->
     <select id="selectAccountIdsByNo" resultType="long">
         SELECT flt03_account_id
@@ -1212,7 +1321,8 @@
          ① `#{stdDate}` → CAST(#{stdDate} AS date) (원본은 java.util.Date를 바인딩, 여기는 문자열이라 날짜 형변환)
          ② 협의승인 열이 DB에 추가되어(2026-10-21) 아래 두 조각을 `flt10_add_confirmer_id`·`flt10_add_confirm_reason` 으로 되돌렸다.
          ③ 조각 이름 selectEmp → violateEmp, selectViolate → violateBody (다른 SQL 조각과 겹치지 않게)
-         ④ violateEmp의 `noAccountSkipYnCheck` 가지를 뺐다 (이 화면은 값을 안 줘 꺼져 있고, MyBatis는 @Param에 없는 이름을 오류로 본다) -->
+         ④ violateEmp의 `noAccountSkipYnCheck` 가지를 뺐다 (이 화면은 값을 안 줘 꺼져 있고, MyBatis는 @Param에 없는 이름을 오류로 본다)
+         ⑤ violateBody 안의 `<include>`는 J07 임직원매매현황(FltEmpMapper)도 이 조각을 쓰므로 refid를 네임스페이스까지 적었다(안 그러면 쓰는 쪽 네임스페이스로 풀려 못 찾는다) -->
     <sql id="addConfirmerId">flt10_add_confirmer_id</sql>
     <sql id="addConfirmReason">flt10_add_confirm_reason</sql>
 
@@ -1318,14 +1428,14 @@
     </sql>
 
     <sql id="violateBody">
-        <include refid="violateEmp"/>
+        <include refid="kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper.violateEmp"/>
         SELECT *
           FROM ( -------------------------------------------------------------------
                SELECT '05'                                        AS check_cd
                     , CASE COALESCE(flt10_status_cd,'00') 
                         WHEN '00' THEN '사전신고 위반(미신고)'
                         WHEN '10' THEN '사전신고 위반(미승인)'
-                        WHEN '20' THEN (CASE WHEN <include refid="addConfirmerId"/> IS NOT NULL THEN '사전신고 위반(미협의승인)' ELSE '' END)
+                        WHEN '20' THEN (CASE WHEN <include refid="kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper.addConfirmerId"/> IS NOT NULL THEN '사전신고 위반(미협의승인)' ELSE '' END)
                         WHEN '30' THEN '사전신고 위반(반려)'
                         ELSE '' END                               AS check_nm
                     , null                                        AS check_std
@@ -1335,9 +1445,9 @@
                       ||' '
                       ||f_cdnm('FloorTrCode', flt10_tr_type, flt10_company_id, flt10_tr_date) AS flt10_tr_item_nm
                     , CONCAT( flt10_reject_reason
-                            , CASE WHEN COALESCE(<include refid="addConfirmReason"/>,'') = '' THEN ''
-                                   ELSE (CASE WHEN COALESCE(flt10_reject_reason,'') = '' THEN '(협조승인) '||<include refid="addConfirmReason"/>
-                                              ELSE E'\n'||'(협조승인) '||<include refid="addConfirmReason"/>
+                            , CASE WHEN COALESCE(<include refid="kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper.addConfirmReason"/>,'') = '' THEN ''
+                                   ELSE (CASE WHEN COALESCE(flt10_reject_reason,'') = '' THEN '(협조승인) '||<include refid="kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper.addConfirmReason"/>
+                                              ELSE E'\n'||'(협조승인) '||<include refid="kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper.addConfirmReason"/>
                                          END)
                               END )                               AS flt10_reject_reason
                     , flt10_tr_note
@@ -1356,8 +1466,8 @@
                       INNER JOIN flt03_account ON flt03_account_id = flt10_account_id
                 WHERE COALESCE(flt10_tr_amt,0) != 0
     <!--               AND COALESCE(flt10_status_cd,'00') != '20' -->
-                  AND 'Y' = CASE WHEN <include refid="addConfirmerId"/> IS NULL     AND COALESCE(flt10_status_cd,'00') = '20' THEN 'N'
-                                 WHEN <include refid="addConfirmerId"/> IS NOT NULL AND COALESCE(flt10_status_cd,'00') = '25' THEN 'N'
+                  AND 'Y' = CASE WHEN <include refid="kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper.addConfirmerId"/> IS NULL     AND COALESCE(flt10_status_cd,'00') = '20' THEN 'N'
+                                 WHEN <include refid="kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper.addConfirmerId"/> IS NOT NULL AND COALESCE(flt10_status_cd,'00') = '25' THEN 'N'
                                  ELSE 'Y' END
                   AND ( flt05_target_yn = 'true'
                        OR
@@ -1447,8 +1557,8 @@
                       INNER JOIN flt03_account ON flt03_account_id = flt10_account_id
                 WHERE 1=1
     <!--               AND COALESCE(flt10_status_cd,'00') = '20' -->
-                  AND 'Y' = CASE WHEN <include refid="addConfirmerId"/> IS NULL     AND COALESCE(flt10_status_cd,'00') = '20' THEN 'Y'
-                                 WHEN <include refid="addConfirmerId"/> IS NOT NULL AND COALESCE(flt10_status_cd,'00') = '25' THEN 'Y'
+                  AND 'Y' = CASE WHEN <include refid="kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper.addConfirmerId"/> IS NULL     AND COALESCE(flt10_status_cd,'00') = '20' THEN 'Y'
+                                 WHEN <include refid="kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper.addConfirmerId"/> IS NOT NULL AND COALESCE(flt10_status_cd,'00') = '25' THEN 'Y'
                                  ELSE 'N' END
                   AND COALESCE(flt10_tr_amt,0) != 0
                   AND flt05_target_yn = 'true'
@@ -1486,8 +1596,8 @@
                       INNER JOIN flt03_account ON flt03_account_id = flt10_account_id
                 WHERE 1=1
     <!--               AND COALESCE(flt10_status_cd,'00') = '20' -->
-                  AND 'Y' = CASE WHEN <include refid="addConfirmerId"/> IS NULL     AND COALESCE(flt10_status_cd,'00') = '20' THEN 'Y'
-                                 WHEN <include refid="addConfirmerId"/> IS NOT NULL AND COALESCE(flt10_status_cd,'00') = '25' THEN 'Y'
+                  AND 'Y' = CASE WHEN <include refid="kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper.addConfirmerId"/> IS NULL     AND COALESCE(flt10_status_cd,'00') = '20' THEN 'Y'
+                                 WHEN <include refid="kr.co.kfs.asseterp.biz.flt.mapper.FltTrMapper.addConfirmerId"/> IS NOT NULL AND COALESCE(flt10_status_cd,'00') = '25' THEN 'Y'
                                  ELSE 'N' END
                   AND COALESCE(flt10_tr_amt,0) != 0
                   AND flt05_target_yn = 'true'

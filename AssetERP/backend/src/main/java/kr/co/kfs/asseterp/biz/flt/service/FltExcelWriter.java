@@ -20,23 +20,34 @@ final class FltExcelWriter {
     private FltExcelWriter() {
     }
 
+    /** 시트 하나: 시트 이름, 첫 줄(제목), 값 */
+    record SheetData(String name, List<String> headers, List<List<Object>> rows) {
+    }
+
     /** 첫 줄은 제목, 다음 줄부터 값. 숫자(Number)는 숫자 칸, 그 밖은 글자 칸(null은 빈 칸) */
     static byte[] write(String sheetName, List<String> headers, List<List<Object>> rows) {
+        return write(List.of(new SheetData(sheetName, headers, rows)));
+    }
+
+    /** 시트가 여럿인 엑셀(J08 책임자보고 — RD 리포트가 한 문서에 세 구간을 담던 것) */
+    static byte[] write(List<SheetData> sheets) {
         try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            Sheet sheet = wb.createSheet(sheetName);
-            Row head = sheet.createRow(0);
-            for (int i = 0; i < headers.size(); i++) {
-                head.createCell(i).setCellValue(headers.get(i));
-            }
-            int r = 1;
-            for (List<Object> values : rows) {
-                Row row = sheet.createRow(r++);
-                for (int i = 0; i < values.size(); i++) {
-                    Object v = values.get(i);
-                    if (v instanceof Number n) {
-                        row.createCell(i).setCellValue(n.doubleValue());
-                    } else if (v != null) {
-                        row.createCell(i).setCellValue(v.toString());
+            for (SheetData data : sheets) {
+                Sheet sheet = wb.createSheet(data.name());
+                Row head = sheet.createRow(0);
+                for (int i = 0; i < data.headers().size(); i++) {
+                    head.createCell(i).setCellValue(data.headers().get(i));
+                }
+                int r = 1;
+                for (List<Object> values : data.rows()) {
+                    Row row = sheet.createRow(r++);
+                    for (int i = 0; i < values.size(); i++) {
+                        Object v = values.get(i);
+                        if (v instanceof Number n) {
+                            row.createCell(i).setCellValue(n.doubleValue());
+                        } else if (v != null) {
+                            row.createCell(i).setCellValue(v.toString());
+                        }
                     }
                 }
             }

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/flt/mapper/flt01_company_std.xml + UpdateDataModel(flt01_company_std) — J09 기준관리
+  `SELECT *`는 DTO 열로 명시했다. yn 열은 'true'/'false' 문자열 — 원본 모델 getter가 null이면 false를 돌려주던 5개 열(투자금액 매수제한·투자한도 표시제한·
+  펀드(일임) 보유주식 매수제한·거래증빙필수·계좌미존재시 정기보고 안함)은 COALESCE(…,'false')로 맞춘다
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.flt.mapper.FltCompanyStdMapper">
+
+    <sql id="companyStdColumns">
+        flt01_company_std_id                                                          AS company_std_id,
+        flt01_company_id                                                              AS company_id,
+        TO_CHAR(flt01_start_date, 'YYYY-MM-DD')                                       AS start_date,
+        flt01_total_invest_amt                                                        AS total_invest_amt,
+        flt01_invest_amt_calc_target_cd                                               AS invest_amt_calc_target_code,
+        f_cdnm('FloorTrInvestCalcTargetCode', flt01_invest_amt_calc_target_cd, flt01_company_id, flt01_start_date) AS invest_amt_calc_target_name,
+        COALESCE(flt01_invest_amt_over_check_yn, 'false')                             AS invest_amt_over_check_yn,
+        COALESCE(flt01_invest_limit_unvisible_yn, 'false')                            AS invest_limit_unvisible_yn,
+        flt01_turnover_rate                                                           AS turnover_rate,
+        flt01_appr_over_rate                                                          AS appr_over_rate,
+        flt01_appr_qty_over_rate                                                      AS appr_qty_over_rate,
+        flt01_appr_valid_days                                                         AS appr_valid_days,
+        flt01_std_date_type                                                           AS std_date_type,
+        f_cdnm('FloorTrStdDateType', flt01_std_date_type, flt01_company_id, flt01_start_date) AS std_date_type_name,
+        COALESCE(flt01_fund_hold_stk_yn, 'false')                                     AS fund_hold_stk_yn,
+        CASE WHEN COALESCE(flt01_lock_up_cd,'1') = '1'
+             THEN f_cdnm('FloorTrLockUpCheckCode', flt01_lock_up_cd, flt01_company_id, flt01_start_date)
+                  ||' ('||COALESCE(flt01_lock_up_days||f_cdnm('FloorTrLockUpCalcStdCode', flt01_lock_up_calc_std_cd, flt01_company_id, flt01_start_date)
+                                  ,'기간 미입력')||')'
+             ELSE '매수주문횟수 '
+                  || (CASE WHEN COALESCE(flt01_buy_opr_day_yn,'false') = 'false'
+                           THEN ''
+                           ELSE '일간 3회'||(CASE WHEN COALESCE(flt01_buy_opr_month_yn,'false') = 'true' THEN ', ' ELSE '' END) END)
+                  || (CASE WHEN COALESCE(flt01_buy_opr_month_yn,'false') = 'false'
+                           THEN ''
+                           ELSE '월간 30회' END)
+                  ||' 초과 체크'
+        END                                                                           AS lock_up_detail_name,
+        TO_CHAR(flt01_rpt_start_date, 'YYYY-MM-DD')                                   AS rpt_start_date,
+        COALESCE(flt01_tr_file_evid_yn, 'false')                                      AS tr_file_evid_yn,
+        COALESCE(flt01_no_account_skip_yn, 'false')                                   AS no_account_skip_yn,
+        flt01_lock_up_cd                                                              AS lock_up_code,
+        flt01_lock_up_days                                                            AS lock_up_days,
+        flt01_lock_up_calc_std_cd                                                     AS lock_up_calc_std_code,
+        flt01_buy_opr_day_yn                                                          AS buy_opr_day_yn,
+        flt01_buy_opr_month_yn                                                        AS buy_opr_month_yn
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) flt01_company_std.selectByCompanyId -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.flt.dto.CompanyStdRes">
+        SELECT <include refid="companyStdColumns"/>
+          FROM flt01_company_std
+         WHERE flt01_company_id = #{companyId}
+         ORDER BY flt01_start_date DESC
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt01_company_std.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.flt.dto.CompanyStdRes">
+        SELECT <include refid="companyStdColumns"/>
+          FROM flt01_company_std
+         WHERE flt01_company_std_id = #{companyStdId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel INSERT: 새 행의 모든 열(등록(복사)는 원본 행의 의무보유기간 열도 가져간다) -->
+    <insert id="insertCompanyStd">
+        INSERT INTO flt01_company_std (flt01_company_std_id, flt01_company_id, flt01_start_date, flt01_total_invest_amt,
+                                       flt01_invest_amt_calc_target_cd, flt01_invest_amt_over_check_yn, flt01_invest_limit_unvisible_yn,
+                                       flt01_turnover_rate, flt01_appr_over_rate, flt01_appr_qty_over_rate, flt01_appr_valid_days,
+                                       flt01_std_date_type, flt01_fund_hold_stk_yn, flt01_rpt_start_date, flt01_tr_file_evid_yn,
+                                       flt01_no_account_skip_yn, flt01_lock_up_cd, flt01_lock_up_days, flt01_lock_up_calc_std_cd,
+                                       flt01_buy_opr_day_yn, flt01_buy_opr_month_yn)
+        VALUES (#{companyStdId}, #{companyId}, CAST(#{req.startDate} AS date), #{req.totalInvestAmt,jdbcType=NUMERIC},
+                #{req.investAmtCalcTargetCode,jdbcType=VARCHAR}, COALESCE(#{req.investAmtOverCheckYn,jdbcType=VARCHAR}, 'false'),
+                COALESCE(#{req.investLimitUnvisibleYn,jdbcType=VARCHAR}, 'false'),
+                #{req.turnoverRate,jdbcType=NUMERIC}, #{req.apprOverRate,jdbcType=NUMERIC}, #{req.apprQtyOverRate,jdbcType=NUMERIC},
+                #{req.apprValidDays,jdbcType=NUMERIC},
+                #{req.stdDateType,jdbcType=VARCHAR}, COALESCE(#{req.fundHoldStkYn,jdbcType=VARCHAR}, 'false'),
+                CAST(#{req.rptStartDate,jdbcType=VARCHAR} AS date), COALESCE(#{req.trFileEvidYn,jdbcType=VARCHAR}, 'false'),
+                COALESCE(#{req.noAccountSkipYn,jdbcType=VARCHAR}, 'false'), #{req.lockUpCode,jdbcType=VARCHAR},
+                #{req.lockUpDays,jdbcType=NUMERIC}, #{req.lockUpCalcStdCode,jdbcType=VARCHAR},
+                #{req.buyOprDayYn,jdbcType=VARCHAR}, #{req.buyOprMonthYn,jdbcType=VARCHAR})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel UPDATE: 그리드에서 고치는 열만 (의무보유기간 열은 updateLockup) -->
+    <update id="updateCompanyStd">
+        UPDATE flt01_company_std
+           SET flt01_start_date                = CAST(#{req.startDate} AS date),
+               flt01_total_invest_amt          = #{req.totalInvestAmt,jdbcType=NUMERIC},
+               flt01_invest_amt_calc_target_cd = #{req.investAmtCalcTargetCode,jdbcType=VARCHAR},
+               flt01_invest_amt_over_check_yn  = COALESCE(#{req.investAmtOverCheckYn,jdbcType=VARCHAR}, 'false'),
+               flt01_invest_limit_unvisible_yn = COALESCE(#{req.investLimitUnvisibleYn,jdbcType=VARCHAR}, 'false'),
+               flt01_turnover_rate             = #{req.turnoverRate,jdbcType=NUMERIC},
+               flt01_appr_over_rate            = #{req.apprOverRate,jdbcType=NUMERIC},
+               flt01_appr_qty_over_rate        = #{req.apprQtyOverRate,jdbcType=NUMERIC},
+               flt01_appr_valid_days           = #{req.apprValidDays,jdbcType=NUMERIC},
+               flt01_std_date_type             = #{req.stdDateType,jdbcType=VARCHAR},
+               flt01_fund_hold_stk_yn          = COALESCE(#{req.fundHoldStkYn,jdbcType=VARCHAR}, 'false'),
+               flt01_rpt_start_date            = CAST(#{req.rptStartDate,jdbcType=VARCHAR} AS date),
+               flt01_tr_file_evid_yn           = COALESCE(#{req.trFileEvidYn,jdbcType=VARCHAR}, 'false'),
+               flt01_no_account_skip_yn        = COALESCE(#{req.noAccountSkipYn,jdbcType=VARCHAR}, 'false')
+         WHERE flt01_company_std_id = #{req.companyStdId}
+           AND flt01_company_id     = #{companyId}
+    </update>
+
+    <delete id="deleteCompanyStds">
+        DELETE FROM flt01_company_std
+         WHERE flt01_company_id = #{companyId}
+           AND flt01_company_std_id IN
+        <foreach collection="companyStdIds" item="companyStdId" open="(" separator="," close=")">#{companyStdId}</foreach>
+    </delete>
+
+    <!-- AS-IS Flt01_CompanyStd.updateOne (UpdateDataModel) — 의무보유기간 위반 체크 방식 -->
+    <update id="updateLockup">
+        UPDATE flt01_company_std
+           SET flt01_lock_up_cd           = #{req.lockUpCode,jdbcType=VARCHAR},
+               flt01_lock_up_days         = #{req.lockUpDays,jdbcType=NUMERIC},
+               flt01_lock_up_calc_std_cd  = #{req.lockUpCalcStdCode,jdbcType=VARCHAR},
+               flt01_buy_opr_day_yn       = #{req.buyOprDayYn,jdbcType=VARCHAR},
+               flt01_buy_opr_month_yn     = #{req.buyOprMonthYn,jdbcType=VARCHAR}
+         WHERE flt01_company_std_id = #{companyStdId}
+           AND flt01_company_id     = #{companyId}
+    </update>
+</mapper>

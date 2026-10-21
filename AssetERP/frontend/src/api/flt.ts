@@ -1,10 +1,12 @@
+import { FileInfo } from '@/types/sys';
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
 import {
   FltViolate, FltAccount, FltAccountAdmin,FltAccountClose, FltAccountStatus, FltBook, FltBookList, FltBuyLockup, FltLockupStd, FltDocClass, FltInvestLimit, FltItemType, FltItemTypeCode,
-  FltAcntTransfer, FltBookMonth, FltEmpLimit, FltRealTr, FltRelateAppr, FltReportCheck, FltRightsExercise, FltTr, FltTrAccount, FltTrCheck, FltTrItem, FltTrList,
-  FltPreApprove, FltPreApproveSetting,
+  FltAcntTransfer, FltBookMonth, FltEmpLimit, FltRealTr, FltRelateAppr, FltReportCheck, FltRightsExercise, FltTr, FltTrAccount, FltTrCheck, FltTrItem, FltTrList, FltEmpAppr, FltEmpApprDoc, FltEmpInfo, FltEmpInfoSetting, FltTrStatus,
+  FltPreApprove, FltPreApproveSetting, FltCeoAccount, FltCeoReportPerson, FltCeoTr, FltCeoAppr,
+  FltCompanyStd, FltCompanyStdLockup, FltBuyLockupItem,
 } from '../types/flt';
 
 /** flt(임직원매매) 화면 API (E08~) */
@@ -412,6 +414,68 @@ export const fltApi = {
     await downloadBlob('v1/flt/books/admin/list/excel', { personId: personId ?? undefined, baseDate, searchText }, fileName);
   },
 
+  // ── J06 정기보고현황 (Flt10_Tab_EmpAppr · Flt10_Grid_EmpAppr) ──
+
+  /** AS-IS flt.Flt10_Tr.selectEmpAppr. stdDate = 기준년월의 말일, unApprYn=true면 미보고건만, 검색어는 서버가 %…%로 */
+  searchEmpApprs: async (stdDate: string, unApprYn: boolean, searchText: string): Promise<FltEmpAppr[]> => {
+    const res = await apiClient.get<ApiResponse<FltEmpAppr[]>>('v1/flt/trs/emp-apprs', { params: { stdDate, unApprYn, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt10_Tr.selectByApprId — 사원의 기간 내 정기보고 상신문서 */
+  searchEmpApprDocs: async (personId: number, startDate: string, closeDate: string): Promise<FltEmpApprDoc[]> => {
+    const res = await apiClient.get<ApiResponse<FltEmpApprDoc[]>>('v1/flt/trs/emp-apprs/docs', { params: { personId, startDate, closeDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt10_Tr.deleteAppr — 상신문서 삭제(폐기 보관 포함) */
+  deleteEmpAppr: async (apprId: number): Promise<void> => {
+    await apiClient.delete<ApiResponse<void>>(`v1/flt/trs/emp-apprs/docs/${apprId}`);
+  },
+
+  // ── J07 임직원매매현황 (Flt02_Tab_EmpInfo · Flt15_Lookup_Note · Flt03_Lookup_AccountView · Flt07_Lookup_FamilyConsent) ──
+
+  /** AS-IS flt.Flt02_Emp.selectByCompanyId — 기준일 시점 재직 사원별 현황, 검색어는 서버가 %…%로 */
+  searchEmpInfos: async (stdDate: string, searchText: string): Promise<FltEmpInfo[]> => {
+    const res = await apiClient.get<ApiResponse<FltEmpInfo[]>>('v1/flt/emps/info', { params: { stdDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt01_CompanyStd.selectByDate (setGridHidden) — 연간투자한도 열을 숨길지 */
+  getEmpInfoSetting: async (stdDate: string): Promise<FltEmpInfoSetting> => {
+    const res = await apiClient.get<ApiResponse<FltEmpInfoSetting>>('v1/flt/emps/info/setting', { params: { stdDate } });
+    return res.data.data;
+  },
+
+  /** 엑셀다운로드 (AS-IS Sys99_Print.insertRdEmpInfo + RD 리포트 → xlsx) */
+  downloadEmpInfoExcel: async (stdDate: string, searchText: string, fileName: string): Promise<void> => {
+    await downloadBlob('v1/flt/emps/info/excel', { stdDate, searchText }, fileName);
+  },
+
+  /** AS-IS flt.Flt15_TrStatus.selectByPersonId — 없으면 서버가 빈 메모 행을 만든다 */
+  getEmpNote: async (personId: number, stdDate: string): Promise<FltTrStatus> => {
+    const res = await apiClient.get<ApiResponse<FltTrStatus>>('v1/flt/tr-statuses', { params: { personId, stdDate } });
+    return res.data.data;
+  },
+
+  /** AS-IS flt.Flt15_TrStatus.update */
+  updateEmpNote: async (trStatusId: number, note: string | null): Promise<FltTrStatus> => {
+    const res = await apiClient.put<ApiResponse<FltTrStatus>>('v1/flt/tr-statuses', { trStatusId, note });
+    return res.data.data;
+  },
+
+  /** AS-IS flt.Flt03_Account.selectByDate(companyId, personId, setupDate, closeAccountYn) — 사원 한 명의 계좌 */
+  searchPersonAccounts: async (personId: number, setupDate: string, closeAccountYn: boolean): Promise<FltAccountAdmin[]> => {
+    const res = await apiClient.get<ApiResponse<FltAccountAdmin[]>>('v1/flt/accounts/status-by-date', { params: { personId, setupDate, closeAccountYn } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys10_File.selectByFamilyConsentId — 사원의 가족금융거래정보 이용동의서 첨부파일 */
+  searchFamilyConsentFiles: async (personId: number): Promise<FileInfo[]> => {
+    const res = await apiClient.get<ApiResponse<FileInfo[]>>('v1/sys/files/family-consent', { params: { personId } });
+    return res.data.data ?? [];
+  },
+
   // ── I10 위반내역조회 (Flt10_Tab_ViolateUser · Flt10_Tab_Violate) ──
 
   /** AS-IS flt.Flt10_Tr.selectViolate. personId 생략(null) = 회사 전체 사원 */
@@ -461,6 +525,87 @@ export const fltApi = {
   sendPreApproveMessage: async (): Promise<string> => {
     const res = await apiClient.post<ApiResponse<string>>('v1/flt/trs/approvals/send-message');
     return res.data.data ?? '';
+  },
+
+  // ── J09 기준관리 (Flt01_Tab_CompanyStd · Flt01_Lookup_LockUpCheckType · Flt08_Lookup_LockupItem · Flt05_Lookup_ItemType) ──
+
+  /** AS-IS flt.Flt01_CompanyStd.selectByCompanyId — 로그인 회사, 적용시작일 내림차순 */
+  searchCompanyStds: async (): Promise<FltCompanyStd[]> => {
+    const res = await apiClient.get<ApiResponse<FltCompanyStd[]>>('v1/flt/company-stds');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt01_CompanyStd.update → 저장된 행(요청 순서) */
+  updateCompanyStds: async (rows: FltCompanyStd[]): Promise<FltCompanyStd[]> => {
+    const res = await apiClient.put<ApiResponse<FltCompanyStd[]>>('v1/flt/company-stds', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt01_CompanyStd.delete → 지운 건수 */
+  deleteCompanyStds: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/flt/company-stds', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS flt.Flt01_CompanyStd.updateOne — 의무보유기간 위반 체크 방식 → 저장된 행 */
+  updateCompanyStdLockup: async (companyStdId: number, req: FltCompanyStdLockup): Promise<FltCompanyStd> => {
+    const res = await apiClient.put<ApiResponse<FltCompanyStd>>(`v1/flt/company-stds/${companyStdId}/lockup`, req);
+    return res.data.data;
+  },
+
+  /** AS-IS flt.Flt08_BuyLockup.selectByText — lockupType `%`=전체, 검색어는 서버가 %…%로 */
+  searchBuyLockups: async (lockupType: string, searchText: string): Promise<FltBuyLockupItem[]> => {
+    const res = await apiClient.get<ApiResponse<FltBuyLockupItem[]>>('v1/flt/buy-lockups', { params: { lockupType, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt08_BuyLockup.update → 저장된 행(요청 순서) */
+  updateBuyLockups: async (rows: FltBuyLockupItem[]): Promise<FltBuyLockupItem[]> => {
+    const res = await apiClient.put<ApiResponse<FltBuyLockupItem[]>>('v1/flt/buy-lockups', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt08_BuyLockup.delete → 지운 건수 */
+  deleteBuyLockups: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/flt/buy-lockups', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS flt.Flt05_ItemType.selectUseCount — 지우려는 종목유형 중 매매·보유내역에서 쓰는 것의 이름(`/` 구분), 없으면 null */
+  checkItemTypeUse: async (ids: number[]): Promise<string | null> => {
+    const res = await apiClient.post<ApiResponse<string | null>>('v1/flt/item-types/use-check', ids);
+    return res.data.data ?? null;
+  },
+
+  // ── J08 책임자보고 (Flt10_Tab_CeoReport) — stdDate = 기준월 말일, startDate = 기준월 1일, transCode 000 전체 / 100 재직 / 900 퇴직 ──
+
+  /** AS-IS flt.Flt03_Account.selectByStdDate — 임직원계좌신고내역 탭 */
+  searchCeoAccounts: async (stdDate: string, startDate: string, transCode: string): Promise<FltCeoAccount[]> => {
+    const res = await apiClient.get<ApiResponse<FltCeoAccount[]>>('v1/flt/ceo-reports/accounts', { params: { stdDate, startDate, transCode } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt10_Tr.selectByStdDate — 매월신고대상임직원 탭 */
+  searchCeoReportPersons: async (stdDate: string, startDate: string, transCode: string): Promise<FltCeoReportPerson[]> => {
+    const res = await apiClient.get<ApiResponse<FltCeoReportPerson[]>>('v1/flt/ceo-reports/report-persons', { params: { stdDate, startDate, transCode } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt10_Tr.selectByStdDate2 — 임직원매매명세 탭 */
+  searchCeoTrs: async (stdDate: string, startDate: string, transCode: string): Promise<FltCeoTr[]> => {
+    const res = await apiClient.get<ApiResponse<FltCeoTr[]>>('v1/flt/ceo-reports/trs', { params: { stdDate, startDate, transCode } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr01_Appr.selectByLinkCode(A72) — 기준월(startDate)의 상신 문서 */
+  searchCeoApprs: async (startDate: string): Promise<FltCeoAppr[]> => {
+    const res = await apiClient.get<ApiResponse<FltCeoAppr[]>>('v1/flt/ceo-reports/apprs', { params: { startDate } });
+    return res.data.data ?? [];
+  },
+
+  /** 엑셀다운로드 (AS-IS Sys99_Print.insertRdCeoReport + RD 리포트 Flt10_Rd_CeoReport → 시트 3개 xlsx). fileName은 확장자 없이 */
+  downloadCeoReportExcel: async (stdDate: string, startDate: string, transCode: string, fileName: string): Promise<void> => {
+    await downloadBlob('v1/flt/ceo-reports/excel', { stdDate, startDate, transCode }, `${fileName}.xlsx`);
   },
 };
 

@@ -57,6 +57,7 @@ export interface FltAccountAdmin {
   itemTypeName: string | null;
   setupDate: string | null;
   apprId: number | null;
+  apprRegDate: string | null;      // J07 계좌정보 조회창의 상신일
   apprStatusName: string | null;
   closeDate: string | null;
   closeApprId: number | null;
@@ -359,6 +360,63 @@ export interface FltTrList {
   addConfirmReason: string | null;
 }
 
+/** 임직원매매현황 한 행 (J07 Flt02_Tab_EmpInfo, flt02_emp.selectByCompanyId). empId는 조회 순서 행번호 */
+export interface FltEmpInfo {
+  empId: number;
+  personId: number;
+  orgName: string | null;
+  personName: string | null;
+  oathYnName: string | null;
+  familyYnName: string | null;     // '○' 또는 ''
+  accountCntStr: string | null;    // 'n건'
+  checkCycle: string | null;
+  checkCycleName: string | null;
+  rcntReportDate: string | null;
+  yearInvestLimit: number | null;
+  yearInvestAmt: number | null;
+  totalInvestAmt: number | null;
+  turnoverRate: number | null;
+  dailyAvg: number | null;
+  violateCntStr: string | null;    // 'n건'
+  note: string | null;             // '있음' 또는 ''
+  noteDate: string | null;         // 메모(flt15_tr_status)의 기준일
+}
+
+/** 임직원매매현황 화면 설정 (기준관리의 연간투자한도 숨김) */
+export interface FltEmpInfoSetting {
+  investLimitUnvisibleYn: boolean;
+}
+
+/** 임직원매매현황 메모 (J07 Flt15_Lookup_Note, flt15_tr_status) */
+export interface FltTrStatus {
+  trStatusId: number;
+  personId: number;
+  date: string;
+  note: string | null;
+}
+
+/** 정기보고현황 한 행 (J06 Flt10_Tab_EmpAppr, flt10_tr.selectEmpAppr). trId는 조회 순서 행번호 */
+export interface FltEmpAppr {
+  trId: number;
+  personId: number;
+  orgName: string | null;
+  personName: string | null;
+  oathYnName: string | null;
+  checkCycle: string | null;       // '1' 분기 / 그 밖 월
+  checkCycleName: string | null;
+  checkApprName: string | null;
+}
+
+/** 사원의 정기보고 상신문서 한 행 (J06 Flt10_Grid_EmpAppr, flt10_tr.selectByApprId). trId는 조회 순서 행번호 */
+export interface FltEmpApprDoc {
+  trId: number;
+  apprId: number;
+  apprRegDate: string | null;
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+  apprTitle: string | null;
+}
+
 /** 위반내역조회 한 행 (I10 Flt10_Tab_ViolateUser · J05 Flt10_Tab_Violate, flt10_tr.selectViolate). trId는 조회 순서 행번호 */
 export interface FltViolate {
   trId: number;
@@ -424,4 +482,110 @@ export interface FltPreApprove {
 export interface FltPreApproveSetting {
   investLimitUnvisibleYn: boolean;
   addConfirmYn: boolean;
+}
+
+/** 기준관리 한 행 (J09, AS-IS Flt01_CompanyStdModel). yn 열은 'true'/'false' 문자열 */
+export interface FltCompanyStd {
+  companyStdId: number;
+  companyId: number;
+  startDate: string;
+  totalInvestAmt: number | null;
+  investAmtCalcTargetCode: string | null;
+  investAmtCalcTargetName: string | null;
+  investAmtOverCheckYn: string | null;
+  investLimitUnvisibleYn: string | null;
+  turnoverRate: number | null;
+  apprOverRate: number | null;
+  apprQtyOverRate: number | null;
+  apprValidDays: number | null;
+  stdDateType: string | null;
+  stdDateTypeName: string | null;
+  fundHoldStkYn: string | null;
+  lockUpDetailName: string | null;
+  rptStartDate: string | null;
+  trFileEvidYn: string | null;
+  noAccountSkipYn: string | null;
+  lockUpCode: string | null;
+  lockUpDays: number | null;
+  lockUpCalcStdCode: string | null;
+  buyOprDayYn: string | null;
+  buyOprMonthYn: string | null;
+}
+
+/** 의무보유기간 위반 체크 방식 (J09, Flt01_Lookup_LockUpCheckType) */
+export interface FltCompanyStdLockup {
+  lockUpCode: string | null;
+  lockUpDays: number | null;
+  lockUpCalcStdCode: string | null;
+  buyOprDayYn: string | null;
+  buyOprMonthYn: string | null;
+}
+
+/** 매수제한종목 한 행 (J09, AS-IS Flt08_BuyLockupModel). 매수제한 검사 결과(`FltBuyLockup`)와 다르다 */
+export interface FltBuyLockupItem {
+  buyLockupId: number;
+  companyId: number;
+  itemCode: string | null;
+  itemName: string | null;
+  startDate: string | null;
+  closeDate: string | null;
+  lockupType: string | null;
+  lockupTypeName: string | null;
+}
+
+/** 책임자보고 > 임직원계좌신고내역 (J08) */
+export interface FltCeoAccount {
+  accountId: number;
+  apprEffectDate: string | null;
+  checkCycleName: string | null;
+  personName: string;
+  orgName: string | null;
+  corpName: string | null;
+  accountNoDec: string | null;
+  accountName: string | null;
+  familyRelateName: string | null;
+}
+
+/** 책임자보고 > 매월신고대상임직원 (J08) */
+export interface FltCeoReportPerson {
+  trId: number;
+  personId: number;
+  personName: string;
+  orgName: string | null;
+  apprEffectDate: string | null;
+}
+
+/** 책임자보고 > 임직원매매명세 (J08) */
+export interface FltCeoTr {
+  trId: number;
+  personId: number;
+  personName: string;
+  orgName: string | null;
+  checkCycleName: string | null;
+  trYn: string | null;
+  depositAmt: number | null;
+  totalInvestAmt: number | null;
+  corpName: string | null;
+  accountNo: string | null;
+  accountName: string | null;
+  trItemName: string | null;
+  trTypeName: string | null;
+  regDate: string | null;
+  expectTrQty: number | null;
+  trDate: string | null;
+  trQty: number | null;
+  unitPrice: number | null;
+  trAmt: number | null;
+}
+
+/** 책임자보고 탭 페이지가 부모에게 여는 조회 함수 (AS-IS 탭 클래스의 public retrieve(reportDate, startDate, transCode)) */
+export interface FltCeoTabHandle {
+  retrieve(stdDate: string, startDate: string, transCode: string): Promise<void>;
+}
+
+/** 책임자보고 상신 문서 (J08, A72) */
+export interface FltCeoAppr {
+  apprId: number;
+  statusCode: string | null;
+  statusName: string | null;
 }

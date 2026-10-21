@@ -45,6 +45,12 @@ public class SysFileController {
         return ApiResponse.ok(sysFileService.searchByParentId(parentId));
     }
 
+    /** AS-IS sys.Sys10_File.selectByFamilyConsentId (J07 가족동의서 조회창) */
+    @GetMapping("/family-consent")
+    public ApiResponse<List<FileRes>> searchByFamilyConsent(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long personId) {
+        return ApiResponse.ok(sysFileService.searchByFamilyConsent(principal, personId));
+    }
+
     /** AS-IS sys.Sys10_File.selectByTotalSize (A16 고객별 서버사용량 — sys admin만, 위 "로그인만"의 예외) */
     @GetMapping("/totals")
     public ApiResponse<List<FileTotalRes>> getTotals(@AuthenticationPrincipal UserPrincipal principal,

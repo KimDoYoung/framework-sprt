@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/flt/mapper/flt08_buy_lockup.xml + UpdateDataModel(flt08_buy_lockup) — J09 매수제한종목 (SELECT *는 DTO 열로 명시, 날짜 TO_CHAR)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.flt.mapper.FltBuyLockupMapper">
+
+    <sql id="buyLockupColumns">
+        flt08_buy_lockup_id                                                        AS buy_lockup_id,
+        flt08_company_id                                                           AS company_id,
+        flt08_item_cd                                                              AS item_code,
+        com50_item_nm                                                              AS item_name,
+        TO_CHAR(flt08_start_date, 'YYYY-MM-DD')                                    AS start_date,
+        TO_CHAR(flt08_close_date, 'YYYY-MM-DD')                                    AS close_date,
+        flt08_lockup_type                                                          AS lockup_type,
+        f_cdnm('BuyLockupType', flt08_lockup_type, flt08_company_id, f_today())    AS lockup_type_name
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) flt08_buy_lockup.selectByText -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.flt.dto.BuyLockupItemRes">
+        SELECT <include refid="buyLockupColumns"/>
+          FROM flt08_buy_lockup
+               INNER JOIN com50_item ON com50_item_cd = flt08_item_cd
+         WHERE flt08_company_id  = #{companyId}
+           AND flt08_lockup_type LIKE #{lockupType}
+           AND UPPER(CONCAT(flt08_item_cd, com50_item_nm)) LIKE UPPER(#{searchText})
+         ORDER BY flt08_item_cd, flt08_start_date
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt08_buy_lockup.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.flt.dto.BuyLockupItemRes">
+        SELECT <include refid="buyLockupColumns"/>
+          FROM flt08_buy_lockup
+               INNER JOIN com50_item ON com50_item_cd = flt08_item_cd
+         WHERE flt08_buy_lockup_id = #{buyLockupId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertBuyLockup">
+        INSERT INTO flt08_buy_lockup (flt08_buy_lockup_id, flt08_company_id, flt08_item_cd, flt08_start_date, flt08_close_date, flt08_lockup_type)
+        VALUES (#{buyLockupId}, #{companyId}, #{req.itemCode}, CAST(#{req.startDate} AS date),
+                CAST(#{req.closeDate,jdbcType=VARCHAR} AS date), #{req.lockupType})
+    </insert>
+
+    <update id="updateBuyLockup">
+        UPDATE flt08_buy_lockup
+           SET flt08_item_cd     = #{req.itemCode},
+               flt08_start_date  = CAST(#{req.startDate} AS date),
+               flt08_close_date  = CAST(#{req.closeDate,jdbcType=VARCHAR} AS date),
+               flt08_lockup_type = #{req.lockupType}
+         WHERE flt08_buy_lockup_id = #{req.buyLockupId}
+           AND flt08_company_id    = #{companyId}
+    </update>
+
+    <delete id="deleteBuyLockups">
+        DELETE FROM flt08_buy_lockup
+         WHERE flt08_company_id = #{companyId}
+           AND flt08_buy_lockup_id IN
+        <foreach collection="buyLockupIds" item="buyLockupId" open="(" separator="," close=")">#{buyLockupId}</foreach>
+    </delete>
+</mapper>

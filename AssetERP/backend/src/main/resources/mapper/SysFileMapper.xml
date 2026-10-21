@@ -54,6 +54,16 @@
          ORDER BY LPAD(COALESCE(file.sys10_seq, '99999'), 5, '0'), COALESCE(file.sys10_title_yn, 'false') DESC, file.sys10_file_nm COLLATE "ko-KR-x-icu"
     </select>
 
+    <!-- AS-IS sys10_file.selectByFamilyConsentId (J07 가족동의서 조회창) — 사원의 가족금융거래정보 이용동의서 첨부파일. 원본은 `ORDER BY 1`(첫 열 = 파일 ID) -->
+    <select id="selectByFamilyConsentId" resultType="kr.co.kfs.asseterp.biz.sys.dto.FileRes">
+        SELECT <include refid="fileColumns"/>
+          FROM flt07_family_consent
+               INNER JOIN sys10_file AS file ON file.sys10_parent_id = flt07_family_consent_id
+         WHERE flt07_person_id = #{personId}
+           AND EXISTS ( SELECT 1 FROM emp01_person WHERE emp01_person_id = flt07_person_id AND emp01_company_id = #{companyId} )
+         ORDER BY file.sys10_file_id
+    </select>
+
     <!-- AS-IS selectByParentId (IDMS-IC) — F09 문서 다운로드(FileDownload apprList)가 쓰는 정렬: 파일 구분(file_yn)이 먼저 -->
     <select id="selectByApprId" resultType="kr.co.kfs.asseterp.biz.sys.dto.FileRes">
         SELECT <include refid="fileColumns"/>

@@ -2,6 +2,8 @@ package kr.co.kfs.asseterp.biz.flt.mapper;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.flt.dto.BookListRes;
+import kr.co.kfs.asseterp.biz.flt.dto.EmpApprDocRes;
+import kr.co.kfs.asseterp.biz.flt.dto.EmpApprRes;
 import kr.co.kfs.asseterp.biz.flt.dto.TrListRes;
 import kr.co.kfs.asseterp.biz.flt.dto.ViolateRes;
 import kr.co.kfs.asseterp.biz.flt.service.FltBookService;
@@ -92,6 +94,22 @@ class FltTrListDbTest {
         List<ViolateRes> mine = trService.searchViolate(user, "2025-12-22", 29049L);
         assertThat(mine).hasSize(16).allMatch(r -> r.personName() != null && r.checkName() != null);
         assertThat(headerCount(trService.downloadViolate(user, "2025-12-22", 29049L))).isEqualTo(9);
+    }
+
+    /** J06 정기보고현황 — 2026-09-30 기준 회사 전체(AS-IS SQL 48행)와 미보고건만(13행), 사원의 상신문서, 삭제는 테스트 트랜잭션이라 롤백 */
+    @Test
+    void 정기보고현황은_전체와_미보고건만_읽히고_상신문서_삭제는_목록에서_빠진다() {
+        List<EmpApprRes> all = trService.searchEmpApprs(user, "2026-09-30", false, null);
+        assertThat(all).hasSize(48);
+        assertThat(trService.searchEmpApprs(user, "2026-09-30", true, null)).hasSize(13)
+                .noneMatch(r -> "완료".equals(r.checkApprName()));
+        assertThat(trService.searchEmpApprs(user, "2026-09-30", false, "zzzz없는이름")).isEmpty();
+
+        // 상신문서가 3건 있는 사원(2026년, flt14_relate_appr)으로 목록·삭제를 본다
+        List<EmpApprDocRes> docs = trService.searchEmpApprDocs(user, 202204180108329L, "2026-01-01", "2026-12-31");
+        assertThat(docs).hasSize(3).allMatch(d -> d.apprStatusName() != null && d.apprTitle() != null);
+        trService.deleteAppr(user, docs.get(0).apprId());
+        assertThat(trService.searchEmpApprDocs(user, 202204180108329L, "2026-01-01", "2026-12-31")).hasSize(2);
     }
 
     private static int headerCount(byte[] xlsx) throws IOException {

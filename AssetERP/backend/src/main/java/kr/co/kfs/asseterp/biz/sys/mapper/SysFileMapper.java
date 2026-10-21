@@ -18,6 +18,9 @@ public interface SysFileMapper {
 
     List<FileRes> selectByParentId(@Param("parentId") Long parentId);
 
+    /** J07: 사원의 가족금융거래정보 이용동의서 첨부파일 (AS-IS sys10_file.selectByFamilyConsentId). 수정: 로그인 회사의 사원만 */
+    List<FileRes> selectByFamilyConsentId(@Param("companyId") Long companyId, @Param("personId") Long personId);
+
     /** F09: FileDownload apprList의 정렬(파일 구분이 먼저) */
     List<FileRes> selectByApprId(@Param("parentId") Long parentId);
 

@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.flt.mapper;
 
+import kr.co.kfs.asseterp.biz.flt.dto.EmpApprDocRes;
+import kr.co.kfs.asseterp.biz.flt.dto.EmpApprRes;
 import kr.co.kfs.asseterp.biz.flt.dto.AcntTransferRes;
 import kr.co.kfs.asseterp.biz.flt.dto.AcntTransferSaveReq;
 import kr.co.kfs.asseterp.biz.flt.dto.EmpLimitRes;
@@ -123,6 +125,19 @@ public interface FltTrMapper {
     int insertApprDel(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("apprId") Long apprId);
 
     int deleteAppr(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("apprId") Long apprId);
+
+    /** J06 정기보고현황 — AS-IS flt10_tr.selectEmpAppr */
+    List<EmpApprRes> selectEmpAppr(Long companyId, String stdDate, boolean unApprYn, String searchText);
+
+    /** J06 사원의 상신문서 — AS-IS flt10_tr.selectByApprId */
+    List<EmpApprDocRes> selectEmpApprDocs(Long companyId, Long personId, String startDate, String closeDate);
+
+    /** J06 준감인의 상신문서 삭제 — AS-IS apr01_appr.insertApprDel / apr01_appr.deleteAppr / flt10_tr.updateByApprId (본인 문서 제한 없음, 회사만) */
+    int insertApprDelAdmin(Long companyId, Long deleterId, Long apprId);
+
+    int deleteApprAdmin(Long companyId, Long apprId);
+
+    int clearApprIdAdmin(Long companyId, Long apprId);
 
     List<Long> selectAccountIdsByNo(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("accountNo") String accountNo);
 
