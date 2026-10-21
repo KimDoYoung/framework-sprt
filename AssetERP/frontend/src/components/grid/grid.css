@@ -70,24 +70,25 @@
 }
 
 
-/* 묶음 헤더 오른쪽 끝: 왼쪽 끝의 흰 세로선과 같은 모양(흰색 1px, 위·아래 안쪽)으로 묶음 제목 셀(아래 절반)과
-   마지막 열 제목 셀(위 절반)에 한 줄씩 그어 두 행을 하나의 긴 선으로 잇는다 */
+/* 묶음 헤더 오른쪽 끝: 두 행에 걸친 열(행번호·본부 …)의 구분선(AG Grid 리사이즈 막대 ::after — 2px, rgb(240,240,240),
+   헤더 위·아래에서 16px 안쪽)과 같은 모양으로 묶음 제목 셀(아래쪽)과 마지막 열 제목 셀(위쪽)에 한 줄씩 그어 하나의 긴 선으로 잇는다 */
 .ag-header-group-cell.gb-grp::after,
 .ag-header-cell.gb-grp-last::after {
   content: '';
   position: absolute;
-  right: 0;
-  width: 1px;
-  background: rgba(255, 255, 255, 0.95);
+  right: 1px;
+  width: 2px;
+  background: rgb(240, 240, 240);
   pointer-events: none;
 }
+/* AG Grid가 셀 ::after에 height:100%를 이미 주므로 bottom이 아니라 height로 길이를 정한다 */
 .ag-header-group-cell.gb-grp::after {
   top: 16px;
-  bottom: 0px;
+  height: calc(100% - 16px);
 }
 .ag-header-cell.gb-grp-last::after {
   top: 0;
-  bottom: 5px;
+  height: calc(100% - 16px);
 }
 .ag-header-group-cell.gb-grp .ag-header-cell-resize::after,
 .ag-header-cell.gb-grp-last .ag-header-cell-resize::after {

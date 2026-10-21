@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/flt/mapper/flt10_tr.xml (selectByCompanyId L215, updateStatusCode L2149, updateAddConfirmer L2240, getSendMessageList L2040),
+     flt01_company_std.xml (getExpectTrDate2 L96, selectByDate L77), UpdateDataModel(flt10_tr 사유) — J02 Flt10_Tab_PreApprove -->
+<mapper namespace="kr.co.kfs.asseterp.biz.flt.mapper.FltPreApproveMapper">
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.selectByCompanyId L215 — 바깥 SELECT *를 DTO 열로 명시(날짜 TO_CHAR, 'true'/'false' → boolean).
+         뺀 것: 위반내역 열(flt10_check_violate)은 이 화면 그리드에 없어 뺐다. `addConfirmerId` 가지는 이 화면이 안 줘서 뺐다(otherwise 가지만).
+         '&lt;b style=color:#EF1919;&gt;' 붙이기는 원본 그대로(CASE 문자열을 '<'||'b …'로 이어 붙임) -->
+    <select id="selectPreApproves" resultType="kr.co.kfs.asseterp.biz.flt.dto.PreApproveRes">
+        SELECT flt10_tr_id                                                              AS tr_id
+             , flt10_person_id                                                          AS person_id
+             , flt10_person_nm                                                          AS person_name
+             , TO_CHAR(flt10_reg_date, 'YYYY-MM-DD')                                    AS reg_date
+             , TO_CHAR(flt10_expect_tr_date, 'YYYY-MM-DD')                              AS expect_tr_date
+             , flt10_item_type_nm                                                       AS item_type_name
+             , flt10_item_nm                                                            AS item_name
+             , flt10_expect_tr_qty                                                      AS expect_tr_qty
+             , flt10_expect_tr_amt                                                      AS expect_tr_amt
+             , flt10_year_invest_limit_emp                                              AS year_invest_limit_emp
+             , CASE WHEN flt10_year_invest_limit_emp <![CDATA[>=]]> flt10_year_invest_limit THEN TO_CHAR(flt10_year_invest_limit,'FM9,999,999,999,999')
+                    ELSE '&lt;'||'b style=color:#EF1919;'||'&gt;'||TO_CHAR(flt10_year_invest_limit,'FM9,999,999,999,999')||'&lt;'||'/b'||'&gt;'
+                    END                                                                 AS year_invest_limit_str
+             , CASE WHEN std_total_invest_amt <![CDATA[>=]]> flt10_total_invest_amt THEN TO_CHAR(flt10_total_invest_amt,'FM9,999,999,999,999')
+                    ELSE '&lt;'||'b style=color:#EF1919;'||'&gt;'||TO_CHAR(flt10_total_invest_amt,'FM9,999,999,999,999')||'&lt;'||'/b'||'&gt;'
+                    END                                                                 AS total_invest_amt_str
+             , CASE WHEN std_turnover_rate <![CDATA[>=]]> flt10_turnover_rate THEN TO_CHAR(flt10_turnover_rate,'FM9,999,999,999,999.00')
+                    ELSE '&lt;'||'b style=color:#EF1919;'||'&gt;'||TO_CHAR(flt10_turnover_rate,'FM9,999,999,999,999.00')||'&lt;'||'/b'||'&gt;'
+                    END                                                                 AS turnover_rate_str
+             , CASE WHEN lock_up_date IS NULL THEN ''
+                    WHEN lock_up_date <![CDATA[<]]> flt10_reg_date THEN book_days
+                    ELSE '&lt;'||'b style=color:#EF1919;'||'&gt;'||book_days||'&lt;'||'/b'||'&gt;'
+                    END                                                                 AS book_days
+             , flt10_check_buy_lockup                                                   AS check_buy_lockup
+             , flt10_check_fund_hold                                                    AS check_fund_hold
+             , flt10_status_cd                                                          AS status_code
+             , flt10_status_nm                                                          AS status_name
+             , flt10_tr_reason                                                          AS tr_reason
+             , flt10_reject_reason                                                      AS reject_reason
+             , flt10_add_confirmer_id                                                   AS add_confirmer_id
+             , flt10_add_confirmer_nm                                                   AS add_confirmer_name
+             , flt10_add_status_nm                                                      AS add_status_name
+             , TO_CHAR(flt10_add_confirm_datetime, 'YYYY-MM-DD HH24:MI:SS')             AS add_confirm_datetime
+             , flt10_add_confirm_reason                                                 AS add_confirm_reason
+             , COALESCE(flt10_confirm_sms_yn, 'false') = 'true'                         AS confirm_sms_yn
+          FROM (
+                SELECT  t1.*
+                     ,  f_cdnm('FloorTrCode',   flt10_tr_type,      flt10_company_id, f_today())                 AS flt10_tr_type_nm
+                     ,  COALESCE(( SELECT flt02_year_invest_limit
+                                     FROM flt02_emp
+                                    WHERE flt02_company_id = flt10_company_id
+                                      AND flt02_person_id  = flt10_person_id
+                                      AND flt02_start_date <![CDATA[<=]]> flt10_reg_date
+                                    ORDER BY flt02_start_date DESC
+                                    LIMIT 1 ),0)                                                                 AS flt10_year_invest_limit_emp
+                     ,  f_get_floorTrCheck('1', flt10_company_id, flt10_person_id, flt10_reg_date, true)         AS flt10_year_invest_limit
+                     ,  f_get_floorTrCheck('2', flt10_company_id, flt10_person_id, flt10_reg_date, true)         AS flt10_total_invest_amt
+                     ,  f_get_floorTrCheck('3', flt10_company_id, flt10_person_id, flt10_reg_date, true)         AS flt10_turnover_rate
+                     ,  CASE WHEN rcnt_buy_date IS NULL THEN '매수정보없음'
+                             ELSE f_get_biz_days(flt10_company_id, rcnt_buy_date, flt10_reg_date)-1||' 영업일' END AS book_days
+                     ,  CASE WHEN lock_up_calc_std_cd = 'M'
+                             THEN rcnt_buy_date + INTERVAL '1month' * COALESCE(lock_up_days,0)
+                             ELSE f_get_biz_date(flt10_company_id, rcnt_buy_date, COALESCE(lock_up_days,0)::text)
+                             END                                                                                  AS lock_up_date
+                     ,  CASE WHEN status_cd = '10' THEN '&lt;'||'b '||'style=color:#EF1919;'||'&gt;'
+                                                        ||f_cdnm('FloorTrStatusCode', status_cd, flt10_company_id, f_today())
+                                                        ||'&lt;'||'/b'||'&gt;'
+                             ELSE f_cdnm('FloorTrStatusCode', status_cd, flt10_company_id, f_today()) END         AS flt10_status_nm
+                     ,  CASE WHEN flt10_add_confirmer_id IS NULL     THEN null
+                             WHEN flt10_add_confirm_datetime IS NULL THEN '미승인'
+                             WHEN flt10_status_cd IN ('10','20')     THEN '미승인'
+                             ELSE f_cdnm('FloorTrStatusCode', flt10_status_cd, flt10_company_id, f_today()) END   AS flt10_add_status_nm
+                     ,  CASE WHEN (   family_relate_cd = '1'
+                                  AND (flt10_target_yn = 'true' OR (flt10_tr_type = '20O' AND COALESCE(flt10_sell_pre_appr_yn,'false') = 'true'))
+                                  AND f_get_floorTrFundHoldCheck( flt10_company_id
+                                                                , flt10_item_cd
+                                                                , LEAST(flt10_reg_date, f_get_biz_date2(flt10_company_id, f_today(), '-1', 'true'))
+                                                                ) )
+                             THEN '펀드종목' ELSE '' END                                                            AS flt10_check_fund_hold
+                     ,  CASE WHEN ( family_relate_cd = '1'        AND
+                                    flt10_target_yn  = 'true'     AND
+                                    flt10_tr_type    = '10I'      AND
+                                    check_buy_lockup IS NOT NULL  )
+                             THEN f_cdnm('BuyLockupType', check_buy_lockup, flt10_company_id, f_today())
+                             ELSE '' END                                                                          AS flt10_check_buy_lockup
+                  FROM (
+                        SELECT  flt10.*
+                             ,  f_emp_kor_nm(flt10_person_id)                                                                       AS flt10_person_nm
+                             ,  flt05.flt05_item_type_nm                                                                            AS flt10_item_type_nm
+                             ,  COALESCE(COALESCE(flt05_tr.flt05_target_yn       , flt05.flt05_target_yn       )::varchar, 'false') AS flt10_target_yn
+                             ,  COALESCE(COALESCE(flt05_tr.flt05_sell_pre_appr_yn, flt05.flt05_sell_pre_appr_yn)::varchar, 'false') AS flt10_sell_pre_appr_yn
+                             ,  emp01_kor_nm                                                                                        AS flt10_add_confirmer_nm
+                             ,  flt08_lockup_type                                                                                   AS check_buy_lockup
+                             ,  f_get_floorTrRcntBuyDate( flt10_company_id, flt10_person_id, flt10_account_id
+                                                        , flt10_item_type, flt10_item_nm, flt10_item_cd
+                                                        , flt10_reg_date, true )                                                    AS rcnt_buy_date
+                             ,  COALESCE(flt01_total_invest_amt,0)                                                                  AS std_total_invest_amt
+                             ,  COALESCE(flt01_turnover_rate,0)                                                                     AS std_turnover_rate
+                             ,  flt01_lock_up_calc_std_cd                                                                           AS lock_up_calc_std_cd
+                             ,  flt01_lock_up_days                                                                                  AS lock_up_days
+                             ,  flt03_family_relate_cd                                                                              AS family_relate_cd
+                             ,  CASE WHEN flt10_add_confirmer_id IS NULL THEN flt10_status_cd
+                                     ELSE (CASE WHEN flt10_status_cd IN ('20','25') THEN '20'
+                                                ELSE flt10_status_cd END) END                                                       AS status_cd
+                          FROM  flt10_tr flt10
+                                INNER JOIN flt03_account ON flt03_account_id = flt10_account_id
+                                LEFT OUTER JOIN flt05_item_type flt05 ON (    flt05.flt05_company_id   = flt10_company_id
+                                                                          AND flt05.flt05_item_type_cd = flt10_item_type
+                                                                          AND flt05.flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                                                             FROM flt05_item_type
+                                                                                                            WHERE flt05_company_id   = flt10_company_id
+                                                                                                              AND flt05_item_type_cd = flt10_item_type
+                                                                                                              AND flt05_start_date <![CDATA[<=]]> flt10_expect_tr_date ) )
+                                LEFT OUTER JOIN flt05_item_type flt05_tr ON (    flt05_tr.flt05_company_id   = flt10_company_id
+                                                                             AND flt05_tr.flt05_item_type_cd = flt10_tr_item_type
+                                                                             AND flt05_tr.flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                                                                   FROM flt05_item_type
+                                                                                                                  WHERE flt05_company_id   = flt10_company_id
+                                                                                                                    AND flt05_item_type_cd = flt10_tr_item_type
+                                                                                                                    AND flt05_start_date <![CDATA[<=]]> flt10_tr_date ) )
+                                LEFT OUTER JOIN flt08_buy_lockup ON (    flt08_company_id = flt10_company_id
+                                                                     AND flt08_item_cd    = flt10_item_cd
+                                                                     AND flt10_reg_date   BETWEEN flt08_start_date AND COALESCE(flt08_close_date,'9999-12-31') )
+                                LEFT OUTER JOIN LATERAL ( SELECT *
+                                                            FROM flt01_company_std
+                                                           WHERE flt01_company_id = flt10_company_id
+                                                             AND flt01_start_date <![CDATA[<=]]> flt10_reg_date
+                                                           ORDER BY flt01_start_date DESC
+                                                           LIMIT 1
+                                                        ) flt01 ON TRUE
+                                LEFT OUTER JOIN emp01_person ON emp01_person_id = flt10_add_confirmer_id
+                         WHERE  1=1
+                           AND  flt10_company_id = #{companyId}
+                           AND  flt10_tr_type LIKE #{trType}
+                           AND  flt10_tr_type IN ( SELECT sys09_code
+                                                     FROM sys13_code_group
+                                                          INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+                                                    WHERE sys13_kind_group_cd = 'FloorTrCode0001' )
+                           AND  CAST(flt10_person_id AS VARCHAR) LIKE #{personIdStr}
+                           AND  COALESCE(flt10_unfill_yn, 'false') != 'true'    /*미체결 사전신고거래 제외*/
+        <choose>
+            <when test="noLimitYn">
+                           AND  COALESCE(flt10_status_cd,'00') IN ('10')
+            </when>
+            <otherwise>
+                           AND  flt10_reg_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+                           AND  ( ( #{apprYn} = 'true'  AND COALESCE(flt10_status_cd,'00') IN ('20','25','30')   ) OR
+                                  ( #{apprYn} = 'false' AND COALESCE(flt10_status_cd,'00') IN ('10')             ) OR
+                                  ( #{apprYn} = '%'     AND COALESCE(flt10_status_cd,'00') != '00'               ) )
+            </otherwise>
+        </choose>
+                       ) t1
+               ) t0
+         WHERE CONCAT(flt10_person_nm, flt10_item_nm, flt10_item_type_nm) ILIKE #{searchText}
+         ORDER BY flt10_person_id, flt10_reg_date, flt10_tr_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt01_company_std.getExpectTrDate2 L96 (승인 때 매매유효일) -->
+    <select id="selectExpectTrDate2" resultType="string">
+        SELECT TO_CHAR(CASE WHEN COALESCE(flt01_std_date_type,'1') = '2'
+                            THEN f_get_biz_date(#{companyId}, CAST(#{stdDate} AS date), (flt01_appr_valid_days-1)::text)
+                            ELSE null END, 'YYYY-MM-DD')
+          FROM flt01_company_std
+         WHERE flt01_company_id = #{companyId}
+           AND flt01_start_date <![CDATA[<=]]> CAST(#{stdDate} AS date)
+         ORDER BY flt01_start_date DESC
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.updateStatusCode L2149. 수정: 회사 조건(flt10_company_id)을 더했다 -->
+    <update id="updateStatusCode">
+        UPDATE  flt10_tr
+           SET  flt10_status_cd         = CAST(#{statusCode} AS varchar)
+             ,  flt10_confirmer_id      = #{personId}
+        <choose>
+            <when test="statusCode == null or statusCode == '10'">
+             ,  flt10_confirm_datetime  = null
+            </when>
+            <otherwise>
+             ,  flt10_confirm_datetime  = f_sysdate()
+            </otherwise>
+        </choose>
+             ,  flt10_reject_reason = CASE WHEN CAST(#{statusCode} AS varchar) NOT IN ('20','30') THEN null
+        <choose>
+            <when test="rejectReason != null">
+                                           ELSE CAST(#{rejectReason} AS text)
+            </when>
+            <otherwise>
+                                           ELSE flt10_reject_reason
+            </otherwise>
+        </choose>
+                                      END
+        <if test="statusCode == '20'">
+             ,  flt10_expect_tr_date = CASE WHEN CAST(#{expectTrDate} AS date) IS NOT NULL THEN CAST(#{expectTrDate} AS date)
+                                            ELSE flt10_expect_tr_date
+                                       END
+        </if>
+         WHERE  flt10_tr_id      = #{trId}
+           AND  flt10_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.updateAddConfirmer L2240. 수정: 회사 조건을 더했다 -->
+    <update id="updateAddConfirmer">
+        UPDATE flt10_tr
+           SET flt10_add_confirmer_id = #{addConfirmerId}
+         WHERE flt10_tr_id      = #{trId}
+           AND flt10_company_id = #{companyId}
+    </update>
+
+    <!-- UpdateDataModel(flt10_tr) UPDATE — RejectReasonWrite.update()는 사유(rejectReason)만 바뀐 행을 저장한다 -->
+    <update id="updateRejectReason">
+        UPDATE flt10_tr
+           SET flt10_reject_reason = #{rejectReason}
+         WHERE flt10_tr_id      = #{trId}
+           AND flt10_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) flt10_tr.getSendMessageList L2040 — 알림 발송 대상 사원 수(사원별 GROUP BY 행 수). 발송 연동이 없어 건수만 쓴다 -->
+    <select id="selectSendMessageCount" resultType="int">
+        SELECT COUNT(*) FROM (
+            SELECT flt10_person_id
+              FROM flt10_tr
+             WHERE flt10_company_id = #{companyId}
+               AND COALESCE(flt10_confirm_sms_yn, 'false') = 'false'
+               AND 'Y' = CASE WHEN flt10_add_confirmer_id IS NULL     AND COALESCE(flt10_status_cd, '00') IN ('20','30') THEN 'Y'
+                              WHEN flt10_add_confirmer_id IS NOT NULL AND COALESCE(flt10_status_cd, '00') IN ('25','30') THEN 'Y'
+                              ELSE 'N' END
+             GROUP BY flt10_person_id
+        ) t
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt01_company_std.selectByDate L77 에서 이 화면이 쓰는 값(투자한도 숨김)만 -->
+    <select id="selectInvestLimitUnvisibleYn" resultType="boolean">
+        SELECT COALESCE(flt01_invest_limit_unvisible_yn, 'false') = 'true'
+          FROM flt01_company_std
+         WHERE flt01_company_id = #{companyId}
+           AND flt01_start_date <![CDATA[<=]]> CAST(#{toDay} AS date)
+         ORDER BY flt01_start_date DESC
+         LIMIT 1
+    </select>
+
+    <!-- LoginUser.getCompanyModel().getFltAddConfirmYn() -->
+    <select id="selectAddConfirmYn" resultType="boolean">
+        SELECT COALESCE(sys01_flt_add_confirm_yn, 'false') = 'true'
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+</mapper>

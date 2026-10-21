@@ -4,6 +4,7 @@ import { readBlobError } from './file';
 import {
   FltViolate, FltAccount, FltAccountAdmin,FltAccountClose, FltAccountStatus, FltBook, FltBookList, FltBuyLockup, FltLockupStd, FltDocClass, FltInvestLimit, FltItemType, FltItemTypeCode,
   FltAcntTransfer, FltBookMonth, FltEmpLimit, FltRealTr, FltRelateAppr, FltReportCheck, FltRightsExercise, FltTr, FltTrAccount, FltTrCheck, FltTrItem, FltTrList,
+  FltPreApprove, FltPreApproveSetting,
 } from '../types/flt';
 
 /** flt(임직원매매) 화면 API (E08~) */
@@ -396,6 +397,44 @@ export const fltApi = {
   /** 엑셀다운로드 (AS-IS Sys99_Print.insertRdViolate + RD 리포트 Flt10_Rd_Violate → xlsx) */
   downloadViolateExcel: async (stdDate: string, personId: number | null, fileName: string): Promise<void> => {
     await downloadBlob('v1/flt/trs/violate/excel', { stdDate, personId: personId ?? undefined }, fileName);
+  },
+
+  // ── J02 사전승인 (Flt10_Tab_PreApprove · Flt10_Lookup_RejectReasonWrite) ──
+
+  /** AS-IS flt.Flt10_Tr.selectByCompanyId. trType '10I' 매수 / '20O' 매도, apprYn `%`(전체)·'true'(승인)·'false'(미승인), personId null = 전체 */
+  searchPreApproves: async (params: { trType: string; personId: number | null; apprYn: string; startDate: string; closeDate: string; searchText: string; noLimitYn: boolean }): Promise<FltPreApprove[]> => {
+    const res = await apiClient.get<ApiResponse<FltPreApprove[]>>('v1/flt/trs/approvals', { params: { ...params, personId: params.personId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** setInitData() — 투자한도 열 숨김·협의승인 회사 여부 */
+  getPreApproveSetting: async (toDay: string): Promise<FltPreApproveSetting> => {
+    const res = await apiClient.get<ApiResponse<FltPreApproveSetting>>('v1/flt/trs/approvals/setting', { params: { toDay } });
+    return res.data.data;
+  },
+
+  /** AS-IS flt.Flt10_Tr.updateStatusCode — '20' 승인 / '30' 반려 / '10' 취소 */
+  updatePreApproveStatus: async (trIds: number[], statusCode: string, rejectReason: string | null): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/flt/trs/approvals/status', { trIds, statusCode, rejectReason });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS flt.Flt10_Tr.updateAddConfirmer — addConfirmerId null = 선택안함 */
+  updatePreApproveConfirmer: async (trIds: number[], addConfirmerId: number | null): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/flt/trs/approvals/add-confirmer', { trIds, addConfirmerId });
+    return res.data.data ?? 0;
+  },
+
+  /** Flt10_Lookup_RejectReasonWrite.update() — 승인·반려 사유 수정 */
+  updatePreApproveReason: async (trId: number, rejectReason: string | null): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>(`v1/flt/trs/approvals/${trId}/reason`, { rejectReason });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS flt.Flt10_Tr.sendMessage (일괄 알림발송) → 결과 메시지 */
+  sendPreApproveMessage: async (): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/flt/trs/approvals/send-message');
+    return res.data.data ?? '';
   },
 };
 

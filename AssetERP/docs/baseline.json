@@ -4511,5 +4511,37 @@
     "note": "docs/work/J/J01-작업기록.md",
     "history": [],
     "id": "J01"
+  },
+  "Flt10_Tab_PreApprove": {
+    "commit": "eb386248de736f38dbee261a928cd4592c8b7175",
+    "commit_short": "eb38624",
+    "branch": "ioc",
+    "commit_date": "2026-10-20",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/flt/Flt10_Lookup_RejectReasonWrite.java": "b93392e5d20ae50c076e32a48f4d7fe2646d67e8",
+      "application/src/main/java/myApp/client/vi/flt/Flt10_Tab_PreApprove.java": "b84ec3f317504c6f918e9e33049dabeb2f9becf4",
+      "application/src/main/java/myApp/client/vi/flt/model/Flt01_CompanyStdModel.java": "b26644e35cf49db8f2842fce320b1d0bb5843e46",
+      "application/src/main/java/myApp/client/vi/flt/model/Flt10_TrModel.java": "6bb4e197d02a67e61bdee53f50195983363ffcce",
+      "application/src/main/java/myApp/client/vi/flt/model/Flt10_TrModelProperties.java": "840c26adbc6961f7bf3d4e079da9442fd321e1c5",
+      "application/src/main/java/myApp/server/emp/mapper/emp01_person.xml": "996a542c6a2637d37b8ad6dafdc1de2019cbe902",
+      "application/src/main/java/myApp/server/emp/mapper/emp92_sms_notice.xml": "b606ac566c0c4019f998a6d350b04c09d646fc6e",
+      "application/src/main/java/myApp/server/flt/Flt01_CompanyStd.java": "6c98eb16f1477d58c08922667114dac1a0781485",
+      "application/src/main/java/myApp/server/flt/Flt10_Tr.java": "2ea7ade9c47c344daad782b66813154a5a178387",
+      "application/src/main/java/myApp/server/flt/mapper/flt01_company_std.xml": "91ad0eed52a43b22de9fe5d09820441a94312093",
+      "application/src/main/java/myApp/server/flt/mapper/flt10_tr.xml": "c84c7d6396dc02e5cdbe6788762dfb2324570066",
+      "application/src/main/java/myApp/server/flt/mapper/flt13_book_init.xml": "de70bfdcf4c141163afd0dc49523ea36e341c9f9",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle",
+      "Emp93_Lookup_SmsNoticeTarget",
+      "Fnd10_Lookup_RelateFund"
+    ],
+    "recorded_at": "2026-10-21T16:36:46+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/J/J02-작업기록.md",
+    "history": [],
+    "id": "J02"
   }
 }

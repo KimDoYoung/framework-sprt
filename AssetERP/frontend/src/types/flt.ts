@@ -385,3 +385,39 @@ export interface FltBookList {
   totalInvestAmt: number | null;
   turnoverRate: number | null;
 }
+
+/** 사전승인(준감인) 한 행 (J02 Flt10_Tab_PreApprove, flt10_tr.selectByCompanyId). 매수·매도 그리드 공용 */
+export interface FltPreApprove {
+  trId: number;
+  personId: number;
+  personName: string | null;
+  regDate: string | null;
+  expectTrDate: string | null;
+  itemTypeName: string | null;
+  itemName: string | null;
+  expectTrQty: number | null;
+  expectTrAmt: number | null;
+  yearInvestLimitEmp: number | null;
+  yearInvestLimitStr: string | null;
+  totalInvestAmtStr: string | null;
+  turnoverRateStr: string | null;
+  bookDays: string | null;
+  checkBuyLockup: string | null;
+  checkFundHold: string | null;
+  statusCode: string | null;
+  statusName: string | null;
+  trReason: string | null;
+  rejectReason: string | null;
+  addConfirmerId: number | null;
+  addConfirmerName: string | null;
+  addStatusName: string | null;
+  addConfirmDatetime: string | null;
+  addConfirmReason: string | null;
+  confirmSmsYn: boolean;
+}
+
+/** 사전승인 화면 설정 — 투자한도 열 숨김(기준관리)·협의승인 사용 회사 */
+export interface FltPreApproveSetting {
+  investLimitUnvisibleYn: boolean;
+  addConfirmYn: boolean;
+}

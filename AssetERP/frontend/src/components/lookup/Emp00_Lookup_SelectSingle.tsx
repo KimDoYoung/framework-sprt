@@ -39,13 +39,15 @@ interface Props {
   separateAddTitle?: boolean;
   /** 기준일 'yyyy-MM-dd' (open의 transDate) */
   transDate: string;
-  /** callback.execute(result): 확인이면 고른 사원, [전체]면 null */
+  /** 널 단추 문구. 기본 '전체'(AS-IS openAll), openNull은 '선택안함'(nullButton.setReText), null이면 단추 없음(callback만 있는 open) */
+  noneLabel?: string | null;
+  /** callback.execute(result): 확인이면 고른 사원, [전체]·[선택안함]이면 null */
   onResult: (row: TransInfo | null) => void;
   /** 취소: hide()만 */
   onClose: () => void;
 }
 
-export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, separateAddTitle = false, transDate, onResult, onClose }) => {
+export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, separateAddTitle = false, noneLabel = '전체', transDate, onResult, onClose }) => {
   const gridRef = useRef<AgGridReact<TransInfo>>(null);
   // L233-244: transName setText("재직"). 처음 값은 열 때마다 받은 transDate라 초기화는 openValues로 한다
   const openValues = useMemo(() => ({ baseDate: transDate, findText: '', transName: '재직' }), [transDate]);
@@ -89,13 +91,13 @@ export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, se
   };
 
   return (
-    <LookupModal open={open} title="사원찾기(조직/직무/성명)" width={700} maskClosable={false} onCancel={onClose} destroyOnHidden
+    <LookupModal open={open} title="사원찾기(조직/직무/성명)" width={760} maskClosable={false} onCancel={onClose} destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
             <Button type="save" onClick={confirm}>확인</Button>
             {/* [E2]·[E7] nullButton[전체].Select [callback != null] (L127·L212) → callback.execute(null), hide() */}
-            <Button type="select" onClick={() => onResult(null)}>전체</Button>
+            {noneLabel !== null && <Button type="select" onClick={() => onResult(null)}>{noneLabel}</Button>}
             {/* [E8] cancelButton[취소].Select (L221) → hide() */}
             <Button type="cancel" onClick={onClose}>취소</Button>
           </Space>
