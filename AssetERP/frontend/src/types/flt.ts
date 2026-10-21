@@ -45,6 +45,24 @@ export interface FltAccount {
   bookInitCnt: number | null;
 }
 
+/** 계좌신고현황 한 행 (J01 Flt03_Tab_AccountAdmin, flt03_account.selectByDate) — 회사 전체 */
+export interface FltAccountAdmin {
+  accountId: number;
+  orgName: string | null;
+  personName: string | null;
+  corpName: string | null;
+  accountNoDec: string | null;
+  accountName: string | null;
+  familyRelateName: string | null;
+  itemTypeName: string | null;
+  setupDate: string | null;
+  apprId: number | null;
+  apprStatusName: string | null;
+  closeDate: string | null;
+  closeApprId: number | null;
+  closeApprStatusName: string | null;
+}
+
 /** 폐쇄 계좌 (flt06_account_close) */
 export interface FltAccountClose {
   accountCloseId: number;

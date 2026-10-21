@@ -57,6 +57,40 @@
          ORDER BY flt03_setup_date, sys15_corp_nm collate "ko_KR.utf8" asc, TO_DECRYPTS(flt03_account_no)
     </select>
 
+    <!-- AS-IS(IDMS-IC) flt03_account.selectByDate L149 (J01 계좌신고현황). personId 분기는 쓰지 않는다(전 사원). SELECT *는 DTO 열로 명시.
+         closeAccountYn=false(폐쇄계좌 포함 해제)면 기준일 전에 폐쇄된 계좌를 뺀다 -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.flt.dto.AccountAdminRes">
+        SELECT flt03_account_id                                                             AS account_id,
+               emp00_org_code_nm                                                            AS org_name,
+               emp00_kor_nm                                                                 AS person_name,
+               sys15_corp_nm                                                                AS corp_name,
+               CASE WHEN COALESCE(flt06_close_date, DATE '9999-12-31') &lt; CAST(#{setupDate} AS date)
+                    THEN '(폐쇄) ' ELSE '' END || TO_DECRYPTS(flt03_account_no)             AS account_no_dec,
+               flt03_account_nm                                                             AS account_name,
+               f_cdnm('FamilyRelateCode', flt03_family_relate_cd, flt03_company_id, f_sysdate()) AS family_relate_name,
+               f_get_itemtype_nm(flt03_item_type, flt03_company_id)                         AS item_type_name,
+               TO_CHAR(flt03_setup_date, 'YYYY-MM-DD')                                      AS setup_date,
+               flt03_appr_id                                                                AS appr_id,
+               f_cdnm('AprStatusCode', appr.apr01_status_cd, appr.apr01_company_id, appr.apr01_reg_date) AS appr_status_name,
+               TO_CHAR(flt06_close_date, 'YYYY-MM-DD')                                      AS close_date,
+               flt06_appr_id                                                                AS close_appr_id,
+               f_cdnm('AprStatusCode', closeAppr.apr01_status_cd, closeAppr.apr01_company_id, closeAppr.apr01_reg_date) AS close_appr_status_name
+          FROM flt03_account
+               INNER JOIN getPerson(#{companyId}, CAST(#{setupDate} AS date)) ON emp00_person_id = flt03_person_id
+               LEFT OUTER JOIN sys15_corp ON sys15_corp_id = flt03_corp_id AND sys15_company_id = flt03_company_id
+               LEFT OUTER JOIN apr01_appr appr ON flt03_appr_id = appr.apr01_appr_id
+               LEFT OUTER JOIN flt06_account_close ON flt06_account_id = flt03_account_id
+               LEFT OUTER JOIN apr01_appr closeAppr ON flt06_appr_id = closeAppr.apr01_appr_id
+         WHERE flt03_company_id = #{companyId}
+           AND flt03_setup_date &lt;= CAST(#{setupDate} AS date)
+        <if test="!closeAccountYn">
+           AND COALESCE(flt06_close_date, DATE '9999-12-31') &gt;= CAST(#{setupDate} AS date)
+        </if>
+         ORDER BY emp00_org_code_nm collate "ko_KR.utf8" asc,
+                  emp00_kor_nm,
+                  CASE WHEN flt03_main_account_yn = 'true' THEN 0 ELSE 1 END
+    </select>
+
     <!-- AS-IS(IDMS-IC) flt03_account.selectById -->
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.flt.dto.AccountRes">
         SELECT <include refid="accountColumns"/>

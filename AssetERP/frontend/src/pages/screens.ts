@@ -9,6 +9,7 @@ import { Emp00_Tab_TransInfo } from './emp/Emp00_Tab_TransInfo';
 import { Emp00_Tab_RoleMenu } from './emp/Emp00_Tab_RoleMenu';
 import { Emp01_Tab_UserInfo } from './emp/Emp01_Tab_UserInfo';
 import { Flt00_Tab_Info } from './flt/Flt00_Tab_Info';
+import { Flt03_Tab_AccountAdmin } from './flt/Flt03_Tab_AccountAdmin';
 import { Flt03_Tab_AccountReport } from './flt/Flt03_Tab_AccountReport';
 import { Flt10_Tab_BuyReport } from './flt/Flt10_Tab_BuyReport';
 import { Flt10_Tab_RealTransaction } from './flt/Flt10_Tab_RealTransaction';
@@ -159,6 +160,7 @@ export const SCREENS: Record<string, React.FC> = {
   Flt10_Tab_TrList, // I08 (1단계=전체: 본 화면 하나, 엑셀은 RD 대신 서버 xlsx. 다른 도메인 의존 없음)
   Flt11_Tab_BookList, // I09 (1단계=전체: 본 화면 하나. [최초원장 등록]은 원본에서 툴바에 연결이 없어 화면에 없다)
   Flt10_Tab_ViolateUser, // I10 (1단계=전체: 본 화면 하나, 엑셀은 RD 대신 서버 xlsx. 사원찾기 Emp00 기존 부품. 본 화면 Flt10_Tab_Violate는 J05가 fixedUser 없이 같이 쓴다)
+  Flt03_Tab_AccountAdmin, // J01 (1단계=전체 본 화면 하나. 보기 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Flt10_Tab_SellReport, // I04 (1단계: 본 화면 + 보유내역 조회창 Flt11_Lookup_BookList(I09 공유). 보고주기·서약서 창 Flt02_Lookup_Emp는 다음 단계)
   Flt05_Tab_ItemTypeAdmin, // E08
   Fnd03_Tab_ConsignmentManager, // D11 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)

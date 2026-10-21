@@ -4489,5 +4489,27 @@
     "note": "docs/work/I/I10-작업기록.md",
     "history": [],
     "id": "I10"
+  },
+  "Flt03_Tab_AccountAdmin": {
+    "commit": "eb386248de736f38dbee261a928cd4592c8b7175",
+    "commit_short": "eb38624",
+    "branch": "ioc",
+    "commit_date": "2026-10-20",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/flt/Flt03_Tab_AccountAdmin.java": "1c5f179bb6ccce293a1ac515cd0a82e56f737c87",
+      "application/src/main/java/myApp/client/vi/flt/model/Flt03_AccountModel.java": "48978725998c1959da49297d94957911a68780db",
+      "application/src/main/java/myApp/client/vi/flt/model/Flt03_AccountModelProperties.java": "e6c4ad37e901df9892f91e61553bf09d22bfcf03",
+      "application/src/main/java/myApp/server/flt/Flt03_Account.java": "6da31f752f367088aeb8d7fd9f7a7895aa6128dd",
+      "application/src/main/java/myApp/server/flt/mapper/flt03_account.xml": "254ddc7206c76953a6f937689eecb69a415bd2f2"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc"
+    ],
+    "recorded_at": "2026-10-21T15:39:31+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/J/J01-작업기록.md",
+    "history": [],
+    "id": "J01"
   }
 }

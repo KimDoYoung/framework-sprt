@@ -70,6 +70,30 @@
 }
 
 
+/* 묶음 헤더 오른쪽 끝: 왼쪽 끝의 흰 세로선과 같은 모양(흰색 1px, 위·아래 안쪽)으로 묶음 제목 셀(아래 절반)과
+   마지막 열 제목 셀(위 절반)에 한 줄씩 그어 두 행을 하나의 긴 선으로 잇는다 */
+.ag-header-group-cell.gb-grp::after,
+.ag-header-cell.gb-grp-last::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.95);
+  pointer-events: none;
+}
+.ag-header-group-cell.gb-grp::after {
+  top: 16px;
+  bottom: 0px;
+}
+.ag-header-cell.gb-grp-last::after {
+  top: 0;
+  bottom: 5px;
+}
+.ag-header-group-cell.gb-grp .ag-header-cell-resize::after,
+.ag-header-cell.gb-grp-last .ag-header-cell-resize::after {
+  display: none;
+}
+
 .ag-header-group-cell.gb-hdr .ag-header-group-cell-label {
   justify-content: center;
   text-align: center;

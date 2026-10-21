@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.flt.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.flt.dto.AccountAdminRes;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountCloseReq;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountCloseRes;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountRes;
@@ -34,6 +35,14 @@ public class FltAccountController {
     @GetMapping
     public ApiResponse<List<AccountRes>> search(@AuthenticationPrincipal UserPrincipal principal) {
         return ApiResponse.ok(service.search(principal));
+    }
+
+    /** AS-IS flt.Flt03_Account.selectByDate (J01 계좌신고현황, 회사 전체) */
+    @GetMapping("/status-by-date")
+    public ApiResponse<List<AccountAdminRes>> searchByDate(@AuthenticationPrincipal UserPrincipal principal,
+                                                           @RequestParam String setupDate,
+                                                           @RequestParam(defaultValue = "true") boolean closeAccountYn) {
+        return ApiResponse.ok(service.searchByDate(principal, setupDate, closeAccountYn));
     }
 
     /** AS-IS flt.Flt03_Account.update → 저장된 행(요청 순서) */

@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.flt.mapper;
 
+import kr.co.kfs.asseterp.biz.flt.dto.AccountAdminRes;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountCloseRes;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountRes;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountSaveReq;
@@ -16,6 +17,10 @@ public interface FltAccountMapper {
 
     // flt03_account
     List<AccountRes> selectByPersonId(@Param("companyId") Long companyId, @Param("personId") Long personId);
+
+    /** AS-IS flt03_account.selectByDate — 회사 전체(personId 분기 없음), 기준일에 재직 중인 사원의 계좌 */
+    List<AccountAdminRes> selectByDate(@Param("companyId") Long companyId, @Param("setupDate") String setupDate,
+                                       @Param("closeAccountYn") boolean closeAccountYn);
 
     AccountRes selectById(@Param("accountId") Long accountId);
 

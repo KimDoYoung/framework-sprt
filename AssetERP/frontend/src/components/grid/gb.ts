@@ -136,8 +136,14 @@ export function gbFor<T>() {
     // ── 헤더 묶음 (AS-IS addHeaderGroupMap) ──
     group: (header: string, children: (ColDef<T> | ColGroupDef<T>)[]): ColGroupDef<T> => ({
       headerName: header.replace(/<br\s*\/?>/gi, '\n'),
-      headerClass: 'gb-hdr',
-      children,
+      headerClass: ['gb-hdr', 'gb-grp'],
+      // 묶음 오른쪽 끝 구분선이 두 행(묶음 제목 + 열 제목)을 이어서 관통하도록 마지막 열에도 표시 (grid.css .gb-grp-last)
+      children: children.map((c, i) => {
+        if (i !== children.length - 1 || 'children' in c) return c;
+        const prev = (c as ColDef<T>).headerClass;
+        if (typeof prev === 'function') return c;
+        return { ...c, headerClass: [...(Array.isArray(prev) ? prev : prev ? [prev] : []), 'gb-grp-last'] };
+      }),
     }),
   };
 }

@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.flt.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.flt.dto.AccountAdminRes;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountCloseReq;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountCloseRes;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountRes;
@@ -32,6 +33,11 @@ public class FltAccountService {
     /** AS-IS Flt03_Account.selectByPersonId(companyId, personId) — 폐쇄된 계좌는 뺀다 */
     public List<AccountRes> search(UserPrincipal user) {
         return mapper.selectByPersonId(user.getCompanyId(), user.getUserId());
+    }
+
+    /** AS-IS Flt03_Account.selectByDate L50(companyId, personId=null, setupDate, closeAccountYn) — 계좌신고현황(J01), 회사 전체 */
+    public List<AccountAdminRes> searchByDate(UserPrincipal user, String setupDate, boolean closeAccountYn) {
+        return mapper.selectByDate(user.getCompanyId(), setupDate, closeAccountYn);
     }
 
     /** AS-IS update(UpdateDataModel): 계좌번호를 암호화해 저장, ID가 0 이하면 INSERT 아니면 UPDATE → selectById로 다시 읽어 요청 순서대로 */

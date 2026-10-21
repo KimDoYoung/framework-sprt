@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
 import {
-  FltViolate, FltAccount, FltAccountClose, FltAccountStatus, FltBook, FltBookList, FltBuyLockup, FltLockupStd, FltDocClass, FltInvestLimit, FltItemType, FltItemTypeCode,
+  FltViolate, FltAccount, FltAccountAdmin,FltAccountClose, FltAccountStatus, FltBook, FltBookList, FltBuyLockup, FltLockupStd, FltDocClass, FltInvestLimit, FltItemType, FltItemTypeCode,
   FltAcntTransfer, FltBookMonth, FltEmpLimit, FltRealTr, FltRelateAppr, FltReportCheck, FltRightsExercise, FltTr, FltTrAccount, FltTrCheck, FltTrItem, FltTrList,
 } from '../types/flt';
 
@@ -41,6 +41,12 @@ export const fltApi = {
   /** AS-IS flt.Flt03_Account.selectByPersonId (로그인 사용자 본인, 폐쇄 계좌 제외) */
   searchAccounts: async (): Promise<FltAccount[]> => {
     const res = await apiClient.get<ApiResponse<FltAccount[]>>('v1/flt/accounts');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt03_Account.selectByDate (J01 계좌신고현황, 회사 전체. closeAccountYn=폐쇄계좌 포함) */
+  searchAccountsByDate: async (setupDate: string, closeAccountYn: boolean): Promise<FltAccountAdmin[]> => {
+    const res = await apiClient.get<ApiResponse<FltAccountAdmin[]>>('v1/flt/accounts/status-by-date', { params: { setupDate, closeAccountYn } });
     return res.data.data ?? [];
   },
 
