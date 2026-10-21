@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/emp/mapper/emp03_trans.xml(selectInOffice·getRetireDate) + ics30_compliance.xml(selectComplianceResultByPersonId)
+     + ics31_compliance_write.xml(checkWriteByPersonId·selectNonComplianceReason) + ics32_relate_appr.xml(selectByCompanyId)  (K03 내부통제 준수보고) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsComplianceReportMapper">
+
+    <!-- AS-IS emp03_trans.selectInOffice (IDMS-IC) — SELECT *는 보고에 쓰는 사원ID·사원명·부서명만 -->
+    <select id="selectInOffice" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportEmp">
+        SELECT emp03_person_id AS person_id,
+               emp01_kor_nm    AS person_name,
+               org02_kor_nm    AS org_name
+          FROM emp03_trans
+               INNER JOIN emp01_person ON emp01_person_id = emp03_person_id
+               INNER JOIN ( SELECT *
+                              FROM org01_code
+                                   INNER JOIN org02_info ON org02_code_id = org01_code_id
+                             WHERE org01_company_id = #{companyId}
+                               AND (org02_code_id, org02_mod_date) IN ( SELECT org02_code_id, MAX(org02_mod_date)
+                                                                          FROM org02_info
+                                                                         WHERE org02_mod_date <![CDATA[<=]]> #{stdDate}
+                                                                         GROUP BY org02_code_id )
+                          ) org ON org01_code_id = emp03_org_code_id
+         WHERE emp01_company_id = #{companyId}
+           AND (emp03_person_id, emp03_trans_date) IN ( SELECT emp03_person_id, MAX(emp03_trans_date)
+                                                          FROM emp03_trans
+                                                               INNER JOIN emp01_person ON emp01_person_id = emp03_person_id
+                                                         WHERE emp01_company_id = #{companyId}
+                                                           AND emp03_trans_date <![CDATA[<=]]> #{stdDate}
+                                                         GROUP BY emp03_person_id )
+           AND emp03_trans_cd NOT IN ('800','900')  /*(800:겸직 / 900:퇴직)*/
+           AND COALESCE(emp03_non_stay_yn,'false') != 'true'
+           AND emp03_title_cd != '900'              /*(900:비상근)*/
+           AND emp03_kind_cd  NOT IN ('40','99')    /*(40:임시직/99:기타직)*/
+        <if test="exceptBizCode != null">
+           AND NOT EXISTS ( SELECT 1
+                              FROM emp33_except_biz
+                             WHERE emp33_company_id = emp01_company_id
+                               AND emp33_person_id  = emp01_person_id
+                               AND #{stdDate}::date BETWEEN emp33_start_date AND COALESCE(emp33_close_date,'2999-12-31'::date)
+                               AND emp33_except_biz_cd = #{exceptBizCode}
+                               AND COALESCE(emp33_unvisible_yn,'false') = 'true' )
+        </if>
+         ORDER BY COALESCE(org02_sort_order, org01_org_cd)
+                , f_code_seq(emp01_company_id, 'EmpTitleCode', emp03_title_cd)
+                , f_code_seq(emp01_company_id, 'EmpPosCode'  , emp03_pos_cd)
+                , emp01_emp_no
+    </select>
+
+    <!-- AS-IS ics31_compliance_write.checkWriteByPersonId (IDMS-IC) -->
+    <select id="countFixedWrite" resultType="int">
+        SELECT count(*)
+          FROM ics31_compliance_write
+         WHERE ics31_person_id  = #{personId}
+           AND ics31_yyyymm     = TO_CHAR(#{stdDate}::date,'YYYY.MM')
+           AND ics31_cycle_type = #{cycleType}
+           AND ics31_fix_yn     = 'true'
+    </select>
+
+    <!-- AS-IS emp03_trans.getRetireDate (IDMS-IC) — 함수가 글자(날짜 문자열)를 돌려주므로 date로 바꾼다 -->
+    <select id="selectRetireDate" resultType="java.time.LocalDate">
+        SELECT NULLIF(f_get_empTrans(#{personId}, #{stdDate}, 'retire_date'), '')::date
+    </select>
+
+    <!-- AS-IS ics30_compliance.selectComplianceResultByPersonId (IDMS-IC) -->
+    <select id="selectResults" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportResult">
+        WITH sys_code AS ( SELECT a.*
+                             FROM sys08_code_kind
+                                  INNER JOIN sys09_code a ON sys09_code_kind_id = sys08_code_kind_id
+                            WHERE sys08_kind_cd    = #{kindCode}
+                              AND sys09_company_id = #{companyId}
+                              AND sys09_apply_date = ( SELECT MAX(b.sys09_apply_date)
+                                                         FROM sys09_code b
+                                                        WHERE b.sys09_code_kind_id = a.sys09_code_kind_id
+                                                          AND b.sys09_company_id   = a.sys09_company_id
+                                                          AND b.sys09_code         = a.sys09_code
+                                                          AND b.sys09_apply_date <![CDATA[<=]]> #{stdDate} )
+                              AND ( ( COALESCE(sys09_close_yn,'false') = 'true'
+                                      AND COALESCE(sys09_close_date,'1900-12-31') <![CDATA[>=]]> #{stdDate} ) OR
+                                    ( COALESCE(sys09_close_yn,'false') != 'true' ) )
+        )
+        SELECT sys09_code                                                                                  AS compliance_type,
+               sys09_name                                                                                  AS compliance_type_name,
+               f_get_compliance_result(#{personId}, #{stdDate}, #{cycleType}, ics30_compliance_type, ics30_start_date) AS compliance_result
+          FROM ics30_compliance
+               INNER JOIN sys_code ON sys09_code = ics30_compliance_type
+         WHERE ics30_company_id = #{companyId}
+           AND ics30_start_date = ( SELECT MAX(ics30_start_date)
+                                      FROM ics30_compliance
+                                     WHERE ics30_company_id = #{companyId}
+                                       AND ics30_start_date <![CDATA[<=]]> #{stdDate}
+                                       AND COALESCE(ics30_date_fix_yn,'false') = 'true' )
+           AND ( ( ics30_use_yn = 'false' AND ics30_use_close_date <![CDATA[>=]]> #{stdDate} ) OR
+                 ( ics30_use_yn != 'false' ) )
+         GROUP BY ics30_compliance_type, ics30_start_date, sys09_code, sys09_name, sys09_seq
+         ORDER BY LPAD(sys09_seq,5,'0')
+    </select>
+
+    <!-- AS-IS ics31_compliance_write.selectNonComplianceReason (IDMS-IC) -->
+    <select id="selectNonComplianceReason" resultType="string">
+        SELECT STRING_AGG(COALESCE(ics31_reason,''),' ')
+          FROM ics31_compliance_write
+               INNER JOIN ics30_compliance ON ics30_compliance_id = ics31_compliance_id
+         WHERE ics31_person_id       = #{personId}
+           AND ics31_yyyymm          = TO_CHAR(#{stdDate}::date,'YYYY.MM')
+           AND ics31_cycle_type      = #{cycleType}
+           AND ics30_compliance_type = #{complianceType}
+    </select>
+
+    <!-- AS-IS ics32_relate_appr.selectByCompanyId (IDMS-IC) — SELECT *는 상신 연결과 결재 상태만 -->
+    <select id="selectAppr" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportApprRes">
+        SELECT ics32_relate_appr_id                                                              AS relate_appr_id,
+               ics32_appr_id                                                                     AS appr_id,
+               b.apr01_status_cd                                                                 AS status_code,
+               f_cdnm('AprStatusCode', b.apr01_status_cd, ics32_company_id, b.apr01_reg_date)    AS status_name
+          FROM ics32_relate_appr
+               LEFT OUTER JOIN apr01_appr b ON ics32_appr_id = apr01_appr_id
+         WHERE ics32_company_id = #{companyId}
+           AND ics32_yyyymm     = #{yyyymm}
+           AND ics32_cycle_type = #{cycleType}
+         LIMIT 1
+    </select>
+</mapper>

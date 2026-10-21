@@ -64,6 +64,9 @@ import { Ics10_Tab_ChecklistAdmin } from './ics/Ics10_Tab_ChecklistAdmin';
 import { Ics17_Tab_UserRequestAdmin } from './ics/Ics17_Tab_UserRequestAdmin';
 import { Ics17_Tab_UserRequest } from './ics/Ics17_Tab_UserRequest';
 import { Ics30_Tab_Compliance } from './ics/Ics30_Tab_Compliance';
+import { Ics31_Tab_ComplianceWrite } from './ics/Ics31_Tab_ComplianceWrite';
+import { Ics31_Tab_ComplianceConfirm } from './ics/Ics31_Tab_ComplianceConfirm';
+import { Ics31_Tab_ComplianceReport } from './ics/Ics31_Tab_ComplianceReport';
 import { Ics20_Tab_RevisionHistoryAdmin } from './ics/Ics20_Tab_RevisionHistoryAdmin';
 import { Ics01_Tab_ClassTreeUser } from './ics/Ics01_Tab_ClassTreeUser';
 import { Ics01_Tab_IcsFileUser } from './ics/Ics01_Tab_IcsFileUser';
@@ -221,6 +224,9 @@ export const SCREENS: Record<string, React.FC> = {
   Ics17_Tab_UserRequestAdmin, // E09 (+ Ics17_Edit_UserRequestAdmin·Ics17_Lookup_LawContent·Ics17_Grid_FileList)
   Ics17_Tab_UserRequest, // H11 (+ Ics17_Edit_UserRequest, Ics17_Lookup_LawContent user·Ics17_Grid_FileList 재사용)
   Ics30_Tab_Compliance, // E05 (+ E05-1 예외사원 등록 Emp33_Lookup_ExceptBiz)
+  Ics31_Tab_ComplianceWrite, // K01 (+ Ics31_Edit_Reason. 엑셀은 RD 리포트 대신 서버 xlsx)
+  Ics31_Tab_ComplianceConfirm, // K02 ([상신] Ics32_Lookup_RelateAppr은 원본도 툴바에 안 붙인 도달 불가 버튼이라 제외)
+  Ics31_Tab_ComplianceReport, // K03 1단계 (RD 미리보기 대신 표. [상신]·[문서보기]·문서분류 선택은 전자결재 단계 — 안내만)
   Icam03_Tab_Fund, // D07 (ICAM Get·타사무 Get은 외부 ICAM DB 연동이 없어 서버가 거절)
   Icam10_Tab_FeeAdmin, // D08 (ICAM 발생보수 가져오기도 같은 연동이 없어 서버가 거절)
   Icam50_Tab_DbSource, // D09 (DB소스 가져오기도 같은 연동이 없어 서버가 거절)

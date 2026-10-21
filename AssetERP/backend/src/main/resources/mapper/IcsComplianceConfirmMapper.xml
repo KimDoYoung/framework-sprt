@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ics/mapper/ics30_compliance.xml(selectByCompanyIdPaging·selectByCompanyIdTotal) + ics31_compliance_write.xml(updateConfirmYn)
+     (K02 내부통제 준수점검) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsComplianceConfirmMapper">
+
+    <!-- AS-IS ics30_compliance.selectByCompanyIdPaging·Total 공통 FROM (IDMS-IC) -->
+    <sql id="base">
+        FROM (
+            SELECT *
+              FROM ics31_compliance_write
+                   INNER JOIN ics30_compliance ON ( ics30_compliance_id = ics31_compliance_id
+                                                AND ics30_start_date = ( SELECT MAX(ics30_start_date)
+                                                                           FROM ics30_compliance
+                                                                          WHERE ics30_company_id = ics31_company_id
+                                                                            AND ics30_start_date <![CDATA[<=]]> #{stdDate}
+                                                                            AND COALESCE(ics30_date_fix_yn,'false') = 'true' )
+                                                AND #{stdDate}::date <![CDATA[<=]]> COALESCE(ics30_use_close_date, '2999-12-31'::date) )
+                   INNER JOIN ( SELECT *
+                                  FROM emp01_person
+                                       INNER JOIN emp03_trans ON ( emp03_person_id = emp01_person_id
+                                                               AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                                                                          FROM emp03_trans
+                                                                                         WHERE emp03_person_id = emp01_person_id
+                                                                                           AND emp03_trans_date <![CDATA[<=]]> #{stdDate} ) )
+                                       INNER JOIN ( SELECT *
+                                                      FROM org01_code
+                                                           INNER JOIN org02_info ON ( org02_code_id = org01_code_id
+                                                                                  AND org02_mod_date = ( SELECT MAX(org02_mod_date)
+                                                                                                           FROM org02_info
+                                                                                                          WHERE org02_code_id = org01_code_id
+                                                                                                            AND org02_mod_date <![CDATA[<=]]> #{stdDate} ) )
+                                                     WHERE org01_company_id = #{companyId} ) org ON org01_code_id = emp03_org_code_id
+                                 WHERE emp01_company_id = #{companyId}
+                                   AND emp03_title_cd != '900'                          /*비상근 제외*/
+                                   AND COALESCE(emp03_non_stay_yn,'false') != 'true'
+                                   AND ( ( emp03_trans_cd = '900' AND #{stdDate} <![CDATA[<=]]> emp03_trans_date ) OR  /*퇴사일 전까지만*/
+                                         ( emp03_trans_cd != '900' ) )
+                                   AND emp03_trans_cd != '800'                          /*겸직 제외*/
+                              ) emp ON emp01_person_id = ics31_person_id
+             WHERE ics31_company_id = #{companyId}
+               AND ics31_yyyymm     = TO_CHAR(#{stdDate}::date,'YYYY.MM')
+               AND ics31_cycle_type = #{cycleType}
+               AND COALESCE(ics31_fix_yn,'false') = 'true'
+            <if test="checkBox">
+               AND COALESCE(ics31_confirm_yn, 'false') = 'false'
+            </if>
+               AND UPPER(CONCAT(ics30_content, org02_kor_nm, emp01_kor_nm)) LIKE UPPER(#{searchText})
+        ) t
+    </sql>
+
+    <!-- AS-IS ics30_compliance.selectByCompanyIdPaging (IDMS-IC) — ics30_compliance_id(ROW_NUMBER) 대신 작성 행 ID를 행 키로 -->
+    <select id="selectPaging" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceConfirmRes">
+        SELECT ics31_compliance_write_id                                                    AS compliance_write_id,
+               f_cdnm('IcsComplianceType', ics30_compliance_type, ics30_company_id, #{stdDate}) AS compliance_type_name,
+               ics30_sub_num                                                                AS sub_num,
+               ics30_content                                                                AS content,
+               f_cdnm('AnswerCode', ics31_answer_cd, ics30_company_id, f_sysdate()) ||
+               CASE WHEN ics31_reason IS NULL THEN '' ELSE '(' || ics31_reason || ')' END    AS reason,
+               org02_kor_nm                                                                 AS org_name,
+               emp01_kor_nm                                                                 AS person_name,
+               COALESCE(ics31_fix_yn, 'false') = 'true'                                     AS fix_yn,
+               COALESCE(ics31_confirm_yn, 'false') = 'true'                                 AS confirm_yn
+        <include refid="base"/>
+         ORDER BY ics30_compliance_type, COALESCE(org02_sort_order, org01_org_cd)
+                , f_code_seq(emp01_company_id, 'EmpTitleCode', emp03_title_cd)
+                , f_code_seq(emp01_company_id, 'EmpPosCode',   emp03_pos_cd)
+                , emp01_emp_no
+                , ics30_sub_num
+         LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- AS-IS ics30_compliance.selectByCompanyIdTotal (IDMS-IC) -->
+    <select id="selectTotal" resultType="long">
+        SELECT count(*)
+        <include refid="base"/>
+    </select>
+
+    <!-- AS-IS ics31_compliance_write.updateConfirmYn (IDMS-IC) — 확인이면 확인일시 = 지금, 취소면 null. 회사 조건은 보안 보강 -->
+    <update id="updateConfirmYn">
+        UPDATE ics31_compliance_write
+           SET ics31_confirm_yn = #{confirmYn},
+               ics31_confirmer_id = #{confirmerId},
+               ics31_confirm_datetime = CASE WHEN #{confirmYn} = 'true' THEN f_sysdate() ELSE NULL END
+         WHERE ics31_compliance_write_id = #{complianceWriteId}
+           AND ics31_company_id = #{companyId}
+    </update>
+</mapper>

@@ -1,6 +1,7 @@
 import { apiClient } from './client';
+import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq } from '../types/ics';
+import { ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsComplianceConfirm, IcsComplianceReportRow, IcsComplianceReportAppr } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 export const icsApi = {
@@ -538,6 +539,99 @@ export const icsApi = {
   relateManager: async (managerId: number, classTreeIds: number[]): Promise<IcsLawManage[]> => {
     const res = await apiClient.put<ApiResponse<IcsLawManage[]>>('v1/ics/relate-managers', { managerId, classTreeIds });
     return res.data.data ?? [];
+  },
+
+  // ── K01 내부통제 준수확인서 작성 (Ics31_Tab_ComplianceWrite·Ics31_Edit_Reason) ──
+
+  /** AS-IS sys.Sys01_Company.selectById 중 체크주기: 'M'(월) / 'Q'(분기) / 설정 없음 null */
+  getComplianceWriteCycleType: async (): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>('v1/ics/compliance-writes/cycle-type');
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS ics.Ics30_Compliance.selectByPersonId: stdDate = 기준 분기(월)의 말일, checkBox = 미체크 보기 */
+  searchComplianceWrites: async (stdDate: string, cycleType: string, checkBox: boolean): Promise<IcsComplianceWrite[]> => {
+    const res = await apiClient.get<ApiResponse<IcsComplianceWrite[]>>('v1/ics/compliance-writes', { params: { stdDate, cycleType, checkBox } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics31_ComplianceWrite.updateAnswerCode: answerCode Y(예)·N(아니오)·X(해당없음), null이면 비운다. yyyymm = 'yyyy.MM' */
+  updateComplianceWriteAnswer: async (complianceId: number, answerCode: string | null, yyyymm: string, cycleType: string): Promise<IcsComplianceWriteItem> => {
+    const res = await apiClient.put<ApiResponse<IcsComplianceWriteItem>>('v1/ics/compliance-writes/answers', { complianceId, answerCode, yyyymm, cycleType });
+    return res.data.data as IcsComplianceWriteItem;
+  },
+
+  /** AS-IS ics.Ics31_ComplianceWrite.modelUpdate(새 행): 사유 창을 처음 열 때 답변 없는 작성 행을 만든다 */
+  createComplianceWrite: async (complianceId: number, yyyymm: string, cycleType: string): Promise<IcsComplianceWriteItem> => {
+    const res = await apiClient.post<ApiResponse<IcsComplianceWriteItem>>('v1/ics/compliance-writes', { complianceId, yyyymm, cycleType });
+    return res.data.data as IcsComplianceWriteItem;
+  },
+
+  /** AS-IS ics.Ics31_ComplianceWrite.selectById */
+  getComplianceWrite: async (complianceWriteId: number): Promise<IcsComplianceWriteItem> => {
+    const res = await apiClient.get<ApiResponse<IcsComplianceWriteItem>>(`v1/ics/compliance-writes/${complianceWriteId}`);
+    return res.data.data as IcsComplianceWriteItem;
+  },
+
+  /** AS-IS ics.Ics31_ComplianceWrite.modelUpdate: 사유 저장 */
+  updateComplianceWriteReason: async (complianceWriteId: number, reason: string): Promise<IcsComplianceWriteItem> => {
+    const res = await apiClient.put<ApiResponse<IcsComplianceWriteItem>>(`v1/ics/compliance-writes/${complianceWriteId}/reason`, { reason });
+    return res.data.data as IcsComplianceWriteItem;
+  },
+
+  /** AS-IS ics.Ics31_ComplianceWrite.updateFixYn: 제출(true)·제출취소(false) */
+  updateComplianceWriteFix: async (fixYn: boolean, writeIds: number[]): Promise<void> => {
+    await apiClient.put<ApiResponse<number>>('v1/ics/compliance-writes/fix', { fixYn, writeIds });
+  },
+
+  /** AS-IS ics.Ics31_ComplianceWrite.deleteByPersonId (새로작성): 제출한 내역이 있으면 서버가 거절한다 */
+  deleteComplianceWrites: async (stdDate: string, cycleType: string): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/ics/compliance-writes', { params: { stdDate, cycleType } });
+    return res.data.data ?? 0;
+  },
+
+  /** 엑셀다운로드 (AS-IS Sys99_Print.insertRdComplianceWrite + RD 리포트 Ics31_Rd_ComplianceWrite → 한 시트 xlsx). fileName은 확장자 없이 */
+  downloadComplianceWriteExcel: async (stdDate: string, cycleType: string, checkBox: boolean, fileName: string): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/ics/compliance-writes/excel', { params: { stdDate, cycleType, checkBox }, responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  // ── K02 내부통제 준수점검(준감인) (Ics31_Tab_ComplianceConfirm) ──
+
+  /** AS-IS ics.Ics30_Compliance.selectByPaging: stdDate = 기준 분기(월)의 말일, checkBox = 미확인건만 조회. 검색어의 앞뒤 %는 서버가 붙인다 */
+  searchComplianceConfirms: async (params: { stdDate: string; cycleType: string; searchText: string; checkBox: boolean; offset: number; limit: number }): Promise<PageRes<IcsComplianceConfirm>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<IcsComplianceConfirm>>>('v1/ics/compliance-confirms', { params });
+    return res.data.data as PageRes<IcsComplianceConfirm>;
+  },
+
+  /** AS-IS ics.Ics31_ComplianceWrite.updateConfirmYn: 고른 작성 행을 확인(true)·확인취소(false) */
+  updateComplianceConfirm: async (confirmYn: boolean, writeIds: number[]): Promise<void> => {
+    await apiClient.put<ApiResponse<number>>('v1/ics/compliance-confirms/confirm', { confirmYn, writeIds });
+  },
+
+  // ── K03 내부통제 준수보고(준감인) (Ics31_Tab_ComplianceReport) ──
+
+  /** AS-IS sys.Sys99_Print.insertComplianceState: 재직 사원별 준수항목 결과·미준수 사유 (stdDate = 기준 분기(월)의 말일) */
+  searchComplianceReport: async (stdDate: string, cycleType: string): Promise<IcsComplianceReportRow[]> => {
+    const res = await apiClient.get<ApiResponse<IcsComplianceReportRow[]>>('v1/ics/compliance-reports', { params: { stdDate, cycleType } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics32_RelateAppr.selectByCompanyId: 그 달 상신 연결과 결재 상태, 연결이 없으면 null (yyyymm = 'yyyy.MM') */
+  getComplianceReportAppr: async (yyyymm: string, cycleType: string): Promise<IcsComplianceReportAppr | null> => {
+    const res = await apiClient.get<ApiResponse<IcsComplianceReportAppr | null>>('v1/ics/compliance-reports/appr', { params: { yyyymm, cycleType } });
+    return res.data.data ?? null;
   },
 };
 

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ics/mapper/ics30_compliance.xml(selectByPersonId) + ics31_compliance_write.xml
+     + UpdateDataModel(ics31_compliance_write)  (K01 내부통제 준수확인서 작성) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsComplianceWriteMapper">
+
+    <!-- AS-IS sys01_company.selectById 중 sys01_ics_comply_cycle_type (IDMS-IC) -->
+    <select id="selectCycleType" resultType="string">
+        SELECT sys01_ics_comply_cycle_type
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS ics30_compliance.selectByPersonId (IDMS-IC) — SELECT * 대신 화면이 쓰는 열만, 구분명은 f_cdnm 그대로 -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteRes">
+        SELECT ics30_compliance_id                                                          AS compliance_id,
+               ics30_company_id                                                             AS company_id,
+               ics30_start_date                                                             AS start_date,
+               ics30_compliance_type                                                        AS compliance_type,
+               f_cdnm('IcsComplianceType', ics30_compliance_type, ics30_company_id, #{stdDate}) AS compliance_type_name,
+               ics30_sub_num                                                                AS sub_num,
+               ics30_content                                                                AS content,
+               ics30_na_use_yn                                                              AS na_use_yn,
+               ics31_compliance_write_id                                                    AS compliance_write_id,
+               ics31_answer_cd                                                              AS answer_code,
+               ics31_reason                                                                 AS reason,
+               COALESCE(ics31_fix_yn,'false') = 'true'                                      AS fix_yn,
+               COALESCE(ics31_confirm_yn,'false') = 'true'                                  AS confirm_yn,
+               f_emp_kor_nm(ics31_confirmer_id)                                             AS confirmer_name,
+               f_emp_kor_nm(ics31_person_id)                                                AS person_name,
+               f_get_empTrans(ics31_person_id, f_sysdate()::date, 'org_code_nm')            AS org_name
+          FROM ics30_compliance
+               LEFT OUTER JOIN ics31_compliance_write ON ( ics31_compliance_id = ics30_compliance_id
+                                                       AND ics31_company_id    = #{companyId}
+                                                       AND ics31_person_id     = #{personId}
+                                                       AND ics31_cycle_type    = #{cycleType}
+                                                       AND ics31_yyyymm        = TO_CHAR(#{stdDate}::date,'YYYY.MM') )
+         WHERE 1=1
+        <if test="checkBox">
+           AND ics31_answer_cd IS NULL
+        </if>
+           AND ics30_company_id = #{companyId}
+           AND #{stdDate}::date <![CDATA[<=]]> COALESCE(ics30_use_close_date, '9999-12-31'::date)
+           AND ics30_start_date = ( SELECT MAX(x.ics30_start_date)
+                                      FROM ics30_compliance x
+                                     WHERE x.ics30_company_id = #{companyId}
+                                       AND x.ics30_start_date <![CDATA[<=]]> #{stdDate}
+                                       AND COALESCE(x.ics30_date_fix_yn,'false') = 'true' )
+           AND CONCAT(ics30_content) LIKE #{searchText}
+         ORDER BY ics30_compliance_type, ics30_sub_num
+    </select>
+
+    <!-- AS-IS ics31_compliance_write.selectById (IDMS-IC) — 내 작성 행만(보안 보강) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteItem">
+        SELECT ics31_compliance_write_id                  AS compliance_write_id,
+               ics31_compliance_id                        AS compliance_id,
+               ics31_answer_cd                            AS answer_code,
+               ics31_reason                               AS reason,
+               COALESCE(ics31_fix_yn,'false') = 'true'     AS fix_yn,
+               COALESCE(ics31_confirm_yn,'false') = 'true' AS confirm_yn
+          FROM ics31_compliance_write
+         WHERE ics31_compliance_write_id = #{complianceWriteId}
+           AND ics31_company_id = #{companyId}
+           AND ics31_person_id  = #{personId}
+    </select>
+
+    <!-- AS-IS ics31_compliance_write.selectByPersonId (IDMS-IC) — 회사 조건은 보안 보강 -->
+    <select id="selectByCompliance" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteItem">
+        SELECT ics31_compliance_write_id                  AS compliance_write_id,
+               ics31_compliance_id                        AS compliance_id,
+               ics31_answer_cd                            AS answer_code,
+               ics31_reason                               AS reason,
+               COALESCE(ics31_fix_yn,'false') = 'true'     AS fix_yn,
+               COALESCE(ics31_confirm_yn,'false') = 'true' AS confirm_yn
+          FROM ics31_compliance_write
+         WHERE ics31_company_id    = #{companyId}
+           AND ics31_compliance_id = #{complianceId}
+           AND ics31_person_id     = #{personId}
+           AND ics31_yyyymm        = #{yyyymm}
+           AND ics31_cycle_type    = #{cycleType}
+         ORDER BY ics31_compliance_write_id
+    </select>
+
+    <!-- AS-IS ics31_compliance_write.selectWrite (IDMS-IC) -->
+    <select id="selectWrite" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceWriteItem">
+        SELECT ics31_compliance_write_id                  AS compliance_write_id,
+               ics31_compliance_id                        AS compliance_id,
+               ics31_answer_cd                            AS answer_code,
+               ics31_reason                               AS reason,
+               COALESCE(ics31_fix_yn,'false') = 'true'     AS fix_yn,
+               COALESCE(ics31_confirm_yn,'false') = 'true' AS confirm_yn
+          FROM ics31_compliance_write
+               INNER JOIN ics30_compliance ON ( ics30_compliance_id = ics31_compliance_id
+                                            AND ics30_start_date = ( SELECT MAX(ics30_start_date)
+                                                                       FROM ics30_compliance
+                                                                      WHERE ics30_compliance_id = ics31_compliance_id
+                                                                        AND ics30_start_date <![CDATA[<=]]> #{stdDate} ) )
+         WHERE ics31_company_id = #{companyId}
+           AND ics31_person_id  = #{personId}
+           AND ics31_yyyymm     = TO_CHAR(#{stdDate}::date,'YYYY.MM')
+           AND ics31_cycle_type = #{cycleType}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel(ics31_compliance_write) INSERT — updateAnswerCode(답변)·modelUpdate(답변 없음)가 만드는 행: 작성일시만 지금, 나머지는 비어 있다 -->
+    <insert id="insert">
+        INSERT INTO ics31_compliance_write
+               ( ics31_compliance_write_id, ics31_company_id, ics31_compliance_id, ics31_yyyymm, ics31_person_id,
+                 ics31_answer_cd, ics31_write_datetime, ics31_cycle_type )
+        VALUES ( #{complianceWriteId}, #{companyId}, #{complianceId}, #{yyyymm}, #{personId},
+                 #{answerCode}, f_sysdate(), #{cycleType} )
+    </insert>
+
+    <!-- AS-IS ics31_compliance_write.updateAnswerCode (IDMS-IC) — 내 작성 행만(보안 보강) -->
+    <update id="updateAnswerCode">
+        UPDATE ics31_compliance_write
+           SET ics31_answer_cd = #{answerCode}
+         WHERE ics31_compliance_write_id = #{complianceWriteId}
+           AND ics31_company_id = #{companyId}
+           AND ics31_person_id  = #{personId}
+    </update>
+
+    <!-- UpdateDataModel(ics31_compliance_write) UPDATE — 이 화면이 바꾸는 열(사유)만 -->
+    <update id="updateReason">
+        UPDATE ics31_compliance_write
+           SET ics31_reason = #{reason}
+         WHERE ics31_compliance_write_id = #{complianceWriteId}
+           AND ics31_company_id = #{companyId}
+           AND ics31_person_id  = #{personId}
+    </update>
+
+    <!-- AS-IS ics31_compliance_write.updateFixYn (IDMS-IC) — 제출이면 제출일시 = 지금, 취소면 null -->
+    <update id="updateFixYn">
+        UPDATE ics31_compliance_write
+           SET ics31_fix_yn = #{fixYn},
+               ics31_fix_datetime = CASE WHEN #{fixYn} = 'true' THEN f_sysdate() ELSE NULL END
+         WHERE ics31_compliance_write_id = #{complianceWriteId}
+           AND ics31_company_id = #{companyId}
+           AND ics31_person_id  = #{personId}
+    </update>
+
+    <!-- UpdateDataModel.deleteModel(ics31_compliance_write) -->
+    <delete id="deleteById">
+        DELETE FROM ics31_compliance_write
+         WHERE ics31_compliance_write_id = #{complianceWriteId}
+           AND ics31_company_id = #{companyId}
+           AND ics31_person_id  = #{personId}
+    </delete>
+</mapper>

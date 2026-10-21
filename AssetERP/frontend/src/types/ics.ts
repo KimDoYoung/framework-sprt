@@ -419,3 +419,68 @@ export interface IcsShareSaveReq {
   shareCode?: string | null;
   orgId?: number | null;
 }
+
+/** 내부통제 준수확인서 작성 그리드 한 행 (K01, 서버 IcsComplianceWriteRes) — 작성 행이 없으면 complianceWriteId·answerCode·reason이 null */
+export interface IcsComplianceWrite {
+  complianceId: number;
+  companyId: number;
+  startDate: string;
+  complianceType: string;
+  complianceTypeName: string | null;
+  subNum: string | null;
+  content: string | null;
+  /** 'true'면 '해당없음' 선택 가능 (ics30_na_use_yn) */
+  naUseYn: string | null;
+  complianceWriteId: number | null;
+  /** Y 예 / N 아니오 / X 해당없음 */
+  answerCode: string | null;
+  reason: string | null;
+  fixYn: boolean;
+  confirmYn: boolean;
+  confirmerName: string | null;
+  personName: string | null;
+  orgName: string | null;
+}
+
+/** 작성 행 하나 (K01, 서버 IcsComplianceWriteItem — AS-IS Ics31_ComplianceWriteModel) */
+export interface IcsComplianceWriteItem {
+  complianceWriteId: number;
+  complianceId: number;
+  answerCode: string | null;
+  reason: string | null;
+  fixYn: boolean;
+  confirmYn: boolean;
+}
+
+/** 내부통제 준수점검 그리드 한 행 (K02, 서버 IcsComplianceConfirmRes) — reason은 "답변(사유)" */
+export interface IcsComplianceConfirm {
+  complianceWriteId: number;
+  complianceTypeName: string | null;
+  subNum: string | null;
+  content: string | null;
+  reason: string | null;
+  orgName: string | null;
+  personName: string | null;
+  fixYn: boolean;
+  confirmYn: boolean;
+}
+
+/** 내부통제 준수보고서 한 줄 (K03, 서버 IcsComplianceReportRes — AS-IS가 sys99_print에 쌓던 행) */
+export interface IcsComplianceReportRow {
+  seq: number;
+  personId: number;
+  personName: string | null;
+  orgName: string | null;
+  complianceType: string;
+  complianceTypeName: string | null;
+  complianceResult: string | null;
+  reason: string | null;
+}
+
+/** 그 달 준수보고의 상신 연결 (K03, 서버 IcsComplianceReportApprRes) — 상신 전이면 statusCode 없음 */
+export interface IcsComplianceReportAppr {
+  relateApprId: number;
+  apprId: number | null;
+  statusCode: string | null;
+  statusName: string | null;
+}
