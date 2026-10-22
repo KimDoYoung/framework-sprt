@@ -499,6 +499,20 @@ export interface ChecklistConfirmParams {
   unConfirmYn: boolean;
 }
 
+/** 내부통제내역 현황 그리드 한 행 (K07, 서버 IcsChecklistStatusRes — AS-IS Sys99_PrintModel). months는 1~12월 12칸("O / X", 기준월 이후는 "-"), 분기 체크주기는 3·6·9·12번째 칸이 1~4분기 */
+export interface IcsChecklistStatus {
+  checklistId: number;
+  checkLClassName: string | null;
+  checkMClassName: string | null;
+  content: string | null;
+  months: string[];
+}
+
+/** 내부통제내역 상세 한 행 (K07 상세 조회창·K08, 서버 IcsChecklistStatusDetailRes) — 확인 그리드 행 + 확인자 이름 */
+export interface IcsChecklistStatusDetail extends IcsChecklistConfirm {
+  confirmerName: string | null;
+}
+
 /** 상신 조회창 한 행 (K06, 서버 IcsChecklistRelateApprRes — AS-IS Ics16_RelateApprModel) */
 export interface IcsChecklistRelateAppr {
   relateApprId: number;

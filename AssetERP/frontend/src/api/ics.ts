@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { IcsChecklistUser, ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsChecklistWrite, IcsChecklistWriteItem, IcsComplianceConfirm, IcsComplianceReportRow, IcsComplianceReportAppr, IcsChecklistConfirm, IcsChecklistRelateAppr, ChecklistConfirmParams } from '../types/ics';
+import { IcsChecklistUser, ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsChecklistWrite, IcsChecklistWriteItem, IcsComplianceConfirm, IcsComplianceReportRow, IcsComplianceReportAppr, IcsChecklistConfirm, IcsChecklistRelateAppr, ChecklistConfirmParams, IcsChecklistStatus, IcsChecklistStatusDetail } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 /** 파일을 받아 저장한다(blob). 오류 응답은 메시지로 바꿔 던진다 */
@@ -752,6 +752,33 @@ export const icsApi = {
   searchChecklistRelateApprs: async (stdDate: string, cycleType: string): Promise<IcsChecklistRelateAppr[]> => {
     const res = await apiClient.get<ApiResponse<IcsChecklistRelateAppr[]>>('v1/ics/checklist-confirms/relate-apprs', { params: { stdDate, cycleType } });
     return res.data.data ?? [];
+  },
+
+  // ── K07 내부통제내역 현황(준감인) (Ics15_Tab_ChecklistStatus·Ics15_Lookup_ChecklistStatusDetail) ──
+
+  /** AS-IS sys.Sys99_Print.insertIcsCheckListStatus: 체크리스트별 월(분기)별 체크·확인 현황. year = 조회년도 4자리, 검색어의 앞뒤 %는 서버가 붙인다 */
+  searchChecklistStatus: async (params: { year: string; cycleType: string; checklistLClassId?: number | null; checklistMClassId?: number | null; searchText: string }): Promise<IcsChecklistStatus[]> => {
+    const res = await apiClient.get<ApiResponse<IcsChecklistStatus[]>>('v1/ics/checklist-status', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics11_ChecklistCompany.selectByChecklistIdStatus: 한 체크리스트의 담당자별 내역 (상세 조회창). stdDate = 그 월(분기)의 말일 */
+  searchChecklistStatusByChecklist: async (checklistId: number, params: { stdDate: string; cycleType: string; unCheckYn: boolean; unConfirmYn: boolean }): Promise<IcsChecklistStatusDetail[]> => {
+    const res = await apiClient.get<ApiResponse<IcsChecklistStatusDetail[]>>(`v1/ics/checklist-status/checklists/${checklistId}`, { params });
+    return res.data.data ?? [];
+  },
+
+  // ── K08 내부통제내역 상세(준감인) (Ics15_Tab_ChecklistStatusDetail) ──
+
+  /** AS-IS ics.Ics11_ChecklistCompany.selectChecklistStatusPaging: stdDate = 기준 분기(월)의 말일. K06과 달리 확인자 조건이 없다(회사 전체). 검색어의 앞뒤 %는 서버가 붙인다 */
+  searchChecklistStatusDetails: async (params: ChecklistConfirmParams & { offset: number; limit: number }): Promise<PageRes<IcsChecklistStatusDetail>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<IcsChecklistStatusDetail>>>('v1/ics/checklist-status/details', { params });
+    return res.data.data as PageRes<IcsChecklistStatusDetail>;
+  },
+
+  /** 출력/다운로드 (AS-IS Sys99_Print.insertRdChecklistDetail + RD 리포트 Ics15_Rd_ChecklistDetail → 한 시트 xlsx). 조회 조건 그대로 전체 행 */
+  downloadChecklistStatusDetailExcel: async (params: ChecklistConfirmParams, fileName: string): Promise<void> => {
+    await downloadXlsx('v1/ics/checklist-status/details/excel', { ...params, fileName }, `${fileName}.xlsx`);
   },
 
   // ── K03 내부통제 준수보고(준감인) (Ics31_Tab_ComplianceReport) ──
