@@ -477,6 +477,41 @@ export interface IcsChecklistWriteItem {
   confirmYn: boolean;
 }
 
+/** 내부통제내역 확인 그리드 한 행 (K06, 서버 IcsChecklistConfirmRes — AS-IS Ics11_ChecklistCompanyModel). 작성 행이 없으면 checklistWriteId null, reason은 "답변 (사유)" */
+export interface IcsChecklistConfirm extends IcsChecklist {
+  checklistWriteId: number | null;
+  reason: string | null;
+  orgName: string | null;
+  personId: number;
+  personName: string | null;
+  fixYn: boolean;
+  confirmYn: boolean;
+}
+
+/** 내부통제내역 확인 조회 조건 (K06) — stdDate = 기준 분기(월)의 말일 */
+export interface ChecklistConfirmParams {
+  stdDate: string;
+  cycleType: string;
+  checklistLClassId?: number | null;
+  checklistMClassId?: number | null;
+  searchText: string;
+  unCheckYn: boolean;
+  unConfirmYn: boolean;
+}
+
+/** 상신 조회창 한 행 (K06, 서버 IcsChecklistRelateApprRes — AS-IS Ics16_RelateApprModel) */
+export interface IcsChecklistRelateAppr {
+  relateApprId: number;
+  checkLClassName: string | null;
+  totalCount: number;
+  confirmCount: number;
+  checklistLClassId: number;
+  apprId: number | null;
+  /** 결재 상태 코드 — 10 상신 / 20 결재 중 / 99 임시저장 */
+  statusCode: string | null;
+  statusName: string | null;
+}
+
 /** 내부통제 준수점검 그리드 한 행 (K02, 서버 IcsComplianceConfirmRes) — reason은 "답변(사유)" */
 export interface IcsComplianceConfirm {
   complianceWriteId: number;

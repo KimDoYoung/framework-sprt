@@ -68,7 +68,7 @@ export const Ics15_Tab_ChecklistWrite: React.FC = () => {
   }, []);
 
   const enabled = cycleType != null && period !== '';
-  const stdDate = () => (cycleType == null ? null : getDate(view.current.year, view.current.period, cycleType)?.format('YYYY-MM-DD') ?? null);
+  const stdDate = () => (view.current.cycleType == null ? null : getDate(view.current.year, view.current.period, view.current.cycleType)?.format('YYYY-MM-DD') ?? null);
   const stdDateText = () => {
     const d = stdDate();
     if (!d) message.warning('기준년도를 4자리 숫자로 입력하세요.');

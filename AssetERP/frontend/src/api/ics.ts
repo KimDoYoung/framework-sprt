@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { IcsChecklistUser, ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsChecklistWrite, IcsChecklistWriteItem, IcsComplianceConfirm, IcsComplianceReportRow, IcsComplianceReportAppr } from '../types/ics';
+import { IcsChecklistUser, ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsChecklistWrite, IcsChecklistWriteItem, IcsComplianceConfirm, IcsComplianceReportRow, IcsComplianceReportAppr, IcsChecklistConfirm, IcsChecklistRelateAppr, ChecklistConfirmParams } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 /** 파일을 받아 저장한다(blob). 오류 응답은 메시지로 바꿔 던진다 */
@@ -728,6 +728,30 @@ export const icsApi = {
   /** AS-IS ics.Ics31_ComplianceWrite.updateConfirmYn: 고른 작성 행을 확인(true)·확인취소(false) */
   updateComplianceConfirm: async (confirmYn: boolean, writeIds: number[]): Promise<void> => {
     await apiClient.put<ApiResponse<number>>('v1/ics/compliance-confirms/confirm', { confirmYn, writeIds });
+  },
+
+  // ── K06 내부통제내역 확인(부서장) (Ics15_Tab_ChecklistConfirm·Ics16_Lookup_RelateAppr) ──
+
+  /** AS-IS ics.Ics11_ChecklistCompany.selectChecklistStatusPaging: stdDate = 기준 분기(월)의 말일, 확인자 = 로그인 사용자. 검색어의 앞뒤 %는 서버가 붙인다 */
+  searchChecklistConfirms: async (params: ChecklistConfirmParams & { offset: number; limit: number }): Promise<PageRes<IcsChecklistConfirm>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<IcsChecklistConfirm>>>('v1/ics/checklist-confirms', { params });
+    return res.data.data as PageRes<IcsChecklistConfirm>;
+  },
+
+  /** 출력/다운로드 (AS-IS Sys99_Print.insertRdChecklistConfirm + RD 리포트 Ics15_Rd_ChecklistConfirm → 한 시트 xlsx). 조회 조건 그대로 전체 행 */
+  downloadChecklistConfirmExcel: async (params: ChecklistConfirmParams, fileName: string): Promise<void> => {
+    await downloadXlsx('v1/ics/checklist-confirms/excel', { ...params, fileName }, `${fileName}.xlsx`);
+  },
+
+  /** AS-IS ics.Ics15_ChecklistWrite.updateConfirmYn: 고른 행을 확인(true)·확인취소(false). yyyymm = 'yyyy.MM' */
+  updateChecklistConfirm: async (confirmYn: boolean, yyyymm: string, cycleType: string, rows: { checklistId: number; personId: number }[]): Promise<void> => {
+    await apiClient.put<ApiResponse<number>>('v1/ics/checklist-confirms/confirm', { confirmYn, yyyymm, cycleType, rows });
+  },
+
+  /** AS-IS ics.Ics16_RelateAppr.selectByConfirmerId: 대분류별 전체·확인 건수와 결재 상태 (상신 조회창) */
+  searchChecklistRelateApprs: async (stdDate: string, cycleType: string): Promise<IcsChecklistRelateAppr[]> => {
+    const res = await apiClient.get<ApiResponse<IcsChecklistRelateAppr[]>>('v1/ics/checklist-confirms/relate-apprs', { params: { stdDate, cycleType } });
+    return res.data.data ?? [];
   },
 
   // ── K03 내부통제 준수보고(준감인) (Ics31_Tab_ComplianceReport) ──
