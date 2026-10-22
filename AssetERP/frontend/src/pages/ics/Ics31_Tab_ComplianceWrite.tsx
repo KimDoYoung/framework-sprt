@@ -6,9 +6,9 @@
  * 체크 한 번마다 저장한다(E8). 엑셀은 RD 리포트 서버(Ics31_Rd_ComplianceWrite) 대신 서버가 한 시트 xlsx로 만든다.
  * UX보강(10): 툴바 = SearchBar(UX-01)
  */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Modal } from 'antd';
-import type { CellValueChangedEvent } from 'ag-grid-community';
+import type { CellValueChangedEvent, ICellRendererParams } from 'ag-grid-community';
 import dayjs from 'dayjs';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
@@ -22,7 +22,22 @@ import { defaultPeriod, getDate } from './icsComplyPeriod';
 
 /** 그리드 행 — 예·아니오·해당없음 체크박스 값은 답변 코드(Y·N·X)에서 정한다 (AS-IS Ics30_ComplianceModel.getYes/getNo/getNot) */
 type Row = IcsComplianceWrite & { yes: boolean; no: boolean; not: boolean };
+/** 표시용 행 — 분류가 바뀔 때 끼우는 그룹 헤더 행(AS-IS GXT GroupingView). 전체 폭 행으로 그린다 */
+type DisplayRow = Row & { __group?: boolean; groupTitle?: string; collapsed?: boolean; toggle?: () => void };
 const gb = gbFor<Row>();
+
+const GroupHeader: React.FC<ICellRendererParams<DisplayRow>> = ({ data }) => (
+  <div
+    onClick={data?.toggle}
+    style={{ display: 'flex', alignItems: 'flex-end', height: '100%', paddingBottom: 4, borderBottom: '1px solid #8fb4e3', cursor: 'pointer',
+      color: '#15428b', fontWeight: 'bold', fontSize: 11 }}
+  >
+    <span style={{ display: 'inline-block', width: 9, height: 9, lineHeight: '7px', textAlign: 'center', fontSize: 10, border: '1px solid #8fa4c4', marginRight: 6 }}>
+      {data?.collapsed ? '+' : '−'}
+    </span>
+    {data?.groupTitle}
+  </div>
+);
 
 const toRow = (r: IcsComplianceWrite): Row => ({ ...r, yes: r.answerCode === 'Y', no: r.answerCode === 'N', not: r.answerCode === 'X' });
 const merge = (r: Row, item: IcsComplianceWriteItem): Row => toRow({
@@ -40,6 +55,7 @@ export const Ics31_Tab_ComplianceWrite: React.FC = () => {
   const [checkBox, setCheckBox] = useState(false);  // "미체크 보기"
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());  // 접은 분류
   const [reasonTarget, setReasonTarget] = useState<IcsComplianceWriteItem | null>(null);
   const view = useRef({ cycleType, year, period, checkBox, rows });
   view.current = { cycleType, year, period, checkBox, rows };
@@ -107,6 +123,23 @@ export const Ics31_Tab_ComplianceWrite: React.FC = () => {
       message.error(errorMessage(err, '저장 실패'));
     }
   };
+
+  // 분류(complianceTypeName)가 바뀔 때마다 그룹 헤더 행을 끼우고, 접은 분류의 문항은 뺀다 (저장·제출은 평면 rows를 그대로 쓴다)
+  const displayRows = useMemo<DisplayRow[]>(() => {
+    const out: DisplayRow[] = [];
+    let prev: string | null | undefined;
+    rows.forEach((r, i) => {
+      const type = r.complianceTypeName ?? '';
+      if (i === 0 || type !== prev) {
+        const closed = collapsed.has(type);
+        out.push({ ...r, complianceId: -(i + 1), __group: true, groupTitle: type, collapsed: closed,
+          toggle: () => setCollapsed(c => { const n = new Set(c); if (n.has(type)) n.delete(type); else n.add(type); return n; }) });
+        prev = type;
+      }
+      if (!collapsed.has(type)) out.push(r);
+    });
+    return out;
+  }, [rows, collapsed]);
 
   // 수정 아이콘 L350-429 (buildGrid의 editCell): 확인된 행은 안내, 작성 행이 없으면 답변 없이 만들고(modelUpdate), 있으면 읽어서(selectById) 사유 창을 연다
   const editReason = async (row: Row) => {
@@ -188,7 +221,6 @@ export const Ics31_Tab_ComplianceWrite: React.FC = () => {
 
   // buildGrid() L350-429 — 열 순서·폭·제목은 원본 그대로. 예·아니오·해당없음은 "체크" 묶음 헤더 아래
   const columnDefs = [
-    gb.text('complianceTypeName', 50, ' '),
     gb.textArea('content', 800, '내용'),
     gb.group('체크', [
       gb.boolean('yes', 70, '예', { editable: true }),
@@ -234,8 +266,11 @@ export const Ics31_Tab_ComplianceWrite: React.FC = () => {
           <Checkbox checked={checkBox} onChange={e => setCheckBox(e.target.checked)}>미체크 보기</Checkbox>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <SingleGrid<Row>
-            rowData={rows}
+          <SingleGrid<DisplayRow>
+            rowData={displayRows}
+            isFullWidthRow={p => !!p.rowNode.data?.__group}
+            fullWidthCellRenderer={GroupHeader}
+            getRowHeight={p => (p.data?.__group ? 28 : undefined)}
             columnDefs={columnDefs}
             getRowId={p => String(p.data.complianceId)}
             loading={loading}
