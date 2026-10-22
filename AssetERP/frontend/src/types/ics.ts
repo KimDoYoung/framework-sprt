@@ -261,6 +261,11 @@ export interface IcsChecklist {
   checkMClassSeq?: number | null;
 }
 
+/** 내부통제 체크리스트 한 행 — 고객사용 (K04, AS-IS ics10_checklist.selectBySearchText). useYn은 고객사별 설정, writeGroupName은 담당그룹 */
+export interface IcsChecklistUser extends IcsChecklist {
+  writeGroupName?: string | null;
+}
+
 /** 체크리스트 분류 콤보 항목 (AS-IS sys.Sys09_Code.selectByIcs21·selectByIcs23) */
 export interface IcsChecklistClassCode {
   code: string;
@@ -446,6 +451,26 @@ export interface IcsComplianceWrite {
 export interface IcsComplianceWriteItem {
   complianceWriteId: number;
   complianceId: number;
+  answerCode: string | null;
+  reason: string | null;
+  fixYn: boolean;
+  confirmYn: boolean;
+}
+
+/** 내부통제 체크리스트 작성 그리드 한 행 (K05, 서버 IcsChecklistWriteRes) — 작성 행이 없으면 checklistWriteId·answerCode·reason이 null */
+export interface IcsChecklistWrite extends IcsChecklist {
+  checklistWriteId: number | null;
+  /** Y 예 / N 아니오 / X 해당없음 */
+  answerCode: string | null;
+  reason: string | null;
+  fixYn: boolean;
+  confirmYn: boolean;
+}
+
+/** 체크리스트 작성 행 하나 (K05, 서버 IcsChecklistWriteItem — AS-IS Ics15_ChecklistWriteModel) */
+export interface IcsChecklistWriteItem {
+  checklistWriteId: number;
+  checklistId: number;
   answerCode: string | null;
   reason: string | null;
   fixYn: boolean;

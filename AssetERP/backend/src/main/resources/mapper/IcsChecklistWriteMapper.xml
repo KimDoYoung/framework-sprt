@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ics/mapper/ics10_checklist.xml(selectByPersonId) + ics15_checklist_write.xml
+     + server/utils/db/mapper/Common.xml(ics_checklist_class) + UpdateDataModel(ics15_checklist_write)  (K05 내부통제 체크리스트 작성) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsChecklistWriteMapper">
+
+    <!-- AS-IS common.ics_checklist_class (IDMS-IC): 사용 중인 대분류·중분류(고객사별 설정 포함, 종료일이 기준일 이전이면 뺀다) — IcsChecklistMapper와 같은 조각 -->
+    <sql id="icsClass">
+        WITH ics_class AS ( SELECT *
+                              FROM ics21_checklist_l_class
+                                   LEFT OUTER JOIN ics22_checklist_l_class_company ON ( ics22_checklist_l_class_id = ics21_checklist_l_class_id AND
+                                                                                        ics22_company_id IN (0, #{companyId}) )
+                                   INNER JOIN      ics23_checklist_m_class         ON ( ics23_checklist_l_class_id = ics21_checklist_l_class_id AND
+                                                                                        ics23_company_id IN (0, #{companyId}) )
+                                   LEFT OUTER JOIN ics24_checklist_m_class_company ON ( ics24_checklist_m_class_id = ics23_checklist_m_class_id AND
+                                                                                        ics24_company_id IN (0, #{companyId}) )
+                             WHERE ics21_company_id IN (0, #{companyId})
+                               AND ( ( COALESCE(ics21_use_yn,'true')           = 'false'                    AND
+                                       COALESCE(ics21_close_date,'1999-12-31') <![CDATA[>=]]> #{stdDate}    ) OR
+                                     ( COALESCE(ics21_use_yn,'true')           = 'true'                     ) )
+                               AND ( ( COALESCE(ics22_use_yn,'true')           = 'false'                    AND
+                                       COALESCE(ics22_close_date,'1999-12-31') <![CDATA[>=]]> #{stdDate}    ) OR
+                                     ( COALESCE(ics22_use_yn,'true')           = 'true'                     ) )
+                               AND ( ( COALESCE(ics23_use_yn,'true')           = 'false'                    AND
+                                       COALESCE(ics23_close_date,'1999-12-31') <![CDATA[>=]]> #{stdDate}    ) OR
+                                     ( COALESCE(ics23_use_yn,'true')           = 'true'                     ) )
+                               AND ( ( COALESCE(ics24_use_yn,'true')           = 'false'                    AND
+                                       COALESCE(ics24_close_date,'1999-12-31') <![CDATA[>=]]> #{stdDate}    ) OR
+                                     ( COALESCE(ics24_use_yn,'true')           = 'true'                     ) )
+        )
+    </sql>
+
+    <!-- AS-IS sys01_company.selectById 중 sys01_ics_check_cycle_type (IDMS-IC) -->
+    <select id="selectCycleType" resultType="string">
+        SELECT sys01_ics_check_cycle_type
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS ics10_checklist.selectByPersonId L149 (IDMS-IC) — SELECT * 대신 화면이 쓰는 열만. 대분류 id·근거·조회순서는 보기 창(Ics10_Edit_Checklist)용 -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistWriteRes">
+        WITH chkList AS (
+            <include refid="icsClass"/>
+            SELECT *
+                 , ics21_checklist_l_class_nm AS ics10_check_l_class_nm
+                 , ics21_seq                  AS ics10_check_l_class_seq
+                 , ics23_checklist_m_class_nm AS ics10_check_m_class_nm
+                 , ics23_seq                  AS ics10_check_m_class_seq
+              FROM ics10_checklist
+                   INNER JOIN ics_class ON ics23_checklist_m_class_id = ics10_checklist_m_class_id
+                   INNER JOIN ics11_checklist_company ON ( ics11_company_id = #{companyId} AND ics11_checklist_id = ics10_checklist_id )
+                   INNER JOIN sch22_write_group ON sch22_write_group_id = ics11_write_group_id
+                   INNER JOIN ( SELECT sch02_info_id
+                                     , sch02_person_id AS person_id
+                                  FROM sch02_share
+                                 WHERE sch02_company_id = #{companyId}
+                                   AND sch02_share_cd   = '1'
+                                   AND #{stdDate} BETWEEN sch02_start_date AND COALESCE(sch02_close_date,'9999-12-31')
+                                 UNION
+                                SELECT sch02_info_id
+                                     , emp03_person_id AS person_id
+                                  FROM emp03_trans
+                                       INNER JOIN sch02_share ON sch02_org_id = emp03_org_code_id
+                                 WHERE (emp03_person_id, emp03_trans_date) IN ( SELECT emp03_person_id, MAX(emp03_trans_date)
+                                                                                  FROM emp03_trans
+                                                                                       INNER JOIN emp01_person ON emp01_person_id = emp03_person_id
+                                                                                 WHERE emp01_company_id = #{companyId}
+                                                                                   AND emp03_trans_date <![CDATA[<=]]> #{stdDate}
+                                                                                 GROUP BY emp03_person_id )
+                                   AND sch02_company_id = #{companyId}
+                                   AND sch02_share_cd   = '2'
+                                   AND #{stdDate} BETWEEN sch02_start_date AND COALESCE(sch02_close_date,'9999-12-31')
+                              ) emp ON sch02_info_id = sch22_write_group_id
+             WHERE COALESCE(ics10_use_yn,'false') = 'true'
+               AND COALESCE(ics11_use_yn,'false') = 'true'
+               AND emp.person_id = #{personId}
+               AND NOT EXISTS ( SELECT 1
+                                  FROM emp04_add_title
+                                 WHERE emp04_add_person_id = emp.person_id
+                                   AND ( ( emp04_start_date                        > #{stdDate} ) OR
+                                           COALESCE(emp04_close_date,'9999-12-31') <![CDATA[<]]> #{stdDate} ) )
+        )
+        SELECT ics10_checklist_id                          AS checklist_id,
+               ics10_company_id                            AS company_id,
+               ics10_content                               AS content,
+               ics10_criterion                             AS criterion,
+               ics10_seq                                   AS seq,
+               ics10_checklist_m_class_id                  AS checklist_m_class_id,
+               ics21_checklist_l_class_id                  AS check_l_class_id,
+               ics10_check_l_class_nm                      AS check_l_class_name,
+               ics10_check_m_class_nm                      AS check_m_class_name,
+               ics15_checklist_write_id                    AS checklist_write_id,
+               ics15_answer_cd                             AS answer_code,
+               ics15_reason                                AS reason,
+               COALESCE(ics15_fix_yn,'false') = 'true'     AS fix_yn,
+               COALESCE(ics15_confirm_yn,'false') = 'true' AS confirm_yn
+          FROM chkList
+               LEFT OUTER JOIN ics15_checklist_write ON ( ics15_checklist_id = ics10_checklist_id
+                                                      AND ics15_company_id   = #{companyId}
+                                                      AND ics15_person_id    = person_id
+                                                      AND ics15_cycle_type   = #{cycleType}
+                                                      AND ics15_check_yyyymm = TO_CHAR(#{stdDate}::date,'YYYY.MM') )
+         WHERE 1=1
+           AND COALESCE(ics24_use_yn, ics23_use_yn) = 'true'
+           AND COALESCE(ics22_use_yn, ics21_use_yn) = 'true'
+        <if test="checklistLClassId != null">
+           AND ics21_checklist_l_class_id = #{checklistLClassId}
+        </if>
+        <if test="checklistMClassId != null">
+           AND ics23_checklist_m_class_id = #{checklistMClassId}
+        </if>
+        <if test="checkBox">
+           AND ics15_answer_cd IS NULL
+        </if>
+           AND CONCAT(ics10_check_l_class_nm, ics10_check_m_class_nm, ics10_content) LIKE #{searchText}
+         ORDER BY ics10_check_l_class_seq, ics10_check_m_class_seq, ics10_seq, ics10_content
+    </select>
+
+    <!-- AS-IS ics15_checklist_write.selectById L32 (IDMS-IC) — 내 작성 행만(보안 보강) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistWriteItem">
+        SELECT ics15_checklist_write_id                    AS checklist_write_id,
+               ics15_checklist_id                          AS checklist_id,
+               ics15_answer_cd                             AS answer_code,
+               ics15_reason                                AS reason,
+               COALESCE(ics15_fix_yn,'false') = 'true'     AS fix_yn,
+               COALESCE(ics15_confirm_yn,'false') = 'true' AS confirm_yn
+          FROM ics15_checklist_write
+         WHERE ics15_checklist_write_id = #{checklistWriteId}
+           AND ics15_company_id = #{companyId}
+           AND ics15_person_id  = #{personId}
+    </select>
+
+    <!-- AS-IS ics15_checklist_write.selectByPersonId L39 (IDMS-IC) — 회사 조건은 보안 보강 -->
+    <select id="selectByChecklist" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistWriteItem">
+        SELECT ics15_checklist_write_id                    AS checklist_write_id,
+               ics15_checklist_id                          AS checklist_id,
+               ics15_answer_cd                             AS answer_code,
+               ics15_reason                                AS reason,
+               COALESCE(ics15_fix_yn,'false') = 'true'     AS fix_yn,
+               COALESCE(ics15_confirm_yn,'false') = 'true' AS confirm_yn
+          FROM ics15_checklist_write
+         WHERE ics15_company_id   = #{companyId}
+           AND ics15_checklist_id = #{checklistId}
+           AND ics15_person_id    = #{personId}
+           AND ics15_check_yyyymm = #{yyyymm}
+           AND ics15_cycle_type   = #{cycleType}
+         ORDER BY ics15_checklist_write_id
+    </select>
+
+    <!-- AS-IS ics15_checklist_write.selectWrite L49 (IDMS-IC) — 기준 달의 내 작성 행 전부 -->
+    <select id="selectWrite" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistWriteItem">
+        SELECT ics15_checklist_write_id                    AS checklist_write_id,
+               ics15_checklist_id                          AS checklist_id,
+               ics15_answer_cd                             AS answer_code,
+               ics15_reason                                AS reason,
+               COALESCE(ics15_fix_yn,'false') = 'true'     AS fix_yn,
+               COALESCE(ics15_confirm_yn,'false') = 'true' AS confirm_yn
+          FROM ics15_checklist_write
+         WHERE ics15_company_id   = #{companyId}
+           AND ics15_check_yyyymm = TO_CHAR(#{stdDate}::date,'YYYY.MM')
+           AND ics15_person_id    = #{personId}
+           AND ics15_cycle_type   = #{cycleType}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel(ics15_checklist_write) INSERT — updateAnswerCode(답변)·modelUpdate(답변 없음)가 만드는 행: 답변일시만 지금, 나머지는 비어 있다 -->
+    <insert id="insert">
+        INSERT INTO ics15_checklist_write
+               ( ics15_checklist_write_id, ics15_company_id, ics15_checklist_id, ics15_check_yyyymm, ics15_answer_cd,
+                 ics15_person_id, ics15_answer_datetime, ics15_cycle_type )
+        VALUES ( #{checklistWriteId}, #{companyId}, #{checklistId}, #{yyyymm}, #{answerCode},
+                 #{personId}, f_sysdate(), #{cycleType} )
+    </insert>
+
+    <!-- AS-IS ics15_checklist_write.updateAnswerCode L87 (IDMS-IC) — 내 작성 행만(보안 보강) -->
+    <update id="updateAnswerCode">
+        UPDATE ics15_checklist_write
+           SET ics15_answer_cd = #{answerCode}
+         WHERE ics15_checklist_write_id = #{checklistWriteId}
+           AND ics15_company_id = #{companyId}
+           AND ics15_person_id  = #{personId}
+    </update>
+
+    <!-- UpdateDataModel(ics15_checklist_write) UPDATE — 이 화면이 바꾸는 열(사유)만 -->
+    <update id="updateReason">
+        UPDATE ics15_checklist_write
+           SET ics15_reason = #{reason}
+         WHERE ics15_checklist_write_id = #{checklistWriteId}
+           AND ics15_company_id = #{companyId}
+           AND ics15_person_id  = #{personId}
+    </update>
+
+    <!-- AS-IS ics15_checklist_write.updateFixYn L93 (IDMS-IC) — 내 작성 행만(보안 보강) -->
+    <update id="updateFixYn">
+        UPDATE ics15_checklist_write
+           SET ics15_fix_yn = #{fixYn}
+         WHERE ics15_checklist_write_id = #{checklistWriteId}
+           AND ics15_company_id = #{companyId}
+           AND ics15_person_id  = #{personId}
+    </update>
+
+    <!-- UpdateDataModel.deleteModel(ics15_checklist_write) -->
+    <delete id="deleteById">
+        DELETE FROM ics15_checklist_write
+         WHERE ics15_checklist_write_id = #{checklistWriteId}
+           AND ics15_company_id = #{companyId}
+           AND ics15_person_id  = #{personId}
+    </delete>
+</mapper>

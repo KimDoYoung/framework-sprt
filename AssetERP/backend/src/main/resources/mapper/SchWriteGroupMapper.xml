@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sch/mapper/sch22_write_group.xml (selectByCompanyId, selectById, checkByWriteGroupId) + sch02_share.xml (selectByInfoId2, selectById, checkWriteGroup, deleteByInfoId)
+     + UpdateDataModel 저장 SQL  (K04 Sch22_Lookup_WriteGroup·Sch02_Page_Share) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sch.mapper.SchWriteGroupMapper">
+
+    <sql id="groupColumns">
+        sch22_write_group_id    AS write_group_id,
+        sch22_write_group_nm    AS write_group_name,
+        sch22_company_id        AS company_id,
+        sch22_confirmer_id      AS confirmer_id,
+        emp01_kor_nm            AS confirmer_name
+    </sql>
+
+    <!-- AS-IS sch22_write_group.selectByCompanyId (IDMS-IC) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch22WriteGroupRes">
+        SELECT <include refid="groupColumns"/>
+          FROM sch22_write_group
+               LEFT JOIN emp01_person ON emp01_person_id = sch22_confirmer_id
+         WHERE sch22_company_id = #{companyId}
+         ORDER BY sch22_write_group_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS sch22_write_group.selectById (IDMS-IC) — 회사 조건은 보안 보강 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch22WriteGroupRes">
+        SELECT <include refid="groupColumns"/>
+          FROM sch22_write_group
+               LEFT JOIN emp01_person ON emp01_person_id = sch22_confirmer_id
+         WHERE sch22_write_group_id = #{writeGroupId}
+           AND sch22_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertGroup">
+        INSERT INTO sch22_write_group (sch22_write_group_id, sch22_company_id, sch22_write_group_nm, sch22_confirmer_id)
+        VALUES (#{writeGroupId}, #{companyId}, #{writeGroupName}, #{confirmerId})
+    </insert>
+
+    <update id="updateGroup">
+        UPDATE sch22_write_group
+           SET sch22_write_group_nm = #{writeGroupName},
+               sch22_confirmer_id   = #{confirmerId}
+         WHERE sch22_write_group_id = #{writeGroupId}
+           AND sch22_company_id     = #{companyId}
+    </update>
+
+    <delete id="deleteGroup">
+        DELETE FROM sch22_write_group
+         WHERE sch22_write_group_id = #{writeGroupId}
+           AND sch22_company_id     = #{companyId}
+    </delete>
+
+    <!-- AS-IS sch22_write_group.checkByWriteGroupId (IDMS-IC) -->
+    <select id="countUse" resultType="int">
+        SELECT COUNT(*)
+          FROM ( SELECT chk02_daily_list_id
+                   FROM chk02_daily_list
+                  WHERE chk02_write_group_id = #{writeGroupId}
+                  UNION ALL
+                 SELECT ics11_checklist_company_id
+                   FROM ics11_checklist_company
+                  WHERE ics11_write_group_id = #{writeGroupId}
+               ) t
+    </select>
+
+    <sql id="shareColumns">
+        sch02_share_id                                                           AS share_id,
+        sch02_info_id                                                            AS info_id,
+        sch02_share_cd                                                           AS share_code,
+        f_cdnm('ShareCode', sch02_share_cd, sch02_company_id, f_sysdate())       AS share_name,
+        sch02_person_id                                                          AS person_id,
+        f_emp_kor_nm(sch02_person_id)                                            AS person_name,
+        sch02_org_id                                                             AS org_id,
+        sch02_company_id                                                         AS company_id,
+        sch02_start_date                                                         AS start_date,
+        sch02_close_date                                                         AS close_date
+    </sql>
+
+    <!-- AS-IS sch02_share.selectByInfoId2 (IDMS-IC) — 회사 조건은 보안 보강 -->
+    <select id="selectSharesByInfoId" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch02ShareRes">
+        SELECT <include refid="shareColumns"/>,
+               CONCAT(f_org_nm(sch02_org_id, f_sysdate())
+                     ,' (조직 폐쇄일 : '||to_char(org01_close_date,'yyyy-MM-dd')||')')   AS org_name
+          FROM sch02_share
+               INNER JOIN org01_code ON org01_code_id = sch02_org_id
+         WHERE sch02_info_id = #{infoId}
+           AND sch02_company_id = #{companyId}
+         ORDER BY sch02_share_cd, sch02_org_id
+    </select>
+
+    <!-- AS-IS sch02_share.selectById (IDMS-IC) — 저장한 행을 다시 읽는다 -->
+    <select id="selectShareById" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch02ShareRes">
+        SELECT <include refid="shareColumns"/>,
+               f_org_nm(sch02_org_id, f_sysdate())   AS org_name
+          FROM sch02_share
+         WHERE sch02_share_id = #{shareId}
+           AND sch02_company_id = #{companyId}
+    </select>
+
+    <insert id="insertShare">
+        INSERT INTO sch02_share
+               ( sch02_share_id, sch02_info_id, sch02_share_cd, sch02_person_id, sch02_org_id, sch02_company_id, sch02_start_date, sch02_close_date )
+        VALUES ( #{shareId}, #{infoId}, #{req.shareCode}, #{req.personId}, #{req.orgId}, #{companyId}, #{req.startDate}, #{req.closeDate} )
+    </insert>
+
+    <update id="updateShare">
+        UPDATE sch02_share
+           SET sch02_start_date = #{req.startDate},
+               sch02_close_date = #{req.closeDate}
+         WHERE sch02_share_id   = #{req.shareId}
+           AND sch02_info_id    = #{infoId}
+           AND sch02_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS sch02_share.checkWriteGroup (IDMS-IC) -->
+    <select id="countShareWrites" resultType="int">
+        SELECT COUNT(*)
+          FROM (  -- 체크리스트 작성내역 체크
+                  SELECT 1
+                   FROM sch02_share
+                        INNER JOIN ics11_checklist_company ON ics11_write_group_id = sch02_info_id
+                        INNER JOIN ics15_checklist_write   ON ( ics15_checklist_id   = ics11_checklist_id   AND
+                                                                ics15_company_id     = sch02_company_id     )
+                  WHERE sch02_share_id = #{shareId}
+                    AND ( (    sch02_share_cd  = '1'
+                           AND sch02_person_id = ics15_person_id )
+                         OR
+                          (    sch02_share_cd  = '2'
+                           AND sch02_org_id = f_get_empTrans(ics15_person_id, f_get_last_day(TO_DATE(ics15_check_yyyymm||'.01','yyyy-MM-dd')), 'org_code_id')::numeric )
+                        )
+                    AND COALESCE(ics15_confirm_yn,'false') = 'true'
+                 -- 일일점검내역 작성내역 체크
+                  UNION ALL
+                 SELECT 2
+                   FROM sch02_share
+                        INNER JOIN chk02_daily_list         ON chk02_write_group_id = sch02_info_id
+                        INNER JOIN chk03_daily_list_write   ON ( chk03_daily_list_id = chk02_daily_list_id  AND
+                                                                 chk03_company_id    = sch02_company_id     )
+                  WHERE sch02_share_id = #{shareId}
+                    AND ( (    sch02_share_cd  = '1'
+                           AND sch02_person_id = chk03_person_id )
+                         OR
+                          (    sch02_share_cd  = '2'
+                           AND sch02_org_id = f_get_empTrans(chk03_person_id, chk03_date, 'org_code_id')::numeric )
+                        )
+                    AND COALESCE(chk03_confirm_yn,'false') = 'true'
+               ) t
+    </select>
+
+    <delete id="deleteShares">
+        DELETE FROM sch02_share
+         WHERE sch02_company_id = #{companyId}
+           AND sch02_info_id    = #{infoId}
+           AND sch02_share_id IN
+        <foreach collection="shareIds" item="shareId" open="(" separator="," close=")">#{shareId}</foreach>
+    </delete>
+
+    <!-- AS-IS sch02_share.deleteByInfoId (IDMS-IC) -->
+    <delete id="deleteSharesByInfoId">
+        DELETE FROM sch02_share
+         WHERE sch02_info_id    = #{infoId}
+           AND sch02_company_id = #{companyId}
+    </delete>
+</mapper>

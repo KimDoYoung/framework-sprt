@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import {
   Sch03Deadline, Sch03DeadlineSaveReq, Sch03DeadlineTemplate, Sch05RelateIcs,
-  Sch04List, Sch04ListManagerSearch, Sch04ListSearch, Sch10Ipo, Sch10IpoSearch, Sch12IpoCorp, Sch14IpoMismatch, Sch15IpoItemMatching,
+  Sch02Share, Sch22WriteGroup, Sch04List, Sch04ListManagerSearch, Sch04ListSearch, Sch10Ipo, Sch10IpoSearch, Sch12IpoCorp, Sch14IpoMismatch, Sch15IpoItemMatching,
 } from '../types/sch';
 import { readBlobError } from './file';
 
@@ -235,5 +235,56 @@ export const schApi = {
   updateIcsListResult: async (listId: number, type: 'U' | 'P' | 'C', note?: string | null): Promise<Sch04List> => {
     const res = await apiClient.put<ApiResponse<Sch04List>>(`v1/sch/lists/${listId}/result`, { type, note });
     return res.data.data;
+  },
+
+  // ── K04 작성(담당)그룹 (Sch22_Lookup_WriteGroup·Sch02_Page_Share) ──
+
+  /** AS-IS sch.Sch22_WriteGroup.selectByCompanyId */
+  searchWriteGroups: async (): Promise<Sch22WriteGroup[]> => {
+    const res = await apiClient.get<ApiResponse<Sch22WriteGroup[]>>('v1/sch/write-groups');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch22_WriteGroup.update → 저장한 행(요청 순서). 새 행(id ≤ 0)은 id를 뺀다 */
+  saveWriteGroups: async (rows: Sch22WriteGroup[]): Promise<Sch22WriteGroup[]> => {
+    const body = rows.map(r => ({ writeGroupId: r.writeGroupId > 0 ? r.writeGroupId : null, writeGroupName: r.writeGroupName, confirmerId: r.confirmerId ?? null }));
+    const res = await apiClient.put<ApiResponse<Sch22WriteGroup[]>>('v1/sch/write-groups', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch22_WriteGroup.checkByWriteGroupId → 일일점검·체크리스트에서 쓰는 그룹이면 true */
+  isWriteGroupInUse: async (writeGroupId: number): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>(`v1/sch/write-groups/${writeGroupId}/in-use`);
+    return res.data.data === true;
+  },
+
+  /** AS-IS sch.Sch02_Share.deleteByInfoId + sch.Sch22_WriteGroup.delete */
+  deleteWriteGroup: async (writeGroupId: number): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sch/write-groups/${writeGroupId}`);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sch.Sch02_Share.selectByInfoId2 */
+  searchWriteGroupShares: async (writeGroupId: number): Promise<Sch02Share[]> => {
+    const res = await apiClient.get<ApiResponse<Sch02Share[]>>(`v1/sch/write-groups/${writeGroupId}/shares`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch02_Share.update → 저장한 행(요청 순서) */
+  saveWriteGroupShares: async (writeGroupId: number, rows: Sch02Share[]): Promise<Sch02Share[]> => {
+    const body = rows.map(r => ({ shareId: r.shareId > 0 ? r.shareId : null, shareCode: r.shareCode, personId: r.personId ?? null, orgId: r.orgId ?? null, startDate: r.startDate ?? null, closeDate: r.closeDate ?? null }));
+    const res = await apiClient.put<ApiResponse<Sch02Share[]>>(`v1/sch/write-groups/${writeGroupId}/shares`, body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch02_Share.checkWriteGroup — 작성내역이 있으면 서버가 오류("작성내역이 존재하여 삭제할 수 없습니다") */
+  checkDeleteWriteGroupShares: async (shareIds: number[]): Promise<void> => {
+    await apiClient.post<ApiResponse<boolean>>('v1/sch/write-groups/shares/check-delete', shareIds);
+  },
+
+  /** AS-IS sch.Sch02_Share.delete */
+  deleteWriteGroupShares: async (writeGroupId: number, shareIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sch/write-groups/${writeGroupId}/shares`, { data: shareIds });
+    return res.data.data ?? 0;
   },
 };

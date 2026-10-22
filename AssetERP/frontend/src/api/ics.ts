@@ -1,9 +1,26 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsComplianceConfirm, IcsComplianceReportRow, IcsComplianceReportAppr } from '../types/ics';
+import { IcsChecklistUser, ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsChecklistWrite, IcsChecklistWriteItem, IcsComplianceConfirm, IcsComplianceReportRow, IcsComplianceReportAppr } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
+/** 파일을 받아 저장한다(blob). 오류 응답은 메시지로 바꿔 던진다 */
+async function downloadXlsx(path: string, params: Record<string, unknown> | undefined, fileName: string): Promise<void> {
+  try {
+    const res = await apiClient.get<Blob>(path, { params, responseType: 'blob' });
+    const url = URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (err) {
+    throw await readBlobError(err);
+  }
+}
+
 export const icsApi = {
   // ── E01 법규관리(관리자) (Ics01_Tab_ClassTree) ──
 
@@ -269,15 +286,15 @@ export const icsApi = {
     return res.data.data ?? 0;
   },
 
-  /** AS-IS sys.Sys09_Code.selectByIcs21: 사용 중인 대분류 */
-  searchChecklistLCodes: async (): Promise<IcsChecklistClassCode[]> => {
-    const res = await apiClient.get<ApiResponse<IcsChecklistClassCode[]>>('v1/ics/checklists/l-codes');
+  /** AS-IS sys.Sys09_Code.selectByIcs21: 사용 중인 대분류 (기준일을 안 주면 오늘 — K05는 기준 분기(월)의 말일) */
+  searchChecklistLCodes: async (stdDate?: string): Promise<IcsChecklistClassCode[]> => {
+    const res = await apiClient.get<ApiResponse<IcsChecklistClassCode[]>>('v1/ics/checklists/l-codes', { params: { stdDate } });
     return res.data.data ?? [];
   },
 
   /** AS-IS sys.Sys09_Code.selectByIcs23: 사용 중인 중분류(대분류를 주면 그 아래만) */
-  searchChecklistMCodes: async (checklistLClassId?: number | null): Promise<IcsChecklistClassCode[]> => {
-    const res = await apiClient.get<ApiResponse<IcsChecklistClassCode[]>>('v1/ics/checklists/m-codes', { params: { checklistLClassId } });
+  searchChecklistMCodes: async (checklistLClassId?: number | null, stdDate?: string): Promise<IcsChecklistClassCode[]> => {
+    const res = await apiClient.get<ApiResponse<IcsChecklistClassCode[]>>('v1/ics/checklists/m-codes', { params: { checklistLClassId, stdDate } });
     return res.data.data ?? [];
   },
 
@@ -332,6 +349,50 @@ export const icsApi = {
   /** AS-IS ics.Ics23_ChecklistMClass.delete */
   deleteChecklistMClasses: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/ics/checklist-classes/m', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  // ── K04 내부통제 체크리스트 관리 (Ics10_Tab_Checklist) ──
+
+  /** AS-IS ics.Ics10_Checklist.selectBySearchText: 대분류·중분류 없으면 전체, useYn '%'(전체)·'true'·'false' */
+  searchChecklistsForCompany: async (params: { checklistLClassId?: number | null; checklistMClassId?: number | null; useYn: string; searchText: string }): Promise<IcsChecklistUser[]> => {
+    const res = await apiClient.get<ApiResponse<IcsChecklistUser[]>>('v1/ics/checklists/company', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics10_Checklist.preDelete → 작성내역이 있어 못 지우는 체크리스트 수 */
+  checkDeleteChecklists: async (checklistIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ics/checklists/check-delete', checklistIds);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS ics.Ics11_ChecklistCompany.updateUseYn */
+  updateChecklistUseYn: async (rows: { checklistId: number; useYn: string }[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/ics/checklists/use-yn', rows);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS ics.Ics11_ChecklistCompany.updateWriteGroupId (writeGroupId null = 지정 해제) */
+  updateChecklistWriteGroup: async (writeGroupId: number | null, checklists: { checklistId: number; useYn: string }[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/ics/checklists/write-group', { writeGroupId, checklists });
+    return res.data.data ?? 0;
+  },
+
+  /** 출력/다운로드 (AS-IS Sys99_Print.insertRdCheckList + RD 리포트 Ics10_Rd_Checklist → 한 시트 xlsx) */
+  downloadChecklistExcel: async (params: { checklistLClassId?: number | null; checklistMClassId?: number | null; searchText: string }): Promise<void> => {
+    await downloadXlsx('v1/ics/checklists/excel', params, '내부통제 체크리스트.xlsx');
+  },
+
+  /** 템플릿 받기 (AS-IS downloadForm → ./excelTemplete/Template_내부통제 체크리스트.xlsx) */
+  downloadChecklistTemplate: async (): Promise<void> => {
+    await downloadXlsx('v1/ics/checklists/template', undefined, 'Template_내부통제 체크리스트.xlsx');
+  },
+
+  /** 데이터업로드 (AS-IS ExcelUpload?uploadType=icsChecklistUpload) → 넣은 건수 */
+  uploadChecklistExcel: async (file: File): Promise<number> => {
+    const form = new FormData();
+    form.append('excelUpload', file);
+    const res = await apiClient.post<ApiResponse<number>>('v1/ics/checklists/excel', form, { headers: { 'Content-Type': 'multipart/form-data' } });
     return res.data.data ?? 0;
   },
 
@@ -539,6 +600,55 @@ export const icsApi = {
   relateManager: async (managerId: number, classTreeIds: number[]): Promise<IcsLawManage[]> => {
     const res = await apiClient.put<ApiResponse<IcsLawManage[]>>('v1/ics/relate-managers', { managerId, classTreeIds });
     return res.data.data ?? [];
+  },
+
+  // ── K05 내부통제 체크리스트 작성 (Ics15_Tab_ChecklistWrite·Ics15_Edit_Reason) ──
+
+  /** AS-IS sys.Sys01_Company.selectById 중 체크주기: 'M'(월) / 'Q'(분기) / 설정 없음 null */
+  getChecklistWriteCycleType: async (): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>('v1/ics/checklist-writes/cycle-type');
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS ics.Ics10_Checklist.selectByPersonId: stdDate = 기준 분기(월)의 말일, checkBox = 미체크 보기 */
+  searchChecklistWrites: async (params: { stdDate: string; cycleType: string; checklistLClassId?: number | null; checklistMClassId?: number | null; searchText: string; checkBox: boolean }): Promise<IcsChecklistWrite[]> => {
+    const res = await apiClient.get<ApiResponse<IcsChecklistWrite[]>>('v1/ics/checklist-writes', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics15_ChecklistWrite.updateAnswerCode: answerCode Y(예)·N(아니오)·X(해당없음). yyyymm = 'yyyy.MM' */
+  updateChecklistWriteAnswer: async (checklistId: number, answerCode: string, yyyymm: string, cycleType: string): Promise<IcsChecklistWriteItem> => {
+    const res = await apiClient.put<ApiResponse<IcsChecklistWriteItem>>('v1/ics/checklist-writes/answers', { checklistId, answerCode, yyyymm, cycleType });
+    return res.data.data as IcsChecklistWriteItem;
+  },
+
+  /** AS-IS ics.Ics15_ChecklistWrite.modelUpdate(새 행): 사유 창을 처음 열 때 답변 없는 작성 행을 만든다 */
+  createChecklistWrite: async (checklistId: number, yyyymm: string, cycleType: string): Promise<IcsChecklistWriteItem> => {
+    const res = await apiClient.post<ApiResponse<IcsChecklistWriteItem>>('v1/ics/checklist-writes', { checklistId, yyyymm, cycleType });
+    return res.data.data as IcsChecklistWriteItem;
+  },
+
+  /** AS-IS ics.Ics15_ChecklistWrite.selectById */
+  getChecklistWrite: async (checklistWriteId: number): Promise<IcsChecklistWriteItem> => {
+    const res = await apiClient.get<ApiResponse<IcsChecklistWriteItem>>(`v1/ics/checklist-writes/${checklistWriteId}`);
+    return res.data.data as IcsChecklistWriteItem;
+  },
+
+  /** AS-IS ics.Ics15_ChecklistWrite.modelUpdate: 사유 저장 */
+  updateChecklistWriteReason: async (checklistWriteId: number, reason: string): Promise<IcsChecklistWriteItem> => {
+    const res = await apiClient.put<ApiResponse<IcsChecklistWriteItem>>(`v1/ics/checklist-writes/${checklistWriteId}/reason`, { reason });
+    return res.data.data as IcsChecklistWriteItem;
+  },
+
+  /** AS-IS ics.Ics15_ChecklistWrite.updateFixYn: 제출(true)·제출취소(false) */
+  updateChecklistWriteFix: async (fixYn: boolean, writeIds: number[]): Promise<void> => {
+    await apiClient.put<ApiResponse<number>>('v1/ics/checklist-writes/fix', { fixYn, writeIds });
+  },
+
+  /** AS-IS ics.Ics15_ChecklistWrite.deleteByPersonId (새로작성): 작성내역이 없거나 확인이 끝난 내역이 있으면 서버가 거절한다 */
+  deleteChecklistWrites: async (stdDate: string, cycleType: string): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/ics/checklist-writes', { params: { stdDate, cycleType } });
+    return res.data.data ?? 0;
   },
 
   // ── K01 내부통제 준수확인서 작성 (Ics31_Tab_ComplianceWrite·Ics31_Edit_Reason) ──

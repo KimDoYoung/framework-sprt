@@ -61,9 +61,11 @@ import { Apr01_Tab_FundDocument } from './apr/Apr01_Tab_FundDocument';
 import { Apr01_Tab_ItemDocument } from './apr/Apr01_Tab_ItemDocument';
 import { Ics01_Tab_IcsFileUpload } from './ics/Ics01_Tab_IcsFileUpload';
 import { Ics10_Tab_ChecklistAdmin } from './ics/Ics10_Tab_ChecklistAdmin';
+import { Ics10_Tab_Checklist } from './ics/Ics10_Tab_Checklist';
 import { Ics17_Tab_UserRequestAdmin } from './ics/Ics17_Tab_UserRequestAdmin';
 import { Ics17_Tab_UserRequest } from './ics/Ics17_Tab_UserRequest';
 import { Ics30_Tab_Compliance } from './ics/Ics30_Tab_Compliance';
+import { Ics15_Tab_ChecklistWrite } from './ics/Ics15_Tab_ChecklistWrite';
 import { Ics31_Tab_ComplianceWrite } from './ics/Ics31_Tab_ComplianceWrite';
 import { Ics31_Tab_ComplianceConfirm } from './ics/Ics31_Tab_ComplianceConfirm';
 import { Ics31_Tab_ComplianceReport } from './ics/Ics31_Tab_ComplianceReport';
@@ -221,9 +223,11 @@ export const SCREENS: Record<string, React.FC> = {
   Icr01_Tab_ClassTree, // H09 (+ Icr01_Grid_IcrType·Edit_ClassTree·Move_TreeGrid·Move_Grid·Lookup_Share·Lookup_IcrFile(admin)·Lookup_Content(editable)·Sch03_Lookup_Ics 6, Icr02_Lookup_Manager=Ics02_Lookup_Manager)
   Icr01_Tab_ClassTreeView, // H03 (+ Icr01_Lookup_Content view·IcrFile period·SelectParent·Sch03_Lookup_IcsUser)
   Ics10_Tab_ChecklistAdmin, // E04
+  Ics10_Tab_Checklist, // K04 (+ Ics10_Lookup_UseYn·Ics10_Lookup_ExcelUpload·Sch22_Lookup_WriteGroup·Sch02_Page_Share. 출력은 RD 대신 서버 xlsx)
   Ics17_Tab_UserRequestAdmin, // E09 (+ Ics17_Edit_UserRequestAdmin·Ics17_Lookup_LawContent·Ics17_Grid_FileList)
   Ics17_Tab_UserRequest, // H11 (+ Ics17_Edit_UserRequest, Ics17_Lookup_LawContent user·Ics17_Grid_FileList 재사용)
   Ics30_Tab_Compliance, // E05 (+ E05-1 예외사원 등록 Emp33_Lookup_ExceptBiz)
+  Ics15_Tab_ChecklistWrite, // K05 (+ Ics15_Edit_Reason. 보기 창은 K04의 Ics10_Edit_Checklist readOnly)
   Ics31_Tab_ComplianceWrite, // K01 (+ Ics31_Edit_Reason. 엑셀은 RD 리포트 대신 서버 xlsx)
   Ics31_Tab_ComplianceConfirm, // K02 ([상신] Ics32_Lookup_RelateAppr은 원본도 툴바에 안 붙인 도달 불가 버튼이라 제외)
   Ics31_Tab_ComplianceReport, // K03 1단계 (RD 미리보기 대신 표. [상신]·[문서보기]·문서분류 선택은 전자결재 단계 — 안내만)

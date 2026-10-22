@@ -155,4 +155,101 @@
          GROUP BY ics23_company_id, ics23_checklist_m_class_id, ics23_checklist_m_class_nm, ics23_seq
          ORDER BY ics23_seq
     </select>
+
+    <!-- AS-IS ics10_checklist.selectBySearchText L67 (IDMS-IC) — K04 고객사용. 사용여부·담당그룹은 ics11(고객사별 설정), 담당그룹명은 로그인 회사 것만 -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistUserRes">
+        <include refid="icsClass"/>
+        SELECT ics10_checklist_id                          AS checklist_id,
+               ics10_company_id                            AS company_id,
+               ics10_content                               AS content,
+               ics10_criterion                             AS criterion,
+               ics10_seq                                   AS seq,
+               COALESCE(ics11_use_yn, 'true')              AS use_yn,
+               ics21_checklist_l_class_nm                  AS check_l_class_name,
+               ics21_checklist_l_class_id                  AS check_l_class_id,
+               ics23_checklist_m_class_nm                  AS check_m_class_name,
+               ics23_checklist_m_class_id                  AS checklist_m_class_id,
+               ( SELECT sch22_write_group_nm
+                   FROM sch22_write_group
+                  WHERE sch22_write_group_id = ics11_write_group_id
+                    AND sch22_company_id = #{companyId} )  AS write_group_name
+          FROM ics10_checklist
+               INNER JOIN ics_class ON ics23_checklist_m_class_id = ics10_checklist_m_class_id
+               LEFT OUTER JOIN ics11_checklist_company ON ics11_checklist_id = ics10_checklist_id AND ics11_company_id = #{companyId}
+         WHERE 1=1
+           AND ics10_company_id IN (0, #{companyId})
+           AND ics10_use_yn = 'true'
+           AND COALESCE(ics11_use_yn, 'true') LIKE #{useYn}
+        <if test="checklistLClassId != null">
+           AND ics21_checklist_l_class_id = #{checklistLClassId}
+        </if>
+        <if test="checklistMClassId != null">
+           AND ics23_checklist_m_class_id = #{checklistMClassId}
+        </if>
+           AND CONCAT( ics21_checklist_l_class_nm
+                     , ics23_checklist_m_class_nm
+                     , ics10_content
+                     , ics10_criterion
+                     ) LIKE #{searchText}
+         ORDER BY ics21_seq, ics23_seq, ics10_seq, ics10_content
+    </select>
+
+    <!-- AS-IS ics15_checklist_write.deleteChecklistIdCheck (IDMS-IC) — 작성내역 수 -->
+    <select id="countWrites" resultType="int">
+        SELECT COUNT(*)
+          FROM ics15_checklist_write
+         WHERE ics15_company_id   = #{companyId}
+           AND ics15_checklist_id = #{checklistId}
+    </select>
+
+    <!-- AS-IS ics11_checklist_company.selectByChecklistId (IDMS-IC) -->
+    <select id="selectCompanyRowId" resultType="java.lang.Long">
+        SELECT ics11_checklist_company_id
+          FROM ics11_checklist_company
+         WHERE ics11_checklist_id = #{checklistId}
+           AND ics11_company_id   = #{companyId}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS ics11_checklist_company.insert (IDMS-IC) -->
+    <insert id="insertCompanyRow">
+        INSERT INTO ics11_checklist_company
+               ( ics11_checklist_company_id, ics11_company_id, ics11_checklist_id, ics11_write_group_id, ics11_use_yn )
+        VALUES ( #{rowId}, #{companyId}, #{checklistId}, #{writeGroupId}, #{useYn} )
+    </insert>
+
+    <!-- AS-IS ics11_checklist_company.updateWriteGroupId (IDMS-IC) -->
+    <update id="updateCompanyWriteGroup">
+        UPDATE ics11_checklist_company
+           SET ics11_write_group_id = #{writeGroupId}
+         WHERE ics11_company_id   = #{companyId}
+           AND ics11_checklist_id = #{checklistId}
+    </update>
+
+    <!-- AS-IS ics10_checklist.updateUseYn (IDMS-IC) — 로그인 회사가 만든 체크리스트만 -->
+    <update id="updateChecklistUseYn">
+        UPDATE ics10_checklist
+           SET ics10_use_yn = #{useYn}
+         WHERE ics10_company_id   = #{companyId}
+           AND ics10_checklist_id = #{checklistId}
+    </update>
+
+    <!-- AS-IS ics21_checklist_l_class.selectByClassName (IDMS-IC) -->
+    <select id="selectLClassIdByName" resultType="java.lang.Long">
+        SELECT ics21_checklist_l_class_id
+          FROM ics21_checklist_l_class
+         WHERE ics21_company_id IN (0, #{companyId})
+           AND replace(ics21_checklist_l_class_nm, ' ', '') = #{className}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS ics23_checklist_m_class.selectByClassName (IDMS-IC) -->
+    <select id="selectMClassIdByName" resultType="java.lang.Long">
+        SELECT ics23_checklist_m_class_id
+          FROM ics23_checklist_m_class
+         WHERE ics23_company_id IN (0, #{companyId})
+           AND ics23_checklist_l_class_id = #{checklistLClassId}
+           AND replace(ics23_checklist_m_class_nm, ' ', '') = #{className}
+         LIMIT 1
+    </select>
 </mapper>

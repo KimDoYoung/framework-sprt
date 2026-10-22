@@ -59,4 +59,9 @@ delete
 update
     on
     public.flt16_except_person for each row execute function flt16_except_person_backup();
+
+
+-- sch22_write_group  변경
+ALTER TABLE sch22_write_group 
+ADD COLUMN sch22_confirmer_id numeric NULL;
 ```    

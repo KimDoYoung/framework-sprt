@@ -156,3 +156,27 @@ export interface Sch04ListSearch {
 export interface Sch04ListManagerSearch extends Sch04ListSearch {
   orgId?: number | null;
 }
+
+/** 작성(담당)그룹 한 행 (K04, AS-IS Sch22_WriteGroupModel) */
+export interface Sch22WriteGroup {
+  writeGroupId: number;
+  writeGroupName?: string | null;
+  companyId?: number | null;
+  confirmerId?: number | null;
+  confirmerName?: string | null;
+}
+
+/** 작성그룹의 공유 한 행 (K04, AS-IS Sch02_ShareModel). shareCode 1=직원 2=부서, 날짜는 yyyy-MM-dd */
+export interface Sch02Share {
+  shareId: number;
+  infoId?: number | null;
+  shareCode?: string | null;
+  shareName?: string | null;
+  personId?: number | null;
+  personName?: string | null;
+  orgId?: number | null;
+  orgName?: string | null;
+  companyId?: number | null;
+  startDate?: string | null;
+  closeDate?: string | null;
+}
