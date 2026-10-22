@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/flt/mapper/flt16_except_person.xml + UpdateDataModel(flt16_except_person) — J09 예외사원 (SELECT *는 DTO 열로 명시, 날짜 TO_CHAR)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.flt.mapper.FltExceptPersonMapper">
+
+    <sql id="exceptPersonColumns">
+        flt16_except_person_id                       AS except_person_id,
+        flt16_company_id                             AS company_id,
+        flt16_person_id                              AS person_id,
+        emp00_kor_nm                                 AS person_name,
+        emp00_org_code_nm                            AS org_name,
+        TO_CHAR(flt16_rpt_start_date, 'YYYY-MM-DD')  AS rpt_start_date,
+        flt16_reason                                 AS reason
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) flt16_except_person.selectByCompanyId -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.flt.dto.ExceptPersonRes">
+        SELECT <include refid="exceptPersonColumns"/>
+          FROM flt16_except_person
+               INNER JOIN getPerson(#{companyId}, f_today()) ON emp00_person_id = flt16_person_id
+         WHERE flt16_company_id = #{companyId}
+         ORDER BY emp00_kor_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt16_except_person.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.flt.dto.ExceptPersonRes">
+        SELECT <include refid="exceptPersonColumns"/>
+          FROM flt16_except_person
+               INNER JOIN LATERAL getPerson(flt16_company_id, f_today()) ON emp00_person_id = flt16_person_id
+         WHERE flt16_except_person_id = #{exceptPersonId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) flt16_except_person.countByPersonId — 회사 조건을 더했다(05 §6, 다른 회사 행은 세지 않는다) -->
+    <select id="countByPersonId" resultType="int">
+        SELECT count(*)
+          FROM flt16_except_person
+         WHERE flt16_company_id        = #{companyId}
+           AND flt16_person_id         = #{personId}
+           AND flt16_except_person_id != #{exceptPersonId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertExceptPerson">
+        INSERT INTO flt16_except_person (flt16_except_person_id, flt16_company_id, flt16_person_id, flt16_rpt_start_date, flt16_reason)
+        VALUES (#{exceptPersonId}, #{companyId}, #{req.personId}, CAST(#{req.rptStartDate,jdbcType=VARCHAR} AS date), #{req.reason,jdbcType=VARCHAR})
+    </insert>
+
+    <update id="updateExceptPerson">
+        UPDATE flt16_except_person
+           SET flt16_person_id      = #{req.personId},
+               flt16_rpt_start_date = CAST(#{req.rptStartDate,jdbcType=VARCHAR} AS date),
+               flt16_reason         = #{req.reason,jdbcType=VARCHAR}
+         WHERE flt16_except_person_id = #{req.exceptPersonId}
+           AND flt16_company_id       = #{companyId}
+    </update>
+
+    <delete id="deleteExceptPersons">
+        DELETE FROM flt16_except_person
+         WHERE flt16_company_id = #{companyId}
+           AND flt16_except_person_id IN
+        <foreach collection="exceptPersonIds" item="exceptPersonId" open="(" separator="," close=")">#{exceptPersonId}</foreach>
+    </delete>
+</mapper>

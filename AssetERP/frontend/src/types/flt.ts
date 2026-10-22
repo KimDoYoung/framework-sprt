@@ -533,6 +533,17 @@ export interface FltBuyLockupItem {
   lockupTypeName: string | null;
 }
 
+/** 예외사원 한 행 (J09, AS-IS Flt16_ExceptPersonModel) — 정기보고 매매등록 시작일을 별도로 관리하는 사원 */
+export interface FltExceptPerson {
+  exceptPersonId: number;
+  companyId: number;
+  personId: number;
+  personName: string | null;
+  orgName: string | null;
+  rptStartDate: string | null;
+  reason: string | null;
+}
+
 /** 책임자보고 > 임직원계좌신고내역 (J08) */
 export interface FltCeoAccount {
   accountId: number;

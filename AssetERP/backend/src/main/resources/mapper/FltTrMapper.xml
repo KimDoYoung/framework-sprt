@@ -986,10 +986,10 @@
     </insert>
 
     <!-- AS-IS(IDMS-IC) flt02_emp.selectByDate 중 정기보고 점검(checkPreAppr·checkNextAppr)이 쓰는 열.
-         수정: asseterpdb에 없는 flt16_except_person(예외자 보고시작일)은 뺐다 — 보고시작일은 회사 기준만 -->
+         예외자 보고시작일(flt16_except_person LEFT JOIN)은 J09 예외사원 변환 때(2026-10-22, 테이블 생성 뒤) 되살렸다 -->
     <select id="selectReportEmp" resultType="kr.co.kfs.asseterp.biz.flt.dto.ReportEmpRes">
         SELECT flt02_check_cycle                                                              AS check_cycle
-             , TO_CHAR(COALESCE(flt01_rpt_start_date, '1900-01-01'::date), 'YYYY-MM-DD')      AS rpt_start_date
+             , TO_CHAR(COALESCE(flt16_rpt_start_date, COALESCE(flt01_rpt_start_date, '1900-01-01'::date)), 'YYYY-MM-DD') AS rpt_start_date
              , TO_CHAR(emp01_hire_date, 'YYYY-MM-DD')                                         AS hire_date
              , COALESCE(flt01_no_account_skip_yn, 'false') = 'true'                           AS no_account_skip_yn
           FROM flt02_emp
@@ -1001,6 +1001,7 @@
                                AND flt01_rpt_start_date IS NOT NULL
                              ORDER BY flt01_start_date DESC
                              LIMIT 1 ) flt01 ON TRUE
+               LEFT JOIN flt16_except_person ON flt16_person_id = flt02_person_id
          WHERE flt02_company_id = #{companyId}
            AND flt02_person_id  = #{personId}
            AND flt02_start_date &lt;= CAST(#{stdDate} AS date)

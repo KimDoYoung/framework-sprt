@@ -2,8 +2,7 @@
  * 기준관리 (J09) — 준법감시 > 11. 임직원매매(준감인) > 기준관리 #1145
  * AS-IS: myApp/client/vi/flt/Flt01_Tab_CompanyStd.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L56-133: center = vlc = 툴바(조회 · 등록 · 등록(복사) · 저장 · 삭제 · 종목유형설정 · 매수제한종목 · 예외사원) / 회사 기준 셀 편집 그리드(체크박스 다중).
- * 의무보유기간 열의 편집 아이콘이 조회창 Flt01_Lookup_LockUpCheckType을, [종목유형설정]·[매수제한종목]이 조회창 Flt05_Lookup_ItemType·Flt08_Lookup_LockupItem을 연다.
- * [예외사원](Flt16_Lookup_ExceptPerson)은 asseterpdb에 flt16_except_person 테이블이 없어 변환하지 못했다(03 원칙 1) — 누르면 안내만 한다.
+ * 의무보유기간 열의 편집 아이콘이 조회창 Flt01_Lookup_LockUpCheckType을, [종목유형설정]·[매수제한종목]·[예외사원]이 조회창 Flt05_Lookup_ItemType·Flt08_Lookup_LockupItem·Flt16_Lookup_ExceptPerson을 연다.
  * UX보강(10): 툴바 = SearchBar(UX-01, 조건 없음), 저장 = 저장(n)(UX-03), 편집 날짜 열 120(UX-08), 변경 표시(UX-07)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -21,6 +20,7 @@ import { useGridCrud } from '@/hooks/useGridCrud';
 import { Flt01_Lookup_LockUpCheckType } from './Flt01_Lookup_LockUpCheckType';
 import { Flt05_Lookup_ItemType } from './Flt05_Lookup_ItemType';
 import { Flt08_Lookup_LockupItem } from './Flt08_Lookup_LockupItem';
+import { Flt16_Lookup_ExceptPerson } from './Flt16_Lookup_ExceptPerson';
 
 const gb = gbFor<FltCompanyStd>();
 
@@ -40,6 +40,7 @@ export const Flt01_Tab_CompanyStd: React.FC = () => {
   const [stdDateTypeCodes, setStdDateTypeCodes] = useState<Code[]>([]);
   const [itemTypeOpen, setItemTypeOpen] = useState(false);
   const [lockupItemOpen, setLockupItemOpen] = useState(false);
+  const [exceptPersonOpen, setExceptPersonOpen] = useState(false);
   const [lockupRow, setLockupRow] = useState<FltCompanyStd | null>(null);
 
   const crud = useGridCrud<FltCompanyStd>({
@@ -134,8 +135,8 @@ export const Flt01_Tab_CompanyStd: React.FC = () => {
           <Button type="group" onClick={() => setItemTypeOpen(true)}>종목유형설정</Button>
           {/* [E7] lockupItemButton[매수제한종목].Select (L96) → Flt08_Lookup_LockupItem.open() */}
           <Button type="assign" onClick={() => setLockupItemOpen(true)}>매수제한종목</Button>
-          {/* [E8 생략] exceptEmpButton[예외사원].Select (L103) → Flt16_Lookup_ExceptPerson.open() — flt16_except_person 테이블이 asseterpdb에 없다 */}
-          <Button onClick={() => message.warning('예외사원 설정은 asseterpdb에 예외사원 테이블(flt16_except_person)이 없어 사용할 수 없습니다.')}>예외사원</Button>
+          {/* [E8] exceptEmpButton[예외사원].Select (L103) → Flt16_Lookup_ExceptPerson.open() */}
+          <Button onClick={() => setExceptPersonOpen(true)}>예외사원</Button>
         </>} />
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<FltCompanyStd> crud={crud} columnDefs={columnDefs} />
@@ -143,6 +144,7 @@ export const Flt01_Tab_CompanyStd: React.FC = () => {
       </div>
       <Flt05_Lookup_ItemType open={itemTypeOpen} onClose={() => setItemTypeOpen(false)} />
       <Flt08_Lookup_LockupItem open={lockupItemOpen} onClose={() => setLockupItemOpen(false)} />
+      <Flt16_Lookup_ExceptPerson open={exceptPersonOpen} onClose={() => setExceptPersonOpen(false)} />
       <Flt01_Lookup_LockUpCheckType
         row={lockupRow}
         onResult={saved => crud.replaceRow(saved.companyStdId, saved)}

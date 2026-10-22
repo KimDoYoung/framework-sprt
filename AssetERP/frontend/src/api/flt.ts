@@ -6,7 +6,7 @@ import {
   FltViolate, FltAccount, FltAccountAdmin,FltAccountClose, FltAccountStatus, FltBook, FltBookList, FltBuyLockup, FltLockupStd, FltDocClass, FltInvestLimit, FltItemType, FltItemTypeCode,
   FltAcntTransfer, FltBookMonth, FltEmpLimit, FltRealTr, FltRelateAppr, FltReportCheck, FltRightsExercise, FltTr, FltTrAccount, FltTrCheck, FltTrItem, FltTrList, FltEmpAppr, FltEmpApprDoc, FltEmpInfo, FltEmpInfoSetting, FltTrStatus,
   FltPreApprove, FltPreApproveSetting, FltCeoAccount, FltCeoReportPerson, FltCeoTr, FltCeoAppr,
-  FltCompanyStd, FltCompanyStdLockup, FltBuyLockupItem,
+  FltCompanyStd, FltCompanyStdLockup, FltBuyLockupItem, FltExceptPerson,
 } from '../types/flt';
 
 /** flt(임직원매매) 화면 API (E08~) */
@@ -571,7 +571,25 @@ export const fltApi = {
     return res.data.data ?? 0;
   },
 
-  /** AS-IS flt.Flt05_ItemType.selectUseCount — 지우려는 종목유형 중 매매·보유내역에서 쓰는 것의 이름(`/` 구분), 없으면 null */
+  /** AS-IS flt.Flt16_ExceptPerson.selectByCompanyId — 로그인 회사 */
+  searchExceptPersons: async (): Promise<FltExceptPerson[]> => {
+    const res = await apiClient.get<ApiResponse<FltExceptPerson[]>>('v1/flt/except-persons');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt16_ExceptPerson.update → 저장된 행(요청 순서). 같은 사원이 이미 있으면 서버가 "[이름] 사원은 이미 등록되어 있습니다" */
+  updateExceptPersons: async (rows: FltExceptPerson[]): Promise<FltExceptPerson[]> => {
+    const res = await apiClient.put<ApiResponse<FltExceptPerson[]>>('v1/flt/except-persons', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS flt.Flt16_ExceptPerson.delete → 지운 건수 */
+  deleteExceptPersons: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/flt/except-persons', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS flt.Flt05_ItemType.selectUseCount —지우려는 종목유형 중 매매·보유내역에서 쓰는 것의 이름(`/` 구분), 없으면 null */
   checkItemTypeUse: async (ids: number[]): Promise<string | null> => {
     const res = await apiClient.post<ApiResponse<string | null>>('v1/flt/item-types/use-check', ids);
     return res.data.data ?? null;
