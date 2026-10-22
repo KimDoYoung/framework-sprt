@@ -4,7 +4,7 @@
  * 생성자 L82-110: center = vlc = 툴바(기준 분기(월): 기준년도 · 월/분기 콤보 · 미체크 보기 · [조회][제출][제출취소] · [새로작성] · [엑셀다운로드]) / 그리드.
  * 회사의 체크주기(M 월 / Q 분기)로 콤보 종류를 정하고 기준을 지난 달(분기)로 둔다. 열 때 자동 조회는 없다(원본 그대로 — [조회]를 눌러야 한다).
  * 체크 한 번마다 저장한다(E8). 엑셀은 RD 리포트 서버(Ics31_Rd_ComplianceWrite) 대신 서버가 한 시트 xlsx로 만든다.
- * UX보강(10): 툴바 = SearchBar(UX-01)
+ * UX보강(10): 툴바 = SearchBar(UX-01), 그룹 모두펼치기/접기 = ExpandCollapseButtons(UX-09)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Modal } from 'antd';
@@ -15,6 +15,7 @@ import { errorMessage } from '@/api/client';
 import { IcsComplianceWrite, IcsComplianceWriteItem } from '@/types/ics';
 import { SingleGrid, gbFor, iconCell } from '@/components/grid';
 import { Button } from '@/components/button';
+import { ExpandCollapseButtons } from '@/components/button/ExpandCollapseButtons';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { SearchBar } from '@/components/search';
 import { Ics31_Edit_Reason } from './Ics31_Edit_Reason';
@@ -141,6 +142,10 @@ export const Ics31_Tab_ComplianceWrite: React.FC = () => {
     return out;
   }, [rows, collapsed]);
 
+  // UX-09: 모두펼치기/모두접기 — 지금 목록에 있는 모든 분류를 비우거나 채운다
+  const expandAll = () => setCollapsed(new Set());
+  const collapseAll = () => setCollapsed(new Set(rows.map(r => r.complianceTypeName ?? '')));
+
   // 수정 아이콘 L350-429 (buildGrid의 editCell): 확인된 행은 안내, 작성 행이 없으면 답변 없이 만들고(modelUpdate), 있으면 읽어서(selectById) 사유 창을 연다
   const editReason = async (row: Row) => {
     if (row.confirmYn) { message.info(MSG_CONFIRMED); return; }
@@ -247,6 +252,7 @@ export const Ics31_Tab_ComplianceWrite: React.FC = () => {
               <Button type="cancel" disabled={!enabled} onClick={() => fixChk(false)}>제출취소</Button>
               <Button type="view" disabled={!enabled} onClick={preDelete}>새로작성</Button>
               <Button type="download" disabled={!enabled} onClick={excelDownload}>엑셀다운로드</Button>
+              <ExpandCollapseButtons onExpandAll={expandAll} onCollapseAll={collapseAll} disabled={!enabled || rows.length === 0} />
             </>
           }
         >
