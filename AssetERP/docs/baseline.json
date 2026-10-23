@@ -5109,5 +5109,32 @@
     "note": "docs/work/K/K08-작업기록.md",
     "history": [],
     "id": "K08"
+  },
+  "Biz90_Tab_Limit": {
+    "commit": "dfb420079ba71dafa951006d6b145752ba65d16d",
+    "commit_short": "dfb4200",
+    "branch": "ioc",
+    "commit_date": "2026-10-22",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/biz/Biz04_Lookup_EmpSetup.java": "0b255d4f692177ca2e8749c4c24e2975d87dfd0f",
+      "application/src/main/java/myApp/client/vi/biz/Biz90_Tab_Limit.java": "c456d66d0bc9b4818ee81077140c9424ebf6ed8f",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz04_ProvideSetupModel.java": "467f9b7c1aec4f94fdbb00ddc364642ae3374d30",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz04_ProvideSetupModelProperties.java": "6fc382f0f96d5bc7ddc23076374a7f790338dd4c",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz90_LimitModel.java": "39fce70669aa827387b94fae229ea811d967dd9e",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz90_LimitModelProperties.java": "7024842cfbd8cfda7dde3c86ff1110f7f73f788a",
+      "application/src/main/java/myApp/server/biz/Biz04_ProvideSetup.java": "d0d7864136e67cd9bab875a46a3a8895eecac96d",
+      "application/src/main/java/myApp/server/biz/Biz90_Limit.java": "6e914b64b7b35b60975077800d19f1f02570ccbe",
+      "application/src/main/java/myApp/server/biz/mapper/biz04_provide_setup.xml": "564724aff7c184df2cfd3c6a3e6733feb21dd247",
+      "application/src/main/java/myApp/server/biz/mapper/biz90_limit.xml": "ddec496422295f9ac4f80c271ec751f39a01e751",
+      "application/src/main/java/myApp/server/sys/Sys09_Code.java": "28d486d654b122ebef05ff7d0c2e7c8f8fd59e2d",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-23T09:08:07+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/L/L01-작업기록.md",
+    "history": [],
+    "id": "L01"
   }
 }

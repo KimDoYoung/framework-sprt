@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz90_limit.xml (selectByCompanyId) + UpdateDataModel(biz90_limit)  (L01) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizLimitMapper">
+
+    <sql id="limitColumns">
+        biz90_limit_id                                                                         AS limit_id,
+        biz90_company_id                                                                       AS company_id,
+        biz90_start_date                                                                       AS start_date,
+        biz90_provide_rcv_type                                                                 AS provide_rcv_type,
+        f_cdnm('ProvideRcvType', biz90_provide_rcv_type, biz90_company_id, biz90_start_date)   AS provide_rcv_type_name,
+        biz90_sale_rule_limit1                                                                 AS sale_rule_limit1,
+        biz90_sale_rule_limit2                                                                 AS sale_rule_limit2,
+        biz90_company_limit1                                                                   AS company_limit1,
+        biz90_company_limit2                                                                   AS company_limit2,
+        biz90_company_limit3                                                                   AS company_limit3
+    </sql>
+
+    <!-- AS-IS biz90_limit.selectByCompanyId (IDMS-IC) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizLimitRes">
+        SELECT <include refid="limitColumns"/>
+          FROM biz90_limit
+         WHERE 1=1
+           AND biz90_company_id = #{companyId}
+         ORDER BY biz90_start_date DESC
+    </select>
+
+    <!-- AS-IS biz90_limit.selectById (IDMS-IC) 저장 결과 한 행 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizLimitRes">
+        SELECT <include refid="limitColumns"/>
+          FROM biz90_limit
+         WHERE biz90_company_id = #{companyId}
+           AND biz90_limit_id = #{limitId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Biz90_Limit.update → UpdateDataModel(biz90_limit) INSERT -->
+    <insert id="insert">
+        INSERT INTO biz90_limit (biz90_limit_id, biz90_company_id, biz90_start_date, biz90_provide_rcv_type,
+                                 biz90_sale_rule_limit1, biz90_sale_rule_limit2,
+                                 biz90_company_limit1, biz90_company_limit2, biz90_company_limit3)
+        VALUES (#{req.limitId}, #{companyId}, #{req.startDate}, #{req.provideRcvType},
+                #{req.saleRuleLimit1}, #{req.saleRuleLimit2},
+                #{req.companyLimit1}, #{req.companyLimit2}, #{req.companyLimit3})
+    </insert>
+
+    <!-- AS-IS Biz90_Limit.update → UpdateDataModel UPDATE -->
+    <update id="update">
+        UPDATE biz90_limit
+           SET biz90_start_date       = #{req.startDate},
+               biz90_provide_rcv_type = #{req.provideRcvType},
+               biz90_sale_rule_limit1 = #{req.saleRuleLimit1},
+               biz90_sale_rule_limit2 = #{req.saleRuleLimit2},
+               biz90_company_limit1   = #{req.companyLimit1},
+               biz90_company_limit2   = #{req.companyLimit2},
+               biz90_company_limit3   = #{req.companyLimit3}
+         WHERE biz90_limit_id   = #{req.limitId}
+           AND biz90_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS Biz90_Limit.delete → UpdateDataModel.deleteModel -->
+    <delete id="deleteById">
+        DELETE FROM biz90_limit
+         WHERE biz90_limit_id   = #{limitId}
+           AND biz90_company_id = #{companyId}
+    </delete>
+</mapper>

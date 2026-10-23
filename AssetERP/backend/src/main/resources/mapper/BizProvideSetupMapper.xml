@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz04_provide_setup.xml (selectByProvidePurCode L21, upsert L49)  (L01) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizProvideSetupMapper">
+
+    <!-- AS-IS biz04_provide_setup.selectByProvidePurCode L21 (IDMS-IC) -->
+    <select id="selectByProvidePurCode" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizProvideSetupRes">
+        SELECT COALESCE(biz04_provide_setup_id, rownum)   AS provide_setup_id,
+               #{companyId}                               AS company_id,
+               sys09_code                                 AS provide_content_code,
+               sys09_name                                 AS provide_content_name,
+               COALESCE(biz04_emp_set_yn,'false')         AS emp_set_yn
+          FROM (
+                 SELECT row_number() over(order by sys09_code) AS rownum
+                      , *
+                   FROM sys08_code_kind
+                        INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+                        LEFT OUTER JOIN biz04_provide_setup ON ( biz04_provide_content_cd = sys09_code AND
+                                                                 biz04_company_id         = #{companyId} )
+                  WHERE sys09_company_id = CASE WHEN COALESCE(sys08_sys_yn,'false') = 'true' THEN 0 ELSE #{companyId} END
+                    AND COALESCE(sys09_close_yn,'false') != 'true'
+                    AND f_today() BETWEEN sys09_apply_date AND COALESCE(sys09_close_date,'9999-12-31')
+                    AND sys08_kind_cd = 'ProvideContentCode'
+                    AND sys09_code LIKE #{providePurCode}
+               ) t
+    </select>
+
+    <!-- AS-IS biz04_provide_setup.upsert L49 (IDMS-IC) -->
+    <insert id="upsert">
+        WITH upsert AS ( UPDATE biz04_provide_setup
+                            SET biz04_company_id         = #{companyId}
+                              , biz04_provide_content_cd = #{req.provideContentCode}
+                              , biz04_emp_set_yn         = #{req.empSetYn}
+                          WHERE biz04_provide_setup_id = #{req.provideSetupId}
+                         RETURNING *
+        ) INSERT
+            INTO biz04_provide_setup
+          SELECT f_create_seq()
+               , #{companyId}
+               , #{req.provideContentCode}
+               , #{req.empSetYn}
+           WHERE NOT EXISTS ( SELECT * from upsert )
+    </insert>
+</mapper>
