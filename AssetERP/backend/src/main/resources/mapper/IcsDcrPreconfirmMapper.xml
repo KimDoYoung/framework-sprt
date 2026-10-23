@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ics/mapper/ics40_dcr_preconfirm.xml + ics41_dcr_type.xml + sys99_print(insertRdDcrPreConfirm) + UpdateDataModel(ics41_dcr_type)  (M05·M06) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsDcrPreconfirmMapper">
+
+    <!-- AS-IS ics40_dcr_preconfirm.selectByConfirm L177 (IDMS-IC) SELECT 절 — `*`는 DTO 열로 명시 -->
+    <sql id="preconfirmSelect">
+        SELECT ics40_dcr_preconfirm_id                                                              AS dcr_preconfirm_id,
+               ics40_reg_date                                                                       AS reg_date,
+               ics40_dcr_type_cd                                                                    AS dcr_type_code,
+               ics41_dcr_type_nm                                                                    AS dcr_type_name,
+               (CASE WHEN ics40_appr_no_prefix IS NULL THEN '' ELSE ics40_appr_no_prefix END)       AS appr_no,
+               ics40_appr_no_prefix                                                                 AS appr_no_prefix,
+               ics40_provide_co                                                                     AS provide_co,
+               ics40_content                                                                        AS content,
+               (f_emp_kor_nm(ics40_person_id) || '(' || f_get_emptrans(ics40_person_id, ics40_reg_date::date, 'org_code_nm') || ')') AS person_name,
+               ics40_appr_id                                                                        AS appr_id,
+               f_emp_kor_nm(ics40_confirmer_id)                                                     AS confirmer_name,
+               ics40_confirm_date                                                                   AS confirm_date,
+               ics40_status_cd                                                                      AS status_code,
+               f_cdnm('StatusCode', ics40_status_cd, ics40_company_id, f_sysdate())                 AS status_name,
+               ics40_confirm_msg                                                                    AS confirm_msg,
+               ics40_reg_emp_msg                                                                    AS reg_emp_msg,
+               (CASE WHEN ics40_confirm_msg IS NOT NULL THEN '있음'
+                     WHEN ics40_reg_emp_msg IS NOT NULL THEN '있음'
+                     ELSE '' END)                                                                   AS msg_yn_str,
+               f_cdnm('AdType', ics40_ad_type, ics40_company_id, f_sysdate())                       AS ad_type_name,
+               f_cdnm('MediaType', ics40_media_type, ics40_company_id, f_sysdate())                 AS media_type_name,
+               ics40_ad_item_nm                                                                     AS ad_item_name,
+               ics40_ad_content                                                                     AS ad_content,
+               ics40_start_date                                                                     AS start_date,
+               ics40_close_date                                                                     AS close_date,
+               ics40_spec                                                                           AS spec,
+               ics40_qty_cnt                                                                        AS qty_cnt,
+               ics40_pre_appr_no                                                                    AS pre_appr_no
+          FROM ics40_dcr_preconfirm
+               INNER JOIN ics41_dcr_type ON (ics41_company_id = ics40_company_id AND ics41_dcr_type_cd = ics40_dcr_type_cd)
+    </sql>
+
+    <sql id="preconfirmWhere">
+         WHERE ics40_company_id = #{companyId}
+           AND ics40_reg_date BETWEEN #{startDate} AND #{closeDate}
+           AND ics40_dcr_type_cd LIKE #{dcrTypeCode}
+           AND CONCAT((CASE WHEN ics40_appr_no_prefix IS NULL
+                            THEN ''
+                            ELSE ics40_appr_no_prefix || LPAD(ics40_appr_no_seq::TEXT, 3, '0') END),
+                      ics40_provide_co, ics40_content, f_emp_kor_nm(ics40_person_id), ics40_dcr_type_cd) ILIKE #{searchText}
+           AND COALESCE(ics40_status_cd, '') IN ('10', '20', '80')
+         ORDER BY ics40_dcr_preconfirm_id DESC
+    </sql>
+
+    <!-- AS-IS ics40_dcr_preconfirm.selectByConfirm L177 (IDMS-IC) — 검색어는 서비스가 %…%로 감싼다 -->
+    <select id="selectByConfirm" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmRes">
+        <include refid="preconfirmSelect"/>
+        <include refid="preconfirmWhere"/>
+    </select>
+
+    <!-- AS-IS ics40_dcr_preconfirm.selectByReviewConfirm L220 (IDMS-IC) — 살아 있는 SQL은 selectByConfirm과 같다(권한 조건은 원본도 주석 처리) -->
+    <select id="selectByReviewConfirm" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmRes">
+        <include refid="preconfirmSelect"/>
+        <include refid="preconfirmWhere"/>
+    </select>
+
+    <!-- AS-IS ics40_dcr_preconfirm.selectByCompanyId (IDMS-IC) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmRes">
+        <include refid="preconfirmSelect"/>
+         WHERE ics40_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS ics40_dcr_preconfirm.selectById (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsDcrPreconfirmRes">
+        <include refid="preconfirmSelect"/>
+         WHERE ics40_company_id = #{companyId}
+           AND ics40_dcr_preconfirm_id = #{dcrPreconfirmId}
+    </select>
+
+    <!-- AS-IS ics40_dcr_preconfirm.countByApprNo L392 (IDMS-IC) -->
+    <select id="countByApprNo" resultType="int">
+        SELECT COUNT(*)
+          FROM ics40_dcr_preconfirm
+         WHERE ics40_company_id  = #{companyId}
+           AND ics40_pre_appr_no = #{apprNo}
+    </select>
+
+    <!-- AS-IS ics40_dcr_preconfirm.updateByStatus01 L399 (IDMS-IC) -->
+    <update id="updateByStatus01">
+        UPDATE ics40_dcr_preconfirm
+           SET ics40_appr_no_prefix = (SELECT #{year} || '-' || #{dcrTypeCode} || LPAD(CAST(MAX(COALESCE(ics40_appr_no_seq, 0)) + 1 AS TEXT), 3, '0')
+                                         FROM ics40_dcr_preconfirm
+                                        WHERE ics40_company_id = #{companyId}
+                                          AND ics40_dcr_type_cd = #{dcrTypeCode}),
+               ics40_appr_no_seq    = (SELECT MAX(COALESCE(ics40_appr_no_seq, 0)) + 1
+                                         FROM ics40_dcr_preconfirm
+                                        WHERE ics40_company_id = #{companyId}
+                                          AND ics40_dcr_type_cd = #{dcrTypeCode}),
+               ics40_status_cd      = #{statusCode},
+               ics40_confirmer_id   = #{confirmerId},
+               ics40_confirm_date   = f_sysdate()
+         WHERE ics40_company_id = #{companyId}
+           AND ics40_dcr_preconfirm_id = #{dcrPreconfirmId}
+    </update>
+
+    <!-- AS-IS ics40_dcr_preconfirm.updateByStatus02 L420 (IDMS-IC) -->
+    <update id="updateByStatus02">
+        UPDATE ics40_dcr_preconfirm
+           SET ics40_appr_no_prefix = null,
+               ics40_appr_no_seq    = null,
+               ics40_status_cd      = #{statusCode},
+               ics40_confirmer_id   = null,
+               ics40_confirm_date   = null
+         WHERE ics40_company_id = #{companyId}
+           AND ics40_dcr_preconfirm_id = #{dcrPreconfirmId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel(ics40_dcr_preconfirm) UPDATE — Ics40_Edit_Msg가 바꾸는 준감인 의견만 -->
+    <update id="updateConfirmMsg">
+        UPDATE ics40_dcr_preconfirm
+           SET ics40_confirm_msg = #{confirmMsg}
+         WHERE ics40_company_id = #{companyId}
+           AND ics40_dcr_preconfirm_id = #{dcrPreconfirmId}
+    </update>
+
+    <select id="selectSkipYn" resultType="boolean">
+        SELECT COALESCE(sys01_dcr_preconfirm_skip_yn, 'false') = 'true'
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId L695 (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS sys99_print.insert L500 (IDMS-IC) — Sys99_Print.insertRdDcrPreConfirm이 채우는 열만 -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_string01, sys99_string02, sys99_string03, sys99_text01
+               , sys99_string04, sys99_string05, sys99_date02, sys99_string06, sys99_text02
+               , sys99_text03, sys99_string07, sys99_string08, sys99_string09, sys99_string10
+               , sys99_date03, sys99_date04, sys99_string11, sys99_string12, sys99_string13
+               , sys99_long01 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{row.regDate}, #{row.dcrTypeName}, #{row.apprNoPrefix}, #{row.provideCo}, #{row.content}
+               , #{row.personName}, #{row.confirmerName}, #{row.confirmDate}, #{row.statusName}, #{row.confirmMsg}
+               , #{row.regEmpMsg}, #{row.adTypeName}, #{row.mediaTypeName}, #{row.adItemName}, #{row.adContent}
+               , #{row.startDate}, #{row.closeDate}, #{row.spec}, #{row.qtyCnt}, #{row.preApprNo}
+               , #{row.dcrPreconfirmId} )
+    </insert>
+
+    <!-- ===== Ics41_Lookup_DcrType ===== -->
+
+    <sql id="dcrTypeSelect">
+        SELECT ics41_dcr_type_id                      AS dcr_type_id,
+               ics41_dcr_type_cd                      AS dcr_type_code,
+               ics41_dcr_type_nm                      AS dcr_type_name,
+               COALESCE(ics41_ad_yn, 'false') = 'true'  AS ad_yn,
+               COALESCE(ics41_use_yn, 'false') = 'true' AS use_yn
+          FROM ics41_dcr_type
+    </sql>
+
+    <!-- AS-IS ics41_dcr_type.selectByText (IDMS-IC) -->
+    <select id="selectDcrTypes" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsDcrTypeRes">
+        <include refid="dcrTypeSelect"/>
+         WHERE ics41_company_id = #{companyId}
+           AND CONCAT(ics41_dcr_type_cd, ics41_dcr_type_nm) ILIKE #{searchText}
+           AND COALESCE(ics41_use_yn, 'false') LIKE #{useYn}
+    </select>
+
+    <!-- AS-IS sys09_code.selectIcs41DcrType (IDMS-IC) -->
+    <select id="selectDcrTypeOptions" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsDcrTypeOption">
+        SELECT ics41_dcr_type_cd AS code,
+               ics41_dcr_type_nm AS name
+          FROM ics41_dcr_type
+         WHERE ics41_company_id = #{companyId}
+           AND COALESCE(ics41_use_yn, 'false') = 'true'
+         ORDER BY ics41_dcr_type_cd
+    </select>
+
+    <!-- AS-IS ics41_dcr_type.adYnCheck (IDMS-IC) -->
+    <select id="selectAdYn" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsDcrTypeRes">
+        <include refid="dcrTypeSelect"/>
+         WHERE ics41_company_id = #{companyId}
+           AND UPPER(ics41_dcr_type_cd) = UPPER(#{dcrTypeCode})
+           AND ics41_use_yn = 'true'
+    </select>
+
+    <!-- AS-IS ics41_dcr_type.selectById (IDMS-IC) -->
+    <select id="selectDcrTypeById" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsDcrTypeRes">
+        <include refid="dcrTypeSelect"/>
+         WHERE ics41_dcr_type_id = #{dcrTypeId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(ics41_dcr_type) 동적 INSERT — 회사는 로그인 정보 -->
+    <insert id="insertDcrType">
+        INSERT INTO ics41_dcr_type (ics41_dcr_type_id, ics41_company_id, ics41_dcr_type_cd, ics41_dcr_type_nm, ics41_ad_yn, ics41_use_yn)
+        VALUES (#{req.dcrTypeId}, #{companyId}, #{req.dcrTypeCode}, #{req.dcrTypeName}, CAST(#{req.adYn} AS TEXT), CAST(#{req.useYn} AS TEXT))
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(ics41_dcr_type) 동적 UPDATE — 로그인 회사 행만 -->
+    <update id="updateDcrType">
+        UPDATE ics41_dcr_type
+           SET ics41_dcr_type_cd = #{req.dcrTypeCode},
+               ics41_dcr_type_nm = #{req.dcrTypeName},
+               ics41_ad_yn       = CAST(#{req.adYn} AS TEXT),
+               ics41_use_yn      = CAST(#{req.useYn} AS TEXT)
+         WHERE ics41_dcr_type_id = #{req.dcrTypeId}
+           AND ics41_company_id  = #{companyId}
+    </update>
+
+    <!-- AS-IS Ics41_DcrType.delete (UpdateDataModel.deleteModel) -->
+    <delete id="deleteDcrType">
+        DELETE FROM ics41_dcr_type
+         WHERE ics41_dcr_type_id = #{dcrTypeId}
+           AND ics41_company_id  = #{companyId}
+    </delete>
+</mapper>

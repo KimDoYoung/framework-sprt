@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { IcsChecklistUser, ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsChecklistWrite, IcsChecklistWriteItem, IcsComplianceConfirm, IcsComplianceReportRow, IcsComplianceReportAppr, IcsChecklistConfirm, IcsChecklistRelateAppr, ChecklistConfirmParams, IcsChecklistStatus, IcsChecklistStatusDetail, IcsExtrActivity, IcsExtrActivitySaveReq } from '../types/ics';
+import { IcsChecklistUser, ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsChecklistWrite, IcsChecklistWriteItem, IcsComplianceConfirm, IcsComplianceReportRow, IcsComplianceReportAppr, IcsChecklistConfirm, IcsChecklistRelateAppr, ChecklistConfirmParams, IcsChecklistStatus, IcsChecklistStatusDetail, IcsExtrActivity, IcsExtrActivitySaveReq, IcsDcrPreconfirm, IcsDcrType, IcsDcrTypeOption } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 /** 파일을 받아 저장한다(blob). 오류 응답은 메시지로 바꿔 던진다 */
@@ -824,6 +824,74 @@ export const icsApi = {
   /** AS-IS ics.Ics35_ExtrActivity.delete → 지운 건수 */
   deleteExtrActivities: async (extrActivityIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/ics/extr-activities', { data: extrActivityIds });
+    return res.data.data;
+  },
+
+  // ── M05·M06 준감인 사전확인대장 (Ics40_Tab_DcrPreConfirm·Ics40_Tab_DcrReviewConfirm) ──
+
+  /** AS-IS ics.Ics40_DcrPreconfirm.selectByConfirm(M05) / selectByReviewConfirm(M06). dcrTypeCode '%' = 전체 */
+  searchDcrPreconfirms: async (review: boolean, startDate: string, closeDate: string, dcrTypeCode: string, searchText: string): Promise<IcsDcrPreconfirm[]> => {
+    const res = await apiClient.get<ApiResponse<IcsDcrPreconfirm[]>>(`v1/ics/dcr-preconfirms${review ? '/review' : ''}`, { params: { startDate, closeDate, dcrTypeCode, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** 회사 설정 dcrPreconfirmSkipYn (true면 승인자·승인일·승인여부 열 없음) */
+  getDcrPreconfirmSkipYn: async (): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/ics/dcr-preconfirms/skip-yn');
+    return res.data.data === true;
+  },
+
+  /** AS-IS ics.Ics40_DcrPreconfirm.updateByStatus — statusCode 20 승인 / 10 취소, 처리 건수 */
+  updateDcrPreconfirmStatus: async (statusCode: '10' | '20', items: { dcrPreconfirmId: number; dcrTypeCode: string | null; apprNo: string | null }[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/ics/dcr-preconfirms/status', { statusCode, items });
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics40_DcrPreconfirm.modelUpdate (Ics40_Edit_Msg) → 저장된 행 */
+  updateDcrPreconfirmConfirmMsg: async (dcrPreconfirmId: number, confirmMsg: string | null): Promise<IcsDcrPreconfirm> => {
+    const res = await apiClient.put<ApiResponse<IcsDcrPreconfirm>>(`v1/ics/dcr-preconfirms/${dcrPreconfirmId}/confirm-msg`, { confirmMsg });
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdDcrPreConfirm → 출력 그룹 ID (RD rdGroupId) */
+  rdDownloadDcrPreconfirm: async (startDate: string, closeDate: string, dcrTypeCode: string, searchText: string): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/ics/dcr-preconfirms/rd-download', { startDate, closeDate, dcrTypeCode, searchText });
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics41_DcrType.selectByText (전체) */
+  searchDcrTypes: async (): Promise<IcsDcrType[]> => {
+    const res = await apiClient.get<ApiResponse<IcsDcrType[]>>('v1/ics/dcr-preconfirms/dcr-types');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys00_Common.selectIcs41DcrType (콤보, 사용 중인 분류) */
+  getDcrTypeOptions: async (): Promise<IcsDcrTypeOption[]> => {
+    const res = await apiClient.get<ApiResponse<IcsDcrTypeOption[]>>('v1/ics/dcr-preconfirms/dcr-types/options');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics41_DcrType.adYnCheck — 없는 코드는 null */
+  checkDcrTypeAdYn: async (dcrTypeCode: string): Promise<IcsDcrType | null> => {
+    const res = await apiClient.get<ApiResponse<IcsDcrType | null>>('v1/ics/dcr-preconfirms/dcr-types/ad-yn', { params: { dcrTypeCode } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS ics.Ics40_DcrPreconfirm.selectByCompanyId — 사전확인대장에 쓰인 대장분류코드 */
+  getDcrTypeUsedCodes: async (): Promise<string[]> => {
+    const res = await apiClient.get<ApiResponse<string[]>>('v1/ics/dcr-preconfirms/dcr-types/used-codes');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics41_DcrType.update → 저장된 행(요청 순서) */
+  saveDcrTypes: async (rows: IcsDcrType[]): Promise<IcsDcrType[]> => {
+    const res = await apiClient.put<ApiResponse<IcsDcrType[]>>('v1/ics/dcr-preconfirms/dcr-types', rows);
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics41_DcrType.delete → 지운 건수 */
+  deleteDcrTypes: async (dcrTypeIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/ics/dcr-preconfirms/dcr-types', { data: dcrTypeIds });
     return res.data.data;
   },
 };

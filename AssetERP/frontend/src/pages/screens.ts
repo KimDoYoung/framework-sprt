@@ -68,6 +68,8 @@ import { Ics17_Tab_UserRequest } from './ics/Ics17_Tab_UserRequest';
 import { Ics30_Tab_Compliance } from './ics/Ics30_Tab_Compliance';
 import { Ics35_Tab_ExtrActivity } from './ics/Ics35_Tab_ExtrActivity';
 import { Ics35_Tab_ExtrActivityList } from './ics/Ics35_Tab_ExtrActivityList';
+import { Ics40_Tab_DcrPreConfirm } from './ics/Ics40_Tab_DcrPreConfirm';
+import { Ics40_Tab_DcrReviewConfirm } from './ics/Ics40_Tab_DcrReviewConfirm';
 import { Biz90_Tab_Limit } from './biz/Biz90_Tab_Limit';
 import { Biz01_Tab_Card } from './biz/Biz01_Tab_Card';
 import { Biz01_Tab_Other } from './biz/Biz01_Tab_Other';
@@ -247,6 +249,8 @@ export const SCREENS: Record<string, React.FC> = {
   Ics30_Tab_Compliance, // E05 (+ E05-1 예외사원 등록 Emp33_Lookup_ExceptBiz)
   Ics35_Tab_ExtrActivity, // M01 (+ Ics35_Edit_ExtrActivity·Ics35_Grid_FileList·Sys10_Lookup_File, 전자결재 편집창은 다음 단계)
   Ics35_Tab_ExtrActivityList, // M02 (짝 M01, 전자결재 편집창은 다음 단계)
+  Ics40_Tab_DcrPreConfirm, // M05 (+ Ics41_Lookup_DcrType·Ics40_Edit_Msg, 전자결재 편집창은 다음 단계)
+  Ics40_Tab_DcrReviewConfirm, // M06 (짝 M05, 읽기 전용)
   Biz90_Tab_Limit, // L01 (메뉴 #1130. 하위 Biz04_Lookup_EmpSetup)
   Biz01_Tab_Card, // L02 (메뉴 #1131. 하위 Biz01_Edit_Card·Biz02_Grid_PersonList(InternalList·ExternalList)·Biz01_Lookup_CardManagement·Biz05_Lookup_RelateAppr·Biz05_Lookup_RelateFile. 1단계: 전자결재·거래처 조회창은 안내만)
   Biz01_Tab_Other, // L03 (메뉴 #1132. 하위 Biz01_Edit_Other. 사람 목록·증빙자료 창은 L02 부품 재사용)

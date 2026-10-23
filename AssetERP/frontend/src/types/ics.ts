@@ -598,3 +598,47 @@ export interface IcsExtrActivitySaveReq {
   activityDesc: string;
   activityPay: string | null;
 }
+
+/** M05·M06 AS-IS Ics40_DcrPreconfirmModel (준감인 사전확인대장) */
+export interface IcsDcrPreconfirm {
+  dcrPreconfirmId: number;
+  regDate: string | null;
+  dcrTypeCode: string | null;
+  dcrTypeName: string | null;
+  apprNo: string | null;
+  apprNoPrefix: string | null;
+  provideCo: string | null;
+  content: string | null;
+  personName: string | null;
+  apprId: number | null;
+  confirmerName: string | null;
+  confirmDate: string | null;
+  statusCode: string | null;
+  statusName: string | null;
+  confirmMsg: string | null;
+  regEmpMsg: string | null;
+  msgYnStr: string | null;
+  adTypeName: string | null;
+  mediaTypeName: string | null;
+  adItemName: string | null;
+  adContent: string | null;
+  startDate: string | null;
+  closeDate: string | null;
+  spec: string | null;
+  qtyCnt: string | null;
+  preApprNo: string | null;
+}
+
+/** M05 AS-IS Ics41_DcrTypeModel (대장분류) — dcrTypeId 0 이하는 새 행 */
+export interface IcsDcrType {
+  dcrTypeId: number;
+  dcrTypeCode: string;
+  dcrTypeName: string;
+  adYn: boolean;
+  useYn: boolean;
+}
+
+export interface IcsDcrTypeOption {
+  code: string;
+  name: string;
+}
