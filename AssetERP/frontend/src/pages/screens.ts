@@ -66,6 +66,7 @@ import { Ics17_Tab_UserRequestAdmin } from './ics/Ics17_Tab_UserRequestAdmin';
 import { Ics17_Tab_UserRequest } from './ics/Ics17_Tab_UserRequest';
 import { Ics30_Tab_Compliance } from './ics/Ics30_Tab_Compliance';
 import { Biz90_Tab_Limit } from './biz/Biz90_Tab_Limit';
+import { Biz01_Tab_Card } from './biz/Biz01_Tab_Card';
 import { Ics15_Tab_ChecklistWrite } from './ics/Ics15_Tab_ChecklistWrite';
 import { Ics15_Tab_ChecklistConfirm } from './ics/Ics15_Tab_ChecklistConfirm';
 import { Ics15_Tab_ChecklistStatus } from './ics/Ics15_Tab_ChecklistStatus';
@@ -232,6 +233,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ics17_Tab_UserRequest, // H11 (+ Ics17_Edit_UserRequest, Ics17_Lookup_LawContent user·Ics17_Grid_FileList 재사용)
   Ics30_Tab_Compliance, // E05 (+ E05-1 예외사원 등록 Emp33_Lookup_ExceptBiz)
   Biz90_Tab_Limit, // L01 (메뉴 #1130. 하위 Biz04_Lookup_EmpSetup)
+  Biz01_Tab_Card, // L02 (메뉴 #1131. 하위 Biz01_Edit_Card·Biz02_Grid_PersonList(InternalList·ExternalList)·Biz01_Lookup_CardManagement·Biz05_Lookup_RelateAppr·Biz05_Lookup_RelateFile. 1단계: 전자결재·거래처 조회창은 안내만)
   Ics15_Tab_ChecklistWrite, // K05 (+ Ics15_Edit_Reason. 보기 창은 K04의 Ics10_Edit_Checklist readOnly)
   Ics15_Tab_ChecklistConfirm, // K06 (+ Ics16_Lookup_RelateAppr. 보기 창은 K04의 Ics10_Edit_Checklist readOnly)
   Ics15_Tab_ChecklistStatus, // K07 (+ Ics15_Lookup_ChecklistStatusDetail. 보기 창은 K04의 Ics10_Edit_Checklist readOnly)

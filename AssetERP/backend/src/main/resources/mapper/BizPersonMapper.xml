@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz02_person.xml (selectByInternal·selectByExternal·selectByEmpId·insert) + UpdateDataModel(biz02_person) DELETE
+     + biz04_provide_setup.selectByProvideContentCode  (L02) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizPersonMapper">
+
+    <!-- AS-IS biz02_person.selectByInternal L40 (IDMS-IC) -->
+    <select id="selectByInternal" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizPersonRes">
+        SELECT a.biz02_person_id                                                 AS person_id
+             , a.biz02_promo_id                                                  AS promo_id
+             , a.biz02_emp_yn = 'true'                                           AS emp_yn
+             , a.biz02_emp_id                                                    AS emp_id
+             , f_emp_kor_nm(a.biz02_emp_id)                                      AS emp_name
+             , f_org_nm(c.emp03_org_code_id, b.biz01_provide_date)               AS org_name
+             , NULL::varchar                                                     AS target_company_name
+             , NULL::varchar                                                     AS target_emp_name
+             , NULL::varchar                                                     AS target_org_name
+          FROM biz02_person a
+               LEFT OUTER JOIN biz01_promo b ON a.biz02_promo_id = b.biz01_promo_id
+               LEFT OUTER JOIN emp03_trans c ON (a.biz02_emp_id = c.emp03_person_id
+                                             AND NOT EXISTS ( SELECT 1
+                                                                FROM emp04_add_title
+                                                               WHERE emp04_add_person_id = a.biz02_emp_id
+                                                                 AND ( emp04_start_date                         >  b.biz01_provide_date OR
+                                                                       COALESCE(emp04_close_date,'9999-12-31')  &lt;  b.biz01_provide_date ) )
+                                             AND emp03_trans_date = (SELECT max(x.emp03_trans_date)
+                                                                       FROM emp03_trans x
+                                                                      WHERE x.emp03_person_id = biz02_emp_id
+                                                                        AND x.emp03_trans_date  &lt;=  b.biz01_provide_date))
+         WHERE 1=1
+           AND b.biz01_company_id = #{companyId}
+           AND biz02_promo_id = #{promoId}
+           AND biz02_emp_yn = 'true'
+    </select>
+
+    <!-- AS-IS biz02_person.selectByExternal L62 (IDMS-IC) -->
+    <select id="selectByExternal" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizPersonRes">
+        SELECT a.biz02_person_id                AS person_id
+             , a.biz02_promo_id                 AS promo_id
+             , a.biz02_emp_yn = 'true'          AS emp_yn
+             , a.biz02_emp_id                   AS emp_id
+             , NULL::varchar                    AS emp_name
+             , NULL::varchar                    AS org_name
+             , a.biz02_target_company_nm        AS target_company_name
+             , a.biz02_target_emp_nm            AS target_emp_name
+             , a.biz02_target_org_nm            AS target_org_name
+          FROM biz02_person a
+               INNER JOIN biz01_promo b ON a.biz02_promo_id = b.biz01_promo_id
+         WHERE 1=1
+           AND b.biz01_company_id = #{companyId}
+           AND biz02_promo_id = #{promoId}
+           AND biz02_emp_yn = 'false'
+    </select>
+
+    <!-- AS-IS biz02_person.selectByEmpId L171 (IDMS-IC) — 등록여부 체크 -->
+    <select id="countByEmpId" resultType="int">
+        SELECT COUNT(*)
+          FROM biz02_person
+         WHERE biz02_promo_id = #{promoId}
+           AND biz02_emp_id   = #{empId}
+    </select>
+
+    <!-- 내역이 로그인 회사 것인지 (보안 보강 — AS-IS는 ID만 본다) -->
+    <select id="countPromo" resultType="int">
+        SELECT COUNT(*)
+          FROM biz01_promo
+         WHERE biz01_promo_id   = #{promoId}
+           AND biz01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS biz02_person.insert L178 (IDMS-IC) — 직원 -->
+    <insert id="insertEmp">
+        INSERT INTO biz02_person (biz02_person_id, biz02_promo_id, biz02_emp_yn, biz02_emp_id)
+        VALUES (#{personId}, #{promoId}, 'true', #{empId})
+    </insert>
+
+    <!-- AS-IS Biz02_Person.delete → UpdateDataModel.deleteModel — 로그인 회사 내역의 인원만 -->
+    <delete id="deleteById">
+        DELETE FROM biz02_person
+         WHERE biz02_person_id = #{personId}
+           AND biz02_promo_id IN (SELECT biz01_promo_id FROM biz01_promo WHERE biz01_company_id = #{companyId})
+    </delete>
+
+    <!-- AS-IS biz04_provide_setup.selectByProvideContentCode L42 (IDMS-IC) — 직원 자동등록 여부 -->
+    <select id="selectEmpSetYn" resultType="string">
+        SELECT biz04_emp_set_yn
+          FROM biz04_provide_setup
+         WHERE biz04_company_id         = #{companyId}
+           AND biz04_provide_content_cd = #{provideContentCode}
+    </select>
+</mapper>

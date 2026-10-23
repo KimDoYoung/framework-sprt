@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz01_promo.xml (selectByCard·closeCheck·noteUpdate·updateAccount01/02) + UpdateDataModel(biz01_promo)
+     + sys00_common.selectByProvideContentCode + dcr01_class_tree.selectByLinkCode + sys99_print.deleteByPersonId·insert  (L02) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizPromoMapper">
+
+    <!-- AS-IS biz01_promo.selectByCard L773 (IDMS-IC) — 그리드·편집·출력에 쓰는 열만 별칭으로 -->
+    <select id="selectByCard" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizPromoCardRes">
+        SELECT a.biz01_promo_id                                                                                 AS promo_id
+             , COALESCE(a.biz01_close_yn, 'false') = 'true'                                                     AS close_yn
+             , CASE WHEN COALESCE(a.biz01_close_yn, 'false') = 'true' THEN '마감' ELSE '' END                    AS close_name
+             , crd01_card_nm                                                                                    AS html_card_name
+             , b.crd02_approval_dt                                                                              AS approval_dt
+             , b.crd02_franchise_nm                                                                             AS franchise_name
+             , b.crd02_sector_nm                                                                                AS sector_name
+             , b.crd02_approval_amount                                                                          AS approval_amount
+             , a.biz01_provide_pur_cd                                                                           AS provide_pur_code
+             , f_cdnm('ProvidePurCode',     a.biz01_provide_pur_cd,     a.biz01_company_id, a.biz01_provide_date) AS provide_pur_name
+             , a.biz01_provide_content_cd                                                                       AS provide_content_code
+             , f_cdnm('ProvideContentCode', a.biz01_provide_content_cd, a.biz01_company_id, a.biz01_provide_date) AS provide_content_name
+             , a.biz01_account_code_id                                                                          AS account_code_id
+             , CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||d.act01_account_nm AS account_name
+             , c.biz02_count                                                                                    AS total_peple
+             , TRUNC(a.biz01_provide_amt / (CASE WHEN a.biz01_provide_rcv_type = '2'
+                                                 THEN f_nvl(c.biz02_emp_count,1)
+                                                 ELSE f_nvl(c.biz02_count    ,1)
+                                            END))                                                               AS average_price
+             , a.biz01_note                                                                                     AS note
+          FROM biz01_promo a
+               INNER JOIN crd01_card ON crd01_card_id = biz01_card_id
+               INNER JOIN crd02_data b ON crd02_data_id = a.biz01_card_data_id
+               INNER JOIN sys01_company ON sys01_company_id = biz01_company_id
+               LEFT OUTER JOIN LATERAL ( SELECT COUNT(*)                                                                  AS biz02_count
+                                              , SUM(CASE WHEN COALESCE(biz02_emp_yn,'false') = 'true' THEN 1 ELSE 0 END) AS biz02_emp_count
+                                           FROM biz02_person
+                                          WHERE biz02_promo_id = biz01_promo_id
+                                       ) c ON TRUE
+               LEFT OUTER JOIN act01_account_code d ON d.act01_account_code_id = a.biz01_account_code_id
+         WHERE 1=1
+           AND biz01_company_id = #{companyId}
+           AND (
+                 (sys01_card_real_user_yn = 'true' AND biz01_real_person_id = #{personId})
+              OR ( (sys01_card_real_user_yn IS DISTINCT FROM 'true')
+                    AND #{personId} IN (
+                          SELECT crd03_person_id
+                            FROM crd03_trans
+                                 INNER JOIN crd01_card
+                                         ON crd01_card_id = crd03_card_id
+                           WHERE a.biz01_provide_date
+                                 BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,to_date('29991231','yyyyMMdd'))
+                             AND a.biz01_card_id = crd03_card_id
+                      )
+                 )
+               )
+           AND biz01_provide_date BETWEEN #{startDate} AND #{closeDate}
+           AND CONCAT(crd01_card_nm,crd02_franchise_nm,crd02_sector_nm, biz01_note) ILIKE #{searchText}
+         ORDER BY biz01_provide_date
+    </select>
+
+    <!-- AS-IS biz01_promo.closeCheck L2267 (IDMS-IC) — 로그인 회사 조건은 보안 보강 -->
+    <select id="countClosed" resultType="int">
+        SELECT COUNT(*)
+          FROM biz01_promo
+         WHERE biz01_company_id = #{companyId}
+           AND biz01_promo_id IN
+           <foreach collection="promoIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+           AND biz01_close_yn = 'true'
+    </select>
+
+    <!-- AS-IS Biz01_Promo.modelUpdate → UpdateDataModel(biz01_promo) UPDATE — 화면이 바꾸는 4열 -->
+    <update id="update">
+        UPDATE biz01_promo
+           SET biz01_provide_pur_cd     = #{req.providePurCode}
+             , biz01_provide_content_cd = #{req.provideContentCode}
+             , biz01_account_code_id    = #{req.accountCodeId}
+             , biz01_note               = #{req.note}
+         WHERE biz01_promo_id   = #{promoId}
+           AND biz01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS biz01_promo.noteUpdate L2372 (IDMS-IC) -->
+    <update id="updateNote">
+        UPDATE biz01_promo
+           SET biz01_note = #{note}
+         WHERE biz01_promo_id   = #{promoId}
+           AND biz01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS biz01_promo.updateAccount01 L2346 (IDMS-IC) -->
+    <update id="updateAccountWithTax">
+        UPDATE biz01_promo
+           SET biz01_provide_pur_cd     = #{providePurCode}
+             , biz01_provide_content_cd = #{provideContentCode}
+             , biz01_account_code_id    = #{accountId}
+             , biz01_tax_type           = #{taxType}
+             , biz01_note               = #{note}
+         WHERE biz01_promo_id   = #{promoId}
+           AND biz01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS biz01_promo.updateAccount02 L2356 (IDMS-IC) -->
+    <update id="updateAccount">
+        UPDATE biz01_promo
+           SET biz01_provide_pur_cd     = #{providePurCode}
+             , biz01_provide_content_cd = #{provideContentCode}
+             , biz01_account_code_id    = #{accountId}
+             , biz01_note               = #{note}
+         WHERE biz01_promo_id   = #{promoId}
+           AND biz01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS sys00_common.selectByProvideContentCode L239 (IDMS-IC) -->
+    <select id="selectProvideAccounts" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizAccountOptionRes">
+        SELECT act01_account_code_id                                                                           AS account_code_id
+             , act01_account_cd                                                                                AS account_code
+             , CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||act01_account_nm  AS account_name
+          FROM act14_link
+               INNER JOIN act01_account_code ON ( act01_company_id = act14_company_id AND
+                                                  act01_account_cd = act14_account_cd )
+         WHERE act14_company_id         = #{companyId}
+           AND act14_provide_content_cd = #{provideContentCode}
+         ORDER BY COALESCE(act14_seq, act14_account_cd::numeric)
+    </select>
+
+    <!-- AS-IS dcr01_class_tree.selectByLinkCode L819 (IDMS-IC) — 문서분류 이름은 f_class_tree_nm_allpath -->
+    <select id="selectDocClassByLinkCode" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizDocClassRes">
+        SELECT a.dcr01_class_tree_id                              AS class_tree_id
+             , f_class_tree_nm_allpath(a.dcr01_class_tree_id)     AS class_tree_full_name
+          FROM dcr01_class_tree a
+             , dcr30_link b
+         WHERE dcr01_company_id = #{companyId}
+           AND dcr30_class_tree_id = dcr01_class_tree_id
+           AND dcr30_link_cd = #{linkCode}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId L695 (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS sys99_print.insert L500 (IDMS-IC) — Sys99_Print.insertRdCard가 채우는 열만 -->
+    <insert id="insertPrintCard">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string02, sys99_date01, sys99_string03, sys99_string04, sys99_long01
+               , sys99_string05, sys99_string06, sys99_long02, sys99_long03, sys99_string07 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , COALESCE(#{row.htmlCardName}, ''), #{row.approvalDt}, COALESCE(#{row.franchiseName}, ''), COALESCE(#{row.sectorName}, ''), COALESCE(#{row.approvalAmount}, 0)
+               , COALESCE(#{row.providePurName}, ''), COALESCE(#{row.provideContentName}, ''), COALESCE(#{row.totalPeple}, 0), COALESCE(#{row.averagePrice}, 0), COALESCE(#{row.note}, '') )
+    </insert>
+</mapper>

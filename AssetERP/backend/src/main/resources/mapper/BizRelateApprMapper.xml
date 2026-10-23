@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz05_relate_appr.xml (selectByPersonId·selectByPromoId·selectFileCount) + UpdateDataModel(biz05_relate_appr) DELETE  (L02) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizRelateApprMapper">
+
+    <!-- AS-IS biz05_relate_appr.selectByPersonId L68 (IDMS-IC) — 사용자·기준년월별 상신 상태 -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizRelateApprRes">
+        SELECT biz05_relate_appr_id                                                       AS relate_appr_id
+             , biz05_promo_id                                                             AS promo_id
+             , biz05_appr_id                                                              AS appr_id
+             , apr01_status_cd                                                            AS status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, biz05_company_id, apr01_reg_date) AS status_name
+          FROM biz05_relate_appr a
+               INNER JOIN apr01_appr b ON b.apr01_appr_id = a.biz05_appr_id
+         WHERE biz05_company_id = #{companyId}
+           AND biz05_std_ym LIKE #{dataYm}
+           AND biz05_link_cd    = #{linkCode}
+           AND biz05_person_id  = #{personId}
+           AND biz05_person_id IS NOT NULL
+    </select>
+
+    <!-- AS-IS biz05_relate_appr.selectByPromoId L31 (IDMS-IC) — 로그인 회사 내역만(보안 보강) -->
+    <select id="selectByPromoId" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizRelateApprRes">
+        SELECT a.biz05_relate_appr_id                                                            AS relate_appr_id
+             , a.biz05_promo_id                                                                  AS promo_id
+             , a.biz05_appr_id                                                                   AS appr_id
+             , b.apr01_status_cd                                                                 AS status_code
+             , f_cdnm('AprStatusCode', b.apr01_status_cd, b.apr01_company_id, b.apr01_reg_date)  AS status_name
+             , b.apr01_title                                                                     AS title
+             , b.apr01_reg_date                                                                  AS reg_date
+             , b.apr01_effect_date                                                               AS effect_date
+             , f_emp_kor_nm(b.apr01_reg_emp_id)                                                  AS reg_emp_name
+          FROM biz05_relate_appr a
+               INNER JOIN apr01_appr b ON b.apr01_appr_id = a.biz05_appr_id
+               INNER JOIN biz01_promo p ON p.biz01_promo_id = a.biz05_promo_id
+         WHERE biz05_promo_id = #{promoId}
+           AND p.biz01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS biz05_relate_appr.selectFileCount L81 (IDMS-IC) -->
+    <select id="selectFileCount" resultType="string">
+        SELECT (COUNT(*) FILTER (WHERE biz05_promo_id = #{promoId})
+              + COUNT(*) FILTER (WHERE sys10_parent_id = #{promoId})) || '건'
+          FROM (SELECT biz05_promo_id, NULL::bigint AS sys10_parent_id FROM biz05_relate_appr
+                 UNION ALL
+                SELECT NULL::bigint AS biz05_promo_id, sys10_parent_id FROM sys10_file) t
+    </select>
+
+    <!-- AS-IS Biz05_RelateAppr.delete → UpdateDataModel.deleteModel — 로그인 회사의 연결만(회사 열이 빈 행은 내역으로 판정) -->
+    <delete id="deleteById">
+        DELETE FROM biz05_relate_appr
+         WHERE biz05_relate_appr_id = #{relateApprId}
+           AND ( biz05_company_id = #{companyId}
+              OR biz05_promo_id IN (SELECT biz01_promo_id FROM biz01_promo WHERE biz01_company_id = #{companyId}) )
+    </delete>
+</mapper>
