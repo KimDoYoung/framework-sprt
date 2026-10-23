@@ -20,6 +20,8 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideCompanyRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListPrintReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideSimpleRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideSimplePrintReq;
 import kr.co.kfs.asseterp.biz.biz.service.BizPromoService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import kr.co.kfs.asseterp.common.dto.PageRes;
@@ -221,5 +223,21 @@ public class BizPromoController {
     @PostMapping("/provide-list/rd-print")
     public ApiResponse<String> provideListRdPrint(@AuthenticationPrincipal UserPrincipal principal, @RequestBody BizProvideListPrintReq req) {
         return ApiResponse.ok(service.insertRdProvideList(principal, req));
+    }
+
+    /** AS-IS biz.Biz01_Promo.selectProvideListSimple (Biz01_Tab_PriorApprovalSimple) — 한도초과 내역. provideRcvType·crmName `%`는 전체 */
+    @GetMapping("/provide-list-simple")
+    public ApiResponse<List<BizProvideSimpleRes>> searchProvideListSimple(@AuthenticationPrincipal UserPrincipal principal,
+                                                                          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                                          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                                                                          @RequestParam(defaultValue = "%") String provideRcvType,
+                                                                          @RequestParam(defaultValue = "%") String crmName) {
+        return ApiResponse.ok(service.searchProvideListSimple(principal, startDate, endDate, provideRcvType, crmName));
+    }
+
+    /** AS-IS sys.Sys99_Print.insertRdProvideListSimple → 출력 그룹 ID */
+    @PostMapping("/provide-list-simple/rd-print")
+    public ApiResponse<String> provideListSimpleRdPrint(@AuthenticationPrincipal UserPrincipal principal, @RequestBody BizProvideSimplePrintReq req) {
+        return ApiResponse.ok(service.insertRdProvideListSimple(principal, req));
     }
 }

@@ -72,6 +72,7 @@ import { Biz01_Tab_Other } from './biz/Biz01_Tab_Other';
 import { Biz01_Tab_CardContents } from './biz/Biz01_Tab_CardContents';
 import { Biz01_Tab_CardSimple } from './biz/Biz01_Tab_CardSimple';
 import { Biz01_Tab_CardContentsSimple } from './biz/Biz01_Tab_CardContentsSimple';
+import { Biz01_Tab_PriorApprovalSimple } from './biz/Biz01_Tab_PriorApprovalSimple';
 import { Biz01_Tab_OtherSimple } from './biz/Biz01_Tab_OtherSimple';
 import { Biz01_Tab_LimitCheckList } from './biz/Biz01_Tab_LimitCheckList';
 import { Bmt01_Tab_Buy } from './bmt/Bmt01_Tab_Buy';
@@ -249,6 +250,7 @@ export const SCREENS: Record<string, React.FC> = {
   Biz01_Tab_LimitCheckList, // L07 (메뉴 #1133. 하위 탭 Biz01_TabPage_PersonDay·PersonYear·CompanyYear, 엑셀 서버 생성)
   Biz01_Tab_PriorApproval, // L08 (메뉴 #1136. 거래상대방 조회창 components/lookup/Mkt01_Lookup_Select2, 제공(수령)자는 Emp00_Lookup_SelectSingle)
   Biz01_Tab_CardContents, // L04 (메뉴 #1138. 편집 칸·인원 칸·증빙자료 창은 L02 부품 재사용, RD 내려받기 utils/rdDownload)
+  Biz01_Tab_PriorApprovalSimple, // L12 (메뉴 #1322. 거래상대방 칸은 영업 거래처 조회창 components/lookup/Crm09_Lookup_SelectSingle, RD 미리보기 RdViewer)
   Biz01_Tab_CardContentsSimple, // L11 (메뉴 #1321. 편집 칸 Biz01_Edit_CardSimple·거래상대방 조회창은 L09, 증빙자료 창은 L02 부품 재사용, RD 내려받기 utils/rdDownload)
   Biz01_Tab_OtherSimple, // L10 (메뉴 #1320. 하위 Biz01_Edit_OtherSimple. 거래상대방 조회창은 L09 Biz01_Lookup_ProvideCompany, 증빙자료 창은 L02 부품 재사용)
   Biz01_Tab_CardSimple, // L09 (메뉴 #1319. 하위 Biz01_Edit_CardSimple·Biz01_Lookup_ProvideCompany. 일괄저장 창·증빙자료 창은 L02 부품 재사용)

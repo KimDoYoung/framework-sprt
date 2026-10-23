@@ -3,9 +3,10 @@ import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
 import {
   BizAccountOption, BizBuyPromo, BizCardContents, BizCardContentsPrintReq, BizCodeOption, BizDocClass, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq, BizPromoOtherSimpleReq,
-  BizPromoSimpleUpdateReq, BizPromoUpdateReq, BizProvideCompany, BizProvideList, BizProvideListCond, BizProvideSetup, BizRelateAppr,
+  BizPromoSimpleUpdateReq, BizPromoUpdateReq, BizProvideCompany, BizProvideList, BizProvideListCond, BizProvideSetup, BizProvideSimple, BizProvideSimpleCond, BizRelateAppr,
 } from '../types/biz';
 import { MktTarget } from '../types/mkt';
+import { CrmContact } from '../types/crm';
 
 /** L01 AS-IS Biz90_Tab_Limit (이익제공 기준관리) */
 export const bizLimitApi = {
@@ -193,6 +194,28 @@ export const bizPromoApi = {
   rdPrintProvideList: async (c: BizProvideListCond): Promise<string> => {
     const res = await apiClient.post<ApiResponse<string>>('v1/biz/promos/provide-list/rd-print', c);
     return res.data.data ?? '';
+  },
+
+  // ── L12 Biz01_Tab_PriorApprovalSimple ──
+
+  /** AS-IS biz.Biz01_Promo.selectProvideListSimple — 한도초과 내역. 날짜 'yyyy-MM-dd', provideRcvType·crmName '%'는 전체 */
+  searchProvideListSimple: async (c: BizProvideSimpleCond): Promise<BizProvideSimple[]> => {
+    const res = await apiClient.get<ApiResponse<BizProvideSimple[]>>('v1/biz/promos/provide-list-simple', { params: c });
+    return res.data.data ?? [];
+  },
+  /** AS-IS sys.Sys99_Print.insertRdProvideListSimple → 출력 그룹 ID */
+  rdPrintProvideListSimple: async (c: BizProvideSimpleCond): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/biz/promos/provide-list-simple/rd-print', c);
+    return res.data.data ?? '';
+  },
+};
+
+/** L12 AS-IS Crm09_Lookup_SelectSingle (server/crm/Crm09_Contact) — 영업 거래처 조회창 */
+export const crmContactApi = {
+  /** AS-IS crm.Crm09_Contact.selectKeyInCompanyName — open("keyInCompany"). searchText는 글자 그대로(서버가 `%…%`로 감싼다) */
+  searchKeyInCompanies: async (searchText: string): Promise<CrmContact[]> => {
+    const res = await apiClient.get<ApiResponse<CrmContact[]>>('v1/crm/contacts/key-in-companies', { params: { searchText } });
+    return res.data.data ?? [];
   },
 };
 

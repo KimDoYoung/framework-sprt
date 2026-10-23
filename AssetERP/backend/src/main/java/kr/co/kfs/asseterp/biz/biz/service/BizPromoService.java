@@ -19,6 +19,8 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideCompanyRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListPrintReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideSimpleRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideSimplePrintReq;
 import kr.co.kfs.asseterp.biz.biz.mapper.BizPersonMapper;
 import kr.co.kfs.asseterp.biz.biz.mapper.BizPromoMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -46,6 +48,7 @@ public class BizPromoService {
     /** 법인카드 사용내역 조회(L04)의 windowClassName — 출력·엑셀이 같은 값 */
     private static final String CONTENTS_WINDOW = "Biz01_Tab_CardContents";
     private static final String CONTENTS_SIMPLE_WINDOW = "Biz01_Tab_CardContentsSimple";
+    private static final String PROVIDE_LIST_SIMPLE_WINDOW = "Biz01_Tab_PriorApprovalSimple";
     /** 이익제공 상세현황(L08)의 windowClassName */
     private static final String PROVIDE_LIST_WINDOW = "Biz01_Tab_PriorApproval";
 
@@ -276,6 +279,22 @@ public class BizPromoService {
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), PROVIDE_LIST_WINDOW);
         mapper.insertPrintProvideList(user.getCompanyId(), user.getUserId(), PROVIDE_LIST_WINDOW, groupId,
                 req.startDate(), req.endDate(), all(req.provideRcvType()), all(req.crmName()), req.empId());
+        return String.valueOf(groupId);
+    }
+
+    /** AS-IS biz.Biz01_Promo.selectProvideListSimple(Biz01_Tab_PriorApprovalSimple) — 한도초과 내역. 구분 전체·거래상대방 전체는 `%`(앞부분 일치) */
+    public List<BizProvideSimpleRes> searchProvideListSimple(UserPrincipal user, LocalDate startDate, LocalDate endDate,
+                                                             String provideRcvType, String crmName) {
+        return mapper.selectProvideListSimple(user.getCompanyId(), startDate, endDate, all(provideRcvType), all(crmName));
+    }
+
+    /** AS-IS sys.Sys99_Print.insertRdProvideListSimple — ① 내 출력 자료 지움 ② 같은 조건의 조회 결과를 새 그룹 ID로 담음. 돌려주는 값 = 그룹 ID */
+    @Transactional
+    public String insertRdProvideListSimple(UserPrincipal user, BizProvideSimplePrintReq req) {
+        long groupId = mapper.selectNextId();
+        mapper.deletePrint(user.getCompanyId(), user.getUserId(), PROVIDE_LIST_SIMPLE_WINDOW);
+        mapper.insertPrintProvideListSimple(user.getCompanyId(), user.getUserId(), PROVIDE_LIST_SIMPLE_WINDOW, groupId,
+                req.startDate(), req.endDate(), all(req.provideRcvType()), all(req.crmName()));
         return String.valueOf(groupId);
     }
 

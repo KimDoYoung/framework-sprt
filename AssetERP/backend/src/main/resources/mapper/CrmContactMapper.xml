@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/crm/mapper/crm09_contact.xml (selectKeyInCompanyName)  (L12 Crm09_Lookup_SelectSingle) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.crm.mapper.CrmContactMapper">
+
+    <select id="selectKeyInCompanyName" resultType="kr.co.kfs.asseterp.biz.crm.dto.CrmContactRes">
+        SELECT ROW_NUMBER() OVER(ORDER BY biz01_provide_company collate "ko_KR.utf8" asc) AS contact_id
+             , biz01_provide_company                                                      AS contact_name
+          FROM biz01_promo
+         WHERE biz01_company_id = #{companyId}
+           AND biz01_provide_company IS NOT NULL
+           AND upper(biz01_provide_company) like upper(#{searchText})
+         GROUP BY biz01_provide_company
+    </select>
+</mapper>

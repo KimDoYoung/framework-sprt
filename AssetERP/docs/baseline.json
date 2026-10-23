@@ -5551,5 +5551,30 @@
     "note": "docs/work/L/L11-작업기록.md",
     "history": [],
     "id": "L11"
+  },
+  "Biz01_Tab_PriorApprovalSimple": {
+    "commit": "dfb420079ba71dafa951006d6b145752ba65d16d",
+    "commit_short": "dfb4200",
+    "branch": "ioc",
+    "commit_date": "2026-10-22",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/biz/Biz01_Tab_PriorApprovalSimple.java": "dd17f14d686f2d839b4ae716fec0cf9ce9624bac",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz01_PromoModel.java": "1c83f9dc7f7061b64bf14767394543e171d7cd6c",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz01_PromoModelProperties.java": "fbc7727d825e7f69b5b88895e3202037d2d02159",
+      "application/src/main/java/myApp/server/biz/Biz01_Promo.java": "d6fd40b02763302b9b8b7614d935ff1058a04be1",
+      "application/src/main/java/myApp/server/biz/mapper/biz01_promo.xml": "6977fe2a50ec72cc48643525f9eda651f1970faf",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Crm09_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-23T14:25:42+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/L/L12-작업기록.md",
+    "history": [],
+    "id": "L12"
   }
 }

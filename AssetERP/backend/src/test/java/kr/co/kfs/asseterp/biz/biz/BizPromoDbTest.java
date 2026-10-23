@@ -15,6 +15,8 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideCompanyRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListPrintReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideSimplePrintReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideSimpleRes;
 import kr.co.kfs.asseterp.biz.biz.service.BizPersonService;
 import kr.co.kfs.asseterp.biz.biz.service.BizPromoService;
 import kr.co.kfs.asseterp.common.dto.PageRes;
@@ -296,6 +298,34 @@ class BizPromoDbTest {
         // 이익수령(2)은 string06 에 거래상대방 한 칸만 담고 string07·08은 비운다
         String g3 = promoService.insertRdProvideList(user, new BizProvideListPrintReq(FROM, TO, "2", "%", null));
         assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_group_id = ? and (sys99_string07 is not null or sys99_string08 is not null)", Integer.class, Long.valueOf(g3))).isZero();
+    }
+
+    // ===== L12 Biz01_Tab_PriorApprovalSimple =====
+
+    @Test
+    void 간이판_상세현황은_한도초과_내역만_행번호순이고_출력자료는_조회_행수만큼() {
+        List<BizProvideSimpleRes> all = promoService.searchProvideListSimple(user, FROM, TO, "%", "%");
+        assertThat(all).isNotEmpty();
+        assertThat(all).extracting(BizProvideSimpleRes::rowId).isSorted();
+        // 한도초과만 — 인당 경제적가치가 모두 양수이고, 구분을 좁히면 합이 전체와 같다
+        assertThat(all).allSatisfy(r -> assertThat(r.averagePrice2()).isPositive());
+        int one = promoService.searchProvideListSimple(user, FROM, TO, "1", "%").size();
+        int two = promoService.searchProvideListSimple(user, FROM, TO, "2", "%").size();
+        assertThat(one + two).isEqualTo(all.size());
+        // 거래상대방은 앞부분 일치(원본 LIKE crmName||'%')
+        String name = all.get(0).provideCompany();
+        if (name != null && !name.isBlank()) {
+            assertThat(promoService.searchProvideListSimple(user, FROM, TO, "%", name)).isNotEmpty().hasSizeLessThanOrEqualTo(all.size());
+        }
+        assertThat(promoService.searchProvideListSimple(otherCompany, FROM, TO, "%", "%")).isEmpty();
+        // 출력 자료 = 조회 행 수, 다시 만들면 이전 자료는 지워진다
+        BizProvideSimplePrintReq req = new BizProvideSimplePrintReq(FROM, TO, "%", "%");
+        String g1 = promoService.insertRdProvideListSimple(user, req);
+        assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_group_id = ?", Integer.class, Long.valueOf(g1))).isEqualTo(all.size());
+        assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_group_id = ? and (sys99_long01 is null or sys99_long02 is null)", Integer.class, Long.valueOf(g1))).isZero();
+        String g2 = promoService.insertRdProvideListSimple(user, req);
+        assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_group_id = ?", Integer.class, Long.valueOf(g1))).isZero();
+        assertThat(g2).isNotEqualTo(g1);
     }
 
     @Test

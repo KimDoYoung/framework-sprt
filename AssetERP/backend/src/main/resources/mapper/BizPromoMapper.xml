@@ -584,6 +584,73 @@
          ORDER BY biz01_provide_date, crd02_franchise_nm collate "ko_KR.utf8" asc
     </insert>
 
+    <!-- ===== L12 Biz01_Tab_PriorApprovalSimple ===== -->
+
+    <!-- AS-IS biz01_promo.selectProvideListSimple (IDMS-IC) 그대로. 맨 앞 row_number() 열은 biz01_promo_id → row_id (L08과 같은 이유), <= 는 &lt;= -->
+    <sql id="provideListSimpleQuery">
+    WITH BIZ AS ( SELECT a.*
+                       , CASE WHEN biz01_provide_rcv_type = '1' THEN COALESCE(biz01_provide_company,'')
+                              ELSE ( SELECT sys01_company_nm
+                                       FROM sys01_company
+                                      WHERE sys01_company_id = biz01_company_id ) END       AS biz01_target_company_nm
+                    FROM ( SELECT biz01_promo.*
+                                , TRUNC(biz01_provide_amt / f_nvl(biz01_peple_count,1))     AS biz01_average_price2
+                             FROM biz01_promo
+                            WHERE biz01_company_id = #{companyId}
+                              AND biz01_provide_rcv_type like #{provideRcvType}
+                              AND biz01_provide_date BETWEEN #{startDate} AND #{endDate}
+                              AND SUBSTR(biz01_provide_pur_cd,1,1) in ('1','2')  /* 10:판매(일반)/11:판매(경조)/20:운용(일반)/21:운용(경조)/50:관리(일반) */
+                         ) a
+                       , biz90_limit
+                   WHERE biz01_company_id       = biz90_company_id
+                     AND biz01_provide_rcv_type = biz90_provide_rcv_type
+                     AND biz90_start_date IN ( SELECT MAX(biz90_start_date)
+                                                 FROM biz90_limit
+                                                WHERE biz90_company_id       = biz01_company_id
+                                                  AND biz90_provide_rcv_type = biz01_provide_rcv_type
+                                                  AND biz90_start_date       &lt;= biz01_provide_date )
+                     AND biz01_average_price2 > CASE WHEN SUBSTR(biz01_provide_pur_cd,2,1) = '0'
+                                                     THEN biz90_sale_rule_limit1         /* 일반 */
+                                                     ELSE biz90_sale_rule_limit2 END     /* 경조 */
+    )
+    SELECT row_number() OVER (ORDER BY biz01_provide_rcv_type, biz01_reg_emp_nm collate "ko_KR.utf8" asc, biz01_provide_date) AS row_id
+         , f_cdnm('ProvideRcvType'     , biz01_provide_rcv_type    , biz01_company_id, biz01_provide_date)  AS provide_rcv_type_name
+         , biz01_reg_emp_nm                                                                                  AS reg_emp_name
+         , biz01_provide_date                                                                                AS provide_date
+         , f_cdnm('ProvidePurCode'     , biz01_provide_pur_cd      , biz01_company_id, biz01_provide_date)  AS provide_pur_name
+         , f_cdnm('ProvideContentCode' , biz01_provide_content_cd  , biz01_company_id, biz01_provide_date)  AS provide_content_name
+         , biz01_provide_company                                                                             AS provide_company
+         , biz01_peple_count                                                                                 AS peple_count
+         , biz01_average_price2                                                                              AS average_price2
+         , biz01_note                                                                                        AS note
+      FROM ( SELECT BIZ.*
+                  , f_emp_kor_nm(CASE WHEN biz01_settle_type = '1'
+                                      THEN f_get_crdManagerId(biz01_card_id, biz01_provide_date)
+                                      ELSE COALESCE(biz01_person_id, biz01_reg_emp_id) END) AS biz01_reg_emp_nm
+               FROM BIZ
+              WHERE upper(biz01_target_company_nm) LIKE upper(#{crmName})||'%'
+           ) a
+    </sql>
+
+    <select id="selectProvideListSimple" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizProvideSimpleRes">
+        <include refid="provideListSimpleQuery"/>
+         ORDER BY row_id
+    </select>
+
+    <!-- AS-IS Sys99_Print.insertRdProvideListSimple L1168 (IDMS-IC) = selectProvideListSimple + sys99_print.insert 를 한 번에(INSERT … SELECT).
+         checkLongNull → COALESCE(…,0), 나머지는 NULL 그대로. 열: 제공/수령 s01 · 제공자 s02 · 일자 d01 · 목적 s03 · 내용 s04 · 거래상대방 s05 · 인원 l02 · 인당 l01 · 비고 s06 -->
+    <insert id="insertPrintProvideListSimple">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_date01, sys99_string03, sys99_string04
+               , sys99_string05, sys99_long02, sys99_long01, sys99_string06 )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , q.provide_rcv_type_name, q.reg_emp_name, q.provide_date, q.provide_pur_name, q.provide_content_name
+             , q.provide_company, COALESCE(q.peple_count, 0), COALESCE(q.average_price2, 0), q.note
+          FROM ( <include refid="provideListSimpleQuery"/> ) q
+         ORDER BY q.row_id
+    </insert>
+
     <!-- ===== L08 Biz01_Tab_PriorApproval ===== -->
 
     <!-- AS-IS biz01_promo.selectProvideList L551 (IDMS-IC) 그대로. 단 맨 앞 열 biz01_promo_id(row_number)는 BIZ.* 의 같은 이름 열과 겹쳐 row_id 로 바꿨다 -->

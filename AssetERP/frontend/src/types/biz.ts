@@ -245,3 +245,25 @@ export interface BizLimitCompanyYear {
   targetCompanyName?: string | null;
   averagePrice?: number | null;
 }
+
+/** L12 Biz01_Tab_PriorApprovalSimple 그리드 한 행 (AS-IS Biz01_PromoModel, 한도초과 내역). rowId = SQL의 row_number() */
+export interface BizProvideSimple {
+  rowId: number;
+  provideRcvTypeName: string | null;
+  regEmpName: string | null;
+  provideDate: string | null;
+  providePurName: string | null;
+  provideContentName: string | null;
+  provideCompany: string | null;
+  pepleCount: number | null;
+  averagePrice2: number | null;
+  note: string | null;
+}
+
+/** L12 조회·출력 조건. 날짜 'yyyy-MM-dd', provideRcvType·crmName '%'는 전체 */
+export interface BizProvideSimpleCond {
+  startDate: string;
+  endDate: string;
+  provideRcvType: string;
+  crmName: string;
+}

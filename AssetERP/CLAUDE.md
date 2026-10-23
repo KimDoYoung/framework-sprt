@@ -41,6 +41,7 @@ TOBE는 새로 설계하지 않고 원본의 레이아웃·버튼·이벤트·�
 - 확인: API는 `yunhee api`(SQL·예외까지 보려면 `--log`), 조회 API와 AS-IS SQL 비교는 `yunhee compare`. 서버 로그는 `docker logs` 대신 `yunhee log`(errors·tail·req·trace, 05 §7 "서버 로그") — 배포 후 `log errors --since-deploy`, 사용자 신고 오류는 재현 전에 `log req … --trace`. 기본 주소는 `.env.local`(AssetERP Tomcat), 고객사 관리자는 `-c <회사코드>`.
 - **원본 변경 점검**(0.3.8~): AS-IS 원본은 매일 바뀐다. `./check-git.sh`(pull → 색인 기준과 다르면 `index-src` 재실행; `--force`·`--no-index`)로 갱신하되, 완료 화면 점검은 **변환을 모두 끝낸 뒤 일괄로** 한다(사용자 결정 2026-10-21). 갱신 뒤 `yunhee drift --all --done-only --base baseline`으로 완료 화면 중 변환 뒤 바뀐 것만 본다(`-o diff`로 상세). ID를 `완료`로 바꿀 때 `yunhee drift --record <클래스> --id <ID> --note-file docs/work/<ID 첫 글자>/<ID>-작업기록.md`로 기준을 남긴다. 기준 파일 `docs/baseline.json`은 git으로 공유한다(05 §7 "원본 변경 점검").
 - **브라우저 화면 시험은 ID 변환 중 쓰지 않는다**(사용자 결정 2026-10-19). 변환 때는 `docs/work/{첫글자}/{id}-화면시험.json` 명세만 남기고 결과확인 7·7-1은 `대기(일괄)`로 적는다. 도메인을 끝낸 뒤 `tools/screens/gen.js --all-pending`으로 일괄 시험한다(06 "화면시험 지연"). 기존 `tools/screens/{id}.js`는 단건 재현용으로 남긴다.
+- **RD(출력/다운로드) 확인이 필요하면 `tools/run-rd-server.sh`(RD 시뮬레이터)를 `status` → `start`로 켜서 쓴다**(사용자 결정 2026-10-23). 받은 mrd·rv는 `tools/run-rd-server.sh calls [mrd]`로 대조한다. 자세히는 `docs/05-작업방법.md` §7 "yunhee로 못 하는 것".
 - yunhee로 안 되는 것(브라우저 확인)만 `tools/`로 하고, 출력은 몇 줄로 줄인다. 다른 방법을 쓴 사유는 `{id}-작업기록`에 한 줄 남긴다.
 
 ## 고정 사항
