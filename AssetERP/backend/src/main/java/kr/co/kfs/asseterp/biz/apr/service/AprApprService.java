@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.apr.service;
 
 import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprPreProvideCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprPreProvideRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocRes;
@@ -200,6 +202,14 @@ public class AprApprService {
                                                  boolean aprYn, String searchText) {
         return mapper.selectByRequestEmpId(new AprMyRequestCond(user.getCompanyId(), user.getUserId(), startDate, closeDate, blankToAny(statusCode),
                 String.valueOf(aprYn), like(searchText), classTreeId, "%"));
+    }
+
+    /**
+     * AS-IS Apr01_Appr.selectByText (L06 Apr01_Tab_BizPriorApproval 이익제공 사전승인신청). 로그인 사용자가 올린 문서 중
+     * 종류코드 PreProvideRcvType의 Link 문서만(preProvideRcvApprYn=true 가지)
+     */
+    public List<AprPreProvideRes> searchPreProvide(UserPrincipal user, LocalDate startDate, LocalDate endDate) {
+        return mapper.selectPreProvide(new AprPreProvideCond(user.getCompanyId(), user.getUserId(), startDate, endDate));
     }
 
     /** AS-IS downLoadButton(sys.Sys99_Print.insertRdRequestList + RD 리포트 Apr01_Rd_MyRequestList) — 같은 조회 결과를 그리드 열 순서로 xlsx에 쓴다 */

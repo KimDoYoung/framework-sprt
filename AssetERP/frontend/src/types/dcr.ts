@@ -8,6 +8,12 @@ export interface DcrClassTreeLookup {
 // ── E16 문서분류 (Dcr01_Tab_ClassTree 외) ──
 
 /** 문서분류 트리 한 행 (AS-IS Dcr01_ClassTreeModel — selectByCompanyId). 전위 순서 평평한 목록 + depth(0부터, 한 건만 읽으면 null) */
+/** Link 코드에 지정된 문서분류 (AS-IS dcr01_class_tree.selectByLinkCode, L06) */
+export interface DcrLinkClassTree {
+  classTreeId: number;
+  classTreeFullName: string;
+}
+
 export interface DcrClassTree {
   classTreeId: number;
   companyId: number;

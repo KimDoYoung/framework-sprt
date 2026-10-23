@@ -38,6 +38,7 @@ import { Apr90_Tab_DisposalAppr } from './apr/Apr90_Tab_DisposalAppr';
 import { Apr90_Tab_DisposalList } from './apr/Apr90_Tab_DisposalList';
 import { Apr01_Tab_MyApproveList } from './apr/Apr01_Tab_MyApproveList';
 import { Apr01_Tab_MyRequestList } from './apr/Apr01_Tab_MyRequestList';
+import { Apr01_Tab_BizPriorApproval } from './apr/Apr01_Tab_BizPriorApproval';
 import { Apr01_Tab_MyReferenceList } from './apr/Apr01_Tab_MyReferenceList';
 import { Apr01_Tab_MyAuthList } from './apr/Apr01_Tab_MyAuthList';
 import { Apr01_Tab_StampSeq } from './apr/Apr01_Tab_StampSeq';
@@ -67,6 +68,10 @@ import { Ics17_Tab_UserRequest } from './ics/Ics17_Tab_UserRequest';
 import { Ics30_Tab_Compliance } from './ics/Ics30_Tab_Compliance';
 import { Biz90_Tab_Limit } from './biz/Biz90_Tab_Limit';
 import { Biz01_Tab_Card } from './biz/Biz01_Tab_Card';
+import { Biz01_Tab_Other } from './biz/Biz01_Tab_Other';
+import { Biz01_Tab_CardContents } from './biz/Biz01_Tab_CardContents';
+import { Biz01_Tab_LimitCheckList } from './biz/Biz01_Tab_LimitCheckList';
+import { Bmt01_Tab_Buy } from './bmt/Bmt01_Tab_Buy';
 import { Ics15_Tab_ChecklistWrite } from './ics/Ics15_Tab_ChecklistWrite';
 import { Ics15_Tab_ChecklistConfirm } from './ics/Ics15_Tab_ChecklistConfirm';
 import { Ics15_Tab_ChecklistStatus } from './ics/Ics15_Tab_ChecklistStatus';
@@ -200,6 +205,7 @@ export const SCREENS: Record<string, React.FC> = {
   Apr01_Tab_FundDocument, // F06 1단계 (메뉴 #1005 + Apr01_Grid_FundDocList. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Apr90_Tab_DisposalAppr, // F10 1단계 (메뉴 #1490. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Apr01_Tab_MyApproveList, // G01 1단계 (메뉴 #1018. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기가 여는 Dcr10_Lookup_MailSender는 다음 단계)
+  Apr01_Tab_BizPriorApproval, // L06 1단계 (메뉴 #1134. 승인신청·상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·문서분류지정이 여는 Dcr30_Lookup_Link는 다음 단계)
   Apr01_Tab_MyRequestList, // G02 1단계 (메뉴 #1019. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·신청의 Ics40_Edit_DcrPreconfirm·준감인의견의 Ics40_Edit_Msg·메일보내기가 여는 Dcr10_Lookup_MailSender는 다음 단계)
   Apr01_Tab_MyReferenceList, // G03 1단계 (메뉴 #1093. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기가 여는 Dcr10_Lookup_MailSender는 다음 단계)
   Apr01_Tab_MyAuthList, // G04 1단계 (메뉴 #1428. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·메일보내기가 여는 Dcr10_Lookup_MailSender는 다음 단계)
@@ -234,6 +240,10 @@ export const SCREENS: Record<string, React.FC> = {
   Ics30_Tab_Compliance, // E05 (+ E05-1 예외사원 등록 Emp33_Lookup_ExceptBiz)
   Biz90_Tab_Limit, // L01 (메뉴 #1130. 하위 Biz04_Lookup_EmpSetup)
   Biz01_Tab_Card, // L02 (메뉴 #1131. 하위 Biz01_Edit_Card·Biz02_Grid_PersonList(InternalList·ExternalList)·Biz01_Lookup_CardManagement·Biz05_Lookup_RelateAppr·Biz05_Lookup_RelateFile. 1단계: 전자결재·거래처 조회창은 안내만)
+  Biz01_Tab_Other, // L03 (메뉴 #1132. 하위 Biz01_Edit_Other. 사람 목록·증빙자료 창은 L02 부품 재사용)
+  Bmt01_Tab_Buy, // L05 (메뉴 #1135. 아래쪽 제공내역은 pages/biz/Biz01_TabPage_List. 전자결재·상대처 조회창은 다음 단계)
+  Biz01_Tab_LimitCheckList, // L07 (메뉴 #1133. 하위 탭 Biz01_TabPage_PersonDay·PersonYear·CompanyYear, 엑셀 서버 생성)
+  Biz01_Tab_CardContents, // L04 (메뉴 #1138. 편집 칸·인원 칸·증빙자료 창은 L02 부품 재사용, RD 내려받기 utils/rdDownload)
   Ics15_Tab_ChecklistWrite, // K05 (+ Ics15_Edit_Reason. 보기 창은 K04의 Ics10_Edit_Checklist readOnly)
   Ics15_Tab_ChecklistConfirm, // K06 (+ Ics16_Lookup_RelateAppr. 보기 창은 K04의 Ics10_Edit_Checklist readOnly)
   Ics15_Tab_ChecklistStatus, // K07 (+ Ics15_Lookup_ChecklistStatusDetail. 보기 창은 K04의 Ics10_Edit_Checklist readOnly)

@@ -3,7 +3,9 @@
  * AS-IS: myApp/client/vi/dcr/Dcr30_Move_DcrClass.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * openNull() L71-86: 관리자(admin) 열기 — 500×700 모달, 툴바 "문서분류 [검색 250] [찾기]" + 트리(typeCode %) + [확인][선택안함][닫기].
  *   companyId·companyName을 주면 그 회사의 트리, 제목 "문서분류 - 회사명"
- * 일반 사용자 열기(open(defaultModel, callback) L88-93: dcr.Dcr03_OrgAuth.selectByDcrOrgId 권한 검사)는 이 화면에서 쓰지 않아 옮기지 않았다 — 쓰는 도메인 변환 때 더한다
+ * open(defaultModel, callback) L88-93 (L06 Apr01_Tab_BizPriorApproval): 일반 사용자 열기 — `authCheck`. [선택안함] 없음(버튼 [확인][닫기]),
+ *   [확인] update() L168-209: 관리자(userId<0·회사 0)는 검사 없이, 그 밖에는 dcr.Dcr03_OrgAuth.selectByDcrOrgId(내 조직·고른 분류)로 수정권한을 확인한다.
+ *   권한이 없으면 `defaultClassTreeId`(open의 defaultModel)와 같은 분류일 때만 통과, 아니면 "권한이 없는 문서분류입니다. 관리자에게 문의하세요"
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Space, Tree } from 'antd';
@@ -13,6 +15,7 @@ import { errorMessage } from '@/api/client';
 import { DcrClassTree } from '@/types/dcr';
 import { Button } from '@/components/button';
 import { SearchBar } from '@/components/search';
+import { useLoginUser } from '@/hooks/useLoginUser';
 import { ancestorKeys, toTree } from '@/pages/dcr/dcr01Tree';
 
 export interface Dcr30ClassResult {
@@ -26,6 +29,10 @@ interface Props {
   /** openNull(companyId, companyName, callback) L71 — 없으면 로그인 회사 */
   companyId?: number;
   companyName?: string;
+  /** open(defaultModel, callback) — 일반 사용자 열기: [선택안함]을 감추고 [확인]에서 조직 권한을 검사한다(관리자는 검사 없음) */
+  authCheck?: boolean;
+  /** open(defaultModel, …)의 defaultModel — 권한이 없어도 이 분류는 고를 수 있다 */
+  defaultClassTreeId?: number | null;
   /** [확인]·[선택안함]의 callback.execute(classTreeModel) — 선택안함은 둘 다 null */
   onResult: (result: Dcr30ClassResult) => void;
   onClose: () => void;
@@ -43,7 +50,8 @@ const fullName = (rows: DcrClassTree[], id: number): string => {
   return names.join('/');
 };
 
-export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyName, onResult, onClose }) => {
+export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyName, authCheck, defaultClassTreeId, onResult, onClose }) => {
+  const user = useLoginUser();
   const [rows, setRows] = useState<DcrClassTree[]>([]);
   const [expanded, setExpanded] = useState<React.Key[]>([]);
   const [selected, setSelected] = useState<DcrClassTree | null>(null);
@@ -81,13 +89,31 @@ export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyN
   };
 
   // [E3] updateButton[확인].Select (L136) → update() L168-209 (admin 열기: 권한 검사 없이 callback·hide)
-  const update = () => {
+  const update = async () => {
     if (selected == null || selected.typeCode !== 'T') {
       message.warning('최하위 문서분류를 선택해주세요');
       return;
     }
-    onResult({ classTreeId: selected.classTreeId, classTreeFullName: fullName(rows, selected.classTreeId) });
-    onClose();
+    const done = () => {
+      onResult({ classTreeId: selected.classTreeId, classTreeFullName: fullName(rows, selected.classTreeId) });
+      onClose();
+    };
+    // LoginUser.getIsManager()(회사관리자 userId<0) || this.admin — authCheck 아닌 열기(openNull)는 admin
+    if (!authCheck || user.userId < 0) {
+      done();
+      return;
+    }
+    try {
+      if (await dcrApi.hasClassTreeUpdateAuth(selected.classTreeId)) {
+        done();
+      } else if (defaultClassTreeId != null && selected.classTreeId === defaultClassTreeId) {
+        done();
+      } else {
+        message.warning('권한이 없는 문서분류입니다. 관리자에게 문의하세요');
+      }
+    } catch (err) {
+      message.error(errorMessage(err, '권한 확인 실패'));
+    }
   };
 
   return (
@@ -103,7 +129,7 @@ export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyN
           <Space>
             <Button type="save" onClick={update}>확인</Button>
             {/* [E4] nullButton[선택안함].Select (L142) → 전체이름·ID를 null로 callback·hide */}
-            <Button type="select" onClick={() => { onResult({ classTreeId: null, classTreeFullName: null }); onClose(); }}>선택안함</Button>
+            {!authCheck && <Button type="select" onClick={() => { onResult({ classTreeId: null, classTreeFullName: null }); onClose(); }}>선택안함</Button>}
             {/* [E5] cancleButton[닫기].Select (L151) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>

@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import {
   DcrCheckRes, DcrCheckRowReq, DcrClassDetail, DcrClassTree, DcrClassTreeAll, DcrClassTreeLookup, DcrClassTreeSaveReq,
-  DcrCopyCompany, DcrDocAppr, DcrDocFile, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrClassLink, DcrLink, DcrLinkSaveReq, DcrRelateDocType, DcrRelateIcr,
+  DcrCopyCompany, DcrDocAppr, DcrDocFile, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrClassLink, DcrLink, DcrLinkClassTree, DcrLinkSaveReq, DcrRelateDocType, DcrRelateIcr,
   DcrOftenUse, DcrRelateIcs, DcrRelateSaveReq, DcrStampAuthTree, DcrUseYnReq, DcrWriteCode, DcrWriteTree,
   DcrMailFile, DcrMailHistory,
 } from '../types/dcr';
@@ -31,6 +31,18 @@ export const dcrApi = {
   /** AS-IS dcr.Dcr01_ClassTree.selectByCompanyId: 사용 중인 분류 트리(전위 순서, depth). typeCode 기본 'C', 이동·반영 창은 '%'. companyId(E17)는 다른 회사 지정 — 관리자 회사만 */
   searchClassTree: async (typeCode = 'C', companyId?: number): Promise<DcrClassTree[]> => {
     const res = await apiClient.get<ApiResponse<DcrClassTree[]>>('v1/dcr/class-trees', { params: { typeCode, companyId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr03_OrgAuth.selectByDcrOrgId (L06 Dcr30_Move_DcrClass 일반 사용자 열기): 내 조직이 이 문서분류의 수정권한이 있는가 */
+  hasClassTreeUpdateAuth: async (classTreeId: number): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>(`v1/dcr/class-trees/${classTreeId}/update-auth`);
+    return res.data.data ?? false;
+  },
+
+  /** AS-IS dcr.Dcr30_Link.selectByLinkCode (L06 Apr01_Tab_BizPriorApproval): Link 코드에 지정된 문서분류. 정확히 1건일 때만 지정된 것으로 본다 */
+  searchClassTreeByLinkCode: async (linkCode: string): Promise<DcrLinkClassTree[]> => {
+    const res = await apiClient.get<ApiResponse<DcrLinkClassTree[]>>('v1/dcr/links/class-tree-by-code', { params: { linkCode } });
     return res.data.data ?? [];
   },
 

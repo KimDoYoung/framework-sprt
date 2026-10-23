@@ -86,6 +86,16 @@ public class DcrClassTreeService {
         return mapper.selectWriteTree(user.getCompanyId(), orgId, user.getUserId());
     }
 
+    /**
+     * AS-IS dcr.Dcr03_OrgAuth.selectByDcrOrgId (L06 Dcr30_Move_DcrClass.update 의 일반 사용자 권한 검사 L168-209).
+     * 조직(LoginUser.getOrgCodeId())의 문서분류 수정권한이 있으면(첫 행 update_yn 'true') true, 행이 없거나 아니면 false. 관리자는 검사하지 않으므로 화면이 부르지 않는다
+     */
+    public boolean hasUpdateAuth(UserPrincipal user, Long classTreeId) {
+        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        List<String> yn = mapper.selectOrgAuthUpdateYn(orgId, classTreeId);
+        return !yn.isEmpty() && "true".equals(yn.get(0));
+    }
+
     /** AS-IS selectByAll: 사용 여부와 관계없는 전체 트리 + 문서구분별 상신문서 건수 (Dcr01_Lookup_UseYn) */
     public List<DcrClassTreeAllRes> searchTreeAll(UserPrincipal user, String typeCode) {
         return mapper.selectTreeAll(user.getCompanyId(), typeCode == null || typeCode.isEmpty() ? "%" : typeCode);

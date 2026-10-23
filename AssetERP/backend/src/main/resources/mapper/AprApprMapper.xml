@@ -1113,4 +1113,32 @@
                 , apr01_org_cd
                 , apr01_person_nm collate "ko_KR.utf8" asc
     </select>
+    <!--
+      AS-IS apr01_appr.selectByText L327 (IDMS-IC) — L06 Apr01_Tab_BizPriorApproval(이익제공 사전승인신청).
+      화면은 preProvideRcvApprYn=true 가지만 쓴다(searchText01~03 가지는 안 쓰는 호출이라 옮기지 않음). SELECT a.*·b.*·e.*는 그리드 열만
+    -->
+    <select id="selectPreProvide" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprPreProvideRes">
+        SELECT a.apr01_appr_id                                                               AS appr_id
+             , a.apr01_reg_date                                                              AS reg_date
+             , a.apr01_effect_date                                                           AS effect_date
+             , f_class_tree_nm_allpath(dcr01_class_tree_id)                                  AS class_tree_name_all_path
+             , a.apr01_title                                                                 AS title
+             , f_cdnm('AprStatusCode', a.apr01_status_cd, #{c.companyId}, a.apr01_reg_date)  AS status_name
+          FROM apr01_appr a
+               INNER JOIN dcr01_class_tree b ON a.apr01_class_tree_id = b.dcr01_class_tree_id
+               INNER JOIN emp01_person e     ON a.apr01_reg_emp_id = e.emp01_person_id
+         WHERE 1=1
+           AND apr01_company_id = #{c.companyId}
+           AND apr01_reg_emp_id = #{c.regEmpId}
+           AND apr01_reg_date BETWEEN #{c.startDate} AND #{c.endDate}
+           AND apr01_link_cd IN ( SELECT sys09_code
+                                    FROM sys08_code_kind
+                                         INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+                                   WHERE sys08_kind_cd = 'PreProvideRcvType'
+                                     AND ( ( COALESCE(sys08_sys_yn,'false')  = 'true' AND sys09_company_id = 0                ) OR
+                                           ( COALESCE(sys08_sys_yn,'false') != 'true' AND sys09_company_id = #{c.companyId} ) )
+                                )
+         ORDER BY apr01_reg_date DESC, apr01_appr_id DESC
+    </select>
+
 </mapper>

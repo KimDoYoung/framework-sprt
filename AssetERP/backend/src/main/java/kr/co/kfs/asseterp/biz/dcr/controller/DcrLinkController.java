@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.dcr.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrClassLinkRes;
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkClassTreeRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkCopyReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkNoteReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkRes;
@@ -33,6 +34,12 @@ public class DcrLinkController {
     @GetMapping("/by-class-tree")
     public ApiResponse<List<DcrClassLinkRes>> searchByClassTree(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long classTreeId) {
         return ApiResponse.ok(service.searchByClassTree(principal, classTreeId));
+    }
+
+    /** AS-IS dcr.Dcr30_Link.selectByLinkCode (L06 Apr01_Tab_BizPriorApproval) — Link 코드에 지정된 문서분류. 1건이 아니면 화면이 "미지정"으로 본다 */
+    @GetMapping("/class-tree-by-code")
+    public ApiResponse<List<DcrLinkClassTreeRes>> searchClassTreeByLinkCode(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String linkCode) {
+        return ApiResponse.ok(service.searchClassTreeByLinkCode(principal, linkCode));
     }
 
     /** AS-IS dcr.Dcr30_Link.selectBySearchId (companyId 없으면 로그인 회사) */

@@ -96,4 +96,19 @@
          WHERE biz04_company_id         = #{companyId}
            AND biz04_provide_content_cd = #{provideContentCode}
     </select>
+
+    <!-- AS-IS biz02_person.insert (IDMS-IC) — 거래상대방(L05 updateAdd: 직원 아님) -->
+    <insert id="insertExternal">
+        INSERT INTO biz02_person (biz02_person_id, biz02_promo_id, biz02_emp_yn, biz02_target_company_nm, biz02_target_emp_nm)
+        VALUES (#{personId}, #{promoId}, 'false', #{targetCompanyName}, #{targetEmpName})
+    </insert>
+
+    <!-- AS-IS biz02_person.update (IDMS-IC) — L05 updateAdd. 원본은 내역의 모든 인원 행을 바꾼다(WHERE promoId만) -->
+    <update id="updateExternal">
+        UPDATE biz02_person
+           SET biz02_target_company_nm = #{targetCompanyName}
+             , biz02_target_emp_nm     = #{targetEmpName}
+         WHERE biz02_promo_id = #{promoId}
+    </update>
+
 </mapper>

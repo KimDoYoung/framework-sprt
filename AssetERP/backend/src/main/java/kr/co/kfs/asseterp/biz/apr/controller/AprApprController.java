@@ -10,6 +10,7 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprMyApproveRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyAuthRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyReferenceRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyRequestRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprPreProvideRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprPutSealRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateAdvRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateFundRes;
@@ -141,6 +142,14 @@ public class AprApprController {
                                                               @RequestParam(defaultValue = "true") boolean aprYn,
                                                               @RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.searchMyRequest(principal, classTreeId, startDate, closeDate, statusCode, aprYn, searchText));
+    }
+
+    /** AS-IS apr.Apr01_Appr.selectByText (L06 Apr01_Tab_BizPriorApproval 이익제공 사전승인신청, preProvideRcvApprYn=true) */
+    @GetMapping("/pre-provide")
+    public ApiResponse<List<AprPreProvideRes>> searchPreProvide(@AuthenticationPrincipal UserPrincipal principal,
+                                                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return ApiResponse.ok(service.searchPreProvide(principal, startDate, endDate));
     }
 
     /** 출력/다운로드 (AS-IS sys.Sys99_Print.insertRdRequestList + RD 리포트 Apr01_Rd_MyRequestList → 조회 결과 xlsx) */

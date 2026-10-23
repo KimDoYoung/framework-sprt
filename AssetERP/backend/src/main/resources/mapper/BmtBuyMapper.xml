@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- AS-IS(IDMS-IC) server/bmt/mapper/bmt01_buy.xml — L05 Bmt01_Tab_Buy -->
+<mapper namespace="kr.co.kfs.asseterp.biz.bmt.mapper.BmtBuyMapper">
+
+    <!-- AS-IS bmt01_buy.selectByCompanyId L52 (IDMS-IC) — 그리드에 쓰는 열만 별칭으로 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.bmt.dto.BmtBuyRes">
+        SELECT a.bmt01_buy_id                                                                                   AS buy_id
+             , a.bmt01_buy_date                                                                                 AS buy_date
+             , a.bmt01_provide_content_cd                                                                       AS provide_content_code
+             , f_cdnm('ProvideContentCode', a.bmt01_provide_content_cd, a.bmt01_company_id, a.bmt01_buy_date)   AS provide_content_name
+             , a.bmt01_buy_qty                                                                                  AS buy_qty
+             , a.bmt01_buy_amt                                                                                  AS buy_amt
+             , COALESCE(c.biz02_count, 0)                                                                       AS total_peple
+             , a.bmt01_buy_amt / a.bmt01_buy_qty                                                                AS average_price
+             , a.bmt01_buy_qty - COALESCE(c.biz02_count, 0)                                                     AS left_qty
+             , a.bmt01_person_id                                                                                AS person_id
+             , f_emp_kor_nm(a.bmt01_person_id)                                                                  AS person_name
+             , a.bmt01_appr_id                                                                                  AS appr_id
+             , f_cdnm('AprStatusCode', b.apr01_status_cd, a.bmt01_company_id, f_sysdate())                      AS appr_status_name
+          FROM bmt01_buy a
+               LEFT OUTER JOIN apr01_appr b ON b.apr01_appr_id = a.bmt01_appr_id
+               LEFT OUTER JOIN ( SELECT biz01_buy_id
+                                      , COUNT(*) biz02_count
+                                   FROM biz01_promo
+                                      , biz02_person
+                                  WHERE biz01_promo_id = biz02_promo_id
+                                  GROUP BY biz01_buy_id ) c ON c.biz01_buy_id = a.bmt01_buy_id
+         WHERE 1=1
+           AND #{personId} IN (bmt01_person_id, bmt01_reg_emp_id)
+           AND bmt01_company_id = #{companyId}
+        <if test="leftYn">
+           AND a.bmt01_buy_qty - COALESCE(c.biz02_count, 0) != 0
+        </if>
+           AND bmt01_buy_date BETWEEN #{startDate} AND #{closeDate}
+         ORDER BY bmt01_buy_date DESC
+    </select>
+
+    <!-- AS-IS bmt01_buy.selectById (IDMS-IC) — 로그인 회사의 행만(보안 보강) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.bmt.dto.BmtBuyRes">
+        SELECT a.bmt01_buy_id                                                                                   AS buy_id
+             , a.bmt01_buy_date                                                                                 AS buy_date
+             , a.bmt01_provide_content_cd                                                                       AS provide_content_code
+             , f_cdnm('ProvideContentCode', a.bmt01_provide_content_cd, a.bmt01_company_id, a.bmt01_buy_date)   AS provide_content_name
+             , a.bmt01_buy_qty                                                                                  AS buy_qty
+             , a.bmt01_buy_amt                                                                                  AS buy_amt
+             , (SELECT count(biz02_person_id)
+                  FROM biz02_person
+                       INNER JOIN biz01_promo ON biz02_promo_id = biz01_promo_id
+                 WHERE biz01_buy_id = a.bmt01_buy_id)                                                           AS total_peple
+             , (a.bmt01_buy_amt / a.bmt01_buy_qty) / (SELECT (CASE WHEN COUNT(biz02_person_id) = 0
+                                                                   THEN 1
+                                                                   ELSE COUNT(biz02_person_id) END)
+                                                        FROM biz02_person
+                                                             INNER JOIN biz01_promo ON biz02_promo_id = biz01_promo_id
+                                                       WHERE biz01_buy_id = a.bmt01_buy_id)                     AS average_price
+             , (SELECT a.bmt01_buy_qty - count(biz02_person_id)
+                  FROM biz02_person
+                       INNER JOIN biz01_promo ON biz02_promo_id = biz01_promo_id
+                 WHERE biz01_buy_id = a.bmt01_buy_id)                                                           AS left_qty
+             , a.bmt01_person_id                                                                                AS person_id
+             , f_emp_kor_nm(a.bmt01_person_id)                                                                  AS person_name
+             , a.bmt01_appr_id                                                                                  AS appr_id
+             , f_cdnm('AprStatusCode', b.apr01_status_cd, a.bmt01_company_id, f_sysdate())                      AS appr_status_name
+          FROM bmt01_buy a
+               LEFT OUTER JOIN apr01_appr b ON b.apr01_appr_id = a.bmt01_appr_id
+         WHERE 1=1
+           AND bmt01_buy_id = #{buyId}
+           AND bmt01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Bmt01_Buy.update → UpdateDataModel(bmt01_buy) INSERT — 화면이 채우는 5열 + 등록자·회사 -->
+    <insert id="insert">
+        INSERT INTO bmt01_buy
+               ( bmt01_buy_id, bmt01_company_id, bmt01_reg_emp_id
+               , bmt01_buy_date, bmt01_provide_content_cd, bmt01_buy_qty, bmt01_buy_amt, bmt01_person_id )
+        VALUES ( #{buyId}, #{companyId}, #{regEmpId}
+               , #{req.buyDate}, #{req.provideContentCode}, #{req.buyQty}, #{req.buyAmt}, #{req.personId} )
+    </insert>
+
+    <!-- AS-IS Bmt01_Buy.update → UpdateDataModel(bmt01_buy) UPDATE — 로그인 회사의 행만(보안 보강) -->
+    <update id="update">
+        UPDATE bmt01_buy
+           SET bmt01_buy_date           = #{req.buyDate}
+             , bmt01_provide_content_cd = #{req.provideContentCode}
+             , bmt01_buy_qty            = #{req.buyQty}
+             , bmt01_buy_amt            = #{req.buyAmt}
+             , bmt01_person_id          = #{req.personId}
+         WHERE bmt01_buy_id     = #{buyId}
+           AND bmt01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS Bmt01_Buy.delete → UpdateDataModel(bmt01_buy) DELETE — 로그인 회사의 행만(보안 보강) -->
+    <delete id="deleteByIds">
+        DELETE FROM bmt01_buy
+         WHERE bmt01_company_id = #{companyId}
+           AND bmt01_buy_id IN
+           <foreach collection="buyIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+</mapper>

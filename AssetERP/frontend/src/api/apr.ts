@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprAltAppr, AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
+import { AprAltAppr, AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -222,6 +222,12 @@ export const aprApi = {
   /** AS-IS apr.Apr01_Appr.selectByRequestEmpId (Apr01_Tab_MyRequestList, G02): 내가 상신한 문서. 검색어는 서버가 %…%로 */
   searchMyRequest: async (params: MyRequestParams): Promise<AprMyRequest[]> => {
     const res = await apiClient.get<ApiResponse<AprMyRequest[]>>('v1/apr/apprs/my-request', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr01_Appr.selectByText (L06 Apr01_Tab_BizPriorApproval 이익제공 사전승인신청): 내가 올린 PreProvideRcvType 문서 */
+  searchPreProvide: async (startDate: string, endDate: string): Promise<AprPreProvide[]> => {
+    const res = await apiClient.get<ApiResponse<AprPreProvide[]>>('v1/apr/apprs/pre-provide', { params: { startDate, endDate } });
     return res.data.data ?? [];
   },
 

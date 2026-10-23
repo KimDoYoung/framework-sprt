@@ -159,4 +159,354 @@
                , COALESCE(#{row.htmlCardName}, ''), #{row.approvalDt}, COALESCE(#{row.franchiseName}, ''), COALESCE(#{row.sectorName}, ''), COALESCE(#{row.approvalAmount}, 0)
                , COALESCE(#{row.providePurName}, ''), COALESCE(#{row.provideContentName}, ''), COALESCE(#{row.totalPeple}, 0), COALESCE(#{row.averagePrice}, 0), COALESCE(#{row.note}, '') )
     </insert>
+
+    <!-- ===== L03 Biz01_Tab_Other · Biz01_Edit_Other ===== -->
+
+    <!-- AS-IS biz01_promo.selectByOther L1391 (IDMS-IC) — 그리드·편집에 쓰는 열만 별칭으로 -->
+    <select id="selectByOther" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherRes">
+        SELECT a.biz01_promo_id                                                                                    AS promo_id
+             , a.biz01_provide_rcv_type                                                                            AS provide_rcv_type
+             , f_cdnm('ProvideRcvType',     a.biz01_provide_rcv_type,   a.biz01_company_id, a.biz01_provide_date)  AS provide_rcv_type_name
+             , a.biz01_provide_date                                                                                AS provide_date
+             , a.biz01_provide_pur_cd                                                                              AS provide_pur_code
+             , f_cdnm('ProvidePurCode',     a.biz01_provide_pur_cd,     a.biz01_company_id, a.biz01_provide_date)  AS provide_pur_name
+             , a.biz01_provide_content_cd                                                                          AS provide_content_code
+             , f_cdnm('ProvideContentCode', a.biz01_provide_content_cd, a.biz01_company_id, a.biz01_provide_date)  AS provide_content_name
+             , a.biz01_provide_amt                                                                                 AS provide_amt
+             , c.biz02_count                                                                                       AS total_peple
+             , TRUNC(a.biz01_provide_amt / CASE WHEN biz01_provide_rcv_type = '2'
+                                                THEN f_nvl(c.biz02_emp_count,1)
+                                                ELSE f_nvl(c.biz02_count,1)
+                                           END)                                                                    AS average_price
+             , a.biz01_note                                                                                        AS note
+          FROM biz01_promo a
+               LEFT OUTER JOIN act01_account_code b ON b.act01_account_code_id = a.biz01_account_code_id
+               LEFT OUTER JOIN LATERAL ( SELECT COUNT(*)                                                                  AS biz02_count
+                                              , SUM(CASE WHEN COALESCE(biz02_emp_yn,'false') = 'true' THEN 1 ELSE 0 END) AS biz02_emp_count
+                                           FROM biz02_person
+                                          WHERE biz02_promo_id = biz01_promo_id
+                                       ) c ON TRUE
+         WHERE 1=1
+           AND biz01_company_id = #{companyId}
+           AND biz01_reg_emp_id = #{personId}
+           AND biz01_provide_date BETWEEN #{startDate} AND #{closeDate}
+           AND biz01_provide_rcv_type LIKE #{provideRcvType}
+           AND biz01_buy_id IS NULL
+           AND biz01_card_id IS NULL
+         ORDER BY biz01_provide_date
+    </select>
+
+    <!-- AS-IS Biz01_Promo.modelUpdate → UpdateDataModel(biz01_promo) INSERT — 화면이 채우는 6열 + 정산구분 2(현예금)·등록자·회사 -->
+    <insert id="insertOther">
+        INSERT INTO biz01_promo
+               ( biz01_promo_id, biz01_company_id, biz01_settle_type, biz01_reg_emp_id
+               , biz01_provide_rcv_type, biz01_provide_date, biz01_provide_pur_cd, biz01_provide_content_cd, biz01_provide_amt, biz01_note )
+        VALUES ( #{promoId}, #{companyId}, '2', #{personId}
+               , #{req.provideRcvType}, #{req.provideDate}, #{req.providePurCode}, #{req.provideContentCode}, #{req.provideAmt}, #{req.note} )
+    </insert>
+
+    <!-- AS-IS Biz01_Promo.modelUpdate → UpdateDataModel(biz01_promo) UPDATE — 로그인 회사의 행만(보안 보강) -->
+    <update id="updateOther">
+        UPDATE biz01_promo
+           SET biz01_provide_rcv_type     = #{req.provideRcvType}
+             , biz01_provide_date         = #{req.provideDate}
+             , biz01_provide_pur_cd       = #{req.providePurCode}
+             , biz01_provide_content_cd   = #{req.provideContentCode}
+             , biz01_provide_amt          = #{req.provideAmt}
+             , biz01_note                 = #{req.note}
+         WHERE biz01_promo_id   = #{promoId}
+           AND biz01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS biz02_person.delete L231 (IDMS-IC) — 내역마다 인원 삭제, 로그인 회사의 내역만(보안 보강) -->
+    <delete id="deletePersonsByPromoIds">
+        DELETE FROM biz02_person
+         WHERE biz02_promo_id IN (
+               SELECT biz01_promo_id
+                 FROM biz01_promo
+                WHERE biz01_company_id = #{companyId}
+                  AND biz01_promo_id IN
+                  <foreach collection="promoIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+               )
+    </delete>
+
+    <!-- AS-IS Biz01_Promo.delete → UpdateDataModel(biz01_promo) DELETE — 로그인 회사의 행만(보안 보강) -->
+    <delete id="deletePromos">
+        DELETE FROM biz01_promo
+         WHERE biz01_company_id = #{companyId}
+           AND biz01_promo_id IN
+           <foreach collection="promoIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- ===== L05 Bmt01_Tab_Buy · Biz01_TabPage_List ===== -->
+
+    <sql id="buyPromoColumns">
+        SELECT a.biz01_promo_id                                                                                    AS promo_id
+             , a.biz01_buy_id                                                                                      AS buy_id
+             , a.biz01_provide_date                                                                                AS provide_date
+             , a.biz01_provide_content_cd                                                                          AS provide_content_code
+             , f_cdnm('ProvideContentCode', a.biz01_provide_content_cd, a.biz01_company_id, a.biz01_provide_date)  AS provide_content_name
+             , a.biz01_provide_pur_cd                                                                              AS provide_pur_code
+             , f_cdnm('ProvidePurCode',     a.biz01_provide_pur_cd,     a.biz01_company_id, a.biz01_provide_date)  AS provide_pur_name
+             , (SELECT biz02_target_company_nm
+                  FROM biz02_person
+                 WHERE biz02_promo_id = a.biz01_promo_id
+                   AND biz02_emp_yn = 'false'
+                 LIMIT 1)                                                                                          AS target_company_name
+             , (SELECT biz02_target_emp_nm
+                  FROM biz02_person
+                 WHERE biz02_promo_id = a.biz01_promo_id
+                   AND biz02_emp_yn = 'false'
+                 LIMIT 1)                                                                                          AS target_emp_name
+             , a.biz01_note                                                                                        AS note
+          FROM biz01_promo a
+               INNER JOIN bmt01_buy b ON a.biz01_buy_id = b.bmt01_buy_id
+    </sql>
+
+    <!-- AS-IS biz01_promo.selectByBuyId L1437 (IDMS-IC) — 그리드에 쓰는 열만 별칭으로(정산구분명·과세·계정과목·마감명은 뺌) -->
+    <select id="selectByBuyId" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizBuyPromoRes">
+        <include refid="buyPromoColumns"/>
+         WHERE 1=1
+           AND biz01_company_id = #{companyId}
+           AND biz01_buy_id = #{buyId}
+         ORDER BY biz01_provide_date
+    </select>
+
+    <!-- AS-IS biz01_promo.selectById (IDMS-IC) — 저장 뒤 다시 읽기, 로그인 회사의 행만 -->
+    <select id="selectBuyPromoById" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizBuyPromoRes">
+        <include refid="buyPromoColumns"/>
+         WHERE biz01_company_id = #{companyId}
+           AND biz01_promo_id = #{promoId}
+    </select>
+
+    <!-- AS-IS Biz01_Promo.updateAdd → UpdateDataModel(biz01_promo) INSERT — 정산구분 2(현예금)·제공/수령 1(제공)·등록자·회사는 서버 값 -->
+    <insert id="insertBuyPromo">
+        INSERT INTO biz01_promo
+               ( biz01_promo_id, biz01_company_id, biz01_settle_type, biz01_reg_emp_id, biz01_provide_rcv_type, biz01_buy_id
+               , biz01_provide_date, biz01_provide_pur_cd, biz01_provide_content_cd, biz01_provide_amt, biz01_person_id, biz01_note )
+        VALUES ( #{promoId}, #{companyId}, '2', #{regEmpId}, '1', #{req.buyId}
+               , #{req.provideDate}, #{req.providePurCode}, #{req.provideContentCode}, #{req.provideAmt}, #{req.personId}, #{req.note} )
+    </insert>
+
+    <!-- AS-IS Biz01_Promo.updateAdd → UpdateDataModel(biz01_promo) UPDATE — 화면에서 고치는 3열, 로그인 회사의 행만(보안 보강) -->
+    <update id="updateBuyPromo">
+        UPDATE biz01_promo
+           SET biz01_provide_date = #{req.provideDate}
+             , biz01_provide_pur_cd = #{req.providePurCode}
+             , biz01_note = #{req.note}
+         WHERE biz01_promo_id   = #{promoId}
+           AND biz01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS sys09_code.selectByKindCode L282 (IDMS-IC) (kindCode ProvidePurCode, code LIKE 구분코드%) -->
+    <select id="selectProvidePurposes" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCodeOptionRes">
+        SELECT sys09_code.sys09_code AS code
+             , sys09_code.sys09_name AS name
+          FROM sys09_code
+             , sys08_code_kind
+         WHERE sys08_kind_cd = 'ProvidePurCode'
+           AND sys09_code_kind_id = sys08_code_kind_id
+           AND sys09_code LIKE #{code}
+           AND COALESCE(sys09_close_yn, 'false') = 'false'
+         ORDER BY sys09_seq
+    </select>
+
+    <!-- ===== L04 Biz01_Tab_CardContents ===== -->
+
+    <!-- AS-IS biz01_promo.selectCardContentsPaging L983 · selectCardContentsTotal L1033 (IDMS-IC) 의 FROM~WHERE -->
+    <sql id="cardContentsFrom">
+          FROM biz01_promo a
+               INNER JOIN crd02_data b ON crd02_data_id = a.biz01_card_data_id
+               LEFT OUTER JOIN LATERAL ( SELECT COUNT(*)                                                                  AS biz02_count
+                                              , SUM(CASE WHEN COALESCE(biz02_emp_yn,'false') = 'true' THEN 1 ELSE 0 END) AS biz02_emp_count
+                                           FROM biz02_person
+                                          WHERE biz02_promo_id = biz01_promo_id
+                                       ) c ON TRUE
+               LEFT OUTER JOIN act01_account_code d ON d.act01_account_code_id = a.biz01_account_code_id
+               INNER JOIN crd01_card ON crd01_card_id = biz01_card_id
+         WHERE 1=1
+           AND biz01_company_id = #{companyId}
+           AND CAST(f_get_crdManagerId(biz01_card_id, biz01_provide_date) AS VARCHAR) LIKE #{managerId}||'%'
+           AND biz01_std_ym = #{dataYm}
+           AND COALESCE(biz01_provide_pur_cd,'%') LIKE #{providePurCode}
+           AND CONCAT(crd02_franchise_nm,crd02_sector_nm, biz01_provide_company, biz01_note) ILIKE #{searchText}
+    </sql>
+
+    <!-- AS-IS biz01_promo.selectCardContentsPaging L983 (IDMS-IC) — 그리드·편집에 쓰는 열만 별칭으로 -->
+    <select id="selectCardContentsPaging" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCardContentsRes">
+        SELECT a.biz01_promo_id                                                                                 AS promo_id
+             , COALESCE(a.biz01_close_yn, 'false') = 'true'                                                     AS close_yn
+             , CASE WHEN COALESCE(a.biz01_close_yn, 'false') = 'true' THEN '마감' ELSE '' END                    AS close_name
+             , crd01_card_nm                                                                                    AS html_card_name
+             , f_emp_kor_nm(f_get_crdManagerId(biz01_card_id, biz01_provide_date))                              AS reg_emp_name
+             , b.crd02_approval_dt                                                                              AS approval_dt
+             , b.crd02_franchise_nm                                                                             AS franchise_name
+             , b.crd02_sector_nm                                                                                AS sector_name
+             , b.crd02_approval_amount                                                                          AS approval_amount
+             , a.biz01_provide_pur_cd                                                                           AS provide_pur_code
+             , f_cdnm('ProvidePurCode',     a.biz01_provide_pur_cd,     a.biz01_company_id, a.biz01_provide_date) AS provide_pur_name
+             , a.biz01_provide_content_cd                                                                       AS provide_content_code
+             , f_cdnm('ProvideContentCode', a.biz01_provide_content_cd, a.biz01_company_id, a.biz01_provide_date) AS provide_content_name
+             , a.biz01_account_code_id                                                                          AS account_code_id
+             , CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||d.act01_account_nm AS account_name
+             , c.biz02_count                                                                                    AS total_peple
+             , TRUNC(a.biz01_provide_amt / CASE WHEN a.biz01_provide_rcv_type = '2'
+                                                THEN f_nvl(c.biz02_emp_count,1)
+                                                ELSE f_nvl(c.biz02_count    ,1)
+                                           END)                                                                 AS average_price
+             , a.biz01_note                                                                                     AS note
+        <include refid="cardContentsFrom"/>
+         ORDER BY biz01_provide_date, crd02_franchise_nm collate "ko_KR.utf8" asc
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <!-- AS-IS biz01_promo.selectCardContentsTotal L1033 (IDMS-IC) -->
+    <select id="selectCardContentsTotal" resultType="long">
+        SELECT count(*)
+        <include refid="cardContentsFrom"/>
+    </select>
+
+    <!-- AS-IS biz01_promo.selectByAmt L1364 (IDMS-IC) — include selectCardUseList L1100을 펼침. managerId(Long)가 있을 때만 관리자 조건 -->
+    <select id="selectCardContentsAmount" resultType="long">
+        SELECT COALESCE(SUM(biz01_provide_amt), 0)
+          FROM (
+                SELECT biz01_provide_amt
+                     , crd02_franchise_nm                                                                              AS biz01_franchise_nm
+                     , crd02_sector_nm                                                                                 AS biz01_sector_nm
+                     , CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||act01_account_nm AS biz01_account_nm
+                     , crd01_card_nm                                                                                   AS biz01_html_card_nm
+                     , f_emp_kor_nm(crd03_person_id)                                                                   AS biz01_reg_emp_nm
+                     , f_cdnm('ProvidePurCode'     , biz01_provide_pur_cd      , biz01_company_id, biz01_provide_date) AS biz01_provide_pur_nm
+                     , f_cdnm('ProvideContentCode' , biz01_provide_content_cd  , biz01_company_id, biz01_provide_date) AS biz01_provide_content_nm
+                  FROM (
+                        SELECT *
+                          FROM biz01_promo
+                               INNER JOIN crd02_data ON crd02_data_id = biz01_card_data_id
+                               INNER JOIN sys01_company ON sys01_company_id = biz01_company_id
+                               LEFT OUTER JOIN crd01_card  ON crd01_card_id = biz01_card_id
+                               LEFT OUTER JOIN crd03_trans ON (    crd03_card_id = biz01_card_id
+                                                               AND biz01_provide_date BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,'9999-12-31') )
+                               LEFT OUTER JOIN act01_account_code ON (act01_account_code_id = biz01_account_code_id)
+                         WHERE biz01_company_id = #{companyId}
+                           AND COALESCE(biz01_provide_pur_cd,'%') LIKE #{providePurCode}
+                           AND biz01_std_ym = #{dataYm}
+                        <if test="managerId != null">
+                           AND CASE WHEN #{managerId} = 0
+                                    THEN crd03_public_yn = 'true'
+                                    ELSE ((CASE WHEN sys01_card_real_user_yn = 'true'
+                                                THEN (CASE WHEN biz01_real_person_id IS NOT NULL
+                                                           THEN biz01_real_person_id
+                                                           ELSE crd03_person_id END)
+                                                ELSE (CASE WHEN crd03_public_yn = 'true'
+                                                           THEN 0
+                                                           ELSE crd03_person_id END) END ) = #{managerId}) END
+                        </if>
+                       ) t
+               ) tt
+         WHERE 1=1
+           AND CONCAT( biz01_franchise_nm
+                     , biz01_sector_nm
+                     , biz01_account_nm
+                     , biz01_html_card_nm
+                     , biz01_reg_emp_nm
+                     , biz01_provide_pur_nm
+                     , biz01_provide_content_nm) ILIKE '%'||#{searchText}||'%'
+    </select>
+
+    <!-- AS-IS sys00_common.selectBizCardManager L? (IDMS-IC) — 코드·이름 두 열(코드는 사원 번호 글자) -->
+    <select id="selectCardManagers" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCodeOptionRes">
+        SELECT CAST(0 AS VARCHAR) AS code
+             , '공통'              AS name
+        UNION ALL
+        SELECT CAST(user_id AS VARCHAR)        AS code
+             , f_emp_kor_nm(user_id)           AS name
+          FROM (SELECT CASE WHEN sys01_card_real_user_yn = 'true' AND crd03_public_yn = 'true'
+                            THEN (CASE WHEN biz01_real_person_id IS NULL THEN crd03_person_id ELSE biz01_real_person_id END)
+                            ELSE crd03_person_id END AS user_id
+                  FROM biz01_promo
+                       INNER JOIN crd02_data ON crd02_data_id = biz01_card_data_id
+                       INNER JOIN sys01_company ON sys01_company_id = biz01_company_id
+                       LEFT OUTER JOIN crd01_card  ON crd01_card_id = biz01_card_id
+                       LEFT OUTER JOIN crd03_trans ON (    crd03_card_id = biz01_card_id
+                                                       AND biz01_provide_date BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,'9999-12-31') )
+                       LEFT OUTER JOIN act01_account_code ON (act01_account_code_id = biz01_account_code_id)
+                 WHERE biz01_company_id = #{companyId}
+                   AND biz01_std_ym = #{stdYm}) t
+         GROUP BY user_id
+         ORDER BY 2
+    </select>
+
+    <!-- AS-IS Sys99_Print.insertRdCardContents L3389 (IDMS-IC) = biz01_promo.selectCardContents L934 + sys99_print.insert 를 한 번에(INSERT … SELECT).
+         checkNull → COALESCE(…,''), checkLongNull → COALESCE(…,0). 열: 관리자 s01 · 승인일 d01 · 가맹점 s02 · 업종 s03 · 승인금액 l01 · 목적 s04 · 내역 s05 · 인원 l02 · 인당 l03 · 직원 t01 · 상대방 t02 · 비고 t03 · 카드명 s07 -->
+    <insert id="insertPrintCardContents">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_date01, sys99_string02, sys99_string03, sys99_long01
+               , sys99_string04, sys99_string05, sys99_long02, sys99_long03
+               , sys99_text01, sys99_text02, sys99_text03, sys99_string07 )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , COALESCE(f_emp_kor_nm(f_get_crdManagerId(biz01_card_id, biz01_provide_date)), ''), b.crd02_approval_dt, COALESCE(b.crd02_franchise_nm, ''), COALESCE(b.crd02_sector_nm, ''), COALESCE(b.crd02_approval_amount, 0)
+             , COALESCE(f_cdnm('ProvidePurCode', a.biz01_provide_pur_cd, a.biz01_company_id, a.biz01_provide_date), ''), COALESCE(f_cdnm('ProvideContentCode', a.biz01_provide_content_cd, a.biz01_company_id, a.biz01_provide_date), ''), COALESCE(c.biz02_count, 0)
+             , COALESCE(TRUNC(a.biz01_provide_amt / CASE WHEN a.biz01_provide_rcv_type = '2'
+                                                         THEN f_nvl(c.biz02_emp_count,1)
+                                                         ELSE f_nvl(c.biz02_count    ,1)
+                                                    END), 0)
+             , COALESCE((SELECT STRING_AGG(f_emp_kor_nm(biz02_emp_id), E'\n')
+                           FROM biz02_person
+                          WHERE biz02_promo_id = biz01_promo_id), '')
+             , COALESCE((SELECT STRING_AGG(biz02_target_company_nm || ' ' || biz02_target_emp_nm, E'\n')
+                           FROM biz02_person
+                          WHERE biz02_promo_id = biz01_promo_id
+                            AND biz02_emp_yn = 'false'), '')
+             , COALESCE(a.biz01_note, ''), COALESCE(crd01_card_nm, '')
+        <include refid="cardContentsFrom"/>
+         ORDER BY biz01_provide_date, crd02_franchise_nm collate "ko_KR.utf8" asc
+    </insert>
+
+    <!-- AS-IS Sys99_Print.insertRdCardContentsDownload L3443 (IDMS-IC) = biz01_promo.selectCardContentsDownload L1053 + sys99_print.insert 를 한 번에.
+         거래상대방이 여럿이면 내역이 상대방 수만큼 여러 행(원본 SQL의 LEFT JOIN biz02_person e). 열: s01 관리자 · d01 · s02 · s03 · l01 · s04 · s05 · l02 · l03 · t01 직원 · t02 비고 · s07 카드명 · s08 상대방 회사 · s09 거래구분 · s10 상대방 사원 · l04 promoId -->
+    <insert id="insertPrintCardContentsDownload">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_date01, sys99_string02, sys99_string03, sys99_long01
+               , sys99_string04, sys99_string05, sys99_long02, sys99_long03
+               , sys99_text01, sys99_text02, sys99_string07
+               , sys99_string08, sys99_string09, sys99_string10, sys99_long04 )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , COALESCE(f_emp_kor_nm(f_get_crdManagerId(biz01_card_id, biz01_provide_date)), ''), b.crd02_approval_dt, COALESCE(b.crd02_franchise_nm, ''), COALESCE(b.crd02_sector_nm, ''), COALESCE(b.crd02_approval_amount, 0)
+             , COALESCE(f_cdnm('ProvidePurCode', a.biz01_provide_pur_cd, a.biz01_company_id, a.biz01_provide_date), ''), COALESCE(f_cdnm('ProvideContentCode', a.biz01_provide_content_cd, a.biz01_company_id, a.biz01_provide_date), ''), COALESCE(c.biz02_count, 0)
+             , COALESCE(TRUNC(a.biz01_provide_amt / CASE WHEN a.biz01_provide_rcv_type = '2'
+                                                         THEN f_nvl(c.biz02_emp_count,1)
+                                                         ELSE f_nvl(c.biz02_count    ,1)
+                                                    END), 0)
+             , COALESCE((SELECT COALESCE(STRING_AGG(f_emp_kor_nm(biz02_emp_id), E'\n'), ' ')
+                           FROM biz02_person
+                          WHERE biz02_promo_id = biz01_promo_id), '')
+             , COALESCE(NULLIF(TRIM(a.biz01_note), ''), ' '), COALESCE(crd01_card_nm, '')
+             , COALESCE(e.biz02_target_company_nm, '')
+             , COALESCE((SELECT f_cdnm('CrmItemTypeCode', mkt01_item_type_cd, mkt01_company_id, biz01_provide_date)
+                           FROM mkt01_target_company
+                          WHERE mkt01_company_id        = biz01_company_id
+                            AND mkt01_target_company_nm = e.biz02_target_company_nm
+                          LIMIT 1), '')
+             , COALESCE(e.biz02_target_emp_nm, ''), COALESCE(a.biz01_promo_id, 0)
+          FROM biz01_promo a
+               INNER JOIN crd02_data b ON crd02_data_id = a.biz01_card_data_id
+               LEFT OUTER JOIN LATERAL ( SELECT COUNT(*)                                                                  AS biz02_count
+                                              , SUM(CASE WHEN COALESCE(biz02_emp_yn,'false') = 'true' THEN 1 ELSE 0 END) AS biz02_emp_count
+                                           FROM biz02_person
+                                          WHERE biz02_promo_id = biz01_promo_id
+                                       ) c ON TRUE
+               LEFT OUTER JOIN act01_account_code d ON d.act01_account_code_id = a.biz01_account_code_id
+               INNER JOIN crd01_card ON crd01_card_id = biz01_card_id
+               LEFT JOIN biz02_person e ON e.biz02_promo_id = a.biz01_promo_id AND e.biz02_emp_yn = 'false'
+         WHERE 1=1
+           AND biz01_company_id = #{companyId}
+           AND CAST(f_get_crdManagerId(biz01_card_id, biz01_provide_date) AS VARCHAR) LIKE #{managerId}||'%'
+           AND biz01_std_ym = #{dataYm}
+           AND COALESCE(biz01_provide_pur_cd,'%') LIKE #{providePurCode}
+           AND CONCAT(crd02_franchise_nm,crd02_sector_nm, biz01_provide_company, biz01_note) ILIKE #{searchText}
+         ORDER BY biz01_provide_date, crd02_franchise_nm collate "ko_KR.utf8" asc, biz01_promo_id
+    </insert>
 </mapper>

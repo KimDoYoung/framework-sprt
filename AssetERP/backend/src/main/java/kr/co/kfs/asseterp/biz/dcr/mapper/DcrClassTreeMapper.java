@@ -28,6 +28,9 @@ public interface DcrClassTreeMapper {
     List<ClassTreeLookupRes> selectLookup(@Param("companyId") Long companyId, @Param("typeCode") String typeCode, @Param("searchText") String searchText,
                                           @Param("relateTable") String relateTable, @Param("relateId") Long relateId);
 
+    /** AS-IS dcr03_org_auth.selectByDcrOrgId (L06 Dcr30_Move_DcrClass.update): 조직의 문서분류 수정권한 값들(최신 행이 첫째) */
+    List<String> selectOrgAuthUpdateYn(@Param("orgId") Long orgId, @Param("classTreeId") Long classTreeId);
+
     /** AS-IS selectByParentId1Bang (selectByCompanyId): 사용 중인 분류의 전위 순서 목록. typeCode는 LIKE 패턴('C'·'%') */
     List<DcrClassTreeRes> selectTree(@Param("companyId") Long companyId, @Param("typeCode") String typeCode);
 

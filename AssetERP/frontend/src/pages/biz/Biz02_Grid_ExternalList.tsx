@@ -9,14 +9,14 @@ import { message, Modal } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { bizPersonApi, bizPromoApi } from '@/api/biz';
 import { errorMessage } from '@/api/client';
-import { BizPerson, BizPromoCard } from '@/types/biz';
+import { BizPerson } from '@/types/biz';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
 
 const gb = gbFor<BizPerson>();
 
 interface Props {
-  promo: BizPromoCard | null;
+  promo: { promoId: number } | null;
   closed: boolean;
   refreshKey: number;
   onChanged: () => void;

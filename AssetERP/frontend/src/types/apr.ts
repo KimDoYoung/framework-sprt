@@ -161,6 +161,16 @@ export interface AprDownloadHistory {
   personName?: string | null;
 }
 
+/** 이익제공 사전승인신청 목록 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Tab_BizPriorApproval 그리드 열, L06) */
+export interface AprPreProvide {
+  apprId: number;
+  regDate?: string | null;
+  effectDate?: string | null;
+  classTreeNameAllPath?: string | null;
+  title?: string | null;
+  statusName?: string | null;
+}
+
 /** 상신내역 조회 목록 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Tab_MyRequestList 그리드 열, G02). title은 HTML(폐기 문서는 빨간 [폐기]) */
 export interface AprMyRequest {
   apprId: number;

@@ -45,6 +45,19 @@ export interface BizPromoCard {
   note: string | null;
 }
 
+/** L04 Biz01_Tab_CardContents 그리드 한 행 — 편집 칸(Biz01_Edit_Card)에 그대로 넘기므로 BizPromoCard에 관리자만 더한다 */
+export interface BizCardContents extends BizPromoCard {
+  regEmpName: string | null;
+}
+
+/** L04 [출력/다운로드]·[엑셀다운로드] 자료 만들기. managerId·providePurCode '%'는 전체 */
+export interface BizCardContentsPrintReq {
+  dataYm: string;
+  managerId: string;
+  providePurCode: string;
+  searchText: string;
+}
+
 /** L02 Biz01_Edit_Card [저장] (AS-IS Biz01_Promo.modelUpdate) */
 export interface BizPromoUpdateReq {
   providePurCode: string | null;
@@ -63,6 +76,57 @@ export interface BizPromoAccountReq {
   note: string | null;
   /** true면 과세구분까지(법인카드 화면은 false) */
   withTax: boolean;
+}
+
+/** L03 Biz01_Tab_Other 그리드 한 행 (AS-IS Biz01_PromoModel). 날짜는 'yyyy-MM-dd'. 아직 저장 전인 새 행은 promoId가 음수(임시) */
+export interface BizPromoOther {
+  promoId: number;
+  provideRcvType: string | null;
+  provideRcvTypeName: string | null;
+  provideDate: string | null;
+  providePurCode: string | null;
+  providePurName: string | null;
+  provideContentCode: string | null;
+  provideContentName: string | null;
+  provideAmt: number | null;
+  totalPeple: number | null;
+  averagePrice: number | null;
+  note: string | null;
+}
+
+/** L03 Biz01_Edit_Other [저장] (AS-IS Biz01_Promo.modelUpdate) */
+export interface BizPromoOtherReq {
+  provideRcvType: string | null;
+  provideDate: string | null;
+  providePurCode: string | null;
+  provideContentCode: string | null;
+  provideAmt: number | null;
+  note: string | null;
+}
+
+/**
+ * L05 Biz01_TabPage_List 그리드 한 행 (AS-IS Biz01_PromoModel). 날짜는 'yyyy-MM-dd'. 새 행은 promoId가 음수(임시)이고
+ * 구매내역에서 넘겨받은 값(buyId·품목·금액·담당자)을 함께 가진다 — 서버에서 읽은 행에는 provideAmt·personId가 없다
+ */
+export interface BizBuyPromo {
+  promoId: number;
+  buyId: number | null;
+  provideDate: string | null;
+  provideContentCode: string | null;
+  provideContentName: string | null;
+  providePurCode: string | null;
+  providePurName: string | null;
+  targetCompanyName: string | null;
+  targetEmpName: string | null;
+  note: string | null;
+  provideAmt?: number | null;
+  personId?: number | null;
+}
+
+/** 코드 콤보 한 항목 (AS-IS sys09_code 코드·이름) */
+export interface BizCodeOption {
+  code: string;
+  name: string;
 }
 
 /** 제공내역에 연결된 계정과목 (AS-IS sys.Sys00_Common.selectByProvideContentCode) */
@@ -102,4 +166,31 @@ export interface BizRelateAppr {
   regDate?: string | null;
   effectDate?: string | null;
   regEmpName?: string | null;
+}
+
+/** 이익제공 한도초과현황 — 인별 1회 초과건 한 행 (AS-IS Biz01_PromoModel 중 Biz01_TabPage_PersonDay 그리드 열, L07) */
+export interface BizLimitPersonDay {
+  provideRcvTypeName?: string | null;
+  regEmpName?: string | null;
+  provideDate?: string | null;
+  providePurName?: string | null;
+  provideContentName?: string | null;
+  targetEmpName?: string | null;
+  averagePrice?: number | null;
+  note?: string | null;
+}
+
+/** 인별 연간 초과건 한 행 (Biz01_TabPage_PersonYear, L07) */
+export interface BizLimitPersonYear {
+  provideRcvTypeName?: string | null;
+  targetCompanyName?: string | null;
+  targetEmpName?: string | null;
+  averagePrice?: number | null;
+}
+
+/** 회사별 연간 초과건 한 행 (Biz01_TabPage_CompanyYear, L07) */
+export interface BizLimitCompanyYear {
+  provideRcvTypeName?: string | null;
+  targetCompanyName?: string | null;
+  averagePrice?: number | null;
 }

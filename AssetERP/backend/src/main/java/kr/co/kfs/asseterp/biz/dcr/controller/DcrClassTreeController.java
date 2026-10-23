@@ -69,6 +69,12 @@ public class DcrClassTreeController {
         return ApiResponse.ok(dcrClassTreeService.searchWriteTree(principal));
     }
 
+    /** AS-IS dcr.Dcr03_OrgAuth.selectByDcrOrgId (L06 Dcr30_Move_DcrClass 확인 — 일반 사용자의 조직이 이 문서분류를 쓸 권한이 있는가) */
+    @GetMapping("/{classTreeId}/update-auth")
+    public ApiResponse<Boolean> hasUpdateAuth(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long classTreeId) {
+        return ApiResponse.ok(dcrClassTreeService.hasUpdateAuth(principal, classTreeId));
+    }
+
     /** AS-IS dcr.Dcr01_ClassTree.selectByAll — 사용 여부와 관계없는 전체 트리(사용여부 설정 창) */
     @GetMapping("/all")
     public ApiResponse<List<DcrClassTreeAllRes>> searchTreeAll(@AuthenticationPrincipal UserPrincipal principal,

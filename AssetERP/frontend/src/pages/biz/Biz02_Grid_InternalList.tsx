@@ -9,7 +9,7 @@ import dayjs from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { bizPersonApi, bizPromoApi } from '@/api/biz';
 import { errorMessage } from '@/api/client';
-import { BizPerson, BizPromoCard } from '@/types/biz';
+import { BizPerson } from '@/types/biz';
 import { TransInfo } from '@/types/emp';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
@@ -19,7 +19,7 @@ const gb = gbFor<BizPerson>();
 
 interface Props {
   /** retrieve(selectedItem) — 고른 내역. 없으면 setEnabled(false) */
-  promo: BizPromoCard | null;
+  promo: { promoId: number } | null;
   /** setButtonVisible(!closeYn) 의 반대: 마감·상신이면 true */
   closed: boolean;
   /** 부모가 올리면 다시 읽는다 (Biz01_Edit_Card가 직원을 자동등록한 뒤 personList.retrieve) */

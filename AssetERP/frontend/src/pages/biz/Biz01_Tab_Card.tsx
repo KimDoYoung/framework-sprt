@@ -90,7 +90,7 @@ export const Biz01_Tab_Card: React.FC = () => {
     const v = sp.current.current;
     try {
       const list = await bizPromoApi.searchCards(fmtDate(v.startDate), fmtDate(v.closeDate), v.searchText);
-      gridRef.current?.api.deselectAll();
+      gridRef.current?.api?.deselectAll();
       lastChecked.current = [];
       setChecked([]);
       setRows(list);

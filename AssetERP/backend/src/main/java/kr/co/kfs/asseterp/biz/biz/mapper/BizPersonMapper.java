@@ -32,4 +32,12 @@ public interface BizPersonMapper {
 
     /** AS-IS biz04_provide_setup.selectByProvideContentCode → biz04_emp_set_yn (설정 없으면 null) */
     String selectEmpSetYn(@Param("companyId") Long companyId, @Param("provideContentCode") String provideContentCode);
+
+    /** AS-IS biz02_person.insert (거래상대방, L05 updateAdd) */
+    int insertExternal(@Param("personId") long personId, @Param("promoId") Long promoId,
+                       @Param("targetCompanyName") String targetCompanyName, @Param("targetEmpName") String targetEmpName);
+
+    /** AS-IS biz02_person.update (L05 updateAdd) — 내역의 인원 행 거래상대방 이름 */
+    int updateExternal(@Param("promoId") Long promoId,
+                       @Param("targetCompanyName") String targetCompanyName, @Param("targetEmpName") String targetEmpName);
 }

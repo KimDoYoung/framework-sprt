@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.apr.mapper;
 
 import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprPreProvideCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprPreProvideRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDcrWriteRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprDocRes;
@@ -66,6 +68,9 @@ public interface AprApprMapper {
 
     /** AS-IS apr01_appr.selectByRequestEmpId (G02 상신내역 조회) */
     List<AprMyRequestRes> selectByRequestEmpId(@Param("c") AprMyRequestCond cond);
+
+    /** AS-IS apr01_appr.selectByText L327 (L06 이익제공 사전승인신청) — preProvideRcvApprYn=true 가지 */
+    List<AprPreProvideRes> selectPreProvide(@Param("c") AprPreProvideCond cond);
 
     /** AS-IS apr01_appr.selectByReferenceEmpId (G03 참조내역 조회) */
     List<AprMyReferenceRes> selectByReferenceEmpId(@Param("c") AprMyReferenceCond cond);

@@ -649,4 +649,13 @@
         )
         SELECT tree_structure.dcr01_class_tree_id FROM tree_structure
     </sql>
+    <!-- AS-IS dcr03_org_auth.selectByDcrOrgId (IDMS-IC) — L06 Dcr30_Move_DcrClass.update(). 서버는 첫 행의 update_yn이 'true'일 때만 status 1 -->
+    <select id="selectOrgAuthUpdateYn" resultType="string">
+        SELECT dcr03_update_yn
+          FROM dcr03_org_auth
+         WHERE dcr03_org_code_id   = #{orgId}
+           AND dcr03_class_tree_id = #{classTreeId}
+         ORDER BY dcr03_org_auth_id DESC
+    </select>
+
 </mapper>

@@ -4,12 +4,11 @@
  * setting() L19-22(둘 다 setEnabled(false)) · setButtonVisible() L24-27 · retrieve() L29-45(둘 다 읽는다) — props(promo·closed·refreshKey)로 같은 일을 한다
  */
 import React from 'react';
-import { BizPromoCard } from '@/types/biz';
 import { Biz02_Grid_InternalList } from './Biz02_Grid_InternalList';
 import { Biz02_Grid_ExternalList } from './Biz02_Grid_ExternalList';
 
 interface Props {
-  promo: BizPromoCard | null;
+  promo: { promoId: number } | null;
   closed: boolean;
   refreshKey: number;
   onChanged: () => void;

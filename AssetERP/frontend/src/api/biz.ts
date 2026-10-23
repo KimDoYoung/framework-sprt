@@ -1,7 +1,9 @@
 import { apiClient } from './client';
-import { ApiResponse } from '../types/auth';
+import { ApiResponse, PageRes } from '../types/auth';
+import { readBlobError } from './file';
 import {
-  BizAccountOption, BizDocClass, BizLimit, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoUpdateReq, BizProvideSetup, BizRelateAppr,
+  BizAccountOption, BizBuyPromo, BizCardContents, BizCardContentsPrintReq, BizCodeOption, BizDocClass, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq,
+  BizPromoUpdateReq, BizProvideSetup, BizRelateAppr,
 } from '../types/biz';
 
 /** L01 AS-IS Biz90_Tab_Limit (이익제공 기준관리) */
@@ -82,6 +84,75 @@ export const bizPromoApi = {
     const res = await apiClient.post<ApiResponse<string>>('v1/biz/promos/rd-print', { startDate, closeDate, searchText });
     return res.data.data ?? '';
   },
+
+  // ── L03 Biz01_Tab_Other·Biz01_Edit_Other ──
+
+  /** AS-IS biz.Biz01_Promo.selectByOther — 날짜 'yyyy-MM-dd', 제공/수령 구분이 없으면 '%'(전체) */
+  searchOthers: async (startDate: string, closeDate: string, provideRcvType: string): Promise<BizPromoOther[]> => {
+    const res = await apiClient.get<ApiResponse<BizPromoOther[]>>('v1/biz/promos/others', { params: { startDate, closeDate, provideRcvType } });
+    return res.data.data ?? [];
+  },
+  /** AS-IS biz.Biz01_Promo.modelUpdate (새 행) → 내역 ID */
+  createOther: async (req: BizPromoOtherReq): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/biz/promos/others', req);
+    return res.data.data ?? 0;
+  },
+  /** AS-IS biz.Biz01_Promo.modelUpdate (고친 행) */
+  updateOther: async (promoId: number, req: BizPromoOtherReq): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>(`v1/biz/promos/others/${promoId}`, req);
+    return res.data.data ?? 0;
+  },
+  /** AS-IS biz.Biz01_Promo.delete → 지운 건수 */
+  deleteOthers: async (promoIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/biz/promos/others', { data: promoIds });
+    return res.data.data ?? 0;
+  },
+  /** AS-IS sys.Sys09_Code.selectByKindCode(ProvidePurCode, 구분코드%) */
+  searchProvidePurposes: async (rcvType: string): Promise<BizCodeOption[]> => {
+    const res = await apiClient.get<ApiResponse<BizCodeOption[]>>('v1/biz/promos/provide-purposes', { params: { rcvType } });
+    return res.data.data ?? [];
+  },
+
+  // ── L05 Bmt01_Tab_Buy → Biz01_TabPage_List ──
+
+  /** AS-IS biz.Biz01_Promo.selectByBuyId */
+  searchBuyPromos: async (buyId: number): Promise<BizBuyPromo[]> => {
+    const res = await apiClient.get<ApiResponse<BizBuyPromo[]>>('v1/biz/promos/buy-promos', { params: { buyId } });
+    return res.data.data ?? [];
+  },
+  /** AS-IS biz.Biz01_Promo.updateAdd — 변경 행(promoId ≤ 0은 새 행) → 다시 읽은 행들(요청 순서) */
+  saveBuyPromos: async (rows: BizBuyPromo[]): Promise<BizBuyPromo[]> => {
+    const res = await apiClient.put<ApiResponse<BizBuyPromo[]>>('v1/biz/promos/buy-promos', rows);
+    return res.data.data ?? [];
+  },
+
+  // ── L04 Biz01_Tab_CardContents ──
+
+  /** AS-IS biz.Biz01_Promo.selectCardContentsPaging — dataYm 'yyyy.MM', managerId·providePurCode '%'는 전체, offset = (쪽-1)*limit */
+  searchCardContents: async (p: { dataYm: string; managerId: string; providePurCode: string; searchText: string; offset: number; limit: number }): Promise<PageRes<BizCardContents>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<BizCardContents>>>('v1/biz/promos/card-contents', { params: p });
+    return res.data.data ?? { total: 0, rows: [] };
+  },
+  /** AS-IS biz.Biz01_Promo.selectByAmt — 총 승인금액 */
+  getCardContentsAmount: async (p: { dataYm: string; managerId: string; providePurCode: string; searchText: string }): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/biz/promos/card-contents/total-amount', { params: p });
+    return res.data.data ?? 0;
+  },
+  /** AS-IS sys.Sys00_Common.selectBizCardManager — 기준년월 'yyyy.MM'. "전체"는 부르는 쪽이 붙인다 */
+  searchCardManagers: async (stdYm: string): Promise<BizCodeOption[]> => {
+    const res = await apiClient.get<ApiResponse<BizCodeOption[]>>('v1/biz/promos/card-managers', { params: { stdYm } });
+    return res.data.data ?? [];
+  },
+  /** AS-IS sys.Sys99_Print.insertRdCardContents → 출력 그룹 ID */
+  rdPrintCardContents: async (req: BizCardContentsPrintReq): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/biz/promos/card-contents/rd-print', req);
+    return res.data.data ?? '';
+  },
+  /** AS-IS sys.Sys99_Print.insertRdCardContentsDownload → 출력 그룹 ID(엑셀용) */
+  rdDownloadCardContents: async (req: BizCardContentsPrintReq): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/biz/promos/card-contents/rd-download', req);
+    return res.data.data ?? '';
+  },
 };
 
 /** L02 AS-IS Biz02_Grid_InternalList·ExternalList (server/biz/Biz02_Person) */
@@ -139,5 +210,44 @@ export const bizRelateApprApi = {
   deleteRelateApprs: async (relateApprIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/biz/relate-apprs', { data: relateApprIds });
     return res.data.data ?? 0;
+  },
+};
+
+function saveBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** L07 AS-IS Biz01_Tab_LimitCheckList (이익제공 한도초과현황) → server Biz01_Promo.selectByPersonDay·PersonYear·CompanyYear. provideRcvType 없으면 전체 */
+export const bizLimitCheckApi = {
+  /** 인별 1회 초과건 */
+  searchPersonDay: async (yearText: string, provideRcvType?: string): Promise<BizLimitPersonDay[]> => {
+    const res = await apiClient.get<ApiResponse<BizLimitPersonDay[]>>('v1/biz/limit-checks/person-day', { params: { yearText, provideRcvType } });
+    return res.data.data ?? [];
+  },
+  /** 인별 연간 초과건 */
+  searchPersonYear: async (yearText: string, provideRcvType?: string): Promise<BizLimitPersonYear[]> => {
+    const res = await apiClient.get<ApiResponse<BizLimitPersonYear[]>>('v1/biz/limit-checks/person-year', { params: { yearText, provideRcvType } });
+    return res.data.data ?? [];
+  },
+  /** 회사별 연간 초과건 */
+  searchCompanyYear: async (yearText: string, provideRcvType?: string): Promise<BizLimitCompanyYear[]> => {
+    const res = await apiClient.get<ApiResponse<BizLimitCompanyYear[]>>('v1/biz/limit-checks/company-year', { params: { yearText, provideRcvType } });
+    return res.data.data ?? [];
+  },
+  /** AS-IS ExcelDownload?actionCode=biz01List: 세 탭을 시트 3개로 — "이익제공 한도초과현황(연도).xls" */
+  downloadExcel: async (yearText: string, provideRcvType?: string): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/biz/limit-checks/excel', { params: { yearText, provideRcvType }, responseType: 'blob' });
+      saveBlob(res.data, `이익제공 한도초과현황(${yearText}).xls`);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
   },
 };

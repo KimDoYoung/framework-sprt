@@ -2,14 +2,22 @@ package kr.co.kfs.asseterp.biz.biz.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.biz.dto.BizAccountOptionRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizBuyPromoRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizBuyPromoSaveReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizCardContentsPrintReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizCardContentsRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizCodeOptionRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizDocClassRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoAccountReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoCardRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoNoteReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoPrintReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
 import kr.co.kfs.asseterp.biz.biz.service.BizPromoService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
+import kr.co.kfs.asseterp.common.dto.PageRes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -75,5 +83,90 @@ public class BizPromoController {
     @PostMapping("/rd-print")
     public ApiResponse<String> rdPrint(@AuthenticationPrincipal UserPrincipal principal, @RequestBody BizPromoPrintReq req) {
         return ApiResponse.ok(service.insertRdCard(principal, req));
+    }
+
+    /** AS-IS biz.Biz01_Promo.selectByOther (Biz01_Tab_Other) — 제공/수령 구분이 없으면 전체 */
+    @GetMapping("/others")
+    public ApiResponse<List<BizPromoOtherRes>> searchByOther(@AuthenticationPrincipal UserPrincipal principal,
+                                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                             @RequestParam(required = false, defaultValue = "%") String provideRcvType) {
+        return ApiResponse.ok(service.searchByOther(principal, startDate, closeDate, provideRcvType));
+    }
+
+    /** AS-IS biz.Biz01_Promo.modelUpdate (새 행) → 내역 ID */
+    @PostMapping("/others")
+    public ApiResponse<Long> createOther(@AuthenticationPrincipal UserPrincipal principal, @RequestBody BizPromoOtherReq req) {
+        return ApiResponse.ok(service.createOther(principal, req));
+    }
+
+    /** AS-IS biz.Biz01_Promo.modelUpdate (고친 행) → 저장한 건수 */
+    @PutMapping("/others/{promoId}")
+    public ApiResponse<Integer> updateOther(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long promoId, @RequestBody BizPromoOtherReq req) {
+        return ApiResponse.ok(service.updateOther(principal, promoId, req));
+    }
+
+    /** AS-IS biz.Biz01_Promo.delete → 지운 건수 */
+    @DeleteMapping("/others")
+    public ApiResponse<Integer> deleteOthers(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> promoIds) {
+        return ApiResponse.ok(service.deleteOthers(principal, promoIds));
+    }
+
+    /** AS-IS biz.Biz01_Promo.selectByBuyId (Bmt01_Tab_Buy → Biz01_TabPage_List) */
+    @GetMapping("/buy-promos")
+    public ApiResponse<List<BizBuyPromoRes>> searchByBuyId(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long buyId) {
+        return ApiResponse.ok(service.searchByBuyId(principal, buyId));
+    }
+
+    /** AS-IS biz.Biz01_Promo.updateAdd — 변경 행 목록 → 다시 읽은 행들(요청 순서) */
+    @PutMapping("/buy-promos")
+    public ApiResponse<List<BizBuyPromoRes>> saveBuyPromos(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<BizBuyPromoSaveReq> rows) {
+        return ApiResponse.ok(service.saveBuyPromos(principal, rows));
+    }
+
+    /** AS-IS sys.Sys09_Code.selectByKindCode(ProvidePurCode, 구분코드%) — Biz01_Edit_Other 제공(수령)목적 */
+    @GetMapping("/provide-purposes")
+    public ApiResponse<List<BizCodeOptionRes>> providePurposes(@RequestParam String rcvType) {
+        return ApiResponse.ok(service.searchProvidePurposes(rcvType));
+    }
+
+    /** AS-IS biz.Biz01_Promo.selectCardContentsPaging (Biz01_Tab_CardContents) — 관리자·제공목적 `%`는 전체 */
+    @GetMapping("/card-contents")
+    public ApiResponse<PageRes<BizCardContentsRes>> searchCardContents(@AuthenticationPrincipal UserPrincipal principal,
+                                                                       @RequestParam String dataYm,
+                                                                       @RequestParam(defaultValue = "%") String managerId,
+                                                                       @RequestParam(defaultValue = "%") String providePurCode,
+                                                                       @RequestParam(defaultValue = "") String searchText,
+                                                                       @RequestParam(defaultValue = "0") long offset,
+                                                                       @RequestParam(defaultValue = "500") long limit) {
+        return ApiResponse.ok(service.searchCardContents(principal, dataYm, managerId, providePurCode, searchText, offset, limit));
+    }
+
+    /** AS-IS biz.Biz01_Promo.selectByAmt — 총 승인금액(제공금액 합계) */
+    @GetMapping("/card-contents/total-amount")
+    public ApiResponse<Long> cardContentsAmount(@AuthenticationPrincipal UserPrincipal principal,
+                                                @RequestParam String dataYm,
+                                                @RequestParam(defaultValue = "%") String managerId,
+                                                @RequestParam(defaultValue = "%") String providePurCode,
+                                                @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.getCardContentsAmount(principal, dataYm, managerId, providePurCode, searchText));
+    }
+
+    /** AS-IS sys.Sys00_Common.selectBizCardManager — 기준년월(yyyy.MM)의 카드 관리자 */
+    @GetMapping("/card-managers")
+    public ApiResponse<List<BizCodeOptionRes>> cardManagers(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String stdYm) {
+        return ApiResponse.ok(service.searchCardManagers(principal, stdYm));
+    }
+
+    /** AS-IS sys.Sys99_Print.insertRdCardContents → 출력 그룹 ID */
+    @PostMapping("/card-contents/rd-print")
+    public ApiResponse<String> cardContentsRdPrint(@AuthenticationPrincipal UserPrincipal principal, @RequestBody BizCardContentsPrintReq req) {
+        return ApiResponse.ok(service.insertRdCardContents(principal, req));
+    }
+
+    /** AS-IS sys.Sys99_Print.insertRdCardContentsDownload → 출력 그룹 ID (엑셀용) */
+    @PostMapping("/card-contents/rd-download")
+    public ApiResponse<String> cardContentsRdDownload(@AuthenticationPrincipal UserPrincipal principal, @RequestBody BizCardContentsPrintReq req) {
+        return ApiResponse.ok(service.insertRdCardContentsDownload(principal, req));
     }
 }

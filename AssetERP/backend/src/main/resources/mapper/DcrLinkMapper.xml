@@ -210,4 +210,16 @@
          WHERE dcr30_company_id = #{companyId}
            AND dcr30_class_tree_id = #{classTreeId}
     </select>
+    <!-- AS-IS dcr01_class_tree.selectByLinkCode L819 (IDMS-IC) — L06 Apr01_Tab_BizPriorApproval retrieveDoc(). a.*는 분류 ID·전체 이름만 -->
+    <select id="selectClassTreeByLinkCode" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkClassTreeRes">
+        SELECT a.dcr01_class_tree_id                                    AS class_tree_id
+             , f_class_tree_nm_allpath(a.dcr01_class_tree_id)           AS class_tree_full_name
+          FROM dcr01_class_tree a
+             , dcr30_link b
+         WHERE 1=1
+           AND dcr01_company_id = #{companyId}
+           AND dcr30_class_tree_id = dcr01_class_tree_id
+           AND dcr30_link_cd = #{linkCode}
+    </select>
+
 </mapper>
