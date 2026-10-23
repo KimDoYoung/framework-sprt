@@ -15,10 +15,11 @@ export const ics40Columns = (opts: {
   msgIcon: 'edit' | 'view';
   onMsg: (row: IcsDcrPreconfirm) => void;
 }) => [
-  gb.date('regDate', 90, '신청일'),  // addDate 90
-  gb.text('dcrTypeName', 100, '대장분류'),
-  gb.textCenter('apprNoPrefix', 120, '심사필번호'),
-  gb.text('provideCo', 120, '제공처'),
+  // 신청일~제공처는 가로 스크롤해도 고정(사용자 요청 2026-10-23, AS-IS에는 없음)
+  gb.date('regDate', 90, '신청일', { pinned: 'left' }),  // addDate 90
+  gb.text('dcrTypeName', 100, '대장분류', { pinned: 'left' }),
+  gb.textCenter('apprNoPrefix', 120, '심사필번호', { pinned: 'left' }),
+  gb.text('provideCo', 120, '제공처', { pinned: 'left' }),
   gb.textArea('content', 360, '내용'),
   gb.text('personName', 180, '신청자'),
   iconCell<IcsDcrPreconfirm>('view', 'actionCellView', 70, '문서확인', opts.onViewAppr),  // actionCell(View)

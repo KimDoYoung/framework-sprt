@@ -187,6 +187,7 @@ export const Ics40_Tab_DcrPreConfirm: React.FC = () => {
         {skipYn != null && (
           <MultiGrid<IcsDcrPreconfirm>
             key={String(skipYn)}
+            selectionColumnDef={{ pinned: 'left' }}
             rowData={rows}
             columnDefs={columnDefs}
             getRowId={p => String(p.data.dcrPreconfirmId)}
