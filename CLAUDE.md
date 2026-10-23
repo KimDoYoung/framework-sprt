@@ -33,8 +33,8 @@ AS-IS 소스(`~/work/IDMS-IC` = `yunhee config`의 `YUNHEE_ASIS_SRC_DIR`, 약 3,
 
 색인이 없거나 오래됐으면 다시 만든다. DB는 docker 안의 localhost `asseterpdb`로 고정이다(omsdb 등 다른 DB는 쓰지 않는다).
 ```bash
-# 1) asseterpdb 스키마 → DBML 마크다운 (yunhee, 읽기 전용). 인자는 asseterpdb 접속정보를 가진 환경변수 이름
-yunhee dbml LOCAL_DB -o .yunhee/asseterp-dbml.md
+# 1) asseterpdb 스키마 → DBML 마크다운 (yunhee, 읽기 전용). 인자는 asseterpdb 접속정보를 가진 환경변수 이름(`.env.yunhee`의 `YUNHEE_DB`, 옛 `LOCAL_DB`도 읽음 — 0.5.0~)
+yunhee dbml YUNHEE_DB -o .yunhee/asseterp-dbml.md
 # 2) DBML → DB 색인
 yunhee index-db .yunhee/asseterp-dbml.md                                 # → docs/as-is/db/
 # 3) 소스 → 소스 색인. 실행마다 출력 폴더의 *.md를 지우고 다시 만든다(앱 패키지 myApp/myOms 자동 탐지)
