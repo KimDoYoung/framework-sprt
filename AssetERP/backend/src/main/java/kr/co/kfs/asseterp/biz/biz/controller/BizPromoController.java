@@ -14,7 +14,9 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizPromoNoteReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoPrintReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizPromoSimpleUpdateReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideCompanyRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListPrintReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListRes;
 import kr.co.kfs.asseterp.biz.biz.service.BizPromoService;
@@ -55,6 +57,19 @@ public class BizPromoController {
     @PutMapping("/{promoId}")
     public ApiResponse<Integer> update(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long promoId, @RequestBody BizPromoUpdateReq req) {
         return ApiResponse.ok(service.update(principal, promoId, req));
+    }
+
+    /** AS-IS biz.Biz01_Promo.modelUpdate (Biz01_Edit_CardSimple) → 저장한 건수 */
+    @PutMapping("/{promoId}/simple")
+    public ApiResponse<Integer> updateSimple(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long promoId, @RequestBody BizPromoSimpleUpdateReq req) {
+        return ApiResponse.ok(service.updateSimple(principal, promoId, req));
+    }
+
+    /** AS-IS biz.Biz01_Promo.selectByProvideCompany (Biz01_Lookup_ProvideCompany) */
+    @GetMapping("/provide-companies")
+    public ApiResponse<List<BizProvideCompanyRes>> provideCompanies(@AuthenticationPrincipal UserPrincipal principal,
+                                                                    @RequestParam(required = false, defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchProvideCompanies(principal, searchText));
     }
 
     /** AS-IS biz.Biz01_Promo.noteUpdate */

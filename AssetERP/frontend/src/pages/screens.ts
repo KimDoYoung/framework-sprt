@@ -70,6 +70,7 @@ import { Biz90_Tab_Limit } from './biz/Biz90_Tab_Limit';
 import { Biz01_Tab_Card } from './biz/Biz01_Tab_Card';
 import { Biz01_Tab_Other } from './biz/Biz01_Tab_Other';
 import { Biz01_Tab_CardContents } from './biz/Biz01_Tab_CardContents';
+import { Biz01_Tab_CardSimple } from './biz/Biz01_Tab_CardSimple';
 import { Biz01_Tab_LimitCheckList } from './biz/Biz01_Tab_LimitCheckList';
 import { Bmt01_Tab_Buy } from './bmt/Bmt01_Tab_Buy';
 import { Biz01_Tab_PriorApproval } from './biz/Biz01_Tab_PriorApproval';
@@ -246,6 +247,7 @@ export const SCREENS: Record<string, React.FC> = {
   Biz01_Tab_LimitCheckList, // L07 (메뉴 #1133. 하위 탭 Biz01_TabPage_PersonDay·PersonYear·CompanyYear, 엑셀 서버 생성)
   Biz01_Tab_PriorApproval, // L08 (메뉴 #1136. 거래상대방 조회창 components/lookup/Mkt01_Lookup_Select2, 제공(수령)자는 Emp00_Lookup_SelectSingle)
   Biz01_Tab_CardContents, // L04 (메뉴 #1138. 편집 칸·인원 칸·증빙자료 창은 L02 부품 재사용, RD 내려받기 utils/rdDownload)
+  Biz01_Tab_CardSimple, // L09 (메뉴 #1319. 하위 Biz01_Edit_CardSimple·Biz01_Lookup_ProvideCompany. 일괄저장 창·증빙자료 창은 L02 부품 재사용)
   Ics15_Tab_ChecklistWrite, // K05 (+ Ics15_Edit_Reason. 보기 창은 K04의 Ics10_Edit_Checklist readOnly)
   Ics15_Tab_ChecklistConfirm, // K06 (+ Ics16_Lookup_RelateAppr. 보기 창은 K04의 Ics10_Edit_Checklist readOnly)
   Ics15_Tab_ChecklistStatus, // K07 (+ Ics15_Lookup_ChecklistStatusDetail. 보기 창은 K04의 Ics10_Edit_Checklist readOnly)

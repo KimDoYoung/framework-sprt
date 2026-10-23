@@ -43,6 +43,10 @@ export interface BizPromoCard {
   totalPeple: number | null;
   averagePrice: number | null;
   note: string | null;
+  /** L09 간이판(Biz01_Tab_CardSimple)이 쓰는 열 */
+  provideCompany: string | null;
+  pepleCount: number | null;
+  averagePrice2: number | null;
 }
 
 /** L04 Biz01_Tab_CardContents 그리드 한 행 — 편집 칸(Biz01_Edit_Card)에 그대로 넘기므로 BizPromoCard에 관리자만 더한다 */
@@ -89,6 +93,18 @@ export interface BizPromoUpdateReq {
   provideContentCode: string | null;
   accountCodeId: number | null;
   note: string | null;
+}
+
+/** L09 Biz01_Edit_CardSimple [저장] (AS-IS Biz01_Promo.modelUpdate) */
+export interface BizPromoSimpleUpdateReq extends BizPromoUpdateReq {
+  provideCompany: string | null;
+  pepleCount: number | null;
+}
+
+/** L09 Biz01_Lookup_ProvideCompany 한 행 (AS-IS biz01_promo.selectByProvideCompany) */
+export interface BizProvideCompany {
+  rowId: number;
+  provideCompany: string;
 }
 
 /** L02 Biz01_Lookup_CardManagement [저장] (AS-IS Biz01_Promo.updateAccount) */

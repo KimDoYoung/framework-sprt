@@ -3,7 +3,7 @@ import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
 import {
   BizAccountOption, BizBuyPromo, BizCardContents, BizCardContentsPrintReq, BizCodeOption, BizDocClass, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq,
-  BizPromoUpdateReq, BizProvideList, BizProvideListCond, BizProvideSetup, BizRelateAppr,
+  BizPromoSimpleUpdateReq, BizPromoUpdateReq, BizProvideCompany, BizProvideList, BizProvideListCond, BizProvideSetup, BizRelateAppr,
 } from '../types/biz';
 import { MktTarget } from '../types/mkt';
 
@@ -59,6 +59,16 @@ export const bizPromoApi = {
   updatePromo: async (promoId: number, req: BizPromoUpdateReq): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>(`v1/biz/promos/${promoId}`, req);
     return res.data.data ?? 0;
+  },
+  /** AS-IS biz.Biz01_Promo.modelUpdate (Biz01_Edit_CardSimple) — 거래상대방·인원까지 */
+  updatePromoSimple: async (promoId: number, req: BizPromoSimpleUpdateReq): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>(`v1/biz/promos/${promoId}/simple`, req);
+    return res.data.data ?? 0;
+  },
+  /** AS-IS biz.Biz01_Promo.selectByProvideCompany (Biz01_Lookup_ProvideCompany) */
+  searchProvideCompanies: async (searchText: string): Promise<BizProvideCompany[]> => {
+    const res = await apiClient.get<ApiResponse<BizProvideCompany[]>>('v1/biz/promos/provide-companies', { params: { searchText } });
+    return res.data.data ?? [];
   },
   /** AS-IS biz.Biz01_Promo.noteUpdate — 마감된 내역은 비고만 */
   updateNote: async (promoId: number, note: string | null): Promise<number> => {

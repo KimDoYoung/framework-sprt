@@ -9,7 +9,9 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizDocClassRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoCardRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizPromoSimpleUpdateReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideCompanyRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -30,6 +32,12 @@ public interface BizPromoMapper {
 
     /** AS-IS Biz01_Promo.modelUpdate → UpdateDataModel(biz01_promo) UPDATE — 화면이 바꾸는 4열만, 로그인 회사의 행만 */
     int update(@Param("companyId") Long companyId, @Param("promoId") Long promoId, @Param("req") BizPromoUpdateReq req);
+
+    /** AS-IS Biz01_Promo.modelUpdate (Biz01_Edit_CardSimple) — 화면이 바꾸는 6열만, 로그인 회사의 행만 */
+    int updateSimple(@Param("companyId") Long companyId, @Param("promoId") Long promoId, @Param("req") BizPromoSimpleUpdateReq req);
+
+    /** AS-IS biz01_promo.selectByProvideCompany */
+    List<BizProvideCompanyRes> selectProvideCompanies(@Param("companyId") Long companyId, @Param("searchText") String searchText);
 
     /** AS-IS biz01_promo.noteUpdate */
     int updateNote(@Param("companyId") Long companyId, @Param("promoId") Long promoId, @Param("note") String note);

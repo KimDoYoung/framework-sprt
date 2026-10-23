@@ -9,7 +9,9 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizPromoCardRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoPrintReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizPromoSimpleUpdateReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideCompanyRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListPrintReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListRes;
 import kr.co.kfs.asseterp.biz.biz.service.BizPersonService;
@@ -251,5 +253,31 @@ class BizPromoDbTest {
         // 이익수령(2)은 string06 에 거래상대방 한 칸만 담고 string07·08은 비운다
         String g3 = promoService.insertRdProvideList(user, new BizProvideListPrintReq(FROM, TO, "2", "%", null));
         assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_group_id = ? and (sys99_string07 is not null or sys99_string08 is not null)", Integer.class, Long.valueOf(g3))).isZero();
+    }
+
+    @Test
+    void 간이판_편집저장은_6열을_바꾸고_다른_회사는_0건_인당_가치는_인원으로_나눈다() {
+        BizPromoCardRes row = first();
+        BizPromoSimpleUpdateReq req = new BizPromoSimpleUpdateReq(row.providePurCode(), row.provideContentCode(), row.accountCodeId(), "L09 시험상대", 4L, "L09 시험");
+        assertThat(promoService.updateSimple(otherCompany, row.promoId(), req)).isZero();
+        assertThat(promoService.updateSimple(user, row.promoId(), req)).isEqualTo(1);
+        BizPromoCardRes after = byId(row.promoId());
+        assertThat(after.provideCompany()).isEqualTo("L09 시험상대");
+        assertThat(after.pepleCount()).isEqualTo(4L);
+        assertThat(after.note()).isEqualTo("L09 시험");
+        Long amount = jdbc.queryForObject("select biz01_provide_amt from biz01_promo where biz01_promo_id = ?", Long.class, row.promoId());
+        assertThat(after.averagePrice2()).isEqualTo(amount / 4);
+        assertThat(after.providePurCode()).isEqualTo(row.providePurCode());
+    }
+
+    @Test
+    void 거래상대방_조회는_로그인_회사의_이름만_대소문자_없이_부분일치() {
+        BizPromoCardRes row = first();
+        promoService.updateSimple(user, row.promoId(), new BizPromoSimpleUpdateReq(row.providePurCode(), row.provideContentCode(), row.accountCodeId(), "Zz L09 Corp", 1L, row.note()));
+        List<BizProvideCompanyRes> found = promoService.searchProvideCompanies(user, "zz l09");
+        assertThat(found).extracting(BizProvideCompanyRes::provideCompany).containsExactly("Zz L09 Corp");
+        assertThat(found.get(0).rowId()).isEqualTo(1L);
+        assertThat(promoService.searchProvideCompanies(otherCompany, "zz l09")).isEmpty();
+        assertThat(promoService.searchProvideCompanies(user, "")).extracting(BizProvideCompanyRes::provideCompany).doesNotContainNull().contains("Zz L09 Corp");
     }
 }

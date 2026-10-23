@@ -29,6 +29,9 @@
                                                  ELSE f_nvl(c.biz02_count    ,1)
                                             END))                                                               AS average_price
              , a.biz01_note                                                                                     AS note
+             , a.biz01_provide_company                                                                          AS provide_company
+             , a.biz01_peple_count                                                                              AS peple_count
+             , TRUNC(a.biz01_provide_amt / f_nvl(a.biz01_peple_count,1))                                        AS average_price2
           FROM biz01_promo a
                INNER JOIN crd01_card ON crd01_card_id = biz01_card_id
                INNER JOIN crd02_data b ON crd02_data_id = a.biz01_card_data_id
@@ -80,6 +83,30 @@
          WHERE biz01_promo_id   = #{promoId}
            AND biz01_company_id = #{companyId}
     </update>
+
+    <!-- AS-IS Biz01_Promo.modelUpdate → UpdateDataModel(biz01_promo) UPDATE (Biz01_Edit_CardSimple) — 화면이 바꾸는 6열 -->
+    <update id="updateSimple">
+        UPDATE biz01_promo
+           SET biz01_provide_pur_cd     = #{req.providePurCode}
+             , biz01_provide_content_cd = #{req.provideContentCode}
+             , biz01_account_code_id    = #{req.accountCodeId}
+             , biz01_provide_company    = #{req.provideCompany}
+             , biz01_peple_count        = #{req.pepleCount}
+             , biz01_note               = #{req.note}
+         WHERE biz01_promo_id   = #{promoId}
+           AND biz01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS biz01_promo.selectByProvideCompany L1526 (IDMS-IC) — 거래상대방 조회창 -->
+    <select id="selectProvideCompanies" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizProvideCompanyRes">
+        SELECT ROW_NUMBER() OVER(ORDER BY biz01_provide_company) AS row_id
+             , biz01_provide_company                             AS provide_company
+          FROM biz01_promo
+         WHERE biz01_company_id = #{companyId}
+           AND biz01_provide_company IS NOT NULL
+           AND upper(biz01_provide_company) like upper(#{searchText})
+         GROUP BY biz01_provide_company
+    </select>
 
     <!-- AS-IS biz01_promo.noteUpdate L2372 (IDMS-IC) -->
     <update id="updateNote">

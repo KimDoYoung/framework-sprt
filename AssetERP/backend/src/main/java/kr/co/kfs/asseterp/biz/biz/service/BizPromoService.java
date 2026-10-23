@@ -13,7 +13,9 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizPromoCardRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoPrintReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizPromoSimpleUpdateReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideCompanyRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListPrintReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListRes;
 import kr.co.kfs.asseterp.biz.biz.mapper.BizPersonMapper;
@@ -65,6 +67,17 @@ public class BizPromoService {
     @Transactional
     public int update(UserPrincipal user, Long promoId, BizPromoUpdateReq req) {
         return mapper.update(user.getCompanyId(), promoId, req);
+    }
+
+    /** AS-IS Biz01_Promo.modelUpdate (Biz01_Edit_CardSimple.update) — 거래상대방·인원까지 6열 */
+    @Transactional
+    public int updateSimple(UserPrincipal user, Long promoId, BizPromoSimpleUpdateReq req) {
+        return mapper.updateSimple(user.getCompanyId(), promoId, req);
+    }
+
+    /** AS-IS biz01_promo.selectByProvideCompany — searchText는 "%…%"로 감싸 대소문자 없이 비교 */
+    public List<BizProvideCompanyRes> searchProvideCompanies(UserPrincipal user, String searchText) {
+        return mapper.selectProvideCompanies(user.getCompanyId(), like(searchText));
     }
 
     /** AS-IS Biz01_Promo.noteUpdate — 마감된 내역은 비고만 */
