@@ -100,7 +100,7 @@ async function runSpec(p, h, file) {
     out.writes = api.writes; out.getsN = api.gets.length;
     mark('완료');
   } catch (e) {
-    ex('실행 중 예외', e.message.split('\n')[0], 'no error');
+    ex('실행 중 예외', e.message.split('\n').filter(l => l.trim()).slice(0, 3).join(' / '), 'no error');   // 원인 줄(waiting for locator …)까지 3줄
     if (cleanup) { try { await cleanup(); } catch (e2) { out.cleanupFailed = e2.message.split('\n')[0]; } }
     try { await p.screenshot({ path: `${OUT}/${id}-fail.png` }); } catch {}
   }

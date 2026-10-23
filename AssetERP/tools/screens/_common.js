@@ -23,8 +23,11 @@ async function login(p, company = 'kfstest') {
 }
 
 async function openMenu(p, group, menu) {
+  const item = p.getByText(menu, { exact: true }).first();
   await p.getByText(group, { exact: true }).first().click(); await p.waitForTimeout(600);
-  await p.getByText(menu, { exact: true }).first().click(); await p.waitForTimeout(2500);
+  // 같은 그룹 메뉴를 연달아 열면 그룹 클릭이 열려 있던 패널을 닫는다 — 메뉴가 안 보이면 한 번 더 눌러 연다
+  if (!(await item.isVisible())) { await p.getByText(group, { exact: true }).first().click(); await p.waitForTimeout(600); }
+  await item.click(); await p.waitForTimeout(2500);
 }
 
 // scope 안의 첫 그리드를 점검한다. 저장하지 않는다 — 부른 쪽이 끝나고 조회로 버린다.

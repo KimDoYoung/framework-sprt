@@ -91,18 +91,22 @@ export const Biz01_Tab_LimitCheckList: React.FC = () => {
             <SystemCodeComboBox kindCd="ProvideRcvType" altCode={ALL_CODE} style={{ width: 100 }} value={rcvType} onChange={c => setRcvType(c ?? ALL)} />
           </SearchBar.Field>
         </SearchBar>
+        {/* [E4] tabPanel.Selection (L116) → retrieveTabpage() — 탭을 바꾸면 그 탭을 읽는다.
+            antd Tabs 안에 그리드를 넣으면 높이가 0이 되므로(브라우저 확인에서 발견) 탭 줄만 Tabs로 두고 아래 칸에 활성 탭의 그리드를 둔다(Pay20과 같은 방식) */}
+        <Tabs
+          activeKey={active}
+          onChange={k => { const t = k as TabKey; setActive(t); void retrieveTabpage(t); }}
+          items={[
+            { key: 'day', label: '인별 1회 초과건' },
+            { key: 'person', label: '인별 연간 초과건' },
+            { key: 'company', label: '회사별 연간 초과건' },
+          ]}
+          style={{ flex: 'none' }}
+        />
         <div style={{ flex: 1, minHeight: 0 }}>
-          {/* [E4] tabPanel.Selection (L116) → retrieveTabpage() — 탭을 바꾸면 그 탭을 읽는다 */}
-          <Tabs
-            activeKey={active}
-            onChange={k => { const t = k as TabKey; setActive(t); void retrieveTabpage(t); }}
-            style={{ height: '100%' }}
-            items={[
-              { key: 'day', label: '인별 1회 초과건', children: <div style={{ height: '100%' }}><Biz01_TabPage_PersonDay rows={day} loading={loading && active === 'day'} /></div> },
-              { key: 'person', label: '인별 연간 초과건', children: <div style={{ height: '100%' }}><Biz01_TabPage_PersonYear rows={person} loading={loading && active === 'person'} /></div> },
-              { key: 'company', label: '회사별 연간 초과건', children: <div style={{ height: '100%' }}><Biz01_TabPage_CompanyYear rows={company} loading={loading && active === 'company'} /></div> },
-            ]}
-          />
+          {active === 'day' && <Biz01_TabPage_PersonDay rows={day} loading={loading} />}
+          {active === 'person' && <Biz01_TabPage_PersonYear rows={person} loading={loading} />}
+          {active === 'company' && <Biz01_TabPage_CompanyYear rows={company} loading={loading} />}
         </div>
       </div>
     </div>
