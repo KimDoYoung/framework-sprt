@@ -9,6 +9,7 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizDocClassRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoCardRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherSimpleReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoSimpleUpdateReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizProvideCompanyRes;
@@ -81,6 +82,13 @@ public interface BizPromoMapper {
     /** AS-IS Biz01_Promo.modelUpdate → UpdateDataModel UPDATE — 로그인 회사의 행만 */
     int updateOther(@Param("companyId") Long companyId, @Param("promoId") Long promoId, @Param("req") BizPromoOtherReq req);
 
+    /** AS-IS Biz01_Promo.modelUpdate → INSERT (Biz01_Edit_OtherSimple: 거래상대방·인원 포함) */
+    int insertOtherSimple(@Param("promoId") long promoId, @Param("companyId") Long companyId, @Param("personId") Long personId,
+                          @Param("req") BizPromoOtherSimpleReq req);
+
+    /** AS-IS Biz01_Promo.modelUpdate → UPDATE (Biz01_Edit_OtherSimple) — 로그인 회사의 행만 */
+    int updateOtherSimple(@Param("companyId") Long companyId, @Param("promoId") Long promoId, @Param("req") BizPromoOtherSimpleReq req);
+
     /** AS-IS biz02_person.delete — 지울 내역의 인원 */
     int deletePersonsByPromoIds(@Param("companyId") Long companyId, @Param("promoIds") List<Long> promoIds);
 
@@ -132,6 +140,12 @@ public interface BizPromoMapper {
                                         @Param("windowClassName") String windowClassName, @Param("groupId") long groupId,
                                         @Param("dataYm") String dataYm, @Param("managerId") String managerId,
                                         @Param("providePurCode") String providePurCode, @Param("searchText") String searchText);
+
+    /** AS-IS Sys99_Print.insertRdCardContentsSimple (L11) — 담은 행 수 */
+    int insertPrintCardContentsSimple(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                      @Param("windowClassName") String windowClassName, @Param("groupId") long groupId,
+                                      @Param("dataYm") String dataYm, @Param("managerId") String managerId,
+                                      @Param("providePurCode") String providePurCode, @Param("searchText") String searchText);
 
     /** AS-IS biz01_promo.selectProvideList (L08) — provideRcvType `1` 이익제공 / `2` 이익수령, crmName `%`는 전체, empId null이면 제공(수령)자 조건 없음 */
     List<BizProvideListRes> selectProvideList(@Param("companyId") Long companyId, @Param("startDate") LocalDate startDate,

@@ -90,6 +90,7 @@ export const Biz01_Tab_Other: React.FC = () => {
     const row: BizPromoOther = {
       promoId: id, provideRcvType: null, provideRcvTypeName: null, provideDate: null, providePurCode: null, providePurName: null,
       provideContentCode: null, provideContentName: null, provideAmt: null, totalPeple: null, averagePrice: null, note: null,
+      provideCompany: null, pepleCount: null, averagePrice2: null,
     };
     setRows(prev => [...prev, row]);
     setTimeout(() => {

@@ -206,6 +206,9 @@
                                                 ELSE f_nvl(c.biz02_count,1)
                                            END)                                                                    AS average_price
              , a.biz01_note                                                                                        AS note
+             , a.biz01_provide_company                                                                             AS provide_company
+             , a.biz01_peple_count                                                                                 AS peple_count
+             , TRUNC(a.biz01_provide_amt / f_nvl(a.biz01_peple_count,1))                                           AS average_price2
           FROM biz01_promo a
                LEFT OUTER JOIN act01_account_code b ON b.act01_account_code_id = a.biz01_account_code_id
                LEFT OUTER JOIN LATERAL ( SELECT COUNT(*)                                                                  AS biz02_count
@@ -231,6 +234,32 @@
         VALUES ( #{promoId}, #{companyId}, '2', #{personId}
                , #{req.provideRcvType}, #{req.provideDate}, #{req.providePurCode}, #{req.provideContentCode}, #{req.provideAmt}, #{req.note} )
     </insert>
+
+    <!-- AS-IS Biz01_Promo.modelUpdate → UpdateDataModel(biz01_promo) INSERT (Biz01_Edit_OtherSimple) — 8열 + 정산구분 2(현예금)·등록자·회사 -->
+    <insert id="insertOtherSimple">
+        INSERT INTO biz01_promo
+               ( biz01_promo_id, biz01_company_id, biz01_settle_type, biz01_reg_emp_id
+               , biz01_provide_rcv_type, biz01_provide_date, biz01_provide_pur_cd, biz01_provide_content_cd, biz01_provide_amt
+               , biz01_provide_company, biz01_peple_count, biz01_note )
+        VALUES ( #{promoId}, #{companyId}, '2', #{personId}
+               , #{req.provideRcvType}, #{req.provideDate}, #{req.providePurCode}, #{req.provideContentCode}, #{req.provideAmt}
+               , #{req.provideCompany}, #{req.pepleCount}, #{req.note} )
+    </insert>
+
+    <!-- AS-IS Biz01_Promo.modelUpdate → UpdateDataModel(biz01_promo) UPDATE (Biz01_Edit_OtherSimple) — 로그인 회사의 행만(보안 보강) -->
+    <update id="updateOtherSimple">
+        UPDATE biz01_promo
+           SET biz01_provide_rcv_type     = #{req.provideRcvType}
+             , biz01_provide_date         = #{req.provideDate}
+             , biz01_provide_pur_cd       = #{req.providePurCode}
+             , biz01_provide_content_cd   = #{req.provideContentCode}
+             , biz01_provide_amt          = #{req.provideAmt}
+             , biz01_provide_company      = #{req.provideCompany}
+             , biz01_peple_count          = #{req.pepleCount}
+             , biz01_note                 = #{req.note}
+         WHERE biz01_promo_id   = #{promoId}
+           AND biz01_company_id = #{companyId}
+    </update>
 
     <!-- AS-IS Biz01_Promo.modelUpdate → UpdateDataModel(biz01_promo) UPDATE — 로그인 회사의 행만(보안 보강) -->
     <update id="updateOther">
@@ -382,6 +411,9 @@
                                                 ELSE f_nvl(c.biz02_count    ,1)
                                            END)                                                                 AS average_price
              , a.biz01_note                                                                                     AS note
+             , a.biz01_provide_company                                                                          AS provide_company
+             , a.biz01_peple_count                                                                              AS peple_count
+             , TRUNC(a.biz01_provide_amt / f_nvl(a.biz01_peple_count,1))                                        AS average_price2
         <include refid="cardContentsFrom"/>
          ORDER BY biz01_provide_date, crd02_franchise_nm collate "ko_KR.utf8" asc
          LIMIT #{limit}
@@ -535,6 +567,21 @@
            AND COALESCE(biz01_provide_pur_cd,'%') LIKE #{providePurCode}
            AND CONCAT(crd02_franchise_nm,crd02_sector_nm, biz01_provide_company, biz01_note) ILIKE #{searchText}
          ORDER BY biz01_provide_date, crd02_franchise_nm collate "ko_KR.utf8" asc, biz01_promo_id
+    </insert>
+
+    <!-- AS-IS Sys99_Print.insertRdCardContentsSimple L3693 (IDMS-IC) = biz01_promo.selectCardContents + sys99_print.insert 를 한 번에. L04 출력과 달리 인원은 biz01_peple_count, 인당은 average_price2,
+         비고는 string06. 열: 관리자 s01 · 승인일 d01 · 가맹점 s02 · 업종 s03 · 승인금액 l01 · 목적 s04 · 내역 s05 · 인원 l02 · 인당 l03 · 비고 s06 -->
+    <insert id="insertPrintCardContentsSimple">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_date01, sys99_string02, sys99_string03, sys99_long01
+               , sys99_string04, sys99_string05, sys99_long02, sys99_long03, sys99_string06 )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , COALESCE(f_emp_kor_nm(f_get_crdManagerId(biz01_card_id, biz01_provide_date)), ''), b.crd02_approval_dt, COALESCE(b.crd02_franchise_nm, ''), COALESCE(b.crd02_sector_nm, ''), COALESCE(b.crd02_approval_amount, 0)
+             , COALESCE(f_cdnm('ProvidePurCode', a.biz01_provide_pur_cd, a.biz01_company_id, a.biz01_provide_date), ''), COALESCE(f_cdnm('ProvideContentCode', a.biz01_provide_content_cd, a.biz01_company_id, a.biz01_provide_date), ''), COALESCE(a.biz01_peple_count, 0)
+             , COALESCE(TRUNC(a.biz01_provide_amt / f_nvl(a.biz01_peple_count,1)), 0), COALESCE(a.biz01_note, '')
+        <include refid="cardContentsFrom"/>
+         ORDER BY biz01_provide_date, crd02_franchise_nm collate "ko_KR.utf8" asc
     </insert>
 
     <!-- ===== L08 Biz01_Tab_PriorApproval ===== -->

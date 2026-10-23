@@ -8,6 +8,7 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizPromoAccountReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoCardRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherSimpleReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoPrintReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoSimpleUpdateReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
@@ -169,6 +170,26 @@ class BizPromoDbTest {
     }
 
     @Test
+    void 간이판_기타내역은_거래상대방_인원까지_등록_수정하고_인당_가치는_인원으로_나눈다() {
+        BizPromoOtherSimpleReq req = new BizPromoOtherSimpleReq("1", LocalDate.of(2025, 3, 3), "10", "1001", 30000L, "L10 시험상대", 3L, "L10 시험");
+        Long id = promoService.createOtherSimple(owner, req);
+        assertThat(jdbc.queryForMap("select biz01_settle_type s, biz01_reg_emp_id r, biz01_company_id c, biz01_provide_company p, biz01_peple_count n from biz01_promo where biz01_promo_id = ?", id))
+                .containsEntry("s", "2").containsEntry("c", new java.math.BigDecimal(28000)).containsEntry("p", "L10 시험상대").containsEntry("n", new java.math.BigDecimal(3));
+        BizPromoOtherRes created = promoService.searchByOther(owner, FROM.minusYears(5), TO.plusYears(5), "%").stream().filter(r -> r.promoId().equals(id)).findFirst().orElseThrow();
+        assertThat(created.provideCompany()).isEqualTo("L10 시험상대");
+        assertThat(created.pepleCount()).isEqualTo(3L);
+        assertThat(created.averagePrice2()).isEqualTo(10000L);
+
+        BizPromoOtherSimpleReq changed = new BizPromoOtherSimpleReq("2", LocalDate.of(2025, 3, 4), "21", "2101", 50000L, "고친 상대", 4L, "고침");
+        assertThat(promoService.updateOtherSimple(otherCompany, id, changed)).isZero();
+        assertThat(promoService.updateOtherSimple(owner, id, changed)).isEqualTo(1);
+        BizPromoOtherRes after = promoService.searchByOther(owner, FROM.minusYears(5), TO.plusYears(5), "2").stream().filter(r -> r.promoId().equals(id)).findFirst().orElseThrow();
+        assertThat(after.provideCompany()).isEqualTo("고친 상대");
+        assertThat(after.averagePrice2()).isEqualTo(12500L);
+        assertThat(promoService.deleteOthers(owner, List.of(id))).isEqualTo(1);
+    }
+
+    @Test
     void 목적_목록은_구분코드로_시작하는_코드만() {
         assertThat(promoService.searchProvidePurposes("1")).isNotEmpty().allSatisfy(o -> assertThat(o.code()).startsWith("1"));
         assertThat(promoService.searchProvidePurposes("2")).isNotEmpty().allSatisfy(o -> assertThat(o.code()).startsWith("2"));
@@ -219,6 +240,28 @@ class BizPromoDbTest {
         Integer expected = jdbc.queryForObject("select count(*) from biz01_promo p left join biz02_person e on e.biz02_promo_id = p.biz01_promo_id and e.biz02_emp_yn = 'false' where p.biz01_company_id = 28000 and p.biz01_std_ym = ?", Integer.class, YM);
         assertThat(download).isEqualTo(expected);
         assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_group_id = ? and sys99_long04 is null", Integer.class, Long.valueOf(g2))).isZero();
+    }
+
+    @Test
+    void 간이판_사용내역은_세_열을_더하고_엑셀자료는_조회_행수만큼_인원은_적은_값() {
+        PageRes<BizCardContentsRes> p = promoService.searchCardContents(user, YM, "%", "%", "", 0, 500);
+        assertThat(p.total()).isEqualTo(135);
+        // 인당 경제적가치 = 제공금액 / 인원(없으면 1) — 원본 biz01_average_price2 식
+        Long amt = jdbc.queryForObject("select biz01_provide_amt from biz01_promo where biz01_promo_id = ?", Long.class, p.rows().get(0).promoId());
+        Long cnt = p.rows().get(0).pepleCount();
+        assertThat(p.rows().get(0).averagePrice2()).isEqualTo(amt / (cnt == null || cnt == 0 ? 1 : cnt));
+        // 검색어는 거래상대방·비고에도 부분일치(원본 CONCAT 대상) — 모든 행이 검색어를 담는다
+        PageRes<BizCardContentsRes> found = promoService.searchCardContents(user, YM, "%", "%", "카드", 0, 500);
+        assertThat(found.total()).isLessThanOrEqualTo(135);
+        BizCardContentsPrintReq req = new BizCardContentsPrintReq(YM, "%", "%", "");
+        String g = promoService.insertRdCardContentsSimple(user, req);
+        assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_group_id = ?", Integer.class, Long.valueOf(g))).isEqualTo(135);
+        assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_group_id = ? and sys99_window_class_nm = 'Biz01_Tab_CardContentsSimple' and (sys99_string01 is null or sys99_string06 is null or sys99_long02 is null or sys99_long03 is null)",
+                Integer.class, Long.valueOf(g))).isZero();
+        // 이전 자료는 지워진다(같은 windowClassName)
+        String g2 = promoService.insertRdCardContentsSimple(user, req);
+        assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_group_id = ?", Integer.class, Long.valueOf(g))).isZero();
+        assertThat(promoService.insertRdCardContentsSimple(otherCompany, req)).isNotEqualTo(g2);
     }
 
     @Test

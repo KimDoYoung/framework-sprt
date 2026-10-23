@@ -13,6 +13,7 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizPromoCardRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoNoteReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherSimpleReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoPrintReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoSimpleUpdateReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
@@ -123,6 +124,18 @@ public class BizPromoController {
         return ApiResponse.ok(service.updateOther(principal, promoId, req));
     }
 
+    /** AS-IS biz.Biz01_Promo.modelUpdate (Biz01_Edit_OtherSimple 새 행) → 내역 ID */
+    @PostMapping("/others/simple")
+    public ApiResponse<Long> createOtherSimple(@AuthenticationPrincipal UserPrincipal principal, @RequestBody BizPromoOtherSimpleReq req) {
+        return ApiResponse.ok(service.createOtherSimple(principal, req));
+    }
+
+    /** AS-IS biz.Biz01_Promo.modelUpdate (Biz01_Edit_OtherSimple 고친 행) → 저장한 건수 */
+    @PutMapping("/others/{promoId}/simple")
+    public ApiResponse<Integer> updateOtherSimple(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long promoId, @RequestBody BizPromoOtherSimpleReq req) {
+        return ApiResponse.ok(service.updateOtherSimple(principal, promoId, req));
+    }
+
     /** AS-IS biz.Biz01_Promo.delete → 지운 건수 */
     @DeleteMapping("/others")
     public ApiResponse<Integer> deleteOthers(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> promoIds) {
@@ -185,6 +198,12 @@ public class BizPromoController {
     @PostMapping("/card-contents/rd-download")
     public ApiResponse<String> cardContentsRdDownload(@AuthenticationPrincipal UserPrincipal principal, @RequestBody BizCardContentsPrintReq req) {
         return ApiResponse.ok(service.insertRdCardContentsDownload(principal, req));
+    }
+
+    /** AS-IS sys.Sys99_Print.insertRdCardContentsSimple (Biz01_Tab_CardContentsSimple) → 출력 그룹 ID (엑셀용) */
+    @PostMapping("/card-contents/rd-download-simple")
+    public ApiResponse<String> cardContentsRdDownloadSimple(@AuthenticationPrincipal UserPrincipal principal, @RequestBody BizCardContentsPrintReq req) {
+        return ApiResponse.ok(service.insertRdCardContentsSimple(principal, req));
     }
 
     /** AS-IS biz.Biz01_Promo.selectProvideList (Biz01_Tab_PriorApproval) — provideRcvType `1` 이익제공 / `2` 이익수령, crmName `%`는 전체, empId는 없으면 조건 없음 */

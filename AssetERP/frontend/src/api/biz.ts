@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
 import {
-  BizAccountOption, BizBuyPromo, BizCardContents, BizCardContentsPrintReq, BizCodeOption, BizDocClass, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq,
+  BizAccountOption, BizBuyPromo, BizCardContents, BizCardContentsPrintReq, BizCodeOption, BizDocClass, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq, BizPromoOtherSimpleReq,
   BizPromoSimpleUpdateReq, BizPromoUpdateReq, BizProvideCompany, BizProvideList, BizProvideListCond, BizProvideSetup, BizRelateAppr,
 } from '../types/biz';
 import { MktTarget } from '../types/mkt';
@@ -108,6 +108,16 @@ export const bizPromoApi = {
     const res = await apiClient.post<ApiResponse<number>>('v1/biz/promos/others', req);
     return res.data.data ?? 0;
   },
+  /** AS-IS biz.Biz01_Promo.modelUpdate (Biz01_Edit_OtherSimple 새 행) — 거래상대방·인원까지 */
+  createOtherSimple: async (req: BizPromoOtherSimpleReq): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/biz/promos/others/simple', req);
+    return res.data.data ?? 0;
+  },
+  /** AS-IS biz.Biz01_Promo.modelUpdate (Biz01_Edit_OtherSimple 고친 행) */
+  updateOtherSimple: async (promoId: number, req: BizPromoOtherSimpleReq): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>(`v1/biz/promos/others/${promoId}/simple`, req);
+    return res.data.data ?? 0;
+  },
   /** AS-IS biz.Biz01_Promo.modelUpdate (고친 행) */
   updateOther: async (promoId: number, req: BizPromoOtherReq): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>(`v1/biz/promos/others/${promoId}`, req);
@@ -162,6 +172,11 @@ export const bizPromoApi = {
   /** AS-IS sys.Sys99_Print.insertRdCardContentsDownload → 출력 그룹 ID(엑셀용) */
   rdDownloadCardContents: async (req: BizCardContentsPrintReq): Promise<string> => {
     const res = await apiClient.post<ApiResponse<string>>('v1/biz/promos/card-contents/rd-download', req);
+    return res.data.data ?? '';
+  },
+  /** AS-IS sys.Sys99_Print.insertRdCardContentsSimple → 출력 그룹 ID(엑셀용, L11) */
+  rdDownloadCardContentsSimple: async (req: BizCardContentsPrintReq): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/biz/promos/card-contents/rd-download-simple', req);
     return res.data.data ?? '';
   },
 

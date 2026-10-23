@@ -12,6 +12,7 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizPromoAccountReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoCardRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherSimpleReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoPrintReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoSimpleUpdateReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
@@ -44,6 +45,7 @@ public class BizPromoService {
     private static final String PRINT_WINDOW = "Biz01_Tab_Card";
     /** 법인카드 사용내역 조회(L04)의 windowClassName — 출력·엑셀이 같은 값 */
     private static final String CONTENTS_WINDOW = "Biz01_Tab_CardContents";
+    private static final String CONTENTS_SIMPLE_WINDOW = "Biz01_Tab_CardContentsSimple";
     /** 이익제공 상세현황(L08)의 windowClassName */
     private static final String PROVIDE_LIST_WINDOW = "Biz01_Tab_PriorApproval";
 
@@ -146,6 +148,20 @@ public class BizPromoService {
         return mapper.updateOther(user.getCompanyId(), promoId, req);
     }
 
+    /** AS-IS Biz01_Promo.modelUpdate (Biz01_Edit_OtherSimple 새 행 INSERT) — 거래상대방·인원까지. 돌려주는 값 = 내역 ID */
+    @Transactional
+    public Long createOtherSimple(UserPrincipal user, BizPromoOtherSimpleReq req) {
+        long promoId = mapper.selectNextId();
+        mapper.insertOtherSimple(promoId, user.getCompanyId(), user.getUserId(), req);
+        return promoId;
+    }
+
+    /** AS-IS Biz01_Promo.modelUpdate (Biz01_Edit_OtherSimple UPDATE) */
+    @Transactional
+    public int updateOtherSimple(UserPrincipal user, Long promoId, BizPromoOtherSimpleReq req) {
+        return mapper.updateOtherSimple(user.getCompanyId(), promoId, req);
+    }
+
     /** AS-IS Biz01_Promo.delete — 내역마다 인원(biz02_person.delete)을 먼저 지우고 내역을 지운다. 지운 내역 수 */
     @Transactional
     public int deleteOthers(UserPrincipal user, List<Long> promoIds) {
@@ -233,6 +249,16 @@ public class BizPromoService {
         long groupId = mapper.selectNextId();
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), CONTENTS_WINDOW);
         mapper.insertPrintCardContentsDownload(user.getCompanyId(), user.getUserId(), CONTENTS_WINDOW, groupId,
+                req.dataYm(), all(req.managerId()), all(req.providePurCode()), like(req.searchText()));
+        return String.valueOf(groupId);
+    }
+
+    /** AS-IS sys.Sys99_Print.insertRdCardContentsSimple(Biz01_Tab_CardContentsSimple) — 엑셀용, 인원·인당 가치는 내역에 적은 값 */
+    @Transactional
+    public String insertRdCardContentsSimple(UserPrincipal user, BizCardContentsPrintReq req) {
+        long groupId = mapper.selectNextId();
+        mapper.deletePrint(user.getCompanyId(), user.getUserId(), CONTENTS_SIMPLE_WINDOW);
+        mapper.insertPrintCardContentsSimple(user.getCompanyId(), user.getUserId(), CONTENTS_SIMPLE_WINDOW, groupId,
                 req.dataYm(), all(req.managerId()), all(req.providePurCode()), like(req.searchText()));
         return String.valueOf(groupId);
     }

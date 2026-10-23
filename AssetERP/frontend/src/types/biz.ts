@@ -133,6 +133,10 @@ export interface BizPromoOther {
   totalPeple: number | null;
   averagePrice: number | null;
   note: string | null;
+  /** L10 간이판(Biz01_Tab_OtherSimple)이 쓰는 열 */
+  provideCompany: string | null;
+  pepleCount: number | null;
+  averagePrice2: number | null;
 }
 
 /** L03 Biz01_Edit_Other [저장] (AS-IS Biz01_Promo.modelUpdate) */
@@ -143,6 +147,12 @@ export interface BizPromoOtherReq {
   provideContentCode: string | null;
   provideAmt: number | null;
   note: string | null;
+}
+
+/** L10 Biz01_Edit_OtherSimple [저장] (AS-IS Biz01_Promo.modelUpdate) */
+export interface BizPromoOtherSimpleReq extends BizPromoOtherReq {
+  provideCompany: string | null;
+  pepleCount: number | null;
 }
 
 /**
