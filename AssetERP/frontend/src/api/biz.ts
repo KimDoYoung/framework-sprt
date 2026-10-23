@@ -3,8 +3,9 @@ import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
 import {
   BizAccountOption, BizBuyPromo, BizCardContents, BizCardContentsPrintReq, BizCodeOption, BizDocClass, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq,
-  BizPromoUpdateReq, BizProvideSetup, BizRelateAppr,
+  BizPromoUpdateReq, BizProvideList, BizProvideListCond, BizProvideSetup, BizRelateAppr,
 } from '../types/biz';
+import { MktTarget } from '../types/mkt';
 
 /** L01 AS-IS Biz90_Tab_Limit (이익제공 기준관리) */
 export const bizLimitApi = {
@@ -152,6 +153,30 @@ export const bizPromoApi = {
   rdDownloadCardContents: async (req: BizCardContentsPrintReq): Promise<string> => {
     const res = await apiClient.post<ApiResponse<string>>('v1/biz/promos/card-contents/rd-download', req);
     return res.data.data ?? '';
+  },
+
+  // ── L08 Biz01_Tab_PriorApproval ──
+
+  /** AS-IS biz.Biz01_Promo.selectProvideList — 날짜 'yyyy-MM-dd', crmName '%'는 전체, empId가 null이면 파라미터를 빼서 조건 없음 */
+  searchProvideList: async (c: BizProvideListCond): Promise<BizProvideList[]> => {
+    const res = await apiClient.get<ApiResponse<BizProvideList[]>>('v1/biz/promos/provide-list', {
+      params: { startDate: c.startDate, endDate: c.endDate, provideRcvType: c.provideRcvType, crmName: c.crmName, ...(c.empId != null ? { empId: c.empId } : {}) },
+    });
+    return res.data.data ?? [];
+  },
+  /** AS-IS sys.Sys99_Print.insertRdProvideList → 출력 그룹 ID */
+  rdPrintProvideList: async (c: BizProvideListCond): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/biz/promos/provide-list/rd-print', c);
+    return res.data.data ?? '';
+  },
+};
+
+/** L08 AS-IS Mkt01_Lookup_Select2 (server/mkt/Mkt01_TargetCompany) — 거래상대방 조회창 */
+export const mktTargetApi = {
+  /** AS-IS mkt.Mkt01_TargetCompany.selectTargetCompanyPaging(cmp) / selectManagerPaging(emp) — searchText는 글자 그대로(서버가 `%…%`로 감싼다), offset = (쪽-1)*limit */
+  search: async (type: 'cmp' | 'emp', p: { searchText: string; offset: number; limit: number }): Promise<PageRes<MktTarget>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<MktTarget>>>(type === 'cmp' ? 'v1/mkt/target-companies' : 'v1/mkt/target-companies/managers', { params: p });
+    return res.data.data ?? { total: 0, rows: [] };
   },
 };
 

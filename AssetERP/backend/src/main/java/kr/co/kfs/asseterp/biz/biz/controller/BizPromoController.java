@@ -15,6 +15,8 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoPrintReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListPrintReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListRes;
 import kr.co.kfs.asseterp.biz.biz.service.BizPromoService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import kr.co.kfs.asseterp.common.dto.PageRes;
@@ -168,5 +170,22 @@ public class BizPromoController {
     @PostMapping("/card-contents/rd-download")
     public ApiResponse<String> cardContentsRdDownload(@AuthenticationPrincipal UserPrincipal principal, @RequestBody BizCardContentsPrintReq req) {
         return ApiResponse.ok(service.insertRdCardContentsDownload(principal, req));
+    }
+
+    /** AS-IS biz.Biz01_Promo.selectProvideList (Biz01_Tab_PriorApproval) — provideRcvType `1` 이익제공 / `2` 이익수령, crmName `%`는 전체, empId는 없으면 조건 없음 */
+    @GetMapping("/provide-list")
+    public ApiResponse<List<BizProvideListRes>> searchProvideList(@AuthenticationPrincipal UserPrincipal principal,
+                                                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                                                                  @RequestParam(defaultValue = "%") String provideRcvType,
+                                                                  @RequestParam(defaultValue = "%") String crmName,
+                                                                  @RequestParam(required = false) Long empId) {
+        return ApiResponse.ok(service.searchProvideList(principal, startDate, endDate, provideRcvType, crmName, empId));
+    }
+
+    /** AS-IS sys.Sys99_Print.insertRdProvideList → 출력 그룹 ID */
+    @PostMapping("/provide-list/rd-print")
+    public ApiResponse<String> provideListRdPrint(@AuthenticationPrincipal UserPrincipal principal, @RequestBody BizProvideListPrintReq req) {
+        return ApiResponse.ok(service.insertRdProvideList(principal, req));
     }
 }

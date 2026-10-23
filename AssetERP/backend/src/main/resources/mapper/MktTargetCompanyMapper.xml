@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/mkt/mapper/mkt01_target_company.xml (selectTargetCompanyPaging·Total, selectManagerPaging·Total)  (L08 Mkt01_Lookup_Select2) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.mkt.mapper.MktTargetCompanyMapper">
+
+    <!-- 조회창은 itemTypeCode `%`, unUseYn true 로만 부른다 → 구분 조건 `LIKE '%'`, 미사용 제외 가지만 옮긴다 -->
+    <sql id="targetCompanyFrom">
+          FROM mkt01_target_company
+         WHERE mkt01_company_id = #{companyId}
+           AND mkt01_item_type_cd LIKE '%'
+           AND COALESCE(mkt01_unuse_yn,'false') != 'true'
+           AND UPPER(CONCAT(mkt01_target_company_nm, mkt01_note)) LIKE UPPER(#{searchText})
+    </sql>
+
+    <select id="selectTargetCompanyPaging" resultType="kr.co.kfs.asseterp.biz.mkt.dto.MktTargetRes">
+        SELECT t.mkt01_target_company_id AS target_company_id
+             , CAST(NULL AS NUMERIC)     AS manager_id
+             , t.mkt01_target_company_nm AS target_company_name
+             , CAST(NULL AS VARCHAR)     AS manager_name
+             , CAST(NULL AS VARCHAR)     AS manager_org_name
+          FROM ( SELECT mkt01_target_company_id, mkt01_target_company_nm
+                 <include refid="targetCompanyFrom"/>
+               ) t
+         ORDER BY t.mkt01_target_company_nm collate "ko_KR.utf8" asc
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="selectTargetCompanyTotal" resultType="long">
+        SELECT COUNT(*)
+          FROM ( SELECT mkt01_target_company_id
+                 <include refid="targetCompanyFrom"/>
+               ) t
+    </select>
+
+    <sql id="managerFrom">
+          FROM mkt01_target_company
+               LEFT OUTER JOIN mkt02_manager ON mkt02_target_company_id = mkt01_target_company_id
+         WHERE 1=1
+           AND mkt01_company_id = #{companyId}
+           AND mkt01_item_type_cd LIKE '%'
+           AND COALESCE(mkt01_unuse_yn,'false') != 'true'
+           AND UPPER(CONCAT(mkt01_target_company_nm, mkt02_manager_nm)) LIKE UPPER(#{searchText})
+    </sql>
+
+    <select id="selectManagerPaging" resultType="kr.co.kfs.asseterp.biz.mkt.dto.MktTargetRes">
+        SELECT t.mkt01_target_company_id AS target_company_id
+             , t.mkt01_manager_id        AS manager_id
+             , t.mkt01_target_company_nm AS target_company_name
+             , t.mkt01_manager_nm        AS manager_name
+             , t.mkt01_manager_org_nm    AS manager_org_name
+          FROM ( SELECT mkt01_target_company_id
+                      , mkt01_target_company_nm
+                      , mkt02_manager_id     AS mkt01_manager_id
+                      , mkt02_manager_nm     AS mkt01_manager_nm
+                      , mkt02_org_nm         AS mkt01_manager_org_nm
+                 <include refid="managerFrom"/>
+               ) t
+         ORDER BY t.mkt01_target_company_nm collate "ko_KR.utf8" asc
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="selectManagerTotal" resultType="long">
+        SELECT COUNT(*)
+          FROM ( SELECT mkt01_target_company_id
+                 <include refid="managerFrom"/>
+               ) t
+    </select>
+</mapper>

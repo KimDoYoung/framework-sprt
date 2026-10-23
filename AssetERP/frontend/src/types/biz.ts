@@ -58,6 +58,31 @@ export interface BizCardContentsPrintReq {
   searchText: string;
 }
 
+/** L08 Biz01_Tab_PriorApproval 그리드 한 행 (AS-IS Biz01_PromoModel). rowId = SQL의 row_number() */
+export interface BizProvideList {
+  rowId: number;
+  provideDate: string | null;
+  orgName: string | null;
+  regEmpName: string | null;
+  providePurName: string | null;
+  provideContentName: string | null;
+  targetName: string | null;
+  targetCompanyName: string | null;
+  targetEmpName: string | null;
+  targetOrgName: string | null;
+  averagePrice: number | null;
+  note: string | null;
+}
+
+/** L08 조회·[출력/다운로드] 조건. provideRcvType '1' 이익제공 / '2' 이익수령, crmName '%'는 전체, empId는 없으면 조건 없음 */
+export interface BizProvideListCond {
+  startDate: string;
+  endDate: string;
+  provideRcvType: string;
+  crmName: string;
+  empId: number | null;
+}
+
 /** L02 Biz01_Edit_Card [저장] (AS-IS Biz01_Promo.modelUpdate) */
 export interface BizPromoUpdateReq {
   providePurCode: string | null;

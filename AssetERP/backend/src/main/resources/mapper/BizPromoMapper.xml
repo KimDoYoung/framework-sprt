@@ -509,4 +509,164 @@
            AND CONCAT(crd02_franchise_nm,crd02_sector_nm, biz01_provide_company, biz01_note) ILIKE #{searchText}
          ORDER BY biz01_provide_date, crd02_franchise_nm collate "ko_KR.utf8" asc, biz01_promo_id
     </insert>
+
+    <!-- ===== L08 Biz01_Tab_PriorApproval ===== -->
+
+    <!-- AS-IS biz01_promo.selectProvideList L551 (IDMS-IC) 그대로. 단 맨 앞 열 biz01_promo_id(row_number)는 BIZ.* 의 같은 이름 열과 겹쳐 row_id 로 바꿨다 -->
+    <sql id="provideListQuery">
+    WITH BIZ_BASE AS ( SELECT biz01_promo.*
+                            , biz90_limit.*
+                            , biz02_cnt.*
+                            , TRUNC(biz01_provide_amt / (CASE WHEN biz01_provide_rcv_type = '2'
+                                                              THEN f_nvl(biz02_emp_count,1)
+                                                              ELSE f_nvl(biz02_count    ,1)
+                                                         END))                                                              AS biz01_average_price
+                            , TRUNC(biz01_provide_amt / f_nvl(biz01_peple_count,1))                                         AS biz01_average_price2
+                            , CASE WHEN biz01_settle_type = '1' THEN f_get_crdManagerId(biz01_card_id, biz01_provide_date)
+                                   ELSE biz01_reg_emp_id END                                                                AS person_id
+                         FROM biz01_promo
+                              INNER JOIN biz90_limit ON ( biz90_company_id       = biz01_company_id          AND
+                                                          biz90_provide_rcv_type = biz01_provide_rcv_type    AND
+                                                          biz90_start_date       = ( SELECT MAX(biz90_start_date)
+                                                                                       FROM biz90_limit
+                                                                                      WHERE biz90_company_id         = biz01_company_id
+                                                                                        AND biz90_provide_rcv_type   = biz01_provide_rcv_type
+                                                                                        AND biz90_start_date &lt;= biz01_provide_date ) )
+                              LEFT OUTER JOIN LATERAL ( SELECT COUNT(*)                                                                 AS biz02_count
+                                                             , SUM(CASE WHEN COALESCE(biz02_emp_yn,'false') = 'true' THEN 1 ELSE 0 END) AS biz02_emp_count
+                                                             , f_emp_kor_nm(MAX(biz02_emp_id))                                          AS biz02_emp_nm
+                                                             , SUM(CASE WHEN COALESCE(biz02_emp_yn,'false') = 'true' THEN 0 ELSE 1 END) AS biz02_target_count
+                                                             , MAX(CONCAT(biz02_target_company_nm,' '
+                                                                         ,biz02_target_emp_nm
+                                                                         ,'('||biz02_target_org_nm||')'))                               AS biz02_target_nm
+                                                          FROM biz02_person
+                                                         WHERE biz02_promo_id = biz01_promo_id
+                                                      ) biz02_cnt ON TRUE
+                        WHERE biz01_company_id = #{companyId}
+                          AND biz01_provide_rcv_type LIKE #{provideRcvType}
+                          AND biz01_provide_date     BETWEEN #{startDate} AND #{endDate}
+                          AND SUBSTR(biz01_provide_pur_cd,1,1) IN ('1','2')  /* 10:판매(일반)/11:판매(경조)/20:운용(일반)/21:운용(경조)/50:관리(일반) */
+    )
+    SELECT row_number() OVER (ORDER BY biz01_provide_date, biz01_person_nm collate "ko_KR.utf8" asc)                          AS row_id
+         , f_cdnm('ProvideRcvType'     , biz01_provide_rcv_type    , biz01_company_id, biz01_provide_date)                      AS biz01_provide_rcv_type_nm
+         , f_cdnm('SettleType'         , biz01_settle_type         , biz01_company_id, biz01_provide_date)                      AS biz01_settle_type_nm
+         , f_cdnm('ProvidePurCode'     , biz01_provide_pur_cd      , biz01_company_id, biz01_provide_date)                      AS biz01_provide_pur_nm
+         , f_cdnm('ProvideContentCode' , biz01_provide_content_cd  , biz01_company_id, biz01_provide_date)                      AS biz01_provide_content_nm
+         , f_cdnm('TaxType'            , biz01_tax_type            , biz01_company_id, biz01_provide_date)                      AS biz01_tax_type_nm
+         , CASE WHEN COALESCE(biz01_close_yn, 'false') = 'true' THEN '마감' ELSE '' END                                          AS biz01_close_nm
+         , CASE WHEN biz01_settle_type = '1' THEN f_emp_kor_nm(person_id) ELSE biz01_person_nm END                              AS biz01_reg_emp_nm
+         , f_get_empTrans(person_id, biz01_provide_date, 'org_code_nm')                                                         AS biz01_org_nm
+         , BIZ.*
+      FROM ( /*--- 이익제공 ---*/
+             SELECT BIZ_BASE.*
+                  , CASE WHEN COALESCE(biz02_emp_count,0) = 0 THEN f_emp_kor_nm(biz01_reg_emp_id)
+                         ELSE (CASE WHEN (SELECT count(*)
+                                            FROM biz02_person
+                                           WHERE biz02_promo_id = biz01_promo_id
+                                             AND biz02_emp_id   = biz01_reg_emp_id) = 0 THEN biz02_emp_nm ELSE f_emp_kor_nm(biz01_reg_emp_id) END)
+                              ||(CASE WHEN biz02_emp_count = 1 THEN '' ELSE ' 외 '||biz02_emp_count-1 END) END                   AS biz01_person_nm
+                  , CONCAT(biz02_target_company_nm,' '
+                          ,biz02_target_emp_nm
+                          ,'('||biz02_target_org_nm||')')                                                                       AS biz01_target_nm
+                  , biz02_target_company_nm                                                                                     AS biz01_target_company_nm
+                  , biz02_target_emp_nm                                                                                         AS biz01_target_emp_nm
+                  , biz02_target_org_nm                                                                                         AS biz01_target_org_nm
+               FROM BIZ_BASE
+                    LEFT OUTER JOIN biz02_person a ON a.biz02_promo_id = biz01_promo_id
+              WHERE biz01_provide_rcv_type = '1'
+                AND COALESCE(biz02_emp_yn,'false') != 'true'
+                AND biz01_average_price > (CASE WHEN SUBSTR(biz01_provide_pur_cd,2,1) = '0'
+                                                            THEN COALESCE(biz90_sale_rule_limit1, 0)        /* 일반 */
+                                                            ELSE COALESCE(biz90_sale_rule_limit2, 0) END)   /* 경조 */
+             /*--- 이익제공(거래상대방 미등록) ---*/
+              UNION ALL
+             SELECT BIZ_BASE.*
+                  , f_emp_kor_nm(biz01_reg_emp_id)  AS biz01_person_nm
+                  , '*미등록*'                        AS biz01_target_nm
+                  , '*미등록*'                        AS biz01_target_company_nm
+                  , null                            AS biz01_target_emp_nm
+                  , null                            AS biz01_target_org_nm
+               FROM BIZ_BASE
+              WHERE biz01_provide_rcv_type = '1'
+                AND biz01_average_price > (CASE WHEN SUBSTR(biz01_provide_pur_cd,2,1) = '0'
+                                                            THEN COALESCE(biz90_sale_rule_limit1, 0)        /* 일반 */
+                                                            ELSE COALESCE(biz90_sale_rule_limit2, 0) END)   /* 경조 */
+                AND NOT EXISTS (SELECT 1
+                                  FROM biz02_person
+                                 WHERE biz02_promo_id = biz01_promo_id
+                                   AND biz02_target_emp_nm IS NOT NULL)
+             /*--- 이익수령 ---*/
+              UNION ALL
+             SELECT BIZ_BASE.*
+                  , f_emp_kor_nm(biz02_emp_id)                                                                                          AS biz01_person_nm
+                  , CASE WHEN COALESCE(biz02_target_count,0) = 0 THEN '*미등록*'
+                         ELSE biz02_target_nm || (CASE WHEN biz02_target_count = 1 THEN '' ELSE ' 외 '||biz02_target_count-1 END) END    AS biz01_target_nm
+                  , null                                                                                                                AS biz01_target_company_nm
+                  , null                                                                                                                AS biz01_target_emp_nm
+                  , null                                                                                                                AS biz01_target_org_nm
+               FROM BIZ_BASE
+                    LEFT OUTER JOIN biz02_person a ON a.biz02_promo_id = biz01_promo_id
+              WHERE biz01_provide_rcv_type = '2'
+                AND COALESCE(biz02_emp_yn,'false') = 'true'
+                AND biz01_average_price > (CASE WHEN SUBSTR(biz01_provide_pur_cd,2,1) = '0'
+                                                            THEN COALESCE(biz90_sale_rule_limit1, 0)        /* 일반 */
+                                                            ELSE COALESCE(biz90_sale_rule_limit2, 0) END)   /* 경조 */
+             /*--- 이익수령(직원정보 미등록) ---*/
+              UNION ALL
+             SELECT BIZ_BASE.*
+                  , f_emp_kor_nm(biz01_reg_emp_id)                                                                                      AS biz01_person_nm
+                  , CASE WHEN COALESCE(biz02_target_count,0) = 0 THEN '*미등록*'
+                         ELSE biz02_target_nm || (CASE WHEN biz02_target_count = 1 THEN '' ELSE ' 외 '||biz02_target_count-1 END) END    AS biz01_target_nm
+                  , null                                                                                                                AS biz01_target_company_nm
+                  , null                                                                                                                AS biz01_target_emp_nm
+                  , null                                                                                                                AS biz01_target_org_nm
+               FROM BIZ_BASE
+              WHERE biz01_provide_rcv_type = '2'
+                AND biz01_average_price > (CASE WHEN SUBSTR(biz01_provide_pur_cd,2,1) = '0'
+                                                            THEN COALESCE(biz90_sale_rule_limit1, 0)        /* 일반 */
+                                                            ELSE COALESCE(biz90_sale_rule_limit2, 0) END)   /* 경조 */
+                AND NOT EXISTS (SELECT 1
+                                  FROM biz02_person
+                                 WHERE biz02_promo_id = biz01_promo_id
+                                   AND biz02_emp_id IS NOT NULL)
+           ) BIZ
+     WHERE biz01_target_nm LIKE #{crmName}||'%'
+    <if test="empId != null">
+       AND person_id = #{empId}
+    </if>
+    </sql>
+
+    <!-- AS-IS biz01_promo.selectProvideList (IDMS-IC) — 그리드 11열만 별칭으로. 원본은 ORDER BY 가 없지만 row_number 순서(일자·제공자)로 고정한다 -->
+    <select id="selectProvideList" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizProvideListRes">
+        SELECT q.row_id                  AS row_id
+             , q.biz01_provide_date      AS provide_date
+             , q.biz01_org_nm            AS org_name
+             , q.biz01_reg_emp_nm        AS reg_emp_name
+             , q.biz01_provide_pur_nm    AS provide_pur_name
+             , q.biz01_provide_content_nm AS provide_content_name
+             , q.biz01_target_nm         AS target_name
+             , q.biz01_target_company_nm AS target_company_name
+             , q.biz01_target_emp_nm     AS target_emp_name
+             , q.biz01_target_org_nm     AS target_org_name
+             , q.biz01_average_price     AS average_price
+             , q.biz01_note              AS note
+          FROM ( <include refid="provideListQuery"/> ) q
+         ORDER BY q.row_id
+    </select>
+
+    <!-- AS-IS Sys99_Print.insertRdProvideList L1106 (IDMS-IC) = biz01_promo.selectProvideList + sys99_print.insert 를 한 번에(INSERT … SELECT).
+         열: d01 일자 · s01 제공자 · s02 목적 · s03 내용 · l01 경제적가치 · s04 비고 · s05 부서 · 이익제공(1)이면 s06 회사 s07 직원 s08 부서, 아니면 s06 거래상대방 -->
+    <insert id="insertPrintProvideList">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_string01, sys99_string02, sys99_string03, sys99_long01, sys99_string04, sys99_string05
+               , sys99_string06, sys99_string07, sys99_string08 )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , q.biz01_provide_date, q.biz01_reg_emp_nm, q.biz01_provide_pur_nm, q.biz01_provide_content_nm, q.biz01_average_price, q.biz01_note, q.biz01_org_nm
+             , CASE WHEN #{provideRcvType} = '1' THEN q.biz01_target_company_nm ELSE q.biz01_target_nm END
+             , CASE WHEN #{provideRcvType} = '1' THEN q.biz01_target_emp_nm END
+             , CASE WHEN #{provideRcvType} = '1' THEN q.biz01_target_org_nm END
+          FROM ( <include refid="provideListQuery"/> ) q
+         ORDER BY q.row_id
+    </insert>
 </mapper>

@@ -14,6 +14,8 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoPrintReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListPrintReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListRes;
 import kr.co.kfs.asseterp.biz.biz.mapper.BizPersonMapper;
 import kr.co.kfs.asseterp.biz.biz.mapper.BizPromoMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -40,6 +42,8 @@ public class BizPromoService {
     private static final String PRINT_WINDOW = "Biz01_Tab_Card";
     /** 법인카드 사용내역 조회(L04)의 windowClassName — 출력·엑셀이 같은 값 */
     private static final String CONTENTS_WINDOW = "Biz01_Tab_CardContents";
+    /** 이익제공 상세현황(L08)의 windowClassName */
+    private static final String PROVIDE_LIST_WINDOW = "Biz01_Tab_PriorApproval";
 
     private final BizPromoMapper mapper;
     private final BizPersonMapper personMapper;
@@ -217,6 +221,22 @@ public class BizPromoService {
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), CONTENTS_WINDOW);
         mapper.insertPrintCardContentsDownload(user.getCompanyId(), user.getUserId(), CONTENTS_WINDOW, groupId,
                 req.dataYm(), all(req.managerId()), all(req.providePurCode()), like(req.searchText()));
+        return String.valueOf(groupId);
+    }
+
+    /** AS-IS biz.Biz01_Promo.selectProvideList(Biz01_Tab_PriorApproval) — 제공/수령 구분 `1`·`2`, 거래상대방 전체는 `%`, 제공(수령)자 empId는 없으면 조건 없음 */
+    public List<BizProvideListRes> searchProvideList(UserPrincipal user, LocalDate startDate, LocalDate endDate,
+                                                     String provideRcvType, String crmName, Long empId) {
+        return mapper.selectProvideList(user.getCompanyId(), startDate, endDate, all(provideRcvType), all(crmName), empId);
+    }
+
+    /** AS-IS sys.Sys99_Print.insertRdProvideList — ① 내 출력 자료 지움 ② 같은 조건의 조회 결과를 새 그룹 ID로 담음. 돌려주는 값 = 그룹 ID */
+    @Transactional
+    public String insertRdProvideList(UserPrincipal user, BizProvideListPrintReq req) {
+        long groupId = mapper.selectNextId();
+        mapper.deletePrint(user.getCompanyId(), user.getUserId(), PROVIDE_LIST_WINDOW);
+        mapper.insertPrintProvideList(user.getCompanyId(), user.getUserId(), PROVIDE_LIST_WINDOW, groupId,
+                req.startDate(), req.endDate(), all(req.provideRcvType()), all(req.crmName()), req.empId());
         return String.valueOf(groupId);
     }
 

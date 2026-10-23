@@ -10,6 +10,8 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoPrintReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListPrintReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListRes;
 import kr.co.kfs.asseterp.biz.biz.service.BizPersonService;
 import kr.co.kfs.asseterp.biz.biz.service.BizPromoService;
 import kr.co.kfs.asseterp.common.dto.PageRes;
@@ -215,5 +217,39 @@ class BizPromoDbTest {
         Integer expected = jdbc.queryForObject("select count(*) from biz01_promo p left join biz02_person e on e.biz02_promo_id = p.biz01_promo_id and e.biz02_emp_yn = 'false' where p.biz01_company_id = 28000 and p.biz01_std_ym = ?", Integer.class, YM);
         assertThat(download).isEqualTo(expected);
         assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_group_id = ? and sys99_long04 is null", Integer.class, Long.valueOf(g2))).isZero();
+    }
+
+    @Test
+    void 상세현황은_구분_거래상대방_제공자_조건으로_좁혀지고_행번호는_1부터_차례로() {
+        List<BizProvideListRes> all = promoService.searchProvideList(user, FROM, TO, "1", "%", null);
+        assertThat(all).isNotEmpty();
+        assertThat(all.get(0).rowId()).isEqualTo(1L);
+        assertThat(all).extracting(BizProvideListRes::rowId).isSorted();
+        assertThat(all).allSatisfy(r -> assertThat(r.targetName()).isNotNull());
+        // 이익제공은 회사·직원·부서를 따로 준다
+        assertThat(all).anySatisfy(r -> assertThat(r.targetCompanyName()).isNotNull());
+        // 거래상대방은 앞부분 일치(원본 LIKE crmName||'%')
+        String name = all.get(0).targetName();
+        List<BizProvideListRes> byTarget = promoService.searchProvideList(user, FROM, TO, "1", name, null);
+        assertThat(byTarget).isNotEmpty().hasSizeLessThanOrEqualTo(all.size());
+        assertThat(byTarget).allSatisfy(r -> assertThat(r.targetName()).startsWith(name));
+        // 다른 회사는 같은 기간에 한 건도 없다
+        assertThat(promoService.searchProvideList(otherCompany, FROM, TO, "1", "%", null)).isEmpty();
+    }
+
+    @Test
+    void 상세현황_출력자료는_조회_행수만큼_이익제공은_회사_직원_부서_이익수령은_거래상대방() {
+        BizProvideListPrintReq req = new BizProvideListPrintReq(FROM, TO, "1", "%", null);
+        int expected = promoService.searchProvideList(user, FROM, TO, "1", "%", null).size();
+        String g1 = promoService.insertRdProvideList(user, req);
+        assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_group_id = ?", Integer.class, Long.valueOf(g1))).isEqualTo(expected);
+        assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_group_id = ? and sys99_string06 is not null", Integer.class, Long.valueOf(g1))).isPositive();
+        // 다시 만들면 이전 자료는 지워진다
+        String g2 = promoService.insertRdProvideList(user, req);
+        assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_group_id = ?", Integer.class, Long.valueOf(g1))).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_group_id = ?", Integer.class, Long.valueOf(g2))).isEqualTo(expected);
+        // 이익수령(2)은 string06 에 거래상대방 한 칸만 담고 string07·08은 비운다
+        String g3 = promoService.insertRdProvideList(user, new BizProvideListPrintReq(FROM, TO, "2", "%", null));
+        assertThat(jdbc.queryForObject("select count(*) from sys99_print where sys99_group_id = ? and (sys99_string07 is not null or sys99_string08 is not null)", Integer.class, Long.valueOf(g3))).isZero();
     }
 }

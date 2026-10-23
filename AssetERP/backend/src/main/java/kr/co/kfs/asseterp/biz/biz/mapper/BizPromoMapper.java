@@ -10,6 +10,7 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizPromoCardRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoUpdateReq;
+import kr.co.kfs.asseterp.biz.biz.dto.BizProvideListRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -123,4 +124,16 @@ public interface BizPromoMapper {
                                         @Param("windowClassName") String windowClassName, @Param("groupId") long groupId,
                                         @Param("dataYm") String dataYm, @Param("managerId") String managerId,
                                         @Param("providePurCode") String providePurCode, @Param("searchText") String searchText);
+
+    /** AS-IS biz01_promo.selectProvideList (L08) — provideRcvType `1` 이익제공 / `2` 이익수령, crmName `%`는 전체, empId null이면 제공(수령)자 조건 없음 */
+    List<BizProvideListRes> selectProvideList(@Param("companyId") Long companyId, @Param("startDate") LocalDate startDate,
+                                              @Param("endDate") LocalDate endDate, @Param("provideRcvType") String provideRcvType,
+                                              @Param("crmName") String crmName, @Param("empId") Long empId);
+
+    /** AS-IS Sys99_Print.insertRdProvideList — 담은 행 수 */
+    int insertPrintProvideList(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                               @Param("windowClassName") String windowClassName, @Param("groupId") long groupId,
+                               @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate,
+                               @Param("provideRcvType") String provideRcvType, @Param("crmName") String crmName,
+                               @Param("empId") Long empId);
 }
