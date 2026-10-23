@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ics/mapper/ics35_extr_activity.xml (selectByPersonId, selectByCompanyId, selectById) + UpdateDataModel(ics35_extr_activity)  (M01·M02) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ics.mapper.IcsExtrActivityMapper">
+
+    <!-- AS-IS ics35_extr_activity.* 의 공통 SELECT 열·JOIN (a.* 는 DTO 열로 명시) -->
+    <sql id="extrActivityColumns">
+        SELECT a.ics35_extr_activity_id                                                                      AS extr_activity_id,
+               a.ics35_company_id                                                                            AS company_id,
+               a.ics35_person_id                                                                             AS person_id,
+               a.ics35_reg_date                                                                              AS reg_date,
+               a.ics35_activity_corp                                                                         AS activity_corp,
+               a.ics35_activity_tgt_cd                                                                       AS activity_tgt_cd,
+               a.ics35_activity_tgt_etc                                                                      AS activity_tgt_etc,
+               a.ics35_activity_period                                                                       AS activity_period,
+               a.ics35_activity_desc                                                                         AS activity_desc,
+               a.ics35_activity_pay                                                                          AS activity_pay,
+               a.ics35_appr_id                                                                               AS appr_id,
+               a.ics35_result_appr_id                                                                        AS result_appr_id,
+               f_cdnm('ExtrActivityTargetCode', a.ics35_activity_tgt_cd, a.ics35_company_id, f_sysdate())    AS activity_tgt_nm,
+               CASE WHEN ics35_activity_tgt_cd = '90' THEN ics35_activity_tgt_etc
+                    ELSE f_cdnm('ExtrActivityTargetCode', a.ics35_activity_tgt_cd, a.ics35_company_id, f_sysdate())
+                    END                                                                                      AS activity_tgt_nm2,
+               b.apr01_status_cd                                                                             AS appr_status_cd,
+               f_cdnm('AprStatusCode', b.apr01_status_cd, b.apr01_company_id, b.apr01_reg_date)              AS appr_status_nm,
+               c.apr01_status_cd                                                                             AS result_appr_status_cd,
+               f_cdnm('AprStatusCode', c.apr01_status_cd, c.apr01_company_id, c.apr01_reg_date)              AS result_appr_status_nm,
+               d.emp01_kor_nm                                                                                AS person_nm,
+               d.emp01_emp_no                                                                                AS person_no,
+               f_get_emptrans(a.ics35_person_id, f_sysdate()::date, 'org_code_nm')                           AS org_nm,
+               f_get_empTrans(a.ics35_person_id, f_sysdate()::date, 'title_nm')                              AS title_nm,
+               ( SELECT COUNT(*)||'건'
+                   FROM sys10_file
+                  WHERE sys10_parent_id = a.ics35_extr_activity_id )                                         AS file_cnt_str,
+               ( SELECT CASE WHEN COUNT(*) > 0
+                             THEN STRING_AGG(sys10_file_nm, ', ')
+                             ELSE ''
+                             END
+                   FROM sys10_file
+                  WHERE sys10_parent_id = a.ics35_extr_activity_id )                                         AS file_str
+          FROM ics35_extr_activity a
+               LEFT OUTER JOIN apr01_appr b ON b.apr01_appr_id = a.ics35_appr_id
+               LEFT OUTER JOIN apr01_appr c ON c.apr01_appr_id = a.ics35_result_appr_id
+               LEFT OUTER JOIN emp01_person d ON d.emp01_person_id = a.ics35_person_id
+    </sql>
+
+    <!-- AS-IS ics35_extr_activity.selectByPersonId (IDMS-IC) -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsExtrActivityRes">
+        <include refid="extrActivityColumns"/>
+         WHERE 1=1
+           AND ics35_company_id = #{companyId}
+           AND ics35_person_id = #{personId}
+           AND ics35_reg_date BETWEEN #{startDate} AND #{closeDate}
+    </select>
+
+    <!-- AS-IS ics35_extr_activity.selectByCompanyId (IDMS-IC) — 임시저장(99)은 제외. unknown이면 기간 없이 결과보고 상신이 없거나 반려인 건만 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsExtrActivityRes">
+        <include refid="extrActivityColumns"/>
+         WHERE 1=1
+           AND ics35_company_id = #{companyId}
+           AND COALESCE(b.apr01_status_cd,'99') != '99'
+        <choose>
+            <when test="unknown">
+           AND COALESCE(c.apr01_status_cd, '99') NOT IN ('10','20','30')
+            </when>
+            <otherwise>
+           AND ics35_reg_date BETWEEN #{startDate} AND #{closeDate}
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- AS-IS ics35_extr_activity.selectById (IDMS-IC) — 저장 결과 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsExtrActivityRes">
+        <include refid="extrActivityColumns"/>
+         WHERE ics35_extr_activity_id = #{extrActivityId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel(ics35_extr_activity) 동적 INSERT — 회사·신청자는 로그인 정보(원본은 화면이 모델에 채움) -->
+    <insert id="insertExtrActivity">
+        INSERT INTO ics35_extr_activity (ics35_extr_activity_id, ics35_company_id, ics35_person_id, ics35_reg_date, ics35_activity_corp,
+                                         ics35_activity_tgt_cd, ics35_activity_tgt_etc, ics35_activity_period, ics35_activity_desc, ics35_activity_pay)
+        VALUES (#{req.extrActivityId}, #{companyId}, #{personId}, #{req.regDate}, #{req.activityCorp},
+                #{req.activityTgtCd}, #{req.activityTgtEtc}, #{req.activityPeriod}, #{req.activityDesc}, #{req.activityPay})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(ics35_extr_activity) 동적 UPDATE — 신청 창이 고치는 7열만, 로그인 회사 행만 (상신 ID는 상신 쪽이 바꾼다) -->
+    <update id="updateExtrActivity">
+        UPDATE ics35_extr_activity
+           SET ics35_reg_date         = #{req.regDate},
+               ics35_activity_corp    = #{req.activityCorp},
+               ics35_activity_tgt_cd  = #{req.activityTgtCd},
+               ics35_activity_tgt_etc = #{req.activityTgtEtc},
+               ics35_activity_period  = #{req.activityPeriod},
+               ics35_activity_desc    = #{req.activityDesc},
+               ics35_activity_pay     = #{req.activityPay}
+         WHERE ics35_extr_activity_id = #{req.extrActivityId}
+           AND ics35_company_id       = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel -->
+    <delete id="deleteExtrActivity">
+        DELETE FROM ics35_extr_activity
+         WHERE ics35_extr_activity_id = #{extrActivityId}
+           AND ics35_company_id = #{companyId}
+    </delete>
+</mapper>

@@ -558,3 +558,43 @@ export interface IcsComplianceReportAppr {
   statusCode: string | null;
   statusName: string | null;
 }
+
+/** 대외활동신청 (M01·M02, 서버 IcsExtrActivityRes) */
+export interface IcsExtrActivity {
+  extrActivityId: number;
+  companyId: number | null;
+  personId: number | null;
+  regDate: string | null;
+  activityCorp: string | null;
+  activityTgtCd: string | null;
+  activityTgtNm: string | null;
+  activityTgtNm2: string | null;
+  activityTgtEtc: string | null;
+  activityPeriod: string | null;
+  activityDesc: string | null;
+  activityPay: string | null;
+  apprId: number | null;
+  apprStatusCd: string | null;
+  apprStatusNm: string | null;
+  resultApprId: number | null;
+  resultApprStatusCd: string | null;
+  resultApprStatusNm: string | null;
+  personNm: string | null;
+  personNo: string | null;
+  orgNm: string | null;
+  titleNm: string | null;
+  fileCntStr: string | null;
+  fileStr: string | null;
+}
+
+/** 대외활동신청 저장 (서버 IcsExtrActivitySaveReq) — 회사·신청자는 서버가 채운다 */
+export interface IcsExtrActivitySaveReq {
+  extrActivityId: number;
+  regDate: string;
+  activityCorp: string;
+  activityTgtCd: string;
+  activityTgtEtc: string | null;
+  activityPeriod: string;
+  activityDesc: string;
+  activityPay: string | null;
+}

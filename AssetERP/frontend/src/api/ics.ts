@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { IcsChecklistUser, ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsChecklistWrite, IcsChecklistWriteItem, IcsComplianceConfirm, IcsComplianceReportRow, IcsComplianceReportAppr, IcsChecklistConfirm, IcsChecklistRelateAppr, ChecklistConfirmParams, IcsChecklistStatus, IcsChecklistStatusDetail } from '../types/ics';
+import { IcsChecklistUser, ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsChecklistWrite, IcsChecklistWriteItem, IcsComplianceConfirm, IcsComplianceReportRow, IcsComplianceReportAppr, IcsChecklistConfirm, IcsChecklistRelateAppr, ChecklistConfirmParams, IcsChecklistStatus, IcsChecklistStatusDetail, IcsExtrActivity, IcsExtrActivitySaveReq } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 /** 파일을 받아 저장한다(blob). 오류 응답은 메시지로 바꿔 던진다 */
@@ -793,6 +793,38 @@ export const icsApi = {
   getComplianceReportAppr: async (yyyymm: string, cycleType: string): Promise<IcsComplianceReportAppr | null> => {
     const res = await apiClient.get<ApiResponse<IcsComplianceReportAppr | null>>('v1/ics/compliance-reports/appr', { params: { yyyymm, cycleType } });
     return res.data.data ?? null;
+  },
+
+  // ── M01·M02 대외활동 (Ics35_Tab_ExtrActivity·Ics35_Tab_ExtrActivityList) ──
+
+  /** AS-IS ics.Ics35_ExtrActivity.selectByPersonId: 로그인 사원 본인의 신청 */
+  searchExtrActivities: async (startDate: string, closeDate: string): Promise<IcsExtrActivity[]> => {
+    const res = await apiClient.get<ApiResponse<IcsExtrActivity[]>>('v1/ics/extr-activities', { params: { startDate, closeDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ics.Ics35_ExtrActivity.selectByCompanyId: 회사 전체(임시저장 제외). unknown = 기간 없이 결과보고 누락건만 */
+  searchExtrActivitiesForCompany: async (startDate: string, closeDate: string, unknown: boolean): Promise<IcsExtrActivity[]> => {
+    const res = await apiClient.get<ApiResponse<IcsExtrActivity[]>>('v1/ics/extr-activities/company', { params: { startDate, closeDate, unknown } });
+    return res.data.data ?? [];
+  },
+
+  /** 새 신청의 id (AS-IS Ics35_Edit_ExtrActivity.insert의 DBUtil.setSeq) */
+  getExtrActivityNextId: async (): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/ics/extr-activities/next-id');
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics35_ExtrActivity.modelUpdate → 저장된 행 */
+  saveExtrActivity: async (req: IcsExtrActivitySaveReq): Promise<IcsExtrActivity> => {
+    const res = await apiClient.put<ApiResponse<IcsExtrActivity>>('v1/ics/extr-activities', req);
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics35_ExtrActivity.delete → 지운 건수 */
+  deleteExtrActivities: async (extrActivityIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/ics/extr-activities', { data: extrActivityIds });
+    return res.data.data;
   },
 };
 

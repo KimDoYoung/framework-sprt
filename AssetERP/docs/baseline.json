@@ -5576,5 +5576,59 @@
     "note": "docs/work/L/L12-작업기록.md",
     "history": [],
     "id": "L12"
+  },
+  "Ics35_Tab_ExtrActivity": {
+    "commit": "dfb420079ba71dafa951006d6b145752ba65d16d",
+    "commit_short": "dfb4200",
+    "branch": "ioc",
+    "commit_date": "2026-10-22",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ics/Ics35_Edit_ExtrActivity.java": "bc0e425fe0e71ea4bc6486e6ae61ebfb9400c4ae",
+      "application/src/main/java/myApp/client/vi/ics/Ics35_Grid_FileList.java": "d94a565e851762462ff4f9e812cbe9d5355ddc1c",
+      "application/src/main/java/myApp/client/vi/ics/Ics35_Tab_ExtrActivity.java": "9f1abff9445992cb692f2d3d92002a44bbf78a25",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics35_ExtrActivityModel.java": "9cd2f674380f1be52130b5c5eefd08211e4a19f3",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics35_ExtrActivityModelProperties.java": "839570bf04ff5122536a99e9f8eec958533b10e9",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/ics/Ics35_ExtrActivity.java": "edc578717cc177b367c2e5f67507314b293c9b25",
+      "application/src/main/java/myApp/server/ics/mapper/ics35_extr_activity.xml": "dbb77ff8395862fa6e46084ec88da170e1a7d529",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Dcr01_Lookup_Class",
+      "Sys10_Lookup_File",
+      "Sys10_Lookup_FileViewer"
+    ],
+    "recorded_at": "2026-10-23T15:24:43+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/M/M01-작업기록.md",
+    "history": [],
+    "id": "M01"
+  },
+  "Ics35_Tab_ExtrActivityList": {
+    "commit": "dfb420079ba71dafa951006d6b145752ba65d16d",
+    "commit_short": "dfb4200",
+    "branch": "ioc",
+    "commit_date": "2026-10-22",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ics/Ics35_Tab_ExtrActivityList.java": "a6a751befb507dfe4598be49e85c0e63f44c8bcd",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics35_ExtrActivityModel.java": "9cd2f674380f1be52130b5c5eefd08211e4a19f3",
+      "application/src/main/java/myApp/client/vi/ics/model/Ics35_ExtrActivityModelProperties.java": "839570bf04ff5122536a99e9f8eec958533b10e9",
+      "application/src/main/java/myApp/server/ics/Ics35_ExtrActivity.java": "edc578717cc177b367c2e5f67507314b293c9b25",
+      "application/src/main/java/myApp/server/ics/mapper/ics35_extr_activity.xml": "dbb77ff8395862fa6e46084ec88da170e1a7d529"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc"
+    ],
+    "recorded_at": "2026-10-23T15:25:10+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/M/M02-작업기록.md",
+    "history": [],
+    "id": "M02"
   }
 }
