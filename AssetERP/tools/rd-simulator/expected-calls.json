@@ -1,0 +1,814 @@
+{
+ "generatedFrom": "IDMS-IC myApp/client RDUtil 사용처 (2026-10-23)",
+ "note": "file은 IDMS-IC/application/src/main/java 기준. RDViewer.java는 page를 코드에서 직접 지정하지 않아 pages가 비어 있다",
+ "files": [
+  {
+   "file": "myApp/client/vi/RDViewer.java",
+   "pages": [],
+   "mrds": [
+    "Emp31_Rd_Director",
+    "Emp31_Rd_Director_End"
+   ],
+   "kinds": []
+  },
+  {
+   "file": "myApp/client/vi/act/Act01_Tab_AccountCode.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Act01_Rd_AccountCode"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/act/Act02_Lookup_Rd_DepositIoList.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Act02_Rd_DepositIoList"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/act/Act02_Lookup_Rd_ForJournal.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Act02_Rd_ForJournal"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/act/Act02_Lookup_Rd_Journal.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Act02_Rd_Journal"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/act/Act02_Lookup_Rd_JournalSub.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Act02_Rd_JournalSub"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/act/Act04_Lookup_Rd_GenLedger.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Act04_Rd_GenLedger"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/act/Act04_Lookup_Rd_ReportBS.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Act04_Rd_ReportBS"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/act/Act04_Lookup_Rd_ReportPL.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Act04_Rd_ReportPL"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/act/Act04_Rd_ReportFSS.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Act04_Rd_ReportFSS"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/ast/Ast09_Tab_FinanceBookPeriod.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Ast09_Rd_FinanceBookPeriod"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/bbs/Bbs15_Tab_CompanyRuleManager.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Bbs15_Rd_CompanyRuleManager"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/biz/Biz01_Rd_CardReport.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Biz01_Rd_CardReport"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/biz/Biz01_Tab_CardContents.java",
+   "pages": [
+    "CommonInvokerDownload.jsp",
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Biz01_Rd_CardContents",
+    "Biz01_Rd_CardContentsDownload"
+   ],
+   "kinds": [
+    "download",
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/biz/Biz01_Tab_CardContentsSimple.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Biz01_Rd_CardContentsSimple"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/biz/Biz01_Tab_CardManagement.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Biz01_Rd_CardManagement"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/dcr/Dcr00_Tab_DocList.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Dcr00_Rd_DocList"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/emp/Emp00_Lookup_PersonnelRecordCard.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Emp00_Rd_PersonnelRecordCard"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/emp/Emp00_Rd_PersonnelRecordCard.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Emp00_Rd_PersonnelRecordCard"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/emp/Emp01_Rd_DueDiligence.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Emp01_Rd_DueDiligence"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/emp/Emp01_Rd_FinanceProState.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Emp01_Rd_FinanceProState"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/emp/Emp01_Rd_InoutState.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Emp01_Rd_InOutState"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/emp/Emp01_Rd_OfficerState.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "emp01_Rd_OfficerState"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/emp/Emp01_Rd_PersonState.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Emp01_Rd_PersonState"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/emp/Emp01_Rd_ProPersonState.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Emp01_Rd_ProPersonState"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/emp/Emp20_Tab_LeaveManager.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Emp20_Rd_LeaveManager"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/emp/Emp21_Rd_PersonList.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Emp21_Rd_PersonList"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/flt/Flt02_Tab_EmpInfo.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Flt02_Rd_EmpInfo",
+    "Flt02_Rd_EmpInfo2"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/flt/Flt10_Tab_CeoReport.java",
+   "pages": [
+    "CommonInvoker.jsp",
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Flt10_Rd_CeoReport"
+   ],
+   "kinds": [
+    "save",
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/flt/Flt10_Tab_TrList.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Flt10_Rd_TrList"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/flt/Flt10_Tab_TrListAdmin.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/flt/Flt10_Tab_Violate.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Flt10_Rd_Violate"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/flt/Flt11_Tab_BookList.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Flt11_Rd_BookList"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/flt/Flt11_Tab_BookListAdmin.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Flt11_Rd_BookListAdmin"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/fnd/Fnd01_Tab_FundSearch.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Fnd01_Rd_FundSearch"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/fnd/Fnd25_Grid_FundTermsDetail.java",
+   "pages": [
+    "CommonInvokerDownload.html"
+   ],
+   "mrds": [
+    "Bbs15_Rd_CompanyRuleManager"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/icam/Icam06_Tab_FundPrice.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Icam06_Rd_FundPrice"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/icam/Icam10_Tab_CurrentFeeByFund.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Icam10_Rd_CurrentFeeByFund"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/ics/Ics16_Lookup_RelateAppr.java",
+   "pages": [
+    "CommonInvoker.jsp",
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Ics15_Rd_ChecklistDetail"
+   ],
+   "kinds": [
+    "save",
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/ics/Ics31_Rd_ComplianceReport.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Ics31_Tab_ComplianceReport"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/ics/Ics31_Tab_ComplianceReport.java",
+   "pages": [
+    "CommonInvoker.jsp"
+   ],
+   "mrds": [
+    "Ics31_Tab_ComplianceReport"
+   ],
+   "kinds": [
+    "save"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/ics/Ics31_Tab_ComplianceWrite.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Ics31_Rd_ComplianceWrite"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/ics/Ics40_Tab_DcrPreConfirm.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Ics40_Rd_DcrPreConfirm"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/org/Org02_Rd_OrgState.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Org02_Rd_OrgState"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/pay/Pay10_Rd_PersonList.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Pay10_Rd_PersonList"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/pay/Pay10_Rd_Retire.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Pay10_Rd_Retire"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/pay/Pay50_Tab_AccountSumList.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Pay50_Rd_AccountSumList"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/pay/Pay50_Tab_ExpensePayWrite.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Pay50_Rd_ExpensePay"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/rpt/Rpt04_Lookup_WeekConfirm.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Rpt04_Rd_WeekConfirm"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/sch/Sch10_Lookup_Rd_Ipo.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Sch10_Rd_Ipo"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/sys/Sys01_Rd_CompanyState.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Sys01_Rd_CompanyState"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/tdm/Tdm31_Lookup_Rd_RoleDesc.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Tdm31_Rd_DescRpt"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/tdm/Tdm31_Tab_RoleDesc.java",
+   "pages": [
+    "CommonInvoker.jsp",
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Tdm31_Rd_DescRpt"
+   ],
+   "kinds": [
+    "save",
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/tdm/Tdm31_Tab_RoleDescAdmin.java",
+   "pages": [
+    "CommonInvoker.jsp",
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Tdm31_Rd_DescRpt"
+   ],
+   "kinds": [
+    "save",
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/tdm/Tdm32_Lookup_Rd_RoleDigm.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Tdm32_Rd_DigmRpt"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/tdm/Tdm32_Tab_RoleDigm.java",
+   "pages": [
+    "CommonInvoker.jsp",
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Tdm32_Rd_DigmRpt"
+   ],
+   "kinds": [
+    "save",
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/tdm/Tdm32_Tab_RoleDigmAdmin.java",
+   "pages": [
+    "CommonInvoker.jsp",
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Tdm32_Rd_DigmRpt"
+   ],
+   "kinds": [
+    "save",
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/tdm/Tdm35_Tab_TaskList.java",
+   "pages": [
+    "CommonInvokerDownload.jsp"
+   ],
+   "mrds": [
+    "Tdm35_Rd_CheckDetailData",
+    "Tdm35_Rd_CheckItemData",
+    "Tdm35_Rd_RoleData",
+    "Tdm35_Rd_TaskInfoData"
+   ],
+   "kinds": [
+    "download"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/tdm/Tdm36_TabPage_RoleReport.java",
+   "pages": [
+    "CommonInvokerDownload.jsp",
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Tdm36_Rd_Fines",
+    "Tdm36_Rd_FssRpt_BoardVote",
+    "Tdm36_Rd_FssRpt_CeoCfrm",
+    "Tdm36_Rd_FssRpt_Overview",
+    "Tdm36_Rd_FssRpt_cover"
+   ],
+   "kinds": [
+    "download",
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/tdm/Tdm42_Lookup_Rd_ManlOrgAppr.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Tdm42_Rd_Manual"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/tdm/Tdm42_Tab_ManlManager.java",
+   "pages": [
+    "CommonInvoker.jsp",
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Tdm42_Rd_Manual"
+   ],
+   "kinds": [
+    "save",
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/tdm/Tdm42_Tab_ManlManagerAdmin.java",
+   "pages": [
+    "CommonInvoker.jsp",
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Tdm42_Rd_Manual"
+   ],
+   "kinds": [
+    "save",
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/tdm/Tdm42_Tab_ManlOrgAppr.java",
+   "pages": [
+    "CommonInvoker.jsp",
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Tdm42_Rd_Manual"
+   ],
+   "kinds": [
+    "save",
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/tdm/Tdm50_Lookup_Rd_CheckJob.java",
+   "pages": [
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Tdm50_Rd_CheckJob"
+   ],
+   "kinds": [
+    "viewer"
+   ]
+  },
+  {
+   "file": "myApp/client/vi/tdm/Tdm50_TabPage_CheckJob.java",
+   "pages": [
+    "CommonInvoker.jsp",
+    "CommonViewer.html"
+   ],
+   "mrds": [
+    "Tdm50_Rd_CheckJob"
+   ],
+   "kinds": [
+    "save",
+    "viewer"
+   ]
+  }
+ ]
+}
