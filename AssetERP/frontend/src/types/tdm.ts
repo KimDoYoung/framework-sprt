@@ -591,3 +591,85 @@ export interface TdmManagerInfo {
   posName: string | null;
   orgName: string | null;
 }
+
+/** 임원별 직책배정 한 행 (GET /api/v1/tdm/role-allcs, AS-IS Tdm30_RoleAllcModel) */
+export interface TdmRoleAllc {
+  roleAllcId: number;
+  roleId: number | null;
+  personId: number | null;
+  roleName: string | null;
+  personName: string | null;
+  addTitleYn: boolean;
+  startDate: string | null;
+  endDate: string | null;
+  /** 상신중이거나 완료된 임원동의서가 있다 */
+  apprYn: boolean;
+  updName: string | null;
+  updDateStr: string | null;
+}
+
+/** 책무배분 등록창 저장 (POST /api/v1/tdm/role-allcs) */
+export interface TdmRoleAllcCreateReq {
+  roleId: number;
+  personId: number;
+  addTitleYn: boolean;
+  startDate: string;
+  roleAllcDate: string;
+  regReason: string;
+  deputyEmpName: string | null;
+}
+
+/** 책무배분 수정창 저장 (PUT /api/v1/tdm/role-allcs/{id}) */
+export interface TdmRoleAllcUpdateReq {
+  roleId: number | null;
+  personId: number;
+  addTitleYn: boolean;
+  startDate: string;
+  endDate: string | null;
+}
+
+/** 책무배분일 한 행 (GET /api/v1/tdm/role-allcs/{id}/details, AS-IS Tdm34_RoleAllcDetailModel). 새 행은 ID ≤ 0 */
+export interface TdmRoleAllcDetail {
+  roleAllcDetailId: number;
+  roleAllcId: number;
+  roleAllcDate: string | null;
+  regReason: string | null;
+  deputyEmpName: string | null;
+  apprId: number | null;
+  /** 상신 전 '00', 99 임시저장·40 반려·10/20 진행·30 완료 */
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+  /** 겸직 'Y'/'N' — 'N'일 때만 책무기술서 미리보기 아이콘 */
+  addTitleYnStr: string | null;
+  updName: string | null;
+  updDateStr: string | null;
+}
+
+/** 책무 및 세부내용 창의 책무 한 행 (AS-IS Tdm35_RoleAllcTaskModel) */
+export interface TdmRoleAllcTask {
+  roleAllcTaskId: number;
+  taskId: number;
+  taskName: string | null;
+  apprYn: boolean;
+}
+
+/** 책무 및 세부내용 창의 세부내용 한 행 */
+export interface TdmRoleAllcTaskDetail {
+  roleAllcTaskId: number;
+  taskRelateDetailName: string | null;
+}
+
+/** 인사정보 한 행 (GET /api/v1/tdm/hr-records, AS-IS Tdm02_HrRecordModel). applyCode 0 미적용 / 1 적용완료 / 9 해당없음 */
+export interface TdmHrRecord {
+  hrRecordId: number;
+  regDate: string | null;
+  regTypeNm: string | null;
+  personNm: string | null;
+  changeData: string | null;
+  applyCode: string | null;
+  /** 적용완료 체크 — AS-IS applyYn (applyCode가 null·0이면 false). 서버 응답에는 없고 화면이 채운다 */
+  applyYn: boolean;
+  note: string | null;
+  updNm: string | null;
+  updDateStr: string | null;
+}

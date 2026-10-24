@@ -162,6 +162,7 @@ import { Tdm05_Tab_Cncl } from './tdm/Tdm05_Tab_Cncl';
 import { Tdm20_Tab_Role } from './tdm/Tdm20_Tab_Role';
 import { Tdm08_Tab_Manager } from './tdm/Tdm08_Tab_Manager';
 import { Tdm09_Tab_ApprStep } from './tdm/Tdm09_Tab_ApprStep';
+import { Tdm30_Tab_RoleAllc } from './tdm/Tdm30_Tab_RoleAllc';
 import { Tdm50_Tab_DutyProgress } from './tdm/Tdm50_Tab_DutyProgress';
 import { Tdm50_Tab_DutyProgressAdmin } from './tdm/Tdm50_Tab_DutyProgressAdmin';
 import { Tdm50_Tab_TotalDashboard } from './tdm/Tdm50_Tab_TotalDashboard';
@@ -292,6 +293,7 @@ export const SCREENS: Record<string, React.FC> = {
   Tdm13_Tab_TaskDuty, // N06 (+ Tdm14_Lookup_TaskType view·Tdm95_Lookup_ChangeHistory)
   Tdm08_Tab_Manager, // N09 (+ Emp00_Lookup_SelectSingle 재사용)
   Tdm09_Tab_ApprStep, // N10 (+ Tdm20_Lookup_SelectRole·Tdm23_Lookup_SelectOrg 신설, Emp01_Lookup_PersonModel 재사용)
+  Tdm30_Tab_RoleAllc, // N11 1단계 (+ Tdm34_TabPage_RoleAllcDetail·Tdm30_Edit_RoleAllc·Tdm30_Edit_RoleAllcModify·Tdm35_Lookup_RoleAllcTask·Tdm02_Lookup_HrRecord, 상신·상신문서보기 Apr01_Edit_ApprDoc와 책무기술서 RD 뷰어는 다음 단계)
   Tdm05_Tab_Cncl, // N07 (+ Tdm05_Edit_Cncl·Tdm22_Lookup_RoleRelateCncl2·Tdm20_Lookup_SelectMulti)
   Tdm20_Tab_Role, // N08 (+ Tdm20_Edit_Role·Tdm20_Lookup_SelectSingle·Tdm21~23 연결창·Tdm05/Tdm10_Lookup_SelectMulti)
   Tdm01_Tab_Hr, // N04 (+ Tdm01_Lookup_HrChangeInfo·Tdm03_Lookup_AddTitle)

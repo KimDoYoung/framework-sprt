@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm02_hr_record.xml + Tdm02_HrRecord (N11 인사정보 창)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmHrRecordMapper">
+
+    <!-- AS-IS(IDMS-IC) tdm02_hr_record.selectByCompanyId — 수정: SELECT *를 화면 열로. applyCode가 "0"(미적용만)이면 변경일 조건을 뺀다 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.HrRecordRes">
+        SELECT tdm02_hr_record_id                                                    AS hr_record_id
+             , tdm02_reg_date                                                        AS reg_date
+             , (
+                CASE WHEN tdm02_reg_type = 'NEW'
+                     THEN '신규'
+                     WHEN tdm02_reg_type = 'UPD'
+                     THEN '변동'
+                     WHEN tdm02_reg_type = 'DEL'
+                     THEN '제거'
+                     ELSE ''
+                     END
+               )                                                                     AS reg_type_nm
+             , tdm02_person_nm                                                       AS person_nm
+             , tdm02_change_data                                                     AS change_data
+             , tdm02_apply_cd                                                        AS apply_code
+             , tdm02_note                                                            AS note
+             , tdm02_upd_nm                                                          AS upd_nm
+             , COALESCE(TO_CHAR(tdm02_upd_date, 'yyyy-mm-dd HH24:MI:SS'), ''::text)  AS upd_date_str
+          FROM tdm02_hr_record
+         WHERE tdm02_company_id = #{companyId}
+           AND COALESCE(tdm02_apply_cd, '0') LIKE #{applyCode}
+           AND CONCAT(tdm02_hr_record, tdm02_person_nm, tdm02_note) ILIKE #{searchText}
+        <if test='applyCode != "0"'>
+           AND tdm02_reg_date BETWEEN #{startDate} AND #{closeDate}
+        </if>
+         ORDER BY tdm02_hr_record_id DESC
+        <if test="limit != null">
+         LIMIT #{limit}
+        </if>
+    </select>
+
+    <select id="selectCompanyId" resultType="long">
+        SELECT tdm02_company_id
+          FROM tdm02_hr_record
+         WHERE tdm02_hr_record_id = #{hrRecordId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm02_hr_record.updateApplyCode — 수정: current_setting('app.current_user') 대신 #{updName} -->
+    <update id="updateApplyCode">
+        UPDATE tdm02_hr_record
+           SET tdm02_apply_cd = #{applyCode}
+             , tdm02_note     = #{note}
+             , tdm02_upd_nm   = #{updName}
+             , tdm02_upd_date = f_sysdate()
+         WHERE tdm02_hr_record_id = #{hrRecordId}
+    </update>
+
+</mapper>

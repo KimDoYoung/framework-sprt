@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm30_role_allc.xml·tdm34_role_allc_detail.xml·tdm35_role_allc_task.xml
+  + Tdm30_RoleAllc·Tdm34_RoleAllcDetail·Tdm35_RoleAllcTask (N11 임원별 직책배정)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmRoleAllcMapper">
+
+    <!-- AS-IS(IDMS-IC) tdm30_role_allc.selectByText·selectById·notInRoleAllcIdList 공통 열 — 수정: tdm30.*를 화면 열로 -->
+    <sql id="roleAllcColumns">
+        tdm30_role_allc_id                                                         AS role_allc_id
+      , tdm30_role_id                                                              AS role_id
+      , tdm30_person_id                                                            AS person_id
+      , tdm20_role_nm                                                              AS role_name
+      , f_emp_kor_nm(tdm30_person_id)                                              AS person_name
+      , COALESCE(tdm30_add_title_yn, 'false') = 'true'                             AS add_title_yn
+      , tdm30_start_date                                                           AS start_date
+      , tdm30_end_date                                                             AS end_date
+      , tdm30_upd_nm                                                               AS upd_name
+      , COALESCE(TO_CHAR(tdm30_upd_date, 'yyyy-mm-dd HH24:MI:SS'), ''::text)       AS upd_date_str
+    </sql>
+
+    <!-- 상신중이거나 완료된 임원동의서가 있는가 (selectByText·selectById 그대로) -->
+    <sql id="apprYn">
+        CASE WHEN ( SELECT COUNT(*)
+                      FROM tdm34_role_allc_detail
+                           INNER JOIN apr01_appr ON apr01_appr_id = tdm34_appr_id
+                     WHERE tdm34_role_allc_id = tdm30_role_allc_id
+                       AND COALESCE(apr01_status_cd,'99') NOT IN ('99','40') ) != 0
+             THEN true ELSE false END
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) tdm30_role_allc.selectByText — allYn이 true면 기준일 조건을 뺀다 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleAllcRes">
+        SELECT <include refid="roleAllcColumns"/>
+             , <include refid="apprYn"/> AS appr_yn
+          FROM tdm30_role_allc
+               LEFT OUTER JOIN tdm20_role ON tdm20_role_id = tdm30_role_id
+         WHERE tdm30_company_id = #{companyId}
+        <if test="!allYn">
+           AND #{baseDate}::date BETWEEN tdm30_start_date AND COALESCE(tdm30_end_date, TO_DATE('29991231','yyyyMMdd'))
+        </if>
+           AND CONCAT(tdm20_role_nm, f_emp_kor_nm(tdm30_person_id)) ILIKE #{searchText}
+         ORDER BY tdm20_role_nm COLLATE "ko_KR.utf8"
+                , tdm30_start_date
+                , f_emp_kor_nm(tdm30_person_id) COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm30_role_allc.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleAllcRes">
+        SELECT <include refid="roleAllcColumns"/>
+             , <include refid="apprYn"/> AS appr_yn
+          FROM tdm30_role_allc
+               LEFT OUTER JOIN tdm20_role ON tdm20_role_id = tdm30_role_id
+         WHERE tdm30_role_allc_id = #{roleAllcId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm30_role_allc.notInRoleAllcIdList — 겹침 검사용: 고른 행을 뺀 회사의 모든 직책배정 -->
+    <select id="notInRoleAllcIdList" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleAllcRes">
+        SELECT <include refid="roleAllcColumns"/>
+             , false AS appr_yn
+          FROM tdm30_role_allc
+               LEFT OUTER JOIN tdm20_role ON tdm20_role_id = tdm30_role_id
+         WHERE tdm30_company_id = #{companyId}
+        <if test="roleAllcIds != null and roleAllcIds.size() != 0">
+           AND tdm30_role_allc_id NOT IN
+            <foreach collection="roleAllcIds" item="roleAllcId" open="(" separator="," close=")">#{roleAllcId}</foreach>
+        </if>
+         ORDER BY tdm20_role_nm COLLATE "ko_KR.utf8"
+                , tdm30_start_date
+                , f_emp_kor_nm(tdm30_person_id) COLLATE "ko_KR.utf8"
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="selectCompanyId" resultType="long">
+        SELECT tdm30_company_id
+          FROM tdm30_role_allc
+         WHERE tdm30_role_allc_id = #{roleAllcId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT (tdm30_role_allc): 화면이 바꾸는 열 -->
+    <insert id="insertRoleAllc">
+        INSERT INTO tdm30_role_allc
+               ( tdm30_role_allc_id, tdm30_company_id, tdm30_role_id, tdm30_person_id, tdm30_add_title_yn
+               , tdm30_start_date, tdm30_end_date, tdm30_upd_nm, tdm30_upd_date )
+        VALUES ( #{roleAllcId}, #{companyId}, #{roleId}, #{personId}, #{addTitleYn}
+               , #{startDate}, #{endDate}, #{updName}, f_sysdate() )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel 동적 UPDATE (tdm30_role_allc) -->
+    <update id="updateRoleAllc">
+        UPDATE tdm30_role_allc
+           SET tdm30_role_id      = #{roleId}
+             , tdm30_person_id    = #{personId}
+             , tdm30_add_title_yn = #{addTitleYn}
+             , tdm30_start_date   = #{startDate}
+             , tdm30_end_date     = #{endDate}
+             , tdm30_upd_nm       = #{updName}
+             , tdm30_upd_date     = f_sysdate()
+         WHERE tdm30_role_allc_id = #{roleAllcId}
+           AND tdm30_company_id   = #{companyId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm34_role_allc_detail.deleteByRoleAllcId -->
+    <delete id="deleteDetailsByRoleAllcId">
+        DELETE
+          FROM tdm34_role_allc_detail
+         WHERE tdm34_role_allc_id = #{roleAllcId}
+    </delete>
+
+    <!-- AS-IS UpdateDataModel.deleteModel (tdm30_role_allc) -->
+    <delete id="deleteRoleAllcs">
+        DELETE FROM tdm30_role_allc
+         WHERE tdm30_company_id = #{companyId}
+           AND tdm30_role_allc_id IN
+        <foreach collection="roleAllcIds" item="roleAllcId" open="(" separator="," close=")">#{roleAllcId}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm34_role_allc_detail.selectByRoleAllcId — 수정: tdm34_role_allc_detail.*를 화면 열로 -->
+    <select id="selectDetailsByRoleAllcId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleAllcDetailRes">
+        SELECT tdm34_role_allc_detail_id                                                   AS role_allc_detail_id
+             , tdm34_role_allc_id                                                          AS role_allc_id
+             , tdm34_role_allc_date                                                        AS role_allc_date
+             , tdm34_reg_reason                                                            AS reg_reason
+             , tdm34_deputy_emp_nm                                                         AS deputy_emp_name
+             , tdm34_appr_id                                                               AS appr_id
+             , COALESCE(apr01_status_cd, '00')                                             AS appr_status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)  AS appr_status_name
+             , CASE WHEN COALESCE(tdm30_add_title_yn,'false') = 'true' THEN 'Y' ELSE 'N' END AS add_title_yn_str
+             , tdm34_upd_nm                                                                AS upd_name
+             , COALESCE(TO_CHAR(tdm34_upd_date, 'yyyy-mm-dd HH24:MI:SS'), ''::text)        AS upd_date_str
+          FROM tdm34_role_allc_detail
+               INNER JOIN tdm30_role_allc ON tdm30_role_allc_id = tdm34_role_allc_id
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = tdm34_appr_id
+         WHERE tdm34_role_allc_id = #{roleAllcId}
+         ORDER BY tdm34_role_allc_date DESC
+    </select>
+
+    <!-- 책무배분일의 회사·임원·책무배분일 (tdm34에는 회사 열이 없어 tdm30에서 읽는다) — 회사 검사·tdm35 재생성·책무기술서 조회가 쓴다 -->
+    <select id="selectDetailKey" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleAllcDetailKey">
+        SELECT tdm30_company_id        AS company_id
+             , tdm30_person_id         AS person_id
+             , tdm34_role_allc_date    AS role_allc_date
+          FROM tdm34_role_allc_detail
+               INNER JOIN tdm30_role_allc ON tdm30_role_allc_id = tdm34_role_allc_id
+         WHERE tdm34_role_allc_detail_id = #{roleAllcDetailId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT (tdm34_role_allc_detail) -->
+    <insert id="insertDetail">
+        INSERT INTO tdm34_role_allc_detail
+               ( tdm34_role_allc_detail_id, tdm34_role_allc_id, tdm34_role_allc_date, tdm34_reg_reason, tdm34_deputy_emp_nm
+               , tdm34_upd_nm, tdm34_upd_date )
+        VALUES ( #{roleAllcDetailId}, #{roleAllcId}, #{roleAllcDate}, #{regReason}, #{deputyEmpName}
+               , #{updName}, f_sysdate() )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel 동적 UPDATE (tdm34_role_allc_detail) -->
+    <update id="updateDetail">
+        UPDATE tdm34_role_allc_detail
+           SET tdm34_role_allc_date = #{roleAllcDate}
+             , tdm34_reg_reason     = #{regReason}
+             , tdm34_deputy_emp_nm  = #{deputyEmpName}
+             , tdm34_upd_nm         = #{updName}
+             , tdm34_upd_date       = f_sysdate()
+         WHERE tdm34_role_allc_detail_id = #{roleAllcDetailId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel (tdm34_role_allc_detail) -->
+    <delete id="deleteDetails">
+        DELETE FROM tdm34_role_allc_detail
+         WHERE tdm34_role_allc_detail_id IN
+        <foreach collection="roleAllcDetailIds" item="roleAllcDetailId" open="(" separator="," close=")">#{roleAllcDetailId}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm35_role_allc_task.selectTask — 그대로 -->
+    <select id="selectTask" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleAllcTaskRes">
+        SELECT ROW_NUMBER() OVER(ORDER BY tdm35_task_nm COLLATE "ko_KR.utf8")  AS role_allc_task_id
+             , tdm35_task_id                                                   AS task_id
+             , tdm35_task_nm                                                   AS task_name
+             , tdm35_appr_yn                                                   AS appr_yn
+          FROM ( /*---- 임원동의서 상신중 또는 완료인 경우 상신시점의 책무세부 select ----*/
+                 SELECT DISTINCT
+                        tdm35_task_id
+                      , tdm35_task_nm
+                      , true    AS tdm35_appr_yn
+                   FROM tdm34_role_allc_detail
+                        INNER JOIN tdm35_role_allc_task ON tdm35_role_allc_detail_id = tdm34_role_allc_detail_id
+                        INNER JOIN apr01_appr           ON apr01_appr_id             = tdm34_appr_id
+                  WHERE 1=1
+                    AND tdm34_role_allc_detail_id = #{roleAllcDetailId}
+                    AND COALESCE(apr01_status_cd,'99') NOT IN ('99','40')   /*(40:반려/99:임시저장)*/
+
+                 /*---- 임원동의서 상신전인 경우 기본정보의 책무세부 select ----*/
+                  UNION ALL
+                 SELECT tdm10_task_id   AS tdm35_task_id
+                      , tdm10_task_nm   AS tdm35_task_nm
+                      , false           AS tdm35_appr_yn
+                   FROM tdm34_role_allc_detail
+                        INNER JOIN tdm30_role_allc           ON tdm30_role_allc_id = tdm34_role_allc_id
+                        INNER JOIN tdm21_role_relate_task    ON tdm21_role_id      = tdm30_role_id
+                        INNER JOIN tdm10_task                ON ( tdm10_task_id    = tdm21_task_id                                                              AND
+                                                                  tdm34_role_allc_date BETWEEN tdm10_start_date AND COALESCE(tdm10_end_date,'9999-12-31'::date) )
+                  WHERE 1=1
+                    AND tdm34_role_allc_detail_id = #{roleAllcDetailId}
+                    AND 'Y' = CASE WHEN ( SELECT COUNT(*)
+                                            FROM tdm34_role_allc_detail
+                                                 INNER JOIN apr01_appr ON apr01_appr_id = tdm34_appr_id
+                                           WHERE tdm34_role_allc_detail_id = #{roleAllcDetailId}
+                                             AND COALESCE(apr01_status_cd,'99') NOT IN ('99','40') ) = 0 THEN 'Y' ELSE 'N' END
+               ) t
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm35_role_allc_task.selectTaskDetail — 그대로 -->
+    <select id="selectTaskDetail" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleAllcTaskDetailRes">
+        SELECT ROW_NUMBER() OVER(ORDER BY tdm35_task_relate_detail_seq)  AS role_allc_task_id
+             , tdm35_task_relate_detail_nm                               AS task_relate_detail_name
+          FROM (
+                 SELECT tdm12_task_relate_detail_id   AS tdm35_task_relate_detail_id
+                      , tdm12_content                 AS tdm35_task_relate_detail_nm
+                      , tdm12_seq                     AS tdm35_task_relate_detail_seq
+                   FROM tdm34_role_allc_detail
+                        INNER JOIN tdm30_role_allc           ON tdm30_role_allc_id = tdm34_role_allc_id
+                        INNER JOIN tdm21_role_relate_task    ON tdm21_role_id      = tdm30_role_id
+                        INNER JOIN tdm10_task                ON ( tdm10_task_id    = tdm21_task_id                                                              AND
+                                                                  tdm34_role_allc_date BETWEEN tdm10_start_date AND COALESCE(tdm10_end_date,'9999-12-31'::date) )
+                        INNER JOIN tdm12_task_relate_detail  ON ( tdm12_task_id                  = tdm10_task_id AND
+                                                                  COALESCE(tdm12_use_yn,'false') = 'true'        )
+                  WHERE 1=1
+                    AND tdm34_role_allc_detail_id = #{roleAllcDetailId}
+                    AND tdm10_task_id             = #{taskId}
+               ) t
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm30_role_allc.selectByExctId — 수정: tdm30.*를 키·상신상태 열로 -->
+    <select id="selectByExctId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleAllcExctRow">
+        SELECT tdm30_role_allc_detail_id    AS role_allc_detail_id
+             , COALESCE(apr01_status_cd,'99') AS appr_status_code
+          FROM getTdm30RoleAllc(#{companyId}, #{stdDate}, false) tdm30
+               LEFT JOIN apr01_appr ON apr01_appr_id = tdm30_appr_id
+         WHERE tdm30_person_id = #{exctId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm35_role_allc_task.deleteByRoleAllcDetailId -->
+    <delete id="deleteTasksByDetailId">
+        DELETE
+          FROM tdm35_role_allc_task
+         WHERE tdm35_role_allc_detail_id = #{roleAllcDetailId}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm35_role_allc_task.insertByRoleAllcDetailId — 수정: current_setting('app.current_user') 대신 #{updName} -->
+    <insert id="insertTasksByDetailId">
+        INSERT
+          INTO tdm35_role_allc_task
+        SELECT f_create_seq()
+             , tdm34_role_allc_detail_id
+             , tdm10_task_id
+             , tdm10_task_nm
+             , tdm12_task_relate_detail_id
+             , tdm12_content
+             , tdm12_seq
+             , tdm13_task_relate_duty_id
+             , tdm13_content
+             , tdm13_seq
+             , #{updName}
+             , f_sysdate()
+          FROM tdm34_role_allc_detail
+               INNER JOIN tdm30_role_allc           ON tdm30_role_allc_id = tdm34_role_allc_id
+               INNER JOIN tdm21_role_relate_task    ON tdm21_role_id      = tdm30_role_id
+               INNER JOIN tdm10_task                ON ( tdm10_task_id    = tdm21_task_id                                                               AND
+                                                         tdm34_role_allc_date BETWEEN tdm10_start_date AND COALESCE(tdm10_end_date,'9999-12-31'::date)  )
+               INNER JOIN tdm12_task_relate_detail  ON ( tdm12_task_id                  = tdm10_task_id AND
+                                                         COALESCE(tdm12_use_yn,'false') = 'true'        )
+               INNER JOIN tdm13_task_relate_duty    ON ( tdm13_task_id               = tdm12_task_id                AND
+                                                         tdm13_task_relate_detail_id = tdm12_task_relate_detail_id  AND
+                                                         COALESCE(tdm13_use_yn,'false') = 'true'                    )
+         WHERE tdm34_role_allc_detail_id = #{roleAllcDetailId}
+         ORDER BY tdm10_task_nm COLLATE "ko_KR.utf8", tdm12_seq, tdm13_seq
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) tdm31_role_desc.getRollAllcDetailId — 수정: tdm31_role_desc.*를 키 열만 -->
+    <select id="selectRoleDescId" resultType="long">
+        SELECT tdm31_role_desc_id
+          FROM getTdm30RoleAllc(#{companyId}, #{roleAllcDate}, true) tdm30
+               LEFT JOIN LATERAL ( SELECT MIN(tdm34_role_allc_date) next_role_allc_date
+                                     FROM tdm34_role_allc_detail
+                                          INNER JOIN apr01_appr ON ( apr01_appr_id = tdm34_appr_id AND COALESCE(apr01_status_cd,'99') = '30' )
+                                    WHERE tdm34_role_allc_id = tdm30_role_allc_id
+                                      AND tdm34_role_allc_date > tdm30_role_allc_date ) t ON true
+               INNER JOIN tdm31_role_desc ON tdm31_role_allc_id = tdm30_role_allc_id
+               INNER JOIN apr01_appr      ON ( apr01_appr_id = tdm31_appr_id AND COALESCE(apr01_status_cd,'99') = '30' )
+         WHERE tdm30_role_allc_detail_id = #{roleAllcDetailId}
+           AND tdm31_allc_std_date >= tdm30_role_allc_date
+           AND tdm31_allc_std_date <![CDATA[<]]> COALESCE(next_role_allc_date, '2999-12-31'::date)
+         ORDER BY tdm31_allc_std_date DESC, tdm31_reg_date DESC, tdm31_role_desc_id DESC
+         LIMIT 1
+    </select>
+
+</mapper>
