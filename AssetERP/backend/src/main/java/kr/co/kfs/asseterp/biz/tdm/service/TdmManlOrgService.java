@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.tdm.dto.DashboardMyOrgRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgApprParam;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgApprRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgMgrRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgParam;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgPeriodReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgPeriodRes;
@@ -45,7 +46,7 @@ public class TdmManlOrgService {
     @Transactional
     public void recreate(UserPrincipal user, Long manlOrgId) {
         Long companyId = requireScope(user, manlOrgId);
-        pdfMaker.make(manlOrgId, companyId);
+        pdfMaker.make(manlOrgId, companyId, user);
     }
 
     /**
@@ -60,6 +61,15 @@ public class TdmManlOrgService {
         }
         String like = "%" + (searchText == null ? "" : searchText) + "%";
         return mapper.selectByTextAppr(new ManlOrgApprParam(user.getCompanyId(), orgId, like, useYn));
+    }
+
+    /**
+     * AS-IS tdm.Tdm42_ManlOrg.selectByText (N19 Tdm42_Tab_ManlManager: 로그인 회사 + 화면에서 고른 부서(없으면 전체), adminYn·기간 조건 없음).
+     * searchText는 '%글자%', useYn은 "사용 & 작성중인 매뉴얼만 조회"
+     */
+    public List<ManlOrgMgrRes> searchMgr(UserPrincipal user, Long orgId, String searchText, boolean useYn) {
+        String like = "%" + (searchText == null ? "" : searchText) + "%";
+        return mapper.selectByTextMgr(new ManlOrgApprParam(user.getCompanyId(), orgId, like, useYn));
     }
 
     /** AS-IS tdm.Tdm42_ManlOrg.notManlOrgList — 로그인 회사의 부서 책무매뉴얼 중 화면 목록에 없는 것(적용기간 중복 검사용) */

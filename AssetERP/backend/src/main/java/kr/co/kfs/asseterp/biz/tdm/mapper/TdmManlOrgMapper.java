@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.tdm.mapper;
 
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgApprParam;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgApprRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgMgrRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgParam;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgPeriodRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgRes;
@@ -21,6 +22,9 @@ public interface TdmManlOrgMapper {
 
     /** AS-IS tdm42_manl_org.selectByText (Tdm42_Tab_ManlOrgAppr: useYn 화면 값, adminYn·기간 조건 없음) */
     List<ManlOrgApprRes> selectByTextAppr(ManlOrgApprParam param);
+
+    /** AS-IS tdm42_manl_org.selectByText (Tdm42_Tab_ManlManager, N19: 부서는 화면에서 고른 값, 점검부서·점검항목 사용/미사용 건수 포함) */
+    List<ManlOrgMgrRes> selectByTextMgr(ManlOrgApprParam param);
 
     /** AS-IS tdm42_manl_org.notManlOrgList — 로그인 회사의 부서 책무매뉴얼 중 목록(화면 그리드)에 없는 것 */
     List<ManlOrgPeriodRes> selectNotIn(@Param("companyId") Long companyId, @Param("manlOrgIds") List<Long> manlOrgIds);

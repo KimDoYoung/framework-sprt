@@ -144,6 +144,29 @@ public class SysFileService {
         return sysFileMapper.selectById(fileId);
     }
 
+    /**
+     * AS-IS Sys10_File.fileReName L557-589: RD 서버가 만든 파일을 `{업로드 폴더}/{새 파일 ID}`로 옮기고 sys10_file 행을 만든다.
+     * 크기는 KB(정수 나눗셈). 옮기기 실패는 호출한 쪽이 예외로 받는다(AS-IS는 로그만 남기고 행도 없었다)
+     */
+    @Transactional
+    public Long registerRdFile(File generated, Long parentId, String companyLoc, String fileNm, String ext) throws IOException {
+        Long fileId = sysFileMapper.selectNextId();
+        String serverPath = uploadFolder(companyLoc);
+        File dir = new File(serverPath);
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw new IOException("폴더를 만들 수 없습니다: " + serverPath);
+        }
+        File target = new File(dir, fileId.toString());
+        java.nio.file.Files.move(generated.toPath(), target.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        try {
+            sysFileMapper.insertRdFile(fileId, parentId, fileNm, serverPath, (double) (target.length() / 1024), ext);
+        } catch (RuntimeException e) {
+            deletePhysical(target, fileId);
+            throw e;
+        }
+        return fileId;
+    }
+
     /** AS-IS FileDownload.downloadFile L162-184 (fileType=file) */
     public StoredFile getDownload(UserPrincipal user, Long fileId) {
         FileRes fileModel = sysFileMapper.selectById(fileId);

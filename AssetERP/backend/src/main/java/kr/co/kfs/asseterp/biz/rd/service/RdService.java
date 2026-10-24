@@ -33,6 +33,14 @@ public class RdService {
     private final RdProperties props;
 
     public RdUrlRes buildUrl(UserPrincipal user, RdUrlReq req) {
+        return buildUrl(user.getCompanyId(), user.getUserId(), req);
+    }
+
+    /**
+     * rv의 companyId·personId를 호출한 쪽이 정한다 — 서버가 직접 RD를 부르는 곳(AS-IS 보고서의 대상 회사·사원이 로그인 사용자와 다른 경우, 예: 책무매뉴얼은 임원).
+     * 브라우저에서 오는 요청은 위 메서드(로그인 값 고정)만 쓴다
+     */
+    public RdUrlRes buildUrl(Long companyId, Long personId, RdUrlReq req) {
         String kind = req.kind() == null ? "" : req.kind();
         String page;
         String dir;
@@ -57,7 +65,7 @@ public class RdService {
             query.put("fileName", fileName(kind, req.fileName()));
             query.put("exportType", req.exportType());
         }
-        query.put("rv", rv(user, req.rv()));
+        query.put("rv", rv(companyId, personId, req.rv()));
 
         StringBuilder url = new StringBuilder(trimEnd(props.url())).append(dir).append(page).append('?');
         query.forEach((k, v) -> url.append(k).append('=').append(encode(v)).append('&'));
@@ -74,10 +82,10 @@ public class RdService {
     }
 
     /** rv=key[value]key[value] — companyId·personId는 로그인 값 */
-    private String rv(UserPrincipal user, Map<String, String> given) {
+    private String rv(Long companyId, Long personId, Map<String, String> given) {
         Map<String, String> rv = new LinkedHashMap<>();
-        rv.put("companyId", String.valueOf(user.getCompanyId()));
-        rv.put("personId", String.valueOf(user.getUserId()));
+        rv.put("companyId", String.valueOf(companyId));
+        rv.put("personId", String.valueOf(personId));
         if (given != null) {
             given.forEach((k, v) -> {
                 if (k == null || !NAME.matcher(k).matches()) throw invalid("rv 키가 올바르지 않습니다: " + k);

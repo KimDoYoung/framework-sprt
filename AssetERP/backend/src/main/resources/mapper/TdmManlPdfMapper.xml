@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sys/mapper/sys99_print.xml (deleteByPJobTp L703, tdmCreateData L299) · sys01_company.selectById (N19 후속: 책무매뉴얼 PDF 생성) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmManlPdfMapper">
+
+    <!-- 수정: 화면 모델 속성만(직책명은 selectByText와 같은 식 COALESCE(점검항목 직책명, 직책명)), 시작일 yyyyMMdd, 회사 폴더 이름(sys01_loc_nm) 함께 -->
+    <select id="selectPdfTarget" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgPdfTarget">
+        SELECT  tdm42_manl_org_id                                                          AS manl_org_id
+             ,  tdm42_company_id                                                           AS company_id
+             ,  tdm42_exct_id                                                              AS exct_id
+             ,  TO_CHAR(tdm42_start_date, 'YYYYMMDD')                                      AS start_date
+             ,  COALESCE((SELECT MAX(tdm43_role_nm) FROM tdm43_manl WHERE tdm43_manl_org_id = tdm42_manl_org_id), tdm20_role_nm) AS role_name
+             ,  f_emp_kor_nm(tdm42_exct_id)                                                AS exct_name
+             ,  sys01_loc_nm                                                               AS loc_name
+          FROM  tdm42_manl_org
+                INNER JOIN tdm20_role   ON tdm20_role_id = tdm42_role_id
+                INNER JOIN sys01_company ON sys01_company_id = tdm42_company_id
+         WHERE  tdm42_manl_org_id = #{manlOrgId}
+    </select>
+
+    <!-- 그대로 (sys99_string01에 pJobTp가 들어간다) -->
+    <delete id="deletePrintByJobTp">
+        DELETE
+          FROM sys99_print
+         WHERE sys99_company_id = #{companyId}
+           AND sys99_person_id  = #{personId}
+           AND sys99_string01   LIKE #{pJobTp}
+    </delete>
+
+    <!-- 그대로 -->
+    <select id="createTdmData" resultType="java.lang.String">
+        SELECT tdm_create_data(#{pJobTp}, #{regDate}, CAST(#{pId} AS numeric), CAST(#{companyId} AS numeric), CAST(#{personId} AS numeric), CAST(#{groupId} AS numeric))
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+</mapper>

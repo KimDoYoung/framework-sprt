@@ -107,6 +107,14 @@
                 '', #{fileExt}, #{fileYn}, NULL, NULL, 'true', 'false')
     </insert>
 
+    <!-- AS-IS Sys10_File.fileReName → insertFileModel → insertUpdate: RD 파일은 print_yn·ext_yn·admin_yn 모두 'true', 확정문서 아님 -->
+    <insert id="insertRdFile">
+        INSERT INTO sys10_file (sys10_file_id, sys10_parent_id, sys10_file_nm, sys10_reg_date, sys10_server_path, sys10_size,
+                                sys10_note, sys10_file_ext, sys10_file_yn, sys10_admin_yn, sys10_law_type, sys10_print_yn, sys10_ext_yn)
+        VALUES (#{fileId}, #{parentId}, #{fileNm}, f_sysdate(), #{serverPath}, #{size},
+                '', #{fileExt}, 'false', 'true', NULL, 'true', 'true')
+    </insert>
+
     <!-- AS-IS delete L589 -->
     <delete id="deleteById">
         DELETE FROM sys10_file WHERE sys10_file_id = #{fileId}

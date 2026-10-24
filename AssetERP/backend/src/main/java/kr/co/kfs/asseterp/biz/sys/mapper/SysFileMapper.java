@@ -36,6 +36,10 @@ public interface SysFileMapper {
 
     int deleteById(@Param("fileId") Long fileId);
 
+    /** AS-IS Sys10_File.insertFileModel (RD가 만든 파일: printYn·extYn·adminYn 모두 true) → sys10_file.insertUpdate */
+    int insertRdFile(@Param("fileId") Long fileId, @Param("parentId") Long parentId, @Param("fileNm") String fileNm,
+                     @Param("serverPath") String serverPath, @Param("size") Double size, @Param("fileExt") String fileExt);
+
     /** AS-IS selectByTotalSize (useYn = 'true'/'false', A16 고객별 서버사용량) */
     List<FileTotalRes> selectByTotalSize(@Param("useYn") String useYn);
 

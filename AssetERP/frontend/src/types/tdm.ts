@@ -267,6 +267,13 @@ export interface TdmManlOrgAppr {
   jobName?: string | null;
 }
 
+/** 매뉴얼 관리 그리드 한 행 (N19 Tdm42_Tab_ManlManager — AS-IS Tdm42_ManlOrgModel). TdmManlOrg(점검항목 조회창 입력)로도 쓴다 */
+export interface TdmManlOrgManager extends TdmManlOrgAppr {
+  orgName?: string | null;
+  manlUseCnt?: number | null;
+  manlUnuseCnt?: number | null;
+}
+
 /** 적용기간 중복 검사용 (AS-IS notManlOrgList 결과) */
 export interface TdmManlOrgPeriod {
   manlOrgId: number;

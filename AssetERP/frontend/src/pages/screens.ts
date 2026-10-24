@@ -160,6 +160,7 @@ import { Tdm40_Tab_ManlJob } from './tdm/Tdm40_Tab_ManlJob';
 import { Tdm41_Tab_ManlDutyOrg } from './tdm/Tdm41_Tab_ManlDutyOrg';
 import { Tdm43_Tab_ManlItemReg } from './tdm/Tdm43_Tab_ManlItemReg';
 import { Tdm42_Tab_ManlManagerAdmin } from './tdm/Tdm42_Tab_ManlManagerAdmin';
+import { Tdm42_Tab_ManlManager } from './tdm/Tdm42_Tab_ManlManager';
 import { Tdm42_Tab_ManlOrgAppr } from './tdm/Tdm42_Tab_ManlOrgAppr';
 import { Tdm01_Tab_Hr } from './tdm/Tdm01_Tab_Hr';
 import { Tdm10_Tab_Task } from './tdm/Tdm10_Tab_Task';
@@ -301,6 +302,7 @@ export const SCREENS: Record<string, React.FC> = {
   Tdm43_Tab_ManlItemReg, // N17 (+ Tdm43_TabPage_ManlItemReg·Tdm43_Lookup_ManlItemRegList·RegList2 신설)
   Tdm32_Tab_RoleDigmAdmin, // E12 (재생성은 RD 리포트 연동이 없어 서버가 거절 — RoleDigmPdfMaker 기본 구현)
   Tdm42_Tab_ManlManagerAdmin, // E13 1단계 (+ Tdm43_Lookup_ManlItem·Org00_Lookup_SelectTdm, 재생성은 RD 연동이 없어 서버가 거절 — ManlOrgPdfMaker 기본 구현, 점검항목 등록/수정창은 E13-2)
+  Tdm42_Tab_ManlManager, // N19 (N18과 같은 서버 클래스·흐름, 부서 직접 선택 + 점검항목 조회창 아이콘. 결재요청·문서보기는 안내, 잠금의 파일 생성은 ManlOrgPdfMaker 기본 구현이 거절)
   Tdm42_Tab_ManlOrgAppr, // N18 1단계 (결재요청·문서보기는 전자결재 편집창 Apr01_Edit_ApprDoc이 다른 도메인이라 점검 후 안내, 잠금의 파일 생성은 ManlOrgPdfMaker 기본 구현이 거절)
   Tdm10_Tab_Task, // N05 1단계 (+ Tdm10_Edit_Task·Tdm12_Lookup_TaskRelateDetail·Tdm14_Lookup_TaskType·Tdm95_Lookup_ChangeHistory, 연결법규·내규 Tdm11은 다음 단계)
   Tdm13_Tab_TaskDuty, // N06 (+ Tdm14_Lookup_TaskType view·Tdm95_Lookup_ChangeHistory)

@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgApprRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgIdsReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgLockReq;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgMgrRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgPeriodReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgPeriodRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgRes;
@@ -55,6 +56,15 @@ public class TdmManlOrgController {
                                                         @RequestParam(required = false) String searchText,
                                                         @RequestParam(defaultValue = "false") boolean useYn) {
         return ApiResponse.ok(service.searchAppr(principal, searchText, useYn));
+    }
+
+    /** N19 AS-IS tdm.Tdm42_ManlOrg.selectByText (로그인 회사 + 고른 부서) */
+    @GetMapping("/manager")
+    public ApiResponse<List<ManlOrgMgrRes>> searchMgr(@AuthenticationPrincipal UserPrincipal principal,
+                                                      @RequestParam(required = false) Long orgId,
+                                                      @RequestParam(required = false) String searchText,
+                                                      @RequestParam(defaultValue = "false") boolean useYn) {
+        return ApiResponse.ok(service.searchMgr(principal, orgId, searchText, useYn));
     }
 
     /** N18 AS-IS tdm.Tdm42_ManlOrg.notManlOrgList (목록 밖의 부서 책무매뉴얼 — 본문이 ID 목록이라 POST) */
