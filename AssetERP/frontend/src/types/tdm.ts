@@ -88,6 +88,42 @@ export interface TdmRoleDigmCompany {
   fileTypeName02?: string | null;
 }
 
+/** 책무구조도 제출 한 행 (AS-IS Tdm36_RoleReportModel 중 Tdm36_Tab_RoleReport 그리드·저장에 쓰는 속성, N14). 날짜는 yyyy-MM-dd */
+export interface TdmRoleReport {
+  roleReportId: number;
+  companyId?: number | null;
+  boardOpenDate?: string | null;
+  allcStdDate?: string | null;
+  reportDate?: string | null;
+  boardOpenLoc?: string | null;
+  membTotCnt?: number | null;
+  membAttendCnt?: number | null;
+  boardOpenAgenda?: string | null;
+  membYesName?: string | null;
+  updName?: string | null;
+  updDateStr?: string | null;
+  apprId?: number | null;
+  apprStatusCode?: string | null;
+  apprStatusName?: string | null;
+}
+
+/**
+ * 책무구조도 제출 첨부 목록 한 행 (AS-IS tdm36_role_report.getAttachList, N14).
+ * roleReportId = 책무기술서(ROLE_DESC)·책무체계도(ROLE_DIGM) 행에서는 그 문서의 ID — 행 구분은 seq·subSeq·roleReportId를 함께
+ */
+export interface TdmRoleReportAttach {
+  roleReportId: number;
+  seq: number;
+  subSeq: number;
+  rptTitle: string;
+  rptSubTitle?: string | null;
+  rdCode?: string | null;
+  rdCode2?: string | null;
+  relateFileId?: number | null;
+  relateApprId?: number | null;
+  relateApprStatusCode?: string | null;
+}
+
 /** 책무진행 상태 한 행 (AS-IS Sys99_PrintModel 중 Tdm50_Tab_DutyProgressAdmin 그리드에 쓰는 속성, f_recon_tdm 'CHCK_STATUS' 결과). m00~m11은 조회 기준월부터 12개월 */
 export interface TdmDutyProgress {
   printId: number;

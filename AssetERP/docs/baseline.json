@@ -6153,5 +6153,37 @@
     "note": "docs/work/N/N13-작업기록.md",
     "history": [],
     "id": "N13"
+  },
+  "Tdm36_Tab_RoleReport": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/tdm/Tdm36_TabPage_RoleReport.java": "495be53a87254afcd0e08d7a258c370fd5802bea",
+      "application/src/main/java/myApp/client/vi/tdm/Tdm36_Tab_RoleReport.java": "5cac3b33d6fd502a9cf70a07980eb37d17f5d3ff",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm33_RoleDigmFileModel.java": "209ba5001ad6c74c134204d46f610cde780e9066",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm36_RoleReportModel.java": "c47895dcdfad38bcadb0eaaa07e2a83e24beb04b",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm36_RoleReportModelProperties.java": "3f0b4ba646a6fd7144ab04c2c9a6077d9011e338",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/tdm/Tdm33_RoleDigmFile.java": "62fddbde65b4f4bfd8dc5d76ee5c1c577eadeeee",
+      "application/src/main/java/myApp/server/tdm/Tdm36_RoleReport.java": "3311f71023ffd23b0bba869daaafc521d9211250",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm33_role_digm_file.xml": "667d55a60f517be64a090b08c8b2d95c9ddeeb34",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm36_role_report.xml": "01296b0922bdc519c4fe7b5402f7de81b1a0ca4e",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Sys10_Lookup_FileViewer"
+    ],
+    "recorded_at": "2026-10-24T21:47:23+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/N/N14-작업기록.md",
+    "history": [],
+    "id": "N14"
   }
 }

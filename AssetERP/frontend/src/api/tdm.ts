@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord } from '../types/tdm';
+import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmRoleReport, TdmRoleReportAttach, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
 export const tdmApi = {
@@ -125,6 +125,34 @@ export const tdmApi = {
   /** AS-IS tdm.Tdm33_RoleDigmFile.deleteByRoleDigmId (첨부 파일과 파일정보 행) */
   deleteRoleDigmFileInfo: async (roleDigmId: number, fileType: string): Promise<void> => {
     await apiClient.delete<ApiResponse<null>>(`v1/tdm/role-digms/${roleDigmId}/files`, { params: { fileType } });
+  },
+
+  // ── N14 책무구조도 제출(Tdm36_Tab_RoleReport) ──
+
+  /** AS-IS tdm.Tdm36_RoleReport.selectByDate (로그인 회사만. notPeriodYn = 전체보기, notEndYn = 미처리건만 조회 — 전체보기를 켠 때만 결재상태 10·20·99) */
+  searchRoleReports: async (p: { startDate: string; closeDate: string; notPeriodYn: boolean; notEndYn: boolean }): Promise<TdmRoleReport[]> => {
+    const res = await apiClient.get<ApiResponse<TdmRoleReport[]>>('v1/tdm/role-reports', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm36_RoleReport.getAttachList */
+  getRoleReportAttaches: async (roleReportId: number): Promise<TdmRoleReportAttach[]> => {
+    const res = await apiClient.get<ApiResponse<TdmRoleReportAttach[]>>(`v1/tdm/role-reports/${roleReportId}/attaches`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm36_RoleReport.update (UpdateDataModel) — roleReportId ≤ 0이면 등록 */
+  saveRoleReports: async (rows: TdmRoleReport[]): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>('v1/tdm/role-reports', rows.map(r => ({
+      roleReportId: r.roleReportId, boardOpenDate: r.boardOpenDate, allcStdDate: r.allcStdDate, reportDate: r.reportDate,
+      boardOpenLoc: r.boardOpenLoc, membTotCnt: r.membTotCnt, membAttendCnt: r.membAttendCnt, boardOpenAgenda: r.boardOpenAgenda, membYesName: r.membYesName,
+    })));
+  },
+
+  /** AS-IS tdm.Tdm36_RoleReport.delete */
+  deleteRoleReports: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/role-reports', { params: { roleReportIds: ids.join(',') } });
+    return res.data.data ?? 0;
   },
 
   // ── E15 책무마감 검증(Tdm50_Tab_DutyReconAdmin) ──

@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm36_role_report.xml (N14 책무구조도 제출)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmRoleReportMapper">
+
+    <!-- 수정·삭제·첨부 목록 대상 행의 회사 확인용(TOBE 추가 — 서버가 요청한 id의 회사를 직접 읽어 권한 범위를 검사) -->
+    <select id="selectCompanyId" resultType="java.lang.Long">
+        SELECT tdm36_company_id FROM tdm36_role_report WHERE tdm36_role_report_id = #{roleReportId}
+    </select>
+
+    <!--
+      AS-IS(IDMS-IC) tdm36_role_report.selectByDate L49
+      수정: SELECT *를 그리드·저장 열 별칭으로, 일자는 TO_CHAR. 조건 분기는 AS-IS 그대로 <choose>:
+            전체보기를 끄면 기간만 걸리고(미처리건만 조회는 무시됨), 전체보기를 켠 채 미처리건만 조회를 켜면 결재상태 10·20·99만
+    -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleReportRes">
+        SELECT  tdm36_role_report_id                                                       AS role_report_id,
+                tdm36_company_id                                                           AS company_id,
+                TO_CHAR(tdm36_board_open_date, 'YYYY-MM-DD')                               AS board_open_date,
+                TO_CHAR(tdm36_allc_std_date, 'YYYY-MM-DD')                                 AS allc_std_date,
+                TO_CHAR(tdm36_report_date, 'YYYY-MM-DD')                                   AS report_date,
+                tdm36_board_open_loc                                                       AS board_open_loc,
+                tdm36_memb_tot_cnt                                                         AS memb_tot_cnt,
+                tdm36_memb_attend_cnt                                                      AS memb_attend_cnt,
+                tdm36_board_open_agenda                                                    AS board_open_agenda,
+                tdm36_memb_yes_nm                                                          AS memb_yes_name,
+                tdm36_upd_nm                                                               AS upd_name,
+                COALESCE(TO_CHAR(tdm36_upd_date, 'yyyy-mm-dd HH24:MI:SS'), ''::text)       AS upd_date_str,
+                tdm36_appr_id                                                              AS appr_id,
+                apr01_status_cd                                                            AS appr_status_code,
+                f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, f_sysdate())    AS appr_status_name
+          FROM  tdm36_role_report
+                LEFT OUTER JOIN apr01_appr ON apr01_appr_id = tdm36_appr_id
+         WHERE  tdm36_company_id = #{companyId}
+        <choose>
+            <when test="!notPeriodYn">
+           AND  tdm36_board_open_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+            </when>
+            <when test="notEndYn">
+           AND  apr01_status_cd IN ('10','20','99')
+            </when>
+        </choose>
+         ORDER BY tdm36_role_report_id DESC
+    </select>
+
+    <!--
+      AS-IS(IDMS-IC) tdm36_role_report.getAttachList L69 — 그대로(CTE list_tdm36, 표지·붙임1·붙임2·붙임3·참조1 UNION).
+      수정: 출력 열 별칭만 record 필드 이름으로(role_report_id·seq·sub_seq·rpt_title…). AS-IS의 쓰는 곳 없는 tdm36_rd_cd2 null 열도 그대로 둔다
+    -->
+    <select id="getAttachList" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleReportAttachRes">
+        WITH list_tdm36
+          AS (
+                SELECT  tdm36_role_report_id
+                     ,  tdm36_company_id
+                     ,  tdm36_board_open_date
+                     ,  tdm36_allc_std_date
+                     ,  COALESCE((  SELECT  MAX(tdm36_allc_std_date)
+                                      FROM  tdm36_role_report
+                                     WHERE  tdm36_company_id = a.tdm36_company_id
+                                       AND  tdm36_allc_std_date &lt; a.tdm36_allc_std_date), to_date('20200101','yyyymmdd')) bf_allc_std_date
+                     ,  tdm36_rpt_cover_file_id
+                     ,  tdm36_rpt_overview_file_id
+                     ,  tdm36_rpt_ceo_cfrm_file_id
+                     ,  tdm36_rpt_board_vote_file_id
+                  FROM  tdm36_role_report a
+                 WHERE  tdm36_role_report_id = #{roleReportId}
+          )
+        SELECT  1                                           AS role_report_id
+             ,  1                                           AS seq
+             ,  0                                           AS sub_seq
+             ,  '표지'                                       AS rpt_title
+             ,  ''                                          AS rpt_sub_title
+             ,  'MK_FSS_COVER'                              AS rd_code
+             ,  null                                        AS rd_code2
+             ,  tdm36_rpt_cover_file_id                     AS relate_file_id
+             ,  0                                           AS relate_appr_id
+             ,  '00'                                        AS relate_appr_status_code
+          FROM  list_tdm36
+         UNION ALL
+        SELECT  2, 2, 0
+             ,  '붙임1(책무구조도 제출개요)'
+             ,  '본문'
+             ,  'MK_FSS_OVERVIEW'
+             ,  null
+             ,  tdm36_rpt_overview_file_id
+             ,  0
+             ,  '00'
+          FROM  list_tdm36
+         UNION ALL
+        SELECT  3, 3, 0
+             ,  '붙임1(책무구조도 제출개요)'
+             ,  '첨부-대표이사 확인서'
+             ,  'MK_FSS_CEO_CFRM'
+             ,  null
+             ,  tdm36_rpt_ceo_cfrm_file_id
+             ,  0
+             ,  '00'
+          FROM  list_tdm36
+         UNION ALL
+        SELECT  4, 4, 0
+             ,  '붙임1(책무구조도 제출개요)'
+             ,  '첨부-이사회 결의서'
+             ,  'MK_FSS_BOARD'
+             ,  null
+             ,  tdm36_rpt_board_vote_file_id
+             ,  0
+             ,  '00'
+          FROM  list_tdm36
+         UNION ALL
+        SELECT  tdm31_role_desc_id
+             ,  5
+             ,  CASE WHEN tdm20_role_type ='A' THEN 1
+                     WHEN tdm20_role_type ='C' THEN 2
+                     WHEN tdm20_role_type ='B' THEN 3
+                     WHEN tdm20_role_type ='D' THEN 4
+                     WHEN tdm20_role_type ='E' THEN 5
+                     ELSE 9
+                 END
+             ,  '붙임2(책무기술서)'
+             ,  tdm20_role_nm||'('||tdm01_person_nm||')'
+             ,  null
+             ,  'ROLE_DESC'
+             ,  0
+             ,  tdm31_appr_id
+             ,  (
+                    SELECT  COALESCE(apr01_status_cd, '00')
+                      FROM  apr01_appr
+                     WHERE  apr01_appr_id = tdm31_appr_id
+                )
+          FROM (SELECT  tdm31_role_desc_id, tdm20_role_type, tdm20_role_nm, tdm01_person_nm
+                     ,  tdm31_appr_id
+                     ,  row_number() over (partition by tdm31_person_id order by tdm36_allc_std_date desc, tdm31_reg_date desc) seq_by_person
+                  FROM  tdm31_role_desc
+                        INNER JOIN list_tdm36       ON tdm31_company_id = tdm36_company_id
+                        INNER JOIN Tdm30_role_allc  ON tdm31_role_allc_id= tdm30_role_allc_id
+                        INNER JOIN tdm20_role       ON tdm30_role_id = tdm20_role_id
+                        LEFT OUTER JOIN tdm01_hr    ON tdm31_person_id = tdm01_person_id
+                 WHERE  1=1
+                   AND  tdm31_appr_id IS NOT NULL
+                   AND  tdm30_start_date &lt;=  tdm36_allc_std_date
+                   AND  coalesce( tdm30_end_date, tdm36_allc_std_date +1 ) &gt;=  tdm36_allc_std_date
+               ) a
+         WHERE  seq_by_person  =1
+         UNION ALL
+        SELECT  tdm32_role_digm_id
+             ,  6
+             ,  0
+             ,  '붙임3(책무체계도)'
+             ,  ''
+             ,  null
+             ,  'ROLE_DIGM'
+             ,  0
+             ,  tdm32_appr_id
+             ,  (
+                    SELECT  COALESCE(apr01_status_cd, '00')
+                      FROM  apr01_appr
+                     WHERE  apr01_appr_id = tdm32_appr_id
+                )
+          FROM  tdm32_role_digm
+                INNER JOIN list_tdm36 ON tdm32_company_id = tdm36_company_id
+         WHERE  tdm32_appr_id IS NOT NULL
+           AND  tdm32_allc_std_date &gt; bf_allc_std_date
+           AND  tdm32_allc_std_date &lt;= tdm36_allc_std_date
+         UNION ALL
+        SELECT  7, 7, 0
+             ,  '참조1(다운로드)'
+             ,  'FINES 등록정보'
+             ,  'MK_FINES'
+             ,  null
+             ,  0
+             ,  0
+             ,  '00'
+         ORDER BY seq, sub_seq, role_report_id
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="java.lang.Long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT (tdm36_role_report): 화면이 채우는 열 -->
+    <insert id="insertRoleReport">
+        INSERT INTO tdm36_role_report
+               ( tdm36_role_report_id, tdm36_company_id, tdm36_board_open_date, tdm36_allc_std_date, tdm36_report_date
+               , tdm36_board_open_loc, tdm36_memb_tot_cnt, tdm36_memb_attend_cnt, tdm36_board_open_agenda, tdm36_memb_yes_nm
+               , tdm36_upd_nm, tdm36_upd_date )
+        VALUES ( #{roleReportId}, #{companyId}, #{boardOpenDate}, #{allcStdDate}, #{reportDate}
+               , #{boardOpenLoc}, #{membTotCnt}, #{membAttendCnt}, #{boardOpenAgenda}, #{membYesName}
+               , #{updName}, f_sysdate() )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel 동적 UPDATE (tdm36_role_report): 그리드에서 고치는 열 -->
+    <update id="updateRoleReport">
+        UPDATE tdm36_role_report
+           SET tdm36_board_open_date   = #{boardOpenDate}
+             , tdm36_allc_std_date     = #{allcStdDate}
+             , tdm36_report_date       = #{reportDate}
+             , tdm36_board_open_loc    = #{boardOpenLoc}
+             , tdm36_memb_tot_cnt      = #{membTotCnt}
+             , tdm36_memb_attend_cnt   = #{membAttendCnt}
+             , tdm36_board_open_agenda = #{boardOpenAgenda}
+             , tdm36_memb_yes_nm       = #{membYesName}
+             , tdm36_upd_nm            = #{updName}
+             , tdm36_upd_date          = f_sysdate()
+         WHERE tdm36_role_report_id = #{roleReportId}
+           AND tdm36_company_id     = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel (tdm36_role_report) -->
+    <delete id="deleteRoleReports">
+        DELETE FROM tdm36_role_report
+         WHERE tdm36_company_id = #{companyId}
+           AND tdm36_role_report_id IN
+        <foreach collection="roleReportIds" item="roleReportId" open="(" separator="," close=")">#{roleReportId}</foreach>
+    </delete>
+</mapper>
