@@ -30,14 +30,16 @@ interface Props {
   baseDate?: string;
   /** true(기본)면 openFixDate: 기준일 읽기 전용. false면 open(baseDate): 기준일을 바꿔 조회할 수 있다 */
   fixDate?: boolean;
-  /** AS-IS open(baseDate, allButtonYn, callback)의 allButtonYn: [전체] 버튼 (닫기만 한다, E4) */
+  /** AS-IS open(baseDate, allButtonYn, callback)의 allButtonYn: [전체] 버튼 (E4) */
   allButton?: boolean;
+  /** [전체]를 누르면 — AS-IS allButton은 callback.execute(null) 뒤 hide() (L148-153). 그 뒤 창이 닫힌다 */
+  onAll?: () => void;
   onClose: () => void;
   /** AS-IS callback.execute(orgCodeModel) */
   onSelect: (org: OrgInfo) => void;
 }
 
-export const Org00_Lookup_SelectSingle: React.FC<Props> = ({ baseDate: openDate, fixDate = true, allButton = false, onClose, onSelect }) => {
+export const Org00_Lookup_SelectSingle: React.FC<Props> = ({ baseDate: openDate, fixDate = true, allButton = false, onAll, onClose, onSelect }) => {
   const [baseDate, setBaseDate] = useState(openDate);
   const gridRef = useRef<AgGridReact<OrgInfo>>(null);
   const [korName, setKorName] = useState('');
@@ -54,7 +56,7 @@ export const Org00_Lookup_SelectSingle: React.FC<Props> = ({ baseDate: openDate,
     }
   }, [korName, baseDate]);
 
-  // [E4]·[E5] allButton[전체](allButtonYn=false라 openFixDate에는 없음, open(date, true, cb)는 있음) / cancelButton[닫기].Select (L155) → hide()
+  // [E4]·[E5] allButton[전체](allButtonYn=false라 openFixDate에는 없음, open(date, true, cb)는 있음) → callback.execute(null), hide() / cancelButton[닫기].Select (L155) → hide()
   const hide = () => { setKorName(''); setRows([]); onClose(); };
 
   // [E3] oKButton[확인].Select (L142) / [E6] grid.CellDoubleClick (L183) → confirm() L238-251
@@ -84,8 +86,8 @@ export const Org00_Lookup_SelectSingle: React.FC<Props> = ({ baseDate: openDate,
         <div style={{ textAlign: 'center' }}>
           <Space>
             <Button type="save" onClick={confirm}>확인</Button>
-            {/* [E4] allButton[전체].Select (L148) → hide() */}
-            {allButton && <Button type="reset" onClick={hide}>전체</Button>}
+            {/* [E4] allButton[전체].Select (L148) → callback.execute(null), hide() */}
+            {allButton && <Button type="reset" onClick={() => { onAll?.(); hide(); }}>전체</Button>}
             <Button type="close" onClick={hide}>닫기</Button>
           </Space>
         </div>

@@ -157,6 +157,7 @@ import { Tdm32_Tab_RoleDigmAdmin } from './tdm/Tdm32_Tab_RoleDigmAdmin';
 import { Tdm32_Tab_RoleDigm } from './tdm/Tdm32_Tab_RoleDigm';
 import { Tdm36_Tab_RoleReport } from './tdm/Tdm36_Tab_RoleReport';
 import { Tdm40_Tab_ManlJob } from './tdm/Tdm40_Tab_ManlJob';
+import { Tdm41_Tab_ManlDutyOrg } from './tdm/Tdm41_Tab_ManlDutyOrg';
 import { Tdm42_Tab_ManlManagerAdmin } from './tdm/Tdm42_Tab_ManlManagerAdmin';
 import { Tdm01_Tab_Hr } from './tdm/Tdm01_Tab_Hr';
 import { Tdm10_Tab_Task } from './tdm/Tdm10_Tab_Task';
@@ -294,6 +295,7 @@ export const SCREENS: Record<string, React.FC> = {
   Tdm32_Tab_RoleDigm, // N13
   Tdm36_Tab_RoleReport, // N14
   Tdm40_Tab_ManlJob, // N15
+  Tdm41_Tab_ManlDutyOrg, // N16 (+ Tdm40_Lookup_SelectSingle·Tdm10_Lookup_SelectSingle·Tdm41_Lookup_ChangeOrg_Tmp 신설)
   Tdm32_Tab_RoleDigmAdmin, // E12 (재생성은 RD 리포트 연동이 없어 서버가 거절 — RoleDigmPdfMaker 기본 구현)
   Tdm42_Tab_ManlManagerAdmin, // E13 1단계 (+ Tdm43_Lookup_ManlItem·Org00_Lookup_SelectTdm, 재생성은 RD 연동이 없어 서버가 거절 — ManlOrgPdfMaker 기본 구현, 점검항목 등록/수정창은 E13-2)
   Tdm10_Tab_Task, // N05 1단계 (+ Tdm10_Edit_Task·Tdm12_Lookup_TaskRelateDetail·Tdm14_Lookup_TaskType·Tdm95_Lookup_ChangeHistory, 연결법규·내규 Tdm11은 다음 단계)

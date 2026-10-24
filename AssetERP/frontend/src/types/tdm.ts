@@ -109,6 +109,49 @@ export interface TdmManlJob {
   updDateStr?: string | null;
 }
 
+/** 매뉴얼 작업의 직책별 책무·관리의무 건수 한 행 (AS-IS Tdm41_ManlDutyModel 중 groupByManlJobId 열, N16) */
+export interface TdmManlDutyGroup {
+  manlDutyId: number;
+  manlJobId: number;
+  roleId: number;
+  roleName?: string | null;
+  taskCnt?: number | null;
+  taskIndvCnt?: number | null;
+  taskCommonCnt?: number | null;
+  taskCeoCnt?: number | null;
+  taskRelateDetailCnt?: number | null;
+  taskRelateDutyCnt?: number | null;
+  taskRelateDutyNoneCnt?: number | null;
+}
+
+/** 관리의무 한 행 (AS-IS tdm41_manl_duty.selectByTextPaging, N16). realManlDutyId = 진짜 ID, useYn = 부서지정 확정(잠금) */
+export interface TdmManlDuty {
+  manlDutyId: number;
+  title?: string | null;
+  taskRelateDutyName?: string | null;
+  orgName2?: string | null;
+  updDateStr?: string | null;
+  roleName?: string | null;
+  taskGubun?: string | null;
+  taskName?: string | null;
+  realManlDutyId: number;
+  useYn: boolean;
+}
+
+/** 책무 · 담당부서별 관리의무 건수 한 행 (AS-IS tdm41_manl_duty.selectTaskAndOrg, N16 부서변경) */
+export interface TdmManlDutyTaskOrg {
+  manlDutyId: number;
+  companyId?: number | null;
+  manlJobId: number;
+  roleId: number;
+  exctId?: number | null;
+  taskId: number;
+  taskName?: string | null;
+  orgId: number;
+  orgName?: string | null;
+  taskRelateDutyCnt?: number | null;
+}
+
 /** 책무구조도 제출 한 행 (AS-IS Tdm36_RoleReportModel 중 Tdm36_Tab_RoleReport 그리드·저장에 쓰는 속성, N14). 날짜는 yyyy-MM-dd */
 export interface TdmRoleReport {
   roleReportId: number;

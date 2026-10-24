@@ -106,11 +106,17 @@ export const Tdm40_Tab_ManlJob: React.FC = () => {
       message.error(errorMessage(err, '조회 실패'));
     }
   };
-  // L196-211: 고르면 직책 + 부서 비움 (callback의 result == null 분기는 [전체]가 hide()만 하므로 닿지 않는다)
+  // L196-211: 고르면 직책 + 부서 비움, [전체](result == null)는 직책만 비움
+  const onRoleAll = () => {
+    if (roleLookup) crud.updateRow(roleLookup.manlJobId, { roleId: null, roleName: null });
+  };
   const onRoleResult = (role: TdmRole) => {
     if (roleLookup) crud.updateRow(roleLookup.manlJobId, { roleId: role.roleId, roleName: role.roleName, orgId: null, orgName: null });
   };
-  // L256-268
+  // L256-268: [전체](result == null)는 부서 비움
+  const onOrgAll = () => {
+    if (orgLookup) crud.updateRow(orgLookup.manlJobId, { orgId: null, orgName: null });
+  };
   const onOrgResult = (org: OrgInfo) => {
     if (orgLookup) crud.updateRow(orgLookup.manlJobId, { orgId: org.orgCodeId, orgName: org.korNm ?? null });
   };
@@ -242,8 +248,8 @@ export const Tdm40_Tab_ManlJob: React.FC = () => {
           <CellEditGrid<TdmManlJob> crud={crud} columnDefs={columnDefs} rowSelection={SINGLE_CHECKED} />
         </div>
       </div>
-      <Tdm20_Lookup_SelectRole open={!!roleLookup} allButton stdDate={roleLookup?.manlApplyStartDate} onSelect={onRoleResult} onClose={() => setRoleLookup(null)} />
-      <Org00_Lookup_SelectSingle baseDate={orgLookup?.manlApplyStartDate ?? undefined} fixDate={false} allButton onSelect={onOrgResult} onClose={() => setOrgLookup(null)} />
+      <Tdm20_Lookup_SelectRole open={!!roleLookup} allButton onAll={onRoleAll} stdDate={roleLookup?.manlApplyStartDate} onSelect={onRoleResult} onClose={() => setRoleLookup(null)} />
+      <Org00_Lookup_SelectSingle baseDate={orgLookup?.manlApplyStartDate ?? undefined} fixDate={false} allButton onAll={onOrgAll} onSelect={onOrgResult} onClose={() => setOrgLookup(null)} />
     </div>
   );
 };

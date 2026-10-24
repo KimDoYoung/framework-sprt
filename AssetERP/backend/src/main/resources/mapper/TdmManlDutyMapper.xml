@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm41_manl_duty.xml (groupByManlJobId·selectByTextPaging·selectTaskAndOrg·countNullOrgId)
+  + tdm42_manl_org.xml (confirmChk·insertByManlJobId·countLockByRoleId·selectByNewOrgId·insert·deleteByTdm43)
+  + tdm44_manl_duty_org.xml (insertCheck·insert·clearEndYn·updateOrgIdByTaskId) + tdm43_manl.updateOrgIdByTaskId (N16 매뉴얼 부서지정)
+  수정(공통): current_setting('app.current_user') 대신 #{updName}
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmManlDutyMapper">
+
+    <select id="selectDutyCompanyId" resultType="java.lang.Long">
+        SELECT tdm41_company_id FROM tdm41_manl_duty WHERE tdm41_manl_duty_id = #{manlDutyId}
+    </select>
+
+    <!--
+      AS-IS(IDMS-IC) tdm41_manl_duty.groupByManlJobId L96 — 그대로, 열 별칭만 record 필드 이름으로. 주석 처리된 indv_task_cnt 줄은 안 옮김
+    -->
+    <select id="groupByManlJobId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyGroupRes">
+        SELECT  ROW_NUMBER() OVER(ORDER BY tdm20_role_nm COLLATE "ko_KR.utf8")  AS manl_duty_id
+             ,  tdm41.tdm41_manl_job_id                                         AS manl_job_id
+             ,  tdm41.tdm41_role_id                                             AS role_id
+             ,  tdm20_role_nm                                                   AS role_name
+             ,  task_cnt                                                        AS task_cnt
+             ,  indv_task_cnt                                                   AS task_indv_cnt
+             ,  common_task_cnt                                                 AS task_common_cnt
+             ,  ceo_task_cnt                                                    AS task_ceo_cnt
+             ,  tdm41_task_relate_detail_cnt                                    AS task_relate_detail_cnt
+             ,  tdm41_task_relate_duty_cnt                                      AS task_relate_duty_cnt
+             ,  tdm41_task_relate_duty_none_cnt                                 AS task_relate_duty_none_cnt
+          FROM  (
+                    SELECT tdm41_manl_job_id
+                         , tdm41_role_id
+                         , COUNT(DISTINCT tdm41_task_relate_detail_id)         AS tdm41_task_relate_detail_cnt
+                         , COUNT(DISTINCT tdm41_task_relate_duty_id)           AS tdm41_task_relate_duty_cnt
+                         , COUNT(DISTINCT CASE WHEN tdm44_manl_duty_id IS NULL
+                                               THEN tdm41_task_relate_duty_id
+                                               END)                            AS tdm41_task_relate_duty_none_cnt
+                      FROM tdm41_manl_duty
+                           LEFT JOIN LATERAL ( SELECT DISTINCT tdm44_manl_duty_id
+                                                 FROM tdm44_manl_duty_org
+                                                WHERE tdm44_manl_duty_id = tdm41_manl_duty_id ) tdm44 ON TRUE
+                     WHERE tdm41_manl_job_id = #{manlJobId}
+                     <choose>
+                         <when test="taskId != null">
+                       AND tdm41_task_id = #{taskId}
+                         </when>
+                     </choose>
+                     GROUP BY tdm41_manl_job_id, tdm41_role_id
+                ) tdm41
+                INNER JOIN ( SELECT tdm41_role_id
+                                  , COUNT(*)                                                                                task_cnt
+                                  , SUM(CASE WHEN tdm10_common_yn != 'true'                            THEN 1 ELSE 0 END)   indv_task_cnt
+                                  , SUM(CASE WHEN tdm10_common_yn  = 'true'                            THEN 1 ELSE 0 END)   common_task_cnt
+                                  , SUM(CASE WHEN tdm10_ceo_yn     = 'true'                            THEN 1 ELSE 0 END)   ceo_task_cnt
+                                  , tdm40_manl_apply_start_date                                                             std_date
+                               FROM (
+                                      SELECT tdm41_role_id
+                                           , tdm41_task_id
+                                           , tdm40_manl_apply_start_date
+                                        FROM tdm41_manl_duty
+                                             INNER JOIN tdm40_manl_job ON tdm40_manl_job_id = tdm41_manl_job_id
+                                       WHERE tdm41_manl_job_id = #{manlJobId}
+                                       GROUP BY tdm41_role_id
+                                              , tdm41_task_id
+                                              , tdm40_manl_apply_start_date
+                                    ) t
+                                    INNER JOIN tdm10_task ON (    tdm10_task_id = tdm41_task_id
+                                                              AND tdm40_manl_apply_start_date BETWEEN tdm10_start_date AND COALESCE(tdm10_end_date,'9999-12-31'::date)
+                                                              <choose>
+                                                                  <when test="taskId != null">
+                                                              AND tdm10_task_id = #{taskId}
+                                                                  </when>
+                                                              </choose>
+                                                             )
+                              GROUP BY tdm41_role_id, tdm40_manl_apply_start_date
+                           ) task ON task.tdm41_role_id = tdm41.tdm41_role_id
+                INNER JOIN tdm20_role ON (    tdm20_role_id = tdm41.tdm41_role_id
+                                          AND std_date BETWEEN tdm20_start_date AND COALESCE(tdm20_end_date,'9999-12-31'::date) )
+         WHERE  1=1
+        <choose>
+            <when test="roleId != null">
+           AND  tdm41.tdm41_role_id = #{roleId}
+            </when>
+        </choose>
+    </select>
+
+    <!--
+      AS-IS(IDMS-IC) tdm41_manl_duty.selectByTextPaging L201 / selectByTextPagingTotal L271 — 그대로, 열 별칭만 record 필드 이름으로.
+      이 화면은 orgId를 안 보내 LEFT JOIN 쪽(otherwise)만 옮겼다(orgId 분기는 selectByOrgIdPaging용 다른 화면). 두 SQL이 공유하도록 조각으로 뺐다
+    -->
+    <sql id="dutyFrom">
+          FROM  tdm41_manl_duty
+                LEFT JOIN LATERAL ( SELECT STRING_AGG(f_org_nm(tdm44_org_id, f_sysdate()),E'\n') org_nm
+                                      FROM tdm44_manl_duty_org
+                                     WHERE tdm44_manl_duty_id = tdm41_manl_duty_id  ) tdm44 ON TRUE
+                INNER JOIN tdm20_role               ON tdm20_role_id                = tdm41_role_id
+                INNER JOIN tdm10_task               ON tdm10_task_id                = tdm41_task_id
+                INNER JOIN tdm12_task_relate_detail ON tdm12_task_relate_detail_id  = tdm41_task_relate_detail_id
+                INNER JOIN tdm13_task_relate_duty   ON tdm13_task_relate_duty_id    = tdm41_task_relate_duty_id
+         WHERE  1=1
+           AND  tdm41_manl_job_id = #{manlJobId}
+        <choose>
+            <when test="roleId != null">
+           AND  tdm41_role_id = #{roleId}
+            </when>
+        </choose>
+        <choose>
+            <when test="taskId != null">
+           AND  tdm10_task_id = #{taskId}
+            </when>
+        </choose>
+        <choose>
+            <when test="unRegYn">
+           AND  org_nm IS NULL
+            </when>
+        </choose>
+           AND  CONCAT(tdm10_task_nm, tdm12_content, org_nm) ILIKE #{searchText}
+    </sql>
+
+    <select id="selectByTextPagingTotal" resultType="java.lang.Long">
+        SELECT  count(*)
+        <include refid="dutyFrom"/>
+    </select>
+
+    <select id="selectByTextPaging" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyRes">
+        SELECT  ROW_NUMBER() OVER ()                                                AS manl_duty_id
+             ,  '['||tdm20_role_nm||'] '||tdm10_task_nm||' : '||
+                CONCAT(tdm12_seq||'. ', tdm12_content)                              AS title
+             ,  CONCAT(tdm13_seq||'. ', tdm13_content)                              AS task_relate_duty_name
+             ,  org_nm                                                              AS org_name2
+             ,  COALESCE(TO_CHAR(tdm41_upd_date, 'yyyy-mm-dd HH24:MI:SS'), ''::text) AS upd_date_str
+             ,  tdm20_role_nm                                                       AS role_name
+             ,  CASE WHEN COALESCE(tdm10_common_yn, 'false') = 'true'
+                     THEN '공통'
+                     ELSE '개별'
+                     END                                                            AS task_gubun
+             ,  tdm10_task_nm                                                       AS task_name
+             ,  tdm41_manl_duty_id                                                  AS real_manl_duty_id
+             ,  CASE WHEN ( SELECT COUNT(*)
+                              FROM tdm42_manl_org
+                             WHERE tdm42_manl_job_id = tdm41_manl_job_id
+                               AND tdm42_role_id = tdm41_role_id ) = 0
+                     THEN false
+                     ELSE true
+                     END                                                            AS use_yn
+        <include refid="dutyFrom"/>
+         ORDER BY tdm41_role_id, tdm41_task_id, tdm12_seq, tdm13_seq
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm41_manl_duty.selectTaskAndOrg L166 -->
+    <select id="selectTaskAndOrg" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyTaskOrgRes">
+        SELECT ROW_NUMBER() OVER(ORDER BY task_name COLLATE "ko_KR.utf8")   AS manl_duty_id
+             , t.*
+          FROM (
+                SELECT tdm41_company_id     AS company_id
+                     , tdm41_manl_job_id    AS manl_job_id
+                     , tdm41_role_id        AS role_id
+                     , tdm42_exct_id        AS exct_id
+                     , tdm41_task_id        AS task_id
+                     , tdm10_task_nm        AS task_name
+                     , tdm44_org_id         AS org_id
+                     , org00_kor_nm         AS org_name
+                     , COUNT(*)             AS task_relate_duty_cnt
+                  FROM tdm40_manl_job
+                       INNER JOIN tdm41_manl_duty     ON tdm41_manl_job_id  = tdm40_manl_job_id
+                       INNER JOIN tdm44_manl_duty_org ON tdm44_manl_duty_id = tdm41_manl_duty_id
+                       INNER JOIN tdm42_manl_org      ON ( tdm42_manl_job_id  = tdm41_manl_job_id   AND
+                                                           tdm42_role_id      = tdm41_role_id       AND
+                                                           tdm42_org_id       = tdm44_org_id        )
+                       INNER JOIN tdm10_task          ON tdm10_task_id = tdm41_task_id
+                       INNER JOIN LATERAL getOrg(tdm40_company_id, tdm40_manl_apply_start_date) ON org00_org_id = tdm44_org_id
+                 WHERE tdm41_manl_job_id = #{manlJobId}
+                   AND tdm41_role_id     = #{roleId}
+                 GROUP BY tdm41_company_id
+                        , tdm41_manl_job_id
+                        , tdm41_role_id
+                        , tdm42_exct_id
+                        , tdm41_task_id
+                        , tdm10_task_nm
+                        , tdm44_org_id
+                        , org00_kor_nm
+               ) t
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm44_manl_duty_org.insertCheck L36 — 같은 관리의무·부서가 있는지(건수) -->
+    <select id="countDutyOrg" resultType="int">
+        SELECT  COUNT(*)
+          FROM  tdm44_manl_duty_org
+         WHERE  tdm44_manl_duty_id = #{manlDutyId}
+           AND  tdm44_org_id = #{orgId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm44_manl_duty_org.insert L43 -->
+    <insert id="insertDutyOrg">
+        INSERT
+          INTO tdm44_manl_duty_org
+        SELECT f_create_seq()
+             , #{manlDutyId}
+             , #{orgId}
+             , 'false'
+             , null
+             , null
+             , #{updName}
+             , f_sysdate()
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) tdm42_manl_org.countLockByRoleId L210 -->
+    <select id="countLockByRoleId" resultType="int">
+        SELECT  COUNT(*)
+          FROM  tdm42_manl_org
+         WHERE  tdm42_manl_job_id   = #{manlJobId}
+           AND  tdm42_role_id       = #{roleId}
+           AND  COALESCE(tdm42_lock_yn,'false') = 'true'
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm42_manl_org.selectByNewOrgId L180 (manlOrgId만) -->
+    <select id="selectManlOrgId" resultType="java.lang.Long">
+        SELECT  tdm42_manl_org_id
+          FROM  tdm42_manl_org
+         WHERE  tdm42_manl_job_id = #{manlJobId}
+           AND  tdm42_role_id     = #{roleId}
+           AND  tdm42_org_id      = #{orgId}
+         LIMIT 1
+    </select>
+
+    <!-- selectTaskAndOrg 행의 tdm42_exct_id: 기존 부서(orgId)의 직책 확정 행 -->
+    <select id="selectExctId" resultType="java.lang.Long">
+        SELECT  tdm42_exct_id
+          FROM  tdm42_manl_org
+         WHERE  tdm42_manl_job_id = #{manlJobId}
+           AND  tdm42_role_id     = #{roleId}
+           AND  tdm42_org_id      = #{orgId}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="java.lang.Long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm42_manl_org.insert L241 — 수정: current_setting 대신 #{updName}. lockYn=false, 시작·종료일·결재 null -->
+    <insert id="insertManlOrg">
+        INSERT
+          INTO tdm42_manl_org
+        SELECT #{manlOrgId}
+             , #{companyId}
+             , #{orgId}
+             , #{exctId}
+             , #{roleId}
+             , 'false'
+             , null
+             , null
+             , null
+             , #{manlJobId}
+             , #{updName}
+             , f_sysdate()
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) tdm43_manl.updateOrgIdByTaskId L793 -->
+    <update id="updateManlOrgByTask">
+        UPDATE tdm43_manl
+           SET tdm43_manl_org_id = #{manlOrgId}
+             , tdm43_org_id      = #{newOrgId}
+             , tdm43_upd_nm      = #{updName}
+             , tdm43_upd_date    = f_sysdate()
+         WHERE tdm43_manl_duty_id IN ( SELECT tdm41_manl_duty_id
+                                         FROM tdm41_manl_duty
+                                              INNER JOIN tdm44_manl_duty_org ON tdm44_manl_duty_id = tdm41_manl_duty_id
+                                        WHERE tdm41_manl_job_id = #{manlJobId}
+                                          AND tdm41_role_id     = #{roleId}
+                                          AND tdm41_task_id     = #{taskId}
+                                          AND tdm44_org_id      = #{orgId}
+                                    )
+           AND tdm43_org_id = #{orgId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm44_manl_duty_org.updateOrgIdByTaskId L115 -->
+    <update id="updateDutyOrgByTask">
+        UPDATE tdm44_manl_duty_org
+           SET tdm44_org_id     = #{newOrgId}
+             , tdm44_upd_nm     = #{updName}
+             , tdm44_upd_date   = f_sysdate()
+         WHERE tdm44_manl_duty_id IN ( SELECT tdm41_manl_duty_id
+                                         FROM tdm41_manl_duty
+                                        WHERE tdm41_manl_job_id = #{manlJobId}
+                                          AND tdm41_role_id     = #{roleId}
+                                          AND tdm41_task_id     = #{taskId}
+                                     )
+           AND tdm44_org_id = #{orgId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm42_manl_org.deleteByTdm43 L294 -->
+    <delete id="deleteEmptyManlOrgs">
+        DELETE
+          FROM  tdm42_manl_org
+         WHERE  tdm42_manl_job_id = #{manlJobId}
+           AND  tdm42_role_id = #{roleId}
+           AND  NOT EXISTS ( SELECT 1
+                               FROM tdm43_manl
+                              WHERE tdm43_manl_org_id = tdm42_manl_org_id )
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm42_manl_org.confirmChk L203 (목록 대신 화면이 쓰는 건수 둘) -->
+    <select id="countManlOrgs" resultType="int">
+        SELECT COUNT(*) FROM tdm42_manl_org WHERE tdm42_manl_job_id = #{manlJobId}
+    </select>
+
+    <select id="countLockedManlOrgs" resultType="int">
+        SELECT COUNT(*) FROM tdm42_manl_org WHERE tdm42_manl_job_id = #{manlJobId} AND COALESCE(tdm42_lock_yn,'false') = 'true'
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm41_manl_duty.countNullOrgId L375 -->
+    <select id="countNullOrgId" resultType="int">
+        SELECT  COUNT(*)
+          FROM  tdm41_manl_duty
+         WHERE  tdm41_manl_job_id = #{manlJobId}
+           AND  NOT EXISTS ( SELECT 1
+                               FROM tdm44_manl_duty_org
+                              WHERE tdm44_manl_duty_id = tdm41_manl_duty_id )
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm42_manl_org.insertByManlJobId L218 — 수정: current_setting 대신 #{updName} -->
+    <insert id="insertManlOrgsByJob">
+        INSERT
+          INTO tdm42_manl_org
+        SELECT f_create_seq()
+             , #{companyId}
+             , tdm44_org_id
+             , tdm30_person_id
+             , tdm41_role_id
+             , 'false'
+             , null
+             , null
+             , null
+             , #{manlJobId}
+             , #{updName}
+             , f_sysdate()
+          FROM tdm41_manl_duty
+               INNER JOIN tdm44_manl_duty_org ON tdm44_manl_duty_id = tdm41_manl_duty_id
+               INNER JOIN tdm40_manl_job ON tdm40_manl_job_id = tdm41_manl_job_id
+               INNER JOIN LATERAL getTdm30RoleAllc(tdm40_company_id, tdm40_manl_apply_start_date, true) ON tdm30_role_id = tdm41_role_id
+         WHERE tdm41_manl_job_id = #{manlJobId}
+         GROUP BY tdm44_org_id, tdm30_person_id, tdm41_role_id, tdm40_reg_date
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) tdm44_manl_duty_org.clearEndYn L91 — 수정: current_setting 대신 #{updName} -->
+    <update id="clearEndYn">
+        UPDATE tdm44_manl_duty_org
+           SET tdm44_end_yn     = 'false'
+            ,  tdm44_end_date   = null
+            ,  tdm44_end_emp_id = null
+            ,  tdm44_upd_nm     = #{updName}
+            ,  tdm44_upd_date   = f_sysdate()
+         WHERE tdm44_manl_duty_id IN ( SELECT tdm41_manl_duty_id
+                                         FROM tdm41_manl_duty
+                                        WHERE tdm41_manl_job_id = #{manlJobId} )
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm40_manl_job.selectSimpleById L65 (작성시작일만) -->
+    <select id="selectJobStartDate" resultType="java.lang.String">
+        SELECT TO_CHAR(tdm40_start_date, 'YYYY-MM-DD') FROM tdm40_manl_job WHERE tdm40_manl_job_id = #{manlJobId}
+    </select>
+</mapper>

@@ -27,8 +27,10 @@ const buildGrid = () => [
 
 interface Props {
   open: boolean;
-  /** AS-IS openAll → allButtonYn: [전체] 버튼 (닫기만 한다, E6) */
+  /** AS-IS openAll → allButtonYn: [전체] 버튼 (E6) */
   allButton?: boolean;
+  /** [전체]를 누르면 — AS-IS allButton은 callback.execute(null) 뒤 hide() (L162-167). 그 뒤 창이 닫힌다 */
+  onAll?: () => void;
   /** AS-IS openAll(stdDate, …)의 기준일 — 없으면 오늘 */
   stdDate?: string | null;
   /** AS-IS callback.execute(고른 직책). 닫기는 onClose */
@@ -36,7 +38,7 @@ interface Props {
   onClose: () => void;
 }
 
-export const Tdm20_Lookup_SelectRole: React.FC<Props> = ({ open, allButton = false, stdDate, onSelect, onClose }) => {
+export const Tdm20_Lookup_SelectRole: React.FC<Props> = ({ open, allButton = false, onAll, stdDate, onSelect, onClose }) => {
   const gridRef = useRef<AgGridReact<TdmRole>>(null);
   const [baseDate, setBaseDate] = useState<Dayjs>(dayjs());
   const [searchText, setSearchText] = useState('');
@@ -85,8 +87,8 @@ export const Tdm20_Lookup_SelectRole: React.FC<Props> = ({ open, allButton = fal
           <Space>
             {/* [E4] updateButton[확인].Select (L150) → confirm() */}
             <Button type="save" onClick={() => confirm()}>확인</Button>
-            {/* [E6] allButton[전체].Select (L162) → hide() */}
-            {allButton && <Button type="reset" onClick={onClose}>전체</Button>}
+            {/* [E6] allButton[전체].Select (L162) → callback.execute(null), hide() */}
+            {allButton && <Button type="reset" onClick={() => { onAll?.(); onClose(); }}>전체</Button>}
             {/* [E5] closeButton[닫기].Select (L156) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>

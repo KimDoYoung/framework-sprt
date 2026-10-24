@@ -25,10 +25,13 @@ public class TdmManlJobService {
 
     private final TdmManlJobMapper mapper;
 
-    /** AS-IS tdm.Tdm40_ManlJob.selectByText — 로그인 회사만. 이 화면은 checkYn·createDutyYn을 항상 false로 보낸다. searchText는 '%글자%' */
-    public List<ManlJobRes> search(UserPrincipal user, String searchText, boolean writingYn) {
+    /**
+     * AS-IS tdm.Tdm40_ManlJob.selectByText — 로그인 회사만. searchText는 '%글자%', checkYn은 아직 쓰는 화면이 없어 false.
+     * createDutyYn: 서버 AS-IS는 안 보내면 true(관리의무가 생성된 작업만) — 작업대상 선정(N15)은 false를, 부서지정(N16) 등은 true를 보낸다
+     */
+    public List<ManlJobRes> search(UserPrincipal user, String searchText, boolean writingYn, boolean createDutyYn) {
         String text = "%" + (searchText == null ? "" : searchText) + "%";
-        return mapper.selectByText(new ManlJobParam(user.getCompanyId(), null, text, writingYn, false, false));
+        return mapper.selectByText(new ManlJobParam(user.getCompanyId(), null, text, writingYn, false, createDutyYn));
     }
 
     /** AS-IS Tdm40_ManlJob.update(UpdateDataModel): manlJobId가 없거나 ≤ 0이면 INSERT, 아니면 UPDATE */
