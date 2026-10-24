@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmRoleReport, TdmRoleReportAttach, TdmManlJob, TdmManlDutyGroup, TdmManlDuty, TdmManlDutyTaskOrg, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord } from '../types/tdm';
+import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlOrgAppr, TdmManlOrgPeriod, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmRoleReport, TdmRoleReportAttach, TdmManlJob, TdmManlDutyGroup, TdmManlDuty, TdmManlDutyReg, TdmManlCopySource, TdmManlCopyItem, TdmManlDutyTaskOrg, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
 export const tdmApi = {
@@ -157,8 +157,8 @@ export const tdmApi = {
 
   // ── N15 매뉴얼 작업대상 선정(Tdm40_Tab_ManlJob) ──
 
-  /** AS-IS tdm.Tdm40_ManlJob.selectByText (로그인 회사만. writingYn = 작성중만 조회, createDutyYn = 관리의무가 생성된 작업만 — 안 주면 false) */
-  searchManlJobs: async (p: { searchText: string; writingYn: boolean; createDutyYn?: boolean }): Promise<TdmManlJob[]> => {
+  /** AS-IS tdm.Tdm40_ManlJob.selectByText (로그인 회사만. writingYn = 작성중만 조회, checkYn = 내 부서가 확정된 작업만(N17), createDutyYn = 관리의무가 생성된 작업만 — 안 주면 false) */
+  searchManlJobs: async (p: { searchText: string; writingYn: boolean; checkYn?: boolean; createDutyYn?: boolean }): Promise<TdmManlJob[]> => {
     const res = await apiClient.get<ApiResponse<TdmManlJob[]>>('v1/tdm/manl-jobs', { params: p });
     return res.data.data ?? [];
   },
@@ -283,6 +283,28 @@ export const tdmApi = {
     await apiClient.post<ApiResponse<null>>(`v1/tdm/manl-orgs/${manlOrgId}/recreate`);
   },
 
+  /** N18 AS-IS tdm.Tdm42_ManlOrg.selectByText (로그인 회사·부서. useYn = "사용 & 작성중인 매뉴얼만 조회") */
+  searchManlOrgAppr: async (searchText: string, useYn: boolean): Promise<TdmManlOrgAppr[]> => {
+    const res = await apiClient.get<ApiResponse<TdmManlOrgAppr[]>>('v1/tdm/manl-orgs/appr', { params: { searchText, useYn } });
+    return res.data.data;
+  },
+
+  /** N18 AS-IS tdm.Tdm42_ManlOrg.notManlOrgList — 화면 목록에 없는 부서 책무매뉴얼(적용기간 중복 검사용) */
+  notManlOrgList: async (manlOrgIds: number[]): Promise<TdmManlOrgPeriod[]> => {
+    const res = await apiClient.post<ApiResponse<TdmManlOrgPeriod[]>>('v1/tdm/manl-orgs/appr/not-in', { manlOrgIds });
+    return res.data.data;
+  },
+
+  /** N18 AS-IS tdm.Tdm42_ManlOrg.update — 적용시작일·적용종료일 (yyyy-MM-dd, 비우면 null) */
+  updateManlOrgPeriods: async (rows: { manlOrgId: number; startDate?: string | null; endDate?: string | null }[]): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>('v1/tdm/manl-orgs/appr/periods', rows);
+  },
+
+  /** N18 AS-IS tdm.Tdm42_ManlOrg.updateLock — 'P' 잠금 / 'C' 잠금해제 */
+  updateManlOrgLock: async (actionType: 'P' | 'C', manlOrgIds: number[]): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>('v1/tdm/manl-orgs/appr/lock', { actionType, manlOrgIds });
+  },
+
   /** AS-IS tdm.Tdm43_Manl.selectByManlOrgId (useYn: '%' 전체 / 'true' 사용 / 'false' 미사용) */
   searchManlItems: async (manlOrgId: number, useYn: string, searchText: string): Promise<TdmManlItem[]> => {
     const res = await apiClient.get<ApiResponse<TdmManlItem[]>>('v1/tdm/manls', { params: { manlOrgId, useYn, searchText } });
@@ -322,6 +344,66 @@ export const tdmApi = {
   /** AS-IS tdm.Tdm43_Manl.delete (선택한 한 건 + 연결 법규·내규·양식·첨부) */
   deleteManlItem: async (manlOrgId: number, manlId: number): Promise<void> => {
     await apiClient.delete<ApiResponse<null>>(`v1/tdm/manls/${manlId}`, { params: { manlOrgId } });
+  },
+
+  // ── N17 매뉴얼(점검항목) 작성(Tdm43_Tab_ManlItemReg) ──
+
+  /** AS-IS tdm.Tdm41_ManlDuty.selectByOrgIdPaging(+Total): 위 그리드. searchText는 서버가 %…%로 감싼다 */
+  searchManlDutiesByOrg: async (p: { manlJobId: number; roleId?: number | null; taskId?: number | null; orgId?: number | null; searchText: string; offset: number; limit: number }): Promise<PageRes<TdmManlDutyReg>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<TdmManlDutyReg>>>('v1/tdm/manl-duties/by-org', { params: p });
+    return res.data.data;
+  },
+
+  /** AS-IS tdm.Tdm41_ManlDuty.updateEndYn: 작성완료(true)·작성취소(false). 작성취소가 잠겨 있으면 400 "잠겨진 매뉴얼입니다" */
+  updateManlDutyEnd: async (p: { manlDutyId: number; manlOrgId: number; orgId: number; endYn: boolean }): Promise<void> => {
+    const { manlDutyId, ...params } = p;
+    await apiClient.put<ApiResponse<null>>(`v1/tdm/manl-duties/${manlDutyId}/end`, null, { params });
+  },
+
+  /** AS-IS tdm.Tdm43_Manl.selectByManlDutyId: 아래 그리드 */
+  searchManlItemsByDuty: async (manlDutyId: number, orgId: number): Promise<TdmManlItem[]> => {
+    const res = await apiClient.get<ApiResponse<TdmManlItem[]>>('v1/tdm/manls/by-duty', { params: { manlDutyId, orgId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm43_Manl.selectByRoleId: 점검항목 불러오기 조회창(TabPage) 위 그리드 */
+  searchManlSourcesByRole: async (p: { roleId?: number | null; taskId?: number | null; orgId?: number | null; stdDate: string; allYn: boolean; searchText: string }): Promise<TdmManlCopySource[]> => {
+    const res = await apiClient.get<ApiResponse<TdmManlCopySource[]>>('v1/tdm/manls/sources/by-role', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm43_Manl.selectByManlJobId: 주요관리의무 불러오기 조회창(본 화면) 위 그리드 */
+  searchManlSourcesByJob: async (p: { manlJobId: number; stdRoleId: number; stdOrgId: number; roleId?: number | null; taskId?: number | null; orgId?: number | null; stdDate: string; allYn: boolean; searchText: string }): Promise<TdmManlCopySource[]> => {
+    const res = await apiClient.get<ApiResponse<TdmManlCopySource[]>>('v1/tdm/manls/sources/by-job', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm43_Manl.selectByTaskRelateDutyId: 조회창 아래 그리드 */
+  searchManlSourceItems: async (manlOrgId: number, taskRelateDutyId: number): Promise<TdmManlCopyItem[]> => {
+    const res = await apiClient.get<ApiResponse<TdmManlCopyItem[]>>('v1/tdm/manls/sources/items', { params: { manlOrgId, taskRelateDutyId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm43_Manl.copyManlList: 고른 원본 점검항목(manlIds)을 관리의무 행(duty)에 복사 */
+  copyManls: async (duty: TdmManlDutyReg, manlIds: number[]): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>('v1/tdm/manls/copy', {
+      manlOrgId: duty.manlOrgId, orgId: duty.orgId, exctId: duty.exctId, roleId: duty.roleId, roleName: duty.roleName,
+      taskId: duty.taskId, taskName: duty.taskName, taskRelateDetailId: duty.taskRelateDetailId, taskRelateDetailName: duty.taskRelateDetailName,
+      taskRelateDutyId: duty.taskRelateDutyId, taskRelateDutyName: duty.taskRelateDutyName, manlDutyId: duty.manlDutyId, manlIds,
+    });
+  },
+
+  /** AS-IS tdm.Tdm43_Manl.copyDutyList: 고른 원본 주요관리의무의 점검항목을 이 작업·직책·부서에 복사 */
+  copyManlDuties: async (p: { manlJobId: number; roleId: number; orgId: number; sources: TdmManlCopySource[] }): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>('v1/tdm/manls/copy-duties', {
+      manlJobId: p.manlJobId, roleId: p.roleId, orgId: p.orgId,
+      sources: p.sources.map(s => ({ manlOrgId: s.manlOrgId, roleId: s.roleId, orgId: s.orgId, taskId: s.taskId, taskRelateDetailId: s.taskRelateDetailId, taskRelateDutyId: s.taskRelateDutyId })),
+    });
+  },
+
+  /** AS-IS tdm.Tdm43_Manl.delete (선택한 여러 건 + 연결 법규·내규·양식·첨부) */
+  deleteManlItems: async (manlOrgId: number, manlIds: number[]): Promise<void> => {
+    await apiClient.delete<ApiResponse<null>>('v1/tdm/manls', { params: { manlOrgId, manlIds: manlIds.join(',') } });
   },
 
   // ── N01 책무점검 현황(Tdm50_Tab_TotalDashboard) — 모두 조회. 점검년월 checkYm은 'yyyy.MM', 기준일 stdDate는 그 달 1일 'yyyy-MM-dd' ──

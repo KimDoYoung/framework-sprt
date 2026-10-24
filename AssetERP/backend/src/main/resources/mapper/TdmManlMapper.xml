@@ -326,4 +326,366 @@
                 , sys10_note COLLATE "ko-KR-x-icu"
                 , sys10_reg_date
     </select>
+
+    <!--
+      AS-IS(IDMS-IC) tdm43_manl.selectByManlDutyId L93 (N17 매뉴얼 작성 아래 그리드) — 그대로, 열 별칭만 record 필드 이름으로.
+      모델의 계산 getter(taskDetailAddSeq·taskDutyAddSeq·checkItemAddCode·checkHowLimit)와 unuseYn은 selectByManlOrgId와 같은 식으로 SQL에서
+    -->
+    <select id="selectByManlDutyId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlItemRes">
+        SELECT  tdm43_manl_id                                                  AS manl_id
+             ,  tdm43_manl_org_id                                              AS manl_org_id
+             ,  tdm43_company_id                                               AS company_id
+             ,  tdm43_org_id                                                   AS org_id
+             ,  tdm43_exct_id                                                  AS exct_id
+             ,  tdm43_role_id                                                  AS role_id
+             ,  tdm43_role_nm                                                  AS role_name
+             ,  tdm43_task_id                                                  AS task_id
+             ,  tdm43_task_nm                                                  AS task_name
+             ,  tdm43_task_relate_detail_id                                    AS task_relate_detail_id
+             ,  tdm43_task_relate_detail_nm                                    AS task_relate_detail_name
+             ,  tdm43_task_relate_duty_id                                      AS task_relate_duty_id
+             ,  tdm43_task_relate_duty_nm                                      AS task_relate_duty_name
+             ,  tdm43_manl_duty_id                                             AS manl_duty_id
+             ,  tdm43_manl_cd                                                  AS manl_code
+             ,  CASE WHEN tdm43_task_relate_detail_nm IS NULL THEN NULL
+                     ELSE tdm12_seq || '. ' || tdm43_task_relate_detail_nm END AS task_detail_add_seq
+             ,  CASE WHEN tdm43_task_relate_duty_nm IS NULL THEN NULL
+                     ELSE tdm13_seq || '. ' || tdm43_task_relate_duty_nm END   AS task_duty_add_seq
+             ,  tdm43_check_item                                               AS check_item
+             ,  CASE WHEN tdm43_manl_cd IS NULL THEN NULL
+                     ELSE '(' || tdm43_manl_cd || ') ' || tdm43_check_item END AS check_item_add_code
+             ,  tdm43_check_cycle_cd                                           AS check_cycle_code
+             ,  tdm43_check_month                                              AS check_month
+             ,  tdm43_check_how                                                AS check_how
+             ,  CASE WHEN length(tdm43_check_how) > 300
+                     THEN SUBSTR(tdm43_check_how,1,300)||'...'
+                     ELSE tdm43_check_how END                                  AS check_how_limit
+             ,  f_cdnm('CycleCode', tdm43_check_cycle_cd, tdm43_company_id, f_sysdate())  AS check_cycle_name
+             ,  tdm43_check_evid_doc_nm                                        AS check_evid_doc_name
+             ,  tdm43_ref_basis                                                AS ref_basis
+             ,  TO_CHAR(tdm43_start_date, 'YYYY-MM-DD')                        AS start_date
+             ,  tdm43_ceo_duty_cd                                              AS ceo_duty_code
+             ,  tdm43_exct_duty_map                                            AS exct_duty_map
+             ,  f_get_exctDutyMap_nm(tdm43_exct_duty_map)                      AS exct_duty_name
+             ,  tdm43_import_level_cd                                          AS import_level_code
+             ,  CASE WHEN (tdm43_start_date IS NULL OR tdm43_start_date <![CDATA[ <= ]]> f_today())
+                     THEN false ELSE true END                                  AS unuse_yn
+             ,  f_get_tdmCheckCycle(tdm43_manl_id)                             AS check_cycle_info
+          FROM  tdm43_manl
+                LEFT JOIN tdm12_task_relate_detail ON tdm12_task_relate_detail_id = tdm43_task_relate_detail_id
+                LEFT JOIN tdm13_task_relate_duty   ON tdm13_task_relate_duty_id   = tdm43_task_relate_duty_id
+         WHERE  tdm43_manl_duty_id = #{manlDutyId}
+           AND  tdm43_org_id       = #{orgId}
+         ORDER BY tdm43_manl_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm43_manl.selectByRoleId L322 — 그대로. 직책명 열이 없어 roleName은 null(원본 그대로) -->
+    <select id="selectByRoleId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlCopySourceRes">
+        SELECT  row_number() over()                          AS manl_id
+             ,  t.tdm43_manl_org_id                          AS manl_org_id
+             ,  t.tdm43_org_id                               AS org_id
+             ,  t.tdm43_role_id                              AS role_id
+             ,  t.tdm43_task_nm                              AS task_name
+             ,  t.tdm43_task_relate_detail_id                AS task_relate_detail_id
+             ,  t.tdm43_task_relate_detail_nm                AS task_relate_detail_name
+             ,  t.tdm43_task_relate_duty_id                  AS task_relate_duty_id
+             ,  t.tdm43_task_relate_duty_nm                  AS task_relate_duty_name
+             ,  t.tdm43_org_nm                               AS org_name
+             ,  TO_CHAR(t.tdm43_apply_start_date, 'YYYY-MM-DD') AS apply_start_date
+             ,  TO_CHAR(t.tdm43_apply_end_date, 'YYYY-MM-DD')   AS apply_end_date
+             ,  t.tdm43_job_nm                               AS job_name
+          FROM  (
+                    SELECT  DISTINCT
+                            tdm43_manl_org_id
+                         ,  tdm43_org_id
+                         ,  tdm43_role_id
+                         ,  tdm43_task_nm
+                         ,  tdm43_task_relate_detail_id
+                         ,  tdm43_task_relate_detail_nm
+                         ,  tdm43_task_relate_duty_id
+                         ,  tdm43_task_relate_duty_nm
+                         ,  org00_kor_nm                        AS tdm43_org_nm
+                         ,  tdm42_start_date                    AS tdm43_apply_start_date
+                         ,  tdm42_end_date                      AS tdm43_apply_end_date
+                         ,  tdm40_job_nm                        AS tdm43_job_nm
+                      FROM  tdm42_manl_org
+                            INNER JOIN tdm43_manl     ON tdm43_manl_org_id = tdm42_manl_org_id
+                            INNER JOIN tdm40_manl_job ON tdm40_manl_job_id = tdm42_manl_job_id
+                            INNER JOIN getOrg(#{companyId}, #{stdDate}::date) ON org00_org_id = tdm43_org_id
+                     WHERE  tdm42_company_id = #{companyId}
+                       AND  tdm42_lock_yn = 'true'
+                    <if test="roleId != null">
+                       AND  tdm42_role_id = #{roleId}
+                    </if>
+                    <if test="orgId != null">
+                       AND  tdm42_org_id = #{orgId}
+                    </if>
+                    <if test="taskId != null">
+                       AND  tdm43_task_id = #{taskId}
+                    </if>
+                    <if test="!allYn">
+                       AND  #{stdDate}::date BETWEEN tdm42_start_date AND COALESCE(tdm42_end_date,'9999-12-31'::date)
+                    </if>
+                 ) t
+         WHERE  CONCAT(tdm43_org_nm, tdm43_task_nm, tdm43_task_relate_detail_nm, tdm43_task_relate_duty_nm) ILIKE #{searchText}
+         ORDER BY tdm43_task_nm COLLATE "ko_KR.utf8"
+                , tdm43_task_relate_detail_nm COLLATE "ko_KR.utf8"
+                , tdm43_task_relate_duty_nm COLLATE "ko_KR.utf8"
+                , tdm43_org_nm COLLATE "ko_KR.utf8"
+                , tdm43_apply_start_date
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm43_manl.selectByManlJobId L420 — 그대로 -->
+    <select id="selectByManlJobId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlCopySourceRes">
+        SELECT  row_number() over()                          AS manl_id
+             ,  t.tdm43_manl_org_id                          AS manl_org_id
+             ,  t.tdm43_org_id                               AS org_id
+             ,  t.tdm43_role_id                              AS role_id
+             ,  t.tdm43_role_nm                              AS role_name
+             ,  t.tdm43_task_id                              AS task_id
+             ,  t.tdm43_task_nm                              AS task_name
+             ,  t.tdm43_task_relate_detail_id                AS task_relate_detail_id
+             ,  t.tdm43_task_relate_detail_nm                AS task_relate_detail_name
+             ,  t.tdm43_task_relate_duty_id                  AS task_relate_duty_id
+             ,  t.tdm43_task_relate_duty_nm                  AS task_relate_duty_name
+             ,  t.tdm43_org_nm                               AS org_name
+             ,  TO_CHAR(t.tdm43_apply_start_date, 'YYYY-MM-DD') AS apply_start_date
+             ,  TO_CHAR(t.tdm43_apply_end_date, 'YYYY-MM-DD')   AS apply_end_date
+             ,  t.tdm43_job_nm                               AS job_name
+          FROM  (
+                    SELECT  DISTINCT
+                            tdm43_manl_org_id
+                         ,  tdm43_org_id
+                         ,  tdm43_role_id
+                         ,  tdm20_role_nm                               AS tdm43_role_nm
+                         ,  tdm43_task_id
+                         ,  tdm43_task_nm
+                         ,  tdm43_task_relate_detail_id
+                         ,  tdm43_task_relate_detail_nm
+                         ,  tdm43_task_relate_duty_id
+                         ,  tdm43_task_relate_duty_nm
+                         ,  org00_kor_nm                                AS tdm43_org_nm
+                         ,  tdm42_start_date                            AS tdm43_apply_start_date
+                         ,  tdm42_end_date                              AS tdm43_apply_end_date
+                         ,  tdm40_job_nm                                AS tdm43_job_nm
+                         ,  tdm43_company_id
+                      FROM  tdm42_manl_org
+                            INNER JOIN tdm43_manl                                     ON tdm43_manl_org_id = tdm42_manl_org_id
+                            INNER JOIN tdm40_manl_job                                 ON tdm40_manl_job_id = tdm42_manl_job_id
+                            INNER JOIN LATERAL getOrg(#{companyId}, tdm42_start_date) ON org00_org_id      = tdm42_org_id
+                            INNER JOIN tdm20_role                                     ON tdm20_role_id     = tdm43_role_id
+                     WHERE  tdm42_company_id    = #{companyId}
+                       AND  tdm42_lock_yn       = 'true'
+                    <if test="roleId != null">
+                       AND  tdm42_role_id       = #{roleId}
+                    </if>
+                    <if test="taskId != null">
+                       AND  tdm43_task_id       = #{taskId}
+                    </if>
+                    <if test="orgId != null">
+                       AND  tdm43_org_id        = #{orgId}
+                    </if>
+                    <if test="!allYn">
+                       AND  #{stdDate}::date BETWEEN tdm42_start_date AND COALESCE(tdm42_end_date,'9999-12-31'::date)
+                    </if>
+                       AND EXISTS ( /*이번 작업에 점검항목을 작성해야할 우리 부서의 관리의무 리스트 */
+                                    SELECT 1
+                                      FROM tdm41_manl_duty
+                                           INNER JOIN tdm44_manl_duty_org ON tdm44_manl_duty_id = tdm41_manl_duty_id
+                                     WHERE tdm41_manl_job_id         = #{manlJobId}
+                                       AND tdm41_role_id             = #{stdRoleId}
+                                       AND tdm44_org_id              = #{stdOrgId}
+                                       AND tdm41_task_relate_duty_id = tdm43_task_relate_duty_id
+                                  )
+                 ) t
+         WHERE  CONCAT(tdm43_task_nm, tdm43_task_relate_detail_nm, tdm43_task_relate_duty_nm, tdm43_org_nm) ILIKE #{searchText}
+         ORDER BY tdm43_task_nm COLLATE "ko_KR.utf8"
+                , tdm43_task_relate_detail_nm COLLATE "ko_KR.utf8"
+                , tdm43_task_relate_duty_nm COLLATE "ko_KR.utf8"
+                , tdm43_org_nm COLLATE "ko_KR.utf8"
+                , tdm43_apply_start_date
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm43_manl.selectByTaskRelateDutyId L370 — 조회창이 쓰는 코드·점검항목만. 값이 없는 LEFT JOIN 둘(tdm12·13)은 행 수에 영향이 없어 뺐다 -->
+    <select id="selectByTaskRelateDutyId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyItemRes">
+        SELECT  tdm43_manl_id    AS manl_id
+             ,  tdm43_manl_cd    AS manl_code
+             ,  tdm43_check_item AS check_item
+          FROM  tdm43_manl
+         WHERE  tdm43_manl_org_id          = #{manlOrgId}
+           AND  tdm43_task_relate_duty_id  = #{taskRelateDutyId}
+         ORDER BY tdm43_manl_cd
+    </select>
+
+    <!--
+      AS-IS(IDMS-IC) tdm43_manl.selectByDutyId — 그대로. 추가: 원본 점검항목도 이 회사 것이어야 한다(AND tdm43_company_id = #{companyId})
+    -->
+    <select id="selectByDutyId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyRow">
+        SELECT  tdm43_manl_id                 AS manl_id,
+                tdm42_manl_org_id             AS manl_org_id,
+                tdm43_company_id              AS company_id,
+                tdm43_org_id                  AS org_id,
+                tdm30_person_id               AS exct_id,
+                tdm42_role_id                 AS role_id,
+                tdm20_role_nm                 AS role_name,
+                tdm43_task_id                 AS task_id,
+                tdm35_task_nm                 AS task_name,
+                tdm43_task_relate_detail_id   AS task_relate_detail_id,
+                tdm35_task_relate_detail_nm   AS task_relate_detail_name,
+                tdm43_task_relate_duty_id     AS task_relate_duty_id,
+                tdm35_task_relate_duty_nm     AS task_relate_duty_name,
+                tdm43_check_item              AS check_item,
+                tdm43_check_cycle_cd          AS check_cycle_code,
+                tdm43_check_month             AS check_month,
+                tdm43_check_how               AS check_how,
+                tdm43_ref_basis               AS ref_basis,
+                TO_CHAR(tdm43_start_date, 'YYYY-MM-DD') AS start_date,
+                tdm41_manl_duty_id            AS manl_duty_id,
+                tdm43_manl_cd                 AS manl_code,
+                tdm43_check_evid_doc_nm       AS check_evid_doc_name,
+                tdm43_ceo_duty_cd             AS ceo_duty_code,
+                tdm43_import_level_cd         AS import_level_code,
+                tdm43_exct_duty_map           AS exct_duty_map
+          FROM  tdm43_manl
+                INNER JOIN ( SELECT *
+                               FROM tdm40_manl_job
+                                    INNER JOIN LATERAL getTdm30RoleAllc(tdm40_company_id, tdm40_manl_apply_start_date, true) ON TRUE
+                                    INNER JOIN tdm35_role_allc_task ON tdm35_role_allc_detail_id = tdm30_role_allc_detail_id
+                                    INNER JOIN tdm41_manl_duty      ON ( tdm41_manl_job_id           = tdm40_manl_job_id             AND
+                                                                         tdm41_role_id               = #{roleId}                     AND
+                                                                         tdm41_task_id               = tdm35_task_id                 AND
+                                                                         tdm41_task_relate_detail_id = tdm35_task_relate_detail_id   AND
+                                                                         tdm41_task_relate_duty_id   = tdm35_task_relate_duty_id     )
+                                    CROSS JOIN ( SELECT *
+                                                   FROM tdm42_manl_org
+                                                  WHERE tdm42_company_id    = #{companyId}
+                                                    AND tdm42_org_id        = #{orgId}
+                                                    AND tdm42_role_id       = #{roleId}
+                                                    AND tdm42_manl_job_id   = #{manlJobId} ) tdm42
+                                    CROSS JOIN ( SELECT *
+                                                   FROM tdm20_role
+                                                  WHERE tdm20_role_id = #{roleId} ) tdm20
+                              WHERE tdm40_manl_job_id = #{manlJobId}
+                                AND tdm30_role_id     = #{roleId}
+                            ) tdm40 ON ( tdm35_task_id                = tdm43_task_id                 AND
+                                         tdm35_task_relate_detail_id  = tdm43_task_relate_detail_id   AND
+                                         tdm35_task_relate_duty_id    = tdm43_task_relate_duty_id     )
+         WHERE  tdm43_manl_org_id            = #{originManlOrgId}
+           AND  tdm43_role_id                = #{originRoleId}
+           AND  tdm43_org_id                 = #{originOrgId}
+           AND  tdm43_task_id                = #{originTaskId}
+           AND  tdm43_task_relate_detail_id  = #{originDetailId}
+           AND  tdm43_task_relate_duty_id    = #{originDutyId}
+           AND  tdm43_company_id             = #{companyId}
+         ORDER BY tdm43_manl_cd
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm43_manl.checkByManlCode — 목록 대신 건수 -->
+    <select id="countByManlCode" resultType="int">
+        SELECT COUNT(*)
+          FROM tdm43_manl
+         WHERE tdm43_manl_org_id = #{manlOrgId}
+           AND tdm43_manl_cd     = #{manlCode}
+    </select>
+
+    <select id="selectSource" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlSourceRes">
+        SELECT tdm43_company_id AS company_id,
+               tdm43_org_id     AS org_id,
+               tdm43_manl_cd    AS manl_code
+          FROM tdm43_manl
+         WHERE tdm43_manl_id = #{manlId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm43_manl.insertByModel — 위치 기반 INSERT 대신 열 이름을 적었다. current_setting → #{updName} -->
+    <insert id="insertCopiedManl">
+        INSERT INTO tdm43_manl (tdm43_manl_id, tdm43_manl_org_id, tdm43_company_id, tdm43_org_id, tdm43_exct_id, tdm43_role_id, tdm43_role_nm,
+                                tdm43_task_id, tdm43_task_nm, tdm43_task_relate_detail_id, tdm43_task_relate_detail_nm,
+                                tdm43_task_relate_duty_id, tdm43_task_relate_duty_nm, tdm43_check_item, tdm43_check_cycle_cd,
+                                tdm43_check_month, tdm43_check_how, tdm43_ref_basis, tdm43_start_date, tdm43_manl_duty_id,
+                                tdm43_first_reg_emp_id, tdm43_manl_cd, tdm43_upd_nm, tdm43_upd_date, tdm43_check_evid_doc_nm,
+                                tdm43_ceo_duty_cd, tdm43_import_level_cd, tdm43_exct_duty_map)
+        VALUES (#{newManlId}, #{row.manlOrgId}, #{row.companyId}, #{orgId}, #{row.exctId}, #{row.roleId}, #{row.roleName},
+                #{row.taskId}, #{row.taskName}, #{row.taskRelateDetailId}, #{row.taskRelateDetailName},
+                #{row.taskRelateDutyId}, #{row.taskRelateDutyName}, #{row.checkItem}, #{row.checkCycleCode},
+                #{row.checkMonth}, #{row.checkHow}, #{row.refBasis}, CAST(NULLIF(#{row.startDate}, '') AS date), #{row.manlDutyId},
+                #{firstRegEmpId}, #{manlCode}, #{updName}, f_sysdate(), #{row.checkEvidDocName},
+                #{row.ceoDutyCode}, #{row.importLevelCode}, #{row.exctDutyMap})
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) tdm43_manl.insertByManlId — 그대로(부서가 다르면 점검항목코드를 새로 만든다). current_setting → #{updName} -->
+    <insert id="insertManlByManlId">
+        INSERT
+          INTO  tdm43_manl
+        SELECT  #{newManlId}
+             ,  #{req.manlOrgId}
+             ,  tdm43_company_id
+             ,  #{req.orgId}
+             ,  #{req.exctId}
+             ,  #{req.roleId}
+             ,  #{req.roleName}
+             ,  #{req.taskId}
+             ,  #{req.taskName}
+             ,  #{req.taskRelateDetailId}
+             ,  #{req.taskRelateDetailName}
+             ,  #{req.taskRelateDutyId}
+             ,  #{req.taskRelateDutyName}
+             ,  tdm43_check_item
+             ,  tdm43_check_cycle_cd
+             ,  tdm43_check_month
+             ,  null
+             ,  null
+             ,  tdm43_check_how
+             ,  tdm43_ref_basis
+             ,  tdm43_start_date
+             ,  #{req.manlDutyId}
+             ,  #{firstRegEmpId}
+             ,  CASE WHEN #{req.orgId} = tdm43_org_id THEN tdm43_manl_cd
+                     ELSE (
+                            SELECT TO_CHAR(NOW(),'YY')||
+                                   LPAD((COALESCE( (SELECT SUBSTR(MAX(b.tdm43_manl_cd),3)::numeric
+                                                      FROM tdm43_manl b
+                                                     WHERE b.tdm43_company_id = a.tdm43_company_id
+                                                       AND SUBSTR(b.tdm43_manl_cd,1,2) = TO_CHAR(NOW(),'YY')), 0) + 1)::text, 5, '0')
+                          ) END
+             ,  #{updName}
+             ,  f_sysdate()
+             ,  tdm43_check_evid_doc_nm
+             ,  tdm43_ceo_duty_cd
+             ,  null
+             ,  tdm43_import_level_cd
+             ,  tdm43_exct_duty_map
+          FROM  tdm43_manl a
+         WHERE  tdm43_manl_id = #{manlId}
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) tdm45_manl_relate_ics / tdm46_manl_relate_icr / tdm47_manl_relate_dcr .insertByManlId -->
+    <insert id="copyRelateIcs">
+        INSERT INTO tdm45_manl_relate_ics
+        SELECT f_create_seq(), #{newManlId}, tdm45_ics_class_tree_id
+          FROM tdm45_manl_relate_ics
+         WHERE tdm45_manl_id = #{manlId}
+    </insert>
+
+    <insert id="copyRelateIcr">
+        INSERT INTO tdm46_manl_relate_icr
+        SELECT f_create_seq(), #{newManlId}, tdm46_icr_class_tree_id
+          FROM tdm46_manl_relate_icr
+         WHERE tdm46_manl_id = #{manlId}
+    </insert>
+
+    <insert id="copyRelateDcr">
+        INSERT INTO tdm47_manl_relate_dcr
+        SELECT f_create_seq(), #{newManlId}, tdm47_dcr_class_tree_id
+          FROM tdm47_manl_relate_dcr
+         WHERE tdm47_manl_id = #{manlId}
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) sys11_relate_file.insertByParentId — tableName은 원본이 'tdm43_manl' 고정 -->
+    <insert id="copyRelateFile">
+        INSERT INTO sys11_relate_file
+        SELECT f_create_seq(), sys11_file_id, #{newManlId}, 'tdm43_manl'
+          FROM sys11_relate_file
+         WHERE sys11_parent_id = #{manlId}
+    </insert>
+
 </mapper>

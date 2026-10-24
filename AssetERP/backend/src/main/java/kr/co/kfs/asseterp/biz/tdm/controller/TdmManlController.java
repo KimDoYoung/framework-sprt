@@ -1,6 +1,10 @@
 package kr.co.kfs.asseterp.biz.tdm.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyDutiesReq;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyItemRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyReq;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopySourceRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlFormFileRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlItemRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlRelatesRes;
@@ -12,6 +16,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -77,6 +82,60 @@ public class TdmManlController {
     @DeleteMapping("/{manlId}")
     public ApiResponse<Void> delete(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long manlId, @RequestParam Long manlOrgId) {
         service.delete(principal, manlOrgId, manlId);
+        return ApiResponse.ok(null);
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.selectByManlDutyId — 매뉴얼(점검항목) 작성(N17) 아래 그리드 */
+    @GetMapping("/by-duty")
+    public ApiResponse<List<ManlItemRes>> searchByDuty(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long manlDutyId, @RequestParam Long orgId) {
+        return ApiResponse.ok(service.searchByDuty(principal, manlDutyId, orgId));
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.selectByRoleId — 점검항목 불러오기 조회창(TabPage) 위 그리드 */
+    @GetMapping("/sources/by-role")
+    public ApiResponse<List<ManlCopySourceRes>> sourcesByRole(@AuthenticationPrincipal UserPrincipal principal,
+                                                              @RequestParam(required = false) Long roleId, @RequestParam(required = false) Long taskId,
+                                                              @RequestParam(required = false) Long orgId, @RequestParam String stdDate,
+                                                              @RequestParam(defaultValue = "false") boolean allYn,
+                                                              @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.sourcesByRole(principal, roleId, taskId, orgId, stdDate, allYn, searchText));
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.selectByManlJobId — 주요관리의무 불러오기 조회창(본 화면) 위 그리드 */
+    @GetMapping("/sources/by-job")
+    public ApiResponse<List<ManlCopySourceRes>> sourcesByJob(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long manlJobId,
+                                                             @RequestParam Long stdRoleId, @RequestParam Long stdOrgId,
+                                                             @RequestParam(required = false) Long roleId, @RequestParam(required = false) Long taskId,
+                                                             @RequestParam(required = false) Long orgId, @RequestParam String stdDate,
+                                                             @RequestParam(defaultValue = "false") boolean allYn,
+                                                             @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.sourcesByJob(principal, manlJobId, stdRoleId, stdOrgId, roleId, taskId, orgId, stdDate, allYn, searchText));
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.selectByTaskRelateDutyId — 조회창 아래 그리드 */
+    @GetMapping("/sources/items")
+    public ApiResponse<List<ManlCopyItemRes>> sourceItems(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long manlOrgId, @RequestParam Long taskRelateDutyId) {
+        return ApiResponse.ok(service.sourceItems(principal, manlOrgId, taskRelateDutyId));
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.copyManlList */
+    @PostMapping("/copy")
+    public ApiResponse<Void> copyManls(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ManlCopyReq req) {
+        service.copyManls(principal, req);
+        return ApiResponse.ok(null);
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.copyDutyList */
+    @PostMapping("/copy-duties")
+    public ApiResponse<Void> copyDuties(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ManlCopyDutiesReq req) {
+        service.copyDuties(principal, req);
+        return ApiResponse.ok(null);
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.delete (선택한 점검항목 여러 건) */
+    @DeleteMapping
+    public ApiResponse<Void> deleteAll(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long manlOrgId, @RequestParam List<Long> manlIds) {
+        service.deleteAll(principal, manlOrgId, manlIds);
         return ApiResponse.ok(null);
     }
 }

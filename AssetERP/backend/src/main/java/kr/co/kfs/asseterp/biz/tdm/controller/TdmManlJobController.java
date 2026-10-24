@@ -27,13 +27,14 @@ public class TdmManlJobController {
 
     private final TdmManlJobService service;
 
-    /** AS-IS tdm.Tdm40_ManlJob.selectByText (writingYn = 작성중만 조회, createDutyYn = 관리의무가 생성된 작업만) */
+    /** AS-IS tdm.Tdm40_ManlJob.selectByText (writingYn = 작성중만 조회, checkYn = 내 부서가 확정된 작업만, createDutyYn = 관리의무가 생성된 작업만) */
     @GetMapping
     public ApiResponse<List<ManlJobRes>> search(@AuthenticationPrincipal UserPrincipal principal,
                                                 @RequestParam(required = false) String searchText,
                                                 @RequestParam(defaultValue = "false") boolean writingYn,
+                                                @RequestParam(defaultValue = "false") boolean checkYn,
                                                 @RequestParam(defaultValue = "false") boolean createDutyYn) {
-        return ApiResponse.ok(service.search(principal, searchText, writingYn, createDutyYn));
+        return ApiResponse.ok(service.search(principal, searchText, writingYn, checkYn, createDutyYn));
     }
 
     /** AS-IS tdm.Tdm40_ManlJob.update — manlJobId ≤ 0이면 등록 */

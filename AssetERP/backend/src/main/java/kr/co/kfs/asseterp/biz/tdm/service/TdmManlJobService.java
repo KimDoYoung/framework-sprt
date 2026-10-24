@@ -2,9 +2,11 @@ package kr.co.kfs.asseterp.biz.tdm.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.sys.service.SysMenuSearchService;
+import kr.co.kfs.asseterp.biz.tdm.dto.DashboardMyOrgRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlJobParam;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlJobRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlJobSaveReq;
+import kr.co.kfs.asseterp.biz.tdm.mapper.TdmDashboardMapper;
 import kr.co.kfs.asseterp.biz.tdm.mapper.TdmManlJobMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
@@ -24,14 +26,21 @@ import java.util.List;
 public class TdmManlJobService {
 
     private final TdmManlJobMapper mapper;
+    private final TdmDashboardMapper dashboardMapper;
 
     /**
-     * AS-IS tdm.Tdm40_ManlJob.selectByText — 로그인 회사만. searchText는 '%글자%', checkYn은 아직 쓰는 화면이 없어 false.
+     * AS-IS tdm.Tdm40_ManlJob.selectByText — 로그인 회사만. searchText는 '%글자%'. checkYn(N17)이면 로그인 사용자 부서가 확정(책무매뉴얼 부서)된 작업만 —
+     * 부서는 AS-IS LoginUser.getOrgCodeId()와 같은 값(dashboard my-org).
      * createDutyYn: 서버 AS-IS는 안 보내면 true(관리의무가 생성된 작업만) — 작업대상 선정(N15)은 false를, 부서지정(N16) 등은 true를 보낸다
      */
-    public List<ManlJobRes> search(UserPrincipal user, String searchText, boolean writingYn, boolean createDutyYn) {
+    public List<ManlJobRes> search(UserPrincipal user, String searchText, boolean writingYn, boolean checkYn, boolean createDutyYn) {
         String text = "%" + (searchText == null ? "" : searchText) + "%";
-        return mapper.selectByText(new ManlJobParam(user.getCompanyId(), null, text, writingYn, false, createDutyYn));
+        Long orgId = null;
+        if (checkYn && user.getUserId() != null && user.getUserId() > 0) {
+            DashboardMyOrgRes myOrg = dashboardMapper.selectMyOrg(user.getCompanyId(), user.getUserId());
+            orgId = myOrg == null ? null : myOrg.orgCodeId();
+        }
+        return mapper.selectByText(new ManlJobParam(user.getCompanyId(), orgId, text, writingYn, checkYn, createDutyYn));
     }
 
     /** AS-IS Tdm40_ManlJob.update(UpdateDataModel): manlJobId가 없거나 ≤ 0이면 INSERT, 아니면 UPDATE */

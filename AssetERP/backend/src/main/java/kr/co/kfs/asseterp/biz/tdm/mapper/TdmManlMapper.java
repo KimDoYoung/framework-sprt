@@ -1,9 +1,14 @@
 package kr.co.kfs.asseterp.biz.tdm.mapper;
 
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyItemRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyRow;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopySourceRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlFormFileRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlItemRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlRelatesRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlSaveReq;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlSourceRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -88,4 +93,52 @@ public interface TdmManlMapper {
     /** AS-IS sys10_file.selectUnConnTdmFormFile — 아직 이 점검항목에 연결 안 된 책무점검 양식 파일 (parent = 회사) */
     List<ManlFormFileRes> selectUnConnFormFiles(@Param("companyId") Long companyId, @Param("formType") String formType,
                                                 @Param("searchText") String searchText, @Param("relateId") Long relateId);
+
+    /** AS-IS tdm43_manl.selectByManlDutyId (N17 아래 그리드) */
+    List<ManlItemRes> selectByManlDutyId(@Param("manlDutyId") Long manlDutyId, @Param("orgId") Long orgId);
+
+    /** AS-IS tdm43_manl.selectByRoleId (TabPage [불러오기] 조회창 위 그리드) */
+    List<ManlCopySourceRes> selectByRoleId(@Param("companyId") Long companyId, @Param("roleId") Long roleId, @Param("taskId") Long taskId,
+                                           @Param("orgId") Long orgId, @Param("stdDate") String stdDate, @Param("allYn") boolean allYn,
+                                           @Param("searchText") String searchText);
+
+    /** AS-IS tdm43_manl.selectByManlJobId (본 화면 [불러오기] 조회창 위 그리드) */
+    List<ManlCopySourceRes> selectByManlJobId(@Param("companyId") Long companyId, @Param("manlJobId") Long manlJobId,
+                                              @Param("stdRoleId") Long stdRoleId, @Param("stdOrgId") Long stdOrgId,
+                                              @Param("roleId") Long roleId, @Param("taskId") Long taskId, @Param("orgId") Long orgId,
+                                              @Param("stdDate") String stdDate, @Param("allYn") boolean allYn,
+                                              @Param("searchText") String searchText);
+
+    /** AS-IS tdm43_manl.selectByTaskRelateDutyId (조회창 아래 그리드) */
+    List<ManlCopyItemRes> selectByTaskRelateDutyId(@Param("manlOrgId") Long manlOrgId, @Param("taskRelateDutyId") Long taskRelateDutyId);
+
+    /** AS-IS tdm43_manl.selectByDutyId — 복사 원본 점검항목을 새 작업·직책·부서 값과 함께 읽는다 */
+    List<ManlCopyRow> selectByDutyId(@Param("companyId") Long companyId, @Param("manlJobId") Long manlJobId, @Param("roleId") Long roleId,
+                                     @Param("orgId") Long orgId, @Param("originManlOrgId") Long originManlOrgId,
+                                     @Param("originRoleId") Long originRoleId, @Param("originOrgId") Long originOrgId,
+                                     @Param("originTaskId") Long originTaskId, @Param("originDetailId") Long originDetailId,
+                                     @Param("originDutyId") Long originDutyId, @Param("firstRegEmpId") Long firstRegEmpId);
+
+    /** AS-IS tdm43_manl.checkByManlCode (건수) */
+    int countByManlCode(@Param("manlOrgId") Long manlOrgId, @Param("manlCode") String manlCode);
+
+    /** copyManlList의 원본 점검항목 — 부서·코드·회사 (없으면 null) */
+    ManlSourceRes selectSource(@Param("manlId") Long manlId);
+
+    /** AS-IS tdm43_manl.insertByModel (copyDutyList) */
+    int insertCopiedManl(@Param("row") ManlCopyRow row, @Param("newManlId") Long newManlId, @Param("manlCode") String manlCode,
+                         @Param("orgId") Long orgId, @Param("firstRegEmpId") Long firstRegEmpId, @Param("updName") String updName);
+
+    /** AS-IS tdm43_manl.insertByManlId (copyManlList) */
+    int insertManlByManlId(@Param("req") ManlCopyReq req, @Param("newManlId") Long newManlId, @Param("manlId") Long manlId,
+                           @Param("firstRegEmpId") Long firstRegEmpId, @Param("updName") String updName);
+
+    /** AS-IS tdm45·46·47 insertByManlId / sys11_relate_file.insertByParentId — 원본 점검항목의 연결을 새 점검항목에 복사 */
+    int copyRelateIcs(@Param("newManlId") Long newManlId, @Param("manlId") Long manlId);
+
+    int copyRelateIcr(@Param("newManlId") Long newManlId, @Param("manlId") Long manlId);
+
+    int copyRelateDcr(@Param("newManlId") Long newManlId, @Param("manlId") Long manlId);
+
+    int copyRelateFile(@Param("newManlId") Long newManlId, @Param("manlId") Long manlId);
 }

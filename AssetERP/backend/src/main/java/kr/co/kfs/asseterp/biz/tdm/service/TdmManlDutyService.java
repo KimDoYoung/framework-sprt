@@ -5,6 +5,8 @@ import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyChangeOrgReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyGroupRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyOrgAssignReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyParam;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyRegParam;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyRegRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyTaskOrgRes;
 import kr.co.kfs.asseterp.biz.tdm.mapper.TdmManlDutyMapper;
@@ -29,6 +31,7 @@ public class TdmManlDutyService {
 
     private final TdmManlDutyMapper mapper;
     private final TdmManlJobMapper jobMapper;
+    private final TdmManlOrgService manlOrgService;
 
     /** AS-IS tdm.Tdm41_ManlDuty.groupByManlJobId — 직책별 책무·관리의무 건수 */
     public List<ManlDutyGroupRes> groups(UserPrincipal user, Long manlJobId, Long roleId, Long taskId) {
@@ -41,6 +44,32 @@ public class TdmManlDutyService {
         requireJob(user, manlJobId);
         ManlDutyParam param = new ManlDutyParam(manlJobId, roleId, taskId, unRegYn, "%" + (searchText == null ? "" : searchText) + "%", limit, offset);
         return new PageRes<>(mapper.selectByTextPagingTotal(param), mapper.selectByTextPaging(param));
+    }
+
+    /**
+     * AS-IS tdm.Tdm41_ManlDuty.selectByOrgIdPaging (+Total) — 매뉴얼(점검항목) 작성(N17) 위 그리드.
+     * orgId는 화면에서 고른 부서(책무관리자만 바꾼다), searchText는 '%글자%'
+     */
+    public PageRes<ManlDutyRegRes> searchByOrg(UserPrincipal user, Long manlJobId, Long roleId, Long taskId, Long orgId, String searchText, long offset, long limit) {
+        requireJob(user, manlJobId);
+        ManlDutyRegParam param = new ManlDutyRegParam(manlJobId, roleId, taskId, orgId, "%" + (searchText == null ? "" : searchText) + "%", limit, offset);
+        return new PageRes<>(mapper.selectByOrgIdPagingTotal(param), mapper.selectByOrgIdPaging(param));
+    }
+
+    /**
+     * AS-IS tdm.Tdm41_ManlDuty.updateEndYn — 점검항목 작성완료(endYn true)·작성취소(false).
+     * 작성취소는 부서 책무매뉴얼이 잠겨 있으면 못 한다(AS-IS status -1 → 화면 "잠겨진 매뉴얼입니다")
+     */
+    @Transactional
+    public void updateEnd(UserPrincipal user, Long manlDutyId, Long manlOrgId, Long orgId, boolean endYn) {
+        Long companyId = manlOrgService.requireScope(user, manlOrgId);
+        if (!companyId.equals(mapper.selectDutyCompanyId(manlDutyId))) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        if (!endYn && mapper.countLockedByManlOrgId(manlOrgId) > 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "잠겨진 매뉴얼입니다");
+        }
+        mapper.updateDutyOrgEnd(manlDutyId, orgId, endYn, user.getUserId(), user.getName());
     }
 
     /** AS-IS tdm.Tdm41_ManlDuty.selectTaskAndOrg — 부서변경 창 */

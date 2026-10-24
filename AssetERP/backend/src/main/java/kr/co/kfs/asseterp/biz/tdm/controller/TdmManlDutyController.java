@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyChangeOrgReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyGroupRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyOrgAssignReq;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyRegRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyTaskOrgRes;
 import kr.co.kfs.asseterp.biz.tdm.service.TdmManlDutyService;
@@ -13,7 +14,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -44,6 +47,23 @@ public class TdmManlDutyController {
                                                     @RequestParam(required = false) String searchText,
                                                     @RequestParam(defaultValue = "0") long offset, @RequestParam(defaultValue = "100") long limit) {
         return ApiResponse.ok(service.search(principal, manlJobId, roleId, taskId, unRegYn, searchText, offset, limit));
+    }
+
+    /** AS-IS tdm.Tdm41_ManlDuty.selectByOrgIdPaging (+Total) — 매뉴얼(점검항목) 작성(N17) 위 그리드 */
+    @GetMapping("/by-org")
+    public ApiResponse<PageRes<ManlDutyRegRes>> searchByOrg(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long manlJobId,
+                                                            @RequestParam(required = false) Long roleId, @RequestParam(required = false) Long taskId,
+                                                            @RequestParam(required = false) Long orgId, @RequestParam(required = false) String searchText,
+                                                            @RequestParam(defaultValue = "0") long offset, @RequestParam(defaultValue = "50") long limit) {
+        return ApiResponse.ok(service.searchByOrg(principal, manlJobId, roleId, taskId, orgId, searchText, offset, limit));
+    }
+
+    /** AS-IS tdm.Tdm41_ManlDuty.updateEndYn — endYn true = 작성완료, false = 작성취소 */
+    @PutMapping("/{manlDutyId}/end")
+    public ApiResponse<Void> updateEnd(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long manlDutyId,
+                                       @RequestParam Long manlOrgId, @RequestParam Long orgId, @RequestParam boolean endYn) {
+        service.updateEnd(principal, manlDutyId, manlOrgId, orgId, endYn);
+        return ApiResponse.ok(null);
     }
 
     /** AS-IS tdm.Tdm41_ManlDuty.selectTaskAndOrg */

@@ -35,6 +35,8 @@ interface Props {
   mode: ManlEditMode;
   /** insert: 점검항목을 등록할 관리의무 행(AS-IS Tdm41_ManlDutyModel 값) / edit·view: 점검항목 행 — 있으면 열린다 */
   manl: TdmManlItem | null;
+  /** edit(model, endYn, cb)의 endYn(N17) — true면 제목은 "수정"인 채로 [저장]을 숨기고 연결을 읽기 전용으로 둔다(L149-155) */
+  endYn?: boolean;
   /** AS-IS callBack.execute() — 저장이 끝난 뒤(창은 안 닫힌다) */
   onSaved?: () => void;
   onClose: () => void;
@@ -48,7 +50,7 @@ const Row: React.FC<{ label: React.ReactNode; blue?: boolean; children: React.Re
   </div>
 );
 
-export const Tdm43_Edit_Manl: React.FC<Props> = ({ mode, manl, onSaved, onClose }) => {
+export const Tdm43_Edit_Manl: React.FC<Props> = ({ mode, manl, endYn = false, onSaved, onClose }) => {
   const relateRef = useRef<Tdm43_Page_RelateHandle>(null);
   const [model, setModel] = useState<TdmManlItem | null>(null);     // editDriver.edit(model)
   const [checkItem, setCheckItem] = useState('');
@@ -65,7 +67,7 @@ export const Tdm43_Edit_Manl: React.FC<Props> = ({ mode, manl, onSaved, onClose 
   const [exctLookup, setExctLookup] = useState<string | null>(null);
   const [howView, setHowView] = useState(false);
   const [saving, setSaving] = useState(false);
-  const readOnly = mode === 'view';
+  const readOnly = mode === 'view' || (mode === 'edit' && endYn);
 
   // [E0] 화면 열림 (생성자 L184-195) → settings(), show(): insert는 새 번호를 받아 모델을 만들고(DBUtil.setSeq), edit·view는 행 값을 폼에 채운다
   useEffect(() => {

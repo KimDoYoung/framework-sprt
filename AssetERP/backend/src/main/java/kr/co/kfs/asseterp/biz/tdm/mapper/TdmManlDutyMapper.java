@@ -2,6 +2,8 @@ package kr.co.kfs.asseterp.biz.tdm.mapper;
 
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyGroupRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyParam;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyRegParam;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyRegRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlDutyTaskOrgRes;
 import org.apache.ibatis.annotations.Mapper;
@@ -72,4 +74,16 @@ public interface TdmManlDutyMapper {
 
     /** 작성시작일(tdm40_start_date) — AS-IS tdm40_manl_job.selectSimpleById 중 쓰는 열 */
     String selectJobStartDate(@Param("manlJobId") Long manlJobId);
+
+    /** AS-IS tdm41_manl_duty.selectByOrgIdPagingTotal / selectByOrgIdPaging (N17 매뉴얼 작성 위 그리드) */
+    long selectByOrgIdPagingTotal(ManlDutyRegParam param);
+
+    List<ManlDutyRegRes> selectByOrgIdPaging(ManlDutyRegParam param);
+
+    /** 잠긴(tdm42_lock_yn) 부서 책무매뉴얼 건수 — AS-IS tdm42_manl_org.selectById 결과에서 잠금만 본다 */
+    int countLockedByManlOrgId(@Param("manlOrgId") Long manlOrgId);
+
+    /** AS-IS tdm44_manl_duty_org.updateEndYn — endYn이 true면 완료일·완료자도 채운다 */
+    int updateDutyOrgEnd(@Param("manlDutyId") Long manlDutyId, @Param("orgId") Long orgId, @Param("endYn") boolean endYn,
+                         @Param("empId") Long empId, @Param("updName") String updName);
 }

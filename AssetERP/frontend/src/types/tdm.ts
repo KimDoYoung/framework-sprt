@@ -242,6 +242,40 @@ export interface TdmDutyRecon {
 }
 
 /** 부서 책무매뉴얼 한 행 (AS-IS Tdm42_ManlOrgModel 중 Tdm42_Tab_ManlManagerAdmin 그리드·재생성·보기·점검항목 조회창에 쓰는 속성) */
+/** 부서별 매뉴얼 보고 그리드 한 행 (N18 Tdm42_Tab_ManlOrgAppr — AS-IS Tdm42_ManlOrgModel) */
+export interface TdmManlOrgAppr {
+  manlOrgId: number;
+  companyId: number;
+  orgId: number;
+  roleId: number;
+  exctId?: number | null;
+  roleName?: string | null;
+  exctName?: string | null;
+  taskCnt?: number | null;
+  taskRelateDetailCnt?: number | null;
+  taskRelateDutyCnt?: number | null;
+  manlCnt?: number | null;
+  manlDutyEndYn?: boolean | null;
+  manlDutyEndDate?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  lockYn?: boolean | null;
+  startDateYnStr?: string | null;
+  apprId?: number | null;
+  apprStatusCode?: string | null;
+  apprStatusName?: string | null;
+  jobName?: string | null;
+}
+
+/** 적용기간 중복 검사용 (AS-IS notManlOrgList 결과) */
+export interface TdmManlOrgPeriod {
+  manlOrgId: number;
+  orgId: number;
+  roleId: number;
+  startDate?: string | null;
+  endDate?: string | null;
+}
+
 export interface TdmManlOrg {
   manlOrgId: number;
   companyId: number;
@@ -300,6 +334,8 @@ export interface TdmManlItem {
   exctDutyName?: string | null;
   importLevelCode?: string | null;
   unuseYn?: boolean | null;
+  /** 점검주기 열 "주기 (점검월)" — 매뉴얼 작성(N17) 그리드만 채운다 */
+  checkCycleInfo?: string | null;
 }
 
 /** 점검항목에 연결된 법규·내규·양식·문서분류 (AS-IS Tdm43_Page_Relate 그리드 4개). id가 없는 행은 아직 저장 안 한 새 연결 */
@@ -816,4 +852,53 @@ export interface TdmHrRecord {
   note: string | null;
   updNm: string | null;
   updDateStr: string | null;
+}
+
+// ── N17 매뉴얼(점검항목) 작성(Tdm43_Tab_ManlItemReg) ──
+
+/** 위 그리드 한 행 (AS-IS Tdm41_ManlDutyModel 중 Tdm43_Tab_ManlItemReg가 쓰는 속성, GET /tdm/manl-duties/by-org) */
+export interface TdmManlDutyReg {
+  manlDutyId: number;
+  manlJobId: number;
+  manlOrgId: number;
+  orgId: number;
+  exctId?: number | null;
+  roleId: number;
+  roleName?: string | null;
+  taskId: number;
+  taskName?: string | null;
+  taskRelateDetailId: number;
+  taskRelateDetailName?: string | null;
+  taskRelateDutyId: number;
+  taskRelateDutyName?: string | null;
+  manlCnt?: number | null;
+  endYn: boolean;
+  endDate?: string | null;
+  endEmpName?: string | null;
+}
+
+/** 불러오기 조회창 위 그리드 한 행 — 복사 원본 주요관리의무 (GET /tdm/manls/sources/by-role·by-job, 직책명은 by-role에 없다) */
+export interface TdmManlCopySource {
+  manlId: number;
+  manlOrgId: number;
+  orgId: number;
+  roleId?: number | null;
+  roleName?: string | null;
+  taskId?: number | null;
+  taskName?: string | null;
+  taskRelateDetailId?: number | null;
+  taskRelateDetailName?: string | null;
+  taskRelateDutyId: number;
+  taskRelateDutyName?: string | null;
+  orgName?: string | null;
+  applyStartDate?: string | null;
+  applyEndDate?: string | null;
+  jobName?: string | null;
+}
+
+/** 불러오기 조회창 아래 그리드 한 행 — 원본 관리의무의 점검항목 (GET /tdm/manls/sources/items) */
+export interface TdmManlCopyItem {
+  manlId: number;
+  manlCode?: string | null;
+  checkItem?: string | null;
 }

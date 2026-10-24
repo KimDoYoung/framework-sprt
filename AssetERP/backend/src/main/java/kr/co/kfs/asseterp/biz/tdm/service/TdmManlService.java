@@ -1,10 +1,18 @@
 package kr.co.kfs.asseterp.biz.tdm.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyDutiesReq;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyItemRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyReq;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyRow;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopySourceRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlFormFileRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlItemRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlRelatesRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlSaveReq;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlSourceRes;
+import kr.co.kfs.asseterp.biz.tdm.mapper.TdmManlDutyMapper;
+import kr.co.kfs.asseterp.biz.tdm.mapper.TdmManlJobMapper;
 import kr.co.kfs.asseterp.biz.tdm.mapper.TdmManlMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
@@ -22,6 +30,8 @@ public class TdmManlService {
 
     private final TdmManlMapper mapper;
     private final TdmManlOrgService manlOrgService;
+    private final TdmManlDutyMapper dutyMapper;
+    private final TdmManlJobMapper jobMapper;
 
     /** AS-IS tdm.Tdm43_Manl.selectByManlOrgId — 부서 책무매뉴얼의 회사로 권한 범위를 검사한다 */
     public List<ManlItemRes> search(UserPrincipal user, Long manlOrgId, String useYn, String searchText) {
@@ -123,5 +133,129 @@ public class TdmManlService {
         mapper.deleteRelateDcrByManlId(manlId);
         mapper.deleteRelateFileByParentId(manlId);
         mapper.deleteById(manlId);
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.selectByManlDutyId (N17 아래 그리드) — 관리의무가 로그인 회사 것이어야 한다 */
+    public List<ManlItemRes> searchByDuty(UserPrincipal user, Long manlDutyId, Long orgId) {
+        requireDuty(user, manlDutyId);
+        return mapper.selectByManlDutyId(manlDutyId, orgId);
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.selectByRoleId (TabPage [불러오기] 조회창 위 그리드) — 로그인 회사. searchText는 '%글자%' */
+    public List<ManlCopySourceRes> sourcesByRole(UserPrincipal user, Long roleId, Long taskId, Long orgId, String stdDate, boolean allYn, String searchText) {
+        return mapper.selectByRoleId(user.getCompanyId(), roleId, taskId, orgId, stdDate, allYn, like(searchText));
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.selectByManlJobId (본 화면 [불러오기] 조회창 위 그리드) — 작업이 로그인 회사 것이어야 한다 */
+    public List<ManlCopySourceRes> sourcesByJob(UserPrincipal user, Long manlJobId, Long stdRoleId, Long stdOrgId, Long roleId, Long taskId, Long orgId,
+                                                String stdDate, boolean allYn, String searchText) {
+        Long jobCompanyId = jobMapper.selectCompanyId(manlJobId);
+        if (jobCompanyId == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        if (!jobCompanyId.equals(user.getCompanyId())) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        return mapper.selectByManlJobId(user.getCompanyId(), manlJobId, stdRoleId, stdOrgId, roleId, taskId, orgId, stdDate, allYn, like(searchText));
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.selectByTaskRelateDutyId (조회창 아래 그리드) — 부서 책무매뉴얼의 회사로 범위를 검사한다 */
+    public List<ManlCopyItemRes> sourceItems(UserPrincipal user, Long manlOrgId, Long taskRelateDutyId) {
+        manlOrgService.requireScope(user, manlOrgId);
+        return mapper.selectByTaskRelateDutyId(manlOrgId, taskRelateDutyId);
+    }
+
+    /**
+     * AS-IS tdm.Tdm43_Manl.copyManlList — 고른 원본 점검항목을 관리의무(manlDutyId)에 복사한다. 연결 법규·내규·문서분류·양식도 같이.
+     * 원본 부서가 같으면 같은 점검항목코드가 이미 있는지 먼저 본다(없을 때만 복사). 원본은 이 회사 것이어야 한다(원본에 없던 검사)
+     */
+    @Transactional
+    public void copyManls(UserPrincipal user, ManlCopyReq req) {
+        if (req.manlOrgId() == null || req.manlDutyId() == null || req.orgId() == null || req.manlIds() == null || req.manlIds().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        Long companyId = manlOrgService.requireScope(user, req.manlOrgId());
+        if (!companyId.equals(dutyMapper.selectDutyCompanyId(req.manlDutyId()))) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        for (Long manlId : req.manlIds()) {
+            ManlSourceRes src = mapper.selectSource(manlId);
+            if (src == null || !companyId.equals(src.companyId())) {
+                throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+            }
+            if (req.orgId().equals(src.orgId()) && mapper.countByManlCode(req.manlOrgId(), src.manlCode()) != 0) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "이미 등록되어 있는 점검항목입니다 (매뉴얼코드:" + src.manlCode() + ")");
+            }
+            Long newManlId = mapper.selectNextId();
+            mapper.insertManlByManlId(req, newManlId, manlId, user.getUserId(), user.getName());
+            copyRelates(newManlId, manlId);
+        }
+    }
+
+    /**
+     * AS-IS tdm.Tdm43_Manl.copyDutyList — 고른 원본 주요관리의무마다 그 점검항목을 이 작업·직책·부서의 같은 관리의무에 복사하고 그 관리의무를 작성완료로 한다.
+     * 원본 부서가 다르면 점검항목코드를 새로 만들고, 같으면 같은 코드가 이미 있는지 본다
+     */
+    @Transactional
+    public void copyDuties(UserPrincipal user, ManlCopyDutiesReq req) {
+        if (req.manlJobId() == null || req.roleId() == null || req.orgId() == null || req.sources() == null || req.sources().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        Long companyId = jobMapper.selectCompanyId(req.manlJobId());
+        if (companyId == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        if (!companyId.equals(user.getCompanyId())) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        for (ManlCopyDutiesReq.Source src : req.sources()) {
+            List<ManlCopyRow> rows = mapper.selectByDutyId(companyId, req.manlJobId(), req.roleId(), req.orgId(), src.manlOrgId(),
+                    src.roleId(), src.orgId(), src.taskId(), src.taskRelateDetailId(), src.taskRelateDutyId(), user.getUserId());
+            for (ManlCopyRow row : rows) {
+                String manlCode;
+                if (!req.orgId().equals(row.orgId())) {
+                    manlCode = mapper.selectNewManlCode(row.companyId());
+                } else {
+                    if (mapper.countByManlCode(row.manlOrgId(), row.manlCode()) != 0) {
+                        throw new BusinessException(ErrorCode.INVALID_INPUT, "이미 등록되어 있는 점검항목입니다 (매뉴얼코드:" + row.manlCode() + ")");
+                    }
+                    manlCode = row.manlCode();
+                }
+                Long newManlId = mapper.selectNextId();
+                mapper.insertCopiedManl(row, newManlId, manlCode, req.orgId(), user.getUserId(), user.getName());
+                copyRelates(newManlId, row.manlId());
+                dutyMapper.updateDutyOrgEnd(row.manlDutyId(), req.orgId(), true, user.getUserId(), user.getName());
+            }
+        }
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.delete 목록 버전 — 고른 점검항목을 한 트랜잭션에서 지운다 */
+    @Transactional
+    public void deleteAll(UserPrincipal user, Long manlOrgId, List<Long> manlIds) {
+        if (manlIds == null || manlIds.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        manlIds.forEach(id -> delete(user, manlOrgId, id));
+    }
+
+    private void copyRelates(Long newManlId, Long manlId) {
+        mapper.copyRelateIcs(newManlId, manlId);      // 연관법규
+        mapper.copyRelateIcr(newManlId, manlId);      // 연관내규
+        mapper.copyRelateDcr(newManlId, manlId);      // 연관문서분류
+        mapper.copyRelateFile(newManlId, manlId);     // 연관양식
+    }
+
+    private void requireDuty(UserPrincipal user, Long manlDutyId) {
+        Long companyId = dutyMapper.selectDutyCompanyId(manlDutyId);
+        if (companyId == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        if (!user.isSysAdmin() && !companyId.equals(user.getCompanyId())) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+    }
+
+    private static String like(String searchText) {
+        return "%" + (searchText == null ? "" : searchText) + "%";
     }
 }
