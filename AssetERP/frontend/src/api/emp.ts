@@ -198,8 +198,9 @@ export const empApi = {
   },
 
   /** AS-IS Emp07_Career.selectByPersonId */
-  getCareers: async (personId: number): Promise<Career[]> => {
-    const res = await apiClient.get<ApiResponse<Career[]>>(`v1/emp/persons/${personId}/careers`);
+  getCareers: async (personId: number, extrAddTitleYn = false): Promise<Career[]> => {
+    // extrAddTitleYn=true: 대외겸직만 (AS-IS selectByPersonId의 extrAddTitleYn 분기 — 책무 직무겸직 사외 탭)
+    const res = await apiClient.get<ApiResponse<Career[]>>(`v1/emp/persons/${personId}/careers`, { params: extrAddTitleYn ? { extrAddTitleYn } : undefined });
     return res.data.data ?? [];
   },
 

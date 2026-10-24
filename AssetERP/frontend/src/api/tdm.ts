@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { Manl, ManlRelateIcs, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmManlSaveReq, TdmRoleDesc, TdmRoleDigm } from '../types/tdm';
+import { TdmChangeDetail, TdmChangeHistory, TdmTask, TdmTaskDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDigm } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
 export const tdmApi = {
@@ -140,5 +140,214 @@ export const tdmApi = {
   /** AS-IS tdm.Tdm43_Manl.delete (선택한 한 건 + 연결 법규·내규·양식·첨부) */
   deleteManlItem: async (manlOrgId: number, manlId: number): Promise<void> => {
     await apiClient.delete<ApiResponse<null>>(`v1/tdm/manls/${manlId}`, { params: { manlOrgId } });
+  },
+
+  // ── N01 책무점검 현황(Tdm50_Tab_TotalDashboard) — 모두 조회. 점검년월 checkYm은 'yyyy.MM', 기준일 stdDate는 그 달 1일 'yyyy-MM-dd' ──
+
+  /** AS-IS tdm.Tdm50_ChckJob.selectRcntChckJob: 진행 중인 가장 최근 점검년월(없으면 null) */
+  getDashboardRecentCheckYm: async (): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>('v1/tdm/dashboard/recent-check-ym');
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS tdm.Tdm50_ChckJob.selectByCheckYm: 점검 작업이 정확히 하나일 때만 값(마감 여부·마감일) */
+  getDashboardCheckEnd: async (checkYm: string): Promise<TdmDashboardCheckEnd | null> => {
+    const res = await apiClient.get<ApiResponse<TdmDashboardCheckEnd | null>>('v1/tdm/dashboard/check-end', { params: { checkYm } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS tdm.Tdm51_ChckOrg.selectDashboardProgress (statusType 1:최종승인 / 2:점검완료, exctId·orgId는 있을 때만) */
+  getDashboardProgress: async (p: { checkYm: string; stdDate: string; statusType: string; exctId?: number | null; orgId?: number | null }): Promise<TdmDashboardProgress | null> => {
+    const res = await apiClient.get<ApiResponse<TdmDashboardProgress | null>>('v1/tdm/dashboard/progress', { params: p });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS tdm.Tdm51_ChckOrg.selectDashboardExct: 임원별(exctId 있으면 직책별) 진행현황 */
+  searchDashboardExctProgress: async (p: { checkYm: string; statusType: string; exctId?: number | null }): Promise<TdmDashboardChckOrg[]> => {
+    const res = await apiClient.get<ApiResponse<TdmDashboardChckOrg[]>>('v1/tdm/dashboard/exct-progress', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm51_ChckOrg.selectDashboardOrg: 부서별 진행현황 */
+  searchDashboardOrgProgress: async (p: { checkYm: string; statusType: string; exctId?: number | null }): Promise<TdmDashboardChckOrg[]> => {
+    const res = await apiClient.get<ApiResponse<TdmDashboardChckOrg[]>>('v1/tdm/dashboard/org-progress', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm52_ChckManl.selectDashboardUndone (orgId가 있으면 retrieveType 1:미점검 / 2:반려 / 3:당월발생 미흡) */
+  searchDashboardUndone: async (p: { checkYm: string; statusType?: string; exctId?: number | null; orgId?: number | null; retrieveType?: string }): Promise<TdmDashboardUndone[]> => {
+    const res = await apiClient.get<ApiResponse<TdmDashboardUndone[]>>('v1/tdm/dashboard/undone', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm54_ChckInsuff.selectDashboardInsuff (AS-IS 서버처럼 부서는 받지 않는다) */
+  searchDashboardInsuff: async (p: { checkYm: string; exctId?: number | null }): Promise<TdmDashboardInsuff[]> => {
+    const res = await apiClient.get<ApiResponse<TdmDashboardInsuff[]>>('v1/tdm/dashboard/insuff', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm08_ManagerInfo.checkIsManager: 책무담당자·책무관리자 여부 (stdDate = 오늘) */
+  isDashboardManager: async (stdDate: string): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/tdm/dashboard/is-manager', { params: { stdDate } });
+    return !!res.data.data;
+  },
+
+  /** AS-IS tdm.Tdm30_RoleAllc.selectByExctId(exctId = 로그인 사용자): 내가 임원인가 */
+  hasDashboardRoleAllc: async (stdDate: string): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/tdm/dashboard/role-allc-exists', { params: { stdDate } });
+    return !!res.data.data;
+  },
+
+  /** AS-IS LoginUser.getOrgCodeId()·getOrgInfoModel().getKorName(): 부서별 탭 초기값 (없으면 null) */
+  getDashboardMyOrg: async (): Promise<TdmDashboardMyOrg | null> => {
+    const res = await apiClient.get<ApiResponse<TdmDashboardMyOrg | null>>('v1/tdm/dashboard/my-org');
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS tdm.Tdm01_Hr.selectByEndDate: 임원선택 조회창 (서버가 %…%로 감싼다) */
+  searchHrLookup: async (searchText: string): Promise<TdmHrLookup[]> => {
+    const res = await apiClient.get<ApiResponse<TdmHrLookup[]>>('v1/tdm/hrs/lookup', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  // ── N04 임원 등록(Tdm01_Tab_Hr) ──
+
+  /** AS-IS tdm.Tdm01_Hr.selectByCompanyId (searchText는 서버가 %…%로 감싼다) */
+  searchHrs: async (exceptRetireYn: boolean, searchText: string): Promise<TdmHr[]> => {
+    const res = await apiClient.get<ApiResponse<TdmHr[]>>('v1/tdm/hrs', { params: { exceptRetireYn, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm01_Hr.selectPersonModifyed: 인사정보 가져오기(신규·변동·제외) */
+  searchHrChanges: async (): Promise<TdmHrChange[]> => {
+    const res = await apiClient.get<ApiResponse<TdmHrChange[]>>('v1/tdm/hrs/changes');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm01_Hr.updateHrInfo: 변동 후 인사정보 적용 */
+  applyHrChanges: async (rows: TdmHrApplyReq[]): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>('v1/tdm/hrs/changes/apply', rows);
+  },
+
+  /** AS-IS tdm.Tdm03_AddTitle.selectByPersonId (사내 겸직) */
+  searchAddTitles: async (personId: number): Promise<TdmAddTitle[]> => {
+    const res = await apiClient.get<ApiResponse<TdmAddTitle[]>>('v1/tdm/add-titles', { params: { personId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm03_AddTitle.update → UpdateDataModel */
+  saveAddTitles: async (rows: TdmAddTitle[]): Promise<TdmAddTitle[]> => {
+    const body = rows.map(r => ({ addTitleId: r.addTitleId, personId: r.personId, addTitleName: r.addTitleName, startDate: r.startDate, closeDate: r.closeDate }));
+    const res = await apiClient.put<ApiResponse<TdmAddTitle[]>>('v1/tdm/add-titles', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm03_AddTitle.delete */
+  deleteAddTitles: async (addTitleIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/add-titles', { data: addTitleIds });
+    return res.data.data ?? 0;
+  },
+
+  // ── N05 책무 등록(Tdm10_Tab_Task) ──
+
+  /** AS-IS tdm.Tdm10_Task.selectByText (taskClassCode '%'=전체, searchText는 서버가 %…%로 감싼다) */
+  searchTasks: async (p: { baseDate: string; taskClassCode: string; allYn: boolean; searchText: string }): Promise<TdmTask[]> => {
+    const res = await apiClient.get<ApiResponse<TdmTask[]>>('v1/tdm/tasks', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS DBUtil.setSeq: 새 책무 ID */
+  getTaskNextId: async (): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/tdm/tasks/next-id');
+    return res.data.data as number;
+  },
+
+  /** AS-IS tdm.Tdm10_Task.selectById */
+  getTask: async (taskId: number): Promise<TdmTask> => {
+    const res = await apiClient.get<ApiResponse<TdmTask>>(`v1/tdm/tasks/${taskId}`);
+    return res.data.data as TdmTask;
+  },
+
+  /** AS-IS tdm.Tdm10_Task.countUseByTaskId: 사용 건수 합 */
+  countTaskUse: async (taskIds: number[]): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/tdm/tasks/use-count', { params: { taskIds: taskIds.join(',') } });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm.Tdm10_Task.modelUpdate (INSERT·COPY) */
+  createTask: async (req: TdmTaskSaveReq): Promise<TdmTask> => {
+    const res = await apiClient.post<ApiResponse<TdmTask>>('v1/tdm/tasks', req);
+    return res.data.data as TdmTask;
+  },
+
+  /** AS-IS tdm.Tdm10_Task.modelUpdate (UPDATE, 변경사유 필요) */
+  updateTask: async (taskId: number, req: TdmTaskSaveReq): Promise<TdmTask> => {
+    const res = await apiClient.put<ApiResponse<TdmTask>>(`v1/tdm/tasks/${taskId}`, req);
+    return res.data.data as TdmTask;
+  },
+
+  /** AS-IS tdm.Tdm10_Task.delete (삭제사유 필요) */
+  deleteTasks: async (ids: number[], reason: string): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/tasks', { data: { ids, reason } });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm.Tdm12_TaskRelateDetail.selectByTaskId */
+  searchTaskDetails: async (taskId: number): Promise<TdmTaskDetail[]> => {
+    const res = await apiClient.get<ApiResponse<TdmTaskDetail[]>>('v1/tdm/task-details', { params: { taskId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm12_TaskRelateDetail.countByTaskDetailId */
+  countTaskDetailUse: async (detailIds: number[]): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/tdm/task-details/use-count', { params: { detailIds: detailIds.join(',') } });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm.Tdm12_TaskRelateDetail.update (기존 행을 고쳤으면 reason 필요) */
+  saveTaskDetails: async (rows: TdmTaskDetail[], reason: string | null): Promise<TdmTaskDetail[]> => {
+    const body = {
+      rows: rows.map(r => ({ taskRelateDetailId: r.taskRelateDetailId, taskId: r.taskId, content: r.content, seq: r.seq, useYn: r.useYn })),
+      reason,
+    };
+    const res = await apiClient.put<ApiResponse<TdmTaskDetail[]>>('v1/tdm/task-details', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm12_TaskRelateDetail.delete (삭제사유 필요) */
+  deleteTaskDetails: async (ids: number[], reason: string): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/task-details', { data: { ids, reason } });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm.Tdm14_TaskType.selectByCompanyId (taskClassCode '%'=전체) */
+  searchTaskTypes: async (taskClassCode: string, useYn: boolean): Promise<TdmTaskType[]> => {
+    const res = await apiClient.get<ApiResponse<TdmTaskType[]>>('v1/tdm/task-types', { params: { taskClassCode, useYn } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm14_TaskType.update */
+  saveTaskTypes: async (rows: TdmTaskType[]): Promise<TdmTaskType[]> => {
+    const body = rows.map(r => ({ taskTypeId: r.taskTypeId, taskTypeCode: r.taskTypeCode, taskTypeName: r.taskTypeName, useYn: r.useYn }));
+    const res = await apiClient.put<ApiResponse<TdmTaskType[]>>('v1/tdm/task-types', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm14_TaskType.delete */
+  deleteTaskTypes: async (taskTypeIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/task-types', { data: taskTypeIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm.Tdm95_ChangeHistory.selectByTargetId (changeType은 구분 콤보 글자, 없으면 전체) */
+  searchChangeHistories: async (p: { targetTable: string; targetId?: number | null; changeType?: string | null; searchText?: string | null }): Promise<TdmChangeHistory[]> => {
+    const res = await apiClient.get<ApiResponse<TdmChangeHistory[]>>('v1/tdm/change-histories', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm96_ChangeDetail.selectByChangeHistoryId */
+  searchChangeDetails: async (changeHistoryId: number): Promise<TdmChangeDetail[]> => {
+    const res = await apiClient.get<ApiResponse<TdmChangeDetail[]>>(`v1/tdm/change-histories/${changeHistoryId}/details`);
+    return res.data.data ?? [];
   },
 };

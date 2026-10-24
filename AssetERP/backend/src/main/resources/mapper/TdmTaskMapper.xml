@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm10_task.xml + Tdm10_Task (N05 책무 등록)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmTaskMapper">
+
+    <!-- 수정: 바깥 SELECT * 를 DTO 열 별칭으로 (selectByText·selectById가 같은 열을 쓴다) -->
+    <sql id="taskColumns">
+        tdm10_task_id          AS task_id
+      , tdm10_task_class_cd    AS task_class_code
+      , f_cdnm('TdmTaskClassCode', tdm10_task_class_cd, tdm10_company_id, f_sysdate())  AS task_class_name
+      , tdm10_task_type_cd     AS task_type_code
+      , '('||tdm14_task_type_cd||')'||tdm14_task_type_nm                                AS task_type_name
+      , tdm10_task_nm          AS task_name
+      , tdm10_common_yn        AS common_yn
+      , tdm10_ceo_yn           AS ceo_yn
+      , tdm10_start_date       AS start_date
+      , tdm10_end_date         AS end_date
+      , tdm10_upd_nm           AS upd_name
+      , COALESCE(TO_CHAR(tdm10_upd_date, 'yyyy-mm-dd HH24:MI:SS'), ''::text)            AS upd_date_str
+      , (
+            SELECT  CASE WHEN COUNT(*) = 0 THEN ''
+                         ELSE COUNT(*)||'건'
+                         END
+              FROM  tdm12_task_relate_detail
+             WHERE  tdm12_task_id = tdm10_task_id
+        )                                                                               AS task_relate_detail_cnt_str
+      , COALESCE((
+            SELECT  COUNT(*)
+              FROM  tdm11_task_relate_rule
+             WHERE  tdm11_task_id = tdm10_task_id
+               AND  tdm11_relate_type = '1'
+        ),0)                                                                            AS task_relate_law_cnt
+      , COALESCE((
+            SELECT  COUNT(*)
+              FROM  tdm11_task_relate_rule
+             WHERE  tdm11_task_id = tdm10_task_id
+               AND  tdm11_relate_type = '2'
+        ),0)                                                                            AS task_relate_rule_cnt
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) tdm10_task.selectByText: allYn이 아니면 기준일이 사용기간 안인 것만 (dedupYn 분기는 이 화면이 안 쓴다) -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TaskRes">
+        SELECT <include refid="taskColumns"/>
+          FROM tdm10_task
+               INNER JOIN tdm14_task_type ON tdm10_company_id = tdm14_company_id AND tdm14_task_type_cd = tdm10_task_type_cd
+         WHERE tdm10_company_id = #{companyId}
+           AND tdm10_task_class_cd LIKE #{taskClassCode}
+           AND CONCAT(tdm14_task_type_cd, tdm14_task_type_nm, tdm10_task_nm) ILIKE #{searchText}
+        <if test="!allYn">
+           AND CAST(#{baseDate} AS date) BETWEEN tdm10_start_date AND COALESCE(tdm10_end_date, TO_DATE('29991231','yyyyMMdd'))
+        </if>
+         ORDER BY tdm10_task_type_cd, tdm10_task_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm10_task.selectById — 수정: 회사 조건 추가(보안 보강) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TaskRes">
+        SELECT <include refid="taskColumns"/>
+          FROM tdm10_task
+               INNER JOIN tdm14_task_type ON tdm10_company_id = tdm14_company_id AND tdm14_task_type_cd = tdm10_task_type_cd
+         WHERE tdm10_task_id = #{taskId}
+           AND tdm10_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm10_task.countUseByTaskId -->
+    <select id="countUseByTaskId" resultType="int">
+        SELECT (
+                SELECT COUNT(*)
+                  FROM tdm21_role_relate_task
+                       INNER JOIN tdm20_role ON tdm20_role_id = tdm21_role_id
+                 WHERE tdm21_task_id = #{taskId}
+               ) + (
+                SELECT COUNT(*)
+                  FROM tdm35_role_allc_task
+                       INNER JOIN tdm34_role_allc_detail ON tdm34_role_allc_detail_id = tdm35_role_allc_detail_id
+                       INNER JOIN apr01_appr             ON (    apr01_appr_id = tdm34_appr_id
+                                                             AND COALESCE(apr01_status_cd,'99') IN ('10','20','30') )
+                 WHERE tdm35_task_id = #{taskId}
+               ) + (
+                SELECT COUNT(*)
+                  FROM tdm43_manl
+                 WHERE tdm43_task_id = #{taskId}
+              )
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 (AS-IS는 편집창을 열 때 DBUtil.setSeq로 미리 받는다) -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm10_task.createCopy: 책무세부·주요관리의무를 새 책무로 복사 (결과 'Y' 또는 오류 문구) -->
+    <select id="createCopy" resultType="string" flushCache="true">
+        SELECT f_create_tdm10Copy(#{oldTaskId}, #{newTaskId})
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT: 화면이 바꾸는 열 -->
+    <insert id="insertTask">
+        INSERT INTO tdm10_task
+               ( tdm10_task_id, tdm10_company_id, tdm10_task_class_cd, tdm10_task_type_cd, tdm10_task_nm
+               , tdm10_common_yn, tdm10_ceo_yn, tdm10_start_date, tdm10_end_date, tdm10_upd_nm, tdm10_upd_date )
+        VALUES ( #{taskId}, #{companyId}, #{req.taskClassCode}, #{req.taskTypeCode}, #{req.taskName}
+               , #{req.commonYn}, #{req.ceoYn}, #{req.startDate}, #{req.endDate}, #{updName}, f_sysdate() )
+    </insert>
+
+    <update id="updateTask">
+        UPDATE tdm10_task
+           SET tdm10_task_class_cd = #{req.taskClassCode}
+             , tdm10_task_type_cd  = #{req.taskTypeCode}
+             , tdm10_task_nm       = #{req.taskName}
+             , tdm10_common_yn     = #{req.commonYn}
+             , tdm10_ceo_yn        = #{req.ceoYn}
+             , tdm10_start_date    = #{req.startDate}
+             , tdm10_end_date      = #{req.endDate}
+             , tdm10_upd_nm        = #{updName}
+             , tdm10_upd_date      = f_sysdate()
+         WHERE tdm10_task_id    = #{req.taskId}
+           AND tdm10_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteTasks">
+        DELETE FROM tdm10_task
+         WHERE tdm10_company_id = #{companyId}
+           AND tdm10_task_id IN
+        <foreach collection="taskIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

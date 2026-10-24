@@ -11,7 +11,8 @@ import java.util.List;
 @Mapper
 public interface EmpCareerMapper {
 
-    List<CareerRes> selectCareers(@Param("companyId") Long companyId, @Param("personId") Long personId);
+    List<CareerRes> selectCareers(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                  @Param("extrAddTitleYn") boolean extrAddTitleYn);
 
     CareerRes selectCareerById(@Param("careerId") Long careerId);
 

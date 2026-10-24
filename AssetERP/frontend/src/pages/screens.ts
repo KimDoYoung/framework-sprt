@@ -155,7 +155,12 @@ import { Sys07_Tab_CompanyRoleMenu } from './sys/Sys07_Tab_CompanyRoleMenu';
 import { Tdm31_Tab_RoleDescAdmin } from './tdm/Tdm31_Tab_RoleDescAdmin';
 import { Tdm32_Tab_RoleDigmAdmin } from './tdm/Tdm32_Tab_RoleDigmAdmin';
 import { Tdm42_Tab_ManlManagerAdmin } from './tdm/Tdm42_Tab_ManlManagerAdmin';
+import { Tdm01_Tab_Hr } from './tdm/Tdm01_Tab_Hr';
+import { Tdm10_Tab_Task } from './tdm/Tdm10_Tab_Task';
+import { Tdm50_Tab_DutyProgress } from './tdm/Tdm50_Tab_DutyProgress';
 import { Tdm50_Tab_DutyProgressAdmin } from './tdm/Tdm50_Tab_DutyProgressAdmin';
+import { Tdm50_Tab_TotalDashboard } from './tdm/Tdm50_Tab_TotalDashboard';
+import { Tdm50_Tab_DutyRecon } from './tdm/Tdm50_Tab_DutyRecon';
 import { Tdm50_Tab_DutyReconAdmin } from './tdm/Tdm50_Tab_DutyReconAdmin';
 import { Dcr01_Tab_ClassTree } from './dcr/Dcr01_Tab_ClassTree';
 import { Dcr05_Tab_DocType } from './dcr/Dcr05_Tab_DocType';
@@ -278,6 +283,9 @@ export const SCREENS: Record<string, React.FC> = {
   Tdm31_Tab_RoleDescAdmin, // E11 (재생성은 RD 리포트 연동이 없어 서버가 거절 — RoleDescPdfMaker 기본 구현)
   Tdm32_Tab_RoleDigmAdmin, // E12 (재생성은 RD 리포트 연동이 없어 서버가 거절 — RoleDigmPdfMaker 기본 구현)
   Tdm42_Tab_ManlManagerAdmin, // E13 1단계 (+ Tdm43_Lookup_ManlItem·Org00_Lookup_SelectTdm, 재생성은 RD 연동이 없어 서버가 거절 — ManlOrgPdfMaker 기본 구현, 점검항목 등록/수정창은 E13-2)
+  Tdm10_Tab_Task, // N05 1단계 (+ Tdm10_Edit_Task·Tdm12_Lookup_TaskRelateDetail·Tdm14_Lookup_TaskType·Tdm95_Lookup_ChangeHistory, 연결법규·내규 Tdm11은 다음 단계)
+  Tdm01_Tab_Hr, // N04 (+ Tdm01_Lookup_HrChangeInfo·Tdm03_Lookup_AddTitle)
+  Tdm50_Tab_DutyProgress, // N02 (E14 Admin의 고객사용 짝 — 같은 API)
   Tdm50_Tab_DutyProgressAdmin, // E14 (조회마다 DB 함수 f_recon_tdm이 sys99_print의 사용자 몫 행을 다시 만든다 — AS-IS 그대로)
   Dcr01_Tab_ClassTree, // E16 (메뉴 #1110·#1001 — 같은 클래스. + Dcr01_Grid_DocType·Dcr01_Edit_ClassTree·Dcr01_Move_*·Dcr01_Lookup_UseYn·DcrCopyAdmin·Dcr05~07·Dcr20·Dcr21, apr 조회창 둘)
   Dcr05_Tab_DocType, // E18 (메뉴 #1482·#1007 — 같은 클래스. + Dcr05_Edit_DocType·Dcr05_Edit_Update(E16)·Sys09_Lookup_Code(구분추가)·Sys01_Lookup_Company)
@@ -300,6 +308,8 @@ export const SCREENS: Record<string, React.FC> = {
   Act11_Tab_TrJournalMap, // E30 (+ Act11_Grid_TrJournalMap·Ast05_Lookup_TrCode)
   Act13_Tab_RealAccountMap, // E31 (+ Act10_Lookup_ReprAccount·Act01_Lookup_AccountCode)
   Act15_Tab_CloseCheck, // E32
+  Tdm50_Tab_TotalDashboard, // N01 1단계 (+ Tdm50_Tab_Dashboard·DashboardExct·DashboardOrg·Tdm01_Lookup_SelectSingle, [보기] 아이콘의 점검 편집창·미흡 조치 상세는 N22·N24)
+  Tdm50_Tab_DutyRecon, // N03 (E15 Admin의 고객사용 짝 — 같은 API)
   Tdm50_Tab_DutyReconAdmin, // E15 (조회마다 DB 함수 f_recon_tdm('DB_CHK')이 sys99_print의 사용자 몫 행을 다시 만든다 — AS-IS 그대로)
   Sms02_Tab_TotalCount, // C05
   Sms03_Tab_SendAdmin, // C06 (실제 문자 발송은 하지 않음 — SmsSender 기본 구현)

@@ -21,8 +21,9 @@ public class EmpCareerController {
 
     @GetMapping("/persons/{personId}/careers")
     public ApiResponse<List<CareerRes>> getCareers(@AuthenticationPrincipal UserPrincipal principal,
-                                                   @PathVariable Long personId) {
-        return ApiResponse.ok(empCareerService.getCareers(principal, personId));
+                                                   @PathVariable Long personId,
+                                                   @RequestParam(defaultValue = "false") boolean extrAddTitleYn) {
+        return ApiResponse.ok(empCareerService.getCareers(principal, personId, extrAddTitleYn));
     }
 
     @PutMapping("/careers")

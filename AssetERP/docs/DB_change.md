@@ -65,3 +65,22 @@ update
 ALTER TABLE sch22_write_group 
 ADD COLUMN sch22_confirmer_id numeric NULL;
 ```    
+
+---
+
+```sql
+  ALTER TABLE tdm54_chck_insuff ADD COLUMN tdm54_occ_ym         VARCHAR(7);
+  ALTER TABLE tdm54_chck_insuff ADD COLUMN tdm54_action_appr_ym VARCHAR(7);
+
+  COMMENT ON COLUMN tdm54_chck_insuff.tdm54_occ_ym         IS '미흡 발생년월(YYYY.MM)';
+  COMMENT ON COLUMN tdm54_chck_insuff.tdm54_action_appr_ym IS '조치 승인년월(YYYY.MM)';
+
+  -- (선택) 기존 행의 발생년월 채우기: 원 이행점검이 속한 점검년월
+  UPDATE tdm54_chck_insuff i
+     SET tdm54_occ_ym = ( SELECT o.tdm51_check_ym
+                            FROM tdm52_chck_manl m
+                                 INNER JOIN tdm51_chck_org o ON o.tdm51_chck_org_id =
+  m.tdm52_chck_org_id
+                           WHERE m.tdm52_chck_manl_id = i.tdm54_chck_manl_id )
+   WHERE tdm54_occ_ym IS NULL;
+```

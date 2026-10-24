@@ -23,7 +23,12 @@ public class EmpCareerService {
 
     /** AS-IS Emp07_Career.selectByPersonId */
     public List<CareerRes> getCareers(UserPrincipal user, Long personId) {
-        return empCareerMapper.selectCareers(user.getCompanyId(), personId);
+        return getCareers(user, personId, false);
+    }
+
+    /** AS-IS emp07_career.selectByPersonId의 extrAddTitleYn 분기: true면 대외겸직(책무 직무겸직 사외 탭)만 */
+    public List<CareerRes> getCareers(UserPrincipal user, Long personId, boolean extrAddTitleYn) {
+        return empCareerMapper.selectCareers(user.getCompanyId(), personId, extrAddTitleYn);
     }
 
     /** AS-IS Emp07_Career.update → UpdateDataModel. ID null/≤0: INSERT. ID>0: UPDATE. */

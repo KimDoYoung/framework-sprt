@@ -5690,5 +5690,143 @@
     "note": "docs/work/M/M06-작업기록.md",
     "history": [],
     "id": "M06"
+  },
+  "Tdm50_Tab_TotalDashboard": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/tdm/Tdm50_Tab_TotalDashboard.java": "0ee86643eb6d13b91efa08e6a583162e60dbee2a"
+    },
+    "shared_links": [
+      "Tdm50_Tab_Dashboard",
+      "Tdm50_Tab_DashboardExct",
+      "Tdm50_Tab_DashboardOrg"
+    ],
+    "recorded_at": "2026-10-24T14:48:10+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/N/N01-작업기록.md",
+    "history": [],
+    "id": "N01"
+  },
+  "Tdm50_Tab_DutyProgress": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/tdm/Tdm50_Tab_DutyProgress.java": "f5797e3d4269b427ae504c92c8cb73b739ba5c91",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm50_ChckJobModel.java": "757f62ef3cfeb28ef647923fa96dba5cdde43eaf",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/tdm/Tdm50_ChckJob.java": "05a22916132dbb6760b35c72fc5beef78d299705",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm50_chck_job.xml": "9ee6557d1a35c4253142198217e1d800c0f176e9"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-24T15:11:38+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/N/N02-작업기록.md",
+    "history": [],
+    "id": "N02"
+  },
+  "Tdm50_Tab_DutyRecon": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/tdm/Tdm50_Tab_DutyRecon.java": "a8187915ffbd96f07e5ab54c53e635ee61fb94f4",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-24T15:32:29+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/N/N03-작업기록.md",
+    "history": [],
+    "id": "N03"
+  },
+  "Tdm01_Tab_Hr": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/tdm/Tdm01_Lookup_HrChangeInfo.java": "6412d8e100b3c2e0630a9218012e13895148880f",
+      "application/src/main/java/myApp/client/vi/tdm/Tdm01_Tab_Hr.java": "acab03ce34b07886fd8d5e3aada78063faddf233",
+      "application/src/main/java/myApp/client/vi/tdm/Tdm03_Lookup_AddTitle.java": "9212fe74a57a593feecd621b12dd6b2fded51d3f",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm01_HrModel.java": "c69e554bfdc7ee26202c39d857cdef6219cb7fca",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm01_HrModelProperties.java": "9b8e37029a52570ea2cc7802ef3615cbac8cdc06",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm03_AddTitleModel.java": "b391221ac366c0fd30c1870439b3debc34ba5b36",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm03_AddTitleModelProperties.java": "8b3e2d2c52442c016ef621d482d352a300b920e4",
+      "application/src/main/java/myApp/server/emp/Emp07_Career.java": "7a54a0f00ed6d984d305ba8033e068fca41299bd",
+      "application/src/main/java/myApp/server/emp/mapper/emp00_trans_info.xml": "76c324eda8ede6658a765beeaaebf929930afd47",
+      "application/src/main/java/myApp/server/emp/mapper/emp07_career.xml": "8ffbbe8ea9bd639cb0850fd1fd1ff2b2a72756a4",
+      "application/src/main/java/myApp/server/tdm/Tdm01_Hr.java": "4a994bfa946658092c2977bac01aa9092f0e67de",
+      "application/src/main/java/myApp/server/tdm/Tdm03_AddTitle.java": "170f1135cb263b2c9ef3ba15ee9733729ff1b960",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm01_hr.xml": "a2f5e64a01d6382c44a30e4c322fe8f1b73a94d5",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm02_hr_record.xml": "9b3cfc7ca782947866f5b8d3be6943e4c5a67aa7",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm03_add_title.xml": "f496a0d3111ef170de2e68fb61d4cb61e15a8dd9"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-24T15:58:41+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/N/N04-작업기록.md",
+    "history": [],
+    "id": "N04"
+  },
+  "Tdm10_Tab_Task": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/tdm/Tdm10_Edit_Task.java": "b4dd7f627e9bf512ba9f11ba28fda4951446dcea",
+      "application/src/main/java/myApp/client/vi/tdm/Tdm10_Tab_Task.java": "75024ec451e55197d97f8cbd317cad37b7a9fe70",
+      "application/src/main/java/myApp/client/vi/tdm/Tdm11_Lookup_TaskRelateRule.java": "dd843c8ac9eb00dc5a1bdfc425d0b89325556f71",
+      "application/src/main/java/myApp/client/vi/tdm/Tdm12_Lookup_TaskRelateDetail.java": "d4186060c035708ff1ec69f5768538beb29cff1e",
+      "application/src/main/java/myApp/client/vi/tdm/Tdm14_Lookup_TaskType.java": "52469a88f934786a3350a5ba01f6122a83b6eddd",
+      "application/src/main/java/myApp/client/vi/tdm/Tdm95_Lookup_ChangeHistory.java": "e2c54e2732cd6e36e9e043fe6c2579b388ad5c21",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm10_TaskModel.java": "ad426e1bef497ec41d0f35e573436a99d31678d0",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm10_TaskModelProperties.java": "287bd11efcbebab28ab05eda285290103e00bcae",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm11_TaskRelateRuleModel.java": "5ee0e1065b1d17abd679f3932b879d92fa4d8f8d",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm11_TaskRelateRuleModelProperties.java": "a7bbeb0ecb35a0db26d24cfe4724f6c0a64f3a45",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm12_TaskRelateDetailModel.java": "a567dc373638edb494e119c7121ef6f2b5e84e87",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm12_TaskRelateDetailModelProperties.java": "e79a714f79b5dd8a467a8561ea921d9db1727ad0",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm14_TaskTypeModel.java": "cd2f934110542e8c01bd4e567adcf0995f9b0485",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm14_TaskTypeModelProperties.java": "fdae6f5ec9eb65df1a95e35f91c1ac9382481191",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm95_ChangeHistoryModel.java": "e69f7720b3e7766c00f6765f97458b769654a81a",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm95_ChangeHistoryModelProperties.java": "487b19db52280f1e5e2c9725f20bf63ea7615b41",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm96_ChangeDetailModel.java": "6b15713c698ad742e04e8a49d2835a2e49fb6948",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm96_ChangeDetailModelProperties.java": "dc71e1decaf66ff1cd1b1c9fbb62b4d8ed7f7d41",
+      "application/src/main/java/myApp/server/tdm/Tdm10_Task.java": "a8ddcd15142d938795e62406f07ce3e9419213b3",
+      "application/src/main/java/myApp/server/tdm/Tdm11_TaskRelateRule.java": "19cd08504fab41d5dc3732ba05531fb591793052",
+      "application/src/main/java/myApp/server/tdm/Tdm12_TaskRelateDetail.java": "7e7f672bea27cc6ae7a72d6e88e6d66be10f16cd",
+      "application/src/main/java/myApp/server/tdm/Tdm14_TaskType.java": "b4192c56661ede07da13d28deb4565101cbcc3f9",
+      "application/src/main/java/myApp/server/tdm/Tdm95_ChangeHistory.java": "46a222e9a1f6d875add0f586ed3048af65740b60",
+      "application/src/main/java/myApp/server/tdm/Tdm96_ChangeDetail.java": "42345f73dc5173f6879ac58c9810ade474234dbb",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm10_task.xml": "cc9da12b18277daef1e04534d2bff98e3f7ce659",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm11_task_relate_rule.xml": "e39be854e66e12491f6ee5cf90a51fdbc377a749",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm12_task_relate_detail.xml": "6077b8a666fd9cd735d88d0aa1cbd8119bff1d7d",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm14_task_type.xml": "ea35e416fa879d9822283d3a66def03cfc217c3b",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm95_change_history.xml": "68ad502bc76d454185be3ef935aab449f2af783d",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm96_change_detail.xml": "0ad88935adc2f416fe13d3284356c706eab16951",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Bbs15_Lookup_CompanyRule",
+      "Sys09_Lookup_CodeKind"
+    ],
+    "recorded_at": "2026-10-24T16:30:09+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/N/N05-작업기록.md",
+    "history": [],
+    "id": "N05"
   }
 }

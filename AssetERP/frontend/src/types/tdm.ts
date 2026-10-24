@@ -215,3 +215,190 @@ export interface Manl {
   checkItemAddCode?: string | null;
   checkHow?: string | null;
 }
+
+/** 책무점검 현황 모니터 (GET /api/v1/tdm/dashboard/progress, AS-IS Tdm51_ChckOrgModel 중 진행율·적정비율·점검결과 정보). checkCntInfo는 `<b style=color:#…;>` 조각을 포함한 글자 */
+export interface TdmDashboardProgress {
+  progRate: number | null;
+  suffRate: number | null;
+  checkCntInfo: string | null;
+}
+
+/** 임원별(직책별)·부서별 진행현황 한 행 (GET dashboard/exct-progress · org-progress, AS-IS Tdm51_ChckOrgModel) */
+export interface TdmDashboardChckOrg {
+  chckOrgId: number;
+  exctName?: string | null;
+  roleName?: string | null;
+  orgName?: string | null;
+  progRate: number | null;
+  monthCheckCnt: number | null;
+  monthManlUndoneCnt: number | null;
+  monthCheck1Cnt: number | null;
+  monthCheck2Cnt: number | null;
+  monthCheck9Cnt: number | null;
+}
+
+/** 미점검·반려·당월발생 미흡 한 행 (GET dashboard/undone, AS-IS Tdm52_ChckManlModel 중 이 화면 그리드가 쓰는 속성) */
+export interface TdmDashboardUndone {
+  chckManlId: number;
+  orgName: string | null;
+  checkerName: string | null;
+  checkItem: string | null;
+  checkCycleName: string | null;
+  checkStatusName: string | null;
+}
+
+/** 미흡 조치현황 한 행 (GET dashboard/insuff, AS-IS Tdm54_ChckInsuffModel 중 이 화면 그리드가 쓰는 속성). 날짜는 yyyy-MM-dd */
+export interface TdmDashboardInsuff {
+  chckInsuffId: number;
+  checkYm: string | null;
+  dueDate: string | null;
+  actionDate: string | null;
+  actionDueDate: string | null;
+  statusName: string | null;
+  orgName: string | null;
+  actionEmpName: string | null;
+  actionName: string | null;
+}
+
+/** 점검년월의 마감 정보 (GET dashboard/check-end). 날짜는 yyyy-MM-dd */
+export interface TdmDashboardCheckEnd {
+  endYn: boolean | null;
+  endDate: string | null;
+}
+
+/** 로그인 사용자의 조직 (GET dashboard/my-org, AS-IS LoginUser.getOrgCodeId()·getOrgInfoModel().getKorName()) */
+export interface TdmDashboardMyOrg {
+  orgCodeId: number;
+  korName: string | null;
+}
+
+/** 임원선택 조회창 한 행 (GET /api/v1/tdm/hrs/lookup, AS-IS Tdm01_HrModel 중 Tdm01_Lookup_SelectSingle 그리드·선택 속성) */
+export interface TdmHrLookup {
+  personId: number;
+  personName: string | null;
+  posName: string | null;
+  orgName: string | null;
+}
+
+/** 임원 등록 목록 한 행 (GET /api/v1/tdm/hrs, AS-IS Tdm01_HrModel 중 Tdm01_Tab_Hr 그리드 속성) */
+export interface TdmHr {
+  hrId: number;
+  personId: number;
+  personName: string | null;
+  posName: string | null;
+  orgName: string | null;
+  hireDate: string | null;
+  retireDate: string | null;
+  endDate: string | null;
+  addTitle: string | null;
+  updName: string | null;
+  updDateStr: string | null;
+}
+
+/** 인사정보 가져오기 창 한 행 (GET /api/v1/tdm/hrs/changes, AS-IS Tdm01_HrModel 중 Tdm01_Lookup_HrChangeInfo 그리드·적용 속성) */
+export interface TdmHrChange {
+  hrId: number;
+  changeTypeCode: string;
+  changeTypeName: string | null;
+  personId: number;
+  personName: string | null;
+  befPosName: string | null;
+  befTitleName: string | null;
+  befOrgName: string | null;
+  befHireDate: string | null;
+  befRetireDate: string | null;
+  befEndDate: string | null;
+  aftPosName: string | null;
+  aftTitleName: string | null;
+  aftOrgName: string | null;
+  aftHireDate: string | null;
+  aftRetireDate: string | null;
+  aftEndDate: string | null;
+}
+
+/** 인사정보 적용 요청 한 건 (POST /api/v1/tdm/hrs/changes/apply) */
+export interface TdmHrApplyReq {
+  personId: number;
+  changeTypeCode: string;
+  befEndDate: string | null;
+  aftEndDate: string | null;
+}
+
+/** 직무겸직(사내) 한 행 (GET /api/v1/tdm/add-titles, AS-IS Tdm03_AddTitleModel) */
+export interface TdmAddTitle {
+  addTitleId: number;
+  personId: number;
+  addTitleName: string | null;
+  startDate: string | null;
+  closeDate: string | null;
+}
+
+/** 책무 한 행 (GET /api/v1/tdm/tasks, AS-IS Tdm10_TaskModel) */
+export interface TdmTask {
+  taskId: number;
+  taskClassCode: string | null;
+  taskClassName: string | null;
+  taskTypeCode: string | null;
+  taskTypeName: string | null;
+  taskName: string | null;
+  commonYn: string | null;
+  ceoYn: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  updName: string | null;
+  updDateStr: string | null;
+  taskRelateDetailCntStr: string | null;
+  taskRelateLawCnt: number | null;
+  taskRelateRuleCnt: number | null;
+}
+
+/** 책무 등록·복사·수정 요청 (POST/PUT /api/v1/tdm/tasks) — 수정은 reason 필요 */
+export interface TdmTaskSaveReq {
+  taskId: number | null;
+  taskClassCode: string | null;
+  taskTypeCode: string | null;
+  taskName: string | null;
+  commonYn: string;
+  ceoYn: string;
+  startDate: string | null;
+  endDate: string | null;
+  oldTaskId?: number | null;
+  reason?: string | null;
+}
+
+/** 책무 세부내용 한 행 (GET /api/v1/tdm/task-details, AS-IS Tdm12_TaskRelateDetailModel) */
+export interface TdmTaskDetail {
+  taskRelateDetailId: number;
+  taskId: number;
+  content: string | null;
+  seq: number | null;
+  useYn: string | null;
+}
+
+/** 책무유형 한 행 (GET /api/v1/tdm/task-types, AS-IS Tdm14_TaskTypeModel) */
+export interface TdmTaskType {
+  taskTypeId: number;
+  taskClassCode: string | null;
+  taskClassName: string | null;
+  taskTypeCode: string | null;
+  taskTypeName: string | null;
+  useYn: string | null;
+}
+
+/** 변경/삭제 이력 한 행 (GET /api/v1/tdm/change-histories, AS-IS Tdm95_ChangeHistoryModel) */
+export interface TdmChangeHistory {
+  changeHistoryId: number;
+  rowNum: number;
+  changeDateStr: string | null;
+  changeEmpName: string | null;
+  changeType: string | null;
+  reason: string | null;
+}
+
+/** 변경/삭제 이력 상세 한 행 (AS-IS Tdm96_ChangeDetailModel) */
+export interface TdmChangeDetail {
+  changeDetailId: number;
+  windowItemName: string | null;
+  beforeData: string | null;
+  afterData: string | null;
+}

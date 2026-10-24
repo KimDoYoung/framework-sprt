@@ -31,6 +31,9 @@
           JOIN emp01_person ON emp07_person_id = emp01_person_id
          WHERE emp01_company_id = #{companyId}
            AND emp07_person_id  = #{personId}
+        <if test="extrAddTitleYn">
+           AND coalesce(emp07_extr_add_title_yn,'false') = 'true'
+        </if>
          ORDER BY emp07_fr_ym DESC
     </select>
 

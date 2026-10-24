@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm03_add_title.xml + Tdm03_AddTitle (N04 직무겸직 창, 사내 탭)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmAddTitleMapper">
+
+    <sql id="addTitleColumns">
+        tdm03_add_title_id   AS add_title_id,
+        tdm03_person_id      AS person_id,
+        tdm03_add_title_nm   AS add_title_name,
+        tdm03_start_date     AS start_date,
+        tdm03_close_date     AS close_date
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) tdm03_add_title.selectByPersonId — 수정: 회사 조건 추가(보안 보강, 05 §6), SELECT * 는 그리드 열로 -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.AddTitleRes">
+        SELECT <include refid="addTitleColumns"/>
+          FROM tdm03_add_title
+         WHERE tdm03_person_id  = #{personId}
+           AND tdm03_company_id = #{companyId}
+         ORDER BY tdm03_start_date DESC
+                , tdm03_add_title_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm03_add_title.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.AddTitleRes">
+        SELECT <include refid="addTitleColumns"/>
+          FROM tdm03_add_title
+         WHERE tdm03_add_title_id = #{addTitleId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT: 화면이 바꾸는 열(겸직명·적용시작일·적용종료일)과 화면이 채운 회사·사원 -->
+    <insert id="insertAddTitle">
+        INSERT INTO tdm03_add_title
+               ( tdm03_add_title_id, tdm03_company_id, tdm03_person_id, tdm03_add_title_nm
+               , tdm03_start_date, tdm03_close_date, tdm03_upd_nm, tdm03_upd_date )
+        VALUES ( #{addTitleId}, #{companyId}, #{req.personId}, #{req.addTitleName}
+               , #{req.startDate}, #{req.closeDate}, #{updName}, f_sysdate() )
+    </insert>
+
+    <update id="updateAddTitle">
+        UPDATE tdm03_add_title
+           SET tdm03_add_title_nm = #{req.addTitleName}
+             , tdm03_start_date   = #{req.startDate}
+             , tdm03_close_date   = #{req.closeDate}
+             , tdm03_upd_nm       = #{updName}
+             , tdm03_upd_date     = f_sysdate()
+         WHERE tdm03_add_title_id = #{req.addTitleId}
+           AND tdm03_company_id   = #{companyId}
+    </update>
+
+    <delete id="deleteAddTitles">
+        DELETE FROM tdm03_add_title
+         WHERE tdm03_company_id = #{companyId}
+           AND tdm03_add_title_id IN
+        <foreach collection="addTitleIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

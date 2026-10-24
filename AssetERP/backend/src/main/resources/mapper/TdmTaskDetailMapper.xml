@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm12_task_relate_detail.xml + Tdm12_TaskRelateDetail (N05 책무 세부내용)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmTaskDetailMapper">
+
+    <sql id="detailColumns">
+        tdm12_task_relate_detail_id AS task_relate_detail_id
+      , tdm12_task_id               AS task_id
+      , tdm12_content               AS content
+      , tdm12_seq                   AS seq
+      , tdm12_use_yn                AS use_yn
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) tdm12_task_relate_detail.selectByTaskId — 수정: SELECT * 와 이 화면이 안 쓰는 열(책무명·기간·유형·의무 수)을 뺌, 회사 조건 추가 -->
+    <select id="selectByTaskId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TaskDetailRes">
+        SELECT <include refid="detailColumns"/>
+          FROM tdm12_task_relate_detail
+               INNER JOIN tdm10_task      ON tdm10_task_id = tdm12_task_id
+               INNER JOIN tdm14_task_type ON tdm10_company_id = tdm14_company_id AND tdm14_task_type_cd = tdm10_task_type_cd
+         WHERE tdm12_task_id = #{taskId}
+           AND tdm10_company_id = #{companyId}
+         ORDER BY tdm12_seq
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm12_task_relate_detail.selectById (저장 뒤 다시 읽기, 변경 전 값 비교) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TaskDetailRes">
+        SELECT <include refid="detailColumns"/>
+          FROM tdm12_task_relate_detail
+         WHERE tdm12_task_relate_detail_id = #{detailId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm12_task_relate_detail.countByTaskDetailId -->
+    <select id="countByTaskDetailId" resultType="int">
+        SELECT (
+                SELECT  COUNT(*)
+                  FROM  tdm43_manl
+                 WHERE  tdm43_task_relate_detail_id = #{taskDetailId}
+               ) + (
+                SELECT  COUNT(*)
+                  FROM  tdm35_role_allc_task
+                        INNER JOIN tdm34_role_allc_detail ON tdm34_role_allc_detail_id = tdm35_role_allc_detail_id
+                        INNER JOIN apr01_appr             ON (    apr01_appr_id = tdm34_appr_id
+                                                              AND COALESCE(apr01_status_cd,'99') IN ('10','20','30') )
+                 WHERE  tdm35_task_relate_detail_id = #{taskDetailId}
+               )
+    </select>
+
+    <!-- 이 책무가 다른 회사의 것인지 보려고: 있으면 회사 ID, 아직 저장 전인 책무(편집창에서 세부내용을 먼저 올린 경우)면 null -->
+    <select id="selectTaskCompany" resultType="long">
+        SELECT tdm10_company_id FROM tdm10_task WHERE tdm10_task_id = #{taskId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT/UPDATE: 화면이 바꾸는 열(세부내용·조회순서·사용여부) -->
+    <insert id="insertDetail">
+        INSERT INTO tdm12_task_relate_detail
+               ( tdm12_task_relate_detail_id, tdm12_task_id, tdm12_content, tdm12_seq, tdm12_use_yn, tdm12_upd_nm, tdm12_upd_date )
+        VALUES ( #{detailId}, #{row.taskId}, #{row.content}, #{row.seq}, #{row.useYn}, #{updName}, f_sysdate() )
+    </insert>
+
+    <update id="updateDetail">
+        UPDATE tdm12_task_relate_detail
+           SET tdm12_content = #{row.content}
+             , tdm12_seq     = #{row.seq}
+             , tdm12_use_yn  = #{row.useYn}
+             , tdm12_upd_nm  = #{updName}
+             , tdm12_upd_date = f_sysdate()
+         WHERE tdm12_task_relate_detail_id = #{row.taskRelateDetailId}
+    </update>
+
+    <delete id="deleteDetails">
+        DELETE FROM tdm12_task_relate_detail
+         WHERE tdm12_task_relate_detail_id IN
+        <foreach collection="detailIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

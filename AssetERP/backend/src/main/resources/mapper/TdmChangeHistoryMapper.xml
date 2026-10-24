@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm95_change_history.xml, tdm96_change_detail.xml (N05 변경/삭제 이력)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmChangeHistoryMapper">
+
+    <!-- AS-IS(IDMS-IC) tdm95_change_history.selectByTargetId — 수정: 바깥 t.* 를 DTO 열 별칭으로. targetId·changeType·searchText 분기는 AS-IS 그대로 -->
+    <select id="selectByTargetId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ChangeHistoryRes">
+        SELECT tdm95_change_history_id  AS change_history_id
+             , tdm95_row_num            AS row_num
+             , tdm95_change_date_str    AS change_date_str
+             , tdm95_change_emp_nm      AS change_emp_name
+             , tdm95_change_type        AS change_type
+             , tdm95_reason             AS reason
+          FROM (
+                SELECT ROW_NUMBER() OVER(ORDER BY tdm95_change_date)                        AS tdm95_row_num
+                     , COALESCE(TO_CHAR(tdm95_change_date, 'yyyy-mm-dd HH24:MI:SS'), '')    AS tdm95_change_date_str
+                     , tdm95_change_history.*
+                  FROM tdm95_change_history
+                 WHERE tdm95_company_id   = #{companyId}
+                   AND tdm95_target_table = #{targetTable}
+                <if test="targetId != null">
+                   AND tdm95_target_id  = #{targetId}
+                </if>
+                <if test="changeType != null">
+                   AND tdm95_change_type = #{changeType}
+                </if>
+                <if test="searchText != null">
+                   AND (   CONCAT(tdm95_change_emp_nm, tdm95_reason) ILIKE #{searchText}
+                        OR
+                           EXISTS ( SELECT 1
+                                      FROM tdm96_change_detail
+                                     WHERE tdm96_change_history_id = tdm95_change_history_id
+                                       AND tdm96_window_item_nm ILIKE #{searchText}
+                                  )
+                       )
+                </if>
+               ) t
+         ORDER BY tdm95_row_num DESC
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm96_change_detail.selectByChangeHistoryId — 수정: 회사 조건 추가(보안 보강) -->
+    <select id="selectByChangeHistoryId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ChangeDetailRes">
+        SELECT tdm96_change_detail_id AS change_detail_id
+             , tdm96_window_item_nm   AS window_item_name
+             , CASE tdm96_column_nm WHEN 'tdm10_task_class_cd' THEN COALESCE(f_cdnm('TdmTaskClassCode', tdm96_before_data, tdm95_company_id, tdm95_change_date::date), tdm96_before_data)
+                                    WHEN 'tdm10_task_type_cd'  THEN COALESCE((SELECT tdm14_task_type_nm
+                                                                                FROM tdm14_task_type
+                                                                               WHERE tdm14_company_id   = tdm95_company_id
+                                                                                 AND tdm14_task_type_cd = tdm96_before_data), tdm96_before_data)
+                                    WHEN 'tdm20_role_type'     THEN COALESCE(f_cdnm('TdmRoleType', tdm96_before_data, tdm95_company_id, tdm95_change_date::date), tdm96_before_data)
+                                    WHEN 'tdm20_ceo_role_id'   THEN COALESCE((SELECT tdm20_role_nm
+                                                                                FROM tdm20_role
+                                                                               WHERE tdm20_role_id = tdm96_before_data::numeric), tdm96_before_data)
+                                    ELSE tdm96_before_data END  AS before_data
+             , CASE tdm96_column_nm WHEN 'tdm10_task_class_cd' THEN COALESCE(f_cdnm('TdmTaskClassCode', tdm96_after_data, tdm95_company_id, tdm95_change_date::date), tdm96_after_data)
+                                    WHEN 'tdm10_task_type_cd'  THEN COALESCE((SELECT tdm14_task_type_nm
+                                                                                FROM tdm14_task_type
+                                                                               WHERE tdm14_company_id   = tdm95_company_id
+                                                                                 AND tdm14_task_type_cd = tdm96_after_data), tdm96_after_data)
+                                    WHEN 'tdm20_role_type'     THEN COALESCE(f_cdnm('TdmRoleType', tdm96_after_data, tdm95_company_id, tdm95_change_date::date), tdm96_after_data)
+                                    WHEN 'tdm20_ceo_role_id'   THEN COALESCE((SELECT tdm20_role_nm
+                                                                                FROM tdm20_role
+                                                                               WHERE tdm20_role_id = tdm96_after_data::numeric), tdm96_after_data)
+                                    ELSE tdm96_after_data END   AS after_data
+          FROM tdm96_change_detail
+               INNER JOIN tdm95_change_history ON tdm95_change_history_id = tdm96_change_history_id
+         WHERE tdm96_change_history_id = #{changeHistoryId}
+           AND tdm95_company_id        = #{companyId}
+           AND tdm96_column_nm NOT IN ( 'tdm12_task_id'
+                                      , 'tdm13_task_id', 'tdm13_task_relate_detail_id'
+                                      , 'tdm20_ceo_role_id' )
+         ORDER BY tdm96_change_detail_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm96_change_detail.createTdmChangeHistory: DB 함수가 변경이력(tdm95·tdm96)을 만든다. 결과 'Y' 또는 오류 문구 -->
+    <select id="createChangeHistory" resultType="string" flushCache="true">
+        SELECT f_create_tdmChangeHistory(CAST(#{modifyInfo} AS jsonb))
+    </select>
+</mapper>

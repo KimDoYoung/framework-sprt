@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm01_hr.xml (N01 임원선택 조회창, N04 임원 등록)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmHrMapper">
+
+    <!--
+      AS-IS(IDMS-IC) tdm01_hr.selectByEndDate
+      수정: SELECT * 를 조회창이 쓰는 열로 (조건·정렬은 그대로)
+    -->
+    <select id="selectByEndDate" resultType="kr.co.kfs.asseterp.biz.tdm.dto.HrLookupRes">
+        SELECT  tdm01_person_id     AS person_id
+             ,  tdm01_person_nm     AS person_name
+             ,  tdm01_pos_nm        AS pos_name
+             ,  tdm01_org_nm        AS org_name
+          FROM  (
+                    SELECT  *
+                         ,  f_cdnm('EmpPosCode'  , tdm01_pos_cd  , tdm01_company_id, f_today()) AS tdm01_pos_nm
+                         ,  f_cdnm('EmpTitleCode', tdm01_title_cd, tdm01_company_id, f_today()) AS tdm01_title_nm
+                      FROM  tdm01_hr
+                     WHERE  tdm01_company_id = #{companyId}
+                       AND  COALESCE(tdm01_retire_date,'9999-12-31'::date) > f_today()
+                       AND  COALESCE(tdm01_end_date   ,'9999-12-31'::date) > f_today()
+                ) t
+         WHERE  1=1
+           AND CONCAT(tdm01_person_nm, tdm01_pos_nm, tdm01_org_nm) ILIKE #{searchText}
+         ORDER BY tdm01_pos_cd, tdm01_person_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!--
+      AS-IS(IDMS-IC) tdm01_hr.selectByCompanyId (N04 임원 등록 목록)
+      수정: 바깥 SELECT * 를 그리드가 쓰는 열 별칭으로, exceptRetireYn 분기는 AS-IS 그대로 (조건·정렬 그대로)
+    -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.HrRes">
+        SELECT  tdm01_hr_id            AS hr_id
+             ,  tdm01_person_id        AS person_id
+             ,  tdm01_person_nm        AS person_name
+             ,  tdm01_pos_nm           AS pos_name
+             ,  tdm01_org_nm           AS org_name
+             ,  tdm01_hire_date        AS hire_date
+             ,  tdm01_retire_date      AS retire_date
+             ,  tdm01_end_date         AS end_date
+             ,  tdm01_upd_nm           AS upd_name
+             ,  tdm01_upd_date_str     AS upd_date_str
+             ,  tdm01_add_title        AS add_title
+          FROM  (
+                    SELECT  *
+                         ,  COALESCE(TO_CHAR(tdm01_upd_date, 'yyyy-mm-dd HH24:MI:SS'), ''::text)    AS tdm01_upd_date_str
+                         ,  CONCAT(
+                                    ( SELECT '[사내]'||STRING_AGG(tdm03_add_title_nm, ', ')
+                                        FROM tdm03_add_title
+                                       WHERE tdm03_person_id = tdm01_person_id
+                                         AND f_today() BETWEEN tdm03_start_date AND COALESCE(tdm03_close_date,'2999-12-31'::date)
+                                    )||' '
+                                  , ( SELECT '[사외]'||f_get_tdmPersonInfo(tdm01_person_id, f_today(), '4') )
+                                  )                                                                AS tdm01_add_title
+                      FROM  (
+                                SELECT  *
+                                     ,  f_cdnm('EmpPosCode'  , tdm01_pos_cd  , tdm01_company_id, f_today()) AS tdm01_pos_nm
+                                     ,  f_cdnm('EmpTitleCode', tdm01_title_cd, tdm01_company_id, f_today()) AS tdm01_title_nm
+                                  FROM  tdm01_hr
+                                 WHERE  tdm01_company_id = #{companyId}
+                                <if test="exceptRetireYn">
+                                   AND  COALESCE(tdm01_retire_date,'9999-12-31'::date) > f_today()
+                                </if>
+                            ) t
+                     WHERE  1=1
+                       AND CONCAT(tdm01_person_nm, tdm01_pos_nm, tdm01_org_nm) ILIKE #{searchText}
+                ) r
+         ORDER BY tdm01_pos_cd, tdm01_person_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm01_hr.selectPersonModifyed (N04 인사정보 가져오기) — 수정: 바깥 t.* 를 그리드가 쓰는 열 별칭으로 -->
+    <select id="selectPersonModifyed" resultType="kr.co.kfs.asseterp.biz.tdm.dto.HrChangeRes">
+WITH emp AS ( SELECT *
+                FROM getPerson(#{companyId}, f_today())
+               WHERE ( COALESCE(emp00_tdm_target_yn,'false') = 'true'
+                       OR
+                       (    COALESCE(emp00_tdm_target_yn,'false') != 'true'
+                        AND emp00_retire_date  IS NOT NULL
+                        AND EXISTS ( SELECT 1
+                                       FROM tdm01_hr
+                                      WHERE tdm01_company_id   = emp00_company_id
+                                        AND tdm01_person_id    = emp00_person_id
+                                        AND COALESCE(tdm01_retire_date, '1999-01-01') != emp00_retire_date ) )
+                     )
+                 AND emp00_trans_cd != '800'
+                 AND NOT EXISTS ( SELECT 1 FROM emp04_add_title WHERE emp04_add_person_id = emp00_person_id ) /* 겸직제외 */
+)
+SELECT ROW_NUMBER() OVER(ORDER BY tdm01_change_type_cd
+                                , tdm01_person_nm COLLATE "ko_KR.utf8"
+                        )   AS hr_id
+     , t.tdm01_change_type_cd AS change_type_code, t.tdm01_change_type_nm AS change_type_name
+     , t.tdm01_person_id AS person_id, t.tdm01_person_nm AS person_name
+     , t.tdm01_bef_pos_nm AS bef_pos_name, t.tdm01_bef_title_nm AS bef_title_name, t.tdm01_bef_org_nm AS bef_org_name
+     , t.tdm01_bef_hire_date AS bef_hire_date, t.tdm01_bef_retire_date AS bef_retire_date, t.tdm01_bef_end_date AS bef_end_date
+     , t.tdm01_aft_pos_nm AS aft_pos_name, t.tdm01_aft_title_nm AS aft_title_name, t.tdm01_aft_org_nm AS aft_org_name
+     , t.tdm01_aft_hire_date AS aft_hire_date, t.tdm01_aft_retire_date AS aft_retire_date, t.tdm01_aft_end_date AS aft_end_date
+  FROM (
+        --------------------------------------
+        -- 신규
+        --------------------------------------
+        SELECT '1'                                                                  AS tdm01_change_type_cd
+             , '신규'                                                                AS tdm01_change_type_nm
+             , emp00_person_id                                                      AS tdm01_person_id
+             , emp00_kor_nm                                                         AS tdm01_person_nm
+             , null                                                                 AS tdm01_bef_pos_nm
+             , null                                                                 AS tdm01_bef_title_nm
+             , null                                                                 AS tdm01_bef_org_nm
+             , null                                                                 AS tdm01_bef_hire_date
+             , null                                                                 AS tdm01_bef_retire_date
+             , null                                                                 AS tdm01_bef_end_date
+             , f_cdnm('EmpPosCode'  , emp00_pos_cd  , emp00_company_id, f_today())  AS tdm01_aft_pos_nm
+             , f_cdnm('EmpTitleCode', emp00_title_cd, emp00_company_id, f_today())  AS tdm01_aft_title_nm
+             , emp00_org_code_nm                                                    AS tdm01_aft_org_nm
+             , emp00_hire_date                                                      AS tdm01_aft_hire_date
+             , emp00_retire_date                                                    AS tdm01_aft_retire_date
+             , null                                                                 AS tdm01_aft_end_date
+          FROM emp
+         WHERE emp00_person_id IN ( SELECT emp00_person_id
+                                      FROM emp
+                                     WHERE COALESCE(emp00_retire_date,'9999-12-31') > f_today()
+                                    EXCEPT
+                                    SELECT tdm01_person_id
+                                      FROM tdm01_hr
+                                     WHERE tdm01_company_id = #{companyId}
+                                  )
+        --------------------------------------
+        -- 제외 (퇴사가 아닌데, 책무대상에서 빠진 경우)
+        --------------------------------------
+         UNION ALL
+        SELECT '3'                                                                  AS tdm01_change_type_cd
+             , '제외'                                                                AS tdm01_change_type_nm
+             , tdm01_person_id                                                      AS tdm01_person_id
+             , tdm01_person_nm                                                      AS tdm01_person_nm
+             , f_cdnm('EmpPosCode'  , tdm01_pos_cd  , tdm01_company_id, f_today())  AS tdm01_bef_pos_nm
+             , f_cdnm('EmpTitleCode', tdm01_title_cd, tdm01_company_id, f_today())  AS tdm01_bef_title_nm
+             , tdm01_org_nm                                                         AS tdm01_bef_org_nm
+             , tdm01_hire_date                                                      AS tdm01_bef_hire_date
+             , tdm01_retire_date                                                    AS tdm01_bef_retire_date
+             , tdm01_end_date                                                       AS tdm01_bef_end_date
+             , null                                                                 AS tdm01_aft_pos_nm
+             , null                                                                 AS tdm01_aft_title_nm
+             , null                                                                 AS tdm01_aft_org_nm
+             , null                                                                 AS tdm01_aft_hire_date
+             , null                                                                 AS tdm01_aft_retire_date
+             , null                                                                 AS tdm01_aft_end_date
+          FROM tdm01_hr
+         WHERE tdm01_company_id = #{companyId}
+           AND tdm01_person_id IN ( SELECT tdm01_person_id
+                                      FROM tdm01_hr
+                                     WHERE tdm01_company_id = #{companyId}
+                                       AND tdm01_end_date IS NULL
+                                    EXCEPT
+                                    SELECT emp00_person_id
+                                      FROM emp
+                                  )
+        --------------------------------------
+        -- 변동
+        --------------------------------------
+         UNION ALL
+        SELECT '2'                                                                  AS tdm01_change_type_cd
+             , '변동'                                                                AS tdm01_change_type_nm
+             , tdm01_person_id                                                      AS tdm01_person_id
+             , tdm01_person_nm                                                      AS tdm01_person_nm
+             , f_cdnm('EmpPosCode'  , tdm01_pos_cd  , tdm01_company_id, f_today())  AS tdm01_bef_pos_nm
+             , f_cdnm('EmpTitleCode', tdm01_title_cd, tdm01_company_id, f_today())  AS tdm01_bef_title_nm
+             , tdm01_org_nm                                                         AS tdm01_bef_org_nm
+             , tdm01_hire_date                                                      AS tdm01_bef_hire_date
+             , tdm01_retire_date                                                    AS tdm01_bef_retire_date
+             , tdm01_end_date                                                       AS tdm01_bef_end_date
+             , f_cdnm('EmpPosCode'  , emp00_pos_cd  , tdm01_company_id, f_today())  AS tdm01_aft_pos_nm
+             , f_cdnm('EmpTitleCode', emp00_title_cd, tdm01_company_id, f_today())  AS tdm01_aft_title_nm
+             , emp00_org_code_nm                                                    AS tdm01_aft_org_nm
+             , emp00_hire_date                                                      AS tdm01_aft_hire_date
+             , emp00_retire_date                                                    AS tdm01_aft_retire_date
+             , null                                                                 AS tdm01_aft_end_date
+          FROM tdm01_hr
+               INNER JOIN emp ON emp00_person_id = tdm01_person_id
+         WHERE tdm01_company_id = #{companyId}
+           AND (
+                tdm01_person_nm                          != emp00_kor_nm        OR
+                tdm01_pos_cd                             != emp00_pos_cd        OR
+                tdm01_title_cd                           != emp00_title_cd      OR
+                tdm01_org_id                             != emp00_org_code_id   OR
+                tdm01_org_nm                             != emp00_org_code_nm   OR
+                tdm01_hire_date                          != emp00_hire_date     OR
+                COALESCE(tdm01_retire_date,'9999-12-31') != emp00_retire_date   OR
+                tdm01_end_date IS NOT NULL                                      )
+       ) t
+    </select>
+
+    <!-- AS-IS(IDMS-IC) emp00_trans_info.selectGetPersonByPersonId — 현재 인사(emp01·emp03) 상태 -->
+    <select id="selectGetPersonByPersonId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.HrNowRes">
+        SELECT  emp00_person_id     AS person_id
+             ,  emp00_kor_nm        AS kor_name
+             ,  emp00_emp_no        AS emp_no
+             ,  emp00_pos_cd        AS pos_code
+             ,  f_cdnm('EmpPosCode'  , emp00_pos_cd  , emp00_company_id, f_today())  AS pos_name
+             ,  emp00_title_cd      AS title_code
+             ,  f_cdnm('EmpTitleCode', emp00_title_cd, emp00_company_id, f_today())  AS title_name
+             ,  emp00_hire_date     AS hire_date
+             ,  emp00_retire_date   AS retire_date
+             ,  emp00_trans_date    AS trans_date
+             ,  emp00_org_code_id   AS org_code_id
+             ,  emp00_org_code_nm   AS org_code_name
+             ,  emp00_org_head_nm   AS org_head_name
+          FROM  getPerson(#{companyId}, f_today())
+         WHERE  emp00_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm01_hr.selectByPersonId -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.HrRowRes">
+        SELECT  tdm01_person_id     AS person_id
+             ,  tdm01_person_nm     AS person_name
+             ,  tdm01_pos_cd        AS pos_code
+             ,  f_cdnm('EmpPosCode'  , tdm01_pos_cd  , tdm01_company_id, f_today())     AS pos_name
+             ,  tdm01_title_cd      AS title_code
+             ,  f_cdnm('EmpTitleCode', tdm01_title_cd, tdm01_company_id, f_today())     AS title_name
+             ,  tdm01_hire_date     AS hire_date
+             ,  tdm01_retire_date   AS retire_date
+             ,  tdm01_end_date      AS end_date
+             ,  tdm01_org_id        AS org_id
+             ,  tdm01_org_nm        AS org_name
+          FROM  tdm01_hr
+         WHERE  tdm01_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm01_hr.insert — 수정: 위치 지정 INSERT 대신 열 이름을 적음, 등록자는 current_setting 대신 로그인 사용자 이름 -->
+    <insert id="insertHr">
+        INSERT INTO tdm01_hr
+               ( tdm01_hr_id, tdm01_company_id, tdm01_person_id, tdm01_person_nm, tdm01_person_no
+               , tdm01_pos_cd, tdm01_title_cd, tdm01_hire_date, tdm01_retire_date, tdm01_end_date
+               , tdm01_org_id, tdm01_org_nm, tdm01_org_head_nm, tdm01_upd_nm, tdm01_upd_date )
+        SELECT f_create_seq()
+             , #{companyId}
+             , #{now.personId}
+             , #{now.korName}
+             , #{now.empNo}
+             , #{now.posCode}
+             , #{now.titleCode}
+             , #{now.hireDate}
+             , #{now.retireDate}
+             , NULL
+             , #{now.orgCodeId}
+             , #{now.orgCodeName}
+             , #{now.orgHeadName}
+             , #{updName}
+             , f_sysdate()
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) tdm01_hr.updateHrChange -->
+    <update id="updateHrChange">
+        UPDATE tdm01_hr
+           SET tdm01_person_nm   = #{hr.personName}
+             , tdm01_pos_cd      = #{hr.posCode}
+             , tdm01_title_cd    = #{hr.titleCode}
+             , tdm01_hire_date   = #{hr.hireDate}
+             , tdm01_retire_date = #{hr.retireDate}
+             , tdm01_end_date    = #{hr.endDate}
+             , tdm01_org_id      = #{hr.orgId}
+             , tdm01_org_nm      = #{hr.orgName}
+             , tdm01_org_head_nm = #{orgHeadName}
+             , tdm01_upd_nm      = #{updName}
+             , tdm01_upd_date    = f_sysdate()
+         WHERE tdm01_person_id = #{hr.personId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm01_hr.updateEndDate -->
+    <update id="updateEndDate">
+        UPDATE tdm01_hr
+           SET tdm01_retire_date = #{retireDate}
+             , tdm01_end_date    = #{endDate}
+             , tdm01_upd_nm      = #{updName}
+             , tdm01_upd_date    = f_sysdate()
+         WHERE tdm01_person_id = #{personId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm02_hr_record.insert — 수정: 등록자·변경자 모두 로그인 사용자 이름(AS-IS는 변경자를 current_setting으로) -->
+    <insert id="insertHrRecord">
+        INSERT INTO tdm02_hr_record
+               ( tdm02_hr_record_id, tdm02_company_id, tdm02_reg_date, tdm02_reg_type, tdm02_person_nm
+               , tdm02_change_data, tdm02_init_nm, tdm02_init_date, tdm02_note, tdm02_apply_cd
+               , tdm02_upd_nm, tdm02_upd_date )
+        SELECT f_create_seq()
+             , #{companyId}
+             , f_today()
+             , #{regType}
+             , #{personName}
+             , #{changeData}
+             , #{updName}
+             , f_sysdate()
+             , NULL
+             , '0'
+             , #{updName}
+             , f_sysdate()
+    </insert>
+</mapper>
