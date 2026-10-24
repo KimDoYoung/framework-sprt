@@ -14,7 +14,7 @@ public interface TdmTaskMapper {
     /** AS-IS tdm10_task.selectByText */
     List<TaskRes> selectByText(@Param("companyId") Long companyId, @Param("baseDate") LocalDate baseDate,
                                @Param("taskClassCode") String taskClassCode, @Param("allYn") boolean allYn,
-                               @Param("searchText") String searchText);
+                               @Param("searchText") String searchText, @Param("dedupYn") boolean dedupYn);
 
     /** AS-IS tdm10_task.selectById */
     TaskRes selectById(@Param("companyId") Long companyId, @Param("taskId") Long taskId);

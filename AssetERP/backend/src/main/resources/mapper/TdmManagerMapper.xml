@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm08_manager_info.xml + Tdm08_ManagerInfo (N09 책무담당자 등록)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmManagerMapper">
+
+    <!-- AS-IS tdm08_manager_info.selectByCompanyId — 그대로 (ROW_NUMBER가 그리드 행 ID) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManagerRes">
+        SELECT ROW_NUMBER() OVER(ORDER BY manager_type_cd, tdm08_org_nm COLLATE "ko_KR.utf8")   AS manager_info_id
+             , manager_type_cd                                                                  AS manager_type
+             , manager_type_nm                                                                  AS manager_type_name
+             , tdm08_org_id                                                                     AS org_id
+             , tdm08_org_nm                                                                     AS org_name
+             , tdm08_person_id                                                                  AS person_id
+             , tdm08_person_nm                                                                  AS person_name
+          FROM (
+                 SELECT manager_type_cd
+                      , manager_type_nm
+                      , tdm08_org_id
+                      , f_org_nm(tdm08_org_id, f_today())   tdm08_org_nm
+                      , tdm08_person_id
+                      , f_emp_kor_nm(tdm08_person_id)       tdm08_person_nm
+                   FROM ( SELECT sys09_code  manager_type_cd
+                               , sys09_name  manager_type_nm
+                            FROM sys08_code_kind
+                                 INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+                           WHERE sys08_kind_cd    = 'TdmManagerType'
+                             AND sys09_company_id = 0
+                             AND sys09_code       LIKE '1%'
+                             AND ( ( COALESCE(sys09_close_yn,'false')         = 'true'                   AND
+                                     COALESCE(sys09_close_date,'2000-01-01') >= f_today()    ) OR
+                                   ( COALESCE(sys09_close_yn,'false')        != 'true'                   ) )
+                        ) sys
+                        LEFT JOIN ( SELECT tdm08_manager_type
+                                         , tdm08_person_id
+                                         , f_get_empTrans(tdm08_person_id, f_today(), 'org_code_id')::numeric  tdm08_org_id
+                                      FROM tdm08_manager_info
+                                     WHERE tdm08_company_id = #{companyId}
+                                       AND f_today() BETWEEN tdm08_start_date AND COALESCE(tdm08_end_date,'9999-12-31'::date)
+                                   ) tdm08 ON tdm08_manager_type = manager_type_cd
+                  UNION ALL
+                 SELECT manager_type_cd
+                      , manager_type_nm
+                      , org_id
+                      , org_nm
+                      , tdm08_person_id
+                      , f_emp_kor_nm(tdm08_person_id)
+                   FROM (
+                          SELECT DISTINCT
+                                 tdm23_org_id org_id
+                               , org00_kor_nm org_nm
+                               , sys.*
+                            FROM tdm20_role
+                                 INNER JOIN tdm23_role_relate_org ON tdm23_role_id = tdm20_role_id
+                                 INNER JOIN getOrg(#{companyId}, f_today()) ON org00_org_id = tdm23_org_id
+                                 CROSS JOIN ( SELECT sys09_code  manager_type_cd
+                                                   , sys09_name  manager_type_nm
+                                                FROM sys08_code_kind
+                                                     INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+                                               WHERE sys08_kind_cd    = 'TdmManagerType'
+                                                 AND sys09_company_id = 0
+                                                 AND sys09_code       LIKE '2%'
+                                                 AND ( ( COALESCE(sys09_close_yn,'false')         = 'true'                   AND
+                                                         COALESCE(sys09_close_date,'2000-01-01') >= f_today()    ) OR
+                                                       ( COALESCE(sys09_close_yn,'false')        != 'true'                   ) )
+                                            ) sys
+                           WHERE tdm20_company_id = #{companyId}
+                             AND f_today() BETWEEN tdm20_start_date AND COALESCE(tdm20_end_date,'2999-12-31'::date)
+                        ) org
+                        LEFT JOIN ( SELECT tdm08_manager_type
+                                         , tdm08_org_id
+                                         , tdm08_person_id
+                                      FROM tdm08_manager_info
+                                     WHERE tdm08_company_id = #{companyId}
+                                       AND f_today() BETWEEN tdm08_start_date AND COALESCE(tdm08_end_date,'9999-12-31'::date)
+                                  ) tdm08 ON ( tdm08_manager_type = manager_type_cd  AND
+                                               tdm08_org_id       = org_id           )
+               ) t
+         WHERE CONCAT(tdm08_org_nm, tdm08_person_nm) ILIKE #{searchText}
+    </select>
+
+    <!-- AS-IS tdm08_manager_info.selectByManagerType — 수정: SELECT *를 화면이 쓰는 열로 -->
+    <select id="selectByManagerType" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManagerInfoRes">
+        SELECT tdm08_manager_info_id                                                    AS manager_info_id
+             , tdm08_manager_type                                                       AS manager_type
+             , tdm08_org_id                                                             AS org_id
+             , tdm08_person_id                                                          AS person_id
+             , tdm08_start_date                                                         AS start_date
+             , tdm08_end_date                                                           AS end_date
+             , emp00_kor_nm                                                             AS person_name
+             , f_cdnm('EmpPosCode', emp00_pos_cd, tdm08_company_id, tdm08_start_date)   AS pos_name
+             , emp00_org_code_nm                                                        AS org_name
+          FROM tdm08_manager_info
+               INNER JOIN LATERAL getPerson(#{companyId}, tdm08_start_date) ON emp00_person_id = tdm08_person_id
+         WHERE tdm08_company_id   = #{companyId}
+           AND tdm08_manager_type = #{managerType}
+           AND ( (  tdm08_manager_type LIKE '2%'    AND
+                    tdm08_org_id       = #{orgId}   ) OR
+                 (  tdm08_manager_type LIKE '1%'    ) )
+         ORDER BY tdm08_start_date DESC
+    </select>
+
+    <!-- AS-IS tdm08_manager_info.selectById — 수정: 화면이 쓰는 열만 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManagerInfoRes">
+        SELECT tdm08_manager_info_id                                                    AS manager_info_id
+             , tdm08_manager_type                                                       AS manager_type
+             , tdm08_org_id                                                             AS org_id
+             , tdm08_person_id                                                          AS person_id
+             , tdm08_start_date                                                         AS start_date
+             , tdm08_end_date                                                           AS end_date
+             , emp00_kor_nm                                                             AS person_name
+             , f_cdnm('EmpPosCode', emp00_pos_cd, tdm08_company_id, tdm08_start_date)   AS pos_name
+             , emp00_org_code_nm                                                        AS org_name
+          FROM tdm08_manager_info
+               INNER JOIN LATERAL getperson(tdm08_company_id, tdm08_start_date) ON emp00_person_id = tdm08_person_id
+         WHERE tdm08_manager_info_id = #{managerInfoId}
+    </select>
+
+    <select id="selectCompanyId" resultType="long">
+        SELECT tdm08_company_id
+          FROM tdm08_manager_info
+         WHERE tdm08_manager_info_id = #{managerInfoId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT/UPDATE: 화면이 바꾸는 열 (등록자·일시는 서버 값) -->
+    <insert id="insertManager">
+        INSERT INTO tdm08_manager_info
+               ( tdm08_manager_info_id, tdm08_company_id, tdm08_manager_type, tdm08_org_id, tdm08_person_id, tdm08_start_date, tdm08_end_date, tdm08_upd_nm, tdm08_upd_date )
+        VALUES ( #{managerInfoId}, #{companyId}, #{row.managerType}, #{row.orgId}, #{row.personId}, #{row.startDate}, #{row.endDate}, #{updName}, f_sysdate() )
+    </insert>
+
+    <update id="updateManager">
+        UPDATE tdm08_manager_info
+           SET tdm08_person_id  = #{row.personId}
+             , tdm08_start_date = #{row.startDate}
+             , tdm08_end_date   = #{row.endDate}
+             , tdm08_upd_nm     = #{updName}
+             , tdm08_upd_date   = f_sysdate()
+         WHERE tdm08_manager_info_id = #{row.managerInfoId}
+    </update>
+
+    <delete id="deleteManagers">
+        DELETE FROM tdm08_manager_info
+         WHERE tdm08_company_id = #{companyId}
+           AND tdm08_manager_info_id IN
+        <foreach collection="managerInfoIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

@@ -30,9 +30,14 @@ public class TdmTaskService {
 
     /** AS-IS Tdm10_Tab_Task.retrieve: taskClassCode·searchText는 %…%, 전체보기(allYn)면 기준일 조건 없음 */
     public List<TaskRes> search(UserPrincipal user, LocalDate baseDate, String taskClassCode, boolean allYn, String searchText) {
+        return search(user, baseDate, taskClassCode, allYn, searchText, false);
+    }
+
+    /** dedupYn: AS-IS Tdm10_Lookup_SelectMulti — 기준일의 직책에 이미 연결된 책무(공통책무 제외)는 뺀다 */
+    public List<TaskRes> search(UserPrincipal user, LocalDate baseDate, String taskClassCode, boolean allYn, String searchText, boolean dedupYn) {
         return mapper.selectByText(user.getCompanyId(), baseDate == null ? LocalDate.now() : baseDate,
                 taskClassCode == null || taskClassCode.isEmpty() ? "%" : taskClassCode, allYn,
-                "%" + (searchText == null ? "" : searchText) + "%");
+                "%" + (searchText == null ? "" : searchText) + "%", dedupYn);
     }
 
     public TaskRes get(UserPrincipal user, Long taskId) {

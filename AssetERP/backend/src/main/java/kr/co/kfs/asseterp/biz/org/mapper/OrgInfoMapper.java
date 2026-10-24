@@ -22,5 +22,5 @@ public interface OrgInfoMapper {
     int countIgnoreStamp(@Param("personId") Long personId);
 
     /** AS-IS org00_org_info.selectByTdmYn — 책무 대상 조직(tdm_yn). searchText는 LIKE 패턴 */
-    List<OrgTdmRes> selectByTdmYn(@Param("companyId") Long companyId, @Param("stdDate") LocalDate stdDate, @Param("searchText") String searchText);
+    List<OrgTdmRes> selectByTdmYn(@Param("companyId") Long companyId, @Param("stdDate") LocalDate stdDate, @Param("searchText") String searchText, @Param("roleId") Long roleId);
 }

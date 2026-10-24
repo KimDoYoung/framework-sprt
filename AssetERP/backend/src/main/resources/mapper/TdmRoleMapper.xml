@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm20_role.xml + tdm21_role_relate_task.xml + tdm22_role_relate_cncl.xml(selectByRoleId) + tdm23_role_relate_org.xml + Tdm20_Role·Tdm21~23 (N08 직책별 책무 등록)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmRoleMapper">
+
+    <sql id="roleSelect">
+        SELECT tdm20_role_id           AS role_id
+             , tdm20_role_nm           AS role_name
+             , tdm20_role_type         AS role_type
+             , f_cdnm('TdmRoleType', tdm20_role_type, tdm20_company_id, f_sysdate()) AS role_type_name
+             , tdm20_role_type_etc_nm  AS role_type_etc_name
+             , tdm20_overview          AS overview
+             , (SELECT CASE WHEN COUNT(*) = 0 THEN '' ELSE COUNT(*)||'건' END
+                  FROM tdm21_role_relate_task WHERE tdm21_role_id = tdm20_role_id)   AS role_relate_task_cnt
+             , (SELECT CASE WHEN COUNT(*) = 0 THEN '' ELSE COUNT(*)||'건' END
+                  FROM tdm22_role_relate_cncl WHERE tdm22_role_id = tdm20_role_id)   AS role_relate_cncl_cnt
+             , (SELECT CASE WHEN COUNT(*) = 0 THEN '' ELSE COUNT(*)||'건' END
+                  FROM tdm23_role_relate_org WHERE tdm23_role_id = tdm20_role_id)    AS role_relate_org_cnt
+             , tdm20_ceo_role_id       AS ceo_role_id
+             , (SELECT sub.tdm20_role_nm FROM tdm20_role sub WHERE sub.tdm20_role_id = a.tdm20_ceo_role_id) AS ceo_role_name
+             , tdm20_start_date        AS start_date
+             , tdm20_end_date          AS end_date
+             , tdm20_upd_nm            AS upd_name
+             , COALESCE(TO_CHAR(tdm20_upd_date, 'yyyy-mm-dd HH24:MI:SS'), ''::text) AS upd_date_str
+          FROM tdm20_role a
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) tdm20_role.selectByDate: allYn이 아니면 기준일이 사용기간 안인 것만, roleType이 있으면 그 직책그룹만 (orgId 분기는 이 화면이 안 쓴다).
+         수정: 바깥 t.*를 화면 열로, 직책그룹명 필터는 안쪽 SELECT의 role_type_name 별칭으로. 정렬·건수 서브쿼리 그대로 -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleRes">
+        SELECT * FROM (
+        <include refid="roleSelect"/>
+         WHERE tdm20_company_id = #{companyId}
+        <if test="!allYn">
+           AND CAST(#{baseDate} AS date) BETWEEN tdm20_start_date AND COALESCE(tdm20_end_date, TO_DATE('29991231','yyyyMMdd'))
+        </if>
+        <if test="roleType != null">
+           AND tdm20_role_type = #{roleType}
+        </if>
+        ) t
+         WHERE CONCAT(role_name, role_type_name, overview) ILIKE #{searchText}
+         ORDER BY role_name COLLATE "ko_KR.utf8"
+                , role_type
+                , role_type_etc_name COLLATE "ko_KR.utf8"
+                , start_date
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm20_role.selectById (변경 전 값 비교, 저장 뒤 다시 읽기) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleRes">
+        <include refid="roleSelect"/>
+         WHERE tdm20_role_id = #{roleId}
+    </select>
+
+    <select id="selectCompanyId" resultType="long">
+        SELECT tdm20_company_id FROM tdm20_role WHERE tdm20_role_id = #{roleId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm20_role.countUseByRoleId -->
+    <select id="countUseByRoleId" resultType="int">
+        SELECT COUNT(*)
+          FROM tdm30_role_allc
+         WHERE tdm30_role_id = #{roleId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm20_role.checkCeoRoleId (SELECT * 를 건수로) -->
+    <select id="countCeoRef" resultType="int">
+        SELECT COUNT(*)
+          FROM tdm20_role
+         WHERE tdm20_ceo_role_id = #{roleId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="selectNextRelateId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT/UPDATE: 화면이 바꾸는 열 -->
+    <insert id="insertRole">
+        INSERT INTO tdm20_role
+               ( tdm20_role_id, tdm20_company_id, tdm20_role_nm, tdm20_role_type, tdm20_role_type_etc_nm, tdm20_overview
+               , tdm20_start_date, tdm20_end_date, tdm20_ceo_role_id, tdm20_upd_nm, tdm20_upd_date )
+        VALUES ( #{roleId}, #{companyId}, #{row.roleName}, #{row.roleType}, #{row.roleTypeEtcName}, #{row.overview}
+               , #{row.startDate}, #{row.endDate}, #{row.ceoRoleId}, #{updName}, f_sysdate() )
+    </insert>
+
+    <update id="updateRole">
+        UPDATE tdm20_role
+           SET tdm20_role_nm           = #{row.roleName}
+             , tdm20_role_type         = #{row.roleType}
+             , tdm20_role_type_etc_nm  = #{row.roleTypeEtcName}
+             , tdm20_overview          = #{row.overview}
+             , tdm20_start_date        = #{row.startDate}
+             , tdm20_end_date          = #{row.endDate}
+             , tdm20_ceo_role_id       = #{row.ceoRoleId}
+             , tdm20_upd_nm            = #{updName}
+             , tdm20_upd_date          = f_sysdate()
+         WHERE tdm20_role_id = #{row.roleId}
+           AND tdm20_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS Tdm20_Lookup_SelectSingle.confirm: roleModel의 보고CEO만 바꿔 modelUpdate (이력 없음) -->
+    <update id="updateCeo">
+        UPDATE tdm20_role
+           SET tdm20_ceo_role_id = #{ceoRoleId}
+             , tdm20_upd_nm      = #{updName}
+             , tdm20_upd_date    = f_sysdate()
+         WHERE tdm20_role_id = #{roleId}
+           AND tdm20_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteRoles">
+        DELETE FROM tdm20_role
+         WHERE tdm20_company_id = #{companyId}
+           AND tdm20_role_id IN
+        <foreach collection="roleIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm21_role_relate_task.selectByRoloId — 수정: SELECT * 를 화면 열로 -->
+    <select id="selectTasksByRoleId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleTaskRes">
+        SELECT tdm21_role_relate_task_id AS role_relate_task_id
+             , tdm21_role_id             AS role_id
+             , tdm21_task_id             AS task_id
+             , f_cdnm('TdmTaskClassCode', tdm10_task_class_cd, tdm10_company_id, f_sysdate()) AS task_class_name
+             , tdm14_task_type_nm        AS task_type_name
+             , tdm10_task_nm             AS task_name
+             , tdm10_start_date          AS start_date
+             , tdm10_end_date            AS end_date
+          FROM tdm21_role_relate_task
+               INNER JOIN tdm20_role ON tdm21_role_id = tdm20_role_id
+               INNER JOIN tdm10_task ON tdm21_task_id = tdm10_task_id
+               INNER JOIN tdm14_task_type ON tdm10_company_id = tdm14_company_id AND tdm14_task_type_cd = tdm10_task_type_cd
+         WHERE tdm21_role_id = #{roleId}
+    </select>
+
+    <select id="selectTaskCompanyId" resultType="long">
+        SELECT tdm10_company_id FROM tdm10_task WHERE tdm10_task_id = #{taskId}
+    </select>
+
+    <insert id="insertRoleTask">
+        INSERT INTO tdm21_role_relate_task ( tdm21_role_relate_task_id, tdm21_role_id, tdm21_task_id )
+        VALUES ( #{id}, #{roleId}, #{taskId} )
+    </insert>
+
+    <delete id="deleteRoleTasks">
+        DELETE FROM tdm21_role_relate_task
+         WHERE tdm21_role_id = #{roleId}
+           AND tdm21_role_relate_task_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm22_role_relate_cncl.selectByRoleId — 수정: SELECT * 를 화면 열로 (원본에 정렬이 없다) -->
+    <select id="selectCouncilsByRoleId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleCouncilRes">
+        SELECT tdm22_role_relate_cncl_id AS role_relate_cncl_id
+             , tdm22_role_id             AS role_id
+             , tdm22_cncl_id             AS cncl_id
+             , tdm05_cncl_nm             AS cncl_name
+             , tdm22_member_type         AS member_type
+             , f_cdnm('TdmCnclMemberType', tdm22_member_type, tdm05_company_id, f_sysdate()) AS member_type_name
+             , tdm22_start_date          AS start_date
+             , tdm22_end_date            AS end_date
+          FROM tdm22_role_relate_cncl
+               INNER JOIN tdm20_role ON tdm22_role_id = tdm20_role_id
+               INNER JOIN tdm05_cncl ON tdm22_cncl_id = tdm05_cncl_id
+         WHERE tdm22_role_id = #{roleId}
+    </select>
+
+    <insert id="insertRoleCouncil">
+        INSERT INTO tdm22_role_relate_cncl
+               ( tdm22_role_relate_cncl_id, tdm22_role_id, tdm22_cncl_id, tdm22_member_type, tdm22_start_date, tdm22_end_date )
+        VALUES ( #{id}, #{roleId}, #{row.cnclId}, #{row.memberType}, #{row.startDate}, #{row.endDate} )
+    </insert>
+
+    <update id="updateRoleCouncil">
+        UPDATE tdm22_role_relate_cncl
+           SET tdm22_member_type = #{row.memberType}
+             , tdm22_start_date  = #{row.startDate}
+             , tdm22_end_date    = #{row.endDate}
+         WHERE tdm22_role_relate_cncl_id = #{row.roleRelateCnclId}
+           AND tdm22_role_id = #{roleId}
+    </update>
+
+    <delete id="deleteRoleCouncils">
+        DELETE FROM tdm22_role_relate_cncl
+         WHERE tdm22_role_id = #{roleId}
+           AND tdm22_role_relate_cncl_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm23_role_relate_org.selectByRoleId — 수정: SELECT * 를 화면 열로 (tdm09Yn·searchText 분기는 이 화면이 안 쓴다) -->
+    <select id="selectOrgsByRoleId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleOrgRes">
+        SELECT tdm23_role_relate_org_id AS role_relate_org_id
+             , tdm23_role_id            AS role_id
+             , tdm23_org_id             AS org_id
+             , org00_kor_nm             AS org_name
+          FROM tdm23_role_relate_org
+               INNER JOIN tdm20_role ON tdm20_role_id = tdm23_role_id
+               INNER JOIN getOrg(#{companyId}, CAST(#{stdDate} AS date)) ON org00_org_id = tdm23_org_id
+         WHERE tdm23_role_id = #{roleId}
+         ORDER BY org00_org_cd
+    </select>
+
+    <select id="countOrg" resultType="int">
+        SELECT COUNT(*)
+          FROM getOrg(#{companyId}, CAST(#{stdDate} AS date))
+         WHERE org00_org_id = #{orgId}
+    </select>
+
+    <insert id="insertRoleOrg">
+        INSERT INTO tdm23_role_relate_org ( tdm23_role_relate_org_id, tdm23_role_id, tdm23_org_id )
+        VALUES ( #{id}, #{roleId}, #{orgId} )
+    </insert>
+
+    <delete id="deleteRoleOrgs">
+        DELETE FROM tdm23_role_relate_org
+         WHERE tdm23_role_id = #{roleId}
+           AND tdm23_role_relate_org_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

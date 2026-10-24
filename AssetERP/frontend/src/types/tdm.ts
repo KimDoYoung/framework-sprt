@@ -472,3 +472,91 @@ export interface TdmCouncilRoleLookup {
   startDate: string | null;
   endDate: string | null;
 }
+
+/** 직책 한 행 (GET /api/v1/tdm/roles, AS-IS Tdm20_RoleModel) */
+export interface TdmRole {
+  roleId: number;
+  roleName: string | null;
+  roleType: string | null;
+  roleTypeName: string | null;
+  roleTypeEtcName: string | null;
+  overview: string | null;
+  roleRelateTaskCnt: string | null;
+  roleRelateCnclCnt: string | null;
+  roleRelateOrgCnt: string | null;
+  ceoRoleId: number | null;
+  ceoRoleName: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  updName: string | null;
+  updDateStr: string | null;
+}
+
+/** 직책 편집창 저장 (PUT /api/v1/tdm/roles, roleId가 없으면 새 직책, reason은 수정일 때만) */
+export interface TdmRoleSaveReq {
+  roleId: number | null;
+  roleName: string;
+  roleType: string;
+  roleTypeEtcName: string | null;
+  overview: string;
+  startDate: string;
+  endDate: string | null;
+  ceoRoleId: number | null;
+  reason: string | null;
+}
+
+/** 직책에 연결된 책무 한 행 (AS-IS Tdm21_RoleRelateTaskModel). 새 행은 ID ≤ 0 */
+export interface TdmRoleTask {
+  roleRelateTaskId: number;
+  roleId: number;
+  taskId: number;
+  taskClassName: string | null;
+  taskTypeName: string | null;
+  taskName: string | null;
+  startDate: string | null;
+  endDate: string | null;
+}
+
+/** 직책에 연결된 회의체 한 행 (AS-IS Tdm22_RoleRelateCnclModel, 직책 쪽). 새 행은 ID ≤ 0 */
+export interface TdmRoleCouncil {
+  roleRelateCnclId: number;
+  roleId: number;
+  cnclId: number;
+  cnclName: string | null;
+  memberType: string | null;
+  memberTypeName: string | null;
+  startDate: string | null;
+  endDate: string | null;
+}
+
+/** 직책에 연결된 부서 한 행 (AS-IS Tdm23_RoleRelateOrgModel). 새 행은 ID ≤ 0 */
+export interface TdmRoleOrg {
+  roleRelateOrgId: number;
+  roleId: number;
+  orgId: number;
+  orgName: string | null;
+}
+
+/** 책무이행점검 수행부서·담당자 (GET /api/v1/tdm/managers, AS-IS Tdm08_ManagerInfoModel) */
+export interface TdmManager {
+  managerInfoId: number;
+  managerType: string;
+  managerTypeName: string | null;
+  orgId: number | null;
+  orgName: string | null;
+  personId: number | null;
+  personName: string | null;
+}
+
+/** 담당자 적용기간 (GET /api/v1/tdm/managers/infos) */
+export interface TdmManagerInfo {
+  managerInfoId: number;
+  managerType: string;
+  orgId: number | null;
+  personId: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  personName: string | null;
+  posName: string | null;
+  orgName: string | null;
+}

@@ -1,7 +1,7 @@
 /**
- * 책무 대상 조직찾기 조회창 (E13에서 처음 씀) — openAll(기준일, 단일 선택, [전체] 버튼)만 변환했다.
+ * 책무 대상 조직찾기 조회창 (E13에서 처음 씀) — openAll(기준일, 단일 선택, [전체] 버튼). N08에서 roleId·다중 선택(`single={false}` + `onSelectMulti`)을 더했다.
  * AS-IS: myApp/client/vi/org/Org00_Lookup_SelectTdm.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
- * 쓰는 곳: Tdm42_Tab_ManlManagerAdmin(부서, 기준일 = 오늘)
+ * 쓰는 곳: Tdm42_Tab_ManlManagerAdmin(부서, 기준일 = 오늘), Tdm23_Lookup_RoleRelateOrg(다중, roleId)
  * UX보강(10): 툴바 = SearchBar(UX-01)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -31,12 +31,16 @@ interface Props {
   single?: boolean;
   /** AS-IS openAll → isAllButton: [전체] 버튼 (callback.execute(null) 후 닫는다) */
   allButton?: boolean;
+  /** AS-IS open(stdDate, roleId, …) — 그 직책에 이미 연결된 조직은 목록에서 뺀다 (N08 Tdm23_Lookup_RoleRelateOrg) */
+  roleId?: number | null;
   onClose: () => void;
-  /** AS-IS callback.execute(orgInfoModel) — [전체]는 null */
-  onSelect: (org: OrgTdm | null) => void;
+  /** AS-IS callback.execute(orgInfoModel) — [전체]는 null. `single`이면 이것을 부른다 */
+  onSelect?: (org: OrgTdm | null) => void;
+  /** AS-IS callback.execute(List<Org00_OrgInfoModel>) — `single={false}`일 때 고른 조직들 */
+  onSelectMulti?: (orgs: OrgTdm[]) => void;
 }
 
-export const Org00_Lookup_SelectTdm: React.FC<Props> = ({ stdDate: openDate, single = true, allButton = false, onClose, onSelect }) => {
+export const Org00_Lookup_SelectTdm: React.FC<Props> = ({ stdDate: openDate, single = true, allButton = false, roleId, onClose, onSelect, onSelectMulti }) => {
   const [stdDate, setStdDate] = useState(openDate);
   const gridRef = useRef<AgGridReact<OrgTdm>>(null);
   const [searchText, setSearchText] = useState('');
@@ -47,11 +51,11 @@ export const Org00_Lookup_SelectTdm: React.FC<Props> = ({ stdDate: openDate, sin
   const retrieve = useCallback(async () => {
     if (!stdDate) return;
     try {
-      setRows(await orgApi.searchTdmOrgs(stdDate, searchText));
+      setRows(await orgApi.searchTdmOrgs(stdDate, searchText, roleId));
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, [searchText, stdDate]);
+  }, [searchText, stdDate, roleId]);
 
   // [E5] cancelButton[닫기].Select (L146) → hide()
   const hide = () => { setSearchText(''); setRows([]); onClose(); };
@@ -61,12 +65,12 @@ export const Org00_Lookup_SelectTdm: React.FC<Props> = ({ stdDate: openDate, sin
     const list = gridRef.current?.api.getSelectedRows() ?? [];
     if (list.length === 0) return void message.warning('조직을 선택해주세요');
     if (single && list.length > 1) return void message.warning('하나의 조직만 선택해주세요');
-    onSelect(list[0]);
+    if (single) onSelect?.(list[0]); else onSelectMulti?.(list);
     hide();
   };
 
   // [E4] allButton[전체].Select [callback != null] (L137) → callback.execute(null); hide()
-  const selectAll = () => { onSelect(null); hide(); };
+  const selectAll = () => { onSelect?.(null); hide(); };
 
   // open() L75-109 끝: show() → retrieve()
   useEffect(() => { setStdDate(openDate); }, [openDate]);

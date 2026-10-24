@@ -43,7 +43,7 @@
         ),0)                                                                            AS task_relate_rule_cnt
     </sql>
 
-    <!-- AS-IS(IDMS-IC) tdm10_task.selectByText: allYn이 아니면 기준일이 사용기간 안인 것만 (dedupYn 분기는 이 화면이 안 쓴다) -->
+    <!-- AS-IS(IDMS-IC) tdm10_task.selectByText: allYn이 아니면 기준일이 사용기간 안인 것만 dedupYn이면(N08 Tdm10_Lookup_SelectMulti) 기준일에 쓰이는 직책에 이미 연결된 책무(공통책무 제외)를 뺀다 -->
     <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TaskRes">
         SELECT <include refid="taskColumns"/>
           FROM tdm10_task
@@ -53,6 +53,15 @@
            AND CONCAT(tdm14_task_type_cd, tdm14_task_type_nm, tdm10_task_nm) ILIKE #{searchText}
         <if test="!allYn">
            AND CAST(#{baseDate} AS date) BETWEEN tdm10_start_date AND COALESCE(tdm10_end_date, TO_DATE('29991231','yyyyMMdd'))
+        </if>
+        <if test="dedupYn">
+           AND NOT EXISTS ( SELECT 1
+                              FROM tdm21_role_relate_task
+                                   INNER JOIN tdm20_role ON tdm20_role_id = tdm21_role_id
+                             WHERE tdm20_company_id = #{companyId}
+                               AND CAST(#{baseDate} AS date) BETWEEN tdm20_start_date AND COALESCE(tdm20_end_date, TO_DATE('29991231','yyyyMMdd'))
+                               AND tdm21_task_id = tdm10_task_id
+                               AND COALESCE(tdm10_common_yn,'false') != 'true' )
         </if>
          ORDER BY tdm10_task_type_cd, tdm10_task_nm COLLATE "ko_KR.utf8"
     </select>

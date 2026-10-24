@@ -29,12 +29,19 @@
           FROM tdm05_cncl
     </sql>
 
-    <!-- AS-IS(IDMS-IC) tdm05_cncl.selectByDate: allYn이면 기간 조건 없이 전부. 수정: SELECT * 를 이 화면이 쓰는 열로 -->
+    <!-- AS-IS(IDMS-IC) tdm05_cncl.selectByDate: roleId가 있으면(N08 Tdm05_Lookup_SelectMulti) 기준일에 그 직책에 이미 연결된 회의체를 뺀다. allYn이면 기간 조건 없이 전부. 수정: SELECT * 를 이 화면이 쓰는 열로 -->
     <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CouncilRes">
         <include refid="councilSelect"/>
          WHERE tdm05_company_id = #{companyId}
         <if test="!allYn">
            AND CAST(#{baseDate} AS date) BETWEEN tdm05_start_date AND COALESCE(tdm05_end_date, TO_DATE('29991231','yyyyMMdd'))
+        </if>
+        <if test="roleId != null">
+           AND NOT EXISTS ( SELECT 1
+                              FROM tdm22_role_relate_cncl
+                             WHERE tdm22_cncl_id = tdm05_cncl_id
+                               AND CAST(#{baseDate} AS date) BETWEEN tdm22_start_date AND COALESCE(tdm22_end_date, DATE '2999-12-31')
+                               AND tdm22_role_id = #{roleId} )
         </if>
          ORDER BY tdm05_cncl_nm COLLATE "ko_KR.utf8", tdm05_open_cycle_cd, tdm05_start_date
     </select>

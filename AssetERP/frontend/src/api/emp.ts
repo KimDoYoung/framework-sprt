@@ -455,8 +455,8 @@ export const orgApi = {
   },
 
   /** AS-IS org.Org00_OrgInfo.selectByTdmYn (Org00_Lookup_SelectTdm — 기준일의 책무 대상 조직) */
-  searchTdmOrgs: async (stdDate: string, searchText: string): Promise<OrgTdm[]> => {
-    const res = await apiClient.get<ApiResponse<OrgTdm[]>>('v1/org/org-infos/tdm', { params: { stdDate, searchText } });
+  searchTdmOrgs: async (stdDate: string, searchText: string, roleId?: number | null): Promise<OrgTdm[]> => {
+    const res = await apiClient.get<ApiResponse<OrgTdm[]>>('v1/org/org-infos/tdm', { params: { stdDate, searchText, roleId: roleId ?? undefined } });
     return res.data.data ?? [];
   },
 

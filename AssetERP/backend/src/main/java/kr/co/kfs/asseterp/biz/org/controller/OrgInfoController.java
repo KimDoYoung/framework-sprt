@@ -37,8 +37,9 @@ public class OrgInfoController {
     @GetMapping("/tdm")
     public ApiResponse<List<OrgTdmRes>> searchTdmOrgs(@AuthenticationPrincipal UserPrincipal principal,
                                                       @RequestParam(required = false) String searchText,
-                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate) {
-        return ApiResponse.ok(orgInfoService.searchTdmOrgs(principal, stdDate, searchText));
+                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
+                                                      @RequestParam(required = false) Long roleId) {
+        return ApiResponse.ok(orgInfoService.searchTdmOrgs(principal, stdDate, searchText, roleId));
     }
 
     /** AS-IS org.Org00_OrgInfo.selectByIgnoreStamp (Apr01_Tab_StampSeq, G06) — 내 조직이 인감무시 조직인가 */

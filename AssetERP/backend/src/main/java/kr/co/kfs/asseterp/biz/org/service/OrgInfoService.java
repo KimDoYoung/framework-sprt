@@ -27,9 +27,9 @@ public class OrgInfoService {
     }
 
     /** AS-IS selectByTdmYn: 기준일의 책무 대상 조직(로그인 회사). 검색어는 조직코드/조직명 */
-    public List<OrgTdmRes> searchTdmOrgs(UserPrincipal user, LocalDate stdDate, String searchText) {
+    public List<OrgTdmRes> searchTdmOrgs(UserPrincipal user, LocalDate stdDate, String searchText, Long roleId) {
         String like = "%" + (searchText == null ? "" : searchText) + "%";
-        return orgInfoMapper.selectByTdmYn(user.getCompanyId(), stdDate, like);
+        return orgInfoMapper.selectByTdmYn(user.getCompanyId(), stdDate, like, roleId);
     }
 
     /** AS-IS selectByIgnoreStamp (G06 인감대장): 로그인 사용자 조직이 인감무시 조직인가. 회사관리자는 조직이 없어 false */

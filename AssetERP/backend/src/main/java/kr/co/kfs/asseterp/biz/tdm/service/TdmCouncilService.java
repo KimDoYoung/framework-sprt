@@ -25,8 +25,8 @@ public class TdmCouncilService {
     private final TdmCouncilMapper mapper;
 
     /** AS-IS tdm.Tdm05_Cncl.selectByDate */
-    public List<CouncilRes> search(UserPrincipal user, LocalDate baseDate, boolean allYn) {
-        return mapper.selectByDate(user.getCompanyId(), baseDate, allYn);
+    public List<CouncilRes> search(UserPrincipal user, LocalDate baseDate, boolean allYn, Long roleId) {
+        return mapper.selectByDate(user.getCompanyId(), baseDate, allYn, roleId);
     }
 
     /** AS-IS Tdm05_Cncl.modelUpdate: cnclId가 없으면 새 ID(DB 시퀀스)로 INSERT, 있으면 UPDATE. 저장한 행을 돌려준다 */

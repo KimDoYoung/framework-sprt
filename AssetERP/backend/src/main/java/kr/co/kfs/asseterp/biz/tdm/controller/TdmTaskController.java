@@ -36,8 +36,9 @@ public class TdmTaskController {
                                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate,
                                              @RequestParam(defaultValue = "%") String taskClassCode,
                                              @RequestParam(defaultValue = "true") boolean allYn,
-                                             @RequestParam(defaultValue = "") String searchText) {
-        return ApiResponse.ok(service.search(principal, baseDate, taskClassCode, allYn, searchText));
+                                             @RequestParam(defaultValue = "") String searchText,
+                                             @RequestParam(defaultValue = "false") boolean dedupYn) {
+        return ApiResponse.ok(service.search(principal, baseDate, taskClassCode, allYn, searchText, dedupYn));
     }
 
     /** AS-IS dbConfig.getSeq (DBUtil.setSeq) — 새 책무 ID를 미리 받는다 */

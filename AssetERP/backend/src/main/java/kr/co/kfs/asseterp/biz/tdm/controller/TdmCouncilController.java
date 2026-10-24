@@ -34,8 +34,9 @@ public class TdmCouncilController {
     @GetMapping
     public ApiResponse<List<CouncilRes>> search(@AuthenticationPrincipal UserPrincipal principal,
                                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate,
-                                                @RequestParam(defaultValue = "true") boolean allYn) {
-        return ApiResponse.ok(service.search(principal, baseDate == null ? LocalDate.now() : baseDate, allYn));
+                                                @RequestParam(defaultValue = "true") boolean allYn,
+                                                @RequestParam(required = false) Long roleId) {
+        return ApiResponse.ok(service.search(principal, baseDate == null ? LocalDate.now() : baseDate, allYn, roleId));
     }
 
     /** AS-IS tdm.Tdm05_Cncl.modelUpdate */

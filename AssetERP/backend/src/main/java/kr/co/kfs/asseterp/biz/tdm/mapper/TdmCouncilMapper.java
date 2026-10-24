@@ -14,7 +14,7 @@ import java.util.List;
 public interface TdmCouncilMapper {
 
     /** AS-IS tdm05_cncl.selectByDate */
-    List<CouncilRes> selectByDate(@Param("companyId") Long companyId, @Param("baseDate") LocalDate baseDate, @Param("allYn") boolean allYn);
+    List<CouncilRes> selectByDate(@Param("companyId") Long companyId, @Param("baseDate") LocalDate baseDate, @Param("allYn") boolean allYn, @Param("roleId") Long roleId);
 
     CouncilRes selectById(@Param("cnclId") Long cnclId, @Param("companyId") Long companyId);
 

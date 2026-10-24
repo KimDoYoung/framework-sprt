@@ -44,7 +44,7 @@
 
     <!--
       AS-IS(IDMS-IC) org00_org_info.selectByTdmYn L241 (E13 Org00_Lookup_SelectTdm)
-      수정: 화면이 roleId를 넘기지 않아(null) roleId 분기는 옮기지 않았다. 바깥 열은 그리드·선택에 쓰는 것(org_code_id·org_cd·kor_nm·kor_nm_with_subOrg)
+      roleId 분기(N08 Tdm23_Lookup_RoleRelateOrg): 그 직책에 이미 연결된 조직은 뺀다. 바깥 열은 그리드·선택에 쓰는 것(org_code_id·org_cd·kor_nm·kor_nm_with_subOrg)
     -->
     <select id="selectByTdmYn" resultType="kr.co.kfs.asseterp.biz.org.dto.OrgTdmRes">
         SELECT org00_org_id                             AS org_code_id
@@ -62,6 +62,12 @@
          WHERE 1=1
            AND CONCAT(org00_org_cd, org00_kor_nm) ILIKE #{searchText}
            AND org00_tdm_yn = 'true'
+        <if test="roleId != null">
+           AND NOT EXISTS ( SELECT 1
+                              FROM tdm23_role_relate_org
+                             WHERE tdm23_org_id  = org00_org_id
+                               AND tdm23_role_id = #{roleId} )
+        </if>
          ORDER BY org00_org_cd
     </select>
 
