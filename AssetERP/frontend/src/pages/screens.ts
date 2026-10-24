@@ -161,6 +161,7 @@ import { Tdm13_Tab_TaskDuty } from './tdm/Tdm13_Tab_TaskDuty';
 import { Tdm05_Tab_Cncl } from './tdm/Tdm05_Tab_Cncl';
 import { Tdm20_Tab_Role } from './tdm/Tdm20_Tab_Role';
 import { Tdm08_Tab_Manager } from './tdm/Tdm08_Tab_Manager';
+import { Tdm09_Tab_ApprStep } from './tdm/Tdm09_Tab_ApprStep';
 import { Tdm50_Tab_DutyProgress } from './tdm/Tdm50_Tab_DutyProgress';
 import { Tdm50_Tab_DutyProgressAdmin } from './tdm/Tdm50_Tab_DutyProgressAdmin';
 import { Tdm50_Tab_TotalDashboard } from './tdm/Tdm50_Tab_TotalDashboard';
@@ -290,6 +291,7 @@ export const SCREENS: Record<string, React.FC> = {
   Tdm10_Tab_Task, // N05 1단계 (+ Tdm10_Edit_Task·Tdm12_Lookup_TaskRelateDetail·Tdm14_Lookup_TaskType·Tdm95_Lookup_ChangeHistory, 연결법규·내규 Tdm11은 다음 단계)
   Tdm13_Tab_TaskDuty, // N06 (+ Tdm14_Lookup_TaskType view·Tdm95_Lookup_ChangeHistory)
   Tdm08_Tab_Manager, // N09 (+ Emp00_Lookup_SelectSingle 재사용)
+  Tdm09_Tab_ApprStep, // N10 (+ Tdm20_Lookup_SelectRole·Tdm23_Lookup_SelectOrg 신설, Emp01_Lookup_PersonModel 재사용)
   Tdm05_Tab_Cncl, // N07 (+ Tdm05_Edit_Cncl·Tdm22_Lookup_RoleRelateCncl2·Tdm20_Lookup_SelectMulti)
   Tdm20_Tab_Role, // N08 (+ Tdm20_Edit_Role·Tdm20_Lookup_SelectSingle·Tdm21~23 연결창·Tdm05/Tdm10_Lookup_SelectMulti)
   Tdm01_Tab_Hr, // N04 (+ Tdm01_Lookup_HrChangeInfo·Tdm03_Lookup_AddTitle)

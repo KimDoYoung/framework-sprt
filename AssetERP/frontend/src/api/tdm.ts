@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDigm, TdmManager, TdmManagerInfo } from '../types/tdm';
+import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDigm, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
 export const tdmApi = {
@@ -533,6 +533,55 @@ export const tdmApi = {
   /** AS-IS tdm.Tdm08_ManagerInfo.delete */
   deleteManagerInfos: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/managers', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm.Tdm23_RoleRelateOrg.selectByRoleId (담당부서 조회창 Tdm23_Lookup_SelectOrg — tdm09Yn이면 승인선에 아직 없는 부서만, searchText는 서버가 '%…%') */
+  searchRoleOrgLookup: async (roleId: number, stdDate: string, tdm09Yn: boolean, searchText: string): Promise<TdmRoleOrgLookup[]> => {
+    const res = await apiClient.get<ApiResponse<TdmRoleOrgLookup[]>>(`v1/tdm/roles/${roleId}/orgs/lookup`, { params: { stdDate, tdm09Yn, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm09_ApprStep.selectByCompanyId (companyId는 서버, typeCode 'C', searchText는 서버가 '%…%') */
+  searchApprSteps: async (searchText: string): Promise<TdmApprStep[]> => {
+    const res = await apiClient.get<ApiResponse<TdmApprStep[]>>('v1/tdm/appr-steps', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm09_ApprStep.update (ID ≤ 0은 INSERT, 하위 승인자의 직책·부서도 같이 바뀐다) */
+  saveApprSteps: async (rows: TdmApprStep[]): Promise<TdmApprStep[]> => {
+    const req = rows.map(r => ({ apprStepId: r.apprStepId, roleId: r.roleId, orgId: r.orgId }));
+    const res = await apiClient.put<ApiResponse<TdmApprStep[]>>('v1/tdm/appr-steps', req);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm09_ApprStep.deleteByParentId (하위 승인자도 같이 지운다) */
+  deleteApprSteps: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/appr-steps', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm.Tdm09_ApprStep.selectByParentId (typeCode 'T') */
+  searchApprStepChildren: async (apprStepId: number): Promise<TdmApprStepChild[]> => {
+    const res = await apiClient.get<ApiResponse<TdmApprStepChild[]>>(`v1/tdm/appr-steps/${apprStepId}/steps`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm09_ApprStep.modelUpdate (고른 사원 ID마다 승인자 한 행, 승인순서는 서버가 이어 붙인다) */
+  addApprStepChildren: async (apprStepId: number, personIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>(`v1/tdm/appr-steps/${apprStepId}/steps`, personIds);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm.Tdm09_ApprStep.inUpdateData (위로·아래로 뒤 순서 저장) */
+  saveApprStepChildOrder: async (rows: Pick<TdmApprStepChild, 'apprStepId' | 'apprSeq'>[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/tdm/appr-steps/steps/order', rows.map(r => ({ apprStepId: r.apprStepId, apprSeq: r.apprSeq })));
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm.Tdm09_ApprStep.delete (승인자 행) */
+  deleteApprStepChildren: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/appr-steps/steps', { data: ids });
     return res.data.data ?? 0;
   },
 };

@@ -5983,5 +5983,38 @@
     "note": "docs/work/N/N09-작업기록.md",
     "history": [],
     "id": "N09"
+  },
+  "Tdm09_Tab_ApprStep": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/tdm/Tdm09_Tab_ApprStep.java": "e2bdb91d32862000a984f83be702f016ccc070f4",
+      "application/src/main/java/myApp/client/vi/tdm/Tdm20_Lookup_SelectRole.java": "be38c12a099fe121a1e043a14baaa24880dff950",
+      "application/src/main/java/myApp/client/vi/tdm/Tdm23_Lookup_SelectOrg.java": "59c474b486f12638f35bb09c603cb42d91584f74",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm09_ApprStepModel.java": "d80b9c0bc01e93308e1171792011293e07b0bc4c",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm09_ApprStepModelProperties.java": "3f118f938e7a7102ff48d44411678277f73e13e0",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm20_RoleModel.java": "6f474eefa5213f1b92bbc8eb7a9a97167bfaf82d",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm20_RoleModelProperties.java": "935b235abe0e12ce04a0c92348ff716f41b149e2",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm23_RoleRelateOrgModel.java": "b6069c35062b635d5d36198589325ac00a335616",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm23_RoleRelateOrgModelProperties.java": "7d72dfd3950b5500edc3d58bcf0bd4f5442c26d5",
+      "application/src/main/java/myApp/server/tdm/Tdm09_ApprStep.java": "e671c32c24c4e6d22a3966a1e62a0778320980ba",
+      "application/src/main/java/myApp/server/tdm/Tdm20_Role.java": "b9a4053f9dd36143debd00f7c9f5102653ab793a",
+      "application/src/main/java/myApp/server/tdm/Tdm23_RoleRelateOrg.java": "88dca52a27634e405ccc0845f1dec5bea9fc1ca2",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm09_appr_step.xml": "900ef5a14cd1f7c07e867ebf1db7b61f469aea73",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm20_role.xml": "dc99f965fcfb7be6f54801e10adf9ed96c47b178",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm23_role_relate_org.xml": "987ca1ab15f9a8d1a1f21d72f427af35b9040001",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Emp01_Lookup_PersonModel"
+    ],
+    "recorded_at": "2026-10-24T18:04:13+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/N/N10-작업기록.md",
+    "history": [],
+    "id": "N10"
   }
 }

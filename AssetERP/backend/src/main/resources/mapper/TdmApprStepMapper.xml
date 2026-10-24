@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm09_appr_step.xml + Tdm09_ApprStep (N10 직책별 부서승인선 등록)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmApprStepMapper">
+
+    <!-- AS-IS(IDMS-IC) tdm09_appr_step.selectByCompanyId — 수정: SELECT *를 화면 열로, typeCode는 'C' 고정 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ApprStepRes">
+        SELECT *
+          FROM (
+                SELECT tdm09_appr_step_id                                                       AS appr_step_id
+                     , tdm09_role_id                                                            AS role_id
+                     , tdm09_org_id                                                             AS org_id
+                     , (SELECT tdm20_role_nm
+                          FROM tdm20_role
+                         WHERE tdm20_role_id = tdm09_role_id)                                   AS role_name
+                     , emp01_kor_nm                                                             AS exct_name
+                     , org00_kor_nm                                                             AS org_name
+                     , (SELECT f_emp_kor_nm(tdm08_person_id)
+                          FROM tdm08_manager_info
+                         WHERE tdm08_org_id = tdm09_org_id
+                           AND tdm08_manager_type = '21'
+                           AND tdm08_start_date <![CDATA[<=]]> f_today()
+                           AND (tdm08_end_date >= f_today() OR tdm08_end_date IS NULL)
+                         LIMIT 1)                                                               AS manager_name
+                  FROM tdm09_appr_step
+                       INNER JOIN getOrg(#{companyId}, f_today()) ON org00_org_id = tdm09_org_id
+                       LEFT  JOIN getTdm30RoleAllc(#{companyId}, f_today(), false) ON tdm30_role_id = tdm09_role_id
+                       LEFT  JOIN emp01_person                                     ON emp01_person_id = tdm30_person_id
+                 WHERE tdm09_company_id = #{companyId}
+                   AND tdm09_type_cd    = 'C'
+               ) t
+         WHERE CONCAT(role_name, org_name, manager_name) ILIKE #{searchText}
+         ORDER BY role_name COLLATE "ko_KR.utf8"
+                , org_name  COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm09_appr_step.selectByParentId — 수정: SELECT *를 화면 열로, typeCode는 'T' 고정 -->
+    <select id="selectByParentId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ApprStepChildRes">
+        SELECT tdm09_appr_step_id                                                   AS appr_step_id
+             , tdm09_appr_seq                                                       AS appr_seq
+             , tdm09_appr_emp_id                                                    AS appr_emp_id
+             , emp00_kor_nm                                                         AS appr_emp_name
+             , emp00_org_code_nm                                                    AS appr_org_name
+             , f_cdnm('EmpPosCode', emp00_pos_cd, tdm09_company_id, f_today())      AS pos_name
+             , ROW_NUMBER() OVER(ORDER BY tdm09_appr_seq) || '차 승인자'               AS appr_step_info
+          FROM tdm09_appr_step
+               LEFT JOIN getPerson(#{companyId}, f_today()) ON emp00_person_id = tdm09_appr_emp_id
+         WHERE tdm09_company_id = #{companyId}
+           AND tdm09_type_cd    = 'T'
+           AND tdm09_parent_id  = #{apprStepId}
+    </select>
+
+    <select id="selectRow" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ApprStepRow">
+        SELECT tdm09_appr_step_id AS appr_step_id
+             , tdm09_company_id   AS company_id
+             , tdm09_role_id      AS role_id
+             , tdm09_org_id       AS org_id
+             , tdm09_type_cd      AS type_code
+          FROM tdm09_appr_step
+         WHERE tdm09_appr_step_id = #{apprStepId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm09_appr_step.selectById — 수정: 키 열만 (이름 칸은 null, 화면은 저장 뒤 다시 조회) -->
+    <select id="selectSavedById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ApprStepRes">
+        SELECT tdm09_appr_step_id        AS appr_step_id
+             , tdm09_role_id             AS role_id
+             , tdm09_org_id              AS org_id
+             , NULL::varchar             AS role_name
+             , NULL::varchar             AS exct_name
+             , NULL::varchar             AS org_name
+             , NULL::varchar             AS manager_name
+          FROM tdm09_appr_step
+         WHERE tdm09_appr_step_id = #{apprStepId}
+    </select>
+
+    <select id="countChildren" resultType="int">
+        SELECT COUNT(*)
+          FROM tdm09_appr_step
+         WHERE tdm09_company_id = #{companyId}
+           AND tdm09_type_cd    = 'T'
+           AND tdm09_parent_id  = #{apprStepId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT: 직책-부서 행(분류구분 C, 상위분류 0) -->
+    <insert id="insertStep">
+        INSERT INTO tdm09_appr_step
+               ( tdm09_appr_step_id, tdm09_company_id, tdm09_role_id, tdm09_org_id, tdm09_type_cd, tdm09_parent_id, tdm09_upd_nm, tdm09_upd_date )
+        VALUES ( #{apprStepId}, #{companyId}, #{row.roleId}, #{row.orgId}, 'C', 0, #{updName}, f_sysdate() )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel 동적 UPDATE: 화면이 바꾸는 열(직책·부서) -->
+    <update id="updateStep">
+        UPDATE tdm09_appr_step
+           SET tdm09_role_id  = #{row.roleId}
+             , tdm09_org_id   = #{row.orgId}
+             , tdm09_upd_nm   = #{updName}
+             , tdm09_upd_date = f_sysdate()
+         WHERE tdm09_appr_step_id = #{row.apprStepId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm09_appr_step.updateByParentId — 그대로 -->
+    <update id="updateChildrenRoleOrg">
+        UPDATE tdm09_appr_step
+           SET tdm09_role_id = #{roleId}
+             , tdm09_org_id  = #{orgId}
+         WHERE tdm09_parent_id = #{apprStepId}
+           AND tdm09_type_cd   = 'T'
+    </update>
+
+    <!-- AS-IS Tdm09_ApprStep.modelUpdate (UpdateDataModel INSERT): 승인자 행(분류구분 T) -->
+    <insert id="insertChild">
+        INSERT INTO tdm09_appr_step
+               ( tdm09_appr_step_id, tdm09_company_id, tdm09_role_id, tdm09_org_id, tdm09_type_cd, tdm09_parent_id, tdm09_appr_seq, tdm09_appr_emp_id, tdm09_upd_nm, tdm09_upd_date )
+        VALUES ( #{apprStepId}, #{companyId}, #{roleId}, #{orgId}, 'T', #{parentId}, #{apprSeq}, #{apprEmpId}, #{updName}, f_sysdate() )
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) tdm09_appr_step.modelUpsert 중 바뀌는 열(순서)만 -->
+    <update id="updateSeq">
+        UPDATE tdm09_appr_step
+           SET tdm09_appr_seq = #{apprSeq}
+             , tdm09_upd_nm   = #{updName}
+             , tdm09_upd_date = f_sysdate()
+         WHERE tdm09_appr_step_id = #{apprStepId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm09_appr_step.deleteByParentId — 그대로 -->
+    <delete id="deleteByParentId">
+        DELETE FROM tdm09_appr_step
+         WHERE tdm09_parent_id = #{apprStepId}
+    </delete>
+
+    <delete id="deleteSteps">
+        DELETE FROM tdm09_appr_step
+         WHERE tdm09_company_id = #{companyId}
+           AND tdm09_appr_step_id IN
+        <foreach collection="apprStepIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

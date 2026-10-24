@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.tdm.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.tdm.dto.RoleCouncilRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.RoleOrgLookupRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.RoleOrgRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.RoleRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.RoleSaveReq;
@@ -254,6 +255,12 @@ public class TdmRoleService {
     public List<RoleOrgRes> searchOrgs(UserPrincipal user, Long roleId, LocalDate stdDate) {
         checkCompany(user, roleId);
         return mapper.selectOrgsByRoleId(user.getCompanyId(), stdDate, roleId);
+    }
+
+    /** AS-IS tdm.Tdm23_RoleRelateOrg.selectByRoleId (담당부서 조회창, searchText는 '%…%'로 감싼다) */
+    public List<RoleOrgLookupRes> searchOrgLookup(UserPrincipal user, Long roleId, LocalDate stdDate, boolean tdm09Yn, String searchText) {
+        checkCompany(user, roleId);
+        return mapper.selectOrgLookup(user.getCompanyId(), stdDate, roleId, tdm09Yn, "%" + (searchText == null ? "" : searchText) + "%");
     }
 
     /** AS-IS Tdm23_RoleRelateOrg.update: 새 행(ID ≤ 0)만 INSERT (조직이 로그인 회사 것인지 검사) */

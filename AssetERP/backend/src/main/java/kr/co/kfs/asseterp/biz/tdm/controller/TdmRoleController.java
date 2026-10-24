@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.tdm.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.tdm.dto.RoleCouncilRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.RoleOrgLookupRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.RoleOrgRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.RoleRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.RoleSaveReq;
@@ -112,6 +113,15 @@ public class TdmRoleController {
     public ApiResponse<List<RoleOrgRes>> searchOrgs(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long roleId,
                                                     @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate) {
         return ApiResponse.ok(service.searchOrgs(principal, roleId, stdDate));
+    }
+
+    /** AS-IS tdm.Tdm23_RoleRelateOrg.selectByRoleId (담당부서 조회창 Tdm23_Lookup_SelectOrg) */
+    @GetMapping("/{roleId}/orgs/lookup")
+    public ApiResponse<List<RoleOrgLookupRes>> searchOrgLookup(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long roleId,
+                                                               @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
+                                                               @RequestParam(defaultValue = "false") boolean tdm09Yn,
+                                                               @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchOrgLookup(principal, roleId, stdDate, tdm09Yn, searchText));
     }
 
     /** AS-IS tdm.Tdm23_RoleRelateOrg.update */

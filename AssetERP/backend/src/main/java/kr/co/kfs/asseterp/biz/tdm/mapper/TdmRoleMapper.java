@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.tdm.mapper;
 
 import kr.co.kfs.asseterp.biz.tdm.dto.RoleCouncilRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.RoleOrgLookupRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.RoleOrgRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.RoleRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.RoleSaveReq;
@@ -61,6 +62,10 @@ public interface TdmRoleMapper {
 
     /** AS-IS tdm23_role_relate_org.selectByRoleId */
     List<RoleOrgRes> selectOrgsByRoleId(@Param("companyId") Long companyId, @Param("stdDate") LocalDate stdDate, @Param("roleId") Long roleId);
+
+    /** AS-IS tdm23_role_relate_org.selectByRoleId (tdm09Yn·searchText 분기 — 담당부서 조회창) */
+    List<RoleOrgLookupRes> selectOrgLookup(@Param("companyId") Long companyId, @Param("stdDate") LocalDate stdDate, @Param("roleId") Long roleId,
+                                           @Param("tdm09Yn") boolean tdm09Yn, @Param("searchText") String searchText);
 
     /** 조직이 로그인 회사의 기준일 조직인지 */
     int countOrg(@Param("companyId") Long companyId, @Param("stdDate") LocalDate stdDate, @Param("orgId") Long orgId);

@@ -537,6 +537,37 @@ export interface TdmRoleOrg {
   orgName: string | null;
 }
 
+/** 담당부서 조회창 한 행 (GET /api/v1/tdm/roles/{roleId}/orgs/lookup, AS-IS Tdm23_RoleRelateOrgModel) */
+export interface TdmRoleOrgLookup {
+  roleRelateOrgId: number;
+  roleId: number;
+  orgId: number;
+  orgCode: string | null;
+  orgName: string | null;
+}
+
+/** 직책-부서 승인선 한 행 (GET /api/v1/tdm/appr-steps, AS-IS Tdm09_ApprStepModel). 새 행은 ID ≤ 0 */
+export interface TdmApprStep {
+  apprStepId: number;
+  roleId: number | null;
+  orgId: number | null;
+  roleName: string | null;
+  exctName: string | null;
+  orgName: string | null;
+  managerName: string | null;
+}
+
+/** 승인자 한 행 (GET /api/v1/tdm/appr-steps/{id}/steps, AS-IS Tdm09_ApprStepModel) */
+export interface TdmApprStepChild {
+  apprStepId: number;
+  apprSeq: string | null;
+  apprEmpId: number | null;
+  apprStepInfo: string | null;
+  apprEmpName: string | null;
+  posName: string | null;
+  apprOrgName: string | null;
+}
+
 /** 책무이행점검 수행부서·담당자 (GET /api/v1/tdm/managers, AS-IS Tdm08_ManagerInfoModel) */
 export interface TdmManager {
   managerInfoId: number;

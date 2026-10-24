@@ -207,6 +207,31 @@
          ORDER BY org00_org_cd
     </select>
 
+    <!-- AS-IS(IDMS-IC) tdm23_role_relate_org.selectByRoleId (N10 담당부서 조회창 Tdm23_Lookup_SelectOrg) — 수정: SELECT * 를 화면 열로. tdm09Yn이면 승인선(분류구분 C)에 아직 없는 부서만, searchText는 부서명 -->
+    <select id="selectOrgLookup" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleOrgLookupRes">
+        SELECT tdm23_role_relate_org_id AS role_relate_org_id
+             , tdm23_role_id            AS role_id
+             , tdm23_org_id             AS org_id
+             , org00_org_cd             AS org_code
+             , org00_kor_nm             AS org_name
+          FROM tdm23_role_relate_org
+               INNER JOIN tdm20_role ON tdm20_role_id = tdm23_role_id
+               INNER JOIN getOrg(#{companyId}, CAST(#{stdDate} AS date)) ON org00_org_id = tdm23_org_id
+         WHERE tdm23_role_id = #{roleId}
+        <if test="tdm09Yn">
+           AND NOT EXISTS ( SELECT 1
+                              FROM tdm09_appr_step
+                             WHERE tdm09_company_id = tdm20_company_id
+                               AND tdm09_role_id    = tdm23_role_id
+                               AND tdm09_org_id     = tdm23_org_id
+                               AND tdm09_type_cd    = 'C' )
+        </if>
+        <if test="searchText != null">
+           AND org00_kor_nm ILIKE #{searchText}
+        </if>
+         ORDER BY org00_org_cd
+    </select>
+
     <select id="countOrg" resultType="int">
         SELECT COUNT(*)
           FROM getOrg(#{companyId}, CAST(#{stdDate} AS date))
