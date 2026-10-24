@@ -11,6 +11,34 @@ export interface ManlRelateIcs {
   taskCheckHow?: string | null;
 }
 
+/** 책무기술서 작성 한 행 (AS-IS Tdm31_RoleDescModel 중 Tdm31_Tab_RoleDesc 그리드·저장에 쓰는 속성, N12). 새로 등록한 행은 roleDescId가 음수 */
+export interface TdmRoleDescCompany {
+  roleDescId: number;
+  regDate: string | null;
+  reasonCode: string | null;
+  reasonName: string | null;
+  companyId: number | null;
+  personId: number;
+  personName: string | null;
+  roleAllcId: number;
+  allcStdDate: string | null;
+  roleName: string | null;
+  addTitle: string | null;
+  apprId: number | null;
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+}
+
+/** 책무기술서 등록 조회창(Tdm30_Lookup_SelectMulti) 한 행 — AS-IS tdm30_role_allc.selectPerson */
+export interface TdmRoleAllcPerson {
+  roleAllcId: number;
+  personId: number;
+  personName: string | null;
+  roleName: string | null;
+  addTitle: string | null;
+  allcStdDate: string | null;
+}
+
 /** 책무기술서 한 행 (AS-IS Tdm31_RoleDescModel 중 Tdm31_Tab_RoleDescAdmin 그리드·재생성에 쓰는 속성) */
 export interface TdmRoleDesc {
   roleDescId: number;

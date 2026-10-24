@@ -17,7 +17,7 @@
 
     <!--
       AS-IS(IDMS-IC) tdm31_role_desc.selectByRegDateAdmin L108
-      수정: ORDER BY의 COLLATE "ko_KR.utf8" → "ko-KR-x-icu"(이 DB에 ko_KR.utf8가 없음, 05 §6), 바깥 SELECT t.*를 그리드·재생성 열로, 일자는 TO_CHAR
+      수정: ORDER BY의 COLLATE "ko_KR.utf8" → "ko-KR-x-icu"(이 DB에 ko_KR.utf8가 없음, 05 §6), 바깥 SELECT t.*를 그리드·재생성 열로, 일자는 TO_CHAR, 열을 안 쓰고 첨부 수만큼 행을 겹치게 하던 sys10_file LEFT JOIN 제외(승인된 제안, N12와 같이)
     -->
     <select id="selectByRegDateAdmin" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleDescRes">
         SELECT  tdm31_role_desc_id                                 AS role_desc_id,
@@ -47,7 +47,6 @@
                         INNER JOIN LATERAL getTdm30RoleAllc(tdm31_company_id, tdm31_allc_std_date, true) ON tdm30_role_allc_id = tdm31_role_allc_id
                         INNER JOIN       tdm20_role      ON tdm20_role_id        = tdm30_role_id
                         INNER JOIN       tdm01_hr        ON tdm01_person_id      = tdm31_person_id
-                        LEFT OUTER JOIN  sys10_file      ON sys10_parent_id      = tdm31_role_desc_id
                         LEFT OUTER JOIN  apr01_appr      ON apr01_appr_id        = tdm31_appr_id
                  WHERE  1=1
                 <if test="companyId != null">
@@ -62,5 +61,126 @@
                ) t
          WHERE CONCAT(tdm31_role_nm, tdm31_add_title, tdm31_person_nm) ILIKE #{searchText}
          ORDER BY tdm31_company_id, tdm31_reg_date, tdm31_person_nm COLLATE "ko-KR-x-icu"
+    </select>
+    <!--
+      AS-IS(IDMS-IC) tdm31_role_desc.selectByRegDate L1 (N12 책무기술서 작성)
+      수정: 바깥 SELECT t.*를 그리드·저장 열로, 일자는 TO_CHAR, 열을 안 쓰고 첨부 수만큼 행을 겹치게 하던 sys10_file LEFT JOIN 제외(승인된 제안). notEndYn(미처리건만 조회)은 결재상태 30(완료) 제외
+    -->
+    <select id="selectByRegDate" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleDescCompanyRes">
+        SELECT  tdm31_role_desc_id                                 AS role_desc_id,
+                TO_CHAR(tdm31_reg_date, 'YYYY-MM-DD')              AS reg_date,
+                tdm31_reason_cd                                    AS reason_code,
+                tdm31_reason_nm                                    AS reason_name,
+                tdm31_company_id                                   AS company_id,
+                tdm31_person_id                                    AS person_id,
+                tdm31_person_nm                                    AS person_name,
+                tdm31_role_allc_id                                 AS role_allc_id,
+                TO_CHAR(tdm31_allc_std_date, 'YYYY-MM-DD')         AS allc_std_date,
+                tdm31_role_nm                                      AS role_name,
+                tdm31_add_title                                    AS add_title,
+                tdm31_appr_id                                      AS appr_id,
+                tdm31_appr_status_cd                               AS appr_status_code,
+                tdm31_appr_status_nm                               AS appr_status_name
+          FROM (
+                SELECT  tdm31_role_desc.*
+                     ,  f_cdnm('TdmDescRegReason', tdm31_reason_cd, tdm31_company_id, tdm31_reg_date)    AS tdm31_reason_nm          --생성사유
+                     ,  tdm01_person_nm                                                                  AS tdm31_person_nm          --임원명
+                     ,  tdm20_role_nm                                                                    AS tdm31_role_nm            --직책
+                     ,  f_get_tdmPersonInfo(tdm31_person_id, tdm31_allc_std_date, '1')                   AS tdm31_add_title          --겸직사항
+                     ,  COALESCE(apr01_status_cd, '00')                                                  AS tdm31_appr_status_cd     --결재상태코드
+                     ,  f_cdnm('AprStatusCode', apr01_status_cd, tdm31_company_id, tdm31_reg_date)       AS tdm31_appr_status_nm     --결재상태명
+                  FROM  tdm31_role_desc
+                        INNER JOIN LATERAL getTdm30RoleAllc(tdm31_company_id, tdm31_allc_std_date, true) ON tdm30_role_allc_id = tdm31_role_allc_id
+                        INNER JOIN       tdm20_role      ON tdm20_role_id        = tdm30_role_id
+                        INNER JOIN       tdm01_hr        ON tdm01_person_id      = tdm31_person_id
+                        LEFT OUTER JOIN  apr01_appr      ON apr01_appr_id        = tdm31_appr_id
+                 WHERE  tdm31_company_id = #{companyId}
+                <if test="!notPeriodYn">
+                   AND  tdm31_reg_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+                </if>
+                <if test="notEndYn">
+                   AND  COALESCE(apr01_status_cd, '00') NOT IN ('30')
+                </if>
+               ) t
+         WHERE CONCAT(tdm31_role_nm, tdm31_add_title, tdm31_person_nm) ILIKE #{searchText}
+         ORDER BY tdm31_reg_date DESC, tdm31_person_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT (tdm31_role_desc): 화면이 채우는 열 -->
+    <insert id="insertRoleDesc">
+        INSERT INTO tdm31_role_desc
+               ( tdm31_role_desc_id, tdm31_company_id, tdm31_reg_date, tdm31_reason_cd, tdm31_person_id
+               , tdm31_role_allc_id, tdm31_allc_std_date, tdm31_upd_nm, tdm31_upd_date )
+        VALUES ( #{roleDescId}, #{companyId}, #{regDate}, #{reasonCode}, #{personId}
+               , #{roleAllcId}, #{allcStdDate}, #{updName}, f_sysdate() )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel 동적 UPDATE (tdm31_role_desc): 그리드에서 고치는 생성일·생성사유 -->
+    <update id="updateRoleDesc">
+        UPDATE tdm31_role_desc
+           SET tdm31_reg_date  = #{regDate}
+             , tdm31_reason_cd = #{reasonCode}
+             , tdm31_upd_nm    = #{updName}
+             , tdm31_upd_date  = f_sysdate()
+         WHERE tdm31_role_desc_id = #{roleDescId}
+           AND tdm31_company_id   = #{companyId}
+    </update>
+
+    <!-- 책무기술서 첨부(sys10_file) 행 정리 — AS-IS Tdm31_RoleDesc.fileCheck의 sys10_file.deleteByParentId와 같은 DELETE (승인된 제안: 삭제 때 고아 행 방지) -->
+    <delete id="deleteFilesByParentIds">
+        DELETE FROM sys10_file
+         WHERE sys10_parent_id IN
+        <foreach collection="roleDescIds" item="roleDescId" open="(" separator="," close=")">#{roleDescId}</foreach>
+    </delete>
+
+    <!-- AS-IS UpdateDataModel.deleteModel (tdm31_role_desc) -->
+    <delete id="deleteRoleDescs">
+        DELETE FROM tdm31_role_desc
+         WHERE tdm31_company_id = #{companyId}
+           AND tdm31_role_desc_id IN
+        <foreach collection="roleDescIds" item="roleDescId" open="(" separator="," close=")">#{roleDescId}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm31_role_desc.selectByParentId — 모델 대신 건수 -->
+    <select id="countWorking" resultType="int">
+        SELECT COUNT(*)
+          FROM tdm31_role_desc
+         WHERE tdm31_role_desc_id = #{roleDescId}
+           AND (tdm31_work_date IS NOT NULL
+                AND f_sysdate() BETWEEN tdm31_work_date - INTERVAL '1 minute'
+                                    AND tdm31_work_date + INTERVAL '1 minute')
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm30_role_allc.selectPerson — 수정: 바깥 row_number()·t.*를 조회창 열로 (순번은 정렬 순서 그대로 화면이 매김) -->
+    <select id="selectPerson" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleAllcPersonRes">
+        SELECT  tdm30_role_allc_id                                 AS role_allc_id,
+                tdm30_person_id                                    AS person_id,
+                tdm30_person_nm                                    AS person_name,
+                tdm30_role_nm                                      AS role_name,
+                tdm30_add_title                                    AS add_title,
+                TO_CHAR(tdm30_allc_std_date, 'YYYY-MM-DD')         AS allc_std_date
+          FROM (
+                SELECT tdm30.*
+                     , tdm01_person_nm                                                  AS tdm30_person_nm
+                     , tdm20_role_nm                                                    AS tdm30_role_nm
+                     , f_get_tdmPersonInfo(tdm30_person_id, #{stdDate}, '1')            AS tdm30_add_title
+                     , ( SELECT MAX(tdm30_role_allc_date)
+                           FROM getTdm30RoleAllc(#{companyId}, #{stdDate}, true) a
+                          WHERE a.tdm30_person_id = tdm30.tdm30_person_id )             AS tdm30_allc_std_date
+                  FROM getTdm30RoleAllc(#{companyId}, #{stdDate}, true) tdm30
+                       INNER JOIN tdm01_hr   ON tdm01_person_id = tdm30_person_id
+                       INNER JOIN tdm20_role ON tdm20_role_id   = tdm30_role_id
+                 WHERE 1=1
+                   AND COALESCE(tdm30_add_title_yn,'false') = 'false'
+               ) t
+         WHERE CONCAT(tdm30_person_nm, tdm30_role_nm, tdm30_add_title) ILIKE #{searchText}
+         ORDER BY tdm30_person_nm COLLATE "ko_KR.utf8"
+                , tdm30_role_nm   COLLATE "ko_KR.utf8"
+                , tdm30_allc_std_date
     </select>
 </mapper>

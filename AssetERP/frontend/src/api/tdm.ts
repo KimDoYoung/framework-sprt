@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDigm, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord } from '../types/tdm';
+import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
 export const tdmApi = {
@@ -41,6 +41,39 @@ export const tdmApi = {
   /** 한 건 재생성 (AS-IS createRd 한 건 분량). RD 연동이 없는 동안 서버가 거절한다 */
   recreateRoleDesc: async (roleDescId: number): Promise<void> => {
     await apiClient.post<ApiResponse<null>>(`v1/tdm/role-descs/${roleDescId}/recreate`);
+  },
+
+  // ── N12 책무기술서 작성(Tdm31_Tab_RoleDesc) ──
+
+  /** AS-IS tdm.Tdm31_RoleDesc.selectByRegDate (로그인 회사. 일자는 전체보기가 아닐 때만 건다, notEndYn = 결재 완료(30) 제외) */
+  searchRoleDescsCompany: async (p: { startDate: string; closeDate: string; searchText: string; notEndYn: boolean; notPeriodYn: boolean }): Promise<TdmRoleDescCompany[]> => {
+    const res = await apiClient.get<ApiResponse<TdmRoleDescCompany[]>>('v1/tdm/role-descs/company', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm30_RoleAllc.selectPerson (Tdm30_Lookup_SelectMulti) */
+  searchRoleAllcPersons: async (stdDate: string, searchText: string): Promise<TdmRoleAllcPerson[]> => {
+    const res = await apiClient.get<ApiResponse<TdmRoleAllcPerson[]>>('v1/tdm/role-descs/persons', { params: { stdDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm31_RoleDesc.update — roleDescId ≤ 0이면 등록 */
+  saveRoleDescs: async (rows: TdmRoleDescCompany[]): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>('v1/tdm/role-descs', rows.map(r => ({
+      roleDescId: r.roleDescId, regDate: r.regDate, reasonCode: r.reasonCode, personId: r.personId, roleAllcId: r.roleAllcId, allcStdDate: r.allcStdDate,
+    })));
+  },
+
+  /** AS-IS tdm.Tdm31_RoleDesc.delete */
+  deleteRoleDescs: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/role-descs', { params: { roleDescIds: ids.join(',') } });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm.Tdm31_RoleDesc.aprWorkCheck — 1분 안에 파일을 만들고 있으면 true */
+  isRoleDescWorking: async (roleDescId: number): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>(`v1/tdm/role-descs/${roleDescId}/working`);
+    return res.data.data ?? false;
   },
 
   // ── E12 책무체계도 재생성(Tdm32_Tab_RoleDigmAdmin) ──
