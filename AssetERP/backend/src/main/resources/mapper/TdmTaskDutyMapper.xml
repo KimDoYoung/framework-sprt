@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm13_task_relate_duty.xml + tdm12_task_relate_detail.xml(selectByText) + Tdm13_TaskRelateDuty (N06 관리의무 등록)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmTaskDutyMapper">
+
+    <sql id="dutyColumns">
+        tdm13_task_relate_duty_id   AS task_relate_duty_id
+      , tdm13_task_id               AS task_id
+      , tdm13_task_relate_detail_id AS task_relate_detail_id
+      , tdm13_content               AS content
+      , tdm13_seq                   AS seq
+      , tdm13_use_yn                AS use_yn
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) tdm12_task_relate_detail.selectByText: allYn이 아니면 기준일이 책무 사용기간 안이고 사용인 세부내용만. 수정: SELECT tdm12.* 를 이 화면이 쓰는 열로 -->
+    <select id="selectDetailsByText" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TaskDutyDetailRes">
+        SELECT tdm12_task_relate_detail_id AS task_relate_detail_id
+             , tdm12_task_id               AS task_id
+             , '('||tdm14_task_type_cd||')'||tdm14_task_type_nm AS task_type_name
+             , tdm10_task_nm               AS task_name
+             , tdm10_start_date            AS task_start_date
+             , tdm10_end_date              AS task_end_date
+             , tdm12_content               AS content
+             , tdm12_use_yn                AS use_yn
+             , (
+                  SELECT CASE WHEN COUNT(*) = 0 THEN ''
+                              ELSE COUNT(*)||'건'
+                              END
+                    FROM tdm13_task_relate_duty
+                   WHERE tdm13_task_relate_detail_id = tdm12_task_relate_detail_id
+               )                           AS duty_cnt
+          FROM tdm12_task_relate_detail
+               INNER JOIN tdm10_task      ON tdm10_task_id = tdm12_task_id
+               INNER JOIN tdm14_task_type ON tdm10_company_id = tdm14_company_id AND tdm14_task_type_cd = tdm10_task_type_cd
+         WHERE tdm10_company_id = #{companyId}
+        <if test="!allYn">
+           AND CAST(#{baseDate} AS date) BETWEEN tdm10_start_date AND COALESCE(tdm10_end_date, TO_DATE('29991231','yyyyMMdd'))
+           AND tdm12_use_yn = 'true'
+        </if>
+           AND tdm14_task_type_cd LIKE #{taskTypeCode}
+           AND CONCAT(tdm10_task_nm, tdm12_content) ILIKE #{searchText}
+         ORDER BY tdm10_task_type_cd
+                , tdm10_task_nm COLLATE "ko_KR.utf8"
+                , tdm10_start_date
+                , tdm12_seq
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm13_task_relate_duty.selectByTaskRelateDetailId — 수정: SELECT * 와 이 화면이 안 쓰는 열(책무명·유형명)을 뺌, 회사 조건 추가 -->
+    <select id="selectByTaskRelateDetailId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TaskDutyRes">
+        SELECT <include refid="dutyColumns"/>
+          FROM tdm13_task_relate_duty
+               INNER JOIN tdm10_task      ON tdm10_task_id = tdm13_task_id
+               INNER JOIN tdm14_task_type ON tdm10_company_id = tdm14_company_id AND tdm14_task_type_cd = tdm10_task_type_cd
+         WHERE tdm13_task_relate_detail_id = #{taskRelateDetailId}
+           AND tdm10_company_id = #{companyId}
+         ORDER BY tdm13_seq
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm13_task_relate_duty.selectById (변경 전 값 비교, 저장 뒤 다시 읽기) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TaskDutyRes">
+        SELECT <include refid="dutyColumns"/>
+          FROM tdm13_task_relate_duty
+         WHERE tdm13_task_relate_duty_id = #{dutyId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm13_task_relate_duty.countByDutyId -->
+    <select id="countByDutyId" resultType="int">
+        SELECT (
+                SELECT  COUNT(*)
+                  FROM  tdm43_manl
+                 WHERE  tdm43_task_relate_duty_id = #{dutyId}
+               ) + (
+                SELECT  COUNT(*)
+                  FROM  tdm35_role_allc_task
+                        INNER JOIN tdm34_role_allc_detail ON tdm34_role_allc_detail_id = tdm35_role_allc_detail_id
+                        INNER JOIN apr01_appr             ON (    apr01_appr_id = tdm34_appr_id
+                                                              AND COALESCE(apr01_status_cd,'99') IN ('10','20','30') )
+                 WHERE  tdm35_task_relate_duty_id = #{dutyId}
+               )
+    </select>
+
+    <!-- 세부내용이 속한 책무의 회사 (저장·삭제 때 로그인 회사 것인지 보려고) -->
+    <select id="selectDetailCompany" resultType="long">
+        SELECT tdm10_company_id
+          FROM tdm12_task_relate_detail
+               INNER JOIN tdm10_task ON tdm10_task_id = tdm12_task_id
+         WHERE tdm12_task_relate_detail_id = #{taskRelateDetailId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT/UPDATE: 화면이 바꾸는 열(관리의무·조회순서·사용여부) -->
+    <insert id="insertDuty">
+        INSERT INTO tdm13_task_relate_duty
+               ( tdm13_task_relate_duty_id, tdm13_task_id, tdm13_task_relate_detail_id, tdm13_content, tdm13_seq, tdm13_use_yn, tdm13_upd_nm, tdm13_upd_date )
+        VALUES ( #{dutyId}, #{row.taskId}, #{row.taskRelateDetailId}, #{row.content}, #{row.seq}, #{row.useYn}, #{updName}, f_sysdate() )
+    </insert>
+
+    <update id="updateDuty">
+        UPDATE tdm13_task_relate_duty
+           SET tdm13_content  = #{row.content}
+             , tdm13_seq      = #{row.seq}
+             , tdm13_use_yn   = #{row.useYn}
+             , tdm13_upd_nm   = #{updName}
+             , tdm13_upd_date = f_sysdate()
+         WHERE tdm13_task_relate_duty_id = #{row.taskRelateDutyId}
+    </update>
+
+    <delete id="deleteDuties">
+        DELETE FROM tdm13_task_relate_duty
+         WHERE tdm13_task_relate_duty_id IN
+        <foreach collection="dutyIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { TdmChangeDetail, TdmChangeHistory, TdmTask, TdmTaskDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDigm } from '../types/tdm';
+import { TdmChangeDetail, TdmChangeHistory, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDigm } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
 export const tdmApi = {
@@ -317,6 +317,40 @@ export const tdmApi = {
   /** AS-IS tdm.Tdm12_TaskRelateDetail.delete (삭제사유 필요) */
   deleteTaskDetails: async (ids: number[], reason: string): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/task-details', { data: { ids, reason } });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm.Tdm12_TaskRelateDetail.selectByText (관리의무 등록 위쪽 목록, taskTypeCode '%'=전체) */
+  searchTaskDutyDetails: async (p: { baseDate: string; taskTypeCode: string; allYn: boolean; searchText: string }): Promise<TdmTaskDutyDetail[]> => {
+    const res = await apiClient.get<ApiResponse<TdmTaskDutyDetail[]>>('v1/tdm/task-duties/details', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm13_TaskRelateDuty.selectByTaskRelateDetailId */
+  searchTaskDuties: async (taskRelateDetailId: number): Promise<TdmTaskDuty[]> => {
+    const res = await apiClient.get<ApiResponse<TdmTaskDuty[]>>('v1/tdm/task-duties', { params: { taskRelateDetailId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm13_TaskRelateDuty.countByDutyId */
+  countTaskDutyUse: async (dutyIds: number[]): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/tdm/task-duties/use-count', { params: { dutyIds: dutyIds.join(',') } });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm.Tdm13_TaskRelateDuty.update (기존 행을 고쳤으면 reason 필요) */
+  saveTaskDuties: async (rows: TdmTaskDuty[], reason: string | null): Promise<TdmTaskDuty[]> => {
+    const body = {
+      rows: rows.map(r => ({ taskRelateDutyId: r.taskRelateDutyId, taskId: r.taskId, taskRelateDetailId: r.taskRelateDetailId, content: r.content, seq: r.seq, useYn: r.useYn })),
+      reason,
+    };
+    const res = await apiClient.put<ApiResponse<TdmTaskDuty[]>>('v1/tdm/task-duties', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm13_TaskRelateDuty.delete (삭제사유 필요) */
+  deleteTaskDuties: async (ids: number[], reason: string): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/task-duties', { data: { ids, reason } });
     return res.data.data ?? 0;
   },
 

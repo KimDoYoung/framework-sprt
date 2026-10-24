@@ -157,6 +157,7 @@ import { Tdm32_Tab_RoleDigmAdmin } from './tdm/Tdm32_Tab_RoleDigmAdmin';
 import { Tdm42_Tab_ManlManagerAdmin } from './tdm/Tdm42_Tab_ManlManagerAdmin';
 import { Tdm01_Tab_Hr } from './tdm/Tdm01_Tab_Hr';
 import { Tdm10_Tab_Task } from './tdm/Tdm10_Tab_Task';
+import { Tdm13_Tab_TaskDuty } from './tdm/Tdm13_Tab_TaskDuty';
 import { Tdm50_Tab_DutyProgress } from './tdm/Tdm50_Tab_DutyProgress';
 import { Tdm50_Tab_DutyProgressAdmin } from './tdm/Tdm50_Tab_DutyProgressAdmin';
 import { Tdm50_Tab_TotalDashboard } from './tdm/Tdm50_Tab_TotalDashboard';
@@ -284,6 +285,7 @@ export const SCREENS: Record<string, React.FC> = {
   Tdm32_Tab_RoleDigmAdmin, // E12 (재생성은 RD 리포트 연동이 없어 서버가 거절 — RoleDigmPdfMaker 기본 구현)
   Tdm42_Tab_ManlManagerAdmin, // E13 1단계 (+ Tdm43_Lookup_ManlItem·Org00_Lookup_SelectTdm, 재생성은 RD 연동이 없어 서버가 거절 — ManlOrgPdfMaker 기본 구현, 점검항목 등록/수정창은 E13-2)
   Tdm10_Tab_Task, // N05 1단계 (+ Tdm10_Edit_Task·Tdm12_Lookup_TaskRelateDetail·Tdm14_Lookup_TaskType·Tdm95_Lookup_ChangeHistory, 연결법규·내규 Tdm11은 다음 단계)
+  Tdm13_Tab_TaskDuty, // N06 (+ Tdm14_Lookup_TaskType view·Tdm95_Lookup_ChangeHistory)
   Tdm01_Tab_Hr, // N04 (+ Tdm01_Lookup_HrChangeInfo·Tdm03_Lookup_AddTitle)
   Tdm50_Tab_DutyProgress, // N02 (E14 Admin의 고객사용 짝 — 같은 API)
   Tdm50_Tab_DutyProgressAdmin, // E14 (조회마다 DB 함수 f_recon_tdm이 sys99_print의 사용자 몫 행을 다시 만든다 — AS-IS 그대로)

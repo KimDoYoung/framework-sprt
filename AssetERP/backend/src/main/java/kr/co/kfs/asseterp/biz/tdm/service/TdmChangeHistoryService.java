@@ -43,11 +43,16 @@ public class TdmChangeHistoryService {
 
     /** historyMap의 공통 부분 (AS-IS 화면 코드가 채우던 companyId·empName·menuNo·targetTable) */
     public Map<String, Object> newHistory(UserPrincipal user, String changeType, String targetTable, String reason) {
+        return newHistory(user, MENU_NO, changeType, targetTable, reason);
+    }
+
+    /** 화면번호가 다른 화면(예: 관리의무 1413)이 만드는 이력 */
+    public Map<String, Object> newHistory(UserPrincipal user, String menuNo, String changeType, String targetTable, String reason) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("companyId", user.getCompanyId());
         map.put("empName", user.getName());
         map.put("changeType", changeType);
-        map.put("menuNo", MENU_NO);
+        map.put("menuNo", menuNo);
         map.put("targetTable", targetTable);
         map.put("reason", reason);
         return map;
@@ -83,7 +88,12 @@ public class TdmChangeHistoryService {
     /** 삭제 이력: targetKeyId를 넣어 대상마다 한 번 */
     @Transactional
     public void insertDeleteHistory(UserPrincipal user, String targetTable, Long targetKeyId, String reason) {
-        Map<String, Object> map = newHistory(user, "DELETE", targetTable, reason);
+        insertDeleteHistory(user, MENU_NO, targetTable, targetKeyId, reason);
+    }
+
+    @Transactional
+    public void insertDeleteHistory(UserPrincipal user, String menuNo, String targetTable, Long targetKeyId, String reason) {
+        Map<String, Object> map = newHistory(user, menuNo, "DELETE", targetTable, reason);
         map.put("targetKeyId", targetKeyId.toString());
         insertModifyHistory(map);
     }

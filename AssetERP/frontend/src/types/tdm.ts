@@ -375,6 +375,29 @@ export interface TdmTaskDetail {
   useYn: string | null;
 }
 
+/** 관리의무 등록 위쪽 그리드 한 행 (GET /api/v1/tdm/task-duties/details, AS-IS Tdm12_TaskRelateDetailModel) */
+export interface TdmTaskDutyDetail {
+  taskRelateDetailId: number;
+  taskId: number;
+  taskTypeName: string | null;
+  taskName: string | null;
+  taskStartDate: string | null;
+  taskEndDate: string | null;
+  content: string | null;
+  useYn: string | null;
+  dutyCnt: string | null;
+}
+
+/** 관리의무 한 행 (GET /api/v1/tdm/task-duties, AS-IS Tdm13_TaskRelateDutyModel) */
+export interface TdmTaskDuty {
+  taskRelateDutyId: number;
+  taskId: number;
+  taskRelateDetailId: number;
+  content: string | null;
+  seq: number | null;
+  useYn: string | null;
+}
+
 /** 책무유형 한 행 (GET /api/v1/tdm/task-types, AS-IS Tdm14_TaskTypeModel) */
 export interface TdmTaskType {
   taskTypeId: number;
