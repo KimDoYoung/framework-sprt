@@ -88,6 +88,27 @@ export interface TdmRoleDigmCompany {
   fileTypeName02?: string | null;
 }
 
+/** 매뉴얼 작업대상 한 행 (AS-IS Tdm40_ManlJobModel 중 Tdm40_Tab_ManlJob 그리드·저장에 쓰는 속성, N15). 날짜는 yyyy-MM-dd */
+export interface TdmManlJob {
+  manlJobId: number;
+  companyId?: number | null;
+  regDate?: string | null;
+  jobName?: string | null;
+  manlApplyStartDate?: string | null;
+  roleId?: number | null;
+  roleName?: string | null;
+  orgId?: number | null;
+  orgName?: string | null;
+  jobReason?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  dutyCntStr?: string | null;
+  dutyEndYn?: boolean;
+  dutyEndDate?: string | null;
+  updName?: string | null;
+  updDateStr?: string | null;
+}
+
 /** 책무구조도 제출 한 행 (AS-IS Tdm36_RoleReportModel 중 Tdm36_Tab_RoleReport 그리드·저장에 쓰는 속성, N14). 날짜는 yyyy-MM-dd */
 export interface TdmRoleReport {
   roleReportId: number;

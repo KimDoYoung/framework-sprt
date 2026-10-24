@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmRoleReport, TdmRoleReportAttach, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord } from '../types/tdm';
+import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmRoleReport, TdmRoleReportAttach, TdmManlJob, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
 export const tdmApi = {
@@ -153,6 +153,55 @@ export const tdmApi = {
   deleteRoleReports: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/role-reports', { params: { roleReportIds: ids.join(',') } });
     return res.data.data ?? 0;
+  },
+
+  // ── N15 매뉴얼 작업대상 선정(Tdm40_Tab_ManlJob) ──
+
+  /** AS-IS tdm.Tdm40_ManlJob.selectByText (로그인 회사만. writingYn = 작성중만 조회) */
+  searchManlJobs: async (p: { searchText: string; writingYn: boolean }): Promise<TdmManlJob[]> => {
+    const res = await apiClient.get<ApiResponse<TdmManlJob[]>>('v1/tdm/manl-jobs', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm40_ManlJob.update (UpdateDataModel) — manlJobId ≤ 0이면 등록 */
+  saveManlJobs: async (rows: TdmManlJob[]): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>('v1/tdm/manl-jobs', rows.map(r => ({
+      manlJobId: r.manlJobId, regDate: r.regDate, jobName: r.jobName, manlApplyStartDate: r.manlApplyStartDate,
+      roleId: r.roleId, orgId: r.orgId, jobReason: r.jobReason, startDate: r.startDate, endDate: r.endDate,
+    })));
+  },
+
+  /** AS-IS tdm.Tdm40_ManlJob.delete */
+  deleteManlJobs: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/manl-jobs', { params: { manlJobIds: ids.join(',') } });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm41Chk — tdm.Tdm41_ManlDuty.selectByManlJobId 에 행이 있는가 */
+  hasManlJobDuties: async (manlJobId: number): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>(`v1/tdm/manl-jobs/${manlJobId}/has-duties`);
+    return !!res.data.data;
+  },
+
+  /** AS-IS tdm.Tdm43_Manl.countByManlJobId */
+  countManlJobManls: async (manlJobId: number): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>(`v1/tdm/manl-jobs/${manlJobId}/manl-count`);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm.Tdm40_ManlJob.deleteAll — 작성내역만 지운다 */
+  deleteManlJobContents: async (manlJobId: number): Promise<void> => {
+    await apiClient.delete<ApiResponse<null>>(`v1/tdm/manl-jobs/${manlJobId}/contents`);
+  },
+
+  /** AS-IS tdm.Tdm40_ManlJob.createDuty (관리의무생성) */
+  createManlJobDuty: async (manlJobId: number): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>(`v1/tdm/manl-jobs/${manlJobId}/duties`);
+  },
+
+  /** AS-IS tdm.Tdm40_ManlJob.createDirectManl — actionName: REDEFINE_BY_ROLE(매뉴얼 작성)·REMAKE_FROM_LATEST(매뉴얼 복제) */
+  createManlJobManual: async (manlJobId: number, actionName: 'REDEFINE_BY_ROLE' | 'REMAKE_FROM_LATEST'): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>(`v1/tdm/manl-jobs/${manlJobId}/manuals`, null, { params: { actionName } });
   },
 
   // ── E15 책무마감 검증(Tdm50_Tab_DutyReconAdmin) ──

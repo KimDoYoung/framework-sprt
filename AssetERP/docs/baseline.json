@@ -6185,5 +6185,38 @@
     "note": "docs/work/N/N14-작업기록.md",
     "history": [],
     "id": "N14"
+  },
+  "Tdm40_Tab_ManlJob": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/tdm/Tdm20_Lookup_SelectRole.java": "be38c12a099fe121a1e043a14baaa24880dff950",
+      "application/src/main/java/myApp/client/vi/tdm/Tdm40_Tab_ManlJob.java": "76110c51703e7af27ffd4f4902c79ee612ea1fc1",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm20_RoleModel.java": "6f474eefa5213f1b92bbc8eb7a9a97167bfaf82d",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm20_RoleModelProperties.java": "935b235abe0e12ce04a0c92348ff716f41b149e2",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm40_ManlJobModel.java": "02a5089b06b9f9ea6e797b161424ef5f2e1bcbec",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm40_ManlJobModelProperties.java": "f1adc6f8900ae2624cdcb16014ea61a4f75baded",
+      "application/src/main/java/myApp/server/tdm/Tdm20_Role.java": "b9a4053f9dd36143debd00f7c9f5102653ab793a",
+      "application/src/main/java/myApp/server/tdm/Tdm40_ManlJob.java": "73fb1ed490fb65f4239353e85611529a89134d58",
+      "application/src/main/java/myApp/server/tdm/Tdm41_ManlDuty.java": "90410d12bed2df1e351e4df036b8771344864011",
+      "application/src/main/java/myApp/server/tdm/Tdm43_Manl.java": "55283933fd9875832a4ca141d52026bfcedb51cd",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm20_role.xml": "dc99f965fcfb7be6f54801e10adf9ed96c47b178",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm40_manl_job.xml": "cd1a00c67470f47fde901f8b6b366af6c8147dc5",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm41_manl_duty.xml": "275970a3ed4a84c751ea77ed7057b5ad1eae2868",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm42_manl_org.xml": "e2e8ee305ff602c05cbb7e3eaf7307a9bbe724cf",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm43_manl.xml": "4ea6f6e3e69fadebd81a20b1a507dd2edac5e88e",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm44_manl_duty_org.xml": "d1ae9a331c744669ea96c113507fb463edb8abc0"
+    },
+    "shared_links": [
+      "Org00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-24T22:02:41+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/N/N15-작업기록.md",
+    "history": [],
+    "id": "N15"
   }
 }

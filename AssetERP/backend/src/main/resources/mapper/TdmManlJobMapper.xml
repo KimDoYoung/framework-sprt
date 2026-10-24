@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm40_manl_job.xml (N15 매뉴얼 작업대상 선정)
+  + tdm41_manl_duty / tdm42_manl_org / tdm43_manl / tdm44_manl_duty_org 의 deleteByManlJobId·count·createDutyOrg
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmManlJobMapper">
+
+    <!-- 수정·삭제·생성 대상 행의 회사 확인용(TOBE 추가) -->
+    <select id="selectCompanyId" resultType="java.lang.Long">
+        SELECT tdm40_company_id FROM tdm40_manl_job WHERE tdm40_manl_job_id = #{manlJobId}
+    </select>
+
+    <!--
+      AS-IS(IDMS-IC) tdm40_manl_job.selectByText L71
+      수정: SELECT tdm40_manl_job.*를 그리드·저장 열 별칭으로, 일자는 TO_CHAR. <choose> 분기·LATERAL 그대로
+    -->
+    <sql id="selectJobColumns">
+        SELECT  tdm40_manl_job_id                                                                  AS manl_job_id,
+                tdm40_company_id                                                                   AS company_id,
+                TO_CHAR(tdm40_reg_date, 'YYYY-MM-DD')                                              AS reg_date,
+                tdm40_job_nm                                                                       AS job_name,
+                TO_CHAR(tdm40_manl_apply_start_date, 'YYYY-MM-DD')                                 AS manl_apply_start_date,
+                tdm40_role_id                                                                      AS role_id,
+                tdm20_role_nm                                                                      AS role_name,
+                tdm40_org_id                                                                       AS org_id,
+                org00_kor_nm                                                                       AS org_name,
+                tdm40_job_reason                                                                   AS job_reason,
+                TO_CHAR(tdm40_start_date, 'YYYY-MM-DD')                                            AS start_date,
+                TO_CHAR(tdm40_end_date, 'YYYY-MM-DD')                                              AS end_date,
+                CASE WHEN tdm41_manl_job_id IS NULL THEN '미생성'
+                     ELSE tdm41_end_cnt ||'/'|| tdm41_org_cnt
+                     END                                                                           AS duty_cnt_str,
+                CASE WHEN tdm41_end_cnt = tdm41_org_cnt AND tdm41_end_cnt != 0 THEN true ELSE false END AS duty_end_yn,
+                TO_CHAR(CASE WHEN tdm41_end_cnt = tdm41_org_cnt AND tdm41_end_cnt != 0 THEN tdm41_end_date ELSE null END, 'YYYY-MM-DD') AS duty_end_date,
+                tdm40_upd_nm                                                                       AS upd_name,
+                COALESCE(TO_CHAR(tdm40_upd_date, 'yyyy-mm-dd HH24:MI:SS'), '')                     AS upd_date_str
+          FROM  tdm40_manl_job
+                LEFT JOIN tdm20_role ON tdm20_role_id = tdm40_role_id
+                LEFT JOIN LATERAL getOrg(tdm40_company_id, tdm40_reg_date) ON org00_org_id = tdm40_org_id
+                LEFT JOIN LATERAL ( SELECT tdm41_manl_job_id
+                                         , COUNT(DISTINCT tdm44_org_id)  tdm41_org_cnt
+                                         , SUM(tdm44_end_cnt)            tdm41_end_cnt
+                                         , MAX(tdm44_end_date)           tdm41_end_date
+                                      FROM ( SELECT tdm41_manl_job_id
+                                                  , tdm44_org_id
+                                                  , CASE WHEN SUM(CASE WHEN tdm44_end_yn = 'true' THEN 1 ELSE 0 END) = COUNT(*)
+                                                         THEN 1 ELSE 0 END   tdm44_end_cnt
+                                                  , MAX(tdm44_end_date)      tdm44_end_date
+                                               FROM tdm41_manl_duty
+                                                    LEFT JOIN tdm44_manl_duty_org ON tdm44_manl_duty_id = tdm41_manl_duty_id
+                                              WHERE tdm41_manl_job_id = tdm40_manl_job_id
+                                              GROUP BY tdm41_manl_job_id, tdm44_org_id
+                                           ) t
+                                     GROUP BY tdm41_manl_job_id  ) tdm41 ON TRUE
+    </sql>
+
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlJobRes">
+        <include refid="selectJobColumns"/>
+         WHERE  tdm40_company_id = #{companyId}
+        <choose>
+            <when test="checkYn">
+           AND  EXISTS ( SELECT 1
+                           FROM tdm42_manl_org
+                          WHERE tdm42_manl_job_id = tdm40_manl_job_id
+                            AND tdm42_org_id      = f_get_tdmOrg_id2(tdm40_company_id, #{orgId}, f_today())
+                       )
+           AND  (
+                    SELECT  COUNT(*)
+                      FROM  tdm42_manl_org
+                     WHERE  1=1
+                       AND  tdm42_manl_job_id = tdm40_manl_job_id
+                ) &gt; 0
+            </when>
+        </choose>
+        <choose>
+            <when test="writingYn">
+           AND  ( tdm41_org_cnt IS NULL             OR
+                  tdm41_org_cnt = 0                 OR
+                  tdm41_org_cnt != tdm41_end_cnt    )
+            </when>
+        </choose>
+        <choose>
+            <when test="createDutyYn">
+           AND  tdm41_manl_job_id IS NOT NULL
+            </when>
+        </choose>
+           AND  CONCAT(tdm40_job_nm, tdm20_role_nm) ILIKE #{searchText}
+         ORDER BY tdm40_reg_date DESC, tdm40_manl_job_id
+    </select>
+
+    <!-- AS-IS tdm40_manl_job.selectById 대신 같은 열을 한 행만 읽는다(생성 버튼이 저장된 행을 쓰도록) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlJobRes">
+        <include refid="selectJobColumns"/>
+         WHERE  tdm40_manl_job_id = #{manlJobId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="java.lang.Long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT (tdm40_manl_job): 화면이 채우는 열 -->
+    <insert id="insertManlJob">
+        INSERT INTO tdm40_manl_job
+               ( tdm40_manl_job_id, tdm40_company_id, tdm40_reg_date, tdm40_job_nm, tdm40_manl_apply_start_date
+               , tdm40_role_id, tdm40_org_id, tdm40_job_reason, tdm40_start_date, tdm40_end_date
+               , tdm40_upd_nm, tdm40_upd_date )
+        VALUES ( #{manlJobId}, #{companyId}, #{regDate}, #{jobName}, #{manlApplyStartDate}
+               , #{roleId}, #{orgId}, #{jobReason}, #{startDate}, #{endDate}
+               , #{updName}, f_sysdate() )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel 동적 UPDATE (tdm40_manl_job): 그리드에서 고치는 열 -->
+    <update id="updateManlJob">
+        UPDATE tdm40_manl_job
+           SET tdm40_reg_date              = #{regDate}
+             , tdm40_job_nm                = #{jobName}
+             , tdm40_manl_apply_start_date = #{manlApplyStartDate}
+             , tdm40_role_id               = #{roleId}
+             , tdm40_org_id                = #{orgId}
+             , tdm40_job_reason            = #{jobReason}
+             , tdm40_start_date            = #{startDate}
+             , tdm40_end_date              = #{endDate}
+             , tdm40_upd_nm                = #{updName}
+             , tdm40_upd_date              = f_sysdate()
+         WHERE tdm40_manl_job_id = #{manlJobId}
+           AND tdm40_company_id  = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel (tdm40_manl_job) -->
+    <delete id="deleteManlJobs">
+        DELETE FROM tdm40_manl_job
+         WHERE tdm40_company_id = #{companyId}
+           AND tdm40_manl_job_id IN
+        <foreach collection="manlJobIds" item="manlJobId" open="(" separator="," close=")">#{manlJobId}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm41_manl_duty.selectByManlJobId L72 — tdm41Chk는 행이 있는지만 본다(목록 대신 같은 JOIN의 건수) -->
+    <select id="countDuties" resultType="int">
+        SELECT  COUNT(*)
+          FROM  tdm41_manl_duty
+                INNER JOIN tdm20_role ON tdm20_role_id = tdm41_role_id
+                INNER JOIN tdm10_task ON tdm10_task_id = tdm41_task_id
+         WHERE  tdm41_manl_job_id = #{manlJobId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm43_manl.countByManlJobId L609 -->
+    <select id="countManls" resultType="int">
+        SELECT  COUNT(*)
+          FROM  tdm42_manl_org
+                INNER JOIN tdm43_manl ON tdm43_manl_org_id = tdm42_manl_org_id
+         WHERE  tdm42_manl_job_id = #{manlJobId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm43_manl.deleteByManlJobId L810 -->
+    <delete id="deleteManlsByJob">
+        DELETE
+          FROM  tdm43_manl
+         WHERE  tdm43_manl_org_id IN ( SELECT tdm42_manl_org_id
+                                         FROM tdm42_manl_org
+                                        WHERE tdm42_manl_job_id = #{manlJobId} )
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm42_manl_org.deleteByManlJobId L281 -->
+    <delete id="deleteManlOrgsByJob">
+        DELETE
+          FROM  tdm42_manl_org
+         WHERE  tdm42_manl_job_id = #{manlJobId}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm44_manl_duty_org.deleteByManlJobId L129 -->
+    <delete id="deleteDutyOrgsByJob">
+        DELETE
+          FROM  tdm44_manl_duty_org
+         WHERE  tdm44_manl_duty_id IN ( SELECT tdm41_manl_duty_id
+                                          FROM tdm41_manl_duty
+                                         WHERE tdm41_manl_job_id = #{manlJobId} )
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm41_manl_duty.deleteByManlJobId L391 -->
+    <delete id="deleteDutiesByJob">
+        DELETE
+          FROM  tdm41_manl_duty
+         WHERE  tdm41_manl_job_id = #{manlJobId}
+    </delete>
+
+    <!--
+      AS-IS(IDMS-IC) tdm40_manl_job.createDuty L141 — 주석 처리된 JOIN·orgId 분기는 옮기지 않는다.
+      수정: current_setting('app.current_user') 대신 #{updName}. roleId가 null이면 직책 조건 없음(<choose> 그대로)
+    -->
+    <insert id="insertDuties">
+        INSERT
+          INTO tdm41_manl_duty
+        SELECT f_create_seq()
+             , #{manlJobId}
+             , tdm30_role_id
+             , tdm35_task_id
+             , tdm35_task_relate_detail_id
+             , tdm35_task_relate_duty_id
+             , #{updName}
+             , f_sysdate()
+             , #{companyId}
+          FROM (
+                 SELECT *
+                   FROM getTdm30RoleAllc(#{companyId}, CAST(#{manlApplyStartDate} AS date), true)
+                        INNER JOIN tdm35_role_allc_task     ON tdm35_role_allc_detail_id    = tdm30_role_allc_detail_id
+                  WHERE 1=1
+                  <choose>
+                      <when test="roleId != null">
+                    AND tdm30_role_id = #{roleId}
+                      </when>
+                  </choose>
+                  ORDER BY tdm30_role_id, tdm35_task_id, tdm35_task_relate_detail_seq, tdm35_task_relate_duty_seq
+               ) t
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) tdm44_manl_duty_org.createDutyOrg L56 — 수정: current_setting 대신 #{updName} -->
+    <insert id="insertDutyOrgs">
+        INSERT
+          INTO tdm44_manl_duty_org
+        SELECT f_create_seq()
+             , tdm41_manl_duty_id
+             , #{orgId}
+             , 'false'
+             , null
+             , null
+             , #{updName}
+             , f_sysdate()
+          FROM tdm41_manl_duty
+         WHERE tdm41_manl_job_id = #{manlJobId}
+    </insert>
+
+    <!--
+      AS-IS(IDMS-IC) tdm40_manl_job.createDirectManl L137
+      DB 함수 안의 current_setting('app.current_user')가 TOBE에서는 비어 있으므로 같은 트랜잭션에 값을 넣어 준다(set_config의 세 번째 인자 true = 트랜잭션 안에서만)
+    -->
+    <select id="createDirectManl" resultType="java.lang.String">
+        SELECT f_create_tdm_manual(#{jobType}, #{companyId}, #{manlJobId})
+          FROM (SELECT set_config('app.current_user', #{updName}, true)) s
+    </select>
+</mapper>
