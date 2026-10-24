@@ -425,3 +425,50 @@ export interface TdmChangeDetail {
   beforeData: string | null;
   afterData: string | null;
 }
+
+/** 회의체 한 행 (GET /api/v1/tdm/councils, AS-IS Tdm05_CnclModel) */
+export interface TdmCouncil {
+  cnclId: number;
+  cnclName: string | null;
+  openCycleCode: string | null;
+  openCycleName: string | null;
+  mainDecision: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  relateRoleCnt: string | null;
+  updName: string | null;
+  updDateStr: string | null;
+}
+
+/** 회의체 편집창 저장 (PUT /api/v1/tdm/councils, cnclId가 없으면 새 회의체) */
+export interface TdmCouncilSaveReq {
+  cnclId: number | null;
+  cnclName: string;
+  openCycleCode: string;
+  mainDecision: string;
+  startDate: string;
+  endDate: string | null;
+}
+
+/** 회의체에 연결된 직책 한 행 (GET /api/v1/tdm/councils/{id}/roles, AS-IS Tdm22_RoleRelateCnclModel) */
+export interface TdmCouncilRole {
+  roleRelateCnclId: number;
+  roleId: number;
+  cnclId: number;
+  roleName: string | null;
+  memberType: string | null;
+  memberTypeName: string | null;
+  startDate: string | null;
+  endDate: string | null;
+}
+
+/** 직책 고르기창 한 행 (GET /api/v1/tdm/councils/role-lookup, AS-IS Tdm20_RoleModel) */
+export interface TdmCouncilRoleLookup {
+  roleId: number;
+  roleName: string | null;
+  roleTypeName: string | null;
+  roleTypeEtcName: string | null;
+  overview: string | null;
+  startDate: string | null;
+  endDate: string | null;
+}

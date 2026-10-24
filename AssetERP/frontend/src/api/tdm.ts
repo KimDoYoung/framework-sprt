@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { TdmChangeDetail, TdmChangeHistory, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDigm } from '../types/tdm';
+import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDigm } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
 export const tdmApi = {
@@ -382,6 +382,48 @@ export const tdmApi = {
   /** AS-IS tdm.Tdm96_ChangeDetail.selectByChangeHistoryId */
   searchChangeDetails: async (changeHistoryId: number): Promise<TdmChangeDetail[]> => {
     const res = await apiClient.get<ApiResponse<TdmChangeDetail[]>>(`v1/tdm/change-histories/${changeHistoryId}/details`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm05_Cncl.selectByDate (allYn이면 기간 조건 없음) */
+  searchCouncils: async (p: { baseDate: string; allYn: boolean }): Promise<TdmCouncil[]> => {
+    const res = await apiClient.get<ApiResponse<TdmCouncil[]>>('v1/tdm/councils', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm05_Cncl.modelUpdate (cnclId가 없으면 새 회의체) */
+  saveCouncil: async (req: TdmCouncilSaveReq): Promise<TdmCouncil> => {
+    const res = await apiClient.put<ApiResponse<TdmCouncil>>('v1/tdm/councils', req);
+    return res.data.data as TdmCouncil;
+  },
+
+  /** AS-IS tdm.Tdm05_Cncl.delete (연결된 직책이 있으면 서버가 거절) */
+  deleteCouncils: async (cnclIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/councils', { data: cnclIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm.Tdm22_RoleRelateCncl.selectByCnclId */
+  searchCouncilRoles: async (cnclId: number): Promise<TdmCouncilRole[]> => {
+    const res = await apiClient.get<ApiResponse<TdmCouncilRole[]>>(`v1/tdm/councils/${cnclId}/roles`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm22_RoleRelateCncl.update (ID ≤ 0은 새 행) */
+  saveCouncilRoles: async (cnclId: number, rows: TdmCouncilRole[]): Promise<TdmCouncilRole[]> => {
+    const res = await apiClient.put<ApiResponse<TdmCouncilRole[]>>(`v1/tdm/councils/${cnclId}/roles`, rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm22_RoleRelateCncl.delete */
+  deleteCouncilRoles: async (cnclId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/tdm/councils/${cnclId}/roles`, { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS tdm.Tdm20_Role.selectByDate (직책 고르기창, searchText는 서버가 '%…%'로 감싼다) */
+  searchCouncilRoleLookup: async (p: { baseDate: string; searchText: string }): Promise<TdmCouncilRoleLookup[]> => {
+    const res = await apiClient.get<ApiResponse<TdmCouncilRoleLookup[]>>('v1/tdm/councils/role-lookup', { params: p });
     return res.data.data ?? [];
   },
 };

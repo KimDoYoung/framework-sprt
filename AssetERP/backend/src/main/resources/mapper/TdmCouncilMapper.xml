@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm05_cncl.xml + tdm22_role_relate_cncl.xml + tdm20_role.xml(selectByDate) + Tdm05_Cncl·Tdm22_RoleRelateCncl (N07 회의체 등록)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmCouncilMapper">
+
+    <sql id="councilSelect">
+        SELECT tdm05_cncl_id          AS cncl_id
+             , tdm05_cncl_nm          AS cncl_name
+             , tdm05_open_cycle_cd    AS open_cycle_code
+             , f_cdnm('CycleCode', tdm05_open_cycle_cd, tdm05_company_id, f_sysdate()) AS open_cycle_name
+             , tdm05_main_decision    AS main_decision
+             , tdm05_start_date       AS start_date
+             , tdm05_end_date         AS end_date
+             , (
+                  SELECT CASE WHEN COUNT(*) = 0 THEN ''
+                              ELSE COUNT(*)||'건'
+                              END
+                    FROM tdm22_role_relate_cncl
+                         INNER JOIN tdm20_role ON tdm20_role_id = tdm22_role_id
+                   WHERE tdm22_cncl_id = tdm05_cncl_id
+               )                      AS relate_role_cnt
+             , tdm05_upd_nm           AS upd_name
+             , COALESCE(TO_CHAR(tdm05_upd_date, 'yyyy-mm-dd HH24:MI:SS'), ''::text) AS upd_date_str
+          FROM tdm05_cncl
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) tdm05_cncl.selectByDate: allYn이면 기간 조건 없이 전부. 수정: SELECT * 를 이 화면이 쓰는 열로 -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CouncilRes">
+        <include refid="councilSelect"/>
+         WHERE tdm05_company_id = #{companyId}
+        <if test="!allYn">
+           AND CAST(#{baseDate} AS date) BETWEEN tdm05_start_date AND COALESCE(tdm05_end_date, TO_DATE('29991231','yyyyMMdd'))
+        </if>
+         ORDER BY tdm05_cncl_nm COLLATE "ko_KR.utf8", tdm05_open_cycle_cd, tdm05_start_date
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm05_cncl.selectById 상당 — 저장 뒤 다시 읽기 (회사 조건 추가) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CouncilRes">
+        <include refid="councilSelect"/>
+         WHERE tdm05_cncl_id = #{cnclId}
+           AND tdm05_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm05_cncl.countUseByCnclId -->
+    <select id="countUseByCnclId" resultType="int">
+        SELECT COUNT(*)
+          FROM tdm22_role_relate_cncl
+               INNER JOIN tdm20_role ON tdm20_role_id = tdm22_role_id
+         WHERE tdm22_cncl_id = #{cnclId}
+    </select>
+
+    <select id="selectCompanyId" resultType="long">
+        SELECT tdm05_company_id
+          FROM tdm05_cncl
+         WHERE tdm05_cncl_id = #{cnclId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT/UPDATE: 화면이 바꾸는 열 (등록자·일시는 서버 값) -->
+    <insert id="insertCouncil">
+        INSERT INTO tdm05_cncl
+               ( tdm05_cncl_id, tdm05_company_id, tdm05_cncl_nm, tdm05_open_cycle_cd, tdm05_main_decision, tdm05_start_date, tdm05_end_date, tdm05_upd_nm, tdm05_upd_date )
+        VALUES ( #{cnclId}, #{companyId}, #{row.cnclName}, #{row.openCycleCode}, #{row.mainDecision}, #{row.startDate}, #{row.endDate}, #{updName}, f_sysdate() )
+    </insert>
+
+    <update id="updateCouncil">
+        UPDATE tdm05_cncl
+           SET tdm05_cncl_nm        = #{row.cnclName}
+             , tdm05_open_cycle_cd  = #{row.openCycleCode}
+             , tdm05_main_decision  = #{row.mainDecision}
+             , tdm05_start_date     = #{row.startDate}
+             , tdm05_end_date       = #{row.endDate}
+             , tdm05_upd_nm         = #{updName}
+             , tdm05_upd_date       = f_sysdate()
+         WHERE tdm05_cncl_id = #{row.cnclId}
+    </update>
+
+    <delete id="deleteCouncils">
+        DELETE FROM tdm05_cncl
+         WHERE tdm05_cncl_id IN
+        <foreach collection="cnclIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm22_role_relate_cncl.selectByCnclId — 수정: SELECT * 를 화면이 쓰는 열로, 회사 조건 추가 -->
+    <select id="selectRolesByCnclId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CouncilRoleRes">
+        SELECT tdm22_role_relate_cncl_id AS role_relate_cncl_id
+             , tdm22_role_id             AS role_id
+             , tdm22_cncl_id             AS cncl_id
+             , tdm20_role_nm             AS role_name
+             , tdm22_member_type         AS member_type
+             , f_cdnm('TdmCnclMemberType', tdm22_member_type, tdm20_company_id, f_sysdate()) AS member_type_name
+             , tdm22_start_date          AS start_date
+             , tdm22_end_date            AS end_date
+          FROM tdm22_role_relate_cncl
+               INNER JOIN tdm20_role ON tdm22_role_id = tdm20_role_id
+               INNER JOIN tdm05_cncl ON tdm22_cncl_id = tdm05_cncl_id
+         WHERE tdm22_cncl_id = #{cnclId}
+           AND tdm05_company_id = #{companyId}
+         ORDER BY tdm20_role_nm COLLATE "ko_KR.utf8", tdm22_start_date
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm22_role_relate_cncl.selectById (저장 뒤 다시 읽기) -->
+    <select id="selectRoleById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CouncilRoleRes">
+        SELECT tdm22_role_relate_cncl_id AS role_relate_cncl_id
+             , tdm22_role_id             AS role_id
+             , tdm22_cncl_id             AS cncl_id
+             , tdm20_role_nm             AS role_name
+             , tdm22_member_type         AS member_type
+             , f_cdnm('TdmCnclMemberType', tdm22_member_type, tdm05_company_id, f_sysdate()) AS member_type_name
+             , tdm22_start_date          AS start_date
+             , tdm22_end_date            AS end_date
+          FROM tdm22_role_relate_cncl
+               INNER JOIN tdm20_role ON tdm22_role_id = tdm20_role_id
+               INNER JOIN tdm05_cncl ON tdm22_cncl_id = tdm05_cncl_id
+         WHERE tdm22_role_relate_cncl_id = #{roleRelateCnclId}
+    </select>
+
+    <select id="selectRoleCompanyId" resultType="long">
+        SELECT tdm20_company_id
+          FROM tdm20_role
+         WHERE tdm20_role_id = #{roleId}
+    </select>
+
+    <insert id="insertRole">
+        INSERT INTO tdm22_role_relate_cncl
+               ( tdm22_role_relate_cncl_id, tdm22_role_id, tdm22_cncl_id, tdm22_member_type, tdm22_start_date, tdm22_end_date )
+        VALUES ( #{roleRelateCnclId}, #{row.roleId}, #{row.cnclId}, #{row.memberType}, #{row.startDate}, #{row.endDate} )
+    </insert>
+
+    <update id="updateRole">
+        UPDATE tdm22_role_relate_cncl
+           SET tdm22_member_type = #{row.memberType}
+             , tdm22_start_date  = #{row.startDate}
+             , tdm22_end_date    = #{row.endDate}
+         WHERE tdm22_role_relate_cncl_id = #{row.roleRelateCnclId}
+    </update>
+
+    <delete id="deleteRoles">
+        DELETE FROM tdm22_role_relate_cncl
+         WHERE tdm22_role_relate_cncl_id IN
+        <foreach collection="roleRelateCnclIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm20_role.selectByDate — 수정: 안쪽 서브쿼리의 연결 건수 열(이 창이 안 쓰는 것)을 뺌, 나머지 조건·정렬 그대로 -->
+    <select id="selectRoleLookup" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CouncilRoleLookupRes">
+        SELECT tdm20_role_id           AS role_id
+             , tdm20_role_nm           AS role_name
+             , tdm20_role_type_nm      AS role_type_name
+             , tdm20_role_type_etc_nm  AS role_type_etc_name
+             , tdm20_overview          AS overview
+             , tdm20_start_date        AS start_date
+             , tdm20_end_date          AS end_date
+          FROM (
+                SELECT a.*
+                     , f_cdnm('TdmRoleType', tdm20_role_type, tdm20_company_id, f_sysdate()) AS tdm20_role_type_nm
+                  FROM tdm20_role a
+                 WHERE tdm20_company_id = #{companyId}
+                   AND CAST(#{baseDate} AS date) BETWEEN tdm20_start_date AND COALESCE(tdm20_end_date, TO_DATE('29991231','yyyyMMdd'))
+               ) t
+         WHERE CONCAT(tdm20_role_nm, tdm20_role_type_nm, tdm20_overview) ILIKE #{searchText}
+         ORDER BY tdm20_role_nm COLLATE "ko_KR.utf8"
+                , tdm20_role_type
+                , tdm20_role_type_etc_nm COLLATE "ko_KR.utf8"
+                , tdm20_start_date
+    </select>
+</mapper>

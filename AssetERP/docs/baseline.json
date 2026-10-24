@@ -5867,5 +5867,39 @@
     "note": "docs/work/N/N06-작업기록.md",
     "history": [],
     "id": "N06"
+  },
+  "Tdm05_Tab_Cncl": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/tdm/Tdm05_Edit_Cncl.java": "e6cdae4ec31989f33670573edbacc0b7d9cb0fba",
+      "application/src/main/java/myApp/client/vi/tdm/Tdm05_Tab_Cncl.java": "e3c85a40a79d1f1d70ff13940277bd10af72d8d7",
+      "application/src/main/java/myApp/client/vi/tdm/Tdm20_Lookup_SelectMulti.java": "b0a374dd385f377831e28cf7625b8a7b0009def8",
+      "application/src/main/java/myApp/client/vi/tdm/Tdm22_Lookup_RoleRelateCncl2.java": "26084d84d4a1f9748591972767c6d2d0a932af62",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm05_CnclModel.java": "4a78bdbb68e0919d0973f7d3410fb57fcd33be47",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm05_CnclModelProperties.java": "b42f4d373b7e7e1da8d20dd40dd963c13a78779c",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm20_RoleModel.java": "6f474eefa5213f1b92bbc8eb7a9a97167bfaf82d",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm20_RoleModelProperties.java": "935b235abe0e12ce04a0c92348ff716f41b149e2",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm22_RoleRelateCnclModel.java": "f030c01fa8e9af1b81dd90567c6fca2458701353",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm22_RoleRelateCnclModelProperties.java": "497554398fcac25f10e9b9255807cbe9587ac27a",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/tdm/Tdm05_Cncl.java": "61ac1613f546b1651420ba1638d4de380b4e8568",
+      "application/src/main/java/myApp/server/tdm/Tdm20_Role.java": "b9a4053f9dd36143debd00f7c9f5102653ab793a",
+      "application/src/main/java/myApp/server/tdm/Tdm22_RoleRelateCncl.java": "eda86a1027eda2412ff9ef048fac0777a71fd589",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm05_cncl.xml": "c473aa3fcb2bbe5ca56c63280bd8b4c9a3a034f2",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm20_role.xml": "dc99f965fcfb7be6f54801e10adf9ed96c47b178",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm22_role_relate_cncl.xml": "8f247c99bfc019dff60b402561b8f6d75e197ec0",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-24T16:59:47+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/N/N07-작업기록.md",
+    "history": [],
+    "id": "N07"
   }
 }
