@@ -73,4 +73,126 @@
          WHERE  tdm33_role_digm_id = #{roleDigmId}
            AND  tdm33_file_type LIKE #{fileType}
     </select>
+
+    <!--
+      AS-IS(IDMS-IC) tdm32_role_digm.selectByRegDate L55 (N13 책무체계도 작성)
+      수정: 바깥 SELECT t.*를 그리드·저장·보기 열 별칭으로(file_id_01·02·upd_date_str·file_type_nm_02 중 화면이 쓰는 건 file_type_nm_02뿐),
+            일자는 TO_CHAR. JOIN c·d는 행 수가 같도록 남김. notEndYn(미처리건만 조회)은 결재상태 30(완료) 제외
+    -->
+    <select id="selectByRegDate" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleDigmCompanyRes">
+        SELECT  tdm32_role_digm_id                                 AS role_digm_id,
+                tdm32_company_id                                   AS company_id,
+                TO_CHAR(tdm32_reg_date, 'YYYY-MM-DD')              AS reg_date,
+                TO_CHAR(tdm32_allc_std_date, 'YYYY-MM-DD')         AS allc_std_date,
+                tdm32_reason_cd                                    AS reason_code,
+                tdm32_reason_nm                                    AS reason_name,
+                tdm32_use_file_type                                AS use_file_type,
+                tdm32_appr_id                                      AS appr_id,
+                tdm32_appr_status_cd                               AS appr_status_code,
+                tdm32_appr_status_nm                               AS appr_status_name,
+                tdm32_role_digm_file_id                            AS role_digm_file_id,
+                tdm32_file_type_nm_02                              AS file_type_name_02
+          FROM (
+                SELECT  tdm32_role_digm.*
+                     ,  f_cdnm('TdmDescRegReason',  tdm32_reason_cd,    tdm32_company_id, tdm32_reg_date)   AS tdm32_reason_nm
+                     ,  COALESCE(apr01_status_cd, '00')                                                     AS tdm32_appr_status_cd
+                     ,  f_cdnm('AprStatusCode', apr01_status_cd, tdm32_company_id, tdm32_reg_date)          AS tdm32_appr_status_nm
+                     ,  (
+                            CASE WHEN b.tdm33_role_digm_file_id IS NOT NULL
+                                 THEN b.tdm33_role_digm_file_id
+                                 ELSE a.tdm33_role_digm_file_id
+                                 END
+                        )                                                                                   AS tdm32_role_digm_file_id
+                     ,  d.sys10_file_nm                                                                     AS tdm32_file_type_nm_02
+                  FROM  tdm32_role_digm
+                        LEFT OUTER JOIN apr01_appr ON apr01_appr_id = tdm32_appr_id
+                        LEFT OUTER JOIN tdm33_role_digm_file a ON a.tdm33_role_digm_id = tdm32_role_digm_id AND a.tdm33_file_type = '1'
+                        LEFT OUTER JOIN tdm33_role_digm_file b ON b.tdm33_role_digm_id = tdm32_role_digm_id AND b.tdm33_file_type = '2'
+                        LEFT OUTER JOIN sys10_file c ON c.sys10_parent_id = a.tdm33_role_digm_file_id
+                        LEFT OUTER JOIN sys10_file d ON d.sys10_parent_id = b.tdm33_role_digm_file_id
+                 WHERE  tdm32_company_id = #{companyId}
+                <if test="!notPeriodYn">
+                   AND  tdm32_reg_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+                </if>
+                <if test="notEndYn">
+                   AND  COALESCE(apr01_status_cd, '00') NOT IN ('30')
+                </if>
+               ) t
+         ORDER BY tdm32_reg_date DESC
+    </select>
+
+    <!--
+      AS-IS(IDMS-IC) tdm33_role_digm_file.selectByFileType('%') + sys10_file.selectByParentId + tdm33_role_digm_file.deleteByRoleDigmFileId (Tdm33_RoleDigmFile.fileCheck L103-134).
+      AS-IS는 조회 범위의 책무체계도마다 파일정보 행을 하나씩 읽어 첨부가 없으면 지운다 — 같은 조건을 한 번에 지운다
+    -->
+    <delete id="deleteFileInfoWithoutFile">
+        DELETE FROM tdm33_role_digm_file f
+         WHERE NOT EXISTS (SELECT 1 FROM sys10_file WHERE sys10_parent_id = f.tdm33_role_digm_file_id)
+           AND f.tdm33_role_digm_id IN (
+                SELECT  tdm32_role_digm_id
+                  FROM  tdm32_role_digm
+                        LEFT OUTER JOIN apr01_appr ON apr01_appr_id = tdm32_appr_id
+                 WHERE  tdm32_company_id = #{companyId}
+                <if test="!notPeriodYn">
+                   AND  tdm32_reg_date BETWEEN CAST(#{startDate} AS date) AND CAST(#{closeDate} AS date)
+                </if>
+                <if test="notEndYn">
+                   AND  COALESCE(apr01_status_cd, '00') NOT IN ('30')
+                </if>
+               )
+    </delete>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="java.lang.Long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT (tdm32_role_digm): 화면이 채우는 열 -->
+    <insert id="insertRoleDigm">
+        INSERT INTO tdm32_role_digm
+               ( tdm32_role_digm_id, tdm32_company_id, tdm32_reg_date, tdm32_allc_std_date, tdm32_reason_cd, tdm32_upd_nm, tdm32_upd_date )
+        VALUES ( #{roleDigmId}, #{companyId}, #{regDate}, #{allcStdDate}, #{reasonCode}, #{updName}, f_sysdate() )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel 동적 UPDATE (tdm32_role_digm): 그리드에서 고치는 생성일·책무배분기준일·생성사유 -->
+    <update id="updateRoleDigm">
+        UPDATE tdm32_role_digm
+           SET tdm32_reg_date      = #{regDate}
+             , tdm32_allc_std_date = #{allcStdDate}
+             , tdm32_reason_cd     = #{reasonCode}
+             , tdm32_upd_nm        = #{updName}
+             , tdm32_upd_date      = f_sysdate()
+         WHERE tdm32_role_digm_id = #{roleDigmId}
+           AND tdm32_company_id   = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel (tdm32_role_digm) -->
+    <delete id="deleteRoleDigms">
+        DELETE FROM tdm32_role_digm
+         WHERE tdm32_company_id = #{companyId}
+           AND tdm32_role_digm_id IN
+        <foreach collection="roleDigmIds" item="roleDigmId" open="(" separator="," close=")">#{roleDigmId}</foreach>
+    </delete>
+
+    <!-- AS-IS tdm33_role_digm_file.insertByRoleDigmId -->
+    <insert id="insertFileInfo">
+        INSERT INTO tdm33_role_digm_file ( tdm33_role_digm_file_id, tdm33_role_digm_id, tdm33_file_type )
+        VALUES ( #{roleDigmFileId}, #{roleDigmId}, #{fileType} )
+    </insert>
+
+    <!-- AS-IS Tdm33_RoleDigmFile.deleteByRoleDigmId L56-70 가 지울 첨부: 파일정보 행(roleDigmId, fileType)에 붙은 sys10_file -->
+    <select id="selectAttachIdByFileType" resultType="java.lang.Long">
+        SELECT  s.sys10_file_id
+          FROM  tdm33_role_digm_file f
+                INNER JOIN sys10_file s ON s.sys10_parent_id = f.tdm33_role_digm_file_id
+         WHERE  f.tdm33_role_digm_id = #{roleDigmId}
+           AND  f.tdm33_file_type = #{fileType}
+    </select>
+
+    <!-- AS-IS tdm33_role_digm_file.deleteByRoleDigmId -->
+    <delete id="deleteFileInfo">
+        DELETE FROM tdm33_role_digm_file
+         WHERE tdm33_role_digm_id = #{roleDigmId}
+           AND tdm33_file_type = #{fileType}
+    </delete>
 </mapper>

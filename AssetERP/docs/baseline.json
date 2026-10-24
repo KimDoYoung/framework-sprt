@@ -6117,5 +6117,41 @@
     "note": "docs/work/N/N12-작업기록.md",
     "history": [],
     "id": "N12"
+  },
+  "Tdm32_Tab_RoleDigm": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/tdm/Tdm32_Tab_RoleDigm.java": "d5ec3b79a0184c057697c0a178f0285fe0ba12fe",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm32_RoleDigmModel.java": "154d10ac5ed9f80941ff6ba0b5290902ffa7b403",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm32_RoleDigmModelProperties.java": "5bd924868380cd1e188ad75a708fc8e3c1d9945b",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm33_RoleDigmFileModel.java": "209ba5001ad6c74c134204d46f610cde780e9066",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/tdm/Tdm32_RoleDigm.java": "40bfb067939e8e8be623672761961bdb49417788",
+      "application/src/main/java/myApp/server/tdm/Tdm33_RoleDigmFile.java": "62fddbde65b4f4bfd8dc5d76ee5c1c577eadeeee",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm32_role_digm.xml": "b8723a76e5725922af1ecd62f122d9688d64fb34",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm33_role_digm_file.xml": "667d55a60f517be64a090b08c8b2d95c9ddeeb34",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Dcr01_Lookup_Class",
+      "Sys10_Lookup_FileViewer"
+    ],
+    "recorded_at": "2026-10-24T21:18:40+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/N/N13-작업기록.md",
+    "history": [],
+    "id": "N13"
   }
 }

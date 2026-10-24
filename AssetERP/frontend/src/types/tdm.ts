@@ -72,6 +72,22 @@ export interface TdmRoleDigm {
   roleDigmFileId?: number | null;
 }
 
+/** 책무체계도 작성 한 행 (AS-IS Tdm32_RoleDigmModel 중 Tdm32_Tab_RoleDigm 그리드·저장·보기에 쓰는 속성, N13). fileTypeName02 = 사용자가 올린 파일 이름 */
+export interface TdmRoleDigmCompany {
+  roleDigmId: number;
+  companyId?: number | null;
+  regDate?: string | null;
+  allcStdDate?: string | null;
+  reasonCode?: string | null;
+  reasonName?: string | null;
+  useFileType?: string | null;
+  apprId?: number | null;
+  apprStatusCode?: string | null;
+  apprStatusName?: string | null;
+  roleDigmFileId?: number | null;
+  fileTypeName02?: string | null;
+}
+
 /** 책무진행 상태 한 행 (AS-IS Sys99_PrintModel 중 Tdm50_Tab_DutyProgressAdmin 그리드에 쓰는 속성, f_recon_tdm 'CHCK_STATUS' 결과). m00~m11은 조회 기준월부터 12개월 */
 export interface TdmDutyProgress {
   printId: number;
