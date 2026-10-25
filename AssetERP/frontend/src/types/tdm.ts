@@ -909,3 +909,104 @@ export interface TdmManlCopyItem {
   manlCode?: string | null;
   checkItem?: string | null;
 }
+
+/** 이행점검 작업 (AS-IS Tdm50_ChckJobModel — GET /tdm/check-jobs, N20) */
+export interface TdmCheckJob {
+  chckJobId: number;
+  companyId: number;
+  checkYm: string;
+  checkName?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  endYn: boolean;
+  apprId?: number | null;
+  apprStatusCode?: string | null;
+  apprStatusName?: string | null;
+  lockYn?: boolean | null;
+  batchCheckUseYn?: boolean | null;
+}
+
+/** 작업정보등록 (PUT /tdm/check-jobs) */
+export interface TdmCheckJobSaveReq {
+  chckJobId: number;
+  checkYm: string;
+  checkName: string;
+  startDate: string;
+  endDate: string;
+}
+
+/** 보고CEO 직책 탭 — 직책명은 "직책 : 임원수" (GET /tdm/check-jobs/ceo-roles) */
+export interface TdmCheckRole {
+  roleId: number;
+  roleName: string;
+}
+
+/** 점검항목 생성 전 검사 — status 1 바로 진행 / 2 확인 뒤 진행(message) */
+export interface TdmCheckPreCreate {
+  status: number;
+  message?: string | null;
+}
+
+/** 임원 승인현황 그리드 한 행 (AS-IS Tdm53_ChckExctModel — GET /tdm/check-jobs/{id}/excts) */
+export interface TdmCheckExct {
+  chckExctId: number;
+  chckJobId: number;
+  roleId: number;
+  exctId: number;
+  roleName?: string | null;
+  exctName?: string | null;
+  chckManlCnt?: number | null;
+  exctApprYn?: boolean | null;
+  lockYn?: boolean | null;
+  buttonEnable?: number | null;
+}
+
+/** 부서 점검현황 그리드 한 행 (AS-IS Tdm51_ChckOrgModel — GET /tdm/check-jobs/{id}/orgs) */
+export interface TdmChckOrg {
+  chckOrgId: number;
+  orgId?: number | null;
+  orgName?: string | null;
+  orgManagerId?: number | null;
+  orgManagerName?: string | null;
+  dutyCnt?: number | null;
+  manlCnt?: number | null;
+  monthManlCnt?: number | null;
+  monthManlDoneCnt?: number | null;
+  monthManlUndoneCnt?: number | null;
+  orgStatusCode?: string | null;
+  orgStatusName?: string | null;
+}
+
+/** 이행점검 연결 상신문서 (AS-IS Tdm56_ChckRelateApprModel) */
+export interface TdmCheckAppr {
+  apprId: number;
+  apprStatusCode?: string | null;
+  apprStatusName?: string | null;
+}
+
+/** 알림발송 대상 부서담당자 */
+export interface TdmCheckOrgManager {
+  chckOrgId: number;
+  orgManagerId?: number | null;
+}
+
+/** RD 뷰어용 출력 자료 (POST /tdm/check-jobs/excts/{id}/rd-print) */
+export interface TdmCheckRdPrint {
+  groupId: number;
+  yyyymm: string;
+  roleName: string;
+  exctName: string;
+}
+
+/** PDF 생성 결과 — RD_FAILED는 잠금을 되돌리고 다음 건으로, FILE_FAILED는 멈춘다 */
+export type TdmPdfOutcome = 'OK' | 'RD_FAILED' | 'FILE_FAILED';
+
+/** 점검(승인) 이력 한 행 (AS-IS Tdm55_ChckRecordModel — GET /tdm/chck-records) */
+export interface TdmChckRecord {
+  rowNum: number;
+  updDateStr?: string | null;
+  procType?: string | null;
+  personInfo?: string | null;
+  procResult?: string | null;
+  resultCmnt?: string | null;
+}

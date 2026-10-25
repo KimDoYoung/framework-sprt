@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/tdm/mapper/tdm55_chck_record.xml (N20 Tdm55_Lookup_ChckRecord, 점검부서별 승인이력) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmChckRecordMapper">
+
+    <!-- AS-IS(IDMS-IC) tdm55_chck_record.selectByChckOrgId. 수정: 바깥 t.*를 그리드 열만 -->
+    <select id="selectByChckOrgId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ChckRecordRes">
+        SELECT t.tdm55_row_num          AS row_num
+             , t.tdm55_upd_date_str     AS upd_date_str
+             , t.tdm55_proc_type        AS proc_type
+             , t.tdm55_person_info      AS person_info
+             , t.tdm55_proc_result      AS proc_result
+             , t.tdm55_result_cmnt      AS result_cmnt
+          FROM (
+                SELECT ROW_NUMBER() OVER(ORDER BY tdm55_upd_date)                       AS tdm55_row_num
+                     , tdm55_chck_record.*
+                     , COALESCE(TO_CHAR(tdm55_upd_date, 'yyyy-mm-dd HH24:MI:SS'), '')   AS tdm55_upd_date_str
+                  FROM tdm55_chck_record
+                 WHERE tdm55_relate_table_id IN ( SELECT tdm62_chck_appr_cmnt_id
+                                                    FROM tdm62_chck_cmnt_relate_org
+                                                         INNER JOIN tdm59_chck_appr_cmnt ON tdm59_chck_appr_cmnt_id = tdm62_chck_appr_cmnt_id
+                                                   WHERE tdm62_chck_org_id = #{chckOrgId} )
+               ) t
+         ORDER BY t.tdm55_row_num DESC
+    </select>
+
+    <!-- 점검부서의 회사(TOBE 추가 — 서버가 요청한 id의 회사를 직접 읽어 권한 범위를 검사) -->
+    <select id="selectChckOrgCompanyId" resultType="java.lang.Long">
+        SELECT tdm51_company_id
+          FROM tdm51_chck_org
+         WHERE tdm51_chck_org_id = #{chckOrgId}
+    </select>
+</mapper>

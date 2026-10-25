@@ -174,6 +174,7 @@ import { Tdm31_Tab_RoleDesc } from './tdm/Tdm31_Tab_RoleDesc';
 import { Tdm50_Tab_DutyProgress } from './tdm/Tdm50_Tab_DutyProgress';
 import { Tdm50_Tab_DutyProgressAdmin } from './tdm/Tdm50_Tab_DutyProgressAdmin';
 import { Tdm50_Tab_TotalDashboard } from './tdm/Tdm50_Tab_TotalDashboard';
+import { Tdm50_Tab_CheckJob } from './tdm/Tdm50_Tab_CheckJob';
 import { Tdm50_Tab_DutyRecon } from './tdm/Tdm50_Tab_DutyRecon';
 import { Tdm50_Tab_DutyReconAdmin } from './tdm/Tdm50_Tab_DutyReconAdmin';
 import { Dcr01_Tab_ClassTree } from './dcr/Dcr01_Tab_ClassTree';
@@ -337,6 +338,7 @@ export const SCREENS: Record<string, React.FC> = {
   Act13_Tab_RealAccountMap, // E31 (+ Act10_Lookup_ReprAccount·Act01_Lookup_AccountCode)
   Act15_Tab_CloseCheck, // E32
   Tdm50_Tab_TotalDashboard, // N01 1단계 (+ Tdm50_Tab_Dashboard·DashboardExct·DashboardOrg·Tdm01_Lookup_SelectSingle, [보기] 아이콘의 점검 편집창·미흡 조치 상세는 N22·N24)
+  Tdm50_Tab_CheckJob, // N20 1단계 (+ Tdm50_TabPage_CheckJob·Tdm50_Edit_CheckJob·Tdm55_Lookup_ChckRecord, 결재요청·문서보기·알림발송의 문자 창은 다른 도메인이라 점검 후 안내, 보고서 PDF는 서버 CheckExctPdfMaker)
   Tdm50_Tab_DutyRecon, // N03 (E15 Admin의 고객사용 짝 — 같은 API)
   Tdm50_Tab_DutyReconAdmin, // E15 (조회마다 DB 함수 f_recon_tdm('DB_CHK')이 sys99_print의 사용자 몫 행을 다시 만든다 — AS-IS 그대로)
   Sms02_Tab_TotalCount, // C05

@@ -1,0 +1,625 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm50_chck_job.xml · tdm51_chck_org.xml · tdm52_chck_manl.xml · tdm53_chck_exct.xml · tdm58_chck_appr_step.xml · tdm56_chck_relate_appr.xml · tdm20_role.xml · tdm42_manl_org.xml (N20 Tdm50_Tab_CheckJob)
+  공통 수정: 날짜 인자·결과는 문자열('yyyy-MM-dd')로 주고받아 CAST(… AS date)·TO_CHAR, current_setting('app.current_user') → #{updName}(N15와 같은 이유)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmCheckJobMapper">
+
+    <!--
+      AS-IS(IDMS-IC) tdm50_chck_job.selectByCheckYm — defaultYn=true 고정(없는 달이면 새 ID의 빈 작업 한 건).
+      수정: ① 바깥 열을 화면 모델 속성만 ② 일자는 TO_CHAR ③ 숫자 인자는 CAST. 결재 서브쿼리가 작업 ID와 무관하게 LIMIT 1인 것은 원본 그대로
+    -->
+    <select id="selectByCheckYm" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckJobRes">
+        SELECT  t.tdm50_chck_job_id                                 AS chck_job_id
+             ,  t.tdm50_company_id                                  AS company_id
+             ,  t.tdm50_check_ym                                    AS check_ym
+             ,  t.tdm50_check_nm                                    AS check_name
+             ,  TO_CHAR(t.tdm50_start_date, 'YYYY-MM-DD')           AS start_date
+             ,  TO_CHAR(t.tdm50_end_date, 'YYYY-MM-DD')             AS end_date
+             ,  t.tdm50_end_yn                                      AS end_yn
+             ,  t.tdm50_appr_id                                     AS appr_id
+             ,  t.tdm50_appr_status_cd                              AS appr_status_code
+             ,  t.tdm50_appr_status_nm                              AS appr_status_name
+             ,  t.tdm50_lock_yn                                     AS lock_yn
+             ,  t.tdm50_batch_check_use_yn                          AS batch_check_use_yn
+          FROM  (
+                    SELECT  a.tdm50_chck_job_id
+                         ,  a.tdm50_company_id
+                         ,  a.tdm50_check_ym
+                         ,  a.tdm50_check_nm
+                         ,  a.tdm50_start_date
+                         ,  a.tdm50_end_date
+                         ,  a.tdm50_end_yn
+                         ,  b.apr01_appr_id                                                                      AS tdm50_appr_id
+                         ,  b.apr01_status_cd                                                                    AS tdm50_appr_status_cd
+                         ,  f_cdnm('AprStatusCode', b.apr01_status_cd, b.apr01_company_id, b.apr01_reg_date)     AS tdm50_appr_status_nm
+                         ,  (
+                                SELECT  CASE WHEN BOOL_AND(c.tdm53_lock_yn = 'true')
+                                             THEN 'true'
+                                             ELSE 'false'
+                                             END
+                                  FROM  tdm53_chck_exct c
+                                 WHERE  c.tdm53_check_ym = a.tdm50_check_ym
+                                   AND  c.tdm53_company_id = a.tdm50_company_id
+                            )                                                                                    AS tdm50_lock_yn
+                         ,  COALESCE(tdm91_batch_check_use_yn, 'false')                                          AS tdm50_batch_check_use_yn
+                      FROM  tdm50_chck_job a
+                            LEFT OUTER JOIN tdm91_company_setup ON ( tdm91_company_id = a.tdm50_company_id AND
+                                                                     tdm91_start_date = ( SELECT MAX(tdm91_start_date)
+                                                                                            FROM tdm91_company_setup
+                                                                                           WHERE tdm91_company_id = a.tdm50_company_id
+                                                                                             AND tdm91_start_date &lt;= a.tdm50_start_date ) )
+                            LEFT OUTER JOIN (
+                                                SELECT  *
+                                                  FROM  tdm56_chck_relate_appr
+                                                        INNER JOIN apr01_appr ON apr01_appr_id = tdm56_appr_id
+                                                 ORDER BY CASE WHEN apr01_status_cd = '10' THEN 1
+                                                               WHEN apr01_status_cd = '20' THEN 2
+                                                               WHEN apr01_status_cd = '30' THEN 3
+                                                               ELSE 4
+                                                          END
+                                                        , apr01_appr_id DESC
+                                                 LIMIT 1
+                                            ) b ON b.tdm56_relate_table_id = a.tdm50_chck_job_id
+                     WHERE  a.tdm50_company_id = #{companyId}
+                       AND  a.tdm50_check_ym   = #{checkYm}
+                    UNION ALL
+                    SELECT  f_create_seq()                                  AS tdm50_chck_job_id
+                         ,  CAST(#{companyId} AS numeric)                   AS tdm50_company_id
+                         ,  CAST(#{checkYm} AS varchar)                     AS tdm50_check_ym
+                         ,  CAST(#{checkYm} AS varchar) || ' 책무 이행점검'  AS tdm50_check_nm
+                         ,  NULL::date                                      AS tdm50_start_date
+                         ,  NULL::date                                      AS tdm50_end_date
+                         ,  'false'                                         AS tdm50_end_yn
+                         ,  NULL::numeric                                   AS tdm50_appr_id
+                         ,  NULL::varchar                                   AS tdm50_appr_status_cd
+                         ,  NULL::varchar                                   AS tdm50_appr_status_nm
+                         ,  'false'                                         AS tdm50_lock_yn
+                         ,  'false'                                         AS tdm50_batch_check_use_yn
+                     WHERE  NOT EXISTS (
+                                SELECT  1
+                                  FROM  tdm50_chck_job
+                                 WHERE  tdm50_company_id = #{companyId}
+                                   AND  tdm50_check_ym   = #{checkYm}
+                            )
+                ) t
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm50_chck_job.selectById — 바깥 열은 selectByCheckYm과 같다(배치 점검 사용여부는 쓰지 않아 false) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckJobRes">
+        SELECT  a.tdm50_chck_job_id                                 AS chck_job_id
+             ,  a.tdm50_company_id                                  AS company_id
+             ,  a.tdm50_check_ym                                    AS check_ym
+             ,  a.tdm50_check_nm                                    AS check_name
+             ,  TO_CHAR(a.tdm50_start_date, 'YYYY-MM-DD')           AS start_date
+             ,  TO_CHAR(a.tdm50_end_date, 'YYYY-MM-DD')             AS end_date
+             ,  a.tdm50_end_yn                                      AS end_yn
+             ,  b.apr01_appr_id                                     AS appr_id
+             ,  b.apr01_status_cd                                   AS appr_status_code
+             ,  f_cdnm('AprStatusCode', b.apr01_status_cd, b.apr01_company_id, b.apr01_reg_date)    AS appr_status_name
+             ,  (
+                    SELECT  CASE WHEN BOOL_AND(c.tdm53_lock_yn = 'true')
+                                 THEN 'true'
+                                 ELSE 'false'
+                                 END
+                      FROM  tdm53_chck_exct c
+                     WHERE  c.tdm53_check_ym = a.tdm50_check_ym
+                       AND  c.tdm53_company_id = a.tdm50_company_id
+                )                                                   AS lock_yn
+             ,  'false'                                             AS batch_check_use_yn
+          FROM  tdm50_chck_job a
+                LEFT OUTER JOIN (
+                                    SELECT  *
+                                      FROM  tdm56_chck_relate_appr
+                                            INNER JOIN apr01_appr ON apr01_appr_id = tdm56_appr_id
+                                     ORDER BY CASE WHEN apr01_status_cd = '10' THEN 1
+                                                   WHEN apr01_status_cd = '20' THEN 2
+                                                   WHEN apr01_status_cd = '30' THEN 3
+                                                   ELSE 4
+                                              END
+                                            , apr01_appr_id DESC
+                                     LIMIT 1
+                                ) b ON b.tdm56_relate_table_id = a.tdm50_chck_job_id
+         WHERE  a.tdm50_chck_job_id = #{chckJobId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm20_role.getCeoRoleList. 날짜 인자 CAST. 정렬 collation은 ko_KR.utf8 그대로(03 원칙 19) -->
+    <select id="selectCeoRoles" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckRoleRes">
+        SELECT  tdm20_role_id                                       AS role_id
+             ,  CONCAT(tdm20_role_nm, ' : '||cnt)                   AS role_name
+          FROM  tdm20_role
+                LEFT JOIN ( SELECT  tdm20_ceo_role_id     ceo_id
+                                 ,  COUNT(*)              cnt
+                              FROM  tdm53_chck_exct
+                                    INNER JOIN tdm20_role ON tdm20_role_id = tdm53_role_id
+                             WHERE  tdm53_company_id = #{companyId}
+                               AND  tdm53_check_ym   = #{checkYm}
+                             GROUP BY tdm20_ceo_role_id
+                          ) t ON ceo_id = tdm20_role_id
+         WHERE  tdm20_company_id = #{companyId}
+           AND  tdm20_role_type  = 'C'
+           AND  CAST(#{baseDate} AS date) BETWEEN tdm20_start_date AND COALESCE(tdm20_end_date, TO_DATE('29991231','yyyyMMdd'))
+         ORDER BY tdm20_start_date, tdm20_role_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm50_chck_job.countCheckYm -->
+    <select id="countAfterCheckYm" resultType="int">
+        SELECT  COUNT(*)
+          FROM  tdm50_chck_job
+         WHERE  tdm50_company_id = #{companyId}
+           AND  tdm50_check_ym > #{checkYm}
+    </select>
+
+    <!-- UpdateDataModel(tdm50_chck_job) 신규 — 마감여부는 모델 기본값 false -->
+    <insert id="insertJob">
+        INSERT INTO tdm50_chck_job
+               ( tdm50_chck_job_id, tdm50_company_id, tdm50_check_ym, tdm50_check_nm, tdm50_start_date, tdm50_end_date, tdm50_end_yn, tdm50_upd_nm, tdm50_upd_date )
+        VALUES ( #{chckJobId}, #{companyId}, #{checkYm}, #{checkName}, CAST(#{startDate} AS date), CAST(#{endDate} AS date), 'false', #{updName}, f_sysdate() )
+    </insert>
+
+    <!-- UpdateDataModel(tdm50_chck_job) 수정 — 화면이 바꾸는 이름·시작일·마감일만, 회사 조건 추가(05 §6) -->
+    <update id="updateJob">
+        UPDATE  tdm50_chck_job
+           SET  tdm50_check_nm   = #{checkName}
+             ,  tdm50_start_date = CAST(#{startDate} AS date)
+             ,  tdm50_end_date   = CAST(#{endDate} AS date)
+             ,  tdm50_upd_nm     = #{updName}
+             ,  tdm50_upd_date   = f_sysdate()
+         WHERE  tdm50_chck_job_id = #{chckJobId}
+           AND  tdm50_company_id  = #{companyId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm50_chck_job.selectCheckStatus. 수정: 열 별칭만 바꿈(tdm50_ 접두 제거) -->
+    <select id="selectCheckStatus" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckStatusRes">
+        SELECT CASE WHEN exct_appr_cnt != 0             THEN true ELSE false END AS exct_appr_yn
+             , CASE WHEN check_end_cnt != 0             THEN true ELSE false END AS check_end_yn
+             , CASE WHEN check_ing_cnt != 0             THEN true ELSE false END AS check_ing_yn
+             , CASE WHEN manl_cnt       = manl_appr_cnt THEN true ELSE false END AS manl_appr_yn
+          FROM tdm50_chck_job
+               LEFT JOIN LATERAL (
+                                   SELECT COUNT(*) exct_appr_cnt    /*(승인이 완료된 임원건수)*/
+                                     FROM tdm53_chck_exct
+                                    WHERE tdm53_company_id = tdm50_company_id
+                                      AND tdm53_check_ym   = tdm50_check_ym
+                                      AND COALESCE(tdm53_exct_appr_yn,'false') = 'true' ) t1 ON TRUE
+               LEFT JOIN LATERAL (
+                                   SELECT SUM(CASE WHEN COALESCE(tdm52_check_status_cd,'10') NOT IN ('10','11') THEN 1 ELSE 0 END)  check_end_cnt  /*(점검완료 및 승인이 진행된 점검항목 건수)*/
+                                        , COUNT(*)                                                                                  check_ing_cnt  /*(생성된 점검항목 건수)*/
+                                     FROM tdm51_chck_org
+                                          LEFT JOIN tdm52_chck_manl ON tdm52_chck_org_id = tdm51_chck_org_id
+                                    WHERE tdm51_company_id = tdm50_company_id
+                                      AND tdm51_check_ym   = tdm50_check_ym             ) t2 ON TRUE
+               LEFT JOIN LATERAL (
+                                   SELECT SUM(CASE WHEN COALESCE(apr01_status_cd,'99') = '30' THEN 1 ELSE 0 END)    manl_appr_cnt /*(결재완료 책무매뉴얼 건수)*/
+                                        , COUNT(*)                                                                  manl_cnt      /*(전체 책무매뉴얼 건수)*/
+                                     FROM tdm42_manl_org
+                                          LEFT JOIN apr01_appr ON apr01_appr_id = tdm42_appr_id
+                                    WHERE tdm42_company_id = tdm50_company_id
+                                      AND (tdm50_check_ym||'.01')::date BETWEEN tdm42_start_date AND COALESCE(tdm42_end_date,'2999-12-31'::date)
+                                 ) t3 ON TRUE
+         WHERE tdm50_company_id = #{companyId}
+           AND tdm50_check_ym   = #{checkYm}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm50_chck_job.selectPreCheckYm -->
+    <select id="selectPreCheckYm" resultType="java.lang.String">
+        SELECT MAX(tdm50_check_ym)
+          FROM tdm50_chck_job
+         WHERE tdm50_company_id = #{companyId}
+           AND tdm50_check_ym &lt; #{checkYm}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm42_manl_org.selectByStdDate — 쓰는 열만 -->
+    <select id="selectManlOrgByStdDate" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgForCheckRes">
+        SELECT tdm42_manl_org_id    AS manl_org_id
+             , tdm42_role_id        AS role_id
+             , tdm42_exct_id        AS exct_id
+             , tdm42_org_id         AS org_id
+          FROM tdm42_manl_org
+               INNER JOIN apr01_appr ON ( apr01_appr_id   = tdm42_appr_id   AND
+                                          apr01_status_cd = '30'            )
+         WHERE tdm42_company_id = #{companyId}
+           AND CAST(#{stdDate} AS date) BETWEEN tdm42_start_date AND COALESCE(tdm42_end_date,'9999-12-31'::date)
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm51_chck_org.insert — 위치 INSERT … SELECT를 열 이름으로 -->
+    <insert id="insertChckOrg">
+        INSERT INTO tdm51_chck_org
+               ( tdm51_chck_org_id, tdm51_company_id, tdm51_check_ym, tdm51_role_id, tdm51_exct_id, tdm51_org_id,
+                 tdm51_chck_job_id, tdm51_manl_org_id, tdm51_upd_nm, tdm51_upd_date )
+        VALUES ( #{chckOrgId}, #{companyId}, #{checkYm}, #{roleId}, #{exctId}, #{orgId},
+                 #{chckJobId}, #{manlOrgId}, #{updName}, f_sysdate() )
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) tdm52_chck_manl.insertByTdm43 L12. 수정: 날짜 인자 CAST, 널 가능 인자(preCheckYm) CAST -->
+    <insert id="insertChckManl">
+        INSERT
+          INTO tdm52_chck_manl
+             ( tdm52_chck_manl_id
+             , tdm52_chck_org_id
+             , tdm52_manl_id
+             , tdm52_company_id
+             , tdm52_checker_id
+             , tdm52_upd_nm
+             , tdm52_upd_date     )
+        SELECT f_create_seq()
+             , #{chckOrgId}
+             , tdm43_manl_id
+             , tdm43_company_id
+             , tdm52_checker_id
+             , #{updName}
+             , f_sysdate()
+          FROM tdm43_manl tdm43
+               LEFT JOIN LATERAL ( SELECT tdm52_checker_id
+                                     FROM tdm51_chck_org
+                                          INNER JOIN tdm52_chck_manl ON tdm52_chck_org_id = tdm51_chck_org_id
+                                          INNER JOIN tdm43_manl a    ON a.tdm43_manl_id   = tdm52_manl_id
+                                          INNER JOIN ( SELECT *
+                                                            , f_get_tdmOrg_id(emp00_person_id, CAST(#{stdDate} AS date)) emp00_tmpOrg_id
+                                                         FROM getPerson(#{companyId}, CAST(#{stdDate} AS date))
+                                                     ) emp00 ON emp00_person_id = tdm52_checker_id
+                                    WHERE COALESCE(emp00_retire_date,'9999-12-31'::date) >= CAST(#{stdDate} AS date)    /*점검시작일 기준 퇴사자 체크*/
+                                      AND emp00_tmpOrg_id   = tdm43.tdm43_org_id                                        /*점검시작일 기준 점검자 부서이동 체크*/
+                                      AND a.tdm43_manl_cd   = tdm43.tdm43_manl_cd
+                                      AND tdm51_company_id  = tdm43.tdm43_company_id
+                                      AND tdm51_role_id     = tdm43.tdm43_role_id
+                                      AND tdm51_check_ym    = CAST(#{preCheckYm} AS varchar)
+                                 ) preMonth ON TRUE
+             , ( SELECT f_get_last_day((f_get_quarter_date(start_date, '1') + interval '3month')::date) + 1 AS q_std_date
+                      , f_get_last_day((f_get_quarter_date(start_date, '2') + interval '6month')::date) + 1 AS h_std_date
+                      , (date_trunc('year' , start_date) + interval '12month')::date                        AS y_std_date
+                      , (date_trunc('month', start_date) + interval '1month')::date                         AS m_std_date
+                   FROM (
+                         SELECT coalesce(sys01_tdm_start_date,'2026-07-01'::date) start_date
+                           FROM sys01_company
+                          WHERE sys01_company_id = #{companyId}
+                        ) sys01a
+               ) sys01
+         WHERE tdm43_manl_org_id = #{manlOrgId}
+           AND COALESCE(tdm43_start_date,'1900-01-01'::date) &lt;= (CAST(#{checkYm} AS varchar)||'.01')::date
+           AND CASE tdm43_check_cycle_cd WHEN '04' THEN q_std_date
+                                         WHEN '05' THEN h_std_date
+                                         WHEN '06' THEN y_std_date
+                                         ELSE m_std_date END        &lt;= (CAST(#{checkYm} AS varchar)||'.01')::date
+           AND CAST(#{month} AS varchar) IN ( /* 이번달에 해당하는 점검항목만 select */
+                             SELECT LPAD(UNNEST(STRING_TO_ARRAY(pos::text, ', ')), 2, '0')
+                               FROM ( SELECT GENERATE_SERIES(1, LENGTH(tdm43_check_month)) pos ) t
+                              WHERE SUBSTR(tdm43_check_month, pos, 1) = '1'
+                           )
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) tdm58_chck_appr_step.insertByTmd09 -->
+    <insert id="insertChckApprStep">
+        INSERT
+          INTO tdm58_chck_appr_step
+             ( tdm58_chck_appr_step_id
+             , tdm58_chck_org_id
+             , tdm58_appr_seq
+             , tdm58_appr_emp_id
+             , tdm58_upd_nm
+             , tdm58_upd_date     )
+        SELECT f_create_seq()
+             , #{chckOrgId}
+             , tdm09_appr_seq
+             , tdm09_appr_emp_id
+             , #{updName}
+             , f_sysdate()
+          FROM tdm09_appr_step
+         WHERE tdm09_company_id = #{companyId}
+           AND tdm09_role_id    = #{roleId}
+           AND tdm09_org_id     = #{orgId}
+           AND tdm09_type_cd    = 'T'
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) tdm53_chck_exct.insertByTmd51 -->
+    <insert id="insertChckExct">
+        INSERT
+          INTO tdm53_chck_exct
+             ( tdm53_chck_exct_id
+             , tdm53_company_id
+             , tdm53_check_ym
+             , tdm53_role_id
+             , tdm53_exct_id
+             , tdm53_exct_appr_yn
+             , tdm53_lock_yn
+             , tdm53_chck_job_id
+             , tdm53_upd_nm
+             , tdm53_upd_date     )
+        SELECT f_create_seq()
+             , tdm51_company_id
+             , tdm51_check_ym
+             , tdm51_role_id
+             , tdm51_exct_id
+             , 'false'
+             , 'false'
+             , #{chckJobId}
+             , #{updName}
+             , f_sysdate()
+          FROM tdm51_chck_org
+         WHERE tdm51_chck_job_id = #{chckJobId}
+         GROUP BY tdm51_company_id, tdm51_check_ym, tdm51_role_id, tdm51_exct_id
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) tdm58_chck_appr_step.deleteChckManl -->
+    <delete id="deleteChckApprStep">
+        DELETE
+          FROM  tdm58_chck_appr_step
+         WHERE  tdm58_chck_org_id IN (
+                                        SELECT  tdm51_chck_org_id
+                                          FROM  tdm51_chck_org
+                                         WHERE  tdm51_company_id = #{companyId}
+                                           AND  tdm51_check_ym   = #{checkYm}
+                                     )
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm53_chck_exct.deleteChckManl -->
+    <delete id="deleteChckExct">
+        DELETE
+          FROM  tdm53_chck_exct
+         WHERE  tdm53_company_id = #{companyId}
+           AND  tdm53_check_ym   = #{checkYm}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm52_chck_manl.deleteChckManl -->
+    <delete id="deleteChckManl">
+        DELETE
+          FROM  tdm52_chck_manl
+         WHERE  tdm52_chck_org_id IN (
+                                        SELECT  tdm51_chck_org_id
+                                          FROM  tdm51_chck_org
+                                         WHERE  tdm51_company_id = #{companyId}
+                                           AND  tdm51_check_ym   = #{checkYm}
+                                     )
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm51_chck_org.deleteChckManl -->
+    <delete id="deleteChckOrg">
+        DELETE
+          FROM  tdm51_chck_org
+         WHERE  tdm51_company_id = #{companyId}
+           AND  tdm51_check_ym   = #{checkYm}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm53_chck_exct.countUnLockByExctAppr -->
+    <select id="countUnLockByExctAppr" resultType="int">
+        SELECT COUNT(*)
+          FROM tdm53_chck_exct
+         WHERE tdm53_chck_job_id                = #{chckJobId}
+           AND tdm53_exct_appr_yn               = 'true'
+           AND COALESCE(tdm53_lock_yn,'false')  = 'false'
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm51_chck_org.countUnCheckByChckJobId -->
+    <select id="countUnCheckByChckJobId" resultType="int">
+        SELECT COUNT(*)
+          FROM tdm53_chck_exct
+               INNER JOIN tdm51_chck_org ON ( tdm51_chck_job_id = tdm53_chck_job_id AND
+                                              tdm51_role_id     = tdm53_role_id     )
+               INNER JOIN tdm52_chck_manl ON  tdm52_chck_org_id = tdm51_chck_org_id
+         WHERE tdm53_chck_job_id = #{chckJobId}
+           AND COALESCE(tdm53_lock_yn,'false')  = 'false'
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm50_chck_job.updateEndYn. current_setting('app.current_user') → #{updName} -->
+    <update id="updateEndYn">
+        UPDATE tdm50_chck_job
+           SET tdm50_end_yn   = CAST(#{endYn} AS varchar)
+             , tdm50_upd_nm   = #{updName}
+             , tdm50_upd_date = f_sysdate()
+         WHERE tdm50_chck_job_id = #{chckJobId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm51_chck_org.getMessageList — 부서담당자 ID만. 날짜 인자 CAST -->
+    <select id="selectMessageList" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckOrgManagerRes">
+        SELECT  t.tdm51_chck_org_id         AS chck_org_id
+             ,  t.tdm51_org_manager_id      AS org_manager_id
+          FROM  (
+                    SELECT  tdm51_chck_org.*
+                         ,  tdm08_person_id     AS tdm51_org_manager_id
+                      FROM  tdm51_chck_org
+                            LEFT JOIN (
+                                        SELECT  tdm08_org_id
+                                             ,  tdm08_person_id
+                                          FROM  tdm08_manager_info
+                                         WHERE  tdm08_company_id   = #{companyId}
+                                           AND  tdm08_manager_type = '21'
+                                           AND  CAST(#{baseDate} AS date) BETWEEN tdm08_start_date AND COALESCE(tdm08_end_date,'9999-12-31'::date)
+                                      ) tdm08 ON tdm08_org_id = tdm51_org_id
+                ) t
+         WHERE  tdm51_company_id = #{companyId}
+           AND  tdm51_check_ym   = #{checkYm}
+           AND  tdm51_role_id IN (
+                                    SELECT tdm53_role_id
+                                      FROM tdm53_chck_exct
+                                           INNER JOIN tdm20_role ON tdm20_role_id = tdm53_role_id
+                                     WHERE tdm53_chck_job_id = #{chckJobId}
+                                       AND tdm20_ceo_role_id IN (
+                                                                    SELECT tdm20_role_id
+                                                                      FROM tdm20_role
+                                                                           LEFT JOIN ( SELECT tdm20_ceo_role_id     ceo_id
+                                                                                            , COUNT(*)              cnt
+                                                                                         FROM tdm53_chck_exct
+                                                                                              INNER JOIN tdm20_role ON tdm20_role_id = tdm53_role_id
+                                                                                        WHERE tdm53_company_id = #{companyId}
+                                                                                          AND tdm53_check_ym   = #{checkYm}
+                                                                                        GROUP BY tdm20_ceo_role_id
+                                                                                     ) t ON ceo_id = tdm20_role_id
+                                                                     WHERE tdm20_company_id = #{companyId}
+                                                                       AND tdm20_role_type  = 'C'
+                                                                       AND CAST(#{baseDate} AS date) BETWEEN tdm20_start_date AND COALESCE(tdm20_end_date, TO_DATE('29991231','yyyyMMdd'))
+                                                                 )
+                                 )
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm53_chck_exct.selectByChckJobId. 수정: t.* → 화면 모델 속성만(+ID), 숫자 인자 CAST. 정렬 collation은 ko_KR.utf8 그대로(03 원칙 19) -->
+    <select id="selectExcts" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckExctRes">
+        SELECT tdm53_chck_exct_id                                               AS chck_exct_id
+             , tdm53_chck_job_id                                                AS chck_job_id
+             , tdm53_role_id                                                    AS role_id
+             , tdm53_exct_id                                                    AS exct_id
+             , tdm20_role_nm                                                    AS role_name
+             , f_emp_kor_nm(tdm53_exct_id)                                      AS exct_name
+             , chck_manl_cnt                                                    AS chck_manl_cnt
+             , tdm53_exct_appr_yn                                               AS exct_appr_yn
+             , tdm53_lock_yn                                                    AS lock_yn
+             , CASE WHEN chck_manl_cnt = 0 THEN null ELSE 1 END                 AS button_enable
+          FROM tdm53_chck_exct
+               INNER JOIN tdm20_role ON tdm20_role_id = tdm53_role_id
+               INNER JOIN getPerson(tdm53_company_id, f_today()) ON emp00_person_id = tdm53_exct_id
+               INNER JOIN LATERAL ( SELECT COUNT(*) chck_manl_cnt
+                                      FROM tdm51_chck_org
+                                           INNER JOIN tdm52_chck_manl ON tdm52_chck_org_id = tdm51_chck_org_id
+                                     WHERE tdm51_company_id = tdm53_company_id
+                                       AND tdm51_check_ym   = tdm53_check_ym
+                                       AND tdm51_role_id    = tdm53_role_id ) tdm52 ON TRUE
+         WHERE tdm53_chck_job_id = #{chckJobId}
+           AND tdm20_ceo_role_id = #{ceoRoleId}
+         ORDER BY tdm20_role_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!--
+      AS-IS(IDMS-IC) tdm51_chck_org.selectByRoleId. 수정: ① 바깥 t.* → 그리드 열 ② 숫자·날짜 인자 CAST
+      정렬 collation은 ko_KR.utf8 그대로(03 원칙 19)
+    -->
+    <select id="selectOrgsByRoleId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ChckOrgRes">
+        SELECT t.tdm51_chck_org_id                                                                        AS chck_org_id
+             , t.tdm51_org_id                                                                             AS org_id
+             , t.tdm51_org_nm                                                                             AS org_name
+             , t.tdm51_org_manager_id                                                                     AS org_manager_id
+             , t.tdm51_org_manager_nm                                                                     AS org_manager_name
+             , t.tdm51_duty_cnt                                                                           AS duty_cnt
+             , t.tdm51_manl_cnt                                                                           AS manl_cnt
+             , t.tdm51_month_manl_cnt                                                                     AS month_manl_cnt
+             , t.tdm51_month_manl_done_cnt                                                                AS month_manl_done_cnt
+             , t.tdm51_month_manl_undone_cnt                                                              AS month_manl_undone_cnt
+             , t.tdm51_org_status_cd                                                                      AS org_status_code
+             , f_cdnm('TdmCheckStatus', t.tdm51_org_status_cd, t.tdm51_company_id, CAST(#{stdDate} AS date)) AS org_status_name
+          FROM (
+                SELECT tdm51_chck_org.*
+                     , org00_kor_nm                                                                             AS tdm51_org_nm                 /*점검부서*/
+                     , tdm08_person_id                                                                          AS tdm51_org_manager_id         /*부서담당자ID*/
+                     , f_emp_kor_nm(tdm08_person_id)                                                            AS tdm51_org_manager_nm         /*부서담당자명*/
+                     , duty_cnt                                                                                 AS tdm51_duty_cnt               /*관리의무*/
+                     , manl_cnt                                                                                 AS tdm51_manl_cnt               /*점검항목*/
+                     , CASE WHEN month_manl_cnt = 0 THEN ''
+                            ELSE (CASE WHEN month_manl_cnt = month_manl_25_cnt  THEN '25'
+                                       WHEN month_manl_cnt = month_manl_19_cnt  THEN '19'
+                                       WHEN month_manl_21_cnt != 0              THEN '21'
+                                       WHEN month_manl_20_cnt != 0              THEN '20'
+                                       WHEN month_manl_19_cnt != 0              THEN '11'
+                                       WHEN month_manl_11_cnt != 0              THEN '11'
+                                                                                ELSE '10' END) END              AS tdm51_org_status_cd          /*진행상태코드*/
+                     , month_manl_cnt                                                                           AS tdm51_month_manl_cnt         /*당월 점검항목_대상*/
+                     , ( month_manl_19_cnt + month_manl_20_cnt
+                       + month_manl_21_cnt + month_manl_25_cnt )                                                AS tdm51_month_manl_done_cnt    /*당월 점검항목_완료*/
+                     , month_manl_cnt - ( month_manl_19_cnt + month_manl_20_cnt
+                                        + month_manl_21_cnt + month_manl_25_cnt )                               AS tdm51_month_manl_undone_cnt  /*당월 점검항목_미완료*/
+                  FROM tdm51_chck_org
+                       INNER JOIN tdm50_chck_job ON ( tdm50_company_id  = tdm51_company_id  AND
+                                                      tdm50_check_ym    = tdm51_check_ym    )
+                       INNER JOIN getOrg(tdm50_company_id, tdm50_start_date) org ON org00_org_id = tdm51_org_id
+                       LEFT  JOIN LATERAL ( SELECT tdm08_org_id, tdm08_person_id
+                                              FROM tdm08_manager_info
+                                             WHERE tdm08_company_id   = #{companyId}
+                                               AND tdm08_manager_type = '21'
+                                               AND tdm08_org_id       = tdm51_org_id
+                                               AND tdm50_start_date BETWEEN tdm08_start_date AND COALESCE(tdm08_end_date,'9999-12-31'::date)
+                                          ) tdm08 ON TRUE
+                       INNER JOIN ( SELECT tdm43_manl_org_id
+                                         , COUNT(DISTINCT tdm43_task_relate_duty_id)    duty_cnt
+                                         , COUNT(*)                                     manl_cnt
+                                      FROM tdm43_manl
+                                     WHERE tdm43_company_id = #{companyId}
+                                       AND COALESCE(tdm43_start_date,'1900-01-01'::date) &lt;= (CAST(#{checkYm} AS varchar)||'.01')::date
+                                     GROUP BY tdm43_manl_org_id ) tdm43 ON tdm43_manl_org_id = tdm51_manl_org_id
+                       INNER JOIN LATERAL ( SELECT COUNT(*)                                                         month_manl_cnt
+                                                 , SUM(CASE WHEN tdm52_check_status_cd = '26' THEN 1 ELSE 0 END)    month_manl_26_cnt   /*승인반려(26)*/
+                                                 , SUM(CASE WHEN tdm52_check_status_cd = '25' THEN 1 ELSE 0 END)    month_manl_25_cnt   /*승인완료(25)*/
+                                                 , SUM(CASE WHEN tdm52_check_status_cd = '21' THEN 1 ELSE 0 END)    month_manl_21_cnt   /*승인진행(21)*/
+                                                 , SUM(CASE WHEN tdm52_check_status_cd = '20' THEN 1 ELSE 0 END)    month_manl_20_cnt   /*승인요청(20)*/
+                                                 , SUM(CASE WHEN tdm52_check_status_cd = '19' THEN 1 ELSE 0 END)    month_manl_19_cnt   /*점검완료(19)*/
+                                                 , SUM(CASE WHEN tdm52_check_status_cd = '11' THEN 1 ELSE 0 END)    month_manl_11_cnt   /*점검진행(11)*/
+                                                 , SUM(CASE WHEN tdm52_check_status_cd = '10' THEN 1 ELSE 0 END)    month_manl_10_cnt   /*점검대기(10)*/
+                                              FROM tdm52_chck_manl
+                                             WHERE tdm52_chck_org_id = tdm51_chck_org_id ) tdm52 ON TRUE
+                 WHERE tdm51_company_id = #{companyId}
+                   AND tdm51_check_ym   = #{checkYm}
+                   AND tdm51_role_id    = #{roleId}
+               ) t
+         ORDER BY t.tdm51_org_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- 임원 승인현황의 회사(TOBE 추가 — 서버가 요청한 id의 회사를 직접 읽어 권한 범위를 검사) -->
+    <select id="selectExctCompanyId" resultType="java.lang.Long">
+        SELECT tdm53_company_id
+          FROM tdm53_chck_exct
+         WHERE tdm53_chck_exct_id = #{chckExctId}
+    </select>
+
+    <!-- UpdateDataModel(tdm53_chck_exct) 저장 — 잠금여부 + 변경자·일시, 회사 조건 추가(05 §6). 0건이면 서비스가 DATA_NOT_FOUND -->
+    <update id="updateLockYn">
+        UPDATE  tdm53_chck_exct
+           SET  tdm53_lock_yn  = CAST(#{lockYn} AS varchar)
+             ,  tdm53_upd_nm   = #{updName}
+             ,  tdm53_upd_date = f_sysdate()
+         WHERE  tdm53_chck_exct_id = #{chckExctId}
+           AND  tdm53_company_id   = #{companyId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) sys10_file.deleteById — adminYn='true' 고정(Tdm53_ChckExct.deleteList). 관리자 파일 = 생성된 보고서 PDF -->
+    <delete id="deleteAdminFiles">
+        DELETE
+          FROM  sys10_file
+         WHERE  sys10_parent_id  = #{parentId}
+           AND  COALESCE(sys10_admin_yn, 'false') = 'true'
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm56_chck_relate_appr.selectApprStatus (최근 한 건) -->
+    <select id="selectApprStatus" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckApprRes">
+        SELECT  tdm56_appr_id                                                           AS appr_id
+             ,  apr01_status_cd                                                         AS appr_status_code
+             ,  f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) AS appr_status_name
+          FROM  tdm56_chck_relate_appr
+                INNER JOIN apr01_appr ON apr01_appr_id = tdm56_appr_id
+         WHERE  tdm56_relate_table_id = #{relateTableId}
+           AND  tdm56_ceo_role_id = #{ceoRoleId}
+         ORDER BY tdm56_appr_date DESC
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm56_chck_relate_appr.selectByCeoRoleId -->
+    <select id="selectApprs" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckApprRes">
+        SELECT  tdm56_appr_id                                                           AS appr_id
+             ,  apr01_status_cd                                                         AS appr_status_code
+             ,  f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) AS appr_status_name
+          FROM  tdm56_chck_relate_appr
+                INNER JOIN apr01_appr ON apr01_appr_id = tdm56_appr_id
+         WHERE  tdm56_relate_table_id = #{relateTableId}
+           AND  tdm56_ceo_role_id = #{ceoRoleId}
+    </select>
+
+    <!-- 이행점검보고서 PDF 생성 대상 — Tdm53_ChckExctModel 속성(갱신일 yyyyMMdd) + 직책명·임원명 + 회사 폴더 이름(sys01_loc_nm). 직책명은 selectByChckJobId와 같은 tdm20_role_nm -->
+    <select id="selectPdfTarget" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckExctPdfTarget">
+        SELECT  tdm53_chck_exct_id                              AS chck_exct_id
+             ,  tdm53_company_id                                AS company_id
+             ,  tdm53_exct_id                                   AS exct_id
+             ,  TO_CHAR(tdm53_upd_date, 'YYYYMMDD')             AS upd_date
+             ,  tdm53_check_ym                                  AS check_ym
+             ,  tdm20_role_nm                                   AS role_name
+             ,  f_emp_kor_nm(tdm53_exct_id)                     AS exct_name
+             ,  sys01_loc_nm                                    AS loc_name
+          FROM  tdm53_chck_exct
+                INNER JOIN tdm20_role    ON tdm20_role_id = tdm53_role_id
+                INNER JOIN sys01_company ON sys01_company_id = tdm53_company_id
+         WHERE  tdm53_chck_exct_id = #{chckExctId}
+    </select>
+</mapper>

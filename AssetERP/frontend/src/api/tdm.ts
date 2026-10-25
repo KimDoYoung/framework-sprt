@@ -1,6 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlOrgAppr, TdmManlOrgManager, TdmManlOrgPeriod, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmRoleReport, TdmRoleReportAttach, TdmManlJob, TdmManlDutyGroup, TdmManlDuty, TdmManlDutyReg, TdmManlCopySource, TdmManlCopyItem, TdmManlDutyTaskOrg, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord } from '../types/tdm';
+import type { TdmCheckJob, TdmCheckJobSaveReq, TdmCheckRole, TdmCheckPreCreate, TdmCheckExct, TdmChckOrg, TdmCheckAppr, TdmCheckOrgManager, TdmCheckRdPrint, TdmPdfOutcome, TdmChckRecord } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
 export const tdmApi = {
@@ -937,5 +938,109 @@ export const tdmApi = {
   saveHrRecords: async (rows: { hrRecordId: number; applyCode: string | null; note: string | null }[]): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>('v1/tdm/hr-records', rows);
     return res.data.data ?? 0;
+  },
+  // ── N20 이행점검 작업 및 보고(Tdm50_Tab_CheckJob) ──
+
+  /** AS-IS tdm.Tdm50_ChckJob.selectRcntChckJob — 진행 중인 점검년월 'yyyy.MM' (없으면 null) */
+  recentCheckYm: async (): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>('v1/tdm/check-jobs/recent');
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS tdm.Tdm50_ChckJob.selectByCheckYm (defaultYn=true) — 없는 달이면 새 ID의 빈 작업 한 건 */
+  searchCheckJob: async (checkYm: string): Promise<TdmCheckJob> => {
+    const res = await apiClient.get<ApiResponse<TdmCheckJob>>('v1/tdm/check-jobs', { params: { checkYm } });
+    return res.data.data;
+  },
+
+  /** AS-IS tdm.Tdm20_Role.getCeoRoleList */
+  searchCheckCeoRoles: async (checkYm: string, baseDate: string): Promise<TdmCheckRole[]> => {
+    const res = await apiClient.get<ApiResponse<TdmCheckRole[]>>('v1/tdm/check-jobs/ceo-roles', { params: { checkYm, baseDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm50_ChckJob.modelUpdate — 작업정보등록 */
+  saveCheckJob: async (req: TdmCheckJobSaveReq): Promise<TdmCheckJob> => {
+    const res = await apiClient.put<ApiResponse<TdmCheckJob>>('v1/tdm/check-jobs', req);
+    return res.data.data;
+  },
+
+  /** AS-IS tdm.Tdm50_ChckJob.preCreateCheckManl */
+  preCreateCheckItems: async (chckJobId: number): Promise<TdmCheckPreCreate> => {
+    const res = await apiClient.post<ApiResponse<TdmCheckPreCreate>>(`v1/tdm/check-jobs/${chckJobId}/pre-create`);
+    return res.data.data;
+  },
+
+  /** AS-IS tdm.Tdm50_ChckJob.createCheckManl */
+  createCheckItems: async (chckJobId: number): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>(`v1/tdm/check-jobs/${chckJobId}/items`);
+  },
+
+  /** AS-IS tdm.Tdm50_ChckJob.deleteChckManl */
+  deleteCheckItems: async (chckJobId: number): Promise<void> => {
+    await apiClient.delete<ApiResponse<null>>(`v1/tdm/check-jobs/${chckJobId}/items`);
+  },
+
+  /** AS-IS tdm.Tdm50_ChckJob.updateEndYn — 점검마감(true)·마감취소(false) */
+  updateCheckEnd: async (chckJobId: number, endYn: boolean): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/tdm/check-jobs/${chckJobId}/end`, { endYn });
+  },
+
+  /** AS-IS tdm.Tdm51_ChckOrg.getMessageList — 알림발송 대상 부서담당자 */
+  searchCheckMessageTargets: async (chckJobId: number, baseDate: string): Promise<TdmCheckOrgManager[]> => {
+    const res = await apiClient.get<ApiResponse<TdmCheckOrgManager[]>>(`v1/tdm/check-jobs/${chckJobId}/message-targets`, { params: { baseDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm53_ChckExct.selectByChckJobId */
+  searchCheckExcts: async (chckJobId: number, ceoRoleId: number): Promise<TdmCheckExct[]> => {
+    const res = await apiClient.get<ApiResponse<TdmCheckExct[]>>(`v1/tdm/check-jobs/${chckJobId}/excts`, { params: { ceoRoleId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm51_ChckOrg.selectByRoleId */
+  searchCheckOrgs: async (chckJobId: number, roleId: number): Promise<TdmChckOrg[]> => {
+    const res = await apiClient.get<ApiResponse<TdmChckOrg[]>>(`v1/tdm/check-jobs/${chckJobId}/orgs`, { params: { roleId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm56_ChckRelateAppr.selectApprStatus — 상신문서가 없으면 null */
+  searchCheckApprStatus: async (chckJobId: number, ceoRoleId: number): Promise<TdmCheckAppr | null> => {
+    const res = await apiClient.get<ApiResponse<TdmCheckAppr | null>>(`v1/tdm/check-jobs/${chckJobId}/appr-status`, { params: { ceoRoleId } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS tdm.Tdm56_ChckRelateAppr.selectByCeoRoleId */
+  searchCheckApprs: async (chckJobId: number, ceoRoleId: number): Promise<TdmCheckAppr[]> => {
+    const res = await apiClient.get<ApiResponse<TdmCheckAppr[]>>(`v1/tdm/check-jobs/${chckJobId}/apprs`, { params: { ceoRoleId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm53_ChckExct.updateLockYn */
+  updateCheckExctLock: async (isLock: boolean, chckExctIds: number[]): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>('v1/tdm/check-jobs/excts/lock', { isLock, chckExctIds });
+  },
+
+  /** AS-IS tdm.Tdm53_ChckExct.deleteList — 잠금해제 때 보고서 파일 행 삭제 */
+  deleteCheckExctFiles: async (chckExctIds: number[]): Promise<void> => {
+    await apiClient.delete<ApiResponse<null>>('v1/tdm/check-jobs/excts/files', { data: { chckExctIds } });
+  },
+
+  /** 한 건 PDF 생성 (AS-IS createRd 한 건 분량) — OK / RD_FAILED(잠금 되돌림) / FILE_FAILED(멈춤) */
+  recreateCheckExct: async (chckExctId: number): Promise<TdmPdfOutcome> => {
+    const res = await apiClient.post<ApiResponse<TdmPdfOutcome>>(`v1/tdm/check-jobs/excts/${chckExctId}/recreate`);
+    return res.data.data;
+  },
+
+  /** AS-IS Sys99_Print.CreateTdmCheckJob (viewRd) — RD 뷰어용 출력 자료 */
+  rdPrintCheckExct: async (chckExctId: number): Promise<TdmCheckRdPrint> => {
+    const res = await apiClient.post<ApiResponse<TdmCheckRdPrint>>(`v1/tdm/check-jobs/excts/${chckExctId}/rd-print`);
+    return res.data.data;
+  },
+
+  /** AS-IS tdm.Tdm55_ChckRecord.selectByChckOrgId (exceptionTable TDM51) */
+  searchChckRecords: async (chckOrgId: number): Promise<TdmChckRecord[]> => {
+    const res = await apiClient.get<ApiResponse<TdmChckRecord[]>>('v1/tdm/chck-records', { params: { chckOrgId } });
+    return res.data.data ?? [];
   },
 };
