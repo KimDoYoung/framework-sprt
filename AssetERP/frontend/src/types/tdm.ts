@@ -1272,3 +1272,43 @@ export interface TdmCheckApprInsuffRecord {
   note?: string | null;
   fileCountStr?: string | null;
 }
+
+/** 미흡내역 조치 목록·조치 창의 미흡/개선 내역 한 행 (AS-IS Tdm54_ChckInsuffModel — GET /tdm/chck-insuffs). 날짜는 yyyy-MM-dd */
+export interface TdmChckInsuffRow {
+  chckInsuffId: number;
+  chckManlId: number;
+  companyId: number;
+  roleId: number;
+  orgId: number;
+  checkYm: string;
+  regDate: string | null;
+  roleName: string | null;
+  orgName: string | null;
+  actionName: string | null;
+  actionPlan: string | null;
+  statusCode: string | null;
+  statusName: string | null;
+  planRegEmpName: string | null;
+  planActionEmpId: number | null;
+  planActionEmpName: string | null;
+  actionEmpId: number | null;
+  actionEmpName: string | null;
+  dueDate: string | null;
+  actionDate: string | null;
+  actionCmnt: string | null;
+}
+
+/** 조치결과 저장·조치완료·완료취소 요청 (PUT /tdm/chck-insuffs/{id}/result) */
+export interface TdmChckInsuffResultReq {
+  procType: 'U' | 'P' | 'C';
+  dueDate: string | null;
+  actionDate: string | null;
+  actionEmpId: number | null;
+  actionCmnt: string | null;
+}
+
+/** 조치기록 저장 요청 (PUT /tdm/chck-insuffs/{id}/records) — chckInsuffRecordId가 0 이하면 신규 */
+export interface TdmChckInsuffRecordSaveReq {
+  deleteIds: number[];
+  rows: { chckInsuffRecordId: number; regDate: string | null; content: string | null; note: string | null }[];
+}

@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlOrgAppr, TdmManlOrgManager, TdmManlOrgPeriod, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmRoleReport, TdmRoleReportAttach, TdmManlJob, TdmManlDutyGroup, TdmManlDuty, TdmManlDutyReg, TdmManlCopySource, TdmManlCopyItem, TdmManlDutyTaskOrg, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord } from '../types/tdm';
-import type { TdmCheckJob, TdmCheckJobSaveReq, TdmCheckRole, TdmCheckPreCreate, TdmCheckExct, TdmChckOrg, TdmCheckAppr, TdmCheckOrgManager, TdmCheckRdPrint, TdmPdfOutcome, TdmChckRecord, TdmCheckOrg, TdmCheckManl, TdmChckApprStep, TdmCheckManlDetail, TdmChckInsuff, TdmChckInsuffSaveReq } from '../types/tdm';
+import type { TdmCheckJob, TdmCheckJobSaveReq, TdmCheckRole, TdmCheckPreCreate, TdmCheckExct, TdmChckOrg, TdmCheckAppr, TdmCheckOrgManager, TdmCheckRdPrint, TdmPdfOutcome, TdmChckRecord, TdmCheckOrg, TdmCheckManl, TdmChckApprStep, TdmCheckManlDetail, TdmChckInsuff, TdmChckInsuffSaveReq, TdmChckInsuffRow, TdmChckInsuffResultReq, TdmChckInsuffRecordSaveReq } from '../types/tdm';
 import type { TdmCheckApprCmnt, TdmCheckApprEndInfo, TdmCheckApprManl, TdmCheckApprInsuff, TdmCheckApprNeighbor, TdmCheckApprRecord, TdmCheckApprInsuffRecord } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
@@ -1153,6 +1153,32 @@ export const tdmApi = {
   /** AS-IS tdm.Tdm54_ChckInsuff.modelUpdate */
   saveChckInsuff: async (req: TdmChckInsuffSaveReq): Promise<TdmChckInsuff> => {
     const res = await apiClient.put<ApiResponse<TdmChckInsuff>>('v1/tdm/chck-insuffs', req);
+    return res.data.data;
+  },
+
+  // ── N24 미흡내역 조치 (Tdm54_Tab_CheckInsuff) ──
+
+  /** AS-IS tdm.Tdm54_ChckInsuff.selectByRegDate — 날짜 yyyy-MM-dd, statusCode는 LIKE 값('%' 전체) */
+  searchChckInsuffs: async (p: { startDate: string; endDate: string; unDoneYn: boolean; roleId?: number | null; orgId?: number | null; statusCode?: string }): Promise<TdmChckInsuffRow[]> => {
+    const res = await apiClient.get<ApiResponse<TdmChckInsuffRow[]>>('v1/tdm/chck-insuffs', { params: p });
+    return res.data.data;
+  },
+
+  /** AS-IS tdm.Tdm51_ChckOrg.getTdmOrgId — 로그인 사용자의 책무 대상 부서, 없으면 null */
+  getTdmOrgId: async (): Promise<number | null> => {
+    const res = await apiClient.get<ApiResponse<number | null>>('v1/tdm/chck-insuffs/tdm-org-id');
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS tdm.Tdm54_ChckInsuff.updateComplete — U 저장·P 조치완료·C 완료취소 → 다시 읽은 행 */
+  updateChckInsuffResult: async (chckInsuffId: number, req: TdmChckInsuffResultReq): Promise<TdmChckInsuffRow> => {
+    const res = await apiClient.put<ApiResponse<TdmChckInsuffRow>>(`v1/tdm/chck-insuffs/${chckInsuffId}/result`, req);
+    return res.data.data;
+  },
+
+  /** AS-IS tdm.Tdm63_ChckInsuffRecord.delete + update → 다시 읽은 조치기록 */
+  saveChckInsuffRecords: async (chckInsuffId: number, req: TdmChckInsuffRecordSaveReq): Promise<TdmCheckApprInsuffRecord[]> => {
+    const res = await apiClient.put<ApiResponse<TdmCheckApprInsuffRecord[]>>(`v1/tdm/chck-insuffs/${chckInsuffId}/records`, req);
     return res.data.data;
   },
 

@@ -178,6 +178,7 @@ import { Tdm50_Tab_CheckJob } from './tdm/Tdm50_Tab_CheckJob';
 import { Tdm51_Tab_CheckOrg } from './tdm/Tdm51_Tab_CheckOrg';
 import { Tdm52_Tab_CheckManl } from './tdm/Tdm52_Tab_CheckManl';
 import { Tdm59_Tab_CheckAppr } from './tdm/Tdm59_Tab_CheckAppr';
+import { Tdm54_Tab_CheckInsuff } from './tdm/Tdm54_Tab_CheckInsuff';
 import { Tdm50_Tab_DutyRecon } from './tdm/Tdm50_Tab_DutyRecon';
 import { Tdm50_Tab_DutyReconAdmin } from './tdm/Tdm50_Tab_DutyReconAdmin';
 import { Dcr01_Tab_ClassTree } from './dcr/Dcr01_Tab_ClassTree';
@@ -345,6 +346,7 @@ export const SCREENS: Record<string, React.FC> = {
   Tdm51_Tab_CheckOrg, // N21 (+ Tdm51_TabPage_CheckOrg·Tdm58_Lookup_ChckApprStep·Emp00_Lookup_SelectSingleTdm, 점검항목 [상세]의 Tdm52_Edit_ChckManl은 N22에서)
   Tdm52_Tab_CheckManl, // N22 (+ Tdm52_TabPage_CheckManl·Tdm52_Edit_ChckManl·Tdm52_Edit_ChckManlBatch·Tdm54_Edit_ChckInsuff)
   Tdm59_Tab_CheckAppr, // N23 (+ Tdm59_TabPage_CheckAppr·Tdm59_Edit_Cmnt·Tdm59_Edit_ReportCmnt·Tdm52_Edit_ChckManlCmnt·Tdm54_Lookup_ChckInsuffCmnt·Tdm55_Lookup_ChckRecord2, 증빙자료 창은 안내만)
+  Tdm54_Tab_CheckInsuff, // N24 (+ Tdm54_Lookup_ChckInsuff, 조치기록 증빙자료 창은 안내만)
   Tdm50_Tab_DutyRecon, // N03 (E15 Admin의 고객사용 짝 — 같은 API)
   Tdm50_Tab_DutyReconAdmin, // E15 (조회마다 DB 함수 f_recon_tdm('DB_CHK')이 sys99_print의 사용자 몫 행을 다시 만든다 — AS-IS 그대로)
   Sms02_Tab_TotalCount, // C05

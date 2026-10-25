@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!-- AS-IS(IDMS-IC) server/tdm/mapper/tdm54_chck_insuff.xml (N22 Tdm54_Edit_ChckInsuff — 조치계획 등록. N24가 조치 처리를 더한다) -->
+<!-- AS-IS(IDMS-IC) server/tdm/mapper/tdm54_chck_insuff.xml (N22 Tdm54_Edit_ChckInsuff — 조치계획 등록, N24 Tdm54_Tab_CheckInsuff·Tdm54_Lookup_ChckInsuff — 조치 처리) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmChckInsuffMapper">
 
     <!-- AS-IS(IDMS-IC) tdm54_chck_insuff.selectByChckManlId. 수정: SELECT * → 조치계획 창이 쓰는 열, 날짜는 'yyyy-MM-dd' 글자 -->
@@ -55,4 +55,172 @@
          WHERE tdm54_chck_insuff_id      = #{req.chckInsuffId}
            AND tdm54_company_id          = #{companyId}
     </update>
+
+    <!-- N24 목록·창이 읽는 열 (selectByRegDate·selectById 공통). 날짜는 'yyyy-MM-dd' 글자 -->
+    <sql id="listColumns">
+        t.tdm54_chck_insuff_id                                     AS chck_insuff_id
+        , t.tdm54_chck_manl_id                                     AS chck_manl_id
+        , t.tdm54_company_id                                       AS company_id
+        , t.tdm54_role_id                                          AS role_id
+        , t.tdm54_org_id                                           AS org_id
+        , t.tdm54_check_ym                                         AS check_ym
+        , TO_CHAR(t.tdm54_reg_date, 'YYYY-MM-DD')                  AS reg_date
+        , t.tdm54_role_nm                                          AS role_name
+        , t.tdm54_org_nm                                           AS org_name
+        , t.tdm54_action_nm                                        AS action_name
+        , t.tdm54_action_plan                                      AS action_plan
+        , t.tdm54_status_cd                                        AS status_code
+        , f_cdnm('TdmInsuffStatus', t.curr_status_cd, t.tdm54_company_id, t.tdm54_reg_date) AS status_name
+        , t.tdm54_plan_reg_emp_nm                                  AS plan_reg_emp_name
+        , t.tdm54_plan_action_emp_id                               AS plan_action_emp_id
+        , t.tdm54_plan_action_emp_nm                               AS plan_action_emp_name
+        , t.tdm54_action_emp_id                                    AS action_emp_id
+        , t.tdm54_action_emp_nm                                    AS action_emp_name
+        , TO_CHAR(t.tdm54_due_date, 'YYYY-MM-DD')                  AS due_date
+        , TO_CHAR(t.tdm54_action_date, 'YYYY-MM-DD')               AS action_date
+        , t.tdm54_action_cmnt                                      AS action_cmnt
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) tdm54_chck_insuff.selectByRegDate L264 — port-sql. 수정: 바깥 SELECT를 화면 열로, 날짜 파라미터는 CAST -->
+    <select id="selectByRegDate" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ChckInsuffListRes">
+        SELECT <include refid="listColumns"/>
+          FROM (
+                SELECT tdm54_chck_insuff.*
+                     , tdm54_occ_ym                                                     AS tdm54_check_ym               /*발생년월*/
+                     , tdm20_role_nm                                                    AS tdm54_role_nm                /*직책명*/
+                     , f_org_nm(tdm54_org_id, f_today())                                AS tdm54_org_nm                 /*부서명*/
+                     , f_emp_kor_nm(tdm54_plan_action_emp_id)                           AS tdm54_plan_action_emp_nm     /*조치예정자*/
+                     , f_emp_kor_nm(tdm54_plan_reg_emp_id)                              AS tdm54_plan_reg_emp_nm        /*조치계획등록자*/
+                     , f_emp_kor_nm(tdm54_action_emp_id)                                AS tdm54_action_emp_nm          /*조치자*/
+                     , CASE WHEN tdm54_occ_ym = TO_CHAR(f_today(),'YYYY.MM') THEN '10'
+                            WHEN tdm54_status_cd IN ('19','20','21','25','26') THEN tdm54_status_cd
+                            ELSE '11' END                                               AS curr_status_cd
+                  FROM tdm54_chck_insuff
+                       INNER JOIN tdm20_role      ON tdm20_role_id      = tdm54_role_id
+                <if test="orgId != null">
+                       , ( SELECT f_get_tdmOrg_id2(CAST(#{companyId} AS numeric), CAST(#{orgId} AS numeric), CAST(#{endDate} AS date)) tdmorg_id ) o
+                </if>
+                 WHERE tdm54_company_id = #{companyId}
+                <if test="roleId != null">
+                   AND tdm54_role_id = #{roleId}
+                </if>
+                <if test="orgId != null">
+                   AND ( tdm54_org_id IN (#{orgId}, tdmorg_id)
+                         OR
+                         #{orgId} IN ( SELECT tdm61_appr_org_id
+                                         FROM tdm61_chck_insuff_appr
+                                        WHERE tdm61_chck_insuff_id = tdm54_chck_insuff_id
+                                        UNION ALL
+                                       SELECT tdm60_appr_org_id
+                                         FROM tdm60_chck_manl_appr
+                                        WHERE tdm60_chck_manl_id = tdm54_chck_manl_id )
+                       )
+                </if>
+               ) t
+         WHERE 1=1
+           AND COALESCE(curr_status_cd,'10') LIKE #{statusCode}
+        <choose>
+            <when test="unDoneYn">
+           AND COALESCE(curr_status_cd,'10') IN ('10','11','26') /*(10:발생/11:조치중/26:승인반려)*/
+            </when>
+            <otherwise>
+           AND tdm54_check_ym BETWEEN TO_CHAR(CAST(#{startDate} AS date),'YYYY.MM') AND TO_CHAR(CAST(#{endDate} AS date),'YYYY.MM')
+            </otherwise>
+        </choose>
+         ORDER BY tdm54_check_ym, tdm54_due_date, tdm54_chck_manl_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm54_chck_insuff.selectById -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ChckInsuffListRes">
+        SELECT <include refid="listColumns"/>
+          FROM (
+                SELECT tdm54_chck_insuff.*
+                     , tdm51_check_ym                                                   AS tdm54_check_ym               /*발생년월*/
+                     , f_emp_kor_nm(tdm54_plan_reg_emp_id)                              AS tdm54_plan_reg_emp_nm        /*조치계획등록자*/
+                     , f_emp_kor_nm(tdm54_plan_action_emp_id)                           AS tdm54_plan_action_emp_nm     /*조치예정자*/
+                     , f_emp_kor_nm(tdm54_action_emp_id)                                AS tdm54_action_emp_nm          /*조치자*/
+                     , f_org_nm(tdm54_org_id, f_today())                                AS tdm54_org_nm                 /*부서명*/
+                     , tdm20_role_nm                                                    AS tdm54_role_nm                /*직책명*/
+                     , CASE WHEN tdm51_check_ym = TO_CHAR(f_today(),'YYYY.MM') THEN '10'
+                            WHEN tdm54_status_cd IN ('19','20','21','25','26') THEN tdm54_status_cd
+                            ELSE '11' END                                               AS curr_status_cd
+                  FROM tdm54_chck_insuff
+                       INNER JOIN tdm52_chck_manl ON tdm52_chck_manl_id = tdm54_chck_manl_id
+                       INNER JOIN tdm51_chck_org  ON tdm51_chck_org_id  = tdm52_chck_org_id
+                       INNER JOIN tdm20_role      ON tdm20_role_id      = tdm54_role_id
+                 WHERE tdm54_chck_insuff_id = #{chckInsuffId}
+               ) t
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm51_chck_org.getTdmOrgId — 조직은 AS-IS LoginUser.getOrgCodeId(), TOBE는 TdmDashboardMapper.selectMyOrg와 같은 규칙으로 구한다 -->
+    <select id="selectTdmOrgId" resultType="long">
+        SELECT f_get_tdmOrg_id2(CAST(#{companyId} AS numeric), t.emp03_org_code_id, f_today())
+          FROM ( SELECT emp03_org_code_id
+                   FROM emp03_trans
+                  WHERE emp03_person_id = #{personId}
+                    AND emp03_trans_cd != '800'
+                  ORDER BY emp03_trans_date DESC
+                  LIMIT 1 ) t
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm61_chck_insuff_appr.selectByChckInsuffId (건수만) -->
+    <select id="countApprByChckInsuffId" resultType="int">
+        SELECT COUNT(*)
+          FROM tdm61_chck_insuff_appr
+         WHERE tdm61_chck_insuff_id = #{chckInsuffId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm63_chck_insuff_record.countEvid — SUM이 null이면 0 -->
+    <select id="countEvid" resultType="int">
+        SELECT COALESCE(SUM(f_get_tdmEvidCount(tdm63_chck_insuff_record_id)), 0)
+          FROM tdm63_chck_insuff_record
+         WHERE tdm63_chck_insuff_id = #{chckInsuffId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(tdm54_chck_insuff) UPDATE — 조치결과 열만. 자동 채움: tdm54_upd_nm·tdm54_upd_date -->
+    <update id="updateResult">
+        UPDATE tdm54_chck_insuff
+           SET tdm54_status_cd     = #{statusCode}
+             , tdm54_due_date      = CAST(#{dueDate} AS date)
+             , tdm54_action_date   = CAST(#{actionDate} AS date)
+             , tdm54_action_emp_id = #{actionEmpId}
+             , tdm54_action_cmnt   = #{actionCmnt}
+             , tdm54_upd_nm        = #{updName}
+             , tdm54_upd_date      = f_sysdate()
+         WHERE tdm54_chck_insuff_id = #{chckInsuffId}
+           AND tdm54_company_id     = #{companyId}
+    </update>
+
+    <select id="selectRecordIds" resultType="long">
+        SELECT tdm63_chck_insuff_record_id
+          FROM tdm63_chck_insuff_record
+         WHERE tdm63_chck_insuff_id = #{chckInsuffId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(tdm63_chck_insuff_record) INSERT. 자동 채움: tdm63_upd_nm·tdm63_upd_date -->
+    <insert id="insertRecord">
+        INSERT INTO tdm63_chck_insuff_record
+               ( tdm63_chck_insuff_record_id, tdm63_chck_insuff_id, tdm63_reg_date, tdm63_reg_emp_id, tdm63_content, tdm63_note, tdm63_upd_nm, tdm63_upd_date )
+        VALUES ( #{id}, #{chckInsuffId}, CAST(#{row.regDate} AS date), #{regEmpId}, #{row.content}, #{row.note}, #{updName}, f_sysdate() )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(tdm63_chck_insuff_record) UPDATE — 화면에서 고치는 열(등록일·조치내용·비고) -->
+    <update id="updateRecord">
+        UPDATE tdm63_chck_insuff_record
+           SET tdm63_reg_date = CAST(#{row.regDate} AS date)
+             , tdm63_content  = #{row.content}
+             , tdm63_note     = #{row.note}
+             , tdm63_upd_nm   = #{updName}
+             , tdm63_upd_date = f_sysdate()
+         WHERE tdm63_chck_insuff_record_id = #{row.chckInsuffRecordId}
+           AND tdm63_chck_insuff_id        = #{chckInsuffId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel(tdm63_chck_insuff_record) DELETE -->
+    <delete id="deleteRecords">
+        DELETE FROM tdm63_chck_insuff_record
+         WHERE tdm63_chck_insuff_id = #{chckInsuffId}
+           AND tdm63_chck_insuff_record_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
 </mapper>
