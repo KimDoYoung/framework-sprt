@@ -20,12 +20,26 @@ public class SysRelateFileService {
 
     private final SysRelateFileMapper sysRelateFileMapper;
 
+    /** 판정과 (상태 2일 때) 화면에 보일 문구 */
+    public record DeleteCheck(int status, String message) {
+    }
+
+    /**
+     * AS-IS Sys11_RelateFile.checkFileDelete L59-141. 02(진행 중 상신문서)와 03(그 밖에서 사용 중)이 모두 상태 2이고 문구만 다르다.
+     * 03(N28 추가): 책무 양식처럼 점검항목·법규 분류에 연결된 파일이 연결을 남긴 채 지워지지 않게 한다
+     */
     @Transactional
-    public int checkFileDelete(Long fileId, Long parentId) {
+    public DeleteCheck checkFileDelete(Long fileId, Long parentId) {
         if (sysRelateFileMapper.countCheckFileDelete01(fileId, parentId) > 0) {
             sysRelateFileMapper.deleteRelateFile(fileId, parentId);
-            return STATUS_RELATE_DELETED;
+            return new DeleteCheck(STATUS_RELATE_DELETED, null);
         }
-        return sysRelateFileMapper.countCheckFileDelete02(fileId, parentId) > 0 ? STATUS_IN_USE : STATUS_DELETABLE;
+        if (sysRelateFileMapper.countCheckFileDelete02(fileId, parentId) > 0) {
+            return new DeleteCheck(STATUS_IN_USE, "해당 파일은 다른 상신문서에서 사용 중이므로 삭제할 수 없습니다");
+        }
+        if (sysRelateFileMapper.countCheckFileDelete03(fileId, parentId) > 0) {
+            return new DeleteCheck(STATUS_IN_USE, "해당 파일은 사용중인 파일이므로 삭제할 수 없습니다");
+        }
+        return new DeleteCheck(STATUS_DELETABLE, null);
     }
 }

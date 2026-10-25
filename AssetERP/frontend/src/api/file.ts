@@ -110,9 +110,12 @@ export const fileApi = {
   },
 
   /** AS-IS sys.Sys11_RelateFile.checkFileDelete → FILE_DELETE_STATUS */
-  checkFileDelete: async (fileId: number, parentId: number): Promise<number> => {
+  checkFileDelete: async (fileId: number, parentId: number): Promise<number> => (await fileApi.checkFileDeleteResult(fileId, parentId)).status,
+
+  /** checkFileDelete + 상태 2일 때 서버 문구 (AS-IS result.getMessage(): 상신문서 사용 중 / 사용중인 파일 두 가지) */
+  checkFileDeleteResult: async (fileId: number, parentId: number): Promise<{ status: number; message: string | null }> => {
     const res = await apiClient.post<ApiResponse<number>>(`v1/sys/files/${fileId}/check-delete`, null, { params: { parentId } });
-    return res.data.data;
+    return { status: res.data.data, message: res.data.data === FILE_DELETE_STATUS.IN_USE ? res.data.message : null };
   },
 
   /** AS-IS FileDelete?fileId= */

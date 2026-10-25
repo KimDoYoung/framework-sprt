@@ -131,7 +131,8 @@ public class SysFileController {
     /** AS-IS sys.Sys11_RelateFile.checkFileDelete → 1 연결만 지움 / 2 다른 상신문서에서 사용 중 / 3 지워도 됨 */
     @PostMapping("/{fileId}/check-delete")
     public ApiResponse<Integer> checkFileDelete(@PathVariable Long fileId, @RequestParam Long parentId) {
-        return ApiResponse.ok(sysRelateFileService.checkFileDelete(fileId, parentId));
+        SysRelateFileService.DeleteCheck check = sysRelateFileService.checkFileDelete(fileId, parentId);
+        return check.message() == null ? ApiResponse.ok(check.status()) : ApiResponse.ok(check.message(), check.status());
     }
 
     /** AS-IS FileDelete?fileId= */

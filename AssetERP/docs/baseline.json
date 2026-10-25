@@ -6953,5 +6953,28 @@
     "note": "docs/work/N/N27-작업기록.md",
     "history": [],
     "id": "N27"
+  },
+  "Tdm43_Tab_RelateFormFileUpload": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/tdm/Tdm43_Lookup_RelateFormFileMultiUpload.java": "7f7d053d0a4801a07307a661d575af0763f6fdaf",
+      "application/src/main/java/myApp/client/vi/tdm/Tdm43_Tab_RelateFormFileUpload.java": "4b7353724fb2b0dcb5d859c44b3054956de5302d",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/Sys11_RelateFile.java": "3aa633bf0b24c8da3c85ea2f505fb68616f92a11",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/sys/mapper/sys11_relate_file.xml": "35c5b410b79c0d900e2332f08e15c5f024b05aa6"
+    },
+    "shared_links": [
+      "Sys10_Lookup_FileViewer"
+    ],
+    "recorded_at": "2026-10-25T17:03:02+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/N/N28-작업기록.md",
+    "history": [],
+    "id": "N28"
   }
 }

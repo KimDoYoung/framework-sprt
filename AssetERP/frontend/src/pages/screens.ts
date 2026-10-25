@@ -182,6 +182,7 @@ import { Tdm54_Tab_CheckInsuff } from './tdm/Tdm54_Tab_CheckInsuff';
 import { Tdm00_Tab_ChangeList } from './tdm/Tdm00_Tab_ChangeList';
 import { Tdm35_Tab_TaskList } from './tdm/Tdm35_Tab_TaskList';
 import { Tdm43_Tab_ManlItemList } from './tdm/Tdm43_Tab_ManlItemList';
+import { Tdm43_Tab_RelateFormFileUpload } from './tdm/Tdm43_Tab_RelateFormFileUpload';
 import { Tdm50_Tab_DutyRecon } from './tdm/Tdm50_Tab_DutyRecon';
 import { Tdm50_Tab_DutyReconAdmin } from './tdm/Tdm50_Tab_DutyReconAdmin';
 import { Dcr01_Tab_ClassTree } from './dcr/Dcr01_Tab_ClassTree';
@@ -352,6 +353,7 @@ export const SCREENS: Record<string, React.FC> = {
   Tdm00_Tab_ChangeList, // N25
   Tdm35_Tab_TaskList, // N26
   Tdm43_Tab_ManlItemList, // N27 (+ Tdm45_TabPage_Relate·Tdm43_Lookup_RefBasis·Tdm43_Lookup_EtcModify)
+  Tdm43_Tab_RelateFormFileUpload, // N28 (+ Tdm43_Lookup_RelateFormFileMultiUpload)
   Tdm54_Tab_CheckInsuff, // N24 (+ Tdm54_Lookup_ChckInsuff, 조치기록 증빙자료 창은 안내만)
   Tdm50_Tab_DutyRecon, // N03 (E15 Admin의 고객사용 짝 — 같은 API)
   Tdm50_Tab_DutyReconAdmin, // E15 (조회마다 DB 함수 f_recon_tdm('DB_CHK')이 sys99_print의 사용자 몫 행을 다시 만든다 — AS-IS 그대로)

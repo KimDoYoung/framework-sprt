@@ -393,6 +393,18 @@ export interface TdmManlFormFile {
   regDate?: string | null;
 }
 
+/** 이행점검 연관양식 파일 한 행 (N28, AS-IS Sys10_FileModel 중 Tdm43_Tab_RelateFormFileUpload 그리드 열). regDate는 'YYYY-MM-DD' */
+export interface TdmFormFile {
+  fileId: number;
+  parentId: number;
+  tdmCheckFormType: string | null;
+  tdmCheckFormTypeName: string | null;
+  fileName: string;
+  note: string | null;
+  regDate: string | null;
+  fileExt: string | null;
+}
+
 /** 연결할 책무이행점검항목 한 행 (AS-IS Tdm43_ManlModel 중 Ics01_Lookup_SelectTdm 그리드 열) */
 export interface Manl {
   manlId: number;

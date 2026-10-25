@@ -2,6 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlOrgAppr, TdmManlOrgManager, TdmManlOrgPeriod, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmManlList, TdmManlEtcReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmRoleReport, TdmRoleReportAttach, TdmManlJob, TdmManlDutyGroup, TdmManlDuty, TdmManlDutyReg, TdmManlCopySource, TdmManlCopyItem, TdmManlDutyTaskOrg, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord, TdmChangeListItem } from '../types/tdm';
 import type { TdmCheckJob, TdmCheckJobSaveReq, TdmCheckRole, TdmCheckPreCreate, TdmCheckExct, TdmChckOrg, TdmCheckAppr, TdmCheckOrgManager, TdmCheckRdPrint, TdmPdfOutcome, TdmChckRecord, TdmCheckOrg, TdmCheckManl, TdmChckApprStep, TdmCheckManlDetail, TdmChckInsuff, TdmChckInsuffSaveReq, TdmChckInsuffRow, TdmChckInsuffResultReq, TdmChckInsuffRecordSaveReq } from '../types/tdm';
+import type { TdmFormFile } from '../types/tdm';
 import type { TdmCheckApprCmnt, TdmCheckApprEndInfo, TdmCheckApprManl, TdmCheckApprInsuff, TdmCheckApprNeighbor, TdmCheckApprRecord, TdmCheckApprInsuffRecord } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
@@ -347,6 +348,26 @@ export const tdmApi = {
   searchManlFormFiles: async (formType: string, searchText: string, relateId: number): Promise<TdmManlFormFile[]> => {
     const res = await apiClient.get<ApiResponse<TdmManlFormFile[]>>('v1/tdm/manls/form-files', { params: { formType, searchText, relateId } });
     return res.data.data ?? [];
+  },
+
+  // ── N28 이행점검 연관양식 등록(Tdm43_Tab_RelateFormFileUpload) — 받기·삭제는 fileApi ──
+
+  /** AS-IS sys.Sys10_File.getTdmCheckFormFile (formType: '%' 전체 / 코드) */
+  searchFormFiles: async (formType: string, searchText: string): Promise<TdmFormFile[]> => {
+    const res = await apiClient.get<ApiResponse<TdmFormFile[]>>('v1/tdm/form-files', { params: { formType, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys10_File.update — 바뀐 행의 구분 코드·비고 */
+  saveFormFiles: async (rows: TdmFormFile[]): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>('v1/tdm/form-files', rows.map(r => ({ fileId: r.fileId, tdmCheckFormType: r.tdmCheckFormType, note: r.note })));
+  },
+
+  /** AS-IS FileUpload?mode=tdmCheckForm&tdmFormType=&note= */
+  uploadFormFile: async (formType: string, note: string, file: File): Promise<void> => {
+    const form = new FormData();
+    form.append('file', file);
+    await apiClient.post<ApiResponse<unknown>>('v1/tdm/form-files', form, { params: { formType, note }, headers: { 'Content-Type': 'multipart/form-data' } });
   },
 
   /** AS-IS tdm.Tdm43_Manl.delete (선택한 한 건 + 연결 법규·내규·양식·첨부) */

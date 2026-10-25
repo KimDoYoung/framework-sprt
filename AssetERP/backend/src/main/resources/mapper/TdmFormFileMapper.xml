@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/sys/mapper/sys10_file.xml (N28 이행점검 연관양식 등록 Tdm43_Tab_RelateFormFileUpload)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmFormFileMapper">
+
+    <!-- AS-IS(IDMS-IC) sys10_file.getTdmCheckFormFile L258 — SELECT *를 그리드·파일보기 열로, 일자는 TO_CHAR -->
+    <select id="selectFormFiles" resultType="kr.co.kfs.asseterp.biz.tdm.dto.FormFileRes">
+        SELECT  sys10_file_id                                                                       AS file_id,
+                sys10_parent_id                                                                     AS parent_id,
+                sys10_tdm_check_form_type                                                           AS tdm_check_form_type,
+                f_cdnm('TdmCheckFormType', sys10_tdm_check_form_type, sys10_parent_id, f_today())   AS tdm_check_form_type_name,
+                sys10_file_nm                                                                       AS file_name,
+                sys10_note                                                                          AS note,
+                TO_CHAR(sys10_reg_date, 'YYYY-MM-DD')                                               AS reg_date,
+                sys10_file_ext                                                                      AS file_ext
+          FROM  sys10_file
+         WHERE  sys10_parent_id = #{companyId}
+           AND  sys10_tdm_check_form_type LIKE #{formType}
+           AND  CONCAT(sys10_file_nm, sys10_note) ILIKE #{searchText}
+         ORDER BY sys10_tdm_check_form_type
+                , sys10_file_nm COLLATE "ko_KR.utf8"
+                , sys10_note COLLATE "ko_KR.utf8"
+                , sys10_reg_date
+    </select>
+
+    <!-- AS-IS sys10_file.update(UpdateDataModel) — 화면이 바꾸는 열만, 회사 조건 추가 -->
+    <update id="updateFormFile">
+        UPDATE sys10_file
+           SET sys10_tdm_check_form_type = #{formType},
+               sys10_note                = #{note}
+         WHERE sys10_file_id   = #{fileId}
+           AND sys10_parent_id = #{companyId}
+    </update>
+
+    <!-- AS-IS FileUpload.uploadTdmForm L592 → sys10_file.insert의 tdmCheckFormType·note·personId -->
+    <update id="updateUploaded">
+        UPDATE sys10_file
+           SET sys10_tdm_check_form_type = #{formType},
+               sys10_note                = #{note},
+               sys10_person_id           = #{personId}
+         WHERE sys10_file_id = #{fileId}
+    </update>
+</mapper>

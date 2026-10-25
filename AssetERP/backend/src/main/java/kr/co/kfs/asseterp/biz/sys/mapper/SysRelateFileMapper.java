@@ -10,5 +10,7 @@ public interface SysRelateFileMapper {
 
     int countCheckFileDelete02(@Param("fileId") Long fileId, @Param("parentId") Long parentId);
 
+    int countCheckFileDelete03(@Param("fileId") Long fileId, @Param("parentId") Long parentId);
+
     int deleteRelateFile(@Param("fileId") Long fileId, @Param("parentId") Long parentId);
 }
