@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.tdm.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.tdm.dto.ChangeListRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.HrRecordRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.HrRecordSaveReq;
 import kr.co.kfs.asseterp.biz.tdm.mapper.TdmHrRecordMapper;
@@ -24,6 +25,11 @@ public class TdmHrRecordService {
     /** AS-IS tdm.Tdm02_HrRecord.selectByCompanyId (searchText는 '%…%'로 감싼다) */
     public List<HrRecordRes> search(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String applyCode, String searchText, Integer limit) {
         return mapper.selectByCompanyId(user.getCompanyId(), startDate, closeDate, applyCode, "%" + (searchText == null ? "" : searchText) + "%", limit);
+    }
+
+    /** AS-IS tdm.Tdm02_HrRecord.selectChangeList (Tdm00_Tab_ChangeList.retrieve: companyId, stdDate) */
+    public List<ChangeListRes> changeList(UserPrincipal user, LocalDate stdDate) {
+        return mapper.selectChangeList(user.getCompanyId(), stdDate);
     }
 
     /** AS-IS tdm.Tdm02_HrRecord.updateApplyCode: 바뀐 행마다 적용여부 코드와 비고 */

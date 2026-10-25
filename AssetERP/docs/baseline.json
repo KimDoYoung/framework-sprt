@@ -6859,5 +6859,25 @@
     "note": "docs/work/N/N24-작업기록.md",
     "history": [],
     "id": "N24"
+  },
+  "Tdm00_Tab_ChangeList": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/tdm/Tdm00_Tab_ChangeList.java": "87f549e275986f1d3ef1573802ac1fc0c0a1d22a",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm02_HrRecordModel.java": "ce99c98c150e3628a140a7461e0847bc2adf6a04",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm02_HrRecordModelProperties.java": "411ad65ad8ba848bcce8e262085e9c66e6a695bf",
+      "application/src/main/java/myApp/server/tdm/Tdm02_HrRecord.java": "15c274759cb3a044deacfbd17d3fae3fc16c537e",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm02_hr_record.xml": "9b3cfc7ca782947866f5b8d3be6943e4c5a67aa7"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-25T16:14:59+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/N/N25-작업기록.md",
+    "history": [],
+    "id": "N25"
   }
 }

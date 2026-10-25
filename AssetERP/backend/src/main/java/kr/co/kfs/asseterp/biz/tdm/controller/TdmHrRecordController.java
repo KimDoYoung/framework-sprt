@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.tdm.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.tdm.dto.ChangeListRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.HrRecordRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.HrRecordSaveReq;
 import kr.co.kfs.asseterp.biz.tdm.service.TdmHrRecordService;
@@ -35,6 +36,13 @@ public class TdmHrRecordController {
                                                  @RequestParam(defaultValue = "") String searchText,
                                                  @RequestParam(required = false) Integer limit) {
         return ApiResponse.ok(service.search(principal, startDate, closeDate, applyCode, searchText, limit));
+    }
+
+    /** AS-IS tdm.Tdm02_HrRecord.selectChangeList — 조치대상조회(변화관리) */
+    @GetMapping("/change-list")
+    public ApiResponse<List<ChangeListRes>> changeList(@AuthenticationPrincipal UserPrincipal principal,
+                                                       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate) {
+        return ApiResponse.ok(service.changeList(principal, stdDate));
     }
 
     /** AS-IS tdm.Tdm02_HrRecord.updateApplyCode */

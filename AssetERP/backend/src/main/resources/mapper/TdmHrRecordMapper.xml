@@ -57,4 +57,168 @@
          WHERE tdm02_hr_record_id = #{hrRecordId}
     </update>
 
+
+    <!-- AS-IS tdm02_hr_record.selectChangeList L76 (IDMS-IC) — 조치대상조회(변화관리). 파라미터: companyId, stdDate -->
+    <select id="selectChangeList" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ChangeListRes">
+        SELECT tdm02_change_data AS change_data, tdm02_note AS note
+          FROM (
+        /*--------- 미지정 책무 ---------*/
+        SELECT 1000 + ROW_NUMBER() OVER(ORDER BY tdm10_task_class_cd
+        , tdm14_task_type_nm COLLATE "ko_KR.utf8"
+        , tdm10_task_nm COLLATE "ko_KR.utf8")       AS seq
+        , '미지정 책무'                                                                  AS tdm02_change_data
+        , CONCAT( '['|| f_cdnm('TdmTaskClassCode', tdm10_task_class_cd, tdm10_company_id, #{stdDate}::date)
+        , '-' || tdm14_task_type_nm ||'] '
+        , tdm10_task_nm )                                                     AS tdm02_note
+        FROM tdm10_task
+        INNER JOIN tdm14_task_type ON ( tdm14_company_id    = tdm10_company_id   AND
+        tdm14_task_type_cd  = tdm10_task_type_cd )
+        WHERE tdm10_company_id = #{companyId}
+        AND #{stdDate}::date BETWEEN tdm10_start_date AND COALESCE(tdm10_end_date,'2999-12-31'::date)
+        AND NOT EXISTS ( SELECT 1
+        FROM tdm20_role
+        INNER JOIN tdm21_role_relate_task ON tdm21_role_id = tdm20_role_id
+        WHERE tdm20_company_id = tdm10_company_id
+        AND #{stdDate}::date BETWEEN tdm20_start_date AND COALESCE(tdm20_end_date,'2999-12-31'::date)
+        AND tdm21_task_id    = tdm10_task_id )
+        /*--------- 임원 미배정 직책 ---------*/
+        UNION ALL
+        SELECT 2000 + ROW_NUMBER() OVER(ORDER BY tdm20_role_nm COLLATE "ko_KR.utf8")   AS seq
+        , '임원 미배정 직책'                                                           AS tdm02_change_data
+        , tdm20_role_nm                                                           AS tdm02_note
+        FROM tdm20_role
+        WHERE tdm20_company_id = #{companyId}
+        AND #{stdDate}::date BETWEEN tdm20_start_date AND COALESCE(tdm20_end_date,'2999-12-31'::date)
+        AND NOT EXISTS ( SELECT 1
+        FROM getTdm30RoleAllc(#{companyId}, #{stdDate}::date, false)
+        WHERE tdm30_role_id = tdm20_role_id )
+        /*--------- 미동의 임원 (임원동의서 미결재) ---------*/
+        UNION ALL
+        SELECT 2300 + ROW_NUMBER() OVER(ORDER BY tdm20_role_nm COLLATE "ko_KR.utf8")   AS seq
+        , '미동의 임원 (임원동의서 미결재)'                                               AS tdm02_change_data
+        , tdm20_role_nm ||' '|| f_emp_kor_nm(tdm30_person_id)                    AS tdm02_note
+        FROM getTdm30RoleAllc(#{companyId}, #{stdDate}::date, false)
+        LEFT  JOIN apr01_appr ON apr01_appr_id = tdm30_appr_id
+        INNER JOIN tdm20_role ON tdm20_role_id = tdm30_role_id
+        WHERE COALESCE(apr01_status_cd,'99') != '30'
+        /*--------- 담당부서 미연결 직책 ---------*/
+        UNION ALL
+        SELECT 2500 + ROW_NUMBER() OVER(ORDER BY tdm20_role_nm COLLATE "ko_KR.utf8")   AS seq
+        , '담당부서 미연결 직책'                                                        AS tdm02_change_data
+        , tdm20_role_nm                                                           AS tdm02_note
+        FROM tdm20_role
+        WHERE tdm20_company_id = #{companyId}
+        AND #{stdDate}::date BETWEEN tdm20_start_date AND COALESCE(tdm20_end_date,'2999-12-31'::date)
+        AND NOT EXISTS ( SELECT 1
+        FROM tdm23_role_relate_org
+        WHERE tdm23_role_id = tdm20_role_id )
+        /*--------- 책무 미연결 직책 ---------*/
+        UNION ALL
+        SELECT 2700 + ROW_NUMBER() OVER(ORDER BY tdm20_role_nm COLLATE "ko_KR.utf8")   AS seq
+        , '책무 미연결 직책'                                                           AS tdm02_change_data
+        , tdm20_role_nm                                                           AS tdm02_note
+        FROM tdm20_role
+        WHERE tdm20_company_id = #{companyId}
+        AND #{stdDate}::date BETWEEN tdm20_start_date AND COALESCE(tdm20_end_date,'2999-12-31'::date)
+        AND NOT EXISTS ( SELECT 1
+        FROM tdm10_task
+        INNER JOIN tdm21_role_relate_task ON tdm21_task_id = tdm10_task_id
+        WHERE tdm21_role_id = tdm20_role_id
+        AND #{stdDate}::date BETWEEN tdm10_start_date AND COALESCE(tdm10_end_date,'2999-12-31'::date) )
+        /*--------- 개별책무 중복배정 ---------*/
+        UNION ALL
+        SELECT 3000 + ROW_NUMBER() OVER(ORDER BY tdm10_task_class_cd
+        , tdm14_task_type_nm COLLATE "ko_KR.utf8"
+        , tdm10_task_nm COLLATE "ko_KR.utf8"
+        , tdm20_role_nm)                        AS seq
+        , '개별책무 중복배정'                                                          AS tdm02_change_data
+        , CONCAT( '['|| f_cdnm('TdmTaskClassCode', tdm10_task_class_cd, tdm10_company_id, #{stdDate}::date)
+        , '-' || tdm14_task_type_nm ||'] '
+        , tdm10_task_nm
+        , ' ==> 직책 : ' || tdm20_role_nm )                                 AS tdm02_note
+        FROM tdm10_task
+        INNER JOIN tdm14_task_type ON ( tdm14_company_id    = tdm10_company_id   AND
+        tdm14_task_type_cd  = tdm10_task_type_cd )
+        INNER JOIN tdm21_role_relate_task ON tdm21_task_id = tdm10_task_id
+        INNER JOIN tdm20_role             ON tdm20_role_id = tdm21_role_id
+        INNER JOIN (
+        SELECT tdm10_task_id   task_id
+        FROM (
+        SELECT DISTINCT tdm10_task_id, tdm20_role_id
+        FROM tdm10_task
+        INNER JOIN tdm21_role_relate_task ON tdm21_task_id = tdm10_task_id
+        INNER JOIN tdm20_role             ON tdm20_role_id = tdm21_role_id
+        WHERE tdm10_company_id = #{companyId}
+        AND #{stdDate}::date BETWEEN tdm10_start_date AND COALESCE(tdm10_end_date,'2999-12-31'::date)
+        AND COALESCE(tdm10_common_yn,'false') != 'true'
+        ) t
+        GROUP BY tdm10_task_id
+        HAVING COUNT(*) > 1
+        ) tt ON task_id = tdm10_task_id
+        WHERE tdm10_company_id = #{companyId}
+        AND #{stdDate}::date BETWEEN tdm10_start_date AND COALESCE(tdm10_end_date,'2999-12-31'::date)
+        /*--------- CEO책무 배정 체크 ---------*/
+        UNION ALL
+        SELECT 3500 + ROW_NUMBER() OVER(ORDER BY tdm10_task_class_cd
+        , tdm14_task_type_nm COLLATE "ko_KR.utf8"
+        , tdm10_task_nm COLLATE "ko_KR.utf8"
+        , tdm20_role_nm)                        AS seq
+        , 'CEO책무 배정'                                                             AS tdm02_change_data
+        , CONCAT( '['|| f_cdnm('TdmTaskClassCode', tdm10_task_class_cd, tdm10_company_id, #{stdDate}::date)
+        , '-' || tdm14_task_type_nm ||'] '
+        , tdm10_task_nm
+        , ' ==> 직책 : ' || tdm20_role_nm )                                 AS tdm02_note
+        FROM tdm10_task
+        INNER JOIN tdm14_task_type ON ( tdm14_company_id    = tdm10_company_id   AND
+        tdm14_task_type_cd  = tdm10_task_type_cd )
+        INNER JOIN tdm21_role_relate_task ON tdm21_task_id = tdm10_task_id
+        INNER JOIN tdm20_role             ON tdm21_role_id = tdm20_role_id
+        WHERE tdm10_company_id = #{companyId}
+        AND #{stdDate}::date BETWEEN tdm10_start_date AND COALESCE(tdm10_end_date,'2999-12-31'::date)
+        AND tdm10_ceo_yn = 'true'
+        AND tdm20_role_type != 'C'
+        /*--------- 책무대상인데, 임원정보 미등록 또는 퇴사 ---------*/
+        UNION ALL
+        SELECT 4000 + ROW_NUMBER() OVER(ORDER BY emp00_org_code_nm COLLATE "ko_KR.utf8"
+        , emp00_kor_nm COLLATE "ko_KR.utf8")                    AS seq
+        , '인사정보 미갱신 : ' || CASE WHEN emp00_retire_date IS NOT NULL THEN '퇴직' ELSE '미등록' END   AS tdm02_change_data
+        , CONCAT( emp00_org_code_nm ||' '
+        , f_cdnm('EmpPosCode', emp00_pos_cd, emp00_company_id, #{stdDate}::date) ||' '
+        , emp00_kor_nm
+        , CASE WHEN emp00_retire_date IS NOT NULL
+        THEN ' (퇴사일:' || TO_CHAR(emp00_retire_date,'YYYY-MM-DD') ||')'
+        ELSE '' END
+        )                                                                                 AS tdm02_note
+        FROM getPerson(#{companyId}, #{stdDate}::date)
+        WHERE COALESCE(emp00_tdm_target_yn, 'false') = 'true'
+        AND ( NOT EXISTS ( SELECT 1
+        FROM tdm01_hr
+        WHERE tdm01_company_id = emp00_company_id
+        AND tdm01_person_id  = emp00_person_id
+        AND COALESCE(tdm01_end_date, '2999-12-31'::date) > #{stdDate}::date )
+        OR
+        COALESCE(emp00_retire_date, '2999-12-31'::date) &lt;= #{stdDate}::date
+        )
+        /*--------- 책무대상이 아닌데, 임원정보 등록 ---------*/
+        UNION ALL
+        SELECT 5000 + ROW_NUMBER() OVER(ORDER BY emp00_org_code_nm COLLATE "ko_KR.utf8"
+        , emp00_kor_nm COLLATE "ko_KR.utf8")    AS seq
+        , '인사정보 미갱신 : 책무대상 해제'                                                AS tdm02_change_data
+        , emp00_org_code_nm ||' '
+        ||f_cdnm('EmpPosCode', emp00_pos_cd, emp00_company_id, #{stdDate}::date) ||' '
+        ||emp00_kor_nm
+        ||CASE WHEN emp00_retire_date IS NOT NULL
+        THEN ' (퇴사일:' || TO_CHAR(emp00_retire_date,'YYYY-MM-DD') ||')'
+        ELSE '' END                                                      AS tdm02_note
+        FROM getPerson(#{companyId}, #{stdDate}::date)
+        WHERE COALESCE(emp00_tdm_target_yn, 'false') = 'false'
+        AND EXISTS ( SELECT 1
+        FROM tdm01_hr
+        WHERE tdm01_company_id = emp00_company_id
+        AND tdm01_person_id  = emp00_person_id
+        AND COALESCE(tdm01_end_date, '2999-12-31'::date) > #{stdDate}::date )
+        ) t
+        ORDER BY seq
+    </select>
+
 </mapper>

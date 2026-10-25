@@ -847,6 +847,12 @@ export interface TdmRoleAllcTaskDetail {
 }
 
 /** 인사정보 한 행 (GET /api/v1/tdm/hr-records, AS-IS Tdm02_HrRecordModel). applyCode 0 미적용 / 1 적용완료 / 9 해당없음 */
+/** AS-IS Tdm02_HrRecordModel changeData·note (조치대상조회) */
+export interface TdmChangeListItem {
+  changeData: string | null;
+  note: string | null;
+}
+
 export interface TdmHrRecord {
   hrRecordId: number;
   regDate: string | null;

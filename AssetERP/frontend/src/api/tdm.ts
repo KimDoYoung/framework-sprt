@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlOrgAppr, TdmManlOrgManager, TdmManlOrgPeriod, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmRoleReport, TdmRoleReportAttach, TdmManlJob, TdmManlDutyGroup, TdmManlDuty, TdmManlDutyReg, TdmManlCopySource, TdmManlCopyItem, TdmManlDutyTaskOrg, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord } from '../types/tdm';
+import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlOrgAppr, TdmManlOrgManager, TdmManlOrgPeriod, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmRoleReport, TdmRoleReportAttach, TdmManlJob, TdmManlDutyGroup, TdmManlDuty, TdmManlDutyReg, TdmManlCopySource, TdmManlCopyItem, TdmManlDutyTaskOrg, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord, TdmChangeListItem } from '../types/tdm';
 import type { TdmCheckJob, TdmCheckJobSaveReq, TdmCheckRole, TdmCheckPreCreate, TdmCheckExct, TdmChckOrg, TdmCheckAppr, TdmCheckOrgManager, TdmCheckRdPrint, TdmPdfOutcome, TdmChckRecord, TdmCheckOrg, TdmCheckManl, TdmChckApprStep, TdmCheckManlDetail, TdmChckInsuff, TdmChckInsuffSaveReq, TdmChckInsuffRow, TdmChckInsuffResultReq, TdmChckInsuffRecordSaveReq } from '../types/tdm';
 import type { TdmCheckApprCmnt, TdmCheckApprEndInfo, TdmCheckApprManl, TdmCheckApprInsuff, TdmCheckApprNeighbor, TdmCheckApprRecord, TdmCheckApprInsuffRecord } from '../types/tdm';
 
@@ -933,6 +933,12 @@ export const tdmApi = {
   searchHrRecords: async (applyCode: string, startDate: string | null, closeDate: string | null, searchText: string, limit?: number): Promise<TdmHrRecord[]> => {
     const res = await apiClient.get<ApiResponse<Omit<TdmHrRecord, 'applyYn'>[]>>('v1/tdm/hr-records', { params: { applyCode, startDate, closeDate, searchText, limit } });
     return (res.data.data ?? []).map(r => ({ ...r, applyYn: r.applyCode != null && r.applyCode !== '0' }));
+  },
+
+  /** AS-IS tdm.Tdm02_HrRecord.selectChangeList (Tdm00_Tab_ChangeList — 조치대상조회) */
+  searchChangeList: async (stdDate: string): Promise<TdmChangeListItem[]> => {
+    const res = await apiClient.get<ApiResponse<TdmChangeListItem[]>>('v1/tdm/hr-records/change-list', { params: { stdDate } });
+    return res.data.data ?? [];
   },
 
   /** AS-IS tdm.Tdm02_HrRecord.updateApplyCode */
