@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlOrgAppr, TdmManlOrgManager, TdmManlOrgPeriod, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmRoleReport, TdmRoleReportAttach, TdmManlJob, TdmManlDutyGroup, TdmManlDuty, TdmManlDutyReg, TdmManlCopySource, TdmManlCopyItem, TdmManlDutyTaskOrg, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord } from '../types/tdm';
-import type { TdmCheckJob, TdmCheckJobSaveReq, TdmCheckRole, TdmCheckPreCreate, TdmCheckExct, TdmChckOrg, TdmCheckAppr, TdmCheckOrgManager, TdmCheckRdPrint, TdmPdfOutcome, TdmChckRecord } from '../types/tdm';
+import type { TdmCheckJob, TdmCheckJobSaveReq, TdmCheckRole, TdmCheckPreCreate, TdmCheckExct, TdmChckOrg, TdmCheckAppr, TdmCheckOrgManager, TdmCheckRdPrint, TdmPdfOutcome, TdmChckRecord, TdmCheckOrg, TdmCheckManl, TdmChckApprStep } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
 export const tdmApi = {
@@ -1042,5 +1042,57 @@ export const tdmApi = {
   searchChckRecords: async (chckOrgId: number): Promise<TdmChckRecord[]> => {
     const res = await apiClient.get<ApiResponse<TdmChckRecord[]>>('v1/tdm/chck-records', { params: { chckOrgId } });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm55_ChckRecord.selectByRelateId (exceptionTable NONE — 점검항목 이력, N21) */
+  searchChckRecordsByRelate: async (relateId: number): Promise<TdmChckRecord[]> => {
+    const res = await apiClient.get<ApiResponse<TdmChckRecord[]>>('v1/tdm/chck-records', { params: { relateId } });
+    return res.data.data ?? [];
+  },
+
+  // ── N21 업무점검자 지정 및 승인요청 (Tdm51_Tab_CheckOrg) ──
+
+  /** AS-IS tdm.Tdm51_ChckOrg.selectByOrgId */
+  searchCheckOrgStatuses: async (checkYm: string, orgId: number): Promise<TdmCheckOrg[]> => {
+    const res = await apiClient.get<ApiResponse<TdmCheckOrg[]>>('v1/tdm/check-orgs', { params: { checkYm, orgId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm51_ChckOrg.updateFix — 확정(P)·확정취소(C) */
+  updateCheckOrgFix: async (chckOrgId: number, actionType: 'P' | 'C'): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/tdm/check-orgs/${chckOrgId}/fix`, { actionType });
+  },
+
+  /** AS-IS tdm.Tdm51_ChckOrg.updateApprStatus — 승인요청(P)·요청취소(C) */
+  updateCheckOrgApprStatus: async (chckOrgId: number, actionType: 'P' | 'C'): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/tdm/check-orgs/${chckOrgId}/appr-status`, { actionType });
+  },
+
+  /** AS-IS tdm.Tdm52_ChckManl.selectByChckOrgId — searchText는 서버가 '%글자%'로 만든다 */
+  searchCheckManls: async (chckOrgId: number, unspecYn: boolean, searchText: string): Promise<TdmCheckManl[]> => {
+    const res = await apiClient.get<ApiResponse<TdmCheckManl[]>>('v1/tdm/check-manls', { params: { chckOrgId, unspecYn, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm52_ChckManl.updateCheckerId */
+  updateCheckManlChecker: async (chckManlIds: number[], personId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>('v1/tdm/check-manls/checker', { chckManlIds, personId });
+  },
+
+  /** AS-IS tdm.Tdm58_ChckApprStep.selectByChckOrgId */
+  searchChckApprSteps: async (chckOrgId: number): Promise<TdmChckApprStep[]> => {
+    const res = await apiClient.get<ApiResponse<TdmChckApprStep[]>>('v1/tdm/chck-appr-steps', { params: { chckOrgId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm58_ChckApprStep.update — 순서를 다시 매긴 전체 행 */
+  saveChckApprSteps: async (rows: { chckApprStepId: number; chckOrgId: number; apprSeq: string; apprEmpId: number }[]): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>('v1/tdm/chck-appr-steps', rows);
+  },
+
+  /** AS-IS tdm.Tdm58_ChckApprStep.delete → 지운 건수 */
+  deleteChckApprSteps: async (chckApprStepIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/chck-appr-steps', { data: { chckApprStepIds } });
+    return res.data.data;
   },
 };

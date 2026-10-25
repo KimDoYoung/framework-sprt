@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import kr.co.kfs.asseterp.biz.emp.dto.TransPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransSaveReq;
+import kr.co.kfs.asseterp.biz.emp.dto.TransTdmRes;
 import kr.co.kfs.asseterp.biz.emp.service.EmpTransService;
 
 import java.util.List;
@@ -39,6 +40,15 @@ public class EmpTransController {
     public ApiResponse<List<TransPersonRes>> searchTransPersons(@AuthenticationPrincipal UserPrincipal principal,
                                                                 @RequestParam(required = false) String searchText) {
         return ApiResponse.ok(empTransService.searchTransPersons(principal, searchText));
+    }
+
+    /** AS-IS emp.Emp03_Trans.selectByTdmYn (Emp00_Lookup_SelectSingleTdm, 책무 대상 사원찾기) */
+    @GetMapping("/trans/tdm")
+    public ApiResponse<List<TransTdmRes>> searchTransTdm(@AuthenticationPrincipal UserPrincipal principal,
+                                                         @RequestParam String stdDate,
+                                                         @RequestParam(required = false) Long orgId,
+                                                         @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(empTransService.searchTransTdm(principal, stdDate, orgId, searchText));
     }
 
     /** AS-IS emp.Emp03_Trans.selectByText — 사원찾기 open(companyId, …): 고른 고객사 사원 (A05, sys admin만) */

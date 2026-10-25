@@ -1010,3 +1010,54 @@ export interface TdmChckRecord {
   procResult?: string | null;
   resultCmnt?: string | null;
 }
+
+/** 부서 점검현황 한 행 (AS-IS Tdm51_ChckOrgModel — GET /tdm/check-orgs). 확정·승인요청 판단 값 포함 */
+export interface TdmCheckOrg {
+  chckOrgId: number;
+  chckJobId: number;
+  orgId: number;
+  checkYm: string;
+  roleName?: string | null;
+  exctName?: string | null;
+  taskCnt?: number | null;
+  detailCnt?: number | null;
+  dutyCnt?: number | null;
+  manlCnt?: number | null;
+  monthManlCnt?: number | null;
+  monthCheckCnt?: number | null;
+  monthCheck1Cnt?: number | null;
+  monthCheck2Cnt?: number | null;
+  monthCheck9Cnt?: number | null;
+  insuffCnt?: number | null;
+  checkEndYn: boolean;
+  orgStatusCode?: string | null;
+  orgStatusName?: string | null;
+  fixYn: boolean;
+  checkStatusAll10Yn: boolean;
+  insuffUnActionYn: boolean;
+  insuffRejectYn: boolean;
+}
+
+/** 부서 점검항목 한 행 (AS-IS Tdm52_ChckManlModel — GET /tdm/check-manls) */
+export interface TdmCheckManl {
+  chckManlId: number;
+  title?: string | null;
+  checkItem?: string | null;
+  checkerId?: number | null;
+  checkerName?: string | null;
+  checkResultName?: string | null;
+  checkStatusCode?: string | null;
+  checkStatusName?: string | null;
+}
+
+/** 부서 점검 승인선 한 행 (AS-IS Tdm58_ChckApprStepModel — GET /tdm/chck-appr-steps) */
+export interface TdmChckApprStep {
+  chckApprStepId: number;
+  chckOrgId: number;
+  apprSeq?: string | null;
+  apprEmpId: number;
+  apprEmpName?: string | null;
+  apprOrgId?: number | null;
+  apprOrgName?: string | null;
+  apprStepInfo?: string | null;
+}

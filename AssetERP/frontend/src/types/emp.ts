@@ -510,3 +510,13 @@ export interface EmpAddrBookMember {
   emailAddress?: string | null;
   mobileTelNo?: string | null;
 }
+
+/** 책무 대상 사원찾기 한 행 (GET /api/v1/emp/trans/tdm, AS-IS Emp03_TransModel — emp03_trans.selectByTdmYn) */
+export interface TransTdm {
+  personId: number;
+  orgNm?: string | null;
+  titleNm?: string | null;
+  empNo?: string | null;
+  korNm?: string | null;
+  transDate?: string | null;
+}

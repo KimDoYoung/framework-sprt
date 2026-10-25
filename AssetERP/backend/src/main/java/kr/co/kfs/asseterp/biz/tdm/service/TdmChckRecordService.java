@@ -30,4 +30,16 @@ public class TdmChckRecordService {
         }
         return mapper.selectByChckOrgId(chckOrgId);
     }
+
+    /** AS-IS tdm.Tdm55_ChckRecord.selectByRelateId (exceptionTable NONE) — 로그인 회사의 점검항목·미흡/개선 내역만 */
+    public List<ChckRecordRes> searchByRelate(UserPrincipal user, Long relateId) {
+        Long companyId = mapper.selectRelateCompanyId(relateId);
+        if (companyId == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        if (!companyId.equals(user.getCompanyId())) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        return mapper.selectByRelateId(relateId);
+    }
 }

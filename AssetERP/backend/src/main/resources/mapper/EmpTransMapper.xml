@@ -160,4 +160,31 @@
            AND emp03_trans_id IN
         <foreach collection="transIds" item="id" open="(" separator="," close=")">#{id}</foreach>
     </delete>
+
+    <!--
+      AS-IS(IDMS-IC) emp03_trans.selectByTdmYn (Emp00_Lookup_SelectSingleTdm, N21) — 기준일에 재직 중인 사원.
+      orgId 가지: 그 조직이거나, 그 하위 조직 중 책무 대상이 아닌(org00_tdm_yn='false') 조직의 사원. 수정: 일자 CAST·TO_CHAR
+    -->
+    <select id="searchTransTdm" resultType="kr.co.kfs.asseterp.biz.emp.dto.TransTdmRes">
+        SELECT emp00_person_id                                                              AS person_id
+             , emp00_org_code_nm                                                            AS org_nm
+             , f_cdnm('EmpTitleCode', emp00_title_cd, emp00_company_id, CAST(#{stdDate} AS date)) AS title_nm
+             , emp00_emp_no                                                                 AS emp_no
+             , emp00_kor_nm                                                                 AS kor_nm
+             , TO_CHAR(emp00_trans_date, 'yyyy-mm-dd')                                      AS trans_date
+          FROM getPerson(#{companyId}, CAST(#{stdDate} AS date))
+         WHERE 1=1
+           AND COALESCE(emp00_retire_date,'2999-12-31'::date) &gt; CAST(#{stdDate} AS date)
+           AND CONCAT(emp00_org_code_nm, emp00_emp_no, emp00_kor_nm) ILIKE #{searchText}
+        <if test="orgId != null">
+           AND (   emp00_org_code_id = #{orgId}
+                OR
+                   EXISTS ( SELECT 1
+                              FROM getSubOrg(#{orgId}, CAST(#{stdDate} AS date))
+                                   INNER JOIN getOrg(#{companyId}, CAST(#{stdDate} AS date)) ON org00_org_id = org_id
+                             WHERE org00_tdm_yn = 'false'
+                               AND org_id       = emp00_org_code_id )
+               )
+        </if>
+    </select>
 </mapper>

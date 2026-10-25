@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!-- AS-IS(IDMS-IC) server/tdm/mapper/tdm55_chck_record.xml (N20 Tdm55_Lookup_ChckRecord, 점검부서별 승인이력) -->
+<!-- AS-IS(IDMS-IC) server/tdm/mapper/tdm55_chck_record.xml (N20 Tdm55_Lookup_ChckRecord 점검부서별 승인이력, N21 selectByRelateId·insert) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmChckRecordMapper">
 
     <!-- AS-IS(IDMS-IC) tdm55_chck_record.selectByChckOrgId. 수정: 바깥 t.*를 그리드 열만 -->
@@ -26,6 +26,54 @@
                ) t
          ORDER BY t.tdm55_row_num DESC
     </select>
+
+    <!-- AS-IS(IDMS-IC) tdm55_chck_record.selectByRelateId (N21 exceptionTable NONE — 점검항목 이력). 수정: 바깥 t.*를 그리드 열만 -->
+    <select id="selectByRelateId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ChckRecordRes">
+        SELECT t.tdm55_row_num          AS row_num
+             , t.tdm55_upd_date_str     AS upd_date_str
+             , t.tdm55_proc_type        AS proc_type
+             , t.tdm55_person_info      AS person_info
+             , t.tdm55_proc_result      AS proc_result
+             , t.tdm55_result_cmnt      AS result_cmnt
+          FROM (
+                SELECT ROW_NUMBER() OVER(ORDER BY tdm55_upd_date)                       AS tdm55_row_num
+                     , tdm55_chck_record.*
+                     , COALESCE(TO_CHAR(tdm55_upd_date, 'yyyy-mm-dd HH24:MI:SS'), '')   AS tdm55_upd_date_str
+                  FROM tdm55_chck_record
+                 WHERE tdm55_relate_table_id = #{relateId}
+               ) t
+         ORDER BY t.tdm55_row_num DESC
+    </select>
+
+    <!-- 이력의 연결 대상(점검항목·미흡/개선 내역)의 회사 (TOBE 추가 — tdm55에는 회사 열이 없다. N24가 다른 연결 대상을 쓰면 여기에 더한다) -->
+    <select id="selectRelateCompanyId" resultType="java.lang.Long">
+        SELECT company_id
+          FROM ( SELECT tdm52_company_id AS company_id FROM tdm52_chck_manl  WHERE tdm52_chck_manl_id   = #{relateId}
+                  UNION ALL
+                 SELECT tdm54_company_id AS company_id FROM tdm54_chck_insuff WHERE tdm54_chck_insuff_id = #{relateId} ) t
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm55_chck_record.insert — 위치 INSERT … SELECT를 열 이름으로. 결과·의견은 N21에서 모두 null. 날짜 인자 CAST -->
+    <insert id="insertRecord">
+        INSERT INTO tdm55_chck_record
+               ( tdm55_chck_record_id, tdm55_relate_table_id, tdm55_relate_table, tdm55_proc_type, tdm55_person_id,
+                 tdm55_person_info, tdm55_proc_result, tdm55_result_cmnt, tdm55_report_cmnt, tdm55_upd_date )
+        SELECT f_create_seq()
+             , #{row.relateTableId}
+             , #{row.relateTable}
+             , #{row.procType}
+             , #{row.personId}
+             , CONCAT( emp00_kor_nm
+                     , ' '||f_cdnm('EmpPosCode', emp00_pos_cd, #{row.companyId}, CAST(#{row.stdDate} AS date))
+                     , '('||emp00_org_code_nm||')' )
+             , NULL
+             , NULL
+             , NULL
+             , f_sysdate()
+          FROM getPerson(#{row.companyId}, CAST(#{row.stdDate} AS date))
+         WHERE emp00_person_id = #{row.personId}
+    </insert>
 
     <!-- 점검부서의 회사(TOBE 추가 — 서버가 요청한 id의 회사를 직접 읽어 권한 범위를 검사) -->
     <select id="selectChckOrgCompanyId" resultType="java.lang.Long">

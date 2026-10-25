@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/tdm/mapper/tdm52_chck_manl.xml (N21 Tdm51_TabPage_CheckOrg — 점검항목 목록·점검자 지정) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmCheckManlMapper">
+
+    <!--
+      AS-IS(IDMS-IC) tdm52_chck_manl.selectByChckOrgId. 수정: 바깥 t.*를 화면이 쓰는 열만(상세 창은 N22에서 열을 더한다)
+      unspecYn 가지: 점검자 미지정만. 정렬 collation은 ko_KR.utf8 그대로(03 원칙 19)
+    -->
+    <select id="selectByChckOrgId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckManlRes">
+        SELECT t.tdm52_chck_manl_id       AS chck_manl_id
+             , t.tdm52_title              AS title
+             , t.tdm52_check_item         AS check_item
+             , t.tdm52_checker_id         AS checker_id
+             , t.tdm52_checker_nm         AS checker_name
+             , t.tdm52_check_result_nm    AS check_result_name
+             , t.tdm52_check_status_cd    AS check_status_code
+             , t.tdm52_check_status_nm    AS check_status_name
+          FROM (
+                SELECT tdm52_chck_manl.*
+                     , CASE WHEN tdm52_checker_id IS NULL THEN '(미지정)' ELSE f_emp_kor_nm(tdm52_checker_id) END AS tdm52_checker_nm
+                     , f_cdnm('TdmCheckResult', tdm52_check_result_cd, tdm52_company_id, f_today())             AS tdm52_check_result_nm
+                     , f_cdnm('TdmCheckStatus', tdm52_check_status_cd, tdm52_company_id, f_today())             AS tdm52_check_status_nm
+                     , '['|| tdm43_role_nm || '-' || CASE WHEN tdm10_common_yn = 'true' THEN '공통'
+
+                                                          ELSE '개별' END ||'] '
+                       ||tdm43_task_relate_duty_nm                                                              AS tdm52_title
+                     , CONCAT('('||tdm43_manl_cd||') ', tdm43_check_item)                                       AS tdm52_check_item
+                     , tdm43_role_nm                                                                            AS tdm52_role_nm
+                     , tdm43_task_nm                                                                            AS tdm52_task_nm
+                     , tdm43_task_relate_detail_nm                                                              AS task_detail_nm
+                     , tdm43_task_relate_duty_nm                                                                AS task_duty_nm
+                     , tdm43_manl_cd                                                                            AS manl_cd
+                  FROM tdm52_chck_manl
+                       INNER JOIN tdm51_chck_org ON tdm51_chck_org_id = tdm52_chck_org_id
+                       INNER JOIN tdm43_manl     ON tdm43_manl_id     = tdm52_manl_id
+                       INNER JOIN tdm10_task     ON tdm10_task_id     = tdm43_task_id
+                 WHERE tdm51_chck_org_id = #{chckOrgId}
+               ) t
+         WHERE CONCAT(task_duty_nm, tdm52_check_item, tdm52_checker_nm) ILIKE #{searchText}
+        <if test="unspecYn">
+           AND tdm52_checker_id IS NULL
+        </if>
+         ORDER BY tdm52_role_nm COLLATE "ko_KR.utf8"
+                , tdm52_task_nm COLLATE "ko_KR.utf8"
+                , task_detail_nm COLLATE "ko_KR.utf8"
+                , task_duty_nm COLLATE "ko_KR.utf8"
+                , manl_cd
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm52_chck_manl.updateCheckerId. 수정: app.current_user → #{updName}, 로그인 회사 행만(보안 보강) -->
+    <update id="updateCheckerId">
+        UPDATE tdm52_chck_manl
+           SET tdm52_checker_id   = #{personId}
+             , tdm52_upd_nm       = #{updName}
+             , tdm52_upd_date     = f_sysdate()
+         WHERE tdm52_chck_manl_id = #{chckManlId}
+           AND tdm52_company_id   = #{companyId}
+    </update>
+</mapper>

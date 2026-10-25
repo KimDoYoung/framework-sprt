@@ -6,6 +6,7 @@ import kr.co.kfs.asseterp.biz.emp.dto.TransPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRow;
 import kr.co.kfs.asseterp.biz.emp.dto.TransSaveReq;
+import kr.co.kfs.asseterp.biz.emp.dto.TransTdmRes;
 import kr.co.kfs.asseterp.biz.emp.mapper.EmpTransMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
@@ -34,6 +35,12 @@ public class EmpTransService {
     public List<TransPersonRes> searchTransPersons(UserPrincipal user, String searchText) {
         String like = "%" + (searchText == null ? "" : searchText) + "%";
         return empTransMapper.searchTransPersons(user.getCompanyId(), like, LocalDateTime.now());
+    }
+
+    /** AS-IS emp.Emp03_Trans.selectByTdmYn (Emp00_Lookup_SelectSingleTdm, 책무 대상 사원찾기): '%검색어%', 로그인 회사 */
+    public List<TransTdmRes> searchTransTdm(UserPrincipal user, String stdDate, Long orgId, String searchText) {
+        String like = "%" + (searchText == null ? "" : searchText) + "%";
+        return empTransMapper.searchTransTdm(user.getCompanyId(), stdDate, orgId, like);
     }
 
     /** AS-IS selectByText(companyId = 클라이언트가 준 회사) — Emp01_Lookup_PersonModel.open(companyId, …). 다른 회사는 sys admin만 */

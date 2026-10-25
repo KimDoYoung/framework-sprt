@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, UserInfo } from '../types/emp';
+import { Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -67,6 +67,12 @@ export const empApi = {
   searchTranses: async (personId: number): Promise<Trans[]> => {
     const res = await apiClient.get<ApiResponse<Trans[]>>(`v1/emp/persons/${personId}/trans`);
     return (res.data.data ?? []).map(toTrans);
+  },
+
+  /** AS-IS emp.Emp03_Trans.selectByTdmYn — 책무 대상 사원찾기(Emp00_Lookup_SelectSingleTdm). orgId가 있으면 그 조직(과 책무 대상이 아닌 하위 조직)의 사원만 */
+  searchTransTdm: async (stdDate: string, orgId: number | null | undefined, searchText: string): Promise<TransTdm[]> => {
+    const res = await apiClient.get<ApiResponse<TransTdm[]>>('v1/emp/trans/tdm', { params: { stdDate, orgId: orgId ?? undefined, searchText } });
+    return res.data.data ?? [];
   },
 
   /** AS-IS emp.Emp03_Trans.selectByText (사원찾기): 조직/직무/성명 '%검색어%' */

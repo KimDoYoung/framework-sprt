@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** 점검(승인) 이력 (AS-IS Tdm55_Lookup_ChckRecord, N20) → server/tdm/Tdm55_ChckRecord */
+/** 점검(승인) 이력 (AS-IS Tdm55_Lookup_ChckRecord, N20·N21) → server/tdm/Tdm55_ChckRecord */
 @RestController
 @RequestMapping("/api/v1/tdm/chck-records")
 @RequiredArgsConstructor
@@ -21,9 +21,14 @@ public class TdmChckRecordController {
 
     private final TdmChckRecordService service;
 
-    /** AS-IS tdm.Tdm55_ChckRecord.selectByChckOrgId (exceptionTable TDM51) */
+    /** AS-IS tdm.Tdm55_ChckRecord.selectByChckOrgId (exceptionTable TDM51) 또는 selectByRelateId (NONE, relateId) */
     @GetMapping
-    public ApiResponse<List<ChckRecordRes>> searchByChckOrg(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long chckOrgId) {
+    public ApiResponse<List<ChckRecordRes>> search(@AuthenticationPrincipal UserPrincipal principal,
+                                                   @RequestParam(required = false) Long chckOrgId,
+                                                   @RequestParam(required = false) Long relateId) {
+        if (relateId != null) {
+            return ApiResponse.ok(service.searchByRelate(principal, relateId));
+        }
         return ApiResponse.ok(service.searchByChckOrg(principal, chckOrgId));
     }
 }

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/tdm/mapper/tdm58_chck_appr_step.xml + UpdateDataModel(tdm58_chck_appr_step) (N21 Tdm58_Lookup_ChckApprStep) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmChckApprStepMapper">
+
+    <!-- AS-IS(IDMS-IC) tdm58_chck_appr_step.selectByChckOrgId. 수정: 바깥 열을 화면 모델 속성만 -->
+    <select id="selectByChckOrgId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckApprStepRes">
+        SELECT tdm58_chck_appr_step_id                              AS chck_appr_step_id
+             , tdm58_chck_org_id                                    AS chck_org_id
+             , tdm58_appr_seq                                       AS appr_seq
+             , tdm58_appr_emp_id                                    AS appr_emp_id
+             , emp00_kor_nm                                         AS appr_emp_name
+             , emp00_org_code_id                                    AS appr_org_id
+             , emp00_org_code_nm                                    AS appr_org_name
+             , ROW_NUMBER() OVER(ORDER BY tdm58_appr_seq) || '차 승인자'   AS appr_step_info
+          FROM tdm58_chck_appr_step
+               INNER JOIN tdm51_chck_org ON tdm51_chck_org_id = tdm58_chck_org_id
+               INNER JOIN tdm50_chck_job ON ( tdm50_company_id = tdm51_company_id   AND
+                                              tdm50_check_ym   = tdm51_check_ym     )
+               INNER JOIN getPerson(tdm50_company_id, tdm50_start_date) ON emp00_person_id = tdm58_appr_emp_id
+         WHERE tdm58_chck_org_id = #{chckOrgId}
+    </select>
+
+    <!-- 행이 속한 부서 점검현황의 회사 (TOBE 추가 — 로그인 회사 행만 다룬다) -->
+    <select id="selectCompanyId" resultType="java.lang.Long">
+        SELECT tdm51_company_id
+          FROM tdm58_chck_appr_step
+               INNER JOIN tdm51_chck_org ON tdm51_chck_org_id = tdm58_chck_org_id
+         WHERE tdm58_chck_appr_step_id = #{chckApprStepId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel(tdm58_chck_appr_step) 새 행 — 화면이 바꾸는 열(점검부서·순서·승인자) + 자동 채움(변경자·일시) -->
+    <insert id="insertApprStep">
+        INSERT INTO tdm58_chck_appr_step
+               ( tdm58_chck_appr_step_id, tdm58_chck_org_id, tdm58_appr_seq, tdm58_appr_emp_id, tdm58_upd_nm, tdm58_upd_date )
+        VALUES ( #{row.chckApprStepId}, #{row.chckOrgId}, #{row.apprSeq}, #{row.apprEmpId}, #{updName}, f_sysdate() )
+    </insert>
+
+    <!-- UpdateDataModel(tdm58_chck_appr_step) 기존 행 -->
+    <update id="updateApprStep">
+        UPDATE tdm58_chck_appr_step
+           SET tdm58_chck_org_id = #{row.chckOrgId}
+             , tdm58_appr_seq    = #{row.apprSeq}
+             , tdm58_appr_emp_id = #{row.apprEmpId}
+             , tdm58_upd_nm      = #{updName}
+             , tdm58_upd_date    = f_sysdate()
+         WHERE tdm58_chck_appr_step_id = #{row.chckApprStepId}
+    </update>
+
+    <!-- UpdateDataModel.deleteModel(tdm58_chck_appr_step) -->
+    <delete id="deleteApprSteps">
+        DELETE FROM tdm58_chck_appr_step
+         WHERE tdm58_chck_appr_step_id IN
+        <foreach collection="chckApprStepIds" item="chckApprStepId" open="(" separator="," close=")">#{chckApprStepId}</foreach>
+    </delete>
+</mapper>
