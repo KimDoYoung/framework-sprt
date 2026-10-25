@@ -7,7 +7,10 @@ import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyRow;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopySourceRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlFormFileRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlEtcReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlItemRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlListRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlRelateLinkReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlRelatesRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlSaveReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlSourceRes;
@@ -257,5 +260,69 @@ public class TdmManlService {
 
     private static String like(String searchText) {
         return "%" + (searchText == null ? "" : searchText) + "%";
+    }
+
+    // ── N27 책무관리현황 > 매뉴얼 규정/양식 연결 (Tdm43_Tab_ManlItemList) ──
+
+    /** AS-IS tdm.Tdm43_Manl.selectByDate — 로그인 회사, 기준일에 쓰는 부서 책무매뉴얼의 점검항목 */
+    public List<ManlListRes> searchByDate(UserPrincipal user, String stdDate, String searchText) {
+        return mapper.selectListByDate(user.getCompanyId(), stdDate, like(searchText), null);
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.selectById — 연결·삭제 뒤 그 행만 다시 읽는다 */
+    public ManlListRes getRow(UserPrincipal user, Long manlId) {
+        requireOwned(user, manlId);
+        return mapper.selectListById(manlId);
+    }
+
+    /** AS-IS Tdm45_ManlRelateIcs.insertList · Tdm46_ManlRelateIcr.insertList · Tdm47_ManlRelateDcr.insertList · Sys11_RelateFile.insertTdmManlList → 바뀐 점검항목 행들(selectById) */
+    @Transactional
+    public List<ManlListRes> linkRelates(UserPrincipal user, ManlRelateLinkReq req) {
+        List<Long> manlIds = ids(req.manlIds());
+        List<Long> relateIds = ids(req.relateIds());
+        if (req.kind() == null || manlIds.isEmpty() || relateIds.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        manlIds.forEach(id -> requireOwned(user, id));
+        for (Long manlId : manlIds) {
+            for (Long relateId : relateIds) {
+                switch (req.kind()) {
+                    case "ics" -> mapper.insertRelateIcs(manlId, relateId);
+                    case "icr" -> mapper.insertRelateIcr(manlId, relateId);
+                    case "form" -> mapper.insertRelateForm(manlId, relateId);
+                    case "dcr" -> mapper.insertRelateDcr(manlId, relateId);
+                    default -> throw new BusinessException(ErrorCode.INVALID_INPUT);
+                }
+            }
+        }
+        return manlIds.stream().map(mapper::selectListById).toList();
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.updateEtc — 허용항목(증빙자료·CEO의무·임원의무·중요도·사용시작일)만 고치고 selectByDate 행을 돌려준다 */
+    @Transactional
+    public ManlListRes updateEtc(UserPrincipal user, Long manlId, ManlEtcReq req) {
+        requireOwned(user, manlId);
+        mapper.updateEtc(manlId, req, user.getName());
+        List<ManlListRes> rows = mapper.selectListByDate(user.getCompanyId(), req.stdDate(), "%", manlId);
+        if (rows.isEmpty()) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return rows.get(0);
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.updateRefBasis */
+    @Transactional
+    public void updateRefBasis(UserPrincipal user, Long manlId, String refBasis) {
+        requireOwned(user, manlId);
+        mapper.updateRefBasis(manlId, refBasis, user.getName());
+    }
+
+    /** 점검항목이 있고 그 부서 책무매뉴얼이 로그인 사용자의 범위(회사)인지 */
+    private void requireOwned(UserPrincipal user, Long manlId) {
+        Long owner = mapper.selectManlOrgIdByManlId(manlId);
+        if (owner == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        manlOrgService.requireScope(user, owner);
     }
 }

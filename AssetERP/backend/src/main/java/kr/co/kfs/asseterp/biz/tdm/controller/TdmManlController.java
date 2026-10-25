@@ -6,7 +6,11 @@ import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyItemRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopySourceRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlFormFileRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlEtcReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlItemRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlListRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlRefBasisReq;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlRelateLinkReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlRelatesRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlSaveReq;
 import kr.co.kfs.asseterp.biz.tdm.service.TdmManlService;
@@ -136,6 +140,40 @@ public class TdmManlController {
     @DeleteMapping
     public ApiResponse<Void> deleteAll(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long manlOrgId, @RequestParam List<Long> manlIds) {
         service.deleteAll(principal, manlOrgId, manlIds);
+        return ApiResponse.ok(null);
+    }
+
+    // ── N27 책무관리현황 > 매뉴얼 규정/양식 연결 ──
+
+    /** AS-IS tdm.Tdm43_Manl.selectByDate (stdDate 'yyyy-MM-dd') */
+    @GetMapping("/by-date")
+    public ApiResponse<List<ManlListRes>> searchByDate(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String stdDate,
+                                                       @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchByDate(principal, stdDate, searchText));
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.selectById */
+    @GetMapping("/{manlId}/row")
+    public ApiResponse<ManlListRes> row(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long manlId) {
+        return ApiResponse.ok(service.getRow(principal, manlId));
+    }
+
+    /** 고른 점검항목들에 법규·내규·양식·문서분류 연결 → 바뀐 행들 */
+    @PostMapping("/relate-links")
+    public ApiResponse<List<ManlListRes>> linkRelates(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ManlRelateLinkReq req) {
+        return ApiResponse.ok(service.linkRelates(principal, req));
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.updateEtc */
+    @PutMapping("/{manlId}/etc")
+    public ApiResponse<ManlListRes> updateEtc(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long manlId, @RequestBody ManlEtcReq req) {
+        return ApiResponse.ok(service.updateEtc(principal, manlId, req));
+    }
+
+    /** AS-IS tdm.Tdm43_Manl.updateRefBasis */
+    @PutMapping("/{manlId}/ref-basis")
+    public ApiResponse<Void> updateRefBasis(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long manlId, @RequestBody ManlRefBasisReq req) {
+        service.updateRefBasis(principal, manlId, req.refBasis());
         return ApiResponse.ok(null);
     }
 }

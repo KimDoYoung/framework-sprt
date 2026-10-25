@@ -688,4 +688,142 @@
          WHERE sys11_parent_id = #{manlId}
     </insert>
 
+    <!--
+      AS-IS(IDMS-IC) tdm43_manl.selectByDate L? (N27 Tdm43_Tab_ManlItemList) — 바깥 t.*를 화면이 쓰는 열로(계산 getter: checkItemAddCode),
+      manlId가 있으면 그 한 건만(AS-IS updateEtc의 "분기 제외: manlId"). f_get_tdmCheckCycle은 화면이 안 써서 뺐다
+    -->
+    <select id="selectListByDate" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlListRes">
+        SELECT  t.tdm43_manl_id                                                   AS manl_id,
+                t.tdm43_manl_org_id                                               AS manl_org_id,
+                t.tdm43_company_id                                                AS company_id,
+                t.tdm43_org_id                                                    AS org_id,
+                t.tdm43_exct_id                                                   AS exct_id,
+                t.tdm43_role_id                                                   AS role_id,
+                t.tdm43_role_nm                                                   AS role_name,
+                t.tdm43_task_id                                                   AS task_id,
+                t.tdm43_task_nm                                                   AS task_name,
+                t.tdm43_task_relate_detail_id                                     AS task_relate_detail_id,
+                t.tdm43_task_relate_detail_nm                                     AS task_relate_detail_name,
+                t.tdm43_task_relate_duty_id                                       AS task_relate_duty_id,
+                t.tdm43_task_relate_duty_nm                                       AS task_relate_duty_name,
+                t.tdm43_manl_duty_id                                              AS manl_duty_id,
+                t.tdm43_manl_cd                                                   AS manl_code,
+                t.tdm43_check_item                                                AS check_item,
+                CASE WHEN t.tdm43_manl_cd IS NULL THEN NULL
+                     ELSE '(' || t.tdm43_manl_cd || ') ' || t.tdm43_check_item END AS check_item_add_code,
+                t.tdm43_check_cycle_cd                                            AS check_cycle_code,
+                t.tdm43_check_month                                               AS check_month,
+                t.tdm43_check_how                                                 AS check_how,
+                t.tdm43_check_evid_doc_nm                                         AS check_evid_doc_name,
+                t.tdm43_ref_basis                                                 AS ref_basis,
+                TO_CHAR(t.tdm43_start_date, 'YYYY-MM-DD')                         AS start_date,
+                t.tdm43_ceo_duty_cd                                               AS ceo_duty_code,
+                f_cdnm('TdmCeoDutyCode', t.tdm43_ceo_duty_cd, t.tdm43_company_id, f_sysdate())     AS ceo_duty_name,
+                t.tdm43_exct_duty_map                                             AS exct_duty_map,
+                f_get_exctDutyMap_nm(t.tdm43_exct_duty_map)                       AS exct_duty_name,
+                t.tdm43_import_level_cd                                           AS import_level_code,
+                f_cdnm('TdmImportLevelCode', t.tdm43_import_level_cd, t.tdm43_company_id, f_sysdate()) AS import_level_name,
+                CASE WHEN (   t.tdm43_start_date IS NULL
+                           OR t.tdm43_start_date <![CDATA[ <= ]]> #{stdDate}::date )
+                     THEN false
+                     ELSE true END                                                AS unuse_yn,
+                t.tdm43_org_nm                                                    AS org_name,
+                t.tdm43_job_nm                                                    AS job_name,
+                CASE WHEN COALESCE(t.ics_cnt, 0)       = 0 THEN '' ELSE t.ics_cnt       || '건' END AS ics_cnt_str,
+                CASE WHEN COALESCE(t.icr_cnt, 0)       = 0 THEN '' ELSE t.icr_cnt       || '건' END AS icr_cnt_str,
+                CASE WHEN COALESCE(t.formfile_cnt, 0)  = 0 THEN '' ELSE t.formfile_cnt  || '건' END AS form_file_cnt_str,
+                CASE WHEN COALESCE(t.dcr_cnt, 0)       = 0 THEN '' ELSE t.dcr_cnt       || '건' END AS dcr_cnt_str
+          FROM (
+                SELECT tdm43_manl.*
+                     , org00_kor_nm                                                                     AS tdm43_org_nm
+                     , tdm40_job_nm                                                                     AS tdm43_job_nm
+                     , (SELECT COUNT(*) FROM tdm45_manl_relate_ics WHERE tdm45_manl_id = tdm43_manl_id)  AS ics_cnt
+                     , (SELECT COUNT(*) FROM tdm46_manl_relate_icr WHERE tdm46_manl_id = tdm43_manl_id)  AS icr_cnt
+                     , (SELECT COUNT(*) FROM sys11_relate_file     WHERE sys11_parent_id = tdm43_manl_id) AS formfile_cnt
+                     , (SELECT COUNT(*) FROM tdm47_manl_relate_dcr WHERE tdm47_manl_id = tdm43_manl_id)  AS dcr_cnt
+                  FROM tdm42_manl_org
+                       INNER JOIN tdm40_manl_job                     ON tdm40_manl_job_id = tdm42_manl_job_id
+                       INNER JOIN tdm43_manl                         ON tdm43_manl_org_id = tdm42_manl_org_id
+                       INNER JOIN getOrg(#{companyId}, #{stdDate}::date) ON org00_org_id  = tdm43_org_id
+                 WHERE tdm42_company_id = #{companyId}
+                   AND #{stdDate}::date BETWEEN tdm42_start_date AND COALESCE(tdm42_end_date, '2999-12-31'::date)
+                   AND CONCAT(tdm43_role_nm, org00_kor_nm, tdm43_task_relate_duty_nm, tdm43_manl_cd, tdm43_check_item) ILIKE #{searchText}
+               ) t
+         WHERE 1=1
+        <if test="manlId != null">
+           AND t.tdm43_manl_id = #{manlId}
+        </if>
+         ORDER BY t.tdm43_role_nm COLLATE "ko_KR.utf8"
+                , t.tdm43_org_nm  COLLATE "ko_KR.utf8"
+                , t.tdm43_task_nm COLLATE "ko_KR.utf8"
+                , t.tdm43_task_relate_detail_nm COLLATE "ko_KR.utf8"
+                , t.tdm43_task_relate_duty_nm COLLATE "ko_KR.utf8"
+                , t.tdm43_manl_cd
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm43_manl.selectById (N27 insertEnd·deleteEnd) — jobName·unuseYn을 채우지 않고 연관 건수는 0이어도 "0건"(AS-IS 그대로) -->
+    <select id="selectListById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlListRes">
+        SELECT  tdm43_manl_id                                                     AS manl_id,
+                tdm43_manl_org_id                                                 AS manl_org_id,
+                tdm43_company_id                                                  AS company_id,
+                tdm43_org_id                                                      AS org_id,
+                tdm43_exct_id                                                     AS exct_id,
+                tdm43_role_id                                                     AS role_id,
+                tdm43_role_nm                                                     AS role_name,
+                tdm43_task_id                                                     AS task_id,
+                tdm43_task_nm                                                     AS task_name,
+                tdm43_task_relate_detail_id                                       AS task_relate_detail_id,
+                tdm43_task_relate_detail_nm                                       AS task_relate_detail_name,
+                tdm43_task_relate_duty_id                                         AS task_relate_duty_id,
+                tdm43_task_relate_duty_nm                                         AS task_relate_duty_name,
+                tdm43_manl_duty_id                                                AS manl_duty_id,
+                tdm43_manl_cd                                                     AS manl_code,
+                tdm43_check_item                                                  AS check_item,
+                CASE WHEN tdm43_manl_cd IS NULL THEN NULL
+                     ELSE '(' || tdm43_manl_cd || ') ' || tdm43_check_item END    AS check_item_add_code,
+                tdm43_check_cycle_cd                                              AS check_cycle_code,
+                tdm43_check_month                                                 AS check_month,
+                tdm43_check_how                                                   AS check_how,
+                tdm43_check_evid_doc_nm                                           AS check_evid_doc_name,
+                tdm43_ref_basis                                                   AS ref_basis,
+                TO_CHAR(tdm43_start_date, 'YYYY-MM-DD')                           AS start_date,
+                tdm43_ceo_duty_cd                                                 AS ceo_duty_code,
+                f_cdnm('TdmCeoDutyCode', tdm43_ceo_duty_cd, tdm43_company_id, f_sysdate())     AS ceo_duty_name,
+                tdm43_exct_duty_map                                               AS exct_duty_map,
+                f_get_exctDutyMap_nm(tdm43_exct_duty_map)                         AS exct_duty_name,
+                tdm43_import_level_cd                                             AS import_level_code,
+                f_cdnm('TdmImportLevelCode', tdm43_import_level_cd, tdm43_company_id, f_sysdate()) AS import_level_name,
+                NULL::boolean                                                     AS unuse_yn,
+                f_org_nm(tdm43_org_id, COALESCE(tdm43_start_date, f_today()))     AS org_name,
+                NULL::text                                                        AS job_name,
+                (SELECT COUNT(*) FROM tdm45_manl_relate_ics WHERE tdm45_manl_id = tdm43_manl_id) || '건' AS ics_cnt_str,
+                (SELECT COUNT(*) FROM tdm46_manl_relate_icr WHERE tdm46_manl_id = tdm43_manl_id) || '건' AS icr_cnt_str,
+                (SELECT COUNT(*) FROM sys11_relate_file     WHERE sys11_parent_id = tdm43_manl_id) || '건' AS form_file_cnt_str,
+                (SELECT COUNT(*) FROM tdm47_manl_relate_dcr WHERE tdm47_manl_id = tdm43_manl_id) || '건' AS dcr_cnt_str
+          FROM  tdm43_manl
+         WHERE  tdm43_manl_id = #{manlId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm43_manl.updateEtc (N27 Tdm43_Lookup_EtcModify) -->
+    <update id="updateEtc">
+        UPDATE tdm43_manl
+           SET tdm43_ceo_duty_cd        = #{req.ceoDutyCode}
+             , tdm43_exct_duty_map      = #{req.exctDutyMap}
+             , tdm43_import_level_cd    = #{req.importLevelCode}
+             , tdm43_start_date         = CAST(#{req.startDate, jdbcType=VARCHAR} AS date)
+             , tdm43_check_evid_doc_nm  = #{req.checkEvidDocName}
+             , tdm43_upd_nm             = #{updName}
+             , tdm43_upd_date           = f_sysdate()
+         WHERE tdm43_manl_id = #{manlId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm43_manl.updateRefBasis (N27 Tdm43_Lookup_RefBasis) -->
+    <update id="updateRefBasis">
+        UPDATE tdm43_manl
+           SET tdm43_ref_basis = #{refBasis}
+             , tdm43_upd_nm    = #{updName}
+             , tdm43_upd_date  = f_sysdate()
+         WHERE tdm43_manl_id = #{manlId}
+    </update>
+
 </mapper>

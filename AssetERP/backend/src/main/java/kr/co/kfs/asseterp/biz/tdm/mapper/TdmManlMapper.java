@@ -5,7 +5,9 @@ import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyRow;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopySourceRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlFormFileRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlCopyReq;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlEtcReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlItemRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlListRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlRelatesRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlSaveReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlSourceRes;
@@ -141,4 +143,17 @@ public interface TdmManlMapper {
     int copyRelateDcr(@Param("newManlId") Long newManlId, @Param("manlId") Long manlId);
 
     int copyRelateFile(@Param("newManlId") Long newManlId, @Param("manlId") Long manlId);
+
+    /** AS-IS tdm43_manl.selectByDate (N27) — manlId가 있으면 그 한 건만 */
+    List<ManlListRes> selectListByDate(@Param("companyId") Long companyId, @Param("stdDate") String stdDate, @Param("searchText") String searchText,
+                                       @Param("manlId") Long manlId);
+
+    /** AS-IS tdm43_manl.selectById (N27) */
+    ManlListRes selectListById(@Param("manlId") Long manlId);
+
+    /** AS-IS tdm43_manl.updateEtc */
+    int updateEtc(@Param("manlId") Long manlId, @Param("req") ManlEtcReq req, @Param("updName") String updName);
+
+    /** AS-IS tdm43_manl.updateRefBasis */
+    int updateRefBasis(@Param("manlId") Long manlId, @Param("refBasis") String refBasis, @Param("updName") String updName);
 }

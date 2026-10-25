@@ -1318,3 +1318,26 @@ export interface TdmChckInsuffRecordSaveReq {
   deleteIds: number[];
   rows: { chckInsuffRecordId: number; regDate: string | null; content: string | null; note: string | null }[];
 }
+
+/** 매뉴얼 규정/양식 연결(N27) 목록 한 행 — TdmManlItem(점검항목 보기창 값)에 목록 열(점검부서·연관 건수·매뉴얼작업명)을 더한 것 */
+export interface TdmManlList extends TdmManlItem {
+  ceoDutyName?: string | null;
+  importLevelName?: string | null;
+  orgName?: string | null;
+  jobName?: string | null;
+  icsCntStr?: string | null;
+  icrCntStr?: string | null;
+  formFileCntStr?: string | null;
+  dcrCntStr?: string | null;
+}
+
+/** 허용항목 수정 요청 (AS-IS tdm.Tdm43_Manl.updateEtc) — 날짜는 'yyyy-MM-dd' */
+export interface TdmManlEtcReq {
+  stdDate: string;
+  ceoDutyCode: string | null;
+  exctDutyMap: string | null;
+  importLevelCode: string | null;
+  startDate: string | null;
+  checkEvidDocName: string | null;
+}
+

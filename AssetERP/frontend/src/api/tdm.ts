@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlOrgAppr, TdmManlOrgManager, TdmManlOrgPeriod, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmRoleReport, TdmRoleReportAttach, TdmManlJob, TdmManlDutyGroup, TdmManlDuty, TdmManlDutyReg, TdmManlCopySource, TdmManlCopyItem, TdmManlDutyTaskOrg, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord, TdmChangeListItem } from '../types/tdm';
+import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlOrgAppr, TdmManlOrgManager, TdmManlOrgPeriod, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmManlList, TdmManlEtcReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmRoleReport, TdmRoleReportAttach, TdmManlJob, TdmManlDutyGroup, TdmManlDuty, TdmManlDutyReg, TdmManlCopySource, TdmManlCopyItem, TdmManlDutyTaskOrg, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord, TdmChangeListItem } from '../types/tdm';
 import type { TdmCheckJob, TdmCheckJobSaveReq, TdmCheckRole, TdmCheckPreCreate, TdmCheckExct, TdmChckOrg, TdmCheckAppr, TdmCheckOrgManager, TdmCheckRdPrint, TdmPdfOutcome, TdmChckRecord, TdmCheckOrg, TdmCheckManl, TdmChckApprStep, TdmCheckManlDetail, TdmChckInsuff, TdmChckInsuffSaveReq, TdmChckInsuffRow, TdmChckInsuffResultReq, TdmChckInsuffRecordSaveReq } from '../types/tdm';
 import type { TdmCheckApprCmnt, TdmCheckApprEndInfo, TdmCheckApprManl, TdmCheckApprInsuff, TdmCheckApprNeighbor, TdmCheckApprRecord, TdmCheckApprInsuffRecord } from '../types/tdm';
 
@@ -1296,5 +1296,36 @@ export const tdmApi = {
   searchCheckApprInsuffRecords: async (chckInsuffId: number): Promise<TdmCheckApprInsuffRecord[]> => {
     const res = await apiClient.get<ApiResponse<TdmCheckApprInsuffRecord[]>>(`v1/tdm/check-apprs/insuff-detail/${chckInsuffId}/records`);
     return res.data.data ?? [];
+  },
+
+  // ── N27 매뉴얼 규정/양식 연결(Tdm43_Tab_ManlItemList) ──
+
+  /** AS-IS tdm.Tdm43_Manl.selectByDate — 기준일 'yyyy-MM-dd' */
+  searchManlsByDate: async (stdDate: string, searchText: string): Promise<TdmManlList[]> => {
+    const res = await apiClient.get<ApiResponse<TdmManlList[]>>('v1/tdm/manls/by-date', { params: { stdDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm43_Manl.selectById — 연결·삭제 뒤 그 행만 다시 읽는다(연관 건수는 0이어도 "0건", 작업명·미사용은 비어 온다 — AS-IS 그대로) */
+  getManlRow: async (manlId: number): Promise<TdmManlList> => {
+    const res = await apiClient.get<ApiResponse<TdmManlList>>(`v1/tdm/manls/${manlId}/row`);
+    return res.data.data;
+  },
+
+  /** AS-IS Tdm45·46·47_…insertList / Sys11_RelateFile.insertTdmManlList → 바뀐 점검항목 행들. kind: ics·icr·form·dcr, relateIds = 분류 ID 또는 파일 ID */
+  linkManlRelates: async (kind: 'ics' | 'icr' | 'form' | 'dcr', manlIds: number[], relateIds: number[]): Promise<TdmManlList[]> => {
+    const res = await apiClient.post<ApiResponse<TdmManlList[]>>('v1/tdm/manls/relate-links', { kind, manlIds, relateIds });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm43_Manl.updateEtc → 목록 행 */
+  updateManlEtc: async (manlId: number, req: TdmManlEtcReq): Promise<TdmManlList> => {
+    const res = await apiClient.put<ApiResponse<TdmManlList>>(`v1/tdm/manls/${manlId}/etc`, req);
+    return res.data.data;
+  },
+
+  /** AS-IS tdm.Tdm43_Manl.updateRefBasis */
+  updateManlRefBasis: async (manlId: number, refBasis: string): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/tdm/manls/${manlId}/ref-basis`, { refBasis });
   },
 };
