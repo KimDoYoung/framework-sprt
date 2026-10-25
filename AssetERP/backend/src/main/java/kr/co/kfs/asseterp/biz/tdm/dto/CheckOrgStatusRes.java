@@ -6,5 +6,6 @@ public record CheckOrgStatusRes(Long chckOrgId, Long chckJobId, Long orgId, Stri
                                 Long taskCnt, Long detailCnt, Long dutyCnt, Long manlCnt, Long monthManlCnt,
                                 Long monthCheckCnt, Long monthCheck1Cnt, Long monthCheck2Cnt, Long monthCheck9Cnt,
                                 Long insuffCnt, Boolean checkEndYn, String orgStatusCode, String orgStatusName,
-                                Boolean fixYn, Boolean checkStatusAll10Yn, Boolean insuffUnActionYn, Boolean insuffRejectYn) {
+                                Boolean fixYn, Boolean checkStatusAll10Yn, Boolean insuffUnActionYn, Boolean insuffRejectYn,
+                                String checkStatusCode, String checkStatusName) {
 }

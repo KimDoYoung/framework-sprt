@@ -1,0 +1,696 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm59_chck_appr_cmnt.xml + tdm52_chck_manl.xml(selectByChckApprCmntId·countByChckApprCmntId) + tdm54_chck_insuff.xml(selectByChckApprCmntId·countByChckApprCmntId·selectById)
+  + tdm55_chck_record.xml(selectByChckApprCmntId) + tdm60_chck_manl_appr.xml + tdm61_chck_insuff_appr.xml + tdm63_chck_insuff_record.xml + tdm53_chck_exct.xml(updateExctApprYn) + tdm51_chck_org.xml(selectUnCheckOrg)
+  (N23 책무이행점검 승인 Tdm59_Tab_CheckAppr). 쓰기 SQL의 current_setting('app.current_user')는 #{updName}으로, 널 가능 인자는 CAST로 바꿨다.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmCheckApprMapper">
+
+    <!-- AS-IS(IDMS-IC) tdm59_chck_appr_cmnt.selectByApprEmpId. 수정: 바깥 t.*를 화면·서버가 읽는 열로, 서버가 한 건을 다시 읽도록 chckApprCmntId 가지(TOBE 추가) -->
+    <select id="selectApprs" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckApprListRes">
+SELECT t.tdm59_chck_appr_cmnt_id                                          AS chck_appr_cmnt_id
+     , t.tdm59_chck_exct_id                                              AS chck_exct_id
+     , t.tdm59_appr_org_id                                               AS appr_org_id
+     , t.tdm59_appr_emp_id                                               AS appr_emp_id
+     , t.tdm59_cmnt_type                                                 AS cmnt_type
+     , t.tdm59_parent_org_id                                             AS parent_org_id
+     , t.tdm59_child_org_id                                              AS child_org_id
+     , t.tdm59_appr_status_cd                                            AS appr_status_code
+     , t.tdm59_appr_cmnt                                                 AS appr_cmnt
+     , t.tdm59_report_cmnt                                               AS report_cmnt
+     , (COALESCE(t.tdm59_submit_yn, 'false') = 'true')                   AS submit_yn
+     , t.tdm59_role_id                                                   AS role_id
+     , t.tdm59_role_nm                                                   AS role_name
+     , t.tdm59_check_org_id                                              AS check_org_id
+     , t.tdm59_month_check_cnt                                           AS month_check_cnt
+     , t.tdm59_month_check1_cnt                                          AS month_check1_cnt
+     , t.tdm59_month_check2_cnt                                          AS month_check2_cnt
+     , t.tdm59_month_check9_cnt                                          AS month_check9_cnt
+     , t.tdm59_insuff_undone_cnt                                         AS insuff_undone_cnt
+     , t.tdm59_insuff_done_cnt                                           AS insuff_done_cnt
+     , t.tdm59_insuff_status20_yn                                        AS insuff_status20_yn
+     , t.tdm59_check_status_cd                                           AS check_status_code
+     , t.tdm59_check_status_all21_yn                                     AS check_status_all21_yn
+     , t.tdm59_first_appr_emp_yn                                         AS first_appr_emp_yn
+     , t.tdm59_final_appr_emp_yn                                         AS final_appr_emp_yn
+     , t.tdm59_company_id                                                AS company_id
+     , t.tdm59_check_ym                                                  AS check_ym
+     , t.tdm59_chck_job_id                                               AS chck_job_id
+     , org00_kor_nm                                                                                         AS check_org_name           /*검토부서명*/
+     , CASE WHEN tdm59_cmnt_type = 'SUB' THEN ' - ' ELSE '' END || org00_kor_nm                             AS check_org_name2          /*검토부서명2*/
+     , CASE WHEN tdm59_cmnt_type = 'SELF' AND COALESCE(tdm59_month_check_cnt,0) = 0 THEN '-'
+            ELSE f_cdnm('TdmCheckStatus'   , tdm59_check_status_cd, #{companyId}, #{stdDate}) END           AS check_status_name        /*점검상태명*/
+     , CASE WHEN tdm59_appr_status_cd IN ('20','30') THEN '등록' ELSE '미등록' END                             AS appr_status_name         /*승인상태(승인처리/의견등록)*/ -->
+     , CASE WHEN tdm59_first_appr_emp_yn THEN '-'
+            ELSE ( SELECT CASE WHEN a.tdm59_appr_status_cd IN ('20','30') THEN '등록' ELSE '미등록' END
+                     FROM tdm59_chck_appr_cmnt a
+                    WHERE a.tdm59_chck_exct_id   = t.tdm59_chck_exct_id
+                      AND a.tdm59_appr_org_id    = t.tdm59_child_org_id
+                      AND a.tdm59_cmnt_type      = 'SELF' ) END                                             AS pre_appr_status_name     /*이전승인자 승인상태*/
+     , CASE WHEN tdm59_final_appr_emp_yn THEN '-'
+            WHEN tdm59_cmnt_type = 'SUB' THEN '-'
+            ELSE ( SELECT CASE WHEN b.tdm59_appr_status_cd IN ('20','30') THEN '등록' ELSE '미등록' END
+                     FROM tdm59_chck_appr_cmnt b
+                    WHERE b.tdm59_chck_exct_id   = t.tdm59_chck_exct_id
+                      AND b.tdm59_appr_org_id    = t.tdm59_parent_org_id
+                      AND b.tdm59_child_org_id   = t.tdm59_appr_org_id
+                      AND b.tdm59_cmnt_type      = 'SUB' ) END                                              AS next_appr_status_name    /*다음승인자 승인상태*/
+     , CASE WHEN tdm59_cmnt_type = 'SELF' AND COALESCE(tdm59_month_check_cnt,0) = 0 THEN null ELSE 1 END    AS appr_button_enable
+     , CASE WHEN tdm59_cmnt_type = 'SUB' THEN null
+            ELSE (CASE WHEN COALESCE(tdm59_month_check_cnt,0) != 0 THEN null ELSE 1 END) END                AS report_button_enable
+  FROM (
+        SELECT tdm59.*
+             , tdm20_role_id                                                                                                                            AS tdm59_role_id                /*직책ID*/
+             , tdm20_role_nm                                                                                                                            AS tdm59_role_nm                /*직책명*/
+             , CASE WHEN tdm59_cmnt_type = 'SELF' THEN tdm59_appr_org_id ELSE tdm59_child_org_id END                                                    AS tdm59_check_org_id           /*검토부서ID*/
+             , CASE WHEN tdm59_cmnt_type = 'SELF' AND COALESCE(month_check_cnt        ,0) = 0 THEN null ELSE COALESCE(month_check_cnt         ,0) END   AS tdm59_month_check_cnt        /*점검항목건수*/
+             , CASE WHEN tdm59_cmnt_type = 'SELF' AND COALESCE(month_check_result1_cnt,0) = 0 THEN null ELSE COALESCE(month_check_result1_cnt ,0) END   AS tdm59_month_check1_cnt       /*이행점검결과_적정*/
+             , CASE WHEN tdm59_cmnt_type = 'SELF' AND COALESCE(month_check_result2_cnt,0) = 0 THEN null ELSE COALESCE(month_check_result2_cnt ,0) END   AS tdm59_month_check2_cnt       /*이행점검결과_미흡*/
+             , CASE WHEN tdm59_cmnt_type = 'SELF' AND COALESCE(month_check_result9_cnt,0) = 0 THEN null ELSE COALESCE(month_check_result9_cnt ,0) END   AS tdm59_month_check9_cnt       /*이행점검결과_해당없음*/
+             , CASE WHEN tdm59_cmnt_type = 'SELF' AND COALESCE(insuff_undone_cnt      ,0) = 0 THEN null ELSE COALESCE(insuff_undone_cnt       ,0) END   AS tdm59_insuff_undone_cnt      /*미흡내역_진행중*/
+             , CASE WHEN tdm59_cmnt_type = 'SELF' AND COALESCE(insuff_done_cnt        ,0) = 0 THEN null ELSE COALESCE(insuff_done_cnt         ,0) END   AS tdm59_insuff_done_cnt        /*미흡내역_종료*/
+             , CASE WHEN COALESCE(insuff_status20_cnt,0) != 0 THEN true ELSE false END                                                                  AS tdm59_insuff_status20_yn     /*미흡내역_승인요청내역 존재여부*/
+             , CASE WHEN month_check_cnt           = 0              THEN null
+                    WHEN month_check_cnt = month_check_status25_cnt THEN '25'
+                    WHEN month_check_cnt = month_check_status19_cnt THEN '19'
+                    WHEN month_check_status26_cnt != 0              THEN '26'
+                    WHEN insuff_status26_cnt      != 0              THEN '26'
+                    WHEN month_check_status11_cnt != 0              THEN '11'
+                    WHEN month_check_status10_cnt != 0              THEN '10'
+                    WHEN month_check_status19_cnt != 0              THEN '19'
+                    WHEN (month_check_status20_cnt        != 0 OR
+                          COALESCE(insuff_status20_cnt,0) != 0 )    THEN '20'
+                    WHEN month_check_status21_cnt != 0              THEN '21'
+                                                                    ELSE null END                                               AS tdm59_check_status_cd        /*점검상태코드*/
+             , CASE WHEN (month_check_cnt != 0 AND
+                          month_check_cnt = month_check_status21_cnt) THEN true ELSE false END                                  AS tdm59_check_status_all21_yn  /*점검상태 전체 승인진행(21) 여부*/
+             , CASE WHEN (SELECT COUNT(*)
+                            FROM tdm62_chck_cmnt_relate_org
+                           WHERE tdm62_chck_appr_cmnt_id = tdm59_chck_appr_cmnt_id
+                             AND tdm59_appr_emp_id IN ( SELECT DISTINCT tdm58_appr_emp_id
+                                                          FROM tdm51_chck_org
+                                                               INNER JOIN tdm58_chck_appr_step ON tdm58_chck_org_id = tdm51_chck_org_id
+                                                         WHERE tdm51_chck_org_id = tdm62_chck_org_id
+                                                           AND tdm58_appr_seq = (SELECT MIN(tdm58_appr_seq)
+                                                                                   FROM tdm58_chck_appr_step
+                                                                                  WHERE tdm58_chck_org_id = tdm51_chck_org_id) )) != 0
+                    THEN true ELSE false END                                                                
+                                                                                                                                AS tdm59_first_appr_emp_yn      /*최초승인자 여부*/
+             , CASE WHEN tdm53_exct_id = #{personId} AND tdm59_cmnt_type = 'SELF' THEN true ELSE false END                      AS tdm59_final_appr_emp_yn      /*최종승인자(임원) 여부*/
+             , tdm53_company_id                                                                                                 AS tdm59_company_id
+             , tdm53_check_ym                                                                                                   AS tdm59_check_ym
+             , tdm53_chck_job_id                                                                                                AS tdm59_chck_job_id
+          FROM tdm59_chck_appr_cmnt tdm59
+               INNER JOIN tdm53_chck_exct ON tdm53_chck_exct_id = tdm59_chck_exct_id
+               INNER JOIN tdm20_role      ON tdm20_role_id      = tdm53_role_id
+               LEFT  JOIN LATERAL ( SELECT COUNT(*)                                                                                                                     month_check_cnt
+                                         , SUM(CASE WHEN COALESCE(tdm52_check_status_cd,'10') NOT IN ('','10','11') AND tdm52_check_result_cd = '1' THEN 1 ELSE 0 END)  month_check_result1_cnt
+                                         , SUM(CASE WHEN COALESCE(tdm52_check_status_cd,'10') NOT IN ('','10','11') AND tdm52_check_result_cd = '2' THEN 1 ELSE 0 END)  month_check_result2_cnt
+                                         , SUM(CASE WHEN COALESCE(tdm52_check_status_cd,'10') NOT IN ('','10','11') AND tdm52_check_result_cd = '9' THEN 1 ELSE 0 END)  month_check_result9_cnt
+                                         , SUM(CASE WHEN tdm52_check_status_cd = '26' THEN 1 ELSE 0 END)                                                                month_check_status26_cnt   /*승인반려(26)*/
+                                         , SUM(CASE WHEN tdm52_check_status_cd = '25' THEN 1 ELSE 0 END)                                                                month_check_status25_cnt   /*승인완료(25)*/
+                                         , SUM(CASE WHEN tdm52_check_status_cd = '21' THEN 1 ELSE 0 END)                                                                month_check_status21_cnt   /*승인진행(21)*/
+                                         , SUM(CASE WHEN tdm52_check_status_cd = '20' THEN 1 ELSE 0 END)                                                                month_check_status20_cnt   /*승인요청(20)*/
+                                         , SUM(CASE WHEN tdm52_check_status_cd = '19' THEN 1 ELSE 0 END)                                                                month_check_status19_cnt   /*점검완료(19)*/
+                                         , SUM(CASE WHEN tdm52_check_status_cd = '11' THEN 1 ELSE 0 END)                                                                month_check_status11_cnt   /*점검진행(11)*/
+                                         , SUM(CASE WHEN tdm52_check_status_cd = '10' THEN 1 ELSE 0 END)                                                                month_check_status10_cnt   /*점검대기(10)*/
+                                      FROM tdm51_chck_org
+                                           INNER JOIN tdm52_chck_manl ON tdm52_chck_org_id = tdm51_chck_org_id
+                                     WHERE tdm51_company_id = tdm53_company_id
+                                       AND tdm51_check_ym   = tdm53_check_ym
+                                       AND tdm51_role_id    = tdm53_role_id
+                                       AND (( tdm59_cmnt_type   = 'SELF'               AND
+                                              tdm51_org_id      = tdm59_appr_org_id    ) OR
+                                            ( tdm59_cmnt_type   = 'SUB'                AND
+                                              tdm51_org_id      IN ( SELECT org_id
+                                                                       FROM getSubTdmOrg(tdm53_chck_exct_id, tdm59_child_org_id)
+                                                                      UNION ALL
+                                                                     SELECT tdm59_child_org_id )
+                                            ))
+                                   ) tdm52 ON TRUE
+               LEFT  JOIN LATERAL (
+                                    SELECT SUM(CASE WHEN tdm54_status_cd &gt;= '19' AND tdm54_action_appr_ym = tdm53_check_ym THEN 1 ELSE 0 END)  insuff_done_cnt         /*완료건수*/
+                                         , SUM(CASE WHEN tdm54_status_cd &gt;= '19' AND tdm54_action_appr_ym = tdm53_check_ym THEN 0 ELSE 1 END)  insuff_undone_cnt       /*진행중건수*/
+                                         , SUM(CASE WHEN tdm54_status_cd = '20'                                                        THEN 1 ELSE 0 END)  insuff_status20_cnt     /*승인요청건수*/
+                                         , SUM(CASE WHEN tdm54_status_cd = '26'                                                        THEN 1 ELSE 0 END)  insuff_status26_cnt     /*반려건수*/
+                                      FROM tdm54_chck_insuff
+                                     WHERE tdm54_company_id = tdm53_company_id
+                                       AND tdm54_role_id    = tdm53_role_id
+                                       AND (( tdm59_cmnt_type   = 'SELF'               AND
+                                              tdm54_org_id      = tdm59_appr_org_id    ) OR
+                                            ( tdm59_cmnt_type   = 'SUB'                AND
+                                              tdm54_org_id      IN ( SELECT org_id
+                                                                       FROM getSubTdmOrg(tdm53_chck_exct_id, tdm59_child_org_id)
+                                                                      UNION ALL
+                                                                     SELECT tdm59_child_org_id )
+                                            ))
+                                       AND tdm54_occ_ym &lt; tdm53_check_ym
+                                       AND 'Y' = (CASE WHEN tdm54_status_cd = '25' AND tdm54_action_appr_ym &lt; tdm53_check_ym THEN 'N' ELSE 'Y' END)
+                                   ) tdm54 ON TRUE
+         WHERE tdm53_company_id   = #{companyId}
+           AND tdm53_check_ym     = #{checkYm}
+           AND tdm53_role_id      = #{roleId}
+           AND tdm59_appr_emp_id  = #{personId}
+        <if test="chckApprCmntId != null">
+           AND tdm59_chck_appr_cmnt_id = #{chckApprCmntId}
+        </if>
+       ) t
+       INNER JOIN getOrg(#{companyId}, #{stdDate}) ON org00_org_id = tdm59_check_org_id
+ ORDER BY tdm59_role_id, tdm59_cmnt_type, tdm59_parent_org_id, tdm59_child_org_id
+    </select>
+
+    <!-- 승인 행의 회사·점검년월·직책 (TOBE 추가 — 승인 행 ID만 받은 서버가 selectApprs에 줄 값을 읽는다) -->
+    <select id="selectApprKey" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckApprKey">
+        SELECT tdm53_company_id AS company_id
+             , tdm53_check_ym   AS check_ym
+             , tdm53_role_id    AS role_id
+          FROM tdm59_chck_appr_cmnt
+               INNER JOIN tdm53_chck_exct ON tdm53_chck_exct_id = tdm59_chck_exct_id
+         WHERE tdm59_chck_appr_cmnt_id = #{chckApprCmntId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm50_chck_job.selectEndInfoByApprEmpId. 수정: 화면이 안 읽는 제출 가능·제출 취소 가능 두 열은 뺐다
+         (화면의 setCheckEndInfo는 이 두 값을 주석 처리해 쓰지 않는다. 제출 가능 검사는 selectSubmitPossible이 한다). 일괄승인 사용여부는 점검시작일 이전에 적용된 설정 중 가장 최근 것 -->
+    <select id="selectEndInfo" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckApprEndInfoRes">
+        SELECT (COALESCE(tdm50_end_yn, 'false') = 'true')                                  AS end_yn
+             , TO_CHAR(tdm50_end_date, 'yyyy-mm-dd')                                       AS end_date
+             , COALESCE(( SELECT tdm91_batch_appr_use_yn = 'true'
+                            FROM tdm91_company_setup
+                           WHERE tdm91_company_id = #{companyId}
+                             AND tdm91_start_date &lt;= tdm50_start_date
+                           ORDER BY tdm91_start_date DESC
+                           LIMIT 1 ), false)                                               AS batch_appr_use_yn
+          FROM tdm50_chck_job
+         WHERE tdm50_company_id = #{companyId}
+           AND tdm50_check_ym   = #{checkYm}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm59_chck_appr_cmnt.checkTdmSubmitPossibleYn. 수정: 함수 결과를 문자로 받는다 — 이 DB의 함수는 boolean('t'/'f'),
+         AS-IS 소스는 'Y' 또는 불가 사유 문구를 기대한다. 서비스가 둘 다 받는다 -->
+    <select id="selectSubmitPossible" resultType="java.lang.String">
+        SELECT CAST(f_get_tdmSubmitPossibleYn(#{companyId}, #{checkYm}, #{roleId}, #{personId}, #{type}) AS text)
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm59_chck_appr_cmnt.selectParent -->
+    <select id="selectParent" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckApprNeighborRes">
+        SELECT tdm59_chck_appr_cmnt_id        AS chck_appr_cmnt_id
+             , tdm59_chck_exct_id             AS chck_exct_id
+             , tdm59_appr_org_id              AS appr_org_id
+             , tdm59_appr_emp_id              AS appr_emp_id
+             , tdm59_appr_status_cd           AS appr_status_code
+             , tdm59_appr_cmnt                AS appr_cmnt
+             , tdm59_report_cmnt              AS report_cmnt
+             , f_org_nm(tdm59_appr_org_id, #{stdDate})  AS appr_org_name
+          FROM tdm59_chck_appr_cmnt
+         WHERE tdm59_chck_exct_id = #{chckExctId}
+           AND tdm59_appr_org_id  = #{parentOrgId}
+           AND tdm59_cmnt_type    = 'SUB'
+           AND tdm59_child_org_id = #{orgId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm59_chck_appr_cmnt.selectChild -->
+    <select id="selectChild" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckApprNeighborRes">
+        SELECT tdm59_chck_appr_cmnt_id        AS chck_appr_cmnt_id
+             , tdm59_chck_exct_id             AS chck_exct_id
+             , tdm59_appr_org_id              AS appr_org_id
+             , tdm59_appr_emp_id              AS appr_emp_id
+             , tdm59_appr_status_cd           AS appr_status_code
+             , tdm59_appr_cmnt                AS appr_cmnt
+             , tdm59_report_cmnt              AS report_cmnt
+             , f_org_nm(tdm59_appr_org_id, #{stdDate})  AS appr_org_name
+          FROM tdm59_chck_appr_cmnt
+         WHERE tdm59_chck_exct_id = #{chckExctId}
+           AND tdm59_appr_org_id  = #{childOrgId}
+           AND tdm59_cmnt_type    = 'SELF'
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm59_chck_appr_cmnt.countChild -->
+    <select id="countChild" resultType="int">
+        SELECT COUNT(*)
+          FROM tdm59_chck_appr_cmnt
+         WHERE tdm59_chck_exct_id = #{chckExctId}
+           AND tdm59_appr_emp_id  = #{apprEmpId}
+           AND tdm59_cmnt_type    = 'SUB'
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm59_chck_appr_cmnt.selectChildApprYn -->
+    <select id="selectChildApprYn" resultType="boolean">
+        SELECT CASE WHEN all_cnt = 0        THEN true
+                    WHEN all_cnt = appr_cnt THEN true
+                    ELSE false END
+          FROM ( SELECT COUNT(*)                                                        AS all_cnt
+                      , SUM(CASE WHEN tdm59_appr_status_cd = '20' THEN 1 ELSE 0 END)    AS appr_cnt
+                   FROM tdm59_chck_appr_cmnt
+                  WHERE tdm59_chck_exct_id = #{chckExctId}
+                    AND tdm59_appr_emp_id  = #{personId}
+                    AND tdm59_cmnt_type    = 'SUB'
+               ) t
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm59_chck_appr_cmnt.updateApprStatus (apprStatusCode가 null이면 상태를 비운다) -->
+    <update id="updateApprStatus">
+        UPDATE tdm59_chck_appr_cmnt
+           SET tdm59_appr_status_cd    = CAST(#{apprStatusCode} AS varchar)
+         WHERE tdm59_chck_appr_cmnt_id = #{chckApprCmntId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm59_chck_appr_cmnt.updateSubmit. 수정: 제출일시는 제출이면 DB 현재 시각(AS-IS는 화면 시각), 제출 취소·반려면 비움 -->
+    <update id="updateSubmit">
+        UPDATE tdm59_chck_appr_cmnt
+           SET tdm59_submit_yn   = CAST(#{submitYn} AS varchar)
+             , tdm59_submit_date = CASE WHEN #{submitYn} = 'true' THEN f_sysdate() ELSE NULL END
+         WHERE tdm59_chck_appr_cmnt_id = #{chckApprCmntId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm59_chck_appr_cmnt.updateByApprInfo -->
+    <update id="updateByApprInfo">
+        UPDATE tdm59_chck_appr_cmnt
+           SET tdm59_appr_status_cd = CAST(#{apprStatusCode} AS varchar)
+             , tdm59_appr_cmnt      = CAST(#{apprCmnt} AS text)
+             , tdm59_report_cmnt    = CAST(#{reportCmnt} AS text)
+         WHERE tdm59_chck_appr_cmnt_id = #{chckApprCmntId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm53_chck_exct.updateExctApprYn. 수정: app.current_user → #{updName} -->
+    <update id="updateExctApprYn">
+        UPDATE tdm53_chck_exct
+           SET tdm53_exct_appr_yn = CAST(#{exctApprYn} AS varchar)
+             , tdm53_upd_nm       = #{updName}
+             , tdm53_upd_date     = f_sysdate()
+         WHERE tdm53_chck_exct_id = #{chckExctId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm51_chck_org.selectUnCheckOrg — 부서 이름만 (화면 메시지에 쓰는 것) -->
+    <select id="selectUnCheckOrgNames" resultType="java.lang.String">
+        SELECT org00_kor_nm
+          FROM (
+                 SELECT tdm51_chck_org_id
+                      , tdm51_org_id
+                   FROM tdm51_chck_org
+                  WHERE tdm51_company_id = #{companyId}
+                    AND tdm51_check_ym   = #{checkYm}
+                    AND tdm51_role_id    = #{roleId}
+                    AND EXISTS ( SELECT 1
+                                   FROM tdm52_chck_manl
+                                  WHERE tdm52_chck_org_id = tdm51_chck_org_id )
+                 EXCEPT
+                 SELECT DISTINCT
+                        tdm51_chck_org_id
+                      , tdm51_org_id
+                   FROM tdm53_chck_exct
+                        INNER JOIN tdm59_chck_appr_cmnt       ON tdm59_chck_exct_id      = tdm53_chck_exct_id
+                        INNER JOIN tdm62_chck_cmnt_relate_org ON tdm62_chck_appr_cmnt_id = tdm59_chck_appr_cmnt_id
+                        INNER JOIN tdm51_chck_org             ON tdm51_chck_org_id       = tdm62_chck_org_id
+                  WHERE tdm53_company_id = #{companyId}
+                    AND tdm53_check_ym   = #{checkYm}
+                    AND tdm53_role_id    = #{roleId}
+                    AND tdm59_cmnt_type  = 'SELF'
+               ) t
+               INNER JOIN getOrg(#{companyId}, #{stdDate}) ON org00_org_id = tdm51_org_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm52_chck_manl.countByChckApprCmntId. AS-IS statusType 1 = unapprovedOnly(승인되지 않은), 2 = rejectedOnly(반려된) 점검항목 -->
+    <select id="countManlByAppr" resultType="int">
+        SELECT count(*)
+          FROM tdm52_chck_manl
+               INNER JOIN tdm60_chck_manl_appr ON tdm60_chck_manl_id = tdm52_chck_manl_id
+         WHERE tdm52_chck_org_id IN ( SELECT tdm62_chck_org_id
+                                        FROM tdm62_chck_cmnt_relate_org
+                                       WHERE tdm62_chck_appr_cmnt_id = #{chckApprCmntId} )
+           AND tdm60_appr_emp_id = #{personId}
+        <if test="unapprovedOnly">
+           AND COALESCE(tdm60_appr_status_cd, '10') != '20' /*(20:승인)되지 않은 점검항목*/
+        </if>
+        <if test="rejectedOnly">
+           AND COALESCE(tdm60_appr_status_cd, '10')  = '30' /*(30:반려)된 점검항목*/
+        </if>
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm54_chck_insuff.countByChckApprCmntId -->
+    <select id="countInsuffByAppr" resultType="int">
+        SELECT count(*)
+          FROM tdm54_chck_insuff
+               INNER JOIN tdm61_chck_insuff_appr ON tdm61_chck_insuff_id = tdm54_chck_insuff_id
+         WHERE tdm54_company_id = #{companyId}
+           AND tdm54_role_id    = #{roleId}
+           AND tdm54_org_id IN ( SELECT tdm51_org_id
+                                   FROM tdm62_chck_cmnt_relate_org
+                                        INNER JOIN tdm51_chck_org ON tdm51_chck_org_id = tdm62_chck_org_id
+                                  WHERE tdm62_chck_appr_cmnt_id = #{chckApprCmntId} )
+           AND tdm54_action_appr_ym = #{checkYm}
+           AND tdm61_step_type   = '2'
+           AND tdm61_appr_emp_id = #{personId}
+        <if test="unapprovedOnly">
+           AND COALESCE(tdm61_appr_status_cd, '10') != '20' /*(20:승인)되지 않은 조치내역*/
+        </if>
+        <if test="rejectedOnly">
+           AND COALESCE(tdm61_appr_status_cd, '10')  = '30' /*(30:반려)된 조치내역*/
+        </if>
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm52_chck_manl.selectByChckApprCmntId. 수정: 바깥 t.*를 화면 열로, 분기 3개는 <if> -->
+    <select id="selectManls" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckApprManlRes">
+SELECT t.tdm52_chck_manl_id           AS chck_manl_id
+     , t.tdm52_chck_org_id            AS chck_org_id
+     , t.tdm52_chck_job_id            AS chck_job_id
+     , t.tdm52_company_id             AS company_id
+     , t.tdm52_manl_id                AS manl_id
+     , t.tdm52_manl_org_id            AS manl_org_id
+     , t.tdm52_org_id                 AS org_id
+     , t.tdm52_org_nm                 AS org_name
+     , t.tdm52_check_ym               AS check_ym
+     , t.tdm52_common_type_nm         AS common_type_name
+     , t.tdm52_task_nm                AS task_name
+     , t.tdm52_check_item             AS check_item
+     , t.tdm52_check_cycle_info       AS check_cycle_info
+     , t.tdm52_check_how              AS check_how
+     , t.tdm52_check_evid_doc_nm      AS check_evid_doc_name
+     , t.tdm52_ref_basis              AS ref_basis
+     , t.tdm52_checker_id             AS checker_id
+     , t.tdm52_checker_nm             AS checker_name
+     , TO_CHAR(t.tdm52_check_date, 'yyyy-mm-dd') AS check_date
+     , t.tdm52_check_result_cd        AS check_result_code
+     , t.tdm52_check_result_nm        AS check_result_name
+     , t.tdm52_check_cmnt             AS check_cmnt
+     , t.tdm52_check_status_cd        AS check_status_code
+     , t.tdm52_check_status_nm        AS check_status_name
+     , t.tdm52_chck_manl_appr_id      AS chck_manl_appr_id
+     , t.tdm52_appr_status_cd         AS appr_status_code
+     , t.tdm52_appr_status_nm         AS appr_status_name
+     , t.tdm52_appr_cmnt              AS appr_cmnt
+     , t.tdm52_file_count_str         AS file_count_str
+     , t.tdm52_final_appr_emp_yn      AS final_appr_emp_yn
+  FROM (
+        SELECT tdm52_chck_manl.*
+             , COALESCE(TO_CHAR(tdm52_upd_date, 'yyyy-mm-dd HH24:MI:SS'), '')                           AS tdm52_upd_date_str
+             , tdm43_org_id                                                                             AS tdm52_org_id
+             , tdm43_manl_org_id                                                                        AS tdm52_manl_org_id
+             , org00_kor_nm                                                                             AS tdm52_org_nm
+             , f_emp_kor_nm(tdm52_checker_id)                                                           AS tdm52_checker_nm
+             , f_cdnm('TdmCheckResult'   , tdm52_check_result_cd, tdm52_company_id, f_today())          AS tdm52_check_result_nm
+             , f_cdnm('TdmCheckStatus'   , tdm52_check_status_cd, tdm52_company_id, f_today())          AS tdm52_check_status_nm
+             , tdm60_chck_manl_appr_id                                                                  AS tdm52_chck_manl_appr_id
+             , tdm60_appr_status_cd                                                                     AS tdm52_appr_status_cd
+             , f_cdnm('AprStepStatusCode', tdm60_appr_status_cd , tdm52_company_id, f_today())          AS tdm52_appr_status_nm
+             , tdm51_check_ym                                                                           AS tdm52_check_ym
+             , tdm51_chck_job_id                                                                        AS tdm52_chck_job_id
+             , CONCAT('('||tdm43_manl_cd||') ', tdm43_check_item)                                       AS tdm52_check_item
+             , tdm43_check_cycle_cd                                                                     AS tdm52_check_cycle_cd
+             , f_cdnm('CycleCode',     tdm43_check_cycle_cd,   tdm43_company_id, f_today())             AS tdm52_check_cycle_nm
+             , f_get_tdmCheckCycle(tdm43_manl_id)                                                       AS tdm52_check_cycle_info
+             , tdm43_check_evid_doc_nm                                                                  AS tdm52_check_evid_doc_nm
+             , tdm43_check_how                                                                          AS tdm52_check_how
+             , tdm43_ref_basis                                                                          AS tdm52_ref_basis
+             , tdm60_appr_cmnt                                                                          AS tdm52_appr_cmnt
+             , CASE WHEN tdm10_common_yn = 'true' THEN '공통'
+                    ELSE '지정' END                                                                      AS tdm52_common_type_nm
+             , tdm43_task_nm                                                                            AS tdm52_task_nm
+             , tdm43_task_relate_detail_nm                                                              AS task_detail_nm
+             , tdm43_task_relate_duty_nm                                                                AS task_duty_nm
+             , tdm43_manl_cd                                                                            AS manl_cd
+             , f_get_tdmEvidCount(tdm52_chck_manl_id) ||'건'                                             AS tdm52_file_count_str
+             , CASE WHEN tdm53_exct_id = #{personId} THEN true ELSE false END                           AS tdm52_final_appr_emp_yn      /*최종승인자(임원) 여부*/
+          FROM tdm59_chck_appr_cmnt
+               INNER JOIN tdm53_chck_exct ON tdm53_chck_exct_id = tdm59_chck_exct_id
+               INNER JOIN tdm50_chck_job  ON (    tdm50_company_id = tdm53_company_id
+                                              AND tdm50_check_ym   = tdm53_check_ym     )
+               INNER JOIN tdm51_chck_org  ON (    tdm51_company_id = tdm53_company_id
+                                              AND tdm51_check_ym   = tdm53_check_ym
+                                              AND tdm51_role_id    = tdm53_role_id
+                                              AND (( tdm59_cmnt_type   = 'SELF'                AND
+                                                     tdm51_org_id      = tdm59_appr_org_id     ) OR
+                                                   ( tdm59_cmnt_type   = 'SUB'                 AND
+                                                     tdm51_org_id      IN ( SELECT org_id
+                                                                              FROM getSubTdmOrg(tdm53_chck_exct_id, tdm59_child_org_id)
+                                                                             UNION ALL
+                                                                            SELECT tdm59_child_org_id )
+                                                   )) )
+               INNER JOIN tdm52_chck_manl ON tdm52_chck_org_id = tdm51_chck_org_id
+               INNER JOIN tdm43_manl      ON tdm43_manl_id     = tdm52_manl_id
+               INNER JOIN tdm10_task      ON tdm10_task_id     = tdm43_task_id
+               INNER JOIN getOrg(#{companyId}, tdm50_start_date) ON org00_org_id = tdm51_org_id
+               INNER JOIN tdm60_chck_manl_appr ON ( tdm60_chck_manl_id = tdm52_chck_manl_id AND
+                                                    tdm60_appr_emp_id  = tdm59_appr_emp_id  )
+         WHERE tdm59_chck_appr_cmnt_id = #{chckApprCmntId}
+        <if test="chckManlId != null">
+           AND tdm52_chck_manl_id = #{chckManlId}
+        </if>
+        <if test="undoneYn">
+           AND COALESCE(tdm60_appr_status_cd,'10') NOT IN ('20')    /*(10:대기/20:승인/30:반려)*/
+        </if>
+       ) t
+ WHERE 1=1
+        <if test="searchText != null">
+   AND CONCAT(tdm52_org_nm, tdm52_check_item) ILIKE #{searchText}
+        </if>
+ ORDER BY tdm52_org_nm COLLATE "ko_KR.utf8"
+        , tdm52_task_nm COLLATE "ko_KR.utf8"
+        , task_detail_nm COLLATE "ko_KR.utf8"
+        , task_duty_nm COLLATE "ko_KR.utf8"
+        , manl_cd
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm54_chck_insuff.selectByChckApprCmntId. 수정: 바깥 t.*를 화면 열로, 분기 2개는 <if> -->
+    <select id="selectInsuffs" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckApprInsuffRes">
+SELECT t.tdm54_chck_insuff_id         AS chck_insuff_id
+     , t.tdm54_chck_manl_id           AS chck_manl_id
+     , t.tdm54_company_id             AS company_id
+     , t.tdm54_role_id                AS role_id
+     , t.tdm54_org_id                 AS org_id
+     , t.tdm54_org_nm                 AS org_name
+     , t.tdm54_check_ym               AS check_ym
+     , TO_CHAR(t.tdm54_reg_date, 'yyyy-mm-dd')    AS reg_date
+     , TO_CHAR(t.tdm54_due_date, 'yyyy-mm-dd')    AS due_date
+     , TO_CHAR(t.tdm54_action_date, 'yyyy-mm-dd') AS action_date
+     , t.tdm54_plan_reg_emp_nm        AS plan_reg_emp_name
+     , t.tdm54_plan_action_emp_nm     AS plan_action_emp_name
+     , t.tdm54_action_emp_nm          AS action_emp_name
+     , t.tdm54_action_emp_info        AS action_emp_info
+     , t.tdm54_action_nm              AS action_name
+     , t.tdm54_action_plan            AS action_plan
+     , t.tdm54_action_cmnt            AS action_cmnt
+     , t.tdm54_status_cd              AS status_code
+     , f_cdnm('TdmInsuffStatus', curr_status_cd, tdm54_company_id, tdm54_reg_date) AS status_name
+     , t.tdm54_curr_month_occ_yn      AS curr_month_occ_yn
+     , t.tdm54_first_appr_emp_yn      AS first_appr_emp_yn
+     , t.tdm54_final_appr_emp_yn      AS final_appr_emp_yn
+     , insuff_appr_id                 AS chck_insuff_appr_id
+     , insuff_appr_status_cd          AS appr_status_code
+     , f_cdnm('AprStepStatusCode', insuff_appr_status_cd , tdm54_company_id, tdm54_reg_date) AS appr_status_name
+     , insuff_cmnt                    AS appr_cmnt
+  FROM (
+        SELECT *
+             , org00_kor_nm                                                                             AS tdm54_org_nm                 /*부서명*/
+             , f_emp_kor_nm(tdm54_plan_action_emp_id)                                                   AS tdm54_plan_action_emp_nm     /*조치예정자*/
+             , f_emp_kor_nm(tdm54_plan_reg_emp_id)                                                      AS tdm54_plan_reg_emp_nm        /*조치계획등록자*/
+             , f_emp_kor_nm(tdm54_action_emp_id)                                                        AS tdm54_action_emp_nm          /*조치자*/
+             , tdm54_occ_ym                                                                             AS tdm54_check_ym               /*발생년월*/
+             , CASE WHEN tdm53_check_ym = tdm54_occ_ym THEN true ELSE false END                         AS tdm54_curr_month_occ_yn      /*당월발생여부*/
+             , emp00_kor_nm ||'('||emp00_org_code_nm||')'                                               AS tdm54_action_emp_info
+             , CASE WHEN tdm59_appr_emp_id = ( SELECT tdm58_appr_emp_id
+                                                 FROM tdm51_chck_org
+                                                      INNER JOIN tdm58_chck_appr_step ON tdm58_chck_org_id = tdm51_chck_org_id
+                                                WHERE tdm51_company_id = tdm53_company_id
+                                                  AND tdm51_check_ym   = tdm53_check_ym
+                                                  AND tdm51_role_id    = tdm53_role_id
+                                                  AND tdm51_org_id     = tdm54_org_id
+                                                ORDER BY tdm58_appr_seq
+                                                LIMIT 1 )
+                    THEN true ELSE false END                                                            AS tdm54_first_appr_emp_yn      /*최초승인자 여부*/
+             , CASE WHEN tdm59_appr_emp_id = tdm53_exct_id THEN true ELSE false END                     AS tdm54_final_appr_emp_yn      /*최종승인자(임원) 여부*/
+             , CASE WHEN tdm54_occ_ym = tdm53_check_ym                      THEN '10'
+                    WHEN tdm54_action_date IS NULL                          THEN '11'
+                    WHEN tdm54_action_appr_ym &gt; tdm53_check_ym  THEN '11'
+                    ELSE tdm54_status_cd END                                                            AS curr_status_cd
+          FROM tdm59_chck_appr_cmnt
+               INNER JOIN tdm53_chck_exct   ON tdm53_chck_exct_id = tdm59_chck_exct_id
+               INNER JOIN tdm54_chck_insuff ON (    tdm54_company_id = tdm53_company_id
+                                                AND tdm54_role_id    = tdm53_role_id       
+                                                AND tdm54_occ_ym &lt;= tdm53_check_ym
+                                                AND 'Y' = (CASE WHEN tdm54_status_cd = '25' AND tdm54_action_appr_ym &lt; tdm53_check_ym THEN 'N' ELSE 'Y' END)
+                                                AND (( tdm59_cmnt_type   = 'SELF'                AND
+                                                       tdm54_org_id      = tdm59_appr_org_id     ) OR
+                                                     ( tdm59_cmnt_type   = 'SUB'                 AND
+                                                       tdm54_org_id      IN ( SELECT org_id
+                                                                                FROM getSubTdmOrg(tdm53_chck_exct_id, tdm59_child_org_id)
+                                                                               UNION ALL
+                                                                              SELECT tdm59_child_org_id )
+                                                     ))
+                                               )
+               INNER JOIN getPerson(#{companyId}, #{stdDate}) ON emp00_person_id = COALESCE(tdm54_action_emp_id, tdm54_plan_action_emp_id)
+               INNER JOIN getOrg(#{companyId}, #{stdDate})    ON org00_org_id    = tdm54_org_id
+         WHERE tdm59_chck_appr_cmnt_id = #{chckApprCmntId}
+        <if test="chckInsuffId != null">
+           AND tdm54_chck_insuff_id = #{chckInsuffId}
+        </if>
+       ) t
+       LEFT  JOIN LATERAL ( SELECT tdm61_chck_insuff_appr_id    insuff_appr_id
+                                 , tdm61_appr_status_cd         insuff_appr_status_cd
+                                 , tdm61_appr_cmnt              insuff_cmnt
+                              FROM tdm61_chck_insuff_appr
+                             WHERE tdm61_chck_insuff_id = tdm54_chck_insuff_id
+                               AND tdm61_appr_emp_id    = tdm59_appr_emp_id
+                               AND tdm61_step_type      = '2'                   /*(2:조치)*/
+                               AND tdm53_check_ym      != tdm54_occ_ym          /*(당월발생)이 아닌*/
+                             UNION ALL
+                            SELECT tdm60_chck_manl_appr_id      insuff_appr_id
+                                 , tdm60_appr_status_cd         insuff_appr_status_cd
+                                 , tdm60_appr_cmnt              insuff_cmnt
+                              FROM tdm60_chck_manl_appr
+                             WHERE tdm60_chck_manl_id   = tdm54_chck_manl_id
+                               AND tdm60_appr_emp_id    = tdm59_appr_emp_id
+                               AND tdm53_check_ym       = tdm54_occ_ym          /*(당월발생)이 아닌*/
+                          ) tdm61 ON TRUE
+ WHERE 1=1
+        <if test="undoneYn">
+   AND COALESCE(insuff_appr_status_cd,'10') NOT IN ('20')   /*(10:대기/20:승인/30:반려)*/
+        </if>
+ ORDER BY tdm54_check_ym, COALESCE(tdm54_action_date, tdm54_due_date)
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm55_chck_record.selectByChckApprCmntId. 수정: 바깥 t.*를 그리드 열만, 분기는 <if> -->
+    <select id="selectRecords" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ChckApprRecordRes">
+SELECT t.tdm55_row_num          AS row_num
+     , t.tdm55_upd_date_str     AS upd_date_str
+     , t.tdm55_proc_type        AS proc_type
+     , org00_kor_nm             AS check_org_name
+     , t.tdm55_person_info      AS person_info
+     , t.tdm55_proc_result      AS proc_result
+     , t.tdm55_result_cmnt      AS result_cmnt
+     , t.tdm55_report_cmnt      AS report_cmnt
+  FROM (
+        SELECT ROW_NUMBER() OVER(ORDER BY tdm55_upd_date)                       AS tdm55_row_num
+             , tdm55_chck_record.*
+             , COALESCE(TO_CHAR(tdm55_upd_date, 'yyyy-mm-dd HH24:MI:SS'), '')   AS tdm55_upd_date_str
+          FROM tdm55_chck_record
+         WHERE tdm55_relate_table_id IN ( SELECT tdm62_chck_appr_cmnt_id
+                                            FROM tdm62_chck_cmnt_relate_org
+                                           WHERE tdm62_chck_org_id IN ( SELECT tdm51_chck_org_id
+                                                                          FROM tdm62_chck_cmnt_relate_org
+                                                                               INNER JOIN tdm51_chck_org  ON tdm51_chck_org_id = tdm62_chck_org_id
+                                                                               INNER JOIN tdm53_chck_exct ON ( tdm53_company_id = tdm51_company_id  AND
+                                                                                                               tdm53_check_ym   = tdm51_check_ym    AND
+                                                                                                               tdm53_role_id    = tdm51_role_id     )
+                                                                         WHERE tdm62_chck_appr_cmnt_id = #{chckApprCmntId}
+        <if test="orgId != null">
+           AND tdm51_org_id IN ( SELECT org_id
+                                   FROM getSubTdmOrg(tdm53_chck_exct_id, #{orgId})
+                                  UNION ALL
+                                 SELECT #{orgId} )
+        </if>
+                                                                      ) )
+       ) t
+       INNER JOIN tdm59_chck_appr_cmnt ON tdm59_chck_appr_cmnt_id = tdm55_relate_table_id
+       INNER JOIN getOrg(#{companyId}, #{stdDate}) ON org00_org_id = (CASE WHEN tdm59_cmnt_type = 'SELF'
+                                                                           THEN tdm59_appr_org_id
+                                                                           ELSE tdm59_child_org_id END)
+ ORDER BY tdm55_row_num DESC
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm54_chck_insuff.selectById — 조치 승인 창의 보기(view). 승인 열은 AS-IS도 이 SQL에는 없다 -->
+    <select id="selectInsuffById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckApprInsuffRes">
+        SELECT t.tdm54_chck_insuff_id         AS chck_insuff_id
+             , t.tdm54_chck_manl_id           AS chck_manl_id
+             , t.tdm54_company_id             AS company_id
+             , t.tdm54_role_id                AS role_id
+             , t.tdm54_org_id                 AS org_id
+             , t.tdm54_org_nm                 AS org_name
+             , t.tdm54_check_ym               AS check_ym
+             , TO_CHAR(t.tdm54_reg_date, 'yyyy-mm-dd')    AS reg_date
+             , TO_CHAR(t.tdm54_due_date, 'yyyy-mm-dd')    AS due_date
+             , TO_CHAR(t.tdm54_action_date, 'yyyy-mm-dd') AS action_date
+             , t.tdm54_plan_reg_emp_nm        AS plan_reg_emp_name
+             , t.tdm54_plan_action_emp_nm     AS plan_action_emp_name
+             , t.tdm54_action_emp_nm          AS action_emp_name
+             , t.tdm54_action_nm              AS action_name
+             , t.tdm54_action_plan            AS action_plan
+             , t.tdm54_action_cmnt            AS action_cmnt
+             , t.tdm54_status_cd              AS status_code
+             , f_cdnm('TdmInsuffStatus', curr_status_cd, tdm54_company_id, tdm54_reg_date) AS status_name
+             , CAST(NULL AS varchar)          AS action_emp_info
+             , CAST(NULL AS boolean)          AS curr_month_occ_yn
+             , CAST(NULL AS boolean)          AS first_appr_emp_yn
+             , CAST(NULL AS boolean)          AS final_appr_emp_yn
+             , CAST(NULL AS numeric)          AS chck_insuff_appr_id
+             , CAST(NULL AS varchar)          AS appr_status_code
+             , CAST(NULL AS varchar)          AS appr_status_name
+             , CAST(NULL AS text)             AS appr_cmnt
+          FROM (
+                SELECT tdm54_chck_insuff.*
+                     , tdm51_check_ym                                                                         AS tdm54_check_ym             /*발생년월*/
+                     , f_emp_kor_nm(tdm54_plan_reg_emp_id)                                                    AS tdm54_plan_reg_emp_nm      /*조치계획등록자*/
+                     , f_emp_kor_nm(tdm54_plan_action_emp_id)                                                 AS tdm54_plan_action_emp_nm   /*조치예정자*/
+                     , f_emp_kor_nm(tdm54_action_emp_id)                                                      AS tdm54_action_emp_nm        /*조치자*/
+                     , f_org_nm(tdm54_org_id, f_today())                                                      AS tdm54_org_nm               /*부서명*/
+                     , CASE WHEN tdm51_check_ym = TO_CHAR(f_today(),'YYYY.MM') THEN '10'
+                            WHEN tdm54_status_cd IN ('19','20','21','25','26') THEN tdm54_status_cd
+                            ELSE '11' END                                                                     AS curr_status_cd
+                  FROM tdm54_chck_insuff
+                       INNER JOIN tdm52_chck_manl ON tdm52_chck_manl_id = tdm54_chck_manl_id
+                       INNER JOIN tdm51_chck_org  ON tdm51_chck_org_id  = tdm52_chck_org_id
+                       INNER JOIN tdm20_role      ON tdm20_role_id      = tdm54_role_id
+                 WHERE tdm54_chck_insuff_id = #{chckInsuffId}
+               ) t
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm63_chck_insuff_record.selectBychckInsuffId -->
+    <select id="selectInsuffRecords" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckApprInsuffRecordRes">
+        SELECT tdm63_chck_insuff_record_id                                      AS chck_insuff_record_id
+             , TO_CHAR(tdm63_reg_date, 'yyyy-mm-dd')                            AS reg_date
+             , f_emp_kor_nm(tdm63_reg_emp_id)                                   AS reg_emp_name
+             , tdm63_content                                                    AS content
+             , tdm63_note                                                       AS note
+             , f_get_tdmEvidCount(tdm63_chck_insuff_record_id) || '건'           AS file_count_str
+          FROM tdm63_chck_insuff_record
+         WHERE tdm63_chck_insuff_id = #{chckInsuffId}
+         ORDER BY tdm63_reg_date, tdm63_chck_insuff_record_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm60_chck_manl_appr.updateById -->
+    <update id="updateManlApprById">
+        UPDATE tdm60_chck_manl_appr
+           SET tdm60_appr_status_cd = #{apprStatusCode}
+             , tdm60_appr_cmnt      = CAST(#{apprCmnt} AS text)
+             , tdm60_appr_date      = CASE WHEN #{apprStatusCode} = '10' THEN NULL ELSE f_sysdate() END
+         WHERE tdm60_chck_manl_appr_id = #{chckManlApprId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm60_chck_manl_appr.updateApprStatusByChckManlId -->
+    <update id="updateManlApprByManlId">
+        UPDATE tdm60_chck_manl_appr
+           SET tdm60_appr_status_cd = #{apprStatusCode}
+             , tdm60_appr_cmnt      = CAST(#{apprCmnt} AS text)
+             , tdm60_appr_date      = CASE WHEN #{apprStatusCode} = '10' THEN NULL ELSE f_sysdate() END
+         WHERE tdm60_chck_manl_id = #{chckManlId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm61_chck_insuff_appr.updateById -->
+    <update id="updateInsuffApprById">
+        UPDATE tdm61_chck_insuff_appr
+           SET tdm61_appr_status_cd = #{apprStatusCode}
+             , tdm61_appr_cmnt      = CAST(#{apprCmnt} AS text)
+             , tdm61_appr_date      = CASE WHEN #{apprStatusCode} = '10' THEN NULL ELSE f_sysdate() END
+         WHERE tdm61_chck_insuff_appr_id = #{chckInsuffApprId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm61_chck_insuff_appr.updateApprStatusByChckInsuffId -->
+    <update id="updateInsuffApprByInsuffId">
+        UPDATE tdm61_chck_insuff_appr
+           SET tdm61_appr_status_cd = #{apprStatusCode}
+             , tdm61_appr_cmnt      = CAST(#{apprCmnt} AS text)
+             , tdm61_appr_date      = CASE WHEN #{apprStatusCode} = '10' THEN NULL ELSE f_sysdate() END
+         WHERE tdm61_chck_insuff_id = #{chckInsuffId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm54_chck_insuff.updateStatusCode. 수정: app.current_user → #{updName} -->
+    <update id="updateInsuffStatusCode">
+        UPDATE tdm54_chck_insuff
+           SET tdm54_status_cd  = #{statusCode}
+             , tdm54_upd_nm     = #{updName}
+         WHERE tdm54_chck_insuff_id = #{chckInsuffId}
+    </update>
+</mapper>

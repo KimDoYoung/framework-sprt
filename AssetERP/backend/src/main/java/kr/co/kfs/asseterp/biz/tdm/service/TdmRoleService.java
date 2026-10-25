@@ -44,6 +44,11 @@ public class TdmRoleService {
                 roleType == null || roleType.isEmpty() ? null : roleType);
     }
 
+    /** AS-IS tdm.Tdm20_Role.selectCheckTargetRole (N23) — 점검년월(yyyy.MM)에 로그인 사용자가 승인자인 직책, searchText는 '%…%' */
+    public List<RoleRes> searchCheckTargets(UserPrincipal user, String checkYm, String searchText) {
+        return mapper.selectCheckTargets(user.getCompanyId(), checkYm, user.getUserId(), "%" + (searchText == null ? "" : searchText) + "%");
+    }
+
     /** AS-IS tdm.Tdm20_Role.countUseByRoleId: 건수 합 */
     public int countUse(UserPrincipal user, List<Long> roleIds) {
         int sum = 0;

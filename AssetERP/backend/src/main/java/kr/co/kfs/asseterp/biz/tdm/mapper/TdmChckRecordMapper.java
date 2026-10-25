@@ -14,6 +14,9 @@ public interface TdmChckRecordMapper {
     /** AS-IS tdm55_chck_record.selectByChckOrgId — 점검부서별 승인이력(exceptionTable TDM51) */
     List<ChckRecordRes> selectByChckOrgId(@Param("chckOrgId") Long chckOrgId);
 
+    /** AS-IS tdm55_chck_record.selectByInsuffId (TDM54) — 미흡/개선 내역과 그 발생 점검항목의 이력 */
+    List<ChckRecordRes> selectByInsuffId(@Param("chckInsuffId") Long chckInsuffId);
+
     /** AS-IS tdm55_chck_record.selectByRelateId — 점검항목 등 연결 대상의 이력(exceptionTable NONE) */
     List<ChckRecordRes> selectByRelateId(@Param("relateId") Long relateId);
 

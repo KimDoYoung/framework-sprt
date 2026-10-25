@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import kr.co.kfs.asseterp.biz.sys.service.SysFileService;
 
 import java.util.List;
 
@@ -31,6 +33,8 @@ class TdmCheckOrgDbTest {
     @Autowired TdmCheckManlService manlService;
     @Autowired TdmChckApprStepService stepService;
     @Autowired JdbcTemplate jdbc;
+    /** TdmCheckManlService가 점검시작취소의 증빙 파일을 지울 때 쓴다 — 이 시험은 파일을 다루지 않는다 */
+    @MockitoBean SysFileService fileService;
 
     /** kfstest (2026.11 부서 점검현황 — 점검자 지정·승인선이 끝났고 확정 전인 부서) */
     private static final long COMPANY = 28000L;
@@ -67,7 +71,7 @@ class TdmCheckOrgDbTest {
         assertThat(appr60(ORG_READY)).isPositive();
         assertThat(statuses(ORG_READY)).containsExactly("10");
         assertThat(count("SELECT COUNT(*) FROM tdm59_chck_appr_cmnt")).isGreaterThan(cmntBefore);
-        assertThat(orgService.search(USER, "2026.11", 202511249196638L)).anyMatch(r -> r.chckOrgId() == ORG_READY && r.fixYn() && r.checkStatusAll10Yn());
+        assertThat(orgService.search(USER, "2026.11", 202511249196638L, null)).anyMatch(r -> r.chckOrgId() == ORG_READY && r.fixYn() && r.checkStatusAll10Yn());
 
         orgService.updateFix(USER, ORG_READY, "C");
         assertThat(appr60(ORG_READY)).isZero();
@@ -89,7 +93,7 @@ class TdmCheckOrgDbTest {
         long manls = count("SELECT COUNT(*) FROM tdm52_chck_manl WHERE tdm52_chck_org_id = ?", ORG_READY);
         assertThat(count("SELECT COUNT(*) FROM tdm55_chck_record")).isEqualTo(recordBefore + manls + 1);
         assertThat(jdbc.queryForList("SELECT DISTINCT tdm55_proc_type FROM tdm55_chck_record ORDER BY 1 DESC LIMIT 1", String.class)).isNotEmpty();
-        assertThat(orgService.search(USER, "2026.11", 202511249196638L)).anyMatch(r -> r.chckOrgId() == ORG_READY && "20".equals(r.orgStatusCode()));
+        assertThat(orgService.search(USER, "2026.11", 202511249196638L, null)).anyMatch(r -> r.chckOrgId() == ORG_READY && "20".equals(r.orgStatusCode()));
 
         orgService.updateApprStatus(USER, ORG_READY, "C");
         assertThat(statuses(ORG_READY)).containsExactly("19");

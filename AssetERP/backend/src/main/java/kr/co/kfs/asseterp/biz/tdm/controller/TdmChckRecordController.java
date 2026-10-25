@@ -21,11 +21,15 @@ public class TdmChckRecordController {
 
     private final TdmChckRecordService service;
 
-    /** AS-IS tdm.Tdm55_ChckRecord.selectByChckOrgId (exceptionTable TDM51) 또는 selectByRelateId (NONE, relateId) */
+    /** AS-IS tdm.Tdm55_ChckRecord.selectByChckOrgId (exceptionTable TDM51) · selectByRelateId (NONE, relateId) · selectByInsuffId (TDM54, chckInsuffId — N23) */
     @GetMapping
     public ApiResponse<List<ChckRecordRes>> search(@AuthenticationPrincipal UserPrincipal principal,
                                                    @RequestParam(required = false) Long chckOrgId,
-                                                   @RequestParam(required = false) Long relateId) {
+                                                   @RequestParam(required = false) Long relateId,
+                                                   @RequestParam(required = false) Long chckInsuffId) {
+        if (chckInsuffId != null) {
+            return ApiResponse.ok(service.searchByInsuff(principal, chckInsuffId));
+        }
         if (relateId != null) {
             return ApiResponse.ok(service.searchByRelate(principal, relateId));
         }

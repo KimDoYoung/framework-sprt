@@ -50,6 +50,23 @@
                 , start_date
     </select>
 
+    <!-- AS-IS(IDMS-IC) tdm20_role.selectCheckTargetRole (N23): 점검년월에 내가 승인자(tdm58)이고 점검항목이 있는 직책. searchText는 '%…%'.
+         수정: DISTINCT tdm20_role.* → roleSelect의 열 + IN 조건(중복 없이), 정렬은 직책명 -->
+    <select id="selectCheckTargets" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleRes">
+        <include refid="roleSelect"/>
+         WHERE tdm20_role_id IN ( SELECT tdm51_role_id
+                                    FROM tdm51_chck_org
+                                         INNER JOIN tdm58_chck_appr_step ON tdm58_chck_org_id = tdm51_chck_org_id
+                                   WHERE tdm51_company_id  = #{companyId}
+                                     AND tdm51_check_ym    = #{checkYm}
+                                     AND tdm58_appr_emp_id = #{personId}
+                                     AND EXISTS ( SELECT 1
+                                                    FROM tdm52_chck_manl
+                                                   WHERE tdm52_chck_org_id = tdm51_chck_org_id ) )
+           AND tdm20_role_nm ILIKE #{searchText}
+         ORDER BY tdm20_role_nm COLLATE "ko_KR.utf8"
+    </select>
+
     <!-- AS-IS(IDMS-IC) tdm20_role.selectById (변경 전 값 비교, 저장 뒤 다시 읽기) -->
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.RoleRes">
         <include refid="roleSelect"/>

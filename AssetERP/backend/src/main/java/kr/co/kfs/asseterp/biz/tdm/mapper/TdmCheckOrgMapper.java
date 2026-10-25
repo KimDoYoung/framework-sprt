@@ -14,8 +14,9 @@ import java.util.List;
 @Mapper
 public interface TdmCheckOrgMapper {
 
-    /** AS-IS tdm51_chck_org.selectByOrgId (personId 가지는 N22용이라 아직 없다) */
-    List<CheckOrgStatusRes> selectByOrgId(@Param("companyId") Long companyId, @Param("checkYm") String checkYm, @Param("orgId") Long orgId);
+    /** AS-IS tdm51_chck_org.selectByOrgId — personId가 있으면 그 점검자의 점검항목·조치만 센다(N22) */
+    List<CheckOrgStatusRes> selectByOrgId(@Param("companyId") Long companyId, @Param("checkYm") String checkYm, @Param("orgId") Long orgId,
+                                          @Param("personId") Long personId);
 
     /** AS-IS tdm51_chck_org.selectById */
     CheckOrgBaseRes selectById(@Param("chckOrgId") Long chckOrgId);

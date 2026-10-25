@@ -26,9 +26,9 @@ public class TdmCheckOrgService {
     private final TdmCheckOrgMapper mapper;
     private final TdmChckRecordMapper recordMapper;
 
-    /** AS-IS tdm.Tdm51_ChckOrg.selectByOrgId (companyId는 로그인 회사) */
-    public List<CheckOrgStatusRes> search(UserPrincipal user, String checkYm, Long orgId) {
-        return mapper.selectByOrgId(user.getCompanyId(), checkYm, orgId);
+    /** AS-IS tdm.Tdm51_ChckOrg.selectByOrgId (companyId는 로그인 회사). personId는 N22(점검자 기준)만 준다 */
+    public List<CheckOrgStatusRes> search(UserPrincipal user, String checkYm, Long orgId, Long personId) {
+        return mapper.selectByOrgId(user.getCompanyId(), checkYm, orgId, personId);
     }
 
     /** AS-IS tdm.Tdm51_ChckOrg.updateFix — actionType P(확정)·C(확정취소). 실패 사유는 AS-IS 문구 그대로 던진다(전체 롤백) */

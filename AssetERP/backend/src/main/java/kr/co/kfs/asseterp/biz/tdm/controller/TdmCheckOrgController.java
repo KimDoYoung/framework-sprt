@@ -25,11 +25,12 @@ public class TdmCheckOrgController {
 
     private final TdmCheckOrgService service;
 
-    /** AS-IS tdm.Tdm51_ChckOrg.selectByOrgId */
+    /** AS-IS tdm.Tdm51_ChckOrg.selectByOrgId — personId(점검자)는 N22 화면만 준다 */
     @GetMapping
     public ApiResponse<List<CheckOrgStatusRes>> search(@AuthenticationPrincipal UserPrincipal principal,
-                                                       @RequestParam String checkYm, @RequestParam Long orgId) {
-        return ApiResponse.ok(service.search(principal, checkYm, orgId));
+                                                       @RequestParam String checkYm, @RequestParam Long orgId,
+                                                       @RequestParam(required = false) Long personId) {
+        return ApiResponse.ok(service.search(principal, checkYm, orgId, personId));
     }
 
     /** AS-IS tdm.Tdm51_ChckOrg.updateFix — 확정(P)·확정취소(C) */

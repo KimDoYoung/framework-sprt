@@ -519,4 +519,6 @@ export interface TransTdm {
   empNo?: string | null;
   korNm?: string | null;
   transDate?: string | null;
+  /** 사원의 조직(emp01_org_id) — N22 이행점검의 점검자 부서 */
+  orgId?: number | null;
 }

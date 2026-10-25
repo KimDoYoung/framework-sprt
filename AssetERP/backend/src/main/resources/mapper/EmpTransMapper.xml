@@ -172,6 +172,7 @@
              , emp00_emp_no                                                                 AS emp_no
              , emp00_kor_nm                                                                 AS kor_nm
              , TO_CHAR(emp00_trans_date, 'yyyy-mm-dd')                                      AS trans_date
+             , emp00_org_code_id                                                            AS org_id
           FROM getPerson(#{companyId}, CAST(#{stdDate} AS date))
          WHERE 1=1
            AND COALESCE(emp00_retire_date,'2999-12-31'::date) &gt; CAST(#{stdDate} AS date)

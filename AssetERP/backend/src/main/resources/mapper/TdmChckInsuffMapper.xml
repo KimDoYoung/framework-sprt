@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/tdm/mapper/tdm54_chck_insuff.xml (N22 Tdm54_Edit_ChckInsuff — 조치계획 등록. N24가 조치 처리를 더한다) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmChckInsuffMapper">
+
+    <!-- AS-IS(IDMS-IC) tdm54_chck_insuff.selectByChckManlId. 수정: SELECT * → 조치계획 창이 쓰는 열, 날짜는 'yyyy-MM-dd' 글자 -->
+    <select id="selectByChckManlId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ChckInsuffRes">
+        SELECT tdm54_chck_insuff_id                            AS chck_insuff_id
+             , tdm54_company_id                                AS company_id
+             , tdm54_role_id                                   AS role_id
+             , tdm54_org_id                                    AS org_id
+             , TO_CHAR(tdm54_reg_date, 'YYYY-MM-DD')           AS reg_date
+             , TO_CHAR(tdm54_due_date, 'YYYY-MM-DD')           AS due_date
+             , tdm54_plan_action_emp_id                        AS plan_action_emp_id
+             , f_emp_kor_nm(tdm54_plan_action_emp_id)          AS plan_action_emp_name
+             , tdm54_action_nm                                 AS action_name
+             , tdm54_action_plan                               AS action_plan
+             , tdm54_plan_reg_emp_id                           AS plan_reg_emp_id
+             , tdm54_status_cd                                 AS status_code
+             , tdm54_chck_manl_id                              AS chck_manl_id
+             , tdm54_occ_ym                                    AS occ_ym
+          FROM tdm54_chck_insuff
+         WHERE tdm54_chck_manl_id = #{chckManlId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel(tdm54_chck_insuff) INSERT. 자동 채움: tdm54_upd_nm·tdm54_upd_date -->
+    <insert id="insertInsuff">
+        INSERT INTO tdm54_chck_insuff
+               ( tdm54_chck_insuff_id, tdm54_company_id, tdm54_role_id, tdm54_org_id, tdm54_reg_date, tdm54_due_date,
+                 tdm54_plan_action_emp_id, tdm54_action_nm, tdm54_action_plan, tdm54_plan_reg_emp_id, tdm54_status_cd,
+                 tdm54_chck_manl_id, tdm54_occ_ym, tdm54_upd_nm, tdm54_upd_date )
+        VALUES ( #{chckInsuffId}, #{companyId}, #{roleId}, #{orgId}, CAST(#{req.regDate} AS date), CAST(#{req.dueDate} AS date),
+                 #{req.planActionEmpId}, #{req.actionName}, #{req.actionPlan}, #{planRegEmpId}, #{statusCode},
+                 #{req.chckManlId}, #{occYm}, #{updName}, f_sysdate() )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(tdm54_chck_insuff) UPDATE — 등록일·조치완료예정일·조치예정자·조치명·조치계획만(나머지는 화면이 읽은 값 그대로라 바뀌지 않는다) -->
+    <update id="updateInsuff">
+        UPDATE tdm54_chck_insuff
+           SET tdm54_reg_date            = CAST(#{req.regDate} AS date)
+             , tdm54_due_date            = CAST(#{req.dueDate} AS date)
+             , tdm54_plan_action_emp_id  = #{req.planActionEmpId}
+             , tdm54_action_nm           = #{req.actionName}
+             , tdm54_action_plan         = #{req.actionPlan}
+             , tdm54_upd_nm              = #{updName}
+             , tdm54_upd_date            = f_sysdate()
+         WHERE tdm54_chck_insuff_id      = #{req.chckInsuffId}
+           AND tdm54_company_id          = #{companyId}
+    </update>
+</mapper>

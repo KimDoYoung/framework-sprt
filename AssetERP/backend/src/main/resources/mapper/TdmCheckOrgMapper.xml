@@ -11,7 +11,8 @@
 
     <!--
       AS-IS(IDMS-IC) tdm51_chck_org.selectByOrgId. 수정: ① 바깥 t.*를 화면이 쓰는 열만 ② 숫자 인자 CAST
-      personId 가지(점검자의 것만 보기)는 이 화면이 보내지 않아 옮기지 않았다(점검자용 화면 N22에서 더한다). 정렬 collation은 ko_KR.utf8 그대로(03 원칙 19)
+      personId 가지(점검자의 것만 보기)는 N21이 보내지 않아 옮기지 않았다가 N22(Tdm52_Tab_CheckManl)에서 더했다 — 점검항목 집계의 점검자, 미흡 집계의 조치자.
+      N22는 점검상태 열(check_status_cd/nm)도 쓴다. 정렬 collation은 ko_KR.utf8 그대로(03 원칙 19)
     -->
     <select id="selectByOrgId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckOrgStatusRes">
         SELECT t.tdm51_chck_org_id                                                        AS chck_org_id
@@ -31,6 +32,8 @@
              , t.tdm51_month_check9_cnt                                                   AS month_check9_cnt
              , t.tdm51_insuff_cnt                                                         AS insuff_cnt
              , t.tdm51_check_end_yn                                                       AS check_end_yn
+             , t.tdm51_check_status_cd                                                    AS check_status_code
+             , f_cdnm('TdmCheckStatus', t.tdm51_check_status_cd, t.tdm51_company_id, f_today()) AS check_status_name
              , t.tdm51_org_status_cd                                                      AS org_status_code
              , f_cdnm('TdmCheckStatus', t.tdm51_org_status_cd, t.tdm51_company_id, f_today()) AS org_status_name
              , t.tdm51_fix_yn                                                             AS fix_yn
@@ -54,6 +57,16 @@
                      , CASE WHEN month_manl_cnt = 0 THEN false
                             WHEN (month_manl_null_cnt + month_manl_10_cnt + month_manl_11_cnt) != 0 THEN false
                             ELSE true END                                                                           AS tdm51_check_end_yn           /*점검완료여부*/
+                     , CASE WHEN month_manl_cnt = 0                     THEN null
+                            WHEN month_manl_cnt = month_manl_25_cnt     THEN '25'
+                            WHEN month_manl_cnt = month_manl_19_cnt     THEN '19'
+                            WHEN month_manl_26_cnt != 0                 THEN '26'
+                            WHEN month_manl_11_cnt != 0                 THEN '11'
+                            WHEN month_manl_10_cnt != 0                 THEN '10'
+                            WHEN month_manl_19_cnt != 0                 THEN '19'
+                            WHEN month_manl_20_cnt != 0                 THEN '20'
+                            WHEN month_manl_21_cnt != 0                 THEN '21'
+                            ELSE null END                                                                           AS tdm51_check_status_cd        /*점검상태*/
                      , CASE WHEN month_manl_cnt     = 0 THEN null
                             WHEN month_manl_26_cnt != 0 THEN '26'
                             WHEN insuff_reject_cnt != 0 THEN '26'
@@ -115,6 +128,9 @@
                                          , SUM(CASE WHEN tdm52_check_status_cd IS NULL THEN 1 ELSE 0 END)                                                               month_manl_null_cnt /*null*/
                                       FROM tdm52_chck_manl
                                      WHERE tdm52_company_id = #{companyId}
+                                    <if test="personId != null">
+                                       AND tdm52_checker_id = #{personId}
+                                    </if>
                                      GROUP BY tdm52_chck_org_id
                                   ) tdm52 ON tdm52_chck_org_id = tdm51_chck_org_id
                        LEFT JOIN LATERAL ( SELECT COUNT(*)                                                                                                              insuff_cnt
@@ -125,6 +141,9 @@
                                             WHERE tdm54_company_id  = tdm51_company_id
                                               AND tdm54_role_id     = tdm51_role_id
                                               AND tdm54_org_id      = tdm51_org_id
+                                            <if test="personId != null">
+                                              AND #{personId}       = COALESCE(tdm54_action_emp_id, tdm54_plan_action_emp_id)
+                                            </if>
                                               AND tdm54_occ_ym &lt; tdm51_check_ym
                                               AND 'Y' = (CASE WHEN tdm54_action_appr_ym &lt; tdm51_check_ym THEN 'N' ELSE 'Y' END)
                                          ) tdm54 ON TRUE

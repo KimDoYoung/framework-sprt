@@ -43,6 +43,13 @@ public class TdmRoleController {
         return ApiResponse.ok(service.search(principal, baseDate == null ? LocalDate.now() : baseDate, allYn, searchText, roleType));
     }
 
+    /** AS-IS tdm.Tdm20_Role.selectCheckTargetRole (N23) — 내가 승인자인 직책 */
+    @GetMapping("/check-targets")
+    public ApiResponse<List<RoleRes>> searchCheckTargets(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String checkYm,
+                                                         @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchCheckTargets(principal, checkYm, searchText));
+    }
+
     /** AS-IS tdm.Tdm20_Role.countUseByRoleId */
     @GetMapping("/use-count")
     public ApiResponse<Integer> countUse(@AuthenticationPrincipal UserPrincipal principal, @RequestParam List<Long> roleIds) {

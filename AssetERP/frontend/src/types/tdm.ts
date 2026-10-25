@@ -1036,6 +1036,9 @@ export interface TdmCheckOrg {
   checkStatusAll10Yn: boolean;
   insuffUnActionYn: boolean;
   insuffRejectYn: boolean;
+  /** N22 점검상태(10 점검대기·11 점검진행·19 점검완료·20~26 승인) */
+  checkStatusCode?: string | null;
+  checkStatusName?: string | null;
 }
 
 /** 부서 점검항목 한 행 (AS-IS Tdm52_ChckManlModel — GET /tdm/check-manls) */
@@ -1060,4 +1063,212 @@ export interface TdmChckApprStep {
   apprOrgId?: number | null;
   apprOrgName?: string | null;
   apprStepInfo?: string | null;
+}
+
+/** 점검자의 점검항목 한 행 (AS-IS Tdm52_ChckManlModel — GET /tdm/check-manls/by-person·점검상세 창). 날짜는 'yyyy-MM-dd' */
+export interface TdmCheckManlDetail {
+  chckManlId: number;
+  chckOrgId: number;
+  chckJobId: number;
+  companyId: number;
+  manlId: number;
+  manlOrgId: number;
+  roleId?: number | null;
+  orgId?: number | null;
+  checkYm: string;
+  roleName?: string | null;
+  commonTypeName?: string | null;
+  taskName?: string | null;
+  checkItem?: string | null;
+  checkCycleInfo?: string | null;
+  checkHow?: string | null;
+  checkEvidDocName?: string | null;
+  refBasis?: string | null;
+  checkerId?: number | null;
+  checkerName?: string | null;
+  checkDate?: string | null;
+  checkResultCode?: string | null;
+  checkResultName?: string | null;
+  checkCmnt?: string | null;
+  checkStatusCode?: string | null;
+  checkStatusName?: string | null;
+  fileCountStr?: string | null;
+}
+
+/** 미흡/개선 내역(조치계획) 한 건 (AS-IS Tdm54_ChckInsuffModel — GET /tdm/chck-insuffs/by-manl) */
+export interface TdmChckInsuff {
+  chckInsuffId?: number | null;
+  companyId?: number | null;
+  roleId?: number | null;
+  orgId?: number | null;
+  regDate?: string | null;
+  dueDate?: string | null;
+  planActionEmpId?: number | null;
+  planActionEmpName?: string | null;
+  actionName?: string | null;
+  actionPlan?: string | null;
+  planRegEmpId?: number | null;
+  statusCode?: string | null;
+  chckManlId: number;
+  occYm?: string | null;
+}
+
+/** 조치계획 저장 요청 (PUT /tdm/chck-insuffs) */
+export interface TdmChckInsuffSaveReq {
+  chckInsuffId?: number | null;
+  chckManlId: number;
+  regDate: string;
+  dueDate: string;
+  planActionEmpId: number;
+  actionName: string;
+  actionPlan: string;
+  stdDate?: string | null;
+}
+
+// ── N23 책무이행점검 승인 (Tdm59_Tab_CheckAppr) ──
+
+/** 승인 현황 한 행 — 직책·검토부서별 SELF(자기 부서 종합의견)/SUB(하위 부서별 의견) (AS-IS Tdm59_ChckApprCmntModel). 건수 열은 SELF 행의 점검항목이 0건이면 null */
+export interface TdmCheckApprCmnt {
+  chckApprCmntId: number;
+  chckExctId: number;
+  apprOrgId: number;
+  apprEmpId: number;
+  cmntType: 'SELF' | 'SUB';
+  parentOrgId?: number | null;
+  childOrgId?: number | null;
+  apprStatusCode?: string | null;
+  apprCmnt?: string | null;
+  reportCmnt?: string | null;
+  submitYn: boolean;
+  roleId: number;
+  roleName?: string | null;
+  checkOrgId: number;
+  checkOrgName?: string | null;
+  checkOrgName2?: string | null;
+  monthCheckCnt?: number | null;
+  monthCheck1Cnt?: number | null;
+  monthCheck2Cnt?: number | null;
+  monthCheck9Cnt?: number | null;
+  insuffUndoneCnt?: number | null;
+  insuffDoneCnt?: number | null;
+  insuffStatus20Yn: boolean;
+  checkStatusCode?: string | null;
+  checkStatusName?: string | null;
+  checkStatusAll21Yn: boolean;
+  firstApprEmpYn: boolean;
+  finalApprEmpYn: boolean;
+  companyId: number;
+  checkYm: string;
+  chckJobId: number;
+  preApprStatusName?: string | null;
+  apprStatusName?: string | null;
+  nextApprStatusName?: string | null;
+  /** 1이면 승인의견 아이콘을 그린다 (DynamicCell) */
+  apprButtonEnable?: number | null;
+  reportButtonEnable?: number | null;
+}
+
+/** 점검 마감 정보 (AS-IS Tdm50_ChckJobModel — selectEndInfoByApprEmpId). 점검 작업이 없으면 null */
+export interface TdmCheckApprEndInfo {
+  endYn: boolean;
+  endDate?: string | null;
+  batchApprUseYn: boolean;
+}
+
+/** 승인할 점검항목 한 행 (AS-IS Tdm52_ChckManlModel — selectByChckApprCmntId) */
+export interface TdmCheckApprManl {
+  chckManlId: number;
+  chckOrgId: number;
+  chckJobId: number;
+  companyId: number;
+  manlId: number;
+  manlOrgId: number;
+  orgId?: number | null;
+  orgName?: string | null;
+  checkYm: string;
+  commonTypeName?: string | null;
+  taskName?: string | null;
+  checkItem?: string | null;
+  checkCycleInfo?: string | null;
+  checkHow?: string | null;
+  checkEvidDocName?: string | null;
+  refBasis?: string | null;
+  checkerId?: number | null;
+  checkerName?: string | null;
+  checkDate?: string | null;
+  checkResultCode?: string | null;
+  checkResultName?: string | null;
+  checkCmnt?: string | null;
+  checkStatusCode?: string | null;
+  checkStatusName?: string | null;
+  chckManlApprId?: number | null;
+  apprStatusCode?: string | null;
+  apprStatusName?: string | null;
+  apprCmnt?: string | null;
+  fileCountStr?: string | null;
+  finalApprEmpYn?: boolean | null;
+}
+
+/** 승인할 미흡/개선 내역 한 행 (AS-IS Tdm54_ChckInsuffModel). 보기용 selectById는 승인 열(chckInsuffApprId·appr*)이 없다 */
+export interface TdmCheckApprInsuff {
+  chckInsuffId: number;
+  chckManlId: number;
+  companyId: number;
+  roleId?: number | null;
+  orgId?: number | null;
+  orgName?: string | null;
+  checkYm?: string | null;
+  regDate?: string | null;
+  dueDate?: string | null;
+  actionDate?: string | null;
+  planRegEmpName?: string | null;
+  planActionEmpName?: string | null;
+  actionEmpName?: string | null;
+  actionEmpInfo?: string | null;
+  actionName?: string | null;
+  actionPlan?: string | null;
+  actionCmnt?: string | null;
+  statusCode?: string | null;
+  statusName?: string | null;
+  currMonthOccYn?: boolean | null;
+  firstApprEmpYn?: boolean | null;
+  finalApprEmpYn?: boolean | null;
+  chckInsuffApprId?: number | null;
+  apprStatusCode?: string | null;
+  apprStatusName?: string | null;
+  apprCmnt?: string | null;
+}
+
+/** 이웃(하위·상위) 부서의 의견 (AS-IS tdm59.selectChild·selectParent) */
+export interface TdmCheckApprNeighbor {
+  chckApprCmntId: number;
+  chckExctId: number;
+  apprOrgId: number;
+  apprEmpId: number;
+  apprStatusCode?: string | null;
+  apprCmnt?: string | null;
+  reportCmnt?: string | null;
+  apprOrgName?: string | null;
+}
+
+/** 승인 이력 한 행 — 종합의견 기준 (AS-IS Tdm55_ChckRecordModel — selectByChckApprCmntId) */
+export interface TdmCheckApprRecord {
+  rowNum: number;
+  updDateStr: string;
+  procType?: string | null;
+  checkOrgName?: string | null;
+  personInfo?: string | null;
+  procResult?: string | null;
+  resultCmnt?: string | null;
+  reportCmnt?: string | null;
+}
+
+/** 미흡/개선 조치기록 한 행 (AS-IS Tdm63_ChckInsuffRecordModel) */
+export interface TdmCheckApprInsuffRecord {
+  chckInsuffRecordId: number;
+  regDate?: string | null;
+  regEmpName?: string | null;
+  content?: string | null;
+  note?: string | null;
+  fileCountStr?: string | null;
 }

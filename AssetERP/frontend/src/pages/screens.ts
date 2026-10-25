@@ -176,6 +176,8 @@ import { Tdm50_Tab_DutyProgressAdmin } from './tdm/Tdm50_Tab_DutyProgressAdmin';
 import { Tdm50_Tab_TotalDashboard } from './tdm/Tdm50_Tab_TotalDashboard';
 import { Tdm50_Tab_CheckJob } from './tdm/Tdm50_Tab_CheckJob';
 import { Tdm51_Tab_CheckOrg } from './tdm/Tdm51_Tab_CheckOrg';
+import { Tdm52_Tab_CheckManl } from './tdm/Tdm52_Tab_CheckManl';
+import { Tdm59_Tab_CheckAppr } from './tdm/Tdm59_Tab_CheckAppr';
 import { Tdm50_Tab_DutyRecon } from './tdm/Tdm50_Tab_DutyRecon';
 import { Tdm50_Tab_DutyReconAdmin } from './tdm/Tdm50_Tab_DutyReconAdmin';
 import { Dcr01_Tab_ClassTree } from './dcr/Dcr01_Tab_ClassTree';
@@ -341,6 +343,8 @@ export const SCREENS: Record<string, React.FC> = {
   Tdm50_Tab_TotalDashboard, // N01 1단계 (+ Tdm50_Tab_Dashboard·DashboardExct·DashboardOrg·Tdm01_Lookup_SelectSingle, [보기] 아이콘의 점검 편집창·미흡 조치 상세는 N22·N24)
   Tdm50_Tab_CheckJob, // N20 1단계 (+ Tdm50_TabPage_CheckJob·Tdm50_Edit_CheckJob·Tdm55_Lookup_ChckRecord, 결재요청·문서보기·알림발송의 문자 창은 다른 도메인이라 점검 후 안내, 보고서 PDF는 서버 CheckExctPdfMaker)
   Tdm51_Tab_CheckOrg, // N21 (+ Tdm51_TabPage_CheckOrg·Tdm58_Lookup_ChckApprStep·Emp00_Lookup_SelectSingleTdm, 점검항목 [상세]의 Tdm52_Edit_ChckManl은 N22에서)
+  Tdm52_Tab_CheckManl, // N22 (+ Tdm52_TabPage_CheckManl·Tdm52_Edit_ChckManl·Tdm52_Edit_ChckManlBatch·Tdm54_Edit_ChckInsuff)
+  Tdm59_Tab_CheckAppr, // N23 (+ Tdm59_TabPage_CheckAppr·Tdm59_Edit_Cmnt·Tdm59_Edit_ReportCmnt·Tdm52_Edit_ChckManlCmnt·Tdm54_Lookup_ChckInsuffCmnt·Tdm55_Lookup_ChckRecord2, 증빙자료 창은 안내만)
   Tdm50_Tab_DutyRecon, // N03 (E15 Admin의 고객사용 짝 — 같은 API)
   Tdm50_Tab_DutyReconAdmin, // E15 (조회마다 DB 함수 f_recon_tdm('DB_CHK')이 sys99_print의 사용자 몫 행을 다시 만든다 — AS-IS 그대로)
   Sms02_Tab_TotalCount, // C05

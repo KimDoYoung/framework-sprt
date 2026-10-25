@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!-- AS-IS(IDMS-IC) server/tdm/mapper/tdm52_chck_manl.xml (N21 Tdm51_TabPage_CheckOrg — 점검항목 목록·점검자 지정) -->
+<!-- AS-IS(IDMS-IC) server/tdm/mapper/tdm52_chck_manl.xml (N21 Tdm51_TabPage_CheckOrg — 점검항목 목록·점검자 지정 / N22 Tdm52_Tab_CheckManl — 이행점검 처리) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmCheckManlMapper">
 
     <!--
@@ -60,4 +60,245 @@
          WHERE tdm52_chck_manl_id = #{chckManlId}
            AND tdm52_company_id   = #{companyId}
     </update>
+    <!-- ===================== N22 Tdm52_Tab_CheckManl ===================== -->
+
+    <!-- 목록·점검상세 창이 쓰는 열 (Tdm52_ChckManlModel). 날짜는 'yyyy-MM-dd' 글자 -->
+    <sql id="detailColumns">
+        t.tdm52_chck_manl_id                      AS chck_manl_id
+      , t.tdm52_chck_org_id                       AS chck_org_id
+      , t.tdm52_chck_job_id                       AS chck_job_id
+      , t.tdm52_company_id                        AS company_id
+      , t.tdm52_manl_id                           AS manl_id
+      , t.tdm43_manl_org_id                       AS manl_org_id
+      , t.tdm52_role_id                           AS role_id
+      , t.tdm52_org_id                            AS org_id
+      , t.tdm52_check_ym                          AS check_ym
+      , t.tdm52_role_nm                           AS role_name
+      , t.tdm52_common_type_nm                    AS common_type_name
+      , t.tdm52_task_nm                           AS task_name
+      , t.tdm52_check_item                        AS check_item
+      , t.tdm52_check_cycle_info                  AS check_cycle_info
+      , t.tdm52_check_how                         AS check_how
+      , t.tdm52_check_evid_doc_nm                 AS check_evid_doc_name
+      , t.tdm52_ref_basis                         AS ref_basis
+      , t.tdm52_checker_id                        AS checker_id
+      , t.tdm52_checker_nm                        AS checker_name
+      , TO_CHAR(t.tdm52_check_date, 'YYYY-MM-DD') AS check_date
+      , t.tdm52_check_result_cd                   AS check_result_code
+      , t.tdm52_check_result_nm                   AS check_result_name
+      , t.tdm52_check_cmnt                        AS check_cmnt
+      , t.tdm52_check_status_cd                   AS check_status_code
+      , t.tdm52_check_status_nm                   AS check_status_name
+      , t.tdm52_file_count_str                    AS file_count_str
+    </sql>
+
+    <!--
+      AS-IS(IDMS-IC) tdm52_chck_manl.selectByPersonId. 수정: 바깥 t.*를 화면·상세 창이 쓰는 열만(manl_org_id 추가: 규정/양식 탭이 점검항목의 매뉴얼 조직을 쓴다).
+      undoneYn 가지: 점검대기·진행·승인반려만. searchText 가지는 서비스가 '%글자%'를 만들고 SQL이 한 번 더 '%'를 붙인다(원본 그대로). 정렬 collation은 ko_KR.utf8 그대로(03 원칙 19)
+    -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckManlDetailRes">
+        SELECT <include refid="detailColumns"/>
+          FROM (
+                SELECT tdm52_chck_manl.*
+                     , tdm43_manl_org_id
+                     , tdm43_role_id                                                                            AS tdm52_role_id
+                     , tdm43_role_nm                                                                            AS tdm52_role_nm
+                     , tdm43_org_id                                                                             AS tdm52_org_id
+                     , f_emp_kor_nm(tdm52_checker_id)                                                           AS tdm52_checker_nm
+                     , f_cdnm('TdmCheckResult', tdm52_check_result_cd, tdm52_company_id, f_today())             AS tdm52_check_result_nm
+                     , f_cdnm('TdmCheckStatus', tdm52_check_status_cd, tdm52_company_id, f_today())             AS tdm52_check_status_nm
+                     , tdm51_check_ym                                                                           AS tdm52_check_ym
+                     , tdm51_chck_job_id                                                                        AS tdm52_chck_job_id
+                     , CONCAT('('||tdm43_manl_cd||') ', tdm43_check_item)                                       AS tdm52_check_item
+                     , f_get_tdmCheckCycle(tdm43_manl_id)                                                       AS tdm52_check_cycle_info
+                     , tdm43_check_evid_doc_nm                                                                  AS tdm52_check_evid_doc_nm
+                     , tdm43_check_how                                                                          AS tdm52_check_how
+                     , tdm43_ref_basis                                                                          AS tdm52_ref_basis
+                     , CASE WHEN tdm10_common_yn = 'true' THEN '공통' ELSE '지정' END                           AS tdm52_common_type_nm
+                     , tdm43_task_nm                                                                            AS tdm52_task_nm
+                     , tdm43_task_relate_detail_nm                                                              AS task_detail_nm
+                     , tdm43_task_relate_duty_nm                                                                AS task_duty_nm
+                     , tdm43_manl_cd                                                                            AS manl_cd
+                     , f_get_tdmEvidCount(tdm52_chck_manl_id) ||'건'                                             AS tdm52_file_count_str
+                  FROM tdm52_chck_manl
+                       INNER JOIN tdm51_chck_org ON tdm51_chck_org_id = tdm52_chck_org_id
+                       INNER JOIN tdm43_manl     ON tdm43_manl_id     = tdm52_manl_id
+                       INNER JOIN tdm10_task     ON tdm10_task_id     = tdm43_task_id
+                 WHERE tdm52_chck_org_id = #{chckOrgId}
+                   AND tdm52_checker_id  = #{personId}
+                <if test="undoneYn">
+                   AND tdm52_check_status_cd IN ('10','11','26')    /*(10:점검대기/11:점검진행/26:승인반려)*/
+                </if>
+                <if test="searchText != null">
+                   AND CONCAT(tdm43_manl_cd, tdm43_check_item) ILIKE '%'||#{searchText}||'%'
+                </if>
+               ) t
+         ORDER BY t.tdm52_role_nm COLLATE "ko_KR.utf8"
+                , t.tdm52_task_nm COLLATE "ko_KR.utf8"
+                , t.task_detail_nm COLLATE "ko_KR.utf8"
+                , t.task_duty_nm COLLATE "ko_KR.utf8"
+                , t.manl_cd
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm52_chck_manl.selectById. 수정: 바깥 t.*를 같은 열만. 점검결과·상태 이름은 원본대로 점검일 기준(f_cdnm) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckManlDetailRes">
+        SELECT <include refid="detailColumns"/>
+          FROM (
+                SELECT tdm52_chck_manl.*
+                     , tdm43_manl_org_id
+                     , tdm43_role_id                                                                            AS tdm52_role_id
+                     , tdm43_role_nm                                                                            AS tdm52_role_nm
+                     , tdm43_org_id                                                                             AS tdm52_org_id
+                     , tdm43_task_nm                                                                            AS tdm52_task_nm
+                     , f_emp_kor_nm(tdm52_checker_id)                                                           AS tdm52_checker_nm
+                     , f_cdnm('TdmCheckResult', tdm52_check_result_cd, tdm52_company_id, tdm52_check_date)      AS tdm52_check_result_nm
+                     , f_cdnm('TdmCheckStatus', tdm52_check_status_cd, tdm52_company_id, tdm52_check_date)      AS tdm52_check_status_nm
+                     , tdm51_check_ym                                                                           AS tdm52_check_ym
+                     , tdm51_chck_job_id                                                                        AS tdm52_chck_job_id
+                     , CONCAT('('||tdm43_manl_cd||') ', tdm43_check_item)                                       AS tdm52_check_item
+                     , f_get_tdmCheckCycle(tdm43_manl_id)                                                       AS tdm52_check_cycle_info
+                     , tdm43_check_evid_doc_nm                                                                  AS tdm52_check_evid_doc_nm
+                     , tdm43_check_how                                                                          AS tdm52_check_how
+                     , tdm43_ref_basis                                                                          AS tdm52_ref_basis
+                     , CASE WHEN tdm10_common_yn = 'true' THEN '공통' ELSE '지정' END                           AS tdm52_common_type_nm
+                     , f_get_tdmEvidCount(tdm52_chck_manl_id) ||'건'                                             AS tdm52_file_count_str
+                  FROM tdm52_chck_manl
+                       INNER JOIN tdm51_chck_org ON tdm51_chck_org_id = tdm52_chck_org_id
+                       INNER JOIN tdm43_manl     ON tdm43_manl_id     = tdm52_manl_id
+                       INNER JOIN tdm10_task     ON tdm10_task_id     = tdm43_task_id
+                 WHERE tdm52_chck_manl_id = #{chckManlId}
+               ) t
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm52_chck_manl.selectCheckTargetByCheckerId. 수정: 행 통째가 아니라 ID만(서버가 다시 쓰는 것은 상태·점검 값뿐). procType 1 = 점검대기만, 2 = 점검진행·점검완료 -->
+    <select id="selectCheckTargetIds" resultType="java.lang.Long">
+        SELECT tdm52_chck_manl_id
+          FROM tdm52_chck_manl
+         WHERE tdm52_chck_org_id = #{chckOrgId}
+           AND tdm52_checker_id  = #{personId}
+        <if test="procType == 1">
+           AND tdm52_check_status_cd IN ('10')      /*(10:점검대기)*/
+        </if>
+        <if test="procType == 2">
+           AND tdm52_check_status_cd IN ('11','19') /*(11:점검진행 / 19:점검완료)*/
+        </if>
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm52_chck_manl.updateByChckManlId. 수정: app.current_user → #{updName}, 날짜 인자 CAST -->
+    <update id="updateByChckManlId">
+        UPDATE tdm52_chck_manl
+           SET tdm52_check_date        = CAST(#{checkDate} AS date)
+             , tdm52_check_result_cd   = CAST(#{checkResultCode} AS varchar)
+             , tdm52_check_cmnt        = CAST(#{checkCmnt} AS text)
+             , tdm52_check_status_cd   = CAST(#{checkStatusCode} AS varchar)
+             , tdm52_upd_nm            = #{updName}
+             , tdm52_upd_date          = f_sysdate()
+         WHERE tdm52_chck_manl_id      = #{chckManlId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel(tdm52_chck_manl) — [저장]이 바꾸는 열(점검일·점검결과·점검의견)만. 로그인 회사 행만 -->
+    <update id="updateContent">
+        UPDATE tdm52_chck_manl
+           SET tdm52_check_date        = CAST(#{checkDate} AS date)
+             , tdm52_check_result_cd   = CAST(#{checkResultCode} AS varchar)
+             , tdm52_check_cmnt        = CAST(#{checkCmnt} AS text)
+             , tdm52_upd_nm            = #{updName}
+             , tdm52_upd_date          = f_sysdate()
+         WHERE tdm52_chck_manl_id      = #{chckManlId}
+           AND tdm52_company_id        = #{companyId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) tdm52_chck_manl.countEvidFile — 증빙자료 건수(연결문서+업로드+외부보관) -->
+    <select id="countEvidFile" resultType="int">
+        SELECT CAST(f_get_tdmEvidCount(#{chckManlId}) AS int)
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm54_chck_insuff.selectByChckManlId 중 ID만(점검 처리는 첫 건의 ID만 쓴다) -->
+    <select id="selectInsuffIds" resultType="java.lang.Long">
+        SELECT tdm54_chck_insuff_id
+          FROM tdm54_chck_insuff
+         WHERE tdm54_chck_manl_id = #{chckManlId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm54_chck_insuff.deleteById -->
+    <delete id="deleteInsuffById">
+        DELETE FROM tdm54_chck_insuff
+         WHERE tdm54_chck_insuff_id = #{chckInsuffId}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm54_chck_insuff.deleteByChckManlId -->
+    <delete id="deleteInsuffByChckManlId">
+        DELETE FROM tdm54_chck_insuff
+         WHERE tdm54_chck_manl_id = #{chckManlId}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) tdm59_chck_appr_cmnt.selectByChckManlId 중 승인상태만(반려 확인용). 수정: SELECT * → 한 열 -->
+    <select id="selectApprStatusCode" resultType="java.lang.String">
+        SELECT tdm59_appr_status_cd
+          FROM tdm52_chck_manl
+               INNER JOIN tdm60_chck_manl_appr ON (    tdm60_chck_manl_id = tdm52_chck_manl_id
+                                                   AND tdm60_appr_seq = ( SELECT MIN(tdm60_appr_seq)
+                                                                            FROM tdm60_chck_manl_appr
+                                                                           WHERE tdm60_chck_manl_id = tdm52_chck_manl_id ) )
+               INNER JOIN tdm51_chck_org ON tdm51_chck_org_id = tdm52_chck_org_id
+               INNER JOIN LATERAL ( SELECT tdm59_chck_appr_cmnt.*
+                                      FROM tdm53_chck_exct
+                                           INNER JOIN tdm59_chck_appr_cmnt ON tdm59_chck_exct_id = tdm53_chck_exct_id
+                                     WHERE tdm53_company_id  = tdm51_company_id
+                                       AND tdm53_check_ym    = tdm51_check_ym
+                                       AND tdm53_role_id     = tdm51_role_id
+                                       AND tdm59_appr_emp_id = tdm60_appr_emp_id ) tdm59 ON TRUE
+         WHERE tdm52_chck_manl_id = #{chckManlId}
+         ORDER BY tdm59_cmnt_type DESC
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm61_chck_insuff_appr.deleteByChckManlId -->
+    <delete id="deleteInsuffApprByChckManlId">
+        DELETE FROM tdm61_chck_insuff_appr
+         WHERE tdm61_chck_insuff_id = ( SELECT tdm54_chck_insuff_id
+                                          FROM tdm54_chck_insuff
+                                         WHERE tdm54_chck_manl_id = #{chckManlId} )
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) com01_relate_appr.deleteByKeyTableId — 점검항목의 연결문서(증빙자료) -->
+    <delete id="deleteRelateApprByKeyTableId">
+        DELETE FROM com01_relate_appr
+         WHERE com01_key_table_id = #{keyTableId}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) sys10_file.deleteCheck — 점검항목이 직접 가진 업로드 파일 ID(다른 곳에서 연결만 한 sys11 파일은 제외). 지우기는 SysFileService.delete(파일·행) -->
+    <select id="selectOwnedFileIds" resultType="java.lang.Long">
+        SELECT sys10_file_id
+          FROM sys10_file
+         WHERE sys10_parent_id = #{parentId}
+         ORDER BY LPAD(COALESCE(sys10_seq, '99999'), 5, '0'), COALESCE(sys10_title_yn, 'false') DESC, sys10_file_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm64_chck_evid_extr.deleteByTargetId — 외부보관 증빙자료 -->
+    <delete id="deleteEvidExtrByTargetId">
+        DELETE FROM tdm64_chck_evid_extr
+         WHERE tdm64_target_id = #{targetId}
+    </delete>
+
+    <!--
+      AS-IS(IDMS-IC) tdm91_company_setup.selectByDate — 기준일에 적용되는 설정 한 행. 설정이 없으면 원본의 기본 행
+      (일괄승인 false·증빙파일 필수등록 true·일괄점검 false, 글자수 제한 없음). 수정: SELECT * → 점검 처리가 읽는 두 열
+    -->
+    <select id="selectCompanySetupByDate" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CheckCompanySetup">
+        SELECT cmnt_min_limit
+             , evid_file_check_yn
+          FROM (
+                SELECT tdm91_start_date                                                      AS start_date
+                     , CAST(tdm91_cmnt_min_limit AS int)                                     AS cmnt_min_limit
+                     , CASE WHEN tdm91_evid_file_check_yn = 'true' THEN true ELSE false END  AS evid_file_check_yn
+                  FROM tdm91_company_setup
+                 WHERE tdm91_company_id = #{companyId}
+                 UNION ALL
+                SELECT CAST('2026-01-01' AS date), CAST(null AS int), true
+               ) t
+         WHERE start_date &lt;= CAST(#{stdDate} AS date)
+         ORDER BY start_date DESC
+         LIMIT 1
+    </select>
 </mapper>

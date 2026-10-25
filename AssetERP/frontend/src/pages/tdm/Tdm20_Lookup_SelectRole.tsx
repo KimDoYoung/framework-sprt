@@ -2,7 +2,7 @@
  * 직책 조회창 (N10) — 직책별 부서승인선 등록(Tdm09_Tab_ApprStep)의 책무직책 칸이 연다.
  * AS-IS: myApp/client/vi/tdm/Tdm20_Lookup_SelectRole.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 창 530×450(원본, 열 420+행번호·선택 60+여백 130 = 610이라 610): 검색줄(기준일 + 검색 + [조회]) + 단일 선택 그리드 + [확인]([전체])[닫기]
- * 만든 것은 open(callback)·openAll(stdDate, callback) 경로(selectByDate). openAll(…, orgId)의 orgId·openTarget(selectCheckTargetRole)은 쓰는 화면이 생길 때 추가
+ * 만든 것은 open(callback)·openAll(stdDate, callback) 경로(selectByDate)와 openTarget(stdDate, personId, callback) 경로(selectCheckTargetRole, N23 — checkTarget). openAll(…, orgId)의 orgId는 쓰는 화면이 생길 때 추가
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창(UX-05·06)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -33,26 +33,31 @@ interface Props {
   onAll?: () => void;
   /** AS-IS openAll(stdDate, …)의 기준일 — 없으면 오늘 */
   stdDate?: string | null;
+  /** AS-IS openTarget(stdDate, personId, callback) → checkTargetYn: 점검년월(기준일의 yyyy.MM)에 로그인 사용자가 승인자인 직책만 (tdm.Tdm20_Role.selectCheckTargetRole) */
+  checkTarget?: boolean;
   /** AS-IS callback.execute(고른 직책). 닫기는 onClose */
   onSelect: (role: TdmRole) => void;
   onClose: () => void;
 }
 
-export const Tdm20_Lookup_SelectRole: React.FC<Props> = ({ open, allButton = false, onAll, stdDate, onSelect, onClose }) => {
+export const Tdm20_Lookup_SelectRole: React.FC<Props> = ({ open, allButton = false, onAll, stdDate, checkTarget = false, onSelect, onClose }) => {
   const gridRef = useRef<AgGridReact<TdmRole>>(null);
   const [baseDate, setBaseDate] = useState<Dayjs>(dayjs());
   const [searchText, setSearchText] = useState('');
   const [rows, setRows] = useState<TdmRole[]>([]);
   const columnDefs = useMemo(buildGrid, []);
 
-  // retrieve() L179-206: tdm.Tdm20_Role.selectByDate (companyId는 서버, baseDate, searchText = '%' + 글자 + '%')
+  // retrieve() L179-206: checkTargetYn이면 tdm.Tdm20_Role.selectCheckTargetRole(checkYm = baseDate의 yyyy.MM, personId는 서버가 로그인 사용자),
+  // 아니면 tdm.Tdm20_Role.selectByDate (companyId는 서버, baseDate, searchText = '%' + 글자 + '%')
   const retrieve = useCallback(async (date: Dayjs, text: string) => {
     try {
-      setRows(await tdmApi.searchRoles({ baseDate: date.format(FORMAT), allYn: false, searchText: text }));
+      setRows(checkTarget
+        ? await tdmApi.searchCheckTargetRoles(date.format('YYYY.MM'), text)
+        : await tdmApi.searchRoles({ baseDate: date.format(FORMAT), allYn: false, searchText: text }));
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, []);
+  }, [checkTarget]);
 
   // [E0] 화면 열림 (생성자 L60-65) → open() L90-120 → retrieve()
   useEffect(() => {

@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm51_TabPage_CheckOrg.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L85-115: 툴바(검색 [280 "검색어(관리의무/점검항목/점검자) 입력후 엔터"] · 점검자 미지정만 조회 · [전체선택][전체해제][점검자일괄지정] · [승인선][확정][확정취소] | [승인요청][요청취소], 높이 50, 테두리)
  * + GridGroupBuilder 그리드(관리의무별 그룹 머리글, 선택·[직책] 관리의무 / 점검항목 1000·점검자 100·점검결과 100·진행상태 100·상세 50·점검이력 70)
- * 다음 단계(N22): [상세] 아이콘이 여는 점검 창 `Tdm52_Edit_ChckManl.view`는 N22(Tdm52_Tab_CheckManl)에서 연결한다 — 지금은 안내만
+ * [상세] 아이콘 = 점검 창 `Tdm52_Edit_ChckManl.view`(읽기 전용, N22에서 연결 — 점검항목을 `GET check-manls/{id}`로 다시 읽어 연다)
  * UX보강(10): 툴바 = Button(UX-01), 조회창(UX-05·06)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -13,6 +13,7 @@ import type { ICellRendererParams } from 'ag-grid-community';
 import { errorMessage } from '@/api/client';
 import { tdmApi } from '@/api/tdm';
 import { TdmCheckManl, TdmCheckOrg } from '@/types/tdm';
+import { CheckManlEditTarget, Tdm52_Edit_ChckManl } from './Tdm52_Edit_ChckManl';
 import { TransTdm } from '@/types/emp';
 import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
@@ -58,6 +59,7 @@ export const Tdm51_TabPage_CheckOrg: React.FC<Props> = ({ target, onChanged }) =
   const [empLookup, setEmpLookup] = useState<{ row: Row | null } | null>(null);   // row=null이면 일괄지정, 있으면 그 행의 점검자 셀
   const [apprStep, setApprStep] = useState<ChckApprStepTarget | null>(null);
   const [recordId, setRecordId] = useState<number | null>(null);
+  const [detail, setDetail] = useState<CheckManlEditTarget | null>(null);   // Tdm52_Edit_ChckManl.view(selectModel)
 
   // setButtonEnable() L527-572
   const fixed = !endYn && (org?.fixYn ?? false);   // 확정(진행 중일 때만)
@@ -218,8 +220,10 @@ export const Tdm51_TabPage_CheckOrg: React.FC<Props> = ({ target, onChanged }) =
     }),
     gb.textCenter('checkResultName', 100, '점검결과'),  // L318
     gb.textCenter('checkStatusName', 100, '진행상태'),  // L319
-    // L320 상세 — 점검 창(Tdm52_Edit_ChckManl.view)은 N22에서 연결한다
-    iconCell<DisplayRow>('view', 'detail', 50, '상세', () => { message.info('상세 창(Tdm52_Edit_ChckManl)은 N22에서 연결됩니다'); }),
+    // L320 상세 — Tdm52_Edit_ChckManl.view(selectModel)
+    iconCell<DisplayRow>('view', 'detail', 50, '상세', row => {
+      tdmApi.getCheckManl(row.chckManlId).then(m => setDetail({ manl: m, mode: 'view' })).catch(err => message.error(errorMessage(err, '조회 실패')));
+    }),
     // L321 점검이력 — Tdm55_Lookup_ChckRecord.open(chckManlId)
     iconCell<DisplayRow>('view', 'history', 70, '점검이력', row => setRecordId(row.chckManlId)),
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -286,6 +290,7 @@ export const Tdm51_TabPage_CheckOrg: React.FC<Props> = ({ target, onChanged }) =
       />
       <Tdm58_Lookup_ChckApprStep target={apprStep} onClose={() => setApprStep(null)} />
       <Tdm55_Lookup_ChckRecord relateId={recordId} onClose={() => setRecordId(null)} />
+      <Tdm52_Edit_ChckManl target={detail} onChanged={() => undefined} onClose={() => setDetail(null)} />
     </div>
   );
 };

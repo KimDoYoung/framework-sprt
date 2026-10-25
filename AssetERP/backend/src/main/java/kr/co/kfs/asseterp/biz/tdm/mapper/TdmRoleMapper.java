@@ -19,6 +19,10 @@ public interface TdmRoleMapper {
     List<RoleRes> selectByDate(@Param("companyId") Long companyId, @Param("baseDate") LocalDate baseDate, @Param("allYn") boolean allYn,
                                @Param("searchText") String searchText, @Param("roleType") String roleType);
 
+    /** AS-IS tdm20_role.selectCheckTargetRole (N23) — 점검년월에 내가 승인자인 직책 */
+    List<RoleRes> selectCheckTargets(@Param("companyId") Long companyId, @Param("checkYm") String checkYm,
+                                     @Param("personId") Long personId, @Param("searchText") String searchText);
+
     /** AS-IS tdm20_role.selectById */
     RoleRes selectById(@Param("roleId") Long roleId);
 

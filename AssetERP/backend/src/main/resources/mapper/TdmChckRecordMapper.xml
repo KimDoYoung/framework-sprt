@@ -45,6 +45,26 @@
          ORDER BY t.tdm55_row_num DESC
     </select>
 
+    <!-- AS-IS(IDMS-IC) tdm55_chck_record.selectByInsuffId (N23 exceptionTable TDM54 — 미흡/개선 내역과 그 발생 점검항목의 이력). 수정: 바깥 t.*를 그리드 열만 -->
+    <select id="selectByInsuffId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ChckRecordRes">
+        SELECT t.tdm55_row_num          AS row_num
+             , t.tdm55_upd_date_str     AS upd_date_str
+             , t.tdm55_proc_type        AS proc_type
+             , t.tdm55_person_info      AS person_info
+             , t.tdm55_proc_result      AS proc_result
+             , t.tdm55_result_cmnt      AS result_cmnt
+          FROM (
+                SELECT ROW_NUMBER() OVER(ORDER BY tdm55_upd_date)                       AS tdm55_row_num
+                     , tdm55_chck_record.*
+                     , COALESCE(TO_CHAR(tdm55_upd_date, 'yyyy-mm-dd HH24:MI:SS'), '')   AS tdm55_upd_date_str
+                  FROM tdm55_chck_record
+                 WHERE tdm55_relate_table_id IN ( SELECT UNNEST(ARRAY[tdm54_chck_manl_id, tdm54_chck_insuff_id])
+                                                    FROM tdm54_chck_insuff
+                                                   WHERE tdm54_chck_insuff_id = #{chckInsuffId} )
+               ) t
+         ORDER BY t.tdm55_row_num DESC
+    </select>
+
     <!-- 이력의 연결 대상(점검항목·미흡/개선 내역)의 회사 (TOBE 추가 — tdm55에는 회사 열이 없다. N24가 다른 연결 대상을 쓰면 여기에 더한다) -->
     <select id="selectRelateCompanyId" resultType="java.lang.Long">
         SELECT company_id
@@ -54,7 +74,7 @@
          LIMIT 1
     </select>
 
-    <!-- AS-IS(IDMS-IC) tdm55_chck_record.insert — 위치 INSERT … SELECT를 열 이름으로. 결과·의견은 N21에서 모두 null. 날짜 인자 CAST -->
+    <!-- AS-IS(IDMS-IC) tdm55_chck_record.insert — 위치 INSERT … SELECT를 열 이름으로. 결과·의견은 N22 점검 처리에서 채운다(그 밖은 null). 날짜 인자 CAST -->
     <insert id="insertRecord">
         INSERT INTO tdm55_chck_record
                ( tdm55_chck_record_id, tdm55_relate_table_id, tdm55_relate_table, tdm55_proc_type, tdm55_person_id,
@@ -67,9 +87,9 @@
              , CONCAT( emp00_kor_nm
                      , ' '||f_cdnm('EmpPosCode', emp00_pos_cd, #{row.companyId}, CAST(#{row.stdDate} AS date))
                      , '('||emp00_org_code_nm||')' )
-             , NULL
-             , NULL
-             , NULL
+             , CAST(#{row.procResult} AS varchar)
+             , CAST(#{row.resultCmnt} AS text)
+             , CAST(#{row.reportCmnt} AS text)
              , f_sysdate()
           FROM getPerson(#{row.companyId}, CAST(#{row.stdDate} AS date))
          WHERE emp00_person_id = #{row.personId}
