@@ -6879,5 +6879,25 @@
     "note": "docs/work/N/N25-작업기록.md",
     "history": [],
     "id": "N25"
+  },
+  "Tdm35_Tab_TaskList": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/tdm/Tdm35_Tab_TaskList.java": "34367e8473af0ba7e2aba540e5c7f586c7670ce2",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm35_RoleAllcTaskModel.java": "b04867ac70a9d9305c62225bd0bbe2bafea7e002",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm35_RoleAllcTaskModelProperties.java": "e4b52776935b7e54f8ac867d20b784b58883e96c",
+      "application/src/main/java/myApp/server/tdm/Tdm35_RoleAllcTask.java": "5d31e72f6be2cbb6b28ebf5a4d1cfa53b82b465f",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm35_role_allc_task.xml": "51d4e6026f97d336bf2bace308683d70f5a79472"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-25T16:21:34+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/N/N26-작업기록.md",
+    "history": [],
+    "id": "N26"
   }
 }
