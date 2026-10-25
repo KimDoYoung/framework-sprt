@@ -1353,3 +1353,14 @@ export interface TdmManlEtcReq {
   checkEvidDocName: string | null;
 }
 
+
+/** 책무관리 시스템설정 한 행 (AS-IS Tdm91_CompanySetupModel) — 날짜는 'yyyy-MM-dd', *Yn은 'true'/'false' */
+export interface TdmCompanySetup {
+  companySetupId: number;
+  startDate: string | null;
+  cmntMinLimit: number | null;
+  batchCheckUseYn: string | null;
+  batchApprUseYn: string | null;
+  evidFileCheckYn: string | null;
+  note: string | null;
+}

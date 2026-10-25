@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { TdmChangeDetail, TdmChangeHistory, TdmCouncil, TdmCouncilRole, TdmCouncilRoleLookup, TdmCouncilSaveReq, TdmRole, TdmRoleCouncil, TdmRoleOrg, TdmRoleSaveReq, TdmRoleTask, TdmTask, TdmTaskDetail, TdmTaskDuty, TdmTaskDutyDetail, TdmTaskSaveReq, TdmTaskType, TdmAddTitle, TdmHr, TdmHrApplyReq, TdmHrChange, Manl, ManlRelateIcs, TdmDashboardCheckEnd, TdmDashboardChckOrg, TdmDashboardInsuff, TdmDashboardMyOrg, TdmDashboardProgress, TdmDashboardUndone, TdmDutyProgress, TdmDutyRecon, TdmManlFormFile, TdmManlItem, TdmManlOrg, TdmManlOrgAppr, TdmManlOrgManager, TdmManlOrgPeriod, TdmManlRelates, TdmHrLookup, TdmManlSaveReq, TdmManlList, TdmManlEtcReq, TdmRoleDesc, TdmRoleDescCompany, TdmRoleAllcPerson, TdmRoleDigm, TdmRoleDigmCompany, TdmRoleReport, TdmRoleReportAttach, TdmManlJob, TdmManlDutyGroup, TdmManlDuty, TdmManlDutyReg, TdmManlCopySource, TdmManlCopyItem, TdmManlDutyTaskOrg, TdmManager, TdmManagerInfo, TdmRoleOrgLookup, TdmApprStep, TdmApprStepChild, TdmRoleAllc, TdmRoleAllcCreateReq, TdmRoleAllcUpdateReq, TdmRoleAllcDetail, TdmRoleAllcTask, TdmRoleAllcTaskDetail, TdmHrRecord, TdmChangeListItem } from '../types/tdm';
 import type { TdmCheckJob, TdmCheckJobSaveReq, TdmCheckRole, TdmCheckPreCreate, TdmCheckExct, TdmChckOrg, TdmCheckAppr, TdmCheckOrgManager, TdmCheckRdPrint, TdmPdfOutcome, TdmChckRecord, TdmCheckOrg, TdmCheckManl, TdmChckApprStep, TdmCheckManlDetail, TdmChckInsuff, TdmChckInsuffSaveReq, TdmChckInsuffRow, TdmChckInsuffResultReq, TdmChckInsuffRecordSaveReq } from '../types/tdm';
-import type { TdmFormFile } from '../types/tdm';
+import type { TdmFormFile, TdmCompanySetup } from '../types/tdm';
 import type { TdmCheckApprCmnt, TdmCheckApprEndInfo, TdmCheckApprManl, TdmCheckApprInsuff, TdmCheckApprNeighbor, TdmCheckApprRecord, TdmCheckApprInsuffRecord } from '../types/tdm';
 
 /** tdm(책무) 화면 API */
@@ -1348,5 +1348,24 @@ export const tdmApi = {
   /** AS-IS tdm.Tdm43_Manl.updateRefBasis */
   updateManlRefBasis: async (manlId: number, refBasis: string): Promise<void> => {
     await apiClient.put<ApiResponse<null>>(`v1/tdm/manls/${manlId}/ref-basis`, { refBasis });
+  },
+
+  /** AS-IS tdm.Tdm91_CompanySetup.selectByCompanyId (회사는 서버) */
+  searchCompanySetups: async (): Promise<TdmCompanySetup[]> => {
+    const res = await apiClient.get<ApiResponse<TdmCompanySetup[]>>('v1/tdm/company-setups');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm91_CompanySetup.update (ID ≤ 0은 INSERT) */
+  saveCompanySetups: async (rows: TdmCompanySetup[]): Promise<TdmCompanySetup[]> => {
+    const req = rows.map(r => ({ companySetupId: r.companySetupId, startDate: r.startDate, cmntMinLimit: r.cmntMinLimit, batchCheckUseYn: r.batchCheckUseYn, batchApprUseYn: r.batchApprUseYn, evidFileCheckYn: r.evidFileCheckYn, note: r.note }));
+    const res = await apiClient.put<ApiResponse<TdmCompanySetup[]>>('v1/tdm/company-setups', req);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS tdm.Tdm91_CompanySetup.delete */
+  deleteCompanySetups: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/tdm/company-setups', { data: ids });
+    return res.data.data ?? 0;
   },
 };

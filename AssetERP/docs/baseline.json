@@ -6976,5 +6976,25 @@
     "note": "docs/work/N/N28-작업기록.md",
     "history": [],
     "id": "N28"
+  },
+  "Tdm91_Tab_CompanySetup": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/tdm/Tdm91_Tab_CompanySetup.java": "bd911d6b196c01ac028eacc389e0d9eaf0e8f4fe",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm91_CompanySetupModel.java": "dc5ac4b9bbd2a38a7aa5a917ce7eff4ec4912dee",
+      "application/src/main/java/myApp/client/vi/tdm/model/Tdm91_CompanySetupModelProperties.java": "12cf467f751611d0f9b300c0782beb78b657902a",
+      "application/src/main/java/myApp/server/tdm/Tdm91_CompanySetup.java": "cc9cb5cdc2409841e26b727119dcd24ea3e37acb",
+      "application/src/main/java/myApp/server/tdm/mapper/tdm91_company_setup.xml": "f878cf12974897f1e3c03d57914d0ca1752792fd"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-25T17:13:37+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/N/N29-작업기록.md",
+    "history": [],
+    "id": "N29"
   }
 }

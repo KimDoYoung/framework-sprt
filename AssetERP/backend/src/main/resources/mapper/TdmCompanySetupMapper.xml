@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/tdm/mapper/tdm91_company_setup.xml + Tdm91_CompanySetup (N29 책무관리 시스템설정)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmCompanySetupMapper">
+
+    <!-- AS-IS tdm91_company_setup.selectByCompanyId — SELECT *를 화면이 쓰는 열로. 항상 2026-01-01 기본 행(DB에는 없음)을 함께 준다.
+         기본 행의 ID: AS-IS는 f_create_seq()인데 읽기 전용 트랜잭션에서는 null이라 고정 음수(TdmCompanySetupService.DEFAULT_ROW_ID)로 준다 — 저장하면 INSERT -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CompanySetupRes">
+        SELECT tdm91_company_setup_id         AS company_setup_id
+             , tdm91_start_date               AS start_date
+             , tdm91_cmnt_min_limit           AS cmnt_min_limit
+             , tdm91_batch_check_use_yn       AS batch_check_use_yn
+             , tdm91_batch_appr_use_yn        AS batch_appr_use_yn
+             , tdm91_evid_file_check_yn       AS evid_file_check_yn
+             , tdm91_note                     AS note
+          FROM tdm91_company_setup
+         WHERE tdm91_company_id = #{companyId}
+         UNION ALL
+        SELECT -999999999::numeric
+             , '2026-01-01'::date
+             , null
+             , 'false'
+             , 'true'
+             , 'false'
+             , null
+         ORDER BY start_date DESC
+    </select>
+
+    <!-- AS-IS tdm91_company_setup.selectById — 화면이 쓰는 열만 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.CompanySetupRes">
+        SELECT tdm91_company_setup_id         AS company_setup_id
+             , tdm91_start_date               AS start_date
+             , tdm91_cmnt_min_limit           AS cmnt_min_limit
+             , tdm91_batch_check_use_yn       AS batch_check_use_yn
+             , tdm91_batch_appr_use_yn        AS batch_appr_use_yn
+             , tdm91_evid_file_check_yn       AS evid_file_check_yn
+             , tdm91_note                     AS note
+          FROM tdm91_company_setup
+         WHERE tdm91_company_setup_id = #{companySetupId}
+    </select>
+
+    <!-- AS-IS tdm91_company_setup.countByDate — 그대로 (새 행은 companySetupId가 null이라 != 가 거짓 → 0, 원본 동작) -->
+    <select id="countByDate" resultType="int">
+        SELECT COUNT(*)
+          FROM tdm91_company_setup
+         WHERE tdm91_company_id        = #{companyId}
+           AND tdm91_start_date        = #{startDate}
+           AND tdm91_company_setup_id != #{companySetupId}
+    </select>
+
+    <select id="selectCompanyId" resultType="long">
+        SELECT tdm91_company_id
+          FROM tdm91_company_setup
+         WHERE tdm91_company_setup_id = #{companySetupId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT/UPDATE: 화면이 바꾸는 열 (등록자·일시는 서버 값) -->
+    <insert id="insertCompanySetup">
+        INSERT INTO tdm91_company_setup
+               ( tdm91_company_setup_id, tdm91_company_id, tdm91_start_date, tdm91_cmnt_min_limit, tdm91_batch_check_use_yn
+               , tdm91_batch_appr_use_yn, tdm91_evid_file_check_yn, tdm91_note, tdm91_upd_nm, tdm91_upd_date )
+        VALUES ( #{companySetupId}, #{companyId}, #{row.startDate}, #{row.cmntMinLimit}, #{row.batchCheckUseYn}
+               , #{row.batchApprUseYn}, #{row.evidFileCheckYn}, #{row.note}, #{updName}, f_sysdate() )
+    </insert>
+
+    <update id="updateCompanySetup">
+        UPDATE tdm91_company_setup
+           SET tdm91_start_date         = #{row.startDate}
+             , tdm91_cmnt_min_limit     = #{row.cmntMinLimit}
+             , tdm91_batch_check_use_yn = #{row.batchCheckUseYn}
+             , tdm91_batch_appr_use_yn  = #{row.batchApprUseYn}
+             , tdm91_evid_file_check_yn = #{row.evidFileCheckYn}
+             , tdm91_note               = #{row.note}
+             , tdm91_upd_nm             = #{updName}
+             , tdm91_upd_date           = f_sysdate()
+         WHERE tdm91_company_setup_id = #{row.companySetupId}
+    </update>
+
+    <delete id="deleteCompanySetups">
+        DELETE FROM tdm91_company_setup
+         WHERE tdm91_company_id = #{companyId}
+           AND tdm91_company_setup_id IN
+        <foreach collection="companySetupIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>
