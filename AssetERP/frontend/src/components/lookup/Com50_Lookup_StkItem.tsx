@@ -7,7 +7,7 @@
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal } from 'antd';
+import { message, Modal, Space } from 'antd';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { comApi } from '@/api/com';
 import { Com50Item } from '@/types/com';
@@ -144,9 +144,11 @@ export const Com50_Lookup_StkItem: React.FC<Props> = ({ mode, initialSearchText,
       destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
-          <Button type="select" onClick={confirm}>선택</Button>
-          {/* [E8] cancelButton[닫기].Select (L189) → hide() */}
-          <Button type="close" onClick={onClose} style={{ marginLeft: 8 }}>닫기</Button>
+          <Space>
+            <Button type="select" onClick={confirm}>선택</Button>
+            {/* [E8] cancelButton[닫기].Select (L189) → hide() */}
+            <Button type="close" onClick={onClose} style={{ marginLeft: 8 }}>닫기</Button>
+          </Space>
         </div>
       }
     >

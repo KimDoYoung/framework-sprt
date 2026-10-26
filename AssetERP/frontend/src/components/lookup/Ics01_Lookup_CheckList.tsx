@@ -5,7 +5,7 @@
  * 모달 폭: 열 합계 600 + 행번호·선택 약 60 + 여백 130 = 790 (03 원칙 21, AS-IS 680보다 작지 않다)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message } from 'antd';
+import { message, Space } from 'antd';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
 import { IcsClassTreeItem } from '@/types/ics';
@@ -68,11 +68,13 @@ export const Ics01_Lookup_CheckList: React.FC<Props> = ({ open, parentTreeId, on
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
-          <Button type="save" onClick={() => select(selectedRef.current)}>확인</Button>
-          {/* [E4] selectAllButton[전체].Select (L79) → selectAll() L135-138: callback(null), hide() */}
-          <Button onClick={() => select(null)}>전체</Button>
-          {/* [E5] cancleButton[닫기].Select (L85) → hide() */}
-          <Button type="close" onClick={onClose}>닫기</Button>
+          <Space>
+            <Button type="save" onClick={() => select(selectedRef.current)}>확인</Button>
+            {/* [E4] selectAllButton[전체].Select (L79) → selectAll() L135-138: callback(null), hide() */}
+            <Button onClick={() => select(null)}>전체</Button>
+            {/* [E5] cancleButton[닫기].Select (L85) → hide() */}
+            <Button type="close" onClick={onClose}>닫기</Button>
+          </Space>
         </div>
       }
     >
