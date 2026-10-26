@@ -84,3 +84,28 @@ ADD COLUMN sch22_confirmer_id numeric NULL;
                            WHERE m.tdm52_chck_manl_id = i.tdm54_chck_manl_id )
    WHERE tdm54_occ_ym IS NULL;
 ```
+
+---
+```sql
+BEGIN;
+
+-- 1. 신규 컬럼 추가
+ALTER TABLE public.tdm54_chck_insuff 
+    ADD COLUMN IF NOT EXISTS tdm54_action_appr_ym varchar(7) NULL,
+    ADD COLUMN IF NOT EXISTS tdm54_occ_ym varchar(7) NULL;
+
+-- 2. 신규 인덱스 생성
+CREATE INDEX IF NOT EXISTS tdm54_chck_insuff_idx03 
+    ON public.tdm54_chck_insuff USING btree (tdm54_company_id, tdm54_action_appr_ym, tdm54_role_id, tdm54_org_id);
+
+-- 3. 트리거 갱신 (INSERT 이벤트 추가를 위해 DROP 후 CREATE)
+DROP TRIGGER IF EXISTS trigger_aft_tdm54_chck_insuff ON public.tdm54_chck_insuff;
+
+CREATE TRIGGER trigger_aft_tdm54_chck_insuff 
+    AFTER INSERT OR DELETE OR UPDATE 
+    ON public.tdm54_chck_insuff 
+    FOR EACH ROW 
+    EXECUTE FUNCTION tdm54_chck_insuff_backup();
+
+COMMIT;
+```
