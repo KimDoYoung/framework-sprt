@@ -2,10 +2,17 @@ package kr.co.kfs.asseterp.biz.sch.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoService;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04CheckStatusRes;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04CheckStatusSearchCond;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04DailyCheckRes;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04DailyCheckStatusReq;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04ListRes;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04ListResultReq;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04ListSaveReq;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04ListSearchCond;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04TodoRes;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04TodoSaveReq;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04TodoSearchCond;
 import kr.co.kfs.asseterp.biz.sch.mapper.SchListMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
@@ -73,6 +80,73 @@ public class SchListService {
                 mapper.updatePersonId(user.getCompanyId(), r.listId(), user.getUserId(), r.manageDate(), r.statusCode());
             }
         }
+    }
+
+    /**
+     * AS-IS Sch04_Tab_ToDoList.retrieve L364-401 → Sch04_List.selectByManagerId L34: 기준일 하루(endDate가 없으면 startDate), 공유구분은 항상 나의 스케줄('1'),
+     * 처리여부(전체 '%')·분류(없으면 전체)·완료건 제외·취소건 제외·조회 기준(처리일/마감일). 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0.
+     * 검색어는 화면이 항상 '%'를 보낸다
+     */
+    public List<Sch04TodoRes> searchTodo(UserPrincipal user, boolean manageCheck, LocalDate startDate, boolean exceptYn, boolean cancelYn,
+                                         String statusCode, Long classId) {
+        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        return mapper.selectByManagerId(new Sch04TodoSearchCond(user.getCompanyId(), user.getUserId(), orgId, String.valueOf(manageCheck), startDate, startDate,
+                "1", String.valueOf(exceptYn), String.valueOf(cancelYn), blankToAny(statusCode), classId, "%"));
+    }
+
+    /**
+     * AS-IS Sch04_List.insertCheck L207-252: 고친 행마다 sch04_list에 있으면(selectById) 처리여부·처리일·담당자·비고만 confirmUpdate(처리일은 미처리·취소면 마감일),
+     * 없으면(UNION이 만든 미처리 건) 새 ID로 insert. 회사는 로그인 회사(AS-IS는 모델 값)
+     */
+    @Transactional
+    public void saveTodo(UserPrincipal user, List<Sch04TodoSaveReq> rows) {
+        for (Sch04TodoSaveReq r : rows) {
+            if (mapper.selectById(user.getCompanyId(), r.listId()) == null) {
+                Sch04ListSaveReq ins = new Sch04ListSaveReq(null, r.closeDate(), r.manageDate(), r.infoId(), r.title(), r.scheduleCode(), r.cycleCode(),
+                        r.managerId(), r.statusCode(), r.note(), r.deadlineId(), null, r.mngOrgId());
+                mapper.insert(mapper.selectNextId(), user.getCompanyId(), r.personId(), ins);
+            } else {
+                mapper.confirmUpdate(user.getCompanyId(), r.listId(), r.statusCode(), r.manageDate(), r.personId(), r.note());
+            }
+        }
+    }
+
+    /**
+     * AS-IS Sch04_Tab_DailyCheckList.retrieve L335-373 → Sch04_List.selectByManagerId L34: 기준일 하루(endDate가 없으면 startDate), 나의 스케줄('1'), 처리일 기준(manageCheck 'true'),
+     * 완료건 제외 안 함·취소건 제외·처리여부 전체. 분류(classId)와 검색어(구분/제목/담당부서·처리자에 들어 있는 글자)만 화면이 정한다.
+     * 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0. 검색어는 서비스가 %…%로 만든다
+     */
+    public List<Sch04DailyCheckRes> searchDailyCheck(UserPrincipal user, LocalDate startDate, Long classId, String searchText) {
+        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        return mapper.selectByDailyCheck(new Sch04TodoSearchCond(user.getCompanyId(), user.getUserId(), orgId, "true", startDate, startDate,
+                "1", "false", "true", "%", classId, searchText == null || searchText.isEmpty() ? "%" : "%" + searchText + "%"));
+    }
+
+    /**
+     * AS-IS Sch04_List.statusUpdateCheck L254-316: 같은 일정·담당자·마감일 행이 있으면(selectByCheck) 처리여부·처리일·처리자만 바꾸고(updateStatusCode),
+     * 없으면(UNION이 만든 미처리 건) 새 ID로 insert. 어느 쪽이든 행의 listId를 돌려준다. 처리자는 로그인 사용자, 회사는 로그인 회사(AS-IS는 모델 값)
+     */
+    @Transactional
+    public Long updateStatus(UserPrincipal user, Sch04DailyCheckStatusReq r) {
+        Long found = mapper.selectByCheck(user.getCompanyId(), r.infoId(), r.managerId(), r.closeDate());
+        if (found != null) {
+            mapper.updateStatusCode(user.getCompanyId(), found, r.statusCode(), r.manageDate(), user.getUserId());
+            return found;
+        }
+        long listId = mapper.selectNextId();
+        Sch04ListSaveReq ins = new Sch04ListSaveReq(null, r.closeDate(), r.manageDate(), r.infoId(), r.title(), r.scheduleCode(), r.cycleCode(),
+                r.managerId(), r.statusCode(), r.note(), r.deadlineId(), null, r.mngOrgId());
+        mapper.insert(listId, user.getCompanyId(), user.getUserId(), ins);
+        return listId;
+    }
+
+    /**
+     * AS-IS Sch04_Tab_DailyCheckListStatus.retrieve L181-205 → Sch04_List.selectCheckListStatus L101: 로그인 사용자가 처리한(처리자) 데일리 체크 건을 처리일 기간으로 읽는다.
+     * 처리여부(전체 '%')·분류(없으면 전체)·검색어(체크항목/체크내용에 들어 있는 글자, 서비스가 %…%로 만든다)
+     */
+    public List<Sch04CheckStatusRes> searchCheckStatus(UserPrincipal user, LocalDate startDate, LocalDate endDate, String statusCode, Long classId, String searchText) {
+        return mapper.selectCheckListStatus(new Sch04CheckStatusSearchCond(user.getCompanyId(), user.getUserId(), startDate, endDate, blankToAny(statusCode), classId,
+                "%" + (searchText == null ? "" : searchText) + "%"));
     }
 
     /**

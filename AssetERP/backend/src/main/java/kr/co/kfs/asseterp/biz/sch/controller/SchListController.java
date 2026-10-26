@@ -1,9 +1,15 @@
 package kr.co.kfs.asseterp.biz.sch.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04CheckStatusRes;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04CheckStatusSearchCond;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04DailyCheckRes;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04DailyCheckStatusReq;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04ListRes;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04ListResultReq;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04ListSaveReq;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04TodoRes;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04TodoSaveReq;
 import kr.co.kfs.asseterp.biz.sch.service.SchListService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -89,6 +95,51 @@ public class SchListController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(body);
+    }
+
+    /** AS-IS sch.Sch04_List.selectByManagerId — 업무일정 처리(O04). manageCheck: 처리일 기준(false면 마감일), statusCode 전체는 '%', classId 없으면 전체 */
+    @GetMapping("/todo")
+    public ApiResponse<List<Sch04TodoRes>> searchTodo(@AuthenticationPrincipal UserPrincipal principal,
+                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                      @RequestParam(defaultValue = "false") boolean manageCheck,
+                                                      @RequestParam(defaultValue = "false") boolean exceptYn,
+                                                      @RequestParam(defaultValue = "true") boolean cancelYn,
+                                                      @RequestParam(required = false) String statusCode,
+                                                      @RequestParam(required = false) Long classId) {
+        return ApiResponse.ok(service.searchTodo(principal, manageCheck, startDate, exceptYn, cancelYn, statusCode, classId));
+    }
+
+    /** AS-IS sch.Sch04_List.insertCheck — 고친 행(처리여부·처리일·담당자·비고)을 저장한다 */
+    @PutMapping("/todo")
+    public ApiResponse<Integer> saveTodo(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Sch04TodoSaveReq> rows) {
+        service.saveTodo(principal, rows);
+        return ApiResponse.ok(rows.size());
+    }
+
+    /** AS-IS sch.Sch04_List.selectByManagerId — 데일리 체크리스트(O05). 분류 없으면 전체, 검색어 없으면 전체 */
+    @GetMapping("/daily-check")
+    public ApiResponse<List<Sch04DailyCheckRes>> searchDailyCheck(@AuthenticationPrincipal UserPrincipal principal,
+                                                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                                  @RequestParam(required = false) Long classId,
+                                                                  @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchDailyCheck(principal, startDate, classId, searchText));
+    }
+
+    /** AS-IS sch.Sch04_List.selectCheckListStatus — 업무일정 체크내역(O06). 처리여부 없으면 전체, 분류 없으면 전체 */
+    @GetMapping("/check-status")
+    public ApiResponse<List<Sch04CheckStatusRes>> searchCheckStatus(@AuthenticationPrincipal UserPrincipal principal,
+                                                                    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                                    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                                                                    @RequestParam(required = false) String statusCode,
+                                                                    @RequestParam(required = false) Long classId,
+                                                                    @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchCheckStatus(principal, startDate, endDate, statusCode, classId, searchText));
+    }
+
+    /** AS-IS sch.Sch04_List.statusUpdateCheck — 체크(처리완료·해당없음) 한 건을 저장하고 그 행의 listId를 돌려준다 */
+    @PutMapping("/daily-check/status")
+    public ApiResponse<Long> updateDailyCheckStatus(@AuthenticationPrincipal UserPrincipal principal, @RequestBody Sch04DailyCheckStatusReq req) {
+        return ApiResponse.ok(service.updateStatus(principal, req));
     }
 
     /** AS-IS sch.Sch04_List.upsert — 고친 행(처리구분·처리일)을 저장한다 */

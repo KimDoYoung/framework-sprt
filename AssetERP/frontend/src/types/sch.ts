@@ -319,6 +319,99 @@ export interface Sch01Period {
   managerOrgInfo?: string | null;
 }
 
+/** 업무일정 처리 조회 조건 (AS-IS Sch04_Tab_ToDoList.retrieve). manageCheck: 처리일 기준(false면 마감일), statusCode 전체 '%', classId 전체 null */
+export interface Sch04TodoSearch {
+  startDate: string;
+  manageCheck: boolean;
+  exceptYn: boolean;
+  cancelYn: boolean;
+  statusCode: string;
+  classId: number | null;
+}
+
+/** 업무일정 처리 한 행 (AS-IS Sch04_ListModel — sch04_list.selectByManagerId). listId는 저장된 행이면 sch04_list_id, 아직 처리하지 않은 일정이면 임시 번호. scheduleCode '1' 업무일정·'5' 공모주 */
+export interface Sch04Todo {
+  listId: number;
+  closeDate?: string | null;
+  manageDate?: string | null;
+  scheduleCode?: string | null;
+  infoId?: number | null;
+  cycleCode?: string | null;
+  title?: string | null;
+  mngOrgId?: number | null;
+  managerId?: number | null;
+  personId?: number | null;
+  statusCode?: string | null;
+  note?: string | null;
+  companyId?: number | null;
+  deadlineId?: number | null;
+  cycleName?: string | null;
+  statusName?: string | null;
+  managerName?: string | null;
+  personName?: string | null;
+  className?: string | null;
+}
+
+/** 데일리 체크리스트 조회 조건 (AS-IS Sch04_Tab_DailyCheckList.retrieve). classId 전체 null, searchText 없으면 전체 */
+export interface Sch04DailyCheckSearch {
+  startDate: string;
+  classId: number | null;
+  searchText: string;
+}
+
+/**
+ * 데일리 체크리스트 한 행 (AS-IS Sch04_ListModel — 데일리 체크). listId는 저장된 행이면 sch04_list_id, 아직 처리하지 않은 일정이면 임시 번호.
+ * statusCode '1' 처리완료·'5' 해당없음(체크 열 yes/not은 이 값에서 나온다). apprStatusCode 10·20·30이면 상신 중이라 고칠 수 없다
+ */
+export interface Sch04DailyCheck {
+  listId: number;
+  closeDate?: string | null;
+  manageDate?: string | null;
+  scheduleCode?: string | null;
+  infoId?: number | null;
+  cycleCode?: string | null;
+  title?: string | null;
+  mngOrgId?: number | null;
+  managerId?: number | null;
+  personId?: number | null;
+  statusCode?: string | null;
+  note?: string | null;
+  companyId?: number | null;
+  deadlineId?: number | null;
+  className?: string | null;
+  apprId?: number | null;
+  apprStatusCode?: string | null;
+  apprStatusName?: string | null;
+  /** 체크 열(AS-IS 모델의 계산 getter getYes/getNot) — 서버가 주지 않고 화면이 statusCode에서 만든다 */
+  yes?: boolean;
+  not?: boolean;
+}
+
+/** 업무일정 체크내역 조회 조건 (AS-IS Sch04_Tab_DailyCheckListStatus.retrieve). statusCode 전체 '%', classId 전체 null */
+export interface Sch04CheckStatusSearch {
+  startDate: string;
+  endDate: string;
+  statusCode: string;
+  classId: number | null;
+  searchText: string;
+}
+
+/** 업무일정 체크내역 한 행 (AS-IS Sch04_ListModel — sch04_list.selectCheckListStatus). scheduleCode '1' 업무일정·'5' 공모주, apprId가 없으면 상신 문서 없음 */
+export interface Sch04CheckStatus {
+  listId: number;
+  manageDate?: string | null;
+  closeDate?: string | null;
+  className?: string | null;
+  title?: string | null;
+  scheduleCode?: string | null;
+  infoId?: number | null;
+  deadlineId?: number | null;
+  statusName?: string | null;
+  note?: string | null;
+  apprId?: number | null;
+  apprStatusName?: string | null;
+}
+
 /** 부서별 업무일정 조회 조건 (AS-IS Sch01_Tab_ListOrg.retrieve). cycleCode 전체 '%' */
 export interface Sch01OrgSearch {
   orgId: number;

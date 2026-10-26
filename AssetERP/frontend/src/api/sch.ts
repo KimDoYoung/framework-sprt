@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import {
   Sch03Deadline, Sch03DeadlineSaveReq, Sch03DeadlineTemplate, Sch05RelateIcs,
-  Sch01Info, Sch01InfoManager, Sch01InfoView, Sch01Org, Sch01OrgSearch, Sch01Period, Sch01PeriodSearch, Sch01InfoSave, Sch01InfoSearch, Sch06Alarm, Sch08Class, Sch08ClassCombo,
+  Sch01Info, Sch01InfoManager, Sch01InfoView, Sch01Org, Sch01OrgSearch, Sch04Todo, Sch04TodoSearch, Sch04DailyCheck, Sch04DailyCheckSearch, Sch04CheckStatus, Sch04CheckStatusSearch, Sch01Period, Sch01PeriodSearch, Sch01InfoSave, Sch01InfoSearch, Sch06Alarm, Sch08Class, Sch08ClassCombo,
   Sch02Share, Sch22WriteGroup, Sch04List, Sch04ListManagerSearch, Sch04ListSearch, Sch10Ipo, Sch10IpoSearch, Sch12IpoCorp, Sch14IpoMismatch, Sch15IpoItemMatching,
 } from '../types/sch';
 import { readBlobError } from './file';
@@ -293,6 +293,40 @@ export const schApi = {
   /** AS-IS sch.Sch01_Info.selectByText — 로그인 사용자가 담당자인 일정 */
   searchInfos: async (cond: Sch01InfoSearch): Promise<Sch01Info[]> => {
     const res = await apiClient.get<ApiResponse<Sch01Info[]>>('v1/sch/infos', { params: cond });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch04_List.selectByManagerId — 업무일정 처리(O04) */
+  searchTodo: async (cond: Sch04TodoSearch): Promise<Sch04Todo[]> => {
+    const res = await apiClient.get<ApiResponse<Sch04Todo[]>>('v1/sch/lists/todo', { params: cond });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch04_List.insertCheck — 고친 행(처리여부·처리일·담당자·비고) 저장 (O04) */
+  saveTodo: async (rows: Sch04Todo[]): Promise<number> => {
+    const body = rows.map(({ listId, closeDate, manageDate, infoId, title, scheduleCode, cycleCode, managerId, personId, statusCode, note, deadlineId, mngOrgId }) =>
+      ({ listId, closeDate, manageDate, infoId, title, scheduleCode, cycleCode, managerId, personId, statusCode, note, deadlineId, mngOrgId }));
+    const res = await apiClient.put<ApiResponse<number>>('v1/sch/lists/todo', body);
+    return res.data.data;
+  },
+
+  /** AS-IS sch.Sch04_List.selectByManagerId — 데일리 체크리스트(O05) */
+  searchDailyCheck: async (cond: Sch04DailyCheckSearch): Promise<Sch04DailyCheck[]> => {
+    const res = await apiClient.get<ApiResponse<Sch04DailyCheck[]>>('v1/sch/lists/daily-check', { params: cond });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch04_List.statusUpdateCheck — 체크(처리완료·해당없음) 한 건 저장, 그 행의 listId를 돌려준다 (O05) */
+  updateDailyCheckStatus: async (row: Sch04DailyCheck): Promise<number> => {
+    const { listId, closeDate, manageDate, infoId, title, scheduleCode, cycleCode, managerId, statusCode, note, deadlineId, mngOrgId } = row;
+    const res = await apiClient.put<ApiResponse<number>>('v1/sch/lists/daily-check/status',
+      { listId, closeDate, manageDate, infoId, title, scheduleCode, cycleCode, managerId, statusCode, note, deadlineId, mngOrgId });
+    return res.data.data;
+  },
+
+  /** AS-IS sch.Sch04_List.selectCheckListStatus — 업무일정 체크내역(O06) */
+  searchCheckStatus: async (cond: Sch04CheckStatusSearch): Promise<Sch04CheckStatus[]> => {
+    const res = await apiClient.get<ApiResponse<Sch04CheckStatus[]>>('v1/sch/lists/check-status', { params: cond });
     return res.data.data ?? [];
   },
 

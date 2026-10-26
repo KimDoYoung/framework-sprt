@@ -1,8 +1,13 @@
 package kr.co.kfs.asseterp.biz.sch.mapper;
 
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04CheckStatusRes;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04CheckStatusSearchCond;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04DailyCheckRes;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04ListRes;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04ListSaveReq;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04ListSearchCond;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04TodoRes;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04TodoSearchCond;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -37,4 +42,24 @@ public interface SchListMapper {
     /** AS-IS sch04_list.updateConfirm */
     int updateConfirm(@Param("companyId") Long companyId, @Param("listId") Long listId, @Param("confirmYn") String confirmYn,
                       @Param("confirmDate") LocalDate confirmDate, @Param("confirmerId") Long confirmerId);
+
+    /** AS-IS sch04_list.selectByManagerId (O04 업무일정 처리) */
+    List<Sch04TodoRes> selectByManagerId(Sch04TodoSearchCond cond);
+
+    /** AS-IS sch04_list.confirmUpdate (O04 저장 — 이미 있는 행). 회사 범위를 더했다 */
+    int confirmUpdate(@Param("companyId") Long companyId, @Param("listId") Long listId, @Param("statusCode") String statusCode,
+                      @Param("manageDate") LocalDate manageDate, @Param("personId") Long personId, @Param("note") String note);
+
+    /** AS-IS sch04_list.selectByManagerId (O05 데일리 체크리스트 — 데일리 일정만, 결재 열 포함) */
+    List<Sch04DailyCheckRes> selectByDailyCheck(Sch04TodoSearchCond cond);
+
+    /** AS-IS sch04_list.selectByCheck (O05) — 같은 일정·담당자·마감일의 처리 행 ID, 없으면 null. 회사 범위를 더했다 */
+    Long selectByCheck(@Param("companyId") Long companyId, @Param("infoId") Long infoId, @Param("managerId") Long managerId, @Param("closeDate") LocalDate closeDate);
+
+    /** AS-IS sch04_list.updateStatusCode (O05). 회사 범위를 더했다 */
+    int updateStatusCode(@Param("companyId") Long companyId, @Param("listId") Long listId, @Param("statusCode") String statusCode,
+                         @Param("manageDate") LocalDate manageDate, @Param("personId") Long personId);
+
+    /** AS-IS sch04_list.selectCheckListStatus (O06 업무일정 체크내역) */
+    List<Sch04CheckStatusRes> selectCheckListStatus(Sch04CheckStatusSearchCond cond);
 }
