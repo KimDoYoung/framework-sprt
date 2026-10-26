@@ -4,7 +4,7 @@
  * 레이아웃 makeLayout() L114-143: 모달 710×490 "주소록", 위 [검색어 칸 250][검색], 가운데 탭 3개(개인 주소록 · 사내 주소록 · 공용 주소록, 각각 체크박스 다중 그리드), 아래 가운데 [확인][닫기]
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Tabs, message } from 'antd';
+import { Tabs, message, Space } from 'antd';
 import dayjs from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { empAddrBookApi, empApi } from '@/api/emp';
@@ -133,9 +133,11 @@ export const Emp10_Lookup_List: React.FC<Props> = ({ open, onResult, onClose }) 
       destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
-          <Button type="save" onClick={confirm}>확인</Button>
-          {/* [E2] closeButton[닫기].Select (L154) → hide() */}
-          <Button type="close" onClick={onClose}>닫기</Button>
+          <Space>
+            <Button type="save" onClick={confirm}>확인</Button>
+            {/* [E2] closeButton[닫기].Select (L154) → hide() */}
+            <Button type="close" onClick={onClose}>닫기</Button>
+          </Space>
         </div>
       }
     >

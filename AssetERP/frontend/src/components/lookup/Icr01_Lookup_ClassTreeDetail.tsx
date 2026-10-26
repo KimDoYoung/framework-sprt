@@ -44,12 +44,10 @@ export const Icr01_Lookup_ClassTreeDetail: React.FC<Props> = ({ classTreeId, onC
       maskClosable={false}
       onCancel={onClose}
       footer={
-        <Space>
           <div style={{ textAlign: 'center' }}>
             {/* [E1] closeButton[닫기].Select (L93) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </div>
-        </Space>
       }
     >
       {/* [E0] 화면 열림 (생성자 L40-51) → getEditor(), show() */}

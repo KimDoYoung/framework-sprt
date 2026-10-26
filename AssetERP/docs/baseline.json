@@ -7307,5 +7307,41 @@
     "note": "docs/work/P/P03-작업기록.md",
     "history": [],
     "id": "P03"
+  },
+  "Fnd20_Tab_PlanEmp": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/fnd/Fnd20_TabPage_PlanEmp.java": "c5e8f589408ec04e21a94ea6cec7379843aa64ca",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd20_Tab_PlanEmp.java": "fe9f680f09e68fb2c9d14696e01cce342df7dc21",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModel.java": "6c8b85e6fd82c9178f6525f60a5e33fd9adee66f",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModelProperties.java": "e5ef80aca72758d7422b0f86dc61cf24a4f22895",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd02_FundInfoModel.java": "997b1e7a847092c9ad0e59ce182fefb8b9ca1934",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd20_PlanModel.java": "ad7042486e7c7b2b7b9d290b3b0743c965c1ba1a",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd20_PlanModelProperties.java": "2a92240e3bc4fe4808e12541fff004a446580b74",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "7f4b0fb215e50834fd6180ab89005f6d73d52cd6",
+      "application/src/main/java/myApp/server/apr/mapper/apr03_relate_fund.xml": "a29728d21792d0b243e983cdced2a038ec516408",
+      "application/src/main/java/myApp/server/apr/mapper/apr04_appr_step.xml": "d2ad02a8dc784aa55ac38dd915c3c1450954fddf",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr05_doc_type.xml": "d4ff69a5141911a52a300fb259e88e3a4af6ff45",
+      "application/src/main/java/myApp/server/fnd/Fnd01_FundCode.java": "49cd01fec4668d353126f461c07c18fc6d93e024",
+      "application/src/main/java/myApp/server/fnd/Fnd20_Plan.java": "cac38f3be225b88b97646179b9fd4c4559963840",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd01_fund_code.xml": "c6b7e784adfbb4ffee602c9f03a4c96b73405b3d",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd20_plan.xml": "e9597ff561d716b5ee7b56457f5d386729574590",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc"
+    ],
+    "recorded_at": "2026-10-26T13:58:07+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/P/P04-작업기록.md",
+    "history": [],
+    "id": "P04"
   }
 }
