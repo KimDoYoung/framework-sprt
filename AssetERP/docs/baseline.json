@@ -7664,5 +7664,27 @@
     "note": "docs/work/Q/Q02-작업기록.md",
     "history": [],
     "id": "Q02"
+  },
+  "Adv11_Tab_BookExtr": {
+    "commit": "497fd9754f254028643bbe6f6df898da309b9d16",
+    "commit_short": "497fd97",
+    "branch": "ioc",
+    "commit_date": "2026-10-26",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/adv/Adv11_Tab_BookExtr.java": "b2dde5098165bfef6e2d0320f18c720723448c2b",
+      "application/src/main/java/myApp/client/vi/adv/model/Adv11_BookExtrModel.java": "c084fda19b7fc34dabfb3865d1e153baf0918ad2",
+      "application/src/main/java/myApp/client/vi/adv/model/Adv11_BookExtrModelProperties.java": "17cdb90fa35e37885137bdd9dcfe85a9567481f5",
+      "application/src/main/java/myApp/server/adv/Adv11_BookExtr.java": "baff431b48ccc82f304733ac5b7541006ddd9838",
+      "application/src/main/java/myApp/server/adv/mapper/adv11_book_extr.xml": "4bf28312d245359e4a04754e76999f55e0a14c4e"
+    },
+    "shared_links": [
+      "Com50_Lookup_StkItem"
+    ],
+    "recorded_at": "2026-10-26T20:33:27+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Q/Q03-작업기록.md",
+    "history": [],
+    "id": "Q03"
   }
 }

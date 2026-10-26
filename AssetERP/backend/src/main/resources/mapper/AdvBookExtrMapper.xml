@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/adv/mapper/adv11_book_extr.xml (selectByStdDate, selectRecentStdDate, selectById, excelInsert)  (Q03)
+  UpdateDataModel의 동적 INSERT/UPDATE/DELETE는 port-save 결과로 옮겼다
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.adv.mapper.AdvBookExtrMapper">
+
+    <sql id="bookExtrColumns">
+        adv11_book_extr_id                                                            AS book_extr_id,
+        adv11_std_date                                                                AS std_date,
+        adv11_manage_cd                                                               AS manage_code,
+        adv11_manage_nm                                                               AS manage_name,
+        adv11_item_cd                                                                 AS item_code,
+        adv11_item_nm                                                                 AS item_name,
+        adv11_item_type                                                               AS item_type,
+        f_cdnm('ItemMClassCode', adv11_item_type, adv11_company_id, adv11_std_date)   AS item_type_name
+    </sql>
+
+    <!-- AS-IS adv11_book_extr.selectByStdDate L26 (IDMS-IC) — SELECT *를 DTO 열로 풀어 썼다 -->
+    <select id="selectByStdDate" resultType="kr.co.kfs.asseterp.biz.adv.dto.BookExtrRes">
+        SELECT <include refid="bookExtrColumns"/>
+          FROM adv11_book_extr
+         WHERE adv11_company_id  = #{companyId}
+           AND adv11_std_date    = #{stdDate}
+           AND CONCAT(adv11_manage_cd, adv11_manage_nm, adv11_item_cd, adv11_item_nm) ILIKE #{searchText}
+         ORDER BY adv11_manage_cd, adv11_item_nm, adv11_item_cd
+    </select>
+
+    <!-- AS-IS adv11_book_extr.selectRecentStdDate L36 (IDMS-IC) -->
+    <select id="selectRecentStdDate" resultType="string">
+        SELECT TO_CHAR(MAX(adv11_std_date),'yyyy-mm-dd')
+          FROM adv11_book_extr
+         WHERE adv11_company_id  = #{companyId}
+           AND adv11_std_date   &lt;= #{stdDate}
+    </select>
+
+    <!-- AS-IS adv11_book_extr.selectById (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.adv.dto.BookExtrRes">
+        SELECT <include refid="bookExtrColumns"/>
+          FROM adv11_book_extr
+         WHERE adv11_book_extr_id = #{bookExtrId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Adv11_BookExtr.update (UpdateDataModel 동적 INSERT) -->
+    <insert id="insertBookExtr">
+        INSERT INTO adv11_book_extr (adv11_book_extr_id, adv11_company_id, adv11_std_date, adv11_manage_cd, adv11_manage_nm, adv11_item_cd, adv11_item_nm, adv11_item_type)
+        VALUES (#{bookExtrId}, #{companyId}, #{req.stdDate}, #{req.manageCode}, #{req.manageName}, #{req.itemCode}, #{req.itemName}, #{req.itemType})
+    </insert>
+
+    <!-- AS-IS Adv11_BookExtr.update (UpdateDataModel 동적 UPDATE) — 로그인 회사 행만 -->
+    <update id="updateBookExtr">
+        UPDATE adv11_book_extr
+           SET adv11_std_date  = #{req.stdDate},
+               adv11_manage_cd = #{req.manageCode},
+               adv11_manage_nm = #{req.manageName},
+               adv11_item_cd   = #{req.itemCode},
+               adv11_item_nm   = #{req.itemName},
+               adv11_item_type = #{req.itemType}
+         WHERE adv11_book_extr_id = #{req.bookExtrId}
+           AND adv11_company_id   = #{companyId}
+    </update>
+
+    <!-- AS-IS Adv11_BookExtr.delete (deleteModel) — 로그인 회사 행만 -->
+    <delete id="deleteBookExtrs">
+        DELETE FROM adv11_book_extr
+         WHERE adv11_company_id = #{companyId}
+           AND adv11_book_extr_id IN
+        <foreach collection="bookExtrIds" item="bookExtrId" open="(" separator="," close=")">#{bookExtrId}</foreach>
+    </delete>
+
+    <!-- AS-IS adv11_book_extr.excelInsert (IDMS-IC) — id는 f_create_seq() -->
+    <insert id="excelInsert">
+        INSERT INTO adv11_book_extr
+               (adv11_book_extr_id, adv11_company_id, adv11_std_date, adv11_manage_cd, adv11_manage_nm, adv11_item_cd, adv11_item_nm, adv11_item_type)
+        VALUES (f_create_seq(), #{companyId}, #{stdDate}, #{manageCode}, #{manageName}, #{itemCode}, #{itemName}, #{itemType})
+    </insert>
+
+</mapper>

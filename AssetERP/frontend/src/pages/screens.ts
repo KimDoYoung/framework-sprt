@@ -41,6 +41,7 @@ import { Fnd25_Tab_FundTerms } from './fnd/Fnd25_Tab_FundTerms';
 import { Fnd01_Tab_FundCode } from './fnd/Fnd01_Tab_FundCode';
 import { Adv02_Tab_Account } from './adv/Adv02_Tab_Account';
 import { Adv05_Tab_OrgAuth } from './adv/Adv05_Tab_OrgAuth';
+import { Adv11_Tab_BookExtr } from './adv/Adv11_Tab_BookExtr';
 import { Fnd20_Tab_Plan } from './fnd/Fnd20_Tab_Plan';
 import { Fnd20_Tab_PlanEmp } from './fnd/Fnd20_Tab_PlanEmp';
 import { Fnd03_Tab_ConsignmentManager } from './fnd/Fnd03_Tab_ConsignmentManager';
@@ -265,6 +266,7 @@ export const SCREENS: Record<string, React.FC> = {
   Fnd20_Tab_Plan, // P03 (+ Fnd20_TabPage_Plan·components/lookup/Dcr00_Lookup_FundPlan, 상품기획일정 등록)
   Adv02_Tab_Account, // Q01 (+ Adv02_Edit_Account·components/lookup/Sys15_Lookup_Corp corpTypeName, 일임계좌 등록)
   Adv05_Tab_OrgAuth, // Q02 (+ Adv05_Page_OrgAuth·components/lookup/Adv05_Lookup_OrgAuth·Adv02_Lookup_SelectMulti, 일임계좌 권한설정)
+  Adv11_Tab_BookExtr, // Q03 (+ components/lookup/Com50_Lookup_StkItem VIEW, 템플릿·엑셀업로드, 일임보유주식등록(타사무))
   Fnd01_Tab_FundCode, // P05 (+ Fnd01_Edit_FundCode·components/lookup/Fnd03_Lookup_Consignment·Fnd06_Lookup_OfficeWork·Fnd09_Lookup_TrustBank, 펀드 등록 및 변경)
   Fnd20_Tab_PlanEmp, // P04 (1단계: 본 화면 + Fnd20_TabPage_PlanEmp. [결재요청] 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc·서버 insertAppr는 다음 단계)
   Fnd01_Tab_FundPlan, // P01 (+ Fnd00_Lookup_FundCode, 신규기획펀드 등록 — 아래 편집 폼 Fnd01_Edit_FundPlan 포함)

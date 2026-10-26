@@ -15,3 +15,15 @@ export interface AdvAccount {
   workDate?: string | null;
   worker?: string | null;
 }
+
+/** 일임보유주식(타사무) 한 행 (Q03, AS-IS Adv11_BookExtrModel). bookExtrId가 0 이하면 새 행 */
+export interface AdvBookExtr {
+  bookExtrId: number;
+  stdDate?: string | null;
+  manageCode?: string | null;
+  manageName?: string | null;
+  itemCode?: string | null;
+  itemName?: string | null;
+  itemType?: string | null;
+  itemTypeName?: string | null;
+}
