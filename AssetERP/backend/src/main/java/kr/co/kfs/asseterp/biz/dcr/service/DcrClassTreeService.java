@@ -13,6 +13,7 @@ import kr.co.kfs.asseterp.biz.dcr.dto.DcrCopyCompanyRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrCopyReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeRowRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeSaveReq;
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrFundPlanLookupRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrUseYnReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrWriteTreeRes;
 import kr.co.kfs.asseterp.biz.dcr.mapper.DcrClassTreeMapper;
@@ -99,6 +100,16 @@ public class DcrClassTreeService {
     /** AS-IS selectByAll: 사용 여부와 관계없는 전체 트리 + 문서구분별 상신문서 건수 (Dcr01_Lookup_UseYn) */
     public List<DcrClassTreeAllRes> searchTreeAll(UserPrincipal user, String typeCode) {
         return mapper.selectTreeAll(user.getCompanyId(), typeCode == null || typeCode.isEmpty() ? "%" : typeCode);
+    }
+
+    /** AS-IS dcr.Dcr01_ClassTree.selectByClassTreeId (Dcr00_Tab_TreeFundPlan.retrieve, P03): 고른 분류 아래의 문서구분(T) */
+    public List<DcrFundPlanLookupRes> searchFundPlanByParent(UserPrincipal user, Long parentId) {
+        return mapper.selectFundPlanByParent(user.getCompanyId(), parentId);
+    }
+
+    /** AS-IS dcr.Dcr01_ClassTree.selectByText (Dcr00_TabPage_GridFundPlan.retrieve, P03): typeCode T, 검색어는 "%…%"(비면 전체) */
+    public List<DcrFundPlanLookupRes> searchFundPlanByText(UserPrincipal user, String searchText) {
+        return mapper.selectFundPlanByText(user.getCompanyId(), "%" + (searchText == null ? "" : searchText) + "%");
     }
 
     /** AS-IS selectByClassTreeId: 고른 분류 아래의 문서구분(T). 검색어는 "%…%"(비면 조건 없음) */

@@ -7,6 +7,7 @@ import kr.co.kfs.asseterp.biz.fnd.dto.FundCodeRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthCond;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanDeleteReq;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanListRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanSaveReq;
 import kr.co.kfs.asseterp.biz.fnd.mapper.FndFundCodeMapper;
@@ -55,6 +56,17 @@ public class FndFundCodeService {
         FundPlanAuthCond cond = new FundPlanAuthCond(user.getCompanyId(), String.valueOf(closeYn),
                 blankToAny(fundTypeCode), blankToAny(classTypeCode), "%" + (fundName == null ? "" : fundName) + "%");
         return orgId == null ? mapper.selectByFundName(cond) : mapper.selectPlanByOrgAuth(cond);
+    }
+
+    /**
+     * AS-IS fnd.Fnd01_FundCode.selectByPlan L307 (P03 상품기획일정 등록). 펀드명은 서버가 %…%로, 펀드유형은 비면 %.
+     * admin = 회사관리자(LoginUser.getIsManager)면 조직 조건 없이, 아니면 내 조직(회사관리자는 0)이 권한을 가진 임시펀드만
+     */
+    public List<FundPlanListRes> searchPlanFunds(UserPrincipal user, boolean closeYn, String fundName, String fundTypeCode) {
+        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        String admin = String.valueOf(SysMenuSearchService.isManager(user));
+        return mapper.selectByPlan(user.getCompanyId(), orgId, admin, String.valueOf(closeYn),
+                "%" + (fundName == null ? "" : fundName) + "%", blankToAny(fundTypeCode));
     }
 
     /** AS-IS fnd.Fnd01_FundCode.selectByOverlap L277 (P01 [중복확인]) — 같은 코드가 있으면 true */

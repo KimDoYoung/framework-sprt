@@ -51,6 +51,16 @@ export interface DcrStampAuthTree {
   depth: number;
 }
 
+/** 문서구분 조회창(Dcr00_Lookup_FundPlan) 그리드 한 행 (P03, AS-IS Dcr01_ClassTreeModel 중 구분코드·문서구분명·상품분류·최종결재) */
+export interface DcrFundPlanLookup {
+  classTreeId: number;
+  classTreeCode?: string | null;
+  classTreeName?: string | null;
+  classTreeFullName?: string | null;
+  approvalTypeName?: string | null;
+  itemTypeName?: string | null;
+}
+
 /** 문서구분(T) 그리드 행 (AS-IS Dcr01_ClassTreeModel — selectByClassTreeId). 새 행은 classTreeId가 0 이하 */
 export interface DcrDocTypeRow {
   classTreeId: number;

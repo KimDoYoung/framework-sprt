@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/fnd/mapper/fnd20_plan.xml selectByFundId L88 (P03), apr01_appr.deleteAppr · apr03_relate_fund.deleteByApprId · apr04_appr_step.deleteByApprId · sys10_file.deleteByParentId -->
+<mapper namespace="kr.co.kfs.asseterp.biz.fnd.mapper.FndPlanMapper">
+
+    <sql id="planColumns">
+        t1.fnd20_plan_id                                                                          AS plan_id,
+        t1.fnd20_fund_id                                                                          AS fund_id,
+        t1.fnd20_class_tree_id                                                                    AS class_tree_id,
+        f_class_tree_nm_allpath(t3.dcr01_class_tree_id)                                           AS class_tree_full_name,
+        f_cdnm('ApprovalTypeCode', t3.dcr01_approval_type_cd, t3.dcr01_company_id, f_sysdate())   AS approval_type_name,
+        t1.fnd20_person_id                                                                        AS person_id,
+        f_emp_kor_nm(t1.fnd20_person_id)                                                          AS person_name,
+        f_org_nm((SELECT emp03_org_code_id
+                    FROM emp03_trans
+                   WHERE (emp03_person_id, emp03_trans_date) IN ( SELECT emp03_person_id, max(emp03_trans_date)
+                                                                    FROM emp03_trans
+                                                                   WHERE emp03_person_id = t1.fnd20_person_id
+                                                                     AND emp03_trans_date &lt;= t1.fnd20_start_date
+                                                                   GROUP BY emp03_person_id))
+                 , t1.fnd20_start_date)                                                           AS org_name,
+        t1.fnd20_start_date                                                                       AS start_date,
+        t1.fnd20_due_date                                                                         AS due_date,
+        CASE WHEN COALESCE(t1.fnd20_appr_id, 0) = 0
+             THEN NULL
+             ELSE f_cdnm('AprStatusCode', t4.apr01_status_cd, t2.fnd01_company_id, t1.fnd20_start_date)
+             END                                                                                  AS close_yn,
+        t1.fnd20_note                                                                             AS note,
+        t1.fnd20_manager_id                                                                       AS manager_id,
+        t1.fnd20_appr_id                                                                          AS appr_id
+    </sql>
+
+    <!-- AS-IS selectByFundId L88. 회사 조건(t2.fnd01_company_id)은 원본에 없어 더했다 — 남의 회사 펀드 ID로 읽지 못하게 -->
+    <select id="selectByFundId" resultType="kr.co.kfs.asseterp.biz.fnd.dto.PlanRes">
+        SELECT <include refid="planColumns"/>
+          FROM fnd20_plan t1
+               INNER JOIN fnd01_fund_code t2 ON t1.fnd20_fund_id = t2.fnd01_fund_code_id
+               INNER JOIN dcr01_class_tree t3 ON t1.fnd20_class_tree_id = t3.dcr01_class_tree_id
+               LEFT OUTER JOIN apr01_appr t4 ON t1.fnd20_appr_id = t4.apr01_appr_id
+         WHERE t1.fnd20_fund_id = #{fundId}
+           AND t2.fnd01_company_id = #{companyId}
+         ORDER BY t3.dcr01_seq
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.fnd.dto.PlanRes">
+        SELECT <include refid="planColumns"/>
+          FROM fnd20_plan t1
+               INNER JOIN fnd01_fund_code t2 ON t1.fnd20_fund_id = t2.fnd01_fund_code_id
+               INNER JOIN dcr01_class_tree t3 ON t1.fnd20_class_tree_id = t3.dcr01_class_tree_id
+               LEFT OUTER JOIN apr01_appr t4 ON t1.fnd20_appr_id = t4.apr01_appr_id
+         WHERE t1.fnd20_plan_id = #{planId}
+           AND t2.fnd01_company_id = #{companyId}
+    </select>
+
+    <select id="countFund" resultType="long">
+        SELECT COUNT(*)
+          FROM fnd01_fund_code
+         WHERE fnd01_fund_code_id = #{fundId}
+           AND fnd01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel(fnd20_plan) INSERT — 화면이 정하는 값: 펀드·문서분류·담당자·시작일·완료예정일·비고, 관리자ID = 로그인 사용자 -->
+    <insert id="insertPlan">
+        INSERT INTO fnd20_plan (fnd20_plan_id, fnd20_fund_id, fnd20_class_tree_id, fnd20_start_date, fnd20_due_date,
+                                fnd20_person_id, fnd20_manager_id, fnd20_note)
+        VALUES (#{planId}, #{req.fundId}, #{req.classTreeId}, #{req.startDate}, #{req.dueDate},
+                #{req.personId}, #{managerId}, #{req.note})
+    </insert>
+
+    <!-- UpdateDataModel(fnd20_plan) UPDATE — 화면에서 고치는 열(문서분류·담당자·시작일·완료예정일·업무내용) -->
+    <update id="updatePlan">
+        UPDATE fnd20_plan
+           SET fnd20_class_tree_id = #{req.classTreeId},
+               fnd20_start_date    = #{req.startDate},
+               fnd20_due_date      = #{req.dueDate},
+               fnd20_person_id     = #{req.personId},
+               fnd20_note          = #{req.note}
+         WHERE fnd20_plan_id = #{req.planId}
+    </update>
+
+    <delete id="deletePlan">
+        DELETE FROM fnd20_plan
+         WHERE fnd20_plan_id = #{planId}
+    </delete>
+
+    <delete id="deleteRelateFund">
+        DELETE FROM apr03_relate_fund
+         WHERE apr03_appr_id = #{apprId}
+    </delete>
+
+    <delete id="deleteFiles">
+        DELETE FROM sys10_file
+         WHERE sys10_parent_id = #{apprId}
+    </delete>
+
+    <delete id="deleteApprSteps">
+        DELETE FROM apr04_appr_step
+         WHERE apr04_appr_id = #{apprId}
+    </delete>
+
+    <delete id="deleteAppr">
+        DELETE FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </delete>
+</mapper>

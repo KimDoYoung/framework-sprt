@@ -9,6 +9,7 @@ import kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeSaveReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrCopyCompanyRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeRowRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeSaveReq;
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrFundPlanLookupRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrWriteTreeRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -114,6 +115,12 @@ public interface DcrClassTreeMapper {
 
     /** AS-IS getAdminYn: 같은 구분코드이고 관리자가 내려준(admin_yn) 다른 회사들의 분류 (admin 회사 제외) */
     List<DcrClassTreeRes> selectAdminCopiesByCode(@Param("classTreeCode") String classTreeCode);
+
+    /** AS-IS selectByParentId (Dcr00_Tab_TreeFundPlan, P03 문서구분 조회창): 고른 분류의 하위 전체(자기 포함) 중 사용 중인 문서구분(T) */
+    List<DcrFundPlanLookupRes> selectFundPlanByParent(@Param("companyId") Long companyId, @Param("parentId") Long parentId);
+
+    /** AS-IS selectByText (Dcr00_TabPage_GridFundPlan, P03 문서구분 조회창): 구분코드+전체 경로명에 검색어(ILIKE)가 든 문서구분(T) */
+    List<DcrFundPlanLookupRes> selectFundPlanByText(@Param("companyId") Long companyId, @Param("searchText") String searchText);
 
     /** 로그인 회사의 sys01_erp_product_cd (사용여부설정 버튼: S1은 숨김) */
     String selectErpProductCode(@Param("companyId") Long companyId);

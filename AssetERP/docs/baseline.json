@@ -7274,5 +7274,38 @@
     "note": "docs/work/P/P02-작업기록.md",
     "history": [],
     "id": "P02"
+  },
+  "Fnd20_Tab_Plan": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/fnd/Fnd20_TabPage_Plan.java": "0f1af77fa8fe5c8b9df5488892d81d14af6c5c1d",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd20_Tab_Plan.java": "d67d91fee88e07105ec8f19d524a9e8ac4a261ba",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModel.java": "6c8b85e6fd82c9178f6525f60a5e33fd9adee66f",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModelProperties.java": "e5ef80aca72758d7422b0f86dc61cf24a4f22895",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd02_FundInfoModel.java": "997b1e7a847092c9ad0e59ce182fefb8b9ca1934",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd20_PlanModel.java": "ad7042486e7c7b2b7b9d290b3b0743c965c1ba1a",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd20_PlanModelProperties.java": "2a92240e3bc4fe4808e12541fff004a446580b74",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "7f4b0fb215e50834fd6180ab89005f6d73d52cd6",
+      "application/src/main/java/myApp/server/apr/mapper/apr03_relate_fund.xml": "a29728d21792d0b243e983cdced2a038ec516408",
+      "application/src/main/java/myApp/server/apr/mapper/apr04_appr_step.xml": "d2ad02a8dc784aa55ac38dd915c3c1450954fddf",
+      "application/src/main/java/myApp/server/fnd/Fnd01_FundCode.java": "49cd01fec4668d353126f461c07c18fc6d93e024",
+      "application/src/main/java/myApp/server/fnd/Fnd20_Plan.java": "cac38f3be225b88b97646179b9fd4c4559963840",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd01_fund_code.xml": "c6b7e784adfbb4ffee602c9f03a4c96b73405b3d",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd20_plan.xml": "e9597ff561d716b5ee7b56457f5d386729574590",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893"
+    },
+    "shared_links": [
+      "Dcr00_Lookup_FundPlan",
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-26T12:43:54+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/P/P03-작업기록.md",
+    "history": [],
+    "id": "P03"
   }
 }

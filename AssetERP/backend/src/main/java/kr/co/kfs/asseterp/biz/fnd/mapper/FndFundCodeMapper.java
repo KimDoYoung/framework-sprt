@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.fnd.dto.FundCodeCond;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundCodeRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthCond;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanListRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanSaveReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -53,4 +54,9 @@ public interface FndFundCodeMapper {
 
     /** AS-IS selectByFundOrgAuth L392 (P02, 권한부서 있음 — admin 조건 없이) */
     List<FundPlanAuthRes> selectPlanByOrgAuth(@Param("c") FundPlanAuthCond cond);
+
+    /** AS-IS selectByPlan L800 (P03). admin이 'false'면 내 조직이 권한(fnd08_auth_yn)을 가진 펀드만 */
+    List<FundPlanListRes> selectByPlan(@Param("companyId") Long companyId, @Param("orgId") Long orgId, @Param("admin") String admin,
+                                       @Param("closeYn") String closeYn, @Param("fundName") String fundName,
+                                       @Param("fundTypeCode") String fundTypeCode);
 }

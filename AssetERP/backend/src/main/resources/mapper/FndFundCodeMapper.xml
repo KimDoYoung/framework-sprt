@@ -331,4 +331,39 @@
                LEFT OUTER JOIN kofiaFundType  ON kofiaFundType.cd  = tt.fnd02_kofia_fund_type_cd
          ORDER BY tt.fnd01_fund_cd
     </select>
+
+    <!-- AS-IS selectByPlan L800 (P03) — 열은 Fnd20_Tab_Plan 그리드 열 + id. 조건·정렬은 그대로.
+         admin이 'false'가 아니면 원본은 fnd08_org_auth를 LEFT JOIN만 해서 권한 건수만큼 같은 펀드가 겹쳐 나온다 → 같은 행을 DISTINCT로 하나로(화면 행 키가 fundCodeId) -->
+    <select id="selectByPlan" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundPlanListRes">
+        SELECT DISTINCT
+               t1.fnd01_fund_code_id AS fund_code_id
+             , t1.fnd01_fund_cd      AS fund_code
+             , t2.fnd02_fund_nm      AS fund_name
+             , f_cdnm('IcamFundType',      t2.fnd02_kofia_fund_type_cd, t1.fnd01_company_id, f_sysdate()) AS kofia_fund_type_name
+             , CAST(t1.fnd01_start_date AS date) AS start_date
+             , CAST(t1.fnd01_end_date AS date)   AS end_date
+             , f_cdnm('PlnClosedFundCode', t1.fnd01_close_yn,           t1.fnd01_company_id, f_sysdate()) AS close_name
+             , f_cdnm('IcamTrustCode',     t2.fnd02_kofia_trust_cd,     t1.fnd01_company_id, f_sysdate()) AS kofia_trust_name
+             , f_cdnm('IcamPublicCode',    t2.fnd02_kofia_public_cd,    t1.fnd01_company_id, f_sysdate()) AS kofia_public_name
+             , t2.fnd02_org_code_nm  AS org_code_name
+             , t2.fnd02_operator1    AS operator1
+             , t2.fnd02_operator2    AS operator2
+             , t1.fnd01_note         AS note
+          FROM fnd01_fund_code t1
+               INNER JOIN fnd02_fund_info t2 ON t1.fnd01_fund_code_id = t2.fnd02_fund_code_id
+               LEFT OUTER JOIN fnd01_fund_code t3 ON t3.fnd01_fund_code_id = t1.fnd01_real_fund_id
+               LEFT OUTER JOIN fnd08_org_auth t4 ON t1.fnd01_fund_code_id = t4.fnd08_fund_code_id
+         WHERE 1=1
+        <if test="admin == 'false'">
+           AND t4.fnd08_auth_yn     = 'true'
+           AND t4.fnd08_org_code_id = #{orgId}
+        </if>
+           AND t2.fnd02_work_date   = f_max_workdate(t2.fnd02_fund_code_id, f_trunc(f_sysdate()))
+           AND t1.fnd01_company_id  = #{companyId}
+           AND t1.fnd01_close_yn   IN ('false', #{closeYn})
+           AND t1.fnd01_fund_cd || t2.fnd02_fund_nm LIKE #{fundName}
+           AND t2.fnd02_kofia_fund_type_cd LIKE #{fundTypeCode}
+           AND t1.fnd01_plan_yn     = 'true'
+         ORDER BY t1.fnd01_fund_cd
+    </select>
 </mapper>

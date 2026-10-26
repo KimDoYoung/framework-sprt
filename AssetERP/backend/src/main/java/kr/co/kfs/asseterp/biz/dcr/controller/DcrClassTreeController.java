@@ -10,6 +10,7 @@ import kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeSaveReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrCopyCompanyRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrCopyReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeRowRes;
+import kr.co.kfs.asseterp.biz.dcr.dto.DcrFundPlanLookupRes;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeSaveReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrParentReq;
 import kr.co.kfs.asseterp.biz.dcr.dto.DcrUseYnReq;
@@ -87,6 +88,19 @@ public class DcrClassTreeController {
     public ApiResponse<List<DcrDocTypeRowRes>> searchDocTypes(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long parentId,
                                                               @RequestParam(required = false) String searchText) {
         return ApiResponse.ok(dcrClassTreeService.searchDocTypes(principal, parentId, searchText));
+    }
+
+    /** AS-IS dcr.Dcr01_ClassTree.selectByClassTreeId (Dcr00_Tab_TreeFundPlan, P03 문서구분 조회창 [문서분류] 탭) */
+    @GetMapping("/{parentId}/fund-plan-lookup")
+    public ApiResponse<List<DcrFundPlanLookupRes>> searchFundPlanByParent(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long parentId) {
+        return ApiResponse.ok(dcrClassTreeService.searchFundPlanByParent(principal, parentId));
+    }
+
+    /** AS-IS dcr.Dcr01_ClassTree.selectByText (Dcr00_TabPage_GridFundPlan, P03 문서구분 조회창 [문서분류찾기] 탭) */
+    @GetMapping("/fund-plan-lookup")
+    public ApiResponse<List<DcrFundPlanLookupRes>> searchFundPlanByText(@AuthenticationPrincipal UserPrincipal principal,
+                                                                       @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(dcrClassTreeService.searchFundPlanByText(principal, searchText));
     }
 
     /** AS-IS dcr.Dcr01_ClassTree.update — 문서구분(T) 그리드 저장 → 저장된 행(요청 순서) */

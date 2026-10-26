@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundCodeRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanDeleteReq;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanListRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanSaveReq;
 import kr.co.kfs.asseterp.biz.fnd.service.FndFundCodeService;
@@ -57,6 +58,15 @@ public class FndFundCodeController {
                                                                  @RequestParam(required = false) String classTypeCode,
                                                                  @RequestParam(required = false) Long orgId) {
         return ApiResponse.ok(service.searchPlansForAuth(principal, closeYn, fundName, fundTypeCode, classTypeCode, orgId));
+    }
+
+    /** AS-IS fnd.Fnd01_FundCode.selectByPlan (P03 상품기획일정 등록) */
+    @GetMapping("/plan-funds")
+    public ApiResponse<List<FundPlanListRes>> searchPlanFunds(@AuthenticationPrincipal UserPrincipal principal,
+                                                              @RequestParam(defaultValue = "false") boolean closeYn,
+                                                              @RequestParam(defaultValue = "") String fundName,
+                                                              @RequestParam(required = false) String fundTypeCode) {
+        return ApiResponse.ok(service.searchPlanFunds(principal, closeYn, fundName, fundTypeCode));
     }
 
     /** AS-IS fnd.Fnd01_FundCode.selectByOverlap (P01 [중복확인]) — true면 이미 쓰는 코드 */

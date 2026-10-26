@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import {
   DcrCheckRes, DcrCheckRowReq, DcrClassDetail, DcrClassTree, DcrClassTreeAll, DcrClassTreeLookup, DcrClassTreeSaveReq,
-  DcrCopyCompany, DcrDocAppr, DcrDocFile, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrClassLink, DcrLink, DcrLinkClassTree, DcrLinkSaveReq, DcrRelateDocType, DcrRelateIcr,
+  DcrCopyCompany, DcrFundPlanLookup, DcrDocAppr, DcrDocFile, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrClassLink, DcrLink, DcrLinkClassTree, DcrLinkSaveReq, DcrRelateDocType, DcrRelateIcr,
   DcrOftenUse, DcrRelateIcs, DcrRelateSaveReq, DcrStampAuthTree, DcrUseYnReq, DcrWriteCode, DcrWriteTree,
   DcrMailFile, DcrMailHistory,
 } from '../types/dcr';
@@ -55,6 +55,18 @@ export const dcrApi = {
   /** AS-IS dcr.Dcr01_ClassTree.selectByClassTreeId: 고른 분류 아래 문서구분(T) */
   searchDocTypeRows: async (parentId: number, searchText: string): Promise<DcrDocTypeRow[]> => {
     const res = await apiClient.get<ApiResponse<DcrDocTypeRow[]>>(`v1/dcr/class-trees/${parentId}/doc-types`, { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr01_ClassTree.selectByClassTreeId (Dcr00_Tab_TreeFundPlan, P03 문서구분 조회창): 고른 분류 아래 문서구분(T) */
+  searchFundPlanByParent: async (parentId: number): Promise<DcrFundPlanLookup[]> => {
+    const res = await apiClient.get<ApiResponse<DcrFundPlanLookup[]>>(`v1/dcr/class-trees/${parentId}/fund-plan-lookup`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr01_ClassTree.selectByText (Dcr00_TabPage_GridFundPlan, P03 문서구분 조회창): typeCode T. 검색어는 서버가 %…%로 */
+  searchFundPlanByText: async (searchText: string): Promise<DcrFundPlanLookup[]> => {
+    const res = await apiClient.get<ApiResponse<DcrFundPlanLookup[]>>('v1/dcr/class-trees/fund-plan-lookup', { params: { searchText } });
     return res.data.data ?? [];
   },
 

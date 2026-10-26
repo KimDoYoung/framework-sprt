@@ -208,6 +208,61 @@
          ORDER BY a.dcr01_seq
     </select>
 
+    <!-- AS-IS dcr01_class_tree.selectByParentId (Dcr00_Tab_TreeFundPlan, P03): 고른 분류의 하위 전체(자기 포함) 중 사용 중인 문서구분(T). 검색어 없음, 열은 조회창 그리드 열 + id -->
+    <select id="selectFundPlanByParent" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrFundPlanLookupRes">
+        SELECT a.dcr01_class_tree_id AS class_tree_id,
+               a.dcr01_class_tree_cd AS class_tree_code,
+               a.dcr01_class_tree_nm AS class_tree_name,
+               f_class_tree_nm_allpath(a.dcr01_class_tree_id) AS class_tree_full_name,
+               f_cdnm('ApprovalTypeCode', a.dcr01_approval_type_cd, a.dcr01_company_id, f_sysdate()) AS approval_type_name,
+               f_cdnm('DocItemTypeCode',  a.dcr01_item_type_cd,     a.dcr01_company_id, f_sysdate()) AS item_type_name
+          FROM dcr01_class_tree a
+         WHERE a.dcr01_company_id = #{companyId}
+           AND a.dcr01_class_tree_id IN (
+                WITH RECURSIVE ics_tree_down(dcr01_class_tree_id, dcr01_parent_tree_id, dcr01_class_tree_cd, depth, path, cycle) AS (
+                    SELECT b.dcr01_class_tree_id, b.dcr01_parent_tree_id, b.dcr01_class_tree_cd, 0, ARRAY[b.dcr01_class_tree_cd::text], false
+                      FROM dcr01_class_tree b
+                     WHERE b.dcr01_company_id    = #{companyId}
+                       AND b.dcr01_class_tree_id = #{parentId}
+                    UNION ALL
+                    SELECT b.dcr01_class_tree_id, b.dcr01_parent_tree_id, b.dcr01_class_tree_cd, c.depth + 1,
+                           array_append(c.path, b.dcr01_class_tree_cd::text), b.dcr01_class_tree_cd = any(c.path)
+                      FROM dcr01_class_tree b, ics_tree_down c
+                     WHERE b.dcr01_parent_tree_id = c.dcr01_class_tree_id
+                       AND b.dcr01_company_id     = #{companyId}
+                       AND NOT cycle
+                )
+                SELECT d.dcr01_class_tree_id FROM ics_tree_down d
+           )
+           AND a.dcr01_type_cd LIKE 'T'
+           AND a.dcr01_use_yn = 'true'
+         ORDER BY a.dcr01_seq
+    </select>
+
+    <!-- AS-IS dcr01_class_tree.selectByText L72 (Dcr00_TabPage_GridFundPlan, P03): typeCode T. useYn·relateTable 가지는 이 조회창이 안 보내 꺼진다(사용 안 하는 분류도 나온다) -->
+    <select id="selectFundPlanByText" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrFundPlanLookupRes">
+        SELECT t.dcr01_class_tree_id AS class_tree_id,
+               t.dcr01_class_tree_cd AS class_tree_code,
+               t.dcr01_class_tree_nm AS class_tree_name,
+               t.dcr01_class_tree_f_nm AS class_tree_full_name,
+               t.dcr01_approval_type_nm AS approval_type_name,
+               t.dcr01_item_type_nm AS item_type_name
+          FROM (
+                SELECT a.dcr01_class_tree_id
+                     , a.dcr01_class_tree_cd
+                     , a.dcr01_class_tree_nm
+                     , f_class_tree_nm_allpath(a.dcr01_class_tree_id) AS dcr01_class_tree_f_nm
+                     , f_cdnm('ApprovalTypeCode', a.dcr01_approval_type_cd, a.dcr01_company_id, f_sysdate()) AS dcr01_approval_type_nm
+                     , f_cdnm('DocItemTypeCode',  a.dcr01_item_type_cd,     a.dcr01_company_id, f_sysdate()) AS dcr01_item_type_nm
+                  FROM dcr01_class_tree a
+                 WHERE 1=1
+                   AND a.dcr01_company_id = #{companyId}
+                   AND a.dcr01_type_cd    = 'T'
+               ) t
+         WHERE CONCAT(t.dcr01_class_tree_cd, t.dcr01_class_tree_f_nm) ILIKE #{searchText}
+         ORDER BY t.dcr01_class_tree_cd
+    </select>
+
     <!-- AS-IS dcr01_class_tree.selectById (저장 뒤 다시 읽기). 사용 중 조건은 두지 않는다 -->
     <select id="selectDocTypeById" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrDocTypeRowRes">
         SELECT <include refid="docTypeColumns"/>

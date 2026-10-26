@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { Consignment, FundCode, FundLookup, FundPlan, FundPlanAuth, OfficeWork, TrustBank } from '../types/fnd';
+import { Consignment, FundCode, FundLookup, FundPlan, FundPlanAuth, FundPlanList, OfficeWork, Plan, TrustBank } from '../types/fnd';
 
 /** fnd(기관정보) 화면 API (D11~) */
 export interface FundOrgAuthParams {
@@ -57,6 +57,32 @@ export const fndApi = {
   searchFundPlanAuths: async (params: { closeYn: boolean; fundName: string; fundTypeCode: string; classTypeCode: string; orgId?: number | null }): Promise<FundPlanAuth[]> => {
     const res = await apiClient.get<ApiResponse<FundPlanAuth[]>>('v1/fnd/fund-codes/plan-auths', { params: { ...params, orgId: params.orgId ?? undefined } });
     return res.data.data ?? [];
+  },
+
+  // ── P03 상품기획일정 등록 (Fnd20_Tab_Plan) ──
+
+  /** AS-IS fnd.Fnd01_FundCode.selectByPlan: 임시펀드 목록(관리자가 아니면 내 조직이 권한을 가진 것만). 펀드명은 서버가 %…%로, 유형은 '%'가 전체 */
+  searchPlanFunds: async (params: { closeYn: boolean; fundName: string; fundTypeCode: string }): Promise<FundPlanList[]> => {
+    const res = await apiClient.get<ApiResponse<FundPlanList[]>>('v1/fnd/fund-codes/plan-funds', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd20_Plan.selectByFundId: 그 펀드의 기획일정 */
+  searchPlans: async (fundId: number): Promise<Plan[]> => {
+    const res = await apiClient.get<ApiResponse<Plan[]>>('v1/fnd/plans', { params: { fundId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd20_Plan.update: 바뀐 행만. planId가 0 이하면 새 행 — 저장된 행을 요청 순서대로 돌려준다 */
+  savePlans: async (rows: Plan[]): Promise<Plan[]> => {
+    const body = rows.map(r => ({ planId: r.planId, fundId: r.fundId, classTreeId: r.classTreeId, personId: r.personId ?? null, startDate: r.startDate ?? null, dueDate: r.dueDate ?? null, note: r.note ?? null }));
+    const res = await apiClient.put<ApiResponse<Plan[]>>('v1/fnd/plans', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd20_Plan.delete: 상신 문서가 있으면 그 문서도 함께 지운다 */
+  deletePlans: async (planIds: number[]): Promise<void> => {
+    await apiClient.delete('v1/fnd/plans', { data: planIds.map(planId => ({ planId })) });
   },
 
   // ── D11 수탁사정보 관리(관리자) (Fnd03_Tab_ConsignmentManager) ──

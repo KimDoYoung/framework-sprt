@@ -103,3 +103,38 @@ export interface FundPlanAuth {
   operator1?: string | null;
   note?: string | null;
 }
+
+/** 상품기획일정 등록 위 그리드 한 행 (P03, AS-IS Fnd01_FundCodeModel 중 Fnd20_Tab_Plan 그리드 열, selectByPlan) */
+export interface FundPlanList {
+  fundCodeId: number;
+  fundCode?: string | null;
+  fundName?: string | null;
+  kofiaFundTypeName?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  closeName?: string | null;
+  kofiaTrustName?: string | null;
+  kofiaPublicName?: string | null;
+  orgCodeName?: string | null;
+  operator1?: string | null;
+  operator2?: string | null;
+  note?: string | null;
+}
+
+/** 기획일정 한 행 (P03, AS-IS Fnd20_PlanModel). planId는 새 행이면 임시 음수. closeYn은 상신 문서 상태 이름 */
+export interface Plan {
+  planId: number;
+  fundId: number;
+  classTreeId: number;
+  classTreeFullName?: string | null;
+  approvalTypeName?: string | null;
+  personId?: number | null;
+  personName?: string | null;
+  orgName?: string | null;
+  startDate?: string | null;
+  dueDate?: string | null;
+  closeYn?: string | null;
+  note?: string | null;
+  managerId?: number | null;
+  apprId?: number | null;
+}
