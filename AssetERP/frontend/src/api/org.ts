@@ -30,6 +30,19 @@ export const orgCodeApi = {
     return res.data.data ?? 0;
   },
 
+  /** AS-IS org.Org01_Code.selectByAccountId (Q02 Adv05_Page_OrgAuth): 일임계좌의 조직 권한 트리(전위 순서 + depth, 행 모양은 펀드 권한과 같다) */
+  searchAccountAuthTree: async (accountId: number): Promise<OrgFundAuth[]> => {
+    const res = await apiClient.get<ApiResponse<OrgFundAuth[]>>('v1/org/org-codes/account-auths', { params: { accountId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS org.Org01_Code.updateAccountAuth (Q02): 바뀐 행만 → 저장한 건수 */
+  updateAccountAuth: async (accountId: number, rows: OrgFundAuth[]): Promise<number> => {
+    const body = { accountId, rows: rows.map(r => ({ orgAuthId: r.orgAuthId ?? null, orgCodeId: r.codeId, authYn: r.authYn ?? null })) };
+    const res = await apiClient.put<ApiResponse<number>>('v1/org/org-codes/account-auths', body);
+    return res.data.data ?? 0;
+  },
+
   /** AS-IS org.Org01_Code.selectByCompanyId: 전체 조직, 전위 순서 + depth */
   searchOrgCodes: async (baseDate: string): Promise<OrgCode[]> => {
     const res = await apiClient.get<ApiResponse<OrgCode[]>>('v1/org/org-codes', { params: { baseDate } });

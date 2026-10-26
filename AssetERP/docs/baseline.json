@@ -7610,5 +7610,59 @@
     "note": "docs/work/P/P13-작업기록.md",
     "history": [],
     "id": "P13"
+  },
+  "Adv02_Tab_Account": {
+    "commit": "497fd9754f254028643bbe6f6df898da309b9d16",
+    "commit_short": "497fd97",
+    "branch": "ioc",
+    "commit_date": "2026-10-26",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/adv/Adv02_Edit_Account.java": "a10b77c21713d18b4dda9c6f9935ae32a1ab076a",
+      "application/src/main/java/myApp/client/vi/adv/Adv02_Tab_Account.java": "41e961c866d8c67c8c13b13d769eec21ad7b60ad",
+      "application/src/main/java/myApp/client/vi/adv/model/Adv02_AccountModel.java": "9db007ffcd905620d4151dddaa0f5aca18cbdd8b",
+      "application/src/main/java/myApp/client/vi/adv/model/Adv02_AccountModelProperties.java": "76bfa8ead1a35e2d74a97daaa41e0d8216baaa50",
+      "application/src/main/java/myApp/server/adv/Adv02_Account.java": "0002cbbf7aff65b77fa4f8ca8ae10046d36d1323",
+      "application/src/main/java/myApp/server/adv/mapper/adv02_account.xml": "f24a8d804a1f5e18088367414ca7a239bfe83ed5",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Sys15_Lookup_Corp"
+    ],
+    "recorded_at": "2026-10-26T19:15:22+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Q/Q01-작업기록.md",
+    "history": [],
+    "id": "Q01"
+  },
+  "Adv05_Tab_OrgAuth": {
+    "commit": "497fd9754f254028643bbe6f6df898da309b9d16",
+    "commit_short": "497fd97",
+    "branch": "ioc",
+    "commit_date": "2026-10-26",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/adv/Adv05_Lookup_OrgAuth.java": "69ab97e906c626fce35413e3f3b9adcfdd7bb6bd",
+      "application/src/main/java/myApp/client/vi/adv/Adv05_Page_OrgAuth.java": "f8d44f548a4f07217cdc7b251e4fb689dd91818b",
+      "application/src/main/java/myApp/client/vi/adv/Adv05_Tab_OrgAuth.java": "39da335118cc29b502fb165c471b6024fa97c933",
+      "application/src/main/java/myApp/client/vi/adv/model/Adv02_AccountModel.java": "9db007ffcd905620d4151dddaa0f5aca18cbdd8b",
+      "application/src/main/java/myApp/client/vi/adv/model/Adv02_AccountModelProperties.java": "76bfa8ead1a35e2d74a97daaa41e0d8216baaa50",
+      "application/src/main/java/myApp/server/adv/Adv02_Account.java": "0002cbbf7aff65b77fa4f8ca8ae10046d36d1323",
+      "application/src/main/java/myApp/server/adv/Adv05_OrgAuth.java": "9382ebef8dbcaa4cb3be51c111bdb691c4c2f603",
+      "application/src/main/java/myApp/server/adv/mapper/adv02_account.xml": "f24a8d804a1f5e18088367414ca7a239bfe83ed5",
+      "application/src/main/java/myApp/server/adv/mapper/adv05_org_auth.xml": "a67c9e255c7a60fb6ac5353982e1d2fc6908f0ee",
+      "application/src/main/java/myApp/server/org/Org01_Code.java": "f0e6a0c84939b5f2fccd14ee3dcd22c6ff5e8797",
+      "application/src/main/java/myApp/server/org/mapper/org01_code.xml": "45bce5ce97e58acb58ac7bad89d1ac9a849fb7af",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Adv02_Lookup_SelectMulti",
+      "Org00_Lookup_SelectMulti"
+    ],
+    "recorded_at": "2026-10-26T20:22:55+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Q/Q02-작업기록.md",
+    "history": [],
+    "id": "Q02"
   }
 }

@@ -2,6 +2,7 @@
  * 거래처 조회창 (I02) — Flt03_Tab_AccountReport 개설기관 칸에서 연다 (act·ast·pay… 여러 도메인이 쓰는 공통 창).
  * AS-IS: myApp/client/vi/sys/Sys15_Lookup_Corp.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(regYn, callback) L72: regYn이면 [거래처추가]가 보이고 [전체]가 [선택안함]이 된다. 창 610×500, 열 때 검색칸에 커서
+ * open(corpTypeName, regYn, callback) L66: 구분 콤보를 그 이름("증권회사" 등)으로 맞추고 조회한다 (Q01 Adv02_Edit_Account)
  * empYn(임직원 포함, openSearch·open(regYn, empYn, …))과 [거래처추가] 창(Sys15_Lookup_AddCorp)은 다음 단계 — 쓰는 화면이 생길 때 만든다
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창 UX-05·06
  */
@@ -30,12 +31,14 @@ interface Props {
   open: boolean;
   /** open(regYn, callback): true면 [거래처추가]를 보이고 [전체]를 [선택안함]으로 부른다 */
   regYn?: boolean;
+  /** open(corpTypeName, …): 열 때 구분 콤보를 이 이름으로 맞추고 조회한다(없거나 코드에 없으면 "전체") */
+  corpTypeName?: string;
   /** callback.execute(result): [확인]·더블클릭이면 고른 거래처, [전체]·[선택안함]이면 null */
   onResult: (corp: Corp | null) => void;
   onClose: () => void;
 }
 
-export const Sys15_Lookup_Corp: React.FC<Props> = ({ open, regYn = false, onResult, onClose }) => {
+export const Sys15_Lookup_Corp: React.FC<Props> = ({ open, regYn = false, corpTypeName, onResult, onClose }) => {
   const gridRef = useRef<AgGridReact<Corp>>(null);
   const lastSelected = useRef<Corp | undefined>(undefined);
   const [corpType, setCorpType] = useState('%');
@@ -53,14 +56,28 @@ export const Sys15_Lookup_Corp: React.FC<Props> = ({ open, regYn = false, onResu
   }, []);
 
   // open() L83-120: 원본은 열 때마다 새 창 → 검색을 비우고, 구분 콤보(CorpType, "전체") 로드가 끝나면 retrieve() (setting() L123-138)
+  // corpTypeName이 있으면 콤보 로드 뒤 그 이름으로 맞추고(setting() L126-130 corpTypeComboBox.setText) 조회한다
   useEffect(() => {
     if (!open) return;
     setCorpType('%');
     setSearchText('');
     setRows([]);
     lastSelected.current = undefined;
-    void retrieve('%', '');
-  }, [open, retrieve]);
+    if (!corpTypeName) {
+      void retrieve('%', '');
+      return;
+    }
+    let alive = true;
+    sysApi.searchCodes('CorpType')
+      .then(list => list.find(c => c.name === corpTypeName)?.code ?? '%')
+      .catch(() => '%')
+      .then(code => {
+        if (!alive) return;
+        setCorpType(code);
+        void retrieve(code, '');
+      });
+    return () => { alive = false; };
+  }, [open, corpTypeName, retrieve]);
 
   // [E6] confirmButton[확인].Select (L179) · [E3] grid.RowDoubleClick (L159) → confirm() L241-250
   const confirm = (picked?: Corp) => {

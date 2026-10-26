@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.org.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.org.dto.OrgAccountAuthSaveReq;
 import kr.co.kfs.asseterp.biz.org.dto.OrgCodeRes;
 import kr.co.kfs.asseterp.biz.org.dto.OrgCodeSaveReq;
 import kr.co.kfs.asseterp.biz.org.dto.OrgFundAuthRes;
@@ -76,5 +77,17 @@ public class OrgCodeController {
     @PutMapping("/fund-auths")
     public ApiResponse<Integer> updateFundAuth(@AuthenticationPrincipal UserPrincipal principal, @RequestBody OrgFundAuthSaveReq req) {
         return ApiResponse.ok(orgCodeService.updateFundAuth(principal, req));
+    }
+
+    /** AS-IS org.Org01_Code.selectByAccountId (Q02 일임계좌별 조직 권한 트리) */
+    @GetMapping("/account-auths")
+    public ApiResponse<List<OrgFundAuthRes>> searchAccountAuthTree(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long accountId) {
+        return ApiResponse.ok(orgCodeService.searchAccountAuthTree(principal, accountId));
+    }
+
+    /** AS-IS org.Org01_Code.updateAccountAuth (Q02 [저장]) → 저장한 건수 */
+    @PutMapping("/account-auths")
+    public ApiResponse<Integer> updateAccountAuth(@AuthenticationPrincipal UserPrincipal principal, @RequestBody OrgAccountAuthSaveReq req) {
+        return ApiResponse.ok(orgCodeService.updateAccountAuth(principal, req));
     }
 }

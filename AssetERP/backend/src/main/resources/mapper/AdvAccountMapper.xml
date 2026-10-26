@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/adv/mapper/adv02_account.xml (selectByManageNamePaging·Total·selectById·checkManageCode·selectByManageCode·insert),
+     server/sys/mapper/sys15_corp.xml checkExcelUpload (Q01 일임계좌 등록, 엑셀 업로드) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.adv.mapper.AdvAccountMapper">
+
+    <sql id="accountColumns">
+        adv02_account_id                  AS account_id,
+        adv02_company_id                  AS company_id,
+        adv02_manage_cd                   AS manage_code,
+        adv02_manage_nm                   AS manage_name,
+        adv02_tr_corp_cd                  AS tr_corp_code,
+        adv02_tr_corp_nm                  AS tr_corp_name,
+        TO_DECRYPTS(adv02_account_no)     AS account_no_dec,
+        adv02_start_date                  AS start_date,
+        adv02_close_date                  AS close_date,
+        adv02_work_date                   AS work_date,
+        adv02_worker                      AS worker
+    </sql>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS adv02_account.selectByManageNamePaging L77 -->
+    <select id="selectByManageNamePaging" resultType="kr.co.kfs.asseterp.biz.adv.dto.AccountRes">
+        SELECT <include refid="accountColumns"/>
+          FROM adv02_account
+         WHERE adv02_company_id = #{p.companyId}
+           AND UPPER(CONCAT(adv02_manage_cd, adv02_manage_nm)) LIKE UPPER(#{p.searchText})
+         ORDER BY adv02_start_date, adv02_manage_cd
+         LIMIT #{p.limit}
+        OFFSET #{p.offset}
+    </select>
+
+    <!-- AS-IS adv02_account.selectByManageNamePagingTotal -->
+    <select id="selectByManageNamePagingTotal" resultType="long">
+        SELECT COUNT(*)
+          FROM adv02_account
+         WHERE adv02_company_id = #{p.companyId}
+           AND UPPER(CONCAT(adv02_manage_cd, adv02_manage_nm)) LIKE UPPER(#{p.searchText})
+    </select>
+
+    <!-- AS-IS adv02_account.selectById L22 (+ 로그인 회사) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.adv.dto.AccountRes">
+        SELECT <include refid="accountColumns"/>
+          FROM adv02_account
+         WHERE adv02_account_id = #{accountId}
+           AND adv02_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS adv02_account.checkManageCode L69 — accountId가 null이면 `!= NULL`이라 원본도 0건 -->
+    <select id="checkManageCode" resultType="int">
+        SELECT COUNT(*)
+          FROM adv02_account
+         WHERE adv02_company_id = #{companyId}
+           AND adv02_manage_cd  = #{manageCode}
+           AND adv02_account_id != #{accountId}
+    </select>
+
+    <!-- AS-IS adv02_account.selectByManageCode L61 -->
+    <select id="countByManageCode" resultType="int">
+        SELECT COUNT(*)
+          FROM adv02_account
+         WHERE adv02_company_id = #{companyId}
+           AND adv02_manage_cd  = #{manageCode}
+    </select>
+
+    <!-- AS-IS UpdateDataModel 동적 INSERT — 계좌번호는 dbConfig.getEncrypts(TO_ENCRYPTS) -->
+    <insert id="insertAccount">
+        INSERT INTO adv02_account (adv02_account_id, adv02_company_id, adv02_manage_cd, adv02_manage_nm, adv02_tr_corp_cd, adv02_tr_corp_nm,
+                                   adv02_account_no, adv02_start_date, adv02_close_date, adv02_work_date, adv02_worker)
+        VALUES (#{id}, #{companyId}, #{r.manageCode}, #{r.manageName}, #{r.trCorpCode}, #{r.trCorpName},
+                TO_ENCRYPTS(#{r.accountNoDec}), #{r.startDate}, #{r.closeDate}, #{r.workDate}, #{r.worker})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel 동적 UPDATE -->
+    <update id="updateAccount">
+        UPDATE adv02_account
+           SET adv02_manage_cd  = #{r.manageCode},
+               adv02_manage_nm  = #{r.manageName},
+               adv02_tr_corp_cd = #{r.trCorpCode},
+               adv02_tr_corp_nm = #{r.trCorpName},
+               adv02_account_no = TO_ENCRYPTS(#{r.accountNoDec}),
+               adv02_start_date = #{r.startDate},
+               adv02_close_date = #{r.closeDate},
+               adv02_work_date  = #{r.workDate},
+               adv02_worker     = #{r.worker}
+         WHERE adv02_account_id = #{r.accountId}
+           AND adv02_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS adv02_account.insert (엑셀 업로드) -->
+    <insert id="excelInsert">
+        INSERT INTO adv02_account (adv02_account_id, adv02_company_id, adv02_manage_cd, adv02_manage_nm, adv02_tr_corp_cd, adv02_tr_corp_nm,
+                                   adv02_account_no, adv02_start_date, adv02_close_date, adv02_work_date, adv02_worker)
+        VALUES (#{r.accountId}, #{r.companyId}, #{r.manageCode}, #{r.manageName}, #{r.trCorpCode}, #{r.trCorpName},
+                TO_ENCRYPTS(#{r.accountNoDec}), #{r.startDate}, #{r.closeDate}, #{r.workDate}, #{r.worker})
+    </insert>
+
+    <!-- AS-IS sys15_corp.checkExcelUpload L184 (corpType 3, 사용 중, 거래처명 일치) — 거래처 코드만 -->
+    <select id="selectTrCorpCodesByName" resultType="string">
+        SELECT sys15_corp_cd
+          FROM sys15_corp
+         WHERE sys15_company_id = #{companyId}
+           AND COALESCE(sys15_use_yn, 'false') = 'true'
+           AND COALESCE(sys15_corp_type, '9') = '3'
+           AND UPPER(sys15_corp_nm) = UPPER(#{corpName})
+    </select>
+</mapper>

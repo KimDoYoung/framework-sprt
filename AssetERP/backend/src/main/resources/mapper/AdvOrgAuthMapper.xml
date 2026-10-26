@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/adv/mapper/adv05_org_auth.xml checkOrgAuth, adv02_account.xml selectByOrgAuthPaging·Total (Q02) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.adv.mapper.AdvOrgAuthMapper">
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS adv02_account.selectByOrgAuthPaging -->
+    <select id="selectByOrgAuthPaging" resultType="kr.co.kfs.asseterp.biz.adv.dto.AccountRes">
+        SELECT adv02_account_id                  AS account_id,
+               adv02_company_id                  AS company_id,
+               adv02_manage_cd                   AS manage_code,
+               adv02_manage_nm                   AS manage_name,
+               adv02_tr_corp_cd                  AS tr_corp_code,
+               adv02_tr_corp_nm                  AS tr_corp_name,
+               TO_DECRYPTS(adv02_account_no)     AS account_no_dec,
+               adv02_start_date                  AS start_date,
+               adv02_close_date                  AS close_date,
+               adv02_work_date                   AS work_date,
+               adv02_worker                      AS worker
+          FROM adv02_account
+         WHERE adv02_company_id = #{p.companyId}
+           AND #{p.orgId} IN (
+                                SELECT adv05_org_code_id
+                                  FROM adv05_org_auth
+                                 WHERE adv05_account_id = adv02_account_id
+                                   AND COALESCE(adv05_auth_yn, 'false') = 'true'
+                             )
+           AND UPPER(CONCAT(adv02_manage_cd, adv02_manage_nm)) LIKE UPPER(#{p.searchText})
+         ORDER BY adv02_start_date, adv02_manage_cd
+         LIMIT #{p.limit}
+        OFFSET #{p.offset}
+    </select>
+
+    <!-- AS-IS adv02_account.selectByOrgAuthPagingTotal -->
+    <select id="selectByOrgAuthPagingTotal" resultType="long">
+        SELECT COUNT(*)
+          FROM adv02_account
+         WHERE adv02_company_id = #{p.companyId}
+           AND #{p.orgId} IN (
+                                SELECT adv05_org_code_id
+                                  FROM adv05_org_auth
+                                 WHERE adv05_account_id = adv02_account_id
+                                   AND COALESCE(adv05_auth_yn, 'false') = 'true'
+                             )
+           AND UPPER(CONCAT(adv02_manage_cd, adv02_manage_nm)) LIKE UPPER(#{p.searchText})
+    </select>
+
+    <select id="countAccount" resultType="int">
+        SELECT COUNT(*)
+          FROM adv02_account
+         WHERE adv02_account_id = #{accountId}
+           AND adv02_company_id = #{companyId}
+    </select>
+
+    <select id="countOrg" resultType="int">
+        SELECT COUNT(*)
+          FROM org01_code
+         WHERE org01_code_id    = #{orgCodeId}
+           AND org01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS checkOrgAuth: SELECT * FROM adv05_org_auth WHERE 조직 AND 계좌 (id만 쓴다) -->
+    <select id="selectOrgAuthId" resultType="long">
+        SELECT adv05_org_auth_id
+          FROM adv05_org_auth
+         WHERE adv05_org_code_id = #{orgCodeId}
+           AND adv05_account_id  = #{accountId}
+    </select>
+
+    <insert id="insertOrgAuth">
+        INSERT INTO adv05_org_auth (adv05_org_auth_id, adv05_account_id, adv05_org_code_id, adv05_auth_yn)
+        VALUES (#{orgAuthId}, #{accountId}, #{orgCodeId}, #{authYn})
+    </insert>
+
+    <update id="updateAuthYn">
+        UPDATE adv05_org_auth
+           SET adv05_auth_yn = #{authYn}
+         WHERE adv05_org_auth_id = #{orgAuthId}
+    </update>
+</mapper>

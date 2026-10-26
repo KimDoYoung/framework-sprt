@@ -277,4 +277,50 @@
          WHERE fnd08_org_auth_id  = #{r.orgAuthId}
            AND fnd08_fund_code_id = #{fundCodeId}
     </update>
+
+    <!-- AS-IS(IDMS-IC) org01_code.selectByAccountId (Q02 일임계좌 권한 트리, 한 단계) -->
+    <select id="selectByAccountId" resultType="kr.co.kfs.asseterp.biz.org.dto.OrgFundAuthRes">
+        SELECT org01_code.org01_code_id         AS code_id
+             , org02_info.org02_parent_code_id  AS parent_code_id
+             , 0                                AS depth
+             , org02_info.org02_kor_nm          AS kor_name
+             , org01_code.org01_org_cd          AS org_code
+             , adv05_org_auth.adv05_org_auth_id AS org_auth_id
+             , adv05_org_auth.adv05_auth_yn     AS auth_yn
+             , org02_info.org02_note            AS note
+          FROM org01_code
+               INNER JOIN org02_info ON org01_code_id = org02_code_id
+               LEFT OUTER JOIN adv05_org_auth ON org01_code_id = adv05_org_code_id AND adv05_account_id = #{accountId}
+         WHERE org01_company_id = #{companyId}
+           AND org02_parent_code_id = #{parentCodeId}
+           AND f_sysdate() BETWEEN org01_open_date AND COALESCE(org01_close_date, to_date('99991231', 'yyyymmdd'))
+           AND org02_mod_date = ( SELECT MAX(x.org02_mod_date)
+                                    FROM org02_info x
+                                   WHERE x.org02_code_id = org02_info.org02_code_id
+                                     AND x.org02_mod_date &lt;= f_sysdate() )
+         ORDER BY org02_sort_order
+    </select>
+
+    <select id="countAccountInCompany" resultType="int">
+        SELECT COUNT(*)
+          FROM adv02_account
+         WHERE adv02_account_id = #{accountId}
+           AND adv02_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(adv05_org_auth) 동적 INSERT/UPDATE — 이 화면은 권한 여부(authYn)만 바꾼다. 조직은 계좌와 같은 회사 것만(보안 보강) -->
+    <insert id="insertAccountAuth">
+        INSERT INTO adv05_org_auth (adv05_org_auth_id, adv05_account_id, adv05_org_code_id, adv05_auth_yn)
+        SELECT #{orgAuthId}, #{accountId}, org01_code_id, #{r.authYn}
+          FROM org01_code
+         WHERE org01_code_id = #{r.orgCodeId}
+           AND org01_company_id = (SELECT adv02_company_id FROM adv02_account WHERE adv02_account_id = #{accountId})
+    </insert>
+
+    <update id="updateAccountAuth">
+        UPDATE adv05_org_auth
+           SET adv05_auth_yn = #{r.authYn}
+         WHERE adv05_org_auth_id = #{r.orgAuthId}
+           AND adv05_account_id  = #{accountId}
+    </update>
 </mapper>

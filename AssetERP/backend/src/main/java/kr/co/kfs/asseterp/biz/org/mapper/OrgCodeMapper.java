@@ -58,4 +58,16 @@ public interface OrgCodeMapper {
 
     /** AS-IS UpdateDataModel(fnd08_org_auth) UPDATE — 권한 여부만 바뀐다 */
     int updateOrgAuth(@Param("fundCodeId") Long fundCodeId, @Param("r") OrgFundAuthRow row);
+
+    /** AS-IS org01_code.selectByAccountId (Q02 일임계좌 권한 트리, 한 단계). 행 모양은 펀드 권한 트리와 같다 */
+    List<OrgFundAuthRes> selectByAccountId(@Param("companyId") Long companyId, @Param("parentCodeId") Long parentCodeId, @Param("accountId") Long accountId);
+
+    /** 일임계좌가 로그인 회사 것인지 (보안 보강) */
+    int countAccountInCompany(@Param("accountId") Long accountId, @Param("companyId") Long companyId);
+
+    /** AS-IS UpdateDataModel(adv05_org_auth) INSERT */
+    int insertAccountAuth(@Param("orgAuthId") Long orgAuthId, @Param("accountId") Long accountId, @Param("r") OrgFundAuthRow row);
+
+    /** AS-IS UpdateDataModel(adv05_org_auth) UPDATE — 권한 여부만 바뀐다 */
+    int updateAccountAuth(@Param("accountId") Long accountId, @Param("r") OrgFundAuthRow row);
 }

@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.org.service;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.org.dto.OrgCodeRes;
 import kr.co.kfs.asseterp.biz.org.dto.OrgCodeSaveReq;
+import kr.co.kfs.asseterp.biz.org.dto.OrgAccountAuthSaveReq;
 import kr.co.kfs.asseterp.biz.org.dto.OrgFundAuthRes;
 import kr.co.kfs.asseterp.biz.org.dto.OrgFundAuthRow;
 import kr.co.kfs.asseterp.biz.org.dto.OrgFundAuthSaveReq;
@@ -63,6 +64,41 @@ public class OrgCodeService {
                 saved += orgCodeMapper.insertOrgAuth(orgCodeMapper.selectNextId(), req.fundCodeId(), r);
             } else {
                 saved += orgCodeMapper.updateOrgAuth(req.fundCodeId(), r);
+            }
+        }
+        return saved;
+    }
+
+    /** AS-IS org.Org01_Code.selectByAccountId L244 (Q02). 상위조직 0부터 단계마다 하위를 찾아 전위 순서 + depth로 편다 */
+    public List<OrgFundAuthRes> searchAccountAuthTree(UserPrincipal user, Long accountId) {
+        List<OrgFundAuthRes> out = new java.util.ArrayList<>();
+        appendAccountAuthChildren(out, user.getCompanyId(), accountId, 0L, 0);
+        return out;
+    }
+
+    private void appendAccountAuthChildren(List<OrgFundAuthRes> out, Long companyId, Long accountId, Long parentCodeId, int depth) {
+        for (OrgFundAuthRes node : orgCodeMapper.selectByAccountId(companyId, parentCodeId, accountId)) {
+            out.add(node.withDepth(depth));
+            appendAccountAuthChildren(out, companyId, accountId, node.codeId(), depth + 1);
+        }
+    }
+
+    /**
+     * AS-IS org.Org01_Code.updateAccountAuth L409 (Q02). 바뀐 행만 받아 있으면(orgAuthId) 권한 여부를 고치고 없으면 새 id로 넣는다.
+     * authYn이 없으면 "false". 계좌는 로그인 회사 것만(보안 보강) → 저장한 건수
+     */
+    @Transactional
+    public int updateAccountAuth(UserPrincipal user, OrgAccountAuthSaveReq req) {
+        if (req.accountId() == null || orgCodeMapper.countAccountInCompany(req.accountId(), user.getCompanyId()) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "일임계좌를 찾을 수 없습니다.");
+        }
+        int saved = 0;
+        for (OrgFundAuthRow row : req.rows() == null ? List.<OrgFundAuthRow>of() : req.rows()) {
+            OrgFundAuthRow r = new OrgFundAuthRow(row.orgAuthId(), row.orgCodeId(), row.authYn() == null ? "false" : row.authYn());
+            if (r.orgAuthId() == null || r.orgAuthId() <= 0) {
+                saved += orgCodeMapper.insertAccountAuth(orgCodeMapper.selectNextId(), req.accountId(), r);
+            } else {
+                saved += orgCodeMapper.updateAccountAuth(req.accountId(), r);
             }
         }
         return saved;
