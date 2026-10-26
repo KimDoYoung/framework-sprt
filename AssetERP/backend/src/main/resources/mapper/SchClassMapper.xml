@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  스케줄분류 (O01) — AS-IS(IDMS-IC) server/sch/mapper/sch08_class.xml + sys00_common의 sys09_code.selectScheduleClass
+  Sch08_Lookup_Class → server/sch/Sch08_Class.java, 콤보 → server/sys/Sys00_Common.java selectScheduleClass L171
+  sch08_class에는 회사 열이 없다(사용자별) — 조회·수정·삭제는 로그인 사용자의 분류만 건다(보안 보강)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sch.mapper.SchClassMapper">
+
+    <!-- AS-IS sch08_class.selectByPersonId (IDMS-IC) -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch08ClassRes">
+        SELECT sch08_class_id    AS class_id,
+               sch08_person_id   AS person_id,
+               sch08_class_nm    AS class_name,
+               sch08_seq         AS seq,
+               sch08_use_yn      AS use_yn,
+               sch08_note        AS note
+          FROM sch08_class
+         WHERE sch08_person_id = #{personId}
+         ORDER BY sch08_seq
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch08ClassRes">
+        SELECT sch08_class_id    AS class_id,
+               sch08_person_id   AS person_id,
+               sch08_class_nm    AS class_name,
+               sch08_seq         AS seq,
+               sch08_use_yn      AS use_yn,
+               sch08_note        AS note
+          FROM sch08_class
+         WHERE sch08_class_id = #{classId}
+           AND sch08_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS sys09_code.selectScheduleClass (IDMS-IC) — 분류 콤보(사용 중인 내 분류) -->
+    <select id="selectCombo" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch08ClassComboRes">
+        SELECT sch08_class_id||''   AS code,
+               sch08_class_nm       AS name
+          FROM sch08_class
+         WHERE sch08_person_id = #{personId}
+           AND COALESCE(sch08_use_yn,'false') = 'true'
+         ORDER BY sch08_seq
+    </select>
+
+    <!-- AS-IS sys09_code.selectScheduleClass2 (IDMS-IC) — 분류 콤보(사용 중인 내 분류 + 공모주 '0', 순서 998) — 기간별 업무일정 조회(O02) -->
+    <select id="selectCombo2" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch08ClassComboRes">
+        SELECT code, name
+          FROM (
+                SELECT sch08_class_id||''   AS code,
+                       sch08_class_nm       AS name,
+                       sch08_seq            AS seq
+                  FROM sch08_class
+                 WHERE sch08_person_id = #{personId}
+                   AND COALESCE(sch08_use_yn,'false') = 'true'
+                 UNION ALL
+                SELECT '0'                  AS code,
+                       '공모주'               AS name,
+                       998                  AS seq
+               ) t
+         ORDER BY seq
+    </select>
+
+    <!-- AS-IS sch01_info.checkClassId (IDMS-IC) — 분류를 쓰는 일정 수 -->
+    <select id="countInfoByClassId" resultType="int">
+        SELECT COUNT(*)
+          FROM sch01_info
+         WHERE sch01_class_id = #{classId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Sch08_Class.update(UpdateDataModel) INSERT — 사용자는 로그인 사용자 -->
+    <insert id="insertClass">
+        INSERT INTO sch08_class (sch08_class_id, sch08_person_id, sch08_class_nm, sch08_seq, sch08_use_yn, sch08_note)
+        VALUES (#{classId}, #{personId}, #{req.className}, #{req.seq}, #{req.useYn}, #{req.note})
+    </insert>
+
+    <update id="updateClass">
+        UPDATE sch08_class
+           SET sch08_class_nm = #{req.className},
+               sch08_seq      = #{req.seq},
+               sch08_use_yn   = #{req.useYn},
+               sch08_note     = #{req.note}
+         WHERE sch08_class_id = #{req.classId}
+           AND sch08_person_id = #{personId}
+    </update>
+
+    <!-- AS-IS Sch08_Class.delete(UpdateDataModel.deleteModel) -->
+    <delete id="deleteClasses">
+        DELETE FROM sch08_class
+         WHERE sch08_person_id = #{personId}
+           AND sch08_class_id IN
+        <foreach collection="classIds" item="classId" open="(" separator="," close=")">#{classId}</foreach>
+    </delete>
+</mapper>

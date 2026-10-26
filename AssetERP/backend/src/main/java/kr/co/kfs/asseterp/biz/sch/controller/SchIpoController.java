@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,6 +38,12 @@ public class SchIpoController {
     public ApiResponse<List<Sch10IpoRes>> search(@RequestParam String dateType, @RequestParam String startDate, @RequestParam String closeDate,
                                                  @RequestParam(required = false) String searchText, @RequestParam(required = false) String marketCode) {
         return ApiResponse.ok(service.search(dateType, startDate, closeDate, searchText, marketCode));
+    }
+
+    /** AS-IS sch.Sch10_Ipo.selectById */
+    @GetMapping("/{ipoId}")
+    public ApiResponse<Sch10IpoRes> get(@PathVariable Long ipoId) {
+        return ApiResponse.ok(service.get(ipoId));
     }
 
     /** AS-IS sch.Sch10_Ipo.update → 저장된 행(요청 순서) */

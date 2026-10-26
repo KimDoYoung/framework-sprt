@@ -1,0 +1,932 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  업무일정 (O01) — AS-IS(IDMS-IC) server/sch/mapper/sch01_info.xml (selectByText L108 …) + sch02_share.xml selectByInfoId
+  Sch01_Tab_Info · Sch01_Lookup_Info · Sch01_Lookup_ManagerModi → server/sch/Sch01_Info.java · Sch02_Share.java
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sch.mapper.SchInfoMapper">
+
+    <!-- selectByText·selectById가 같이 쓰는 열 (AS-IS 두 SQL의 SELECT 절이 같다) -->
+    <sql id="infoColumns">
+        a.sch01_info_id                                                                                       AS info_id,
+        a.sch01_company_id                                                                                    AS company_id,
+        a.sch01_title                                                                                         AS title,
+        a.sch01_content                                                                                       AS content,
+        a.sch01_report                                                                                        AS report,
+        a.sch01_manager_id                                                                                    AS manager_id,
+        a.sch01_note                                                                                          AS note,
+        a.sch01_use_yn                                                                                        AS use_yn,
+        a.sch01_dcr_class_tree_id                                                                             AS dcr_class_tree_id,
+        a.sch01_private_yn                                                                                    AS private_yn,
+        a.sch01_daily_yn                                                                                      AS daily_yn,
+        a.sch01_class_id                                                                                      AS class_id,
+        f_emp_kor_nm(a.sch01_manager_id)                                                                      AS manager_name,
+        f_class_tree_nm_allpath(sch01_dcr_class_tree_id)                                                      AS dcr_class_tree_name,
+        (
+            SELECT CASE WHEN COUNT(*)=1 THEN MIN(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate()))
+                        ELSE MIN(f_cdnm('CycleCode', sch03_cycle_cd, sch03_company_id, f_sysdate()))||' 외 '||COUNT(sch03_deadline.*)-1||'건'
+                        END
+              FROM sch03_deadline
+             WHERE sch03_schedule_cd = '1'
+               AND sch03_info_id = sch01_info_id
+               AND f_today() BETWEEN COALESCE(sch03_start_date,'2000-01-01') AND COALESCE(sch03_close_date,'9999-12-31')
+             LIMIT 1
+        )                                                                                                     AS deadline_name,
+        (
+            SELECT CASE WHEN COUNT(*)=1 THEN MIN(f_get_deadline_nm(sch03_deadline_id, '1'))
+                        ELSE MIN(f_get_deadline_nm(sch03_deadline_id, '1'))||' 외 '||COUNT(sch03_deadline.*)-1||'건'
+                        END
+              FROM sch03_deadline
+             WHERE sch03_info_id = sch01_info_id
+               AND sch03_schedule_cd = '1'
+               AND f_today() BETWEEN COALESCE(sch03_start_date,'2000-01-01') AND COALESCE(sch03_close_date,'9999-12-31')
+        )                                                                                                     AS deadline_full_name,
+        (
+            SELECT CASE WHEN COUNT(*)=1 THEN MIN(f_org_nm(sch02_org_id, f_sysdate()))
+                        ELSE MIN(f_org_nm(sch02_org_id, f_sysdate())) || ' 외 ' || COUNT(sch02_share.*) - 1
+                        END
+              FROM sch02_share
+             WHERE sch01_info_id = sch02_info_id
+               AND sch02_share_cd = '2'
+             LIMIT 1
+        )                                                                                                     AS share_org_name,
+        (
+            SELECT CASE WHEN COUNT(*)=1 THEN MIN(f_emp_kor_nm(sch02_person_id))
+                        ELSE MIN(f_emp_kor_nm(sch02_person_id))||' 외 '||COUNT(sch02_share.*)-1
+                        END
+              FROM sch02_share
+             WHERE sch01_info_id = sch02_info_id
+               AND sch02_share_cd = '1'
+             LIMIT 1
+        )                                                                                                     AS share_person_name,
+        (
+            SELECT CASE WHEN COUNT(*)=1 THEN MAX(f_ics_class_tree_nm(sch05_ics_class_tree_id))
+                        ELSE MAX(f_ics_class_tree_nm(sch05_ics_class_tree_id))||' 외 '||COUNT(*)-1||'건' END
+              FROM sch05_relate_ics
+             WHERE sch05_info_id = sch01_info_id
+        )                                                                                                     AS ics_class_tree_name,
+        CASE WHEN COALESCE(sch01_private_yn,'false') = 'true' THEN '비공개' ELSE '' END                          AS private_yn_name,
+        CASE WHEN COALESCE(sch01_daily_yn,'false') = 'true' THEN 'O' ELSE '' END                              AS daily_yn_name,
+        ( SELECT MIN(f_get_alarm_info(sch06_alarm_id))
+                 || CASE WHEN COUNT(*) = 1 THEN '' ELSE ' 외 '||COUNT(*)-1||'건' END
+            FROM sch06_alarm
+           WHERE sch06_company_id = sch01_company_id
+             AND sch06_target_cd  = 'SCH'
+             AND sch06_target_id  = sch01_info_id
+             AND COALESCE(sch06_use_yn,'false') = 'true' )                                                    AS alarm_info
+    </sql>
+
+    <!-- AS-IS sch01_info.selectByCloseDate L553 (IDMS-IC) — 파라미터 Map → Sch01PeriodSearchCond. 분류(classId)·검색(searchText)은 원본의 <when>을 <if>로.
+         include selectIpo(L196)는 한 번만 쓰여 그 자리에 펼쳤다. dailyYn·shareType은 원본처럼 글자('true'/'false', '%'/'1'/'2')로 비교한다 -->
+    <select id="selectByCloseDate" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch01PeriodRes">
+        SELECT close_date                                                                        AS close_date
+             , CASE WHEN status_cd IN ('1','5','2') THEN manage_date ELSE null END               AS manage_date
+             , class_nm                                                                          AS class_name
+             , title                                                                             AS title
+             , CASE WHEN length(contt) > 300 THEN SUBSTR(contt,1,300)||'...' ELSE contt END      AS content_limit
+             , deadline_nm                                                                       AS deadline_name
+             , f_cdnm('ScheduleStatusCode', status_cd, company_id, close_date)                   AS status_name
+             , CASE WHEN status_cd IN ('1','5','2') THEN f_emp_kor_nm(person_id) ELSE null END   AS person_name
+             , note                                                                              AS note
+             , info_id                                                                           AS real_info_id
+             , ROW_NUMBER() OVER(ORDER BY close_date, seq, title COLLATE "ko_KR.utf8")           AS info_id
+             , class_id                                                                          AS class_id
+             , deadline_id                                                                       AS deadline_id
+             , contt                                                                             AS content
+             , manager_id                                                                        AS manager_id
+             , f_emp_kor_nm(manager_id)                                                          AS manager_name
+             , person_id                                                                         AS person_id
+             , f_get_empTrans(manager_id, close_date, 'org_code_nm')                             AS org_name
+             , company_id                                                                        AS company_id
+          FROM (
+                SELECT sch04_info_id                                AS info_id
+                     , sch04_company_id                             AS company_id
+                     , sch04_title                                  AS title
+                     , sch01_content                                AS contt
+                     , sch04_note                                   AS note
+                     , sch04_manager_id                             AS manager_id
+                     , sch04_person_id                              AS person_id
+                     , sch01_class_id                               AS class_id
+                     , sch08_class_nm                               AS class_nm
+                     , COALESCE(sch08_seq,999)                      AS seq
+                     , sch04_close_date                             AS close_date
+                     , sch04_deadline_id                            AS deadline_id
+                     , f_get_deadline_nm(sch04_deadline_id, '2')    AS deadline_nm
+                     , sch03_cycle_cd                               AS cycle_cd
+                     , sch04_manage_date                            AS manage_date
+                     , sch04_status_cd                              AS status_cd
+                  FROM sch04_list
+                       INNER JOIN sch03_deadline   ON sch03_deadline_id = sch04_deadline_id
+                       INNER JOIN sch01_info       ON sch01_info_id     = sch04_info_id
+                       LEFT OUTER JOIN sch08_class ON sch08_class_id    = sch01_class_id
+                 WHERE sch04_company_id  = #{companyId}
+                   AND sch04_schedule_cd = '1'     /*(1:스케줄)*/
+                   AND sch04_close_date  BETWEEN #{startDate}::date AND #{endDate}::date
+                   AND sch04_status_cd != '9'
+                <if test="classId != null">
+                   AND sch01_class_id = #{classId}
+                </if>
+                   AND ( ( #{dailyYn}  = 'true' AND COALESCE(sch01_daily_yn,'false') = 'true' ) OR
+                         ( #{dailyYn} != 'true'                                               ) )
+                   AND ( ( sch04_manager_id != #{personId} AND COALESCE(sch01_private_yn,'false') != 'true' ) OR
+                         ( sch04_manager_id  = #{personId}                                                  ) )
+                   AND ( ( #{shareType} IN ('%','1') AND #{personId} IN (sch04_manager_id, sch04_person_id) )
+                         OR
+                         ( #{shareType} IN ('%','2') AND #{personId} NOT IN (sch04_manager_id, sch04_person_id)
+                                                     AND ( ( #{personId} IN ( SELECT sch02_person_id
+                                                                                FROM sch02_share
+                                                                               WHERE sch02_info_id  = sch01_info_id
+                                                                                 AND sch02_share_cd = '1' )  ) OR
+                                                           ( #{orgId}  IN ( SELECT sch02_org_id
+                                                                              FROM sch02_share
+                                                                             WHERE sch02_info_id  = sch01_info_id
+                                                                               AND sch02_share_cd = '2' )    ) ) ) )
+                 UNION ALL
+                SELECT *
+                     , null     manage_date
+                     , '0'      status_cd
+                  FROM (
+                        --------------------------
+                        -- 나의 스케줄
+                        --------------------------
+                        SELECT sch01_info_id                                                                       info_id
+                             , sch01_company_id                                                                    company_id
+                             , sch01_title                                                                         title
+                             , sch01_content                                                                       contt
+                             , sch01_note                                                                          note
+                             , sch01_manager_id                                                                    manager_id
+                             , sch01_manager_id                                                                    person_id
+                             , sch01_class_id                                                                      class_id
+                             , sch08_class_nm                                                                      class_nm
+                             , COALESCE(sch08_seq,999)                                                             seq
+                             , f_get_std_date(sch03_deadline_id, sys12_day::date, sch01_company_id)                close_date
+                             , sch03_deadline_id                                                                   deadline_id
+                             , f_get_deadline_nm(sch03_deadline_id, '2')                                           deadline_nm
+                             , sch03_cycle_cd                                                                      cycle_cd
+                          FROM sch01_info
+                               INNER JOIN sch03_deadline ON sch03_info_id = sch01_info_id
+                               LEFT OUTER JOIN sch08_class ON sch08_class_id = sch01_class_id
+                               INNER JOIN sys12_calendar ON ( sys12_company_id = sch01_company_id                                 AND
+                                                              sys12_day BETWEEN #{startDate}::timestamp AND #{endDate}::timestamp )
+                         WHERE sch01_company_id = #{companyId}
+                           AND sch01_manager_id = #{personId}
+                        <if test="classId != null">
+                           AND sch01_class_id = #{classId}
+                        </if>
+                           AND ( ( #{dailyYn}  = 'true' AND COALESCE(sch01_daily_yn,'false') = 'true' ) OR
+                                 ( #{dailyYn} != 'true'                                               ) )
+                           AND #{shareType} IN ('1','%')
+                           AND COALESCE(sch01_use_yn,'false') = 'true'
+                           AND sch03_cycle_calc_type NOT IN ('02','10')                 /*(02:수시기간설정/10:즉시)제외*/
+                           AND sch03_cycle_cd        NOT IN ('02','03','04','05','06')  /*(주/월/분기/반기/연)제외*/
+                         UNION ALL
+                        SELECT sch01_info_id                                                                       info_id
+                             , sch01_company_id                                                                    company_id
+                             , sch01_title                                                                         title
+                             , sch01_content                                                                       contt
+                             , sch01_note                                                                          note
+                             , sch01_manager_id                                                                    manager_id
+                             , sch01_manager_id                                                                    person_id
+                             , sch01_class_id                                                                      class_id
+                             , sch08_class_nm                                                                      class_nm
+                             , COALESCE(sch08_seq,999)                                                             seq
+                             , sch09_day                                                                           close_date
+                             , sch03_deadline_id                                                                   deadline_id
+                             , f_get_deadline_nm(sch03_deadline_id, '2')                                           deadline_nm
+                             , sch03_cycle_cd                                                                      cycle_cd
+                          FROM sch01_info
+                               INNER JOIN sch03_deadline     ON sch03_info_id     = sch01_info_id
+                               INNER JOIN sch09_deadline_day ON sch09_deadline_id = sch03_deadline_id
+                               LEFT OUTER JOIN sch08_class   ON sch08_class_id    = sch01_class_id
+                         WHERE sch01_company_id = #{companyId}
+                           AND sch01_manager_id = #{personId}
+                        <if test="classId != null">
+                           AND sch01_class_id = #{classId}
+                        </if>
+                           AND ( ( #{dailyYn}  = 'true' AND COALESCE(sch01_daily_yn,'false') = 'true' ) OR
+                                 ( #{dailyYn} != 'true'                                               ) )
+                           AND #{shareType} IN ('1','%')
+                           AND COALESCE(sch01_use_yn,'false') = 'true'
+                           AND sch03_cycle_calc_type NOT IN ('02','10')                  /*(02:수시기간설정/10:즉시)제외*/
+                           AND sch03_cycle_cd            IN ('02','03','04','05','06')   /*(주/월/분기/반기/연)*/
+                           AND sch09_day BETWEEN #{startDate}::date AND #{endDate}::date
+                        --------------------------
+                        -- 공유 스케줄
+                        --------------------------
+                         UNION
+                        SELECT sch01_info_id                                                                      info_id
+                             , sch01_company_id                                                                   company_id
+                             , sch01_title                                                                        title
+                             , sch01_content                                                                      contt
+                             , sch01_note                                                                         note
+                             , sch01_manager_id                                                                   manager_id
+                             , sch01_manager_id                                                                   person_id
+                             , sch01_class_id                                                                     class_id
+                             , sch08_class_nm                                                                     class_nm
+                             , COALESCE(sch08_seq,999)                                                            seq
+                             , f_get_std_date(sch03_deadline_id, sys12_day::date, sch01_company_id)               close_date
+                             , sch03_deadline_id                                                                  deadline_id
+                             , f_get_deadline_nm(sch03_deadline_id, '2')                                          deadline_nm
+                             , sch03_cycle_cd                                                                     cycle_cd
+                          FROM sch01_info
+                               INNER JOIN sch03_deadline ON sch03_info_id = sch01_info_id
+                               LEFT OUTER JOIN sch08_class ON sch08_class_id = sch01_class_id
+                               INNER JOIN sys12_calendar ON ( sys12_company_id = sch01_company_id                                  AND
+                                                              sys12_day BETWEEN #{startDate}::timestamp AND #{endDate}::timestamp  )
+                         WHERE sch01_company_id  = #{companyId}
+                           AND sch01_manager_id != #{personId}
+                           AND COALESCE(#{classId,jdbcType=BIGINT},1) = 1
+                           AND 'false'           = #{dailyYn}
+                           AND COALESCE(sch01_use_yn,'false') = 'true'
+                           AND COALESCE(sch01_private_yn,'false') != 'true'
+                           AND sch03_cycle_calc_type NOT IN ('02','10')                  /*(02:수시기간설정/10:즉시)제외 */
+                           AND sch03_cycle_cd        NOT IN ('02','03','04','05','06')   /*(주/월/분기/반기/연)제외*/
+                           AND #{shareType} IN ('2','%')
+                           AND ( ( #{personId} IN ( SELECT sch02_person_id
+                                                      FROM sch02_share
+                                                     WHERE sch02_info_id  = sch01_info_id
+                                                       AND sch02_share_cd = '1' )  ) OR
+                                 ( #{orgId}  IN ( SELECT sch02_org_id
+                                                    FROM sch02_share
+                                                   WHERE sch02_info_id  = sch01_info_id
+                                                     AND sch02_share_cd = '2' )    ) )
+                         UNION ALL
+                        SELECT sch01_info_id                                                                      info_id
+                             , sch01_company_id                                                                   company_id
+                             , sch01_title                                                                        title
+                             , sch01_content                                                                      contt
+                             , sch01_note                                                                         note
+                             , sch01_manager_id                                                                   manager_id
+                             , sch01_manager_id                                                                   person_id
+                             , sch01_class_id                                                                     class_id
+                             , sch08_class_nm                                                                     class_nm
+                             , COALESCE(sch08_seq,999)                                                            seq
+                             , sch09_day                                                                          close_date
+                             , sch03_deadline_id                                                                  deadline_id
+                             , f_get_deadline_nm(sch03_deadline_id, '2')                                          deadline_nm
+                             , sch03_cycle_cd                                                                     cycle_cd
+                          FROM sch01_info
+                               INNER JOIN sch03_deadline     ON sch03_info_id     = sch01_info_id
+                               INNER JOIN sch09_deadline_day ON sch09_deadline_id = sch03_deadline_id
+                               LEFT OUTER JOIN sch08_class   ON sch08_class_id    = sch01_class_id
+                         WHERE sch01_company_id  = #{companyId}
+                           AND sch01_manager_id != #{personId}
+                           AND COALESCE(#{classId,jdbcType=BIGINT},1) = 1
+                           AND 'false'           = #{dailyYn}
+                           AND COALESCE(sch01_use_yn,'false') = 'true'
+                           AND COALESCE(sch01_private_yn,'false') != 'true'
+                           AND sch03_cycle_calc_type NOT IN ('02','10')                 /*(02:수시기간설정/10:즉시)제외 */
+                           AND sch03_cycle_cd            IN ('02','03','04','05','06')  /*(주/월/분기/반기/연)*/
+                           AND sch09_day BETWEEN #{startDate}::date AND #{endDate}::date
+                           AND #{shareType} IN ('2','%')
+                           AND ( ( #{personId} IN ( SELECT sch02_person_id
+                                                      FROM sch02_share
+                                                     WHERE sch02_info_id  = sch01_info_id
+                                                       AND sch02_share_cd = '1' )  ) OR
+                                 ( #{orgId}  IN ( SELECT sch02_org_id
+                                                    FROM sch02_share
+                                                   WHERE sch02_info_id  = sch01_info_id
+                                                     AND sch02_share_cd = '2' )    ) )
+                        --------------------------
+                        -- 공모주 일정
+                        --------------------------
+                         UNION
+                        SELECT info_id       info_id
+                             , #{companyId}  company_id
+                             , title         title
+                             , content       contt
+                             , null          note
+                             , null          manager_id
+                             , null          person_id
+                             , 0             class_id
+                             , '공모주'        class_nm
+                             , 999           seq
+                             , close_date    close_date
+                             , null          deadline_id
+                             , '수시'         deadline_nm
+                             , '99'          cycle_cd
+                          FROM (
+                                SELECT sch10_ipo_id                        as info_id
+                                     , '[수요예측] '||sch10_item_nm          as title
+                                     , CONCAT('시장구분 : ', f_cdnm('MarketCode', sch10_market_cd, sch10_company_id, f_today())
+                                             ,' / '
+                                             ,'희망공모가 : ',sch10_price_bracket
+                                             ,E'\n주간사 : ',sch10_note)     as content
+                                     , sch10_demand_start_date             as close_date
+                                  FROM sch10_ipo
+                                 WHERE sch10_demand_start_date BETWEEN #{startDate}::date AND #{endDate}::date
+                                   AND COALESCE(sch10_cancel_yn,'false') != 'true'
+                                 UNION ALL
+                                SELECT sch10_ipo_id                        as info_id
+                                     , '[공모주청약] '||sch10_item_nm         as title
+                                     , CONCAT('시장구분 : ',f_cdnm('MarketCode', sch10_market_cd, sch10_company_id, f_today())
+                                             ,' / '
+                                             ,'공모가 : ',COALESCE(TO_CHAR(sch10_price,'FM999,999,999'),'미정')
+                                             ,E'\n주간사 : ',sch10_note)     as content
+                                     , sch10_subscription_start_date       as close_date
+                                  FROM sch10_ipo
+                                 WHERE sch10_subscription_start_date BETWEEN #{startDate}::date AND #{endDate}::date
+                                   AND COALESCE(sch10_cancel_yn,'false') != 'true'
+                                 UNION ALL
+                                SELECT sch10_ipo_id                        as info_id
+                                     , '[공모주납입] '||sch10_item_nm         as title
+                                     , CONCAT('시장구분 : ',f_cdnm('MarketCode', sch10_market_cd, sch10_company_id, f_today())
+                                             ,' / '
+                                             ,'공모가 : ',COALESCE(TO_CHAR(sch10_price,'FM999,999,999'),'미정')
+                                             ,E'\n주간사 : ',sch10_note)     as content
+                                     , sch10_pay_date                      as close_date
+                                  FROM sch10_ipo
+                                 WHERE sch10_pay_date BETWEEN #{startDate}::date AND #{endDate}::date
+                                   AND COALESCE(sch10_cancel_yn,'false') != 'true'
+                                 UNION ALL
+                                SELECT sch10_ipo_id                        as info_id
+                                     , '[공모주상장] '||sch10_item_nm         as title
+                                     , CONCAT('시장구분 : ',f_cdnm('MarketCode', sch10_market_cd, sch10_company_id, f_today())
+                                             ,' / '
+                                             ,'공모가 : ',COALESCE(TO_CHAR(sch10_price,'FM999,999,999'),'미정')
+                                             ,E'\n주간사 : ',sch10_note)     as content
+                                     , sch10_list_date                     as close_date
+                                  FROM sch10_ipo
+                                 WHERE sch10_list_date BETWEEN #{startDate}::date AND #{endDate}::date
+                                   AND COALESCE(sch10_cancel_yn,'false') != 'true'
+                               ) ipo
+                         WHERE #{shareType} IN ('2','%')
+                           AND COALESCE(#{classId,jdbcType=BIGINT},0) = 0
+                           AND ( ( #{personId}  IN ( SELECT sch02_person_id
+                                                       FROM sch02_share
+                                                      WHERE sch02_info_id  = info_id
+                                                        AND sch02_share_cd = '1' ) ) OR
+                                 ( #{orgId}     IN ( SELECT sch02_org_id
+                                                       FROM sch02_share
+                                                      WHERE sch02_info_id  = info_id
+                                                        AND sch02_share_cd = '2' ) ) )
+                           AND 'false' = f_get_empTrans(#{personId}, close_date, 'non_stay_yn')
+                       ) sch
+                 WHERE close_date BETWEEN #{startDate}::date AND #{endDate}::date
+                   AND close_date &lt;= COALESCE(f_get_empTrans(manager_id, close_date, 'retire_date')::date,'9999-12-31')
+                   AND NOT EXISTS ( SELECT 1
+                                      FROM sch04_list
+                                     WHERE sch04_company_id   = company_id
+                                       AND sch04_info_id      = info_id
+                                       AND sch04_manager_id   = manager_id
+                                       AND sch04_close_date   = close_date
+                                       AND sch04_schedule_cd != '5' )
+               ) t
+         WHERE 1=1
+           AND cycle_cd LIKE #{cycleCode}
+           AND CONCAT(title, contt, f_get_empTrans(manager_id, close_date, 'org_code_nm'), f_emp_kor_nm(manager_id)) ILIKE #{searchText}
+    </select>
+
+    <!-- AS-IS sch01_info.selectIpo L196 (IDMS-IC) — 공모주 일정 4종(수요예측·청약·납입·상장). selectByOrg만 쓴다(O02 selectByCloseDate는 같은 내용을 그 자리에 펼쳐 둠) -->
+    <sql id="ipoSchedules">
+        SELECT sch10_ipo_id                        AS info_id
+             , '[수요예측] '||sch10_item_nm          AS title
+             , CONCAT('시장구분 : ', f_cdnm('MarketCode', sch10_market_cd, sch10_company_id, f_today())
+                     ,' / '
+                     ,'희망공모가 : ',sch10_price_bracket
+                     ,E'\n주간사 : ',sch10_note)     AS content
+             , sch10_demand_start_date             AS close_date
+          FROM sch10_ipo
+         WHERE sch10_demand_start_date BETWEEN #{startDate}::date AND #{endDate}::date
+           AND COALESCE(sch10_cancel_yn,'false') != 'true'
+         UNION ALL
+        SELECT sch10_ipo_id                        AS info_id
+             , '[공모주청약] '||sch10_item_nm         AS title
+             , CONCAT('시장구분 : ',f_cdnm('MarketCode', sch10_market_cd, sch10_company_id, f_today())
+                     ,' / '
+                     ,'공모가 : ',COALESCE(TO_CHAR(sch10_price,'FM999,999,999'),'미정')
+                     ,E'\n주간사 : ',sch10_note)     AS content
+             , sch10_subscription_start_date       AS close_date
+          FROM sch10_ipo
+         WHERE sch10_subscription_start_date BETWEEN #{startDate}::date AND #{endDate}::date
+           AND COALESCE(sch10_cancel_yn,'false') != 'true'
+         UNION ALL
+        SELECT sch10_ipo_id                        AS info_id
+             , '[공모주납입] '||sch10_item_nm         AS title
+             , CONCAT('시장구분 : ',f_cdnm('MarketCode', sch10_market_cd, sch10_company_id, f_today())
+                     ,' / '
+                     ,'공모가 : ',COALESCE(TO_CHAR(sch10_price,'FM999,999,999'),'미정')
+                     ,E'\n주간사 : ',sch10_note)     AS content
+             , sch10_pay_date                      AS close_date
+          FROM sch10_ipo
+         WHERE sch10_pay_date BETWEEN #{startDate}::date AND #{endDate}::date
+           AND COALESCE(sch10_cancel_yn,'false') != 'true'
+         UNION ALL
+        SELECT sch10_ipo_id                        AS info_id
+             , '[공모주상장] '||sch10_item_nm         AS title
+             , CONCAT('시장구분 : ',f_cdnm('MarketCode', sch10_market_cd, sch10_company_id, f_today())
+                     ,' / '
+                     ,'공모가 : ',COALESCE(TO_CHAR(sch10_price,'FM999,999,999'),'미정')
+                     ,E'\n주간사 : ',sch10_note)     AS content
+             , sch10_list_date                     AS close_date
+          FROM sch10_ipo
+         WHERE sch10_list_date BETWEEN #{startDate}::date AND #{endDate}::date
+           AND COALESCE(sch10_cancel_yn,'false') != 'true'
+    </sql>
+
+    <!-- AS-IS sch01_info.selectByOrg L845 + selectOrgList L852 (IDMS-IC) (O03 부서별 업무일정 조회) — 파라미터 Map → Sch01OrgSearchCond, 열 별칭만 record 필드 이름으로
+         (record 생성자 순서 = SELECT 순서). include selectIpo는 조각 ipoSchedules로, 나머지 SQL·조건은 그대로. ROW_NUMBER() OVER()는 ORDER BY 앞에서 매겨진다(원본과 같음) -->
+    <select id="selectByOrg" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch01OrgRes">
+        SELECT sch01_close_date                 AS close_date
+             , sch01_manage_date                AS manage_date
+             , sch01_class_nm                   AS class_name
+             , sch01_title                      AS title
+             , sch01_content                    AS content
+             , sch01_deadline_nm                AS deadline_name
+             , sch01_status_nm                  AS status_name
+             , sch01_person_nm                  AS person_name
+             , sch01_note                       AS note
+             , sch01_real_info_id               AS real_info_id
+             , ROW_NUMBER() OVER()              AS info_id
+             , sch01_class_id                   AS class_id
+             , sch01_deadline_id                AS deadline_id
+             , sch01_manager_id                 AS manager_id
+             , sch01_manager_nm                 AS manager_name
+             , sch01_person_id                  AS person_id
+             , sch01_org_nm                     AS org_name
+             , sch01_company_id                 AS company_id
+          FROM (
+        SELECT sch01_company_id
+             , sch01_title
+             , sch01_content
+             , sch01_manager_id
+             , f_emp_kor_nm(sch01_manager_id)                                           AS sch01_manager_nm
+             , sch01_person_id
+             , CASE WHEN status_cd IN ('1','5','2') THEN f_emp_kor_nm(sch01_person_id)
+                    ELSE null END                                                       AS sch01_person_nm
+             , org_nm                                                                   AS sch01_org_nm
+             , sch01_note
+             , sch01_class_id
+             , sch08_class_nm                                                           AS sch01_class_nm
+             , close_date                                                               AS sch01_close_date
+             , deadline_id                                                              AS sch01_deadline_id
+             , deadline_nm                                                              AS sch01_deadline_nm
+             , info_id                                                                  AS sch01_real_info_id
+             , CASE WHEN status_cd IN ('1','5','2') THEN manager_date ELSE null END     AS sch01_manage_date
+             , f_cdnm('ScheduleStatusCode', status_cd, sch01_company_id, manager_date)  AS sch01_status_nm
+             , seq
+             , ipo_yn
+          FROM (
+                ----------------------------
+                -- 스케줄 과거일정
+                ----------------------------
+                SELECT sch04_company_id                                 sch01_company_id
+                     , sch04_title                                      sch01_title
+                     , sch01_content                                    sch01_content
+                     , sch04_manager_id                                 sch01_manager_id
+                     , sch04_person_id                                  sch01_person_id
+                     , sch04_note                                       sch01_note
+                     , sch01_class_id                                   sch01_class_id
+                     , sch08_class_nm                                   sch08_class_nm
+                     , COALESCE(sch08_seq,999)                          seq
+                     , sch04_close_date                                 close_date
+                     , sch03_deadline_id                                deadline_id
+                     , f_get_deadline_nm(sch03_deadline_id, '2')        deadline_nm
+                     , sch03_cycle_cd                                   cycle_cd
+                     , sch01_info_id                                    info_id
+                     , sch04_mng_org_id                                 org_id
+                     , f_org_nm(sch04_mng_org_id, sch04_close_date)     org_nm
+                     , sch04_manage_date                                manager_date    /* 처리일 */
+                     , COALESCE(sch04_status_cd,'0')                    status_cd       /* 처리상태 */
+                     , 'false'                                          ipo_yn
+                  FROM sch04_list
+                       INNER JOIN sch03_deadline   ON sch03_deadline_id = sch04_deadline_id
+                       INNER JOIN sch01_info       ON sch01_info_id     = sch04_info_id
+                       LEFT OUTER JOIN sch08_class ON sch08_class_id    = sch01_class_id
+                 WHERE sch04_company_id  = #{companyId}
+                   AND sch04_schedule_cd = '1'     /*(1:스케줄)*/
+                   AND sch04_close_date  BETWEEN #{startDate}::date AND #{endDate}::date
+                   AND sch04_status_cd != '9'
+                   AND ( ( #{dailyYn}  = 'true' AND COALESCE(sch01_daily_yn,'false') = 'true' ) OR
+                         ( #{dailyYn} != 'true'                                               ) )
+                   AND COALESCE(sch01_private_yn,'false') != 'true'
+                ----------------------------
+                -- 스케줄 미래일정
+                ----------------------------
+                 UNION ALL
+                SELECT *
+                     , CAST(f_get_empTrans(sch01_manager_id, close_date, 'org_code_id') AS NUMERIC) org_id
+                     , f_get_empTrans(sch01_manager_id, close_date, 'org_code_nm')                  org_nm
+                     , null                                                                         manager_date    /* 처리일 */
+                     , '0'                                                                          status_cd       /* 처리상태 */
+                     , 'false'                                                                      ipo_yn
+                  FROM (
+                        SELECT distinct
+                               sch01_company_id
+                             , sch01_title
+                             , sch01_content
+                             , sch01_manager_id
+                             , sch01_manager_id as sch01_person_id
+                             , sch01_note
+                             , sch01_class_id
+                             , sch08_class_nm
+                             , COALESCE(sch08_seq,999) seq
+                             , f_get_std_date(sch03_deadline_id, sys12_day::date, sch01_company_id) close_date
+                             , sch03_deadline_id                                                    deadline_id
+                             , f_get_deadline_nm(sch03_deadline_id, '2')                            deadline_nm
+                             , sch03_cycle_cd                                                       cycle_cd
+                             , sch01_info_id                                                        info_id
+                          FROM sch01_info
+                               INNER JOIN sch03_deadline ON sch03_info_id = sch01_info_id
+                               LEFT OUTER JOIN sch08_class ON sch08_class_id = sch01_class_id
+                               INNER JOIN sys12_calendar ON ( sys12_company_id = sch01_company_id                                 AND
+                                                              sys12_day BETWEEN #{startDate}::timestamp AND #{endDate}::timestamp )
+                         WHERE sch01_company_id = #{companyId}
+                           AND ( ( #{dailyYn}  = 'true' AND COALESCE(sch01_daily_yn,'false') = 'true' ) OR
+                                 ( #{dailyYn} != 'true'                                               ) )
+                           AND COALESCE(sch01_private_yn,'false') != 'true'
+                           AND COALESCE(sch01_use_yn,'false') = 'true'
+                           AND sch03_cycle_calc_type NOT IN ('02','10')                  /* (02:수시기간설정/10:즉시)제외 */
+                           AND sch03_cycle_cd        NOT IN ('02','03','04','05','06')   /* (주/월/분기/반기/연)제외 */
+                         UNION ALL
+                        SELECT sch01_company_id
+                             , sch01_title
+                             , sch01_content
+                             , sch01_manager_id
+                             , sch01_manager_id as sch01_person_id
+                             , sch01_note
+                             , sch01_class_id
+                             , sch08_class_nm
+                             , COALESCE(sch08_seq,999) seq
+                             , sch09_day                                                            close_date
+                             , sch03_deadline_id                                                    deadline_id
+                             , f_get_deadline_nm(sch03_deadline_id, '2')                            deadline_nm
+                             , sch03_cycle_cd                                                       cycle_cd
+                             , sch01_info_id                                                        info_id
+                          FROM sch01_info
+                               INNER JOIN sch03_deadline     ON sch03_info_id     = sch01_info_id
+                               INNER JOIN sch09_deadline_day ON sch09_deadline_id = sch03_deadline_id
+                               LEFT OUTER JOIN sch08_class   ON sch08_class_id    = sch01_class_id
+                         WHERE sch01_company_id = #{companyId}
+                           AND ( ( #{dailyYn}  = 'true' AND COALESCE(sch01_daily_yn,'false') = 'true' ) OR
+                                 ( #{dailyYn} != 'true'                                               ) )
+                           AND COALESCE(sch01_private_yn,'false') != 'true'
+                           AND COALESCE(sch01_use_yn,'false') = 'true'
+                           AND sch03_cycle_calc_type NOT IN ('02','10')                  /*(02:수시기간설정/10:즉시)제외 */
+                           AND sch03_cycle_cd            IN ('02','03','04','05','06')   /*(주/월/분기/반기/연) */
+                           AND sch09_day BETWEEN #{startDate}::date AND #{endDate}::date
+                       ) tt
+                 WHERE close_date BETWEEN #{startDate}::date AND #{endDate}::date
+                   AND close_date &lt;= COALESCE(f_get_empTrans(sch01_manager_id, close_date, 'retire_date')::date,'9999-12-31')
+                   AND NOT EXISTS ( SELECT 1
+                                      FROM sch04_list
+                                     WHERE sch04_company_id = sch01_company_id
+                                       AND sch04_info_id    = info_id
+                                       AND sch04_manager_id = sch01_manager_id
+                                       AND sch04_close_date = close_date )
+                ----------------------------
+                -- 공모주
+                ----------------------------
+                 UNION ALL
+                SELECT #{companyId}
+                     , title
+                     , content
+                     , null                                 manager_id
+                     , null                                 person_id
+                     , null                                 note
+                     , 0                                    class_id
+                     , '공모주'                               class_nm
+                     , 999                                  seq
+                     , close_date
+                     , null                                 deadline_id
+                     , null                                 deadline_nm
+                     , '99'                                 cycle_cd
+                     , info_id
+                     , sch02_org_id                         org_id
+                     , f_org_nm(sch02_org_id, close_date)   org_nm
+                     , null                                 manager_date    /* 처리일 */
+                     , '0'                                  status_cd       /* 처리상태 */
+                     , 'true'                               ipo_yn
+                  FROM (<include refid="ipoSchedules"/>) ipo
+                       INNER JOIN ( SELECT DISTINCT
+                                           sch02_info_id
+                                         , sch02_org_id
+                                      FROM sch02_share
+                                     WHERE sch02_company_id = #{companyId} ) share ON sch02_info_id = info_id
+               ) t
+         WHERE 1=1
+        <choose>
+            <when test="subOrgYn == true">
+              AND org_id IN ( WITH RECURSIVE org ( org_id, parent_id, depth, path, cycle )
+                               AS ( SELECT org01_code_id              as org_id
+                                         , org02_parent_code_id       as parent_id
+                                         , 0                          as depth
+                                         , ARRAY[org02_kor_nm::text]  as path
+                                         , false                      as cycle
+                                      FROM org01_code
+                                           INNER JOIN org02_info ON ( org02_code_id  = org01_code_id AND
+                                                                      org02_mod_date = (SELECT MAX(org02_mod_date)
+                                                                                          FROM org02_info
+                                                                                         WHERE org02_code_id = org01_code_id
+                                                                                           AND org02_mod_date &lt;= close_date) )
+                                     WHERE org01_company_id = #{companyId}
+                                       AND org01_code_id    = #{orgId}
+                                     UNION ALL
+                                    SELECT org01_code_id
+                                         , org02_parent_code_id
+                                         , depth + 1
+                                         , ARRAY_APPEND(path, org02_kor_nm::text)
+                                         , org02_kor_nm = ANY(path)
+                                      FROM org01_code
+                                           INNER JOIN org02_info ON ( org02_code_id  = org01_code_id AND
+                                                                      org02_mod_date = (SELECT MAX(org02_mod_date)
+                                                                                          FROM org02_info
+                                                                                         WHERE org02_code_id = org01_code_id
+                                                                                           AND org02_mod_date &lt;= close_date) )
+                                           INNER JOIN org ON org_id = org02_parent_code_id
+                                     WHERE org01_company_id = #{companyId}
+                                       AND NOT CYCLE
+                                  )
+                                  SELECT org_id FROM org )
+            </when>
+            <otherwise>
+              AND org_id = #{orgId}
+            </otherwise>
+        </choose>
+        <if test="cycleCode != null">
+              AND cycle_cd LIKE #{cycleCode}
+        </if>
+           AND CONCAT(sch08_class_nm, sch01_title, sch01_content, org_nm, f_emp_kor_nm(sch01_manager_id)) ILIKE #{searchText}
+               ) sch
+         ORDER BY sch01_close_date, sch01_org_nm COLLATE "ko_KR.utf8", seq, sch01_title COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS sch01_info.selectByDeadLineId L1058 (IDMS-IC) — 수정: 원본에 없는 sch01_company_id = 로그인 회사 조건 추가(다른 회사의 일정 ID로 읽지 못하게, O01 서비스와 같은 보안 보강) -->
+    <select id="selectByDeadlineId" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch01InfoViewRes">
+        SELECT sch01_info_id                            AS info_id
+             , sch08_class_nm                           AS class_name
+             , sch01_title                              AS title
+             , sch01_content                            AS content
+             , sch01_report                             AS report
+             , f_get_deadline_nm(sch03_deadline_id, '2') AS deadline_name
+             , sch01_note                               AS note
+          FROM sch01_info
+               INNER JOIN sch03_deadline ON ( sch03_info_id     = sch01_info_id AND
+                                              sch03_deadline_id = #{deadlineId} )
+               LEFT OUTER JOIN sch08_class ON sch08_class_id = sch01_class_id
+         WHERE sch01_info_id    = #{infoId}
+           AND sch01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS sch01_info.selectByText L108 (IDMS-IC) — 사용·데일리 조건은 원본의 ( :x='true' AND … ) OR ( :x!='true' )를 <if>로, 주기구분 '%'는 전체 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch01InfoRes">
+        SELECT *
+          FROM (
+                SELECT <include refid="infoColumns"/>,
+                       COALESCE(sch08_class_nm,'')   AS class_name,
+                       sch08_seq,
+                       a.sch01_use_yn                AS sort_use_yn
+                  FROM sch01_info a
+                       LEFT OUTER JOIN sch08_class ON sch08_class_id = sch01_class_id
+                 WHERE sch01_company_id = #{companyId}
+                   AND sch01_manager_id = #{userId}
+                <if test="classId != null">
+                   AND sch01_class_id = #{classId}
+                </if>
+                <if test="useYn">
+                   AND COALESCE(sch01_use_yn,'false') = 'true'
+                </if>
+                <if test="dailyYn">
+                   AND COALESCE(sch01_daily_yn,'false') = 'true'
+                </if>
+                <if test='cycleCode != null and cycleCode != "%"'>
+                   AND ( SELECT COUNT(*)
+                           FROM sch03_deadline
+                          WHERE sch03_company_id  = sch01_company_id
+                            AND sch03_schedule_cd = '1'
+                            AND sch03_info_id     = sch01_info_id
+                            AND sch03_cycle_cd    = #{cycleCode} ) != 0
+                </if>
+               ) t
+         WHERE UPPER(CONCAT(title, deadline_name, report)) LIKE UPPER(#{searchText})
+         ORDER BY COALESCE(sch08_seq,999), sort_use_yn DESC, deadline_name COLLATE "ko_KR.utf8", info_id
+    </select>
+
+    <!-- AS-IS sch01_info.selectById (IDMS-IC) — 저장한 행을 다시 읽는다. 회사 조건은 보안 보강 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch01InfoRes">
+        SELECT <include refid="infoColumns"/>,
+               sch08_class_nm   AS class_name
+          FROM sch01_info a
+               LEFT OUTER JOIN sch08_class ON sch08_class_id = sch01_class_id
+         WHERE sch01_info_id = #{infoId}
+           AND sch01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS sch01_info.selectByManagerId (IDMS-IC) — 담당자 변경 창 -->
+    <select id="selectByManagerId" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch01InfoManagerRes">
+        SELECT sch01_info_id        AS info_id,
+               sch01_company_id     AS company_id,
+               sch01_title          AS title,
+               sch01_content        AS content,
+               sch01_report         AS report,
+               sch01_manager_id     AS manager_id,
+               sch01_note           AS note,
+               sch01_use_yn         AS use_yn,
+               sch01_dcr_class_tree_id AS dcr_class_tree_id,
+               sch01_private_yn     AS private_yn,
+               sch01_daily_yn       AS daily_yn,
+               sch01_class_id       AS class_id,
+               sch08_class_nm       AS class_name
+          FROM sch01_info
+               LEFT OUTER JOIN sch08_class ON sch08_class_id = sch01_class_id
+         WHERE sch01_company_id = #{companyId}
+           AND sch01_manager_id = #{managerId}
+           AND COALESCE(sch01_use_yn    ,'false')  = 'true'
+           AND COALESCE(sch01_private_yn,'false') != 'true'
+        <if test="classId != null">
+           AND sch01_class_id = #{classId}
+        </if>
+           AND UPPER(CONCAT(sch01_title, sch01_report)) LIKE #{searchText}
+         ORDER BY COALESCE(sch08_seq,999), sch01_title COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS sch04_list.checkSchInfo (IDMS-IC) — 이미 발생한 스케줄이 있나 -->
+    <select id="countSchList" resultType="int">
+        SELECT COUNT(*)
+          FROM sch04_list
+         WHERE sch04_schedule_cd = '1'
+           AND sch04_info_id = #{infoId}
+    </select>
+
+    <!-- AS-IS sys05_user_role.getAdminCheck (IDMS-IC) — 관리자 역할(sys04_admin_yn)을 가진 사용자인가 (LoginUser.isUserManager) -->
+    <select id="countAdminRole" resultType="int">
+        SELECT COUNT(*)
+          FROM sys05_user_role
+               INNER JOIN sys04_role ON sys04_role_id = sys05_role_id AND sys04_company_id = #{companyId} AND sys04_admin_yn = 'true'
+         WHERE sys05_user_id = #{userId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Sch01_Info.update(UpdateDataModel) INSERT — 새 행 (Sch01_Tab_Info.insertRow: 회사·담당자(로그인 사용자)·사용=true) -->
+    <insert id="insertInfo">
+        INSERT INTO sch01_info (sch01_info_id, sch01_company_id, sch01_manager_id, sch01_use_yn)
+        VALUES (#{infoId}, #{companyId}, #{managerId}, 'true')
+    </insert>
+
+    <!-- AS-IS Sch01_Info.update(UpdateDataModel) UPDATE — 편집기가 바꾸는 열 -->
+    <update id="updateInfo">
+        UPDATE sch01_info
+           SET sch01_class_id   = #{req.classId},
+               sch01_title      = #{req.title},
+               sch01_content    = #{req.content},
+               sch01_daily_yn   = #{req.dailyYn},
+               sch01_private_yn = #{req.privateYn},
+               sch01_use_yn     = #{req.useYn}
+         WHERE sch01_info_id    = #{infoId}
+           AND sch01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS Sch01_Info.delete(UpdateDataModel.deleteModel) -->
+    <delete id="deleteInfos">
+        DELETE FROM sch01_info
+         WHERE sch01_company_id = #{companyId}
+           AND sch01_info_id IN
+        <foreach collection="infoIds" item="infoId" open="(" separator="," close=")">#{infoId}</foreach>
+    </delete>
+
+    <!-- AS-IS sch01_info.deleteByInfoId (IDMS-IC) — 등록 창을 저장 없이 닫을 때 새 행 되돌리기. 회사 조건은 보안 보강 -->
+    <delete id="deleteByInfoId">
+        DELETE FROM sch01_info
+         WHERE sch01_info_id = #{infoId}
+           AND sch01_company_id = #{companyId}
+    </delete>
+
+    <!-- ===== 일정공유 (AS-IS sch02_share.selectByInfoId — 저장·삭제는 SchWriteGroupMapper의 공유 SQL을 쓴다) ===== -->
+    <select id="selectSharesByInfoId" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch02ShareRes">
+        SELECT a.sch02_share_id                                                          AS share_id,
+               a.sch02_info_id                                                           AS info_id,
+               a.sch02_share_cd                                                          AS share_code,
+               f_cdnm('ShareCode', sch02_share_cd, sch01_company_id, f_sysdate())        AS share_name,
+               a.sch02_person_id                                                         AS person_id,
+               f_emp_kor_nm(sch02_person_id)                                             AS person_name,
+               a.sch02_org_id                                                            AS org_id,
+               f_org_nm(sch02_org_id, f_sysdate())                                       AS org_name,
+               a.sch02_company_id                                                        AS company_id,
+               a.sch02_start_date                                                        AS start_date,
+               a.sch02_close_date                                                        AS close_date
+          FROM sch02_share a
+               INNER JOIN sch01_info b     ON b.sch01_info_id = a.sch02_info_id
+               INNER JOIN sys01_company c  ON c.sys01_company_id = a.sch02_company_id
+         WHERE sch02_info_id = #{infoId}
+           AND sch02_company_id = #{companyId}
+         ORDER BY sch02_share_cd, sch02_org_id
+    </select>
+
+    <select id="selectShareById" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch02ShareRes">
+        SELECT a.sch02_share_id                                                          AS share_id,
+               a.sch02_info_id                                                           AS info_id,
+               a.sch02_share_cd                                                          AS share_code,
+               f_cdnm('ShareCode', sch02_share_cd, sch01_company_id, f_sysdate())        AS share_name,
+               a.sch02_person_id                                                         AS person_id,
+               f_emp_kor_nm(sch02_person_id)                                             AS person_name,
+               a.sch02_org_id                                                            AS org_id,
+               f_org_nm(sch02_org_id, f_sysdate())                                       AS org_name,
+               a.sch02_company_id                                                        AS company_id,
+               a.sch02_start_date                                                        AS start_date,
+               a.sch02_close_date                                                        AS close_date
+          FROM sch02_share a
+               INNER JOIN sch01_info b     ON b.sch01_info_id = a.sch02_info_id
+         WHERE sch02_share_id = #{shareId}
+           AND sch02_company_id = #{companyId}
+    </select>
+
+    <!-- ===== 담당자 변경 처리 (AS-IS Sch01_Info.copySchedule L92-197) ===== -->
+    <!-- AS-IS sch01_info.selectByIdList (IDMS-IC) — 분류로 정렬해 같은 분류가 이어지게 -->
+    <select id="selectByIdList" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch01InfoManagerRes">
+        SELECT sch01_info_id        AS info_id,
+               sch01_company_id     AS company_id,
+               sch01_title          AS title,
+               sch01_content        AS content,
+               sch01_report         AS report,
+               sch01_manager_id     AS manager_id,
+               sch01_note           AS note,
+               sch01_use_yn         AS use_yn,
+               sch01_dcr_class_tree_id AS dcr_class_tree_id,
+               sch01_private_yn     AS private_yn,
+               sch01_daily_yn       AS daily_yn,
+               sch01_class_id       AS class_id,
+               NULL                 AS class_name
+          FROM sch01_info
+         WHERE sch01_company_id = #{companyId}
+           AND sch01_info_id IN
+        <foreach collection="infoIds" item="infoId" open="(" separator="," close=")">#{infoId}</foreach>
+         ORDER BY COALESCE(sch01_class_id, 999999999999999)
+    </select>
+
+    <!-- AS-IS sch08_class.insertByClassId (IDMS-IC) -->
+    <insert id="insertClassByClassId">
+        INSERT INTO sch08_class (sch08_class_id, sch08_person_id, sch08_class_nm, sch08_seq, sch08_use_yn, sch08_note)
+        SELECT #{newClassId}, #{managerId}, sch08_class_nm, sch08_seq, sch08_use_yn, #{note}
+          FROM sch08_class
+         WHERE sch08_class_id = #{classId}
+    </insert>
+
+    <!-- AS-IS sch01_info.insertByInfoId (IDMS-IC) -->
+    <insert id="insertInfoByInfoId">
+        INSERT INTO sch01_info (sch01_info_id, sch01_company_id, sch01_title, sch01_content, sch01_report, sch01_manager_id, sch01_note, sch01_use_yn,
+                                sch01_dcr_class_tree_id, sch01_private_yn, sch01_daily_yn, sch01_class_id)
+        SELECT #{newInfoId}, sch01_company_id, sch01_title, sch01_content, sch01_report, #{managerId}, sch01_note, sch01_use_yn,
+               sch01_dcr_class_tree_id, sch01_private_yn, sch01_daily_yn, #{newClassId}
+          FROM sch01_info
+         WHERE sch01_info_id = #{infoId}
+    </insert>
+
+    <!-- AS-IS sch02_share.insertByInfoId (IDMS-IC) -->
+    <insert id="insertShareByInfoId">
+        INSERT INTO sch02_share (sch02_share_id, sch02_info_id, sch02_company_id, sch02_share_cd, sch02_person_id, sch02_org_id, sch02_start_date, sch02_close_date)
+        SELECT f_create_seq(), #{newInfoId}, sch02_company_id, sch02_share_cd, sch02_person_id, sch02_org_id, sch02_start_date, sch02_close_date
+          FROM sch02_share
+         WHERE sch02_info_id = #{infoId}
+    </insert>
+
+    <!-- AS-IS sch03_deadline.insertByInfoId (IDMS-IC) -->
+    <insert id="insertDeadlineByInfoId">
+        INSERT INTO sch03_deadline (sch03_deadline_id, sch03_info_id, sch03_company_id, sch03_schedule_cd, sch03_cycle_cd, sch03_cycle_calc_type,
+                                    sch03_period_cd, sch03_year_cd, sch03_year_type_cd, sch03_month_cd, sch03_month_type_cd, sch03_day_cd,
+                                    sch03_day_type_cd, sch03_week_cd, sch03_day_week_cd, sch03_holiday_cd, sch03_num1, sch03_num2, sch03_num3,
+                                    sch03_fix_date, sch03_note, sch03_start_date, sch03_close_date)
+        SELECT f_create_seq(), #{newInfoId}, sch03_company_id, sch03_schedule_cd, sch03_cycle_cd, sch03_cycle_calc_type,
+               sch03_period_cd, sch03_year_cd, sch03_year_type_cd, sch03_month_cd, sch03_month_type_cd, sch03_day_cd,
+               sch03_day_type_cd, sch03_week_cd, sch03_day_week_cd, sch03_holiday_cd, sch03_num1, sch03_num2, sch03_num3,
+               sch03_fix_date, sch03_note, sch03_start_date, sch03_close_date
+          FROM sch03_deadline
+         WHERE sch03_info_id = #{infoId}
+    </insert>
+
+    <!-- AS-IS sch05_relate_ics.insertByInfoId (IDMS-IC) -->
+    <insert id="insertRelateIcsByInfoId">
+        INSERT INTO sch05_relate_ics (sch05_relate_ics_id, sch05_info_id, sch05_ics_class_tree_id, sch05_deadline_id)
+        SELECT f_create_seq(), #{newInfoId}, sch05_ics_class_tree_id, sch05_deadline_id
+          FROM sch05_relate_ics
+         WHERE sch05_info_id = #{infoId}
+    </insert>
+
+    <!-- AS-IS sch06_alarm.insertByTargetId (IDMS-IC) — 사용 중인 알람만 -->
+    <insert id="insertAlarmByTargetId">
+        INSERT INTO sch06_alarm (sch06_alarm_id, sch06_company_id, sch06_target_cd, sch06_target_id, sch06_alarm_type, sch06_day_week_cd, sch06_num,
+                                 sch06_bef_aft_cd, sch06_am_pm_cd, sch06_hour_cd, sch06_minute_cd, sch06_holiday_cd, sch06_use_yn)
+        SELECT f_create_seq(), sch06_company_id, sch06_target_cd, #{newTargetId}, sch06_alarm_type, sch06_day_week_cd, sch06_num,
+               sch06_bef_aft_cd, sch06_am_pm_cd, sch06_hour_cd, sch06_minute_cd, sch06_holiday_cd, sch06_use_yn
+          FROM sch06_alarm
+         WHERE sch06_target_cd = #{targetCode}
+           AND sch06_target_id = #{targetId}
+           AND COALESCE(sch06_use_yn,'false') = 'true'
+    </insert>
+
+    <!-- AS-IS Sys10_File.copyFile L417-434 → sys11_relate_file.insert (IDMS-IC) — 원본 첨부파일을 새 일정에도 연결 -->
+    <insert id="insertRelateFile">
+        INSERT INTO sys11_relate_file (sys11_relate_file_id, sys11_file_id, sys11_parent_id, sys11_parent_table)
+        VALUES (#{relateFileId}, #{fileId}, #{parentId}, #{parentTable})
+    </insert>
+
+    <!-- AS-IS sch01_info.updateUseYnByInfoId (IDMS-IC) — 이동이면 변경 전 담당자의 일정을 미사용으로 -->
+    <update id="updateUseYnFalseByInfoId">
+        UPDATE sch01_info
+           SET sch01_use_yn = 'false'
+         WHERE sch01_info_id = #{infoId}
+    </update>
+</mapper>

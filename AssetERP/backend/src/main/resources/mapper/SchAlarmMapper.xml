@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  알람설정 (O01) — AS-IS(IDMS-IC) server/sch/mapper/sch06_alarm.xml
+  Sch06_Lookup_AlarmSetup → server/sch/Sch06_Alarm.java (selectByTargetId L23 / update L28 / delete L33)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sch.mapper.SchAlarmMapper">
+
+    <sql id="alarmColumns">
+        sch06_alarm_id                                                                    AS alarm_id,
+        sch06_company_id                                                                  AS company_id,
+        sch06_target_cd                                                                   AS target_code,
+        sch06_target_id                                                                   AS target_id,
+        sch06_alarm_type                                                                  AS alarm_type,
+        sch06_day_week_cd                                                                 AS day_week_code,
+        sch06_num                                                                         AS num,
+        sch06_bef_aft_cd                                                                  AS bef_aft_code,
+        sch06_am_pm_cd                                                                    AS am_pm_code,
+        sch06_hour_cd                                                                     AS hour_code,
+        sch06_minute_cd                                                                   AS minute_code,
+        sch06_holiday_cd                                                                  AS holiday_code,
+        sch06_use_yn                                                                      AS use_yn,
+        f_cdnm('DayWeekCode'        , sch06_day_week_cd , sch06_company_id, f_today())    AS day_week_name,
+        f_cdnm('BeforeAfterCode'    , sch06_bef_aft_cd  , sch06_company_id, f_today())    AS bef_aft_name,
+        f_cdnm('AmPmCode'           , sch06_am_pm_cd    , sch06_company_id, f_today())    AS am_pm_name,
+        f_cdnm('HourCode12'         , sch06_hour_cd     , sch06_company_id, f_today())    AS hour_name,
+        f_cdnm('MinuteCode2'        , sch06_minute_cd   , sch06_company_id, f_today())    AS minute_name,
+        f_cdnm('HolidaySettleCode'  , sch06_holiday_cd  , sch06_company_id, f_today())    AS holiday_name
+    </sql>
+
+    <!-- AS-IS sch06_alarm.selectByTargetId (IDMS-IC) — 원본은 대상 ID만 건다. 회사 조건은 보안 보강 -->
+    <select id="selectByTargetId" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch06AlarmRes">
+        SELECT <include refid="alarmColumns"/>
+          FROM sch06_alarm
+         WHERE sch06_target_id = #{targetId}
+           AND sch06_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS sch06_alarm.selectById (IDMS-IC) — 저장한 행을 다시 읽는다 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch06AlarmRes">
+        SELECT <include refid="alarmColumns"/>
+          FROM sch06_alarm
+         WHERE sch06_alarm_id = #{alarmId}
+           AND sch06_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertAlarm">
+        INSERT INTO sch06_alarm (sch06_alarm_id, sch06_company_id, sch06_target_cd, sch06_target_id, sch06_alarm_type, sch06_day_week_cd, sch06_num,
+                                 sch06_bef_aft_cd, sch06_am_pm_cd, sch06_hour_cd, sch06_minute_cd, sch06_holiday_cd, sch06_use_yn)
+        VALUES (#{alarmId}, #{companyId}, #{req.targetCode}, #{req.targetId}, #{req.alarmType}, #{req.dayWeekCode}, #{req.num},
+                #{req.befAftCode}, #{req.amPmCode}, #{req.hourCode}, #{req.minuteCode}, #{req.holidayCode}, #{req.useYn})
+    </insert>
+
+    <update id="updateAlarm">
+        UPDATE sch06_alarm
+           SET sch06_alarm_type  = #{req.alarmType},
+               sch06_day_week_cd = #{req.dayWeekCode},
+               sch06_num         = #{req.num},
+               sch06_bef_aft_cd  = #{req.befAftCode},
+               sch06_am_pm_cd    = #{req.amPmCode},
+               sch06_hour_cd     = #{req.hourCode},
+               sch06_minute_cd   = #{req.minuteCode},
+               sch06_holiday_cd  = #{req.holidayCode},
+               sch06_use_yn      = #{req.useYn}
+         WHERE sch06_alarm_id    = #{req.alarmId}
+           AND sch06_company_id  = #{companyId}
+    </update>
+
+    <!-- AS-IS Sch06_Alarm.delete(UpdateDataModel.deleteModel) -->
+    <delete id="deleteAlarms">
+        DELETE FROM sch06_alarm
+         WHERE sch06_company_id = #{companyId}
+           AND sch06_alarm_id IN
+        <foreach collection="alarmIds" item="alarmId" open="(" separator="," close=")">#{alarmId}</foreach>
+    </delete>
+</mapper>

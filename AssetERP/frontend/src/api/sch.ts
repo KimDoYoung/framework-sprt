@@ -2,6 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import {
   Sch03Deadline, Sch03DeadlineSaveReq, Sch03DeadlineTemplate, Sch05RelateIcs,
+  Sch01Info, Sch01InfoManager, Sch01InfoView, Sch01Org, Sch01OrgSearch, Sch01Period, Sch01PeriodSearch, Sch01InfoSave, Sch01InfoSearch, Sch06Alarm, Sch08Class, Sch08ClassCombo,
   Sch02Share, Sch22WriteGroup, Sch04List, Sch04ListManagerSearch, Sch04ListSearch, Sch10Ipo, Sch10IpoSearch, Sch12IpoCorp, Sch14IpoMismatch, Sch15IpoItemMatching,
 } from '../types/sch';
 import { readBlobError } from './file';
@@ -285,6 +286,156 @@ export const schApi = {
   /** AS-IS sch.Sch02_Share.delete */
   deleteWriteGroupShares: async (writeGroupId: number, shareIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>(`v1/sch/write-groups/${writeGroupId}/shares`, { data: shareIds });
+    return res.data.data ?? 0;
+  },
+  // ── O01 업무일정 등록 (Sch01_Tab_Info·Sch01_Lookup_Info·ManagerModi(Run)·Sch08_Lookup_Class·Sch06_Lookup_AlarmSetup) ──
+
+  /** AS-IS sch.Sch01_Info.selectByText — 로그인 사용자가 담당자인 일정 */
+  searchInfos: async (cond: Sch01InfoSearch): Promise<Sch01Info[]> => {
+    const res = await apiClient.get<ApiResponse<Sch01Info[]>>('v1/sch/infos', { params: cond });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch01_Info.selectByOrg — 부서별 업무일정 조회(O03) */
+  searchInfosByOrg: async (cond: Sch01OrgSearch): Promise<Sch01Org[]> => {
+    const res = await apiClient.get<ApiResponse<Sch01Org[]>>('v1/sch/infos/org', { params: cond });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch01_Info.selectByCloseDate — 기간별 업무일정 조회(O02) */
+  searchInfosByPeriod: async (cond: Sch01PeriodSearch): Promise<Sch01Period[]> => {
+    const res = await apiClient.get<ApiResponse<Sch01Period[]>>('v1/sch/infos/period', { params: cond });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch01_Info.selectByDeadLineId — 업무일정 보기 창 */
+  getInfoView: async (infoId: number, deadlineId: number): Promise<Sch01InfoView> => {
+    const res = await apiClient.get<ApiResponse<Sch01InfoView>>(`v1/sch/infos/${infoId}/view`, { params: { deadlineId } });
+    return res.data.data;
+  },
+
+  /** AS-IS sch.Sch10_Ipo.selectById */
+  getIpo: async (ipoId: number): Promise<Sch10Ipo> => {
+    const res = await apiClient.get<ApiResponse<Sch10Ipo>>(`v1/sch/ipos/${ipoId}`);
+    return res.data.data;
+  },
+
+  /** AS-IS LoginUser.getIsUserManager — 담당자 변경 창에서 담당자를 바꿀 수 있는가(관리자 역할) */
+  isUserManager: async (): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/sch/infos/user-manager');
+    return res.data.data === true;
+  },
+
+  /** AS-IS sch.Sch01_Info.selectById */
+  getInfo: async (infoId: number): Promise<Sch01Info> => {
+    const res = await apiClient.get<ApiResponse<Sch01Info>>(`v1/sch/infos/${infoId}`);
+    return res.data.data as Sch01Info;
+  },
+
+  /** AS-IS Sch01_Tab_Info.insertRow + Sch01_Lookup_Info.update01 — 빈 행을 먼저 만든다 → 만든 행 */
+  createInfo: async (): Promise<Sch01Info> => {
+    const res = await apiClient.post<ApiResponse<Sch01Info>>('v1/sch/infos');
+    return res.data.data as Sch01Info;
+  },
+
+  /** AS-IS sch.Sch01_Info.update → 저장한 행 */
+  updateInfo: async (infoId: number, req: Sch01InfoSave): Promise<Sch01Info> => {
+    const res = await apiClient.put<ApiResponse<Sch01Info>>(`v1/sch/infos/${infoId}`, req);
+    return res.data.data as Sch01Info;
+  },
+
+  /** AS-IS sch.Sch01_Info.checkSchInfo + delete — 이미 발생한 스케줄이 있으면 서버가 오류 */
+  deleteInfos: async (infoIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sch/infos', { data: infoIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sch.Sch01_Info.deleteByInfoId — 등록 창을 저장 없이 닫을 때 새 행 되돌리기 */
+  rollbackInfo: async (infoId: number): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sch/infos/${infoId}`);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sch.Sch01_Info.selectByManagerId — 담당자 변경 창 */
+  searchInfosByManager: async (managerId: number, classId: number | null, searchText: string): Promise<Sch01InfoManager[]> => {
+    const res = await apiClient.get<ApiResponse<Sch01InfoManager[]>>('v1/sch/infos/by-manager', { params: { managerId, classId, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch01_Info.copySchedule — procType MOVE(이동)·COPY(복사) */
+  copyInfos: async (managerId: number, procType: 'MOVE' | 'COPY', infoIds: number[]): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>('v1/sch/infos/copy', { managerId, procType, infoIds });
+  },
+
+  /** AS-IS sch.Sch02_Share.selectByInfoId */
+  searchInfoShares: async (infoId: number): Promise<Sch02Share[]> => {
+    const res = await apiClient.get<ApiResponse<Sch02Share[]>>(`v1/sch/infos/${infoId}/shares`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch02_Share.update → 저장한 행(요청 순서). 새 행(id ≤ 0)은 id를 뺀다 */
+  saveInfoShares: async (infoId: number, rows: Sch02Share[]): Promise<Sch02Share[]> => {
+    const body = rows.map(r => ({ shareId: r.shareId > 0 ? r.shareId : null, shareCode: r.shareCode, personId: r.personId ?? null, orgId: r.orgId ?? null, startDate: r.startDate ?? null, closeDate: r.closeDate ?? null }));
+    const res = await apiClient.put<ApiResponse<Sch02Share[]>>(`v1/sch/infos/${infoId}/shares`, body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch02_Share.delete */
+  deleteInfoShares: async (infoId: number, shareIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sch/infos/${infoId}/shares`, { data: shareIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sch.Sch08_Class.selectByPersonId */
+  searchClasses: async (): Promise<Sch08Class[]> => {
+    const res = await apiClient.get<ApiResponse<Sch08Class[]>>('v1/sch/classes');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys00_Common.selectScheduleClass — 분류 콤보 (ipoYn: selectScheduleClass2 = 공모주 '0' 포함, O02) */
+  searchClassCombo: async (ipoYn = false): Promise<Sch08ClassCombo[]> => {
+    const res = await apiClient.get<ApiResponse<Sch08ClassCombo[]>>('v1/sch/classes/combo', { params: ipoYn ? { ipoYn } : undefined });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch08_Class.checkClassId — 쓰는 일정이 있으면 서버가 오류("사용중인 분류는 삭제 불가합니다") */
+  checkClassDelete: async (classId: number): Promise<void> => {
+    await apiClient.get<ApiResponse<null>>(`v1/sch/classes/${classId}/check-delete`);
+  },
+
+  /** AS-IS sch.Sch08_Class.update → 저장한 행(요청 순서). 새 행(id ≤ 0)은 id를 뺀다 */
+  saveClasses: async (rows: Sch08Class[]): Promise<Sch08Class[]> => {
+    const body = rows.map(r => ({ classId: r.classId > 0 ? r.classId : null, className: r.className, seq: r.seq ?? null, useYn: r.useYn ?? false, note: r.note ?? null }));
+    const res = await apiClient.put<ApiResponse<Sch08Class[]>>('v1/sch/classes', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch08_Class.delete */
+  deleteClasses: async (classIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sch/classes', { data: classIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sch.Sch06_Alarm.selectByTargetId */
+  searchAlarms: async (targetId: number): Promise<Sch06Alarm[]> => {
+    const res = await apiClient.get<ApiResponse<Sch06Alarm[]>>('v1/sch/alarms', { params: { targetId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch06_Alarm.update → 저장한 행(요청 순서). 새 행(id ≤ 0)은 id를 뺀다 */
+  saveAlarms: async (rows: Sch06Alarm[]): Promise<Sch06Alarm[]> => {
+    const body = rows.map(r => ({
+      alarmId: r.alarmId > 0 ? r.alarmId : null, targetCode: r.targetCode, targetId: r.targetId, alarmType: r.alarmType,
+      dayWeekCode: r.dayWeekCode, num: r.num ?? null, befAftCode: r.befAftCode, amPmCode: r.amPmCode, hourCode: r.hourCode,
+      minuteCode: r.minuteCode, holidayCode: r.holidayCode, useYn: r.useYn ?? false,
+    }));
+    const res = await apiClient.put<ApiResponse<Sch06Alarm[]>>('v1/sch/alarms', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch06_Alarm.delete */
+  deleteAlarms: async (alarmIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/sch/alarms', { data: alarmIds });
     return res.data.data ?? 0;
   },
 };

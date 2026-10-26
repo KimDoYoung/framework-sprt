@@ -180,3 +180,187 @@ export interface Sch02Share {
   startDate?: string | null;
   closeDate?: string | null;
 }
+
+/** 업무일정 (O01, AS-IS Sch01_InfoModel). Y/N은 boolean */
+export interface Sch01Info {
+  infoId: number;
+  companyId?: number | null;
+  title?: string | null;
+  content?: string | null;
+  report?: string | null;
+  managerId?: number | null;
+  managerName?: string | null;
+  note?: string | null;
+  useYn?: boolean | null;
+  dcrClassTreeId?: number | null;
+  dcrClassTreeName?: string | null;
+  privateYn?: boolean | null;
+  dailyYn?: boolean | null;
+  classId?: number | null;
+  className?: string | null;
+  deadlineName?: string | null;
+  deadlineFullName?: string | null;
+  shareOrgName?: string | null;
+  sharePersonName?: string | null;
+  icsClassTreeName?: string | null;
+  privateYnName?: string | null;
+  dailyYnName?: string | null;
+  alarmInfo?: string | null;
+}
+
+/** 담당자 변경 창의 일정 (O01, sch01_info.selectByManagerId) */
+export interface Sch01InfoManager {
+  infoId: number;
+  companyId?: number | null;
+  title?: string | null;
+  content?: string | null;
+  report?: string | null;
+  managerId?: number | null;
+  note?: string | null;
+  useYn?: boolean | null;
+  dcrClassTreeId?: number | null;
+  privateYn?: boolean | null;
+  dailyYn?: boolean | null;
+  classId?: number | null;
+  className?: string | null;
+}
+
+/** 업무일정 조회 조건 (Sch01_Tab_Info.retrieve) */
+export interface Sch01InfoSearch {
+  classId?: number | null;
+  cycleCode: string;
+  searchText: string;
+  dailyYn: boolean;
+  useYn: boolean;
+}
+
+/** 업무일정 저장 (Sch01_Lookup_Info.update — 편집기가 바꾸는 열) */
+export interface Sch01InfoSave {
+  classId?: number | null;
+  title?: string | null;
+  content?: string | null;
+  dailyYn: boolean;
+  privateYn: boolean;
+  useYn: boolean;
+}
+
+/** 알람설정 (O01, AS-IS Sch06_AlarmModel). 새 행은 alarmId ≤ 0 */
+export interface Sch06Alarm {
+  alarmId: number;
+  companyId?: number | null;
+  targetCode?: string | null;
+  targetId?: number | null;
+  alarmType?: string | null;
+  dayWeekCode?: string | null;
+  dayWeekName?: string | null;
+  num?: number | null;
+  befAftCode?: string | null;
+  befAftName?: string | null;
+  amPmCode?: string | null;
+  amPmName?: string | null;
+  hourCode?: string | null;
+  hourName?: string | null;
+  minuteCode?: string | null;
+  minuteName?: string | null;
+  holidayCode?: string | null;
+  holidayName?: string | null;
+  useYn?: boolean | null;
+}
+
+/** 스케줄분류 (O01, AS-IS Sch08_ClassModel). 새 행은 classId ≤ 0 */
+export interface Sch08Class {
+  classId: number;
+  personId?: number | null;
+  className?: string | null;
+  seq?: number | null;
+  useYn?: boolean | null;
+  note?: string | null;
+}
+
+/** 분류 콤보 (sys09_code.selectScheduleClass) */
+export interface Sch08ClassCombo {
+  code: string;
+  name: string;
+}
+
+/** 기간별 업무일정 조회 조건 (AS-IS Sch01_Tab_List.retrieve). shareType: 전체 '%'·나의 스케줄 '1'·공유 스케줄 '2', cycleCode 전체 '%' */
+export interface Sch01PeriodSearch {
+  startDate: string;
+  endDate: string;
+  classId: number | null;
+  shareType: string;
+  cycleCode: string;
+  dailyYn: boolean;
+  searchText: string;
+}
+
+/** 기간별 업무일정 한 행 (AS-IS Sch01_InfoModel — sch01_info.selectByCloseDate). infoId는 SQL의 ROW_NUMBER, 실제 일정 ID는 realInfoId (classId 0이면 공모주 ID) */
+export interface Sch01Period {
+  infoId: number;
+  realInfoId?: number | null;
+  closeDate?: string | null;
+  manageDate?: string | null;
+  className?: string | null;
+  title?: string | null;
+  contentLimit?: string | null;
+  content?: string | null;
+  deadlineName?: string | null;
+  deadlineId?: number | null;
+  statusName?: string | null;
+  personName?: string | null;
+  note?: string | null;
+  classId?: number | null;
+  managerId?: number | null;
+  managerName?: string | null;
+  personId?: number | null;
+  orgName?: string | null;
+  companyId?: number | null;
+  /** 등록자 열 — 원본 모델에는 있지만 SQL이 채우지 않아 항상 빈 칸 */
+  managerOrgInfo?: string | null;
+}
+
+/** 부서별 업무일정 조회 조건 (AS-IS Sch01_Tab_ListOrg.retrieve). cycleCode 전체 '%' */
+export interface Sch01OrgSearch {
+  orgId: number;
+  subOrgYn: boolean;
+  startDate: string;
+  endDate: string;
+  cycleCode: string;
+  dailyYn: boolean;
+  searchText: string;
+}
+
+/** 부서별 업무일정 한 행 (AS-IS Sch01_InfoModel — sch01_info.selectByOrg). infoId는 SQL의 ROW_NUMBER, 실제 일정 ID는 realInfoId (classId 0이면 공모주 ID) */
+export interface Sch01Org {
+  infoId: number;
+  realInfoId?: number | null;
+  closeDate?: string | null;
+  manageDate?: string | null;
+  className?: string | null;
+  title?: string | null;
+  content?: string | null;
+  deadlineName?: string | null;
+  deadlineId?: number | null;
+  statusName?: string | null;
+  personName?: string | null;
+  note?: string | null;
+  classId?: number | null;
+  managerId?: number | null;
+  managerName?: string | null;
+  personId?: number | null;
+  orgName?: string | null;
+  companyId?: number | null;
+  /** 등록자 열 — 원본 모델에는 있지만 SQL이 채우지 않아 항상 빈 칸 */
+  managerOrgInfo?: string | null;
+}
+
+/** 업무일정 보기 창 (AS-IS Sch01_Lookup_InfoView — sch01_info.selectByDeadLineId) */
+export interface Sch01InfoView {
+  infoId: number;
+  className?: string | null;
+  title?: string | null;
+  content?: string | null;
+  report?: string | null;
+  deadlineName?: string | null;
+  note?: string | null;
+}

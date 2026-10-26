@@ -54,6 +54,13 @@ public class SchIpoService {
                 "%" + (searchText == null ? "" : searchText) + "%", isBlank(marketCode) ? "%" : marketCode));
     }
 
+    /** AS-IS sch.Sch10_Ipo.selectById — 기간별 업무일정(O02)에서 공모주 행의 상세 창 */
+    public Sch10IpoRes get(Long ipoId) {
+        Sch10IpoRes row = mapper.selectById(ipoId);
+        if (row == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        return row;
+    }
+
     /** AS-IS update(UpdateDataModel): 신규(화면 임시 ID 0 이하)면 INSERT, 아니면 UPDATE 하고 selectById로 다시 읽어 요청 순서대로 */
     @Transactional
     public List<Sch10IpoRes> update(UserPrincipal user, List<Sch10IpoSaveReq> rows) {

@@ -192,6 +192,9 @@ import { Dcr30_Tab_LinkAdmin } from './dcr/Dcr30_Tab_LinkAdmin';
 import { Dcr01_Tab_DcrUser } from './dcr/Dcr01_Tab_DcrUser';
 import { Dcr01_Tab_DcrWrite } from './dcr/Dcr01_Tab_DcrWrite';
 import { Rpt10_Tab_FssSubmit } from './rpt/Rpt10_Tab_FssSubmit';
+import { Sch01_Tab_Info } from './sch/Sch01_Tab_Info';
+import { Sch01_Tab_List } from './sch/Sch01_Tab_List';
+import { Sch01_Tab_ListOrg } from './sch/Sch01_Tab_ListOrg';
 import { Sch04_Tab_IcsList } from './sch/Sch04_Tab_IcsList';
 import { Sch04_Tab_IcsListManager } from './sch/Sch04_Tab_IcsListManager';
 import { Sch10_Tab_IpoAdmin } from './sch/Sch10_Tab_IpoAdmin';
@@ -331,6 +334,9 @@ export const SCREENS: Record<string, React.FC> = {
   Dcr01_Tab_DcrUser, // F02 1단계 (메뉴 #1002 + Dcr01_Tab_DcrManager·Apr01_Grid_DocList·Apr03_TabPage_Relate. 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList·메일 Dcr10_Lookup_MailSender는 다음 단계)
   Dcr01_Tab_DcrWrite, // F01 1단계 (메뉴 #1318 + Dcr08_Lookup_SelectSingle. 전자결재 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList는 F01-2)
   Rpt10_Tab_FssSubmit, // E19 (+ Rpt10_Edit_WriteGuide)
+  Sch01_Tab_Info, // O01 (+ Sch01_Lookup_Info·Sch01_Lookup_ManagerModi(Run)·Sch01_Grid_RelateFile·Sch08_Lookup_Class·Sch06_Lookup_AlarmSetup. 기한 Sch03_Lookup_Short/Cycle은 E01-1 재사용)
+  Sch01_Tab_List, // O02 (+ Sch01_Lookup_InfoView·Sch10_Lookup_Ipo. 첨부는 Bbs02_Lookup_File 재사용)
+  Sch01_Tab_ListOrg, // O03 (+ Org00_Lookup_SelectMulti·Sch01_Lookup_InfoView·Sch10_Lookup_Ipo 재사용)
   Sch04_Tab_IcsList, // H06 (+ Sch04_Lookup_IcsMsg·Ics01/Icr01_Lookup_ClassTreeDetail. Apr01_Edit_ApprDoc은 다른 도메인이라 안내만)
   Sch04_Tab_IcsListManager, // H12 (H06의 관리자용 짝. Sch04_Lookup_IcsMsg actionType "2"·Org00_Lookup_SelectMulti 재사용. Apr01_Edit_ApprDoc은 안내만)
   Sch10_Tab_IpoAdmin, // E20 (+ Sch12_Lookup_IpoCorp·Sch14_Lookup_IpoMismatch·Sch15_Lookup_IpoItemMatching·Com50_Lookup_StkItem)

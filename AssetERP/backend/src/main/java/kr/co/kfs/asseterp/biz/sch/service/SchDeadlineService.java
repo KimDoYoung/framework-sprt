@@ -27,8 +27,8 @@ public class SchDeadlineService {
 
     /** 스케줄 구분: 1 스케줄 / 2 내부통제-반복 / 3 내부통제-수시 / 6 내규담당 / 7 문서작성(내규) */
     private static final Set<String> SCHEDULE_CODES = Set.of("1", "2", "3", "6", "7");
-    /** 기본 기한 복사(updateModel)가 쓰는 스케줄 구분: 법규 "2", 내규 "6" (Sch03_Lookup_Ics·Sch03_Lookup_Icr.load) */
-    private static final Set<String> COPY_SCHEDULE_CODES = Set.of("2", "6");
+    /** 기본 기한 복사(updateModel)가 쓰는 스케줄 구분: 스케줄 "1"(Sch01_Lookup_Info.load, O01), 법규 "2", 내규 "6" (Sch03_Lookup_Ics·Sch03_Lookup_Icr.load) */
+    private static final Set<String> COPY_SCHEDULE_CODES = Set.of("1", "2", "6");
 
     private final SchDeadlineMapper mapper;
 
