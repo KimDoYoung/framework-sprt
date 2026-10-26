@@ -81,6 +81,48 @@ export interface Sch10IpoSearch {
   marketCode: string;
 }
 
+/** 공모주 일정조회 한 행 (Q04, AS-IS Sch10_IpoModel — sch10_ipo.selectBySearchText). 날짜는 yyyy-MM-dd, interestName은 관심이면 '★' */
+export interface Sch10IpoUser {
+  ipoId: number;
+  interestName?: string | null;
+  marketName?: string | null;
+  itemName?: string | null;
+  demandStartDate?: string | null;
+  demandCloseDate?: string | null;
+  subscriptionStartDate?: string | null;
+  subscriptionCloseDate?: string | null;
+  payDate?: string | null;
+  listDate?: string | null;
+  priceBracket?: string | null;
+  price?: number | null;
+  note?: string | null;
+  subscriptionRate?: number | null;
+  shareInfo?: string | null;
+}
+
+/** 공모주 일정조회 조건 (Q04, AS-IS retrieve() L403-439) */
+export interface Sch10IpoUserSearch {
+  dateType: string;
+  startDate: string;
+  closeDate: string;
+  searchText: string;
+  marketCode: string;
+  interestYn: boolean;
+}
+
+/** 공모주 알람설정 6칸 (Q04, AS-IS Sch11_IpoCompanyModel) */
+export interface Sch11IpoCompany {
+  ipoCompanyId: number;
+  ipoId?: number | null;
+  companyId?: number | null;
+  demandSdateAlarmYn?: boolean | null;
+  demandCdateAlarmYn?: boolean | null;
+  subscriptionSdateAlarmYn?: boolean | null;
+  subscriptionCdateAlarmYn?: boolean | null;
+  payDateAlarmYn?: boolean | null;
+  listDateAlarmYn?: boolean | null;
+}
+
 /** 주간사 (AS-IS Sch12_IpoCorpModel, E20) */
 export interface Sch12IpoCorp {
   ipoCorpId: number;

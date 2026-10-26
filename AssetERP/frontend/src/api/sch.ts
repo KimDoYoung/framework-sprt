@@ -3,7 +3,7 @@ import { ApiResponse } from '../types/auth';
 import {
   Sch03Deadline, Sch03DeadlineSaveReq, Sch03DeadlineTemplate, Sch05RelateIcs,
   Sch01Info, Sch01InfoManager, Sch01InfoView, Sch01Org, Sch01OrgSearch, Sch04Todo, Sch04TodoSearch, Sch04DailyCheck, Sch04DailyCheckSearch, Sch04CheckStatus, Sch04CheckStatusSearch, Sch01Period, Sch01PeriodSearch, Sch01InfoSave, Sch01InfoSearch, Sch06Alarm, Sch08Class, Sch08ClassCombo,
-  Sch02Share, Sch22WriteGroup, Sch04List, Sch04ListManagerSearch, Sch04ListSearch, Sch10Ipo, Sch10IpoSearch, Sch12IpoCorp, Sch14IpoMismatch, Sch15IpoItemMatching,
+  Sch02Share, Sch22WriteGroup, Sch04List, Sch04ListManagerSearch, Sch04ListSearch, Sch10Ipo, Sch10IpoSearch, Sch10IpoUser, Sch10IpoUserSearch, Sch11IpoCompany, Sch12IpoCorp, Sch14IpoMismatch, Sch15IpoItemMatching,
 } from '../types/sch';
 import { readBlobError } from './file';
 
@@ -117,6 +117,81 @@ export const schApi = {
     form.append('excelUpload', file);
     const res = await apiClient.post<ApiResponse<number>>('v1/sch/ipos/excel', form, { headers: { 'Content-Type': 'multipart/form-data' } });
     return res.data.data ?? 0;
+  },
+
+  // ── Q04 공모주 일정조회 (Sch10_Tab_Ipo) ──
+
+  /** AS-IS sch.Sch10_Ipo.selectBySearchText (ManagerYn=false) */
+  searchIposUser: async (cond: Sch10IpoUserSearch): Promise<Sch10IpoUser[]> => {
+    const res = await apiClient.get<ApiResponse<Sch10IpoUser[]>>('v1/sch/ipos/user', { params: cond });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch11_IpoCompany.insertInterest — 고른 공모주의 관심종목 등록(true)·제거(false) */
+  updateIpoInterests: async (ipoIds: number[], interestYn: boolean): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/sch/ipos/interests', { ipoIds, interestYn });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdIpo → 출력 그룹 ID (RD rdGroupId) */
+  printIpos: async (cond: Sch10IpoUserSearch): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/sch/ipos/rd-print', cond);
+    return res.data.data;
+  },
+
+  /** AS-IS sch.Sch02_Share.selectByInfoId3 — 일정알림 공유자 */
+  searchIpoShares: async (ipoId: number): Promise<Sch02Share[]> => {
+    const res = await apiClient.get<ApiResponse<Sch02Share[]>>(`v1/sch/ipos/${ipoId}/shares`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch02_Share.selectShareInto — 일정공유 칸 문구 */
+  getIpoShareInfo: async (ipoId: number): Promise<string> => {
+    const res = await apiClient.get<ApiResponse<string | null>>(`v1/sch/ipos/${ipoId}/share-info`);
+    return res.data.data ?? '';
+  },
+
+  /** AS-IS sch.Sch02_Share.update → 저장한 행. 새 행(id ≤ 0)은 id를 뺀다 */
+  saveIpoShares: async (ipoId: number, rows: Sch02Share[]): Promise<Sch02Share[]> => {
+    const body = rows.map(r => ({ shareId: r.shareId > 0 ? r.shareId : null, shareCode: r.shareCode, personId: r.personId ?? null, orgId: r.orgId ?? null, startDate: null, closeDate: null }));
+    const res = await apiClient.put<ApiResponse<Sch02Share[]>>(`v1/sch/ipos/${ipoId}/shares`, body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch02_Share.delete */
+  deleteIpoShares: async (ipoId: number, shareIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/sch/ipos/${ipoId}/shares`, { data: shareIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sch.Sch11_IpoCompany.selectByIpoId — 내 회사 행이 없으면 null */
+  getIpoCompany: async (ipoId: number): Promise<Sch11IpoCompany | null> => {
+    const res = await apiClient.get<ApiResponse<Sch11IpoCompany | null>>(`v1/sch/ipos/${ipoId}/company`);
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS sch.Sch11_IpoCompany.update → 저장한 행. 행이 없으면(id ≤ 0) 서버가 새로 만든다 */
+  saveIpoCompany: async (ipoId: number, row: Sch11IpoCompany): Promise<Sch11IpoCompany> => {
+    const body = {
+      ipoCompanyId: row.ipoCompanyId > 0 ? row.ipoCompanyId : null,
+      demandSdateAlarmYn: row.demandSdateAlarmYn ?? false, demandCdateAlarmYn: row.demandCdateAlarmYn ?? false,
+      subscriptionSdateAlarmYn: row.subscriptionSdateAlarmYn ?? false, subscriptionCdateAlarmYn: row.subscriptionCdateAlarmYn ?? false,
+      payDateAlarmYn: row.payDateAlarmYn ?? false, listDateAlarmYn: row.listDateAlarmYn ?? false,
+    };
+    const res = await apiClient.put<ApiResponse<Sch11IpoCompany>>(`v1/sch/ipos/${ipoId}/company`, body);
+    return res.data.data;
+  },
+
+  /** AS-IS sch.Sch12_IpoCorp.selectByCorpName — [바로가기] 주간사 하나 */
+  searchIpoCorpsByName: async (corpName: string): Promise<Sch12IpoCorp[]> => {
+    const res = await apiClient.get<ApiResponse<Sch12IpoCorp[]>>('v1/sch/ipo-corps/by-name', { params: { corpName } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sch.Sch12_IpoCorp.selectByCorpNameList — 주간사 여럿(쉼표) */
+  searchIpoCorpsByNames: async (corpName: string): Promise<Sch12IpoCorp[]> => {
+    const res = await apiClient.get<ApiResponse<Sch12IpoCorp[]>>('v1/sch/ipo-corps/by-names', { params: { corpName } });
+    return res.data.data ?? [];
   },
 
   // ── E20 주간사 등록 (Sch12_Lookup_IpoCorp) ──

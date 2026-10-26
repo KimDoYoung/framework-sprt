@@ -66,6 +66,10 @@ def split_shell_commands(cmd: str) -> list[tuple[str, bool, str]]:
 PROT_PATHS_RE = re.compile(
     r"(oms-data/src|backend/src/main/java|backend/src/main/resources/mapper|backend/src/test/java|frontend/src|docs/as-is/|docs/[0-9]+-)"
 )
+# 2026-10-26: 번호 문서(docs/NN-*.md)는 출력이 짧은 head/tail만 허용한다(08 교훈 표 `tail -3` 등). cat/sed/awk/grep 문맥은 계속 막는다
+PROT_NO_DOCS_RE = re.compile(
+    r"(oms-data/src|backend/src/main/java|backend/src/main/resources/mapper|backend/src/test/java|frontend/src|docs/as-is/)"
+)
 PSQL_RE = re.compile(
     r"(^|[;&|(`]\s*|&&\s*)(sudo\s+([^;&|]*\s)?)?(psql|pg_dump|pg_restore)(\s|$)|(docker|podman)\s+(compose\s+)?exec\s[^;&|]*\s(psql|pg_dump)(\s|$)"
 )
@@ -96,6 +100,7 @@ def inspect_command(cmd: str) -> tuple[bool, str, str]:
         "- AS-IS: yunhee analysis screen <화면> --class <클래스> --section …, analysis method <클래스>.<메서드> [-o code], analysis grid <클래스>, analysis sql <ns.id>, yunhee table <테이블>\n"
         "- TOBE: yunhee outline <파일…> 또는 yunhee analysis tobe <파일> → 필요한 줄만 Read(offset/limit)\n"
         "- 메뉴 찾기(docs/as-is/**/menus.md·menus.tsv)의 grep은 된다\n"
+        "- 문서(docs/NN-*.md)의 끝부분은 tail/head로 봐도 된다. 파일 전체는 Read(offset/limit)\n"
         "yunhee로 정말 안 되면 작업기록에 사유를 쓰지 말고 yunhee 수정사항으로 제안할 것."
     )
 
@@ -116,6 +121,8 @@ def inspect_command(cmd: str) -> tuple[bool, str, str]:
             continue
 
         if PROT_PATHS_RE.search(seg_raw):
+            if tool in ("head", "tail") and not PROT_NO_DOCS_RE.search(seg_raw):
+                continue
             if "menus.md" in seg_raw or "menus.tsv" in seg_raw:
                 cleaned = re.sub(r"[^ \t]*menus\.(md|tsv)", "", seg_raw)
                 if not PROT_PATHS_RE.search(cleaned):
@@ -130,6 +137,8 @@ def inspect_command(cmd: str) -> tuple[bool, str, str]:
 
     return False, "", ""
 
+NOT_RUN = "\n⚠ 이 Bash 호출은 통째로 실행되지 않았다(같은 호출의 파일 쓰기·다른 명령도 안 돌았다). 걸린 부분만 고치거나 빼서 다시 보내고, 쓰기는 따로 보낸다."
+
 try:
     data = json.loads(sys.stdin.read())
 except Exception:
@@ -138,7 +147,7 @@ except Exception:
 cmd = (data.get("tool_input") or {}).get("command", "")
 blocked, trigger, reason = inspect_command(cmd)
 if blocked:
-    msg = f"[차단 원인: {trigger}] {reason}" if trigger else reason
+    msg = (f"[차단 원인: {trigger}] {reason}" if trigger else reason) + NOT_RUN
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",

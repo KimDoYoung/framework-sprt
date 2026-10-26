@@ -129,4 +129,189 @@
                #{row.cancelYn}::varchar, #{row.priceBracket}::varchar, #{row.price}::numeric, #{row.issCorpCode}::varchar
          WHERE NOT EXISTS ( SELECT * FROM upsert )
     </insert>
+
+    <!-- ===== 공모주 일정조회 (Q04 Sch10_Tab_Ipo) ===== -->
+
+    <!-- AS-IS(IDMS-IC) sch10_ipo.selectBySearchText L200 (ManagerYn=false: 수요예측시작일 내림차순 + ID 오름차순). 철회(cancel)는 조건에서 이미 빠진다 -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch10IpoUserRes">
+        SELECT sch10_ipo_id                                                                       AS ipo_id
+             , (CASE WHEN COALESCE(sch11_interest_yn,'false') = 'true' THEN '★' ELSE '' END)      AS interest_name
+             , f_cdnm('MarketCode', sch10_market_cd, sch10_company_id, f_sysdate())               AS market_name
+             , sch10_item_nm                                                                      AS item_name
+             , sch10_demand_start_date                                                            AS demand_start_date
+             , sch10_demand_close_date                                                            AS demand_close_date
+             , sch10_subscription_start_date                                                      AS subscription_start_date
+             , sch10_subscription_close_date                                                      AS subscription_close_date
+             , sch10_pay_date                                                                     AS pay_date
+             , sch10_list_date                                                                    AS list_date
+             , sch10_price_bracket                                                                AS price_bracket
+             , COALESCE(sch10_price, 0)                                                           AS price
+             , sch10_note                                                                         AS note
+             , COALESCE(( SELECT icam25_reg_rate
+                            FROM icam25_ipo
+                           WHERE icam25_iss_corp_cd = sch10_iss_corp_cd
+                             AND icam25_start_date  = sch10_subscription_start_date
+                           LIMIT 1 ),0)                                                           AS subscription_rate
+             , ( SELECT CASE WHEN sch02_share_cd = '1'
+                             THEN f_emp_kor_nm(sch02_person_id)
+                             ELSE f_org_nm(sch02_org_id, f_sysdate()) END
+                        ||CASE WHEN sch02.cnt = 1 THEN ''
+                               ELSE ' 외 '||sch02.cnt - 1 END
+                   FROM sch02_share
+                  WHERE sch02_info_id    = sch10_ipo_id
+                    AND sch02_company_id = #{c.companyId}
+                  LIMIT 1 )                                                                       AS share_info
+          FROM sch10_ipo
+               LEFT OUTER JOIN ( SELECT sch02_info_id
+                                      , COUNT(*) cnt
+                                   FROM sch02_share
+                                  WHERE sch02_company_id = #{c.companyId}
+                                  GROUP BY sch02_info_id
+                               ) sch02 ON sch02_info_id = sch10_ipo_id
+               LEFT OUTER JOIN sch11_ipo_company ON ( sch11_ipo_id     = sch10_ipo_id AND
+                                                      sch11_company_id = #{c.companyId} )
+         WHERE sch10_company_id = 0
+           AND coalesce(sch10_cancel_yn,'false') = 'false'
+        <if test="c.interestYn">
+           AND sch11_interest_yn = 'true'
+        </if>
+           AND upper(CONCAT(sch10_item_nm, sch10_note)) LIKE upper(#{c.searchText})
+           AND sch10_market_cd LIKE #{c.marketCode}
+           AND ( ( #{c.dateType} = '1'                                           AND
+                   sch10_demand_start_date &gt;= #{c.startDate}                    AND
+                   sch10_demand_close_date &lt;= #{c.closeDate}                    ) OR
+                 ( #{c.dateType} = '2'                                           AND
+                   sch10_subscription_start_date &gt;= #{c.startDate}              AND
+                   sch10_subscription_close_date &lt;= #{c.closeDate}              ) OR
+                 ( #{c.dateType} = '3'                                           AND
+                   sch10_div_date BETWEEN #{c.startDate} AND #{c.closeDate}        ) OR
+                 ( #{c.dateType} = '4'                                           AND
+                   sch10_pay_date BETWEEN #{c.startDate} AND #{c.closeDate}        ) OR
+                 ( #{c.dateType} = '5'                                           AND
+                   sch10_refund_date BETWEEN #{c.startDate} AND #{c.closeDate}     ) OR
+                 ( #{c.dateType} = '6'                                           AND
+                   sch10_list_date BETWEEN #{c.startDate} AND #{c.closeDate}       ) )
+         ORDER BY sch10_demand_start_date DESC, sch10_ipo_id
+    </select>
+
+    <!-- AS-IS sch11_ipo_company.insertInterest L33 — 있으면 관심 여부만 UPDATE, 없으면 INSERT -->
+    <insert id="insertInterest">
+        WITH upsert AS
+        (
+            UPDATE sch11_ipo_company
+               SET sch11_interest_yn = #{interestYn}
+             WHERE sch11_ipo_id      = #{ipoId}
+               AND sch11_company_id  = #{companyId}
+         RETURNING *
+        )
+        INSERT INTO sch11_ipo_company
+               ( sch11_ipo_company_id, sch11_ipo_id, sch11_company_id, sch11_interest_yn )
+        SELECT f_create_seq(), #{ipoId}, #{companyId}, #{interestYn}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </insert>
+
+    <!-- AS-IS sch02_share.selectByInfoId3 L69 (일정공유 창) — 회사 조건은 원본에도 있다 -->
+    <select id="selectSharesByIpoId" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch02ShareRes">
+        SELECT sch02_share_id                                                      AS share_id
+             , sch02_info_id                                                       AS info_id
+             , sch02_share_cd                                                      AS share_code
+             , f_cdnm('ShareCode', sch02_share_cd, sch02_company_id, f_sysdate())  AS share_name
+             , sch02_person_id                                                     AS person_id
+             , f_emp_kor_nm(sch02_person_id)                                       AS person_name
+             , sch02_org_id                                                        AS org_id
+             , f_org_nm(sch02_org_id, f_sysdate())                                 AS org_name
+             , sch02_company_id                                                    AS company_id
+             , sch02_start_date                                                    AS start_date
+             , sch02_close_date                                                    AS close_date
+          FROM sch02_share
+         WHERE sch02_info_id    = #{ipoId}
+           AND sch02_company_id = #{companyId}
+         ORDER BY sch02_share_cd, sch02_org_id
+    </select>
+
+    <!-- AS-IS sch02_share.selectShareInto L80 -->
+    <select id="selectShareInfo" resultType="string">
+        SELECT CASE WHEN sch02_share_cd = '1'
+                    THEN f_emp_kor_nm(sch02_person_id)
+                    ELSE f_org_nm(sch02_org_id, f_sysdate()) END
+               ||CASE WHEN COUNT(*) OVER() = 1
+                      THEN ''
+                      ELSE ' 외 '|| COUNT(*) OVER()-1 END
+          FROM sch02_share
+         WHERE sch02_info_id    = #{ipoId}
+           AND sch02_company_id = #{companyId}
+         LIMIT 1
+    </select>
+
+    <sql id="companyColumns">
+        sch11_ipo_company_id                                          AS ipo_company_id,
+        sch11_ipo_id                                                  AS ipo_id,
+        sch11_company_id                                              AS company_id,
+        COALESCE(sch11_demand_sdate_alarm_yn, 'false') = 'true'       AS demand_sdate_alarm_yn,
+        COALESCE(sch11_demand_cdate_alarm_yn, 'false') = 'true'       AS demand_cdate_alarm_yn,
+        COALESCE(sch11_subscription_sdate_alarm_yn, 'false') = 'true' AS subscription_sdate_alarm_yn,
+        COALESCE(sch11_subscription_cdate_alarm_yn, 'false') = 'true' AS subscription_cdate_alarm_yn,
+        COALESCE(sch11_pay_date_alarm_yn, 'false') = 'true'           AS pay_date_alarm_yn,
+        COALESCE(sch11_list_date_alarm_yn, 'false') = 'true'          AS list_date_alarm_yn
+    </sql>
+
+    <!-- AS-IS sch11_ipo_company.selectByIpoId L26 -->
+    <select id="selectCompanyByIpoId" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch11IpoCompanyRes">
+        SELECT <include refid="companyColumns"/>
+          FROM sch11_ipo_company
+         WHERE sch11_company_id = #{companyId}
+           AND sch11_ipo_id     = #{ipoId}
+    </select>
+
+    <!-- AS-IS sch11_ipo_company.selectById — 저장한 행을 다시 읽는다 -->
+    <select id="selectCompanyById" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch11IpoCompanyRes">
+        SELECT <include refid="companyColumns"/>
+          FROM sch11_ipo_company
+         WHERE sch11_ipo_company_id = #{ipoCompanyId}
+           AND sch11_company_id     = #{companyId}
+    </select>
+
+    <insert id="insertCompany">
+        INSERT INTO sch11_ipo_company
+               ( sch11_ipo_company_id, sch11_ipo_id, sch11_company_id
+               , sch11_demand_sdate_alarm_yn, sch11_demand_cdate_alarm_yn, sch11_subscription_sdate_alarm_yn
+               , sch11_subscription_cdate_alarm_yn, sch11_pay_date_alarm_yn, sch11_list_date_alarm_yn )
+        VALUES ( #{ipoCompanyId}, #{ipoId}, #{companyId}
+               , #{req.demandSdateAlarmYn}, #{req.demandCdateAlarmYn}, #{req.subscriptionSdateAlarmYn}
+               , #{req.subscriptionCdateAlarmYn}, #{req.payDateAlarmYn}, #{req.listDateAlarmYn} )
+    </insert>
+
+    <update id="updateCompany">
+        UPDATE sch11_ipo_company
+           SET sch11_demand_sdate_alarm_yn       = #{req.demandSdateAlarmYn},
+               sch11_demand_cdate_alarm_yn       = #{req.demandCdateAlarmYn},
+               sch11_subscription_sdate_alarm_yn = #{req.subscriptionSdateAlarmYn},
+               sch11_subscription_cdate_alarm_yn = #{req.subscriptionCdateAlarmYn},
+               sch11_pay_date_alarm_yn           = #{req.payDateAlarmYn},
+               sch11_list_date_alarm_yn          = #{req.listDateAlarmYn}
+         WHERE sch11_ipo_company_id = #{req.ipoCompanyId}
+           AND sch11_ipo_id         = #{ipoId}
+           AND sch11_company_id     = #{companyId}
+    </update>
+
+    <!-- AS-IS sys99_print.deleteByPersonId (insertRdIpo ① 데이터 정리) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdIpo L2631 ② 데이터 생성 (철회 string05는 조회에서 철회를 빼므로 항상 '') -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_string03
+               , sys99_date01, sys99_date02, sys99_date03, sys99_date04, sys99_date05, sys99_date06
+               , sys99_string04, sys99_long01, sys99_text01, sys99_string05 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{row.interestName}, #{row.marketName}, #{row.itemName}
+               , #{row.demandStartDate}, #{row.demandCloseDate}, #{row.subscriptionStartDate}, #{row.subscriptionCloseDate}, #{row.payDate}, #{row.listDate}
+               , #{row.priceBracket}, #{row.price}, #{row.note}, '' )
+    </insert>
 </mapper>

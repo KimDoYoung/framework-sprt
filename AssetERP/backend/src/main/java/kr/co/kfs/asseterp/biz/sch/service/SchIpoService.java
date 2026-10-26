@@ -1,11 +1,20 @@
 package kr.co.kfs.asseterp.biz.sch.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch02ShareRes;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch02ShareSaveReq;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch10IpoExcelRow;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch10IpoInterestReq;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch10IpoPrintReq;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch10IpoUserCond;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch10IpoUserRes;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch11IpoCompanyRes;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch11IpoCompanySaveReq;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch10IpoRes;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch10IpoSaveReq;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch10IpoSearchParam;
 import kr.co.kfs.asseterp.biz.sch.mapper.SchIpoMapper;
+import kr.co.kfs.asseterp.biz.sch.mapper.SchWriteGroupMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +53,8 @@ public class SchIpoService {
     private static final String TEMPLATE = "excelTemplete/Template_공모주 일정등록.xlsx";
 
     private final SchIpoMapper mapper;
+    /** 일정공유(sch02_share) 저장·삭제는 일정(`SchInfoService`)·작성그룹과 같은 매퍼를 쓴다 */
+    private final SchWriteGroupMapper shareMapper;
 
     /** AS-IS retrieve() L292-328: 검색어는 "%검색어%"(없으면 %), 시장구분이 없으면 % */
     public List<Sch10IpoRes> search(String dateType, String startDate, String closeDate, String searchText, String marketCode) {
@@ -87,6 +98,122 @@ public class SchIpoService {
     public int delete(UserPrincipal user, List<Long> ids) {
         requireAdminCompany(user);
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteIpos(ADMIN_COMPANY_ID, ids);
+    }
+
+    // ===== 공모주 일정조회 (Q04 Sch10_Tab_Ipo) =====
+
+    private static final String PRINT_WINDOW = "Sch10_Tab_Ipo";
+
+    /** AS-IS Sch10_Tab_Ipo.retrieve() L403-439: 검색어는 "%검색어%"(없으면 %), 시장구분이 없으면 %, 관심종목만 보기, ManagerYn=false */
+    public List<Sch10IpoUserRes> searchUser(UserPrincipal user, String dateType, LocalDate startDate, LocalDate closeDate,
+                                            String searchText, String marketCode, boolean interestYn) {
+        return mapper.selectBySearchText(new Sch10IpoUserCond(user.getCompanyId(), dateType, startDate, closeDate,
+                "%" + (searchText == null ? "" : searchText) + "%", isBlank(marketCode) ? "%" : marketCode, interestYn));
+    }
+
+    /** AS-IS Sch10_Tab_Ipo.interest() L453-477 → sch.Sch11_IpoCompany.insertInterest (고른 공모주마다) → 처리 건수 */
+    @Transactional
+    public int interest(UserPrincipal user, Sch10IpoInterestReq req) {
+        if (req.ipoIds() == null || req.ipoIds().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "대상을 먼저 선택해주세요");
+        }
+        boolean interestYn = Boolean.TRUE.equals(req.interestYn());
+        for (Long ipoId : req.ipoIds()) {
+            mapper.insertInterest(user.getCompanyId(), ipoId, interestYn);
+        }
+        return req.ipoIds().size();
+    }
+
+    /**
+     * AS-IS Sys99_Print.insertRdIpo L2631 — ① 내 출력 자료를 지우고 ② 같은 조건의 조회 결과를 새 그룹 ID로 담는다.
+     * 돌려주는 값 = 그룹 ID(RD 리포트 Sch10_Rd_IpoList의 rdGroupId)
+     */
+    @Transactional
+    public String insertRd(UserPrincipal user, Sch10IpoPrintReq req) {
+        Long companyId = user.getCompanyId();
+        Long personId = user.getUserId();
+        long groupId = mapper.selectNextId();
+        mapper.deletePrint(companyId, personId, PRINT_WINDOW);
+        for (Sch10IpoUserRes row : searchUser(user, req.dateType(), req.startDate(), req.closeDate(), req.searchText(), req.marketCode(),
+                Boolean.TRUE.equals(req.interestYn()))) {
+            mapper.insertPrint(mapper.selectNextId(), companyId, personId, PRINT_WINDOW, groupId, row);
+        }
+        return String.valueOf(groupId);
+    }
+
+    // ===== 일정알림 공유자 (Sch02_Lookup_Share) =====
+
+    /** AS-IS Sch02_Share.selectByInfoId3 */
+    public List<Sch02ShareRes> searchShares(UserPrincipal user, Long ipoId) {
+        requireIpo(ipoId);
+        return mapper.selectSharesByIpoId(user.getCompanyId(), ipoId);
+    }
+
+    /** AS-IS Sch02_Share.selectShareInto — 저장 뒤 일정공유 칸에 넣는 문구(없으면 null) */
+    public String shareInfo(UserPrincipal user, Long ipoId) {
+        requireIpo(ipoId);
+        return mapper.selectShareInfo(user.getCompanyId(), ipoId);
+    }
+
+    /** AS-IS Sch02_Share.update(UpdateDataModel): 이 창은 새 행만 만든다(고칠 수 있는 열이 없다) → 저장한 행(요청 순서) */
+    @Transactional
+    public List<Sch02ShareRes> saveShares(UserPrincipal user, Long ipoId, List<Sch02ShareSaveReq> rows) {
+        requireIpo(ipoId);
+        Long companyId = user.getCompanyId();
+        List<Sch02ShareRes> saved = new ArrayList<>();
+        for (Sch02ShareSaveReq req : rows) {
+            boolean person = "1".equals(req.shareCode());
+            if (!person && !"2".equals(req.shareCode()) || (person ? req.personId() == null : req.orgId() == null)) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "공유자를 선택하세요.");
+            }
+            if (req.shareId() != null && req.shareId() > 0) {
+                saved.add(shareMapper.selectShareById(companyId, req.shareId()));
+                continue;
+            }
+            Long shareId = shareMapper.selectNextId();
+            shareMapper.insertShare(companyId, ipoId, shareId, req);
+            saved.add(shareMapper.selectShareById(companyId, shareId));
+        }
+        return saved;
+    }
+
+    /** AS-IS Sch02_Share.delete(UpdateDataModel.deleteModel) → 지운 건수 */
+    @Transactional
+    public int deleteShares(UserPrincipal user, Long ipoId, List<Long> shareIds) {
+        if (shareIds == null || shareIds.isEmpty()) {
+            return 0;
+        }
+        requireIpo(ipoId);
+        return shareMapper.deleteShares(user.getCompanyId(), ipoId, shareIds);
+    }
+
+    // ===== 공모주 알람설정 (Sch11_Edit_IpoAlarmSetup) =====
+
+    /** AS-IS Sch11_IpoCompany.selectByIpoId — 내 회사 행이 없으면 null(화면이 빈 행을 만든다) */
+    public Sch11IpoCompanyRes getCompany(UserPrincipal user, Long ipoId) {
+        requireIpo(ipoId);
+        return mapper.selectCompanyByIpoId(user.getCompanyId(), ipoId);
+    }
+
+    /** AS-IS Sch11_IpoCompany.update(UpdateDataModel): 행이 없으면(id 0 이하) INSERT, 있으면 알람 6칸 UPDATE → 저장한 행 */
+    @Transactional
+    public Sch11IpoCompanyRes saveCompany(UserPrincipal user, Long ipoId, Sch11IpoCompanySaveReq req) {
+        requireIpo(ipoId);
+        Long companyId = user.getCompanyId();
+        Long id = req.ipoCompanyId();
+        if (id == null || id <= 0) {
+            id = mapper.selectNextId();
+            mapper.insertCompany(id, companyId, ipoId, req);
+        } else if (mapper.updateCompany(companyId, ipoId, req) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return mapper.selectCompanyById(companyId, id);
+    }
+
+    private void requireIpo(Long ipoId) {
+        if (ipoId == null || mapper.selectById(ipoId) == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
     }
 
     /** 엑셀 템플릿 (AS-IS downloadForm → ./excelTemplete/Template_공모주 일정등록.xlsx) */

@@ -3,7 +3,8 @@
  * AS-IS: myApp/client/vi/sch/Sch06_Lookup_AlarmSetup.java (367줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 open() L71-114: 모달 650×350 "알람설정"(BBS는 "알람설정 (공지일 기준)"), 위 툴바 50([조회][등록][저장][삭제] + "* 알람은 메일로 발송됩니다" 527BB7),
  *   그리드(체크 다중 + 셀 편집, 2단 헤더 일/주·시간·휴일지정·사용), 아래 가운데 [닫기]
- * [생략] IPO 전용 ipoGrid(L95-98·L303-310 ipoGrid.update/retrieve)는 이 창을 SCH로만 쓰는 O01에서 만들지 않는다 — 공모주 알람 화면을 변환할 때 더한다
+ * IPO(Q04): targetCode가 "IPO"면 아래에 공모주 알람 6칸 `Sch11_Edit_IpoAlarmSetup`(ipoGrid L95-98)이 붙고(창 650×450, 그리드 100) [조회]·[저장]을 같이 쓴다
+ *   — 변경 검사 preCheck() L253-301의 "변경내역이 없습니다"는 두 그리드 합계, 검사를 통과하면 알람 update 뒤 ipoGrid.update()(L303-310)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';
@@ -15,6 +16,7 @@ import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { useGridCrud } from '@/hooks/useGridCrud';
+import { Sch11_Edit_IpoAlarmSetup, useIpoAlarmSetup } from '@/components/lookup/Sch11_Edit_IpoAlarmSetup';
 
 const gb = gbFor<Sch06Alarm>();
 const MULTI_SELECTION = { mode: 'multiRow', checkboxes: true, headerCheckbox: true, enableClickSelection: false } as const;
@@ -38,6 +40,20 @@ interface Props {
 type CodeKey = 'dayWeek' | 'befAft' | 'amPm' | 'hour' | 'minute' | 'holiday';
 const KINDS: Record<CodeKey, string> = { dayWeek: 'DayWeekCode', befAft: 'BeforeAfterCode', amPm: 'AmPmCode', hour: 'HourCode12', minute: 'MinuteCode2', holiday: 'HolidaySettleCode' };
 
+/** preCheck() L253-301: num이 있는 행마다 일/주·전/후·오전/오후·시·분·휴일지정을 모두 골랐는지 본다 */
+const validateAlarm = (changed: Sch06Alarm[]): string | undefined => {
+  for (const m of changed) {
+    if (m.num == null) continue;
+    if (!m.dayWeekCode) return '일 또는 주를 선택하세요';
+    if (!m.befAftCode) return '전 또는 후를 선택하세요';
+    if (!m.amPmCode) return '오전 또는 오후를 선택하세요';
+    if (!m.hourCode) return '알람시간(시)을 선택하세요';
+    if (!m.minuteCode) return '알람시간(분)을 선택하세요';
+    if (!m.holidayCode) return '휴일알람지정을 선택하세요';
+  }
+  return undefined;
+};
+
 export const Sch06_Lookup_AlarmSetup: React.FC<Props> = ({ target, onClosed, onClose }) => {
   const [codes, setCodes] = useState<Record<CodeKey, Code[]>>({ dayWeek: [], befAft: [], amPm: [], hour: [], minute: [], holiday: [] });
 
@@ -59,25 +75,41 @@ export const Sch06_Lookup_AlarmSetup: React.FC<Props> = ({ target, onClosed, onC
     // delete() L312-337: 확인 "선택한 알람설정 정보를 삭제하시겠습니까?" → [E12] msgBox.DialogHide [YES] (L320) → sch.Sch06_Alarm.delete
     deleteConfirm: '선택한 알람설정 정보를 삭제하시겠습니까?',
     // preCheck() L253-301: num이 있는 행마다 일/주·전/후·오전/오후·시·분·휴일지정을 모두 골랐는지 본다
-    validate: changed => {
-      for (const m of changed) {
-        if (m.num == null) continue;
-        if (!m.dayWeekCode) return '일 또는 주를 선택하세요';
-        if (!m.befAftCode) return '전 또는 후를 선택하세요';
-        if (!m.amPmCode) return '오전 또는 오후를 선택하세요';
-        if (!m.hourCode) return '알람시간(시)을 선택하세요';
-        if (!m.minuteCode) return '알람시간(분)을 선택하세요';
-        if (!m.holidayCode) return '휴일알람지정을 선택하세요';
-      }
-      return undefined;
-    },
+    validate: validateAlarm,
   });
+  // IPO: 아래 공모주 알람 6칸 (ipoGrid). 다른 대상이면 비어 있다
+  const isIpo = target?.targetCode === 'IPO';
+  const ipoCrud = useIpoAlarmSetup(isIpo && target ? target.targetId : null);
+  const { retrieve: retrieveIpo } = ipoCrud;
   const { retrieve, addRows } = crud;
+
+  // retrieve() L339-352: 알람을 읽은 뒤 IPO면 ipoGrid.retrieve(targetId)
+  const retrieveAll = async () => {
+    await retrieve();
+    if (isIpo) await retrieveIpo();
+  };
+
+  // [E4] updateButton[저장].Select (L135) → preCheck() L253-301: 변경이 없으면 "변경내역이 없습니다"(IPO는 두 그리드 합계), 검사 통과하면 update() L303-310
+  const saveAll = async () => {
+    if (!isIpo) return crud.saveRows();
+    const changed = crud.getChanged();
+    if (changed.length + ipoCrud.getChanged().length === 0) {
+      message.warning('변경내역이 없습니다');
+      return;
+    }
+    const invalid = validateAlarm(changed);
+    if (invalid) {
+      message.warning(invalid);
+      return;
+    }
+    await crud.saveRows();
+    await ipoCrud.saveRows();
+  };
 
   // [E0] 화면 열림 (생성자 L65-69, open L71-114) → setting(), retrieve(). 콤보는 grid() L152-227의 ComboBoxField(DayWeekCode …)
   useEffect(() => {
     if (!target) return;
-    void retrieve();
+    void retrieveAll();
     Promise.all((Object.keys(KINDS) as CodeKey[]).map(k => sysApi.searchCodes(KINDS[k]).then(list => [k, list] as const)))
       .then(entries => setCodes(Object.fromEntries(entries) as Record<CodeKey, Code[]>))
       .catch(() => undefined);
@@ -149,19 +181,20 @@ export const Sch06_Lookup_AlarmSetup: React.FC<Props> = ({ target, onClosed, onC
         </div>
       )}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: 250 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: isIpo ? 358 : 250 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* [E1] retrieveButton[조회].Select (L117) → retrieve() */}
-          <Button type="search" onClick={() => void retrieve()}>조회</Button>
+          <Button type="search" onClick={retrieveAll}>조회</Button>
           <Button type="register" onClick={insertRow}>등록</Button>
           {/* [E4] updateButton[저장].Select (L135) → preCheck() */}
-          <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
+          <Button type="save" count={isIpo ? { added: crud.changes.added + ipoCrud.changes.added, modified: crud.changes.modified + ipoCrud.changes.modified, editing: crud.changes.editing || ipoCrud.changes.editing } : crud.changes} onClick={saveAll}>저장</Button>
           <Button type="delete" onClick={deleteRows}>삭제</Button>
           <span style={{ color: '#527BB7', marginLeft: 4 }}>* 알람은 메일로 발송됩니다</span>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
           <CellEditGrid<Sch06Alarm> crud={crud} columnDefs={columnDefs} rowSelection={MULTI_SELECTION} />
         </div>
+        {isIpo && <div style={{ height: 100 }}><Sch11_Edit_IpoAlarmSetup crud={ipoCrud} /></div>}
       </div>
     </LookupModal>
   );

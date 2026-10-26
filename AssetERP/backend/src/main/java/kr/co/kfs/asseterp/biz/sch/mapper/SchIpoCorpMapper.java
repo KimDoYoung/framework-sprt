@@ -21,4 +21,10 @@ public interface SchIpoCorpMapper {
     int updateIpoCorp(@Param("req") Sch12IpoCorpSaveReq req);
 
     int deleteIpoCorps(@Param("ids") List<Long> ids);
+
+    /** AS-IS sch12_ipo_corp.selectByCorpName (주간사명이 같은 것) */
+    List<Sch12IpoCorpRes> selectByCorpName(@Param("corpName") String corpName);
+
+    /** AS-IS sch12_ipo_corp.selectByCorpNameList (쉼표로 이은 주간사명, 공백 뺀 것) */
+    List<Sch12IpoCorpRes> selectByCorpNameList(@Param("corpName") String corpName);
 }

@@ -26,6 +26,16 @@ public class SchIpoCorpService {
         return mapper.selectBySearchText("%" + (searchText == null ? "" : searchText) + "%");
     }
 
+    /** AS-IS Sch12_IpoCorp.selectByCorpName — [바로가기] 주간사가 하나일 때 */
+    public List<Sch12IpoCorpRes> searchByCorpName(String corpName) {
+        return mapper.selectByCorpName(corpName);
+    }
+
+    /** AS-IS Sch12_IpoCorp.selectByCorpNameList — 주간사가 여럿일 때(쉼표로 이은 이름, 공백은 뺀다) */
+    public List<Sch12IpoCorpRes> searchByCorpNameList(String corpName) {
+        return mapper.selectByCorpNameList(corpName);
+    }
+
     /** AS-IS update(UpdateDataModel): 신규(화면 임시 ID 0 이하)면 INSERT, 아니면 UPDATE 하고 selectById로 다시 읽어 요청 순서대로 */
     @Transactional
     public List<Sch12IpoCorpRes> update(UserPrincipal user, List<Sch12IpoCorpSaveReq> rows) {

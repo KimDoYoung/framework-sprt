@@ -217,6 +217,7 @@ import { Sch04_Tab_DailyCheckListStatus } from './sch/Sch04_Tab_DailyCheckListSt
 import { Sch04_Tab_IcsList } from './sch/Sch04_Tab_IcsList';
 import { Sch04_Tab_IcsListManager } from './sch/Sch04_Tab_IcsListManager';
 import { Sch10_Tab_IpoAdmin } from './sch/Sch10_Tab_IpoAdmin';
+import { Sch10_Tab_Ipo } from './sch/Sch10_Tab_Ipo';
 import { Test_Tab_ReactComponents } from './test/Test_Tab_ReactComponents';
 
 /**
@@ -377,6 +378,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sch04_Tab_DailyCheckListStatus, // O06 (+ Sch01_Lookup_InfoView·Sch10_Lookup_Ipo 재사용, 결재 문서 보기는 안내만)
   Sch04_Tab_IcsList, // H06 (+ Sch04_Lookup_IcsMsg·Ics01/Icr01_Lookup_ClassTreeDetail. Apr01_Edit_ApprDoc은 다른 도메인이라 안내만)
   Sch04_Tab_IcsListManager, // H12 (H06의 관리자용 짝. Sch04_Lookup_IcsMsg actionType "2"·Org00_Lookup_SelectMulti 재사용. Apr01_Edit_ApprDoc은 안내만)
+  Sch10_Tab_Ipo, // Q04 (+ Sch02_Lookup_Share·Sch12_Lookup_IpoCorpList·RdViewer_Sch10. 알람 Sch06_Lookup_AlarmSetup은 O01, 사원·조직 찾기는 재사용)
   Sch10_Tab_IpoAdmin, // E20 (+ Sch12_Lookup_IpoCorp·Sch14_Lookup_IpoMismatch·Sch15_Lookup_IpoItemMatching·Com50_Lookup_StkItem)
   Ast01_Tab_InfoManager, // E21
   Pay20_Tab_DeductAdmin, // E22 1단계 (탭 1~3: Pay20_TabPage_Item·Pay04_TabPage_Formula·Pay21_TabPage_Rate + Pay20_Lookup_ItemList·Pay04_Lookup_Insert. 탭 4~9는 자리만)

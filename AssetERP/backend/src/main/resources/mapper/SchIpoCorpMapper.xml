@@ -47,4 +47,18 @@
          WHERE sch12_ipo_corp_id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
     </delete>
+
+    <!-- AS-IS(IDMS-IC) sch12_ipo_corp.selectByCorpName L26 -->
+    <select id="selectByCorpName" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch12IpoCorpRes">
+        SELECT <include refid="columns"/>
+          FROM sch12_ipo_corp
+         WHERE sch12_corp_nm = #{corpName}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sch12_ipo_corp.selectByCorpNameList L32 -->
+    <select id="selectByCorpNameList" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch12IpoCorpRes">
+        SELECT <include refid="columns"/>
+          FROM sch12_ipo_corp
+         WHERE sch12_corp_nm IN (SELECT unnest(string_to_array(replace(#{corpName}, ' ', ''), ',')))
+    </select>
 </mapper>

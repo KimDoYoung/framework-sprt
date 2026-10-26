@@ -31,6 +31,18 @@ public class SchIpoCorpController {
         return ApiResponse.ok(service.search(searchText));
     }
 
+    /** AS-IS sch.Sch12_IpoCorp.selectByCorpName (Sch10_Tab_Ipo [바로가기], 주간사 하나) */
+    @GetMapping("/by-name")
+    public ApiResponse<List<Sch12IpoCorpRes>> searchByCorpName(@RequestParam String corpName) {
+        return ApiResponse.ok(service.searchByCorpName(corpName));
+    }
+
+    /** AS-IS sch.Sch12_IpoCorp.selectByCorpNameList (Sch12_Lookup_IpoCorpList, 주간사 여럿) */
+    @GetMapping("/by-names")
+    public ApiResponse<List<Sch12IpoCorpRes>> searchByCorpNameList(@RequestParam String corpName) {
+        return ApiResponse.ok(service.searchByCorpNameList(corpName));
+    }
+
     /** AS-IS sch.Sch12_IpoCorp.update → 저장된 행(요청 순서) */
     @PutMapping
     public ApiResponse<List<Sch12IpoCorpRes>> update(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Sch12IpoCorpSaveReq> rows) {
