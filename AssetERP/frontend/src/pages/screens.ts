@@ -222,6 +222,7 @@ import { Fnd30_Tab_DemandOpr } from './fnd/Fnd30_Tab_DemandOpr';
 import { Fnd30_Tab_Opr } from './fnd/Fnd30_Tab_Opr';
 import { Fnd32_Tab_Account } from './fnd/Fnd32_Tab_Account';
 import { Est01_Tab_PfFeeType } from './est/Est01_Tab_PfFeeType';
+import { Est02_Tab_PfContract } from './est/Est02_Tab_PfContract';
 import { Test_Tab_ReactComponents } from './test/Test_Tab_ReactComponents';
 
 /**
@@ -386,6 +387,7 @@ export const SCREENS: Record<string, React.FC> = {
   Fnd30_Tab_DemandOpr, // Q05 1단계 (메뉴 #1341. + Fnd31_Page_DemandOprFund·Fnd31_Edit_DemandOprFund·Fnd30_Edit_DemandOpr·components/lookup/Adv02_Lookup_SelectSingle. [결재요청]·[상세보기]가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·문서분류지정 Dcr30_Lookup_Link는 다음 단계)
   Fnd30_Tab_Opr, // Q06 1단계 (메뉴 #1227. + Fnd31_Page_OprFund·Fnd31_Edit_OprFund·Fnd30_Edit_Opr·Fnd30_Lookup_DemandOprList. [결재요청]·[상세보기]가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·문서분류지정 Dcr30_Lookup_Link는 다음 단계)
   Fnd32_Tab_Account, // Q07 (메뉴 #1290. 공모주 참여계좌 — 거래처 조회창 Sys15_Lookup_Corp 재사용)
+  Est02_Tab_PfContract, // Q09 (메뉴 #1376. 용역계약체결 — + Est02_Edit_PfContract·Est02_Grid_File·Est01_Lookup_PfFeeType. 결재 아이콘·문서보기의 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Est01_Tab_PfFeeType, // Q08 (메뉴 #1375. 부동산PF 수수료 — 계획서양식·결과보고서양식 아이콘이 여는 Com11_Lookup_FormMappingMulti)
   Sch10_Tab_IpoAdmin, // E20 (+ Sch12_Lookup_IpoCorp·Sch14_Lookup_IpoMismatch·Sch15_Lookup_IpoItemMatching·Com50_Lookup_StkItem)
   Ast01_Tab_InfoManager, // E21

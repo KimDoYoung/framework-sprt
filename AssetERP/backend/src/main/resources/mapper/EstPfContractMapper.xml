@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/est/mapper/est02_pf_contract.xml(selectByText·selectById) + UpdateDataModel(est02_pf_contract) + est03_pf_history.checkList
+  (Q09 Est02_Tab_PfContract)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.est.mapper.EstPfContractMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS(IDMS-IC) est02_pf_contract.selectByText·selectById의 같은 열 (SELECT est02_pf_contract.*는 DTO 열로 명시, 첨부 파일 목록 열 2개는 다음 단계) -->
+    <sql id="pfContractColumns">
+        est02_pf_contract_id                                                    AS pf_contract_id,
+        est02_borrower                                                          AS borrower,
+        est02_project_site_nm                                                   AS project_site_name,
+        est02_project_site_addr                                                 AS project_site_addr,
+        est02_pf_fee_type_id                                                    AS pf_fee_type_id,
+        est01_fee_cd                                                            AS fee_code,
+        f_cdnm('EstPfFeeCode', est01_fee_cd, est02_company_id, f_sysdate())     AS fee_name,
+        est02_start_date                                                        AS start_date,
+        est02_close_date                                                        AS close_date,
+        est02_manager_id                                                        AS manager_id,
+        emp01_kor_nm                                                            AS manager_name,
+        (
+            f_get_empTrans(est02_manager_id, est02_start_date::date, 'org_code_nm')
+            ||' '||
+            emp01_kor_nm
+            ||' ('||
+            emp01_office_telno
+            ||', '||
+            emp01_email_addr
+            ||')'
+        )                                                                       AS manager_info,
+        f_get_emptrans(est02_manager_id, est02_start_date, 'org_code_id')       AS manager_org_id,
+        est02_plan                                                              AS plan,
+        est02_plan_appr_id                                                      AS plan_appr_id,
+        (
+            SELECT f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)
+              FROM apr01_appr
+             WHERE apr01_appr_id = est02_plan_appr_id
+        )                                                                       AS plan_appr_status_name,
+        est02_result_appr_id                                                    AS result_appr_id,
+        (
+            SELECT f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)
+              FROM apr01_appr
+             WHERE apr01_appr_id = est02_result_appr_id
+        )                                                                       AS result_appr_status_name
+    </sql>
+
+    <sql id="pfContractFrom">
+          FROM est02_pf_contract
+               INNER JOIN emp01_person ON emp01_person_id = est02_manager_id
+               LEFT OUTER JOIN est01_pf_fee_type ON est01_pf_fee_type_id = est02_pf_fee_type_id
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) est02_pf_contract.selectByText -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.est.dto.PfContractRes">
+        SELECT <include refid="pfContractColumns"/>
+        <include refid="pfContractFrom"/>
+         WHERE 1=1
+           AND est02_company_id = #{companyId}
+           AND #{startDate} BETWEEN est02_start_date AND COALESCE(est02_close_date, TO_DATE('29991231', 'yyyyMMdd'))
+           AND UPPER(CONCAT(est02_borrower, est02_project_site_nm, f_cdnm('EstPfFeeCode', est01_fee_cd, est02_company_id, f_sysdate()))) LIKE UPPER(#{searchText})
+    </select>
+
+    <!-- AS-IS(IDMS-IC) est02_pf_contract.selectById (UpdateDataModel이 저장 뒤 돌려주는 행) + 로그인 회사 조건(보안 보강) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.est.dto.PfContractRes">
+        SELECT <include refid="pfContractColumns"/>
+        <include refid="pfContractFrom"/>
+         WHERE est02_pf_contract_id = #{pfContractId}
+           AND est02_company_id = #{companyId}
+    </select>
+
+    <insert id="insertPfContract">
+        INSERT INTO est02_pf_contract (est02_pf_contract_id, est02_company_id, est02_pf_fee_type_id, est02_manager_id, est02_borrower, est02_project_site_nm, est02_project_site_addr, est02_start_date, est02_close_date, est02_plan)
+        VALUES (#{r.pfContractId}, #{companyId}, #{r.pfFeeTypeId}, #{r.managerId}, #{r.borrower}, #{r.projectSiteName}, #{r.projectSiteAddr}, #{r.startDate}, #{r.closeDate}, #{r.plan})
+    </insert>
+
+    <update id="updatePfContract">
+        UPDATE est02_pf_contract
+           SET est02_pf_fee_type_id    = #{r.pfFeeTypeId},
+               est02_manager_id        = #{r.managerId},
+               est02_borrower          = #{r.borrower},
+               est02_project_site_nm   = #{r.projectSiteName},
+               est02_project_site_addr = #{r.projectSiteAddr},
+               est02_start_date        = #{r.startDate},
+               est02_close_date        = #{r.closeDate},
+               est02_plan              = #{r.plan}
+         WHERE est02_pf_contract_id    = #{r.pfContractId}
+           AND est02_company_id = #{companyId}
+    </update>
+
+    <delete id="deletePfContracts">
+        DELETE FROM est02_pf_contract
+         WHERE est02_company_id = #{companyId}
+           AND est02_pf_contract_id IN
+        <foreach collection="pfContractIds" item="pfContractId" open="(" separator="," close=")">#{pfContractId}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) est03_pf_history.checkList (SELECT *는 ID만) -->
+    <select id="selectHistoryIdsByContracts" resultType="long">
+        SELECT est03_pf_history_id
+          FROM est03_pf_history
+         WHERE est03_pf_contract_id IN
+        <foreach collection="pfContractIds" item="pfContractId" open="(" separator="," close=")">#{pfContractId}</foreach>
+    </select>
+</mapper>

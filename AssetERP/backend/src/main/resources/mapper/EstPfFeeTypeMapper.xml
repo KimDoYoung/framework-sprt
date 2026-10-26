@@ -43,6 +43,16 @@
          ORDER BY est01_seq, sys09_name
     </select>
 
+    <!-- AS-IS(IDMS-IC) est01_pf_fee_type.selectByText (Est01_Lookup_PfFeeType 조회창, SELECT est01_pf_fee_type.*는 DTO 열로 명시) -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.est.dto.PfFeeTypeRes">
+        SELECT <include refid="pfFeeTypeColumns"/>
+        <include refid="pfFeeTypeFrom"/>
+         WHERE 1=1
+           AND est01_company_id = #{companyId}
+           AND #{startDate} BETWEEN est01_start_date AND COALESCE(est01_close_date, TO_DATE('29991231', 'yyyyMMdd'))
+           AND UPPER(CONCAT(sys09_name, sys09_desc)) LIKE UPPER(#{searchText})
+    </select>
+
     <!-- AS-IS(IDMS-IC) est01_pf_fee_type.selectById (UpdateDataModel이 저장 뒤 돌려주는 행) + 로그인 회사 조건(보안 보강) -->
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.est.dto.PfFeeTypeRes">
         SELECT <include refid="pfFeeTypeColumns"/>

@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /** AS-IS server/est/Est01_PfFeeType.java (selectByCompanyId L24 / update L42 / delete L47) + Est02_PfContract.checkList L39 */
@@ -21,6 +22,11 @@ public class EstPfFeeTypeService {
     /** AS-IS selectByCompanyId */
     public List<PfFeeTypeRes> search(UserPrincipal user) {
         return mapper.selectByCompanyId(user.getCompanyId());
+    }
+
+    /** AS-IS selectByText (Est01_Lookup_PfFeeType 조회창): 조회일에 사용 중인 항목 중 이름·정의에 검색어가 든 것 */
+    public List<PfFeeTypeRes> lookup(UserPrincipal user, LocalDate startDate, String searchText) {
+        return mapper.selectByText(user.getCompanyId(), startDate, "%" + (searchText == null ? "" : searchText) + "%");
     }
 
     /** AS-IS update(UpdateDataModel): ID가 DB에 있으면 UPDATE, 없으면 INSERT(0 이하는 새 id) → 저장된 행(요청 순서) */
