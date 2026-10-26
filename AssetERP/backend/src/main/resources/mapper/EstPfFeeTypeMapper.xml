@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/est/mapper/est01_pf_fee_type.xml(selectByCompanyId) + UpdateDataModel(est01_pf_fee_type) + est02_pf_contract.checkList
+  (Q08 Est01_Tab_PfFeeType)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.est.mapper.EstPfFeeTypeMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <sql id="pfFeeTypeColumns">
+        est01_pf_fee_type_id AS pf_fee_type_id,
+        est01_fee_cd         AS fee_code,
+        a.sys09_name         AS fee_name,
+        a.sys09_desc         AS fee_desc,
+        est01_seq            AS seq,
+        est01_start_date     AS start_date,
+        est01_close_date     AS close_date,
+        est01_note           AS note
+    </sql>
+
+    <sql id="pfFeeTypeFrom">
+          FROM est01_pf_fee_type
+               INNER JOIN (
+                    SELECT *
+                      FROM sys09_code
+                           INNER JOIN sys08_code_kind ON sys08_code_kind_id = sys09_code_kind_id
+                     WHERE sys08_kind_cd = 'EstPfFeeCode'
+               ) a ON est01_fee_cd = a.sys09_code
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) est01_pf_fee_type.selectByCompanyId (SELECT est01_pf_fee_type.*는 DTO 열로 명시) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.est.dto.PfFeeTypeRes">
+        SELECT <include refid="pfFeeTypeColumns"/>
+        <include refid="pfFeeTypeFrom"/>
+         WHERE est01_company_id = #{companyId}
+         ORDER BY est01_seq, sys09_name
+    </select>
+
+    <!-- AS-IS(IDMS-IC) est01_pf_fee_type.selectById (UpdateDataModel이 저장 뒤 돌려주는 행) + 로그인 회사 조건(보안 보강) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.est.dto.PfFeeTypeRes">
+        SELECT <include refid="pfFeeTypeColumns"/>
+        <include refid="pfFeeTypeFrom"/>
+         WHERE est01_pf_fee_type_id = #{pfFeeTypeId}
+           AND est01_company_id = #{companyId}
+    </select>
+
+    <insert id="insertPfFeeType">
+        INSERT INTO est01_pf_fee_type (est01_pf_fee_type_id, est01_company_id, est01_fee_cd, est01_start_date, est01_close_date, est01_seq, est01_note)
+        VALUES (#{id}, #{companyId}, #{r.feeCode}, #{r.startDate}, #{r.closeDate}, #{r.seq}, #{r.note})
+    </insert>
+
+    <update id="updatePfFeeType">
+        UPDATE est01_pf_fee_type
+           SET est01_fee_cd     = #{r.feeCode},
+               est01_start_date = #{r.startDate},
+               est01_close_date = #{r.closeDate},
+               est01_seq        = #{r.seq},
+               est01_note       = #{r.note}
+         WHERE est01_pf_fee_type_id = #{r.pfFeeTypeId}
+           AND est01_company_id = #{companyId}
+    </update>
+
+    <delete id="deletePfFeeTypes">
+        DELETE FROM est01_pf_fee_type
+         WHERE est01_company_id = #{companyId}
+           AND est01_pf_fee_type_id IN
+        <foreach collection="pfFeeTypeIds" item="pfFeeTypeId" open="(" separator="," close=")">#{pfFeeTypeId}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) est02_pf_contract.checkList (SELECT *는 ID만) -->
+    <select id="selectContractIdsByFeeTypes" resultType="long">
+        SELECT est02_pf_contract_id
+          FROM est02_pf_contract
+         WHERE est02_pf_fee_type_id IN
+        <foreach collection="pfFeeTypeIds" item="pfFeeTypeId" open="(" separator="," close=")">#{pfFeeTypeId}</foreach>
+    </select>
+</mapper>

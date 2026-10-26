@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/com/mapper/com11_form_mapping_multi.xml(selectByDetailCode) + UpdateDataModel(com11_form_mapping_multi)
+  (Q08 Com11_Lookup_FormMappingMulti)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.com.mapper.ComFormMappingMultiMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS(IDMS-IC) com11_form_mapping_multi.selectByDetailCode (SELECT *는 DTO 열로 명시) -->
+    <select id="selectByDetailCode" resultType="kr.co.kfs.asseterp.biz.com.dto.FormMappingMultiRes">
+        SELECT com11_form_mapping_multi_id AS form_mapping_multi_id,
+               com11_company_id            AS company_id,
+               com11_sys_kind_cd           AS sys_kind_code,
+               com11_sys_detail_cd         AS sys_detail_code,
+               com11_link_cd               AS link_code,
+               com11_content               AS content,
+               com11_note                  AS note
+          FROM com11_form_mapping_multi
+         WHERE com11_company_id = #{companyId}
+           AND com11_sys_kind_cd = #{kindCode}
+           AND com11_sys_detail_cd = #{detailCode}
+           AND com11_link_cd = #{linkCode}
+    </select>
+
+    <select id="selectCompanyIdById" resultType="long">
+        SELECT com11_company_id
+          FROM com11_form_mapping_multi
+         WHERE com11_form_mapping_multi_id = #{formMappingMultiId}
+    </select>
+
+    <insert id="insertFormMappingMulti">
+        INSERT INTO com11_form_mapping_multi (com11_form_mapping_multi_id, com11_company_id, com11_sys_kind_cd, com11_sys_detail_cd, com11_link_cd, com11_content)
+        VALUES (#{id}, #{companyId}, #{r.sysKindCode}, #{r.sysDetailCode}, #{r.linkCode}, #{r.content})
+    </insert>
+
+    <update id="updateContent">
+        UPDATE com11_form_mapping_multi
+           SET com11_content = #{content}
+         WHERE com11_form_mapping_multi_id = #{formMappingMultiId}
+    </update>
+</mapper>

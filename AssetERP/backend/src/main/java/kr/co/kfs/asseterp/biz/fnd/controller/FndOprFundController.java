@@ -51,17 +51,18 @@ public class FndOprFundController {
         return ApiResponse.ok(null);
     }
 
-    /** 템플릿 (AS-IS ./excelTemplete/Template_공모주 수요예측 신청.xlsx) */
+    /** 템플릿 (AS-IS ./excelTemplete/Template_공모주 수요예측 신청.xlsx, subscription이면 Template_공모주청약 펀드배분.xlsx) */
     @GetMapping("/template")
-    public ResponseEntity<byte[]> template() {
+    public ResponseEntity<byte[]> template(@RequestParam(defaultValue = "false") boolean subscription) {
+        String fileName = subscription ? "Template_공모주청약 펀드배분.xlsx" : "Template_공모주 수요예측 신청.xlsx";
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        ContentDisposition.attachment().filename("Template_공모주 수요예측 신청.xlsx", StandardCharsets.UTF_8).build().toString())
+                        ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .body(service.template());
+                .body(service.template(subscription));
     }
 
-    /** 엑셀업로드 (AS-IS ExcelUpload?uploadType=demandOprFundUpload) → 등록한 건수 */
+    /** 엑셀업로드 (AS-IS ExcelUpload?uploadType=demandOprFundUpload · oprFundUpload — 그 운용지시가 수요예측인지 청약인지로 열 구성이 정해진다) → 등록한 건수 */
     @PostMapping("/excel")
     public ApiResponse<Integer> upload(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long oprId,
                                        @RequestParam("excelUpload") MultipartFile file) {

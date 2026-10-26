@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Com50Item, FormMapping } from '../types/com';
+import { Com50Item, FormMapping, FormMappingMulti } from '../types/com';
 
 /** com(공통) 화면 API (E17~) */
 export const comApi = {
@@ -35,5 +35,17 @@ export const comApi = {
   deleteItems: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/com/items', { data: ids });
     return res.data.data ?? 0;
+  },
+
+  /** AS-IS com.Com11_FormMappingMulti.getUpdateModel: 저장된 양식, 없으면 번호만 새로 받은 빈 양식 */
+  getFormMappingMulti: async (kindCode: string, detailCode: string | null, linkCode: string): Promise<FormMappingMulti> => {
+    const res = await apiClient.get<ApiResponse<FormMappingMulti>>('v1/com/form-mapping-multis', { params: { kindCode, detailCode, linkCode } });
+    return res.data.data as FormMappingMulti;
+  },
+
+  /** AS-IS com.Com11_FormMappingMulti.modelUpdate → 양식 번호 */
+  updateFormMappingMulti: async (req: { formMappingMultiId: number; sysKindCode: string; sysDetailCode: string | null; linkCode: string; content: string }): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/com/form-mapping-multis', req);
+    return res.data.data as number;
   },
 };

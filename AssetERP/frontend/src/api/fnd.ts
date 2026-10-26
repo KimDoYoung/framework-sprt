@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AstAssetItem, BookExtr, BookRelateAst, BookRelateFnd, Consignment, FundCode, FundDetail, FundHistory, FundInfo, FundLookup, FundMulti, FundPlan, FundRelate, FundSearch, FundSingle, FundTermsDetail, FundPlanAuth, FundPlanList, OfficeWork, OprDemand, OprDemandSave, OprFund, OprFundSave, Plan, Terms, TermsRevision, TermsRevisionSaveReq, TermsView, TrustBank } from '../types/fnd';
+import { AstAssetItem, BookExtr, BookRelateAst, BookRelateFnd, Consignment, FundCode, FundDetail, FundHistory, FundInfo, FundLookup, FundMulti, FundPlan, FundRelate, FundSearch, FundSingle, FundTermsDetail, IpoAccount, FundPlanAuth, FundPlanList, OfficeWork, OprDemand, OprDemandOffer, OprDemandSave, OprFund, OprFundSave, OprSub, OprSubSave, Plan, Terms, TermsRevision, TermsRevisionSaveReq, TermsView, TrustBank } from '../types/fnd';
 
 /** fnd(기관정보) 화면 API (D11~) */
 export interface FundOrgAuthParams {
@@ -442,13 +442,13 @@ export const fndApi = {
   },
 
   /** 템플릿 받기 (AS-IS downloadForm → ./excelTemplete/Template_공모주 수요예측 신청.xlsx) */
-  downloadOprFundTemplate: async (): Promise<void> => {
+  downloadOprFundTemplate: async (subscription = false): Promise<void> => {
     try {
-      const res = await apiClient.get<Blob>('v1/fnd/opr-funds/template', { responseType: 'blob' });
+      const res = await apiClient.get<Blob>('v1/fnd/opr-funds/template', { params: { subscription }, responseType: 'blob' });
       const url = URL.createObjectURL(res.data);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'Template_공모주 수요예측 신청.xlsx';
+      a.download = subscription ? 'Template_공모주청약 펀드배분.xlsx' : 'Template_공모주 수요예측 신청.xlsx';
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -463,6 +463,88 @@ export const fndApi = {
     const form = new FormData();
     form.append('excelUpload', file);
     const res = await apiClient.post<ApiResponse<number>>('v1/fnd/opr-funds/excel', form, { params: { oprId }, headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data.data ?? 0;
+  },
+
+  // ── Q06 공모주청약 운용지시 (Fnd30_Tab_Opr) ──
+
+  /** AS-IS fnd.Fnd30_Opr.selectByDate: 로그인 회사의 청약일 기간 공모주청약(oprCode "01"), 검색어(종목/주간사)는 서버가 %…%로 */
+  searchSubscriptionOprs: async (params: { startDate: string; closeDate: string; searchText: string }): Promise<OprSub[]> => {
+    const res = await apiClient.get<ApiResponse<OprSub[]>>('v1/fnd/oprs/subscription', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd30_Opr.selectById (공모주청약): 펀드별 배정 창의 발행가·수수료율·총배정수량 */
+  getSubscriptionOpr: async (oprId: number): Promise<OprSub> => {
+    const res = await apiClient.get<ApiResponse<OprSub>>(`v1/fnd/oprs/${oprId}/subscription`);
+    return res.data.data as OprSub;
+  },
+
+  /** AS-IS fnd.Fnd30_Opr.selectByDemandOprCode: 청약을 만들 수 있는 수요예측(신청기간·종목명) */
+  searchDemandOffers: async (params: { startDate: string; closeDate: string; searchText: string }): Promise<OprDemandOffer[]> => {
+    const res = await apiClient.get<ApiResponse<OprDemandOffer[]>>('v1/fnd/oprs/demand-offers', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd30_Opr.modelUpdate·multiUpdate(신규): insertCount가 1보다 크면 건수만큼, demandId가 있으면 수요예측 비율로 펀드별 배정도 같이 */
+  createSubscriptionOpr: async (req: OprSubSave): Promise<number[]> => {
+    const res = await apiClient.post<ApiResponse<number[]>>('v1/fnd/oprs/subscription', req);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd30_Opr.modelUpdate(수정) */
+  updateSubscriptionOpr: async (oprId: number, req: OprSubSave): Promise<OprSub> => {
+    const res = await apiClient.put<ApiResponse<OprSub>>(`v1/fnd/oprs/${oprId}/subscription`, req);
+    return res.data.data as OprSub;
+  },
+
+  // ── Q07 공모주 참여계좌 관리 (Fnd32_Tab_Account) ──
+
+  /** AS-IS fnd.Fnd32_Account.selectByText: 검색어(증권사/운용대상/구분/계좌번호/은행연계계좌/비고)는 서버가 %…%로, 계좌상태는 코드 또는 '%'(전체) */
+  searchIpoAccounts: async (params: { searchText: string; accountStateCode: string }): Promise<IpoAccount[]> => {
+    const res = await apiClient.get<ApiResponse<IpoAccount[]>>('v1/fnd/accounts', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd32_Account.updateList: 임시 행(ID ≤ 0)은 새 행 → 저장된 행(요청 순서) */
+  saveIpoAccounts: async (rows: IpoAccount[]): Promise<IpoAccount[]> => {
+    const res = await apiClient.put<ApiResponse<IpoAccount[]>>('v1/fnd/accounts', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd32_Account.copyUpdate: [등록(복사)]가 만든 새 행을 곧바로 저장 → 저장된 행 */
+  copyIpoAccount: async (row: Partial<IpoAccount>): Promise<IpoAccount> => {
+    const res = await apiClient.post<ApiResponse<IpoAccount>>('v1/fnd/accounts/copy', row);
+    return res.data.data as IpoAccount;
+  },
+
+  /** AS-IS fnd.Fnd32_Account.delete */
+  deleteIpoAccounts: async (ids: number[]): Promise<void> => {
+    await apiClient.delete('v1/fnd/accounts', { data: ids });
+  },
+
+  /** 템플릿 받기 (AS-IS downloadForm → ./excelTemplete/Template_공모주참여계좌.xlsx) */
+  downloadIpoAccountTemplate: async (): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/fnd/accounts/template', { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Template_공모주참여계좌.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** 엑셀업로드 (AS-IS ExcelUpload?uploadType=accountUpload) → 등록한 건수 */
+  uploadIpoAccountsExcel: async (file: File): Promise<number> => {
+    const form = new FormData();
+    form.append('excelUpload', file);
+    const res = await apiClient.post<ApiResponse<number>>('v1/fnd/accounts/excel', form, { headers: { 'Content-Type': 'multipart/form-data' } });
     return res.data.data ?? 0;
   },
 };

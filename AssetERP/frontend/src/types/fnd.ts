@@ -448,6 +448,9 @@ export interface OprFund {
   fundName?: string | null;
   price?: number | null;
   qty?: number | null;
+  /** 공모주청약 배정금액 · 수수료 (수요예측은 없다) */
+  contAmt?: number | null;
+  fee?: number | null;
   settleAmt?: number | null;
 }
 
@@ -459,5 +462,81 @@ export interface OprFundSave {
   fundAdviceType: string | null;
   price: number | null;
   qty: number | null;
+  /** 공모주청약 배정 창만 보낸다 */
+  contAmt?: number | null;
+  fee?: number | null;
   settleAmt: number | null;
+}
+
+/** 공모주청약 한 건 (Q06, AS-IS Fnd30_OprModel — fnd30_opr.selectByDate·selectById). 결재문서가 없으면 apprId·apprStatusCode는 null */
+export interface OprSub {
+  oprId: number;
+  oprCode?: string | null;
+  subscriptionDate?: string | null;
+  itemName?: string | null;
+  corpId?: number | null;
+  corpName?: string | null;
+  price?: number | null;
+  feeRate?: number | null;
+  payDate?: string | null;
+  qty?: number | null;
+  lockPeriod?: string | null;
+  apprId?: number | null;
+  apprStatusCode?: string | null;
+  apprStatusName?: string | null;
+  note?: string | null;
+  demandId?: number | null;
+}
+
+/** 공모주청약 등록·수정 (AS-IS Fnd30_Edit_Opr). insertCount는 신규일 때만, demandId는 수요예측 신청내역에서 등록할 때만 */
+export interface OprSubSave {
+  subscriptionDate: string | null;
+  payDate: string | null;
+  itemName: string | null;
+  corpId: number | null;
+  price: number | null;
+  feeRate: number | null;
+  qty: number | null;
+  lockPeriod: string | null;
+  note: string | null;
+  insertCount?: number;
+  demandId?: number | null;
+}
+
+/** 청약을 만들 수 있는 수요예측 한 건 (Q06, AS-IS Fnd30_Lookup_DemandOprList) */
+export interface OprDemandOffer {
+  oprId: number;
+  demandDate?: string | null;
+  itemName?: string | null;
+  market?: string | null;
+  leadManager?: string | null;
+  price?: number | null;
+  lockPeriod?: string | null;
+  apprStatusCode?: string | null;
+  schPayDate?: string | null;
+  note?: string | null;
+}
+
+/** 공모주 참여계좌 한 행 (Q07, AS-IS Fnd32_AccountModel — fnd32_account.selectByText). decAccountNo·decBankLinkNo는 복호화한 값 */
+export interface IpoAccount {
+  accountId: number;
+  setupDate?: string | null;
+  corpId?: number | null;
+  corpName?: string | null;
+  branch?: string | null;
+  accountCode1?: string | null;
+  accountName1?: string | null;
+  accountCode2?: string | null;
+  accountName2?: string | null;
+  accountName?: string | null;
+  decAccountNo?: string | null;
+  bankCorpId?: number | null;
+  bankCorpName?: string | null;
+  decBankLinkNo?: string | null;
+  accountStateCode?: string | null;
+  accountStateName?: string | null;
+  ipoOutCode?: string | null;
+  ipoOutName?: string | null;
+  managerTel?: string | null;
+  note?: string | null;
 }

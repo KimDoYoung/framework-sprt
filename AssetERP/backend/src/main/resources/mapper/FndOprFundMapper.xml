@@ -21,6 +21,8 @@
              , c.fund_nm                AS fund_name
              , fnd31_price              AS price
              , fnd31_qty                AS qty
+             , fnd31_cont_amt           AS cont_amt
+             , fnd31_fee                AS fee
              , fnd31_settle_amt         AS settle_amt
           FROM fnd31_opr_fund
                INNER JOIN ( SELECT fnd01_fund_code_id  fund_id
@@ -43,6 +45,8 @@
              , adv02_manage_nm
              , fnd31_price
              , fnd31_qty
+             , fnd31_cont_amt
+             , fnd31_fee
              , fnd31_settle_amt
           FROM fnd31_opr_fund
                INNER JOIN adv02_account ON adv02_account_id = fnd31_fund_id
@@ -70,6 +74,8 @@
                         END                 AS fund_name
                  , fnd31_price              AS price
                  , fnd31_qty                AS qty
+                 , fnd31_cont_amt           AS cont_amt
+                 , fnd31_fee                AS fee
                  , fnd31_settle_amt         AS settle_amt
               FROM fnd31_opr_fund
              WHERE fnd31_opr_fund_id = #{oprFundId}
@@ -79,8 +85,8 @@
     <!-- AS-IS Fnd31_OprFund.modelUpdate L39-50 → UpdateDataModel INSERT -->
     <insert id="insertOprFund">
         INSERT INTO fnd31_opr_fund
-               ( fnd31_opr_fund_id, fnd31_opr_id, fnd31_fund_id, fnd31_fund_advice_type, fnd31_price, fnd31_qty, fnd31_settle_amt )
-        VALUES ( #{id}, #{r.oprId}, #{r.fundId}, #{r.fundAdviceType}, #{r.price}, #{r.qty}, #{r.settleAmt} )
+               ( fnd31_opr_fund_id, fnd31_opr_id, fnd31_fund_id, fnd31_fund_advice_type, fnd31_price, fnd31_qty, fnd31_cont_amt, fnd31_fee, fnd31_settle_amt )
+        VALUES ( #{id}, #{r.oprId}, #{r.fundId}, #{r.fundAdviceType}, #{r.price}, #{r.qty}, #{r.contAmt}, #{r.fee}, #{r.settleAmt} )
     </insert>
 
     <update id="updateOprFund">
@@ -89,6 +95,8 @@
                fnd31_fund_advice_type = #{r.fundAdviceType},
                fnd31_price            = #{r.price},
                fnd31_qty              = #{r.qty},
+               fnd31_cont_amt         = #{r.contAmt},
+               fnd31_fee              = #{r.fee},
                fnd31_settle_amt       = #{r.settleAmt}
          WHERE fnd31_opr_fund_id = #{r.oprFundId}
            AND fnd31_opr_id      = #{r.oprId}
@@ -124,5 +132,22 @@
         INSERT INTO fnd31_opr_fund
                ( fnd31_opr_fund_id, fnd31_opr_id, fnd31_fund_id, fnd31_price, fnd31_qty, fnd31_cont_amt, fnd31_fee, fnd31_settle_amt, fnd31_fund_advice_type )
         VALUES ( #{id}, #{oprId}, #{fundId}, NULL, #{qty}, NULL, NULL, #{settleAmt}, #{fundAdviceType} )
+    </insert>
+
+    <!-- AS-IS fnd31_opr_fund.sumQty (공모주청약 배정수량 합계, 펀드별 배정 창의 수량 검사) — 고친 행 자신은 뺀다(AS-IS는 창을 열 때 합계에서 현재 수량을 뺐다). 행이 없으면 null -->
+    <select id="sumQty" resultType="long">
+        SELECT SUM(fnd31_qty)
+          FROM fnd31_opr_fund
+         WHERE fnd31_opr_id = #{oprId}
+        <if test="exceptFundId != null">
+           AND fnd31_opr_fund_id != #{exceptFundId}
+        </if>
+    </select>
+
+    <!-- AS-IS 공모주청약 펀드배분 업로드(ExcelUpload.oprFundUpload L1949) fnd31_opr_fund.excelInsert — 단가·배정금액·수수료·납입금액까지 엑셀 값 -->
+    <insert id="excelInsertSub">
+        INSERT INTO fnd31_opr_fund
+               ( fnd31_opr_fund_id, fnd31_opr_id, fnd31_fund_id, fnd31_price, fnd31_qty, fnd31_cont_amt, fnd31_fee, fnd31_settle_amt, fnd31_fund_advice_type )
+        VALUES ( #{id}, #{oprId}, #{fundId}, #{price}, #{qty}, #{contAmt}, #{fee}, #{settleAmt}, #{fundAdviceType} )
     </insert>
 </mapper>

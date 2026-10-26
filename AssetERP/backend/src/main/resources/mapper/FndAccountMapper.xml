@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/fnd/mapper/fnd32_account.xml selectByText · selectById · encrypts · excelInsert (Q07), sys15_corp.selectByCorpName · sys09_code.selectByName -->
+<mapper namespace="kr.co.kfs.asseterp.biz.fnd.mapper.FndAccountMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <sql id="accountColumns">
+        fnd32_account_id                                                                    AS account_id,
+        fnd32_setup_date                                                                    AS setup_date,
+        fnd32_corp_id                                                                       AS corp_id,
+        f_get_corp_nm(fnd32_corp_id)                                                        AS corp_name,
+        fnd32_branch                                                                        AS branch,
+        fnd32_account_cd1                                                                   AS account_code1,
+        f_cdnm('Fnd32Code1', fnd32_account_cd1, fnd32_company_id, f_sysdate())              AS account_name1,
+        fnd32_account_cd2                                                                   AS account_code2,
+        f_cdnm('Fnd32Code2', fnd32_account_cd2, fnd32_company_id, f_sysdate())              AS account_name2,
+        fnd32_account_nm                                                                    AS account_name,
+        to_decrypts(fnd32_account_no)                                                       AS dec_account_no,
+        fnd32_bank_corp_id                                                                  AS bank_corp_id,
+        f_get_corp_nm(fnd32_bank_corp_id)                                                   AS bank_corp_name,
+        to_decrypts(fnd32_bank_link_no)                                                     AS dec_bank_link_no,
+        fnd32_account_state_cd                                                              AS account_state_code,
+        f_cdnm('AccountStateCode', fnd32_account_state_cd, fnd32_company_id, f_sysdate())   AS account_state_name,
+        fnd32_ipo_out_cd                                                                    AS ipo_out_code,
+        f_cdnm('IpoOutCode', fnd32_ipo_out_cd, fnd32_company_id, f_sysdate())               AS ipo_out_name,
+        fnd32_manager_tel                                                                   AS manager_tel,
+        fnd32_note                                                                          AS note
+    </sql>
+
+    <!-- AS-IS fnd32_account.selectByText (IDMS-IC) — SELECT * 대신 쓰는 열만 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.fnd.dto.IpoAccountRes">
+        SELECT <include refid="accountColumns"/>
+          FROM fnd32_account
+         WHERE 1=1
+           AND fnd32_company_id = #{companyId}
+           AND fnd32_account_state_cd LIKE #{accountStateCode}
+           AND UPPER(CONCAT(f_get_corp_nm(fnd32_corp_id)
+                           ,f_cdnm('Fnd32Code1',fnd32_account_cd1,fnd32_company_id,f_sysdate())
+                           ,f_cdnm('Fnd32Code2',fnd32_account_cd2,fnd32_company_id,f_sysdate())
+                           ,to_decrypts(fnd32_account_no)
+                           ,to_decrypts(fnd32_bank_link_no)
+                           ,fnd32_note)) LIKE UPPER(#{searchText})
+         ORDER BY fnd32_setup_date DESC
+    </select>
+
+    <!-- AS-IS fnd32_account.selectById (IDMS-IC) + 로그인 회사 조건(보안 보강) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.fnd.dto.IpoAccountRes">
+        SELECT <include refid="accountColumns"/>
+          FROM fnd32_account
+         WHERE fnd32_account_id = #{accountId}
+           AND fnd32_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(fnd32_account) INSERT — 계좌번호·은행연계계좌는 fnd32_account.encrypts(to_encrypts) -->
+    <insert id="insertAccount">
+        INSERT INTO fnd32_account
+               ( fnd32_account_id, fnd32_company_id, fnd32_setup_date, fnd32_corp_id, fnd32_branch, fnd32_account_cd1, fnd32_account_cd2
+               , fnd32_account_nm, fnd32_account_no, fnd32_bank_corp_id, fnd32_bank_link_no, fnd32_account_state_cd, fnd32_ipo_out_cd
+               , fnd32_manager_tel, fnd32_note )
+        VALUES ( #{id}, #{companyId}, #{r.setupDate}, #{r.corpId}, #{r.branch}, #{r.accountCode1}, #{r.accountCode2}
+               , #{r.accountName}, to_encrypts(#{r.decAccountNo}), #{r.bankCorpId}, to_encrypts(#{r.decBankLinkNo}), #{r.accountStateCode}, #{r.ipoOutCode}
+               , #{r.managerTel}, #{r.note} )
+    </insert>
+
+    <update id="updateAccount">
+        UPDATE fnd32_account
+           SET fnd32_setup_date       = #{r.setupDate},
+               fnd32_corp_id          = #{r.corpId},
+               fnd32_branch           = #{r.branch},
+               fnd32_account_cd1      = #{r.accountCode1},
+               fnd32_account_cd2      = #{r.accountCode2},
+               fnd32_account_nm       = #{r.accountName},
+               fnd32_account_no       = to_encrypts(#{r.decAccountNo}),
+               fnd32_bank_corp_id     = #{r.bankCorpId},
+               fnd32_bank_link_no     = to_encrypts(#{r.decBankLinkNo}),
+               fnd32_account_state_cd = #{r.accountStateCode},
+               fnd32_ipo_out_cd       = #{r.ipoOutCode},
+               fnd32_manager_tel      = #{r.managerTel},
+               fnd32_note             = #{r.note}
+         WHERE fnd32_account_id = #{r.accountId}
+           AND fnd32_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteAccounts">
+        DELETE FROM fnd32_account
+         WHERE fnd32_company_id = #{companyId}
+           AND fnd32_account_id IN
+        <foreach collection="accountIds" item="accountId" open="(" separator="," close=")">#{accountId}</foreach>
+    </delete>
+
+    <!-- AS-IS sys15_corp.selectByCorpName (IDMS-IC) — 첫 행의 ID만 -->
+    <select id="selectCorpIdByName" resultType="long">
+        SELECT sys15_corp_id
+          FROM sys15_corp
+         WHERE sys15_company_id = #{companyId}
+           AND sys15_corp_nm    = #{corpName}
+           AND COALESCE(sys15_use_yn,'false') = 'true'
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS sys09_code.selectByName (IDMS-IC) — 첫 행의 코드만 -->
+    <select id="selectCodeByName" resultType="string">
+        SELECT sys09_code
+          FROM sys09_code c
+             , sys08_code_kind k
+         WHERE sys08_code_kind_id = sys09_code_kind_id
+           AND ( ( COALESCE(sys08_sys_yn,'false') = 'true'  AND sys09_company_id = 0 )
+              OR ( COALESCE(sys08_sys_yn,'false') != 'true' AND sys09_company_id = #{companyId} ) )
+           AND sys08_kind_cd = #{kindCode}
+           AND sys09_name    = #{name}
+           AND COALESCE(sys09_close_yn,'false') = 'false'
+           AND sys09_apply_date &lt;= #{applyDate}
+         ORDER BY sys09_seq
+         LIMIT 1
+    </select>
+</mapper>

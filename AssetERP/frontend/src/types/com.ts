@@ -16,3 +16,14 @@ export interface Com50Item {
   itemName?: string | null;
   itemType?: string | null;
 }
+
+/** 상세코드별 데이터맵핑 양식 (GET /api/v1/com/form-mapping-multis, AS-IS Com11_FormMappingMultiModel). 저장된 것이 없으면 번호만 새로 받은 빈 양식 */
+export interface FormMappingMulti {
+  formMappingMultiId: number;
+  companyId: number;
+  sysKindCode: string;
+  sysDetailCode: string | null;
+  linkCode: string;
+  content: string | null;
+  note: string | null;
+}

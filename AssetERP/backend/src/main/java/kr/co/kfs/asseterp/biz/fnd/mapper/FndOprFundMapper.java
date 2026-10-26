@@ -36,4 +36,12 @@ public interface FndOprFundMapper {
     /** AS-IS fnd31_opr_fund.excelInsert */
     int excelInsert(@Param("id") Long oprFundId, @Param("oprId") Long oprId, @Param("fundId") Long fundId,
                     @Param("qty") Long qty, @Param("settleAmt") Long settleAmt, @Param("fundAdviceType") String fundAdviceType);
+
+    /** AS-IS fnd31_opr_fund.sumQty — exceptFundId 행은 뺀다, 행이 없으면 null */
+    Long sumQty(@Param("oprId") Long oprId, @Param("exceptFundId") Long exceptFundId);
+
+    /** AS-IS 공모주청약 펀드배분 업로드의 fnd31_opr_fund.excelInsert */
+    int excelInsertSub(@Param("id") Long oprFundId, @Param("oprId") Long oprId, @Param("fundId") Long fundId, @Param("price") Long price,
+                       @Param("qty") Long qty, @Param("contAmt") Long contAmt, @Param("fee") Long fee, @Param("settleAmt") Long settleAmt,
+                       @Param("fundAdviceType") String fundAdviceType);
 }

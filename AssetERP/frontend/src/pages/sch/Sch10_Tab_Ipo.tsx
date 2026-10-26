@@ -4,7 +4,7 @@
  * 생성자 L80-138: 가운데(여백 20, 테두리) = 툴바 1줄(조회일자 [콤보 100 · 시작 100 ~ 종료 100] · 시장구분 [콤보 70 "전체"] · 검색 250 "종목명/주간사" · ☐ 관심종목만 보기 · [조회][출력/다운로드][DART 바로가기])
  *   + 툴바 2줄([관심종목 등록][관심종목 제거] · [공모주 달력] · 안내 2줄 4472C4 12px) + 공모주 일정 그리드(체크 다중, 1~3열 고정, 2단 헤더 수요예측일정·청약일정)
  * UX보강(10): 툴바 = SearchBar(UX-01), 읽기 전용 날짜 열 폭 90(UX-08, 원본 95·120)
- * 수요예측참여(E9) 아이콘은 Q05의 `Fnd30_Edit_DemandOpr`(insertWith)를 연다. [다음 단계] 청약운용지시(E10) 아이콘의 `Fnd30_Edit_Opr`는 Q06(`Fnd30_Tab_Opr`)에서 만든다 — 지금은 안내만
+ * 수요예측참여(E9) 아이콘은 Q05의 `Fnd30_Edit_DemandOpr`(insertWith)를, 청약운용지시(E10) 아이콘은 Q06의 `Fnd30_Edit_Opr`(insertWith)를 연다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message } from 'antd';
@@ -24,6 +24,7 @@ import { Sch02_Lookup_Share } from './Sch02_Lookup_Share';
 import { Sch12_Lookup_IpoCorpList } from './Sch12_Lookup_IpoCorpList';
 import { RdViewer_Sch10 } from './RdViewer_Sch10';
 import { DemandOprTarget, Fnd30_Edit_DemandOpr } from '../fnd/Fnd30_Edit_DemandOpr';
+import { Fnd30_Edit_Opr, OprTarget } from '../fnd/Fnd30_Edit_Opr';
 
 const gb = gbFor<Sch10IpoUser>();
 const FORMAT = 'YYYY-MM-DD';
@@ -45,6 +46,7 @@ export const Sch10_Tab_Ipo: React.FC = () => {
   const [shareIpoId, setShareIpoId] = useState<number | null>(null);
   const [corpNames, setCorpNames] = useState<string | null>(null);
   const [demandTarget, setDemandTarget] = useState<DemandOprTarget | null>(null);
+  const [oprTarget, setOprTarget] = useState<OprTarget | null>(null);
 
   const cond = () => ({ dateType, startDate: startDate.format(FORMAT), closeDate: closeDate.format(FORMAT), searchText, marketCode, interestYn });
 
@@ -151,10 +153,11 @@ export const Sch10_Tab_Ipo: React.FC = () => {
         priceAcceptYn: true,
       },
     })),
-    // [E10] insertCell → Fnd30_Edit_Opr.insert(oprModel{oprCode "01" …}) — Q06에서
-    iconCell<Sch10IpoUser>('edit', 'opAction', 60, '청약<br>운용지시', () => {
-      message.info('청약 운용지시 등록창(Fnd30_Edit_Opr)은 공모주청약 운용지시(Q06) 변환에서 연결합니다.');
-    }),
+    // [E10] insertCell (L312-329) → Fnd30_Edit_Opr.insert(oprModel{oprCode "01", 종목명, 납입일}, callback → retrieve())
+    iconCell<Sch10IpoUser>('edit', 'opAction', 60, '청약<br>운용지시', row => setOprTarget({
+      mode: 'insertWith',
+      preset: { itemName: row.itemName ?? null, payDate: row.payDate ?? null },
+    })),
     gb.date('listDate', 90, '상장(예정)일'),                                            // L300
     gb.textCenter('priceBracket', 120, '희망공모가'),                                    // L301
     gb.long('price', 80, '공모가', { cellStyle: { fontWeight: 'bold' } }),               // L302 addLongBold
@@ -223,6 +226,7 @@ export const Sch10_Tab_Ipo: React.FC = () => {
       <Sch12_Lookup_IpoCorpList corpName={corpNames} onResult={row => openCorp(row)} onClose={() => setCorpNames(null)} />
       <RdViewer_Sch10 open={calendarOpen} onClose={() => setCalendarOpen(false)} />
       <Fnd30_Edit_DemandOpr target={demandTarget} onSaved={() => void retrieve()} onClose={() => setDemandTarget(null)} />
+      <Fnd30_Edit_Opr target={oprTarget} onSaved={() => void retrieve()} onClose={() => setOprTarget(null)} />
       <RdViewer url={rdUrl} title="" onClose={() => setRdUrl(null)} />
     </div>
   );

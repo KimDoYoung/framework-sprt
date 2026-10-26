@@ -1,8 +1,10 @@
 package kr.co.kfs.asseterp.biz.fnd.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.fnd.dto.OprDemandRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.OprFundRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.OprFundSaveReq;
+import kr.co.kfs.asseterp.biz.fnd.dto.OprSubRes;
 import kr.co.kfs.asseterp.biz.fnd.mapper.FndOprFundMapper;
 import kr.co.kfs.asseterp.biz.fnd.mapper.FndOprMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -35,11 +37,12 @@ import java.util.List;
 public class FndOprFundService {
 
     private static final String TEMPLATE = "excelTemplete/Template_공모주 수요예측 신청.xlsx";
+    private static final String TEMPLATE_SUBSCRIPTION = "excelTemplete/Template_공모주청약 펀드배분.xlsx";
 
     private final FndOprFundMapper mapper;
     private final FndOprMapper oprMapper;
 
-    /** AS-IS selectByOprId — 로그인 회사의 수요예측만 */
+    /** AS-IS selectByOprId — 로그인 회사의 수요예측·공모주청약만 */
     public List<OprFundRes> search(UserPrincipal user, Long oprId) {
         if (oprMapper.selectById(oprId, user.getCompanyId()) == null) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
@@ -50,8 +53,16 @@ public class FndOprFundService {
     /** AS-IS UpdateDataModel: ID가 없으면(또는 0 이하) INSERT, 있으면 UPDATE. 결재가 걸린 수요예측은 못 고친다(화면 apprCheck 검사를 서버에서도) */
     @Transactional
     public OprFundRes save(UserPrincipal user, OprFundSaveReq req) {
-        checkEditable(user, req.oprId());
-        if (req.oprFundId() != null && req.oprFundId() > 0) {
+        boolean existing = req.oprFundId() != null && req.oprFundId() > 0;
+        OprDemandRes opr = loadOpr(user, req.oprId());
+        // 수요예측은 항상, 공모주청약은 기존 행을 고칠 때만 결재 상태를 본다(Fnd31_Page_OprFund는 [등록]에서 검사하지 않는다)
+        if (!"01".equals(opr.oprCode()) || existing) {
+            FndOprService.checkNotInAppr(opr);
+        }
+        if ("01".equals(opr.oprCode())) {
+            checkSubscriptionQty(user, req);
+        }
+        if (existing) {
             if (mapper.updateOprFund(req) == 0) {
                 throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
             }
@@ -72,8 +83,19 @@ public class FndOprFundService {
         mapper.deleteOprFunds(oprId, oprFundIds);
     }
 
-    public byte[] template() {
-        try (InputStream in = new ClassPathResource(TEMPLATE).getInputStream()) {
+    /** AS-IS Fnd31_Edit_OprFund.update L362-370: 이 펀드를 뺀 배정수량 합계 + 새 수량이 총배정수량을 넘으면 막는다(수요예측은 검사 없음) */
+    private void checkSubscriptionQty(UserPrincipal user, OprFundSaveReq req) {
+        OprSubRes sub = oprMapper.selectSubscriptionById(req.oprId(), user.getCompanyId());
+        Long others = mapper.sumQty(req.oprId(), req.oprFundId() != null && req.oprFundId() > 0 ? req.oprFundId() : null);
+        long total = sub == null || sub.qty() == null ? 0 : sub.qty();
+        if ((others == null ? 0 : others) + (req.qty() == null ? 0 : req.qty()) > total) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "배정수량을 다시 한번 확인해주세요");
+        }
+    }
+
+    /** subscription이면 공모주청약 펀드배분 템플릿, 아니면 수요예측 신청 템플릿 */
+    public byte[] template(boolean subscription) {
+        try (InputStream in = new ClassPathResource(subscription ? TEMPLATE_SUBSCRIPTION : TEMPLATE).getInputStream()) {
             return in.readAllBytes();
         } catch (IOException e) {
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "엑셀 템플릿을 읽을 수 없습니다.");
@@ -86,7 +108,11 @@ public class FndOprFundService {
      */
     @Transactional
     public int upload(UserPrincipal user, Long oprId, MultipartFile file) {
-        checkEditable(user, oprId);
+        OprDemandRes opr = loadOpr(user, oprId);
+        boolean subscription = "01".equals(opr.oprCode());
+        if (!subscription) {
+            FndOprService.checkNotInAppr(opr);
+        }
         if (file == null || file.isEmpty()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "등록할 파일이 전달되지 않았습니다.");
         }
@@ -104,13 +130,17 @@ public class FndOprFundService {
                 }
                 String fundCode = cellString(row.getCell(0));
                 Long qty = cellLong(wb, row.getCell(2));
-                Long settleAmt = cellLong(wb, row.getCell(3));
-                String fundAdviceType = cellString(row.getCell(4));
+                // 공모주청약 펀드배분: 코드·펀드명·배정수량·단가·배정금액·수수료·납입금액·구분 / 수요예측 신청: 코드·펀드명·신청수량·신청금액·구분
+                Long price = subscription ? cellLong(wb, row.getCell(3)) : null;
+                Long contAmt = subscription ? cellLong(wb, row.getCell(4)) : null;
+                Long fee = subscription ? cellLong(wb, row.getCell(5)) : null;
+                Long settleAmt = cellLong(wb, row.getCell(subscription ? 6 : 3));
+                String fundAdviceType = cellString(row.getCell(subscription ? 7 : 4));
                 if (fundAdviceType == null) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, (i + 1) + "행의 운용펀드/일임(자문) 구분이 없습니다.");
                 }
                 Long fundId = null;
-                if (qty != null || settleAmt != null) {
+                if (qty != null || (subscription ? price : settleAmt) != null) {
                     fundId = "1".equals(fundAdviceType)
                             ? mapper.selectFundIdByCode(companyId, fundCode)
                             : mapper.selectAccountIdByManageCode(companyId, fundCode);
@@ -118,7 +148,11 @@ public class FndOprFundService {
                         throw new BusinessException(ErrorCode.INVALID_INPUT, (i + 1) + "행의 펀드코드 [" + fundCode + "]를 찾을 수 없습니다.");
                     }
                 }
-                mapper.excelInsert(mapper.selectNextId(), oprId, fundId, qty, settleAmt, fundAdviceType);
+                if (subscription) {
+                    mapper.excelInsertSub(mapper.selectNextId(), oprId, fundId, price, qty, contAmt, fee, settleAmt, fundAdviceType);
+                } else {
+                    mapper.excelInsert(mapper.selectNextId(), oprId, fundId, qty, settleAmt, fundAdviceType);
+                }
                 count++;
             }
             return count;
@@ -130,14 +164,18 @@ public class FndOprFundService {
     }
 
     private void checkEditable(UserPrincipal user, Long oprId) {
+        FndOprService.checkNotInAppr(loadOpr(user, oprId));
+    }
+
+    private OprDemandRes loadOpr(UserPrincipal user, Long oprId) {
         if (oprId == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "상단의 종목을 먼저 선택해주세요");
         }
-        var opr = oprMapper.selectById(oprId, user.getCompanyId());
+        OprDemandRes opr = oprMapper.selectById(oprId, user.getCompanyId());
         if (opr == null) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
-        FndOprService.checkNotInAppr(opr);
+        return opr;
     }
 
     /** ExcelUpload.getStringCellData — 셀이 없으면 null, 숫자는 정수면 정수 글자, 아니면 소수 글자 */

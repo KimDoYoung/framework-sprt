@@ -84,6 +84,105 @@
            AND fnd30_company_id = #{companyId}
     </update>
 
+    <!-- ===== 공모주청약 (Q06, oprCode "01") ===== -->
+    <sql id="subColumns">
+        fnd30_opr_id                                                                    AS opr_id,
+        fnd30_opr_cd                                                                    AS opr_code,
+        fnd30_subscription_date                                                         AS subscription_date,
+        fnd30_item_nm                                                                   AS item_name,
+        fnd30_corp_id                                                                   AS corp_id,
+        f_get_corp_nm(fnd30_corp_id)                                                    AS corp_name,
+        fnd30_price                                                                     AS price,
+        fnd30_fee_rate                                                                  AS fee_rate,
+        fnd30_pay_date                                                                  AS pay_date,
+        fnd30_qty                                                                       AS qty,
+        fnd30_lock_period                                                               AS lock_period,
+        fnd30_appr_id                                                                   AS appr_id,
+        apr01_status_cd                                                                 AS appr_status_code,
+        f_cdnm('AprStatusCode', apr01_status_cd, fnd30_company_id, f_sysdate())         AS appr_status_name,
+        fnd30_note                                                                      AS note,
+        fnd30_demand_id                                                                 AS demand_id
+    </sql>
+
+    <!-- AS-IS fnd30_opr.selectByDate (IDMS-IC) -->
+    <select id="selectBySubscriptionDate" resultType="kr.co.kfs.asseterp.biz.fnd.dto.OprSubRes">
+        SELECT <include refid="subColumns"/>
+          FROM fnd30_opr
+               LEFT OUTER JOIN apr01_appr ON fnd30_appr_id = apr01_appr_id
+         WHERE 1=1
+           AND fnd30_company_id = #{companyId}
+           AND fnd30_opr_cd     = #{oprCode}
+           AND fnd30_subscription_date BETWEEN #{startDate} AND #{closeDate}
+           AND UPPER((f_get_corp_nm(fnd30_corp_id)||fnd30_item_nm)) LIKE UPPER(#{searchText})
+         ORDER BY fnd30_subscription_date DESC
+                , fnd30_item_nm collate "ko_KR.utf8" asc
+    </select>
+
+    <!-- AS-IS fnd30_opr.selectById (IDMS-IC) + 로그인 회사 조건(보안 보강) -->
+    <select id="selectSubscriptionById" resultType="kr.co.kfs.asseterp.biz.fnd.dto.OprSubRes">
+        SELECT <include refid="subColumns"/>
+          FROM fnd30_opr
+               LEFT OUTER JOIN apr01_appr ON fnd30_appr_id = apr01_appr_id
+         WHERE fnd30_opr_id     = #{oprId}
+           AND fnd30_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS fnd30_opr.selectByDemandOprCode (IDMS-IC) — 결재완료이고 아직 청약을 만들지 않은 수요예측. 공모주 일정의 납입일을 종목명으로 붙인다 -->
+    <select id="selectDemandOffers" resultType="kr.co.kfs.asseterp.biz.fnd.dto.OprDemandOfferRes">
+        SELECT fnd30_opr_id                  AS opr_id
+             , fnd30_demand_date             AS demand_date
+             , fnd30_item_nm                 AS item_name
+             , fnd30_market                  AS market
+             , fnd30_lead_manager            AS lead_manager
+             , fnd30_price                   AS price
+             , fnd30_lock_period             AS lock_period
+             , apr01_status_cd               AS appr_status_code
+             , sch10_pay_date                AS sch_pay_date
+             , fnd30_note                    AS note
+          FROM fnd30_opr
+               LEFT OUTER JOIN apr01_appr ON fnd30_appr_id = apr01_appr_id
+               LEFT OUTER JOIN sch10_ipo ON sch10_item_nm = fnd30_item_nm
+         WHERE 1=1
+           AND (sch10_cancel_yn = 'false' OR sch10_cancel_yn IS NULL)
+           AND fnd30_company_id = #{companyId}
+           AND fnd30_opr_cd     = #{oprCode}
+           AND fnd30_demand_date BETWEEN #{startDate} AND #{closeDate}
+           AND apr01_status_cd = '30'
+           AND COALESCE(fnd30_cancel_yn,'false') != 'true'
+           AND fnd30_opr_id NOT IN (SELECT fnd30_demand_id
+                                      FROM fnd30_opr
+                                     WHERE fnd30_opr_cd = '01'
+                                       AND fnd30_demand_id IS NOT NULL)
+           AND UPPER((fnd30_item_nm)) LIKE UPPER(#{searchText})
+         ORDER BY fnd30_subscription_date DESC
+                , fnd30_item_nm collate "ko_KR.utf8" asc
+    </select>
+
+    <!-- AS-IS UpdateDataModel(fnd30_opr) INSERT: Fnd30_Opr.modelUpdate L158-167 — oprCode "01", oprDate = 청약일 -->
+    <insert id="insertSubscription">
+        INSERT INTO fnd30_opr
+               ( fnd30_opr_id, fnd30_company_id, fnd30_opr_cd, fnd30_opr_date, fnd30_subscription_date, fnd30_pay_date, fnd30_item_nm
+               , fnd30_corp_id, fnd30_price, fnd30_fee_rate, fnd30_qty, fnd30_lock_period, fnd30_note, fnd30_demand_id )
+        VALUES ( #{oprId}, #{companyId}, '01', #{r.subscriptionDate}, #{r.subscriptionDate}, #{r.payDate}, #{r.itemName}
+               , #{r.corpId}, #{r.price}, #{r.feeRate}, #{r.qty}, #{r.lockPeriod}, #{r.note}, #{r.demandId} )
+    </insert>
+
+    <update id="updateSubscription">
+        UPDATE fnd30_opr
+           SET fnd30_subscription_date = #{r.subscriptionDate},
+               fnd30_pay_date          = #{r.payDate},
+               fnd30_item_nm           = #{r.itemName},
+               fnd30_corp_id           = #{r.corpId},
+               fnd30_price             = #{r.price},
+               fnd30_fee_rate          = #{r.feeRate},
+               fnd30_qty               = #{r.qty},
+               fnd30_lock_period       = #{r.lockPeriod},
+               fnd30_note              = #{r.note}
+         WHERE fnd30_opr_id     = #{oprId}
+           AND fnd30_company_id = #{companyId}
+           AND fnd30_opr_cd     = '01'
+    </update>
+
     <delete id="deleteOpr">
         DELETE FROM fnd30_opr
          WHERE fnd30_opr_id     = #{oprId}

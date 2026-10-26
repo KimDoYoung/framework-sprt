@@ -7772,5 +7772,101 @@
     "note": "docs/work/Q/Q05-작업기록.md",
     "history": [],
     "id": "Q05"
+  },
+  "Fnd30_Tab_Opr": {
+    "commit": "497fd9754f254028643bbe6f6df898da309b9d16",
+    "commit_short": "497fd97",
+    "branch": "ioc",
+    "commit_date": "2026-10-26",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/fnd/Fnd30_Lookup_DemandOprList.java": "a9d0d769f1e46f080d2adbdd1bc4029b6cb16196",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd30_Tab_Opr.java": "7931047d04cb6a7fdd0c2b02c6135524d35daf23",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd31_Edit_OprFund.java": "4dbbdb69ff0ff38e54846d3ba6505fae5b787be1",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd31_Page_OprFund.java": "94336994f0b3446406a246140beacb369e104347",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd00_FundModel.java": "fdff888d8bf9032fea0f195e1a45c8009e58a647",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd30_OprModel.java": "1f1a187658c1845aadefbcd30597010f2306689b",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd30_OprModelProperties.java": "c783d412932ed5d01737b1d0805593e3e3f4469d",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd31_OprFundModel.java": "ec83f361ba42da03ecc955e98b1135b7e9561daf",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd31_OprFundModelProperties.java": "cd7d179b0a0a3fda750ff2b02f3ff62f9409135c",
+      "application/src/main/java/myApp/server/adv/Adv02_Account.java": "0002cbbf7aff65b77fa4f8ca8ae10046d36d1323",
+      "application/src/main/java/myApp/server/adv/mapper/adv02_account.xml": "f24a8d804a1f5e18088367414ca7a239bfe83ed5",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/apr/mapper/apr03_relate_fund.xml": "a29728d21792d0b243e983cdced2a038ec516408",
+      "application/src/main/java/myApp/server/apr/mapper/apr04_appr_step.xml": "d2ad02a8dc784aa55ac38dd915c3c1450954fddf",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/fnd/Fnd30_Opr.java": "264cca6e2a25159b6da6bf86fd6e6960f89c0fe3",
+      "application/src/main/java/myApp/server/fnd/Fnd31_OprFund.java": "80d0fb1a567bc58688915d36d611a55370d4c6fe",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd30_opr.xml": "7755bd47631f592bbe1bb4b254ddaaee2bbcc375",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd31_opr_fund.xml": "39b858035eef1bad2576765958b66794a8c9bb1c",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Adv02_Lookup_SelectSingle",
+      "Apr01_Edit_ApprDoc",
+      "Dcr01_Lookup_Class",
+      "Dcr30_Lookup_Link",
+      "Fnd01_Lookup_SelectSingle",
+      "Fnd30_Edit_Opr"
+    ],
+    "recorded_at": "2026-10-26T22:07:08+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Q/Q06-작업기록.md",
+    "history": [],
+    "id": "Q06"
+  },
+  "Fnd32_Tab_Account": {
+    "commit": "497fd9754f254028643bbe6f6df898da309b9d16",
+    "commit_short": "497fd97",
+    "branch": "ioc",
+    "commit_date": "2026-10-26",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/fnd/Fnd32_Tab_Account.java": "bf7aa7d517634210e3f074d7d2db542007534c27",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd32_AccountModel.java": "fb31f48503a75382ea61fcb1ebd60e6c490d72a5",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd32_AccountModelProperties.java": "e2b4af558130d5d90cb844b7bd8191d42463fd78",
+      "application/src/main/java/myApp/server/fnd/Fnd32_Account.java": "1333ec6a3ee9a7e14bfe5e3c5541d27dc689b789",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd32_account.xml": "7188b619c007704c8395447fa19eac66bfe3bca9",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Sys15_Lookup_Corp"
+    ],
+    "recorded_at": "2026-10-26T22:15:15+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Q/Q07-작업기록.md",
+    "history": [],
+    "id": "Q07"
+  },
+  "Est01_Tab_PfFeeType": {
+    "commit": "497fd9754f254028643bbe6f6df898da309b9d16",
+    "commit_short": "497fd97",
+    "branch": "ioc",
+    "commit_date": "2026-10-26",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/est/Est01_Tab_PfFeeType.java": "c9844d9c965def25e650f4e78fe472834797304b",
+      "application/src/main/java/myApp/client/vi/est/model/Est01_PfFeeTypeModel.java": "90d9d303f8008e84caf94b6166e50a4ae466d3dc",
+      "application/src/main/java/myApp/client/vi/est/model/Est01_PfFeeTypeModelProperties.java": "868715d49a243a2269b5021b918d6f592afab61c",
+      "application/src/main/java/myApp/server/com/Com11_FormMappingMulti.java": "dbfac655ca29a6e608776a08f55a7d66e0ed54bf",
+      "application/src/main/java/myApp/server/com/mapper/com11_form_mapping_multi.xml": "13035bd6a78b8fc6f592b2b4aedf642519f51410",
+      "application/src/main/java/myApp/server/est/Est01_PfFeeType.java": "291dc171f64c539db16d203df487456d49acb4a5",
+      "application/src/main/java/myApp/server/est/Est02_PfContract.java": "013c58a2ad6d30d23db37624942565691d8c5f59",
+      "application/src/main/java/myApp/server/est/mapper/est01_pf_fee_type.xml": "7fde7c44999333d76f269173e9af2dbf7375bd68",
+      "application/src/main/java/myApp/server/est/mapper/est02_pf_contract.xml": "564b9c91eedb03a2184fea535ca0e559fab3b628",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Com11_Lookup_FormMappingMulti"
+    ],
+    "recorded_at": "2026-10-26T22:30:47+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Q/Q08-작업기록.md",
+    "history": [],
+    "id": "Q08"
   }
 }
