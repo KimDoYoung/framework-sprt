@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/fnd/mapper/fnd31_opr_fund.xml selectByOprId · excelInsert (Q05), fnd01_fund_code.selectByFundCode · adv02_account.selectByManageCode -->
+<mapper namespace="kr.co.kfs.asseterp.biz.fnd.mapper.FndOprFundMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS fnd31_opr_fund.selectByOprId (IDMS-IC) — 운용펀드 UNION 일임계좌, fnd31_opr_fund.* 대신 쓰는 열만 -->
+    <select id="selectByOprId" resultType="kr.co.kfs.asseterp.biz.fnd.dto.OprFundRes">
+        SELECT fnd31_opr_fund_id        AS opr_fund_id
+             , fnd31_opr_id             AS opr_id
+             , fnd31_fund_id            AS fund_id
+             , fnd31_fund_advice_type   AS fund_advice_type
+             , c.fund_cd                AS fund_code
+             , c.fund_nm                AS fund_name
+             , fnd31_price              AS price
+             , fnd31_qty                AS qty
+             , fnd31_settle_amt         AS settle_amt
+          FROM fnd31_opr_fund
+               INNER JOIN ( SELECT fnd01_fund_code_id  fund_id
+                                 , fnd01_fund_cd       fund_cd
+                                 , fnd02_fund_nm       fund_nm
+                              FROM fnd01_fund_code fnd01
+                                 , fnd02_fund_info fnd02
+                             WHERE fnd01_fund_code_id = fnd02_fund_code_id
+                               AND (fnd02_fund_code_id, fnd02_work_date) IN ( SELECT a.fnd02_fund_code_id, MAX(a.fnd02_work_date)
+                                                                                FROM fnd02_fund_info a
+                                                                               WHERE a.fnd02_work_date &lt;= f_sysdate()
+                                                                               GROUP BY a.fnd02_fund_code_id )) c ON fnd31_fund_id = c.fund_id
+         WHERE fnd31_opr_id = #{oprId}
+         UNION
+        SELECT fnd31_opr_fund_id
+             , fnd31_opr_id
+             , fnd31_fund_id
+             , fnd31_fund_advice_type
+             , adv02_manage_cd
+             , adv02_manage_nm
+             , fnd31_price
+             , fnd31_qty
+             , fnd31_settle_amt
+          FROM fnd31_opr_fund
+               INNER JOIN adv02_account ON adv02_account_id = fnd31_fund_id
+         WHERE fnd31_opr_id = #{oprId}
+         ORDER BY fund_id
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.fnd.dto.OprFundRes">
+        SELECT * FROM (
+            SELECT fnd31_opr_fund_id        AS opr_fund_id
+                 , fnd31_opr_id             AS opr_id
+                 , fnd31_fund_id            AS fund_id
+                 , fnd31_fund_advice_type   AS fund_advice_type
+                 , CASE WHEN fnd31_fund_advice_type = '2'
+                        THEN (SELECT adv02_manage_cd FROM adv02_account WHERE adv02_account_id = fnd31_fund_id)
+                        ELSE (SELECT fnd01_fund_cd FROM fnd01_fund_code WHERE fnd01_fund_code_id = fnd31_fund_id)
+                        END                 AS fund_code
+                 , CASE WHEN fnd31_fund_advice_type = '2'
+                        THEN (SELECT adv02_manage_nm FROM adv02_account WHERE adv02_account_id = fnd31_fund_id)
+                        ELSE (SELECT fnd02_fund_nm
+                                FROM fnd02_fund_info
+                               WHERE fnd02_fund_code_id = fnd31_fund_id
+                                 AND fnd02_work_date = (SELECT MAX(a.fnd02_work_date) FROM fnd02_fund_info a
+                                                         WHERE a.fnd02_fund_code_id = fnd31_fund_id AND a.fnd02_work_date &lt;= f_sysdate()))
+                        END                 AS fund_name
+                 , fnd31_price              AS price
+                 , fnd31_qty                AS qty
+                 , fnd31_settle_amt         AS settle_amt
+              FROM fnd31_opr_fund
+             WHERE fnd31_opr_fund_id = #{oprFundId}
+        ) t
+    </select>
+
+    <!-- AS-IS Fnd31_OprFund.modelUpdate L39-50 → UpdateDataModel INSERT -->
+    <insert id="insertOprFund">
+        INSERT INTO fnd31_opr_fund
+               ( fnd31_opr_fund_id, fnd31_opr_id, fnd31_fund_id, fnd31_fund_advice_type, fnd31_price, fnd31_qty, fnd31_settle_amt )
+        VALUES ( #{id}, #{r.oprId}, #{r.fundId}, #{r.fundAdviceType}, #{r.price}, #{r.qty}, #{r.settleAmt} )
+    </insert>
+
+    <update id="updateOprFund">
+        UPDATE fnd31_opr_fund
+           SET fnd31_fund_id          = #{r.fundId},
+               fnd31_fund_advice_type = #{r.fundAdviceType},
+               fnd31_price            = #{r.price},
+               fnd31_qty              = #{r.qty},
+               fnd31_settle_amt       = #{r.settleAmt}
+         WHERE fnd31_opr_fund_id = #{r.oprFundId}
+           AND fnd31_opr_id      = #{r.oprId}
+    </update>
+
+    <delete id="deleteOprFunds">
+        DELETE FROM fnd31_opr_fund
+         WHERE fnd31_opr_id = #{oprId}
+           AND fnd31_opr_fund_id IN
+        <foreach collection="oprFundIds" item="oprFundId" open="(" separator="," close=")">#{oprFundId}</foreach>
+    </delete>
+
+    <!-- AS-IS fnd01_fund_code.selectByFundCode (IDMS-IC) — 첫 행의 ID만 -->
+    <select id="selectFundIdByCode" resultType="long">
+        SELECT fnd01_fund_code_id
+          FROM fnd01_fund_code
+         WHERE fnd01_fund_cd    = #{fundCode}
+           AND fnd01_company_id = #{companyId}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS adv02_account.selectByManageCode (IDMS-IC) — 첫 행의 ID만 -->
+    <select id="selectAccountIdByManageCode" resultType="long">
+        SELECT adv02_account_id
+          FROM adv02_account
+         WHERE adv02_company_id = #{companyId}
+           AND adv02_manage_cd  = #{manageCode}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS fnd31_opr_fund.excelInsert (IDMS-IC) — 단가·체결금액·수수료는 업로드가 채우지 않아 null (excelDelete는 새 ID라 지우는 것이 없다) -->
+    <insert id="excelInsert">
+        INSERT INTO fnd31_opr_fund
+               ( fnd31_opr_fund_id, fnd31_opr_id, fnd31_fund_id, fnd31_price, fnd31_qty, fnd31_cont_amt, fnd31_fee, fnd31_settle_amt, fnd31_fund_advice_type )
+        VALUES ( #{id}, #{oprId}, #{fundId}, NULL, #{qty}, NULL, NULL, #{settleAmt}, #{fundAdviceType} )
+    </insert>
+</mapper>

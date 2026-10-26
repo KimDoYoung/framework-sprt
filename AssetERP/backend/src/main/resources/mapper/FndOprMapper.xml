@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/fnd/mapper/fnd30_opr.xml selectByDemandDate · selectById (Q05), apr01_appr.deleteAppr · apr03_relate_fund.deleteByApprId · apr04_appr_step.deleteByApprId · sys10_file.deleteByParentId · fnd31_opr_fund.deleteOprFund -->
+<mapper namespace="kr.co.kfs.asseterp.biz.fnd.mapper.FndOprMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <sql id="demandColumns">
+        fnd30_opr_id                                                                    AS opr_id,
+        fnd30_opr_cd                                                                    AS opr_code,
+        fnd30_demand_date                                                               AS demand_date,
+        fnd30_item_nm                                                                   AS item_name,
+        fnd30_market                                                                    AS market,
+        fnd30_lead_manager                                                              AS lead_manager,
+        fnd30_demand_period                                                             AS demand_period,
+        fnd30_price_bracket                                                             AS price_bracket,
+        fnd30_price                                                                     AS price,
+        COALESCE(fnd30_price_accept_yn, 'false') = 'true'                               AS price_accept_yn,
+        CASE WHEN fnd30_price_accept_yn = 'true' THEN '예' ELSE '아니요' END             AS price_accept_str,
+        fnd30_lock_period                                                               AS lock_period,
+        fnd30_appr_id                                                                   AS appr_id,
+        apr01_status_cd                                                                 AS appr_status_code,
+        f_cdnm('AprStatusCode', apr01_status_cd, fnd30_company_id, f_sysdate())         AS appr_status_name,
+        COALESCE(fnd30_cancel_yn, 'false') = 'true'                                     AS cancel_yn,
+        CASE WHEN COALESCE(fnd30_cancel_yn, 'false') = 'true' THEN '√' ELSE '' END      AS cancel_name,
+        fnd30_note                                                                      AS note
+    </sql>
+
+    <!-- AS-IS fnd30_opr.selectByDemandDate (IDMS-IC) -->
+    <select id="selectByDemandDate" resultType="kr.co.kfs.asseterp.biz.fnd.dto.OprDemandRes">
+        SELECT <include refid="demandColumns"/>
+          FROM fnd30_opr
+               LEFT OUTER JOIN apr01_appr ON fnd30_appr_id = apr01_appr_id
+         WHERE 1=1
+           AND fnd30_company_id = #{companyId}
+           AND fnd30_opr_cd     = #{oprCode}
+           AND fnd30_demand_date BETWEEN #{startDate} AND #{closeDate}
+           AND UPPER((fnd30_lead_manager||fnd30_item_nm)) LIKE UPPER(#{searchText})
+         ORDER BY fnd30_demand_date desc
+                , fnd30_item_nm collate "ko_KR.utf8" asc
+    </select>
+
+    <!-- AS-IS fnd30_opr.selectById (IDMS-IC) + 로그인 회사 조건(보안 보강) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.fnd.dto.OprDemandRes">
+        SELECT <include refid="demandColumns"/>
+          FROM fnd30_opr
+               LEFT OUTER JOIN apr01_appr ON fnd30_appr_id = apr01_appr_id
+         WHERE fnd30_opr_id     = #{oprId}
+           AND fnd30_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(fnd30_opr) INSERT: Fnd30_Opr.modelUpdate L158-167 — oprCode "02", oprDate = 신청일 -->
+    <insert id="insertDemand">
+        INSERT INTO fnd30_opr
+               ( fnd30_opr_id, fnd30_company_id, fnd30_opr_cd, fnd30_opr_date, fnd30_demand_date, fnd30_item_nm, fnd30_lead_manager
+               , fnd30_demand_period, fnd30_market, fnd30_price_bracket, fnd30_price, fnd30_price_accept_yn, fnd30_lock_period
+               , fnd30_note, fnd30_cancel_yn, fnd30_pay_date )
+        VALUES ( #{oprId}, #{companyId}, '02', #{r.demandDate}, #{r.demandDate}, #{r.itemName}, #{r.leadManager}
+               , #{r.demandPeriod}, #{r.market}, #{r.priceBracket}, #{r.price}
+               , CASE WHEN #{r.priceAcceptYn} THEN 'true' ELSE 'false' END, #{r.lockPeriod}
+               , #{r.note}, CASE WHEN #{r.cancelYn} THEN 'true' ELSE 'false' END, #{r.payDate} )
+    </insert>
+
+    <update id="updateDemand">
+        UPDATE fnd30_opr
+           SET fnd30_demand_date     = #{r.demandDate},
+               fnd30_item_nm         = #{r.itemName},
+               fnd30_lead_manager    = #{r.leadManager},
+               fnd30_demand_period   = #{r.demandPeriod},
+               fnd30_market          = #{r.market},
+               fnd30_price_bracket   = #{r.priceBracket},
+               fnd30_price           = #{r.price},
+               fnd30_price_accept_yn = CASE WHEN #{r.priceAcceptYn} THEN 'true' ELSE 'false' END,
+               fnd30_lock_period     = #{r.lockPeriod},
+               fnd30_note            = #{r.note},
+               fnd30_cancel_yn       = CASE WHEN #{r.cancelYn} THEN 'true' ELSE 'false' END
+         WHERE fnd30_opr_id     = #{oprId}
+           AND fnd30_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteOpr">
+        DELETE FROM fnd30_opr
+         WHERE fnd30_opr_id     = #{oprId}
+           AND fnd30_company_id = #{companyId}
+    </delete>
+
+    <delete id="deleteOprFunds">
+        DELETE FROM fnd31_opr_fund
+         WHERE fnd31_opr_id = #{oprId}
+    </delete>
+
+    <delete id="deleteRelateFund">
+        DELETE FROM apr03_relate_fund
+         WHERE apr03_appr_id = #{apprId}
+    </delete>
+
+    <delete id="deleteFiles">
+        DELETE FROM sys10_file
+         WHERE sys10_parent_id = #{apprId}
+    </delete>
+
+    <delete id="deleteApprSteps">
+        DELETE FROM apr04_appr_step
+         WHERE apr04_appr_id = #{apprId}
+    </delete>
+
+    <delete id="deleteAppr">
+        DELETE FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </delete>
+</mapper>

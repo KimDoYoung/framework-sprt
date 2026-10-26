@@ -398,3 +398,66 @@ export interface TermsView {
   endExpectDate?: string | null;
 }
 
+/** 수요예측 한 건 (Q05, AS-IS Fnd30_OprModel — fnd30_opr.selectByDemandDate·selectById). 결재문서가 없으면 apprId·apprStatusCode는 null */
+export interface OprDemand {
+  oprId: number;
+  oprCode?: string | null;
+  demandDate?: string | null;
+  itemName?: string | null;
+  market?: string | null;
+  leadManager?: string | null;
+  demandPeriod?: string | null;
+  priceBracket?: string | null;
+  price?: number | null;
+  priceAcceptYn?: boolean | null;
+  priceAcceptStr?: string | null;
+  lockPeriod?: string | null;
+  apprId?: number | null;
+  apprStatusCode?: string | null;
+  apprStatusName?: string | null;
+  cancelYn?: boolean | null;
+  cancelName?: string | null;
+  note?: string | null;
+}
+
+/** 수요예측 등록·수정 (AS-IS Fnd30_Edit_DemandOpr). insertCount는 신규일 때만(1보다 크면 건수만큼), cancelYn은 수정 창에만 있다 */
+export interface OprDemandSave {
+  demandDate: string | null;
+  itemName: string | null;
+  leadManager: string | null;
+  demandPeriod: string | null;
+  market: string | null;
+  priceBracket: string | null;
+  price: number | null;
+  priceAcceptYn: boolean;
+  lockPeriod: string | null;
+  note: string | null;
+  cancelYn: boolean;
+  insertCount?: number;
+  /** 공모주 일정조회가 넘기는 납입일자(신규만, 창에는 없다) */
+  payDate?: string | null;
+}
+
+/** 수요예측 펀드별 신청 한 행 (Q05, AS-IS Fnd31_OprFundModel). fundAdviceType 1:운용펀드 / 2:일임(자문) */
+export interface OprFund {
+  oprFundId: number;
+  oprId: number;
+  fundId: number;
+  fundAdviceType?: string | null;
+  fundCode?: string | null;
+  fundName?: string | null;
+  price?: number | null;
+  qty?: number | null;
+  settleAmt?: number | null;
+}
+
+/** 펀드별 수요예측 신청 한 건 저장. oprFundId가 없으면 새 행 */
+export interface OprFundSave {
+  oprFundId: number | null;
+  oprId: number;
+  fundId: number;
+  fundAdviceType: string | null;
+  price: number | null;
+  qty: number | null;
+  settleAmt: number | null;
+}

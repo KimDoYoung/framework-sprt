@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AstAssetItem, BookExtr, BookRelateAst, BookRelateFnd, Consignment, FundCode, FundDetail, FundHistory, FundInfo, FundLookup, FundMulti, FundPlan, FundRelate, FundSearch, FundSingle, FundTermsDetail, FundPlanAuth, FundPlanList, OfficeWork, Plan, Terms, TermsRevision, TermsRevisionSaveReq, TermsView, TrustBank } from '../types/fnd';
+import { AstAssetItem, BookExtr, BookRelateAst, BookRelateFnd, Consignment, FundCode, FundDetail, FundHistory, FundInfo, FundLookup, FundMulti, FundPlan, FundRelate, FundSearch, FundSingle, FundTermsDetail, FundPlanAuth, FundPlanList, OfficeWork, OprDemand, OprDemandSave, OprFund, OprFundSave, Plan, Terms, TermsRevision, TermsRevisionSaveReq, TermsView, TrustBank } from '../types/fnd';
 
 /** fnd(기관정보) 화면 API (D11~) */
 export interface FundOrgAuthParams {
@@ -391,5 +391,78 @@ export const fndApi = {
   searchTermsView: async (params: { termsType: string; searchText: string }): Promise<TermsView[]> => {
     const res = await apiClient.get<ApiResponse<TermsView[]>>('v1/fnd/terms/list', { params });
     return res.data.data ?? [];
+  },
+
+  // ── Q05 공모주 수요예측 (Fnd30_Tab_DemandOpr) ──
+
+  /** AS-IS fnd.Fnd30_Opr.selectByDemandDate: 로그인 회사의 신청일 기간 수요예측(oprCode "02"), 검색어(종목/주간사)는 서버가 %…%로 */
+  searchDemandOprs: async (params: { startDate: string; closeDate: string; searchText: string }): Promise<OprDemand[]> => {
+    const res = await apiClient.get<ApiResponse<OprDemand[]>>('v1/fnd/oprs/demand', { params: { ...params, oprCode: '02' } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd30_Opr.selectById: 상태 검사·펀드별 등록창의 신청가격 */
+  getOpr: async (oprId: number): Promise<OprDemand> => {
+    const res = await apiClient.get<ApiResponse<OprDemand>>(`v1/fnd/oprs/${oprId}`);
+    return res.data.data as OprDemand;
+  },
+
+  /** AS-IS fnd.Fnd30_Opr.modelUpdate·multiUpdate(신규): insertCount가 1보다 크면 같은 내용을 건수만큼 */
+  createDemandOpr: async (req: OprDemandSave): Promise<number[]> => {
+    const res = await apiClient.post<ApiResponse<number[]>>('v1/fnd/oprs', req);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd30_Opr.modelUpdate(수정) */
+  updateDemandOpr: async (oprId: number, req: OprDemandSave): Promise<OprDemand> => {
+    const res = await apiClient.put<ApiResponse<OprDemand>>(`v1/fnd/oprs/${oprId}`, req);
+    return res.data.data as OprDemand;
+  },
+
+  /** AS-IS fnd.Fnd30_Opr.deleteApprId → deleteOprFund → delete (서버가 한 번에) */
+  deleteOpr: async (oprId: number): Promise<void> => {
+    await apiClient.delete(`v1/fnd/oprs/${oprId}`);
+  },
+
+  /** AS-IS fnd.Fnd31_OprFund.selectByOprId */
+  searchOprFunds: async (oprId: number): Promise<OprFund[]> => {
+    const res = await apiClient.get<ApiResponse<OprFund[]>>('v1/fnd/opr-funds', { params: { oprId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd31_OprFund.modelUpdate: oprFundId가 없으면 새 행 */
+  saveOprFund: async (req: OprFundSave): Promise<OprFund> => {
+    const res = await apiClient.put<ApiResponse<OprFund>>('v1/fnd/opr-funds', req);
+    return res.data.data as OprFund;
+  },
+
+  /** AS-IS fnd.Fnd31_OprFund.delete */
+  deleteOprFunds: async (oprId: number, ids: number[]): Promise<void> => {
+    await apiClient.delete('v1/fnd/opr-funds', { params: { oprId }, data: ids });
+  },
+
+  /** 템플릿 받기 (AS-IS downloadForm → ./excelTemplete/Template_공모주 수요예측 신청.xlsx) */
+  downloadOprFundTemplate: async (): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/fnd/opr-funds/template', { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Template_공모주 수요예측 신청.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** 엑셀업로드 (AS-IS ExcelUpload?uploadType=demandOprFundUpload&oprId) → 등록한 건수 */
+  uploadOprFundsExcel: async (oprId: number, file: File): Promise<number> => {
+    const form = new FormData();
+    form.append('excelUpload', file);
+    const res = await apiClient.post<ApiResponse<number>>('v1/fnd/opr-funds/excel', form, { params: { oprId }, headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data.data ?? 0;
   },
 };
