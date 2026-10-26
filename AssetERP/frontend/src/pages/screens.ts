@@ -30,6 +30,7 @@ import { Flt01_Tab_CompanyStd } from './flt/Flt01_Tab_CompanyStd';
 import { Flt05_Tab_ItemTypeAdmin } from './flt/Flt05_Tab_ItemTypeAdmin';
 import { Fnd01_Tab_FundPlan } from './fnd/Fnd01_Tab_FundPlan';
 import { Fnd08_Tab_OrgAuthTempFund } from './fnd/Fnd08_Tab_OrgAuthTempFund';
+import { Fnd01_Tab_FundCode } from './fnd/Fnd01_Tab_FundCode';
 import { Fnd20_Tab_Plan } from './fnd/Fnd20_Tab_Plan';
 import { Fnd20_Tab_PlanEmp } from './fnd/Fnd20_Tab_PlanEmp';
 import { Fnd03_Tab_ConsignmentManager } from './fnd/Fnd03_Tab_ConsignmentManager';
@@ -244,6 +245,7 @@ export const SCREENS: Record<string, React.FC> = {
   Flt05_Tab_ItemTypeAdmin, // E08
   Fnd08_Tab_OrgAuthTempFund, // P02 (+ Fnd08_Page_OrgAuth·Fnd08_Lookup_OrgCode)
   Fnd20_Tab_Plan, // P03 (+ Fnd20_TabPage_Plan·components/lookup/Dcr00_Lookup_FundPlan, 상품기획일정 등록)
+  Fnd01_Tab_FundCode, // P05 (+ Fnd01_Edit_FundCode·components/lookup/Fnd03_Lookup_Consignment·Fnd06_Lookup_OfficeWork·Fnd09_Lookup_TrustBank, 펀드 등록 및 변경)
   Fnd20_Tab_PlanEmp, // P04 (1단계: 본 화면 + Fnd20_TabPage_PlanEmp. [결재요청] 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc·서버 insertAppr는 다음 단계)
   Fnd01_Tab_FundPlan, // P01 (+ Fnd00_Lookup_FundCode, 신규기획펀드 등록 — 아래 편집 폼 Fnd01_Edit_FundPlan 포함)
   Fnd03_Tab_ConsignmentManager, // D11 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)

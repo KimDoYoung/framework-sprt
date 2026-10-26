@@ -5,7 +5,7 @@
  *   오른쪽 700 = 공유 페이지(Sch02_Page_Share), 아래 가운데 [확인][작성그룹없음][닫기]. edit() L67: [확인][작성그룹없음]을 감추고 제목 "그룹 관리", open() L73: 제목 "그룹 일괄지정"
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { message, Modal } from 'antd';
+import { message, Modal, Space } from 'antd';
 import dayjs from 'dayjs';
 import { SearchOutlined } from '@ant-design/icons';
 import { LookupModal } from '@/components/lookup/LookupModal';
@@ -149,10 +149,12 @@ export const Sch22_Lookup_WriteGroup: React.FC<Props> = ({ open, mode, onResult,
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
-          {mode === 'pick' && <Button type="save" onClick={confirm}>확인</Button>}
-          {mode === 'pick' && <Button type="cancel" onClick={pickNone} style={{ marginLeft: 8 }}>작성그룹없음</Button>}
-          {/* [E8] closeButton[닫기].Select (L165) → hide() */}
-          <Button type="close" onClick={onClose} style={{ marginLeft: 8 }}>닫기</Button>
+          <Space>
+            {mode === 'pick' && <Button type="save" onClick={confirm}>확인</Button>}
+            {mode === 'pick' && <Button type="cancel" onClick={pickNone} style={{ marginLeft: 8 }}>작성그룹없음</Button>}
+            {/* [E8] closeButton[닫기].Select (L165) → hide() */}
+            <Button type="close" onClick={onClose} style={{ marginLeft: 8 }}>닫기</Button>
+          </Space>
         </div>
       }
     >

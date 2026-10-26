@@ -50,4 +50,9 @@ public class FndTrustBankService {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }
+
+    /** AS-IS fnd.Fnd09_TrustBank.selectByText (P05 조회창) — 검색어는 서버가 %…%로 */
+    public List<TrustBankRes> lookup(UserPrincipal user, String searchText) {
+        return mapper.selectByText(user.getCompanyId(), "%" + (searchText == null ? "" : searchText) + "%");
+    }
 }

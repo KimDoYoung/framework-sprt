@@ -5,7 +5,7 @@
  * 한 법규로 열면(open(Long classTreeId, …)) 그 법규의 관리그룹(없으면 미지정 그룹)과 공유를 읽고, 여러 법규로 열면(open(List, …)) 비어서 열린다.
  */
 import React, { useEffect, useState } from 'react';
-import { message, Typography } from 'antd';
+import { message, Typography, Space } from 'antd';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
 import { IcsLawManage, IcsManager, IcsShare } from '@/types/ics';
@@ -85,8 +85,10 @@ export const Ics01_Lookup_Share: React.FC<Props> = ({ target, onResult, onClose 
       onCancel={close}
       footer={
         <div style={{ textAlign: 'center' }}>
-          <Button type="save" onClick={update}>저장</Button>
-          <Button type="close" onClick={close}>닫기</Button>
+          <Space>
+            <Button type="save" onClick={update}>저장</Button>
+            <Button type="close" onClick={close}>닫기</Button>
+          </Space>
         </div>
       }
     >

@@ -5,7 +5,7 @@
  * 열릴 때마다 조회한다(L65 retrieve()).
  */
 import React, { useEffect, useState } from 'react';
-import { message } from 'antd';
+import { message, Space } from 'antd';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
 import { IcsManager } from '@/types/ics';
@@ -58,11 +58,13 @@ export const Ics02_Lookup_Manager: React.FC<Props> = ({ open, allButton, onResul
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
-          <Button type="save" onClick={() => confirm()}>확인</Button>
-          {/* [E2] allButton[전체].Select [callback != null] (L75) → callback.execute(null), hide() */}
-          {allButton && <Button type="close" onClick={() => { onResult(null); onClose(); }}>전체</Button>}
-          {/* [E3] cancelButton[닫기].Select (L84) → hide() */}
-          <Button type="close" onClick={onClose}>닫기</Button>
+          <Space>
+            <Button type="save" onClick={() => confirm()}>확인</Button>
+            {/* [E2] allButton[전체].Select [callback != null] (L75) → callback.execute(null), hide() */}
+            {allButton && <Button type="close" onClick={() => { onResult(null); onClose(); }}>전체</Button>}
+            {/* [E3] cancelButton[닫기].Select (L84) → hide() */}
+            <Button type="close" onClick={onClose}>닫기</Button>
+          </Space>
         </div>
       }
     >

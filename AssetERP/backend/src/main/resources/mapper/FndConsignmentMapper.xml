@@ -60,4 +60,17 @@
                ( fnd03_consignment_id, fnd03_consignment_cd, fnd03_consignment_nm, fnd03_use_yn, fnd03_note, fnd03_company_id )
         VALUES ( #{consignmentId}, #{req.consignmentCode}, #{req.consignmentName}, #{req.useYn}, #{req.note}, #{companyId} )
     </insert>
+
+    <!-- AS-IS fnd03_consignment.selectByText (P05 Fnd03_Lookup_Consignment) — 로그인 회사의 수탁사, 이름 검색 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.fnd.dto.ConsignmentRes">
+        SELECT fnd03_consignment_id AS consignment_id,
+               fnd03_consignment_cd AS consignment_code,
+               fnd03_consignment_nm AS consignment_name,
+               fnd03_use_yn         AS use_yn,
+               fnd03_note           AS note,
+               fnd03_company_id     AS company_id
+          FROM fnd03_consignment
+         WHERE fnd03_company_id = #{companyId}
+           AND UPPER(fnd03_consignment_nm) LIKE UPPER(#{searchText})
+    </select>
 </mapper>

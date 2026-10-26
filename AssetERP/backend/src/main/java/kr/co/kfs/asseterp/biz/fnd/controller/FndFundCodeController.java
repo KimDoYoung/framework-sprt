@@ -7,17 +7,28 @@ import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanDeleteReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanListRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanSaveReq;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundSaveReq;
 import kr.co.kfs.asseterp.biz.fnd.service.FndFundCodeService;
+import kr.co.kfs.asseterp.biz.fnd.service.FndFundUploadService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.List;
 
@@ -28,6 +39,7 @@ import java.util.List;
 public class FndFundCodeController {
 
     private final FndFundCodeService service;
+    private final FndFundUploadService uploadService;
 
     /** AS-IS fnd.Fnd01_FundCode.selectByFundOrgAuth (Apr01_Tab_FundDocument, F06 펀드별 문서검색) */
     @GetMapping("/org-auth")
@@ -86,5 +98,37 @@ public class FndFundCodeController {
     public ApiResponse<Void> deletePlans(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<FundPlanDeleteReq> rows) {
         service.deletePlans(principal, rows);
         return ApiResponse.ok(null);
+    }
+
+    /** AS-IS fnd.Fnd01_FundCode.selectByFundName (P05 펀드 등록 및 변경, 일반 펀드) */
+    @GetMapping
+    public ApiResponse<List<FundRes>> searchFunds(@AuthenticationPrincipal UserPrincipal principal,
+                                                  @RequestParam(defaultValue = "false") boolean closeYn,
+                                                  @RequestParam(defaultValue = "") String fundName,
+                                                  @RequestParam(required = false) String fundTypeCode,
+                                                  @RequestParam(required = false) String classTypeCode) {
+        return ApiResponse.ok(service.searchFunds(principal, closeYn, fundName, fundTypeCode, classTypeCode));
+    }
+
+    /** AS-IS fnd.Fnd01_FundCode.update / noteUpdate (P05 편집 폼 [저장]) → 저장된 행 */
+    @PutMapping
+    public ApiResponse<FundRes> saveFund(@AuthenticationPrincipal UserPrincipal principal, @RequestBody FundSaveReq req) {
+        return ApiResponse.ok(service.saveFund(principal, req));
+    }
+
+    /** 템플릿 (AS-IS ./excelTemplete/Template_펀드정보.xlsx) */
+    @GetMapping("/template")
+    public ResponseEntity<byte[]> template() {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename("Template_펀드정보.xlsx", StandardCharsets.UTF_8).build().toString())
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(uploadService.template());
+    }
+
+    /** 엑셀업로드 (AS-IS ExcelUpload?uploadType=fundUpload) → 등록·갱신한 건수 */
+    @PostMapping("/excel")
+    public ApiResponse<Integer> upload(@AuthenticationPrincipal UserPrincipal principal, @RequestParam("excelUpload") MultipartFile file) {
+        return ApiResponse.ok(uploadService.upload(principal, file));
     }
 }

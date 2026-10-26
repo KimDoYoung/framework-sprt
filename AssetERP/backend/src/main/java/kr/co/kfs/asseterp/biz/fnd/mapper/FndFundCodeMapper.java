@@ -7,6 +7,9 @@ import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanListRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanSaveReq;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundSaveReq;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundSearchCond;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -59,4 +62,21 @@ public interface FndFundCodeMapper {
     List<FundPlanListRes> selectByPlan(@Param("companyId") Long companyId, @Param("orgId") Long orgId, @Param("admin") String admin,
                                        @Param("closeYn") String closeYn, @Param("fundName") String fundName,
                                        @Param("fundTypeCode") String fundTypeCode);
+
+    /** AS-IS selectByFundName L253 (P05, 일반 펀드) */
+    List<FundRes> selectFunds(@Param("c") FundSearchCond cond);
+
+    /** AS-IS selectById L35 (P05) — 저장 뒤 그 행을 다시 읽는다. cond는 회사만 쓴다 */
+    FundRes selectFundById(@Param("c") FundSearchCond cond, @Param("fundCodeId") Long fundCodeId);
+
+    int insertFund(@Param("fundCodeId") Long fundCodeId, @Param("companyId") Long companyId, @Param("r") FundSaveReq req);
+
+    int updateFund(@Param("companyId") Long companyId, @Param("r") FundSaveReq req);
+
+    /** AS-IS noteUpdate (P05, ICAM관리 펀드) */
+    int updateFundNote(@Param("fundCodeId") Long fundCodeId, @Param("companyId") Long companyId, @Param("note") String note);
+
+    int insertFundDetail(@Param("fundInfoId") Long fundInfoId, @Param("fundCodeId") Long fundCodeId, @Param("r") FundSaveReq req);
+
+    int updateFundDetail(@Param("fundCodeId") Long fundCodeId, @Param("r") FundSaveReq req);
 }

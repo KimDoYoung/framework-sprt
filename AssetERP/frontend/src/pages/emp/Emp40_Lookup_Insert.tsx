@@ -5,7 +5,7 @@
  *   처음 값 = 오늘 기준 한 달 전의 년·월 (L64-71)
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message } from 'antd';
+import { Input, message, Space } from 'antd';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { empEvalApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
@@ -77,9 +77,11 @@ export const Emp40_Lookup_Insert: React.FC<Props> = ({ open, dateList, onSaved, 
       destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
-          <Button type="generate" onClick={update}>생성</Button>
-          {/* [E2] closeButton[닫기].Select (L80) → hide() */}
-          <Button type="close" onClick={onClose}>닫기</Button>
+          <Space>
+            <Button type="generate" onClick={update}>생성</Button>
+            {/* [E2] closeButton[닫기].Select (L80) → hide() */}
+            <Button type="close" onClick={onClose}>닫기</Button>
+          </Space>
         </div>
       }
     >

@@ -366,4 +366,190 @@
            AND t1.fnd01_plan_yn     = 'true'
          ORDER BY t1.fnd01_fund_cd
     </select>
+
+    <!-- === P05 펀드 등록 및 변경 (Fnd01_Tab_FundCode) — 일반 펀드(planYn=false) ===
+         AS-IS(IDMS-IC) fnd01_fund_code.selectByFundName L253 / selectById L35: t1.*·t2.* 중 화면(그리드·편집 폼)이 쓰는 열만 별칭으로.
+         이름 열은 AS-IS와 같은 코드 CTE(codeName). 조건 icamYn은 서버가 '%'로 채운다(Fnd01_FundCode.selectByFundName L48) -->
+    <sql id="fundWith">
+        WITH closeFund AS ( <include refid="codeName"><property name="kind" value="ClosedFundCode"/></include> )
+           , kofiaTrust AS ( <include refid="codeName"><property name="kind" value="IcamTrustCode"/></include> )
+           , kofiaFundType AS ( <include refid="codeName"><property name="kind" value="IcamFundType"/></include> )
+           , kofiaPublic AS ( <include refid="codeName"><property name="kind" value="IcamPublicCode"/></include> )
+           , kofiaParent AS ( <include refid="codeName"><property name="kind" value="IcamParentCode"/></include> )
+           , kofiaClassType AS ( <include refid="codeName"><property name="kind" value="IcamClassType"/></include> )
+           , kofiaFundUnit AS ( <include refid="codeName"><property name="kind" value="IcamFundUnitCode"/></include> )
+           , kofiaCharClass AS ( <include refid="codeName"><property name="kind" value="IcamCharClassCode"/></include> )
+    </sql>
+
+    <sql id="fundColumns">
+        t1.fnd01_fund_code_id                 AS fund_code_id
+      , t2.fnd02_fund_info_id                 AS fund_info_id
+      , t1.fnd01_fund_cd                      AS fund_code
+      , t2.fnd02_kofia_fund_cd                AS kofia_fund_code
+      , t2.fnd02_ksd_fund_cd                  AS ksd_fund_code
+      , t2.fnd02_ksd_item_cd                  AS ksd_item_code
+      , t2.fnd02_fund_full_nm                 AS fund_full_name
+      , t2.fnd02_fund_nm                      AS fund_name
+      , t2.fnd02_cur                          AS cur
+      , t2.fnd02_seolj_aek                    AS seolj_aek
+      , t2.fnd02_sunjasan_aek                 AS sunjasan_aek
+      , CAST(t1.fnd01_start_date AS date)     AS start_date
+      , t2.fnd02_next_close_date              AS next_close_date
+      , t2.fnd02_next_fee_date                AS next_fee_date
+      , t2.fnd02_end_expect_date              AS end_expect_date
+      , CAST(t1.fnd01_end_date AS date)       AS end_date
+      , t1.fnd01_close_yn                     AS close_yn
+      , closeFund.nm                          AS close_name
+      , t2.fnd02_org_code_nm                  AS org_code_name
+      , t2.fnd02_operator1                    AS operator1
+      , t2.fnd02_operator2                    AS operator2
+      , t2.fnd02_consignment_cd               AS consignment_code
+      , fnd03_consignment_nm                  AS consignment_name
+      , t2.fnd02_office_work_cd               AS office_work_code
+      , fnd06_office_work_nm                  AS office_work_name
+      , t2.fnd02_trust_bank_cd                AS trust_bank_code
+      , fnd09_trust_bank_nm                   AS trust_bank_name
+      , t2.fnd02_kofia_trust_cd               AS kofia_trust_code
+      , kofiaTrust.nm                         AS kofia_trust_name
+      , t2.fnd02_kofia_fund_type_cd           AS kofia_fund_type_code
+      , kofiaFundType.nm                      AS kofia_fund_type_name
+      , t2.fnd02_kofia_public_cd              AS kofia_public_code
+      , kofiaPublic.nm                        AS kofia_public_name
+      , t2.fnd02_kofia_parent_cd              AS kofia_parent_code
+      , kofiaParent.nm                        AS kofia_parent_name
+      , t2.fnd02_kofia_class_type_cd          AS kofia_class_type_code
+      , kofiaClassType.nm                     AS kofia_class_type_name
+      , t2.fnd02_kofia_fund_unit_cd           AS kofia_fund_unit_code
+      , kofiaFundUnit.nm                      AS kofia_fund_unit_name
+      , t2.fnd02_kofia_char_class_cd          AS kofia_char_class_code
+      , kofiaCharClass.nm                     AS kofia_char_class_name
+      , t2.fnd02_management_rate              AS management_rate
+      , t2.fnd02_sales_rate                   AS sales_rate
+      , t2.fnd02_consignment_rate             AS consignment_rate
+      , t2.fnd02_office_work_rate             AS office_work_rate
+      , t1.fnd01_note                         AS note
+      , t1.fnd01_icam_yn                      AS icam_yn
+      , CAST(t2.fnd02_work_date AS date)      AS work_date
+      , t1.fnd01_company_id                   AS company_id
+    </sql>
+
+    <sql id="fundFrom">
+          FROM fnd01_fund_code t1
+               INNER JOIN fnd02_fund_info t2 ON t1.fnd01_fund_code_id = t2.fnd02_fund_code_id
+               LEFT OUTER JOIN fnd09_trust_bank  ON ( fnd09_trust_bank_cd  = t2.fnd02_trust_bank_cd  AND fnd09_company_id = t1.fnd01_company_id )
+               LEFT OUTER JOIN fnd03_consignment ON ( fnd03_consignment_cd = t2.fnd02_consignment_cd AND fnd03_company_id = t1.fnd01_company_id )
+               LEFT OUTER JOIN fnd06_office_work ON ( fnd06_office_work_cd = t2.fnd02_office_work_cd AND fnd06_company_id = t1.fnd01_company_id )
+               LEFT OUTER JOIN closeFund       ON closeFund.cd      = t1.fnd01_close_yn
+               LEFT OUTER JOIN kofiaTrust      ON kofiaTrust.cd     = t2.fnd02_kofia_trust_cd
+               LEFT OUTER JOIN kofiaFundType   ON kofiaFundType.cd  = t2.fnd02_kofia_fund_type_cd
+               LEFT OUTER JOIN kofiaPublic     ON kofiaPublic.cd    = t2.fnd02_kofia_public_cd
+               LEFT OUTER JOIN kofiaParent     ON kofiaParent.cd    = t2.fnd02_kofia_parent_cd
+               LEFT OUTER JOIN kofiaClassType  ON kofiaClassType.cd = t2.fnd02_kofia_class_type_cd
+               LEFT OUTER JOIN kofiaFundUnit   ON kofiaFundUnit.cd  = t2.fnd02_kofia_fund_unit_cd
+               LEFT OUTER JOIN kofiaCharClass  ON kofiaCharClass.cd = t2.fnd02_kofia_char_class_cd
+         WHERE t2.fnd02_work_date  = f_max_workdate(t2.fnd02_fund_code_id, f_trunc(f_sysdate()))
+           AND t1.fnd01_company_id = #{c.companyId}
+           AND t1.fnd01_plan_yn    = 'false'
+    </sql>
+
+    <!-- AS-IS selectByFundName L253 -->
+    <select id="selectFunds" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundRes">
+        <include refid="fundWith"/>
+        SELECT <include refid="fundColumns"/>
+        <include refid="fundFrom"/>
+           AND COALESCE(t1.fnd01_close_yn,'false') IN ('false', #{c.closeYn})
+           AND t2.fnd02_kofia_fund_type_cd                 LIKE #{c.fundTypeCode}
+           AND COALESCE(t2.fnd02_kofia_class_type_cd, '%') LIKE #{c.classTypeCode}
+           AND COALESCE(t1.fnd01_icam_yn,'false') LIKE '%'
+           AND UPPER(CONCAT(t1.fnd01_fund_cd, t2.fnd02_fund_nm, t2.fnd02_kofia_fund_cd, t2.fnd02_ksd_fund_cd, fnd03_consignment_nm, fnd06_office_work_nm)) LIKE UPPER(#{c.fundName})
+         ORDER BY t1.fnd01_fund_cd
+    </select>
+
+    <!-- AS-IS selectById L35 (저장 뒤 다시 읽기) — 회사·일반 펀드 조건은 보안 보강 -->
+    <select id="selectFundById" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundRes">
+        <include refid="fundWith"/>
+        SELECT <include refid="fundColumns"/>
+        <include refid="fundFrom"/>
+           AND t1.fnd01_fund_code_id = #{fundCodeId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(fnd01_fund_code) 동적 INSERT/UPDATE — 편집 폼이 바꾸는 열만. 일반 펀드(planYn=false) 고정 -->
+    <insert id="insertFund">
+        INSERT INTO fnd01_fund_code (fnd01_fund_code_id, fnd01_company_id, fnd01_fund_cd, fnd01_start_date, fnd01_end_date,
+                                     fnd01_close_yn, fnd01_plan_yn, fnd01_note)
+        VALUES (#{fundCodeId}, #{companyId}, #{r.fundCode}, #{r.startDate,jdbcType=DATE}, #{r.endDate,jdbcType=DATE},
+                #{r.closeYn}, 'false', #{r.note})
+    </insert>
+
+    <update id="updateFund">
+        UPDATE fnd01_fund_code
+           SET fnd01_fund_cd    = #{r.fundCode},
+               fnd01_start_date = #{r.startDate,jdbcType=DATE},
+               fnd01_end_date   = #{r.endDate,jdbcType=DATE},
+               fnd01_close_yn   = #{r.closeYn},
+               fnd01_note       = #{r.note}
+         WHERE fnd01_fund_code_id = #{r.fundCodeId}
+           AND fnd01_company_id   = #{companyId}
+           AND fnd01_plan_yn      = 'false'
+    </update>
+
+    <!-- AS-IS fnd01_fund_code.noteUpdate — ICAM관리 펀드는 비고만. 회사 조건은 보안 보강 -->
+    <update id="updateFundNote">
+        UPDATE fnd01_fund_code
+           SET fnd01_note = #{note}
+         WHERE fnd01_fund_code_id = #{fundCodeId}
+           AND fnd01_company_id   = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel(fnd02_fund_info) 동적 INSERT/UPDATE -->
+    <insert id="insertFundDetail">
+        INSERT INTO fnd02_fund_info (fnd02_fund_info_id, fnd02_fund_code_id, fnd02_work_date, fnd02_fund_nm, fnd02_fund_full_nm,
+                                     fnd02_kofia_fund_cd, fnd02_ksd_fund_cd, fnd02_ksd_item_cd, fnd02_cur, fnd02_seolj_aek, fnd02_sunjasan_aek,
+                                     fnd02_next_close_date, fnd02_next_fee_date, fnd02_end_expect_date, fnd02_org_code_nm,
+                                     fnd02_operator1, fnd02_operator2, fnd02_consignment_cd, fnd02_office_work_cd, fnd02_trust_bank_cd,
+                                     fnd02_kofia_trust_cd, fnd02_kofia_fund_type_cd, fnd02_kofia_public_cd, fnd02_kofia_parent_cd,
+                                     fnd02_kofia_class_type_cd, fnd02_kofia_fund_unit_cd, fnd02_kofia_char_class_cd,
+                                     fnd02_management_rate, fnd02_sales_rate, fnd02_consignment_rate, fnd02_office_work_rate)
+        VALUES (#{fundInfoId}, #{fundCodeId}, #{r.workDate,jdbcType=DATE}, #{r.fundName}, #{r.fundFullName},
+                #{r.kofiaFundCode}, #{r.ksdFundCode}, #{r.ksdItemCode}, #{r.cur}, #{r.seoljAek,jdbcType=NUMERIC}, #{r.sunjasanAek,jdbcType=NUMERIC},
+                #{r.nextCloseDate,jdbcType=DATE}, #{r.nextFeeDate,jdbcType=DATE}, #{r.endExpectDate,jdbcType=DATE}, #{r.orgCodeName},
+                #{r.operator1}, #{r.operator2}, #{r.consignmentCode}, #{r.officeWorkCode}, #{r.trustBankCode},
+                #{r.kofiaTrustCode}, #{r.kofiaFundTypeCode}, #{r.kofiaPublicCode}, #{r.kofiaParentCode},
+                #{r.kofiaClassTypeCode}, #{r.kofiaFundUnitCode}, #{r.kofiaCharClassCode},
+                #{r.managementRate,jdbcType=NUMERIC}, #{r.salesRate,jdbcType=NUMERIC}, #{r.consignmentRate,jdbcType=NUMERIC}, #{r.officeWorkRate,jdbcType=NUMERIC})
+    </insert>
+
+    <update id="updateFundDetail">
+        UPDATE fnd02_fund_info
+           SET fnd02_fund_nm              = #{r.fundName},
+               fnd02_fund_full_nm         = #{r.fundFullName},
+               fnd02_kofia_fund_cd        = #{r.kofiaFundCode},
+               fnd02_ksd_fund_cd          = #{r.ksdFundCode},
+               fnd02_ksd_item_cd          = #{r.ksdItemCode},
+               fnd02_cur                  = #{r.cur},
+               fnd02_seolj_aek            = #{r.seoljAek,jdbcType=NUMERIC},
+               fnd02_sunjasan_aek         = #{r.sunjasanAek,jdbcType=NUMERIC},
+               fnd02_next_close_date      = #{r.nextCloseDate,jdbcType=DATE},
+               fnd02_next_fee_date        = #{r.nextFeeDate,jdbcType=DATE},
+               fnd02_end_expect_date      = #{r.endExpectDate,jdbcType=DATE},
+               fnd02_org_code_nm          = #{r.orgCodeName},
+               fnd02_operator1            = #{r.operator1},
+               fnd02_operator2            = #{r.operator2},
+               fnd02_consignment_cd       = #{r.consignmentCode},
+               fnd02_office_work_cd       = #{r.officeWorkCode},
+               fnd02_trust_bank_cd        = #{r.trustBankCode},
+               fnd02_kofia_trust_cd       = #{r.kofiaTrustCode},
+               fnd02_kofia_fund_type_cd   = #{r.kofiaFundTypeCode},
+               fnd02_kofia_public_cd      = #{r.kofiaPublicCode},
+               fnd02_kofia_parent_cd      = #{r.kofiaParentCode},
+               fnd02_kofia_class_type_cd  = #{r.kofiaClassTypeCode},
+               fnd02_kofia_fund_unit_cd   = #{r.kofiaFundUnitCode},
+               fnd02_kofia_char_class_cd  = #{r.kofiaCharClassCode},
+               fnd02_management_rate      = #{r.managementRate,jdbcType=NUMERIC},
+               fnd02_sales_rate           = #{r.salesRate,jdbcType=NUMERIC},
+               fnd02_consignment_rate     = #{r.consignmentRate,jdbcType=NUMERIC},
+               fnd02_office_work_rate     = #{r.officeWorkRate,jdbcType=NUMERIC}
+         WHERE fnd02_fund_info_id = #{r.fundInfoId}
+           AND fnd02_fund_code_id = #{fundCodeId}
+    </update>
 </mapper>

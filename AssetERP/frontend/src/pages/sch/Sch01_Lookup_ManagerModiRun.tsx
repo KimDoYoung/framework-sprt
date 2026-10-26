@@ -4,7 +4,7 @@
  * 레이아웃: 변경 전 담당자(읽기 전용 100) · 변경 후 담당자(사원 조회창 트리거 100, 빈 문구 "선택하세요") · 처리구분 라디오 이동(기본)/복사, 아래 가운데 [변경하기][닫기]
  */
 import React, { useEffect, useState } from 'react';
-import { Input, Modal, Radio, message } from 'antd';
+import { Input, Modal, Radio, message, Space } from 'antd';
 import { schApi } from '@/api/sch';
 import { errorMessage } from '@/api/client';
 import { Sch01InfoManager } from '@/types/sch';
@@ -87,9 +87,11 @@ export const Sch01_Lookup_ManagerModiRun: React.FC<Props> = ({ target, onClosed,
         onCancel={onClose}
         footer={(
           <div style={{ textAlign: 'center' }}>
-            <Button type="assign" onClick={preUpdate}>변경하기</Button>
-            {/* [E3] closeButton[닫기].Select [callback != null] (L139) → callback.execute(); hide() */}
-            <Button type="close" onClick={() => { onClosed(); onClose(); }}>닫기</Button>
+            <Space>
+              <Button type="assign" onClick={preUpdate}>변경하기</Button>
+              {/* [E3] closeButton[닫기].Select [callback != null] (L139) → callback.execute(); hide() */}
+              <Button type="close" onClick={() => { onClosed(); onClose(); }}>닫기</Button>
+            </Space>
           </div>
         )}
       >

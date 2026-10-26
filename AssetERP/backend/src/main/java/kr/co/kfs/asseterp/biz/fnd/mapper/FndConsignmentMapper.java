@@ -24,4 +24,7 @@ public interface FndConsignmentMapper {
 
     /** AS-IS fnd03_consignment.insertUpdate 중 INSERT */
     int insertConsignment(@Param("consignmentId") Long consignmentId, @Param("req") ConsignmentSaveReq req, @Param("companyId") Long companyId);
+
+    /** AS-IS selectByText (P05 조회창) */
+    List<ConsignmentRes> selectByText(@Param("companyId") Long companyId, @Param("searchText") String searchText);
 }

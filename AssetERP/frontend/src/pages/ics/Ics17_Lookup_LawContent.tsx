@@ -4,7 +4,7 @@
  * 레이아웃 L39-80: 모달 1000×500 "법규내용", 본문 = 법규내용 텍스트 영역, 하단 가운데 [저장](userType "user"만)·[닫기]. "admin"이면 읽기 전용
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message } from 'antd';
+import { Input, message, Space } from 'antd';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
@@ -46,9 +46,11 @@ export const Ics17_Lookup_LawContent: React.FC<Props> = ({ model, userType, onSa
       destroyOnClose
       footer={
         <div style={{ textAlign: 'center' }}>
-          {userType === 'user' && <Button type="save" onClick={update}>저장</Button>}
-          {/* [E2] closeButton[닫기].Select (L64) → hide() */}
-          <Button type="close" onClick={onClose}>닫기</Button>
+          <Space>
+            {userType === 'user' && <Button type="save" onClick={update}>저장</Button>}
+            {/* [E2] closeButton[닫기].Select (L64) → hide() */}
+            <Button type="close" onClick={onClose}>닫기</Button>
+          </Space>
         </div>
       }
     >

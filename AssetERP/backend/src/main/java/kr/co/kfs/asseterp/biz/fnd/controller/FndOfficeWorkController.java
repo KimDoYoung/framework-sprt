@@ -39,4 +39,10 @@ public class FndOfficeWorkController {
         service.importIcam(principal);
         return ApiResponse.ok(null);
     }
+
+    /** AS-IS fnd.Fnd06_OfficeWork.selectByText — P05 조회창. 로그인 회사의 것, 이름 검색 */
+    @GetMapping("/lookup")
+    public ApiResponse<List<OfficeWorkRes>> lookup(@AuthenticationPrincipal UserPrincipal principal, @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.lookup(principal, searchText));
+    }
 }

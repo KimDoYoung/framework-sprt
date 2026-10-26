@@ -6,7 +6,7 @@
  * UX보강(10): 팝업(UX-05)
  */
 import React, { useEffect, useState } from 'react';
-import { DatePicker, Input, message } from 'antd';
+import { DatePicker, Input, message, Space } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { errorMessage } from '@/api/client';
 import { tdmApi } from '@/api/tdm';
@@ -77,9 +77,11 @@ export const Tdm50_Edit_CheckJob: React.FC<Props> = ({ job, onSaved, onClose }) 
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
-          <Button type="save" onClick={update}>저장</Button>
-          {/* [E2] closeButton[닫기].Select (L83) → hide() */}
-          <Button type="close" onClick={onClose}>닫기</Button>
+          <Space>
+            <Button type="save" onClick={update}>저장</Button>
+            {/* [E2] closeButton[닫기].Select (L83) → hide() */}
+            <Button type="close" onClick={onClose}>닫기</Button>
+          </Space>
         </div>
       }
     >

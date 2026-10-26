@@ -5,7 +5,7 @@
  * 창 아래 버튼(가운데): [저장] [닫기]
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { message } from 'antd';
+import { message, Space } from 'antd';
 import type { CellValueChangedEvent } from 'ag-grid-community';
 import { bizProvideSetupApi } from '@/api/biz';
 import { errorMessage } from '@/api/client';
@@ -102,9 +102,11 @@ export const Biz04_Lookup_EmpSetup: React.FC<Props> = ({ open, onClose }) => {
       onCancel={onClose}
       footer={
         <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
-          <Button type="save" onClick={update}>저장</Button>
-          {/* [E4] closeButton[닫기].Select (L109) → hide() */}
-          <Button type="close" onClick={onClose}>닫기</Button>
+          <Space>
+            <Button type="save" onClick={update}>저장</Button>
+            {/* [E4] closeButton[닫기].Select (L109) → hide() */}
+            <Button type="close" onClick={onClose}>닫기</Button>
+          </Space>
         </div>
       }
     >

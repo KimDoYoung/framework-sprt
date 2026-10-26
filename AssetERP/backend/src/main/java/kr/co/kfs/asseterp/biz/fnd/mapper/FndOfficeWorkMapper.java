@@ -24,4 +24,7 @@ public interface FndOfficeWorkMapper {
 
     /** AS-IS UpdateDataModel INSERT */
     int insertOfficeWork(@Param("officeWorkId") Long officeWorkId, @Param("req") OfficeWorkSaveReq req, @Param("companyId") Long companyId);
+
+    /** AS-IS selectByText (P05 조회창) */
+    List<OfficeWorkRes> selectByText(@Param("companyId") Long companyId, @Param("searchText") String searchText);
 }

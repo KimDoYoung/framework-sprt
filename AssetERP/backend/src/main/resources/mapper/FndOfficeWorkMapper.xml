@@ -66,4 +66,19 @@
         VALUES ( #{officeWorkId}, #{req.officeWorkCode}, #{req.officeWorkName}, #{req.useYn}, #{req.note},
                  #{companyId}, #{req.etcOfficeWorkCode01}, #{req.kofiaCode} )
     </insert>
+
+    <!-- AS-IS fnd06_office_work.selectByText (P05 Fnd06_Lookup_OfficeWork) — 로그인 회사의 사무수탁사, 이름 검색 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkRes">
+        SELECT fnd06_office_work_id       AS office_work_id,
+               fnd06_office_work_nm       AS office_work_name,
+               fnd06_office_work_cd       AS office_work_code,
+               fnd06_kofia_cd             AS kofia_code,
+               fnd06_etc_office_work_cd01 AS etc_office_work_code01,
+               fnd06_office_work_use_yn   AS use_yn,
+               fnd06_office_work_note     AS note,
+               fnd06_company_id           AS company_id
+          FROM fnd06_office_work
+         WHERE fnd06_company_id = #{companyId}
+           AND UPPER(fnd06_office_work_nm) LIKE UPPER(#{searchText})
+    </select>
 </mapper>

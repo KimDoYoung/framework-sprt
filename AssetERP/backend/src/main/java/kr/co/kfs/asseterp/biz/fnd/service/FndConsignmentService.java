@@ -59,4 +59,9 @@ public class FndConsignmentService {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }
+
+    /** AS-IS fnd.Fnd03_Consignment.selectByText (P05 조회창) — 검색어는 서버가 %…%로 */
+    public List<ConsignmentRes> lookup(UserPrincipal user, String searchText) {
+        return mapper.selectByText(user.getCompanyId(), "%" + (searchText == null ? "" : searchText) + "%");
+    }
 }

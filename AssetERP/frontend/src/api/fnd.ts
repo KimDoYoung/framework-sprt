@@ -1,6 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { Consignment, FundCode, FundLookup, FundPlan, FundPlanAuth, FundPlanList, OfficeWork, Plan, TrustBank } from '../types/fnd';
+import { readBlobError } from './file';
+import { Consignment, FundCode, FundDetail, FundLookup, FundPlan, FundPlanAuth, FundPlanList, OfficeWork, Plan, TrustBank } from '../types/fnd';
 
 /** fnd(기관정보) 화면 API (D11~) */
 export interface FundOrgAuthParams {
@@ -144,5 +145,64 @@ export const fndApi = {
   /** AS-IS fnd.Fnd09_TrustBank.selectIcamTrustBank: ICAM가져오기 — 외부 ICAM DB 연동이 없으면 오류 */
   importIcamTrustBanks: async (): Promise<void> => {
     await apiClient.post<ApiResponse<null>>('v1/fnd/trust-banks/import');
+  },
+
+  // ── P05 펀드 등록 및 변경 (Fnd01_Tab_FundCode) ──
+
+  /** AS-IS fnd.Fnd01_FundCode.selectByFundName: 로그인 회사의 일반 펀드. 펀드명은 서버가 %…%로, 유형·클래스구분은 '%'가 전체 */
+  searchFunds: async (params: { closeYn: boolean; fundName: string; fundTypeCode: string; classTypeCode: string }): Promise<FundDetail[]> => {
+    const res = await apiClient.get<ApiResponse<FundDetail[]>>('v1/fnd/fund-codes', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd01_FundCode.update / noteUpdate(ICAM관리 펀드는 서버가 비고만): 저장된 행을 돌려준다(새 행이면 서버가 매긴 id) */
+  saveFund: async (row: FundDetail): Promise<FundDetail> => {
+    const res = await apiClient.put<ApiResponse<FundDetail>>('v1/fnd/fund-codes', row.fundCodeId > 0 ? row : { ...row, fundCodeId: null });
+    return res.data.data as FundDetail;
+  },
+
+  /** 템플릿 받기 (AS-IS downloadForm → ./excelTemplete/Template_펀드정보.xlsx) */
+  downloadFundTemplate: async (): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/fnd/fund-codes/template', { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Template_펀드정보.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** 엑셀업로드 (AS-IS ExcelUpload?uploadType=fundUpload) → 등록·갱신한 건수 */
+  uploadFundsExcel: async (file: File): Promise<number> => {
+    const form = new FormData();
+    form.append('excelUpload', file);
+    const res = await apiClient.post<ApiResponse<number>>('v1/fnd/fund-codes/excel', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data.data ?? 0;
+  },
+
+  // ── P05 조회창 (Fnd03_Lookup_Consignment · Fnd06_Lookup_OfficeWork · Fnd09_Lookup_TrustBank) ──
+
+  /** AS-IS fnd.Fnd03_Consignment.selectByText: 로그인 회사의 수탁사, 이름 검색(서버가 %…%) */
+  lookupConsignments: async (searchText: string): Promise<Consignment[]> => {
+    const res = await apiClient.get<ApiResponse<Consignment[]>>('v1/fnd/consignments/lookup', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd06_OfficeWork.selectByText */
+  lookupOfficeWorks: async (searchText: string): Promise<OfficeWork[]> => {
+    const res = await apiClient.get<ApiResponse<OfficeWork[]>>('v1/fnd/office-works/lookup', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd09_TrustBank.selectByText */
+  lookupTrustBanks: async (searchText: string): Promise<TrustBank[]> => {
+    const res = await apiClient.get<ApiResponse<TrustBank[]>>('v1/fnd/trust-banks/lookup', { params: { searchText } });
+    return res.data.data ?? [];
   },
 };

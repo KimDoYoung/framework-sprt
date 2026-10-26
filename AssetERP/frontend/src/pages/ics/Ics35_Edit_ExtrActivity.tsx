@@ -5,7 +5,7 @@
  *   아래 가운데 [저장][닫기]
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { DatePicker, Input, message } from 'antd';
+import { DatePicker, Input, message, Space } from 'antd';
 import dayjs from 'dayjs';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
@@ -105,9 +105,11 @@ export const Ics35_Edit_ExtrActivity: React.FC<Props> = ({ target, onSaved, onCl
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
-          {/* [E3] updateButton[저장].Select (L139) → update(), [E4] closeButton[닫기].Select (L145) → hide() */}
-          <Button type="save" onClick={update}>저장</Button>
-          <Button type="close" onClick={onClose}>닫기</Button>
+          <Space>
+            {/* [E3] updateButton[저장].Select (L139) → update(), [E4] closeButton[닫기].Select (L145) → hide() */}
+            <Button type="save" onClick={update}>저장</Button>
+            <Button type="close" onClick={onClose}>닫기</Button>
+          </Space>
         </div>
       }
     >

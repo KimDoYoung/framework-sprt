@@ -4,7 +4,7 @@
  * 레이아웃 생성자 L77-124: 모달 400×300 "신규등록"/"수정"(닫기 X 없음), 라벨 폭 105, 메일주소 · 비밀번호 · 비고(높이 120), 아래 가운데 [검증][닫기]
  */
 import React, { useEffect, useState } from 'react';
-import { Input, Modal, message } from 'antd';
+import { Input, Modal, message, Space } from 'antd';
 import { cmpMailBookApi } from '@/api/cmp';
 import { errorMessage } from '@/api/client';
 import { CmpMailBook } from '@/types/cmp';
@@ -109,10 +109,12 @@ export const Cmp10_Edit_Tab_MailBook: React.FC<Props> = ({ open, mailBook, onSav
       destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
-          {/* [E1] checkButton[검증].Select (L84) → checkMail() */}
-          <Button type="view" disabled={checkLocked} onClick={checkMail}>검증</Button>
-          {/* [E2] closeButton[닫기].Select (L90) → hide() */}
-          <Button type="close" disabled={closeLocked} onClick={onClose}>닫기</Button>
+          <Space>
+            {/* [E1] checkButton[검증].Select (L84) → checkMail() */}
+            <Button type="view" disabled={checkLocked} onClick={checkMail}>검증</Button>
+            {/* [E2] closeButton[닫기].Select (L90) → hide() */}
+            <Button type="close" disabled={closeLocked} onClick={onClose}>닫기</Button>
+          </Space>
         </div>
       }
     >

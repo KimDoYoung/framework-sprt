@@ -4,7 +4,7 @@
  * 레이아웃 getEditor() L101-137: 모달 650×700 "내규 상세", 라벨 폭 80, 위에서 내규명(50)·상세내용(225)·관련조문(70)·제출처(50)·기한(50)·서식파일 그리드(130), 아래 가운데 [닫기]
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Space, Typography } from 'antd';
+import { Input, message, Typography } from 'antd';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { icrApi } from '@/api/icr';
 import { errorMessage } from '@/api/client';

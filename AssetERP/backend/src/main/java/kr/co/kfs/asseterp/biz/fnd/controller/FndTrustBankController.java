@@ -39,4 +39,10 @@ public class FndTrustBankController {
         service.importIcam(principal);
         return ApiResponse.ok(null);
     }
+
+    /** AS-IS fnd.Fnd09_TrustBank.selectByText — P05 조회창. 로그인 회사의 것, 이름 검색 */
+    @GetMapping("/lookup")
+    public ApiResponse<List<TrustBankRes>> lookup(@AuthenticationPrincipal UserPrincipal principal, @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.lookup(principal, searchText));
+    }
 }

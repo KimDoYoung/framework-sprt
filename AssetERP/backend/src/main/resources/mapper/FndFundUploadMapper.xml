@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/fnd/mapper/fnd01_fund_code.xml excelInsert · selectByFundCode, fnd02_fund_info.xml excelDelete · excelInsert,
+     fnd06_office_work.xml selectByKofiaCode, fnd00_fund.xml selectCorpCode (P05 엑셀업로드) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.fnd.mapper.FndFundUploadMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS fnd01_fund_code.selectByFundCode: 회사 + 코드 -->
+    <select id="selectFundCodeId" resultType="long">
+        SELECT fnd01_fund_code_id
+          FROM fnd01_fund_code
+         WHERE fnd01_fund_cd    = #{fundCode}
+           AND fnd01_company_id = #{companyId}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS fnd06_office_work.selectByKofiaCode -->
+    <select id="selectOfficeWorkCodeByKofia" resultType="string">
+        SELECT fnd06_office_work_cd
+          FROM fnd06_office_work
+         WHERE fnd06_company_id = #{companyId}
+           AND fnd06_kofia_cd   = #{kofiaCode}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS fnd00_fund.selectCorpCode -->
+    <select id="selectCorpCode" resultType="string">
+        SELECT f_get_corp_cd(1, #{corpType}, #{corpCode}, #{officeType}, #{officeWorkCode})
+    </select>
+
+    <!-- AS-IS fnd01_fund_code.excelInsert: planYn은 'false', icamYn은 'false' -->
+    <insert id="excelInsertFund">
+        INSERT INTO fnd01_fund_code (fnd01_fund_code_id, fnd01_fund_cd, fnd01_start_date, fnd01_end_date, fnd01_close_yn,
+                                     fnd01_plan_yn, fnd01_company_id, fnd01_icam_yn)
+        VALUES (#{r.fundCodeId}, #{r.fundCode}, #{r.startDate,jdbcType=DATE}, #{r.endDate,jdbcType=DATE}, #{r.closeYn},
+                'false', #{r.companyId}, 'false')
+    </insert>
+
+    <!-- AS-IS fnd02_fund_info.excelDelete: f_trunc(작업일) -->
+    <delete id="excelDeleteInfo">
+        DELETE FROM fnd02_fund_info
+         WHERE fnd02_work_date    = f_trunc(#{workDate,jdbcType=DATE})
+           AND fnd02_fund_code_id = #{fundCodeId}
+    </delete>
+
+    <!-- AS-IS fnd02_fund_info.excelInsert: 원본은 엑셀에서 더 읽지만(클래스구분·설정액·보수율 등) 이 열들만 넣는다 -->
+    <insert id="excelInsertInfo">
+        INSERT INTO fnd02_fund_info (fnd02_fund_info_id, fnd02_fund_code_id, fnd02_work_date, fnd02_fund_nm, fnd02_fund_full_nm,
+                                     fnd02_kofia_fund_cd, fnd02_kofia_fund_type_cd, fnd02_kofia_trust_cd, fnd02_kofia_public_cd,
+                                     fnd02_consignment_cd, fnd02_office_work_cd, fnd02_org_code_nm, fnd02_operator1, fnd02_operator2,
+                                     fnd02_ksd_fund_cd, fnd02_ksd_item_cd)
+        VALUES (#{r.fundInfoId}, #{r.fundCodeId}, #{r.workDate,jdbcType=DATE}, #{r.fundName}, #{r.fundFullName},
+                #{r.kofiaFundCode}, #{r.kofiaFundTypeCode}, #{r.kofiaTrustCode}, #{r.kofiaPublicCode},
+                #{r.consignmentCode}, #{r.officeWorkCode}, #{r.orgCodeName}, #{r.operator1}, #{r.operator2},
+                #{r.ksdFundCode}, #{r.ksdItemCode})
+    </insert>
+</mapper>

@@ -7,7 +7,7 @@
  * 전송 및 로그아웃(L81-106)은 확인 후 입력한 내용을 부른 쪽(onResult)에 돌려주고 닫는다 — 부른 쪽이 보내고 5분 표시를 시작한다.
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Modal } from 'antd';
+import { Input, message, Modal, Space } from 'antd';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
 import { WebsocketPerson } from '@/types/sys';
@@ -85,10 +85,12 @@ export const SendMessage: React.FC<Props> = ({ open, msg, list, onResult, onClos
       destroyOnClose
       footer={
         <div style={{ textAlign: 'center' }}>
-          <Button type="send" onClick={send}>전송</Button>{' '}
-          <Button type="send" onClick={sendLogout}>전송 및 로그아웃</Button>{' '}
-          {/* closeButton[닫기].Select (L107) → hide() */}
-          <Button type="close" onClick={onClose}>닫기</Button>
+          <Space>
+            <Button type="send" onClick={send}>전송</Button>{' '}
+            <Button type="send" onClick={sendLogout}>전송 및 로그아웃</Button>{' '}
+            {/* closeButton[닫기].Select (L107) → hide() */}
+            <Button type="close" onClick={onClose}>닫기</Button>
+          </Space>
         </div>
       }
     >

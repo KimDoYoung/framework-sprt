@@ -4,7 +4,7 @@
  * 레이아웃 insert() L46-72 / edit() L74-93 / getEditor() L110-119: 모달 450×200 "신규등록"/"수정"(닫기 X 없음), 그룹명 [글자 칸] · 전체공개 [체크], 아래 가운데 [저장][닫기]
  */
 import React, { useEffect, useState } from 'react';
-import { Checkbox, Input, Modal, message } from 'antd';
+import { Checkbox, Input, Modal, message, Space } from 'antd';
 import { empAddrBookApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
 import { EmpAddrBookGroup } from '@/types/emp';
@@ -72,9 +72,11 @@ export const Emp57_Edit_GroupName: React.FC<Props> = ({ open, group, onSaved, on
       destroyOnHidden
       footer={
         <div style={{ textAlign: 'center' }}>
-          <Button type="save" onClick={updateChk}>저장</Button>
-          {/* [E2] closeButton[닫기].Select (L102) → hide() */}
-          <Button type="close" onClick={onClose}>닫기</Button>
+          <Space>
+            <Button type="save" onClick={updateChk}>저장</Button>
+            {/* [E2] closeButton[닫기].Select (L102) → hide() */}
+            <Button type="close" onClick={onClose}>닫기</Button>
+          </Space>
         </div>
       }
     >

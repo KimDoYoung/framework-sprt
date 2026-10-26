@@ -5,7 +5,7 @@
  *   아래 가운데 [저장][닫기]. 삭제는 화면에서만 빼 두었다가 [저장]에서 서버에 보낸다(deleteList)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message } from 'antd';
+import { message, Space } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { schApi } from '@/api/sch';
 import { errorMessage } from '@/api/client';
@@ -124,9 +124,11 @@ export const Sch08_Lookup_Class: React.FC<Props> = ({ open, onSaved, onClose }) 
       onCancel={onClose}
       footer={(
         <div style={{ textAlign: 'center' }}>
-          <Button type="save" count={saveCount} onClick={preUpdate}>저장</Button>
-          {/* [E5] cancelButton[닫기].Select (L117) → hide() */}
-          <Button type="close" onClick={onClose}>닫기</Button>
+          <Space>
+            <Button type="save" count={saveCount} onClick={preUpdate}>저장</Button>
+            {/* [E5] cancelButton[닫기].Select (L117) → hide() */}
+            <Button type="close" onClick={onClose}>닫기</Button>
+          </Space>
         </div>
       )}
     >

@@ -6,7 +6,7 @@
  *   관리그룹 칸의 조회창 Icr02_Lookup_Manager는 법규의 Ics02_Lookup_Manager와 같은 SQL·화면이라 그 부품을 쓴다([전체] 없음)
  */
 import React, { useEffect, useState } from 'react';
-import { message, Typography } from 'antd';
+import { message, Typography, Space } from 'antd';
 import { icsApi } from '@/api/ics';
 import { icrApi } from '@/api/icr';
 import { errorMessage } from '@/api/client';
@@ -77,8 +77,10 @@ export const Icr01_Lookup_Share: React.FC<Props> = ({ classTreeId, onResult, onC
       onCancel={close}
       footer={
         <div style={{ textAlign: 'center' }}>
-          <Button type="save" onClick={update}>저장</Button>
-          <Button type="close" onClick={close}>닫기</Button>
+          <Space>
+            <Button type="save" onClick={update}>저장</Button>
+            <Button type="close" onClick={close}>닫기</Button>
+          </Space>
         </div>
       }
     >

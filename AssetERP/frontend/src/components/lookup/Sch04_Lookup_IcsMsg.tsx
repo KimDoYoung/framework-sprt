@@ -5,7 +5,7 @@
  * 버튼: actionType 1(처리자 처리결과입력) = [저장][닫기], 2(확인자 확인처리) = [확인][확인취소][닫기]
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message, Typography } from 'antd';
+import { Input, message, Typography, Space } from 'antd';
 import { schApi } from '@/api/sch';
 import { errorMessage } from '@/api/client';
 import { Sch04List } from '@/types/sch';
@@ -68,11 +68,13 @@ export const Sch04_Lookup_IcsMsg: React.FC<Props> = ({ row, actionType, onResult
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
-          {actionType === '1' && <Button type="save" disabled={saveDisabled} onClick={() => update('U')}>저장</Button>}
-          {actionType === '2' && <Button type="save" disabled={confirmDisabled} onClick={() => update('P')}>확인</Button>}
-          {actionType === '2' && <Button type="cancel" disabled={cancelDisabled} onClick={() => update('C')}>확인취소</Button>}
-          {/* [E4] closeButton[닫기].Select (L110) → hide() */}
-          <Button type="close" onClick={onClose}>닫기</Button>
+          <Space>
+            {actionType === '1' && <Button type="save" disabled={saveDisabled} onClick={() => update('U')}>저장</Button>}
+            {actionType === '2' && <Button type="save" disabled={confirmDisabled} onClick={() => update('P')}>확인</Button>}
+            {actionType === '2' && <Button type="cancel" disabled={cancelDisabled} onClick={() => update('C')}>확인취소</Button>}
+            {/* [E4] closeButton[닫기].Select (L110) → hide() */}
+            <Button type="close" onClick={onClose}>닫기</Button>
+          </Space>
         </div>
       }
     >

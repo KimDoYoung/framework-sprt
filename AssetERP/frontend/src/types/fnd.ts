@@ -138,3 +138,59 @@ export interface Plan {
   managerId?: number | null;
   apprId?: number | null;
 }
+
+/**
+ * 펀드 등록 및 변경 한 행 (P05, AS-IS Fnd01_FundCodeModel + Fnd02_FundInfoModel 중 그리드·편집 폼 열). 날짜는 'yyyy-MM-dd'.
+ * fundCodeId는 새 행이면 임시 음수. icamYn은 DB 형태('true'면 ICAM관리 펀드 — 비고만 저장)
+ */
+export interface FundDetail {
+  fundCodeId: number;
+  fundInfoId?: number | null;
+  fundCode?: string | null;
+  kofiaFundCode?: string | null;
+  ksdFundCode?: string | null;
+  ksdItemCode?: string | null;
+  fundFullName?: string | null;
+  fundName?: string | null;
+  cur?: string | null;
+  seoljAek?: number | null;
+  sunjasanAek?: number | null;
+  startDate?: string | null;
+  nextCloseDate?: string | null;
+  nextFeeDate?: string | null;
+  endExpectDate?: string | null;
+  endDate?: string | null;
+  closeYn?: string | null;
+  closeName?: string | null;
+  orgCodeName?: string | null;
+  operator1?: string | null;
+  operator2?: string | null;
+  consignmentCode?: string | null;
+  consignmentName?: string | null;
+  officeWorkCode?: string | null;
+  officeWorkName?: string | null;
+  trustBankCode?: string | null;
+  trustBankName?: string | null;
+  kofiaTrustCode?: string | null;
+  kofiaTrustName?: string | null;
+  kofiaFundTypeCode?: string | null;
+  kofiaFundTypeName?: string | null;
+  kofiaPublicCode?: string | null;
+  kofiaPublicName?: string | null;
+  kofiaParentCode?: string | null;
+  kofiaParentName?: string | null;
+  kofiaClassTypeCode?: string | null;
+  kofiaClassTypeName?: string | null;
+  kofiaFundUnitCode?: string | null;
+  kofiaFundUnitName?: string | null;
+  kofiaCharClassCode?: string | null;
+  kofiaCharClassName?: string | null;
+  managementRate?: number | null;
+  salesRate?: number | null;
+  consignmentRate?: number | null;
+  officeWorkRate?: number | null;
+  note?: string | null;
+  icamYn?: string | null;
+  workDate?: string | null;
+  companyId?: number | null;
+}

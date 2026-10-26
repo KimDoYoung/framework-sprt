@@ -10,6 +10,9 @@ import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanDeleteReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanListRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanSaveReq;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundSaveReq;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundSearchCond;
 import kr.co.kfs.asseterp.biz.fnd.mapper.FndFundCodeMapper;
 import kr.co.kfs.asseterp.biz.sys.service.SysMenuSearchService;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -18,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /** AS-IS server/fnd/Fnd01_FundCode.java */
@@ -129,6 +133,70 @@ public class FndFundCodeService {
             mapper.deleteFundInfos(fundInfoIds, fundCodeIds);
         }
         mapper.deleteFundCodes(fundCodeIds, user.getCompanyId());
+    }
+
+    /**
+     * AS-IS fnd.Fnd01_FundCode.selectByFundName L38 (P05, 일반 펀드). 펀드명은 서버가 %…%로, 유형·클래스구분은 비면 %,
+     * icamYn은 '%'(원본 서버가 null이면 '%'로 채움 — SQL에 박았다)
+     */
+    public List<FundRes> searchFunds(UserPrincipal user, boolean closeYn, String fundName, String fundTypeCode, String classTypeCode) {
+        return mapper.selectFunds(new FundSearchCond(user.getCompanyId(), String.valueOf(closeYn),
+                "%" + (fundName == null ? "" : fundName) + "%", blankToAny(fundTypeCode), blankToAny(classTypeCode)));
+    }
+
+    /**
+     * AS-IS Fnd01_Edit_FundCode.updateRow L378 → fnd.Fnd01_FundCode.update L139 / noteUpdate L125 (P05).
+     * 이미 있는 펀드가 ICAM관리면(DB에서 확인 — 원본은 화면 모델을 믿음) 비고만 저장한다. 그 밖에는 검사 순서·문구를 원본 그대로
+     * (펀드코드 → 펀드명 → 동일 펀드코드), fnd02_fund_info(없으면 새 id, 작업일 = 요청의 workDate 또는 오늘) → fnd01_fund_code 순.
+     * 새 펀드의 ID는 서버가 매기고 회사는 로그인 회사, 일반 펀드(planYn=false)로 고정한다. 저장된 행을 되돌린다.
+     */
+    @Transactional
+    public FundRes saveFund(UserPrincipal user, FundSaveReq req) {
+        FundSearchCond company = new FundSearchCond(user.getCompanyId(), null, null, null, null);
+        boolean isNew = req.fundCodeId() == null || req.fundCodeId() <= 0;
+        if (!isNew) {
+            FundRes current = mapper.selectFundById(company, req.fundCodeId());
+            if (current == null) {
+                throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "펀드를 찾을 수 없습니다.");
+            }
+            if ("true".equals(current.icamYn())) {
+                mapper.updateFundNote(req.fundCodeId(), user.getCompanyId(), req.note());
+                return mapper.selectFundById(company, req.fundCodeId());
+            }
+        }
+        if (req.fundCode() == null || req.fundCode().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "펀드코드는 필수입력항목입니다.");
+        }
+        if (req.fundName() == null || req.fundName().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "펀드명은 필수입력항목입니다.");
+        }
+        if (mapper.countFundCodeCheck(isNew ? 0L : req.fundCodeId(), req.fundCode(), "false") > 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "동일 펀드코드가 존재합니다.");
+        }
+        Long fundCodeId = req.fundCodeId();
+        FundSaveReq r = req.workDate() == null ? withWorkDate(req, LocalDate.now()) : req;
+        if (isNew) {
+            fundCodeId = mapper.selectNextId();
+            mapper.insertFund(fundCodeId, user.getCompanyId(), r);
+            mapper.insertFundDetail(mapper.selectNextId(), fundCodeId, r);
+        } else {
+            mapper.updateFund(user.getCompanyId(), r);
+            if (r.fundInfoId() == null || r.fundInfoId() <= 0) {
+                mapper.insertFundDetail(mapper.selectNextId(), fundCodeId, r);
+            } else {
+                mapper.updateFundDetail(fundCodeId, r);
+            }
+        }
+        return mapper.selectFundById(company, fundCodeId);
+    }
+
+    private static FundSaveReq withWorkDate(FundSaveReq q, LocalDate workDate) {
+        return new FundSaveReq(q.fundCodeId(), q.fundInfoId(), q.fundCode(), q.kofiaFundCode(), q.ksdFundCode(), q.ksdItemCode(),
+                q.fundFullName(), q.fundName(), q.cur(), q.seoljAek(), q.sunjasanAek(), q.startDate(), q.nextCloseDate(), q.nextFeeDate(),
+                q.endExpectDate(), q.endDate(), q.closeYn(), q.orgCodeName(), q.operator1(), q.operator2(), q.consignmentCode(),
+                q.officeWorkCode(), q.trustBankCode(), q.kofiaTrustCode(), q.kofiaFundTypeCode(), q.kofiaPublicCode(), q.kofiaParentCode(),
+                q.kofiaClassTypeCode(), q.kofiaFundUnitCode(), q.kofiaCharClassCode(), q.managementRate(), q.salesRate(), q.consignmentRate(),
+                q.officeWorkRate(), q.note(), workDate);
     }
 
     private String blankToAny(String code) {

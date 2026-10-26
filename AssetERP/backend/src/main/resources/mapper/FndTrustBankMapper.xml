@@ -26,4 +26,17 @@
            AND fnd09_trust_bank_cd||fnd09_trust_bank_nm LIKE '%'||#{searchText}||'%'
          ORDER BY fnd09_trust_bank_cd
     </select>
+
+    <!-- AS-IS fnd09_trust_bank.selectByText (P05 Fnd09_Lookup_TrustBank) — 로그인 회사의 수탁은행, 이름 검색 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.fnd.dto.TrustBankRes">
+        SELECT fnd09_trust_bank_id AS trust_bank_id,
+               fnd09_trust_bank_cd AS trust_bank_code,
+               fnd09_trust_bank_nm AS trust_bank_name,
+               fnd09_use_yn        AS use_yn,
+               fnd09_note          AS note,
+               fnd09_company_id    AS company_id
+          FROM fnd09_trust_bank
+         WHERE fnd09_company_id = #{companyId}
+           AND UPPER(fnd09_trust_bank_nm) LIKE UPPER(#{searchText})
+    </select>
 </mapper>

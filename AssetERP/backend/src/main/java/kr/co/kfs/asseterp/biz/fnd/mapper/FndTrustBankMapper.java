@@ -11,4 +11,7 @@ public interface FndTrustBankMapper {
 
     /** AS-IS fnd09_trust_bank.selectByCompanyId0 (공통회사 0 전용) */
     List<TrustBankRes> selectByCompanyId0(@Param("companyId") Long companyId, @Param("useYn") String useYn, @Param("searchText") String searchText);
+
+    /** AS-IS selectByText (P05 조회창) */
+    List<TrustBankRes> selectByText(@Param("companyId") Long companyId, @Param("searchText") String searchText);
 }

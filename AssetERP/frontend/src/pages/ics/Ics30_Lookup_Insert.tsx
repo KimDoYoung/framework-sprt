@@ -4,7 +4,7 @@
  * 레이아웃 L60-91·getEditor L93-103: 모달 350×180 "생성", 적용월 [년 입력] 년 [월 콤보 MonthsCode], 아래 가운데 [생성][닫기]. 열릴 때 기본값은 지난달
  */
 import React, { useEffect, useState } from 'react';
-import { Input, message } from 'antd';
+import { Input, message, Space } from 'antd';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { icsApi } from '@/api/ics';
 import { errorMessage } from '@/api/client';
@@ -64,9 +64,11 @@ export const Ics30_Lookup_Insert: React.FC<Props> = ({ open, dateList, onCreated
       onCancel={onClose}
       footer={
         <div style={{ textAlign: 'center' }}>
-          <Button type="generate" onClick={update}>생성</Button>
-          {/* [E2] closeButton[닫기].Select (L80) → hide() */}
-          <Button type="close" onClick={onClose} style={{ marginLeft: 8 }}>닫기</Button>
+          <Space>
+            <Button type="generate" onClick={update}>생성</Button>
+            {/* [E2] closeButton[닫기].Select (L80) → hide() */}
+            <Button type="close" onClick={onClose} style={{ marginLeft: 8 }}>닫기</Button>
+          </Space>
         </div>
       }
     >

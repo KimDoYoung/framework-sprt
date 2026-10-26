@@ -309,8 +309,10 @@ export const Sch01_Lookup_Info: React.FC<Props> = ({ target, onResult, onClose }
         styles={{ body: { maxHeight: 'calc(100vh - 240px)', overflowY: 'auto', paddingRight: 8 } }}
         footer={(
           <div style={{ textAlign: 'center' }}>
-            <Button type="save" onClick={update} loading={saving}>저장</Button>
-            <Button type="close" onClick={closeWindow}>닫기</Button>
+            <Space>
+              <Button type="save" onClick={update} loading={saving}>저장</Button>
+              <Button type="close" onClick={closeWindow}>닫기</Button>
+            </Space>
           </div>
         )}
       >
