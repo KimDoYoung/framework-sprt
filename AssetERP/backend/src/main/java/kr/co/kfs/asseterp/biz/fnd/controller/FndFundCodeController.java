@@ -2,6 +2,8 @@ package kr.co.kfs.asseterp.biz.fnd.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundCodeRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundHistoryRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundRelateRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanDeleteReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanListRes;
@@ -19,6 +21,7 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.charset.StandardCharsets;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /** 펀드코드 (AS-IS server/fnd/Fnd01_FundCode) */
@@ -121,6 +125,23 @@ public class FndFundCodeController {
                                                              @RequestParam(required = false) String fundTypeCode,
                                                              @RequestParam(required = false) String classTypeCode) {
         return ApiResponse.ok(service.searchFundSearch(principal, closeYn, fundName, fundTypeCode, classTypeCode));
+    }
+
+    /** AS-IS fnd.Fnd01_FundCode.selectByHistoryCompanyId (P08 펀드 조회(변경이력), 일반 펀드 최신 정보) */
+    @GetMapping("/history")
+    public ApiResponse<List<FundHistoryRes>> searchHistory(@AuthenticationPrincipal UserPrincipal principal,
+                                                           @RequestParam(defaultValue = "false") boolean closeYn,
+                                                           @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchHistory(principal, closeYn, searchText));
+    }
+
+    /** AS-IS fnd.Fnd01_FundCode.selectByCompanyId (P09 펀드별 자산 조회 — 내 조직 권한 펀드) */
+    @GetMapping("/relate")
+    public ApiResponse<List<FundRelateRes>> searchRelate(@AuthenticationPrincipal UserPrincipal principal,
+                                                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
+                                                         @RequestParam(required = false) String fundType,
+                                                         @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchRelate(principal, stdDate, fundType, searchText));
     }
 
     /** AS-IS sys.Sys99_Print.insertRdFundSearch (P07 [엑셀다운로드]) → 출력 그룹 ID */

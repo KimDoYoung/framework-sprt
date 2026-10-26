@@ -32,6 +32,9 @@ import { Fnd01_Tab_FundPlan } from './fnd/Fnd01_Tab_FundPlan';
 import { Fnd08_Tab_OrgAuthTempFund } from './fnd/Fnd08_Tab_OrgAuthTempFund';
 import { Fnd08_Tab_OrgAuth } from './fnd/Fnd08_Tab_OrgAuth';
 import { Fnd01_Tab_FundSearch } from './fnd/Fnd01_Tab_FundSearch';
+import { Fnd01_Tab_FundIcamHistory } from './fnd/Fnd01_Tab_FundIcamHistory';
+import { Fnd10_Tab_RelateAst } from './fnd/Fnd10_Tab_RelateAst';
+import { Fnd10_Tab_RelateFnd } from './fnd/Fnd10_Tab_RelateFnd';
 import { Fnd01_Tab_FundCode } from './fnd/Fnd01_Tab_FundCode';
 import { Fnd20_Tab_Plan } from './fnd/Fnd20_Tab_Plan';
 import { Fnd20_Tab_PlanEmp } from './fnd/Fnd20_Tab_PlanEmp';
@@ -247,6 +250,9 @@ export const SCREENS: Record<string, React.FC> = {
   Flt05_Tab_ItemTypeAdmin, // E08
   Fnd08_Tab_OrgAuthTempFund, // P02 (+ Fnd08_Page_OrgAuth·Fnd08_Lookup_OrgCode)
   Fnd01_Tab_FundSearch, // P07 (+ Fnd01_Edit_FundSearch·components/lookup/Fnd25_Lookup_Content)
+  Fnd01_Tab_FundIcamHistory, // P08 (+ 오른쪽 변경이력 페이징 그리드 Fnd01_Grid_FundIcamHistory 포함)
+  Fnd10_Tab_RelateAst, // P09
+  Fnd10_Tab_RelateFnd, // P10
   Fnd08_Tab_OrgAuth, // P06 (+ Fnd08_Page_OrgAuth·components/lookup/Fnd08_Lookup_OrgAuth·Fnd01_Lookup_SelectMulti)
   Fnd20_Tab_Plan, // P03 (+ Fnd20_TabPage_Plan·components/lookup/Dcr00_Lookup_FundPlan, 상품기획일정 등록)
   Fnd01_Tab_FundCode, // P05 (+ Fnd01_Edit_FundCode·components/lookup/Fnd03_Lookup_Consignment·Fnd06_Lookup_OfficeWork·Fnd09_Lookup_TrustBank, 펀드 등록 및 변경)

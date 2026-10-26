@@ -105,4 +105,10 @@
                ) a
                LEFT OUTER JOIN sys14_holiday ON ( sys14_company_id = company_id AND sys14_day = dt )
     </insert>
+
+    <!-- AS-IS sys12_calendar.bizDate: SELECT f_get_biz_date(:companyId, :stdDate, :type) -->
+    <select id="selectBizDate" resultType="string">
+        SELECT TO_CHAR(f_get_biz_date(#{companyId}, CAST(#{stdDate} AS date), #{type}), 'YYYY-MM-DD')
+    </select>
+
 </mapper>

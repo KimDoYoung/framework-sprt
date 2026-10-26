@@ -4,6 +4,7 @@
  * 레이아웃 getEditor() L212-325: 라벨 145, 줄 7개(여백 20·20·17·20), 칸 300(보수율 260 + "(bp)" 50), 모든 칸 읽기 전용, 설정액·순자산 `#,###`, 보수율 `#,###.######`. 버튼 없음
  * retrieve(param) L327-335 / init() L337-339: 목록에서 고른 행을 보여 주고, 고른 행이 없으면 빈 폼
  */
+
 import React from 'react';
 import { Input } from 'antd';
 import { FundSearch } from '@/types/fnd';
@@ -15,10 +16,24 @@ const fmtRate = (v?: number | null) => {
   return `${i.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}${d != null ? `.${d.slice(0, 6)}` : ''}`;
 };
 
-/** 칸 하나: 라벨(폭 145) + 읽기 전용 입력. 줄 안에서 폭 300 */
-const Cell: React.FC<{ label: string; width?: number; value?: string | null; align?: 'right' }> = ({ label, width = 300, value, align }) => (
+/** 칸 하나: 라벨(폭 145, 우측 정렬) + 읽기 전용 입력. 줄 안에서 폭 300 */
+const Cell: React.FC<{ label: string; width?: number; value?: string | null; align?: 'right' }> = ({ 
+  label, 
+  width = 300, 
+  value, 
+  align 
+}) => (
   <div style={{ width, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-    <label style={{ width: 145, flexShrink: 0 }}>{label}</label>
+    <label 
+      style={{ 
+        width: 145, 
+        flexShrink: 0, 
+        textAlign: 'right', 
+        paddingRight: 10 
+      }}
+    >
+      {label}
+    </label>
     <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
       <Input readOnly value={value ?? ''} style={align ? { textAlign: align } : undefined} />
     </div>
@@ -34,7 +49,7 @@ const RateCell: React.FC<{ label: string; value?: number | null }> = ({ label, v
 );
 
 const Row: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{ display: 'flex', margin: '20px 20px 17px 20px' }}>{children}</div>
+  <div style={{ display: 'flex', margin: '10px 20px 10px 20px' }}>{children}</div>
 );
 
 interface Props {

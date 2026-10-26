@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.ast.service;
 
+import kr.co.kfs.asseterp.biz.ast.dto.AstAssetItemRes;
 import kr.co.kfs.asseterp.biz.ast.dto.AstItemTreeCond;
 import kr.co.kfs.asseterp.biz.ast.dto.AstItemTreeRes;
 import kr.co.kfs.asseterp.biz.ast.mapper.AstClassTreeMapper;
@@ -28,5 +29,10 @@ public class AstClassTreeService {
         Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
         String asset = assetType == null || assetType.isEmpty() ? "%" : assetType;
         return mapper.selectItemTree(new AstItemTreeCond(user.getCompanyId(), user.getUserId(), orgId, "%", asset));
+    }
+
+    /** AS-IS Ast01_ClassTree.selectByAssetType L147 (P10). 회사는 로그인 회사, 검색어는 SQL이 %…%로 감싼다 */
+    public List<AstAssetItemRes> searchByAssetType(UserPrincipal user, java.time.LocalDate stdDate, String assetType, String searchText) {
+        return mapper.selectByAssetType(user.getCompanyId(), stdDate, assetType, searchText == null ? "" : searchText);
     }
 }

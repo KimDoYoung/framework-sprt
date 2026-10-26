@@ -1,7 +1,7 @@
 import { apiClient } from './client';
-import { ApiResponse } from '../types/auth';
+import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { Consignment, FundCode, FundDetail, FundLookup, FundMulti, FundPlan, FundSearch, FundTermsDetail, FundPlanAuth, FundPlanList, OfficeWork, Plan, TrustBank } from '../types/fnd';
+import { AstAssetItem, BookRelateAst, BookRelateFnd, Consignment, FundCode, FundDetail, FundHistory, FundInfo, FundLookup, FundMulti, FundPlan, FundRelate, FundSearch, FundTermsDetail, FundPlanAuth, FundPlanList, OfficeWork, Plan, TrustBank } from '../types/fnd';
 
 /** fnd(기관정보) 화면 API (D11~) */
 export interface FundOrgAuthParams {
@@ -57,6 +57,48 @@ export const fndApi = {
   /** AS-IS fnd.Fnd01_FundCode.selectByFundName(권한부서 없음) / selectByFundOrgAuth(권한부서 orgId 있음): 임시펀드 목록 */
   searchFundPlanAuths: async (params: { closeYn: boolean; fundName: string; fundTypeCode: string; classTypeCode: string; orgId?: number | null }): Promise<FundPlanAuth[]> => {
     const res = await apiClient.get<ApiResponse<FundPlanAuth[]>>('v1/fnd/fund-codes/plan-auths', { params: { ...params, orgId: params.orgId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  // ── P08 펀드 조회(변경이력) (Fnd01_Tab_FundIcamHistory) ──
+
+  /** AS-IS fnd.Fnd01_FundCode.selectByHistoryCompanyId: 오늘 기준 펀드별 최신 펀드정보 */
+  searchFundHistory: async (params: { closeYn: boolean; searchText: string }): Promise<FundHistory[]> => {
+    const res = await apiClient.get<ApiResponse<FundHistory[]>>('v1/fnd/fund-codes/history', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd02_FundInfo.selectByPaging: 한 펀드의 변경이력(작업일 내림차순) 페이지 */
+  searchFundInfos: async (params: { fundCode: string; offset: number; limit: number }): Promise<PageRes<FundInfo>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<FundInfo>>>('v1/fnd/fund-infos', { params });
+    return res.data.data;
+  },
+
+  // ── P09 펀드별 자산 조회(ICAM) (Fnd10_Tab_RelateAst) ──
+
+  /** AS-IS fnd.Fnd01_FundCode.selectByCompanyId: 내 조직 권한 펀드(기준일 최신 펀드정보). fundType 없음 = 콤보 "전체"(null) */
+  searchFundRelate: async (params: { stdDate: string; fundType?: string; searchText: string }): Promise<FundRelate[]> => {
+    const res = await apiClient.get<ApiResponse<FundRelate[]>>('v1/fnd/fund-codes/relate', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd10_Book.selectByRelateAst: 고른 펀드의 기준일 운용자산 */
+  searchBookRelateAst: async (params: { fundCodeId: number; stdDate: string }): Promise<BookRelateAst[]> => {
+    const res = await apiClient.get<ApiResponse<BookRelateAst[]>>('v1/fnd/books/relate-ast', { params });
+    return res.data.data ?? [];
+  },
+
+  // ── P10 자산별 펀드 조회(ICAM) (Fnd10_Tab_RelateFnd) ──
+
+  /** AS-IS ast.Ast01_ClassTree.selectByAssetType: 기준일에 펀드 운용자산이 있는 종목 (assetType "2" = 운용자산) */
+  searchAstAssetItems: async (params: { stdDate: string; assetType: string; searchText: string }): Promise<AstAssetItem[]> => {
+    const res = await apiClient.get<ApiResponse<AstAssetItem[]>>('v1/ast/class-trees/by-asset-type', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd10_Book.selectByRelateFnd: 고른 종목을 가진 내 권한 펀드 */
+  searchBookRelateFnd: async (params: { astClassTreeId: number; stdDate: string }): Promise<BookRelateFnd[]> => {
+    const res = await apiClient.get<ApiResponse<BookRelateFnd[]>>('v1/fnd/books/relate-fnd', { params });
     return res.data.data ?? [];
   },
 

@@ -2,10 +2,14 @@ package kr.co.kfs.asseterp.biz.fnd.mapper;
 
 import kr.co.kfs.asseterp.biz.fnd.dto.FundCodeCond;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundCodeRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundHistoryCond;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundHistoryRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthCond;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanListRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundRelateCond;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundRelateRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanSaveReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundSaveReq;
@@ -90,4 +94,10 @@ public interface FndFundCodeMapper {
     /** AS-IS Sys99_Print.insertRdFundSearch (P07 엑셀다운로드 ② 같은 조회 결과를 새 그룹 ID로 담음) */
     int insertPrintFundSearch(@Param("companyId") Long companyId, @Param("personId") Long personId,
                               @Param("windowClassName") String windowClassName, @Param("groupId") Long groupId, @Param("c") FundSearchCond cond);
+
+    /** AS-IS selectByHistoryCompanyId L331 (P08 펀드 조회(변경이력)) — 오늘 기준 펀드별 최신 펀드정보 */
+    List<FundHistoryRes> selectByHistoryCompanyId(@Param("c") FundHistoryCond cond);
+
+    /** AS-IS selectByCompanyId L334 (P09 펀드별 자산 조회) — 내 조직 권한 펀드 중 기준일 최신 펀드정보 */
+    List<FundRelateRes> selectByCompanyId(@Param("c") FundRelateCond cond);
 }

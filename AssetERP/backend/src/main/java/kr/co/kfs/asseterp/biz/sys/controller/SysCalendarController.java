@@ -33,6 +33,14 @@ public class SysCalendarController {
         return ApiResponse.ok(service.search(principal, year, month));
     }
 
+    /** AS-IS sys.Sys12_Calendar.selectBizDate (펀드별 자산 조회 등 기준일 초기값 — type "-1" = 전 영업일) */
+    @GetMapping("/biz-date")
+    public ApiResponse<String> bizDate(@AuthenticationPrincipal UserPrincipal principal,
+                                       @RequestParam @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate stdDate,
+                                       @RequestParam(defaultValue = "-1") String type) {
+        return ApiResponse.ok(service.bizDate(principal, stdDate, type));
+    }
+
     /** AS-IS sys.Sys12_Calendar.update → 저장된 행(요청 순서) */
     @PutMapping
     public ApiResponse<List<CalendarRes>> update(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<CalendarSaveReq> rows) {

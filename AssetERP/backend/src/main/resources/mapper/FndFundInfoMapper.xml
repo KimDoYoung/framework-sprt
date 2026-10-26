@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/fnd/mapper/fnd02_fund_info.xml selectByNamePaging·selectByNameTotal (P08 펀드 조회(변경이력)) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.fnd.mapper.FndFundInfoMapper">
+
+    <!-- 그리드가 쓰는 열만(원본은 fnd02_fund_info의 모든 열 + 코드 이름). 기준가는 ICAM 기준가(icam06) ∪ 수탁사 기준가(ifi32) 중 작업일과 같은 날 것 -->
+    <select id="selectByNamePaging" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundInfoRes">
+        SELECT fnd02_fund_info_id AS fund_info_id
+             , CAST(fnd02_work_date AS date) AS work_date
+             , fnd02_fund_nm                 AS fund_name
+             , fnd02_fund_full_nm            AS fund_full_name
+             , fnd02_kofia_fund_cd           AS kofia_fund_code
+             , fnd02_ksd_fund_cd             AS ksd_fund_code
+             , fnd02_ksd_item_cd             AS ksd_item_code
+             , f_cdnm('IcamTrustCode', fnd02_kofia_trust_cd, fnd01_company_id, fnd02_work_date)          AS kofia_trust_name
+             , f_cdnm('IcamFundType', fnd02_kofia_fund_type_cd, fnd01_company_id, fnd02_work_date)       AS kofia_fund_type_name
+             , f_cdnm('IcamPublicCode', fnd02_kofia_public_cd, fnd01_company_id, fnd02_work_date)        AS kofia_public_name
+             , f_cdnm('IcamParentCode', fnd02_kofia_parent_cd, fnd01_company_id, fnd02_work_date)        AS kofia_parent_name
+             , f_cdnm('IcamClassType', fnd02_kofia_class_type_cd, fnd01_company_id, fnd02_work_date)     AS kofia_class_type_name
+             , f_cdnm('IcamFundUnitCode', fnd02_kofia_fund_unit_cd, fnd01_company_id, fnd02_work_date)   AS kofia_fund_unit_name
+             , f_cdnm('IcamCharClassCode', fnd02_kofia_char_class_cd, fnd01_company_id, fnd02_work_date) AS kofia_char_class_name
+             , fnd02_org_code_nm             AS org_code_name
+             , fnd02_operator1               AS operator1
+             , fnd02_operator2               AS operator2
+             , fnd02_cur                     AS cur
+             , fnd02_seolj_aek               AS seolj_aek
+             , fnd02_sunjasan_aek            AS sunjasan_aek
+             , std_price                     AS std_price
+             , fnd02_next_close_date         AS next_close_date
+             , fnd02_next_fee_date           AS next_fee_date
+             , fnd02_end_expect_date         AS end_expect_date
+             , ( SELECT fnd03_consignment_nm
+                   FROM fnd03_consignment
+                  WHERE fnd03_consignment_cd = fnd02_consignment_cd
+                    AND fnd03_company_id     = fnd01_company_id ) AS consignment_name
+             , ( SELECT fnd09_trust_bank_nm
+                   FROM fnd09_trust_bank
+                  WHERE fnd09_trust_bank_cd = fnd02_trust_bank_cd
+                    AND fnd09_company_id    = fnd01_company_id ) AS trust_bank_name
+             , ( SELECT fnd06_office_work_nm
+                   FROM fnd06_office_work
+                  WHERE fnd06_office_work_cd = fnd02_office_work_cd
+                    AND fnd06_company_id     = fnd01_company_id ) AS office_work_name
+             , fnd02_management_rate         AS management_rate
+             , fnd02_sales_rate              AS sales_rate
+             , fnd02_consignment_rate        AS consignment_rate
+             , fnd02_office_work_rate        AS office_work_rate
+          FROM fnd02_fund_info
+               INNER JOIN fnd01_fund_code ON fnd01_fund_code_id = fnd02_fund_code_id
+               LEFT  JOIN (
+                            SELECT icam06_std_date     std_date
+                                 , icam06_std_price    std_price
+                              FROM icam06_fund_book
+                                   INNER JOIN sys01_company ON ( sys01_icam_company_cd = icam06_icam_company_cd AND
+                                                                 sys01_company_id      = #{c.companyId}       )
+                             WHERE icam06_fund_cd = #{c.fundCode}
+                             UNION ALL
+                            SELECT DISTINCT
+                                   to_date(ifi32_std_date,'yyyymmdd')      std_date
+                                 , ifi32_price                             std_price
+                              FROM ifi32_fund_price
+                                   INNER JOIN ifi29_am_corp_mapping ON ( ifi29_if_cd       = ifi32_if_cd       AND
+                                                                         ifi29_am_corp_cd  = ifi32_am_corp_cd  AND
+                                                                         ifi29_company_id  = #{c.companyId}  )
+                             WHERE ifi32_if_cd   IN ('SFTP_SHFP_01','SFTP_KBFP_01')
+                               AND ifi32_fund_cd = #{c.fundCode}
+                               AND ifi32_cur_cd  = 'KRW'
+                          ) prc ON std_date = fnd02_work_date
+         WHERE fnd01_fund_cd = #{c.fundCode}
+           AND fnd01_company_id = #{c.companyId}
+         ORDER BY fnd02_work_date DESC
+         LIMIT #{c.limit}
+        OFFSET #{c.offset}
+    </select>
+
+    <select id="selectByNameTotal" resultType="long">
+        SELECT count(*)
+          FROM fnd02_fund_info
+             , fnd01_fund_code a
+         WHERE fnd01_fund_code_id = fnd02_fund_code_id
+           AND fnd01_fund_cd = #{c.fundCode}
+           AND fnd01_company_id = #{c.companyId}
+    </select>
+
+</mapper>

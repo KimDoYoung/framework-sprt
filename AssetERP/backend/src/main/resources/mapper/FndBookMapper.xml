@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/fnd/mapper/fnd10_book.xml selectByRelateAst (P09 펀드별 자산 조회(ICAM)) · selectByRelateFnd (P10 자산별 펀드 조회(ICAM)) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.fnd.mapper.FndBookMapper">
+
+    <!-- 그리드가 쓰는 열(종목코드 fnd10_item_cd, 종목명 열이 쓰는 비고 fnd10_note, 평가금액)만. 정렬은 원본의 종목 전체경로(f_ast_class_tree_nm_allpath2) -->
+    <select id="selectByRelateAst" resultType="kr.co.kfs.asseterp.biz.fnd.dto.BookRelateAstRes">
+        SELECT t.fnd10_book_id  AS book_id
+             , t.fnd10_item_cd  AS item_code
+             , t.fnd10_note     AS note
+             , t.fnd10_eval_amt AS eval_amt
+          FROM (
+                 SELECT a.*
+                      , f_ast_class_tree_nm_allpath2(b.ast01_class_tree_id) AS fnd10_item_full_nm
+                   FROM fnd10_book a
+                        INNER JOIN ast01_class_tree b ON a.fnd10_ast_class_tree_id = b.ast01_class_tree_id
+                  WHERE 1=1
+                    AND fnd10_fund_code_id = #{fundCodeId}
+                    AND fnd10_company_id   = #{companyId}
+                    AND fnd10_std_date     = #{stdDate}
+               ) t
+         ORDER BY t.fnd10_item_full_nm collate "ko_KR.utf8" asc
+    </select>
+
+    <!-- AS-IS selectByRelateFnd: 내 조직(fnd08_auth_yn)의 일반 펀드 중 기준일에 그 종목(자산분류)을 가진 펀드. 행 ID(fnd10_book_id)는 원본의 row_number -->
+    <select id="selectByRelateFnd" resultType="kr.co.kfs.asseterp.biz.fnd.dto.BookRelateFndRes">
+        SELECT  row_number() OVER (ORDER BY fnd10_fund_cd) AS book_id
+             ,  fnd10_fund_cd AS fund_code
+             ,  fnd10_fund_nm AS fund_name
+          FROM  (
+                   SELECT   distinct
+                            c.fund_cd                                           AS fnd10_fund_cd
+                        ,   c.fund_nm                                           AS fnd10_fund_nm
+                     FROM   fnd10_book a
+                            INNER JOIN ast01_class_tree b ON a.fnd10_ast_class_tree_id = b.ast01_class_tree_id
+                            INNER JOIN ( SELECT fnd01_fund_code_id  fund_id
+                                              , fnd01_fund_cd       fund_cd
+                                              , fnd02_fund_nm       fund_nm
+                                           FROM fnd01_fund_code fnd01
+                                              , fnd02_fund_info fnd02
+                                              , fnd08_org_auth  fnd08
+                                          WHERE fnd01_fund_code_id = fnd02_fund_code_id
+                                            AND fnd01_fund_code_id = fnd08_fund_code_id
+                                            AND fnd08_auth_yn      = 'true'
+                                            AND fnd08_org_code_id  = #{orgId}
+                                            AND (fnd02_fund_code_id, fnd02_work_date) IN ( SELECT a.fnd02_fund_code_id, MAX(a.fnd02_work_date)
+                                                                                             FROM fnd02_fund_info a
+                                                                                            WHERE a.fnd02_work_date &lt;= CAST(#{stdDate} AS date)
+                                                                                            GROUP BY a.fnd02_fund_code_id )
+                                            AND fnd01_company_id = #{companyId}
+                                            AND COALESCE(fnd01_close_yn,'false') = 'false'
+                                            AND COALESCE(fnd01_plan_yn,'false') = 'false' ) c ON a.fnd10_fund_code_id = c.fund_id
+                    WHERE   1=1
+                      AND   fnd10_company_id        = #{companyId}
+                      AND   fnd10_ast_class_tree_id = #{astClassTreeId}
+                      AND   fnd10_std_date          = CAST(#{stdDate} AS date)
+                ) a
+         ORDER BY fnd10_fund_cd
+    </select>
+
+</mapper>

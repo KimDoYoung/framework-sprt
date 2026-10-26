@@ -1008,6 +1008,12 @@ export const sysApi = {
     await apiClient.post<ApiResponse<void>>('v1/sys/calendars/generate', null, { params: { year } });
   },
 
+  /** AS-IS sys.Sys12_Calendar.selectBizDate: 기준일에서 type만큼 이동한 영업일('-1' = 전 영업일) → 'yyyy-MM-dd' */
+  getBizDate: async (stdDate: string, type = '-1'): Promise<string> => {
+    const res = await apiClient.get<ApiResponse<string>>('v1/sys/calendars/biz-date', { params: { stdDate, type } });
+    return res.data.data;
+  },
+
   /** AS-IS sys.Sys12_Calendar.selectByDay: 고객사반영 조회창 (관리자) */
   searchCalendarCustomers: async (day: string): Promise<Calendar[]> => {
     const res = await apiClient.get<ApiResponse<Calendar[]>>('v1/sys/calendars/customers', { params: { day } });

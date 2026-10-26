@@ -4,11 +4,15 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoService;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundCodeCond;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundCodeRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundHistoryCond;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundHistoryRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthCond;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanDeleteReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanListRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundRelateCond;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundRelateRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanSaveReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundSaveReq;
@@ -162,6 +166,21 @@ public class FndFundCodeService {
     /** AS-IS fnd.Fnd01_FundCode.selectByFundName L38 (P07 펀드 조회) — P05와 같은 조건, 최종 규약 3열이 더 있다 */
     public List<FundSearchRes> searchFundSearch(UserPrincipal user, boolean closeYn, String fundName, String fundTypeCode, String classTypeCode) {
         return mapper.selectFundSearch(searchCond(user, closeYn, fundName, fundTypeCode, classTypeCode));
+    }
+
+    /** AS-IS fnd.Fnd01_FundCode.selectByHistoryCompanyId L331 (P08 펀드 조회(변경이력)). 기준일은 오늘, 검색어는 SQL이 %…%로 감싼다 */
+    public List<FundHistoryRes> searchHistory(UserPrincipal user, boolean closeYn, String searchText) {
+        return mapper.selectByHistoryCompanyId(new FundHistoryCond(user.getCompanyId(), String.valueOf(closeYn),
+                searchText == null ? "" : searchText));
+    }
+
+    /**
+     * AS-IS fnd.Fnd01_FundCode.selectByCompanyId L326 (P09 펀드별 자산 조회). 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0.
+     * fundType은 콤보 코드를 그대로(원본은 "전체"도 넘기므로 그때는 ICAM 조건에 걸려 목록이 비는 것까지 같다)
+     */
+    public List<FundRelateRes> searchRelate(UserPrincipal user, LocalDate stdDate, String fundType, String searchText) {
+        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        return mapper.selectByCompanyId(new FundRelateCond(user.getCompanyId(), orgId, stdDate, fundType, searchText == null ? "" : searchText));
     }
 
     /**

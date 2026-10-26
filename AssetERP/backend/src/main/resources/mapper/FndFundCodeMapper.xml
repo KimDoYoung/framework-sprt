@@ -194,6 +194,71 @@
          ORDER BY x.fund_code
     </select>
 
+    <!-- === P08 펀드 조회(변경이력) (Fnd01_Tab_FundIcamHistory) — AS-IS selectByHistoryCompanyId L331: 오늘 이전 작업일 중 가장 늦은 펀드정보, 일반 펀드(planYn=false).
+         원본은 fnd01.*, fnd02.*를 모두 주지만 그리드가 쓰는 열(펀드코드·펀드명·최신적용일·설정일·해지일)만 -->
+    <select id="selectByHistoryCompanyId" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundHistoryRes">
+        SELECT fnd01.fnd01_fund_code_id AS fund_code_id
+             , fnd01.fnd01_fund_cd      AS fund_code
+             , fnd02.fnd02_fund_nm      AS fund_name
+             , CAST(fnd02.fnd02_work_date AS date)   AS work_date
+             , CAST(fnd01.fnd01_start_date AS date)  AS start_date
+             , CAST(fnd01.fnd01_end_date AS date)    AS end_date
+          FROM fnd01_fund_code fnd01
+             , fnd02_fund_info fnd02
+         WHERE fnd01_fund_code_id = fnd02_fund_code_id
+           AND (fnd02_fund_code_id, fnd02_work_date) IN ( SELECT a.fnd02_fund_code_id, MAX(a.fnd02_work_date)
+                                                            FROM fnd02_fund_info a
+                                                           WHERE a.fnd02_work_date &lt;= f_today()
+                                                           GROUP BY a.fnd02_fund_code_id )
+           AND fnd01_company_id = #{c.companyId}
+           AND COALESCE(fnd01_close_yn,'false') IN ('false', #{c.closeYn})
+           AND COALESCE(fnd01_plan_yn ,'false') = 'false'
+           AND upper(fnd01_fund_cd||fnd02_fund_nm) like '%'||upper(#{c.searchText})||'%'
+         ORDER BY fnd02_fund_code_id
+    </select>
+
+    <!-- === P09 펀드별 자산 조회(ICAM) (Fnd10_Tab_RelateAst) — AS-IS selectByCompanyId L334: 내 조직(fnd08_auth_yn)의 일반 펀드, 기준일 이전 최신 펀드정보.
+         fundType이 null이 아니면(원본은 "전체"도 보냄) ICAM 보유 펀드 조건이 붙고 1:운용펀드·2:판매펀드가 아니면 아무 것도 안 나온다. 그리드 열(코드·펀드명)만 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundRelateRes">
+        SELECT fnd01.fnd01_fund_code_id AS fund_code_id
+             , fnd01.fnd01_fund_cd      AS fund_code
+             , fnd02.fnd02_fund_nm      AS fund_name
+          FROM fnd01_fund_code fnd01
+             , fnd02_fund_info fnd02
+             , fnd08_org_auth  fnd08
+         WHERE fnd01_fund_code_id = fnd02_fund_code_id
+           AND fnd01_fund_code_id = fnd08_fund_code_id
+           AND fnd08_auth_yn      = 'true'
+           AND fnd08_org_code_id  = #{c.orgId}
+           AND (fnd02_fund_code_id, fnd02_work_date) IN ( SELECT a.fnd02_fund_code_id, MAX(a.fnd02_work_date)
+                                                            FROM fnd02_fund_info a
+                                                           WHERE a.fnd02_work_date &lt;= #{c.stdDate}
+                                                           GROUP BY a.fnd02_fund_code_id )
+           AND fnd01_company_id = #{c.companyId}
+           AND COALESCE(fnd01_close_yn,'false') = 'false'
+           AND COALESCE(fnd01_plan_yn ,'false') = 'false'
+           AND upper(fnd01_fund_cd||fnd02_fund_nm) like '%'||upper(#{c.searchText})||'%'
+        <choose>
+            <when test="c.fundType != null">
+           AND EXISTS ( SELECT 1
+                          FROM icam06_fund_book
+                               INNER JOIN sys01_company ON ( sys01_icam_company_cd = icam06_icam_company_cd AND
+                                                             sys01_company_id      = fnd01_company_id       )
+                         WHERE icam06_std_date = fnd02_work_date::date
+                           AND icam06_fund_cd  = fnd01_fund_cd
+                           AND ( (    #{c.fundType}    = '1'  /*(1:운용펀드)*/
+                                  AND icam06_fund_cd = (CASE WHEN COALESCE(icam06_multi_class_cd,'') != '' THEN icam06_multi_class_cd ELSE icam06_fund_cd END)
+                                 )
+                                 OR
+                                 (    #{c.fundType}     = '2' /*(2:판매펀드)*/
+                                  AND icam06_fund_cd != COALESCE(icam06_multi_class_cd, '')
+                                 ) )
+                      )
+            </when>
+        </choose>
+         ORDER BY fnd02_fund_nm collate "ko_KR.utf8" asc
+    </select>
+
     <!-- AS-IS sys99_print.deleteByPersonId (insertRdFundSearch ① 데이터 정리) -->
     <delete id="deletePrint">
         DELETE FROM sys99_print

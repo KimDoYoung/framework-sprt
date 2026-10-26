@@ -226,3 +226,77 @@ export interface FundDetail {
   workDate?: string | null;
   companyId?: number | null;
 }
+
+/** 펀드 조회(변경이력) 왼쪽 목록 한 행 (P08, AS-IS Fnd01_FundCodeModel — 오늘 기준 펀드별 최신 펀드정보) */
+export interface FundHistory {
+  fundCodeId: number;
+  fundCode: string;
+  fundName?: string | null;
+  workDate?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+}
+
+/** 펀드 변경이력 한 행 (P08, AS-IS Fnd02_FundInfoModel 중 Fnd01_Grid_FundIcamHistory 열) */
+export interface FundInfo {
+  fundInfoId: number;
+  workDate?: string | null;
+  fundName?: string | null;
+  fundFullName?: string | null;
+  kofiaFundCode?: string | null;
+  ksdFundCode?: string | null;
+  ksdItemCode?: string | null;
+  kofiaTrustName?: string | null;
+  kofiaFundTypeName?: string | null;
+  kofiaPublicName?: string | null;
+  kofiaParentName?: string | null;
+  kofiaClassTypeName?: string | null;
+  kofiaFundUnitName?: string | null;
+  kofiaCharClassName?: string | null;
+  orgCodeName?: string | null;
+  operator1?: string | null;
+  operator2?: string | null;
+  cur?: string | null;
+  seoljAek?: number | null;
+  sunjasanAek?: number | null;
+  stdPrice?: number | null;
+  nextCloseDate?: string | null;
+  nextFeeDate?: string | null;
+  endExpectDate?: string | null;
+  consignmentName?: string | null;
+  trustBankName?: string | null;
+  officeWorkName?: string | null;
+  managementRate?: number | null;
+  salesRate?: number | null;
+  consignmentRate?: number | null;
+  officeWorkRate?: number | null;
+}
+
+/** 펀드별 자산 조회 왼쪽 펀드 목록 한 행 (P09, AS-IS Fnd01_FundCodeModel 중 펀드코드·펀드명) */
+export interface FundRelate {
+  fundCodeId: number;
+  fundCode: string;
+  fundName?: string | null;
+}
+
+/** 펀드별 자산 한 행 (P09, AS-IS Fnd10_BookModel — "종목명" 열은 note(비고)를 쓴다) */
+export interface BookRelateAst {
+  bookId: number;
+  itemCode?: string | null;
+  note?: string | null;
+  evalAmt?: number | null;
+}
+
+/** 자산별 펀드 조회 왼쪽 자산(종목) 목록 한 행 (P10, AS-IS Ast01_ClassTreeModel 중 종목코드·종목명 전체경로) */
+export interface AstAssetItem {
+  classTreeId: number;
+  isin?: string | null;
+  classTreeFullName?: string | null;
+}
+
+/** 자산별 펀드 한 행 (P10, AS-IS Fnd10_BookModel 중 펀드코드·펀드명) */
+export interface BookRelateFnd {
+  bookId: number;
+  fundCode?: string | null;
+  fundName?: string | null;
+}

@@ -84,4 +84,27 @@
                 )
          ORDER BY path
     </select>
+
+    <!-- === P10 자산별 펀드 조회(ICAM) (Fnd10_Tab_RelateFnd) — AS-IS(IDMS-IC) ast01_class_tree.selectByAssetType: 기준일(fnd10_std_date)에 펀드 운용자산이 있는 종목(IT).
+         그리드 열(종목코드·종목명 전체경로)과 ID만 -->
+    <select id="selectByAssetType" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstAssetItemRes">
+        SELECT a.ast01_class_tree_id        AS class_tree_id
+             , a.ast01_isin                 AS isin
+             , a.ast01_class_tree_full_nm   AS class_tree_full_name
+          FROM (  SELECT distinct
+                         ast01_class_tree.ast01_class_tree_id
+                       , ast01_class_tree.ast01_isin
+                       , f_ast_class_tree_nm_allpath2(ast01_class_tree_id) as ast01_class_tree_full_nm
+                    FROM ast01_class_tree
+                       , fnd10_book
+                   WHERE ast01_class_tree_id = fnd10_ast_class_tree_id
+                     AND ast01_type_cd    = 'IT'
+                     AND ast01_company_id = #{companyId}
+                     AND ast01_asset_type = #{assetType}
+                     AND fnd10_std_date   = #{stdDate}
+               ) a
+         WHERE upper(ast01_isin||ast01_class_tree_full_nm) like '%'||upper(#{searchText})||'%'
+         ORDER BY ast01_class_tree_full_nm collate "ko_KR.utf8" asc
+    </select>
+
 </mapper>

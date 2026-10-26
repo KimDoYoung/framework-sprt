@@ -29,6 +29,11 @@ public class SysCalendarService {
         return mapper.selectByYear(user.getCompanyId(), year, month == null || month.isEmpty() ? "%" : month);
     }
 
+    /** AS-IS Sys12_Calendar.selectBizDate L60: 기준일에서 type(-1 = 전 영업일)만큼 이동한 영업일, yyyy-MM-dd */
+    public String bizDate(UserPrincipal user, java.time.LocalDate stdDate, String type) {
+        return mapper.selectBizDate(user.getCompanyId(), stdDate, type);
+    }
+
     /** AS-IS insertAuto: 그 해의 일자를 지우고 다시 만든다. 원본은 월 인자를 받아도 쓰지 않는다(연 전체) */
     @Transactional
     public void generate(UserPrincipal user, String year) {

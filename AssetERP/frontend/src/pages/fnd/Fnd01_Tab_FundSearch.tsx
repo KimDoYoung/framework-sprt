@@ -124,7 +124,7 @@ export const Fnd01_Tab_FundSearch: React.FC = () => {
       <Splitter layout="vertical" style={{ height: '100%' }}>
         <Splitter.Panel min={150}>
           <div style={{ height: '100%', padding: '20px 20px 0 20px', boxSizing: 'border-box' }}>
-            <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ height: '100%',  display: 'flex', flexDirection: 'column' }}>
               <SearchBar
                 onSearch={() => void retrieve()}
                 loading={loading}
@@ -141,7 +141,7 @@ export const Fnd01_Tab_FundSearch: React.FC = () => {
                 </SearchBar.Field>
                 <Checkbox checked={closeYn} onChange={e => setCloseYn(e.target.checked)}>해지펀드포함</Checkbox>
               </SearchBar>
-              <div style={{ flex: 1, minHeight: 0 }}>
+              <div style={{ flex: 1, minHeight: 0, marginTop: 5 }}>
                 <SingleGrid<FundSearch>
                   gridRef={gridRef}
                   rowData={rows}
@@ -156,7 +156,7 @@ export const Fnd01_Tab_FundSearch: React.FC = () => {
             </div>
           </div>
         </Splitter.Panel>
-        <Splitter.Panel defaultSize={360} min={120} max={900}>
+        <Splitter.Panel defaultSize={360} min={360} max={900}>
           <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
             <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
               <Fnd01_Edit_FundSearch model={selected} />
