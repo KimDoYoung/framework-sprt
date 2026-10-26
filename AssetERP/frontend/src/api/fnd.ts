@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { Consignment, FundCode, OfficeWork, TrustBank } from '../types/fnd';
+import { Consignment, FundCode, FundLookup, FundPlan, FundPlanAuth, OfficeWork, TrustBank } from '../types/fnd';
 
 /** fnd(기관정보) 화면 API (D11~) */
 export interface FundOrgAuthParams {
@@ -17,6 +17,45 @@ export const fndApi = {
   /** AS-IS fnd.Fnd01_FundCode.selectByFundOrgAuth: 내 조직이 권한을 가진 펀드. 펀드명은 서버가 %…%로, 유형·클래스 구분은 '%'가 전체 */
   searchFundCodesByOrgAuth: async (params: FundOrgAuthParams): Promise<FundCode[]> => {
     const res = await apiClient.get<ApiResponse<FundCode[]>>('v1/fnd/fund-codes/org-auth', { params });
+    return res.data.data ?? [];
+  },
+
+  // ── P01 신규기획펀드 등록 (Fnd01_Tab_FundPlan) ──
+
+  /** AS-IS fnd.Fnd01_FundCode.selectByFundPlan: 로그인 회사의 임시펀드. 펀드명은 서버가 %…%로, 유형은 '%'가 전체 */
+  searchFundPlans: async (params: { closeYn: boolean; fundName: string; fundTypeCode: string }): Promise<FundPlan[]> => {
+    const res = await apiClient.get<ApiResponse<FundPlan[]>>('v1/fnd/fund-codes/plans', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd01_FundCode.selectByOverlap: 이미 쓰는 임시코드면 true */
+  existsFundPlanCode: async (fundCode: string): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/fnd/fund-codes/plans/overlap', { params: { fundCode } });
+    return res.data.data ?? false;
+  },
+
+  /** AS-IS fnd.Fnd01_FundCode.update: 저장된 행을 돌려준다(새 행이면 서버가 매긴 id) */
+  saveFundPlan: async (row: FundPlan): Promise<FundPlan> => {
+    const res = await apiClient.put<ApiResponse<FundPlan>>('v1/fnd/fund-codes/plans', row);
+    return res.data.data as FundPlan;
+  },
+
+  /** AS-IS fnd.Fnd01_FundCode.delete: ICAM관리 펀드가 있으면 서버가 거절 */
+  deleteFundPlans: async (rows: FundPlan[]): Promise<void> => {
+    await apiClient.delete('v1/fnd/fund-codes/plans', { data: rows.map(r => ({ fundCodeId: r.fundCodeId, fundInfoId: r.fundInfoId })) });
+  },
+
+  /** AS-IS fnd.Fnd00_Fund.selectByLookupFundCode: 펀드찾기(일반 펀드, 임시펀드 제외) */
+  searchFundLookup: async (closeYn: boolean, fundName: string): Promise<FundLookup[]> => {
+    const res = await apiClient.get<ApiResponse<FundLookup[]>>('v1/fnd/funds/lookup', { params: { closeYn, fundName } });
+    return res.data.data ?? [];
+  },
+
+  // ── P02 신규기획펀드 권한설정 (Fnd08_Tab_OrgAuthTempFund) ──
+
+  /** AS-IS fnd.Fnd01_FundCode.selectByFundName(권한부서 없음) / selectByFundOrgAuth(권한부서 orgId 있음): 임시펀드 목록 */
+  searchFundPlanAuths: async (params: { closeYn: boolean; fundName: string; fundTypeCode: string; classTypeCode: string; orgId?: number | null }): Promise<FundPlanAuth[]> => {
+    const res = await apiClient.get<ApiResponse<FundPlanAuth[]>>('v1/fnd/fund-codes/plan-auths', { params: { ...params, orgId: params.orgId ?? undefined } });
     return res.data.data ?? [];
   },
 

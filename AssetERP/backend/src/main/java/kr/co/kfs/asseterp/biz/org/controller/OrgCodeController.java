@@ -3,6 +3,9 @@ package kr.co.kfs.asseterp.biz.org.controller;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.org.dto.OrgCodeRes;
 import kr.co.kfs.asseterp.biz.org.dto.OrgCodeSaveReq;
+import kr.co.kfs.asseterp.biz.org.dto.OrgFundAuthRes;
+import kr.co.kfs.asseterp.biz.org.dto.OrgFundAuthSaveReq;
+import kr.co.kfs.asseterp.biz.org.dto.OrgInfoRes;
 import kr.co.kfs.asseterp.biz.org.service.OrgCodeService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -54,5 +57,24 @@ public class OrgCodeController {
     public ApiResponse<Integer> deleteOrgCode(@AuthenticationPrincipal UserPrincipal principal,
                                               @PathVariable Long codeId, @RequestParam Long infoId) {
         return ApiResponse.ok(orgCodeService.deleteOrgCode(principal, codeId, infoId));
+    }
+    /** AS-IS org.Org01_Code.selectByKorName (P02 조직찾기) */
+    @GetMapping("/search")
+    public ApiResponse<List<OrgInfoRes>> searchByKorName(@AuthenticationPrincipal UserPrincipal principal,
+                                                         @RequestParam(required = false) String korName,
+                                                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
+        return ApiResponse.ok(orgCodeService.searchByKorName(principal, korName, baseDate));
+    }
+
+    /** AS-IS org.Org01_Code.selectByFundCodeId (P02 펀드별 조직 권한 트리) */
+    @GetMapping("/fund-auths")
+    public ApiResponse<List<OrgFundAuthRes>> searchFundAuthTree(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long fundCodeId) {
+        return ApiResponse.ok(orgCodeService.searchFundAuthTree(principal, fundCodeId));
+    }
+
+    /** AS-IS org.Org01_Code.updateFundAuth (P02 [저장]) → 저장한 건수 */
+    @PutMapping("/fund-auths")
+    public ApiResponse<Integer> updateFundAuth(@AuthenticationPrincipal UserPrincipal principal, @RequestBody OrgFundAuthSaveReq req) {
+        return ApiResponse.ok(orgCodeService.updateFundAuth(principal, req));
     }
 }

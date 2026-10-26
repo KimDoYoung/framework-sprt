@@ -7218,5 +7218,61 @@
     "note": "docs/work/O/O06-작업기록.md",
     "history": [],
     "id": "O06"
+  },
+  "Fnd01_Tab_FundPlan": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/fnd/Fnd00_Lookup_FundCode.java": "84eeb15d77e1a0b432bae8b1ade37798540b127f",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd01_Edit_FundPlan.java": "b358ca9ec0985b9ee2fb7d192c887000a90da60f",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd01_Tab_FundPlan.java": "c0e99a4297478b0cced15fe5b2ee1fe59a5037b3",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd00_FundModel.java": "fdff888d8bf9032fea0f195e1a45c8009e58a647",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd00_FundModelProperties.java": "ac8fd8d5a7056bbdc0612d2e39dfc74b506703c7",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModel.java": "6c8b85e6fd82c9178f6525f60a5e33fd9adee66f",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModelProperties.java": "e5ef80aca72758d7422b0f86dc61cf24a4f22895",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd02_FundInfoModel.java": "997b1e7a847092c9ad0e59ce182fefb8b9ca1934",
+      "application/src/main/java/myApp/server/fnd/Fnd00_Fund.java": "79d6f410c2f785d1dac7851d6984c1b759e7567d",
+      "application/src/main/java/myApp/server/fnd/Fnd01_FundCode.java": "49cd01fec4668d353126f461c07c18fc6d93e024",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd00_fund.xml": "37146e07cb6e3fc9b138d7e60aa68ee39fd6a096",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd01_fund_code.xml": "c6b7e784adfbb4ffee602c9f03a4c96b73405b3d",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd02_fund_info.xml": "01af2ac1b81a804096f88577ea4f9458d81ecb12",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-26T11:26:57+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/P/P01-작업기록.md",
+    "history": [],
+    "id": "P01"
+  },
+  "Fnd08_Tab_OrgAuthTempFund": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/fnd/Fnd08_Lookup_OrgCode.java": "362248c9e3c79b6883559b26ad3a1c7ac201603e",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd08_Page_OrgAuth.java": "206540b6a49829665d525eda3529270e35ae4723",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd08_Tab_OrgAuthTempFund.java": "c32e060ed824b31f5e580b0ac38e53b65a8a21c4",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModel.java": "6c8b85e6fd82c9178f6525f60a5e33fd9adee66f",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModelProperties.java": "e5ef80aca72758d7422b0f86dc61cf24a4f22895",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd02_FundInfoModel.java": "997b1e7a847092c9ad0e59ce182fefb8b9ca1934",
+      "application/src/main/java/myApp/server/fnd/Fnd01_FundCode.java": "49cd01fec4668d353126f461c07c18fc6d93e024",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd01_fund_code.xml": "c6b7e784adfbb4ffee602c9f03a4c96b73405b3d",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd08_org_auth.xml": "c019511575673b13ce069371f7eae2a98c9c4f87",
+      "application/src/main/java/myApp/server/org/Org01_Code.java": "f0e6a0c84939b5f2fccd14ee3dcd22c6ff5e8797",
+      "application/src/main/java/myApp/server/org/mapper/org01_code.xml": "45bce5ce97e58acb58ac7bad89d1ac9a849fb7af",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-26T12:22:26+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/P/P02-작업기록.md",
+    "history": [],
+    "id": "P02"
   }
 }

@@ -210,4 +210,71 @@
     <delete id="deleteCode">
         DELETE FROM org01_code WHERE org01_code_id = #{codeId} AND org01_company_id = #{companyId}
     </delete>
+
+    <!-- === P02 신규기획펀드 권한설정 (Fnd08_Tab_OrgAuthTempFund) ===
+         AS-IS(IDMS-IC) org01_code.selectByKorName (Fnd08_Lookup_OrgCode) / selectByFundCodeId (Fnd08_Page_OrgAuth) -->
+    <select id="selectByKorName" resultType="kr.co.kfs.asseterp.biz.org.dto.OrgInfoRes">
+        SELECT a.org01_code_id                                                          AS org_code_id
+             , a.org01_org_cd                                                           AS org_cd
+             , b.org02_kor_nm                                                           AS kor_nm
+             , f_org_parent_full_nm(a.org01_code_id, a.org01_close_date)                AS parent_full_nm
+             , b.org02_level_cd                                                         AS level_cd
+             , f_cdnm('OrgLevelCode', b.org02_level_cd, a.org01_company_id, b.org02_mod_date) AS level_nm
+             , b.org02_mod_date                                                         AS mod_date
+          FROM org01_code a
+             , org02_info b
+         WHERE a.org01_company_id = #{companyId}
+           AND a.org01_code_id    = b.org02_code_id
+           AND #{baseDate} BETWEEN a.org01_open_date AND COALESCE(a.org01_close_date, to_date('99991231', 'yyyymmdd'))
+           AND b.org02_kor_nm LIKE #{korName}
+           AND b.org02_mod_date = ( SELECT MAX(x.org02_mod_date)
+                                      FROM org02_info x
+                                     WHERE x.org02_code_id = b.org02_code_id
+                                       AND x.org02_mod_date &lt;= #{baseDate} )
+    </select>
+
+    <select id="selectByFundCodeId" resultType="kr.co.kfs.asseterp.biz.org.dto.OrgFundAuthRes">
+        SELECT org01_code.org01_code_id         AS code_id
+             , org02_info.org02_parent_code_id  AS parent_code_id
+             , 0                                AS depth
+             , org02_info.org02_kor_nm          AS kor_name
+             , org01_code.org01_org_cd          AS org_code
+             , fnd08_org_auth.fnd08_org_auth_id AS org_auth_id
+             , fnd08_org_auth.fnd08_auth_yn     AS auth_yn
+             , org02_info.org02_note            AS note
+          FROM org01_code
+               INNER JOIN org02_info ON org01_code_id = org02_code_id
+               LEFT OUTER JOIN fnd08_org_auth ON org01_code_id = fnd08_org_code_id AND fnd08_fund_code_id = #{fundCodeId}
+         WHERE org01_company_id = #{companyId}
+           AND org02_parent_code_id = #{parentCodeId}
+           AND f_sysdate() BETWEEN org01_open_date AND COALESCE(org01_close_date, to_date('99991231', 'yyyymmdd'))
+           AND org02_mod_date = ( SELECT MAX(x.org02_mod_date)
+                                    FROM org02_info x
+                                   WHERE x.org02_code_id = org02_info.org02_code_id
+                                     AND x.org02_mod_date &lt;= f_sysdate() )
+         ORDER BY org02_sort_order
+    </select>
+
+    <select id="countFundInCompany" resultType="int">
+        SELECT COUNT(*)
+          FROM fnd01_fund_code
+         WHERE fnd01_fund_code_id = #{fundCodeId}
+           AND fnd01_company_id   = #{companyId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(fnd08_org_auth) 동적 INSERT/UPDATE — 이 화면은 권한 여부(authYn)만 바꾼다. 조직은 로그인 회사 것만(보안 보강) -->
+    <insert id="insertOrgAuth">
+        INSERT INTO fnd08_org_auth (fnd08_org_auth_id, fnd08_fund_code_id, fnd08_org_code_id, fnd08_auth_yn)
+        SELECT #{orgAuthId}, #{fundCodeId}, org01_code_id, #{r.authYn}
+          FROM org01_code
+         WHERE org01_code_id = #{r.orgCodeId}
+           AND org01_company_id = (SELECT fnd01_company_id FROM fnd01_fund_code WHERE fnd01_fund_code_id = #{fundCodeId})
+    </insert>
+
+    <update id="updateOrgAuth">
+        UPDATE fnd08_org_auth
+           SET fnd08_auth_yn = #{r.authYn}
+         WHERE fnd08_org_auth_id  = #{r.orgAuthId}
+           AND fnd08_fund_code_id = #{fundCodeId}
+    </update>
 </mapper>

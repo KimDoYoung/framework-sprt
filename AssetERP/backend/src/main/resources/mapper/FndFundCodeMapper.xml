@@ -112,4 +112,223 @@
                LEFT OUTER JOIN kofiaPublic    ON kofiaPublic.cd    = tt.fnd02_kofia_public_cd
          ORDER BY fnd01_fund_cd
     </select>
+
+    <!-- === P01 신규기획펀드 등록 (Fnd01_Tab_FundPlan) ===
+         AS-IS(IDMS-IC) fnd01_fund_code.selectByFundPlan L534 / selectById L35: t1.*·t2.* 중 화면이 쓰는 열만 별칭으로 -->
+    <sql id="planColumns">
+        t1.fnd01_fund_code_id                                                                          AS fund_code_id
+      , t2.fnd02_fund_info_id                                                                          AS fund_info_id
+      , t1.fnd01_fund_cd                                                                               AS fund_code
+      , t2.fnd02_fund_nm                                                                               AS fund_name
+      , t2.fnd02_kofia_fund_type_cd                                                                    AS kofia_fund_type_code
+      , f_cdnm('IcamFundType',      t2.fnd02_kofia_fund_type_cd, t1.fnd01_company_id, f_sysdate())     AS kofia_fund_type_name
+      , CAST(t1.fnd01_start_date AS date)                                                              AS start_date
+      , CAST(t1.fnd01_end_date AS date)                                                                AS end_date
+      , t1.fnd01_close_yn                                                                              AS close_yn
+      , f_cdnm('PlnClosedFundCode', t1.fnd01_close_yn, t1.fnd01_company_id, f_sysdate())               AS close_name
+      , t2.fnd02_kofia_trust_cd                                                                        AS kofia_trust_code
+      , f_cdnm('IcamTrustCode',     t2.fnd02_kofia_trust_cd, t1.fnd01_company_id, f_sysdate())         AS kofia_trust_name
+      , t2.fnd02_kofia_public_cd                                                                       AS kofia_public_code
+      , f_cdnm('IcamPublicCode',    t2.fnd02_kofia_public_cd, t1.fnd01_company_id, f_sysdate())        AS kofia_public_name
+      , t2.fnd02_org_code_nm                                                                           AS org_code_name
+      , t2.fnd02_operator1                                                                             AS operator1
+      , t2.fnd02_operator2                                                                             AS operator2
+      , t1.fnd01_real_fund_id                                                                          AS real_fund_id
+      , t3.fnd01_fund_cd                                                                               AS real_fund_code
+      , f_get_fund_nm2(t3.fnd01_fund_code_id, f_today())                                               AS real_fund_name
+      , CAST(t2.fnd02_work_date AS date)                                                               AS work_date
+      , t2.fnd02_plan_investor_dscr                                                                    AS plan_investor_dscr
+      , t2.fnd02_plan_note                                                                             AS plan_note
+      , t1.fnd01_note                                                                                  AS note
+      , t1.fnd01_icam_yn                                                                               AS icam_yn
+      , t1.fnd01_company_id                                                                            AS company_id
+    </sql>
+
+    <sql id="planFrom">
+          FROM fnd01_fund_code t1
+               INNER JOIN fnd02_fund_info t2 ON t1.fnd01_fund_code_id = t2.fnd02_fund_code_id
+               LEFT OUTER JOIN fnd01_fund_code t3 ON t3.fnd01_fund_code_id = t1.fnd01_real_fund_id
+         WHERE t1.fnd01_company_id = #{companyId}
+           AND t1.fnd01_plan_yn    = 'true'
+           AND t2.fnd02_work_date  = f_max_workdate(t2.fnd02_fund_code_id, f_trunc(f_sysdate()))
+    </sql>
+
+    <!-- AS-IS selectByFundPlan L534 -->
+    <select id="selectByFundPlan" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundPlanRes">
+        SELECT <include refid="planColumns"/>
+        <include refid="planFrom"/>
+           AND t1.fnd01_close_yn IN ('false', #{closeYn})
+           AND t1.fnd01_fund_cd||t2.fnd02_fund_nm LIKE #{fundName}
+           AND t2.fnd02_kofia_fund_type_cd        LIKE #{fundTypeCode}
+         ORDER BY t1.fnd01_fund_cd
+    </select>
+
+    <!-- AS-IS selectById L35 (저장 뒤 다시 읽기) — 회사·임시펀드 조건은 보안 보강 -->
+    <select id="selectPlanById" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundPlanRes">
+        SELECT <include refid="planColumns"/>
+        <include refid="planFrom"/>
+           AND t1.fnd01_fund_code_id = #{fundCodeId}
+    </select>
+
+    <!-- 삭제 대상 검사 (AS-IS는 화면이 보낸 모델의 icamYn을 믿는다 → 서버가 DB에서 읽는다) -->
+    <select id="selectPlanForDelete" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundPlanRes">
+        SELECT <include refid="planColumns"/>
+        <include refid="planFrom"/>
+           AND t1.fnd01_fund_code_id IN
+        <foreach collection="fundCodeIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <!-- AS-IS selectByOverlap L771: select * ... like :fundCode -->
+    <select id="countByOverlap" resultType="long">
+        SELECT COUNT(*)
+          FROM fnd01_fund_code
+         WHERE fnd01_fund_cd LIKE #{fundCode}
+    </select>
+
+    <!-- AS-IS selectOneFundCodeCheck L665 -->
+    <select id="countFundCodeCheck" resultType="long">
+        SELECT COUNT(*)
+          FROM fnd01_fund_code
+         WHERE fnd01_fund_cd       = #{fundCode}
+           AND fnd01_fund_code_id != #{fundCodeId}
+           AND fnd01_plan_yn       = #{planYn}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel(fnd01_fund_code) 동적 INSERT/UPDATE — 편집 폼이 바꾸는 열만. 임시펀드(planYn=true) 고정 -->
+    <insert id="insertFundCode">
+        INSERT INTO fnd01_fund_code (fnd01_fund_code_id, fnd01_company_id, fnd01_fund_cd, fnd01_start_date, fnd01_end_date,
+                                     fnd01_close_yn, fnd01_plan_yn, fnd01_real_fund_id, fnd01_note)
+        VALUES (#{fundCodeId}, #{companyId}, #{r.fundCode}, #{r.startDate,jdbcType=DATE}, #{r.endDate,jdbcType=DATE},
+                #{r.closeYn}, 'true', #{r.realFundId,jdbcType=NUMERIC}, #{r.note})
+    </insert>
+
+    <update id="updateFundCode">
+        UPDATE fnd01_fund_code
+           SET fnd01_fund_cd      = #{r.fundCode},
+               fnd01_start_date   = #{r.startDate,jdbcType=DATE},
+               fnd01_end_date     = #{r.endDate,jdbcType=DATE},
+               fnd01_close_yn     = #{r.closeYn},
+               fnd01_real_fund_id = #{r.realFundId,jdbcType=NUMERIC},
+               fnd01_note         = #{r.note}
+         WHERE fnd01_fund_code_id = #{r.fundCodeId}
+           AND fnd01_company_id   = #{companyId}
+           AND fnd01_plan_yn      = 'true'
+    </update>
+
+    <!-- AS-IS UpdateDataModel(fnd02_fund_info) 동적 INSERT/UPDATE -->
+    <insert id="insertFundInfo">
+        INSERT INTO fnd02_fund_info (fnd02_fund_info_id, fnd02_fund_code_id, fnd02_work_date, fnd02_fund_nm, fnd02_kofia_fund_type_cd,
+                                     fnd02_kofia_trust_cd, fnd02_kofia_public_cd, fnd02_operator1, fnd02_operator2,
+                                     fnd02_plan_investor_dscr, fnd02_plan_note)
+        VALUES (#{fundInfoId}, #{fundCodeId}, #{r.workDate,jdbcType=DATE}, #{r.fundName}, #{r.kofiaFundTypeCode},
+                #{r.kofiaTrustCode}, #{r.kofiaPublicCode}, #{r.operator1}, #{r.operator2},
+                #{r.planInvestorDscr}, #{r.planNote})
+    </insert>
+
+    <update id="updateFundInfo">
+        UPDATE fnd02_fund_info
+           SET fnd02_fund_nm            = #{r.fundName},
+               fnd02_kofia_fund_type_cd = #{r.kofiaFundTypeCode},
+               fnd02_kofia_trust_cd     = #{r.kofiaTrustCode},
+               fnd02_kofia_public_cd    = #{r.kofiaPublicCode},
+               fnd02_operator1          = #{r.operator1},
+               fnd02_operator2          = #{r.operator2},
+               fnd02_plan_investor_dscr = #{r.planInvestorDscr},
+               fnd02_plan_note          = #{r.planNote}
+         WHERE fnd02_fund_info_id = #{r.fundInfoId}
+           AND fnd02_fund_code_id = #{fundCodeId}
+    </update>
+
+    <!-- AS-IS delete: 먼저 fnd02_fund_info(화면 행의 정보 id), 다음 fnd01_fund_code. 코드 id 조건은 보안 보강 -->
+    <delete id="deleteFundInfos">
+        DELETE FROM fnd02_fund_info
+         WHERE fnd02_fund_info_id IN
+        <foreach collection="fundInfoIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+           AND fnd02_fund_code_id IN
+        <foreach collection="fundCodeIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <delete id="deleteFundCodes">
+        DELETE FROM fnd01_fund_code
+         WHERE fnd01_company_id = #{companyId}
+           AND fnd01_plan_yn    = 'true'
+           AND fnd01_fund_code_id IN
+        <foreach collection="fundCodeIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- === P02 신규기획펀드 권한설정 (Fnd08_Tab_OrgAuthTempFund) — 목록은 임시펀드(planYn=true)만 ===
+         AS-IS selectByFundName L38: 권한부서를 안 고르면. 이름 열은 AS-IS와 같은 코드 CTE(ClosedFundCode·IcamFundType), 그리드가 안 쓰는 열·조인은 뺐다 -->
+    <select id="selectByFundName" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthRes">
+        WITH closeFund AS ( <include refid="codeName"><property name="kind" value="ClosedFundCode"/></include> )
+           , kofiaFundType AS ( <include refid="codeName"><property name="kind" value="IcamFundType"/></include> )
+        SELECT t1.fnd01_fund_code_id         AS fund_code_id
+             , t1.fnd01_fund_cd              AS fund_code
+             , t2.fnd02_fund_nm              AS fund_name
+             , kofiaFundType.nm              AS kofia_fund_type_name
+             , CAST(t1.fnd01_start_date AS date) AS start_date
+             , CAST(t1.fnd01_end_date AS date)   AS end_date
+             , closeFund.nm                  AS close_name
+             , t2.fnd02_org_code_nm          AS org_code_name
+             , t2.fnd02_operator1            AS operator1
+             , t1.fnd01_note                 AS note
+          FROM fnd01_fund_code t1
+               INNER JOIN fnd02_fund_info t2 ON t1.fnd01_fund_code_id = t2.fnd02_fund_code_id
+               LEFT OUTER JOIN fnd03_consignment ON ( fnd03_consignment_cd = t2.fnd02_consignment_cd AND fnd03_company_id = t1.fnd01_company_id )
+               LEFT OUTER JOIN fnd06_office_work ON ( fnd06_office_work_cd = t2.fnd02_office_work_cd AND fnd06_company_id = t1.fnd01_company_id )
+               LEFT OUTER JOIN closeFund      ON closeFund.cd      = t1.fnd01_close_yn
+               LEFT OUTER JOIN kofiaFundType  ON kofiaFundType.cd  = t2.fnd02_kofia_fund_type_cd
+         WHERE 1=1
+           AND t2.fnd02_work_date = f_max_workdate(t2.fnd02_fund_code_id, f_trunc(f_sysdate()))
+           AND t1.fnd01_company_id = #{c.companyId}
+           AND COALESCE(t1.fnd01_close_yn,'false') IN ('false', #{c.closeYn})
+           AND t2.fnd02_kofia_fund_type_cd                 LIKE #{c.fundTypeCode}
+           AND COALESCE(t2.fnd02_kofia_class_type_cd, '%') LIKE #{c.classTypeCode}
+           AND t1.fnd01_plan_yn = 'true'
+           AND COALESCE(t1.fnd01_icam_yn,'false') LIKE '%'
+           AND UPPER(CONCAT(t1.fnd01_fund_cd, t2.fnd02_fund_nm, t2.fnd02_kofia_fund_cd, t2.fnd02_ksd_fund_cd, fnd03_consignment_nm, fnd06_office_work_nm)) LIKE UPPER(#{c.fundName})
+         ORDER BY t1.fnd01_fund_cd
+    </select>
+
+    <!-- AS-IS selectByFundOrgAuth L392: 권한부서를 고르면. 화면이 admin을 안 보내 `admin == 'false'` 조직 조건이 빠진다
+         → 어느 조직이든 권한(fnd08_auth_yn=true)이 하나라도 있는 임시펀드가 나온다(원본 그대로). apprCount 열은 이 그리드가 안 써서 뺐다 -->
+    <select id="selectPlanByOrgAuth" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthRes">
+        WITH closeFund AS ( <include refid="codeName"><property name="kind" value="ClosedFundCode"/></include> )
+           , kofiaFundType AS ( <include refid="codeName"><property name="kind" value="IcamFundType"/></include> )
+        SELECT tt.fnd01_fund_code_id         AS fund_code_id
+             , tt.fnd01_fund_cd              AS fund_code
+             , tt.fnd02_fund_nm              AS fund_name
+             , kofiaFundType.nm              AS kofia_fund_type_name
+             , CAST(tt.fnd01_start_date AS date) AS start_date
+             , CAST(tt.fnd01_end_date AS date)   AS end_date
+             , closeFund.nm                  AS close_name
+             , tt.fnd02_org_code_nm          AS org_code_name
+             , tt.fnd02_operator1            AS operator1
+             , tt.fnd01_note                 AS note
+          FROM (
+                SELECT DISTINCT t.fnd01_fund_code_id, t.fnd01_fund_cd, t.fnd01_start_date, t.fnd01_end_date, t.fnd01_close_yn, t.fnd01_note,
+                       fnd02_fund_info.fnd02_fund_nm, fnd02_fund_info.fnd02_kofia_fund_type_cd, fnd02_fund_info.fnd02_org_code_nm, fnd02_fund_info.fnd02_operator1
+                  FROM fnd01_fund_code t
+                       INNER JOIN fnd02_fund_info ON ( fnd02_fund_code_id = fnd01_fund_code_id
+                                                       AND fnd02_work_date = ( SELECT MAX(fnd02_work_date)
+                                                                                 FROM fnd02_fund_info
+                                                                                WHERE fnd02_fund_code_id = fnd01_fund_code_id
+                                                                                  AND fnd02_work_date &lt;= f_today() ) )
+                       INNER JOIN fnd08_org_auth ON fnd08_fund_code_id = fnd01_fund_code_id
+                 WHERE fnd01_company_id = #{c.companyId}
+                   AND fnd08_auth_yn = 'true'
+                   AND fnd01_close_yn IN ('false', #{c.closeYn})
+                   AND fnd01_plan_yn = 'true'
+                   AND fnd02_kofia_fund_type_cd LIKE #{c.fundTypeCode}
+                   AND COALESCE(fnd02_kofia_class_type_cd, '%') LIKE #{c.classTypeCode}
+                   AND CONCAT(fnd01_fund_cd, fnd02_fund_nm) ILIKE #{c.fundName}
+               ) tt
+               LEFT OUTER JOIN closeFund      ON closeFund.cd      = tt.fnd01_close_yn
+               LEFT OUTER JOIN kofiaFundType  ON kofiaFundType.cd  = tt.fnd02_kofia_fund_type_cd
+         ORDER BY tt.fnd01_fund_cd
+    </select>
 </mapper>

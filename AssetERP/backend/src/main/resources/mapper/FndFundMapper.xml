@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/fnd/mapper/fnd00_fund.xml selectByLookupFundCode L366 (P01) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.fnd.mapper.FndFundMapper">
+
+    <!-- AS-IS selectByLookupFundCode L366: fnd00_fund 뷰 t1.* 중 그리드 열만. fundTypeCode는 AS-IS SQL이 쓰지 않는다 -->
+    <select id="selectByLookupFundCode" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundLookupRes">
+        SELECT t1.fnd00_fund_id                   AS fund_id
+             , t1.fnd00_fund_cd                   AS fund_code
+             , t1.fnd00_fund_nm                   AS fund_name
+             , t1.fnd00_fund_type_nm              AS fund_type_name
+             , t1.fnd00_org_code_nm               AS org_code_name
+             , CAST(t1.fnd00_start_date AS date)  AS start_date
+             , t1.fnd00_close_nm                  AS close_name
+             , t1.fnd00_note                      AS note
+          FROM fnd00_fund t1
+         WHERE 1=1
+           AND t1.fnd00_work_date = f_max_workdate(fnd00_fund_id, f_trunc(f_sysdate()))
+           AND t1.fnd00_plan_yn   = 'false'
+           AND t1.fnd00_close_yn IN ('false', #{closeYn})
+           AND (t1.fnd00_fund_cd LIKE #{fundName} OR t1.fnd00_fund_nm LIKE #{fundName})
+           AND t1.fnd00_company_id = #{companyId}
+         ORDER BY fnd00_fund_cd
+    </select>
+</mapper>

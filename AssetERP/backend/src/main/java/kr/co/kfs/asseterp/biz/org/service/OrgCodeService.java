@@ -3,7 +3,11 @@ package kr.co.kfs.asseterp.biz.org.service;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.org.dto.OrgCodeRes;
 import kr.co.kfs.asseterp.biz.org.dto.OrgCodeSaveReq;
+import kr.co.kfs.asseterp.biz.org.dto.OrgFundAuthRes;
+import kr.co.kfs.asseterp.biz.org.dto.OrgFundAuthRow;
+import kr.co.kfs.asseterp.biz.org.dto.OrgFundAuthSaveReq;
 import kr.co.kfs.asseterp.biz.org.dto.OrgInfoHistRes;
+import kr.co.kfs.asseterp.biz.org.dto.OrgInfoRes;
 import kr.co.kfs.asseterp.biz.org.mapper.OrgCodeMapper;
 import kr.co.kfs.asseterp.biz.org.mapper.OrgInfoHistoryMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -23,6 +27,46 @@ public class OrgCodeService {
 
     private final OrgCodeMapper orgCodeMapper;
     private final OrgInfoHistoryMapper orgInfoHistoryMapper;
+
+    /** AS-IS org.Org01_Code.selectByKorName L34 (P02 조직찾기). 검색어는 서버가 %…%로, 없으면 % */
+    public List<OrgInfoRes> searchByKorName(UserPrincipal user, String korName, LocalDate baseDate) {
+        return orgCodeMapper.selectByKorName(user.getCompanyId(), baseDate, blank(korName) ? "%" : "%" + korName + "%");
+    }
+
+    /** AS-IS org.Org01_Code.selectByFundCodeId L221 (P02). 상위조직 0부터 단계마다 하위를 찾아 전위 순서 + depth로 편다 */
+    public List<OrgFundAuthRes> searchFundAuthTree(UserPrincipal user, Long fundCodeId) {
+        List<OrgFundAuthRes> out = new java.util.ArrayList<>();
+        appendFundAuthChildren(out, user.getCompanyId(), fundCodeId, 0L, 0);
+        return out;
+    }
+
+    private void appendFundAuthChildren(List<OrgFundAuthRes> out, Long companyId, Long fundCodeId, Long parentCodeId, int depth) {
+        for (OrgFundAuthRes node : orgCodeMapper.selectByFundCodeId(companyId, parentCodeId, fundCodeId)) {
+            out.add(node.withDepth(depth));
+            appendFundAuthChildren(out, companyId, fundCodeId, node.codeId(), depth + 1);
+        }
+    }
+
+    /**
+     * AS-IS org.Org01_Code.updateFundAuth L376 (P02). 바뀐 행만 받아 있으면(orgAuthId) 권한 여부를 고치고 없으면 새 id로 넣는다.
+     * authYn이 없으면 "false". 펀드는 로그인 회사 것만(보안 보강) → 저장한 건수
+     */
+    @Transactional
+    public int updateFundAuth(UserPrincipal user, OrgFundAuthSaveReq req) {
+        if (req.fundCodeId() == null || orgCodeMapper.countFundInCompany(req.fundCodeId(), user.getCompanyId()) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "펀드를 찾을 수 없습니다.");
+        }
+        int saved = 0;
+        for (OrgFundAuthRow row : req.rows() == null ? List.<OrgFundAuthRow>of() : req.rows()) {
+            OrgFundAuthRow r = new OrgFundAuthRow(row.orgAuthId(), row.orgCodeId(), row.authYn() == null ? "false" : row.authYn());
+            if (r.orgAuthId() == null || r.orgAuthId() <= 0) {
+                saved += orgCodeMapper.insertOrgAuth(orgCodeMapper.selectNextId(), req.fundCodeId(), r);
+            } else {
+                saved += orgCodeMapper.updateOrgAuth(req.fundCodeId(), r);
+            }
+        }
+        return saved;
+    }
 
     /** AS-IS selectByCompanyId L64-104 (rootOrgId 없음 → parentCodeId 0, 전체 조직). 전위 순서 + depth */
     public List<OrgCodeRes> searchOrgCodes(UserPrincipal user, LocalDate baseDate) {

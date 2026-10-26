@@ -4,8 +4,15 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoService;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundCodeCond;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundCodeRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthCond;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanDeleteReq;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanSaveReq;
 import kr.co.kfs.asseterp.biz.fnd.mapper.FndFundCodeMapper;
 import kr.co.kfs.asseterp.biz.sys.service.SysMenuSearchService;
+import kr.co.kfs.asseterp.common.error.BusinessException;
+import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +38,85 @@ public class FndFundCodeService {
         String admin = String.valueOf(SysMenuSearchService.isManager(user));
         return mapper.selectByFundOrgAuth(new FundCodeCond(user.getCompanyId(), orgId, user.getUserId(), admin, String.valueOf(closeYn),
                 String.valueOf(classFundExceptYn), "%" + (fundName == null ? "" : fundName) + "%", blankToAny(fundTypeCode), blankToAny(classTypeCode)));
+    }
+
+    /** AS-IS fnd.Fnd01_FundCode.selectByFundPlan L83 (P01). 펀드명은 서버가 %…%로, 펀드유형은 비면 % */
+    public List<FundPlanRes> searchPlans(UserPrincipal user, boolean closeYn, String fundName, String fundTypeCode) {
+        return mapper.selectByFundPlan(user.getCompanyId(), String.valueOf(closeYn), "%" + (fundName == null ? "" : fundName) + "%",
+                blankToAny(fundTypeCode));
+    }
+
+    /**
+     * AS-IS fnd.Fnd01_FundCode.selectByFundName L38 / selectByFundOrgAuth L56 (P02). 권한부서(orgId)를 안 고르면 앞, 고르면 뒤.
+     * 펀드명은 서버가 %…%로, 유형·클래스구분은 '%'가 전체
+     */
+    public List<FundPlanAuthRes> searchPlansForAuth(UserPrincipal user, boolean closeYn, String fundName, String fundTypeCode,
+                                                    String classTypeCode, Long orgId) {
+        FundPlanAuthCond cond = new FundPlanAuthCond(user.getCompanyId(), String.valueOf(closeYn),
+                blankToAny(fundTypeCode), blankToAny(classTypeCode), "%" + (fundName == null ? "" : fundName) + "%");
+        return orgId == null ? mapper.selectByFundName(cond) : mapper.selectPlanByOrgAuth(cond);
+    }
+
+    /** AS-IS fnd.Fnd01_FundCode.selectByOverlap L277 (P01 [중복확인]) — 같은 코드가 있으면 true */
+    public boolean existsOverlap(String fundCode) {
+        return mapper.countByOverlap(fundCode) > 0;
+    }
+
+    /**
+     * AS-IS fnd.Fnd01_FundCode.update L139 (P01). 검사 순서·문구는 원본 그대로
+     * (펀드코드 → 펀드명 → 동일 펀드코드), fnd02_fund_info(없으면 새 id) → fnd01_fund_code 순으로 저장하고 저장된 행을 되돌린다.
+     * 새 행의 펀드코드 ID는 서버가 새로 매기고(원본은 UpdateDataModel이), 회사는 로그인 회사, 임시펀드(planYn=true)로 고정한다.
+     */
+    @Transactional
+    public FundPlanRes savePlan(UserPrincipal user, FundPlanSaveReq req) {
+        if (req.fundCode() == null || req.fundCode().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "펀드코드는 필수입력항목입니다.");
+        }
+        if (req.fundName() == null || req.fundName().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "펀드명은 필수입력항목입니다.");
+        }
+        boolean isNew = req.fundCodeId() == null || req.fundCodeId() <= 0;
+        if (mapper.countFundCodeCheck(isNew ? 0L : req.fundCodeId(), req.fundCode(), "true") > 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "동일 펀드코드가 존재합니다.");
+        }
+        Long fundCodeId = req.fundCodeId();
+        if (isNew) {
+            fundCodeId = mapper.selectNextId();
+            mapper.insertFundCode(fundCodeId, user.getCompanyId(), req);
+            mapper.insertFundInfo(mapper.selectNextId(), fundCodeId, req);
+        } else {
+            if (mapper.updateFundCode(user.getCompanyId(), req) == 0) {
+                throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "펀드를 찾을 수 없습니다.");
+            }
+            if (req.fundInfoId() == null || req.fundInfoId() <= 0) {
+                mapper.insertFundInfo(mapper.selectNextId(), fundCodeId, req);
+            } else {
+                mapper.updateFundInfo(fundCodeId, req);
+            }
+        }
+        return mapper.selectPlanById(fundCodeId, user.getCompanyId());
+    }
+
+    /** AS-IS fnd.Fnd01_FundCode.delete L222 (P01). ICAM관리 펀드가 하나라도 있으면 아무것도 지우지 않는다 */
+    @Transactional
+    public void deletePlans(UserPrincipal user, List<FundPlanDeleteReq> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return;
+        }
+        List<Long> requested = rows.stream().map(FundPlanDeleteReq::fundCodeId).toList();
+        List<FundPlanRes> found = mapper.selectPlanForDelete(requested, user.getCompanyId());
+        if (found.stream().anyMatch(f -> "true".equals(f.icamYn()))) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "ICAM관리 펀드입니다. 수정불가합니다.");
+        }
+        List<Long> fundCodeIds = found.stream().map(FundPlanRes::fundCodeId).toList();
+        if (fundCodeIds.isEmpty()) {
+            return;
+        }
+        List<Long> fundInfoIds = rows.stream().map(FundPlanDeleteReq::fundInfoId).filter(id -> id != null && id > 0).toList();
+        if (!fundInfoIds.isEmpty()) {
+            mapper.deleteFundInfos(fundInfoIds, fundCodeIds);
+        }
+        mapper.deleteFundCodes(fundCodeIds, user.getCompanyId());
     }
 
     private String blankToAny(String code) {

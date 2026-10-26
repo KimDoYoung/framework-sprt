@@ -68,3 +68,15 @@ export interface OrgRoleStamp {
   orgName?: string | null;
   useYn?: string | null;
 }
+
+/** 펀드별 조직 권한 트리 한 행 (P02, AS-IS Org01_CodeModel 중 Fnd08_Page_OrgAuth 열 + fnd08_org_auth). authYn은 'true'/'false'/null */
+export interface OrgFundAuth {
+  codeId: number;
+  parentCodeId: number;
+  depth: number;
+  korName?: string | null;
+  orgCode?: string | null;
+  orgAuthId?: number | null;
+  authYn?: string | null;
+  note?: string | null;
+}

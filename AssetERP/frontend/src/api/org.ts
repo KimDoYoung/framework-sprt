@@ -1,6 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { OrgCode, OrgCodeSaveReq, OrgInfoHist, OrgRoleStamp } from '../types/org';
+import { OrgCode, OrgCodeSaveReq, OrgFundAuth, OrgInfoHist, OrgRoleStamp } from '../types/org';
+import { OrgInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss') */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -8,6 +9,27 @@ const toCode = (r: OrgCode): OrgCode => ({ ...r, modDate: day(r.modDate), openDa
 
 /** C02 조직정보 등록 (Org01_Tab_OrgCode → server/org/Org01_Code, Org02_Info) */
 export const orgCodeApi = {
+  // ── P02 신규기획펀드 권한설정 (Fnd08_Tab_OrgAuthTempFund) ──
+
+  /** AS-IS org.Org01_Code.selectByKorName: 조직찾기 Fnd08_Lookup_OrgCode — 조직명(%…%)·기준일에 유효한 조직 */
+  searchByKorName: async (korName: string | undefined, baseDate: string): Promise<OrgInfo[]> => {
+    const res = await apiClient.get<ApiResponse<OrgInfo[]>>('v1/org/org-codes/search', { params: { korName: korName || undefined, baseDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS org.Org01_Code.selectByFundCodeId: 펀드의 조직 권한 트리(전위 순서 + depth) */
+  searchFundAuthTree: async (fundCodeId: number): Promise<OrgFundAuth[]> => {
+    const res = await apiClient.get<ApiResponse<OrgFundAuth[]>>('v1/org/org-codes/fund-auths', { params: { fundCodeId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS org.Org01_Code.updateFundAuth: 바뀐 행만 → 저장한 건수 */
+  updateFundAuth: async (fundCodeId: number, rows: OrgFundAuth[]): Promise<number> => {
+    const body = { fundCodeId, rows: rows.map(r => ({ orgAuthId: r.orgAuthId ?? null, orgCodeId: r.codeId, authYn: r.authYn ?? null })) };
+    const res = await apiClient.put<ApiResponse<number>>('v1/org/org-codes/fund-auths', body);
+    return res.data.data ?? 0;
+  },
+
   /** AS-IS org.Org01_Code.selectByCompanyId: 전체 조직, 전위 순서 + depth */
   searchOrgCodes: async (baseDate: string): Promise<OrgCode[]> => {
     const res = await apiClient.get<ApiResponse<OrgCode[]>>('v1/org/org-codes', { params: { baseDate } });
