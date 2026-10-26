@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!-- AS-IS(IDMS-IC) server/fnd/mapper/fnd26_terms_detail.xml selectByTermsId (P07) -->
+<!-- AS-IS(IDMS-IC) server/fnd/mapper/fnd26_terms_detail.xml selectByTermsId (P07) · selectBySearchText·selectBySearchTextManager·RevisionNoCheck, fnd25_terms.xml selectByFundId·deleteByTermsId (P12) · selectBySearchTextManager (P13) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.fnd.mapper.FndTermsDetailMapper">
 
     <!-- 그리드 열(제개정일·개정회차·첨부파일 수) + 본문. 첨부파일 수 = sys10_file의 상세 ID 건수 -->
@@ -22,4 +22,224 @@
            AND fnd26_use_yn     = 'true'
          ORDER BY fnd26_revision_no DESC
     </select>
+
+    <!-- AS-IS fnd26_terms_detail.selectBySearchText (IDMS-IC) — 규약마다 사용 중인 최신 개정(DISTINCT ON). 열은 P12 왼쪽 그리드와 수정 창이 쓰는 것만 -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.fnd.dto.TermsRes">
+        SELECT  fnd25.fnd25_terms_id                                                                    AS terms_id
+             ,  fnd25.fnd25_terms_type                                                                  AS terms_type
+             ,  f_cdnm('FundTermsType', fnd25.fnd25_terms_type, fnd25.fnd25_company_id, f_sysdate())    AS terms_type_name
+             ,  fnd26.fnd26_terms_nm                                                                    AS terms_name
+             ,  fnd25.fnd25_seq                                                                         AS seq
+             ,  fnd25.fnd25_fund_id                                                                     AS fund_id
+             ,  fnd01.fnd02_ksd_fund_cd                                                                 AS ksd_fund_code
+             ,  fnd01.fnd02_fund_nm                                                                     AS fund_name
+             ,  fnd09.fnd09_trust_bank_nm                                                               AS trust_bank_name
+             ,  fnd01.fnd01_start_date                                                                  AS fund_start_date
+             ,  fnd26.fnd26_revision_date                                                               AS revision_date
+             ,  fnd26.fnd26_revision_no                                                                 AS revision_no
+          FROM  fnd25_terms fnd25
+                INNER JOIN (SELECT DISTINCT ON (fnd26_terms_id) fnd26_terms_id
+                                 , fnd26_terms_detail_id
+                                 , fnd26_terms_nm
+                                 , fnd26_content
+                                 , fnd26_note
+                                 , fnd26_revision_date
+                                 , fnd26_revision_no
+                                 , fnd26_use_yn
+                              FROM  fnd26_terms_detail
+                             WHERE  fnd26_use_yn = 'true'
+                             ORDER BY fnd26_terms_id
+                                    , fnd26_revision_no DESC) AS fnd26 ON fnd26.fnd26_terms_id = fnd25.fnd25_terms_id
+                LEFT OUTER JOIN (SELECT *
+                                   FROM fnd01_fund_code
+                                        INNER JOIN fnd02_fund_info ON ( fnd01_company_id   = #{companyId}  AND
+                                                                        fnd02_fund_code_id = fnd01_fund_code_id AND
+                                                                        fnd02_work_date = f_max_workdate(fnd02_fund_code_id, f_trunc(f_sysdate())) )) fnd01 ON fnd01.fnd01_fund_code_id = fnd25.fnd25_fund_id
+                LEFT OUTER JOIN fnd09_trust_bank fnd09  ON ( fnd09_trust_bank_cd  = fnd01.fnd02_trust_bank_cd   AND
+                                                             fnd09_company_id     = fnd01.fnd01_company_id     )
+         WHERE  fnd25_company_id = #{companyId}
+           AND  fnd25_terms_type LIKE #{termsType}
+           AND  CONCAT(fnd26.fnd26_terms_nm, fnd01.fnd02_fund_nm, fnd01.fnd02_ksd_fund_cd) ILIKE #{searchText}
+         ORDER BY fnd25_seq, fnd25_terms_type, fnd26_terms_nm, fnd26_revision_date
+    </select>
+
+    <!-- AS-IS fnd26_terms_detail.selectBySearchTextManager L81 (IDMS-IC) — SELECT *를 열 명시로. 규약 회사 조건은 보안 보강 -->
+    <select id="selectBySearchTextManager" resultType="kr.co.kfs.asseterp.biz.fnd.dto.TermsRevisionRes">
+        SELECT  fnd26_terms_detail_id                                                   AS terms_detail_id
+             ,  fnd25_terms_id                                                          AS terms_id
+             ,  fnd26_terms_nm                                                          AS terms_name
+             ,  fnd25_terms_type                                                        AS terms_type
+             ,  f_cdnm('FundTermsType', fnd25_terms_type, fnd25_company_id, f_sysdate()) AS terms_type_name
+             ,  fnd25_seq                                                               AS seq
+             ,  fnd01.fnd01_fund_code_id                                                AS fund_id
+             ,  fnd01.fnd02_ksd_fund_cd                                                 AS ksd_fund_code
+             ,  fnd26_revision_date                                                     AS revision_date
+             ,  fnd26_revision_no                                                       AS revision_no
+             ,  ( SELECT COUNT(*)
+                    FROM sys10_file
+                   WHERE sys10_parent_id = fnd26_terms_detail_id )                      AS file_cnt
+             ,  (fnd26_use_yn = 'true')                                                 AS use_yn
+             ,  fnd25_close_date                                                        AS close_date
+             ,  fnd26_content                                                           AS content
+             ,  fnd26_note                                                              AS note
+             ,  fnd26_upd_nm                                                            AS upd_name
+             ,  COALESCE(TO_CHAR(fnd26_upd_date, 'yyyy-mm-dd HH24:MI:SS'), ''::text)    AS upd_date_str
+          FROM  fnd26_terms_detail
+                INNER JOIN fnd25_terms ON fnd25_terms_id = fnd26_terms_id
+                LEFT OUTER JOIN (SELECT *
+                                   FROM fnd01_fund_code
+                                        INNER JOIN fnd02_fund_info ON ( fnd01_company_id   = #{companyId}  AND
+                                                                        fnd02_fund_code_id = fnd01_fund_code_id AND
+                                                                        fnd02_work_date = f_max_workdate(fnd02_fund_code_id, f_trunc(f_sysdate())) )) fnd01 ON fnd01.fnd01_fund_code_id = fnd25_fund_id
+         WHERE  fnd25_terms_id   = #{termsId}
+           AND  fnd25_company_id = #{companyId}
+           AND  CONCAT(fnd26_terms_nm, fnd26_note) ILIKE #{searchText}
+         ORDER BY  fnd26_revision_no DESC
+    </select>
+
+
+    <!-- AS-IS fnd25_terms.selectBySearchTextManager (IDMS-IC) — P13. fnd25.*를 그리드 열만. 검색은 개정의 펀드규약명만(P12와 다름) -->
+    <select id="selectViewBySearchText" resultType="kr.co.kfs.asseterp.biz.fnd.dto.TermsViewRes">
+        SELECT  fnd25.fnd25_terms_id                                                                    AS terms_id
+             ,  f_cdnm('FundTermsType', fnd25_terms_type, fnd25_company_id, f_sysdate())                AS terms_type_name
+             ,  fnd26.fnd26_terms_nm                                                                    AS terms_name
+             ,  fnd01.fnd02_ksd_fund_cd                                                                 AS ksd_fund_code
+             ,  fnd01.fnd02_fund_nm                                                                     AS fund_name
+             ,  fnd09.fnd09_trust_bank_nm                                                               AS trust_bank_name
+             ,  fnd01.fnd01_start_date                                                                  AS fund_start_date
+             ,  f_cdnm('IcamFundType', fnd01.fnd02_kofia_fund_type_cd, fnd01.fnd01_company_id, f_sysdate()) AS kofia_fund_type_name
+             ,  fnd26.fnd26_revision_date                                                               AS revision_date
+             ,  fnd26.fnd26_revision_no                                                                 AS revision_no
+             ,  fnd01.fnd02_end_expect_date                                                             AS end_expect_date
+          FROM  fnd25_terms fnd25
+                INNER JOIN (SELECT DISTINCT ON (fnd26_terms_id) fnd26_terms_id
+                                 , fnd26_terms_detail_id
+                                 , fnd26_terms_nm
+                                 , fnd26_content
+                                 , fnd26_note
+                                 , fnd26_revision_date
+                                 , fnd26_revision_no
+                                 , fnd26_use_yn
+                              FROM  fnd26_terms_detail
+                             WHERE  fnd26_use_yn = 'true'
+                             ORDER BY fnd26_terms_id
+                                    , fnd26_revision_no DESC) AS fnd26 ON fnd26.fnd26_terms_id = fnd25.fnd25_terms_id
+                LEFT OUTER JOIN (SELECT *
+                                   FROM fnd01_fund_code
+                                        INNER JOIN fnd02_fund_info ON ( fnd01_company_id   = #{companyId}  AND
+                                                                        fnd02_fund_code_id = fnd01_fund_code_id AND
+                                                                        fnd02_work_date = f_max_workdate(fnd02_fund_code_id, f_trunc(f_sysdate())) )) fnd01 ON fnd01.fnd01_fund_code_id = fnd25.fnd25_fund_id
+                LEFT OUTER JOIN fnd09_trust_bank fnd09  ON ( fnd09_trust_bank_cd  = fnd01.fnd02_trust_bank_cd  AND
+                                                             fnd09_company_id     = fnd01.fnd01_company_id     )
+         WHERE  fnd25_company_id = #{companyId}
+           AND  fnd25_terms_type LIKE #{termsType}
+           AND  CONCAT(fnd26.fnd26_terms_nm) ILIKE #{searchText}
+         ORDER BY fnd25_seq, fnd26.fnd26_terms_nm, fnd25_terms_type, fnd26.fnd26_revision_date
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS fnd26_terms_detail.RevisionNoCheck (IDMS-IC) — 개수만 -->
+    <select id="countRevisionNo" resultType="int">
+        SELECT COUNT(*)
+          FROM fnd26_terms_detail
+               INNER JOIN fnd25_terms ON fnd25_terms_id = fnd26_terms_id
+         WHERE fnd26_terms_id    = #{termsId}
+           AND fnd26_revision_no = #{revisionNo}
+        <if test="originRevisionNo != null">
+           AND fnd26_revision_no != #{originRevisionNo}
+        </if>
+    </select>
+
+    <!-- AS-IS fnd25_terms.selectByFundId (IDMS-IC) — 개수만 -->
+    <select id="countByFundId" resultType="int">
+        SELECT COUNT(*)
+          FROM fnd25_terms
+         WHERE fnd25_fund_id = #{fundId}
+        <if test="originFundId != null">
+           AND fnd25_fund_id != #{originFundId}
+        </if>
+    </select>
+
+    <select id="selectTermsCompanyId" resultType="long">
+        SELECT fnd25_company_id FROM fnd25_terms WHERE fnd25_terms_id = #{termsId}
+    </select>
+
+    <select id="selectTermsIdOfDetail" resultType="long">
+        SELECT fnd26_terms_id FROM fnd26_terms_detail WHERE fnd26_terms_detail_id = #{termsDetailId}
+    </select>
+
+    <!-- AS-IS Fnd26_TermsDetail.update → UpdateDataModel fnd25_terms 동적 INSERT (upd_nm = 사용자 이름, upd_date = now()) -->
+    <insert id="insertTerms">
+        INSERT INTO fnd25_terms (fnd25_terms_id, fnd25_company_id, fnd25_terms_type, fnd25_seq, fnd25_close_date, fnd25_fund_id, fnd25_upd_nm, fnd25_upd_date)
+        VALUES (#{termsId}, #{companyId}, #{req.termsType}, #{req.seq}, #{req.closeDate}, #{req.fundId}, #{userName}, now())
+    </insert>
+
+    <!-- 같은 UpdateDataModel 동적 UPDATE — 개정 저장(new·copy·edit)이 규약의 구분·순서·종료일·펀드도 같은 값으로 쓴다 -->
+    <update id="updateTermsByRevision">
+        UPDATE fnd25_terms
+           SET fnd25_terms_type = #{req.termsType},
+               fnd25_seq        = #{req.seq},
+               fnd25_close_date = #{req.closeDate},
+               fnd25_fund_id    = #{req.fundId},
+               fnd25_upd_nm     = #{userName},
+               fnd25_upd_date   = now()
+         WHERE fnd25_terms_id   = #{termsId}
+           AND fnd25_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS Fnd26_TermsDetail.update mode fnd25update → fnd25_terms 동적 UPDATE -->
+    <update id="updateTerms">
+        UPDATE fnd25_terms
+           SET fnd25_terms_type = #{req.termsType},
+               fnd25_seq        = #{req.seq},
+               fnd25_close_date = #{req.closeDate},
+               fnd25_fund_id    = #{req.fundId},
+               fnd25_upd_nm     = #{userName},
+               fnd25_upd_date   = now()
+         WHERE fnd25_terms_id   = #{termsId}
+           AND fnd25_company_id = #{companyId}
+    </update>
+
+    <insert id="insertTermsDetail">
+        INSERT INTO fnd26_terms_detail (fnd26_terms_detail_id, fnd26_terms_id, fnd26_terms_nm, fnd26_content, fnd26_note, fnd26_revision_date, fnd26_revision_no, fnd26_use_yn, fnd26_upd_nm, fnd26_upd_date)
+        VALUES (#{termsDetailId}, #{termsId}, #{req.termsName}, #{req.content}, #{req.note}, #{req.revisionDate}, #{req.revisionNo}, CASE WHEN #{req.useYn} THEN 'true' ELSE 'false' END, #{userName}, now())
+    </insert>
+
+    <!-- 로그인 회사 규약의 개정만 고친다(보안 보강) -->
+    <update id="updateTermsDetail">
+        UPDATE fnd26_terms_detail
+           SET fnd26_terms_id      = #{termsId},
+               fnd26_terms_nm      = #{req.termsName},
+               fnd26_content       = #{req.content},
+               fnd26_note          = #{req.note},
+               fnd26_revision_date = #{req.revisionDate},
+               fnd26_revision_no   = #{req.revisionNo},
+               fnd26_use_yn        = CASE WHEN #{req.useYn} THEN 'true' ELSE 'false' END,
+               fnd26_upd_nm        = #{userName},
+               fnd26_upd_date      = now()
+         WHERE fnd26_terms_detail_id = #{termsDetailId}
+           AND fnd26_terms_id IN (SELECT fnd25_terms_id FROM fnd25_terms WHERE fnd25_company_id = #{companyId})
+    </update>
+
+    <!-- AS-IS Fnd26_TermsDetail.delete (deleteModel) — 로그인 회사 규약의 개정만(보안 보강) -->
+    <delete id="deleteRevisions">
+        DELETE FROM fnd26_terms_detail
+         WHERE fnd26_terms_id IN (SELECT fnd25_terms_id FROM fnd25_terms WHERE fnd25_company_id = #{companyId})
+           AND fnd26_terms_detail_id IN
+        <foreach collection="termsDetailIds" item="termsDetailId" open="(" separator="," close=")">#{termsDetailId}</foreach>
+    </delete>
+
+    <!-- AS-IS fnd26_terms_detail.deleteByTermsId (IDMS-IC) -->
+    <delete id="deleteDetailsByTermsId">
+        DELETE FROM fnd26_terms_detail WHERE fnd26_terms_id = #{termsId}
+    </delete>
+
+    <!-- AS-IS fnd25_terms.deleteByTermsId (IDMS-IC) -->
+    <delete id="deleteTermsById">
+        DELETE FROM fnd25_terms WHERE fnd25_terms_id = #{termsId}
+    </delete>
 </mapper>

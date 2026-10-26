@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AstAssetItem, BookRelateAst, BookRelateFnd, Consignment, FundCode, FundDetail, FundHistory, FundInfo, FundLookup, FundMulti, FundPlan, FundRelate, FundSearch, FundTermsDetail, FundPlanAuth, FundPlanList, OfficeWork, Plan, TrustBank } from '../types/fnd';
+import { AstAssetItem, BookExtr, BookRelateAst, BookRelateFnd, Consignment, FundCode, FundDetail, FundHistory, FundInfo, FundLookup, FundMulti, FundPlan, FundRelate, FundSearch, FundSingle, FundTermsDetail, FundPlanAuth, FundPlanList, OfficeWork, Plan, Terms, TermsRevision, TermsRevisionSaveReq, TermsView, TrustBank } from '../types/fnd';
 
 /** fnd(기관정보) 화면 API (D11~) */
 export interface FundOrgAuthParams {
@@ -285,6 +285,111 @@ export const fndApi = {
   /** AS-IS fnd.Fnd09_TrustBank.selectByText */
   lookupTrustBanks: async (searchText: string): Promise<TrustBank[]> => {
     const res = await apiClient.get<ApiResponse<TrustBank[]>>('v1/fnd/trust-banks/lookup', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  // ── P11 펀드보유주식등록(타사무) (Fnd11_Tab_BookExtr) ──
+
+  /** AS-IS fnd.Fnd11_BookExtr.selectByStdDate: 로그인 회사의 그 기준일 보유종목, 검색어는 서버가 %…%로 */
+  searchBookExtrs: async (params: { stdDate: string; searchText: string }): Promise<BookExtr[]> => {
+    const res = await apiClient.get<ApiResponse<BookExtr[]>>('v1/fnd/book-extrs', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd11_BookExtr.selectRecentStdDate: 그 날 이전 가장 최근 기준일(yyyy-MM-dd), 없으면 null */
+  getBookExtrRecentStdDate: async (stdDate: string): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>('v1/fnd/book-extrs/recent-std-date', { params: { stdDate } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS fnd.Fnd11_BookExtr.update: 바뀐 행만. bookExtrId가 0 이하면 새 행 — 저장된 행을 요청 순서대로 돌려준다 */
+  saveBookExtrs: async (rows: BookExtr[]): Promise<BookExtr[]> => {
+    const body = rows.map(r => ({ bookExtrId: r.bookExtrId > 0 ? r.bookExtrId : null, stdDate: r.stdDate ?? null, fundCode: r.fundCode ?? null, fundName: r.fundName ?? null, itemCode: r.itemCode ?? null, itemName: r.itemName ?? null, itemType: r.itemType ?? null }));
+    const res = await apiClient.put<ApiResponse<BookExtr[]>>('v1/fnd/book-extrs', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd11_BookExtr.delete */
+  deleteBookExtrs: async (ids: number[]): Promise<void> => {
+    await apiClient.delete('v1/fnd/book-extrs', { data: ids });
+  },
+
+  /** 템플릿 받기 (AS-IS downloadForm → ./excelTemplete/Template_펀드보유주식등록(타사무).xlsx) */
+  downloadBookExtrTemplate: async (): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/fnd/book-extrs/template', { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Template_펀드보유주식등록(타사무).xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** 엑셀업로드 (AS-IS ExcelUpload?uploadType=bookFndExtrUpload) → 등록한 건수 */
+  uploadBookExtrsExcel: async (file: File): Promise<number> => {
+    const form = new FormData();
+    form.append('excelUpload', file);
+    const res = await apiClient.post<ApiResponse<number>>('v1/fnd/book-extrs/excel', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data.data ?? 0;
+  },
+
+  // ── P12 펀드규약 등록 (Fnd25_Tab_FundTermsManager) ──
+
+  /** AS-IS fnd.Fnd00_Fund.selectBySearchText(orgId 있음): 내 조직 권한 펀드 — 연관펀드 단일 선택 조회창. 펀드유형은 `%`가 전체 */
+  searchFundSingle: async (params: { planYn: boolean; fundType: string; searchText: string; closeYn: boolean; classYn: boolean }): Promise<FundSingle[]> => {
+    const res = await apiClient.get<ApiResponse<FundSingle[]>>('v1/fnd/funds/single', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd26_TermsDetail.selectBySearchText: 규약마다 사용 중인 최신 개정 (termsType `%`=전체) */
+  searchTerms: async (params: { termsType: string; searchText: string }): Promise<Terms[]> => {
+    const res = await apiClient.get<ApiResponse<Terms[]>>('v1/fnd/terms', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd26_TermsDetail.selectBySearchTextManager: 그 규약의 개정(개정회차 내림차순) */
+  searchTermsRevisions: async (termsId: number, searchText: string): Promise<TermsRevision[]> => {
+    const res = await apiClient.get<ApiResponse<TermsRevision[]>>(`v1/fnd/terms/${termsId}/revisions`, { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS DBUtil.setSeq: 편집 창이 열릴 때 받는 새 개정 ID */
+  getTermsNextId: async (): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/fnd/terms/next-id');
+    return res.data.data as number;
+  },
+
+  /** AS-IS fnd.Fnd26_TermsDetail.update (mode insert/new/copy/edit) */
+  saveTermsRevision: async (req: TermsRevisionSaveReq): Promise<void> => {
+    await apiClient.put('v1/fnd/terms/revisions', req);
+  },
+
+  /** AS-IS fnd.Fnd26_TermsDetail.update (mode fnd25update): 신청구분·조회순서·예탁원코드(펀드). 종료일은 원본 모델에 없어 null — 종료일이 지워진다 */
+  updateTerms: async (termsId: number, req: { termsType: string | null; seq: number | null; fundId: number | null; closeDate: string | null; originFundId: number | null }): Promise<void> => {
+    await apiClient.put(`v1/fnd/terms/${termsId}`, req);
+  },
+
+  /** AS-IS fnd.Fnd26_TermsDetail.delete: 고른 개정 */
+  deleteTermsRevisions: async (termsDetailIds: number[]): Promise<void> => {
+    await apiClient.delete('v1/fnd/terms/revisions', { data: termsDetailIds });
+  },
+
+  /** AS-IS fnd.Fnd26_TermsDetail.deleteAll: 개정 전부와 규약 */
+  deleteTerms: async (termsId: number): Promise<void> => {
+    await apiClient.delete(`v1/fnd/terms/${termsId}`);
+  },
+
+  // ── P13 펀드규약 (Fnd25_Tab_FundTerms) ──
+
+  /** AS-IS fnd.Fnd25_Terms.selectBySearchTextManager: 규약마다 사용 중인 최신 개정 (termsType `%`=전체, 검색은 펀드규약명) */
+  searchTermsView: async (params: { termsType: string; searchText: string }): Promise<TermsView[]> => {
+    const res = await apiClient.get<ApiResponse<TermsView[]>>('v1/fnd/terms/list', { params });
     return res.data.data ?? [];
   },
 };

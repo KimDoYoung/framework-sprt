@@ -2,7 +2,7 @@
  * 펀드규약 내용 조회창 (P07) — Fnd01_Tab_FundSearch 그리드의 [규약보기] 아이콘이 연다 (viewContent L285-289)
  * AS-IS: myApp/client/vi/fnd/Fnd25_Lookup_Content.java (226줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L52-85: 모달 1154×800 "펀드규약", 왼쪽 310 = 개정 목록 그리드(제개정일 90 · 개정회차 70 · 첨부파일 80 · 아이콘 40, 행번호 없음), 가운데 = 선택한 개정의 본문(HTML), 아래 가운데 [닫기]
- * 첨부파일 아이콘은 Com01_Lookup_RelateFile.view(termsDetailId) — 같은 AS-IS 패턴(Bbs02 openUser)의 Bbs02_Lookup_File로 연다
+ * 첨부파일 아이콘은 Com01_Lookup_RelateFile.view(termsDetailId) — P12에서 만든 같은 이름 공통 부품을 readOnly로 연다(P07은 Bbs02_Lookup_File로 대신했었다)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';
@@ -15,7 +15,7 @@ import { Button } from '@/components/button';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { HtmlView } from '@/components/form/HtmlView';
-import { Bbs02_Lookup_File } from '@/pages/bbs/Bbs02_Lookup_File';
+import { Com01_Lookup_RelateFile } from '@/components/lookup/Com01_Lookup_RelateFile';
 
 const gb = gbFor<FundTermsDetail>();
 
@@ -93,7 +93,7 @@ export const Fnd25_Lookup_Content: React.FC<Props> = ({ termsId, onClose }) => {
           </div>
         </div>
       </LookupModal>
-      <Bbs02_Lookup_File open={fileParentId != null} parentId={fileParentId} onClose={() => setFileParentId(null)} />
+      <Com01_Lookup_RelateFile open={fileParentId != null} parentId={fileParentId} readOnly onClose={() => setFileParentId(null)} />
     </>
   );
 };

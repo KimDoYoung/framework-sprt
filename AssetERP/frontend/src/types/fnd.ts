@@ -300,3 +300,101 @@ export interface BookRelateFnd {
   fundCode?: string | null;
   fundName?: string | null;
 }
+
+/** 펀드보유주식(타사무) 한 행 (P11, AS-IS Fnd11_BookExtrModel). bookExtrId가 0 이하면 새 행 */
+export interface BookExtr {
+  bookExtrId: number;
+  stdDate?: string | null;
+  fundCode?: string | null;
+  fundName?: string | null;
+  itemCode?: string | null;
+  itemName?: string | null;
+  itemType?: string | null;
+  itemTypeName?: string | null;
+}
+
+/** 연관펀드 단일 선택 조회창 한 행 (P12, AS-IS Fnd00_FundModel 중 Fnd01_Lookup_SelectSingle 그리드 열) */
+export interface FundSingle {
+  fundId: number;
+  fundCode?: string | null;
+  ksdFundCode?: string | null;
+  fundName?: string | null;
+  kofiaFundTypeName?: string | null;
+  kofiaClassTypeName?: string | null;
+  kofiaTrustName?: string | null;
+  startDate?: string | null;
+  empName1?: string | null;
+  note?: string | null;
+}
+
+/** 펀드규약 한 행 (P12 왼쪽 목록, AS-IS Fnd26_TermsDetailModel — 규약마다 사용 중인 최신 개정) */
+export interface Terms {
+  termsId: number;
+  termsType?: string | null;
+  termsTypeName?: string | null;
+  termsName?: string | null;
+  seq?: number | null;
+  fundId?: number | null;
+  ksdFundCode?: string | null;
+  fundName?: string | null;
+  trustBankName?: string | null;
+  fundStartDate?: string | null;
+  revisionDate?: string | null;
+  revisionNo?: number | null;
+}
+
+/** 펀드규약 개정 한 행 (P12 오른쪽 목록·편집 창, AS-IS Fnd26_TermsDetailModel) */
+export interface TermsRevision {
+  termsDetailId: number;
+  termsId?: number | null;
+  termsName?: string | null;
+  termsType?: string | null;
+  termsTypeName?: string | null;
+  seq?: number | null;
+  fundId?: number | null;
+  ksdFundCode?: string | null;
+  revisionDate?: string | null;
+  revisionNo?: number | null;
+  fileCnt?: number | null;
+  useYn?: boolean | null;
+  closeDate?: string | null;
+  content?: string | null;
+  note?: string | null;
+  updName?: string | null;
+  updDateStr?: string | null;
+}
+
+/** 개정 저장 요청 (P12, AS-IS Fnd26_TermsDetail.update). mode: insert / new / copy / edit */
+export interface TermsRevisionSaveReq {
+  mode: 'insert' | 'new' | 'copy' | 'edit';
+  originRevisionNo?: number | null;
+  originFundId?: number | null;
+  termsDetailId: number;
+  termsId?: number | null;
+  termsType?: string | null;
+  termsName?: string | null;
+  seq?: number | null;
+  fundId?: number | null;
+  closeDate?: string | null;
+  content?: string | null;
+  note?: string | null;
+  revisionDate?: string | null;
+  revisionNo?: number | null;
+  useYn: boolean;
+}
+
+/** 펀드규약 조회 한 행 (P13, AS-IS Fnd25_TermsModel 중 selectBySearchTextManager 그리드 열) */
+export interface TermsView {
+  termsId: number;
+  termsTypeName?: string | null;
+  termsName?: string | null;
+  ksdFundCode?: string | null;
+  fundName?: string | null;
+  trustBankName?: string | null;
+  fundStartDate?: string | null;
+  kofiaFundTypeName?: string | null;
+  revisionDate?: string | null;
+  revisionNo?: number | null;
+  endExpectDate?: string | null;
+}
+

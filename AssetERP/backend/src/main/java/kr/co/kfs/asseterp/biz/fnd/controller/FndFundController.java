@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.fnd.controller;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundLookupRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundMultiRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundSingleRes;
 import kr.co.kfs.asseterp.biz.fnd.service.FndFundService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -39,5 +40,16 @@ public class FndFundController {
                                                             @RequestParam(defaultValue = "false") boolean closeYn,
                                                             @RequestParam(defaultValue = "true") boolean classYn) {
         return ApiResponse.ok(service.searchMultiAdmin(principal, planYn, fundType, searchText, closeYn, classYn));
+    }
+
+    /** AS-IS fnd.Fnd00_Fund.selectBySearchText (P12 연관펀드 단일 선택 조회창 Fnd01_Lookup_SelectSingle) — 내 조직 권한 펀드 */
+    @GetMapping("/single")
+    public ApiResponse<List<FundSingleRes>> searchSingle(@AuthenticationPrincipal UserPrincipal principal,
+                                                         @RequestParam(defaultValue = "false") boolean planYn,
+                                                         @RequestParam(required = false) String fundType,
+                                                         @RequestParam(defaultValue = "") String searchText,
+                                                         @RequestParam(defaultValue = "false") boolean closeYn,
+                                                         @RequestParam(defaultValue = "true") boolean classYn) {
+        return ApiResponse.ok(service.searchSingle(principal, planYn, fundType, searchText, closeYn, classYn));
     }
 }

@@ -49,4 +49,34 @@
         </if>
          ORDER BY fnd00_fund_cd
     </select>
+
+    <!-- AS-IS selectBySearchText L122 (P12 Fnd01_Lookup_SelectSingle): 내 조직(orgId)에 권한이 있는 펀드만. AS-IS는 기본 테이블 조인이지만
+         selectBySearchTextAdmin(P06)과 같은 fnd00_fund_sysdate 뷰에 fnd08_org_auth를 붙였다. fundIdList(제외 목록)는 화면이 안 보낸다 → 분기 생략.
+         classYn이 true이고 임시펀드가 아니면 클래스구분 '1','Z'이고 차등배분형이 아닌 펀드만 -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundSingleRes">
+        SELECT fnd00_fund_id                   AS fund_id
+             , fnd00_fund_cd                   AS fund_code
+             , fnd00_ksd_fund_cd               AS ksd_fund_code
+             , fnd00_fund_nm                   AS fund_name
+             , fnd00_kofia_fund_type_nm        AS kofia_fund_type_name
+             , fnd00_kofia_class_type_nm       AS kofia_class_type_name
+             , fnd00_kofia_trust_nm            AS kofia_trust_name
+             , CAST(fnd00_start_date AS date)  AS start_date
+             , fnd00_emp1_nm                   AS emp_name1
+             , fnd00_note                      AS note
+          FROM fnd00_fund_sysdate
+               INNER JOIN fnd08_org_auth ON fnd08_fund_code_id = fnd00_fund_id
+         WHERE fnd08_auth_yn      = 'true'
+           AND fnd08_org_code_id  = #{orgId}
+           AND fnd00_company_id   = #{companyId}
+           AND fnd00_close_yn IN ('false', #{closeYn})
+           AND fnd00_plan_yn = #{planYn}
+           AND fnd00_kofia_fund_type_cd LIKE #{fundType}
+           AND UPPER(fnd00_fund_cd||fnd00_fund_nm) LIKE UPPER(#{searchText})
+        <if test="classYn == 'true' and planYn != 'true'">
+           AND fnd00_kofia_class_type_cd IN ('1','Z')
+           AND COALESCE(fnd00_diff_div_yn,'false') != 'true'
+        </if>
+         ORDER BY fnd00_fund_cd
+    </select>
 </mapper>
