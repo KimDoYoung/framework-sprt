@@ -109,3 +109,10 @@ CREATE TRIGGER trigger_aft_tdm54_chck_insuff
 
 COMMIT;
 ```
+
+---
+```sql
+  ALTER TABLE public.fnd25_terms ADD COLUMN fnd25_fund_id numeric;
+  COMMENT ON COLUMN public.fnd25_terms.fnd25_fund_id IS '펀드ID(fnd01_fund_code_id)';
+  CREATE INDEX fnd25_terms_idx02 ON public.fnd25_terms (fnd25_fund_id);
+```  

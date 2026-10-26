@@ -163,6 +163,68 @@
          ORDER BY t1.fnd01_fund_cd
     </select>
 
+    <!-- === P07 펀드 조회 (Fnd01_Tab_FundSearch) — P05 selectFunds와 같은 열·조건 + 최종 규약(termsId·revisionNo·revisionDate).
+         AS-IS selectByFundName L253의 fnd25_terms 조인: 규약(fnd25_fund_id = 펀드)마다 사용 중(fnd26_use_yn)인 상세 중 개정회차가 가장 큰 것 -->
+    <sql id="fundSearchSelect">
+        SELECT x.*
+             , tm.fnd25_terms_id      AS terms_id
+             , tm.fnd26_revision_no   AS revision_no
+             , tm.fnd26_revision_date AS revision_date
+          FROM ( SELECT <include refid="fundColumns"/>
+                 <include refid="fundFrom"/>
+                   AND COALESCE(t1.fnd01_close_yn,'false') IN ('false', #{c.closeYn})
+                   AND t2.fnd02_kofia_fund_type_cd                 LIKE #{c.fundTypeCode}
+                   AND COALESCE(t2.fnd02_kofia_class_type_cd, '%') LIKE #{c.classTypeCode}
+                   AND COALESCE(t1.fnd01_icam_yn,'false') LIKE '%'
+                   AND UPPER(CONCAT(t1.fnd01_fund_cd, t2.fnd02_fund_nm, t2.fnd02_kofia_fund_cd, t2.fnd02_ksd_fund_cd, fnd03_consignment_nm, fnd06_office_work_nm)) LIKE UPPER(#{c.fundName})
+               ) x
+               LEFT OUTER JOIN ( SELECT fnd25_terms_id, fnd26_revision_no, fnd26_revision_date, fnd25_fund_id
+                                   FROM fnd25_terms fnd25
+                                        INNER JOIN ( SELECT DISTINCT ON (fnd26_terms_id) fnd26_terms_id, fnd26_revision_date, fnd26_revision_no
+                                                       FROM fnd26_terms_detail
+                                                      WHERE fnd26_use_yn = 'true'
+                                                      ORDER BY fnd26_terms_id, fnd26_revision_no DESC
+                                                   ) fnd26 ON fnd26.fnd26_terms_id = fnd25.fnd25_terms_id
+                               ) tm ON tm.fnd25_fund_id = x.fund_code_id
+    </sql>
+
+    <select id="selectFundSearch" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundSearchRes">
+        <include refid="fundWith"/>
+        <include refid="fundSearchSelect"/>
+         ORDER BY x.fund_code
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId (insertRdFundSearch ① 데이터 정리) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdFundSearch L4485 ② 데이터 생성 — 같은 조회 결과를 열 매핑(string01~17·date01~03·long01~02·double01~04)대로 담는다. 널은 ''(checkNull)·0 -->
+    <insert id="insertPrintFundSearch">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_string03, sys99_string04, sys99_string05, sys99_string06, sys99_string07
+               , sys99_date01, sys99_date02, sys99_date03
+               , sys99_string08, sys99_string09, sys99_string10, sys99_string11, sys99_string12, sys99_string13, sys99_string14, sys99_string15
+               , sys99_long01, sys99_long02, sys99_double01, sys99_double02, sys99_double03, sys99_double04
+               , sys99_string16, sys99_string17 )
+        <include refid="fundWith"/>
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , COALESCE(s.fund_code, ''), COALESCE(s.fund_full_name, ''), COALESCE(s.kofia_fund_code, ''), COALESCE(s.ksd_fund_code, ''), COALESCE(s.ksd_item_code, '')
+             , COALESCE(s.kofia_fund_type_name, ''), COALESCE(s.kofia_class_type_name, '')
+             , s.start_date, s.end_expect_date, s.end_date
+             , COALESCE(s.close_name, ''), COALESCE(s.kofia_trust_name, ''), COALESCE(s.kofia_public_name, ''), COALESCE(s.consignment_name, ''), COALESCE(s.trust_bank_name, '')
+             , COALESCE(s.office_work_name, ''), COALESCE(s.operator1, ''), COALESCE(s.operator2, '')
+             , COALESCE(s.seolj_aek, 0), COALESCE(s.sunjasan_aek, 0)
+             , COALESCE(s.management_rate, 0), COALESCE(s.sales_rate, 0), COALESCE(s.consignment_rate, 0), COALESCE(s.office_work_rate, 0)
+             , COALESCE(s.note, ''), COALESCE(s.fund_name, '')
+          FROM ( <include refid="fundSearchSelect"/> ) s
+         ORDER BY s.fund_code
+    </insert>
+
     <!-- AS-IS selectById L35 (저장 뒤 다시 읽기) — 회사·임시펀드 조건은 보안 보강 -->
     <select id="selectPlanById" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundPlanRes">
         SELECT <include refid="planColumns"/>
@@ -261,11 +323,13 @@
         <foreach collection="fundCodeIds" item="id" open="(" separator="," close=")">#{id}</foreach>
     </delete>
 
-    <!-- === P02 신규기획펀드 권한설정 (Fnd08_Tab_OrgAuthTempFund) — 목록은 임시펀드(planYn=true)만 ===
+    <!-- === P02 신규기획펀드 권한설정 (Fnd08_Tab_OrgAuthTempFund) — 목록은 임시펀드(planYn=true)만. P06 펀드 권한설정(Fnd08_Tab_OrgAuth)은 같은 SQL을 planYn=false로 쓴다 ===
          AS-IS selectByFundName L38: 권한부서를 안 고르면. 이름 열은 AS-IS와 같은 코드 CTE(ClosedFundCode·IcamFundType), 그리드가 안 쓰는 열·조인은 뺐다 -->
     <select id="selectByFundName" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthRes">
         WITH closeFund AS ( <include refid="codeName"><property name="kind" value="ClosedFundCode"/></include> )
            , kofiaFundType AS ( <include refid="codeName"><property name="kind" value="IcamFundType"/></include> )
+           , kofiaTrust AS ( <include refid="codeName"><property name="kind" value="IcamTrustCode"/></include> )
+           , kofiaPublic AS ( <include refid="codeName"><property name="kind" value="IcamPublicCode"/></include> )
         SELECT t1.fnd01_fund_code_id         AS fund_code_id
              , t1.fnd01_fund_cd              AS fund_code
              , t2.fnd02_fund_nm              AS fund_name
@@ -273,8 +337,11 @@
              , CAST(t1.fnd01_start_date AS date) AS start_date
              , CAST(t1.fnd01_end_date AS date)   AS end_date
              , closeFund.nm                  AS close_name
+             , kofiaTrust.nm                 AS kofia_trust_name
+             , kofiaPublic.nm                AS kofia_public_name
              , t2.fnd02_org_code_nm          AS org_code_name
              , t2.fnd02_operator1            AS operator1
+             , t2.fnd02_operator2            AS operator2
              , t1.fnd01_note                 AS note
           FROM fnd01_fund_code t1
                INNER JOIN fnd02_fund_info t2 ON t1.fnd01_fund_code_id = t2.fnd02_fund_code_id
@@ -282,13 +349,15 @@
                LEFT OUTER JOIN fnd06_office_work ON ( fnd06_office_work_cd = t2.fnd02_office_work_cd AND fnd06_company_id = t1.fnd01_company_id )
                LEFT OUTER JOIN closeFund      ON closeFund.cd      = t1.fnd01_close_yn
                LEFT OUTER JOIN kofiaFundType  ON kofiaFundType.cd  = t2.fnd02_kofia_fund_type_cd
+               LEFT OUTER JOIN kofiaTrust     ON kofiaTrust.cd     = t2.fnd02_kofia_trust_cd
+               LEFT OUTER JOIN kofiaPublic    ON kofiaPublic.cd    = t2.fnd02_kofia_public_cd
          WHERE 1=1
            AND t2.fnd02_work_date = f_max_workdate(t2.fnd02_fund_code_id, f_trunc(f_sysdate()))
            AND t1.fnd01_company_id = #{c.companyId}
            AND COALESCE(t1.fnd01_close_yn,'false') IN ('false', #{c.closeYn})
            AND t2.fnd02_kofia_fund_type_cd                 LIKE #{c.fundTypeCode}
            AND COALESCE(t2.fnd02_kofia_class_type_cd, '%') LIKE #{c.classTypeCode}
-           AND t1.fnd01_plan_yn = 'true'
+           AND t1.fnd01_plan_yn = #{c.planYn}
            AND COALESCE(t1.fnd01_icam_yn,'false') LIKE '%'
            AND UPPER(CONCAT(t1.fnd01_fund_cd, t2.fnd02_fund_nm, t2.fnd02_kofia_fund_cd, t2.fnd02_ksd_fund_cd, fnd03_consignment_nm, fnd06_office_work_nm)) LIKE UPPER(#{c.fundName})
          ORDER BY t1.fnd01_fund_cd
@@ -299,6 +368,8 @@
     <select id="selectPlanByOrgAuth" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundPlanAuthRes">
         WITH closeFund AS ( <include refid="codeName"><property name="kind" value="ClosedFundCode"/></include> )
            , kofiaFundType AS ( <include refid="codeName"><property name="kind" value="IcamFundType"/></include> )
+           , kofiaTrust AS ( <include refid="codeName"><property name="kind" value="IcamTrustCode"/></include> )
+           , kofiaPublic AS ( <include refid="codeName"><property name="kind" value="IcamPublicCode"/></include> )
         SELECT tt.fnd01_fund_code_id         AS fund_code_id
              , tt.fnd01_fund_cd              AS fund_code
              , tt.fnd02_fund_nm              AS fund_name
@@ -306,12 +377,16 @@
              , CAST(tt.fnd01_start_date AS date) AS start_date
              , CAST(tt.fnd01_end_date AS date)   AS end_date
              , closeFund.nm                  AS close_name
+             , kofiaTrust.nm                 AS kofia_trust_name
+             , kofiaPublic.nm                AS kofia_public_name
              , tt.fnd02_org_code_nm          AS org_code_name
              , tt.fnd02_operator1            AS operator1
+             , tt.fnd02_operator2            AS operator2
              , tt.fnd01_note                 AS note
           FROM (
                 SELECT DISTINCT t.fnd01_fund_code_id, t.fnd01_fund_cd, t.fnd01_start_date, t.fnd01_end_date, t.fnd01_close_yn, t.fnd01_note,
-                       fnd02_fund_info.fnd02_fund_nm, fnd02_fund_info.fnd02_kofia_fund_type_cd, fnd02_fund_info.fnd02_org_code_nm, fnd02_fund_info.fnd02_operator1
+                       fnd02_fund_info.fnd02_fund_nm, fnd02_fund_info.fnd02_kofia_fund_type_cd, fnd02_fund_info.fnd02_org_code_nm, fnd02_fund_info.fnd02_operator1,
+                       fnd02_fund_info.fnd02_operator2, fnd02_fund_info.fnd02_kofia_trust_cd, fnd02_fund_info.fnd02_kofia_public_cd
                   FROM fnd01_fund_code t
                        INNER JOIN fnd02_fund_info ON ( fnd02_fund_code_id = fnd01_fund_code_id
                                                        AND fnd02_work_date = ( SELECT MAX(fnd02_work_date)
@@ -322,13 +397,15 @@
                  WHERE fnd01_company_id = #{c.companyId}
                    AND fnd08_auth_yn = 'true'
                    AND fnd01_close_yn IN ('false', #{c.closeYn})
-                   AND fnd01_plan_yn = 'true'
+                   AND fnd01_plan_yn = #{c.planYn}
                    AND fnd02_kofia_fund_type_cd LIKE #{c.fundTypeCode}
                    AND COALESCE(fnd02_kofia_class_type_cd, '%') LIKE #{c.classTypeCode}
                    AND CONCAT(fnd01_fund_cd, fnd02_fund_nm) ILIKE #{c.fundName}
                ) tt
                LEFT OUTER JOIN closeFund      ON closeFund.cd      = tt.fnd01_close_yn
                LEFT OUTER JOIN kofiaFundType  ON kofiaFundType.cd  = tt.fnd02_kofia_fund_type_cd
+               LEFT OUTER JOIN kofiaTrust     ON kofiaTrust.cd     = tt.fnd02_kofia_trust_cd
+               LEFT OUTER JOIN kofiaPublic    ON kofiaPublic.cd    = tt.fnd02_kofia_public_cd
          ORDER BY tt.fnd01_fund_cd
     </select>
 

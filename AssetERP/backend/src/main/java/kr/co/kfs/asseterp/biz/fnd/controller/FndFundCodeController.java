@@ -9,6 +9,8 @@ import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanSaveReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundSaveReq;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundSearchPrintReq;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundSearchRes;
 import kr.co.kfs.asseterp.biz.fnd.service.FndFundCodeService;
 import kr.co.kfs.asseterp.biz.fnd.service.FndFundUploadService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -72,6 +74,17 @@ public class FndFundCodeController {
         return ApiResponse.ok(service.searchPlansForAuth(principal, closeYn, fundName, fundTypeCode, classTypeCode, orgId));
     }
 
+    /** AS-IS fnd.Fnd01_FundCode.selectByFundName / selectByFundOrgAuth (P06 펀드 권한설정) */
+    @GetMapping("/auths")
+    public ApiResponse<List<FundPlanAuthRes>> searchFundsForAuth(@AuthenticationPrincipal UserPrincipal principal,
+                                                                 @RequestParam(defaultValue = "false") boolean closeYn,
+                                                                 @RequestParam(defaultValue = "") String fundName,
+                                                                 @RequestParam(required = false) String fundTypeCode,
+                                                                 @RequestParam(required = false) String classTypeCode,
+                                                                 @RequestParam(required = false) Long orgId) {
+        return ApiResponse.ok(service.searchFundsForAuth(principal, closeYn, fundName, fundTypeCode, classTypeCode, orgId));
+    }
+
     /** AS-IS fnd.Fnd01_FundCode.selectByPlan (P03 상품기획일정 등록) */
     @GetMapping("/plan-funds")
     public ApiResponse<List<FundPlanListRes>> searchPlanFunds(@AuthenticationPrincipal UserPrincipal principal,
@@ -98,6 +111,22 @@ public class FndFundCodeController {
     public ApiResponse<Void> deletePlans(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<FundPlanDeleteReq> rows) {
         service.deletePlans(principal, rows);
         return ApiResponse.ok(null);
+    }
+
+    /** AS-IS fnd.Fnd01_FundCode.selectByFundName (P07 펀드 조회, 일반 펀드 + 최종 규약) */
+    @GetMapping("/search")
+    public ApiResponse<List<FundSearchRes>> searchFundSearch(@AuthenticationPrincipal UserPrincipal principal,
+                                                             @RequestParam(defaultValue = "false") boolean closeYn,
+                                                             @RequestParam(defaultValue = "") String fundName,
+                                                             @RequestParam(required = false) String fundTypeCode,
+                                                             @RequestParam(required = false) String classTypeCode) {
+        return ApiResponse.ok(service.searchFundSearch(principal, closeYn, fundName, fundTypeCode, classTypeCode));
+    }
+
+    /** AS-IS sys.Sys99_Print.insertRdFundSearch (P07 [엑셀다운로드]) → 출력 그룹 ID */
+    @PostMapping("/search/rd-download")
+    public ApiResponse<String> searchRdDownload(@AuthenticationPrincipal UserPrincipal principal, @RequestBody FundSearchPrintReq req) {
+        return ApiResponse.ok(service.insertRdFundSearch(principal, req));
     }
 
     /** AS-IS fnd.Fnd01_FundCode.selectByFundName (P05 펀드 등록 및 변경, 일반 펀드) */

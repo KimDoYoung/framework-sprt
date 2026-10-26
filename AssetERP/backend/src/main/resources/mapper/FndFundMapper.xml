@@ -25,4 +25,28 @@
            AND t1.fnd00_company_id = #{companyId}
          ORDER BY fnd00_fund_cd
     </select>
+
+    <!-- AS-IS selectBySearchTextAdmin L323 (P06): fnd00_fund_sysdate 뷰의 그리드 열만. fundIdList(제외 목록)는 화면이 안 보낸다 → 분기 생략.
+         classYn(클래스펀드&차등배분형 제외)이 true이고 임시펀드가 아니면 클래스구분이 '1','Z'인 펀드만 -->
+    <select id="selectBySearchTextAdmin" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundMultiRes">
+        SELECT fnd00_fund_id                   AS fund_id
+             , fnd00_fund_cd                   AS fund_code
+             , fnd00_fund_nm                   AS fund_name
+             , fnd00_kofia_fund_type_nm        AS kofia_fund_type_name
+             , fnd00_kofia_class_type_nm       AS kofia_class_type_name
+             , fnd00_consignment_nm            AS consignment_name
+             , CAST(fnd00_start_date AS date)  AS start_date
+             , fnd00_emp1_nm                   AS emp_name1
+             , fnd00_note                      AS note
+          FROM fnd00_fund_sysdate
+         WHERE fnd00_company_id = #{companyId}
+           AND fnd00_close_yn IN ('false', #{closeYn})
+           AND fnd00_plan_yn = #{planYn}
+           AND fnd00_kofia_fund_type_cd LIKE #{fundType}
+           AND UPPER(fnd00_fund_cd||fnd00_fund_nm) LIKE UPPER(#{searchText})
+        <if test="classYn == 'true' and planYn != 'true'">
+           AND fnd00_kofia_class_type_cd IN ('1','Z')
+        </if>
+         ORDER BY fnd00_fund_cd
+    </select>
 </mapper>

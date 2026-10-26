@@ -10,6 +10,7 @@ import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanSaveReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundSaveReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundSearchCond;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundSearchRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -79,4 +80,14 @@ public interface FndFundCodeMapper {
     int insertFundDetail(@Param("fundInfoId") Long fundInfoId, @Param("fundCodeId") Long fundCodeId, @Param("r") FundSaveReq req);
 
     int updateFundDetail(@Param("fundCodeId") Long fundCodeId, @Param("r") FundSaveReq req);
+
+    /** AS-IS selectByFundName L253 (P07 펀드 조회) — P05와 같은 조회 + 최종 규약 */
+    List<FundSearchRes> selectFundSearch(@Param("c") FundSearchCond cond);
+
+    /** AS-IS sys99_print.deleteByPersonId (P07 엑셀다운로드 ① 내 출력 자료 지움) */
+    int deletePrint(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("windowClassName") String windowClassName);
+
+    /** AS-IS Sys99_Print.insertRdFundSearch (P07 엑셀다운로드 ② 같은 조회 결과를 새 그룹 ID로 담음) */
+    int insertPrintFundSearch(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                              @Param("windowClassName") String windowClassName, @Param("groupId") Long groupId, @Param("c") FundSearchCond cond);
 }

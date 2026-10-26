@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/fnd/mapper/fnd26_terms_detail.xml selectByTermsId (P07) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.fnd.mapper.FndTermsDetailMapper">
+
+    <!-- 그리드 열(제개정일·개정회차·첨부파일 수) + 본문. 첨부파일 수 = sys10_file의 상세 ID 건수 -->
+    <select id="selectByTermsId" resultType="kr.co.kfs.asseterp.biz.fnd.dto.FundTermsDetailRes">
+        SELECT fnd26_terms_detail_id   AS terms_detail_id
+             , fnd26_revision_date     AS revision_date
+             , fnd26_revision_no       AS revision_no
+             , ( SELECT COUNT(*)
+                   FROM sys10_file
+                  WHERE sys10_parent_id = fnd26_terms_detail_id ) AS file_cnt
+             , fnd26_content           AS content
+          FROM fnd25_terms
+               INNER JOIN fnd26_terms_detail ON fnd25_terms_id = fnd26_terms_id
+         WHERE fnd25_terms_id   = #{termsId}
+           AND fnd25_company_id = #{companyId}
+           AND fnd26_use_yn     = 'true'
+         ORDER BY fnd26_revision_no DESC
+    </select>
+</mapper>

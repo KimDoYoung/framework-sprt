@@ -13,6 +13,8 @@ import kr.co.kfs.asseterp.biz.fnd.dto.FundPlanSaveReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundSaveReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.FundSearchCond;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundSearchPrintReq;
+import kr.co.kfs.asseterp.biz.fnd.dto.FundSearchRes;
 import kr.co.kfs.asseterp.biz.fnd.mapper.FndFundCodeMapper;
 import kr.co.kfs.asseterp.biz.sys.service.SysMenuSearchService;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -29,6 +31,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class FndFundCodeService {
+
+    private static final String FUND_SEARCH_WINDOW = "Fnd01_Tab_FundSearch";
 
     private final FndFundCodeMapper mapper;
     private final EmpTransInfoService transInfoService;
@@ -57,8 +61,19 @@ public class FndFundCodeService {
      */
     public List<FundPlanAuthRes> searchPlansForAuth(UserPrincipal user, boolean closeYn, String fundName, String fundTypeCode,
                                                     String classTypeCode, Long orgId) {
-        FundPlanAuthCond cond = new FundPlanAuthCond(user.getCompanyId(), String.valueOf(closeYn),
-                blankToAny(fundTypeCode), blankToAny(classTypeCode), "%" + (fundName == null ? "" : fundName) + "%");
+        return selectAuthFunds(user, "true", closeYn, fundName, fundTypeCode, classTypeCode, orgId);
+    }
+
+    /** AS-IS fnd.Fnd01_FundCode.selectByFundName / selectByFundOrgAuth (P06 펀드 권한설정) — P02와 같은 SQL, planYn만 'false' */
+    public List<FundPlanAuthRes> searchFundsForAuth(UserPrincipal user, boolean closeYn, String fundName, String fundTypeCode,
+                                                    String classTypeCode, Long orgId) {
+        return selectAuthFunds(user, "false", closeYn, fundName, fundTypeCode, classTypeCode, orgId);
+    }
+
+    private List<FundPlanAuthRes> selectAuthFunds(UserPrincipal user, String planYn, boolean closeYn, String fundName,
+                                                  String fundTypeCode, String classTypeCode, Long orgId) {
+        FundPlanAuthCond cond = new FundPlanAuthCond(user.getCompanyId(), String.valueOf(closeYn), blankToAny(fundTypeCode),
+                blankToAny(classTypeCode), "%" + (fundName == null ? "" : fundName) + "%", planYn);
         return orgId == null ? mapper.selectByFundName(cond) : mapper.selectPlanByOrgAuth(cond);
     }
 
@@ -142,6 +157,29 @@ public class FndFundCodeService {
     public List<FundRes> searchFunds(UserPrincipal user, boolean closeYn, String fundName, String fundTypeCode, String classTypeCode) {
         return mapper.selectFunds(new FundSearchCond(user.getCompanyId(), String.valueOf(closeYn),
                 "%" + (fundName == null ? "" : fundName) + "%", blankToAny(fundTypeCode), blankToAny(classTypeCode)));
+    }
+
+    /** AS-IS fnd.Fnd01_FundCode.selectByFundName L38 (P07 펀드 조회) — P05와 같은 조건, 최종 규약 3열이 더 있다 */
+    public List<FundSearchRes> searchFundSearch(UserPrincipal user, boolean closeYn, String fundName, String fundTypeCode, String classTypeCode) {
+        return mapper.selectFundSearch(searchCond(user, closeYn, fundName, fundTypeCode, classTypeCode));
+    }
+
+    /**
+     * AS-IS sys.Sys99_Print.insertRdFundSearch L4485 (P07 [엑셀다운로드]) — ① 내 출력 자료 지움 ② 같은 조건의 조회 결과를 새 그룹 ID로 담음.
+     * 돌려주는 값 = 그룹 ID (RD 리포트 Fnd01_Rd_FundSearch의 rdGroupId)
+     */
+    @Transactional
+    public String insertRdFundSearch(UserPrincipal user, FundSearchPrintReq req) {
+        long groupId = mapper.selectNextId();
+        mapper.deletePrint(user.getCompanyId(), user.getUserId(), FUND_SEARCH_WINDOW);
+        mapper.insertPrintFundSearch(user.getCompanyId(), user.getUserId(), FUND_SEARCH_WINDOW, groupId,
+                searchCond(user, req.closeYn(), req.fundName(), req.fundTypeCode(), req.classTypeCode()));
+        return String.valueOf(groupId);
+    }
+
+    private FundSearchCond searchCond(UserPrincipal user, boolean closeYn, String fundName, String fundTypeCode, String classTypeCode) {
+        return new FundSearchCond(user.getCompanyId(), String.valueOf(closeYn),
+                "%" + (fundName == null ? "" : fundName) + "%", blankToAny(fundTypeCode), blankToAny(classTypeCode));
     }
 
     /**

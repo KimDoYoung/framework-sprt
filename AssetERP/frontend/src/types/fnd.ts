@@ -90,7 +90,7 @@ export interface FundLookup {
   note?: string | null;
 }
 
-/** 신규기획펀드 권한설정 목록 한 행 (P02, AS-IS Fnd01_FundCodeModel 중 Fnd08_Tab_OrgAuthTempFund 그리드 열) */
+/** 펀드 권한설정 목록 한 행 (P02 Fnd08_Tab_OrgAuthTempFund·P06 Fnd08_Tab_OrgAuth, AS-IS Fnd01_FundCodeModel 중 그리드 열) */
 export interface FundPlanAuth {
   fundCodeId: number;
   fundCode?: string | null;
@@ -99,8 +99,40 @@ export interface FundPlanAuth {
   startDate?: string | null;
   endDate?: string | null;
   closeName?: string | null;
+  kofiaTrustName?: string | null;
+  kofiaPublicName?: string | null;
   orgCodeName?: string | null;
   operator1?: string | null;
+  operator2?: string | null;
+  note?: string | null;
+}
+
+/** 펀드 조회 한 행 (P07, 펀드 등록 및 변경 행 + 최종 규약: AS-IS Fnd01_FundCodeModel의 termsId·revisionNo·revisionDate) */
+export interface FundSearch extends FundDetail {
+  termsId?: number | null;
+  revisionNo?: number | null;
+  revisionDate?: string | null;
+}
+
+/** 규약 내용 조회창 한 행 (P07, AS-IS Fnd26_TermsDetailModel 중 그리드 열과 본문) */
+export interface FundTermsDetail {
+  termsDetailId: number;
+  revisionDate?: string | null;
+  revisionNo?: number | null;
+  fileCnt?: number | null;
+  content?: string | null;
+}
+
+/** 연관펀드 조회창 한 행 (P06, AS-IS Fnd00_FundModel 중 Fnd01_Lookup_SelectMulti 그리드 열) */
+export interface FundMulti {
+  fundId: number;
+  fundCode?: string | null;
+  fundName?: string | null;
+  kofiaFundTypeName?: string | null;
+  kofiaClassTypeName?: string | null;
+  consignmentName?: string | null;
+  startDate?: string | null;
+  empName1?: string | null;
   note?: string | null;
 }
 

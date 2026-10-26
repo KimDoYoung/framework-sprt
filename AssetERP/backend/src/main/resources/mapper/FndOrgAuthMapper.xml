@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/fnd/mapper/fnd08_org_auth.xml checkOrgAuth L27 (P06) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.fnd.mapper.FndOrgAuthMapper">
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="countFund" resultType="int">
+        SELECT COUNT(*)
+          FROM fnd01_fund_code
+         WHERE fnd01_fund_code_id = #{fundCodeId}
+           AND fnd01_company_id   = #{companyId}
+    </select>
+
+    <select id="countOrg" resultType="int">
+        SELECT COUNT(*)
+          FROM org01_code
+         WHERE org01_code_id    = #{orgCodeId}
+           AND org01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS checkOrgAuth: SELECT * FROM fnd08_org_auth WHERE 조직 AND 펀드 (id만 쓴다) -->
+    <select id="selectOrgAuthId" resultType="long">
+        SELECT fnd08_org_auth_id
+          FROM fnd08_org_auth
+         WHERE fnd08_org_code_id  = #{orgCodeId}
+           AND fnd08_fund_code_id = #{fundCodeId}
+    </select>
+
+    <insert id="insertOrgAuth">
+        INSERT INTO fnd08_org_auth (fnd08_org_auth_id, fnd08_fund_code_id, fnd08_org_code_id, fnd08_auth_yn)
+        VALUES (#{orgAuthId}, #{fundCodeId}, #{orgCodeId}, #{authYn})
+    </insert>
+
+    <update id="updateAuthYn">
+        UPDATE fnd08_org_auth
+           SET fnd08_auth_yn = #{authYn}
+         WHERE fnd08_org_auth_id = #{orgAuthId}
+    </update>
+</mapper>

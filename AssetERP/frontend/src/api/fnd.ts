@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { Consignment, FundCode, FundDetail, FundLookup, FundPlan, FundPlanAuth, FundPlanList, OfficeWork, Plan, TrustBank } from '../types/fnd';
+import { Consignment, FundCode, FundDetail, FundLookup, FundMulti, FundPlan, FundSearch, FundTermsDetail, FundPlanAuth, FundPlanList, OfficeWork, Plan, TrustBank } from '../types/fnd';
 
 /** fnd(기관정보) 화면 API (D11~) */
 export interface FundOrgAuthParams {
@@ -58,6 +58,46 @@ export const fndApi = {
   searchFundPlanAuths: async (params: { closeYn: boolean; fundName: string; fundTypeCode: string; classTypeCode: string; orgId?: number | null }): Promise<FundPlanAuth[]> => {
     const res = await apiClient.get<ApiResponse<FundPlanAuth[]>>('v1/fnd/fund-codes/plan-auths', { params: { ...params, orgId: params.orgId ?? undefined } });
     return res.data.data ?? [];
+  },
+
+  // ── P07 펀드 조회 (Fnd01_Tab_FundSearch) ──
+
+  /** AS-IS fnd.Fnd01_FundCode.selectByFundName: P05와 같은 조회 + 최종 규약(termsId·revisionNo·revisionDate) */
+  searchFundSearch: async (params: { closeYn: boolean; fundName: string; fundTypeCode: string; classTypeCode: string }): Promise<FundSearch[]> => {
+    const res = await apiClient.get<ApiResponse<FundSearch[]>>('v1/fnd/fund-codes/search', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdFundSearch: 같은 조건의 조회 결과를 출력 자료로 담고 그룹 ID를 돌려준다 */
+  rdDownloadFundSearch: async (body: { closeYn: boolean; fundName: string; fundTypeCode: string; classTypeCode: string }): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/fnd/fund-codes/search/rd-download', body);
+    return res.data.data ?? '';
+  },
+
+  /** AS-IS fnd.Fnd26_TermsDetail.selectByTermsId: 규약의 사용 중인 개정 목록(개정회차 내림차순) */
+  searchTermsDetails: async (termsId: number): Promise<FundTermsDetail[]> => {
+    const res = await apiClient.get<ApiResponse<FundTermsDetail[]>>(`v1/fnd/terms/${termsId}/details`);
+    return res.data.data ?? [];
+  },
+
+  // ── P06 펀드 권한설정 (Fnd08_Tab_OrgAuth) ──
+
+  /** AS-IS fnd.Fnd01_FundCode.selectByFundName(권한부서 없음) / selectByFundOrgAuth(권한부서 orgId 있음): 일반 펀드 목록 (P02와 같은 SQL, planYn만 false) */
+  searchFundAuths: async (params: { closeYn: boolean; fundName: string; fundTypeCode: string; classTypeCode: string; orgId?: number | null }): Promise<FundPlanAuth[]> => {
+    const res = await apiClient.get<ApiResponse<FundPlanAuth[]>>('v1/fnd/fund-codes/auths', { params: { ...params, orgId: params.orgId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd00_Fund.selectBySearchText(orgId 없음 → selectBySearchTextAdmin): 연관펀드 조회창 (Fnd01_Lookup_SelectMulti.openAdmin). 검색어는 서버가 %…%로 */
+  searchFundMulti: async (params: { planYn: boolean; fundType: string; searchText: string; closeYn: boolean; classYn: boolean }): Promise<FundMulti[]> => {
+    const res = await apiClient.get<ApiResponse<FundMulti[]>>('v1/fnd/funds/multi', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd08_OrgAuth.updateAuthYn: 펀드 × 조직 모두에 권한 부여(confirm 'true') 또는 삭제('false') → 처리 건수 */
+  updateOrgAuths: async (body: { fundCodeIds: number[]; orgCodeIds: number[]; confirm: 'true' | 'false' }): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/fnd/org-auths', body);
+    return res.data.data ?? 0;
   },
 
   // ── P03 상품기획일정 등록 (Fnd20_Tab_Plan) ──

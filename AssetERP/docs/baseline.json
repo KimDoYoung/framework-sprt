@@ -7382,5 +7382,74 @@
     "note": "docs/work/P/P05-작업기록.md",
     "history": [],
     "id": "P05"
+  },
+  "Fnd08_Tab_OrgAuth": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/fnd/Fnd00_Lookup_FundCode.java": "84eeb15d77e1a0b432bae8b1ade37798540b127f",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd08_Lookup_OrgAuth.java": "53e976c7ef7cd67c9fa617d1915b7701dde48633",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd08_Lookup_OrgCode.java": "362248c9e3c79b6883559b26ad3a1c7ac201603e",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd08_Page_OrgAuth.java": "206540b6a49829665d525eda3529270e35ae4723",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd08_Tab_OrgAuth.java": "5340e88236035b01d6adcd91336d8c42c3908ee2",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd00_FundModel.java": "fdff888d8bf9032fea0f195e1a45c8009e58a647",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd00_FundModelProperties.java": "ac8fd8d5a7056bbdc0612d2e39dfc74b506703c7",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModel.java": "6c8b85e6fd82c9178f6525f60a5e33fd9adee66f",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModelProperties.java": "e5ef80aca72758d7422b0f86dc61cf24a4f22895",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd02_FundInfoModel.java": "997b1e7a847092c9ad0e59ce182fefb8b9ca1934",
+      "application/src/main/java/myApp/server/fnd/Fnd00_Fund.java": "79d6f410c2f785d1dac7851d6984c1b759e7567d",
+      "application/src/main/java/myApp/server/fnd/Fnd01_FundCode.java": "49cd01fec4668d353126f461c07c18fc6d93e024",
+      "application/src/main/java/myApp/server/fnd/Fnd08_OrgAuth.java": "6673cd72186e6381f62dfc3253e9afc8f52858ac",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd00_fund.xml": "37146e07cb6e3fc9b138d7e60aa68ee39fd6a096",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd01_fund_code.xml": "c6b7e784adfbb4ffee602c9f03a4c96b73405b3d",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd08_org_auth.xml": "c019511575673b13ce069371f7eae2a98c9c4f87",
+      "application/src/main/java/myApp/server/org/Org01_Code.java": "f0e6a0c84939b5f2fccd14ee3dcd22c6ff5e8797",
+      "application/src/main/java/myApp/server/org/mapper/org01_code.xml": "45bce5ce97e58acb58ac7bad89d1ac9a849fb7af",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Fnd01_Lookup_SelectMulti",
+      "Org00_Lookup_SelectMulti"
+    ],
+    "recorded_at": "2026-10-26T14:37:55+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/P/P06-작업기록.md",
+    "history": [],
+    "id": "P06"
+  },
+  "Fnd01_Tab_FundSearch": {
+    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+    "commit_short": "d538228",
+    "branch": "ioc",
+    "commit_date": "2026-10-23",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/fnd/Fnd01_Edit_FundSearch.java": "32abf4135ccca8a5694d129af7b1ed6b384948e0",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd01_Tab_FundSearch.java": "e911466642f4ff83ea9bc2aee3ce765054e9dbb6",
+      "application/src/main/java/myApp/client/vi/fnd/Fnd25_Lookup_Content.java": "86a91167cbdd8871dfb3ad7e7a7d928921e291cf",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModel.java": "6c8b85e6fd82c9178f6525f60a5e33fd9adee66f",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd01_FundCodeModelProperties.java": "e5ef80aca72758d7422b0f86dc61cf24a4f22895",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd02_FundInfoModel.java": "997b1e7a847092c9ad0e59ce182fefb8b9ca1934",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd26_TermsDetailModel.java": "0ddbf1351c0a65b3e670cbfdc13eb35b19be4496",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd26_TermsDetailModelProperties.java": "81f330c3efa3890ffb997b879191f3d69a9ea038",
+      "application/src/main/java/myApp/server/fnd/Fnd01_FundCode.java": "49cd01fec4668d353126f461c07c18fc6d93e024",
+      "application/src/main/java/myApp/server/fnd/Fnd26_TermsDetail.java": "458d83a5ec37d4538d67ce987c7f47e68212b4f8",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd01_fund_code.xml": "c6b7e784adfbb4ffee602c9f03a4c96b73405b3d",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd26_terms_detail.xml": "b4a49fa4029127e406ce2192f19b3628b9513c3f",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Com01_Lookup_RelateFile"
+    ],
+    "recorded_at": "2026-10-26T15:09:59+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/P/P07-작업기록.md",
+    "history": [],
+    "id": "P07"
   }
 }
