@@ -9,21 +9,21 @@
         SELECT f_create_seq()
     </select>
 
-    <!-- AS-IS ast03_cf_info.selectByClassTreeId L44 -->
+    <!-- AS-IS ast03_cf_info.selectByClassTreeId L44 (IDMS-IC) -->
     <select id="selectCfInfoList" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstCfInfoRes">
         SELECT a.ast03_cf_info_id         AS cfInfoId,
                a.ast03_ast_class_tree_id  AS astClassTreeId,
-               a.ast03_cf_cd              AS cfCd,
-               a.ast03_cf_nm              AS cfNm,
-               a.ast03_tr_cd              AS trCd,
-               t.ast05_tr_nm              AS trNm,
+               a.ast03_cf_cd              AS cfCode,
+               a.ast03_cf_nm              AS cfName,
+               a.ast03_tr_cd              AS trCode,
+               t.ast05_tr_nm              AS trName,
                a.ast03_start_ym           AS startYm,
                a.ast03_close_ym           AS closeYm,
                a.ast03_cycle              AS cycle,
-               a.ast03_date_cd            AS dateCd,
-               f_cdnm('DateCode', a.ast03_date_cd, c.ast01_company_id, f_sysdate()) AS dateNm,
-               a.ast03_holiday_settle_cd  AS holidaySettleCd,
-               f_cdnm('HolidaySettleCode', a.ast03_holiday_settle_cd, c.ast01_company_id, f_sysdate()) AS holidaySettleNm,
+               a.ast03_date_cd            AS dateCode,
+               f_cdnm('DateCode', a.ast03_date_cd, c.ast01_company_id, f_sysdate()) AS dateName,
+               a.ast03_holiday_settle_cd  AS holidaySettleCode,
+               f_cdnm('HolidaySettleCode', a.ast03_holiday_settle_cd, c.ast01_company_id, f_sysdate()) AS holidaySettleName,
                a.ast03_amt                AS amt,
                a.ast03_note               AS note,
                a.ast03_round              AS round,
@@ -31,7 +31,7 @@
                a.ast03_cont_amt           AS contAmt,
                a.ast03_tax                AS tax,
                a.ast03_corp_id            AS corpId,
-               f_get_corp_nm(a.ast03_corp_id) AS corpNm
+               f_get_corp_nm(a.ast03_corp_id) AS corpName
           FROM ast03_cf_info a
          INNER JOIN ast01_class_tree c ON c.ast01_class_tree_id = a.ast03_ast_class_tree_id
           LEFT OUTER JOIN ast05_tr_code t ON (t.ast05_company_id = c.ast01_company_id AND t.ast05_tr_cd = a.ast03_tr_cd)
@@ -39,7 +39,7 @@
          ORDER BY a.ast03_cf_cd
     </select>
 
-    <!-- AS-IS ast04_cf.selectByCfInfoId L39 -->
+    <!-- AS-IS ast04_cf.selectByCfInfoId L39 (IDMS-IC) -->
     <select id="selectCfList" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstCfRes">
         SELECT ast04_cf_id         AS cfId,
                ast04_cf_info_id    AS cfInfoId,
@@ -52,7 +52,7 @@
                ast04_tax           AS tax
           FROM ast04_cf
          WHERE ast04_cf_info_id = #{cfInfoId}
-         ORDER BY ast04_date, ast04_seq
+         ORDER BY ast04_date
     </select>
 
     <insert id="insertCfInfo">
@@ -60,16 +60,16 @@
             ast03_cf_info_id, ast03_ast_class_tree_id, ast03_cf_cd, ast03_cf_nm,
             ast03_tr_cd, ast03_corp_id, ast03_icam_yn, ast03_note
         ) VALUES (
-            #{cfInfoId}, #{req.astClassTreeId}, #{req.cfCd}, #{req.cfNm},
-            #{req.trCd}, #{req.corpId}, COALESCE(#{req.icamYn}, 'false'), #{req.note}
+            #{cfInfoId}, #{req.astClassTreeId}, #{req.cfCode}, #{req.cfName},
+            #{req.trCode}, #{req.corpId}, COALESCE(#{req.icamYn}, 'false'), #{req.note}
         )
     </insert>
 
     <update id="updateCfInfo">
         UPDATE ast03_cf_info
-           SET ast03_cf_cd   = #{req.cfCd},
-               ast03_cf_nm   = #{req.cfNm},
-               ast03_tr_cd   = #{req.trCd},
+           SET ast03_cf_cd   = #{req.cfCode},
+               ast03_cf_nm   = #{req.cfName},
+               ast03_tr_cd   = #{req.trCode},
                ast03_corp_id = #{req.corpId},
                ast03_icam_yn = COALESCE(#{req.icamYn}, 'false'),
                ast03_note    = #{req.note}
@@ -113,12 +113,12 @@
          WHERE ast04_cf_info_id = #{cfInfoId}
     </delete>
 
-    <!-- AS-IS ast04_cf.lastDate L50 -->
+    <!-- AS-IS ast04_cf.lastDate L50 (IDMS-IC) -->
     <select id="selectLastDate" resultType="java.util.Date">
         SELECT f_get_last_day(#{date})
     </select>
 
-    <!-- AS-IS ast04_cf.bizDate L46 -->
+    <!-- AS-IS ast04_cf.bizDate L46 (IDMS-IC) -->
     <select id="selectBizDate" resultType="java.util.Date">
         SELECT f_get_biz_date(#{companyId}, #{date}, #{string})
     </select>

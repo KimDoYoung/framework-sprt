@@ -76,6 +76,38 @@ public class AstDetailService {
         return mapper.selectByCompanyId("true", user.getCompanyId(), "%" + (searchText == null ? "" : searchText) + "%");
     }
 
+    /** 기본 항목 템플릿 저장 (Ast02_Lookup_Detail) */
+    @Transactional
+    public List<AstDetailRes> saveTemplates(UserPrincipal user, List<AstDetailSaveReq> rows) {
+        if (rows == null || rows.isEmpty()) return List.of();
+        for (AstDetailSaveReq req : rows) {
+            if (req.seq() == null) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "조회순번은 필수입력 항목입니다.");
+            }
+            if (req.title() == null || req.title().isEmpty()) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "항목은 필수입력 항목입니다.");
+            }
+        }
+        return rows.stream().map(req -> {
+            boolean exists = req.detailId() != null && req.detailId() > 0 && mapper.selectById(req.detailId()) != null;
+            if (exists) {
+                if (mapper.update(user.getCompanyId(), req) == 0) {
+                    throw new BusinessException(ErrorCode.ACCESS_DENIED);
+                }
+                return mapper.selectById(req.detailId());
+            }
+            long newId = mapper.selectNextId();
+            mapper.insert(newId, user.getCompanyId(), req);
+            return mapper.selectById(newId);
+        }).toList();
+    }
+
+    /** 기본 항목 템플릿 삭제 (Ast02_Lookup_Detail) */
+    @Transactional
+    public int deleteTemplates(UserPrincipal user, List<Long> ids) {
+        return ids == null || ids.isEmpty() ? 0 : mapper.deleteByIds(user.getCompanyId(), ids);
+    }
+
     /** 종목 상세 저장(CUD) */
     @Transactional
     public List<kr.co.kfs.asseterp.biz.ast.dto.AstItemDetailRes> saveItemDetails(UserPrincipal user, List<kr.co.kfs.asseterp.biz.ast.dto.AstItemDetailSaveReq> rows) {

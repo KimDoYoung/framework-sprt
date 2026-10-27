@@ -57,6 +57,22 @@ public class AstDetailController {
         return ApiResponse.ok(service.searchTemplates(principal, searchText));
     }
 
+    /** 기본 항목 템플릿 저장(CUD) */
+    @PutMapping("/templates")
+    public ApiResponse<List<AstDetailRes>> saveTemplates(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestBody List<AstDetailSaveReq> rows) {
+        return ApiResponse.ok(service.saveTemplates(principal, rows));
+    }
+
+    /** 기본 항목 템플릿 삭제 */
+    @DeleteMapping("/templates")
+    public ApiResponse<Integer> deleteTemplates(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestBody List<Long> ids) {
+        return ApiResponse.ok(service.deleteTemplates(principal, ids));
+    }
+
     /** 종목 상세 저장(CUD) */
     @PutMapping("/items")
     public ApiResponse<List<kr.co.kfs.asseterp.biz.ast.dto.AstItemDetailRes>> saveItemDetails(

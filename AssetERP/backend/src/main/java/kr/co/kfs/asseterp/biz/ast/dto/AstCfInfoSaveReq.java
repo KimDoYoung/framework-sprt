@@ -8,9 +8,9 @@ import java.io.Serializable;
 public record AstCfInfoSaveReq(
         Long cfInfoId,
         Long astClassTreeId,
-        String cfCd,
-        String cfNm,
-        String trCd,
+        String cfCode,
+        String cfName,
+        String trCode,
         Long corpId,
         String icamYn,
         String note

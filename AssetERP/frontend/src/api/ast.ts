@@ -205,6 +205,18 @@ export const astApi = {
     return res.data.data ?? [];
   },
 
+  /** 기본 항목 템플릿 저장 (Ast02_Lookup_Detail) */
+  saveItemDetailTemplates: async (rows: AstDetail[]): Promise<AstDetail[]> => {
+    const res = await apiClient.put<ApiResponse<AstDetail[]>>('v1/ast/details/templates', rows);
+    return res.data.data ?? [];
+  },
+
+  /** 기본 항목 템플릿 삭제 (Ast02_Lookup_Detail) */
+  deleteItemDetailTemplates: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/ast/details/templates', { data: ids });
+    return res.data.data ?? 0;
+  },
+
   /** 종목 자산상세 항목 일괄 저장 */
   saveItemDetails: async (rows: AstItemDetailSaveReq[]): Promise<AstItemDetail[]> => {
     const res = await apiClient.put<ApiResponse<AstItemDetail[]>>('v1/ast/details/items', rows);

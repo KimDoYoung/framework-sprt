@@ -3,12 +3,14 @@
  * AS-IS: myApp/client/vi/ast/Ast02_Grid_DetailManagement.java (383줄)
  */
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { Input, message, Modal, Splitter } from 'antd';
+import { message, Modal, Splitter } from 'antd';
 import type { ColDef } from 'ag-grid-community';
 import { astApi } from '@/api/ast';
 import { errorMessage } from '@/api/client';
 import { Button } from '@/components/button';
-import { MultiGrid, gbFor } from '@/components/grid';
+import { HtmlEditor } from '@/components/form/HtmlEditor';
+import { CellEditGrid, gbFor } from '@/components/grid';
+import { useGridCrud } from '@/hooks/useGridCrud';
 import { AstClassTree, AstItemDetail, AstItemDetailSaveReq } from '@/types/ast';
 import { Ast02_Lookup_Detail } from './Ast02_Lookup_Detail';
 import { Ast03_Lookup_CfInfo } from './Ast03_Lookup_CfInfo';
@@ -16,6 +18,7 @@ import { Ast10_Grid_Manager, Ast10GridManagerHandle } from './Ast10_Grid_Manager
 
 export interface Ast02GridDetailManagementHandle {
   loadNode: (node: AstClassTree) => void;
+  visible: () => void;
   clear: () => void;
 }
 
@@ -28,72 +31,118 @@ const gb = gbFor<AstItemDetail>();
 export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementHandle, Ast02GridDetailManagementProps>(
   ({ currentNode }, ref) => {
     const [node, setNode] = useState<AstClassTree | null>(currentNode);
+    const [enabled, setEnabled] = useState(false);
     const [content, setContent] = useState('');
-    const [rows, setRows] = useState<AstItemDetail[]>([]);
+    const [editorKey, setEditorKey] = useState(0);
     const [selectedRows, setSelectedRows] = useState<AstItemDetail[]>([]);
-    const [loading, setLoading] = useState(false);
 
     // 모달 상태
     const [cfModalOpen, setCfModalOpen] = useState(false);
     const [detailModalOpen, setDetailModalOpen] = useState(false);
 
     const managerRef = useRef<Ast10GridManagerHandle>(null);
+    const nodeRef = useRef<AstClassTree | null>(currentNode);
+    nodeRef.current = node;
+
+    const crud = useGridCrud<AstItemDetail>({
+      idField: 'detailId',
+      search: useCallback(async () => {
+        const active = nodeRef.current;
+        if (!active?.classTreeId) return [];
+        return astApi.getItemDetails(active.classTreeId);
+      }, []),
+      save: useCallback(async (changed: AstItemDetail[]) => {
+        const active = nodeRef.current;
+        if (!active?.classTreeId) return [];
+        const payload: AstItemDetailSaveReq[] = changed.map((r) => ({
+          detailId: r.detailId > 0 ? r.detailId : undefined,
+          astClassTreeId: active.classTreeId,
+          seq: r.seq,
+          title: r.title,
+          value: r.value,
+          note: r.note,
+          useYn: r.useYn ?? 'true',
+          defaultYn: r.defaultYn ?? 'false',
+          tag: r.tag,
+        }));
+        return astApi.saveItemDetails(payload);
+      }, []),
+      remove: astApi.deleteItemDetails,
+      newRow: useCallback(
+        () => ({
+          astClassTreeId: nodeRef.current?.classTreeId ?? 0,
+          useYn: 'true',
+          defaultYn: 'false',
+        }),
+        []
+      ),
+      reloadAfterSave: true,
+    });
 
     // [E1] retrieveButton[조회].Select (L106) → retrieve()
-    const retrieve = useCallback(async (targetNode?: AstClassTree | null) => {
-      const activeNode = targetNode ?? node;
-      if (!activeNode || !activeNode.classTreeId) {
-        setRows([]);
-        setContent('');
-        return;
-      }
-      setLoading(true);
-      try {
-        const data = await astApi.getItemDetails(activeNode.classTreeId);
-        setRows(data);
+    const retrieve = useCallback(
+      async (targetNode?: AstClassTree | null) => {
+        const activeNode = targetNode ?? nodeRef.current;
+        if (!activeNode || !activeNode.classTreeId) {
+          crud.clear();
+          setContent('');
+          setEditorKey((k) => k + 1);
+          return;
+        }
+        setEnabled(true);
+        setNode(activeNode);
+        nodeRef.current = activeNode;
         setContent(activeNode.content || '');
-      } catch (e) {
-        message.error(errorMessage(e));
-      } finally {
-        setLoading(false);
-      }
-    }, [node]);
+        setEditorKey((k) => k + 1);
+        managerRef.current?.retrieve(activeNode.classTreeId);
+        await crud.retrieve();
+      },
+      [crud]
+    );
 
-    const loadNode = useCallback((selectedNode: AstClassTree) => {
-      setNode(selectedNode);
-      retrieve(selectedNode);
-      if (managerRef.current) {
-        managerRef.current.retrieve(selectedNode.classTreeId);
-      }
-    }, [retrieve]);
+    const loadNode = useCallback(
+      (selectedNode: AstClassTree) => {
+        retrieve(selectedNode);
+      },
+      [retrieve]
+    );
+
+    // visible() L218-220: this.setEnabled(false)
+    const visible = useCallback(() => {
+      setEnabled(false);
+    }, []);
 
     const clear = useCallback(() => {
+      setEnabled(false);
       setNode(null);
-      setRows([]);
+      nodeRef.current = null;
+      crud.clear();
       setContent('');
-      if (managerRef.current) {
-        managerRef.current.clear();
-      }
-    }, []);
+      setEditorKey((k) => k + 1);
+      managerRef.current?.clear();
+    }, [crud]);
 
     useImperativeHandle(ref, () => ({
       loadNode,
+      visible,
       clear,
     }));
 
     // [E0] 화면 열림 (생성자 L98-102) → settings(), makeLayout()
     useEffect(() => {
-      if (currentNode) {
+      if (currentNode && currentNode.typeCode === 'IT') {
         loadNode(currentNode);
+      } else if (currentNode) {
+        visible();
       } else {
         clear();
       }
-    }, [currentNode, loadNode, clear]);
+    }, [currentNode, loadNode, visible, clear]);
 
     // [E5] addButton[항목추가].Select (L141) → insert()
     const insert = () => {
       if (!node) {
-        message.warning('자산 종목을 먼저 선택해주세요.');
+        message.warning('좌측 자산종목을 선택헤주세요');
         return;
       }
       setDetailModalOpen(true);
@@ -101,10 +150,8 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
 
     const handleSelectTemplates = (templates: AstItemDetail[]) => {
       if (!node) return;
-      const newItems: AstItemDetail[] = templates.map((t, idx) => ({
-        detailId: -Date.now() - idx,
+      const inits: Partial<AstItemDetail>[] = templates.map((t) => ({
         astClassTreeId: node.classTreeId,
-        seq: rows.length + idx + 1,
         title: t.title,
         value: '',
         note: '',
@@ -112,13 +159,13 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
         defaultYn: 'false',
         tag: t.tag,
       }));
-      setRows((prev) => [...prev, ...newItems]);
+      crud.addRows(inits, true);
     };
 
     // [E4] cfButton[현금흐름표].Select [classTreeModel == null] (L124) → retrieve()
     const openCfInfo = () => {
       if (!node) {
-        message.warning('자산 종목을 먼저 선택해주세요.');
+        message.warning('좌측 자산종목을 선택헤주세요');
         return;
       }
       setCfModalOpen(true);
@@ -132,21 +179,24 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
       }
       // [E6] msgBox.DialogHide [YES] (L337) → delete()
       Modal.confirm({
-        title: '항목 삭제',
-        content: '선택한 항목을 삭제하시겠습니까?',
+        title: '삭제',
+        content: `${selectedRows.length}건의 항목을 삭제하시겠습니까?`,
+        width: 300,
         onOk: async () => {
           const persistedIds = selectedRows.filter((r) => r.detailId > 0).map((r) => r.detailId);
+          const tempIds = selectedRows.filter((r) => r.detailId <= 0).map((r) => r.detailId);
+          if (tempIds.length > 0) {
+            crud.removeRows(tempIds);
+          }
           if (persistedIds.length > 0) {
             try {
               await astApi.deleteItemDetails(persistedIds);
-              message.success('삭제되었습니다.');
+              await crud.retrieve();
             } catch (e) {
               message.error(errorMessage(e));
               return;
             }
           }
-          const selectedSet = new Set(selectedRows.map((r) => r.detailId));
-          setRows((prev) => prev.filter((r) => !selectedSet.has(r.detailId)));
           setSelectedRows([]);
         },
       });
@@ -155,106 +205,157 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
     // [E2] updateButton[저장].Select (L112) → update()
     const update = async () => {
       if (!node) return;
-      try {
-        // 비고/내용 업데이트
-        if (content !== node.content) {
-          await astApi.updateItemClass(node.classTreeId, {
-            classTreeId: node.classTreeId,
-            content,
-          });
+      crud.gridRef.current?.api?.stopEditing();
+      const changed = crud.getChanged();
+      for (const model of changed) {
+        if (model.seq == null) {
+          message.warning('순번을 입력해주세요');
+          return;
         }
-        // 상세 항목 업데이트
-        const payload: AstItemDetailSaveReq[] = rows.map((r) => ({
-          detailId: r.detailId > 0 ? r.detailId : undefined,
-          astClassTreeId: node.classTreeId,
-          seq: r.seq,
-          title: r.title,
-          value: r.value,
-          note: r.note,
-          useYn: r.useYn,
-          tag: r.tag,
-        }));
-        await astApi.saveItemDetails(payload);
-        message.success('저장되었습니다.');
-        retrieve();
+        if (model.title == null || model.title === '') {
+          message.warning('항목을 입력해주세요');
+          return;
+        }
+      }
+
+      try {
+        await astApi.updateItemClass(node.classTreeId, {
+          classTreeId: node.classTreeId,
+          content,
+          itemLClassCode: node.itemLClassCode,
+          itemMClassCode: node.itemMClassCode,
+          itemSClassCode: node.itemSClassCode,
+          itemDClassCode: node.itemDClassCode,
+          accountType: node.accountType,
+          trUnit: node.trUnit,
+          issueDate: node.issueDate,
+          matDate: node.matDate,
+          corpId: node.corpId,
+          curCode: node.curCode,
+          depnYear: node.depnYear,
+          depnRate: node.depnRate,
+          depnType: node.depnType,
+          evalType: node.evalType,
+        });
+        setNode((prev) => (prev ? { ...prev, content } : prev));
+        if (changed.length > 0) {
+          await crud.saveRows();
+        }
+        message.success('저장이 완료되었습니다.');
       } catch (e) {
         message.error(errorMessage(e));
       }
     };
 
-    // buildGrid 컬럼 (L210-213)
+    // buildGrid 컬럼 (L205-216)
     const columns: ColDef<AstItemDetail>[] = useMemo(
       () => [
-        gb.longCenter('seq', 70, '순번', { editable: true }),
-        gb.textCenter('title', 120, '항목', { editable: true }),
-        gb.textArea('value', 350, '정보', { editable: true }),
-        gb.textArea('note', 350, '비고', { editable: true }),
+        gb.longCenter('seq', 70, '순번', { editor: 'number' }),
+        gb.textCenter('title', 120, '항목', { editor: 'text' }),
+        gb.textArea('value', 350, '정보', { editor: 'largeText' }),
+        gb.textArea('note', 350, '비고', { editor: 'largeText' }),
       ],
       []
     );
 
+    const isDisabled = !enabled || !node;
+
     return (
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
-        {/* 상단 툴바 */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {/* [E1] retrieveButton[조회].Select */}
-            <Button type="search" onClick={() => retrieve()} disabled={!node}>
-              조회
-            </Button>
-            {/* [E3] deleteButton[삭제].Select */}
-            <Button type="delete" onClick={deleteRow} disabled={!node}>
-              삭제
-            </Button>
-            {/* [E5] addButton[항목추가].Select */}
-            <Button type="register" onClick={insert} disabled={!node}>
-              항목추가
+      <div
+        style={{
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          boxSizing: 'border-box',
+          border: '1px solid #d9d9d9',
+          padding: 10,
+          gap: 8,
+          opacity: isDisabled ? 0.6 : 1,
+          pointerEvents: isDisabled ? 'none' : 'auto',
+        }}
+      >
+        {/* 상단 50%: 툴바 + 상세 그리드 (center=form) */}
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            border: '1px solid #d9d9d9',
+            padding: 8,
+            gap: 8,
+            boxSizing: 'border-box',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {/* [E1] retrieveButton[조회].Select */}
+              <Button type="search" onClick={() => retrieve()} disabled={isDisabled}>
+                조회
+              </Button>
+              {/* [E3] deleteButton[삭제].Select */}
+              <Button type="delete" onClick={deleteRow} disabled={isDisabled}>
+                삭제
+              </Button>
+              {/* [E5] addButton[항목추가].Select */}
+              <Button type="register" onClick={insert} disabled={isDisabled}>
+                항목추가
+              </Button>
+            </div>
+            <div>
+              {/* [E4] cfButton[현금흐름표].Select */}
+              <Button type="register" onClick={openCfInfo} disabled={isDisabled}>
+                현금흐름표
+              </Button>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <CellEditGrid<AstItemDetail>
+              crud={crud}
+              columnDefs={columns}
+              rowNumber={false}
+              onSelectionChanged={(e) => setSelectedRows(e.api.getSelectedRows())}
+            />
+          </div>
+        </div>
+
+        {/* 하단 50%: 좌측 HtmlEditor (0.7) + 우측 담당자 그리드 (0.3) + 하단 저장 버튼 */}
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            boxSizing: 'border-box',
+          }}
+        >
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <Splitter style={{ height: '100%' }}>
+              <Splitter.Panel defaultSize="70%" style={{ paddingRight: 6, boxSizing: 'border-box' }}>
+                <HtmlEditor key={editorKey} value={content} onChange={setContent} />
+              </Splitter.Panel>
+              <Splitter.Panel
+                defaultSize="30%"
+                style={{
+                  paddingLeft: 6,
+                  border: '1px solid #d9d9d9',
+                  padding: 8,
+                  boxSizing: 'border-box',
+                }}
+              >
+                <Ast10_Grid_Manager ref={managerRef} linkId={node?.classTreeId ?? null} />
+              </Splitter.Panel>
+            </Splitter>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            {/* [E2] updateButton[저장].Select */}
+            <Button type="save" onClick={update} disabled={isDisabled}>
+              저장
             </Button>
           </div>
-          <div>
-            {/* [E4] cfButton[현금흐름표].Select */}
-            <Button type="register" onClick={openCfInfo} disabled={!node}>
-              현금흐름표
-            </Button>
-          </div>
-        </div>
-
-        {/* 비고/내용 입력란 */}
-        <div style={{ marginBottom: 8 }}>
-          <Input.TextArea
-            placeholder="비고 / 상세설명"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={2}
-          />
-        </div>
-
-        {/* 상하 분할: 상단 상세 그리드 + 하단 담당자 그리드 */}
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <Splitter layout="vertical">
-            <Splitter.Panel defaultSize="65%" min="40%" style={{ display: 'flex', flexDirection: 'column', paddingBottom: 6 }}>
-              <div style={{ flex: 1, minHeight: 0 }}>
-                <MultiGrid<AstItemDetail>
-                  columnDefs={columns}
-                  rowData={rows}
-                  loading={loading}
-                  onCheckedChange={(selected: AstItemDetail[]) => setSelectedRows(selected)}
-                  getRowId={(params) => String(params.data.detailId)}
-                />
-              </div>
-            </Splitter.Panel>
-            <Splitter.Panel defaultSize="35%" min="25%" style={{ display: 'flex', flexDirection: 'column', paddingTop: 6 }}>
-              <Ast10_Grid_Manager ref={managerRef} linkId={node?.classTreeId ?? null} />
-            </Splitter.Panel>
-          </Splitter>
-        </div>
-
-        {/* 하단 저장 버튼 */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-          {/* [E2] updateButton[저장].Select */}
-          <Button type="save" onClick={update} disabled={!node}>
-            저장
-          </Button>
         </div>
 
         {/* 기본항목 조회/추가 모달 */}
@@ -267,8 +368,11 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
         {/* 현금흐름표 모달 */}
         <Ast03_Lookup_CfInfo
           open={cfModalOpen}
-          astClassTreeId={node?.classTreeId ?? null}
-          onClose={() => setCfModalOpen(false)}
+          classTreeModel={node}
+          onClose={() => {
+            setCfModalOpen(false);
+            if (node) retrieve(node);
+          }}
         />
       </div>
     );

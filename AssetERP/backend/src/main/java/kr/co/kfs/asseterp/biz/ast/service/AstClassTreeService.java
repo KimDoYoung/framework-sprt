@@ -43,9 +43,9 @@ public class AstClassTreeService {
         return mapper.selectByAssetType(user.getCompanyId(), stdDate, assetType, searchText == null ? "" : searchText);
     }
 
-    /** R08 본 화면 전체 트리 조회 (AS-IS ast01_class_tree.selectByCompanyId) */
+    /** R08·R09 본 화면 전체 트리 조회 (AS-IS ast01_class_tree.selectByCompanyId) */
     public List<AstClassTreeRes> searchClassTree(UserPrincipal user, String typeCode, String assetType) {
-        String type = (typeCode == null || typeCode.isBlank()) ? "IC" : typeCode;
+        String type = (typeCode == null || typeCode.isBlank()) ? "IC" : ("%".equals(typeCode) ? null : typeCode);
         String asset = (assetType == null || assetType.isBlank() || "%".equals(assetType)) ? null : assetType;
         return mapper.selectClassTree(user.getCompanyId(), type, asset);
     }

@@ -8,17 +8,17 @@ import java.io.Serializable;
 public record AstCfInfoRes(
         Long cfInfoId,
         Long astClassTreeId,
-        String cfCd,
-        String cfNm,
-        String trCd,
-        String trNm,
+        String cfCode,
+        String cfName,
+        String trCode,
+        String trName,
         String startYm,
         String closeYm,
         Long cycle,
-        String dateCd,
-        String dateNm,
-        String holidaySettleCd,
-        String holidaySettleNm,
+        String dateCode,
+        String dateName,
+        String holidaySettleCode,
+        String holidaySettleName,
         Long amt,
         String note,
         Long round,
@@ -26,5 +26,5 @@ public record AstCfInfoRes(
         Long contAmt,
         Long tax,
         Long corpId,
-        String corpNm
+        String corpName
 ) implements Serializable {}

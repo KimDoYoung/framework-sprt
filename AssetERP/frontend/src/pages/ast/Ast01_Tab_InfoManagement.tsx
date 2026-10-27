@@ -29,10 +29,11 @@ export const Ast01_Tab_InfoManagement: React.FC = () => {
   const retrieve = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await astApi.searchClassTree({ typeCode: 'IC' });
+      const data = await astApi.searchClassTree({ typeCode: '%', assetType: '2' });
       setTreeList(data);
-      // 최상위 노드 자동 펼치기
-      const rootKeys = data.filter((d: AstClassTree) => d.parentTreeId === 0).map((d: AstClassTree) => String(d.classTreeId));
+      const rootKeys = data
+        .filter((d: AstClassTree) => d.parentTreeId === 0)
+        .map((d: AstClassTree) => String(d.classTreeId));
       setExpandedKeys(rootKeys);
     } catch (e) {
       message.error(errorMessage(e));
@@ -48,12 +49,14 @@ export const Ast01_Tab_InfoManagement: React.FC = () => {
 
   // [E2] docSearch.KeyPress [Enter] (L57) → search()
   const search = () => {
-    if (!docSearch.trim()) {
+    const findText = docSearch.trim();
+    if (!findText) {
+      setExpandedKeys([]);
       setAutoExpandParent(false);
       return;
     }
     const matched = treeList.filter((item) =>
-      item.classTreeName.toLowerCase().includes(docSearch.toLowerCase())
+      item.classTreeName.toLowerCase().includes(findText.toLowerCase())
     );
     const keys = matched.map((m) => String(m.classTreeId));
     setExpandedKeys(keys);
@@ -94,14 +97,14 @@ export const Ast01_Tab_InfoManagement: React.FC = () => {
     if (selectedKeys.length > 0) {
       const rawNode = (info.node as unknown as { raw: AstClassTree }).raw;
       setSelectedNode(rawNode);
-      if (detailRef.current) {
-        detailRef.current.loadNode(rawNode);
+      if (rawNode.typeCode === 'IT') {
+        detailRef.current?.loadNode(rawNode);
+      } else {
+        detailRef.current?.visible();
       }
     } else {
       setSelectedNode(null);
-      if (detailRef.current) {
-        detailRef.current.clear();
-      }
+      detailRef.current?.clear();
     }
   };
 
@@ -111,21 +114,33 @@ export const Ast01_Tab_InfoManagement: React.FC = () => {
         width: '100%',
         height: '100%',
         boxSizing: 'border-box',
-        padding: 8,
+        padding: 20,
       }}
     >
-      <Splitter>
+      <Splitter style={{ height: '100%' }}>
         {/* 좌측 Tree 영역 (west=vlc) */}
-        <Splitter.Panel defaultSize="28%" min="20%" max="40%" style={{ display: 'flex', flexDirection: 'column', paddingRight: 8 }}>
+        <Splitter.Panel
+          defaultSize={550}
+          max={1000}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            padding: 10,
+            gap: 8,
+            border: '1px solid #d9d9d9',
+            boxSizing: 'border-box',
+          }}
+        >
           {/* 툴바 buttonBar: {docSearch} {retrieveButton} */}
-          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <span style={{ fontWeight: 500 }}>검색</span>
             {/* [E2] docSearch.KeyPress [Enter] */}
             <Input
-              placeholder="검색어 입력"
               value={docSearch}
               onChange={(e) => setDocSearch(e.target.value)}
               onPressEnter={search}
               allowClear
+              style={{ width: 150 }}
             />
             {/* [E1] retrieveButton[조회].Select */}
             <Button type="search" onClick={retrieve}>
@@ -133,7 +148,7 @@ export const Ast01_Tab_InfoManagement: React.FC = () => {
             </Button>
           </div>
 
-          <div style={{ flex: 1, minHeight: 0, overflow: 'auto', border: '1px solid #d9d9d9', borderRadius: 4, padding: 6 }}>
+          <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
             <Spin spinning={loading}>
               <Tree
                 treeData={treeData}
@@ -150,7 +165,7 @@ export const Ast01_Tab_InfoManagement: React.FC = () => {
         </Splitter.Panel>
 
         {/* 우측 상세 영역 (center=gridDetail) */}
-        <Splitter.Panel defaultSize="72%" min="50%" style={{ paddingLeft: 8 }}>
+        <Splitter.Panel style={{ paddingLeft: 8, boxSizing: 'border-box' }}>
           <Ast02_Grid_DetailManagement ref={detailRef} currentNode={selectedNode} />
         </Splitter.Panel>
       </Splitter>

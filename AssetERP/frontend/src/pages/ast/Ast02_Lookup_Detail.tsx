@@ -2,19 +2,21 @@
  * 기본 항목 조회/관리 모달 (R09) — Ast02_Lookup_Detail
  * AS-IS: myApp/client/vi/ast/Ast02_Lookup_Detail.java (232줄)
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Input, message, Modal } from 'antd';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Input, message } from 'antd';
 import type { ColDef } from 'ag-grid-community';
 import { astApi } from '@/api/ast';
 import { errorMessage } from '@/api/client';
 import { Button } from '@/components/button';
-import { MultiGrid, gbFor } from '@/components/grid';
+import { CellEditGrid, gbFor } from '@/components/grid';
+import { LookupModal } from '@/components/lookup/LookupModal';
+import { useGridCrud } from '@/hooks/useGridCrud';
 import { AstDetail, AstItemDetail } from '@/types/ast';
 
 interface Ast02LookupDetailProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (selected: AstItemDetail[]) => void;
+  onSelect: (items: AstItemDetail[]) => void;
 }
 
 const gb = gbFor<AstItemDetail>();
@@ -25,34 +27,64 @@ export const Ast02_Lookup_Detail: React.FC<Ast02LookupDetailProps> = ({
   onSelect,
 }) => {
   const [searchText, setSearchText] = useState('');
-  const [rows, setRows] = useState<AstItemDetail[]>([]);
   const [selectedRows, setSelectedRows] = useState<AstItemDetail[]>([]);
-  const [loading, setLoading] = useState(false);
+  const deleteList = useRef<number[]>([]);
+
+  const crud = useGridCrud<AstItemDetail>({
+    idField: 'detailId',
+    search: useCallback(() => astApi.searchItemDetailTemplates(searchText), [searchText]),
+    save: useCallback(async (changed: AstItemDetail[]) => {
+      const payload: AstDetail[] = changed.map((r) => ({
+        detailId: r.detailId > 0 ? r.detailId : 0,
+        seq: r.seq,
+        title: r.title,
+        tag: r.tag ?? '',
+        useYn: r.useYn ?? 'true',
+      }));
+      const saved = await astApi.saveItemDetailTemplates(payload);
+      return saved.map((s) => ({
+        detailId: s.detailId,
+        seq: s.seq ?? 0,
+        title: s.title ?? '',
+        tag: s.tag,
+        useYn: s.useYn ?? 'true',
+        defaultYn: 'true',
+      }));
+    }, []),
+    remove: useCallback(async () => 0, []),
+    newRow: useCallback(
+      () => ({
+        astClassTreeId: 0,
+        defaultYn: 'true',
+        useYn: 'true',
+      }),
+      []
+    ),
+    firstEditField: 'seq',
+    reloadAfterSave: true,
+  });
 
   // [E4] retrieveButton[조회].Select (L119) & [E1] searchText.KeyPress [Enter] (L86) → retrieve()
   const retrieve = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await astApi.searchItemDetailTemplates(searchText);
-      setRows(data);
-      setSelectedRows([]);
-    } catch (e) {
-      message.error(errorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  }, [searchText]);
+    deleteList.current = [];
+    setSelectedRows([]);
+    await crud.retrieve();
+  }, [crud]);
 
   // [E0] 화면 열림 (생성자 L67-83) → show()
   useEffect(() => {
     if (open) {
       setSearchText('');
-      retrieve();
+      deleteList.current = [];
+      setSelectedRows([]);
+      crud.retrieve();
     } else {
-      setRows([]);
+      crud.clear();
+      deleteList.current = [];
       setSelectedRows([]);
     }
-  }, [open, retrieve]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   // [E3] cancleButton[닫기].Select (L112) → hide()
   const hide = () => {
@@ -61,8 +93,12 @@ export const Ast02_Lookup_Detail: React.FC<Ast02LookupDetailProps> = ({
 
   // [E2] confirmButton[확인].Select (L94) → callback(detailList), hide()
   const confirm = () => {
+    if (crud.hasChanges() || deleteList.current.length > 0) {
+      message.warning('저장되지 않은 데이터가 존재합니다.');
+      return;
+    }
     if (selectedRows.length === 0) {
-      message.warning('항목을 선택해주세요.');
+      message.warning('항목을 선택해주세요');
       return;
     }
     onSelect(selectedRows);
@@ -71,61 +107,65 @@ export const Ast02_Lookup_Detail: React.FC<Ast02LookupDetailProps> = ({
 
   // [E6] insertButton[행 추가].Select (L131) → insertRow()
   const insertRow = () => {
-    const newRow: AstItemDetail = {
-      detailId: -Date.now(),
-      seq: rows.length + 1,
-      title: '',
-      tag: '',
-      useYn: 'true',
-    };
-    setRows((prev) => [...prev, newRow]);
+    crud.addRow();
   };
 
   // [E7] deleteButton[행 삭제].Select (L137) → deleteRow()
   const deleteRow = () => {
-    if (selectedRows.length === 0) {
-      message.warning('삭제할 항목을 선택해주세요.');
-      return;
+    if (selectedRows.length === 0) return;
+    for (const model of selectedRows) {
+      if (model.detailId > 0) {
+        deleteList.current.push(model.detailId);
+      }
     }
-    const selectedIds = new Set(selectedRows.map((r) => r.detailId));
-    setRows((prev) => prev.filter((r) => !selectedIds.has(r.detailId)));
+    crud.removeRows(selectedRows.map((r) => r.detailId));
     setSelectedRows([]);
   };
 
   // [E5] updateButton[저장].Select (L125) → update()
   const update = async () => {
+    crud.gridRef.current?.api?.stopEditing();
+    const changed = crud.getChanged();
+    for (const chkModel of changed) {
+      if (chkModel.seq == null) {
+        message.warning('조회순번은 필수입력 항목입니다.');
+        return;
+      }
+      if (chkModel.title == null || chkModel.title === '') {
+        message.warning('항목은 필수입력 항목입니다.');
+        return;
+      }
+    }
     try {
-      const payload: AstDetail[] = rows.map((r) => ({
-        detailId: r.detailId > 0 ? r.detailId : 0,
-        seq: r.seq,
-        title: r.title,
-        tag: r.tag,
-        useYn: r.useYn,
-      }));
-      await astApi.saveDetails(payload);
-      message.success('저장되었습니다.');
-      retrieve();
+      if (changed.length > 0) {
+        await crud.saveRows();
+      }
+      if (deleteList.current.length > 0) {
+        await astApi.deleteItemDetailTemplates(deleteList.current);
+        deleteList.current = [];
+        await crud.retrieve();
+      }
     } catch (e) {
       message.error(errorMessage(e));
     }
   };
 
-  // buildCfInfoGrid 컬럼 (L157-159)
+  // buildCfInfoGrid 컬럼 (L153-162)
   const columns: ColDef<AstItemDetail>[] = useMemo(
     () => [
-      gb.long('seq', 60, '조회순번', { editable: true }),
-      gb.text('title', 200, '항목', { editable: true }),
-      gb.text('tag', 280, '연관태그', { editable: true }),
+      gb.long('seq', 60, '조회순번', { editor: 'number' }),
+      gb.text('title', 200, '항목', { editor: 'text' }),
+      gb.text('tag', 280, '연관태그', { editor: 'text' }),
     ],
     []
   );
 
   return (
-    <Modal
+    <LookupModal
       open={open}
-      title="기본 항목 관리"
+      title="항목추가"
       onCancel={hide}
-      width={680}
+      width={730}
       footer={[
         // [E2] confirmButton[확인].Select
         <Button key="confirm" type="save" onClick={confirm}>
@@ -138,13 +178,15 @@ export const Ast02_Lookup_Detail: React.FC<Ast02LookupDetailProps> = ({
       ]}
     >
       <div style={{ display: 'flex', gap: 6, marginBottom: 12, alignItems: 'center' }}>
+        <span style={{ fontWeight: 500 }}>검색</span>
         {/* [E1] searchText.KeyPress [Enter] */}
         <Input
           placeholder="연관태그를 입력해주세요"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           onPressEnter={retrieve}
-          style={{ width: 220 }}
+          allowClear
+          style={{ width: 200 }}
         />
         {/* [E4] retrieveButton[조회].Select */}
         <Button type="search" onClick={retrieve}>
@@ -164,15 +206,13 @@ export const Ast02_Lookup_Detail: React.FC<Ast02LookupDetailProps> = ({
         </Button>
       </div>
 
-      <div style={{ height: 350 }}>
-        <MultiGrid<AstItemDetail>
+      <div style={{ height: 420 }}>
+        <CellEditGrid<AstItemDetail>
+          crud={crud}
           columnDefs={columns}
-          rowData={rows}
-          loading={loading}
-          onCheckedChange={(selected: AstItemDetail[]) => setSelectedRows(selected)}
-          getRowId={(params) => String(params.data.detailId)}
+          onSelectionChanged={(e) => setSelectedRows(e.api.getSelectedRows())}
         />
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

@@ -190,17 +190,17 @@ export interface AstItemDetailSaveReq {
 export interface AstCfInfo {
   cfInfoId: number;
   astClassTreeId: number;
-  cfCd: string;
-  cfNm: string;
-  trCd: string;
-  trNm?: string | null;
+  cfCode: string;
+  cfName: string;
+  trCode: string;
+  trName?: string | null;
   startYm?: string | null;
   closeYm?: string | null;
   cycle?: number | null;
-  dateCd?: string | null;
-  dateNm?: string | null;
-  holidaySettleCd?: string | null;
-  holidaySettleNm?: string | null;
+  dateCode?: string | null;
+  dateName?: string | null;
+  holidaySettleCode?: string | null;
+  holidaySettleName?: string | null;
   amt?: number | null;
   note?: string | null;
   round?: number | null;
@@ -208,15 +208,15 @@ export interface AstCfInfo {
   contAmt?: number | null;
   tax?: number | null;
   corpId?: number | null;
-  corpNm?: string | null;
+  corpName?: string | null;
 }
 
 export interface AstCfInfoSaveReq {
   cfInfoId?: number | null;
   astClassTreeId: number;
-  cfCd: string;
-  cfNm: string;
-  trCd: string;
+  cfCode: string;
+  cfName: string;
+  trCode: string;
   corpId?: number | null;
   icamYn?: string | null;
   note?: string | null;
