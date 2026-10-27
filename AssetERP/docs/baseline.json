@@ -8174,5 +8174,28 @@
     "note": "docs/work/R/R05-작업기록.md",
     "history": [],
     "id": "R05"
+  },
+  "Icam10_Tab_CurrentFeeByFund": {
+    "commit": "87b2dccf21b1f775b2b6d5958791f5c55bcd817a",
+    "commit_short": "87b2dcc",
+    "branch": "ioc",
+    "commit_date": "2026-10-26",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/icam/Icam10_Tab_CurrentFeeByFund.java": "a90451bb29caf7da02b59d32e81573f19338e496",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam10_FeeModel.java": "616e186ef8659b71f9d4fd84050504c0f9eda2ad",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam10_FeeModelProperties.java": "9ae71f4d65e09e8975970e626e4ad47a483c8f9c",
+      "application/src/main/java/myApp/server/icam/Icam10_Fee.java": "495530a0e51cd7f4cace4fe657973d4506c7813f",
+      "application/src/main/java/myApp/server/icam/mapper/icam10_fee.xml": "ba24a6691b9b6199323288c59b1eee6e90a922a8",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-27T15:42:28+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/R/R06-작업기록.md",
+    "history": [],
+    "id": "R06"
   }
 }
