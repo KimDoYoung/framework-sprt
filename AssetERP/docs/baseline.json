@@ -7912,5 +7912,79 @@
     "note": "docs/work/Q/Q09-작업기록.md",
     "history": [],
     "id": "Q09"
+  },
+  "Est03_Tab_PfHistory": {
+    "commit": "87b2dccf21b1f775b2b6d5958791f5c55bcd817a",
+    "commit_short": "87b2dcc",
+    "branch": "ioc",
+    "commit_date": "2026-10-26",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/est/Est02_Lookup_PfContract.java": "f7952ff6e6f496a2105c27345f6de184a2fb02d0",
+      "application/src/main/java/myApp/client/vi/est/Est03_TabPage_PfHistory.java": "7867f60e0696eb7ca89f744e728bdb20b95099b6",
+      "application/src/main/java/myApp/client/vi/est/Est03_Tab_PfHistory.java": "7702514319e25abe0754ada23842fc9ba7991da6",
+      "application/src/main/java/myApp/client/vi/est/Est04_Grid_PfFile.java": "2069156819760dd08f34a4e4292c817d3bd6c62f",
+      "application/src/main/java/myApp/client/vi/est/model/Est02_PfContractModel.java": "937f196c7b16bd4c0a6a6c6ffc91651f7122c643",
+      "application/src/main/java/myApp/client/vi/est/model/Est02_PfContractModelProperties.java": "afc4a137184af6a50b8116e0f8055096d55afe42",
+      "application/src/main/java/myApp/client/vi/est/model/Est03_PfHistoryModel.java": "64ba218b466b97d7563174a3a2ac72b70d37aeb7",
+      "application/src/main/java/myApp/client/vi/est/model/Est03_PfHistoryModelProperties.java": "e2b65153a2805da791dabaa3f7321dbcc569ed21",
+      "application/src/main/java/myApp/client/vi/est/model/Est04_PfFileModel.java": "4d1cfcbe84e2d619796165ba71df2987e21ee9cd",
+      "application/src/main/java/myApp/client/vi/est/model/Est04_PfFileModelProperties.java": "ea368105bd94536e80e7b873899ebe7dcabcca30",
+      "application/src/main/java/myApp/server/est/Est02_PfContract.java": "013c58a2ad6d30d23db37624942565691d8c5f59",
+      "application/src/main/java/myApp/server/est/Est03_PfHistory.java": "10a79ce7b276aafe8917923f449adf5ab226b156",
+      "application/src/main/java/myApp/server/est/Est04_PfFile.java": "f23f1e93d16358dae47da832287f6442836ed2ea",
+      "application/src/main/java/myApp/server/est/mapper/est02_pf_contract.xml": "564b9c91eedb03a2184fea535ca0e559fab3b628",
+      "application/src/main/java/myApp/server/est/mapper/est03_pf_history.xml": "4ff9e5ce89e548acbfd0f78e3b33f42f736f1536",
+      "application/src/main/java/myApp/server/est/mapper/est04_pf_file.xml": "d1b96ef8dc076c0dcf634bf3b7a8b27b39fdc688",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/Sys11_RelateFile.java": "3aa633bf0b24c8da3c85ea2f505fb68616f92a11",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/sys/mapper/sys11_relate_file.xml": "35c5b410b79c0d900e2332f08e15c5f024b05aa6",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle",
+      "Sys10_Lookup_FileViewer"
+    ],
+    "recorded_at": "2026-10-27T09:29:56+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Q/Q10-작업기록.md",
+    "history": [],
+    "id": "Q10"
+  },
+  "Est03_Tab_PfHistoryConfirm": {
+    "commit": "87b2dccf21b1f775b2b6d5958791f5c55bcd817a",
+    "commit_short": "87b2dcc",
+    "branch": "ioc",
+    "commit_date": "2026-10-26",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/est/Est02_Lookup_PfContract.java": "f7952ff6e6f496a2105c27345f6de184a2fb02d0",
+      "application/src/main/java/myApp/client/vi/est/Est03_TabPage_PfHistoryConfirm.java": "add678095ae5759636220b64d6475edefb05304a",
+      "application/src/main/java/myApp/client/vi/est/Est03_Tab_PfHistoryConfirm.java": "e620255d93e87e10a58f0c6c57479ce056c85831",
+      "application/src/main/java/myApp/client/vi/est/Est04_Grid_PfFileConfirm.java": "3fa83a6927da0f856aa711762fb34fa3e6767d0c",
+      "application/src/main/java/myApp/client/vi/est/model/Est02_PfContractModel.java": "937f196c7b16bd4c0a6a6c6ffc91651f7122c643",
+      "application/src/main/java/myApp/client/vi/est/model/Est02_PfContractModelProperties.java": "afc4a137184af6a50b8116e0f8055096d55afe42",
+      "application/src/main/java/myApp/client/vi/est/model/Est03_PfHistoryModel.java": "64ba218b466b97d7563174a3a2ac72b70d37aeb7",
+      "application/src/main/java/myApp/client/vi/est/model/Est03_PfHistoryModelProperties.java": "e2b65153a2805da791dabaa3f7321dbcc569ed21",
+      "application/src/main/java/myApp/client/vi/est/model/Est04_PfFileModel.java": "4d1cfcbe84e2d619796165ba71df2987e21ee9cd",
+      "application/src/main/java/myApp/client/vi/est/model/Est04_PfFileModelProperties.java": "ea368105bd94536e80e7b873899ebe7dcabcca30",
+      "application/src/main/java/myApp/server/est/Est02_PfContract.java": "013c58a2ad6d30d23db37624942565691d8c5f59",
+      "application/src/main/java/myApp/server/est/Est03_PfHistory.java": "10a79ce7b276aafe8917923f449adf5ab226b156",
+      "application/src/main/java/myApp/server/est/Est04_PfFile.java": "f23f1e93d16358dae47da832287f6442836ed2ea",
+      "application/src/main/java/myApp/server/est/mapper/est02_pf_contract.xml": "564b9c91eedb03a2184fea535ca0e559fab3b628",
+      "application/src/main/java/myApp/server/est/mapper/est03_pf_history.xml": "4ff9e5ce89e548acbfd0f78e3b33f42f736f1536",
+      "application/src/main/java/myApp/server/est/mapper/est04_pf_file.xml": "d1b96ef8dc076c0dcf634bf3b7a8b27b39fdc688",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893"
+    },
+    "shared_links": [
+      "Sys10_Lookup_FileViewer"
+    ],
+    "recorded_at": "2026-10-27T09:44:17+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Q/Q11-작업기록.md",
+    "history": [],
+    "id": "Q11"
   }
 }

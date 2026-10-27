@@ -60,4 +60,9 @@ public class EstPfContractService {
         }
         return mapper.selectHistoryIdsByContracts(pfContractIds).size();
     }
+
+    /** AS-IS selectById: 로그인 회사 행만 */
+    public PfContractRes get(UserPrincipal user, Long pfContractId) {
+        return mapper.selectById(pfContractId, user.getCompanyId());
+    }
 }

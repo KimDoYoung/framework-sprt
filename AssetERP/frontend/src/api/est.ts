@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { PfContract, PfContractSaveReq, PfFeeType } from '../types/est';
+import { PfConfirmer, PfContract, PfContractSaveReq, PfFeeType, PfFile, PfHistory, PfHistorySaveReq } from '../types/est';
 
 /** est(부동산PF 용역수행) 화면 API (Q08~) */
 export const estApi = {
@@ -64,5 +64,67 @@ export const estApi = {
   countPfContractHistories: async (ids: number[]): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/est/pf-contracts/history-count', ids);
     return res.data.data ?? 0;
+  },
+
+  // ── Q10 용역수행내역 등록 (Est03_Tab_PfHistory) ──
+
+  /** AS-IS est.Est03_PfHistory.selectByPfContractId */
+  searchPfHistories: async (pfContractId: number): Promise<PfHistory[]> => {
+    const res = await apiClient.get<ApiResponse<PfHistory[]>>('v1/est/pf-histories', { params: { pfContractId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dbConfig.getSeq: [등록] 행·[행 추가] 증빙 행의 새 번호. DB에는 쓰지 않는다 */
+  nextPfHistoryId: async (): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/est/pf-histories/next-id');
+    return res.data.data as number;
+  },
+
+  /** AS-IS est.Est03_PfHistory.getConfirmerParent: 로그인 사용자의 승인자(오늘 기준) */
+  getPfConfirmerParent: async (date: string): Promise<PfConfirmer> => {
+    const res = await apiClient.get<ApiResponse<PfConfirmer>>('v1/est/pf-histories/confirmer-parent', { params: { date } });
+    return res.data.data ?? { confirmerId: null, confirmerName: null };
+  },
+
+  /** AS-IS est.Est04_PfFile.selectByPfHistoryId */
+  searchPfFiles: async (pfHistoryId: number): Promise<PfFile[]> => {
+    const res = await apiClient.get<ApiResponse<PfFile[]>>(`v1/est/pf-histories/${pfHistoryId}/files`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS est.Est04_PfFile.update·delete + est.Est03_PfHistory.modelUpdate(한 트랜잭션) → 저장된 행 */
+  savePfHistory: async (req: PfHistorySaveReq): Promise<PfHistory> => {
+    const res = await apiClient.put<ApiResponse<PfHistory>>('v1/est/pf-histories', req);
+    return res.data.data as PfHistory;
+  },
+
+  /** AS-IS est.Est03_PfHistory.delete */
+  deletePfHistories: async (ids: number[]): Promise<void> => {
+    await apiClient.delete('v1/est/pf-histories', { data: ids });
+  },
+
+  // ── Q11 용역수행내역 승인 (Est03_Tab_PfHistoryConfirm) ──
+
+  /** AS-IS est.Est03_PfHistory.selectByConfirmer01 (일자기준): 내가 승인자인 신청·승인 내역. confirm이 true면 미승인만. 검색어는 서버가 %…%로 */
+  searchPfHistoriesByConfirmer: async (params: { startDate: string; searchText: string; confirm: boolean }): Promise<PfHistory[]> => {
+    const res = await apiClient.get<ApiResponse<PfHistory[]>>('v1/est/pf-histories/confirm', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS est.Est03_PfHistory.selectByConfirmer02 (체결용역 기준) */
+  searchPfHistoriesByConfirmerContract: async (pfContractId: number): Promise<PfHistory[]> => {
+    const res = await apiClient.get<ApiResponse<PfHistory[]>>('v1/est/pf-histories/confirm/by-contract', { params: { pfContractId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS est.Est03_PfHistory.updateConfirm: true 승인(20), false 승인취소(10) */
+  updatePfHistoryConfirm: async (pfHistoryId: number, confirm: boolean): Promise<void> => {
+    await apiClient.put(`v1/est/pf-histories/${pfHistoryId}/confirm`, null, { params: { confirm } });
+  },
+
+  /** AS-IS est.Est02_PfContract.selectById: 승인취소 전에 결과보고서(resultApprId)가 있는지 본다 */
+  getPfContract: async (pfContractId: number): Promise<PfContract> => {
+    const res = await apiClient.get<ApiResponse<PfContract>>(`v1/est/pf-contracts/${pfContractId}`);
+    return res.data.data as PfContract;
   },
 };

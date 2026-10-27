@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/est/mapper/est03_pf_history.xml(selectByPfContractId·selectById·getConfirmerParent·checkNo) + UpdateDataModel(est03_pf_history)
+  + est04_pf_file.xml(selectByPfHistoryId) + UpdateDataModel(est04_pf_file)
+  (Q10 Est03_Tab_PfHistory)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.est.mapper.EstPfHistoryMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS(IDMS-IC) est03_pf_history.selectByPfContractId·selectById의 같은 열 (SELECT *는 DTO 열로 명시) -->
+    <sql id="pfHistoryColumns">
+        est03_pf_history_id                                                     AS pf_history_id,
+        est03_pf_contract_id                                                    AS pf_contract_id,
+        est03_no                                                                AS no,
+        est03_start_date                                                        AS start_date,
+        est03_close_date                                                        AS close_date,
+        est03_content                                                           AS content,
+        est03_detail                                                            AS detail,
+        est03_person_id                                                         AS person_id,
+        f_emp_kor_nm(est03_person_id)                                           AS person_name,
+        f_get_emptrans(est03_person_id, est03_close_date, 'org_code_nm')        AS org_name,
+        est03_status_cd                                                         AS status_code,
+        f_cdnm('StatusCode', est03_status_cd, est03_company_id, f_sysdate())    AS status_name,
+        est03_confirmer_id                                                      AS confirmer_id,
+        f_emp_kor_nm(est03_confirmer_id)                                        AS confirmer_name,
+        (
+            SELECT COUNT(*)||'건'
+              FROM est04_pf_file
+             WHERE est04_pf_history_id = est03_pf_history_id
+        )                                                                       AS file_count_str
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) est03_pf_history.selectByPfContractId -->
+    <select id="selectByPfContractId" resultType="kr.co.kfs.asseterp.biz.est.dto.PfHistoryRes">
+        SELECT <include refid="pfHistoryColumns"/>
+          FROM est03_pf_history
+         WHERE est03_company_id = #{companyId}
+           AND est03_pf_contract_id = #{pfContractId}
+         ORDER BY est03_no
+    </select>
+
+    <!-- AS-IS(IDMS-IC) est03_pf_history.selectById + 로그인 회사 조건(보안 보강) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.est.dto.PfHistoryRes">
+        SELECT <include refid="pfHistoryColumns"/>
+          FROM est03_pf_history
+         WHERE est03_pf_history_id = #{pfHistoryId}
+           AND est03_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) est03_pf_history.getConfirmerParent (ROW_NUMBER 열은 쓰지 않아 뺐다) -->
+    <select id="selectConfirmerParent" resultType="kr.co.kfs.asseterp.biz.est.dto.PfConfirmerRes">
+        SELECT f_get_confirmer_parent(#{personId}, #{date})                     AS confirmer_id,
+               f_emp_kor_nm(f_get_confirmer_parent(#{personId}, #{date}))       AS confirmer_name
+    </select>
+
+    <!-- AS-IS(IDMS-IC) est03_pf_history.checkNo (SELECT *는 ID만) -->
+    <select id="selectSameNoIds" resultType="long">
+        SELECT est03_pf_history_id
+          FROM est03_pf_history
+         WHERE est03_pf_contract_id = #{pfContractId}
+           AND est03_no = #{no}
+           AND est03_pf_history_id != #{pfHistoryId}
+    </select>
+
+    <insert id="insertPfHistory">
+        INSERT INTO est03_pf_history (est03_pf_history_id, est03_company_id, est03_pf_contract_id, est03_no, est03_start_date, est03_close_date, est03_content, est03_detail, est03_person_id, est03_status_cd, est03_confirmer_id)
+        VALUES (#{r.pfHistoryId}, #{companyId}, #{r.pfContractId}, #{r.no}, #{r.startDate}, #{r.closeDate}, #{r.content}, #{r.detail}, #{r.personId}, #{r.statusCode}, #{r.confirmerId})
+    </insert>
+
+    <update id="updatePfHistory">
+        UPDATE est03_pf_history
+           SET est03_no           = #{r.no},
+               est03_start_date   = #{r.startDate},
+               est03_close_date   = #{r.closeDate},
+               est03_content      = #{r.content},
+               est03_detail       = #{r.detail},
+               est03_person_id    = #{r.personId},
+               est03_status_cd    = #{r.statusCode},
+               est03_confirmer_id = #{r.confirmerId}
+         WHERE est03_pf_history_id = #{r.pfHistoryId}
+           AND est03_company_id = #{companyId}
+    </update>
+
+    <delete id="deletePfHistories">
+        DELETE FROM est03_pf_history
+         WHERE est03_company_id = #{companyId}
+           AND est03_pf_history_id IN
+        <foreach collection="pfHistoryIds" item="pfHistoryId" open="(" separator="," close=")">#{pfHistoryId}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) est04_pf_file.selectByPfHistoryId (SELECT est04_pf_file.*는 DTO 열로) -->
+    <select id="selectFilesByPfHistoryId" resultType="kr.co.kfs.asseterp.biz.est.dto.PfFileRes">
+        SELECT est04_pf_file_id         AS pf_file_id,
+               est04_pf_history_id      AS pf_history_id,
+               est04_file_desc          AS file_desc,
+               est04_check_route        AS check_route,
+               sys10_file_id            AS file_id,
+               sys10_file_nm            AS file_name
+          FROM est04_pf_file
+               INNER JOIN est03_pf_history ON est03_pf_history_id = est04_pf_history_id
+               LEFT OUTER JOIN sys10_file ON sys10_parent_id = est04_pf_file_id
+         WHERE est04_pf_history_id = #{pfHistoryId}
+           AND est03_company_id = #{companyId}
+    </select>
+
+    <select id="countPfFile" resultType="int">
+        SELECT COUNT(*) FROM est04_pf_file WHERE est04_pf_file_id = #{pfFileId}
+    </select>
+
+    <insert id="insertPfFile">
+        INSERT INTO est04_pf_file (est04_pf_file_id, est04_pf_history_id, est04_file_desc, est04_check_route)
+        VALUES (#{r.pfFileId}, #{pfHistoryId}, #{r.fileDesc}, #{r.checkRoute})
+    </insert>
+
+    <update id="updatePfFile">
+        UPDATE est04_pf_file
+           SET est04_file_desc   = #{r.fileDesc},
+               est04_check_route = #{r.checkRoute}
+         WHERE est04_pf_file_id    = #{r.pfFileId}
+           AND est04_pf_history_id = #{pfHistoryId}
+    </update>
+
+    <delete id="deletePfFiles">
+        DELETE FROM est04_pf_file
+         WHERE est04_pf_history_id = #{pfHistoryId}
+           AND est04_pf_file_id IN
+        <foreach collection="pfFileIds" item="pfFileId" open="(" separator="," close=")">#{pfFileId}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) est03_pf_history.selectByConfirmer01 (Q11 Est03_Tab_PfHistoryConfirm, SELECT est03_pf_history.*는 DTO 열로) -->
+    <select id="selectByConfirmer01" resultType="kr.co.kfs.asseterp.biz.est.dto.PfHistoryRes">
+        SELECT <include refid="pfHistoryColumns"/>
+          FROM est03_pf_history
+               INNER JOIN est02_pf_contract ON est02_pf_contract_id = est03_pf_contract_id
+               LEFT OUTER JOIN est01_pf_fee_type ON est01_pf_fee_type_id = est02_pf_fee_type_id
+         WHERE est03_company_id = #{companyId}
+           AND est03_confirmer_id = #{personId}
+           AND #{startDate} BETWEEN est03_start_date AND COALESCE(est03_close_date, TO_DATE('29991231', 'yyyyMMdd'))
+           AND UPPER(CONCAT(est02_borrower, est02_project_site_nm, f_cdnm('EstPfFeeCode', est01_fee_cd, est02_company_id, f_sysdate()))) LIKE UPPER(#{searchText})
+           AND COALESCE(est03_status_cd,'00') IN ('10','20')
+        <if test="confirm">
+           AND COALESCE(est03_status_cd,'00') NOT IN ('20')
+        </if>
+         ORDER BY est03_start_date, est03_pf_history_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) est03_pf_history.selectByConfirmer02 -->
+    <select id="selectByConfirmer02" resultType="kr.co.kfs.asseterp.biz.est.dto.PfHistoryRes">
+        SELECT <include refid="pfHistoryColumns"/>
+          FROM est03_pf_history
+         WHERE est03_company_id = #{companyId}
+           AND est03_confirmer_id = #{personId}
+           AND est03_pf_contract_id = #{pfContractId}
+         ORDER BY est03_no
+    </select>
+
+    <!-- AS-IS(IDMS-IC) est03_pf_history.updateConfirm + 로그인 회사 조건(보안 보강) -->
+    <update id="updateConfirm">
+        UPDATE est03_pf_history
+           SET est03_status_cd = #{statusCode},
+        <choose>
+            <when test="confirm">est03_confirm_time = f_sysdate()</when>
+            <otherwise>est03_confirm_time = NULL</otherwise>
+        </choose>
+         WHERE est03_pf_history_id = #{pfHistoryId}
+           AND est03_company_id = #{companyId}
+    </update>
+</mapper>

@@ -45,3 +45,54 @@ export interface PfContractSaveReq {
   managerId: number;
   plan: string | null;
 }
+
+/** 부동산PF 용역수행내역 한 행 (GET /api/v1/est/pf-histories, AS-IS Est03_PfHistoryModel). statusCode 10 신청 / 20 승인 / null 신청전 */
+export interface PfHistory {
+  pfHistoryId: number;
+  pfContractId: number;
+  no: number | null;
+  startDate: string | null;
+  closeDate: string | null;
+  content: string | null;
+  detail: string | null;
+  personId: number | null;
+  personName: string | null;
+  orgName: string | null;
+  statusCode: string | null;
+  statusName: string | null;
+  confirmerId: number | null;
+  confirmerName: string | null;
+  fileCountStr: string | null;
+}
+
+/** 수행내역 증빙자료 한 행 (GET /api/v1/est/pf-histories/{id}/files, AS-IS Est04_PfFileModel) */
+export interface PfFile {
+  pfFileId: number;
+  pfHistoryId: number;
+  fileDesc: string | null;
+  checkRoute: string | null;
+  fileId: number | null;
+  fileName: string | null;
+}
+
+/** 수행내역 저장 요청 (AS-IS est.Est03_PfHistory.modelUpdate + est.Est04_PfFile.update·delete) */
+export interface PfHistorySaveReq {
+  pfHistoryId: number;
+  pfContractId: number;
+  no: number | null;
+  startDate: string | null;
+  closeDate: string | null;
+  content: string | null;
+  detail: string | null;
+  personId: number | null;
+  statusCode: string | null;
+  confirmerId: number | null;
+  files: { pfFileId: number; fileDesc: string | null; checkRoute: string | null }[];
+  deleteFileIds: number[];
+}
+
+/** 로그인 사용자의 승인자(조직장) (AS-IS est03_pf_history.getConfirmerParent) */
+export interface PfConfirmer {
+  confirmerId: number | null;
+  confirmerName: string | null;
+}

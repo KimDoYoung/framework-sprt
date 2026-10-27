@@ -53,4 +53,10 @@ public class EstPfContractController {
     public ApiResponse<Integer> countHistories(@RequestBody List<Long> pfContractIds) {
         return ApiResponse.ok(service.countHistories(pfContractIds));
     }
+
+    /** AS-IS est.Est02_PfContract.selectById — Q11 승인취소 전에 결과보고서(resultApprId)가 있는지 본다 */
+    @GetMapping("/{pfContractId}")
+    public ApiResponse<PfContractRes> get(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long pfContractId) {
+        return ApiResponse.ok(service.get(principal, pfContractId));
+    }
 }
