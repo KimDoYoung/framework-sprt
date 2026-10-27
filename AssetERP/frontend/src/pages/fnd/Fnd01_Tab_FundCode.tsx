@@ -4,6 +4,7 @@
  *   + components/lookup/Fnd03_Lookup_Consignment·Fnd06_Lookup_OfficeWork·Fnd09_Lookup_TrustBank (각 140줄)
  *   — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L78-222: 위(분할 가능, 여백 20·20·0·20) = 테두리 박스(툴바 50 + 펀드 그리드) / 아래(360, 최대 900, 여백 20) = 편집 폼(Fnd01_Edit_FundCode)
+ * 스타일: SGEF (견본 SGVF = Fnd01_Tab_FundSearch의 4항목 적용: 툴바-그리드 간격 5, 폼 라벨 우측 정렬, 폼 영역 최소 360, 줄 간격 10, 위쪽 박스 테두리 없음)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  * 도달 불가(원본): [파일업로드] 단추(L139 주석 처리)와 그 fileUpdownForm(E5·E6), deleteRow()(E11, 호출처 없음) → 만들지 않는다
  */
@@ -164,7 +165,7 @@ export const Fnd01_Tab_FundCode: React.FC = () => {
       <Splitter layout="vertical" style={{ height: '100%' }}>
         <Splitter.Panel min={120} max={1000}>
           <div style={{ height: '100%', padding: '20px 20px 0 20px', boxSizing: 'border-box' }}>
-            <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <SearchBar
                 onSearch={() => void retrieve()}
                 loading={loading}
@@ -187,7 +188,7 @@ export const Fnd01_Tab_FundCode: React.FC = () => {
                 </SearchBar.Field>
                 <Checkbox checked={closeYn} onChange={e => setCloseYn(e.target.checked)}>해지펀드포함</Checkbox>
               </SearchBar>
-              <div style={{ flex: 1, minHeight: 0 }}>
+              <div style={{ flex: 1, minHeight: 0, marginTop: 5 }}>
                 <SingleGrid<FundDetail>
                   gridRef={gridRef}
                   rowData={rows}
@@ -210,7 +211,7 @@ export const Fnd01_Tab_FundCode: React.FC = () => {
             </div>
           </div>
         </Splitter.Panel>
-        <Splitter.Panel defaultSize={360} min={120} max={900}>
+        <Splitter.Panel defaultSize={360} min={360} max={900}>
           <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
             <Fnd01_Edit_FundCode model={selected} onSaved={onSaved} />
           </div>

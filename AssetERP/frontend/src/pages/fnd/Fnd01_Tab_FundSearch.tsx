@@ -5,6 +5,7 @@
  * 레이아웃 L58-96: 위(분할 가능, 최대 1000, 여백 20·20·0·20) = 테두리 박스(툴바 50 + 펀드 그리드) / 아래(320, 최대 900, 여백 20) = 읽기 전용 폼(Fnd01_Edit_FundSearch)
  * 열 때 조회하지 않는다(생성자는 settings()만). 조회가 끝나면 첫 행을 고른다
  * RD: [엑셀다운로드]는 `rdDownload`(docs/RD-대책.md) — mrd Fnd01_Rd_FundSearch
+ * 스타일: SGVF (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useMemo, useRef, useState } from 'react';

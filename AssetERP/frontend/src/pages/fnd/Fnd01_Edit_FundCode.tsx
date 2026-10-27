@@ -34,7 +34,7 @@ const Cell: React.FC<{ label: string; width?: number; align?: 'center' | 'flex-s
   label, width = 300, align = 'center', children,
 }) => (
   <div style={{ width, display: 'flex', alignItems: align, flexShrink: 0 }}>
-    <label style={{ width: 120, flexShrink: 0 }}>{label}</label>
+    <label style={{ width: 120, flexShrink: 0, textAlign: 'right', paddingRight: 10 }}>{label}</label>
     <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>{children}</div>
   </div>
 );
@@ -51,7 +51,7 @@ const RateCell: React.FC<{ label: string; value?: number | null; onChange: (v: n
 );
 
 const Row: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{ display: 'flex', margin: '20px 20px 17px 20px' }}>{children}</div>
+  <div style={{ display: 'flex', margin: '10px 20px 10px 20px' }}>{children}</div>
 );
 
 interface Props {

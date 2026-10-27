@@ -21,6 +21,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `tools/dbml-index.py`, `tools/src-index.py`, `tools/sql-check.py` — AS-IS 색인·SQL 정합성 생성기의 원본. 지금은 같은 기능의 `yunhee index-db` / `index-src` / `sql-check`를 쓴다. 출력은 `docs/as-is/`(git-ignored, 재생성 가능).
 - `docs/grid-types.md` — 공통 그리드 이름표(GridType·`gb.*`·옵션). yunhee 변환 명세와 TOBE 코드가 이 이름만 쓴다.
 - `docs/button-types.md` — 공통 버튼 이름표(`<Button type="search">` 등 type 약 30개, AS-IS `ColorButtonBar` 제목 → type). 컴포넌트는 아직 없음.
+- `docs/page-style.md` — 페이지(`*_Tab_*`) 화면 배치 이름표. 스타일 ID(SID: SG·SGVF·SGEF·TG·GG·CG)로 화면 구성을 부른다. 견본 코드는 `docs/page-style/{SID}/`(참조용 복사본). 초안(전체 `_Tab_` 조사 후 확정).
 
 ## AS-IS 참조 (전환 작업 시)
 
