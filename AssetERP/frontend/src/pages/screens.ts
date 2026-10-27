@@ -119,6 +119,7 @@ import { Icr01_Tab_ClassTreeView } from './icr/Icr01_Tab_ClassTreeView';
 import { Icr01_Tab_ClassTree } from './icr/Icr01_Tab_ClassTree';
 import { Icam03_Tab_Fund } from './icam/Icam03_Tab_Fund';
 import { Icam06_Tab_FundPrice } from './icam/Icam06_Tab_FundPrice';
+import { Icam10_Tab_CurrentFeeByFund } from './icam/Icam10_Tab_CurrentFeeByFund';
 import { Icam10_Tab_FeeAdmin } from './icam/Icam10_Tab_FeeAdmin';
 import { Icam50_Tab_DbSource } from './icam/Icam50_Tab_DbSource';
 import { Icam99_Tab_Test } from './icam/Icam99_Tab_Test';
@@ -356,6 +357,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ics31_Tab_ComplianceReport, // K03 1단계 (RD 미리보기 대신 표. [상신]·[문서보기]·문서분류 선택은 전자결재 단계 — 안내만)
   Icam03_Tab_Fund, // D07 (ICAM Get·타사무 Get은 외부 ICAM DB 연동이 없어 서버가 거절)
   Icam06_Tab_FundPrice, // R05 (메뉴 #1475. 펀드별 기준가 현황)
+  Icam10_Tab_CurrentFeeByFund, // R06 (메뉴 #1268. 펀드별 발생보수현황 / #1494. 월별 펀드보수현황)
   Icam10_Tab_FeeAdmin, // D08 (ICAM 발생보수 가져오기도 같은 연동이 없어 서버가 거절)
   Icam50_Tab_DbSource, // D09 (DB소스 가져오기도 같은 연동이 없어 서버가 거절)
   Icam99_Tab_Test, // D10 (작업 버튼은 BatchMain 연동이 없어 서버가 거절)

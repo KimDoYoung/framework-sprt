@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { FundPrice, IcamData, IcamFee, IcamFund, IcamSource, IcamTestBatchReq } from '../types/icam';
+import { CurrentFeeByFund, FundPrice, IcamData, IcamFee, IcamFund, IcamSource, IcamTestBatchReq } from '../types/icam';
 
 /** icam 화면 API (D07~) */
 export const icamApi = {
@@ -73,6 +73,25 @@ export const icamApi = {
   /** AS-IS sys.Sys99_Print.insertRdFundPrice: RD 엑셀 다운로드 그룹 ID 생성 */
   rdDownloadFundPrice: async (stdDate: string): Promise<string> => {
     const res = await apiClient.post<ApiResponse<string>>('v1/icam/fund-prices/rd-download', { stdDate });
+    return res.data.data ?? '';
+  },
+
+  // ── R06 펀드별 발생보수현황 (Icam10_Tab_CurrentFeeByFund) ──
+
+  /** AS-IS icam.Icam10_Fee.getCurrentFeeByFund: 펀드별 발생보수현황 목록 */
+  searchCurrentFeeByFunds: async (yearText: string, preYearText?: string): Promise<CurrentFeeByFund[]> => {
+    const res = await apiClient.get<ApiResponse<CurrentFeeByFund[]>>('v1/icam/current-fee-by-funds', {
+      params: { yearText, preYearText },
+    });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdCurrentFeeByFund: RD 엑셀 다운로드 그룹 ID 생성 */
+  rdDownloadCurrentFeeByFund: async (yearText: string, preYearText?: string): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/icam/current-fee-by-funds/rd-download', {
+      yearText,
+      preYearText,
+    });
     return res.data.data ?? '';
   },
 };

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/icam/mapper/icam10_fee.xml (getCurrentFeeByFund L376)
+   + server/sys/Sys99_Print.java (insertRdCurrentFeeByFund L4984)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.icam.mapper.IcamCurrentFeeByFundMapper">
+
+    <sql id="currentFeeByFundQuery">
+        WITH month_fee AS (
+            SELECT icam10_fund_cd                                                               AS fund_cd
+                 , icam10_std_date                                                              AS std_date
+                 , EXTRACT(MONTH FROM icam10_std_date)::int                                     AS month_no
+                 , icam10_fee * icam10_fx_rate                                                  AS fee_amt
+                 , CASE WHEN TO_CHAR(icam10_std_date,'YYYY') = #{preYearText} THEN 'PRE'
+                        WHEN TO_CHAR(icam10_std_date,'YYYY') = #{yearText}    THEN 'CURR' END   AS year_type
+              FROM icam10_fee
+             WHERE icam10_company_id = #{companyId}
+               AND icam10_fee_type   = '20402'  /*(20402:미지급운용보수)*/
+               AND icam10_rmk_cd     = 'P00'    /*(P00:보수 및 수수료(비용)발생)*/
+               AND icam10_std_date BETWEEN (#{preYearText}||'-01-01')::date AND (#{yearText}||'-12-31')::date
+             UNION ALL
+            SELECT ifi31_fund_cd                                                                AS fund_cd
+                 , ifi31_std_date::date                                                         AS std_date
+                 , EXTRACT(MONTH FROM ifi31_std_date::date)::int                                AS month_no
+                 , ifi31_occ_fee                                                                AS fee_amt
+                 , CASE WHEN SUBSTR(ifi31_std_date,1,4) = #{preYearText} THEN 'PRE'
+                        WHEN SUBSTR(ifi31_std_date,1,4) = #{yearText}    THEN 'CURR' END        AS year_type
+              FROM ifi31_fund_fee
+                   INNER JOIN ifi29_am_corp_mapping ON (    ifi29_if_cd      = ifi31_if_cd
+                                                        AND ifi29_am_corp_cd = ifi31_am_corp_cd
+                                                        AND ifi31_std_date  BETWEEN TO_CHAR(ifi29_start_date,'YYYYMMDD')
+                                                                            AND     COALESCE(TO_CHAR(ifi29_end_date,'YYYYMMDD'),'99991231') )
+             WHERE ifi29_company_id = #{companyId}
+               AND ifi31_cur_cd     = 'KRW'
+               AND ifi31_std_date BETWEEN (#{preYearText}||'0101') AND (#{yearText}||'1231')
+        )
+        SELECT ROW_NUMBER() OVER()                                                          AS fee_id
+             , fund_cd ||' '|| fnd02_fund_nm                                                AS fund_name
+             , SUM(CASE WHEN year_type = 'PRE'  AND month_no = 1  THEN fee_amt ELSE 0 END)  AS beforefee1
+             , SUM(CASE WHEN year_type = 'CURR' AND month_no = 1  THEN fee_amt ELSE 0 END)  AS afterfee1
+             , SUM(CASE WHEN year_type = 'PRE'  AND month_no = 2  THEN fee_amt ELSE 0 END)  AS beforefee2
+             , SUM(CASE WHEN year_type = 'CURR' AND month_no = 2  THEN fee_amt ELSE 0 END)  AS afterfee2
+             , SUM(CASE WHEN year_type = 'PRE'  AND month_no = 3  THEN fee_amt ELSE 0 END)  AS beforefee3
+             , SUM(CASE WHEN year_type = 'CURR' AND month_no = 3  THEN fee_amt ELSE 0 END)  AS afterfee3
+             , SUM(CASE WHEN year_type = 'PRE'  AND month_no = 4  THEN fee_amt ELSE 0 END)  AS beforefee4
+             , SUM(CASE WHEN year_type = 'CURR' AND month_no = 4  THEN fee_amt ELSE 0 END)  AS afterfee4
+             , SUM(CASE WHEN year_type = 'PRE'  AND month_no = 5  THEN fee_amt ELSE 0 END)  AS beforefee5
+             , SUM(CASE WHEN year_type = 'CURR' AND month_no = 5  THEN fee_amt ELSE 0 END)  AS afterfee5
+             , SUM(CASE WHEN year_type = 'PRE'  AND month_no = 6  THEN fee_amt ELSE 0 END)  AS beforefee6
+             , SUM(CASE WHEN year_type = 'CURR' AND month_no = 6  THEN fee_amt ELSE 0 END)  AS afterfee6
+             , SUM(CASE WHEN year_type = 'PRE'  AND month_no = 7  THEN fee_amt ELSE 0 END)  AS beforefee7
+             , SUM(CASE WHEN year_type = 'CURR' AND month_no = 7  THEN fee_amt ELSE 0 END)  AS afterfee7
+             , SUM(CASE WHEN year_type = 'PRE'  AND month_no = 8  THEN fee_amt ELSE 0 END)  AS beforefee8
+             , SUM(CASE WHEN year_type = 'CURR' AND month_no = 8  THEN fee_amt ELSE 0 END)  AS afterfee8
+             , SUM(CASE WHEN year_type = 'PRE'  AND month_no = 9  THEN fee_amt ELSE 0 END)  AS beforefee9
+             , SUM(CASE WHEN year_type = 'CURR' AND month_no = 9  THEN fee_amt ELSE 0 END)  AS afterfee9
+             , SUM(CASE WHEN year_type = 'PRE'  AND month_no = 10 THEN fee_amt ELSE 0 END)  AS beforefee10
+             , SUM(CASE WHEN year_type = 'CURR' AND month_no = 10 THEN fee_amt ELSE 0 END)  AS afterfee10
+             , SUM(CASE WHEN year_type = 'PRE'  AND month_no = 11 THEN fee_amt ELSE 0 END)  AS beforefee11
+             , SUM(CASE WHEN year_type = 'CURR' AND month_no = 11 THEN fee_amt ELSE 0 END)  AS afterfee11
+             , SUM(CASE WHEN year_type = 'PRE'  AND month_no = 12 THEN fee_amt ELSE 0 END)  AS beforefee12
+             , SUM(CASE WHEN year_type = 'CURR' AND month_no = 12 THEN fee_amt ELSE 0 END)  AS afterfee12
+             , SUM(CASE WHEN year_type = 'PRE'                    THEN fee_amt ELSE 0 END)  AS total_beforefee
+             , SUM(CASE WHEN year_type = 'CURR'                   THEN fee_amt ELSE 0 END)  AS total_afterfee
+          FROM month_fee
+               LEFT OUTER JOIN ( SELECT ast33_fund_cd
+                                      , MAX(CASE WHEN ast33_fund_trans_cd = '2' THEN ast33_date ELSE null END) ast33_in_date
+                                      , MAX(CASE WHEN ast33_fund_trans_cd = '1' THEN ast33_date ELSE null END) ast33_out_date
+                                   FROM ast33_fund_trans
+                                  WHERE ast33_company_id = #{companyId}
+                                  GROUP BY ast33_fund_cd
+                               ) t2 ON ast33_fund_cd = fund_cd
+               LEFT OUTER JOIN ( SELECT fnd01_fund_cd, fnd02_fund_nm
+                                   FROM fnd01_fund_code
+                                        INNER JOIN fnd02_fund_info ON (    fnd02_fund_code_id = fnd01_fund_code_id
+                                                                       AND fnd02_work_date    = ( SELECT MAX(fnd02_work_date)
+                                                                                                    FROM fnd02_fund_info
+                                                                                                   WHERE fnd02_fund_code_id = fnd01_fund_code_id ) )
+                                  WHERE fnd01_company_id = #{companyId} ) fnd ON fnd01_fund_cd = fund_cd
+         WHERE std_date &gt;= COALESCE(ast33_in_date  ,'2000-01-01')
+           AND std_date &lt;  COALESCE(ast33_out_date ,'9999-12-31')
+         GROUP BY fund_cd, fnd02_fund_nm
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) icam10_fee.getCurrentFeeByFund L376 -->
+    <select id="selectCurrentFeeByFund" resultType="kr.co.kfs.asseterp.biz.icam.dto.CurrentFeeByFundRes">
+        SELECT s.*
+          FROM (
+               <include refid="currentFeeByFundQuery"/>
+          ) s
+         ORDER BY s.total_afterfee DESC
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys99_print.deleteByPersonId L695 -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) Sys99_Print.insertRdCurrentFeeByFund L4984 -->
+    <insert id="insertPrintCurrentFeeByFund">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01
+               , sys99_double01, sys99_double02, sys99_double03, sys99_double04
+               , sys99_double05, sys99_double06, sys99_double07, sys99_double08
+               , sys99_double09, sys99_double10, sys99_double11, sys99_double12
+               , sys99_double13, sys99_double14, sys99_double15, sys99_double16
+               , sys99_double17, sys99_double18, sys99_double19, sys99_double20
+               , sys99_double21, sys99_double22, sys99_double23, sys99_double24
+               , sys99_double25, sys99_double26 )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , COALESCE(s.fund_name, '')
+             , COALESCE(s.beforefee1, 0), COALESCE(s.afterfee1, 0)
+             , COALESCE(s.beforefee2, 0), COALESCE(s.afterfee2, 0)
+             , COALESCE(s.beforefee3, 0), COALESCE(s.afterfee3, 0)
+             , COALESCE(s.beforefee4, 0), COALESCE(s.afterfee4, 0)
+             , COALESCE(s.beforefee5, 0), COALESCE(s.afterfee5, 0)
+             , COALESCE(s.beforefee6, 0), COALESCE(s.afterfee6, 0)
+             , COALESCE(s.beforefee7, 0), COALESCE(s.afterfee7, 0)
+             , COALESCE(s.beforefee8, 0), COALESCE(s.afterfee8, 0)
+             , COALESCE(s.beforefee9, 0), COALESCE(s.afterfee9, 0)
+             , COALESCE(s.beforefee10, 0), COALESCE(s.afterfee10, 0)
+             , COALESCE(s.beforefee11, 0), COALESCE(s.afterfee11, 0)
+             , COALESCE(s.beforefee12, 0), COALESCE(s.afterfee12, 0)
+             , COALESCE(s.total_beforefee, 0), COALESCE(s.total_afterfee, 0)
+          FROM (
+               <include refid="currentFeeByFundQuery"/>
+          ) s
+         ORDER BY s.total_afterfee DESC
+    </insert>
+
+</mapper>

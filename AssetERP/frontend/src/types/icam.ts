@@ -119,3 +119,36 @@ export interface FundPrice {
   forNav: number;
   navDiff: number;
 }
+
+/** R06 펀드별 발생보수현황 (AS-IS Icam10_FeeModel) */
+export interface CurrentFeeByFund {
+  feeId: number;
+  fundName: string;
+  beforefee1: number;
+  afterfee1: number;
+  beforefee2: number;
+  afterfee2: number;
+  beforefee3: number;
+  afterfee3: number;
+  beforefee4: number;
+  afterfee4: number;
+  beforefee5: number;
+  afterfee5: number;
+  beforefee6: number;
+  afterfee6: number;
+  beforefee7: number;
+  afterfee7: number;
+  beforefee8: number;
+  afterfee8: number;
+  beforefee9: number;
+  afterfee9: number;
+  beforefee10: number;
+  afterfee10: number;
+  beforefee11: number;
+  afterfee11: number;
+  beforefee12: number;
+  afterfee12: number;
+  totalBeforefee: number;
+  totalAfterfee: number;
+}
+
