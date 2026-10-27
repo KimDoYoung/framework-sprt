@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.fnd.mapper;
 
+import kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkCompanyRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkCompanySaveReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkSaveReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -27,4 +29,22 @@ public interface FndOfficeWorkMapper {
 
     /** AS-IS selectByText (P05 조회창) */
     List<OfficeWorkRes> selectByText(@Param("companyId") Long companyId, @Param("searchText") String searchText);
+
+    /** AS-IS fnd06_office_work.selectByCompanyId (R11 Fnd06_Tab_OfficeWork — 회사별 사무수탁사 목록) */
+    List<OfficeWorkCompanyRes> selectByCompanyId(@Param("companyId") Long companyId, @Param("useYn") String useYn, @Param("searchText") String searchText);
+
+    /** AS-IS fnd06_office_work.selectById (R11 회사별 전체 열) */
+    OfficeWorkCompanyRes selectCompanyById(@Param("officeWorkId") Long officeWorkId);
+
+    /** AS-IS fnd06_office_work.selectByCd (R11 preUpdate 중복 코드 검사) */
+    int countByCd(@Param("companyId") Long companyId, @Param("officeWorkCode") String officeWorkCode);
+
+    /** AS-IS UpdateDataModel(fnd06_office_work) INSERT (R11) */
+    int insertCompanyOfficeWork(@Param("officeWorkId") Long officeWorkId, @Param("req") OfficeWorkCompanySaveReq req, @Param("companyId") Long companyId);
+
+    /** AS-IS UpdateDataModel(fnd06_office_work) UPDATE (R11) */
+    int updateCompanyOfficeWork(@Param("req") OfficeWorkCompanySaveReq req, @Param("companyId") Long companyId);
+
+    /** AS-IS UpdateDataModel(fnd06_office_work) DELETE (R11) */
+    int deleteCompanyOfficeWorks(@Param("companyId") Long companyId, @Param("officeWorkIds") List<Long> officeWorkIds);
 }

@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.fnd.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkCompanyRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkCompanySaveReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkSaveReq;
 import kr.co.kfs.asseterp.biz.fnd.service.FndOfficeWorkService;
@@ -11,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** 사무수탁사정보 관리(관리자) (AS-IS Fnd06_Tab_OfficeWorkManager → server/fnd/Fnd06_OfficeWork) — 메뉴 #1094 */
+/** 사무수탁사정보 관리(관리자 #1094 / 회사별 #1052) (AS-IS Fnd06_Tab_OfficeWorkManager / Fnd06_Tab_OfficeWork → server/fnd/Fnd06_OfficeWork) */
 @RestController
 @RequestMapping("/api/v1/fnd/office-works")
 @RequiredArgsConstructor
@@ -44,5 +46,35 @@ public class FndOfficeWorkController {
     @GetMapping("/lookup")
     public ApiResponse<List<OfficeWorkRes>> lookup(@AuthenticationPrincipal UserPrincipal principal, @RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.lookup(principal, searchText));
+    }
+
+    /** AS-IS fnd.Fnd06_OfficeWork.selectByCompanyId (R11 #1052 사무수탁사정보 관리) */
+    @GetMapping("/company")
+    public ApiResponse<List<OfficeWorkCompanyRes>> searchCompany(@AuthenticationPrincipal UserPrincipal principal,
+                                                                 @RequestParam(defaultValue = "") String searchText,
+                                                                 @RequestParam(defaultValue = "true") boolean useYn) {
+        return ApiResponse.ok(service.searchCompany(principal, searchText, useYn));
+    }
+
+    /** AS-IS fnd.Fnd06_OfficeWork.preUpdate + update (R11 #1052) */
+    @PutMapping("/company")
+    public ApiResponse<List<OfficeWorkCompanyRes>> saveCompany(@AuthenticationPrincipal UserPrincipal principal,
+                                                               @RequestBody List<OfficeWorkCompanySaveReq> rows) {
+        return ApiResponse.ok(service.saveCompany(principal, rows));
+    }
+
+    /** AS-IS fnd.Fnd06_OfficeWork.delete (R11 #1052) */
+    @DeleteMapping("/company")
+    public ApiResponse<Void> deleteCompany(@AuthenticationPrincipal UserPrincipal principal,
+                                           @RequestBody List<Long> officeWorkIds) {
+        service.deleteCompany(principal, officeWorkIds);
+        return ApiResponse.ok(null);
+    }
+
+    /** AS-IS fnd.Fnd06_OfficeWork.selectIcamOfficeWork (R11 #1052) */
+    @PostMapping("/company/import")
+    public ApiResponse<Void> importCompanyIcam(@AuthenticationPrincipal UserPrincipal principal) {
+        service.importCompanyIcam(principal);
+        return ApiResponse.ok(null);
     }
 }

@@ -1,0 +1,11 @@
+{
+  "id": "R11",
+  "menu": "펀드관리 > 90. 기관정보관리 > 사무수탁사정보 관리",
+  "menuId": 1052,
+  "className": "Fnd06_Tab_OfficeWork",
+  "apiPrefix": "/api/v1/fnd/office-works/company",
+  "pageStyle": "CG",
+  "grid": true,
+  "buttons": "조회.*등록.*저장.*삭제.*가져오기\\(ICAM\\)",
+  "headers": ["선택", "No", "사무수탁사 코드", "사무수탁사명", "금융투자협회코드", "신한펀드", "사용여부", "비고"]
+}

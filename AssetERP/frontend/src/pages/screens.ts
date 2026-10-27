@@ -48,11 +48,14 @@ import { Adv05_Tab_OrgAuth } from './adv/Adv05_Tab_OrgAuth';
 import { Adv11_Tab_BookExtr } from './adv/Adv11_Tab_BookExtr';
 import { Fnd20_Tab_Plan } from './fnd/Fnd20_Tab_Plan';
 import { Fnd20_Tab_PlanEmp } from './fnd/Fnd20_Tab_PlanEmp';
+import { Fnd03_Tab_Consignment } from './fnd/Fnd03_Tab_Consignment';
 import { Fnd03_Tab_ConsignmentManager } from './fnd/Fnd03_Tab_ConsignmentManager';
+import { Fnd06_Tab_OfficeWork } from './fnd/Fnd06_Tab_OfficeWork';
 import { Fnd06_Tab_OfficeWorkManager } from './fnd/Fnd06_Tab_OfficeWorkManager';
 import { Ast01_Tab_InfoManager } from './ast/Ast01_Tab_InfoManager';
 import { Ast01_Tab_ClassTreeManagement } from './ast/Ast01_Tab_ClassTreeManagement';
 import { Ast01_Tab_InfoManagement } from './ast/Ast01_Tab_InfoManagement';
+import { Fnd09_Tab_TrustBank } from './fnd/Fnd09_Tab_TrustBank';
 import { Fnd09_Tab_TrustBankManager } from './fnd/Fnd09_Tab_TrustBankManager';
 import { Ics01_Tab_ClassTree } from './ics/Ics01_Tab_ClassTree';
 import { Ics01_Tab_ApprList } from './ics/Ics01_Tab_ApprList';
@@ -292,8 +295,11 @@ export const SCREENS: Record<string, React.FC> = {
   Fnd01_Tab_FundCode, // P05 (+ Fnd01_Edit_FundCode·components/lookup/Fnd03_Lookup_Consignment·Fnd06_Lookup_OfficeWork·Fnd09_Lookup_TrustBank, 펀드 등록 및 변경)
   Fnd20_Tab_PlanEmp, // P04 (1단계: 본 화면 + Fnd20_TabPage_PlanEmp. [결재요청] 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc·서버 insertAppr는 다음 단계)
   Fnd01_Tab_FundPlan, // P01 (+ Fnd00_Lookup_FundCode, 신규기획펀드 등록 — 아래 편집 폼 Fnd01_Edit_FundPlan 포함)
+  Fnd03_Tab_Consignment, // R10 (#1051 수탁사정보 관리)
   Fnd03_Tab_ConsignmentManager, // D11 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)
+  Fnd06_Tab_OfficeWork, // R11 (#1052 사무수탁사정보 관리)
   Fnd06_Tab_OfficeWorkManager, // D12 (ICAM가져오기는 외부 ICAM DB 연동이 없어 서버가 거절)
+  Fnd09_Tab_TrustBank, // R12 (#1100 수탁은행정보 관리)
   Fnd09_Tab_TrustBankManager, // D13 (저장은 원본 서버에 insertCheck가 없어 원본에서도 실패 — 서버가 거절, ICAM가져오기도 거절)
   Ics01_Tab_ApprList, // F03 1단계 (메뉴 #1014 + Ics01_Grid_ApprList. 편집창 Apr01_Edit_ApprDoc·문서분류 조회창 Dcr01_Lookup_Class는 다음 단계)
   Dcr00_Tab_DocList, // F05 1단계 (메뉴 #1006 + Dcr01_Lookup_DcrClass·Apr03_TabPage_Relate. 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList·댓글 Apr42_Lookup_CommentView는 다음 단계)

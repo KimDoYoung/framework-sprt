@@ -1,0 +1,11 @@
+{
+  "id": "R10",
+  "menu": "펀드관리 > 90. 기관정보관리 > 수탁사정보 관리",
+  "menuId": 1051,
+  "className": "Fnd03_Tab_Consignment",
+  "apiPrefix": "/api/v1/fnd/consignments/company",
+  "pageStyle": "CG",
+  "grid": true,
+  "buttons": "조회.*등록.*저장.*삭제.*가져오기\\(ICAM\\)",
+  "headers": ["선택", "No", "수탁사코드", "수탁사명", "사용여부", "비고", "신한아이타스", "우리펀드", "하나펀드", "미래에셋", "예탁원", "국민", "코스콤", "삼정", "스카이"]
+}

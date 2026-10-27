@@ -1,4 +1,4 @@
-/** 수탁사 한 행 (AS-IS Fnd03_ConsignmentModel 중 Fnd03_Tab_ConsignmentManager 그리드 열). useYn은 DB 형태('true'/'false') 그대로 */
+/** 수탁사 한 행 (AS-IS Fnd03_ConsignmentModel — Fnd03_Tab_ConsignmentManager #1102 / Fnd03_Tab_Consignment #1051). useYn은 DB 형태('true'/'false') 그대로 */
 export interface Consignment {
   consignmentId: number;
   consignmentCode?: string | null;
@@ -6,9 +6,19 @@ export interface Consignment {
   useYn?: string | null;
   note?: string | null;
   companyId?: number | null;
+  etcConsignmentCode01?: string | null;
+  etcConsignmentCode02?: string | null;
+  etcConsignmentCode03?: string | null;
+  etcConsignmentCode04?: string | null;
+  etcConsignmentCode05?: string | null;
+  etcConsignmentCode06?: string | null;
+  etcConsignmentCode07?: string | null;
+  etcConsignmentCode08?: string | null;
+  etcConsignmentCode09?: string | null;
+  etcConsignmentCode10?: string | null;
 }
 
-/** 사무수탁사 한 행 (AS-IS Fnd06_OfficeWorkModel 중 Fnd06_Tab_OfficeWorkManager 그리드 열). useYn은 DB 형태('true'/'false') 그대로 */
+/** 사무수탁사 한 행 (AS-IS Fnd06_OfficeWorkModel — Fnd06_Tab_OfficeWorkManager #1094 / Fnd06_Tab_OfficeWork #1052). useYn·officeWorkUseYn은 DB 형태('true'/'false') 그대로 */
 export interface OfficeWork {
   officeWorkId: number;
   officeWorkName?: string | null;
@@ -17,10 +27,12 @@ export interface OfficeWork {
   etcOfficeWorkCode01?: string | null;
   useYn?: string | null;
   note?: string | null;
+  officeWorkUseYn?: string | null;
+  officeWorkNote?: string | null;
   companyId?: number | null;
 }
 
-/** 수탁은행 한 행 (AS-IS Fnd09_TrustBankModel 중 Fnd09_Tab_TrustBankManager 그리드 열). useYn은 DB 형태('true'/'false') 그대로 */
+/** 수탁은행 한 행 (AS-IS Fnd09_TrustBankModel — Fnd09_Tab_TrustBankManager #1103 / Fnd09_Tab_TrustBank #1100). useYn은 DB 형태('true'/'false') 그대로 */
 export interface TrustBank {
   trustBankId: number;
   trustBankCode?: string | null;
@@ -28,6 +40,16 @@ export interface TrustBank {
   useYn?: string | null;
   note?: string | null;
   companyId?: number | null;
+  etcTrustBankCode01?: string | null;
+  etcTrustBankCode02?: string | null;
+  etcTrustBankCode03?: string | null;
+  etcTrustBankCode04?: string | null;
+  etcTrustBankCode05?: string | null;
+  etcTrustBankCode06?: string | null;
+  etcTrustBankCode07?: string | null;
+  etcTrustBankCode08?: string | null;
+  etcTrustBankCode09?: string | null;
+  etcTrustBankCode10?: string | null;
 }
 
 /** 펀드별 문서검색 펀드 목록 한 행 (AS-IS Fnd01_FundCodeModel 중 Apr01_Tab_FundDocument가 쓰는 열) */

@@ -188,6 +188,31 @@ export const fndApi = {
     await apiClient.post<ApiResponse<null>>('v1/fnd/consignments/import');
   },
 
+  // ── R10 수탁사정보 관리 (Fnd03_Tab_Consignment, #1051) ──
+
+  /** AS-IS fnd.Fnd03_Consignment.selectByCompanyId: 로그인 회사의 수탁사 목록 */
+  searchCompanyConsignments: async (searchText: string, useYn: boolean): Promise<Consignment[]> => {
+    const res = await apiClient.get<ApiResponse<Consignment[]>>('v1/fnd/consignments/company', { params: { searchText, useYn } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd03_Consignment.preUpdate + update → 저장된 행(요청 순서) */
+  saveCompanyConsignments: async (rows: Consignment[]): Promise<Consignment[]> => {
+    const res = await apiClient.put<ApiResponse<Consignment[]>>('v1/fnd/consignments/company', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd03_Consignment.delete */
+  deleteCompanyConsignments: async (ids: number[]): Promise<number> => {
+    await apiClient.delete<ApiResponse<null>>('v1/fnd/consignments/company', { data: ids });
+    return ids.length;
+  },
+
+  /** AS-IS fnd.Fnd03_Consignment.selectIcamConsignment (회사별 화면) */
+  importCompanyIcamConsignments: async (): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>('v1/fnd/consignments/company/import');
+  },
+
   // ── D12 사무수탁사정보 관리(관리자) (Fnd06_Tab_OfficeWorkManager) ──
 
   /** AS-IS fnd.Fnd06_OfficeWork.selectByCompanyId0: 공통 회사(0) 전용 — 사용여부 체크면 사용 중인 것만 */
@@ -209,6 +234,31 @@ export const fndApi = {
     await apiClient.post<ApiResponse<null>>('v1/fnd/office-works/import');
   },
 
+  // ── R11 사무수탁사정보 관리 (Fnd06_Tab_OfficeWork, #1052) ──
+
+  /** AS-IS fnd.Fnd06_OfficeWork.selectByCompanyId: 로그인 회사의 사무수탁사 목록 */
+  searchCompanyOfficeWorks: async (searchText: string, useYn: boolean): Promise<OfficeWork[]> => {
+    const res = await apiClient.get<ApiResponse<OfficeWork[]>>('v1/fnd/office-works/company', { params: { searchText, useYn } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd06_OfficeWork.preUpdate + update → 저장된 행(요청 순서) */
+  saveCompanyOfficeWorks: async (rows: OfficeWork[]): Promise<OfficeWork[]> => {
+    const res = await apiClient.put<ApiResponse<OfficeWork[]>>('v1/fnd/office-works/company', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd06_OfficeWork.delete */
+  deleteCompanyOfficeWorks: async (ids: number[]): Promise<number> => {
+    await apiClient.delete<ApiResponse<null>>('v1/fnd/office-works/company', { data: ids });
+    return ids.length;
+  },
+
+  /** AS-IS fnd.Fnd06_OfficeWork.selectIcamOfficeWork (회사별 화면) */
+  importCompanyIcamOfficeWorks: async (): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>('v1/fnd/office-works/company/import');
+  },
+
   // ── D13 수탁은행정보 관리(관리자) (Fnd09_Tab_TrustBankManager) ──
 
   /** AS-IS fnd.Fnd09_TrustBank.selectByCompanyId0: 공통 회사(0) 전용 — 사용여부 체크면 사용 중인 것만 */
@@ -227,6 +277,31 @@ export const fndApi = {
   /** AS-IS fnd.Fnd09_TrustBank.selectIcamTrustBank: ICAM가져오기 — 외부 ICAM DB 연동이 없으면 오류 */
   importIcamTrustBanks: async (): Promise<void> => {
     await apiClient.post<ApiResponse<null>>('v1/fnd/trust-banks/import');
+  },
+
+  // ── R12 수탁은행정보 관리 (Fnd09_Tab_TrustBank, #1100) ──
+
+  /** AS-IS fnd.Fnd09_TrustBank.selectByCompanyId: 로그인 회사의 수탁은행 목록 */
+  searchCompanyTrustBanks: async (searchText: string, useYn: boolean): Promise<TrustBank[]> => {
+    const res = await apiClient.get<ApiResponse<TrustBank[]>>('v1/fnd/trust-banks/company', { params: { searchText, useYn } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd09_TrustBank.preUpdate + update → 저장된 행(요청 순서) */
+  saveCompanyTrustBanks: async (rows: TrustBank[]): Promise<TrustBank[]> => {
+    const res = await apiClient.put<ApiResponse<TrustBank[]>>('v1/fnd/trust-banks/company', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd09_TrustBank.delete */
+  deleteCompanyTrustBanks: async (ids: number[]): Promise<number> => {
+    await apiClient.delete<ApiResponse<null>>('v1/fnd/trust-banks/company', { data: ids });
+    return ids.length;
+  },
+
+  /** AS-IS fnd.Fnd09_TrustBank.selectIcamTrustBank (회사별 화면) */
+  importCompanyIcamTrustBanks: async (): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>('v1/fnd/trust-banks/company/import');
   },
 
   // ── P05 펀드 등록 및 변경 (Fnd01_Tab_FundCode) ──

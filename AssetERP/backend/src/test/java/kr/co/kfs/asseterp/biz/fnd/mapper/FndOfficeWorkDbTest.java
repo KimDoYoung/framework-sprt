@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.fnd.mapper;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkCompanyRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkCompanySaveReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkSaveReq;
 import kr.co.kfs.asseterp.biz.fnd.service.DisabledFndIcamImporter;
@@ -69,5 +71,35 @@ class FndOfficeWorkDbTest {
     @Test
     void 관리자_회사의_ICAM가져오기는_연동이_없어_거절된다() {
         assertThatThrownBy(() -> service.importIcam(admin)).isInstanceOf(BusinessException.class).hasMessageContaining("ICAM 연동");
+    }
+
+    @Test
+    void R11_회사별_사무수탁사_조회_등록_중복검사_수정_삭제가_동작한다() {
+        List<OfficeWorkCompanyRes> initial = service.searchCompany(company, "", true);
+        assertThat(initial).hasSize(11);
+
+        List<OfficeWorkCompanyRes> inserted = service.saveCompany(company, List.of(
+                new OfficeWorkCompanySaveReq(-1L, "ZR11", "R11사무수탁사", "KF11", "SH11", "true", "비고R11")
+        ));
+        OfficeWorkCompanyRes row = inserted.get(0);
+        assertThat(row.officeWorkId()).isPositive();
+        assertThat(row.kofiaCode()).isEqualTo("KF11");
+        assertThat(row.etcOfficeWorkCode01()).isEqualTo("SH11");
+
+        // preUpdate: 동일 사무수탁사코드 중복 검사
+        assertThatThrownBy(() -> service.saveCompany(company, List.of(
+                new OfficeWorkCompanySaveReq(-2L, "ZR11", "중복사무수탁사", null, null, "true", null)
+        ))).isInstanceOf(BusinessException.class).hasMessageContaining("동일한 사무수탁사코드가 존재합니다.");
+
+        // 수정
+        OfficeWorkCompanyRes updated = service.saveCompany(company, List.of(
+                new OfficeWorkCompanySaveReq(row.officeWorkId(), "ZR11", "R11사무수탁사수정", "KF12", "SH12", "true", "비고수정")
+        )).get(0);
+        assertThat(updated.officeWorkName()).isEqualTo("R11사무수탁사수정");
+        assertThat(updated.kofiaCode()).isEqualTo("KF12");
+
+        // 삭제
+        service.deleteCompany(company, List.of(row.officeWorkId()));
+        assertThat(service.searchCompany(company, "ZR11", false)).isEmpty();
     }
 }

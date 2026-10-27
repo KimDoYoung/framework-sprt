@@ -39,4 +39,136 @@
          WHERE fnd09_company_id = #{companyId}
            AND UPPER(fnd09_trust_bank_nm) LIKE UPPER(#{searchText})
     </select>
+
+    <!-- AS-IS dbConfig.getSeq -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS fnd09_trust_bank.selectByCompanyId L72 (R12 Fnd09_Tab_TrustBank) — 원본의 ${companyId}는 #{companyId} -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.fnd.dto.TrustBankCompanyRes">
+        SELECT fnd09_trust_bank_id         AS trust_bank_id,
+               fnd09_trust_bank_cd         AS trust_bank_code,
+               fnd09_trust_bank_nm         AS trust_bank_name,
+               fnd09_use_yn                AS use_yn,
+               fnd09_note                  AS note,
+               fnd09_company_id            AS company_id,
+               fnd09_etc_trust_bank_cd01   AS etc_trust_bank_code01,
+               fnd09_etc_trust_bank_cd02   AS etc_trust_bank_code02,
+               fnd09_etc_trust_bank_cd03   AS etc_trust_bank_code03,
+               fnd09_etc_trust_bank_cd04   AS etc_trust_bank_code04,
+               fnd09_etc_trust_bank_cd05   AS etc_trust_bank_code05,
+               fnd09_etc_trust_bank_cd06   AS etc_trust_bank_code06,
+               fnd09_etc_trust_bank_cd07   AS etc_trust_bank_code07,
+               fnd09_etc_trust_bank_cd08   AS etc_trust_bank_code08,
+               fnd09_etc_trust_bank_cd09   AS etc_trust_bank_code09,
+               fnd09_etc_trust_bank_cd10   AS etc_trust_bank_code10
+          FROM fnd09_trust_bank
+         WHERE fnd09_company_id = #{companyId}
+           AND ( ( #{useYn} = 'true'                      AND
+                   COALESCE(fnd09_use_yn,'true') = 'true' ) OR
+                 ( #{useYn} = 'false'                     ) )
+           AND fnd09_trust_bank_cd||fnd09_trust_bank_nm LIKE '%'||#{searchText}||'%'
+         ORDER BY fnd09_trust_bank_cd
+    </select>
+
+    <!-- AS-IS fnd09_trust_bank.selectById L26 (R12 전체 열) -->
+    <select id="selectCompanyById" resultType="kr.co.kfs.asseterp.biz.fnd.dto.TrustBankCompanyRes">
+        SELECT fnd09_trust_bank_id         AS trust_bank_id,
+               fnd09_trust_bank_cd         AS trust_bank_code,
+               fnd09_trust_bank_nm         AS trust_bank_name,
+               fnd09_use_yn                AS use_yn,
+               fnd09_note                  AS note,
+               fnd09_company_id            AS company_id,
+               fnd09_etc_trust_bank_cd01   AS etc_trust_bank_code01,
+               fnd09_etc_trust_bank_cd02   AS etc_trust_bank_code02,
+               fnd09_etc_trust_bank_cd03   AS etc_trust_bank_code03,
+               fnd09_etc_trust_bank_cd04   AS etc_trust_bank_code04,
+               fnd09_etc_trust_bank_cd05   AS etc_trust_bank_code05,
+               fnd09_etc_trust_bank_cd06   AS etc_trust_bank_code06,
+               fnd09_etc_trust_bank_cd07   AS etc_trust_bank_code07,
+               fnd09_etc_trust_bank_cd08   AS etc_trust_bank_code08,
+               fnd09_etc_trust_bank_cd09   AS etc_trust_bank_code09,
+               fnd09_etc_trust_bank_cd10   AS etc_trust_bank_code10
+          FROM fnd09_trust_bank
+         WHERE fnd09_trust_bank_id = #{trustBankId}
+    </select>
+
+    <!-- AS-IS fnd09_trust_bank.selectByCd L32 (R12 preUpdate 중복 검사) -->
+    <select id="countByCd" resultType="int">
+        SELECT COUNT(*)
+          FROM fnd09_trust_bank
+         WHERE fnd09_trust_bank_cd = #{trustBankCode}
+           AND fnd09_company_id    = #{companyId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(fnd09_trust_bank) INSERT (R12) -->
+    <insert id="insertCompanyTrustBank">
+        INSERT INTO fnd09_trust_bank (
+               fnd09_trust_bank_id,
+               fnd09_trust_bank_cd,
+               fnd09_trust_bank_nm,
+               fnd09_use_yn,
+               fnd09_note,
+               fnd09_company_id,
+               fnd09_etc_trust_bank_cd01,
+               fnd09_etc_trust_bank_cd02,
+               fnd09_etc_trust_bank_cd03,
+               fnd09_etc_trust_bank_cd04,
+               fnd09_etc_trust_bank_cd05,
+               fnd09_etc_trust_bank_cd06,
+               fnd09_etc_trust_bank_cd07,
+               fnd09_etc_trust_bank_cd08,
+               fnd09_etc_trust_bank_cd09,
+               fnd09_etc_trust_bank_cd10
+        ) VALUES (
+               #{trustBankId},
+               #{req.trustBankCode},
+               #{req.trustBankName},
+               #{req.useYn},
+               #{req.note},
+               #{companyId},
+               #{req.etcTrustBankCode01},
+               #{req.etcTrustBankCode02},
+               #{req.etcTrustBankCode03},
+               #{req.etcTrustBankCode04},
+               #{req.etcTrustBankCode05},
+               #{req.etcTrustBankCode06},
+               #{req.etcTrustBankCode07},
+               #{req.etcTrustBankCode08},
+               #{req.etcTrustBankCode09},
+               #{req.etcTrustBankCode10}
+        )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(fnd09_trust_bank) UPDATE (R12) -->
+    <update id="updateCompanyTrustBank">
+        UPDATE fnd09_trust_bank
+           SET fnd09_trust_bank_cd       = #{req.trustBankCode},
+               fnd09_trust_bank_nm       = #{req.trustBankName},
+               fnd09_use_yn              = #{req.useYn},
+               fnd09_note                = #{req.note},
+               fnd09_etc_trust_bank_cd01 = #{req.etcTrustBankCode01},
+               fnd09_etc_trust_bank_cd02 = #{req.etcTrustBankCode02},
+               fnd09_etc_trust_bank_cd03 = #{req.etcTrustBankCode03},
+               fnd09_etc_trust_bank_cd04 = #{req.etcTrustBankCode04},
+               fnd09_etc_trust_bank_cd05 = #{req.etcTrustBankCode05},
+               fnd09_etc_trust_bank_cd06 = #{req.etcTrustBankCode06},
+               fnd09_etc_trust_bank_cd07 = #{req.etcTrustBankCode07},
+               fnd09_etc_trust_bank_cd08 = #{req.etcTrustBankCode08},
+               fnd09_etc_trust_bank_cd09 = #{req.etcTrustBankCode09},
+               fnd09_etc_trust_bank_cd10 = #{req.etcTrustBankCode10}
+         WHERE fnd09_trust_bank_id = #{req.trustBankId}
+           AND fnd09_company_id    = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel(fnd09_trust_bank) DELETE (R12) -->
+    <delete id="deleteCompanyTrustBanks">
+        DELETE FROM fnd09_trust_bank
+         WHERE fnd09_company_id = #{companyId}
+           AND fnd09_trust_bank_id IN
+        <foreach collection="trustBankIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
 </mapper>

@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.fnd.mapper;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.fnd.dto.ConsignmentCompanyRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.ConsignmentCompanySaveReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.ConsignmentRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.ConsignmentSaveReq;
 import kr.co.kfs.asseterp.biz.fnd.service.DisabledFndIcamImporter;
@@ -64,5 +66,35 @@ class FndConsignmentDbTest {
     @Test
     void 관리자_회사의_ICAM가져오기는_연동이_없어_거절된다() {
         assertThatThrownBy(() -> service.importIcam(admin)).isInstanceOf(BusinessException.class).hasMessageContaining("ICAM 연동");
+    }
+
+    @Test
+    void R10_회사별_수탁사_조회_등록_중복검사_수정_삭제가_동작한다() {
+        List<ConsignmentCompanyRes> initial = service.searchCompany(company, "", true);
+        assertThat(initial).hasSize(30);
+
+        List<ConsignmentCompanyRes> inserted = service.saveCompany(company, List.of(
+                new ConsignmentCompanySaveReq(-1L, "ZR10", "R10수탁사", "true", "비고R10", "S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", null)
+        ));
+        ConsignmentCompanyRes row = inserted.get(0);
+        assertThat(row.consignmentId()).isPositive();
+        assertThat(row.etcConsignmentCode01()).isEqualTo("S1");
+        assertThat(row.etcConsignmentCode09()).isEqualTo("S9");
+
+        // preUpdate: 동일 수탁사코드 중복 검사
+        assertThatThrownBy(() -> service.saveCompany(company, List.of(
+                new ConsignmentCompanySaveReq(-2L, "ZR10", "중복수탁사", "true", null, null, null, null, null, null, null, null, null, null, null)
+        ))).isInstanceOf(BusinessException.class).hasMessageContaining("동일한 수탁사코드가 존재합니다.");
+
+        // 수정 (같은 코드 유지 시 통과)
+        ConsignmentCompanyRes updated = service.saveCompany(company, List.of(
+                new ConsignmentCompanySaveReq(row.consignmentId(), "ZR10", "R10수탁사수정", "true", "비고수정", "U1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", null)
+        )).get(0);
+        assertThat(updated.consignmentName()).isEqualTo("R10수탁사수정");
+        assertThat(updated.etcConsignmentCode01()).isEqualTo("U1");
+
+        // 삭제
+        service.deleteCompany(company, List.of(row.consignmentId()));
+        assertThat(service.searchCompany(company, "ZR10", false)).isEmpty();
     }
 }

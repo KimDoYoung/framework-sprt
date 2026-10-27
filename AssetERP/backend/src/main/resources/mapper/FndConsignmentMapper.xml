@@ -73,4 +73,131 @@
          WHERE fnd03_company_id = #{companyId}
            AND UPPER(fnd03_consignment_nm) LIKE UPPER(#{searchText})
     </select>
+
+    <!-- AS-IS fnd03_consignment.selectByCompanyId L71 (R10 Fnd03_Tab_Consignment) — 원본의 ${companyId}는 #{companyId} -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.fnd.dto.ConsignmentCompanyRes">
+        SELECT fnd03_consignment_id         AS consignment_id,
+               fnd03_consignment_cd         AS consignment_code,
+               fnd03_consignment_nm         AS consignment_name,
+               fnd03_use_yn                 AS use_yn,
+               fnd03_note                   AS note,
+               fnd03_company_id             AS company_id,
+               fnd03_etc_consignment_cd01   AS etc_consignment_code01,
+               fnd03_etc_consignment_cd02   AS etc_consignment_code02,
+               fnd03_etc_consignment_cd03   AS etc_consignment_code03,
+               fnd03_etc_consignment_cd04   AS etc_consignment_code04,
+               fnd03_etc_consignment_cd05   AS etc_consignment_code05,
+               fnd03_etc_consignment_cd06   AS etc_consignment_code06,
+               fnd03_etc_consignment_cd07   AS etc_consignment_code07,
+               fnd03_etc_consignment_cd08   AS etc_consignment_code08,
+               fnd03_etc_consignment_cd09   AS etc_consignment_code09,
+               fnd03_etc_consignment_cd10   AS etc_consignment_code10
+          FROM fnd03_consignment
+         WHERE fnd03_company_id = #{companyId}
+           AND ( ( #{useYn} = 'true'                      AND
+                   COALESCE(fnd03_use_yn,'true') = 'true' ) OR
+                 ( #{useYn} = 'false'                     ) )
+           AND UPPER(CONCAT(fnd03_consignment_cd,fnd03_consignment_nm)) LIKE '%'||UPPER(#{searchText})||'%'
+         ORDER BY fnd03_consignment_cd
+    </select>
+
+    <!-- AS-IS fnd03_consignment.selectById L25 (R10 전체 열) -->
+    <select id="selectCompanyById" resultType="kr.co.kfs.asseterp.biz.fnd.dto.ConsignmentCompanyRes">
+        SELECT fnd03_consignment_id         AS consignment_id,
+               fnd03_consignment_cd         AS consignment_code,
+               fnd03_consignment_nm         AS consignment_name,
+               fnd03_use_yn                 AS use_yn,
+               fnd03_note                   AS note,
+               fnd03_company_id             AS company_id,
+               fnd03_etc_consignment_cd01   AS etc_consignment_code01,
+               fnd03_etc_consignment_cd02   AS etc_consignment_code02,
+               fnd03_etc_consignment_cd03   AS etc_consignment_code03,
+               fnd03_etc_consignment_cd04   AS etc_consignment_code04,
+               fnd03_etc_consignment_cd05   AS etc_consignment_code05,
+               fnd03_etc_consignment_cd06   AS etc_consignment_code06,
+               fnd03_etc_consignment_cd07   AS etc_consignment_code07,
+               fnd03_etc_consignment_cd08   AS etc_consignment_code08,
+               fnd03_etc_consignment_cd09   AS etc_consignment_code09,
+               fnd03_etc_consignment_cd10   AS etc_consignment_code10
+          FROM fnd03_consignment
+         WHERE fnd03_consignment_id = #{consignmentId}
+    </select>
+
+    <!-- AS-IS fnd03_consignment.selectByCd L31 (R10 preUpdate 중복 검사) -->
+    <select id="countByCd" resultType="int">
+        SELECT COUNT(*)
+          FROM fnd03_consignment
+         WHERE fnd03_consignment_cd = #{consignmentCode}
+           AND fnd03_company_id     = #{companyId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(fnd03_consignment) INSERT (R10) -->
+    <insert id="insertCompanyConsignment">
+        INSERT INTO fnd03_consignment (
+               fnd03_consignment_id,
+               fnd03_consignment_cd,
+               fnd03_consignment_nm,
+               fnd03_use_yn,
+               fnd03_note,
+               fnd03_company_id,
+               fnd03_etc_consignment_cd01,
+               fnd03_etc_consignment_cd02,
+               fnd03_etc_consignment_cd03,
+               fnd03_etc_consignment_cd04,
+               fnd03_etc_consignment_cd05,
+               fnd03_etc_consignment_cd06,
+               fnd03_etc_consignment_cd07,
+               fnd03_etc_consignment_cd08,
+               fnd03_etc_consignment_cd09,
+               fnd03_etc_consignment_cd10
+        ) VALUES (
+               #{consignmentId},
+               #{req.consignmentCode},
+               #{req.consignmentName},
+               #{req.useYn},
+               #{req.note},
+               #{companyId},
+               #{req.etcConsignmentCode01},
+               #{req.etcConsignmentCode02},
+               #{req.etcConsignmentCode03},
+               #{req.etcConsignmentCode04},
+               #{req.etcConsignmentCode05},
+               #{req.etcConsignmentCode06},
+               #{req.etcConsignmentCode07},
+               #{req.etcConsignmentCode08},
+               #{req.etcConsignmentCode09},
+               #{req.etcConsignmentCode10}
+        )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(fnd03_consignment) UPDATE (R10) -->
+    <update id="updateCompanyConsignment">
+        UPDATE fnd03_consignment
+           SET fnd03_consignment_cd       = #{req.consignmentCode},
+               fnd03_consignment_nm       = #{req.consignmentName},
+               fnd03_use_yn               = #{req.useYn},
+               fnd03_note                 = #{req.note},
+               fnd03_etc_consignment_cd01 = #{req.etcConsignmentCode01},
+               fnd03_etc_consignment_cd02 = #{req.etcConsignmentCode02},
+               fnd03_etc_consignment_cd03 = #{req.etcConsignmentCode03},
+               fnd03_etc_consignment_cd04 = #{req.etcConsignmentCode04},
+               fnd03_etc_consignment_cd05 = #{req.etcConsignmentCode05},
+               fnd03_etc_consignment_cd06 = #{req.etcConsignmentCode06},
+               fnd03_etc_consignment_cd07 = #{req.etcConsignmentCode07},
+               fnd03_etc_consignment_cd08 = #{req.etcConsignmentCode08},
+               fnd03_etc_consignment_cd09 = #{req.etcConsignmentCode09},
+               fnd03_etc_consignment_cd10 = #{req.etcConsignmentCode10}
+         WHERE fnd03_consignment_id = #{req.consignmentId}
+           AND fnd03_company_id     = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel(fnd03_consignment) DELETE (R10) -->
+    <delete id="deleteCompanyConsignments">
+        DELETE FROM fnd03_consignment
+         WHERE fnd03_company_id = #{companyId}
+           AND fnd03_consignment_id IN
+        <foreach collection="consignmentIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
 </mapper>

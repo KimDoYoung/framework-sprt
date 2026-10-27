@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.fnd.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.fnd.dto.ConsignmentCompanyRes;
+import kr.co.kfs.asseterp.biz.fnd.dto.ConsignmentCompanySaveReq;
 import kr.co.kfs.asseterp.biz.fnd.dto.ConsignmentRes;
 import kr.co.kfs.asseterp.biz.fnd.dto.ConsignmentSaveReq;
 import kr.co.kfs.asseterp.biz.fnd.mapper.FndConsignmentMapper;
@@ -11,10 +13,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
- * AS-IS server/fnd/Fnd03_Consignment.java (selectByCompanyId0 L39 / insertCheck L93 / selectIcamConsignment L142).
- * 수탁사정보 관리(관리자)는 공통 회사(0) 전용 화면이라 저장·가져오기는 관리자 회사만 한다(보안 보강, D07과 같음)
+ * AS-IS server/fnd/Fnd03_Consignment.java (selectByCompanyId L34 / selectByCompanyId0 L39 / preUpdate L53 / insertCheck L93 / update L132 / delete L137 / selectIcamConsignment L142).
+ * 수탁사정보 관리(관리자, D11)는 공통 회사(0) 전용이고, 수탁사정보 관리(R10, #1051)는 로그인 회사별 CRUD 화면이다.
  */
 @Service
 @RequiredArgsConstructor
@@ -63,5 +66,52 @@ public class FndConsignmentService {
     /** AS-IS fnd.Fnd03_Consignment.selectByText (P05 조회창) — 검색어는 서버가 %…%로 */
     public List<ConsignmentRes> lookup(UserPrincipal user, String searchText) {
         return mapper.selectByText(user.getCompanyId(), "%" + (searchText == null ? "" : searchText) + "%");
+    }
+
+    /** AS-IS fnd.Fnd03_Consignment.selectByCompanyId (R10 #1051 수탁사정보 관리) */
+    public List<ConsignmentCompanyRes> searchCompany(UserPrincipal user, String searchText, boolean useYn) {
+        return mapper.selectByCompanyId(user.getCompanyId(), String.valueOf(useYn), searchText == null ? "" : searchText);
+    }
+
+    /** AS-IS fnd.Fnd03_Consignment.preUpdate (L53-91) + update (L132-135, UpdateDataModel) */
+    @Transactional
+    public List<ConsignmentCompanyRes> saveCompany(UserPrincipal user, List<ConsignmentCompanySaveReq> rows) {
+        Long companyId = user.getCompanyId();
+        for (ConsignmentCompanySaveReq req : rows) {
+            ConsignmentCompanyRes found = (req.consignmentId() == null || req.consignmentId() <= 0)
+                    ? null : mapper.selectCompanyById(req.consignmentId());
+            if (found != null && !found.companyId().equals(companyId)) {
+                throw new BusinessException(ErrorCode.ACCESS_DENIED);
+            }
+            boolean checkDup = (found == null) || !Objects.equals(req.consignmentCode(), found.consignmentCode());
+            if (checkDup && mapper.countByCd(companyId, req.consignmentCode()) > 0) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "동일한 수탁사코드가 존재합니다.");
+            }
+        }
+        return rows.stream().map(req -> {
+            ConsignmentCompanyRes found = (req.consignmentId() == null || req.consignmentId() <= 0)
+                    ? null : mapper.selectCompanyById(req.consignmentId());
+            if (found != null) {
+                mapper.updateCompanyConsignment(req, companyId);
+                return mapper.selectCompanyById(req.consignmentId());
+            }
+            long newId = mapper.selectNextId();
+            mapper.insertCompanyConsignment(newId, req, companyId);
+            return mapper.selectCompanyById(newId);
+        }).toList();
+    }
+
+    /** AS-IS fnd.Fnd03_Consignment.delete (L137-140, UpdateDataModel) */
+    @Transactional
+    public void deleteCompany(UserPrincipal user, List<Long> consignmentIds) {
+        if (consignmentIds == null || consignmentIds.isEmpty()) {
+            return;
+        }
+        mapper.deleteCompanyConsignments(user.getCompanyId(), consignmentIds);
+    }
+
+    /** AS-IS fnd.Fnd03_Consignment.selectIcamConsignment (L142, R10 회사별 화면에서 호출) */
+    public void importCompanyIcam(UserPrincipal user) {
+        icamImporter.importConsignments(user.getCompanyId() == 0 ? "%" : String.valueOf(user.getCompanyId()));
     }
 }

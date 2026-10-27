@@ -81,4 +81,109 @@
          WHERE fnd06_company_id = #{companyId}
            AND UPPER(fnd06_office_work_nm) LIKE UPPER(#{searchText})
     </select>
+
+    <!-- AS-IS fnd06_office_work.selectByCompanyId L75 (R11 Fnd06_Tab_OfficeWork) — 원본의 ${companyId}는 #{companyId} -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkCompanyRes">
+        SELECT fnd06_office_work_id       AS office_work_id,
+               fnd06_office_work_cd       AS office_work_code,
+               fnd06_office_work_nm       AS office_work_name,
+               fnd06_office_work_use_yn   AS office_work_use_yn,
+               fnd06_office_work_note     AS office_work_note,
+               fnd06_company_id           AS company_id,
+               fnd06_etc_office_work_cd01 AS etc_office_work_code01,
+               fnd06_etc_office_work_cd02 AS etc_office_work_code02,
+               fnd06_etc_office_work_cd03 AS etc_office_work_code03,
+               fnd06_etc_office_work_cd04 AS etc_office_work_code04,
+               fnd06_etc_office_work_cd05 AS etc_office_work_code05,
+               fnd06_etc_office_work_cd06 AS etc_office_work_code06,
+               fnd06_etc_office_work_cd07 AS etc_office_work_code07,
+               fnd06_etc_office_work_cd08 AS etc_office_work_code08,
+               fnd06_etc_office_work_cd09 AS etc_office_work_code09,
+               fnd06_etc_office_work_cd10 AS etc_office_work_code10,
+               fnd06_kofia_cd             AS kofia_code
+          FROM fnd06_office_work
+         WHERE fnd06_company_id = #{companyId}
+           AND ( ( #{useYn} = 'true'                                  AND
+                   COALESCE(fnd06_office_work_use_yn,'true') = 'true' ) OR
+                 ( #{useYn} = 'false'                                 ) )
+           AND fnd06_office_work_cd||fnd06_office_work_nm LIKE '%'||#{searchText}||'%'
+         ORDER BY fnd06_office_work_cd
+    </select>
+
+    <!-- AS-IS fnd06_office_work.selectById L29 (R11 전체 열) -->
+    <select id="selectCompanyById" resultType="kr.co.kfs.asseterp.biz.fnd.dto.OfficeWorkCompanyRes">
+        SELECT fnd06_office_work_id       AS office_work_id,
+               fnd06_office_work_cd       AS office_work_code,
+               fnd06_office_work_nm       AS office_work_name,
+               fnd06_office_work_use_yn   AS office_work_use_yn,
+               fnd06_office_work_note     AS office_work_note,
+               fnd06_company_id           AS company_id,
+               fnd06_etc_office_work_cd01 AS etc_office_work_code01,
+               fnd06_etc_office_work_cd02 AS etc_office_work_code02,
+               fnd06_etc_office_work_cd03 AS etc_office_work_code03,
+               fnd06_etc_office_work_cd04 AS etc_office_work_code04,
+               fnd06_etc_office_work_cd05 AS etc_office_work_code05,
+               fnd06_etc_office_work_cd06 AS etc_office_work_code06,
+               fnd06_etc_office_work_cd07 AS etc_office_work_code07,
+               fnd06_etc_office_work_cd08 AS etc_office_work_code08,
+               fnd06_etc_office_work_cd09 AS etc_office_work_code09,
+               fnd06_etc_office_work_cd10 AS etc_office_work_code10,
+               fnd06_kofia_cd             AS kofia_code
+          FROM fnd06_office_work
+         WHERE fnd06_office_work_id = #{officeWorkId}
+    </select>
+
+    <!-- AS-IS fnd06_office_work.selectByCd L35 (R11 preUpdate 중복 검사) -->
+    <select id="countByCd" resultType="int">
+        SELECT COUNT(*)
+          FROM fnd06_office_work
+         WHERE fnd06_office_work_cd = #{officeWorkCode}
+           AND fnd06_company_id     = #{companyId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(fnd06_office_work) INSERT (R11) -->
+    <insert id="insertCompanyOfficeWork">
+        INSERT INTO fnd06_office_work (
+               fnd06_office_work_id,
+               fnd06_office_work_cd,
+               fnd06_office_work_nm,
+               fnd06_office_work_use_yn,
+               fnd06_office_work_note,
+               fnd06_company_id,
+               fnd06_etc_office_work_cd01,
+               fnd06_kofia_cd
+        ) VALUES (
+               #{officeWorkId},
+               #{req.officeWorkCode},
+               #{req.officeWorkName},
+               #{req.officeWorkUseYn},
+               #{req.officeWorkNote},
+               #{companyId},
+               #{req.etcOfficeWorkCode01},
+               #{req.kofiaCode}
+        )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(fnd06_office_work) UPDATE (R11) -->
+    <update id="updateCompanyOfficeWork">
+        UPDATE fnd06_office_work
+           SET fnd06_office_work_cd       = #{req.officeWorkCode},
+               fnd06_office_work_nm       = #{req.officeWorkName},
+               fnd06_kofia_cd             = #{req.kofiaCode},
+               fnd06_etc_office_work_cd01 = #{req.etcOfficeWorkCode01},
+               fnd06_office_work_use_yn   = #{req.officeWorkUseYn},
+               fnd06_office_work_note     = #{req.officeWorkNote}
+         WHERE fnd06_office_work_id = #{req.officeWorkId}
+           AND fnd06_company_id     = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel(fnd06_office_work) DELETE (R11) -->
+    <delete id="deleteCompanyOfficeWorks">
+        DELETE FROM fnd06_office_work
+         WHERE fnd06_company_id = #{companyId}
+           AND fnd06_office_work_id IN
+        <foreach collection="officeWorkIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
 </mapper>
