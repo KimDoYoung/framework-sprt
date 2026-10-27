@@ -2,11 +2,11 @@
  * 담당자 그리드 컴포넌트 (R09) — Ast10_Grid_Manager
  * AS-IS: myApp/client/vi/ast/Ast10_Grid_Manager.java (95줄)
  */
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import type { ColDef } from 'ag-grid-community';
 import { astApi } from '@/api/ast';
 import { Button } from '@/components/button';
-import { SingleGrid, gbFor, checkCell } from '@/components/grid';
+import { SingleGrid, gbFor, CheckCell } from '@/components/grid';
 import { AstManager } from '@/types/ast';
 import { Ast10_Lookup_Manager } from './Ast10_Lookup_Manager';
 
@@ -73,7 +73,7 @@ export const Ast10_Grid_Manager = forwardRef<Ast10GridManagerHandle, Ast10GridMa
         gb.text('personName', 80, '성명'),
         {
           ...gb.boolean('reprYn', 50, '대표'),
-          cellRenderer: checkCell,
+          cellRenderer: CheckCell,
         },
       ],
       []

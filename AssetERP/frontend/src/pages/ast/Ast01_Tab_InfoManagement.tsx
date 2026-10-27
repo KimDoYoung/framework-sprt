@@ -29,7 +29,7 @@ export const Ast01_Tab_InfoManagement: React.FC = () => {
   const retrieve = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await astApi.searchClassTree('IC');
+      const data = await astApi.searchClassTree({ typeCode: 'IC' });
       setTreeList(data);
       // 최상위 노드 자동 펼치기
       const rootKeys = data.filter((d: AstClassTree) => d.parentTreeId === 0).map((d: AstClassTree) => String(d.classTreeId));
