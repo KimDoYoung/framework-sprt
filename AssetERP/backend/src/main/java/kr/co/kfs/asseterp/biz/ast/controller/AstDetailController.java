@@ -38,4 +38,38 @@ public class AstDetailController {
     public ApiResponse<Integer> delete(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> ids) {
         return ApiResponse.ok(service.delete(principal, ids));
     }
+
+    // ==================== R09 종목상세 엔드포인트 ====================
+
+    /** AS-IS ast02_detail.selectByClassTreeId */
+    @GetMapping("/by-tree")
+    public ApiResponse<List<kr.co.kfs.asseterp.biz.ast.dto.AstItemDetailRes>> getItemDetails(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam Long classTreeId) {
+        return ApiResponse.ok(service.getItemDetails(principal, classTreeId));
+    }
+
+    /** AS-IS ast02_detail.selectByCompanyId (기본 항목 템플릿 검색) */
+    @GetMapping("/templates")
+    public ApiResponse<List<kr.co.kfs.asseterp.biz.ast.dto.AstItemDetailRes>> searchTemplates(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchTemplates(principal, searchText));
+    }
+
+    /** 종목 상세 저장(CUD) */
+    @PutMapping("/items")
+    public ApiResponse<List<kr.co.kfs.asseterp.biz.ast.dto.AstItemDetailRes>> saveItemDetails(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestBody List<kr.co.kfs.asseterp.biz.ast.dto.AstItemDetailSaveReq> rows) {
+        return ApiResponse.ok(service.saveItemDetails(principal, rows));
+    }
+
+    /** 종목 상세 삭제 */
+    @DeleteMapping("/items")
+    public ApiResponse<Integer> deleteItemDetails(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestBody List<Long> ids) {
+        return ApiResponse.ok(service.deleteItemDetails(principal, ids));
+    }
 }

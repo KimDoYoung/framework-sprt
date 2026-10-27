@@ -8197,5 +8197,70 @@
     "note": "docs/work/R/R06-작업기록.md",
     "history": [],
     "id": "R06"
+  },
+  "Icam06_Tab_FundOperateStatus": {
+    "commit": "87b2dccf21b1f775b2b6d5958791f5c55bcd817a",
+    "commit_short": "87b2dcc",
+    "branch": "ioc",
+    "commit_date": "2026-10-26",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/icam/Icam06_Grid_FundOperateStatus.java": "eef33225749061516196e029cb44b2bde3f3f82a",
+      "application/src/main/java/myApp/client/vi/icam/Icam06_Tab_FundOperateStatus.java": "89c3703123f7c2a7278384a391e7e160bd517b70",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam06_FundBookModel.java": "d0678f73bb341f0f0613c592688cab2205e4c7f3",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam06_FundBookModelProperties.java": "2c2d59dda4e507f70d94e1755f2d4bb0c97866a9",
+      "application/src/main/java/myApp/server/icam/Icam06_FundBook.java": "f85165ed6e215b720dc8ff4d555b85d865ea71a3",
+      "application/src/main/java/myApp/server/icam/mapper/icam06_fund_book.xml": "e62304e04074746d64c7aaa6a495da51ceedae5f",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-27T16:09:52+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/R/R07-작업기록.md",
+    "history": [],
+    "id": "R07"
+  },
+  "Ast01_Tab_ClassTreeManagement": {
+    "commit": "87b2dccf21b1f775b2b6d5958791f5c55bcd817a",
+    "commit_short": "87b2dcc",
+    "branch": "ioc",
+    "commit_date": "2026-10-26",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ast/Ast01_Edit_ClassTree.java": "3444964418627da41b703929e04f7b9799cf0d0c",
+      "application/src/main/java/myApp/client/vi/ast/Ast01_Grid_AstTypeManagement.java": "fea07584042e3c52a9573eeb51e3b81c3f200b21",
+      "application/src/main/java/myApp/client/vi/ast/Ast01_Lookup_ItemClass.java": "c07ea2f2872fdb4840df3bfaed9302356f99b33e",
+      "application/src/main/java/myApp/client/vi/ast/Ast01_Lookup_MoveClassTree.java": "f142b7fa5c038697f401b380d152a329ac3f0d0d",
+      "application/src/main/java/myApp/client/vi/ast/Ast01_Move_ClassTree.java": "76c29df66fe3139071a14acaa7385e7ed0e01851",
+      "application/src/main/java/myApp/client/vi/ast/Ast01_Tab_ClassTreeManagement.java": "32eb46b1b06687e7ae28f058eaa79c03b1e16ad8",
+      "application/src/main/java/myApp/client/vi/ast/Ast10_Lookup_Manager.java": "fca29ee3b45b0fa2650b4f1a239886bd470f4954",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast01_ClassTreeModel.java": "ee2cde89198d72acc210c16582a4c1a9e6091262",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast01_ClassTreeModelProperties.java": "9ff4c820ad4209ea0cbfffe4fc0971b497468939",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast10_ManagerModel.java": "36eae4fd6a250294dc7644d28a96ae37ddd3ed06",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast10_ManagerModelProperties.java": "d94163069bb3acad1e8bf175d06831c26093c0a7",
+      "application/src/main/java/myApp/server/ast/Ast01_ClassTree.java": "281b066b09cf7350910ca8c871a467217d28c1e6",
+      "application/src/main/java/myApp/server/ast/Ast10_Manager.java": "bb6ca22148aaf374b7ba9e3b146ddfdfe7102c87",
+      "application/src/main/java/myApp/server/ast/mapper/ast01_class_tree.xml": "4d4dcbefb08aaedcad3120c9a73fd887926fad88",
+      "application/src/main/java/myApp/server/ast/mapper/ast02_detail.xml": "14bc54d115c2513c6cc9fc2f28927972a334c6d6",
+      "application/src/main/java/myApp/server/ast/mapper/ast10_manager.xml": "ca1212b5b2221255a9c20a6388f3a9cabb954518",
+      "application/src/main/java/myApp/server/org/mapper/org01_code.xml": "45bce5ce97e58acb58ac7bad89d1ac9a849fb7af",
+      "application/src/main/java/myApp/server/sys/Sys09_Code.java": "28d486d654b122ebef05ff7d0c2e7c8f8fd59e2d",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectMulti",
+      "Org00_Lookup_SelectMulti",
+      "Sys15_Lookup_Corp"
+    ],
+    "recorded_at": "2026-10-27T16:41:54+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/R/R08-작업기록.md",
+    "history": [],
+    "id": "R08"
   }
 }

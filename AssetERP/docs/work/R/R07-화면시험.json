@@ -1,0 +1,12 @@
+{
+  "id": "R07",
+  "menu": "펀드관리 > 20. 운용현황 > 펀드운용현황(펀드합계)",
+  "menuId": 1323,
+  "className": "Icam06_Tab_FundOperateStatus",
+  "apiPrefix": "/api/v1/icam/fund-operate-status",
+  "pageStyle": "GG",
+  "grid": true,
+  "buttons": "조회.*출력/다운로드",
+  "headers": ["일자", "원본액", "순자산", "총자산", "순자산평잔", "총자산평잔"],
+  "detailHeaders": ["계산일자", "펀드코드", "펀드명", "원본액", "순자산액", "총자산액", "설정좌수", "기준가", "펀드통화"]
+}

@@ -1,0 +1,46 @@
+package kr.co.kfs.asseterp.biz.ast.dto;
+
+import java.time.LocalDate;
+
+public record AstClassTreeRes(
+        Long classTreeId,
+        Long companyId,
+        Long parentTreeId,
+        String classTreeName,
+        String classTreeCode,
+        Long seq,
+        String typeCode,
+        String note,
+        String useYn,
+        String content,
+        String isin,
+        String itemLClassCode,
+        String itemMClassCode,
+        String itemSClassCode,
+        String itemDClassCode,
+        String accountType,
+        String assetType,
+        String trUnit,
+        LocalDate issueDate,
+        LocalDate matDate,
+        Long corpId,
+        String curCode,
+        Long depnYear,
+        Double depnRate,
+        String depnType,
+        String evalType,
+        String itemLClassName,
+        String itemMClassName,
+        String itemSClassName,
+        String itemDClassName,
+        String evalTypeName,
+        String accountName,
+        String assetName,
+        String depnTypeName,
+        String corpName,
+        String curName,
+        String classTreeFullName,
+        String parentTreeFullName,
+        Integer depth
+) {
+}

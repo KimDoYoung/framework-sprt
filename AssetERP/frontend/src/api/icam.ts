@@ -1,6 +1,16 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { CurrentFeeByFund, FundPrice, IcamData, IcamFee, IcamFund, IcamSource, IcamTestBatchReq } from '../types/icam';
+import {
+  CurrentFeeByFund,
+  FundOperateStatus,
+  FundOperateStatusDetail,
+  FundPrice,
+  IcamData,
+  IcamFee,
+  IcamFund,
+  IcamSource,
+  IcamTestBatchReq,
+} from '../types/icam';
 
 /** icam 화면 API (D07~) */
 export const icamApi = {
@@ -92,6 +102,42 @@ export const icamApi = {
       yearText,
       preYearText,
     });
+    return res.data.data ?? '';
+  },
+
+  // ── R07 펀드운용현황 (Icam06_Tab_FundOperateStatus) ──
+
+  /** AS-IS icam.Icam06_FundBook.selectFundBookAvg: 상단 펀드운용현황 합계 목록 */
+  searchFundOperateStatus: async (params: {
+    startDate: string;
+    closeDate: string;
+    fundType?: string;
+    searchText?: string;
+  }): Promise<FundOperateStatus[]> => {
+    const res = await apiClient.get<ApiResponse<FundOperateStatus[]>>('v1/icam/fund-operate-status', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS icam.Icam06_FundBook.selectByStdDate: 하단 펀드별 운용현황 상세 목록 */
+  searchFundOperateStatusDetails: async (params: {
+    stdDate: string;
+    fundType?: string;
+    searchText?: string;
+  }): Promise<FundOperateStatusDetail[]> => {
+    const res = await apiClient.get<ApiResponse<FundOperateStatusDetail[]>>('v1/icam/fund-operate-status/details', {
+      params,
+    });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdFundOperateStatus: RD 출력 그룹 ID 생성 */
+  rdPrintFundOperateStatus: async (req: {
+    startDate: string;
+    closeDate: string;
+    fundType?: string;
+    searchText?: string;
+  }): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/icam/fund-operate-status/rd-print', req);
     return res.data.data ?? '';
   },
 };

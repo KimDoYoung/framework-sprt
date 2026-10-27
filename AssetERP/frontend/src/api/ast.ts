@@ -1,6 +1,24 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { AstDetail, AstItemTreeNode, TrCode, TrCodeWindow } from '../types/ast';
+import {
+  AstCf,
+  AstCfBatchCreateReq,
+  AstCfInfo,
+  AstCfInfoSaveReq,
+  AstCfSaveReq,
+  AstClassTree,
+  AstClassTreeItem,
+  AstClassTreeSaveReq,
+  AstDetail,
+  AstItemClassUpdateReq,
+  AstItemDetail,
+  AstItemDetailSaveReq,
+  AstItemTreeNode,
+  AstManager,
+  AstManagerSaveReq,
+  TrCode,
+  TrCodeWindow,
+} from '../types/ast';
 
 /** ast(자산) API (E21 자산상세 항목관리, E29 거래유형 등록) */
 export const astApi = {
@@ -99,5 +117,145 @@ export const astApi = {
   deleteTrCodeWindows: async (ids: number[], companyId?: number | null): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/ast/tr-code-windows', { data: ids, params: { companyId: companyId ?? undefined } });
     return res.data.data ?? 0;
+  },
+
+  // ── R08 펀드자산 종목기본 (Ast01_Tab_ClassTreeManagement) ──
+
+  /** 자산분류 전체 트리 조회 */
+  searchClassTree: async (params?: { typeCode?: string; assetType?: string }): Promise<AstClassTree[]> => {
+    const res = await apiClient.get<ApiResponse<AstClassTree[]>>('v1/ast/class-trees', { params });
+    return res.data.data ?? [];
+  },
+
+  /** 우측 종목 상세 목록 */
+  searchClassTreeItems: async (parentId: number, typeCode?: string): Promise<AstClassTreeItem[]> => {
+    const res = await apiClient.get<ApiResponse<AstClassTreeItem[]>>(`v1/ast/class-trees/${parentId}/items`, {
+      params: { typeCode },
+    });
+    return res.data.data ?? [];
+  },
+
+  /** 코드 채번 */
+  createCode: async (parentId: number | null, typeCode: string): Promise<string> => {
+    const res = await apiClient.get<ApiResponse<string>>('v1/ast/class-trees/create-code', {
+      params: { parentId, typeCode },
+    });
+    return res.data.data ?? '';
+  },
+
+  /** 분류 등록 */
+  createClassTree: async (req: AstClassTreeSaveReq): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ast/class-trees', req);
+    return res.data.data ?? 0;
+  },
+
+  /** 분류 수정 */
+  updateClassTree: async (id: number, req: AstClassTreeSaveReq): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>(`v1/ast/class-trees/${id}`, req);
+    return res.data.data ?? 0;
+  },
+
+  /** 우측 종목 그리드 일괄 저장 */
+  saveClassTreeItems: async (parentId: number, items: AstClassTreeSaveReq[]): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/ast/class-trees/${parentId}/items`, items);
+  },
+
+  /** 상위분류 변경 (이동) */
+  moveClassTree: async (id: number, parentId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/ast/class-trees/${id}/move`, null, { params: { parentId } });
+  },
+
+  /** 추가정보 설정 (Ast01_Lookup_ItemClass) */
+  updateItemClass: async (id: number, req: AstItemClassUpdateReq): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/ast/class-trees/${id}/item-class`, req);
+  },
+
+  /** 분류/종목 삭제 */
+  deleteClassTree: async (id: number): Promise<void> => {
+    await apiClient.delete<ApiResponse<void>>(`v1/ast/class-trees/${id}`);
+  },
+
+  /** 담당자 목록 조회 */
+  searchManagers: async (linkId: number): Promise<AstManager[]> => {
+    const res = await apiClient.get<ApiResponse<AstManager[]>>(`v1/ast/managers/${linkId}`);
+    return res.data.data ?? [];
+  },
+
+  /** 담당자 일괄 저장 */
+  saveManagers: async (linkId: number, managers: AstManagerSaveReq[]): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/ast/managers/${linkId}`, managers);
+  },
+
+  /** 담당자 삭제 */
+  deleteManagers: async (ids: number[]): Promise<void> => {
+    await apiClient.delete<ApiResponse<void>>('v1/ast/managers', { params: { ids } });
+  },
+
+  // ── R09 종목상세 / 현금흐름표 API ──
+
+  /** 종목별 자산상세 항목 조회 (Ast02_Grid_DetailManagement) */
+  getItemDetails: async (classTreeId: number): Promise<AstItemDetail[]> => {
+    const res = await apiClient.get<ApiResponse<AstItemDetail[]>>('v1/ast/details/by-tree', { params: { classTreeId } });
+    return res.data.data ?? [];
+  },
+
+  /** 기본 항목 템플릿 검색 (Ast02_Lookup_Detail) */
+  searchItemDetailTemplates: async (searchText?: string): Promise<AstItemDetail[]> => {
+    const res = await apiClient.get<ApiResponse<AstItemDetail[]>>('v1/ast/details/templates', { params: { searchText: searchText ?? '' } });
+    return res.data.data ?? [];
+  },
+
+  /** 종목 자산상세 항목 일괄 저장 */
+  saveItemDetails: async (rows: AstItemDetailSaveReq[]): Promise<AstItemDetail[]> => {
+    const res = await apiClient.put<ApiResponse<AstItemDetail[]>>('v1/ast/details/items', rows);
+    return res.data.data ?? [];
+  },
+
+  /** 종목 자산상세 항목 삭제 */
+  deleteItemDetails: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/ast/details/items', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** 현금흐름표 기본구분 목록 조회 (Ast03_Lookup_CfInfo) */
+  getCfInfoList: async (astClassTreeId: number): Promise<AstCfInfo[]> => {
+    const res = await apiClient.get<ApiResponse<AstCfInfo[]>>('v1/ast/cf-infos', { params: { astClassTreeId } });
+    return res.data.data ?? [];
+  },
+
+  /** 현금흐름표 기본구분 일괄 저장 */
+  saveCfInfoList: async (rows: AstCfInfoSaveReq[]): Promise<AstCfInfo[]> => {
+    const res = await apiClient.put<ApiResponse<AstCfInfo[]>>('v1/ast/cf-infos', rows);
+    return res.data.data ?? [];
+  },
+
+  /** 현금흐름표 기본구분 삭제 */
+  deleteCfInfo: async (id: number): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/ast/cf-infos/${id}`);
+    return res.data.data ?? 0;
+  },
+
+  /** 현금흐름표 상세 일정 목록 조회 */
+  getCfList: async (cfInfoId: number): Promise<AstCf[]> => {
+    const res = await apiClient.get<ApiResponse<AstCf[]>>('v1/ast/cfs', { params: { cfInfoId } });
+    return res.data.data ?? [];
+  },
+
+  /** 현금흐름표 상세 일정 일괄 저장 */
+  saveCfList: async (rows: AstCfSaveReq[]): Promise<AstCf[]> => {
+    const res = await apiClient.put<ApiResponse<AstCf[]>>('v1/ast/cfs', rows);
+    return res.data.data ?? [];
+  },
+
+  /** 현금흐름표 상세 일정 삭제 */
+  deleteCf: async (id: number): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/ast/cfs/${id}`);
+    return res.data.data ?? 0;
+  },
+
+  /** 현금흐름표 일괄생성 (Ast03_Lookup_CfAutoCreate) */
+  batchCreateCf: async (req: AstCfBatchCreateReq): Promise<AstCf[]> => {
+    const res = await apiClient.post<ApiResponse<AstCf[]>>('v1/ast/cf-infos/batch-create', req);
+    return res.data.data ?? [];
   },
 };

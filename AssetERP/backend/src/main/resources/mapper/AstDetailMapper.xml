@@ -68,4 +68,66 @@
            AND ast02_detail_id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
     </delete>
+
+    <!-- AS-IS ast02_detail.selectByClassTreeId L52 (R09) -->
+    <select id="selectByClassTreeId" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstItemDetailRes">
+        SELECT ast02_detail_id          AS detailId,
+               ast02_ast_class_tree_id  AS astClassTreeId,
+               ast02_seq                AS seq,
+               ast02_title              AS title,
+               ast02_value              AS value,
+               ast02_note               AS note,
+               COALESCE(ast02_use_yn, 'true') AS useYn,
+               ast02_default_yn         AS defaultYn,
+               ast02_tag                AS tag,
+               ast02_company_id         AS companyId
+          FROM ast02_detail
+         WHERE ast02_default_yn = 'false'
+           AND ast02_ast_class_tree_id = #{classTreeId}
+           AND ast02_company_id = #{companyId}
+         ORDER BY ast02_seq
+    </select>
+
+    <!-- AS-IS ast02_detail.selectByCompanyId L25 (R09) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstItemDetailRes">
+        SELECT ast02_detail_id          AS detailId,
+               ast02_ast_class_tree_id  AS astClassTreeId,
+               ast02_seq                AS seq,
+               ast02_title              AS title,
+               ast02_value              AS value,
+               ast02_note               AS note,
+               COALESCE(ast02_use_yn, 'true') AS useYn,
+               ast02_default_yn         AS defaultYn,
+               ast02_tag                AS tag,
+               ast02_company_id         AS companyId
+          FROM ast02_detail
+         WHERE ast02_default_yn = #{defaultYn}
+           AND ast02_company_id = #{companyId}
+           AND ast02_ast_class_tree_id = 0
+           AND upper(COALESCE(ast02_title,'') || COALESCE(ast02_tag,'')) LIKE upper(#{searchText})
+           AND COALESCE(ast02_use_yn, 'true') = 'true'
+         ORDER BY ast02_seq
+    </select>
+
+    <insert id="insertItemDetail">
+        INSERT INTO ast02_detail (
+            ast02_detail_id, ast02_ast_class_tree_id, ast02_company_id, ast02_default_yn,
+            ast02_seq, ast02_title, ast02_value, ast02_note, ast02_use_yn, ast02_tag
+        ) VALUES (
+            #{detailId}, #{req.astClassTreeId}, #{companyId}, 'false',
+            #{req.seq}, #{req.title}, #{req.value}, #{req.note}, COALESCE(#{req.useYn}, 'true'), #{req.tag}
+        )
+    </insert>
+
+    <update id="updateItemDetail">
+        UPDATE ast02_detail
+           SET ast02_seq    = #{req.seq},
+               ast02_title  = #{req.title},
+               ast02_value  = #{req.value},
+               ast02_note   = #{req.note},
+               ast02_tag    = #{req.tag},
+               ast02_use_yn = COALESCE(#{req.useYn}, 'true')
+         WHERE ast02_detail_id = #{req.detailId}
+           AND ast02_company_id = #{companyId}
+    </update>
 </mapper>

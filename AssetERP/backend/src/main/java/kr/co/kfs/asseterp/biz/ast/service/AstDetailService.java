@@ -64,6 +64,40 @@ public class AstDetailService {
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteByIds(user.getCompanyId(), ids);
     }
 
+    // ==================== R09 종목상세 (ast02_detail) ====================
+
+    /** AS-IS ast02_detail.selectByClassTreeId */
+    public List<kr.co.kfs.asseterp.biz.ast.dto.AstItemDetailRes> getItemDetails(UserPrincipal user, Long classTreeId) {
+        return mapper.selectByClassTreeId(classTreeId, user.getCompanyId());
+    }
+
+    /** AS-IS ast02_detail.selectByCompanyId (Ast02_Lookup_Detail) */
+    public List<kr.co.kfs.asseterp.biz.ast.dto.AstItemDetailRes> searchTemplates(UserPrincipal user, String searchText) {
+        return mapper.selectByCompanyId("true", user.getCompanyId(), "%" + (searchText == null ? "" : searchText) + "%");
+    }
+
+    /** 종목 상세 저장(CUD) */
+    @Transactional
+    public List<kr.co.kfs.asseterp.biz.ast.dto.AstItemDetailRes> saveItemDetails(UserPrincipal user, List<kr.co.kfs.asseterp.biz.ast.dto.AstItemDetailSaveReq> rows) {
+        if (rows == null || rows.isEmpty()) return List.of();
+        for (kr.co.kfs.asseterp.biz.ast.dto.AstItemDetailSaveReq req : rows) {
+            if (req.detailId() != null && req.detailId() > 0) {
+                mapper.updateItemDetail(user.getCompanyId(), req);
+            } else {
+                long newId = mapper.selectNextId();
+                mapper.insertItemDetail(newId, user.getCompanyId(), req);
+            }
+        }
+        Long classTreeId = rows.get(0).astClassTreeId();
+        return classTreeId != null ? mapper.selectByClassTreeId(classTreeId, user.getCompanyId()) : List.of();
+    }
+
+    /** 종목 상세 삭제 */
+    @Transactional
+    public int deleteItemDetails(UserPrincipal user, List<Long> ids) {
+        return ids == null || ids.isEmpty() ? 0 : mapper.deleteByIds(user.getCompanyId(), ids);
+    }
+
     private static void requireSysAdmin(UserPrincipal user) {
         if (!user.isSysAdmin()) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);

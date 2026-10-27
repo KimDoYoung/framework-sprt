@@ -107,4 +107,387 @@
          ORDER BY ast01_class_tree_full_nm collate "ko_KR.utf8" asc
     </select>
 
+    <!-- === R08 자산분류 전체 트리 조회 (AS-IS ast01_class_tree.selectByCompanyId) === -->
+    <select id="selectClassTree" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstClassTreeRes">
+        WITH RECURSIVE ast_tree(
+                ast01_class_tree_id
+            ,   ast01_company_id
+            ,   ast01_class_tree_nm
+            ,   ast01_parent_tree_id
+            ,   ast01_seq
+            ,   ast01_class_tree_cd
+            ,   ast01_type_cd
+            ,   ast01_note
+            ,   ast01_use_yn
+            ,   ast01_content
+            ,   ast01_isin
+            ,   ast01_item_l_class_cd
+            ,   ast01_item_m_class_cd
+            ,   ast01_item_s_class_cd
+            ,   ast01_account_type
+            ,   ast01_asset_type
+            ,   ast01_icam_yn
+            ,   ast01_detail_cd
+            ,   ast01_tr_unit
+            ,   ast01_issue_date
+            ,   ast01_mat_date
+            ,   ast01_corp_id
+            ,   ast01_cur_cd
+            ,   ast01_depn_year
+            ,   ast01_depn_rt
+            ,   ast01_depn_type
+            ,   ast01_ipo_assign_yn
+            ,   ast01_item_d_class_cd
+            ,   ast01_eval_type
+            ,   depth
+            ,   path
+            ,   cycle
+        ) AS
+        (
+            SELECT  ast01_class_tree_id
+                 ,  ast01_company_id
+                 ,  ast01_class_tree_nm
+                 ,  ast01_parent_tree_id
+                 ,  ast01_seq
+                 ,  ast01_class_tree_cd
+                 ,  ast01_type_cd
+                 ,  ast01_note
+                 ,  ast01_use_yn
+                 ,  ast01_content
+                 ,  ast01_isin
+                 ,  ast01_item_l_class_cd
+                 ,  ast01_item_m_class_cd
+                 ,  ast01_item_s_class_cd
+                 ,  ast01_account_type
+                 ,  ast01_asset_type
+                 ,  ast01_icam_yn
+                 ,  ast01_detail_cd
+                 ,  ast01_tr_unit
+                 ,  ast01_issue_date
+                 ,  ast01_mat_date
+                 ,  ast01_corp_id
+                 ,  ast01_cur_cd
+                 ,  ast01_depn_year
+                 ,  ast01_depn_rt
+                 ,  ast01_depn_type
+                 ,  ast01_ipo_assign_yn
+                 ,  ast01_item_d_class_cd
+                 ,  ast01_eval_type
+                 ,  1
+                 ,  ARRAY[CAST(a.ast01_parent_tree_id AS varchar) || LPAD(CAST(a.ast01_seq AS varchar),10,'0')||a.ast01_class_tree_cd||LPAD(CAST(a.ast01_class_tree_id AS varchar),15,'0')]
+                 ,  false
+              FROM  ast01_class_tree a
+             WHERE  1=1
+               AND  ast01_parent_tree_id = 0
+               AND  ast01_use_yn = 'true'
+               <if test="typeCode != null and typeCode != ''">
+               AND  ast01_type_cd = #{typeCode}
+               </if>
+               <if test="assetType != null and assetType != '' and assetType != '%'">
+               AND  ast01_asset_type = #{assetType}
+               </if>
+               AND  ast01_company_id = #{companyId}
+             UNION ALL
+            SELECT  a.ast01_class_tree_id
+                 ,  a.ast01_company_id
+                 ,  a.ast01_class_tree_nm
+                 ,  a.ast01_parent_tree_id
+                 ,  a.ast01_seq
+                 ,  a.ast01_class_tree_cd
+                 ,  a.ast01_type_cd
+                 ,  a.ast01_note
+                 ,  a.ast01_use_yn
+                 ,  a.ast01_content
+                 ,  a.ast01_isin
+                 ,  a.ast01_item_l_class_cd
+                 ,  a.ast01_item_m_class_cd
+                 ,  a.ast01_item_s_class_cd
+                 ,  a.ast01_account_type
+                 ,  a.ast01_asset_type
+                 ,  a.ast01_icam_yn
+                 ,  a.ast01_detail_cd
+                 ,  a.ast01_tr_unit
+                 ,  a.ast01_issue_date
+                 ,  a.ast01_mat_date
+                 ,  a.ast01_corp_id
+                 ,  a.ast01_cur_cd
+                 ,  a.ast01_depn_year
+                 ,  a.ast01_depn_rt
+                 ,  a.ast01_depn_type
+                 ,  a.ast01_ipo_assign_yn
+                 ,  a.ast01_item_d_class_cd
+                 ,  a.ast01_eval_type
+                 ,  b.depth + 1
+                 ,  array_append(b.path, CAST(a.ast01_parent_tree_id AS varchar) || LPAD(CAST(a.ast01_seq AS varchar),10,'0')||a.ast01_class_tree_cd||LPAD(CAST(a.ast01_class_tree_id AS varchar),15,'0'))
+                 ,  a.ast01_class_tree_nm = any(b.path)
+              FROM  ast01_class_tree a
+                    INNER JOIN ast_tree b ON a.ast01_parent_tree_id = b.ast01_class_tree_id
+             WHERE  1=1
+               AND  a.ast01_use_yn = 'true'
+               <if test="typeCode != null and typeCode != ''">
+               AND  a.ast01_type_cd = #{typeCode}
+               </if>
+               <if test="assetType != null and assetType != '' and assetType != '%'">
+               AND  a.ast01_asset_type = #{assetType}
+               </if>
+               AND  not cycle
+        )
+        SELECT  a.ast01_class_tree_id                                                               AS class_tree_id
+             ,  a.ast01_company_id                                                                  AS company_id
+             ,  a.ast01_parent_tree_id                                                              AS parent_tree_id
+             ,  ast01_class_tree_nm
+                ||CASE WHEN ast01_type_cd != 'IT' THEN ''
+                       ELSE (CASE WHEN COALESCE(a.ast01_isin,'X') != 'X' THEN ' ('||a.ast01_isin||')' ELSE '' END) END AS class_tree_name
+             ,  a.ast01_class_tree_cd                                                               AS class_tree_code
+             ,  a.ast01_seq                                                                         AS seq
+             ,  a.ast01_type_cd                                                                     AS type_code
+             ,  a.ast01_note                                                                        AS note
+             ,  a.ast01_use_yn                                                                      AS use_yn
+             ,  a.ast01_content                                                                     AS content
+             ,  a.ast01_isin                                                                        AS isin
+             ,  a.ast01_item_l_class_cd                                                             AS item_l_class_code
+             ,  a.ast01_item_m_class_cd                                                             AS item_m_class_code
+             ,  a.ast01_item_s_class_cd                                                             AS item_s_class_code
+             ,  a.ast01_item_d_class_cd                                                             AS item_d_class_code
+             ,  a.ast01_account_type                                                                AS account_type
+             ,  a.ast01_asset_type                                                                  AS asset_type
+             ,  a.ast01_tr_unit                                                                     AS tr_unit
+             ,  a.ast01_issue_date                                                                  AS issue_date
+             ,  a.ast01_mat_date                                                                    AS mat_date
+             ,  a.ast01_corp_id                                                                     AS corp_id
+             ,  a.ast01_cur_cd                                                                      AS cur_code
+             ,  a.ast01_depn_year                                                                   AS depn_year
+             ,  a.ast01_depn_rt                                                                     AS depn_rate
+             ,  a.ast01_depn_type                                                                   AS depn_type
+             ,  a.ast01_eval_type                                                                   AS eval_type
+             ,  f_cdnm('ItemLClassCode', a.ast01_item_l_class_cd, a.ast01_company_id, f_sysdate())  AS item_l_class_name
+             ,  f_cdnm('ItemMClassCode', a.ast01_item_m_class_cd, a.ast01_company_id, f_sysdate())  AS item_m_class_name
+             ,  f_cdnm('ItemSClassCode', a.ast01_item_s_class_cd, a.ast01_company_id, f_sysdate())  AS item_s_class_name
+             ,  f_cdnm('ItemDClassCode', a.ast01_item_d_class_cd, a.ast01_company_id, f_sysdate())  AS item_d_class_name
+             ,  f_cdnm('AssetEvalType',  a.ast01_eval_type,       a.ast01_company_id, f_sysdate())  AS eval_type_name
+             ,  f_cdnm('AccountType',    a.ast01_account_type,    a.ast01_company_id, f_sysdate())  AS account_name
+             ,  f_cdnm('AssetType',      a.ast01_asset_type,      a.ast01_company_id, f_sysdate())  AS asset_name
+             ,  f_cdnm('DepnType',       a.ast01_depn_type,       a.ast01_company_id, f_sysdate())  AS depn_type_name
+             ,  f_get_corp_nm(a.ast01_corp_id)                                                      AS corp_name
+             ,  f_cdnm('CurCode',        a.ast01_cur_cd,          a.ast01_company_id, f_sysdate())  AS cur_name
+             ,  f_ast_class_tree_nm_allpath(a.ast01_class_tree_id)                                  AS class_tree_full_name
+             ,  COALESCE(f_ast_class_tree_nm_allpath(a.ast01_parent_tree_id),'없음')                 AS parent_tree_full_name
+             ,  depth                                                                               AS depth
+          FROM  ast_tree a
+         ORDER BY path
+    </select>
+
+    <!-- === R08 우측 종목 상세 목록 (AS-IS ast01_class_tree.selectByParentId) === -->
+    <select id="selectByParentId" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstClassTreeItemRes">
+        SELECT t.ast01_class_tree_id        AS class_tree_id
+             , t.ast01_company_id           AS company_id
+             , t.ast01_parent_tree_id       AS parent_tree_id
+             , t.ast01_seq                  AS seq
+             , t.ast01_isin                 AS isin
+             , t.ast01_class_tree_nm        AS class_tree_name
+             , t.ast01_class_tree_cd        AS class_tree_code
+             , t.ast01_use_yn               AS use_yn
+             , t.ast01_note                 AS note
+             , CONCAT( ast01_item_l_class_nm
+                     , '/' || ast01_item_m_class_nm
+                     , '/' || ast01_item_s_class_nm
+                     , '/' || ast01_item_d_class_nm ) AS item_class_name
+          FROM (
+                SELECT *
+                     , f_cdnm('ItemLClassCode', ast01_item_l_class_cd, ast01_company_id, f_sysdate()) AS ast01_item_l_class_nm
+                     , f_cdnm('ItemMClassCode', ast01_item_m_class_cd, ast01_company_id, f_sysdate()) AS ast01_item_m_class_nm
+                     , f_cdnm('ItemSClassCode', ast01_item_s_class_cd, ast01_company_id, f_sysdate()) AS ast01_item_s_class_nm
+                     , f_cdnm('ItemDClassCode', ast01_item_d_class_cd, ast01_company_id, f_sysdate()) AS ast01_item_d_class_nm
+                  FROM ast01_class_tree
+                 WHERE ast01_parent_tree_id = #{parentId}
+                   AND ast01_company_id = #{companyId}
+                   AND ast01_type_cd = #{typeCode}
+               ) t
+         ORDER BY ast01_seq
+    </select>
+
+    <!-- 단건 조회 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstClassTreeRes">
+        SELECT ast01_class_tree_id          AS class_tree_id
+             , ast01_company_id             AS company_id
+             , ast01_parent_tree_id         AS parent_tree_id
+             , ast01_class_tree_nm          AS class_tree_name
+             , ast01_class_tree_cd          AS class_tree_code
+             , ast01_seq                    AS seq
+             , ast01_type_cd                AS type_code
+             , ast01_note                   AS note
+             , ast01_use_yn                 AS use_yn
+             , ast01_content                AS content
+             , ast01_isin                   AS isin
+             , ast01_item_l_class_cd        AS item_l_class_code
+             , ast01_item_m_class_cd        AS item_m_class_code
+             , ast01_item_s_class_cd        AS item_s_class_code
+             , ast01_item_d_class_cd        AS item_d_class_code
+             , ast01_account_type           AS account_type
+             , ast01_asset_type             AS asset_type
+             , ast01_tr_unit                AS tr_unit
+             , ast01_issue_date             AS issue_date
+             , ast01_mat_date               AS mat_date
+             , ast01_corp_id                AS corp_id
+             , ast01_cur_cd                 AS cur_code
+             , ast01_depn_year              AS depn_year
+             , ast01_depn_rt                AS depn_rate
+             , ast01_depn_type              AS depn_type
+             , ast01_eval_type              AS eval_type
+             , f_cdnm('ItemLClassCode', ast01_item_l_class_cd, ast01_company_id, f_sysdate()) AS item_l_class_name
+             , f_cdnm('ItemMClassCode', ast01_item_m_class_cd, ast01_company_id, f_sysdate()) AS item_m_class_name
+             , f_cdnm('ItemSClassCode', ast01_item_s_class_cd, ast01_company_id, f_sysdate()) AS item_s_class_name
+             , f_cdnm('ItemDClassCode', ast01_item_d_class_cd, ast01_company_id, f_sysdate()) AS item_d_class_name
+             , f_cdnm('AssetEvalType',  ast01_eval_type,       ast01_company_id, f_sysdate()) AS eval_type_name
+             , f_cdnm('AccountType',    ast01_account_type,    ast01_company_id, f_sysdate()) AS account_name
+             , f_cdnm('AssetType',      ast01_asset_type,      ast01_company_id, f_sysdate()) AS asset_name
+             , f_cdnm('DepnType',       ast01_depn_type,       ast01_company_id, f_sysdate()) AS depn_type_name
+             , f_get_corp_nm(ast01_corp_id)                                                    AS corp_name
+             , f_cdnm('CurCode',        ast01_cur_cd,          ast01_company_id, f_sysdate()) AS cur_name
+             , f_ast_class_tree_nm_allpath(ast01_class_tree_id)                                AS class_tree_full_name
+             , COALESCE(f_ast_class_tree_nm_allpath(ast01_parent_tree_id),'없음')               AS parent_tree_full_name
+             , 1 AS depth
+          FROM ast01_class_tree
+         WHERE ast01_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- 코드 채번 (AS-IS ast01_class_tree.createCode) -->
+    <select id="createCode" resultType="string">
+        SELECT f_create_ast_class_tree_cd(#{parentId}, #{typeCode}, #{companyId})
+    </select>
+
+    <!-- 시퀀스 채번 -->
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- 등록 (AS-IS ast01_class_tree.insert) -->
+    <insert id="insertClassTree">
+        INSERT INTO ast01_class_tree
+               ( ast01_class_tree_id
+               , ast01_company_id
+               , ast01_parent_tree_id
+               , ast01_class_tree_nm
+               , ast01_class_tree_cd
+               , ast01_seq
+               , ast01_type_cd
+               , ast01_note
+               , ast01_use_yn
+               , ast01_content
+               , ast01_isin
+               , ast01_item_l_class_cd
+               , ast01_item_m_class_cd
+               , ast01_item_s_class_cd
+               , ast01_item_d_class_cd
+               , ast01_account_type
+               , ast01_asset_type
+               , ast01_tr_unit
+               , ast01_issue_date
+               , ast01_mat_date
+               , ast01_corp_id
+               , ast01_cur_cd
+               , ast01_depn_year
+               , ast01_depn_rt
+               , ast01_depn_type
+               , ast01_eval_type )
+        VALUES ( #{classTreeId}
+               , #{companyId}
+               , #{parentTreeId}
+               , #{classTreeName}
+               , #{classTreeCode}
+               , #{seq}
+               , #{typeCode}
+               , #{note}
+               , #{useYn}
+               , #{content}
+               , #{isin}
+               , #{itemLClassCode}
+               , #{itemMClassCode}
+               , #{itemSClassCode}
+               , #{itemDClassCode}
+               , #{accountType}
+               , #{assetType}
+               , #{trUnit}
+               , #{issueDate}
+               , #{matDate}
+               , #{corpId}
+               , #{curCode}
+               , #{depnYear}
+               , #{depnRate}
+               , #{depnType}
+               , #{evalType} )
+    </insert>
+
+    <!-- 우측 그리드 수정 (AS-IS ast01_class_tree.infoUpdate) -->
+    <update id="updateClassTreeInfo">
+        UPDATE ast01_class_tree
+           SET ast01_class_tree_nm = #{classTreeName}
+             , ast01_seq           = #{seq}
+             , ast01_use_yn        = #{useYn}
+         WHERE ast01_class_tree_id = #{classTreeId}
+    </update>
+
+    <!-- 분류 폼 수정 (AS-IS UpdateDataModel) -->
+    <update id="updateClassTree">
+        UPDATE ast01_class_tree
+           SET ast01_class_tree_nm = #{classTreeName}
+             , ast01_seq           = #{seq}
+             , ast01_note          = #{note}
+             , ast01_use_yn        = #{useYn}
+             , ast01_isin          = #{isin}
+             , ast01_asset_type    = #{assetType}
+         WHERE ast01_class_tree_id = #{classTreeId}
+    </update>
+
+    <!-- 상위분류 변경 (이동) (AS-IS ast01_class_tree.updateParentId) -->
+    <update id="updateParentId">
+        UPDATE ast01_class_tree
+           SET ast01_parent_tree_id = #{parentId}
+         WHERE ast01_class_tree_id  = #{classTreeId}
+    </update>
+
+    <!-- 추가정보 수정 (AS-IS ast01_class_tree.modelUpdate) -->
+    <update id="modelUpdate">
+        UPDATE ast01_class_tree
+           SET ast01_content         = #{content}
+             , ast01_item_l_class_cd = #{itemLClassCode}
+             , ast01_item_m_class_cd = #{itemMClassCode}
+             , ast01_item_s_class_cd = #{itemSClassCode}
+             , ast01_item_d_class_cd = #{itemDClassCode}
+             , ast01_account_type    = #{accountType}
+             , ast01_tr_unit         = #{trUnit}
+             , ast01_issue_date      = #{issueDate}
+             , ast01_mat_date        = #{matDate}
+             , ast01_corp_id         = #{corpId}
+             , ast01_cur_cd          = #{curCode}
+             , ast01_depn_year       = #{depnYear}
+             , ast01_depn_rt         = #{depnRate}
+             , ast01_depn_type       = #{depnType}
+             , ast01_eval_type       = #{evalType}
+         WHERE ast01_class_tree_id   = #{classTreeId}
+    </update>
+
+    <!-- 사용여부 체크 (AS-IS ast01_class_tree.checkUseAstId) -->
+    <select id="checkUseAstId" resultType="int">
+        SELECT f_check_use_ast_id(#{classTreeId})
+    </select>
+
+    <!-- 하위 상세 삭제 (AS-IS ast02_detail.deleteByAstClassTreeId) -->
+    <delete id="deleteByAstClassTreeId">
+        DELETE FROM ast02_detail
+         WHERE ast02_ast_class_tree_id = #{classTreeId}
+    </delete>
+
+    <!-- 담당자 삭제 (AS-IS ast10_manager.deleteByLinkId) -->
+    <delete id="deleteManagerByLinkId">
+        DELETE FROM ast10_manager
+         WHERE ast10_link_id = #{classTreeId}
+    </delete>
+
+    <!-- 분류/종목 삭제 (AS-IS ast01_class_tree.delete) -->
+    <delete id="deleteClassTree">
+        DELETE FROM ast01_class_tree
+         WHERE ast01_class_tree_id = #{classTreeId}
+    </delete>
+
 </mapper>

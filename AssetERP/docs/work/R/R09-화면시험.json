@@ -1,0 +1,43 @@
+{
+  "screenId": "R09",
+  "screenName": "Ast01_Tab_InfoManagement",
+  "menuPath": "펀드관리 > 80. 펀드자산 > 펀드자산 종목상세",
+  "tests": [
+    {
+      "id": "T01",
+      "name": "자산분류 트리 로드",
+      "description": "화면 진입 시 좌측 트리에 자산분류 목록이 표시되는지 확인",
+      "status": "대기(일괄)"
+    },
+    {
+      "id": "T02",
+      "name": "트리 검색",
+      "description": "검색창 입력 및 Enter 시 트리 노드가 필터링되는지 확인",
+      "status": "대기(일괄)"
+    },
+    {
+      "id": "T03",
+      "name": "종목 선택 및 상세 조회",
+      "description": "트리 노드 선택 시 우측 상세 항목 및 담당자 목록이 조회되는지 확인",
+      "status": "대기(일괄)"
+    },
+    {
+      "id": "T04",
+      "name": "항목추가 모달 열기",
+      "description": "항목추가 버튼 클릭 시 Ast02_Lookup_Detail 모달이 열리는지 확인",
+      "status": "대기(일괄)"
+    },
+    {
+      "id": "T05",
+      "name": "현금흐름표 모달 열기",
+      "description": "현금흐름표 버튼 클릭 시 Ast03_Lookup_CfInfo 모달이 열리는지 확인",
+      "status": "대기(일괄)"
+    },
+    {
+      "id": "T06",
+      "name": "담당자 관리 모달 열기",
+      "description": "담당자 관리 버튼 클릭 시 Ast10_Lookup_Manager 모달이 열리는지 확인",
+      "status": "대기(일괄)"
+    }
+  ]
+}

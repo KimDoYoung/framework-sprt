@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/icam/mapper/icam06_fund_book.xml
+   + server/sys/Sys99_Print.java (insertRdFundOperateStatus L2894)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.icam.mapper.IcamFundOperateStatusMapper">
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <sql id="fundBookAvgQuery">
+        SELECT row_number() OVER(ORDER BY icam06_std_date DESC)                         AS fund_book_id
+             , icam06_std_date                                                          AS std_date
+             , SUM(icam06_principal)                                                    AS principal
+             , SUM(icam06_nav)                                                          AS nav
+             , SUM(icam06_total_asset)                                                  AS total_asset
+             , f_calc_FundBookAvg(icam06_company_id, icam06_std_date, '1', #{fundType}) AS nav_avg
+             , f_calc_FundBookAvg(icam06_company_id, icam06_std_date, '2', #{fundType}) AS total_asset_avg
+          FROM (
+                 SELECT icam06_std_date
+                      , icam06_fund_cd
+                      , icam06_fund_nm
+                      , icam06_multi_class_cd
+                      , icam06_principal
+                      , icam06_nav
+                      , icam06_total_asset
+                      , sys01_company_id                AS icam06_company_id
+                   FROM icam06_fund_book
+                        INNER JOIN sys01_company ON ( sys01_icam_company_cd = icam06_icam_company_cd AND
+                                                      sys01_company_id      = #{companyId}           )
+                  WHERE icam06_std_date BETWEEN #{startDate}::date AND #{closeDate}::date
+                  UNION ALL
+                 SELECT ifi32_std_date::date            AS icam06_std_date
+                      , ifi32_fund_cd                   AS icam06_fund_cd
+                      , ifi32_fund_nm                   AS icam06_fund_nm
+                      , ifi32_multi_class_func_cd       AS icam06_multi_class_cd
+                      , ifi32_principal                 AS icam06_principal
+                      , ifi32_nav                       AS icam06_nav
+                      , ifi32_total_asset               AS icam06_total_asset
+                      , ifi29_company_id                AS icam06_company_id
+                   FROM ifi32_fund_price
+                        INNER JOIN ifi29_am_corp_mapping ON (    ifi29_if_cd      = ifi32_if_cd
+                                                             AND ifi29_am_corp_cd = ifi32_am_corp_cd
+                                                             AND ifi32_std_date  BETWEEN TO_CHAR(ifi29_start_date,'YYYYMMDD')
+                                                                                 AND     COALESCE(TO_CHAR(ifi29_end_date,'YYYYMMDD'),'99991231') )
+                  WHERE ifi29_company_id = #{companyId}
+                    AND ifi32_cur_cd     = 'KRW'
+                    AND ifi32_std_date BETWEEN TO_CHAR(#{startDate}::date,'YYYYMMDD') AND TO_CHAR(#{closeDate}::date,'YYYYMMDD')
+               ) t
+         WHERE ( ( #{fundType}     = '1'    AND /*(1:운용펀드)*/
+                   icam06_fund_cd  = (CASE WHEN COALESCE(icam06_multi_class_cd,'') != '' THEN icam06_multi_class_cd ELSE icam06_fund_cd END)
+                 )
+                 OR
+                 ( #{fundType}     = '2'    AND /*(2:판매펀드)*/
+                   icam06_fund_cd != COALESCE(icam06_multi_class_cd, '')
+                 ) )
+           AND UPPER(CONCAT(icam06_fund_cd, icam06_fund_nm)) ILIKE UPPER(#{searchText})
+         GROUP BY icam06_std_date, icam06_company_id
+    </sql>
+
+    <!-- AS-IS icam06_fund_book.selectFundBookAvg -->
+    <select id="selectFundBookAvg" resultType="kr.co.kfs.asseterp.biz.icam.dto.FundOperateStatusRes">
+        <include refid="fundBookAvgQuery"/>
+        ORDER BY icam06_std_date DESC
+    </select>
+
+    <!-- AS-IS icam06_fund_book.selectByStdDate -->
+    <select id="selectByStdDate" resultType="kr.co.kfs.asseterp.biz.icam.dto.FundOperateStatusDetailRes">
+        SELECT ROW_NUMBER() OVER(ORDER BY icam06_fund_cd)   AS fund_book_id
+             , t.icam06_std_date                            AS std_date
+             , t.icam06_fund_cd                             AS fund_code
+             , t.icam06_fund_nm                             AS fund_name
+             , t.icam06_principal                           AS principal
+             , t.icam06_nav                                 AS nav
+             , t.icam06_total_asset                         AS total_asset
+             , t.icam06_set_qty                             AS set_qty
+             , t.icam06_std_price                           AS std_price
+             , t.icam06_cur                                 AS cur
+          FROM (
+                 SELECT icam06_std_date
+                      , icam06_fund_cd
+                      , icam06_fund_nm
+                      , icam06_multi_class_cd
+                      , icam06_cur
+                      , icam06_set_qty
+                      , icam06_set_amt
+                      , icam06_principal
+                      , icam06_nav
+                      , icam06_total_asset
+                      , icam06_std_price
+                   FROM icam06_fund_book
+                        INNER JOIN sys01_company ON ( sys01_icam_company_cd = icam06_icam_company_cd AND
+                                                      sys01_company_id      = #{companyId}           )
+                  WHERE icam06_std_date = #{stdDate}::date
+                  UNION ALL
+                 SELECT ifi32_std_date::date            AS icam06_std_date
+                      , ifi32_fund_cd                   AS icam06_fund_cd
+                      , ifi32_fund_nm                   AS icam06_fund_nm
+                      , ifi32_multi_class_func_cd       AS icam06_multi_class_cd
+                      , ifi32_cur_cd                    AS icam06_cur
+                      , ifi32_set_qty                   AS icam06_set_qty
+                      , ifi32_set_amt                   AS icam06_set_amt
+                      , ifi32_principal                 AS icam06_principal
+                      , ifi32_nav                       AS icam06_nav
+                      , ifi32_total_asset               AS icam06_total_asset
+                      , ifi32_price                     AS icam06_std_price
+                   FROM ifi32_fund_price
+                        INNER JOIN ifi29_am_corp_mapping ON (    ifi29_if_cd      = ifi32_if_cd
+                                                             AND ifi29_am_corp_cd = ifi32_am_corp_cd
+                                                             AND ifi32_std_date  BETWEEN TO_CHAR(ifi29_start_date,'YYYYMMDD')
+                                                                                 AND     COALESCE(TO_CHAR(ifi29_end_date,'YYYYMMDD'),'99991231') )
+                  WHERE ifi29_company_id = #{companyId}
+                    AND ifi32_cur_cd     = 'KRW'
+                    AND ifi32_std_date   = TO_CHAR(#{stdDate}::date,'YYYYMMDD')
+               ) t
+         WHERE ( ( #{fundType}     = '1'    AND /*(1:운용펀드)*/
+                   icam06_fund_cd  = (CASE WHEN COALESCE(icam06_multi_class_cd,'') != '' THEN icam06_multi_class_cd ELSE icam06_fund_cd END)
+                 )
+                 OR
+                 ( #{fundType}     = '2'    AND /*(2:판매펀드)*/
+                   icam06_fund_cd != COALESCE(icam06_multi_class_cd, '')
+                 ) )
+           AND UPPER(CONCAT(icam06_fund_cd, icam06_fund_nm)) ILIKE UPPER(#{searchText})
+         ORDER BY t.icam06_fund_cd
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdFundOperateStatus L2894 -->
+    <insert id="insertPrintFundOperateStatus">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_long01, sys99_long02, sys99_long03, sys99_long04, sys99_long05 )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , s.std_date, s.principal, s.nav, s.total_asset, s.nav_avg, s.total_asset_avg
+          FROM (
+               <include refid="fundBookAvgQuery"/>
+          ) s
+         ORDER BY s.std_date DESC
+    </insert>
+
+</mapper>

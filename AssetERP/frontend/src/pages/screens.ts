@@ -51,6 +51,8 @@ import { Fnd20_Tab_PlanEmp } from './fnd/Fnd20_Tab_PlanEmp';
 import { Fnd03_Tab_ConsignmentManager } from './fnd/Fnd03_Tab_ConsignmentManager';
 import { Fnd06_Tab_OfficeWorkManager } from './fnd/Fnd06_Tab_OfficeWorkManager';
 import { Ast01_Tab_InfoManager } from './ast/Ast01_Tab_InfoManager';
+import { Ast01_Tab_ClassTreeManagement } from './ast/Ast01_Tab_ClassTreeManagement';
+import { Ast01_Tab_InfoManagement } from './ast/Ast01_Tab_InfoManagement';
 import { Fnd09_Tab_TrustBankManager } from './fnd/Fnd09_Tab_TrustBankManager';
 import { Ics01_Tab_ClassTree } from './ics/Ics01_Tab_ClassTree';
 import { Ics01_Tab_ApprList } from './ics/Ics01_Tab_ApprList';
@@ -119,6 +121,7 @@ import { Icr01_Tab_ClassTreeView } from './icr/Icr01_Tab_ClassTreeView';
 import { Icr01_Tab_ClassTree } from './icr/Icr01_Tab_ClassTree';
 import { Icam03_Tab_Fund } from './icam/Icam03_Tab_Fund';
 import { Icam06_Tab_FundPrice } from './icam/Icam06_Tab_FundPrice';
+import { Icam06_Tab_FundOperateStatus } from './icam/Icam06_Tab_FundOperateStatus';
 import { Icam10_Tab_CurrentFeeByFund } from './icam/Icam10_Tab_CurrentFeeByFund';
 import { Icam10_Tab_FeeAdmin } from './icam/Icam10_Tab_FeeAdmin';
 import { Icam50_Tab_DbSource } from './icam/Icam50_Tab_DbSource';
@@ -357,6 +360,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ics31_Tab_ComplianceReport, // K03 1단계 (RD 미리보기 대신 표. [상신]·[문서보기]·문서분류 선택은 전자결재 단계 — 안내만)
   Icam03_Tab_Fund, // D07 (ICAM Get·타사무 Get은 외부 ICAM DB 연동이 없어 서버가 거절)
   Icam06_Tab_FundPrice, // R05 (메뉴 #1475. 펀드별 기준가 현황)
+  Icam06_Tab_FundOperateStatus, // R07 (메뉴 #1323. 펀드운용현황(펀드합계))
   Icam10_Tab_CurrentFeeByFund, // R06 (메뉴 #1268. 펀드별 발생보수현황 / #1494. 월별 펀드보수현황)
   Icam10_Tab_FeeAdmin, // D08 (ICAM 발생보수 가져오기도 같은 연동이 없어 서버가 거절)
   Icam50_Tab_DbSource, // D09 (DB소스 가져오기도 같은 연동이 없어 서버가 거절)
@@ -409,6 +413,8 @@ export const SCREENS: Record<string, React.FC> = {
   Est01_Tab_PfFeeType, // Q08 (메뉴 #1375. 부동산PF 수수료 — 계획서양식·결과보고서양식 아이콘이 여는 Com11_Lookup_FormMappingMulti)
   Sch10_Tab_IpoAdmin, // E20 (+ Sch12_Lookup_IpoCorp·Sch14_Lookup_IpoMismatch·Sch15_Lookup_IpoItemMatching·Com50_Lookup_StkItem)
   Ast01_Tab_InfoManager, // E21
+  Ast01_Tab_ClassTreeManagement, // R08 (메뉴 #1117. 펀드자산 종목기본)
+  Ast01_Tab_InfoManagement, // R09 (메뉴 #1118. 펀드자산 종목상세)
   Pay20_Tab_DeductAdmin, // E22 1단계 (탭 1~3: Pay20_TabPage_Item·Pay04_TabPage_Formula·Pay21_TabPage_Rate + Pay20_Lookup_ItemList·Pay04_Lookup_Insert. 탭 4~9는 자리만)
   Pay34_Tab_WorkTimeConfig, // E23
   Crd10_Tab_ExcelCompanyAdmin, // E24 (+ Crd11_Lookup_ExcelCodeAdmin)

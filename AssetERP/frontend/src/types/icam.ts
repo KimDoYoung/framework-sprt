@@ -152,3 +152,29 @@ export interface CurrentFeeByFund {
   totalAfterfee: number;
 }
 
+/** R07 펀드운용현황 (AS-IS Icam06_Tab_FundOperateStatus) */
+export interface FundOperateStatus {
+  fundBookId: number;
+  stdDate: string;
+  principal: number;
+  nav: number;
+  totalAsset: number;
+  navAvg: number;
+  totalAssetAvg: number;
+}
+
+/** R07 펀드운용현황 상세 (AS-IS Icam06_Grid_FundOperateStatus) */
+export interface FundOperateStatusDetail {
+  fundBookId: number;
+  stdDate: string;
+  fundCode: string;
+  fundName: string;
+  principal: number;
+  nav: number;
+  totalAsset: number;
+  setQty: number;
+  stdPrice: number;
+  cur: string;
+}
+
+

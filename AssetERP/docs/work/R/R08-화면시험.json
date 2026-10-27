@@ -1,0 +1,12 @@
+{
+  "id": "R08",
+  "menu": "펀드관리 > 80. 펀드자산 > 펀드자산 종목기본",
+  "menuId": 1117,
+  "className": "Ast01_Tab_ClassTreeManagement",
+  "apiPrefix": "/api/v1/ast/class-trees",
+  "pageStyle": "SGT",
+  "grid": true,
+  "buttons": "찾기.*펼치기.*감추기.*상위등록.*하위등록",
+  "headers": ["자산구분", "비고", "이동", "상세"],
+  "detailHeaders": ["선택", "순서", "종목코드", "종목명", "담당자", "이동"]
+}

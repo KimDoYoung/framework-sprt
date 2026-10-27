@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ast/mapper/ast10_manager.xml (R08) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.Ast10ManagerMapper">
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="selectByLinkId" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstManagerRes">
+        SELECT m.ast10_manager_id                                                       AS manager_id
+             , m.ast10_company_id                                                       AS company_id
+             , m.ast10_link_id                                                          AS link_id
+             , m.ast10_manager_type                                                     AS manager_type
+             , f_cdnm('ShareCode', m.ast10_manager_type, m.ast10_company_id, f_sysdate()) AS manager_name
+             , m.ast10_org_id                                                           AS org_id
+             , f_org_nm(m.ast10_org_id, f_sysdate())                                    AS org_name
+             , m.ast10_person_id                                                        AS person_id
+             , f_emp_kor_nm(m.ast10_person_id)                                          AS person_name
+             , m.ast10_repr_yn                                                          AS repr_yn
+             , m.ast10_link_content                                                     AS link_content
+          FROM ast10_manager m
+         WHERE m.ast10_link_id    = #{linkId}
+           AND m.ast10_company_id = #{companyId}
+         ORDER BY m.ast10_manager_type, m.ast10_org_id
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstManagerRes">
+        SELECT m.ast10_manager_id                                                       AS manager_id
+             , m.ast10_company_id                                                       AS company_id
+             , m.ast10_link_id                                                          AS link_id
+             , m.ast10_manager_type                                                     AS manager_type
+             , f_cdnm('ShareCode', m.ast10_manager_type, m.ast10_company_id, f_sysdate()) AS manager_name
+             , m.ast10_org_id                                                           AS org_id
+             , f_org_nm(m.ast10_org_id, f_sysdate())                                    AS org_name
+             , m.ast10_person_id                                                        AS person_id
+             , f_emp_kor_nm(m.ast10_person_id)                                          AS person_name
+             , m.ast10_repr_yn                                                          AS repr_yn
+             , m.ast10_link_content                                                     AS link_content
+          FROM ast10_manager m
+         WHERE m.ast10_manager_id = #{managerId}
+    </select>
+
+    <insert id="insertManager">
+        INSERT INTO ast10_manager
+               ( ast10_manager_id
+               , ast10_company_id
+               , ast10_link_id
+               , ast10_manager_type
+               , ast10_org_id
+               , ast10_person_id
+               , ast10_repr_yn
+               , ast10_link_content )
+        VALUES ( #{managerId}
+               , #{companyId}
+               , #{linkId}
+               , #{req.managerType}
+               , #{req.orgId}
+               , #{req.personId}
+               , #{req.reprYn}
+               , #{req.linkContent} )
+    </insert>
+
+    <update id="updateManager">
+        UPDATE ast10_manager
+           SET ast10_repr_yn      = #{req.reprYn}
+             , ast10_manager_type = #{req.managerType}
+             , ast10_org_id       = #{req.orgId}
+             , ast10_person_id    = #{req.personId}
+         WHERE ast10_manager_id   = #{req.managerId}
+           AND ast10_company_id   = #{companyId}
+    </update>
+
+    <delete id="deleteManager">
+        DELETE FROM ast10_manager
+         WHERE ast10_manager_id = #{managerId}
+    </delete>
+
+    <delete id="deleteByLinkId">
+        DELETE FROM ast10_manager
+         WHERE ast10_link_id = #{linkId}
+    </delete>
+
+</mapper>

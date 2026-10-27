@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstCfInfoMapper">
+
+    <select id="selectNextSeq" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS ast03_cf_info.selectByClassTreeId L44 -->
+    <select id="selectCfInfoList" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstCfInfoRes">
+        SELECT a.ast03_cf_info_id         AS cfInfoId,
+               a.ast03_ast_class_tree_id  AS astClassTreeId,
+               a.ast03_cf_cd              AS cfCd,
+               a.ast03_cf_nm              AS cfNm,
+               a.ast03_tr_cd              AS trCd,
+               t.ast05_tr_nm              AS trNm,
+               a.ast03_start_ym           AS startYm,
+               a.ast03_close_ym           AS closeYm,
+               a.ast03_cycle              AS cycle,
+               a.ast03_date_cd            AS dateCd,
+               f_cdnm('DateCode', a.ast03_date_cd, c.ast01_company_id, f_sysdate()) AS dateNm,
+               a.ast03_holiday_settle_cd  AS holidaySettleCd,
+               f_cdnm('HolidaySettleCode', a.ast03_holiday_settle_cd, c.ast01_company_id, f_sysdate()) AS holidaySettleNm,
+               a.ast03_amt                AS amt,
+               a.ast03_note               AS note,
+               a.ast03_round              AS round,
+               COALESCE(a.ast03_icam_yn, 'false') AS icamYn,
+               a.ast03_cont_amt           AS contAmt,
+               a.ast03_tax                AS tax,
+               a.ast03_corp_id            AS corpId,
+               f_get_corp_nm(a.ast03_corp_id) AS corpNm
+          FROM ast03_cf_info a
+         INNER JOIN ast01_class_tree c ON c.ast01_class_tree_id = a.ast03_ast_class_tree_id
+          LEFT OUTER JOIN ast05_tr_code t ON (t.ast05_company_id = c.ast01_company_id AND t.ast05_tr_cd = a.ast03_tr_cd)
+         WHERE a.ast03_ast_class_tree_id = #{astClassTreeId}
+         ORDER BY a.ast03_cf_cd
+    </select>
+
+    <!-- AS-IS ast04_cf.selectByCfInfoId L39 -->
+    <select id="selectCfList" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstCfRes">
+        SELECT ast04_cf_id         AS cfId,
+               ast04_cf_info_id    AS cfInfoId,
+               ast04_seq           AS seq,
+               ast04_date          AS date,
+               ast04_settle_date   AS settleDate,
+               ast04_settle_amt    AS settleAmt,
+               ast04_note          AS note,
+               ast04_cont_amt      AS contAmt,
+               ast04_tax           AS tax
+          FROM ast04_cf
+         WHERE ast04_cf_info_id = #{cfInfoId}
+         ORDER BY ast04_date, ast04_seq
+    </select>
+
+    <insert id="insertCfInfo">
+        INSERT INTO ast03_cf_info (
+            ast03_cf_info_id, ast03_ast_class_tree_id, ast03_cf_cd, ast03_cf_nm,
+            ast03_tr_cd, ast03_corp_id, ast03_icam_yn, ast03_note
+        ) VALUES (
+            #{cfInfoId}, #{req.astClassTreeId}, #{req.cfCd}, #{req.cfNm},
+            #{req.trCd}, #{req.corpId}, COALESCE(#{req.icamYn}, 'false'), #{req.note}
+        )
+    </insert>
+
+    <update id="updateCfInfo">
+        UPDATE ast03_cf_info
+           SET ast03_cf_cd   = #{req.cfCd},
+               ast03_cf_nm   = #{req.cfNm},
+               ast03_tr_cd   = #{req.trCd},
+               ast03_corp_id = #{req.corpId},
+               ast03_icam_yn = COALESCE(#{req.icamYn}, 'false'),
+               ast03_note    = #{req.note}
+         WHERE ast03_cf_info_id = #{req.cfInfoId}
+    </update>
+
+    <delete id="deleteCfInfo">
+        DELETE FROM ast03_cf_info
+         WHERE ast03_cf_info_id = #{cfInfoId}
+    </delete>
+
+    <insert id="insertCf">
+        INSERT INTO ast04_cf (
+            ast04_cf_id, ast04_cf_info_id, ast04_seq, ast04_date,
+            ast04_settle_date, ast04_settle_amt, ast04_cont_amt, ast04_tax, ast04_note
+        ) VALUES (
+            #{cfId}, #{req.cfInfoId}, #{req.seq}, #{req.date},
+            #{req.settleDate}, #{req.settleAmt}, #{req.contAmt}, #{req.tax}, #{req.note}
+        )
+    </insert>
+
+    <update id="updateCf">
+        UPDATE ast04_cf
+           SET ast04_seq         = #{req.seq},
+               ast04_date        = #{req.date},
+               ast04_settle_date = #{req.settleDate},
+               ast04_settle_amt  = #{req.settleAmt},
+               ast04_cont_amt    = #{req.contAmt},
+               ast04_tax         = #{req.tax},
+               ast04_note        = #{req.note}
+         WHERE ast04_cf_id = #{req.cfId}
+    </update>
+
+    <delete id="deleteCf">
+        DELETE FROM ast04_cf
+         WHERE ast04_cf_id = #{cfId}
+    </delete>
+
+    <delete id="deleteCfByCfInfoId">
+        DELETE FROM ast04_cf
+         WHERE ast04_cf_info_id = #{cfInfoId}
+    </delete>
+
+    <!-- AS-IS ast04_cf.lastDate L50 -->
+    <select id="selectLastDate" resultType="java.util.Date">
+        SELECT f_get_last_day(#{date})
+    </select>
+
+    <!-- AS-IS ast04_cf.bizDate L46 -->
+    <select id="selectBizDate" resultType="java.util.Date">
+        SELECT f_get_biz_date(#{companyId}, #{date}, #{string})
+    </select>
+
+    <update id="updateBatchInfo">
+        UPDATE ast03_cf_info
+           SET ast03_date_cd           = #{req.dateCode},
+               ast03_holiday_settle_cd = #{req.holidaySettleCode},
+               ast03_start_ym          = #{req.startYm},
+               ast03_close_ym          = #{req.closeYm},
+               ast03_amt               = #{req.amt},
+               ast03_cont_amt          = #{req.contAmt},
+               ast03_tax               = #{req.tax},
+               ast03_cycle             = #{req.cycle},
+               ast03_round             = #{req.round}
+         WHERE ast03_cf_info_id = #{req.cfInfoId}
+    </update>
+</mapper>
