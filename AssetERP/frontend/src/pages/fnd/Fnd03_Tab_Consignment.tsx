@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/fnd/Fnd03_Tab_Consignment.java (269줄)
  * 스타일: CG (CrudGrid — docs/page-style.md)
  * 레이아웃 L106-135: 툴바(수탁사명 300 "전체" · 사용여부 체크 · 조회 · 등록 · 저장 · 삭제 · 가져오기(ICAM)) + 그리드(행번호, 체크박스 단일,
- *   수탁사코드·수탁사명·사용여부·비고·신한아이타스~스카이 편집). 여백 20, 최대 폭 1000
+ *   수탁사코드·수탁사명·사용여부·비고·신한아이타스~스카이 편집). 여백 20, 폭 100%
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Checkbox, message } from 'antd';
@@ -70,7 +70,7 @@ export const Fnd03_Tab_Consignment: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', boxSizing: 'border-box', padding: 20, display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 1000 }}>
+    <div style={{ width: '100%', height: '100%', boxSizing: 'border-box', padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
       {/* [E1] searchText.KeyPress [Enter] (L64) → retrieve(), [E2] retrieveButton[조회].Select (L72) → retrieve() */}
       <SearchBar onSearch={crud.retrieve} loading={crud.loading} extra={<>
         {/* [E3] insertButton[등록].Select (L78) → insertRow() */}
@@ -89,7 +89,7 @@ export const Fnd03_Tab_Consignment: React.FC = () => {
           <Checkbox checked={useYn} onChange={e => setUseYn(e.target.checked)} />
         </SearchBar.Field>
       </SearchBar>
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ width: '100%', flex: 1, minHeight: 0 }}>
         <CellEditGrid<Consignment> crud={crud} columnDefs={columnDefs} rowSelection={ROW_SELECTION} />
       </div>
     </div>

@@ -2,11 +2,10 @@
  * 펀드자산 종목 상세 그리드 (R08) — 우측 센터
  * AS-IS: myApp/client/vi/ast/Ast01_Grid_AstTypeManagement.java (221줄)
  */
-import React, { forwardRef, useImperativeHandle, useMemo, useState } from 'react';
-import { message, Modal } from 'antd';
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { message } from 'antd';
 import type { ColDef } from 'ag-grid-community';
 import { astApi } from '@/api/ast';
-import { errorMessage } from '@/api/client';
 import { AstClassTree, AstClassTreeItem } from '@/types/ast';
 import { Button } from '@/components/button';
 import { CellEditGrid, gbFor, iconCell } from '@/components/grid';
@@ -29,6 +28,8 @@ const gb = gbFor<AstClassTreeItem>();
 export const Ast01_Grid_AstTypeManagement = forwardRef<Ast01GridAstTypeManagementHandle, Props>(
   ({ style, onRefreshParent }, ref) => {
     const [parentModel, setParentModel] = useState<AstClassTree | null>(null);
+    const parentModelRef = useRef<AstClassTree | null>(null);
+    parentModelRef.current = parentModel;
 
     const [managerModalOpen, setManagerModalOpen] = useState(false);
     const [managerLinkId, setManagerLinkId] = useState<number | null>(null);
@@ -39,39 +40,51 @@ export const Ast01_Grid_AstTypeManagement = forwardRef<Ast01GridAstTypeManagemen
     // [E0] 화면 열림 (생성자 L48-79) → 초기화
     const crud = useGridCrud<AstClassTreeItem>({
       idField: 'classTreeId',
-      search: async () => {
-        if (!parentModel) return [];
-        return astApi.searchClassTreeItems(parentModel.classTreeId, 'IT');
-      },
-      save: async (changed) => {
-        if (!parentModel) return [];
+      search: useCallback(async () => {
+        const p = parentModelRef.current;
+        if (!p) return [];
+        return astApi.searchClassTreeItems(p.classTreeId, 'IT');
+      }, []),
+      save: useCallback(async (changed: AstClassTreeItem[]) => {
+        const p = parentModelRef.current;
+        if (!p) return [];
         await astApi.saveClassTreeItems(
-          parentModel.classTreeId,
+          p.classTreeId,
           changed.map((r) => ({
             classTreeId: r.classTreeId > 0 ? r.classTreeId : null,
-            parentTreeId: parentModel.classTreeId,
+            parentTreeId: p.classTreeId,
             classTreeName: r.classTreeName,
             isin: r.isin,
             seq: r.seq,
             useYn: r.useYn ?? 'true',
           }))
         );
-        return astApi.searchClassTreeItems(parentModel.classTreeId, 'IT');
+        return astApi.searchClassTreeItems(p.classTreeId, 'IT');
+      }, []),
+      validate: (changed) => {
+        for (const r of changed) {
+          if (!r.classTreeName || r.classTreeName.trim().length < 1) {
+            return '종목명을 입력해주세요';
+          }
+        }
+        return undefined;
       },
-      remove: async (ids) => {
+      remove: useCallback(async (ids: number[]) => {
         for (const id of ids) {
           await astApi.deleteClassTree(id);
         }
-      },
-      newRow: () => ({
-        classTreeId: -Date.now(),
-        companyId: parentModel?.companyId ?? 0,
-        parentTreeId: parentModel?.classTreeId ?? 0,
+      }, []),
+      // [E5] msgBox.DialogHide [YES] (L199) → delete()
+      deleteConfirm: '선택한 종목을 삭제하시겠습니까?',
+      newRow: useCallback(() => ({
+        companyId: parentModelRef.current?.companyId ?? 0,
+        parentTreeId: parentModelRef.current?.classTreeId ?? 0,
         seq: 10,
         isin: '',
         classTreeName: '',
         useYn: 'true',
-      }),
+      }), []),
+      reloadAfterSave: true,
     });
 
     const columnDefs: ColDef<AstClassTreeItem>[] = useMemo(
@@ -103,24 +116,12 @@ export const Ast01_Grid_AstTypeManagement = forwardRef<Ast01GridAstTypeManagemen
 
     // [E1] deleteButton[삭제].Select (L51) → deleteRow()
     const deleteRow = () => {
-      Modal.confirm({
-        title: '삭제 확인',
-        content: '선택한 종목을 삭제하시겠습니까?',
-        // [E5] msgBox.DialogHide [YES] (L199) → delete()
-        onOk: async () => {
-          try {
-            await crud.deleteChecked();
-            message.success('삭제되었습니다.');
-          } catch (e) {
-            message.error(errorMessage(e));
-          }
-        },
-      });
+      crud.deleteChecked();
     };
 
     // [E2] insertButton[등록].Select (L57) → insertRow()
     const insertRow = () => {
-      if (!parentModel) {
+      if (!parentModelRef.current) {
         message.warning('상위분류를 먼저 선택하세요.');
         return;
       }
@@ -129,27 +130,21 @@ export const Ast01_Grid_AstTypeManagement = forwardRef<Ast01GridAstTypeManagemen
 
     // [E3] updateButton[저장].Select (L63) → update()
     const update = async () => {
-      try {
-        await crud.saveRows();
-        message.success('저장되었습니다.');
-      } catch (e) {
-        message.error(errorMessage(e));
-      }
+      await crud.saveRows();
     };
 
     useImperativeHandle(ref, () => ({
       retrieve: async (parent: AstClassTree | null) => {
+        parentModelRef.current = parent;
         setParentModel(parent);
         if (parent) {
-          crud.clear();
-          const items = await astApi.searchClassTreeItems(parent.classTreeId, 'IT');
-          crud.replaceRow(0, items[0]); // dummy or direct set
-          crud.retrieve();
+          await crud.retrieve();
         } else {
           crud.clear();
         }
       },
       clear: () => {
+        parentModelRef.current = null;
         setParentModel(null);
         crud.clear();
       },

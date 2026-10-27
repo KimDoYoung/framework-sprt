@@ -35,7 +35,7 @@ export const Ast01_Move_ClassTree: React.FC<Props> = ({ open, classTreeId, onClo
   const loadTree = async () => {
     setLoading(true);
     try {
-      const list = await astApi.searchClassTree({ typeCode: 'IC' });
+      const list = await astApi.searchClassTree({ typeCode: 'IC', assetType: '2' });
       const nodes = buildTreeNodes(list);
       setTreeData(nodes);
     } catch (e) {

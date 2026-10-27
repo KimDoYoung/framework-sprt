@@ -97,7 +97,7 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
         managerRef.current?.retrieve(activeNode.classTreeId);
         await crud.retrieve();
       },
-      [crud]
+      [crud.clear, crud.retrieve]
     );
 
     const loadNode = useCallback(
@@ -120,7 +120,7 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
       setContent('');
       setEditorKey((k) => k + 1);
       managerRef.current?.clear();
-    }, [crud]);
+    }, [crud.clear]);
 
     useImperativeHandle(ref, () => ({
       loadNode,
@@ -134,10 +134,11 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
         loadNode(currentNode);
       } else if (currentNode) {
         visible();
-      } else {
+      } else if (nodeRef.current !== null) {
         clear();
       }
-    }, [currentNode, loadNode, visible, clear]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentNode]);
 
     // [E5] addButton[항목추가].Select (L141) → insert()
     const insert = () => {

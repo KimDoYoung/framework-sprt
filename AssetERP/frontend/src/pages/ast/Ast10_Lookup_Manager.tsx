@@ -2,7 +2,7 @@
  * 담당자 관리 모달 (R08)
  * AS-IS: myApp/client/vi/ast/Ast10_Lookup_Manager.java (310줄)
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal, Radio } from 'antd';
 import type { ColDef } from 'ag-grid-community';
 import { astApi } from '@/api/ast';
@@ -28,6 +28,7 @@ export const Ast10_Lookup_Manager: React.FC<Props> = ({ open, linkId, onClose, o
   const [rows, setRows] = useState<AstManager[]>([]);
   const [selectedRows, setSelectedRows] = useState<AstManager[]>([]);
   const [loading, setLoading] = useState(false);
+  const deletedIdsRef = useRef<number[]>([]);
 
   const [managerType, setManagerType] = useState<'1' | '2'>('1'); // 1: 사원, 2: 부서
   const [empLookupOpen, setEmpLookupOpen] = useState(false);
@@ -38,12 +39,17 @@ export const Ast10_Lookup_Manager: React.FC<Props> = ({ open, linkId, onClose, o
   useEffect(() => {
     if (open && linkId) {
       retrieve();
+    } else if (!open) {
+      deletedIdsRef.current = [];
+      setSelectedRows([]);
     }
   }, [open, linkId]);
 
   const retrieve = async () => {
     if (!linkId) return;
     setLoading(true);
+    deletedIdsRef.current = [];
+    setSelectedRows([]);
     try {
       const data = await astApi.searchManagers(linkId);
       setRows(data);
@@ -121,26 +127,36 @@ export const Ast10_Lookup_Manager: React.FC<Props> = ({ open, linkId, onClose, o
       message.warning('삭제할 담당자를 선택하세요.');
       return;
     }
+    selectedRows.forEach((r) => {
+      if (r.managerId > 0) deletedIdsRef.current.push(r.managerId);
+    });
     const removeIds = new Set(selectedRows.map((r) => r.managerId));
     setRows((prev) => prev.filter((r) => !removeIds.has(r.managerId)));
+    setSelectedRows([]);
   };
 
   // [E4] updateButton[저장].Select (L142) → preCheck()
   const preCheck = async () => {
     if (!linkId) return;
     try {
-      await astApi.saveManagers(
-        linkId,
-        rows.map((r) => ({
-          managerId: r.managerId > 0 ? r.managerId : null,
+      if (deletedIdsRef.current.length > 0) {
+        await astApi.deleteManagers(deletedIdsRef.current);
+        deletedIdsRef.current = [];
+      }
+      if (rows.length > 0) {
+        await astApi.saveManagers(
           linkId,
-          managerType: r.managerType,
-          orgId: r.orgId,
-          personId: r.personId,
-          reprYn: r.reprYn,
-          linkContent: r.linkContent,
-        }))
-      );
+          rows.map((r) => ({
+            managerId: r.managerId > 0 ? r.managerId : null,
+            linkId,
+            managerType: r.managerType,
+            orgId: r.orgId,
+            personId: r.personId,
+            reprYn: r.reprYn,
+            linkContent: r.linkContent,
+          }))
+        );
+      }
       message.success('담당자가 저장되었습니다.');
       onSuccess?.();
       retrieve();

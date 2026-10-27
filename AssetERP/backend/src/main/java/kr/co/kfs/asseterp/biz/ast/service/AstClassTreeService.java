@@ -170,6 +170,7 @@ public class AstClassTreeService {
                         item.classTreeId(),
                         item.classTreeName(),
                         item.seq() != null ? item.seq() : 1L,
+                        item.isin(),
                         item.useYn() != null ? item.useYn() : "true"
                 );
             }

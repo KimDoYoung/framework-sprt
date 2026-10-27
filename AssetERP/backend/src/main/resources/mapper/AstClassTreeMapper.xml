@@ -180,10 +180,10 @@
              WHERE  1=1
                AND  ast01_parent_tree_id = 0
                AND  ast01_use_yn = 'true'
-               <if test="typeCode != null and typeCode != '' and typeCode != '%'">
+               <if test="typeCode != null and typeCode != ''">
                AND  ast01_type_cd = #{typeCode}
                </if>
-               <if test="assetType != null and assetType != '' and assetType != '%'">
+               <if test="assetType != null and assetType != ''">
                AND  ast01_asset_type = #{assetType}
                </if>
                AND  ast01_company_id = #{companyId}
@@ -224,12 +224,13 @@
                     INNER JOIN ast_tree b ON a.ast01_parent_tree_id = b.ast01_class_tree_id
              WHERE  1=1
                AND  a.ast01_use_yn = 'true'
-               <if test="typeCode != null and typeCode != '' and typeCode != '%'">
+               <if test="typeCode != null and typeCode != ''">
                AND  a.ast01_type_cd = #{typeCode}
                </if>
-               <if test="assetType != null and assetType != '' and assetType != '%'">
+               <if test="assetType != null and assetType != ''">
                AND  a.ast01_asset_type = #{assetType}
                </if>
+               AND  a.ast01_company_id = #{companyId}
                AND  not cycle
         )
         SELECT  a.ast01_class_tree_id                                                               AS class_tree_id
@@ -423,6 +424,7 @@
         UPDATE ast01_class_tree
            SET ast01_class_tree_nm = #{classTreeName}
              , ast01_seq           = #{seq}
+             , ast01_isin          = #{isin}
              , ast01_use_yn        = #{useYn}
          WHERE ast01_class_tree_id = #{classTreeId}
     </update>

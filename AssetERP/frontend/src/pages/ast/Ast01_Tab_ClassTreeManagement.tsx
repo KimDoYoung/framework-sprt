@@ -25,7 +25,6 @@ const gb = gbFor<AstClassTree>();
 
 export const Ast01_Tab_ClassTreeManagement: React.FC = () => {
   const [astSearch, setAstSearch] = useState('');
-  const [rows, setRows] = useState<AstClassTree[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedNode, setSelectedNode] = useState<AstClassTree | null>(null);
 
@@ -55,14 +54,20 @@ export const Ast01_Tab_ClassTreeManagement: React.FC = () => {
     setSelectedNode(null);
     gridDocTypeRef.current?.clear();
     try {
-      const data = await astApi.searchClassTree({ typeCode: 'IC' });
-      setRows(data);
+      const data = await astApi.searchClassTree({ typeCode: 'IC', assetType: '2' });
+      tree.setRows(data);
+      const parents = new Set(data.map((d) => d.parentTreeId).filter((p) => p > 0));
+      setTimeout(() => {
+        if (parents.size > 0) {
+          tree.expandAncestors(data.map((d) => d.classTreeId));
+        }
+      });
     } catch (e) {
       message.error(errorMessage(e));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [tree.setRows, tree.expandAncestors]);
 
   useEffect(() => {
     retrieve();
@@ -71,10 +76,19 @@ export const Ast01_Tab_ClassTreeManagement: React.FC = () => {
   // [E1] astSearch.KeyPress [Enter] (L53) → search()
   // [E2] retrieveButton[찾기].Select (L61) → search()
   const search = () => {
-    if (!astSearch.trim()) return;
-    const found = rows.find((r) => r.classTreeName.includes(astSearch.trim()));
+    tree.expandAll();
+    const findText = astSearch.trim().toLowerCase();
+    if (!findText) return;
+    tree.gridRef.current?.api?.deselectAll();
+    const found = tree.rows.find((r) => r.classTreeName?.toLowerCase().includes(findText));
     if (found) {
-      tree.expandAll();
+      setTimeout(() => {
+        const node = tree.gridRef.current?.api?.getRowNode(String(found.classTreeId));
+        if (node) {
+          node.setSelected(true, true);
+          tree.gridRef.current?.api?.ensureNodeVisible(node);
+        }
+      });
     }
   };
 
@@ -121,7 +135,7 @@ export const Ast01_Tab_ClassTreeManagement: React.FC = () => {
   // 트리 컬럼 정의
   const columnDefs: ColDef<AstClassTree>[] = useMemo(
     () => [
-      gb.text('classTreeName', 350, '자산구분'),
+      tree.treeCol('classTreeName', 350, '자산구분'),
       gb.textArea('note', 200, '비고'),
       iconCell<AstClassTree>('move', 'moveCol', 50, '이동', (row) => {
         setMoveClassTreeId(row.classTreeId);
@@ -134,7 +148,7 @@ export const Ast01_Tab_ClassTreeManagement: React.FC = () => {
         setEditModalOpen(true);
       }),
     ],
-    []
+    [tree.treeCol]
   );
 
   return (
@@ -192,6 +206,7 @@ export const Ast01_Tab_ClassTreeManagement: React.FC = () => {
           <Splitter.Panel defaultSize={760} min={400} max={900}>
             <div style={{ width: '100%', height: '100%', boxSizing: 'border-box' }}>
               <SingleGrid<AstClassTree>
+                gridRef={tree.gridRef}
                 columnDefs={columnDefs}
                 loading={loading}
                 onSelect={handleSelect}

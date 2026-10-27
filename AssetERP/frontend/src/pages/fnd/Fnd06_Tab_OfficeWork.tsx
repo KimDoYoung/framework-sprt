@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/fnd/Fnd06_Tab_OfficeWork.java (292줄)
  * 스타일: CG (CrudGrid — docs/page-style.md)
  * 레이아웃 L115-145: 툴바(사무수탁사명 300 "전체" · 사용여부 체크 · 조회 · 등록 · 저장 · 삭제 · 가져오기(ICAM)) + 그리드(행번호, 체크박스 단일,
- *   사무수탁사 코드·사무수탁사명·금융투자협회코드·신한펀드·사용여부·비고 편집). 여백 20, 최대 폭 1000
+ *   사무수탁사 코드·사무수탁사명·금융투자협회코드·신한펀드·사용여부·비고 편집). 여백 20, 폭 100%
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Checkbox, message } from 'antd';
@@ -70,7 +70,7 @@ export const Fnd06_Tab_OfficeWork: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', boxSizing: 'border-box', padding: 20, display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 1000 }}>
+    <div style={{ width: '100%', height: '100%', boxSizing: 'border-box', padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
       {/* [E1] searchText.KeyPress [Enter] (L66) → retrieve(), [E2] retrieveButton[조회].Select (L81) → retrieve() */}
       <SearchBar onSearch={crud.retrieve} loading={crud.loading} extra={<>
         {/* [E3] insertButton[등록].Select (L87) → insertRow() */}
@@ -89,7 +89,7 @@ export const Fnd06_Tab_OfficeWork: React.FC = () => {
           <Checkbox checked={useYn} onChange={e => setUseYn(e.target.checked)} />
         </SearchBar.Field>
       </SearchBar>
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ width: '100%', flex: 1, minHeight: 0 }}>
         <CellEditGrid<OfficeWork> crud={crud} columnDefs={columnDefs} rowSelection={ROW_SELECTION} />
       </div>
     </div>

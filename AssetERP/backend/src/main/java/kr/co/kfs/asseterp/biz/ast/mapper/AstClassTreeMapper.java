@@ -45,6 +45,7 @@ public interface AstClassTreeMapper {
     int updateClassTreeInfo(@Param("classTreeId") Long classTreeId,
                             @Param("classTreeName") String classTreeName,
                             @Param("seq") Long seq,
+                            @Param("isin") String isin,
                             @Param("useYn") String useYn);
 
     int updateClassTree(AstClassTreeRes row);
