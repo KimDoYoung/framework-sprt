@@ -14,6 +14,7 @@
 | SID | 이름 | 구성 | 예 |
 |:---|:---|:---|:---|
 | SG | SearchGrid | SearchBar + 그리드 하나 | 단순 조회 화면 |
+| SGP | SearchGrid+Popup | SearchBar + 그리드 하나(셀 편집이 아니라 [등록]·[수정]이 편집 팝업 `*_Edit_*`을 연다) | `Chk02_Tab_DailyList` (일일점검내역 관리) |
 | SGVF | SearchGrid+ViewForm | 위 그리드, 아래 읽기 전용 폼(상하 분할) | `Fnd01_Tab_FundSearch` (펀드 조회) |
 | SGEF | SearchGrid+EditForm | 위 그리드, 아래 편집 폼(저장·삭제 버튼) | 마스터 편집 화면 |
 | SGTP | SearchGrid+TabPage | 위 SearchBar + 그리드, 아래 탭 영역(상하 분할, 그리드 선택 연동) | `Fnd20_Tab_Plan` (상품기획일정 등록) |
@@ -29,7 +30,7 @@
 견본: `docs/page-style/SG/Tdm01_Tab_Hr.tsx` (임원 등록)
 
 - 가장 단순한 형태: 바깥 여백 20, 안쪽 `padding 10`, 테두리 없음. 세로 flex로 `SearchBar` + `SingleGrid`를 쌓고 툴바-그리드 간격은 `gap: 8`(SGVF 등의 `marginTop: 8`과 같은 간격).
-- 조회 외 원본 버튼(예: [인사정보 가져오기])은 `SearchBar`의 `extra`. 조회창(`*_Lookup_*`)은 화면 끝에 `open`/`onClose`로 붙인다(편집창이 아니라 조회창이면 SGP가 아니라 SG).
+- 조회 외 원본 버튼(예: [인사정보 가져오기])은 `SearchBar`의 `extra`. 조회창(`*_Lookup_*`)은 화면 끝에 `open`/`onClose`로 붙인다(편집 팝업이 아니라 조회창이면 SGP가 아니라 SG).
 - 이 견본은 열 때 조회한다(원본이 그렇다). 조건이 2개라 초기화(UX-02)는 넣지 않는다.
 
 ### SGVF — SearchGrid+ViewForm
@@ -83,6 +84,15 @@
 - 위·아래 모두 **외곽 테두리 박스를 두지 않는다**(SGTP는 아래 탭에 테두리가 있다).
 - 열 때 조회하고, 조회가 끝나면 첫 행을 고른다. 행을 누르면 아래가 그 행의 id로 다시 읽는다(`pfContractId` + `nonce` — 같은 행을 다시 눌러도 다시 읽는다).
 - SGTP와 구조가 같고 아래가 탭 영역이 아니라 그리드 하나인 경우가 GG다.
+
+### SGP — SearchGrid+Popup (초안)
+
+견본: `docs/page-style/SGP/` (`Chk02_Tab_DailyList.tsx` + 편집 팝업 `Chk02_Edit_DailyList.tsx` + 조회창 `Chk02_Lookup_UseYn.tsx`). yunhee `page-style`의 판별 근거: "조회 툴바 + 그리드 하나 + 편집 팝업".
+
+- 구조는 SG와 같다(바깥 여백 20, 세로 flex로 `SearchBar` + `SingleGrid`/`MultiGrid`, 툴바-그리드 `gap: 8`). 다른 점은 행 편집을 그리드 셀이 아니라 **편집 팝업(`*_Edit_*`)** 으로 한다는 것이다.
+- [등록]·그리드의 [수정] 아이콘이 편집 팝업을 열고, 저장하면 팝업을 닫고 다시 조회한다. 삭제는 체크한 행을 확인창(YES) 뒤에 지운다.
+- 조회창(`*_Lookup_*`)은 SG와 같이 화면 끝에 `open`/`onClose`로 붙인다. 편집 팝업이 없고 조회창만 있으면 SG다.
+- 폼이 화면에 붙는 SGEF와 달리 폼은 팝업 안에만 있다.
 
 (나머지 스타일은 전체 조사 후 같은 형식으로 채운다.)
 

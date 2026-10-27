@@ -16,6 +16,9 @@ public record ChkDailyListRes(
         String useYn,
         Long adminDailyListId,
         /** AS-IS getAdminYn(): 회사 0이거나 관리자 점검내역에서 복사된 행 */
-        Boolean adminYn
+        Boolean adminYn,
+        /** 담당그룹(R01) — sch22_write_group */
+        Long writeGroupId,
+        String writeGroupName
 ) {
 }

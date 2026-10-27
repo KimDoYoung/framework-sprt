@@ -38,4 +38,14 @@ public interface ChkDailyListMapper {
 
     /** AS-IS chk02_daily_list.insertFromAdmin */
     int insertFromAdmin(@Param("companyId") Long companyId, @Param("dailyListId") Long dailyListId);
+
+    /** AS-IS chk02_daily_list.selectBySearchText2 — 사용여부 조건 없이 */
+    List<ChkDailyListRes> selectBySearchText2(@Param("companyId") Long companyId, @Param("parentTreeId") Long parentTreeId,
+                                              @Param("searchText") String searchText);
+
+    /** AS-IS chk02_daily_list.updateUseYn */
+    int updateUseYn(@Param("companyId") Long companyId, @Param("dailyListId") Long dailyListId, @Param("useYn") String useYn);
+
+    /** AS-IS chk02_daily_list.updateWriteGroupId */
+    int updateWriteGroupId(@Param("companyId") Long companyId, @Param("dailyListId") Long dailyListId, @Param("writeGroupId") Long writeGroupId);
 }

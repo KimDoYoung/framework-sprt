@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!-- AS-IS(IDMS-IC) server/chk/mapper/chk02_daily_list.xml (selectByAdmin, selectById, selectByAdminDailyListId, insertFromAdmin, updateFromAdmin) + UpdateDataModel(chk02_daily_list)  (E07) -->
+<!-- AS-IS(IDMS-IC) server/chk/mapper/chk02_daily_list.xml (selectByAdmin, selectById, selectByAdminDailyListId, insertFromAdmin, updateFromAdmin) + R01 Chk02_Tab_DailyList(selectBySearchText2, updateUseYn, updateWriteGroupId) + UpdateDataModel(chk02_daily_list)  (E07) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.chk.mapper.ChkDailyListMapper">
 
     <sql id="dailyListColumns">
@@ -19,7 +19,33 @@
         chk02_seq                   AS seq,
         chk02_use_yn                AS use_yn,
         chk02_admin_daily_list_id   AS admin_daily_list_id,
-        (chk02_company_id = 0 OR COALESCE(chk02_admin_daily_list_id, 0) &lt;&gt; 0) AS admin_yn
+        (chk02_company_id = 0 OR COALESCE(chk02_admin_daily_list_id, 0) &lt;&gt; 0) AS admin_yn,
+        chk02_write_group_id        AS write_group_id,
+        (SELECT sch22_write_group_nm
+           FROM sch22_write_group
+          WHERE sch22_write_group_id = chk02_write_group_id
+            AND sch22_company_id = chk02_company_id) AS write_group_name
+    </sql>
+
+    <!-- common.chkTreeDown — 기준 분류와 그 아래(회사 0·로그인 회사) -->
+    <sql id="chkTreeDown">
+        WITH RECURSIVE chk_tree_down(chk01_class_tree_id, chk01_parent_tree_id, depth, path, cycle) AS (
+            SELECT a.chk01_class_tree_id, a.chk01_parent_tree_id, 0, ARRAY[a.chk01_class_tree_nm::text], false
+              FROM chk01_class_tree a
+             WHERE 1=1
+               AND chk01_company_id IN (0, #{companyId})
+               AND chk01_class_tree_id = #{parentTreeId}
+             UNION ALL
+            SELECT a.chk01_class_tree_id, a.chk01_parent_tree_id, b.depth + 1,
+                   array_append(b.path, a.chk01_class_tree_nm::text),
+                   a.chk01_class_tree_nm = any(b.path)
+              FROM chk01_class_tree a, chk_tree_down b
+             WHERE 1=1
+               AND a.chk01_parent_tree_id = b.chk01_class_tree_id
+               AND a.chk01_company_id IN (0, #{companyId})
+               AND NOT cycle
+        )
+        SELECT a.chk01_class_tree_id FROM chk_tree_down a
     </sql>
 
     <!-- AS-IS chk02_daily_list.selectByAdmin (IDMS-IC) — common.chkTreeDown(기준 분류와 그 아래, 회사 0·로그인 회사)을 펼쳐 넣음 -->
@@ -29,23 +55,7 @@
                INNER JOIN chk01_class_tree ON chk01_class_tree_id = chk02_class_tree_id
          WHERE 1=1
            AND chk02_class_tree_id IN (
-               WITH RECURSIVE chk_tree_down(chk01_class_tree_id, chk01_parent_tree_id, depth, path, cycle) AS (
-                   SELECT a.chk01_class_tree_id, a.chk01_parent_tree_id, 0, ARRAY[a.chk01_class_tree_nm::text], false
-                     FROM chk01_class_tree a
-                    WHERE 1=1
-                      AND chk01_company_id IN (0, #{companyId})
-                      AND chk01_class_tree_id = #{parentTreeId}
-                    UNION ALL
-                   SELECT a.chk01_class_tree_id, a.chk01_parent_tree_id, b.depth + 1,
-                          array_append(b.path, a.chk01_class_tree_nm::text),
-                          a.chk01_class_tree_nm = any(b.path)
-                     FROM chk01_class_tree a, chk_tree_down b
-                    WHERE 1=1
-                      AND a.chk01_parent_tree_id = b.chk01_class_tree_id
-                      AND a.chk01_company_id IN (0, #{companyId})
-                      AND NOT cycle
-               )
-               SELECT a.chk01_class_tree_id FROM chk_tree_down a
+               <include refid="chkTreeDown"/>
            )
            AND chk02_company_id = #{companyId}
            AND chk02_use_yn LIKE #{useYn}
@@ -121,4 +131,34 @@
          WHERE chk02_daily_list_id = #{dailyListId}
            AND chk02_company_id = 0
     </insert>
+
+    <!-- AS-IS chk02_daily_list.selectBySearchText2 (IDMS-IC) — 사용여부 조건 없이 전체(R01 사용여부설정 창) -->
+    <select id="selectBySearchText2" resultType="kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListRes">
+        SELECT <include refid="dailyListColumns"/>
+          FROM chk02_daily_list
+               INNER JOIN chk01_class_tree ON chk01_class_tree_id = chk02_class_tree_id
+         WHERE 1=1
+           AND chk02_class_tree_id IN (
+               <include refid="chkTreeDown"/>
+           )
+           AND chk02_company_id = #{companyId}
+           AND UPPER(CONCAT(chk01_class_tree_nm, chk02_content, chk02_explan)) LIKE UPPER(#{searchText})
+         ORDER BY chk01_seq, chk02_seq
+    </select>
+
+    <!-- AS-IS chk02_daily_list.updateUseYn (IDMS-IC) -->
+    <update id="updateUseYn">
+        UPDATE chk02_daily_list
+           SET chk02_use_yn = #{useYn}
+         WHERE chk02_company_id = #{companyId}
+           AND chk02_daily_list_id = #{dailyListId}
+    </update>
+
+    <!-- AS-IS chk02_daily_list.updateWriteGroupId (IDMS-IC) — writeGroupId null = 작성그룹없음 -->
+    <update id="updateWriteGroupId">
+        UPDATE chk02_daily_list
+           SET chk02_write_group_id = #{writeGroupId}
+         WHERE chk02_company_id = #{companyId}
+           AND chk02_daily_list_id = #{dailyListId}
+    </update>
 </mapper>

@@ -4,6 +4,8 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListCopyReq;
 import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListRes;
 import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListSaveReq;
+import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListUseYnReq;
+import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListWriteGroupReq;
 import kr.co.kfs.asseterp.biz.chk.service.ChkDailyListService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** 일일점검내역 관리(관리자) (AS-IS Chk02_Tab_DailyListAdmin·Chk02_Edit_DailyList → server/chk/Chk02_DailyList) — 메뉴 #1245 */
+/** 일일점검내역 관리 (AS-IS Chk02_Tab_DailyListAdmin #1245 · Chk02_Tab_DailyList #1240·Chk02_Lookup_UseYn·Chk02_Edit_DailyList → server/chk/Chk02_DailyList) */
 @RestController
 @RequestMapping("/api/v1/chk/daily-lists")
 @RequiredArgsConstructor
@@ -27,6 +29,26 @@ public class ChkDailyListController {
                                                      @RequestParam(required = false) String useYn,
                                                      @RequestParam(required = false) String searchText) {
         return ApiResponse.ok(service.search(principal, classTreeId, useYn, searchText));
+    }
+
+    /** AS-IS chk.Chk02_DailyList.selectBySearchText2 (사용여부설정 창) — 사용여부 조건 없이 전체 */
+    @GetMapping("/all")
+    public ApiResponse<List<ChkDailyListRes>> searchAll(@AuthenticationPrincipal UserPrincipal principal,
+                                                        @RequestParam Long classTreeId,
+                                                        @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchAll(principal, classTreeId, searchText));
+    }
+
+    /** AS-IS chk.Chk02_DailyList.updateUseYn → 처리 건수 */
+    @PutMapping("/use-yn")
+    public ApiResponse<Integer> updateUseYn(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ChkDailyListUseYnReq req) {
+        return ApiResponse.ok(service.updateUseYn(principal, req));
+    }
+
+    /** AS-IS chk.Chk02_DailyList.updateWriteGroupId → 처리 건수 */
+    @PutMapping("/write-group")
+    public ApiResponse<Integer> updateWriteGroup(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ChkDailyListWriteGroupReq req) {
+        return ApiResponse.ok(service.updateWriteGroup(principal, req));
     }
 
     /** AS-IS chk.Chk02_DailyList.modelUpdate (새 행) → 저장된 행 */

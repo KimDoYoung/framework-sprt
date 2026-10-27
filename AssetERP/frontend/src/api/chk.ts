@@ -50,6 +50,24 @@ export const chkApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS chk.Chk02_DailyList.selectBySearchText2 (사용여부설정 창) — 사용여부 조건 없이 전체 */
+  searchAllDailyLists: async (classTreeId: number, searchText: string): Promise<ChkDailyList[]> => {
+    const res = await apiClient.get<ApiResponse<ChkDailyList[]>>('v1/chk/daily-lists/all', { params: { classTreeId, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS chk.Chk02_DailyList.updateUseYn — 바꾼 행만 → 처리 건수 */
+  updateDailyListUseYn: async (items: { dailyListId: number; useYn: string }[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/chk/daily-lists/use-yn', { items });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS chk.Chk02_DailyList.updateWriteGroupId — writeGroupId null = 작성그룹없음 → 처리 건수 */
+  updateDailyListWriteGroup: async (writeGroupId: number | null, dailyListIds: number[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/chk/daily-lists/write-group', { writeGroupId, dailyListIds });
+    return res.data.data ?? 0;
+  },
+
   /** AS-IS chk.Chk02_DailyList.modelUpdate (새 행) → 저장된 행 */
   createDailyList: async (req: ChkDailyListSaveReq): Promise<ChkDailyList> => {
     const res = await apiClient.post<ApiResponse<ChkDailyList>>('v1/chk/daily-lists', req);

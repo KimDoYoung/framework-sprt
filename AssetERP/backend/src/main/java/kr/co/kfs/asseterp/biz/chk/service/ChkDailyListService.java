@@ -4,6 +4,8 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListCopyReq;
 import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListRes;
 import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListSaveReq;
+import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListUseYnReq;
+import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListWriteGroupReq;
 import kr.co.kfs.asseterp.biz.chk.mapper.ChkDailyListMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
@@ -15,7 +17,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * AS-IS Chk02_Tab_DailyListAdmin·Chk02_Edit_DailyList → server/chk/Chk02_DailyList.java
+ * AS-IS Chk02_Tab_DailyListAdmin·Chk02_Tab_DailyList(R01)·Chk02_Lookup_UseYn·Chk02_Edit_DailyList → server/chk/Chk02_DailyList.java
  * (selectByAdmin L27 / insert L117 / modelUpdate L148 / delete L166). 저장·삭제는 로그인 회사 행만(보안 보강)
  */
 @Service
@@ -29,6 +31,33 @@ public class ChkDailyListService {
     public List<ChkDailyListRes> search(UserPrincipal user, Long classTreeId, String useYn, String searchText) {
         String yn = useYn == null || useYn.isBlank() ? "%" : useYn;
         return mapper.selectByAdmin(user.getCompanyId(), classTreeId, yn, "%" + (searchText == null ? "" : searchText) + "%");
+    }
+
+    /** AS-IS selectBySearchText2(Chk02_Lookup_UseYn): 사용여부 조건 없이 전체, 검색어는 `%…%` */
+    public List<ChkDailyListRes> searchAll(UserPrincipal user, Long classTreeId, String searchText) {
+        return mapper.selectBySearchText2(user.getCompanyId(), classTreeId, "%" + (searchText == null ? "" : searchText) + "%");
+    }
+
+    /** AS-IS updateUseYn: 바꾼 행마다 로그인 회사의 사용여부 갱신 → 처리 건수 */
+    @Transactional
+    public int updateUseYn(UserPrincipal user, ChkDailyListUseYnReq req) {
+        if (req == null || req.items() == null) return 0;
+        int done = 0;
+        for (ChkDailyListUseYnReq.Item item : req.items()) {
+            done += mapper.updateUseYn(user.getCompanyId(), item.dailyListId(), item.useYn());
+        }
+        return done;
+    }
+
+    /** AS-IS updateWriteGroupId: 고른 행들에 담당그룹(null = 작성그룹없음) 지정 → 처리 건수 */
+    @Transactional
+    public int updateWriteGroup(UserPrincipal user, ChkDailyListWriteGroupReq req) {
+        if (req == null || req.dailyListIds() == null) return 0;
+        int done = 0;
+        for (Long id : req.dailyListIds()) {
+            done += mapper.updateWriteGroupId(user.getCompanyId(), id, req.writeGroupId());
+        }
+        return done;
     }
 
     /** AS-IS modelUpdate 새 행: id는 원본이 서버에서 getSeq — 저장 후 읽은 행을 돌려준다 */

@@ -39,6 +39,9 @@ export interface ChkDailyList {
   adminDailyListId?: number | null
   /** 회사 0이거나 관리자 점검내역에서 복사된 행 */
   adminYn: boolean
+  /** 담당그룹(R01) — sch22_write_group */
+  writeGroupId?: number | null
+  writeGroupName?: string | null
 }
 
 /** Chk02_Edit_DailyList 저장 본문 — 회사는 서버가 채운다 */
