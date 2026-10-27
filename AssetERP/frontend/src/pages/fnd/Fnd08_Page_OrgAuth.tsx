@@ -95,7 +95,7 @@ export const Fnd08_Page_OrgAuth: React.FC<Props> = ({ fundCodeId }) => {
           onCellClicked={getColumn}
         />
       </div>
-      <div style={{ height: 50, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ height: 50, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0, 0, 0, 0.03)'}}>
         <Button type="save" count={changedCount} disabled={fundCodeId == null} onClick={update}>저장</Button>
       </div>
     </div>

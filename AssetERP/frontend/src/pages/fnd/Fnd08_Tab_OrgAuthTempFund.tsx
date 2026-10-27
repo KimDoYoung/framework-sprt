@@ -4,7 +4,7 @@
  *   — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L61-97: 위 툴바(50, 여백 20·20·-2·20, 테두리) / 왼쪽(0.5, 분할 가능, 최대 1000) = 임시펀드 그리드 / 가운데 = 조직 권한 트리(Fnd08_Page_OrgAuth)
  * 열 때 조회하지 않는다(생성자는 settings()만). 삭제 단추는 없고 deleteRow()는 호출처가 없어 만들지 않았다(E5 도달 불가)
- * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * UX보강(10): 툴바 = SearchBar(UX-01·04). 조건 4개 → 초기화(UX-02) 적용(값은 처음 연 상태로, 초기화 뒤 자동 조회 없음)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Splitter } from 'antd';
@@ -14,7 +14,7 @@ import { errorMessage } from '@/api/client';
 import { FundPlanAuth } from '@/types/fnd';
 import { OrgInfo } from '@/types/emp';
 import { SingleGrid, gbFor } from '@/components/grid';
-import { SearchBar } from '@/components/search';
+import { SearchBar, useSearchParams } from '@/components/search';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Fnd08_Lookup_OrgCode } from '@/components/lookup/Fnd08_Lookup_OrgCode';
@@ -30,10 +30,8 @@ const SINGLE_CHECK = { mode: 'singleRow', checkboxes: true, enableClickSelection
 export const Fnd08_Tab_OrgAuthTempFund: React.FC = () => {
   const gridRef = useRef<AgGridReact<FundPlanAuth>>(null);
   // [E0] 화면 열림 (생성자 L61-97) → settings() L99-151: 펀드유형 "전체"(180), 클래스구분 "전체"(130), 해지펀드포함 해제, 권한부서 빈칸 글자 "전체"(250)
-  const [fundTypeCode, setFundTypeCode] = useState<string>(ALL);
-  const [classTypeCode, setClassTypeCode] = useState<string>(ALL);
-  const [closeYn, setCloseYn] = useState(false);
-  const [org, setOrg] = useState<{ id: number; name: string } | null>(null);
+  const sp = useSearchParams(() => ({ fundTypeCode: ALL, classTypeCode: ALL, closeYn: false, org: null as { id: number; name: string } | null }));
+  const { fundTypeCode, classTypeCode, closeYn, org } = sp.values;
   const [orgOpen, setOrgOpen] = useState(false);
   const [rows, setRows] = useState<FundPlanAuth[]>([]);
   const [loading, setLoading] = useState(false);
@@ -59,9 +57,9 @@ export const Fnd08_Tab_OrgAuthTempFund: React.FC = () => {
   };
 
   // [E1] orgKorName.TriggerClick (L114) → Fnd08_Lookup_OrgCode.open → 고른 조직의 이름·id
-  const onOrgResult = (o: OrgInfo) => setOrg({ id: o.orgCodeId, name: o.korNm ?? '' });
+  const onOrgResult = (o: OrgInfo) => sp.set('org', { id: o.orgCodeId, name: o.korNm ?? '' });
   // [E2] orgKorName.Change (L129) — 비우면(또는 "전체") 권한부서를 없앤다
-  const clearOrg = () => setOrg(null);
+  const clearOrg = () => sp.set('org', null);
 
   // [E5 생략] messageBox.DialogHide (L233) → deleteSelectedRow(): deleteRow() 호출처가 없어 도달 불가 — 삭제 단추도 없다
   // [E4] grid.SelectionChanged [선택>0] (L143) → retrieveEditPage() L171-180: orgAuthTree.retrieve(fundCodeId)
@@ -72,7 +70,7 @@ export const Fnd08_Tab_OrgAuthTempFund: React.FC = () => {
 
   // buildGrid() L153-169
   const columnDefs = useMemo(() => [
-    gb.text('fundCode', 70, '코드'),
+     gb.text('fundCode', 70, '코드'), 
     gb.text('fundName', 250, '펀드명'),
     gb.text('kofiaFundTypeName', 100, '펀드유형'),
     gb.date('startDate', 90, '등록일'),
@@ -86,22 +84,22 @@ export const Fnd08_Tab_OrgAuthTempFund: React.FC = () => {
   return (
     <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '20px 20px 0 20px', flexShrink: 0 }}>
-        <div style={{ border: '1px solid #d9d9d9' }}>
-          <SearchBar onSearch={() => void retrieve()} loading={loading}>
+        <div>
+          <SearchBar onSearch={() => void retrieve()} onReset={sp.reset} loading={loading}>
             <SearchBar.Field label="권한부서">
               <LookupInput width={250} value={org?.name ?? ''} placeholder="전체" onOpen={() => setOrgOpen(true)} onClear={clearOrg} />
             </SearchBar.Field>
             <SearchBar.Field label="펀드유형">
-              <SystemCodeComboBox kindCd="IcamFundType" altCode={ALL_CODE} style={{ width: 180 }} value={fundTypeCode} onChange={c => setFundTypeCode(c ?? ALL)} />
+              <SystemCodeComboBox kindCd="IcamFundType" altCode={ALL_CODE} style={{ width: 180 }} value={fundTypeCode} onChange={c => sp.set('fundTypeCode', c ?? ALL)} />
             </SearchBar.Field>
             <SearchBar.Field label="클래스구분">
-              <SystemCodeComboBox kindCd="IcamClassType" altCode={ALL_CODE} style={{ width: 130 }} value={classTypeCode} onChange={c => setClassTypeCode(c ?? ALL)} />
+              <SystemCodeComboBox kindCd="IcamClassType" altCode={ALL_CODE} style={{ width: 130 }} value={classTypeCode} onChange={c => sp.set('classTypeCode', c ?? ALL)} />
             </SearchBar.Field>
-            <Checkbox checked={closeYn} onChange={e => setCloseYn(e.target.checked)}>해지펀드포함</Checkbox>
+            <Checkbox checked={closeYn} onChange={e => sp.set('closeYn', e.target.checked)}>해지펀드포함</Checkbox>
           </SearchBar>
         </div>
       </div>
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ flex: 1, minHeight: 0 , marginTop: 8}}>
         <Splitter style={{ height: '100%' }}>
           <Splitter.Panel defaultSize="50%" min={200} max={1000}>
             <div style={{ height: '100%', padding: '0 0 20px 20px', boxSizing: 'border-box' }}>

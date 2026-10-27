@@ -142,7 +142,7 @@ export const Fnd01_Tab_FundSearch: React.FC = () => {
                 </SearchBar.Field>
                 <Checkbox checked={closeYn} onChange={e => setCloseYn(e.target.checked)}>해지펀드포함</Checkbox>
               </SearchBar>
-              <div style={{ flex: 1, minHeight: 0, marginTop: 5 }}>
+              <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
                 <SingleGrid<FundSearch>
                   gridRef={gridRef}
                   rowData={rows}

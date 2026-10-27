@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/tdm/Tdm01_Tab_Hr.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L40-65: 가운데(여백 20, 테두리) = 툴바(검색 임원명/직위/조직명 200 · 퇴사자 제외 · [조회] · [인사정보 가져오기]) + 임원 그리드(SingleGrid)
  * 함께: Tdm01_Lookup_HrChangeInfo(인사정보 가져오기 창), Tdm03_Lookup_AddTitle(직무겸직 창, 그리드의 편집 아이콘)
+ * 스타일: SG (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04)
  */
 import React, { useEffect, useMemo, useState } from 'react';
@@ -54,7 +55,7 @@ export const Tdm01_Tab_Hr: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%',  padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E2] retrieveButton[조회].Select (L82) → retrieve() */}
         <SearchBar
           onSearch={retrieve}

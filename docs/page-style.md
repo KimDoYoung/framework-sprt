@@ -16,11 +16,21 @@
 | SG | SearchGrid | SearchBar + 그리드 하나 | 단순 조회 화면 |
 | SGVF | SearchGrid+ViewForm | 위 그리드, 아래 읽기 전용 폼(상하 분할) | `Fnd01_Tab_FundSearch` (펀드 조회) |
 | SGEF | SearchGrid+EditForm | 위 그리드, 아래 편집 폼(저장·삭제 버튼) | 마스터 편집 화면 |
+| SGTP | SearchGrid+TabPage | 위 SearchBar + 그리드, 아래 탭 영역(상하 분할, 그리드 선택 연동) | `Fnd20_Tab_Plan` (상품기획일정 등록) |
+| SGT | SearchGrid+Tree | 위 SearchBar(전체 폭), 아래 좌우 분할: 왼쪽 그리드 / 오른쪽 트리(선택 연동) | `Fnd08_Tab_OrgAuth` (펀드 권한설정). P02도 같은 모양 |
 | TG | Tree+Grid | 왼쪽 트리, 오른쪽 그리드 | `*_Tab_ClassTree` 계열 |
 | GG | Grid+Grid | 마스터 그리드와 상세 그리드 | |
 | CG | CrudGrid | 편집 가능한 그리드 하나 | 코드 관리류 |
 
 ## 스타일별 상세
+
+### SG — SearchGrid
+
+견본: `docs/page-style/SG/Tdm01_Tab_Hr.tsx` (임원 등록)
+
+- 가장 단순한 형태: 바깥 여백 20, 안쪽 `padding 10`, 테두리 없음. 세로 flex로 `SearchBar` + `SingleGrid`를 쌓고 툴바-그리드 간격은 `gap: 8`(SGVF 등의 `marginTop: 8`과 같은 간격).
+- 조회 외 원본 버튼(예: [인사정보 가져오기])은 `SearchBar`의 `extra`. 조회창(`*_Lookup_*`)은 화면 끝에 `open`/`onClose`로 붙인다(편집창이 아니라 조회창이면 SGP가 아니라 SG).
+- 이 견본은 열 때 조회한다(원본이 그렇다). 조건이 2개라 초기화(UX-02)는 넣지 않는다.
 
 ### SGVF — SearchGrid+ViewForm
 
@@ -32,8 +42,8 @@
 
 견본: `docs/page-style/SGVF/` (`Fnd01_Tab_FundSearch.tsx` + `Fnd01_Edit_FundSearch.tsx`)
 
-공통 규칙 4가지(SGVF·SGEF 모두):
-1. SearchBar와 그리드 사이 세로 간격 5px (그리드를 감싼 div에 `marginTop: 5`)
+공통 규칙 4가지(SGVF·SGEF 모두). 2~4번은 **폼이 있는 스타일에서만** 의미가 있다(특히 3번 최소 크기는 폼이 가려지지 않게 하려는 것이라 view/edit 폼일 때만 둔다):
+1. SearchBar와 그리드 사이 세로 간격 8px (그리드를 감싼 div에 `marginTop: 8`)
 2. 폼 라벨은 오른쪽 정렬 (`textAlign: 'right'` + `paddingRight: 10`)
 3. 폼 영역은 최소 크기를 가져 가려지지 않는다 (아래 `Splitter.Panel`의 `min={360}`)
 4. 폼의 줄(row) 사이 간격은 크지 않게 (Row margin `10px 20px 10px 20px`)
@@ -46,6 +56,25 @@
 - 위 공통 규칙 4가지를 그대로 적용한다. 라벨 폭(120/145)과 칸 폭은 원본(AS-IS) 값을 따른다.
 - 위쪽 박스(SearchBar + 그리드)에는 테두리를 두지 않는다(SGVF와 같음).
 
+### SGTP — SearchGrid+TabPage (초안)
+
+견본: `docs/page-style/SGTP/` (`Fnd20_Tab_Plan.tsx` + `Fnd20_TabPage_Plan.tsx`)
+
+- 구조는 SGVF·SGEF와 같은 위아래 분할(위 40%, 아래 60%)이고, 아래가 폼이 아니라 **탭 영역**(`*_TabPage_*` 파일)이다.
+- 위: 테두리 없는 SearchBar + `SingleGrid`(툴바와 그리드 사이 `marginTop: 8`). 열 때 조회하고, 조회가 끝나면 첫 행을 고른다.
+- 그리드 행을 누르면 아래 탭이 그 행의 id로 다시 읽는다(`target = { fundId, nonce }` — 같은 행을 다시 눌러도 nonce를 올려 다시 읽는다).
+- SGVF·SGEF의 공통 규칙 4가지 중 툴바-그리드 간격(1)만 적용한다. 아래는 그리드 탭이라 라벨 정렬(2)·폼 줄 간격(4)은 해당 없고(탭 안은 지금 그대로), 폼 최소 크기(3)도 두지 않는다.
+- 초기화(UX-02): 조건 3개(펀드유형·기획펀드·완료건포함)라 `useSearchParams` + `onReset={sp.reset}`로 넣었다. 초기화 뒤 자동 조회는 하지 않는다.
+
+### SGT — SearchGrid+Tree (초안, 견본 없음)
+
+`Fnd08_Tab_OrgAuth` 기준.
+
+- 위: SearchBar를 전체 폭으로(테두리 박스). 아래: 가로 `Splitter`, 왼쪽 = 그리드(기본 50%), 오른쪽 = 트리(`*_Page_*` 파일).
+- 그리드 행을 고르면 오른쪽 트리가 그 행의 id로 다시 조회한다. 조회가 끝나면 첫 행을 고른다.
+- SGVF·SGEF의 공통 규칙 4가지는 이 스타일에 그대로 적용되지 않는다(아래 폼이 없고, 툴바는 그리드 위가 아니라 전체 폭 위에 있다). 이 스타일에 맞는 규칙은 화면 몇 개를 더 본 뒤 정한다.
+- 오른쪽 트리는 `Fnd08_Page_OrgAuth`처럼 `*_Page_*` 파일이다. Tab과 Page의 역할 구분도 정해야 한다.
+
 (나머지 스타일은 전체 조사 후 같은 형식으로 채운다.)
 
 ## 견본 사용법
@@ -56,6 +85,8 @@
 - 같은 SID 화면을 찾으려면 `grep -rn '스타일: SGVF' AssetERP/frontend/src/pages`.
 
 ## 추가 규칙
+
+- 초기화 버튼(UX-02, `AssetERP/docs/10-UX보강.md`): 검색 조건이 **3개 이상**이고 버튼을 넣을 **공간이 있을 때만** 넣는다. 조건이 2개 이하이거나 줄바꿈되면 넣지 않는다.
 
 - 새 스타일이 필요하면 이 표에 먼저 SID를 등록한 뒤 쓴다(SID는 2~4자 대문자, 중복 금지).
 - 한 화면이 두 스타일에 걸치면 주된 것을 SID로 적고 주석에 차이를 적는다.

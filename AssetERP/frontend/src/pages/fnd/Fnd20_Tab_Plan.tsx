@@ -3,7 +3,8 @@
  * AS-IS: myApp/client/vi/fnd/Fnd20_Tab_Plan.java (166줄) + Fnd20_TabPage_Plan.java (221줄, 아래 기획일정 탭) + Dcr00_Lookup_FundPlan·Emp00_Lookup_SelectSingle(components/lookup)
  *   — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L49-114: 위(40%, 최대 1000, 여백 20·20·0·20) = 테두리 박스(툴바 50 + 기획펀드 그리드) / 아래(60%, 최대 900, 여백 20) = 기획일정 탭(테두리)
- * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: SGTP (견본 — docs/page-style.md)
+ * UX보강(10): 툴바 = SearchBar(UX-01·04). 조건 3개 → 초기화(UX-02) 적용(값은 처음 연 상태로, 초기화 뒤 자동 조회 없음)
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Splitter } from 'antd';
@@ -12,7 +13,7 @@ import { fndApi } from '@/api/fnd';
 import { errorMessage } from '@/api/client';
 import { FundPlanList } from '@/types/fnd';
 import { SingleGrid, gbFor } from '@/components/grid';
-import { SearchBar } from '@/components/search';
+import { SearchBar, useSearchParams } from '@/components/search';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Fnd20_TabPage_Plan } from './Fnd20_TabPage_Plan';
 
@@ -26,9 +27,8 @@ const SINGLE_CHECK = { mode: 'singleRow', checkboxes: true, enableClickSelection
 export const Fnd20_Tab_Plan: React.FC = () => {
   const gridRef = useRef<AgGridReact<FundPlanList>>(null);
   // [E0] 화면 열림 (생성자 L44-47) → init(), retrieve() — 열자마자 조회한다. 펀드유형 "전체"(200), 기획펀드 검색칸(400, 빈칸 글자 "전체"), 완료건포함 해제
-  const [fundTypeCode, setFundTypeCode] = useState<string>(ALL);
-  const [fundText, setFundText] = useState('');
-  const [closeYn, setCloseYn] = useState(false);
+  const sp = useSearchParams(() => ({ fundTypeCode: ALL, fundText: '', closeYn: false }));
+  const { fundTypeCode, fundText, closeYn } = sp.values;
   const [rows, setRows] = useState<FundPlanList[]>([]);
   const [loading, setLoading] = useState(false);
   /** 아래 탭이 보여 줄 펀드 — 조회가 끝나면 첫 행, 행을 누르면 그 행(누를 때마다 nonce를 올려 다시 조회) */
@@ -81,17 +81,17 @@ export const Fnd20_Tab_Plan: React.FC = () => {
       <Splitter layout="vertical" style={{ height: '100%' }}>
         <Splitter.Panel defaultSize="40%" min={120} max={1000}>
           <div style={{ height: '100%', padding: '20px 20px 0 20px', boxSizing: 'border-box' }}>
-            <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
-              <SearchBar onSearch={() => void retrieve()} loading={loading}>
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column'}}>
+              <SearchBar onSearch={() => void retrieve()} onReset={sp.reset} loading={loading}>
                 <SearchBar.Field label="펀드유형">
-                  <SystemCodeComboBox kindCd="IcamFundType" altCode={ALL_CODE} style={{ width: 200 }} value={fundTypeCode} onChange={c => setFundTypeCode(c ?? ALL)} />
+                  <SystemCodeComboBox kindCd="IcamFundType" altCode={ALL_CODE} style={{ width: 200 }} value={fundTypeCode} onChange={c => sp.set('fundTypeCode', c ?? ALL)} />
                 </SearchBar.Field>
                 <SearchBar.Field label="기획펀드">
-                  <SearchBar.Input style={{ width: 400 }} placeholder="전체" value={fundText} onChange={e => setFundText(e.target.value)} />
+                  <SearchBar.Input style={{ width: 400 }} placeholder="전체" value={fundText} onChange={e => sp.set('fundText', e.target.value)} />
                 </SearchBar.Field>
-                <Checkbox checked={closeYn} onChange={e => setCloseYn(e.target.checked)}>완료건포함</Checkbox>
+                <Checkbox checked={closeYn} onChange={e => sp.set('closeYn', e.target.checked)}>완료건포함</Checkbox>
               </SearchBar>
-              <div style={{ flex: 1, minHeight: 0 }}>
+              <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
                 <SingleGrid<FundPlanList>
                   gridRef={gridRef}
                   rowData={rows}
@@ -116,8 +116,8 @@ export const Fnd20_Tab_Plan: React.FC = () => {
           </div>
         </Splitter.Panel>
         <Splitter.Panel defaultSize="60%" min={120} max={900}>
-          <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-            <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 8 }}>
+          <div style={{ height: '100%', padding: 10, boxSizing: 'border-box' }}>
+            <div style={{ height: '100%',  boxSizing: 'border-box', padding: 8 }}>
               <Fnd20_TabPage_Plan target={target} />
             </div>
           </div>
