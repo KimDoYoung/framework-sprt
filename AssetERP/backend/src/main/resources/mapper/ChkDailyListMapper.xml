@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!-- AS-IS(IDMS-IC) server/chk/mapper/chk02_daily_list.xml (selectByAdmin, selectById, selectByAdminDailyListId, insertFromAdmin, updateFromAdmin) + R01 Chk02_Tab_DailyList(selectBySearchText2, updateUseYn, updateWriteGroupId) + UpdateDataModel(chk02_daily_list)  (E07) -->
+<!-- AS-IS(IDMS-IC) server/chk/mapper/chk02_daily_list.xml (selectByAdmin, selectById, selectByAdminDailyListId, insertFromAdmin, updateFromAdmin) + R01 Chk02_Tab_DailyList(selectBySearchText2, updateUseYn, updateWriteGroupId) + R02 Chk03_Tab_DailyListWrite(selectByPersonId) + UpdateDataModel(chk02_daily_list)  (E07) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.chk.mapper.ChkDailyListMapper">
 
     <sql id="dailyListColumns">
@@ -161,4 +161,76 @@
          WHERE chk02_company_id = #{companyId}
            AND chk02_daily_list_id = #{dailyListId}
     </update>
+
+    <!-- AS-IS chk02_daily_list.selectByPersonId (IDMS-IC) — SELECT * 대신 화면이 쓰는 열만. 원본의 date·stdDate는 같은 값이라 stdDate 하나로 받는다.
+         원본은 searchText·useYn 파라미터를 받지만 SQL이 쓰지 않는다(검색칸이 동작하지 않음) — 그대로 -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListWriteRes">
+        WITH chkList AS (
+            SELECT *
+              FROM chk02_daily_list
+                   INNER JOIN chk01_class_tree ON chk01_class_tree_id = chk02_class_tree_id
+                   INNER JOIN sch22_write_group ON sch22_write_group_id = chk02_write_group_id
+                   INNER JOIN (
+                       SELECT sch02_info_id,
+                              sch02_person_id AS person_id
+                         FROM sch02_share
+                        WHERE sch02_company_id = #{companyId}
+                          AND sch02_share_cd   = '1'
+                          AND #{stdDate} BETWEEN sch02_start_date AND COALESCE(sch02_close_date,'9999-12-31')
+                        UNION
+                       SELECT sch02_info_id,
+                              emp03_person_id AS person_id
+                         FROM emp03_trans
+                              INNER JOIN sch02_share ON sch02_org_id = emp03_org_code_id
+                        WHERE (emp03_person_id, emp03_trans_date) IN (
+                                  SELECT emp03_person_id, max(emp03_trans_date)
+                                    FROM emp03_trans
+                                         INNER JOIN emp01_person ON emp01_person_id = emp03_person_id
+                                   WHERE emp01_company_id = #{companyId}
+                                     AND emp03_trans_date &lt;= #{stdDate}
+                                   GROUP BY emp03_person_id )
+                          AND sch02_company_id = #{companyId}
+                          AND sch02_share_cd   = '2'
+                          AND #{stdDate} BETWEEN sch02_start_date AND COALESCE(sch02_close_date,'9999-12-31')
+                   ) emp ON sch02_info_id = sch22_write_group_id
+             WHERE 1=1
+               AND emp.person_id = #{personId}
+               AND NOT EXISTS ( SELECT 1
+                                  FROM emp04_add_title
+                                 WHERE emp04_add_person_id = emp.person_id
+                                   AND ( ( emp04_start_date &gt; #{stdDate} ) OR
+                                         COALESCE(emp04_close_date,'9999-12-31') &lt; #{stdDate} ) )
+               AND chk02_company_id = #{companyId}
+        )
+        SELECT chk02_daily_list_id                            AS daily_list_id,
+               chk02_class_tree_id                            AS class_tree_id,
+               chk01_class_tree_nm                            AS class_tree_name,
+               chk02_content                                  AS content,
+               chk02_explan                                   AS explan,
+               chk02_cutoff                                   AS cutoff,
+               chk02_window_no                                AS window_no,
+               chk02_seq                                      AS seq,
+               chk02_use_yn                                   AS use_yn,
+               chk03_daily_list_write_id                      AS daily_list_write_id,
+               chk03_answer_cd                                AS answer_code,
+               chk03_reason                                   AS reason,
+               chk03_note                                     AS note,
+               COALESCE(chk03_confirm_yn,'false') = 'true'    AS confirm_yn
+          FROM chkList
+               LEFT OUTER JOIN chk03_daily_list_write ON ( chk03_daily_list_id = chk02_daily_list_id
+                                                       AND chk03_company_id    = #{companyId}
+                                                       AND chk03_person_id     = person_id
+                                                       AND chk03_date          = #{stdDate} )
+         WHERE chk02_class_tree_id IN (
+               <include refid="chkTreeDown"/>
+           )
+           AND ( ( chk03_daily_list_write_id IS NULL
+                   AND COALESCE(chk01_use_yn,'false') = 'true'
+                   AND COALESCE(chk02_use_yn,'false') = 'true' )
+                 OR ( chk03_daily_list_write_id IS NOT NULL ) )
+        <if test="checkBox">
+           AND chk03_answer_cd IS NULL
+        </if>
+         ORDER BY chk01_seq, chk01_class_tree_nm COLLATE "ko_KR.utf8" ASC, chk02_content COLLATE "ko_KR.utf8" ASC
+    </select>
 </mapper>

@@ -2,9 +2,11 @@ package kr.co.kfs.asseterp.biz.chk.mapper;
 
 import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListRes;
 import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListSaveReq;
+import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListWriteRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Mapper
@@ -48,4 +50,9 @@ public interface ChkDailyListMapper {
 
     /** AS-IS chk02_daily_list.updateWriteGroupId */
     int updateWriteGroupId(@Param("companyId") Long companyId, @Param("dailyListId") Long dailyListId, @Param("writeGroupId") Long writeGroupId);
+
+    /** AS-IS chk02_daily_list.selectByPersonId — 내가 속한 작성그룹의 점검내역 + 그 날짜의 내 작성 행 */
+    List<ChkDailyListWriteRes> selectByPersonId(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                                @Param("parentTreeId") Long parentTreeId, @Param("stdDate") LocalDate stdDate,
+                                                @Param("checkBox") boolean checkBox);
 }

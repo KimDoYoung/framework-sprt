@@ -60,3 +60,31 @@ export interface ChkDailyListCopyReq {
   dailyListIds: number[]
   companyIds: number[]
 }
+
+/** 일일점검내역 작성 화면의 한 행 (R02, AS-IS Chk02_DailyListModel) — 답변 코드 Y(예)·N(아니오)·X(해당없음) */
+export interface ChkDailyListWrite {
+  dailyListId: number
+  classTreeId: number
+  classTreeName?: string | null
+  content?: string | null
+  explan?: string | null
+  cutoff?: string | null
+  windowNo?: string | null
+  seq?: number | null
+  useYn?: string | null
+  dailyListWriteId?: number | null
+  answerCode?: string | null
+  reason?: string | null
+  note?: string | null
+  confirmYn: boolean
+}
+
+/** 작성 행 하나 (AS-IS Chk03_DailyListWriteModel) */
+export interface ChkDailyListWriteItem {
+  dailyListWriteId: number
+  dailyListId: number
+  answerCode?: string | null
+  reason?: string | null
+  note?: string | null
+  confirmYn: boolean
+}

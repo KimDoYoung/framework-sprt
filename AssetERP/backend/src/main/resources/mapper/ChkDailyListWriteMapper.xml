@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/chk/mapper/chk03_daily_list_write.xml (selectByPersonId, selectById, updateAnswerCode) + UpdateDataModel(chk03_daily_list_write)  (R02 일일점검내역 작성) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.chk.mapper.ChkDailyListWriteMapper">
+
+    <sql id="writeColumns">
+        chk03_daily_list_write_id                   AS daily_list_write_id,
+        chk03_daily_list_id                         AS daily_list_id,
+        chk03_answer_cd                             AS answer_code,
+        chk03_reason                                AS reason,
+        chk03_note                                  AS note,
+        COALESCE(chk03_confirm_yn,'false') = 'true' AS confirm_yn
+    </sql>
+
+    <!-- AS-IS chk03_daily_list_write.selectByPersonId (IDMS-IC) — 회사 조건은 보안 보강 -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListWriteItem">
+        SELECT <include refid="writeColumns"/>
+          FROM chk03_daily_list_write
+         WHERE chk03_company_id    = #{companyId}
+           AND chk03_daily_list_id = #{dailyListId}
+           AND chk03_person_id     = #{personId}
+           AND chk03_date          = #{date}
+         ORDER BY chk03_daily_list_write_id
+    </select>
+
+    <!-- AS-IS chk03_daily_list_write.selectById (IDMS-IC) — 내 작성 행만(보안 보강) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListWriteItem">
+        SELECT <include refid="writeColumns"/>
+          FROM chk03_daily_list_write
+         WHERE chk03_daily_list_write_id = #{dailyListWriteId}
+           AND chk03_company_id = #{companyId}
+           AND chk03_person_id  = #{personId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel INSERT — 사유·비고·확인 열은 비운다(원본 updateAnswerCode의 insertModel). 답변일시는 서버 현재 시각 -->
+    <insert id="insert">
+        INSERT INTO chk03_daily_list_write
+               ( chk03_daily_list_write_id, chk03_company_id, chk03_daily_list_id, chk03_date, chk03_answer_cd, chk03_person_id, chk03_answer_datetime )
+        VALUES ( #{dailyListWriteId}, #{companyId}, #{dailyListId}, #{date}, #{answerCode}, #{personId}, now() )
+    </insert>
+
+    <!-- AS-IS chk03_daily_list_write.updateAnswerCode (IDMS-IC) — 답변일시에 :date를 넣는 것도 원본 그대로 -->
+    <update id="updateAnswerCode">
+        UPDATE chk03_daily_list_write
+           SET chk03_answer_cd       = #{answerCode},
+               chk03_answer_datetime = #{date}
+         WHERE chk03_daily_list_write_id = #{dailyListWriteId}
+           AND chk03_company_id = #{companyId}
+           AND chk03_person_id  = #{personId}
+    </update>
+
+    <!-- UpdateDataModel UPDATE — 화면이 바꾸는 열(점검결과)만 -->
+    <update id="updateReason">
+        UPDATE chk03_daily_list_write
+           SET chk03_reason = #{reason}
+         WHERE chk03_daily_list_write_id = #{dailyListWriteId}
+           AND chk03_company_id = #{companyId}
+           AND chk03_person_id  = #{personId}
+    </update>
+
+    <!-- UpdateDataModel UPDATE — 화면이 바꾸는 열(비고)만 -->
+    <update id="updateNote">
+        UPDATE chk03_daily_list_write
+           SET chk03_note = #{note}
+         WHERE chk03_daily_list_write_id = #{dailyListWriteId}
+           AND chk03_company_id = #{companyId}
+           AND chk03_person_id  = #{personId}
+    </update>
+</mapper>

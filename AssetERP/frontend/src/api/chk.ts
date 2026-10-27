@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { ChkClassTree, ChkClassTreeSaveReq, ChkDailyList, ChkDailyListCopyReq, ChkDailyListSaveReq } from '../types/chk';
+import { ChkClassTree, ChkClassTreeSaveReq, ChkDailyList, ChkDailyListCopyReq, ChkDailyListSaveReq, ChkDailyListWrite, ChkDailyListWriteItem } from '../types/chk';
 
 /** chk(일일점검) 화면 API (E06~) */
 export const chkApi = {
@@ -90,5 +90,41 @@ export const chkApi = {
   copyDailyLists: async (req: ChkDailyListCopyReq): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/chk/daily-lists/copy', req);
     return res.data.data ?? 0;
+  },
+
+  /** AS-IS chk.Chk02_DailyList.selectByPersonId — 점검일자(date)의 내 점검내역과 작성 행 */
+  searchDailyListWrites: async (classTreeId: number, date: string, checkBox: boolean): Promise<ChkDailyListWrite[]> => {
+    const res = await apiClient.get<ApiResponse<ChkDailyListWrite[]>>('v1/chk/daily-list-writes', { params: { classTreeId, date, checkBox } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS chk.Chk03_DailyListWrite.updateAnswerCode — 작성 행이 없으면 서버가 만든다 → 작성 행 */
+  updateDailyListWriteAnswer: async (dailyListId: number, answerCode: string, date: string): Promise<ChkDailyListWriteItem> => {
+    const res = await apiClient.put<ApiResponse<ChkDailyListWriteItem>>('v1/chk/daily-list-writes/answers', { dailyListId, answerCode, date });
+    return res.data.data;
+  },
+
+  /** AS-IS chk.Chk03_DailyListWrite.modelUpdate (답변 없는 새 행) → 작성 행 */
+  createDailyListWrite: async (dailyListId: number, date: string): Promise<ChkDailyListWriteItem> => {
+    const res = await apiClient.post<ApiResponse<ChkDailyListWriteItem>>('v1/chk/daily-list-writes', { dailyListId, date });
+    return res.data.data;
+  },
+
+  /** AS-IS chk.Chk03_DailyListWrite.selectById */
+  getDailyListWrite: async (dailyListWriteId: number): Promise<ChkDailyListWriteItem> => {
+    const res = await apiClient.get<ApiResponse<ChkDailyListWriteItem>>(`v1/chk/daily-list-writes/${dailyListWriteId}`);
+    return res.data.data;
+  },
+
+  /** AS-IS Chk03_Edit_Reason.update → modelUpdate (점검결과) */
+  updateDailyListWriteReason: async (dailyListWriteId: number, text: string | null): Promise<ChkDailyListWriteItem> => {
+    const res = await apiClient.put<ApiResponse<ChkDailyListWriteItem>>(`v1/chk/daily-list-writes/${dailyListWriteId}/reason`, { text });
+    return res.data.data;
+  },
+
+  /** AS-IS Chk03_Edit_Note.update → modelUpdate (비고) */
+  updateDailyListWriteNote: async (dailyListWriteId: number, text: string | null): Promise<ChkDailyListWriteItem> => {
+    const res = await apiClient.put<ApiResponse<ChkDailyListWriteItem>>(`v1/chk/daily-list-writes/${dailyListWriteId}/note`, { text });
+    return res.data.data;
   },
 };
