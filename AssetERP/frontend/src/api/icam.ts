@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { IcamData, IcamFee, IcamFund, IcamSource, IcamTestBatchReq } from '../types/icam';
+import { FundPrice, IcamData, IcamFee, IcamFund, IcamSource, IcamTestBatchReq } from '../types/icam';
 
 /** icam 화면 API (D07~) */
 export const icamApi = {
@@ -60,5 +60,19 @@ export const icamApi = {
   /** AS-IS BatchMain(actionCode=…): 작업용 화면의 작업 버튼 — 배치 연동이 없으면 오류 */
   runTestBatch: async (req: IcamTestBatchReq): Promise<void> => {
     await apiClient.post<ApiResponse<null>>('v1/icam/test/batch', req);
+  },
+
+  // ── R05 펀드별 기준가 현황 (Icam06_Tab_FundPrice) ──
+
+  /** AS-IS icam.Icam06_FundBook.selectIcamFundPrice: 펀드별 기준가 현황 목록 */
+  searchFundPrices: async (stdDate: string): Promise<FundPrice[]> => {
+    const res = await apiClient.get<ApiResponse<FundPrice[]>>('v1/icam/fund-prices', { params: { stdDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdFundPrice: RD 엑셀 다운로드 그룹 ID 생성 */
+  rdDownloadFundPrice: async (stdDate: string): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/icam/fund-prices/rd-download', { stdDate });
+    return res.data.data ?? '';
   },
 };

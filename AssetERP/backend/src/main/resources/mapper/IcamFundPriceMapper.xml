@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/icam/mapper/icam06_fund_book.xml (selectFundPrice L247)
+   + server/sys/Sys99_Print.java (insertRdFundPrice L5056)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.icam.mapper.IcamFundPriceMapper">
+
+    <sql id="fundPriceQuery">
+        SELECT bok.icam06_fund_cd                                                                           AS fund_code
+             , bok.icam06_fund_nm                                                                           AS fund_name
+             , bok.icam06_cur                                                                               AS cur
+             , CASE WHEN bok.icam06_cur = 'KRW' THEN bok.icam06_principal ELSE bok.icam06_for_principal END AS for_principal
+             , CASE WHEN bok.icam06_cur = 'KRW'
+                        THEN bok.icam06_principal     - COALESCE(preBok.icam06_principal    ,0)
+                        ELSE bok.icam06_for_principal - COALESCE(preBok.icam06_for_principal,0) END         AS principal_diff
+             , CASE WHEN bok.icam06_cur = 'KRW' THEN bok.icam06_nav       ELSE bok.icam06_for_nav       END AS for_nav
+             , CASE WHEN bok.icam06_cur = 'KRW'
+                        THEN bok.icam06_nav           - COALESCE(preBok.icam06_nav          ,0)
+                        ELSE bok.icam06_for_nav       - COALESCE(preBok.icam06_for_nav      ,0) END         AS nav_diff
+             , CASE WHEN bok.icam06_cur = 'KRW' THEN bok.icam06_std_price ELSE bok.icam06_for_std_price END AS for_std_price
+             , CASE WHEN bok.icam06_cur = 'KRW'
+                        THEN bok.icam06_std_price     - COALESCE(preBok.icam06_std_price    ,0)
+                        ELSE bok.icam06_for_std_price - COALESCE(preBok.icam06_for_std_price,0) END         AS std_price_diff
+             , CASE WHEN bok.icam06_cur = 'KRW' THEN bok.icam06_tax_price ELSE bok.icam06_for_tax_price END AS for_tax_price
+             , CASE WHEN bok.icam06_cur = 'KRW'
+                        THEN bok.icam06_tax_price     - COALESCE(preBok.icam06_tax_price    ,0)
+                        ELSE bok.icam06_for_tax_price - COALESCE(preBok.icam06_for_tax_price,0) END         AS tax_price_diff
+          FROM icam06_fund_book bok
+               LEFT JOIN icam06_fund_book preBok ON ( preBok.icam06_icam_company_cd = bok.icam06_icam_company_cd
+                                                  AND preBok.icam06_fund_cd         = bok.icam06_fund_cd
+                                                  AND preBok.icam06_std_date        = bok.icam06_std_date - 1 )
+         WHERE bok.icam06_icam_company_cd = ( SELECT sys01_icam_company_cd
+                                                FROM sys01_company
+                                               WHERE sys01_company_id = #{companyId} )
+           AND bok.icam06_std_date = #{stdDate}::date
+           AND bok.icam06_fund_cd != COALESCE(bok.icam06_multi_class_cd,'')
+         UNION ALL
+        SELECT *
+          FROM (
+                 WITH book AS ( SELECT prc.*
+                                     , prc.ifi32_principal - COALESCE(prePrc.ifi32_principal,0) AS principal_diff
+                                     , prc.ifi32_nav       - COALESCE(prePrc.ifi32_nav      ,0) AS nav_diff
+                                     , prc.ifi32_price     - COALESCE(prePrc.ifi32_price    ,0) AS std_price_diff
+                                     , prc.ifi32_tax_price - COALESCE(prePrc.ifi32_tax_price,0) AS tax_price_diff
+                                  FROM ifi32_fund_price prc
+                                       LEFT JOIN ifi32_fund_price prePrc ON ( prePrc.ifi32_if_cd        = prc.ifi32_if_cd
+                                                                          AND prePrc.ifi32_am_corp_cd   = prc.ifi32_am_corp_cd
+                                                                          AND prePrc.ifi32_std_date     = TO_CHAR(TO_DATE(prc.ifi32_std_date,'yyyymmdd')-1,'yyyymmdd')
+                                                                          AND prePrc.ifi32_fund_cd      = prc.ifi32_fund_cd
+                                                                          AND prePrc.ifi32_cur_cd       = prc.ifi32_cur_cd )
+                                 WHERE (prc.ifi32_if_cd, prc.ifi32_am_corp_cd) IN ( SELECT ifi29_if_cd, ifi29_am_corp_cd
+                                                                                      FROM ifi29_am_corp_mapping
+                                                                                     WHERE ifi29_company_id = #{companyId}
+                                                                                       AND #{stdDate}::date BETWEEN ifi29_start_date AND COALESCE(ifi29_end_date, '2999-12-31'::date) )
+                                   AND prc.ifi32_std_date = TO_CHAR(#{stdDate}::date,'yyyymmdd')
+                                   AND NOT EXISTS ( SELECT 1
+                                                      FROM ifi32_fund_price a
+                                                     WHERE a.ifi32_if_cd                = prc.ifi32_if_cd
+                                                       AND a.ifi32_am_corp_cd           = prc.ifi32_am_corp_cd
+                                                       AND a.ifi32_std_date             = prc.ifi32_std_date
+                                                       AND a.ifi32_multi_class_func_cd  = prc.ifi32_fund_cd )
+                 )
+                 SELECT bok.ifi32_fund_cd                                                                               AS fund_code
+                      , bok.ifi32_fund_nm                                                                               AS fund_name
+                      , COALESCE(forBok.ifi32_cur_cd, bok.ifi32_cur_cd)                                                 AS cur
+                      , CASE WHEN forBok.ifi32_cur_cd IS NULL THEN bok.ifi32_principal  ELSE forBok.ifi32_principal END AS for_principal
+                      , CASE WHEN forBok.ifi32_cur_cd IS NULL THEN bok.principal_diff   ELSE forBok.principal_diff  END AS principal_diff
+                      , CASE WHEN forBok.ifi32_cur_cd IS NULL THEN bok.ifi32_nav        ELSE forBok.ifi32_nav       END AS for_nav
+                      , CASE WHEN forBok.ifi32_cur_cd IS NULL THEN bok.nav_diff         ELSE forBok.nav_diff        END AS nav_diff
+                      , CASE WHEN forBok.ifi32_cur_cd IS NULL THEN bok.ifi32_price      ELSE forBok.ifi32_price     END AS for_std_price
+                      , CASE WHEN forBok.ifi32_cur_cd IS NULL THEN bok.std_price_diff   ELSE forBok.std_price_diff  END AS std_price_diff
+                      , CASE WHEN forBok.ifi32_cur_cd IS NULL THEN bok.ifi32_tax_price  ELSE forBok.ifi32_tax_price END AS for_tax_price
+                      , CASE WHEN forBok.ifi32_cur_cd IS NULL THEN bok.tax_price_diff   ELSE forBok.tax_price_diff  END AS tax_price_diff
+                   FROM book bok
+                        LEFT JOIN book forBok ON ( forBok.ifi32_if_cd        = bok.ifi32_if_cd
+                                               AND forBok.ifi32_am_corp_cd   = bok.ifi32_am_corp_cd
+                                               AND forBok.ifi32_std_date     = bok.ifi32_std_date
+                                               AND forBok.ifi32_fund_cd      = bok.ifi32_fund_cd
+                                               AND forBok.ifi32_cur_cd      != 'KRW' )
+                  WHERE bok.ifi32_cur_cd = 'KRW'
+               ) t
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) icam06_fund_book.selectFundPrice L247 -->
+    <select id="selectFundPrice" resultType="kr.co.kfs.asseterp.biz.icam.dto.FundPriceRes">
+        SELECT ROW_NUMBER() OVER(ORDER BY fund_code) AS fund_book_id
+             , s.fund_code
+             , s.fund_name
+             , s.cur
+             , COALESCE(s.for_principal, 0)  AS for_principal
+             , COALESCE(s.principal_diff, 0) AS principal_diff
+             , COALESCE(s.for_std_price, 0)  AS for_std_price
+             , COALESCE(s.std_price_diff, 0) AS std_price_diff
+             , COALESCE(s.for_tax_price, 0)  AS for_tax_price
+             , COALESCE(s.tax_price_diff, 0) AS tax_price_diff
+             , COALESCE(s.for_nav, 0)        AS for_nav
+             , COALESCE(s.nav_diff, 0)       AS nav_diff
+          FROM (
+               <include refid="fundPriceQuery"/>
+          ) s
+         ORDER BY s.fund_code
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys99_print.deleteByPersonId L695 -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm = #{windowClassName}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) Sys99_Print.insertRdFundPrice L5056 -->
+    <insert id="insertPrintFundPrice">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_string03
+               , sys99_double01, sys99_double02, sys99_double03, sys99_double04
+               , sys99_double05, sys99_double06, sys99_double07, sys99_double08 )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , COALESCE(s.fund_code, ''), COALESCE(s.fund_name, ''), COALESCE(s.cur, '')
+             , COALESCE(s.for_principal, 0), COALESCE(s.principal_diff, 0)
+             , COALESCE(s.for_nav, 0), COALESCE(s.nav_diff, 0)
+             , COALESCE(s.for_std_price, 0), COALESCE(s.std_price_diff, 0)
+             , COALESCE(s.for_tax_price, 0), COALESCE(s.tax_price_diff, 0)
+          FROM (
+               <include refid="fundPriceQuery"/>
+          ) s
+         ORDER BY s.fund_code
+    </insert>
+
+</mapper>

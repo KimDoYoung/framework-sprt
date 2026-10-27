@@ -103,3 +103,19 @@ export interface IcamTestBatchReq {
   closeDate?: string;
   year?: string;
 }
+
+/** R05 펀드별 기준가 현황 (AS-IS Icam06_FundBookModel) */
+export interface FundPrice {
+  fundBookId: number;
+  fundCode: string;
+  fundName: string;
+  cur: string;
+  forPrincipal: number;
+  principalDiff: number;
+  forStdPrice: number;
+  stdPriceDiff: number;
+  forTaxPrice: number;
+  taxPriceDiff: number;
+  forNav: number;
+  navDiff: number;
+}

@@ -8151,5 +8151,28 @@
     "note": "docs/work/R/R04-작업기록.md",
     "history": [],
     "id": "R04"
+  },
+  "Icam06_Tab_FundPrice": {
+    "commit": "87b2dccf21b1f775b2b6d5958791f5c55bcd817a",
+    "commit_short": "87b2dcc",
+    "branch": "ioc",
+    "commit_date": "2026-10-26",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/icam/Icam06_Tab_FundPrice.java": "24c6efd3a74215afc2eae0f131f7887b84948610",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam06_FundBookModel.java": "d0678f73bb341f0f0613c592688cab2205e4c7f3",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam06_FundBookModelProperties.java": "2c2d59dda4e507f70d94e1755f2d4bb0c97866a9",
+      "application/src/main/java/myApp/server/icam/Icam06_FundBook.java": "f85165ed6e215b720dc8ff4d555b85d865ea71a3",
+      "application/src/main/java/myApp/server/icam/mapper/icam06_fund_book.xml": "e62304e04074746d64c7aaa6a495da51ceedae5f",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-27T15:14:18+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/R/R05-작업기록.md",
+    "history": [],
+    "id": "R05"
   }
 }
