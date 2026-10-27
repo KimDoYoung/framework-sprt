@@ -20,7 +20,7 @@ interface SearchContextValue {
   loading: boolean;
 }
 
-const SearchContext = createContext<SearchContextValue>({ search: () => undefined, loading: false });
+export const SearchContext = createContext<SearchContextValue>({ search: () => undefined, loading: false });
 
 export interface SearchBarProps {
   /** 조회. Promise를 돌려주면 끝날 때까지 loading */
@@ -65,7 +65,7 @@ const Field: React.FC<{ label: React.ReactNode; children: React.ReactNode }> = (
 );
 
 /** 검색어 입력 — Enter = 조회(UX-01, 조회 중이면 무시), allowClear 기본 true(UX-04), Ctrl+Delete = 내용 전체 비움 */
-const SearchInput: React.FC<InputProps> = ({ allowClear = true, onPressEnter, onKeyDown, ...rest }) => {
+export const SearchInput: React.FC<InputProps> = ({ allowClear = true, onPressEnter, onKeyDown, ...rest }) => {
   const { search } = useContext(SearchContext);
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     onKeyDown?.(e);

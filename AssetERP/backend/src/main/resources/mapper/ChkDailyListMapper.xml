@@ -233,4 +233,118 @@
         </if>
          ORDER BY chk01_seq, chk01_class_tree_nm COLLATE "ko_KR.utf8" ASC, chk02_content COLLATE "ko_KR.utf8" ASC
     </select>
+
+    <!-- R03 chk03_daily_list_write.chkList — 점검일(date) 기준 작성그룹 담당자(개인 + 부서원, 퇴직 제외) x 점검내역 -->
+    <sql id="confirmChkList">
+        SELECT *,
+               chk01_class_tree_nm                                                           AS chk02_class_tree_nm,
+               COALESCE(sch22_confirmer_id, f_get_confirmer_limit(person_id, #{date}, '0020')) AS confirmer_id
+          FROM chk02_daily_list
+               INNER JOIN chk01_class_tree ON chk01_class_tree_id = chk02_class_tree_id
+               INNER JOIN sch22_write_group ON sch22_write_group_id = chk02_write_group_id
+               INNER JOIN (
+                   SELECT sch02_info_id,
+                          sch02_person_id     person_id,
+                          emp00_kor_nm        person_nm,
+                          emp00_org_code_id   org_id,
+                          emp00_org_code_nm   org_nm
+                     FROM sch02_share
+                          INNER JOIN getPerson(#{companyId}, #{date}) ON emp00_person_id = sch02_person_id
+                    WHERE sch02_company_id = #{companyId}
+                      AND sch02_share_cd   = '1'
+                      AND #{date} BETWEEN sch02_start_date AND COALESCE(sch02_close_date,'9999-12-31')
+                    UNION ALL
+                   SELECT sch02_info_id,
+                          emp00_person_id     person_id,
+                          emp00_kor_nm        person_nm,
+                          emp00_org_code_id   org_id,
+                          emp00_org_code_nm   org_nm
+                     FROM sch02_share
+                          INNER JOIN getPerson(#{companyId}, #{date}) ON emp00_org_code_id = sch02_org_id
+                    WHERE sch02_company_id = #{companyId}
+                      AND sch02_share_cd   = '2'
+                      AND #{date}::date BETWEEN sch02_start_date AND COALESCE(sch02_close_date,'9999-12-31')
+                      AND emp00_trans_cd  != '900'  /* 900:퇴직 */
+               ) emp ON sch02_info_id = sch22_write_group_id
+         WHERE 1=1
+           AND chk02_company_id = #{companyId}
+           AND NOT EXISTS ( SELECT 1
+                              FROM emp04_add_title
+                             WHERE emp04_add_person_id = person_id
+                               AND ( emp04_start_date                        &gt; #{date} OR
+                                     COALESCE(emp04_close_date,'9999-12-31') &lt; #{date} ) )
+    </sql>
+
+    <!-- R03 chk03_daily_list_write.whereCondition — 목록과 건수가 같은 조건을 쓴다. confirmerId는 원본이 항상 로그인 사용자를 준다 -->
+    <sql id="confirmWhere">
+        LEFT OUTER JOIN chk03_daily_list_write ON ( chk03_daily_list_id = chk02_daily_list_id
+                                                AND chk03_company_id    = #{companyId}
+                                                AND chk03_person_id     = person_id
+                                                AND chk03_date          = #{date} )
+    </sql>
+
+    <sql id="confirmCondition">
+           AND chk02_class_tree_id IN (
+               <include refid="chkTreeDown"/>
+           )
+           AND ( ( chk03_daily_list_write_id IS NULL
+                   AND COALESCE(chk01_use_yn,'false') = 'true'
+                   AND COALESCE(chk02_use_yn,'false') = 'true' )
+                 OR ( chk03_daily_list_write_id IS NOT NULL ) )
+           AND ( ( #{unCheckYn} = 'true'  AND chk03_answer_cd IS NULL ) OR ( #{unCheckYn} = 'false' ) )
+           AND ( ( #{unConfirmYn} = 'true' AND COALESCE(chk03_confirm_yn,'false') = 'false' ) OR ( #{unConfirmYn} = 'false' ) )
+           AND CONCAT(chk02_class_tree_nm, chk02_content, chk02_explan, f_org_nm(org_id, #{date}), f_emp_kor_nm(person_id)) LIKE #{searchText}
+           AND COALESCE(chk03_confirmer_id, confirmer_id) = #{confirmerId}
+    </sql>
+
+    <!-- AS-IS chk03_daily_list_write.selectDailyListStatusPaging (IDMS-IC) — 원본의 date·stdDate는 같은 값이라 date 하나. SELECT 목록은 화면 열 + 상세보기 창이 보는 열 -->
+    <select id="selectConfirmListPaging" resultType="kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListConfirmRes">
+        WITH chkList AS (
+            <include refid="confirmChkList"/>
+        )
+        SELECT row_number() OVER()                                                              AS key_id,
+               chk02_company_id                                                                 AS company_id,
+               chk02_daily_list_id                                                              AS daily_list_id,
+               chk02_class_tree_id                                                              AS class_tree_id,
+               chk02_class_tree_nm                                                              AS class_tree_name,
+               chk02_content                                                                    AS content,
+               chk02_explan                                                                     AS explan,
+               chk02_cutoff                                                                     AS cutoff,
+               chk02_window_no                                                                  AS window_no,
+               chk02_seq                                                                        AS seq,
+               chk02_use_yn                                                                     AS use_yn,
+               chk03_daily_list_write_id                                                        AS daily_list_write_id,
+               chk03_answer_cd                                                                  AS answer_code,
+               CASE WHEN chk03_answer_cd IS NOT NULL THEN f_cdnm('AnswerCode', chk03_answer_cd, chk02_company_id, #{date}) ELSE '' END
+                 || CASE WHEN chk03_reason IS NOT NULL THEN ' (' || chk03_reason || ')' ELSE '' END AS reason,
+               org_id                                                                           AS org_id,
+               org_nm                                                                           AS org_name,
+               person_id                                                                        AS person_id,
+               person_nm                                                                        AS person_name,
+               confirmer.emp00_person_id                                                        AS confirmer_id,
+               confirmer.emp00_kor_nm                                                           AS confirmer_name,
+               COALESCE(chk03_confirm_yn,'false') = 'true'                                      AS confirm_yn
+          FROM chkList
+               <include refid="confirmWhere"/>
+               LEFT JOIN getPerson(#{companyId}, #{date}) confirmer ON confirmer.emp00_person_id = COALESCE(chk03_confirmer_id, confirmer_id)
+         WHERE 1=1
+        <include refid="confirmCondition"/>
+         ORDER BY chk01_seq, chk02_seq,
+                  f_org_nm(org_id, #{date}) COLLATE "ko_KR.utf8" ASC,
+                  f_emp_kor_nm(person_id) COLLATE "ko_KR.utf8" ASC
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <!-- AS-IS chk03_daily_list_write.selectDailyListStatusPagingTotal (IDMS-IC) -->
+    <select id="selectConfirmListTotal" resultType="long">
+        WITH chkList AS (
+            <include refid="confirmChkList"/>
+        )
+        SELECT count(*)
+          FROM chkList
+               <include refid="confirmWhere"/>
+         WHERE 1=1
+        <include refid="confirmCondition"/>
+    </select>
 </mapper>

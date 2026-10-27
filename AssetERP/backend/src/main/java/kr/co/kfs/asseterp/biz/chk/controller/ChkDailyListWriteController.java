@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.chk.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListConfirmReq;
+import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListConfirmRes;
 import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListWriteAnswerReq;
 import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListWriteCreateReq;
 import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListWriteItem;
@@ -8,6 +10,7 @@ import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListWriteRes;
 import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListWriteTextReq;
 import kr.co.kfs.asseterp.biz.chk.service.ChkDailyListWriteService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
+import kr.co.kfs.asseterp.common.dto.PageRes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,6 +34,25 @@ public class ChkDailyListWriteController {
                                                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                                                         @RequestParam(defaultValue = "false") boolean checkBox) {
         return ApiResponse.ok(service.list(principal, classTreeId, date, checkBox));
+    }
+
+    /** AS-IS chk.Chk03_DailyListWrite.selectDailyListStatusPaging (R03 #1242) — 점검일의 담당자별 점검내역, 내가 확인자인 행 */
+    @GetMapping("/confirm-list")
+    public ApiResponse<PageRes<ChkDailyListConfirmRes>> confirmList(@AuthenticationPrincipal UserPrincipal principal,
+                                                                    @RequestParam Long classTreeId,
+                                                                    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                                                                    @RequestParam(defaultValue = "") String searchText,
+                                                                    @RequestParam(defaultValue = "false") boolean unCheckYn,
+                                                                    @RequestParam(defaultValue = "false") boolean unConfirmYn,
+                                                                    @RequestParam(defaultValue = "0") long offset,
+                                                                    @RequestParam(defaultValue = "100") long limit) {
+        return ApiResponse.ok(service.searchConfirmList(principal, classTreeId, date, searchText, unCheckYn, unConfirmYn, offset, limit));
+    }
+
+    /** AS-IS chk.Chk03_DailyListWrite.updateConfirmYn (R03) — 선택한 행 확인/확인취소 → 처리 건수 */
+    @PutMapping("/confirm")
+    public ApiResponse<Integer> updateConfirmYn(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ChkDailyListConfirmReq req) {
+        return ApiResponse.ok(service.updateConfirmYn(principal, req));
     }
 
     /** AS-IS chk.Chk03_DailyListWrite.updateAnswerCode → 작성 행 */

@@ -74,4 +74,23 @@
            AND chk03_company_id = #{companyId}
            AND chk03_person_id  = #{personId}
     </update>
+
+    <!-- AS-IS chk03_daily_list_write.updateConfirmYn (IDMS-IC, R03) — 회사 조건은 보안 보강. 확인취소면 confirmerId = null -->
+    <update id="updateConfirmYn">
+        UPDATE chk03_daily_list_write
+           SET chk03_confirm_yn       = #{confirmYn},
+               chk03_confirmer_id     = #{confirmerId},
+               chk03_confirm_datetime = now()
+         WHERE chk03_daily_list_write_id = #{dailyListWriteId}
+           AND chk03_company_id = #{companyId}
+    </update>
+
+    <!-- UpdateDataModel INSERT (R03 confirm) — 작성 행이 아직 없는 대상을 확인할 때. 답변·사유·비고는 비운다 -->
+    <insert id="insertConfirm">
+        INSERT INTO chk03_daily_list_write
+               ( chk03_daily_list_write_id, chk03_company_id, chk03_daily_list_id, chk03_date, chk03_person_id,
+                 chk03_confirm_yn, chk03_confirmer_id, chk03_confirm_datetime )
+        VALUES ( #{dailyListWriteId}, #{companyId}, #{dailyListId}, #{date}, #{personId},
+                 #{confirmYn}, #{confirmerId}, now() )
+    </insert>
 </mapper>

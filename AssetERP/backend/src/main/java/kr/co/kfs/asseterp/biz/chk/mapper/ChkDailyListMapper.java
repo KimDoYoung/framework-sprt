@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.chk.mapper;
 
+import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListConfirmRes;
 import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListRes;
 import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListSaveReq;
 import kr.co.kfs.asseterp.biz.chk.dto.ChkDailyListWriteRes;
@@ -55,4 +56,17 @@ public interface ChkDailyListMapper {
     List<ChkDailyListWriteRes> selectByPersonId(@Param("companyId") Long companyId, @Param("personId") Long personId,
                                                 @Param("parentTreeId") Long parentTreeId, @Param("stdDate") LocalDate stdDate,
                                                 @Param("checkBox") boolean checkBox);
+
+    /** AS-IS chk03_daily_list_write.selectDailyListStatusPaging — 점검일의 담당자별 점검내역(확인 대상 = 확인자가 나인 행) */
+    List<ChkDailyListConfirmRes> selectConfirmListPaging(@Param("companyId") Long companyId, @Param("confirmerId") Long confirmerId,
+                                                         @Param("parentTreeId") Long parentTreeId, @Param("date") LocalDate date,
+                                                         @Param("searchText") String searchText, @Param("unCheckYn") String unCheckYn,
+                                                         @Param("unConfirmYn") String unConfirmYn,
+                                                         @Param("limit") long limit, @Param("offset") long offset);
+
+    /** AS-IS chk03_daily_list_write.selectDailyListStatusPagingTotal */
+    long selectConfirmListTotal(@Param("companyId") Long companyId, @Param("confirmerId") Long confirmerId,
+                                @Param("parentTreeId") Long parentTreeId, @Param("date") LocalDate date,
+                                @Param("searchText") String searchText, @Param("unCheckYn") String unCheckYn,
+                                @Param("unConfirmYn") String unConfirmYn);
 }

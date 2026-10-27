@@ -8089,5 +8089,36 @@
     "note": "docs/work/R/R02-작업기록.md",
     "history": [],
     "id": "R02"
+  },
+  "Chk03_Tab_DailyListConfirm": {
+    "commit": "87b2dccf21b1f775b2b6d5958791f5c55bcd817a",
+    "commit_short": "87b2dcc",
+    "branch": "ioc",
+    "commit_date": "2026-10-26",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/chk/Chk01_Edit_ClassTree.java": "4f7599427a2f11c396ae862580241d617f57c744",
+      "application/src/main/java/myApp/client/vi/chk/Chk01_Lookup_ClassTree.java": "e229f21301fb6f6904cb027d5ada252f262113d9",
+      "application/src/main/java/myApp/client/vi/chk/Chk02_Edit_DailyList.java": "1d2fc640449bc6fe4c2371370435d3f69559a989",
+      "application/src/main/java/myApp/client/vi/chk/Chk03_Tab_DailyListConfirm.java": "95e7971ac727973f02038543fdf7f1fc826b300f",
+      "application/src/main/java/myApp/client/vi/chk/model/Chk01_ClassTreeModel.java": "9797c982cfac60def6daab9bf251e9f45f04dd7b",
+      "application/src/main/java/myApp/client/vi/chk/model/Chk01_ClassTreeModelProperties.java": "736bb99d1c7b9cab5b7a2a2dd30f4d9e659d32e2",
+      "application/src/main/java/myApp/client/vi/chk/model/Chk02_DailyListModel.java": "7a4a5ec44f9753219f887bdd97127363ed0712f1",
+      "application/src/main/java/myApp/client/vi/chk/model/Chk03_DailyListWriteModel.java": "5ab2c67eff530312bf75d43a97d1070f101fb155",
+      "application/src/main/java/myApp/client/vi/chk/model/Chk03_DailyListWriteModelProperties.java": "b46d145ccbf483bebe66274b5919fb593fe1a047",
+      "application/src/main/java/myApp/server/chk/Chk01_ClassTree.java": "0b8dceca88295445d4e4ce7543f671d1b2180c4c",
+      "application/src/main/java/myApp/server/chk/Chk02_DailyList.java": "6bfce21fc36429e06048df66cbabcdc13c10122f",
+      "application/src/main/java/myApp/server/chk/Chk03_DailyListWrite.java": "15da51534614197fbf512808bbff183da95b77fa",
+      "application/src/main/java/myApp/server/chk/mapper/chk01_class_tree.xml": "c642cfb8e9e1c4f650fa26c0f91bc5ba7f0b6e72",
+      "application/src/main/java/myApp/server/chk/mapper/chk02_daily_list.xml": "579bdbdb81d44f8f6dbe0988671d24eedf71004f",
+      "application/src/main/java/myApp/server/chk/mapper/chk03_daily_list_write.xml": "6d95e58321ad5e97b41303e5e722753ba979afb7",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-27T14:16:51+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/R/R03-작업기록.md",
+    "history": [],
+    "id": "R03"
   }
 }

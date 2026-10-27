@@ -1,6 +1,6 @@
 import { apiClient } from './client';
-import { ApiResponse } from '../types/auth';
-import { ChkClassTree, ChkClassTreeSaveReq, ChkDailyList, ChkDailyListCopyReq, ChkDailyListSaveReq, ChkDailyListWrite, ChkDailyListWriteItem } from '../types/chk';
+import { ApiResponse, PageRes } from '../types/auth';
+import { ChkClassTree, ChkClassTreeSaveReq, ChkDailyList, ChkDailyListConfirm, ChkDailyListConfirmParams, ChkDailyListCopyReq, ChkDailyListSaveReq, ChkDailyListWrite, ChkDailyListWriteItem } from '../types/chk';
 
 /** chk(일일점검) 화면 API (E06~) */
 export const chkApi = {
@@ -125,6 +125,18 @@ export const chkApi = {
   /** AS-IS Chk03_Edit_Note.update → modelUpdate (비고) */
   updateDailyListWriteNote: async (dailyListWriteId: number, text: string | null): Promise<ChkDailyListWriteItem> => {
     const res = await apiClient.put<ApiResponse<ChkDailyListWriteItem>>(`v1/chk/daily-list-writes/${dailyListWriteId}/note`, { text });
+    return res.data.data;
+  },
+
+  /** AS-IS chk.Chk03_DailyListWrite.updateConfirmYn — 선택한 행(점검내역 + 담당자)을 점검일 기준으로 확인(true)/확인취소(false) → 처리 건수 */
+  updateDailyListConfirm: async (confirmYn: boolean, date: string, items: { dailyListId: number; personId: number }[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/chk/daily-list-writes/confirm', { confirmYn, date, items });
+    return res.data.data;
+  },
+
+  /** AS-IS chk.Chk03_DailyListWrite.selectDailyListStatusPaging(+Total) — 점검일의 담당자별 점검내역(내가 확인자인 행) */
+  searchDailyListConfirms: async (p: ChkDailyListConfirmParams & { offset: number; limit: number }): Promise<PageRes<ChkDailyListConfirm>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<ChkDailyListConfirm>>>('v1/chk/daily-list-writes/confirm-list', { params: p });
     return res.data.data;
   },
 };

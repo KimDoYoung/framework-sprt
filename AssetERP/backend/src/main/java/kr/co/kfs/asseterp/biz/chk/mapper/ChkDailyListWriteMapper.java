@@ -35,4 +35,13 @@ public interface ChkDailyListWriteMapper {
     /** AS-IS Chk03_Edit_Note.update → modelUpdate (비고 열) */
     int updateNote(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("dailyListWriteId") Long dailyListWriteId,
                    @Param("note") String note);
+
+    /** AS-IS chk03_daily_list_write.updateConfirmYn (R03) — confirmYn은 'true'/'false', 확인취소면 confirmerId = null */
+    int updateConfirmYn(@Param("companyId") Long companyId, @Param("dailyListWriteId") Long dailyListWriteId,
+                        @Param("confirmYn") String confirmYn, @Param("confirmerId") Long confirmerId);
+
+    /** AS-IS Chk03_DailyListWrite.updateConfirmYn → UpdateDataModel INSERT (R03) — 작성 행이 없는 대상 */
+    int insertConfirm(@Param("companyId") Long companyId, @Param("dailyListWriteId") Long dailyListWriteId,
+                      @Param("dailyListId") Long dailyListId, @Param("date") LocalDate date, @Param("personId") Long personId,
+                      @Param("confirmYn") String confirmYn, @Param("confirmerId") Long confirmerId);
 }

@@ -88,3 +88,37 @@ export interface ChkDailyListWriteItem {
   note?: string | null
   confirmYn: boolean
 }
+
+/** 일일점검내역 확인 화면의 한 행 (R03, AS-IS Chk03_DailyListWriteModel) — reason은 "답변 (사유)" 문장, keyId는 목록 안의 행번호 */
+export interface ChkDailyListConfirm {
+  keyId: number
+  companyId: number
+  dailyListId: number
+  classTreeId: number
+  classTreeName?: string | null
+  content?: string | null
+  explan?: string | null
+  cutoff?: string | null
+  windowNo?: string | null
+  seq?: number | null
+  useYn?: string | null
+  dailyListWriteId?: number | null
+  answerCode?: string | null
+  reason?: string | null
+  orgId?: number | null
+  orgName?: string | null
+  personId: number
+  personName?: string | null
+  confirmerId?: number | null
+  confirmerName?: string | null
+  confirmYn: boolean
+}
+
+/** 일일점검내역 확인 조회 조건 (GridPagingLoader.addParam) */
+export interface ChkDailyListConfirmParams {
+  classTreeId: number
+  date: string
+  searchText: string
+  unCheckYn: boolean
+  unConfirmYn: boolean
+}
