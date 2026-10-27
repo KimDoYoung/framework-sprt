@@ -139,4 +139,10 @@ export const chkApi = {
     const res = await apiClient.get<ApiResponse<PageRes<ChkDailyListConfirm>>>('v1/chk/daily-list-writes/confirm-list', { params: p });
     return res.data.data;
   },
+
+  /** AS-IS chk.Chk03_DailyListWrite.selectDailyListStatusPaging(+Total) — 확인자 조건 없는 회사 전체 점검 현황 (R04) */
+  searchDailyListStatuses: async (p: ChkDailyListConfirmParams & { offset: number; limit: number }): Promise<PageRes<ChkDailyListConfirm>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<ChkDailyListConfirm>>>('v1/chk/daily-list-writes/status-list', { params: p });
+    return res.data.data;
+  },
 };

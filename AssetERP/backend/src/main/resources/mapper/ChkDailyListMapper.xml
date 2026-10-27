@@ -275,7 +275,7 @@
                                      COALESCE(emp04_close_date,'9999-12-31') &lt; #{date} ) )
     </sql>
 
-    <!-- R03 chk03_daily_list_write.whereCondition — 목록과 건수가 같은 조건을 쓴다. confirmerId는 원본이 항상 로그인 사용자를 준다 -->
+    <!-- R03·R04 chk03_daily_list_write.whereCondition — 목록과 건수가 같은 조건을 쓴다. confirmerId는 R03(확인)만 로그인 사용자를 주고 R04(현황)는 주지 않는다 -->
     <sql id="confirmWhere">
         LEFT OUTER JOIN chk03_daily_list_write ON ( chk03_daily_list_id = chk02_daily_list_id
                                                 AND chk03_company_id    = #{companyId}
@@ -294,7 +294,9 @@
            AND ( ( #{unCheckYn} = 'true'  AND chk03_answer_cd IS NULL ) OR ( #{unCheckYn} = 'false' ) )
            AND ( ( #{unConfirmYn} = 'true' AND COALESCE(chk03_confirm_yn,'false') = 'false' ) OR ( #{unConfirmYn} = 'false' ) )
            AND CONCAT(chk02_class_tree_nm, chk02_content, chk02_explan, f_org_nm(org_id, #{date}), f_emp_kor_nm(person_id)) LIKE #{searchText}
+        <if test="confirmerId != null">
            AND COALESCE(chk03_confirmer_id, confirmer_id) = #{confirmerId}
+        </if>
     </sql>
 
     <!-- AS-IS chk03_daily_list_write.selectDailyListStatusPaging (IDMS-IC) — 원본의 date·stdDate는 같은 값이라 date 하나. SELECT 목록은 화면 열 + 상세보기 창이 보는 열 -->

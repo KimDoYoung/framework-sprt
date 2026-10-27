@@ -6,6 +6,7 @@ import { Chk02_Tab_DailyList } from './chk/Chk02_Tab_DailyList';
 import { Chk02_Tab_DailyListAdmin } from './chk/Chk02_Tab_DailyListAdmin';
 import { Chk03_Tab_DailyListWrite } from './chk/Chk03_Tab_DailyListWrite';
 import { Chk03_Tab_DailyListConfirm } from './chk/Chk03_Tab_DailyListConfirm';
+import { Chk03_Tab_DailyListStatus } from './chk/Chk03_Tab_DailyListStatus';
 import { Dbm01_Tab_TabComments } from './dbm/Dbm01_Tab_TabComments';
 import { Dbm10_Tab_MakePdf } from './dbm/Dbm10_Tab_MakePdf';
 import { Emp00_Tab_TransInfo } from './emp/Emp00_Tab_TransInfo';
@@ -244,6 +245,7 @@ export const SCREENS: Record<string, React.FC> = {
   Chk02_Tab_DailyList, // R01
   Chk03_Tab_DailyListWrite, // R02
   Chk03_Tab_DailyListConfirm, // R03
+  Chk03_Tab_DailyListStatus, // R04
   Dbm01_Tab_TabComments, // C08 (주석 저장·소스 생성은 DB 프로시저가 없어 서버가 거절)
   Dbm10_Tab_MakePdf, // C07 (PDF 생성은 서버 연동 없음 — PdfMaker 기본 구현)
   Emp00_Tab_TransInfo, // C01 (1단계: 목록·등록·기본정보·일반발령)

@@ -78,13 +78,24 @@ public class ChkDailyListWriteService {
         return mapper.selectById(user.getCompanyId(), user.getUserId(), dailyListWriteId);
     }
 
-    /** AS-IS selectDailyListStatusPaging(+Total): 점검일의 담당자별 점검내역 중 내가 확인자인 행. 검색어는 "%…%"로 감싼다(GridPagingLoader 호출부) */
+    /** AS-IS selectDailyListStatusPaging(+Total): 점검일의 담당자별 점검내역 중 내가 확인자인 행(R03). 검색어는 "%…%"로 감싼다(GridPagingLoader 호출부) */
     public PageRes<ChkDailyListConfirmRes> searchConfirmList(UserPrincipal user, Long classTreeId, LocalDate date, String searchText,
                                                              boolean unCheckYn, boolean unConfirmYn, long offset, long limit) {
+        return page(user.getCompanyId(), user.getUserId(), classTreeId, date, searchText, unCheckYn, unConfirmYn, offset, limit);
+    }
+
+    /** 같은 SQL, 확인자 조건 없이 — 회사 전체 담당자의 점검 현황(R04, 원본이 confirmerId를 주지 않는다) */
+    public PageRes<ChkDailyListConfirmRes> searchStatusList(UserPrincipal user, Long classTreeId, LocalDate date, String searchText,
+                                                            boolean unCheckYn, boolean unConfirmYn, long offset, long limit) {
+        return page(user.getCompanyId(), null, classTreeId, date, searchText, unCheckYn, unConfirmYn, offset, limit);
+    }
+
+    private PageRes<ChkDailyListConfirmRes> page(Long companyId, Long confirmerId, Long classTreeId, LocalDate date, String searchText,
+                                                 boolean unCheckYn, boolean unConfirmYn, long offset, long limit) {
         String like = "%" + (searchText == null ? "" : searchText) + "%";
-        long total = listMapper.selectConfirmListTotal(user.getCompanyId(), user.getUserId(), classTreeId, date, like,
+        long total = listMapper.selectConfirmListTotal(companyId, confirmerId, classTreeId, date, like,
                 String.valueOf(unCheckYn), String.valueOf(unConfirmYn));
-        List<ChkDailyListConfirmRes> rows = listMapper.selectConfirmListPaging(user.getCompanyId(), user.getUserId(), classTreeId, date, like,
+        List<ChkDailyListConfirmRes> rows = listMapper.selectConfirmListPaging(companyId, confirmerId, classTreeId, date, like,
                 String.valueOf(unCheckYn), String.valueOf(unConfirmYn), limit, offset);
         return new PageRes<>(total, rows);
     }

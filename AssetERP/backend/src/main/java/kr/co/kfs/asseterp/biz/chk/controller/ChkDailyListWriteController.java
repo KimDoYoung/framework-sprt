@@ -49,6 +49,19 @@ public class ChkDailyListWriteController {
         return ApiResponse.ok(service.searchConfirmList(principal, classTreeId, date, searchText, unCheckYn, unConfirmYn, offset, limit));
     }
 
+    /** AS-IS chk.Chk03_DailyListWrite.selectDailyListStatusPaging (R04 #1243) — 확인자 조건 없는 회사 전체 점검 현황 */
+    @GetMapping("/status-list")
+    public ApiResponse<PageRes<ChkDailyListConfirmRes>> statusList(@AuthenticationPrincipal UserPrincipal principal,
+                                                                   @RequestParam Long classTreeId,
+                                                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                                                                   @RequestParam(defaultValue = "") String searchText,
+                                                                   @RequestParam(defaultValue = "false") boolean unCheckYn,
+                                                                   @RequestParam(defaultValue = "false") boolean unConfirmYn,
+                                                                   @RequestParam(defaultValue = "0") long offset,
+                                                                   @RequestParam(defaultValue = "100") long limit) {
+        return ApiResponse.ok(service.searchStatusList(principal, classTreeId, date, searchText, unCheckYn, unConfirmYn, offset, limit));
+    }
+
     /** AS-IS chk.Chk03_DailyListWrite.updateConfirmYn (R03) — 선택한 행 확인/확인취소 → 처리 건수 */
     @PutMapping("/confirm")
     public ApiResponse<Integer> updateConfirmYn(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ChkDailyListConfirmReq req) {
