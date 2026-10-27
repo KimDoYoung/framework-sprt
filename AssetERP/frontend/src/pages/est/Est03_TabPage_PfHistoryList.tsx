@@ -56,9 +56,9 @@ export const Est03_TabPage_PfHistoryList: React.FC<Props> = ({ pfContractId, non
   ], []);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', border: '1px solid #d9d9d9', background: '#fff' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', background: '#fff' }}>
       {/* [E0] 화면 열림 (생성자 L35-49) */}
-      <div style={{ height: 50, flex: 'none', display: 'flex', alignItems: 'center', padding: '0 10px', fontSize: 14, fontWeight: 'bold' }}>
+      <div style={{ height: 40, flex: 'none', display: 'flex', alignItems: 'center', padding: '0 10px', fontSize: 14, fontWeight: 'bold' }}>
         ▶ 일정별 용역 수행내역
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>

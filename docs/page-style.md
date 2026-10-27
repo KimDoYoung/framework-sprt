@@ -19,7 +19,7 @@
 | SGTP | SearchGrid+TabPage | 위 SearchBar + 그리드, 아래 탭 영역(상하 분할, 그리드 선택 연동) | `Fnd20_Tab_Plan` (상품기획일정 등록) |
 | SGT | SearchGrid+Tree | 위 SearchBar(전체 폭), 아래 좌우 분할: 왼쪽 그리드 / 오른쪽 트리(선택 연동) | `Fnd08_Tab_OrgAuth` (펀드 권한설정). P02도 같은 모양 |
 | TG | Tree+Grid | 왼쪽 트리, 오른쪽 그리드 | `*_Tab_ClassTree` 계열 |
-| GG | Grid+Grid | 마스터 그리드와 상세 그리드 | |
+| GG | Grid+Grid | 위 SearchBar + 마스터 그리드, 아래 상세 그리드(상하 50:50 분할, 선택 연동) | `Est02_Tab_PfResultReport` (용역결과보고서) |
 | CG | CrudGrid | 편집 가능한 그리드 하나 | 코드 관리류 |
 
 ## 스타일별 상세
@@ -74,6 +74,15 @@
 - 그리드 행을 고르면 오른쪽 트리가 그 행의 id로 다시 조회한다. 조회가 끝나면 첫 행을 고른다.
 - SGVF·SGEF의 공통 규칙 4가지는 이 스타일에 그대로 적용되지 않는다(아래 폼이 없고, 툴바는 그리드 위가 아니라 전체 폭 위에 있다). 이 스타일에 맞는 규칙은 화면 몇 개를 더 본 뒤 정한다.
 - 오른쪽 트리는 `Fnd08_Page_OrgAuth`처럼 `*_Page_*` 파일이다. Tab과 Page의 역할 구분도 정해야 한다.
+
+### GG — Grid+Grid (초안)
+
+견본: `docs/page-style/GG/` (`Est02_Tab_PfResultReport.tsx` + `Est03_TabPage_PfHistoryList.tsx`)
+
+- 세로 `Splitter` 위 50% / 아래 50%(최소 120 / 200). 위: 테두리 없는 SearchBar + `SingleGrid`(툴바-그리드 `marginTop: 8`, 바깥 여백 `20 20 0 20`). 아래: 상세 그리드(`*_TabPage_*` 파일), 바깥 여백 20.
+- 위·아래 모두 **외곽 테두리 박스를 두지 않는다**(SGTP는 아래 탭에 테두리가 있다).
+- 열 때 조회하고, 조회가 끝나면 첫 행을 고른다. 행을 누르면 아래가 그 행의 id로 다시 읽는다(`pfContractId` + `nonce` — 같은 행을 다시 눌러도 다시 읽는다).
+- SGTP와 구조가 같고 아래가 탭 영역이 아니라 그리드 하나인 경우가 GG다.
 
 (나머지 스타일은 전체 조사 후 같은 형식으로 채운다.)
 

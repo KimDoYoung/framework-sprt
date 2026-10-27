@@ -1,13 +1,14 @@
 /**
  * [1378] 펀드관리 > 05. 부동산PF 용역수행 > 용역결과보고서 (Q12)
  * AS-IS: myApp/client/vi/est/Est02_Tab_PfResultReport.java (317줄) + Est03_TabPage_PfHistoryList.java (142줄) + Est04_Lookup_PfFile.java (138줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
- * 생성자 L61-89: BorderLayout 가운데(여백 20, 테두리) = 툴바 50(조회기준일 100 · 검색 300 "차주명/사업자명/수수료명" · [조회]) + 그리드(행번호, 단일 선택), 아래 330(여백 0,20,20,20) = Est03_TabPage_PfHistoryList
+ * 생성자 L61-89: BorderLayout 가운데(여백 20) = 툴바 50(조회기준일 100 · 검색 300 "차주명/사업자명/수수료명" · [조회]) + 그리드(행번호, 단일 선택), 아래 330(여백 0,20,20,20) = Est03_TabPage_PfHistoryList
+ * 스타일: GG (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  * [다음 단계] 결재 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc(insertLinkApproval)·문서분류 조회창 Dcr01_Lookup_Class·문서분류지정 Dcr30_Link(getClassTreeModel)·문서보기 아이콘의 retrieveApproval은 다른 도메인이라 지금은 안내만 한다.
  *   결재 아이콘은 편집창이 열릴 자리까지의 사전 검사(수행내역 모두 승인·작성자 조직원·결재 상태)를 원본 그대로 한다. 결재가 끝나면 updateResultApprId와 TempData 태그 양식(createMapping)이 필요하다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DatePicker, message } from 'antd';
+import { DatePicker, message, Splitter } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { estApi } from '@/api/est';
@@ -104,31 +105,39 @@ export const Est02_Tab_PfResultReport: React.FC = () => {
   ], [myOrgId]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ flex: 1, minHeight: 0, margin: 20, border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, padding: 10 }}>
-        {/* [E2] retrieveButton[조회].Select (L104) → retrieve(), [E1] searchText.KeyPress [Enter] (L96) → retrieve() */}
-        <SearchBar onSearch={retrieve} loading={loading}>
-          <SearchBar.Field label="조회기준일">
-            <DatePicker style={{ width: 120 }} allowClear={false} value={startDate} format={FORMAT} onChange={d => d && setStartDate(d)} />
-          </SearchBar.Field>
-          <SearchBar.Field label="검색">
-            <SearchBar.Input style={{ width: 300 }} placeholder="차주명/사업자명/수수료명" value={searchText} onChange={e => setSearchText(e.target.value)} />
-          </SearchBar.Field>
-        </SearchBar>
-        <div style={{ flex: 1, minHeight: 0 }}>
-          {/* [E3] grid.RowClick (L110) → retrieveTabpage() L118-126: 같은 행을 다시 눌러도 다시 읽는다 */}
-          <SingleGrid<PfContract>
-            gridRef={gridRef}
-            rowData={rows}
-            columnDefs={columnDefs}
-            getRowId={p => String(p.data.pfContractId)}
-            onRowClicked={e => { if (e.data) { setSelectedId(e.data.pfContractId); setNonce(n => n + 1); } }}
-          />
-        </div>
-      </div>
-      <div style={{ height: 330, flex: 'none', margin: '0 20px 20px', boxSizing: 'border-box' }}>
-        <Est03_TabPage_PfHistoryList pfContractId={selectedId} nonce={nonce} />
-      </div>
+    <div style={{ height: '100%', background: '#fff' }}>
+      <Splitter layout="vertical" style={{ height: '100%' }}>
+        <Splitter.Panel defaultSize="50%" min={120}>
+          <div style={{ height: '100%', padding: '20px 20px 0 20px', boxSizing: 'border-box' }}>
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              {/* [E2] retrieveButton[조회].Select (L104) → retrieve(), [E1] searchText.KeyPress [Enter] (L96) → retrieve() */}
+              <SearchBar onSearch={retrieve} loading={loading}>
+                <SearchBar.Field label="조회기준일">
+                  <DatePicker style={{ width: 120 }} allowClear={false} value={startDate} format={FORMAT} onChange={d => d && setStartDate(d)} />
+                </SearchBar.Field>
+                <SearchBar.Field label="검색">
+                  <SearchBar.Input style={{ width: 300 }} placeholder="차주명/사업자명/수수료명" value={searchText} onChange={e => setSearchText(e.target.value)} />
+                </SearchBar.Field>
+              </SearchBar>
+              <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
+                {/* [E3] grid.RowClick (L110) → retrieveTabpage() L118-126: 같은 행을 다시 눌러도 다시 읽는다 */}
+                <SingleGrid<PfContract>
+                  gridRef={gridRef}
+                  rowData={rows}
+                  columnDefs={columnDefs}
+                  getRowId={p => String(p.data.pfContractId)}
+                  onRowClicked={e => { if (e.data) { setSelectedId(e.data.pfContractId); setNonce(n => n + 1); } }}
+                />
+              </div>
+            </div>
+          </div>
+        </Splitter.Panel>
+        <Splitter.Panel defaultSize="50%" min={200}>
+          <div style={{ height: '100%', padding: 10, boxSizing: 'border-box' }}>
+            <Est03_TabPage_PfHistoryList pfContractId={selectedId} nonce={nonce} />
+          </div>
+        </Splitter.Panel>
+      </Splitter>
     </div>
   );
 };
