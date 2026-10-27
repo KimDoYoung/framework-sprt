@@ -33,7 +33,7 @@ interface Props {
 /** 라벨 폭 105 (form.setLabelWidth(105)) */
 const Field: React.FC<{ label: string; width?: number | string; children: React.ReactNode }> = ({ label, width = '100%', children }) => (
   <div style={{ display: 'flex', alignItems: 'flex-start', width }}>
-    <Typography.Text style={{ width: 105, flex: 'none', lineHeight: '32px' }}>{label}</Typography.Text>
+    <Typography.Text style={{ width: 105, flex: 'none', lineHeight: '32px', textAlign: 'right', paddingRight: 10 }}>{label}</Typography.Text>
     <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
   </div>
 );
@@ -79,6 +79,10 @@ export const Chk02_Edit_DailyList: React.FC<Props> = ({ model, baseClassTreeId, 
       width={800}
       maskClosable={false}
       onCancel={onClose}
+      styles={{
+        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },  // EditModal 견본: 머리말 아래 선
+        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },  // 단추 줄 위 선
+      }}
       footer={
         <div style={{ textAlign: 'center' }}>
           <Space>
@@ -89,7 +93,7 @@ export const Chk02_Edit_DailyList: React.FC<Props> = ({ model, baseClassTreeId, 
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px 2px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 2px' }}>
         <Field label="분류">
           {/* [E2] classTreeName[분류].TriggerClick (L191) → Chk01_Lookup_ClassTree.edit(): 결과가 있으면 classTreeId·이름을 바꾼다 */}
           <Input readOnly disabled={locked} value={f.classTreeName ?? ''} suffix={<SearchOutlined />} style={{ cursor: locked ? 'default' : 'pointer' }}
