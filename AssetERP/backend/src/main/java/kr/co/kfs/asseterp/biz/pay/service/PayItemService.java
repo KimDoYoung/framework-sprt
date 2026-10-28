@@ -33,6 +33,11 @@ public class PayItemService {
         return mapper.selectByText("%" + nvl(searchText) + "%");
     }
 
+    /** AS-IS selectByItemType(급여 항목 행 추가 조회창): 항목구분 1 지급 / 2 공제 */
+    public List<PayItemRes> searchByItemType(String itemType) {
+        return mapper.selectByItemType(itemType);
+    }
+
     /**
      * AS-IS update(UpdateDataModel): 있는 행은 고치고, 없는 행은 새 id로 넣는다 → 저장된 행(요청 순서).
      * 원본은 필수값 검사가 없어 NOT NULL 열이 비면 DB 오류가 나므로 서버가 먼저 막는다

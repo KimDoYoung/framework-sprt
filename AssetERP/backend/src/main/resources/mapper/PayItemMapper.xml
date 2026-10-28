@@ -38,6 +38,14 @@
          WHERE UPPER(pay20_item_nm) LIKE UPPER(#{searchText})
     </select>
 
+    <!-- AS-IS pay20_item.selectByItemType (IDMS-IC) -->
+    <select id="selectByItemType" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayItemRes">
+        SELECT <include refid="itemColumns"/>
+          FROM pay20_item
+         WHERE pay20_item_type = #{itemType}
+         ORDER BY pay20_item_cd
+    </select>
+
     <!-- AS-IS pay20_item.selectById L20 (IDMS-IC) -->
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayItemRes">
         SELECT <include refid="itemColumns"/>

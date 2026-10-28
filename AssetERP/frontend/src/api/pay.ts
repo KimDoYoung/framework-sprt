@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxDeductLimit, PayWorkTime } from '../types/pay';
+import { PayApprCheck, PayInsurePay, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayRelateNote, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxDeductLimit, PayWorkTime } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -464,6 +464,108 @@ export const payApi = {
   /** AS-IS pay.Pay06_ActMapping.delete → 지운 건수 */
   deleteActMappings: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/pay/act-mappings', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  // ── S16 급여관리 (Pay10_Tab_Month) ──
+
+  /** AS-IS pay.Pay10_Month.selectByCompanyId */
+  searchMonths: async (payCode: string, payDate: string): Promise<PayMonth[]> => {
+    const res = await apiClient.get<ApiResponse<PayMonth[]>>('v1/pay/months', { params: { payCode, payDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay10_Month.selectByYear (지급구분/일자 조회창) — payCode 전체는 "%" */
+  searchMonthGroups: async (year: string, payCode: string, code?: string | null): Promise<PayMonthGroup[]> => {
+    const res = await apiClient.get<ApiResponse<PayMonthGroup[]>>('v1/pay/months/groups', { params: { year, payCode, code: code ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay10_Month.checkAppr — 결재 진행·전표 발생이면 ok=false + 문구 (실패여도 예외가 아니다) */
+  checkMonthAppr: async (payCode: string, payDate: string, monthId?: number | null): Promise<PayApprCheck> => {
+    const res = await apiClient.get<ApiResponse<PayApprCheck>>('v1/pay/months/check-appr', { params: { payCode, payDate, monthId: monthId ?? undefined } });
+    return res.data.data ?? { ok: true };
+  },
+
+  /** AS-IS pay.Pay10_Month.insert */
+  createMonths: async (req: PayMonthCreateReq): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/pay/months', req);
+  },
+
+  /** AS-IS pay.Pay10_Month.deleteAll → 지운 건수 */
+  deleteMonths: async (monthIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/pay/months', { data: monthIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS pay.Pay10_Month.modelUpdate (근로시간 팝업) — 총근로시간은 서버가 계산 */
+  updateMonthWorkTime: async (monthId: number, req: { workDay: number; extendWorkTime: number; nightWorkTime: number; holidayWorkTime: number }): Promise<void> => {
+    await apiClient.put<ApiResponse<number>>(`v1/pay/months/${monthId}/work-time`, req);
+  },
+
+  /** AS-IS pay.Pay11_MonthItem.selectByItemType — 1 지급 / 2 공제 */
+  searchMonthItems: async (monthId: number, itemType: string): Promise<PayMonthItem[]> => {
+    const res = await apiClient.get<ApiResponse<PayMonthItem[]>>('v1/pay/month-items', { params: { monthId, itemType } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay11_MonthItem.updateList(지급) / getInsureAdjustModi(공제) */
+  saveMonthItems: async (monthId: number, itemType: string, updateList: { monthItemId?: number | null; itemCd: string; itemAmt?: number | null }[], deleteIds: number[]): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/pay/month-items', { monthId, itemType, updateList, deleteIds });
+  },
+
+  /** AS-IS pay.Pay11_MonthItem.recalculationTax */
+  recalculateTax: async (monthId: number): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/pay/month-items/recalculate-tax', null, { params: { monthId } });
+  },
+
+  /** AS-IS pay.Pay20_Item.selectByItemType (Pay20_Lookup_SelectMulti) */
+  searchItemsByType: async (itemType: string): Promise<PayItem[]> => {
+    const res = await apiClient.get<ApiResponse<PayItem[]>>('v1/pay/items/by-type', { params: { itemType } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay09_RelateNote.selectByCompanyId — noteType 1 전체 / 2 개별 */
+  searchRelateNotes: async (payCode: string, payDate: string, noteType: string): Promise<PayRelateNote[]> => {
+    const res = await apiClient.get<ApiResponse<PayRelateNote[]>>('v1/pay/relate-notes', { params: { payCode, payDate, noteType } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay09_RelateNote.checkNote — 없으면 빈 비고 행을 만들어 돌려준다 */
+  checkRelateNote: async (payCode: string, payDate: string, noteType: string): Promise<PayRelateNote> => {
+    const res = await apiClient.post<ApiResponse<PayRelateNote>>('v1/pay/relate-notes/check', null, { params: { payCode, payDate, noteType } });
+    return res.data.data as PayRelateNote;
+  },
+
+  /** AS-IS pay.Pay09_RelateNote.modelUpdate / update → 저장된 행(요청 순서). id가 0 이하·없으면 새 행 */
+  saveRelateNotes: async (rows: PayRelateNote[]): Promise<PayRelateNote[]> => {
+    const body = rows.map(({ relateNoteId, payDate, payCd, noteType, personId, note }) => ({ relateNoteId: relateNoteId > 0 ? relateNoteId : null, payDate, payCd, noteType, personId, note }));
+    const res = await apiClient.put<ApiResponse<PayRelateNote[]>>('v1/pay/relate-notes', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay09_RelateNote.delete → 지운 건수 */
+  deleteRelateNotes: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/pay/relate-notes', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS pay.Pay32_InsurePay.selectByPersonId — year·insureCode가 비면 전체 */
+  searchInsurePays: async (personId: number, insureCode: string, year: string): Promise<PayInsurePay[]> => {
+    const res = await apiClient.get<ApiResponse<PayInsurePay[]>>('v1/pay/insure-pays', { params: { personId, insureCode, year } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay32_InsurePay.update → 저장된 행(요청 순서). id가 0 이하면 새 행 */
+  saveInsurePays: async (rows: PayInsurePay[]): Promise<PayInsurePay[]> => {
+    const body = rows.map(({ insurePayId, personId, year, insureCd, tgtAmt, payCd, payDiv, date, cnt, amt, remAmt }) => ({ insurePayId: insurePayId > 0 ? insurePayId : null, personId, year, insureCd, tgtAmt, payCd, payDiv, date, cnt, amt, remAmt }));
+    const res = await apiClient.put<ApiResponse<PayInsurePay[]>>('v1/pay/insure-pays', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay32_InsurePay.delete → 지운 건수 */
+  deleteInsurePays: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/pay/insure-pays', { data: ids });
     return res.data.data ?? 0;
   },
 };

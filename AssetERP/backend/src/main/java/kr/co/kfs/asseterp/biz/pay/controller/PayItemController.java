@@ -32,6 +32,12 @@ public class PayItemController {
         return ApiResponse.ok(service.lookup(searchText));
     }
 
+    /** AS-IS pay.Pay20_Item.selectByItemType (Pay20_Lookup_SelectMulti) */
+    @GetMapping("/by-type")
+    public ApiResponse<List<PayItemRes>> byType(@RequestParam String itemType) {
+        return ApiResponse.ok(service.searchByItemType(itemType));
+    }
+
     /** AS-IS pay.Pay20_Item.update → 저장된 행(요청 순서) */
     @PutMapping
     public ApiResponse<List<PayItemRes>> save(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<PayItemSaveReq> rows) {

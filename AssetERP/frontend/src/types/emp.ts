@@ -842,3 +842,15 @@ export interface Errand {
   apprId: number | null;
   aprStatusName: string | null;
 }
+
+/** 발령 기준 사원 선택(Emp01_Lookup_TransDate) 행 — 그리드는 조직·사번·성명·직책 */
+export interface TransTarget {
+  personId: number;
+  transCd: string;
+  hireDate?: string | null;
+  transDate: string;
+  orgNm?: string;
+  empNo?: string;
+  korNm?: string;
+  titleNm?: string;
+}

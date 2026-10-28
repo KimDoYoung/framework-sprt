@@ -50,7 +50,7 @@ public interface PayMonthMapper {
     int deleteMonths(@Param("companyId") Long companyId, @Param("monthIds") List<Long> monthIds);
 
     /** UpdateDataModel.updateModel — 근로시간 팝업이 바꾸는 열 */
-    int updateWorkTime(@Param("companyId") Long companyId, @Param("monthId") Long monthId, @Param("totalWorkTime") Long totalWorkTime,
+    int updateWorkTime(@Param("companyId") Long companyId, @Param("monthId") Long monthId, @Param("totalWorkTime") Double totalWorkTime,
                        @Param("req") kr.co.kfs.asseterp.biz.pay.dto.PayMonthWorkTimeReq req);
 
     // ---- 급여 생성 (Pay10_Month.insert) ----

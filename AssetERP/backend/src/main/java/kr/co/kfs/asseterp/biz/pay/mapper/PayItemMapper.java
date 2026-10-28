@@ -16,6 +16,9 @@ public interface PayItemMapper {
     /** AS-IS selectByText (항목명 UPPER LIKE) */
     List<PayItemRes> selectByText(@Param("searchText") String searchText);
 
+    /** AS-IS selectByItemType (급여 항목 행 추가 조회창 Pay20_Lookup_SelectMulti — 항목구분 정확히 일치, 항목코드순) */
+    List<PayItemRes> selectByItemType(@Param("itemType") String itemType);
+
     PayItemRes selectById(@Param("itemId") Long itemId);
 
     /** dbConfig.getSeq (f_create_seq) */

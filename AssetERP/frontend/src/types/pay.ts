@@ -212,3 +212,93 @@ export interface PayActMapping {
   kindCode?: string | null;
   kindName?: string;
 }
+
+/** 급여(pay10_month) 한 행 — 급여관리(S16) 왼쪽 그리드·근로시간 팝업 */
+export interface PayMonth {
+  monthId: number;
+  companyId?: number;
+  payCd: string;
+  date: string;
+  personId: number;
+  workDay: number;
+  totalWorkTime: number;
+  extendWorkTime: number;
+  nightWorkTime: number;
+  holidayWorkTime: number;
+  note?: string | null;
+  stdMonth?: string | null;
+  personNo?: string;
+  personNm?: string;
+  posNm?: string;
+  paySum?: number;
+  taxDdcSum?: number;
+  deductionSum?: number;
+}
+
+/** 지급구분/일자 조회창(Pay10_Lookup_GroupList) 한 행 */
+export interface PayMonthGroup {
+  payGroupNm: string;
+  companyId?: number;
+  date: string;
+  payCd: string;
+}
+
+/** 서버 checkAppr 결과 — ok=false면 message가 막는 이유 */
+export interface PayApprCheck {
+  ok: boolean;
+  message?: string | null;
+}
+
+/** 급여 생성 요청 — 대상 사원은 Emp01_Lookup_TransDate에서 고른 행 */
+export interface PayMonthCreateReq {
+  payCode: string;
+  payDate: string;
+  annualYn: boolean;
+  stdMonth: string;
+  targets: { personId: number; transCode: string; hireDate: string | null; transDate: string }[];
+}
+
+/** 급여 항목(pay11_month_item) 한 행 — 지급(itemType 1)·공제(2) 그리드 */
+export interface PayMonthItem {
+  monthItemId: number;
+  monthId: number;
+  itemType: string;
+  itemCd: string;
+  itemAmt?: number | null;
+  itemTypeNm?: string;
+  nonTaxTypeNm?: string;
+  itemNm?: string;
+}
+
+/** 급여 비고(pay09_relate_note) — noteType 1 전체 / 2 개별 */
+export interface PayRelateNote {
+  relateNoteId: number;
+  companyId?: number;
+  payDate: string;
+  payCd: string;
+  noteType: string;
+  personId?: number | null;
+  note?: string | null;
+  noteTypeNm?: string;
+  personNm?: string;
+}
+
+/** 4대보험 연말정산 납부(pay32_insure_pay) 한 행 */
+export interface PayInsurePay {
+  insurePayId: number;
+  companyId?: number;
+  personId: number;
+  year?: string;
+  insureCd?: string;
+  tgtAmt?: number | null;
+  payCd?: string | null;
+  payDiv?: number | null;
+  date?: string | null;
+  cnt?: number | null;
+  amt?: number | null;
+  remAmt?: number | null;
+  personNo?: string;
+  personNm?: string;
+  insureNm?: string;
+  payNm?: string;
+}

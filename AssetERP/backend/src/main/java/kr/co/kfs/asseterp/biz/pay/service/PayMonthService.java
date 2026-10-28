@@ -222,11 +222,11 @@ public class PayMonthService {
         }
         PayMonthRes row = rows.get(0);
         requireOk(checkAppr(user, row.payCd(), row.date(), row.monthId()));
-        long total = nz(req.workDay()) * 8 + nz(req.extendWorkTime()) + nz(req.nightWorkTime()) + nz(req.holidayWorkTime());
+        double total = nz(req.workDay()) * 8 + nz(req.extendWorkTime()) + nz(req.nightWorkTime()) + nz(req.holidayWorkTime());
         return mapper.updateWorkTime(user.getCompanyId(), monthId, total, req);
     }
 
-    private static long nz(Long v) {
+    private static double nz(Double v) {
         return v == null ? 0 : v;
     }
 
