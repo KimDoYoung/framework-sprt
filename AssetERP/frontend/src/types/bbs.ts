@@ -59,3 +59,15 @@ export interface BbsComment {
   deleteStr: string;
   comment: string;
 }
+
+/** 증명서 신청내역 행 (S05, AS-IS Bbs11_ApplicationModel · selectByAppStatus) */
+export interface BbsApplication {
+  applicationId: number;
+  appDate?: string | null;
+  appEmpId?: number | null;
+  appEmpName?: string | null;
+  appType?: string | null;
+  appTypeName?: string | null;
+  appStatus?: string | null;
+  content?: string | null;
+}

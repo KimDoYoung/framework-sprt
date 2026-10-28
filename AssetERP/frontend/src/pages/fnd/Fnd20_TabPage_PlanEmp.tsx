@@ -77,7 +77,7 @@ export const Fnd20_TabPage_PlanEmp: React.FC<Props> = ({ target }) => {
 
   // [E2 생략] msgBox.DialogHide [YES] (L193) → fnd.Fnd20_Plan.delete — deleteRow() 호출처가 없다(addDeleteButton 주석 처리)
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ height: 32, display: 'flex', alignItems: 'center', width: 120 }}>
         <Typography.Text strong>펀드별 일정목록</Typography.Text>
       </div>

@@ -1,10 +1,31 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { Cert, CertSaveReq, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
 const toTrans = (t: Trans): Trans => ({ ...t, transDate: day(t.transDate), expiryDate: day(t.expiryDate) });
+
+/** S05 증명서 발급 (Emp15_Tab_Cert) */
+export const empCertApi = {
+  /** AS-IS emp.Emp15_Cert.selectByCompanyId */
+  searchCerts: async (startDate: string, closeDate: string): Promise<Cert[]> => {
+    const res = await apiClient.get<ApiResponse<Cert[]>>('v1/emp/certs', { params: { startDate, closeDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp15_Cert.modelUpdate (INSERT) → 새 증명서 ID */
+  createCert: async (req: CertSaveReq): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/emp/certs', req);
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp15_Cert.delete */
+  deleteCert: async (certId: number): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/emp/certs/${certId}`);
+    return res.data.data;
+  },
+};
 
 /** C01 사원정보 관리 (Emp00_Tab_TransInfo) */
 export const empApi = {

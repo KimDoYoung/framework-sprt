@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/emp/mapper/emp15_cert.xml selectByCompanyId(L7). SELECT 목록은 그리드·상신 이후 단계에 쓰는 열만 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpCertMapper">
+
+    <!-- AS-IS emp15_cert.selectByCompanyId (IDMS-IC) -->
+    <select id="selectCerts" resultType="kr.co.kfs.asseterp.biz.emp.dto.CertRes">
+        SELECT cert.emp15_cert_id                                                                   AS cert_id,
+               cert.emp15_issue_date                                                                AS issue_date,
+               cert.emp15_link_cd                                                                   AS link_code,
+               f_cdnm('LinkCode', cert.emp15_link_cd, cert.emp15_company_id, f_sysdate())           AS link_name,
+               cert.emp15_person_id                                                                 AS person_id,
+               per.emp01_emp_no                                                                     AS person_no,
+               f_emp_kor_nm(cert.emp15_person_id)                                                   AS person_name,
+               cert.emp15_cert_use_cd                                                               AS cert_use_code,
+               cert.emp15_cert_use                                                                  AS cert_use,
+               (CASE WHEN cert.emp15_cert_use_cd = '9'
+                     THEN cert.emp15_cert_use
+                     ELSE f_cdnm('CertUseCode', cert.emp15_cert_use_cd, cert.emp15_company_id, f_sysdate())
+                     END)                                                                           AS cert_use_name,
+               cert.emp15_dcr_class_tree_id                                                         AS dcr_class_tree_id,
+               cert.emp15_appr_id                                                                   AS appr_id,
+               appr.apr01_stamp_seq                                                                 AS stamp_seq_text,
+               COALESCE(f_cdnm('AprStatusCode', appr.apr01_status_cd, cert.emp15_company_id, f_sysdate()), '') AS appr_status_name,
+               per.emp01_email_addr                                                                 AS email_address
+          FROM emp15_cert cert
+               LEFT OUTER JOIN apr01_appr appr ON cert.emp15_appr_id    = appr.apr01_appr_id
+               INNER JOIN sys01_company com    ON cert.emp15_company_id = com.sys01_company_id
+               INNER JOIN emp01_person per     ON cert.emp15_person_id  = per.emp01_person_id
+         WHERE cert.emp15_company_id = #{companyId}
+           AND cert.emp15_issue_date BETWEEN #{startDate} AND #{closeDate}
+         ORDER BY cert.emp15_issue_date DESC, cert.emp15_link_cd, cert.emp15_appr_id DESC
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="countPerson" resultType="int">
+        SELECT COUNT(*)
+          FROM emp01_person
+         WHERE emp01_person_id  = #{personId}
+           AND emp01_company_id = #{companyId}
+    </select>
+
+    <insert id="insertCert">
+        INSERT INTO emp15_cert (emp15_cert_id, emp15_company_id, emp15_issue_date, emp15_link_cd, emp15_person_id, emp15_cert_use_cd, emp15_cert_use, emp15_dcr_class_tree_id)
+        VALUES (#{certId}, #{companyId}, #{issueDate}, #{linkCode}, #{personId}, #{certUseCode}, #{certUse}, #{dcrClassTreeId})
+    </insert>
+
+    <delete id="deleteCert">
+        DELETE FROM emp15_cert
+         WHERE emp15_company_id = #{companyId}
+           AND emp15_cert_id    = #{certId}
+    </delete>
+</mapper>

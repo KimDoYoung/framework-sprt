@@ -8456,5 +8456,49 @@
     "note": "docs/work/S/S04-작업기록.md",
     "history": [],
     "id": "S04"
+  },
+  "Emp15_Tab_Cert": {
+    "commit": "4bd1f4ed0410cf5d7a0c4f0367464792a7bfee9c",
+    "commit_short": "4bd1f4e",
+    "branch": "ioc",
+    "commit_date": "2026-10-27",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp15_Lookup_Cert.java": "afb9b2ce745e7442edffec011ac86edd70c35679",
+      "application/src/main/java/myApp/client/vi/emp/Emp15_Lookup_GetCert.java": "226e1e2bece4af15f8fc83b2026293005f8c24cc",
+      "application/src/main/java/myApp/client/vi/emp/Emp15_Lookup_StampDocCert.java": "8fa4f96f03a10c918fab9cc43258b93a6ddd7ca9",
+      "application/src/main/java/myApp/client/vi/emp/Emp15_Tab_Cert.java": "0e5095a0d556caa8b60db11f3f4728335deabb2d",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp00_TransInfoModel.java": "dc29160bc09265170d01009c5353bd56081484c3",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp01_PersonModel.java": "f4478d406df99853f5315401fc09f28e760101fe",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp02_OthersModel.java": "361f61b4bebfd1073f0769db40e42327748e6897",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp15_CertModel.java": "289b4d160118ac7c5ac1dae8872bfe2e869a6513",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp15_CertModelProperties.java": "7fea598b5aa7d5dfd22ee518c89d8d19d8e2048e",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp20_LeaveModel.java": "08d4fe0e87a0e52d15d517f341428f632a6b3ef0",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/bbs/Bbs11_Application.java": "2ddc9b4f2c377a5520f11c8ac421d05cb19d7244",
+      "application/src/main/java/myApp/server/bbs/mapper/bbs11_application.xml": "0d0cf959a135bc98a88c9275c5297fd32cf1cbc4",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/emp/Emp15_Cert.java": "c84aa62dcd0867824397cc656dff62881bb268ee",
+      "application/src/main/java/myApp/server/emp/mapper/emp15_cert.xml": "858510d88cff91aaeebc26a2bce860ec408e3d1e",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Dcr01_Lookup_Class",
+      "Dcr10_Lookup_MailSender",
+      "Dcr30_Lookup_Link",
+      "Dcr30_Move_DcrClass",
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-28T10:51:06+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/S/S05-작업기록.md",
+    "history": [],
+    "id": "S05"
   }
 }

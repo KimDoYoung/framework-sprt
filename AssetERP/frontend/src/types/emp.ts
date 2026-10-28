@@ -613,3 +613,32 @@ export interface OrgPerson {
   officeTelNo?: string | null;
   empNo?: string | null;
 }
+
+/** 증명서 발급 그리드 행 (S05, AS-IS Emp15_CertModel · selectByCompanyId) */
+export interface Cert {
+  certId: number;
+  issueDate?: string | null;
+  linkCode?: string | null;
+  linkName?: string | null;
+  personId: number;
+  personNo?: string | null;
+  personName?: string | null;
+  certUseCode?: string | null;
+  certUse?: string | null;
+  certUseName?: string | null;
+  dcrClassTreeId?: number | null;
+  apprId?: number | null;
+  stampSeqText?: string | null;
+  apprStatusName?: string | null;
+  emailAddress?: string | null;
+}
+
+/** 증명서 발급 등록 (AS-IS Emp15_Lookup_Cert.update → modelUpdate) */
+export interface CertSaveReq {
+  issueDate: string;
+  linkCode: string;
+  personId: number;
+  certUseCode: string;
+  certUse: string | null;
+  dcrClassTreeId: number;
+}

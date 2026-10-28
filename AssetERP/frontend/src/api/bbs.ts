@@ -1,7 +1,16 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsNotice } from '../types/bbs';
+import { BbsApplication, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsNotice } from '../types/bbs';
+
+/** 요청서(신청서) — 증명서 신청내역 (S05, AS-IS Bbs11_Application) */
+export const bbsApplicationApi = {
+  /** AS-IS bbs.Bbs11_Application.selectByAppStatus — 증명서 신청(재직·경력·징계내역) 중 요청상태가 appStatus인 것(10 = 신청) */
+  searchByAppStatus: async (appStatus = '10'): Promise<BbsApplication[]> => {
+    const res = await apiClient.get<ApiResponse<BbsApplication[]>>('v1/bbs/applications', { params: { appStatus } });
+    return res.data.data ?? [];
+  },
+};
 
 /** bbs 화면 API (E10~) */
 export const bbsApi = {
