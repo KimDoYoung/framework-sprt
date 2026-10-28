@@ -6,6 +6,7 @@ import kr.co.kfs.asseterp.biz.emp.dto.TransPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRow;
 import kr.co.kfs.asseterp.biz.emp.dto.TransSaveReq;
+import kr.co.kfs.asseterp.biz.emp.dto.TransTargetRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransTdmRes;
 import kr.co.kfs.asseterp.biz.emp.mapper.EmpTransMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +37,12 @@ public class EmpTransService {
     public List<TransPersonRes> searchTransPersons(UserPrincipal user, String searchText) {
         String like = "%" + (searchText == null ? "" : searchText) + "%";
         return empTransMapper.searchTransPersons(user.getCompanyId(), like, LocalDateTime.now());
+    }
+
+    /** AS-IS selectByText (Emp01_Lookup_TransDate): '%검색어%', 조회일자 기준 — 급여 생성 대상 사원 선택 */
+    public List<TransTargetRes> searchTransTargets(UserPrincipal user, String searchText, LocalDate transDate, boolean separateAddTitle) {
+        String like = "%" + (searchText == null ? "" : searchText) + "%";
+        return empTransMapper.searchTransTargets(user.getCompanyId(), like, transDate, separateAddTitle);
     }
 
     /** AS-IS emp.Emp03_Trans.selectByTdmYn (Emp00_Lookup_SelectSingleTdm, 책무 대상 사원찾기): '%검색어%', 로그인 회사 */

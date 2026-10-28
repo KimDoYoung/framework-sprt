@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/pay/mapper/pay09_relate_note.xml (selectByCompanyId, checkNote) + UpdateDataModel(pay09_relate_note)  (S16) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayRelateNoteMapper">
+
+    <sql id="noteColumns">
+        pay09_relate_note_id                                                       AS relate_note_id,
+        pay09_company_id                                                           AS company_id,
+        pay09_pay_date                                                             AS pay_date,
+        pay09_pay_cd                                                               AS pay_cd,
+        pay09_note_type                                                            AS note_type,
+        pay09_person_id                                                            AS person_id,
+        pay09_note                                                                 AS note,
+        f_cdnm('NoteType', pay09_note_type, pay09_company_id, pay09_pay_date)      AS note_type_nm,
+        f_emp_kor_nm(pay09_person_id)                                              AS person_nm
+    </sql>
+
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRelateNoteRes">
+        SELECT <include refid="noteColumns"/>
+          FROM pay09_relate_note
+         WHERE pay09_company_id = #{companyId}
+           AND pay09_pay_cd     = #{payCode}
+           AND pay09_pay_date   = #{payDate}
+           AND pay09_note_type  = #{noteType}
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRelateNoteRes">
+        SELECT <include refid="noteColumns"/>
+          FROM pay09_relate_note
+         WHERE pay09_company_id = #{companyId}
+           AND pay09_relate_note_id = #{relateNoteId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO pay09_relate_note (pay09_relate_note_id, pay09_company_id, pay09_pay_date, pay09_pay_cd, pay09_note_type, pay09_person_id, pay09_note)
+        VALUES (#{relateNoteId}, #{companyId}, #{req.payDate}, #{req.payCd}, #{req.noteType}, #{req.personId}, #{req.note})
+    </insert>
+
+    <update id="update">
+        UPDATE pay09_relate_note
+           SET pay09_pay_date  = #{req.payDate},
+               pay09_pay_cd    = #{req.payCd},
+               pay09_note_type = #{req.noteType},
+               pay09_person_id = #{req.personId},
+               pay09_note      = #{req.note}
+         WHERE pay09_relate_note_id = #{req.relateNoteId}
+           AND pay09_company_id     = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM pay09_relate_note
+         WHERE pay09_company_id = #{companyId}
+           AND pay09_relate_note_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <select id="countPerson" resultType="int">
+        SELECT count(*) FROM emp01_person
+         WHERE emp01_company_id = #{companyId} AND emp01_person_id = #{personId}
+    </select>
+</mapper>

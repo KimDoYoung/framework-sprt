@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/pay/mapper/pay10_month.xml (selectByCompanyId, selectByYear)
+  + pay05_relate_appr.checkAppr + act02_journal.countByPayMonthCode
+  + pay11_month_item.deleteByMonthId·getInsureAdjustModi, pay12_retire_insure·pay13_retire_tax·pay14_retire_tax_item.deleteByMonthId, pay32_insure_pay.deleteByDate
+  + UpdateDataModel(pay10_month)  (S16)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayMonthMapper">
+
+    <sql id="monthColumns">
+        pay10_month_id                                      AS month_id,
+        pay10_company_id                                    AS company_id,
+        pay10_pay_cd                                        AS pay_cd,
+        pay10_date                                          AS date,
+        pay10_person_id                                     AS person_id,
+        COALESCE(pay10_work_day, 0)                         AS work_day,
+        COALESCE(pay10_total_work_time, 0)                  AS total_work_time,
+        COALESCE(pay10_extend_work_time, 0)                 AS extend_work_time,
+        COALESCE(pay10_night_work_time, 0)                  AS night_work_time,
+        COALESCE(pay10_holiday_work_time, 0)                AS holiday_work_time,
+        pay10_note                                          AS note,
+        pay10_std_month                                     AS std_month,
+        emp01_emp_no                                        AS person_no,
+        f_emp_kor_nm(pay10_person_id)                       AS person_nm,
+        f_cdnm('EmpPosCode', emp03_pos_cd, emp01_company_id, f_sysdate()) AS pos_nm,
+        (SELECT COALESCE(SUM(pay11_item_amt), 0) FROM pay11_month_item
+          WHERE pay11_month_id = pay10_month_id AND pay11_item_type = '1')   AS pay_sum,
+        (SELECT COALESCE(SUM(pay11_item_amt), 0) FROM pay11_month_item
+          WHERE pay11_month_id = pay10_month_id AND pay11_item_type = '2')   AS tax_ddc_sum,
+        (SELECT COALESCE(SUM(pay11_item_amt), 0) FROM pay11_month_item
+          WHERE pay11_month_id = pay10_month_id AND pay11_item_type = '1')
+        - (SELECT COALESCE(SUM(pay11_item_amt), 0) FROM pay11_month_item
+          WHERE pay11_month_id = pay10_month_id AND pay11_item_type = '2')   AS deduction_sum
+    </sql>
+
+    <!-- AS-IS pay10_month.selectByCompanyId (파라미터: companyId, payCode, payDate) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayMonthRes">
+        SELECT <include refid="monthColumns"/>
+          FROM pay10_month
+         INNER JOIN emp01_person ON pay10_person_id = emp01_person_id
+         INNER JOIN emp02_others ON pay10_person_id = emp02_person_id
+         INNER JOIN emp03_trans  ON pay10_person_id = emp03_person_id
+         WHERE (emp03_person_id, emp03_trans_date) IN (
+                SELECT emp03_person_id, MAX(emp03_trans_date)
+                  FROM emp01_person
+                 INNER JOIN emp03_trans ON emp03_person_id = emp01_person_id
+                 WHERE emp01_company_id = #{companyId}
+                   AND emp03_trans_date &lt;= #{payDate}
+                 GROUP BY emp03_person_id
+         )
+           AND pay10_company_id = #{companyId}
+           AND pay10_date       = #{payDate}
+           AND pay10_pay_cd     = #{payCode}
+         ORDER BY emp01_emp_no
+    </select>
+
+    <!-- AS-IS pay10_month.selectByYear (파라미터: companyId, payCode, year). month_id는 ROW_NUMBER라 내지 않는다 -->
+    <select id="selectByYear" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayMonthGroupRes">
+        SELECT (to_char(pay10_date,'yyyy-mm-dd')||' / '||f_cdnm('PayMonthCode', pay10_pay_cd, pay10_company_id, f_sysdate())) AS pay_group_nm,
+               pay10_company_id AS company_id,
+               pay10_date       AS date,
+               pay10_pay_cd     AS pay_cd
+          FROM pay10_month
+         WHERE to_char(pay10_date, 'yyyy') = #{year}
+           AND pay10_company_id = #{companyId}
+           AND pay10_pay_cd like #{payCode}
+        <if test="code == '001'">
+           AND pay10_pay_cd IN ('01', '02')
+        </if>
+         GROUP BY pay10_company_id, pay10_date, pay10_pay_cd
+         ORDER BY pay10_company_id, pay10_date DESC, pay10_pay_cd
+    </select>
+
+    <!-- 삭제·근로시간 저장 전에 행을 다시 읽는다(회사 범위, 화면이 보낸 값을 믿지 않는다). 사원 관련 열은 채우지 않는다 -->
+    <select id="selectByIds" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayMonthRes">
+        SELECT pay10_month_id                         AS month_id,
+               pay10_company_id                       AS company_id,
+               pay10_pay_cd                           AS pay_cd,
+               pay10_date                             AS date,
+               pay10_person_id                        AS person_id,
+               COALESCE(pay10_work_day, 0)            AS work_day,
+               COALESCE(pay10_total_work_time, 0)     AS total_work_time,
+               COALESCE(pay10_extend_work_time, 0)    AS extend_work_time,
+               COALESCE(pay10_night_work_time, 0)     AS night_work_time,
+               COALESCE(pay10_holiday_work_time, 0)   AS holiday_work_time,
+               pay10_note                             AS note,
+               pay10_std_month                        AS std_month,
+               NULL::varchar AS person_no, NULL::varchar AS person_nm, NULL::varchar AS pos_nm,
+               NULL::numeric AS pay_sum, NULL::numeric AS tax_ddc_sum, NULL::numeric AS deduction_sum
+          FROM pay10_month
+         WHERE pay10_company_id = #{companyId}
+           AND pay10_month_id IN
+        <foreach collection="monthIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <!-- AS-IS pay05_relate_appr.checkAppr: 결재 진행(10·20·30) 상신에 걸린 급여대장 수. 퇴직정산(03)은 퇴직정산ID까지 본다 -->
+    <select id="countRelateAppr" resultType="int">
+        SELECT count(*)
+          FROM pay05_relate_appr
+         INNER JOIN apr01_appr b ON pay05_appr_id = apr01_appr_id
+         WHERE pay05_company_id = #{companyId}
+           AND pay05_pay_cd     = #{payCode}
+           AND pay05_start_date = #{payDate}
+        <if test="payCode == '03' and monthId != null">
+           AND pay05_retire_id  = #{monthId}
+        </if>
+           AND apr01_status_cd in ('10','20','30')
+    </select>
+
+    <!-- AS-IS act02_journal.countByPayMonthCode: 03(퇴직정산)이면 retire_id까지, 아니면 구분만 -->
+    <select id="countJournal" resultType="long">
+        SELECT count(*)
+          FROM act02_journal
+         WHERE act02_company_id   = #{companyId}
+           AND act02_date         = #{payDate}
+           AND act02_pay_month_cd = #{payCode}
+        <if test="payCode == '03'">
+           AND act02_retire_id    = #{monthId}
+        </if>
+    </select>
+
+    <delete id="deleteItems">
+        DELETE FROM pay11_month_item WHERE pay11_month_id = #{monthId}
+    </delete>
+
+    <delete id="deleteRetireInsure">
+        DELETE FROM pay12_retire_insure WHERE pay12_month_id = #{monthId}
+    </delete>
+
+    <delete id="deleteRetireTax">
+        DELETE FROM pay13_retire_tax WHERE pay13_month_id = #{monthId}
+    </delete>
+
+    <delete id="deleteRetireTaxItem">
+        DELETE FROM pay14_retire_tax_item WHERE pay14_month_id = #{monthId}
+    </delete>
+
+    <delete id="deleteInsurePay">
+        DELETE FROM pay32_insure_pay
+         WHERE pay32_person_id = #{personId}
+           AND pay32_date      = #{date}
+    </delete>
+
+    <select id="getInsureAdjustModi" resultType="string">
+        SELECT f_create_4insure_adjust_modi(#{personId}, #{insureCode}, #{payDate})
+    </select>
+
+    <delete id="deleteMonths">
+        DELETE FROM pay10_month
+         WHERE pay10_company_id = #{companyId}
+           AND pay10_month_id IN
+        <foreach collection="monthIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <update id="updateWorkTime">
+        UPDATE pay10_month
+           SET pay10_work_day          = #{req.workDay},
+               pay10_total_work_time   = #{totalWorkTime},
+               pay10_extend_work_time  = #{req.extendWorkTime},
+               pay10_night_work_time   = #{req.nightWorkTime},
+               pay10_holiday_work_time = #{req.holidayWorkTime}
+         WHERE pay10_month_id   = #{monthId}
+           AND pay10_company_id = #{companyId}
+    </update>
+
+    <!-- ================= 급여 생성 (Pay10_Month.insert) ================= -->
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="countPerson" resultType="int">
+        SELECT count(*) FROM emp01_person
+         WHERE emp01_company_id = #{companyId} AND emp01_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS sys12_calendar.workDayPerson: sys12_company_id = 1 고정 -->
+    <select id="workDayPerson" resultType="long">
+        SELECT count(*)
+          FROM sys12_calendar
+         WHERE sys12_working_yn not in ('false')
+           AND to_char(sys12_day,'yyyymm') = #{payDateInt}
+           AND sys12_day >= #{hireDate}
+        <if test="retireDate != null">
+           AND sys12_day &lt;= #{retireDate}
+        </if>
+           AND sys12_company_id = 1
+    </select>
+
+    <select id="countByPayDatePerson" resultType="int">
+        SELECT count(*)
+          FROM pay10_month
+         WHERE pay10_company_id = #{companyId}
+           AND pay10_person_id  = #{personId}
+           AND pay10_date       = #{payDate}
+           AND pay10_pay_cd     = #{payCode}
+    </select>
+
+    <!-- AS-IS pay01_annual.selectByApprStatus (statusCode 30 고정) — 금액 열은 NULL이면 0 -->
+    <select id="selectApprovedAnnual" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayMonthAnnualRes">
+        SELECT COALESCE(pay01_basic_pay, 0)           AS basic_pay,
+               COALESCE(pay01_over_pay, 0)            AS over_pay,
+               COALESCE(pay01_etc01_pay, 0)           AS etc01_pay,
+               COALESCE(pay01_etc02_pay, 0)           AS etc02_pay,
+               COALESCE(pay01_meal_pay, 0)            AS meal_pay,
+               COALESCE(pay01_car_mt, 0)              AS car_mt,
+               COALESCE(pay01_childcare_allowance, 0) AS childcare_allowance
+          FROM pay01_annual
+         WHERE pay01_company_id = #{companyId}
+           AND pay01_person_id  = #{personId}
+           AND pay01_start_date IN (
+                SELECT MAX(a.pay01_start_date)
+                  FROM pay01_annual a
+                       INNER JOIN apr01_appr b ON a.pay01_appr_id = b.apr01_appr_id
+                 WHERE a.pay01_person_id = #{personId}
+                   AND b.apr01_status_cd = '30'
+                   AND a.pay01_start_date &lt;= #{payDate}
+           )
+         ORDER BY pay01_start_date DESC
+         LIMIT 1
+    </select>
+
+    <insert id="insertMonth">
+        INSERT INTO pay10_month
+               (pay10_month_id, pay10_company_id, pay10_pay_cd, pay10_date, pay10_person_id,
+                pay10_work_day, pay10_total_work_time, pay10_extend_work_time, pay10_night_work_time, pay10_holiday_work_time,
+                pay10_std_month)
+        VALUES (#{monthId}, #{companyId}, #{payCode}, #{payDate}, #{personId},
+                #{workDay}, #{totalWorkTime}, NULL, NULL, NULL,
+                #{stdMonth})
+    </insert>
+
+    <insert id="insertItem">
+        INSERT INTO pay11_month_item
+               (pay11_month_item_id, pay11_month_id, pay11_item_type, pay11_item_cd, pay11_item_amt)
+        VALUES (#{monthItemId}, #{monthId}, #{itemType}, #{itemCode}, #{itemAmt})
+    </insert>
+
+    <!-- AS-IS pay11_month_item.insertLatestInfo — 열 이름 없는 INSERT … SELECT(pay11 열 순서: 항목ID·급여ID·구분·코드·금액). 221/231/241 제외 -->
+    <insert id="insertLatestInfo">
+        INSERT INTO pay11_month_item
+        SELECT f_create_seq(),
+               #{monthId},
+               pay11_item_type,
+               pay11_item_cd,
+               pay11_item_amt
+          FROM pay11_month_item
+               INNER JOIN pay10_month ON pay10_month_id = pay11_month_id
+         WHERE pay10_company_id = #{companyId}
+           AND pay10_person_id  = #{personId}
+           AND pay11_item_cd NOT IN ('221','231','241')
+           AND pay10_date = (
+                SELECT MAX(pay10_date)
+                  FROM pay10_month
+                 WHERE pay10_pay_cd    = #{payCode}
+                   AND pay10_person_id = #{personId}
+                   AND CAST(TO_CHAR(pay10_date,'yyyymm') AS numeric) &lt;= CAST(#{payDateInt} AS numeric) - 1
+           )
+           AND pay10_pay_cd = #{payCode}
+    </insert>
+
+    <select id="getInsureNps" resultType="long">
+        SELECT f_calc_4insure_nps(#{personId}, #{payDate})
+    </select>
+
+    <select id="getInsureHi" resultType="long">
+        SELECT f_calc_4insure_hi(#{personId}, #{payDate}, 'true')
+    </select>
+
+    <select id="getInsureLtc" resultType="long">
+        SELECT f_calc_4insure_ltc(#{personId}, #{payDate})
+    </select>
+
+    <select id="getInsureEi" resultType="long">
+        SELECT f_calc_4insure_ei(#{personId}, #{payDate})
+    </select>
+
+    <select id="getIncomeTax" resultType="long">
+        SELECT f_calc_income_tax(#{monthId})
+    </select>
+
+    <select id="getLocalTax" resultType="long">
+        SELECT f_calc_local_tax(#{payDate}, f_calc_income_tax(#{monthId}))
+    </select>
+
+    <select id="getAdjustPay" resultType="long">
+        SELECT f_create_4insure_adjust_pay(#{personId}, #{insureCode}, #{payDate})
+    </select>
+</mapper>

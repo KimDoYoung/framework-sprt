@@ -70,7 +70,7 @@ export const Fnd09_Tab_TrustBank: React.FC = () => {
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', boxSizing: 'border-box', padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ width: '100%', height: '100%', boxSizing: 'border-box', padding: 20, display: 'flex', flexDirection: 'column', gap: 8, background: '#fff' }}>
       {/* [E1] searchText.KeyPress [Enter] (L64) → retrieve(), [E2] retrieveButton[조회].Select (L72) → retrieve() */}
       <SearchBar onSearch={crud.retrieve} loading={crud.loading} extra={<>
         {/* [E3] insertButton[등록].Select (L78) → insertRow() */}

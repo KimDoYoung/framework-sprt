@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/pay/mapper/pay11_month_item.xml (selectByItemType, updateModel, deleteByMonthItemId, updateItemAmt, getIncomeTax, getLocalTax, getInsureAdjustModi)  (S16)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayMonthItemMapper">
+
+    <!-- AS-IS selectByItemType. f_cdnm 회사 ID 1 고정은 원본 그대로 -->
+    <select id="selectByItemType" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemRes">
+        SELECT pay11_month_item_id                                          AS month_item_id,
+               pay11_month_id                                               AS month_id,
+               pay11_item_type                                              AS item_type,
+               pay11_item_cd                                                AS item_cd,
+               pay11_item_amt                                               AS item_amt,
+               f_cdnm('PayItemType', pay11_item_type, 1, f_sysdate())       AS item_type_nm,
+               f_cdnm('NonTaxType', pay20_non_tax_type, 1, f_sysdate())     AS non_tax_type_nm,
+               pay20_item_nm                                                AS item_nm
+          FROM pay11_month_item
+               INNER JOIN pay20_item ON pay20_item_cd = pay11_item_cd
+         WHERE pay11_month_id  = #{monthId}
+           AND pay11_item_type = #{itemType}
+         ORDER BY pay11_item_cd
+    </select>
+
+    <!-- AS-IS updateModel: UPDATE 후 없으면 INSERT -->
+    <update id="updateModel">
+        WITH upsert AS
+        (
+            UPDATE pay11_month_item
+               SET pay11_month_id  = #{monthId},
+                   pay11_item_type = #{itemType},
+                   pay11_item_cd   = #{itemCode},
+                   pay11_item_amt  = #{itemAmt}
+             WHERE pay11_month_item_id = #{monthItemId}
+               AND pay11_month_id      = #{monthId}
+         RETURNING *
+        )
+        INSERT INTO pay11_month_item
+               (pay11_month_item_id, pay11_month_id, pay11_item_type, pay11_item_cd, pay11_item_amt)
+        SELECT f_create_seq(), #{monthId}, #{itemType}, #{itemCode}, #{itemAmt}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </update>
+
+    <select id="selectItemCode" resultType="string">
+        SELECT pay11_item_cd FROM pay11_month_item
+         WHERE pay11_month_item_id = #{monthItemId} AND pay11_month_id = #{monthId}
+    </select>
+
+    <delete id="deleteByMonthItemId">
+        DELETE FROM pay11_month_item
+         WHERE pay11_month_item_id = #{monthItemId}
+           AND pay11_month_id      = #{monthId}
+    </delete>
+
+    <!-- AS-IS updateItemAmt: 항목 코드로 금액만 바꾸고, 없으면 pay20_item의 구분으로 INSERT -->
+    <update id="updateItemAmt">
+        WITH upsert AS
+        (
+            UPDATE pay11_month_item
+               SET pay11_item_amt = #{itemAmt}
+             WHERE pay11_month_id = #{monthId}
+               AND pay11_item_cd  = #{itemCode}
+         RETURNING *
+        )
+        INSERT INTO pay11_month_item
+               (pay11_month_item_id, pay11_month_id, pay11_item_type, pay11_item_cd, pay11_item_amt)
+        SELECT f_create_seq(),
+               #{monthId},
+               (SELECT pay20_item_type FROM pay20_item WHERE pay20_item_cd = #{itemCode} LIMIT 1),
+               #{itemCode},
+               #{itemAmt}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </update>
+
+    <select id="getIncomeTax" resultType="long">
+        SELECT f_calc_income_tax(#{monthId})
+    </select>
+
+    <select id="getLocalTax" resultType="long">
+        SELECT f_calc_local_tax(#{payDate}, f_calc_income_tax(#{monthId}))
+    </select>
+
+    <select id="getInsureAdjustModi" resultType="string">
+        SELECT f_create_4insure_adjust_modi(#{personId}, #{insureCode}, #{payDate})
+    </select>
+</mapper>

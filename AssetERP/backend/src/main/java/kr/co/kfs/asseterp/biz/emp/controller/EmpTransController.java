@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.emp.controller;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,9 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 import kr.co.kfs.asseterp.biz.emp.dto.TransPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransSaveReq;
+import kr.co.kfs.asseterp.biz.emp.dto.TransTargetRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransTdmRes;
 import kr.co.kfs.asseterp.biz.emp.service.EmpTransService;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /** 일반발령 탭 (AS-IS Emp03_TabPage_Trans → server/emp/Emp03_Trans) */
@@ -40,6 +43,15 @@ public class EmpTransController {
     public ApiResponse<List<TransPersonRes>> searchTransPersons(@AuthenticationPrincipal UserPrincipal principal,
                                                                 @RequestParam(required = false) String searchText) {
         return ApiResponse.ok(empTransService.searchTransPersons(principal, searchText));
+    }
+
+    /** AS-IS emp.Emp03_Trans.selectByText (Emp01_Lookup_TransDate, 급여 생성 대상 사원 선택) */
+    @GetMapping("/trans/by-text")
+    public ApiResponse<List<TransTargetRes>> searchTransTargets(@AuthenticationPrincipal UserPrincipal principal,
+                                                                @RequestParam(required = false) String searchText,
+                                                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate transDate,
+                                                                @RequestParam(defaultValue = "true") boolean isSeparateAddTitle) {
+        return ApiResponse.ok(empTransService.searchTransTargets(principal, searchText, transDate, isSeparateAddTitle));
     }
 
     /** AS-IS emp.Emp03_Trans.selectByTdmYn (Emp00_Lookup_SelectSingleTdm, 책무 대상 사원찾기) */

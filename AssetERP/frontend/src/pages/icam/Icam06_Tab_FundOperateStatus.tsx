@@ -150,7 +150,8 @@ export const Icam06_Tab_FundOperateStatus: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
-        padding: 8,
+        padding: 10,
+        backgroundColor: '#fff'
       }}
     >
       <SearchBar

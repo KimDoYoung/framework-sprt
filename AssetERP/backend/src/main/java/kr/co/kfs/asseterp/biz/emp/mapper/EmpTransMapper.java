@@ -4,10 +4,12 @@ import kr.co.kfs.asseterp.biz.emp.dto.TransDeleteParam;
 import kr.co.kfs.asseterp.biz.emp.dto.TransPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransRow;
+import kr.co.kfs.asseterp.biz.emp.dto.TransTargetRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransTdmRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,6 +22,10 @@ public interface EmpTransMapper {
     /** AS-IS selectByText (사원찾기) */
     List<TransPersonRes> searchTransPersons(@Param("companyId") Long companyId, @Param("searchText") String searchText,
                                             @Param("transDate") LocalDateTime transDate);
+
+    /** AS-IS selectByText (Emp01_Lookup_TransDate) — separateAddTitle이면 겸직(800)도 제외 */
+    List<TransTargetRes> searchTransTargets(@Param("companyId") Long companyId, @Param("searchText") String searchText,
+                                            @Param("transDate") LocalDate transDate, @Param("separateAddTitle") boolean separateAddTitle);
 
     /** AS-IS selectByTdmYn (책무 대상 사원찾기 Emp00_Lookup_SelectSingleTdm) — stdDate 'yyyy-MM-dd', orgId는 없으면 null */
     List<TransTdmRes> searchTransTdm(@Param("companyId") Long companyId, @Param("stdDate") String stdDate,
