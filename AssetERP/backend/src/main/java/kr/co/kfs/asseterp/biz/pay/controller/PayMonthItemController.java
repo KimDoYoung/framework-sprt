@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.pay.controller;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemAmountReq;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemBulkReq;
+import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemDateRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemSaveReq;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemTextRes;
@@ -75,6 +76,26 @@ public class PayMonthItemController {
                                        @RequestParam(defaultValue = "%") String itemCode,
                                        @RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.insertRdPrint(principal, payCode, payDate, itemCode, searchText));
+    }
+
+    /** pay.Pay11_MonthItem.selectByDate (S19 급여항목조회) */
+    @GetMapping("/by-date")
+    public ApiResponse<List<PayMonthItemDateRes>> searchByDate(@AuthenticationPrincipal UserPrincipal principal,
+                                                               @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                               @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                               @RequestParam(defaultValue = "%") String itemCode,
+                                                               @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchByDate(principal, startDate, closeDate, itemCode, searchText));
+    }
+
+    /** sys.Sys99_Print.insertRdMonthSearch (S19 [출력/다운로드]) → 출력 자료 groupId */
+    @PostMapping("/rd-print-by-date")
+    public ApiResponse<String> rdPrintByDate(@AuthenticationPrincipal UserPrincipal principal,
+                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                             @RequestParam(defaultValue = "%") String itemCode,
+                                             @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.insertRdPrintByDate(principal, startDate, closeDate, itemCode, searchText));
     }
 
     /** pay.Pay11_MonthItem.recalculationTax — [소득세 재계산] */

@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemText, PayRelateNote, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxDeductLimit, PayWorkTime } from '../types/pay';
+import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxDeductLimit, PayWorkTime } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -534,6 +534,36 @@ export const payApi = {
   /** AS-IS sys.Sys99_Print.insertRdMonthItem (S17 [출력/다운로드]) → 출력 자료 groupId */
   rdPrintMonthItems: async (params: { payCode: string; payDate: string; itemCode: string; searchText: string }): Promise<string> => {
     const res = await apiClient.post<ApiResponse<string>>('v1/pay/month-items/rd-print', null, { params });
+    return res.data.data as string;
+  },
+
+  /** AS-IS pay.Pay10_Month.selectByYearPersonId — 본인 급여(S20 급여명세서). 사원은 서버가 로그인 사용자로 정한다 */
+  searchMyPayMonths: async (year: string): Promise<PayMonthPerson[]> => {
+    const res = await apiClient.get<ApiResponse<PayMonthPerson[]>>('v1/pay/months/mine', { params: { year } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay10_Month.selectByYearPersonId — 고른 사원의 급여(S21 급여명세서(경영관리팀)) */
+  searchPersonPayMonths: async (personId: number, year: string): Promise<PayMonthPerson[]> => {
+    const res = await apiClient.get<ApiResponse<PayMonthPerson[]>>('v1/pay/months/by-person', { params: { personId, year } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay10_Month.selectByMonthIdCount ×2 — 지급·공제 항목 수 중 큰 값(RD 보고서 num). mine이면 본인 급여만 */
+  payMonthItemCount: async (monthId: number, mine: boolean): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>(mine ? `v1/pay/months/mine/${monthId}/item-count` : `v1/pay/months/${monthId}/item-count`);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS pay.Pay11_MonthItem.selectByDate (S19 급여항목조회) */
+  searchMonthItemsByDate: async (params: { startDate: string; closeDate: string; itemCode: string; searchText: string }): Promise<PayMonthItemDate[]> => {
+    const res = await apiClient.get<ApiResponse<PayMonthItemDate[]>>('v1/pay/month-items/by-date', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdMonthSearch (S19 [출력/다운로드]) → 출력 자료 groupId */
+  rdPrintMonthItemsByDate: async (params: { startDate: string; closeDate: string; itemCode: string; searchText: string }): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/pay/month-items/rd-print-by-date', null, { params });
     return res.data.data as string;
   },
 

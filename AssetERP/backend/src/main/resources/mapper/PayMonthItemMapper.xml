@@ -149,4 +149,50 @@
              , q.person_no, q.person_name, q.pos_name, q.item_type_name, q.item_name, COALESCE(q.item_amt, 0)
           FROM (<include refid="textQuery"/>) q
     </insert>
+
+    <!-- AS-IS pay11_month_item.selectByDate (IDMS-IC) — S19 급여항목조회. 사원별 가장 늦은 발령(조회 종료일 이전)의 직급 -->
+    <sql id="dateQuery">
+        SELECT pay11_month_item_id                                          AS month_item_id,
+               pay10_date                                                   AS pay_date,
+               f_cdnm('PayMonthCode', pay10_pay_cd, 1, f_sysdate())         AS pay_name,
+               emp01_emp_no                                                 AS person_no,
+               f_emp_kor_nm(pay10_person_id)                                AS person_name,
+               f_cdnm('EmpPosCode', emp03_pos_cd, emp01_company_id, f_sysdate()) AS pos_name,
+               f_cdnm('PayItemType', pay11_item_type, 1, f_sysdate())       AS item_type_name,
+               pay20_item_nm                                                AS item_name,
+               pay11_item_amt                                               AS item_amt
+          FROM pay11_month_item
+               INNER JOIN pay10_month  ON pay10_month_id  = pay11_month_id
+               INNER JOIN pay20_item   ON pay20_item_cd   = pay11_item_cd
+               INNER JOIN emp01_person ON pay10_person_id = emp01_person_id
+               INNER JOIN emp02_others ON pay10_person_id = emp02_person_id
+               INNER JOIN emp03_trans  ON pay10_person_id = emp03_person_id
+         WHERE (emp03_person_id, emp03_trans_date) IN (
+                   SELECT emp03_person_id, MAX(emp03_trans_date)
+                     FROM emp01_person
+                          INNER JOIN emp03_trans ON emp03_person_id = emp01_person_id
+                    WHERE emp01_company_id = #{companyId}
+                      AND emp03_trans_date &lt;= #{closeDate}
+                    GROUP BY emp03_person_id
+               )
+           AND pay10_company_id = #{companyId}
+           AND pay11_item_cd LIKE #{itemCode}
+           AND pay10_date BETWEEN #{startDate} AND #{closeDate}
+           AND UPPER(CONCAT(f_emp_kor_nm(pay10_person_id), pay20_item_nm)) LIKE UPPER(#{searchText})
+         ORDER BY pay10_date DESC, pay10_pay_cd, emp01_emp_no, pay11_item_type, pay20_item_cd
+    </sql>
+
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemDateRes">
+        <include refid="dateQuery"/>
+    </select>
+
+    <!-- AS-IS Sys99_Print.insertRdMonthSearch L2495: 지급일 = date01, 지급구분·사번·사원명·직급·항목구분·항목명 = string01~06, 금액 = long01(null이면 0) -->
+    <insert id="insertPrintByDate">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_string01, sys99_string02, sys99_string03, sys99_string04, sys99_string05, sys99_string06, sys99_long01 )
+        SELECT f_create_seq(), #{companyId}, #{printPersonId}, #{windowClassName}, #{groupId}
+             , q.pay_date, q.pay_name, q.person_no, q.person_name, q.pos_name, q.item_type_name, q.item_name, COALESCE(q.item_amt, 0)
+          FROM (<include refid="dateQuery"/>) q
+    </insert>
 </mapper>

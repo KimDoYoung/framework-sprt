@@ -1,0 +1,10 @@
+{
+  "id": "S19",
+  "menu": ["경영관리", "급여항목조회"],
+  "api": ["pay/month-items/by-date", "pay/month-items/rd-print-by-date", "pay/items/month-items"],
+  "opens": {
+    "buttons": "조회.*출력/다운로드",
+    "headers": "지급일,지급구분,사번,사원명,직급,항목구분,항목명,금액"
+  },
+  "notes": "조회기간 기본값 = 이번 달 1일~말일(열 때 조회 안 함). 데이터가 있는 기간(예: 2026-01-01~2026-12-31)을 넣고 [조회]. 항목 칸 돋보기 = 항목 List 창(550폭 목록, 확인/취소), x = 전체. 출력은 RdViewer 창이 열리는지만."
+}

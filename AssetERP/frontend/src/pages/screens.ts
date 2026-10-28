@@ -149,6 +149,9 @@ import { Pay01_Tab_AnnualList } from './pay/Pay01_Tab_AnnualList';
 import { Pay01_Tab_AnnualPerson } from './pay/Pay01_Tab_AnnualPerson';
 import { Pay10_Tab_Month } from './pay/Pay10_Tab_Month';
 import { Pay10_Tab_MonthItem } from './pay/Pay10_Tab_MonthItem';
+import { Pay10_Tab_MonthSearch } from './pay/Pay10_Tab_MonthSearch';
+import { Pay10_Tab_PersonList } from './pay/Pay10_Tab_PersonList';
+import { Pay10_Tab_PersonListManager } from './pay/Pay10_Tab_PersonListManager';
 import { Pay10_Tab_List } from './pay/Pay10_Tab_List';
 import { Pay34_Tab_WorkTimeConfig } from './pay/Pay34_Tab_WorkTimeConfig';
 import { Crd10_Tab_ExcelCompanyAdmin } from './crd/Crd10_Tab_ExcelCompanyAdmin';
@@ -451,6 +454,9 @@ export const SCREENS: Record<string, React.FC> = {
   Ast01_Tab_InfoManager, // E21
   Ast01_Tab_ClassTreeManagement, // R08 (메뉴 #1117. 펀드자산 종목기본)
   Ast01_Tab_InfoManagement, // R09 (메뉴 #1118. 펀드자산 종목상세)
+  Pay10_Tab_PersonListManager, // S21 (S20의 RD 폼 Pay10_Rd_PersonList 공용 + 사원찾기 Emp00_Lookup_SelectSingle)
+  Pay10_Tab_PersonList, // S20 (RD 보고서 Pay10_Rd_PersonList 끼워 넣기)
+  Pay10_Tab_MonthSearch, // S19 (Pay20_Lookup_MonthItem은 S17 재사용. 출력 창 = RdViewer)
   Pay10_Tab_MonthItem, // S17 (Pay10_Lookup_GroupList는 S16 재사용 + Pay20_Lookup_MonthItem. 출력 창 = RdViewer)
   Pay10_Tab_List, // S18 (RD 보고서 Pay10_Rd_List 끼워 넣기 + Pay10_Lookup_Journal·Pay03_Lookup_PayAccount. 1단계: 상신·문서보기는 안내)
   Pay10_Tab_Month, // S16 1단계 (임금계산방법 Pay04_Lookup_Formula는 다음 단계 — 안내만. + Pay11_TabPage_MonthItem·팝업 6개·Emp01_Lookup_TransDate)

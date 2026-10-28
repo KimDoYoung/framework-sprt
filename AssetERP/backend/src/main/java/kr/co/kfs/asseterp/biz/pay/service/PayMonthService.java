@@ -5,6 +5,7 @@ import kr.co.kfs.asseterp.biz.pay.dto.PayApprCheckRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthAnnualRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthCreateReq;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthGroupRes;
+import kr.co.kfs.asseterp.biz.pay.dto.PayMonthPersonRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthWorkTimeReq;
 import kr.co.kfs.asseterp.biz.pay.mapper.PayMonthMapper;
@@ -42,6 +43,29 @@ public class PayMonthService {
     /** pay10_month.selectByYear — payCode "%"는 전체 */
     public List<PayMonthGroupRes> searchGroups(UserPrincipal user, String year, String payCode, String code) {
         return mapper.selectByYear(user.getCompanyId(), year, payCode, code);
+    }
+
+    /** S20 pay10_month.selectByYearPersonId — 로그인 사용자 본인의 급여(사원은 서버가 정한다) */
+    public List<PayMonthPersonRes> searchMine(UserPrincipal user, String year) {
+        return mapper.selectByYearPerson(user.getCompanyId(), user.getUserId(), year);
+    }
+
+    /** S21 pay10_month.selectByYearPersonId — 고른 사원의 급여(회사는 로그인 사용자) */
+    public List<PayMonthPersonRes> searchByPerson(UserPrincipal user, Long personId, String year) {
+        return mapper.selectByYearPerson(user.getCompanyId(), personId, year);
+    }
+
+    /**
+     * S20·S21 pay10_month.selectByMonthIdCount ×2 — 지급·공제 항목 수 중 큰 값(RD 보고서의 num).
+     * mineOnly면 본인 급여만(S20), 아니면 로그인 회사의 급여면 된다(S21). 없는/남의 급여는 404
+     */
+    public long itemCount(UserPrincipal user, Long monthId, boolean mineOnly) {
+        PayMonthRes month = mapper.selectByIds(user.getCompanyId(), List.of(monthId)).stream().findFirst()
+                .orElseThrow(() -> new BusinessException(ErrorCode.DATA_NOT_FOUND));
+        if (mineOnly && !Objects.equals(month.personId(), user.getUserId())) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return Math.max(mapper.countItems(monthId, "1"), mapper.countItems(monthId, "2"));
     }
 
     /** AS-IS checkAppr: 결재 진행 중이면 막고, 분개(전표)가 있으면 막는다 */

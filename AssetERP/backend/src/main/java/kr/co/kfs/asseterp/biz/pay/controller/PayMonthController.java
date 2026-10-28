@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.pay.dto.PayApprCheckRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthCreateReq;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthGroupRes;
+import kr.co.kfs.asseterp.biz.pay.dto.PayMonthPersonRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthWorkTimeReq;
 import kr.co.kfs.asseterp.biz.pay.service.PayMonthService;
@@ -47,6 +48,31 @@ public class PayMonthController {
                                                       @RequestParam(defaultValue = "%") String payCode,
                                                       @RequestParam(required = false) String code) {
         return ApiResponse.ok(service.searchGroups(principal, year, payCode, code));
+    }
+
+    /** pay.Pay10_Month.selectByYearPersonId — 본인 급여(S20 급여명세서, 사원은 로그인 사용자) */
+    @GetMapping("/mine")
+    public ApiResponse<List<PayMonthPersonRes>> mine(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String year) {
+        return ApiResponse.ok(service.searchMine(principal, year));
+    }
+
+    /** pay.Pay10_Month.selectByYearPersonId — 고른 사원의 급여(S21 급여명세서(경영관리팀)) */
+    @GetMapping("/by-person")
+    public ApiResponse<List<PayMonthPersonRes>> byPerson(@AuthenticationPrincipal UserPrincipal principal,
+                                                         @RequestParam Long personId, @RequestParam String year) {
+        return ApiResponse.ok(service.searchByPerson(principal, personId, year));
+    }
+
+    /** pay.Pay10_Month.selectByMonthIdCount — 본인 급여의 지급·공제 항목 수 중 큰 값(S20 RD 보고서 num) */
+    @GetMapping("/mine/{monthId}/item-count")
+    public ApiResponse<Long> mineItemCount(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long monthId) {
+        return ApiResponse.ok(service.itemCount(principal, monthId, true));
+    }
+
+    /** pay.Pay10_Month.selectByMonthIdCount — 지급·공제 항목 수 중 큰 값(S21 RD 보고서 num) */
+    @GetMapping("/{monthId}/item-count")
+    public ApiResponse<Long> itemCount(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long monthId) {
+        return ApiResponse.ok(service.itemCount(principal, monthId, false));
     }
 
     /** pay.Pay10_Month.checkAppr — 실패여도 200, ok=false + 문구 */

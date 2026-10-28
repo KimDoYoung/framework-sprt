@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.pay.dto.PayApprCheckRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemAmountReq;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemBulkReq;
+import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemDateRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemSaveReq;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemTextRes;
@@ -36,6 +37,9 @@ public class PayMonthItemService {
 
     /** S17 [출력/다운로드] 출력 자료의 window class (AS-IS windowClassName) */
     private static final String RD_WINDOW_CLASS_NAME = "Pay10_Tab_MonthItem";
+
+    /** S19 [출력/다운로드] 출력 자료의 window class */
+    private static final String RD_SEARCH_WINDOW_CLASS_NAME = "Pay10_Tab_MonthSearch";
 
     private final PayMonthItemMapper mapper;
     private final PayMonthMapper monthMapper;
@@ -149,6 +153,24 @@ public class PayMonthItemService {
         long groupId = monthMapper.selectNextId();
         mapper.deletePrint(user.getCompanyId(), user.getUserId(), RD_WINDOW_CLASS_NAME);
         mapper.insertPrint(user.getCompanyId(), user.getUserId(), RD_WINDOW_CLASS_NAME, groupId, payCode, payDate,
+                blank(itemCode) ? "%" : itemCode, "%" + nvl(searchText) + "%");
+        return String.valueOf(groupId);
+    }
+
+    /** S19 pay11_month_item.selectByDate — 조회기간(지급일)의 전체 사원 항목. 항목 코드 기본 "%", 검색어는 "%…%"(사원명+항목명) */
+    public List<PayMonthItemDateRes> searchByDate(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String itemCode, String searchText) {
+        return mapper.selectByDate(user.getCompanyId(), startDate, closeDate, blank(itemCode) ? "%" : itemCode, "%" + nvl(searchText) + "%");
+    }
+
+    /** S19 AS-IS Sys99_Print.insertRdMonthSearch L2495: 내 지난 출력 자료 정리 → 목록 삽입 → 출력 자료 groupId */
+    @Transactional
+    public String insertRdPrintByDate(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String itemCode, String searchText) {
+        if (startDate == null || closeDate == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        long groupId = monthMapper.selectNextId();
+        mapper.deletePrint(user.getCompanyId(), user.getUserId(), RD_SEARCH_WINDOW_CLASS_NAME);
+        mapper.insertPrintByDate(user.getCompanyId(), user.getUserId(), RD_SEARCH_WINDOW_CLASS_NAME, groupId, startDate, closeDate,
                 blank(itemCode) ? "%" : itemCode, "%" + nvl(searchText) + "%");
         return String.valueOf(groupId);
     }

@@ -1,0 +1,10 @@
+{
+  "id": "S20",
+  "menu": ["경영관리", "급여명세서"],
+  "api": ["pay/months/mine", "pay/months/mine/{monthId}/item-count", "rd/urls"],
+  "opens": {
+    "buttons": "조회",
+    "headers": "일자,구분,실수령액,급여액,소득세액"
+  },
+  "notes": "본인 급여만 보인다. kfstest admin은 급여가 없어 목록이 비는 것이 정상(빈 그리드 + 빈 보고서 영역). 열릴 때 바로 조회한다. 데이터 있는 사원 계정이 있으면 첫 행이 선택되고 오른쪽에 보고서 iframe이 열려야 한다."
+}

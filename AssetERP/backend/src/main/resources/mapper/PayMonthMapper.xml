@@ -290,4 +290,57 @@
     <select id="getAdjustPay" resultType="long">
         SELECT f_create_4insure_adjust_pay(#{personId}, #{insureCode}, #{payDate})
     </select>
+
+    <!-- AS-IS pay10_month.selectByYearPersonId (IDMS-IC) — S20·S21 급여명세서. 지급일이 오늘 이전이거나 결재완료(30)된 급여만 -->
+    <select id="selectByYearPerson" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayMonthPersonRes">
+        SELECT t.pay10_month_id         AS month_id,
+               t.pay10_date             AS date,
+               t.pay10_pay_nm           AS pay_name,
+               t.pay10_deduction_sum    AS deduction_sum,
+               t.pay10_pay_sum          AS pay_sum,
+               t.pay10_income_tax_sum   AS income_tax_sum
+          FROM (
+                 SELECT pay10_month_id
+                      , pay10_date
+                      , f_cdnm('PayMonthCode', pay10_pay_cd, pay10_company_id, pay10_date)                       AS pay10_pay_nm
+                      , SUM(COALESCE(pay11_item_amt,0) * CASE WHEN pay11_item_type = '2' THEN -1 ELSE 1 END)     AS pay10_deduction_sum
+                      , SUM(CASE WHEN pay11_item_type = '1' THEN COALESCE(pay11_item_amt,0) ELSE 0 END)          AS pay10_pay_sum
+                      , SUM(CASE WHEN pay11_item_cd = '250' THEN COALESCE(pay11_item_amt,0) ELSE 0 END)          AS pay10_income_tax_sum
+                      , pay10_company_id
+                      , pay10_pay_cd
+                   FROM pay10_month
+                        INNER JOIN pay11_month_item ON pay11_month_id = pay10_month_id
+                  WHERE pay10_company_id            = #{companyId}
+                    AND pay10_person_id             = #{personId}
+                    AND to_char(pay10_date,'yyyy')  = #{year}
+                  GROUP BY pay10_company_id, pay10_month_id, pay10_date, pay10_pay_cd
+               ) t
+               LEFT JOIN pay05_relate_appr ON (    pay05_company_id   = pay10_company_id
+                                               AND pay05_start_date   = pay10_date
+                                               AND pay05_pay_cd       = pay10_pay_cd
+                                               AND ( ( pay05_pay_cd    = '03'              AND
+                                                       pay05_retire_id = pay10_month_id    ) OR
+                                                     ( pay05_pay_cd   != '03'              ) )
+                                              )
+               LEFT JOIN apr01_appr ON ( apr01_appr_id                  = pay05_appr_id AND
+                                         COALESCE(apr01_status_cd,'99') = '30'          )
+         WHERE 'Y' = CASE WHEN t.pay10_date &lt;= f_today() THEN 'Y'
+                          WHEN apr01_appr_id IS NOT NULL             THEN 'Y'
+                          ELSE 'N' END
+         ORDER BY t.pay10_date DESC, t.pay10_pay_cd
+    </select>
+
+    <!-- AS-IS pay10_month.selectByMonthIdCount — 금액이 0이 아닌 지급(1)/공제(2) 항목 수 (RD 보고서의 행 수 num) -->
+    <select id="countItems" resultType="int">
+        SELECT COUNT(*)
+          FROM ( SELECT *
+                   FROM pay10_month
+                        LEFT OUTER JOIN pay11_month_item ON pay10_month_id = pay11_month_id
+                        INNER JOIN pay20_item ON pay11_item_cd = pay20_item_cd
+                        INNER JOIN emp01_person ON pay10_person_id = emp01_person_id
+                        INNER JOIN emp02_others ON pay10_person_id = emp02_person_id ) t
+         WHERE pay10_month_id = #{monthId}
+           AND pay11_item_amt != 0
+           AND pay11_item_type = #{itemType}
+    </select>
 </mapper>

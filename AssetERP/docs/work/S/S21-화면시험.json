@@ -1,0 +1,10 @@
+{
+  "id": "S21",
+  "menu": ["경영관리", "급여명세서(경영관리팀)"],
+  "api": ["pay/months/by-person", "pay/months/{monthId}/item-count", "rd/urls"],
+  "opens": {
+    "buttons": "조회",
+    "headers": "일자,구분,실수령액"
+  },
+  "notes": "열 때 조회하지 않는다. 사원 없이 [조회] = '사원을 선택해주세요.'. 사원명 칸 돋보기 = 사원 조회창(Emp00_Lookup_SelectSingle). 사원을 고르면 바로 급여 목록이 뜨고 첫 행이 선택되며 오른쪽에 보고서 iframe이 열린다(kfstest 회사의 급여 있는 사원 예: 박동진)."
+}

@@ -286,6 +286,29 @@ export interface PayMonthItemText {
   posName?: string;
 }
 
+/** 급여항목조회 그리드 한 행 — pay11_month_item.selectByDate (S19) */
+export interface PayMonthItemDate {
+  monthItemId: number;
+  payDate?: string | null;
+  payName?: string;
+  personNo?: string;
+  personName?: string;
+  posName?: string;
+  itemTypeName?: string;
+  itemName?: string;
+  itemAmt?: number | null;
+}
+
+/** 급여명세서 목록 한 행 — pay10_month.selectByYearPersonId (S20·S21) */
+export interface PayMonthPerson {
+  monthId: number;
+  date: string;
+  payName?: string;
+  deductionSum?: number | null;
+  paySum?: number | null;
+  incomeTaxSum?: number | null;
+}
+
 /** 급여 비고(pay09_relate_note) — noteType 1 전체 / 2 개별 */
 export interface PayRelateNote {
   relateNoteId: number;

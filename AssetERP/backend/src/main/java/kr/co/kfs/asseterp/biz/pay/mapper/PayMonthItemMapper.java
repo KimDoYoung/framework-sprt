@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.pay.mapper;
 
+import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemDateRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemTextRes;
 import org.apache.ibatis.annotations.Mapper;
@@ -52,4 +53,15 @@ public interface PayMonthItemMapper {
                     @Param("windowClassName") String windowClassName, @Param("groupId") Long groupId,
                     @Param("payCode") String payCode, @Param("payDate") LocalDate payDate,
                     @Param("itemCode") String itemCode, @Param("searchText") String searchText);
+
+    /** AS-IS selectByDate (S19 급여항목조회) */
+    List<PayMonthItemDateRes> selectByDate(@Param("companyId") Long companyId, @Param("startDate") LocalDate startDate,
+                                           @Param("closeDate") LocalDate closeDate, @Param("itemCode") String itemCode,
+                                           @Param("searchText") String searchText);
+
+    /** AS-IS Sys99_Print.insertRdMonthSearch L2495 — selectByDate 목록을 sys99_print에 넣는다 */
+    int insertPrintByDate(@Param("companyId") Long companyId, @Param("printPersonId") Long printPersonId,
+                          @Param("windowClassName") String windowClassName, @Param("groupId") Long groupId,
+                          @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate,
+                          @Param("itemCode") String itemCode, @Param("searchText") String searchText);
 }

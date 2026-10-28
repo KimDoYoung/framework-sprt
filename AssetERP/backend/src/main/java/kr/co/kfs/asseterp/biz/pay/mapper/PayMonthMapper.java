@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.pay.mapper;
 
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthAnnualRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthGroupRes;
+import kr.co.kfs.asseterp.biz.pay.dto.PayMonthPersonRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -100,4 +101,10 @@ public interface PayMonthMapper {
 
     /** AS-IS pay11_month_item.getAdjustPay — 4대보험 연말정산 납부(insureCode 2 건강·3 장기요양·4 고용) */
     Long getAdjustPay(@Param("personId") Long personId, @Param("insureCode") String insureCode, @Param("payDate") LocalDate payDate);
+
+    /** AS-IS pay10_month.selectByYearPersonId (S20·S21 급여명세서) */
+    List<PayMonthPersonRes> selectByYearPerson(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("year") String year);
+
+    /** AS-IS pay10_month.selectByMonthIdCount — 항목 수(itemType 1 지급 / 2 공제) */
+    int countItems(@Param("monthId") Long monthId, @Param("itemType") String itemType);
 }
