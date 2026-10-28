@@ -2,8 +2,8 @@
  * 상세 관리 컴포넌트 (R09) — Ast02_Grid_DetailManagement
  * AS-IS: myApp/client/vi/ast/Ast02_Grid_DetailManagement.java (383줄)
  */
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { message, Modal, Splitter } from 'antd';
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { message, Splitter } from 'antd';
 import type { ColDef } from 'ag-grid-community';
 import { astApi } from '@/api/ast';
 import { errorMessage } from '@/api/client';
@@ -23,29 +23,40 @@ export interface Ast02GridDetailManagementHandle {
 }
 
 interface Ast02GridDetailManagementProps {
-  currentNode: AstClassTree | null;
+  /** 저장한 내용(content)을 부른 쪽 트리 목록에도 반영 — 같은 종목을 다시 고르면 저장한 내용이 보여야 한다 */
+  onContentSaved?: (classTreeId: number, content: string) => void;
 }
 
 const gb = gbFor<AstItemDetail>();
 
 export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementHandle, Ast02GridDetailManagementProps>(
-  ({ currentNode }, ref) => {
-    const [node, setNode] = useState<AstClassTree | null>(currentNode);
+  ({ onContentSaved }, ref) => {
+    const [node, setNode] = useState<AstClassTree | null>(null);
     const [enabled, setEnabled] = useState(false);
     const [content, setContent] = useState('');
     const [editorKey, setEditorKey] = useState(0);
-    const [selectedRows, setSelectedRows] = useState<AstItemDetail[]>([]);
 
     // 모달 상태
     const [cfModalOpen, setCfModalOpen] = useState(false);
     const [detailModalOpen, setDetailModalOpen] = useState(false);
 
     const managerRef = useRef<Ast10GridManagerHandle>(null);
-    const nodeRef = useRef<AstClassTree | null>(currentNode);
+    const nodeRef = useRef<AstClassTree | null>(null);
     nodeRef.current = node;
+
+    // AS-IS update() 검사 — 순번·항목 필수
+    const validateRows = (changed: AstItemDetail[]): string | undefined => {
+      for (const model of changed) {
+        if (model.seq == null) return '순번을 입력해주세요';
+        if (model.title == null || model.title === '') return '항목을 입력해주세요';
+      }
+      return undefined;
+    };
 
     const crud = useGridCrud<AstItemDetail>({
       idField: 'detailId',
+      validate: validateRows,
+      deleteConfirm: (n) => `${n}건의 항목을 삭제하시겠습니까?`,
       search: useCallback(async () => {
         const active = nodeRef.current;
         if (!active?.classTreeId) return [];
@@ -128,22 +139,10 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
       clear,
     }));
 
-    // [E0] 화면 열림 (생성자 L98-102) → settings(), makeLayout()
-    useEffect(() => {
-      if (currentNode && currentNode.typeCode === 'IT') {
-        loadNode(currentNode);
-      } else if (currentNode) {
-        visible();
-      } else if (nodeRef.current !== null) {
-        clear();
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentNode]);
-
     // [E5] addButton[항목추가].Select (L141) → insert()
     const insert = () => {
       if (!node) {
-        message.warning('좌측 자산종목을 선택헤주세요');
+        message.warning('좌측 자산종목을 선택해주세요');
         return;
       }
       setDetailModalOpen(true);
@@ -166,57 +165,31 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
     // [E4] cfButton[현금흐름표].Select [classTreeModel == null] (L124) → retrieve()
     const openCfInfo = () => {
       if (!node) {
-        message.warning('좌측 자산종목을 선택헤주세요');
+        message.warning('좌측 자산종목을 선택해주세요');
         return;
       }
       setCfModalOpen(true);
     };
 
     // [E3] deleteButton[삭제].Select (L118) → deleteRow()
+    // [E6] msgBox.DialogHide [YES] (L337) → delete(): deleteConfirm 확인 뒤 DELETE
     const deleteRow = () => {
-      if (selectedRows.length === 0) {
+      if ((crud.gridRef.current?.api?.getSelectedRows().length ?? 0) === 0) {
         message.warning('삭제할 항목을 선택해주세요');
         return;
       }
-      // [E6] msgBox.DialogHide [YES] (L337) → delete()
-      Modal.confirm({
-        title: '삭제',
-        content: `${selectedRows.length}건의 항목을 삭제하시겠습니까?`,
-        width: 300,
-        onOk: async () => {
-          const persistedIds = selectedRows.filter((r) => r.detailId > 0).map((r) => r.detailId);
-          const tempIds = selectedRows.filter((r) => r.detailId <= 0).map((r) => r.detailId);
-          if (tempIds.length > 0) {
-            crud.removeRows(tempIds);
-          }
-          if (persistedIds.length > 0) {
-            try {
-              await astApi.deleteItemDetails(persistedIds);
-              await crud.retrieve();
-            } catch (e) {
-              message.error(errorMessage(e));
-              return;
-            }
-          }
-          setSelectedRows([]);
-        },
-      });
+      crud.deleteChecked();
     };
 
     // [E2] updateButton[저장].Select (L112) → update()
+    // 순서: 그리드 검사 → 종목 내용 저장(modelUpdate) → 그리드 저장(GridUpdate)
     const update = async () => {
       if (!node) return;
       crud.gridRef.current?.api?.stopEditing();
-      const changed = crud.getChanged();
-      for (const model of changed) {
-        if (model.seq == null) {
-          message.warning('순번을 입력해주세요');
-          return;
-        }
-        if (model.title == null || model.title === '') {
-          message.warning('항목을 입력해주세요');
-          return;
-        }
+      const invalid = validateRows(crud.getChanged());
+      if (invalid) {
+        message.warning(invalid);
+        return;
       }
 
       try {
@@ -238,14 +211,21 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
           depnType: node.depnType,
           evalType: node.evalType,
         });
-        setNode((prev) => (prev ? { ...prev, content } : prev));
-        if (changed.length > 0) {
-          await crud.saveRows();
-        }
-        message.success('저장이 완료되었습니다.');
       } catch (e) {
         message.error(errorMessage(e));
+        return;
       }
+      const saved = { ...node, content };
+      setNode(saved);
+      nodeRef.current = saved;
+      onContentSaved?.(node.classTreeId, content);
+
+      // 그리드에 바뀐 행이 없으면 완료 메시지만, 있으면 saveRows가 건수와 함께 알린다(실패하면 그쪽에서 오류를 알린다)
+      if (crud.getChanged().length === 0) {
+        message.success('저장이 완료되었습니다.');
+        return;
+      }
+      await crud.saveRows();
     };
 
     // buildGrid 컬럼 (L205-216)
@@ -316,7 +296,6 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
               crud={crud}
               columnDefs={columns}
               rowNumber={false}
-              onSelectionChanged={(e) => setSelectedRows(e.api.getSelectedRows())}
             />
           </div>
         </div>
@@ -346,7 +325,7 @@ export const Ast02_Grid_DetailManagement = forwardRef<Ast02GridDetailManagementH
                   boxSizing: 'border-box',
                 }}
               >
-                <Ast10_Grid_Manager ref={managerRef} linkId={node?.classTreeId ?? null} />
+                <Ast10_Grid_Manager ref={managerRef} />
               </Splitter.Panel>
             </Splitter>
           </div>

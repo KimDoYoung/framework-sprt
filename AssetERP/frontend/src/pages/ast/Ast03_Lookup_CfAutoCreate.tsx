@@ -8,7 +8,6 @@ import { astApi } from '@/api/ast';
 import { errorMessage } from '@/api/client';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
-import { LookupModal } from '@/components/lookup/LookupModal';
 import { AstCf, AstCfBatchCreateReq, AstCfInfo } from '@/types/ast';
 
 interface Ast03LookupCfAutoCreateProps {
@@ -19,6 +18,12 @@ interface Ast03LookupCfAutoCreateProps {
 }
 
 const isNumeric = (s: string): boolean => /^\d+$/.test(s);
+
+// AS-IS NumberFormat "#,###.#####" — 천 단위 쉼표
+const money = {
+  formatter: (v: number | string | undefined) => (v == null || v === '' ? '' : `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')),
+  parser: (v: string | undefined) => Number((v ?? '').replace(/,/g, '')),
+};
 
 export const Ast03_Lookup_CfAutoCreate: React.FC<Ast03LookupCfAutoCreateProps> = ({
   open,
@@ -140,28 +145,36 @@ export const Ast03_Lookup_CfAutoCreate: React.FC<Ast03LookupCfAutoCreateProps> =
   };
 
   return (
-    <LookupModal
+    // 값을 입력하는 편집창 — EditModal 규격(03 원칙 16, 11 §4a)
+    <Modal
       open={open}
       title="일괄생성"
       onCancel={hide}
       width={550}
-      confirmLoading={loading}
-      footer={[
-        // [E3] updateButton[생성].Select
-        <Button key="generate" type="generate" onClick={update}>
-          생성
-        </Button>,
-        // [E4] cancleButton[닫기].Select
-        <Button key="close" type="close" onClick={hide}>
-          닫기
-        </Button>,
-      ]}
+      maskClosable={false}
+      destroyOnHidden
+      styles={{
+        header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 },
+        footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 },
+      }}
+      footer={
+        <div style={{ textAlign: 'center', display: 'flex', justifyContent: 'center', gap: 8 }}>
+          {/* [E3] updateButton[생성].Select */}
+          <Button type="generate" onClick={update} loading={loading}>
+            생성
+          </Button>
+          {/* [E4] cancleButton[닫기].Select */}
+          <Button type="close" onClick={hide}>
+            닫기
+          </Button>
+        </div>
+      }
     >
-      <Form form={form} layout="horizontal" labelCol={{ flex: '100px' }}>
+      <Form form={form} layout="horizontal" labelCol={{ flex: '80px' }} labelAlign="right" style={{ padding: '12px 2px' }}>
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item name="round" label="시작회차">
-              <InputNumber min={1} style={{ width: '100%' }} />
+              <InputNumber precision={0} style={{ width: '100%' }} />
             </Form.Item>
           </Col>
         </Row>
@@ -180,7 +193,7 @@ export const Ast03_Lookup_CfAutoCreate: React.FC<Ast03LookupCfAutoCreateProps> =
           </Col>
           <Col span={12}>
             <Form.Item name="contAmt" label="금액">
-              <InputNumber min={0} style={{ width: '100%' }} onChange={handleAmtChange} />
+              <InputNumber precision={0} {...money} style={{ width: '100%' }} onChange={handleAmtChange} />
             </Form.Item>
           </Col>
         </Row>
@@ -188,12 +201,12 @@ export const Ast03_Lookup_CfAutoCreate: React.FC<Ast03LookupCfAutoCreateProps> =
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item name="cycle" label="계산주기">
-              <InputNumber min={1} addonAfter="개월" style={{ width: '100%' }} />
+              <InputNumber precision={0} addonAfter="개월" style={{ width: '100%' }} />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="tax" label="세금">
-              <InputNumber min={0} style={{ width: '100%' }} onChange={handleAmtChange} />
+              <InputNumber precision={0} {...money} style={{ width: '100%' }} onChange={handleAmtChange} />
             </Form.Item>
           </Col>
         </Row>
@@ -206,7 +219,7 @@ export const Ast03_Lookup_CfAutoCreate: React.FC<Ast03LookupCfAutoCreateProps> =
           </Col>
           <Col span={12}>
             <Form.Item name="amt" label="결제금액">
-              <InputNumber min={0} style={{ width: '100%' }} />
+              <InputNumber precision={0} {...money} style={{ width: '100%' }} />
             </Form.Item>
           </Col>
         </Row>
@@ -230,6 +243,6 @@ export const Ast03_Lookup_CfAutoCreate: React.FC<Ast03LookupCfAutoCreateProps> =
           </Col>
         </Row>
       </Form>
-    </LookupModal>
+    </Modal>
   );
 };

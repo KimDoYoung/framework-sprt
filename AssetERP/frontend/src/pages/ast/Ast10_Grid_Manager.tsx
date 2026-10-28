@@ -2,7 +2,7 @@
  * 담당자 그리드 컴포넌트 (R09) — Ast10_Grid_Manager
  * AS-IS: myApp/client/vi/ast/Ast10_Grid_Manager.java (95줄)
  */
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 import type { ColDef } from 'ag-grid-community';
 import { astApi } from '@/api/ast';
 import { Button } from '@/components/button';
@@ -15,18 +15,14 @@ export interface Ast10GridManagerHandle {
   clear: () => void;
 }
 
-interface Ast10GridManagerProps {
-  linkId: number | null;
-}
-
 const gb = gbFor<AstManager>();
 
-export const Ast10_Grid_Manager = forwardRef<Ast10GridManagerHandle, Ast10GridManagerProps>(
-  ({ linkId }, ref) => {
+export const Ast10_Grid_Manager = forwardRef<Ast10GridManagerHandle>(
+  (_props, ref) => {
     const [rows, setRows] = useState<AstManager[]>([]);
     const [loading, setLoading] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
-    const [currentLinkId, setCurrentLinkId] = useState<number | null>(linkId);
+    const [currentLinkId, setCurrentLinkId] = useState<number | null>(null);
 
     const retrieve = useCallback(async (id: number) => {
       setCurrentLinkId(id);
@@ -50,15 +46,6 @@ export const Ast10_Grid_Manager = forwardRef<Ast10GridManagerHandle, Ast10GridMa
       retrieve,
       clear,
     }));
-
-    // [E0] 화면 열림 (생성자 L32-51) → 초기화
-    useEffect(() => {
-      if (linkId) {
-        retrieve(linkId);
-      } else {
-        clear();
-      }
-    }, [linkId, retrieve, clear]);
 
     // [E1] insertButton[담당자 관리].Select (L35) → editManager()
     const editManager = () => {

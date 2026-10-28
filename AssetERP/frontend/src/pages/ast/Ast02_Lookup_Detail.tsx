@@ -139,6 +139,8 @@ export const Ast02_Lookup_Detail: React.FC<Ast02LookupDetailProps> = ({
     try {
       if (changed.length > 0) {
         await crud.saveRows();
+        // saveRows는 실패해도 던지지 않고 오류만 알린다 — 저장 안 된 행이 남았으면 삭제로 넘어가지 않는다
+        if (crud.hasChanges()) return;
       }
       if (deleteList.current.length > 0) {
         await astApi.deleteItemDetailTemplates(deleteList.current);

@@ -230,6 +230,8 @@ export const Ast03_Lookup_CfInfo: React.FC<Ast03LookupCfInfoProps> = ({
     try {
       if (changed.length > 0) {
         await cfInfoCrud.saveRows();
+        // saveRows는 실패해도 던지지 않고 오류만 알린다 — 저장 안 된 행이 남았으면 삭제로 넘어가지 않는다
+        if (cfInfoCrud.hasChanges()) return;
       }
       if (deleteCfInfoList.current.length > 0) {
         for (const id of deleteCfInfoList.current) {
@@ -271,6 +273,8 @@ export const Ast03_Lookup_CfInfo: React.FC<Ast03LookupCfInfoProps> = ({
     try {
       if (changed.length > 0) {
         await cfCrud.saveRows();
+        // saveRows는 실패해도 던지지 않고 오류만 알린다 — 저장 안 된 행이 남았으면 삭제로 넘어가지 않는다
+        if (cfCrud.hasChanges()) return;
       }
       if (deleteCfList.current.length > 0) {
         for (const id of deleteCfList.current) {

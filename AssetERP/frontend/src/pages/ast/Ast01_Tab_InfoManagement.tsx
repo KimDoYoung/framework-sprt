@@ -6,6 +6,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Spin, Splitter, Tree } from 'antd';
 import type { DataNode } from 'antd/es/tree';
+import { FolderOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { astApi } from '@/api/ast';
 import { errorMessage } from '@/api/client';
 import { Button } from '@/components/button';
@@ -18,10 +19,9 @@ import {
 export const Ast01_Tab_InfoManagement: React.FC = () => {
   const [docSearch, setDocSearch] = useState('');
   const [treeList, setTreeList] = useState<AstClassTree[]>([]);
-  const [selectedNode, setSelectedNode] = useState<AstClassTree | null>(null);
   const [loading, setLoading] = useState(false);
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
-  const [autoExpandParent, setAutoExpandParent] = useState(true);
+  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
 
   const detailRef = useRef<Ast02GridDetailManagementHandle>(null);
 
@@ -31,6 +31,7 @@ export const Ast01_Tab_InfoManagement: React.FC = () => {
     try {
       const data = await astApi.searchClassTree({ typeCode: '%', assetType: '2' });
       setTreeList(data);
+      setSelectedKeys([]);
       const rootKeys = data
         .filter((d: AstClassTree) => d.parentTreeId === 0)
         .map((d: AstClassTree) => String(d.classTreeId));
@@ -47,20 +48,42 @@ export const Ast01_Tab_InfoManagement: React.FC = () => {
     retrieve();
   }, [retrieve]);
 
-  // [E2] docSearch.KeyPress [Enter] (L57) → search()
-  const search = () => {
-    const findText = docSearch.trim();
-    if (!findText) {
-      setExpandedKeys([]);
-      setAutoExpandParent(false);
-      return;
+  // [E3] tree.Selection (L68) → retrieveTabpage(): 종목(IT)이면 상세 조회, 아니면 상세를 비활성
+  const selectNode = (rawNode: AstClassTree | null) => {
+    if (!rawNode) {
+      detailRef.current?.clear();
+    } else if (rawNode.typeCode === 'IT') {
+      detailRef.current?.loadNode(rawNode);
+    } else {
+      detailRef.current?.visible();
     }
-    const matched = treeList.filter((item) =>
-      item.classTreeName.toLowerCase().includes(findText.toLowerCase())
-    );
-    const keys = matched.map((m) => String(m.classTreeId));
-    setExpandedKeys(keys);
-    setAutoExpandParent(true);
+  };
+
+  // [E2] docSearch.KeyPress [Enter] (L57) → search()
+  // 선택 해제·모두 접기 → 이름이 맞는 노드의 조상을 펼치고 맞는 노드를 고른다(마지막으로 고른 노드가 선택으로 남는다)
+  const search = () => {
+    setSelectedKeys([]);
+    setExpandedKeys([]);
+    selectNode(null);
+    const findText = docSearch.trim().toLowerCase();
+    if (!findText) return;
+
+    const byId = new Map(treeList.map((i) => [i.classTreeId, i]));
+    const matched = treeList.filter((i) => (i.classTreeName ?? '').toLowerCase().includes(findText));
+    const expand = new Set<string>();
+    matched.forEach((m) => {
+      let parent = byId.get(m.parentTreeId);
+      while (parent) {
+        expand.add(String(parent.classTreeId));
+        parent = byId.get(parent.parentTreeId);
+      }
+    });
+    setExpandedKeys([...expand]);
+    const last = matched[matched.length - 1];
+    if (last) {
+      setSelectedKeys([String(last.classTreeId)]);
+      selectNode(last);
+    }
   };
 
   // 트리 데이터 구성
@@ -92,21 +115,14 @@ export const Ast01_Tab_InfoManagement: React.FC = () => {
     return roots;
   }, [treeList]);
 
-  // [E3] tree.Selection (L68) → retrieveTabpage()
-  const handleSelectNode = (selectedKeys: React.Key[], info: { node: DataNode }) => {
-    if (selectedKeys.length > 0) {
-      const rawNode = (info.node as unknown as { raw: AstClassTree }).raw;
-      setSelectedNode(rawNode);
-      if (rawNode.typeCode === 'IT') {
-        detailRef.current?.loadNode(rawNode);
-      } else {
-        detailRef.current?.visible();
-      }
-    } else {
-      setSelectedNode(null);
-      detailRef.current?.clear();
-    }
+  const handleSelectNode = (keys: React.Key[], info: { node: DataNode }) => {
+    setSelectedKeys(keys);
+    selectNode(keys.length > 0 ? (info.node as unknown as { raw: AstClassTree }).raw : null);
   };
+
+  // 트리 아이콘: 하위가 없으면 목록, 있으면 폴더(AS-IS leafIcon·nodeCloseIcon)
+  const renderIcon = (props: { isLeaf?: boolean }) =>
+    props.isLeaf ? <UnorderedListOutlined /> : <FolderOutlined />;
 
   return (
     <div
@@ -152,12 +168,11 @@ export const Ast01_Tab_InfoManagement: React.FC = () => {
             <Spin spinning={loading}>
               <Tree
                 treeData={treeData}
+                showIcon
+                icon={renderIcon}
                 expandedKeys={expandedKeys}
-                autoExpandParent={autoExpandParent}
-                onExpand={(keys) => {
-                  setExpandedKeys(keys);
-                  setAutoExpandParent(false);
-                }}
+                selectedKeys={selectedKeys}
+                onExpand={(keys) => setExpandedKeys(keys)}
                 onSelect={handleSelectNode}
               />
             </Spin>
@@ -166,7 +181,12 @@ export const Ast01_Tab_InfoManagement: React.FC = () => {
 
         {/* 우측 상세 영역 (center=gridDetail) */}
         <Splitter.Panel style={{ paddingLeft: 8, boxSizing: 'border-box' }}>
-          <Ast02_Grid_DetailManagement ref={detailRef} currentNode={selectedNode} />
+          <Ast02_Grid_DetailManagement
+            ref={detailRef}
+            onContentSaved={(classTreeId, content) =>
+              setTreeList((prev) => prev.map((t) => (t.classTreeId === classTreeId ? { ...t, content } : t)))
+            }
+          />
         </Splitter.Panel>
       </Splitter>
     </div>

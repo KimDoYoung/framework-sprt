@@ -55,7 +55,6 @@ public class AstCfInfoService {
     @Transactional
     public int deleteCfInfo(Long cfInfoId) {
         if (cfInfoId == null) return 0;
-        mapper.deleteCfByCfInfoId(cfInfoId);
         return mapper.deleteCfInfo(cfInfoId);
     }
 
@@ -122,22 +121,24 @@ public class AstCfInfoService {
             }
 
             while (check >= 0) {
-                Date targetDate;
+                // AS-IS는 startcal 자체를 발생일로 바꾼 뒤 주기를 더하고 종료년월과 비교한다
+                // (발생일이 1일이 아니면 종료년월의 달은 만들어지지 않는다)
                 String ymStr = ymFormat.format(startCal.getTime());
                 String month = ymStr.substring(5, 7);
 
                 if ("31".equals(dateCode)) {
-                    targetDate = mapper.selectLastDate(startCal.getTime());
+                    startCal.setTime(mapper.selectLastDate(startCal.getTime()));
                 } else if ("02".equals(month) && ("29".equals(dateCode) || "30".equals(dateCode))) {
-                    targetDate = mapper.selectLastDate(startFormat.parse(ymStr + "-01"));
+                    startCal.setTime(mapper.selectLastDate(startFormat.parse(ymStr + "-01")));
                 } else {
-                    targetDate = startFormat.parse(ymStr + "-" + dateCode);
+                    startCal.setTime(startFormat.parse(ymStr + "-" + dateCode));
                 }
+                Date targetDate = startCal.getTime();
 
                 Date settleDate = mapper.selectBizDate(companyId, holidayStr, targetDate);
 
                 LocalDate localDate = targetDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                LocalDate localSettleDate = settleDate != null ? settleDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : localDate;
+                LocalDate localSettleDate = settleDate != null ? settleDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : null;
 
                 long cfId = mapper.selectNextSeq();
                 AstCfSaveReq saveReq = new AstCfSaveReq(
