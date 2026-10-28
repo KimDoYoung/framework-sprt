@@ -39,4 +39,7 @@ public interface EmpEvalListStdMapper {
 
     /** AS-IS emp43_eval_target.getDateChk (건수만 쓴다) */
     int countDateChk(@Param("companyId") Long companyId, @Param("startDate") LocalDate startDate);
+
+    /** AS-IS emp40_eval_list_std.getEvalListStdId — 그 날짜 이전에 시작한 확정된 적용기준 중 가장 최근 것의 ID (없으면 null) */
+    Long selectAppliedId(@Param("companyId") Long companyId, @Param("startDate") LocalDate startDate);
 }

@@ -7,6 +7,7 @@ import kr.co.kfs.asseterp.biz.emp.dto.EvalListStdRes;
 import kr.co.kfs.asseterp.biz.emp.service.EmpEvalListStdService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,8 +16,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /** 인사평가 항목 기준 적용일 (AS-IS Emp41_Tab_EvalList·Emp40_Lookup_Insert → server/emp/Emp40_EvalListStd) — 메뉴 #1398·#1391 */
@@ -57,5 +60,11 @@ public class EmpEvalListStdController {
     @GetMapping("/{evalListStdId}/in-use")
     public ApiResponse<Boolean> inUse(@PathVariable Long evalListStdId) {
         return ApiResponse.ok(service.inUse(evalListStdId));
+    }
+
+    /** AS-IS emp.Emp40_EvalListStd.getEvalListStdId — 평가 종료일에 적용되는 확정된 기준 ID (없으면 null) */
+    @GetMapping("/applied")
+    public ApiResponse<Long> applied(@AuthenticationPrincipal UserPrincipal principal, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
+        return ApiResponse.ok(service.getAppliedId(principal, startDate));
     }
 }

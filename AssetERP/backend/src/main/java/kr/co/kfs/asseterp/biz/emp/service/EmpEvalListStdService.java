@@ -110,4 +110,9 @@ public class EmpEvalListStdService {
     public boolean inUse(Long evalListStdId) {
         return mapper.countEventChk(evalListStdId) > 0;
     }
+
+    /** AS-IS emp.Emp40_EvalListStd.getEvalListStdId (Emp43_Tab_EvalTarget [등록]) — 평가 종료일 기준 적용기준 ID, 없으면 null */
+    public Long getAppliedId(UserPrincipal user, LocalDate startDate) {
+        return mapper.selectAppliedId(user.getCompanyId(), startDate);
+    }
 }

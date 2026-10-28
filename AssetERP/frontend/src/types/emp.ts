@@ -871,3 +871,93 @@ export interface TransTarget {
   korNm?: string;
   titleNm?: string;
 }
+
+/** 인사평가 대상자 한 행 (AS-IS emp43_eval_target.selectByTermCode — Emp43_Tab_EvalTarget). status는 '진행중'·'상신중'·'완료'·'' */
+export interface EvalTarget {
+  evalTargetId: number;
+  companyId: number;
+  personId: number;
+  stdYear: string;
+  stdTermCd: string;
+  evalListStdId: number;
+  evalStartDate: string | null;
+  evalCloseDate: string | null;
+  orgHeadNm: string | null;
+  posNm: string | null;
+  personNm: string | null;
+  orgNm: string | null;
+  firstEvaluatorId: number | null;
+  firstOrgNm: string | null;
+  firstPersonNm: string | null;
+  firstEvalWeight: number | null;
+  secondEvaluatorId: number | null;
+  secondOrgNm: string | null;
+  secondPersonNm: string | null;
+  secondEvalWeight: number | null;
+  sumEvalWeight: number | null;
+  status: string;
+}
+
+/** 인사평가 대상등록 조회창 한 행 (AS-IS emp00_trans_info.selectByEvalText — Emp43_Lookup_SelectMulti) */
+export interface EvalCandidate {
+  personId: number;
+  orgCodeId: number;
+  orgTitleNm: string | null;
+  parentFullNm: string | null;
+  titleNm: string | null;
+  posNm: string | null;
+  korNm: string | null;
+  orgHeadNm: string | null;
+  hireDate: string | null;
+  transDate: string | null;
+}
+
+/** 상위 조직장 (AS-IS emp00_trans_info.getHighInfo) */
+export interface HighInfo {
+  personId: number;
+  orgTitleNm: string | null;
+  korNm: string | null;
+}
+
+/** 회사의 인사평가 설정 — 05 반기별 / 06 연별, 시작월(MonthsCode '01'…'12') */
+export interface EvalSetting {
+  empEvalCycleCode: string | null;
+  empEvalMonthCode: string | null;
+}
+
+/** 인사평가수행 목록 한 행 (AS-IS emp43_eval_target.selectByText — Emp43_Tab_EvalExecute·Emp44_Lookup_Write). orderEvalNm '1차'·'2차' */
+export interface EvalExecute {
+  evalTargetId: number;
+  evalListStdId: number;
+  stdYear: string;
+  stdTermCd: string;
+  personId: number;
+  orderEvalNm: string;
+  orgHeadNm: string | null;
+  posNm: string | null;
+  personNm: string | null;
+  orgNm: string | null;
+  hireDateStr: string | null;
+  workYear: string | null;
+  dateStr: string | null;
+  orderScore: string | null;
+  orderGrade: string | null;
+  orderStatus: string | null;
+  orderReason: string | null;
+  firstEvalReason: string | null;
+  secondEvalReason: string | null;
+}
+
+/** 인사평가표 한 행 (AS-IS emp44_eval_write.getEvalTargetList — Emp44_Lookup_Write). 평가 안 한 항목은 evalGrade 등이 null */
+export interface EvalWrite {
+  evalWriteId: number;
+  evalListId: number;
+  evalClassNm: string | null;
+  content: string | null;
+  weightMember: number | null;
+  weightLeader: number | null;
+  evalGrade: string | null;
+  evalGradeId: number | null;
+  evalGradeScore: number | null;
+}
+

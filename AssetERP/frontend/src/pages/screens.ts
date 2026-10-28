@@ -165,6 +165,8 @@ import { Pay34_Tab_WorkTimeConfig } from './pay/Pay34_Tab_WorkTimeConfig';
 import { Crd10_Tab_ExcelCompanyAdmin } from './crd/Crd10_Tab_ExcelCompanyAdmin';
 import { Emp55_Tab_benefitInfoManager } from './emp/Emp55_Tab_benefitInfoManager';
 import { Emp41_Tab_EvalList } from './emp/Emp41_Tab_EvalList';
+import { Emp43_Tab_EvalTarget } from './emp/Emp43_Tab_EvalTarget';
+import { Emp43_Tab_EvalExecute } from './emp/Emp43_Tab_EvalExecute';
 import { Act01_Tab_AccountCode } from './act/Act01_Tab_AccountCode';
 import { Act10_Tab_ReprAccount } from './act/Act10_Tab_ReprAccount';
 import { Ast05_Tab_TrCodeAdmin } from './ast/Ast05_Tab_TrCodeAdmin';
@@ -484,6 +486,8 @@ export const SCREENS: Record<string, React.FC> = {
   Crd10_Tab_ExcelCompanyAdmin, // E24 (+ Crd11_Lookup_ExcelCodeAdmin)
   Emp55_Tab_benefitInfoManager, // E25 (+ Act01_Lookup_AccountCode)
   Emp41_Tab_EvalList, // E26 (+ Emp40_Lookup_Insert·Emp42_Lookup_EvalGrade)
+  Emp43_Tab_EvalTarget, // T01 (+ Emp43_Lookup_SelectSingle·Emp43_Lookup_SelectMulti·Emp43_Edit_ChangeEval)
+  Emp43_Tab_EvalExecute, // T02 (+ Emp44_Lookup_Write)
   Act01_Tab_AccountCode, // E27 (+ Act01_Edit_AccountCode·Act01_Lookup_Parent·Act01_Lookup_PrintYn·Act01_Lookup_CopyAdmin)
   Act10_Tab_ReprAccount, // E28 (+ Act10_Lookup_ReprAccount)
   Ast05_Tab_TrCodeAdmin, // E29 (+ Ast15_Lookup_TrCodeWindow·Ast15_Page_TrCodeWindow·Sys06_Lookup_SearchMenu·Sys40_Lookup_Bookmark)

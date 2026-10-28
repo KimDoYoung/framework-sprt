@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { TransTarget, BizTrip, Errand, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { TransTarget, BizTrip, Errand, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalExecute, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -617,6 +617,119 @@ export const empEvalApi = {
     };
     const res = await apiClient.put<ApiResponse<number>>('v1/emp/eval-grades', body);
     return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp40_EvalListStd.getEvalListStdId (T01) — 평가 종료일에 적용되는 확정된 기준 ID, 없으면 null */
+  getAppliedEvalListStdId: async (startDate: string): Promise<number | null> => {
+    const res = await apiClient.get<ApiResponse<number | null>>('v1/emp/eval-list-stds/applied', { params: { startDate } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS sys.Sys01_Company.selectById 중 인사평가 평가기간·시작월 (T01) */
+  getEvalSetting: async (): Promise<EvalSetting> => {
+    const res = await apiClient.get<ApiResponse<EvalSetting>>('v1/emp/eval-targets/setting');
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp43_EvalTarget.selectByTermCode (T01) */
+  searchEvalTargets: async (stdYear: string, stdTermCode: string, orgId: number | null): Promise<EvalTarget[]> => {
+    const res = await apiClient.get<ApiResponse<EvalTarget[]>>('v1/emp/eval-targets', { params: { stdYear, stdTermCode, orgId: orgId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp45_EvalRelateAppr.selectByTermCode — 최종 결재 상태 코드(결재 행이 없으면 null, 30 = 완료) */
+  getFinalApprStatus: async (stdYear: string, stdTermCode: string): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>('v1/emp/eval-targets/final-appr-status', { params: { stdYear, stdTermCode } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS emp.Emp00_TransInfo.selectByEvalText — 인사평가 대상등록 조회창 (서버가 기준일을 오늘로 정함) */
+  searchEvalCandidates: async (searchText: string): Promise<EvalCandidate[]> => {
+    const res = await apiClient.get<ApiResponse<EvalCandidate[]>>('v1/emp/eval-targets/candidates', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp00_TransInfo.getHighInfo — 상위 조직장 목록(1차·2차 평가자 후보, 순서대로) */
+  getHighInfos: async (personId: number, orgCodeId: number, transDate: string): Promise<HighInfo[]> => {
+    const res = await apiClient.get<ApiResponse<HighInfo[]>>('v1/emp/eval-targets/high-infos', { params: { personId, orgCodeId, transDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp44_EvalWrite.selectByEvaluatorId — 그 평가자의 작성 내역이 있는가 */
+  hasEvalWrite: async (evalTargetId: number, personId: number): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/emp/eval-targets/writes/exists', { params: { evalTargetId, personId } });
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp43_EvalTarget.update / updateList(deleteWrites) — 저장한 행을 요청 순서로 */
+  saveEvalTargets: async (rows: EvalTarget[], deleteWrites: boolean): Promise<EvalTarget[]> => {
+    const body = {
+      rows: rows.map(r => ({
+        evalTargetId: r.evalTargetId, personId: r.personId, stdYear: r.stdYear, stdTermCd: r.stdTermCd, evalListStdId: r.evalListStdId,
+        evalStartDate: r.evalStartDate, evalCloseDate: r.evalCloseDate,
+        firstEvaluatorId: r.firstEvaluatorId, firstEvalWeight: r.firstEvalWeight, secondEvaluatorId: r.secondEvaluatorId, secondEvalWeight: r.secondEvalWeight,
+      })),
+      deleteWrites,
+    };
+    const res = await apiClient.put<ApiResponse<EvalTarget[]>>('v1/emp/eval-targets', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp43_EvalTarget.deleteList → 지운 건수 (화면의 평가자 값을 함께 보낸다) */
+  deleteEvalTargets: async (rows: EvalTarget[]): Promise<number> => {
+    const body = { rows: rows.map(r => ({ evalTargetId: r.evalTargetId, firstEvaluatorId: r.firstEvaluatorId, secondEvaluatorId: r.secondEvaluatorId })) };
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/eval-targets', { data: body });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp43_EvalTarget.updateEval (Emp43_Edit_ChangeEval) */
+  changeEvalTargetEvaluators: async (evalTargetIds: number[], firstPersonId: number, firstEvalWeight: number, secondPersonId: number | null, secondEvalWeight: number | null): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/emp/eval-targets/evaluators', { evalTargetIds, firstPersonId, firstEvalWeight, secondPersonId, secondEvalWeight });
+  },
+
+  /** AS-IS emp.Emp43_EvalTarget.selectByText (T02 Emp43_Tab_EvalExecute) — 로그인 사원이 평가자인 대상자 */
+  searchEvalExecutes: async (stdYear: string, stdTermCode: string, searchText: string): Promise<EvalExecute[]> => {
+    const res = await apiClient.get<ApiResponse<EvalExecute[]>>('v1/emp/eval-targets/mine', { params: { stdYear, stdTermCode, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp45_EvalRelateAppr.selectByTermCode 중 1차보고 상신문서 상태 — 없으면 null, 10·20·30이면 평가완료·취소 불가 */
+  getApprStatus: async (stdYear: string, stdTermCode: string): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>('v1/emp/eval-targets/appr-status', { params: { stdYear, stdTermCode } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS emp.Emp43_EvalTarget.getWrite — 내 평가상태('완료'·'작성중'·'') */
+  getEvalWriteStatus: async (evalTargetId: number): Promise<string> => {
+    const res = await apiClient.get<ApiResponse<string>>(`v1/emp/eval-targets/${evalTargetId}/write-status`);
+    return res.data.data ?? '';
+  },
+
+  /** AS-IS emp.Emp43_EvalTarget.updateReason (T02 Emp44_Lookup_Write [저장]) */
+  updateEvalReason: async (evalTargetId: number, reason: string | null, orderEvalName: string): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/emp/eval-targets/${evalTargetId}/reason`, { reason, orderEvalName });
+  },
+
+  /** AS-IS emp.Emp43_EvalTarget.updateEndYn — 평가완료(true)·평가취소(false) */
+  updateEvalEnd: async (evalTargetId: number, endYn: boolean, orderEvalName: string): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/emp/eval-targets/${evalTargetId}/end`, { endYn, orderEvalName });
+  },
+
+  /** AS-IS emp.Emp44_EvalWrite.getEvalTargetList — 인사평가표(평가자는 로그인 사원) */
+  searchEvalWrites: async (evalListStdId: number, evalTargetId: number): Promise<EvalWrite[]> => {
+    const res = await apiClient.get<ApiResponse<EvalWrite[]>>('v1/emp/eval-writes', { params: { evalListStdId, evalTargetId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp44_EvalWrite.getEmpEvalGrade — 내가 매긴 점수 합계의 등급(없으면 null) */
+  getEvalWriteGrade: async (evalListStdId: number, evalTargetId: number): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>('v1/emp/eval-writes/grade', { params: { evalListStdId, evalTargetId } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS emp.Emp44_EvalWrite.updateEvalGradeId — 평가 항목 하나의 등급 */
+  updateEvalWriteGrade: async (evalTargetId: number, evalListId: number, evalGradeId: number, orgHead: boolean): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/emp/eval-writes/grade', { evalTargetId, evalListId, evalGradeId, orgHead });
   },
 };
 

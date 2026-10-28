@@ -41,6 +41,17 @@
     </select>
 
     <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <!-- AS-IS emp40_eval_list_std.getEvalListStdId (IDMS-IC) — ID만 쓴다 -->
+    <select id="selectAppliedId" resultType="long">
+        SELECT emp40_eval_list_std_id
+          FROM emp40_eval_list_std
+         WHERE emp40_company_id = #{companyId}
+           AND emp40_fix_yn     = 'true'
+           AND emp40_start_date <![CDATA[ <= ]]> #{startDate}
+         ORDER BY emp40_start_date DESC
+         LIMIT 1
+    </select>
+
     <select id="selectNextId" resultType="long" flushCache="true">
         SELECT f_create_seq()
     </select>

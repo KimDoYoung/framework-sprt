@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/emp/mapper/emp44_eval_write.xml (getEvalTargetList, getEmpEvalGrade, checkEvalTarget, updateEvalGradeId) + Emp44_EvalWrite.updateEvalGradeId(L64) INSERT 가지 (T02 Emp44_Lookup_Write)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpEvalWriteMapper">
+
+    <!-- AS-IS emp44_eval_write.getEvalTargetList (IDMS-IC) -->
+    <select id="selectEvalTargetList" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvalWriteRes">
+        SELECT ROW_NUMBER() OVER (ORDER BY emp41_seq)                                         AS eval_write_id,
+               emp41_eval_list_id                                                             AS eval_list_id,
+               f_cdnm('EmpEvalClassCode', emp41_eval_class_cd, emp40_company_id, f_sysdate()) AS eval_class_nm,
+               emp41_content                                                                  AS content,
+               emp41_weight_member                                                            AS weight_member,
+               emp41_weight_leader                                                            AS weight_leader,
+               emp42_grade                                                                    AS eval_grade,
+               emp44_eval_grade_id                                                            AS eval_grade_id,
+               emp44_eval_grade_score                                                         AS eval_grade_score
+          FROM emp41_eval_list
+               INNER JOIN emp40_eval_list_std ON emp41_eval_list_std_id = emp40_eval_list_std_id
+               LEFT OUTER JOIN emp44_eval_write ON emp44_eval_list_id = emp41_eval_list_id AND emp44_eval_target_id = #{evalTargetId} AND emp44_evaluator_id = #{personId}
+               LEFT OUTER JOIN emp42_eval_grade ON emp44_eval_grade_id = emp42_eval_grade_id
+         WHERE emp41_eval_list_std_id = #{evalListStdId}
+         ORDER BY emp41_seq
+    </select>
+
+    <!-- AS-IS emp44_eval_write.getEmpEvalGrade (IDMS-IC) -->
+    <select id="selectEmpEvalGrade" resultType="string">
+        SELECT (
+                SELECT emp42_grade
+                  FROM emp42_eval_grade
+                 WHERE emp42_eval_grade_id = f_get_empEvalGradeId(#{evalListStdId}, SUM(emp44_eval_grade_score)::numeric)
+               )
+          FROM emp44_eval_write
+         WHERE emp44_evaluator_id = #{personId}
+           AND emp44_eval_target_id = #{evalTargetId}
+    </select>
+
+    <!-- AS-IS emp44_eval_write.checkEvalTarget (IDMS-IC) — 건수만 쓴다 -->
+    <select id="countEvalWrite" resultType="int">
+        SELECT COUNT(*)
+          FROM emp44_eval_write
+         WHERE emp44_evaluator_id = #{personId}
+           AND emp44_eval_target_id = #{evalTargetId}
+           AND emp44_eval_list_id = #{evalListId}
+    </select>
+
+    <select id="countTargetByCompany" resultType="int">
+        SELECT COUNT(*)
+          FROM emp43_eval_target
+         WHERE emp43_eval_target_id = #{evalTargetId}
+           AND emp43_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS emp44_eval_write.updateEvalGradeId (IDMS-IC) -->
+    <update id="updateEvalGradeId">
+        UPDATE emp44_eval_write
+           SET emp44_eval_grade_id = #{evalGradeId}
+             , emp44_eval_grade_score = TRUNC((
+                                            SELECT CASE WHEN #{orgHeadYn} = 'true'
+                                                        THEN emp41_weight_leader
+                                                        ELSE emp41_weight_member
+                                                        END
+                                              FROM emp41_eval_list
+                                             WHERE emp44_eval_list_id = emp41_eval_list_id
+                                        )*(
+                                            SELECT emp42_grade_weight
+                                              FROM emp42_eval_grade
+                                             WHERE emp42_eval_grade_id = #{evalGradeId}
+                                        ), 1)
+         WHERE emp44_evaluator_id = #{personId}
+           AND emp44_eval_target_id = #{evalTargetId}
+           AND emp44_eval_list_id = #{evalListId}
+    </update>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel(emp44_eval_write) INSERT — 환산점수는 서버가 구한다: (조직장이면 가중치(조직장) 아니면 가중치(조직원)) × 등급 가중치 -->
+    <insert id="insertEvalWrite">
+        INSERT INTO emp44_eval_write (emp44_eval_write_id, emp44_evaluator_id, emp44_eval_target_id, emp44_eval_list_id, emp44_eval_grade_id, emp44_eval_grade_score)
+        VALUES (#{evalWriteId}, #{personId}, #{evalTargetId}, #{evalListId}, #{evalGradeId},
+                (SELECT CASE WHEN #{orgHeadYn} = 'true' THEN emp41_weight_leader ELSE emp41_weight_member END
+                   FROM emp41_eval_list WHERE emp41_eval_list_id = #{evalListId})
+                * (SELECT emp42_grade_weight FROM emp42_eval_grade WHERE emp42_eval_grade_id = #{evalGradeId}))
+    </insert>
+
+</mapper>

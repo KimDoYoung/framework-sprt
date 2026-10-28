@@ -1,0 +1,563 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/emp/mapper/emp43_eval_target.xml (selectByTermCode L204, selectById, updateEval) + emp44_eval_write.xml (deleteByPersonId, selectByEvaluatorId)
+  + emp45_eval_relate_appr.xml (selectByTermCode) + emp00_trans_info.xml (selectByEvalText L461, getHighInfo L1410) (T01 Emp43_Tab_EvalTarget)
+  + emp43_eval_target.xml (selectByText·getWrite·updateReason·updateEndYn) (T02 Emp43_Tab_EvalExecute)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpEvalTargetMapper">
+
+    <sql id="targetColumns">
+        emp43_eval_target_id    AS eval_target_id,
+        emp43_company_id        AS company_id,
+        emp43_person_id         AS person_id,
+        emp43_std_year          AS std_year,
+        emp43_std_term_cd       AS std_term_cd,
+        emp43_eval_list_std_id  AS eval_list_std_id,
+        emp43_eval_start_date   AS eval_start_date,
+        emp43_eval_close_date   AS eval_close_date,
+        emp43_org_head_nm       AS org_head_nm,
+        emp43_pos_nm            AS pos_nm,
+        emp43_person_nm         AS person_nm,
+        emp43_org_nm            AS org_nm,
+        emp43_first_evaluator_id AS first_evaluator_id,
+        emp43_first_org_nm      AS first_org_nm,
+        emp43_first_person_nm   AS first_person_nm,
+        emp43_first_eval_weight AS first_eval_weight,
+        emp43_second_evaluator_id AS second_evaluator_id,
+        emp43_second_org_nm     AS second_org_nm,
+        emp43_second_person_nm  AS second_person_nm,
+        emp43_second_eval_weight AS second_eval_weight,
+        emp43_sum_eval_weight   AS sum_eval_weight,
+        emp43_status            AS status
+    </sql>
+
+    <!-- selectByTermCode·selectById가 같은 안쪽 SELECT를 쓴다 (원본 그대로) -->
+    <sql id="targetInner">
+        SELECT	*
+        	 ,	f_cdnm('EmpEvalTermCode', emp43_std_term_cd, emp43_company_id, f_sysdate())		AS emp43_std_term_nm
+        	 , 	(
+        	 		SELECT	CASE WHEN COALESCE(emp03_org_head_yn, 'false') = 'true'
+        	 					 THEN '조직장'
+        	 					 ELSE '조직원'
+        	 					 END
+          			  FROM	emp03_trans
+         			 WHERE	emp03_person_id = emp43_person_id
+           			   AND	emp03_trans_date IN (
+           			   								SELECT	MAX(emp03_trans_date)
+           						  			   	      FROM	emp03_trans
+           						 			  	     WHERE	emp03_person_id = emp43_person_id
+           						   			    	   AND	emp03_trans_date  &lt;=  (emp43_std_year||'-12-31')::date
+           						   			     )
+         		)																				AS emp43_org_head_nm
+             ,	f_get_empTrans(emp43_person_id, f_sysdate()::date, 'pos_nm')					AS emp43_pos_nm
+             ,	f_get_empTrans(emp43_person_id, f_sysdate()::date, 'title_nm')					AS emp43_title_nm
+             ,	f_emp_kor_nm(emp43_person_id)													AS emp43_person_nm
+        	 ,	f_get_empTrans(emp43_person_id, f_sysdate()::date, 'org_code_nm')				AS emp43_org_nm
+             ,	f_emp_kor_nm(emp43_first_evaluator_id)											AS emp43_first_person_nm
+        	 ,	f_get_empTrans(emp43_first_evaluator_id, f_sysdate()::date, 'org_code_nm')		AS emp43_first_org_nm
+             ,	f_emp_kor_nm(emp43_second_evaluator_id)											AS emp43_second_person_nm
+        	 ,	f_get_empTrans(emp43_second_evaluator_id, f_sysdate()::date, 'org_code_nm')		AS emp43_second_org_nm
+        	 ,	(COALESCE(emp43_first_eval_weight,0)+COALESCE(emp43_second_eval_weight,0))		AS emp43_sum_eval_weight
+        	 ,	CASE WHEN EXISTS (
+        	 						SELECT	1
+        					          FROM	emp44_eval_write
+        					         WHERE	emp43_eval_target_id = emp44_eval_target_id
+        					     )
+        			 THEN '진행중'
+        		     WHEN EXISTS (
+        					        SELECT	1
+        					          FROM	apr01_appr
+        					         		LEFT JOIN emp45_eval_relate_appr ON emp45_appr_id = apr01_appr_id
+        					         WHERE	emp45_std_year = emp43_std_year
+        					           AND	emp45_std_term_cd = emp43_std_term_cd
+        					           AND	emp45_company_id = emp43_company_id
+        					           AND	COALESCE(apr01_status_cd, '') IN ('10','20')
+        		   				 )
+        		     THEN '상신중'
+        		     WHEN EXISTS (
+        					        SELECT	1
+        					          FROM	apr01_appr
+        					         		LEFT JOIN emp45_eval_relate_appr ON emp45_appr_id = apr01_appr_id
+        					         WHERE	emp45_std_year = emp43_std_year
+        					           AND	emp45_std_term_cd = emp43_std_term_cd
+        					           AND	emp45_company_id = emp43_company_id
+        					           AND	COALESCE(apr01_status_cd, '') = '30'
+        		   				 )
+        		     THEN '완료'
+        		     ELSE ''
+        			 END																		AS emp43_status
+          FROM	emp43_eval_target
+    </sql>
+
+    <!-- AS-IS emp43_eval_target.selectByTermCode (IDMS-IC L204) -->
+    <select id="selectByTermCode" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvalTargetRes">
+        SELECT <include refid="targetColumns"/>
+          FROM (
+                <include refid="targetInner"/>
+                 WHERE	emp43_company_id = #{companyId}
+                   AND	emp43_std_year = #{stdYear}
+                   AND	emp43_std_term_cd = #{stdTermCode}
+               ) t
+         WHERE 1=1
+        <if test="orgId != null">
+           AND CAST(f_get_emptrans(emp43_person_id, f_sysdate()::date, 'org_code_id') AS NUMERIC) = #{orgId}
+        </if>
+         ORDER BY emp43_org_nm COLLATE "ko_KR.utf8"
+                , emp43_person_nm COLLATE "ko_KR.utf8"
+                , emp43_pos_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS emp43_eval_target.selectById (저장·삭제 전 비교·저장 뒤 다시 읽기). 회사 조건은 TOBE가 더했다 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvalTargetRes">
+        SELECT <include refid="targetColumns"/>
+          FROM (
+                <include refid="targetInner"/>
+                 WHERE	emp43_eval_target_id = #{evalTargetId}
+                   AND	emp43_company_id = #{companyId}
+               ) t
+    </select>
+
+    <!-- AS-IS sys01_company.selectById (IDMS-IC) 중 인사평가 설정 두 컬럼만 -->
+    <select id="selectEvalSetting" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvalSettingRes">
+        SELECT sys01_emp_eval_cycle_cd AS emp_eval_cycle_code,
+               sys01_emp_eval_month_cd AS emp_eval_month_code
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel(emp43_eval_target) 동적 INSERT — 화면이 넣는 컬럼만 -->
+    <insert id="insertEvalTarget">
+        INSERT INTO emp43_eval_target (emp43_eval_target_id, emp43_company_id, emp43_person_id, emp43_std_year, emp43_eval_list_std_id,
+                                       emp43_std_term_cd, emp43_eval_start_date, emp43_eval_close_date,
+                                       emp43_first_evaluator_id, emp43_first_eval_weight, emp43_second_evaluator_id, emp43_second_eval_weight)
+        VALUES (#{row.evalTargetId}, #{companyId}, #{row.personId}, #{row.stdYear}, #{row.evalListStdId},
+                #{row.stdTermCd}, #{row.evalStartDate}, #{row.evalCloseDate},
+                #{row.firstEvaluatorId}, #{row.firstEvalWeight}, #{row.secondEvaluatorId}, #{row.secondEvalWeight})
+    </insert>
+
+    <!-- UpdateDataModel 동적 UPDATE — 그리드에서 바뀌는 컬럼(평가자·비중)만. 회사 조건은 TOBE가 더했다 -->
+    <update id="updateEvalTarget">
+        UPDATE emp43_eval_target
+           SET emp43_first_evaluator_id  = #{row.firstEvaluatorId},
+               emp43_first_eval_weight   = #{row.firstEvalWeight},
+               emp43_second_evaluator_id = #{row.secondEvaluatorId},
+               emp43_second_eval_weight  = #{row.secondEvalWeight}
+         WHERE emp43_eval_target_id = #{row.evalTargetId}
+           AND emp43_company_id = #{companyId}
+    </update>
+
+    <!-- UpdateDataModel.deleteModel (ID로 DELETE). 회사 조건은 TOBE가 더했다 -->
+    <delete id="deleteEvalTarget">
+        DELETE FROM emp43_eval_target
+         WHERE emp43_eval_target_id = #{evalTargetId}
+           AND emp43_company_id = #{companyId}
+    </delete>
+
+    <!-- AS-IS emp43_eval_target.updateEval (IDMS-IC). 회사 조건은 TOBE가 더했다 -->
+    <update id="updateEval">
+        UPDATE	emp43_eval_target
+           SET	emp43_first_evaluator_id	= #{firstPersonId}
+         	 ,	emp43_first_eval_weight		= #{firstEvalWeight}
+         	 ,	emp43_second_evaluator_id	= #{secondPersonId}
+         	 ,	emp43_second_eval_weight	= #{secondEvalWeight}
+         WHERE	emp43_eval_target_id = #{evalTargetId}
+           AND	emp43_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS emp44_eval_write.deleteByPersonId (IDMS-IC) -->
+    <delete id="deleteWriteByPersonId">
+        DELETE
+          FROM	emp44_eval_write
+         WHERE	emp44_eval_target_id = (
+                                        SELECT	emp43_eval_target_id
+                                          FROM	emp43_eval_target
+                                         WHERE	emp43_company_id = #{companyId}
+                                           AND	emp43_std_year = #{stdYear}
+                                           AND	emp43_std_term_cd = #{stdTermCode}
+                                           AND	emp43_person_id = #{targetPersonId}
+                                     )
+           AND	emp44_evaluator_id = #{personId}
+    </delete>
+
+    <!-- AS-IS emp44_eval_write.selectByEvaluatorId (IDMS-IC) — 건수만 쓴다. 회사 조건은 TOBE가 더했다 -->
+    <select id="countWriteByEvaluatorId" resultType="int">
+        SELECT	COUNT(*)
+          FROM	emp44_eval_write
+          		INNER JOIN emp43_eval_target ON emp44_eval_target_id = emp43_eval_target_id
+         WHERE	emp44_eval_target_id = #{evalTargetId}
+           AND	emp44_evaluator_id = #{personId}
+           AND	emp43_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS emp45_eval_relate_appr.selectByTermCode (IDMS-IC) — 최종 결재 상태 코드만 쓴다 (없으면 행 없음) -->
+    <select id="selectFinalApprStatusCodes" resultType="string">
+        SELECT	b.apr01_status_cd
+          FROM	emp45_eval_relate_appr
+          		LEFT OUTER JOIN apr01_appr a ON a.apr01_appr_id = emp45_appr_id
+          		LEFT OUTER JOIN apr01_appr b ON b.apr01_appr_id = emp45_final_appr_id
+         WHERE	emp45_company_id = #{companyId}
+           AND	emp45_std_year = #{stdYear}
+           AND	emp45_std_term_cd = #{stdTermCode}
+    </select>
+
+    <!-- common.emp00_trans_info (Common.xml L1372) — 인사평가 대상자·평가자 조회가 쓰는 사람별 최신 발령(조직장 여부 포함) -->
+    <sql id="evalEmp00With">
+        WITH emp00 AS (
+            SELECT t2.emp03_trans_id                                                             AS emp00_trans_id,
+                   t2.emp03_trans_date                                                           AS emp00_trans_date,
+                   t2.emp03_person_id                                                            AS emp00_person_id,
+                   t2.emp03_trans_cd                                                             AS emp00_trans_cd,
+                   t2.emp03_title_cd                                                             AS emp00_title_cd,
+                   t2.emp03_pos_cd                                                               AS emp00_pos_cd,
+                   t2.emp03_org_code_id                                                          AS emp00_org_code_id,
+                   f_org_nm(t2.emp03_org_code_id, t2.emp03_trans_date)                           AS emp00_org_title_nm,
+                   t2.emp03_org_head_yn                                                          AS emp00_org_head_yn
+              FROM emp01_person t1
+                   INNER JOIN emp03_trans t2 ON t2.emp03_person_id = t1.emp01_person_id
+             WHERE t1.emp01_company_id = #{companyId}
+               AND t2.emp03_trans_date = ( SELECT MAX(x.emp03_trans_date)
+                                             FROM emp03_trans x
+                                            WHERE x.emp03_person_id = t1.emp01_person_id
+                                              AND (  (x.emp03_trans_cd  = '900' AND to_char(x.emp03_trans_date,'yyyymmdd') &lt;  replace(#{transDate},'-',''))
+                                                  OR (x.emp03_trans_cd != '900' AND to_char(x.emp03_trans_date,'yyyymmdd') &lt;= replace(#{transDate},'-',''))) )
+               AND 'Y' = (CASE WHEN (SELECT COUNT(*) FROM emp04_add_title WHERE emp04_add_person_id = t1.emp01_person_id) = 0 THEN 'Y'
+                               ELSE (CASE WHEN (SELECT COUNT(*)
+                                                  FROM emp01_person a
+                                                       INNER JOIN emp04_add_title ON emp04_person_id = a.emp01_person_id
+                                                 WHERE emp04_add_person_id = t1.emp01_person_id) = 0 THEN 'N'
+                                          ELSE 'Y' END) END)
+        ), org00 AS (
+            SELECT org01_code_id   AS org00_org_code_id,
+                   org01_org_cd    AS org00_org_cd,
+                   org02_kor_nm    AS org00_kor_nm,
+                   org02_mod_date  AS org00_mod_date
+              FROM org01_code
+                   INNER JOIN org02_info ON org02_code_id = org01_code_id
+             WHERE org01_company_id = #{companyId}
+        )
+    </sql>
+
+    <!-- AS-IS emp00_trans_info.selectByEvalText (IDMS-IC L461) — 서버가 기준일을 오늘로 정한다(클라이언트 transDate 무시) -->
+    <select id="selectByEvalText" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvalCandidateRes">
+        <include refid="evalEmp00With"/>
+        SELECT emp00_person_id                                                               AS person_id,
+               emp00_org_code_id                                                             AS org_code_id,
+               emp00_org_title_nm                                                            AS org_title_nm,
+               f_org_parent_full_nm(emp00_org_code_id, emp00_trans_date)                     AS parent_full_nm,
+               f_get_empTrans(emp00_person_id, emp00_trans_date::date, 'title_nm')           AS title_nm,
+               f_cdnm('EmpPosCode', emp00_pos_cd, emp01_company_id, emp00_trans_date)        AS pos_nm,
+               emp01_kor_nm                                                                  AS kor_nm,
+               CASE WHEN COALESCE(emp00_org_head_yn, 'false') = 'true' THEN '조직장' ELSE '조직원' END AS org_head_nm,
+               emp01_hire_date                                                               AS hire_date,
+               emp00_trans_date                                                              AS trans_date
+          FROM emp00 trans
+               INNER JOIN emp01_person ON emp00_person_id = emp01_person_id
+               INNER JOIN org00        ON emp00_org_code_id = org00_org_code_id
+         WHERE 1=1
+           AND emp00_trans_cd <![CDATA[ <= ]]> '799'
+           AND ( (emp01_kor_nm || org00_kor_nm || emp01_emp_no) LIKE #{searchText}
+                 OR ( CASE WHEN COALESCE(emp00_org_head_yn, 'false') = 'true' THEN '조직장' ELSE '조직원' END ) LIKE #{searchText} )
+           AND org00_mod_date = ( SELECT max(org00_mod_date)
+                                    FROM org00
+                                   WHERE org00_org_code_id = emp00_org_code_id
+                                     AND org00_mod_date <![CDATA[ <= ]]> emp00_trans_date )
+           AND NOT EXISTS ( SELECT 1
+                              FROM emp04_add_title
+                             WHERE emp04_add_person_id = emp00_person_id
+                               AND ( emp04_start_date                        <![CDATA[ > ]]> to_date(#{transDate},'yyyy-mm-dd') OR
+                                     COALESCE(emp04_close_date,'9999-12-31') <![CDATA[ < ]]> to_date(#{transDate},'yyyy-mm-dd') ) )
+         ORDER BY org00_org_cd, emp00_title_cd, emp00_pos_cd, emp01_order_seq
+    </select>
+
+    <!-- AS-IS emp00_trans_info.getHighInfo (IDMS-IC L1410) — 같은 조직 조직장(본인이 조직장이면 제외) → 상위·상상위 조직 조직장, level 순 -->
+    <select id="getHighInfo" resultType="kr.co.kfs.asseterp.biz.emp.dto.HighInfoRes">
+        <include refid="evalEmp00With"/>
+        SELECT person_id, org_title_nm, kor_nm
+          FROM (
+                SELECT emp00_person_id AS person_id, emp00_org_title_nm AS org_title_nm, emp01_kor_nm AS kor_nm, '1' AS level
+                  FROM emp00
+                       INNER JOIN emp01_person ON emp00_person_id = emp01_person_id
+                       INNER JOIN org00        ON emp00_org_code_id = org00_org_code_id
+                 WHERE COALESCE(emp00_org_head_yn, 'false') = 'true'
+                   AND emp00_org_code_id = #{orgCodeId}
+                   AND org00_mod_date = ( SELECT max(org00_mod_date) FROM org00
+                                           WHERE org00_org_code_id = emp00_org_code_id AND org00_mod_date <![CDATA[ <= ]]> to_date(#{transDate},'yyyy-mm-dd') )
+                   AND #{personId} NOT IN ( SELECT emp00_person_id FROM emp00
+                                             WHERE emp00_org_head_yn = 'true' AND emp00_org_code_id = #{orgCodeId} )
+                 UNION ALL
+                SELECT emp00_person_id, emp00_org_title_nm, emp01_kor_nm, '2' AS level
+                  FROM emp00
+                       INNER JOIN emp01_person ON emp00_person_id = emp01_person_id
+                       INNER JOIN org00        ON emp00_org_code_id = org00_org_code_id
+                 WHERE COALESCE(emp00_org_head_yn, 'false') = 'true'
+                   AND org00_mod_date = ( SELECT max(org00_mod_date) FROM org00
+                                           WHERE org00_org_code_id = emp00_org_code_id AND org00_mod_date <![CDATA[ <= ]]> to_date(#{transDate},'yyyy-mm-dd') )
+                   AND emp00_org_code_id = ( SELECT org02_parent_code_id
+                                               FROM org02_info
+                                                    INNER JOIN org01_code ON org02_code_id = org01_code_id
+                                              WHERE org01_company_id = #{companyId}
+                                                AND org02_code_id = #{orgCodeId}
+                                                AND f_sysdate() BETWEEN org01_open_date AND COALESCE(org01_close_date, to_date('99991231','yyyymmdd'))
+                                                AND org02_mod_date = ( SELECT MAX(x.org02_mod_date) FROM org02_info x
+                                                                        WHERE x.org02_code_id = org02_info.org02_code_id
+                                                                          AND x.org02_mod_date <![CDATA[ <= ]]> f_sysdate() ) )
+                 UNION ALL
+                SELECT emp00_person_id, emp00_org_title_nm, emp01_kor_nm, '3' AS level
+                  FROM emp00
+                       INNER JOIN emp01_person ON emp00_person_id = emp01_person_id
+                       INNER JOIN org00        ON emp00_org_code_id = org00_org_code_id
+                 WHERE COALESCE(emp00_org_head_yn, 'false') = 'true'
+                   AND org00_mod_date = ( SELECT max(org00_mod_date) FROM org00
+                                           WHERE org00_org_code_id = emp00_org_code_id AND org00_mod_date <![CDATA[ <= ]]> to_date(#{transDate},'yyyy-mm-dd') )
+                   AND emp00_org_code_id = ( SELECT org02_parent_code_id
+                                               FROM org02_info
+                                                    INNER JOIN org01_code ON org02_code_id = org01_code_id
+                                              WHERE org01_company_id = #{companyId}
+                                                AND org02_code_id = ( SELECT org02_parent_code_id
+                                                                        FROM org02_info
+                                                                             INNER JOIN org01_code ON org02_code_id = org01_code_id
+                                                                       WHERE org01_company_id = #{companyId}
+                                                                         AND org02_code_id = #{orgCodeId}
+                                                                         AND f_sysdate() BETWEEN org01_open_date AND COALESCE(org01_close_date, to_date('99991231','yyyymmdd'))
+                                                                         AND org02_mod_date = ( SELECT MAX(x.org02_mod_date) FROM org02_info x
+                                                                                                 WHERE x.org02_code_id = org02_info.org02_code_id
+                                                                                                   AND x.org02_mod_date <![CDATA[ <= ]]> f_sysdate() ) )
+                                                AND f_sysdate() BETWEEN org01_open_date AND COALESCE(org01_close_date, to_date('99991231','yyyymmdd'))
+                                                AND org02_mod_date = ( SELECT MAX(x.org02_mod_date) FROM org02_info x
+                                                                        WHERE x.org02_code_id = org02_info.org02_code_id
+                                                                          AND x.org02_mod_date <![CDATA[ <= ]]> f_sysdate() ) )
+               ) AS result
+         ORDER BY level
+    </select>
+
+    <!-- AS-IS emp43_eval_target.selectByText (IDMS-IC) — 로그인 사원이 평가자(1차 또는 2차)인 대상자. 바깥 SELECT 목록만 DTO 별칭, 안쪽은 원본 그대로 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvalExecuteRes">
+        SELECT emp43_eval_target_id   AS eval_target_id,
+               emp43_eval_list_std_id AS eval_list_std_id,
+               emp43_std_year         AS std_year,
+               emp43_std_term_cd      AS std_term_cd,
+               emp43_person_id        AS person_id,
+               emp43_order_eval_nm    AS order_eval_nm,
+               emp43_org_head_nm      AS org_head_nm,
+               emp43_pos_nm           AS pos_nm,
+               emp43_person_nm        AS person_nm,
+               emp43_org_nm           AS org_nm,
+               emp43_hire_date_str    AS hire_date_str,
+               emp43_work_year        AS work_year,
+               emp43_date_str         AS date_str,
+               emp43_order_score      AS order_score,
+               emp43_order_grade      AS order_grade,
+               emp43_order_status     AS order_status,
+               emp43_order_reason     AS order_reason,
+               emp43_first_eval_reason  AS first_eval_reason,
+               emp43_second_eval_reason AS second_eval_reason
+          FROM (
+        <![CDATA[
+                SELECT	*
+                	 ,	f_cdnm('EmpEvalTermCode', emp43_std_term_cd, emp43_company_id, f_sysdate())		AS emp43_std_term_nm
+                 	 ,	(
+                 	 		CASE WHEN emp43_eval_start_date  <=  emp01_hire_date
+                 	 			 THEN TO_CHAR(emp01_hire_date,'yyyy-MM-dd') || ' ~ ' || emp43_eval_close_date
+                 	 			 ELSE TO_CHAR(emp43_eval_start_date,'yyyy-MM-dd') || ' ~ ' || emp43_eval_close_date
+                 	 			 END
+                 	 	)																				AS emp43_date_str
+                 	 ,	TO_CHAR(emp01_hire_date,'yyyy-MM-dd')											AS emp43_hire_date_str
+                 	 ,	emp01_hire_date																	AS emp43_hire_date
+                 	 ,	f_get_datediff(emp01_hire_date, emp43_eval_close_date, '1')						AS emp43_work_year
+                	 , 	(
+                	 		SELECT	CASE WHEN COALESCE(emp03_org_head_yn, 'false') = 'true'
+                	 					 THEN '조직장'
+                	 					 ELSE '조직원'
+                	 					 END
+                  			  FROM	emp03_trans 
+                 			 WHERE	emp03_person_id = emp43_person_id
+                   			   AND	emp03_trans_date IN (
+                   			   								SELECT	MAX(emp03_trans_date)
+                   						  			   	      FROM	emp03_trans
+                   						 			  	     WHERE	emp03_person_id = emp43_person_id
+                   						   			    	   AND	emp03_trans_date  <=  (emp43_std_year||'-12-31')::date
+                   						   			     )
+                 		)																				AS emp43_org_head_nm
+                     ,	f_get_empTrans(emp43_person_id, f_sysdate()::date, 'pos_nm')					AS emp43_pos_nm
+                     ,	f_get_empTrans(emp43_person_id, f_sysdate()::date, 'title_nm')					AS emp43_title_nm
+                     ,	f_emp_kor_nm(emp43_person_id)													AS emp43_person_nm
+                	 ,	f_get_empTrans(emp43_person_id, f_sysdate()::date, 'org_code_nm')				AS emp43_org_nm
+                	 , 	(
+                	 		CASE WHEN emp43_first_evaluator_id = #{personId}
+                   				 THEN '1차'
+                   				 ELSE '2차'
+                	 			 END
+                  		)																				AS emp43_order_eval_nm
+                	 , 	(
+                	 		CASE WHEN emp43_first_evaluator_id = #{personId}
+                   				 THEN emp43_first_eval_score
+                   				 ELSE emp43_second_eval_score
+                	 			 END
+                  		)																				AS emp43_order_score
+                	 , 	(
+                	 		CASE WHEN emp43_first_evaluator_id = #{personId}
+                   				 THEN (
+                   				 		SELECT	emp42_grade
+                   				 		  FROM	emp42_eval_grade
+                   				 		 WHERE	emp42_eval_grade_id = f_get_empEvalGradeId(emp40_eval_list_std_id, emp43_first_eval_score)
+                   				 	  )	
+                   				 ELSE (
+                   				 		SELECT	emp42_grade
+                   				 		  FROM	emp42_eval_grade
+                   				 		 WHERE	emp42_eval_grade_id = f_get_empEvalGradeId(emp40_eval_list_std_id, emp43_second_eval_score)
+                   				 	  )		
+                	 			 END
+                  		)																				AS emp43_order_grade
+                	 , 	(
+                	 		CASE WHEN emp43_first_evaluator_id = #{personId}
+                   				 THEN CASE WHEN COALESCE(emp43_first_eval_end_yn, 'false') = 'true'
+                   				 		   THEN	'완료'
+                   				 		   WHEN	(
+                   				 		   			SELECT	COUNT(emp44_eval_write_id)
+                   				 		   			  FROM	emp44_eval_write
+                   				 		   			 WHERE	emp43_eval_target_id = emp44_eval_target_id
+                   				 		   			   AND	emp44_evaluator_id = #{personId}
+                   				 		   		)  >  0
+                   				 		   THEN '작성중'
+                   				 		   ELSE ''
+                   				 		   END
+                   				 ELSE CASE WHEN COALESCE(emp43_second_eval_end_yn, 'false') = 'true'
+                   				 		   THEN	'완료'
+                   				 		   WHEN	(
+                   				 		   			SELECT	COUNT(emp44_eval_write_id)
+                   				 		   			  FROM	emp44_eval_write
+                   				 		   			 WHERE	emp43_eval_target_id = emp44_eval_target_id
+                   				 		   			   AND	emp44_evaluator_id = #{personId}
+                   				 		   		)  >  0
+                   				 		   THEN '작성중'
+                   				 		   ELSE ''
+                   				 		   END	
+                	 			 END
+                  		)																				AS emp43_order_status
+                	 , 	(
+                	 		CASE WHEN emp43_first_evaluator_id = #{personId}
+                   				 THEN CASE WHEN (
+                			   				 		SELECT	COALESCE(emp42_reason_yn, 'false')
+                			   				 		  FROM	emp42_eval_grade
+                			   				 		 WHERE	emp42_eval_grade_id = f_get_empEvalGradeId(emp40_eval_list_std_id, emp43_first_eval_score)
+                			   				 	 ) = 'true'	 
+                   				 		   THEN CASE WHEN emp43_first_eval_reason IS NOT NULL
+                   				 					 THEN '작성완료'
+                   				 					 ELSE '작성필요'
+                   				 					 END
+                   				 		   ELSE ''
+                   				 		   END
+                   				 ELSE CASE WHEN (
+                			   				 		SELECT	COALESCE(emp42_reason_yn, 'false')
+                			   				 		  FROM	emp42_eval_grade
+                			   				 		 WHERE	emp42_eval_grade_id = f_get_empEvalGradeId(emp40_eval_list_std_id, emp43_second_eval_score)
+                			   				 	 ) = 'true'
+                   				 		   THEN CASE WHEN emp43_second_eval_reason IS NOT NULL
+                   				 					 THEN '작성완료'
+                   				 					 ELSE '작성필요'
+                   				 					 END
+                   				 		   ELSE ''
+                   				 		   END
+                	 			 END
+                  		)																				AS emp43_order_reason
+                  FROM	emp43_eval_target
+                  		INNER JOIN emp40_eval_list_std	ON emp43_eval_list_std_id = emp40_eval_list_std_id
+                  		INNER JOIN emp01_person			ON emp01_person_id = emp43_person_id
+                 WHERE	emp43_company_id = #{companyId}
+                   AND	emp43_std_year = #{stdYear}
+                   AND	emp43_std_term_cd = #{stdTermCode}
+                   AND	(
+                   			emp43_first_evaluator_id  = #{personId}
+                   			OR
+                   			emp43_second_evaluator_id = #{personId}
+                   		)
+                   AND	UPPER(CONCAT(f_get_empTrans(emp43_person_id,f_sysdate()::date,'pos_nm')
+                   					,f_emp_kor_nm(emp43_person_id)
+                   					,f_get_empTrans(emp43_person_id,f_sysdate()::date,'org_code_nm'))) LIKE UPPER(#{searchText})
+        ]]>
+               ) t
+    </select>
+
+    <!-- AS-IS emp43_eval_target.getWrite (IDMS-IC) — 평가완료·취소 뒤 다시 읽는 평가상태(order_status)만 쓴다 -->
+    <select id="selectWriteStatus" resultType="string">
+        SELECT CASE WHEN emp43_first_evaluator_id = #{personId}
+                    THEN CASE WHEN COALESCE(emp43_first_eval_end_yn, 'false') = 'true'
+                              THEN '완료'
+                              WHEN ( SELECT COUNT(emp44_eval_write_id) FROM emp44_eval_write
+                                      WHERE emp43_eval_target_id = emp44_eval_target_id AND emp44_evaluator_id = #{personId} ) > 0
+                              THEN '작성중'
+                              ELSE '' END
+                    ELSE CASE WHEN COALESCE(emp43_second_eval_end_yn, 'false') = 'true'
+                              THEN '완료'
+                              WHEN ( SELECT COUNT(emp44_eval_write_id) FROM emp44_eval_write
+                                      WHERE emp43_eval_target_id = emp44_eval_target_id AND emp44_evaluator_id = #{personId} ) > 0
+                              THEN '작성중'
+                              ELSE '' END
+               END
+          FROM emp43_eval_target
+         WHERE emp43_eval_target_id = #{evalTargetId}
+           AND emp43_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS emp43_eval_target.updateReason (IDMS-IC) — 1차면 first, 아니면 second. 회사·평가자 조건은 TOBE가 더했다 -->
+    <update id="updateReason">
+        UPDATE emp43_eval_target
+        <choose>
+            <when test="orderEvalName == '1차'">
+           SET emp43_first_eval_reason  = #{reason}
+            </when>
+            <otherwise>
+           SET emp43_second_eval_reason = #{reason}
+            </otherwise>
+        </choose>
+         WHERE emp43_eval_target_id = #{evalTargetId}
+           AND emp43_company_id = #{companyId}
+           AND (emp43_first_evaluator_id = #{personId} OR emp43_second_evaluator_id = #{personId})
+    </update>
+
+    <!-- AS-IS emp43_eval_target.updateEndYn (IDMS-IC) — 평가완료(true)는 내 작성 점수 합계를 점수로, 취소(false)는 점수를 비운다 -->
+    <update id="updateEndYn">
+        UPDATE emp43_eval_target
+        <choose>
+            <when test="orderEvalName == '1차'">
+           SET emp43_first_eval_end_yn = #{endYn}
+             , emp43_first_eval_score  =
+            </when>
+            <otherwise>
+           SET emp43_second_eval_end_yn = #{endYn}
+             , emp43_second_eval_score  =
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="endYn == 'true'">
+                ( SELECT SUM(emp44_eval_grade_score)
+                    FROM emp44_eval_write
+                   WHERE emp44_evaluator_id = #{personId}
+                     AND emp44_eval_target_id = emp43_eval_target_id )
+            </when>
+            <otherwise>NULL</otherwise>
+        </choose>
+         WHERE emp43_eval_target_id = #{evalTargetId}
+           AND emp43_company_id = #{companyId}
+           AND (emp43_first_evaluator_id = #{personId} OR emp43_second_evaluator_id = #{personId})
+    </update>
+
+    <!-- AS-IS emp45_eval_relate_appr.selectByTermCode (IDMS-IC) 중 1차보고 상신문서 상태(emp45_appr_status_cd = a.apr01_status_cd) — 평가완료·취소 전 검사 -->
+    <select id="selectApprStatusCodes" resultType="string">
+        SELECT a.apr01_status_cd
+          FROM emp45_eval_relate_appr
+               LEFT OUTER JOIN apr01_appr a ON a.apr01_appr_id = emp45_appr_id
+         WHERE emp45_company_id = #{companyId}
+           AND emp45_std_year = #{stdYear}
+           AND emp45_std_term_cd = #{stdTermCode}
+    </select>
+
+</mapper>
