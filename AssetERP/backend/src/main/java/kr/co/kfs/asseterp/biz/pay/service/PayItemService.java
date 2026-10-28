@@ -33,6 +33,11 @@ public class PayItemService {
         return mapper.selectByText("%" + nvl(searchText) + "%");
     }
 
+    /** AS-IS getMonthItem(급여관리(항목별) 항목 List): 항목명 "%검색어%", 지급·공제만 */
+    public List<PayItemRes> searchMonthItems(String searchText) {
+        return mapper.selectMonthItems("%" + nvl(searchText) + "%");
+    }
+
     /** AS-IS selectByItemType(급여 항목 행 추가 조회창): 항목구분 1 지급 / 2 공제 */
     public List<PayItemRes> searchByItemType(String itemType) {
         return mapper.selectByItemType(itemType);

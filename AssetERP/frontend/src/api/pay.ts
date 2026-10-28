@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { PayApprCheck, PayInsurePay, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayRelateNote, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxDeductLimit, PayWorkTime } from '../types/pay';
+import { PayApprCheck, PayInsurePay, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemText, PayRelateNote, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxDeductLimit, PayWorkTime } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -512,6 +512,35 @@ export const payApi = {
   /** AS-IS pay.Pay11_MonthItem.updateList(지급) / getInsureAdjustModi(공제) */
   saveMonthItems: async (monthId: number, itemType: string, updateList: { monthItemId?: number | null; itemCd: string; itemAmt?: number | null }[], deleteIds: number[]): Promise<void> => {
     await apiClient.put<ApiResponse<void>>('v1/pay/month-items', { monthId, itemType, updateList, deleteIds });
+  },
+
+  /** AS-IS pay.Pay11_MonthItem.selectByText (S17 급여관리(항목별)) */
+  searchMonthItemsByText: async (params: { payCode: string; payDate: string; itemCode: string; searchText: string }): Promise<PayMonthItemText[]> => {
+    const res = await apiClient.get<ApiResponse<PayMonthItemText[]>>('v1/pay/month-items/by-text', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay11_MonthItem.updateMonthItemList (S17 [저장]) */
+  saveMonthItemAmounts: async (rows: { monthId: number; monthItemId: number; itemType: string; itemCd: string; itemAmt: number | null }[]): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/pay/month-items/amounts', rows);
+  },
+
+  /** AS-IS pay.Pay11_MonthItem.insertItemType (S17 [일괄생성]) → 추가한 건수 */
+  insertMonthItemBulk: async (req: { payCode: string; payDate: string; itemType: string; itemCode: string }): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/pay/month-items/bulk', req);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdMonthItem (S17 [출력/다운로드]) → 출력 자료 groupId */
+  rdPrintMonthItems: async (params: { payCode: string; payDate: string; itemCode: string; searchText: string }): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/pay/month-items/rd-print', null, { params });
+    return res.data.data as string;
+  },
+
+  /** AS-IS pay.Pay20_Item.getMonthItem (S17 Pay20_Lookup_MonthItem) */
+  lookupMonthItems: async (searchText: string): Promise<PayItem[]> => {
+    const res = await apiClient.get<ApiResponse<PayItem[]>>('v1/pay/items/month-items', { params: { searchText } });
+    return res.data.data ?? [];
   },
 
   /** AS-IS pay.Pay11_MonthItem.recalculationTax */

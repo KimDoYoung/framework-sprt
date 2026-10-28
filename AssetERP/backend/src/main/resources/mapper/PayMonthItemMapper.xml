@@ -86,4 +86,67 @@
     <select id="getInsureAdjustModi" resultType="string">
         SELECT f_create_4insure_adjust_modi(#{personId}, #{insureCode}, #{payDate})
     </select>
+
+    <!-- AS-IS pay11_month_item.selectByText L60 (IDMS-IC) — S17. 사원별 가장 늦은 발령(조회 지급일 이전)의 직급 -->
+    <sql id="textQuery">
+        SELECT pay11_month_item_id                                          AS month_item_id,
+               pay11_month_id                                               AS month_id,
+               pay10_person_id                                              AS person_id,
+               pay11_item_type                                              AS item_type,
+               pay11_item_cd                                                AS item_cd,
+               pay11_item_amt                                               AS item_amt,
+               f_cdnm('PayItemType', pay11_item_type, 1, f_sysdate())       AS item_type_name,
+               f_cdnm('NonTaxType', pay20_non_tax_type, 1, f_sysdate())     AS non_tax_type_name,
+               pay20_item_nm                                                AS item_name,
+               emp01_emp_no                                                 AS person_no,
+               f_emp_kor_nm(pay10_person_id)                                AS person_name,
+               f_cdnm('EmpPosCode', emp03_pos_cd, emp01_company_id, f_sysdate()) AS pos_name
+          FROM pay11_month_item
+               INNER JOIN pay10_month  ON pay10_month_id  = pay11_month_id
+               INNER JOIN pay20_item   ON pay20_item_cd   = pay11_item_cd
+               INNER JOIN emp01_person ON pay10_person_id = emp01_person_id
+               INNER JOIN emp02_others ON pay10_person_id = emp02_person_id
+               INNER JOIN emp03_trans  ON pay10_person_id = emp03_person_id
+         WHERE (emp03_person_id, emp03_trans_date) IN (
+                   SELECT emp03_person_id, MAX(emp03_trans_date)
+                     FROM emp01_person
+                          INNER JOIN emp03_trans ON emp03_person_id = emp01_person_id
+                    WHERE emp01_company_id = #{companyId}
+                      AND emp03_trans_date &lt;= #{payDate}
+                    GROUP BY emp03_person_id
+               )
+           AND pay10_company_id = #{companyId}
+           AND pay10_date       = #{payDate}
+           AND pay10_pay_cd     = #{payCode}
+           AND pay11_item_cd LIKE #{itemCode}
+           AND UPPER(CONCAT(f_emp_kor_nm(pay10_person_id), pay20_item_nm)) LIKE UPPER(#{searchText})
+         ORDER BY emp01_emp_no, pay11_item_type, pay20_item_cd
+    </sql>
+
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemTextRes">
+        <include refid="textQuery"/>
+    </select>
+
+    <select id="countItem" resultType="int">
+        SELECT COUNT(*) FROM pay20_item
+         WHERE pay20_item_type = #{itemType} AND pay20_item_cd = #{itemCode}
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId (windowClassName은 LIKE였으나 값이 고정 클래스 이름이라 =) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{printPersonId}
+           AND sys99_window_class_nm = #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdMonthItem L2542: 사번·사원명·직급·항목구분·항목명 = string01~05, 금액 = long01(null이면 0) -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_string03, sys99_string04, sys99_string05, sys99_long01 )
+        SELECT f_create_seq(), #{companyId}, #{printPersonId}, #{windowClassName}, #{groupId}
+             , q.person_no, q.person_name, q.pos_name, q.item_type_name, q.item_name, COALESCE(q.item_amt, 0)
+          FROM (<include refid="textQuery"/>) q
+    </insert>
 </mapper>

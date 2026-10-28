@@ -148,6 +148,7 @@ import { Pay01_Tab_Annual } from './pay/Pay01_Tab_Annual';
 import { Pay01_Tab_AnnualList } from './pay/Pay01_Tab_AnnualList';
 import { Pay01_Tab_AnnualPerson } from './pay/Pay01_Tab_AnnualPerson';
 import { Pay10_Tab_Month } from './pay/Pay10_Tab_Month';
+import { Pay10_Tab_MonthItem } from './pay/Pay10_Tab_MonthItem';
 import { Pay34_Tab_WorkTimeConfig } from './pay/Pay34_Tab_WorkTimeConfig';
 import { Crd10_Tab_ExcelCompanyAdmin } from './crd/Crd10_Tab_ExcelCompanyAdmin';
 import { Emp55_Tab_benefitInfoManager } from './emp/Emp55_Tab_benefitInfoManager';
@@ -449,6 +450,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ast01_Tab_InfoManager, // E21
   Ast01_Tab_ClassTreeManagement, // R08 (메뉴 #1117. 펀드자산 종목기본)
   Ast01_Tab_InfoManagement, // R09 (메뉴 #1118. 펀드자산 종목상세)
+  Pay10_Tab_MonthItem, // S17 (Pay10_Lookup_GroupList는 S16 재사용 + Pay20_Lookup_MonthItem. 출력 창 = RdViewer)
   Pay10_Tab_Month, // S16 1단계 (임금계산방법 Pay04_Lookup_Formula는 다음 단계 — 안내만. + Pay11_TabPage_MonthItem·팝업 6개·Emp01_Lookup_TransDate)
   Pay01_Tab_AnnualPerson, // S15 1단계 (상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계)
   Pay01_Tab_AnnualList, // S14 1단계 (상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계. 출력 창 Pay01_Lookup_Rd_AnnualList = RdViewer)

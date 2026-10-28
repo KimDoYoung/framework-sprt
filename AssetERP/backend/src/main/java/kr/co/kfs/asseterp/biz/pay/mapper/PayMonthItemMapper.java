@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.pay.mapper;
 
 import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemRes;
+import kr.co.kfs.asseterp.biz.pay.dto.PayMonthItemTextRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -33,4 +34,22 @@ public interface PayMonthItemMapper {
     /** AS-IS getInsureAdjustModi → 'Y' 또는 실패 문구 */
     String getInsureAdjustModi(@Param("personId") Long personId, @Param("insureCode") String insureCode,
                                @Param("payDate") LocalDate payDate);
+
+    /** AS-IS selectByText (S17 급여관리(항목별)) */
+    List<PayMonthItemTextRes> selectByText(@Param("companyId") Long companyId, @Param("payCode") String payCode,
+                                           @Param("payDate") LocalDate payDate, @Param("itemCode") String itemCode,
+                                           @Param("searchText") String searchText);
+
+    /** 일괄생성 항목이 급여항목에 있는지(TOBE 추가) */
+    int countItem(@Param("itemType") String itemType, @Param("itemCode") String itemCode);
+
+    /** AS-IS sys99_print.deleteByPersonId — 로그인 사용자의 지난 출력 자료 */
+    int deletePrint(@Param("companyId") Long companyId, @Param("printPersonId") Long printPersonId,
+                    @Param("windowClassName") String windowClassName);
+
+    /** AS-IS Sys99_Print.insertRdMonthItem L2542 — selectByText 목록을 sys99_print에 넣는다 */
+    int insertPrint(@Param("companyId") Long companyId, @Param("printPersonId") Long printPersonId,
+                    @Param("windowClassName") String windowClassName, @Param("groupId") Long groupId,
+                    @Param("payCode") String payCode, @Param("payDate") LocalDate payDate,
+                    @Param("itemCode") String itemCode, @Param("searchText") String searchText);
 }

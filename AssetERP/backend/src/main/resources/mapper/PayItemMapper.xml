@@ -38,6 +38,15 @@
          WHERE UPPER(pay20_item_nm) LIKE UPPER(#{searchText})
     </select>
 
+    <!-- AS-IS pay20_item.getMonthItem L55 (IDMS-IC) — S17 -->
+    <select id="selectMonthItems" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayItemRes">
+        SELECT <include refid="itemColumns"/>
+          FROM pay20_item
+         WHERE pay20_item_type IN ('1','2')
+           AND pay20_item_nm LIKE #{searchText}
+         ORDER BY pay20_item_cd
+    </select>
+
     <!-- AS-IS pay20_item.selectByItemType (IDMS-IC) -->
     <select id="selectByItemType" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayItemRes">
         SELECT <include refid="itemColumns"/>

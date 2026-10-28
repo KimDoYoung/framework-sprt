@@ -270,6 +270,22 @@ export interface PayMonthItem {
   itemNm?: string;
 }
 
+/** 급여관리(항목별) 그리드 한 행 — pay11_month_item.selectByText (S17) */
+export interface PayMonthItemText {
+  monthItemId: number;
+  monthId: number;
+  personId: number;
+  itemType: string;
+  itemCd: string;
+  itemAmt?: number | null;
+  itemTypeName?: string;
+  nonTaxTypeName?: string;
+  itemName?: string;
+  personNo?: string;
+  personName?: string;
+  posName?: string;
+}
+
 /** 급여 비고(pay09_relate_note) — noteType 1 전체 / 2 개별 */
 export interface PayRelateNote {
   relateNoteId: number;

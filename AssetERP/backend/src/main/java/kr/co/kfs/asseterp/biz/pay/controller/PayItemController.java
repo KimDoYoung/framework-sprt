@@ -32,6 +32,12 @@ public class PayItemController {
         return ApiResponse.ok(service.lookup(searchText));
     }
 
+    /** AS-IS pay.Pay20_Item.getMonthItem (S17 Pay20_Lookup_MonthItem — 지급·공제 항목만) */
+    @GetMapping("/month-items")
+    public ApiResponse<List<PayItemRes>> monthItems(@RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchMonthItems(searchText));
+    }
+
     /** AS-IS pay.Pay20_Item.selectByItemType (Pay20_Lookup_SelectMulti) */
     @GetMapping("/by-type")
     public ApiResponse<List<PayItemRes>> byType(@RequestParam String itemType) {
