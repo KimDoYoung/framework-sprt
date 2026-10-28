@@ -33,6 +33,15 @@ public class PayInsurePayController {
         return ApiResponse.ok(service.search(principal, personId, insureCode, year));
     }
 
+    /** pay.Pay32_InsurePay.selectByCompanyId (S27 4대보험 정산내역) */
+    @GetMapping("/company")
+    public ApiResponse<List<PayInsurePayRes>> searchByCompany(@AuthenticationPrincipal UserPrincipal principal,
+                                                              @RequestParam(required = false) Long personId,
+                                                              @RequestParam(required = false) String insureCode,
+                                                              @RequestParam(required = false) String year) {
+        return ApiResponse.ok(service.searchByCompany(principal, personId, insureCode, year));
+    }
+
     /** pay.Pay32_InsurePay.update */
     @PutMapping
     public ApiResponse<List<PayInsurePayRes>> save(@AuthenticationPrincipal UserPrincipal principal,

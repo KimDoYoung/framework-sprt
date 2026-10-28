@@ -14,6 +14,10 @@ public interface PayInsurePayMapper {
     List<PayInsurePayRes> selectByPersonId(@Param("companyId") Long companyId, @Param("personId") Long personId,
                                            @Param("insureCode") String insureCode, @Param("year") String year);
 
+    /** AS-IS selectByCompanyId (S27) — personId가 null이면 회사 전체 */
+    List<PayInsurePayRes> selectByCompanyId(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                            @Param("insureCode") String insureCode, @Param("year") String year);
+
     PayInsurePayRes selectById(@Param("companyId") Long companyId, @Param("insurePayId") Long insurePayId);
 
     Long selectNextId();

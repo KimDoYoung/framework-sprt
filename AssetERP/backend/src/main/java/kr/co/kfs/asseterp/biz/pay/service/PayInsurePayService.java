@@ -25,6 +25,11 @@ public class PayInsurePayService {
         return mapper.selectByPersonId(user.getCompanyId(), personId, blankToAll(insureCode), blankToAll(year));
     }
 
+    /** pay32_insure_pay.selectByCompanyId (S27) — 사원 없으면 회사 전체. year·insureCode가 비면 전체("%") */
+    public List<PayInsurePayRes> searchByCompany(UserPrincipal user, Long personId, String insureCode, String year) {
+        return mapper.selectByCompanyId(user.getCompanyId(), personId, blankToAll(insureCode), blankToAll(year));
+    }
+
     /** AS-IS update (UpdateDataModel) → 저장된 행(요청 순서) */
     @Transactional
     public List<PayInsurePayRes> save(UserPrincipal user, List<PayInsurePaySaveReq> rows) {

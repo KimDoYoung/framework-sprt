@@ -4,6 +4,7 @@
  * settings() L82-170: 1150×480 모달 "납부상세", 위 툴바(기준년도 50 "YYYY" · 구분 콤보 120 = 코드그룹 InsureCode003 · [조회][저장][등록][삭제]) + 셀 편집 그리드
  *   (일자 100 · 정산보험료 150 · 납부방법 120(DivPayCode 콤보) · 분할납부회차 150 · 납부회차 150 · 납부금액 150 · 잔여금액 150). 체크 열이 없다 — 고른 한 행을 삭제
  * 열 때(open(monthModel) L69): 구분 = 건강보험, 기준년도 = 급여 지급일의 전년도, 그 뒤 바로 조회
+ *   open(insurePayModel) L64 (S27 4대보험 정산내역의 [납부상세]): 구분·기준년도를 그 정산 행에서
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';
@@ -23,8 +24,8 @@ const gb = gbFor<PayInsurePay>();
 const SINGLE_SELECTION = { mode: 'singleRow', checkboxes: false, enableClickSelection: true } as const;
 
 interface Props {
-  /** open(monthModel) — 급여의 사원과 지급일. null이면 닫힘 */
-  target: { personId: number; payDate: string } | null;
+  /** open(monthModel) — 급여의 사원과 지급일(`payDate`). open(insurePayModel)(S27) — 정산 행의 사원·기준년도(`year`)·구분 이름(`insureName`). null이면 닫힘 */
+  target: { personId: number; payDate?: string; year?: string; insureName?: string } | null;
   onClose: () => void;
 }
 
@@ -60,10 +61,11 @@ export const Pay32_Lookup_Detail: React.FC<Props> = ({ target, onClose }) => {
   // [E1] insureName callbackOnCreate (L88): 구분 = 건강보험, 기준년도 = 지급일의 전년도, retrieve()
   useEffect(() => {
     if (!target) return;
-    const y = String(Number(target.payDate.slice(0, 4)) - 1);
+    // open(Pay32_InsurePayModel) L97-99: 구분·기준년도를 정산 행에서 / open(Pay10_MonthModel) L92-95: 건강보험, 지급일의 전년도
+    const y = target.year ?? String(Number((target.payDate ?? '').slice(0, 4)) - 1);
     setYear(y);
     sysApi.searchCodesByKindGroup('InsureCode003').then(list => {
-      const code = list.find(c => c.name === '건강보험')?.code;
+      const code = list.find(c => c.name === (target.insureName ?? '건강보험'))?.code;
       queryRef.current = { year: y, insureCode: code };
       setInsureCode(code);
       void retrieve();

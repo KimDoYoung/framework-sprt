@@ -36,6 +36,40 @@
          ORDER BY pay32_date, COALESCE(pay32_cnt, 0)
     </select>
 
+    <!-- AS-IS(IDMS-IC) pay32_insure_pay.selectByCompanyId L37 (S27) — 사원·연도·보험별 가장 최근 일자(같으면 납부회차 큰 것) 한 행. 정렬 없음(원본 그대로) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayInsurePayRes">
+        SELECT t.pay32_insure_pay_id                                                     AS insure_pay_id,
+               t.pay32_company_id                                                        AS company_id,
+               t.pay32_person_id                                                         AS person_id,
+               t.pay32_year                                                              AS year,
+               t.pay32_insure_cd                                                         AS insure_cd,
+               t.pay32_tgt_amt                                                           AS tgt_amt,
+               t.pay32_pay_cd                                                            AS pay_cd,
+               t.pay32_pay_div                                                           AS pay_div,
+               t.pay32_date                                                              AS date,
+               t.pay32_cnt                                                               AS cnt,
+               t.pay32_amt                                                               AS amt,
+               t.pay32_rem_amt                                                           AS rem_amt,
+               emp01_emp_no                                                              AS person_no,
+               emp01_kor_nm                                                              AS person_nm,
+               f_cdnm('InsureCode', pay32_insure_cd, pay32_company_id, f_sysdate())      AS insure_nm,
+               f_cdnm('DivPayCode', pay32_pay_cd, pay32_company_id, f_sysdate())         AS pay_nm
+          FROM (
+                   SELECT *,
+                          ROW_NUMBER() OVER (PARTITION BY pay32_person_id, pay32_year, pay32_insure_cd
+                                             ORDER BY pay32_date DESC, COALESCE(pay32_cnt, 0) DESC) AS rn
+                     FROM pay32_insure_pay
+               ) t
+               INNER JOIN emp01_person ON emp01_person_id = pay32_person_id
+         WHERE rn = 1
+           AND pay32_company_id = #{companyId}
+           AND pay32_year LIKE #{year}
+           AND pay32_insure_cd LIKE #{insureCode}
+        <if test="personId != null">
+           AND pay32_person_id = #{personId}
+        </if>
+    </select>
+
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayInsurePayRes">
         SELECT <include refid="insurePayColumns"/>
           FROM pay32_insure_pay

@@ -646,6 +646,12 @@ export const payApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS pay.Pay32_InsurePay.selectByCompanyId (S27) — 사원·연도·보험별 가장 최근 정산 한 행. personId가 없으면 회사 전체, year·insureCode가 비면 전체 */
+  searchInsurePaysByCompany: async (params: { personId?: number | null; insureCode?: string; year?: string }): Promise<PayInsurePay[]> => {
+    const res = await apiClient.get<ApiResponse<PayInsurePay[]>>('v1/pay/insure-pays/company', { params: { ...params, personId: params.personId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS pay.Pay32_InsurePay.update → 저장된 행(요청 순서). id가 0 이하면 새 행 */
   saveInsurePays: async (rows: PayInsurePay[]): Promise<PayInsurePay[]> => {
     const body = rows.map(({ insurePayId, personId, year, insureCd, tgtAmt, payCd, payDiv, date, cnt, amt, remAmt }) => ({ insurePayId: insurePayId > 0 ? insurePayId : null, personId, year, insureCd, tgtAmt, payCd, payDiv, date, cnt, amt, remAmt }));

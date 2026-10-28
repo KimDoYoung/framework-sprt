@@ -9274,5 +9274,34 @@
     "note": "docs/work/S/S26-작업기록.md",
     "history": [],
     "id": "S26"
+  },
+  "Pay32_Tab_InsurePay": {
+    "commit": "9aa7dd18b83a3b218bc74edbd97fa9e25b5f920e",
+    "commit_short": "9aa7dd1",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/pay/Pay32_Lookup_Detail.java": "e9e13217b80fa2134053535af213735129b05991",
+      "application/src/main/java/myApp/client/vi/pay/Pay32_Tab_InsurePay.java": "1d0edbfa81022b79ac2fdf72018e4834b2070bdf",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay10_MonthModel.java": "7530a8ff372de12a0356be0532f0a56d55e4aad2",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay32_InsurePayModel.java": "292ba4fc3d7765da9be59438ca77a9d917eeb65d",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay32_InsurePayModelProperties.java": "00840c26afa2c9867974c89e916365f20b58f5fa",
+      "application/src/main/java/myApp/server/emp/Emp00_TransInfo.java": "df97d7f0f13eb8c414b2ce628d93cc02138f6963",
+      "application/src/main/java/myApp/server/emp/mapper/emp00_trans_info.xml": "76c324eda8ede6658a765beeaaebf929930afd47",
+      "application/src/main/java/myApp/server/pay/Pay32_InsurePay.java": "3809cfd403869d091994003f53c56cdc372ba383",
+      "application/src/main/java/myApp/server/pay/mapper/pay32_insure_pay.xml": "23b5b65e448bf55433feaa65739f277f2bba770d",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-28T19:43:12+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/S/S27-작업기록.md",
+    "history": [],
+    "id": "S27"
   }
 }

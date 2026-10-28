@@ -151,6 +151,7 @@ import { Pay40_Tab_TaxWithholding } from './pay/Pay40_Tab_TaxWithholding';
 import { Pay08_Tab_TaxWithholding } from './pay/Pay08_Tab_TaxWithholding';
 import { Pay08_Tab_TaxWithholdingAdmin } from './pay/Pay08_Tab_TaxWithholdingAdmin';
 import { Pay31_Tab_InsureApply } from './pay/Pay31_Tab_InsureApply';
+import { Pay32_Tab_InsurePay } from './pay/Pay32_Tab_InsurePay';
 import { Pay10_Tab_Month } from './pay/Pay10_Tab_Month';
 import { Pay10_Tab_MonthItem } from './pay/Pay10_Tab_MonthItem';
 import { Pay10_Tab_MonthSearch } from './pay/Pay10_Tab_MonthSearch';
@@ -468,6 +469,7 @@ export const SCREENS: Record<string, React.FC> = {
   Pay10_Tab_Month, // S16 1단계 (임금계산방법 Pay04_Lookup_Formula는 다음 단계 — 안내만. + Pay11_TabPage_MonthItem·팝업 6개·Emp01_Lookup_TransDate)
   Pay08_Tab_TaxWithholding, // S24
   Pay08_Tab_TaxWithholdingAdmin, // S25
+  Pay32_Tab_InsurePay, // S27 (4대보험 정산내역 — Pay32_Lookup_Detail은 S16 부품, 정산 행에서 열 때 구분·기준년도를 행에서)
   Pay31_Tab_InsureApply, // S26 (4대보험신고(EDI) — 탭 4개 Pay31_TabPage_InsureApply1~4 + Pay31_Lookup_Insert1~3)
   Pay40_Tab_TaxWithholding, // S23 1단계 (결재요청 아이콘의 결재문서 작성·상세보기 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계)
   Pay01_Tab_AnnualPerson, // S15 1단계 (상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계)
