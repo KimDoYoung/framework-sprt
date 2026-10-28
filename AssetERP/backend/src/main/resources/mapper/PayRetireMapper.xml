@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/pay/mapper/pay10_month.xml(selectByPersonId·getRetireInfo·selectByRetirePayCode), pay11_month_item.xml(getLeavePayRetire·updateItemAmt),
+     pay12_retire_insure.xml, pay13_retire_tax.xml, pay14_retire_tax_item.xml, pay15_retire_leave.xml, pay05_relate_appr.xml(deleteRetireId)  (S22) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayRetireMapper">
+
+    <select id="selectMonthByPerson" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRetireMonthRes">
+        SELECT pay10_month_id   AS month_id,
+               pay10_company_id AS company_id,
+               pay10_pay_cd     AS pay_cd,
+               pay10_date       AS date,
+               pay10_person_id  AS person_id,
+               CAST(NULLIF(f_get_emptrans(pay10_person_id, NULL, 'retire_date'), '') AS DATE) AS retire_date
+          FROM pay10_month
+         WHERE pay10_company_id = #{companyId}
+           AND pay10_person_id  = #{personId}
+           AND pay10_pay_cd     = '03'
+    </select>
+
+    <select id="countRetireItems" resultType="long">
+        SELECT COUNT(*)
+          FROM pay10_month
+               INNER JOIN pay11_month_item ON pay10_month_id = pay11_month_id
+               INNER JOIN pay20_item ON pay11_item_cd = pay20_item_cd
+         WHERE pay10_person_id = #{personId}
+           AND pay10_pay_cd    = '03'
+           AND pay11_item_type = #{itemType}
+    </select>
+
+    <select id="callLeavePayRetire" resultType="string">
+        SELECT f_calc_leave_pay_retire(#{personId}, #{gubun})
+    </select>
+
+    <select id="callInsureRetire" resultType="string">
+        SELECT f_calc_4insure_retire(#{personId}, #{checkYn}, #{gubun})
+    </select>
+
+    <select id="callIncomeTaxRetire" resultType="string">
+        SELECT f_calc_income_tax_retire(#{personId}, #{checkYn}, #{menuNum})
+    </select>
+
+    <select id="callIncomeTaxRetireC" resultType="string">
+        SELECT f_calc_income_tax_retire_c(#{personId}, #{menuNum})
+    </select>
+
+    <delete id="deleteRelateApprRetire">
+        DELETE
+          FROM pay05_relate_appr
+         WHERE pay05_company_id = #{companyId}
+           AND pay05_start_date = #{startDate}
+           AND pay05_pay_cd     = #{payCode}
+           AND pay05_retire_id  = #{retireId}
+    </delete>
+
+    <sql id="insureCols">
+        pay12_retire_insure_id AS retire_insure_id,
+        pay12_month_id         AS month_id,
+        pay12_insure_cd        AS insure_code,
+        pay12_year             AS year,
+        pay12_apply_term       AS apply_term,
+        pay12_work_month_cnt   AS work_month_cnt,
+        pay12_pay_month_cnt    AS pay_month_cnt,
+        pay12_total_pay        AS total_pay,
+        pay12_month_pay        AS month_pay,
+        pay12_insure_rate      AS insure_rate,
+        pay12_month_amt        AS month_amt,
+        pay12_fix_amt          AS fix_amt,
+        pay12_pay_amt          AS pay_amt,
+        pay12_unpay_amt        AS unpay_amt,
+        pay12_settle_amt       AS settle_amt
+    </sql>
+
+    <select id="selectInsures" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRetireInsureRes">
+        SELECT <include refid="insureCols"/>
+          FROM pay12_retire_insure
+               INNER JOIN pay10_month ON pay12_month_id = pay10_month_id
+         WHERE pay10_pay_cd    = '03'
+           AND pay10_person_id = #{personId}
+           AND pay12_insure_cd = #{insureCode}
+         ORDER BY pay12_apply_term
+    </select>
+
+    <select id="selectInsuresByYear" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRetireInsureRes">
+        SELECT <include refid="insureCols"/>
+          FROM pay12_retire_insure
+         WHERE pay12_month_id  = #{monthId}
+           AND pay12_insure_cd = #{insureCode}
+           AND pay12_year      = #{year}
+    </select>
+
+    <update id="upsertInsure">
+        WITH upsert AS
+        (
+            UPDATE pay12_retire_insure
+               SET pay12_month_id       = #{monthId},
+                   pay12_insure_cd      = #{insureCode},
+                   pay12_year           = #{year},
+                   pay12_apply_term     = #{applyTerm},
+                   pay12_work_month_cnt = #{workMonthCnt},
+                   pay12_pay_month_cnt  = #{payMonthCnt},
+                   pay12_total_pay      = #{totalPay},
+                   pay12_month_pay      = #{monthPay},
+                   pay12_insure_rate    = #{insureRate},
+                   pay12_month_amt      = #{monthAmt},
+                   pay12_fix_amt        = #{fixAmt},
+                   pay12_pay_amt        = #{payAmt},
+                   pay12_unpay_amt      = #{unpayAmt},
+                   pay12_settle_amt     = #{settleAmt}
+             WHERE pay12_retire_insure_id = #{retireInsureId}
+         RETURNING *
+        )
+        INSERT INTO pay12_retire_insure
+             ( pay12_retire_insure_id, pay12_month_id, pay12_insure_cd, pay12_year, pay12_apply_term,
+               pay12_work_month_cnt, pay12_pay_month_cnt, pay12_total_pay, pay12_month_pay, pay12_insure_rate,
+               pay12_month_amt, pay12_fix_amt, pay12_pay_amt, pay12_unpay_amt, pay12_settle_amt )
+        SELECT f_create_seq(), #{monthId}, #{insureCode}, #{year}, #{applyTerm},
+               #{workMonthCnt}, #{payMonthCnt}, #{totalPay}, #{monthPay}, #{insureRate},
+               #{monthAmt}, #{fixAmt}, #{payAmt}, #{unpayAmt}, #{settleAmt}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </update>
+
+    <delete id="deleteInsure">
+        DELETE FROM pay12_retire_insure WHERE pay12_month_id = #{monthId} AND pay12_retire_insure_id = #{retireInsureId}
+    </delete>
+
+    <update id="updateMonthItemAmt">
+        WITH upsert AS
+        (
+            UPDATE pay11_month_item
+               SET pay11_item_amt = #{itemAmt}
+             WHERE pay11_month_id = #{monthId}
+               AND pay11_item_cd  = #{itemCode}
+         RETURNING *
+        )
+        INSERT INTO pay11_month_item ( pay11_month_item_id, pay11_month_id, pay11_item_type, pay11_item_cd, pay11_item_amt )
+        SELECT f_create_seq(), #{monthId},
+               ( SELECT pay20_item_type FROM pay20_item WHERE pay20_item_cd = #{itemCode} LIMIT 1 ),
+               #{itemCode}, #{itemAmt}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </update>
+
+    <select id="countMonth" resultType="int">
+        SELECT COUNT(*) FROM pay10_month
+         WHERE pay10_company_id = #{companyId} AND pay10_month_id = #{monthId} AND pay10_pay_cd = '03'
+        <if test="personId != null">
+           AND pay10_person_id = #{personId}
+        </if>
+    </select>
+
+    <select id="countPerson" resultType="int">
+        SELECT COUNT(*) FROM emp01_person WHERE emp01_company_id = #{companyId} AND emp01_person_id = #{personId}
+    </select>
+
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{printPersonId}
+           AND sys99_window_class_nm = #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdRetireInsure L2045 — pay12_retire_insure.selectByRdPersonId(pay_cd 03) 행을 한 건씩. Long·Double 값은 null이면 0 -->
+    <insert id="insertPrintInsure">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_string03
+               , sys99_long01, sys99_long02, sys99_long03, sys99_long04, sys99_double01
+               , sys99_long05, sys99_long06, sys99_long07, sys99_long08, sys99_long09 )
+        SELECT f_create_seq(), #{companyId}, #{printPersonId}, #{windowClassName}, #{groupId}
+             , pay12_insure_cd, pay12_year, pay12_apply_term
+             , COALESCE(pay12_work_month_cnt, 0), COALESCE(pay12_pay_month_cnt, 0), COALESCE(pay12_total_pay, 0), COALESCE(pay12_month_pay, 0), COALESCE(pay12_insure_rate, 0)
+             , COALESCE(pay12_month_amt, 0), COALESCE(pay12_fix_amt, 0), COALESCE(pay12_pay_amt, 0), COALESCE(pay12_unpay_amt, 0), COALESCE(pay12_settle_amt, 0)
+          FROM pay12_retire_insure
+               INNER JOIN pay10_month ON pay12_month_id = pay10_month_id
+         WHERE pay10_pay_cd    = '03'
+           AND pay10_person_id = #{personId}
+         ORDER BY pay12_apply_term
+    </insert>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="selectTax" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRetireTaxRes">
+        SELECT pay13_retire_tax_id          AS retire_tax_id,
+               pay13_month_id               AS month_id,
+               pay13_income_deduct          AS income_deduct,
+               pay13_income_amt             AS income_amt,
+               pay13_tax_base               AS tax_base,
+               pay13_calc_tax               AS calc_tax,
+               pay13_decide_tax             AS decide_tax,
+               pay13_pre_office_pay_tax     AS pre_office_pay_tax,
+               pay13_cur_office_pay_tax     AS cur_office_pay_tax,
+               pay13_settle_tax             AS settle_tax,
+               pay13_py_income_deduct       AS py_income_deduct,
+               pay13_py_income_amt          AS py_income_amt,
+               pay13_py_tax_base            AS py_tax_base,
+               pay13_py_calc_tax            AS py_calc_tax,
+               pay13_py_decide_tax          AS py_decide_tax,
+               pay13_py_pre_office_pay_tax  AS py_pre_office_pay_tax,
+               pay13_py_cur_office_pay_tax  AS py_cur_office_pay_tax,
+               pay13_py_settle_tax          AS py_settle_tax
+          FROM pay13_retire_tax
+         WHERE pay13_month_id = #{monthId}
+    </select>
+
+    <select id="selectOfficePayTax" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRetireTaxOfficeRes">
+        SELECT pay13.*
+          FROM (
+                SELECT 1                              AS retire_tax_id,
+                       '종(전)근무지 기납부세액'           AS title_name,
+                       pay13_pre_office_pay_tax       AS office_pay_tax,
+                       pay13_py_pre_office_pay_tax    AS py_office_pay_tax
+                  FROM pay13_retire_tax
+                 WHERE pay13_month_id = #{monthId}
+                 UNION ALL
+                SELECT 2                              AS retire_tax_id,
+                       '주(현)근무지 기납부세액'           AS title_name,
+                       pay13_cur_office_pay_tax       AS office_pay_tax,
+                       pay13_py_cur_office_pay_tax    AS py_office_pay_tax
+                  FROM pay13_retire_tax
+                 WHERE pay13_month_id = #{monthId}
+          ) pay13
+    </select>
+
+    <select id="selectTaxItems" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRetireTaxItemRes">
+        SELECT pay14_retire_tax_item_id AS retire_tax_item_id,
+               pay14_month_id           AS month_id,
+               pay14_item_type          AS item_type,
+               pay14_item_nm            AS item_name,
+               pay14_item_amt           AS item_amt,
+               pay14_py_item_amt        AS py_item_amt
+          FROM pay14_retire_tax_item
+         WHERE pay14_item_type = #{itemType}
+           AND pay14_month_id  = #{monthId}
+         ORDER BY pay14_item_nm
+    </select>
+
+    <update id="upsertTaxItem">
+        WITH upsert AS
+        (
+            UPDATE pay14_retire_tax_item
+               SET pay14_month_id    = #{monthId},
+                   pay14_item_type   = #{itemType},
+                   pay14_item_nm     = #{itemName},
+                   pay14_item_amt    = #{itemAmt},
+                   pay14_py_item_amt = #{pyItemAmt}
+             WHERE pay14_retire_tax_item_id = #{retireTaxItemId}
+         RETURNING *
+        )
+        INSERT INTO pay14_retire_tax_item
+             ( pay14_retire_tax_item_id, pay14_month_id, pay14_item_type, pay14_item_nm, pay14_item_amt, pay14_py_item_amt )
+        SELECT f_create_seq(), #{monthId}, #{itemType}, #{itemName}, #{itemAmt}, #{pyItemAmt}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </update>
+
+    <delete id="deleteTaxItem">
+        DELETE FROM pay14_retire_tax_item WHERE pay14_month_id = #{monthId} AND pay14_retire_tax_item_id = #{retireTaxItemId}
+    </delete>
+
+    <update id="updateTaxAmt">
+        UPDATE pay13_retire_tax
+           SET
+        <choose>
+            <when test="menuNum == 2">pay13_income_deduct = #{itemAmt}, pay13_py_income_deduct = #{pyItemAmt}</when>
+            <when test="menuNum == 3">pay13_income_amt = #{itemAmt}, pay13_py_income_amt = #{pyItemAmt}</when>
+            <when test="menuNum == 5">pay13_tax_base = #{itemAmt}, pay13_py_tax_base = #{pyItemAmt}</when>
+            <when test="menuNum == 6">pay13_calc_tax = #{itemAmt}, pay13_py_calc_tax = #{pyItemAmt}</when>
+            <when test="menuNum == 8">pay13_decide_tax = #{itemAmt}, pay13_py_decide_tax = #{pyItemAmt}</when>
+            <when test="menuNum == 10">pay13_settle_tax = #{itemAmt}, pay13_py_settle_tax = #{pyItemAmt}</when>
+        </choose>
+         WHERE pay13_month_id = #{monthId}
+    </update>
+
+    <update id="updateOfficePayTax">
+        UPDATE pay13_retire_tax
+           SET pay13_pre_office_pay_tax    = #{preOfficePayTax},
+               pay13_py_pre_office_pay_tax = #{pyPreOfficePayTax},
+               pay13_cur_office_pay_tax    = #{curOfficePayTax},
+               pay13_py_cur_office_pay_tax = #{pyCurOfficePayTax}
+         WHERE pay13_month_id = #{monthId}
+    </update>
+
+    <select id="selectMonthDate" resultType="java.time.LocalDate">
+        SELECT pay10_date FROM pay10_month WHERE pay10_month_id = #{monthId} AND pay10_company_id = #{companyId}
+    </select>
+
+    <select id="selectRetireLeave" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRetireLeaveSummary">
+        SELECT pay15_remain_leave_days                                              AS remain_leave_days,
+               pay15_add_leave_days                                                 AS add_leave_days,
+               pay15_remain_leave_days + pay15_add_leave_days                       AS total_remain_leave_days,
+               pay15_daily_amt                                                      AS daily_amt,
+               (pay15_remain_leave_days + pay15_add_leave_days) * pay15_daily_amt   AS retire_leave_amt
+          FROM (
+                SELECT ty_remain_leave_days
+                       + CASE WHEN py_month_leave_days &lt;= py_use_leave_days THEN 0
+                              ELSE py_month_leave_days - py_use_leave_days END      AS pay15_remain_leave_days,
+                       CASE WHEN calc_std1_leave_days &lt;= calc_std2_leave_days THEN 0
+                            ELSE calc_std1_leave_days - calc_std2_leave_days END    AS pay15_add_leave_days,
+                       daily_amt                                                    AS pay15_daily_amt
+                  FROM (
+                        SELECT f_get_leave_days2(#{personId}, #{year}, '3', #{retireDate}, 'true')                               AS ty_remain_leave_days,
+                               f_get_leave_days(#{personId}, CAST(CAST(#{year} AS NUMERIC)-1 AS VARCHAR), '5', null, 'true')     AS py_month_leave_days,
+                               f_get_leave_days(#{personId}, CAST(CAST(#{year} AS NUMERIC)-1 AS VARCHAR), '2', null, 'true')     AS py_use_leave_days,
+                               COALESCE(( SELECT COALESCE(SUM(pay15_leave_days),0) FROM pay15_retire_leave
+                                           WHERE pay15_month_id = #{monthId} AND pay15_calc_std_type = '1' ),0)                  AS calc_std1_leave_days,
+                               COALESCE(( SELECT COALESCE(SUM(pay15_leave_days),0) FROM pay15_retire_leave
+                                           WHERE pay15_month_id = #{monthId} AND pay15_calc_std_type = '2' ),0)                  AS calc_std2_leave_days,
+                               TRUNC(COALESCE((SELECT pay01_annual_pay
+                                                 FROM pay01_annual
+                                                      INNER JOIN apr01_appr ON apr01_appr_id = pay01_appr_id
+                                                WHERE pay01_person_id = #{personId}
+                                                  AND pay01_start_date &lt;= #{retireDate}
+                                                  AND apr01_status_cd = '30'
+                                                ORDER BY pay01_start_date DESC
+                                                LIMIT 1),0) / 12 / 209 * 8)                                                      AS daily_amt
+                       ) t1
+               ) t2
+    </select>
+
+    <select id="selectLeaveRows" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRetireLeaveRowRes">
+        SELECT pay15_retire_leave_id                                                                 AS retire_leave_id,
+               pay15_month_id                                                                        AS month_id,
+               pay15_calc_std_type                                                                   AS calc_std_type,
+               pay15_year_cnt                                                                        AS year_cnt,
+               pay15_year_cnt || '년'                                                                 AS year_cnt_str,
+               TO_CHAR(pay15_start_date,'yyyy.mm.dd') || ' ~ ' || TO_CHAR(pay15_close_date,'yyyy.mm.dd') AS period_date_str,
+               pay15_leave_days                                                                      AS leave_days
+          FROM pay15_retire_leave
+         WHERE pay15_month_id      = #{monthId}
+           AND pay15_calc_std_type = #{calcStdType}
+         ORDER BY pay15_year_cnt
+    </select>
+
+    <select id="calcRemLeaveDays" resultType="string">
+        SELECT f_calc_rem_leave_days(#{personId}, #{retireDate})
+    </select>
+
+    <select id="selectRemLeaveDays" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRetireLeaveSummary">
+        SELECT pay16_rem_days   AS remain_leave_days,
+               pay16_add_days   AS add_leave_days,
+               pay16_final_days AS total_remain_leave_days,
+               NULL             AS daily_amt,
+               NULL             AS retire_leave_amt
+          FROM pay16_retire_rem_leave
+         WHERE pay16_person_id = #{personId}
+    </select>
+</mapper>

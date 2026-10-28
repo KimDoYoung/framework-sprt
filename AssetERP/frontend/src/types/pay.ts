@@ -362,3 +362,125 @@ export interface PayInsurePay {
   insureNm?: string;
   payNm?: string;
 }
+
+// ── 퇴직정산 Pay10_Tab_Retire (S22) ──
+
+/** 퇴직정산 급여 한 건 (pay10_month, pay_cd 03) */
+export interface PayRetireMonth {
+  monthId: number;
+  companyId: number;
+  payCd: string;
+  date: string;
+  personId: number;
+  retireDate?: string | null;
+}
+
+/** 퇴직정산 4대보험 한 행 (pay12_retire_insure) — insureCode 2 건강 · 3 장기요양 · 4 고용. 추가한 행은 임시 음수 retireInsureId */
+export interface PayRetireInsure {
+  retireInsureId: number;
+  monthId: number;
+  insureCode: string;
+  year?: string | null;
+  applyTerm?: string | null;
+  workMonthCnt?: number | null;
+  payMonthCnt?: number | null;
+  totalPay?: number | null;
+  monthPay?: number | null;
+  insureRate?: number | null;
+  monthAmt?: number | null;
+  fixAmt?: number | null;
+  payAmt?: number | null;
+  unpayAmt?: number | null;
+  settleAmt?: number | null;
+}
+
+/** 퇴직정산 소득세 (pay13_retire_tax) — 당해년도 / 전년도(py) */
+export interface PayRetireTax {
+  retireTaxId: number;
+  monthId: number;
+  incomeDeduct?: number | null;
+  incomeAmt?: number | null;
+  taxBase?: number | null;
+  calcTax?: number | null;
+  decideTax?: number | null;
+  preOfficePayTax?: number | null;
+  curOfficePayTax?: number | null;
+  settleTax?: number | null;
+  pyIncomeDeduct?: number | null;
+  pyIncomeAmt?: number | null;
+  pyTaxBase?: number | null;
+  pyCalcTax?: number | null;
+  pyDecideTax?: number | null;
+  pyPreOfficePayTax?: number | null;
+  pyCurOfficePayTax?: number | null;
+  pySettleTax?: number | null;
+}
+
+/** 퇴직정산 소득세 항목 (pay14_retire_tax_item) — itemType 1 총소득액 · 3 종합소득공제 · 4 세액공제 */
+export interface PayRetireTaxItem {
+  retireTaxItemId: number;
+  monthId: number;
+  itemType: string;
+  itemName: string;
+  itemAmt?: number | null;
+  pyItemAmt?: number | null;
+}
+
+/** 9. 기납부세액 그리드 행 — retireTaxId 1 종(전)근무지 · 2 주(현)근무지 */
+export interface PayRetireTaxOffice {
+  retireTaxId: number;
+  titleName: string;
+  officePayTax?: number | null;
+  pyOfficePayTax?: number | null;
+}
+
+export interface PayRetireTaxDetail {
+  tax: PayRetireTax | null;
+  incomes: PayRetireTaxItem[];
+  deducts: PayRetireTaxItem[];
+  credits: PayRetireTaxItem[];
+  offices: PayRetireTaxOffice[];
+}
+
+/** pay15_retire_leave 한 행 */
+export interface PayRetireLeaveRow {
+  retireLeaveId: number;
+  monthId: number;
+  calcStdType: string;
+  yearCnt?: number | null;
+  yearCntStr?: string | null;
+  periodDateStr?: string | null;
+  leaveDays?: number | null;
+}
+
+/** 연차수당 탭 — 계산값 + 입사일기준(entry)/회계일기준(fiscal) */
+export interface PayRetireLeave {
+  remainLeaveDays?: number | null;
+  addLeaveDays?: number | null;
+  totalRemainLeaveDays?: number | null;
+  dailyAmt?: number | null;
+  retireLeaveAmt?: number | null;
+  entry: PayRetireLeaveRow[];
+  fiscal: PayRetireLeaveRow[];
+}
+
+/** 잔여휴가 팝업 [계산] 결과 */
+export interface PayRetireLeaveCalc {
+  remainLeaveDays?: number | null;
+  addLeaveDays?: number | null;
+  totalRemainLeaveDays?: number | null;
+  entry: PayRetireLeaveRow[];
+  fiscal: PayRetireLeaveRow[];
+}
+
+/** 소득세 탭 [근로소득공제표] 창 — 공제한도(dataCode 1) + 공제표(dataCode 2) */
+export interface PayRetireDeduct {
+  limitAmt: number;
+  rows: PayDeductTable[];
+}
+
+/** 소득세 탭 [산출기준] 창 — 세액공제 + 세액공제 한도 */
+export interface PayRetireTaxDeduct {
+  deducts: PayTaxDeduct[];
+  limits: PayTaxDeductLimit[];
+}

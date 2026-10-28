@@ -17,4 +17,19 @@
            AND pay05_pay_cd     = #{payCode}
            AND pay05_start_date = #{payDate}
     </select>
+
+    <!-- AS-IS pay05_relate_appr.selectByRetire (IDMS-IC)  (S22) — payCode '03', startDate는 퇴직정산 급여(pay10_month)의 지급일자 -->
+    <select id="selectByRetire" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRelateApprRes">
+        SELECT pay05_relate_appr_id                                                                      AS relate_appr_id,
+               pay05_appr_id                                                                             AS appr_id,
+               b.apr01_status_cd                                                                         AS status_code,
+               f_cdnm('AprStatusCode', b.apr01_status_cd, pay05_company_id, b.apr01_reg_date)            AS status_name
+          FROM pay05_relate_appr
+               LEFT OUTER JOIN apr01_appr b ON pay05_appr_id = apr01_appr_id
+         WHERE pay05_company_id = #{companyId}
+           AND pay05_pay_cd     = '03'
+           AND pay05_retire_id  = #{monthId}
+           AND pay05_start_date = ( SELECT pay10_date FROM pay10_month
+                                     WHERE pay10_month_id = #{monthId} AND pay10_company_id = #{companyId} AND pay10_pay_cd = '03' )
+    </select>
 </mapper>

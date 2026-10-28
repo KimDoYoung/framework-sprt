@@ -13,4 +13,7 @@ public interface PayRelateApprMapper {
     /** AS-IS selectByCompanyId */
     List<PayRelateApprRes> selectByCompanyId(@Param("companyId") Long companyId, @Param("payCode") String payCode,
                                              @Param("payDate") LocalDate payDate);
+
+    /** AS-IS selectByRetire (S22) — 퇴직정산서(monthId)의 상신 상태 */
+    List<PayRelateApprRes> selectByRetire(@Param("companyId") Long companyId, @Param("monthId") Long monthId);
 }

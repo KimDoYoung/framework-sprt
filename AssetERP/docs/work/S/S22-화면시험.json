@@ -1,0 +1,10 @@
+{
+  "id": "S22",
+  "menu": ["경영관리", "퇴직정산"],
+  "api": ["emp/trans-infos/retired", "pay/retires/month", "pay/retires/rd-count", "pay/retire-insures", "pay/retire-taxes", "pay/retire-leaves", "pay/retire-tables", "pay/relate-apprs/retire", "rd/urls"],
+  "opens": {
+    "buttons": "조회,생성,삭제,문서분류지정",
+    "tabs": "퇴직정산서,4대보험 정산,소득세 정산,연차수당 정산"
+  },
+  "notes": "열 때 조회하지 않는다. 사원 없이 [생성]·[삭제]·잔여연차 미리보기 = '사원을 선택하여 주십시오.'. 성명 돋보기 = 퇴직 사원 조회창(재직구분 '퇴직'으로 열림). kfstest 회사에서 퇴직정산서가 있는 사원: 박동진 계열 29049(4대보험 6행·소득세 항목 4·퇴직일 없음)·202307181559603(연차 4행·퇴직일 2023-07-31, 성명은 DB로 확인). 쓰기는 시험하지 않는다 — [생성]·[삭제]는 DB 함수(f_calc_*_retire)가 실제 급여 자료를 만들고 지우므로 확인창까지만 보고 취소한다. 4대보험 [저장]·소득세 [저장]은 같은 값이라도 pay11 항목·재계산을 건드리므로 시험하지 않는다. 잔여연차 미리보기 [계산]은 pay16·pay15 임시 자료를 쓰므로 시험 사원(202307181559603)으로만 한다. RD 리포트(Pay10_Rd_Retire·Pay12_Rd_RetireInsure·Pay13_Rd_RetireTax)는 RD 시뮬레이터 필요."
+}

@@ -28,4 +28,10 @@ public class PayRelateApprController {
                                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate payDate) {
         return ApiResponse.ok(service.current(principal, payCode, payDate));
     }
+
+    /** pay.Pay05_RelateAppr.selectByRetire — 퇴직정산서의 상신 상태(S22), 없으면 data null */
+    @GetMapping("/retire")
+    public ApiResponse<PayRelateApprRes> retire(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long monthId) {
+        return ApiResponse.ok(service.retire(principal, monthId));
+    }
 }

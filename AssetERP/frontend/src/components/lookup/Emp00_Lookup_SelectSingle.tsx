@@ -41,6 +41,8 @@ interface Props {
   transDate: string;
   /** open(…, searchText, …): 검색칸에 미리 넣고 그 글자로 조회한다(S13 — 입력칸에 이름을 치고 Enter했을 때). 없으면 빈 칸 */
   searchText?: string;
+  /** open(transDate, searchText, isRetire, callback) L64 (S22): true면 재직구분 콤보를 "퇴직"으로 열고 그 구분으로 조회한다. 기본 false("재직") */
+  retire?: boolean;
   /** 널 단추 문구. 기본 '전체'(AS-IS openAll), openNull은 '선택안함'(nullButton.setReText), null이면 단추 없음(callback만 있는 open) */
   noneLabel?: string | null;
   /** callback.execute(result): 확인이면 고른 사원, [전체]·[선택안함]이면 null */
@@ -49,10 +51,11 @@ interface Props {
   onClose: () => void;
 }
 
-export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, separateAddTitle = false, noneLabel = '전체', searchText = '', transDate, onResult, onClose }) => {
+export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, separateAddTitle = false, retire = false, noneLabel = '전체', searchText = '', transDate, onResult, onClose }) => {
   const gridRef = useRef<AgGridReact<TransInfo>>(null);
   // L233-244: transName setText("재직"). 처음 값은 열 때마다 받은 transDate라 초기화는 openValues로 한다
-  const openValues = useMemo(() => ({ baseDate: transDate, findText: searchText, transName: '재직' }), [transDate, searchText]);
+  const openTransName = retire ? '퇴직' : '재직';
+  const openValues = useMemo(() => ({ baseDate: transDate, findText: searchText, transName: openTransName }), [transDate, searchText, openTransName]);
   const sp = useSearchParams(() => openValues);
   const { baseDate, findText, transName } = sp.values;
   const [rows, setRows] = useState<TransInfo[]>([]);
@@ -78,9 +81,9 @@ export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, se
     if (!open) return;
     sp.setValues(openValues);
     setRows([]);
-    retrieve(transDate, searchText, '재직');
+    retrieve(transDate, searchText, openTransName);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, transDate, searchText, retrieve]);
+  }, [open, transDate, searchText, openTransName, retrieve]);
 
   // [E6] oKButton[확인].Select (L202) / [E10] grid.CellDoubleClick (L268) → confirm() L353-365
   const confirm = () => {

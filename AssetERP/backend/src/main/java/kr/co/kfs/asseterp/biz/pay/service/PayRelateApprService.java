@@ -23,4 +23,10 @@ public class PayRelateApprService {
         List<PayRelateApprRes> list = mapper.selectByCompanyId(user.getCompanyId(), payCode, payDate);
         return list.size() == 1 ? list.get(0) : null;
     }
+
+    /** AS-IS Pay10_TabPage_Retire.retrieveApprStep → pay05_relate_appr.selectByRetire — 한 건일 때만 상신 상태, 아니면 null(미상신) */
+    public PayRelateApprRes retire(UserPrincipal user, Long monthId) {
+        List<PayRelateApprRes> list = mapper.selectByRetire(user.getCompanyId(), monthId);
+        return list.size() == 1 ? list.get(0) : null;
+    }
 }

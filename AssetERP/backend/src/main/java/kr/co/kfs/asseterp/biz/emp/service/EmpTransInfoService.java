@@ -42,6 +42,13 @@ public class EmpTransInfoService {
                 new TransInfoSearchParam(user.getCompanyId(), date, like, transCode == null ? "000" : transCode, separateAddTitle, null, null));
     }
 
+    /** AS-IS Emp00_TransInfo.selectRetireEmpList L587 (S22 퇴직정산 성명): 기준일 최신 발령이 퇴직(900)인 사원 */
+    public List<TransInfoRes> searchRetireTransInfos(UserPrincipal user, LocalDate transDate, String searchText) {
+        String date = (transDate == null ? LocalDate.now() : transDate).toString();
+        String like = "%" + (searchText == null ? "" : searchText) + "%";
+        return empTransInfoMapper.searchRetireTransInfos(new TransInfoSearchParam(user.getCompanyId(), date, like, "900", true, null, null));
+    }
+
     /**
      * 사원찾기(Emp00_Lookup_SelectMulti.open(companyId, date, cb))가 고른 회사의 사원을 찾을 때 (A15-4):
      * AS-IS selectByText에 companyId를 직접 준다(sys admin만). isSeparateAddTitle은 true(SQL 반영).

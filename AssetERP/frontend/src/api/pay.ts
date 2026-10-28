@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxDeductLimit, PayWorkTime } from '../types/pay';
+import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxDeductLimit, PayWorkTime } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -657,5 +657,117 @@ export const payApi = {
   deleteInsurePays: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/pay/insure-pays', { data: ids });
     return res.data.data ?? 0;
+  },
+
+  // ── 퇴직정산 Pay10_Tab_Retire (S22) ──
+
+  /** AS-IS pay.Pay10_Month.selectByPersonId(payCode 03) + getRetireInfo의 퇴직일 — 퇴직정산서가 없으면 null */
+  getRetireMonth: async (personId: number): Promise<PayRetireMonth | null> => {
+    const res = await apiClient.get<ApiResponse<PayRetireMonth | null>>('v1/pay/retires/month', { params: { personId } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS pay.Pay10_Month.selectByRetirePayCode(지급 1·공제 2) 행 수 중 큰 값 — RD 폼 num */
+  retireRdCount: async (personId: number): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/pay/retires/rd-count', { params: { personId } });
+    return res.data.data ?? 1;
+  },
+
+  /** AS-IS pay.Pay12_RetireInsure.getInsureRetire(insert) — Pay12_Lookup_RetireCreate [생성] */
+  createRetire: async (personId: number, insureCheckYn: boolean, taxCheckYn: boolean): Promise<void> => {
+    await apiClient.post('v1/pay/retires', { personId, insureCheckYn, taxCheckYn });
+  },
+
+  /** AS-IS getInsureRetire(C) — [삭제]. 퇴직정산서가 없으면 false */
+  deleteRetire: async (personId: number): Promise<boolean> => {
+    const res = await apiClient.delete<ApiResponse<boolean>>('v1/pay/retires', { params: { personId } });
+    return res.data.data ?? false;
+  },
+
+  /** AS-IS pay.Pay12_RetireInsure.selectByPersonId */
+  searchRetireInsures: async (personId: number, insureCode: string): Promise<PayRetireInsure[]> => {
+    const res = await apiClient.get<ApiResponse<PayRetireInsure[]>>('v1/pay/retire-insures', { params: { personId, insureCode } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay12_RetireInsure.insertRetireInfo — 행 저장(음수 id는 새 행)·삭제 */
+  saveRetireInsures: async (monthId: number, insureCode: string, year: string, updates: PayRetireInsure[], deleteIds: number[]): Promise<void> => {
+    const rows = updates.map((r) => ({ ...r, retireInsureId: r.retireInsureId > 0 ? r.retireInsureId : null }));
+    await apiClient.put('v1/pay/retire-insures', { monthId, insureCode, year, updates: rows, deleteIds });
+  },
+
+  /** AS-IS pay.Pay12_RetireInsure.callInsureRetire — [4대보험 정산 재생성] */
+  regenerateRetireInsures: async (personId: number): Promise<void> => {
+    await apiClient.post('v1/pay/retire-insures/regenerate', null, { params: { personId } });
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdRetireInsure → rdGroupId */
+  rdPrintRetireInsures: async (personId: number): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/pay/retire-insures/rd-print', null, { params: { personId } });
+    return res.data.data ?? '';
+  },
+
+  /** AS-IS pay.Pay14_RetireTaxItem.selectByMonthId ×3 + pay.Pay13_RetireTax.getOfficePayTax·selectByMonthId */
+  getRetireTax: async (monthId: number): Promise<PayRetireTaxDetail> => {
+    const res = await apiClient.get<ApiResponse<PayRetireTaxDetail>>(`v1/pay/retire-taxes/${monthId}`);
+    return res.data.data as PayRetireTaxDetail;
+  },
+
+  /** AS-IS pay.Pay14_RetireTaxItem.insertRetireTaxItem — menuNum 1·4·7 */
+  saveRetireTaxItems: async (personId: number, monthId: number, menuNum: number, updates: PayRetireTaxItem[], deleteIds: number[]): Promise<void> => {
+    const rows = updates.map((r) => ({ ...r, retireTaxItemId: r.retireTaxItemId > 0 ? r.retireTaxItemId : null }));
+    await apiClient.put('v1/pay/retire-taxes/items', { personId, monthId, menuNum, updates: rows, deleteIds });
+  },
+
+  /** AS-IS pay.Pay13_RetireTax.insertRetireTax — menuNum 2·3·5·6·8·10 */
+  saveRetireTaxAmount: async (personId: number, monthId: number, menuNum: number, itemAmt: number | null, pyItemAmt: number | null): Promise<void> => {
+    await apiClient.put('v1/pay/retire-taxes/amounts', { personId, monthId, menuNum, itemAmt, pyItemAmt });
+  },
+
+  /** AS-IS pay.Pay13_RetireTax.insertOfficePayTax — 9. 기납부세액 */
+  saveRetireOfficePayTax: async (personId: number, monthId: number, v: { preOfficePayTax: number | null; pyPreOfficePayTax: number | null; curOfficePayTax: number | null; pyCurOfficePayTax: number | null }): Promise<void> => {
+    await apiClient.put('v1/pay/retire-taxes/office', { personId, monthId, ...v });
+  },
+
+  /** AS-IS pay.Pay10_Month.getRetireInfo → pay.Pay15_RetireLeave.getRetireLeave·selectByMonthId — 퇴직정산서가 없으면 null */
+  getRetireLeave: async (personId: number): Promise<PayRetireLeave | null> => {
+    const res = await apiClient.get<ApiResponse<PayRetireLeave | null>>('v1/pay/retire-leaves', { params: { personId } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS pay.Pay15_RetireLeave.calcRetireLeaveDays → selectRemLeaveDays → selectByMonthId(monthId=사원ID) */
+  calcRetireLeave: async (personId: number, retireDate: string): Promise<PayRetireLeaveCalc> => {
+    const res = await apiClient.post<ApiResponse<PayRetireLeaveCalc>>('v1/pay/retire-leaves/calc', null, { params: { personId, retireDate } });
+    return res.data.data as PayRetireLeaveCalc;
+  },
+
+  /** AS-IS pay.Pay05_RelateAppr.selectByRetire — 퇴직정산서의 상신 상태. 없으면 null(미상신) */
+  getRetireRelateAppr: async (monthId: number): Promise<PayRelateAppr | null> => {
+    const res = await apiClient.get<ApiResponse<PayRelateAppr | null>>('v1/pay/relate-apprs/retire', { params: { monthId } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS pay.Pay24_DeductTable.selectByMonthId — Pay24_Lookup_DeductTable */
+  getRetireDeductTable: async (monthId: number): Promise<PayRetireDeduct> => {
+    const res = await apiClient.get<ApiResponse<PayRetireDeduct>>('v1/pay/retire-tables/deduct', { params: { monthId } });
+    return res.data.data as PayRetireDeduct;
+  },
+
+  /** AS-IS pay.Pay25_PersonDeduct.selectByMonthId — Pay25_Lookup_PersonDeduct */
+  getRetirePersonDeducts: async (monthId: number): Promise<PayPersonDeduct[]> => {
+    const res = await apiClient.get<ApiResponse<PayPersonDeduct[]>>('v1/pay/retire-tables/person-deduct', { params: { monthId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay26_TaxCalcTable.selectByMonthId — Pay26_Lookup_TaxCalcTable */
+  getRetireTaxCalcs: async (monthId: number): Promise<PayTaxCalc[]> => {
+    const res = await apiClient.get<ApiResponse<PayTaxCalc[]>>('v1/pay/retire-tables/tax-calc', { params: { monthId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay27_TaxDeductTable·Pay28_TaxDeductLimit.selectByMonthId — Pay27_Lookup_TaxDeductTable */
+  getRetireTaxDeduct: async (monthId: number): Promise<PayRetireTaxDeduct> => {
+    const res = await apiClient.get<ApiResponse<PayRetireTaxDeduct>>('v1/pay/retire-tables/tax-deduct', { params: { monthId } });
+    return res.data.data as PayRetireTaxDeduct;
   },
 };

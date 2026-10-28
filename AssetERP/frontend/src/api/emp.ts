@@ -38,6 +38,12 @@ export const empApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS emp.Emp00_TransInfo.selectRetireEmpList — 퇴직(900) 발령 사원 (S22 퇴직정산 성명 입력) */
+  searchRetireTransInfos: async (transDate: string | undefined, searchText: string): Promise<TransInfo[]> => {
+    const res = await apiClient.get<ApiResponse<TransInfo[]>>('v1/emp/trans-infos/retired', { params: { transDate, searchText } });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS emp.Emp00_TransInfo.selectByText — 고른 회사의 사원 (Emp00_Lookup_SelectMulti.open(companyId, …), sys admin만) */
   searchCompanyTransInfos: async (companyId: number, transDate: string | undefined, searchText: string, transCode: string): Promise<TransInfo[]> => {
     const res = await apiClient.get<ApiResponse<TransInfo[]>>(`v1/emp/companies/${companyId}/trans-infos`, { params: { transDate, searchText, transCode } });

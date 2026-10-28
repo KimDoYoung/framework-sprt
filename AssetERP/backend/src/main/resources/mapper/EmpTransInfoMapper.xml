@@ -147,6 +147,24 @@
         </choose>
     </select>
 
+    <!-- AS-IS emp00_trans_info.selectRetireEmpList L587(서버)/SQL (IDMS-IC) — 퇴직(900) 발령 사원 (S22 퇴직정산 성명 입력).
+         조건: 기준일 최신 발령이 퇴직(900), 검색어는 성명·조직·사번, 조직 이력은 발령일 기준, 정렬은 발령일 내림차순. 겸직 제외 조건 없음 -->
+    <select id="searchRetireTransInfos" resultType="kr.co.kfs.asseterp.biz.emp.dto.TransInfoRes">
+        <include refid="emp00With"/>
+        SELECT <include refid="transInfoColumns"/>
+          FROM emp00 trans
+               INNER JOIN emp01_person         ON emp00_person_id = emp01_person_id
+               INNER JOIN org00                ON emp00_org_code_id = org00_org_code_id
+               LEFT OUTER JOIN emp02_others    ON emp00_person_id = emp02_person_id
+         WHERE emp00_trans_cd = '900'
+           AND (emp01_kor_nm||org00_kor_nm||emp01_emp_no) LIKE #{searchText}
+           AND org00_mod_date = ( SELECT max(org00_mod_date)
+                                    FROM org00
+                                   WHERE org00_org_code_id = emp00_org_code_id
+                                     AND org00_mod_date <![CDATA[ <= ]]> emp00_trans_date )
+         ORDER BY emp00_trans_date DESC
+    </select>
+
     <!-- AS-IS emp00_trans_info.selectByAllOrgCodeId L978 (IDMS-IC) — common.emp00_trans_info + org00_org_info + orgCodeDown(조직+하위 조직).
          기준일 최신 발령(900은 기준일 미만) 사원 중 기준일에 재직(close_date ≥ 기준일)·겸직 기간 밖이 아닌 사람. SELECT 목록은 그리드 열만 -->
     <select id="selectOrgPersons" resultType="kr.co.kfs.asseterp.biz.emp.dto.OrgPersonRes">

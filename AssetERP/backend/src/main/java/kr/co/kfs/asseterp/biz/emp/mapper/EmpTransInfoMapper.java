@@ -18,6 +18,9 @@ public interface EmpTransInfoMapper {
     /** AS-IS selectByText */
     List<TransInfoRes> searchTransInfos(TransInfoSearchParam param);
 
+    /** AS-IS selectRetireEmpList — 퇴직(900) 발령 사원 (S22) */
+    List<TransInfoRes> searchRetireTransInfos(TransInfoSearchParam param);
+
     /** AS-IS selectById (transId) */
     TransInfoRes selectTransInfo(TransInfoSearchParam param);
 

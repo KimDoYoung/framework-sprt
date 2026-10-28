@@ -38,6 +38,14 @@ public class EmpTransInfoController {
         return ApiResponse.ok(empTransInfoService.searchTransInfos(principal, transDate, searchText, transCode, separateAddTitle));
     }
 
+    /** AS-IS emp.Emp00_TransInfo.selectRetireEmpList — 퇴직 발령 사원 (S22 퇴직정산) */
+    @GetMapping("/trans-infos/retired")
+    public ApiResponse<List<TransInfoRes>> searchRetireTransInfos(@AuthenticationPrincipal UserPrincipal principal,
+                                                                  @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate transDate,
+                                                                  @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(empTransInfoService.searchRetireTransInfos(principal, transDate, searchText));
+    }
+
     /** AS-IS emp.Emp00_TransInfo.selectByText — 고른 회사의 사원(Emp00_Lookup_SelectMulti.open(companyId, …), sys admin만) */
     @GetMapping("/companies/{companyId}/trans-infos")
     public ApiResponse<List<TransInfoRes>> searchCompanyTransInfos(@AuthenticationPrincipal UserPrincipal principal,
