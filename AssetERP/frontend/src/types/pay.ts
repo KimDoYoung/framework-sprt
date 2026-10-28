@@ -160,3 +160,55 @@ export interface PayWorkTime {
   holiStdMultRate?: number;
   holiOverMultRate?: number;
 }
+
+/** 연봉계약 한 행 — AS-IS Pay01_AnnualModel (S13). 날짜는 yyyy-MM-dd */
+export interface PayAnnual {
+  annualId: number;
+  companyId?: number;
+  personId?: number | null;
+  posName?: string;
+  personNo?: string;
+  personName?: string;
+  startDate?: string | null;
+  closeDate?: string | null;
+  startTime?: string;
+  closeTime?: string;
+  monthOtHours?: number | null;
+  annualPay?: number | null;
+  retirePay?: number | null;
+  yearPay?: number | null;
+  etcAgreement?: string;
+  basicPay?: number | null;
+  mealPay?: number | null;
+  carMt?: number | null;
+  childcareAllowance?: number | null;
+  overPay?: number | null;
+  etc01Pay?: number | null;
+  etc02Pay?: number | null;
+  monthPay?: number | null;
+  note?: string;
+  apprId?: number | null;
+  apprStatusCode?: string | null;
+  apprStatusName?: string;
+  birthDay?: string | null;
+  hireDate?: string | null;
+  companyName?: string;
+  companyAddress?: string;
+  companyAgent?: string;
+  orgName?: string;
+  personAddress?: string;
+}
+
+/** 계약서 Mapping 한 행 — AS-IS Pay06_ActMappingModel (S13) */
+export interface PayActMapping {
+  actMappingId: number;
+  companyId?: number;
+  title?: string;
+  content?: string | null;
+  linkCode?: string;
+  linkName?: string;
+  defaultYn?: boolean;
+  note?: string;
+  kindCode?: string | null;
+  kindName?: string;
+}

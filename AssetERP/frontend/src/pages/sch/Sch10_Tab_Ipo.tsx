@@ -171,9 +171,10 @@ export const Sch10_Tab_Ipo: React.FC = () => {
   const noticeStyle: React.CSSProperties = { color: '#4472C4', fontSize: 12, lineHeight: '25px' };
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-      <style>{'.sch10-share-hdr .ag-header-cell-text{color:#0069B4}'}</style>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, padding: 10, background: '#fff' }}>
+    // <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
+    //   <style>{'.sch10-share-hdr .ag-header-cell-text{color:#0069B4}'}</style>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+      <div style={{ height: '100%',  boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, padding: 10, background: '#fff' }}>
         {/* [E3] retrieveButton[조회].Select (L173) → retrieve(), [E2] searchText.KeyPress [Enter] (L164) → retrieve() */}
         <SearchBar
           onSearch={retrieve}

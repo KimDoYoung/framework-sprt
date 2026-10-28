@@ -120,8 +120,8 @@ export const Fnd25_Grid_FundTermsDetail: React.FC<Props> = ({ target, onChanged 
   const columnDefs = useMemo(() => [
     // [E6] editCell (ImageCell, L138) → Fnd25_Edit_FundTermsManager.editFundTerms(): 고른 행(내용 포함)을 연다 — 수정이 끝나면 다시 조회
     iconCell<TermsRevision>('edit', 'actionCell', 55, '수정', row => setEditTarget({ mode: 'edit', model: { ...row } })),
-    gb.text('termsName', 320, '펀드규약명'),
-    gb.date('revisionDate', 90, '제개정일'),
+    gb.text('termsName', 320, '펀드규약명', {pinned: 'left'}),
+    gb.date('revisionDate', 90, '제개정일', {pinned: 'left'}),
     gb.longCenter('revisionNo', 70, '개정회차'),
     gb.longCenter('fileCnt', 90, '첨부파일 갯수'),
     gb.booleanYn2('useYn', 30, '사용'),

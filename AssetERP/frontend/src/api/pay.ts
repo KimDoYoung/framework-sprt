@@ -1,6 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxDeductLimit, PayWorkTime } from '../types/pay';
+import { readBlobError } from './file';
+import { PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxDeductLimit, PayWorkTime } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -385,6 +386,84 @@ export const payApi = {
   /** AS-IS pay.Pay34_WorkTimeConfig.delete → 지운 건수 */
   deleteWorkTimes: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/pay/work-times', { data: ids });
+    return res.data.data ?? 0;
+  },
+  // ── S13 연봉계약관리 (Pay01_Tab_Annual) ──
+
+  /** AS-IS pay.Pay01_Annual.selectByAll / selectByPersonId — 사원을 안 골랐으면 전체. radioOption 1 최근등록내역 / 2 년도별(yearStr) / 3 전체 */
+  searchAnnuals: async (params: { personId?: number | null; radioOption: number; yearStr: string; retireYn: boolean; apprCheckYn?: boolean }): Promise<PayAnnual[]> => {
+    const res = await apiClient.get<ApiResponse<PayAnnual[]>>('v1/pay/annuals', { params: { ...params, personId: params.personId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** S15 연봉조회: AS-IS pay.Pay01_Annual.selectByPersonId(personId = 로그인 사용자, apprYn "true") — 본인의 결재완료 연봉 전부 */
+  searchMyAnnuals: async (): Promise<PayAnnual[]> => {
+    const res = await apiClient.get<ApiResponse<PayAnnual[]>>('v1/pay/annuals/mine');
+    return res.data.data ?? [];
+  },
+
+  /** S14 [출력/다운로드]: AS-IS sys.Sys99_Print.insertRdAnnualListAll(사원 없음) / insertRdAnnualList(사원) — 결재완료만 출력 자료에 넣고 groupId(rdGroupId)를 돌려준다 */
+  rdPrintAnnuals: async (params: { personId?: number | null; radioOption: number; yearStr: string; retireYn: boolean }): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/pay/annuals/rd-print', null, { params: { ...params, personId: params.personId ?? undefined } });
+    return res.data.data ?? '';
+  },
+
+  /** AS-IS pay.Pay01_Annual.update — 저장한 행(요청 순서) */
+  saveAnnuals: async (rows: PayAnnual[]): Promise<PayAnnual[]> => {
+    const body = rows.map(({ annualId, personId, startDate, closeDate, startTime, closeTime, monthOtHours, annualPay, retirePay, etcAgreement, basicPay, mealPay, carMt, childcareAllowance, overPay, etc01Pay, etc02Pay }) => ({ annualId, personId, startDate, closeDate, startTime, closeTime, monthOtHours, annualPay, retirePay, etcAgreement, basicPay, mealPay, carMt, childcareAllowance, overPay, etc01Pay, etc02Pay }));
+    const res = await apiClient.put<ApiResponse<PayAnnual[]>>('v1/pay/annuals', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay01_Annual.delete → 지운 건수 */
+  deleteAnnuals: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/pay/annuals', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** [템플릿] — AS-IS downloadForm.submit() (./excelTemplete/Template_연봉계약정보.xlsx) */
+  downloadAnnualTemplate: async (): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/pay/annuals/template', { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Template_연봉계약정보.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** [엑셀업로드] — AS-IS ExcelUpload?uploadType=payUpload → 등록한 건수 */
+  uploadAnnualsExcel: async (file: File): Promise<number> => {
+    const form = new FormData();
+    form.append('excelUpload', file);
+    const res = await apiClient.post<ApiResponse<number>>('v1/pay/annuals/excel', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data.data ?? 0;
+  },
+
+  // ── S13 계약서 Mapping (Pay06_Lookup_ActList) ──
+
+  /** AS-IS pay.Pay06_ActMapping.selectByLinkCode — 사원구분은 전체("%") */
+  searchActMappings: async (linkCode: string): Promise<PayActMapping[]> => {
+    const res = await apiClient.get<ApiResponse<PayActMapping[]>>('v1/pay/act-mappings', { params: { linkCode, kindCode: '%' } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay06_ActMapping.update — 저장한 행(요청 순서) */
+  saveActMappings: async (rows: PayActMapping[]): Promise<PayActMapping[]> => {
+    const body = rows.map(({ actMappingId, title, content, linkCode, defaultYn, note, kindCode }) => ({ actMappingId, title, content, linkCode, defaultYn, note, kindCode }));
+    const res = await apiClient.put<ApiResponse<PayActMapping[]>>('v1/pay/act-mappings', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay06_ActMapping.delete → 지운 건수 */
+  deleteActMappings: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/pay/act-mappings', { data: ids });
     return res.data.data ?? 0;
   },
 };

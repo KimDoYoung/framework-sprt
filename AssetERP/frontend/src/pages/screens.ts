@@ -144,6 +144,9 @@ import { Icam99_Tab_Test } from './icam/Icam99_Tab_Test';
 import { Ifi90_Tab_Config } from './ifi/Ifi90_Tab_Config';
 import { Org01_Tab_OrgCode } from './org/Org01_Tab_OrgCode';
 import { Pay20_Tab_DeductAdmin } from './pay/Pay20_Tab_DeductAdmin';
+import { Pay01_Tab_Annual } from './pay/Pay01_Tab_Annual';
+import { Pay01_Tab_AnnualList } from './pay/Pay01_Tab_AnnualList';
+import { Pay01_Tab_AnnualPerson } from './pay/Pay01_Tab_AnnualPerson';
 import { Pay34_Tab_WorkTimeConfig } from './pay/Pay34_Tab_WorkTimeConfig';
 import { Crd10_Tab_ExcelCompanyAdmin } from './crd/Crd10_Tab_ExcelCompanyAdmin';
 import { Emp55_Tab_benefitInfoManager } from './emp/Emp55_Tab_benefitInfoManager';
@@ -445,6 +448,9 @@ export const SCREENS: Record<string, React.FC> = {
   Ast01_Tab_InfoManager, // E21
   Ast01_Tab_ClassTreeManagement, // R08 (메뉴 #1117. 펀드자산 종목기본)
   Ast01_Tab_InfoManagement, // R09 (메뉴 #1118. 펀드자산 종목상세)
+  Pay01_Tab_AnnualPerson, // S15 1단계 (상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계)
+  Pay01_Tab_AnnualList, // S14 1단계 (상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계. 출력 창 Pay01_Lookup_Rd_AnnualList = RdViewer)
+  Pay01_Tab_Annual, // S13 1단계 (상신의 결재문서 작성·상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계. + Pay06_Lookup_ActList·Pay06_Lookup_ActMapping)
   Pay20_Tab_DeductAdmin, // E22 1단계 (탭 1~3: Pay20_TabPage_Item·Pay04_TabPage_Formula·Pay21_TabPage_Rate + Pay20_Lookup_ItemList·Pay04_Lookup_Insert. 탭 4~9는 자리만)
   Pay34_Tab_WorkTimeConfig, // E23
   Crd10_Tab_ExcelCompanyAdmin, // E24 (+ Crd11_Lookup_ExcelCodeAdmin)

@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/pay/mapper/pay01_annual.xml (selectByAll L60, selectByPersonId L166, selectById L46, excelDelete L312, excelInsert L321)
+  + UpdateDataModel(pay01_annual) 저장  (S13)
+  화면이 보내지 않는 분기(apprCheckYn·apprYn)는 옮기지 않았다
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayAnnualMapper">
+
+    <!-- pay01_annual.* 대신 쓰는 열 + 계산 열. 직급은 최근등록내역(radioOption 1)이면 오늘 기준, 아니면 적용시작일 기준 -->
+    <sql id="annualColumns">
+        pay01_annual_id                                  AS annual_id,
+        pay01_company_id                                 AS company_id,
+        pay01_person_id                                  AS person_id,
+        pay01_start_date                                 AS start_date,
+        pay01_close_date                                 AS close_date,
+        pay01_start_time                                 AS start_time,
+        pay01_close_time                                 AS close_time,
+        pay01_month_ot_hours                             AS month_ot_hours,
+        pay01_annual_pay                                 AS annual_pay,
+        pay01_retire_pay                                 AS retire_pay,
+        COALESCE(pay01_annual_pay, 0)
+            + COALESCE(pay01_retire_pay, 0)              AS year_pay,
+        pay01_etc_agreement                              AS etc_agreement,
+        pay01_basic_pay                                  AS basic_pay,
+        pay01_meal_pay                                   AS meal_pay,
+        pay01_car_mt                                     AS car_mt,
+        pay01_childcare_allowance                        AS childcare_allowance,
+        pay01_over_pay                                   AS over_pay,
+        pay01_etc01_pay                                  AS etc01_pay,
+        pay01_etc02_pay                                  AS etc02_pay,
+        COALESCE(pay01_basic_pay,0)
+            + COALESCE(pay01_meal_pay,0)
+            + COALESCE(pay01_car_mt,0)
+            + COALESCE(pay01_over_pay,0)
+            + COALESCE(pay01_etc01_pay,0)
+            + COALESCE(pay01_etc02_pay,0)
+            + COALESCE(pay01_childcare_allowance,0)      AS month_pay,
+        pay01_note                                       AS note,
+        pay01_appr_id                                    AS appr_id,
+        <choose>
+            <when test="radioOption == 1">
+        f_get_empTrans(emp01_person_id, f_sysdate()::date, 'pos_nm')       AS pos_name,
+            </when>
+            <otherwise>
+        f_get_empTrans(emp01_person_id, pay01_start_date::date, 'pos_nm')  AS pos_name,
+            </otherwise>
+        </choose>
+        emp01_emp_no                                     AS person_no,
+        emp01_kor_nm                                     AS person_name,
+        emp01_hire_date                                  AS hire_date,
+        apr01_status_cd                                  AS appr_status_code,
+        f_cdnm('AprStatusCode', apr01_status_cd, pay01_company_id, f_sysdate()) AS appr_status_name,
+        sys01_company_nm                                 AS company_name,
+        '('||COALESCE(sys01_zip_cd,'')||') '||COALESCE(sys01_zip_addr,'')||' '||COALESCE(sys01_zip_detail,'') AS company_address,
+        (
+            SELECT emp01_kor_nm
+              FROM emp01_person
+                   INNER JOIN emp03_trans ON emp03_person_id = emp01_person_id
+             WHERE emp01_company_id = pay01_company_id
+               AND emp03_trans_date = (
+                       SELECT MAX(emp03_trans_date)
+                         FROM emp03_trans
+                        WHERE emp03_person_id = emp01_person_id
+                          AND emp03_trans_date <![CDATA[ <= ]]> pay01_start_date
+                   )
+               AND emp03_pos_cd = '100'
+               AND emp03_trans_cd != '900'
+             LIMIT 1
+        )                                                AS company_agent,
+        (
+            SELECT emp02_birthday
+              FROM emp02_others
+             WHERE emp02_person_id = emp01_person_id
+        )                                                AS birth_day,
+        (
+            SELECT f_org_nm(emp03_org_code_id, pay01_start_date)
+              FROM emp03_trans
+             WHERE emp03_person_id = pay01_person_id
+               AND emp03_trans_date IN (
+                       SELECT MAX(emp03_trans_date)
+                         FROM emp03_trans
+                        WHERE emp03_person_id = pay01_person_id
+                          AND emp03_trans_date <![CDATA[ <= ]]> pay01_start_date
+                   )
+        )                                                AS org_name,
+        (
+            SELECT '('||COALESCE(emp02_zip_cd,'')||')'||COALESCE(emp02_zip_addr,'')||' '||COALESCE(emp02_addr_detail,'')
+              FROM emp02_others
+             WHERE emp02_person_id = pay01_person_id
+        )                                                AS person_address
+    </sql>
+
+    <sql id="annualFrom">
+        FROM pay01_annual
+             LEFT OUTER JOIN apr01_appr ON apr01_appr_id    = pay01_appr_id
+             INNER JOIN emp01_person    ON pay01_person_id  = emp01_person_id
+             INNER JOIN sys01_company   ON sys01_company_id = pay01_company_id
+    </sql>
+
+    <!-- AS-IS pay01_annual.selectByAll L60 (IDMS-IC) — 조회와 출력 자료 만들기(insertPrint)가 같이 쓴다. apprCheckYn(true면 결재완료만)은 연봉계약현황(S14)이 보낸다 -->
+    <sql id="allQuery">
+        SELECT <include refid="annualColumns"/>
+        <include refid="annualFrom"/>
+        WHERE pay01_company_id = #{companyId}
+        <choose>
+            <when test="radioOption == 1">
+        AND (pay01_person_id, pay01_start_date) IN (
+                SELECT a.pay01_person_id
+                     , MAX(a.pay01_start_date)
+                  FROM pay01_annual a
+                       LEFT OUTER JOIN apr01_appr ON apr01_appr_id = a.pay01_appr_id
+                 WHERE a.pay01_person_id = emp01_person_id
+                   AND a.pay01_start_date <![CDATA[ <= ]]> f_today()
+                <if test="apprCheckYn">
+                   AND COALESCE(apr01_status_cd,'X') = '30'    /*(30:완료)*/
+                </if>
+                 GROUP BY a.pay01_person_id
+            )
+            </when>
+            <when test="radioOption == 2">
+        AND TO_CHAR(pay01_start_date,'yyyy') LIKE #{yearStr}
+            </when>
+        </choose>
+        <if test="!retireYn">
+        AND pay01_person_id NOT IN (
+                SELECT c.emp03_person_id
+                  FROM emp03_trans c
+                 WHERE pay01_person_id = c.emp03_person_id
+                   AND c.emp03_trans_cd = '900'
+            )
+        </if>
+        <if test="apprCheckYn">
+        AND COALESCE(apr01_status_cd,'X') = '30'    /*(30:완료)*/
+        </if>
+        ORDER BY f_get_empTrans(emp01_person_id, pay01_start_date::date, 'pos_cd') COLLATE "ko_KR.utf8", emp01_emp_no, pay01_start_date
+    </sql>
+
+    <select id="selectByAll" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayAnnualRes">
+        <include refid="allQuery"/>
+    </select>
+
+    <!-- AS-IS pay01_annual.selectByPersonId L166 (IDMS-IC) — 같은 이유로 조각. apprYn(true면 결재완료만)은 연봉조회(S15)가 보낸다 -->
+    <sql id="personQuery">
+        SELECT <include refid="annualColumns"/>
+        <include refid="annualFrom"/>
+        WHERE pay01_company_id = #{companyId}
+          AND emp01_person_id = #{personId}
+        <choose>
+            <when test="radioOption == 1">
+        AND pay01_start_date IN (
+                SELECT MAX(a.pay01_start_date)
+                  FROM pay01_annual a
+                       LEFT OUTER JOIN apr01_appr ON apr01_appr_id = a.pay01_appr_id
+                 WHERE a.pay01_person_id = emp01_person_id
+                   AND a.pay01_start_date <![CDATA[ <= ]]> f_today()
+                <if test="apprCheckYn">
+                   AND COALESCE(apr01_status_cd,'X') = '30'    /*(30:완료)*/
+                </if>
+            )
+            </when>
+            <when test="radioOption == 2">
+        AND TO_CHAR(pay01_start_date,'yyyy') LIKE #{yearStr}
+            </when>
+        </choose>
+        <if test="apprYn">
+        AND COALESCE(apr01_status_cd, '99') = '30'
+        </if>
+        <if test="!retireYn">
+        AND pay01_person_id NOT IN (
+                SELECT c.emp03_person_id
+                  FROM emp03_trans c
+                 WHERE pay01_person_id = c.emp03_person_id
+                   AND c.emp03_trans_cd = '900'
+            )
+        </if>
+        <if test="apprCheckYn">
+        AND COALESCE(apr01_status_cd,'X') = '30'    /*(30:완료)*/
+        </if>
+        ORDER BY pay01_start_date
+    </sql>
+
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayAnnualRes">
+        <include refid="personQuery"/>
+    </select>
+
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{printPersonId}
+           AND sys99_window_class_nm = #{windowClassName}
+    </delete>
+
+    <sql id="printColumns">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_date01, sys99_date02, sys99_string03, sys99_string04
+               , sys99_long01, sys99_long02, sys99_long03, sys99_string05
+               , sys99_long04, sys99_long05, sys99_long06, sys99_long07, sys99_long08, sys99_long09
+               , sys99_long10, sys99_long11, sys99_string06, sys99_long12 )
+        SELECT f_create_seq(), #{companyId}, #{printPersonId}, #{windowClassName}, #{groupId}
+             , q.person_no, q.person_name, q.start_date, q.close_date, q.start_time, q.close_time
+             , COALESCE(q.annual_pay, 0), COALESCE(q.retire_pay, 0), COALESCE(q.year_pay, 0), q.etc_agreement
+             , COALESCE(q.basic_pay, 0), COALESCE(q.meal_pay, 0), COALESCE(q.car_mt, 0), COALESCE(q.over_pay, 0)
+             , COALESCE(q.etc01_pay, 0), COALESCE(q.etc02_pay, 0)
+             , COALESCE(q.month_pay, 0), COALESCE(q.childcare_allowance, 0), q.appr_status_name, COALESCE(q.month_ot_hours, 0)
+    </sql>
+
+    <!-- AS-IS Sys99_Print.insertRdAnnualListAll L2386: 목록(selectByAll)을 한 건씩 sys99_print에 넣는다. Long 값은 null이면 0(checkLongNull) -->
+    <insert id="insertPrintAll">
+        <include refid="printColumns"/>
+          FROM (<include refid="allQuery"/>) q
+    </insert>
+
+    <!-- AS-IS Sys99_Print.insertRdAnnualList L2306: 같은 열을 selectByPersonId 목록으로 -->
+    <insert id="insertPrintPerson">
+        <include refid="printColumns"/>
+          FROM (<include refid="personQuery"/>) q
+    </insert>
+
+    <!-- AS-IS pay01_annual.selectById L46 (IDMS-IC) — 저장 뒤 돌려줄 행. 서비스가 radioOption 2(직급은 적용시작일 기준)를 준다 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayAnnualRes">
+        SELECT <include refid="annualColumns"/>
+        <include refid="annualFrom"/>
+        WHERE pay01_annual_id = #{annualId}
+          AND pay01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO pay01_annual (pay01_annual_id, pay01_company_id, pay01_person_id, pay01_start_date, pay01_close_date,
+                                  pay01_start_time, pay01_close_time, pay01_month_ot_hours, pay01_annual_pay, pay01_retire_pay,
+                                  pay01_etc_agreement, pay01_basic_pay, pay01_meal_pay, pay01_car_mt, pay01_childcare_allowance,
+                                  pay01_over_pay, pay01_etc01_pay, pay01_etc02_pay)
+        VALUES (#{annualId}, #{companyId}, #{req.personId}, #{req.startDate}, #{req.closeDate},
+                #{req.startTime}, #{req.closeTime}, #{req.monthOtHours}, #{req.annualPay}, #{req.retirePay},
+                #{req.etcAgreement}, #{req.basicPay}, #{req.mealPay}, #{req.carMt}, #{req.childcareAllowance},
+                #{req.overPay}, #{req.etc01Pay}, #{req.etc02Pay})
+    </insert>
+
+    <update id="update">
+        UPDATE pay01_annual
+           SET pay01_person_id          = #{req.personId},
+               pay01_start_date         = #{req.startDate},
+               pay01_close_date         = #{req.closeDate},
+               pay01_start_time         = #{req.startTime},
+               pay01_close_time         = #{req.closeTime},
+               pay01_month_ot_hours     = #{req.monthOtHours},
+               pay01_annual_pay         = #{req.annualPay},
+               pay01_retire_pay         = #{req.retirePay},
+               pay01_etc_agreement      = #{req.etcAgreement},
+               pay01_basic_pay          = #{req.basicPay},
+               pay01_meal_pay           = #{req.mealPay},
+               pay01_car_mt             = #{req.carMt},
+               pay01_childcare_allowance = #{req.childcareAllowance},
+               pay01_over_pay           = #{req.overPay},
+               pay01_etc01_pay          = #{req.etc01Pay},
+               pay01_etc02_pay          = #{req.etc02Pay}
+         WHERE pay01_annual_id = #{req.annualId}
+           AND pay01_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM pay01_annual
+         WHERE pay01_company_id = #{companyId}
+           AND pay01_annual_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <select id="countPerson" resultType="int">
+        SELECT COUNT(*) FROM emp01_person
+         WHERE emp01_person_id = #{personId} AND emp01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS emp01_person.selectByEmpNo (IDMS-IC) — 사번 → 사원 ID -->
+    <select id="selectPersonIdByEmpNo" resultType="long">
+        SELECT emp01_person_id
+          FROM emp01_person
+         WHERE emp01_company_id = #{companyId}
+           AND emp01_emp_no = #{empNo}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS pay01_annual.excelDelete L312 (IDMS-IC) -->
+    <delete id="excelDelete">
+        DELETE FROM pay01_annual
+         WHERE pay01_person_id  = #{personId}
+           AND pay01_company_id = #{companyId}
+           AND pay01_start_date = #{startDate}
+           AND pay01_close_date = #{closeDate}
+    </delete>
+
+    <!-- AS-IS pay01_annual.excelInsert L321 (IDMS-IC) — 월연장근로시간·양육수당은 AS-IS도 넣지 않는다 -->
+    <insert id="excelInsert">
+        INSERT INTO pay01_annual (pay01_annual_id, pay01_company_id, pay01_person_id, pay01_start_date, pay01_close_date,
+                                  pay01_start_time, pay01_close_time, pay01_annual_pay, pay01_retire_pay, pay01_etc_agreement,
+                                  pay01_basic_pay, pay01_meal_pay, pay01_car_mt, pay01_over_pay, pay01_etc01_pay, pay01_etc02_pay)
+        VALUES (#{annualId}, #{companyId}, #{personId}, #{req.startDate}, #{req.closeDate},
+                #{req.startTime}, #{req.closeTime}, #{req.annualPay}, #{req.retirePay}, #{req.etcAgreement},
+                #{req.basicPay}, #{req.mealPay}, #{req.carMt}, #{req.overPay}, #{req.etc01Pay}, #{req.etc02Pay})
+    </insert>
+</mapper>

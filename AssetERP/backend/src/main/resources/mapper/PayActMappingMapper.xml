@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/pay/mapper/pay06_act_mapping.xml (selectByLinkCode L37, selectById) + UpdateDataModel(pay06_act_mapping) 저장  (S13)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayActMappingMapper">
+
+    <sql id="actMappingColumns">
+        pay06_act_mapping_id                                                 AS act_mapping_id,
+        pay06_company_id                                                     AS company_id,
+        pay06_title                                                          AS title,
+        pay06_content                                                        AS content,
+        pay06_link_cd                                                        AS link_code,
+        f_cdnm('LinkCode', pay06_link_cd, pay06_company_id, f_sysdate())     AS link_name,
+        (pay06_default_yn = 'true')                                          AS default_yn,
+        pay06_note                                                           AS note,
+        pay06_kind_cd                                                        AS kind_code,
+        f_cdnm('EmpKindCode', pay06_kind_cd, pay06_company_id, f_sysdate())  AS kind_name
+    </sql>
+
+    <!-- AS-IS pay06_act_mapping.selectByLinkCode L37 (IDMS-IC) — AS-IS는 회사 ID를 ${} 로 붙인다 -->
+    <select id="selectByLinkCode" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayActMappingRes">
+        SELECT <include refid="actMappingColumns"/>
+          FROM pay06_act_mapping
+         WHERE pay06_company_id = #{companyId}
+           AND pay06_link_cd = #{linkCode}
+           AND pay06_kind_cd LIKE #{kindCode}
+         ORDER BY pay06_title COLLATE "ko_KR.utf8"
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayActMappingRes">
+        SELECT <include refid="actMappingColumns"/>
+          FROM pay06_act_mapping
+         WHERE pay06_act_mapping_id = #{actMappingId}
+           AND pay06_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- 기본설정 여부는 varchar 'true'/'false' 로 저장된다(AS-IS UpdateDataModel과 같음) -->
+    <insert id="insert">
+        INSERT INTO pay06_act_mapping (pay06_act_mapping_id, pay06_company_id, pay06_title, pay06_content, pay06_link_cd,
+                                       pay06_default_yn, pay06_note, pay06_kind_cd)
+        VALUES (#{actMappingId}, #{companyId}, #{req.title}, #{req.content}, #{req.linkCode},
+                COALESCE(CAST(#{req.defaultYn} AS VARCHAR), 'false'), #{req.note}, #{req.kindCode})
+    </insert>
+
+    <update id="update">
+        UPDATE pay06_act_mapping
+           SET pay06_title      = #{req.title},
+               pay06_content    = #{req.content},
+               pay06_link_cd    = #{req.linkCode},
+               pay06_default_yn = COALESCE(CAST(#{req.defaultYn} AS VARCHAR), 'false'),
+               pay06_note       = #{req.note},
+               pay06_kind_cd    = #{req.kindCode}
+         WHERE pay06_act_mapping_id = #{req.actMappingId}
+           AND pay06_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM pay06_act_mapping
+         WHERE pay06_company_id = #{companyId}
+           AND pay06_act_mapping_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

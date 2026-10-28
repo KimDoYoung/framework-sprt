@@ -130,7 +130,7 @@ export const Est03_Tab_PfHistory: React.FC = () => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ flex: 1, minHeight: 0, margin: 20, border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, padding: 10 }}>
+      <div style={{ flex: 1, minHeight: 0, margin: 20,  boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, padding: 10 }}>
         {/* [E2] retrieveButton[조회].Select (L120) → retrieve() */}
         <SearchBar
           onSearch={() => retrieve()}

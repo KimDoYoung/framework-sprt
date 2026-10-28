@@ -142,8 +142,8 @@ export const Fnd30_Tab_DemandOpr: React.FC = () => {
   ], []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ flex: 1, minHeight: 0, border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, padding: 10, background: '#fff' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 10, boxSizing: 'border-box', background: '#fff' }}>
+      <div style={{ flex: 1, minHeight: 0,  boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, padding: 10, background: '#fff' }}>
         {/* [E3] retrieveButton[조회].Select (L140) → retrieve(), [E2] searchText.KeyPress [Enter] (L131) → retrieve() */}
         <SearchBar
           onSearch={retrieve}
@@ -176,7 +176,7 @@ export const Fnd30_Tab_DemandOpr: React.FC = () => {
           />
         </div>
       </div>
-      <div style={{ height: 400, flex: 'none', border: '1px solid #d9d9d9', boxSizing: 'border-box', background: '#fff' }}>
+      <div style={{ height: 400, flex: 'none', boxSizing: 'border-box', background: '#fff', padding: 10 }}>
         <Fnd31_Page_DemandOprFund oprId={selectedOprId} />
       </div>
       <Fnd30_Edit_DemandOpr target={target} onSaved={() => void retrieve()} onClose={() => setTarget(null)} />

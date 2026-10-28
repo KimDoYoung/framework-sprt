@@ -102,8 +102,8 @@ export const Fnd25_Tab_FundTermsManager: React.FC = () => {
   const columnDefs = useMemo(() => [
     // [E7] editCell (ImageCell, L132) → Fnd25_Lookup_FundTermsManager.edit(): 고른 규약의 예탁원코드 창
     iconCell<Terms>('edit', 'actionCell', 55, '수정', row => setLookupTarget(row)),
-    gb.text('termsTypeName', 80, '구분'),
-    gb.text('termsName', 180, '펀드규약명'),
+    gb.text('termsTypeName', 80, '구분', {pinned: 'left'}),
+    gb.text('termsName', 180, '펀드규약명', {pinned: 'left'}),
     gb.text('ksdFundCode', 120, '예탁원코드'),
     gb.text('fundName', 320, '펀드명'),
     gb.text('trustBankName', 120, '수탁은행'),

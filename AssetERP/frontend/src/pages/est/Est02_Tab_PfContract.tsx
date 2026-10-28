@@ -136,7 +136,7 @@ export const Est02_Tab_PfContract: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, padding: 10 }}>
+      <div style={{ height: '100%',  boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, padding: 10 }}>
         {/* [E2] retrieveButton[조회].Select (L107) → retrieve(), [E1] searchText.KeyPress [Enter] (L99) → retrieve() */}
         <SearchBar
           onSearch={retrieve}

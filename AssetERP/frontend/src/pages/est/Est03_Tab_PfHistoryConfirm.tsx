@@ -119,7 +119,7 @@ export const Est03_Tab_PfHistoryConfirm: React.FC = () => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ flex: 1, minHeight: 0, margin: 20, border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, padding: 10 }}>
+      <div style={{ flex: 1, minHeight: 0, margin: 20,  boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8, padding: 10 }}>
         {/* [E1] toggleSearchType.ValueChange (L144) → 일자기준이면 위 입력줄, 체결용역이면 아래 입력줄만 켠다 */}
         <Radio.Group value={searchType} onChange={e => setSearchType(e.target.value)} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
