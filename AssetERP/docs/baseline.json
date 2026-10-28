@@ -9236,5 +9236,43 @@
     "note": "docs/work/S/S25-작업기록.md",
     "history": [],
     "id": "S25"
+  },
+  "Pay31_Tab_InsureApply": {
+    "commit": "9aa7dd18b83a3b218bc74edbd97fa9e25b5f920e",
+    "commit_short": "9aa7dd1",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/pay/Pay31_Lookup_Insert1.java": "baae60339ac05b3a6f5895dd3bde43b6ecac891b",
+      "application/src/main/java/myApp/client/vi/pay/Pay31_Lookup_Insert2.java": "d6b4b27e66b2a43b0322051be27b139011aa1cbc",
+      "application/src/main/java/myApp/client/vi/pay/Pay31_Lookup_Insert3.java": "bcbe0f5a3c1d77000421e577044135dc0b3b2d53",
+      "application/src/main/java/myApp/client/vi/pay/Pay31_TabPage_InsureApply1.java": "ffc61959ee17d3ac80881dd4096e1340a463ab04",
+      "application/src/main/java/myApp/client/vi/pay/Pay31_TabPage_InsureApply2.java": "1a3bf5d6678e3654d6cb42378f9aae0f781e34cf",
+      "application/src/main/java/myApp/client/vi/pay/Pay31_TabPage_InsureApply3.java": "dd48286faf95efd5eef3f6fcdc5200118146b757",
+      "application/src/main/java/myApp/client/vi/pay/Pay31_TabPage_InsureApply4.java": "498474f3ab1f4792970591bd900cb51ce8184aab",
+      "application/src/main/java/myApp/client/vi/pay/Pay31_Tab_InsureApply.java": "0d8283565e34f28994ac8d32e13b868077d77e9d",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay31_InsureApplyModel.java": "d5ec1d3c83878bff6635ce7e15d7a622bae86628",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay31_InsureApplyModelProperties.java": "5eefafce21b137a413d3809a34e5ed5119204cb7",
+      "application/src/main/java/myApp/server/emp/Emp00_TransInfo.java": "df97d7f0f13eb8c414b2ce628d93cc02138f6963",
+      "application/src/main/java/myApp/server/emp/mapper/emp00_trans_info.xml": "76c324eda8ede6658a765beeaaebf929930afd47",
+      "application/src/main/java/myApp/server/emp/mapper/emp01_person.xml": "996a542c6a2637d37b8ad6dafdc1de2019cbe902",
+      "application/src/main/java/myApp/server/emp/mapper/emp35_deduct.xml": "06c2f21e2e84e4d7e75f8ae4a73e4841db179318",
+      "application/src/main/java/myApp/server/pay/Pay31_InsureApply.java": "d47794f35c73f96b646a6fb10319049c35ff543c",
+      "application/src/main/java/myApp/server/pay/mapper/pay21_rate.xml": "7b27cd3d4bce04b6be3277acf8cab5f383a69151",
+      "application/src/main/java/myApp/server/pay/mapper/pay31_insure_apply.xml": "1fd5ec5a78aef0bec66bc04d30ec1a748c23a565",
+      "application/src/main/java/myApp/server/pay/mapper/pay32_insure_pay.xml": "23b5b65e448bf55433feaa65739f277f2bba770d",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-28T19:26:13+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/S/S26-작업기록.md",
+    "history": [],
+    "id": "S26"
   }
 }

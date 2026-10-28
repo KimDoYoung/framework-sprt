@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime } from '../types/pay';
+import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -827,5 +827,74 @@ export const payApi = {
   deleteTaxReceipt: async (taxWithholdingId: number): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>(`v1/pay/tax-receipts/${taxWithholdingId}`);
     return res.data.data;
+  },
+
+  // ── S26 4대보험신고(EDI) (Pay31_Tab_InsureApply) ──
+
+  /** AS-IS pay.Pay31_InsureApply.selectByCompanyId — gubun "1" 자격취득 / "multi" 보수변동·착오정정 / "4" 전년도분 보수총액 / "5" 납부방법 변경 */
+  searchInsureApplies: async (params: { gubun: string; personId?: number | null; insureCode?: string; year?: string; startDate: string; closeDate: string }): Promise<PayInsureApply[]> => {
+    const res = await apiClient.get<ApiResponse<PayInsureApply[]>>('v1/pay/insure-applies', { params: { ...params, personId: params.personId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay31_InsureApply.update — 저장한 행(요청 순서) */
+  saveInsureApplies: async (rows: PayInsureApply[]): Promise<PayInsureApply[]> => {
+    const body = rows.map(({ insureApplyId, personId, insureCode, insureApplyCode, applyDate, initDate, applyMonth, applyMonthPay, payCode, payDiv, note, npsInitPayYn }) => ({ insureApplyId, personId, insureCode, insureApplyCode, applyDate, initDate, applyMonth, applyMonthPay, payCode, payDiv, note, npsInitPayYn }));
+    const res = await apiClient.put<ApiResponse<PayInsureApply[]>>('v1/pay/insure-applies', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay31_InsureApply.delete → 지운 건수 */
+  deleteInsureApplies: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/pay/insure-applies', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS pay.Pay31_InsureApply.insert1 → 만든 행 수 */
+  createInsureApplies: async (req: PayInsureApplyCreateReq): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/pay/insure-applies', req);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS pay.Pay31_InsureApply.insert3 — personId 없이 allYn이면 전체생성 */
+  createInsurePreYear: async (req: { personId?: number | null; allYn: boolean; year: string }): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/pay/insure-applies/pre-year', { ...req, personId: req.personId ?? undefined });
+  },
+
+  /** AS-IS pay.Pay31_InsureApply.updateList */
+  saveInsurePreYear: async (year: string, rows: PayInsureApply[]): Promise<void> => {
+    const body = { year, rows: rows.map(({ insureApplyId, preYearPay1, preYearPay2, preYearPay3, preYearWorkMonthCnt }) => ({ insureApplyId, preYearPay1, preYearPay2, preYearPay3, preYearWorkMonthCnt })) };
+    await apiClient.put<ApiResponse<void>>('v1/pay/insure-applies/pre-year', body);
+  },
+
+  /** AS-IS pay.Pay31_InsureApply.deleteList → 지운 건수 */
+  deleteInsurePreYear: async (year: string, ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/pay/insure-applies/pre-year', { data: { year, ids } });
+    return res.data.data ?? 0;
+  },
+
+  /** 탭 4 [템플릿] — AS-IS downloadForm.submit() (./excelTemplete/Template_4대보험 납부방법 변경.xlsx) */
+  downloadInsureApplyTemplate: async (): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/pay/insure-applies/template', { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Template_4대보험 납부방법 변경.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** 탭 2 [엑셀업로드] — AS-IS ExcelUpload?uploadType=ediUpload / 탭 4 — payInsureApply4Upload → 넣은 건수 */
+  uploadInsureApplyExcel: async (kind: 'edi' | 'pay-method', file: File): Promise<number> => {
+    const form = new FormData();
+    form.append('excelUpload', file);
+    const res = await apiClient.post<ApiResponse<number>>(`v1/pay/insure-applies/excel/${kind}`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data.data ?? 0;
   },
 };

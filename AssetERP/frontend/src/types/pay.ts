@@ -513,3 +513,45 @@ export interface PayTaxReceipt {
   fileName?: string | null;
   fileExt?: string | null;
 }
+
+/** 4대보험 신고 한 행 (S26, GET /api/v1/pay/insure-applies) — AS-IS Pay31_InsureApplyModel. 날짜는 yyyy-MM-dd */
+export interface PayInsureApply {
+  insureApplyId: number;
+  companyId?: number;
+  personId?: number | null;
+  insureCode?: string | null;
+  insureApplyCode?: string | null;
+  applyDate?: string | null;
+  initDate?: string | null;
+  applyMonth?: string | null;
+  applyMonthPay?: number | null;
+  preYearWorkMonthCnt?: number | null;
+  preYearPay1?: number | null;
+  preYearPay2?: number | null;
+  preYearPay3?: number | null;
+  termInfo?: string | null;
+  payCode?: string | null;
+  payDiv?: number | null;
+  note?: string | null;
+  npsInitPayYn?: boolean | null;
+  personNo?: string | null;
+  personName?: string | null;
+  insureName?: string | null;
+  insureApplyName?: string | null;
+  payName?: string | null;
+  insureYearPay?: number | null;
+}
+
+/** 자격취득·보수변동/착오정정 등록 창의 [생성] 요청 (AS-IS pay.Pay31_InsureApply.insert1) */
+export interface PayInsureApplyCreateReq {
+  personId: number;
+  ch01: boolean;
+  ch02: boolean;
+  ch03: boolean;
+  npsInitPayYn?: boolean;
+  insureApplyCode: string;
+  applyDate: string;
+  initDate?: string | null;
+  applyMonthPay: number;
+  applyMonth?: string | null;
+}

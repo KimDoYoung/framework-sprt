@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/pay/mapper/pay31_insure_apply.xml (S26) + pay32_insure_pay.xml(createInsureAdjust·deleteByPersonId)
+  + pay21_rate.xml(selectByDate) + emp35_deduct.xml(selectByCompanyId) + emp01_person.xml(selectById·selectByCtzNo·selectByEmpNo)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayInsureApplyMapper">
+
+    <sql id="insureApplyColumns">
+        pay31_insure_apply_id                                                            AS insure_apply_id,
+        pay31_company_id                                                                 AS company_id,
+        pay31_person_id                                                                  AS person_id,
+        pay31_insure_cd                                                                  AS insure_code,
+        pay31_insure_apply_cd                                                            AS insure_apply_code,
+        pay31_apply_date                                                                 AS apply_date,
+        pay31_init_date                                                                  AS init_date,
+        pay31_apply_month                                                                AS apply_month,
+        pay31_apply_month_pay                                                            AS apply_month_pay,
+        pay31_pre_year_work_month_cnt                                                    AS pre_year_work_month_cnt,
+        pay31_pre_year_pay1                                                              AS pre_year_pay1,
+        pay31_pre_year_pay2                                                              AS pre_year_pay2,
+        pay31_pre_year_pay3                                                              AS pre_year_pay3,
+        pay31_term_info                                                                  AS term_info,
+        pay31_pay_cd                                                                     AS pay_code,
+        pay31_pay_div                                                                    AS pay_div,
+        pay31_note                                                                       AS note,
+        (COALESCE(pay31_nps_init_pay_yn, 'false') = 'true')                              AS nps_init_pay_yn,
+        emp01_emp_no                                                                     AS person_no,
+        emp01_kor_nm                                                                     AS person_name,
+        f_cdnm('InsureCode',      pay31_insure_cd,       pay31_company_id, f_sysdate())  AS insure_name,
+        f_cdnm('InsureApplyCode', pay31_insure_apply_cd, pay31_company_id, f_sysdate())  AS insure_apply_name,
+        f_cdnm('DivPayCode',      pay31_pay_cd,          pay31_company_id, f_sysdate())  AS pay_name
+    </sql>
+
+    <!-- AS-IS(IDMS-IC) pay31_insure_apply.selectByCompanyId L62 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayInsureApplyRes">
+        SELECT <include refid="insureApplyColumns"/>,
+               (
+                   SELECT COALESCE(SUM(pay11_item_amt), 0)
+                     FROM pay11_month_item
+                          INNER JOIN pay10_month ON pay11_month_id = pay10_month_id
+                    WHERE pay10_person_id = pay31_person_id
+                      AND pay10_date BETWEEN #{startDate}::date AND #{closeDate}::date
+                      AND pay11_item_cd IN ('220','230')
+               )                                                                         AS insure_year_pay
+          FROM pay31_insure_apply
+               INNER JOIN emp01_person ON emp01_person_id = pay31_person_id
+         WHERE pay31_company_id = #{companyId}
+           AND pay31_insure_cd LIKE #{insureCode}
+        <choose>
+            <when test="insureApplyGubun == 'multi'">
+           AND pay31_insure_apply_cd IN ('2','3')
+            </when>
+            <otherwise>
+           AND pay31_insure_apply_cd = #{insureApplyGubun}
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="year != null">
+           AND TO_CHAR(pay31_apply_date,'YYYY') = #{year}
+            </when>
+            <otherwise>
+           AND f_trunc(pay31_apply_date) BETWEEN #{startDate} AND #{closeDate}
+            </otherwise>
+        </choose>
+        <if test="personId != null">
+           AND pay31_person_id = #{personId}
+        </if>
+         ORDER BY emp01_emp_no
+    </select>
+
+    <!-- AS-IS(IDMS-IC) pay31_insure_apply.selectById L22 — 회사 조건은 TOBE 추가 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayInsureApplyRes">
+        SELECT <include refid="insureApplyColumns"/>,
+               NULL::numeric                                                             AS insure_year_pay
+          FROM pay31_insure_apply
+               INNER JOIN emp01_person ON emp01_person_id = pay31_person_id
+         WHERE pay31_insure_apply_id = #{insureApplyId}
+           AND pay31_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel 동적 INSERT — 탭 4 [등록]이 채우는 열 -->
+    <insert id="insert">
+        INSERT INTO pay31_insure_apply
+               (pay31_insure_apply_id, pay31_company_id, pay31_person_id, pay31_insure_cd, pay31_insure_apply_cd,
+                pay31_apply_date, pay31_init_date, pay31_apply_month, pay31_apply_month_pay,
+                pay31_pay_cd, pay31_pay_div, pay31_note, pay31_nps_init_pay_yn)
+        VALUES (#{insureApplyId}, #{companyId}, #{req.personId}, #{req.insureCode}, #{req.insureApplyCode},
+                #{req.applyDate}, #{req.initDate}, #{req.applyMonth}, #{req.applyMonthPay},
+                #{req.payCode}, #{req.payDiv}, #{req.note},
+                CASE WHEN #{req.npsInitPayYn,jdbcType=BOOLEAN} IS NULL THEN NULL ELSE #{req.npsInitPayYn,jdbcType=BOOLEAN}::text END)
+    </insert>
+
+    <!-- UpdateDataModel 동적 UPDATE — 탭 1·2·4 그리드가 바꾸는 열(+회사 조건) -->
+    <update id="update">
+        UPDATE pay31_insure_apply
+           SET pay31_person_id         = #{req.personId},
+               pay31_insure_cd         = #{req.insureCode},
+               pay31_apply_date        = #{req.applyDate},
+               pay31_init_date         = #{req.initDate},
+               pay31_apply_month       = #{req.applyMonth},
+               pay31_apply_month_pay   = #{req.applyMonthPay},
+               pay31_pay_cd            = #{req.payCode},
+               pay31_pay_div           = #{req.payDiv},
+               pay31_note              = #{req.note},
+               pay31_nps_init_pay_yn   = CASE WHEN #{req.npsInitPayYn,jdbcType=BOOLEAN} IS NULL THEN NULL ELSE #{req.npsInitPayYn,jdbcType=BOOLEAN}::text END
+         WHERE pay31_insure_apply_id = #{req.insureApplyId}
+           AND pay31_company_id = #{companyId}
+    </update>
+
+    <!-- UpdateDataModel deleteModel -->
+    <delete id="deleteByIds">
+        DELETE FROM pay31_insure_apply
+         WHERE pay31_company_id = #{companyId}
+           AND pay31_insure_apply_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) pay31_insure_apply.insert1 L105 -->
+    <insert id="insert1">
+        INSERT INTO pay31_insure_apply
+        SELECT f_create_seq(),
+               #{companyId},
+               #{personId},
+               #{insureCode},
+               #{insureApplyCode},
+               #{applyDate},
+               #{initDate,jdbcType=DATE},
+               #{applyMonth,jdbcType=VARCHAR},
+               #{applyMonthPay,jdbcType=NUMERIC},
+               null,
+               null,
+               null,
+               null,
+               null,
+               null,
+               null,
+               null,
+               #{npsInitPayYn,jdbcType=VARCHAR}
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) pay31_insure_apply.delete3 -->
+    <delete id="delete3">
+        DELETE FROM pay31_insure_apply
+         WHERE pay31_person_id = #{personId}
+           AND pay31_company_id = #{companyId}
+           AND pay31_apply_date = #{applyDate}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) pay31_insure_apply.insert3-2 L128 (건강보험) -->
+    <insert id="insert3x2">
+        INSERT INTO pay31_insure_apply
+        SELECT f_create_seq(),
+               #{companyId},
+               #{personId},
+               '2',
+               '4',
+               #{applyDate},
+               null,
+               #{applyMonth},
+               null,
+               CASE WHEN #{hireDate}::date > #{startDate}::date
+                    THEN f_get_datedif(#{hireDate}::date, #{closeDate}::date, 'M') + 1
+                    ELSE f_get_datedif(#{startDate}::date, #{closeDate}::date, 'M') + 1 END,
+               (
+                   SELECT SUM(COALESCE(pay11_item_amt, 0))
+                     FROM pay11_month_item
+                          INNER JOIN pay10_month ON pay11_month_id = pay10_month_id
+                          INNER JOIN pay20_item ON pay20_item_cd = pay11_item_cd
+                    WHERE pay10_person_id = #{personId}
+                      AND pay10_date BETWEEN #{startDate}::date AND #{closeDate}::date
+                      AND pay20_item_type = '1'
+                      AND pay20_non_tax_type = '1'
+               ),
+               null,
+               null,
+               #{termInfo},
+               null,
+               null,
+               null,
+               null
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) pay31_insure_apply.insert3-4 (고용보험) -->
+    <insert id="insert3x4">
+        INSERT INTO pay31_insure_apply
+        SELECT f_create_seq(),
+               #{companyId},
+               #{personId},
+               '4',
+               '4',
+               #{applyDate},
+               null,
+               #{applyMonth},
+               null,
+               CASE WHEN #{hireDate}::date > #{startDate}::date
+                    THEN f_get_datedif(#{hireDate}::date, #{closeDate}::date, 'M') + 1
+                    ELSE f_get_datedif(#{startDate}::date, #{closeDate}::date, 'M') + 1 END,
+               (
+                   SELECT SUM(COALESCE(pay11_item_amt, 0))
+                     FROM pay11_month_item
+                          INNER JOIN pay10_month ON pay11_month_id = pay10_month_id
+                          INNER JOIN pay20_item ON pay20_item_cd = pay11_item_cd
+                    WHERE pay10_person_id = #{personId}
+                      AND pay20_item_type = '1'
+                      AND pay20_non_tax_type = '1'
+                      AND pay10_date BETWEEN #{startDate}::date AND #{closeDate}::date
+               ),
+               (
+                   SELECT COALESCE(SUM(pay11_item_amt), 0)
+                     FROM pay11_month_item
+                          INNER JOIN pay10_month ON pay11_month_id = pay10_month_id
+                          INNER JOIN pay20_item ON pay20_item_cd = pay11_item_cd
+                    WHERE pay10_person_id = #{personId}
+                      AND pay20_item_type = '1'
+                      AND pay20_non_tax_type = '1'
+                      AND pay10_date BETWEEN #{preYearPay1Date,jdbcType=DATE}::date AND #{closeDate}::date
+               ),
+               (
+                   SELECT COALESCE(SUM(pay11_item_amt), 0)
+                     FROM pay11_month_item
+                          INNER JOIN pay10_month ON pay11_month_id = pay10_month_id
+                          INNER JOIN pay20_item ON pay20_item_cd = pay11_item_cd
+                    WHERE pay10_person_id = #{personId}
+                      AND pay20_item_type = '1'
+                      AND pay20_non_tax_type = '1'
+                      AND pay10_date BETWEEN #{preYearPay2Date,jdbcType=DATE}::date AND #{closeDate}::date
+               ),
+               #{termInfo},
+               null,
+               null,
+               null,
+               null
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) pay31_insure_apply.updateModel — 회사 조건은 TOBE 추가 -->
+    <update id="updatePreYear">
+        UPDATE pay31_insure_apply
+           SET pay31_pre_year_pay1 = #{req.preYearPay1},
+               pay31_pre_year_pay2 = #{req.preYearPay2},
+               pay31_pre_year_pay3 = #{req.preYearPay3},
+               pay31_pre_year_work_month_cnt = #{req.preYearWorkMonthCnt}
+         WHERE pay31_insure_apply_id = #{req.insureApplyId}
+           AND pay31_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) pay32_insure_pay.createInsureAdjust -->
+    <select id="createInsureAdjust" resultType="string" flushCache="true" useCache="false">
+        SELECT f_calc_4insure_adjust(#{personId}, #{year}, #{insureCode})
+    </select>
+
+    <!-- AS-IS(IDMS-IC) pay32_insure_pay.deleteByPersonId -->
+    <delete id="deleteInsurePayByPersonId">
+        DELETE FROM pay32_insure_pay
+         WHERE pay32_company_id = #{companyId}
+           AND pay32_insure_cd  = #{insureCode}
+           AND pay32_person_id  = #{personId}
+           AND pay32_year       = #{year}
+           AND pay32_cnt        = 0
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) pay21_rate.selectByDate — 정렬 없음(원본 그대로) -->
+    <select id="selectRateStartDates" resultType="java.time.LocalDate">
+        SELECT pay21_start_date
+          FROM pay21_rate
+         WHERE pay21_start_date BETWEEN #{startDate}::date AND #{closeDate}::date
+           AND pay21_rate_cd LIKE #{rateCode}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) emp35_deduct.selectByCompanyId — 기준일 이전 가장 최근 공제정보의 대표자여부 -->
+    <select id="selectReprYn" resultType="string">
+        SELECT emp35_repr_yn
+          FROM emp35_deduct
+         WHERE emp35_start_date = (
+                   SELECT MAX(emp35_start_date)
+                     FROM emp35_deduct
+                    WHERE emp35_company_id = #{companyId}
+                      AND emp35_start_date &lt;= #{startDate}
+                      AND emp35_person_id = #{personId})
+           AND emp35_company_id = #{companyId}
+           AND emp35_person_id = #{personId}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS(IDMS-IC) emp01_person.selectById 의 입사일 — 회사 조건은 TOBE 추가 -->
+    <select id="selectHireDate" resultType="java.time.LocalDate">
+        SELECT emp01_hire_date
+          FROM emp01_person
+         WHERE emp01_person_id = #{personId}
+           AND emp01_company_id = #{companyId}
+    </select>
+
+    <select id="countPerson" resultType="int">
+        SELECT COUNT(*)
+          FROM emp01_person
+         WHERE emp01_person_id = #{personId}
+           AND emp01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) emp01_person.selectByCtzNo -->
+    <select id="selectPersonIdsByCtzNo" resultType="long">
+        SELECT emp01_person.emp01_person_id
+          FROM emp01_person
+               INNER JOIN emp02_others ON emp01_person_id = emp02_person_id
+         WHERE emp01_company_id = #{companyId}
+           AND emp01_kor_nm = #{personName}
+           AND LEFT(to_decrypts(emp02_ctz_no), 6) = LEFT(#{personCtzNo}, 6)
+    </select>
+
+    <!-- AS-IS(IDMS-IC) emp01_person.selectByEmpNo -->
+    <select id="selectPersonIdsByEmpNo" resultType="long">
+        SELECT emp01_person_id
+          FROM emp01_person
+         WHERE emp01_company_id = #{companyId}
+           AND emp01_emp_no = #{empNo}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) pay31_insure_apply.excelInsert -->
+    <insert id="excelInsert">
+        INSERT INTO pay31_insure_apply
+               (pay31_insure_apply_id, pay31_company_id, pay31_person_id, pay31_insure_cd, pay31_insure_apply_cd,
+                pay31_apply_date, pay31_pay_cd, pay31_pay_div)
+        VALUES (f_create_seq(), #{companyId}, #{personId}, #{insureCode}, '5',
+                #{applyDate}, #{payCode}, #{payDiv})
+    </insert>
+</mapper>
