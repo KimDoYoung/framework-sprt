@@ -4,7 +4,7 @@
  * 생성자 L67-120: 위 좌우 50:50 (왼쪽 [행 추가][행 삭제][저장] + 지급 그리드 / 오른쪽 [행 추가][행 삭제][저장][소득세 재계산] + 공제 그리드),
  *   아래 [근로시간][비고작성][임금계산방법][4대보험 연말정산 납부상세]. 그리드는 체크 다중 셀 편집 + 합계 행 "계"
  * 부모(Pay10_Tab_Month)가 forwardRef 핸들로 enabled()·retrieve()·init()를 부른다
- * 삭제는 화면에서만 빼 두었다가 [저장]에서 서버에 한꺼번에 보낸다(deleteList1·2). 임금계산방법(Pay04_Lookup_Formula)은 다음 단계 — 안내만
+ * 삭제는 화면에서만 빼 두었다가 [저장]에서 서버에 한꺼번에 보낸다(deleteList1·2). 임금계산방법은 Pay04_Lookup_Formula 창
  */
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { message, Splitter } from 'antd';
@@ -14,6 +14,7 @@ import { PayItem, PayMonth, PayMonthItem } from '@/types/pay';
 import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { useGridCrud } from '@/hooks/useGridCrud';
+import { Pay04_Lookup_Formula } from './Pay04_Lookup_Formula';
 import { Pay09_Lookup_Note } from './Pay09_Lookup_Note';
 import { Pay10_Lookup_Work } from './Pay10_Lookup_Work';
 import { Pay20_Lookup_SelectMulti } from './Pay20_Lookup_SelectMulti';
@@ -45,6 +46,7 @@ export const Pay11_TabPage_MonthItem = forwardRef<PayMonthItemHandle>((_props, r
   const [workOpen, setWorkOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [formulaOpen, setFormulaOpen] = useState(false);
 
   const makeCrud = (itemType: string) => ({
     idField: 'monthItemId' as const,
@@ -212,8 +214,8 @@ export const Pay11_TabPage_MonthItem = forwardRef<PayMonthItemHandle>((_props, r
         <Button type="view" onClick={needMonth(() => setWorkOpen(true))}>근로시간</Button>
         {/* [E9] noteButton[비고작성].Select (L179) */}
         <Button type="view" onClick={needMonth(() => setNoteOpen(true))}>비고작성</Button>
-        {/* [E10] formulaButton[임금계산방법].Select (L196) → lookupformula() — Pay04_Lookup_Formula는 다음 단계 */}
-        <Button type="view" onClick={() => message.info('임금계산방법 창(Pay04_Lookup_Formula)은 다음 단계에서 지원합니다')}>임금계산방법</Button>
+        {/* [E10] formulaButton[임금계산방법].Select (L196) → lookupformula() L418-421: Pay04_Lookup_Formula.open() (급여정보를 고르지 않아도 열린다) */}
+        <Button type="view" onClick={() => setFormulaOpen(true)}>임금계산방법</Button>
         {/* [E11] insureDetailButton[4대보험 연말정산 납부상세].Select (L202) */}
         <Button type="view" onClick={needMonth(() => setDetailOpen(true))}>4대보험 연말정산 납부상세</Button>
       </div>
@@ -224,6 +226,7 @@ export const Pay11_TabPage_MonthItem = forwardRef<PayMonthItemHandle>((_props, r
         onSaved={patch => { if (month) { const next = { ...month, ...patch }; monthRef.current = next; setMonth(next); } }}
         onClose={() => setWorkOpen(false)}
       />
+      <Pay04_Lookup_Formula open={formulaOpen} onClose={() => setFormulaOpen(false)} />
       <Pay09_Lookup_Note target={noteOpen && month ? { payCode: month.payCd, payDate: month.date } : null} onClose={() => setNoteOpen(false)} />
       <Pay32_Lookup_Detail target={detailOpen && month ? { personId: month.personId, payDate: month.date } : null} onClose={() => setDetailOpen(false)} />
     </div>

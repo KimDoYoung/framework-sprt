@@ -28,6 +28,7 @@ public class PayFormulaService {
 
     private final PayFormulaMapper mapper;
 
+    // S16: 생성·저장·삭제는 로그인 회사 행만 다루므로 고객사 관리자도 허용(임금계산방법 창 Pay04_Lookup_Formula, 사용자 결정 2026-10-28). 고객사 지정 기초데이터생성만 KFS 관리자
     /** AS-IS selectByCompanyId: 기준 적용일 목록(최신순) */
     public List<PayFormulaDateRes> searchDates(UserPrincipal user, Long companyId) {
         return mapper.selectDates(targetCompany(user, companyId));
@@ -44,7 +45,6 @@ public class PayFormulaService {
      */
     @Transactional
     public void createDate(UserPrincipal user, LocalDate startDate) {
-        requireSysAdmin(user);
         if (startDate == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "적용일은 필수입력 항목입니다");
         }
@@ -62,7 +62,6 @@ public class PayFormulaService {
     /** AS-IS update(UpdateDataModel): 있는 행은 고치고, 없는 행은 새 id로 넣는다 → 저장된 행(요청 순서) */
     @Transactional
     public List<PayFormulaRes> save(UserPrincipal user, List<PayFormulaSaveReq> rows) {
-        requireSysAdmin(user);
         Long companyId = user.getCompanyId();
         return rows.stream().map(req -> {
             boolean exists = req.formulaId() != null && req.formulaId() > 0 && mapper.selectById(req.formulaId()) != null;
@@ -87,14 +86,12 @@ public class PayFormulaService {
     /** AS-IS delete(UpdateDataModel.deleteModel) → 지운 건수 */
     @Transactional
     public int delete(UserPrincipal user, List<Long> ids) {
-        requireSysAdmin(user);
         return ids == null || ids.isEmpty() ? 0 : mapper.deleteByIds(user.getCompanyId(), ids);
     }
 
     /** AS-IS deleteByDate: 로그인 회사의 해당 적용일을 통째로 지운다 → 지운 건수 */
     @Transactional
     public int deleteDate(UserPrincipal user, LocalDate startDate) {
-        requireSysAdmin(user);
         if (startDate == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "기준 적용일을 선택해주세요");
         }
