@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq } from '../types/pay';
+import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq, PayBasicSetup, PayBasicSetupSaveReq } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -613,6 +613,18 @@ export const payApi = {
   getRelateAppr: async (payCode: string, payDate: string): Promise<PayRelateAppr | null> => {
     const res = await apiClient.get<ApiResponse<PayRelateAppr | null>>('v1/pay/relate-apprs', { params: { payCode, payDate } });
     return res.data.data ?? null;
+  },
+
+  /** AS-IS pay.Pay30_BasicSetup.selectByCompanyId (S28) — 설정이 없으면 null */
+  getBasicSetup: async (): Promise<PayBasicSetup | null> => {
+    const res = await apiClient.get<ApiResponse<PayBasicSetup | null>>('v1/pay/basic-setup');
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS pay.Pay30_BasicSetup.modelUpdate (S28) */
+  saveBasicSetup: async (req: PayBasicSetupSaveReq): Promise<PayBasicSetup> => {
+    const res = await apiClient.put<ApiResponse<PayBasicSetup>>('v1/pay/basic-setup', req);
+    return res.data.data;
   },
 
   /** AS-IS pay.Pay03_Account.selectByCompanyId */

@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.dto.AddDeductRes;
 import kr.co.kfs.asseterp.biz.emp.dto.AddDeductSaveReq;
 import kr.co.kfs.asseterp.biz.emp.dto.DeductCreateReq;
+import kr.co.kfs.asseterp.biz.emp.dto.DeductPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.DeductRes;
 import kr.co.kfs.asseterp.biz.emp.dto.DeductSaveReq;
 import kr.co.kfs.asseterp.biz.emp.service.EmpDeductService;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -28,6 +30,14 @@ import java.util.List;
 public class EmpDeductController {
 
     private final EmpDeductService empDeductService;
+
+    /** AS-IS emp.Emp35_Deduct.selectByStdDate (S28 Emp35_Tab_DeductPerson) */
+    @GetMapping("/deducts/persons")
+    public ApiResponse<List<DeductPersonRes>> getDeductPersons(@AuthenticationPrincipal UserPrincipal principal,
+                                                               @RequestParam(required = false) Long personId,
+                                                               @RequestParam(defaultValue = "000") String transCode) {
+        return ApiResponse.ok(empDeductService.getDeductPersons(principal, personId, transCode));
+    }
 
     /** AS-IS emp.Emp35_Deduct.selectByPersonId */
     @GetMapping("/persons/{personId}/deducts")

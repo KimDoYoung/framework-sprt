@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { TransTarget, BizTrip, Errand, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { TransTarget, BizTrip, Errand, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -138,6 +138,12 @@ export const empApi = {
   deleteTranses: async (transIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/emp/trans', { data: transIds });
     return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp35_Deduct.selectByStdDate (S28) — 기준일은 서버가 오늘로, transCode 000 전체/100 재직/800 겸직/900 퇴직 */
+  getDeductPersons: async (params: { personId?: number | null; transCode: string }): Promise<DeductPerson[]> => {
+    const res = await apiClient.get<ApiResponse<DeductPerson[]>>('v1/emp/deducts/persons', { params: { ...params, personId: params.personId ?? undefined } });
+    return res.data.data ?? [];
   },
 
   /** AS-IS emp.Emp35_Deduct.selectByPersonId */

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/pay/Pay30_BasicSetup.java + mapper/pay30_basic_setup.xml (S28) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayBasicSetupMapper">
+
+    <!-- AS-IS pay30_basic_setup.selectByCompanyId L28 (IDMS-IC) — 코드명·"%"·"회" 문자열 열은 화면이 만든다 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayBasicSetupRes">
+        SELECT pay30_basic_setup_id  AS basic_setup_id,
+               pay30_company_id      AS company_id,
+               pay30_with_hold_rate  AS with_hold_rate,
+               pay30_hi_div_pay_cd   AS hi_div_pay_code,
+               pay30_hi_max_div      AS hi_max_div,
+               pay30_ei_div_pay_cd   AS ei_div_pay_code,
+               pay30_ei_max_div      AS ei_max_div
+          FROM pay30_basic_setup
+         WHERE pay30_company_id = #{companyId}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertBasicSetup">
+        INSERT INTO pay30_basic_setup (pay30_basic_setup_id, pay30_company_id, pay30_with_hold_rate,
+                                       pay30_hi_div_pay_cd, pay30_hi_max_div, pay30_ei_div_pay_cd, pay30_ei_max_div)
+        VALUES (#{basicSetupId}, #{companyId}, #{req.withHoldRate},
+                #{req.hiDivPayCode}, #{req.hiMaxDiv}, #{req.eiDivPayCode}, #{req.eiMaxDiv})
+    </insert>
+
+    <update id="updateBasicSetup">
+        UPDATE pay30_basic_setup
+           SET pay30_with_hold_rate = #{req.withHoldRate},
+               pay30_hi_div_pay_cd  = #{req.hiDivPayCode},
+               pay30_hi_max_div     = #{req.hiMaxDiv},
+               pay30_ei_div_pay_cd  = #{req.eiDivPayCode},
+               pay30_ei_max_div     = #{req.eiMaxDiv}
+         WHERE pay30_company_id = #{companyId}
+    </update>
+</mapper>

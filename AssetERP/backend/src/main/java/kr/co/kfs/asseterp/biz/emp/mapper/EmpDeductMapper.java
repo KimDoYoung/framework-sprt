@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.emp.mapper;
 
 import kr.co.kfs.asseterp.biz.emp.dto.AddDeductRes;
 import kr.co.kfs.asseterp.biz.emp.dto.AddDeductSaveReq;
+import kr.co.kfs.asseterp.biz.emp.dto.DeductPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.DeductRes;
 import kr.co.kfs.asseterp.biz.emp.dto.DeductSaveReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -13,6 +14,10 @@ import java.util.List;
 /** AS-IS server/emp/Emp35_Deduct.java + Emp36_AddDeduct.java */
 @Mapper
 public interface EmpDeductMapper {
+
+    /** AS-IS emp35_deduct.selectByStdDate — 기준일의 사원별 최신 급여공제 + 재직구분(transCode 000/100/800/900), personId는 null이면 전체 */
+    List<DeductPersonRes> selectByStdDate(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                          @Param("stdDate") LocalDate stdDate, @Param("transCode") String transCode);
 
     /** AS-IS emp35_deduct.selectByPersonId */
     List<DeductRes> selectDeducts(@Param("companyId") Long companyId, @Param("personId") Long personId);

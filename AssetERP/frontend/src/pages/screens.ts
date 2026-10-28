@@ -12,6 +12,7 @@ import { Dbm01_Tab_TabComments } from './dbm/Dbm01_Tab_TabComments';
 import { Dbm10_Tab_MakePdf } from './dbm/Dbm10_Tab_MakePdf';
 import { Emp00_Tab_ChangeHistory } from './emp/Emp00_Tab_ChangeHistory';
 import { Emp31_Tab_Director } from './emp/Emp31_Tab_Director';
+import { Emp35_Tab_DeductPerson } from './emp/Emp35_Tab_DeductPerson';
 import { Emp00_Tab_OrgPerson } from './emp/Emp00_Tab_OrgPerson';
 import { Emp15_Tab_Cert } from './emp/Emp15_Tab_Cert';
 import { Emp20_Tab_LeaveManager } from './emp/Emp20_Tab_LeaveManager';
@@ -143,6 +144,7 @@ import { Icam50_Tab_DbSource } from './icam/Icam50_Tab_DbSource';
 import { Icam99_Tab_Test } from './icam/Icam99_Tab_Test';
 import { Ifi90_Tab_Config } from './ifi/Ifi90_Tab_Config';
 import { Org01_Tab_OrgCode } from './org/Org01_Tab_OrgCode';
+import { Pay20_Tab_Deduct } from './pay/Pay20_Tab_Deduct';
 import { Pay20_Tab_DeductAdmin } from './pay/Pay20_Tab_DeductAdmin';
 import { Pay01_Tab_Annual } from './pay/Pay01_Tab_Annual';
 import { Pay01_Tab_AnnualList } from './pay/Pay01_Tab_AnnualList';
@@ -284,6 +286,7 @@ export const SCREENS: Record<string, React.FC> = {
   Emp54_Tab_ErrandManager, // S12 (1단계: 이익수령 제외신청 결재문서 보기 전자결재 편집창은 다음 단계)
   Emp20_Tab_LeaveManager, // S06 (1단계: [휴가취소]의 결재문서 삭제·알림 발송 emp.Emp20_Leave.cancelUpdate는 다음 단계)
   Emp15_Tab_Cert, // S05 (1단계: 전자결재 상신 Apr01_Edit_ApprDoc·문서분류 선택 Dcr01_Lookup_Class·메일보내기 Dcr10_Lookup_MailSender는 다음 단계)
+  Emp35_Tab_DeductPerson, // S28 (급여공제정보 — 아래는 C01-3의 Emp35_Page_DeductDate 공용 + 기본설정 pay30_Popup_BasicSetup·임금계산방법·급여출금계좌. 다음 단계: 4대보험 신고정보 Pay31_Popup_InsureApply)
   Emp31_Tab_Director, // S03 (1단계: 문서분류지정 Dcr30_Lookup_Link·보고서 창의 선임/해임 콤보·결재상신은 다음 단계)
   Bbs02_Tab_NoticeViewLaw, // H01 (+ Bbs02_Popup_NoticeAdmin·Bbs07_TapPage_Comment·Bbs07_Lookup_FileList·Bbs02_Lookup_File)
   Bbs15_Tab_CompanyRuleManager, // E10 (+ Bbs15_Edit_CompanyRuleManager·Bbs15_Lookup_File, 엑셀다운로드는 RD 리포트 대신 서버가 xlsx 생성)
@@ -475,6 +478,7 @@ export const SCREENS: Record<string, React.FC> = {
   Pay01_Tab_AnnualPerson, // S15 1단계 (상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계)
   Pay01_Tab_AnnualList, // S14 1단계 (상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계. 출력 창 Pay01_Lookup_Rd_AnnualList = RdViewer)
   Pay01_Tab_Annual, // S13 1단계 (상신의 결재문서 작성·상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계. + Pay06_Lookup_ActList·Pay06_Lookup_ActMapping)
+  Pay20_Tab_Deduct, // S29 (E22 Pay20_Tab_DeductAdmin 껍데기 재사용 — 원본이 클래스명만 다름, 탭 9개·25 클래스 모두 E22)
   Pay20_Tab_DeductAdmin, // E22 1단계 (탭 1~3: Pay20_TabPage_Item·Pay04_TabPage_Formula·Pay21_TabPage_Rate + Pay20_Lookup_ItemList·Pay04_Lookup_Insert. 탭 4~9는 자리만)
   Pay34_Tab_WorkTimeConfig, // E23
   Crd10_Tab_ExcelCompanyAdmin, // E24 (+ Crd11_Lookup_ExcelCodeAdmin)

@@ -138,6 +138,23 @@ export interface Deduct {
   childDeductCnt?: number | null;
 }
 
+/** 급여공제정보 사원 목록 행 (GET /api/v1/emp/deducts/persons, AS-IS Emp35_DeductModel — S28) */
+export interface DeductPerson {
+  deductId: number;
+  companyId: number;
+  personId: number;
+  personNo?: string | null;
+  personName?: string | null;
+  hireDate?: string | null;
+  birthday?: string | null;
+  basicDeductCnt?: number | null;
+  addDeductYn?: string | null;
+  insureYn?: string | null;
+  reprYn?: string | null;
+  npsYn?: string | null;
+  withHoldRate?: number | null;
+}
+
 /** 추가인적공제 행 (GET /api/v1/emp/deducts/{deductId}/add-deducts, AS-IS Emp36_AddDeductModel) */
 export interface AddDeduct {
   addDeductId: number;

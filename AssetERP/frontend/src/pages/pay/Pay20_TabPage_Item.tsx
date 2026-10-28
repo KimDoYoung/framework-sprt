@@ -25,7 +25,7 @@ export interface PayTabPageHandle {
 
 /**
  * AS-IS buildGrid() L138-169: setChecked(MULTI).
- * [E7] itemTypeComboBox[PayItemType].Collapse (L142), [E8] nonTaxTypeComboBox[NonTaxType].Collapse (L151) → 고른 이름에 맞춰 코드(itemType·nonTaxType)도 바꾼다
+ * [E8] itemTypeComboBox[PayItemType].Collapse (L142), [E9] nonTaxTypeComboBox[NonTaxType].Collapse (L151) → 고른 이름에 맞춰 코드(itemType·nonTaxType)도 바꾼다
  */
 const buildGrid = (itemTypes: Code[], nonTaxTypes: Code[]) => [
   gb.text('itemTypeName', 150, '항목구분', {  // L161
@@ -81,19 +81,19 @@ export const Pay20_TabPage_Item = forwardRef<PayTabPageHandle>((_props, ref) => 
     sysApi.searchCodes('NonTaxType').then(setNonTaxTypes).catch(() => {});
   }, []);
 
-  // [E0] 열 때 조회 + [E1] itemTypeComboBox[PayItemType].Collapse (L92) → retrieve(): 항목구분을 고르면 바로 조회
+  // [E0] 열 때 조회 + [E1] itemTypeComboBox.callbackOnCreate (L82) + [E2] itemTypeComboBox[PayItemType].Collapse (L92) → retrieve(): 항목구분을 고르면 바로 조회
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { crud.retrieve(); }, [itemType]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {/* [E2] searchText.KeyPress [Enter] (L101) → retrieve(), [E3] retrieveButton[조회].Select (L110) → retrieve() */}
+      {/* [E3] searchText.KeyPress [Enter] (L101) → retrieve(), [E4] retrieveButton[조회].Select (L110) → retrieve() */}
       <SearchBar onSearch={crud.retrieve} loading={crud.loading} extra={isAdminCompany && <>
-        {/* [E4] insertButton[등록].Select (L116) → insertRow() L212-216 */}
+        {/* [E5] insertButton[등록].Select (L116) → insertRow() L212-216 */}
         <Button type="register" onClick={crud.addRow}>등록</Button>
-        {/* [E5] updateButton[저장].Select (L122) → update() L196-209. 저장(n)은 UX-03 */}
+        {/* [E6] updateButton[저장].Select (L122) → update() L196-209. 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-        {/* [E6] deleteButton[삭제].Select (L128) → deleteRow() L219-234 → [E9] messageBox.DialogHide [YES] (L222) → pay.Pay20_Item.delete */}
+        {/* [E7] deleteButton[삭제].Select (L128) → deleteRow() L219-234 → [E10] messageBox.DialogHide [YES] (L222) → pay.Pay20_Item.delete */}
         <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
       </>}>
         <SearchBar.Field label="항목구분">

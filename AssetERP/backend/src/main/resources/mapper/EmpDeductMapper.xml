@@ -20,6 +20,47 @@
         emp35_child_deduct_cnt AS child_deduct_cnt
     </sql>
 
+    <!-- AS-IS emp35_deduct.selectByStdDate L53 (IDMS-IC) — 기준일 이전 최신 급여공제(rn=1) + 기준일 현재 발령 -->
+    <select id="selectByStdDate" resultType="kr.co.kfs.asseterp.biz.emp.dto.DeductPersonRes">
+        SELECT emp35_deduct_id        AS deduct_id,
+               emp35_company_id       AS company_id,
+               emp35_person_id        AS person_id,
+               emp01_emp_no           AS person_no,
+               emp01_kor_nm           AS person_name,
+               emp01_hire_date        AS hire_date,
+               CAST(emp02_birthday AS date) AS birthday,
+               emp35_basic_deduct_cnt AS basic_deduct_cnt,
+               emp35_add_deduct_yn    AS add_deduct_yn,
+               emp35_insure_yn        AS insure_yn,
+               emp35_repr_yn          AS repr_yn,
+               CASE WHEN f_get_4insure_yn(emp35_person_id, #{stdDate}, '1') THEN 'false' ELSE 'true' END AS nps_yn,
+               emp35_with_hold_rate   AS with_hold_rate
+          FROM (SELECT *
+                     , ROW_NUMBER() OVER(PARTITION BY emp35_person_id ORDER BY emp35_start_date DESC) AS rn
+                  FROM emp35_deduct
+                 WHERE emp35_start_date &lt;= #{stdDate}
+               ) t
+         INNER JOIN emp01_person ON emp01_person_id = emp35_person_id
+         INNER JOIN emp02_others ON emp02_person_id = emp35_person_id
+          LEFT OUTER JOIN emp03_trans ON (emp03_person_id = emp35_person_id
+                                      AND (emp03_person_id, emp03_trans_date) IN (SELECT emp03_person_id, MAX(emp03_trans_date)
+                                                                                    FROM emp03_trans
+                                                                                   WHERE emp03_person_id = emp35_person_id
+                                                                                     AND emp03_trans_date &lt;= #{stdDate}
+                                                                                   GROUP BY emp03_person_id))
+         WHERE rn = 1
+           AND emp35_company_id = #{companyId}
+           AND emp03_trans_cd = (CASE #{transCode}
+                                     WHEN '100' THEN (CASE WHEN emp03_trans_cd &lt;= '799' THEN emp03_trans_cd ELSE #{transCode} END)
+                                     WHEN '900' THEN '900'
+                                     WHEN '800' THEN '800'
+                                     ELSE emp03_trans_cd
+                                 END)
+        <if test="personId != null">
+           AND emp35_person_id = #{personId}
+        </if>
+    </select>
+
     <!-- AS-IS emp35_deduct.selectByPersonId (SELECT *) -->
     <select id="selectDeducts" resultType="kr.co.kfs.asseterp.biz.emp.dto.DeductRes">
         SELECT <include refid="deductColumns"/>

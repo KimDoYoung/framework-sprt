@@ -555,3 +555,23 @@ export interface PayInsureApplyCreateReq {
   applyMonthPay: number;
   applyMonth?: string | null;
 }
+
+/** 급여공제 기본설정 (GET /api/v1/pay/basic-setup, AS-IS Pay30_BasicSetupModel — S28) */
+export interface PayBasicSetup {
+  basicSetupId: number;
+  companyId: number;
+  withHoldRate?: number | null;
+  hiDivPayCode?: string | null;
+  hiMaxDiv?: number | null;
+  eiDivPayCode?: string | null;
+  eiMaxDiv?: number | null;
+}
+
+export interface PayBasicSetupSaveReq {
+  basicSetupId?: number | null;
+  withHoldRate: number | null;
+  hiDivPayCode: string | null;
+  hiMaxDiv: number | null;
+  eiDivPayCode: string | null;
+  eiMaxDiv: number | null;
+}

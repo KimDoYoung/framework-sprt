@@ -22,7 +22,7 @@ const gb = gbFor<PayRate>();
 
 /**
  * AS-IS buildGrid() L123-143: setChecked(MULTI).
- * [E6] RateTypeComboBox[RateCode].Collapse (L127) → 고른 이름에 맞춰 코드(rateCode)도 바꾼다
+ * [E7] RateTypeComboBox[RateCode].Collapse (L127) → 고른 이름에 맞춰 코드(rateCode)도 바꾼다
  */
 const buildGrid = (rateCodes: Code[]) => [
   gb.text('rateName', 150, '율 구분', {  // L137
@@ -65,19 +65,19 @@ export const Pay21_TabPage_Rate = forwardRef<PayTabPageHandle>((_props, ref) => 
     sysApi.searchCodes('RateCode').then(setRateCodes).catch(() => {});
   }, []);
 
-  // [E0] 열 때 조회 + [E1] RateComboBox[RateCode].Collapse (L88) → retrieve(): 율 구분을 고르면 바로 조회
+  // [E0] 열 때 조회 + [E1] RateComboBox.callbackOnCreate (L78) + [E2] RateComboBox[RateCode].Collapse (L88) → retrieve(): 율 구분을 고르면 바로 조회
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { crud.retrieve(); }, [rateCode]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {/* [E2] retrieveButton[조회].Select (L95) → retrieve() */}
+      {/* [E3] retrieveButton[조회].Select (L95) → retrieve() */}
       <SearchBar onSearch={crud.retrieve} loading={crud.loading} extra={isAdminCompany && <>
-        {/* [E3] insertButton[등록].Select (L101) → insertRow() L186-190 */}
+        {/* [E4] insertButton[등록].Select (L101) → insertRow() L186-190 */}
         <Button type="register" onClick={crud.addRow}>등록</Button>
-        {/* [E4] updateButton[저장].Select (L107) → update() L171-184. 저장(n)은 UX-03 */}
+        {/* [E5] updateButton[저장].Select (L107) → update() L171-184. 저장(n)은 UX-03 */}
         <Button type="save" count={crud.changes} onClick={crud.saveRows}>저장</Button>
-        {/* [E5] deleteButton[삭제].Select (L113) → deleteRow() L192-207 → [E7] messageBox.DialogHide [YES] (L195) → pay.Pay21_Rate.delete */}
+        {/* [E6] deleteButton[삭제].Select (L113) → deleteRow() L192-207 → [E8] messageBox.DialogHide [YES] (L195) → pay.Pay21_Rate.delete */}
         <Button type="delete" onClick={crud.deleteChecked}>삭제</Button>
       </>}>
         <SearchBar.Field label="율 구분">

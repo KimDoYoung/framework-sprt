@@ -8,18 +8,17 @@ import { LookupModal } from '@/components/lookup/LookupModal';
 import { Dayjs } from 'dayjs';
 import { empApi } from '@/api/emp';
 import { errorMessage } from '@/api/client';
-import { TransInfo } from '@/types/emp';
 import { Button } from '@/components/button';
 
 interface Props {
   open: boolean;
-  row: TransInfo | undefined;
+  personId: number | undefined;
   onClose: () => void;
   /** AS-IS insert() 콜백: 목록 갱신 */
   onCreated: () => void;
 }
 
-export const Emp35_Popup_DeductCreate: React.FC<Props> = ({ open, row, onClose, onCreated }) => {
+export const Emp35_Popup_DeductCreate: React.FC<Props> = ({ open, personId, onClose, onCreated }) => {
   const [year, setYear] = useState<Dayjs | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -32,10 +31,10 @@ export const Emp35_Popup_DeductCreate: React.FC<Props> = ({ open, row, onClose, 
       message.warning('적용일은 필수입력 항목입니다');
       return;
     }
-    if (!row?.personId) return;
+    if (!personId) return;
     setSaving(true);
     try {
-      await empApi.createDeduct(row.personId, year.format('YYYY-MM-DD'));
+      await empApi.createDeduct(personId, year.format('YYYY-MM-DD'));
       onCreated();
       onClose();
     } catch (err) {
