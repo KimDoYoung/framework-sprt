@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/emp/mapper/emp03_trans.xml selectByHistory(L98) · emp08_license.xml selectByHistory(L49) · emp11_reward.xml selectByHistory(L49)
+  + sys/Sys99_Print insertRdEmp03History(L4779)·insertRdEmp08History(L4847)·insertRdEmp11History(L4897).
+  사원정보 변경조회(Emp00_Tab_ChangeHistory)의 세 탭 조회와 [출력/다운로드]용 sys99_print 채우기.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpChangeHistoryMapper">
+
+    <!-- AS-IS emp03_trans.selectByHistory L98: 조직은 발령일 기준 이름(org00 CTE → org00_org_info 뷰) -->
+    <sql id="transQuery">
+        SELECT emp03_trans_date                                                              AS trans_date,
+               emp01_kor_nm                                                                  AS emp_kor_name,
+               f_cdnm('EmpTransCode', emp03_trans_cd, emp01_company_id, emp03_trans_date)    AS trans_name,
+               f_cdnm('EmpKindCode',  emp03_kind_cd,  emp01_company_id, emp03_trans_date)    AS kind_name,
+               org00_kor_nm                                                                  AS org_name,
+               f_get_empTrans(emp03_person_id, emp03_trans_date::date, 'title_nm')           AS title_name,
+               f_cdnm('EmpPosCode',   emp03_pos_cd,   emp01_company_id, emp03_trans_date)    AS pos_name,
+               f_cdnm('EmpGradeCode', emp03_grade_cd, emp01_company_id, emp03_trans_date)    AS grade_name,
+               emp03_duty                                                                    AS duty,
+               emp03_expiry_date                                                             AS expiry_date,
+               emp03_org_head_yn                                                             AS org_head_yn,
+               emp03_officer_yn                                                              AS officer_yn,
+               emp03_tdm_target_yn                                                           AS tdm_target_yn,
+               emp03_non_stay_yn                                                             AS non_stay_yn,
+               emp03_trans_reason                                                            AS trans_reason,
+               emp01_emp_no                                                                  AS emp_no
+          FROM emp03_trans
+               INNER JOIN emp01_person ON emp01_person_id = emp03_person_id
+               LEFT OUTER JOIN org00_org_info ON (    org00_org_code_id = emp03_org_code_id
+                                                  AND org00_company_id  = #{companyId}
+                                                  AND org00_mod_date = ( SELECT MAX(org02_mod_date)
+                                                                           FROM org02_info
+                                                                          WHERE org02_code_id = emp03_org_code_id
+                                                                            AND org02_mod_date <![CDATA[ <= ]]> emp03_trans_date ))
+         WHERE emp01_company_id = #{companyId}
+           AND emp03_trans_date BETWEEN #{startDate} AND #{closeDate}
+           AND UPPER(CONCAT(emp01_kor_nm, emp01_emp_no)) LIKE UPPER(#{searchText})
+        <if test="empTransCode != null">
+           AND emp03_trans_cd = #{empTransCode}
+        </if>
+    </sql>
+
+    <!-- AS-IS emp08_license.selectByHistory L49: 기준일의 최신 발령 기준 재직(100)·겸직(800)·퇴직(900)·전체(그 밖) -->
+    <sql id="licenseQuery">
+        SELECT t.emp08_emp_org_nm                AS emp_org_name,
+               t.emp08_emp_kor_nm                AS emp_kor_name,
+               t.emp08_certified_nm              AS certified_name,
+               t.emp08_certified_dt              AS certified_dt,
+               t.emp08_license_no                AS license_number,
+               t.emp08_issuing_agency            AS issuing_agency,
+               t.emp08_finance_pro_type_nm       AS finance_pro_type_name,
+               t.emp08_finance_relate_yn         AS finance_relate_yn,
+               t.emp08_kofia_reg_date            AS kofia_reg_date,
+               t.emp08_note                      AS note
+          FROM (
+               SELECT emp08_certified_dt
+                    , CONCAT(emp08_certified_nm, ' '||emp08_issuing_grade)                                 AS emp08_certified_nm
+                    , emp08_license_no
+                    , emp08_issuing_agency
+                    , emp08_issuing_grade
+                    , emp08_note
+                    , emp08_finance_relate_yn
+                    , emp08_kofia_reg_date
+                    , f_get_empTrans(emp01_person_id, f_sysdate()::date, 'org_code_nm')                    AS emp08_emp_org_nm
+                    , emp01_kor_nm                                                                         AS emp08_emp_kor_nm
+                    , emp01_emp_no                                                                         AS emp08_emp_no
+                    , emp32_finance_pro_type                                                               AS emp08_finance_pro_type
+                    , f_cdnm('FinanceProType', emp32_finance_pro_type, emp01_company_id, '2024-1-1')       AS emp08_finance_pro_type_nm
+                 FROM emp08_license
+                      INNER JOIN emp01_person ON emp08_person_id = emp01_person_id
+                      INNER JOIN emp03_trans  ON emp03_person_id = emp01_person_id AND emp03_trans_date = ( SELECT MAX(t.emp03_trans_date)
+                                                                                                              FROM emp03_trans t
+                                                                                                             WHERE t.emp03_person_id = emp01_person_id
+                                                                                                               AND t.emp03_trans_date <![CDATA[ <= ]]> #{startDate})
+                      LEFT  JOIN emp32_relate_license ON emp32_license_id = emp08_license_id
+                WHERE emp01_company_id = #{companyId}
+                  AND emp03_trans_cd = (
+                                         CASE #{transCode} WHEN '100'
+                                                           THEN ( CASE WHEN emp03_trans_cd <![CDATA[ <= ]]> '899' /* 퇴직(900)만 제외한다. (겸직자 재직자로 인식) */
+                                                                       THEN emp03_trans_cd
+                                                                       ELSE '100'
+                                                                  END)
+                                                           WHEN '900'
+                                                           THEN '900'
+                                                           WHEN '800'
+                                                           THEN '800'
+                                                           ELSE emp03_trans_cd
+                                         END
+                                       )
+                  AND emp08_certified_dt <![CDATA[ <= ]]> #{startDate}
+               ) t
+         WHERE CONCAT(t.emp08_emp_kor_nm, t.emp08_certified_nm, t.emp08_license_no, t.emp08_issuing_agency) ILIKE #{searchText}
+         ORDER BY t.emp08_emp_kor_nm COLLATE "ko_KR.utf8"
+                , t.emp08_certified_nm COLLATE "ko_KR.utf8"
+                , t.emp08_certified_dt
+    </sql>
+
+    <!-- AS-IS emp11_reward.selectByHistory L49 -->
+    <sql id="rewardQuery">
+        SELECT emp11_reward_dt                                                              AS reward_dt,
+               emp01_kor_nm                                                                 AS emp_kor_name,
+               f_cdnm('EmpRewardCode', emp11_reward_cd, emp01_company_id, f_sysdate())      AS reward_code_name,
+               emp11_reward_group                                                           AS reward_group,
+               emp11_reward_nm                                                              AS reward_name,
+               emp11_reward_desc                                                            AS reward_desc,
+               emp11_note                                                                   AS note,
+               emp01_emp_no                                                                 AS emp_no
+          FROM emp11_reward
+               INNER JOIN emp01_person ON emp11_person_id = emp01_person_id
+         WHERE emp01_company_id = #{companyId}
+           AND emp11_reward_dt BETWEEN #{startDate} AND #{closeDate}
+           AND UPPER(CONCAT(emp01_kor_nm, emp01_emp_no)) LIKE UPPER(#{searchText})
+         ORDER BY emp11_reward_dt, emp01_emp_no DESC
+    </sql>
+
+    <select id="selectTransHistory" resultType="kr.co.kfs.asseterp.biz.emp.dto.ChangeHistoryTransRes">
+        SELECT q.* FROM (<include refid="transQuery"/>) q
+         ORDER BY q.trans_date, q.emp_no DESC
+    </select>
+
+    <select id="selectLicenseHistory" resultType="kr.co.kfs.asseterp.biz.emp.dto.ChangeHistoryLicenseRes">
+        <include refid="licenseQuery"/>
+    </select>
+
+    <select id="selectRewardHistory" resultType="kr.co.kfs.asseterp.biz.emp.dto.ChangeHistoryRewardRes">
+        SELECT q.* FROM (<include refid="rewardQuery"/>) q
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys99_print.deleteByPersonId L695: 화면 클래스명은 LIKE 로 비교 -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) Sys99_Print.insertRdEmp03History L4779 -->
+    <insert id="insertPrintTrans">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_string01, sys99_string02, sys99_string03, sys99_string04, sys99_string05
+               , sys99_string06, sys99_string07, sys99_string08, sys99_date02
+               , sys99_string09, sys99_string10, sys99_string11, sys99_string12, sys99_string13 )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , s.trans_date, COALESCE(s.emp_kor_name, ''), COALESCE(s.trans_name, ''), COALESCE(s.kind_name, ''), COALESCE(s.org_name, ''), COALESCE(s.title_name, '')
+             , COALESCE(s.pos_name, ''), COALESCE(s.grade_name, ''), COALESCE(s.duty, ''), s.expiry_date
+             , CASE WHEN s.org_head_yn   = 'true' THEN '✓' ELSE '' END
+             , CASE WHEN s.officer_yn    = 'true' THEN '✓' ELSE '' END
+             , CASE WHEN s.tdm_target_yn = 'true' THEN '✓' ELSE '' END
+             , CASE WHEN s.non_stay_yn   = 'true' THEN '✓' ELSE '' END
+             , COALESCE(s.trans_reason, '')
+          FROM (<include refid="transQuery"/>) s
+         ORDER BY s.trans_date, s.emp_no DESC
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) Sys99_Print.insertRdEmp08History L4847 -->
+    <insert id="insertPrintLicense">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_string03, sys99_date01, sys99_string04, sys99_string05
+               , sys99_string06, sys99_string07, sys99_date02, sys99_string08 )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , COALESCE(s.emp_org_name, ''), COALESCE(s.emp_kor_name, ''), COALESCE(s.certified_name, ''), s.certified_dt
+             , COALESCE(s.license_number, ''), COALESCE(s.issuing_agency, ''), COALESCE(s.finance_pro_type_name, '')
+             , CASE WHEN s.finance_relate_yn = 'true' THEN '✓' ELSE '' END
+             , s.kofia_reg_date, COALESCE(s.note, '')
+          FROM (<include refid="licenseQuery"/>) s
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) Sys99_Print.insertRdEmp11History L4897 -->
+    <insert id="insertPrintReward">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_string01, sys99_string02, sys99_string03, sys99_string04, sys99_string05, sys99_string06 )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , s.reward_dt, COALESCE(s.emp_kor_name, ''), COALESCE(s.reward_code_name, ''), COALESCE(s.reward_group, '')
+             , COALESCE(s.reward_name, ''), COALESCE(s.reward_desc, ''), COALESCE(s.note, '')
+          FROM (<include refid="rewardQuery"/>) s
+    </insert>
+
+</mapper>

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/emp/mapper/emp31_director.xml selectByText(L64) · selectByTextReport(L121) · selectByPersonId + UpdateDataModel(emp31_director)
+  + sys/Sys99_Print insertRdDirector01(L2944)·insertRdDirector02(L3019).
+  임원정보 관리(Emp31_Tab_Director). emp31_director에는 회사 컬럼이 없다 → 회사 조건은 사원(emp01_person)으로 건다.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpDirectorMapper">
+
+    <!-- AS-IS selectByText/selectByTextReport 가 같은 대상 조건: 임시직(40)·기타직(99)·겸직(800)·겸직자 제외, 이사(director_yn) 또는 등기임원, 해임임원 포함 여부, 검색어 -->
+    <sql id="directorWhere">
+           AND  emp03_kind_cd  NOT IN ('40','99')     /*(40:임시직/99:기타직)*/
+           AND  emp03_trans_cd != '800'               /*(800:겸직)*/
+           AND  NOT EXISTS ( SELECT 1 FROM emp04_add_title WHERE emp04_add_person_id = emp01_person_id )
+           AND  (   COALESCE(emp03_director_yn,'false') = 'true'
+                 OR emp03_officer_yn = 'true' )
+        <if test="!endCheck">
+           AND  (emp31_end_date IS NULL OR emp31_end_date >= f_sysdate())
+        </if>
+           AND  UPPER(CONCAT(f_emp_kor_nm(emp01_person_id), f_get_emptrans(emp01_person_id, f_sysdate()::date, 'pos_nm'), emp31_note)) LIKE UPPER(#{searchText})
+    </sql>
+
+    <!-- 그리드·출력이 같이 쓰는 FROM (사원 최신 발령 + 임원정보 + 기타정보) -->
+    <sql id="directorFrom">
+          FROM  emp01_person
+                LEFT OUTER JOIN (SELECT *
+                                      , ROW_NUMBER() OVER (PARTITION BY emp03_person_id ORDER BY emp03_trans_date DESC) AS rn
+                                   FROM emp03_trans) emp03_trans        ON emp03_person_id = emp01_person_id AND rn = 1
+                LEFT OUTER JOIN emp31_director                          ON emp31_person_id = emp01_person_id
+                LEFT OUTER JOIN emp02_others                            ON emp02_person_id = emp01_person_id
+    </sql>
+
+    <sql id="directorCareer">
+          (SELECT STRING_AGG(company_nm, E'\n' ORDER BY company_nm)
+             FROM (SELECT DISTINCT emp07_company_nm AS company_nm
+                     FROM emp07_career
+                    WHERE emp07_person_id = emp01_person_id
+                      AND emp07_main_career_yn = 'true') x )
+    </sql>
+
+    <!-- AS-IS emp31_director.selectByText L64 (서비스 Emp31_Director.selectByText L24) -->
+    <sql id="directorQuery">
+        SELECT ROW_NUMBER() OVER(ORDER BY emp31_officer_yn DESC, emp31_init_assign_date, emp31_pos_cd, emp31_person_nm) AS emp31_director_id
+             , t.*
+          FROM (
+                SELECT emp01_person_id                                                      AS emp31_person_id
+                     , f_emp_kor_nm(emp01_person_id)                                        AS emp31_person_nm
+                     , emp02_chn_nm                                                         AS emp31_chn_nm
+                     , f_get_emptrans(emp01_person_id, f_sysdate()::date, 'pos_cd')         AS emp31_pos_cd
+                     , f_get_emptrans(emp01_person_id, f_sysdate()::date, 'pos_nm')         AS emp31_pos_nm
+                     , COALESCE(SUBSTRING(to_decrypts(emp02_ctz_no), 1, 6), '미입력')         AS emp31_ctz_no
+                     , COALESCE(emp03_officer_yn, 'false')                                  AS emp31_officer_yn
+                     , emp03_non_stay_yn                                                    AS emp31_non_stay_yn
+                     , emp03_duty                                                           AS emp31_duty
+                     , emp31_init_assign_date
+                     , emp31_rcnt_assing_date
+                     , emp31_expire_date
+                     , emp31_assign_cnt
+                     , emp31_add_title
+                     , emp31_prefer_stock
+                     , emp31_common_stock
+                     , emp31_note
+                     , COALESCE(emp31_qualified, ' ')                                       AS emp31_qualified
+                     , <include refid="directorCareer"/>                                    AS emp31_career
+                     , emp31_end_date
+                     , emp31_end_reason
+                <include refid="directorFrom"/>
+                 WHERE emp01_company_id = #{companyId}
+                <include refid="directorWhere"/>
+               ) t
+         ORDER BY emp31_pos_cd
+    </sql>
+
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.emp.dto.DirectorRes">
+        SELECT q.emp31_director_id   AS director_id,
+               q.emp31_person_id     AS person_id,
+               q.emp31_person_nm     AS person_name,
+               q.emp31_chn_nm        AS chn_name,
+               q.emp31_pos_nm        AS pos_name,
+               q.emp31_officer_yn    AS officer_yn,
+               q.emp31_ctz_no        AS ctz_no,
+               q.emp31_init_assign_date AS init_assign_date,
+               q.emp31_rcnt_assing_date AS rcnt_assing_date,
+               q.emp31_expire_date   AS expire_date,
+               q.emp31_assign_cnt    AS assign_cnt,
+               q.emp31_add_title     AS add_title,
+               q.emp31_qualified     AS qualified,
+               q.emp31_prefer_stock  AS prefer_stock,
+               q.emp31_common_stock  AS common_stock,
+               q.emp31_end_date      AS end_date,
+               q.emp31_end_reason    AS end_reason,
+               q.emp31_note          AS note
+          FROM (<include refid="directorQuery"/>) q
+    </select>
+
+    <!-- AS-IS emp31_director.selectByPersonId -->
+    <select id="selectDirectorIdByPersonId" resultType="long">
+        SELECT emp31_director_id
+          FROM emp31_director
+         WHERE emp31_person_id = #{personId}
+         ORDER BY emp31_director_id
+         LIMIT 1
+    </select>
+
+    <!-- TOBE 추가: 저장 대상 사원이 로그인 회사 소속인지 -->
+    <select id="countPerson" resultType="int">
+        SELECT COUNT(*) FROM emp01_person
+         WHERE emp01_person_id = #{personId} AND emp01_company_id = #{companyId}
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel(emp31_director) 동적 INSERT: 화면이 고치는 11개 열 + 사원 -->
+    <insert id="insertDirector">
+        INSERT INTO emp31_director
+               ( emp31_director_id, emp31_person_id, emp31_init_assign_date, emp31_rcnt_assing_date, emp31_expire_date, emp31_assign_cnt
+               , emp31_add_title, emp31_qualified, emp31_prefer_stock, emp31_common_stock, emp31_end_date, emp31_end_reason, emp31_note )
+        VALUES ( #{directorId}, #{personId}, #{initAssignDate}, #{rcntAssingDate}, #{expireDate}, #{assignCnt}
+               , #{addTitle}, #{qualified}, #{preferStock}, #{commonStock}, #{endDate}, #{endReason}, #{note} )
+    </insert>
+
+    <update id="updateDirector">
+        UPDATE emp31_director
+           SET emp31_init_assign_date = #{initAssignDate},
+               emp31_rcnt_assing_date = #{rcntAssingDate},
+               emp31_expire_date      = #{expireDate},
+               emp31_assign_cnt       = #{assignCnt},
+               emp31_add_title        = #{addTitle},
+               emp31_qualified        = #{qualified},
+               emp31_prefer_stock     = #{preferStock},
+               emp31_common_stock     = #{commonStock},
+               emp31_end_date         = #{endDate},
+               emp31_end_reason       = #{endReason},
+               emp31_note             = #{note}
+         WHERE emp31_director_id = #{directorId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) sys99_print.deleteByPersonId L695 -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) Sys99_Print.insertRdDirector01 L2944 ← emp31_director.selectByTextReport L121: 고른 사원만 + 책무(직책 배분 업무) 조인 -->
+    <insert id="insertPrintSenior">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_string03, sys99_string04
+               , sys99_date01, sys99_date02, sys99_date03, sys99_long01
+               , sys99_string05, sys99_string06, sys99_string07, sys99_string08, sys99_string09, sys99_string10, sys99_string11
+               , sys99_date04, sys99_string12, sys99_text01, sys99_text02 )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , COALESCE(r.emp31_pos_nm, ''), COALESCE(r.emp31_person_nm, ''), COALESCE(r.emp31_chn_nm, ''), COALESCE(r.emp31_ctz_no, '')
+             , r.emp31_init_assign_date, r.emp31_rcnt_assing_date, r.emp31_expire_date, COALESCE(r.emp31_assign_cnt, 0)
+             , COALESCE(r.emp31_add_title, ''), COALESCE(r.emp31_qualified, ''), COALESCE(r.emp31_career, ''), COALESCE(r.emp31_note, '')
+             , CASE WHEN r.emp31_officer_yn = 'true' THEN '등기' ELSE '비등기' END
+             , CASE WHEN r.emp31_non_stay_yn IS NULL OR r.emp31_non_stay_yn != 'true' THEN '상임' ELSE '비상임' END
+             , COALESCE(r.emp31_duty, '')
+             , r.emp31_end_date, COALESCE(r.emp31_end_reason, ''), COALESCE(r.emp31_task_nm, ''), COALESCE(r.emp31_task_detail, '')
+          FROM (
+                SELECT ROW_NUMBER() OVER(ORDER BY emp31_officer_yn DESC, emp31_init_assign_date, emp31_pos_cd, emp31_person_nm) AS emp31_director_id
+                     , t.*
+                  FROM (
+                        SELECT emp01_person_id                                                      AS emp31_person_id
+                             , f_emp_kor_nm(emp01_person_id)                                        AS emp31_person_nm
+                             , emp02_chn_nm                                                         AS emp31_chn_nm
+                             , f_get_emptrans(emp01_person_id, f_sysdate()::date, 'pos_cd')         AS emp31_pos_cd
+                             , f_get_emptrans(emp01_person_id, f_sysdate()::date, 'pos_nm')         AS emp31_pos_nm
+                             , COALESCE(SUBSTRING(to_decrypts(emp02_ctz_no), 1, 6), '미입력')         AS emp31_ctz_no
+                             , COALESCE(emp03_officer_yn, 'false')                                  AS emp31_officer_yn
+                             , emp03_non_stay_yn                                                    AS emp31_non_stay_yn
+                             , emp03_duty                                                           AS emp31_duty
+                             , emp31_init_assign_date
+                             , emp31_rcnt_assing_date
+                             , emp31_expire_date
+                             , emp31_assign_cnt
+                             , emp31_add_title
+                             , emp31_prefer_stock
+                             , emp31_common_stock
+                             , emp31_note
+                             , emp31_qualified
+                             , <include refid="directorCareer"/>                                    AS emp31_career
+                             , emp31_end_date
+                             , emp31_end_reason
+                             , tdm35_task_nm                                                        AS emp31_task_nm
+                             , tdm35_task_detail                                                    AS emp31_task_detail
+                        <include refid="directorFrom"/>
+                                LEFT OUTER JOIN (SELECT DISTINCT tdm35_task_relate_detail_id
+                                                      , tdm35_task_nm COLLATE "ko_KR.utf8" AS tdm35_task_nm
+                                                      , tdm12_content  AS tdm35_task_detail
+                                                      , tdm30_person_id AS tdm35_person_id
+                                                   FROM getTdm30RoleAllc(#{companyId}, f_sysdate()::date, true)
+                                                        INNER JOIN tdm34_role_allc_detail ON tdm30_role_allc_id = tdm34_role_allc_id
+                                                        INNER JOIN tdm35_role_allc_task ON tdm35_role_allc_detail_id = tdm34_role_allc_detail_id
+                                                        INNER JOIN tdm12_task_relate_detail ON tdm35_task_relate_detail_id = tdm12_task_relate_detail_id
+                                                  ORDER BY tdm35_task_nm) task ON tdm35_person_id = emp01_person_id
+                         WHERE emp01_company_id = #{companyId}
+                           AND emp01_person_id IN
+                        <foreach collection="personList" item="pid" open="(" separator="," close=")">#{pid}</foreach>
+                        <include refid="directorWhere"/>
+                       ) t
+                 ORDER BY emp31_pos_cd
+               ) r
+    </insert>
+
+    <!-- AS-IS(IDMS-IC) Sys99_Print.insertRdDirector02 L3019 ← emp31_director.selectByText L64: 전체 현황(해임임원 제외) -->
+    <insert id="insertPrintTotal">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_string03, sys99_string04
+               , sys99_date01, sys99_date02, sys99_date03, sys99_long01
+               , sys99_string05, sys99_string06, sys99_string07, sys99_string08, sys99_string09, sys99_string10
+               , sys99_date04 )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , COALESCE(r.emp31_pos_nm, ''), COALESCE(r.emp31_person_nm, ''), COALESCE(r.emp31_chn_nm, ''), COALESCE(r.emp31_ctz_no, '')
+             , r.emp31_init_assign_date, r.emp31_rcnt_assing_date, r.emp31_expire_date, COALESCE(r.emp31_assign_cnt, 0)
+             , COALESCE(r.emp31_add_title, ''), COALESCE(r.emp31_qualified, ''), COALESCE(r.emp31_career, ''), COALESCE(r.emp31_note, '')
+             , CASE WHEN r.emp31_officer_yn = 'true' THEN '등기' ELSE '비등기' END
+             , CASE WHEN r.emp31_non_stay_yn IS NULL OR r.emp31_non_stay_yn != 'true' THEN '상임' ELSE '비상임' END
+             , r.emp31_end_date
+          FROM (<include refid="directorQuery"/>) r
+    </insert>
+
+</mapper>

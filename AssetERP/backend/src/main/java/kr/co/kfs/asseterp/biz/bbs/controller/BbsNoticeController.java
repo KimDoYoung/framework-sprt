@@ -22,7 +22,7 @@ public class BbsNoticeController {
 
     private final BbsNoticeService service;
 
-    /** AS-IS bbs.Bbs02_Notice.selectByNoticeDetailCodePaging (Bbs02_Tab_NoticeViewLaw). 법규공지는 noticeType 10 */
+    /** AS-IS bbs.Bbs02_Notice.selectByNoticeDetailCodePaging (Bbs02_Tab_NoticeViewLaw). 법규공지는 noticeType 10, 경영공지(Bbs02_Tab_NoticeViewMgt)는 20 */
     @GetMapping
     public ApiResponse<PageRes<NoticeRes>> searchByNoticeDetailCode(@AuthenticationPrincipal UserPrincipal principal,
                                                                     @RequestParam(defaultValue = "10") String noticeType,

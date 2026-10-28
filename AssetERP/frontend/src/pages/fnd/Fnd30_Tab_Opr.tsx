@@ -4,7 +4,7 @@
  * 생성자 L77-125: BorderLayout 가운데(여백 20, 테두리) = 툴바 50(청약기간 [시작 100 ~ 종료 100] · 검색 250 "종목/주간사" · [조회][등록][등록(수요예측) 140][삭제] · [문서분류지정]) + 공모주청약 그리드(체크 단일) / 아래 400(여백 0·20·20·20, 테두리) = Fnd31_Page_OprFund
  * UX보강(10): 툴바 = SearchBar(UX-01). 초기화(UX-02)는 원본에 없어 넣지 않는다
  * [다음 단계] 전자결재 편집창 Apr01_Edit_ApprDoc([결재요청]이 문서분류 조회창 Dcr01_Lookup_Class를 거쳐 여는 insertLinkApproval(총 배정수량과 펀드별 배정수량 합계 검사 뒤)·[상세보기]의 retrieveApproval, 끝난 뒤 updateApprId)과
- *   문서분류지정 창 Dcr30_Lookup_Link([문서분류지정]·열 때 defaultName)은 다른 도메인이라 지금은 안내만 한다. 결재요청은 편집창이 열릴 자리까지의 사전 검사·확인 창을 원본 그대로 한다
+ *   문서분류지정 창 Dcr30_Lookup_Link는 B15에서 연결했다(열 때 defaultName은 다음 단계). 결재요청은 편집창이 열릴 자리까지의 사전 검사·확인 창을 원본 그대로 한다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Modal } from 'antd';
@@ -13,6 +13,7 @@ import { fndApi } from '@/api/fnd';
 import { errorMessage } from '@/api/client';
 import { OprSub } from '@/types/fnd';
 import { Button } from '@/components/button';
+import { Dcr30_Lookup_Link } from '@/components/lookup/Dcr30_Lookup_Link';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
@@ -27,6 +28,7 @@ const FORMAT = 'YYYY-MM-DD';
 const SINGLE_CHECK = { mode: 'singleRow', checkboxes: true, enableClickSelection: true } as const;
 
 export const Fnd30_Tab_Opr: React.FC = () => {
+  const [linkOpen, setLinkOpen] = useState(false);
   const gridRef = useRef<AgGridReact<OprSub>>(null);
   // settings() L127-134: 청약기간 올해 1/1 ~ 오늘, 검색칸 250 "종목/주간사"
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().startOf('year'));
@@ -158,8 +160,8 @@ export const Fnd30_Tab_Opr: React.FC = () => {
             {/* [E5] insertDemandButton[등록(수요예측)].Select (L157) → Fnd30_Lookup_DemandOprList.open(callback → retrieve()) */}
             <Button type="register" onClick={() => setDemandListOpen(true)}>등록(수요예측)</Button>
             <Button type="delete" onClick={deleteCheck}>삭제</Button>
-            {/* [E7] dcrLinkButton[문서분류지정].Select (L175) → Dcr30_Lookup_Link.open("A26", callback → defaultName()) — 다른 도메인이라 다음 단계 */}
-            <Button type="select" onClick={() => message.info('문서분류지정 창(Dcr30_Lookup_Link)은 다음 단계에서 연결합니다.')}>문서분류지정</Button>
+            {/* [E7] dcrLinkButton[문서분류지정].Select (L175) → Dcr30_Lookup_Link.open("A26", callback → defaultName()) (B15; defaultName은 아직 다음 단계라 callback은 비워 둔다) */}
+            <Button type="select" onClick={() => setLinkOpen(true)}>문서분류지정</Button>
           </>}
         >
           <SearchBar.Field label="청약기간">
@@ -187,6 +189,7 @@ export const Fnd30_Tab_Opr: React.FC = () => {
       </div>
       <Fnd30_Edit_Opr target={target} onSaved={() => void retrieve()} onClose={() => setTarget(null)} />
       <Fnd30_Lookup_DemandOprList open={demandListOpen} onClose={() => { setDemandListOpen(false); void retrieve(); }} />
+      <Dcr30_Lookup_Link open={linkOpen} linkCodeList="A26" onClose={() => setLinkOpen(false)} />
     </div>
   );
 };

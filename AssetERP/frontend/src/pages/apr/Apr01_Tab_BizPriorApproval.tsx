@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr01_Tab_BizPriorApproval.java (393줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L84-106: north(100) = 위 양식 한 줄(신청서 구분 콤보 · 문서분류 칸 · [승인신청] · 관리자만 [문서분류지정]), center = 툴바(조회기간 ~ [조회]) + 문서 그리드(체크박스 단일 선택)
  * 1단계(F·G·L02와 같은 사유): [승인신청]·[상세보기]가 여는 전자결재 편집창 `Apr01_Edit_ApprDoc`(5831줄, 다른 도메인 apr)과 [문서분류지정]이 여는
- *   `Dcr30_Lookup_Link`(Link 관리 조회창)는 다음 단계에서 연결한다 — 지금은 원본의 사전 검사 메시지까지만 하고 안내를 띄운다.
+ *   (B15에서 [문서분류지정]의 `Dcr30_Lookup_Link`를 연결했다.) 편집창은 다음 단계 — 지금은 원본의 사전 검사 메시지까지만 하고 안내를 띄운다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
  */
 import React, { useMemo, useRef, useState } from 'react';
@@ -19,6 +19,7 @@ import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
+import { Dcr30_Lookup_Link } from '@/components/lookup/Dcr30_Lookup_Link';
 import { Dcr30_Move_DcrClass, Dcr30ClassResult } from '@/components/lookup/Dcr30_Move_DcrClass';
 import { useLoginUser } from '@/hooks/useLoginUser';
 
@@ -96,10 +97,9 @@ export const Apr01_Tab_BizPriorApproval: React.FC = () => {
   };
 
   // [E3] dcrLinkButton[문서분류지정].Select (L155) → Dcr30_Lookup_Link.open("LinkCode0002", callback{}) — 관리자만 보이는 버튼
-  // [E3 생략] Link 관리 조회창(Dcr30_Lookup_Link, 다른 도메인 dcr)은 다음 단계
-  const openLinkLookup = () => {
-    message.info('문서분류지정(Link 관리) 창은 다음 단계에서 연결됩니다');
-  };
+  //   (B15) 창은 components/lookup/Dcr30_Lookup_Link. 닫은 뒤 callback{}은 아무것도 하지 않는다
+  const [linkOpen, setLinkOpen] = useState(false);
+  const openLinkLookup = () => setLinkOpen(true);
 
   // insertLinkApproval() L362-382: 문서분류가 없으면 "문서분류를 선택해주세요", 아니면 제목 "{신청서 구분 이름}_{로그인 사원 이름}"으로(다음 단계에서 콤보 이름을 받는다)
   //   Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, linkCode, model, false, callback → 결과가 있으면 retrieve())
@@ -175,6 +175,7 @@ export const Apr01_Tab_BizPriorApproval: React.FC = () => {
           />
         </div>
       </div>
+      <Dcr30_Lookup_Link open={linkOpen} linkCodeList="LinkCode0002" onClose={() => setLinkOpen(false)} />
       <Dcr30_Move_DcrClass
         open={docOpen}
         authCheck

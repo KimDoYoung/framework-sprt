@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -693,5 +693,73 @@ export const empAddrBookApi = {
   deleteGroupMembers: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/emp/addr-book-groups/members', { data: ids });
     return res.data.data ?? 0;
+  },
+};
+
+/** S02 사원정보 변경조회 (Emp00_Tab_ChangeHistory) */
+export const empChangeHistoryApi = {
+  /** AS-IS emp.Emp03_Trans.selectByHistory — empTransCode가 없으면 전체 */
+  searchTrans: async (startDate: string, closeDate: string, searchText: string, empTransCode?: string): Promise<ChangeHistoryTrans[]> => {
+    const res = await apiClient.get<ApiResponse<ChangeHistoryTrans[]>>('v1/emp/change-histories/trans', { params: { startDate, closeDate, searchText, empTransCode } });
+    return (res.data.data ?? []).map(r => ({ ...r, transDate: day(r.transDate), expiryDate: day(r.expiryDate) }));
+  },
+
+  /** AS-IS emp.Emp08_License.selectByHistory — transCode 전체 000 / 재직 100 / 겸직 800 / 퇴직 900 */
+  searchLicenses: async (startDate: string, searchText: string, transCode: string): Promise<ChangeHistoryLicense[]> => {
+    const res = await apiClient.get<ApiResponse<ChangeHistoryLicense[]>>('v1/emp/change-histories/licenses', { params: { startDate, searchText, transCode } });
+    return (res.data.data ?? []).map(r => ({ ...r, certifiedDt: day(r.certifiedDt) }));
+  },
+
+  /** AS-IS emp.Emp11_Reward.selectByHistory */
+  searchRewards: async (startDate: string, closeDate: string, searchText: string): Promise<ChangeHistoryReward[]> => {
+    const res = await apiClient.get<ApiResponse<ChangeHistoryReward[]>>('v1/emp/change-histories/rewards', { params: { startDate, closeDate, searchText } });
+    return (res.data.data ?? []).map(r => ({ ...r, rewardDt: day(r.rewardDt) }));
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdEmp03History → 출력 그룹 ID */
+  rdPrintTrans: async (req: ChangeHistoryPrintReq): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/emp/change-histories/trans/rd-print', req);
+    return res.data.data ?? '';
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdEmp08History → 출력 그룹 ID */
+  rdPrintLicenses: async (req: ChangeHistoryPrintReq): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/emp/change-histories/licenses/rd-print', req);
+    return res.data.data ?? '';
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdEmp11History → 출력 그룹 ID */
+  rdPrintRewards: async (req: ChangeHistoryPrintReq): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/emp/change-histories/rewards/rd-print', req);
+    return res.data.data ?? '';
+  },
+};
+
+/** S03 임원정보 관리 (Emp31_Tab_Director) */
+export const empDirectorApi = {
+  /** AS-IS emp.Emp31_Director.selectByText — endCheck = 해임임원 포함 */
+  searchDirectors: async (searchText: string, endCheck: boolean): Promise<Director[]> => {
+    const res = await apiClient.get<ApiResponse<Director[]>>('v1/emp/directors', { params: { searchText, endCheck } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp31_Director.updateList → 저장한 건수 */
+  updateDirectors: async (rows: Director[]): Promise<number> => {
+    const body = rows.map(({ personId, initAssignDate, rcntAssingDate, expireDate, assignCnt, addTitle, qualified, preferStock, commonStock, endDate, endReason, note }) =>
+      ({ personId, initAssignDate, rcntAssingDate, expireDate, assignCnt, addTitle, qualified, preferStock, commonStock, endDate, endReason, note }));
+    const res = await apiClient.put<ApiResponse<number>>('v1/emp/directors', body);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdDirector01 → 선임/해임 보고 대상(고른 임원)의 출력 그룹 ID(seniorGroupId) */
+  rdPrintSenior: async (searchText: string, personIds: number[]): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/emp/directors/rd-print-senior', { searchText, personIds });
+    return res.data.data ?? '';
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdDirector02 → 전체 현황의 출력 그룹 ID(totalGroupId) */
+  rdPrintTotal: async (searchText: string): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/emp/directors/rd-print-total', { searchText });
+    return res.data.data ?? '';
   },
 };

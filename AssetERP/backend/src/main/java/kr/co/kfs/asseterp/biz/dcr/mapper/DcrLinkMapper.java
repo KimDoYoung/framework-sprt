@@ -31,6 +31,10 @@ public interface DcrLinkMapper {
 
     List<DcrLinkRes> selectBySearchId(@Param("companyId") Long companyId, @Param("searchText") String searchText);
 
+    List<DcrLinkRes> selectByCompanyId(@Param("companyId") Long companyId);
+
+    List<DcrLinkRes> selectByLinkCodeList(@Param("companyId") Long companyId, @Param("linkCodeList") String linkCodeList);
+
     DcrLinkRes selectById(@Param("linkId") Long linkId);
 
     Long selectLinkCompanyId(@Param("linkId") Long linkId);

@@ -522,3 +522,79 @@ export interface TransTdm {
   /** 사원의 조직(emp01_org_id) — N22 이행점검의 점검자 부서 */
   orgId?: number | null;
 }
+
+// ── S02 사원정보 변경조회 (Emp00_Tab_ChangeHistory) ──
+/** 일반발령 탭 행 (emp03_trans.selectByHistory) — 날짜는 서버 'yyyy-MM-ddTHH:mm:ss' */
+export interface ChangeHistoryTrans {
+  transDate?: string | null;
+  empKorName?: string | null;
+  transName?: string | null;
+  kindName?: string | null;
+  orgName?: string | null;
+  titleName?: string | null;
+  posName?: string | null;
+  gradeName?: string | null;
+  duty?: string | null;
+  expiryDate?: string | null;
+  orgHeadYn?: string | null;
+  officerYn?: string | null;
+  tdmTargetYn?: string | null;
+  nonStayYn?: string | null;
+  transReason?: string | null;
+}
+
+/** 자격사항 탭 행 (emp08_license.selectByHistory) */
+export interface ChangeHistoryLicense {
+  empOrgName?: string | null;
+  empKorName?: string | null;
+  certifiedName?: string | null;
+  certifiedDt?: string | null;
+  licenseNumber?: string | null;
+  issuingAgency?: string | null;
+  financeProTypeName?: string | null;
+  financeRelateYn?: string | null;
+  kofiaRegDate?: string | null;
+  note?: string | null;
+}
+
+/** 상벌내역 탭 행 (emp11_reward.selectByHistory) */
+export interface ChangeHistoryReward {
+  rewardDt?: string | null;
+  empKorName?: string | null;
+  rewardCodeName?: string | null;
+  rewardGroup?: string | null;
+  rewardName?: string | null;
+  rewardDesc?: string | null;
+  note?: string | null;
+}
+
+/** [출력/다운로드] 조건 — 자격사항은 startDate(기준일)·searchText만 쓴다 */
+export interface ChangeHistoryPrintReq {
+  startDate: string;
+  closeDate?: string;
+  searchText: string;
+  empTransCode?: string;
+}
+
+// ── S03 임원정보 관리 (Emp31_Tab_Director) ──
+/** 임원 그리드 행 (emp31_director.selectByText). `personId`가 행 키(임시 ID 없음 — 행 추가 버튼이 없다). 날짜는 'yyyy-MM-dd' */
+export interface Director {
+  directorId?: number | null;
+  personId: number;
+  personName?: string | null;
+  chnName?: string | null;
+  posName?: string | null;
+  officerYn?: string | null;
+  ctzNo?: string | null;
+  initAssignDate?: string | null;
+  rcntAssingDate?: string | null;
+  expireDate?: string | null;
+  assignCnt?: number | null;
+  addTitle?: string | null;
+  qualified?: string | null;
+  preferStock?: number | null;
+  commonStock?: number | null;
+  endDate?: string | null;
+  endReason?: string | null;
+  note?: string | null;
+}

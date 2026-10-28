@@ -265,6 +265,20 @@ export const dcrApi = {
     return res.data.data ?? [];
   },
 
+  // ── B15 문서분류지정 창 (Dcr30_Lookup_Link) ──
+
+  /** AS-IS dcr.Dcr30_Link.selectByCompanyId / selectByLinkCodeList: linkCodeList(Link 코드 또는 코드그룹)가 없으면 로그인 회사 전체 */
+  lookupLinks: async (linkCodeList?: string | null): Promise<DcrLink[]> => {
+    const res = await apiClient.get<ApiResponse<DcrLink[]>>('v1/dcr/links/lookup', { params: { linkCodeList: linkCodeList || undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr30_Link.insertCheck: 창을 열 때 로그인 회사에 없는 Link를 넣는다(조회가 쓰기) → 새로 넣은 건수 */
+  linkCheckCompany: async (): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/dcr/links/check-company');
+    return res.data.data ?? 0;
+  },
+
   /** AS-IS dcr.Dcr30_Link.linkCheck: 없는 Link를 모든 회사에 넣는다(조회가 쓰기, 관리자 회사만) → 새로 넣은 건수 */
   linkCheck: async (): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/dcr/links/check');

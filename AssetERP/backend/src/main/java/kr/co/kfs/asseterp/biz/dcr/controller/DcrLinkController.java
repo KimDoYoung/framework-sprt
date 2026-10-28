@@ -50,6 +50,21 @@ public class DcrLinkController {
         return ApiResponse.ok(service.search(principal, companyId, searchText));
     }
 
+    /** AS-IS dcr.Dcr30_Link.selectByCompanyId / selectByLinkCodeList (문서분류지정 창 Dcr30_Lookup_Link) — linkCodeList 가 없으면 로그인 회사 전체 */
+    @GetMapping("/lookup")
+    public ApiResponse<List<DcrLinkRes>> lookup(@AuthenticationPrincipal UserPrincipal principal,
+                                                @RequestParam(required = false) String linkCodeList) {
+        return ApiResponse.ok(linkCodeList == null || linkCodeList.isBlank()
+                ? service.searchByCompany(principal)
+                : service.searchByLinkCodeList(principal, linkCodeList));
+    }
+
+    /** AS-IS dcr.Dcr30_Link.insertCheck (문서분류지정 창을 열 때. 로그인 회사에 없는 Link 만 넣는다) → 새로 넣은 건수 */
+    @PostMapping("/check-company")
+    public ApiResponse<Integer> linkCheckCompany(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.linkCheckCompany(principal));
+    }
+
     /** AS-IS dcr.Dcr30_Link.linkCheck (화면을 열 때. 없는 Link를 모든 회사에 넣는다 — 관리자 회사만) → 새로 넣은 건수 */
     @PostMapping("/check")
     public ApiResponse<Integer> linkCheck(@AuthenticationPrincipal UserPrincipal principal) {

@@ -23,13 +23,13 @@ const Cell: React.FC<{ label: string; required?: boolean; width?: number; align?
   label, required, width = 350, align = 'center', children,
 }) => (
   <div style={{ width, marginRight: 50, display: 'flex', alignItems: align, flexShrink: 0 }}>
-    <label style={{ width: 105, flexShrink: 0, color: required ? BLUE : undefined }}>{label}</label>
+    <label style={{ width: 105, flexShrink: 0, textAlign: 'right', paddingRight: 8, color: required ? BLUE : undefined }}>{label}</label>
     <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
   </div>
 );
 
 const Row: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{ display: 'flex', margin: '20px 20px 17px 20px' }}>{children}</div>
+  <div style={{ display: 'flex', margin: '8px 20px 8px 20px' }}>{children}</div>
 );
 
 interface Props {
@@ -169,7 +169,7 @@ export const Fnd01_Edit_FundPlan: React.FC<Props> = ({ model, onSaved }) => {
           </Cell>
         </Row>
       </fieldset>
-      <div style={{ height: 60, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+      <div style={{ height: 60, flexShrink: 0, display: 'flex', boxSizing: 'border-box', borderTop: '1px solid #d9d9d9', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
         <Button type="save" disabled={disabled} onClick={updateRow}>저장</Button>
       </div>
       <Fnd00_Lookup_FundCode open={lookupOpen} onResult={onLookupResult} onClose={() => setLookupOpen(false)} />

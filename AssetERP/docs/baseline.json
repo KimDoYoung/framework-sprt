@@ -8311,5 +8311,123 @@
     "note": "docs/work/R/R09-작업기록.md",
     "history": [],
     "id": "R09"
+  },
+  "Bbs02_Tab_NoticeViewMgt": {
+    "commit": "4bd1f4ed0410cf5d7a0c4f0367464792a7bfee9c",
+    "commit_short": "4bd1f4e",
+    "branch": "ioc",
+    "commit_date": "2026-10-27",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/bbs/Bbs02_Tab_NoticeViewMgt.java": "ad988ecf9050dc051720f0f2dd929842eb4fe915",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs02_NoticeModel.java": "f53f949e944d83507fa7c7382e3ff2334a113cae",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs02_NoticeModelProperties.java": "95798a6de9b18ca64adac0f74aa3dc4f2d4e6948",
+      "application/src/main/java/myApp/server/bbs/Bbs02_Notice.java": "cb6bad5a4ac23171c279c3c3f8c2e2e9a0ed34d0",
+      "application/src/main/java/myApp/server/bbs/mapper/bbs02_notice.xml": "c4664317cdb39070b24d4dad8cc7543e9184afb0",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+      "application/src/main/java/myApp/server/sys/Sys09_Code.java": "28d486d654b122ebef05ff7d0c2e7c8f8fd59e2d",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9"
+    },
+    "shared_links": [
+      "Bbs02_Popup_NoticeAdmin"
+    ],
+    "recorded_at": "2026-10-28T09:49:36+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/S/S01-작업기록.md",
+    "history": [],
+    "id": "S01"
+  },
+  "Emp00_Tab_ChangeHistory": {
+    "commit": "4bd1f4ed0410cf5d7a0c4f0367464792a7bfee9c",
+    "commit_short": "4bd1f4e",
+    "branch": "ioc",
+    "commit_date": "2026-10-27",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp00_Tab_ChangeHistory.java": "06214f73f454d2e055d06a5b5fe1882e41e3e70b",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp01_PersonModel.java": "f4478d406df99853f5315401fc09f28e760101fe",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp02_OthersModel.java": "361f61b4bebfd1073f0769db40e42327748e6897",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp03_TransModel.java": "04d7eee0cc0e32e67ef794a9c7535cb96a7b1f7b",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp03_TransModelProperties.java": "c0a6db6e304f028dfef862716f5395885158e478",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp08_LicenseModel.java": "d7641e7f0ce3aa2525f9cdc1ff0c0594fbf7c3ee",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp08_LicenseModelProperties.java": "4c4eb87ec91a2a9c050662871be1f698de7ca85c",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp11_RewardModel.java": "c1d16476105bd43100b173441c899ef91cb63fc2",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp11_RewardModelProperties.java": "c32ebe1e333c9878fd46c8a189aa9e0884145d6f",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp20_LeaveModel.java": "08d4fe0e87a0e52d15d517f341428f632a6b3ef0",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp25_MypageNoticeModel.java": "ed561979441bb7c66b28ab4db8af90bbc8d9774d",
+      "application/src/main/java/myApp/server/emp/Emp03_Trans.java": "2952a28d7b447313932b24460906f1b8c0b3469a",
+      "application/src/main/java/myApp/server/emp/Emp08_License.java": "f53a8d809583ec516e70a95cd366c514ce62ef5e",
+      "application/src/main/java/myApp/server/emp/Emp11_Reward.java": "847d5b1ac4298c71b8e13c09479d6ce1eff6727c",
+      "application/src/main/java/myApp/server/emp/mapper/emp03_trans.xml": "76e7ec4447db3a1924571d7dbe7f3ca041ba7d41",
+      "application/src/main/java/myApp/server/emp/mapper/emp08_license.xml": "4ca7fa50aa81c505df22083d0428558f0b55247e",
+      "application/src/main/java/myApp/server/emp/mapper/emp11_reward.xml": "e3320402d92da070da20180b2c9705b2ad5e8e12",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-28T10:00:57+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/S/S02-작업기록.md",
+    "history": [],
+    "id": "S02"
+  },
+  "Emp31_Tab_Director": {
+    "commit": "4bd1f4ed0410cf5d7a0c4f0367464792a7bfee9c",
+    "commit_short": "4bd1f4e",
+    "branch": "ioc",
+    "commit_date": "2026-10-27",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp31_Tab_Director.java": "c036ebf03a78947440281b7193aab59dd950cdb9",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp31_DirectorModel.java": "7f48f8c9cb2fa678f69d4223b775b3e4f6fe4000",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp31_DirectorModelProperties.java": "c3eb2efbd74897e9838e50eb6a2514fed5e793bf",
+      "application/src/main/java/myApp/server/emp/Emp31_Director.java": "510b14000f186531a627ad0ba3259481074ea68b",
+      "application/src/main/java/myApp/server/emp/mapper/emp31_director.xml": "14d0a13eda5b5551686aac3d26dff2bbd888526b",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Dcr30_Lookup_Link"
+    ],
+    "recorded_at": "2026-10-28T10:07:58+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/S/S03-작업기록.md",
+    "history": [],
+    "id": "S03"
+  },
+  "Dcr30_Lookup_Link": {
+    "commit": "4bd1f4ed0410cf5d7a0c4f0367464792a7bfee9c",
+    "commit_short": "4bd1f4e",
+    "branch": "ioc",
+    "commit_date": "2026-10-27",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/dcr/Dcr30_Lookup_Link.java": "a7bb4dc0a5eb679c39b5f690a623bb388581f542",
+      "application/src/main/java/myApp/client/vi/dcr/Dcr30_Lookup_LinkNote.java": "f6717a6784be9fdedd6b6c64c7bb2a9f065e5413",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr01_ClassTreeModel.java": "b11f72ec7b9f373dd86ec5303bac1785335febf4",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr03_OrgAuthModel.java": "9d159b0f64709f2e044abe12af5c0cc6308ddeaf",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr30_LinkModel.java": "264bc54ee294fe24f388e2529e2fdf2a95e77c3b",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr30_LinkModelProperties.java": "102899bcbb1a23ff030e3f0d5c9cb03a87d094a7",
+      "application/src/main/java/myApp/server/com/Com10_FormMapping.java": "06aee732fac5b6050213564dfacca00a0c2870bd",
+      "application/src/main/java/myApp/server/com/mapper/com10_form_mapping.xml": "ddc37cf311330d07300b31a322ffba789c031b2f",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr03_org_auth.xml": "5da3fd2370625731dccb0be70b7581e0968dd065",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr30_link.xml": "ea6fd1a9a684d167a513a2d0f2bd444d7f30e937",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Com10_Lookup_CommonMapping",
+      "Dcr30_Move_DcrClass"
+    ],
+    "recorded_at": "2026-10-28T10:17:22+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/B/B15-작업기록.md",
+    "history": [],
+    "id": "B15"
   }
 }

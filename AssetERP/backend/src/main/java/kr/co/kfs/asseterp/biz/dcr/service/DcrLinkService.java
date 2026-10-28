@@ -43,6 +43,29 @@ public class DcrLinkService {
         return mapper.selectBySearchId(targetCompany(user, companyId), "%" + (searchText == null ? "" : searchText) + "%");
     }
 
+    /** AS-IS selectByCompanyId (문서분류지정 창): 로그인 회사의 Link 전체 */
+    public List<DcrLinkRes> searchByCompany(UserPrincipal user) {
+        return mapper.selectByCompanyId(user.getCompanyId());
+    }
+
+    /** AS-IS selectByLinkCodeList (문서분류지정 창): Link 코드 또는 코드그룹으로 줄인 로그인 회사의 Link */
+    public List<DcrLinkRes> searchByLinkCodeList(UserPrincipal user, String linkCodeList) {
+        return mapper.selectByLinkCodeList(user.getCompanyId(), linkCodeList);
+    }
+
+    /** AS-IS insertCheck (문서분류지정 창을 열 때): 로그인 회사에 없는 Link 코드만 넣는다(조회가 쓰기, 원본 그대로) → 새로 넣은 건수 */
+    @Transactional
+    public int linkCheckCompany(UserPrincipal user) {
+        int count = 0;
+        for (String linkCode : mapper.selectLinkCodes(LINK_KIND_CODE)) {
+            if (mapper.countByLinkCode(user.getCompanyId(), linkCode) == 0) {
+                mapper.insertLink(mapper.selectNextId(), linkCode, user.getCompanyId());
+                count++;
+            }
+        }
+        return count;
+    }
+
     /** AS-IS linkCheck: 모든 회사에 없는 Link 코드를 넣는다(조회가 쓰기) → 새로 넣은 건수. 관리자 회사만 */
     @Transactional
     public int linkCheck(UserPrincipal user) {

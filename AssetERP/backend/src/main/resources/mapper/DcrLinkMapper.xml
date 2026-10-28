@@ -81,6 +81,48 @@
          ORDER BY sys09_seq, link_name
     </select>
 
+    <!-- AS-IS(IDMS-IC) dcr30_link.selectByCompanyId (문서분류지정 창 B15, 검색 없이 로그인 회사 전체) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkRes">
+        SELECT <include refid="linkColumns"/>
+        <include refid="linkFrom"/>
+         WHERE 1=1
+           AND dcr30_company_id = #{companyId}
+         ORDER BY sys09_seq, link_name
+    </select>
+
+    <!-- AS-IS(IDMS-IC) dcr30_link.selectByLinkCodeList (B15): Link 코드 하나, 또는 같은 코드그룹(sys13)의 코드들. 이름은 기준일(오늘) 회사 코드명, 사용중지 코드는 뺀다 -->
+    <select id="selectByLinkCodeList" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkRes">
+        SELECT dcr30_link_id                                                           AS link_id,
+               dcr30_link_cd                                                           AS link_code,
+               f_cdnm('LinkCode', dcr30_link_cd, dcr30_company_id, f_sysdate())        AS link_name,
+               dcr30_company_id                                                        AS company_id,
+               dcr30_class_tree_id                                                     AS class_tree_id,
+               f_class_tree_nm_allpath(dcr30_class_tree_id)                            AS class_tree_full_name,
+               dcr30_form_mapping_id                                                   AS form_mapping_id,
+               CASE WHEN dcr30_link_cd IN ('A02','A05','A08','A09','A13','A24','A25','A26','A27','A29','A30','A34','B05','B06')
+                    THEN 'A'
+                    WHEN dcr30_form_mapping_id IS NULL
+                    THEN ' '
+                    ELSE 'B'
+               END                                                                     AS gubun,
+               dcr30_note                                                              AS note
+          FROM dcr30_link
+               INNER JOIN ( SELECT sys09_code.*
+                              FROM sys08_code_kind
+                                   INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+                             WHERE sys08_kind_cd    = 'LinkCode'
+                               AND sys09_company_id = 0
+                               AND COALESCE(sys09_close_yn,'false') = 'false' ) sys ON sys09_code = dcr30_link_cd
+         WHERE 1=1
+           AND dcr30_company_id = #{companyId}
+           AND (   dcr30_link_cd = #{linkCodeList}
+                OR sys09_code_id IN ( SELECT sys13_code_id
+                                        FROM sys13_code_group
+                                       WHERE sys13_kind_group_cd = #{linkCodeList}
+                                         AND sys13_code_id       = sys09_code_id ) )
+         ORDER BY sys09_seq, link_name
+    </select>
+
     <!-- AS-IS(IDMS-IC) dcr30_link.selectById (UpdateDataModel 뒤 다시 읽기) -->
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrLinkRes">
         SELECT <include refid="linkColumns"/>

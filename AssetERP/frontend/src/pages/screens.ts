@@ -1,5 +1,6 @@
 import React from 'react';
 import { Bbs02_Tab_NoticeViewLaw } from './bbs/Bbs02_Tab_NoticeViewLaw';
+import { Bbs02_Tab_NoticeViewMgt } from './bbs/Bbs02_Tab_NoticeViewMgt';
 import { Bbs15_Tab_CompanyRuleManager } from './bbs/Bbs15_Tab_CompanyRuleManager';
 import { Chk01_Tab_ClassTree } from './chk/Chk01_Tab_ClassTree';
 import { Chk02_Tab_DailyList } from './chk/Chk02_Tab_DailyList';
@@ -9,6 +10,8 @@ import { Chk03_Tab_DailyListConfirm } from './chk/Chk03_Tab_DailyListConfirm';
 import { Chk03_Tab_DailyListStatus } from './chk/Chk03_Tab_DailyListStatus';
 import { Dbm01_Tab_TabComments } from './dbm/Dbm01_Tab_TabComments';
 import { Dbm10_Tab_MakePdf } from './dbm/Dbm10_Tab_MakePdf';
+import { Emp00_Tab_ChangeHistory } from './emp/Emp00_Tab_ChangeHistory';
+import { Emp31_Tab_Director } from './emp/Emp31_Tab_Director';
 import { Emp00_Tab_TransInfo } from './emp/Emp00_Tab_TransInfo';
 import { Emp00_Tab_RoleMenu } from './emp/Emp00_Tab_RoleMenu';
 import { Emp01_Tab_UserInfo } from './emp/Emp01_Tab_UserInfo';
@@ -246,6 +249,9 @@ import { Test_Tab_ReactComponents } from './test/Test_Tab_ReactComponents';
  * 메뉴 키는 DB 값 그대로 쓴다(오타 `Sys03_Tab_ComapnyMenu`도 그대로).
  */
 export const SCREENS: Record<string, React.FC> = {
+  Bbs02_Tab_NoticeViewMgt, // S01 (H01의 Bbs02_Popup_NoticeAdmin 재사용, noticeType 20)
+  Emp00_Tab_ChangeHistory, // S02
+  Emp31_Tab_Director, // S03 (1단계: 문서분류지정 Dcr30_Lookup_Link·보고서 창의 선임/해임 콤보·결재상신은 다음 단계)
   Bbs02_Tab_NoticeViewLaw, // H01 (+ Bbs02_Popup_NoticeAdmin·Bbs07_TapPage_Comment·Bbs07_Lookup_FileList·Bbs02_Lookup_File)
   Bbs15_Tab_CompanyRuleManager, // E10 (+ Bbs15_Edit_CompanyRuleManager·Bbs15_Lookup_File, 엑셀다운로드는 RD 리포트 대신 서버가 xlsx 생성)
   Chk01_Tab_ClassTree, // E06
