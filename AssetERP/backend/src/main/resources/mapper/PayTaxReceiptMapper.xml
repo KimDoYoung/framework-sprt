@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/pay/mapper/pay08_tax_withholding.xml (selectByPersonId)  (S24)
+  AS-IS 서버는 companyId도 받지만 SQL은 쓰지 않는다 — 그대로 personId만 조건으로 건다
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayTaxReceiptMapper">
+
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayTaxReceiptRes">
+        SELECT pay08_tax_withholding_id         AS tax_withholding_id,
+               pay08_person_id                  AS person_id,
+               COALESCE(emp01_kor_nm, '-')      AS person_name,
+               pay08_reg_date                   AS reg_date,
+               pay08_note                       AS note,
+               sys10_file_id                    AS file_id,
+               sys10_file_nm                    AS file_name,
+               sys10_file_ext                   AS file_ext
+          FROM pay08_tax_withholding
+               INNER JOIN sys10_file ON sys10_parent_id = pay08_tax_withholding_id
+               LEFT OUTER JOIN emp01_person ON emp01_person_id = pay08_person_id
+         WHERE pay08_person_id = #{personId}
+         ORDER BY sys10_file_nm DESC
+    </select>
+
+</mapper>

@@ -148,6 +148,7 @@ import { Pay01_Tab_Annual } from './pay/Pay01_Tab_Annual';
 import { Pay01_Tab_AnnualList } from './pay/Pay01_Tab_AnnualList';
 import { Pay01_Tab_AnnualPerson } from './pay/Pay01_Tab_AnnualPerson';
 import { Pay40_Tab_TaxWithholding } from './pay/Pay40_Tab_TaxWithholding';
+import { Pay08_Tab_TaxWithholding } from './pay/Pay08_Tab_TaxWithholding';
 import { Pay10_Tab_Month } from './pay/Pay10_Tab_Month';
 import { Pay10_Tab_MonthItem } from './pay/Pay10_Tab_MonthItem';
 import { Pay10_Tab_MonthSearch } from './pay/Pay10_Tab_MonthSearch';
@@ -463,6 +464,7 @@ export const SCREENS: Record<string, React.FC> = {
   Pay10_Tab_Retire, // S22 (퇴직정산 — 탭 4개 Pay10_TabPage_Retire·Pay12_TabPage_RetireInsure·Pay13_TabPage_RetireTax·Pay15_TabPage_RetireLeave + Pay12_Lookup_RetireCreate·Pay10_Lookup_RemLeaveDays·Pay24~27 보기 창. 1단계: 상신·문서보기는 안내)
   Pay10_Tab_List, // S18 (RD 보고서 Pay10_Rd_List 끼워 넣기 + Pay10_Lookup_Journal·Pay03_Lookup_PayAccount. 1단계: 상신·문서보기는 안내)
   Pay10_Tab_Month, // S16 1단계 (임금계산방법 Pay04_Lookup_Formula는 다음 단계 — 안내만. + Pay11_TabPage_MonthItem·팝업 6개·Emp01_Lookup_TransDate)
+  Pay08_Tab_TaxWithholding, // S24
   Pay40_Tab_TaxWithholding, // S23 1단계 (결재요청 아이콘의 결재문서 작성·상세보기 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계)
   Pay01_Tab_AnnualPerson, // S15 1단계 (상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계)
   Pay01_Tab_AnnualList, // S14 1단계 (상신상태 아이콘의 결재문서 보기 Apr01_Edit_ApprDoc은 다음 단계. 출력 창 Pay01_Lookup_Rd_AnnualList = RdViewer)

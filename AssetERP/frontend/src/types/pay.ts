@@ -501,3 +501,15 @@ export interface PayTaxWithholding {
   statusCode?: string | null;
   statusName?: string | null;
 }
+
+/** 원천징수영수증 파일 한 건 (S24, GET /api/v1/pay/tax-receipts/mine) — AS-IS Pay08_TaxWithholdingModel */
+export interface PayTaxReceipt {
+  taxWithholdingId: number;
+  personId?: number | null;
+  personName?: string | null;
+  regDate?: string | null;
+  note?: string | null;
+  fileId: number;
+  fileName?: string | null;
+  fileExt?: string | null;
+}

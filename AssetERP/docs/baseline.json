@@ -9190,5 +9190,26 @@
     "note": "docs/work/S/S23-작업기록.md",
     "history": [],
     "id": "S23"
+  },
+  "Pay08_Tab_TaxWithholding": {
+    "commit": "4bd1f4ed0410cf5d7a0c4f0367464792a7bfee9c",
+    "commit_short": "4bd1f4e",
+    "branch": "ioc",
+    "commit_date": "2026-10-27",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/pay/Pay08_PDFViewer.java": "8eee718dfa3c55c23bcc953afcd07d8a35baf9ed",
+      "application/src/main/java/myApp/client/vi/pay/Pay08_Tab_TaxWithholding.java": "679c2bd0ab1c2334874f74ae445f9356e671ec10",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay08_TaxWithholdingModel.java": "671bedaf30b036abf21507a89c8ea017eacae0b8",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay08_TaxWithholdingModelProperties.java": "d801e34df6f6fd939242f07bf51163824bc66257",
+      "application/src/main/java/myApp/server/pay/Pay08_TaxWithholding.java": "4ae189c23259fb6e2641e6ac752692a1ef05fd44",
+      "application/src/main/java/myApp/server/pay/mapper/pay08_tax_withholding.xml": "27f41cbc104ba48edceae2fbbf80165d111cefe1"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-28T16:38:50+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/S/S24-작업기록.md",
+    "history": [],
+    "id": "S24"
   }
 }
