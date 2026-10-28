@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/act/mapper/act03_journal_dtl.xml (selectPayMonth)  (S18). 원본은 act02_journal.*·act03_journal_dtl.*를 모두 가져오지만 전표확인 그리드가 쓰는 열만 고른다 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActJournalDtlMapper">
+
+    <select id="selectPayMonth" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalPayMonthRes">
+        SELECT act03_journal_dtl_id                                          AS journal_dtl_id,
+               act03_dr_account_cd                                           AS dr_account_code,
+               f_get_account_nm(act02_company_id, act03_dr_account_cd)       AS dr_account_name,
+               act03_dr_amt                                                  AS dr_amt,
+               f_ast_class_tree_nm(act03_dr_ast_id)                          AS dr_ast_name,
+               act03_cr_account_cd                                           AS cr_account_code,
+               f_get_account_nm(act02_company_id, act03_cr_account_cd)       AS cr_account_name,
+               act03_cr_amt                                                  AS cr_amt,
+               f_ast_class_tree_nm(act03_cr_ast_id)                          AS cr_ast_name
+          FROM act02_journal
+               INNER JOIN act03_journal_dtl ON act03_journal_id = act02_journal_id
+         WHERE act02_company_id   = #{companyId}
+           AND act02_date         = #{payDate}
+           AND act02_pay_month_cd = #{payType}
+         ORDER BY act03_seq
+    </select>
+</mapper>

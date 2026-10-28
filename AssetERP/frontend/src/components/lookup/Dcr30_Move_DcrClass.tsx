@@ -31,6 +31,8 @@ interface Props {
   companyName?: string;
   /** open(defaultModel, callback) — 일반 사용자 열기: [선택안함]을 감추고 [확인]에서 조직 권한을 검사한다(관리자는 검사 없음) */
   authCheck?: boolean;
+  /** open(callback) L93-112 (S18 Pay10_Tab_List) — [선택안함]만 감추고 권한 검사는 하지 않는다(admin 열기 그대로) */
+  hideNull?: boolean;
   /** open(defaultModel, …)의 defaultModel — 권한이 없어도 이 분류는 고를 수 있다 */
   defaultClassTreeId?: number | null;
   /** [확인]·[선택안함]의 callback.execute(classTreeModel) — 선택안함은 둘 다 null */
@@ -50,7 +52,7 @@ const fullName = (rows: DcrClassTree[], id: number): string => {
   return names.join('/');
 };
 
-export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyName, authCheck, defaultClassTreeId, onResult, onClose }) => {
+export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyName, authCheck, hideNull, defaultClassTreeId, onResult, onClose }) => {
   const user = useLoginUser();
   const [rows, setRows] = useState<DcrClassTree[]>([]);
   const [expanded, setExpanded] = useState<React.Key[]>([]);
@@ -129,7 +131,7 @@ export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyN
           <Space>
             <Button type="save" onClick={update}>확인</Button>
             {/* [E4] nullButton[선택안함].Select (L142) → 전체이름·ID를 null로 callback·hide */}
-            {!authCheck && <Button type="select" onClick={() => { onResult({ classTreeId: null, classTreeFullName: null }); onClose(); }}>선택안함</Button>}
+            {!authCheck && !hideNull && <Button type="select" onClick={() => { onResult({ classTreeId: null, classTreeFullName: null }); onClose(); }}>선택안함</Button>}
             {/* [E5] cancleButton[닫기].Select (L151) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>

@@ -299,6 +299,27 @@ export interface PayRelateNote {
   personNm?: string;
 }
 
+/** 급여대장 상신 상태(pay05_relate_appr + apr01_appr) — statusCode가 null이면 결재문서 없음, '40'은 반려 */
+export interface PayRelateAppr {
+  relateApprId: number;
+  apprId?: number | null;
+  statusCode?: string | null;
+  statusName?: string | null;
+}
+
+/** 급여출금계좌(pay03_account) 한 행 */
+export interface PayAccount {
+  accountId: number;
+  startDate?: string | null;
+  astClassTreeId?: number | null;
+  astClassTreeName?: string | null;
+  bankCd?: string | null;
+  bankName?: string | null;
+  accountNo?: string | null;
+  accountName?: string | null;
+  note?: string | null;
+}
+
 /** 4대보험 연말정산 납부(pay32_insure_pay) 한 행 */
 export interface PayInsurePay {
   insurePayId: number;

@@ -1,10 +1,16 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, JournalMap, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, JournalMap, JournalPayMonth, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { readBlobError } from './file';
 
 /** act(관리회계) 화면 API (E25~) */
 export const actApi = {
+  /** AS-IS act.Act03_JournalDtl.selectPayMonth — 급여 전표확인(payType = 월급여지급구분 코드) */
+  searchPayMonthJournals: async (payDate: string, payType: string): Promise<JournalPayMonth[]> => {
+    const res = await apiClient.get<ApiResponse<JournalPayMonth[]>>('v1/act/journal-dtls/pay-month', { params: { payDate, payType } });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS act.Act01_AccountCode.selectBySlipYn (Act01_Lookup_AccountCode): companyId가 없으면 로그인 회사, 다른 회사는 관리자 회사만 */
   searchAccountCodes: async (attributeCode: string, searchText: string, companyId?: number): Promise<AccountCode[]> => {
     const res = await apiClient.get<ApiResponse<AccountCode[]>>('v1/act/account-codes/lookup', { params: { companyId, attributeCode: attributeCode || undefined, searchText } });

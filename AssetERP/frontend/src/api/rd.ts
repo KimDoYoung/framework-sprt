@@ -3,7 +3,8 @@ import { ApiResponse } from '../types/auth';
 
 /** RD(Report Designer) 호출 주소 발급 — 백엔드 `POST /api/v1/rd/urls` (docs/RD-대책.md). rv의 companyId·personId는 서버가 로그인 값으로 채운다 */
 export interface RdUrlReq {
-  kind: 'viewer' | 'download' | 'save';
+  /** page = 화면에 끼워 넣는 RD 페이지(`{mrd}.html`, rv는 일반 쿼리 문자열) */
+  kind: 'viewer' | 'download' | 'save' | 'page';
   mrd: string;
   options?: string;
   exportType?: string;

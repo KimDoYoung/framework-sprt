@@ -157,3 +157,16 @@ export interface JournalMap {
   note: string | null;
   useYn: string | null;
 }
+
+/** 급여 전표 한 행(act03_journal_dtl) — 차변·대변 계정과 금액 (Pay10_Lookup_Journal) */
+export interface JournalPayMonth {
+  journalDtlId: number;
+  drAccountCode?: string | null;
+  drAccountName?: string | null;
+  drAmt?: number | null;
+  drAstName?: string | null;
+  crAccountCode?: string | null;
+  crAccountName?: string | null;
+  crAmt?: number | null;
+  crAstName?: string | null;
+}

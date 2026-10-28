@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/pay/mapper/pay05_relate_appr.xml (selectByCompanyId)  (S18) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayRelateApprMapper">
+
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRelateApprRes">
+        SELECT pay05_relate_appr_id                                                                      AS relate_appr_id,
+               pay05_appr_id                                                                             AS appr_id,
+               b.apr01_status_cd                                                                         AS status_code,
+               f_cdnm('AprStatusCode', b.apr01_status_cd, pay05_company_id, b.apr01_reg_date)            AS status_name
+          FROM pay05_relate_appr
+               LEFT OUTER JOIN apr01_appr b ON pay05_appr_id = apr01_appr_id
+         WHERE pay05_company_id = #{companyId}
+           AND pay05_pay_cd     = #{payCode}
+           AND pay05_start_date = #{payDate}
+    </select>
+</mapper>

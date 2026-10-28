@@ -39,6 +39,19 @@ class RdServiceTest {
     }
 
     @Test
+    void pageEmbedsHtmlWithPlainQuery_andLoginValuesWin() {
+        Map<String, String> rv = new LinkedHashMap<>();
+        rv.put("companyId", "1");      // 위조 시도
+        rv.put("payCode", "01");
+        rv.put("payDate", "2026-10-25");
+        rv.put("fileName", "PayList(26.10.25)");
+        RdUrlRes res = service.buildUrl(user, new RdUrlReq("page", "Pay10_Rd_List", null, null, null, rv));
+        assertEquals("GET", res.method());
+        assertEquals("http://localhost:5151/ReportingServer/html5/RDhtml/Pay10_Rd_List.html?companyId=28000&dbName=post_dev-devdb&dns=admin"
+                + "&personId=-28656&payCode=01&payDate=2026-10-25&fileName=PayList%2826.10.25%29", res.url());
+    }
+
+    @Test
     void saveUsesJspAndPrefixesSaveDirWithEscape() {
         RdUrlRes res = service.buildUrl(user, new RdUrlReq("save", "Ics15_Rd_ChecklistDetail", null, "pdf", "a b.pdf", Map.of()));
         assertEquals("POST", res.method());

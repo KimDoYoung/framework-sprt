@@ -42,6 +42,7 @@ public class RdService {
      */
     public RdUrlRes buildUrl(Long companyId, Long personId, RdUrlReq req) {
         String kind = req.kind() == null ? "" : req.kind();
+        if ("page".equals(kind)) return pageUrl(companyId, personId, req);
         String page;
         String dir;
         String method;
@@ -49,7 +50,7 @@ public class RdService {
             case "viewer" -> { page = "CommonViewer.html"; dir = "/ReportingServer/html5/RDhtml/"; method = "GET"; }
             case "download" -> { page = "CommonInvokerDownload.jsp"; dir = "/ReportingServer/jsp/"; method = "POST"; }
             case "save" -> { page = "CommonInvoker.jsp"; dir = "/ReportingServer/jsp/"; method = "POST"; }
-            default -> throw invalid("kind는 viewer, download, save 중 하나여야 합니다");
+            default -> throw invalid("kind는 viewer, download, save, page 중 하나여야 합니다");
         }
         if (req.mrd() == null || !NAME.matcher(req.mrd()).matches()) throw invalid("mrd 이름이 올바르지 않습니다");
         String options = req.options() == null ? "" : req.options();
@@ -71,6 +72,30 @@ public class RdService {
         query.forEach((k, v) -> url.append(k).append('=').append(encode(v)).append('&'));
         url.setLength(url.length() - 1);
         return new RdUrlRes(url.toString(), method);
+    }
+
+    /**
+     * 화면에 끼워 넣는 RD 페이지(AS-IS Pay10_Lookup_Rd_List.retrieve L27-54): `…/RDhtml/{mrd}.html?companyId&dbName&dns&personId&…`.
+     * CommonViewer와 달리 rv[…] 묶음이 아니라 일반 쿼리 문자열이고, companyId·personId는 마찬가지로 로그인 값이다
+     */
+    private RdUrlRes pageUrl(Long companyId, Long personId, RdUrlReq req) {
+        if (req.mrd() == null || !NAME.matcher(req.mrd()).matches()) throw invalid("mrd 이름이 올바르지 않습니다");
+        Map<String, String> query = new LinkedHashMap<>();
+        query.put("companyId", String.valueOf(companyId));
+        query.put("dbName", props.dbName());
+        query.put("dns", props.dns());
+        query.put("personId", String.valueOf(personId));
+        if (req.rv() != null) {
+            req.rv().forEach((k, v) -> {
+                if (k == null || !NAME.matcher(k).matches()) throw invalid("rv 키가 올바르지 않습니다: " + k);
+                if (query.containsKey(k)) return;
+                query.put(k, v == null ? "" : v);
+            });
+        }
+        StringBuilder url = new StringBuilder(trimEnd(props.url())).append("/ReportingServer/html5/RDhtml/").append(req.mrd()).append(".html?");
+        query.forEach((k, v) -> url.append(k).append('=').append(encode(v)).append('&'));
+        url.setLength(url.length() - 1);
+        return new RdUrlRes(url.toString(), "GET");
     }
 
     private String fileName(String kind, String name) {
