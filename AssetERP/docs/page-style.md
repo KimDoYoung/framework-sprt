@@ -21,6 +21,7 @@
 | SGT | SearchGrid+Tree | 위 SearchBar(전체 폭), 아래 좌우 분할: 왼쪽 그리드 / 오른쪽 트리(선택 연동) | `Fnd08_Tab_OrgAuth` (펀드 권한설정). P02도 같은 모양 |
 | TG | Tree+Grid | 왼쪽 트리, 오른쪽 그리드 | `*_Tab_ClassTree` 계열 |
 | GG | Grid+Grid | 위 SearchBar + 마스터 그리드, 아래 상세 그리드(상하 50:50 분할, 선택 연동) | `Est02_Tab_PfResultReport` (용역결과보고서) |
+| STP | SearchBar+TabPanel | 위 툴바(성명 등 입력 + 버튼들, 그리드 없음), 아래 탭 컨테이너(탭마다 서로 다른 내부 구성, 툴바의 대상이 모든 탭에 전달됨) | `Pay10_Tab_Retire` (퇴직정산, S22) |
 | CG | CrudGrid | 편집 가능한 그리드 하나 | 코드 관리류 |
 
 ## 스타일별 상세
@@ -96,6 +97,10 @@
 - 편집 팝업(`*_Edit_*`)은 EditModal 규격으로 만든다 — 헤더 아래 선·푸터 위 선·라벨 오른쪽 정렬·본문 위아래 간격 12 (`AssetERP/docs/11-프론트부품.md` §4a, 03 원칙 16).
 
 (나머지 스타일은 전체 조사 후 같은 형식으로 채운다.)
+
+### STP — SearchBar+TabPanel (초안, 견본 없음, 2026-10-28 S22에서 등록)
+- 위: 툴바 한 줄(입력 + [조회] 등 버튼 — `SearchBar`), 아래: 탭 컨테이너. 그리드가 없어 `yunhee page-style`은 AS-IS·TOBE 모두 `미분류(그리드 없음)`로 판별한다 — 판별기에 STP 규칙이 없다(yunhee 수정사항 제안).
+- 탭 페이지는 `forwardRef` 핸들(`retrieve(param)`·`clear`)을 노출하고 부모가 탭 선택·[조회]·입력 변경 때 부른다. 처음 연 탭은 마운트한 뒤 조회하고 한 번 연 탭은 숨기기만 한다. 예: `Pay10_Tab_Retire`(`payRetireTab.ts`), `Pay20_Tab_DeductAdmin`(탭만 있고 툴바 없음)
 
 ## 견본 사용법
 
