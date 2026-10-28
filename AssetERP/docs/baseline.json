@@ -9159,5 +9159,36 @@
     "note": "docs/work/S/S22-작업기록.md",
     "history": [],
     "id": "S22"
+  },
+  "Pay40_Tab_TaxWithholding": {
+    "commit": "4bd1f4ed0410cf5d7a0c4f0367464792a7bfee9c",
+    "commit_short": "4bd1f4e",
+    "branch": "ioc",
+    "commit_date": "2026-10-27",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/pay/Pay40_Tab_TaxWithholding.java": "4a6bc082503d4f94b0cddb2ae473678f828034b8",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay40_IncomeTaxWithholdingModel.java": "60b19d19d923909b8a202f4978937156032aa492",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay40_IncomeTaxWithholdingModelProperties.java": "6a9eaeac70d885db741ded774e4a76fd0766fb1d",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/pay/Pay40_IncomeTaxWithholding.java": "da8f178faa052b2e0c19b13b47e2499b6933a134",
+      "application/src/main/java/myApp/server/pay/mapper/pay40_income_tax_withholding.xml": "27acfa54cc22683dc27a7b17cfcf5a064d4d6ac5",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Dcr30_Move_DcrClass",
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-28T16:24:39+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/S/S23-작업기록.md",
+    "history": [],
+    "id": "S23"
   }
 }

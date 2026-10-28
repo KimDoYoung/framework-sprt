@@ -484,3 +484,20 @@ export interface PayRetireTaxDeduct {
   deducts: PayTaxDeduct[];
   limits: PayTaxDeductLimit[];
 }
+
+/** 갑근세원천징수확인서 발급 한 행 (S23, GET /api/v1/pay/tax-withholdings) — AS-IS Pay40_IncomeTaxWithholdingModel */
+export interface PayTaxWithholding {
+  incomeTaxWithholdingId: number;
+  personId?: number | null;
+  personName?: string | null;
+  regDate?: string | null;
+  stdYear?: string | null;
+  purUseCode?: string | null;
+  purUseName?: string | null;
+  submitTo?: string | null;
+  cnt?: number | null;
+  issueNo?: number | null;
+  apprId?: number | null;
+  statusCode?: string | null;
+  statusName?: string | null;
+}

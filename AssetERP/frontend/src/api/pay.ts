@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxDeductLimit, PayWorkTime } from '../types/pay';
+import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxDeductLimit, PayWorkTime } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -769,5 +769,26 @@ export const payApi = {
   getRetireTaxDeduct: async (monthId: number): Promise<PayRetireTaxDeduct> => {
     const res = await apiClient.get<ApiResponse<PayRetireTaxDeduct>>('v1/pay/retire-tables/tax-deduct', { params: { monthId } });
     return res.data.data as PayRetireTaxDeduct;
+  },
+
+  // ── S23 갑근세확인서 발급 (Pay40_Tab_TaxWithholding) ──
+
+  /** AS-IS pay.Pay40_IncomeTaxWithholding.selectByCompanyId — stdYear는 LIKE 비교(원본 그대로) */
+  searchTaxWithholdings: async (stdYear: string): Promise<PayTaxWithholding[]> => {
+    const res = await apiClient.get<ApiResponse<PayTaxWithholding[]>>('v1/pay/tax-withholdings', { params: { stdYear } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay40_IncomeTaxWithholding.updateList — 저장한 행(요청 순서) */
+  saveTaxWithholdings: async (rows: PayTaxWithholding[]): Promise<PayTaxWithholding[]> => {
+    const body = rows.map(({ incomeTaxWithholdingId, personId, regDate, stdYear, purUseCode, submitTo, cnt }) => ({ incomeTaxWithholdingId, personId, regDate, stdYear, purUseCode, submitTo, cnt }));
+    const res = await apiClient.put<ApiResponse<PayTaxWithholding[]>>('v1/pay/tax-withholdings', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay40_IncomeTaxWithholding.delete → 지운 건수 */
+  deleteTaxWithholdings: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/pay/tax-withholdings', { data: ids });
+    return res.data.data ?? 0;
   },
 };
