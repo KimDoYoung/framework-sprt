@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  연월차휴가 현황 (S07 Emp20_Tab_YearList)
+  AS-IS(IDMS-IC) server/emp/mapper/emp01_person.xml selectByYearList(L341) + sys/Sys99_Print insertRdYearList(L2248).
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpYearLeaveMapper">
+
+    <!-- AS-IS emp01_person.selectByYearList L341 (IDMS-IC): SQL 그대로(파라미터만 #{}) -->
+    <sql id="yearListQuery">
+    WITH emp01 AS ( SELECT emp01_person.*
+
+                          /**** 연차정보 ****/
+                         , f_get_datediff(COALESCE(emp02_hire_date_leave_calc, emp01_hire_date), (f_get_close_date(emp01_company_id, #{stdYear}, '2') + INTERVAL '-1year')::date, '1')    AS emp20_year_period
+                         , CASE WHEN (f_get_close_date(emp01_company_id, #{stdYear}, '1') - COALESCE(emp02_hire_date_leave_calc, emp01_hire_date))  &lt;  0 THEN 0
+                                ELSE ROUND((f_get_close_date(emp01_company_id, #{stdYear}, '1') - COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)) / 365.0, 2) END                  AS emp20_year_per
+                         , f_get_leave_days2(emp01_person_id, #{stdYear}, '4', null, 'true')                                                                                              AS emp20_year_leave_days
+
+                          /**** 월차정보 ****/
+                         , CASE WHEN f_get_close_date(emp01_company_id, #{stdYear}, '2')  &lt;  monthCalcCloseDate THEN ''
+                                ELSE (CASE WHEN f_get_close_date(emp01_company_id, #{stdYear}, '2') = f_get_close_date(emp01_company_id, TO_CHAR(COALESCE(emp02_hire_date_leave_calc, emp01_hire_date),'YYYY'), '2')
+                                           THEN f_get_datediff(monthCalcStartDate, monthCalcCloseDate, '1')
+                                           ELSE f_get_datediff(monthCalcStartDate, (monthCalcCloseDate + interval '1month')::date, '1') END)
+                                END                                                                                                                           AS emp20_month_period
+                         , f_get_leave_days2(emp01_person_id, #{stdYear}, '5', monthCalcCloseDate, 'true')                                                    AS emp20_month_leave_days
+                         , CASE WHEN f_get_close_date(emp01_company_id, (#{stdYear}::numeric - 1)::varchar, '2')
+                                     = f_get_close_date(emp01_company_id, TO_CHAR(COALESCE(emp02_hire_date_leave_calc, emp01_hire_date),'YYYY'), '2')
+                                THEN GREATEST(f_get_leave_days(emp01_person_id
+                                                              ,(#{stdYear}::numeric - 1)::varchar
+                                                              ,'3'
+                                                              , f_get_close_date(emp01_company_id, (#{stdYear}::numeric - 1)::varchar, '2')
+                                                              , 'true'), 0)
+                                ELSE 0 END                                                                                                                    AS emp20_py_remain_month_days
+                         , f_get_leave_days2(emp01_person_id, #{stdYear}, '2', monthCalcStdDate, 'true')                                                      AS emp20_use_days
+                         , f_get_leave_days2(emp01_person_id, #{stdYear}, '6', null, 'true')                                                                  AS emp20_spc_days
+                         , f_get_leave_days2(emp01_person_id, #{stdYear}, '7', null, 'true')                                                                  AS emp20_reward_total_days
+                         , f_get_leave_days2(emp01_person_id, #{stdYear}, '8', null, 'true')                                                                  AS emp20_reward_use_days
+                         , f_get_leave_days2(emp01_person_id, #{stdYear}, '9', null, 'true')                                                                  AS emp20_reward_remain_days
+                         , ( SELECT emp03_trans_date
+                               FROM emp03_trans
+                              WHERE emp03_person_id = emp01_person_id
+                                AND emp03_trans_cd = '900'
+                              ORDER BY emp03_trans_date DESC
+                              LIMIT 1 )                                                                                                                       AS emp20_resign_date
+                         , f_get_empTrans(emp01_person_id, f_get_close_date(emp01_company_id,#{stdYear},'2'), 'title_cd')                                     AS emp20_title_cd
+                         , COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)                                                                              AS emp02_hire_date_leave_calc
+                      FROM emp01_person
+                           INNER JOIN emp02_others ON emp02_person_id = emp01_person_id
+                           INNER JOIN ( SELECT --------------------------------------------------------------------------
+                                               -- 월차계산기준 시작일
+                                               CASE WHEN f_get_close_date(emp01_company_id, #{stdYear}, '1')  &lt;=  date_trunc('month',COALESCE(emp02_hire_date_leave_calc, emp01_hire_date))::date
+                                                    THEN COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)
+                                                    ELSE f_get_close_date(emp01_company_id, #{stdYear}, '1') END                                                                            AS monthCalcStartDate
+                                             , --------------------------------------------------------------------------
+                                               -- 월차계산기준 종료일
+                                               (CASE WHEN monthCalcStdDate  &lt;=  date_trunc('month', COALESCE(emp02_hire_date_leave_calc, emp01_hire_date) + interval '1year')::date
+                                                     THEN f_get_last_day(monthCalcStdDate)
+                                                     ELSE (date_trunc('month', (COALESCE(emp02_hire_date_leave_calc, emp01_hire_date) + interval '1year')) + interval '-1day')::date END)   AS monthCalcCloseDate
+                                             , --------------------------------------------------------------------------
+                                               emp01_person_id                                                                                        AS emp_id
+                                             , monthCalcStdDate                                                                                       AS monthCalcStdDate
+                                          FROM emp01_person
+                                               INNER JOIN emp02_others ON emp02_person_id = emp01_person_id
+                                             , ( SELECT CASE #{monthStdDateType} /* 월차기준일구분(1:현재/2:기준연도말/3:특정일) */
+                                                          WHEN '1' THEN f_today()
+                                                          WHEN '2' THEN f_get_close_date(#{companyId}, #{stdYear}, '2')
+                                                          WHEN '3' THEN #{stdDate}
+                                                        END AS monthCalcStdDate ) d
+                                         WHERE emp01_company_id = #{companyId}
+                                      ) t ON emp_id = emp01_person_id
+                           INNER JOIN emp03_trans ON (    emp03_person_id  = emp_id
+                                                      AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                                                                 FROM emp03_trans
+                                                                                WHERE emp03_person_id = emp_id
+                                                                                  AND emp03_trans_date  &lt;=  monthCalcStdDate ) )
+                     WHERE emp01_company_id = #{companyId}
+                       AND emp03_kind_cd  NOT IN ('40','99') /*(40:임시직/99:기타직)*/
+                       AND NOT EXISTS ( /* 겸직자용 가상 person_id 제거 */
+                                        SELECT 1
+                                          FROM emp03_trans
+                                         WHERE emp03_person_id = emp01_person_id
+                                           AND emp03_trans_cd = '800' )  /*(800:겸직)*/
+    )
+    SELECT a.*
+         , emp20_total_days                                      - emp20_use_days          AS emp20_remain_days
+         , emp20_year_leave_days                                 - emp20_use_year_days     AS emp20_remain_year_days
+         , (emp20_month_leave_days + emp20_py_remain_month_days) - emp20_use_month_days    AS emp20_remain_month_days
+      FROM ( SELECT emp01.*
+                  , emp20_year_leave_days + emp20_month_leave_days + emp20_py_remain_month_days                       AS emp20_total_days
+                  , CASE WHEN emp20_month_leave_days + emp20_py_remain_month_days  &gt;=  emp20_use_days
+                         THEN 0
+                         ELSE emp20_use_days - (emp20_month_leave_days + emp20_py_remain_month_days) END              AS emp20_use_year_days
+                  , CASE WHEN emp20_month_leave_days + emp20_py_remain_month_days  &gt;=  emp20_use_days
+                         THEN emp20_use_days
+                         ELSE emp20_month_leave_days + emp20_py_remain_month_days END                                 AS emp20_use_month_days
+               FROM emp01
+              WHERE COALESCE(emp20_resign_date,'9999-12-31')  &gt;  f_get_close_date(emp01_company_id,#{stdYear},'1')
+                AND ( ( #{retireType} = '100'                                               AND     /*(100:재직)*/
+                        COALESCE(emp20_resign_date,'9999-12-31')  &gt;  f_today()  ) OR
+                      ( #{retireType} = '900'                                               AND     /*(900:퇴직)*/
+                        emp20_resign_date  &lt;=  f_today()                        ) OR
+                      ( #{retireType} = '000'                                               ) )     /*(000:전체)*/
+                AND emp20_title_cd != '900'   /*(900:비상근)*/
+           ) a
+     ORDER BY emp01_emp_no
+    </sql>
+
+    <!-- 그리드 열(Emp20_Tab_YearList.buildGrid)만 꺼낸다 -->
+    <select id="selectYearList" resultType="kr.co.kfs.asseterp.biz.emp.dto.YearLeaveRes">
+        SELECT y.emp01_person_id               AS person_id
+             , y.emp01_emp_no                  AS emp_no
+             , y.emp01_kor_nm                  AS kor_name
+             , y.emp02_hire_date_leave_calc    AS hire_date_leave_calc
+             , y.emp20_year_period             AS year_period
+             , y.emp20_year_per                AS year_per
+             , y.emp20_year_leave_days         AS year_leave_days
+             , y.emp20_month_period            AS month_period
+             , y.emp20_month_leave_days        AS month_leave_days
+             , y.emp20_py_remain_month_days    AS py_remain_month_days
+             , y.emp20_total_days              AS total_days
+             , y.emp20_use_year_days           AS use_year_days
+             , y.emp20_use_month_days          AS use_month_days
+             , y.emp20_use_days                AS use_days
+             , y.emp20_remain_year_days        AS remain_year_days
+             , y.emp20_remain_month_days       AS remain_month_days
+             , y.emp20_remain_days             AS remain_days
+             , y.emp20_reward_total_days       AS reward_total_days
+             , y.emp20_reward_use_days         AS reward_use_days
+             , y.emp20_reward_remain_days      AS reward_remain_days
+             , y.emp20_spc_days                AS spc_days
+          FROM (<include refid="yearListQuery"/>) y
+         ORDER BY y.emp01_emp_no
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{printPersonId}
+           AND sys99_window_class_nm = #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdYearList L2248: 목록(selectByYearList)을 한 건씩 sys99_print에 넣는다 -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_date01, sys99_string03, sys99_double01, sys99_double02
+               , sys99_string04, sys99_double03, sys99_double12, sys99_double11
+               , sys99_double04, sys99_double05, sys99_double06
+               , sys99_double07, sys99_double08, sys99_double09
+               , sys99_long02, sys99_long03, sys99_long04, sys99_double10 )
+        SELECT f_create_seq(), #{companyId}, #{printPersonId}, #{windowClassName}, #{groupId}
+             , y.emp01_emp_no, y.emp01_kor_nm, y.emp02_hire_date_leave_calc, y.emp20_year_period, y.emp20_year_per, y.emp20_year_leave_days
+             , y.emp20_month_period, y.emp20_month_leave_days, y.emp20_py_remain_month_days, y.emp20_total_days
+             , y.emp20_use_year_days, y.emp20_use_month_days, y.emp20_use_days
+             , y.emp20_remain_year_days, y.emp20_remain_month_days, y.emp20_remain_days
+             , y.emp20_reward_total_days, y.emp20_reward_use_days, y.emp20_reward_remain_days, y.emp20_spc_days
+          FROM (<include refid="yearListQuery"/>) y
+         ORDER BY y.emp01_emp_no
+    </insert>
+
+</mapper>

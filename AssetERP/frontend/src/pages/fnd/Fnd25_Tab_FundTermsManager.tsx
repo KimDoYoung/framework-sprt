@@ -116,7 +116,7 @@ export const Fnd25_Tab_FundTermsManager: React.FC = () => {
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter style={{ height: '100%' }}>
         <Splitter.Panel defaultSize="45%" min={590} max={1000}>
-          <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', marginRight: 4 }}>
+          <div style={{ height: '100%',  boxSizing: 'border-box', display: 'flex', flexDirection: 'column', marginRight: 4 }}>
             <SearchBar
               onSearch={() => retrieve()}
               loading={loading}
@@ -130,7 +130,7 @@ export const Fnd25_Tab_FundTermsManager: React.FC = () => {
                 <SearchBar.Input style={{ width: 220 }} placeholder="펀드규약명/펀드명/예탁원코드" value={searchText} onChange={e => setSearchText(e.target.value)} />
               </SearchBar.Field>
             </SearchBar>
-            <div style={{ flex: 1, minHeight: 0 }}>
+            <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
               <SingleGrid<Terms>
                 rowData={rows}
                 columnDefs={columnDefs}

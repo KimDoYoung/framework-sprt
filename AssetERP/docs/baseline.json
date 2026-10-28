@@ -8547,5 +8547,69 @@
     "note": "docs/work/S/S06-작업기록.md",
     "history": [],
     "id": "S06"
+  },
+  "Emp20_Tab_YearList": {
+    "commit": "4bd1f4ed0410cf5d7a0c4f0367464792a7bfee9c",
+    "commit_short": "4bd1f4e",
+    "branch": "ioc",
+    "commit_date": "2026-10-27",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp20_Tab_YearList.java": "44e3a2ddad902d6156784de5605cb98d335508a2",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp01_PersonModel.java": "f4478d406df99853f5315401fc09f28e760101fe",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp01_PersonModelProperties.java": "f36026c64bcbbee177022dca10214c624b6441df",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp02_OthersModel.java": "361f61b4bebfd1073f0769db40e42327748e6897",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp20_LeaveModel.java": "08d4fe0e87a0e52d15d517f341428f632a6b3ef0",
+      "application/src/main/java/myApp/server/emp/Emp01_Person.java": "4fff22179802bd493eeb621520dbee1320450bf0",
+      "application/src/main/java/myApp/server/emp/mapper/emp01_person.xml": "996a542c6a2637d37b8ad6dafdc1de2019cbe902",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-28T11:28:50+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/S/S07-작업기록.md",
+    "history": [],
+    "id": "S07"
+  },
+  "Emp21_Tab_UnLeaveList": {
+    "commit": "4bd1f4ed0410cf5d7a0c4f0367464792a7bfee9c",
+    "commit_short": "4bd1f4e",
+    "branch": "ioc",
+    "commit_date": "2026-10-27",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp21_Lookup_Insert.java": "a8e504b9b955877934fe4045cc21b4992d3a4618",
+      "application/src/main/java/myApp/client/vi/emp/Emp21_TabPage_UnLeaveList1.java": "5ba6259ea9c8b815c0950b35b6f647490b50cff2",
+      "application/src/main/java/myApp/client/vi/emp/Emp21_TabPage_UnLeaveList2.java": "8df6ac359b87995dacdacd1689c7b2ccc78c86e1",
+      "application/src/main/java/myApp/client/vi/emp/Emp21_Tab_UnLeaveList.java": "8bd15efc8033efd2187e816eb4418da61174e55e",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp21_UnLeaveModel.java": "31d154901792b9c863e2201d7dd2207deb243580",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp21_UnLeaveModelProperties.java": "21945027835c32f044e53c24f87463955b97cfcb",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/apr/mapper/apr04_appr_step.xml": "d2ad02a8dc784aa55ac38dd915c3c1450954fddf",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/emp/Emp21_UnLeave.java": "3bee402810f5c769799ffd9818e1cff02f782c4b",
+      "application/src/main/java/myApp/server/emp/mapper/emp01_person.xml": "996a542c6a2637d37b8ad6dafdc1de2019cbe902",
+      "application/src/main/java/myApp/server/emp/mapper/emp21_un_leave.xml": "9ccd79cb98d4de4f55337d9c0ac6554140c449f5",
+      "application/src/main/java/myApp/server/emp/mapper/emp22_etc_leave.xml": "9a691dc656c2908e70f14d026bfc5519d32b6f77",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/sys/mapper/sys12_calendar.xml": "4d765811d5aa8954038cdb196caca5fe413b4339",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Dcr30_Move_DcrClass"
+    ],
+    "recorded_at": "2026-10-28T12:18:12+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/S/S08-작업기록.md",
+    "history": [],
+    "id": "S08"
   }
 }

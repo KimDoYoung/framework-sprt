@@ -15,6 +15,8 @@ import { Emp31_Tab_Director } from './emp/Emp31_Tab_Director';
 import { Emp00_Tab_OrgPerson } from './emp/Emp00_Tab_OrgPerson';
 import { Emp15_Tab_Cert } from './emp/Emp15_Tab_Cert';
 import { Emp20_Tab_LeaveManager } from './emp/Emp20_Tab_LeaveManager';
+import { Emp20_Tab_YearList } from './emp/Emp20_Tab_YearList';
+import { Emp21_Tab_UnLeaveList } from './emp/Emp21_Tab_UnLeaveList';
 import { Emp00_Tab_TransInfo } from './emp/Emp00_Tab_TransInfo';
 import { Emp00_Tab_RoleMenu } from './emp/Emp00_Tab_RoleMenu';
 import { Emp01_Tab_UserInfo } from './emp/Emp01_Tab_UserInfo';
@@ -255,6 +257,8 @@ export const SCREENS: Record<string, React.FC> = {
   Bbs02_Tab_NoticeViewMgt, // S01 (H01의 Bbs02_Popup_NoticeAdmin 재사용, noticeType 20)
   Emp00_Tab_ChangeHistory, // S02
   Emp00_Tab_OrgPerson, // S04
+  Emp20_Tab_YearList, // S07
+  Emp21_Tab_UnLeaveList, // S08 (1단계: 상신 결재문서 일괄 생성·문자발송·상세보기 전자결재 편집창은 다음 단계)
   Emp20_Tab_LeaveManager, // S06 (1단계: [휴가취소]의 결재문서 삭제·알림 발송 emp.Emp20_Leave.cancelUpdate는 다음 단계)
   Emp15_Tab_Cert, // S05 (1단계: 전자결재 상신 Apr01_Edit_ApprDoc·문서분류 선택 Dcr01_Lookup_Class·메일보내기 Dcr10_Lookup_MailSender는 다음 단계)
   Emp31_Tab_Director, // S03 (1단계: 문서분류지정 Dcr30_Lookup_Link·보고서 창의 선임/해임 콤보·결재상신은 다음 단계)

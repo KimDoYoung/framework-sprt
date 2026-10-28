@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  연차휴가 사용촉진 (S08 Emp21_Tab_UnLeaveList — 연차 탭 Emp21_TabPage_UnLeaveList1 · 월차 탭 Emp21_TabPage_UnLeaveList2 · 생성 창 Emp21_Lookup_Insert)
+  AS-IS(IDMS-IC) server/emp/mapper/emp21_un_leave.xml selectByUnLeaveCode(L165)·selectByUnLeaveCode2(L198)·insert
+  + emp01_person.xml selectByUnLeaveCode·selectByUnLeaveCode2 + emp/Emp21_UnLeave insert(L95)·insert2(L128)·update(L674)·delete(L679).
+  SQL 본문은 그대로, 파라미터만 #{}로 바꿨다. 1단계: 상신(insertAppr)·문자발송(sendMessage)은 다음 단계.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpUnLeaveMapper">
+
+    <!-- AS-IS emp21_un_leave.selectByUnLeaveCode L165 (IDMS-IC): `SELECT *`만 emp21 열로 줄였다(조인 테이블의 같은 이름 열 방지) -->
+    <sql id="yearQuery"><![CDATA[
+SELECT	emp21_un_leave_id, emp21_company_id, emp21_person_id, emp21_un_leave_cd, emp21_start_date,
+		emp21_total_days, emp21_use_days, emp21_remain_days, emp21_appr_id, emp21_expect_appr_id
+	 ,	f_emp_kor_nm(emp21_person_id)													AS emp21_person_nm
+	 ,	emp01_emp_no 																	AS emp21_person_no
+	 ,	COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)        					AS emp21_hire_date
+     ,	f_cdnm('unLeaveCode', emp21_un_leave_cd, emp21_company_id, f_sysdate())			AS emp21_un_leave_nm
+     ,	apr01.apr01_reg_date															AS emp21_notice_date
+     ,	apr01.apr01_status_cd                                                         	AS emp21_appr_status_cd
+     ,	f_cdnm('AprStatusCode', apr01.apr01_status_cd, emp21_company_id, f_sysdate()) 	AS emp21_appr_status_nm
+     ,	apr02.apr01_status_cd                                                         	AS emp21_expect_appr_status_cd
+     ,	f_cdnm('AprStatusCode', apr02.apr01_status_cd, emp21_company_id, f_sysdate()) 	AS emp21_expect_appr_status_nm
+
+
+     ,	f_get_close_date(#{companyId}, #{stdYear}, '1')	- INTERVAL '1 years'			AS emp21_leave_occur_start_date
+     ,	f_get_close_date(#{companyId}, #{stdYear}, '2')	- INTERVAL '1 years'			AS emp21_leave_occur_close_date
+     ,	f_get_close_date(#{companyId}, #{stdYear}, '1')									AS emp21_leave_target_start_date
+     ,	f_get_close_date(#{companyId}, #{stdYear}, '2')									AS emp21_leave_target_close_date
+     ,	sys01_company_nm																AS emp21_company_nm
+     ,	sys01_leave_compulsion_rt														AS emp21_duty_rt
+     ,	f_get_emptrans(emp21_person_id, emp21_start_date::date, 'org_code_nm')			AS emp21_org_nm
+     ,	f_get_empTrans(emp21_person_id, emp21_start_date::date, 'pos_nm')    			AS emp21_pos_nm
+  FROM	emp21_un_leave
+  		INNER JOIN emp01_person  ON emp01_person_id = emp21_person_id
+  		INNER JOIN emp02_others  ON emp02_person_id = emp21_person_id
+  		INNER JOIN sys01_company ON sys01_company_id = emp21_company_id
+  		LEFT OUTER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = emp21_appr_id
+  		LEFT OUTER JOIN apr01_appr apr02 ON apr02.apr01_appr_id = emp21_expect_appr_id
+ WHERE	emp21_company_id = #{companyId}
+   AND	emp21_un_leave_cd LIKE #{unLeaveCode}
+   AND	emp21_start_date BETWEEN f_get_close_date(#{companyId}, #{stdYear}, '1') AND f_get_close_date(#{companyId}, #{stdYear},'2')
+ ORDER BY emp01_emp_no
+    ]]></sql>
+
+    <!-- AS-IS emp21_un_leave.selectByUnLeaveCode2 L198 (IDMS-IC): 위와 같이 `SELECT *`만 줄였다 -->
+    <sql id="monthQuery"><![CDATA[
+SELECT	emp21_un_leave_id, emp21_company_id, emp21_person_id, emp21_un_leave_cd, emp21_start_date,
+		emp21_total_days, emp21_use_days, emp21_remain_days, emp21_appr_id, emp21_expect_appr_id
+	 ,	f_emp_kor_nm(emp21_person_id)													AS emp21_person_nm
+	 ,	emp01_emp_no 																	AS emp21_person_no
+	 ,	COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)                           AS emp21_hire_date
+     ,	f_cdnm('unLeaveCode', emp21_un_leave_cd, emp21_company_id, f_sysdate())			AS emp21_un_leave_nm
+     ,	apr01.apr01_reg_date															AS emp21_notice_date
+     ,	apr01.apr01_status_cd                                                         	AS emp21_appr_status_cd
+     ,	f_cdnm('AprStatusCode', apr01.apr01_status_cd, emp21_company_id, f_sysdate()) 	AS emp21_appr_status_nm
+     ,	apr02.apr01_status_cd                                                         	AS emp21_expect_appr_status_cd
+     ,	f_cdnm('AprStatusCode', apr02.apr01_status_cd, emp21_company_id, f_sysdate()) 	AS emp21_expect_appr_status_nm
+     ,	sys01_company_nm																AS emp21_company_nm
+     ,	sys01_leave_compulsion_rt														AS emp21_duty_rt
+     ,	f_get_emptrans(emp21_person_id, emp21_start_date::date, 'org_code_nm')			AS emp21_org_nm
+     ,	f_get_empTrans(emp21_person_id, emp21_start_date::date, 'pos_nm')    			AS emp21_pos_nm
+     ,	CASE WHEN emp21_un_leave_cd IN ('03','04') THEN COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)
+     		 WHEN emp21_un_leave_cd IN ('05','06') THEN date_trunc('month', COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)) + interval '+10month'
+     		 END																		AS emp21_leave_occur_start_date
+     ,	CASE WHEN emp21_un_leave_cd IN ('03','04') THEN date_trunc('month', COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)) + interval '+10month -1day'
+     		 WHEN emp21_un_leave_cd IN ('05','06') THEN date_trunc('month', COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)) + interval '+12month -1day'
+     		 END																		AS emp21_leave_occur_close_date
+     ,	CASE WHEN emp21_un_leave_cd IN ('03','04') THEN date_trunc('month', COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)) + interval '+1month'
+     		 WHEN emp21_un_leave_cd IN ('05','06') THEN date_trunc('month', COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)) + interval '+10month' 
+     		 END																		AS emp21_leave_target_start_date
+     ,	date_trunc('month', COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)) + interval '+12month -1day'
+                                                                                        AS emp21_leave_target_close_date
+  FROM	emp21_un_leave
+  		INNER JOIN emp01_person  ON emp01_person_id = emp21_person_id
+        INNER JOIN emp02_others  ON emp02_person_id = emp21_person_id
+   		INNER JOIN sys01_company ON sys01_company_id = emp21_company_id
+  		LEFT OUTER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = emp21_appr_id
+  		LEFT OUTER JOIN apr01_appr apr02 ON apr02.apr01_appr_id = emp21_expect_appr_id
+ WHERE	emp21_company_id = #{companyId}
+   AND	emp21_un_leave_cd LIKE #{unLeaveCode}
+   AND	emp21_un_leave_cd NOT IN ('01','02')
+   AND	to_char(emp21_start_date,'yyyy') = #{stdYear}
+ ORDER BY emp01_emp_no
+    ]]></sql>
+
+    <!-- AS-IS emp01_person.selectByUnLeaveCode (IDMS-IC): [생성] 대상 사원(연차 탭) -->
+    <sql id="yearTargets"><![CDATA[
+WITH emp01 AS ( SELECT	emp01_person.*
+		             ,	f_get_datediff(COALESCE(emp02_hire_date_leave_calc, emp01_hire_date), (f_get_close_date(emp01_company_id, #{stdYear}, '2') + INTERVAL '-1year')::date, '1')	AS emp20_year_period
+		             ,	CASE WHEN (f_get_close_date(emp01_company_id, #{stdYear}, '1') - COALESCE(emp02_hire_date_leave_calc, emp01_hire_date))  <  0
+		             		 THEN 0
+		                     ELSE ROUND((f_get_close_date(emp01_company_id, #{stdYear}, '1') - COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)) / 365.0, 2)
+		                     END																													AS emp20_year_per
+		             ,	f_get_leave_days2(emp01_person_id, #{stdYear}, '4', std_date, 'true')                                                    	AS emp20_year_leave_days
+		             ,	CASE WHEN (f_get_close_date(emp01_company_id, #{stdYear}, '1') - COALESCE(emp02_hire_date_leave_calc, emp01_hire_date))  >  0
+		             		 THEN ''
+		                     ELSE f_get_datediff(COALESCE(emp02_hire_date_leave_calc, emp01_hire_date), std_date, '1')
+		                     END																													AS emp20_month_period
+		             ,	f_get_leave_days2(emp01_person_id, #{stdYear}, '5', std_date, 'true')                                                       AS emp20_month_leave_days
+		             ,	f_get_leave_days2(emp01_person_id, #{stdYear}, '2', std_date, 'true')                                                       AS emp20_use_days_calc
+                     ,	f_get_leave_days2(emp01_person_id, #{stdYear}, '6', std_date, 'true')                                                       AS emp20_spc_days
+                     ,  std_date
+                  FROM	emp01_person
+                        INNER JOIN emp02_others ON emp02_person_id = emp01_person_id
+                        INNER JOIN emp03_trans  ON emp03_person_id = emp01_person_id
+		             ,	(
+		             		SELECT	CASE WHEN #{unLeaveCode} = '01'
+		                                 THEN cast(f_get_close_date(#{companyId}, #{stdYear},'2') - INTERVAL '6 months' as date)
+		                                 ELSE cast(f_get_close_date(#{companyId}, #{stdYear},'2') - INTERVAL '2 months' as date)
+		                            	 END std_date
+		                ) t 
+                 WHERE	emp01_company_id = #{companyId}
+                   AND  emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                               FROM emp03_trans
+                                              WHERE emp03_person_id  = emp01_person_id
+                                                AND emp03_trans_date <= f_today() )
+                   AND  emp03_trans_cd NOT IN ('800', '900')            /*(800:겸직/900:퇴직)*/
+                   AND  emp03_title_cd != '900'                         /*(900:비상근)*/
+                   AND  COALESCE(emp03_non_stay_yn,'false') != 'true'   
+                   AND  emp03_kind_cd NOT IN ('40','99')                /*(40:임시직/99:기타직)*/
+)
+SELECT	a.*
+	 ,	emp20_total_days - emp20_use_days AS emp20_remain_days
+  FROM	(
+  			SELECT	emp01.*
+  			     ,  emp20_year_leave_days                                                AS emp20_total_days
+		         ,	CASE WHEN emp20_month_leave_days  >=  emp20_use_days_calc
+		                 THEN 0
+		                 ELSE emp20_use_days_calc - emp20_month_leave_days
+		                 END               												 AS emp20_use_days
+              FROM	emp01
+  		) a
+ WHERE	1=1
+   AND  f_today() BETWEEN std_date+1 AND std_date+10
+   AND	emp01_person_id NOT IN (	
+   									SELECT	e.emp21_person_id
+   									  FROM	emp21_un_leave e
+   									 WHERE	e.emp21_person_id = emp01_person_id
+   									   AND	e.emp21_un_leave_cd = #{unLeaveCode}
+   									   AND	e.emp21_start_date BETWEEN std_date+1 AND std_date+10
+   								)
+   AND  emp20_total_days - emp20_use_days  >  0
+   AND  ( ( #{unLeaveCode} = '02' AND NOT EXISTS ( SELECT 1
+                                                     FROM emp21_un_leave
+                                                          INNER JOIN apr01_appr ON ( apr01_appr_id = emp21_expect_appr_id AND
+                                                                                     apr01_status_cd NOT IN ('40','99')   )
+                                                    WHERE emp21_person_id = emp01_person_id
+                                                      AND TO_CHAR(emp21_start_date,'yyyy') = #{stdYear}
+                                                      AND emp21_un_leave_cd = '01' )
+          ) OR
+          ( #{unLeaveCode} != '02' ) )
+ ORDER BY emp01_emp_no
+    ]]></sql>
+
+    <!-- AS-IS emp01_person.selectByUnLeaveCode2 (IDMS-IC): [생성] 대상 사원(월차 탭) -->
+    <sql id="monthTargets"><![CDATA[
+WITH emp AS (   SELECT	emp01_person.*
+                     ,	f_get_leave_days2(emp01_person_id, #{stdYear}, '2', f_get_close_date(emp01_company_id, #{stdYear},'2'), 'true')
+	               		+
+	               		CASE WHEN #{stdYear} = to_char(COALESCE(emp02_hire_date_leave_calc, emp01_hire_date),'YYYY')
+	               			 THEN 0
+	                      	 ELSE f_get_leave_days2(emp01_person_id, to_char(COALESCE(emp02_hire_date_leave_calc, emp01_hire_date),'YYYY'), '2', f_get_close_date(emp01_company_id, to_char(COALESCE(emp02_hire_date_leave_calc, emp01_hire_date),'YYYY'),'2'), 'true')
+	                      	 END                                                AS use_month_days
+                     ,  COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)   AS calc_hire_date
+                  FROM	emp01_person
+                        INNER JOIN emp02_others ON emp02_person_id = emp01_person_id
+                        INNER JOIN emp03_trans  ON emp03_person_id = emp01_person_id
+	             WHERE	emp01_company_id = #{companyId}
+	               AND	COALESCE(emp02_hire_date_leave_calc, emp01_hire_date) + interval '+1year' > f_today()
+	               AND  emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+	                                           FROM emp03_trans
+	                                          WHERE emp03_person_id  = emp01_person_id
+	                                            AND emp03_trans_date <= f_today() )
+ 	               AND  emp03_trans_cd NOT IN ('800', '900')  /*(800:겸직/900:퇴직)*/
+                   AND  emp03_title_cd != '900'               /*(900:비상근)*/
+                   AND  COALESCE(emp03_non_stay_yn,'false') != 'true'
+ 	               AND  emp03_kind_cd NOT IN ('40','99')      /*(40:임시직/99:기타직)*/
+)
+SELECT	row_number() over()                                          AS emp01_person_id
+     ,  un_leave_code												 AS emp01_un_leave_code
+	 ,	f_emp_kor_nm(emp01_person_id)                                AS emp21_person_nm
+     ,	emp01_emp_no                                                 AS emp21_person_no
+     ,	f_get_emptrans(emp01_person_id, f_today(), 'pos_nm')         AS emp21_pos_nm
+     ,	f_get_emptrans(emp01_person_id, f_today(), 'org_code_nm')    AS emp21_org_nm
+     ,	calc_hire_date                                               AS emp21_hire_date
+     ,	occur_start_date                                             AS emp21_leave_occur_start_date
+     ,	occur_close_date                                             AS emp21_leave_occur_close_date
+     ,	use_start_date                                               AS emp21_leave_target_start_date
+     ,	use_close_date                                               AS emp21_leave_target_close_date
+     ,	occur_days                                                   AS emp21_total_days
+     ,	use_days                                                     AS emp21_use_days
+     ,	occur_days - use_days                                        AS emp21_remain_days
+     ,	sys01_leave_compulsion_rt                                    AS emp21_duty_rt
+     ,	occur_days								                     AS emp20_total_days
+	 ,	use_days													 AS emp20_use_days
+	 ,	occur_days - use_days										 AS emp20_remain_days
+	 ,  emp01_person_id                                              AS emp20_person_id
+	 ,  a.*
+  FROM	(
+         	SELECT	'03'                                                                   un_leave_code
+            	 ,	date_trunc('month', calc_hire_date) + interval '+9month'               notice_start_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+9month +9day'         notice_close_date
+            	 --,	date_trunc('month', calc_hire_date) + interval '+1month'           occur_start_date
+            	 ,  calc_hire_date                                                         occur_start_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+10month -1day'        occur_close_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+1month'               use_start_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+12month -1day'        use_close_date
+            	 ,	9                                                                      occur_days
+            	 ,	use_month_days                                                         use_days
+            	 ,  calc_hire_date                                                         calc_hire_date
+            	 ,	emp01_person_id														   person_id
+			  FROM	emp
+         	 UNION
+			SELECT	'05'                                                                   un_leave_code
+            	 ,	date_trunc('month', calc_hire_date) + interval '+11month'              notice_start_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+11month +4day'        notice_close_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+10month'              occur_start_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+12month -1day'        occur_close_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+10month'              use_start_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+12month -1day'        use_close_date
+            	 ,	2                                                                      occur_days
+            	 ,	greatest(use_month_days-9,0)                                           use_days
+                 ,  calc_hire_date                                                         calc_hire_date
+            	 ,	emp01_person_id														   person_id
+			  FROM	emp
+         	 UNION
+			SELECT '04'                                                                                                    un_leave_code
+            	 ,	f_get_last_day((date_trunc('month', calc_hire_date) + interval '+10month')::date) + interval '-4day'   notice_start_date
+            	 ,	f_get_last_day((date_trunc('month', calc_hire_date) + interval '+10month')::date)                      notice_close_date
+            	 --,	date_trunc('month', calc_hire_date) + interval '+1month'                                           occur_start_date
+            	 ,  calc_hire_date                                                                                         occur_start_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+10month -1day'                                        occur_close_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+1month'                                               use_start_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+12month -1day'                                        use_close_date
+            	 ,	9                                                                                                      occur_days
+            	 ,	use_month_days                                                                                         use_days
+                 ,  calc_hire_date                                                                                         calc_hire_date
+            	 ,	emp01_person_id																						   person_id
+           	  FROM	emp
+         	 UNION
+         	SELECT	'06'                                                                                                   un_leave_code
+            	 ,	f_get_last_day((date_trunc('month', calc_hire_date) + interval '+11month')::date) + interval '-14day'  notice_start_date
+            	 ,	f_get_last_day((date_trunc('month', calc_hire_date) + interval '+11month')::date) + interval '-10day'  notice_close_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+10month'                                              occur_start_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+12month -1day'                                        occur_close_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+10month'                                              use_start_date
+            	 ,	date_trunc('month', calc_hire_date) + interval '+12month -1day'                                        use_close_date
+            	 ,	2                                                                                                      occur_days
+            	 ,	greatest(use_month_days-9,0)                                                                           use_days
+                 ,  calc_hire_date                                                                                         calc_hire_date
+            	 ,	emp01_person_id																						   person_id
+           	  FROM	emp
+		) t
+		INNER JOIN emp01_person a ON emp01_person_id = person_id
+	 ,	sys01_company
+ WHERE	sys01_company_id = #{companyId}
+   AND	f_today() BETWEEN notice_start_date AND notice_close_date
+   AND	occur_days - use_days > 0
+   AND	(
+	   		(un_leave_code IN ('04','06') AND NOT EXISTS ( 
+	   														SELECT	1
+									                          FROM	emp21_un_leave
+									                                INNER JOIN apr01_appr ON apr01_appr_id = emp21_expect_appr_id
+									                         WHERE	emp21_person_id   = emp01_person_id
+									                           AND	emp21_un_leave_cd = CASE WHEN un_leave_code = '04' THEN '03' ELSE '05' END
+									                           AND	apr01_status_cd NOT IN ('99','40')
+									                      )
+			)
+        	OR
+        	(un_leave_code NOT IN ('04','06'))
+        )
+   AND	emp01_person_id NOT IN (	
+   									SELECT	emp21_person_id
+   									  FROM	emp21_un_leave
+   									 WHERE	emp21_person_id = person_id
+   									   AND	emp21_un_leave_cd = un_leave_code
+   									   AND	emp21_start_date BETWEEN notice_start_date AND notice_close_date
+   								)
+ ORDER BY notice_start_date, emp01_emp_no
+    ]]></sql>
+
+    <select id="selectYearList" resultType="kr.co.kfs.asseterp.biz.emp.dto.UnLeaveRes">
+        SELECT u.emp21_un_leave_id          AS un_leave_id
+             , u.emp21_person_id             AS person_id
+             , u.emp21_un_leave_cd           AS un_leave_code
+             , u.emp21_un_leave_nm           AS un_leave_name
+             , u.emp21_person_no             AS person_no
+             , u.emp21_person_nm             AS person_name
+             , u.emp21_hire_date             AS hire_date
+             , u.emp21_total_days            AS total_days
+             , u.emp21_use_days              AS use_days
+             , u.emp21_remain_days           AS remain_days
+             , u.emp21_start_date            AS start_date
+             , u.emp21_appr_id               AS appr_id
+             , u.emp21_appr_status_cd        AS appr_status_code
+             , u.emp21_appr_status_nm        AS appr_status_name
+             , u.emp21_expect_appr_id        AS expect_appr_id
+             , u.emp21_expect_appr_status_cd AS expect_appr_status_code
+             , u.emp21_expect_appr_status_nm AS expect_appr_status_name
+          FROM (<include refid="yearQuery"/>) u
+         ORDER BY u.emp21_person_no
+    </select>
+
+    <select id="selectMonthList" resultType="kr.co.kfs.asseterp.biz.emp.dto.UnLeaveRes">
+        SELECT u.emp21_un_leave_id          AS un_leave_id
+             , u.emp21_person_id             AS person_id
+             , u.emp21_un_leave_cd           AS un_leave_code
+             , u.emp21_un_leave_nm           AS un_leave_name
+             , u.emp21_person_no             AS person_no
+             , u.emp21_person_nm             AS person_name
+             , u.emp21_hire_date             AS hire_date
+             , u.emp21_total_days            AS total_days
+             , u.emp21_use_days              AS use_days
+             , u.emp21_remain_days           AS remain_days
+             , u.emp21_start_date            AS start_date
+             , u.emp21_appr_id               AS appr_id
+             , u.emp21_appr_status_cd        AS appr_status_code
+             , u.emp21_appr_status_nm        AS appr_status_name
+             , u.emp21_expect_appr_id        AS expect_appr_id
+             , u.emp21_expect_appr_status_cd AS expect_appr_status_code
+             , u.emp21_expect_appr_status_nm AS expect_appr_status_name
+          FROM (<include refid="monthQuery"/>) u
+         ORDER BY u.emp21_person_no
+    </select>
+
+    <!-- AS-IS Emp21_UnLeave.insert L95: 대상 사원마다 emp21_un_leave 한 행(생성일 = 오늘). 입력한 구분 코드로 넣는다 -->
+    <insert id="insertYear">
+        INSERT INTO emp21_un_leave
+               ( emp21_un_leave_id, emp21_company_id, emp21_person_id, emp21_un_leave_cd, emp21_start_date
+               , emp21_total_days, emp21_use_days, emp21_remain_days )
+        SELECT f_create_seq(), #{companyId}, t.emp01_person_id, #{unLeaveCode}, f_today()
+             , t.emp20_total_days, t.emp20_use_days, t.emp20_remain_days
+          FROM (<include refid="yearTargets"/>) t
+    </insert>
+
+    <!-- AS-IS Emp21_UnLeave.insert2 L128: 구분 코드와 사원은 조회 결과(emp01_un_leave_code, emp20_person_id)에서 가져온다 -->
+    <insert id="insertMonth">
+        INSERT INTO emp21_un_leave
+               ( emp21_un_leave_id, emp21_company_id, emp21_person_id, emp21_un_leave_cd, emp21_start_date
+               , emp21_total_days, emp21_use_days, emp21_remain_days )
+        SELECT f_create_seq(), #{companyId}, t.emp20_person_id, t.emp01_un_leave_code, f_today()
+             , t.emp20_total_days, t.emp20_use_days, t.emp20_remain_days
+          FROM (<include refid="monthTargets"/>) t
+    </insert>
+
+    <!-- AS-IS Emp21_UnLeave.update L674: 그리드에서 고치는 열은 발생·사용·잔여 휴가뿐 -->
+    <update id="updateUnLeave">
+        UPDATE emp21_un_leave
+           SET emp21_total_days  = #{totalDays}
+             , emp21_use_days    = #{useDays}
+             , emp21_remain_days = #{remainDays}
+         WHERE emp21_un_leave_id = #{unLeaveId}
+           AND emp21_company_id  = #{companyId}
+    </update>
+
+    <!-- AS-IS Emp21_UnLeave.delete L679 -->
+    <delete id="deleteUnLeaves">
+        DELETE FROM emp21_un_leave
+         WHERE emp21_company_id = #{companyId}
+           AND emp21_un_leave_id IN
+        <foreach collection="unLeaveIds" item="unLeaveId" open="(" separator="," close=")">#{unLeaveId}</foreach>
+    </delete>
+
+</mapper>

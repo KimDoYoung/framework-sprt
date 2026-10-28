@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Cert, CertSaveReq, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { Cert, CertSaveReq, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -849,5 +849,59 @@ export const empInitLeaveApi = {
   remove: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/emp/init-leaves', { data: ids });
     return res.data.data;
+  },
+};
+
+/** S07 연월차휴가 현황 (Emp20_Tab_YearList) — 날짜는 서버가 'yyyy-MM-dd'로 준다 */
+export const empYearLeaveApi = {
+  /** AS-IS emp.Emp01_Person.selectByYearList */
+  search: async (param: YearLeaveParam): Promise<YearLeave[]> => {
+    const res = await apiClient.get<ApiResponse<YearLeave[]>>('v1/emp/year-leaves', { params: param });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdYearList → rdGroupId */
+  rdPrint: async (param: YearLeaveParam): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/emp/year-leaves/rd-print', null, { params: param });
+    return res.data.data ?? '';
+  },
+};
+
+/** S08 연차휴가 사용촉진 (Emp21_Tab_UnLeaveList) — 연차 탭 `un-leaves`, 월차 탭 `un-leaves/month`. 1단계: 상신·문자발송은 다음 단계 */
+export const empUnLeaveApi = {
+  /** AS-IS emp.Emp21_UnLeave.selectByUnLeaveCode (연차 탭) */
+  searchYear: async (stdYear: string, unLeaveCode: string): Promise<UnLeave[]> => {
+    const res = await apiClient.get<ApiResponse<UnLeave[]>>('v1/emp/un-leaves', { params: { stdYear, unLeaveCode } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp21_UnLeave.selectByUnLeaveCode2 (월차 탭) */
+  searchMonth: async (stdYear: string, unLeaveCode: string): Promise<UnLeave[]> => {
+    const res = await apiClient.get<ApiResponse<UnLeave[]>>('v1/emp/un-leaves/month', { params: { stdYear, unLeaveCode } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp21_UnLeave.insert (생성 창) → 만든 건수 */
+  createYear: async (stdYear: string, unLeaveCode: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/emp/un-leaves', { stdYear, unLeaveCode });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp21_UnLeave.insert2 (월차 탭 [생성]) → 만든 건수 */
+  createMonth: async (stdYear: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/emp/un-leaves/month', { stdYear });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp21_UnLeave.update (발생·사용·잔여 휴가) → 저장한 건수 */
+  save: async (rows: UnLeave[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/emp/un-leaves', rows.map(r => ({ unLeaveId: r.unLeaveId, totalDays: r.totalDays, useDays: r.useDays, remainDays: r.remainDays })));
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp21_UnLeave.delete */
+  remove: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/un-leaves', { data: ids });
+    return res.data.data ?? 0;
   },
 };

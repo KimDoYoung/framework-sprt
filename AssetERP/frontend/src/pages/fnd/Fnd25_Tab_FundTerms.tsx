@@ -67,7 +67,7 @@ export const Fnd25_Tab_FundTerms: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ height: '100%',  boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
         <SearchBar onSearch={() => retrieve()} loading={loading}>
           <SearchBar.Field label="구분">
             <SystemCodeComboBox kindCd="FundTermsType" altCode={['%', '전체']} style={{ width: 150 }} value={termsType}
@@ -77,7 +77,7 @@ export const Fnd25_Tab_FundTerms: React.FC = () => {
             <SearchBar.Input style={{ width: 230 }} placeholder="펀드규약명" value={searchText} onChange={e => setSearchText(e.target.value)} />
           </SearchBar.Field>
         </SearchBar>
-        <div style={{ flex: 1, minHeight: 0 }}>
+        <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
           <SingleGrid<TermsView>
             rowData={rows}
             columnDefs={columnDefs}

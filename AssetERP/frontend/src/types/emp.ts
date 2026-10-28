@@ -703,3 +703,57 @@ export interface EtcLeave {
   remainDays: number | null;
   note: string | null;
 }
+
+/** S07 연월차휴가 현황 한 행 (emp01_person.selectByYearList). 날짜는 'yyyy-MM-dd' */
+export interface YearLeave {
+  personId: number;
+  empNo: string | null;
+  korName: string | null;
+  hireDateLeaveCalc: string | null;
+  yearPeriod: string | null;
+  yearPer: number | null;
+  yearLeaveDays: number | null;
+  monthPeriod: string | null;
+  monthLeaveDays: number | null;
+  pyRemainMonthDays: number | null;
+  totalDays: number | null;
+  useYearDays: number | null;
+  useMonthDays: number | null;
+  useDays: number | null;
+  remainYearDays: number | null;
+  remainMonthDays: number | null;
+  remainDays: number | null;
+  rewardTotalDays: number | null;
+  rewardUseDays: number | null;
+  rewardRemainDays: number | null;
+  spcDays: number | null;
+}
+
+/** S07 조회 조건 — monthStdDateType: 1 현재 · 2 기준연도말 · 3 특정일, retireType: 100 재직 · 900 퇴직 · 000 전체 */
+export interface YearLeaveParam {
+  stdYear: string;
+  monthStdDateType: string;
+  stdDate: string;
+  retireType: string;
+}
+
+/** S08 미사용 연차·월차 휴가 한 행 (Emp21_UnLeaveModel). 날짜는 'yyyy-MM-dd' */
+export interface UnLeave {
+  unLeaveId: number;
+  personId: number;
+  unLeaveCode: string | null;
+  unLeaveName: string | null;
+  personNo: string | null;
+  personName: string | null;
+  hireDate: string | null;
+  totalDays: number | null;
+  useDays: number | null;
+  remainDays: number | null;
+  startDate: string | null;
+  apprId: number | null;
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+  expectApprId: number | null;
+  expectApprStatusCode: string | null;
+  expectApprStatusName: string | null;
+}

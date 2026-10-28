@@ -92,7 +92,7 @@ export const Fnd10_Tab_RelateFnd: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ height: '100%',  boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
         <SearchBar onSearch={() => void retrieve()} loading={loading}>
           <SearchBar.Field label="기준일">
             <DatePicker style={{ width: 100 }} allowClear={false} value={baseDate} onChange={d => d && setBaseDate(d)} />
@@ -101,7 +101,7 @@ export const Fnd10_Tab_RelateFnd: React.FC = () => {
             <SearchBar.Input style={{ width: 150 }} value={searchText} onChange={e => setSearchText(e.target.value)} />
           </SearchBar.Field>
         </SearchBar>
-        <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', marginTop: 8 }}>
           <div style={{ width: '60%', height: '100%' }}>
             <SingleGrid<AstAssetItem>
               rowData={rows}
@@ -116,7 +116,7 @@ export const Fnd10_Tab_RelateFnd: React.FC = () => {
               }}
             />
           </div>
-          <div style={{ width: '40%', height: '100%' }}>
+          <div style={{ width: '40%', height: '100%', marginLeft: 5 }}>
             <SingleGrid<BookRelateFnd>
               rowData={bookRows}
               columnDefs={bookColumnDefs}

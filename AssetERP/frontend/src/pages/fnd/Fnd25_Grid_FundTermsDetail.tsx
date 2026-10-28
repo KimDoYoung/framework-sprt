@@ -132,7 +132,7 @@ export const Fnd25_Grid_FundTermsDetail: React.FC<Props> = ({ target, onChanged 
   ], []);
 
   return (
-    <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', background: '#fff' }}>
+    <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', background: '#fff' }}>
       {/* [E2] retrieveButton[조회].Select (L99), [E1] searchTextField.KeyPress [Enter] (L90) → retrieve(termsDetailModel) */}
       <SearchBar
         onSearch={retrieve}
@@ -147,7 +147,7 @@ export const Fnd25_Grid_FundTermsDetail: React.FC<Props> = ({ target, onChanged 
           <SearchBar.Input style={{ width: 190 }} placeholder="펀드규약명" value={searchText} onChange={e => setSearchText(e.target.value)} />
         </SearchBar.Field>
       </SearchBar>
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
         <MultiGrid<TermsRevision>
           gridRef={gridRef}
           rowData={rows}
