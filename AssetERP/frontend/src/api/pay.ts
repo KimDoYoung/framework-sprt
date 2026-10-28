@@ -799,4 +799,33 @@ export const payApi = {
     const res = await apiClient.get<ApiResponse<PayTaxReceipt[]>>('v1/pay/tax-receipts/mine');
     return res.data.data ?? [];
   },
+
+  // ── S25 원천징수영수증 업로드 (Pay08_Tab_TaxWithholdingAdmin) ──
+
+  /** AS-IS pay.Pay08_TaxWithholding.selectByCompanyId(personId 없음) / selectByPersonId(사원을 골랐을 때) */
+  searchTaxReceipts: async (personId: number | null): Promise<PayTaxReceipt[]> => {
+    const res = await apiClient.get<ApiResponse<PayTaxReceipt[]>>('v1/pay/tax-receipts', { params: { personId: personId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS FileUpload?mode=pay08 — 파일 하나마다 영수증 행을 새로 만들어 올린다 */
+  uploadTaxReceipt: async (file: File): Promise<PayTaxReceipt> => {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await apiClient.post<ApiResponse<PayTaxReceipt>>('v1/pay/tax-receipts', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data.data;
+  },
+
+  /** AS-IS pay.Pay08_TaxWithholding.update — 바뀐 행의 사원·비고 → 저장한 건수 */
+  saveTaxReceipts: async (rows: PayTaxReceipt[]): Promise<number> => {
+    const body = rows.map(({ taxWithholdingId, personId, note }) => ({ taxWithholdingId, personId, note }));
+    const res = await apiClient.put<ApiResponse<number>>('v1/pay/tax-receipts', body);
+    return res.data.data;
+  },
+
+  /** AS-IS pay.Pay08_TaxWithholding.delete (파일은 fileApi.deleteFile로 먼저 지운다) */
+  deleteTaxReceipt: async (taxWithholdingId: number): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/pay/tax-receipts/${taxWithholdingId}`);
+    return res.data.data;
+  },
 };

@@ -25,4 +25,76 @@
          ORDER BY sys10_file_nm DESC
     </select>
 
+    <!-- AS-IS(IDMS-IC) pay08_tax_withholding.selectByCompanyId L31 (S25) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayTaxReceiptRes">
+        SELECT pay08_tax_withholding_id         AS tax_withholding_id,
+               pay08_person_id                  AS person_id,
+               COALESCE(emp01_kor_nm, '-')      AS person_name,
+               pay08_reg_date                   AS reg_date,
+               pay08_note                       AS note,
+               sys10_file_id                    AS file_id,
+               sys10_file_nm                    AS file_name,
+               sys10_file_ext                   AS file_ext
+          FROM pay08_tax_withholding
+               INNER JOIN sys10_file ON sys10_parent_id = pay08_tax_withholding_id
+               LEFT OUTER JOIN emp01_person ON emp01_person_id = pay08_person_id
+         WHERE pay08_company_id = #{companyId}
+         ORDER BY sys10_file_nm DESC, emp01_person_id
+    </select>
+
+    <!-- AS-IS(IDMS-IC) pay08_tax_withholding.selectByPersonId L10 (S25) — 사원을 골라 조회할 때. 회사 조건은 TOBE 추가(다른 회사 사원 ID로 남의 영수증을 못 보게) -->
+    <select id="selectByCompanyAndPerson" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayTaxReceiptRes">
+        SELECT pay08_tax_withholding_id         AS tax_withholding_id,
+               pay08_person_id                  AS person_id,
+               COALESCE(emp01_kor_nm, '-')      AS person_name,
+               pay08_reg_date                   AS reg_date,
+               pay08_note                       AS note,
+               sys10_file_id                    AS file_id,
+               sys10_file_nm                    AS file_name,
+               sys10_file_ext                   AS file_ext
+          FROM pay08_tax_withholding
+               INNER JOIN sys10_file ON sys10_parent_id = pay08_tax_withholding_id
+               LEFT OUTER JOIN emp01_person ON emp01_person_id = pay08_person_id
+         WHERE pay08_person_id = #{personId}
+           AND pay08_company_id = #{companyId}
+         ORDER BY sys10_file_nm DESC
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS(IDMS-IC) pay08_tax_withholding.insert L57 (FileUpload.uploadPay08) -->
+    <insert id="insert">
+        INSERT INTO pay08_tax_withholding (pay08_tax_withholding_id, pay08_company_id, pay08_reg_date)
+        VALUES (#{taxWithholdingId}, #{companyId}, f_sysdate())
+    </insert>
+
+    <!-- AS-IS UpdateDataModel update — 화면이 바꾸는 열은 사원·비고 -->
+    <update id="update">
+        UPDATE pay08_tax_withholding
+           SET pay08_person_id = #{req.personId},
+               pay08_note      = #{req.note}
+         WHERE pay08_tax_withholding_id = #{req.taxWithholdingId}
+           AND pay08_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel deleteModel -->
+    <delete id="delete">
+        DELETE FROM pay08_tax_withholding
+         WHERE pay08_tax_withholding_id = #{taxWithholdingId}
+           AND pay08_company_id = #{companyId}
+    </delete>
+
+    <select id="countOwn" resultType="int">
+        SELECT COUNT(*) FROM pay08_tax_withholding
+         WHERE pay08_tax_withholding_id = #{taxWithholdingId} AND pay08_company_id = #{companyId}
+    </select>
+
+    <select id="countPerson" resultType="int">
+        SELECT COUNT(*) FROM emp01_person
+         WHERE emp01_person_id = #{personId} AND emp01_company_id = #{companyId}
+    </select>
+
 </mapper>
