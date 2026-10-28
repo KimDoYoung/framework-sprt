@@ -97,7 +97,7 @@ export const Fnd10_Tab_RelateAst: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
         {/* [E5] retrieveButton[조회].Select (L142) · [E3] searchText.KeyPress [Enter] (L123) → retrieve() */}
         <SearchBar onSearch={() => void retrieve()} loading={loading}>
           <SearchBar.Field label="기준일">
@@ -117,7 +117,7 @@ export const Fnd10_Tab_RelateAst: React.FC = () => {
             <SearchBar.Input style={{ width: 150 }} placeholder="펀드코드/명" value={searchText} onChange={e => setSearchText(e.target.value)} />
           </SearchBar.Field>
         </SearchBar>
-        <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', marginTop: 8}}>
           <div style={{ width: '40%', height: '100%' }}>
             <SingleGrid<FundRelate>
               rowData={rows}
@@ -132,7 +132,7 @@ export const Fnd10_Tab_RelateAst: React.FC = () => {
               }}
             />
           </div>
-          <div style={{ width: '60%', height: '100%' }}>
+          <div style={{ width: '60%', height: '100%', borderLeft: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
             <SingleGrid<BookRelateAst>
               rowData={bookRows}
               columnDefs={bookColumnDefs}

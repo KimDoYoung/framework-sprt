@@ -642,3 +642,64 @@ export interface CertSaveReq {
   certUse: string | null;
   dcrClassTreeId: number;
 }
+
+/** S06 휴가관리 그리드 한 행 (Emp20_LeaveModel 중 Emp20_Tab_LeaveManager가 쓰는 열). 날짜는 'yyyy-MM-dd' */
+export interface Leave {
+  leaveId: number;
+  personId: number;
+  apprId: number | null;
+  startDate: string | null;
+  closeDate: string | null;
+  leaveName: string | null;
+  leaveCount: number | null;
+  managerName: string | null;
+  reason: string | null;
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+  overConfirmStatusCode: string | null;
+  overConfirmStatusName: string | null;
+  overConfirmerName: string | null;
+  overConfirmDateStr: string | null;
+}
+
+/** S06 요약 칸 (emp20_leave.selectByDays + emp22_etc_leave.selectByDays) */
+export interface LeaveDays {
+  totalDays: number | null;
+  pyRemainMonthDays: number | null;
+  useDays: number | null;
+  remainDays: number | null;
+  stdPeriod: string | null;
+  etcTotalDays: number | null;
+  etcUseDays: number | null;
+  etcRemainDays: number | null;
+}
+
+/** S06 로그인 회사의 휴가 설정 (leaveYn·leaveConfirmYn·leaveMonthCode) */
+export interface LeaveOption {
+  leaveYn: boolean;
+  leaveConfirmYn: boolean;
+  leaveMonthCode: string | null;
+}
+
+/** S06 초기설정 휴가일수 (Emp26_InitLeaveModel). 새 행은 initLeaveId 음수 */
+export interface InitLeave {
+  initLeaveId: number;
+  personId: number;
+  year: string | null;
+  personNo: string | null;
+  personName: string | null;
+  posName: string | null;
+  useDays: number | null;
+}
+
+/** S06 포상휴가 내역 (Emp22_EtcLeaveModel) */
+export interface EtcLeave {
+  etcLeaveId: number;
+  reason: string | null;
+  startDate: string | null;
+  closeDate: string | null;
+  days: number | null;
+  useDays: number | null;
+  remainDays: number | null;
+  note: string | null;
+}

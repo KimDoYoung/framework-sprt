@@ -84,7 +84,7 @@ export const Fnd08_Page_OrgAuth: React.FC<Props> = ({ fundCodeId }) => {
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
       <div style={{ flex: 1, minHeight: 0 }}>
         <SingleGrid<OrgFundAuth>
           gridRef={tree.gridRef}

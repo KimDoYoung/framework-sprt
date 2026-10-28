@@ -729,3 +729,17 @@ export interface Bookmark {
   parentTitleNm?: string | null;
   seq?: string | null;
 }
+
+/** S06 휴가기준관리 한 행 (Sys31_LeaveCompanyModel). 저장된 행이 없는 기준은 임시 번호가 ID */
+export interface LeaveCompany {
+  leaveCompanyId: number;
+  leaveCode: string;
+  leaveName: string | null;
+  spcLeaveCode: string | null;
+  spcLeaveName: string | null;
+  days: number | null;
+  calcCode: string | null;
+  calcName: string | null;
+  unUseYn: boolean;
+  note: string | null;
+}

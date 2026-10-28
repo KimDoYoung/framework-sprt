@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/emp/mapper/emp26_init_leave.xml selectByYear(L58)·selectById + Emp26_InitLeave update/delete(UpdateDataModel).
+  초기설정 휴가일수(Emp26_Lookup_InitLeave).
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpInitLeaveMapper">
+
+    <!-- AS-IS emp26_init_leave.selectByYear L58 (personId는 있을 때만) -->
+    <select id="selectInitLeaves" resultType="kr.co.kfs.asseterp.biz.emp.dto.InitLeaveRes">
+        SELECT emp26_init_leave_id                                              AS init_leave_id
+             , emp01_person_id                                                  AS person_id
+             , emp26_year                                                       AS year
+             , emp01_emp_no                                                     AS person_no
+             , f_emp_kor_nm(emp26_person_id)                                    AS person_name
+             , f_cdnm('EmpPosCode', emp03_pos_cd, emp26_company_id, f_sysdate()) AS pos_name
+             , emp26_use_days                                                   AS use_days
+          FROM emp26_init_leave
+               INNER JOIN emp01_person ON emp26_person_id = emp01_person_id
+               INNER JOIN emp02_others ON emp26_person_id = emp02_person_id
+               INNER JOIN emp03_trans  ON emp26_person_id = emp03_person_id
+         WHERE (emp03_person_id, emp03_trans_date) IN (
+                                                        SELECT emp03_person_id, MAX(emp03_trans_date)
+                                                          FROM emp01_person
+                                                               INNER JOIN emp03_trans ON emp03_person_id = emp01_person_id
+                                                         WHERE emp01_company_id = #{companyId}
+                                                           AND emp03_trans_date  <![CDATA[<=]]>  f_sysdate()
+                                                         GROUP BY emp03_person_id
+                                                    )
+        <if test="personId != null">
+           AND emp26_person_id = #{personId}
+        </if>
+           AND emp26_year = #{year}
+         ORDER BY emp01_emp_no
+    </select>
+
+    <!-- AS-IS emp26_init_leave.selectById (저장 뒤 그 행을 다시 읽는다) -->
+    <select id="selectInitLeaveById" resultType="kr.co.kfs.asseterp.biz.emp.dto.InitLeaveRes">
+        SELECT emp26_init_leave_id                                              AS init_leave_id
+             , emp01_person_id                                                  AS person_id
+             , emp26_year                                                       AS year
+             , emp01_emp_no                                                     AS person_no
+             , f_emp_kor_nm(emp26_person_id)                                    AS person_name
+             , f_cdnm('EmpPosCode', emp03_pos_cd, emp26_company_id, f_sysdate()) AS pos_name
+             , emp26_use_days                                                   AS use_days
+          FROM emp26_init_leave
+               INNER JOIN emp01_person ON emp26_person_id = emp01_person_id
+               INNER JOIN emp02_others ON emp26_person_id = emp02_person_id
+               INNER JOIN emp03_trans  ON emp26_person_id = emp03_person_id
+         WHERE emp03_trans_date = (
+                                    SELECT MAX(x.emp03_trans_date)
+                                      FROM emp03_trans x
+                                     WHERE x.emp03_person_id = emp01_person_id
+                                       AND x.emp03_trans_date <![CDATA[<=]]> f_sysdate()
+                                  )
+           AND emp26_init_leave_id = #{initLeaveId}
+           AND emp26_company_id    = #{companyId}
+    </select>
+
+    <!-- 로그인 회사 소속 사원인지 확인 (TOBE 추가) -->
+    <select id="countPerson" resultType="int">
+        SELECT COUNT(*)
+          FROM emp01_person
+         WHERE emp01_company_id = #{companyId}
+           AND emp01_person_id  = #{personId}
+    </select>
+
+    <select id="countInitLeave" resultType="int">
+        SELECT COUNT(*)
+          FROM emp26_init_leave
+         WHERE emp26_company_id    = #{companyId}
+           AND emp26_init_leave_id = #{initLeaveId}
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertInitLeave">
+        INSERT INTO emp26_init_leave
+               ( emp26_init_leave_id, emp26_company_id, emp26_person_id, emp26_year, emp26_use_days )
+        VALUES ( #{initLeaveId}, #{companyId}, #{personId}, #{year}, #{useDays} )
+    </insert>
+
+    <update id="updateInitLeave">
+        UPDATE emp26_init_leave
+           SET emp26_year     = #{year}
+             , emp26_use_days = #{useDays}
+         WHERE emp26_company_id    = #{companyId}
+           AND emp26_init_leave_id = #{initLeaveId}
+    </update>
+
+    <delete id="deleteInitLeave">
+        DELETE FROM emp26_init_leave
+         WHERE emp26_company_id    = #{companyId}
+           AND emp26_init_leave_id = #{initLeaveId}
+    </delete>
+
+</mapper>

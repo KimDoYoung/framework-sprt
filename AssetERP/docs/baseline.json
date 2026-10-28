@@ -8500,5 +8500,52 @@
     "note": "docs/work/S/S05-작업기록.md",
     "history": [],
     "id": "S05"
+  },
+  "Emp20_Tab_LeaveManager": {
+    "commit": "4bd1f4ed0410cf5d7a0c4f0367464792a7bfee9c",
+    "commit_short": "4bd1f4e",
+    "branch": "ioc",
+    "commit_date": "2026-10-27",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp20_Tab_LeaveManager.java": "aff1d6af32707d37a22afa2d8c0934956a027f32",
+      "application/src/main/java/myApp/client/vi/emp/Emp22_Lookup_EtcLeave.java": "183f5c6a251f865711ad5283586d4cb926f7400f",
+      "application/src/main/java/myApp/client/vi/emp/Emp26_Lookup_InitLeave.java": "d8a7e290c5699bf8ed3d377a4ebb3d109d528a85",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp00_TransInfoModel.java": "dc29160bc09265170d01009c5353bd56081484c3",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp01_PersonModel.java": "f4478d406df99853f5315401fc09f28e760101fe",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp02_OthersModel.java": "361f61b4bebfd1073f0769db40e42327748e6897",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp20_LeaveModel.java": "08d4fe0e87a0e52d15d517f341428f632a6b3ef0",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp20_LeaveModelProperties.java": "50d29bda8b92ab30983f5c2304df3aa30271a3c2",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp22_EtcLeaveModel.java": "00d1304f99045fce7be0072ed5dcb544afa3ac71",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp22_EtcLeaveModelProperties.java": "4b2b82d565a39179d5f6c17490970fc8a6bba5de",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp26_InitLeaveModel.java": "015036bfec283fd70792443c56cac97e563e3f9f",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp26_InitLeaveModelProperties.java": "eeefdd81d28c34638a4a5a97774d1efef1ec295f",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/apr/mapper/apr04_appr_step.xml": "d2ad02a8dc784aa55ac38dd915c3c1450954fddf",
+      "application/src/main/java/myApp/server/emp/Emp20_Leave.java": "e12adbe08b6e6cec9bd9de8a6468f3c1f5c1e5b0",
+      "application/src/main/java/myApp/server/emp/Emp22_EtcLeave.java": "eb0df4fb69c325ebdc1345ab09342c167dfac261",
+      "application/src/main/java/myApp/server/emp/Emp26_InitLeave.java": "a20f9f2e6836e5b51587da86283c52842e3acbcd",
+      "application/src/main/java/myApp/server/emp/mapper/emp01_person.xml": "996a542c6a2637d37b8ad6dafdc1de2019cbe902",
+      "application/src/main/java/myApp/server/emp/mapper/emp20_leave.xml": "79ca289fe6448d3de7d4b667eb400c7283e48802",
+      "application/src/main/java/myApp/server/emp/mapper/emp22_etc_leave.xml": "9a691dc656c2908e70f14d026bfc5519d32b6f77",
+      "application/src/main/java/myApp/server/emp/mapper/emp26_init_leave.xml": "e785b4cc01a9c922412cbf59f874fa80092996bb",
+      "application/src/main/java/myApp/server/emp/mapper/emp92_sms_notice.xml": "b606ac566c0c4019f998a6d350b04c09d646fc6e",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Dcr30_Lookup_Link",
+      "Emp00_Lookup_SelectMulti",
+      "Emp00_Lookup_SelectSingle",
+      "Sys31_Lookup_LeaveCompany"
+    ],
+    "recorded_at": "2026-10-28T11:13:55+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/S/S06-작업기록.md",
+    "history": [],
+    "id": "S06"
   }
 }

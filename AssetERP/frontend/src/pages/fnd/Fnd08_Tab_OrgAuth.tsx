@@ -95,8 +95,8 @@ export const Fnd08_Tab_OrgAuth: React.FC = () => {
 
   return (
     <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '20px 20px 0 20px', flexShrink: 0 }}>
-        <div style={{ border: '1px solid #d9d9d9' }}>
+      <div style={{ padding: '10px 8px 8px 20px', flexShrink: 0 }}>
+        <div>
           <SearchBar
             onSearch={() => void retrieve()}
             loading={loading}

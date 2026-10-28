@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/sys/mapper/sys31_leave_company.xml selectByCompanyId + selectById + Sys31_LeaveCompany.update(UpdateDataModel).
+  휴가기준관리(Sys31_Lookup_LeaveCompany).
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.sys.mapper.SysLeaveCompanyMapper">
+
+    <!-- AS-IS sys31_leave_company.selectByCompanyId: 휴가코드(회사 0) × 특별휴가 상세코드(회사별)에 저장된 기준을 붙인다 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.sys.dto.LeaveCompanyRes">
+        SELECT COALESCE(sys31_leave_company_id, ROW_NUMBER() OVER(ORDER BY leaveSeq, spcLeaveSeq))  AS leave_company_id
+             , COALESCE(sys31_leave_cd, leaveCode)                                                  AS leave_code
+             , COALESCE(sys31_spc_leave_cd, spcLeaveCode)                                           AS spc_leave_code
+             , sys31_days                                                                           AS days
+             , COALESCE(sys31_calc_cd,'2')                                                          AS calc_code
+             , COALESCE(sys31_un_use_yn,'false') = 'true'                                           AS un_use_yn
+             , sys31_note                                                                           AS note
+             , f_cdnm('leaveCode'        , leaveCode                  , #{companyId}, f_today())    AS leave_name
+             , f_cdnm('SpecialLeaveCode' , spcLeaveCode               , #{companyId}, f_today())    AS spc_leave_name
+             , f_cdnm('LeaveDaysCalcType', COALESCE(sys31_calc_cd,'2'), #{companyId}, f_today())    AS calc_name
+          FROM (
+                 SELECT t1.*
+                      , spcLeaveCode
+                      , spcLeaveName
+                      , spcLeaveSeq
+                   FROM ( SELECT sys09_code leaveCode
+                               , sys09_name leaveName
+                               , sys09_seq  leaveSeq
+                            FROM sys08_code_kind
+                                 INNER JOIN sys09_code a1 ON sys09_code_kind_id = sys08_code_kind_id
+                           WHERE sys08_kind_cd    = 'leaveCode'
+                             AND sys09_company_id = 0
+                             AND COALESCE(sys09_close_yn,'false') = 'false'
+                             AND sys09_apply_date = ( SELECT MAX(a2.sys09_apply_date)
+                                                        FROM sys09_code a2
+                                                       WHERE a2.sys09_code_kind_id = a1.sys09_code_kind_id
+                                                         AND a2.sys09_code         = a1.sys09_code
+                                                         AND a2.sys09_company_id   = a1.sys09_company_id
+                                                         AND a2.sys09_apply_date <![CDATA[<=]]> f_today() )
+                        ) t1
+                        LEFT OUTER JOIN ( SELECT sys09_code spcLeaveCode
+                                               , sys09_name spcLeaveName
+                                               , sys09_seq  spcLeaveSeq
+                                               , '04'       leaveCode
+                                            FROM sys08_code_kind
+                                                 INNER JOIN sys09_code b1 ON sys09_code_kind_id = sys08_code_kind_id
+                                           WHERE sys08_kind_cd    = 'SpecialLeaveCode'
+                                             AND sys09_company_id = #{companyId}
+                                             AND COALESCE(sys09_close_yn,'false') = 'false'
+                                             AND sys09_apply_date = ( SELECT MAX(b2.sys09_apply_date)
+                                                                        FROM sys09_code b2
+                                                                       WHERE b2.sys09_code_kind_id = b1.sys09_code_kind_id
+                                                                         AND b2.sys09_code         = b1.sys09_code
+                                                                         AND b2.sys09_company_id   = b1.sys09_company_id
+                                                                         AND b2.sys09_apply_date <![CDATA[<=]]> f_today() )
+                                        ) t2 ON t2.leaveCode = t1.leaveCode
+               ) tt
+               LEFT OUTER JOIN sys31_leave_company ON (    sys31_company_id   = #{companyId}
+                                                       AND sys31_leave_cd     = leaveCode
+                                                       AND ( ( sys31_leave_cd     = '04'         AND
+                                                               sys31_spc_leave_cd = spcLeaveCode ) OR
+                                                             ( sys31_leave_cd    != '04'         ) )
+                                                      )
+    </select>
+
+    <!-- AS-IS sys31_leave_company.selectById: 저장된 행인지 (TOBE는 로그인 회사 행만) -->
+    <select id="countById" resultType="int">
+        SELECT COUNT(*)
+          FROM sys31_leave_company
+         WHERE sys31_leave_company_id = #{leaveCompanyId}
+           AND sys31_company_id       = #{companyId}
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertLeaveCompany">
+        INSERT INTO sys31_leave_company
+               ( sys31_leave_company_id, sys31_company_id, sys31_leave_cd, sys31_spc_leave_cd
+               , sys31_days, sys31_calc_cd, sys31_un_use_yn, sys31_note )
+        VALUES ( #{leaveCompanyId}, #{companyId}, #{leaveCode}, #{spcLeaveCode}
+               , #{days}, #{calcCode}, #{unUseYn}, #{note} )
+    </insert>
+
+    <update id="updateLeaveCompany">
+        UPDATE sys31_leave_company
+           SET sys31_days      = #{days}
+             , sys31_calc_cd   = #{calcCode}
+             , sys31_un_use_yn = #{unUseYn}
+         WHERE sys31_leave_company_id = #{leaveCompanyId}
+           AND sys31_company_id       = #{companyId}
+    </update>
+
+</mapper>

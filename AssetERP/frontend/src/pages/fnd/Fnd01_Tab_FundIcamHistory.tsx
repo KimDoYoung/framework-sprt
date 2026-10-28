@@ -65,8 +65,8 @@ export const Fnd01_Tab_FundIcamHistory: React.FC = () => {
 
   return (
     <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '20px 20px 0 20px', boxSizing: 'border-box' }}>
-        <div style={{ border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+      <div style={{ padding: '10px 8px 8px 20px', boxSizing: 'border-box' }}>
+        <div>
           <SearchBar onSearch={() => void retrieve()} loading={loading}>
             <SearchBar.Field label="검색">
               <SearchBar.Input style={{ width: 300 }} placeholder="펀드코드/펀드명" value={searchText} onChange={e => setSearchText(e.target.value)} />

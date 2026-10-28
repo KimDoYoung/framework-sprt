@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/emp/mapper/emp20_leave.xml selectByPersonId(L102)·selectByDays(L303)·selectById·updateOverConfirm
+  + emp22_etc_leave.xml selectByDays(L85)·selectByPersonId + sys/Sys99_Print insertRdLeaveManager(L4244).
+  휴가관리(경영관리팀, Emp20_Tab_LeaveManager)의 조회·요약·초과휴가 승인·엑셀 출력 자료.
+  [휴가취소](emp20_leave.cancelUpdate · apr01_appr.insertApprDel/deleteAppr · emp92_sms_notice.*)는 다음 단계.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpLeaveMapper">
+
+    <!-- AS-IS emp20_leave.selectByPersonId L102: managerYn=true 가지만 쓴다(경영관리팀 화면). 분류트리·대직자 열은 취소(다음 단계)에서 쓴다 -->
+    <sql id="leaveQuery">
+        WITH emp20 AS ( SELECT t.*
+                             , f_cdnm('leaveCode'       , emp20_leave_cd    , emp20_company_id, f_sysdate())                    AS emp20_leave_nm
+                          FROM (
+                                 SELECT emp20_leave_id
+                                      , emp20_person_id
+                                      , emp20_company_id
+                                      , emp20_leave_cd
+                                      , emp20_reg_date
+                                      , emp20_start_date
+                                      , emp20_close_date
+                                      , emp20_leave_count
+                                      , emp20_reason
+                                      , emp20_manager_nm
+                                      , emp20_appr_id
+                                      , emp20_over_confirm_status_cd
+                                      , emp20_over_confirmer_id
+                                      , emp20_over_confirm_date
+                                   FROM emp20_leave
+                                        LEFT JOIN apr01_appr ON apr01_appr_id = emp20_appr_id
+                                  WHERE emp20_person_id = #{personId}
+                                    AND ( COALESCE(apr01_status_cd,'99') NOT IN ('40','99')
+                                         OR
+                                          COALESCE(emp20_over_confirm_status_cd, '00') != '00' )
+                                  UNION ALL
+                                 SELECT emp24_joint_leave_id                                                    AS emp20_leave_id
+                                      , #{personId}                                                             AS emp20_person_id
+                                      , emp24_company_id                                                        AS emp20_company_id
+                                      , '01'                                                                    AS emp20_leave_cd
+                                      , apr01_reg_date                                                          AS emp20_reg_date
+                                      , emp24_start_date                                                        AS emp20_start_date
+                                      , emp24_close_date                                                        AS emp20_close_date
+                                      , f_get_biz_days(emp24_company_id, emp24_start_date, emp24_close_date)    AS emp20_leave_count
+                                      , '[공동연차]'||emp24_reason                                                AS emp20_reason
+                                      , null                                                                    AS emp20_manager_nm
+                                      , emp24_appr_id                                                           AS emp20_appr_id
+                                      , null                                                                    AS emp20_over_confirm_status_cd
+                                      , null                                                                    AS emp20_over_confirmer_id
+                                      , null                                                                    AS emp20_over_confirm_date
+                                   FROM emp24_joint_leave
+                                        INNER JOIN apr01_appr   ON apr01_appr_id   = emp24_appr_id
+                                        INNER JOIN emp01_person ON emp01_person_id = #{personId}
+                                  WHERE emp24_company_id = emp01_company_id
+                                    AND apr01_status_cd  = '30' /* 상신상태(30:완료) */
+                                    AND emp01_hire_date <![CDATA[<]]> emp24_start_date
+                                    AND NOT EXISTS ( SELECT 1
+                                                       FROM emp28_joint_leave_except
+                                                      WHERE emp28_joint_leave_id = emp24_joint_leave_id
+                                                        AND emp28_person_id      = emp01_person_id )
+                                  UNION ALL /* AssetERP 시스템 사용전 휴가사용내역 (2023.07.24 CYY)*/
+                                 SELECT emp27_leave_old_id                                                      AS emp20_leave_id
+                                      , emp27_person_id                                                         AS emp20_person_id
+                                      , emp27_company_id                                                        AS emp20_company_id
+                                      , emp27_leave_cd                                                          AS emp20_leave_cd
+                                      , emp27_reg_date                                                          AS emp20_reg_date
+                                      , emp27_start_date                                                        AS emp20_start_date
+                                      , emp27_close_date                                                        AS emp20_close_date
+                                      , emp27_leave_count                                                       AS emp20_leave_count
+                                      , '['||emp27_note||']'||CASE WHEN COALESCE(emp27_reason,'') = '' THEN ''
+                                                                   ELSE '-'||emp27_reason END                   AS emp20_reason
+                                      , null                                                                    AS emp20_manager_nm
+                                      , 0                                                                       AS emp20_appr_id
+                                      , null                                                                    AS emp20_over_confirm_status_cd
+                                      , null                                                                    AS emp20_over_confirmer_id
+                                      , null                                                                    AS emp20_over_confirm_date
+                                   FROM emp27_leave_old
+                                  WHERE emp27_person_id = #{personId}
+                               ) t
+                         WHERE ( ( emp20_start_date BETWEEN f_get_close_date(emp20_company_id,#{stdYear},'1')
+                                                    AND     f_get_close_date(emp20_company_id,#{stdYear},'2') ) or
+                                 ( emp20_close_date BETWEEN f_get_close_date(emp20_company_id,#{stdYear},'1')
+                                                    AND     f_get_close_date(emp20_company_id,#{stdYear},'2') ) )
+        )
+        SELECT a.emp20_leave_id                                                                  AS leave_id
+             , a.emp20_person_id                                                                 AS person_id
+             , a.emp20_appr_id                                                                   AS appr_id
+             , a.emp20_start_date                                                                AS start_date
+             , a.emp20_close_date                                                                AS close_date
+             , a.emp20_leave_nm                                                                  AS leave_name
+             , a.emp20_leave_count                                                               AS leave_count
+             , a.emp20_manager_nm                                                                AS manager_name
+             , a.emp20_reason                                                                    AS reason
+             , CASE WHEN emp20_appr_id = 0 THEN '30' ELSE COALESCE(apr01_status_cd,'00') END     AS appr_status_code
+             , CASE WHEN emp20_appr_id = 0 THEN '해당없음'
+                    ELSE f_cdnm('AprStatusCode', apr01_status_cd, emp20_company_id, f_sysdate()) END AS appr_status_name
+             , a.emp20_over_confirm_status_cd                                                    AS over_confirm_status_code
+             , f_cdnm('StatusCode' , emp20_over_confirm_status_cd, emp20_company_id, f_sysdate()) AS over_confirm_status_name
+             , CASE WHEN emp20_over_confirmer_id IS NULL THEN null
+                    ELSE f_emp_kor_nm(emp20_over_confirmer_id) END                               AS over_confirmer_name
+             , COALESCE(TO_CHAR(emp20_over_confirm_date, 'yyyy-mm-dd HH24:MI:SS'), ''::text)     AS over_confirm_date_str
+          FROM emp20 a
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = a.emp20_appr_id
+         ORDER BY emp20_start_date DESC, emp20_leave_id
+    </sql>
+
+    <select id="selectLeaves" resultType="kr.co.kfs.asseterp.biz.emp.dto.LeaveRes">
+        <include refid="leaveQuery"/>
+    </select>
+
+    <!-- 로그인 회사 소속 사원인지 확인 (TOBE 추가: AS-IS는 클라이언트가 보낸 personId를 그대로 쓴다) -->
+    <select id="countPerson" resultType="int">
+        SELECT COUNT(*)
+          FROM emp01_person
+         WHERE emp01_company_id = #{companyId}
+           AND emp01_person_id  = #{personId}
+    </select>
+
+    <!-- AS-IS emp20_leave.selectByDays L303 (apprCheckYn=true) -->
+    <select id="selectDays" resultType="kr.co.kfs.asseterp.biz.emp.dto.LeaveDaysRes">
+        SELECT a.total_days                                                                    AS total_days
+             , a.py_remain_month_days                                                          AS py_remain_month_days
+             , a.use_days                                                                      AS use_days
+             , (a.total_days + a.py_remain_month_days) - a.use_days                            AS remain_days
+             , to_char(f_get_close_date(a.emp01_company_id,#{stdYear},'1'),'yyyy-mm-dd') || ' ~ ' ||
+               to_char(f_get_close_date(a.emp01_company_id,#{stdYear},'2'),'yyyy-mm-dd')       AS std_period
+             , etc.total_days                                                                  AS etc_total_days
+             , etc.use_days                                                                    AS etc_use_days
+             , etc.remain_days                                                                 AS etc_remain_days
+          FROM ( SELECT emp01_person.*
+                      , CASE WHEN f_get_close_date(emp01_company_id,#{stdYear},'2')  <![CDATA[<]]>  DATE_TRUNC('month', f_today())
+                             THEN f_get_leave_days2(emp01_person_id,#{stdYear},'1',f_get_close_date(emp01_company_id,#{stdYear},'2'),'true')
+                             ELSE f_get_leave_days2(emp01_person_id,#{stdYear},'1',f_today(),'true') END   AS total_days
+                      , f_get_leave_days2(emp01_person_id,#{stdYear},'2',null,'true')                      AS use_days
+                      , CASE WHEN f_get_close_date(emp01_company_id, (#{stdYear}::numeric - 1)::varchar, '2')
+                                  = f_get_close_date(emp01_company_id, TO_CHAR(COALESCE(emp02_hire_date_leave_calc,emp01_hire_date),'YYYY'), '2')
+                             THEN GREATEST(f_get_leave_days( emp01_person_id
+                                                           , (#{stdYear}::numeric - 1)::varchar
+                                                           , '3'
+                                                           , f_get_close_date(emp01_company_id, (#{stdYear}::numeric - 1)::varchar, '2')
+                                                           , 'true'), 0)
+                             ELSE 0 END     AS py_remain_month_days
+                   FROM emp01_person
+                        INNER JOIN emp02_others ON emp02_person_id = emp01_person_id
+                  WHERE emp01_person_id = #{personId} ) a
+               CROSS JOIN
+               <!-- AS-IS emp22_etc_leave.selectByDays L85 (apprCheckYn=true): 요약 칸 두 줄을 한 번에 -->
+               ( SELECT f_get_leave_days2(emp01_person_id,#{stdYear},'7',f_today(),'true') AS total_days
+                      , f_get_leave_days2(emp01_person_id,#{stdYear},'8',null,'true')       AS use_days
+                      , f_get_leave_days2(emp01_person_id,#{stdYear},'9',null,'true')       AS remain_days
+                   FROM emp01_person
+                  WHERE emp01_person_id = #{personId} ) etc
+    </select>
+
+    <!-- 회사 휴가 설정: sys01_leave_yn(초과휴가허용) · sys01_leave_confirm_yn(초과휴가승인 사용) · sys01_leave_month_cd(결산월) -->
+    <select id="selectOption" resultType="kr.co.kfs.asseterp.biz.emp.dto.LeaveOptionRes">
+        SELECT COALESCE(sys01_leave_yn, 'false')         = 'true'  AS leave_yn
+             , COALESCE(sys01_leave_confirm_yn, 'false') = 'true'  AS leave_confirm_yn
+             , sys01_leave_month_cd                                AS leave_month_code
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS emp20_leave.updateOverConfirm (TOBE: 로그인 회사 행만) -->
+    <update id="updateOverConfirm">
+        UPDATE emp20_leave
+           SET emp20_over_confirm_status_cd = #{confirmStatusCode}
+             , emp20_over_confirmer_id      = #{confirmerId}
+             , emp20_over_confirm_date      = CASE WHEN #{confirmStatusCode} IN ('20','30') THEN f_sysdate() ELSE null END
+         WHERE emp20_leave_id   = #{leaveId}
+           AND emp20_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS emp20_leave.selectById (그리드 열만) -->
+    <select id="selectLeaveById" resultType="kr.co.kfs.asseterp.biz.emp.dto.LeaveRes">
+        SELECT emp20_leave_id                                                             AS leave_id
+             , emp20_person_id                                                            AS person_id
+             , emp20_appr_id                                                              AS appr_id
+             , emp20_start_date                                                           AS start_date
+             , emp20_close_date                                                           AS close_date
+             , f_cdnm('leaveCode', emp20_leave_cd, emp20_company_id, f_sysdate())         AS leave_name
+             , emp20_leave_count                                                          AS leave_count
+             , emp20_manager_nm                                                           AS manager_name
+             , emp20_reason                                                               AS reason
+             , apr01_status_cd                                                            AS appr_status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, emp20_company_id, f_sysdate())    AS appr_status_name
+             , emp20_over_confirm_status_cd                                               AS over_confirm_status_code
+             , f_cdnm('StatusCode' , emp20_over_confirm_status_cd, emp20_company_id, f_sysdate()) AS over_confirm_status_name
+             , f_emp_kor_nm(emp20_over_confirmer_id)                                      AS over_confirmer_name
+             , COALESCE(TO_CHAR(emp20_over_confirm_date, 'yyyy-mm-dd HH24:MI:SS'), ''::text) AS over_confirm_date_str
+          FROM emp20_leave
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = emp20_appr_id
+         WHERE emp20_leave_id   = #{leaveId}
+           AND emp20_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId -->
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm = #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdLeaveManager L4244: 휴가 목록(selectByPersonId)을 한 건씩 sys99_print에 넣는다 -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_date02, sys99_string01, sys99_double01, sys99_string02, sys99_string03, sys99_string04 )
+        SELECT f_create_seq(), #{companyId}, #{printPersonId}, #{windowClassName}, #{groupId}
+             , s.start_date, s.close_date, COALESCE(s.leave_name, ''), COALESCE(s.leave_count, 0)
+             , COALESCE(s.manager_name, ''), COALESCE(s.reason, ''), COALESCE(s.appr_status_name, '')
+          FROM (<include refid="leaveQuery"/>) s
+    </insert>
+
+    <!-- AS-IS emp22_etc_leave.selectByPersonId (포상휴가 보기 창) -->
+    <select id="selectEtcLeaves" resultType="kr.co.kfs.asseterp.biz.emp.dto.EtcLeaveRes">
+        SELECT emp22_etc_leave_id                           AS etc_leave_id
+             , emp22_reason                                 AS reason
+             , emp22_start_date                             AS start_date
+             , emp22_close_date                             AS close_date
+             , emp22_days                                   AS days
+             , COALESCE(emp20.use_days,0)                   AS use_days
+             , emp22_days - COALESCE(emp20.use_days,0)      AS remain_days
+             , emp22_note                                   AS note
+          FROM emp22_etc_leave
+               INNER JOIN apr01_appr             ON apr01_appr_id = emp22_appr_id AND apr01_status_cd LIKE '30'
+               INNER JOIN emp23_etc_leave_person ON emp23_etc_leave_id = emp22_etc_leave_id
+               LEFT  JOIN LATERAL ( SELECT SUM(emp20_leave_count) use_days
+                                      FROM emp20_leave
+                                     WHERE emp20_etc_leave_id  = emp22_etc_leave_id
+                                       AND emp20_person_id     = #{personId} ) emp20 ON TRUE
+         WHERE emp22_company_id = #{companyId}
+           AND emp23_person_id = #{personId}
+           AND #{stdYear} BETWEEN to_char(emp22_start_date,'yyyy') AND to_char(emp22_close_date,'yyyy')
+         ORDER BY emp22_start_date, emp22_close_date
+    </select>
+
+</mapper>

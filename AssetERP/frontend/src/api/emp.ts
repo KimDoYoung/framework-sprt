@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Cert, CertSaveReq, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { Cert, CertSaveReq, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -788,5 +788,66 @@ export const empDirectorApi = {
   rdPrintTotal: async (searchText: string): Promise<string> => {
     const res = await apiClient.post<ApiResponse<string>>('v1/emp/directors/rd-print-total', { searchText });
     return res.data.data ?? '';
+  },
+};
+
+/** S06 휴가관리(경영관리팀) (Emp20_Tab_LeaveManager) — 데이터 날짜는 서버가 'yyyy-MM-dd'로 준다 */
+export const empLeaveApi = {
+  /** AS-IS emp.Emp20_Leave.selectByPersonId (managerYn=true) */
+  searchLeaves: async (personId: number, stdYear: string): Promise<Leave[]> => {
+    const res = await apiClient.get<ApiResponse<Leave[]>>('v1/emp/leaves', { params: { personId, stdYear } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp20_Leave.selectByDays + emp.Emp22_EtcLeave.selectByDays — 사원 정보가 없으면 null */
+  getDays: async (personId: number, stdYear: string): Promise<LeaveDays | null> => {
+    const res = await apiClient.get<ApiResponse<LeaveDays | null>>('v1/emp/leaves/days', { params: { personId, stdYear } });
+    return res.data.data ?? null;
+  },
+
+  /** 로그인 회사의 초과휴가 설정 (setOverConfirmVer) */
+  getOption: async (): Promise<LeaveOption> => {
+    const res = await apiClient.get<ApiResponse<LeaveOption>>('v1/emp/leaves/option');
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp20_Leave.updateOverConfirm → 갱신된 행 */
+  updateOverConfirm: async (leaveId: number, confirmStatusCode: string): Promise<Leave> => {
+    const res = await apiClient.put<ApiResponse<Leave>>(`v1/emp/leaves/${leaveId}/over-confirm`, { confirmStatusCode });
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdLeaveManager → rdGroupId */
+  rdDownload: async (personId: number, stdYear: string): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/emp/leaves/rd-download', { personId, stdYear });
+    return res.data.data ?? '';
+  },
+
+  /** AS-IS emp.Emp22_EtcLeave.selectByPersonId */
+  searchEtcLeaves: async (personId: number, stdYear: string): Promise<EtcLeave[]> => {
+    const res = await apiClient.get<ApiResponse<EtcLeave[]>>('v1/emp/etc-leaves', { params: { personId, stdYear } });
+    return res.data.data ?? [];
+  },
+};
+
+/** S06 초기설정 휴가일수 (Emp26_Lookup_InitLeave) */
+export const empInitLeaveApi = {
+  /** AS-IS emp.Emp26_InitLeave.selectByYear (personId는 있을 때만) */
+  search: async (year: string, personId?: number | null): Promise<InitLeave[]> => {
+    const res = await apiClient.get<ApiResponse<InitLeave[]>>('v1/emp/init-leaves', { params: { year, ...(personId ? { personId } : {}) } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp26_InitLeave.update → 저장된 행(요청 순서) */
+  save: async (rows: InitLeave[]): Promise<InitLeave[]> => {
+    const body = rows.map(({ initLeaveId, personId, year, useDays }) => ({ initLeaveId, personId, year, useDays }));
+    const res = await apiClient.put<ApiResponse<InitLeave[]>>('v1/emp/init-leaves', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp26_InitLeave.delete */
+  remove: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/init-leaves', { data: ids });
+    return res.data.data;
   },
 };
