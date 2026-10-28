@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출장관리 (S11 Emp53_Tab_BizTripManager)
+  AS-IS(IDMS-IC) server/emp/mapper/emp53_biz_trip.xml selectByCompanyId(L68)·selectById(L36) + Emp53_BizTrip.update(UpdateDataModel).
+  SQL 본문은 그대로, 파라미터만 #{}로 바꾸고 `SELECT *`는 화면 열로 줄였다. 1단계: 상세보기(Apr01_Edit_ApprDoc)는 다음 단계.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpBizTripMapper">
+
+    <sql id="bizTripCols">
+        emp53_biz_trip_id                                                                          AS bizTripId
+      , CONCAT(f_emp_kor_nm(emp53_person_id)
+              ,'('||f_get_empTrans(emp53_person_id, emp53_start_date::date, 'org_code_nm')||')')   AS personInfo
+      , emp53_start_date                                                                           AS startDate
+      , emp53_close_date                                                                           AS closeDate
+      , f_cdnm('BizTripCode', emp53_biz_trip_cd, emp53_company_id, f_sysdate())                    AS bizTripName
+      , emp53_destination                                                                          AS destination
+      , emp53_purpose                                                                              AS purpose
+      , emp53_num                                                                                  AS num
+      , emp53_companion                                                                            AS companion
+      , emp53_appr_id                                                                              AS apprId
+      , apr01.apr01_status_cd                                                                      AS apprStatusCode
+      , f_cdnm('AprStatusCode', apr01.apr01_status_cd, emp53_company_id, f_sysdate())              AS apprStatusName
+      , emp53_result_appr_id                                                                       AS resultApprId
+      , apr02.apr01_status_cd                                                                      AS resultApprStatusCode
+      , f_cdnm('AprStatusCode', apr02.apr01_status_cd, emp53_company_id, f_sysdate())              AS resultApprStatusName
+      , emp53_result_skip_yn                                                                       AS resultSkipYn
+      , emp53_skip_reason                                                                          AS skipReason
+    </sql>
+
+    <!-- AS-IS emp53_biz_trip.selectByCompanyId -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.emp.dto.BizTripRes">
+        SELECT <include refid="bizTripCols"/>
+          FROM emp53_biz_trip
+               LEFT OUTER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = emp53_appr_id
+               LEFT OUTER JOIN apr01_appr apr02 ON apr02.apr01_appr_id = emp53_result_appr_id
+         WHERE emp53_company_id = #{companyId}
+           AND emp53_start_date BETWEEN #{startDate} AND #{closeDate}
+           AND COALESCE(apr01.apr01_status_cd, '99') != '99'
+        <if test="resultSkipYn">
+           AND COALESCE(apr02.apr01_status_cd, '99') != '30'
+           AND COALESCE(emp53_result_skip_yn,'false') != 'true'
+        </if>
+           AND UPPER(CONCAT(f_get_empTrans(emp53_person_id, emp53_start_date::date, 'org_code_nm'), f_emp_kor_nm(emp53_person_id), emp53_destination, emp53_purpose)) LIKE UPPER(#{searchText})
+         ORDER BY emp53_start_date DESC
+    </select>
+
+    <!-- AS-IS emp53_biz_trip.selectById (회사 조건 추가) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.emp.dto.BizTripRes">
+        SELECT <include refid="bizTripCols"/>
+          FROM emp53_biz_trip
+               LEFT OUTER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = emp53_appr_id
+               LEFT OUTER JOIN apr01_appr apr02 ON apr02.apr01_appr_id = emp53_result_appr_id
+         WHERE emp53_biz_trip_id = #{bizTripId}
+           AND emp53_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel: 그리드에서 고치는 열은 결과보고서 면제 여부·사유뿐 (여부는 'true'/'false' 글자로 저장) -->
+    <update id="updateSkip">
+        UPDATE emp53_biz_trip
+           SET emp53_result_skip_yn = CAST(#{resultSkipYn} AS VARCHAR)
+             , emp53_skip_reason    = #{skipReason}
+         WHERE emp53_biz_trip_id = #{bizTripId}
+           AND emp53_company_id = #{companyId}
+    </update>
+
+</mapper>

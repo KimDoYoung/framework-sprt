@@ -84,7 +84,7 @@ export const Adv05_Page_OrgAuth: React.FC<Props> = ({ accountId }) => {
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9', boxSizing: 'border-box', marginLeft: 3 }}>
       <div style={{ flex: 1, minHeight: 0 }}>
         <SingleGrid<OrgFundAuth>
           gridRef={tree.gridRef}

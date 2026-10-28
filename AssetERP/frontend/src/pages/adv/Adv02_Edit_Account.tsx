@@ -20,13 +20,13 @@ const FORMAT = 'YYYY-MM-DD';
 /** 칸 하나: 라벨(폭 120) + 입력. 줄 안에서 폭 280(계좌번호는 560) */
 const Cell: React.FC<{ label: string; width?: number; children: React.ReactNode }> = ({ label, width = 280, children }) => (
   <div style={{ width, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-    <label style={{ width: 120, flexShrink: 0 }}>{label}</label>
+    <label style={{ width: 120, flexShrink: 0, textAlign: 'right', paddingRight: 8 }}>{label}</label>
     <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>{children}</div>
   </div>
 );
 
 const Row: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{ display: 'flex', margin: '20px 20px 17px 20px' }}>{children}</div>
+  <div style={{ display: 'flex', margin: '20px 20px 8px 20px' }}>{children}</div>
 );
 
 interface Props {

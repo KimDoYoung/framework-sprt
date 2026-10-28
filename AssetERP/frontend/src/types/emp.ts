@@ -804,3 +804,41 @@ export interface EtcLeavePerson {
   orgName: string | null;
   personName: string | null;
 }
+
+/** S11 출장 한 행 (Emp53_BizTripModel — 출장관리 그리드). 날짜는 'yyyy-MM-dd' */
+export interface BizTrip {
+  bizTripId: number;
+  personInfo: string | null;
+  startDate: string | null;
+  closeDate: string | null;
+  bizTripName: string | null;
+  destination: string | null;
+  purpose: string | null;
+  num: string | null;
+  companion: string | null;
+  apprId: number | null;
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+  resultApprId: number | null;
+  resultApprStatusCode: string | null;
+  resultApprStatusName: string | null;
+  resultSkipYn: boolean | null;
+  skipReason: string | null;
+}
+
+/** S12 외출 한 행 (Emp54_ErrandModel — 외출관리 그리드). 날짜는 'yyyy-MM-dd' */
+export interface Errand {
+  errandId: number;
+  date: string | null;
+  weekday: string | null;
+  personInfo: string | null;
+  errandName: string | null;
+  departTime: string | null;
+  returnTime: string | null;
+  reason: string | null;
+  venue: string | null;
+  host: string | null;
+  note: string | null;
+  apprId: number | null;
+  aprStatusName: string | null;
+}

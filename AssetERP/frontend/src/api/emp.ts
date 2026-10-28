@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { BizTrip, Errand, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -981,5 +981,29 @@ export const empEtcLeaveApi = {
   removePersons: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/emp/etc-leave-persons', { data: ids });
     return res.data.data ?? 0;
+  },
+};
+
+/** S11 출장관리 (Emp53_Tab_BizTripManager). 1단계: 상세보기(결재문서 보기)는 다음 단계 */
+export const empBizTripApi = {
+  /** AS-IS emp.Emp53_BizTrip.selectByCompanyId */
+  search: async (startDate: string, closeDate: string, resultSkipYn: boolean, searchText: string): Promise<BizTrip[]> => {
+    const res = await apiClient.get<ApiResponse<BizTrip[]>>('v1/emp/biz-trips', { params: { startDate, closeDate, resultSkipYn, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp53_BizTrip.update (결과보고서 면제 여부·사유) → 저장된 행(요청 순서) */
+  save: async (rows: BizTrip[]): Promise<BizTrip[]> => {
+    const res = await apiClient.put<ApiResponse<BizTrip[]>>('v1/emp/biz-trips', rows.map(r => ({ bizTripId: r.bizTripId, resultSkipYn: r.resultSkipYn, skipReason: r.skipReason })));
+    return res.data.data ?? [];
+  },
+};
+
+/** S12 외출관리 (Emp54_Tab_ErrandManager). 조회만. 1단계: 이익수령 제외신청 상세보기는 다음 단계 */
+export const empErrandApi = {
+  /** AS-IS emp.Emp54_Errand.selectByManager */
+  search: async (startDate: string, closeDate: string, searchText: string): Promise<Errand[]> => {
+    const res = await apiClient.get<ApiResponse<Errand[]>>('v1/emp/errands', { params: { startDate, closeDate, searchText } });
+    return res.data.data ?? [];
   },
 };

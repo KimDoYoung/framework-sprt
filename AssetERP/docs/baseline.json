@@ -8688,5 +8688,55 @@
     "note": "docs/work/S/S10-작업기록.md",
     "history": [],
     "id": "S10"
+  },
+  "Emp53_Tab_BizTripManager": {
+    "commit": "4bd1f4ed0410cf5d7a0c4f0367464792a7bfee9c",
+    "commit_short": "4bd1f4e",
+    "branch": "ioc",
+    "commit_date": "2026-10-27",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp53_Tab_BizTripManager.java": "d33194076d67b9fa4f7f1b797206274c5c0da038",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp53_BizTripModel.java": "2e474d6a64bed1ffa13989940d7fac547e1cfb81",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp53_BizTripModelProperties.java": "aa42b3b176b16ba4eacc3b8244bd6bd72255fb18",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/emp/Emp53_BizTrip.java": "6d4581eeea90d466dea64aac1dbb273b74ad2c6b",
+      "application/src/main/java/myApp/server/emp/mapper/emp53_biz_trip.xml": "1acab3ff053af0762c917c5b061e5878d5a9d3e9",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc"
+    ],
+    "recorded_at": "2026-10-28T12:55:39+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/S/S11-작업기록.md",
+    "history": [],
+    "id": "S11"
+  },
+  "Emp54_Tab_ErrandManager": {
+    "commit": "4bd1f4ed0410cf5d7a0c4f0367464792a7bfee9c",
+    "commit_short": "4bd1f4e",
+    "branch": "ioc",
+    "commit_date": "2026-10-27",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp54_Tab_ErrandManager.java": "f35bfd8bd0a19f3aa29793051d27fafbb68f372f",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp54_ErrandModel.java": "5c40c40d1a71c073fdc7ddc46499220b5d3f6c01",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp54_ErrandModelProperties.java": "02d9f894a4c24477715d9a9681e0b6bf4bfcaf92",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/emp/Emp54_Errand.java": "7dda4804ede9fe45557b47f9b814dfe4bbbc7194",
+      "application/src/main/java/myApp/server/emp/mapper/emp54_errand.xml": "330418c9fb2dc8bafc3dc5cb1b03d736a5042746",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc"
+    ],
+    "recorded_at": "2026-10-28T12:55:40+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/S/S12-작업기록.md",
+    "history": [],
+    "id": "S12"
   }
 }

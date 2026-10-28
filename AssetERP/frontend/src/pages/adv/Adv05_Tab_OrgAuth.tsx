@@ -86,7 +86,7 @@ export const Adv05_Tab_OrgAuth: React.FC = () => {
   return (
     <div style={{ height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '20px 20px 0 20px', flexShrink: 0 }}>
-        <div style={{ border: '1px solid #d9d9d9' }}>
+        <div>
           <SearchBar
             onSearch={retrieve}
             loading={loading}
@@ -101,7 +101,7 @@ export const Adv05_Tab_OrgAuth: React.FC = () => {
           </SearchBar>
         </div>
       </div>
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
         <Splitter style={{ height: '100%' }}>
           <Splitter.Panel defaultSize="50%" min={200} max={1000}>
             <div style={{ height: '100%', padding: '0 0 20px 20px', boxSizing: 'border-box' }}>
@@ -130,7 +130,7 @@ export const Adv05_Tab_OrgAuth: React.FC = () => {
             </div>
           </Splitter.Panel>
           <Splitter.Panel min={200}>
-            <div style={{ height: '100%', padding: '0 20px 22px 0', boxSizing: 'border-box' }}>
+            <div style={{ height: '100%', padding: '0 20px 22px 0', boxSizing: 'border-box'}}>
               <Adv05_Page_OrgAuth accountId={accountId} />
             </div>
           </Splitter.Panel>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  외출관리 (S12 Emp54_Tab_ErrandManager)
+  AS-IS(IDMS-IC) server/emp/mapper/emp54_errand.xml selectByManager(L51). SQL 본문은 그대로, 파라미터만 #{}로 바꾸고 바깥 `SELECT *`는 화면 열로 줄였다.
+  1단계: 상세보기(Apr01_Edit_ApprDoc)는 다음 단계.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpErrandMapper">
+
+    <!-- AS-IS emp54_errand.selectByManager -->
+    <select id="selectByManager" resultType="kr.co.kfs.asseterp.biz.emp.dto.ErrandRes">
+        SELECT emp54_errand_id    AS errandId
+             , emp54_date         AS date
+             , emp54_weekday      AS weekday
+             , emp54_person_info  AS personInfo
+             , emp54_errand_nm    AS errandName
+             , emp54_depart_time  AS departTime
+             , emp54_return_time  AS returnTime
+             , emp54_reason       AS reason
+             , emp54_venue        AS venue
+             , emp54_host         AS host
+             , emp54_note         AS note
+             , emp54_appr_id      AS apprId
+             , emp54_apr_status_nm AS aprStatusName
+          FROM (
+                SELECT emp54_errand.*
+                     , f_cdnm('ErrandCode', emp54_errand_cd, emp54_company_id, emp54_date)          AS emp54_errand_nm
+                     , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)   AS emp54_apr_status_nm
+                     , emp00_kor_nm                                                                 AS emp54_person_nm
+                     , emp00_org_code_nm                                                            AS emp54_org_nm
+                     , emp00_kor_nm ||'('|| emp00_org_code_nm ||')'                                 AS emp54_person_info
+                     , sys12_weekday                                                                AS emp54_weekday
+                  FROM emp54_errand
+                       INNER JOIN LATERAL getPerson(emp54_company_id, emp54_date) ON ( emp00_person_id = emp54_person_id AND
+                                                                                       emp00_trans_cd NOT IN ('800','900') )
+                       INNER JOIN sys12_calendar ON ( sys12_company_id = emp54_company_id AND
+                                                      sys12_day::date  = emp54_date )
+                       LEFT OUTER JOIN apr01_appr ON apr01_appr_id = emp54_appr_id
+                 WHERE emp54_company_id = #{companyId}
+                   AND emp54_date BETWEEN #{startDate} AND #{closeDate}
+               ) t
+         WHERE CONCAT(emp54_person_info, emp54_errand_nm, emp54_reason, emp54_host) ILIKE #{searchText}
+         ORDER BY emp54_date DESC, emp54_depart_time, emp54_return_time
+    </select>
+
+</mapper>
