@@ -598,3 +598,18 @@ export interface Director {
   endReason?: string | null;
   note?: string | null;
 }
+
+/** 조직별 사원조회 그리드 행 (S04, AS-IS Emp00_TransInfoModel · selectByAllOrgCodeId) */
+export interface OrgPerson {
+  transId: number;
+  personId: number;
+  empKorName?: string | null;
+  posName?: string | null;
+  orgKorName?: string | null;
+  titleName2?: string | null;
+  hireDate?: string | null;
+  emailAddress?: string | null;
+  mobileTelNo?: string | null;
+  officeTelNo?: string | null;
+  empNo?: string | null;
+}

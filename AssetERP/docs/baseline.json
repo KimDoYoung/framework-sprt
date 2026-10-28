@@ -8429,5 +8429,32 @@
     "note": "docs/work/B/B15-작업기록.md",
     "history": [],
     "id": "B15"
+  },
+  "Emp00_Tab_OrgPerson": {
+    "commit": "4bd1f4ed0410cf5d7a0c4f0367464792a7bfee9c",
+    "commit_short": "4bd1f4e",
+    "branch": "ioc",
+    "commit_date": "2026-10-27",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp00_Tab_OrgPerson.java": "db2d014f42603a969b1aeaa5f36f0c0d3e525965",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp00_TransInfoModel.java": "dc29160bc09265170d01009c5353bd56081484c3",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp00_TransInfoModelProperties.java": "2c3866aa16a482f692073e25312b9f4f76eb2709",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp01_PersonModel.java": "f4478d406df99853f5315401fc09f28e760101fe",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp02_OthersModel.java": "361f61b4bebfd1073f0769db40e42327748e6897",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp20_LeaveModel.java": "08d4fe0e87a0e52d15d517f341428f632a6b3ef0",
+      "application/src/main/java/myApp/server/emp/Emp00_TransInfo.java": "df97d7f0f13eb8c414b2ce628d93cc02138f6963",
+      "application/src/main/java/myApp/server/emp/mapper/emp00_trans_info.xml": "76c324eda8ede6658a765beeaaebf929930afd47",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Org01_Tree_OrgCode",
+      "Org02_View_Chart"
+    ],
+    "recorded_at": "2026-10-28T10:31:56+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/S/S04-작업기록.md",
+    "history": [],
+    "id": "S04"
   }
 }

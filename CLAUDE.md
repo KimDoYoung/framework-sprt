@@ -10,7 +10,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 저장소 구조
 
-- `antdesign/` — Spring Boot(backend) + React(frontend) 프로토타입. 실제 작업은 대부분 여기서 이뤄진다.
+**`AssetERP/`가 메인 폴더다.** 실제 AssetERP 변환(화면·백엔드·작업 문서·page-style 등)은 모두 여기서 하며 규칙은 `AssetERP/CLAUDE.md`를 따른다. 저장소 루트 아래의 다른 폴더(`antdesign/`, `security-test/`, `OMS/` 등)는 보안·메인 화면 전환 같은 특별한 용도를 시험하는 테스트용 프로젝트이므로, 사용자가 따로 지시하지 않으면 변환 작업의 대상이나 참고 기준으로 삼지 않는다.
+
+- `antdesign/` — (테스트용) Spring Boot(backend) + React(frontend) 프로토타입.
   - `antdesign/backend/` — Spring Boot 3.4.3 / Java 21, 현재는 골격 수준(컨트롤러/도메인 패키지 없음).
   - `antdesign/frontend/` — Vite + React 19 + TypeScript + Ant Design 5 UI 프로토타입. 실제 API 연동 없이 mock 데이터로 동작.
   - `antdesign/bm.sh`, `antdesign/fm.sh`, `antdesign/deploy.sh` — 각각 backend/frontend 관리 스크립트와 배포 스크립트.
@@ -21,7 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `tools/dbml-index.py`, `tools/src-index.py`, `tools/sql-check.py` — AS-IS 색인·SQL 정합성 생성기의 원본. 지금은 같은 기능의 `yunhee index-db` / `index-src` / `sql-check`를 쓴다. 출력은 `docs/as-is/`(git-ignored, 재생성 가능).
 - `docs/grid-types.md` — 공통 그리드 이름표(GridType·`gb.*`·옵션). yunhee 변환 명세와 TOBE 코드가 이 이름만 쓴다.
 - `docs/button-types.md` — 공통 버튼 이름표(`<Button type="search">` 등 type 약 30개, AS-IS `ColorButtonBar` 제목 → type). 컴포넌트는 아직 없음.
-- `docs/page-style.md` — 페이지(`*_Tab_*`) 화면 배치 이름표. 스타일 ID(SID: SG·SGVF·SGEF·TG·GG·CG)로 화면 구성을 부른다. 견본 코드는 `docs/page-style/{SID}/`(참조용 복사본). 초안(전체 `_Tab_` 조사 후 확정).
+- `AssetERP/docs/page-style.md` — 페이지(`*_Tab_*`) 화면 배치 이름표. 스타일 ID(SID: SG·SGVF·SGEF·TG·GG·CG)로 화면 구성을 부른다. 견본 코드는 `AssetERP/docs/page-style/{SID}/`(참조용 복사본). 초안(전체 `_Tab_` 조사 후 확정).
 
 ## AS-IS 참조 (전환 작업 시)
 

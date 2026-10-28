@@ -147,6 +147,100 @@
         </choose>
     </select>
 
+    <!-- AS-IS emp00_trans_info.selectByAllOrgCodeId L978 (IDMS-IC) — common.emp00_trans_info + org00_org_info + orgCodeDown(조직+하위 조직).
+         기준일 최신 발령(900은 기준일 미만) 사원 중 기준일에 재직(close_date ≥ 기준일)·겸직 기간 밖이 아닌 사람. SELECT 목록은 그리드 열만 -->
+    <select id="selectOrgPersons" resultType="kr.co.kfs.asseterp.biz.emp.dto.OrgPersonRes">
+        WITH emp00 AS (
+            SELECT t2.emp03_trans_id                                                             AS emp00_trans_id,
+                   t2.emp03_trans_date                                                           AS emp00_trans_date,
+                   t2.emp03_person_id                                                            AS emp00_person_id,
+                   CASE WHEN t2.emp03_trans_cd = '900' THEN t2.emp03_trans_date
+                        ELSE ( SELECT MIN(a.emp03_trans_date) - '1day'::interval
+                                 FROM emp03_trans a
+                                WHERE a.emp03_person_id = t2.emp03_person_id
+                                  AND a.emp03_trans_date <![CDATA[>]]> t2.emp03_trans_date )
+                        END                                                                      AS emp00_close_date,
+                   t2.emp03_pos_cd                                                               AS emp00_pos_cd,
+                   f_cdnm('EmpPosCode', t2.emp03_pos_cd, t1.emp01_company_id, t2.emp03_trans_date)     AS emp00_pos_nm,
+                   t2.emp03_title_cd                                                             AS emp00_title_cd,
+                   f_cdnm('EmpGradeCode', t2.emp03_grade_cd, t1.emp01_company_id, t2.emp03_trans_date) AS emp00_grade_nm,
+                   t2.emp03_org_code_id                                                          AS emp00_org_code_id,
+                   t1.emp01_emp_no                                                               AS emp00_emp_no
+              FROM emp01_person t1
+                   INNER JOIN emp03_trans t2 ON t2.emp03_person_id = t1.emp01_person_id
+             WHERE t1.emp01_company_id = #{companyId}
+               AND t2.emp03_trans_date = ( SELECT MAX(x.emp03_trans_date)
+                                             FROM emp03_trans x
+                                            WHERE x.emp03_person_id = t1.emp01_person_id
+                                              AND (   (x.emp03_trans_cd  = '900' AND x.emp03_trans_date <![CDATA[ < ]]> #{baseDate}::date)
+                                                   OR (x.emp03_trans_cd != '900' AND x.emp03_trans_date <![CDATA[ <= ]]> #{baseDate}::date)) )
+               AND 'Y' = (CASE WHEN (SELECT COUNT(*) FROM emp04_add_title WHERE emp04_add_person_id = t1.emp01_person_id) = 0 THEN 'Y'
+                               ELSE (CASE WHEN (SELECT COUNT(*)
+                                                  FROM emp01_person a
+                                                       INNER JOIN emp04_add_title ON emp04_person_id = a.emp01_person_id
+                                                 WHERE emp04_add_person_id = t1.emp01_person_id) = 0 THEN 'N'
+                                          ELSE 'Y' END) END)
+        ), org00 AS (
+            SELECT org01_code_id   AS org00_org_code_id,
+                   org01_org_cd    AS org00_org_cd,
+                   org02_kor_nm    AS org00_kor_nm,
+                   org02_mod_date  AS org00_mod_date,
+                   org02_sort_order AS org00_seq
+              FROM org01_code
+                   INNER JOIN org02_info ON org02_code_id = org01_code_id
+             WHERE org01_company_id = #{companyId}
+        )
+        SELECT emp00_trans_id                                                                    AS trans_id,
+               emp00_person_id                                                                   AS person_id,
+               emp01_kor_nm                                                                      AS emp_kor_name,
+               emp00_pos_nm                                                                      AS pos_name,
+               org00_kor_nm                                                                      AS org_kor_name,
+               CASE WHEN emp00_grade_nm IS NULL
+                    THEN f_cdnm('EmpTitleCode', emp00_title_cd, emp01_company_id, emp00_trans_date)
+                    ELSE emp00_grade_nm END                                                      AS title_name2,
+               emp01_hire_date                                                                   AS hire_date,
+               emp01_email_addr                                                                  AS email_address,
+               emp01_mobile_telno                                                                AS mobile_tel_no,
+               emp01_office_telno                                                                AS office_tel_no,
+               emp00_emp_no                                                                      AS emp_no
+          FROM emp00
+               INNER JOIN emp01_person      ON emp00_person_id   = emp01_person_id
+               INNER JOIN org00             ON org00_org_code_id = emp00_org_code_id
+               LEFT OUTER JOIN emp02_others ON emp01_person_id   = emp02_person_id
+         WHERE 1=1
+           AND #{baseDate}::date <![CDATA[ <= ]]> COALESCE(emp00_close_date, #{baseDate}::date)
+           AND NOT EXISTS ( SELECT 1
+                              FROM emp04_add_title
+                             WHERE emp04_add_person_id = emp00_person_id
+                               AND ( emp04_start_date                        <![CDATA[ > ]]> #{baseDate}::date OR
+                                     COALESCE(emp04_close_date,'9999-12-31') <![CDATA[ < ]]> #{baseDate}::date ) )
+           AND org00_mod_date = ( SELECT max(org00_mod_date)
+                                    FROM org00
+                                   WHERE org00_org_code_id = emp00_org_code_id
+                                     AND org00_mod_date <![CDATA[ <= ]]> #{baseDate}::date )
+           AND org00_org_code_id IN (
+                WITH RECURSIVE org_tree_down(org00_org_code_id, org00_parent_code_id, org00_kor_nm, depth, path, cycle) AS (
+                    SELECT a.org00_org_code_id, a.org00_parent_code_id, a.org00_kor_nm, 0, ARRAY[a.org00_kor_nm::text], false
+                      FROM org00_org_info a
+                     WHERE a.org00_company_id = #{companyId}
+                       AND a.org00_org_code_id = #{orgCodeId}
+                       AND a.org00_mod_date = ( SELECT max(org00_mod_date)
+                                                  FROM org00_org_info
+                                                 WHERE org00_org_code_id = #{orgCodeId}
+                                                   AND f_trunc(org00_mod_date) <![CDATA[ <= ]]> f_trunc(#{baseDate}::date) )
+                     UNION ALL
+                    SELECT a.org00_org_code_id, a.org00_parent_code_id, a.org00_kor_nm, b.depth + 1,
+                           array_append(b.path, a.org00_kor_nm::text), a.org00_kor_nm = any(b.path)
+                      FROM org00_org_info a, org_tree_down b
+                     WHERE a.org00_parent_code_id = b.org00_org_code_id
+                       AND a.org00_company_id = #{companyId}
+                       AND NOT cycle
+                )
+                SELECT a.org00_org_code_id FROM org_tree_down a )
+         ORDER BY LPAD(COALESCE(CASE WHEN emp01_order_seq = '' THEN null ELSE emp01_order_seq END,'9999999999'), 10, '0'),
+                  org00_org_cd, org00_seq, emp00_pos_cd, emp01_hire_date
+    </select>
+
     <!-- AS-IS selectById L66 (등록 후 다시 읽기, transId 한 건) -->
     <select id="selectTransInfo" resultType="kr.co.kfs.asseterp.biz.emp.dto.TransInfoRes">
         <include refid="emp00With"/>

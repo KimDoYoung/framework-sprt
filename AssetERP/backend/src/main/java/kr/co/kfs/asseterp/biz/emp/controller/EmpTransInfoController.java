@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import kr.co.kfs.asseterp.biz.emp.dto.OrgPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransInfoCreateReq;
 import kr.co.kfs.asseterp.biz.emp.dto.TransInfoRes;
 import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoService;
@@ -45,6 +46,14 @@ public class EmpTransInfoController {
                                                                    @RequestParam(required = false) String searchText,
                                                                    @RequestParam(required = false) String transCode) {
         return ApiResponse.ok(empTransInfoService.searchCompanyTransInfos(principal, companyId, transDate, searchText, transCode));
+    }
+
+    /** AS-IS emp.Emp00_TransInfo.selectByAllOrgCodeId — 조직별 사원조회(Emp00_Tab_OrgPerson): 그 조직과 하위 조직의 사원 */
+    @GetMapping("/org-codes/{orgCodeId}/trans-infos")
+    public ApiResponse<List<OrgPersonRes>> searchOrgPersons(@AuthenticationPrincipal UserPrincipal principal,
+                                                            @PathVariable Long orgCodeId,
+                                                            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
+        return ApiResponse.ok(empTransInfoService.searchOrgPersons(principal, orgCodeId, baseDate));
     }
 
     /** AS-IS emp.Emp00_TransInfo.update (신규사원 등록) → 등록된 행 */

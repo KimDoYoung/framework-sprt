@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -20,6 +20,12 @@ export const empApi = {
   /** AS-IS emp.Emp00_TransInfo.selectByText — 고른 회사의 사원 (Emp00_Lookup_SelectMulti.open(companyId, …), sys admin만) */
   searchCompanyTransInfos: async (companyId: number, transDate: string | undefined, searchText: string, transCode: string): Promise<TransInfo[]> => {
     const res = await apiClient.get<ApiResponse<TransInfo[]>>(`v1/emp/companies/${companyId}/trans-infos`, { params: { transDate, searchText, transCode } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp00_TransInfo.selectByAllOrgCodeId — 조직별 사원조회(S04): 그 조직과 하위 조직의 기준일 사원 */
+  searchOrgPersons: async (orgCodeId: number, baseDate: string): Promise<OrgPerson[]> => {
+    const res = await apiClient.get<ApiResponse<OrgPerson[]>>(`v1/emp/org-codes/${orgCodeId}/trans-infos`, { params: { baseDate } });
     return res.data.data ?? [];
   },
 

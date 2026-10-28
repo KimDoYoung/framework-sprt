@@ -21,7 +21,7 @@ interface Props {
 }
 
 /** getServiceResult L113-128 + addChild L101-110: 서버의 전위 순서 목록을 깊이(TreeUtil.makeOrgTree)로 트리로 */
-const toTree = (list: OrgCode[]): DataNode[] => {
+export const toTree = (list: OrgCode[]): DataNode[] => {
   const roots: DataNode[] = [];
   const stack: { depth: number; node: DataNode }[] = [];
   list.forEach(r => {
