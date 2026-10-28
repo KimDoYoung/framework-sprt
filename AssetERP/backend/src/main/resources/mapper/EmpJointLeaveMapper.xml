@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  공동연차관리 (S09 Emp24_Tab_JointLeave 위 그리드)
+  AS-IS(IDMS-IC) server/emp/mapper/emp24_joint_leave.xml selectByYear·selectById + Emp24_JointLeave update/delete(UpdateDataModel)·deleteApprId
+  + apr01_appr.xml insertApprDel(L3111)·deleteAppr(L2942). 1단계: 승인신청(결재문서 생성)은 다음 단계.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpJointLeaveMapper">
+
+    <sql id="jointLeaveCols">
+        emp24_joint_leave_id                                                           AS jointLeaveId
+      , emp24_company_id                                                               AS companyId
+      , emp24_start_date                                                               AS startDate
+      , emp24_close_date                                                               AS closeDate
+      , emp24_reason                                                                   AS reason
+      , emp24_note                                                                     AS note
+      , emp24_appr_id                                                                  AS apprId
+      , apr01.apr01_status_cd                                                          AS apprStatusCode
+      , f_cdnm('AprStatusCode', apr01.apr01_status_cd, emp24_company_id, f_sysdate())  AS apprStatusName
+    </sql>
+
+    <!-- AS-IS emp24_joint_leave.selectByYear -->
+    <select id="selectByYear" resultType="kr.co.kfs.asseterp.biz.emp.dto.JointLeaveRes">
+        SELECT <include refid="jointLeaveCols"/>
+          FROM emp24_joint_leave
+               LEFT OUTER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = emp24_appr_id
+         WHERE emp24_company_id = #{companyId}
+           AND (to_char(emp24_start_date, 'yyyy') LIKE #{stdYear} OR to_char(emp24_close_date, 'yyyy') LIKE #{stdYear})
+         ORDER BY emp24_start_date DESC, emp24_close_date DESC
+    </select>
+
+    <!-- AS-IS emp24_joint_leave.selectById (회사 조건 추가) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.emp.dto.JointLeaveRes">
+        SELECT <include refid="jointLeaveCols"/>
+          FROM emp24_joint_leave
+               LEFT OUTER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = emp24_appr_id
+         WHERE emp24_joint_leave_id = #{jointLeaveId}
+           AND emp24_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertJointLeave">
+        INSERT INTO emp24_joint_leave (emp24_joint_leave_id, emp24_company_id, emp24_start_date, emp24_close_date, emp24_reason)
+        VALUES (#{jointLeaveId}, #{companyId}, #{startDate}, #{closeDate}, #{reason})
+    </insert>
+
+    <update id="updateJointLeave">
+        UPDATE emp24_joint_leave
+           SET emp24_start_date = #{startDate},
+               emp24_close_date = #{closeDate},
+               emp24_reason     = #{reason}
+         WHERE emp24_joint_leave_id = #{jointLeaveId}
+           AND emp24_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS apr01_appr.insertApprDel (열 순서 그대로) -->
+    <insert id="insertApprDel">
+        INSERT INTO apr99_appr_del
+        SELECT f_create_seq()
+             , apr01_appr_id
+             , apr01_title
+             , apr01_reg_date
+             , apr01_status_cd
+             , apr01_content
+             , apr01_note
+             , apr01_reg_emp_id
+             , apr01_effect_date
+             , apr01_class_tree_id
+             , apr01_stamp_id
+             , apr01_receive_nm
+             , apr01_reference_nm
+             , apr01_stamp_seq
+             , apr01_inout_cd
+             , f_sysdate()
+             , #{empId}
+             , apr01_company_id
+             , apr01_form_type
+             , apr01_dcr_id_word
+             , apr01_sign_company
+             , apr01_sign_ceo
+             , apr01_stamp_position
+             , apr01_link_cd
+          FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </insert>
+
+    <delete id="deleteAppr">
+        DELETE FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </delete>
+
+    <delete id="deleteJointLeaves">
+        DELETE FROM emp24_joint_leave
+         WHERE emp24_company_id = #{companyId}
+           AND emp24_joint_leave_id IN
+        <foreach collection="jointLeaveIds" item="jointLeaveId" open="(" separator="," close=")">#{jointLeaveId}</foreach>
+    </delete>
+
+</mapper>

@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Cert, CertSaveReq, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, EmpEvent, EvalGrade, EvalList, EvalListStd, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -902,6 +902,84 @@ export const empUnLeaveApi = {
   /** AS-IS emp.Emp21_UnLeave.delete */
   remove: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/emp/un-leaves', { data: ids });
+    return res.data.data ?? 0;
+  },
+};
+
+/** S09 공동연차관리 (Emp24_Tab_JointLeave) — 위 그리드 `joint-leaves`, 아래 제외사원 `joint-leave-excepts`. 1단계: [승인신청]의 결재문서 생성·상세보기는 다음 단계 */
+export const empJointLeaveApi = {
+  /** AS-IS emp.Emp24_JointLeave.selectByYear */
+  search: async (stdYear: string): Promise<JointLeave[]> => {
+    const res = await apiClient.get<ApiResponse<JointLeave[]>>('v1/emp/joint-leaves', { params: { stdYear } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp24_JointLeave.update → 저장된 행(요청 순서) */
+  save: async (rows: JointLeave[]): Promise<JointLeave[]> => {
+    const res = await apiClient.put<ApiResponse<JointLeave[]>>('v1/emp/joint-leaves', rows.map(r => ({ jointLeaveId: r.jointLeaveId, startDate: r.startDate, closeDate: r.closeDate, reason: r.reason })));
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp24_JointLeave.deleteApprId + delete */
+  remove: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/joint-leaves', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp28_JointLeaveExcept.selectByJointLeaveId */
+  searchExcepts: async (jointLeaveId: number): Promise<JointLeaveExcept[]> => {
+    const res = await apiClient.get<ApiResponse<JointLeaveExcept[]>>('v1/emp/joint-leave-excepts', { params: { jointLeaveId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp28_JointLeaveExcept.update → 저장된 행(요청 순서) */
+  saveExcepts: async (rows: JointLeaveExcept[]): Promise<JointLeaveExcept[]> => {
+    const res = await apiClient.put<ApiResponse<JointLeaveExcept[]>>('v1/emp/joint-leave-excepts', rows.map(r => ({ jointLeaveExceptId: r.jointLeaveExceptId, jointLeaveId: r.jointLeaveId, personId: r.personId, reason: r.reason })));
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp28_JointLeaveExcept.delete */
+  removeExcepts: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/joint-leave-excepts', { data: ids });
+    return res.data.data ?? 0;
+  },
+};
+
+/** S10 포상휴가관리 (Emp22_Tab_EtcLeave) — 그리드 `etc-leaves`, 오른쪽 대상 직원 `etc-leave-persons`. 1단계: [결재요청]의 결재문서 생성·상세보기는 다음 단계 */
+export const empEtcLeaveApi = {
+  /** AS-IS emp.Emp22_EtcLeave.selectByDate */
+  search: async (startDate: string, closeDate: string, searchText: string): Promise<EtcLeaveManage[]> => {
+    const res = await apiClient.get<ApiResponse<EtcLeaveManage[]>>('v1/emp/etc-leaves/search', { params: { startDate, closeDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp22_EtcLeave.update → 저장된 행(요청 순서) */
+  save: async (rows: EtcLeaveManage[]): Promise<EtcLeaveManage[]> => {
+    const res = await apiClient.put<ApiResponse<EtcLeaveManage[]>>('v1/emp/etc-leaves', rows.map(r => ({ etcLeaveId: r.etcLeaveId, reason: r.reason, days: r.days, startDate: r.startDate, closeDate: r.closeDate, note: r.note })));
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp22_EtcLeave.deleteApprId + delete */
+  remove: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/etc-leaves', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp23_EtcLeavePerson.selectByEtcLeaveId */
+  searchPersons: async (etcLeaveId: number): Promise<EtcLeavePerson[]> => {
+    const res = await apiClient.get<ApiResponse<EtcLeavePerson[]>>('v1/emp/etc-leave-persons', { params: { etcLeaveId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp23_EtcLeavePerson.update → 저장된 행(요청 순서) */
+  savePersons: async (rows: EtcLeavePerson[]): Promise<EtcLeavePerson[]> => {
+    const res = await apiClient.put<ApiResponse<EtcLeavePerson[]>>('v1/emp/etc-leave-persons', rows.map(r => ({ etcLeavePersonId: r.etcLeavePersonId, etcLeaveId: r.etcLeaveId, personId: r.personId })));
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp23_EtcLeavePerson.delete */
+  removePersons: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/emp/etc-leave-persons', { data: ids });
     return res.data.data ?? 0;
   },
 };

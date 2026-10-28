@@ -757,3 +757,50 @@ export interface UnLeave {
   expectApprStatusCode: string | null;
   expectApprStatusName: string | null;
 }
+
+/** S09 공동연차 한 행 (Emp24_JointLeaveModel). 날짜는 'yyyy-MM-dd' */
+export interface JointLeave {
+  jointLeaveId: number;
+  companyId: number | null;
+  startDate: string | null;
+  closeDate: string | null;
+  reason: string | null;
+  note: string | null;
+  apprId: number | null;
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+}
+
+/** S09 공동연차 제외사원 한 행 (Emp28_JointLeaveExceptModel) */
+export interface JointLeaveExcept {
+  jointLeaveExceptId: number;
+  jointLeaveId: number;
+  personId: number;
+  orgName: string | null;
+  personName: string | null;
+  reason: string | null;
+}
+
+/** S10 포상휴가 한 행 (Emp22_EtcLeaveModel — 포상휴가관리 그리드). 날짜는 'yyyy-MM-dd' */
+export interface EtcLeaveManage {
+  etcLeaveId: number;
+  companyId: number | null;
+  leaveCode: string | null;
+  reason: string | null;
+  days: number | null;
+  startDate: string | null;
+  closeDate: string | null;
+  note: string | null;
+  apprId: number | null;
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+}
+
+/** S10 포상휴가 대상 직원 한 행 (Emp23_EtcLeavePersonModel) */
+export interface EtcLeavePerson {
+  etcLeavePersonId: number;
+  etcLeaveId: number;
+  personId: number;
+  orgName: string | null;
+  personName: string | null;
+}

@@ -161,8 +161,8 @@ export const Adv02_Tab_Account: React.FC = () => {
     <div style={{ height: '100%', background: '#fff' }}>
       <Splitter layout="vertical" style={{ height: '100%' }}>
         <Splitter.Panel min={120} max={1000}>
-          <div style={{ height: '100%', padding: '20px 20px 0 20px', boxSizing: 'border-box' }}>
-            <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ height: '100%', padding: '10px 20px 8px 20px', boxSizing: 'border-box' }}>
+            <div style={{ height: '100%',  boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
               <SearchBar
                 onSearch={retrieve}
                 loading={loading}
@@ -178,7 +178,7 @@ export const Adv02_Tab_Account: React.FC = () => {
                   <SearchBar.Input style={{ width: 400 }} placeholder="관리코드/계좌명" value={searchText} onChange={e => setSearchText(e.target.value)} />
                 </SearchBar.Field>
               </SearchBar>
-              <div style={{ flex: 1, minHeight: 0 }}>
+              <div style={{ flex: 1, minHeight: 0, marginTop: 8 }}>
                 <SingleGrid<AdvAccount>
                   gridRef={gridRef}
                   rowData={rows}
@@ -202,8 +202,8 @@ export const Adv02_Tab_Account: React.FC = () => {
             </div>
           </div>
         </Splitter.Panel>
-        <Splitter.Panel defaultSize={150} min={120} max={900}>
-          <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
+        <Splitter.Panel defaultSize={230} min={230} max={500}>
+          <div style={{ height: '100%', padding: 10, boxSizing: 'border-box' }}>
             <Adv02_Edit_Account model={selected} onSaved={onSaved} />
           </div>
         </Splitter.Panel>

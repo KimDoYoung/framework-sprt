@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  포상휴가관리 (S10 Emp22_Tab_EtcLeave 그리드)
+  AS-IS(IDMS-IC) server/emp/mapper/emp22_etc_leave.xml selectByDate·selectById + Emp22_EtcLeave update/delete(UpdateDataModel)·deleteApprId
+  + apr01_appr.xml insertApprDel(L3111)·deleteAppr(L2942). 1단계: 결재요청(결재문서 생성·updateApprId)은 다음 단계.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpEtcLeaveMapper">
+
+    <sql id="etcLeaveCols">
+        emp22_etc_leave_id                                                             AS etcLeaveId
+      , emp22_company_id                                                               AS companyId
+      , emp22_leave_cd                                                                 AS leaveCode
+      , emp22_reason                                                                   AS reason
+      , emp22_days                                                                     AS days
+      , emp22_start_date                                                               AS startDate
+      , emp22_close_date                                                               AS closeDate
+      , emp22_note                                                                     AS note
+      , emp22_appr_id                                                                  AS apprId
+      , apr01.apr01_status_cd                                                          AS apprStatusCode
+      , f_cdnm('AprStatusCode', apr01.apr01_status_cd, emp22_company_id, f_sysdate())  AS apprStatusName
+    </sql>
+
+    <!-- AS-IS emp22_etc_leave.selectByDate -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.emp.dto.EtcLeaveManageRes">
+        SELECT <include refid="etcLeaveCols"/>
+          FROM emp22_etc_leave
+               LEFT OUTER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = emp22_appr_id
+         WHERE emp22_company_id = #{companyId}
+           AND emp22_start_date <![CDATA[ <= ]]> #{closeDate}
+           AND emp22_close_date <![CDATA[ >= ]]> #{startDate}
+           AND UPPER(CONCAT(emp22_reason, emp22_note)) LIKE UPPER(#{searchText})
+         ORDER BY emp22_start_date, emp22_close_date
+    </select>
+
+    <!-- AS-IS emp22_etc_leave.selectById (회사 조건 추가) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.emp.dto.EtcLeaveManageRes">
+        SELECT <include refid="etcLeaveCols"/>
+          FROM emp22_etc_leave
+               LEFT OUTER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = emp22_appr_id
+         WHERE emp22_etc_leave_id = #{etcLeaveId}
+           AND emp22_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS 그리드 [등록]이 휴가코드 05(포상휴가)를 채운다 -->
+    <insert id="insertEtcLeave">
+        INSERT INTO emp22_etc_leave (emp22_etc_leave_id, emp22_company_id, emp22_leave_cd, emp22_days, emp22_start_date, emp22_close_date, emp22_reason, emp22_note)
+        VALUES (#{etcLeaveId}, #{companyId}, '05', #{days}, #{startDate}, #{closeDate}, #{reason}, #{note})
+    </insert>
+
+    <update id="updateEtcLeave">
+        UPDATE emp22_etc_leave
+           SET emp22_days       = #{days},
+               emp22_start_date = #{startDate},
+               emp22_close_date = #{closeDate},
+               emp22_reason     = #{reason},
+               emp22_note       = #{note}
+        <if test="clearAppr">
+             , emp22_appr_id    = NULL
+        </if>
+         WHERE emp22_etc_leave_id = #{etcLeaveId}
+           AND emp22_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS apr01_appr.insertApprDel (열 순서 그대로) -->
+    <insert id="insertApprDel">
+        INSERT INTO apr99_appr_del
+        SELECT f_create_seq()
+             , apr01_appr_id
+             , apr01_title
+             , apr01_reg_date
+             , apr01_status_cd
+             , apr01_content
+             , apr01_note
+             , apr01_reg_emp_id
+             , apr01_effect_date
+             , apr01_class_tree_id
+             , apr01_stamp_id
+             , apr01_receive_nm
+             , apr01_reference_nm
+             , apr01_stamp_seq
+             , apr01_inout_cd
+             , f_sysdate()
+             , #{empId}
+             , apr01_company_id
+             , apr01_form_type
+             , apr01_dcr_id_word
+             , apr01_sign_company
+             , apr01_sign_ceo
+             , apr01_stamp_position
+             , apr01_link_cd
+          FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </insert>
+
+    <delete id="deleteAppr">
+        DELETE FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </delete>
+
+    <delete id="deleteEtcLeaves">
+        DELETE FROM emp22_etc_leave
+         WHERE emp22_company_id = #{companyId}
+           AND emp22_etc_leave_id IN
+        <foreach collection="etcLeaveIds" item="etcLeaveId" open="(" separator="," close=")">#{etcLeaveId}</foreach>
+    </delete>
+
+</mapper>

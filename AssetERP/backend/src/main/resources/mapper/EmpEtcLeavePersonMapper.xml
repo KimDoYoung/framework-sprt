@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  포상휴가 대상 직원 (S10 Emp23_Page_EtcLeavePerson 그리드)
+  AS-IS(IDMS-IC) server/emp/mapper/emp23_etc_leave_person.xml selectByEtcLeaveId(L33)·selectById(L15) + Emp23_EtcLeavePerson update/delete(UpdateDataModel).
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpEtcLeavePersonMapper">
+
+    <!-- AS-IS emp23_etc_leave_person.selectByEtcLeaveId (본문 그대로, 열은 화면 열만, 포상휴가 회사 조건 추가) -->
+    <select id="selectByEtcLeaveId" resultType="kr.co.kfs.asseterp.biz.emp.dto.EtcLeavePersonRes">
+        SELECT emp23_etc_leave_person_id                                          AS etcLeavePersonId
+             , emp23_etc_leave_id                                                 AS etcLeaveId
+             , emp23_person_id                                                    AS personId
+             , f_get_emptrans(emp23_person_id, f_sysdate()::date, 'org_code_nm')  AS orgName
+             , f_emp_kor_nm(emp23_person_id)                                      AS personName
+          FROM emp23_etc_leave_person
+             , emp22_etc_leave
+             , emp01_person
+             , emp03_trans
+             , org00_org_info
+         WHERE emp23_etc_leave_id = #{etcLeaveId}
+           AND emp22_company_id = #{companyId}
+           AND emp22_etc_leave_id = emp23_etc_leave_id
+           AND emp23_person_id = emp01_person_id
+           AND emp03_trans_date
+             = ( SELECT MAX(emp03_trans_date)
+                   FROM emp03_trans x
+                  WHERE x.emp03_person_id = emp01_person_id
+                    AND x.emp03_trans_date <![CDATA[ <= ]]> f_sysdate())
+           AND emp03_person_id = emp01_person_id
+           AND emp03_org_code_id = org00_org_code_id
+           AND org00_mod_date
+             = ( SELECT MAX(org00_mod_date)
+                   FROM org00_org_info
+                  WHERE org00_org_code_id = emp03_org_code_id
+                    AND org00_mod_date <![CDATA[ <= ]]> emp03_trans_date )
+         ORDER BY org00_org_cd,
+                  f_org_seq(org00_org_code_id, emp03_trans_date, emp01_company_id),
+                  f_code_seq(emp01_company_id, 'EmpTitleCode', emp03_title_cd),
+                  f_code_seq(emp01_company_id, 'EmpPosCode', emp03_pos_cd)
+    </select>
+
+    <!-- AS-IS emp23_etc_leave_person.selectById (회사 조건 추가) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.emp.dto.EtcLeavePersonRes">
+        SELECT emp23_etc_leave_person_id                                          AS etcLeavePersonId
+             , emp23_etc_leave_id                                                 AS etcLeaveId
+             , emp23_person_id                                                    AS personId
+             , f_get_emptrans(emp23_person_id, f_sysdate()::date, 'org_code_nm')  AS orgName
+             , f_emp_kor_nm(emp23_person_id)                                      AS personName
+          FROM emp23_etc_leave_person
+               INNER JOIN emp22_etc_leave ON emp22_etc_leave_id = emp23_etc_leave_id
+         WHERE emp23_etc_leave_person_id = #{etcLeavePersonId}
+           AND emp22_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS emp22_etc_leave.selectById 의 emp22_appr_id (회사 조건 추가) -->
+    <select id="selectApprId" resultType="long">
+        SELECT emp22_appr_id
+          FROM emp22_etc_leave
+         WHERE emp22_etc_leave_id = #{etcLeaveId}
+           AND emp22_company_id = #{companyId}
+    </select>
+
+    <select id="countEtcLeave" resultType="int">
+        SELECT COUNT(*)
+          FROM emp22_etc_leave
+         WHERE emp22_etc_leave_id = #{etcLeaveId}
+           AND emp22_company_id = #{companyId}
+    </select>
+
+    <select id="selectEtcLeaveIds" resultType="long">
+        SELECT DISTINCT emp23_etc_leave_id
+          FROM emp23_etc_leave_person
+               INNER JOIN emp22_etc_leave ON emp22_etc_leave_id = emp23_etc_leave_id
+         WHERE emp22_company_id = #{companyId}
+           AND emp23_etc_leave_person_id IN
+        <foreach collection="etcLeavePersonIds" item="etcLeavePersonId" open="(" separator="," close=")">#{etcLeavePersonId}</foreach>
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertEtcLeavePerson">
+        INSERT INTO emp23_etc_leave_person (emp23_etc_leave_person_id, emp23_etc_leave_id, emp23_person_id)
+        SELECT #{etcLeavePersonId}, e.emp22_etc_leave_id, p.emp01_person_id
+          FROM emp22_etc_leave e, emp01_person p
+         WHERE e.emp22_etc_leave_id = #{etcLeaveId}
+           AND e.emp22_company_id = #{companyId}
+           AND p.emp01_person_id = #{personId}
+           AND p.emp01_company_id = #{companyId}
+    </insert>
+
+    <delete id="deleteEtcLeavePersons">
+        DELETE FROM emp23_etc_leave_person
+         WHERE emp23_etc_leave_id IN (SELECT emp22_etc_leave_id FROM emp22_etc_leave WHERE emp22_company_id = #{companyId})
+           AND emp23_etc_leave_person_id IN
+        <foreach collection="etcLeavePersonIds" item="etcLeavePersonId" open="(" separator="," close=")">#{etcLeavePersonId}</foreach>
+    </delete>
+
+</mapper>

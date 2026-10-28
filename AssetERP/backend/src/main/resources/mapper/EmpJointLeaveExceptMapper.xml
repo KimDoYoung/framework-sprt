@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  공동연차 제외사원 (S09 Emp24_Tab_JointLeave 아래 그리드)
+  AS-IS(IDMS-IC) server/emp/mapper/emp28_joint_leave_except.xml selectByJointLeaveId·selectById + Emp28_JointLeaveExcept update/delete(UpdateDataModel).
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpJointLeaveExceptMapper">
+
+    <sql id="exceptCols">
+        emp28_joint_leave_except_id                                      AS jointLeaveExceptId
+      , emp28_joint_leave_id                                             AS jointLeaveId
+      , emp28_person_id                                                  AS personId
+      , f_get_empTrans(emp28_person_id, f_sysdate()::date, 'org_code_nm') AS orgName
+      , f_emp_kor_nm(emp28_person_id)                                    AS personName
+      , emp28_reason                                                     AS reason
+    </sql>
+
+    <!-- AS-IS emp28_joint_leave_except.selectByJointLeaveId (회사 조건 추가: 공동연차가 로그인 회사 것) -->
+    <select id="selectByJointLeaveId" resultType="kr.co.kfs.asseterp.biz.emp.dto.JointLeaveExceptRes">
+        SELECT <include refid="exceptCols"/>
+          FROM emp28_joint_leave_except
+         WHERE emp28_joint_leave_id = #{jointLeaveId}
+           AND emp28_joint_leave_id IN (SELECT emp24_joint_leave_id FROM emp24_joint_leave WHERE emp24_company_id = #{companyId})
+    </select>
+
+    <!-- AS-IS emp28_joint_leave_except.selectById (회사 조건 추가) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.emp.dto.JointLeaveExceptRes">
+        SELECT <include refid="exceptCols"/>
+          FROM emp28_joint_leave_except
+         WHERE emp28_joint_leave_except_id = #{jointLeaveExceptId}
+           AND emp28_joint_leave_id IN (SELECT emp24_joint_leave_id FROM emp24_joint_leave WHERE emp24_company_id = #{companyId})
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertJointLeaveExcept">
+        INSERT INTO emp28_joint_leave_except (emp28_joint_leave_except_id, emp28_joint_leave_id, emp28_person_id, emp28_reason)
+        SELECT #{jointLeaveExceptId}, emp24_joint_leave_id, #{personId}, #{reason}
+          FROM emp24_joint_leave
+         WHERE emp24_joint_leave_id = #{jointLeaveId}
+           AND emp24_company_id = #{companyId}
+    </insert>
+
+    <update id="updateJointLeaveExcept">
+        UPDATE emp28_joint_leave_except
+           SET emp28_reason = #{reason}
+         WHERE emp28_joint_leave_except_id = #{jointLeaveExceptId}
+           AND emp28_joint_leave_id IN (SELECT emp24_joint_leave_id FROM emp24_joint_leave WHERE emp24_company_id = #{companyId})
+    </update>
+
+    <delete id="deleteJointLeaveExcepts">
+        DELETE FROM emp28_joint_leave_except
+         WHERE emp28_joint_leave_id IN (SELECT emp24_joint_leave_id FROM emp24_joint_leave WHERE emp24_company_id = #{companyId})
+           AND emp28_joint_leave_except_id IN
+        <foreach collection="jointLeaveExceptIds" item="jointLeaveExceptId" open="(" separator="," close=")">#{jointLeaveExceptId}</foreach>
+    </delete>
+
+</mapper>
