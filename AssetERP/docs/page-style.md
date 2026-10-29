@@ -26,6 +26,13 @@
 | GCG | Grid+Calendar+Grid | 위 제목 줄(기준일자 + 새로고침 아이콘)과 그리드(현황), 아래 좌측 달력·[예약하기] 버튼 / 우측 라디오(MY·전체) + 그리드(달력 날짜 연동). 조회 툴바 없음 | `Car03_Tab_List` (공용차량 예약관리, T13) |
 | TP | TabPanel | 툴바·그리드 없이 탭 컨테이너만(탭마다 자기 툴바·내용을 가짐) | `Rpt10_Tab_FssOrg` (업무보고서, T17) |
 | SR | SearchBar+RD | 위 툴바 한 줄(조회기간 등 + [조회], `SearchBar`), 아래 RD 보고서 영역(iframe) 하나. 그리드 없음 | `Emp01_Tab_InoutState` (기간별 입퇴사현황, T18) |
+| SGHF | SearchGrid+HorizontalForm | 조회 줄 + 그리드 + 편집 폼을 **좌우**로 배치(SGEF의 좌우 버전). 제안 2026-10-29, 견본 없음 | `Biz01_Tab_Card` (1131) |
+| MG | MultiGrid+Form | 조회 줄 + 그리드 2개 이상 + 편집/보기 폼, 위아래 분할 아님. 제안, 견본 없음 | `Sys90_Tab_AfterService` (1066) |
+| TO | TreeOnly | 트리 중심, 오른쪽이 일반 그리드가 아님/없음, 편집은 팝업. 제안, 견본 없음 | `Org01_Tab_OrgCode` (1028) |
+| GO | GridOnly | 그리드 하나, 조회 툴바 없음. 제안, 견본 없음 | `Tdm54_Tab_CheckInsuff` (1459) |
+| DB | Dashboard | 그리드·트리·툴바 없이 카드/요약 영역. 제안, 견본 없음 | `Tdm50_Tab_TotalDashboard` (1495) |
+
+> 위 5개(SGHF·MG·TO·GO·DB)는 2026-10-29 제안이다. 사용자가 대표 화면을 열어 확인·수정한 뒤 `docs/page-style/{SID}/`에 견본을 넣고 상세 절을 만든다. 판별기 규칙은 `docs/yunhee-page-style-판별.md`.
 
 ## 스타일별 상세
 
