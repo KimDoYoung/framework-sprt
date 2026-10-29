@@ -116,6 +116,25 @@ SGP/SG, TP/TG 등 이미 판별되는 SID는 규칙을 바꾸지 말고 그대�
 
 (`Car03_Tab_List`·`Car03_Tab_DayofMonth`(GCG), `Cmp10_Edit_Tab_MailBook`(`_Tab_`이 아닌 편집 부품)는 표에서 뺐다.)
 
+## 4-1. 0.6.6 평가 결과와 남은 수정 (2026-10-29)
+
+0.6.6에서 §2 표의 견본·검증 화면 46개 중 40개가 기대 SID로 나오고, `--all` 305개에서 미분류는 0이다. 남은 수정은 2건이다.
+
+1. **TabPage 자식의 그리드를 합산하지 않는다** (§3-5 "`*_TabPage_*`는 0으로 센다"가 자식 추적 경로에서 지켜지지 않음).
+   - 증상: `Sms02_Tab_TotalCount`, `Sys10_Tab_TotalSize`가 `grids: 3`, `tabpage: true`로 나와 GG가 된다. 실제 그리드는 왼쪽 1개이고 나머지 2개는 오른쪽 `*_TabPage_Detail` 안의 것이다.
+   - 기대: GO (`grids: 1`, 조건 줄 없음). `--json`의 `grids`가 1이어야 한다.
+2. **직접 만든 조건 줄을 `custom_search`로 읽어 STP로 판별한다** (§3-2).
+   - 증상: `Tdm50_Tab_CheckJob`이 `custom_search: false`, `search: false`라서 TP가 된다. 이 화면은 `SearchBar`가 아니라 `Typography.Text`·`DatePicker` 등을 직접 배치한 `div` 조건 줄이 있다.
+   - 기대: STP (탭이 있고 조건 줄이 `SearchBar` 또는 직접 만든 줄이면 STP).
+
+**화면을 열어 확인할 것 (yunhee 수정 아님)**: 아래는 요청서 표 또는 규칙 우선순위가 틀렸을 수 있어, 화면을 직접 보고 SID를 정한 뒤 이 문서의 §2 표를 고친다.
+
+| 화면 | 기대 → 판별 | 확인할 것 |
+|:---|:--|:--|
+| `Pay31_Tab_InsureApply` | TP → STP | 화면에 `SearchBar`가 있는데 `search: false`로 읽힌다. 선언 `STP`가 우선했다. 조건 줄이 실제로 있으면 STP가 맞고 §2 표(TP)를 고친다. |
+| `Pay20_Tab_Deduct` | TP → STP | `Pay20_Tab_DeductAdmin`을 위임받아 부모 SID를 따른다. 부모가 TP인지 STP인지 확인한다. |
+| `Pay10_Tab_List` | STP → SR | `iframe`이 있어 SR로 갔다. 탭·RD 중 어느 쪽이 주인지 정하고, SR 규칙(`*_Rd_*` import 또는 iframe)과 STP 규칙의 우선순위를 정한다. |
+
 ## 5. 완료 기준
 
 - `yunhee page-style --all`에서 `미분류`가 `_Tab_` 화면 기준 0에 가깝다(껍데기 화면은 부모를 따르고, 선언이 있는 화면은 선언이 우선이다).
