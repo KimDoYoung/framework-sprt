@@ -9972,5 +9972,22 @@
     "note": "docs/work/T/T18-작업기록.md",
     "history": [],
     "id": "T18"
+  },
+  "Emp01_Tab_DueDiligence": {
+    "commit": "fc71b1a1c2304e8085b2aaf80a81603a99454e88",
+    "commit_short": "fc71b1a",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp01_Rd_DueDiligence.java": "96292ada8c5084125e1b616fd75350d9c739d753",
+      "application/src/main/java/myApp/client/vi/emp/Emp01_Tab_DueDiligence.java": "2179058ed41f8d4ad4c13e5015260c0629e340df"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-29T12:59:43+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/T/T19-작업기록.md",
+    "history": [],
+    "id": "T19"
   }
 }

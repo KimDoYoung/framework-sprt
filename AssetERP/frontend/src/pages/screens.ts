@@ -182,6 +182,7 @@ import { Car04_Tab_PublicJournalAdmin } from './car/Car04_Tab_PublicJournalAdmin
 import { Car04_Tab_Journal } from './car/Car04_Tab_Journal';
 import { Rpt10_Tab_FssOrg } from './rpt/Rpt10_Tab_FssOrg';
 import { Emp01_Tab_InoutState } from './emp/Emp01_Tab_InoutState';
+import { Emp01_Tab_DueDiligence } from './emp/Emp01_Tab_DueDiligence';
 import { Car04_Tab_PrivateJournalAdmin } from './car/Car04_Tab_PrivateJournalAdmin';
 import { Act01_Tab_AccountCode } from './act/Act01_Tab_AccountCode';
 import { Act10_Tab_ReprAccount } from './act/Act10_Tab_ReprAccount';
@@ -516,6 +517,7 @@ export const SCREENS: Record<string, React.FC> = {
   Car04_Tab_PrivateJournalAdmin, // T12 (+ Car04_Lookup_Batch)
   Car04_Tab_PublicJournal, // T14 (+ Car04_Lookup_PublicJournal, Car01_Lookup_Info)
   Emp01_Tab_InoutState, // T18 (+ Emp01_Rd_InoutState, RD 출력)
+  Emp01_Tab_DueDiligence, // T19 (+ Emp01_Rd_DueDiligence, RD 출력)
   Rpt10_Tab_FssOrg, // T17 (+ RD 보고서 탭 페이지 6개·Rpt10_Lookup_WriteGuide, RD 출력)
   Car04_Tab_Journal, // T16 (+ Car04_Lookup_PrivateJournal·PublicJournal 재사용, RD 출력)
   Car04_Tab_PublicJournalAdmin, // T15 (+ Car04_Lookup_PublicJournalAdmin, Car04_Edit_PublicJournalAdmin)
