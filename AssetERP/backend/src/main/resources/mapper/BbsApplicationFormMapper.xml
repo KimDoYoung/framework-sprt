@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- AS-IS(IDMS-IC) server/bbs/mapper/bbs12_application_form.xml · server/sys/mapper/sys09_code.xml — T22 Bbs11_Tab_ApplicationMng(Bbs12_Lookup_ApplicationMng) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.bbs.mapper.BbsApplicationFormMapper">
+
+    <!-- AS-IS sys09_code.selectByApplicationForm (IDMS-IC) — SELECT 목록은 코드만 -->
+    <select id="selectMissingCodes" resultType="string">
+        SELECT sys09_code
+          FROM sys09_code
+               INNER JOIN sys08_code_kind ON sys09_code_kind_id = sys08_code_kind_id
+         WHERE sys08_kind_cd = #{kindCode}
+           AND sys09_company_id = #{companyId}
+           AND sys09_code NOT IN (SELECT bbs12_app_type
+                                    FROM bbs12_application_form
+                                   WHERE bbs12_company_id = #{companyId})
+         ORDER BY sys09_seq
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS bbs12_application_form.insert (IDMS-IC) — formCheck가 넣는 열(공개여부 false) -->
+    <insert id="insertForm">
+        INSERT INTO bbs12_application_form
+             (bbs12_application_form_id, bbs12_company_id, bbs12_app_type, bbs12_public_yn)
+        VALUES (#{applicationFormId}, #{companyId}, #{appType}, 'false')
+    </insert>
+
+    <!-- AS-IS bbs12_application_form.selectByCompanyId (IDMS-IC) — SELECT 목록은 ApplicationFormRes 열만 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.bbs.dto.ApplicationFormRes">
+        SELECT bbs12_application_form_id                                                       AS application_form_id
+             , bbs12_company_id                                                                AS company_id
+             , bbs12_app_type                                                                  AS app_type
+             , f_cdnm('ApplicationType', bbs12_app_type, bbs12_company_id, f_today())          AS app_type_name
+             , bbs12_content                                                                   AS content
+             , bbs12_content_mobi                                                              AS content_mobi
+             , COALESCE(bbs12_public_yn, 'false') = 'true'                                     AS public_yn
+          FROM bbs12_application_form
+               INNER JOIN (SELECT *
+                             FROM sys08_code_kind
+                                  INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+                            WHERE sys08_kind_cd = 'ApplicationType'
+                              AND sys09_company_id = #{companyId}
+                              AND ( ( COALESCE(sys09_close_yn  ,'false') = 'true'                      AND
+                                      COALESCE(sys09_close_date,'1900-12-31') >= f_today() ) OR
+                                    ( COALESCE(sys09_close_yn  ,'false') = 'false'                     ) )
+                          ) sys ON sys09_code = bbs12_app_type
+         WHERE bbs12_company_id = #{companyId}
+         ORDER BY bbs12_app_type
+    </select>
+
+    <!-- AS-IS Bbs12_ApplicationForm.update → UpdateDataModel UPDATE — 그리드가 고치는 열(공개여부), 로그인 회사의 행만(보안 보강) -->
+    <update id="updatePublicYn">
+        UPDATE bbs12_application_form
+           SET bbs12_public_yn = CASE WHEN #{publicYn} THEN 'true' ELSE 'false' END
+         WHERE bbs12_application_form_id = #{applicationFormId}
+           AND bbs12_company_id          = #{companyId}
+    </update>
+
+    <!-- AS-IS Bbs12_ApplicationForm.modelUpdate → UpdateDataModel UPDATE — 편집기 내용·모바일 내용 -->
+    <update id="updateContent">
+        UPDATE bbs12_application_form
+           SET bbs12_content      = #{content}
+             , bbs12_content_mobi = #{contentMobi}
+         WHERE bbs12_application_form_id = #{applicationFormId}
+           AND bbs12_company_id          = #{companyId}
+    </update>
+</mapper>

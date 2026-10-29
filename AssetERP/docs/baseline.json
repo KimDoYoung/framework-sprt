@@ -10050,5 +10050,37 @@
     "note": "docs/work/T/T21-작업기록.md",
     "history": [],
     "id": "T21"
+  },
+  "Bbs11_Tab_ApplicationMng": {
+    "commit": "fc71b1a1c2304e8085b2aaf80a81603a99454e88",
+    "commit_short": "fc71b1a",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/bbs/Bbs11_Tab_ApplicationMng.java": "461d0dd1b95bedcc2051cf2dd58aaa263050bedf",
+      "application/src/main/java/myApp/client/vi/bbs/Bbs12_Lookup_ApplicationMng.java": "1cefb6de88c230b346e5e76156e7888a5d6aeef5",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs11_ApplicationModel.java": "118127ccba522d26e6974c95291c9ec2c4e0c0f3",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs11_ApplicationModelProperties.java": "05b569db27385cb1bc12172640d7c1bf52aefb90",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs12_ApplicationFormModel.java": "a1d013b7b777fc4e0382baeacfc3d4c41c1f8e66",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs12_ApplicationFormModelProperties.java": "7ed77c7cc0b8a9207dd773168624a3dcc861b540",
+      "application/src/main/java/myApp/server/bbs/Bbs11_Application.java": "2ddc9b4f2c377a5520f11c8ac421d05cb19d7244",
+      "application/src/main/java/myApp/server/bbs/Bbs12_ApplicationForm.java": "ab0d278808c0360e65098dff4c186104726a8baf",
+      "application/src/main/java/myApp/server/bbs/mapper/bbs11_application.xml": "0d0cf959a135bc98a88c9275c5297fd32cf1cbc4",
+      "application/src/main/java/myApp/server/bbs/mapper/bbs12_application_form.xml": "ecae829a382e7604eb5bb320fe60eaa07cad265e",
+      "application/src/main/java/myApp/server/sms/Sms02_History.java": "9266934009808b9f0e1938c2c30a374a398ff4e7",
+      "application/src/main/java/myApp/server/sms/mapper/sms02_history.xml": "a317e77539b5c26864b6910e26052a996f0588e6",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Emp93_Lookup_SmsNoticeTarget"
+    ],
+    "recorded_at": "2026-10-29T13:50:27+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/T/T22-작업기록.md",
+    "history": [],
+    "id": "T22"
   }
 }

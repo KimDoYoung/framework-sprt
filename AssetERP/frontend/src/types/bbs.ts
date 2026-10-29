@@ -72,6 +72,33 @@ export interface BbsApplication {
   content?: string | null;
 }
 
+/** T22 AS-IS Bbs11_ApplicationModel (bbs11_application + 계산 열) — 기타신청서 확인 그리드 */
+export interface BbsApplicationMng {
+  applicationId: number;
+  companyId?: number | null;
+  appDate?: string | null;
+  appEmpId?: number | null;
+  appEmpName?: string | null;
+  appType?: string | null;
+  appTypeName?: string | null;
+  appStatus?: string | null;
+  appStatusName?: string | null;
+  closeDate?: string | null;
+  note?: string | null;
+  content?: string | null;
+}
+
+/** T22 AS-IS Bbs12_ApplicationFormModel — 신청구분 내용 양식 */
+export interface BbsApplicationForm {
+  applicationFormId: number;
+  companyId?: number | null;
+  appType?: string | null;
+  appTypeName?: string | null;
+  content?: string | null;
+  contentMobi?: string | null;
+  publicYn?: boolean | null;
+}
+
 /** T21 AS-IS Bbs20_FloralRequestModel (bbs20_floral_request + 계산 열) */
 export interface BbsFloralRequest {
   floralRequestId: number;

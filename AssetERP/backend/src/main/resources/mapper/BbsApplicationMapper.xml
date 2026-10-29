@@ -21,4 +21,74 @@
            AND bbs11_app_status = #{appStatus}
          ORDER BY bbs11_app_date DESC, bbs11_app_type
     </select>
+
+    <!-- AS-IS bbs11_application.selectByResultCheck L59 (IDMS-IC). SELECT * → ApplicationMngRes 열만, 날짜 조건·정렬은 그대로 -->
+    <select id="selectByResultCheck" resultType="kr.co.kfs.asseterp.biz.bbs.dto.ApplicationMngRes">
+        SELECT bbs11_application_id                                                                      AS application_id,
+               bbs11_company_id                                                                          AS company_id,
+               bbs11_app_date                                                                            AS app_date,
+               bbs11_app_emp_id                                                                          AS app_emp_id,
+               f_emp_kor_nm(bbs11_app_emp_id)                                                            AS app_emp_name,
+               bbs11_app_type                                                                            AS app_type,
+               f_cdnm('ApplicationType', bbs11_app_type, bbs11_company_id, f_sysdate())                  AS app_type_name,
+               bbs11_app_status                                                                          AS app_status,
+               f_cdnm('ApplicationStatusCode', bbs11_app_status, bbs11_company_id, f_sysdate())          AS app_status_name,
+               bbs11_close_date                                                                          AS close_date,
+               bbs11_note                                                                                AS note,
+               bbs11_content                                                                             AS content
+          FROM bbs11_application
+         WHERE bbs11_company_id = #{cond.companyId}
+           AND bbs11_app_date BETWEEN #{cond.startDate} AND #{cond.closeDate}
+        <if test="cond.appTypeCode != null">
+           AND bbs11_app_type = #{cond.appTypeCode}
+        </if>
+        <if test="cond.resultCheck">
+           AND bbs11_close_date IS NULL
+        </if>
+         ORDER BY bbs11_app_date DESC, bbs11_app_type
+    </select>
+
+    <!-- AS-IS Bbs11_Application.update → UpdateDataModel(bbs11_application) UPDATE — 그리드가 고치는 3열(신청상태·완료일·비고), 로그인 회사의 행만(보안 보강) -->
+    <update id="updateStatus">
+        UPDATE bbs11_application
+           SET bbs11_app_status = #{req.appStatus}
+             , bbs11_close_date = #{req.closeDate}
+             , bbs11_note       = #{req.note}
+         WHERE bbs11_application_id = #{req.applicationId}
+           AND bbs11_company_id     = #{companyId}
+    </update>
+
+    <!-- AS-IS Bbs11_Application.modelUpdate → UpdateDataModel UPDATE — 편집기 내용 -->
+    <update id="updateContent">
+        UPDATE bbs11_application
+           SET bbs11_content = #{content}
+         WHERE bbs11_application_id = #{applicationId}
+           AND bbs11_company_id     = #{companyId}
+    </update>
+
+    <!-- 저장 뒤 다시 읽기: AS-IS bbs11_application.selectById (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.bbs.dto.ApplicationMngRes">
+        SELECT bbs11_application_id                                                                      AS application_id,
+               bbs11_company_id                                                                          AS company_id,
+               bbs11_app_date                                                                            AS app_date,
+               bbs11_app_emp_id                                                                          AS app_emp_id,
+               f_emp_kor_nm(bbs11_app_emp_id)                                                            AS app_emp_name,
+               bbs11_app_type                                                                            AS app_type,
+               f_cdnm('ApplicationType', bbs11_app_type, bbs11_company_id, f_sysdate())                  AS app_type_name,
+               bbs11_app_status                                                                          AS app_status,
+               f_cdnm('ApplicationStatusCode', bbs11_app_status, bbs11_company_id, f_sysdate())          AS app_status_name,
+               bbs11_close_date                                                                          AS close_date,
+               bbs11_note                                                                                AS note,
+               bbs11_content                                                                             AS content
+          FROM bbs11_application
+         WHERE bbs11_application_id = #{applicationId}
+           AND bbs11_company_id     = #{companyId}
+    </select>
+
+    <!-- AS-IS emp01_person.selectById 중 휴대폰번호 -->
+    <select id="selectMobileTelNo" resultType="string">
+        SELECT emp01_mobile_telno
+          FROM emp01_person
+         WHERE emp01_person_id = #{personId}
+    </select>
 </mapper>

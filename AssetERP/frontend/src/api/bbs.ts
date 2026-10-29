@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { BbsApplication, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralShare, BbsNotice } from '../types/bbs';
+import { BbsApplication, BbsApplicationForm, BbsApplicationMng, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralShare, BbsNotice } from '../types/bbs';
 
 /** 요청서(신청서) — 증명서 신청내역 (S05, AS-IS Bbs11_Application) */
 export const bbsApplicationApi = {
@@ -9,6 +9,49 @@ export const bbsApplicationApi = {
   searchByAppStatus: async (appStatus = '10'): Promise<BbsApplication[]> => {
     const res = await apiClient.get<ApiResponse<BbsApplication[]>>('v1/bbs/applications', { params: { appStatus } });
     return res.data.data ?? [];
+  },
+
+  /** T22 AS-IS bbs.Bbs11_Application.selectByResultCheck — appTypeCode 없으면 전체, resultCheck = 미완료건만 */
+  searchByResultCheck: async (startDate: string, closeDate: string, appTypeCode: string | undefined, resultCheck: boolean): Promise<BbsApplicationMng[]> => {
+    const res = await apiClient.get<ApiResponse<BbsApplicationMng[]>>('v1/bbs/applications/mng', { params: { startDate, closeDate, appTypeCode, resultCheck } });
+    return res.data.data ?? [];
+  },
+
+  /** T22 AS-IS bbs.Bbs11_Application.update — 변경 행(신청상태·완료일·비고) → 다시 읽은 행들 */
+  saveMng: async (rows: BbsApplicationMng[]): Promise<BbsApplicationMng[]> => {
+    const body = rows.map(({ applicationId, appStatus, closeDate, note }) => ({ applicationId, appStatus, closeDate, note }));
+    const res = await apiClient.put<ApiResponse<BbsApplicationMng[]>>('v1/bbs/applications/mng', body);
+    return res.data.data ?? [];
+  },
+
+  /** T22 AS-IS bbs.Bbs11_Application.modelUpdate — 선택한 신청의 내용(편집기 HTML) */
+  updateContent: async (applicationId: number, content: string): Promise<void> => {
+    await apiClient.put(`v1/bbs/applications/${applicationId}/content`, { content });
+  },
+
+  /** T22 AS-IS sms.Sms02_History.sendMessage — [완료문자발송] */
+  sendMessage: async (personId: number, msg: string): Promise<void> => {
+    await apiClient.post('v1/bbs/applications/sms', { personId, msg });
+  },
+};
+
+/** T22 신청구분 내용 양식 (AS-IS Bbs12_ApplicationForm) */
+export const bbsApplicationFormApi = {
+  /** AS-IS formCheck(없는 신청구분 양식 만들기) + selectByCompanyId */
+  search: async (): Promise<BbsApplicationForm[]> => {
+    const res = await apiClient.get<ApiResponse<BbsApplicationForm[]>>('v1/bbs/application-forms');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS update — 공개여부 */
+  update: async (rows: BbsApplicationForm[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/bbs/application-forms', rows.map(({ applicationFormId, publicYn }) => ({ applicationFormId, publicYn })));
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS modelUpdate — 선택한 양식의 내용·모바일 내용 */
+  updateContent: async (applicationFormId: number, content: string, contentMobi: string): Promise<void> => {
+    await apiClient.put(`v1/bbs/application-forms/${applicationFormId}/content`, { content, contentMobi });
   },
 };
 
