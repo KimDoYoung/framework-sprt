@@ -1,6 +1,7 @@
 /**
  * [4110] 경영관리 > 01. 조직 및 사원관리 > 조직정보 등록, [202504242267306] 기본정보 > 기본정보 > 조직정보 등록 (C02)
  * AS-IS: myApp/client/vi/org/Org01_Tab_OrgCode.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
+ * 스타일: TO (견본 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Space, Typography } from 'antd';

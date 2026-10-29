@@ -4,9 +4,10 @@
  * 생성자 L18-25: center = tabPanel(여백 20, 테두리) — 총괄(Tdm50_Tab_Dashboard) · 임원별(Tdm50_Tab_DashboardExct) · 부서별(Tdm50_Tab_DashboardOrg)
  * 세 탭은 열 때 모두 만들어 두고(탭을 옮겨도 고른 임원·부서·기간이 남는다), 탭을 고를 때마다 그 탭이 다시 조회한다.
  * 1단계: [보기] 아이콘이 여는 점검 편집창(Tdm52_Edit_ChckManl, N22)·미흡 조치 상세(Tdm54_Lookup_ChckInsuffCmnt, N24)는 다음 단계
+ * 스타일: DB (견본 — docs/page-style.md)
  */
 import React, { useRef, useState } from 'react';
-import { Tabs } from 'antd';
+import { PageTabs } from '@/components/tabs';
 import { DashboardTabHandle, Tdm50_Tab_Dashboard } from './Tdm50_Tab_Dashboard';
 import { Tdm50_Tab_DashboardExct } from './Tdm50_Tab_DashboardExct';
 import { Tdm50_Tab_DashboardOrg } from './Tdm50_Tab_DashboardOrg';
@@ -40,8 +41,8 @@ export const Tdm50_Tab_TotalDashboard: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
-        <Tabs activeKey={active} onChange={onChange} items={TABS.map(t => ({ key: t.key, label: t.label }))} tabBarStyle={{ margin: 0, paddingLeft: 10 }} />
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+        <PageTabs activeKey={active} onChange={onChange} items={TABS.map(t => ({ key: t.key, label: t.label }))} tabBarStyle={{ margin: 0 }} />
         {pane('total', <Tdm50_Tab_Dashboard ref={totalRef} />)}
         {pane('exct', <Tdm50_Tab_DashboardExct ref={exctRef} />)}
         {pane('org', <Tdm50_Tab_DashboardOrg ref={orgRef} />)}

@@ -4,6 +4,7 @@
  * 생성자 L69-102: BorderLayout center(여백 20, 테두리) = 툴바(높이 50: 조회기간 [시작~종료, 진행중만 보기가 켜져 있으면 비활성] · 직책 [220] · 부서 [180] · 조치상태 [85] · 진행중만 보기 · [조회]) + 미흡/개선 내역 그리드(한 행 선택)
  * 조치등록 아이콘 = Tdm54_Lookup_ChckInsuff.open(행), 승인이력 아이콘 = Tdm55_Lookup_ChckRecord.open(chckInsuffId, "TDM54"). 다음 단계: 조치 창의 증빙자료 창(Tdm00_Lookup_RelateAppr)은 안내만
  * UX보강(10): 툴바 = Button(UX-01), 직책·부서 칸 = LookupInput, 조회창(UX-05·06)
+ * 스타일: GO (견본 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, DatePicker, Typography, message } from 'antd';
@@ -54,6 +55,7 @@ export const Tdm54_Tab_CheckInsuff: React.FC = () => {
   const [orgLookup, setOrgLookup] = useState(false);
   const [actionTarget, setActionTarget] = useState<TdmChckInsuffRow | null>(null);
   const [recordInsuffId, setRecordInsuffId] = useState<number | null>(null);
+  const myOrg = useRef<{ id: number | null; name: string }>({ id: null, name: '' });   // 초기화 때 돌아갈 로그인 사용자 부서
 
   // 조회 조건은 ref로 읽는다 — 콜백(아이콘·조회창)이 낡은 값을 쥐지 않게
   const latest = useRef({ startDate, endDate, unDoneYn, status, role, org });
@@ -84,6 +86,7 @@ export const Tdm54_Tab_CheckInsuff: React.FC = () => {
         if (my) {
           over = { org: { id: my.orgCodeId, name: my.korName ?? '' } };
           setOrg(over.org!);
+          myOrg.current = over.org!;
         }
       } catch (err) {
         message.error(errorMessage(err, '조회 실패'));
@@ -97,13 +100,22 @@ export const Tdm54_Tab_CheckInsuff: React.FC = () => {
     [],
   );
 
+  const reset = () => {
+    setStartDate(dayjs().startOf('year'));
+    setEndDate(dayjs());
+    setUnDoneYn(true);
+    setStatus('%');
+    setRole({ id: null, name: '' });
+    setOrg(myOrg.current);
+  };
+
   // 조치 창이 처리한 행을 목록에 반영 — grid.getStore().update(chckInsuffModel)
   const onChanged = (row: TdmChckInsuffRow) => setRows(prev => prev.map(r => (r.chckInsuffId === row.chckInsuffId ? row : r)));
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 'none', height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 10px', flexWrap: 'nowrap', overflow: 'hidden' }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: 8, padding: '0 10px 8px', flexWrap: 'nowrap', overflow: 'hidden' }}>
           <Typography.Text strong>조회기간</Typography.Text>
           <DatePicker style={{ width: 120 }} format={DATE_FORMAT} allowClear={false} disabled={unDoneYn} value={startDate} onChange={d => d && setStartDate(d)} />
           <span>~</span>
@@ -127,6 +139,8 @@ export const Tdm54_Tab_CheckInsuff: React.FC = () => {
           <Checkbox checked={unDoneYn} onChange={e => setUnDoneYn(e.target.checked)}>진행중만 보기(조회기간 제한없음)</Checkbox>
           {/* [E6] retrieveButton[조회].Select (L188) → retrieve() */}
           <Button type="search" onClick={() => retrieve()}>조회</Button>
+          {/* 초기화(UX-02): 조건을 처음 값으로 되돌린다. 조회는 하지 않는다 */}
+          <Button type="reset" onClick={reset}>초기화</Button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
           <SingleGrid<TdmChckInsuffRow>

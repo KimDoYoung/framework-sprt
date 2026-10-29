@@ -57,11 +57,11 @@ const renderCheckCntInfo = (info: string): React.ReactNode[] => {
   return out;
 };
 
-const MonitorPanel: React.FC<{ title: string; flex: number; align: 'flex-end' | 'center'; children: React.ReactNode }> = ({ title, flex, align, children }) => (
+const MonitorPanel: React.FC<{ title: string; flex: number; children: React.ReactNode }> = ({ title, flex, children }) => (
   <div style={{ flex, minWidth: 0, margin: 10, border: '1px solid #d9d9d9', boxSizing: 'border-box', background: '#fff', display: 'flex', flexDirection: 'column' }}>
     <div style={{ padding: '4px 10px', background: '#f5f5f5', borderBottom: '1px solid #d9d9d9' }}><GridTitle>{title}</GridTitle></div>
-    <div style={{ flex: 1, minHeight: 0, display: 'flex', justifyContent: align, alignItems: 'flex-end' }}>
-      <span style={{ fontSize: 50, marginBottom: 35, marginRight: 25, whiteSpace: 'nowrap' }}><b>{children}</b></span>
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <span style={{ fontSize: 50, whiteSpace: 'nowrap' }}><b>{children}</b></span>
     </div>
   </div>
 );
@@ -69,10 +69,10 @@ const MonitorPanel: React.FC<{ title: string; flex: number; align: 'flex-end' | 
 /** progress가 null이면 init() 상태 "-" , 값이 있으면 retrieve() L305-309 */
 export const MonitorRow: React.FC<{ progress: TdmDashboardProgress | null }> = ({ progress }) => (
   <div style={{ flex: 'none', height: 140, display: 'flex' }}>
-    <MonitorPanel title="진행율" flex={0.2} align="flex-end">{progress ? rateStr(progress.progRate) : '-'}</MonitorPanel>
-    <MonitorPanel title="적정비율" flex={0.2} align="flex-end">{progress ? rateStr(progress.suffRate) : '-'}</MonitorPanel>
+    <MonitorPanel title="진행율" flex={0.2}>{progress ? rateStr(progress.progRate) : '-'}</MonitorPanel>
+    <MonitorPanel title="적정비율" flex={0.2}>{progress ? rateStr(progress.suffRate) : '-'}</MonitorPanel>
     {/* 값이 null이면 AS-IS 문자열 연결이 "null"을 그대로 찍는다 */}
-    <MonitorPanel title="점검결과 : 대상 / 적정 / 미흡 / 해당없음" flex={0.6} align="center">
+    <MonitorPanel title="점검결과 : 대상 / 적정 / 미흡 / 해당없음" flex={0.6}>
       {progress ? renderCheckCntInfo(String(progress.checkCntInfo)) : '-'}
     </MonitorPanel>
   </div>
@@ -107,10 +107,10 @@ export const DashboardToolbar: React.FC<ToolbarProps> = ({ ym, onYmChange, onYmC
       <QuickMoveField {...ym} onChange={onYmChange} onCommit={onYmCommit} />
     </span>
     {lookup}
-    {/* radio1(최종승인, 기본) · radio2(점검완료) 75폭, toggleGroup.ValueChange → statusType 바꾸고 retrieve() */}
+    {/* radio1(최종승인, 기본) · radio2(점검완료) 원본 75폭(+30), toggleGroup.ValueChange → statusType 바꾸고 retrieve() */}
     <Radio.Group value={statusType} onChange={e => onStatusChange(e.target.value as StatusType)}>
-      <Radio value="1" style={{ width: 75 }}>최종승인</Radio>
-      <Radio value="2" style={{ width: 75 }}>점검완료</Radio>
+      <Radio value="1" style={{ width: 105 }}>최종승인</Radio>
+      <Radio value="2" style={{ width: 105 }}>점검완료</Radio>
     </Radio.Group>
     <Button type="reset" onClick={onRefresh}>새로고침</Button>
     <span style={{ marginLeft: 10 }}><CheckEndLabel checkEnd={checkEnd} /></span>

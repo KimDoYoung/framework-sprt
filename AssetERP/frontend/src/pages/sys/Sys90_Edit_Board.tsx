@@ -24,10 +24,10 @@ import { Sys90_Lookup_HappenReason } from './Sys90_Lookup_HappenReason';
 import { Sys90_Lookup_HappenRemedy } from './Sys90_Lookup_HappenRemedy';
 
 const FIELD_W = 250;
-const ROW: React.CSSProperties = { display: 'flex', alignItems: 'center', marginBottom: 10 };
+const ROW: React.CSSProperties = { display: 'flex', alignItems: 'center', marginBottom: 8 };
 
 const Label: React.FC<{ children: React.ReactNode; onClick?: () => void }> = ({ children, onClick }) => (
-  <Typography.Text strong style={{ width: 100, flex: 'none', cursor: onClick ? 'pointer' : undefined }} onMouseDown={onClick}>{children}</Typography.Text>
+  <Typography.Text strong style={{ width: 100, flex: 'none', textAlign: 'right', marginRight: 8, cursor: onClick ? 'pointer' : undefined }} onMouseDown={onClick}>{children}</Typography.Text>
 );
 
 interface Props {
@@ -130,15 +130,18 @@ export const Sys90_Edit_Board: React.FC<Props> = ({ model, onSaved, onDeleted })
           </div>
         </div>
         <div style={{ width: 600, display: 'flex' }}>
-          <Label>첨부파일</Label>
+          {/* 라벨 아래에 파일등록 단추 */}
+          <div style={{ flex: 'none', width: 108 }}>
+            <Label>첨부파일</Label>
+            <div style={{ width: 100, marginTop: 8 }}>
+              {/* [E3] uploadFileButton[파일등록].Select (L186) → fileUpload.click() */}
+              <Button type="upload" style={{ width: '100%' }} onClick={() => fileForm.current?.click()}>파일등록</Button>
+              <FileUpdownForm ref={fileForm} onChange={upload} />
+            </div>
+          </div>
           <div style={{ flex: 1, height: 142 }}>
             <Sys90_Grid_ApprFile ref={gridRef} parentId={model?.afterServiceId} />
           </div>
-        </div>
-        <div style={{ width: 120, marginLeft: 40 }}>
-          {/* [E3] uploadFileButton[파일등록].Select (L186) → fileUpload.click() */}
-          <Button type="upload" onClick={() => fileForm.current?.click()}>파일등록</Button>
-          <FileUpdownForm ref={fileForm} onChange={upload} />
         </div>
       </div>
       <div style={{ display: 'flex', padding: '20px 20px 0 20px', height: 160, flex: 'none', boxSizing: 'border-box', minWidth: 1560 }}>
@@ -153,7 +156,7 @@ export const Sys90_Edit_Board: React.FC<Props> = ({ model, onSaved, onDeleted })
           <div style={{ flex: 1, minWidth: 0 }}><HtmlView html={model?.happenRemedy ?? ''} height={135} /></div>
         </div>
       </div>
-      <div style={{ flex: 'none', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+      <div style={{ flex: 'none', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderTop: '1px solid #d9d9d9' }}>
         <Button type="save" onClick={updateRow}>저장</Button>
         <Button type="delete" onClick={deleteRow}>삭제</Button>
       </div>

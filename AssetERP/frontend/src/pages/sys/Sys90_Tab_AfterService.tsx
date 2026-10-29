@@ -4,9 +4,10 @@
  * 레이아웃 L61-112: center = 툴바(발생일 ~ · 구분 · 완료여부 · 검색어 · 미확인건만 보기 · 조회 · 등록) + 그리드(행번호, 체크박스 단일, 8열),
  *   south = Sys90_Edit_Board (편집 폼). 로그인한 회사의 것만 보인다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 줄바꿈이 늘어 넣지 않는다
+ * 스타일: MG (견본 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Checkbox, DatePicker, message } from 'antd';
+import { Checkbox, DatePicker, message, Splitter } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import dayjs, { Dayjs } from 'dayjs';
 import { sysApi } from '@/api/sys';
@@ -109,8 +110,10 @@ export const Sys90_Tab_AfterService: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#fff' }}>
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '20px 20px 8px', gap: 8 }}>
+    <div style={{ height: '100%', background: '#fff' }}>
+      <Splitter layout="vertical" style={{ height: '100%' }}>
+      <Splitter.Panel min={200}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', padding: '20px 20px 8px', gap: 8 }}>
         {/* [E3] retrieveButton[조회].Select (L138) → retrieve() */}
         <SearchBar onSearch={retrieve} extra={<Button type="register" onClick={insertRow}>등록</Button>}>
           <SearchBar.Field label="발생일">
@@ -145,9 +148,12 @@ export const Sys90_Tab_AfterService: React.FC = () => {
           />
         </div>
       </div>
-      <div style={{ flex: 'none', height: 400, borderTop: '1px solid #d9d9d9' }}>
+      </Splitter.Panel>
+      {/* 편집 폼 높이 = 위 줄 190 + 아래 줄 160 + 저장·삭제 줄 60 = 410 (Sys90_Edit_Board). 이보다 작으면 저장·삭제가 가려진다 */}
+      <Splitter.Panel defaultSize={410} min={410}>
         <Sys90_Edit_Board key={`${selected?.afterServiceId ?? 'none'}-${formSeq}`} model={selected} onSaved={onSaved} onDeleted={onDeleted} />
-      </div>
+      </Splitter.Panel>
+      </Splitter>
     </div>
   );
 };

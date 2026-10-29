@@ -6,6 +6,7 @@
  * 1단계(F·G 변환과 같은 사유): 상신이 여는 전자결재 편집창 `Apr01_Edit_ApprDoc`(다른 도메인 apr)은 다음 단계 — [상신]·[문서보기]는 AS-IS 점검·확인 창까지 하고 편집창 자리에 안내만 띄운다.
  *   RD 출력은 `rdApi`로 주소를 받아 `RdViewer`에 띄운다(docs/RD-대책.md).
  * UX보강(10): 툴바 = SearchBar(UX-01·02·04), 그리드 날짜 폭(UX-08)
+ * 스타일: SGHF (견본 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Splitter } from 'antd';
@@ -269,11 +270,11 @@ export const Biz01_Tab_Card: React.FC = () => {
   const docPlaceholder = defaultDoc?.classTreeFullName ?? '문서분류가 미지정 상태입니다. 관리자에게 문의해주세요';
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter style={{ height: '100%' }}>
         <Splitter.Panel min={600}>
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', border: '1px solid #d9d9d9' }}>
-            <div style={{ padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+            <div style={{ padding: '0 10px 10px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {/* [E3] retrieveButton[조회].Select (L249) → retrieve() · [E4] searchTextField.KeyPress [Enter] (L255) → retrieve() */}
               <SearchBar onSearch={retrieve} onReset={sp.reset} extra={<Button type="download" onClick={downLoad}>출력/다운로드</Button>}>
                 <SearchBar.Field label="승인기간">
@@ -310,7 +311,7 @@ export const Biz01_Tab_Card: React.FC = () => {
           </div>
         </Splitter.Panel>
         <Splitter.Panel defaultSize={420} min={300}>
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', border: '1px solid #d9d9d9' }}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
             <div style={{ height: 300, flex: 'none' }}>
               <Biz01_Edit_Card promo={current} closed={closed} onSaved={() => void retrieve()} onEmpAdded={() => setPersonRefresh(n => n + 1)} />
             </div>

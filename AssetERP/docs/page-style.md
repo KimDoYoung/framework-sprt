@@ -26,13 +26,13 @@
 | GCG | Grid+Calendar+Grid | 위 제목 줄(기준일자 + 새로고침 아이콘)과 그리드(현황), 아래 좌측 달력·[예약하기] 버튼 / 우측 라디오(MY·전체) + 그리드(달력 날짜 연동). 조회 툴바 없음 | `Car03_Tab_List` (공용차량 예약관리, T13) |
 | TP | TabPanel | 툴바·그리드 없이 탭 컨테이너만(탭마다 자기 툴바·내용을 가짐) | `Rpt10_Tab_FssOrg` (업무보고서, T17) |
 | SR | SearchBar+RD | 위 툴바 한 줄(조회기간 등 + [조회], `SearchBar`), 아래 RD 보고서 영역(iframe) 하나. 그리드 없음 | `Emp01_Tab_InoutState` (기간별 입퇴사현황, T18) |
-| SGHF | SearchGrid+HorizontalForm | 조회 줄 + 그리드 + 편집 폼을 **좌우**로 배치(SGEF의 좌우 버전). 제안 2026-10-29, 견본 없음 | `Biz01_Tab_Card` (1131) |
-| MG | MultiGrid+Form | 조회 줄 + 그리드 2개 이상 + 편집/보기 폼, 위아래 분할 아님. 제안, 견본 없음 | `Sys90_Tab_AfterService` (1066) |
-| TO | TreeOnly | 트리 중심, 오른쪽이 일반 그리드가 아님/없음, 편집은 팝업. 제안, 견본 없음 | `Org01_Tab_OrgCode` (1028) |
-| GO | GridOnly | 그리드 하나, 조회 툴바 없음. 제안, 견본 없음 | `Tdm54_Tab_CheckInsuff` (1459) |
-| DB | Dashboard | 그리드·트리·툴바 없이 카드/요약 영역. 제안, 견본 없음 | `Tdm50_Tab_TotalDashboard` (1495) |
+| SGHF | SearchGrid+HorizontalForm | 조회 줄 + 그리드 + 편집 폼을 **좌우**로 배치(SGEF의 좌우 버전). 제안 2026-10-29, 견본 확정 2026-10-29 | `Biz01_Tab_Card` (1131) |
+| MG | MultiGrid+Form | 조회 줄 + 그리드 2개 이상 + 편집/보기 폼, 위아래 분할 아님. 제안, 견본 확정 2026-10-29 | `Sys90_Tab_AfterService` (1066) |
+| TO | TreeOnly | 트리 중심, 오른쪽이 일반 그리드가 아님/없음, 편집은 팝업. 제안, 견본 확정 2026-10-29 | `Org01_Tab_OrgCode` (1028) |
+| GO | GridOnly | 그리드 하나, 조회 툴바 없음(직접 만든 조건 줄). 제안, 견본 확정 2026-10-29 | `Tdm54_Tab_CheckInsuff` (1459) |
+| DB | Dashboard | 그리드·트리·툴바 없이 카드/요약 영역. 제안, 견본 확정 2026-10-29 | `Tdm50_Tab_TotalDashboard` (1495) |
 
-> 위 5개(SGHF·MG·TO·GO·DB)는 2026-10-29 제안이다. 사용자가 대표 화면을 열어 확인·수정한 뒤 `docs/page-style/{SID}/`에 견본을 넣고 상세 절을 만든다. 판별기 규칙은 `docs/yunhee-page-style-판별.md`.
+> 위 5개(SGHF·MG·TO·GO·DB)는 2026-10-29 제안이다(SGHF·MG·TO·GO·DB는 견본 확정 — 5개 모두). 사용자가 대표 화면을 열어 확인·수정한 뒤 `docs/page-style/{SID}/`에 견본을 넣고 상세 절을 만든다. 판별기 규칙은 `docs/yunhee-page-style-판별.md`.
 
 ## 스타일별 상세
 
@@ -94,6 +94,47 @@
 - 툴바는 전체 폭이 아니라 **왼쪽(트리) 패널 안 위**에 둔다(SGT와 다르다). 제목 + 검색어 묶음과 버튼 묶음을 `flexWrap: 'wrap'`으로 두어, 패널이 좁아지면 **버튼 묶음 전체가** 제목 줄 아래로 내려간다(버튼이 하나씩 떨어지지 않게 묶음 단위로 `flex: 'none'`). 헤더는 `minHeight: 50`.
 - 트리의 이름 열(`treeCol`)은 `pinned: 'left'`로 고정해 가로 스크롤해도 보인다.
 - 트리 행을 고르면 오른쪽 그리드가 그 행의 id로 다시 조회한다.
+
+### SGHF — SearchGrid+HorizontalForm (초안, 2026-10-29 견본 확정)
+
+견본: `docs/page-style/SGHF/` (`Biz01_Tab_Card.tsx` 이익제공 입력(법인카드) 1131 + 오른쪽 위 편집 폼 `Biz01_Edit_Card.tsx` + 오른쪽 아래 `Biz02_Grid_PersonList.tsx`)
+
+- 바깥 여백 20 + 배경 `#fff`. 가로 `Splitter`: 왼쪽 = 조회 줄 + 그리드(최소 600), 오른쪽 = 편집 폼 + 보조 그리드(기본 420, 최소 300). **패널에 외곽 테두리를 두지 않는다.**
+- 왼쪽 조회 줄 영역은 위 padding 0(`0 10px 10px 10px`)이라 첫 라벨이 바깥 여백 20만큼만 떨어진다. 조회 줄(`SearchBar`)과 버튼 줄 사이 `gap: 8`.
+- 왼쪽 그리드 아래의 입력 줄(문서분류·상신 등)은 얇은 위쪽 구분선만 둔다(안쪽 구분선은 유지).
+- 오른쪽은 위 편집 폼(높이 고정 300) + 아래 보조 그리드(남는 높이).
+
+### MG — MultiGrid+Form (초안, 2026-10-29 견본 확정)
+
+견본: `docs/page-style/MG/` (`Sys90_Tab_AfterService.tsx` 개선사항 및 오류 통보 1066 + 편집 폼 `Sys90_Edit_Board.tsx` + 첨부 그리드 `Sys90_Grid_ApprFile.tsx`)
+
+- 바깥 배경 `#fff`. 세로 `Splitter`: 위 = 조회 줄(`SearchBar`) + 그리드(바깥 여백 `20 20 8`, `gap 8`, 최소 200), 아래 = 편집 폼(기본·최소 = 폼 높이 합계). 폼 높이 합계(위 줄 190 + 아래 줄 160 + 저장·삭제 줄 60 = 410)보다 작으면 저장·삭제가 가려지므로 **최소 높이를 합계로 둔다**(줄 높이를 바꾸면 같이 바꾼다).
+- 편집 폼 규칙: 라벨은 모두 **오른쪽 정렬**(폭 100), 라벨과 입력란 가로 간격 8. 줄과 줄 사이 세로 간격 8. 파일 올리기 버튼은 `첨부파일` 라벨 바로 아래. 저장·삭제 버튼 줄 위에 얇은 구분선(`#d9d9d9`).
+- 첫 줄은 배경 `#F7F8FC`(원본 색)로 아래 줄과 구분한다.
+
+### TO — TreeOnly (초안, 2026-10-29 견본 확정)
+
+견본: `docs/page-style/TO/` (`Org01_Tab_OrgCode.tsx` 조직정보 등록 1028 + 편집 팝업 `Org01_Edit_OrgCode.tsx`). 화면을 열어 확인했고 고칠 곳 없이 현재 모양 그대로 확정.
+
+- 바깥 여백 20 + 배경 `#fff`, 세로 flex `gap: 8`. 위: 툴바 한 줄(기준일 + [조회]·[하위조직등록]·[조직도보기], `Space wrap`). 아래: 전체 폭 트리 그리드 하나(`useTreeGrid` + `SingleGrid`, 남는 높이).
+- 오른쪽에 내용 그리드·Splitter가 없다(TG와 다르다). 행의 수정은 편집 팝업(`*_Edit_*`)으로 한다.
+
+### GO — GridOnly (초안, 2026-10-29 견본 확정)
+
+견본: `docs/page-style/GO/` (`Tdm54_Tab_CheckInsuff.tsx` 미흡내역 조치 1459)
+
+- 바깥 여백 20 + 배경 `#fff`, **외곽 테두리 박스 없음**. 세로 flex: 위 = 직접 만든 조건 줄(`SearchBar`를 쓰지 않는다), 아래 = 그리드 하나(남는 높이).
+- 조건 줄은 고정 높이를 두지 않는다(글자가 가운데 놓여 위 간격이 벌어진다). `padding: 0 10px 8px`로 두어 첫 라벨이 바깥 여백 20만큼만 떨어지게 한다.
+- 버튼은 [조회] 뒤에 [초기화]. 초기화는 조건을 처음 열 때 값으로 되돌리고 자동 조회는 하지 않는다(처음 값이 서버에서 오는 부서 같은 것은 `ref`에 보관).
+- 이름은 GridOnly이지만 이 견본은 조건 줄이 있다. 조건 줄 없이 그리드만 있는 화면(`Sms02_Tab_TotalCount`·`Sys10_Tab_TotalSize`)이 같은 SID에 들어갈지는 그 화면을 열어 확인한다.
+
+### DB — Dashboard (초안, 2026-10-29 견본 확정)
+
+견본: `docs/page-style/DB/` (`Tdm50_Tab_TotalDashboard.tsx` 책무점검 현황 1495 + 탭 페이지 `Tdm50_Tab_Dashboard.tsx` + 공통 `Tdm50_Dashboard_Common.tsx`)
+
+- 바깥 여백 20 + 배경 `#fff`, **외곽 테두리 없음**. 위: 공용 탭 `PageTabs`(총괄·임원별·부서별) — 탭 막대가 바깥 여백 20만큼만 떨어지게 하고 탭 막대 위에 따로 공간을 주지 않는다. 아래: 탭 페이지(세 탭을 모두 만들어 두고 숨기기만 한다).
+- 탭 페이지 안: 툴바 줄(점검년월·라디오·[새로고침]) + 요약 칸(모니터 3칸, 각 칸의 값은 **가로·세로 가운데**) + 아래 그리드들.
+- 라디오처럼 AS-IS 폭이 좁은 것은 글자가 잘리지 않게 필요한 만큼 넓힌다(최종승인·점검완료 75→105).
 
 ### SGT — SearchGrid+Tree (초안, 2026-10-29 견본 확정)
 
