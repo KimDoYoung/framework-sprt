@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { TransTarget, BizTrip, Errand, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalExecute, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { TransTarget, BizTrip, Errand, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -713,6 +713,28 @@ export const empEvalApi = {
   /** AS-IS emp.Emp43_EvalTarget.updateEndYn — 평가완료(true)·평가취소(false) */
   updateEvalEnd: async (evalTargetId: number, endYn: boolean, orderEvalName: string): Promise<void> => {
     await apiClient.put<ApiResponse<void>>(`v1/emp/eval-targets/${evalTargetId}/end`, { endYn, orderEvalName });
+  },
+
+  /** AS-IS emp.Emp43_EvalTarget.selectByTextAdmin (T03 Emp43_Tab_FirstAppr·T04 Emp43_Tab_FinalAppr) — 회사 전체 대상자 */
+  searchEvalAdmins: async (stdYear: string, stdTermCode: string, searchText: string): Promise<EvalAdmin[]> => {
+    const res = await apiClient.get<ApiResponse<EvalAdmin[]>>('v1/emp/eval-targets/admin', { params: { stdYear, stdTermCode, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp45_EvalRelateAppr.selectByTermCode (T03·T04) — 상신 상태. 상신 행이 없으면 null */
+  getEvalRelateAppr: async (stdYear: string, stdTermCode: string): Promise<EvalRelateAppr | null> => {
+    const res = await apiClient.get<ApiResponse<EvalRelateAppr | null>>('v1/emp/eval-targets/relate-appr', { params: { stdYear, stdTermCode } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS emp.Emp43_EvalTarget.modelUpdate (T03 Emp43_Edit_Score) — 상점·벌점·평정사유가감 */
+  updateEvalScore: async (evalTargetId: number, body: { plusScore: number | null; minusScore: number | null; reasonAdjustScore: number | null }): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/emp/eval-targets/${evalTargetId}/score`, body);
+  },
+
+  /** AS-IS emp.Emp43_EvalTarget.modelUpdate (T04 Emp43_Edit_CeoScore) — 대표이사 가점·감점 */
+  updateEvalCeoScore: async (evalTargetId: number, body: { ceoEvalBonus: number | null; ceoEvalPenalty: number | null }): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/emp/eval-targets/${evalTargetId}/ceo-score`, body);
   },
 
   /** AS-IS emp.Emp44_EvalWrite.getEvalTargetList — 인사평가표(평가자는 로그인 사원) */

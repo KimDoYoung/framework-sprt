@@ -9512,5 +9512,79 @@
     "note": "docs/work/T/T02-작업기록.md",
     "history": [],
     "id": "T02"
+  },
+  "Emp43_Tab_FirstAppr": {
+    "commit": "fc71b1a1c2304e8085b2aaf80a81603a99454e88",
+    "commit_short": "fc71b1a",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp43_Edit_Score.java": "ce67bfbbe0d936892d54ac1d2b81dd01a9830539",
+      "application/src/main/java/myApp/client/vi/emp/Emp43_Tab_FirstAppr.java": "a4e88f113eae224070718b7adfd17470bb251703",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp43_EvalTargetModel.java": "9cfd7a454a8fc3d4be48411dfeca852d43d45b73",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp43_EvalTargetModelProperties.java": "403a69aa59cae44eb924f81bf51b699c3c86a90d",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp45_EvalRelateApprModel.java": "9912695fb752af85d75eed4026a2f14afc056b06",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/emp/Emp43_EvalTarget.java": "b4126e5323065ebb28ddcac35359ad5b1bf5b1e9",
+      "application/src/main/java/myApp/server/emp/Emp45_EvalRelateAppr.java": "fcf1c407893120a2e8ea45e6fb2b979b74b767c3",
+      "application/src/main/java/myApp/server/emp/mapper/emp43_eval_target.xml": "a6441e67ac7d670f7c494852fcbbcbdd9a76412a",
+      "application/src/main/java/myApp/server/emp/mapper/emp45_eval_relate_appr.xml": "df7c69b5ee3812584fea498e7ed5c335ed507e25",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+      "application/src/main/java/myApp/server/sys/Sys01_Company.java": "0f7e212738f8a84c9f952803f8d5dfe4521dd61c",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Dcr30_Move_DcrClass"
+    ],
+    "recorded_at": "2026-10-29T09:04:41+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/T/T03-작업기록.md",
+    "history": [],
+    "id": "T03"
+  },
+  "Emp43_Tab_FinalAppr": {
+    "commit": "fc71b1a1c2304e8085b2aaf80a81603a99454e88",
+    "commit_short": "fc71b1a",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp43_Edit_CeoScore.java": "76c997495d85156ab266a4fceefb05975181ff0a",
+      "application/src/main/java/myApp/client/vi/emp/Emp43_Tab_FinalAppr.java": "587cd385373f1c2e9a61a4b74f232d716f67d656",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp43_EvalTargetModel.java": "9cfd7a454a8fc3d4be48411dfeca852d43d45b73",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp43_EvalTargetModelProperties.java": "403a69aa59cae44eb924f81bf51b699c3c86a90d",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp45_EvalRelateApprModel.java": "9912695fb752af85d75eed4026a2f14afc056b06",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/emp/Emp43_EvalTarget.java": "b4126e5323065ebb28ddcac35359ad5b1bf5b1e9",
+      "application/src/main/java/myApp/server/emp/Emp45_EvalRelateAppr.java": "fcf1c407893120a2e8ea45e6fb2b979b74b767c3",
+      "application/src/main/java/myApp/server/emp/mapper/emp43_eval_target.xml": "a6441e67ac7d670f7c494852fcbbcbdd9a76412a",
+      "application/src/main/java/myApp/server/emp/mapper/emp45_eval_relate_appr.xml": "df7c69b5ee3812584fea498e7ed5c335ed507e25",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+      "application/src/main/java/myApp/server/sys/Sys01_Company.java": "0f7e212738f8a84c9f952803f8d5dfe4521dd61c",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Dcr30_Move_DcrClass"
+    ],
+    "recorded_at": "2026-10-29T09:04:42+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/T/T04-작업기록.md",
+    "history": [],
+    "id": "T04"
   }
 }

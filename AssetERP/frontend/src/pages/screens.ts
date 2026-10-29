@@ -167,6 +167,8 @@ import { Emp55_Tab_benefitInfoManager } from './emp/Emp55_Tab_benefitInfoManager
 import { Emp41_Tab_EvalList } from './emp/Emp41_Tab_EvalList';
 import { Emp43_Tab_EvalTarget } from './emp/Emp43_Tab_EvalTarget';
 import { Emp43_Tab_EvalExecute } from './emp/Emp43_Tab_EvalExecute';
+import { Emp43_Tab_FirstAppr } from './emp/Emp43_Tab_FirstAppr';
+import { Emp43_Tab_FinalAppr } from './emp/Emp43_Tab_FinalAppr';
 import { Act01_Tab_AccountCode } from './act/Act01_Tab_AccountCode';
 import { Act10_Tab_ReprAccount } from './act/Act10_Tab_ReprAccount';
 import { Ast05_Tab_TrCodeAdmin } from './ast/Ast05_Tab_TrCodeAdmin';
@@ -488,6 +490,8 @@ export const SCREENS: Record<string, React.FC> = {
   Emp41_Tab_EvalList, // E26 (+ Emp40_Lookup_Insert·Emp42_Lookup_EvalGrade)
   Emp43_Tab_EvalTarget, // T01 (+ Emp43_Lookup_SelectSingle·Emp43_Lookup_SelectMulti·Emp43_Edit_ChangeEval)
   Emp43_Tab_EvalExecute, // T02 (+ Emp44_Lookup_Write)
+  Emp43_Tab_FirstAppr, // T03 (+ Emp43_Edit_Score. 1단계: 전자결재 상신·문서보기 Apr01_Edit_ApprDoc·문서분류 선택 Dcr30_Move_DcrClass는 다음 단계)
+  Emp43_Tab_FinalAppr, // T04 (+ Emp43_Edit_CeoScore. 1단계: T03과 같음)
   Act01_Tab_AccountCode, // E27 (+ Act01_Edit_AccountCode·Act01_Lookup_Parent·Act01_Lookup_PrintYn·Act01_Lookup_CopyAdmin)
   Act10_Tab_ReprAccount, // E28 (+ Act10_Lookup_ReprAccount)
   Ast05_Tab_TrCodeAdmin, // E29 (+ Ast15_Lookup_TrCodeWindow·Ast15_Page_TrCodeWindow·Sys06_Lookup_SearchMenu·Sys40_Lookup_Bookmark)

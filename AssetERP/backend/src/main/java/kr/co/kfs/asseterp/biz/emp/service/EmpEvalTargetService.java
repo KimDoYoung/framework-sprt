@@ -1,8 +1,12 @@
 package kr.co.kfs.asseterp.biz.emp.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.EvalAdminRes;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalCandidateRes;
+import kr.co.kfs.asseterp.biz.emp.dto.EvalCeoScoreReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalExecuteRes;
+import kr.co.kfs.asseterp.biz.emp.dto.EvalRelateApprRes;
+import kr.co.kfs.asseterp.biz.emp.dto.EvalScoreReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalSettingRes;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalTargetDeleteReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalTargetEvaluatorsReq;
@@ -86,6 +90,29 @@ public class EmpEvalTargetService {
     @Transactional
     public void updateEndYn(UserPrincipal user, Long evalTargetId, boolean endYn, String orderEvalName) {
         mapper.updateEndYn(user.getCompanyId(), user.getUserId(), evalTargetId, String.valueOf(endYn), orderEvalName);
+    }
+
+    /** AS-IS Emp43_EvalTarget.selectByTextAdmin (Emp43_Tab_FirstAppr·Emp43_Tab_FinalAppr) — 회사 전체 대상자 */
+    public List<EvalAdminRes> searchAdmin(UserPrincipal user, String stdYear, String stdTermCode, String searchText) {
+        return mapper.selectByTextAdmin(user.getCompanyId(), stdYear, stdTermCode, "%" + nvl(searchText) + "%");
+    }
+
+    /** AS-IS Emp45_EvalRelateAppr.selectByTermCode — 상신 상태(1차·최종). 상신 행이 없으면 null */
+    public EvalRelateApprRes getRelateAppr(UserPrincipal user, String stdYear, String stdTermCode) {
+        List<EvalRelateApprRes> list = mapper.selectRelateAppr(user.getCompanyId(), stdYear, stdTermCode);
+        return list.isEmpty() ? null : list.get(0);
+    }
+
+    /** AS-IS Emp43_EvalTarget.modelUpdate (Emp43_Edit_Score) — 상점·벌점·평정사유가감 */
+    @Transactional
+    public void updateScore(UserPrincipal user, Long evalTargetId, EvalScoreReq req) {
+        mapper.updateScore(user.getCompanyId(), evalTargetId, req.plusScore(), req.minusScore(), req.reasonAdjustScore());
+    }
+
+    /** AS-IS Emp43_EvalTarget.modelUpdate (Emp43_Edit_CeoScore) — 대표이사 가점·감점 */
+    @Transactional
+    public void updateCeoScore(UserPrincipal user, Long evalTargetId, EvalCeoScoreReq req) {
+        mapper.updateCeoScore(user.getCompanyId(), evalTargetId, req.ceoEvalBonus(), req.ceoEvalPenalty());
     }
 
     /** AS-IS Emp44_EvalWrite.selectByEvaluatorId — 그 평가자의 작성 내역이 있는가 */

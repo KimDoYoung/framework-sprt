@@ -1,10 +1,14 @@
 package kr.co.kfs.asseterp.biz.emp.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.EvalAdminRes;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalCandidateRes;
+import kr.co.kfs.asseterp.biz.emp.dto.EvalCeoScoreReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalEndReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalExecuteRes;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalReasonReq;
+import kr.co.kfs.asseterp.biz.emp.dto.EvalRelateApprRes;
+import kr.co.kfs.asseterp.biz.emp.dto.EvalScoreReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalSettingRes;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalTargetDeleteReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalTargetEvaluatorsReq;
@@ -55,6 +59,35 @@ public class EmpEvalTargetController {
     public ApiResponse<String> apprStatus(@AuthenticationPrincipal UserPrincipal principal,
                                           @RequestParam String stdYear, @RequestParam String stdTermCode) {
         return ApiResponse.ok(service.getApprStatusCode(principal, stdYear, stdTermCode));
+    }
+
+    /** AS-IS emp.Emp43_EvalTarget.selectByTextAdmin (Emp43_Tab_FirstAppr·Emp43_Tab_FinalAppr) — 회사 전체 대상자 */
+    @GetMapping("/admin")
+    public ApiResponse<List<EvalAdminRes>> admin(@AuthenticationPrincipal UserPrincipal principal,
+                                                 @RequestParam String stdYear, @RequestParam String stdTermCode,
+                                                 @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchAdmin(principal, stdYear, stdTermCode, searchText));
+    }
+
+    /** AS-IS emp.Emp45_EvalRelateAppr.selectByTermCode — 상신 상태(1차·최종 결재 문서), 상신 행이 없으면 null */
+    @GetMapping("/relate-appr")
+    public ApiResponse<EvalRelateApprRes> relateAppr(@AuthenticationPrincipal UserPrincipal principal,
+                                                     @RequestParam String stdYear, @RequestParam String stdTermCode) {
+        return ApiResponse.ok(service.getRelateAppr(principal, stdYear, stdTermCode));
+    }
+
+    /** AS-IS emp.Emp43_EvalTarget.modelUpdate (Emp43_Edit_Score) — 상점·벌점·평정사유가감 */
+    @PutMapping("/{evalTargetId}/score")
+    public ApiResponse<Void> updateScore(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long evalTargetId, @RequestBody EvalScoreReq req) {
+        service.updateScore(principal, evalTargetId, req);
+        return ApiResponse.ok(null);
+    }
+
+    /** AS-IS emp.Emp43_EvalTarget.modelUpdate (Emp43_Edit_CeoScore) — 대표이사 가점·감점 */
+    @PutMapping("/{evalTargetId}/ceo-score")
+    public ApiResponse<Void> updateCeoScore(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long evalTargetId, @RequestBody EvalCeoScoreReq req) {
+        service.updateCeoScore(principal, evalTargetId, req);
+        return ApiResponse.ok(null);
     }
 
     /** AS-IS emp.Emp43_EvalTarget.getWrite — 평가상태('완료'·'작성중'·'') */

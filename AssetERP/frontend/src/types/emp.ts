@@ -948,6 +948,51 @@ export interface EvalExecute {
   secondEvalReason: string | null;
 }
 
+/** 인사평가결과(인사부)·인사평가보고(대표이사) 한 행 (AS-IS emp43_eval_target.selectByTextAdmin — T03 Emp43_Tab_FirstAppr·T04 Emp43_Tab_FinalAppr). *OrderReason '작성필요'·'작성완료'·'' */
+export interface EvalAdmin {
+  evalTargetId: number;
+  personId: number;
+  orgNm: string | null;
+  personNm: string | null;
+  posNm: string | null;
+  orgHeadNm: string | null;
+  firstPersonNm: string | null;
+  firstEvalScore: number | null;
+  firstEvalGrade: string | null;
+  firstOrderReason: string | null;
+  firstEvalReason: string | null;
+  secondPersonNm: string | null;
+  secondEvalScore: number | null;
+  secondEvalGrade: string | null;
+  secondOrderReason: string | null;
+  secondEvalReason: string | null;
+  totalEvalScore: number | null;
+  totalEvalGrade: string | null;
+  totalEvalStatus: string | null;
+  totalOrderReason: string | null;
+  plusScore: number | null;
+  minusScore: number | null;
+  reasonAdjustScore: number | null;
+  adjustEvalScore: number | null;
+  adjustEvalGrade: string | null;
+  apprStatus: string | null;
+  ceoEvalBonus: number | null;
+  ceoEvalPenalty: number | null;
+  finalEvalScore: number | null;
+  finalEvalGrade: string | null;
+}
+
+/** 인사평가 상신문서 연결 (AS-IS emp45_eval_relate_appr.selectByTermCode). apprId는 1차 보고, finalApprId는 최종(대표이사) 보고 상신문서 */
+export interface EvalRelateAppr {
+  evalRelateApprId: number;
+  apprId: number | null;
+  finalApprId: number | null;
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+  finalApprStatusCode: string | null;
+  finalApprStatusName: string | null;
+}
+
 /** 인사평가표 한 행 (AS-IS emp44_eval_write.getEvalTargetList — Emp44_Lookup_Write). 평가 안 한 항목은 evalGrade 등이 null */
 export interface EvalWrite {
   evalWriteId: number;
