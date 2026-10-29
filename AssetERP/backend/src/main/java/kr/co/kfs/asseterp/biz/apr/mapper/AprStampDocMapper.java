@@ -1,10 +1,12 @@
 package kr.co.kfs.asseterp.biz.apr.mapper;
 
+import kr.co.kfs.asseterp.biz.apr.dto.AprStampCheckRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampDocApplRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampDocLookupRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampDocSaveReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampDocSumRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprStampListRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -47,4 +49,27 @@ public interface AprStampDocMapper {
     /** Sys99_Print.insertRdStampDocManager — selectDocByRegDate(1·2 전체) 목록을 sys99_print에 넣는다 */
     int insertPrint(@Param("companyId") Long companyId, @Param("printPersonId") Long printPersonId, @Param("windowClassName") String windowClassName,
                     @Param("groupId") long groupId, @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate);
+
+    /** T24·T25 selectStampByCompanyId — orgId가 null이 아니면 그 부서가 쓸 수 있는 인감만(T25) */
+    List<AprStampListRes> selectStampList(@Param("companyId") Long companyId, @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate,
+                                          @Param("stampId") Long stampId, @Param("outYn") boolean outYn, @Param("searchText") String searchText,
+                                          @Param("orgId") Long orgId);
+
+    /** Sys99_Print.insertRdStampListApr16 — selectStampList와 같은 조건의 목록을 sys99_print에 넣는다 */
+    int insertStampListPrint(@Param("companyId") Long companyId, @Param("printPersonId") Long printPersonId, @Param("windowClassName") String windowClassName,
+                             @Param("groupId") long groupId, @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate,
+                             @Param("stampId") Long stampId, @Param("outYn") boolean outYn, @Param("searchText") String searchText,
+                             @Param("orgId") Long orgId);
+
+    LocalDate selectStampDate(@Param("companyId") Long companyId, @Param("stampDocId") Long stampDocId);
+
+    int updateStampDate(@Param("companyId") Long companyId, @Param("stampDocId") Long stampDocId, @Param("stampDate") LocalDate stampDate);
+
+    /** T26 selectStampCheck */
+    List<AprStampCheckRes> selectStampCheck(@Param("companyId") Long companyId, @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate,
+                                            @Param("stampId") Long stampId, @Param("notStampFileYn") boolean notStampFileYn);
+
+    /** T26 updateConfirmDate — 확인취소는 confirmerId·confirmDate가 null */
+    int updateConfirm(@Param("companyId") Long companyId, @Param("stampDocId") Long stampDocId,
+                      @Param("confirmerId") Long confirmerId, @Param("confirmDate") LocalDate confirmDate);
 }

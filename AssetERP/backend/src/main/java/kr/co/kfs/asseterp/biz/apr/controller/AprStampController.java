@@ -34,6 +34,13 @@ public class AprStampController {
         return ApiResponse.ok(service.searchStamp(principal, searchText));
     }
 
+    /** AS-IS apr.Apr10_Stamp.selectByOrgId (Apr10_Lookup_Stamp flag=false, T25) — 내 부서 소유 인감 포함 */
+    @GetMapping("/by-org")
+    public ApiResponse<List<AprStampRes>> searchStampByOrg(@AuthenticationPrincipal UserPrincipal principal,
+                                                           @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchStampByOrg(principal, searchText));
+    }
+
     /** AS-IS apr.Apr10_Stamp.selectByCodeName (Apr10_Tab_Stamp, G07 인감 등록) */
     @GetMapping("/manage")
     public ApiResponse<List<AprStampManageRes>> searchManage(@AuthenticationPrincipal UserPrincipal principal) {

@@ -148,6 +148,31 @@
          ORDER BY a.apr10_stamp_nm
     </select>
 
+    <!-- AS-IS apr10_stamp.selectByOrgId L241 (IDMS-IC) — Apr10_Lookup_Stamp(flag=false, T25). 사용기간 조건 없음, 내 부서 소유 인감도 포함. 주석 처리된 org_tree_list 조건은 옮기지 않는다 -->
+    <select id="selectByOrgId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStampRes">
+        SELECT a.apr10_stamp_id AS stamp_id,
+               a.apr10_stamp_id || '' AS stamp_id_string,
+               a.apr10_stamp_nm AS stamp_name,
+               a.apr10_use_nm   AS use_name,
+               f_org_nm(a.apr10_org_id, COALESCE(a.apr10_close_date, to_date('99991231','yyyymmdd'))) AS org_name
+          FROM apr10_stamp a
+         WHERE a.apr10_company_id = #{companyId}
+           AND (
+                    a.apr10_all_use_yn = 'true'
+                    OR
+                    a.apr10_org_id = #{orgId}
+                    OR
+                    a.apr10_stamp_id IN (
+                            SELECT org10_stamp_id
+                              FROM org10_role_stamp
+                             WHERE org10_org_code_id = #{orgId}
+                       )
+               )
+           AND UPPER(CONCAT(a.apr10_stamp_nm, a.apr10_use_nm, a.apr10_note,
+                            f_org_nm(a.apr10_org_id, COALESCE(a.apr10_close_date, to_date('99991231','yyyymmdd'))))) LIKE UPPER(#{searchText})
+         ORDER BY a.apr10_stamp_nm
+    </select>
+
     <select id="selectOrgCodeId" resultType="long">
         SELECT emp03_org_code_id
           FROM emp03_trans

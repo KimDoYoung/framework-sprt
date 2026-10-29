@@ -19,6 +19,9 @@ public interface AprStampMapper {
     /** AS-IS selectBySearchText (G06 Apr10_Lookup_Stamp, flag=true): 모두 사용 가능하거나 사용자 조직에 역할로 준 인감. searchText는 LIKE 패턴 */
     List<AprStampRes> selectBySearchText(@Param("companyId") Long companyId, @Param("orgId") Long orgId, @Param("searchText") String searchText);
 
+    /** AS-IS selectByOrgId (T25 Apr10_Lookup_Stamp, flag=false): 모두 사용 가능하거나 내 부서 소유·내 부서에 역할로 준 인감. 사용기간 조건 없음. searchText는 LIKE 패턴 */
+    List<AprStampRes> selectByOrgId(@Param("companyId") Long companyId, @Param("orgId") Long orgId, @Param("searchText") String searchText);
+
     /** AS-IS selectByCodeName (G07 Apr10_Tab_Stamp): 회사의 모든 인감 */
     List<AprStampManageRes> selectByCodeName(@Param("companyId") Long companyId);
 

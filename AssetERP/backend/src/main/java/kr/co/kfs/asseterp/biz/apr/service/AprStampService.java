@@ -36,6 +36,11 @@ public class AprStampService {
         return mapper.selectBySearchText(user.getCompanyId(), orgCodeId(user), like(searchText));
     }
 
+    /** AS-IS Apr10_Stamp.selectByOrgId (T25 Apr10_Lookup_Stamp, flag=false): 내 부서 소유 인감까지 포함, 사용기간 조건 없음 */
+    public List<AprStampRes> searchStampByOrg(UserPrincipal user, String searchText) {
+        return mapper.selectByOrgId(user.getCompanyId(), orgCodeId(user), like(searchText));
+    }
+
     /** AS-IS Apr10_Stamp.selectByCodeName (G07 Apr10_Tab_Stamp): 로그인 회사의 모든 인감 */
     public List<AprStampManageRes> searchManage(UserPrincipal user) {
         return mapper.selectByCodeName(user.getCompanyId());

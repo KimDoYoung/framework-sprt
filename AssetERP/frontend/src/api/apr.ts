@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
+import { AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -82,6 +82,12 @@ export const aprApi = {
   /** AS-IS apr.Apr10_Stamp.selectBySearchText: 내 조직이 쓸 수 있는 인감 (Apr10_Lookup_Stamp, G06) */
   searchStamps: async (searchText: string): Promise<AprStamp[]> => {
     const res = await apiClient.get<ApiResponse<AprStamp[]>>('v1/apr/stamps', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr10_Stamp.selectByOrgId (Apr10_Lookup_Stamp flag=false, T25): 내 부서 소유 인감까지 포함, 사용기간 조건 없음 */
+  searchStampsByOrg: async (searchText: string): Promise<AprStamp[]> => {
+    const res = await apiClient.get<ApiResponse<AprStamp[]>>('v1/apr/stamps/by-org', { params: { searchText } });
     return res.data.data ?? [];
   },
 
@@ -380,6 +386,42 @@ export const aprStampDocApi = {
   rdPrint: async (startDate: string, closeDate: string): Promise<string> => {
     const res = await apiClient.post<ApiResponse<string>>('v1/apr/stamp-docs/rd-print', null, { params: { startDate, closeDate } });
     return res.data.data;
+  },
+
+  /** T24·T25 AS-IS apr.Apr16_StampDoc.selectStampByCompanyId — org=true면 부서 인감날인대장(T25) */
+  searchStampList: async (params: { startDate: string; closeDate: string; stampId?: number; outYn: boolean; searchText?: string; org?: boolean }): Promise<AprStampList[]> => {
+    const res = await apiClient.get<ApiResponse<AprStampList[]>>('v1/apr/stamp-docs/stamp-list', { params });
+    return res.data.data;
+  },
+
+  /** T24·T25 AS-IS sys.Sys99_Print.insertRdStampListApr16 → rdGroupId */
+  stampListRdPrint: async (params: { startDate: string; closeDate: string; stampId?: number; outYn: boolean; searchText?: string; org?: boolean }): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/apr/stamp-docs/stamp-list/rd-print', null, { params });
+    return res.data.data;
+  },
+
+  /** T24·T25 AS-IS apr.Apr16_StampDoc.selectById — 날인일자 설정 창이 여는 값 */
+  getStampDate: async (stampDocId: number): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>(`v1/apr/stamp-docs/${stampDocId}/stamp-date`);
+    return res.data.data ?? null;
+  },
+
+  /** T24·T25 AS-IS apr.Apr16_StampDoc.updateStampDate */
+  updateStampDate: async (stampDocId: number, stampDate: string | null): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/apr/stamp-docs/stamp-date', { stampDocId, stampDate });
+    return res.data.data ?? 0;
+  },
+
+  /** T26 AS-IS apr.Apr16_StampDoc.selectStampCheck */
+  searchStampCheck: async (params: { startDate: string; closeDate: string; stampId?: number; notStampFileYn: boolean }): Promise<AprStampCheck[]> => {
+    const res = await apiClient.get<ApiResponse<AprStampCheck[]>>('v1/apr/stamp-docs/stamp-check', { params });
+    return res.data.data;
+  },
+
+  /** T26 AS-IS apr.Apr16_StampDoc.updateConfirmDate — check=false면 확인취소 */
+  confirm: async (ids: number[], check: boolean): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/apr/stamp-docs/confirm', { ids, check });
+    return res.data.data ?? 0;
   },
 
   /** AS-IS apr.Apr15_ReprCorp.selectByCompanyId (Apr15_Lookup_ReprCorp) */

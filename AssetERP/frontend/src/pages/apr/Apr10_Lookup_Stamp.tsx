@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr10_Lookup_Stamp.java (251줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L79-82(flag, checkflag) · makeLayout() L118-158: 모달 830×550 "인감종류", 위 툴바(검색어 + 200 + [검색]) + 체크박스 단일 그리드(인감 80 이미지 · 인감이름 200 · 사용용도 250 · 부서 200),
  * 아래 가운데 [확인][전체 | 해당사항 없음][닫기]. flag=true는 서비스 apr.Apr10_Stamp.selectBySearchText(모두 사용 가능하거나 내 조직에 역할로 준 인감).
- * 이 ID에서 쓰는 호출은 flag=true·checkflag=true(인감대장)뿐이라 selectByOrgId(flag=false)·selectBySearchTextAdmin(openAdmin)은 다음에 쓰는 화면이 나올 때 더한다
+ * flag=false(selectByOrgId)는 T25(부서 인감날인대장)에서 더했다. selectBySearchTextAdmin(openAdmin)은 쓰는 화면이 나올 때 더한다
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { message, Space } from 'antd';
@@ -22,6 +22,8 @@ const gb = gbFor<AprStamp>();
 
 interface Props {
   open: boolean;
+  /** flag(L79): 기본 true = selectBySearchText(사용기간 안, 모두 사용 가능하거나 내 조직에 역할로 준 인감), false = selectByOrgId(내 부서 소유 인감 포함, 사용기간 조건 없음 — T25) */
+  flag?: boolean;
   /** checkflag: true이면 deleteButton이 "전체", false이면 "해당사항 없음" (titleString L48) */
   checkflag: boolean;
   /** callback.execute(stampModel) — [확인]·더블클릭은 고른 인감, 고른 것이 없으면 원본은 null을 넘긴다 */
@@ -31,7 +33,7 @@ interface Props {
   onClose: () => void;
 }
 
-export const Apr10_Lookup_Stamp: React.FC<Props> = ({ open, checkflag, onResult, onDelete, onClose }) => {
+export const Apr10_Lookup_Stamp: React.FC<Props> = ({ open, flag = true, checkflag, onResult, onDelete, onClose }) => {
   const [searchText, setSearchText] = useState('');
   const [rows, setRows] = useState<AprStamp[]>([]);
   const [loading, setLoading] = useState(false);
@@ -54,7 +56,8 @@ export const Apr10_Lookup_Stamp: React.FC<Props> = ({ open, checkflag, onResult,
   const retrieve = async (text: string) => {
     setLoading(true);
     try {
-      setRows(await aprApi.searchStamps(text));
+      // retrieve() L202-206: flag면 apr.Apr10_Stamp.selectBySearchText, 아니면 selectByOrgId (admin 모드는 이 화면에서 쓰지 않는다)
+      setRows(flag ? await aprApi.searchStamps(text) : await aprApi.searchStampsByOrg(text));
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     } finally {

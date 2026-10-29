@@ -241,4 +241,220 @@
         <include refid="docFromWhere"/>
            AND apr16_appl_type IN ('1','2')
     </insert>
+
+    <!-- ===== T24 Apr16_Tab_StampList / T25 Apr16_Tab_StampListOrg / T26 Apr16_Tab_StampFileCheck ===== -->
+
+    <!-- AS-IS apr16_stamp_doc.selectStampByCompanyId L228 (IDMS-IC). 조회와 인쇄 적재(insertStampListPrint)가 같은 문장을 쓴다.
+         'false'·'[폐기]' 등 문자열 상수는 원본 그대로(폐기 표시는 '<'||'b'||'style=…'||'>' 로 만든다 — 'b' 뒤 공백 없음도 원본 그대로) -->
+    <sql id="stampListSelect">
+        <![CDATA[
+        SELECT ROW_NUMBER() OVER (ORDER BY apr16_appl_date DESC, apr16_appr_id DESC)    AS apr16_stamp_doc_id
+             , t.*
+             , emp01_kor_nm                                                             AS apr16_appl_emp_nm
+             , apr10_stamp_nm                                                           AS apr16_stamp_nm
+             , CASE WHEN COALESCE(status_cd,'') = '' THEN null ELSE status_cd END       AS apr16_appr_status_nm
+          FROM (
+                SELECT apr16_appl_date
+                     , apr16_appl_emp_id
+                     , apr16_note
+                     , apr16_stamp_id
+                     , apr16_stamp_qty
+                     , apr16_stamp_out_yn
+                     , apr16_provide_co
+                     , apr16_purpose
+                     , apr01_stamp_seq          AS apr16_stamp_seq
+                     , apr16_stamp_doc_id       AS apr16_real_stamp_doc_id
+                     , apr16_stamp_date
+                     , apr16_appr_id
+                     , apr01_status_cd          AS status_cd
+                  FROM apr16_stamp_doc
+                       LEFT JOIN apr01_appr ON apr01_appr_id = apr16_appr_id
+                 WHERE apr16_company_id = #{companyId}
+                   AND apr16_appl_date BETWEEN #{startDate} AND #{closeDate}
+                   AND apr16_appl_type = '3'
+                   AND ( ( apr16_appr_id IS NOT NULL                            AND
+                           COALESCE(apr01_status_cd,'99') NOT IN ('99','40')    ) OR
+                         ( apr16_stamp_date IS NOT NULL                         ) OR
+                         ( apr16_appr_id IS NULL                                ) )
+                 UNION ALL
+                SELECT apr01_reg_date                                                           AS apr16_appl_date
+                     , apr01_reg_emp_id                                                         AS apr16_appl_emp_id
+                     , NULL                                                                     AS apr16_note
+                     , apr01_stamp_id                                                           AS apr16_stamp_id
+                     , 1                                                                        AS apr16_stamp_qty
+                     , 'false'                                                                  AS apr16_stamp_out_yn
+                     , apr01_receive_nm                                                         AS apr16_provide_co
+                     , apr01_title                                                              AS apr16_purpose
+                     , apr01_stamp_seq                                                          AS apr16_stamp_seq
+                     , NULL                                                                     AS apr16_real_stamp_doc_id
+                     , (
+                           SELECT  sys10_reg_date
+                             FROM  sys10_file
+                            WHERE  sys10_parent_id = apr01_appr_id
+                              AND  sys10_title_yn = 'true'
+                            ORDER BY sys10_file_id
+                            LIMIT 1
+                       )                                                                        AS apr16_stamp_date
+                     , apr01_appr_id                                                            AS apr16_appr_id
+                     , apr01_status_cd                                                          AS status_cd
+                  FROM apr01_appr
+                 WHERE apr01_company_id = #{companyId}
+                   AND apr01_reg_date BETWEEN #{startDate} AND #{closeDate}
+                   AND apr01_status_cd = '30'
+                 UNION ALL
+                SELECT apr99_reg_date                                                           AS apr16_appl_date
+                     , apr99_reg_emp_id                                                         AS apr16_appl_emp_id
+                     , NULL                                                                     AS apr16_note
+                     , apr99_stamp_id                                                           AS apr16_stamp_id
+                     , 1                                                                        AS apr16_stamp_qty
+                     , 'false'                                                                  AS apr16_stamp_out_yn
+                     , apr99_receive_nm                                                         AS apr16_provide_co
+                     , '<'||'b'||'style=color:#E33E31;'||'>'||'[폐기] '||'<'||'/b'||'>'||apr99_title AS apr16_purpose
+                     , apr99_stamp_seq                                                          AS apr16_stamp_seq
+                     , NULL                                                                     AS apr16_real_stamp_doc_id
+                     , (
+                           SELECT  sys10_reg_date
+                             FROM  sys10_file
+                            WHERE  sys10_parent_id = apr99_appr_id
+                              AND  sys10_title_yn = 'true'
+                            ORDER BY sys10_file_id
+                            LIMIT 1
+                       )                                                                        AS apr16_stamp_date
+                     , apr99_appr_id                                                            AS apr16_appr_id
+                     , apr99_status_cd                                                          AS status_cd
+                  FROM apr99_appr_del
+                 WHERE apr99_company_id = #{companyId}
+                   AND apr99_reg_date BETWEEN #{startDate} AND #{closeDate}
+                   AND apr99_status_cd = '30'
+                ) t
+                INNER JOIN apr10_stamp  ON apr10_stamp_id  = apr16_stamp_id
+                INNER JOIN emp01_person ON emp01_person_id = apr16_appl_emp_id
+         WHERE  1=1
+        ]]>
+        <if test="stampId != null">
+           AND  apr16_stamp_id = #{stampId}
+        </if>
+        <if test="outYn == true">
+           AND  COALESCE(apr16_stamp_out_yn, 'false') = 'true'
+        </if>
+        <if test="searchText != null">
+           AND  CONCAT(emp01_kor_nm, apr16_provide_co, apr16_purpose, apr16_stamp_seq) ILIKE #{searchText}
+        </if>
+        <if test="orgId != null">
+           AND  (   COALESCE(apr10_all_use_yn, 'false')  = 'true'
+                 OR
+                    EXISTS ( SELECT 1
+                               FROM org10_role_stamp
+                              WHERE org10_stamp_id    = apr16_stamp_id
+                                AND org10_org_code_id = #{orgId} )
+                )
+        </if>
+    </sql>
+
+    <select id="selectStampList" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStampListRes">
+        SELECT apr16_stamp_doc_id          AS stamp_doc_id
+             , apr16_appl_date             AS appl_date
+             , apr16_appl_emp_nm           AS appl_emp_name
+             , apr16_stamp_nm              AS stamp_name
+             , apr16_stamp_qty             AS stamp_qty
+             , apr16_stamp_out_yn          AS stamp_out_yn
+             , apr16_provide_co            AS provide_co
+             , apr16_purpose               AS purpose
+             , apr16_note                  AS note
+             , apr16_appr_status_nm        AS appr_status_name
+             , apr16_stamp_seq             AS stamp_seq
+             , apr16_stamp_date            AS stamp_date
+             , apr16_appr_id               AS appr_id
+             , apr16_real_stamp_doc_id     AS real_stamp_doc_id
+          FROM (<include refid="stampListSelect"/>) s
+         ORDER BY apr16_stamp_doc_id
+    </select>
+
+    <!-- AS-IS Sys99_Print.insertRdStampListApr16 L3234: 목록을 한 건씩 sys99_print에 넣는다(date01 신청일자·string01 신청자·02 날인인감·03 대장번호·04 반출 ✓·long01 부수·text01 제출처·text02 내용) -->
+    <insert id="insertStampListPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_string01, sys99_string02, sys99_string03, sys99_string04
+               , sys99_long01, sys99_text01, sys99_text02 )
+        SELECT f_create_seq(), #{companyId}, #{printPersonId}, #{windowClassName}, #{groupId}
+             , apr16_appl_date
+             , COALESCE(apr16_appl_emp_nm, ''), COALESCE(apr16_stamp_nm, ''), COALESCE(apr16_stamp_seq, '')
+             , CASE WHEN COALESCE(apr16_stamp_out_yn, 'false') = 'true' THEN '✓' ELSE '' END
+             , COALESCE(apr16_stamp_qty, 0), COALESCE(apr16_provide_co, ''), COALESCE(apr16_purpose, '')
+          FROM (<include refid="stampListSelect"/>) s
+         ORDER BY apr16_stamp_doc_id
+    </insert>
+
+    <!-- AS-IS apr16_stamp_doc.selectById L48 — [수정] 창은 날인일자만 쓰므로 그 열만 -->
+    <select id="selectStampDate" resultType="java.time.LocalDate">
+        SELECT apr16_stamp_date
+          FROM apr16_stamp_doc
+         WHERE apr16_stamp_doc_id = #{stampDocId}
+           AND apr16_company_id   = #{companyId}
+    </select>
+
+    <!-- AS-IS apr16_stamp_doc.updateStampDate L445 -->
+    <update id="updateStampDate">
+        UPDATE apr16_stamp_doc
+           SET apr16_stamp_date = #{stampDate}
+         WHERE apr16_stamp_doc_id = #{stampDocId}
+           AND apr16_company_id   = #{companyId}
+    </update>
+
+    <!-- AS-IS apr16_stamp_doc.selectStampCheck L343 -->
+    <select id="selectStampCheck" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStampCheckRes">
+        SELECT apr16_stamp_doc_id          AS stamp_doc_id
+             , apr16_appl_date             AS appl_date
+             , apr16_appl_emp_nm           AS appl_emp_name
+             , apr16_stamp_nm              AS stamp_name
+             , apr16_stamp_qty             AS stamp_qty
+             , apr16_provide_co            AS provide_co
+             , apr16_purpose               AS purpose
+             , apr16_appr_id               AS appr_id
+             , apr16_appr_status_nm        AS appr_status_name
+             , apr16_stamp_date            AS stamp_date
+             , CASE WHEN stamp_file_cnt = 0 THEN 'X' ELSE 'O' END AS stamp_file_chk
+             , apr16_confirm_date          AS confirm_date
+             , apr16_confirmer_id          AS confirmer_id
+             , apr16_confirmer_nm          AS confirmer_name
+          FROM (
+                SELECT apr16_stamp_doc.*
+                     , a.emp01_kor_nm                       AS apr16_appl_emp_nm
+                     , b.emp01_kor_nm                       AS apr16_confirmer_nm
+                     , apr10_stamp_nm                       AS apr16_stamp_nm
+                     , CASE WHEN COALESCE(apr01_status_cd,'') = ''
+                            THEN null
+                            ELSE apr01_status_cd END        AS apr16_appr_status_nm
+                     , ( SELECT COUNT(*)
+                           FROM sys10_file
+                          WHERE sys10_parent_id = apr16_appr_id
+                            AND sys10_stamp_yn  = 'true' )  AS stamp_file_cnt
+                  FROM apr16_stamp_doc
+                       LEFT JOIN apr01_appr     ON apr01_appr_id     = apr16_appr_id
+                       LEFT JOIN apr10_stamp    ON apr10_stamp_id    = apr16_stamp_id
+                       LEFT JOIN emp01_person a ON a.emp01_person_id = apr16_appl_emp_id
+                       LEFT JOIN emp01_person b ON b.emp01_person_id = apr16_confirmer_id
+                 WHERE apr16_company_id = #{companyId}
+                   AND apr16_appl_date BETWEEN #{startDate} AND #{closeDate}
+                   AND apr16_appl_type = '3'
+                   AND COALESCE(apr01_status_cd,'') IN ('30','')
+                <if test="stampId != null">
+                   AND apr16_stamp_id = #{stampId}
+                </if>
+               ) t
+         WHERE 1=1
+        <if test="notStampFileYn == true">
+           AND stamp_file_cnt = 0
+        </if>
+         ORDER BY apr16_appl_date DESC, apr16_stamp_doc_id DESC
+    </select>
+
+    <!-- AS-IS apr16_stamp_doc.updateConfirmDate L438 — 확인취소는 confirmerId·confirmDate가 null -->
+    <update id="updateConfirm">
+        UPDATE apr16_stamp_doc
+           SET apr16_confirmer_id = #{confirmerId}
+             , apr16_confirm_date = #{confirmDate}
+         WHERE apr16_stamp_doc_id = #{stampDocId}
+           AND apr16_company_id   = #{companyId}
+    </update>
 </mapper>

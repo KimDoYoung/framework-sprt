@@ -384,6 +384,42 @@ export interface AprStampDoc {
   apprStatusName?: string | null;
 }
 
+/** T24·T25 AS-IS Apr16_StampDocModel — 인감날인대장 한 행 (selectStampByCompanyId). stampDocId는 행번호 키, realStampDocId가 실제 신청 ID(대외문서는 null) */
+export interface AprStampList {
+  stampDocId: number;
+  applDate?: string | null;
+  applEmpName?: string | null;
+  stampName?: string | null;
+  stampQty?: number | null;
+  stampOutYn?: string | null;
+  provideCo?: string | null;
+  purpose?: string | null;
+  note?: string | null;
+  apprStatusName?: string | null;
+  stampSeq?: string | null;
+  stampDate?: string | null;
+  apprId?: number | null;
+  realStampDocId?: number | null;
+}
+
+/** T26 AS-IS Apr16_StampDocModel — 인감날인본 업로드확인 한 행 (selectStampCheck) */
+export interface AprStampCheck {
+  stampDocId: number;
+  applDate?: string | null;
+  applEmpName?: string | null;
+  stampName?: string | null;
+  stampQty?: number | null;
+  provideCo?: string | null;
+  purpose?: string | null;
+  apprId?: number | null;
+  apprStatusName?: string | null;
+  stampDate?: string | null;
+  stampFileChk?: string | null;
+  confirmDate?: string | null;
+  confirmerId?: number | null;
+  confirmerName?: string | null;
+}
+
 /** 위쪽 합계 그리드 (selectDocGroupSum) */
 export interface AprStampDocSum {
   stampDocId: number;
