@@ -76,3 +76,26 @@ export interface AttOvertimeReqUpdateReq {
   confirmYn?: boolean;
   rows: Pick<AttOvertimeReq, 'overtimeReqId' | 'paymentTypeCode' | 'confirmYn' | 'changeReason'>[];
 }
+
+/** AS-IS Att02_CommuteModel 중 근태현황 열 (T08 getCommuteStatus · T09 getPersonStatus). 한 쪽에 없는 열은 null */
+export interface AttCommuteStatus {
+  commuteId: number;
+  personNo: string | null;
+  personName: string | null;
+  orgName: string | null;
+  posName: string | null;
+  statusName: string | null;
+  workDate: string | null;
+  dayOfWeek: string | null;
+  dateInfo: string | null;
+  inOutReasonYnStr: string | null;
+  inReason: string | null;
+  outReason: string | null;
+  checkInTimeStr: string | null;
+  checkOutTimeStr: string | null;
+  calcCheckInTimeStr: string | null;
+  calcCheckOutTimeStr: string | null;
+  baseWorkTimeStr: string | null;
+  overtimeWorkTimeStr: string | null;
+  nightWorkTimeStr: string | null;
+}

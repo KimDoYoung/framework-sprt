@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/car/mapper/car01_info.xml (selectByCompanyId, selectById) + car03_booking.selectByInfoId(행 수) + UpdateDataModel(car01_info)  (T10) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.car.mapper.CarInfoMapper">
+
+    <sql id="infoColumns">
+        car01_info_id                                                        AS info_id,
+        car01_car_type                                                       AS car_type,
+        f_cdnm('CarTypeCode', car01_car_type, car01_company_id, f_sysdate()) AS car_type_nm,
+        car01_car_no                                                         AS car_no,
+        car01_car_nm                                                         AS car_nm,
+        car01_car_info                                                       AS car_info,
+        car01_note                                                           AS note,
+        car01_init_mileage                                                   AS init_mileage,
+        (
+            SELECT f_emp_kor_nm(car02_person_id)
+              FROM car02_user
+             WHERE car02_info_id = car01_info_id
+             ORDER BY car02_start_date DESC
+             LIMIT 1
+        )                                                                    AS person_nm,
+        (
+            SELECT car02_start_date
+              FROM car02_user
+             WHERE car02_info_id = car01_info_id
+             ORDER BY car02_start_date DESC
+             LIMIT 1
+        )                                                                    AS start_date
+    </sql>
+
+    <!-- AS-IS car01_info.selectByCompanyId (IDMS-IC) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.car.dto.CarInfoRes">
+        SELECT <include refid="infoColumns"/>
+          FROM car01_info
+         WHERE car01_company_id = #{companyId}
+           AND car01_car_type LIKE #{carType}
+           AND (COALESCE(car01_car_no,' ')||COALESCE(car01_car_nm,' ')||COALESCE(car01_car_info,' ')||COALESCE(car01_note,' ') LIKE #{searchText})
+         ORDER BY car01_car_type COLLATE "ko_KR.utf8", car01_car_no COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS car01_info.selectById — 저장 결과 한 행(TOBE는 로그인 회사 행만) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.car.dto.CarInfoRes">
+        SELECT <include refid="infoColumns"/>
+          FROM car01_info
+         WHERE car01_company_id = #{companyId}
+           AND car01_info_id = #{infoId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO car01_info (car01_info_id, car01_company_id, car01_car_type, car01_car_no, car01_car_nm, car01_car_info, car01_note, car01_init_mileage)
+        VALUES (#{infoId}, #{companyId}, #{req.carType}, #{req.carNo}, #{req.carNm}, #{req.carInfo}, #{req.note}, #{req.initMileage})
+    </insert>
+
+    <update id="update">
+        UPDATE car01_info
+           SET car01_car_type     = #{req.carType},
+               car01_car_no       = #{req.carNo},
+               car01_car_nm       = #{req.carNm},
+               car01_car_info     = #{req.carInfo},
+               car01_note         = #{req.note},
+               car01_init_mileage = #{req.initMileage}
+         WHERE car01_info_id    = #{req.infoId}
+           AND car01_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM car01_info
+         WHERE car01_company_id = #{companyId}
+           AND car01_info_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS car01_info.selectByCarType1 (IDMS-IC) -->
+    <select id="selectByCarType1" resultType="kr.co.kfs.asseterp.biz.car.dto.CarInfoRes">
+        SELECT <include refid="infoColumns"/>
+          FROM car01_info
+         WHERE car01_company_id = #{companyId}
+           AND car01_car_type LIKE #{carType}
+           AND #{personId} IN (
+                   SELECT car02_person_id
+                     FROM car02_user
+                    WHERE car02_info_id = car01_info_id
+                      AND to_char(COALESCE(car02_start_date,'9999-12-31'),'YYYY.MM') <![CDATA[<=]]> #{stdMonth}
+                      AND to_char(COALESCE(car02_close_date,'9999-12-31'), 'YYYY.MM') <![CDATA[>=]]> #{stdMonth}
+               )
+           AND (COALESCE(car01_car_no,' ')||COALESCE(car01_car_nm,' ')||COALESCE(car01_car_info,' ')||COALESCE(car01_note,' ') LIKE #{searchText})
+    </select>
+
+    <!-- AS-IS car01_info.selectByCarType2 (IDMS-IC) -->
+    <select id="selectByCarType2" resultType="kr.co.kfs.asseterp.biz.car.dto.CarInfoRes">
+        SELECT <include refid="infoColumns"/>
+          FROM car01_info
+         WHERE car01_company_id = #{companyId}
+           AND car01_car_type LIKE #{carType}
+           AND (
+                   #{personId} IN (
+                       SELECT car03_person_id
+                         FROM car03_booking
+                        WHERE car03_info_id = car01_info_id
+                          AND to_char(car03_start_date,'YYYY.MM') LIKE #{stdMonth}
+                   )
+                   OR
+                   #{personId} IN (
+                       SELECT car03_reg_emp_id
+                         FROM car03_booking
+                        WHERE car03_info_id = car01_info_id
+                          AND to_char(car03_start_date,'YYYY.MM') LIKE #{stdMonth}
+                   )
+               )
+           AND (COALESCE(car01_car_no,' ')||COALESCE(car01_car_nm,' ')||COALESCE(car01_car_info,' ')||COALESCE(car01_note,' ') LIKE #{searchText})
+    </select>
+
+    <!-- AS-IS car01_info.selectByCarTypeAdmin (IDMS-IC) -->
+    <select id="selectByCarTypeAdmin" resultType="kr.co.kfs.asseterp.biz.car.dto.CarInfoRes">
+        SELECT <include refid="infoColumns"/>
+          FROM car01_info
+         WHERE car01_company_id = #{companyId}
+           AND car01_car_type LIKE #{carType}
+           AND (COALESCE(car01_car_no,' ')||COALESCE(car01_car_nm,' ')||COALESCE(car01_car_info,' ')||COALESCE(car01_note,' ') LIKE #{searchText})
+    </select>
+
+    <!-- AS-IS car03_booking.selectByInfoId (IDMS-IC) — 행 수만 -->
+    <select id="countBookingsByInfoId" resultType="int">
+        SELECT COUNT(*)
+          FROM car03_booking a
+               INNER JOIN car01_info b ON a.car03_info_id = b.car01_info_id
+         WHERE car03_info_id = #{infoId}
+    </select>
+</mapper>

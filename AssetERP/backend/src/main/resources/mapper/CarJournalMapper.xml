@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/car/mapper/car04_journal.xml (selectByPrivateJournal, selectByDate, selectById, getAfterCloseYn, getAfterFixYn, checkDate) + UpdateDataModel(car04_journal)  (T11), selectByPublicJournal, checkBookingId (T14), selectByPublicJournalAdmin (T15) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.car.mapper.CarJournalMapper">
+
+    <!-- 고정 열: fix/close는 'true'/'false' 글자 → 불리언(null = false) -->
+    <sql id="journalColumns">
+        car04_journal_id                                   AS journal_id,
+        car04_company_id                                   AS company_id,
+        car04_info_id                                      AS info_id,
+        car04_date                                         AS "date",
+        car04_person_id                                    AS person_id,
+        car04_mileage                                      AS mileage,
+        car04_commute_mileage                              AS commute_mileage,
+        car04_biz_mileage                                  AS biz_mileage,
+        car04_un_biz_mileage                               AS un_biz_mileage,
+        car04_destination                                  AS destination,
+        car04_reason                                       AS reason,
+        car04_note                                         AS note,
+        car04_booking_id                                   AS booking_id,
+        (COALESCE(car04_fix_yn, 'false') = 'true')         AS fix_yn,
+        (COALESCE(car04_close_yn, 'false') = 'true')       AS close_yn,
+        COALESCE(car04_commute_mileage, 0) + COALESCE(car04_biz_mileage, 0) AS business_mileage
+    </sql>
+
+    <!-- AS-IS car04_journal.selectByPrivateJournal (IDMS-IC) — 마지막 마감일 이후부터 누적해 주행 전·후 계기판을 계산 -->
+    <select id="selectByPrivateJournal" resultType="kr.co.kfs.asseterp.biz.car.dto.CarJournalRes">
+        <![CDATA[
+        WITH car AS ( SELECT row_number() OVER (ORDER BY car04_date) AS seq
+                           , t.*
+                        FROM (
+                               SELECT car01_info.*
+                                    , car04_journal.*
+                                    , SUM(CASE WHEN car04_close_yn = 'true' THEN car04_after_mileage
+                                               ELSE COALESCE(car04_mileage,0) END) OVER (ORDER BY car04_date)
+                                      - COALESCE(car04_mileage,0)     as car04_before_mileage_calc
+                                 FROM car01_info
+                                      INNER JOIN car04_journal ON car04_info_id = car01_info_id
+                                WHERE car01_company_id = #{companyId}
+                                  AND car01_info_id    = #{infoId}
+                                  AND car01_car_type   = '1'
+                                  AND car04_date      >= COALESCE(( SELECT MAX(car04_date)
+                                                                      FROM car04_journal
+                                                                     WHERE car04_company_id = car01_company_id
+                                                                       AND car04_info_id    = car01_info_id
+                                                                       AND COALESCE(car04_close_yn,'false') = 'true'
+                                                                       AND car04_date < TO_DATE(#{stdMonth}||'.01','yyyy.mm.dd') ),'1999-01-01')
+                             ) t
+        )
+        SELECT car04_journal_id                                   AS journal_id
+             , car04_company_id                                   AS company_id
+             , car04_info_id                                      AS info_id
+             , car04_date                                         AS "date"
+             , car04_person_id                                    AS person_id
+             , car04_mileage                                      AS mileage
+             , CASE WHEN COALESCE(car04_close_yn,'false') = 'true' THEN car04_before_mileage
+                    ELSE car04_before_mileage_calc2 END           AS before_mileage
+             , CASE WHEN COALESCE(car04_close_yn,'false') = 'true' THEN car04_after_mileage
+                    ELSE car04_before_mileage_calc2 + COALESCE(car04_mileage,0) END AS after_mileage
+             , car04_commute_mileage                              AS commute_mileage
+             , car04_biz_mileage                                  AS biz_mileage
+             , car04_un_biz_mileage                               AS un_biz_mileage
+             , car04_destination                                  AS destination
+             , car04_reason                                       AS reason
+             , car04_note                                         AS note
+             , car04_booking_id                                   AS booking_id
+             , (COALESCE(car04_fix_yn, 'false') = 'true')         AS fix_yn
+             , (COALESCE(car04_close_yn, 'false') = 'true')       AS close_yn
+             , COALESCE(car04_commute_mileage, 0) + COALESCE(car04_biz_mileage, 0) AS business_mileage
+             , car01_car_no||' - '||car01_car_nm                  AS info_nm
+             , ( SELECT f_emp_kor_nm(car02_person_id)
+                   FROM car02_user
+                  WHERE car02_info_id = car01_info_id
+                    AND to_char(car02_start_date,'YYYY.MM') <= #{stdMonth}
+                  ORDER BY car02_start_date DESC
+                  LIMIT 1 )                                       AS info_person_nm
+          FROM ( SELECT car04_before_mileage_calc
+                        + ( SELECT CASE WHEN coalesce(car04_close_yn,'false') = 'false' THEN car01_init_mileage ELSE 0 END
+                              FROM car
+                             WHERE seq = 1 ) as car04_before_mileage_calc2
+                      , car.*
+                   FROM car
+               ) t2
+         WHERE to_char(car04_date,'YYYY.MM') = #{stdMonth}
+         ORDER BY seq
+        ]]>
+    </select>
+
+    <!-- AS-IS car04_journal.selectByDate (IDMS-IC) — 그 날짜 이전(포함) 마지막 일지. 쓰지 않는 열 car04_info_person_nm은 뺐다(날짜 값을 글자 'YYYY.MM'과 비교하는 하위 쿼리라 PostgreSQL에서 타입 오류) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.car.dto.CarJournalRes">
+        <![CDATA[
+        WITH car AS ( SELECT row_number() OVER (ORDER BY car04_date) AS seq
+                           , t.*
+                        FROM (
+                               SELECT car01_info.*
+                                    , car04_journal.*
+                                    , SUM(CASE WHEN car04_close_yn = 'true' THEN car04_after_mileage
+                                               ELSE COALESCE(car04_mileage,0) END) OVER (ORDER BY car04_date)
+                                      - COALESCE(car04_mileage,0)     as car04_before_mileage_calc
+                                 FROM car01_info
+                                      INNER JOIN car04_journal ON car04_info_id = car01_info_id
+                                WHERE car01_company_id = #{companyId}
+                                  AND car01_info_id    = #{infoId}
+                                  AND car01_car_type   = '1'
+                                  AND car04_date      >= COALESCE(( SELECT MAX(car04_date)
+                                                                      FROM car04_journal
+                                                                     WHERE car04_company_id = car01_company_id
+                                                                       AND car04_info_id    = car01_info_id
+                                                                       AND COALESCE(car04_close_yn,'false') = 'true'
+                                                                       AND car04_date < #{date}),'1999-01-01')
+                             ) t
+        )
+        SELECT car04_journal_id                                   AS journal_id
+             , car04_company_id                                   AS company_id
+             , car04_info_id                                      AS info_id
+             , car04_date                                         AS "date"
+             , car04_person_id                                    AS person_id
+             , car04_mileage                                      AS mileage
+             , CASE WHEN COALESCE(car04_close_yn,'false') = 'true' THEN car04_before_mileage
+                    ELSE car04_before_mileage_calc2 END           AS before_mileage
+             , CASE WHEN COALESCE(car04_close_yn,'false') = 'true' THEN car04_after_mileage
+                    ELSE car04_before_mileage_calc2 + COALESCE(car04_mileage,0) END AS after_mileage
+             , car04_commute_mileage                              AS commute_mileage
+             , car04_biz_mileage                                  AS biz_mileage
+             , car04_un_biz_mileage                               AS un_biz_mileage
+             , car04_destination                                  AS destination
+             , car04_reason                                       AS reason
+             , car04_note                                         AS note
+             , car04_booking_id                                   AS booking_id
+             , (COALESCE(car04_fix_yn, 'false') = 'true')         AS fix_yn
+             , (COALESCE(car04_close_yn, 'false') = 'true')       AS close_yn
+             , COALESCE(car04_commute_mileage, 0) + COALESCE(car04_biz_mileage, 0) AS business_mileage
+             , car01_car_no||' - '||car01_car_nm                  AS info_nm
+             , NULL                                               AS info_person_nm
+          FROM ( SELECT car04_before_mileage_calc
+                        + ( SELECT CASE WHEN coalesce(car04_close_yn,'false') = 'false' THEN car01_init_mileage ELSE 0 END
+                              FROM car
+                             WHERE seq = 1 ) as car04_before_mileage_calc2
+                      , car.*
+                   FROM car
+               ) t2
+         WHERE car04_date <= #{date}
+         ORDER BY seq DESC
+         LIMIT 1
+        ]]>
+    </select>
+
+    <!-- AS-IS car04_journal.selectById — 저장 결과 한 행(TOBE는 로그인 회사 행만) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.car.dto.CarJournalRes">
+        SELECT <include refid="journalColumns"/>,
+               car04_before_mileage AS before_mileage,
+               car04_after_mileage  AS after_mileage,
+               NULL                 AS info_nm,
+               NULL                 AS info_person_nm
+          FROM car04_journal
+         WHERE car04_company_id = #{companyId}
+           AND car04_journal_id = #{journalId}
+    </select>
+
+    <!-- AS-IS car04_journal.getAfterCloseYn (IDMS-IC) — 행 수만 -->
+    <select id="countAfterClose" resultType="int">
+        SELECT COUNT(*)
+          FROM car04_journal
+               INNER JOIN car01_info ON car01_info_id = car04_info_id
+         WHERE car04_info_id = #{infoId}
+           AND car04_company_id = #{companyId}
+           AND COALESCE(car04_close_yn, 'false') = 'true'
+           AND TO_DATE(#{stdMonth}, 'YYYY.MM') + INTERVAL '1 months' <![CDATA[<=]]> car04_date
+    </select>
+
+    <!-- AS-IS car04_journal.getAfterFixYn (IDMS-IC) — 행 수만 -->
+    <select id="countAfterFix" resultType="int">
+        SELECT COUNT(*)
+          FROM car04_journal
+               INNER JOIN car01_info ON car01_info_id = car04_info_id
+         WHERE car04_info_id = #{infoId}
+           AND car04_company_id = #{companyId}
+           AND COALESCE(car04_fix_yn, 'false') = 'true'
+           AND TO_DATE(#{stdMonth}, 'YYYY.MM') + INTERVAL '1 months' <![CDATA[<=]]> car04_date
+    </select>
+
+    <!-- AS-IS car04_journal.checkDate (IDMS-IC) — 행 수만 -->
+    <select id="countByDate" resultType="int">
+        SELECT COUNT(*)
+          FROM car04_journal
+               INNER JOIN car01_info ON car01_info_id = car04_info_id
+         WHERE car04_info_id = #{infoId}
+           AND car04_company_id = #{companyId}
+           AND car04_date = #{date}
+    </select>
+
+    <!-- AS-IS sys12_calendar.getWorkDay (IDMS-IC) — 원본이 회사 1의 달력으로 고정(sys12_company_id = 1) -->
+    <select id="selectWorkDays" resultType="java.time.LocalDate">
+        SELECT sys12_day
+          FROM sys12_calendar
+         WHERE sys12_working_yn NOT IN ('false')
+           AND to_char(sys12_day, 'yyyy.mm') LIKE #{stdMonth}
+           AND sys12_company_id = 1
+         ORDER BY sys12_day
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- 신규: 주행 전·후 계기판은 null(AS-IS Tab.update()가 null로 저장), 확정·마감은 false -->
+    <insert id="insert">
+        INSERT INTO car04_journal (car04_journal_id, car04_company_id, car04_info_id, car04_date, car04_person_id, car04_mileage,
+                                   car04_before_mileage, car04_after_mileage, car04_commute_mileage, car04_biz_mileage, car04_un_biz_mileage,
+                                   car04_destination, car04_reason, car04_note, car04_booking_id, car04_fix_yn, car04_close_yn)
+        VALUES (#{journalId}, #{companyId}, #{req.infoId}, #{req.date}, #{req.personId}, #{req.mileage},
+                NULL, NULL, #{req.commuteMileage}, #{req.bizMileage}, #{req.unBizMileage},
+                #{req.destination}, #{req.reason}, #{req.note}, #{req.bookingId}, 'false', 'false')
+    </insert>
+
+    <!-- AS-IS car04_journal.insert (IDMS-IC) — 일괄생성 한 날 -->
+    <insert id="insertBatch">
+        INSERT INTO car04_journal
+        SELECT f_create_seq(), #{companyId}, #{req.infoId}, #{date}, #{personId}, #{req.mileage}, NULL, NULL,
+               #{req.commuteMileage}, #{req.bizMileage}, #{req.unBizMileage}, #{req.destination}, #{req.reason}, NULL, NULL, 'false', 'false'
+    </insert>
+
+    <!-- 수정: 확정·마감 여부는 건드리지 않는다(편집창이 바꾸지 않는 값). 주행 전·후 계기판은 null(AS-IS) -->
+    <update id="update">
+        UPDATE car04_journal
+           SET car04_info_id         = #{req.infoId},
+               car04_date            = #{req.date},
+               car04_person_id       = #{req.personId},
+               car04_mileage         = #{req.mileage},
+               car04_before_mileage  = NULL,
+               car04_after_mileage   = NULL,
+               car04_commute_mileage = #{req.commuteMileage},
+               car04_biz_mileage     = #{req.bizMileage},
+               car04_un_biz_mileage  = #{req.unBizMileage},
+               car04_destination     = #{req.destination},
+               car04_reason          = #{req.reason},
+               car04_note            = #{req.note},
+               car04_booking_id      = #{req.bookingId}
+         WHERE car04_journal_id = #{req.journalId}
+           AND car04_company_id = #{companyId}
+    </update>
+
+    <!-- 확정·확정취소: AS-IS는 조회한 모델 전체를 UpdateDataModel로 저장해 계산된 계기판 값도 쓴다 -->
+    <update id="updateFix">
+        UPDATE car04_journal
+           SET car04_info_id         = #{row.infoId},
+               car04_date            = #{row.date},
+               car04_person_id       = #{row.personId},
+               car04_mileage         = #{row.mileage},
+               car04_before_mileage  = #{row.beforeMileage},
+               car04_after_mileage   = #{row.afterMileage},
+               car04_commute_mileage = #{row.commuteMileage},
+               car04_biz_mileage     = #{row.bizMileage},
+               car04_un_biz_mileage  = #{row.unBizMileage},
+               car04_destination     = #{row.destination},
+               car04_reason          = #{row.reason},
+               car04_note            = #{row.note},
+               car04_booking_id      = #{row.bookingId},
+               car04_fix_yn          = CASE WHEN #{fixYn} THEN 'true' ELSE 'false' END,
+               car04_close_yn        = CASE WHEN #{row.closeYn} THEN 'true' ELSE 'false' END
+         WHERE car04_journal_id = #{row.journalId}
+           AND car04_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM car04_journal
+         WHERE car04_company_id = #{companyId}
+           AND car04_journal_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS car04_journal.selectByPublicJournal L178 (IDMS-IC) — 열 순서는 CarPublicJournalRes. 주행 전·후는 AS-IS 결과에 없어 NULL -->
+    <select id="selectByPublicJournal" resultType="kr.co.kfs.asseterp.biz.car.dto.CarPublicJournalRes">
+        SELECT COALESCE(car04_journal_id,        ROW_NUMBER() OVER())                 AS journal_id
+             , COALESCE(car04_company_id,        car01_company_id)                    AS company_id
+             , COALESCE(car04_info_id,           car01_info_id)                       AS info_id
+             , COALESCE(car04_date,              car03_start_date)                    AS "date"
+             , COALESCE(car04_person_id,         car03_person_id)                     AS person_id
+             , COALESCE(car04_mileage,           0)                                   AS mileage
+             , CAST(NULL AS numeric)                                                  AS before_mileage
+             , CAST(NULL AS numeric)                                                  AS after_mileage
+             , COALESCE(car04_commute_mileage,   0)                                   AS commute_mileage
+             , COALESCE(car04_biz_mileage,       0)                                   AS biz_mileage
+             , COALESCE(car04_un_biz_mileage,    0)                                   AS un_biz_mileage
+             , COALESCE(car04_destination,       car03_destination)                   AS destination
+             , COALESCE(car04_reason,            car03_reason)                        AS reason
+             , COALESCE(car04_note,              car03_note)                          AS note
+             , COALESCE(car04_booking_id,        car03_booking_id)                    AS booking_id
+             , (COALESCE(car04_fix_yn,           'false') = 'true')                   AS fix_yn
+             , (COALESCE(car04_close_yn,         'false') = 'true')                   AS close_yn
+             , COALESCE(car04_commute_mileage, 0) + COALESCE(car04_biz_mileage, 0)    AS business_mileage
+             , car01_car_no || ' - ' || car01_car_nm                                  AS info_nm
+             , car03_attendance                                                       AS attendance
+          FROM car03_booking
+               INNER JOIN      car01_info    ON car01_info_id = car03_info_id AND car01_car_type = '2'
+               LEFT OUTER JOIN car04_journal ON car04_booking_id = car03_booking_id
+         WHERE 1=1
+           AND car01_company_id = #{companyId}
+           AND to_char(car03_start_date, 'YYYY.MM') LIKE #{stdMonth}
+           AND (
+                COALESCE(car04_person_id, car03_person_id) = #{personId}
+                OR
+                COALESCE(car04_person_id, car03_reg_emp_id) = #{personId}
+           )
+        <if test="infoId != null">
+           AND car01_info_id = #{infoId}
+        </if>
+         ORDER BY COALESCE(car04_date, car03_start_date), COALESCE(car04_journal_id, ROW_NUMBER() OVER())
+    </select>
+
+    <!-- AS-IS car04_journal.checkBookingId L586 (IDMS-IC) — 행 수만, 로그인 회사 일지로 막는다 -->
+    <select id="countByBookingId" resultType="int">
+        SELECT COUNT(*)
+          FROM car04_journal
+               INNER JOIN car01_info ON car01_info_id = car04_info_id
+         WHERE car04_booking_id = #{bookingId}
+           AND car04_company_id = #{companyId}
+    </select>
+
+    <!-- 공용 확정·확정취소(UpdateDataModel 전체 모델 저장): 계기판 값은 조회에 없어 NULL -->
+    <update id="updatePublicFix">
+        UPDATE car04_journal
+           SET car04_info_id         = #{row.infoId},
+               car04_date            = #{row.date},
+               car04_person_id       = #{row.personId},
+               car04_mileage         = #{row.mileage},
+               car04_before_mileage  = NULL,
+               car04_after_mileage   = NULL,
+               car04_commute_mileage = #{row.commuteMileage},
+               car04_biz_mileage     = #{row.bizMileage},
+               car04_un_biz_mileage  = #{row.unBizMileage},
+               car04_destination     = #{row.destination},
+               car04_reason          = #{row.reason},
+               car04_note            = #{row.note},
+               car04_booking_id      = #{row.bookingId},
+               car04_fix_yn          = CASE WHEN #{fixYn} THEN 'true' ELSE 'false' END,
+               car04_close_yn        = CASE WHEN #{row.closeYn} THEN 'true' ELSE 'false' END
+         WHERE car04_journal_id = #{row.journalId}
+           AND car04_company_id = #{companyId}
+    </update>
+
+    <insert id="insertPublicFix">
+        INSERT INTO car04_journal (car04_journal_id, car04_company_id, car04_info_id, car04_date, car04_person_id, car04_mileage,
+                                   car04_before_mileage, car04_after_mileage, car04_commute_mileage, car04_biz_mileage, car04_un_biz_mileage,
+                                   car04_destination, car04_reason, car04_note, car04_booking_id, car04_fix_yn, car04_close_yn)
+        VALUES (#{journalId}, #{companyId}, #{row.infoId}, #{row.date}, #{row.personId}, #{row.mileage},
+                NULL, NULL, #{row.commuteMileage}, #{row.bizMileage}, #{row.unBizMileage},
+                #{row.destination}, #{row.reason}, #{row.note}, #{row.bookingId},
+                CASE WHEN #{fixYn} THEN 'true' ELSE 'false' END, CASE WHEN #{row.closeYn} THEN 'true' ELSE 'false' END)
+    </insert>
+
+    <!-- AS-IS car04_journal.selectByPublicJournalAdmin L215 (IDMS-IC) — 안쪽 SELECT는 원본 그대로, 바깥에서 열 이름만 바꾼다. 정렬 car04_info_nm은 ko_KR.utf8 -->
+    <select id="selectByPublicJournalAdmin" resultType="kr.co.kfs.asseterp.biz.car.dto.CarPublicAdminJournalRes">
+        SELECT a.car04_journal_id AS journal_id, a.car04_company_id AS company_id, a.car04_info_id AS info_id, a.car04_date AS "date",
+               a.car04_person_id AS person_id, a.car04_mileage AS mileage, a.car04_commute_mileage AS commute_mileage,
+               a.car04_biz_mileage AS biz_mileage, a.car04_un_biz_mileage AS un_biz_mileage, a.car04_destination AS destination,
+               a.car04_reason AS reason, a.car04_note AS note, a.car04_booking_id AS booking_id,
+               (a.car04_fix_yn = 'true') AS fix_yn, (a.car04_close_yn = 'true') AS close_yn,
+               a.car04_commute_mileage + a.car04_biz_mileage AS business_mileage, a.car04_info_nm AS info_nm,
+               a.car04_attendance AS attendance, a.car04_datetime AS datetime, a.car04_week_nm AS week_name, a.car04_person_nm AS person_nm,
+               a.car04_start_hour AS start_hour, a.car04_start_min AS start_min, a.car04_close_hour AS close_hour, a.car04_close_min AS close_min
+          FROM (
+            <![CDATA[
+            SELECT COALESCE(car04_journal_id,        ROW_NUMBER() OVER())                 AS car04_journal_id
+                 , COALESCE(car04_company_id,        car01_company_id)                    AS car04_company_id
+                 , COALESCE(car04_info_id,           car01_info_id)                       AS car04_info_id
+                 , COALESCE(car04_date,              car03_start_date)                    AS car04_date
+                 , COALESCE(car04_person_id,         car03_person_id)                     AS car04_person_id
+                 , COALESCE(car04_mileage,           0)                                   AS car04_mileage
+                 , COALESCE(car04_commute_mileage,   0)                                   AS car04_commute_mileage
+                 , COALESCE(car04_biz_mileage,       0)                                   AS car04_biz_mileage
+                 , COALESCE(car04_un_biz_mileage,    0)                                   AS car04_un_biz_mileage
+                 , COALESCE(car04_destination,       car03_destination)                   AS car04_destination
+                 , COALESCE(car04_reason,            car03_reason)                        AS car04_reason
+                 , COALESCE(car04_note,              car03_note)                          AS car04_note
+                 , COALESCE(car04_booking_id,        car03_booking_id)                    AS car04_booking_id
+                 , COALESCE(car04_fix_yn,            'false')                             AS car04_fix_yn
+                 , COALESCE(car04_close_yn,          'false')                             AS car04_close_yn
+                 , car01_car_no || ' - ' || car01_car_nm                                  AS car04_info_nm
+                 , car03_attendance                                                       AS car04_attendance
+                 , TO_CHAR(COALESCE(car04_date, car03_start_date),'YYYY-MM-DD')
+                   ||' '||
+                   car03_start_hour||':'||car03_start_min
+                   ||' ~ '||
+                   car03_close_hour||':'||car03_close_min                                 AS car04_datetime
+                 , (
+                     CASE TO_CHAR(COALESCE(car04_date, car03_start_date), 'D')
+                     WHEN '1' THEN '<'||'span style=color:#DD5E5E;'||'>'||'일요일'||'<'||'/span'||'>'
+                     WHEN '2' THEN '<'||'span style=color:#000000;'||'>'||'월요일'||'<'||'/span'||'>'
+                     WHEN '3' THEN '<'||'span style=color:#000000;'||'>'||'화요일'||'<'||'/span'||'>'
+                     WHEN '4' THEN '<'||'span style=color:#000000;'||'>'||'수요일'||'<'||'/span'||'>'
+                     WHEN '5' THEN '<'||'span style=color:#000000;'||'>'||'목요일'||'<'||'/span'||'>'
+                     WHEN '6' THEN '<'||'span style=color:#000000;'||'>'||'금요일'||'<'||'/span'||'>'
+                     WHEN '7' THEN '<'||'span style=color:#597EB1;'||'>'||'토요일'||'<'||'/span'||'>'
+                     END
+                   )                                                                      AS car04_week_nm
+                 , f_emp_kor_nm(car03_person_id)                                          AS car04_person_nm
+                 , car03_start_hour                                                       AS car04_start_hour
+                 , car03_start_min                                                        AS car04_start_min
+                 , car03_close_hour                                                       AS car04_close_hour
+                 , car03_close_min                                                        AS car04_close_min
+                 , car03_booking.*
+              FROM car03_booking
+                   INNER JOIN      car01_info    ON car01_info_id = car03_info_id AND car01_car_type = '2'
+                   LEFT OUTER JOIN car04_journal ON car04_booking_id = car03_booking_id
+             WHERE 1=1
+               AND car01_company_id = #{companyId}
+               AND to_char(car03_start_date,'YYYY.MM') LIKE #{stdMonth}
+            ]]>
+            <if test="infoId != null">
+               AND car01_info_id = #{infoId}
+            </if>
+          ) a
+         WHERE UPPER(CONCAT(a.car04_week_nm, a.car04_person_nm, a.car03_destination, a.car03_reason)) LIKE UPPER(#{searchText})
+         ORDER BY a.car04_info_nm COLLATE "ko_KR.utf8", a.car04_date, COALESCE(a.car03_start_hour, '00')
+    </select>
+
+    <select id="selectIdByBookingId" resultType="long">
+        SELECT car04_journal_id
+          FROM car04_journal
+         WHERE car04_booking_id = #{bookingId}
+           AND car04_company_id = #{companyId}
+         ORDER BY car04_journal_id
+         LIMIT 1
+    </select>
+
+    <delete id="deleteByBookingIds">
+        DELETE FROM car04_journal
+         WHERE car04_company_id = #{companyId}
+           AND car04_booking_id IN
+        <foreach collection="bookingIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

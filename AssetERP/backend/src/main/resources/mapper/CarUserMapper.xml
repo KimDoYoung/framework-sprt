@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/car/mapper/car02_user.xml (selectByInfoId, selectById) + UpdateDataModel(car02_user)  (T10) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.car.mapper.CarUserMapper">
+
+    <sql id="userColumns">
+        car02_user_id               AS user_id,
+        car02_info_id               AS info_id,
+        car02_person_id             AS person_id,
+        f_emp_kor_nm(car02_person_id) AS person_nm,
+        car02_start_date            AS start_date,
+        car02_close_date            AS close_date
+    </sql>
+
+    <!-- AS-IS car02_user.selectByInfoId (IDMS-IC) -->
+    <select id="selectByInfoId" resultType="kr.co.kfs.asseterp.biz.car.dto.CarUserRes">
+        SELECT <include refid="userColumns"/>
+          FROM car02_user
+         WHERE car02_info_id = #{infoId}
+         ORDER BY car02_start_date DESC
+    </select>
+
+    <!-- AS-IS car02_user.selectById — 저장 결과 한 행 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.car.dto.CarUserRes">
+        SELECT <include refid="userColumns"/>
+          FROM car02_user
+         WHERE car02_user_id = #{userId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO car02_user (car02_user_id, car02_info_id, car02_person_id, car02_start_date, car02_close_date)
+        VALUES (#{userId}, #{req.infoId}, #{req.personId}, #{req.startDate}, #{req.closeDate})
+    </insert>
+
+    <update id="update">
+        UPDATE car02_user
+           SET car02_person_id  = #{req.personId},
+               car02_start_date = #{req.startDate},
+               car02_close_date = #{req.closeDate}
+         WHERE car02_user_id = #{req.userId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM car02_user
+         WHERE car02_user_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- 회사 컬럼이 없는 car02_user를 차량정보의 회사로 막는다(보안 보강) -->
+    <select id="countInfoOfCompany" resultType="int">
+        SELECT COUNT(*) FROM car01_info WHERE car01_company_id = #{companyId} AND car01_info_id = #{infoId}
+    </select>
+</mapper>

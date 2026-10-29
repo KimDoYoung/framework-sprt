@@ -112,25 +112,26 @@ frontend를 빌드해 `backend/src/main/resources/static`으로 복사한 뒤 `b
 
 ## yunhee의 이용 (local qwen2.5를 이용하는 agent)
 
-이 시스템에는 토큰 절약 로컬 CLI인 yunhee가 설치되어 있습니다. 실측 평가(`OMS/docs/yunhee-eval.md`, 2026-10-01)에 따라 아래 규칙을 따르세요:
-1. ASIS 화면 분석 시: `yunhee prepare`는 쓰지 않는다. **`docs/as-is/src` 색인 화면 파일**을 본다 — 서비스 → 서버 → SQL → 테이블과
-   `## UI` 절(레이아웃·툴바·그리드 컬럼·이벤트 → 메서드·메서드 줄 범위)이 있다. 원본은 처리 로직이 필요한 메서드의 줄 범위만 읽는다.
-   원본·색인을 `sed`·`grep`·`cat`으로 직접 자르기 전에 **`yunhee analysis <type> <대상>`**(0.2.4~, `yunhee analysis --list`)으로 필요한 것만 뽑는다:
-   `screen <화면> --list`/`--class <클래스> --section …`, `method <클래스>.<메서드>`(요약, 원문은 `-o code`), `grid <클래스>`, `model <모델>`,
-   `sql <ns.id> [--param k=v --count | -o sql]`, `ui <화면> --done/--later/--tobe`, `tobe <TOBE 파일>`, `run last`. AssetERP 작업은 `AssetERP/`에서 실행한다(루트에서는 색인을 못 찾음). 한계와 단계별 사용법은 `AssetERP/docs/05-작업방법.md` §7.
-2. 테이블 스키마 확인 시: 전체 DDL이나 DB 카탈로그를 뒤지지 말고 `yunhee table <테이블명>`(glob 가능) 또는 `docs/as-is/db/tables/{도메인}.md`를 본다.
-   둘은 같은 DBML이므로 하나만 본다. `yunhee table --page`는 쓰지 않는다(화면 파일의 '테이블' 절을 본다).
-3. TOBE 기존 코드 위치 파악 시: Service·Controller·Mapper·TS 파일을 통째로 읽지 말고 `yunhee outline <파일|디렉터리>`로
-   시그니처·매핑 경로·statement id·줄 번호를 본 뒤 필요한 줄만 읽는다. (0.1.2: enum 상수 목록·레코드 본문 메서드는 부정확)
-4. API 확인 시: curl로 직접 로그인하지 말고 `yunhee api <METHOD> <PATH> [-p k=v] [-b '<json>']`로 호출한다
-   (테스트 계정 자동 로그인, 응답은 상태·행 수·필드·첫 행만). 화면 변환 후 새 API는 이것으로 검증한다.
-   테넌트는 Host로 판정되므로 `-t`로는 바뀌지 않는다(0.1.2). 저장 API 시험은 같은 값 PUT 등 데이터를 바꾸지 않는 방식으로 한다.
-   API가 실패하거나 결과가 이상하면 `--log`를 붙여 서버가 실행한 SQL(매퍼 ID·파라미터·행 수)과 WARN/ERROR를 함께 본다.
-5. 서버 로그 확인 시: `docker logs`·로그 파일을 직접 grep하지 말고 `yunhee log`(0.2.5~)를 쓴다 —
-   `log errors --since-deploy`(배포 후), `log tail --since 5m`(스크립트 후 — 0.2.7의 `--since-run`은 run 끝 시각 기준이라 쓰지 않는다), `log req <METHOD> <경로 일부> --trace`(사용자가 알린 오류), `log trace <id> --sql`(바인딩된 SQL). 출력 시각은 UTC지만 `--from`/`--to`는 KST로 입력한다. 남은 한계는 AssetERP 05 §7.
-6. 컴파일/빌드/테스트/배포 실행 시: 셸에서 직접 실행하지 말고 `yunhee run "<명령어>"` (예: `yunhee run "./bm.sh compile"`, `yunhee run "npx tsc -b --noEmit"`)로 실행하여 요약만 확인한다.
-   원시 로그는 `.yunhee/runs/`(git-ignored)에 남고, 직전 결과는 `yunhee last-run`.
-7. `yunhee agent-guide`와 이 절이 다르면 이 절을 따른다.
+
+- 이 머신에는 AI 어시스턴트의 토큰 낭비를 원천 차단하기 위한 로컬 CLI `yunhee`가 설치되어 있습니다.
+-  작업 시 불필요한 전체 파일 읽기, grep/find, 셸 직접 빌드(mvn/gradle/npm)나 curl 호출을 금지합니다.
+
+1. **작업 전 도구 탐색**:
+   - 상황에 맞는 명령어를 찾으려면 먼저 아래 중앙 가이드 색인을 읽으세요:
+   👉 `/home/kdy987/work/yunhee-cli/docs/help/index.md`
+2. **세부 작업별 전문 가이드 (필요할 때 해당 파일 열람)**:
+   - 화면 레이아웃/그리드/SQL/메서드 분석: `/home/kdy987/work/yunhee-cli/docs/help/analysis.md`
+   - 업무 흐름/CRUD 매트릭스/상태 전이 추적: `/home/kdy987/work/yunhee-cli/docs/help/trace.md`
+   - SQL 포팅/DTO 생성/화면 스타일/드리프트: `/home/kdy987/work/yunhee-cli/docs/help/migration.md`
+   - 코드 줄 단위 탐색/빌드 실행/API/서버 로그:
+   ￹`/home/kdy987/work/yunhee-cli/docs/help/ops-and-log.md`
+3. **핵심 3대 금기 사항**:
+   - ❌ 소스 파일 전체를 읽지 마세요(cat 파일은 하지 말것) ➔ `yunhee outline <경로>` 및 `yunhee cat <파일:줄범위>` 사용
+   - ❌ 셸에서 직접 빌드/테스트를 돌리지 마세요 ➔ `yunhee run "<명령>"` 사용 (에러 자동 압축)
+   - ❌ 전체 DDL을 검색하거나 DB에 임의 쿼리하지 마세요 ➔ `yunhee table <테이블>` 사용
+
+
+## 작업완료
 8. **작업 완료 알림 (ntfy)**: 사용자의 요청에 따른 작업(화면 변환, 버그 수정, 빌드/테스트 등)이 끝나면 **항상** 아래 `curl` 명령을 실행하여 ntfy 알림을 전송한다:
    `curl -s -d "claude/agy message: <작업내용 요약> 작업 끝 남" ntfy.sh/asseterp-framework-gwtgxt-2-sbreact-2026`
 

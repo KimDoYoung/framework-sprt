@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { AttCommute, AttCommuteTimeReq, AttOvertimeReq, AttOvertimeReqUpdateReq, AttWorkPolicy } from '../types/att';
+import { AttCommute, AttCommuteStatus, AttCommuteTimeReq, AttOvertimeReq, AttOvertimeReqUpdateReq, AttWorkPolicy } from '../types/att';
 
 /** att(근태) 화면 API (T06~) */
 export const attApi = {
@@ -81,5 +81,19 @@ export const attApi = {
   updateOvertimeReqs: async (req: AttOvertimeReqUpdateReq): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>('v1/att/overtime-reqs', req);
     return res.data.data ?? 0;
+  },
+
+  // ── T08 근태현황(관리자) · T09 근태현황 (Att02_Tab_CommuteStatus · Att02_Tab_PersonStatus) ──
+
+  /** AS-IS att.Att02_Commute.getCommuteStatus — 근무일자 하루. 검색어 `%…%`는 서버 */
+  searchCommuteStatus: async (p: { baseDate: string; searchText: string; personId?: number | null }): Promise<AttCommuteStatus[]> => {
+    const res = await apiClient.get<ApiResponse<AttCommuteStatus[]>>('v1/att/commutes/status', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS att.Att02_Commute.getPersonStatus — 로그인 사원 본인의 기간 근태 */
+  searchPersonStatus: async (p: { startDate: string; closeDate: string }): Promise<AttCommuteStatus[]> => {
+    const res = await apiClient.get<ApiResponse<AttCommuteStatus[]>>('v1/att/commutes/person-status', { params: p });
+    return res.data.data ?? [];
   },
 };

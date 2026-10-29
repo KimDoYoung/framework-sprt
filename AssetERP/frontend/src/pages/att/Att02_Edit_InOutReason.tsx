@@ -10,7 +10,7 @@ import { Button } from '@/components/button';
 
 interface Props {
   /** 사유를 볼 출퇴근 행 — null이면 닫힘 */
-  target: AttCommute | null;
+  target: Pick<AttCommute, 'inReason' | 'outReason'> | null;
   onClose: () => void;
 }
 

@@ -172,6 +172,14 @@ import { Emp43_Tab_FinalAppr } from './emp/Emp43_Tab_FinalAppr';
 import { Emp43_Tab_EvalResult } from './emp/Emp43_Tab_EvalResult';
 import { Att02_Tab_CommuteAdmin } from './att/Att02_Tab_CommuteAdmin';
 import { Att03_Tab_OvertimeReq } from './att/Att03_Tab_OvertimeReq';
+import { Att02_Tab_CommuteStatus } from './att/Att02_Tab_CommuteStatus';
+import { Att02_Tab_PersonStatus } from './att/Att02_Tab_PersonStatus';
+import { Car01_Tab_Info } from './car/Car01_Tab_Info';
+import { Car03_Tab_List } from './car/Car03_Tab_List';
+import { Car04_Tab_PrivateJournal } from './car/Car04_Tab_PrivateJournal';
+import { Car04_Tab_PublicJournal } from './car/Car04_Tab_PublicJournal';
+import { Car04_Tab_PublicJournalAdmin } from './car/Car04_Tab_PublicJournalAdmin';
+import { Car04_Tab_PrivateJournalAdmin } from './car/Car04_Tab_PrivateJournalAdmin';
 import { Act01_Tab_AccountCode } from './act/Act01_Tab_AccountCode';
 import { Act10_Tab_ReprAccount } from './act/Act10_Tab_ReprAccount';
 import { Ast05_Tab_TrCodeAdmin } from './ast/Ast05_Tab_TrCodeAdmin';
@@ -497,6 +505,14 @@ export const SCREENS: Record<string, React.FC> = {
   Emp43_Tab_FinalAppr, // T04 (+ Emp43_Edit_CeoScore. 1단계: T03과 같음)
   Emp43_Tab_EvalResult, // T05 (+ 공용 사원찾기 Emp00_Lookup_SelectSingle)
   Att03_Tab_OvertimeReq, // T07
+  Att02_Tab_CommuteStatus, // T08 (+ Att02_Edit_InOutReason)
+  Att02_Tab_PersonStatus, // T09 (+ Att02_Edit_InOutReason)
+  Car01_Tab_Info, // T10 (+ Car01_Edit_Info, Car02_Grid_User)
+  Car03_Tab_List, // T13 (+ Car03_Tab_DayofMonth, Car03_Popup_BookingReg, Car03_TimelineChart)
+  Car04_Tab_PrivateJournal, // T11 (+ Car04_Lookup_PrivateJournal, Car01_Lookup_Info)
+  Car04_Tab_PrivateJournalAdmin, // T12 (+ Car04_Lookup_Batch)
+  Car04_Tab_PublicJournal, // T14 (+ Car04_Lookup_PublicJournal, Car01_Lookup_Info)
+  Car04_Tab_PublicJournalAdmin, // T15 (+ Car04_Lookup_PublicJournalAdmin, Car04_Edit_PublicJournalAdmin)
   Att02_Tab_CommuteAdmin, // T06 (+ Att02_Lookup_InsertBatch·Att02_Edit_InOutReason·Att02_Edit_CommuteBatch·Att02_Edit_Commute·Att01_Lookup_WorkPolicy)
   Act01_Tab_AccountCode, // E27 (+ Act01_Edit_AccountCode·Act01_Lookup_Parent·Act01_Lookup_PrintYn·Act01_Lookup_CopyAdmin)
   Act10_Tab_ReprAccount, // E28 (+ Act10_Lookup_ReprAccount)

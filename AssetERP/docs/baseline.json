@@ -9673,5 +9673,223 @@
     "note": "docs/work/T/T07-작업기록.md",
     "history": [],
     "id": "T07"
+  },
+  "Att02_Tab_CommuteStatus": {
+    "commit": "fc71b1a1c2304e8085b2aaf80a81603a99454e88",
+    "commit_short": "fc71b1a",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/att/Att02_Edit_InOutReason.java": "7984a0d61cf97a18dafc359fe576bf896dc89cb1",
+      "application/src/main/java/myApp/client/vi/att/Att02_Tab_CommuteStatus.java": "2d4ae1b821978caebb80a2548d9246565aed563a",
+      "application/src/main/java/myApp/client/vi/att/model/Att02_CommuteModel.java": "137da0f200343c5bf84baa747d5408cc936cceed",
+      "application/src/main/java/myApp/client/vi/att/model/Att02_CommuteModelProperties.java": "4f6c2b0ff9cefc32393bc8a051f8362b60af7e1b",
+      "application/src/main/java/myApp/server/att/Att02_Commute.java": "8cc187a471381cb1d96c1c3ff13af88b5a3ed44e",
+      "application/src/main/java/myApp/server/att/mapper/att02_commute.xml": "05e08cdfd85e1711a0f6f928bacd0fea54f6557d"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-29T10:45:50+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/T/T08-작업기록.md",
+    "history": [],
+    "id": "T08"
+  },
+  "Att02_Tab_PersonStatus": {
+    "commit": "fc71b1a1c2304e8085b2aaf80a81603a99454e88",
+    "commit_short": "fc71b1a",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/att/Att02_Edit_InOutReason.java": "7984a0d61cf97a18dafc359fe576bf896dc89cb1",
+      "application/src/main/java/myApp/client/vi/att/Att02_Tab_PersonStatus.java": "58aa34f1c29875346bd031d50d57562aed8f7484",
+      "application/src/main/java/myApp/client/vi/att/model/Att02_CommuteModel.java": "137da0f200343c5bf84baa747d5408cc936cceed",
+      "application/src/main/java/myApp/client/vi/att/model/Att02_CommuteModelProperties.java": "4f6c2b0ff9cefc32393bc8a051f8362b60af7e1b",
+      "application/src/main/java/myApp/server/att/Att02_Commute.java": "8cc187a471381cb1d96c1c3ff13af88b5a3ed44e",
+      "application/src/main/java/myApp/server/att/mapper/att02_commute.xml": "05e08cdfd85e1711a0f6f928bacd0fea54f6557d"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-29T10:45:50+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/T/T09-작업기록.md",
+    "history": [],
+    "id": "T09"
+  },
+  "Car01_Tab_Info": {
+    "commit": "fc71b1a1c2304e8085b2aaf80a81603a99454e88",
+    "commit_short": "fc71b1a",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/car/Car01_Edit_Info.java": "c527e951b34d773e28efaaf04b188d4420176066",
+      "application/src/main/java/myApp/client/vi/car/Car01_Tab_Info.java": "30409b5c29ad1594dd6e7a7bfe172da3a79c819b",
+      "application/src/main/java/myApp/client/vi/car/Car02_Grid_User.java": "0e089200b70db44ef2a323cdaea12aaf2add2d95",
+      "application/src/main/java/myApp/client/vi/car/model/Car01_InfoModel.java": "47a81f44ee57f728b4ac2ed2faf50c8966cdc163",
+      "application/src/main/java/myApp/client/vi/car/model/Car01_InfoModelProperties.java": "25c07b98d032fa335f40674b16611600b37cc159",
+      "application/src/main/java/myApp/client/vi/car/model/Car02_UserModel.java": "c68517afeab098656c1f736d2e2c3e36a35f8ff7",
+      "application/src/main/java/myApp/client/vi/car/model/Car02_UserModelProperties.java": "8104afbd0cea3e18ecf2a3a5f981f3eee742634c",
+      "application/src/main/java/myApp/server/car/Car01_Info.java": "47a351159d641c02cf6e0780f0de29a932999cd5",
+      "application/src/main/java/myApp/server/car/Car02_User.java": "07d5958154a894f8181d4deb40b692f1a776989a",
+      "application/src/main/java/myApp/server/car/Car03_Booking.java": "af45e6f912be864b500bd7eac854ecd062c99d6a",
+      "application/src/main/java/myApp/server/car/mapper/car01_info.xml": "0989677250aee7d49a8c925b75f8712e098bdc4c",
+      "application/src/main/java/myApp/server/car/mapper/car02_user.xml": "25a55c9ce389b292cb3aa3a146a0a7890fff4e40",
+      "application/src/main/java/myApp/server/car/mapper/car03_booking.xml": "95d549452791dc2c415429201d7bb9a87d0e3b48"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-29T10:59:09+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/T/T10-작업기록.md",
+    "history": [],
+    "id": "T10"
+  },
+  "Car04_Tab_PrivateJournal": {
+    "commit": "fc71b1a1c2304e8085b2aaf80a81603a99454e88",
+    "commit_short": "fc71b1a",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/car/Car01_Lookup_Info.java": "ee87caa92c9f64bfde1c752ba8e36db7c0ae4b31",
+      "application/src/main/java/myApp/client/vi/car/Car04_Lookup_PrivateJournal.java": "ecec264ec7204f892efa31a19883ea08e9509980",
+      "application/src/main/java/myApp/client/vi/car/Car04_Tab_PrivateJournal.java": "93774e8941d006b294bbb13d84cece818ca2bffd",
+      "application/src/main/java/myApp/client/vi/car/model/Car01_InfoModel.java": "47a81f44ee57f728b4ac2ed2faf50c8966cdc163",
+      "application/src/main/java/myApp/client/vi/car/model/Car01_InfoModelProperties.java": "25c07b98d032fa335f40674b16611600b37cc159",
+      "application/src/main/java/myApp/client/vi/car/model/Car03_BookingModel.java": "ea6451ad436d9d0590e53c1a27b527b784eb7b46",
+      "application/src/main/java/myApp/client/vi/car/model/Car04_JournalModel.java": "81d2257fa29c4111b1c74e70bb0ac66533e2b650",
+      "application/src/main/java/myApp/client/vi/car/model/Car04_JournalModelProperties.java": "d92b8d5879f6204c42f16b2f70244152614e58b9",
+      "application/src/main/java/myApp/server/car/Car01_Info.java": "47a351159d641c02cf6e0780f0de29a932999cd5",
+      "application/src/main/java/myApp/server/car/Car04_Journal.java": "04d7696e64d98c264dff95a426ef4499b30a9133",
+      "application/src/main/java/myApp/server/car/mapper/car01_info.xml": "0989677250aee7d49a8c925b75f8712e098bdc4c",
+      "application/src/main/java/myApp/server/car/mapper/car04_journal.xml": "83e8e1ebc1869333d502f8c9a1303d512ad7598f",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-29T11:15:07+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/T/T11-작업기록.md",
+    "history": [],
+    "id": "T11"
+  },
+  "Car04_Tab_PrivateJournalAdmin": {
+    "commit": "fc71b1a1c2304e8085b2aaf80a81603a99454e88",
+    "commit_short": "fc71b1a",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/car/Car01_Lookup_Info.java": "ee87caa92c9f64bfde1c752ba8e36db7c0ae4b31",
+      "application/src/main/java/myApp/client/vi/car/Car04_Lookup_Batch.java": "78fc8e0f8ba6c44aa606f4308d3a56fabd60d77d",
+      "application/src/main/java/myApp/client/vi/car/Car04_Lookup_PrivateJournal.java": "ecec264ec7204f892efa31a19883ea08e9509980",
+      "application/src/main/java/myApp/client/vi/car/Car04_Tab_PrivateJournalAdmin.java": "67f72d71b8f2c82375255d9c8cfb781cff015c67",
+      "application/src/main/java/myApp/client/vi/car/model/Car01_InfoModel.java": "47a81f44ee57f728b4ac2ed2faf50c8966cdc163",
+      "application/src/main/java/myApp/client/vi/car/model/Car01_InfoModelProperties.java": "25c07b98d032fa335f40674b16611600b37cc159",
+      "application/src/main/java/myApp/client/vi/car/model/Car03_BookingModel.java": "ea6451ad436d9d0590e53c1a27b527b784eb7b46",
+      "application/src/main/java/myApp/client/vi/car/model/Car04_JournalModel.java": "81d2257fa29c4111b1c74e70bb0ac66533e2b650",
+      "application/src/main/java/myApp/client/vi/car/model/Car04_JournalModelProperties.java": "d92b8d5879f6204c42f16b2f70244152614e58b9",
+      "application/src/main/java/myApp/server/car/Car01_Info.java": "47a351159d641c02cf6e0780f0de29a932999cd5",
+      "application/src/main/java/myApp/server/car/Car04_Journal.java": "04d7696e64d98c264dff95a426ef4499b30a9133",
+      "application/src/main/java/myApp/server/car/mapper/car01_info.xml": "0989677250aee7d49a8c925b75f8712e098bdc4c",
+      "application/src/main/java/myApp/server/car/mapper/car04_journal.xml": "83e8e1ebc1869333d502f8c9a1303d512ad7598f",
+      "application/src/main/java/myApp/server/sys/mapper/sys12_calendar.xml": "4d765811d5aa8954038cdb196caca5fe413b4339",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-29T11:23:05+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/T/T12-작업기록.md",
+    "history": [],
+    "id": "T12"
+  },
+  "Car03_Tab_List": {
+    "commit": "fc71b1a1c2304e8085b2aaf80a81603a99454e88",
+    "commit_short": "fc71b1a",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/car/Car03_Tab_DayofMonth.java": "23f6ea7c9d8667fd7a399be29484446dc090928d",
+      "application/src/main/java/myApp/client/vi/car/Car03_Tab_List.java": "c86bd6ad07f70d7103effe8902fb5b91915d9606",
+      "application/src/main/java/myApp/client/vi/car/model/Car03_BookingModel.java": "ea6451ad436d9d0590e53c1a27b527b784eb7b46",
+      "application/src/main/java/myApp/client/vi/car/model/Car03_BookingModelProperties.java": "590893ee4c3364607d3e0162d27d0a541372516e",
+      "application/src/main/java/myApp/server/car/Car03_Booking.java": "af45e6f912be864b500bd7eac854ecd062c99d6a",
+      "application/src/main/java/myApp/server/car/mapper/car03_booking.xml": "95d549452791dc2c415429201d7bb9a87d0e3b48"
+    },
+    "shared_links": [
+      "Car03_Popup_BookingReg"
+    ],
+    "recorded_at": "2026-10-29T11:43:44+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/T/T13-작업기록.md",
+    "history": [],
+    "id": "T13"
+  },
+  "Car04_Tab_PublicJournal": {
+    "commit": "fc71b1a1c2304e8085b2aaf80a81603a99454e88",
+    "commit_short": "fc71b1a",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/car/Car01_Lookup_Info.java": "ee87caa92c9f64bfde1c752ba8e36db7c0ae4b31",
+      "application/src/main/java/myApp/client/vi/car/Car04_Lookup_PublicJournal.java": "eb54b5fbcbad4ce47d3ae0cdf288db98388ad0a9",
+      "application/src/main/java/myApp/client/vi/car/Car04_Tab_PublicJournal.java": "29eb6de9a10056750da22548ae2063494d029551",
+      "application/src/main/java/myApp/client/vi/car/model/Car01_InfoModel.java": "47a81f44ee57f728b4ac2ed2faf50c8966cdc163",
+      "application/src/main/java/myApp/client/vi/car/model/Car01_InfoModelProperties.java": "25c07b98d032fa335f40674b16611600b37cc159",
+      "application/src/main/java/myApp/client/vi/car/model/Car03_BookingModel.java": "ea6451ad436d9d0590e53c1a27b527b784eb7b46",
+      "application/src/main/java/myApp/client/vi/car/model/Car04_JournalModel.java": "81d2257fa29c4111b1c74e70bb0ac66533e2b650",
+      "application/src/main/java/myApp/client/vi/car/model/Car04_JournalModelProperties.java": "d92b8d5879f6204c42f16b2f70244152614e58b9",
+      "application/src/main/java/myApp/server/car/Car01_Info.java": "47a351159d641c02cf6e0780f0de29a932999cd5",
+      "application/src/main/java/myApp/server/car/Car04_Journal.java": "04d7696e64d98c264dff95a426ef4499b30a9133",
+      "application/src/main/java/myApp/server/car/mapper/car01_info.xml": "0989677250aee7d49a8c925b75f8712e098bdc4c",
+      "application/src/main/java/myApp/server/car/mapper/car04_journal.xml": "83e8e1ebc1869333d502f8c9a1303d512ad7598f",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-29T11:51:51+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/T/T14-작업기록.md",
+    "history": [],
+    "id": "T14"
+  },
+  "Car04_Tab_PublicJournalAdmin": {
+    "commit": "fc71b1a1c2304e8085b2aaf80a81603a99454e88",
+    "commit_short": "fc71b1a",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/car/Car01_Lookup_Info.java": "ee87caa92c9f64bfde1c752ba8e36db7c0ae4b31",
+      "application/src/main/java/myApp/client/vi/car/Car04_Edit_PublicJournalAdmin.java": "1fdf684888dddf51f9e321a9975d07cb01952ab0",
+      "application/src/main/java/myApp/client/vi/car/Car04_Lookup_PublicJournalAdmin.java": "271295f1700771a6852c0f46eb96ee0fd152158b",
+      "application/src/main/java/myApp/client/vi/car/Car04_Tab_PublicJournalAdmin.java": "7ce5bce0978a6b7e9b3b3b30873ad2f66cb57222",
+      "application/src/main/java/myApp/client/vi/car/model/Car01_InfoModel.java": "47a81f44ee57f728b4ac2ed2faf50c8966cdc163",
+      "application/src/main/java/myApp/client/vi/car/model/Car01_InfoModelProperties.java": "25c07b98d032fa335f40674b16611600b37cc159",
+      "application/src/main/java/myApp/client/vi/car/model/Car03_BookingModel.java": "ea6451ad436d9d0590e53c1a27b527b784eb7b46",
+      "application/src/main/java/myApp/client/vi/car/model/Car04_JournalModel.java": "81d2257fa29c4111b1c74e70bb0ac66533e2b650",
+      "application/src/main/java/myApp/client/vi/car/model/Car04_JournalModelProperties.java": "d92b8d5879f6204c42f16b2f70244152614e58b9",
+      "application/src/main/java/myApp/server/car/Car01_Info.java": "47a351159d641c02cf6e0780f0de29a932999cd5",
+      "application/src/main/java/myApp/server/car/Car03_Booking.java": "af45e6f912be864b500bd7eac854ecd062c99d6a",
+      "application/src/main/java/myApp/server/car/Car04_Journal.java": "04d7696e64d98c264dff95a426ef4499b30a9133",
+      "application/src/main/java/myApp/server/car/mapper/car01_info.xml": "0989677250aee7d49a8c925b75f8712e098bdc4c",
+      "application/src/main/java/myApp/server/car/mapper/car03_booking.xml": "95d549452791dc2c415429201d7bb9a87d0e3b48",
+      "application/src/main/java/myApp/server/car/mapper/car04_journal.xml": "83e8e1ebc1869333d502f8c9a1303d512ad7598f",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-29T12:00:51+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/T/T15-작업기록.md",
+    "history": [],
+    "id": "T15"
   }
 }

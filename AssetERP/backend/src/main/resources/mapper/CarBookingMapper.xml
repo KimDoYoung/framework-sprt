@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/car/mapper/car03_booking.xml (selectByList, selectByDate, selectByDateUnion, selectById, confirmUpdate, deleteParentId) + UpdateDataModel(car03_booking)  (T13) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.car.mapper.CarBookingMapper">
+
+    <sql id="bookingColumns">
+        a.car03_booking_id                                    AS booking_id,
+        a.car03_info_id                                       AS info_id,
+        a.car03_person_id                                     AS person_id,
+        a.car03_start_date                                    AS start_date,
+        a.car03_start_hour                                    AS start_hour,
+        a.car03_start_min                                     AS start_min,
+        COALESCE(a.car03_close_date, a.car03_start_date)      AS close_date,
+        a.car03_close_hour                                    AS close_hour,
+        a.car03_close_min                                     AS close_min,
+        a.car03_destination                                   AS destination,
+        a.car03_reason                                        AS reason,
+        a.car03_attendance                                    AS attendance,
+        a.car03_note                                          AS note,
+        a.car03_parent_id                                     AS parent_id,
+        a.car03_reg_emp_id                                    AS reg_emp_id,
+        f_emp_kor_nm(a.car03_person_id)                       AS person_nm,
+        b.car01_car_nm                                        AS info_nm
+    </sql>
+
+    <!-- AS-IS car03_booking.selectByList L53 (IDMS-IC) -->
+    <select id="selectByList" resultType="kr.co.kfs.asseterp.biz.car.dto.CarBookingRes">
+        SELECT <include refid="bookingColumns"/>
+             , a.car03_start_hour||':'||a.car03_start_min||' ~ '||a.car03_close_hour||':'||a.car03_close_min AS time
+          FROM car03_booking a
+               INNER JOIN car01_info b ON a.car03_info_id = b.car01_info_id
+         WHERE 1=1
+           AND b.car01_company_id = #{companyId}
+           AND a.car03_parent_id = 0
+           AND to_char(f_sysdate(),'YYYYMMDD') &lt;= to_char(COALESCE(a.car03_close_date, a.car03_start_date),'YYYYMMDD')
+         ORDER BY a.car03_start_date, COALESCE(a.car03_close_date, a.car03_start_date) DESC, b.car01_car_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS car03_booking.selectByDate L68 (IDMS-IC) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.car.dto.CarBookingRes">
+        SELECT <include refid="bookingColumns"/>
+             , CAST(NULL AS varchar) AS time
+          FROM car03_booking a
+               INNER JOIN car01_info b ON a.car03_info_id = b.car01_info_id
+         WHERE 1=1
+           AND f_trunc(a.car03_start_date) = f_trunc(CAST(#{date} AS timestamp))
+           AND b.car01_company_id = #{companyId}
+        <if test="type == 'my'">
+           AND a.car03_person_id = #{personId}
+        </if>
+         ORDER BY b.car01_car_nm COLLATE "ko_KR.utf8", a.car03_start_date
+    </select>
+
+    <!-- AS-IS car03_booking.selectByDateUnion (IDMS-IC) — 날짜 조건은 car03_start_date = :startDate -->
+    <select id="selectByDateUnion" resultType="kr.co.kfs.asseterp.biz.car.dto.CarBookingTimelineRes">
+        SELECT COALESCE(car03_booking_id, 1)                                       AS booking_id
+             , COALESCE(car03_person_id, 0)                                        AS person_id
+             , COALESCE(car03_info_id, 0)                                          AS info_id
+             , COALESCE(car03_start_date, CAST(#{date} AS date))                   AS start_date
+             , COALESCE(f_emp_kor_nm(car03_person_id), ' ')                        AS person_nm
+             , COALESCE(car03_destination, ' ')                                    AS destination
+             , COALESCE(car01_car_nm, ' ')                                         AS info_nm
+             , to_char(COALESCE(car03_start_time, to_timestamp(to_char(f_trunc(CAST(#{date} AS timestamp)),'YYYYMMDD')||'080000','YYYYMMDDHH24MISS')),'YYYY-MM-DD HH24:MI:SS') AS start_time
+             , to_char(COALESCE(car03_close_time, to_timestamp(to_char(f_trunc(CAST(#{date} AS timestamp)),'YYYYMMDD')||'080000','YYYYMMDDHH24MISS')),'YYYY-MM-DD HH24:MI:SS') AS close_time
+          FROM car01_info t0
+               LEFT OUTER JOIN (
+                    SELECT a.*
+                         , to_timestamp(to_char(f_trunc(car03_start_date),'YYYYMMDD')||car03_start_hour||car03_start_min||'01', 'YYYYMMDDHH24MISS') AS car03_start_time
+                         , to_timestamp(to_char(f_trunc(car03_start_date),'YYYYMMDD')||car03_close_hour||car03_close_min||'00', 'YYYYMMDDHH24MISS') AS car03_close_time
+                      FROM car03_booking a
+                     WHERE car03_start_date = #{date}
+               ) t1 ON t0.car01_info_id = t1.car03_info_id
+         WHERE 1=1
+           AND car01_company_id = #{companyId}
+           AND car01_car_type LIKE '2'
+         UNION ALL
+        SELECT 1
+             , 0
+             , 0
+             , CAST(#{date} AS date)
+             , ' '
+             , ' '
+             , '공용차량 사용시간'
+             , to_char(to_timestamp(to_char(f_trunc(CAST(#{date} AS timestamp)),'YYYYMMDD')||'080000', 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS')
+             , to_char(to_timestamp(to_char(f_trunc(CAST(#{date} AS timestamp)),'YYYYMMDD')||'190000', 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS')
+         ORDER BY 4
+    </select>
+
+    <!-- AS-IS car03_booking.selectById (IDMS-IC) — 저장 결과 한 행 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.car.dto.CarBookingRes">
+        SELECT <include refid="bookingColumns"/>
+             , CAST(NULL AS varchar) AS time
+          FROM car03_booking a
+               INNER JOIN car01_info b ON a.car03_info_id = b.car01_info_id
+         WHERE a.car03_booking_id = #{bookingId}
+    </select>
+
+    <!-- AS-IS car03_booking.confirmUpdate (IDMS-IC) -->
+    <select id="confirmUpdate" resultType="string">
+        SELECT f_booking_car_check( #{bookingId}
+                                  , #{infoId}
+                                  , CAST(#{startDate} AS timestamp)
+                                  , #{startHour}
+                                  , #{startMin}
+                                  , #{closeHour}
+                                  , #{closeMin}
+               ) AS car03_check_ok
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT COUNT(*) FROM car03_booking WHERE car03_booking_id = #{bookingId}
+    </select>
+
+    <insert id="insertBooking">
+        INSERT INTO car03_booking (car03_booking_id, car03_info_id, car03_person_id, car03_start_date, car03_start_hour, car03_start_min, car03_close_date, car03_close_hour, car03_close_min, car03_destination, car03_reason, car03_attendance, car03_note, car03_parent_id, car03_reg_emp_id)
+        VALUES (#{bookingId}, #{req.infoId}, #{req.personId}, #{startDate}, #{req.startHour}, #{req.startMin}, #{closeDate}, #{req.closeHour}, #{req.closeMin}, #{req.destination}, #{req.reason}, #{req.attendance}, #{req.note}, #{parentId}, #{req.regEmpId})
+    </insert>
+
+    <update id="updateBooking">
+        UPDATE car03_booking
+           SET car03_info_id     = #{req.infoId},
+               car03_person_id   = #{req.personId},
+               car03_start_date  = #{startDate},
+               car03_start_hour  = #{req.startHour},
+               car03_start_min   = #{req.startMin},
+               car03_close_date  = #{closeDate},
+               car03_close_hour  = #{req.closeHour},
+               car03_close_min   = #{req.closeMin},
+               car03_destination = #{req.destination},
+               car03_reason      = #{req.reason},
+               car03_attendance  = #{req.attendance},
+               car03_note        = #{req.note},
+               car03_parent_id   = #{parentId},
+               car03_reg_emp_id  = #{req.regEmpId}
+         WHERE car03_booking_id = #{bookingId}
+    </update>
+
+    <!-- AS-IS car03_booking.deleteParentId (IDMS-IC) — car03에는 회사 컬럼이 없어 차량정보로 막는다 -->
+    <delete id="deleteByParentId">
+        DELETE FROM car03_booking
+         WHERE car03_parent_id = #{parentId}
+           AND car03_info_id IN (SELECT car01_info_id FROM car01_info WHERE car01_company_id = #{companyId})
+    </delete>
+
+    <delete id="deleteByIds">
+        DELETE FROM car03_booking
+         WHERE car03_booking_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+           AND car03_info_id IN (SELECT car01_info_id FROM car01_info WHERE car01_company_id = #{companyId})
+    </delete>
+</mapper>
