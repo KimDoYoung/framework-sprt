@@ -158,8 +158,8 @@ SGP/SG, TP/TG 등 이미 판별되는 SID는 규칙을 바꾸지 말고 그대�
 
 | 화면 | 기대 → 판별 | 확인할 것 |
 |:---|:--|:--|
-| `Pay31_Tab_InsureApply` | TP → STP | 화면에 `SearchBar`가 있는데 `search: false`로 읽힌다. 선언 `STP`가 우선했다. 조건 줄이 실제로 있으면 STP가 맞고 §2 표(TP)를 고친다. |
-| `Pay20_Tab_Deduct` | TP → STP | `Pay20_Tab_DeductAdmin`을 위임받아 부모 SID를 따른다. 부모가 TP인지 STP인지 확인한다. |
+| `Pay31_Tab_InsureApply` | TP → STP | **결정(2026-10-29)**: 툴바 없이 탭만 있어 TP가 맞다. 선언이 STP로 잘못 적혀 있던 것을 TP로 고쳤다. 판별기는 이제 TP로 나온다. |
+| `Pay20_Tab_Deduct` | TP → STP | **결정(2026-10-29)**: 부모 `Pay20_Tab_DeductAdmin`이 TP라 TP. 선언이 STP로 잘못 적혀 있던 것을 고쳤다. |
 | `Pay10_Tab_List` | STP → SR | `iframe`이 있어 SR로 갔다. 탭·RD 중 어느 쪽이 주인지 정하고, SR 규칙(`*_Rd_*` import 또는 iframe)과 STP 규칙의 우선순위를 정한다. |
 
 ## 4-2. SID `DB` → `DSBRD` 이름 변경 (2026-10-29, 0.6.8 이후 요청)

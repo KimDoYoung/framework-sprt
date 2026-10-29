@@ -3,14 +3,16 @@
  * AS-IS: myApp/client/vi/tdm/Tdm50_Tab_CheckJob.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L79-117: center = 툴바(점검년월 · [조회][작업정보등록][점검항목생성][알림발송] · [(회사전체 당월)점검마감][마감취소], 높이 50) + 작업 요약 글(높이 50, 테두리) + 보고CEO 직책 탭(Tdm50_TabPage_CheckJob), 여백 20·테두리
  * 1단계: [알림발송]이 여는 문자 발송 창(Sms03_Lookup_SendList, 다른 도메인)은 대상 부서담당자를 읽은 뒤 안내만 한다. 결재요청·문서보기는 TabPage 참고.
+ * 스타일: STP (docs/page-style.md) — 조건 줄이 SearchBar가 아니라 직접 만든 줄(점검년월 QuickMoveField + 버튼 7개)
  * UX보강(10): 툴바 = Button(UX-01)
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Modal, Tabs, message } from 'antd';
+import { Modal, message } from 'antd';
 import { errorMessage } from '@/api/client';
 import { tdmApi } from '@/api/tdm';
 import { TdmCheckJob, TdmCheckRole } from '@/types/tdm';
 import { Button } from '@/components/button';
+import { PageTabs } from '@/components/tabs';
 import { QuickMoveField, YearMonth } from '@/components/form/QuickMoveField';
 import { checkYmOf, firstDayOf, ymOfCheckYm } from './Tdm50_Dashboard_Common';
 import { Tdm50_Edit_CheckJob } from './Tdm50_Edit_CheckJob';
@@ -190,8 +192,8 @@ export const Tdm50_Tab_CheckJob: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
-        <div style={{ flex: 'none', height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', boxSizing: 'border-box' }}>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+        <div style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: 8, padding: 10, boxSizing: 'border-box' }}>
           <b>점검년월</b>
           <QuickMoveField {...ym} onChange={setYm} onCommit={v => { void retrieve(v); }} />
           <Button type="search" onClick={onRetrieve} disabled={loading}>조회</Button>
@@ -202,7 +204,7 @@ export const Tdm50_Tab_CheckJob: React.FC = () => {
           <Button type="save" disabled={ended || !job} onClick={() => updateEndYnChk(true)}>(회사전체 당월)점검마감</Button>
           <Button type="cancel" disabled={!ended} onClick={() => updateEndYnChk(false)}>마감취소</Button>
         </div>
-        <div style={{ flex: 'none', height: 50, display: 'flex', alignItems: 'center', padding: '0 15px 0 20px', boxSizing: 'border-box', border: '1px solid #d9d9d9', margin: '0 -1px', fontSize: 14 }}>
+        <div style={{ flex: 'none', display: 'flex', alignItems: 'center', padding: '0 10px 10px', boxSizing: 'border-box', fontSize: 14 }}>
           {job && (
             <b>
               {' [ 점검시작일 : '}{dateStr(job.startDate)}
@@ -214,17 +216,22 @@ export const Tdm50_Tab_CheckJob: React.FC = () => {
           )}
         </div>
         {/* plainTabPanel — 직책마다 Tdm50_TabPage_CheckJob(roleId, 작업 사본). 조회마다 다시 만들고, 탭은 모두 만들어 두었다가 고른 것만 보인다 */}
-        <Tabs
-          activeKey={activeRole == null ? undefined : String(activeRole)}
-          onChange={k => setActiveRole(Number(k))}
-          tabBarStyle={{ margin: 0, paddingLeft: 10 }}
-          items={roles.map(r => ({ key: String(r.roleId), label: r.roleName }))}
-        />
-        {job && roles.map(r => (
-          <div key={`${r.roleId}-${tabNonce}`} style={{ flex: 1, minHeight: 0, display: activeRole === r.roleId ? 'block' : 'none' }}>
-            <Tdm50_TabPage_CheckJob target={{ roleId: r.roleId, job }} />
+        <div style={{ flex: 1, minHeight: 0, boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column' }}>
+          <PageTabs
+            activeKey={activeRole == null ? undefined : String(activeRole)}
+            onChange={k => setActiveRole(Number(k))}
+            items={roles.map(r => ({ key: String(r.roleId), label: r.roleName }))}
+            style={{ flex: 'none' }}
+            tabBarStyle={{ marginBottom: 0 }}
+          />
+          <div style={{ flex: 1, minHeight: 0, border: '1px solid #d9d9d9', borderTop: 0 }}>
+            {job && roles.map(r => (
+              <div key={`${r.roleId}-${tabNonce}`} style={{ height: '100%', display: activeRole === r.roleId ? 'block' : 'none' }}>
+                <Tdm50_TabPage_CheckJob target={{ roleId: r.roleId, job }} />
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
       <Tdm50_Edit_CheckJob job={editJob} onSaved={() => { void retrieve(ym); }} onClose={() => setEditJob(null)} />
     </div>

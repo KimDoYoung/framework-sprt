@@ -5,9 +5,10 @@
  * 탭을 고를 때마다 그 탭의 retrieve()를 부른다(retrieveTabpage L74-77).
  * 1단계(E22): 탭 1~3(항목관리·임금계산방법·율관리), 2단계(E22-2): 탭 4~6(근로소득 간이세액표·근로소득 공제표·인적공제금액).
  * 3단계(E22-3): 탭 7~9(과세표준 구간별 기본세율·근로소득 세액공제·기타설정).
+ * 스타일: TP (docs/page-style.md)
  */
 import React, { useRef, useState } from 'react';
-import { Tabs } from 'antd';
+import { PageTabs } from '@/components/tabs';
 import { Pay04_TabPage_Formula } from './Pay04_TabPage_Formula';
 import { Pay20_TabPage_Item, PayTabPageHandle } from './Pay20_TabPage_Item';
 import { Pay21_TabPage_Rate } from './Pay21_TabPage_Rate';
@@ -63,14 +64,8 @@ export const Pay20_Tab_DeductAdmin: React.FC = () => {
 
   return (
     <div style={{ height: '100%', boxSizing: 'border-box', padding: 20, background: '#fff', display: 'flex', flexDirection: 'column' }}>
-      <Tabs
-        type="card"
-        activeKey={activeKey}
-        onChange={onChange}
-        items={TABS.map(t => ({ key: t.key, label: t.label }))}
-        style={{ flex: 'none', marginBottom: 0 }}
-      />
-      <div style={{ flex: 1, minHeight: 0, border: '1px solid #f0f0f0', padding: 10 }}>
+      <PageTabs activeKey={activeKey} onChange={onChange} items={TABS.map(t => ({ key: t.key, label: t.label }))} style={{ flex: 'none', marginBottom: 0 }} />
+      <div style={{ flex: 1, minHeight: 0, padding: 10, boxSizing: 'border-box' }}>
         {TABS.filter(t => opened.includes(t.key)).map(t => (
           <div key={t.key} className="pay20-pane" style={{ height: '100%', display: t.key === activeKey ? 'block' : 'none' }}>{page(t.key)}</div>
         ))}
