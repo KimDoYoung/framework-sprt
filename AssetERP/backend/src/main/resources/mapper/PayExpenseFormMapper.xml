@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/pay/mapper/pay51_expense_form.xml (selectByCompanyId, insert) + sys09_code.selectByExpenseForm + UpdateDataModel(pay51_expense_form)  (U03) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayExpenseFormMapper">
+
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseFormRes">
+        SELECT pay51_expense_form_id                                                         AS expense_form_id,
+               pay51_form_cd                                                                 AS form_code,
+               f_cdnm('ExpenseDetailType', pay51_form_cd, pay51_company_id, f_today())       AS form_name,
+               pay51_content                                                                 AS content
+          FROM pay51_expense_form
+               INNER JOIN (SELECT *
+                             FROM sys08_code_kind
+                                  INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+                            WHERE sys08_kind_cd = 'ExpenseDetailType'
+                              AND sys09_company_id = #{companyId}
+                              AND ( ( COALESCE(sys09_close_yn  ,'false') = 'true'                      AND
+                                      COALESCE(sys09_close_date,'1900-12-31') <![CDATA[>=]]> f_today() ) OR
+                                    ( COALESCE(sys09_close_yn  ,'false') = 'false'                     ) )
+                          ) sys ON sys09_code = pay51_form_cd
+         WHERE pay51_company_id = #{companyId}
+    </select>
+
+    <select id="selectNewFormCodes" resultType="string">
+        SELECT sys09_code
+          FROM sys09_code
+               INNER JOIN sys08_code_kind ON sys09_code_kind_id = sys08_code_kind_id
+         WHERE sys08_kind_cd = #{kindCode}
+           AND sys09_company_id = #{companyId}
+           AND sys09_code NOT IN (SELECT pay51_form_cd
+                                    FROM pay51_expense_form
+                                   WHERE pay51_company_id = #{companyId})
+         ORDER BY sys09_seq
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO pay51_expense_form
+             ( pay51_expense_form_id, pay51_company_id, pay51_form_cd )
+        VALUES ( #{expenseFormId}, #{companyId}, #{formCode} )
+    </insert>
+
+    <update id="updateContent">
+        UPDATE pay51_expense_form
+           SET pay51_content = #{content}
+         WHERE pay51_expense_form_id = #{expenseFormId}
+           AND pay51_company_id      = #{companyId}
+    </update>
+</mapper>

@@ -575,3 +575,93 @@ export interface PayBasicSetupSaveReq {
   eiDivPayCode: string | null;
   eiMaxDiv: number | null;
 }
+
+/** 지출결의서 한 행 (U03, AS-IS Pay50_ExpenseModel) — 목록과 아래 편집 폼이 같이 쓴다 */
+export interface PayExpense {
+  expenseId: number;
+  companyId: number;
+  expenseCode: string | null;
+  expenseName: string | null;
+  regEmpId: number | null;
+  regDate: string | null;
+  occDate: string | null;
+  desc: string | null;
+  content: string | null;
+  corpId: number | null;
+  corpName: string | null;
+  taxType: string | null;
+  taxTypeName: string | null;
+  amt: number | null;
+  tax: number | null;
+  settleAmt: number | null;
+  dueDate: string | null;
+  payMethodCode: string | null;
+  payMethodName: string | null;
+  payAccountInfo: string | null;
+  confirmerId: number | null;
+  confirmStatusCode: string | null;
+  confirmerOrgName: string | null;
+  apprEmpId: number | null;
+  apprEmpOrgName: string | null;
+  rejectReason: string | null;
+  rejectSmsYn: string | null;
+  accountCode: string | null;
+  accountName: string | null;
+  note: string | null;
+  depositId: number | null;
+  depositName: string | null;
+  astId: number | null;
+  astName: string | null;
+  floralId: number | null;
+  journalId: number | null;
+  expenseApprId: number | null;
+  expenseApprTitle: string | null;
+  expenseApprStatusCode: string | null;
+  expenseApprStatusName: string | null;
+  regEmpOrgName: string | null;
+  expenseStatusName: string | null;
+  fileCountStr: string | null;
+  /** 요청자의 발생부서(상신 때 같은 부서끼리만 묶는다) */
+  orgName: string | null;
+}
+
+/** 저장 요청 (AS-IS Pay50_Edit_Expense.update — 화면이 바꾸는 열) */
+export type PayExpenseUpdateReq = Pick<PayExpense,
+  'occDate' | 'desc' | 'corpId' | 'taxType' | 'amt' | 'tax' | 'settleAmt' | 'dueDate' | 'payMethodCode' | 'payAccountInfo' | 'accountCode' | 'note' | 'depositId' | 'astId'>;
+
+/** 지출요청내역 한 행 (AS-IS selectExpenseRequest) */
+export interface PayExpenseRequest {
+  expenseId: number;
+  companyId: number;
+  expenseCode: string;
+  expenseName: string | null;
+  regEmpId: number | null;
+  regEmpOrgName: string | null;
+  regDate: string | null;
+  occDate: string | null;
+  desc: string | null;
+  settleAmt: number | null;
+  dueDate: string | null;
+  corpId: number | null;
+  corpName: string | null;
+  floralId: number | null;
+}
+
+/** 지출요청 상세양식 (AS-IS Pay51_ExpenseFormModel) */
+export interface PayExpenseForm {
+  expenseFormId: number;
+  formCode: string;
+  formName: string;
+  content: string | null;
+}
+
+/** 자주 쓰는 계정과목 (AS-IS Pay52_FavoriteAccountModel) */
+export interface PayFavoriteAccount {
+  favoriteAccountId: number;
+  accountCodeId: number;
+  seq: number | null;
+  accountCode: string;
+  accountName: string;
+  attributeCode: string;
+  attributeName: string | null;
+}

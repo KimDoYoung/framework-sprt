@@ -315,7 +315,10 @@ export interface AstBookPeriod {
 export interface AstCorpAccount {
   classTreeId: number;
   itemSClassName: string | null;
+  corpId: number | null;
   corpName: string | null;
   classTreeName: string | null;
   corpAccountName: string | null;
+  /** 지출처의 대표계좌 "은행 계좌번호 예금주" (U03 — 지급요청계좌에 채운다) */
+  corpPayAccountInfo: string | null;
 }

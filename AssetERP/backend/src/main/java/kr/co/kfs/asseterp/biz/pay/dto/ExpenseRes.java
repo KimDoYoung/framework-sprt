@@ -1,0 +1,52 @@
+package kr.co.kfs.asseterp.biz.pay.dto;
+
+import java.time.LocalDate;
+
+/** 지출결의서 한 행 (AS-IS Pay50_ExpenseModel, pay50_expense + 이름·상신 조인) — 목록 그리드와 아래 편집 폼이 같이 쓴다 */
+public record ExpenseRes(
+        Long expenseId,
+        Long companyId,
+        String expenseCode,
+        String expenseName,
+        Long regEmpId,
+        LocalDate regDate,
+        LocalDate occDate,
+        String desc,
+        String content,
+        Long corpId,
+        String corpName,
+        String taxType,
+        String taxTypeName,
+        Long amt,
+        Long tax,
+        Long settleAmt,
+        LocalDate dueDate,
+        String payMethodCode,
+        String payMethodName,
+        String payAccountInfo,
+        Long confirmerId,
+        String confirmStatusCode,
+        String confirmerOrgName,
+        Long apprEmpId,
+        String apprEmpOrgName,
+        String rejectReason,
+        String rejectSmsYn,
+        String accountCode,
+        String accountName,
+        String note,
+        Long depositId,
+        String depositName,
+        Long astId,
+        String astName,
+        Long floralId,
+        Long journalId,
+        Long expenseApprId,
+        String expenseApprTitle,
+        String expenseApprStatusCode,
+        String expenseApprStatusName,
+        String regEmpOrgName,
+        String expenseStatusName,
+        String fileCountStr,
+        String orgName
+) {
+}

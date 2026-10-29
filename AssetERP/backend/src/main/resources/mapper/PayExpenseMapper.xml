@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/pay/mapper/pay50_expense.xml (selectExpenseAppr L365, selectExpenseRequest L307, selectById L110, insertRequest L1304,
+     updateModel L1394, updateRejectReason L1450, updateApprEmpId L1457, initExpense L1500, updateContent L1530, deleteById L1543) (U03) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayExpenseMapper">
+
+    <!-- 목록·편집 폼이 같이 쓰는 열. 안쪽 select가 pay50_* 이름으로 만든다 -->
+    <sql id="expenseColumns">
+        pay50_expense_id                    AS expense_id,
+        pay50_company_id                    AS company_id,
+        pay50_expense_cd                    AS expense_code,
+        pay50_expense_nm                    AS expense_name,
+        pay50_reg_emp_id                    AS reg_emp_id,
+        pay50_reg_date                      AS reg_date,
+        pay50_occ_date                      AS occ_date,
+        pay50_desc                          AS "desc",
+        pay50_content                       AS content,
+        pay50_corp_id                       AS corp_id,
+        pay50_corp_nm                       AS corp_name,
+        pay50_tax_type                      AS tax_type,
+        pay50_tax_type_nm                   AS tax_type_name,
+        pay50_amt                           AS amt,
+        COALESCE(pay50_tax, 0)              AS tax,
+        pay50_settle_amt                    AS settle_amt,
+        pay50_due_date                      AS due_date,
+        pay50_pay_method_cd                 AS pay_method_code,
+        pay50_pay_method_nm                 AS pay_method_name,
+        pay50_pay_account_info              AS pay_account_info,
+        pay50_confirmer_id                  AS confirmer_id,
+        pay50_confirm_status_cd             AS confirm_status_code,
+        pay50_confirmer_org_nm              AS confirmer_org_name,
+        pay50_appr_emp_id                   AS appr_emp_id,
+        pay50_appr_emp_org_nm               AS appr_emp_org_name,
+        pay50_reject_reason                 AS reject_reason,
+        COALESCE(pay50_reject_sms_yn, 'false') AS reject_sms_yn,
+        pay50_account_cd                    AS account_code,
+        pay50_account_nm                    AS account_name,
+        pay50_note                          AS note,
+        pay50_deposit_id                    AS deposit_id,
+        pay50_deposit_nm                    AS deposit_name,
+        pay50_ast_id                        AS ast_id,
+        pay50_ast_nm                        AS ast_name,
+        pay50_floral_id                     AS floral_id,
+        pay50_journal_id                    AS journal_id,
+        pay50_expense_appr_id               AS expense_appr_id,
+        pay50_expense_appr_title            AS expense_appr_title,
+        pay50_expense_appr_status_cd        AS expense_appr_status_code,
+        pay50_expense_appr_status_nm        AS expense_appr_status_name,
+        pay50_reg_emp_org_nm                AS reg_emp_org_name,
+        pay50_expense_status_nm             AS expense_status_name,
+        pay50_file_count_str                AS file_count_str,
+        pay50_org_nm                        AS org_name
+    </sql>
+
+    <!-- 사용하지 않는 열(자금집행 쪽 pay_amt·apr2·settle_* 와 ast06_tr 조인)은 뺐다 -->
+    <select id="selectExpenseAppr" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseRes">
+        SELECT <include refid="expenseColumns"/>
+          FROM (
+        SELECT pay50.*
+        , f_cdnm('ExpenseType'    , pay50_expense_cd          , pay50_company_id, pay50_reg_date)  AS pay50_expense_nm
+        , f_cdnm('TaxType'        , pay50_tax_type            , pay50_company_id, pay50_reg_date)  AS pay50_tax_type_nm
+        , f_cdnm('PayMethodCode'  , pay50_pay_method_cd       , pay50_company_id, pay50_reg_date)  AS pay50_pay_method_nm
+        , f_get_account_nm(pay50_company_id, pay50_account_cd)                                     AS pay50_account_nm
+        , ast1.ast01_class_tree_nm                                                                 AS pay50_deposit_nm
+        , ast2.ast01_class_tree_nm                                                                 AS pay50_ast_nm
+        , f_get_empTrans(pay50_reg_emp_id   , pay50_reg_date, 'person_org_info')                   AS pay50_reg_emp_org_nm
+        , f_get_empTrans(pay50_appr_emp_id  , pay50_reg_date, 'person_org_info')                   AS pay50_appr_emp_org_nm
+        , f_get_empTrans(pay50_confirmer_id , pay50_reg_date, 'person_org_info')                   AS pay50_confirmer_org_nm
+        , f_get_empTrans(pay50_reg_emp_id   , pay50_reg_date, 'org_code_nm')                       AS pay50_org_nm
+        , COALESCE(sys15_corp_nm, f_emp_kor_nm(pay50_corp_id))                                     AS pay50_corp_nm
+        , ( SELECT COUNT(*)
+              FROM sys10_file
+             WHERE sys10_parent_id = pay50_expense_id )
+          +
+          ( SELECT COUNT(*)
+              FROM com01_relate_appr
+             WHERE com01_key_table_id = pay50_expense_id ) ||'건'                                   AS pay50_file_count_str
+        , CASE WHEN pay50_appr_emp_id IS NULL THEN ''
+               ELSE (CASE WHEN COALESCE(apr1.apr01_status_cd,'99') = '30' THEN '완료'
+                          WHEN COALESCE(apr1.apr01_status_cd,'99') = '40' OR COALESCE(pay50_reject_reason,'') != '' THEN '반려'
+                          ELSE '진행중' END)
+          END                                                                                      AS pay50_expense_status_nm
+        , apr1.apr01_title                                                                         AS pay50_expense_appr_title
+        , apr1.apr01_status_cd                                                                     AS pay50_expense_appr_status_cd
+        , f_cdnm('AprStatusCode', apr1.apr01_status_cd, pay50_company_id, pay50_reg_date)          AS pay50_expense_appr_status_nm
+        FROM ( SELECT pay50_expense.*
+                 FROM pay50_expense
+                WHERE pay50_company_id         = #{companyId}
+                  AND pay50_confirm_status_cd  IN ('20','80')  /*(20:승인/80:PASS)*/
+                  AND pay50_appr_emp_id IS NOT NULL
+                  AND pay50_occ_date BETWEEN #{startDate} AND #{closeDate}
+                  AND pay50_expense_cd LIKE #{expenseCode}
+             ) pay50
+             LEFT OUTER JOIN sys15_corp            ON sys15_corp_id            = pay50_corp_id
+             LEFT OUTER JOIN apr01_appr apr1       ON apr1.apr01_appr_id       = pay50_expense_appr_id
+             LEFT OUTER JOIN ast01_class_tree ast1 ON ast1.ast01_class_tree_id = pay50_deposit_id
+             LEFT OUTER JOIN ast01_class_tree ast2 ON ast2.ast01_class_tree_id = pay50_ast_id
+        WHERE 1=1
+        <if test="payMethodCode != null">
+            AND pay50_pay_method_cd LIKE #{payMethodCode}
+        </if>
+        <if test="statusCheckYn">
+            AND COALESCE(pay50_reject_reason,'') = ''
+            AND COALESCE(apr1.apr01_status_cd,'99') NOT IN ('30','40')  /*(30:완료/40:반려)*/
+        </if>
+        <choose>
+            <when test="!managerYn">
+                AND pay50_appr_emp_id       = #{personId}
+                AND pay50_confirm_status_cd = '80'
+            </when>
+            <otherwise>
+                AND 'Y' = CASE WHEN pay50_confirm_status_cd != '80' THEN 'Y'
+                               ELSE (CASE WHEN pay50_appr_emp_id != #{personId} AND COALESCE(apr1.apr01_status_cd,'99') = '99'
+                                          THEN 'N' ELSE 'Y' END) END
+            </otherwise>
+        </choose>
+        ) t
+        WHERE CONCAT(pay50_expense_nm, pay50_desc, pay50_corp_nm, pay50_reg_emp_org_nm, pay50_note) ILIKE #{searchText}
+        ORDER BY pay50_occ_date DESC, pay50_expense_id
+        <if test="limit != null"> LIMIT #{limit} </if>
+    </select>
+
+    <select id="selectExpenseRequest" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseRequestRes">
+        SELECT pay50_expense_id        AS expense_id,
+               pay50_company_id        AS company_id,
+               pay50_expense_cd        AS expense_code,
+               pay50_expense_nm        AS expense_name,
+               pay50_reg_emp_id        AS reg_emp_id,
+               pay50_reg_emp_org_nm    AS reg_emp_org_name,
+               pay50_reg_date          AS reg_date,
+               pay50_occ_date          AS occ_date,
+               pay50_desc              AS "desc",
+               pay50_settle_amt        AS settle_amt,
+               pay50_due_date          AS due_date,
+               pay50_corp_id           AS corp_id,
+               pay50_corp_nm           AS corp_name,
+               pay50_floral_id         AS floral_id
+          FROM (
+                 ----------------------------------------
+                 -- 사업비요청
+                 ----------------------------------------
+                 SELECT pay50_expense_id
+                      , pay50_company_id
+                      , pay50_expense_cd
+                      , f_cdnm('ExpenseType', pay50_expense_cd, pay50_company_id, pay50_reg_date)    AS pay50_expense_nm
+                      , pay50_reg_emp_id
+                      , f_get_empTrans(pay50_reg_emp_id , pay50_reg_date, 'person_org_info')         AS pay50_reg_emp_org_nm
+                      , pay50_reg_date
+                      , pay50_occ_date
+                      , pay50_desc
+                      , pay50_settle_amt
+                      , pay50_due_date
+                      , pay50_corp_id
+                      , COALESCE(sys15_corp_nm, f_emp_kor_nm(pay50_corp_id))                         AS pay50_corp_nm
+                      , null                                                                         AS pay50_floral_id
+                   FROM pay50_expense
+                        LEFT OUTER JOIN sys15_corp ON sys15_corp_id = pay50_corp_id
+                  WHERE pay50_company_id         = #{companyId}
+                    AND pay50_confirm_status_cd  = '20'  /*(20:승인)*/
+                    AND pay50_appr_emp_id IS NULL
+                 ----------------------------------------
+                 -- 화환신청
+                 ----------------------------------------
+                  UNION ALL
+                 SELECT row_number() over()                                                 AS pay50_expense_id
+                      , bbs20_company_id                                                    AS pay50_company_id
+                      , '20'                                                                AS pay50_expense_cd
+                      , f_cdnm('ExpenseType', '20', bbs20_company_id, bbs20_reg_date)       AS pay50_expense_nm
+                      , bbs20_person_id                                                     AS pay50_reg_emp_id
+                      , f_get_empTrans(bbs20_person_id , bbs20_reg_date, 'person_org_info') AS pay50_reg_emp_org_nm
+                      , bbs20_reg_date                                                      AS pay50_reg_date
+                      , bbs20_end_date                                                      AS pay50_occ_date
+                      , CONCAT(f_cdnm('OccasionsCode',bbs20_occasions_cd,bbs20_company_id,bbs20_reg_date)
+                              ,' - '||bbs20_rcv_company
+                              ,' '||bbs20_rcv_emp
+                              ,'('||bbs20_reason||')')                                      AS pay50_desc
+                      , null                                                                AS pay50_settle_amt
+                      , null                                                                AS pay50_due_date
+                      , null                                                                AS pay50_corp_id
+                      , null                                                                AS pay50_corp_nm
+                      , bbs20_floral_request_id                                             AS pay50_floral_id
+                   FROM bbs20_floral_request
+                  WHERE bbs20_company_id    = #{companyId}
+                    AND bbs20_status_cd     = '92'  /*(20:접수/92:발송완료)*/
+                    AND NOT EXISTS ( SELECT 1
+                                       FROM pay50_expense
+                                      WHERE pay50_floral_id = bbs20_floral_request_id )
+               ) t
+         WHERE CONCAT(pay50_reg_emp_org_nm, pay50_expense_nm, pay50_desc, pay50_corp_nm) ILIKE #{searchText}
+         ORDER BY pay50_occ_date DESC
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseRes">
+        SELECT <include refid="expenseColumns"/>
+          FROM (
+        SELECT pay50.*
+        , f_cdnm('ExpenseType'    , pay50_expense_cd          , pay50_company_id, f_today())       AS pay50_expense_nm
+        , f_cdnm('TaxType'        , pay50_tax_type            , pay50_company_id, f_today())       AS pay50_tax_type_nm
+        , f_cdnm('PayMethodCode'  , pay50_pay_method_cd       , pay50_company_id, f_today())       AS pay50_pay_method_nm
+        , f_get_account_nm(pay50_company_id, pay50_account_cd)                                     AS pay50_account_nm
+        , ast1.ast01_class_tree_nm                                                                 AS pay50_deposit_nm
+        , ast2.ast01_class_tree_nm                                                                 AS pay50_ast_nm
+        , f_get_empTrans(pay50_reg_emp_id   , f_today(), 'person_org_info')                        AS pay50_reg_emp_org_nm
+        , f_get_empTrans(pay50_appr_emp_id  , f_today(), 'person_org_info')                        AS pay50_appr_emp_org_nm
+        , f_get_empTrans(pay50_confirmer_id , pay50_reg_date, 'person_org_info')                   AS pay50_confirmer_org_nm
+        , f_get_empTrans(pay50_reg_emp_id   , pay50_reg_date, 'org_code_nm')                       AS pay50_org_nm
+        , COALESCE(sys15_corp_nm, f_emp_kor_nm(pay50_corp_id))                                     AS pay50_corp_nm
+        , ( SELECT COUNT(*)
+              FROM sys10_file
+             WHERE sys10_parent_id = pay50_expense_id )
+          +
+          ( SELECT COUNT(*)
+              FROM com01_relate_appr
+             WHERE com01_key_table_id = pay50_expense_id ) ||'건'                                   AS pay50_file_count_str
+        , CASE WHEN pay50_appr_emp_id IS NULL THEN ''
+               ELSE (CASE WHEN COALESCE(apr1.apr01_status_cd,'99') = '30' THEN '완료'
+                          WHEN COALESCE(apr1.apr01_status_cd,'99') = '40' OR COALESCE(pay50_reject_reason,'') != '' THEN '반려'
+                          ELSE '진행중' END)
+          END                                                                                      AS pay50_expense_status_nm
+        , apr1.apr01_title                                                                         AS pay50_expense_appr_title
+        , apr1.apr01_status_cd                                                                     AS pay50_expense_appr_status_cd
+        , f_cdnm('AprStatusCode', apr1.apr01_status_cd, pay50_company_id, f_today())               AS pay50_expense_appr_status_nm
+        FROM pay50_expense pay50
+             LEFT OUTER JOIN sys15_corp            ON sys15_corp_id            = pay50_corp_id
+             LEFT OUTER JOIN apr01_appr apr1       ON apr1.apr01_appr_id       = pay50_expense_appr_id
+             LEFT OUTER JOIN ast01_class_tree ast1 ON ast1.ast01_class_tree_id = pay50_deposit_id
+             LEFT OUTER JOIN ast01_class_tree ast2 ON ast2.ast01_class_tree_id = pay50_ast_id
+        WHERE pay50_expense_id = #{expenseId}
+          AND pay50_company_id = #{companyId}
+        ) t
+    </select>
+
+    <select id="selectApprStatusCode" resultType="string">
+        SELECT apr01_status_cd
+          FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <update id="update">
+        UPDATE pay50_expense
+           SET pay50_occ_date         = #{req.occDate}
+             , pay50_desc             = #{req.desc}
+             , pay50_corp_id          = #{req.corpId}
+             , pay50_tax_type         = #{req.taxType}
+             , pay50_amt              = #{req.amt}
+             , pay50_tax              = #{req.tax}
+             , pay50_settle_amt       = #{req.settleAmt}
+             , pay50_due_date         = #{req.dueDate}
+             , pay50_pay_method_cd    = #{req.payMethodCode}
+             , pay50_pay_account_info = #{req.payAccountInfo}
+             , pay50_account_cd       = #{req.accountCode}
+             , pay50_note             = #{req.note}
+             , pay50_deposit_id       = #{req.depositId}
+             , pay50_ast_id           = #{req.astId}
+         WHERE pay50_expense_id = #{expenseId}
+           AND pay50_company_id = #{companyId}
+    </update>
+
+    <update id="updateRejectReason">
+        UPDATE pay50_expense
+           SET pay50_reject_reason = #{rejectReason}
+             , pay50_reject_sms_yn = null
+         WHERE pay50_expense_id  = #{expenseId}
+           AND pay50_company_id  = #{companyId}
+    </update>
+
+    <update id="updateApprEmpId">
+        UPDATE pay50_expense
+           SET pay50_appr_emp_id = #{apprEmpId}
+         WHERE pay50_expense_id  = #{expenseId}
+           AND pay50_company_id  = #{companyId}
+    </update>
+
+    <insert id="insertRequest">
+        INSERT INTO pay50_expense
+             ( pay50_expense_id, pay50_company_id, pay50_expense_cd, pay50_reg_emp_id, pay50_reg_date, pay50_occ_date, pay50_desc,
+               pay50_confirmer_id, pay50_confirm_status_cd, pay50_confirm_date, pay50_appr_emp_id, pay50_floral_id, pay50_pay_method_cd )
+        VALUES ( #{expenseId}, #{companyId}, #{row.expenseCode}, #{row.regEmpId}, #{row.regDate}, #{row.occDate}, #{row.desc},
+                 #{apprEmpId}, '20', #{row.occDate}, #{apprEmpId}, #{row.floralId}, '10' )
+    </insert>
+
+    <update id="updateContent">
+        UPDATE pay50_expense
+           SET pay50_content    = #{content}
+         WHERE pay50_expense_id = #{expenseId}
+           AND pay50_company_id = #{companyId}
+    </update>
+
+    <update id="initExpense">
+        UPDATE pay50_expense
+           SET pay50_appr_emp_id     = null
+             , pay50_reject_reason   = null
+             , pay50_reject_sms_yn   = null
+             , pay50_expense_appr_id = null
+         WHERE pay50_expense_id  = #{expenseId}
+           AND pay50_company_id  = #{companyId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE
+          FROM pay50_expense
+         WHERE pay50_expense_id  = #{expenseId}
+           AND pay50_company_id  = #{companyId}
+    </delete>
+</mapper>

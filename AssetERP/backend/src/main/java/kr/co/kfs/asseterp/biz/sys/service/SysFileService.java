@@ -274,6 +274,39 @@ public class SysFileService {
         sysFileMapper.deleteById(fileId);
     }
 
+    /**
+     * AS-IS Pay50_Expense.updateApprEmpId L170-198 + insertFileModel L953-977: 파일을 다른 부모(지출결의서)로 복사한다.
+     * 실제 파일을 `{업로드 폴더}/{새 파일 ID}`로 복사하고 sys10_file 행을 만든다(크기는 KB 정수 나눗셈). 복사 실패는 호출한 쪽이 예외로 받는다(AS-IS는 로그만 남기고 넘어갔다)
+     */
+    @Transactional
+    public Long copyToParent(UserPrincipal user, Long fileId, Long newParentId) {
+        FileRes src = sysFileMapper.selectById(fileId);
+        if (src == null) {
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND, "등록된 파일정보를 찾을 수 없습니다.");
+        }
+        Long newFileId = sysFileMapper.selectNextId();
+        String serverPath = uploadFolder(user.getCompanyCode());
+        File dir = new File(serverPath);
+        File target = new File(dir, newFileId.toString());
+        try {
+            if (!dir.exists() && !dir.mkdirs()) {
+                throw new IOException("폴더를 만들 수 없습니다: " + serverPath);
+            }
+            java.nio.file.Files.copy(new File(src.serverPath(), fileId.toString()).toPath(), target.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            log.error("파일 복사시 오류발생 fileId={}", fileId, e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "파일 복사 중 오류가 발생하였습니다.");
+        }
+        try {
+            sysFileMapper.insertFile(newFileId, newParentId, src.fileNm(), serverPath, (double) (target.length() / 1024), src.fileExt(), src.fileYn());
+        } catch (RuntimeException e) {
+            deletePhysical(target, newFileId);
+            throw e;
+        }
+        return newFileId;
+    }
+
     /** TOBE 추가(사용자 결정): 확장자가 allowed-types에 있고, Tika가 내용으로 판별한 MIME이 그 확장자의 허용 목록에 있어야 한다 */
     private void checkAllowedType(UserPrincipal user, String fileNm, String ext, MultipartFile upload) {
         Set<String> allowed = uploadProperties.allowedTypes() == null ? null

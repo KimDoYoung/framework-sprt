@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq, PayBasicSetup, PayBasicSetupSaveReq } from '../types/pay';
+import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq, PayBasicSetup, PayBasicSetupSaveReq, PayExpense, PayExpenseForm, PayExpenseRequest, PayExpenseUpdateReq, PayFavoriteAccount } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -913,6 +913,95 @@ export const payApi = {
     const form = new FormData();
     form.append('excelUpload', file);
     const res = await apiClient.post<ApiResponse<number>>(`v1/pay/insure-applies/excel/${kind}`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data.data ?? 0;
+  },
+
+  // ── U03 지출결의서(경영관리) Pay50_Tab_ExpenseManager ──
+  /** AS-IS pay.Pay50_Expense.selectExpenseAppr — 코드는 콤보의 "전체"가 '%', 검색어는 서버가 "%…%"로 감싼다. limit은 불러오기 창의 최대 건수 */
+  searchExpenses: async (p: { startDate: string; closeDate: string; statusCheckYn: boolean; expenseCode: string; payMethodCode: string; searchText: string; managerYn?: boolean; limit?: number }): Promise<PayExpense[]> => {
+    const res = await apiClient.get<ApiResponse<PayExpense[]>>('v1/pay/expenses', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay50_Expense.selectExpenseRequest */
+  searchExpenseRequests: async (searchText: string): Promise<PayExpenseRequest[]> => {
+    const res = await apiClient.get<ApiResponse<PayExpenseRequest[]>>('v1/pay/expenses/requests', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay50_Expense.selectById */
+  getExpense: async (expenseId: number): Promise<PayExpense> => {
+    const res = await apiClient.get<ApiResponse<PayExpense>>(`v1/pay/expenses/${expenseId}`);
+    return res.data.data as PayExpense;
+  },
+
+  /** AS-IS pay.Pay50_Expense.update → 저장된 행 */
+  updateExpense: async (expenseId: number, req: PayExpenseUpdateReq): Promise<PayExpense> => {
+    const res = await apiClient.put<ApiResponse<PayExpense>>(`v1/pay/expenses/${expenseId}`, req);
+    return res.data.data as PayExpense;
+  },
+
+  /** AS-IS pay.Pay50_Expense.initExpense ([삭제]) */
+  initExpenses: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/pay/expenses/init', ids);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS pay.Pay50_Expense.updateRejectReason — 사유 null이면 반려취소 */
+  rejectExpenses: async (ids: number[], rejectReason: string | null): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/pay/expenses/reject', { ids, rejectReason });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS pay.Pay50_Expense.updateApprEmpId ([지출요청내역 가져오기]) */
+  takeExpenseRequests: async (rows: PayExpenseRequest[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/pay/expenses/take-requests', rows);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS pay.Pay50_Expense.updateContent */
+  updateExpenseContent: async (expenseId: number, content: string): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/pay/expenses/${expenseId}/content`, { content });
+  },
+
+  /** AS-IS pay.Pay51_ExpenseForm.selectByCompanyId */
+  searchExpenseForms: async (): Promise<PayExpenseForm[]> => {
+    const res = await apiClient.get<ApiResponse<PayExpenseForm[]>>('v1/pay/expense-forms');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay51_ExpenseForm.formCheck — 새 코드의 빈 양식을 만든다 */
+  checkExpenseForms: async (): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/pay/expense-forms/check');
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS pay.Pay51_ExpenseForm.modelUpdate */
+  updateExpenseFormContent: async (expenseFormId: number, content: string): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/pay/expense-forms/${expenseFormId}/content`, { content });
+  },
+
+  /** AS-IS pay.Pay52_FavoriteAccount.selectByCompanyId — 계정속성은 콤보의 "전체"가 '%' */
+  searchFavoriteAccounts: async (attributeCode: string, searchText: string, allAccountYn: boolean): Promise<PayFavoriteAccount[]> => {
+    const res = await apiClient.get<ApiResponse<PayFavoriteAccount[]>>('v1/pay/favorite-accounts', { params: { attributeCode, searchText, allAccountYn } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay52_FavoriteAccount.insert — 계정코드 ID 목록, 이미 있는 것은 건너뛴다 */
+  insertFavoriteAccounts: async (accountCodeIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/pay/favorite-accounts', accountCodeIds);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS pay.Pay52_FavoriteAccount.update — 조회순서 */
+  updateFavoriteAccountSeqs: async (rows: { favoriteAccountId: number; seq: number | null }[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/pay/favorite-accounts', rows);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS pay.Pay52_FavoriteAccount.delete */
+  deleteFavoriteAccounts: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/pay/favorite-accounts', { data: ids });
     return res.data.data ?? 0;
   },
 };

@@ -6,18 +6,27 @@
 <!-- AS-IS(IDMS-IC) server/ast/mapper/ast01_class_tree.xml (selectCorpAccount L532) — 계좌선택 조회창 Ast01_Lookup_CorpAccount (U02) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstCorpAccountMapper">
 
-    <!-- AS-IS ast01_class_tree.selectCorpAccount L532 (IDMS-IC) — 안쪽 select는 조회창이 쓰는 열(계좌구분·보관처·계좌)과 정렬 열만 남겼다 -->
+    <!-- AS-IS ast01_class_tree.selectCorpAccount L532 (IDMS-IC) — 안쪽 select는 조회창이 쓰는 열(계좌구분·보관처·계좌)과 정렬 열만 남겼다. U03에서 지출처·대표계좌 열(corp_id·corp_pay_account_info)을 더했다 -->
     <select id="selectCorpAccount" resultType="kr.co.kfs.asseterp.biz.ast.dto.CorpAccountRes">
         SELECT ast01_class_tree_id AS class_tree_id
              , ast01_item_s_class_nm AS item_s_class_name
+             , ast01_corp_id AS corp_id
              , ast01_corp_nm AS corp_name
              , ast01_class_tree_nm AS class_tree_name
              , ast01_corp_account_nm AS corp_account_name
+             , ast01_corp_pay_account_info AS corp_pay_account_info
           FROM ( SELECT ast01_class_tree.*
                       , COALESCE(sys15_corp_nm,'')                                                      AS ast01_corp_nm
                       , f_get_corp_nm(ast01_corp_id)||'('||ast01_class_tree_nm||')'                     AS ast01_corp_account_nm
                       , f_cdnm('ItemSClassCode', ast01_item_s_class_cd, ast01_company_id, f_sysdate())  AS ast01_item_s_class_nm
                       , COALESCE(sys09_seq, ast01_item_s_class_cd)                                      AS ast01_item_s_class_seq
+                      , ( SELECT CONCAT( f_cdnm('BankCode', sys17_bank_cd, 0, f_today())
+                                       , ' '||TO_DECRYPTS(sys17_account_no)
+                                       , ' '||sys17_account_nm)
+                            FROM sys17_corp_account
+                           WHERE sys17_corp_id = ast01_corp_id
+                             AND sys17_main_account_yn = 'true'
+                           LIMIT 1 )                                                                    AS ast01_corp_pay_account_info
                    FROM ast01_class_tree
                      LEFT OUTER JOIN sys15_corp ON sys15_corp_id = ast01_corp_id
                      LEFT OUTER JOIN ( SELECT sys09_code.*

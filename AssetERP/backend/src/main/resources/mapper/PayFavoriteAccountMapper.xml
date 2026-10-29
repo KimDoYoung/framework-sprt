@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/pay/mapper/pay52_favorite_account.xml (selectByCompanyId, countByAccountCodeId, insert) + UpdateDataModel(pay52_favorite_account)  (U03) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayFavoriteAccountMapper">
+
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.pay.dto.FavoriteAccountRes">
+        SELECT pay52_favorite_account_id                                                     AS favorite_account_id,
+               pay52_account_code_id                                                         AS account_code_id,
+               pay52_seq                                                                     AS seq,
+               pay52_account_cd                                                              AS account_code,
+               pay52_account_nm                                                              AS account_name,
+               pay52_attribute_cd                                                            AS attribute_code,
+               f_cdnm('AccountAttributeCode', pay52_attribute_cd, pay52_company_id, f_today()) AS attribute_name
+          FROM (
+                SELECT pay52_favorite_account.*
+                     , act01_account_cd           AS pay52_account_cd
+                     , act01_account_nm           AS pay52_account_nm
+                     , act01_attribute_cd         AS pay52_attribute_cd
+                  FROM pay52_favorite_account
+                       INNER JOIN act01_account_code ON act01_account_code_id = pay52_account_code_id
+                 WHERE pay52_company_id = #{companyId}
+                   AND COALESCE(act01_use_yn ,'false') = 'true'
+                   AND COALESCE(act01_slip_yn,'false') = 'true'
+                   AND #{allAccountYn}                 = false
+                 UNION ALL
+                SELECT row_number() over()                AS pay52_favorite_account_id
+                     , act01_company_id                   AS pay52_company_id
+                     , act01_account_code_id              AS pay52_account_code_id
+                     , CAST(act01_account_cd AS NUMERIC)  AS pay52_seq
+                     , act01_account_cd                   AS pay52_account_cd
+                     , act01_account_nm                   AS pay52_account_nm
+                     , act01_attribute_cd                 AS pay52_attribute_cd
+                  FROM act01_account_code
+                 WHERE act01_company_id = #{companyId}
+                   AND COALESCE(act01_use_yn ,'false') = 'true'
+                   AND COALESCE(act01_slip_yn,'false') = 'true'
+                   AND #{allAccountYn}                 = true
+               ) t
+         WHERE pay52_attribute_cd LIKE #{attributeCode}
+           AND CONCAT(pay52_account_cd, pay52_account_nm) ILIKE #{searchText}
+         ORDER BY <if test="!allAccountYn">pay52_seq,</if>
+                  pay52_attribute_cd, pay52_account_cd
+    </select>
+
+    <select id="countByAccountCodeId" resultType="int">
+        SELECT count(*)
+          FROM pay52_favorite_account
+         WHERE pay52_company_id      = #{companyId}
+           AND pay52_account_code_id = #{accountCodeId}
+    </select>
+
+    <select id="countAccountCode" resultType="int">
+        SELECT count(*)
+          FROM act01_account_code
+         WHERE act01_company_id      = #{companyId}
+           AND act01_account_code_id = #{accountCodeId}
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO pay52_favorite_account
+             ( pay52_favorite_account_id, pay52_company_id, pay52_account_code_id )
+        VALUES ( #{favoriteAccountId}, #{companyId}, #{accountCodeId} )
+    </insert>
+
+    <update id="updateSeq">
+        UPDATE pay52_favorite_account
+           SET pay52_seq = #{seq}
+         WHERE pay52_favorite_account_id = #{favoriteAccountId}
+           AND pay52_company_id          = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE
+          FROM pay52_favorite_account
+         WHERE pay52_company_id = #{companyId}
+           AND pay52_favorite_account_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

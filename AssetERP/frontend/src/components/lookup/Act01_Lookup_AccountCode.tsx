@@ -1,7 +1,7 @@
 /**
  * 계정코드 조회창 (E25) — Emp55_Tab_benefitInfoManager 계정코드 칸에서 연다 (다른 도메인에서도 쓰는 조회창).
  * AS-IS: myApp/client/vi/act/Act01_Lookup_AccountCode.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
- * open(callback) L73-111과 open(searchText, callback) L53-56(E31, `searchText` prop)을 옮겼다(SINGLE: 선택 1건). openMulti·openCompanyId는 쓰는 화면이 생기면 더한다(`companyId`는 prop으로 이미 받는다).
+ * open(callback) L73-111과 open(searchText, callback) L53-56(E31, `searchText` prop)을 옮겼다(SINGLE: 선택 1건). openMulti L68-71(U03, `multi` prop: 체크 다중 → `onMultiResult`)도 옮겼다. openCompanyId는 쓰는 화면이 생기면 더한다(`companyId`는 prop으로 이미 받는다).
  * 모달 800×500, 툴바(계정속성 콤보 · 계정코드/명 · 조회) + 체크박스 단일 그리드(속성 80 · 계정코드 100 · 계정과목 500) + [확인] [취소]
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04). 조건이 둘뿐이라 초기화(UX-02)는 넣지 않는다
  */
@@ -13,7 +13,7 @@ import { actApi } from '@/api/act';
 import { errorMessage } from '@/api/client';
 import { AccountCode } from '@/types/act';
 import { Button } from '@/components/button';
-import { SingleGrid, gbFor } from '@/components/grid';
+import { MultiGrid, SingleGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 
@@ -32,13 +32,16 @@ interface Props {
   companyId?: number;
   /** AS-IS open(searchText, callback) L53-56: 검색칸에 미리 넣고 그 글자로 조회한다 */
   searchText?: string;
-  /** callback.execute(result): 확인이면 고른 계정 */
-  onResult: (row: AccountCode) => void;
+  /** AS-IS openMulti L68-71: 체크박스 다중 선택. [확인]·더블클릭이면 `onMultiResult`로 고른 계정들을 준다 */
+  multi?: boolean;
+  /** callback.execute(result): 확인이면 고른 계정 (단일) */
+  onResult?: (row: AccountCode) => void;
+  onMultiResult?: (rows: AccountCode[]) => void;
   /** 취소: hide()만 */
   onClose: () => void;
 }
 
-export const Act01_Lookup_AccountCode: React.FC<Props> = ({ open, companyId, searchText: initialText, onResult, onClose }) => {
+export const Act01_Lookup_AccountCode: React.FC<Props> = ({ open, companyId, searchText: initialText, multi, onResult, onMultiResult, onClose }) => {
   const gridRef = useRef<AgGridReact<AccountCode>>(null);
   const [attributeCode, setAttributeCode] = useState('%');
   const [searchText, setSearchText] = useState('');
@@ -65,12 +68,13 @@ export const Act01_Lookup_AccountCode: React.FC<Props> = ({ open, companyId, sea
 
   // [E1] grid.CellDoubleClick (L104) / [E5] oKButton[확인].Select (L150) → confirm() L218-232
   const confirm = () => {
-    const row = gridRef.current?.api.getSelectedRows()[0];
-    if (!row) {
+    const picked = gridRef.current?.api.getSelectedRows() ?? [];
+    if (picked.length === 0) {
       message.warning('계정과목을 선택하세요');
       return;
     }
-    onResult(row);
+    if (multi) onMultiResult?.(picked);
+    else onResult?.(picked[0]);
   };
 
   return (
@@ -100,14 +104,25 @@ export const Act01_Lookup_AccountCode: React.FC<Props> = ({ open, companyId, sea
           </SearchBar.Field>
         </SearchBar>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <SingleGrid<AccountCode>
-            gridRef={gridRef}
-            rowData={rows}
-            columnDefs={columnDefs}
-            getRowId={p => String(p.data.accountCodeId)}
-            rowSelection={SINGLE_CHECK}
-            onRowDoubleClicked={confirm}
-          />
+          {multi ? (
+            <MultiGrid<AccountCode>
+              gridRef={gridRef}
+              rowData={rows}
+              columnDefs={columnDefs}
+              getRowId={p => String(p.data.accountCodeId)}
+              rowClick
+              onRowDoubleClicked={confirm}
+            />
+          ) : (
+            <SingleGrid<AccountCode>
+              gridRef={gridRef}
+              rowData={rows}
+              columnDefs={columnDefs}
+              getRowId={p => String(p.data.accountCodeId)}
+              rowSelection={SINGLE_CHECK}
+              onRowDoubleClicked={confirm}
+            />
+          )}
         </div>
       </div>
     </LookupModal>
