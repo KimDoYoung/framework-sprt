@@ -3,6 +3,24 @@
 작성 2026-10-29. 대상: `yunhee page-style`(`--all`·`--json`·`--compare`)의 SID 판별기. 이 문서는 yunhee 쪽에 전달할 내용을 모은 것이다(yunhee 코드는 이 저장소에 없다 — 05 §7 "yunhee 수정사항 제안").
 SID 정의는 `docs/page-style.md`, 견본은 `docs/page-style/{SID}/`.
 
+## 0. yunhee에 요청하는 것 — 미결 목록 (2026-10-29, 0.6.8 기준)
+
+0.6.8 평가 결과 §2 표의 46개 중 43개가 기대 SID로 나오고 `--all` 미분류는 0이다. 아래는 그 뒤 SID 체계를 바꾸면서 새로 생긴 요청이다. 자세한 증상·기대는 각 절을 본다. **이 목록이 모두 끝나면 §5 완료 기준을 다시 돌린다.**
+
+| # | 요청 | 절 | 지금 증상 | 기대 |
+|:-:|:---|:-:|:---|:---|
+| 1 | SID 이름 `DB` → **`DSBRD`** | 4-2 | `yunhee page-style`이 `DB`로 출력한다. 선언 `스타일: DSBRD`와 달라 `--compare`에서 불일치로 보인다 | `Tdm50_Tab_TotalDashboard`·`Tdm35_Tab_TaskList` 모두 `DSBRD` |
+| 2 | 선언 정규식 `[A-Z]{2,4}` → **`{2,5}`** | 4-2 | 5자 SID `DSBRD`를 읽지 못해 `declared`가 `null`이 된다 (SID 길이 규칙을 2~5자로 바꿨다) | `declared = DSBRD` |
+| 3 | DSBRD **탭 없는 변형** 인식 | 4-2 | `Tdm35_Tab_TaskList`(기준일 툴바 + 엑셀다운로드 4줄)는 DSBRD인데, §2-1 신호("DSBRD는 탭이 있다")와 맞지 않는다 | 선언이 없어도 "툴바·그리드·트리 없음 + 조회/RD API 호출 + 메뉴 링크 없음"이면 DSBRD |
+| 4 | SID **`MG` 폐지** (SGEF에 합침) | 4-3 | `Sys90_Tab_AfterService` 등 4개가 MG로 나온다 | 4개 모두 `SGEF` |
+| 5 | 아래 폼이 **고정 높이 `div`**인 위아래 구조도 SGEF | 4-3 | `Splitter`가 없으면 `layout=none`이라 SGEF로 안 읽힌다 | "위 `SearchBar` + 그리드, 아래 `*_Edit_*`"이면 SGEF |
+| 6 | MG 폐지 뒤 `Sms03_Tab_SendAdmin`은 **미분류 허용** | 4-3 | 지금은 MG로 판별된다. MG가 없어지면 SGEF로 잘못 가거나 오류가 날 수 있다 | `미분류`(별도 SID가 정해질 때까지) |
+| 7 | 분포 출력의 SID 목록 갱신 | — | `--all` 분포가 `DB`·`MG`를 포함한다 | 18개 SID(`DSBRD` 포함, `MG` 없음) |
+
+화면을 열어 정하는 것(yunhee 수정 아님): `Pay31_Tab_InsureApply`(TP↔STP), `Pay20_Tab_Deduct`(TP↔STP), `Pay10_Tab_List`(STP↔SR), `Flt03_Tab_AccountReport`(0.6.8에서 SGTP → GG로 바뀜, 자식 grids=0이라 오판일 수 있음), `Sms02_Tab_TotalCount`·`Sys10_Tab_TotalSize`(GO 견본과 구조가 달라 별도 SID 후보). 결과가 나오면 §2 표를 고치고 필요한 규칙을 이 목록에 보탠다.
+
+완료된 요청: §4-1의 1·2·3번(0.6.7~0.6.8에서 반영, 평가 완료).
+
 ## 1. 지금 문제 (2026-10-29, TOBE `*_Tab_*.tsx` 311개)
 
 분포(견본 정립 전): SG 83 · CG 73 · GG 46 · **미분류 40** · SGP 31 · SGTP 15 · SGEF 9 · TG 8 · SGT 4 · SGVF 2.
@@ -16,7 +34,7 @@ SID 정의는 `docs/page-style.md`, 견본은 `docs/page-style/{SID}/`.
 | 탭이 <Tabs>/<PageTabs>로 인라인이라 `tabpage` 아님 | `Rpt10_Tab_FssOrg`, `Pay20_Tab_Deduct` | → 미분류(그리드 없음) |
 | 구조를 자식 컴포넌트에 맡김 | `Dcr01_Tab_DcrUser`, `Flt00_Tab_Info`, `Tdm35_Tab_TaskList` 등 | 특징이 전부 0 |
 
-## 2. SID별 판별 규칙 (19개, 견본은 모두 확정 — 2026-10-29)
+## 2. SID별 판별 규칙 (18개, 견본은 모두 확정 — 2026-10-29)
 
 SID 정의는 `docs/page-style.md` "스타일 목록", 견본은 `docs/page-style/{SID}/`. 판별 특징 이름은 §4의 열 설명을 따른다. ★ = 이번에 새로 만든 SID(지금 판별기에 규칙이 없다).
 
@@ -36,7 +54,6 @@ SID 정의는 `docs/page-style.md` "스타일 목록", 견본은 `docs/page-styl
 | SR | 툴바 있음 + RD 영역(`*_Rd_*` import·`iframe`) + 탭·그리드·트리 없음 | `Emp01_Tab_InoutState` | `Emp01_Tab_DueDiligence` |
 | GCG | 위아래 분할 + 그리드 둘 + 달력(`Calendar`) | `Car03_Tab_List` | — |
 | ★SGHF | 조회 줄 + 그리드 + 편집 폼을 **좌우**로 배치(`layout=horizontal`, edit 폼 있음) | `Biz01_Tab_Card` | `Biz01_Tab_Other`·`CardContents`·`CardSimple`·`OtherSimple`·`CardContentsSimple` |
-| ★MG | 조회 줄 + 그리드 2개 이상 + 편집/보기 폼, 위아래 분할 아님(`layout=none`) | `Sys90_Tab_AfterService` | `Sys90_Tab_AfterServiceAdmin`, `Ics20_Tab_RevisionHistory`·`Admin`, `Sms03_Tab_SendAdmin` |
 | ★TO | 트리 중심, 오른쪽이 일반 그리드가 아님/없음, 편집은 팝업 | `Org01_Tab_OrgCode` | `Chk01_Tab_ClassTree`, `Fbx01_Tab_Document`(탭 페이지·편집 그리드가 함께 있어 TO가 아닐 수 있다) |
 | ★GO | 그리드 하나 + **직접 만든 조건 줄**(`SearchBar` 아님) 또는 조건 줄 없음 | `Tdm54_Tab_CheckInsuff` | `Sms02_Tab_TotalCount`, `Sys10_Tab_TotalSize`(조건 줄이 없는 화면일 수 있다) |
 | ★DSBRD | 그리드·트리·툴바 없이 탭 + 카드/요약 영역(조회 API 호출, 값을 보여 준다) | `Tdm50_Tab_TotalDashboard` | `Tdm35_Tab_TaskList` |
@@ -54,7 +71,6 @@ SGP/SG, TP/TG 등 이미 판별되는 SID는 규칙을 바꾸지 말고 그대�
 | IN ↔ TP | TP는 탭 컨테이너가 있다. IN은 탭이 없다 |
 | GO ↔ SG | GO는 조건 줄이 `SearchBar`가 아니라 직접 만든 `div`(`Typography.Text`·`DatePicker` 직접 배치) |
 | STP ↔ TP | `SearchBar` 또는 직접 만든 조건 줄 유무 |
-| MG ↔ SGEF | MG는 위아래 `Splitter`가 아니거나 그리드가 2개 이상. SGEF는 위아래 분할 + 그리드 하나 |
 
 ## 3. 판별기에 필요한 기능 수정
 
@@ -65,10 +81,10 @@ SGP/SG, TP/TG 등 이미 판별되는 SID는 규칙을 바꾸지 말고 그대�
 5. **자식 컴포넌트 추적**: Tab 파일에 특징이 없으면 같은 폴더의 자식(`*_Page_*`·`*_Grid_*`·`*_Rd_*`)을 한 단계 따라가 합산한다.
    - **상속한 껍데기 화면**: 다른 `_Tab_` 컴포넌트를 import해 그대로 렌더링하는 짧은 화면(`Dcr01_Tab_DcrUser` → `Dcr01_Tab_DcrManager`, `Flt10_Tab_ViolateUser` → `Flt10_Tab_Violate`)은 **부모의 SID를 따른다**.
    - **세로 Splitter에 SG 두 개를 얹은 화면**(`Sys07_Tab_Company`: 위 버튼 줄 + 출발지/목적지 SG 둘): GG 변형으로 읽을지 규칙이 필요하다(열어서 최종 확인 전, 임시로 GG 후보).
-6. **새 SID 규칙** SGHF·MG·TO·GO·DSBRD·IN(§2). 특징 필드에 `calendar`(달력)·`rd`(RD 영역)·`tabs`(인라인 탭)·`api_calls`(조회/저장 API 호출 여부)·`menu_link`(`openMenuByNo` 등 메뉴 열기)를 추가해야 §2-1의 쌍이 갈린다.
+6. **새 SID 규칙** SGHF·TO·GO·DSBRD·IN(§2). 특징 필드에 `calendar`(달력)·`rd`(RD 영역)·`tabs`(인라인 탭)·`api_calls`(조회/저장 API 호출 여부)·`menu_link`(`openMenuByNo` 등 메뉴 열기)를 추가해야 §2-1의 쌍이 갈린다.
 7. **`--compare` 정확도**: AS-IS(GXT)와 TOBE(React)가 같은 SID인데 다르게 나오는 경우(GG≠SG, SG≠CG)가 있다. AS-IS 판별 규칙과 TOBE 판별 규칙의 기준을 같게 맞추거나, 불일치 이유를 `why`에 남긴다.
 8. **선언 우선**: 화면 머리 주석 `스타일: XXX`(괄호 안 설명 제외)를 `declared`로 읽는다. 지금 `스타일: STP (견본 — docs/page-style.md)`처럼 뒤에 설명이 붙어도 SID만 읽어야 한다. 머리 주석은 `/** … */` 블록뿐 아니라 `// 스타일: IN …` 한 줄 주석도 읽어야 한다(`Flt00_Tab_Info`).
-9. **SID 목록 동기화**: 유효한 SID 목록(19개)을 `docs/page-style.md`의 "스타일 목록" 표 첫 열에서 읽는다. 선언이 목록에 없는 SID면 경고한다.
+9. **SID 목록 동기화**: 유효한 SID 목록(18개)을 `docs/page-style.md`의 "스타일 목록" 표 첫 열에서 읽는다. 선언이 목록에 없는 SID면 경고한다.
 
 ## 4. 현재 미분류 화면의 특징값 (2026-10-29 `--json`)
 
@@ -153,10 +169,19 @@ SGP/SG, TP/TG 등 이미 판별되는 SID는 규칙을 바꾸지 말고 그대�
 3. **탭이 없는 변형**: `Tdm35_Tab_TaskList`(기준일 툴바 + [엑셀다운로드] 4줄, `api_calls`는 `rdApi` 정도)도 DSBRD다. 지금 DSBRD 규칙은 "탭 + 카드/요약 영역"이라 §2-1의 `IN ↔ DSBRD` 구분 신호("DSBRD는 탭이 있다")가 맞지 않는다. 선언 `스타일: DSBRD`가 있으면 선언을 우선하고, 선언이 없을 때의 추정은 "툴바·그리드·트리 없음 + 조회 API 호출(또는 `rdApi`/`rdDownload`) + 안내 링크(`openMenuByNo`) 없음"이면 DSBRD로 본다.
 4. 기대: `Tdm50_Tab_TotalDashboard`·`Tdm35_Tab_TaskList` 둘 다 `DSBRD`로 나온다.
 
+## 4-3. SID `MG` 폐지 — SGEF에 합침 (2026-10-29)
+
+견본 `Sys90_Tab_AfterService`가 세로 `Splitter` + 그리드 1개 + 편집 폼이라 구조가 SGEF와 같아, MG를 없애고 SGEF의 변형(폼 안에 보조 그리드)으로 합쳤다. `Sys90_Tab_AfterServiceAdmin`, `Ics20_Tab_RevisionHistory`·`Admin`도 SGEF다. yunhee에서 바꿀 것:
+
+1. 유효 SID에서 `MG`를 뺀다(`load_valid_sids`는 `docs/page-style.md` 표에서 읽으므로 자동). 판별 규칙의 `MG` 분기를 없앤다.
+2. 아래 폼이 **고정 높이 `div`**(`flex: 'none', height: 400, borderTop`)로 쌓인 위아래 구조도 SGEF로 읽는다(지금 `layout=none`이라 MG로 갔다). `Splitter`가 없어도 "위 `SearchBar` + 그리드, 아래 `*_Edit_*`"이면 SGEF다.
+3. `Sms03_Tab_SendAdmin`(조건 줄 없는 좌우 분할, 그리드 3개 + 폼)은 SGEF가 아니다. 지금은 MG로 나오므로 MG를 없애면 `미분류`가 된다. 별도 SID가 정해질 때까지 미분류를 허용한다.
+4. 기대: `Sys90_Tab_AfterService` 등 4개가 SGEF로 나온다.
+
 ## 5. 완료 기준
 
 - `yunhee page-style --all`에서 `미분류`가 `_Tab_` 화면 기준 0에 가깝다(껍데기 화면은 부모를 따르고, 선언이 있는 화면은 선언이 우선이다).
 - §2 표의 "견본"과 "같은 SID로 정한 다른 화면"이 모두 그 SID로 나온다.
 - `yunhee page-style --compare`가 TOBE 머리 주석 선언과 판별을 비교해 불일치를 보고한다.
-- §2-1의 쌍(IN↔DSBRD, IN↔TP, GO↔SG, STP↔TP, MG↔SGEF)이 구분된다.
-- 새 SID 6개(SGHF·MG·TO·GO·DSBRD·IN)는 규칙이 확정이 아니다. 같은 SID로 묶은 화면을 실제로 맞추면서 규칙을 다시 조정한다.
+- §2-1의 쌍(IN↔DSBRD, IN↔TP, GO↔SG, STP↔TP)이 구분된다.
+- 새 SID 5개(SGHF·TO·GO·DSBRD·IN)는 규칙이 확정이 아니다. 같은 SID로 묶은 화면을 실제로 맞추면서 규칙을 다시 조정한다.

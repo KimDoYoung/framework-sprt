@@ -4,7 +4,7 @@
  * 레이아웃 L61-112: center = 툴바(발생일 ~ · 구분 · 완료여부 · 검색어 · 미확인건만 보기 · 조회 · 등록) + 그리드(행번호, 체크박스 단일, 8열),
  *   south = Sys90_Edit_Board (편집 폼). 로그인한 회사의 것만 보인다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 줄바꿈이 늘어 넣지 않는다
- * 스타일: MG (견본 — docs/page-style.md)
+ * 스타일: SGEF (견본 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Splitter } from 'antd';

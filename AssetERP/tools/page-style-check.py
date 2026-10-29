@@ -6,7 +6,7 @@ docs/page-style.md 의 SID별 규칙 중 정규식으로 확인할 수 있는 �
 
 사용:
   tools/page-style-check.py                  # 대상 17개 + 견본
-  tools/page-style-check.py SGHF MG          # 지정한 SID만
+  tools/page-style-check.py SGHF SGEF         # 지정한 SID만
   tools/page-style-check.py --only-fail      # 어긋난 칸만
 """
 import re
@@ -21,8 +21,8 @@ SAMPLES = ROOT / "docs/page-style"
 TARGETS = {
     "SGHF": ("Biz01_Tab_Card", ["Biz01_Tab_Other", "Biz01_Tab_CardContents", "Biz01_Tab_CardSimple",
                                 "Biz01_Tab_OtherSimple", "Biz01_Tab_CardContentsSimple"]),
-    "MG": ("Sys90_Tab_AfterService", ["Sys90_Tab_AfterServiceAdmin", "Ics20_Tab_RevisionHistory",
-                                      "Ics20_Tab_RevisionHistoryAdmin", "Sms03_Tab_SendAdmin"]),
+    "SGEF": ("Sys90_Tab_AfterService", ["Sys90_Tab_AfterServiceAdmin", "Ics20_Tab_RevisionHistory",
+                                      "Ics20_Tab_RevisionHistoryAdmin"]),
     "TO": ("Org01_Tab_OrgCode", ["Chk01_Tab_ClassTree", "Fbx01_Tab_Document"]),
     "GO": ("Tdm54_Tab_CheckInsuff", ["Sms02_Tab_TotalCount", "Sys10_Tab_TotalSize"]),
     "DSBRD": ("Tdm50_Tab_TotalDashboard", ["Tdm35_Tab_TaskList"]),
@@ -45,7 +45,7 @@ RULES = {
         ("외곽 테두리 없음", BORDER, False),
         ("SearchBar", r"<SearchBar\b", True),
     ],
-    "MG": [
+    "SGEF": [
         ("세로 Splitter", r"<Splitter\b[^>]*vertical", True),
         ("위 최소 200", r"min=\{200\}", True),
         ("여백 20 20 8", r"20px 20px 8px|20,\s*20,\s*8|'20 20 8'", True),

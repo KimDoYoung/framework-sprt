@@ -4,9 +4,10 @@
  * 레이아웃 L68-117: 위 = 툴바(등록일·시행일 선택 · 기간 · 소관부처 120 · 통합검색 300 · 조문검색 200 · [조회]) + 그리드(행번호, 체크박스 단일),
  *   아래 = Ics20_Edit_RevisionHistory (보기 폼). 관리자용 짝(Ics20_Tab_RevisionHistoryAdmin)과 달리 [등록]이 없다
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 초기화 UX-02는 줄바꿈이 늘어 넣지 않는다)
+ * 스타일: SGEF (docs/page-style.md) — 폼 안에 보조 그리드가 있는 변형
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { DatePicker, message, Radio } from 'antd';
+import { DatePicker, message, Radio, Splitter } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import dayjs from 'dayjs';
 import { icsApi } from '@/api/ics';
@@ -83,8 +84,10 @@ export const Ics20_Tab_RevisionHistory: React.FC = () => {
   // [E5 생략] messageBox.DialogHide (L236) → deleteSelectedRow(): 이 탭의 deleteRow()는 어디서도 부르지 않는다(삭제 버튼 없음) — 죽은 코드
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#fff' }}>
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '20px 20px 8px', gap: 8 }}>
+    <div style={{ height: '100%', background: '#fff' }}>
+      <Splitter layout="vertical" style={{ height: '100%' }}>
+      <Splitter.Panel min={200}>
+      <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', padding: '20px 20px 8px', gap: 8 }}>
         {/* [E4] retrieveButton[조회].Select (L166) → retrieve() */}
         <SearchBar onSearch={retrieve}>
           <Radio.Group value={dateType} onChange={e => setDateType(e.target.value)}>
@@ -120,9 +123,12 @@ export const Ics20_Tab_RevisionHistory: React.FC = () => {
           />
         </div>
       </div>
-      <div style={{ flex: 'none', height: 400, borderTop: '1px solid #d9d9d9' }}>
+      </Splitter.Panel>
+      {/* 보기 폼 높이 400(Ics20_Edit_RevisionHistory). 이보다 작으면 아래가 가려진다 */}
+      <Splitter.Panel defaultSize={400} min={400}>
         <Ics20_Edit_RevisionHistory key={`${selected?.revisionHistoryId ?? 'none'}-${formSeq}`} model={selected} />
-      </div>
+      </Splitter.Panel>
+      </Splitter>
     </div>
   );
 };
