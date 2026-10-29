@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/att/mapper/att02_commute.xml (selectByTextAdmin, adminCheck, insertBatch)  (T06) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.att.mapper.AttCommuteMapper">
+
+    <!-- TOBE 보안 보강: 로그인 회사의 출퇴근 행인지 확인(AS-IS에는 없다) -->
+    <select id="countInCompany" resultType="int">
+        SELECT COUNT(*) FROM att02_commute
+         WHERE att02_commute_id = #{commuteId} AND att02_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS att02_commute.selectByTextAdmin L305 (IDMS-IC) att02_commute.xml -->
+<select id="selectByTextAdmin" resultType="kr.co.kfs.asseterp.biz.att.dto.AttCommuteRes" >
+SELECT	a.att02_commute_id				AS commute_id
+	 ,	a.att02_person_id				AS person_id
+	 ,	a.att02_work_date::date			AS work_date
+	 ,	a.att02_status_cd				AS status_code
+	 ,	a.att02_person_no				AS person_no
+	 ,	a.att02_person_nm				AS person_name
+	 ,	a.att02_org_nm					AS org_name
+	 ,	a.att02_pos_nm					AS pos_name
+	 ,	a.att02_day_of_week				AS day_of_week
+	 ,	a.att02_date_info				AS date_info
+	 ,	a.att02_in_out_reason_yn_str	AS in_out_reason_yn_str
+	 ,	a.att02_check_in_time::date		AS check_in_time
+	 ,	a.att02_check_in_time_str		AS check_in_time_str
+	 ,	a.att02_check_out_time::date	AS check_out_time
+	 ,	a.att02_check_out_time_str		AS check_out_time_str
+	 ,	a.att02_work_time_str			AS work_time_str
+	 ,	a.att02_calc_check_in_time_str	AS calc_check_in_time_str
+	 ,	a.att02_calc_check_out_time_str	AS calc_check_out_time_str
+	 ,	a.att02_calc_work_time_str		AS calc_work_time_str
+	 ,	a.att02_in_reason				AS in_reason
+	 ,	a.att02_out_reason				AS out_reason
+<!-- 	 ,	f_cdnm('CommuteStatusCode', a.att02_status_cd, a.att02_company_id, f_sysdate()) AS status_name -->
+	 ,	CASE WHEN lb.emp20_person_id IS NOT NULL
+             THEN f_cdnm('leaveCode', lb.emp20_leave_cd, a.att02_company_id, f_sysdate())
+	 		 WHEN a.att02_commute_id IS NOT NULL
+	 		 THEN f_cdnm('CommuteStatusCode', a.att02_status_cd, a.att02_company_id, f_sysdate())
+	 		 ELSE '미출근'
+	 		 END															  		AS status_name
+	 ,	CASE WHEN EXISTS (
+							SELECT	1
+							  FROM	att05_pm_work
+							  		INNER JOIN apr01_appr ON apr01_appr_id = att05_appr_id
+							 WHERE	att05_person_id = a.att02_person_id
+							   AND	att05_work_date::date = a.att02_work_date::date
+							   AND	apr01_status_cd = '30'
+						 )
+			 THEN '오후근무'
+			 ELSE '일반근무'
+			 END 																		AS division
+  FROM	(
+  			SELECT	b.*
+				 ,	(
+				    	CASE WHEN COALESCE(att02_admin_check_yn, 'false') = 'true'
+				    		 THEN '99' <!-- 관리자 확인필요 -->
+							 
+							 WHEN COALESCE(att04_after_in, att02_check_in_time) <![CDATA[>]]>
+				    			  (
+				    				att02_work_date::date
+				    				 + CASE WHEN att02_pm_work_yn = 'true'
+				    						THEN att01_pm_work_start_time::time
+				    						ELSE att01_work_start_time::time
+				    						END
+				    				 + (COALESCE(att01_start_grace_after_minutes,0) * INTERVAL '1 minute')
+				    			  )
+				    		 THEN '60' <!-- 지각 -->
+				    		 
+				    		 WHEN COALESCE(att04_after_out, att02_check_out_time) IS NULL
+				    		 THEN '00' <!-- 출근 -->
+				    		 
+				    		 WHEN COALESCE(att02_ext_check_out_yn, 'false') = 'true'
+				    		 THEN '70' <!-- 외근 후 퇴근 -->
+				    		 
+				    		 WHEN att02_pm_work_yn = 'true' AND COALESCE(att04_after_out, att02_check_out_time)::date != att02_work_date::date
+				    		 THEN '50' <!-- 익일야간근무 -->
+
+				    		 WHEN att02_pm_work_yn = 'false' AND COALESCE(att04_after_in, att02_check_in_time)::date != att02_check_out_time::date
+				    		 THEN '50' <!-- 익일야간근무 -->
+
+				    		 WHEN att02_pm_work_yn = 'true' AND COALESCE(att04_after_out, att02_check_out_time) <![CDATA[>]]>
+				    		  	  (
+				    		  	  	  att02_work_date::date
+				    		  	  	  + att01_pm_work_end_time::time
+				    		  	  	  + (COALESCE(att01_end_grace_after_minutes,0) * INTERVAL '1 minute')
+				    		  	  )
+				    		  	  AND EXISTS (
+												SELECT	1
+												  FROM	att03_overtime_req
+											      		LEFT OUTER JOIN apr01_appr ON apr01_appr_id = att03_appr_id
+											     WHERE	COALESCE(apr01_status_cd, '99') = '30'
+												   AND	att03_person_id = att02_person_id
+												   AND	att03_work_date::date = att02_work_date::date
+											 )
+				    		 THEN '40' <!-- 연장근무 -->
+				    		 
+							 WHEN att02_pm_work_yn = 'true' AND COALESCE(att04_after_out, att02_check_out_time) <![CDATA[>]]>
+				    		  	  (
+				    		  	  	  att02_work_date::date
+				    		  	  	  + att01_pm_work_end_time::time
+				    		  	  	  + (COALESCE(att01_end_grace_after_minutes,0) * INTERVAL '1 minute')
+				    		  	  )
+				    		 THEN '30' <!-- 연장근무(미신청) -->
+				    		 
+				    		 WHEN att02_pm_work_yn = 'false' AND COALESCE(att04_after_out, att02_check_out_time) <![CDATA[>]]>
+				    		  	  (
+				    		  	  	  att02_work_date::date
+				    		  	  	  + att01_work_end_time::time
+				    		  	  	  + (COALESCE(att01_end_grace_after_minutes,0) * INTERVAL '1 minute')
+				    		  	  )
+					    		  AND EXISTS (
+												SELECT	1
+												  FROM	att03_overtime_req
+											      		LEFT OUTER JOIN apr01_appr ON apr01_appr_id = att03_appr_id
+											     WHERE	COALESCE(apr01_status_cd, '99') = '30'
+												   AND	att03_person_id = att02_person_id
+												   AND	att03_work_date::date = att02_work_date::date
+											  )
+				    		 THEN '40' <!-- 연장근무 -->
+				    		 
+				    		 WHEN att02_pm_work_yn = 'false' AND COALESCE(att04_after_out, att02_check_out_time) <![CDATA[>]]>
+				    		  	  (
+				    		  	  	  att02_work_date::date
+				    		  	  	  + att01_work_end_time::time
+				    		  	  	  + (COALESCE(att01_end_grace_after_minutes,0) * INTERVAL '1 minute')
+				    		  	  )
+				    		 THEN '30' <!-- 연장근무(미신청) -->
+				    		 
+				    		 WHEN att02_pm_work_yn = 'true' AND COALESCE(att04_after_out, att02_check_out_time) <![CDATA[<]]>
+				    		  	  (
+				    		  	  	  att02_work_date::date
+				    		  	  	  + att01_pm_work_end_time::time
+				    		  	  	  - (COALESCE(att01_end_grace_before_minutes,0) * INTERVAL '1 minute')
+				    		  	  )
+				    		 THEN '20' <!-- 조기퇴근 -->
+
+				    		 WHEN att02_pm_work_yn = 'false' AND COALESCE(att04_after_out, att02_check_out_time) <![CDATA[<]]>
+				    		  	  (
+				    		  	  	  att02_work_date::date
+				    		  	  	  + att01_work_end_time::time
+				    		  	  	  - (COALESCE(att01_end_grace_before_minutes,0) * INTERVAL '1 minute')
+				    		  	  )
+				    		 THEN '20' <!-- 조기퇴근 -->
+
+							 ELSE '10' <!-- 정상근무 -->
+				    		 END
+					) AS att02_status_cd
+			  FROM	(
+			  			SELECT	att02_commute.*
+							 ,	att04_after_in
+							 ,	att04_after_out
+							 ,	att01_work_start_time
+							 ,	att01_work_end_time
+							 ,	att01_pm_work_start_time
+							 ,	att01_pm_work_end_time
+							 ,	att01_break_minutes
+							 ,	att01_start_grace_after_minutes
+							 ,	att01_end_grace_after_minutes
+							 ,	att01_end_grace_before_minutes
+							 ,	TO_CHAR(att02_check_in_time, 'HH24:MI') AS att02_check_in_time_str
+							 ,	TO_CHAR(att02_check_out_time, 'HH24:MI') AS att02_check_out_time_str
+							 ,	COALESCE(att04_after_in, att02_check_in_time) AS att02_calc_check_in_time
+							 ,	COALESCE(att04_after_out, att02_check_out_time) AS att02_calc_check_out_time
+							 ,	TO_CHAR(COALESCE(att04_after_in, att02_check_in_time), 'HH24:MI') AS att02_calc_check_in_time_str
+							 ,	TO_CHAR(COALESCE(att04_after_out, att02_check_out_time), 'HH24:MI') AS att02_calc_check_out_time_str
+							 ,	emp01_emp_no AS att02_person_no
+							 ,	emp01_kor_nm AS att02_person_nm
+							 ,	f_get_empTrans(att02_person_id, att02_work_date::date, 'org_code_nm') AS att02_org_nm
+							 ,	f_get_empTrans(att02_person_id, att02_work_date::date, 'pos_nm') AS att02_pos_nm
+							 ,	CASE EXTRACT(DOW FROM att02_work_date)
+									 WHEN 0 THEN '일'
+									 WHEN 1 THEN '월'
+									 WHEN 2 THEN '화'
+									 WHEN 3 THEN '수'
+									 WHEN 4 THEN '목'
+									 WHEN 5 THEN '금'
+									 WHEN 6 THEN '토'
+									 END AS att02_day_of_week
+							 ,	CASE WHEN COALESCE(sys12_working_yn,'false') = 'true'
+							 		 THEN '근무일'
+							 		 ELSE COALESCE(sys12_off_reason, '휴일')
+							 		 END AS att02_date_info
+							 ,	CASE WHEN att02_in_reason IS NOT NULL
+							 		 THEN 'true'
+							 		 WHEN att02_out_reason IS NOT NULL
+							 		 THEN 'true'
+							 		 ELSE NULL
+							 		 END AS att02_in_out_reason_yn_str
+							 ,	(
+							    	CASE WHEN att02_check_out_time IS NULL OR att02_check_in_time IS NULL
+							    		 THEN ''
+							    		 WHEN EXTRACT(HOUR FROM (
+												(att02_check_out_time - att02_check_in_time)
+												- (att01_break_minutes * INTERVAL '1 minute')
+											)) <![CDATA[>]]> 0
+							        	 THEN (
+												EXTRACT(HOUR FROM (
+													(att02_check_out_time - att02_check_in_time)
+													- (att01_break_minutes * INTERVAL '1 minute')
+												)) || '시간 '
+											  )
+											  ||
+											  (
+												EXTRACT(MINUTE FROM (
+													(att02_check_out_time - att02_check_in_time)
+													- (att01_break_minutes * INTERVAL '1 minute')
+												)) || '분'
+											  )
+							        	 ELSE ''
+							    		 END
+								) AS att02_work_time_str
+	
+							 ,	(
+							    	CASE WHEN COALESCE(att04_after_out, att02_check_out_time) IS NULL
+							    			  AND COALESCE(att04_after_in, att02_check_in_time) IS NULL
+							    		 THEN ''
+							    		 WHEN EXTRACT(HOUR FROM (
+												(COALESCE(att04_after_out, att02_check_out_time)
+												- COALESCE(att04_after_in, att02_check_in_time))
+												- (att01_break_minutes * INTERVAL '1 minute')
+											)) <![CDATA[>]]> 0
+							        	 THEN (
+												EXTRACT(HOUR FROM (
+													(COALESCE(att04_after_out, att02_check_out_time)
+													- COALESCE(att04_after_in, att02_check_in_time))
+													- (att01_break_minutes * INTERVAL '1 minute')
+												)) || '시간 '
+											  )
+											  ||
+											  (
+												EXTRACT(MINUTE FROM (
+													(COALESCE(att04_after_out, att02_check_out_time)
+													- COALESCE(att04_after_in, att02_check_in_time))
+													- (att01_break_minutes * INTERVAL '1 minute')
+												)) || '분'
+											  )
+							        	 ELSE ''
+							    		 END
+								) AS att02_calc_work_time_str
+	
+							 ,	CASE WHEN EXISTS (
+											SELECT	1
+											  FROM	att05_pm_work
+											  		INNER JOIN apr01_appr
+											  			ON apr01_appr_id = att05_appr_id
+											 WHERE	att05_person_id = att02_person_id
+											   AND	att05_work_date::date = att02_work_date::date
+											   AND	apr01_status_cd = '30'
+									  )
+									THEN 'true'
+									ELSE 'false'
+									END AS att02_pm_work_yn
+					  	  FROM	att02_commute
+					  			INNER JOIN emp01_person ON emp01_person_id = att02_person_id
+					  			INNER JOIN att01_work_policy ON att01_company_id = att02_company_id
+								  		   AND att01_start_date = (
+																	SELECT	MAX(att01_start_date)
+																	  FROM	att01_work_policy
+																	 WHERE	att01_company_id = att02_company_id
+																	   AND	att01_start_date <![CDATA[<=]]> att02_work_date
+																	   AND	att01_use_yn = 'true'
+																  )
+								LEFT OUTER JOIN sys12_calendar ON sys12_company_id = att02_company_id AND sys12_day::date = att02_work_date::date
+								LEFT OUTER JOIN att04_commute_hist ON att04_commute_id = att02_commute_id
+					 ) b
+  		) a
+  		LEFT OUTER JOIN LATERAL (
+								    SELECT  e.emp20_person_id
+								         ,  e.emp20_leave_cd
+								      FROM  emp20_leave e
+								            INNER JOIN apr01_appr p ON p.apr01_appr_id = e.emp20_appr_id AND p.apr01_status_cd != '99'
+								     WHERE  e.emp20_company_id = #{companyId}
+								       AND  a.att02_work_date BETWEEN e.emp20_start_date AND e.emp20_close_date
+								     GROUP BY e.emp20_person_id, e.emp20_leave_cd
+								 ) lb ON a.att02_person_id = lb.emp20_person_id
+ WHERE	1=1
+   AND	att02_company_id = #{companyId}
+   
+<choose>
+	<when test="personId != null">
+   AND	att02_person_id = #{personId}
+	</when>
+</choose>
+
+<choose>
+	<when test="baseDate != null">
+   AND	att02_work_date::date = #{baseDate}::date
+	</when>
+	<otherwise>
+   AND	att02_work_date::date BETWEEN #{startDate}::date AND #{closeDate}::date
+	</otherwise>
+</choose>
+
+   AND	UPPER(CONCAT(att02_person_no, att02_person_nm, att02_org_nm)) LIKE UPPER(#{searchText})
+ ORDER BY	att02_work_date DESC
+		,	att02_person_id DESC
+</select>
+
+
+    <!-- AS-IS att02_commute.adminCheck L1137 (IDMS-IC) att02_commute.xml -->
+<update id="adminCheck">
+UPDATE	att02_commute
+   SET	att02_admin_check_yn = NULL /* AS-IS는 adminCheckYn을 넘기지 않아 늘 NULL(확인필요 해제) */
+ WHERE	att02_commute_id = #{commuteId}
+</update>
+
+
+    <!-- AS-IS att02_commute.insertBatch L1081 (IDMS-IC) att02_commute.xml -->
+<insert id="insertBatch">
+INSERT
+  INTO	att02_commute
+	 (	att02_commute_id
+	 ,	att02_company_id
+	 ,	att02_person_id
+	 ,	att02_work_date
+	 ,	att02_check_in_time
+	 ,	att02_check_out_time
+	 ,	att02_batch_yn
+	 )
+SELECT	f_create_seq()
+	 ,	#{companyId}
+	 ,	#{personId}
+	 ,	d.work_date
+	 ,	(d.work_date::text||' '||wp.att01_work_start_time)::timestamp
+	 ,	(d.work_date::text||' '||wp.att01_work_end_time)::timestamp
+	 ,	'true'
+  FROM	(SELECT generate_series(#{startDate}::date,#{closeDate}::date,INTERVAL '1 day')::date AS work_date) d
+  		JOIN LATERAL (
+					    SELECT	*
+					      FROM	att01_work_policy wp
+					     WHERE	wp.att01_company_id = #{companyId}
+					       AND	wp.att01_start_date <![CDATA[<=]]> d.work_date
+					       AND	wp.att01_use_yn = 'true'
+					     ORDER BY wp.att01_start_date DESC
+					     LIMIT 1
+					 ) wp ON TRUE
+ WHERE	1=1
+   AND	NOT EXISTS
+		(
+		    SELECT	1
+		      FROM	att02_commute c
+		     WHERE	c.att02_company_id = #{companyId}
+		       AND	c.att02_person_id = #{personId}
+		       AND	c.att02_work_date = d.work_date
+		)
+   AND	NOT EXISTS
+		(
+		    SELECT	1
+		      FROM	emp20_leave l
+		     WHERE	l.emp20_company_id = #{companyId}
+		       AND	l.emp20_person_id = #{personId}
+		       AND	d.work_date BETWEEN l.emp20_start_date AND l.emp20_close_date
+		       AND	COALESCE(l.emp20_cancel, 'false') = 'false'
+		)
+   AND	NOT EXISTS
+		(
+		    SELECT	1
+		      FROM	sys12_calendar s
+		     WHERE	s.sys12_company_id = #{companyId}
+		       AND	s.sys12_day = d.work_date
+		       AND	s.sys12_working_yn = 'false'
+		)
+</insert>
+
+
+</mapper>

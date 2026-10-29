@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/att/mapper/att01_work_policy.xml (selectByCompanyId, selectById, getModel) + UpdateDataModel(att01_work_policy)  (T06) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.att.mapper.AttWorkPolicyMapper">
+
+    <sql id="policyColumns">
+        att01_work_policy_id            AS work_policy_id,
+        att01_start_date::date          AS start_date,
+        att01_work_start_time           AS work_start_time,
+        att01_work_end_time             AS work_end_time,
+        att01_break_minutes             AS break_minutes,
+        (att01_use_yn = 'true')         AS use_yn,
+        att01_overtime_minutes          AS overtime_minutes,
+        att01_start_grace_after_minutes AS start_grace_after_minutes,
+        att01_end_grace_before_minutes  AS end_grace_before_minutes,
+        att01_end_grace_after_minutes   AS end_grace_after_minutes,
+        att01_pm_work_start_time        AS pm_work_start_time,
+        att01_pm_work_end_time          AS pm_work_end_time
+    </sql>
+
+    <!-- AS-IS att01_work_policy.selectByCompanyId L30 (IDMS-IC) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.att.dto.AttWorkPolicyRes">
+        SELECT <include refid="policyColumns"/>
+          FROM att01_work_policy
+         WHERE att01_company_id = #{companyId}
+         ORDER BY att01_start_date DESC
+    </select>
+
+    <!-- AS-IS att01_work_policy.selectById — 저장 결과 한 행(TOBE는 로그인 회사 행만) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.att.dto.AttWorkPolicyRes">
+        SELECT <include refid="policyColumns"/>
+          FROM att01_work_policy
+         WHERE att01_company_id = #{companyId}
+           AND att01_work_policy_id = #{workPolicyId}
+    </select>
+
+    <!-- AS-IS att01_work_policy.getModel L51 (IDMS-IC) — useYn "true"만, startDate 조건은 이 화면이 안 줘서 뺐다 -->
+    <select id="selectActive" resultType="kr.co.kfs.asseterp.biz.att.dto.AttWorkPolicyRes">
+        SELECT <include refid="policyColumns"/>
+          FROM att01_work_policy
+         WHERE att01_company_id = #{companyId}
+           AND att01_use_yn = 'true'
+         ORDER BY att01_start_date
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Att01_WorkPolicy.update → UpdateDataModel INSERT -->
+    <insert id="insert">
+        INSERT INTO att01_work_policy
+             ( att01_work_policy_id, att01_company_id, att01_start_date, att01_work_start_time, att01_work_end_time,
+               att01_break_minutes, att01_overtime_minutes, att01_start_grace_after_minutes, att01_end_grace_before_minutes,
+               att01_end_grace_after_minutes, att01_use_yn, att01_pm_work_start_time, att01_pm_work_end_time )
+        VALUES
+             ( #{workPolicyId}, #{companyId}, #{req.startDate}, #{req.workStartTime}, #{req.workEndTime},
+               #{req.breakMinutes}, #{req.overtimeMinutes}, #{req.startGraceAfterMinutes}, #{req.endGraceBeforeMinutes},
+               #{req.endGraceAfterMinutes}, CASE WHEN COALESCE(#{req.useYn}, false) THEN 'true' ELSE 'false' END,
+               #{req.pmWorkStartTime}, #{req.pmWorkEndTime} )
+    </insert>
+
+    <!-- AS-IS Att01_WorkPolicy.update → UpdateDataModel UPDATE — 로그인 회사 행만 -->
+    <update id="update">
+        UPDATE att01_work_policy
+           SET att01_start_date                 = #{req.startDate},
+               att01_work_start_time            = #{req.workStartTime},
+               att01_work_end_time              = #{req.workEndTime},
+               att01_break_minutes              = #{req.breakMinutes},
+               att01_overtime_minutes           = #{req.overtimeMinutes},
+               att01_start_grace_after_minutes  = #{req.startGraceAfterMinutes},
+               att01_end_grace_before_minutes   = #{req.endGraceBeforeMinutes},
+               att01_end_grace_after_minutes    = #{req.endGraceAfterMinutes},
+               att01_use_yn                     = CASE WHEN COALESCE(#{req.useYn}, false) THEN 'true' ELSE 'false' END,
+               att01_pm_work_start_time         = #{req.pmWorkStartTime},
+               att01_pm_work_end_time           = #{req.pmWorkEndTime}
+         WHERE att01_company_id = #{companyId}
+           AND att01_work_policy_id = #{req.workPolicyId}
+    </update>
+
+    <!-- AS-IS Att01_WorkPolicy.delete → UpdateDataModel DELETE — 로그인 회사 행만 -->
+    <delete id="deleteByIds">
+        DELETE FROM att01_work_policy
+         WHERE att01_company_id = #{companyId}
+           AND att01_work_policy_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

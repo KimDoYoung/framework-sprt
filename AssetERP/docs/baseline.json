@@ -9617,5 +9617,39 @@
     "note": "docs/work/T/T05-작업기록.md",
     "history": [],
     "id": "T05"
+  },
+  "Att02_Tab_CommuteAdmin": {
+    "commit": "fc71b1a1c2304e8085b2aaf80a81603a99454e88",
+    "commit_short": "fc71b1a",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/att/Att01_Lookup_WorkPolicy.java": "19821caa389d65940ab5b551377b2f492c4b260d",
+      "application/src/main/java/myApp/client/vi/att/Att02_Edit_Commute.java": "3011ec960f4a04a86e06160bf3aca374d1d0dab9",
+      "application/src/main/java/myApp/client/vi/att/Att02_Edit_CommuteBatch.java": "ec00017ef0b24c0df1fffb8ded834eb2f909d70e",
+      "application/src/main/java/myApp/client/vi/att/Att02_Edit_InOutReason.java": "7984a0d61cf97a18dafc359fe576bf896dc89cb1",
+      "application/src/main/java/myApp/client/vi/att/Att02_Lookup_InsertBatch.java": "41b5db518988b4c21d2e0352ac7a56a2321f7195",
+      "application/src/main/java/myApp/client/vi/att/Att02_Tab_CommuteAdmin.java": "d463e74078e9f94112692c3673ab31dff5ba1a62",
+      "application/src/main/java/myApp/client/vi/att/model/Att01_WorkPolicyModel.java": "b8ddbbcb934574c8a0420e67b2baf3b438d01128",
+      "application/src/main/java/myApp/client/vi/att/model/Att01_WorkPolicyModelProperties.java": "8c12d8da8d9ea0c2fadf43df5c49a2beb10b23d5",
+      "application/src/main/java/myApp/client/vi/att/model/Att02_CommuteModel.java": "137da0f200343c5bf84baa747d5408cc936cceed",
+      "application/src/main/java/myApp/client/vi/att/model/Att02_CommuteModelProperties.java": "4f6c2b0ff9cefc32393bc8a051f8362b60af7e1b",
+      "application/src/main/java/myApp/server/att/Att01_WorkPolicy.java": "f7ef089f7f13ab62388d1145ccdebeefa32834d0",
+      "application/src/main/java/myApp/server/att/Att02_Commute.java": "8cc187a471381cb1d96c1c3ff13af88b5a3ed44e",
+      "application/src/main/java/myApp/server/att/Att04_CommuteHist.java": "0cc02005606e070e9f59bbbdae38a985532bc244",
+      "application/src/main/java/myApp/server/att/mapper/att01_work_policy.xml": "29c0aa4f6a49fe61dff7d378c7aeba974de3a3b2",
+      "application/src/main/java/myApp/server/att/mapper/att02_commute.xml": "05e08cdfd85e1711a0f6f928bacd0fea54f6557d",
+      "application/src/main/java/myApp/server/att/mapper/att04_commute_hist.xml": "7cec0b3cfcf9eb05ffc4d4390ef5cc69802044c0"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectMulti",
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-29T09:54:22+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/T/T06-작업기록.md",
+    "history": [],
+    "id": "T06"
   }
 }

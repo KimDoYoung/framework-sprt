@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/att/mapper/att04_commute_hist.xml (selectByCommuteId, insert, updateTime, insertAuto, updateTimeAuto)  (T06) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.att.mapper.AttCommuteHistMapper">
+
+    <!-- AS-IS att04_commute_hist.selectByCommuteId L24 (IDMS-IC) att04_commute_hist.xml -->
+<select id="selectByCommuteId" resultType="java.lang.Long" > 
+SELECT	att04_commute_hist_id
+  FROM 	att04_commute_hist
+ WHERE	att04_commute_id = #{commuteId}
+</select>
+
+
+    <!-- AS-IS att04_commute_hist.insert L30 (IDMS-IC) att04_commute_hist.xml -->
+<insert id="insert">
+INSERT
+  INTO	att04_commute_hist
+     (  att04_commute_hist_id
+     ,	att04_commute_id
+     ,	att04_before_in
+     ,	att04_before_out
+     ,	att04_after_in
+     ,	att04_after_out
+     ,	att04_change_reason
+     ,	att04_reg_date
+     ,	att04_reg_person_id
+	 )
+VALUES
+	 (	f_create_seq()
+	 ,	#{commuteId}
+	 ,	(SELECT	att02_check_in_time FROM att02_commute WHERE att02_commute_id = #{commuteId})
+	 ,	(SELECT	att02_check_out_time FROM att02_commute WHERE att02_commute_id = #{commuteId})
+     ,	TO_TIMESTAMP(TO_CHAR(#{checkInTime}::date,'YYYY-MM-DD')||' '||#{checkInTimeStr},'YYYY-MM-DD HH24:MI:SS')
+   	 ,	TO_TIMESTAMP(TO_CHAR(#{checkOutTime}::date,'YYYY-MM-DD')||' '||#{checkOutTimeStr},'YYYY-MM-DD HH24:MI:SS')
+	 ,	#{changeReason}
+	 ,	f_sysdate()
+	 ,	#{personId}
+	 )
+</insert>
+
+
+    <!-- AS-IS att04_commute_hist.updateTime L160 (IDMS-IC) att04_commute_hist.xml -->
+<update id="updateTime" >
+UPDATE	att04_commute_hist
+   SET	att04_reg_person_id = #{personId}
+     ,	att04_change_reason = #{changeReason}
+     ,	att04_reg_date = f_sysdate()
+	<choose> 
+		<when test="checkInTimeStr != null">
+	 ,	att04_after_in = TO_TIMESTAMP(TO_CHAR(#{checkInTime}::date,'YYYY-MM-DD')||' '||#{checkInTimeStr},'YYYY-MM-DD HH24:MI:SS')
+   		</when>
+		<when test="checkOutTimeStr != null">
+ 	,	att04_after_out = TO_TIMESTAMP(TO_CHAR(#{checkOutTime}::date,'YYYY-MM-DD')||' '||#{checkOutTimeStr},'YYYY-MM-DD HH24:MI:SS')
+   		</when>
+	</choose> 
+ WHERE	att04_commute_id = #{commuteId}
+</update>
+
+
+    <!-- AS-IS att04_commute_hist.insertAuto L56 (IDMS-IC) att04_commute_hist.xml -->
+<insert id="insertAuto">
+INSERT
+  INTO	att04_commute_hist
+  	 (	att04_commute_hist_id
+     ,	att04_commute_id
+     ,	att04_before_in
+     ,	att04_before_out
+     ,	att04_after_in
+     ,	att04_after_out
+     ,	att04_change_reason
+     ,	att04_reg_date
+     ,	att04_reg_person_id
+	 )
+SELECT	f_create_seq()
+     ,	a.att02_commute_id
+     ,	a.att02_check_in_time
+     ,	a.att02_check_out_time
+<!-- 	 ,	CASE WHEN a.att02_check_in_time <![CDATA[>]]> (a.att02_work_date::date + b.att01_work_start_time::time -->
+<!--               											+ COALESCE(b.att01_start_grace_after_minutes, 0) * INTERVAL '1 minute') -->
+<!--         	 THEN a.att02_check_in_time -->
+<!--         	 ELSE (a.att02_work_date::date + b.att01_work_start_time::time) -->
+<!--       		 END																		AS att04_after_in -->	
+<!--      ,	CASE WHEN o.att03_person_id IS NOT NULL -->
+<!--      		 THEN (a.att02_work_date::date + b.att01_work_end_time::time -->
+<!--              		+ COALESCE(o.att03_overtime_min, 0) * INTERVAL '1 minute') -->
+<!-- 	         WHEN COALESCE(a.att02_ext_check_out_yn, 'false') = 'true' -->
+<!-- 	         THEN (a.att02_work_date::date + b.att01_work_end_time::time) -->
+<!-- 	         WHEN a.att02_check_out_time <![CDATA[<]]> (a.att02_work_date::date + b.att01_work_end_time::time -->
+<!--               											 - COALESCE(b.att01_end_grace_before_minutes, 0) * INTERVAL '1 minute') -->
+<!-- 			 THEN a.att02_check_out_time -->
+<!-- 	         ELSE (a.att02_work_date::date + b.att01_work_end_time::time) -->
+<!--     		 END																		AS att04_after_out -->
+     ,	CASE WHEN EXISTS (
+				SELECT	1
+				  FROM	att05_pm_work p
+						INNER JOIN apr01_appr ap ON ap.apr01_appr_id = p.att05_appr_id
+				 WHERE	p.att05_person_id = a.att02_person_id
+				   AND	p.att05_work_date::date = a.att02_work_date::date
+				   AND	ap.apr01_status_cd = '30'
+			 )
+		 	 THEN CASE WHEN a.att02_check_in_time <![CDATA[>]]> (a.att02_work_date::date + b.att01_pm_work_start_time::time 
+              											+ COALESCE(b.att01_start_grace_after_minutes, 0) * INTERVAL '1 minute') 
+        		  	   THEN a.att02_check_in_time 
+        		 	   ELSE (a.att02_work_date::date + b.att01_pm_work_start_time::time) 
+      			  	   END
+		 	 ELSE CASE WHEN a.att02_check_in_time <![CDATA[>]]> (a.att02_work_date::date + b.att01_work_start_time::time 
+              											+ COALESCE(b.att01_start_grace_after_minutes, 0) * INTERVAL '1 minute') 
+        		  	   THEN a.att02_check_in_time 
+        		  	   ELSE (a.att02_work_date::date + b.att01_work_start_time::time) 
+      			  	   END
+		 	 END																		AS att04_after_in
+	,	CASE WHEN EXISTS (
+				SELECT	1
+				  FROM	att05_pm_work p
+						INNER JOIN apr01_appr ap ON ap.apr01_appr_id = p.att05_appr_id
+				 WHERE	p.att05_person_id = a.att02_person_id
+				   AND	p.att05_work_date::date = a.att02_work_date::date
+				   AND	ap.apr01_status_cd = '30'
+			 )
+		 	 THEN CASE WHEN o.att03_person_id IS NOT NULL 
+	     		 	   THEN (a.att02_work_date::date + b.att01_pm_work_end_time::time 
+	             			+ COALESCE(o.att03_overtime_min, 0) * INTERVAL '1 minute') 
+		         	   WHEN COALESCE(a.att02_ext_check_out_yn, 'false') = 'true' 
+		         	   THEN (a.att02_work_date::date + b.att01_pm_work_end_time::time) 
+		         	   WHEN a.att02_check_out_time <![CDATA[<]]> (a.att02_work_date::date + b.att01_pm_work_end_time::time 
+	              												- COALESCE(b.att01_end_grace_before_minutes, 0) * INTERVAL '1 minute') 
+					   THEN a.att02_check_out_time 
+		         	   ELSE (a.att02_work_date::date + b.att01_pm_work_end_time::time) 
+	    			   END
+		 	 ELSE CASE WHEN o.att03_person_id IS NOT NULL 
+	     		 	   THEN (a.att02_work_date::date + b.att01_work_end_time::time 
+	             			+ COALESCE(o.att03_overtime_min, 0) * INTERVAL '1 minute') 
+		         	   WHEN COALESCE(a.att02_ext_check_out_yn, 'false') = 'true' 
+		         	   THEN (a.att02_work_date::date + b.att01_work_end_time::time) 
+		         	   WHEN a.att02_check_out_time <![CDATA[<]]> (a.att02_work_date::date + b.att01_work_end_time::time 
+	              												- COALESCE(b.att01_end_grace_before_minutes, 0) * INTERVAL '1 minute') 
+					   THEN a.att02_check_out_time 
+		         	   ELSE (a.att02_work_date::date + b.att01_work_end_time::time) 
+	    			   END
+		 	 END																		AS att04_after_out	 
+     ,	#{changeReason}
+     ,	f_sysdate()
+     ,	#{personId}
+  FROM	att02_commute a
+		INNER JOIN att01_work_policy b  ON	b.att01_company_id = a.att02_company_id
+										AND b.att01_start_date = ( 
+																	SELECT	MAX(c.att01_start_date)
+																	  FROM	att01_work_policy c
+																	 WHERE	c.att01_company_id = a.att02_company_id
+																	   AND	c.att01_start_date <![CDATA[<=]]> a.att02_work_date
+								               						   AND	c.att01_use_yn = 'true'
+											 				    )
+		LEFT OUTER JOIN (
+							SELECT	att03_person_id
+								 ,	att03_work_date::date	AS att03_work_date
+								 ,	SUM(att03_overtime_min)	AS att03_overtime_min
+							  FROM	att03_overtime_req
+									LEFT OUTER JOIN apr01_appr ON apr01_appr_id = att03_appr_id
+							 WHERE	COALESCE(apr01_status_cd, '99') = '30'
+							 GROUP BY att03_person_id, att03_work_date::date
+						) o ON o.att03_person_id = a.att02_person_id AND o.att03_work_date::date = a.att02_work_date::date
+ WHERE	a.att02_commute_id = #{commuteId}
+</insert>
+
+
+    <!-- AS-IS att04_commute_hist.updateTimeAuto L176 (IDMS-IC) att04_commute_hist.xml -->
+<update id="updateTimeAuto" >
+UPDATE	att04_commute_hist h
+<!--    SET	att04_after_in =  -->
+<!--    		(	CASE WHEN a.att02_check_in_time <![CDATA[>]]> (a.att02_work_date::date + b.att01_work_start_time::time -->
+<!--               											+ COALESCE(b.att01_start_grace_after_minutes, 0) * INTERVAL '1 minute') -->
+<!--         	 	 THEN a.att02_check_in_time -->
+<!--         	 	 ELSE (a.att02_work_date::date + b.att01_work_start_time::time) -->
+<!--       		 	 END -->
+<!--         ) -->
+<!--      ,	att04_after_out = -->
+<!--      	(	CASE WHEN o.att03_person_id IS NOT NULL -->
+<!--      			 THEN (a.att02_work_date::date + b.att01_work_end_time::time -->
+<!--         	     		+ COALESCE(o.att03_overtime_min, 0) * INTERVAL '1 minute') -->
+<!--         	     WHEN COALESCE(a.att02_ext_check_out_yn, 'false') = 'true' -->
+<!-- 	         	 THEN (a.att02_work_date::date + b.att01_work_end_time::time)		 -->
+<!-- 	    	     WHEN a.att02_check_out_time <![CDATA[<]]> (a.att02_work_date::date + b.att01_work_end_time::time -->
+<!--         	      											 - COALESCE(b.att01_end_grace_before_minutes, 0) * INTERVAL '1 minute') -->
+<!-- 				 THEN a.att02_check_out_time -->
+<!-- 	    	     ELSE (a.att02_work_date::date + b.att01_work_end_time::time) -->
+<!--     			 END -->
+<!--     	) -->
+   SET	att04_after_in =
+   		(
+   			CASE WHEN EXISTS (
+					SELECT	1
+					  FROM	att05_pm_work p
+							INNER JOIN apr01_appr ap ON ap.apr01_appr_id = p.att05_appr_id
+					 WHERE	p.att05_person_id = a.att02_person_id
+					   AND	p.att05_work_date::date = a.att02_work_date::date
+					   AND	ap.apr01_status_cd = '30'
+				 )
+			 	 THEN CASE WHEN a.att02_check_in_time <![CDATA[>]]> (a.att02_work_date::date + b.att01_pm_work_start_time::time 
+	              											+ COALESCE(b.att01_start_grace_after_minutes, 0) * INTERVAL '1 minute') 
+	        		  	   THEN a.att02_check_in_time 
+	        		 	   ELSE (a.att02_work_date::date + b.att01_pm_work_start_time::time) 
+	      			  	   END
+			 	 ELSE CASE WHEN a.att02_check_in_time <![CDATA[>]]> (a.att02_work_date::date + b.att01_work_start_time::time 
+	              											+ COALESCE(b.att01_start_grace_after_minutes, 0) * INTERVAL '1 minute') 
+	        		  	   THEN a.att02_check_in_time 
+	        		  	   ELSE (a.att02_work_date::date + b.att01_work_start_time::time) 
+	      			  	   END
+			 	 END
+   		)
+    ,	att04_after_out =
+    	(
+    		CASE WHEN EXISTS (
+					SELECT	1
+					  FROM	att05_pm_work p
+							INNER JOIN apr01_appr ap ON ap.apr01_appr_id = p.att05_appr_id
+					 WHERE	p.att05_person_id = a.att02_person_id
+					   AND	p.att05_work_date::date = a.att02_work_date::date
+					   AND	ap.apr01_status_cd = '30'
+				 )
+			 	 THEN CASE WHEN o.att03_person_id IS NOT NULL 
+		     		 	   THEN (a.att02_work_date::date + b.att01_pm_work_end_time::time 
+		             			+ COALESCE(o.att03_overtime_min, 0) * INTERVAL '1 minute') 
+			         	   WHEN COALESCE(a.att02_ext_check_out_yn, 'false') = 'true' 
+			         	   THEN (a.att02_work_date::date + b.att01_pm_work_end_time::time) 
+			         	   WHEN a.att02_check_out_time <![CDATA[<]]> (a.att02_work_date::date + b.att01_pm_work_end_time::time 
+		              												- COALESCE(b.att01_end_grace_before_minutes, 0) * INTERVAL '1 minute') 
+						   THEN a.att02_check_out_time 
+			         	   ELSE (a.att02_work_date::date + b.att01_pm_work_end_time::time) 
+		    			   END
+			 	 ELSE CASE WHEN o.att03_person_id IS NOT NULL 
+		     		 	   THEN (a.att02_work_date::date + b.att01_work_end_time::time 
+		             			+ COALESCE(o.att03_overtime_min, 0) * INTERVAL '1 minute') 
+			         	   WHEN COALESCE(a.att02_ext_check_out_yn, 'false') = 'true' 
+			         	   THEN (a.att02_work_date::date + b.att01_work_end_time::time) 
+			         	   WHEN a.att02_check_out_time <![CDATA[<]]> (a.att02_work_date::date + b.att01_work_end_time::time 
+		              												- COALESCE(b.att01_end_grace_before_minutes, 0) * INTERVAL '1 minute') 
+						   THEN a.att02_check_out_time 
+			         	   ELSE (a.att02_work_date::date + b.att01_work_end_time::time) 
+		    			   END
+			 	 END	
+    	)
+     ,	att04_change_reason = #{changeReason}
+     ,	att04_reg_date = f_sysdate()
+     ,	att04_reg_person_id = #{personId}
+  FROM	att02_commute a
+		INNER JOIN att01_work_policy b  ON	b.att01_company_id = a.att02_company_id
+										AND b.att01_start_date = ( 
+																	SELECT	MAX(c.att01_start_date)
+																	  FROM	att01_work_policy c
+																	 WHERE	c.att01_company_id = a.att02_company_id
+																	   AND	c.att01_start_date <![CDATA[<=]]> a.att02_work_date
+								               						   AND	c.att01_use_yn = 'true'
+											 				    )
+		LEFT OUTER JOIN (
+							SELECT	att03_person_id
+						         ,	att03_work_date::date	AS att03_work_date
+						         ,	SUM(att03_overtime_min) AS att03_overtime_min
+						      FROM	att03_overtime_req
+									LEFT OUTER JOIN apr01_appr ON apr01_appr_id = att03_appr_id
+							 WHERE	COALESCE(apr01_status_cd, '99') = '30'
+						     GROUP BY att03_person_id, att03_work_date::date
+						) o ON o.att03_person_id = a.att02_person_id AND o.att03_work_date::date = a.att02_work_date::date
+ WHERE	h.att04_commute_id = #{commuteId}
+   AND	a.att02_commute_id = #{commuteId}
+</update>
+
+</mapper>
