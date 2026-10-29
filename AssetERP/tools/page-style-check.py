@@ -8,6 +8,7 @@ docs/page-style.md 의 SID별 규칙 중 정규식으로 확인할 수 있는 �
   tools/page-style-check.py                  # 대상 17개 + 견본
   tools/page-style-check.py SGHF SGEF         # 지정한 SID만
   tools/page-style-check.py --only-fail      # 어긋난 칸만
+  tools/page-style-check.py --screen Act02_Tab_DepositIoList [SID]   # 화면 하나(SID는 머리 주석 `스타일:`에서 읽는다)
 """
 import re
 import sys
@@ -23,12 +24,13 @@ TARGETS = {
                                 "Biz01_Tab_OtherSimple", "Biz01_Tab_CardContentsSimple"]),
     "SGEF": ("Sys90_Tab_AfterService", ["Sys90_Tab_AfterServiceAdmin", "Ics20_Tab_RevisionHistory",
                                       "Ics20_Tab_RevisionHistoryAdmin"]),
-    "TO": ("Org01_Tab_OrgCode", ["Chk01_Tab_ClassTree"])  # Fbx01_Tab_Document는 TO가 아니다(SID 미정),
-    "GO": ("Tdm54_Tab_CheckInsuff", ["Sms02_Tab_TotalCount", "Sys10_Tab_TotalSize"]),
+    # Fbx01_Tab_Document는 TO가 아니다(SID 미정)
+    "TO": ("Org01_Tab_OrgCode", ["Chk01_Tab_ClassTree"]),
+    "GO": ("Tdm54_Tab_CheckInsuff", []),
     "GDP": ("Sms02_Tab_TotalCount", ["Sys10_Tab_TotalSize", "Sms03_Tab_SendAdmin", "Ics02_Tab_Manager"]),
     "DSBRD": ("Tdm50_Tab_TotalDashboard", ["Tdm35_Tab_TaskList"]),
     "STP": ("Pay10_Tab_Retire", ["Tdm50_Tab_CheckJob"]),
-    "TP": ("Rpt10_Tab_FssOrg", ["Pay31_Tab_InsureApply", "Pay20_Tab_DeductAdmin"])  # Pay20_Tab_Deduct는 DeductAdmin 껍데기라 제외,
+    "TP": ("Rpt10_Tab_FssOrg", ["Pay31_Tab_InsureApply", "Pay20_Tab_DeductAdmin"]),  # Pay20_Tab_Deduct는 DeductAdmin 껍데기라 제외
 }
 
 BORDER = r"border\s*:\s*['\"]1px solid"
@@ -111,8 +113,32 @@ def check(path: Path, sid: str) -> dict[str, bool]:
     return res
 
 
+def screen_main(cls: str, sid: str | None) -> int:
+    """변환 중인 화면 하나를 점검한다. SID를 안 주면 머리 주석 `스타일: XXX`에서 읽는다."""
+    p = find(cls)
+    if p is None:
+        print(f"{cls}: 파일 없음")
+        return 2
+    if sid is None:
+        m = re.search(r"스타일:\s*([A-Z]{2,5})\b", p.read_text(encoding="utf-8"))
+        sid = m.group(1) if m else None
+    if sid is None:
+        print(f"{cls}: 머리 주석에 `스타일: XXX` 선언이 없다 (SID를 인자로 주거나 선언을 넣는다)")
+        return 2
+    if sid not in RULES:
+        print(f"{cls}: SID {sid}는 점검 규칙이 없다. docs/page-style.md {sid} 절을 보고 RULES에 규칙을 추가한다 (03 원칙 22)")
+        return 2
+    res = check(p, sid)
+    names = [n for n, _, _ in COMMON] + [n for n, _, _ in RULES[sid]]
+    fails = [n for n in names if not res.get(n, False)]
+    print(f"## {sid}\n- {cls}: " + ("모두 통과" if not fails else "✗ " + ", ".join(fails)))
+    return 1 if fails else 0
+
+
 def main() -> int:
     args = sys.argv[1:]
+    if args and args[0] == "--screen":
+        return screen_main(args[1], args[2] if len(args) > 2 else None)
     only_fail = "--only-fail" in args
     sids = [a for a in args if not a.startswith("--")] or list(TARGETS)
     bad_total = 0
