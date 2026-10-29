@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.act.controller;
 
+import kr.co.kfs.asseterp.biz.act.dto.JournalDtlRes;
 import kr.co.kfs.asseterp.biz.act.dto.JournalPayMonthRes;
 import kr.co.kfs.asseterp.biz.act.service.ActJournalDtlService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
@@ -29,5 +30,13 @@ public class ActJournalDtlController {
                                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate payDate,
                                                           @RequestParam String payType) {
         return ApiResponse.ok(service.searchPayMonth(principal, payDate, payType));
+    }
+
+    /** act.Act03_JournalDtl.selectByAstId (U01 일일자금관리 입금·출금 그리드) — drCrType D 입금 / C 출금 */
+    @GetMapping("/by-ast")
+    public ApiResponse<List<JournalDtlRes>> byAst(@AuthenticationPrincipal UserPrincipal principal,
+                                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                                                  @RequestParam Long astId, @RequestParam String drCrType) {
+        return ApiResponse.ok(service.searchByAstId(principal, date, astId, drCrType));
     }
 }

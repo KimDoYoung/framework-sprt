@@ -262,3 +262,36 @@ export interface AstCfBatchCreateReq {
 }
 
 
+
+/** 예금원장 한 행 (Act02_Tab_DepositIoList buildGrid — AS-IS Ast09_BookModel 중 이 화면·RD 출력이 쓰는 속성) */
+export interface AstBook {
+  bookId: number;
+  companyId: number;
+  holdDate: string;
+  astClassTreeId: number;
+  astClassTreeName: string | null;
+  curCode: string | null;
+  preDayAmt: number | null;
+  holdQty: number | null;
+  astMClassCode: string | null;
+  astSClassCode: string | null;
+  astSClassName: string | null;
+  astSClassSeq: number | null;
+  keepAccountSeq: number | null;
+}
+
+/** 통화별 합계 한 행 (Act02_Tab_DepositIoList buildSumGrid) */
+export interface AstBookSum {
+  bookId: number;
+  curCode: string | null;
+  preDayAmt: number | null;
+  holdQty: number | null;
+}
+
+/** 연관문서(고유자산) — 상신 문서 ID·상태 (AS-IS Ast80_RelateApprModel) */
+export interface AstRelateAppr {
+  relateApprId: number;
+  apprId: number | null;
+  statusCode: string | null;
+  statusName: string | null;
+}

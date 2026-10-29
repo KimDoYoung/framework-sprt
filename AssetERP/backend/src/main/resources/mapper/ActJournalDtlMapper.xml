@@ -23,4 +23,22 @@
            AND act02_pay_month_cd = #{payType}
          ORDER BY act03_seq
     </select>
+
+    <!-- AS-IS act03_journal_dtl.selectByAstId L389 (IDMS-IC) — 일일자금관리 U01: 계좌(astId)의 입금(D)·출금(C) 분개. 원본의 journalDtlColumns 중 거래유형·거래처·적요·금액만 -->
+    <select id="selectByAstId" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalDtlRes">
+        SELECT f_cdnm('trCode', f_get_journal_tr_cd(act02_journal_id), act02_company_id, act02_date)              AS tr_name,
+               f_get_journal_corp_nm(act02_journal_id)                                                            AS corp_name,
+               f_get_journal_note(act02_journal_id)                                                               AS note,
+               CASE WHEN COALESCE(drAst.ast01_cur_cd,'KRW') = 'KRW' THEN act03_dr_amt ELSE act03_dr_for_amt END   AS dr_for_amt,
+               CASE WHEN COALESCE(crAst.ast01_cur_cd,'KRW') = 'KRW' THEN act03_cr_amt ELSE act03_cr_for_amt END   AS cr_for_amt
+          FROM act03_journal_dtl
+               INNER JOIN act02_journal ON act02_journal_id = act03_journal_id
+               LEFT OUTER JOIN ast01_class_tree drAst ON drAst.ast01_class_tree_id = act03_dr_ast_id
+               LEFT OUTER JOIN ast01_class_tree crAst ON crAst.ast01_class_tree_id = act03_cr_ast_id
+         WHERE act02_company_id = #{companyId}
+           AND act02_date       = #{date}
+           AND (   (#{drCrType} = 'D' AND act03_dr_ast_id = #{astId})
+                OR (#{drCrType} = 'C' AND act03_cr_ast_id = #{astId}) )
+         ORDER BY act02_journal_no, act03_seq
+    </select>
 </mapper>

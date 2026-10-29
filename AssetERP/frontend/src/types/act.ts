@@ -170,3 +170,12 @@ export interface JournalPayMonth {
   crAmt?: number | null;
   crAstName?: string | null;
 }
+
+/** 계좌별 입금·출금 분개 한 행 (Act02_Tab_DepositIoList inGrid·outGrid — AS-IS Act03_JournalDtlModel) */
+export interface JournalDtl {
+  trName: string | null;
+  corpName: string | null;
+  note: string | null;
+  drForAmt: number | null;
+  crForAmt: number | null;
+}

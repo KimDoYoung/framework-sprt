@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sys/mapper/sys99_print.xml (deleteByPersonId L695 · insert L500 · updateDepositOutData L660) — 일일자금관리 RD 출력 자료 U01 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActDepositIoMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId L695 (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS sys99_print.insert L500 (IDMS-IC) — Sys99_Print.insertRdDepositIoList가 채우는 열만.
+         long01 = 원장 순번, long02 = 입출금 줄 순번 / date01 일자 · string01 계좌 · 02 통화 · 03 예금구분코드 · 04 예금구분명 · 05 대분류코드 · double01 기초잔액 · 02 마감잔액
+         · string11~13·double10 입금(거래유형·거래처·적요·금액) · string21~23·double20 출금 · long10 소분류순번 · long11 보관계좌순번 -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_long01, sys99_long02
+               , sys99_date01, sys99_string01, sys99_string02, sys99_string03, sys99_string04, sys99_double01, sys99_double02
+               , sys99_string11, sys99_string12, sys99_string13, sys99_double10
+               , sys99_string21, sys99_string22, sys99_string23, sys99_double20
+               , sys99_string05, sys99_long10, sys99_long11 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{seq}, #{seq2}
+               , #{book.holdDate}, #{book.astClassTreeName,jdbcType=VARCHAR}, #{book.curCode,jdbcType=VARCHAR}, #{book.astSClassCode,jdbcType=VARCHAR}, #{book.astSClassName,jdbcType=VARCHAR}, #{book.preDayAmt,jdbcType=NUMERIC}, #{book.holdQty,jdbcType=NUMERIC}
+               , #{inRow.trName,jdbcType=VARCHAR}, #{inRow.corpName,jdbcType=VARCHAR}, #{inRow.note,jdbcType=VARCHAR}, #{inRow.drForAmt,jdbcType=NUMERIC}
+               , #{outRow.trName,jdbcType=VARCHAR}, #{outRow.corpName,jdbcType=VARCHAR}, #{outRow.note,jdbcType=VARCHAR}, #{outRow.crForAmt,jdbcType=NUMERIC}
+               , #{book.astMClassCode,jdbcType=VARCHAR}, #{book.astSClassSeq,jdbcType=NUMERIC}, #{book.keepAccountSeq,jdbcType=NUMERIC} )
+    </insert>
+
+    <!-- AS-IS sys99_print.updateDepositOutData L660 (IDMS-IC) -->
+    <update id="updateOutData">
+        UPDATE sys99_print
+           SET sys99_string21 = #{outRow.trName,jdbcType=VARCHAR}
+             , sys99_string22 = #{outRow.corpName,jdbcType=VARCHAR}
+             , sys99_string23 = #{outRow.note,jdbcType=VARCHAR}
+             , sys99_double20 = #{outRow.crForAmt,jdbcType=NUMERIC}
+         WHERE sys99_group_id = #{groupId}
+           AND sys99_long01   = #{seq}
+           AND sys99_long02   = #{seq2}
+    </update>
+</mapper>

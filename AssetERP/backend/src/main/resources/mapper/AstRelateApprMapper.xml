@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ast/mapper/ast80_relate_appr.xml (selectByCompanyId L24 · updateApprId L35 · insert L41 · deleteByApprId L57) — 일일자금관리 U01 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstRelateApprMapper">
+
+    <!-- AS-IS ast80_relate_appr.selectByCompanyId L24 (IDMS-IC) — SELECT *의 ast80_appr_id를 apprId로 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.ast.dto.RelateApprRes">
+        SELECT ast80_relate_appr_id                                                          AS relate_appr_id
+             , ast80_appr_id                                                                 AS appr_id
+             , b.apr01_status_cd                                                             AS status_code
+             , f_cdnm('AprStatusCode', b.apr01_status_cd, ast80_company_id, b.apr01_reg_date) AS status_name
+          FROM ast80_relate_appr
+               LEFT OUTER JOIN apr01_appr b ON ast80_appr_id = apr01_appr_id
+         WHERE ast80_company_id = #{companyId}
+           AND ast80_date       = #{date}
+           AND ast80_link_cd    = #{linkCode}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS ast80_relate_appr.insert L41 (IDMS-IC) -->
+    <insert id="insert">
+        INSERT INTO ast80_relate_appr
+               ( ast80_relate_appr_id, ast80_company_id, ast80_date, ast80_link_cd )
+        VALUES ( #{relateApprId}, #{companyId}, #{date}, #{linkCode} )
+    </insert>
+
+    <!-- AS-IS ast80_relate_appr.deleteByApprId L57 (IDMS-IC) -->
+    <delete id="deleteByApprId">
+        DELETE FROM ast80_relate_appr
+         WHERE ast80_relate_appr_id = #{relateApprId}
+    </delete>
+
+    <!-- AS-IS ast80_relate_appr.updateApprId L35 (IDMS-IC) -->
+    <update id="updateApprId">
+        UPDATE ast80_relate_appr
+           SET ast80_appr_id = #{apprId}
+         WHERE ast80_relate_appr_id = #{relateApprId}
+    </update>
+</mapper>

@@ -1,6 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, JournalMap, JournalPayMonth, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, JournalDtl, JournalMap, JournalPayMonth, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { AstBook } from '../types/ast';
 import { readBlobError } from './file';
 
 /** act(관리회계) 화면 API (E25~) */
@@ -226,6 +227,18 @@ export const actApi = {
   /** AS-IS act.Act12_JournalMap.delete → 지운 건수 */
   deleteJournalMaps: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/act/journal-maps', { data: ids });
+    return res.data.data;
+  },
+
+  /** AS-IS act.Act03_JournalDtl.selectByAstId (Act02_Tab_DepositIoList, U01): 계좌의 입금(D)·출금(C) 분개 */
+  searchJournalDtlsByAst: async (date: string, astId: number, drCrType: 'D' | 'C'): Promise<JournalDtl[]> => {
+    const res = await apiClient.get<ApiResponse<JournalDtl[]>>('v1/act/journal-dtls/by-ast', { params: { date, astId, drCrType } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdDepositIoList (U01) — 그리드 행을 보내 출력 자료를 만들고 그룹 ID(rdGroupId)를 받는다 */
+  rdPrintDepositIo: async (rows: AstBook[]): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/act/deposit-ios/rd-print', { rows });
     return res.data.data;
   },
 };

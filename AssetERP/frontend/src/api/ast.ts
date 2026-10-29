@@ -13,9 +13,12 @@ import {
   AstItemClassUpdateReq,
   AstItemDetail,
   AstItemDetailSaveReq,
+  AstBook,
+  AstBookSum,
   AstItemTreeNode,
   AstManager,
   AstManagerSaveReq,
+  AstRelateAppr,
   TrCode,
   TrCodeWindow,
 } from '../types/ast';
@@ -269,5 +272,40 @@ export const astApi = {
   batchCreateCf: async (req: AstCfBatchCreateReq): Promise<AstCf[]> => {
     const res = await apiClient.post<ApiResponse<AstCf[]>>('v1/ast/cf-infos/batch-create', req);
     return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast09_Book.selectByHoldDate (Act02_Tab_DepositIoList, U01): astType 1(예금) 기준일 현재 예금원장 */
+  searchDeposits: async (holdDate: string): Promise<AstBook[]> => {
+    const res = await apiClient.get<ApiResponse<AstBook[]>>('v1/ast/books/deposits', { params: { holdDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast09_Book.selectDepositCurGroupSum (U01): 통화별 합계 */
+  searchDepositCurSums: async (holdDate: string): Promise<AstBookSum[]> => {
+    const res = await apiClient.get<ApiResponse<AstBookSum[]>>('v1/ast/books/deposits/cur-sums', { params: { holdDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast09_Book.createDepositBook (U01): 기준일부터 오늘까지 예금잔고정리 — 실패는 오류 메시지로 던진다 */
+  cleanDepositBook: async (stdDate: string): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>('v1/ast/books/deposits/clean', { stdDate });
+  },
+
+  /** AS-IS ast.Ast80_RelateAppr.selectByCompanyId (U01): 일자·링크코드의 상신 문서. 한 건이 아니면 null(미상신) */
+  getRelateAppr: async (date: string, linkCode: string): Promise<AstRelateAppr | null> => {
+    const res = await apiClient.get<ApiResponse<AstRelateAppr | null>>('v1/ast/relate-apprs', { params: { date, linkCode } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS ast.Ast80_RelateAppr.insert (U01): 같은 일자·링크코드가 있으면 지우고 새로 만든다 → 새 relateApprId */
+  createRelateAppr: async (date: string, linkCode: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ast/relate-apprs', { date, linkCode });
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast80_RelateAppr.updateApprId (U01): 상신한 문서 ID 기록 */
+  updateRelateApprId: async (relateApprId: number, apprId: number): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>(`v1/ast/relate-apprs/${relateApprId}/appr-id`, { apprId });
+    return res.data.data;
   },
 };

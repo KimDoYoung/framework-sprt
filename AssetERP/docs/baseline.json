@@ -10210,5 +10210,41 @@
     "note": "docs/work/T/T26-작업기록.md",
     "history": [],
     "id": "T26"
+  },
+  "Act02_Tab_DepositIoList": {
+    "commit": "c0855642013eab9377ca21506118ac89463beee3",
+    "commit_short": "c085564",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/act/Act02_Tab_DepositIoList.java": "b3a937a29d538e53019b975b69ed01169282205e",
+      "application/src/main/java/myApp/client/vi/act/model/Act02_JournalModel.java": "4ebb3e69f0b7dba94668c6e774ff700eaa1cf06c",
+      "application/src/main/java/myApp/client/vi/act/model/Act03_JournalDtlModel.java": "1ad5d7a66b81b62c880b4ba07e93299bd4c66d54",
+      "application/src/main/java/myApp/client/vi/act/model/Act03_JournalDtlModelProperties.java": "987fea07eb1401d88c54e595f2a97ea6b0c08d43",
+      "application/src/main/java/myApp/server/act/Act03_JournalDtl.java": "ea4892fe161b44e445c18470a6d7a4956e03a859",
+      "application/src/main/java/myApp/server/act/mapper/act03_journal_dtl.xml": "30693776bf7e446ac02e9099bd5aca30c8dca83e",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/ast/Ast09_Book.java": "b9ba44f158e27cb4b9efb126262ae2f7ab5eb477",
+      "application/src/main/java/myApp/server/ast/Ast80_RelateAppr.java": "90c4f11098231f7e4303e181bff9d27f82d8caf3",
+      "application/src/main/java/myApp/server/ast/mapper/ast09_book.xml": "fb0636ccfd391f1efae798a56d6aaa46ce71ea4a",
+      "application/src/main/java/myApp/server/ast/mapper/ast80_relate_appr.xml": "3600c198c779b52192e465a60aec3969e06d0e94",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "02073a29bc7feb680d7fefea312fd41a0ccecc98",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Dcr30_Move_DcrClass"
+    ],
+    "recorded_at": "2026-10-29T21:37:55+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/U/U01-작업기록.md",
+    "history": [],
+    "id": "U01"
   }
 }

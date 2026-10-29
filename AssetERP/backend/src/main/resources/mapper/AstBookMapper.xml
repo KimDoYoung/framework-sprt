@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ast/mapper/ast09_book.xml (selectByHoldDate L100 · selectDepositCurGroupSum L391 · createDepositBook L647) — 일일자금관리 U01.
+     공통 CTE(common.ast_book_postgresql)를 두 select에 풀어 썼다. 이 화면이 주지 않는 파라미터(astClassTreeId·keepAccountId·depositIdStr·investAssetType·abroType·depositDiffYn)의 <choose> 분기와 astType≠1 정렬 분기는 뺐고, `0l` 리터럴은 `0`으로 썼다(PostgreSQL 15 이상은 `0l`을 거부) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstBookMapper">
+
+    <sql id="bookColumns">
+        ast09_ast_class_tree_nm             AS ast_class_tree_name,
+        ast09_cur_code                      AS cur_code,
+        ast09_preDay_amt                    AS pre_day_amt,
+        ast09_hold_qty                      AS hold_qty,
+        CAST(#{holdDate} AS date)           AS hold_date,   /* 안쪽 select의 첫 열(기준일 상수)과 book.*의 ast09_hold_date가 겹쳐 열 이름을 못 쓴다 — 원본은 SELECT *로 첫 열이 쓰인다 */
+        ast09_ast_m_class_cd                AS ast_m_class_code,
+        ast09_ast_s_class_cd                AS ast_s_class_code,
+        ast09_ast_s_class_nm                AS ast_s_class_name,
+        ast09_ast_s_class_seq               AS ast_s_class_seq,
+        ast09_keep_account_seq              AS keep_account_seq,
+        ast09_book_id                       AS book_id,
+        ast09_ast_class_tree_id             AS ast_class_tree_id,
+        ast09_company_id                    AS company_id
+    </sql>
+
+    <!-- AS-IS ast09_book.selectByHoldDate L100 (IDMS-IC) — astType 1(예금)·searchText '%' -->
+    <select id="selectByHoldDate" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookRes">
+    WITH book AS (
+    WITH book1 AS ( SELECT '1' seq
+                         , ast09_book.*
+                      FROM ast09_book
+                     WHERE ast09_company_id = #{companyId}
+                       AND (ast09_ast_class_tree_id, ast09_keep_account_id, ast09_hold_date) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(ast09_hold_date)
+                                                                                                    FROM ast09_book
+                                                                                                   WHERE ast09_company_id = #{companyId}
+                                                                                                     AND ast09_hold_date &lt;= #{holdDate}
+                                                                                                   GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+                     UNION ALL
+                    SELECT '2' seq
+                         , ast11_book_id
+                         , ast11_hold_date
+                         , ast11_ast_class_tree_id
+                         , ast11_keep_account_id
+                         , ast11_hold_qty
+                         , ast11_pur_amt
+                         , ast11_book_amt
+                         , ast11_eval_amt
+                         , ast11_eval_pl
+                         , ast11_first_pur_amt
+                         , ast11_first_pur_date
+                         , ast11_company_id
+                         , ast11_for_pur_amt
+                         , ast11_for_book_amt
+                         , ast11_for_eval_amt
+                         , ast11_for_eval_pl
+                         , ast11_fx_pl
+                         , ast11_book_end_yn
+                         , ast11_acr_int_amt
+                         , ast11_for_acr_int_amt
+                         , ast11_oci
+                         , ast11_for_oci
+                         , ast11_lock_up_period_cd
+                         , ast11_lock_up_date
+                         , ast11_lock_up_qty
+                      FROM ast11_book_close
+                     WHERE ast11_company_id = #{companyId}
+                       AND (ast11_ast_class_tree_id, ast11_keep_account_id, ast11_hold_date) IN ( SELECT ast11_ast_class_tree_id, ast11_keep_account_id, MAX(ast11_hold_date)
+                                                                                                    FROM ast11_book_close
+                                                                                                   WHERE ast11_company_id = #{companyId}
+                                                                                                     AND ast11_hold_date &lt; #{holdDate}
+                                                                                                   GROUP BY ast11_ast_class_tree_id, ast11_keep_account_id )
+    )
+    SELECT *
+      FROM book1
+     WHERE (ast09_ast_class_tree_id, ast09_keep_account_id, to_char(ast09_hold_date,'yyyymmdd')||seq) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(to_char(ast09_hold_date,'yyyymmdd')||seq)
+                                                                                                             FROM book1
+                                                                                                            GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+)
+        SELECT <include refid="bookColumns"/>
+          FROM (
+        SELECT #{holdDate}                                                                                           as ast09_hold_date
+        , ast1.ast01_class_tree_nm                                                                              as ast09_ast_class_tree_nm
+        , COALESCE(ast1.ast01_tr_unit,1)                                                                        as ast09_ast_tr_unit
+        , ast2.ast01_corp_id                                                                                    as ast09_corp_id
+        , f_get_corp_nm(ast2.ast01_corp_id)                                                                     as ast09_corp_nm
+        , ast2.ast01_class_tree_nm                                                                              as ast09_keep_account_nm
+        , ast2.ast01_seq                                                                                        as ast09_keep_account_seq
+        , f_get_corp_nm(ast2.ast01_corp_id)
+        ||'('||f_ast_class_tree_nm(ast09_keep_account_id)||')'                                                as ast09_keep_corp_account_nm
+        , f_cdnm('ItemMClassCode',ast1.ast01_item_m_class_cd,ast09_company_id,ast09_hold_date)
+        ||CASE WHEN substr(ast1.ast01_item_s_class_cd,5) = '99' THEN ''
+        ELSE '('||f_cdnm('ItemSClassCode',ast1.ast01_item_s_class_cd,ast09_company_id,ast09_hold_date)||')'
+        END                                                                                            as ast09_ast_class_nm
+        , ast1.ast01_item_m_class_cd                                                                            as ast09_ast_m_class_cd
+        , ast1.ast01_item_s_class_cd                                                                            as ast09_ast_s_class_cd
+        , COALESCE(sys09_seq, ast1.ast01_item_s_class_cd)                                                       as ast09_ast_s_class_seq
+        , ast1.ast01_account_type                                                                               as ast09_account_type
+        , f_cdnm('ItemMClassCode',ast1.ast01_item_m_class_cd,ast09_company_id,ast09_hold_date)                  as ast09_ast_m_class_nm
+        , f_cdnm('ItemSClassCode',ast1.ast01_item_s_class_cd,ast09_company_id,ast09_hold_date)                  as ast09_ast_s_class_nm
+        , f_cdnm('AccountType'   ,ast1.ast01_account_type   ,ast09_company_id,ast09_hold_date)                  as ast09_account_type_nm
+        , COALESCE(ast1.ast01_cur_cd,'KRW')                                                                     as ast09_cur_code
+        , COALESCE(ast12_real_qty,0)                                                                            as ast09_real_amt
+        , ast09_hold_qty - COALESCE(ast12_real_qty,0)                                                           as ast09_diff_amt
+        , coalesce(( SELECT holdQty
+        FROM ( SELECT ast09_hold_date holdDate
+        , ast09_hold_qty  holdQty
+        FROM ast09_book
+        WHERE ast09_company_id        = book.ast09_company_id
+        AND ast09_ast_class_tree_id = book.ast09_ast_class_tree_id
+        AND ast09_keep_account_id   = book.ast09_keep_account_id
+        AND ast09_hold_date         &lt; #{holdDate}
+        UNION ALL
+        SELECT ast11_hold_date holdDate
+        , ast11_hold_qty  holdQty
+        FROM ast11_book_close
+        WHERE ast11_company_id        = book.ast09_company_id
+        AND ast11_ast_class_tree_id = book.ast09_ast_class_tree_id
+        AND ast11_keep_account_id   = book.ast09_keep_account_id
+        AND ast11_hold_date         &lt; #{holdDate}
+        ORDER BY holdDate DESC
+        LIMIT 1 ) t),0)                                                                  as ast09_preDay_amt
+        , f_cdnm('LockUpPeriodCode', ast09_lock_up_period_cd, ast09_company_id, ast09_hold_date)                as ast09_lock_up_period_nm
+        , f_get_sellPossibleQty(ast09_book_id, #{holdDate}::date)                                               as ast09_sell_possible_qty
+        , COALESCE(ast09_lock_up_qty,0)                                                                         as ast09_lock_up_qty
+        , CASE WHEN ast09_lock_up_date IS NULL THEN ast09_first_pur_date
+        ELSE f_get_biz_date2(0, ast09_lock_up_date, '+1', 'true') END                                    as ast09_sell_possible_date
+        , CASE WHEN COALESCE(ast09_eval_amt,0) = 0 THEN null
+        ELSE trunc(ast09_eval_amt / f_nvl(ast09_hold_qty,1) * COALESCE(ast1.ast01_tr_unit,1),2) END      as ast09_eval_price
+        , trunc((ast09_eval_amt - ast09_book_amt) / f_nvl(ast09_book_amt,1) * 100,2)                            as ast09_ty_pl_rate
+        , trunc((ast09_eval_amt - ast09_pur_amt ) / f_nvl(ast09_pur_amt ,1) * 100,2)                            as ast09_pur_pl_rate
+        , CASE WHEN ast09_lock_up_date IS NOT NULL
+        THEN f_get_datediff(f_get_biz_date2(0, ast09_lock_up_date, '+1', 'true'), #{holdDate}, '2')
+        ELSE f_get_datediff(ast09_first_pur_date, #{holdDate}, '2') END                                  as ast09_hold_period
+        , CASE WHEN ast41_stop_loss_rate IS NULL THEN '정보없음'
+        ELSE (CASE WHEN (ast09_eval_amt - ast09_pur_amt) / f_nvl(ast09_pur_amt,1) * 100 &lt;= (ast41_stop_loss_rate * -1)
+        THEN '매도필요' ELSE '' END) END                                                        as ast09_stop_loss_notice
+        , CASE WHEN COALESCE(ast1.ast01_cur_cd,'KRW') = 'KRW' THEN 1
+        ELSE COALESCE((SELECT ast24_apply_fx_rate
+        FROM ast24_fx_rate
+        WHERE ast24_fx_rate_type = '01'
+        AND COALESCE(ast1.ast01_cur_cd,'KRW') = ast24_cur_cd
+        ORDER BY  ast24_std_date
+        LIMIT 1)
+        ,1) END																  	  as ast09_fx_rate
+        , ( SELECT TRIM(ast02_value)
+        FROM ast02_detail
+        WHERE ast02_ast_class_tree_id  = ast1.ast01_class_tree_id
+        AND ast02_title              = '계좌번호'
+        AND COALESCE(ast02_use_yn,'false') = 'true'
+        LIMIT 1 )                                                                                          as ast09_account_no
+        , book.*
+        FROM book
+        INNER JOIN ast01_class_tree ast1 ON ast1.ast01_class_tree_id = ast09_ast_class_tree_id
+        INNER JOIN ast01_class_tree ast2 ON ast2.ast01_class_tree_id = ast09_keep_account_id
+        LEFT OUTER JOIN ( SELECT sys09_code.*
+        FROM sys08_code_kind
+        INNER JOIN sys09_code ON ( sys09_code_kind_id = sys08_code_kind_id  AND
+        sys09_company_id   = 0                   )
+        WHERE sys08_kind_cd  = 'ItemSClassCode'
+        AND COALESCE(sys09_close_yn,'false') = 'false' ) sys ON sys09_code = ast1.ast01_item_s_class_cd
+        LEFT OUTER JOIN ast12_book_real  ON ( ast12_company_id        = ast09_company_id        AND
+        ast12_hold_date         = #{holdDate}             AND
+        ast12_ast_class_tree_id = ast09_ast_class_tree_id AND
+        ast12_keep_account_id   = ast09_keep_account_id   )
+        LEFT OUTER JOIN ( SELECT ast41_invest_asset_type, ast41_stop_loss_rate
+        FROM ast41_invest_limit
+        WHERE ast41_company_id = #{companyId}
+        AND ast41_start_date IN ( SELECT MAX(ast41_start_date)
+        FROM ast41_invest_limit
+        WHERE ast41_company_id = #{companyId}
+        AND ast41_start_date &lt;= #{holdDate} )
+        ) ast41 ON ast1.ast01_item_s_class_cd LIKE ast41_invest_asset_type
+        WHERE COALESCE(ast09_book_end_yn,'false') != 'true'
+        AND ast1.ast01_asset_type = '1'                      /* 1:고유자산 / 2:운용(펀드)자산 */
+        AND ( ( '1' = #{astType}                    AND     /* 자산구분(1:예금) => 10:현금 및 예치금 */
+        ast1.ast01_item_l_class_cd = '10'   ) OR
+        ( '2' = #{astType}                    AND     /* 자산구분(2:금융자산) => 20:증권 */
+        ast1.ast01_item_l_class_cd = '20'   ) )
+        AND 'Y' = (CASE WHEN COALESCE(ast1.ast01_mat_date,'9999-12-31') &lt; #{holdDate} AND ast09_hold_qty = 0 THEN 'N' ELSE 'Y' END)
+        AND 'Y' = (CASE WHEN COALESCE(ast1.ast01_use_yn,'false') != 'true' AND ast09_hold_qty = 0 THEN 'N' ELSE 'Y' END)
+        ) t
+        WHERE UPPER(CONCAT(ast09_corp_nm,ast09_keep_account_nm,ast09_ast_class_tree_nm,ast09_ast_class_nm)) LIKE upper(#{searchText})
+        ORDER BY
+        ast09_ast_m_class_cd, ast09_ast_s_class_seq, ast09_keep_account_seq    </select>
+
+    <!-- AS-IS ast09_book.selectDepositCurGroupSum L391 (IDMS-IC) -->
+    <select id="selectDepositCurGroupSum" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookSumRes">
+    WITH book AS (
+    WITH book1 AS ( SELECT '1' seq
+                         , ast09_book.*
+                      FROM ast09_book
+                     WHERE ast09_company_id = #{companyId}
+                       AND (ast09_ast_class_tree_id, ast09_keep_account_id, ast09_hold_date) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(ast09_hold_date)
+                                                                                                    FROM ast09_book
+                                                                                                   WHERE ast09_company_id = #{companyId}
+                                                                                                     AND ast09_hold_date &lt;= #{holdDate}
+                                                                                                   GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+                     UNION ALL
+                    SELECT '2' seq
+                         , ast11_book_id
+                         , ast11_hold_date
+                         , ast11_ast_class_tree_id
+                         , ast11_keep_account_id
+                         , ast11_hold_qty
+                         , ast11_pur_amt
+                         , ast11_book_amt
+                         , ast11_eval_amt
+                         , ast11_eval_pl
+                         , ast11_first_pur_amt
+                         , ast11_first_pur_date
+                         , ast11_company_id
+                         , ast11_for_pur_amt
+                         , ast11_for_book_amt
+                         , ast11_for_eval_amt
+                         , ast11_for_eval_pl
+                         , ast11_fx_pl
+                         , ast11_book_end_yn
+                         , ast11_acr_int_amt
+                         , ast11_for_acr_int_amt
+                         , ast11_oci
+                         , ast11_for_oci
+                         , ast11_lock_up_period_cd
+                         , ast11_lock_up_date
+                         , ast11_lock_up_qty
+                      FROM ast11_book_close
+                     WHERE ast11_company_id = #{companyId}
+                       AND (ast11_ast_class_tree_id, ast11_keep_account_id, ast11_hold_date) IN ( SELECT ast11_ast_class_tree_id, ast11_keep_account_id, MAX(ast11_hold_date)
+                                                                                                    FROM ast11_book_close
+                                                                                                   WHERE ast11_company_id = #{companyId}
+                                                                                                     AND ast11_hold_date &lt; #{holdDate}
+                                                                                                   GROUP BY ast11_ast_class_tree_id, ast11_keep_account_id )
+    )
+    SELECT *
+      FROM book1
+     WHERE (ast09_ast_class_tree_id, ast09_keep_account_id, to_char(ast09_hold_date,'yyyymmdd')||seq) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(to_char(ast09_hold_date,'yyyymmdd')||seq)
+                                                                                                             FROM book1
+                                                                                                            GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+)
+        SELECT coalesce(ast01_cur_cd,'KRW')                                           AS cur_code,
+               SUM(coalesce(( SELECT holdQty
+                                FROM ( SELECT ast09_hold_date holdDate
+                                            , ast09_hold_qty  holdQty
+                                         FROM ast09_book
+                                        WHERE ast09_company_id        = book.ast09_company_id
+                                          AND ast09_ast_class_tree_id = book.ast09_ast_class_tree_id
+                                          AND ast09_keep_account_id   = book.ast09_keep_account_id
+                                          AND ast09_hold_date         &lt; #{holdDate}
+                                        UNION ALL
+                                       SELECT ast11_hold_date holdDate
+                                            , ast11_hold_qty  holdQty
+                                         FROM ast11_book_close
+                                        WHERE ast11_company_id        = book.ast09_company_id
+                                          AND ast11_ast_class_tree_id = book.ast09_ast_class_tree_id
+                                          AND ast11_keep_account_id   = book.ast09_keep_account_id
+                                          AND ast11_hold_date         &lt; #{holdDate}
+                                        ORDER BY holdDate DESC
+                                        LIMIT 1 ) t),0))                             AS pre_day_amt,
+               SUM(ast09_hold_qty)                                                    AS hold_qty,
+               row_number() OVER (ORDER BY SUM(ast09_hold_qty) DESC)                  AS book_id
+          FROM book
+         INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast09_ast_class_tree_id
+         WHERE ast01_item_l_class_cd = '10' /* 10:현금 및 예치금 */
+         GROUP BY coalesce(ast01_cur_cd,'KRW')
+    </select>
+
+    <!-- AS-IS ast09_book.createDepositBook L647 (IDMS-IC) — 성공이면 'Y', 아니면 오류 메시지 -->
+    <select id="createDepositBook" resultType="string" flushCache="true">
+        SELECT f_create_depositBook(#{companyId}, #{stdDate})
+    </select>
+</mapper>
