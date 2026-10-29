@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- AS-IS(IDMS-IC) server/ast/mapper/ast09_book.xml (selectByHoldDate L100 · selectDepositCurGroupSum L391 · createDepositBook L647) — 일일자금관리 U01.
-     공통 CTE(common.ast_book_postgresql)를 두 select에 풀어 썼다. 이 화면이 주지 않는 파라미터(astClassTreeId·keepAccountId·depositIdStr·investAssetType·abroType·depositDiffYn)의 <choose> 분기와 astType≠1 정렬 분기는 뺐고, `0l` 리터럴은 `0`으로 썼다(PostgreSQL 15 이상은 `0l`을 거부) -->
+     공통 CTE(common.ast_book_postgresql)를 두 select에 풀어 썼다. 이 화면이 주지 않는 파라미터(astClassTreeId·keepAccountId·investAssetType·abroType·depositDiffYn)의 <choose> 분기와 astType≠1 정렬 분기는 뺐고, `0l` 리터럴은 `0`으로 썼다(PostgreSQL 15 이상은 `0l`을 거부) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstBookMapper">
 
     <sql id="bookColumns">
@@ -23,8 +23,8 @@
         ast09_company_id                    AS company_id
     </sql>
 
-    <!-- AS-IS ast09_book.selectByHoldDate L100 (IDMS-IC) — astType 1(예금)·searchText '%' -->
-    <select id="selectByHoldDate" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookRes">
+    <!-- AS-IS ast09_book.selectByHoldDate L100 (IDMS-IC) — 열 목록(cols)만 달리 쓰는 공통 본문. depositIdStr 분기는 일일자금관리(U01)가 안 주므로 null -->
+    <sql id="depositBookQuery">
     WITH book AS (
     WITH book1 AS ( SELECT '1' seq
                          , ast09_book.*
@@ -76,7 +76,7 @@
                                                                                                              FROM book1
                                                                                                             GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
 )
-        SELECT <include refid="bookColumns"/>
+        SELECT <include refid="${cols}"/>
           FROM (
         SELECT #{holdDate}                                                                                           as ast09_hold_date
         , ast1.ast01_class_tree_nm                                                                              as ast09_ast_class_tree_nm
@@ -121,7 +121,7 @@
         LIMIT 1 ) t),0)                                                                  as ast09_preDay_amt
         , f_cdnm('LockUpPeriodCode', ast09_lock_up_period_cd, ast09_company_id, ast09_hold_date)                as ast09_lock_up_period_nm
         , f_get_sellPossibleQty(ast09_book_id, #{holdDate}::date)                                               as ast09_sell_possible_qty
-        , COALESCE(ast09_lock_up_qty,0)                                                                         as ast09_lock_up_qty
+        , COALESCE(ast09_lock_up_qty,0)                                                                         as ast09_lock_up_qty_nvl
         , CASE WHEN ast09_lock_up_date IS NULL THEN ast09_first_pur_date
         ELSE f_get_biz_date2(0, ast09_lock_up_date, '+1', 'true') END                                    as ast09_sell_possible_date
         , CASE WHEN COALESCE(ast09_eval_amt,0) = 0 THEN null
@@ -180,8 +180,117 @@
         AND 'Y' = (CASE WHEN COALESCE(ast1.ast01_use_yn,'false') != 'true' AND ast09_hold_qty = 0 THEN 'N' ELSE 'Y' END)
         ) t
         WHERE UPPER(CONCAT(ast09_corp_nm,ast09_keep_account_nm,ast09_ast_class_tree_nm,ast09_ast_class_nm)) LIKE upper(#{searchText})
+        <if test="depositIdStr != null">
+        AND COALESCE(CAST(ast09_keep_account_id AS VARCHAR),'') LIKE #{depositIdStr}
+        </if>
         ORDER BY
-        ast09_ast_m_class_cd, ast09_ast_s_class_seq, ast09_keep_account_seq    </select>
+        ast09_ast_m_class_cd, ast09_ast_s_class_seq, ast09_keep_account_seq    </sql>
+
+    <select id="selectByHoldDate" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookRes">
+        <include refid="depositBookQuery"><property name="cols" value="bookColumns"/></include>
+    </select>
+
+    <!-- 예금잔고 기간조회(U02) — sys99_print에 쌓을 전체 열 -->
+    <sql id="bookFullColumns">
+        ast09_book_id                       AS book_id,
+        CAST(#{holdDate} AS date)           AS hold_date,
+        ast09_first_pur_date                AS first_pur_date,
+        ast09_ast_s_class_cd                AS ast_s_class_code,
+        ast09_ast_s_class_nm                AS ast_s_class_name,
+        ast09_keep_corp_account_nm          AS keep_corp_account_name,
+        ast09_cur_code                      AS cur_code,
+        COALESCE(ast09_for_book_amt, 0.0)   AS for_book_amt,
+        ast09_hold_qty                      AS hold_qty,
+        ast09_book_amt                      AS book_amt,
+        ast09_keep_account_id               AS keep_account_id,
+        ast09_ast_class_tree_id             AS ast_class_tree_id,
+        ast09_pur_amt                       AS pur_amt,
+        COALESCE(ast09_acr_int_amt, 0)      AS acr_int_amt,
+        ast09_eval_amt                      AS eval_amt,
+        COALESCE(ast09_eval_pl, 0)          AS eval_pl,
+        COALESCE(ast09_oci, 0)              AS oci,
+        COALESCE(ast09_first_pur_amt, 0)    AS first_pur_amt,
+        ast09_keep_account_nm               AS keep_account_name,
+        ast09_ast_class_nm                  AS ast_class_name,
+        ast09_ast_class_tree_nm             AS ast_class_tree_name,
+        ast09_account_type_nm               AS account_type_name,
+        ast09_lock_up_period_nm             AS lock_up_period_name,
+        ast09_lock_up_date                  AS lock_up_date,
+        ast09_lock_up_qty_nvl               AS lock_up_qty   /* 안쪽 select의 COALESCE(…,0) 열 — book.*의 같은 이름과 겹쳐 이름을 바꿨다 */
+    </sql>
+
+    <select id="selectByHoldDateFull" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookFullRes">
+        <include refid="depositBookQuery"><property name="cols" value="bookFullColumns"/></include>
+    </select>
+
+    <!-- AS-IS sys12_calendar.selectPeriod L110 (IDMS-IC) -->
+    <select id="selectCalendarDays" resultType="java.time.LocalDate">
+        SELECT CAST(sys12_day AS date)
+          FROM sys12_calendar
+         WHERE sys12_company_id = #{companyId}
+           AND sys12_day BETWEEN #{startDate} AND #{closeDate}
+         ORDER BY sys12_day
+    </select>
+
+    <!-- AS-IS dbConfig.getBatchSeq (DBConfig.xml L33) -->
+    <select id="selectBatchId" resultType="long" flushCache="true">
+        SELECT CAST(to_char(f_today(),'yyyymmdd') AS numeric) * 10000000000 + CAST(lpad(CAST(nextval('batchseq') AS varchar),10,'0') AS numeric)
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId L695 (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS sys99_print.insert L500 (IDMS-IC) — Ast09_Book.selectByHoldDatePeriod가 채우는 열만 -->
+    <insert id="insertPrintPeriod">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_date02, sys99_string01, sys99_string02, sys99_string03, sys99_string04, sys99_string05, sys99_string06, sys99_string07, sys99_string08
+               , sys99_double01, sys99_double02, sys99_long01, sys99_long02, sys99_long03, sys99_long04, sys99_long05, sys99_long06, sys99_long07, sys99_long08, sys99_long09
+               , sys99_string09, sys99_date03, sys99_double03 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{b.holdDate}, #{b.firstPurDate,jdbcType=DATE}, #{b.astSClassCode,jdbcType=VARCHAR}, #{b.astSClassName,jdbcType=VARCHAR}, #{b.keepCorpAccountName,jdbcType=VARCHAR}, #{b.curCode,jdbcType=VARCHAR}, #{b.keepAccountName,jdbcType=VARCHAR}, #{b.astClassName,jdbcType=VARCHAR}, #{b.astClassTreeName,jdbcType=VARCHAR}, #{b.accountTypeName,jdbcType=VARCHAR}
+               , #{b.forBookAmt,jdbcType=NUMERIC}, #{b.holdQty,jdbcType=NUMERIC}, #{b.bookAmt,jdbcType=NUMERIC}, #{b.keepAccountId,jdbcType=NUMERIC}, #{b.astClassTreeId,jdbcType=NUMERIC}, #{b.purAmt,jdbcType=NUMERIC}, #{b.acrIntAmt,jdbcType=NUMERIC}, #{b.evalAmt,jdbcType=NUMERIC}, #{b.evalPl,jdbcType=NUMERIC}, #{b.oci,jdbcType=NUMERIC}, #{b.firstPurAmt,jdbcType=NUMERIC}
+               , #{b.lockUpPeriodName,jdbcType=VARCHAR}, #{b.lockUpDate,jdbcType=DATE}, #{b.lockUpQty,jdbcType=NUMERIC} )
+    </insert>
+
+    <!-- AS-IS ast09_book.selectByHoldDatePeriod L324 (IDMS-IC) — 방금 쌓은 sys99_print 그룹에서 전일 대비 증감액까지 -->
+    <select id="selectByHoldDatePeriod" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookPeriodRes">
+        SELECT sys99_print_id                                                               AS book_id
+             , sys99_date01                                                                 AS hold_date
+             , sys99_string02                                                               AS ast_s_class_name
+             , sys99_string03                                                               AS keep_corp_account_name
+             , sys99_string04                                                               AS cur_code
+             , sys99_double01                                                               AS for_book_amt
+             , sys99_double01 - COALESCE(( SELECT sys99_double01
+                                             FROM sys99_print
+                                            WHERE sys99_group_id = a.sys99_group_id
+                                              AND sys99_long02   = a.sys99_long02
+                                              AND sys99_long03   = a.sys99_long03
+                                              AND sys99_date01   = a.sys99_date01 - 1 ),0)  AS for_diff_amt
+             , sys99_long01                                                                 AS book_amt
+             , sys99_long01 - COALESCE(( SELECT sys99_long01
+                                           FROM sys99_print
+                                          WHERE sys99_group_id = a.sys99_group_id
+                                            AND sys99_long02   = a.sys99_long02
+                                            AND sys99_long03   = a.sys99_long03
+                                            AND sys99_date01   = a.sys99_date01 - 1 ),0)    AS diff_amt
+             , sys99_long02                                                                 AS keep_account_id
+             , sys99_long03                                                                 AS ast_class_tree_id
+          FROM sys99_print a
+         WHERE sys99_group_id = #{groupId}
+           AND sys99_date01 BETWEEN #{startDate} AND #{closeDate}
+         ORDER BY sys99_print_id
+    </select>
 
     <!-- AS-IS ast09_book.selectDepositCurGroupSum L391 (IDMS-IC) -->
     <select id="selectDepositCurGroupSum" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookSumRes">

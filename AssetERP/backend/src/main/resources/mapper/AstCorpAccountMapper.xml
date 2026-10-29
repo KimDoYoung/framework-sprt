@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ast/mapper/ast01_class_tree.xml (selectCorpAccount L532) — 계좌선택 조회창 Ast01_Lookup_CorpAccount (U02) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstCorpAccountMapper">
+
+    <!-- AS-IS ast01_class_tree.selectCorpAccount L532 (IDMS-IC) — 안쪽 select는 조회창이 쓰는 열(계좌구분·보관처·계좌)과 정렬 열만 남겼다 -->
+    <select id="selectCorpAccount" resultType="kr.co.kfs.asseterp.biz.ast.dto.CorpAccountRes">
+        SELECT ast01_class_tree_id AS class_tree_id
+             , ast01_item_s_class_nm AS item_s_class_name
+             , ast01_corp_nm AS corp_name
+             , ast01_class_tree_nm AS class_tree_name
+             , ast01_corp_account_nm AS corp_account_name
+          FROM ( SELECT ast01_class_tree.*
+                      , COALESCE(sys15_corp_nm,'')                                                      AS ast01_corp_nm
+                      , f_get_corp_nm(ast01_corp_id)||'('||ast01_class_tree_nm||')'                     AS ast01_corp_account_nm
+                      , f_cdnm('ItemSClassCode', ast01_item_s_class_cd, ast01_company_id, f_sysdate())  AS ast01_item_s_class_nm
+                      , COALESCE(sys09_seq, ast01_item_s_class_cd)                                      AS ast01_item_s_class_seq
+                   FROM ast01_class_tree
+                     LEFT OUTER JOIN sys15_corp ON sys15_corp_id = ast01_corp_id
+                     LEFT OUTER JOIN ( SELECT sys09_code.*
+                                         FROM sys08_code_kind
+                                              INNER JOIN sys09_code ON ( sys09_code_kind_id = sys08_code_kind_id  AND
+                                                                         sys09_company_id   = 0                   )
+                                        WHERE sys08_kind_cd  = 'ItemSClassCode'
+                                          AND COALESCE(sys09_close_yn,'false') = 'false' ) sys ON sys09_code = ast01_item_s_class_cd
+               WHERE ast01_company_id       = #{companyId}
+                 AND ast01_type_cd          = 'IT'
+                 AND ast01_asset_type       = '1'
+                 AND ast01_item_s_class_cd IN ( SELECT sys09_code
+                                                  FROM sys13_code_group
+                                                       INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+                                                 WHERE sys13_kind_group_cd = 'ItemSClassCode003' )
+                 AND COALESCE(ast01_mat_date,'9999-12-31') &gt;= #{stdDate}
+                 AND COALESCE(ast01_use_yn, 'false') = 'true'
+               <if test="prePayOnlyYn == true">
+                 AND ast01_item_m_class_cd = '9030' /*(9030:선급금)*/
+                </if>
+               <if test="corpId != null">
+                 AND ast01_corp_id = #{corpId}
+                </if>
+ ) a
+         WHERE upper(ast01_class_tree_nm||ast01_corp_nm) like '%'||upper(#{searchText})||'%'
+         ORDER BY ast01_item_m_class_cd, ast01_item_s_class_seq, ast01_corp_nm collate "ko_KR.utf8" asc, ast01_seq
+    </select>
+</mapper>

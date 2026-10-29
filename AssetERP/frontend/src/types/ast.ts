@@ -295,3 +295,27 @@ export interface AstRelateAppr {
   statusCode: string | null;
   statusName: string | null;
 }
+
+/** 예금잔고 기간조회 한 행 (Ast09_Tab_DepositBookPeriod buildGrid — 전일 대비 증감액 포함) */
+export interface AstBookPeriod {
+  bookId: number;
+  holdDate: string;
+  astSClassName: string | null;
+  keepCorpAccountName: string | null;
+  curCode: string | null;
+  forBookAmt: number | null;
+  forDiffAmt: number | null;
+  bookAmt: number | null;
+  diffAmt: number | null;
+  keepAccountId: number | null;
+  astClassTreeId: number | null;
+}
+
+/** 계좌선택 조회창 한 행 (Ast01_Lookup_CorpAccount) */
+export interface AstCorpAccount {
+  classTreeId: number;
+  itemSClassName: string | null;
+  corpName: string | null;
+  classTreeName: string | null;
+  corpAccountName: string | null;
+}

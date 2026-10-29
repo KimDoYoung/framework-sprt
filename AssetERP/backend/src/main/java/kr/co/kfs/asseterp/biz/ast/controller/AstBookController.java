@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.ast.controller;
 
 import jakarta.validation.Valid;
+import kr.co.kfs.asseterp.biz.ast.dto.BookPeriodRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookSumRes;
 import kr.co.kfs.asseterp.biz.ast.dto.DepositCleanReq;
@@ -40,6 +41,17 @@ public class AstBookController {
     public ApiResponse<List<BookSumRes>> depositCurSums(@AuthenticationPrincipal UserPrincipal principal,
                                                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate holdDate) {
         return ApiResponse.ok(service.searchDepositCurSums(principal, holdDate));
+    }
+
+    /** ast.Ast09_Book.selectByHoldDatePeriod (U02) — GET이지만 조회 전에 내 sys99_print 자료를 다시 만든다(AS-IS 그대로). depositId 없으면 전체 */
+    @GetMapping("/deposits/period")
+    public ApiResponse<List<BookPeriodRes>> depositsPeriod(@AuthenticationPrincipal UserPrincipal principal,
+                                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                           @RequestParam(required = false) Long depositId,
+                                                           @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchDepositsPeriod(principal, startDate, closeDate,
+                depositId == null ? "%" : String.valueOf(depositId), "%" + searchText + "%"));
     }
 
     /** ast.Ast09_Book.createDepositBook */

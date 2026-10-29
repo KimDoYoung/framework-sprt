@@ -198,6 +198,7 @@ import { Act11_Tab_TrJournalMap } from './act/Act11_Tab_TrJournalMap';
 import { Act13_Tab_RealAccountMap } from './act/Act13_Tab_RealAccountMap';
 import { Act15_Tab_CloseCheck } from './act/Act15_Tab_CloseCheck';
 import { Act02_Tab_DepositIoList } from './act/Act02_Tab_DepositIoList';
+import { Ast09_Tab_DepositBookPeriod } from './ast/Ast09_Tab_DepositBookPeriod';
 import { Sms02_Tab_TotalCount } from './sms/Sms02_Tab_TotalCount';
 import { Sms03_Tab_SendAdmin } from './sms/Sms03_Tab_SendAdmin';
 import { Sys01_Tab_Company } from './sys/Sys01_Tab_Company';
@@ -544,6 +545,7 @@ export const SCREENS: Record<string, React.FC> = {
   Act13_Tab_RealAccountMap, // E31 (+ Act10_Lookup_ReprAccount·Act01_Lookup_AccountCode)
   Act15_Tab_CloseCheck, // E32
   Act02_Tab_DepositIoList, // U01 (메뉴 #1164·#1470. 상신의 전자결재 편집창은 다음 단계, 문서분류 조회창 Dcr30_Move_DcrClass·RD 출력 재사용)
+  Ast09_Tab_DepositBookPeriod, // U02 (메뉴 #1238·#1471. 하위 Ast01_Lookup_CorpAccount. 계정별원장 아이콘은 메뉴 1150을 열고 값만 보냄 — 받는 화면 Act02_Tab_JournalSub는 다음 단계)
   Tdm50_Tab_TotalDashboard, // N01 1단계 (+ Tdm50_Tab_Dashboard·DashboardExct·DashboardOrg·Tdm01_Lookup_SelectSingle, [보기] 아이콘의 점검 편집창·미흡 조치 상세는 N22·N24)
   Tdm50_Tab_CheckJob, // N20 1단계 (+ Tdm50_TabPage_CheckJob·Tdm50_Edit_CheckJob·Tdm55_Lookup_ChckRecord, 결재요청·문서보기·알림발송의 문자 창은 다른 도메인이라 점검 후 안내, 보고서 PDF는 서버 CheckExctPdfMaker)
   Tdm51_Tab_CheckOrg, // N21 (+ Tdm51_TabPage_CheckOrg·Tdm58_Lookup_ChckApprStep·Emp00_Lookup_SelectSingleTdm, 점검항목 [상세]의 Tdm52_Edit_ChckManl은 N22에서)

@@ -10246,5 +10246,53 @@
     "note": "docs/work/U/U01-작업기록.md",
     "history": [],
     "id": "U01"
+  },
+  "Ast09_Tab_DepositBookPeriod": {
+    "commit": "c0855642013eab9377ca21506118ac89463beee3",
+    "commit_short": "c085564",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ast/Ast09_Tab_DepositBookPeriod.java": "2d016bd3fd93f30f13faa9bf54919dcbe1e89efb",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast01_ClassTreeModel.java": "ee2cde89198d72acc210c16582a4c1a9e6091262",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast09_BookModel.java": "428b3c826da36a0835c239afdea603ad80eb2015",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast09_BookModelProperties.java": "3074cf6b7cfac48ac47543a93cdc9e9249534408",
+      "application/src/main/java/myApp/server/ast/Ast09_Book.java": "b9ba44f158e27cb4b9efb126262ae2f7ab5eb477",
+      "application/src/main/java/myApp/server/ast/mapper/ast09_book.xml": "fb0636ccfd391f1efae798a56d6aaa46ce71ea4a",
+      "application/src/main/java/myApp/server/sys/mapper/sys12_calendar.xml": "4d765811d5aa8954038cdb196caca5fe413b4339",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Act02_Tab_JournalSub",
+      "Ast01_Lookup_CorpAccount"
+    ],
+    "recorded_at": "2026-10-29T22:07:14+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/U/U02-작업기록.md",
+    "history": [],
+    "id": "U02"
+  },
+  "Ast01_Lookup_CorpAccount": {
+    "commit": "c0855642013eab9377ca21506118ac89463beee3",
+    "commit_short": "c085564",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ast/Ast01_Lookup_CorpAccount.java": "ce82c7b62776a96de50dbf13bfa4b4705dbae8bf",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast01_ClassTreeModel.java": "ee2cde89198d72acc210c16582a4c1a9e6091262",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast01_ClassTreeModelProperties.java": "9ff4c820ad4209ea0cbfffe4fc0971b497468939",
+      "application/src/main/java/myApp/server/ast/Ast01_ClassTree.java": "281b066b09cf7350910ca8c871a467217d28c1e6",
+      "application/src/main/java/myApp/server/ast/mapper/ast01_class_tree.xml": "4d4dcbefb08aaedcad3120c9a73fd887926fad88"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-29T22:07:14+09:00",
+    "recorded_by": "kdy987",
+    "note": null,
+    "history": [],
+    "id": "U02"
   }
 }

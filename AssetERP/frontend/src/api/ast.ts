@@ -14,7 +14,9 @@ import {
   AstItemDetail,
   AstItemDetailSaveReq,
   AstBook,
+  AstBookPeriod,
   AstBookSum,
+  AstCorpAccount,
   AstItemTreeNode,
   AstManager,
   AstManagerSaveReq,
@@ -307,5 +309,17 @@ export const astApi = {
   updateRelateApprId: async (relateApprId: number, apprId: number): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>(`v1/ast/relate-apprs/${relateApprId}/appr-id`, { apprId });
     return res.data.data;
+  },
+
+  /** AS-IS ast.Ast09_Book.selectByHoldDatePeriod (Ast09_Tab_DepositBookPeriod, U02): 기간 예금잔고(전일 대비 증감 포함). depositId 없으면 전체 — 서버가 내 sys99_print 자료를 다시 만든다 */
+  searchDepositsPeriod: async (startDate: string, closeDate: string, depositId: number | null, searchText: string): Promise<AstBookPeriod[]> => {
+    const res = await apiClient.get<ApiResponse<AstBookPeriod[]>>('v1/ast/books/deposits/period', { params: { startDate, closeDate, depositId: depositId ?? undefined, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast01_ClassTree.selectCorpAccount (Ast01_Lookup_CorpAccount, U02): 계좌선택 */
+  searchCorpAccounts: async (stdDate: string, searchText: string, prePayOnly?: boolean, corpId?: number | null): Promise<AstCorpAccount[]> => {
+    const res = await apiClient.get<ApiResponse<AstCorpAccount[]>>('v1/ast/corp-accounts', { params: { stdDate, searchText, prePayOnlyYn: prePayOnly || undefined, corpId: corpId ?? undefined } });
+    return res.data.data ?? [];
   },
 };
