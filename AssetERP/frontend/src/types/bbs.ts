@@ -71,3 +71,60 @@ export interface BbsApplication {
   appStatus?: string | null;
   content?: string | null;
 }
+
+/** T21 AS-IS Bbs20_FloralRequestModel (bbs20_floral_request + 계산 열) */
+export interface BbsFloralRequest {
+  floralRequestId: number;
+  companyId?: number | null;
+  regDate?: string | null;
+  personId?: number | null;
+  personName?: string | null;
+  personInfo?: string | null;
+  occasionsCode?: string | null;
+  occasionsName?: string | null;
+  message?: string | null;
+  sendCompany?: string | null;
+  sendEmp?: string | null;
+  sendPos?: string | null;
+  rcvCompany?: string | null;
+  rcvEmp?: string | null;
+  rcvPos?: string | null;
+  rcvDept?: string | null;
+  rcvTel?: string | null;
+  rcvAddr?: string | null;
+  sendRequestDate?: string | null;
+  sendRequestTime?: string | null;
+  statusCode?: string | null;
+  statusName?: string | null;
+  endDate?: string | null;
+  note?: string | null;
+  reason?: string | null;
+  addInfo?: string | null;
+  requests?: string | null;
+  rejectReason?: string | null;
+  privateYn?: string | null;
+  fileCount?: number | null;
+  shareInfo?: string | null;
+  /** 그리드 열 `rcvInfo`(담당자) — AS-IS SQL에 이 열이 없어 늘 비어 있다(원본 그대로) */
+  rcvInfo?: string | null;
+}
+
+/** AS-IS Bbs22_FloralMessageModel */
+export interface BbsFloralMessage {
+  floralMessageId: number;
+  occasionsCode?: string | null;
+  occasionsName?: string | null;
+  message?: string | null;
+}
+
+/** AS-IS Bbs21_FloralRequestShareModel */
+export interface BbsFloralShare {
+  floralRequestShareId: number;
+  floralRequestId?: number | null;
+  shareCode?: string | null;
+  shareName?: string | null;
+  personId?: number | null;
+  personName?: string | null;
+  orgId?: number | null;
+  orgName?: string | null;
+}

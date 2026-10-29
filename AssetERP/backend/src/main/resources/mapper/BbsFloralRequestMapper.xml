@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- AS-IS(IDMS-IC) server/bbs/mapper/bbs20_floral_request.xml · bbs21_floral_request_share.xml · bbs22_floral_message.xml — T21 Bbs20_Tab_FloralRequestMng -->
+<mapper namespace="kr.co.kfs.asseterp.biz.bbs.mapper.BbsFloralRequestMapper">
+
+    <!-- AS-IS bbs20_floral_request.selectByTextAdmin/selectById의 SELECT 절 (SELECT * + 계산 열 5개) -->
+    <sql id="requestColumns">
+        bbs20_floral_request_id         AS floral_request_id
+      , bbs20_company_id                AS company_id
+      , bbs20_reg_date                  AS reg_date
+      , bbs20_person_id                 AS person_id
+      , f_emp_kor_nm(bbs20_person_id)   AS person_name
+      , (
+            f_emp_kor_nm(bbs20_person_id)||' ('||
+            f_get_emptrans(bbs20_person_id, bbs20_reg_date::date, 'org_code_nm')||')'
+        )                               AS person_info
+      , bbs20_occasions_cd              AS occasions_code
+      , f_cdnm('OccasionsCode',         bbs20_occasions_cd, bbs20_company_id, bbs20_reg_date) AS occasions_name
+      , bbs20_message                   AS message
+      , bbs20_send_company              AS send_company
+      , bbs20_send_emp                  AS send_emp
+      , bbs20_send_pos                  AS send_pos
+      , bbs20_rcv_company               AS rcv_company
+      , bbs20_rcv_emp                   AS rcv_emp
+      , bbs20_rcv_pos                   AS rcv_pos
+      , bbs20_rcv_dept                  AS rcv_dept
+      , bbs20_rcv_tel                   AS rcv_tel
+      , bbs20_rcv_addr                  AS rcv_addr
+      , bbs20_send_request_date         AS send_request_date
+      , bbs20_send_request_time         AS send_request_time
+      , bbs20_status_cd                 AS status_code
+      , f_cdnm('ApplicationStatusCode', bbs20_status_cd, bbs20_company_id, bbs20_reg_date) AS status_name
+      , bbs20_end_date                  AS end_date
+      , bbs20_note                      AS note
+      , bbs20_reason                    AS reason
+      , bbs20_add_info                  AS add_info
+      , bbs20_requests                  AS requests
+      , bbs20_reject_reason             AS reject_reason
+      , bbs20_private_yn                AS private_yn
+      , (
+            SELECT COUNT(*)
+              FROM sys10_file
+             WHERE sys10_parent_id = bbs20_floral_request_id
+        )                               AS file_count
+      , (
+            SELECT (
+                        SELECT CASE WHEN bbs21_share_cd = '1'
+                                    THEN f_emp_kor_nm(bbs21_person_id)
+                                    ELSE f_org_nm(bbs21_org_id, COALESCE(bbs20_reg_date, f_today()))
+                                    END
+                          FROM bbs21_floral_request_share
+                         WHERE bbs21_floral_request_id = bbs20_floral_request_id
+                         ORDER BY bbs21_share_cd DESC
+                         LIMIT 1
+                   )
+                   ||
+                   (
+                        CASE WHEN COUNT(*) = 1
+                             THEN ''
+                             ELSE ' 외 '||COUNT(*)-1
+                             END
+                   )
+              FROM bbs21_floral_request_share
+             WHERE bbs21_floral_request_id = bbs20_floral_request_id
+        )                               AS share_info
+    </sql>
+
+    <!-- AS-IS bbs20_floral_request.selectByTextAdmin (IDMS-IC) — 로그인 회사, 신청일 기간, 신청자/거래처/담당자 검색(searchText는 %를 이미 붙여서 받는다) -->
+    <select id="selectByTextAdmin" resultType="kr.co.kfs.asseterp.biz.bbs.dto.FloralRequestRes">
+        SELECT <include refid="requestColumns"/>
+          FROM bbs20_floral_request
+         WHERE bbs20_company_id = #{companyId}
+           AND bbs20_reg_date BETWEEN #{startDate} AND #{closeDate}
+           AND UPPER(CONCAT(f_emp_kor_nm(bbs20_person_id), bbs20_rcv_company, bbs20_rcv_emp)) LIKE UPPER(#{searchText})
+        <if test="confirmYn">
+           AND COALESCE(bbs20_status_cd, '10') NOT IN ('91','92')
+        </if>
+         ORDER BY bbs20_reg_date DESC, bbs20_occasions_cd
+    </select>
+
+    <!-- AS-IS bbs20_floral_request.selectById (IDMS-IC) — 로그인 회사의 행만(보안 보강) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.bbs.dto.FloralRequestRes">
+        SELECT <include refid="requestColumns"/>
+          FROM bbs20_floral_request
+         WHERE bbs20_floral_request_id = #{floralRequestId}
+           AND bbs20_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS Bbs20_FloralRequest.update → UpdateDataModel(bbs20_floral_request) UPDATE — 그리드가 고치는 4열, 로그인 회사의 행만(보안 보강) -->
+    <update id="updateStatus">
+        UPDATE bbs20_floral_request
+           SET bbs20_status_cd     = #{req.statusCode}
+             , bbs20_end_date      = #{req.endDate}
+             , bbs20_note          = #{req.note}
+             , bbs20_reject_reason = #{req.rejectReason}
+         WHERE bbs20_floral_request_id = #{req.floralRequestId}
+           AND bbs20_company_id        = #{companyId}
+    </update>
+
+    <!-- AS-IS emp01_person.selectById 중 휴대폰번호 -->
+    <select id="selectMobileTelNo" resultType="string">
+        SELECT emp01_mobile_telno
+          FROM emp01_person
+         WHERE emp01_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS bbs22_floral_message.insertCode (IDMS-IC) — 공통 경조구분 코드 중 이 회사에 없는 것을 넣는다 -->
+    <insert id="insertMessageCodes">
+        INSERT INTO bbs22_floral_message
+               ( bbs22_floral_message_id, bbs22_occasions_cd, bbs22_company_id )
+        SELECT f_create_seq()
+             , a.sys09_code
+             , #{companyId}
+          FROM sys09_code a
+               LEFT JOIN bbs22_floral_message b ON a.sys09_code = b.bbs22_occasions_cd AND b.bbs22_company_id = #{companyId}
+         WHERE sys09_company_id = 0
+           AND COALESCE(sys09_close_yn, 'false') = 'false'
+           AND sys09_code_kind_id = (
+                                        SELECT sys08_code_kind_id
+                                          FROM sys08_code_kind
+                                         WHERE sys08_kind_cd = #{kindCode}
+                                    )
+           AND b.bbs22_occasions_cd IS NULL
+    </insert>
+
+    <!-- AS-IS bbs22_floral_message.deleteCode (IDMS-IC) — 공통 코드에 더 이상 없는 경조구분 문구를 지운다 -->
+    <delete id="deleteMessageCodes">
+        DELETE FROM bbs22_floral_message
+         WHERE bbs22_company_id = #{companyId}
+           AND bbs22_occasions_cd NOT IN (
+                                            SELECT sys09_code
+                                              FROM sys09_code
+                                             WHERE sys09_company_id = 0
+                                               AND COALESCE(sys09_close_yn, 'false') = 'false'
+                                               AND sys09_code_kind_id = (
+                                                                            SELECT sys08_code_kind_id
+                                                                              FROM sys08_code_kind
+                                                                             WHERE sys08_kind_cd = #{kindCode}
+                                                                        )
+                                         )
+    </delete>
+
+    <!-- AS-IS bbs22_floral_message.selectByCompanyId (IDMS-IC) -->
+    <select id="selectMessages" resultType="kr.co.kfs.asseterp.biz.bbs.dto.FloralMessageRes">
+        SELECT bbs22_floral_message_id AS floral_message_id
+             , bbs22_occasions_cd      AS occasions_code
+             , f_cdnm('OccasionsCode', bbs22_occasions_cd, bbs22_company_id, f_sysdate()) AS occasions_name
+             , bbs22_message           AS message
+          FROM bbs22_floral_message
+         WHERE bbs22_company_id = #{companyId}
+         ORDER BY bbs22_occasions_cd
+    </select>
+
+    <!-- AS-IS Bbs22_FloralMessage.update → UpdateDataModel(bbs22_floral_message) UPDATE — 로그인 회사의 행만(보안 보강) -->
+    <update id="updateMessage">
+        UPDATE bbs22_floral_message
+           SET bbs22_message = #{message}
+         WHERE bbs22_floral_message_id = #{floralMessageId}
+           AND bbs22_company_id        = #{companyId}
+    </update>
+
+    <!-- AS-IS bbs21_floral_request_share.selectByFloralRequestId (IDMS-IC) — 로그인 회사 신청의 공유만 -->
+    <select id="selectShares" resultType="kr.co.kfs.asseterp.biz.bbs.dto.FloralShareRes">
+        SELECT bbs21_floral_request_share_id AS floral_request_share_id
+             , bbs21_floral_request_id       AS floral_request_id
+             , bbs21_share_cd                AS share_code
+             , share_nm                      AS share_name
+             , bbs21_person_id               AS person_id
+             , person_nm                     AS person_name
+             , bbs21_org_id                  AS org_id
+             , org_nm                        AS org_name
+          FROM (
+                    SELECT bbs21_floral_request_share.*
+                         , f_cdnm('ShareCode', bbs21_share_cd, 0, f_today())             AS share_nm
+                         , f_emp_kor_nm(bbs21_person_id)                                 AS person_nm
+                         , f_org_nm(bbs21_org_id, COALESCE(bbs20_reg_date, f_today()))   AS org_nm
+                      FROM bbs21_floral_request_share
+                           LEFT OUTER JOIN bbs20_floral_request ON bbs21_floral_request_id = bbs20_floral_request_id
+                     WHERE bbs21_floral_request_id = #{floralRequestId}
+                       AND bbs20_company_id = #{companyId}
+               ) t
+         ORDER BY bbs21_share_cd DESC
+                , org_nm    COLLATE "ko_KR.utf8"
+                , person_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS bbs21_floral_request_share.selectShareInfo (IDMS-IC) -->
+    <select id="selectShareInfo" resultType="string">
+        SELECT (
+                    SELECT CASE WHEN bbs21_share_cd = '1'
+                                THEN f_emp_kor_nm(bbs21_person_id)
+                                ELSE f_org_nm(bbs21_org_id, COALESCE(bbs20_reg_date, f_today()))
+                                END
+                      FROM bbs21_floral_request_share
+                           LEFT OUTER JOIN bbs20_floral_request ON bbs21_floral_request_id = bbs20_floral_request_id
+                     WHERE bbs21_floral_request_id = #{floralRequestId}
+                     ORDER BY bbs21_share_cd DESC
+                     LIMIT 1
+               )
+               ||
+               (
+                    CASE WHEN COUNT(*) = 1
+                         THEN ''
+                         ELSE ' 외 '||COUNT(*)-1
+                         END
+               )
+          FROM bbs21_floral_request_share
+         WHERE bbs21_floral_request_id = #{floralRequestId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Bbs21_FloralRequestShare.update → UpdateDataModel(bbs21_floral_request_share) INSERT -->
+    <insert id="insertShare">
+        INSERT INTO bbs21_floral_request_share
+               ( bbs21_floral_request_share_id, bbs21_floral_request_id, bbs21_share_cd, bbs21_person_id, bbs21_org_id )
+        VALUES ( #{shareId}, #{floralRequestId}, #{shareCode}, #{personId}, #{orgId} )
+    </insert>
+
+    <!-- AS-IS Bbs21_FloralRequestShare.delete → UpdateDataModel DELETE — 로그인 회사 신청의 공유만(보안 보강) -->
+    <delete id="deleteShares">
+        DELETE FROM bbs21_floral_request_share
+         WHERE bbs21_floral_request_id = #{floralRequestId}
+           AND bbs21_floral_request_id IN (SELECT bbs20_floral_request_id FROM bbs20_floral_request WHERE bbs20_company_id = #{companyId})
+           AND bbs21_floral_request_share_id IN
+           <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+</mapper>
