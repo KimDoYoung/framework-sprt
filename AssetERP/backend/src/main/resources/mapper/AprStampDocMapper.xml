@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr16_stamp_doc.xml · server/sys/Sys99_Print.insertRdStampDocManager — T23 Apr16_Tab_StampDocManager -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprStampDocMapper">
+
+    <!-- AS-IS apr16_stamp_doc.selectDocByRegDate L125 (IDMS-IC). SELECT * + 계산 열 → AprStampDocRes 열만. 인쇄(insertPrint)도 같은 FROM·WHERE를 쓴다 -->
+    <sql id="docFromWhere">
+          FROM apr16_stamp_doc
+               LEFT JOIN emp01_Person      ON emp01_person_id    = apr16_appl_emp_id
+               LEFT JOIN apr10_stamp       ON apr10_stamp_id     = apr16_stamp_id
+               LEFT JOIN apr15_repr_corp   ON apr15_repr_corp_id = apr16_repr_corp_id
+               LEFT JOIN sys01_company     ON sys01_company_id   = apr16_repr_corp_id
+               LEFT JOIN apr01_appr        ON apr01_appr_id      = apr16_appr_id
+         WHERE apr16_company_id  = #{companyId}
+           AND apr16_reg_date BETWEEN #{startDate}::date AND #{closeDate}::date
+    </sql>
+
+    <select id="selectDocByRegDate" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStampDocRes">
+        SELECT apr16_stamp_doc_id                                                                       AS stamp_doc_id
+             , apr16_company_id                                                                         AS company_id
+             , apr16_reg_date                                                                           AS reg_date
+             , apr16_appl_type                                                                          AS appl_type
+             , f_cdnm('CorpDocStampApplType', apr16_appl_type, apr16_company_id, #{startDate}::date)    AS appl_type_name
+             , apr16_stamp_id                                                                           AS stamp_id
+             , apr16_repr_corp_id                                                                       AS repr_corp_id
+             , CASE WHEN apr16_appl_type = '2' THEN COALESCE(apr15_corp_nm, sys01_company_nm)
+                    ELSE apr10_stamp_nm END                                                             AS stamp_repr_corp_name
+             , apr16_doc_issue_qty                                                                      AS doc_issue_qty
+             , apr16_doc_appl_qty                                                                       AS doc_appl_qty
+             , apr16_doc_use_qty                                                                        AS doc_use_qty
+             , apr16_provide_co                                                                         AS provide_co
+             , apr16_purpose                                                                            AS purpose
+             , apr16_requester                                                                          AS requester
+             , apr16_note                                                                               AS note
+             , apr16_appl_date                                                                          AS appl_date
+             , emp01_kor_nm                                                                             AS appl_emp_name
+             , apr16_appr_id                                                                            AS appr_id
+             , apr01_title                                                                              AS appr_name
+             , CASE WHEN apr01_appr_id IS NULL THEN null
+                    ELSE f_cdnm('AprStatusCode', apr01_status_cd, apr16_company_id, #{startDate}::date)
+                    END                                                                                 AS appr_status_name
+        <include refid="docFromWhere"/>
+        <choose>
+            <when test="applType != null">
+           AND apr16_appl_type = #{applType}
+            </when>
+            <otherwise>
+           AND apr16_appl_type IN ('1','2')
+            </otherwise>
+        </choose>
+        <if test="stampReprCorpId != null">
+           AND (( #{applType} = '1' AND apr16_stamp_id = #{stampReprCorpId})
+               OR (#{applType} = '2' AND apr16_repr_corp_id = #{stampReprCorpId}))
+        </if>
+         ORDER BY apr16_reg_date DESC, apr16_stamp_doc_id DESC
+    </select>
+
+    <!-- AS-IS apr16_stamp_doc.selectDocGroupSum L192 (IDMS-IC) -->
+    <select id="selectDocGroupSum" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStampDocSumRes">
+        SELECT ROW_NUMBER() OVER(ORDER BY apr16_appl_type, apr16_stamp_repr_corp_nm COLLATE "ko_KR.utf8")   AS stamp_doc_id
+             , f_cdnm('CorpDocStampApplType', apr16_appl_type, #{companyId}, f_today())                     AS appl_type_name
+             , apr16_stamp_repr_corp_nm                                                                     AS stamp_repr_corp_name
+             , COALESCE(SUM(apr16_doc_issue_qty),0)                                                         AS doc_issue_qty
+             , COALESCE(SUM(apr16_doc_use_qty)  ,0)                                                         AS doc_use_qty
+             , SUM(apr16_doc_remain_qty)                                                                    AS doc_remain_qty
+          FROM (
+                 SELECT apr16_stamp_doc.*
+                      , CASE WHEN apr16_appl_type = '2' THEN COALESCE(apr15_corp_nm, sys01_company_nm)
+                             ELSE apr10_stamp_nm END                                                AS apr16_stamp_repr_corp_nm
+                      , COALESCE(apr16_doc_issue_qty,0) - COALESCE(apr16_doc_use_qty,0)             AS apr16_doc_remain_qty
+                   FROM apr16_stamp_doc
+                        LEFT JOIN apr10_stamp     ON apr10_stamp_id     = apr16_stamp_id
+                        LEFT JOIN apr15_repr_corp ON apr15_repr_corp_id = apr16_repr_corp_id
+                        LEFT JOIN sys01_company   ON sys01_company_id   = apr16_repr_corp_id
+                  WHERE apr16_company_id  = #{companyId}
+                <choose>
+                    <when test="applType != null">
+                    AND apr16_appl_type = #{applType}
+                    </when>
+                    <otherwise>
+                    AND apr16_appl_type IN ('1', '2')
+                    </otherwise>
+                </choose>
+                <if test="stampReprCorpId != null">
+                    AND (( #{applType} = '1' AND apr16_stamp_id = #{stampReprCorpId})
+                     OR (#{applType} = '2' AND apr16_repr_corp_id = #{stampReprCorpId}))
+                </if>
+                    AND apr16_reg_date IS NOT NULL
+               ) t
+         GROUP BY apr16_appl_type, apr16_stamp_repr_corp_nm
+    </select>
+
+    <!-- AS-IS apr16_stamp_doc.selectByApplType L162 (IDMS-IC) — 검색어·기간은 원본 SQL이 쓰지 않는다 -->
+    <select id="selectByApplType" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStampDocLookupRes">
+        SELECT ROW_NUMBER() OVER(ORDER BY apr16_appl_type, apr16_stamp_repr_corp_nm COLLATE "ko_KR.utf8")   AS stamp_doc_id
+             , f_cdnm('CorpDocStampApplType', apr16_appl_type, #{companyId}, f_today())                     AS appl_type_name
+             , apr16_appl_type                                                                              AS appl_type
+             , apr16_stamp_repr_corp_nm                                                                     AS stamp_repr_corp_name
+             , apr16_stamp_id                                                                               AS stamp_id
+             , apr16_repr_corp_id                                                                           AS repr_corp_id
+          FROM (
+                 SELECT apr16_stamp_doc.*
+                      , CASE WHEN apr16_appl_type = '2' THEN COALESCE(apr15_corp_nm, sys01_company_nm)
+                             ELSE apr10_stamp_nm END                                                AS apr16_stamp_repr_corp_nm
+                      , COALESCE(apr16_doc_issue_qty,0) - COALESCE(apr16_doc_use_qty,0)             AS apr16_doc_remain_qty
+                   FROM apr16_stamp_doc
+                        LEFT JOIN apr10_stamp     ON apr10_stamp_id     = apr16_stamp_id
+                        LEFT JOIN apr15_repr_corp ON apr15_repr_corp_id = apr16_repr_corp_id
+                        LEFT JOIN sys01_company   ON sys01_company_id   = apr16_repr_corp_id
+                  WHERE apr16_company_id  = #{companyId}
+                <choose>
+                    <when test="applType != null">
+                    AND apr16_appl_type = #{applType}
+                    </when>
+                    <otherwise>
+                    AND apr16_appl_type IN ('1', '2')
+                    </otherwise>
+                </choose>
+                    AND apr16_reg_date IS NOT NULL
+               ) t
+         GROUP BY apr16_appl_type, apr16_stamp_repr_corp_nm, apr16_stamp_id, apr16_repr_corp_id
+    </select>
+
+    <!-- AS-IS apr16_stamp_doc.selectApplDocByRegDateIsNull L104 (IDMS-IC) -->
+    <select id="selectApplDocByRegDateIsNull" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStampDocApplRes">
+        SELECT apr16_stamp_doc_id                                                                       AS stamp_doc_id
+             , apr16_appl_date                                                                          AS appl_date
+             , emp01_kor_nm                                                                             AS appl_emp_name
+             , apr16_provide_co                                                                         AS provide_co
+             , apr16_purpose                                                                            AS purpose
+             , apr16_appl_type                                                                          AS appl_type
+             , f_cdnm('CorpDocStampApplType', apr16_appl_type, apr16_company_id, f_today())             AS appl_type_name
+             , CASE WHEN apr16_appl_type = '2' THEN COALESCE(apr15_corp_nm, sys01_company_nm)
+                    ELSE apr10_stamp_nm END                                                             AS stamp_repr_corp_name
+             , apr16_doc_appl_qty                                                                       AS doc_appl_qty
+          FROM apr16_stamp_doc
+               LEFT JOIN emp01_Person    ON emp01_person_id    = apr16_appl_emp_id
+               LEFT JOIN apr10_stamp     ON apr10_stamp_id     = apr16_stamp_id
+               LEFT JOIN apr15_repr_corp ON apr15_repr_corp_id = apr16_repr_corp_id
+               LEFT JOIN sys01_company   ON sys01_company_id   = apr16_repr_corp_id
+               LEFT JOIN apr01_appr      ON apr01_appr_id      = apr16_appr_id
+         WHERE apr16_company_id = #{companyId}
+           AND apr16_appl_type  IN ('1','2')
+           AND apr16_reg_date IS NULL
+           AND ( ( apr16_appr_id IS NOT NULL                            AND
+                   COALESCE(apr01_status_cd,'99') NOT IN ('99','40')    ) OR
+                 ( apr16_appr_id IS NULL                                ) )
+         ORDER BY apr16_appl_date DESC, apr16_stamp_doc_id DESC
+    </select>
+
+    <!-- AS-IS apr16_stamp_doc.selectSimpleById L388 중 신청일 + 회사 확인(보안 보강) -->
+    <select id="selectApplDate" resultType="java.time.LocalDate">
+        SELECT apr16_appl_date
+          FROM apr16_stamp_doc
+         WHERE apr16_stamp_doc_id = #{stampDocId}
+           AND apr16_company_id   = #{companyId}
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT COUNT(*)
+          FROM apr16_stamp_doc
+         WHERE apr16_stamp_doc_id = #{stampDocId}
+           AND apr16_company_id   = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Apr16_StampDoc.update → UpdateDataModel INSERT — 등록 창이 채우는 열 -->
+    <insert id="insertStampDoc">
+        INSERT INTO apr16_stamp_doc
+               ( apr16_stamp_doc_id, apr16_company_id, apr16_reg_date, apr16_appl_type, apr16_stamp_id, apr16_repr_corp_id
+               , apr16_doc_issue_qty, apr16_doc_use_qty, apr16_provide_co, apr16_purpose, apr16_note, apr16_appr_id )
+        VALUES ( #{stampDocId}, #{companyId}, #{r.regDate}, #{r.applType}, #{r.stampId}, #{r.reprCorpId}
+               , #{r.docIssueQty}, #{r.docUseQty}, #{r.provideCo}, #{r.purpose}, #{r.note}, #{r.apprId} )
+    </insert>
+
+    <!-- AS-IS Apr16_StampDoc.update → UpdateDataModel UPDATE — 같은 열, 로그인 회사의 행만(보안 보강) -->
+    <update id="updateStampDoc">
+        UPDATE apr16_stamp_doc
+           SET apr16_reg_date      = #{r.regDate}
+             , apr16_appl_type     = #{r.applType}
+             , apr16_stamp_id      = #{r.stampId}
+             , apr16_repr_corp_id  = #{r.reprCorpId}
+             , apr16_doc_issue_qty = #{r.docIssueQty}
+             , apr16_doc_use_qty   = #{r.docUseQty}
+             , apr16_provide_co    = #{r.provideCo}
+             , apr16_purpose       = #{r.purpose}
+             , apr16_note          = #{r.note}
+             , apr16_appr_id       = #{r.apprId}
+         WHERE apr16_stamp_doc_id = #{r.stampDocId}
+           AND apr16_company_id   = #{companyId}
+    </update>
+
+    <!-- AS-IS apr16_stamp_doc.deleteById L451 -->
+    <delete id="deleteById">
+        DELETE FROM apr16_stamp_doc
+         WHERE apr16_stamp_doc_id = #{stampDocId}
+           AND apr16_company_id   = #{companyId}
+    </delete>
+
+    <!-- AS-IS apr16_stamp_doc.updateRegDate L432 -->
+    <update id="updateRegDate">
+        UPDATE apr16_stamp_doc
+           SET apr16_reg_date = #{regDate}
+         WHERE apr16_stamp_doc_id = #{stampDocId}
+           AND apr16_company_id   = #{companyId}
+    </update>
+
+    <select id="selectNextPrintId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{printPersonId}
+           AND sys99_window_class_nm = #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdStampDocManager L3127: selectDocByRegDate(1·2 전체) 목록을 한 건씩 sys99_print에 넣는다 -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_string01, sys99_string02, sys99_long01, sys99_long02, sys99_long03
+               , sys99_string03, sys99_string04, sys99_string05, sys99_string06, sys99_date02, sys99_string07
+               , sys99_string08, sys99_string09, sys99_date03, sys99_long04 )
+        SELECT f_create_seq(), #{companyId}, #{printPersonId}, #{windowClassName}, #{groupId}
+             , apr16_reg_date
+             , COALESCE(f_cdnm('CorpDocStampApplType', apr16_appl_type, apr16_company_id, #{startDate}::date), '')
+             , COALESCE(CASE WHEN apr16_appl_type = '2' THEN COALESCE(apr15_corp_nm, sys01_company_nm) ELSE apr10_stamp_nm END, '')
+             , COALESCE(apr16_doc_issue_qty, 0), COALESCE(apr16_doc_appl_qty, 0), COALESCE(apr16_doc_use_qty, 0)
+             , COALESCE(apr16_provide_co, ''), COALESCE(apr16_purpose, ''), COALESCE(apr16_requester, ''), COALESCE(apr16_note, '')
+             , apr16_appl_date, COALESCE(emp01_kor_nm, '')
+             , COALESCE(apr01_title, '')
+             , COALESCE(CASE WHEN apr01_appr_id IS NULL THEN null
+                             ELSE f_cdnm('AprStatusCode', apr01_status_cd, apr16_company_id, #{startDate}::date) END, '')
+             , apr16_reg_date, COALESCE(apr16_stamp_doc_id, 0)
+        <include refid="docFromWhere"/>
+           AND apr16_appl_type IN ('1','2')
+    </insert>
+</mapper>

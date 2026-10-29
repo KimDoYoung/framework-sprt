@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprAltAppr, AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
+import { AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -329,5 +329,74 @@ export const aprAltApprApi = {
   deleteAltApprs: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/apr/alt-apprs', { data: ids });
     return res.data.data ?? 0;
+  },
+};
+
+/** T23 법인서류 매수관리 (AS-IS Apr16_StampDoc) */
+export const aprStampDocApi = {
+  /** AS-IS apr.Apr16_StampDoc.selectDocByRegDate — applType 없으면 인감증명서·등기부등본 모두 */
+  search: async (params: { startDate: string; closeDate: string; applType?: string; stampReprCorpId?: number }): Promise<AprStampDoc[]> => {
+    const res = await apiClient.get<ApiResponse<AprStampDoc[]>>('v1/apr/stamp-docs', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr16_StampDoc.selectDocGroupSum */
+  searchSum: async (params: { applType?: string; stampReprCorpId?: number }): Promise<AprStampDocSum[]> => {
+    const res = await apiClient.get<ApiResponse<AprStampDocSum[]>>('v1/apr/stamp-docs/sum', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr16_StampDoc.selectByApplType (Apr16_Lookup_StampReprCorp) */
+  searchLookup: async (applType?: string): Promise<AprStampDocLookup[]> => {
+    const res = await apiClient.get<ApiResponse<AprStampDocLookup[]>>('v1/apr/stamp-docs/lookup', { params: { applType } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr16_StampDoc.selectApplDocByRegDateIsNull — 등록일이 없는 신청내역 */
+  searchAppl: async (): Promise<AprStampDocAppl[]> => {
+    const res = await apiClient.get<ApiResponse<AprStampDocAppl[]>>('v1/apr/stamp-docs/appl');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr16_StampDoc.update → 저장한 건수 */
+  save: async (rows: AprStampDocSaveReq[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/apr/stamp-docs', rows);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS apr.Apr16_StampDoc.deleteReg */
+  deleteReg: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/apr/stamp-docs', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS apr.Apr16_StampDoc.updateRegDate — 신청내역 가져오기 */
+  registerRegDate: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/apr/stamp-docs/reg-date', ids);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdStampDocManager → rdGroupId */
+  rdPrint: async (startDate: string, closeDate: string): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/apr/stamp-docs/rd-print', null, { params: { startDate, closeDate } });
+    return res.data.data;
+  },
+
+  /** AS-IS apr.Apr15_ReprCorp.selectByCompanyId (Apr15_Lookup_ReprCorp) */
+  searchReprCorpLookup: async (companyAddYn: boolean): Promise<AprReprCorpLookup[]> => {
+    const res = await apiClient.get<ApiResponse<AprReprCorpLookup[]>>('v1/apr/repr-corps/lookup', { params: { companyAddYn } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr15_ReprCorp.selectCorpRegYn — 등록 대표명의가 있는가 */
+  existsCorpReg: async (): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/apr/repr-corps/corp-reg-exists');
+    return res.data.data;
+  },
+
+  /** AS-IS apr.Apr10_Stamp.selectCorpStampYn — 기본 법인인감(없으면 null) */
+  getCorpStamp: async (): Promise<AprCorpStamp | null> => {
+    const res = await apiClient.get<ApiResponse<AprCorpStamp | null>>('v1/apr/stamps/corp-stamp');
+    return res.data.data ?? null;
   },
 };

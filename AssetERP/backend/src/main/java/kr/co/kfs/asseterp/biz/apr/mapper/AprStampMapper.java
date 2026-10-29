@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.apr.mapper;
 
+import kr.co.kfs.asseterp.biz.apr.dto.AprCorpStampRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampManageRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampSaveReq;
@@ -38,4 +39,7 @@ public interface AprStampMapper {
 
     /** LoginUser.getOrgCodeId() 근사: 직원의 가장 최근 발령(겸직 제외) 조직. 없으면 null */
     Long selectOrgCodeId(@Param("personId") Long personId);
+
+    /** AS-IS apr10_stamp.selectCorpStampYn — 기준일에 쓸 수 있는 법인인감(여러 개면 첫 번째가 기본값) */
+    List<AprCorpStampRes> selectCorpStamps(@Param("companyId") Long companyId, @Param("stdDate") java.time.LocalDate stdDate);
 }

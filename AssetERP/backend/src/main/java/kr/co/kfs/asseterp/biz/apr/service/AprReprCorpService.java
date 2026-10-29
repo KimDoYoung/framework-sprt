@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.apr.service;
 
+import kr.co.kfs.asseterp.biz.apr.dto.AprReprCorpLookupRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprReprCorpRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprReprCorpSaveReq;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprReprCorpMapper;
@@ -19,6 +20,16 @@ import java.util.List;
 public class AprReprCorpService {
 
     private final AprReprCorpMapper mapper;
+
+    /** AS-IS Apr15_ReprCorp.selectByCompanyId L23 (Apr15_Lookup_ReprCorp 호출): 등록·사용중 대표명의, companyAddYn이면 회사 자신도 */
+    public List<AprReprCorpLookupRes> searchLookup(UserPrincipal user, boolean companyAddYn) {
+        return mapper.selectLookup(user.getCompanyId(), companyAddYn);
+    }
+
+    /** AS-IS Apr15_ReprCorp.selectCorpRegYn L28: 등록 대표명의가 있는가 (없으면 등록 창 기본값 = 회사 자신) */
+    public boolean existsCorpReg(UserPrincipal user) {
+        return mapper.countCorpReg(user.getCompanyId()) > 0;
+    }
 
     /** AS-IS Apr15_ReprCorp.selectByCompanyId L23: 로그인 회사의 추가 대표명의 */
     public List<AprReprCorpRes> search(UserPrincipal user) {

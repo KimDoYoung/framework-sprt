@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.apr.service;
 
+import kr.co.kfs.asseterp.biz.apr.dto.AprCorpStampRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampManageRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampSaveReq;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /** AS-IS server/apr/Apr10_Stamp.java selectBySearchText2 L36 (Apr10_Lookup_DocStamp, flag=true), selectBySearchText (Apr10_Lookup_Stamp, flag=true) */
@@ -93,5 +95,11 @@ public class AprStampService {
 
     private String like(String searchText) {
         return "%" + (searchText == null ? "" : searchText) + "%";
+    }
+
+    /** AS-IS Apr10_Stamp.selectCorpStampYn L137 — 법인인감이 하나 이상이면 첫 번째(등록 창의 기본 인감), 없으면 null */
+    public AprCorpStampRes getCorpStamp(UserPrincipal user) {
+        List<AprCorpStampRes> list = mapper.selectCorpStamps(user.getCompanyId(), LocalDate.now());
+        return list.isEmpty() ? null : list.get(0);
     }
 }

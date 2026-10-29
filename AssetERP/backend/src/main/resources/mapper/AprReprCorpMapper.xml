@@ -86,4 +86,45 @@
           FROM apr16_stamp_doc
          WHERE apr16_repr_corp_id = #{reprCorpId}
     </select>
+
+    <!-- AS-IS apr15_repr_corp.selectByCompanyId L30 (IDMS-IC) — Apr15_Lookup_ReprCorp 호출(corpRegYn·useYn = true). 검색어는 원본이 늘 null/빈 문자열이라 쓰지 않는다 -->
+    <select id="selectLookup" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprReprCorpLookupRes">
+        SELECT apr15_repr_corp_id  AS repr_corp_id
+             , apr15_corp_type_nm  AS corp_type_name
+             , apr15_corp_nm       AS corp_name
+             , apr15_repr_nm       AS repr_name
+          FROM (
+                SELECT apr15_repr_corp.*
+                     , f_cdnm('ReprCorpType', apr15_corp_type, apr15_company_id, f_today()) AS apr15_corp_type_nm
+                  FROM apr15_repr_corp
+                 WHERE apr15_company_id = #{companyId}
+                   AND COALESCE(apr15_corp_reg_yn, 'false') = 'true'
+                   AND COALESCE(apr15_use_yn, 'false') = 'true'
+                <if test="companyAddYn">
+                 UNION ALL
+                SELECT sys01_company_id         AS apr15_repr_corp_id
+                     , sys01_company_id         AS apr15_company_id
+                     , '00'                     AS apr15_corp_type
+                     , sys01_company_nm         AS apr15_corp_nm
+                     , sys01_company_rep_nm     AS apr15_repr_nm
+                     , 'true'                   AS apr15_corp_reg_yn
+                     , null                     AS apr15_stamp_id
+                     , 'true'                   AS apr15_use_yn
+                     , null                     AS apr15_note
+                     , '법인'                    AS apr15_corp_type_nm
+                  FROM sys01_company
+                 WHERE sys01_company_id = #{companyId}
+                </if>
+               ) t
+         ORDER BY apr15_corp_type, apr15_corp_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS apr15_repr_corp.selectCorpRegYn L77 (IDMS-IC) -->
+    <select id="countCorpReg" resultType="int">
+        SELECT COUNT(*)
+          FROM apr15_repr_corp
+         WHERE apr15_company_id  = #{companyId}
+           AND COALESCE(apr15_corp_reg_yn,'false') = 'true'
+           AND COALESCE(apr15_use_yn, 'false') = 'true'
+    </select>
 </mapper>

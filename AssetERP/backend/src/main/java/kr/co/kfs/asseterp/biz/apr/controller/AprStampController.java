@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.apr.controller;
 
+import kr.co.kfs.asseterp.biz.apr.dto.AprCorpStampRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampManageRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampSaveReq;
@@ -63,5 +64,11 @@ public class AprStampController {
                                                          @RequestParam Long classTreeId,
                                                          @RequestParam(required = false) String searchText) {
         return ApiResponse.ok(service.searchDocStamp(principal, classTreeId, searchText));
+    }
+
+    /** AS-IS apr.Apr10_Stamp.selectCorpStampYn — 기본 법인인감(없으면 data = null) */
+    @GetMapping("/corp-stamp")
+    public ApiResponse<AprCorpStampRes> getCorpStamp(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.getCorpStamp(principal));
     }
 }

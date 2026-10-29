@@ -359,3 +359,89 @@ export interface AprReprCorp {
   note?: string | null;
   useYn?: string | null;
 }
+
+/** T23 AS-IS Apr16_StampDocModel — 법인서류 매수관리 그리드 한 행 (selectDocByRegDate) */
+export interface AprStampDoc {
+  stampDocId: number;
+  companyId?: number | null;
+  regDate?: string | null;
+  applType?: string | null;
+  applTypeName?: string | null;
+  stampId?: number | null;
+  reprCorpId?: number | null;
+  stampReprCorpName?: string | null;
+  docIssueQty?: number | null;
+  docApplQty?: number | null;
+  docUseQty?: number | null;
+  provideCo?: string | null;
+  purpose?: string | null;
+  requester?: string | null;
+  note?: string | null;
+  applDate?: string | null;
+  applEmpName?: string | null;
+  apprId?: number | null;
+  apprName?: string | null;
+  apprStatusName?: string | null;
+}
+
+/** 위쪽 합계 그리드 (selectDocGroupSum) */
+export interface AprStampDocSum {
+  stampDocId: number;
+  applTypeName?: string | null;
+  stampReprCorpName?: string | null;
+  docIssueQty?: number | null;
+  docUseQty?: number | null;
+  docRemainQty?: number | null;
+}
+
+/** 신청내역 가져오기 창 (selectApplDocByRegDateIsNull) */
+export interface AprStampDocAppl {
+  stampDocId: number;
+  applDate?: string | null;
+  applEmpName?: string | null;
+  provideCo?: string | null;
+  purpose?: string | null;
+  applType?: string | null;
+  applTypeName?: string | null;
+  stampReprCorpName?: string | null;
+  docApplQty?: number | null;
+}
+
+/** 인감 및 대표명의 선택 창 (selectByApplType). stampDocId는 ROW_NUMBER */
+export interface AprStampDocLookup {
+  stampDocId: number;
+  applTypeName?: string | null;
+  applType?: string | null;
+  stampReprCorpName?: string | null;
+  stampId?: number | null;
+  reprCorpId?: number | null;
+}
+
+/** 저장 — 매수관리 그리드의 발급·사용매수와 등록 창 입력값. stampDocId가 0 이하면 새 행 */
+export interface AprStampDocSaveReq {
+  stampDocId: number;
+  regDate?: string | null;
+  applType?: string | null;
+  stampId?: number | null;
+  reprCorpId?: number | null;
+  docIssueQty?: number | null;
+  docUseQty?: number | null;
+  provideCo?: string | null;
+  purpose?: string | null;
+  note?: string | null;
+  apprId?: number | null;
+}
+
+/** 대표명의 선택 창 (Apr15_Lookup_ReprCorp) */
+export interface AprReprCorpLookup {
+  reprCorpId: number;
+  corpTypeName?: string | null;
+  corpName?: string | null;
+  reprName?: string | null;
+}
+
+/** 기본 법인인감 (selectCorpStampYn) */
+export interface AprCorpStamp {
+  stampId: number;
+  stampName: string;
+}

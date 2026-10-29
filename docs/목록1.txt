@@ -1,0 +1,149 @@
+att13_overtime_req_hist 
+
+
+    ## 🤖 yunhee CLI 토큰 절약 필수 지침
+
+    이 머신에는 AI 어시스턴트의 토큰 낭비를 원천 차단하기 위한 로컬 CLI `yunhee`가 설치되어 있습니다.
+    작업 시 불필요한 전체 파일 읽기, grep/find, 셸 직접 빌드(mvn/gradle/npm)나 curl 호출을 금지합니다.
+
+    1. **작업 전 도구 탐색**:
+       - 상황에 맞는 명령어를 찾으려면 먼저 아래 중앙 가이드 색인을 읽으세요:
+         👉 `/home/kdy987/work/yunhee-cli/docs/help/index.md`
+    2. **세부 작업별 전문 가이드 (필요할 때 해당 파일 열람)**:
+       - 화면 레이아웃/그리드/SQL/메서드 분석: `/home/kdy987/work/yunhee-cli/docs/help/analysis.md`
+       - 업무 흐름/CRUD 매트릭스/상태 전이 추적: `/home/kdy987/work/yunhee-cli/docs/help/trace.md`
+       - SQL 포팅/DTO 생성/화면 스타일/드리프트: `/home/kdy987/work/yunhee-cli/docs/help/migration.md`
+       - 코드 줄 단위 탐색/빌드 실행/API/서버 로그:
+       ￹`/home/kdy987/work/yunhee-cli/docs/help/ops-and-log.md`
+    3. **핵심 3대 금기 사항**:
+       - ❌ 소스 파일 전체를 읽지 마세요 ➔ `yunhee outline <경로>` 및 `yunhee cat <파일:줄범위>` 사용
+       - ❌ 셸에서 직접 빌드/테스트를 돌리지 마세요 ➔ `yunhee run "<명령>"` 사용 (에러 자동 압축)
+       - ❌ 전체 DDL을 검색하거나 DB에 임의 쿼리하지 마세요 ➔ `yunhee table <테이블>` 사용
+       
+       
+자금관리 u      
+Act02_Tab_DepositIoList
+Ast09_Tab_DepositBookPeriod
+Pay50_Tab_ExpenseManager
+Ast06_Tab_TrTax
+Emp17_Tab_BenefitManager
+Emp50_Tab_TransportExpenseMng
+Pay50_Tab_ExpensePayWrite
+Pay50_Tab_ExpensePay
+Pay50_Tab_ExpenseJournal
+Act02_Tab_CreateJournalBiz
+Pay50_Tab_ExpenseSettle
+Pay50_Tab_AccountSumList
+Crd01_Tab_Card
+Crd02_Tab_DataUpload
+Biz01_Tab_CardManagement
+Biz01_Tab_CardUserAllocation
+Biz01_Tab_CardReport
+Biz01_Tab_EntertmExpenseReport
+
+고유자산 w
+Ast01_Tab_ClassTreeIntrinsic
+Ast01_Tab_InfoIntrinsic
+Ast40_Tab_OwnerCapital
+Sch10_Tab_Ipo2
+Ast06_Tab_TrIPO
+Ast06_Tab_TrFinance
+Ast06_Tab_TrForFinance
+Ast06_Tab_TrAcntTransfer
+Ast06_Tab_EvalFinance
+Ast25_Tab_Price
+Ast06_Tab_EvalDepn
+Ast09_Tab_FinanceBook
+Ast09_Tab_FinanceForBook
+Ast09_Tab_FinanceBookPeriod
+Ast09_Tab_FinanceBookOpr
+Ast13_Tab_OfficeAssets
+Ast13_Tab_DepnBook
+Bmt10_Tab_Info
+Bmt12_Tab_PcList
+Act02_Tab_DepositIoList
+Ast09_Tab_DepositBook
+Ast09_Tab_DepositBookPeriod
+Ast06_Tab_TrDepositInt
+
+관리회계 x
+Act02_Tab_CreateJournal
+Act02_Tab_JournalFix
+Ast06_Tab_TrIntrinsic
+Ast06_Tab_AccruedIntrinsic
+Ast06_Tab_TrDepositInt
+Ast06_Tab_TrDeposit
+
+Act02_Tab_CreateForJournal
+Ast06_Tab_TrForIntrinsic
+Ast06_Tab_AccruedForIntrinsic
+Ast06_Tab_TrForDeposit
+
+Ast09_Tab_DepositBook
+Ast06_Tab_FxEvalDeposit
+Ast30_Tab_OfficeMngFeeClose
+Act04_Tab_Close
+
+Act02_Tab_Journal
+Act02_Tab_ForJournal
+Act02_Tab_JournalSub
+Act04_Tab_GenLedger
+Ast09_Tab_PreDepositBook
+
+Act04_Tab_ReportPL
+Act04_Tab_ReportBS
+Act04_Tab_ReportFSS
+
+Icam10_Tab_OfficeMngFee
+Icam12_Tab_OfficeMngFeeBook
+Ast30_Tab_OfficeMngFeeState
+Ast30_Tab_OfficeMngFeeStatePeriod
+Icam11_Tab_OfficeMngFeeDeposit
+Ast33_Tab_OfficeMngFundTrans
+
+Icam10_Tab_FundMngFee
+Icam12_Tab_FundMngFeeBook
+Ast30_Tab_FundMngFeeState
+Ast30_Tab_FundMngFee
+Icam11_Tab_FundMngFeeDeposit
+Ast33_Tab_FundMngTrans
+Ast30_Tab_FundMngFeeClose
+
+신청 y
+Emp20_Tab_Leave
+Emp20_Tab_LeaveList
+Emp21_Tab_PersonList
+Emp54_Tab_Errand
+Emp53_Tab_BizTrip
+
+Emp17_Tab_Benefit
+Emp50_Tab_TransportExpense
+Pay50_Tab_ExpenseRequest
+Pay50_Tab_ExpenseConfirm
+Pay50_Tab_Expense
+
+Apr16_Tab_StampDocAppl
+Apr16_Tab_StampDocAppl
+Bbs20_Tab_FloralRequest
+Bbs11_Tab_Application
+
+
+커뮤니티z
+Bbs15_Tab_CompanyRule
+Bbs02_Tab_NoticeManager
+Bbs02_Tab_NoticeView
+Bbs02_Tab_NoticeAdmin
+Mkt01_Tab_TargetCompany
+Mkt03_Tab_HistoryManager
+Bbs10_Tab_BizShare
+Rpt01_Tab_DailyWrite
+Rpt01_Tab_DailyConfirm
+
+Rpt02_Tab_MonthWrite
+Rpt03_Tab_WeekWrite
+Rpt04_Tab_WeekConfirm
+Bbs30_Tab_ClassTree
+Sms03_Tab_GroupSend
+Kfs01_Tab_RemoteView
+
+

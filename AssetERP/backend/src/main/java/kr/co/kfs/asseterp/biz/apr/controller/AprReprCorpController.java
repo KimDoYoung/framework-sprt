@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.apr.controller;
 
+import kr.co.kfs.asseterp.biz.apr.dto.AprReprCorpLookupRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprReprCorpRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprReprCorpSaveReq;
 import kr.co.kfs.asseterp.biz.apr.service.AprReprCorpService;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -40,5 +42,18 @@ public class AprReprCorpController {
     @DeleteMapping
     public ApiResponse<Integer> delete(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> ids) {
         return ApiResponse.ok(service.delete(principal, ids));
+    }
+
+    /** AS-IS Apr15_ReprCorp.selectByCompanyId (Apr15_Lookup_ReprCorp) */
+    @GetMapping("/lookup")
+    public ApiResponse<List<AprReprCorpLookupRes>> searchLookup(@AuthenticationPrincipal UserPrincipal principal,
+                                                                @RequestParam(defaultValue = "false") boolean companyAddYn) {
+        return ApiResponse.ok(service.searchLookup(principal, companyAddYn));
+    }
+
+    /** AS-IS Apr15_ReprCorp.selectCorpRegYn — 등록 대표명의가 있는가 */
+    @GetMapping("/corp-reg-exists")
+    public ApiResponse<Boolean> existsCorpReg(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.existsCorpReg(principal));
     }
 }

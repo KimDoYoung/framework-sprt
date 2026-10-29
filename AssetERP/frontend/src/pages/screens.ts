@@ -87,6 +87,7 @@ import { Apr01_Tab_SubList } from './apr/Apr01_Tab_SubList';
 import { Apr07_Tab_AltAppr } from './apr/Apr07_Tab_AltAppr';
 import { Apr10_Tab_Stamp } from './apr/Apr10_Tab_Stamp';
 import { Apr15_Tab_ReprCorp } from './apr/Apr15_Tab_ReprCorp';
+import { Apr16_Tab_StampDocManager } from './apr/Apr16_Tab_StampDocManager';
 import { Emp60_Tab_Sign } from './emp/Emp60_Tab_Sign';
 import { Emp30_Tab_ApprStepExcept } from './emp/Emp30_Tab_ApprStepExcept';
 import { Emp10_Tab_AddrBook } from './emp/Emp10_Tab_AddrBook';
@@ -389,6 +390,7 @@ export const SCREENS: Record<string, React.FC> = {
   Emp10_Tab_PublicAddrBook, // G12 (메뉴 #1211. 그룹설정 재사용)
   Dcr10_Tab_MailHistory, // G14 (메뉴 #1023. 상세보기 Dcr10_Lookup_MailViwer 함께, 전자결재 편집창·펀드 조회창은 다음 단계)
   Cmp10_Tab_MailBook, // G13 (메뉴 #1212. 권한자 Cmp10_Tab_MailBookList·등록창 Cmp10_Edit_Tab_MailBook 함께)
+  Apr16_Tab_StampDocManager, // T23 (+ Apr16_Lookup_StampDocReg·Apr16_Lookup_StampReprCorp·Apr15_Lookup_ReprCorp·Apr16_Lookup_GetDocAppl)
   Apr15_Tab_ReprCorp, // G08 (메뉴 #1506. 인감 조회창 Apr10_Lookup_Stamp 재사용)
   Apr07_Tab_AltAppr, // G05 (메뉴 #1021. 사원찾기 Emp00_Lookup_SelectSingle 재사용)
   Apr90_Tab_DisposalList, // F04 1단계 (메뉴 #1443. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)

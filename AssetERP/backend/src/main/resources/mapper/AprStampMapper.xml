@@ -156,4 +156,14 @@
          ORDER BY emp03_trans_date DESC
          LIMIT 1
     </select>
+
+    <!-- AS-IS apr10_stamp.selectCorpStampYn L319 (IDMS-IC) — SELECT 목록은 AprCorpStampRes 열만 -->
+    <select id="selectCorpStamps" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprCorpStampRes">
+        SELECT apr10_stamp_id AS stamp_id
+             , apr10_stamp_nm AS stamp_name
+          FROM apr10_stamp
+         WHERE apr10_company_id = #{companyId}
+           AND COALESCE(apr10_corp_stamp_yn,'false') = 'true'
+           AND #{stdDate}::date BETWEEN apr10_start_date AND COALESCE(apr10_close_date,'2999-12-31'::date)
+    </select>
 </mapper>
