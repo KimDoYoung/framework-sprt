@@ -65,8 +65,17 @@ public class EmpEvalTargetController {
     @GetMapping("/admin")
     public ApiResponse<List<EvalAdminRes>> admin(@AuthenticationPrincipal UserPrincipal principal,
                                                  @RequestParam String stdYear, @RequestParam String stdTermCode,
-                                                 @RequestParam(required = false) String searchText) {
-        return ApiResponse.ok(service.searchAdmin(principal, stdYear, stdTermCode, searchText));
+                                                 @RequestParam(required = false) String searchText,
+                                                 @RequestParam(required = false) Long targetPersonId) {
+        return ApiResponse.ok(service.searchAdmin(principal, stdYear, stdTermCode, searchText, targetPersonId));
+    }
+
+    /** AS-IS emp.Emp43_EvalTarget.selectByTextAdminAll (Emp43_Tab_EvalResult "기간조건 제외") — 평가기간 조건 없이 전체 */
+    @GetMapping("/admin-all")
+    public ApiResponse<List<EvalAdminRes>> adminAll(@AuthenticationPrincipal UserPrincipal principal,
+                                                    @RequestParam(required = false) String searchText,
+                                                    @RequestParam(required = false) Long targetPersonId) {
+        return ApiResponse.ok(service.searchAdminAll(principal, searchText, targetPersonId));
     }
 
     /** AS-IS emp.Emp45_EvalRelateAppr.selectByTermCode — 상신 상태(1차·최종 결재 문서), 상신 행이 없으면 null */

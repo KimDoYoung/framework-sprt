@@ -560,7 +560,7 @@
            AND emp45_std_term_cd = #{stdTermCode}
     </select>
 
-    <!-- AS-IS emp43_eval_target.selectByTextAdmin (IDMS-IC L400) — 인사부·대표이사 화면의 전체 대상자. 바깥 SELECT 목록만 DTO 별칭, WITH 쿼리는 원본 그대로(targetPersonId 가지는 이 화면이 안 써서 뺐다) -->
+    <!-- AS-IS emp43_eval_target.selectByTextAdmin (IDMS-IC L400) — 인사부·대표이사 화면의 전체 대상자. 바깥 SELECT 목록만 DTO 별칭, WITH 쿼리는 원본 그대로(T05 사원명 조건 targetPersonId 가지 포함) -->
     <select id="selectByTextAdmin" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvalAdminRes">
         <![CDATA[
 WITH person_info AS (
@@ -777,7 +777,10 @@ SELECT emp43_eval_target_id AS eval_target_id,
                emp43_ceo_eval_bonus AS ceo_eval_bonus,
                emp43_ceo_eval_penalty AS ceo_eval_penalty,
                emp43_final_eval_score AS final_eval_score,
-               emp43_final_eval_grade AS final_eval_grade
+               emp43_final_eval_grade AS final_eval_grade,
+               emp43_title_nm AS title_nm,
+               emp43_eval_start_date AS eval_start_date,
+               emp43_eval_close_date AS eval_close_date
   FROM	main
  WHERE	emp43_company_id = #{companyId}
    AND	emp43_std_year LIKE #{stdYear}
@@ -785,6 +788,11 @@ SELECT emp43_eval_target_id AS eval_target_id,
    AND	UPPER(CONCAT(emp43_pos_nm, emp43_person_nm, emp43_org_nm)) LIKE UPPER(#{searchText})
  
         
+]]>
+        <if test="targetPersonId != null">
+   AND	emp43_person_id = #{targetPersonId}
+        </if>
+        <![CDATA[
  ORDER BY emp43_org_nm COLLATE "ko_KR.utf8"
         , emp43_person_nm COLLATE "ko_KR.utf8"
         , emp43_pos_nm COLLATE "ko_KR.utf8"
@@ -825,6 +833,243 @@ SELECT emp43_eval_target_id AS eval_target_id,
          WHERE emp45_company_id = #{companyId}
            AND emp45_std_year = #{stdYear}
            AND emp45_std_term_cd = #{stdTermCode}
+    </select>
+
+
+    <!-- AS-IS emp43_eval_target.selectByTextAdminAll (IDMS-IC L604) — 기간조건 제외(Emp43_Tab_EvalResult). WITH 쿼리는 원본 그대로. 원본 SELECT의 평정사유(total_order_reason) CASE 식에는 별칭이 없어 resultMap에 안 걸린다 → 항상 null(NULL AS total_order_reason) -->
+    <select id="selectByTextAdminAll" resultType="kr.co.kfs.asseterp.biz.emp.dto.EvalAdminRes">
+        <![CDATA[
+WITH person_info AS (
+	SELECT	emp01_person_id
+	   	 ,	f_get_empTrans(emp01_person_id, f_sysdate()::date, 'pos_nm')		AS pos_nm
+	   	 ,	f_get_empTrans(emp01_person_id, f_sysdate()::date, 'title_nm')		AS title_nm
+	   	 ,	f_emp_kor_nm(emp01_person_id)										AS kor_nm
+	   	 ,	f_get_empTrans(emp01_person_id, f_sysdate()::date, 'org_code_nm')	AS org_nm
+	  FROM	emp01_person
+),
+grade_ids AS (
+	SELECT	emp43_eval_target_id
+		 ,	emp43_eval_list_std_id
+		 ,	emp43_person_id
+		 ,	f_get_empEvalGradeId(emp43_eval_list_std_id, emp43_first_eval_score)	AS first_eval_grade_id
+		 ,	f_get_empEvalGradeId(emp43_eval_list_std_id, emp43_second_eval_score)	AS second_eval_grade_id
+		 ,	f_get_empEvalGradeId(emp43_eval_list_std_id
+		 						,(
+									TRUNC((COALESCE(emp43_first_eval_score,0)*COALESCE(emp43_first_eval_weight,0)*0.01)
+										 +(COALESCE(emp43_second_eval_score,0)*COALESCE(emp43_second_eval_weight,0)*0.01),1)
+								 ))													AS total_eval_grade_id
+		 ,	f_get_empEvalGradeId(emp43_eval_list_std_id
+		 						,(
+									TRUNC((COALESCE(emp43_first_eval_score,0)*COALESCE(emp43_first_eval_weight,0)*0.01)
+										 +(COALESCE(emp43_second_eval_score,0)*COALESCE(emp43_second_eval_weight,0)*0.01),1)
+										 + COALESCE(emp43_plus_score,0)
+										 - COALESCE(emp43_minus_score,0)
+										 + COALESCE(emp43_reason_adjust_score,0)
+								 ))													AS adjust_eval_grade_id
+		 ,	f_get_empEvalGradeId(emp43_eval_list_std_id
+		 						,(
+									TRUNC((COALESCE(emp43_first_eval_score,0)*COALESCE(emp43_first_eval_weight,0)*0.01)
+										 +(COALESCE(emp43_second_eval_score,0)*COALESCE(emp43_second_eval_weight,0)*0.01),1)
+										 + COALESCE(emp43_plus_score,0)
+										 - COALESCE(emp43_minus_score,0)
+										 + COALESCE(emp43_reason_adjust_score,0)
+										 + COALESCE(emp43_ceo_eval_bonus,0)
+										 - COALESCE(emp43_ceo_eval_penalty,0)
+								 ))													AS final_eval_grade_id
+	  FROM	emp43_eval_target
+	 WHERE	emp43_company_id = #{companyId}
+),
+grades AS (
+	SELECT	eg.emp42_eval_grade_id
+		 ,	eg.emp42_grade
+		 ,	eg.emp42_reason_yn
+      FROM	emp42_eval_grade eg
+),
+main AS (
+    SELECT	(
+		 		SELECT	CASE WHEN COALESCE(emp03_org_head_yn, 'false') = 'true'
+		 					 THEN '조직장'
+		 					 ELSE '조직원'
+		 					 END
+	  			  FROM	emp03_trans 
+	 			 WHERE	emp03_person_id = e.emp43_person_id
+	   			   AND	emp03_trans_date IN (
+	   			   								SELECT	MAX(emp03_trans_date)
+	   						  			   	      FROM	emp03_trans
+	   						 			  	     WHERE	emp03_person_id = e.emp43_person_id
+	   						   			    	   AND	emp03_trans_date  <=  (e.emp43_std_year||'-12-31')::date
+	   						   			     )
+	 		)																				AS emp43_org_head_nm
+    	 ,	(
+	    	 	CASE WHEN g1.emp42_reason_yn = 'true'
+	    	 		 THEN CASE WHEN e.emp43_first_eval_reason IS NOT NULL
+	    	 		 		   THEN '작성완료'
+	    	 		 		   ELSE '작성필요'
+	    	 		 		   END
+	            	 ELSE ''
+	        		 END																	
+	        )																				AS emp43_first_order_reason
+         ,	(
+         		CASE WHEN g2.emp42_reason_yn = 'true'
+         		     THEN CASE WHEN e.emp43_second_eval_reason IS NOT NULL
+         		     		   THEN '작성완료'
+         		     		   ELSE '작성필요'
+         		     		   END
+            		 ELSE ''
+        			 END
+         	)																				AS emp43_second_order_reason
+         ,	(
+				    CASE WHEN g1.emp42_reason_yn = 'true' AND g2.emp42_reason_yn = 'true'
+				    	 THEN CASE WHEN e.emp43_first_eval_reason IS NOT NULL AND e.emp43_second_eval_reason IS NOT NULL
+		    	 		 		   THEN '작성완료'
+		    	 		 		   ELSE '작성필요'
+		    	 		 		   END
+				         WHEN g1.emp42_reason_yn = 'true'
+				         THEN CASE WHEN e.emp43_first_eval_reason IS NOT NULL
+		    	 		 		   THEN '작성완료'
+		    	 		 		   ELSE '작성필요'
+		    	 		 		   END
+				         WHEN g2.emp42_reason_yn = 'true'
+				         THEN CASE WHEN e.emp43_second_eval_reason IS NOT NULL
+		    	 		 		   THEN '작성완료'
+		    	 		 		   ELSE '작성필요'
+		    	 		 		   END
+				         ELSE ''
+				    	 END
+         	)
+         ,	(
+				    CASE WHEN e.emp43_first_evaluator_id IS NULL AND e.emp43_second_evaluator_id IS NULL
+				    	   THEN ''
+				         WHEN e.emp43_first_evaluator_id IS NOT NULL AND e.emp43_second_evaluator_id IS NOT NULL
+    				       THEN (CASE WHEN COALESCE(e.emp43_first_eval_end_yn ,'false') = 'true' AND
+                                           COALESCE(e.emp43_second_eval_end_yn,'false') = 'true'
+                                        THEN '완료'
+                                      WHEN (SELECT COUNT(*)
+                                              FROM emp44_eval_write
+                                             WHERE emp44_eval_target_id = e.emp43_eval_target_id
+                                               AND emp44_evaluator_id IN (emp43_first_evaluator_id, emp43_second_evaluator_id)) > 0
+        			         		    THEN '작성중'
+    						          ELSE ''
+    						     END)
+                         WHEN e.emp43_first_evaluator_id IS NOT NULL AND COALESCE(emp43_first_eval_weight,0) = 100
+                           THEN (CASE WHEN COALESCE(e.emp43_first_eval_end_yn ,'false') = 'true'
+                                        THEN '완료'
+                                      WHEN (SELECT COUNT(*)
+                                              FROM emp44_eval_write
+                                             WHERE emp44_eval_target_id = e.emp43_eval_target_id
+                                               AND emp44_evaluator_id   = emp43_first_evaluator_id) > 0
+                                        THEN '작성중'
+                                      ELSE ''
+                                 END)
+				         ELSE ''
+				    	 END
+         	)																				AS emp43_total_eval_status
+	 	 ,	f_emp_kor_nm(emp43_first_evaluator_id)											AS emp43_first_person_nm
+    	 ,	f_emp_kor_nm(emp43_second_evaluator_id)											AS emp43_second_person_nm
+    	 ,	pi.pos_nm																		AS emp43_pos_nm
+    	 ,	pi.title_nm																		AS emp43_title_nm
+    	 ,	pi.kor_nm																		AS emp43_person_nm
+    	 ,	pi.org_nm																		AS emp43_org_nm
+    	 ,	g1.emp42_grade																	AS emp43_first_eval_grade
+    	 ,	g2.emp42_grade																	AS emp43_second_eval_grade
+    	 ,	g3.emp42_grade																	AS emp43_total_eval_grade
+    	 ,	g4.emp42_grade																	AS emp43_adjust_eval_grade
+    	 ,	g5.emp42_grade																	AS emp43_final_eval_grade
+         ,	(
+				TRUNC((COALESCE(e.emp43_first_eval_score,0)*COALESCE(e.emp43_first_eval_weight,0)*0.01)
+					 +(COALESCE(e.emp43_second_eval_score,0)*COALESCE(e.emp43_second_eval_weight,0)*0.01),1)
+         	)																				AS emp43_total_eval_score
+		 ,	(
+				TRUNC((COALESCE(e.emp43_first_eval_score,0)*COALESCE(e.emp43_first_eval_weight,0)*0.01)
+					 +(COALESCE(e.emp43_second_eval_score,0)*COALESCE(e.emp43_second_eval_weight,0)*0.01),1)
+					 + COALESCE(e.emp43_plus_score,0)
+					 - COALESCE(e.emp43_minus_score,0)
+					 + COALESCE(e.emp43_reason_adjust_score,0)
+			)																				AS emp43_adjust_eval_score
+		 ,	(
+				TRUNC((COALESCE(e.emp43_first_eval_score,0)*COALESCE(e.emp43_first_eval_weight,0)*0.01)
+					 +(COALESCE(e.emp43_second_eval_score,0)*COALESCE(e.emp43_second_eval_weight,0)*0.01),1)
+					 + COALESCE(e.emp43_plus_score,0)
+					 - COALESCE(e.emp43_minus_score,0)
+					 + COALESCE(e.emp43_reason_adjust_score,0)
+					 + COALESCE(e.emp43_ceo_eval_bonus,0)
+					 - COALESCE(e.emp43_ceo_eval_penalty,0)
+			)																				AS emp43_final_eval_score
+		 ,	(
+				SELECT	CASE WHEN apr01_status_cd IS NULL
+							 THEN ''
+							 ELSE f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)
+							 END
+				  FROM	apr01_appr
+				 WHERE	apr01_appr_id = (
+				 							SELECT	emp45_appr_id
+				 							  FROM	emp45_eval_relate_appr
+											 WHERE	emp45_company_id = emp43_company_id
+											   AND	emp45_std_year = emp43_std_year
+											   AND	emp45_std_term_cd = emp43_std_term_cd
+											 LIMIT 1 
+				 						)
+			)																				AS emp43_appr_status
+	 	 ,	f_cdnm('EmpEvalTermCode', e.emp43_std_term_cd, e.emp43_company_id, f_sysdate())	AS emp43_std_term_nm
+         ,	e.*
+      FROM	emp43_eval_target e
+       		INNER JOIN grade_ids gi				ON gi.emp43_eval_target_id = e.emp43_eval_target_id
+      		INNER JOIN emp40_eval_list_std s	ON e.emp43_eval_list_std_id = s.emp40_eval_list_std_id
+    		INNER JOIN person_info pi			ON pi.emp01_person_id = e.emp43_person_id
+		    LEFT OUTER JOIN grades g1			ON g1.emp42_eval_grade_id = gi.first_eval_grade_id
+		    LEFT OUTER JOIN grades g2			ON g2.emp42_eval_grade_id = gi.second_eval_grade_id
+		    LEFT OUTER JOIN grades g3			ON g3.emp42_eval_grade_id = gi.total_eval_grade_id
+		    LEFT OUTER JOIN grades g4			ON g4.emp42_eval_grade_id = gi.adjust_eval_grade_id
+		    LEFT OUTER JOIN grades g5			ON g5.emp42_eval_grade_id = gi.final_eval_grade_id
+)
+SELECT emp43_eval_target_id AS eval_target_id,
+               emp43_person_id AS person_id,
+               emp43_org_nm AS org_nm,
+               emp43_person_nm AS person_nm,
+               emp43_pos_nm AS pos_nm,
+               emp43_org_head_nm AS org_head_nm,
+               emp43_first_person_nm AS first_person_nm,
+               emp43_first_eval_score AS first_eval_score,
+               emp43_first_eval_grade AS first_eval_grade,
+               emp43_first_order_reason AS first_order_reason,
+               emp43_first_eval_reason AS first_eval_reason,
+               emp43_second_person_nm AS second_person_nm,
+               emp43_second_eval_score AS second_eval_score,
+               emp43_second_eval_grade AS second_eval_grade,
+               emp43_second_order_reason AS second_order_reason,
+               emp43_second_eval_reason AS second_eval_reason,
+               emp43_total_eval_score AS total_eval_score,
+               emp43_total_eval_grade AS total_eval_grade,
+               emp43_total_eval_status AS total_eval_status,
+               emp43_plus_score AS plus_score,
+               emp43_minus_score AS minus_score,
+               emp43_reason_adjust_score AS reason_adjust_score,
+               emp43_adjust_eval_score AS adjust_eval_score,
+               emp43_adjust_eval_grade AS adjust_eval_grade,
+               emp43_appr_status AS appr_status,
+               emp43_ceo_eval_bonus AS ceo_eval_bonus,
+               emp43_ceo_eval_penalty AS ceo_eval_penalty,
+               emp43_final_eval_score AS final_eval_score,
+               emp43_final_eval_grade AS final_eval_grade,
+               emp43_title_nm AS title_nm,
+               emp43_eval_start_date AS eval_start_date,
+               emp43_eval_close_date AS eval_close_date,
+               NULL AS total_order_reason
+  FROM	main
+ WHERE	emp43_company_id = #{companyId}
+   AND	UPPER(CONCAT(emp43_pos_nm, emp43_person_nm, emp43_org_nm)) LIKE UPPER(#{searchText})
+ 
+        
+]]>
+        <if test="targetPersonId != null">
+   AND	emp43_person_id = #{targetPersonId}
+        </if>
+        <![CDATA[
+ ORDER BY emp43_eval_start_date
+ 		, emp43_org_nm COLLATE "ko_KR.utf8"
+        , emp43_person_nm COLLATE "ko_KR.utf8"
+        , emp43_pos_nm COLLATE "ko_KR.utf8"
+        ]]>
     </select>
 
 </mapper>

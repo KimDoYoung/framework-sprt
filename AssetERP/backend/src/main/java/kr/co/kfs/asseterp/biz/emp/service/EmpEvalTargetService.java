@@ -93,8 +93,13 @@ public class EmpEvalTargetService {
     }
 
     /** AS-IS Emp43_EvalTarget.selectByTextAdmin (Emp43_Tab_FirstAppr·Emp43_Tab_FinalAppr) — 회사 전체 대상자 */
-    public List<EvalAdminRes> searchAdmin(UserPrincipal user, String stdYear, String stdTermCode, String searchText) {
-        return mapper.selectByTextAdmin(user.getCompanyId(), stdYear, stdTermCode, "%" + nvl(searchText) + "%");
+    public List<EvalAdminRes> searchAdmin(UserPrincipal user, String stdYear, String stdTermCode, String searchText, Long targetPersonId) {
+        return mapper.selectByTextAdmin(user.getCompanyId(), stdYear, stdTermCode, "%" + nvl(searchText) + "%", targetPersonId);
+    }
+
+    /** AS-IS Emp43_EvalTarget.selectByTextAdminAll (Emp43_Tab_EvalResult "기간조건 제외") — 평가기간 조건 없이 전체 */
+    public List<EvalAdminRes> searchAdminAll(UserPrincipal user, String searchText, Long targetPersonId) {
+        return mapper.selectByTextAdminAll(user.getCompanyId(), "%" + nvl(searchText) + "%", targetPersonId);
     }
 
     /** AS-IS Emp45_EvalRelateAppr.selectByTermCode — 상신 상태(1차·최종). 상신 행이 없으면 null */

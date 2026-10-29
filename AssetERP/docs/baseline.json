@@ -9586,5 +9586,36 @@
     "note": "docs/work/T/T04-작업기록.md",
     "history": [],
     "id": "T04"
+  },
+  "Emp43_Tab_EvalResult": {
+    "commit": "fc71b1a1c2304e8085b2aaf80a81603a99454e88",
+    "commit_short": "fc71b1a",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp43_Tab_EvalResult.java": "dbb24698a770f2381355e8296910949ba6004d6b",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp00_TransInfoModel.java": "dc29160bc09265170d01009c5353bd56081484c3",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp01_PersonModel.java": "f4478d406df99853f5315401fc09f28e760101fe",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp02_OthersModel.java": "361f61b4bebfd1073f0769db40e42327748e6897",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp20_LeaveModel.java": "08d4fe0e87a0e52d15d517f341428f632a6b3ef0",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp43_EvalTargetModel.java": "9cfd7a454a8fc3d4be48411dfeca852d43d45b73",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp43_EvalTargetModelProperties.java": "403a69aa59cae44eb924f81bf51b699c3c86a90d",
+      "application/src/main/java/myApp/server/emp/Emp43_EvalTarget.java": "b4126e5323065ebb28ddcac35359ad5b1bf5b1e9",
+      "application/src/main/java/myApp/server/emp/mapper/emp43_eval_target.xml": "a6441e67ac7d670f7c494852fcbbcbdd9a76412a",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+      "application/src/main/java/myApp/server/sys/Sys01_Company.java": "0f7e212738f8a84c9f952803f8d5dfe4521dd61c",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-29T09:28:13+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/T/T05-작업기록.md",
+    "history": [],
+    "id": "T05"
   }
 }

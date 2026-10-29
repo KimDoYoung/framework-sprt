@@ -78,7 +78,10 @@ public interface EmpEvalTargetMapper {
 
     /** AS-IS emp43_eval_target.selectByTextAdmin — 전체 대상자(인사부·대표이사) */
     List<EvalAdminRes> selectByTextAdmin(@Param("companyId") Long companyId, @Param("stdYear") String stdYear, @Param("stdTermCode") String stdTermCode,
-                                         @Param("searchText") String searchText);
+                                         @Param("searchText") String searchText, @Param("targetPersonId") Long targetPersonId);
+
+    /** AS-IS emp43_eval_target.selectByTextAdminAll — 기간조건 제외(Emp43_Tab_EvalResult) */
+    List<EvalAdminRes> selectByTextAdminAll(@Param("companyId") Long companyId, @Param("searchText") String searchText, @Param("targetPersonId") Long targetPersonId);
 
     /** AS-IS emp43_eval_target.modelUpdate — 상점·벌점·평정사유가감 */
     int updateScore(@Param("companyId") Long companyId, @Param("evalTargetId") Long evalTargetId, @Param("plusScore") Long plusScore,

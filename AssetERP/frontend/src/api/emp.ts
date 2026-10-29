@@ -716,8 +716,14 @@ export const empEvalApi = {
   },
 
   /** AS-IS emp.Emp43_EvalTarget.selectByTextAdmin (T03 Emp43_Tab_FirstAppr·T04 Emp43_Tab_FinalAppr) — 회사 전체 대상자 */
-  searchEvalAdmins: async (stdYear: string, stdTermCode: string, searchText: string): Promise<EvalAdmin[]> => {
-    const res = await apiClient.get<ApiResponse<EvalAdmin[]>>('v1/emp/eval-targets/admin', { params: { stdYear, stdTermCode, searchText } });
+  searchEvalAdmins: async (stdYear: string, stdTermCode: string, searchText: string, targetPersonId?: number | null): Promise<EvalAdmin[]> => {
+    const res = await apiClient.get<ApiResponse<EvalAdmin[]>>('v1/emp/eval-targets/admin', { params: { stdYear, stdTermCode, searchText, targetPersonId: targetPersonId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp43_EvalTarget.selectByTextAdminAll (T05 Emp43_Tab_EvalResult "기간조건 제외") — 평가기간 조건 없이 전체 */
+  searchEvalAdminAll: async (searchText: string, targetPersonId?: number | null): Promise<EvalAdmin[]> => {
+    const res = await apiClient.get<ApiResponse<EvalAdmin[]>>('v1/emp/eval-targets/admin-all', { params: { searchText, targetPersonId: targetPersonId ?? undefined } });
     return res.data.data ?? [];
   },
 

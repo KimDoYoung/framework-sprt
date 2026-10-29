@@ -948,7 +948,7 @@ export interface EvalExecute {
   secondEvalReason: string | null;
 }
 
-/** 인사평가결과(인사부)·인사평가보고(대표이사) 한 행 (AS-IS emp43_eval_target.selectByTextAdmin — T03 Emp43_Tab_FirstAppr·T04 Emp43_Tab_FinalAppr). *OrderReason '작성필요'·'작성완료'·'' */
+/** 인사평가결과(인사부)·인사평가보고(대표이사)·결과조회 한 행 (AS-IS emp43_eval_target.selectByTextAdmin[All] — T03 Emp43_Tab_FirstAppr·T04 Emp43_Tab_FinalAppr·T05 Emp43_Tab_EvalResult). *OrderReason '작성필요'·'작성완료'·'' */
 export interface EvalAdmin {
   evalTargetId: number;
   personId: number;
@@ -980,6 +980,11 @@ export interface EvalAdmin {
   ceoEvalPenalty: number | null;
   finalEvalScore: number | null;
   finalEvalGrade: string | null;
+  titleNm: string | null;
+  evalStartDate: string | null;
+  evalCloseDate: string | null;
+  /** T05 "대표이사 평가" 열: 원본 모델에만 있고 SQL·테이블에 열이 없어 늘 비어 있다 */
+  ceoEvalScore?: number | null;
 }
 
 /** 인사평가 상신문서 연결 (AS-IS emp45_eval_relate_appr.selectByTermCode). apprId는 1차 보고, finalApprId는 최종(대표이사) 보고 상신문서 */
