@@ -3,6 +3,7 @@ import { message } from 'antd';
 import { openMenuByNo } from '@/utils/tempData';
 
 // Flt00_Tab_Info (client/vi/flt/Flt00_Tab_Info.java, IDMS-IC) — 임직원매매 화면사용순서 안내. 조회·저장 없음, HTML 안내문 + 링크.
+// 스타일: IN (견본 — docs/page-style.md)
 
 const LINK_COLOR = '#0070C0';  // link() L264
 const SP = '    ';  // space = &nbsp; ×4
