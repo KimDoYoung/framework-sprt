@@ -4,6 +4,7 @@
  * 레이아웃 L57-93: center = 툴바(승인기간 ~ · 검색 300 · [조회] · [일괄저장]) + 카드 사용내역 그리드(체크박스 다중), east 420 = `Biz01_Edit_CardSimple`(전체 높이)
  *   L02 `Biz01_Tab_Card`의 간이판 — 출력/다운로드·거래처 바로가기·문서분류·상신·인원 칸이 없고, 그리드에 카드명 대신 거래상대방이 있다.
  *   서버 조회(selectByCard)·마감 검사(closeCheck)·일괄 저장 창(Biz01_Lookup_CardManagement)은 L02와 같은 것을 menuName만 달리해 쓴다
+ * 스타일: SGHF (docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·02·04), 그리드 날짜 폭(UX-08)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -114,11 +115,11 @@ export const Biz01_Tab_CardSimple: React.FC = () => {
   ], []);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter style={{ height: '100%' }}>
         <Splitter.Panel min={600}>
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', border: '1px solid #d9d9d9' }}>
-            <div style={{ padding: 10 }}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+            <div style={{ padding: '0 10px 10px 10px' }}>
               {/* [E2] retrieveButton[조회].Select (L118) → retrieve() · [E3] searchTextField.KeyPress [Enter] (L124) → retrieve() */}
               <SearchBar onSearch={retrieve} onReset={sp.reset} extra={<Button type="save" onClick={selectUpdate}>일괄저장</Button>}>
                 <SearchBar.Field label="승인기간">

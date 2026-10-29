@@ -4,6 +4,7 @@
  * 생성자 L59-106: 위 툴바(기준일) + 아래 4줄(라벨 155폭 · [엑셀다운로드]). 화면에 그리드는 없다 — buildGrid()(L155-168)의 grid는
  *   레이아웃에 붙지 않고(retrieve() L170-187의 결과는 화면에 나오지 않는다), [조회] 단추도 툴바에 연결되지 않았다(E2 도달 불가).
  * RD: 4개 모두 `rdDownload`(docs/RD-대책.md) — mrd만 다르고 나머지는 같다.
+ * 스타일: DSBRD (docs/page-style.md) — 탭이 없는 변형
  */
 import React, { useState } from 'react';
 import { DatePicker, message } from 'antd';
@@ -66,9 +67,9 @@ export const Tdm35_Tab_TaskList: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-        <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+        <div style={{ height: '100%', boxSizing: 'border-box' }}>
           {/* buttonBar L66-69: 기준일 */}
-          <div style={{ height: 50, borderBottom: '1px solid #d9d9d9', display: 'flex', alignItems: 'center', gap: 8, padding: '0 10px', boxSizing: 'border-box' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 10px 8px', boxSizing: 'border-box' }}>
             <span>기준일</span>
             <DatePicker style={{ width: 120 }} format="YYYY.MM.DD" allowClear={false} value={stdDate} onChange={d => d && setStdDate(d)} />
           </div>

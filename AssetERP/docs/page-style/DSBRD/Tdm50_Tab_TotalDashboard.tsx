@@ -4,7 +4,7 @@
  * 생성자 L18-25: center = tabPanel(여백 20, 테두리) — 총괄(Tdm50_Tab_Dashboard) · 임원별(Tdm50_Tab_DashboardExct) · 부서별(Tdm50_Tab_DashboardOrg)
  * 세 탭은 열 때 모두 만들어 두고(탭을 옮겨도 고른 임원·부서·기간이 남는다), 탭을 고를 때마다 그 탭이 다시 조회한다.
  * 1단계: [보기] 아이콘이 여는 점검 편집창(Tdm52_Edit_ChckManl, N22)·미흡 조치 상세(Tdm54_Lookup_ChckInsuffCmnt, N24)는 다음 단계
- * 스타일: DB (견본 — docs/page-style.md)
+ * 스타일: DSBRD (견본 — docs/page-style.md)
  */
 import React, { useRef, useState } from 'react';
 import { PageTabs } from '@/components/tabs';

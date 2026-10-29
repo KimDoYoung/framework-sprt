@@ -5,6 +5,7 @@
  *   center = 사용내역 그리드(단일 선택) + 페이징 툴바(500건), east 420 = 위 `Biz01_Edit_Card`(280) + 아래 `Biz02_Grid_PersonList` (L02와 같은 부품)
  * 편집 칸의 콤보 3개와 인원 칸의 [등록][삭제]는 늘 잠겨 있다(setting() L149-150 `setButtonVisible(false)`) — 조회 전용 화면이다.
  * RD: [출력/다운로드]는 `RdViewer`, [엑셀다운로드]는 `rdDownload`(docs/RD-대책.md)
+ * 스타일: SGHF (docs/page-style.md) — 툴바가 전체 폭 north(총 승인금액 라벨 포함)라 견본처럼 왼쪽 패널 안에 두지 않는다
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 버튼이 많아 UX-02 초기화는 뺀다), 그리드 날짜 폭(UX-08)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -209,7 +210,7 @@ export const Biz01_Tab_CardContents: React.FC = () => {
   ], []);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
         <div style={{ flex: 4, minWidth: 0 }}>
           {/* [E5] retrieveButton[조회].Select (L206) → retrieve() · [E1] dataYMText.KeyPress [Enter] (L160) → retrieve()
@@ -254,7 +255,7 @@ export const Biz01_Tab_CardContents: React.FC = () => {
       <div style={{ flex: 1, minHeight: 0 }}>
         <Splitter style={{ height: '100%' }}>
           <Splitter.Panel min={600}>
-            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', border: '1px solid #d9d9d9' }}>
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
               <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
                 <SingleGrid<BizCardContents>
                   gridRef={gridRef}
@@ -273,7 +274,7 @@ export const Biz01_Tab_CardContents: React.FC = () => {
             </div>
           </Splitter.Panel>
           <Splitter.Panel defaultSize={420} min={300}>
-            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', border: '1px solid #d9d9d9' }}>
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
               <div style={{ height: 280, flex: 'none' }}>
                 {/* setButtonVisible(false) L149-150: 콤보 3개 잠금 · 인원 칸 [등록][삭제] 숨김 → closed */}
                 <Biz01_Edit_Card promo={current} closed onSaved={() => void retrieve()} onEmpAdded={() => setPersonRefresh(n => n + 1)} />

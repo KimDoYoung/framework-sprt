@@ -39,7 +39,7 @@ SID 정의는 `docs/page-style.md` "스타일 목록", 견본은 `docs/page-styl
 | ★MG | 조회 줄 + 그리드 2개 이상 + 편집/보기 폼, 위아래 분할 아님(`layout=none`) | `Sys90_Tab_AfterService` | `Sys90_Tab_AfterServiceAdmin`, `Ics20_Tab_RevisionHistory`·`Admin`, `Sms03_Tab_SendAdmin` |
 | ★TO | 트리 중심, 오른쪽이 일반 그리드가 아님/없음, 편집은 팝업 | `Org01_Tab_OrgCode` | `Chk01_Tab_ClassTree`, `Fbx01_Tab_Document`(탭 페이지·편집 그리드가 함께 있어 TO가 아닐 수 있다) |
 | ★GO | 그리드 하나 + **직접 만든 조건 줄**(`SearchBar` 아님) 또는 조건 줄 없음 | `Tdm54_Tab_CheckInsuff` | `Sms02_Tab_TotalCount`, `Sys10_Tab_TotalSize`(조건 줄이 없는 화면일 수 있다) |
-| ★DB | 그리드·트리·툴바 없이 탭 + 카드/요약 영역(조회 API 호출, 값을 보여 준다) | `Tdm50_Tab_TotalDashboard` | `Tdm35_Tab_TaskList` |
+| ★DSBRD | 그리드·트리·툴바 없이 탭 + 카드/요약 영역(조회 API 호출, 값을 보여 준다) | `Tdm50_Tab_TotalDashboard` | `Tdm35_Tab_TaskList` |
 | ★IN | 그리드·트리·폼·툴바·탭이 없고 안내 문구/링크(HTML)만 있는 문서 화면. **조회·저장 API 호출이 없고 `openMenuByNo` 같은 메뉴 열기 링크가 있다** | `Flt00_Tab_Info` | — |
 
 SGP/SG, TP/TG 등 이미 판별되는 SID는 규칙을 바꾸지 말고 그대로 두고, 위 표의 ★와 STP·TP·SR·GCG·TG 규칙만 보강한다.
@@ -50,7 +50,7 @@ SGP/SG, TP/TG 등 이미 판별되는 SID는 규칙을 바꾸지 말고 그대�
 
 | 쌍 | 구분 신호 |
 |:---|:---|
-| IN ↔ DB | 화면이 `*Api`(조회 API)를 import해 호출하는가. IN은 호출이 없고 DB는 있다. DB는 탭(`<PageTabs>`)이 있다 |
+| IN ↔ DSBRD | 화면이 `*Api`(조회 API)를 import해 호출하는가. IN은 호출이 없고 DSBRD는 있다. DSBRD는 탭(`<PageTabs>`)이 있다 |
 | IN ↔ TP | TP는 탭 컨테이너가 있다. IN은 탭이 없다 |
 | GO ↔ SG | GO는 조건 줄이 `SearchBar`가 아니라 직접 만든 `div`(`Typography.Text`·`DatePicker` 직접 배치) |
 | STP ↔ TP | `SearchBar` 또는 직접 만든 조건 줄 유무 |
@@ -65,7 +65,7 @@ SGP/SG, TP/TG 등 이미 판별되는 SID는 규칙을 바꾸지 말고 그대�
 5. **자식 컴포넌트 추적**: Tab 파일에 특징이 없으면 같은 폴더의 자식(`*_Page_*`·`*_Grid_*`·`*_Rd_*`)을 한 단계 따라가 합산한다.
    - **상속한 껍데기 화면**: 다른 `_Tab_` 컴포넌트를 import해 그대로 렌더링하는 짧은 화면(`Dcr01_Tab_DcrUser` → `Dcr01_Tab_DcrManager`, `Flt10_Tab_ViolateUser` → `Flt10_Tab_Violate`)은 **부모의 SID를 따른다**.
    - **세로 Splitter에 SG 두 개를 얹은 화면**(`Sys07_Tab_Company`: 위 버튼 줄 + 출발지/목적지 SG 둘): GG 변형으로 읽을지 규칙이 필요하다(열어서 최종 확인 전, 임시로 GG 후보).
-6. **새 SID 규칙** SGHF·MG·TO·GO·DB·IN(§2). 특징 필드에 `calendar`(달력)·`rd`(RD 영역)·`tabs`(인라인 탭)·`api_calls`(조회/저장 API 호출 여부)·`menu_link`(`openMenuByNo` 등 메뉴 열기)를 추가해야 §2-1의 쌍이 갈린다.
+6. **새 SID 규칙** SGHF·MG·TO·GO·DSBRD·IN(§2). 특징 필드에 `calendar`(달력)·`rd`(RD 영역)·`tabs`(인라인 탭)·`api_calls`(조회/저장 API 호출 여부)·`menu_link`(`openMenuByNo` 등 메뉴 열기)를 추가해야 §2-1의 쌍이 갈린다.
 7. **`--compare` 정확도**: AS-IS(GXT)와 TOBE(React)가 같은 SID인데 다르게 나오는 경우(GG≠SG, SG≠CG)가 있다. AS-IS 판별 규칙과 TOBE 판별 규칙의 기준을 같게 맞추거나, 불일치 이유를 `why`에 남긴다.
 8. **선언 우선**: 화면 머리 주석 `스타일: XXX`(괄호 안 설명 제외)를 `declared`로 읽는다. 지금 `스타일: STP (견본 — docs/page-style.md)`처럼 뒤에 설명이 붙어도 SID만 읽어야 한다. 머리 주석은 `/** … */` 블록뿐 아니라 `// 스타일: IN …` 한 줄 주석도 읽어야 한다(`Flt00_Tab_Info`).
 9. **SID 목록 동기화**: 유효한 SID 목록(19개)을 `docs/page-style.md`의 "스타일 목록" 표 첫 열에서 읽는다. 선언이 목록에 없는 SID면 경고한다.
@@ -118,7 +118,7 @@ SGP/SG, TP/TG 등 이미 판별되는 SID는 규칙을 바꾸지 말고 그대�
 
 ## 4-1. 0.6.6 평가 결과와 남은 수정 (2026-10-29)
 
-0.6.6에서 §2 표의 견본·검증 화면 46개 중 40개가 기대 SID로 나오고, `--all` 305개에서 미분류는 0이다. 남은 수정은 2건이다.
+0.6.6에서 §2 표의 견본·검증 화면 46개 중 40개가 기대 SID로 나오고, `--all` 305개에서 미분류는 0이다. 남은 수정은 2건이었고(0.6.7에서 완료), 0.6.7 확인 후 3번이 추가됐다.
 
 1. **TabPage 자식의 그리드를 합산하지 않는다** (§3-5 "`*_TabPage_*`는 0으로 센다"가 자식 추적 경로에서 지켜지지 않음).
    - 증상: `Sms02_Tab_TotalCount`, `Sys10_Tab_TotalSize`가 `grids: 3`, `tabpage: true`로 나와 GG가 된다. 실제 그리드는 왼쪽 1개이고 나머지 2개는 오른쪽 `*_TabPage_Detail` 안의 것이다.
@@ -126,6 +126,15 @@ SGP/SG, TP/TG 등 이미 판별되는 SID는 규칙을 바꾸지 말고 그대�
 2. **직접 만든 조건 줄을 `custom_search`로 읽어 STP로 판별한다** (§3-2).
    - 증상: `Tdm50_Tab_CheckJob`이 `custom_search: false`, `search: false`라서 TP가 된다. 이 화면은 `SearchBar`가 아니라 `Typography.Text`·`DatePicker` 등을 직접 배치한 `div` 조건 줄이 있다.
    - 기대: STP (탭이 있고 조건 줄이 `SearchBar` 또는 직접 만든 줄이면 STP).
+
+> 0.6.7에서 위 1·2번은 고쳐졌다(`Sms02`·`Sys10` GO, `Tdm50_Tab_CheckJob` STP 확인). 아래 3번이 남았다.
+
+3. **GG와 SGTP 구분: `*_TabPage_*` 이름만으로 탭 영역이라 보지 않는다** (0.6.7 확인).
+   - 증상: 0.6.7에서 SGTP가 3 → 13개로 늘었다. 위아래 분할 + 그리드 하나 + 자식 `*_TabPage_*`이면 SGTP로 보는데, 이 이름은 아래 **그리드**에도 쓰인다(GG 견본 `Est03_TabPage_PfHistoryList`). 자식이 탭이 아니라 그리드인 화면이 SGTP로 옮겨 갔다.
+   - GG여야 하는 후보 9개(자식 `*_TabPage_*`에 `<Tabs>`가 없고 그리드가 있다): `Dcr30_Tab_LinkAdmin`, `Fnd20_Tab_PlanEmp`, `Tdm36_Tab_RoleReport`, `Tdm41_Tab_ManlDutyOrg`, `Tdm43_Tab_ManlItemReg`, `Tdm51_Tab_CheckOrg`, `Tdm52_Tab_CheckManl`, `Tdm59_Tab_CheckAppr`, `Bmt01_Tab_Buy`(자식 확인 필요).
+   - SGTP로 남는 화면(자식이 폼·탭 컨테이너): `Fnd20_Tab_Plan`(견본), `Emp00_Tab_TransInfo`(자식 17개), `Sys01_Tab_Company`(자식 5개), `Flt03_Tab_AccountReport`(확인 필요).
+   - 기준(제안): 자식 `*_TabPage_*`가 `<Tabs>`·`<PageTabs>`를 갖거나 자식이 2개 이상(탭 페이지 전환)이면 SGTP. 자식이 하나이고 그 안에 그리드가 있으면 GG. 판별 근거 `why`에 어느 쪽으로 읽었는지 남긴다.
+   - 기대: 위 GG 후보 9개가 GG, `Est02_Tab_PfResultReport`·`Fnd20_Tab_Plan`은 그대로. 고친 뒤 `--all` 분포의 SGTP가 4~5개 안팎으로 돌아온다. 후보 중 일부가 실제로는 SGTP일 수 있으니 화면을 열어 최종 확인한다.
 
 **화면을 열어 확인할 것 (yunhee 수정 아님)**: 아래는 요청서 표 또는 규칙 우선순위가 틀렸을 수 있어, 화면을 직접 보고 SID를 정한 뒤 이 문서의 §2 표를 고친다.
 
@@ -135,10 +144,19 @@ SGP/SG, TP/TG 등 이미 판별되는 SID는 규칙을 바꾸지 말고 그대�
 | `Pay20_Tab_Deduct` | TP → STP | `Pay20_Tab_DeductAdmin`을 위임받아 부모 SID를 따른다. 부모가 TP인지 STP인지 확인한다. |
 | `Pay10_Tab_List` | STP → SR | `iframe`이 있어 SR로 갔다. 탭·RD 중 어느 쪽이 주인지 정하고, SR 규칙(`*_Rd_*` import 또는 iframe)과 STP 규칙의 우선순위를 정한다. |
 
+## 4-2. SID `DB` → `DSBRD` 이름 변경 (2026-10-29, 0.6.8 이후 요청)
+
+`DB`가 DataBase로 읽혀서 SID 이름을 **`DSBRD`**(Dashboard)로 바꿨다. 정의·견본 폴더(`docs/page-style/DSBRD/`)·화면 머리 주석(`스타일: DSBRD`)은 이미 바꿨다. yunhee 쪽에서 바꿀 것:
+
+1. **SID 이름**: `page_style.py`의 `"DB"`(유효 SID 목록 `load_valid_sids` 대비 기본값 37행, 판별 517·521·568행 부근)를 `"DSBRD"`로 바꾼다. 출력(`yunhee page-style`, `--all` 분포)에도 `DSBRD`로 나와야 한다. 옛 이름 `DB` 선언은 경고로 알려 준다.
+2. **선언 정규식**: `스타일:\s*([A-Z]{2,4})\b`는 5자 `DSBRD`를 읽지 못한다(`DSBRD`는 선언이 없는 것으로 보인다). `[A-Z]{2,5}`로 넓힌다. `load_valid_sids`도 `docs/page-style.md` "스타일 목록" 첫 열을 5자까지 읽는다. SID 길이 규칙은 2~5자로 바꿨다.
+3. **탭이 없는 변형**: `Tdm35_Tab_TaskList`(기준일 툴바 + [엑셀다운로드] 4줄, `api_calls`는 `rdApi` 정도)도 DSBRD다. 지금 DSBRD 규칙은 "탭 + 카드/요약 영역"이라 §2-1의 `IN ↔ DSBRD` 구분 신호("DSBRD는 탭이 있다")가 맞지 않는다. 선언 `스타일: DSBRD`가 있으면 선언을 우선하고, 선언이 없을 때의 추정은 "툴바·그리드·트리 없음 + 조회 API 호출(또는 `rdApi`/`rdDownload`) + 안내 링크(`openMenuByNo`) 없음"이면 DSBRD로 본다.
+4. 기대: `Tdm50_Tab_TotalDashboard`·`Tdm35_Tab_TaskList` 둘 다 `DSBRD`로 나온다.
+
 ## 5. 완료 기준
 
 - `yunhee page-style --all`에서 `미분류`가 `_Tab_` 화면 기준 0에 가깝다(껍데기 화면은 부모를 따르고, 선언이 있는 화면은 선언이 우선이다).
 - §2 표의 "견본"과 "같은 SID로 정한 다른 화면"이 모두 그 SID로 나온다.
 - `yunhee page-style --compare`가 TOBE 머리 주석 선언과 판별을 비교해 불일치를 보고한다.
-- §2-1의 쌍(IN↔DB, IN↔TP, GO↔SG, STP↔TP, MG↔SGEF)이 구분된다.
-- 새 SID 6개(SGHF·MG·TO·GO·DB·IN)는 규칙이 확정이 아니다. 같은 SID로 묶은 화면을 실제로 맞추면서 규칙을 다시 조정한다.
+- §2-1의 쌍(IN↔DSBRD, IN↔TP, GO↔SG, STP↔TP, MG↔SGEF)이 구분된다.
+- 새 SID 6개(SGHF·MG·TO·GO·DSBRD·IN)는 규칙이 확정이 아니다. 같은 SID로 묶은 화면을 실제로 맞추면서 규칙을 다시 조정한다.

@@ -4,6 +4,7 @@
  * 레이아웃 L55-92: center = 툴바(조회기간 ~ · 제공/수령 · [조회][등록][삭제]) + 내역 그리드(단일 선택), east 420 = `Biz01_Edit_OtherSimple`(전체 높이)
  *   L03 `Biz01_Tab_Other`의 간이판 — 거래처 관리 바로가기·인원 칸이 없고, 그리드에 거래상대방·인원(직접 입력값)이 있다. 같은 서버 조회(selectByOther)·삭제(Biz01_Promo.delete)를 쓴다.
  * 아직 저장하지 않은 새 행은 promoId가 음수(임시)이고 서버에 없다.
+ * 스타일: SGHF (docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 그리드 날짜 폭(UX-08)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -139,11 +140,11 @@ export const Biz01_Tab_OtherSimple: React.FC = () => {
   ], []);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter style={{ height: '100%' }}>
         <Splitter.Panel min={600}>
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', border: '1px solid #d9d9d9' }}>
-            <div style={{ padding: 10 }}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+            <div style={{ padding: '0 10px 10px 10px' }}>
               {/* [E2] retrieveButton[조회].Select (L120) → retrieve() */}
               {/* UX-02 초기화는 뺀다: 조건 2개 뒤에 원본 버튼이 셋(조회·등록·삭제)이라 한 줄에 담기지 않을 수 있다(줄바꿈이면 넣지 않는 규칙, L03과 같음) */}
               <SearchBar

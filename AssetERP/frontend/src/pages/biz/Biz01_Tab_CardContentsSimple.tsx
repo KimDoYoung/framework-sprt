@@ -5,6 +5,7 @@
  * L04 `Biz01_Tab_CardContents`의 간이판: 총 승인금액·[출력/다운로드]·인원 칸이 없고 검색칸이 있으며, 그리드가 카드명 대신 거래상대방·인원(직접 입력값)을 갖는다.
  * 편집 칸은 늘 콤보 3개가 잠겨 있다(setting() L122 `editCard.setButtonVisible(false)`) — 거래상대방·인원·비고만 고친다.
  * RD: [엑셀다운로드]는 `rdDownload`(docs/RD-대책.md)
+ * 스타일: SGHF (docs/page-style.md) — 툴바가 전체 폭 north라 견본처럼 왼쪽 패널 안에 두지 않는다
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 버튼이 적어 UX-02 초기화는 뺀다 — L04와 같이 조회 조건이 많다), 그리드 날짜 폭(UX-08)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -179,7 +180,7 @@ export const Biz01_Tab_CardContentsSimple: React.FC = () => {
   ], []);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff', display: 'flex', flexDirection: 'column', gap: 8 }}>
       {/* [E4] retrieveButton[조회].Select (L174) → retrieve() · [E1] dataYMText.KeyPress [Enter] (L136) → retrieve() · [E5] searchTextField.KeyPress [Enter] (L180) → retrieve() */}
       <SearchBar
         onSearch={retrieve}
@@ -214,7 +215,7 @@ export const Biz01_Tab_CardContentsSimple: React.FC = () => {
       <div style={{ flex: 1, minHeight: 0 }}>
         <Splitter style={{ height: '100%' }}>
           <Splitter.Panel min={600}>
-            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', border: '1px solid #d9d9d9' }}>
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
               <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
                 <SingleGrid<BizCardContents>
                   gridRef={gridRef}

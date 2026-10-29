@@ -4,6 +4,7 @@
  * 레이아웃 L62-103: center = 툴바(조회기간 ~ · 제공/수령 · [조회][등록][삭제][거래처 관리 바로가기]) + 내역 그리드(단일 선택),
  *   east 420 = 위 `Biz01_Edit_Other`(350) + 아래 `Biz02_Grid_PersonList`(직원 · 거래상대방, L02와 같은 부품)
  * 아직 저장하지 않은 새 행은 promoId가 음수(임시)이고 서버에 없다 — 인원 칸은 저장된 내역(promoId > 0)에만 연다.
+ * 스타일: SGHF (docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·02·04), 그리드 날짜 폭(UX-08)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -156,11 +157,11 @@ export const Biz01_Tab_Other: React.FC = () => {
   const personPromo = current && current.promoId > 0 ? current : null;
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
       <Splitter style={{ height: '100%' }}>
         <Splitter.Panel min={600}>
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', border: '1px solid #d9d9d9' }}>
-            <div style={{ padding: 10 }}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+            <div style={{ padding: '0 10px 10px 10px' }}>
               {/* [E2] retrieveButton[조회].Select (L132) → retrieve() */}
               {/* UX-02 초기화는 뺀다: 조건 2개 뒤에 원본 버튼이 넷(등록·삭제·거래처 관리 바로가기 + 조회)이라 한 줄에 담기지 않을 수 있다(줄바꿈이면 넣지 않는 규칙) */}
               <SearchBar
@@ -201,7 +202,7 @@ export const Biz01_Tab_Other: React.FC = () => {
           </div>
         </Splitter.Panel>
         <Splitter.Panel defaultSize={420} min={300}>
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', border: '1px solid #d9d9d9' }}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
             <div style={{ height: 350, flex: 'none' }}>
               <Biz01_Edit_Other promo={current} onSaved={() => void retrieve()} onEmpAdded={() => setPersonRefresh(n => n + 1)} />
             </div>
