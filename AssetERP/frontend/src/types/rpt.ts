@@ -10,6 +10,12 @@ export interface RptFssSubmit {
   reviseHistory?: string | null;
 }
 
+/** 작성요령 및 변경이력 (T17, AS-IS selectByReportCode) */
+export interface RptWriteGuide {
+  writeGuide: string | null;
+  reviseHistory: string | null;
+}
+
 /** submitId가 없거나 0 이하면 새 행 */
 export interface RptFssSubmitSaveReq {
   submitId?: number | null;

@@ -6,9 +6,12 @@ import kr.co.kfs.asseterp.biz.car.dto.CarJournalDateCheckRes;
 import kr.co.kfs.asseterp.biz.car.dto.CarJournalFixReq;
 import kr.co.kfs.asseterp.biz.car.dto.CarJournalRes;
 import kr.co.kfs.asseterp.biz.car.dto.CarJournalSaveReq;
+import kr.co.kfs.asseterp.biz.car.dto.CarJournalCloseReq;
+import kr.co.kfs.asseterp.biz.car.dto.CarJournalRdReq;
 import kr.co.kfs.asseterp.biz.car.dto.CarPublicAdminFixReq;
 import kr.co.kfs.asseterp.biz.car.dto.CarPublicAdminJournalRes;
 import kr.co.kfs.asseterp.biz.car.dto.CarPublicJournalRes;
+import kr.co.kfs.asseterp.biz.car.dto.CarRelateApprRes;
 import kr.co.kfs.asseterp.biz.car.service.CarJournalService;
 import kr.co.kfs.asseterp.biz.car.service.CarJournalUploadService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -114,6 +117,30 @@ public class CarJournalController {
     @PutMapping("/public-admin-fix")
     public ApiResponse<Integer> fixPublicAdmin(@AuthenticationPrincipal UserPrincipal principal, @RequestBody CarPublicAdminFixReq req) {
         return ApiResponse.ok(service.fixPublicAdmin(principal, req));
+    }
+
+    /** AS-IS car.Car04_Journal.selectByJournal (T16) — 전용·공용 차량의 월 일지 */
+    @GetMapping("/month")
+    public ApiResponse<List<CarJournalRes>> searchJournal(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long infoId, @RequestParam String stdMonth) {
+        return ApiResponse.ok(service.searchJournal(principal, infoId, stdMonth));
+    }
+
+    /** AS-IS car.Car05_RelateAppr.selectByStdMonth (T16) — 상신한 적 없으면 data null */
+    @GetMapping("/appr-status")
+    public ApiResponse<CarRelateApprRes> apprStatus(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long infoId, @RequestParam String stdMonth) {
+        return ApiResponse.ok(service.relateAppr(principal, infoId, stdMonth));
+    }
+
+    /** AS-IS Car04_Tab_Journal.updateCheck → car.Car04_Journal.update (T16) — 마감·마감취소 → 바꾼 건수 */
+    @PutMapping("/close")
+    public ApiResponse<Integer> close(@AuthenticationPrincipal UserPrincipal principal, @RequestBody CarJournalCloseReq req) {
+        return ApiResponse.ok(service.closeJournal(principal, req));
+    }
+
+    /** AS-IS sys.Sys99_Print.insertRdCarJournal (T16) → rdGroupId */
+    @PostMapping("/rd-print")
+    public ApiResponse<Long> rdPrint(@AuthenticationPrincipal UserPrincipal principal, @RequestBody CarJournalRdReq req) {
+        return ApiResponse.ok(service.printRd(principal, req));
     }
 
     @DeleteMapping

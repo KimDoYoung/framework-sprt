@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.rpt.service;
 
 import kr.co.kfs.asseterp.biz.rpt.dto.RptFssSubmitRes;
 import kr.co.kfs.asseterp.biz.rpt.dto.RptFssSubmitSaveReq;
+import kr.co.kfs.asseterp.biz.rpt.dto.RptWriteGuideRes;
 import kr.co.kfs.asseterp.biz.rpt.mapper.RptFssSubmitMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
@@ -22,6 +23,11 @@ public class RptFssSubmitService {
     /** AS-IS selectBySearchText: 화면이 "%검색어%"로 감싸 보낸다(없으면 %%) */
     public List<RptFssSubmitRes> search(String searchText) {
         return mapper.selectBySearchText("%" + (searchText == null ? "" : searchText) + "%");
+    }
+
+    /** AS-IS selectByReportCode (T17 작성요령 창) — 첫 행의 작성요령·변경이력 */
+    public RptWriteGuideRes getWriteGuide(String reportCode) {
+        return mapper.selectByReportCode(reportCode).get(0);
     }
 
     /**

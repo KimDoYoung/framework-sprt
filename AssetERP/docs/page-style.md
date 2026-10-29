@@ -24,6 +24,8 @@
 | STP | SearchBar+TabPanel | 위 툴바(성명 등 입력 + 버튼들, 그리드 없음), 아래 탭 컨테이너(탭마다 서로 다른 내부 구성, 툴바의 대상이 모든 탭에 전달됨) | `Pay10_Tab_Retire` (퇴직정산, S22) |
 | CG | CrudGrid | 편집 가능한 그리드 하나 | 코드 관리류 |
 | GCG | Grid+Calendar+Grid | 위 제목 줄(기준일자 + 새로고침 아이콘)과 그리드(현황), 아래 좌측 달력·[예약하기] 버튼 / 우측 라디오(MY·전체) + 그리드(달력 날짜 연동). 조회 툴바 없음 | `Car03_Tab_List` (공용차량 예약관리, T13) |
+| TP | TabPanel | 툴바·그리드 없이 탭 컨테이너만(탭마다 자기 툴바·내용을 가짐) | `Rpt10_Tab_FssOrg` (업무보고서, T17) |
+| SR | SearchBar+RD | 위 툴바 한 줄(조회기간 등 + [조회], `SearchBar`), 아래 RD 보고서 영역(iframe) 하나. 그리드 없음 | `Emp01_Tab_InoutState` (기간별 입퇴사현황, T18) |
 
 ## 스타일별 상세
 
@@ -107,6 +109,14 @@
 ### STP — SearchBar+TabPanel (초안, 견본 없음, 2026-10-28 S22에서 등록)
 - 위: 툴바 한 줄(입력 + [조회] 등 버튼 — `SearchBar`), 아래: 탭 컨테이너. 그리드가 없어 `yunhee page-style`은 AS-IS·TOBE 모두 `미분류(그리드 없음)`로 판별한다 — 판별기에 STP 규칙이 없다(yunhee 수정사항 제안).
 - 탭 페이지는 `forwardRef` 핸들(`retrieve(param)`·`clear`)을 노출하고 부모가 탭 선택·[조회]·입력 변경 때 부른다. 처음 연 탭은 마운트한 뒤 조회하고 한 번 연 탭은 숨기기만 한다. 예: `Pay10_Tab_Retire`(`payRetireTab.ts`), `Pay20_Tab_DeductAdmin`(탭만 있고 툴바 없음)
+
+### TP — TabPanel (초안, 견본 없음, 2026-10-29 T17에서 등록)
+- 화면 전체가 탭 컨테이너 하나(여백 20). 툴바가 탭 위에 없고 탭 페이지마다 자기 툴바(기준년월 + [조회] 등)를 가진다 — 툴바가 위에 있는 STP와 다르다. 그리드가 없어 `yunhee page-style`은 `미분류(그리드 없음)`으로 판별한다(판별기에 TP 규칙이 없다 — yunhee 수정사항 제안).
+- 탭을 고르면 그 탭 페이지가 `retrieve`를 한다(AS-IS `InterfaceTabPage.retrieve`). 처음 연 탭은 선택 이벤트가 없어 조회하지 않는다. 한 번 연 탭은 숨기기만 한다(STP와 같음). 예: `Rpt10_Tab_FssOrg`(탭 6개 = RD 보고서 페이지)
+
+### SR — SearchBar+RD (초안, 견본 없음, 2026-10-29 T18에서 등록)
+- 위: `SearchBar`(조회기간 시작 ~ 끝 + [조회]), 아래: RD 보고서 `iframe`(남은 높이 전부). 그리드가 없어 `yunhee page-style`은 `미분류(그리드 없음)`로 판별한다(판별기에 SR 규칙이 없다 — yunhee 수정사항 제안).
+- RD 영역은 AS-IS `Emp01_Rd_*` 클래스(RD 주소 발급 + iframe)로 따로 두고 탭이 `retrieve(param)`을 부른다. 열 때 한 번 조회하는 화면(`Emp01_Tab_InoutState`)과 열 때 조회하지 않는 화면(탭 안 RD 페이지, TP)이 있다.
 
 ## 견본 사용법
 

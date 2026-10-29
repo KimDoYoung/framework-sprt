@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.car.mapper;
 import kr.co.kfs.asseterp.biz.car.dto.CarJournalBatchReq;
 import kr.co.kfs.asseterp.biz.car.dto.CarJournalRes;
 import kr.co.kfs.asseterp.biz.car.dto.CarPublicAdminJournalRes;
+import kr.co.kfs.asseterp.biz.car.dto.CarRelateApprRes;
 import kr.co.kfs.asseterp.biz.car.dto.CarPublicJournalRes;
 import kr.co.kfs.asseterp.biz.car.dto.CarJournalSaveReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -71,4 +72,22 @@ public interface CarJournalMapper {
 
     /** AS-IS Car04_Journal.delete — 예약을 지울 때 같이 지운다(예약 ID로 찾는다) */
     int deleteByBookingIds(@Param("companyId") Long companyId, @Param("bookingIds") List<Long> bookingIds);
+
+    /** AS-IS car04_journal.selectByJournal — 전용·공용 차량 월 일지 */
+    List<CarJournalRes> selectByJournal(@Param("companyId") Long companyId, @Param("infoId") Long infoId, @Param("stdMonth") String stdMonth);
+
+    /** AS-IS car04_journal.getBeforeCloseYn — 그 달 이전에 마감 안 된 일지 수 */
+    int countBeforeOpen(@Param("companyId") Long companyId, @Param("infoId") Long infoId, @Param("stdMonth") String stdMonth);
+
+    int updateClose(@Param("companyId") Long companyId, @Param("journalId") Long journalId, @Param("beforeMileage") Long beforeMileage,
+                    @Param("afterMileage") Long afterMileage, @Param("closeYn") boolean closeYn);
+
+    /** AS-IS car05_relate_appr.selectByStdMonth — 없으면 null */
+    CarRelateApprRes selectRelateAppr(@Param("companyId") Long companyId, @Param("infoId") Long infoId, @Param("stdMonth") String stdMonth);
+
+    int deleteRdPrint(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("windowClassName") String windowClassName);
+
+    int insertRdJournal(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("windowClassName") String windowClassName,
+                        @Param("groupId") Long groupId, @Param("infoId") Long infoId, @Param("stdMonth") String stdMonth,
+                        @Param("year") String year, @Param("month") String month);
 }

@@ -6,9 +6,12 @@ import kr.co.kfs.asseterp.biz.car.dto.CarJournalDateCheckRes;
 import kr.co.kfs.asseterp.biz.car.dto.CarJournalFixReq;
 import kr.co.kfs.asseterp.biz.car.dto.CarJournalRes;
 import kr.co.kfs.asseterp.biz.car.dto.CarJournalSaveReq;
+import kr.co.kfs.asseterp.biz.car.dto.CarJournalCloseReq;
+import kr.co.kfs.asseterp.biz.car.dto.CarJournalRdReq;
 import kr.co.kfs.asseterp.biz.car.dto.CarPublicAdminFixReq;
 import kr.co.kfs.asseterp.biz.car.dto.CarPublicAdminJournalRes;
 import kr.co.kfs.asseterp.biz.car.dto.CarPublicJournalRes;
+import kr.co.kfs.asseterp.biz.car.dto.CarRelateApprRes;
 import kr.co.kfs.asseterp.biz.car.mapper.CarInfoMapper;
 import kr.co.kfs.asseterp.biz.car.mapper.CarJournalMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -31,6 +34,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class CarJournalService {
 
+    private static final String RD_WINDOW = "Car04_Tab_Journal";
     private static final DateTimeFormatter YYYY_MM = DateTimeFormatter.ofPattern("yyyy.MM");
 
     private final CarJournalMapper mapper;
@@ -167,6 +171,52 @@ public class CarJournalService {
             else count += mapper.insertPublicFix(user.getCompanyId(), mapper.selectNextId(), row, fix);
         }
         return count;
+    }
+
+    /** AS-IS Car04_Tab_Journal.retrieve → selectByJournal (T16) — 전용(1)·공용(2) 차량 모두 */
+    public List<CarJournalRes> searchJournal(UserPrincipal user, Long infoId, String stdMonth) {
+        return mapper.selectByJournal(user.getCompanyId(), infoId, stdMonth);
+    }
+
+    /** AS-IS Tab.retrieveApprStatus → car.Car05_RelateAppr.selectByStdMonth — 상신한 적 없으면 null */
+    public CarRelateApprRes relateAppr(UserPrincipal user, Long infoId, String stdMonth) {
+        return mapper.selectRelateAppr(user.getCompanyId(), infoId, stdMonth);
+    }
+
+    /**
+     * AS-IS Car04_Tab_Journal.updateCheck → getBeforeCloseYn / getAfterCloseYn → update (T16) — 그 달 일지 전부를 마감·마감취소.
+     * 마감은 그 이전 달에 마감 안 된 일지가 있으면, 취소는 그 이후 달에 마감된 일지가 있으면 거절한다.
+     * 마감은 화면에 계산돼 보이던 주행 전·후 계기판을 함께 저장하고 취소는 둘 다 비운다 → 바꾼 건수
+     */
+    @Transactional
+    public int closeJournal(UserPrincipal user, CarJournalCloseReq req) {
+        boolean close = Boolean.TRUE.equals(req.closeYn());
+        Long companyId = user.getCompanyId();
+        if (req.infoId() == null || infoMapper.selectById(companyId, req.infoId()) == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        if (close && mapper.countBeforeOpen(companyId, req.infoId(), req.stdMonth()) > 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "마감하려는 차량 운행일지 이전에 발생한 운행일지를 마감 후 처리가 가능합니다");
+        }
+        if (!close && mapper.countAfterClose(companyId, req.infoId(), req.stdMonth()) > 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "마감취소하려는 차량 운행일지 후에 발생한 운행일지가 이미 마감되어 수정이 불가능합니다");
+        }
+        int count = 0;
+        for (CarJournalRes row : mapper.selectByJournal(companyId, req.infoId(), req.stdMonth())) {
+            count += mapper.updateClose(companyId, row.journalId(), close ? row.beforeMileage() : null, close ? row.afterMileage() : null, close);
+        }
+        return count;
+    }
+
+    /** AS-IS Sys99_Print.insertRdCarJournal (T16) — 출력 자료를 만들고 묶음 ID(rdGroupId)를 돌려준다. 월이 없으면 그 해 전체 */
+    @Transactional
+    public Long printRd(UserPrincipal user, CarJournalRdReq req) {
+        Long companyId = user.getCompanyId();
+        if (req.infoId() == null || infoMapper.selectById(companyId, req.infoId()) == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        String month = req.month() == null || req.month().isBlank() ? "%" : req.month();
+        String stdMonth = req.year() + "." + ("%".equals(month) ? "01" : month);
+        mapper.deleteRdPrint(companyId, user.getUserId(), RD_WINDOW);
+        long groupId = mapper.selectNextId();
+        mapper.insertRdJournal(companyId, user.getUserId(), RD_WINDOW, groupId, req.infoId(), stdMonth, req.year(), month);
+        return groupId;
     }
 
     /** AS-IS delete → 지운 건수 */

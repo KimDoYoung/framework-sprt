@@ -112,3 +112,12 @@ export const orgRoleStampApi = {
     return res.data.data;
   },
 };
+
+/** 조직기구현황 RD 출력 (T17 Org02_Rd_OrgState) */
+export const orgStateApi = {
+  /** AS-IS sys.Sys99_Print.insertRdOrgState — 기준일(기준년월 말일) 현재 조직 출력 자료를 만들고 rdGroupId를 돌려준다 */
+  rdPrint: async (baseDate: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/org/state/rd-print', { baseDate });
+    return res.data.data;
+  },
+};

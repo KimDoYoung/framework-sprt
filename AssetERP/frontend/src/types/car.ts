@@ -46,6 +46,8 @@ export interface CarJournal {
   infoPersonNm?: string | null;
   /** 그리드 확정여부 열(AS-IS getFixYnText) — 화면에서 valueGetter로 채운다 */
   fixYnText?: string | null;
+  /** 그리드 마감여부 열(AS-IS getCloseYnText) — 화면에서 valueGetter로 채운다 */
+  closeYnText?: string | null;
 }
 
 /** 편집창 사용일자 검사 결과 — message가 있으면 알리고 [저장]을 끈다, 없으면 beforeMileage를 쓴다 */
@@ -146,4 +148,11 @@ export interface CarBookingJournalReq {
   reason?: string | null;
   attendance?: string | null;
   note?: string | null;
+}
+
+/** 차량 운행일지 월별 결재 상태 (AS-IS Car05_RelateApprModel) — statusCode '10'·'20'·'30' 상신 중, '40' 반려 */
+export interface CarRelateAppr {
+  apprId?: number | null;
+  statusCode?: string | null;
+  statusName?: string | null;
 }

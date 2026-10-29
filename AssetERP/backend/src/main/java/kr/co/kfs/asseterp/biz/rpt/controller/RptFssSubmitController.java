@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.rpt.controller;
 
 import kr.co.kfs.asseterp.biz.rpt.dto.RptFssSubmitRes;
 import kr.co.kfs.asseterp.biz.rpt.dto.RptFssSubmitSaveReq;
+import kr.co.kfs.asseterp.biz.rpt.dto.RptWriteGuideRes;
 import kr.co.kfs.asseterp.biz.rpt.service.RptFssSubmitService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,12 @@ public class RptFssSubmitController {
     @GetMapping
     public ApiResponse<List<RptFssSubmitRes>> search(@RequestParam(required = false) String searchText) {
         return ApiResponse.ok(service.search(searchText));
+    }
+
+    /** AS-IS rpt.Rpt10_FssSubmit.selectByReportCode (T17 작성요령 창) — 작성요령·변경이력 */
+    @GetMapping("/write-guide")
+    public ApiResponse<RptWriteGuideRes> writeGuide(@RequestParam String reportCode) {
+        return ApiResponse.ok(service.getWriteGuide(reportCode));
     }
 
     /** AS-IS rpt.Rpt10_FssSubmit.modelUpdate → 저장된 행 (submitId 없으면 등록) */

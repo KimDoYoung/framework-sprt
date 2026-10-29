@@ -32,6 +32,21 @@
          WHERE rpt10_fss_submit_id = #{submitId}
     </select>
 
+    <!-- AS-IS rpt10_fss_submit.selectByReportCode — 보고서코드가 없으면 빈 작성요령·변경이력 한 행(UNION ALL) -->
+    <select id="selectByReportCode" resultType="kr.co.kfs.asseterp.biz.rpt.dto.RptWriteGuideRes">
+        SELECT rpt10_write_guide    AS write_guide,
+               rpt10_revise_history AS revise_history
+          FROM rpt10_fss_submit
+         WHERE rpt10_report_cd = #{reportCode}
+         UNION ALL
+        SELECT '' AS write_guide,
+               '' AS revise_history
+          FROM rpt10_fss_submit
+         WHERE NOT EXISTS (SELECT *
+                             FROM rpt10_fss_submit
+                            WHERE rpt10_report_cd = #{reportCode})
+    </select>
+
     <select id="selectNextId" resultType="long" flushCache="true">
         SELECT f_create_seq()
     </select>

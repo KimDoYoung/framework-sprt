@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { RptFssSubmit, RptFssSubmitSaveReq } from '../types/rpt';
+import { RptFssSubmit, RptFssSubmitSaveReq, RptWriteGuide } from '../types/rpt';
 
 /** rpt(보고서) API (E19 금감원 업무보고서) */
 export const rptApi = {
@@ -8,6 +8,12 @@ export const rptApi = {
   searchFssSubmits: async (searchText: string): Promise<RptFssSubmit[]> => {
     const res = await apiClient.get<ApiResponse<RptFssSubmit[]>>('v1/rpt/fss-submits', { params: { searchText } });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS rpt.Rpt10_FssSubmit.selectByReportCode (T17 작성요령 창) — 작성요령·변경이력, 없는 코드면 빈 글자 */
+  getWriteGuide: async (reportCode: string): Promise<RptWriteGuide> => {
+    const res = await apiClient.get<ApiResponse<RptWriteGuide>>('v1/rpt/fss-submits/write-guide', { params: { reportCode } });
+    return res.data.data;
   },
 
   /** AS-IS rpt.Rpt10_FssSubmit.modelUpdate → 저장된 행 (submitId 없으면 등록) */

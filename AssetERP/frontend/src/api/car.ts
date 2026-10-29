@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse } from '../types/auth';
-import { CarAdminBookingReq, CarBooking, CarBookingJournalReq, CarBookingTimeline, CarInfo, CarJournal, CarJournalDateCheck, CarPublicAdminJournal, CarPublicJournal, CarUser } from '../types/car';
+import { CarAdminBookingReq, CarBooking, CarBookingJournalReq, CarBookingTimeline, CarInfo, CarJournal, CarJournalDateCheck, CarPublicAdminJournal, CarPublicJournal, CarRelateAppr, CarUser } from '../types/car';
 
 /** car(차량관리) 화면 API (T10~) */
 export const carApi = {
@@ -210,5 +210,31 @@ export const carApi = {
   deleteAdminBookings: async (bookingIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/car/bookings/admin', { data: bookingIds });
     return res.data.data ?? 0;
+  },
+
+  // ── T16 차량 운행일지 (Car04_Tab_Journal) ──
+
+  /** AS-IS car.Car04_Journal.selectByJournal — 전용(1)·공용(2) 차량 월 일지, stdMonth 'YYYY.MM' */
+  searchMonthJournals: async (p: { infoId: number; stdMonth: string }): Promise<CarJournal[]> => {
+    const res = await apiClient.get<ApiResponse<CarJournal[]>>('v1/car/journals/month', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS car.Car05_RelateAppr.selectByStdMonth — 상신한 적 없으면 null */
+  getJournalApprStatus: async (p: { infoId: number; stdMonth: string }): Promise<CarRelateAppr | null> => {
+    const res = await apiClient.get<ApiResponse<CarRelateAppr | null>>('v1/car/journals/appr-status', { params: p });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS Car04_Tab_Journal.updateCheck·update — 그 달 일지 전부를 마감(true)·마감취소(false) → 바꾼 건수 */
+  closeJournals: async (p: { infoId: number; stdMonth: string; closeYn: boolean }): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/car/journals/close', p);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdCarJournal — 출력 자료를 만들고 묶음 ID(rdGroupId) 반환. month가 없으면 그 해 전체 */
+  rdPrintJournal: async (p: { infoId: number; year: string; month?: string | null }): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/car/journals/rd-print', p);
+    return res.data.data as number;
   },
 };
