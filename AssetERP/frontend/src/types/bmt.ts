@@ -14,3 +14,15 @@ export interface BmtBuy {
   apprId: number | null;
   apprStatusName: string | null;
 }
+
+/** T20 Bmt12_Tab_EmpIct 그리드 한 행 (AS-IS Bmt12_PcHistoryModel) */
+export interface BmtEmpIct {
+  pcHistoryId: number;
+  personName: string | null;
+  messenger: string | null;
+  website: string | null;
+  internalIp: string | null;
+  astClassTreeName: string | null;
+  spec: string | null;
+  etc: string | null;
+}

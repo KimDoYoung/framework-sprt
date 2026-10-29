@@ -9989,5 +9989,28 @@
     "note": "docs/work/T/T19-작업기록.md",
     "history": [],
     "id": "T19"
+  },
+  "Bmt12_Tab_EmpIct": {
+    "commit": "fc71b1a1c2304e8085b2aaf80a81603a99454e88",
+    "commit_short": "fc71b1a",
+    "branch": "ioc",
+    "commit_date": "2026-10-28",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/bmt/Bmt12_Tab_EmpIct.java": "cfe62fa817d02e8f08c38681ad1ba8117373c4e5",
+      "application/src/main/java/myApp/client/vi/bmt/model/Bmt12_PcHistoryModel.java": "bd38208b4ad552c64d153d049d3a7f0d0291973e",
+      "application/src/main/java/myApp/client/vi/bmt/model/Bmt12_PcHistoryModelProperties.java": "03349bfaf107764caee305fa959fc9aacefcf607",
+      "application/src/main/java/myApp/server/bmt/Bmt12_PcHistory.java": "f383167e543c8fe3e804578a673f264cb956a1e7",
+      "application/src/main/java/myApp/server/bmt/mapper/bmt12_pc_history.xml": "f7679f5d1868fa16425cf4c0d897dfc46afac439",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "331105bbb0cd1fd75e9e67df50f9bde38e15b8b6",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-29T13:10:13+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/T/T20-작업기록.md",
+    "history": [],
+    "id": "T20"
   }
 }

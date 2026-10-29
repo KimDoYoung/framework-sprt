@@ -118,6 +118,7 @@ import { Biz01_Tab_PriorApprovalSimple } from './biz/Biz01_Tab_PriorApprovalSimp
 import { Biz01_Tab_OtherSimple } from './biz/Biz01_Tab_OtherSimple';
 import { Biz01_Tab_LimitCheckList } from './biz/Biz01_Tab_LimitCheckList';
 import { Bmt01_Tab_Buy } from './bmt/Bmt01_Tab_Buy';
+import { Bmt12_Tab_EmpIct } from './bmt/Bmt12_Tab_EmpIct';
 import { Biz01_Tab_PriorApproval } from './biz/Biz01_Tab_PriorApproval';
 import { Ics15_Tab_ChecklistWrite } from './ics/Ics15_Tab_ChecklistWrite';
 import { Ics15_Tab_ChecklistConfirm } from './ics/Ics15_Tab_ChecklistConfirm';
@@ -411,6 +412,7 @@ export const SCREENS: Record<string, React.FC> = {
   Biz01_Tab_Card, // L02 (메뉴 #1131. 하위 Biz01_Edit_Card·Biz02_Grid_PersonList(InternalList·ExternalList)·Biz01_Lookup_CardManagement·Biz05_Lookup_RelateAppr·Biz05_Lookup_RelateFile. 1단계: 전자결재·거래처 조회창은 안내만)
   Biz01_Tab_Other, // L03 (메뉴 #1132. 하위 Biz01_Edit_Other. 사람 목록·증빙자료 창은 L02 부품 재사용)
   Bmt01_Tab_Buy, // L05 (메뉴 #1135. 아래쪽 제공내역은 pages/biz/Biz01_TabPage_List. 전자결재·상대처 조회창은 다음 단계)
+  Bmt12_Tab_EmpIct, // T20 (임직원 정보통신수단, RD 출력)
   Biz01_Tab_LimitCheckList, // L07 (메뉴 #1133. 하위 탭 Biz01_TabPage_PersonDay·PersonYear·CompanyYear, 엑셀 서버 생성)
   Biz01_Tab_PriorApproval, // L08 (메뉴 #1136. 거래상대방 조회창 components/lookup/Mkt01_Lookup_Select2, 제공(수령)자는 Emp00_Lookup_SelectSingle)
   Biz01_Tab_CardContents, // L04 (메뉴 #1138. 편집 칸·인원 칸·증빙자료 창은 L02 부품 재사용, RD 내려받기 utils/rdDownload)

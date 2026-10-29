@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- AS-IS(IDMS-IC) server/bmt/mapper/bmt12_pc_history.xml — T20 Bmt12_Tab_EmpIct -->
+<mapper namespace="kr.co.kfs.asseterp.biz.bmt.mapper.BmtEmpIctMapper">
+
+    <!-- AS-IS bmt12_pc_history.selectEmpICT L76 (IDMS-IC) — 조회와 출력 적재가 같은 문장을 쓴다. `bmt12_pc_history.*`는 행번호 별칭과 같은 이름의 열을 하나 더 만들어 바깥에서 모호해지므로 쓰는 두 열만 고른다 -->
+    <sql id="empIctQuery">
+        SELECT ROW_NUMBER() OVER(ORDER BY bmt12_person_nm COLLATE "ko_KR.utf8") AS bmt12_pc_history_id
+             , t.*
+          FROM (
+                 SELECT f_emp_kor_nm(bmt11_person_id)   AS bmt12_person_nm
+                      , bmt11_messenger                 AS bmt12_messenger
+                      , bmt11_website                   AS bmt12_website
+                      , ast01_class_tree_nm             AS bmt12_ast_class_tree_nm
+                      , bmt10_spec                      AS bmt12_spec
+                      , bmt12_internal_ip
+                      , bmt12_etc
+                   FROM bmt10_info
+                        INNER JOIN ast01_class_tree   ON ast01_class_tree_id = bmt10_ast_class_tree_id
+                        LEFT OUTER JOIN bmt11_history ON (    bmt11_info_id    = bmt10_info_id
+                                                          AND bmt11_start_date = (SELECT MAX(bmt11_start_date)
+                                                                                    FROM bmt11_history
+                                                                                   WHERE bmt11_info_id = bmt10_info_id
+                                                                                     AND bmt11_start_date &lt;= #{stdDate}) )
+                        LEFT OUTER JOIN bmt12_pc_history ON (    bmt12_info_id    = bmt10_info_id
+                                                             AND bmt12_start_date = (SELECT MAX(bmt12_start_date)
+                                                                                       FROM bmt12_pc_history
+                                                                                      WHERE bmt12_info_id = bmt10_info_id
+                                                                                        AND bmt12_start_date &lt;= #{stdDate}) )
+                  WHERE bmt10_company_id = #{companyId}
+                    AND ast01_item_s_class_cd IN ( SELECT sys09_code
+                                                     FROM sys13_code_group
+                                                          INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+                                                    WHERE sys13_kind_group_cd = 'ItemSClassCode006' )
+                    AND COALESCE(bmt10_retire_date,'9999-12-31') &gt;= #{stdDate}
+               ) t
+         WHERE UPPER(CONCAT(bmt12_person_nm, bmt12_messenger, bmt12_website, bmt12_internal_ip
+                           ,bmt12_ast_class_tree_nm, bmt12_spec, bmt12_etc)) LIKE UPPER(#{searchText})
+    </sql>
+
+    <select id="selectEmpIct" resultType="kr.co.kfs.asseterp.biz.bmt.dto.BmtEmpIctRes">
+        SELECT q.bmt12_pc_history_id    AS pc_history_id
+             , q.bmt12_person_nm        AS person_name
+             , q.bmt12_messenger        AS messenger
+             , q.bmt12_website          AS website
+             , q.bmt12_internal_ip      AS internal_ip
+             , q.bmt12_ast_class_tree_nm AS ast_class_tree_name
+             , q.bmt12_spec             AS spec
+             , q.bmt12_etc              AS etc
+          FROM (<include refid="empIctQuery"/>) q
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{printPersonId}
+           AND sys99_window_class_nm = #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdEmplct L3957: selectEmpICT 목록을 한 건씩 sys99_print에 넣는다 -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_long01, sys99_string01, sys99_text01, sys99_text02, sys99_string02, sys99_string03
+               , sys99_text03, sys99_text04 )
+        SELECT f_create_seq(), #{companyId}, #{printPersonId}, #{windowClassName}, #{groupId}
+             , q.bmt12_pc_history_id, q.bmt12_person_nm, q.bmt12_messenger, q.bmt12_website, q.bmt12_internal_ip, q.bmt12_ast_class_tree_nm
+             , q.bmt12_spec, q.bmt12_etc
+          FROM (<include refid="empIctQuery"/>) q
+    </insert>
+
+</mapper>
