@@ -2,10 +2,10 @@
  * [1289] 경영관리 > 20. 대외보고서 > 업무보고서 (T17)
  * AS-IS: myApp/client/vi/rpt/Rpt10_Tab_FssOrg.java (75줄, 새 원본 IDMS-IC) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 생성자 L26-69: 탭 6개(GA140 조직기구현황 · GA141 점포현황 · GA142 일반현황 · GA143 임원현황 · GA144 전문인력현황 · GA402 투자운용인력현황), 여백 20.
- * 탭 페이지 6개는 RD 보고서 페이지(Org02_Rd_OrgState·Sys01_Rd_CompanyState·Emp01_Rd_* 4개, 공통 처리 useRdStatePage.tsx). 스타일: TP (page-style.md, 2026-10-29 등록)
+ * 탭 페이지 6개는 RD 보고서 페이지(Org02_Rd_OrgState·Sys01_Rd_CompanyState·Emp01_Rd_* 4개, 공통 처리 useRdStatePage.tsx). 스타일: TP (견본 — docs/page-style.md)
  */
 import React, { useRef, useState } from 'react';
-import { Tabs } from 'antd';
+import { PageTabs } from '@/components/tabs';
 import { Emp01_Rd_FinanceProState } from '../emp/Emp01_Rd_FinanceProState';
 import { Emp01_Rd_OfficerState } from '../emp/Emp01_Rd_OfficerState';
 import { Emp01_Rd_PersonState } from '../emp/Emp01_Rd_PersonState';
@@ -42,8 +42,8 @@ export const Rpt10_Tab_FssOrg: React.FC = () => {
 
   return (
     <div style={{ height: '100%', boxSizing: 'border-box', padding: 20, background: '#fff', display: 'flex', flexDirection: 'column' }}>
-      <Tabs type="card" activeKey={activeKey} onChange={onChange} items={TABS.map(t => ({ key: t.key, label: t.label }))} style={{ flex: 'none', marginBottom: 0 }} />
-      <div style={{ flex: 1, minHeight: 0, border: '1px solid #f0f0f0', padding: 10, boxSizing: 'border-box' }}>
+      <PageTabs activeKey={activeKey} onChange={onChange} items={TABS.map(t => ({ key: t.key, label: t.label }))} style={{ flex: 'none', marginBottom: 0 }} />
+      <div style={{ flex: 1, minHeight: 0, padding: 10, boxSizing: 'border-box' }}>
         {TABS.filter(t => opened.includes(t.key)).map(t => (
           <div key={t.key} style={{ height: '100%', display: t.key === activeKey ? 'block' : 'none' }}>
             <t.Page ref={h => { refs.current[t.key] = h; }} />

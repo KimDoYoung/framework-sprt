@@ -71,9 +71,26 @@
 - SGVF·SGEF의 공통 규칙 4가지 중 툴바-그리드 간격(1)만 적용한다. 아래는 그리드 탭이라 라벨 정렬(2)·폼 줄 간격(4)은 해당 없고(탭 안은 지금 그대로), 폼 최소 크기(3)도 두지 않는다.
 - 초기화(UX-02): 조건 3개(펀드유형·기획펀드·완료건포함)라 `useSearchParams` + `onReset={sp.reset}`로 넣었다. 초기화 뒤 자동 조회는 하지 않는다.
 
-### SGT — SearchGrid+Tree (초안, 견본 없음)
+### CG — CrudGrid (초안, 2026-10-29 견본 확정)
 
-`Fnd08_Tab_OrgAuth` 기준.
+견본: `docs/page-style/CG/Apr10_Tab_Stamp.tsx` (사용인감등록, 1026)
+
+- SG와 같은 틀: 바깥 여백 20 + 배경 `#fff`, 안쪽 `padding 10`, 테두리 없음, 세로 flex `gap: 8`.
+- 위: 버튼 줄(`[조회][등록][저장][삭제]`, 간격 `gap: 8`). 조건 입력이 없어 `SearchBar`를 쓰지 않는다. 아래: 셀 편집 그리드(`CellEditGrid` + `useGridCrud`).
+- 조건 입력이 있는 편집 그리드는 SG처럼 `SearchBar`를 쓰고 [등록]·[저장]·[삭제]는 `extra`에 둔다(견본에는 없는 경우 — 그런 화면이 나오면 이 절에 보탠다).
+
+### TG — Tree+Grid (초안, 2026-10-29 견본 확정)
+
+견본: `docs/page-style/TG/Sys06_Tab_Menu.tsx` (메뉴 관리, 1077)
+
+- 바깥 여백 20 + 배경 `#fff`. 가로 `Splitter`: 왼쪽 = 트리 그리드(`useTreeGrid`, min 300), 오른쪽 = 그리드(기본 600, min 200 / max 1000). 패널마다 `1px solid #d9d9d9` 테두리, `boxSizing: 'border-box'`(테두리가 높이 100%에 더해져 스크롤바가 2개 생기는 것을 막는다).
+- 툴바는 전체 폭이 아니라 **왼쪽(트리) 패널 안 위**에 둔다(SGT와 다르다). 제목 + 검색어 묶음과 버튼 묶음을 `flexWrap: 'wrap'`으로 두어, 패널이 좁아지면 **버튼 묶음 전체가** 제목 줄 아래로 내려간다(버튼이 하나씩 떨어지지 않게 묶음 단위로 `flex: 'none'`). 헤더는 `minHeight: 50`.
+- 트리의 이름 열(`treeCol`)은 `pinned: 'left'`로 고정해 가로 스크롤해도 보인다.
+- 트리 행을 고르면 오른쪽 그리드가 그 행의 id로 다시 조회한다.
+
+### SGT — SearchGrid+Tree (초안, 2026-10-29 견본 확정)
+
+견본: `docs/page-style/SGT/` (`Fnd08_Tab_OrgAuth.tsx` 펀드 권한설정 1050 + `Fnd08_Page_OrgAuth.tsx` 오른쪽 트리).
 
 - 위: SearchBar를 전체 폭으로(테두리 박스). 아래: 가로 `Splitter`, 왼쪽 = 그리드(기본 50%), 오른쪽 = 트리(`*_Page_*` 파일).
 - 그리드 행을 고르면 오른쪽 트리가 그 행의 id로 다시 조회한다. 조회가 끝나면 첫 행을 고른다.
@@ -101,20 +118,35 @@
 
 (나머지 스타일은 전체 조사 후 같은 형식으로 채운다.)
 
-### GCG — Grid+Calendar+Grid (초안, 견본 없음, 2026-10-29 T13에서 등록)
+### GCG — Grid+Calendar+Grid (초안, 2026-10-29 T13에서 등록, 2026-10-29 견본 확정)
+
+견본: `docs/page-style/GCG/` (`Car03_Tab_List.tsx` 공용차량 예약관리 1187 + 아래 영역 `Car03_Tab_DayofMonth.tsx`)
+
+- 위·아래를 세로 `Splitter`로 나눈다(위 기본 300·최소 150, 아래 최소 200). 위 영역은 **외곽 테두리 없이** 바깥 여백 `20 20 0 20`, 제목 줄은 고정 높이 없이 글자 크기대로 두고 아래 8을 띄운다(제목 오른쪽 끝에 새로고침 아이콘, 줄 `space-between`). 아래 영역의 박스는 테두리를 두되 구분선과의 위쪽 여백은 8이다.
 - `yunhee page-style`이 AS-IS `Car03_Tab_List`를 `미분류(그리드 하나, 조회 툴바 없음)`로 판별한다 — 판별기에 GCG 규칙이 없다(yunhee 수정사항 제안).
 - 위(높이 300, 여백 20/20/0/20): 제목 줄(`공용차량 예약현황 (기준일자 : yyyy년 MM월 dd일)` + 오른쪽 새로고침 아이콘) 아래 `SingleGrid`. 아래: 왼쪽(폭 300) 달력 + [예약하기], 오른쪽 라디오(MY 예약 / 전체 예약) + `SingleGrid`. 달력 날짜·라디오가 바뀌면 오른쪽 그리드를 다시 조회하고 위 그리드도 같이 조회한다.
 - 행 [상세보기] 아이콘이 예약 팝업(`*_Popup_*`)을 열고, [삭제] 아이콘은 확인창(YES) 뒤에 지운다.
 
-### STP — SearchBar+TabPanel (초안, 견본 없음, 2026-10-28 S22에서 등록)
+### STP — SearchBar+TabPanel (초안, 2026-10-28 S22에서 등록, 2026-10-29 견본 확정)
+
+견본: `docs/page-style/STP/` (`Pay10_Tab_Retire.tsx` 퇴직정산 1274 + 탭 페이지 `Pay10_TabPage_Retire.tsx`)
+
+- 바깥 여백 20 + 배경 `#fff`, **외곽 테두리 박스를 두지 않는다**(툴바·탭 영역 모두 `padding 10`). 탭 아래 내용 영역의 얇은 테두리만 남겨 탭과 내용을 잇는다.
+- 탭은 눌러 쓰는 탭임이 분명해야 한다: 공통 부품 `PageTabs`(`components/tabs`, `Tabs` 대신 쓴다) — 안 고른 탭은 회색 바탕+테두리+손가락 커서(마우스를 올리면 연한 파랑), 고른 탭은 흰 바탕+위 파란 줄 3px+굵은 파란 글자. TP도 같다.
 - 위: 툴바 한 줄(입력 + [조회] 등 버튼 — `SearchBar`), 아래: 탭 컨테이너. 그리드가 없어 `yunhee page-style`은 AS-IS·TOBE 모두 `미분류(그리드 없음)`로 판별한다 — 판별기에 STP 규칙이 없다(yunhee 수정사항 제안).
 - 탭 페이지는 `forwardRef` 핸들(`retrieve(param)`·`clear`)을 노출하고 부모가 탭 선택·[조회]·입력 변경 때 부른다. 처음 연 탭은 마운트한 뒤 조회하고 한 번 연 탭은 숨기기만 한다. 예: `Pay10_Tab_Retire`(`payRetireTab.ts`), `Pay20_Tab_DeductAdmin`(탭만 있고 툴바 없음)
 
-### TP — TabPanel (초안, 견본 없음, 2026-10-29 T17에서 등록)
+### TP — TabPanel (초안, 2026-10-29 T17에서 등록, 2026-10-29 견본 확정)
+
+견본: `docs/page-style/TP/` (`Rpt10_Tab_FssOrg.tsx` 업무보고서 1289 + RD 탭 페이지 `Org02_Rd_OrgState.tsx`·공통 처리 `useRdStatePage.tsx`)
+
+- 바깥 여백 20 + 배경 `#fff`, 탭은 공통 부품 `PageTabs`(STP와 같은 모양), **탭 아래 내용 영역에 외곽 테두리를 두지 않는다**(안쪽 `padding 10`만).
 - 화면 전체가 탭 컨테이너 하나(여백 20). 툴바가 탭 위에 없고 탭 페이지마다 자기 툴바(기준년월 + [조회] 등)를 가진다 — 툴바가 위에 있는 STP와 다르다. 그리드가 없어 `yunhee page-style`은 `미분류(그리드 없음)`으로 판별한다(판별기에 TP 규칙이 없다 — yunhee 수정사항 제안).
 - 탭을 고르면 그 탭 페이지가 `retrieve`를 한다(AS-IS `InterfaceTabPage.retrieve`). 처음 연 탭은 선택 이벤트가 없어 조회하지 않는다. 한 번 연 탭은 숨기기만 한다(STP와 같음). 예: `Rpt10_Tab_FssOrg`(탭 6개 = RD 보고서 페이지)
 
-### SR — SearchBar+RD (초안, 견본 없음, 2026-10-29 T18에서 등록)
+### SR — SearchBar+RD (초안, 2026-10-29 T18에서 등록, 2026-10-29 견본 확정)
+
+견본: `docs/page-style/SR/` (`Emp01_Tab_InoutState.tsx` 기간별 입퇴사현황 1287 + RD 영역 `Emp01_Rd_InoutState.tsx`). 화면을 열어 확인했고 고칠 곳 없이 현재 모양 그대로 확정.
 - 위: `SearchBar`(조회기간 시작 ~ 끝 + [조회]), 아래: RD 보고서 `iframe`(남은 높이 전부). 그리드가 없어 `yunhee page-style`은 `미분류(그리드 없음)`로 판별한다(판별기에 SR 규칙이 없다 — yunhee 수정사항 제안).
 - RD 영역은 AS-IS `Emp01_Rd_*` 클래스(RD 주소 발급 + iframe)로 따로 두고 탭이 `retrieve(param)`을 부른다. 열 때 한 번 조회하는 화면(`Emp01_Tab_InoutState`)과 열 때 조회하지 않는 화면(탭 안 RD 페이지, TP)이 있다.
 

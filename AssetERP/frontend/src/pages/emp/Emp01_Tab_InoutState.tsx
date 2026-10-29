@@ -2,7 +2,7 @@
  * [1287] 경영관리 > 20. 대외보고서 > 기간별 입퇴사현황 (T18)
  * AS-IS: myApp/client/vi/emp/Emp01_Tab_InoutState.java (126줄, 새 원본 IDMS-IC) + Emp01_Rd_InoutState(RD 영역) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 생성자 L32-101: north(높이 50, 여백 20/20/0/20) = 툴바(조회기간 시작 ~ 끝 [조회]), center(여백 0/22/20/20) = RD 영역. 조회기간 기본 = 오늘 -3개월 ~ 오늘.
- * 스타일: SR (page-style.md, 2026-10-29 등록) UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: SR (견본 — docs/page-style.md) UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker } from 'antd';

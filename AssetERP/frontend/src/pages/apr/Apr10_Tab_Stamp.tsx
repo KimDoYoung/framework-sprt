@@ -5,6 +5,7 @@
  *   인감이름 180 · 시작날짜 90 · 종료날짜 90 · 사용용도 200 · 인감(이미지) 60 · 올리기 30 · 법인인감 70 · 결재선 필수추가 70 · 전체사용 70 ·
  *   사용가능 부서 140 · 편집 30 · 미사용 문서분류 70 · 편집 30 · 비고 300). 조회창 4개를 모두 이 ID에서 함께 변환했다:
  *   Apr10_Move_OrgCode(부서 선택) · Org10_Lookup_RoleStamp(부서별 사용권한, 안에서 Org00_Lookup_SelectMulti 새로 만듦) · Dcr40_Lookup_StampAuth(미사용 문서분류) · 사원찾기(기존)
+ * 스타일: CG (견본 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button as AntButton, message } from 'antd';
@@ -186,8 +187,8 @@ export const Apr10_Tab_Stamp: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, border: '1px solid #d9d9d9', padding: 8, boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+      <div style={{ height: '100%', padding: 10, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* [E2] retrieveButton[조회].Select (L113) → retrieve() */}
           <Button type="search" onClick={crud.retrieve}>조회</Button>

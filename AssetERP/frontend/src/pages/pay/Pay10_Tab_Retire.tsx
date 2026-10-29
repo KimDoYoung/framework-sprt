@@ -1,5 +1,5 @@
 /**
- * [1274] 경영관리 > 04. 급여관리 > 퇴직정산 (S22) — 스타일: STP
+ * [1274] 경영관리 > 04. 급여관리 > 퇴직정산 (S22) — 스타일: STP (견본 — docs/page-style.md)
  * AS-IS: myApp/client/vi/pay/Pay10_Tab_Retire.java (370줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L78-152: BorderLayout — 위 툴바 50(성명 {personName 150} · [조회][생성][삭제][문서분류지정] · ">> 잔여연차 미리보기" 링크) /
  *   가운데 탭 4개(퇴직정산서 · 4대보험 정산 · 소득세 정산 · 연차수당 정산, 여백 10, 테두리). 바깥 여백 20.
@@ -15,13 +15,14 @@
  * [E8] calcRetireLeaveDaysLink.Click (L233) → 사원이 없으면 "사원을 선택하여 주십시오." 아니면 Pay10_Lookup_RemLeaveDays.open(personId)
  */
 import React, { useRef, useState } from 'react';
-import { Input, Modal, Tabs, Tooltip, message } from 'antd';
+import { Input, Modal, Tooltip, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { empApi } from '@/api/emp';
 import { payApi } from '@/api/pay';
 import { errorMessage } from '@/api/client';
 import { TransInfo } from '@/types/emp';
 import { Button } from '@/components/button';
+import { PageTabs } from '@/components/tabs';
 import { SearchBar } from '@/components/search';
 import { Dcr30_Lookup_Link } from '@/components/lookup/Dcr30_Lookup_Link';
 import { Emp00_Lookup_SelectSingle } from '@/components/lookup/Emp00_Lookup_SelectSingle';
@@ -177,8 +178,8 @@ export const Pay10_Tab_Retire: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', boxSizing: 'border-box', padding: 20, display: 'flex', flexDirection: 'column', gap: 0 }}>
-      <div style={{ boxSizing: 'border-box', border: '1px solid #d9d9d9', padding: 10, flex: 'none' }}>
+    <div style={{ height: '100%', boxSizing: 'border-box', padding: 20, background: '#fff', display: 'flex', flexDirection: 'column', gap: 0 }}>
+      <div style={{ boxSizing: 'border-box', padding: 10, flex: 'none' }}>
         {/* [E4] retrieveButton[조회].Select (L196) → retrieveTabpage() */}
         <SearchBar
           onSearch={() => retrieveTabpage()}
@@ -208,9 +209,8 @@ export const Pay10_Tab_Retire: React.FC = () => {
           </SearchBar.Field>
         </SearchBar>
       </div>
-      <div style={{ flex: 1, minHeight: 0, boxSizing: 'border-box', border: '1px solid #d9d9d9', borderTop: 0, padding: 10, display: 'flex', flexDirection: 'column' }}>
-        <Tabs
-          type="card"
+      <div style={{ flex: 1, minHeight: 0, boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column' }}>
+        <PageTabs
           activeKey={activeKey}
           onChange={onTabChange}
           items={TABS.map(t => ({ key: t.key, label: t.label }))}

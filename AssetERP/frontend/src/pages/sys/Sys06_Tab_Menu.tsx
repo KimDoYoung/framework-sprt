@@ -3,6 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys06_Tab_Menu.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(생성자 L58-96): center = 툴바(높이 50) + 매뉴 트리 그리드, east = Sys01_Grid_CompanyMenu(폭 600, 최대 1000, 분할), 여백 20
  * UX보강(10) B12-1: 검색어 칸 x(UX-04)만. 원본 툴바에 조회 버튼이 없어(Enter 검색·새로고침) SearchBar는 쓰지 않는다(조회·초기화 버튼이 생기므로)
+ * 스타일: TG (견본 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Splitter, Typography } from 'antd';
@@ -138,7 +139,7 @@ export const Sys06_Tab_Menu: React.FC = () => {
 
   // buildTreeGrid() L198-229: getTreeGrid(1) — 행번호 없음, 트리 컬럼 = 매뉴명, 정렬 없음
   const columnDefs = useMemo<ColDef<MenuNode>[]>(() => [
-    tree.treeCol('menuNm', 400, '매뉴명'),  // L215
+    { ...tree.treeCol('menuNm', 400, '매뉴명'), pinned: 'left' as const },  // L215 (가로 스크롤해도 매뉴명 고정)
     { colId: 'edit', headerName: '수정', width: 45, cellStyle: { textAlign: 'center' }, cellRenderer: actionCell(<EditOutlined />, editMenu) },  // L216
     { colId: 'move', headerName: '이동', width: 45, cellStyle: { textAlign: 'center' }, cellRenderer: actionCell(<SwapOutlined />, moveMenu) },  // L217
     gb.booleanYn2('useYn', 45, '사용'),  // L218
@@ -158,9 +159,13 @@ export const Sys06_Tab_Menu: React.FC = () => {
         <Splitter.Panel min={300}>
           {/* border-box: 테두리(2px)가 높이 100%에 더해져 패널보다 커지면 스크롤바가 2개 생긴다 */}
           <div style={{ height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9' }}>
-            <div style={{ height: 50, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px', flex: 'none', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}>
-              <Typography.Text strong style={{ flex: 'none' }}>매뉴구성</Typography.Text>
-              <Input style={{ width: 200, flex: 'none' }} allowClear value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={search} />
+            {/* 패널이 좁아지면 버튼 묶음(5개)이 통째로 매뉴구성·검색어 줄 아래로 내려간다 */}
+            <div style={{ minHeight: 50, display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 8, padding: '8px', flex: 'none', boxSizing: 'border-box' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>
+                <Typography.Text strong style={{ flex: 'none' }}>매뉴구성</Typography.Text>
+                <Input style={{ width: 200, flex: 'none' }} allowClear value={searchText} onChange={e => setSearchText(e.target.value)} onPressEnter={search} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>
               {/* [E2] retrieveButton[새로고침].Select (L108) → retrieve() */}
               <Button type="reset" onClick={() => retrieve()}>새로고침</Button>
               {/* [E3] createRoot[루트매뉴 등록].Select (L114) → insertMenu(0) — root menu는 parentId가 0 */}
@@ -171,6 +176,7 @@ export const Sys06_Tab_Menu: React.FC = () => {
               <Button type="collapse" onClick={tree.collapseAll}>감추기</Button>
               {/* [E6] copyButton[일괄복사].Select (L133) → Sys06_Lookup_CopyMulti.open(callback: retrieve()) */}
               <Button type="change" onClick={() => setCopyOpen(true)}>일괄복사</Button>
+              </div>
             </div>
             <div style={{ flex: 1, minHeight: 0 }}>
               {/* [E7] treeGrid.SelectionChanged [data != null] (L146) → companyMenu.retrieve(menuId) */}

@@ -3,10 +3,10 @@
  * AS-IS: myApp/client/vi/car/Car03_Tab_List.java (191줄) + Car03_Tab_DayofMonth.java (265줄, 아래 날짜별 예약) + Car03_Popup_BookingReg.java (405줄, 예약 팝업)
  *   — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L57-103: 위 300(여백 20,20,0,20, 테두리) = 제목 줄 50("공용차량 예약현황 (기준일자 : yyyy년 MM월 dd일)" + 오른쪽 새로고침 아이콘) + 현황 그리드(체크 단일), 가운데 = Car03_Tab_DayofMonth
- * 스타일: GCG (page-style.md에 이번에 등록 — 조회 툴바 없음. 판별기는 미분류로 읽는다)
+ * 스타일: GCG (견본 — docs/page-style.md. 조회 툴바 없음, 판별기는 미분류로 읽는다)
  */
 import React, { useMemo, useRef, useState } from 'react';
-import { message, Modal } from 'antd';
+import { message, Modal, Splitter } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { carApi } from '@/api/car';
@@ -84,30 +84,32 @@ export const Car03_Tab_List: React.FC = () => {
   ], [user.userId]);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#fff' }}>
-      {/* getNorthLayout() L70-103 */}
-      <div style={{ height: 300, flexShrink: 0, margin: '20px 20px 0 20px', boxSizing: 'border-box', border: '1px solid #d9d9d9', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ height: 50, flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-          <div style={{ flex: '0 0 70%', paddingLeft: 10, fontWeight: 'bold' }}>
-            {dayjs().format('공용차량 예약현황 (기준일자 : YYYY년 MM월 DD일)')}
+    <div style={{ height: '100%', background: '#fff' }}>
+      <Splitter layout="vertical" style={{ height: '100%' }}>
+        {/* getNorthLayout() L70-103 — 외곽 테두리 없음, 새로고침 아이콘은 제목 줄 안 오른쪽 끝 */}
+        <Splitter.Panel defaultSize={300} min={150}>
+          <div style={{ height: '100%', boxSizing: 'border-box', padding: '20px 20px 0 20px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 10px', marginBottom: 8, boxSizing: 'border-box' }}>
+              <div style={{ fontWeight: 'bold' }}>
+                {dayjs().format('공용차량 예약현황 (기준일자 : YYYY년 MM월 DD일)')}
+              </div>
+              <ReloadOutlined style={{ cursor: 'pointer' }} onClick={() => void retrieve()} />
+            </div>
+            <div style={{ flex: 1, minHeight: 0 }}>
+              <SingleGrid<CarBooking>
+                rowData={rows}
+                columnDefs={columnDefs}
+                getRowId={p => String(p.data.bookingId)}
+                loading={loading}
+                rowSelection={SINGLE_CHECK}
+              />
+            </div>
           </div>
-          <div style={{ flex: '0 0 30%', display: 'flex', justifyContent: 'flex-end', paddingRight: 20 }}>
-            <ReloadOutlined style={{ cursor: 'pointer' }} onClick={() => void retrieve()} />
-          </div>
-        </div>
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <SingleGrid<CarBooking>
-            rowData={rows}
-            columnDefs={columnDefs}
-            getRowId={p => String(p.data.bookingId)}
-            loading={loading}
-            rowSelection={SINGLE_CHECK}
-          />
-        </div>
-      </div>
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <Car03_Tab_DayofMonth ref={dayRef} callback={() => void retrieve()} />
-      </div>
+        </Splitter.Panel>
+        <Splitter.Panel min={200}>
+          <Car03_Tab_DayofMonth ref={dayRef} callback={() => void retrieve()} />
+        </Splitter.Panel>
+      </Splitter>
       <Car03_Popup_BookingReg target={popup} onSaved={() => { void retrieve(); void dayRef.current?.retrieve(); }} onClose={() => setPopup(null)} />
     </div>
   );

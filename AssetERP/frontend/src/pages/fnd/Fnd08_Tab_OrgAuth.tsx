@@ -5,6 +5,7 @@
  * 레이아웃 L65-106: 위 툴바(50, 여백 20·20·-2·20, 테두리) / 왼쪽(0.5, 분할 가능, 최대 1000) = 펀드 그리드 / 가운데(0.5) = 조직 권한 트리(Fnd08_Page_OrgAuth)
  * P02(신규기획펀드 권한설정)와 같은 모양이지만 일반 펀드(planYn false) 목록이고 툴바에 펀드찾기·[일괄 권한설정]이 더 있다. 열 때 조회하지 않는다
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * 스타일: SGT (견본 — docs/page-style.md)
  */
 import React, { useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Splitter } from 'antd';

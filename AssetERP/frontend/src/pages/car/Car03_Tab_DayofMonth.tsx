@@ -104,7 +104,7 @@ export const Car03_Tab_DayofMonth = forwardRef<DayofMonthHandle, Props>(({ callb
   return (
     <div style={{ height: '100%', display: 'flex' }}>
       {/* getWestLayout() L85-105 */}
-      <div style={{ width: 300, flexShrink: 0, margin: '20px 0 20px 20px', boxSizing: 'border-box', border: '1px solid #d9d9d9', background: '#fff', padding: 10 }}>
+      <div style={{ width: 300, flexShrink: 0, margin: '8px 0 20px 20px', boxSizing: 'border-box', border: '1px solid #d9d9d9', background: '#fff', padding: 10 }}>
         {/* [E1] datePicker.ValueChange (L137) → retrieve() */}
         <Calendar fullscreen={false} value={date} onChange={d => { setDate(d); void retrieve({ date: d, type }); }} />
         {/* [E2] insertButton[예약하기].Select (L143) → Car03_Popup_BookingReg.open(datePicker.getValue(), cb → retrieve()) */}
@@ -113,7 +113,7 @@ export const Car03_Tab_DayofMonth = forwardRef<DayofMonthHandle, Props>(({ callb
         </div>
       </div>
       {/* getCenterLayout() L107-134 */}
-      <div style={{ flex: 1, minWidth: 0, margin: '20px 20px 20px -2px', boxSizing: 'border-box', border: '1px solid #d9d9d9', background: '#fff', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ flex: 1, minWidth: 0, margin: '8px 20px 20px -2px', boxSizing: 'border-box', border: '1px solid #d9d9d9', background: '#fff', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E3] toggleAllMy.ValueChange (L162) → retrieve() */}
         <Radio.Group value={type} onChange={e => { setType(e.target.value); void retrieve({ date, type: e.target.value }); }}>
           <Radio value="my">MY 예약</Radio>
