@@ -50,3 +50,29 @@ export interface AttWorkPolicy {
   pmWorkStartTime?: string | null;
   pmWorkEndTime?: string | null;
 }
+
+/** AS-IS Att03_OvertimeReqModel (T07 연장근무관리 그리드) */
+export interface AttOvertimeReq {
+  overtimeReqId: number;
+  confirmYn: string;
+  workDate: string;
+  personNo: string;
+  personName: string;
+  orgName: string;
+  posName: string;
+  workTypeName: string;
+  overTimeStr: string | null;
+  reason: string | null;
+  workRewardTypeName: string;
+  paymentTypeCode: string | null;
+  paymentTypeName: string | null;
+  weekReport: string | null;
+  monthReport: string | null;
+  changeReason: string | null;
+}
+
+/** att.Att13_OvertimeReqHist.updateInfo 요청 — confirmYn이 있으면 확정(true)·확정취소(false), 없으면 저장 */
+export interface AttOvertimeReqUpdateReq {
+  confirmYn?: boolean;
+  rows: Pick<AttOvertimeReq, 'overtimeReqId' | 'paymentTypeCode' | 'confirmYn' | 'changeReason'>[];
+}

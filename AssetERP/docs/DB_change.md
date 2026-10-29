@@ -116,3 +116,21 @@ COMMIT;
   COMMENT ON COLUMN public.fnd25_terms.fnd25_fund_id IS '펀드ID(fnd01_fund_code_id)';
   CREATE INDEX fnd25_terms_idx02 ON public.fnd25_terms (fnd25_fund_id);
 ```  
+
+
+---
+```sql
+
+
+-- DROP TABLE public.att13_overtime_req_hist;
+
+CREATE TABLE public.att13_overtime_req_hist (
+	att13_overtime_req_hist_id numeric NOT NULL,
+	att13_overtime_req_id numeric NOT NULL,
+	att13_payment_type_cd varchar(2) NULL,
+	att13_confirm_yn varchar(5) NULL,
+	att13_confirmer_id numeric NULL,
+	att13_change_reason text NULL,
+	CONSTRAINT att13_overtime_req_hist_pkey PRIMARY KEY (att13_overtime_req_hist_id)
+);
+```

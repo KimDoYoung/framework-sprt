@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/att/mapper/att03_overtime_req.xml (getConfirmList) · att13_overtime_req_hist.xml (selectByOvertimeReqId, insert, updateInfo)  (T07) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.att.mapper.AttOvertimeReqMapper">
+
+    <!-- AS-IS att03_overtime_req.getConfirmList (IDMS-IC). 날짜 조건은 원본이 `baseDate != null`일 때만 붙고 서버가 baseDate를 넘기지 않아 늘 빠진다 → 옮기지 않음.
+         확정여부 NULL → 'false'(원본 모델 Boolean), 신청상태 열(status_cd·status_nm)은 그리드에 없어 뺌 -->
+    <select id="getConfirmList" resultType="kr.co.kfs.asseterp.biz.att.dto.AttOvertimeReqRes">
+<![CDATA[
+
+ WITH weekly_sum AS (
+	SELECT	att03_person_id
+		 ,	date_trunc('week', att03_work_date) 	AS week_start
+		 ,	FLOOR(SUM(att03_overtime_min) / 60.0)	AS week_total_hour
+ FROM	att03_overtime_req
+ LEFT OUTER JOIN apr01_appr ON apr01_appr_id = att03_appr_id
+ WHERE	COALESCE(apr01_status_cd, '99') = '30'
+ GROUP BY att03_person_id, date_trunc('week', att03_work_date)
+),
+monthly_sum AS (
+ SELECT  att03_person_id
+ ,  date_trunc('month', att03_work_date)	AS month_start
+ ,  FLOOR(SUM(att03_overtime_min) / 60.0)	AS month_total_hour
+ FROM	att03_overtime_req
+ LEFT OUTER JOIN apr01_appr ON apr01_appr_id = att03_appr_id
+ WHERE	COALESCE(apr01_status_cd, '99') = '30'
+ GROUP BY att03_person_id, date_trunc('month', att03_work_date)
+)
+ SELECT att03_overtime_req_id AS overtime_req_id,
+ COALESCE(att03_confirm_yn, 'false') AS confirm_yn,
+ att03_work_date AS work_date,
+ emp01_emp_no AS person_no,
+ emp01_kor_nm AS person_name,
+ f_get_empTrans(a.att03_person_id, a.att03_work_date::date, 'org_code_nm') AS org_name,
+ f_get_empTrans(a.att03_person_id, a.att03_work_date::date, 'pos_nm') AS pos_name,
+ f_cdnm('WorkTypeCode', a.att03_work_type_cd, a.att03_company_id, f_sysdate()) AS work_type_name,
+ CASE WHEN a.att03_work_type_cd = '10'
+ THEN TO_CHAR(CASE WHEN EXISTS (
+ SELECT	1
+ FROM	att05_pm_work pm
+ LEFT OUTER JOIN apr01_appr ON apr01_appr_id = att03_appr_id
+ WHERE	COALESCE(apr01_status_cd, '99') = '30'
+ AND	pm.att05_person_id = a.att03_person_id
+ AND	pm.att05_work_date = a.att03_work_date
+ )
+ THEN aop.att01_pm_work_end_time::time
+ ELSE aop.att01_work_end_time::time
+ END, 'HH24:MI')
+ || ' ~ ' ||
+ TO_CHAR((CASE WHEN EXISTS (
+ SELECT	1
+ FROM	att05_pm_work pm
+ LEFT OUTER JOIN apr01_appr ON apr01_appr_id = att03_appr_id
+ WHERE	COALESCE(apr01_status_cd, '99') = '30'
+ AND	pm.att05_person_id = a.att03_person_id
+ AND	pm.att05_work_date = a.att03_work_date
+ )
+ THEN aop.att01_pm_work_end_time::time
+ ELSE aop.att01_work_end_time::time
+ END + (a.att03_overtime_min || ' minutes')::interval), 'HH24:MI')
+ WHEN a.att03_work_type_cd = '20'
+ THEN TO_CHAR(aptc.pay34_nt_start_time::time, 'HH24:MI')
+ || ' ~ ' ||
+ TO_CHAR((aptc.pay34_nt_start_time::time + (a.att03_overtime_min || ' minutes')::interval), 'HH24:MI')
+ END   AS over_time_str,
+ att03_reason AS reason,
+ f_cdnm('WorkRewardTypeCode', a.att03_work_reward_type_cd, a.att03_company_id, f_sysdate()) AS work_reward_type_name,
+ f_cdnm('PaymentTypeCode', a13.att13_payment_type_cd, a.att03_company_id, f_sysdate()) AS payment_type_name,
+ CASE WHEN ws.week_total_hour = aptc.pay34_week_max_add_hours
+ THEN '<'||'b style=color:#E33E31;'||'>'||
+ (ws.week_total_hour || ' / ' || aptc.pay34_week_max_add_hours)
+ ||'<'||'/b'||'>'
+ ELSE '<'||'b style=color:#4B81B9;'||'>'||
+ (ws.week_total_hour || ' / ' || aptc.pay34_week_max_add_hours)
+ ||'<'||'/b'||'>'
+ END AS week_report,
+ CASE WHEN pay01_month_ot_hours IS NULL
+ THEN '<'||'b'||'>'||
+ ms.month_total_hour
+ ||'<'||'/b'||'>'
+ WHEN ms.month_total_hour = annal.pay01_month_ot_hours
+ THEN '<'||'b style=color:#E33E31;'||'>'||
+ (ms.month_total_hour || ' / ' || annal.pay01_month_ot_hours)
+ ||'<'||'/b'||'>'
+ ELSE '<'||'b style=color:#4B81B9;'||'>'||
+ (ms.month_total_hour || ' / ' || annal.pay01_month_ot_hours)
+ ||'<'||'/b'||'>'
+ END AS month_report,
+ a13.att13_change_reason AS change_reason,
+ a13.att13_payment_type_cd AS payment_type_code
+FROM att03_overtime_req a
+ INNER JOIN 		emp01_person ON emp01_person_id = a.att03_person_id
+ LEFT OUTER JOIN att01_work_policy aop		ON aop.att01_company_id = a.att03_company_id
+ AND	aop.att01_start_date = (
+ SELECT	MAX(att01_start_date)
+ FROM	att01_work_policy
+ WHERE	att01_company_id = a.att03_company_id
+ AND	att01_start_date <= a.att03_work_date
+ )
+ LEFT OUTER JOIN	pay34_work_time_config aptc	ON aptc.pay34_start_date = (
+ SELECT	pay34_start_date
+ FROM	pay34_work_time_config t
+ WHERE	t.pay34_company_id IN (a.att03_company_id, 0)
+ AND	t.pay34_start_date <= a.att03_work_date
+ ORDER BY CASE WHEN t.pay34_company_id = a.att03_company_id THEN 0 ELSE 1 END
+ , t.pay34_start_date DESC
+ LIMIT 1
+ )
+ LEFT OUTER JOIN	pay01_annual annal			ON annal.pay01_start_date = (
+ SELECT	pay01_start_date
+ FROM	pay01_annual t
+ WHERE	t.pay01_person_id = a.att03_person_id
+ AND	t.pay01_start_date <= a.att03_work_date
+ ORDER BY t.pay01_start_date DESC
+ LIMIT 1
+ )
+ AND annal.pay01_person_id = a.att03_person_id
+ LEFT OUTER JOIN weekly_sum ws ON ws.att03_person_id = a.att03_person_id
+ AND ws.week_start = date_trunc('week', a.att03_work_date)
+ LEFT OUTER JOIN monthly_sum ms ON ms.att03_person_id = a.att03_person_id
+ AND ms.month_start = date_trunc('month', a.att03_work_date)
+ LEFT OUTER JOIN apr01_appr apr ON apr.apr01_appr_id = a.att03_appr_id
+ LEFT OUTER JOIN att13_overtime_req_hist a13 ON a13.att13_overtime_req_id = a.att03_overtime_req_id
+ WHERE	1=1
+   AND	a.att03_company_id = #{companyId}
+   AND	COALESCE(apr.apr01_status_cd, '99') = '30'
+ ORDER BY a.att03_work_date
+ , CASE	a.att03_work_type_cd
+ WHEN '30' THEN 1
+ WHEN '10' THEN 2
+ WHEN '20' THEN 3
+ ELSE 4 END
+ , a.att03_overtime_req_id
+]]>
+    </select>
+
+    <!-- AS-IS att13_overtime_req_hist.selectByOvertimeReqId (IDMS-IC) — 이력이 있는지만 본다 -->
+    <select id="selectByOvertimeReqId" resultType="java.lang.Long">
+SELECT	att13_overtime_req_hist_id
+  FROM 	att13_overtime_req_hist
+ WHERE	att13_overtime_req_id = #{overtimeReqId}
+    </select>
+
+    <!-- AS-IS att13_overtime_req_hist.insert (IDMS-IC) -->
+    <insert id="insert">
+INSERT
+  INTO	att13_overtime_req_hist
+     (  att13_overtime_req_hist_id
+     ,	att13_overtime_req_id
+     ,	att13_payment_type_cd
+     ,	att13_confirm_yn
+     ,	att13_confirmer_id
+     ,	att13_change_reason
+	 )
+VALUES
+	 (	f_create_seq()
+	 ,	#{overtimeReqId}
+	 ,	#{paymentTypeCode}
+	 ,	#{confirmYn}
+	 ,	#{confirmerId}
+	 ,	#{changeReason}
+	 )
+    </insert>
+
+    <!-- AS-IS att13_overtime_req_hist.updateInfo (IDMS-IC) -->
+    <update id="updateInfo">
+UPDATE	att13_overtime_req_hist
+   SET	att13_payment_type_cd = #{paymentTypeCode}
+   	 ,	att13_confirm_yn = #{confirmYn}
+   	 ,	att13_confirmer_id = #{confirmerId}
+     ,	att13_change_reason = #{changeReason}
+ WHERE	att13_overtime_req_id = #{overtimeReqId}
+    </update>
+
+    <!-- 보안 보강: 쓰기 전에 로그인 회사의 신청인지 확인 -->
+    <select id="countInCompany" resultType="int">
+SELECT	COUNT(*)
+  FROM	att03_overtime_req
+ WHERE	att03_company_id = #{companyId}
+   AND	att03_overtime_req_id = #{overtimeReqId}
+    </select>
+
+</mapper>

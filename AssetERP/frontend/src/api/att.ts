@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { AttCommute, AttCommuteTimeReq, AttWorkPolicy } from '../types/att';
+import { AttCommute, AttCommuteTimeReq, AttOvertimeReq, AttOvertimeReqUpdateReq, AttWorkPolicy } from '../types/att';
 
 /** att(근태) 화면 API (T06~) */
 export const attApi = {
@@ -66,6 +66,20 @@ export const attApi = {
   /** AS-IS att.Att01_WorkPolicy.delete → 지운 건수 */
   deleteWorkPolicies: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/att/work-policies', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  // ── T07 연장근무관리 (Att03_Tab_OvertimeReq) ──
+
+  /** AS-IS att.Att03_OvertimeReq.getConfirmList — 조회기간은 원본 SQL이 쓰지 않아 보내지 않는다 */
+  searchOvertimeReqs: async (): Promise<AttOvertimeReq[]> => {
+    const res = await apiClient.get<ApiResponse<AttOvertimeReq[]>>('v1/att/overtime-reqs');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS att.Att13_OvertimeReqHist.updateInfo (저장·확정·확정취소) → 처리 건수 */
+  updateOvertimeReqs: async (req: AttOvertimeReqUpdateReq): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/att/overtime-reqs', req);
     return res.data.data ?? 0;
   },
 };
