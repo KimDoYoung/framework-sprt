@@ -23,7 +23,7 @@ TARGETS = {
                                 "Biz01_Tab_OtherSimple", "Biz01_Tab_CardContentsSimple"]),
     "SGEF": ("Sys90_Tab_AfterService", ["Sys90_Tab_AfterServiceAdmin", "Ics20_Tab_RevisionHistory",
                                       "Ics20_Tab_RevisionHistoryAdmin"]),
-    "TO": ("Org01_Tab_OrgCode", ["Chk01_Tab_ClassTree", "Fbx01_Tab_Document"]),
+    "TO": ("Org01_Tab_OrgCode", ["Chk01_Tab_ClassTree"])  # Fbx01_Tab_Document는 TO가 아니다(SID 미정),
     "GO": ("Tdm54_Tab_CheckInsuff", ["Sms02_Tab_TotalCount", "Sys10_Tab_TotalSize"]),
     "GDP": ("Sms02_Tab_TotalCount", ["Sys10_Tab_TotalSize", "Sms03_Tab_SendAdmin", "Ics02_Tab_Manager"]),
     "DSBRD": ("Tdm50_Tab_TotalDashboard", ["Tdm35_Tab_TaskList"]),

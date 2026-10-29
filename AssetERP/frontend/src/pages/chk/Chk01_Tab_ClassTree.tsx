@@ -3,10 +3,11 @@
  * AS-IS: myApp/client/vi/chk/Chk01_Tab_ClassTree.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L42-62: 여백 20, 위 = 툴바(높이 50) [조회][상위분류 등록][하위분류 등록], 아래 = 트리 그리드(클래스명 500 · 수정 50 · 사용 50 · 순서 100 · 비고 300 · 매뉴링크 300), 테두리
  * 그리드: getTreeGrid(1) — 행번호 없음, 트리 컬럼 = 클래스명, 정렬 없음
+ * 스타일: TO (docs/page-style.md)
  * UX보강(10): 검색 조건이 없는 툴바라 SearchBar는 쓰지 않는다(조회 버튼 하나 — UX-01은 `Button` 부품이 처리)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message } from 'antd';
+import { message, Space } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import type { ColDef } from 'ag-grid-community';
 import type { CustomCellRendererProps } from 'ag-grid-react';
@@ -104,18 +105,16 @@ export const Chk01_Tab_ClassTree: React.FC = () => {
   ], [tree.treeCol]);
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
-        <div style={{ height: 50, display: 'flex', alignItems: 'center', gap: 4, padding: '0 8px', flex: 'none' }}>
-          {/* [E1] retrieveButton[조회].Select (L67) → retrieve() */}
-          <Button type="search" onClick={() => retrieve()}>조회</Button>
-          {/* [E2] addParentButton[상위분류 등록].Select (L73) → insertClassTree(0) — 맨 위 분류는 parentId가 0 */}
-          <Button type="register" onClick={() => insertClassTree(0)}>상위분류 등록</Button>
-          <Button type="register" onClick={insertChildClassTree}>하위분류 등록</Button>
-        </div>
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <SingleGrid<ChkClassTree> gridRef={tree.gridRef} {...tree.gridProps} rowNumber={false} columnDefs={columnDefs} />
-        </div>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 20, background: '#fff', boxSizing: 'border-box' }}>
+      <Space wrap>
+        {/* [E1] retrieveButton[조회].Select (L67) → retrieve() */}
+        <Button type="search" onClick={() => retrieve()}>조회</Button>
+        {/* [E2] addParentButton[상위분류 등록].Select (L73) → insertClassTree(0) — 맨 위 분류는 parentId가 0 */}
+        <Button type="register" onClick={() => insertClassTree(0)}>상위분류 등록</Button>
+        <Button type="register" onClick={insertChildClassTree}>하위분류 등록</Button>
+      </Space>
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <SingleGrid<ChkClassTree> gridRef={tree.gridRef} {...tree.gridProps} rowNumber={false} columnDefs={columnDefs} />
       </div>
       <Chk01_Edit_ClassTree model={editing} onClose={() => setEditing(null)} onDone={id => { void retrieve(id); }} />
     </div>

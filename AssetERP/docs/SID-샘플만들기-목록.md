@@ -23,7 +23,8 @@
 |:---|:---|
 | SGHF | 1132 `Biz01_Tab_Other`, 1138 `Biz01_Tab_CardContents`, 1319 `Biz01_Tab_CardSimple`, 1320 `Biz01_Tab_OtherSimple`, 1321 `Biz01_Tab_CardContentsSimple` |
 | SGEF(구 MG) | 1121 `Sys90_Tab_AfterServiceAdmin`, 1256 `Ics20_Tab_RevisionHistory`, 1257 `Ics20_Tab_RevisionHistoryAdmin` |
-| TO | 1244 `Chk01_Tab_ClassTree`, 1116 `Fbx01_Tab_Document` |
+| TO | 1244 `Chk01_Tab_ClassTree` (1116 `Fbx01_Tab_Document`는 TO가 아니다 → SID 미정) |
+| (SID 미정) | 1116 `Fbx01_Tab_Document` — 위: 문서함 편집 그리드(`SearchBar`), 아래: 좌 문서분류 트리 + 우 파일 목록(`Fbx01_TabPage_DocList`)의 3영역 |
 | GDP | 1306 `Sys10_Tab_TotalSize`, 1367 `Sms03_Tab_SendAdmin`(왼쪽 아래 폼 변형), 1213 `Ics02_Tab_Manager` (견본 1305 `Sms02_Tab_TotalCount`) |
 | DSBRD | 1467 `Tdm35_Tab_TaskList` |
 

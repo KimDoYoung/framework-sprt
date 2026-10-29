@@ -16,6 +16,7 @@ SID 정의는 `docs/page-style.md`, 견본은 `docs/page-style/{SID}/`.
 | 5 | 아래 폼이 **고정 높이 `div`**인 위아래 구조도 SGEF | 4-3 | `Splitter`가 없으면 `layout=none`이라 SGEF로 안 읽힌다 | "위 `SearchBar` + 그리드, 아래 `*_Edit_*`"이면 SGEF |
 | 6 | MG 폐지 뒤 `Sms03_Tab_SendAdmin` | 4-3 | 지금은 MG로 판별된다 | `GDP`(요청 8번으로 해결) |
 | 7 | 분포 출력의 SID 목록 갱신 | — | `--all` 분포가 `DB`·`MG`를 포함한다 | 19개 SID(`DSBRD`·`GDP` 포함, `MG` 없음) |
+| 9 | `Fbx01_Tab_Document`는 TO가 아니다 | §2 | 지금 TO로 판별된다(트리 중심으로 읽는다) | `미분류`(SID가 정해질 때까지). 위 `SearchBar` + 편집 그리드가 있고 `Splitter`가 위아래·좌우로 중첩이면 TO에서 제외 |
 | 8 | 새 SID **`GDP`** (Grid+DetailPage) 판별 | 4-4 | `Sms02_Tab_TotalCount`·`Sys10_Tab_TotalSize`가 `GG`로(그리드 3개로 오집계), `Sms03_Tab_SendAdmin`은 `MG`로, `Ics02_Tab_Manager`는 다른 SID로 나온다 | 4개 모두 `GDP` |
 
 화면을 열어 정하는 것(yunhee 수정 아님): `Pay31_Tab_InsureApply`(TP↔STP), `Pay20_Tab_Deduct`(TP↔STP), `Pay10_Tab_List`(STP↔SR), `Flt03_Tab_AccountReport`(0.6.8에서 SGTP → GG로 바뀜, 자식 grids=0이라 오판일 수 있음), 결과가 나오면 §2 표를 고치고 필요한 규칙을 이 목록에 보탠다.
@@ -55,7 +56,7 @@ SID 정의는 `docs/page-style.md` "스타일 목록", 견본은 `docs/page-styl
 | SR | 툴바 있음 + RD 영역(`*_Rd_*` import·`iframe`) + 탭·그리드·트리 없음 | `Emp01_Tab_InoutState` | `Emp01_Tab_DueDiligence` |
 | GCG | 위아래 분할 + 그리드 둘 + 달력(`Calendar`) | `Car03_Tab_List` | — |
 | ★SGHF | 조회 줄 + 그리드 + 편집 폼을 **좌우**로 배치(`layout=horizontal`, edit 폼 있음) | `Biz01_Tab_Card` | `Biz01_Tab_Other`·`CardContents`·`CardSimple`·`OtherSimple`·`CardContentsSimple` |
-| ★TO | 트리 중심, 오른쪽이 일반 그리드가 아님/없음, 편집은 팝업 | `Org01_Tab_OrgCode` | `Chk01_Tab_ClassTree`, `Fbx01_Tab_Document`(탭 페이지·편집 그리드가 함께 있어 TO가 아닐 수 있다) |
+| ★TO | 트리 중심, 오른쪽이 일반 그리드가 아님/없음, 편집은 팝업 | `Org01_Tab_OrgCode` | `Chk01_Tab_ClassTree` (`Fbx01_Tab_Document`는 TO가 아니다 — 2026-10-29 확인, 위 문서함 그리드 + 아래 트리·파일 목록의 3영역. TO로 읽지 말고 `미분류` 허용) |
 | ★GDP | 가로 `Splitter`, 왼쪽 = 버튼 줄(`SearchBar` 아님) + 그리드, 오른쪽 = `*_Page_*`/`*_TabPage_*` 상세 페이지(선택 행과 연동) | `Sms02_Tab_TotalCount` | `Sys10_Tab_TotalSize`, `Ics02_Tab_Manager`, `Sms03_Tab_SendAdmin`(왼쪽 아래 편집 폼 변형) |
 | ★GO | 그리드 하나 + **직접 만든 조건 줄**(`SearchBar` 아님) 또는 조건 줄 없음 | `Tdm54_Tab_CheckInsuff` | `Sms02_Tab_TotalCount`, `Sys10_Tab_TotalSize`(조건 줄이 없는 화면일 수 있다) |
 | ★DSBRD | 그리드·트리·툴바 없이 탭 + 카드/요약 영역(조회 API 호출, 값을 보여 준다) | `Tdm50_Tab_TotalDashboard` | `Tdm35_Tab_TaskList` |
