@@ -2,6 +2,7 @@
  * [1306] 관리자 > 01. 고객관리 > 고객별 서버사용량 (A16)
  * AS-IS: myApp/client/vi/sys/Sys10_Tab_TotalSize.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L37-64: 왼쪽 center(여백 20, 최대 1000) = 툴바(조회 · 사용고객만 보기) + 고객 그리드, 오른쪽 east(폭 500) = Sys10_TabPage_Detail
+ * 스타일: GDP (docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Splitter } from 'antd';

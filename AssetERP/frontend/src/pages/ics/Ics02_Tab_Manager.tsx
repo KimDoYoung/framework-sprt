@@ -4,6 +4,7 @@
  * 레이아웃(생성자 L66-115, BorderLayout): west 550(최대 1000, 분할) = 툴바 50(제목 "법규관리 그룹" · [조회][등록][저장][삭제]) + 관리그룹 그리드, center = 공유 페이지(Ics04_Page_Share)
  * 그리드(CellEditGrid, 체크): 행번호 · 선택 · 잠금 40(미지정 그룹) · 관리그룹명 360(편집)
  * 도달 불가라 만들지 않은 것: lookupEmp 트리거(컬럼·툴바 미연결), selectCheck()/[전체적용](호출처 없음, E6·E7)
+ * 스타일: GDP (docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Splitter } from 'antd';
@@ -82,10 +83,10 @@ export const Ics02_Tab_Manager: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', background: '#fff' }}>
       <Splitter style={{ height: '100%' }}>
         <Splitter.Panel defaultSize={550} min={300} max={1000}>
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 10, border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 20, boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
               <b style={{ fontSize: 14, marginRight: 8 }}>법규관리 그룹</b>
               {/* [E1] retrieveButton[조회].Select (L124) → retrieve() */}
@@ -102,7 +103,7 @@ export const Ics02_Tab_Manager: React.FC = () => {
           </div>
         </Splitter.Panel>
         <Splitter.Panel>
-          <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box' }}>
+          <div style={{ height: '100%', padding: '20px 20px 20px 0', boxSizing: 'border-box' }}>
             <Ics04_Page_Share managerId={shareManagerId} />
           </div>
         </Splitter.Panel>

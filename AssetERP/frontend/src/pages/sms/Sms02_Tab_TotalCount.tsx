@@ -2,6 +2,7 @@
  * [1305] 관리자 > 01. 고객관리 > 고객별 문자사용량 (C05)
  * AS-IS: myApp/client/vi/sms/Sms02_Tab_TotalCount.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L39-66: 왼쪽 center(여백 20, 최대 1000) = 툴바(조회 · 사용고객만 보기) + 고객 그리드, 오른쪽 east(폭 500) = Sms02_TabPage_Detail
+ * 스타일: GDP (견본 — docs/page-style.md)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Splitter } from 'antd';

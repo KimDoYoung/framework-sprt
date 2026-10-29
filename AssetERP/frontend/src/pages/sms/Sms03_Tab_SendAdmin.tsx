@@ -3,9 +3,10 @@
  * AS-IS: myApp/client/vi/sms/Sms03_Tab_SendAdmin.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L47-77: 왼쪽(폭 500, 여백 20) = 툴바(조회·등록·삭제) + 단체문자 그리드 + 편집 폼(높이 450), 가운데 = Sms03_Page_UserListAdmin
  * 실제 문자 발송은 하지 않는다(사용자 지시) — 발송 단추는 서버가 거절 문구를 돌려준다.
+ * 스타일: GDP (docs/page-style.md) — 왼쪽 아래에 편집 폼이 더 있는 변형
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal } from 'antd';
+import { message, Modal, Splitter } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { smsApi } from '@/api/sms';
 import { errorMessage } from '@/api/client';
@@ -94,8 +95,10 @@ export const Sms03_Tab_SendAdmin: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', background: '#fff' }}>
-      <div style={{ width: 540, flex: 'none', display: 'flex', flexDirection: 'column', padding: 20 }}>
+    <>
+    <Splitter style={{ height: '100%', background: '#fff' }}>
+      <Splitter.Panel defaultSize={540} min={540} max={1000}>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: 20, boxSizing: 'border-box' }}>
         <div style={{ flex: 'none', height: 50, display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* [E1] retrieveButton[조회].Select (L80) → retrieve() */}
           <Button type="search" onClick={retrieve}>조회</Button>
@@ -118,10 +121,14 @@ export const Sms03_Tab_SendAdmin: React.FC = () => {
           <Sms03_Edit_GroupSend key={selected?.groupSendId ?? 'none'} model={selected} onSaved={onSaved} />
         </div>
       </div>
-      <div style={{ flex: 1, minWidth: 0, padding: '20px 20px 20px 0' }}>
-        <Sms03_Page_UserListAdmin groupSendId={selected && selected.groupSendId > 0 ? selected.groupSendId : null} />
-      </div>
-      <Sms04_Lookup_History open={historyGroupSendId != null} groupSendId={historyGroupSendId} onClose={() => setHistoryGroupSendId(undefined)} />
-    </div>
+      </Splitter.Panel>
+      <Splitter.Panel min={300}>
+        <div style={{ height: '100%', padding: '20px 20px 20px 0', boxSizing: 'border-box' }}>
+          <Sms03_Page_UserListAdmin groupSendId={selected && selected.groupSendId > 0 ? selected.groupSendId : null} />
+        </div>
+      </Splitter.Panel>
+    </Splitter>
+    <Sms04_Lookup_History open={historyGroupSendId != null} groupSendId={historyGroupSendId} onClose={() => setHistoryGroupSendId(undefined)} />
+    </>
   );
 };

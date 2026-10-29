@@ -25,6 +25,7 @@ TARGETS = {
                                       "Ics20_Tab_RevisionHistoryAdmin"]),
     "TO": ("Org01_Tab_OrgCode", ["Chk01_Tab_ClassTree", "Fbx01_Tab_Document"]),
     "GO": ("Tdm54_Tab_CheckInsuff", ["Sms02_Tab_TotalCount", "Sys10_Tab_TotalSize"]),
+    "GDP": ("Sms02_Tab_TotalCount", ["Sys10_Tab_TotalSize", "Sms03_Tab_SendAdmin", "Ics02_Tab_Manager"]),
     "DSBRD": ("Tdm50_Tab_TotalDashboard", ["Tdm35_Tab_TaskList"]),
     "STP": ("Pay10_Tab_Retire", ["Tdm50_Tab_CheckJob"]),
     "TP": ("Rpt10_Tab_FssOrg", ["Pay31_Tab_InsureApply", "Pay20_Tab_Deduct"]),
@@ -64,6 +65,12 @@ RULES = {
         ("조건 줄 padding 0 10 8", r"0 10px 8px", True),
         ("외곽 테두리 없음", BORDER, False),
         ("초기화 버튼", r"초기화", True),
+    ],
+    "GDP": [
+        ("가로 Splitter", r"<Splitter\b(?![^>]*vertical)", True),
+        ("SearchBar 안 씀", r"<SearchBar\b", False),
+        ("오른쪽 padding 0", r"20px 20px 20px 0", True),
+        ("외곽 테두리 없음", BORDER, False),
     ],
     "DSBRD": [
         # 탭이 없는 변형(Tdm35)도 있어 PageTabs는 필수가 아니다. antd Tabs만 막는다.
