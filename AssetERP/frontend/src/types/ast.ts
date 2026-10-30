@@ -496,3 +496,28 @@ export interface SettleSaveReq {
   amt: number;
   settleAmt: number;
 }
+
+/** 자기자본 한 행 (W03 Ast40_Tab_OwnerCapital) */
+export interface OwnerCapital {
+  ownerCapitalId: number;
+  stdDate: string | null;
+  amt: number | null;
+  note: string | null;
+}
+
+/** 투자한도/StopLoss 적용일 (W03 Ast41_Lookup_InvestLimit 왼쪽 그리드) */
+export interface InvestLimitDate {
+  investLimitId: number;
+  startDate: string;
+}
+
+/** 투자한도/StopLoss 한 행 (W03 Ast41_Lookup_InvestLimit 오른쪽 그리드) */
+export interface InvestLimit {
+  investLimitId: number;
+  startDate: string;
+  investAssetType: string | null;
+  investAssetName: string | null;
+  limitRate: number | null;
+  stopLossRate: number | null;
+  note: string | null;
+}

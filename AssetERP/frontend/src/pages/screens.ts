@@ -70,6 +70,8 @@ import { Fnd06_Tab_OfficeWorkManager } from './fnd/Fnd06_Tab_OfficeWorkManager';
 import { Ast01_Tab_InfoManager } from './ast/Ast01_Tab_InfoManager';
 import { Ast01_Tab_ClassTreeManagement } from './ast/Ast01_Tab_ClassTreeManagement';
 import { Ast01_Tab_ClassTreeIntrinsic } from './ast/Ast01_Tab_ClassTreeIntrinsic';
+import { Ast01_Tab_InfoIntrinsic } from './ast/Ast01_Tab_InfoIntrinsic';
+import { Ast40_Tab_OwnerCapital } from './ast/Ast40_Tab_OwnerCapital';
 import { Ast01_Tab_InfoManagement } from './ast/Ast01_Tab_InfoManagement';
 import { Fnd09_Tab_TrustBank } from './fnd/Fnd09_Tab_TrustBank';
 import { Fnd09_Tab_TrustBankManager } from './fnd/Fnd09_Tab_TrustBankManager';
@@ -515,6 +517,8 @@ export const SCREENS: Record<string, React.FC> = {
   Ast01_Tab_InfoManager, // E21
   Ast01_Tab_ClassTreeManagement, // R08 (메뉴 #1117. 펀드자산 종목기본)
   Ast01_Tab_ClassTreeIntrinsic, // W01 (메뉴 #1087. 고유자산 기본등록 ①)
+  Ast01_Tab_InfoIntrinsic, // W02 (메뉴 #1088. 고유자산 상세등록 ②)
+  Ast40_Tab_OwnerCapital, // W03 (메뉴 #1299. 자기자본/투자한도 등록. 하위 Ast41_Lookup_InvestLimit·Ast41_Lookup_Insert)
   Ast01_Tab_InfoManagement, // R09 (메뉴 #1118. 펀드자산 종목상세)
   Pay10_Tab_PersonListManager, // S21 (S20의 RD 폼 Pay10_Rd_PersonList 공용 + 사원찾기 Emp00_Lookup_SelectSingle)
   Pay50_Tab_ExpenseManager, // U03 (메뉴 #1385. 하위 Pay50_Edit_Expense·Pay51_Lookup_ExpenseForm·Pay50_Lookup_RejectReason·Pay50_Lookup_ExpenseRequestList·Pay52_Lookup_AccountCode·Pay50_Lookup_Content·Sys17_Lookup_Account. 1단계: 바로등록·상신·문서보기·알림발송·증빙자료는 안내만)

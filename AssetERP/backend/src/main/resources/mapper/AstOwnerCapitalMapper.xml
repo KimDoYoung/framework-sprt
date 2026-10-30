@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/ast/mapper/ast40_owner_capital.xml (selectByDate L35, selectById) + UpdateDataModel(ast40_owner_capital) 저장  (W03)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstOwnerCapitalMapper">
+
+    <!-- AS-IS ast40_owner_capital.selectByDate L35 (IDMS-IC) — 정렬 없음(원본 그대로) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.ast.dto.OwnerCapitalRes">
+        SELECT ast40_owner_capital_id AS owner_capital_id,
+               ast40_std_date         AS std_date,
+               ast40_amt              AS amt,
+               ast40_note             AS note
+          FROM ast40_owner_capital
+         WHERE CAST(extract(year from ast40_std_date) AS text) = #{stdYear}
+           AND ast40_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS ast40_owner_capital.selectById (IDMS-IC) + 회사 조건 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ast.dto.OwnerCapitalRes">
+        SELECT ast40_owner_capital_id AS owner_capital_id,
+               ast40_std_date         AS std_date,
+               ast40_amt              AS amt,
+               ast40_note             AS note
+          FROM ast40_owner_capital
+         WHERE ast40_owner_capital_id = #{ownerCapitalId}
+           AND ast40_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel INSERT: 화면 insertRow()가 회사 ID를 넣는다 -->
+    <insert id="insert">
+        INSERT INTO ast40_owner_capital (ast40_owner_capital_id, ast40_company_id, ast40_std_date, ast40_amt, ast40_note)
+        VALUES (#{ownerCapitalId}, #{companyId}, #{req.stdDate}, #{req.amt}, #{req.note})
+    </insert>
+
+    <update id="update">
+        UPDATE ast40_owner_capital
+           SET ast40_std_date = #{req.stdDate},
+               ast40_amt      = #{req.amt},
+               ast40_note     = #{req.note}
+         WHERE ast40_owner_capital_id = #{req.ownerCapitalId}
+           AND ast40_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM ast40_owner_capital
+         WHERE ast40_company_id = #{companyId}
+           AND ast40_owner_capital_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

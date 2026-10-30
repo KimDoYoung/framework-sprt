@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/ast/mapper/ast41_invest_limit.xml (selectByCompanyId, selectByDate, selectByMaxCompanyId, selectById, insert, deleteByDate) + UpdateDataModel(ast41_invest_limit) 저장  (W03)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstInvestLimitMapper">
+
+    <!-- AS-IS ast41_invest_limit.selectByCompanyId (IDMS-IC) — 적용일별 한 행, id는 row_number -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.ast.dto.InvestLimitDateRes">
+        SELECT row_number() OVER (ORDER BY ast41_start_date) AS invest_limit_id
+             , ast41_start_date                              AS start_date
+          FROM ast41_invest_limit
+         WHERE ast41_company_id = #{companyId}
+         GROUP BY ast41_start_date
+         ORDER BY ast41_start_date DESC
+    </select>
+
+    <!-- AS-IS ast41_invest_limit.selectByDate (IDMS-IC) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.ast.dto.InvestLimitRes">
+        SELECT ast41_invest_limit_id   AS invest_limit_id
+             , ast41_start_date        AS start_date
+             , ast41_invest_asset_type AS invest_asset_type
+             , f_cdnm('InvestAssetType', ast41_invest_asset_type, ast41_company_id, ast41_start_date) AS invest_asset_name
+             , ast41_limit_rate        AS limit_rate
+             , ast41_stop_loss_rate    AS stop_loss_rate
+             , ast41_note              AS note
+          FROM ast41_invest_limit
+         WHERE ast41_company_id = #{companyId}
+           AND ast41_start_date = #{startDate}
+    </select>
+
+    <!-- AS-IS ast41_invest_limit.selectById (IDMS-IC) + 회사 조건 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ast.dto.InvestLimitRes">
+        SELECT ast41_invest_limit_id   AS invest_limit_id
+             , ast41_start_date        AS start_date
+             , ast41_invest_asset_type AS invest_asset_type
+             , f_cdnm('InvestAssetType', ast41_invest_asset_type, ast41_company_id, ast41_start_date) AS invest_asset_name
+             , ast41_limit_rate        AS limit_rate
+             , ast41_stop_loss_rate    AS stop_loss_rate
+             , ast41_note              AS note
+          FROM ast41_invest_limit
+         WHERE ast41_invest_limit_id = #{investLimitId}
+           AND ast41_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS ast41_invest_limit.selectByMaxCompanyId (IDMS-IC) -->
+    <select id="selectByMaxCompanyId" resultType="kr.co.kfs.asseterp.biz.ast.dto.InvestLimitRes">
+        SELECT ast41_invest_limit_id   AS invest_limit_id
+             , ast41_start_date        AS start_date
+             , ast41_invest_asset_type AS invest_asset_type
+             , NULL                    AS invest_asset_name
+             , ast41_limit_rate        AS limit_rate
+             , ast41_stop_loss_rate    AS stop_loss_rate
+             , ast41_note              AS note
+          FROM ast41_invest_limit
+         WHERE ast41_start_date = (
+                SELECT max(ast41_start_date)
+                  FROM ast41_invest_limit
+                 WHERE ast41_company_id = #{companyId}
+                   AND ast41_start_date &lt;= current_date)
+           AND ast41_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS ast41_invest_limit.insert (IDMS-IC) / UpdateDataModel INSERT -->
+    <insert id="insert">
+        INSERT INTO ast41_invest_limit (ast41_invest_limit_id, ast41_company_id, ast41_start_date, ast41_invest_asset_type,
+                                        ast41_limit_rate, ast41_stop_loss_rate, ast41_note)
+        VALUES (#{investLimitId}, #{companyId}, #{req.startDate}, #{req.investAssetType},
+                #{req.limitRate}, #{req.stopLossRate}, #{req.note})
+    </insert>
+
+    <!-- 화면이 바꾸는 열만(자산구분·한도비율·StopLoss·비고) -->
+    <update id="update">
+        UPDATE ast41_invest_limit
+           SET ast41_invest_asset_type = #{req.investAssetType},
+               ast41_limit_rate        = #{req.limitRate},
+               ast41_stop_loss_rate    = #{req.stopLossRate},
+               ast41_note              = #{req.note}
+         WHERE ast41_invest_limit_id = #{req.investLimitId}
+           AND ast41_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS ast41_invest_limit.deleteByDate (IDMS-IC) -->
+    <delete id="deleteByDate">
+        DELETE FROM ast41_invest_limit
+         WHERE ast41_company_id = #{companyId}
+           AND ast41_start_date = #{startDate}
+    </delete>
+
+    <delete id="deleteByIds">
+        DELETE FROM ast41_invest_limit
+         WHERE ast41_company_id = #{companyId}
+           AND ast41_invest_limit_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

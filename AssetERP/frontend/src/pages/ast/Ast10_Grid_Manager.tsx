@@ -19,6 +19,7 @@ const gb = gbFor<AstManager>();
 
 export const Ast10_Grid_Manager = forwardRef<Ast10GridManagerHandle>(
   (_props, ref) => {
+    // [E0] 화면 열림 (생성자 L32-51) → 초기화
     const [rows, setRows] = useState<AstManager[]>([]);
     const [loading, setLoading] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);

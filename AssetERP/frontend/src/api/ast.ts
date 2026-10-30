@@ -20,6 +20,9 @@ import {
   AstCorpAccount,
   AstTr,
   AstTrCodeByWindow,
+  InvestLimit,
+  InvestLimitDate,
+  OwnerCapital,
   AstTr4InsureLedger,
   AstTr4InsureSaveReq,
   AstTrTaxLedger,
@@ -429,5 +432,63 @@ export const astApi = {
   /** AS-IS ast.Ast07_Settle.delete (취소) */
   deleteSettles: async (settleIds: number[]): Promise<void> => {
     await apiClient.post<ApiResponse<void>>('v1/ast/settles/delete', { settleIds });
+  },
+
+  // ==================== W03 자기자본/투자한도 (ast40·ast41) ====================
+
+  /** AS-IS ast.Ast40_OwnerCapital.selectByDate — 기준연도(yyyy)의 자기자본 */
+  searchOwnerCapitals: async (stdYear: string): Promise<OwnerCapital[]> => {
+    const res = await apiClient.get<ApiResponse<OwnerCapital[]>>('v1/ast/owner-capitals', { params: { stdYear } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast40_OwnerCapital.update → 저장된 행(요청 순서) */
+  saveOwnerCapitals: async (rows: OwnerCapital[]): Promise<OwnerCapital[]> => {
+    const body = rows.map(({ ownerCapitalId, stdDate, amt, note }) => ({ ownerCapitalId, stdDate, amt, note }));
+    const res = await apiClient.put<ApiResponse<OwnerCapital[]>>('v1/ast/owner-capitals', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast40_OwnerCapital.delete → 지운 건수 */
+  deleteOwnerCapitals: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/ast/owner-capitals', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS ast.Ast41_InvestLimit.selectByCompanyId — 기준 적용일 목록 */
+  searchInvestLimitDates: async (): Promise<InvestLimitDate[]> => {
+    const res = await apiClient.get<ApiResponse<InvestLimitDate[]>>('v1/ast/invest-limits/dates');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast41_InvestLimit.selectByDate */
+  searchInvestLimits: async (startDate: string): Promise<InvestLimit[]> => {
+    const res = await apiClient.get<ApiResponse<InvestLimit[]>>('v1/ast/invest-limits', { params: { startDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast41_InvestLimit.insert — 적용일 생성(가장 최근 적용일을 복사) */
+  createInvestLimitDate: async (startDate: string): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/ast/invest-limits', { startDate });
+  },
+
+  /** AS-IS ast.Ast41_InvestLimit.deleteByDate → 지운 건수 */
+  deleteInvestLimitDate: async (startDate: string): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/ast/invest-limits/by-date', { params: { startDate } });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS ast.Ast41_InvestLimit.update → 저장된 행(요청 순서) */
+  saveInvestLimits: async (rows: InvestLimit[]): Promise<InvestLimit[]> => {
+    const body = rows.map(({ investLimitId, startDate, investAssetType, limitRate, stopLossRate, note }) =>
+      ({ investLimitId, startDate, investAssetType, limitRate, stopLossRate, note }));
+    const res = await apiClient.put<ApiResponse<InvestLimit[]>>('v1/ast/invest-limits', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast41_InvestLimit.delete → 지운 건수 */
+  deleteInvestLimits: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/ast/invest-limits', { data: ids });
+    return res.data.data ?? 0;
   },
 };

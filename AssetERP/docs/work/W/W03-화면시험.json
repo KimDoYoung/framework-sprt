@@ -1,0 +1,12 @@
+{
+  "id": "W03",
+  "menu": "고유자산 > 10. 고유자산 등록 > 자기자본/투자한도 등록",
+  "menuId": 1299,
+  "className": "Ast40_Tab_OwnerCapital",
+  "apiPrefix": "/api/v1/ast/owner-capitals",
+  "pageStyle": "CG",
+  "grid": true,
+  "buttons": "조회",
+  "headers": ["기준일", "자기자본금", "비고"],
+  "notes": "기준연도 입력에 올해(YYYY)가 들어 있고 열 때 조회된다. [투자한도/StopLoss 설정]을 누르면 1000폭 조회창이 열리고 왼쪽 적용일 목록의 첫 행이 선택되어 오른쪽에 자산구분·투자한도비율(%)·Stop Loss(%)·비고가 보여야 한다. 쓰기 시험은 하지 않는다."
+}
