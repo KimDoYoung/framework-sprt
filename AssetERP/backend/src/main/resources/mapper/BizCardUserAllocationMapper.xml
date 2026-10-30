@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz01_promo.xml (selectCardCommonUser·updateRealPersonId, 안의 selectCardUseList 중 dataYm 분기)  (U16 Biz01_Tab_CardUserAllocation) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizCardUserAllocationMapper">
+
+    <!-- AS-IS biz01_promo.selectCardCommonUser L1073 (IDMS-IC) — 화면은 managerId 없이 dataYm만 보내므로 selectCardUseList의 dataYm 분기만 펼침 -->
+    <select id="selectCardCommonUser" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCardUserAllocationRes">
+        SELECT tt.biz01_promo_id                                    AS promo_id
+             , COALESCE(tt.biz01_close_yn, 'false') = 'true'        AS close_yn
+             , tt.biz01_close_nm                                    AS close_name
+             , tt.biz01_html_card_nm                                AS html_card_name
+             , tt.biz01_approval_dt                                 AS approval_dt
+             , tt.biz01_franchise_nm                                AS franchise_name
+             , tt.biz01_sector_nm                                   AS sector_name
+             , tt.biz01_provide_amt                                 AS provide_amt
+             , tt.biz01_reg_emp_nm                                  AS reg_emp_name
+          FROM (
+                SELECT  t.*
+                     ,  CASE WHEN COALESCE(biz01_close_yn, 'false') = 'true' THEN '마감' ELSE '' END                         AS biz01_close_nm
+                     ,  crd02_approval_dt                                                                                   AS biz01_approval_dt
+                     ,  crd02_franchise_nm                                                                                  AS biz01_franchise_nm
+                     ,  crd02_sector_nm                                                                                     AS biz01_sector_nm
+                     ,  crd01_card_nm                                                                                       AS biz01_html_card_nm
+                     ,  CASE WHEN crd03_public_yn = 'true'
+                              AND biz01_real_person_id IS NULL THEN '공통'
+                             WHEN crd03_public_yn = 'true'
+                              AND biz01_real_person_id IS NOT NULL THEN f_emp_kor_nm(biz01_real_person_id)
+                             ELSE f_emp_kor_nm(crd03_person_id) END                                                         AS biz01_reg_emp_nm
+                     ,  crd02_approval_time                                                                                 AS biz01_approval_time
+                     ,  crd03_public_yn                                                                                     AS biz01_public_yn
+                  FROM (
+                        SELECT *
+                          FROM biz01_promo
+                               INNER JOIN crd02_data ON crd02_data_id = biz01_card_data_id
+                               INNER JOIN sys01_company ON sys01_company_id = biz01_company_id
+                               LEFT OUTER JOIN crd01_card  ON crd01_card_id = biz01_card_id
+                               LEFT OUTER JOIN crd03_trans ON (    crd03_card_id = biz01_card_id
+                                                               AND biz01_provide_date BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,'9999-12-31') )
+                               LEFT OUTER JOIN act01_account_code ON (act01_account_code_id = biz01_account_code_id)
+                         WHERE biz01_company_id = #{companyId}
+                           AND COALESCE(biz01_provide_pur_cd,'%') LIKE #{providePurCode}
+                           AND biz01_std_ym = #{dataYm}
+                       ) t
+               ) tt
+         WHERE 1=1
+           AND biz01_public_yn = 'true'
+        <if test="unassignedOnly">
+           AND biz01_real_person_id IS NULL
+        </if>
+         ORDER BY biz01_approval_dt, biz01_approval_time, biz01_franchise_nm
+    </select>
+
+    <!-- AS-IS biz01_promo.updateRealPersonId L2238 (IDMS-IC) — 원본 그대로 회사 조건이 없다 -->
+    <update id="updateRealPersonId">
+        UPDATE biz01_promo
+           SET biz01_real_person_id = #{realPersonId}
+         WHERE biz01_promo_id       = #{promoId}
+    </update>
+
+</mapper>

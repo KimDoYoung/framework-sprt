@@ -324,3 +324,24 @@ export interface BizCardManagementPrintReq {
   providePurCode: string;
   searchText: string;
 }
+
+/** U16 Biz01_Tab_CardUserAllocation 그리드 한 행 (AS-IS Biz01_PromoModel). 날짜는 'yyyy-MM-dd…' */
+export interface BizCardUserAllocation {
+  promoId: number;
+  closeYn: boolean | null;
+  /** 마감이면 '마감' */
+  closeName: string | null;
+  htmlCardName: string | null;
+  approvalDt: string | null;
+  franchiseName: string | null;
+  sectorName: string | null;
+  provideAmt: number | null;
+  /** 공통카드에 실사용자가 없으면 '공통' */
+  regEmpName: string | null;
+}
+
+/** U16 [일괄저장] (AS-IS Biz01_Promo.updateRealPersonId). realPersonId가 없으면 '공통' */
+export interface BizCardUserAllocationUpdateReq {
+  promoIds: number[];
+  realPersonId: number | null;
+}

@@ -10810,5 +10810,27 @@
     "note": "docs/work/U/U15-작업기록.md",
     "history": [],
     "id": "U15"
+  },
+  "Biz01_Tab_CardUserAllocation": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/biz/Biz01_Tab_CardUserAllocation.java": "a25897d9af09bd48a20937faebb4c8eef2fdf546",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz01_PromoModel.java": "1c83f9dc7f7061b64bf14767394543e171d7cd6c",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz01_PromoModelProperties.java": "fbc7727d825e7f69b5b88895e3202037d2d02159",
+      "application/src/main/java/myApp/server/biz/Biz01_Promo.java": "d6fd40b02763302b9b8b7614d935ff1058a04be1",
+      "application/src/main/java/myApp/server/biz/mapper/biz01_promo.xml": "4146dbb852af9dc7b73367ab57014bca38065854"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-30T14:18:00+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/U/U16-작업기록.md",
+    "history": [],
+    "id": "U16"
   }
 }

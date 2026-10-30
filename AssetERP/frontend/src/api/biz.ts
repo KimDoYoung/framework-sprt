@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
 import {
-  BizAccountOption, BizBuyPromo, BizCardCompare, BizCardContents, BizCardContentsPrintReq, BizCardManagement, BizCardManagementPrintReq, BizCardManagementUpdateReq, BizCodeOption, BizDocClass, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq, BizPromoOtherSimpleReq,
+  BizAccountOption, BizBuyPromo, BizCardCompare, BizCardContents, BizCardContentsPrintReq, BizCardManagement, BizCardManagementPrintReq, BizCardManagementUpdateReq, BizCardUserAllocation, BizCardUserAllocationUpdateReq, BizCodeOption, BizDocClass, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq, BizPromoOtherSimpleReq,
   BizPromoSimpleUpdateReq, BizPromoUpdateReq, BizProvideCompany, BizProvideList, BizProvideListCond, BizProvideSetup, BizProvideSimple, BizProvideSimpleCond, BizRelateAppr,
 } from '../types/biz';
 import { MktTarget } from '../types/mkt';
@@ -364,5 +364,19 @@ export const bizLimitCheckApi = {
     } catch (err) {
       throw await readBlobError(err);
     }
+  },
+};
+
+/** U16 AS-IS Biz01_Tab_CardUserAllocation (법인카드 실사용자 배분) → server/biz/Biz01_Promo (selectCardCommonUser·updateRealPersonId) */
+export const bizCardUserAllocationApi = {
+  /** AS-IS biz.Biz01_Promo.selectCardCommonUser — dataYm 'yyyy.MM', unassignedOnly = "미분배건 조회" */
+  search: async (dataYm: string, unassignedOnly: boolean): Promise<BizCardUserAllocation[]> => {
+    const res = await apiClient.get<ApiResponse<BizCardUserAllocation[]>>('v1/biz/card-user-allocations', { params: { dataYm, unassignedOnly } });
+    return res.data.data ?? [];
+  },
+  /** AS-IS biz.Biz01_Promo.updateRealPersonId — realPersonId null = 공통. 저장한 건수 */
+  update: async (req: BizCardUserAllocationUpdateReq): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/biz/card-user-allocations', req);
+    return res.data.data ?? 0;
   },
 };
