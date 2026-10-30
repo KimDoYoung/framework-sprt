@@ -212,6 +212,7 @@ SELECT CASE WHEN act02_journal_id IS NULL THEN row_number() over()
              , f_get_account_nm(act02_company_id, act03_cr_account_cd)
                ||CASE WHEN act03_cr_ast_id is null THEN '' ELSE '('||f_ast_class_tree_nm(act03_cr_ast_id)||')' END AS cr_ast_account_name
              , act03_journal_dtl_id AS journal_dtl_id
+             , act02_journal_id     AS journal_id
              , act02_date           AS date
              , act02_journal_no     AS journal_no_str
              , act02_note           AS note

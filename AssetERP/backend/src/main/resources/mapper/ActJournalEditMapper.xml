@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/act/mapper/act02_journal.xml (update L550) · act06_journal_tmp.xml (selectByJournalId · selectByJournalId2 L54 · insert L67 · deleteByJournalId)
+     · act03_journal_dtl.xml (insertByJournalId L409 · deleteByJournalId) — 전표변경 Act02_Lookup_ModiJournal (W05 2단계) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActJournalEditMapper">
+
+    <!-- 전표 머리: 창이 쓰는 열만(AS-IS는 act03_journal_dtl 조인 첫 행의 act02 열). 거래유형명·거래처명은 AS-IS 함수 그대로 -->
+    <select id="selectHeader" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalHeaderRes">
+        SELECT act02_journal_id                                                                          AS journal_id
+             , act02_date                                                                                AS date
+             , act02_journal_no                                                                          AS journal_no
+             , act02_corp_id                                                                             AS corp_id
+             , f_get_journal_corp_nm(act02_journal_id)                                                   AS corp_name
+             , f_cdnm('trCode', f_get_journal_tr_cd(act02_journal_id), act02_company_id, act02_date)     AS tr_name
+             , act02_note                                                                                AS note
+             , COALESCE(act02_fix_yn, 'false') = 'true'                                                  AS fix_yn
+          FROM act02_journal
+         WHERE act02_company_id = #{companyId}
+           AND act02_journal_id = #{journalId}
+    </select>
+
+    <!-- AS-IS act06_journal_tmp.selectByJournalId. 정렬 act06_seq -->
+    <select id="selectTmpByJournalId" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalTmpRes">
+        SELECT act06_journal_tmp_id                                                      AS journal_tmp_id
+             , act06_seq                                                                 AS seq
+             , act06_drcr_type                                                           AS drcr_type
+             , f_cdnm('DrcrType', act06_drcr_type, act02_company_id, act02_date)         AS drcr_type_name
+             , act06_real_account_cd                                                     AS real_account_code
+             , f_get_account_nm(act02_company_id, act06_real_account_cd)                 AS real_account_name
+             , act06_repr_account_cd                                                     AS repr_account_code
+             , act06_account_map                                                         AS account_map
+             , act06_amt                                                                 AS amt
+             , act06_for_amt                                                             AS for_amt
+             , act06_deposit_id                                                          AS deposit_id
+             , f_ast_class_tree_nm(act06_deposit_id)                                     AS deposit_name
+             , act06_note                                                                AS note
+          FROM act02_journal
+               INNER JOIN act06_journal_tmp ON act06_journal_id = act02_journal_id
+         WHERE act02_journal_id = #{journalId}
+         ORDER BY act06_seq
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <update id="updateJournal">
+        UPDATE act02_journal
+           SET act02_note    = #{note}
+             , act02_corp_id = #{corpId}
+         WHERE act02_journal_id = #{journalId}
+    </update>
+
+    <delete id="deleteTmpByJournalId">DELETE FROM act06_journal_tmp WHERE act06_journal_id = #{journalId}</delete>
+
+    <delete id="deleteDtlByJournalId">DELETE FROM act03_journal_dtl WHERE act03_journal_id = #{journalId}</delete>
+
+    <!-- 금액·외화금액이 비면 0 (AS-IS 모델 getter가 null이면 0을 돌려준다) -->
+    <insert id="insertTmp">
+        INSERT INTO act06_journal_tmp (act06_journal_tmp_id, act06_journal_id, act06_seq, act06_repr_account_cd, act06_real_account_cd,
+                                       act06_drcr_type, act06_amt, act06_deposit_id, act06_note, act06_account_map, act06_for_amt)
+        VALUES (#{tmpId}, #{journalId}, #{seq}, #{r.reprAccountCode}, #{r.realAccountCode},
+                #{r.drcrType}, COALESCE(#{r.amt}, 0), #{r.depositId}, #{r.note}, #{r.accountMap}, COALESCE(#{r.forAmt}, 0))
+    </insert>
+
+    <insert id="insertDtl">
+        INSERT INTO act03_journal_dtl
+        SELECT f_create_seq()
+             , #{journalId}
+             , #{seq}
+             , CAST(#{dr.realAccountCode} AS varchar)
+             , COALESCE(CAST(#{dr.amt} AS numeric), 0)
+             , CAST(#{cr.realAccountCode} AS varchar)
+             , COALESCE(CAST(#{cr.amt} AS numeric), 0)
+             , CAST(#{dr.depositId} AS numeric)
+             , CAST(#{cr.depositId} AS numeric)
+             , CAST(#{dr.note} AS varchar)
+             , CAST(#{cr.note} AS varchar)
+             , COALESCE(CAST(#{dr.forAmt} AS numeric), 0)
+             , COALESCE(CAST(#{cr.forAmt} AS numeric), 0)
+    </insert>
+
+</mapper>

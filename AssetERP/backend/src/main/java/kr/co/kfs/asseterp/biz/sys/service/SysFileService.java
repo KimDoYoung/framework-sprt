@@ -5,6 +5,7 @@ import kr.co.kfs.asseterp.biz.audit.dto.AuditResult;
 import kr.co.kfs.asseterp.biz.audit.service.AuditLogService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.sys.dto.FileMonthRes;
+import kr.co.kfs.asseterp.biz.sys.dto.FileLockRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileTotalParam;
 import kr.co.kfs.asseterp.biz.sys.dto.FileTotalRes;
@@ -63,6 +64,11 @@ public class SysFileService {
     /** AS-IS Sys10_File.selectByParentId L52 */
     public List<FileRes> searchByParentId(Long parentId) {
         return sysFileMapper.selectByParentId(parentId);
+    }
+
+    /** AS-IS Sys10_File.selectByParentId2 L57 (W05 연관문서 창 첨부파일) — 잠김(lockYn) 포함 */
+    public List<FileLockRes> searchByParentId2(Long parentId) {
+        return sysFileMapper.selectByParentId2(parentId);
     }
 
     /** AS-IS Sys10_File.selectByFamilyConsentId L252 (J07 가족동의서 조회창) — 로그인 회사의 사원만 */

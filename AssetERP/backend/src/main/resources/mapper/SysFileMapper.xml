@@ -54,6 +54,44 @@
          ORDER BY LPAD(COALESCE(file.sys10_seq, '99999'), 5, '0'), COALESCE(file.sys10_title_yn, 'false') DESC, file.sys10_file_nm COLLATE "ko-KR-x-icu"
     </select>
 
+    <!-- AS-IS sys10_file.selectByParentId2 L130 (W05 Act80_LookupGrid_RelateFile): 본 파일 + 연관 파일 + 정산·지출결의서에서 따라온 파일(lock). 정렬·SQL 그대로(collation은 03 원칙 19 ko_KR.utf8) -->
+    <select id="selectByParentId2" resultType="kr.co.kfs.asseterp.biz.sys.dto.FileLockRes">
+SELECT <include refid="fileColumns"/>
+             , file.sys10_lock_yn AS lock_yn
+  FROM  (
+            SELECT  sys10_file.*
+                 ,  false           AS sys10_lock_yn
+              FROM  sys10_file
+             WHERE  sys10_parent_id = #{parentId}
+             UNION
+            SELECT  sys10_file.*
+                 ,  false           AS sys10_lock_yn
+              FROM  sys11_relate_file
+                    INNER JOIN sys10_file ON sys10_file_id = sys11_file_id
+             WHERE  sys11_parent_id = #{parentId}
+             UNION
+            SELECT  sys10_file.*
+                 ,  true            AS sys10_lock_yn
+              FROM  sys10_file
+                    INNER JOIN act02_journal ON act02_journal_id = sys10_parent_id
+             WHERE  act02_tr_id IN ( SELECT ast07_tr_id
+                                       FROM act02_journal
+                                            INNER JOIN ast07_settle ON ast07_settle_id = act02_tr_id
+                                      WHERE act02_journal_id = #{parentId} )
+             UNION
+            SELECT  sys10_file.*
+                 ,  true            AS sys10_lock_yn
+              FROM  sys10_file
+             WHERE  sys10_parent_id IN ( SELECT pay50_journal_id
+                                           FROM act02_journal
+                                                INNER JOIN ast07_settle  ON ast07_settle_id  = act02_tr_id
+                                                INNER JOIN pay50_expense ON pay50_expense_id = ast07_expense_id
+                                          WHERE act02_journal_id = #{parentId} )
+        ) AS file
+ WHERE  1=1
+ ORDER BY COALESCE(sys10_file_yn, 'false') ASC, LPAD(COALESCE(sys10_seq, '99999'), 5, '0'), COALESCE(sys10_title_yn, 'false') DESC, sys10_file_nm COLLATE "ko_KR.utf8"
+    </select>
+
     <!-- AS-IS sys10_file.selectByFamilyConsentId (J07 가족동의서 조회창) — 사원의 가족금융거래정보 이용동의서 첨부파일. 원본은 `ORDER BY 1`(첫 열 = 파일 ID) -->
     <select id="selectByFamilyConsentId" resultType="kr.co.kfs.asseterp.biz.sys.dto.FileRes">
         SELECT <include refid="fileColumns"/>

@@ -6,7 +6,7 @@
  * 열 때 한 번 조회한다. 조회하면 첫 행을 고르고 그 행의 분개를 아래에 보여 준다. 행을 누르면 그 행의 분개를 다시 읽는다
  * 스타일: GG (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
- * [다음 단계] 아래 그리드 [변경] 아이콘이 여는 Act02_Lookup_ModiJournal은 분개 수정 창이라 지금은 안내만 한다
+ * 아래 그리드 [변경] 아이콘은 Act02_Lookup_ModiJournal(W05 2단계)을 연다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Splitter, message } from 'antd';

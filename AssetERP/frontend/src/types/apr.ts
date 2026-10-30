@@ -43,6 +43,21 @@ export interface AprDcrWriteParams {
   limit: number;
 }
 
+/** 불러오기 창 문서 목록 한 행 (AS-IS Apr03_RelateFundModel 중 Apr05_Grid_RelateAprList 열 + 미리보기 apprModel.content, W05 ⓒ) */
+export interface AprLoadDoc {
+  apprId: number;
+  /** `<b style=color:…;>상태</b>` */
+  statusName?: string | null;
+  title?: string | null;
+  /** 이 SQL에는 펀드 열이 없어 늘 빈 값(AS-IS도 같다) */
+  fundName?: string | null;
+  regDate?: string | null;
+  effectDate?: string | null;
+  regEmpName?: string | null;
+  /** 미리보기 HTML (apr01_content) */
+  content?: string | null;
+}
+
 /** 업무별 문서작성 문서 목록 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Grid_DocList 그리드 열, F02) */
 export interface AprDoc {
   apprId: number;
@@ -480,4 +495,110 @@ export interface AprReprCorpLookup {
 export interface AprCorpStamp {
   stampId: number;
   stampName: string;
+}
+
+/** 전자결재 문서 열기 (AS-IS Apr01_ApprModel 중 Apr01_Edit_ApprDoc 편집기 열, V01) */
+export interface AprApprDetail {
+  apprId: number;
+  companyId: number;
+  classTreeId: number;
+  /** 루트부터 '/'로 이은 문서분류 이름 (창 제목) */
+  classTreeFullName?: string | null;
+  printFundYn?: string | null;
+  title?: string | null;
+  /** '10' 대외문서 · '20' 사내문서 */
+  inOutTypeCode?: string | null;
+  content?: string | null;
+  regDate: string;
+  effectDate?: string | null;
+  /** '10' 상신 · '20' 진행 · '30' 완료 · '40' 반려 · '99' 임시저장 */
+  statusCode: string;
+  regEmpId: number;
+  regEmpName?: string | null;
+  stampId?: number | null;
+  stampName?: string | null;
+  stampPosition?: string | null;
+  stampPositionName?: string | null;
+  receiveName?: string | null;
+  referenceName?: string | null;
+  signCompany?: string | null;
+  signCeo?: string | null;
+  note?: string | null;
+  linkCode?: string | null;
+  advertYn?: string | null;
+}
+
+/** 결재선 한 줄 (AS-IS Apr04_ApprStepModel, V01) */
+export interface AprApprStep {
+  apprStepId: number;
+  /** 결재단계 순서 (문자열 숫자) */
+  seq?: string | null;
+  stepTypeCode: string;
+  stepTypeName?: string | null;
+  stepStatusCode?: string | null;
+  stepStatusName?: string | null;
+  apprDate?: string | null;
+  /** `<b>정) </b>직책 성명(조직)` 같은 HTML — 서버가 만든다 */
+  stepApprName?: string | null;
+  opinionYnStr?: string | null;
+  typoYnStr?: string | null;
+  note?: string | null;
+  rejectReason?: string | null;
+  stepEmpId: number;
+  apprEmpId?: number | null;
+}
+
+/** 연관문서 탭 한 줄 (AS-IS Apr21_RelateApprModel, V01) */
+export interface AprRelateAppr {
+  relateApprId: number;
+  targetApprId: number;
+  inOutTypeCode?: string | null;
+  inOutTypeName?: string | null;
+  targetRegDate?: string | null;
+  targetTitle?: string | null;
+}
+
+/** 연관법규·연관내규 탭 한 줄 (AS-IS Apr20_RelateIcsModel·Apr22_RelateIcrModel, V01) */
+export interface AprRelateLaw {
+  relateId: number;
+  classTreeId: number;
+  classTreeFullName?: string | null;
+  cycleName?: string | null;
+  closeDate?: string | null;
+}
+
+/** 날인신청 탭 한 줄 (AS-IS Apr16_Grid_StampApplList, V01) */
+export interface AprApprStampAppl {
+  stampDocId: number;
+  applTypeName?: string | null;
+  stampReprCorpName?: string | null;
+  applQty?: number | null;
+  stampOutYn?: string | null;
+}
+
+/** 첨부파일 탭 한 줄 (AS-IS Sys10_FileModel 중 Apr01_Grid_ApprFile 열, V01) */
+export interface AprApprFile {
+  fileId: number;
+  fileName: string;
+  fileExt?: string | null;
+  /** 'true'면 확정문서 */
+  fileYn?: string | null;
+  printYn?: string | null;
+}
+
+/** 연관펀드 탭 한 줄 (AS-IS Apr03_RelateFundModel 중 buildRelateFundGrid 열, V01) */
+export interface AprApprFund {
+  relateFundId: number;
+  fundTypeName?: string | null;
+  fundCode?: string | null;
+  fundName?: string | null;
+  afterYn?: string | null;
+  printYn?: string | null;
+}
+
+/** 연관일임 탭 한 줄 (AS-IS Apr12_RelateAdvModel 중 buildRelateAdvGrid 열, V01) */
+export interface AprApprAdv {
+  relateAdvId: number;
+  manageCode?: string | null;
+  manageName?: string | null;
 }

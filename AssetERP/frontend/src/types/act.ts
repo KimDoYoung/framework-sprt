@@ -216,6 +216,7 @@ export interface JournalBiz {
 /** AS-IS act.Act03_JournalDtl.selectBizCard·selectChargeFee·selectErpChargeFee·selectByJournalId (Act02_Grid_CreateJournalBiz, U10) — 분개 한 행 */
 export interface JournalBizLine {
   journalDtlId: number;
+  journalId: number;
   date: string | null;
   journalNoStr: string | null;
   note: string | null;
@@ -237,4 +238,64 @@ export interface JournalBizRow {
   note: string | null;
   date: string | null;
   payMonthCode: string | null;
+}
+
+/** AS-IS act.Act06_JournalTmp.selectByJournalId (Act02_Lookup_ModiJournal, W05 2단계) — 전표변경 창의 분개 한 줄. reprAccountCode·accountMap·forAmt는 그리드에 안 보이지만 저장 때 그대로 되돌려 보낸다 */
+export interface JournalTmp {
+  journalTmpId: number;
+  seq: number | null;
+  drcrType: string | null;
+  drcrTypeName: string | null;
+  realAccountCode: string | null;
+  realAccountName: string | null;
+  reprAccountCode: string | null;
+  accountMap: string | null;
+  amt: number | null;
+  forAmt: number | null;
+  depositId: number | null;
+  depositName: string | null;
+  note: string | null;
+}
+
+/** 전표변경 창을 열 때 값: 전표 머리 + 임시분개 줄 */
+export interface JournalEdit {
+  journalId: number;
+  date: string;
+  journalNo: number | null;
+  corpId: number | null;
+  corpName: string | null;
+  trName: string | null;
+  note: string | null;
+  fixYn: boolean;
+  lines: JournalTmp[];
+}
+
+/** AS-IS act.Act02_Journal.updateAll 요청 — 줄 순서가 곧 순번(10, 20, …) */
+export interface JournalSaveReq {
+  corpId: number | null;
+  note: string | null;
+  lines: {
+    drcrType: string | null;
+    realAccountCode: string | null;
+    reprAccountCode: string | null;
+    accountMap: string | null;
+    amt: number | null;
+    forAmt: number | null;
+    depositId: number | null;
+    note: string | null;
+  }[];
+}
+
+/** AS-IS act.Act80_RelateAppr.selectByTrId·selectByJournalId (Act80_Lookup_RelateAppr, W05 2단계 ⓑ) — 연관문서 한 행. lockYn = 거래·결제에서 오는 문서라 연결을 끊을 수 없음 */
+export interface ActRelateAppr {
+  relateApprId: number;
+  apprId: number;
+  journalId: number | null;
+  trId: number | null;
+  regDate: string | null;
+  effectDate: string | null;
+  title: string | null;
+  statusName: string | null;
+  regEmpName: string | null;
+  lockYn: boolean;
 }

@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/act/mapper/act80_relate_appr.xml (selectByTrId L149 · selectByJournalId · selectTrId · selectJournalId) · UpdateDataModel(act80_relate_appr) 동적 INSERT/DELETE
+     · act02_journal.selectOneJournalIdByTrId — 연관문서 Act80_Lookup_RelateAppr (W05 2단계 ⓑ).
+     SQL 본문은 그대로이고, `a.*`·별칭만 DTO 이름으로 풀고 상신 문서(apr01_appr) 조인마다 회사 조건을 더했다 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActRelateApprMapper">
+
+    <!-- AS-IS act80_relate_appr.selectByTrId: 거래에 직접 연결 + 같은 거래·결제(정산) 거래의 전표에 연결된 문서 + 거래 자체의 상신 문서(잠김) -->
+    <select id="selectByTrId" resultType="kr.co.kfs.asseterp.biz.act.dto.ActRelateApprRes">
+SELECT 	a.act80_relate_appr_id AS relate_appr_id
+	 , a.act80_appr_id AS appr_id
+	 , a.act80_journal_id AS journal_id
+	 , a.act80_tr_id AS tr_id
+	 ,	b.apr01_reg_date 																	AS reg_date
+	 ,	b.apr01_effect_date 																AS effect_date
+	 ,	b.apr01_title																		AS title
+     ,	f_cdnm('AprStatusCode', b.apr01_status_cd, b.apr01_company_id, b.apr01_reg_date)	AS status_name
+     ,	f_emp_kor_nm(b.apr01_reg_emp_id)													AS reg_emp_name
+     ,  false                                                                               AS lock_yn
+  FROM	act80_relate_appr a
+		INNER JOIN apr01_appr b ON b.apr01_appr_id = a.act80_appr_id AND b.apr01_company_id = #{companyId}
+ WHERE	1=1
+   AND	( act80_tr_id = #{trId}  OR
+          act80_journal_id IN ( SELECT act02_journal_id
+                                  FROM act02_journal
+                                 WHERE act02_tr_id = #{trId}
+                                 UNION
+                                SELECT act02_journal_id
+                                  FROM act02_journal
+                                 WHERE act02_tr_id IN ( SELECT ast07_tr_id
+                                                          FROM ast07_settle
+                                                         WHERE ast07_settle_id = #{trId}
+                                                         UNION
+                                                        SELECT ast07_settle_id
+                                                          FROM ast07_settle
+                                                         WHERE ast07_tr_id = #{trId} ) ) )
+ UNION ALL
+SELECT row_number() over()                                                                  AS relate_appr_id
+     , apr01_appr_id                                                                        AS appr_id
+     , null                                                                                 AS journal_id
+     , #{trId}                                                                              AS tr_id
+     , apr01_reg_date                                                                       AS reg_date
+     , apr01_effect_date                                                                    AS effect_date
+     , apr01_title                                                                          AS title
+     , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)           AS status_name
+     , f_emp_kor_nm(apr01_reg_emp_id)                                                       AS reg_emp_name
+     , true                                                                                 AS lock_yn
+  FROM ast06_tr
+       INNER JOIN apr01_appr ON ( apr01_appr_id = ast06_appr_id          AND apr01_company_id = #{companyId} AND
+                                  COALESCE(apr01_status_cd,'99') != '99' )
+ WHERE ast06_tr_id = #{trId}
+    </select>
+
+    <!-- AS-IS act80_relate_appr.selectByJournalId: 전표 + 관련 거래·결제 거래에 연결된 문서 + 공통 연결(com01_relate_appr)·거래의 상신 문서(잠김) -->
+    <select id="selectByJournalId" resultType="kr.co.kfs.asseterp.biz.act.dto.ActRelateApprRes">
+SELECT 	a.act80_relate_appr_id AS relate_appr_id
+	 , a.act80_appr_id AS appr_id
+	 , a.act80_journal_id AS journal_id
+	 , a.act80_tr_id AS tr_id
+	 ,	b.apr01_reg_date 																	AS reg_date
+	 ,	b.apr01_effect_date 																AS effect_date
+	 ,	b.apr01_title																		AS title
+     ,	f_cdnm('AprStatusCode', b.apr01_status_cd, b.apr01_company_id, b.apr01_reg_date)	AS status_name
+     ,	f_emp_kor_nm(b.apr01_reg_emp_id)													AS reg_emp_name
+     ,  false                                                                               AS lock_yn
+  FROM	act80_relate_appr a
+		INNER JOIN apr01_appr b ON b.apr01_appr_id = a.act80_appr_id AND b.apr01_company_id = #{companyId}
+ WHERE	1=1
+   AND	( act80_journal_id IN ( SELECT #{journalId}
+                                 UNION
+                                SELECT act02_journal_id
+                                  FROM act02_journal
+                                 WHERE act02_tr_id IN ( SELECT ast07_tr_id
+                                                          FROM ast07_settle
+                                                               INNER JOIN act02_journal ON act02_tr_id = ast07_settle_id
+                                                         WHERE act02_journal_id = #{journalId}
+                                                         UNION
+                                                        SELECT ast07_settle_id
+                                                          FROM ast07_settle
+                                                         WHERE ast07_tr_id IN (SELECT ast07_tr_id
+  					                                                             FROM ast07_settle
+						                                                              INNER JOIN act02_journal ON act02_tr_id = ast07_settle_id
+						                                                        WHERE act02_journal_id = #{journalId})
+                                                         UNION
+                                                        SELECT ast07_settle_id
+                                                          FROM ast07_settle
+                                                         WHERE ast07_tr_id IN (SELECT ast06_tr_id
+                                                                                 FROM ast06_tr
+                                                                                      INNER JOIN act02_journal ON act02_tr_id = ast06_tr_id
+                                                                                WHERE act02_journal_id = #{journalId}) ) ) OR
+          act80_tr_id IN ( SELECT act02_tr_id
+                             FROM act02_journal
+                            WHERE act02_journal_id = #{journalId}
+                            UNION
+                           SELECT ast07_tr_id
+                             FROM ast07_settle
+                            WHERE ast07_settle_id IN ( SELECT act02_tr_id
+                                                         FROM act02_journal
+                                                        WHERE act02_journal_id = #{journalId} )
+                            UNION
+                           SELECT ast07_settle_id
+                             FROM ast07_settle
+                            WHERE ast07_tr_id In ( SELECT ast07_tr_id
+						                             FROM ast07_settle
+						                            WHERE ast07_settle_id IN ( SELECT act02_tr_id
+						                                                         FROM act02_journal
+						                                                        WHERE act02_journal_id = #{journalId} ))
+                            UNION
+                           SELECT ast07_settle_id
+                             FROM ast07_settle
+                            WHERE ast07_tr_id IN ( SELECT act02_tr_id
+                                                     FROM act02_journal
+                                                    WHERE act02_journal_id = #{journalId} ) )   )
+ UNION ALL
+SELECT 1000000 + row_number() over()                                                        AS relate_appr_id
+     , apr01_appr_id                                                                        AS appr_id
+     , #{journalId}                                                                         AS journal_id
+     , null                                                                                 AS tr_id
+     , apr01_reg_date                                                                       AS reg_date
+     , apr01_effect_date                                                                    AS effect_date
+     , apr01_title                                                                          AS title
+     , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)           AS status_name
+     , f_emp_kor_nm(apr01_reg_emp_id)                                                       AS reg_emp_name
+     , true                                                                                 AS lock_yn
+  FROM com01_relate_appr
+       INNER JOIN apr01_appr ON apr01_appr_id = com01_appr_id AND apr01_company_id = #{companyId}
+ WHERE com01_key_table_id IN ( SELECT #{journalId}
+                                UNION ALL
+                               SELECT pay50_journal_id
+                                 FROM pay50_expense
+                                      INNER JOIN ast07_settle  ON ast07_expense_id = pay50_expense_id
+                                      INNER JOIN act02_journal ON act02_tr_id      = ast07_settle_id
+                                WHERE act02_journal_id = #{journalId} )
+ UNION ALL
+SELECT 2000000 + row_number() over()                                                        AS relate_appr_id
+     , apr01_appr_id                                                                        AS appr_id
+     , #{journalId}                                                                         AS journal_id
+     , null                                                                                 AS tr_id
+     , apr01_reg_date                                                                       AS reg_date
+     , apr01_effect_date                                                                    AS effect_date
+     , apr01_title                                                                          AS title
+     , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)           AS status_name
+     , f_emp_kor_nm(apr01_reg_emp_id)                                                       AS reg_emp_name
+     , true                                                                                 AS lock_yn
+  FROM ast06_tr
+       INNER JOIN apr01_appr ON ( apr01_appr_id = ast06_appr_id          AND apr01_company_id = #{companyId} AND
+                                  COALESCE(apr01_status_cd,'99') != '99' )
+ WHERE ast06_tr_id IN (SELECT act02_tr_id
+                         FROM act02_journal
+                        WHERE act02_journal_id = #{journalId}
+                        UNION
+                       SELECT ast07_tr_id
+                         FROM ast07_settle
+                        WHERE ast07_settle_id IN ( SELECT act02_tr_id
+                                                     FROM act02_journal
+                                                    WHERE act02_journal_id = #{journalId} )
+                        UNION
+                       SELECT ast07_settle_id
+                         FROM ast07_settle
+                        WHERE ast07_tr_id In ( SELECT ast07_tr_id
+                                                 FROM ast07_settle
+                                                WHERE ast07_settle_id IN ( SELECT act02_tr_id
+                                                                             FROM act02_journal
+                                                                            WHERE act02_journal_id = #{journalId} ))
+                        UNION
+                       SELECT ast07_settle_id
+                         FROM ast07_settle
+                        WHERE ast07_tr_id IN ( SELECT act02_tr_id
+                                                 FROM act02_journal
+                                                WHERE act02_journal_id = #{journalId} )
+                      )
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS act80_relate_appr.selectTrId · selectJournalId -->
+    <select id="selectTrId" resultType="long">
+        SELECT act02_tr_id FROM act02_journal WHERE act02_journal_id = #{journalId}
+    </select>
+
+    <select id="selectJournalId" resultType="long">
+        SELECT act02_journal_id FROM act02_journal WHERE act02_tr_id = #{trId} LIMIT 1
+    </select>
+
+    <!-- AS-IS act02_journal.selectOneJournalIdByTrId (여러 전표면 첫 전표) -->
+    <select id="selectOneJournalIdByTrId" resultType="long">
+        SELECT act02_journal_id FROM act02_journal WHERE act02_tr_id = #{trId} ORDER BY act02_journal_id LIMIT 1
+    </select>
+
+    <!-- 상신 문서가 내 회사 것인지 -->
+    <select id="countAppr" resultType="int">
+        SELECT COUNT(*) FROM apr01_appr WHERE apr01_appr_id = #{apprId} AND apr01_company_id = #{companyId}
+    </select>
+
+    <insert id="insertRelateAppr">
+        INSERT INTO act80_relate_appr (act80_relate_appr_id, act80_appr_id, act80_journal_id, act80_tr_id)
+        VALUES (#{relateApprId}, #{apprId}, #{journalId}, #{trId})
+    </insert>
+
+    <!-- AS-IS UpdateDataModel.deleteModel(act80_relate_appr). 내 회사 상신 문서에 걸린 연결만 -->
+    <delete id="deleteRelateAppr">
+        DELETE FROM act80_relate_appr
+         WHERE act80_relate_appr_id = #{relateApprId}
+           AND act80_appr_id IN ( SELECT apr01_appr_id FROM apr01_appr WHERE apr01_company_id = #{companyId} )
+    </delete>
+
+</mapper>

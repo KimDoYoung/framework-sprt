@@ -6,6 +6,7 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprDocSearchRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprFundDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprItemDocRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprLoadDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyApproveRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyAuthRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyReferenceRes;
@@ -267,6 +268,14 @@ public class AprApprController {
     public ApiResponse<List<AprItemDocRes>> searchItemDocList(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long astClassTreeId,
                                                               @RequestParam(defaultValue = "1") String searchType, @RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.searchItemDocList(principal, astClassTreeId, searchType, searchText));
+    }
+
+    /** AS-IS apr.Apr03_RelateFund.selectByClassTreeId·selectBySearch (Apr05_Lookup_LoadDoc 불러오기 창). searchText를 주지 않으면 분류 클릭 조회 */
+    @GetMapping("/load-docs")
+    public ApiResponse<List<AprLoadDocRes>> searchLoadDocs(@AuthenticationPrincipal UserPrincipal principal,
+                                                           @RequestParam Long classTreeId,
+                                                           @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchLoadDocs(principal, classTreeId, searchText));
     }
 
     /** AS-IS apr.Apr03_RelateFund.selectByApprId (Apr03_TabPage_Relate 연관펀드) */

@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.sys.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.sys.dto.FileMonthRes;
+import kr.co.kfs.asseterp.biz.sys.dto.FileLockRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileTotalRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileYearRes;
@@ -43,6 +44,12 @@ public class SysFileController {
     @GetMapping
     public ApiResponse<List<FileRes>> searchByParentId(@RequestParam Long parentId) {
         return ApiResponse.ok(sysFileService.searchByParentId(parentId));
+    }
+
+    /** AS-IS sys.Sys10_File.selectByParentId2 (W05 연관문서 창 첨부파일, lockYn 포함) */
+    @GetMapping("/with-lock")
+    public ApiResponse<List<FileLockRes>> searchByParentId2(@RequestParam Long parentId) {
+        return ApiResponse.ok(sysFileService.searchByParentId2(parentId));
     }
 
     /** AS-IS sys.Sys10_File.selectByFamilyConsentId (J07 가족동의서 조회창) */

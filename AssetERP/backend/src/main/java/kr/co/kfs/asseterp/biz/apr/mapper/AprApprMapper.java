@@ -14,6 +14,8 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprItemDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprItemDocRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprLoadDocCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprLoadDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyApproveCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyAuthCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyAuthRes;
@@ -62,6 +64,12 @@ public interface AprApprMapper {
     List<AprDocSearchRes> selectByText2(@Param("c") AprDocSearchCond cond);
 
     List<AprIcsDocRes> selectByIcsClassTreeId(@Param("c") AprIcsDocListCond cond);
+
+    /** AS-IS apr03_relate_fund.selectByClassTreeId L54 (W05 ⓒ 불러오기 창) */
+    List<AprLoadDocRes> selectLoadDocByClassTreeId(@Param("c") AprLoadDocCond cond);
+
+    /** AS-IS apr03_relate_fund.selectBySearch L172 (W05 ⓒ 불러오기 창) */
+    List<AprLoadDocRes> selectLoadDocBySearch(@Param("c") AprLoadDocCond cond);
 
     /** AS-IS apr01_appr.selectApprListByEmpId L1119 (G01 결재내역 조회) */
     List<AprMyApproveRes> selectApprListByEmpId(@Param("c") AprMyApproveCond cond);

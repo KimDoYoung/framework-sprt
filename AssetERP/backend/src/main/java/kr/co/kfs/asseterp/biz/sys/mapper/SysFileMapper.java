@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.sys.mapper;
 
 import kr.co.kfs.asseterp.biz.sys.dto.FileMonthRes;
+import kr.co.kfs.asseterp.biz.sys.dto.FileLockRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileRes;
 import kr.co.kfs.asseterp.biz.sys.dto.FileTotalParam;
 import kr.co.kfs.asseterp.biz.sys.dto.FileTotalRes;
@@ -15,6 +16,9 @@ import java.util.List;
 @Mapper
 public interface SysFileMapper {
     FileRes selectById(@Param("fileId") Long fileId);
+
+    /** sys10_file.selectByParentId2 — 잠김(lockYn)이 붙은 목록 */
+    List<FileLockRes> selectByParentId2(@Param("parentId") Long parentId);
 
     List<FileRes> selectByParentId(@Param("parentId") Long parentId);
 

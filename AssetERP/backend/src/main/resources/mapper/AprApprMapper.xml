@@ -1141,4 +1141,76 @@
          ORDER BY apr01_reg_date DESC, apr01_appr_id DESC
     </select>
 
+    <!-- AS-IS apr03_relate_fund.selectByClassTreeId L54 (IDMS-IC) — W05 ⓒ Apr05_Grid_RelateAprList.retrieve(). SELECT *·모델 열 중 그리드·미리보기가 쓰는 열만.
+         emp00 CTE(common.emp00_trans_info, 회사 조건)는 DB 뷰 emp00_trans_info(emp00_all_title = 0)로 — 상신자의 상신일 기준 발령 구간이 없으면 행이 빠지는 조건 -->
+    <select id="selectLoadDocByClassTreeId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprLoadDocRes">
+        SELECT apr01_appr_id                                                                    AS appr_id
+             , (
+                   CASE WHEN apr01_status_cd = '40'
+                        THEN '&lt;' || 'b style=color:#E33E31;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                        WHEN apr01_status_cd = '99'
+                        THEN '&lt;' || 'b style=color:#4B81B9;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                        ELSE '&lt;' || 'b style=color:#404040;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                   END
+               )                                                                                AS status_name
+             , apr01_title                                                                      AS title
+             , CAST(NULL AS varchar)                                                            AS fund_name
+             , apr01_reg_date                                                                   AS reg_date
+             , apr01_effect_date                                                                AS effect_date
+             , f_emp_kor_nm(apr01_reg_emp_id)                                                   AS reg_emp_name
+             , apr01_content                                                                    AS content
+          FROM apr01_appr
+               INNER JOIN dcr01_class_tree ON apr01_class_tree_id = dcr01_class_tree_id
+               INNER JOIN emp00_trans_info ON ( apr01_reg_emp_id = emp00_person_id AND emp00_all_title = 0 AND emp00_company_id = #{c.companyId}
+                                                AND apr01_reg_date BETWEEN emp00_trans_date AND COALESCE(emp00_close_date, to_date('99991231','yyyyMMdd')) )
+               LEFT OUTER JOIN apr10_stamp ON apr01_stamp_id = apr10_stamp_id
+               LEFT OUTER JOIN dcr03_org_auth ON (apr01_class_tree_id = dcr03_class_tree_id AND dcr03_org_code_id = #{c.orgId})
+               LEFT OUTER JOIN dcr04_emp_auth ON (dcr04_class_tree_id = dcr01_class_tree_id AND dcr04_person_id = #{c.personId})
+         WHERE 1=1
+           AND ( COALESCE(dcr04_retrieve_yn, dcr03_retrieve_yn, 'false') = 'true'
+                 OR #{c.personId} IN ( SELECT apr04_step_emp_id
+                                         FROM apr04_appr_step
+                                        WHERE apr04_appr_id = apr01_appr_id ) )
+           AND apr01_class_tree_id = #{c.classTreeId}
+         ORDER BY apr01_reg_date DESC
+                , apr01_title COLLATE "ko_KR.utf8"
+                , apr01_status_cd
+                , apr01_effect_date
+    </select>
+
+    <!-- AS-IS apr03_relate_fund.selectBySearch L172 (IDMS-IC) — W05 ⓒ Apr05_Grid_RelateAprList.search(). emp00 조인 없음, 제목 UPPER LIKE -->
+    <select id="selectLoadDocBySearch" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprLoadDocRes">
+        SELECT apr01_appr_id                                                                    AS appr_id
+             , (
+                   CASE WHEN apr01_status_cd = '40'
+                        THEN '&lt;' || 'b style=color:#E33E31;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                        WHEN apr01_status_cd = '99'
+                        THEN '&lt;' || 'b style=color:#4B81B9;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                        ELSE '&lt;' || 'b style=color:#404040;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                   END
+               )                                                                                AS status_name
+             , apr01_title                                                                      AS title
+             , CAST(NULL AS varchar)                                                            AS fund_name
+             , apr01_reg_date                                                                   AS reg_date
+             , apr01_effect_date                                                                AS effect_date
+             , f_emp_kor_nm(apr01_reg_emp_id)                                                   AS reg_emp_name
+             , apr01_content                                                                    AS content
+          FROM apr01_appr
+               INNER JOIN dcr01_class_tree ON apr01_class_tree_id = dcr01_class_tree_id
+               LEFT OUTER JOIN apr10_stamp ON apr01_stamp_id = apr10_stamp_id
+               LEFT OUTER JOIN dcr03_org_auth ON (apr01_class_tree_id = dcr03_class_tree_id AND dcr03_org_code_id = #{c.orgId})
+               LEFT OUTER JOIN dcr04_emp_auth ON (dcr04_class_tree_id = dcr01_class_tree_id AND dcr04_person_id = #{c.personId})
+         WHERE 1=1
+           AND ( COALESCE(dcr04_retrieve_yn, dcr03_retrieve_yn, 'false') = 'true'
+                 OR #{c.personId} IN ( SELECT apr04_step_emp_id
+                                         FROM apr04_appr_step
+                                        WHERE apr04_appr_id = apr01_appr_id ) )
+           AND apr01_class_tree_id = #{c.classTreeId}
+           AND UPPER(CONCAT(apr01_title)) LIKE UPPER(#{c.searchText})
+         ORDER BY apr01_reg_date DESC
+                , apr01_title COLLATE "ko_KR.utf8"
+                , apr01_status_cd
+                , apr01_effect_date
+    </select>
+
 </mapper>

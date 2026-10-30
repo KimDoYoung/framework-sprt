@@ -2,7 +2,7 @@
  * 분개 그리드 (U04) — Ast06_Tab_TrTax 아래에서 고른 거래의 분개를 보여 준다
  * AS-IS: myApp/client/vi/ast/Ast06_Grid_Journal.java (143줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L41-58: BorderLayout 가운데 = 툴바 50([변경]) + 그리드(행번호, 체크 다중, 차변 4열 · 대변 4열, 맨 아래 합계 행 "계"), buildGrid() L75-99
- * [다음 단계] [변경]이 여는 분개 수정 창 Act02_Lookup_ModiJournal(이벤트 13)은 다른 도메인이라 지금은 안내만 한다
+ * [변경] = 분개 수정 창 Act02_Lookup_ModiJournal(W05 2단계) — 저장하면 retrieve()
  */
 import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { message } from 'antd';
@@ -12,6 +12,7 @@ import { errorMessage } from '@/api/client';
 import { JournalLine } from '@/types/act';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
+import { Act02_Lookup_ModiJournal } from '../act/Act02_Lookup_ModiJournal';
 
 const gb = gbFor<JournalLine>();
 const DR = { color: '#456EA6', fontWeight: 'bold' };
@@ -51,9 +52,13 @@ export interface Ast06_Grid_JournalHandle {
 export const Ast06_Grid_Journal = forwardRef<Ast06_Grid_JournalHandle>((_props, ref) => {
   const gridRef = useRef<AgGridReact<JournalLine>>(null);
   const [rows, setRows] = useState<JournalLine[]>([]);
+  /** 지금 보이는 분개의 전표 ID — [변경]이 연다 */
+  const [journalId, setJournalId] = useState<number | null>(null);
+  const [modiOpen, setModiOpen] = useState(false);
 
   // retrieve() L112-125: act.Act03_JournalDtl.selectByJournalId → 첫 행 선택
   const retrieve = async (journalId: number | null | undefined) => {
+    setJournalId(journalId ?? null);
     if (journalId == null) { setRows([]); return; }
     try {
       const list = await actApi.searchJournalLines(journalId);
@@ -72,11 +77,12 @@ export const Ast06_Grid_Journal = forwardRef<Ast06_Grid_JournalHandle>((_props, 
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         {/* [E1] modiButton[변경].Select (L61) → Act02_Lookup_ModiJournal.open(grid.getStore().get(0), …) — 닫으면 retrieve() */}
-        <Button type="change" onClick={() => message.info('분개 수정 창(Act02_Lookup_ModiJournal)은 다음 단계에서 연결합니다.')}>변경</Button>
+        <Button type="change" onClick={() => { if (journalId != null) setModiOpen(true); }}>변경</Button>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         <MultiGrid<JournalLine> gridRef={gridRef} rowData={rows} columnDefs={columnDefs} getRowId={p => String(p.data.journalDtlId)} sumRow={sumRow} />
       </div>
+      <Act02_Lookup_ModiJournal journalId={modiOpen ? journalId : null} onSaved={() => void retrieve(journalId)} onClose={() => setModiOpen(false)} />
     </div>
   );
 });

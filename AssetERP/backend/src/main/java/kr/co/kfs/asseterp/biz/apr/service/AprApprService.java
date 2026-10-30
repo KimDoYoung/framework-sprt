@@ -14,6 +14,8 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprItemDocListCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprItemDocRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprLoadDocCond;
+import kr.co.kfs.asseterp.biz.apr.dto.AprLoadDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyApproveCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyAuthCond;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyAuthRes;
@@ -328,6 +330,18 @@ public class AprApprService {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "문서를 찾을 수 없습니다.");
         }
         return mapper.selectPutSeal(apprId);
+    }
+
+    /**
+     * AS-IS Apr03_RelateFund.selectByClassTreeId / selectBySearch (Apr05_Lookup_LoadDoc, W05 ⓒ). searchText가 null이면 분류 클릭(selectByClassTreeId),
+     * 아니면 [찾기](selectBySearch, 서비스가 %…%로). 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0
+     */
+    public List<AprLoadDocRes> searchLoadDocs(UserPrincipal user, Long classTreeId, String searchText) {
+        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        if (searchText == null) {
+            return mapper.selectLoadDocByClassTreeId(new AprLoadDocCond(classTreeId, user.getCompanyId(), orgId, user.getUserId(), null));
+        }
+        return mapper.selectLoadDocBySearch(new AprLoadDocCond(classTreeId, user.getCompanyId(), orgId, user.getUserId(), like(searchText)));
     }
 
     /** AS-IS Apr03_RelateFund.selectByApprId */

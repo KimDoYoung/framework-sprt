@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
+import { AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprAdv, AprApprDetail, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -160,6 +160,12 @@ export const aprApi = {
   /** AS-IS apr.Apr01_Appr.selectByClassTreeId2 (Apr01_Grid_DocList): 문서분류의 문서 목록. searchText는 서버가 %…%로 */
   searchDocList: async (params: { classTreeId: number; startDate: string; endDate: string; searchText: string }): Promise<AprDoc[]> => {
     const res = await apiClient.get<ApiResponse<AprDoc[]>>('v1/apr/apprs/doc-list', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr03_RelateFund.selectByClassTreeId·selectBySearch (Apr05_Grid_RelateAprList, W05 ⓒ): searchText를 주지 않으면 분류 클릭 조회, 주면 [찾기](서버가 %…%로) */
+  searchLoadDocs: async (classTreeId: number, searchText?: string): Promise<AprLoadDoc[]> => {
+    const res = await apiClient.get<ApiResponse<AprLoadDoc[]>>('v1/apr/apprs/load-docs', { params: { classTreeId, searchText } });
     return res.data.data ?? [];
   },
 
@@ -440,5 +446,79 @@ export const aprStampDocApi = {
   getCorpStamp: async (): Promise<AprCorpStamp | null> => {
     const res = await apiClient.get<ApiResponse<AprCorpStamp | null>>('v1/apr/stamps/corp-stamp');
     return res.data.data ?? null;
+  },
+};
+
+/** 전자결재 문서 열기 (AS-IS client/vi/apr/Apr01_Edit_ApprDoc 읽기, V01) */
+export const aprDetailApi = {
+  /** AS-IS apr.Apr01_Appr.selectById — 로그인 회사의 문서만 */
+  getDetail: async (apprId: number): Promise<AprApprDetail> => {
+    const res = await apiClient.get<ApiResponse<AprApprDetail>>(`v1/apr/apprs/${apprId}/detail`);
+    return res.data.data;
+  },
+
+  /** AS-IS apr.Apr04_ApprStep.selectByApprId: 결재선 (결재자 문구는 서버가 만든다) */
+  getSteps: async (apprId: number): Promise<AprApprStep[]> => {
+    const res = await apiClient.get<ApiResponse<AprApprStep[]>>(`v1/apr/apprs/${apprId}/steps`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr03_RelateFund.selectByApprId: 연관펀드 (펀드유형·코드·펀드명·결재이후·출력) */
+  getFunds: async (apprId: number): Promise<AprApprFund[]> => {
+    const res = await apiClient.get<ApiResponse<AprApprFund[]>>(`v1/apr/apprs/${apprId}/funds`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr12_RelateAdv.selectByApprId: 연관일임 */
+  getAdvs: async (apprId: number): Promise<AprApprAdv[]> => {
+    const res = await apiClient.get<ApiResponse<AprApprAdv[]>>(`v1/apr/apprs/${apprId}/advs`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr21_RelateAppr.selectByApprId */
+  getRelateApprs: async (apprId: number): Promise<AprRelateAppr[]> => {
+    const res = await apiClient.get<ApiResponse<AprRelateAppr[]>>(`v1/apr/apprs/${apprId}/relate-apprs`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr20_RelateIcs.selectByApprId */
+  getRelateIcs: async (apprId: number): Promise<AprRelateLaw[]> => {
+    const res = await apiClient.get<ApiResponse<AprRelateLaw[]>>(`v1/apr/apprs/${apprId}/relate-ics`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr22_RelateIcr.selectByApprId */
+  getRelateIcr: async (apprId: number): Promise<AprRelateLaw[]> => {
+    const res = await apiClient.get<ApiResponse<AprRelateLaw[]>>(`v1/apr/apprs/${apprId}/relate-icr`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr16_StampDoc.selectByApprId: 날인신청 */
+  getStampAppls: async (apprId: number): Promise<AprApprStampAppl[]> => {
+    const res = await apiClient.get<ApiResponse<AprApprStampAppl[]>>(`v1/apr/apprs/${apprId}/stamp-appls`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys10_File.selectByParentId: 첨부파일 (표지 제외) */
+  getFiles: async (apprId: number): Promise<AprApprFile[]> => {
+    const res = await apiClient.get<ApiResponse<AprApprFile[]>>(`v1/apr/apprs/${apprId}/files`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr50_Bookmark.selectByPublicYn: 북마크 켜짐 */
+  isBookmarked: async (apprId: number): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>(`v1/apr/apprs/${apprId}/bookmark`);
+    return !!res.data.data;
+  },
+
+  /** AS-IS apr.Apr42_Comment.getSize: 댓글 건수 */
+  getCommentSize: async (apprId: number): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>(`v1/apr/apprs/${apprId}/comment-size`);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS apr.Apr41_OpenHistory.insert: 열람기록 (임시저장·관리자는 서버가 건너뛴다) */
+  recordOpen: async (apprId: number): Promise<void> => {
+    await apiClient.post(`v1/apr/apprs/${apprId}/open-history`);
   },
 };

@@ -433,6 +433,11 @@ export interface FileInfo {
   serverPath?: string | null;
 }
 
+/** AS-IS sys.Sys10_File.selectByParentId2 (Act80_LookupGrid_RelateFile, W05) — 파일 한 행 + 잠김(정산·결의서에서 따라온 파일이라 지울 수 없음) */
+export interface FileLock extends FileInfo {
+  lockYn: boolean;
+}
+
 /** 개선사항 및 오류 통보 한 행 (A30, AS-IS Sys90_AfterServiceModel / sys90_after_service). 날짜는 'YYYY-MM-DD', confirmYn은 'true'/'false' */
 export interface AfterService {
   afterServiceId: number;

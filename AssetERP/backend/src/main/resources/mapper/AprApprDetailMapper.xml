@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr01_appr.xml selectById, apr04_appr_step.xml selectByApprId, apr07_alt_appr.xml, apr10_stamp.xml selectByApprId,
+     apr16_stamp_doc.xml selectByApprId L404, apr20_relate_ics.xml·apr21_relate_appr.xml·apr22_relate_icr.xml selectByApprId, apr41_open_history.insert, apr42_comment.getSize,
+     apr50_bookmark.selectByPublicYn, emp00_trans_info.selectOneEmpInfo — V01 전자결재 문서 열기 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprApprDetailMapper">
+
+    <!-- AS-IS apr01_appr.selectById (apr00 CTE = 상신자의 상신일 기준 발령·조직이 있어야 나온다). SELECT *·모델 열 중 편집기가 쓰는 열만.
+         AS-IS는 회사 조건이 없다 → TOBE는 로그인 회사 문서만(03 원칙 1·2와 같은 보안 보강, 작업방법에 기록) -->
+    <select id="selectDetail" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprApprDetailRes">
+        <![CDATA[
+        SELECT apr01_appr_id                                                                    AS appr_id
+             , apr01_company_id                                                                 AS company_id
+             , apr01_class_tree_id                                                              AS class_tree_id
+             , f_class_tree_nm_allpath(dcr01_class_tree_id)                                     AS class_tree_full_name
+             , dcr01_print_fund_yn                                                              AS print_fund_yn
+             , apr01_title                                                                      AS title
+             , apr01_inout_cd                                                                   AS in_out_type_code
+             , apr01_content                                                                    AS content
+             , apr01_reg_date                                                                   AS reg_date
+             , apr01_effect_date                                                                AS effect_date
+             , apr01_status_cd                                                                  AS status_code
+             , apr01_reg_emp_id                                                                 AS reg_emp_id
+             , emp01_kor_nm                                                                     AS reg_emp_name
+             , apr01_stamp_id                                                                   AS stamp_id
+             , apr10_stamp_nm                                                                   AS stamp_name
+             , apr01_stamp_position                                                             AS stamp_position
+             , f_cdnm('StampLocation', COALESCE(apr01_stamp_position, '1'), apr01_company_id, apr01_reg_date) AS stamp_position_name
+             , apr01_receive_nm                                                                 AS receive_name
+             , apr01_reference_nm                                                               AS reference_name
+             , apr01_sign_company                                                               AS sign_company
+             , apr01_sign_ceo                                                                   AS sign_ceo
+             , apr01_note                                                                       AS note
+             , apr01_link_cd                                                                    AS link_code
+             , dcr01_advert_yn                                                                  AS advert_yn
+          FROM apr01_appr
+               INNER JOIN emp01_person ON emp01_person_id = apr01_reg_emp_id
+               INNER JOIN emp03_trans t2 ON ( emp03_person_id = apr01_reg_emp_id
+                                              AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                                                         FROM emp03_trans
+                                                                        WHERE emp03_person_id = apr01_reg_emp_id
+                                                                          AND emp03_trans_date <= apr01_reg_date ) )
+               INNER JOIN org01_code ON org01_code_id = emp03_org_code_id
+               INNER JOIN org02_info ON ( org02_code_id = org01_code_id
+                                          AND org02_mod_date = ( SELECT MAX(org02_mod_date)
+                                                                   FROM org02_info
+                                                                  WHERE org02_code_id = emp03_org_code_id
+                                                                    AND org02_mod_date <= emp03_trans_date ) )
+               INNER JOIN dcr01_class_tree ON dcr01_class_tree_id = apr01_class_tree_id
+               LEFT OUTER JOIN apr10_stamp ON apr10_stamp_id = apr01_stamp_id
+         WHERE apr01_appr_id = #{apprId}
+           AND apr01_company_id = #{companyId}
+        ]]>
+    </select>
+
+    <!-- AS-IS apr04_appr_step.selectByApprId. 단계 담당자의 (결재일 또는 오늘) 기준 발령. 정렬 f_to_number(apr04_seq), 단계코드, ID 그대로 -->
+    <select id="selectSteps" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprApprStepRow">
+        <![CDATA[
+        SELECT apr04_appr_step_id                                                              AS appr_step_id
+             , apr04_seq                                                                       AS seq
+             , apr04_step_type_cd                                                              AS step_type_code
+             , f_cdnm('AprStepTypeCode', apr04_step_type_cd, emp01_company_id, f_sysdate())     AS step_type_name
+             , apr04_step_status_cd                                                            AS step_status_code
+             , f_cdnm('AprStepStatusCode', apr04_step_status_cd, emp01_company_id, f_sysdate()) AS step_status_name
+             , apr04_appr_date                                                                 AS appr_date
+             , apr04_step_emp_id                                                               AS step_emp_id
+             , apr04_appr_emp_id                                                               AS appr_emp_id
+             , apr04_note                                                                      AS note
+             , apr04_reject_reason                                                             AS reject_reason
+             , CASE WHEN char_length(apr04_note::text) > 0 THEN '의견'
+                    WHEN char_length(apr04_reject_reason::text) > 0 THEN '의견'
+                    ELSE '' END                                                                AS opinion_yn_str
+             , CASE WHEN ( SELECT COUNT(*)
+                             FROM apr92_appr_modi
+                            WHERE apr92_appr_id = apr04_appr_id
+                              AND apr92_reg_emp_id = apr04_step_emp_id ) > 0
+                    THEN '수정' ELSE '' END                                                     AS typo_yn_str
+             , emp03_org_code_id                                                               AS org_code_id
+             , f_get_empTrans(emp03_person_id, emp03_trans_date::date, 'title_nm')              AS title_name
+             , emp01_kor_nm                                                                    AS kor_name
+             , f_org_nm(emp03_org_code_id, emp03_trans_date)                                   AS org_title_name
+          FROM apr04_appr_step
+               INNER JOIN emp01_person t1 ON emp01_person_id = apr04_step_emp_id
+               INNER JOIN emp03_trans t2 ON ( emp03_person_id = apr04_step_emp_id
+                                              AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                                                         FROM emp03_trans
+                                                                        WHERE emp03_person_id = apr04_step_emp_id
+                                                                          AND emp03_trans_date <= COALESCE(apr04_appr_date, f_today()) ) )
+         WHERE apr04_appr_id = #{apprId}
+         ORDER BY f_to_number(apr04_seq), apr04_step_type_cd, apr04_appr_step_id
+        ]]>
+    </select>
+
+    <!-- AS-IS emp00_trans_info.selectOneEmpInfo (baseDate 기준 발령의 직책·성명·조직) -->
+    <select id="selectEmpBrief" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprEmpBrief">
+        <![CDATA[
+        SELECT f_get_empTrans(emp03_person_id, emp03_trans_date::date, 'title_nm') AS title_name
+             , emp01_kor_nm                                                        AS kor_name
+             , f_org_nm(emp03_org_code_id, emp03_trans_date)                       AS org_name
+          FROM emp01_person
+               INNER JOIN emp03_trans ON emp03_person_id = emp01_person_id
+         WHERE emp01_person_id = #{empId}
+           AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                      FROM emp03_trans
+                                     WHERE emp03_person_id = #{empId}
+                                       AND emp03_trans_date::date <= CAST(#{baseDate} AS date) )
+         LIMIT 1
+        ]]>
+    </select>
+
+    <!-- AS-IS apr07_alt_appr.selectCountByEmpId -->
+    <select id="selectAltCount" resultType="int">
+        <![CDATA[
+        SELECT COUNT(*)
+          FROM apr07_alt_appr
+         WHERE apr07_target_emp_id = #{personId}
+           AND f_today() BETWEEN apr07_start_date AND apr07_close_date
+        ]]>
+    </select>
+
+    <sql id="altColumns">
+             apr07_alt_emp_id                                                             AS alt_emp_id
+           , apr07_stamp_yn                                                               AS stamp_yn
+           , f_get_empTrans(tgt.emp01_person_id, apr07_close_date::date, 'title_nm')      AS target_title_name
+           , tgt.emp01_kor_nm                                                             AS target_emp_name
+           , f_get_empTrans(tgt.emp01_person_id, apr07_close_date::date, 'org_code_nm')   AS target_org_name
+           , f_get_empTrans(org.emp01_person_id, apr07_close_date::date, 'title_nm')      AS alt_title_name
+           , org.emp01_kor_nm                                                             AS alt_emp_name
+           , f_get_empTrans(org.emp01_person_id, apr07_close_date::date, 'org_code_nm')   AS alt_org_name
+    </sql>
+
+    <!-- AS-IS apr07_alt_appr.selectOneByEmpId -->
+    <select id="selectAltByEmp" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprAltRow">
+        <![CDATA[
+        SELECT
+        ]]>
+        <include refid="altColumns"/>
+        <![CDATA[
+          FROM apr07_alt_appr
+               INNER JOIN emp01_person tgt ON tgt.emp01_person_id = apr07_target_emp_id
+               INNER JOIN emp01_person org ON org.emp01_person_id = apr07_alt_emp_id
+         WHERE apr07_target_emp_id = #{personId}
+           AND f_today() BETWEEN apr07_start_date AND apr07_close_date
+         LIMIT 1
+        ]]>
+    </select>
+
+    <!-- AS-IS apr07_alt_appr.selectOneByOrgEmpId — 대결자의 (대결 종료일 기준) 조직이 orgId인 것 -->
+    <select id="selectAltByOrg" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprAltRow">
+        <![CDATA[
+        SELECT *
+          FROM ( SELECT
+        ]]>
+        <include refid="altColumns"/>
+        <![CDATA[
+                      , CAST(f_get_empTrans(org.emp01_person_id, apr07_close_date::date, 'org_code_id') AS NUMERIC) AS alt_org_id
+                   FROM apr07_alt_appr
+                        INNER JOIN emp01_person tgt ON tgt.emp01_person_id = apr07_target_emp_id
+                        INNER JOIN emp01_person org ON org.emp01_person_id = apr07_alt_emp_id
+                  WHERE apr07_target_emp_id = #{personId}
+                    AND f_today() BETWEEN apr07_start_date AND apr07_close_date ) t
+         WHERE alt_org_id = #{orgId}
+         LIMIT 1
+        ]]>
+    </select>
+
+    <!-- AS-IS apr10_stamp.selectByApprId 의 apr10_second_emp_id -->
+    <select id="selectStampSecondEmp" resultType="long">
+        SELECT apr10_second_emp_id
+          FROM apr10_stamp
+               INNER JOIN apr01_appr ON apr10_stamp_id = apr01_stamp_id
+         WHERE apr01_appr_id = #{apprId}
+           AND apr10_emp_id = #{personId}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS apr03_relate_fund.selectByApprId (fnd00 CTE) — 연관펀드 탭 열만. 펀드유형은 fnd00_kofia_fund_type_nm(IcamFundType). 원본은 정렬이 없어 PK 순으로 둔다 -->
+    <select id="selectApprFunds" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprApprFundRes">
+        <![CDATA[
+        SELECT apr03_relate_fund_id                                                                                  AS relate_fund_id
+             , f_cdnm('IcamFundType', fnd02.fnd02_kofia_fund_type_cd, fnd01.fnd01_company_id, fnd02.fnd02_work_date) AS fund_type_name
+             , COALESCE(fnd01_r.fnd01_fund_cd, fnd01.fnd01_fund_cd)                                                  AS fund_code
+             , COALESCE(fnd02_r.fnd02_fund_nm, fnd02.fnd02_fund_nm)                                                  AS fund_name
+             , apr03_after_yn                                                                                        AS after_yn
+             , apr03_print_yn                                                                                        AS print_yn
+          FROM apr01_appr
+               INNER JOIN apr03_relate_fund ON apr03_appr_id = apr01_appr_id
+               INNER JOIN fnd01_fund_code fnd01 ON fnd01.fnd01_fund_code_id = apr03_fund_id
+               INNER JOIN fnd02_fund_info fnd02 ON ( fnd02.fnd02_fund_code_id = apr03_fund_id
+                                                     AND fnd02.fnd02_work_date = ( SELECT MAX(x.fnd02_work_date)
+                                                                                     FROM fnd02_fund_info x
+                                                                                    WHERE x.fnd02_fund_code_id = apr03_fund_id
+                                                                                      AND x.fnd02_work_date <= apr01_reg_date ) )
+               LEFT OUTER JOIN fnd01_fund_code fnd01_r ON fnd01_r.fnd01_fund_code_id = fnd01.fnd01_real_fund_id
+               LEFT OUTER JOIN fnd02_fund_info fnd02_r ON ( fnd02_r.fnd02_fund_code_id = fnd01.fnd01_real_fund_id
+                                                            AND fnd02_r.fnd02_work_date = ( SELECT MAX(x.fnd02_work_date)
+                                                                                              FROM fnd02_fund_info x
+                                                                                             WHERE x.fnd02_fund_code_id = fnd01.fnd01_real_fund_id
+                                                                                               AND x.fnd02_work_date <= f_today() ) )
+         WHERE apr01_appr_id = #{apprId}
+         ORDER BY apr03_relate_fund_id
+        ]]>
+    </select>
+
+    <!-- AS-IS apr12_relate_adv.selectByApprId -->
+    <select id="selectApprAdvs" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprApprAdvRes">
+        SELECT a.apr12_relate_adv_id AS relate_adv_id
+             , b.adv02_manage_cd     AS manage_code
+             , b.adv02_manage_nm     AS manage_name
+          FROM apr12_relate_adv a
+               INNER JOIN adv02_account b ON a.apr12_adv_id = b.adv02_account_id
+         WHERE apr12_appr_id = #{apprId}
+         ORDER BY a.apr12_relate_adv_id
+    </select>
+
+    <!-- AS-IS apr21_relate_appr.selectByApprId -->
+    <select id="selectRelateApprs" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateApprRes">
+        SELECT a.apr21_relate_appr_id   AS relate_appr_id
+             , a.apr21_targer_appr_id   AS target_appr_id
+             , b.apr01_inout_cd         AS in_out_type_code
+             , CASE WHEN b.apr01_inout_cd = '10' THEN '대외' ELSE '사내' END AS in_out_type_name
+             , b.apr01_reg_date         AS target_reg_date
+             , b.apr01_title            AS target_title
+          FROM apr21_relate_appr a
+               INNER JOIN apr01_appr b ON a.apr21_targer_appr_id = b.apr01_appr_id
+         WHERE apr21_appr_id = #{apprId}
+         ORDER BY a.apr21_relate_appr_id
+    </select>
+
+    <!-- AS-IS apr20_relate_ics.selectByApprId -->
+    <select id="selectRelateIcs" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateLawRes">
+        SELECT a.apr20_relate_ics_id                                                        AS relate_id
+             , a.apr20_class_tree_id                                                        AS class_tree_id
+             , f_ics_class_tree_nm_allpath(b.ics01_class_tree_id)                           AS class_tree_full_name
+             , f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate())       AS cycle_name
+             , a.apr20_close_date                                                           AS close_date
+          FROM apr20_relate_ics a
+               INNER JOIN ics01_class_tree b ON a.apr20_class_tree_id = b.ics01_class_tree_id
+               LEFT OUTER JOIN sch03_deadline c ON c.sch03_deadline_id = a.apr20_deadline_id AND c.sch03_schedule_cd IN ('2','3')
+         WHERE apr20_appr_id = #{apprId}
+         ORDER BY a.apr20_relate_ics_id
+    </select>
+
+    <!-- AS-IS apr22_relate_icr.selectByApprId -->
+    <select id="selectRelateIcr" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateLawRes">
+        SELECT a.apr22_relate_icr_id                                                        AS relate_id
+             , a.apr22_class_tree_id                                                        AS class_tree_id
+             , f_icr_class_tree_nm_allpath(b.icr01_class_tree_id)                           AS class_tree_full_name
+             , f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate())       AS cycle_name
+             , a.apr22_close_date                                                           AS close_date
+          FROM apr22_relate_icr a
+               INNER JOIN icr01_class_tree b ON a.apr22_class_tree_id = b.icr01_class_tree_id
+               LEFT OUTER JOIN sch03_deadline c ON c.sch03_deadline_id = a.apr22_deadline_id AND c.sch03_schedule_cd IN ('6','7')
+         WHERE apr22_appr_id = #{apprId}
+         ORDER BY a.apr22_relate_icr_id
+    </select>
+
+    <!-- AS-IS apr16_stamp_doc.selectByApprId L404 (regCheckYn 분기 아님). 그리드(Apr16_Grid_StampApplList) 열: 구분·인감 및 대표명의·부수·반출 -->
+    <select id="selectStampAppls" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprApprStampApplRes">
+        SELECT apr16_stamp_doc_id                                                              AS stamp_doc_id
+             , f_cdnm('CorpDocStampApplType', apr16_appl_type, apr16_company_id, f_today())    AS appl_type_name
+             , CASE WHEN apr16_appl_type = '2' THEN COALESCE(apr15_corp_nm, sys01_company_nm)
+                    ELSE apr10_stamp_nm END                                                    AS stamp_repr_corp_name
+             , CASE WHEN apr16_appl_type = '3' THEN apr16_stamp_qty ELSE apr16_doc_appl_qty END AS appl_qty
+             , apr16_stamp_out_yn                                                              AS stamp_out_yn
+          FROM apr16_stamp_doc
+               LEFT JOIN apr10_stamp     ON apr10_stamp_id     = apr16_stamp_id
+               LEFT JOIN apr15_repr_corp ON apr15_repr_corp_id = apr16_repr_corp_id
+               LEFT JOIN sys01_company   ON sys01_company_id   = apr16_repr_corp_id
+         WHERE apr16_appr_id = #{apprId}
+         ORDER BY apr16_appl_type, apr16_stamp_doc_id
+    </select>
+
+    <!-- AS-IS sys10_file.selectByParentId L85 (IDMS-IC) — 부모 파일 + 연결 파일(sys11), 표지(title_yn = true)는 화면에서 빼는 대신 여기서 뺀다. 열은 그리드가 쓰는 것만 -->
+    <select id="selectApprFiles" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprApprFileRes">
+        <![CDATA[
+        SELECT file.sys10_file_id   AS file_id
+             , file.sys10_file_nm   AS file_name
+             , file.sys10_file_ext  AS file_ext
+             , file.sys10_file_yn   AS file_yn
+             , file.sys10_print_yn  AS print_yn
+          FROM ( SELECT *
+                   FROM sys10_file
+                  WHERE sys10_parent_id = #{apprId}
+                  UNION
+                 SELECT sys10_file.*
+                   FROM sys11_relate_file
+                        INNER JOIN sys10_file ON sys10_file_id = sys11_file_id
+                  WHERE sys11_parent_id = #{apprId} ) AS file
+         WHERE COALESCE(file.sys10_title_yn, 'false') <> 'true'
+         ORDER BY COALESCE(file.sys10_file_yn, 'false') ASC
+                , LPAD(COALESCE(file.sys10_seq, '99999'), 5, '0')
+                , COALESCE(file.sys10_title_yn, 'false') DESC
+                , file.sys10_file_nm COLLATE "ko_KR.utf8"
+        ]]>
+    </select>
+
+    <!-- AS-IS apr50_bookmark.selectByPublicYn (publicYn = 'true') — 행 수만 -->
+    <select id="countBookmark" resultType="int">
+        SELECT COUNT(*)
+          FROM apr50_bookmark
+         WHERE apr50_company_id = #{companyId}
+           AND apr50_appr_id = #{apprId}
+           AND ( apr50_person_id = #{personId} OR apr50_public_yn = 'true' )
+    </select>
+
+    <!-- AS-IS apr42_comment.getSize -->
+    <select id="countComments" resultType="int">
+        SELECT COUNT(*)
+          FROM apr42_comment
+         WHERE apr42_appr_id = #{apprId}
+           AND apr42_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS apr41_open_history.insert -->
+    <insert id="insertOpenHistory">
+        INSERT INTO apr41_open_history
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{apprId}, f_sysdate(), 'P'
+    </insert>
+
+</mapper>

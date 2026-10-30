@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, JournalLine, JournalMap, JournalPayMonth, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, JournalEdit, JournalLine, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { AstBook } from '../types/ast';
 import { readBlobError } from './file';
 
@@ -257,6 +257,41 @@ export const actApi = {
   /** AS-IS act.Act02_Journal.createJournal (U04): 거래의 자동분개 생성(procType P, exceptYn true) */
   createJournal: async (trId: number, trCode: string): Promise<void> => {
     await apiClient.post<ApiResponse<void>>('v1/act/journals/create', { trId, trCode, procType: 'P', exceptYn: true });
+  },
+
+  /** AS-IS act.Act03_JournalDtl.selectByJournalId + act.Act06_JournalTmp.selectByJournalId (Act02_Lookup_ModiJournal, W05): 전표 머리 + 임시분개 줄 */
+  getJournalEdit: async (journalId: number): Promise<JournalEdit> => {
+    const res = await apiClient.get<ApiResponse<JournalEdit>>(`v1/act/journals/${journalId}/edit`);
+    return res.data.data;
+  },
+
+  /** AS-IS act.Act02_Journal.updateAll (Act02_Lookup_ModiJournal, W05): 비고·거래처와 임시분개·분개장을 다시 쓴다 */
+  saveJournal: async (journalId: number, req: JournalSaveReq): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/act/journals/${journalId}`, req);
+  },
+
+  // ── W05 2단계 ⓑ 연관문서 (Act80_Lookup_RelateAppr) ──
+
+  /** AS-IS act.Act80_RelateAppr.selectByTrId·selectByJournalId: code = 'trId' | 'journalId' */
+  searchRelateApprs: async (code: 'trId' | 'journalId', relateId: number): Promise<ActRelateAppr[]> => {
+    const res = await apiClient.get<ApiResponse<ActRelateAppr[]>>('v1/act/relate-apprs', { params: { code, relateId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act02_Journal.selectOneJournalIdByTrId: 거래에 걸린 전표 ID(첨부파일의 부모). 없으면 null */
+  getJournalIdByTr: async (trId: number): Promise<number | null> => {
+    const res = await apiClient.get<ApiResponse<number | null>>('v1/act/relate-apprs/journal-id', { params: { trId } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS act.Act80_RelateAppr.modelUpdate: 상신 문서를 거래 또는 전표에 연결 */
+  addRelateAppr: async (req: { apprId: number; trId?: number | null; journalId?: number | null }): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/act/relate-apprs', req);
+  },
+
+  /** AS-IS act.Act80_RelateAppr.delete: 연결 제거 */
+  deleteRelateApprs: async (relateApprIds: number[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/act/relate-apprs/delete', { relateApprIds });
   },
 
   /** AS-IS act.Act04_GenLedger.checkClose (U04): 마감이면 AS-IS 메시지로 실패 */

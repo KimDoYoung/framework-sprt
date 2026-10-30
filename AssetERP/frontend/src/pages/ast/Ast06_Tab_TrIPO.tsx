@@ -6,7 +6,7 @@
  *   + 가운데 그리드(툴바 50: [등록][삭제] + 행번호·체크 다중·17열), 아래 300(여백 0,20,20,20) = Ast06_Grid_Journal
  * 스타일: GG (견본 — docs/page-style.md). 툴바가 두 줄이라 SearchPanel(R03), [등록][삭제] 줄은 그리드 위에 따로 둔다
  * UX보강(10): 툴바 = SearchPanel(UX-01), 읽기 전용 날짜 열 폭 90(UX-08, 원본 100)
- * [다음 단계] 연관문서 아이콘이 여는 Act80_Lookup_RelateAppr(다른 도메인 act, 안에서 전자결재 편집창 Apr01_Edit_ApprDoc)과 분개 그리드의 [변경]이 여는 Act02_Lookup_ModiJournal은 지금은 안내만 한다
+ * 연관문서 아이콘 = Act80_Lookup_RelateAppr(W05 2단계 ⓑ, 안에서 [불러오기]·[신규문서 작성]·상세보기의 전자결재 창은 다음 단계 안내), 분개 그리드의 [변경] = Act02_Lookup_ModiJournal(2단계 ⓐ)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Modal, Splitter } from 'antd';
@@ -24,6 +24,7 @@ import { Ast01_Lookup_Info } from './Ast01_Lookup_Info';
 import { Ast05_Lookup_TrCodeWindow } from './Ast05_Lookup_TrCodeWindow';
 import { Ast06_Lookup_TrIPO, AstTrIpoTarget } from './Ast06_Lookup_TrIPO';
 import { Ast06_Grid_Journal, Ast06_Grid_JournalHandle } from './Ast06_Grid_Journal';
+import { Act80_Lookup_RelateAppr, ActRelateApprTarget } from '../act/Act80_Lookup_RelateAppr';
 
 const gb = gbFor<AstTrFinance>();
 const FORMAT = 'YYYY-MM-DD';
@@ -49,6 +50,7 @@ export const Ast06_Tab_TrIPO: React.FC = () => {
   const [corpOpen, setCorpOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const [target, setTarget] = useState<AstTrIpoTarget | null>(null);
+  const [relateTarget, setRelateTarget] = useState<ActRelateApprTarget | null>(null);
   /** 변경 창을 연 행 — 닫을 때 그 행의 분개를 다시 읽는다(callback.execute(trModel)) */
   const editRowId = useRef<number | null>(null);
   const rowsRef = useRef<AstTrFinance[]>([]);
@@ -134,6 +136,25 @@ export const Ast06_Tab_TrIPO: React.FC = () => {
     setTarget({ mode: 'MODI', tr: row });
   };
 
+  // 연관문서 아이콘: 제목 = 일자(yyyy-MM-dd) + " 거래유형" + " 거래처"
+  const openRelate = (row: AstTrFinance) => {
+    editRowId.current = row.trId;
+    setRelateTarget({
+      title: `${row.date}${row.trName ? ' ' + row.trName : ''}${row.corpName ? ' ' + row.corpName : ''}`,
+      code: 'trId', relateId: row.trId, dcrClassTreeId: row.dcrClassTreeId,
+    });
+  };
+  const closeRelate = async () => {
+    const id = editRowId.current;
+    if (id == null) return;
+    try {
+      const fresh = await astApi.getTrFinance(id);
+      setRows(prev => prev.map(r => (r.trId === id ? fresh : r)));
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
   // [E7] deleteButton[삭제].Select (L256) → deleteRow() L455-473: 확인(440) "N건의 항목을 삭제하면 실수령/지급내역이 같이 삭제됩니다. 진행하시겠습니까?" → [E11] YES → delete() L475-531
   const deleteRow = () => {
     const checked = gridRef.current?.api.getSelectedRows() ?? [];
@@ -183,8 +204,8 @@ export const Ast06_Tab_TrIPO: React.FC = () => {
     gb.textCenter('lockUpPeriodName', 100, '확약기간'),  // L370
     iconCell<AstTrFinance>('edit', 'modiAction', 50, '변경', openModi),  // L371 actionCell
     gb.textCenter('apprCnt', 55, '연관문서'),  // L372
-    // [E10] actionCell2 (ImageCell "View") callbackOnCreate (L354) → Act80_Lookup_RelateAppr.open(…) — 다음 단계(안내만)
-    iconCell<AstTrFinance>('view', 'relateAction', 25, ' ', () => message.info('연관문서 창(Act80_Lookup_RelateAppr)은 다음 단계에서 연결합니다.')),  // L373 actionCell2
+    // [E10] actionCell2 (ImageCell "View") callbackOnCreate (L354) → Act80_Lookup_RelateAppr.open(제목, "trId", trId, dcrClassTreeId, callback): 닫으면 그 거래를 다시 읽어 연관문서 건수를 갱신(ast.Ast06_Tr.selectById)
+    iconCell<AstTrFinance>('view', 'relateAction', 25, ' ', openRelate),  // L373 actionCell2
     gb.text('depositName', 150, '예금계좌'),  // L375
     gb.text('note', 250, '적요'),  // L376
     gb.textCenter('personName', 80, '등록자'),  // L377
@@ -249,6 +270,7 @@ export const Ast06_Tab_TrIPO: React.FC = () => {
       <Ast01_Lookup_CorpAccount open={corpOpen} stdDate={startDate} onResult={onCorpResult} onClose={() => setCorpOpen(false)} />
       <Ast01_Lookup_Info open={infoOpen} assetType="1" itemLClass="20" abroType="1" withAll onResult={onInfoResult} onClose={() => setInfoOpen(false)} />
       <Ast06_Lookup_TrIPO target={target} onChanged={onChanged} onClose={closeEdit} />
+      <Act80_Lookup_RelateAppr target={relateTarget} onClosed={() => void closeRelate()} onClose={() => setRelateTarget(null)} />
     </div>
   );
 };

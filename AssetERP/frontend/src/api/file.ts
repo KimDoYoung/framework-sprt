@@ -1,6 +1,6 @@
 import { apiClient, API_BASE_URL } from './client';
 import { ApiResponse } from '../types/auth';
-import { FileInfo } from '../types/sys';
+import { FileInfo, FileLock } from '../types/sys';
 
 /**
  * 파일 공통 API (B10) — AS-IS 서블릿 FileUpload·FileDownload·FileDelete, 서비스 sys.Sys10_File.selectByParentId·sys.Sys11_RelateFile.checkFileDelete
@@ -56,6 +56,12 @@ export const fileApi = {
   /** AS-IS sys.Sys10_File.selectByParentId */
   searchByParentId: async (parentId: number): Promise<FileInfo[]> => {
     const res = await apiClient.get<ApiResponse<FileInfo[]>>('v1/sys/files', { params: { parentId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys10_File.selectByParentId2 (W05): 잠김(lockYn)이 붙은 목록 */
+  searchByParentIdWithLock: async (parentId: number): Promise<FileLock[]> => {
+    const res = await apiClient.get<ApiResponse<FileLock[]>>('v1/sys/files/with-lock', { params: { parentId } });
     return res.data.data ?? [];
   },
 
