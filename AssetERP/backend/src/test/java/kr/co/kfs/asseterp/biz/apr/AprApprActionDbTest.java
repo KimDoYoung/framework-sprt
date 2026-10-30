@@ -16,12 +16,14 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprApprActionStateRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprApprStepRes;
 import kr.co.kfs.asseterp.biz.apr.service.AprApprActionService;
 import kr.co.kfs.asseterp.biz.apr.service.AprApprDetailService;
+import kr.co.kfs.asseterp.biz.apr.service.AprNoticeService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.support.NoticeTestConfig;
 
 /** V02 결재 처리 쓰기를 asseterpdb의 실제 문서로 돌리고 롤백한다 (@MybatisTest는 테스트마다 롤백) */
 @MybatisTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({AprApprActionService.class, AprApprDetailService.class})
+@Import({AprApprActionService.class, AprApprDetailService.class, AprNoticeService.class, NoticeTestConfig.class})
 class AprApprActionDbTest {
 
     @Autowired AprApprActionService service;

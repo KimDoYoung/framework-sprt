@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * 전자결재 결재 처리 (AS-IS client/vi/apr/Apr01_Edit_ApprDoc 승인·반려·승인취소·상신취소 + server/apr/Apr04_ApprStep confirmUpdate·clearApprStepId·cancelUpdate, V02).
  * AS-IS는 단추를 켤지(myTurnCheck 등)를 클라이언트가 정하고 서버는 값을 믿고 고쳤다 → TOBE는 같은 판정을 서버에서 다시 해 로그인 사원이 할 수 없는 처리는 막는다.
- * 알림(앱·메일·SMS 발송, Apr04_ApprStep의 SendTalkAPI·SendMailMaster·sendSMSToNextApprStep)은 TOBE에 발송 부품이 없어 만들지 않았다(작업기록).
+ * 알림(앱·메일·SMS)은 AprNoticeService가 정하고 커밋 뒤 NoticeSender(AA01, 개발은 알림 시뮬레이터)로 보낸다.
  */
 @Service
 @RequiredArgsConstructor
@@ -30,6 +30,7 @@ public class AprApprActionService {
 
     private final AprApprDetailService detail;
     private final AprApprActionMapper mapper;
+    private final AprNoticeService notice;
 
     /** retrieveApproval 판정의 결과 (내부용) */
     record Turn(boolean canConfirm, AprApprStepRes myStep, boolean canCancelApproval, boolean canCancelRequest) {
@@ -116,6 +117,8 @@ public class AprApprActionService {
         if ("30".equals(docStatus) && "true".equals(doc.advertYn())) {
             mapper.insertAdvertHistory(mapper.selectAdvertSeq(), apprId, user.getCompanyId());
         }
+        // 결재 알림 (confirmUpdate L144-561) — 커밋 뒤에 보낸다
+        notice.dispatchAfterCommit(notice.planAfterConfirm(user, doc, docStatus));
         boolean makePdf = "30".equals(docStatus) && hasStamp && stampSeq != null;
         return new AprApprActionRes(true, false, makePdf, null, null);
     }
@@ -143,6 +146,8 @@ public class AprApprActionService {
         if (!"Y".equals(mapper.nextTurnCheck(apprId, mine.stepTypeCode(), mine.seq()))) {
             return fail("다음 결재권자의 결재가 진행되어 결재를 취소할 수 없습니다.");
         }
+        // clearApprStepId L960-1131: 취소하기 전 상태에서 다음 결재자에게 알린다
+        notice.dispatchAfterCommit(notice.planBeforeCancelApproval(user, doc));
         mapper.clearApprStep(mine.apprStepId());
         return new AprApprActionRes(true, false, false, null, null);
     }

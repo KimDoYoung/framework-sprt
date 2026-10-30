@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/emp/mapper/emp01_person.xml selectById, emp92_sms_notice.xml sendCheckTalk·Mail·Sms, apr04_appr_step.xml lastCheck L272·nextCheck L281·lastStepOne·selectByApprId,
+     apr10_stamp.xml selectByAlt, sys01_company.xml selectById, dcr01_class_tree.xml selectById — AA01 결재 알림 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprNoticeMapper">
+
+    <select id="selectPerson" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprNoticePerson">
+        SELECT emp01_person_id     AS person_id
+             , emp01_kor_nm        AS kor_name
+             , emp01_mobile_telno  AS mobile_tel_no
+             , emp01_email_addr    AS email_address
+             , emp01_company_id    AS company_id
+          FROM emp01_person
+         WHERE emp01_person_id = #{personId}
+    </select>
+
+    <select id="selectCompanyLoc" resultType="string">
+        SELECT sys01_loc_nm FROM sys01_company WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <select id="selectClassTreeName" resultType="string">
+        SELECT dcr01_class_tree_nm FROM dcr01_class_tree WHERE dcr01_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- 앱알림은 emp92_talk_notice_yn이 비어 있어도 꺼진 것으로 본다(COALESCE 'false') — 원본 그대로 -->
+    <select id="countTalkBlocked" resultType="int">
+        SELECT COUNT(*)
+          FROM emp92_sms_notice
+         WHERE emp92_person_id = #{personId}
+           AND emp92_sms_notice_cd = #{noticeCode}
+           AND COALESCE(emp92_talk_notice_yn, 'false') = 'false'
+    </select>
+
+    <select id="countMailBlocked" resultType="int">
+        SELECT COUNT(*)
+          FROM emp92_sms_notice
+         WHERE emp92_person_id = #{personId}
+           AND emp92_sms_notice_cd = #{noticeCode}
+           AND COALESCE(emp92_mail_notice_yn, 'true') = 'false'
+    </select>
+
+    <select id="countSmsBlocked" resultType="int">
+        SELECT COUNT(*)
+          FROM emp92_sms_notice
+         WHERE emp92_person_id = #{personId}
+           AND emp92_sms_notice_cd = #{noticeCode}
+           AND COALESCE(emp92_sms_notice_yn, 'true') = 'false'
+    </select>
+
+    <sql id="stepColumns">
+        apr04_appr_id        AS appr_id
+      , apr04_seq            AS seq
+      , apr04_step_type_cd   AS step_type_code
+      , apr04_step_status_cd AS step_status_code
+      , apr04_step_emp_id    AS step_emp_id
+      , apr04_appr_date      AS appr_date
+    </sql>
+
+    <select id="selectSteps" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprNoticeStep">
+        SELECT <include refid="stepColumns"/>
+          FROM apr04_appr_step
+         WHERE apr04_appr_id = #{apprId}
+         ORDER BY f_to_number(apr04_seq), apr04_step_type_cd, apr04_appr_step_id
+    </select>
+
+    <select id="selectLastCheck" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprNoticeStep">
+        SELECT <include refid="stepColumns"/>
+          FROM apr04_appr_step
+         WHERE apr04_appr_id = #{apprId}
+           AND COALESCE(apr04_step_status_cd, 'none') IN ('20', '30')
+           AND apr04_step_type_cd IN ('00', '10', '20', '40')
+         ORDER BY apr04_seq DESC
+    </select>
+
+    <select id="selectNextCheck" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprNoticeStep">
+        SELECT <include refid="stepColumns"/>
+          FROM apr04_appr_step
+         WHERE apr04_appr_id = #{apprId}
+           AND COALESCE(apr04_step_status_cd, 'none') IN ('10')
+           AND apr04_step_type_cd IN ('00', '10', '20', '40')
+         ORDER BY apr04_seq
+    </select>
+
+    <select id="selectLastStepEmp" resultType="long">
+        SELECT apr04_step_emp_id
+          FROM apr04_appr_step
+         WHERE apr04_appr_id = #{apprId}
+           AND apr04_seq::INTEGER = ( SELECT MAX(apr04_seq::INTEGER)
+                                        FROM apr04_appr_step
+                                       WHERE apr04_appr_id = #{apprId}
+                                         AND apr04_step_type_cd NOT IN ('30', '40') )
+         LIMIT 1
+    </select>
+
+    <select id="selectStampAltSecondEmp" resultType="long">
+        SELECT apr10_stamp.apr10_second_emp_id
+          FROM apr10_stamp
+               INNER JOIN apr01_appr    ON apr01_stamp_id = apr10_stamp_id
+               INNER JOIN apr07_alt_appr ON apr07_target_emp_id = apr10_emp_id
+         WHERE apr01_appr_id = #{apprId}
+           AND apr07_target_emp_id = #{personId}
+           AND apr07_stamp_yn = 'true'
+           AND f_today() BETWEEN apr07_start_date AND apr07_close_date
+         LIMIT 1
+    </select>
+
+</mapper>
