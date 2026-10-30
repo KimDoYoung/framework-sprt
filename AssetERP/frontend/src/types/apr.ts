@@ -602,3 +602,20 @@ export interface AprApprAdv {
   manageCode?: string | null;
   manageName?: string | null;
 }
+
+/** 문서를 연 사원에게 켜질 결재 처리 단추 (AS-IS myTurnCheck·myCancelApprovalCheck·retrieveApproval, V02) */
+export interface AprApprActionState {
+  canConfirm: boolean;
+  canCancelApproval: boolean;
+  canCancelRequest: boolean;
+}
+
+/** 결재 처리 결과 (V02) — ok가 false면 message를 안내로, needConfirm이면 message로 확인을 받고 다시 보낸다 */
+export interface AprApprActionRes {
+  ok: boolean;
+  needConfirm: boolean;
+  /** 인감이 있는 완료 문서 — AS-IS는 PDF를 만들었다(V04 전까지 안 만듦) */
+  makePdf: boolean;
+  message?: string | null;
+  notice?: string | null;
+}

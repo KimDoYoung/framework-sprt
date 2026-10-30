@@ -60,12 +60,12 @@ class CrdExcelDbTest {
     @Test
     void 구분코드_조회_등록_수정_삭제() {
         int all = jdbc.queryForObject("select count(*) from crd11_excel_code where crd11_company_id = 0 and crd11_bank_cd = '1000'", Integer.class);
-        assertThat(codes.search(admin, "1000")).hasSize(all);
+        assertThat(codes.search(admin, "1000", false)).hasSize(all);
 
         CrdExcelCodeRes created = codes.save(admin, List.of(new CrdExcelCodeSaveReq(-1L, "1000", "9999", 999L, "시험"))).get(0);
         assertThat(created.excelCodeId()).isPositive();
-        assertThat(codes.search(admin, "1000")).hasSize(all + 1);
-        assertThat(codes.search(admin, "1000").get(all).excelCodeId()).isEqualTo(created.excelCodeId());  // 순서(seq) 오름차순
+        assertThat(codes.search(admin, "1000", false)).hasSize(all + 1);
+        assertThat(codes.search(admin, "1000", false).get(all).excelCodeId()).isEqualTo(created.excelCodeId());  // 순서(seq) 오름차순
 
         CrdExcelCodeRes updated = codes.save(admin, List.of(new CrdExcelCodeSaveReq(created.excelCodeId(), "1000", "9999", 998L, "시험2"))).get(0);
         assertThat(updated.seq()).isEqualTo(998L);
@@ -77,6 +77,6 @@ class CrdExcelDbTest {
         assertThat(codes.delete(other, List.of(created.excelCodeId()))).isZero();
 
         assertThat(codes.delete(admin, List.of(created.excelCodeId()))).isEqualTo(1);
-        assertThat(codes.search(admin, "1000")).hasSize(all);
+        assertThat(codes.search(admin, "1000", false)).hasSize(all);
     }
 }

@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprAdv, AprApprDetail, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
+import { AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprApprAdv, AprApprDetail, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -520,5 +520,38 @@ export const aprDetailApi = {
   /** AS-IS apr.Apr41_OpenHistory.insert: 열람기록 (임시저장·관리자는 서버가 건너뛴다) */
   recordOpen: async (apprId: number): Promise<void> => {
     await apiClient.post(`v1/apr/apprs/${apprId}/open-history`);
+  },
+};
+
+/** 전자결재 결재 처리 (AS-IS client/vi/apr/Apr01_Edit_ApprDoc 승인·반려·승인취소·상신취소, V02) */
+export const aprActionApi = {
+  /** AS-IS retrieveApproval/myTurnCheck/myCancelApprovalCheck: 이 사원에게 켜질 단추 */
+  getState: async (apprId: number): Promise<AprApprActionState> => {
+    const res = await apiClient.get<ApiResponse<AprApprActionState>>(`v1/apr/apprs/${apprId}/action-state`);
+    return res.data.data;
+  },
+
+  /** AS-IS apr.Apr04_ApprStep.confirmCheck: [승인]·[반려]를 누른 직후(의견 창 전) 앞 결재가 끝났는지 */
+  confirmCheck: async (apprId: number): Promise<AprApprActionRes> => {
+    const res = await apiClient.post<ApiResponse<AprApprActionRes>>(`v1/apr/apprs/${apprId}/confirm-check`);
+    return res.data.data;
+  },
+
+  /** AS-IS apr.Apr04_ApprStep.confirmUpdate: action 'confirm'(승인, message=결재의견) | 'reject'(반려, message=반려사유) */
+  confirm: async (apprId: number, action: 'confirm' | 'reject', message: string): Promise<AprApprActionRes> => {
+    const res = await apiClient.post<ApiResponse<AprApprActionRes>>(`v1/apr/apprs/${apprId}/confirm`, { action, message });
+    return res.data.data;
+  },
+
+  /** AS-IS apr.Apr04_ApprStep.nextTurnCheck + clearApprStepId: 승인취소 */
+  cancelApproval: async (apprId: number): Promise<AprApprActionRes> => {
+    const res = await apiClient.post<ApiResponse<AprApprActionRes>>(`v1/apr/apprs/${apprId}/cancel-approval`);
+    return res.data.data;
+  },
+
+  /** AS-IS 상신취소 (cancelCheck01~cancel2, 특정 화면 상신 문서는 deleteChk01): needConfirm이면 확인을 받고 confirmed=true로 다시 */
+  cancelRequest: async (apprId: number, confirmed: boolean): Promise<AprApprActionRes> => {
+    const res = await apiClient.post<ApiResponse<AprApprActionRes>>(`v1/apr/apprs/${apprId}/cancel-request`, { confirmed });
+    return res.data.data;
   },
 };

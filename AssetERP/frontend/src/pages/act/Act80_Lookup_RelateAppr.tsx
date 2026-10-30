@@ -147,7 +147,7 @@ export const Act80_Lookup_RelateAppr: React.FC<Props> = ({ target, onClosed, onC
           <Act80_LookupGrid_RelateFile code={target?.code ?? null} relateId={target?.relateId ?? null} />
         </div>
       </div>
-      <Apr01_Edit_ApprDoc apprId={detailApprId} onClose={() => setDetailApprId(null)} />
+      <Apr01_Edit_ApprDoc apprId={detailApprId} onClosed={() => void retrieve()} onClose={() => setDetailApprId(null)} />
       <Apr05_Lookup_LoadDoc open={loadDocOpen} onResult={doc => void insert(doc)} onClose={() => setLoadDocOpen(false)} />
       <Dcr01_Lookup_Class open={classOpen} classTreeId={target?.dcrClassTreeId} onResult={() => message.info(NEXT_STEP)} onClose={() => setClassOpen(false)} />
     </LookupModal>

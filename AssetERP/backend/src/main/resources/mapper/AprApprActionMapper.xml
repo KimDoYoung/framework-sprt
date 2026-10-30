@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr04_appr_step.xml confirmCheck L312·nextTurnCheck·cancelCheck L290·confirmUpdate L447·nextConfirmUpdate L471·clearApprStepId L501·lastStepList·cancelUpdate,
+     apr01_appr.xml confirmUpdate·cancelUpdate·getStampSeq·insertApprDel·deleteAppr, apr11_advert_book.xml, apr16_stamp_doc.xml deleteByApprId·selectByApprId, apr92_appr_modi.xml — V02 결재 처리 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprApprActionMapper">
+
+    <!-- AS-IS apr04_appr_step.confirmCheck: 합의 묶음의 시작 앞 단계, 결재면 바로 앞 단계(참조 제외)에 결재일이 있어야 'Y' -->
+    <select id="confirmCheck" resultType="string">
+        <![CDATA[
+        WITH current_step AS (
+            SELECT CAST(#{apprId} AS numeric)       AS appr_id
+                 , CAST(#{stepTypeCode} AS varchar) AS step_type_cd
+                 , CAST(#{seq} AS int)              AS seq
+        ),
+        agree_start AS (
+            SELECT MIN(a.apr04_seq::int) AS start_seq
+              FROM apr04_appr_step a
+                   INNER JOIN current_step c ON a.apr04_appr_id = c.appr_id
+             WHERE a.apr04_step_type_cd = '20'
+               AND a.apr04_seq::int <= c.seq::int
+               AND NOT EXISTS ( SELECT 1
+                                  FROM apr04_appr_step x
+                                 WHERE x.apr04_appr_id = a.apr04_appr_id
+                                   AND x.apr04_step_type_cd != '20'
+                                   AND x.apr04_seq::int < c.seq::int
+                                   AND x.apr04_seq::int >= a.apr04_seq::int )
+        ),
+        prev_seq AS (
+            SELECT CASE WHEN c.step_type_cd = '10'
+                        THEN ( SELECT MAX(a.apr04_seq::int)
+                                 FROM apr04_appr_step a
+                                WHERE a.apr04_appr_id = c.appr_id
+                                  AND a.apr04_step_type_cd != '30'
+                                  AND a.apr04_seq::int < c.seq )
+                        WHEN c.step_type_cd = '20'
+                        THEN ( SELECT MAX(a.apr04_seq::int)
+                                 FROM apr04_appr_step a
+                                      CROSS JOIN agree_start g
+                                WHERE a.apr04_appr_id = c.appr_id
+                                  AND a.apr04_step_type_cd != '30'
+                                  AND a.apr04_seq::int < g.start_seq )
+                   END AS prev_seq
+              FROM current_step c
+        )
+        SELECT CASE WHEN p.prev_seq IS NULL THEN 'Y'
+                    WHEN EXISTS ( SELECT 1
+                                    FROM apr04_appr_step a
+                                         INNER JOIN current_step c ON a.apr04_appr_id = c.appr_id
+                                   WHERE a.apr04_seq::int = p.prev_seq
+                                     AND a.apr04_appr_date IS NOT NULL )
+                    THEN 'Y'
+                    ELSE 'N' END AS can_approve
+          FROM prev_seq p
+        ]]>
+    </select>
+
+    <!-- AS-IS apr04_appr_step.nextTurnCheck: 다음 단계(합의 묶음이면 묶음 끝 뒤)에 아직 결재일이 없어야 'Y' -->
+    <select id="nextTurnCheck" resultType="string">
+        <![CDATA[
+        WITH current_step AS (
+            SELECT CAST(#{apprId} AS numeric)       AS appr_id
+                 , CAST(#{stepTypeCode} AS varchar) AS step_type_cd
+                 , CAST(#{seq} AS int)              AS seq
+        ),
+        agree_end AS (
+            SELECT MAX(a.apr04_seq::int) AS end_seq
+              FROM apr04_appr_step a
+             WHERE a.apr04_appr_id = #{apprId}
+               AND a.apr04_step_type_cd = '20'
+               AND a.apr04_seq::int >= CAST(#{seq} AS int)
+               AND NOT EXISTS ( SELECT 1
+                                  FROM apr04_appr_step x
+                                 WHERE x.apr04_appr_id = a.apr04_appr_id
+                                   AND x.apr04_step_type_cd = '10'
+                                   AND x.apr04_seq::int > CAST(#{seq} AS int)
+                                   AND x.apr04_seq::int < a.apr04_seq::int )
+        ),
+        next_seq AS (
+            SELECT CASE WHEN c.step_type_cd = '10'
+                        THEN ( SELECT MIN(a.apr04_seq::int)
+                                 FROM apr04_appr_step a
+                                WHERE a.apr04_appr_id = c.appr_id
+                                  AND a.apr04_step_type_cd != '30'
+                                  AND a.apr04_seq::int > c.seq )
+                        WHEN c.step_type_cd = '20'
+                        THEN ( SELECT MIN(a.apr04_seq::int)
+                                 FROM apr04_appr_step a
+                                      CROSS JOIN agree_end g
+                                WHERE a.apr04_appr_id = c.appr_id
+                                  AND a.apr04_step_type_cd != '30'
+                                  AND a.apr04_seq::int > g.end_seq )
+                   END AS next_seq
+              FROM current_step c
+        )
+        SELECT CASE WHEN n.next_seq IS NULL THEN 'Y'
+                    WHEN EXISTS ( SELECT 1
+                                    FROM apr04_appr_step a
+                                         INNER JOIN current_step c ON a.apr04_appr_id = c.appr_id
+                                   WHERE a.apr04_seq::int = n.next_seq
+                                     AND a.apr04_appr_date IS NULL )
+                    THEN 'Y'
+                    ELSE 'N' END AS can_next_approve
+          FROM next_seq n
+        ]]>
+    </select>
+
+    <!-- AS-IS apr04_appr_step.cancelCheck (결과 행 수를 센다) -->
+    <select id="countDoneSteps" resultType="int">
+        SELECT COUNT(*)
+          FROM apr04_appr_step
+         WHERE apr04_appr_id = #{apprId}
+           AND COALESCE(apr04_step_status_cd, 'none') IN ('20', '30')
+    </select>
+
+    <!-- AS-IS apr04_appr_step.confirmUpdate: 승인(20)이면 결재자의 사용 중인 서명(emp60)을 붙인다 -->
+    <update id="confirmUpdateStep">
+        UPDATE apr04_appr_step
+           SET apr04_step_status_cd = CAST(#{statusCode} AS varchar)
+             , apr04_note           = #{note}
+             , apr04_reject_reason  = #{rejectReason}
+             , apr04_appr_date      = f_sysdate()
+             , apr04_appr_emp_id    = #{apprEmpId}
+             , apr04_sign_id        = CASE WHEN CAST(#{statusCode} AS varchar) = '20'
+                                           THEN ( SELECT emp60_sign_id
+                                                    FROM emp60_sign
+                                                   WHERE emp60_person_id = #{apprEmpId}
+                                                     AND COALESCE(emp60_use_yn, 'false') = 'true'
+                                                   LIMIT 1 )
+                                           ELSE NULL END
+         WHERE apr04_appr_id      = #{apprId}
+           AND apr04_step_emp_id  = #{stepEmpId}
+           AND apr04_step_type_cd = #{stepTypeCode}
+           AND apr04_seq          = #{seq}
+    </update>
+
+    <!-- AS-IS apr04_appr_step.nextConfirmUpdate: 같은 사람이 연달아 결재자일 때 뒤 단계를 함께 승인 -->
+    <update id="nextConfirmUpdate">
+        UPDATE apr04_appr_step
+           SET apr04_step_status_cd = CAST(#{statusCode} AS varchar)
+             , apr04_note           = #{note}
+             , apr04_reject_reason  = #{rejectReason}
+             , apr04_appr_date      = f_sysdate()
+             , apr04_appr_emp_id    = #{apprEmpId}
+             , apr04_sign_id        = CASE WHEN CAST(#{statusCode} AS varchar) = '20'
+                                           THEN ( SELECT emp60_sign_id
+                                                    FROM emp60_sign
+                                                   WHERE emp60_person_id = #{apprEmpId}
+                                                     AND COALESCE(emp60_use_yn, 'false') = 'true'
+                                                   LIMIT 1 )
+                                           ELSE NULL END
+         WHERE apr04_appr_id = #{apprId}
+           AND apr04_seq     = #{seq}
+    </update>
+
+    <!-- AS-IS apr04_appr_step.lastStepList: 이번 단계 뒤 단계의 실제 결재자(인감은 대결/부책임자, 결재·합의는 대결자) -->
+    <select id="selectLastSteps" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprLastStepRow">
+        <![CDATA[
+        SELECT apr04_step_type_cd AS step_type_code
+             , apr04_seq          AS seq
+             , ( CASE WHEN apr04_step_type_cd = '40'
+                      THEN ( CASE WHEN COALESCE(apr07_stamp_yn, 'false') = 'true'
+                                  THEN ( SELECT COALESCE(apr10_second_emp_id, apr10_emp_id)
+                                           FROM apr10_stamp
+                                          WHERE apr10_stamp_id = apr01_stamp_id )
+                                  ELSE apr04_step_emp_id END )
+                      WHEN apr04_step_type_cd != '30'
+                      THEN COALESCE(apr07_alt_emp_id, apr04_step_emp_id)
+                      ELSE apr04_step_emp_id END ) AS step_emp_id
+          FROM apr04_appr_step
+               INNER JOIN apr01_appr ON apr01_appr_id = apr04_appr_id
+               LEFT OUTER JOIN apr07_alt_appr ON apr07_target_emp_id = apr04_step_emp_id
+                                             AND f_sysdate()::date BETWEEN apr07_start_date AND apr07_close_date
+         WHERE apr04_appr_id = #{apprId}
+           AND apr04_seq::integer > CAST(#{seq} AS INTEGER)
+           AND apr04_step_type_cd NOT IN ('00', '30')
+         ORDER BY apr04_seq
+        ]]>
+    </select>
+
+    <select id="selectStepStates" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStepStateRow">
+        SELECT apr04_step_type_cd   AS step_type_code
+             , apr04_step_status_cd AS step_status_code
+          FROM apr04_appr_step
+         WHERE apr04_appr_id = #{apprId}
+         ORDER BY f_to_number(apr04_seq), apr04_step_type_cd, apr04_appr_step_id
+    </select>
+
+    <!-- AS-IS apr01_appr.getStampSeq: 올해 인감대장 마지막 번호 + 1 (표지 파일이 있으면 없음) -->
+    <select id="selectStampSeq" resultType="string">
+        <![CDATA[
+        WITH sys AS ( SELECT COALESCE(sys01_dcr_numbering_cd, '1') AS dcr_numbering_cd
+                           , CASE WHEN COALESCE(sys01_dcr_numbering_cd, '1') = '2'
+                                  THEN COALESCE(org02_dcr_id_word, '') ELSE '' END AS dcr_id_word
+                        FROM sys01_company
+                             INNER JOIN ( SELECT *
+                                            FROM org01_code
+                                                 INNER JOIN org02_info ON org02_code_id = org01_code_id
+                                           WHERE org01_company_id = #{companyId}
+                                             AND org01_code_id    = CAST(f_get_emptrans(#{regEmpId}, CAST(#{regDate} AS date), 'org_code_id') AS NUMERIC)
+                                             AND org02_mod_date   = ( SELECT MAX(org02_mod_date)
+                                                                        FROM org02_info
+                                                                       WHERE org02_code_id = org01_code_id
+                                                                         AND org02_mod_date <= #{regDate} )
+                                        ) sys ON org01_company_id = sys01_company_id
+        ) SELECT (SELECT dcr_id_word FROM sys) || stamp_seq AS apr01_stamp_seq
+            FROM ( SELECT COALESCE(MAX(REPLACE(t.apr01_stamp_seq, COALESCE(apr01_dcr_id_word, dcr_id_word), '')::numeric), 0) + 1 AS stamp_seq
+                     FROM ( SELECT apr01_stamp_seq                AS apr01_stamp_seq
+                                 , COALESCE(apr01_dcr_id_word, '') AS apr01_dcr_id_word
+                              FROM apr01_appr
+                             WHERE to_char(apr01_reg_date, 'yyyy') = to_char(f_today(), 'yyyy')
+                               AND apr01_company_id = #{companyId}
+                             UNION ALL
+                            SELECT apr99_stamp_seq                AS apr01_stamp_seq
+                                 , COALESCE(apr99_dcr_id_word, '') AS apr01_dcr_id_word
+                              FROM apr99_appr_del
+                             WHERE to_char(apr99_reg_date, 'yyyy') = to_char(f_today(), 'yyyy')
+                               AND apr99_company_id = #{companyId}
+                          ) t
+                        , sys
+                    WHERE ( ( dcr_numbering_cd = '2' AND apr01_dcr_id_word = dcr_id_word ) OR
+                            ( dcr_numbering_cd = '1' AND apr01_dcr_id_word = '' ) )
+                 ) A
+           WHERE NOT EXISTS ( SELECT *
+                                FROM sys10_file
+                               WHERE sys10_parent_id = #{apprId}
+                                 AND sys10_title_yn = 'true' )
+        ]]>
+    </select>
+
+    <!-- AS-IS apr01_appr.confirmUpdate: 인감대장번호는 값이 없으면 NULL로 덮어쓴다(원본 그대로) -->
+    <update id="confirmUpdateAppr">
+        UPDATE apr01_appr
+           SET apr01_status_cd = #{statusCode}
+             , apr01_stamp_seq = #{stampSeq}
+         WHERE apr01_appr_id = #{apprId}
+    </update>
+
+    <!-- AS-IS apr11_advert_book.getAdvertSeq. asseterpdb의 apr11_advert_seq는 varchar(40)이라 `COALESCE(MAX(열), 10000)`이 "types text and integer cannot be matched"로 안 돈다
+         → 열을 numeric으로 바꿔 최댓값을 구한다 (원래 SQL은 V02 작업방법에 적음) -->
+    <select id="selectAdvertSeq" resultType="long">
+        SELECT CASE WHEN apr11_advert_seq &lt;= 9999 THEN 10000 ELSE apr11_advert_seq END AS apr11_advert_seq
+          FROM ( SELECT (COALESCE(MAX(CAST(apr11_advert_seq AS numeric)), 10000)) + 1 AS apr11_advert_seq
+                   FROM apr11_advert_book ) t
+    </select>
+
+    <insert id="insertAdvertHistory">
+        INSERT INTO apr11_advert_book ( apr11_advert_book_id, apr11_advert_seq, apr11_advert_type_nm, apr11_media_nm, apr11_cnt, apr11_note, apr11_appr_id, apr11_company_id )
+        SELECT f_create_seq(), CAST(#{advertSeq} AS varchar), NULL, NULL, NULL, NULL, #{apprId}, #{companyId}
+    </insert>
+
+    <!-- AS-IS apr04_appr_step.clearApprStepId (승인취소) -->
+    <update id="clearApprStep">
+        UPDATE apr04_appr_step
+           SET apr04_step_status_cd = '10'
+             , apr04_appr_date      = NULL
+             , apr04_note           = NULL
+             , apr04_reject_reason  = NULL
+             , apr04_appr_emp_id    = NULL
+         WHERE apr04_appr_step_id = #{apprStepId}
+    </update>
+
+    <delete id="deleteApprModi">
+        DELETE FROM apr92_appr_modi WHERE apr92_appr_id = #{apprId}
+    </delete>
+
+    <!-- AS-IS apr04_appr_step.cancelUpdate: 상신자 본인 단계를 대기(10)로 되돌린다 -->
+    <update id="cancelUpdateStep">
+        UPDATE apr04_appr_step
+           SET apr04_step_status_cd = '10'
+             , apr04_reject_reason  = ''
+             , apr04_appr_date      = NULL
+             , apr04_appr_emp_id    = #{empId}
+         WHERE apr04_appr_id     = #{apprId}
+           AND apr04_step_emp_id = #{empId}
+    </update>
+
+    <!-- AS-IS apr01_appr.cancelUpdate (상신 취소) -->
+    <update id="cancelUpdateAppr">
+        UPDATE apr01_appr SET apr01_status_cd = '99' WHERE apr01_appr_id = #{apprId}
+    </update>
+
+    <!-- AS-IS apr16_stamp_doc.selectByApprId regCheckYn=true -->
+    <select id="countStampDocsDone" resultType="int">
+        SELECT COUNT(*)
+          FROM apr16_stamp_doc
+         WHERE apr16_appr_id = #{apprId}
+           AND ( ( apr16_appl_type IN ('1','2') AND apr16_reg_date   IS NOT NULL ) OR
+                 ( apr16_appl_type IN ('3')     AND apr16_stamp_date IS NOT NULL ) )
+    </select>
+
+    <!-- AS-IS apr16_stamp_doc.deleteByApprId -->
+    <delete id="deleteStampDocs">
+        DELETE FROM apr16_stamp_doc
+         WHERE apr16_appr_id = #{apprId}
+           AND ( ( apr16_appl_type IN ('1','2') AND apr16_reg_date   IS NULL ) OR
+                 ( apr16_appl_type IN ('3')     AND apr16_stamp_date IS NULL ) )
+    </delete>
+
+    <!-- AS-IS apr01_appr.insertApprDel (apr99_appr_del 열 순서 그대로). 삭제 사원은 원본 요청에 값이 없어 비는데 TOBE는 로그인 사원을 남긴다 -->
+    <insert id="insertApprDel">
+        INSERT INTO apr99_appr_del
+        SELECT f_create_seq()
+             , apr01_appr_id
+             , apr01_title
+             , apr01_reg_date
+             , apr01_status_cd
+             , apr01_content
+             , apr01_note
+             , apr01_reg_emp_id
+             , apr01_effect_date
+             , apr01_class_tree_id
+             , apr01_stamp_id
+             , apr01_receive_nm
+             , apr01_reference_nm
+             , apr01_stamp_seq
+             , apr01_inout_cd
+             , f_sysdate()
+             , #{empId}
+             , apr01_company_id
+             , apr01_form_type
+             , apr01_dcr_id_word
+             , apr01_sign_company
+             , apr01_sign_ceo
+             , apr01_stamp_position
+             , apr01_link_cd
+          FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </insert>
+
+    <delete id="deleteAppr">
+        DELETE FROM apr01_appr WHERE apr01_appr_id = #{apprId}
+    </delete>
+
+    <update id="clearOprApprId">
+        UPDATE opr01_create SET opr01_appr_id = NULL WHERE opr01_appr_id = #{apprId}
+    </update>
+
+    <update id="clearPlanApprId">
+        UPDATE pln02_plan SET pln02_appr_id = NULL WHERE pln02_appr_id = #{apprId}
+    </update>
+
+    <delete id="deleteAdvertByApprId">
+        DELETE FROM apr11_advert_book WHERE apr11_appr_id = #{apprId}
+    </delete>
+
+</mapper>

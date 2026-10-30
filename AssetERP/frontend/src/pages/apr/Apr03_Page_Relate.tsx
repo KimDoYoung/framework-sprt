@@ -74,8 +74,8 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc }) => {
         aprDetailApi.getAdvs(id), aprDetailApi.getRelateApprs(id), aprDetailApi.getStampAppls(id), aprDetailApi.getSteps(id),
       ]);
       setFiles(fileList); setIcs(icsList); setIcr(icrList); setFunds(fundList); setAdvs(advList); setApprs(apprList); setStamps(stampList);
-      // 결재선 store는 stepStatusCode 오름차순으로 정렬된다 (buildApprStepGrid L1605-1607, 안정 정렬)
-      setSteps([...stepList].sort((a, b) => (a.stepStatusCode ?? '').localeCompare(b.stepStatusCode ?? '')));
+      // 결재선은 서버가 주는 순서(seq)대로 둔다 — buildApprStepGrid L1605의 결재상태 정렬(StoreSortInfo)은 쓰지 않았다(작업방법 "다른 점")
+      setSteps(stepList);
       // clearPanel(0): 처음 값이 있는 탭을 연다
       const counts = [fileList.length, icsList.length, icrList.length, fundList.length, advList.length, apprList.length, stampList.length];
       const first = counts.findIndex(c => c > 0);
