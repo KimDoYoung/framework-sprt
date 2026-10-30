@@ -267,3 +267,60 @@ export interface BizProvideSimpleCond {
   provideRcvType: string;
   crmName: string;
 }
+
+/** U15 Biz01_Tab_CardManagement 그리드 한 행 (AS-IS Biz01_PromoModel) — 오른쪽 폼(Biz01_Edit_Account)에 그대로 넘긴다. 날짜는 'yyyy-MM-dd…' */
+export interface BizCardManagement {
+  promoId: number;
+  closeYn: boolean | null;
+  /** 마감이면 '마감' */
+  closeName: string | null;
+  htmlCardName: string | null;
+  regEmpName: string | null;
+  approvalDt: string | null;
+  franchiseName: string | null;
+  sectorName: string | null;
+  provideAmt: number | null;
+  providePurCode: string | null;
+  providePurName: string | null;
+  provideContentCode: string | null;
+  provideContentName: string | null;
+  accountCodeId: number | null;
+  accountCode: string | null;
+  accountName: string | null;
+  taxType: string | null;
+  taxTypeName: string | null;
+  note: string | null;
+  /** 비품대장에 올랐으면 '등록완료' */
+  depnBookYn: string | null;
+  realPersonId: number | null;
+  realPersonName: string | null;
+}
+
+/** U15 [마감] 때 업로드 금액과 내역관리 금액이 다른 건 (AS-IS crd02_data.selectByCompareAmt) */
+export interface BizCardCompare {
+  cardNo: string | null;
+  approvalDt: string | null;
+  franchiseName: string | null;
+  sectorName: string | null;
+  approvalAmount: number | null;
+  provideAmt: number | null;
+}
+
+/** U15 Biz01_Edit_Account [저장] (AS-IS Biz01_Promo.modelUpdate). realPersonId가 없으면 '공통' */
+export interface BizCardManagementUpdateReq {
+  providePurCode: string | null;
+  provideContentCode: string | null;
+  accountCodeId: number | null;
+  note: string | null;
+  taxType: string | null;
+  realPersonId: number | null;
+}
+
+/** U15 [엑셀다운로드] 자료 만들기 — 기간 'yyyy.MM', managerId·providePurCode '%'는 전체 */
+export interface BizCardManagementPrintReq {
+  startYm: string;
+  closeYm: string;
+  managerId: string;
+  providePurCode: string;
+  searchText: string;
+}

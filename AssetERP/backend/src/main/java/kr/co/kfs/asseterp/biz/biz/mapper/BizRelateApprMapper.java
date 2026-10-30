@@ -13,6 +13,10 @@ public interface BizRelateApprMapper {
     List<BizRelateApprRes> selectByPersonId(@Param("companyId") Long companyId, @Param("dataYm") String dataYm,
                                             @Param("linkCode") String linkCode, @Param("personId") Long personId);
 
+    /** AS-IS biz05_relate_appr.selectByDataYm — dataYm은 "%…%"로 감싼 글자 */
+    List<BizRelateApprRes> selectByDataYm(@Param("companyId") Long companyId, @Param("dataYm") String dataYm,
+                                          @Param("linkCode") String linkCode);
+
     /** AS-IS biz05_relate_appr.selectByPromoId */
     List<BizRelateApprRes> selectByPromoId(@Param("companyId") Long companyId, @Param("promoId") Long promoId);
 

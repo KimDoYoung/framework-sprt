@@ -30,6 +30,12 @@ public class BizRelateApprController {
         return ApiResponse.ok(service.getByPerson(principal, dataYm, linkCode));
     }
 
+    /** AS-IS biz.Biz05_RelateAppr.selectByDataYm — 한 건이면 그 행, 아니면 data가 null(미상신) */
+    @GetMapping("/by-data-ym")
+    public ApiResponse<BizRelateApprRes> byDataYm(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String dataYm, @RequestParam String linkCode) {
+        return ApiResponse.ok(service.getByDataYm(principal, dataYm, linkCode));
+    }
+
     /** AS-IS biz.Biz05_RelateAppr.selectFileCount → 'n건' */
     @GetMapping("/file-count")
     public ApiResponse<String> fileCount(@RequestParam Long promoId) {

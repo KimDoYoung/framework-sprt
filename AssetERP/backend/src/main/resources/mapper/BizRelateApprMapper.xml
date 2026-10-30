@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!-- AS-IS(IDMS-IC) server/biz/mapper/biz05_relate_appr.xml (selectByPersonId·selectByPromoId·selectFileCount) + UpdateDataModel(biz05_relate_appr) DELETE  (L02) -->
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz05_relate_appr.xml (selectByPersonId·selectByDataYm·selectByPromoId·selectFileCount) + UpdateDataModel(biz05_relate_appr) DELETE  (L02) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizRelateApprMapper">
 
     <!-- AS-IS biz05_relate_appr.selectByPersonId L68 (IDMS-IC) — 사용자·기준년월별 상신 상태 -->
@@ -13,6 +13,10 @@
              , biz05_appr_id                                                              AS appr_id
              , apr01_status_cd                                                            AS status_code
              , f_cdnm('AprStatusCode', apr01_status_cd, biz05_company_id, apr01_reg_date) AS status_name
+             , NULL::varchar                                                              AS title
+             , NULL::timestamp                                                            AS reg_date
+             , NULL::timestamp                                                            AS effect_date
+             , NULL::varchar                                                              AS reg_emp_name
           FROM biz05_relate_appr a
                INNER JOIN apr01_appr b ON b.apr01_appr_id = a.biz05_appr_id
          WHERE biz05_company_id = #{companyId}
@@ -20,6 +24,24 @@
            AND biz05_link_cd    = #{linkCode}
            AND biz05_person_id  = #{personId}
            AND biz05_person_id IS NOT NULL
+    </select>
+
+    <!-- AS-IS biz05_relate_appr.selectByDataYm (IDMS-IC) — 회사·기준년월(부분 일치)별 상신 상태 (U15 Biz01_Tab_CardManagement) -->
+    <select id="selectByDataYm" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizRelateApprRes">
+        SELECT biz05_relate_appr_id                                                       AS relate_appr_id
+             , biz05_promo_id                                                             AS promo_id
+             , biz05_appr_id                                                              AS appr_id
+             , apr01_status_cd                                                            AS status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, biz05_company_id, apr01_reg_date) AS status_name
+             , NULL::varchar                                                              AS title
+             , NULL::timestamp                                                            AS reg_date
+             , NULL::timestamp                                                            AS effect_date
+             , NULL::varchar                                                              AS reg_emp_name
+          FROM biz05_relate_appr a
+               INNER JOIN apr01_appr b ON b.apr01_appr_id = a.biz05_appr_id
+         WHERE biz05_company_id = #{companyId}
+           AND biz05_std_ym LIKE #{dataYm}
+           AND biz05_link_cd    = #{linkCode}
     </select>
 
     <!-- AS-IS biz05_relate_appr.selectByPromoId L31 (IDMS-IC) — 로그인 회사 내역만(보안 보강) -->

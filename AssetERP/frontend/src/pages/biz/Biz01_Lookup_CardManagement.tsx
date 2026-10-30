@@ -20,7 +20,7 @@ const CARD_MENU = 'Biz01_Tab_Card';
 interface Props {
   open: boolean;
   /** open(list, …) — 화면에서 체크한 내역들 */
-  rows: BizPromoCard[];
+  rows: Pick<BizPromoCard, 'promoId'>[];
   /** open(…, menuName, …) — Biz01_Tab_Card면 과세구분 없이 저장하고 직원 자동등록까지 한다 */
   menuName: string;
   /** callback.execute() — 저장이 끝난 뒤 부르는 쪽이 다시 조회 */

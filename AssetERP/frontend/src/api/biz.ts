@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
 import {
-  BizAccountOption, BizBuyPromo, BizCardContents, BizCardContentsPrintReq, BizCodeOption, BizDocClass, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq, BizPromoOtherSimpleReq,
+  BizAccountOption, BizBuyPromo, BizCardCompare, BizCardContents, BizCardContentsPrintReq, BizCardManagement, BizCardManagementPrintReq, BizCardManagementUpdateReq, BizCodeOption, BizDocClass, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq, BizPromoOtherSimpleReq,
   BizPromoSimpleUpdateReq, BizPromoUpdateReq, BizProvideCompany, BizProvideList, BizProvideListCond, BizProvideSetup, BizProvideSimple, BizProvideSimpleCond, BizRelateAppr,
 } from '../types/biz';
 import { MktTarget } from '../types/mkt';
@@ -274,6 +274,11 @@ export const bizRelateApprApi = {
     const res = await apiClient.get<ApiResponse<BizRelateAppr | null>>('v1/biz/relate-apprs/by-person', { params: { dataYm, linkCode } });
     return res.data.data ?? null;
   },
+  /** AS-IS biz.Biz05_RelateAppr.selectByDataYm — 한 건이면 그 행, 아니면 null(미상신). dataYm 'yyyy.MM' */
+  getByDataYm: async (dataYm: string, linkCode: string): Promise<BizRelateAppr | null> => {
+    const res = await apiClient.get<ApiResponse<BizRelateAppr | null>>('v1/biz/relate-apprs/by-data-ym', { params: { dataYm, linkCode } });
+    return res.data.data ?? null;
+  },
   /** AS-IS biz.Biz05_RelateAppr.selectFileCount → 'n건' */
   getFileCount: async (promoId: number): Promise<string> => {
     const res = await apiClient.get<ApiResponse<string>>('v1/biz/relate-apprs/file-count', { params: { promoId } });
@@ -283,6 +288,43 @@ export const bizRelateApprApi = {
   deleteRelateApprs: async (relateApprIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/biz/relate-apprs', { data: relateApprIds });
     return res.data.data ?? 0;
+  },
+};
+
+/** U15 AS-IS Biz01_Tab_CardManagement (법인카드 내역관리) → server/biz/Biz01_Promo (selectByPaging·compareCheck·cardClose·modelUpdate·sendMessage) */
+export const bizCardManagementApi = {
+  /** AS-IS biz.Biz01_Promo.selectByPaging — dataYm 'yyyy.MM', managerId·providePurCode '%'는 전체, offset = (쪽-1)*limit */
+  search: async (p: { dataYm: string; managerId: string; providePurCode: string; searchText: string; offset: number; limit: number }): Promise<PageRes<BizCardManagement>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<BizCardManagement>>>('v1/biz/card-managements', { params: p });
+    return res.data.data ?? { total: 0, rows: [] };
+  },
+  /** AS-IS LoginUser.getCompanyModel().getCardRealUserYn() — 실사용자 칸을 보일지 */
+  getCardRealUser: async (): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/biz/card-managements/real-user');
+    return res.data.data ?? false;
+  },
+  /** AS-IS biz.Biz01_Promo.compareCheck — 업로드 내역과 금액이 다른 건. 비면 같다 */
+  compare: async (dataYm: string): Promise<BizCardCompare[]> => {
+    const res = await apiClient.get<ApiResponse<BizCardCompare[]>>('v1/biz/card-managements/compare', { params: { dataYm } });
+    return res.data.data ?? [];
+  },
+  /** AS-IS biz.Biz01_Promo.cardClose — procType P 마감 / C 취소. 실패하면 서버 메시지로 오류 */
+  close: async (dataYm: string, procType: 'P' | 'C'): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/biz/card-managements/close', { dataYm, procType });
+  },
+  /** AS-IS biz.Biz01_Promo.modelUpdate (Biz01_Edit_Account) → 저장한 건수 */
+  update: async (promoId: number, req: BizCardManagementUpdateReq): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>(`v1/biz/card-managements/${promoId}`, req);
+    return res.data.data ?? 0;
+  },
+  /** AS-IS sys.Sys99_Print.insertRdCardManagement → 출력 그룹 ID(엑셀용) */
+  rdDownload: async (req: BizCardManagementPrintReq): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/biz/card-managements/rd-download', req);
+    return res.data.data ?? '';
+  },
+  /** AS-IS biz.Biz01_Promo.sendMessage — 고른 사용자(사원 ID)에게 마감 알림 문자 */
+  sendMessage: async (dataYm: string, personIds: number[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/biz/card-managements/messages', { dataYm, personIds });
   },
 };
 

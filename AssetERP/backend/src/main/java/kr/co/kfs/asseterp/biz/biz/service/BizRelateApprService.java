@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/** AS-IS Biz05_Lookup_RelateAppr·Biz01_Tab_Card(상신 상태) → server/biz/Biz05_RelateAppr.java (selectByPromoId L26 / selectByPersonId L62 / selectFileCount L92 / delete L213) */
+/** AS-IS Biz05_Lookup_RelateAppr·Biz01_Tab_Card(상신 상태) → server/biz/Biz05_RelateAppr.java (selectByPromoId L26 / selectByPersonId L62 / selectByDataYm L48 / selectFileCount L92 / delete L213) */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -20,6 +20,12 @@ public class BizRelateApprService {
     /** AS-IS selectByPersonId(companyId, dataYm, linkCode, personId = LoginUser) — 정확히 한 건일 때만 그 행, 아니면 null(미상신) */
     public BizRelateApprRes getByPerson(UserPrincipal user, String dataYm, String linkCode) {
         List<BizRelateApprRes> list = mapper.selectByPersonId(user.getCompanyId(), dataYm, linkCode, user.getUserId());
+        return list.size() == 1 ? list.get(0) : null;
+    }
+
+    /** AS-IS selectByDataYm(companyId, dataYm = "%…%", linkCode) — 정확히 한 건일 때만 그 행, 아니면 null(미상신) */
+    public BizRelateApprRes getByDataYm(UserPrincipal user, String dataYm, String linkCode) {
+        List<BizRelateApprRes> list = mapper.selectByDataYm(user.getCompanyId(), "%" + dataYm + "%", linkCode);
         return list.size() == 1 ? list.get(0) : null;
     }
 

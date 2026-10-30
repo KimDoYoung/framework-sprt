@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz01_promo.xml (selectCardManagementPaging·Total·Rd, selectCardCloseCount, updateCardClose, modelUpdate) + crd02_data.selectByCompareAmt + act04_gen_ledger.selectCloseCount + sys99_print  (U15 Biz01_Tab_CardManagement) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizCardManagementMapper">
+
+    <!-- AS-IS biz01_promo.selectCardUseList L972 (IDMS-IC) — dataYm이 있으면 그 달, 없으면 startYm~closeYm. managerId는 있을 때만(0 = 공통카드) -->
+    <sql id="cardUseList">
+        SELECT *
+          FROM biz01_promo
+               INNER JOIN crd02_data ON crd02_data_id = biz01_card_data_id
+               INNER JOIN sys01_company ON sys01_company_id = biz01_company_id
+               LEFT OUTER JOIN crd01_card  ON crd01_card_id = biz01_card_id
+               LEFT OUTER JOIN crd03_trans ON (    crd03_card_id = biz01_card_id
+                                               AND biz01_provide_date BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,'9999-12-31') )
+               LEFT OUTER JOIN act01_account_code ON (act01_account_code_id = biz01_account_code_id)
+         WHERE biz01_company_id = #{companyId}
+           AND COALESCE(biz01_provide_pur_cd,'%') LIKE #{providePurCode}
+        <choose>
+            <when test="dataYm != null">
+           AND biz01_std_ym = #{dataYm}
+            </when>
+            <otherwise>
+           AND biz01_std_ym BETWEEN #{startYm} AND #{closeYm}
+            </otherwise>
+        </choose>
+        <if test="managerId != null">
+           AND CASE WHEN #{managerId} = 0
+                    THEN crd03_public_yn = 'true'
+                    ELSE ((CASE WHEN sys01_card_real_user_yn = 'true'
+                                THEN (CASE WHEN biz01_real_person_id IS NOT NULL
+                                           THEN biz01_real_person_id
+                                           ELSE crd03_person_id END)
+                                ELSE (CASE WHEN crd03_public_yn = 'true'
+                                           THEN 0
+                                           ELSE crd03_person_id END) END ) = #{managerId}) END
+        </if>
+    </sql>
+
+    <!-- AS-IS biz01_promo.selectCardManagementPaging L1102 (IDMS-IC) 의 바깥 열 — 그리드·폼에 쓰는 열만 별칭으로 -->
+    <sql id="pagingColumns">
+        SELECT tt.biz01_promo_id                                    AS promo_id
+             , COALESCE(tt.biz01_close_yn, 'false') = 'true'        AS close_yn
+             , tt.biz01_close_nm                                    AS close_name
+             , tt.biz01_html_card_nm                                AS html_card_name
+             , tt.biz01_reg_emp_nm                                  AS reg_emp_name
+             , tt.biz01_approval_dt                                 AS approval_dt
+             , tt.biz01_franchise_nm                                AS franchise_name
+             , tt.biz01_sector_nm                                   AS sector_name
+             , tt.biz01_provide_amt                                 AS provide_amt
+             , tt.biz01_provide_pur_cd                              AS provide_pur_code
+             , tt.biz01_provide_pur_nm                              AS provide_pur_name
+             , tt.biz01_provide_content_cd                          AS provide_content_code
+             , tt.biz01_provide_content_nm                          AS provide_content_name
+             , tt.biz01_account_code_id                             AS account_code_id
+             , tt.biz01_account_cd                                  AS account_code
+             , tt.biz01_account_nm                                  AS account_name
+             , tt.biz01_tax_type                                    AS tax_type
+             , tt.biz01_tax_type_nm                                 AS tax_type_name
+             , tt.biz01_note                                        AS note
+             , tt.biz01_depn_book_yn                                AS depn_book_yn
+             , tt.biz01_real_person_id                              AS real_person_id
+             , tt.biz01_real_person_nm                              AS real_person_name
+    </sql>
+
+    <sql id="pagingFrom">
+          FROM (
+                SELECT  t.*
+                     ,  f_cdnm('ProvidePurCode'     , biz01_provide_pur_cd      , biz01_company_id, biz01_provide_date)     AS biz01_provide_pur_nm
+                     ,  f_cdnm('ProvideContentCode' , biz01_provide_content_cd  , biz01_company_id, biz01_provide_date)     AS biz01_provide_content_nm
+                     ,  f_cdnm('TaxType'            , biz01_tax_type            , biz01_company_id, biz01_provide_date)     AS biz01_tax_type_nm
+                     ,  CASE WHEN COALESCE(biz01_close_yn, 'false') = 'true' THEN '마감' ELSE '' END                         AS biz01_close_nm
+                     ,  crd02_approval_dt                                                                                   AS biz01_approval_dt
+                     ,  crd02_franchise_nm                                                                                  AS biz01_franchise_nm
+                     ,  crd02_sector_nm                                                                                     AS biz01_sector_nm
+                     ,  CASE WHEN COALESCE((SELECT count(*)
+                                              FROM ast06_tr
+                                             WHERE ast06_company_id       = biz01_company_id
+                                               AND ast06_card_approval_no = crd02_approval_no),0) = 0 THEN null
+                             ELSE '등록완료' END                                                                              AS biz01_depn_book_yn
+                     ,  act01_account_cd                                                                                    AS biz01_account_cd
+                     ,  CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||act01_account_nm      AS biz01_account_nm
+                     ,  crd01_card_nm                                                                                       AS biz01_html_card_nm
+                     ,  CASE WHEN sys01_card_real_user_yn = 'true' THEN
+                                 CASE WHEN crd03_public_yn = 'true'
+                                       AND biz01_real_person_id IS NULL THEN '공통('||f_emp_kor_nm(crd03_person_id)||')'
+                                      WHEN crd03_public_yn = 'true'
+                                       AND biz01_real_person_id IS NOT NULL THEN '공통('||f_emp_kor_nm(biz01_real_person_id)||')'
+                                      ELSE f_emp_kor_nm(crd03_person_id) END
+                             ELSE CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(crd03_person_id) END END AS biz01_reg_emp_nm
+                     ,  CASE WHEN biz01_real_person_id IS NULL THEN '공통' ELSE f_emp_kor_nm(biz01_real_person_id) END       AS biz01_real_person_nm
+                     ,  crd02_approval_time                                                                                 AS biz01_approval_time
+                  FROM (<include refid="cardUseList"/>) t
+               ) tt
+         WHERE 1=1
+        <if test="searchText != null">
+           AND CONCAT( biz01_franchise_nm
+                     , biz01_sector_nm
+                     , biz01_account_nm
+                     , biz01_html_card_nm
+                     , biz01_reg_emp_nm
+                     , biz01_provide_pur_nm
+                     , biz01_provide_content_nm) ILIKE '%'||#{searchText}||'%'
+        </if>
+    </sql>
+
+    <!-- AS-IS biz01_promo.selectCardManagementPaging L1102 (IDMS-IC) -->
+    <select id="selectPaging" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCardManagementRes">
+        <include refid="pagingColumns"/>
+        <include refid="pagingFrom"/>
+         ORDER BY biz01_approval_dt, biz01_approval_time, biz01_franchise_nm
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <!-- AS-IS biz01_promo.selectCardManagementTotal L1155 (IDMS-IC) — 사용자 이름은 공통카드를 풀지 않은 f_emp_kor_nm(crd03_person_id)로 센다(원본 그대로) -->
+    <select id="selectTotal" resultType="int">
+        SELECT COUNT(*)
+          FROM (
+                SELECT  crd02_franchise_nm                                                                                  AS biz01_franchise_nm
+                     ,  crd02_sector_nm                                                                                     AS biz01_sector_nm
+                     ,  CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||act01_account_nm      AS biz01_account_nm
+                     ,  crd01_card_nm                                                                                       AS biz01_html_card_nm
+                     ,  f_emp_kor_nm(crd03_person_id)                                                                       AS biz01_reg_emp_nm
+                     ,  f_cdnm('ProvidePurCode'     , biz01_provide_pur_cd      , biz01_company_id, biz01_provide_date)     AS biz01_provide_pur_nm
+                     ,  f_cdnm('ProvideContentCode' , biz01_provide_content_cd  , biz01_company_id, biz01_provide_date)     AS biz01_provide_content_nm
+                  FROM (<include refid="cardUseList"/>) t
+               ) tt
+         WHERE 1=1
+        <if test="searchText != null">
+           AND UPPER(CONCAT( biz01_franchise_nm
+                           , biz01_sector_nm
+                           , biz01_account_nm
+                           , biz01_html_card_nm
+                           , biz01_reg_emp_nm
+                           , biz01_provide_pur_nm
+                           , biz01_provide_content_nm)) LIKE '%'||UPPER(#{searchText})||'%'
+        </if>
+    </select>
+
+    <!-- AS-IS biz01_promo.selectCardCloseCount L1387 (IDMS-IC) -->
+    <select id="countCardClosed" resultType="long">
+        SELECT count(*)
+          FROM biz01_promo
+               INNER JOIN crd01_card ON crd01_card_id = biz01_card_id
+         WHERE biz01_company_id = #{companyId}
+           AND biz01_std_ym = #{dataYm}
+           AND COALESCE(biz01_close_yn,'false') = 'true'
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.selectCloseCount (IDMS-IC) -->
+    <select id="countLedgerClosed" resultType="long">
+        SELECT count(*)
+          FROM act05_gen_ledger_close
+         WHERE act05_company_id = #{companyId}
+           AND TO_CHAR(act05_std_date,'YYYY.MM') >= #{dataYm}
+    </select>
+
+    <!-- AS-IS cardClose가 selectCardManagement(managerId null · providePurCode '%')로 읽은 내역 중 계정과목이 없는 것의 개수 -->
+    <select id="countWithoutAccount" resultType="long">
+        SELECT count(*)
+          FROM (<include refid="cardUseList"/>) t
+         WHERE biz01_account_code_id IS NULL
+    </select>
+
+    <!-- AS-IS cardClose가 읽은 내역 중 전표(act02_journal.selectByBizId)가 있는 것의 개수 -->
+    <select id="countWithJournal" resultType="long">
+        SELECT count(*)
+          FROM (<include refid="cardUseList"/>) t
+         WHERE EXISTS (SELECT 1 FROM act02_journal WHERE act02_biz_id = t.biz01_promo_id)
+    </select>
+
+    <!-- AS-IS biz01_promo.updateCardClose L1457 (IDMS-IC) -->
+    <update id="updateCardClose">
+        UPDATE biz01_promo
+           SET biz01_close_yn = CASE WHEN #{procType} = 'P' THEN 'true' ELSE 'false' END
+         WHERE biz01_company_id = #{companyId}
+           AND biz01_std_ym = #{dataYm}
+           AND biz01_card_id IN ( SELECT crd01_card_id
+                                    FROM crd01_card
+                                   WHERE crd01_card_id = biz01_card_id )
+    </update>
+
+    <!-- AS-IS crd02_data.selectByCompareAmt (IDMS-IC) — 업로드 승인금액과 내역관리 금액이 다른 카드 내역(카드번호당 한 건일 때만) -->
+    <select id="selectCompare" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCardCompareRes">
+        WITH CardCounts AS (
+              SELECT crd02_card_no
+                   , COUNT(*) as count
+                FROM (
+                    SELECT *
+                         ,  biz01_provide_amt AS crd02_provide_amt
+                      FROM (
+                          SELECT *
+                            FROM crd02_data
+                                 INNER JOIN biz01_promo ON crd02_data_id = biz01_card_data_id
+                           WHERE biz01_std_ym = #{dataYm}
+                             AND biz01_company_id = #{companyId}
+                             AND biz01_provide_amt != crd02_approval_amount
+                           UNION ALL
+                          SELECT *
+                            FROM crd02_data
+                                 LEFT OUTER JOIN biz01_promo ON biz01_card_data_id = crd02_data_id
+                           WHERE crd02_data_ym = #{dataYm}
+                             AND crd02_company_id = #{companyId}
+                             AND crd02_data_id NOT IN (SELECT biz01_card_data_id
+                                                         FROM biz01_promo
+                                                        WHERE biz01_std_ym = #{dataYm}
+                                                          AND biz01_company_id = #{companyId})
+                        ) t
+                    ) subquery
+               GROUP BY crd02_card_no
+        )
+        SELECT s.crd02_card_no          AS card_no
+             , s.crd02_approval_dt      AS approval_dt
+             , s.crd02_franchise_nm     AS franchise_name
+             , s.crd02_sector_nm        AS sector_name
+             , s.crd02_approval_amount  AS approval_amount
+             , s.crd02_provide_amt      AS provide_amt
+        FROM (
+              SELECT *
+                   ,  biz01_provide_amt AS crd02_provide_amt
+                FROM (
+                    SELECT *
+                      FROM crd02_data
+                           INNER JOIN biz01_promo ON crd02_data_id = biz01_card_data_id
+                     WHERE biz01_std_ym = #{dataYm}
+                       AND biz01_company_id = #{companyId}
+                       AND biz01_provide_amt != crd02_approval_amount
+                     UNION ALL
+                    SELECT *
+                      FROM crd02_data
+                           LEFT OUTER JOIN biz01_promo ON biz01_card_data_id = crd02_data_id
+                     WHERE crd02_data_ym = #{dataYm}
+                       AND crd02_company_id = #{companyId}
+                       AND crd02_data_id NOT IN (SELECT biz01_card_data_id
+                                                   FROM biz01_promo
+                                                  WHERE biz01_std_ym = #{dataYm}
+                                                    AND biz01_company_id = #{companyId})
+                      ) t
+            ) s
+        JOIN CardCounts c ON s.crd02_card_no = c.crd02_card_no
+        WHERE c.count = 1
+    </select>
+
+    <!-- AS-IS Biz01_Promo.modelUpdate → UpdateDataModel(biz01_promo) UPDATE (Biz01_Edit_Account) — 화면이 바꾸는 6열, 로그인 회사의 행만 -->
+    <update id="update">
+        UPDATE biz01_promo
+           SET biz01_provide_pur_cd     = #{req.providePurCode}
+             , biz01_provide_content_cd = #{req.provideContentCode}
+             , biz01_account_code_id    = #{req.accountCodeId}
+             , biz01_note               = #{req.note}
+             , biz01_tax_type           = #{req.taxType}
+             , biz01_real_person_id     = #{req.realPersonId}
+         WHERE biz01_promo_id   = #{promoId}
+           AND biz01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS LoginUser.getCompanyModel().getCardRealUserYn() — 법인카드 실사용자 관리 사용 회사인가 (Biz01_Edit_Account 실사용자 칸) -->
+    <select id="selectCardRealUser" resultType="boolean">
+        SELECT COALESCE(sys01_card_real_user_yn, 'false') = 'true'
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS emp01_person.selectById — 휴대폰번호만 -->
+    <select id="selectMobileTelNo" resultType="string">
+        SELECT emp01_mobile_telno
+          FROM emp01_person
+         WHERE emp01_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdCardManagement L1465 (IDMS-IC) = biz01_promo.selectCardManagementRd L1182 + sys99_print.insert 를 한 번에(INSERT … SELECT).
+         열: s01 마감구분 · s02 관리자 · d01 카드승인일 · s03 가맹점명 · s04 업종 · l01 승인금액 · s05 제공목적 · s06 제공내역 · s07 계정과목 · s09 카드이름 · s10 과세 · s11 카드번호 · s12 사업자번호 · s13 증빙자료개수 · s14 승인번호 · s15 계정코드 · t01 비고 · s16 카드사용자.
+         원본 setString은 null을 그대로 넣는다 → COALESCE를 쓰지 않는다 -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_date01, sys99_string03, sys99_string04, sys99_long01
+               , sys99_string05, sys99_string06, sys99_string07, sys99_string09, sys99_string10, sys99_string11
+               , sys99_string12, sys99_string13, sys99_string14, sys99_string15, sys99_text01, sys99_string16 )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , biz01_close_nm, biz01_reg_emp_nm, biz01_approval_dt, biz01_franchise_nm, biz01_sector_nm, biz01_provide_amt
+             , biz01_provide_pur_nm, biz01_provide_content_nm, biz01_account_nm, biz01_html_card_nm, biz01_tax_type_nm, biz01_card_no_slip
+             , biz01_license_no, biz01_file_count_str, biz01_approval_no, biz01_account_cd, biz01_note, biz01_reg_emp_nm
+          FROM (
+                SELECT  t.*
+                     ,  f_cdnm('ProvidePurCode'     , biz01_provide_pur_cd      , biz01_company_id, biz01_provide_date)     AS biz01_provide_pur_nm
+                     ,  f_cdnm('ProvideContentCode' , biz01_provide_content_cd  , biz01_company_id, biz01_provide_date)     AS biz01_provide_content_nm
+                     ,  f_cdnm('TaxType'            , biz01_tax_type            , biz01_company_id, biz01_provide_date)     AS biz01_tax_type_nm
+                     ,  CASE WHEN COALESCE(biz01_close_yn, 'false') = 'true' THEN '마감' ELSE '' END                         AS biz01_close_nm
+                     ,  crd02_approval_dt                                                                                   AS biz01_approval_dt
+                     ,  crd02_franchise_nm                                                                                  AS biz01_franchise_nm
+                     ,  crd02_sector_nm                                                                                     AS biz01_sector_nm
+                     ,  crd02_approval_no                                                                                   AS biz01_approval_no
+                     ,  act01_account_cd                                                                                    AS biz01_account_cd
+                     ,  CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||act01_account_nm      AS biz01_account_nm
+                     ,  crd01_card_nm                                                                                       AS biz01_html_card_nm
+                     ,  f_emp_kor_nm(crd03_person_id)                                                                       AS biz01_reg_emp_nm
+                     ,  crd01_card_no_slip                                                                                  AS biz01_card_no_slip
+                     ,  crd02_biz_license_no                                                                                AS biz01_license_no
+                     ,  crd02_approval_time                                                                                 AS biz01_approval_time
+                     ,  (
+                         SELECT ( COUNT(*) FILTER (WHERE biz05_promo_id  = biz01_promo_id)
+                                + COUNT(*) FILTER (WHERE sys10_parent_id = biz01_promo_id) )||'건'
+                           FROM ( SELECT biz05_promo_id
+                                       , NULL::bigint   as sys10_parent_id
+                                    FROM biz05_relate_appr
+                                   UNION ALL
+                                  SELECT NULL::bigint    as biz05_promo_id
+                                       , sys10_parent_id
+                                    FROM sys10_file ) a      )                                                              AS biz01_file_count_str
+                  FROM (<include refid="cardUseList"/>) t
+               ) tt
+         WHERE 1=1
+        <if test="searchText != null">
+           AND CONCAT( biz01_franchise_nm
+                     , biz01_sector_nm
+                     , biz01_account_nm
+                     , biz01_html_card_nm
+                     , biz01_reg_emp_nm
+                     , biz01_provide_pur_nm
+                     , biz01_provide_content_nm) ILIKE '%'||#{searchText}||'%'
+        </if>
+         ORDER BY biz01_approval_dt, biz01_approval_time, biz01_franchise_nm
+    </insert>
+</mapper>
