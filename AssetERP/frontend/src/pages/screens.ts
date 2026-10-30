@@ -167,6 +167,8 @@ import { Pay10_Tab_MonthSearch } from './pay/Pay10_Tab_MonthSearch';
 import { Pay10_Tab_PersonList } from './pay/Pay10_Tab_PersonList';
 import { Pay10_Tab_PersonListManager } from './pay/Pay10_Tab_PersonListManager';
 import { Pay50_Tab_ExpenseManager } from './pay/Pay50_Tab_ExpenseManager';
+import { Pay50_Tab_ExpensePayWrite } from './pay/Pay50_Tab_ExpensePayWrite';
+import { Pay50_Tab_ExpensePay } from './pay/Pay50_Tab_ExpensePay';
 import { Pay10_Tab_List } from './pay/Pay10_Tab_List';
 import { Pay10_Tab_Retire } from './pay/Pay10_Tab_Retire';
 import { Pay34_Tab_WorkTimeConfig } from './pay/Pay34_Tab_WorkTimeConfig';
@@ -504,6 +506,8 @@ export const SCREENS: Record<string, React.FC> = {
   Ast01_Tab_InfoManagement, // R09 (메뉴 #1118. 펀드자산 종목상세)
   Pay10_Tab_PersonListManager, // S21 (S20의 RD 폼 Pay10_Rd_PersonList 공용 + 사원찾기 Emp00_Lookup_SelectSingle)
   Pay50_Tab_ExpenseManager, // U03 (메뉴 #1385. 하위 Pay50_Edit_Expense·Pay51_Lookup_ExpenseForm·Pay50_Lookup_RejectReason·Pay50_Lookup_ExpenseRequestList·Pay52_Lookup_AccountCode·Pay50_Lookup_Content·Sys17_Lookup_Account. 1단계: 바로등록·상신·문서보기·알림발송·증빙자료는 안내만)
+  Pay50_Tab_ExpensePayWrite, // U07 (메뉴 #1386. 하위 Pay50_Lookup_UpdateDeposit·Pay50_Lookup_NewExpenseApprList·Sys15_Lookup_TelInfo·Ast01_Lookup_CorpAccount. 1단계: 상신·문서보기는 안내만)
+  Pay50_Tab_ExpensePay, // U08 (메뉴 #1400. 하위 Sys15_Lookup_TelInfo. 1단계: 문서보기는 안내만)
   Pay10_Tab_PersonList, // S20 (RD 보고서 Pay10_Rd_PersonList 끼워 넣기)
   Pay10_Tab_MonthSearch, // S19 (Pay20_Lookup_MonthItem은 S17 재사용. 출력 창 = RdViewer)
   Pay10_Tab_MonthItem, // S17 (Pay10_Lookup_GroupList는 S16 재사용 + Pay20_Lookup_MonthItem. 출력 창 = RdViewer)

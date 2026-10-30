@@ -2,9 +2,16 @@ package kr.co.kfs.asseterp.biz.pay.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseContentReq;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseDepositReq;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseNewRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRejectReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRequestRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseSettleApprRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseSettleApprRowRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseSettlePrintReq;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseSettleRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseSettleSaveReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseUpdateReq;
 import kr.co.kfs.asseterp.biz.pay.service.PayExpenseService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -50,6 +57,75 @@ public class PayExpenseController {
     public ApiResponse<List<ExpenseRequestRes>> requests(@AuthenticationPrincipal UserPrincipal principal,
                                                          @RequestParam(required = false) String searchText) {
         return ApiResponse.ok(service.requests(principal, searchText));
+    }
+
+    // ── U07 자금집행결의서 작성(Pay50_Tab_ExpensePayWrite) · U08 조회(Pay50_Tab_ExpensePay) ──
+
+    /** pay.Pay50_Expense.selectExpensePay */
+    @GetMapping("/settles")
+    public ApiResponse<List<ExpenseSettleRes>> searchSettles(@AuthenticationPrincipal UserPrincipal principal,
+                                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                             @RequestParam(required = false) String expenseCode,
+                                                             @RequestParam(required = false) String payYnCode,
+                                                             @RequestParam(defaultValue = "false") boolean statusCheckYn,
+                                                             @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchSettles(principal, startDate, closeDate, expenseCode, payYnCode, statusCheckYn, searchText));
+    }
+
+    /** pay.Pay50_Expense.selectNewExpenseAppr (targetType SETTLE) */
+    @GetMapping("/new-settles")
+    public ApiResponse<List<ExpenseNewRes>> newSettles(@AuthenticationPrincipal UserPrincipal principal,
+                                                       @RequestParam(required = false) String expenseCode,
+                                                       @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.newSettles(principal, expenseCode, searchText));
+    }
+
+    /** pay.Pay50_Expense.updateSettleEmpId — [자금집행 예정내역 가져오기] */
+    @PutMapping("/take-settles")
+    public ApiResponse<Integer> takeSettles(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<ExpenseNewRes> rows) {
+        return ApiResponse.ok(service.takeSettles(principal, rows));
+    }
+
+    /** pay.Pay50_Expense.update — [저장] */
+    @PutMapping("/settles")
+    public ApiResponse<Integer> saveSettles(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<ExpenseSettleSaveReq> rows) {
+        return ApiResponse.ok(service.saveSettles(principal, rows));
+    }
+
+    /** pay.Pay50_Expense.updateDeposit — [일괄저장] */
+    @PutMapping("/settle-deposit")
+    public ApiResponse<Integer> updateDeposit(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ExpenseDepositReq req) {
+        return ApiResponse.ok(service.updateDeposit(principal, req));
+    }
+
+    /** pay.Pay50_Expense.initExpenseSettle — [삭제] */
+    @PostMapping("/init-settle")
+    public ApiResponse<Integer> initSettles(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> ids) {
+        return ApiResponse.ok(service.initSettles(principal, ids));
+    }
+
+    /** sys.Sys99_Print.insertRdExpensePay — [엑셀다운로드] 그룹 ID */
+    @PostMapping("/rd-settle-print")
+    public ApiResponse<String> rdSettlePrint(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ExpenseSettlePrintReq req) {
+        return ApiResponse.ok(service.printSettles(principal, req));
+    }
+
+    /** pay.Pay50_Expense.selectBySettleDate */
+    @GetMapping("/settle-apprs")
+    public ApiResponse<List<ExpenseSettleApprRes>> searchBySettleDate(@AuthenticationPrincipal UserPrincipal principal,
+                                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                                      @RequestParam(defaultValue = "false") boolean statusCheckYn,
+                                                                      @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchBySettleDate(principal, startDate, closeDate, statusCheckYn, searchText));
+    }
+
+    /** pay.Pay50_Expense.selectBySettleApprId */
+    @GetMapping("/settle-apprs/{settleApprId}")
+    public ApiResponse<List<ExpenseSettleApprRowRes>> searchBySettleApprId(@AuthenticationPrincipal UserPrincipal principal,
+                                                                           @PathVariable Long settleApprId) {
+        return ApiResponse.ok(service.searchBySettleApprId(principal, settleApprId));
     }
 
     /** pay.Pay50_Expense.selectById */

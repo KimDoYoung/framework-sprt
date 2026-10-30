@@ -27,8 +27,9 @@ TARGETS = {
     # Fbx01_Tab_Document는 TO가 아니다(SID 미정)
     "TO": ("Org01_Tab_OrgCode", ["Chk01_Tab_ClassTree"]),
     "GO": ("Tdm54_Tab_CheckInsuff", []),
-    "SG": ("Tdm01_Tab_Hr", ["Emp50_Tab_TransportExpenseMng"]),  # U06: 기존 SG 화면 91개는 일괄 점검하지 않고 다시 건드릴 때 맞춘다(03 원칙 22 ④)
+    "SG": ("Tdm01_Tab_Hr", ["Emp50_Tab_TransportExpenseMng", "Pay50_Tab_ExpensePayWrite"]),  # U06: 기존 SG 화면 91개는 일괄 점검하지 않고 다시 건드릴 때 맞춘다(03 원칙 22 ④)
     "GG": ("Est02_Tab_PfResultReport", ["Ast06_Tab_TrTax", "Emp17_Tab_BenefitManager"]),  # U04: 아래 크기는 원본이 300 고정이라 defaultSize는 점검하지 않는다
+    "GGH": ("Pay50_Tab_ExpensePay", []),  # U08: 좌우 분할 마스터-상세(제안 2026-10-30). 견본 docs/page-style/GGH/
     "GDP": ("Sms02_Tab_TotalCount", ["Sys10_Tab_TotalSize", "Sms03_Tab_SendAdmin", "Ics02_Tab_Manager"]),
     "DSBRD": ("Tdm50_Tab_TotalDashboard", ["Tdm35_Tab_TaskList"]),
     "STP": ("Pay10_Tab_Retire", ["Tdm50_Tab_CheckJob"]),
@@ -75,6 +76,13 @@ RULES = {
         ("세로 Splitter", r"<Splitter\b[^>]*vertical", True),
         ("위 최소 120", r"min=\{120\}", True),
         ("아래 최소 200", r"min=\{200\}", True),
+        ("SearchBar", r"<SearchBar\b", True),
+        ("외곽 테두리 없음", BORDER, False),
+    ],
+    "GGH": [
+        ("가로 Splitter", r"<Splitter\b(?![^>]*vertical)", True),
+        ("왼쪽 기본 680", r"defaultSize=\{680\}", True),
+        ("왼쪽 최대 1000", r"max=\{1000\}", True),
         ("SearchBar", r"<SearchBar\b", True),
         ("외곽 테두리 없음", BORDER, False),
     ],

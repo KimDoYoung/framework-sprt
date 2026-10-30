@@ -665,3 +665,100 @@ export interface PayFavoriteAccount {
   attributeCode: string;
   attributeName: string | null;
 }
+
+// ── U07 자금집행결의서 작성(Pay50_Tab_ExpensePayWrite) · U08 조회(Pay50_Tab_ExpensePay) ──
+
+/** 자금집행결의서 작성 한 행 (pay50_expense.selectExpensePay) */
+export interface PayExpenseSettle {
+  expenseId: number;
+  companyId: number;
+  expenseCode: string | null;
+  expenseName: string | null;
+  desc: string | null;
+  corpId: number | null;
+  corpName: string | null;
+  tel: string | null;
+  addr: string | null;
+  dueDate: string | null;
+  settleAmt: number | null;
+  payMethodCode: string | null;
+  payMethodName: string | null;
+  payAccountInfo: string | null;
+  settleDate: string | null;
+  depositId: number | null;
+  depositName: string | null;
+  settleNote: string | null;
+  journalId: number | null;
+  expenseApprId: number | null;
+  expenseApprStatusCode: string | null;
+  settleApprId: number | null;
+  settleApprStatusCode: string | null;
+  settleApprStatusName: string | null;
+  payYn: boolean | null;
+}
+
+/** [저장] 한 행 — 화면이 바꾸는 열 5개 */
+export interface PayExpenseSettleSaveReq {
+  expenseId: number;
+  payMethodCode: string | null;
+  payAccountInfo: string | null;
+  settleDate: string | null;
+  depositId: number | null;
+  settleNote: string | null;
+}
+
+/** 신규 자금집행 예정내역 한 행 (pay50_expense.selectNewExpenseAppr) */
+export interface PayExpenseNew {
+  expenseId: number;
+  companyId: number;
+  expenseCode: string | null;
+  expenseName: string | null;
+  occDate: string | null;
+  dueDate: string | null;
+  desc: string | null;
+  corpId: number | null;
+  corpName: string | null;
+  payMethodCode: string | null;
+  payMethodName: string | null;
+  payAccountInfo: string | null;
+  taxType: string | null;
+  amt: number | null;
+  tax: number | null;
+  settleAmt: number | null;
+  apprEmpId: number | null;
+  expenseApprId: number | null;
+  benefitId: number | null;
+  transportStdYm: string | null;
+  bizCardStdYm: string | null;
+  bizCardCorpCode: string | null;
+  depositId: number | null;
+  settleDate: string | null;
+  accountCode: string | null;
+  accountName: string | null;
+  trId: number | null;
+}
+
+/** 자금집행결의서 조회 위 그리드 한 행 (pay50_expense.selectBySettleDate) */
+export interface PayExpenseSettleAppr {
+  expenseId: number;
+  settleDate: string | null;
+  settleApprTitle: string | null;
+  count: string | null;
+  settleAmt: number | null;
+  settleApprStatusName: string | null;
+  settleApprId: number | null;
+}
+
+/** 자금집행결의서 조회 아래 그리드 한 행 (pay50_expense.selectBySettleApprId) */
+export interface PayExpenseSettleApprRow {
+  expenseId: number;
+  expenseApprId: number | null;
+  occDate: string | null;
+  expenseName: string | null;
+  desc: string | null;
+  corpName: string | null;
+  tel: string | null;
+  addr: string | null;
+  settleAmt: number | null;
+  payMethodName: string | null;
+}

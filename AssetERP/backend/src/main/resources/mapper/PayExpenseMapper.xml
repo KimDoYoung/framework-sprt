@@ -4,7 +4,8 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- AS-IS(IDMS-IC) server/pay/mapper/pay50_expense.xml (selectExpenseAppr L365, selectExpenseRequest L307, selectById L110, insertRequest L1304,
-     updateModel L1394, updateRejectReason L1450, updateApprEmpId L1457, initExpense L1500, updateContent L1530, deleteById L1543) (U03) -->
+     updateModel L1394, updateRejectReason L1450, updateApprEmpId L1457, initExpense L1500, updateContent L1530, deleteById L1543) (U03)
+     + selectExpensePay L908, selectNewExpenseAppr, selectBySettleDate, selectBySettleApprId, updateDepositId, initExpenseSettle, insertExpense (U07·U08, IDMS-IC) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.pay.mapper.PayExpenseMapper">
 
     <!-- 목록·편집 폼이 같이 쓰는 열. 안쪽 select가 pay50_* 이름으로 만든다 -->
@@ -309,4 +310,739 @@
          WHERE pay50_expense_id  = #{expenseId}
            AND pay50_company_id  = #{companyId}
     </delete>
+
+    <!-- ===== U07 Pay50_Tab_ExpensePayWrite · U08 Pay50_Tab_ExpensePay (자금집행결의서) ===== -->
+    <!-- AS-IS pay50_expense.selectExpensePay L908 (IDMS-IC) — 열만 DTO 이름으로, 바깥 SELECT 열 목록을 이 화면 것으로 줄였다 -->
+    <select id="selectExpensePay" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseSettleRes">
+        SELECT
+        pay50_expense_id                    AS expense_id,
+        pay50_company_id                    AS company_id,
+        pay50_expense_cd                    AS expense_code,
+        pay50_expense_nm                    AS expense_name,
+        pay50_desc                          AS "desc",
+        pay50_corp_id                       AS corp_id,
+        pay50_corp_nm                       AS corp_name,
+        pay50_tel                           AS tel,
+        pay50_addr                          AS addr,
+        pay50_due_date                      AS due_date,
+        pay50_settle_amt                    AS settle_amt,
+        pay50_pay_method_cd                 AS pay_method_code,
+        pay50_pay_method_nm                 AS pay_method_name,
+        pay50_pay_account_info              AS pay_account_info,
+        pay50_settle_date                   AS settle_date,
+        pay50_deposit_id                    AS deposit_id,
+        pay50_deposit_nm                    AS deposit_name,
+        pay50_settle_note                   AS settle_note,
+        pay50_journal_id                    AS journal_id,
+        pay50_expense_appr_id               AS expense_appr_id,
+        pay50_expense_appr_status_cd        AS expense_appr_status_code,
+        pay50_settle_appr_id                AS settle_appr_id,
+        pay50_settle_appr_status_cd         AS settle_appr_status_code,
+        pay50_settle_appr_status_nm         AS settle_appr_status_name,
+        pay50_pay_yn                        AS pay_yn
+
+          FROM (
+        SELECT pay50.*
+        , f_cdnm('ExpenseType'    , pay50_expense_cd          , pay50_company_id, pay50_due_date)  AS pay50_expense_nm
+        , f_cdnm('TaxType'        , pay50_tax_type            , pay50_company_id, pay50_due_date)  AS pay50_tax_type_nm
+        , f_cdnm('PayMethodCode'  , pay50_pay_method_cd       , pay50_company_id, pay50_due_date)  AS pay50_pay_method_nm
+        , f_cdnm('StatusCode'     , pay50_confirm_status_cd   , pay50_company_id, pay50_due_date)  AS pay50_confirm_status_nm
+        , f_get_account_nm(pay50_company_id, pay50_account_cd)                                     AS pay50_account_nm
+        , ast01_class_tree_nm                                                                      AS pay50_deposit_nm
+        , f_get_empTrans(pay50_reg_emp_id   , pay50_due_date, 'person_org_info')                   AS pay50_reg_emp_org_nm
+        , f_get_empTrans(pay50_appr_emp_id  , pay50_due_date, 'person_org_info')                   AS pay50_appr_emp_org_nm
+        , f_get_empTrans(pay50_settle_emp_id, pay50_due_date, 'person_org_info')                   AS pay50_settle_emp_org_nm
+        , f_get_empTrans(pay50_reg_emp_id, pay50_reg_date, 'org_code_nm')         		       		AS pay50_org_nm
+        , COALESCE(sys15_corp_nm, f_emp_kor_nm(pay50_corp_id))                                     AS pay50_corp_nm
+        , sys15_tel																				AS pay50_tel
+        , sys15_addr																				AS pay50_addr
+        , ( SELECT COUNT(*)
+        FROM sys10_file
+        WHERE sys10_parent_id = pay50_expense_id )
+        +
+        ( SELECT COUNT(*)
+        FROM com01_relate_appr
+        WHERE com01_key_table_id = pay50_expense_id ) ||'건'                                  AS pay50_file_count_str
+        , CASE WHEN pay50_appr_emp_id IS NULL THEN ''
+        ELSE (CASE WHEN COALESCE(apr1.apr01_status_cd,'99') = '30' THEN '완료'
+        WHEN COALESCE(apr1.apr01_status_cd,'99') = '40' OR COALESCE(pay50_reject_reason,'') != '' THEN '반려'
+        ELSE '진행중' END)
+        END                                                                                 AS pay50_expense_status_nm
+        , CASE WHEN pay_amt = pay50_settle_amt THEN '완료'
+        ELSE (CASE WHEN COALESCE(apr2.apr01_status_cd,'99') = '99' THEN ''
+        WHEN COALESCE(apr2.apr01_status_cd,'99') = '40' THEN '반려'
+        ELSE '진행중' END)
+        END                                                                                 AS pay50_settle_status_nm
+        , apr1.apr01_title                                                                         AS pay50_expense_appr_title
+        , apr1.apr01_status_cd                                                                     AS pay50_expense_appr_status_cd
+        , f_cdnm('AprStatusCode', apr1.apr01_status_cd, pay50_company_id, pay50_due_date)          AS pay50_expense_appr_status_nm
+        , apr2.apr01_title                                                                         AS pay50_settle_appr_title
+        , apr2.apr01_status_cd                                                                     AS pay50_settle_appr_status_cd
+        , f_cdnm('AprStatusCode', apr2.apr01_status_cd, pay50_company_id, pay50_due_date)          AS pay50_settle_appr_status_nm
+        , CASE WHEN (pay50_settle_amt = pay_amt AND apr2.apr01_status_cd = '30') THEN true
+        ELSE false END                                                                      AS pay50_pay_yn
+        FROM ( SELECT pay50_expense.*
+        , CASE WHEN COALESCE(ast06_settle_mng_yn,'true') = 'false' THEN pay50_settle_amt
+        ELSE COALESCE((SELECT SUM(ast07_for_amt)
+        FROM ast07_settle
+        WHERE ast07_expense_id = pay50_expense_id),0)
+        END    as pay_amt
+        FROM pay50_expense
+        LEFT OUTER JOIN ast06_tr ON (    ast06_expense_id = pay50_expense_id
+        AND ast06_tr_cd IN ( SELECT ast15_tr_cd
+        FROM ast15_tr_code_window
+        WHERE ast15_company_id      = ast06_company_id
+        AND ast15_window_class_nm = 'Ast06_Tab_TrTax' /*(세금/4대보험 발생회계는 ast06 정보로 생성함)*/
+        AND ast15_tr_cd IS NOT NULL ) )
+        WHERE pay50_company_id = #{companyId}
+        AND pay50_settle_emp_id IS NOT NULL
+        AND pay50_due_date BETWEEN #{startDate} AND #{closeDate}
+        AND pay50_expense_cd LIKE #{expenseCode}
+        ) pay50
+        INNER      JOIN apr01_appr apr1      ON apr1.apr01_appr_id   = pay50_expense_appr_id
+        LEFT OUTER JOIN apr01_appr apr2      ON apr2.apr01_appr_id   = pay50_settle_appr_id
+        LEFT OUTER JOIN ast01_class_tree     ON ast01_class_tree_id  = pay50_deposit_id
+        LEFT OUTER JOIN sys15_corp           ON sys15_corp_id        = pay50_corp_id
+        WHERE 1=1
+        AND apr1.apr01_status_cd = '30'  /*(30:결재완료)*/
+        <choose>
+        <when test="payYnCode != null">
+        AND ( ( #{payYnCode} = 'Y'              AND
+        pay_amt      = pay50_settle_amt ) OR
+        ( #{payYnCode} = 'N'              AND
+        pay_amt     != pay50_settle_amt ) OR
+        ( #{payYnCode} = '%'              ) )
+        </when>
+        </choose>
+        <choose>
+        <when test="statusCheckYn==true">
+        AND (COALESCE(apr2.apr01_status_cd,'99') NOT IN ('30','40')		/*(30:완료/40:반려)*/
+        OR (apr2.apr01_status_cd = '30' AND pay50_due_date >= f_sysdate()::date))
+        </when>
+        </choose>
+        ) t
+        WHERE CONCAT(pay50_desc, pay50_corp_nm) ILIKE #{searchText}
+        ORDER BY pay50_due_date, pay50_expense_id
+    </select>
+
+
+    <!-- AS-IS pay50_expense.selectNewExpenseAppr (IDMS-IC) — 안쪽 UNION 본문은 그대로, 바깥 열만 DTO 이름으로. 이 화면은 targetType = 'SETTLE' -->
+    <select id="selectNewExpenseAppr" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseNewRes">
+        SELECT
+        pay50_expense_id                    AS expense_id,
+        pay50_company_id                    AS company_id,
+        pay50_expense_cd                    AS expense_code,
+        pay50_expense_nm                    AS expense_name,
+        pay50_occ_date                      AS occ_date,
+        pay50_due_date                      AS due_date,
+        pay50_desc                          AS "desc",
+        pay50_corp_id                       AS corp_id,
+        pay50_corp_nm                       AS corp_name,
+        pay50_pay_method_cd                 AS pay_method_code,
+        f_cdnm('PayMethodCode', pay50_pay_method_cd, pay50_company_id, pay50_due_date) AS pay_method_name,
+        pay50_pay_account_info              AS pay_account_info,
+        pay50_tax_type                      AS tax_type,
+        pay50_amt                           AS amt,
+        pay50_tax                           AS tax,
+        pay50_settle_amt                    AS settle_amt,
+        pay50_appr_emp_id                   AS appr_emp_id,
+        pay50_expense_appr_id               AS expense_appr_id,
+        pay50_benefit_id                    AS benefit_id,
+        pay50_transport_std_ym              AS transport_std_ym,
+        pay50_biz_card_std_ym               AS biz_card_std_ym,
+        pay50_biz_card_corp_cd              AS biz_card_corp_code,
+        pay50_deposit_id                    AS deposit_id,
+        pay50_settle_date                   AS settle_date,
+        pay50_account_cd                    AS account_code,
+        pay50_account_nm                    AS account_name,
+        pay50_tr_id                         AS tr_id
+
+          FROM (
+        ----------------------------------------
+        -- (신규 자금집행 예정내역)
+        -- 10:사업비요청
+        -- 20:화환신청
+        -- 90:기타출금
+        -- 91:기타출금(선급)
+        ----------------------------------------
+        SELECT pay50_expense_id
+        , pay50_company_id
+        , pay50_expense_cd
+        , f_cdnm('ExpenseType', pay50_expense_cd, pay50_company_id, pay50_due_date)   AS pay50_expense_nm
+        , pay50_occ_date
+        , pay50_due_date
+        , pay50_desc
+        , pay50_corp_id
+        , COALESCE(sys15_corp_nm, f_emp_kor_nm(pay50_corp_id))                        AS pay50_corp_nm
+        , pay50_pay_method_cd
+        , pay50_pay_account_info
+        , pay50_tax_type
+        , pay50_amt
+        , pay50_tax
+        , pay50_settle_amt
+        , pay50_appr_emp_id
+        , pay50_expense_appr_id
+        , null                                                                        AS pay50_benefit_id
+        , null                                                                        AS pay50_transport_std_ym
+        , null                                                                        AS pay50_biz_card_std_ym
+        , null                                                                        AS pay50_biz_card_corp_cd
+        , null::numeric                                                               AS pay50_deposit_id
+        , null::date                                                                  AS pay50_settle_date
+        , pay50_account_cd
+        , f_get_account_nm(pay50_company_id, pay50_account_cd)                        AS pay50_account_nm
+        , null::numeric                                                               AS pay50_tr_id
+        FROM pay50_expense
+        INNER JOIN apr01_appr ON apr01_appr_id = pay50_expense_appr_id
+        LEFT OUTER JOIN sys15_corp ON sys15_corp_id = pay50_corp_id
+        WHERE pay50_company_id = #{companyId}
+        AND apr01_status_cd  = '30'
+        AND pay50_expense_cd IN ('10','20','90','91')   /*(10:사업비요청/20:화환신청/90:기타출금/91:기타출금(선급))*/
+        AND pay50_pay_method_cd != '15'                 /*(15:법인카드)*/
+        AND ( ( #{targetType} = 'SETTLE'        AND
+        pay50_settle_emp_id IS NULL     AND
+        pay50_pay_method_cd != '17'     ) OR    /*(17:선급비용)은 자금집행 없음*/
+        ( #{targetType} = 'JOURNAL'       AND
+        pay50_journal_id IS NULL        ) )
+        ----------------------------------------
+        -- 30:복리후생비
+        ----------------------------------------
+        UNION ALL
+        SELECT COALESCE(pay50_expense_id, 3000000 + row_number() over())               AS pay50_expense_id
+        , emp17_company_id                                                        AS pay50_company_id
+        , '30'                                                                    AS pay50_expense_cd
+        , f_cdnm('ExpenseType', '30', emp17_company_id, emp17_occ_date)           AS pay50_expense_nm
+        , COALESCE(pay50_occ_date, emp17_occ_date)                                AS pay50_occ_date
+        , COALESCE(pay50_due_date, f_today())                                     AS pay50_due_date
+        , COALESCE(pay50_desc
+        ,CONCAT( f_cdnm('EmpBenefitType', emp17_benefit_cd, emp17_company_id, emp17_issue_date)
+        , '('||emp17_benefit_detail||')'
+        , '_'||emp17_pay_request_yyyymm ))                       AS pay50_desc
+        , COALESCE(pay50_corp_id, emp17_person_id)                                AS pay50_corp_id
+        , f_emp_kor_nm(COALESCE(pay50_corp_id, emp17_person_id))                  AS pay50_corp_nm
+        , COALESCE(pay50_pay_method_cd, '10')                                     AS pay50_pay_method_cd
+        , COALESCE(pay50_pay_account_info
+        ,CONCAT(f_cdnm('BankCode', emp14_bank_cd, emp17_company_id, f_today())
+        ,' '||TO_DECRYPTS(emp14_account_no)))                    AS pay50_pay_account_info
+        , '1'                                                                     AS pay50_tax_type
+        , COALESCE(pay50_settle_amt, emp17_issue_amt)                             AS pay50_amt
+        , 0                                                                       AS pay50_tax
+        , COALESCE(pay50_settle_amt, emp17_issue_amt)                             AS pay50_settle_amt
+        , apr01_reg_emp_id                                                        AS pay50_appr_emp_id
+        , emp17_pay_request_appr_id                                               AS pay50_expense_appr_id
+        , emp17_benefit_id                                                        AS pay50_benefit_id
+        , null                                                                    AS pay50_transport_std_ym
+        , null                                                                    AS pay50_biz_card_std_ym
+        , null                                                                    AS pay50_biz_card_corp_cd
+        , null                                                                    AS pay50_deposit_id
+        , null                                                                    AS pay50_settle_date
+        , pay50_account_cd
+        , f_get_account_nm(pay50_company_id, pay50_account_cd)                    AS pay50_account_nm
+        , null                                                                    AS pay50_tr_id
+        FROM emp17_benefit
+        INNER JOIN apr01_appr ON apr01_appr_id = emp17_pay_request_appr_id
+        LEFT OUTER JOIN emp14_account ON (    emp14_person_id = emp17_person_id
+        AND emp14_start_date = (SELECT MAX(emp14_start_date)
+        FROM emp14_account
+        WHERE emp14_person_id = emp17_person_id
+        AND emp14_start_date &lt;= f_today()) )
+        LEFT OUTER JOIN pay50_expense ON pay50_benefit_id = emp17_benefit_id
+        WHERE emp17_company_id = #{companyId}
+        AND apr01_status_cd  = '30'
+        AND ( ( #{targetType} = 'SETTLE'        AND
+        pay50_settle_emp_id IS NULL     ) OR
+        ( #{targetType} = 'JOURNAL'       AND
+        pay50_journal_id IS NULL        ) )
+        ----------------------------------------
+        -- 40:여비교통비
+        ----------------------------------------
+        UNION ALL
+        SELECT COALESCE(pay50_expense_id, 4000000 + row_number() over())               AS pay50_expense_id
+        , emp52_company_id                                                        AS pay50_company_id
+        , '40'                                                                    AS pay50_expense_cd
+        , f_cdnm('ExpenseType', '40', emp52_company_id, f_today())                AS pay50_expense_nm
+        , COALESCE(pay50_occ_date, apr01_effect_date)                             AS pay50_occ_date
+        , COALESCE(pay50_due_date, f_today())                                     AS pay50_due_date
+        , COALESCE(pay50_desc, CONCAT('여비교통비', '_'||emp52_yyyymm))              AS pay50_desc
+        , COALESCE(pay50_corp_id, emp50_person_id)                                AS pay50_corp_id
+        , f_emp_kor_nm(COALESCE(pay50_corp_id, emp50_person_id))                  AS pay50_corp_nm
+        , COALESCE(pay50_pay_method_cd, '10')                                     AS pay50_pay_method_cd
+        , COALESCE(pay50_pay_account_info
+        ,CONCAT(f_cdnm('BankCode', emp14_bank_cd, emp50_person_id, f_today())
+        ,' '||TO_DECRYPTS(emp14_account_no)))                    AS pay50_pay_account_info
+        , '1'                                                                     AS pay50_tax_type
+        , COALESCE(pay50_amt       , amt)                                         AS pay50_amt
+        , COALESCE(pay50_tax       , 0)                                           AS pay50_tax
+        , COALESCE(pay50_settle_amt, amt)                                         AS pay50_settle_amt
+        , apr01_reg_emp_id                                                        AS pay50_appr_emp_id
+        , emp52_appr_id                                                           AS pay50_expense_appr_id
+        , null                                                                    AS pay50_benefit_id
+        , emp52_yyyymm                                                            AS pay50_transport_std_ym
+        , null                                                                    AS pay50_biz_card_std_ym
+        , null                                                                    AS pay50_biz_card_corp_cd
+        , null                                                                    AS pay50_deposit_id
+        , null                                                                    AS pay50_settle_date
+        , pay50_account_cd
+        , f_get_account_nm(pay50_company_id, pay50_account_cd)                    AS pay50_account_nm
+        , null                                                                    AS pay50_tr_id
+        FROM ( SELECT emp52_company_id
+        , emp52_yyyymm
+        , emp52_appr_id
+        , apr2.apr01_effect_date     apr01_effect_date
+        , apr2.apr01_reg_emp_id      apr01_reg_emp_id
+        , emp50_person_id
+        , SUM(emp50_amt)             amt
+        FROM emp50_transport_expense
+        INNER JOIN emp51_relate_appr ON ( emp51_company_id  = emp50_company_id  AND
+        emp51_yyyymm      = emp50_yyyymm      AND
+        emp51_person_id   = emp50_person_id   )
+        INNER JOIN emp52_relate_appr ON ( emp52_company_id  = emp50_company_id  AND
+        emp52_yyyymm      = emp50_yyyymm      )
+        INNER JOIN apr01_appr apr1 ON apr1.apr01_appr_id = emp51_appr_id
+        INNER JOIN apr01_appr apr2 ON apr2.apr01_appr_id = emp52_appr_id
+        WHERE emp50_company_id       = #{companyId}
+        AND emp51_close_yn         = 'true'
+        AND emp50_yyyymm >= '2025.01'
+        AND apr1.apr01_status_cd   = '30'
+        AND apr2.apr01_status_cd   = '30'
+        AND NOT EXISTS ( SELECT 1
+        FROM pay50_expense
+        WHERE pay50_company_id       = emp52_company_id
+        AND pay50_transport_std_ym = emp52_yyyymm
+        AND pay50_corp_id          = emp50_person_id
+        AND pay50_expense_appr_id  = emp52_appr_id
+        AND ( ( #{targetType} = 'SETTLE'           AND
+        pay50_settle_emp_id IS NOT NULL    ) OR
+        ( #{targetType} = 'JOURNAL'              AND
+        pay50_journal_id IS NOT NULL       ) )
+        )
+        GROUP BY emp52_company_id, emp52_yyyymm, emp52_appr_id, emp50_person_id
+        , apr2.apr01_effect_date, apr2.apr01_reg_emp_id
+        ) emp50
+        LEFT OUTER JOIN emp14_account ON (    emp14_person_id = emp50_person_id
+        AND emp14_start_date = (SELECT MAX(emp14_start_date)
+        FROM emp14_account
+        WHERE emp14_person_id = emp50_person_id
+        AND emp14_start_date &lt;= f_today()) )
+        LEFT OUTER JOIN pay50_expense ON ( pay50_company_id         = emp52_company_id  AND
+        pay50_transport_std_ym   = emp52_yyyymm      AND
+        pay50_corp_id            = emp50_person_id   AND
+        pay50_expense_appr_id    = emp52_appr_id     )
+        ----------------------------------------
+        -- 50:법인카드
+        ----------------------------------------
+        UNION ALL
+        SELECT 5000000 + row_number() over()                                           AS pay50_expense_id
+        , pay50_company_id
+        , pay50_expense_cd
+        , f_cdnm('ExpenseType', pay50_expense_cd, pay50_company_id, f_today())    AS pay50_expense_nm
+        , pay50_occ_date
+        , f_today()                                                               AS pay50_due_date
+        , CONCAT(pay50_corp_nm, '_'||pay50_biz_card_std_ym)                       AS pay50_desc
+        , null                                                                    AS pay50_corp_id
+        , pay50_corp_nm
+        , '10'                                                                    AS pay50_pay_method_cd
+        , null                                                                    AS pay50_pay_account_info
+        , null                                                                    AS pay50_tax_type
+        , pay50_settle_amt                                                        AS pay50_amt
+        , 0                                                                       AS pay50_tax
+        , pay50_settle_amt
+        , pay50_appr_emp_id
+        , pay50_expense_appr_id
+        , null                                                                    AS pay50_benefit_id
+        , null                                                                    AS pay50_transport_std_ym
+        , pay50_biz_card_std_ym
+        , pay50_biz_card_corp_cd
+        , pay50_deposit_id
+        , null                                                                    AS pay50_settle_date
+        , null                                                                    AS pay50_account_cd
+        , null                                                                    AS pay50_account_nm
+        , null                                                                    AS pay50_tr_id
+        FROM (
+        SELECT biz01_company_id                                                           pay50_company_id
+        , '50'                                                                       pay50_expense_cd
+        , apr01_effect_date                                                          pay50_occ_date
+        , biz01_std_ym                                                               pay50_biz_card_std_ym
+        , crd01_bank_cd                                                              pay50_biz_card_corp_cd
+        , f_cdnm('CreditCardCompany', crd01_bank_cd, biz01_company_id, f_today())    pay50_corp_nm
+        , sum(biz01_provide_amt)                                                     pay50_settle_amt
+        , apr01_reg_emp_id                                                           pay50_appr_emp_id
+        , apr01_appr_id                                                              pay50_expense_appr_id
+        , crd01_deposit_id                                                           pay50_deposit_id
+        FROM biz01_promo
+        INNER JOIN biz05_relate_appr ON ( biz05_company_id = biz01_company_id   AND
+        biz05_std_ym     = biz01_std_ym       AND
+        biz05_link_cd    = 'A13'              )  /*(A13:법인카드 사용내역서)*/
+        INNER JOIN apr01_appr ON apr01_appr_id = biz05_appr_id
+        INNER JOIN crd01_card ON crd01_card_id = biz01_card_id
+        LEFT OUTER JOIN ast01_class_tree ON ast01_class_tree_id = crd01_deposit_id
+        WHERE biz01_company_id   = #{companyId}
+        AND #{targetType}     != 'JOURNAL'
+        AND biz01_close_yn     = 'true'
+        AND apr01_status_cd    = '30'  /*(30:완료)*/
+        AND crd01_card_type    = '1'   /*(1:신용카드)*/
+        AND NOT EXISTS ( SELECT 1
+        FROM pay50_expense
+        WHERE pay50_company_id        = biz01_company_id
+        AND pay50_biz_card_std_ym   = biz01_std_ym
+        AND pay50_biz_card_corp_cd  = crd01_bank_cd
+        AND COALESCE(pay50_deposit_id,0) = COALESCE(crd01_deposit_id,0) )
+        GROUP BY biz01_company_id, biz01_std_ym, crd01_bank_cd, crd01_deposit_id
+        , apr01_appr_id, apr01_reg_date, apr01_reg_emp_id
+        ) biz01
+        ----------------------------------------
+        -- 53:원천세/부가세
+        ----------------------------------------
+        UNION ALL
+        SELECT 5300000 + row_number() over()                                           AS pay50_expense_id
+        , pay50_company_id
+        , pay50_expense_cd
+        , f_cdnm('ExpenseType', pay50_expense_cd, pay50_company_id, f_today())    AS pay50_expense_nm
+        , pay50_occ_date
+        , f_today()                                                               AS pay50_due_date
+        , pay50_desc
+        , pay50_corp_id
+        , pay50_corp_nm
+        , '10'                                                                    AS pay50_pay_method_cd
+        , null                                                                    AS pay50_pay_account_info
+        , null                                                                    AS pay50_tax_type
+        , pay50_settle_amt                                                        AS pay50_amt
+        , 0                                                                       AS pay50_tax
+        , pay50_settle_amt
+        , pay50_appr_emp_id
+        , pay50_expense_appr_id
+        , null                                                                    AS pay50_benefit_id
+        , null                                                                    AS pay50_transport_std_ym
+        , null                                                                    AS pay50_biz_card_std_ym
+        , null                                                                    AS pay50_biz_card_corp_cd
+        , pay50_deposit_id
+        , pay50_settle_date
+        , null                                                                    AS pay50_account_cd
+        , null                                                                    AS pay50_account_nm
+        , pay50_tr_id
+        FROM (
+        SELECT ast06_company_id                                                           pay50_company_id
+        , '53'                                                                       pay50_expense_cd
+        , apr01_effect_date                                                          pay50_occ_date
+        , ast06_corp_id                                                              pay50_corp_id
+        , f_get_corp_nm(ast06_corp_id)                                               pay50_corp_nm
+        , ast06_note                                                                 pay50_desc
+        , ast06_amt                                                                  pay50_settle_amt
+        , apr01_reg_emp_id                                                           pay50_appr_emp_id
+        , ast06_appr_id                                                              pay50_expense_appr_id
+        , ast06_deposit_id                                                           pay50_deposit_id
+        , ast06_tr_id                                                                pay50_tr_id
+        , CASE WHEN COALESCE(ast06_settle_mng_yn,'true') = 'false' THEN ast06_date
+        ELSE null END                                                         pay50_settle_date
+        FROM ast06_tr
+        INNER JOIN ast20_tr_tax ON ast20_tr_id   = ast06_tr_id
+        INNER JOIN apr01_appr   ON apr01_appr_id = ast06_appr_id
+        WHERE ast06_company_id   = #{companyId}
+        AND #{targetType}     != 'JOURNAL'
+        AND apr01_status_cd    = '30'  /*(30:완료)*/
+        AND NOT EXISTS ( SELECT 1
+        FROM pay50_expense
+        WHERE pay50_expense_id = ast06_expense_id )
+        ) tax
+        ----------------------------------------
+        -- 55:4대보험
+        ----------------------------------------
+        UNION ALL
+        SELECT 5500000 + row_number() over()                                           AS pay50_expense_id
+        , pay50_company_id
+        , pay50_expense_cd
+        , f_cdnm('ExpenseType', pay50_expense_cd, pay50_company_id, f_today())    AS pay50_expense_nm
+        , pay50_occ_date
+        , f_today()                                                               AS pay50_due_date
+        , pay50_desc
+        , pay50_corp_id
+        , pay50_corp_nm
+        , '10'                                                                    AS pay50_pay_method_cd
+        , null                                                                    AS pay50_pay_account_info
+        , null                                                                    AS pay50_tax_type
+        , pay50_settle_amt                                                        AS pay50_amt
+        , 0                                                                       AS pay50_tax
+        , pay50_settle_amt
+        , pay50_appr_emp_id
+        , pay50_expense_appr_id
+        , null                                                                    AS pay50_benefit_id
+        , null                                                                    AS pay50_transport_std_ym
+        , null                                                                    AS pay50_biz_card_std_ym
+        , null                                                                    AS pay50_biz_card_corp_cd
+        , pay50_deposit_id
+        , pay50_settle_date
+        , null                                                                    AS pay50_account_cd
+        , null                                                                    AS pay50_account_nm
+        , pay50_tr_id
+        FROM (
+        SELECT ast06_company_id                                                           pay50_company_id
+        , '55'                                                                       pay50_expense_cd
+        , apr01_effect_date                                                          pay50_occ_date
+        , ast06_corp_id                                                              pay50_corp_id
+        , f_get_corp_nm(ast06_corp_id)                                               pay50_corp_nm
+        , ast06_note                                                                 pay50_desc
+        , ast06_amt                                                                  pay50_settle_amt
+        , apr01_reg_emp_id                                                           pay50_appr_emp_id
+        , ast06_appr_id                                                              pay50_expense_appr_id
+        , ast06_deposit_id                                                           pay50_deposit_id
+        , ast06_tr_id                                                                pay50_tr_id
+        , CASE WHEN COALESCE(ast06_settle_mng_yn,'true') = 'false' THEN ast06_date
+        ELSE null END                                                         pay50_settle_date
+        FROM ast06_tr
+        INNER JOIN ast21_tr_4insure ON ast21_tr_id   = ast06_tr_id
+        INNER JOIN apr01_appr       ON apr01_appr_id = ast06_appr_id
+        WHERE ast06_company_id   = #{companyId}
+        AND #{targetType}     != 'JOURNAL'
+        AND apr01_status_cd    = '30'  /*(30:완료)*/
+        AND NOT EXISTS ( SELECT 1
+        FROM pay50_expense
+        WHERE pay50_expense_id = ast06_expense_id )
+        ) insure
+        ----------------------------------------
+        -- 60:급여 / 61:상여금 / 62:퇴직정산
+        ----------------------------------------
+        UNION ALL
+        SELECT 6000000 + row_number() over()                                           AS pay50_expense_id
+        , pay10_company_id                                                        AS pay50_company_id
+        , expense_cd                                                              AS pay50_expense_cd
+        , f_cdnm('ExpenseType', expense_cd, pay10_company_id, pay10_date)         AS pay50_expense_nm
+        , pay10_date                                                              AS pay50_occ_date
+        , pay10_date                                                              AS pay50_due_date
+        , CONCAT( f_cdnm('ExpenseType', expense_cd, pay10_company_id, pay10_date)
+        , '('||f_emp_kor_nm(pay10_person_id)||')'
+        , '_'||pay10_std_month )                                          AS pay50_desc
+        , pay10_person_id                                                         AS pay50_corp_id
+        , f_emp_kor_nm(pay10_person_id)                                           AS pay50_corp_nm
+        , '10'                                                                    AS pay50_pay_method_cd
+        , CONCAT(f_cdnm('BankCode', emp14_bank_cd, pay10_person_id, f_today())
+        ,' '||TO_DECRYPTS(emp14_account_no))                          AS pay50_pay_account_info
+        , null                                                                    AS pay50_tax_type
+        , pay_amt                                                                 AS pay50_amt
+        , 0                                                                       AS pay50_tax
+        , pay_amt                                                                 AS pay50_settle_amt
+        , apr01_reg_emp_id                                                        AS pay50_appr_emp_id
+        , appr_id                                                                 AS pay50_expense_appr_id
+        , null                                                                    AS pay50_benefit_id
+        , null                                                                    AS pay50_transport_std_ym
+        , null                                                                    AS pay50_biz_card_std_ym
+        , null                                                                    AS pay50_biz_card_corp_cd
+        , null                                                                    AS pay50_deposit_id
+        , null                                                                    AS pay50_settle_date
+        , null                                                                    AS pay50_account_cd
+        , null                                                                    AS pay50_account_nm
+        , null                                                                    AS pay50_tr_id
+        FROM (
+        SELECT pay10_month.*
+        , CASE pay10_pay_cd WHEN '01' THEN '60'
+        WHEN '02' THEN '61'
+        WHEN '03' THEN '62'
+        ELSE '69' END as expense_cd
+        , COALESCE(( SELECT SUM(pay11_item_amt)
+        FROM pay11_month_item
+        INNER JOIN pay20_item ON pay20_item_cd = pay11_item_cd
+        WHERE pay11_month_id  = pay10_month_id
+        AND pay20_item_type = '1' /*(1:급여지급항목)*/
+        ),0)
+        -
+        COALESCE(( SELECT SUM(pay11_item_amt)
+        FROM pay11_month_item
+        INNER JOIN pay20_item ON pay20_item_cd = pay11_item_cd
+        WHERE pay11_month_id  = pay10_month_id
+        AND pay20_item_type = '2' /*(2:급여공제항목)*/
+        ),0)  as pay_amt
+        , pay05_appr_id  as appr_id
+        FROM pay10_month
+        INNER JOIN pay05_relate_appr ON (    pay05_company_id = pay10_company_id
+        AND ( ( pay05_pay_cd     = '03'           AND
+        pay05_retire_id  = pay10_month_id ) OR
+        ( pay05_pay_cd    != '03'           AND
+        pay05_start_date = pay10_date     AND
+        pay05_pay_cd     = pay10_pay_cd   ) )
+        )
+        WHERE pay10_company_id   = #{companyId}
+        AND #{targetType}     != 'JOURNAL'
+        AND pay10_date >= '2025-1-1'::date
+        AND NOT EXISTS ( SELECT 1
+        FROM pay50_expense
+        WHERE pay50_company_id    = pay10_company_id
+        AND pay50_due_date      = pay10_date
+        AND pay50_corp_id       = pay10_person_id
+        AND pay10_pay_cd = (CASE pay50_expense_cd WHEN '60' THEN '01'
+        WHEN '61' THEN '02'
+        WHEN '62' THEN '03'
+        ELSE '04' END) )
+        ) pay10
+        INNER JOIN apr01_appr ON ( apr01_appr_id = appr_id AND apr01_status_cd = '30' )
+        LEFT OUTER JOIN emp14_account ON (    emp14_person_id = pay10_person_id
+        AND emp14_start_date = (SELECT MAX(emp14_start_date)
+        FROM emp14_account
+        WHERE emp14_person_id = pay10_person_id
+        AND emp14_start_date &lt;= f_today()) )
+        WHERE pay_amt > 0
+        ) t
+        WHERE CONCAT(pay50_expense_nm, pay50_desc, pay50_corp_nm) ILIKE #{searchText}
+        <choose>
+        <when test="expenseCode != null">
+        AND pay50_expense_cd LIKE #{expenseCode}
+        </when>
+        </choose>
+        <choose>
+        <when test="targetType == 'JOURNAL'">
+        AND pay50_expense_cd IN (SELECT sys09_code
+        FROM sys13_code_group
+        INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+        WHERE sys13_kind_group_cd = 'ExpenseType0002')
+        </when>
+        </choose>
+        ORDER BY <choose>
+        <when test="targetType == 'SETTLE'">
+        pay50_due_date, pay50_occ_date, pay50_expense_cd, pay50_desc collate "ko_KR.utf8" asc
+        </when>
+        <otherwise>
+        pay50_occ_date, pay50_expense_cd, pay50_desc collate "ko_KR.utf8" asc
+        </otherwise>
+        </choose>
+    </select>
+
+    <!-- AS-IS pay50_expense.selectBySettleDate (IDMS-IC) -->
+    <select id="selectBySettleDate" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseSettleApprRes">
+        SELECT row_number() over(order by pay50_settle_date desc, pay50_settle_appr_id)         AS expense_id
+             , pay50_settle_date                                                                AS settle_date
+             , apr01_title                                                                      AS settle_appr_title
+             , COUNT(*)||'건'                                                                    AS "count"
+             , SUM(pay50_settle_amt)                                                            AS settle_amt
+             , f_cdnm('AprStatusCode', apr01_status_cd, pay50_company_id, pay50_settle_date)    AS settle_appr_status_name
+             , pay50_settle_appr_id                                                             AS settle_appr_id
+          FROM pay50_expense
+               INNER JOIN apr01_appr ON apr01_appr_id = pay50_settle_appr_id
+         WHERE pay50_company_id = #{companyId}
+           AND pay50_settle_date BETWEEN #{startDate} AND #{closeDate}
+           AND apr01_status_cd NOT IN ('99')
+        <if test="statusCheckYn">
+           AND apr01_status_cd NOT IN ('30','40')
+        </if>
+           AND pay50_settle_appr_id IN ( SELECT a.pay50_settle_appr_id
+                                           FROM pay50_expense a
+                                                INNER JOIN apr01_appr b ON b.apr01_appr_id = a.pay50_settle_appr_id
+                                                LEFT OUTER JOIN sys15_corp ON sys15_corp_id = a.pay50_corp_id
+                                          WHERE a.pay50_company_id = #{companyId}
+                                            AND a.pay50_settle_date BETWEEN #{startDate} AND #{closeDate}
+                                            AND CONCAT(b.apr01_title, a.pay50_desc, COALESCE(sys15_corp_nm, f_emp_kor_nm(a.pay50_corp_id))) ILIKE #{searchText}
+                                       )
+         GROUP BY pay50_company_id, pay50_settle_date, apr01_title, apr01_status_cd, pay50_settle_appr_id
+    </select>
+
+    <!-- AS-IS pay50_expense.selectBySettleApprId (IDMS-IC) — 열은 아래 그리드·연락처 창이 쓰는 것만, 회사 조건 추가 -->
+    <select id="selectBySettleApprId" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseSettleApprRowRes">
+        SELECT pay50_expense_id                                                                 AS expense_id
+             , pay50_expense_appr_id                                                            AS expense_appr_id
+             , pay50_occ_date                                                                   AS occ_date
+             , f_cdnm('ExpenseType', pay50_expense_cd, pay50_company_id, pay50_settle_date)     AS expense_name
+             , pay50_desc                                                                       AS "desc"
+             , COALESCE(sys15_corp_nm, f_emp_kor_nm(pay50_corp_id))                             AS corp_name
+             , sys15_tel                                                                        AS tel
+             , sys15_addr                                                                       AS addr
+             , pay50_settle_amt                                                                 AS settle_amt
+             , f_cdnm('PayMethodCode', pay50_pay_method_cd, pay50_company_id, pay50_settle_date) AS pay_method_name
+          FROM pay50_expense
+               LEFT OUTER JOIN sys15_corp ON sys15_corp_id = pay50_corp_id
+         WHERE pay50_settle_appr_id = #{settleApprId}
+           AND pay50_company_id     = #{companyId}
+         ORDER BY pay50_occ_date, pay50_expense_id
+    </select>
+
+    <!-- initExpenseSettle가 읽는 값 (AS-IS는 화면 행 모델에서 읽음) -->
+    <select id="selectSettleInitInfo" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseSettleInitRes">
+        SELECT pay50_expense_id AS expense_id, pay50_expense_cd AS expense_code, pay50_journal_id AS journal_id, pay50_settle_appr_id AS settle_appr_id
+          FROM pay50_expense
+         WHERE pay50_expense_id = #{expenseId}
+           AND pay50_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS ast07_settle.countByExpenseId -->
+    <select id="countSettleByExpenseId" resultType="int">
+        SELECT COUNT(*)
+          FROM ast07_settle
+         WHERE ast07_expense_id = #{expenseId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(pay50_expense) → updateModel 중 이 화면이 바꾸는 열 5개 + 회사 조건 -->
+    <update id="updateSettle">
+        UPDATE pay50_expense
+           SET pay50_pay_method_cd    = #{req.payMethodCode}
+             , pay50_pay_account_info = #{req.payAccountInfo}
+             , pay50_settle_date      = #{req.settleDate}
+             , pay50_deposit_id       = #{req.depositId}
+             , pay50_settle_note      = #{req.settleNote}
+         WHERE pay50_expense_id = #{req.expenseId}
+           AND pay50_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS pay50_expense.updateSettleEmpId -->
+    <update id="updateSettleEmpId">
+        UPDATE pay50_expense
+           SET pay50_settle_emp_id = #{settleEmpId}
+         WHERE pay50_expense_id    = #{expenseId}
+           AND pay50_company_id    = #{companyId}
+    </update>
+
+    <!-- AS-IS pay50_expense.insertExpense — 예정내역이 아직 지출결의서 행이 아니면(복리후생·여비교통 등) 새 행으로 -->
+    <insert id="insertExpense">
+        INSERT INTO pay50_expense
+             ( pay50_expense_id, pay50_company_id, pay50_expense_cd, pay50_occ_date, pay50_desc, pay50_corp_id, pay50_tax_type
+             , pay50_amt, pay50_tax, pay50_settle_amt, pay50_due_date, pay50_pay_method_cd, pay50_pay_account_info, pay50_account_cd
+             , pay50_appr_emp_id, pay50_expense_appr_id, pay50_deposit_id, pay50_settle_emp_id, pay50_settle_date
+             , pay50_benefit_id, pay50_transport_std_ym, pay50_biz_card_std_ym, pay50_biz_card_corp_cd )
+        VALUES ( #{expenseId}, #{companyId}, #{row.expenseCode}, #{row.occDate}, #{row.desc}, #{row.corpId}, #{row.taxType}
+               , #{row.amt}, #{row.tax}, #{row.settleAmt}, #{row.dueDate}, #{row.payMethodCode}, #{row.payAccountInfo}, #{row.accountCode}
+               , #{row.apprEmpId}, #{row.expenseApprId}, #{row.depositId}, #{settleEmpId}, #{row.settleDate}
+               , #{row.benefitId}, #{row.transportStdYm}, #{row.bizCardStdYm}, #{row.bizCardCorpCode} )
+    </insert>
+
+    <!-- AS-IS ast06_tr.updateExpenseId — 세금/4대보험 발생회계(ast06_tr)와 지출결의서를 잇는다 -->
+    <update id="updateTrExpenseId">
+        UPDATE ast06_tr
+           SET ast06_expense_id = #{expenseId}
+         WHERE ast06_tr_id      = #{trId}
+           AND ast06_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS pay50_expense.updateDepositId -->
+    <update id="updateDepositId">
+        UPDATE pay50_expense
+           SET pay50_settle_date = #{settleDate}
+             , pay50_deposit_id  = #{depositId}
+         WHERE pay50_expense_id  = #{expenseId}
+           AND pay50_company_id  = #{companyId}
+    </update>
+
+    <!-- AS-IS pay50_expense.initExpenseSettle -->
+    <update id="initExpenseSettle">
+        UPDATE pay50_expense
+           SET pay50_settle_emp_id  = null
+             , pay50_deposit_id     = null
+             , pay50_settle_date    = null
+             , pay50_settle_appr_id = null
+         WHERE pay50_expense_id = #{expenseId}
+           AND pay50_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS sys99_print.deleteByPersonId L695 (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS sys99_print.insert L500 (IDMS-IC) — Sys99_Print.insertRdExpensePay가 채우는 열만.
+         date01 지급요청일 · string01 구분 · 02 지출내역 · 03 지출처 · 04 전화번호 · 05 주소 · long01 지급금액 · string06 지급방법 · 07 지급요청계좌 · date02 자금집행일 · string08 지급계좌 · 09 지급여부 -->
+    <insert id="insertSettlePrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_string01, sys99_string02, sys99_string03, sys99_string04, sys99_string05
+               , sys99_long01, sys99_string06, sys99_string07, sys99_date02, sys99_string08, sys99_string09 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{row.dueDate}, #{row.expenseName,jdbcType=VARCHAR}, #{row.desc,jdbcType=VARCHAR}, #{row.corpName,jdbcType=VARCHAR}, #{row.tel,jdbcType=VARCHAR}, #{row.addr,jdbcType=VARCHAR}
+               , #{row.settleAmt,jdbcType=NUMERIC}, #{row.payMethodName,jdbcType=VARCHAR}, #{row.payAccountInfo,jdbcType=VARCHAR}, #{row.settleDate}, #{row.depositName,jdbcType=VARCHAR}, #{mark} )
+    </insert>
 </mapper>

@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq, PayBasicSetup, PayBasicSetupSaveReq, PayExpense, PayExpenseForm, PayExpenseRequest, PayExpenseUpdateReq, PayFavoriteAccount } from '../types/pay';
+import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq, PayBasicSetup, PayBasicSetupSaveReq, PayExpense, PayExpenseForm, PayExpenseRequest, PayExpenseUpdateReq, PayFavoriteAccount, PayExpenseSettle, PayExpenseSettleSaveReq, PayExpenseNew, PayExpenseSettleAppr, PayExpenseSettleApprRow } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -957,6 +957,61 @@ export const payApi = {
   takeExpenseRequests: async (rows: PayExpenseRequest[]): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>('v1/pay/expenses/take-requests', rows);
     return res.data.data ?? 0;
+  },
+
+  // ── U07 자금집행결의서 작성 Pay50_Tab_ExpensePayWrite · U08 조회 Pay50_Tab_ExpensePay ──
+  /** AS-IS pay.Pay50_Expense.selectExpensePay — 코드는 콤보의 "전체"가 '%', 검색어는 서버가 "%…%"로 감싼다 */
+  searchExpenseSettles: async (p: { startDate: string; closeDate: string; expenseCode: string; payYnCode: string; statusCheckYn: boolean; searchText: string }): Promise<PayExpenseSettle[]> => {
+    const res = await apiClient.get<ApiResponse<PayExpenseSettle[]>>('v1/pay/expenses/settles', { params: p });
+    return res.data.data as PayExpenseSettle[];
+  },
+
+  /** AS-IS pay.Pay50_Expense.selectNewExpenseAppr (targetType SETTLE) — expenseCode를 안 주면 구분 조건 없음 */
+  searchNewExpenseSettles: async (p: { expenseCode?: string; searchText: string }): Promise<PayExpenseNew[]> => {
+    const res = await apiClient.get<ApiResponse<PayExpenseNew[]>>('v1/pay/expenses/new-settles', { params: p });
+    return res.data.data as PayExpenseNew[];
+  },
+
+  /** AS-IS pay.Pay50_Expense.updateSettleEmpId ([자금집행 예정내역 가져오기]) */
+  takeExpenseSettles: async (rows: PayExpenseNew[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/pay/expenses/take-settles', rows);
+    return res.data.data as number;
+  },
+
+  /** AS-IS pay.Pay50_Expense.update ([저장]) */
+  saveExpenseSettles: async (rows: PayExpenseSettleSaveReq[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/pay/expenses/settles', rows);
+    return res.data.data as number;
+  },
+
+  /** AS-IS pay.Pay50_Expense.updateDeposit ([일괄저장]) */
+  updateExpenseDeposit: async (ids: number[], settleDate: string, depositId: number): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/pay/expenses/settle-deposit', { ids, settleDate, depositId });
+    return res.data.data as number;
+  },
+
+  /** AS-IS pay.Pay50_Expense.initExpenseSettle ([삭제]) */
+  initExpenseSettles: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/pay/expenses/init-settle', ids);
+    return res.data.data as number;
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdExpensePay ([엑셀다운로드]) → rdGroupId */
+  rdPrintExpenseSettles: async (p: { startDate: string; closeDate: string; expenseCode: string; payYnCode: string; statusCheckYn: boolean; searchText: string }): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/pay/expenses/rd-settle-print', p);
+    return res.data.data as string;
+  },
+
+  /** AS-IS pay.Pay50_Expense.selectBySettleDate */
+  searchExpenseSettleApprs: async (p: { startDate: string; closeDate: string; statusCheckYn: boolean; searchText: string }): Promise<PayExpenseSettleAppr[]> => {
+    const res = await apiClient.get<ApiResponse<PayExpenseSettleAppr[]>>('v1/pay/expenses/settle-apprs', { params: p });
+    return res.data.data as PayExpenseSettleAppr[];
+  },
+
+  /** AS-IS pay.Pay50_Expense.selectBySettleApprId */
+  searchExpenseSettleApprRows: async (settleApprId: number): Promise<PayExpenseSettleApprRow[]> => {
+    const res = await apiClient.get<ApiResponse<PayExpenseSettleApprRow[]>>(`v1/pay/expenses/settle-apprs/${settleApprId}`);
+    return res.data.data as PayExpenseSettleApprRow[];
   },
 
   /** AS-IS pay.Pay50_Expense.updateContent */

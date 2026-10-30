@@ -21,6 +21,7 @@
 | SGT | SearchGrid+Tree | 위 SearchBar(전체 폭), 아래 좌우 분할: 왼쪽 그리드 / 오른쪽 트리(선택 연동) | `Fnd08_Tab_OrgAuth` (펀드 권한설정). P02도 같은 모양 |
 | TG | Tree+Grid | 왼쪽 트리, 오른쪽 그리드 | `*_Tab_ClassTree` 계열 |
 | GG | Grid+Grid | 위 SearchBar + 마스터 그리드, 아래 상세 그리드(상하 50:50 분할, 선택 연동) | `Est02_Tab_PfResultReport` (용역결과보고서) |
+| GGH | Grid+Grid 좌우 | 위 SearchBar(전체 폭), 아래 좌우 분할: 왼쪽 마스터 그리드(680) / 오른쪽 상세 그리드(선택 연동). 제안 2026-10-30(U08) | `Pay50_Tab_ExpensePay` (1400) |
 | STP | SearchBar+TabPanel | 위 툴바(성명 등 입력 + 버튼들, 그리드 없음), 아래 탭 컨테이너(탭마다 서로 다른 내부 구성, 툴바의 대상이 모든 탭에 전달됨) | `Pay10_Tab_Retire` (퇴직정산, S22) |
 | CG | CrudGrid | 편집 가능한 그리드 하나 | 코드 관리류 |
 | GCG | Grid+Calendar+Grid | 위 제목 줄(기준일자 + 새로고침 아이콘)과 그리드(현황), 아래 좌측 달력·[예약하기] 버튼 / 우측 라디오(MY·전체) + 그리드(달력 날짜 연동). 조회 툴바 없음 | `Car03_Tab_List` (공용차량 예약관리, T13) |
@@ -178,6 +179,15 @@
 - 열 때 조회하고, 조회가 끝나면 첫 행을 고른다. 행을 누르면 아래가 그 행의 id로 다시 읽는다(`pfContractId` + `nonce` — 같은 행을 다시 눌러도 다시 읽는다).
 - SGTP와 구조가 같고 아래가 탭 영역이 아니라 그리드 하나인 경우가 GG다.
 - 점검 규칙(`tools/page-style-check.py GG`, U04에서 추가): 세로 `Splitter` · 위 최소 120 · 아래 최소 200 · `SearchBar` · 외곽 테두리 없음. 아래 크기는 원본이 정하면(U04 `Ast06_Tab_TrTax`는 300 고정) 그대로 `defaultSize`에 둔다. 적용 화면: `Est02_Tab_PfResultReport`(견본), `Ast06_Tab_TrTax`, `Emp17_Tab_BenefitManager`(U05 — 아래에 폼 줄이 붙고 위 크기는 원본 0.45에 맞춰 `45%`).
+
+### GGH — Grid+Grid 좌우 (제안 2026-10-30, U08에서 등록)
+
+견본: `docs/page-style/GGH/Pay50_Tab_ExpensePay.tsx` (자금집행결의서 조회, 1400)
+
+- GG와 같은 마스터-상세 구조이지만 원본이 **좌우**로 나눈다(BorderLayout: North 툴바 50 / West 680(분할·최대 1000) / Center). yunhee `page-style`은 GG로 판별하고 `GGH`를 아직 모른다(0.6.9 — "유효한 SID 목록에 없습니다" 경고. 판별기 개선 제안).
+- 위: 바깥 여백 `20 20 0 20`의 테두리 없는 `SearchBar`(전체 폭). 아래: 가로 `Splitter` — 왼쪽 `defaultSize 680`·`max 1000`(안쪽 여백 `8 10 20 20`) / 오른쪽 나머지(안쪽 여백 `8 20 20 10`). **외곽 테두리 박스를 두지 않는다.**
+- 열 때 조회하고, 조회가 끝나면 왼쪽 첫 행을 골라 오른쪽을 읽는다(`onRowDataUpdated` → 첫 행 선택, `onSelect` → 상세 조회). 행이 없으면 오른쪽을 비운다.
+- 점검 규칙(`tools/page-style-check.py GGH`, U08에서 추가): 가로 `Splitter` · 왼쪽 `defaultSize={680}` · `max={1000}` · `SearchBar` · 외곽 테두리 없음.
 
 ### SGP — SearchGrid+Popup (초안)
 
