@@ -32,7 +32,7 @@ TARGETS = {
     "GGH": ("Pay50_Tab_ExpensePay", []),  # U08: 좌우 분할 마스터-상세(제안 2026-10-30). 견본 docs/page-style/GGH/
     "GDP": ("Sms02_Tab_TotalCount", ["Sys10_Tab_TotalSize", "Sms03_Tab_SendAdmin", "Ics02_Tab_Manager"]),
     "DSBRD": ("Tdm50_Tab_TotalDashboard", ["Tdm35_Tab_TaskList"]),
-    "STP": ("Pay10_Tab_Retire", ["Tdm50_Tab_CheckJob"]),
+    "STP": ("Pay10_Tab_Retire", ["Tdm50_Tab_CheckJob", "Biz01_Tab_EntertmExpenseReport"]),
     "TP": ("Rpt10_Tab_FssOrg", ["Pay31_Tab_InsureApply", "Pay20_Tab_DeductAdmin"]),  # Pay20_Tab_Deduct는 DeductAdmin 껍데기라 제외
 }
 

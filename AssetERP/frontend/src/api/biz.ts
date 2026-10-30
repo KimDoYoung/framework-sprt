@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
 import {
-  BizAccountMap, BizAccountOption, BizBuyPromo, BizCardCompare, BizCardContents, BizCardContentsPrintReq, BizCardManagement, BizCardManagementPrintReq, BizCardManagementUpdateReq, BizCardReportPrint, BizCardUseItem, BizCardUserAllocation, BizCardUserAllocationUpdateReq, BizCodeOption, BizDocClass, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq, BizPromoOtherSimpleReq,
+  BizAccountMap, BizAccountOption, BizBuyPromo, BizCardCompare, BizCardContents, BizCardContentsPrintReq, BizCardManagement, BizCardManagementPrintReq, BizCardManagementUpdateReq, BizCardReportPrint, BizCardUseItem, BizCardUserAllocation, BizCardUserAllocationUpdateReq, BizCodeOption, BizDocClass, BizEntertmCompany, BizEntertmHistory, BizEntertmMonth, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq, BizPromoOtherSimpleReq,
   BizPromoSimpleUpdateReq, BizPromoUpdateReq, BizProvideCompany, BizProvideList, BizProvideListCond, BizProvideSetup, BizProvideSimple, BizProvideSimpleCond, BizRelateAppr,
 } from '../types/biz';
 import { MktTarget } from '../types/mkt';
@@ -412,5 +412,34 @@ export const bizAccountMapApi = {
   remove: async (accountMapIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/biz/account-maps', { data: accountMapIds });
     return res.data.data ?? 0;
+  },
+};
+
+/** U18 AS-IS Biz01_Tab_EntertmExpenseReport (접대비 현황) — 탭 3개의 조회. month '01'~'12' 또는 '전체' */
+export interface EntertmCond {
+  year: string;
+  month: string;
+  cardRealUserType?: string;
+}
+export const bizEntertmExpenseApi = {
+  /** AS-IS biz.Biz01_Promo.selectByMonthEntertmExpense */
+  searchMonthly: async (c: EntertmCond): Promise<BizEntertmMonth[]> => {
+    const res = await apiClient.get<ApiResponse<BizEntertmMonth[]>>('v1/biz/entertm-expenses/monthly', { params: c });
+    return res.data.data;
+  },
+  /** AS-IS biz.Biz01_Promo.selectByAccountName */
+  searchHistory: async (c: EntertmCond): Promise<BizEntertmHistory[]> => {
+    const res = await apiClient.get<ApiResponse<BizEntertmHistory[]>>('v1/biz/entertm-expenses/history', { params: c });
+    return res.data.data;
+  },
+  /** AS-IS biz.Biz02_Person.selectByEntertmExpense */
+  searchCompanies: async (c: EntertmCond): Promise<BizEntertmCompany[]> => {
+    const res = await apiClient.get<ApiResponse<BizEntertmCompany[]>>('v1/biz/entertm-expenses/companies', { params: { year: c.year, month: c.month } });
+    return res.data.data;
+  },
+  /** AS-IS biz.Biz01_Promo.selectByTargetCompanyName */
+  searchByTargetCompany: async (c: EntertmCond, targetCompanyName: string): Promise<BizEntertmHistory[]> => {
+    const res = await apiClient.get<ApiResponse<BizEntertmHistory[]>>('v1/biz/entertm-expenses/company-history', { params: { ...c, targetCompanyName } });
+    return res.data.data;
   },
 };

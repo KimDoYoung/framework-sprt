@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz01_promo.xml selectByMonthEntertmExpense·selectByAccountName·selectByTargetCompanyName + biz02_person.xml selectByEntertmExpense  (U18 Biz01_Tab_EntertmExpenseReport)
+     closeDate 는 원본이 'yyyy-MM-dd' 글자로 TO_DATE에 넣는 것을 날짜로 받아 #{closeDate}::text 로 넣는다 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizEntertmExpenseMapper">
+
+    <!-- 달별 합계 한 칸 — AS-IS biz01_promo.selectByMonthEntertmExpense 의 jan_sum…total_sum 서브쿼리와 같은 식 (ym = '.01' …, 합계는 '%') -->
+    <sql id="monthSum">
+        (SELECT COALESCE(SUM((biz01_average_price * (SELECT CASE WHEN count(*) = 0 THEN 1
+                                                                 ELSE count(*) END
+                                                       FROM biz02_person
+                                                      WHERE biz02_promo_id = biz01_promo_id
+                                                        AND biz02_emp_yn = 'false'))),0)
+           FROM biz
+          WHERE biz01_std_ym LIKE #{year}||'${ym}'
+            AND to_date(concat(substring( biz01_std_ym from 1 for 4)
+                                        , '-'
+                                        , substring(biz01_std_ym from 6 for 2)
+                                        , '-01'), 'YYYY-MM-DD') + interval '1 month' - interval '1 day' &lt;= #{closeDate}
+            AND (
+                CASE
+                    WHEN #{cardRealUserType} = '관리자'
+                        THEN CASE WHEN crd03_public_yn = 'true' THEN 0
+                                  ELSE crd03_person_id END
+                    ELSE CASE WHEN crd03_public_yn = 'true'
+                               AND biz01_real_person_id IS NULL THEN 0
+                              WHEN crd03_public_yn = 'true'
+                               AND biz01_real_person_id IS NOT NULL THEN biz01_real_person_id
+                              ELSE crd03_person_id END
+                END
+                ) = t.crd03_person_id)
+    </sql>
+
+    <!-- AS-IS biz01_promo.selectByMonthEntertmExpense -->
+    <select id="selectMonthly" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizEntertmMonthRes">
+WITH crd AS (
+SELECT *
+  FROM (SELECT CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN 0      ELSE crd03_person_id               END AS crd03_person_id
+	         , CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(crd03_person_id) END AS biz01_emp_nm
+             , CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(crd03_person_id) END AS biz01_seq
+          FROM crd01_card
+	           INNER JOIN crd03_trans ON crd03_card_id = crd01_card_id
+         WHERE crd01_company_id = #{companyId}
+           AND TO_DATE(crd03_fr_dt::text,  'YYYY-MM-dd') &lt;= TO_DATE(#{closeDate}::text, 'YYYY-MM-dd')
+           AND crd03_fr_dt IS NOT NULL
+           AND (TO_DATE(crd03_to_dt::text, 'YYYY-MM-dd') &gt;= TO_DATE(#{closeDate}::text, 'YYYY-MM-dd')
+	        OR crd03_to_dt IS NULL)
+
+	     GROUP BY COALESCE(crd03_public_yn,'false'), crd03_person_id)t
+ GROUP BY crd03_person_id, biz01_emp_nm, biz01_seq
+), 
+realPerson AS (
+SELECT crd03_person_id
+     , biz01_emp_nm
+     , biz01_seq
+  FROM (SELECT *
+		  FROM (SELECT CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN 0      ELSE crd03_person_id               END AS crd03_person_id
+					 , CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(crd03_person_id) END AS biz01_emp_nm
+					 , CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(crd03_person_id) END AS biz01_seq
+				  FROM crd01_card
+					   INNER JOIN crd03_trans ON crd03_card_id = crd01_card_id
+				 WHERE crd01_company_id = #{companyId}
+				   AND TO_DATE(crd03_fr_dt::text,  'YYYY-MM-dd') &lt;= TO_DATE(#{closeDate}::text, 'YYYY-MM-dd')
+				   AND crd03_fr_dt IS NOT NULL
+				   AND (TO_DATE(crd03_to_dt::text, 'YYYY-MM-dd') &gt;= TO_DATE(#{closeDate}::text, 'YYYY-MM-dd')
+					OR crd03_to_dt IS NULL)
+
+
+				 GROUP BY COALESCE(crd03_public_yn,'false'), crd03_person_id)t
+		 GROUP BY crd03_person_id, biz01_emp_nm, biz01_seq
+		 UNION ALL
+		SELECT CASE WHEN biz01_real_person_id IS NULL THEN 0 ELSE biz01_real_person_id END							AS crd03_person_id
+			 , CASE WHEN biz01_real_person_id IS NULL THEN '공통' ELSE f_emp_kor_nm(biz01_real_person_id) END		AS biz01_emp_nm
+			 , CASE WHEN biz01_real_person_id IS NULL THEN '공통' ELSE f_emp_kor_nm(biz01_real_person_id) END		AS biz01_seq
+		  FROM biz01_promo
+		 WHERE biz01_std_ym LIKE #{year}||'%'
+		   AND biz01_company_id = #{companyId}
+		 GROUP BY biz01_real_person_id) t
+ GROUP BY crd03_person_id, biz01_emp_nm, biz01_seq
+ ORDER BY CASE WHEN biz01_emp_nm = '공통' THEN 1 ELSE 0 END,
+                    biz01_emp_nm COLLATE "ko_KR.utf8"
+),
+biz AS (
+SELECT  *
+     ,  CASE WHEN (biz01_peple_count = 0 OR biz01_peple_count IS NULL)
+             THEN TRUNC(biz01_provide_amt / CASE WHEN biz01_provide_rcv_type = '2'
+                                                 THEN f_nvl(c.biz02_emp_count,1)
+                                                 ELSE f_nvl(c.biz02_count    ,1)
+                                            END)
+             ELSE TRUNC(biz01_provide_amt / f_nvl(biz01_peple_count,1))
+             END																							    AS biz01_average_price
+  FROM  biz01_promo
+		INNER JOIN sys01_company ON sys01_company_id = biz01_company_id
+		LEFT OUTER JOIN crd03_trans ON (    crd03_card_id = biz01_card_id
+   							    		AND biz01_provide_date BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,'9999-12-31') )
+		INNER JOIN crd02_data ON crd02_data_id = biz01_card_data_id
+		LEFT OUTER JOIN act01_account_code d ON d.act01_account_code_id = biz01_account_code_id
+		LEFT OUTER JOIN LATERAL ( SELECT COUNT(*)                                                                 AS biz02_count
+                                       , SUM(CASE WHEN COALESCE(biz02_emp_yn,'false') = 'true' THEN 1 ELSE 0 END) AS biz02_emp_count
+        							FROM biz02_person
+                                   WHERE biz02_promo_id = biz01_promo_id
+						        ) c ON TRUE
+ WHERE  act01_account_nm = '접대비'
+   AND  biz01_company_id = #{companyId}
+   AND  CASE WHEN (biz01_peple_count = 0 OR biz01_peple_count IS NULL)
+			 THEN TRUNC(biz01_provide_amt / CASE WHEN COALESCE(c.biz02_count,0) = 0 THEN 1 ELSE c.biz02_count END)
+			 ELSE TRUNC(biz01_provide_amt / f_nvl(biz01_peple_count,1)) END &gt; (SELECT CASE WHEN biz01_provide_pur_cd = '11' THEN biz90_sale_rule_limit2		
+			                                                                                           WHEN (biz01_provide_pur_cd = '50' AND biz01_provide_content_cd = '5008') THEN biz90_sale_rule_limit2
+																						          ELSE biz90_sale_rule_limit1 END
+																							 FROM biz90_limit
+																							WHERE biz90_company_id = #{companyId}
+																							  AND biz90_provide_rcv_type = '1'
+																							ORDER BY biz90_start_date DESC
+																							LIMIT 1)
+),
+base_data AS (
+    SELECT * 
+    FROM crd
+    WHERE #{cardRealUserType} = '관리자'
+    UNION ALL
+    SELECT * 
+    FROM realPerson
+    WHERE #{cardRealUserType} = '실사용자'
+)
+        SELECT
+        biz01_emp_nm AS emp_name
+             , <include refid="monthSum"><property name="ym" value=".01"/></include> AS jan_sum
+             , <include refid="monthSum"><property name="ym" value=".02"/></include> AS feb_sum
+             , <include refid="monthSum"><property name="ym" value=".03"/></include> AS mar_sum
+             , <include refid="monthSum"><property name="ym" value=".04"/></include> AS apr_sum
+             , <include refid="monthSum"><property name="ym" value=".05"/></include> AS may_sum
+             , <include refid="monthSum"><property name="ym" value=".06"/></include> AS jun_sum
+             , <include refid="monthSum"><property name="ym" value=".07"/></include> AS jul_sum
+             , <include refid="monthSum"><property name="ym" value=".08"/></include> AS aug_sum
+             , <include refid="monthSum"><property name="ym" value=".09"/></include> AS sep_sum
+             , <include refid="monthSum"><property name="ym" value=".10"/></include> AS oct_sum
+             , <include refid="monthSum"><property name="ym" value=".11"/></include> AS nov_sum
+             , <include refid="monthSum"><property name="ym" value=".12"/></include> AS dec_sum
+             , <include refid="monthSum"><property name="ym" value="%"/></include> AS total_sum
+             , ROW_NUMBER() OVER(ORDER BY biz01_emp_nm) AS promo_id
+          FROM base_data t
+         ORDER BY CASE WHEN biz01_emp_nm = '공통' THEN 1 ELSE 0 END,
+                  biz01_emp_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS biz01_promo.selectByAccountName -->
+    <select id="selectHistory" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizEntertmHistoryRes">
+SELECT biz01_promo_id                     AS promo_id
+     , biz01_reg_emp_nm                   AS reg_emp_name
+     , biz01_approval_dt                  AS approval_dt
+     , biz01_franchise_nm                AS franchise_name
+     , biz01_provide_amt                  AS provide_amt
+     , biz01_total_peple                  AS total_peple
+     , biz01_average_price                AS average_price
+     , biz01_note                         AS note
+	 , (biz01_average_price * (SELECT CASE WHEN count(*) = 0 THEN 1
+							          ELSE count(*) END
+								 FROM biz02_person 
+								WHERE biz02_promo_id = biz01_promo_id 
+								  AND biz02_emp_yn = 'false'))                       AS average_provide_amt
+  FROM (
+		SELECT  a.*
+			 ,  CASE WHEN #{cardRealUserType} = '실사용자' THEN
+			         CASE WHEN crd03_public_yn = 'true' 
+			               AND biz01_real_person_id IS NULL THEN '공통'
+			              WHEN crd03_public_yn = 'true'
+			               AND biz01_real_person_id IS NOT NULL THEN f_emp_kor_nm(biz01_real_person_id)
+	                	  ELSE f_emp_kor_nm(crd03_person_id) END
+    				 ELSE CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(crd03_person_id) END END AS biz01_reg_emp_nm
+			 ,  b.crd02_approval_dt                                                                                     			AS biz01_approval_dt
+			 ,  b.crd02_franchise_nm                                                                                    			AS biz01_franchise_nm
+			 ,  c.biz02_count                                                                                           			AS biz01_total_peple
+	         ,  CASE WHEN (a.biz01_peple_count = 0 OR a.biz01_peple_count IS NULL)
+	                 THEN TRUNC(a.biz01_provide_amt / CASE WHEN COALESCE(c.biz02_count,0) = 0 THEN 1 ELSE c.biz02_count END)
+	                 ELSE TRUNC(a.biz01_provide_amt / f_nvl(a.biz01_peple_count,1))
+	                  END																							    			AS biz01_average_price
+			 ,  CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||d.act01_account_nm					AS biz01_account_nm
+	         ,  crd01_card_type                                                                                         			AS biz01_card_type
+			 ,  (SELECT STRING_AGG(f_emp_kor_nm(biz02_emp_id), E'\n')
+				   FROM biz02_person
+				  WHERE biz02_promo_id = biz01_promo_id)                                                                			AS biz01_emp_list
+			 ,  (SELECT STRING_AGG(biz02_target_company_nm || ' ' || biz02_target_emp_nm, E'\n')
+				   FROM biz02_person 
+				  WHERE biz02_promo_id = biz01_promo_id 
+					AND biz02_emp_yn = 'false')                                                                         			AS biz01_target_emp_list
+		  FROM  biz01_promo a
+	  			INNER JOIN sys01_company ON sys01_company_id = biz01_company_id
+				LEFT OUTER JOIN crd03_trans ON (    crd03_card_id = biz01_card_id
+        							    		AND biz01_provide_date BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,'9999-12-31') )
+				INNER JOIN crd02_data b ON crd02_data_id = a.biz01_card_data_id
+				LEFT OUTER JOIN ( SELECT biz02_promo_id
+									   , COUNT(*) biz02_count
+									FROM biz02_person
+								   GROUP BY biz02_promo_id ) c ON biz02_promo_id = biz01_promo_id
+				LEFT OUTER JOIN act01_account_code d ON d.act01_account_code_id = a.biz01_account_code_id
+				INNER JOIN crd01_card ON crd01_card_id = biz01_card_id
+	  )t
+ WHERE  1=1
+   AND  biz01_provide_rcv_type = '1'
+   AND  biz01_company_id = #{companyId}
+   AND  biz01_std_ym LIKE #{year}||'%'
+   AND  to_date(concat(substring( biz01_std_ym from 1 for 4)
+                                , '-'
+                                , substring(biz01_std_ym from 6 for 2)
+                                , '-01'), 'YYYY-MM-DD') + interval '1 month' - interval '1 day' &lt;= #{closeDate}
+   AND  biz01_account_nm = '접대비'
+
+   AND  biz01_average_price &gt; (SELECT CASE WHEN biz01_provide_pur_cd = '11' THEN biz90_sale_rule_limit2		
+   												       WHEN (biz01_provide_pur_cd = '50' AND biz01_provide_content_cd = '5008') THEN biz90_sale_rule_limit2
+										          ELSE biz90_sale_rule_limit1 END
+											 FROM biz90_limit
+										    WHERE biz90_company_id = #{companyId}
+											  AND biz90_provide_rcv_type = '1'
+										    ORDER BY biz90_start_date DESC
+										    LIMIT 1)
+ ORDER BY biz01_provide_date, biz01_franchise_nm collate "ko_KR.utf8" asc
+    </select>
+
+    <!-- AS-IS biz01_promo.selectByTargetCompanyName -->
+    <select id="selectByTargetCompany" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizEntertmHistoryRes">
+SELECT biz01_promo_id                     AS promo_id
+     , biz01_reg_emp_nm                   AS reg_emp_name
+     , biz01_approval_dt                  AS approval_dt
+     , biz01_franchise_nm                AS franchise_name
+     , biz01_provide_amt                  AS provide_amt
+     , biz01_total_peple                  AS total_peple
+     , biz01_average_price                AS average_price
+     , biz01_note                         AS note
+	 , (biz01_average_price * (SELECT CASE WHEN count(*) = 0 THEN 1
+							          ELSE count(*) END
+								 FROM biz02_person 
+								WHERE biz02_promo_id = biz01_promo_id 
+								  AND biz02_emp_yn = 'false'))                       AS average_provide_amt
+  FROM (
+		SELECT  a.*
+			 ,  CASE WHEN #{cardRealUserType} = '실사용자' THEN
+			         CASE WHEN crd03_public_yn = 'true' 
+			               AND biz01_real_person_id IS NULL THEN '공통'
+			              WHEN crd03_public_yn = 'true'
+			               AND biz01_real_person_id IS NOT NULL THEN f_emp_kor_nm(biz01_real_person_id)
+	                	  ELSE f_emp_kor_nm(crd03_person_id) END
+    				 ELSE CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(crd03_person_id) END END AS biz01_reg_emp_nm
+			 ,  b.crd02_approval_dt                                                                                     AS biz01_approval_dt
+			 ,  b.crd02_franchise_nm                                                                                    AS biz01_franchise_nm
+			 ,  c.biz02_count                                                                                           AS biz01_total_peple
+	         ,  CASE WHEN (a.biz01_peple_count = 0 OR a.biz01_peple_count IS NULL)
+	                 THEN TRUNC(a.biz01_provide_amt / CASE WHEN COALESCE(c.biz02_count,0) = 0 THEN 1 ELSE c.biz02_count END)
+	                 ELSE TRUNC(a.biz01_provide_amt / f_nvl(a.biz01_peple_count,1))
+	                  END																							    AS biz01_average_price
+			 ,  CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||d.act01_account_nm		AS biz01_account_nm 
+	         ,  crd01_card_type                                                                                         AS biz01_card_type
+             ,  (SELECT count(*)
+				   FROM biz02_person 
+				  WHERE biz02_promo_id = biz01_promo_id 
+					AND biz02_emp_yn = 'false')                                                                         AS biz01_target_emp_count
+		  FROM  biz01_promo a
+  	  			INNER JOIN sys01_company ON sys01_company_id = biz01_company_id
+				LEFT OUTER JOIN crd03_trans ON (    crd03_card_id = biz01_card_id
+        							    		AND biz01_provide_date BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,'9999-12-31') )
+				INNER JOIN crd02_data b ON crd02_data_id = a.biz01_card_data_id
+				LEFT OUTER JOIN ( SELECT biz02_promo_id
+									   , COUNT(*) biz02_count
+									FROM biz02_person
+								   GROUP BY biz02_promo_id ) c ON biz02_promo_id = biz01_promo_id
+				LEFT OUTER JOIN act01_account_code d ON d.act01_account_code_id = a.biz01_account_code_id
+				INNER JOIN crd01_card ON crd01_card_id = biz01_card_id
+	  )t
+ WHERE  1=1
+   AND  biz01_provide_rcv_type = '1'
+   AND  biz01_company_id = #{companyId}
+   AND  SUBSTRING(biz01_std_ym FROM 1 FOR 4) = #{year}
+   AND  to_date(concat(substring( biz01_std_ym from 1 for 4)
+                                , '-'
+                                , substring(biz01_std_ym from 6 for 2)
+                                , '-01'), 'YYYY-MM-DD') + interval '1 month' - interval '1 day' &lt;= #{closeDate}
+   AND  biz01_account_nm = '접대비'
+
+   AND  biz01_average_price &gt; (SELECT CASE WHEN biz01_provide_pur_cd = '11' THEN biz90_sale_rule_limit2		
+   													   WHEN (biz01_provide_pur_cd = '50' AND biz01_provide_content_cd = '5008') THEN biz90_sale_rule_limit2
+										          ELSE biz90_sale_rule_limit1 END
+											 FROM biz90_limit
+										    WHERE biz90_company_id = #{companyId}
+											  AND biz90_provide_rcv_type = '1'
+										    ORDER BY biz90_start_date DESC
+										    LIMIT 1)
+   AND  CASE WHEN #{targetCompanyName} = '미지정거래처' THEN biz01_target_emp_count = 0  
+        ELSE  biz01_promo_id IN (SELECT biz02_promo_id
+								   FROM biz02_person
+								  WHERE biz02_emp_yn = 'false'
+									AND biz02_target_company_nm = #{targetCompanyName}
+								  GROUP BY biz02_promo_id)  END
+ ORDER BY biz01_provide_date, biz01_franchise_nm collate "ko_KR.utf8" asc
+    </select>
+
+    <!-- AS-IS biz02_person.selectByEntertmExpense -->
+    <select id="selectCompanies" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizEntertmCompanyRes">
+SELECT 0 																				  				  AS person_id
+     , '미지정거래처'																					  AS target_company_name
+     , '&lt;' || 'b ' || 'style=color:#E33E31;' ||'&gt;'|| '미지정거래처' || '&lt;' || '/b' || '&gt;'	  AS html_target_company_name
+	 , SUM((biz01_average_price * (SELECT CASE WHEN count(*) = 0 THEN 1
+							          	  ELSE count(*) END
+								     FROM biz02_person
+								    WHERE biz02_promo_id = biz01_promo_id
+								      AND biz02_emp_yn = 'false')))                       AS entertm_expense_sum
+  FROM (
+		SELECT  a.*
+	         ,  CASE WHEN (a.biz01_peple_count = 0 OR a.biz01_peple_count IS NULL)
+	                 THEN TRUNC(a.biz01_provide_amt / CASE WHEN COALESCE(c.biz02_count,0) = 0 THEN 1 ELSE c.biz02_count END)
+	                 ELSE TRUNC(a.biz01_provide_amt / f_nvl(a.biz01_peple_count,1))
+	                  END																							    AS biz01_average_price
+			 ,  CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||d.act01_account_nm		AS biz01_account_nm 
+	         ,  crd01_card_type                                                                                         AS biz01_card_type
+			 ,  (SELECT count(*)
+				   FROM biz02_person 
+				  WHERE biz02_promo_id = biz01_promo_id 
+					AND biz02_emp_yn = 'false')                                                                         AS biz01_target_emp_count
+		  FROM  biz01_promo a
+				INNER JOIN crd02_data b ON crd02_data_id = a.biz01_card_data_id
+				LEFT OUTER JOIN ( SELECT biz02_promo_id
+									   , COUNT(*) biz02_count
+									FROM biz02_person
+								   GROUP BY biz02_promo_id ) c ON biz02_promo_id = biz01_promo_id
+				LEFT OUTER JOIN act01_account_code d ON d.act01_account_code_id = a.biz01_account_code_id
+				INNER JOIN crd01_card ON crd01_card_id = biz01_card_id
+	  )t
+ WHERE  1=1
+   AND  biz01_provide_rcv_type = '1'
+   AND  biz01_company_id = #{companyId}
+   AND  biz01_std_ym LIKE #{year}||'%'
+   AND  to_date(concat(substring( biz01_std_ym from 1 for 4)
+                                , '-'
+                                , substring(biz01_std_ym from 6 for 2)
+                                , '-01'), 'YYYY-MM-DD') + interval '1 month' - interval '1 day' &lt;= #{closeDate}
+   AND  biz01_account_nm = '접대비'
+
+   AND  biz01_target_emp_count = 0
+   AND  biz01_average_price &gt; (SELECT CASE WHEN biz01_provide_pur_cd = '11' THEN biz90_sale_rule_limit2		
+   												       WHEN (biz01_provide_pur_cd = '50' AND biz01_provide_content_cd = '5008') THEN biz90_sale_rule_limit2
+										          ELSE biz90_sale_rule_limit1 END
+											 FROM biz90_limit
+										    WHERE biz90_company_id = #{companyId}
+											  AND biz90_provide_rcv_type = '1'
+										    ORDER BY biz90_start_date DESC
+										    LIMIT 1)
+UNION ALL
+SELECT  ROW_NUMBER() OVER(ORDER BY biz02_target_company_nm) AS person_id
+     ,  biz02_target_company_nm                            AS target_company_name
+
+     ,  biz02_target_company_nm                            AS html_target_company_name
+     ,  SUM(biz02_average_price)      					   AS entertm_expense_sum
+  FROM (
+		SELECT  biz01_peple_count
+	         ,  biz01_provide_amt
+	         ,  biz01_provide_pur_cd
+	         ,  biz01_provide_content_cd
+	         ,  biz02_count
+			 ,  biz02_target_company_nm
+			 ,  biz02_emp_yn
+			 ,  biz01_company_id
+			 ,  biz01_std_ym
+			 ,  crd01_card_type                                                                                         AS biz01_card_type
+			 ,  CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||act01_account_nm			AS biz01_account_nm
+			 ,  CASE WHEN (biz01_peple_count = 0 OR biz01_peple_count IS NULL) 
+					 THEN TRUNC(biz01_provide_amt / CASE WHEN COALESCE(biz02_count,0) = 0 THEN 1 ELSE biz02_count END)
+					 ELSE TRUNC(biz01_provide_amt / f_nvl(biz01_peple_count,1)) END										AS biz02_average_price
+		  FROM (SELECT *
+					 , (SELECT COUNT(*)
+						  FROM biz02_person a
+						 WHERE biz01_promo_id = a.biz02_promo_id)  AS biz02_count
+				  FROM biz02_person
+					   INNER JOIN biz01_promo ON biz01_promo_id = biz02_promo_id) t
+			LEFT OUTER JOIN act01_account_code ON act01_account_code_id = biz01_account_code_id
+			INNER JOIN crd01_card ON crd01_card_id = biz01_card_id
+  		)t
+ WHERE biz02_emp_yn = 'false'
+   AND biz02_target_company_nm IS NOT NULL
+   AND biz01_company_id = #{companyId}
+   AND biz01_account_nm = '접대비'
+
+   AND  biz01_std_ym LIKE #{year}||'%'
+   AND  to_date(concat(substring( biz01_std_ym from 1 for 4)
+                                , '-'
+                                , substring(biz01_std_ym from 6 for 2)
+                                , '-01'), 'YYYY-MM-DD') + interval '1 month' - interval '1 day' &lt;= #{closeDate}
+   AND biz02_average_price &gt; ( SELECT CASE WHEN biz01_provide_pur_cd = '11' THEN biz90_sale_rule_limit2		
+ 													   WHEN (biz01_provide_pur_cd = '50' AND biz01_provide_content_cd = '5008') THEN biz90_sale_rule_limit2
+										          ELSE biz90_sale_rule_limit1 END
+											 FROM biz90_limit
+											WHERE biz90_company_id = #{companyId}
+											  AND biz90_provide_rcv_type = '1'
+											ORDER BY biz90_start_date DESC
+											LIMIT 1)
+ GROUP BY biz02_target_company_nm
+    </select>
+
+</mapper>

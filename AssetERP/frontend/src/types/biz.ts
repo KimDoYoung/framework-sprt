@@ -368,3 +368,43 @@ export interface BizAccountMap {
   accountCode: string | null;
   accountName: string | null;
 }
+
+/** U18 접대비 현황 — 월별 제공금액 누계 한 행 (AS-IS Biz01_PromoModel empName·janSum~decSum·totalSum) */
+export interface BizEntertmMonth {
+  promoId: number;
+  empName: string | null;
+  janSum: number | null;
+  febSum: number | null;
+  marSum: number | null;
+  aprSum: number | null;
+  maySum: number | null;
+  junSum: number | null;
+  julSum: number | null;
+  augSum: number | null;
+  sepSum: number | null;
+  octSum: number | null;
+  novSum: number | null;
+  decSum: number | null;
+  totalSum: number | null;
+}
+
+/** U18 접대비 현황 — 제공 내역 한 행 (AS-IS Biz01_PromoModel) */
+export interface BizEntertmHistory {
+  promoId: number;
+  regEmpName: string | null;
+  approvalDt: string | null;
+  franchiseName: string | null;
+  provideAmt: number | null;
+  averageProvideAmt: number | null;
+  totalPeple: number | null;
+  averagePrice: number | null;
+  note: string | null;
+}
+
+/** U18 접대비 현황 — 거래처별 제공금액 한 행 (AS-IS Biz02_PersonModel) */
+export interface BizEntertmCompany {
+  personId: number;
+  targetCompanyName: string | null;
+  htmlTargetCompanyName: string | null;
+  entertmExpenseSum: number | null;
+}
