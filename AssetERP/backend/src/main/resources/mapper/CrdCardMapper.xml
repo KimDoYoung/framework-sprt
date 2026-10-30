@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/crd/mapper/crd01_card.xml (selectByText, selectById, excelInsert) · crd03_trans.xml (selectByCardId, deleteByCardId)
+  · crd02_data.xml (selectByCardNo) · sys00_common.xml (selectCardManager) + UpdateDataModel(crd01_card·crd03_trans) 저장  (U13)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.crd.mapper.CrdCardMapper">
+
+    <!-- AS-IS crd01_card.selectByText L77 (IDMS-IC) — 은행 조건은 늘 '%'. useYn='true'면 사용카드만, managerId가 있으면 그 사용자의 카드만 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdCardRes">
+        SELECT crd01_card_id                                                              AS card_id
+             , crd01_company_id                                                           AS company_id
+             , crd01_bank_cd                                                              AS bank_code
+             , f_cdnm('CreditCardCompany', crd01_bank_cd, crd01_company_id, f_sysdate())  AS bank_name
+             , crd01_card_nm                                                              AS card_name
+             , crd01_card_no_slip                                                         AS card_no_slip
+             , crd01_card_no                                                              AS card_no
+             , crd01_fr_dt                                                                AS fr_date
+             , crd01_to_dt                                                                AS to_date
+             , crd01_close_yn                                                             AS close_yn
+             , crd01_card_type                                                            AS card_type
+             , f_cdnm('CardType', crd01_card_type, crd01_company_id, f_sysdate())         AS card_type_name
+             , crd01_note                                                                 AS note
+             , crd01_deposit_id                                                           AS deposit_id
+             , f_ast_class_tree_nm(crd01_deposit_id)                                      AS deposit_name
+             , f_emp_kor_nm(crd03_person_id)                                              AS card_manager_name
+          FROM crd01_card
+               LEFT JOIN crd03_trans ON ( crd03_card_id = crd01_card_id
+                                      AND f_sysdate()::date BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,'9999-12-31') )
+         WHERE crd01_bank_cd LIKE '%'   /* AS-IS bankCardCode는 늘 '%' — 은행 코드가 없는(NULL) 카드는 빠진다 */
+           AND COALESCE(crd01_card_nm,'') || COALESCE(crd01_card_no,'') LIKE #{searchText}
+           AND crd01_company_id = #{companyId}
+        <if test="useYn">
+           AND crd01_close_yn = 'true'
+        </if>
+        <if test="managerId != null">
+           AND crd03_person_id = #{managerId}
+        </if>
+         ORDER BY crd01_card_id
+    </select>
+
+    <!-- AS-IS crd01_card.selectById (IDMS-IC) — 저장 뒤 다시 읽기. 로그인 회사 조건 추가 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdCardRes">
+        SELECT crd01_card_id                                                              AS card_id
+             , crd01_company_id                                                           AS company_id
+             , crd01_bank_cd                                                              AS bank_code
+             , f_cdnm('CreditCardCompany', crd01_bank_cd, crd01_company_id, f_sysdate())  AS bank_name
+             , crd01_card_nm                                                              AS card_name
+             , crd01_card_no_slip                                                         AS card_no_slip
+             , crd01_card_no                                                              AS card_no
+             , crd01_fr_dt                                                                AS fr_date
+             , crd01_to_dt                                                                AS to_date
+             , crd01_close_yn                                                             AS close_yn
+             , crd01_card_type                                                            AS card_type
+             , f_cdnm('CardType', crd01_card_type, crd01_company_id, f_sysdate())         AS card_type_name
+             , crd01_note                                                                 AS note
+             , crd01_deposit_id                                                           AS deposit_id
+             , f_ast_class_tree_nm(crd01_deposit_id)                                      AS deposit_name
+             , NULL                                                                       AS card_manager_name
+          FROM crd01_card
+         WHERE crd01_card_id    = #{cardId}
+           AND crd01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS sys00_common.selectCardManager L147 (IDMS-IC) -->
+    <select id="selectManagers" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdCardManagerRes">
+        SELECT crd03_person_id               AS person_id
+             , f_emp_kor_nm(crd03_person_id) AS name
+          FROM crd01_card
+               INNER JOIN crd03_trans ON ( crd03_card_id = crd01_card_id
+                                       AND f_sysdate()::date BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,'9999-12-31') )
+         WHERE crd01_company_id = #{companyId}
+        <if test="useYn">
+           AND crd01_close_yn = 'true'
+        </if>
+         GROUP BY crd03_person_id
+    </select>
+
+    <!-- AS-IS crd02_data.selectByCardNo (IDMS-IC) — 행 대신 건수만 -->
+    <select id="countDataByCardNo" resultType="int">
+        SELECT COUNT(*)
+          FROM crd02_data
+         WHERE crd02_card_no like #{cardNo}
+           AND crd02_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel(crd01_card) 동적 INSERT — Crd01_Edit_Card가 바꾸는 10개 열 -->
+    <insert id="insertCard">
+        INSERT INTO crd01_card
+               ( crd01_card_id, crd01_company_id, crd01_bank_cd, crd01_card_nm, crd01_card_no_slip, crd01_card_no
+               , crd01_fr_dt, crd01_to_dt, crd01_close_yn, crd01_card_type, crd01_note, crd01_deposit_id )
+        VALUES ( #{cardId}, #{companyId}, #{req.bankCode}, #{req.cardName}, #{req.cardNoSlip}, #{req.cardNo}
+               , #{req.frDate}, #{req.toDate}, #{req.closeYn}, #{req.cardType}, #{req.note}, #{req.depositId} )
+    </insert>
+
+    <!-- UpdateDataModel(crd01_card) 동적 UPDATE — 로그인 회사의 카드만 -->
+    <update id="updateCard">
+        UPDATE crd01_card
+           SET crd01_bank_cd      = #{req.bankCode},
+               crd01_card_nm      = #{req.cardName},
+               crd01_card_no_slip = #{req.cardNoSlip},
+               crd01_card_no      = #{req.cardNo},
+               crd01_fr_dt        = #{req.frDate},
+               crd01_to_dt        = #{req.toDate},
+               crd01_close_yn     = #{req.closeYn},
+               crd01_card_type    = #{req.cardType},
+               crd01_note         = #{req.note},
+               crd01_deposit_id   = #{req.depositId}
+         WHERE crd01_card_id    = #{req.cardId}
+           AND crd01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS crd03_trans.deleteByCardId (IDMS-IC) -->
+    <delete id="deleteTransByCardId">
+        DELETE FROM crd03_trans
+         WHERE crd03_card_id = #{cardId}
+    </delete>
+
+    <!-- UpdateDataModel.deleteModel(crd01_card) — 로그인 회사의 카드만 -->
+    <delete id="deleteCard">
+        DELETE FROM crd01_card
+         WHERE crd01_card_id    = #{cardId}
+           AND crd01_company_id = #{companyId}
+    </delete>
+
+    <!-- AS-IS crd01_card.excelInsert (IDMS-IC) — closeYn true · cardType 1 · toDate/depositId 없음 -->
+    <insert id="excelInsertCard">
+        INSERT INTO crd01_card
+               ( crd01_card_id, crd01_company_id, crd01_bank_cd, crd01_card_nm, crd01_card_no_slip, crd01_card_no
+               , crd01_fr_dt, crd01_to_dt, crd01_close_yn, crd01_card_type, crd01_note, crd01_deposit_id )
+        VALUES ( #{cardId}, #{companyId}, #{bankCode}, #{cardName}, #{cardNoSlip}, #{cardNo}
+               , #{frDate}, NULL, 'true', '1', #{note}, NULL )
+    </insert>
+
+    <!-- ===== Crd03_Grid_User (crd03_trans) ===== -->
+
+    <!-- AS-IS crd03_trans.selectByCardId (IDMS-IC) -->
+    <select id="selectUsers" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdCardUserRes">
+        SELECT crd03_trans_id                                                                         AS trans_id
+             , crd03_person_id                                                                        AS person_id
+             , crd03_card_id                                                                          AS card_id
+             , crd03_fr_dt                                                                            AS fr_dt
+             , crd03_to_dt                                                                            AS to_dt
+             , crd03_use_yn                                                                           AS use_yn
+             , crd03_public_yn                                                                        AS public_yn
+             , f_emp_kor_nm(crd03_person_id)                                                          AS person_name
+             , f_get_empTrans(crd03_person_id, coalesce(crd03_fr_dt, f_today())::date, 'title_nm')    AS title_name
+             , f_get_empTrans(crd03_person_id, coalesce(crd03_fr_dt, f_today())::date, 'org_code_nm') AS org_name
+          FROM crd03_trans
+         WHERE crd03_card_id = #{cardId}
+    </select>
+
+    <!-- 저장 뒤 다시 읽기 (selectByCardId와 같은 열, 한 행) -->
+    <select id="selectUserById" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdCardUserRes">
+        SELECT crd03_trans_id                                                                         AS trans_id
+             , crd03_person_id                                                                        AS person_id
+             , crd03_card_id                                                                          AS card_id
+             , crd03_fr_dt                                                                            AS fr_dt
+             , crd03_to_dt                                                                            AS to_dt
+             , crd03_use_yn                                                                           AS use_yn
+             , crd03_public_yn                                                                        AS public_yn
+             , f_emp_kor_nm(crd03_person_id)                                                          AS person_name
+             , f_get_empTrans(crd03_person_id, coalesce(crd03_fr_dt, f_today())::date, 'title_nm')    AS title_name
+             , f_get_empTrans(crd03_person_id, coalesce(crd03_fr_dt, f_today())::date, 'org_code_nm') AS org_name
+          FROM crd03_trans
+         WHERE crd03_trans_id = #{transId}
+           AND crd03_card_id  = #{cardId}
+    </select>
+
+    <!-- UpdateDataModel(crd03_trans) 동적 INSERT -->
+    <insert id="insertUser">
+        INSERT INTO crd03_trans
+               ( crd03_trans_id, crd03_card_id, crd03_person_id, crd03_fr_dt, crd03_to_dt, crd03_use_yn, crd03_public_yn )
+        VALUES ( #{transId}, #{cardId}, #{req.personId}, #{req.frDt}, #{req.toDt}, #{req.useYn}, #{req.publicYn} )
+    </insert>
+
+    <!-- UpdateDataModel(crd03_trans) 동적 UPDATE — 이 카드의 행만 -->
+    <update id="updateUser">
+        UPDATE crd03_trans
+           SET crd03_person_id = #{req.personId},
+               crd03_fr_dt     = #{req.frDt},
+               crd03_to_dt     = #{req.toDt},
+               crd03_use_yn    = #{req.useYn},
+               crd03_public_yn = #{req.publicYn}
+         WHERE crd03_trans_id = #{req.transId}
+           AND crd03_card_id  = #{cardId}
+    </update>
+
+    <!-- UpdateDataModel.deleteModel(crd03_trans) — 이 카드의 행만 -->
+    <delete id="deleteUsers">
+        DELETE FROM crd03_trans
+         WHERE crd03_card_id = #{cardId}
+           AND crd03_trans_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+</mapper>

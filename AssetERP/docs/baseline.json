@@ -10680,5 +10680,38 @@
     "note": "docs/work/U/U12-작업기록.md",
     "history": [],
     "id": "U12"
+  },
+  "Crd01_Tab_Card": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/crd/Crd01_Edit_Card.java": "3ba9fbf2f57953a84735b3d67912c72775fb72fd",
+      "application/src/main/java/myApp/client/vi/crd/Crd01_Tab_Card.java": "5248faade594197433e51938e0f6b2fef4ec7323",
+      "application/src/main/java/myApp/client/vi/crd/Crd03_Grid_User.java": "015078dc46e696aba21612080776976bcb7afcc5",
+      "application/src/main/java/myApp/client/vi/crd/model/Crd01_CardModel.java": "747dfc6f5e8d26ec19440e5a5557389fdfea6e9b",
+      "application/src/main/java/myApp/client/vi/crd/model/Crd01_CardModelProperties.java": "2d8a5e6f381b1d934404f7917c8eee8ea8a8beec",
+      "application/src/main/java/myApp/client/vi/crd/model/Crd03_TransModel.java": "0c75bb27eddd95d0cec83636a0475156957b93b2",
+      "application/src/main/java/myApp/client/vi/crd/model/Crd03_TransModelProperties.java": "d5f99bcade52d03836a0394331c37a1ddc0f3cf0",
+      "application/src/main/java/myApp/server/crd/Crd01_Card.java": "a0aea94d50cadea7ebb95ae1f10a75d5b9d05c54",
+      "application/src/main/java/myApp/server/crd/Crd02_Data.java": "0b8c345316d1c6b3cd857c1d95830920d5e9e171",
+      "application/src/main/java/myApp/server/crd/Crd03_Trans.java": "343b9a4867a20dbd8dbd4700cc073a7b1ccd523b",
+      "application/src/main/java/myApp/server/crd/mapper/crd01_card.xml": "91af22f4b24af26fb17eaca045b98a49b748ef7e",
+      "application/src/main/java/myApp/server/crd/mapper/crd02_data.xml": "6863dfab03893c89e542335f02bab35811243d72",
+      "application/src/main/java/myApp/server/crd/mapper/crd03_trans.xml": "32b854edb775b96a696b6968186be9bc08f7eaa6",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+      "application/src/main/java/myApp/server/sys/mapper/sys00_common.xml": "85fc049879ba7a4782049091661f16e02c426f98"
+    },
+    "shared_links": [
+      "Ast01_Lookup_CorpAccount",
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-10-30T12:55:43+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/U/U13-작업기록.md",
+    "history": [],
+    "id": "U13"
   }
 }
