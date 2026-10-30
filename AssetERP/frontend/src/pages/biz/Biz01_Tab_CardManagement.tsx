@@ -377,7 +377,7 @@ export const Biz01_Tab_CardManagement: React.FC = () => {
             extra={<Button type="download" onClick={downloadLookUp}>엑셀다운로드</Button>}
           >
             <SearchBar.Field label="기준년월">
-              <SearchBar.Input style={{ width: 80 }} placeholder="YYYY.MM" value={dataYm}
+              <SearchBar.Input style={{ width: 100 }} placeholder="YYYY.MM" value={dataYm}
                 onChange={e => sp.set('dataYm', e.target.value)} onBlur={onYmChange} />
             </SearchBar.Field>
             <SearchBar.Field label="사용자">
