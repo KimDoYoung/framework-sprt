@@ -16,6 +16,8 @@ interface Props {
   mode: 'insert' | 'update';
   parentId: number | null;
   data: AstClassTree | null;
+  /** 새 분류의 자산구분 (1:고유자산/2:운용자산). 원본은 호출한 화면이 모델에 담아 준다 */
+  assetType?: string;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -25,6 +27,7 @@ export const Ast01_Edit_ClassTree: React.FC<Props> = ({
   mode,
   parentId,
   data,
+  assetType = '2',
   onClose,
   onSuccess,
 }) => {
@@ -40,7 +43,7 @@ export const Ast01_Edit_ClassTree: React.FC<Props> = ({
           useYn: 'true',
           seq: 1,
           typeCode: 'IC',
-          assetType: '2',
+          assetType,
         });
         astApi.createCode(parentId, 'IC').then((code) => {
           form.setFieldValue('classTreeCode', code);

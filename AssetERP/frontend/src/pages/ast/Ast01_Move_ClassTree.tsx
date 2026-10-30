@@ -13,11 +13,13 @@ import { Button } from '@/components/button';
 interface Props {
   open: boolean;
   classTreeId: number | null;
+  /** 보여 줄 트리의 자산구분 (1:고유자산/2:운용자산) */
+  assetType?: string;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export const Ast01_Move_ClassTree: React.FC<Props> = ({ open, classTreeId, onClose, onSuccess }) => {
+export const Ast01_Move_ClassTree: React.FC<Props> = ({ open, classTreeId, assetType = '2', onClose, onSuccess }) => {
   const [treeData, setTreeData] = useState<DataNode[]>([]);
   const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
   const [searchText, setSearchText] = useState('');
@@ -35,7 +37,7 @@ export const Ast01_Move_ClassTree: React.FC<Props> = ({ open, classTreeId, onClo
   const loadTree = async () => {
     setLoading(true);
     try {
-      const list = await astApi.searchClassTree({ typeCode: 'IC', assetType: '2' });
+      const list = await astApi.searchClassTree({ typeCode: 'IC', assetType });
       const nodes = buildTreeNodes(list);
       setTreeData(nodes);
     } catch (e) {

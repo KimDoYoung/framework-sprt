@@ -64,9 +64,33 @@ public class AstClassTreeController {
     public ApiResponse<List<AstClassTreeItemRes>> searchByParentId(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long parentId,
-            @RequestParam(required = false) String typeCode
+            @RequestParam(required = false) String typeCode,
+            @RequestParam(required = false) String searchText
     ) {
+        // W01(Ast01_Grid_AstType)은 검색어(빈 글자 포함)를 보내 selectBySearchParentId를 쓴다
+        if (searchText != null) {
+            return ApiResponse.ok(service.searchBySearchParentId(principal, parentId, typeCode, searchText));
+        }
         return ApiResponse.ok(service.searchByParentId(principal, parentId, typeCode));
+    }
+
+    /** W01 분류 1건 (그리드 행의 추가정보·C/F 팝업이 AS-IS처럼 전체 모델을 받도록) */
+    @GetMapping("/{id}")
+    public ApiResponse<AstClassTreeRes> getClassTree(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id
+    ) {
+        return ApiResponse.ok(service.getClassTree(principal, id));
+    }
+
+    /** W01 가져오기 (AS-IS Ast01_ClassTree.pullData) — 대상 회사의 고유자산 분류를 내 회사로 복사. 회사관리자만 */
+    @PostMapping("/pull-data")
+    public ApiResponse<Void> pullData(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam Long targetCompanyId
+    ) {
+        service.pullData(principal, targetCompanyId, LocalDate.now());
+        return ApiResponse.ok(null);
     }
 
     /** R08 코드 채번 */

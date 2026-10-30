@@ -29,6 +29,7 @@ TARGETS = {
     "GO": ("Tdm54_Tab_CheckInsuff", []),
     "SG": ("Tdm01_Tab_Hr", ["Emp50_Tab_TransportExpenseMng", "Pay50_Tab_ExpensePayWrite", "Pay50_Tab_AccountSumList", "Biz01_Tab_CardUserAllocation"]),  # U06: 기존 SG 화면 91개는 일괄 점검하지 않고 다시 건드릴 때 맞춘다(03 원칙 22 ④)
     "GG": ("Est02_Tab_PfResultReport", ["Ast06_Tab_TrTax", "Emp17_Tab_BenefitManager", "Pay50_Tab_ExpenseJournal", "Act02_Tab_CreateJournalBiz", "Pay50_Tab_ExpenseSettle"]),  # U04: 아래 크기는 원본이 300 고정이라 defaultSize는 점검하지 않는다
+    "TG": ("Sys06_Tab_Menu", ["Ast01_Tab_ClassTreeIntrinsic"]),  # W01: TG 규칙 추가. 고정 폭 패널(왼쪽 420 vs 견본 오른쪽 600)은 원본 폭을 따르므로 점검하지 않는다
     "GGH": ("Pay50_Tab_ExpensePay", []),  # U08: 좌우 분할 마스터-상세(제안 2026-10-30). 견본 docs/page-style/GGH/
     "GDP": ("Sms02_Tab_TotalCount", ["Sys10_Tab_TotalSize", "Sms03_Tab_SendAdmin", "Ics02_Tab_Manager"]),
     "DSBRD": ("Tdm50_Tab_TotalDashboard", ["Tdm35_Tab_TaskList"]),
@@ -78,6 +79,15 @@ RULES = {
         ("아래 최소 200", r"min=\{200\}", True),
         ("SearchBar", r"<SearchBar\b", True),
         ("외곽 테두리 없음", BORDER, False),
+    ],
+    "TG": [
+        ("가로 Splitter", r"<Splitter\b(?![^>]*vertical)", True),
+        ("왼쪽 최소 300", r"min=\{300\}", True),
+        ("패널 테두리 1px #d9d9d9", r"border\s*:\s*['\"]1px solid #d9d9d9", True),
+        ("패널 border-box", r"boxSizing\s*:\s*['\"]border-box", True),
+        ("useTreeGrid", r"useTreeGrid", True),
+        ("트리 이름 열 pinned left", r"pinned\s*:\s*['\"]left", True),
+        ("SearchBar 안 씀", r"<SearchBar\b", False),
     ],
     "GGH": [
         ("가로 Splitter", r"<Splitter\b(?![^>]*vertical)", True),

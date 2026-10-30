@@ -32,6 +32,30 @@ public interface AstClassTreeMapper {
                                                @Param("parentId") Long parentId,
                                                @Param("typeCode") String typeCode);
 
+    /** W01 우측 종목 검색 목록 (AS-IS ast01_class_tree.selectBySearchParentId) */
+    List<AstClassTreeItemRes> selectBySearchParentId(@Param("companyId") Long companyId,
+                                                     @Param("parentId") Long parentId,
+                                                     @Param("typeCode") String typeCode,
+                                                     @Param("searchText") String searchText);
+
+    /** W01 가져오기: 원본 회사의 분류 id (AS-IS ast01_class_tree.selectPullData) */
+    List<Long> selectPullIds(@Param("companyId") Long companyId,
+                             @Param("assetType") String assetType,
+                             @Param("typeCode") String typeCode,
+                             @Param("parentTreeId") Long parentTreeId);
+
+    /** W01 가져오기: 분류 1건을 새 id·회사·부모로 복사 */
+    int insertCopy(@Param("newId") Long newId,
+                   @Param("companyId") Long companyId,
+                   @Param("parentTreeId") Long parentTreeId,
+                   @Param("sourceId") Long sourceId);
+
+    /** 종목 신규 저장 때 모든 부서를 담당자로 넣을지 (AS-IS 회사 sys01_ast_manager_auto_yn) */
+    boolean selectAstManagerAutoYn(@Param("companyId") Long companyId);
+
+    /** 기준일에 열려 있는 부서코드 id (AS-IS org01_code.selectByCompanyId) */
+    List<Long> selectOpenOrgCodeIds(@Param("companyId") Long companyId, @Param("stdDate") LocalDate stdDate);
+
     AstClassTreeRes selectById(@Param("classTreeId") Long classTreeId);
 
     String createCode(@Param("companyId") Long companyId,

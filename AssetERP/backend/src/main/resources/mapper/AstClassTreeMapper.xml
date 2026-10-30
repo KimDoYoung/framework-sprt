@@ -307,6 +307,79 @@
          ORDER BY ast01_seq
     </select>
 
+    <!-- AS-IS(IDMS-IC) ast01_class_tree.selectBySearchParentId L365 (W01 Ast01_Grid_AstType) — 종목명·종목코드·종목구분 검색 -->
+    <select id="selectBySearchParentId" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstClassTreeItemRes">
+        SELECT t.ast01_class_tree_id        AS class_tree_id
+             , t.ast01_company_id           AS company_id
+             , t.ast01_parent_tree_id       AS parent_tree_id
+             , t.ast01_seq                  AS seq
+             , t.ast01_isin                 AS isin
+             , t.ast01_class_tree_nm        AS class_tree_name
+             , t.ast01_class_tree_cd        AS class_tree_code
+             , t.ast01_use_yn               AS use_yn
+             , t.ast01_note                 AS note
+             , CONCAT( ast01_item_l_class_nm
+                     , '/' || ast01_item_m_class_nm
+                     , '/' || ast01_item_s_class_nm
+                     , '/' || ast01_item_d_class_nm ) AS item_class_name
+          FROM (
+                SELECT *
+                     , f_cdnm('ItemLClassCode', ast01_item_l_class_cd, ast01_company_id, f_sysdate()) AS ast01_item_l_class_nm
+                     , f_cdnm('ItemMClassCode', ast01_item_m_class_cd, ast01_company_id, f_sysdate()) AS ast01_item_m_class_nm
+                     , f_cdnm('ItemSClassCode', ast01_item_s_class_cd, ast01_company_id, f_sysdate()) AS ast01_item_s_class_nm
+                     , f_cdnm('ItemDClassCode', ast01_item_d_class_cd, ast01_company_id, f_sysdate()) AS ast01_item_d_class_nm
+                  FROM ast01_class_tree
+                 WHERE ast01_parent_tree_id = #{parentId}
+                   AND ast01_company_id = #{companyId}
+                   AND ast01_type_cd = #{typeCode}
+               ) t
+         WHERE CONCAT( ast01_class_tree_nm, ast01_isin, ast01_item_l_class_nm
+                     , ast01_item_m_class_nm, ast01_item_s_class_nm, ast01_item_d_class_nm ) ILIKE '%' || #{searchText} || '%'
+         ORDER BY ast01_seq
+    </select>
+
+    <!-- AS-IS(IDMS-IC) ast01_class_tree.selectPullData (W01 가져오기) —원본 회사의 분류 id만 뽑고, 복사는 insertCopy가 한다 -->
+    <select id="selectPullIds" resultType="long">
+        SELECT ast01_class_tree_id
+          FROM ast01_class_tree
+         WHERE ast01_company_id = #{companyId}
+           AND ast01_asset_type = #{assetType}
+           AND ast01_type_cd = #{typeCode}
+           AND ast01_parent_tree_id = #{parentTreeId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys01_company.selectById 중 자산담당자 자동생성 여부 (Ast01_ClassTree.insert L199-) -->
+    <select id="selectAstManagerAutoYn" resultType="boolean">
+        SELECT COALESCE(sys01_ast_manager_auto_yn, 'false') = 'true'
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) org01_code.selectByCompanyId L50 — 기준일에 열려 있는 모든 부서코드 -->
+    <select id="selectOpenOrgCodeIds" resultType="long">
+        SELECT org01_code_id
+          FROM org01_code
+         WHERE org01_company_id = #{companyId}
+           AND #{stdDate} BETWEEN org01_open_date AND COALESCE(org01_close_date, #{stdDate})
+    </select>
+
+    <!-- 가져오기 복사: AS-IS는 조회한 모델의 id·회사·부모만 바꿔 ast01_class_tree.insert (모든 컬럼 그대로) -->
+    <insert id="insertCopy">
+        INSERT INTO ast01_class_tree
+               ( ast01_class_tree_id, ast01_company_id, ast01_parent_tree_id, ast01_class_tree_nm, ast01_class_tree_cd
+               , ast01_seq, ast01_type_cd, ast01_note, ast01_use_yn, ast01_content, ast01_isin
+               , ast01_item_l_class_cd, ast01_item_m_class_cd, ast01_item_s_class_cd, ast01_item_d_class_cd
+               , ast01_account_type, ast01_asset_type, ast01_tr_unit, ast01_issue_date, ast01_mat_date
+               , ast01_corp_id, ast01_cur_cd, ast01_depn_year, ast01_depn_rt, ast01_depn_type, ast01_eval_type )
+        SELECT #{newId}, #{companyId}, #{parentTreeId}, ast01_class_tree_nm, ast01_class_tree_cd
+             , ast01_seq, ast01_type_cd, ast01_note, ast01_use_yn, ast01_content, ast01_isin
+             , ast01_item_l_class_cd, ast01_item_m_class_cd, ast01_item_s_class_cd, ast01_item_d_class_cd
+             , ast01_account_type, ast01_asset_type, ast01_tr_unit, ast01_issue_date, ast01_mat_date
+             , ast01_corp_id, ast01_cur_cd, ast01_depn_year, ast01_depn_rt, ast01_depn_type, ast01_eval_type
+          FROM ast01_class_tree
+         WHERE ast01_class_tree_id = #{sourceId}
+    </insert>
+
     <!-- 단건 조회 -->
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstClassTreeRes">
         SELECT ast01_class_tree_id          AS class_tree_id

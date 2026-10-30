@@ -7,7 +7,12 @@ import kr.co.kfs.asseterp.biz.ast.dto.AstClassTreeSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.AstItemClassUpdateReq;
 import kr.co.kfs.asseterp.biz.ast.dto.AstItemTreeCond;
 import kr.co.kfs.asseterp.biz.ast.dto.AstItemTreeRes;
+import kr.co.kfs.asseterp.biz.ast.dto.AstManagerSaveReq;
+import kr.co.kfs.asseterp.biz.ast.mapper.Ast10ManagerMapper;
 import kr.co.kfs.asseterp.biz.ast.mapper.AstClassTreeMapper;
+import kr.co.kfs.asseterp.biz.org.dto.OrgInfoRes;
+import kr.co.kfs.asseterp.biz.org.dto.OrgInfoSearchParam;
+import kr.co.kfs.asseterp.biz.org.mapper.OrgInfoMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.service.EmpTransInfoService;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -27,6 +32,8 @@ public class AstClassTreeService {
 
     private final AstClassTreeMapper mapper;
     private final EmpTransInfoService transInfoService;
+    private final OrgInfoMapper orgInfoMapper;
+    private final Ast10ManagerMapper managerMapper;
 
     /**
      * 종목별 문서검색 트리(Apr01_Tab_ItemDocument.retrieve): typeCode %, assetType이 비면 %.
@@ -54,6 +61,53 @@ public class AstClassTreeService {
     public List<AstClassTreeItemRes> searchByParentId(UserPrincipal user, Long parentId, String typeCode) {
         String type = (typeCode == null || typeCode.isBlank()) ? "IT" : typeCode;
         return mapper.selectByParentId(user.getCompanyId(), parentId, type);
+    }
+
+    /** W01 분류 1건 (AS-IS ast01_class_tree.selectById). 내 회사 것만 */
+    public AstClassTreeRes getClassTree(UserPrincipal user, Long classTreeId) {
+        AstClassTreeRes row = mapper.selectById(classTreeId);
+        if (row == null || !user.getCompanyId().equals(row.companyId())) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "존재하지 않는 분류입니다.");
+        }
+        return row;
+    }
+
+    /** W01 우측 종목 검색 목록 (AS-IS ast01_class_tree.selectBySearchParentId). 검색어는 서버가 %…%로 만든다(null이면 %) */
+    public List<AstClassTreeItemRes> searchBySearchParentId(UserPrincipal user, Long parentId, String typeCode, String searchText) {
+        String type = (typeCode == null || typeCode.isBlank()) ? "IT" : typeCode;
+        String search = searchText == null ? "%" : "%" + searchText + "%";
+        return mapper.selectBySearchParentId(user.getCompanyId(), parentId, type, search);
+    }
+
+    /**
+     * W01 가져오기 (AS-IS Ast01_ClassTree.pullData L362-441) — 기초세팅용. 대상 회사의 고유자산(assetType 1) 분류를
+     * 내 회사로 복사한다: IC(최상위) → IC(하위) → IT(종목). 종목마다 내 회사의 모든 조직을 담당 부서로 넣는다.
+     * 원본 버튼은 LoginUser.getIsManager()(회사관리자)일 때만 보이므로 서버도 회사관리자만 허용한다.
+     */
+    @Transactional
+    public void pullData(UserPrincipal user, Long targetCompanyId, LocalDate stdDate) {
+        if (user.getUserId() >= 0) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED, "회사관리자만 사용할 수 있습니다.");
+        }
+        Long companyId = user.getCompanyId();
+        List<OrgInfoRes> orgList = orgInfoMapper.searchOrgInfos(new OrgInfoSearchParam(companyId, "%", stdDate, null));
+        for (Long id1 : mapper.selectPullIds(targetCompanyId, "1", "IC", 0L)) {
+            long newId1 = mapper.selectNextId();
+            mapper.insertCopy(newId1, companyId, 0L, id1);
+            for (Long id2 : mapper.selectPullIds(targetCompanyId, "1", "IC", id1)) {
+                long newId2 = mapper.selectNextId();
+                mapper.insertCopy(newId2, companyId, newId1, id2);
+                for (Long id3 : mapper.selectPullIds(targetCompanyId, "1", "IT", id2)) {
+                    long newId3 = mapper.selectNextId();
+                    mapper.insertCopy(newId3, companyId, newId2, id3);
+                    for (OrgInfoRes org : orgList) {
+                        // 초기세팅은 무조건 부서(managerType 2)
+                        managerMapper.insertManager(managerMapper.selectNextId(), companyId, newId3,
+                                new AstManagerSaveReq(null, newId3, "2", org.orgCodeId(), null, "false", "ast01_class_tree_id"));
+                    }
+                }
+            }
+        }
     }
 
     /** 코드 채번 (AS-IS ast01_class_tree.createCode) */
@@ -132,6 +186,7 @@ public class AstClassTreeService {
     @Transactional
     public void saveItems(UserPrincipal user, Long parentId, List<AstClassTreeSaveReq> items) {
         AstClassTreeRes parent = mapper.selectById(parentId);
+        boolean autoManager = mapper.selectAstManagerAutoYn(user.getCompanyId());
         for (AstClassTreeSaveReq item : items) {
             if (item.classTreeId() == null || item.classTreeId() <= 0) {
                 long newId = mapper.selectNextId();
@@ -165,6 +220,13 @@ public class AstClassTreeService {
                         null, null, null, null, null, null, null, null, null, null, null, null, 1
                 );
                 mapper.insertClassTree(newRow);
+                // 담당자 자동셋팅 (AS-IS: 회사 sys01_ast_manager_auto_yn이면 열린 부서 전부를 담당부서(2)로)
+                if (autoManager) {
+                    for (Long orgId : mapper.selectOpenOrgCodeIds(user.getCompanyId(), LocalDate.now())) {
+                        managerMapper.insertManager(managerMapper.selectNextId(), user.getCompanyId(), newId,
+                                new AstManagerSaveReq(null, newId, "2", orgId, null, "false", "ast01_class_tree_id"));
+                    }
+                }
             } else {
                 mapper.updateClassTreeInfo(
                         item.classTreeId(),

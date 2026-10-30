@@ -140,11 +140,22 @@ export const astApi = {
   },
 
   /** 우측 종목 상세 목록 */
-  searchClassTreeItems: async (parentId: number, typeCode?: string): Promise<AstClassTreeItem[]> => {
+  searchClassTreeItems: async (parentId: number, typeCode?: string, searchText?: string): Promise<AstClassTreeItem[]> => {
     const res = await apiClient.get<ApiResponse<AstClassTreeItem[]>>(`v1/ast/class-trees/${parentId}/items`, {
-      params: { typeCode },
+      params: { typeCode, searchText },
     });
     return res.data.data ?? [];
+  },
+
+  /** 분류 1건 (W01 추가정보·C/F 칸이 그리드 행으로 팝업을 열 때) */
+  getClassTree: async (id: number): Promise<AstClassTree> => {
+    const res = await apiClient.get<ApiResponse<AstClassTree>>(`v1/ast/class-trees/${id}`);
+    return res.data.data;
+  },
+
+  /** 가져오기 (W01 Ast01_Tab_ClassTreeIntrinsic.pullData) — 대상 회사의 고유자산 분류를 내 회사로 복사. 회사관리자만 */
+  pullClassTreeData: async (targetCompanyId: number): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/ast/class-trees/pull-data', null, { params: { targetCompanyId } });
   },
 
   /** 코드 채번 */
