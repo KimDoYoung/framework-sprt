@@ -15,6 +15,9 @@ public interface SysCorpMapper {
                                     @Param("searchText") String searchText, @Param("useYn") boolean useYn);
 
     /** AS-IS sys15_corp.selectByUseYn (empYn=false 가지: 사용 중인 거래처만) */
+    /** selectByUseYn empYn=true — 임직원(구분 Z99) 포함 */
+    List<CorpRes> selectLookupWithEmp(@Param("companyId") Long companyId, @Param("corpType") String corpType, @Param("searchText") String searchText);
+
     List<CorpRes> selectLookup(@Param("companyId") Long companyId, @Param("corpType") String corpType, @Param("searchText") String searchText);
 
     CorpRes selectById(@Param("corpId") Long corpId);

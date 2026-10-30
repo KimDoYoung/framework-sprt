@@ -44,8 +44,9 @@ public class SysCorpController {
     @GetMapping("/lookup")
     public ApiResponse<List<CorpRes>> lookup(@AuthenticationPrincipal UserPrincipal principal,
                                              @RequestParam(required = false) String corpType,
-                                             @RequestParam(required = false) String searchText) {
-        return ApiResponse.ok(service.lookup(principal, corpType, searchText));
+                                             @RequestParam(required = false) String searchText,
+                                             @RequestParam(defaultValue = "false") boolean empYn) {
+        return ApiResponse.ok(service.lookup(principal, corpType, searchText, empYn));
     }
 
     /** AS-IS sys.Sys15_Corp.update → 저장된 행(요청 순서) */

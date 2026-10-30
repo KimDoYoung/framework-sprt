@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 미수/미지급 결제 Pay50_Tab_ExpenseSettle (U11)
+     AS-IS(IDMS-IC) server/ast/mapper/ast07_settle.xml(selectByHistory · selectByHistoryPaing · selectByHistoryPaingTotal · selectAmt · sumForAmt · updateAmt · insert · selectById)
+       · ast06_tr.xml(selectByAccrued) · act02_journal.xml(countByTrId) · pay50_expense.xml(selectById) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstSettleMapper">
+
+    <!-- AS-IS ast06_tr.selectByAccrued — 바깥 열만 DTO 이름으로. 분류 조건(astClassTreeId)은 이 화면이 늘 0이라 뺐다 -->
+    <select id="selectAccrueds" resultType="kr.co.kfs.asseterp.biz.ast.dto.SettleAccruedRes">
+        <![CDATA[
+SELECT ast06_tr_id AS tr_id, ast06_company_id AS company_id, ast06_date AS date, ast06_tr_cd AS tr_code, ast06_amt AS amt,
+               ast06_corp_id AS corp_id, ast06_corp_nm AS corp_name, ast06_rcv_pay_cd AS rcv_pay_code, ast06_accrued_amt AS accrued_amt,
+               COALESCE(note, CONCAT( ast06_class_tree_nm
+                                    , CASE WHEN COALESCE(ast06_class_tree_nm,'') != '' THEN '/' ELSE '' END
+                                    , ast06_note)) AS note
+          FROM (
+				SELECT 	ast06_tr_id
+                    ,   ast06_company_id
+                    ,   ast06_date
+                    ,   ast06_tr_cd
+                    ,   ast06_amt
+                    ,   ast06_for_amt
+                    ,   ast06_note
+                    ,   f_ast_class_tree_nm(ast06_ast_class_tree_id)         as ast06_class_tree_nm
+					,	f_ast_class_tree_nm_allpath(ast06_ast_class_tree_id) as ast06_class_tree_full_nm
+			        ,   ast05_tr_nm                                          as ast06_tr_nm
+			        ,   ast05_rcv_pay_cd                                     as ast06_rcv_pay_cd
+                    ,   accrued_amt                                          as ast06_accrued_amt
+			        ,   ast06_corp_id
+                    ,   COALESCE(sys15_corp_nm, f_emp_kor_nm(ast06_corp_id)) as ast06_corp_nm
+                    ,   null                                                 as ast06_deposit_id
+			        ,   b.ast01_class_tree_nm                                as ast06_deposit_name
+			        ,   ast06_note                                           as ast06_input_note
+			        ,   CASE WHEN act02_journal_id IS NOT NULL
+			                 THEN f_get_journal_note(act02_journal_id)
+			                 ELSE NULL END                                   as note
+                    ,   ast06_ast_class_tree_id                              as ast_class_tree_id
+				FROM 	ast06_tr
+						INNER JOIN ast05_tr_code ON (ast05_tr_cd = ast06_tr_cd AND ast05_company_id = ast06_company_id)
+                        CROSS JOIN LATERAL ( SELECT ast06_for_amt - COALESCE(sum(ast07_for_amt), 0) AS accrued_amt
+                                               FROM ast07_settle
+                                              WHERE ast07_tr_id = ast06_tr_id ) acc
+						LEFT OUTER JOIN ast01_class_tree a ON a.ast01_class_tree_id = ast06_ast_class_tree_id
+			            LEFT OUTER JOIN ast01_class_tree b ON b.ast01_class_tree_id = ast06_deposit_id
+			            LEFT OUTER JOIN sys15_corp         ON sys15_corp_id = ast06_corp_id
+			            LEFT OUTER JOIN act02_journal      ON act02_tr_id   = ast06_tr_id
+				WHERE	ast06_company_id = #{companyId}
+                AND     accrued_amt     != 0
+				AND     COALESCE(a.ast01_asset_type,'1') = #{assetType}
+				AND     COALESCE(ast06_settle_mng_yn,'false') = 'true'
+                AND     'Y' = CASE WHEN COALESCE(( SELECT count(*)
+                                                     FROM act03_journal_dtl
+                                                          INNER JOIN act13_real_account_map ON ( act13_company_id    = act02_company_id                              AND
+                                                                                                 act13_real_account_cd IN (act03_dr_account_cd, act03_cr_account_cd) )
+                                                    WHERE act03_journal_id = act02_journal_id
+                                                      AND substr(act13_repr_account_cd,1,2) IN ('12','22') ),0) = 0 THEN 'N' ELSE 'Y' END
+				AND 	ast05_rcv_pay_cd like #{payCode}
+				AND     /* 반제거래는 원본거래랑 세트로 제외 (9911:펀드운용보수 미수반제처리 / 9921:펀드사무관리보수 미수반제처리) */
+				        ast06_tr_id NOT IN ( SELECT ast06_org_tr_id
+				                               FROM ast06_tr
+				                              WHERE ast06_company_id = #{companyId}
+				                                AND ast06_tr_cd IN ('9911','9921') )
+                AND     ast06_tr_cd NOT IN ('9911','9921')
+                        /* (2025.06.20 CYY - 지출결의서 존재시 미수/미지급 정리(미지급반제)는 거래내역(ast06)이 아닌  지출결의서내역(pay50)으로 정리함) */
+                AND     NOT EXISTS (SELECT 1 FROM pay50_expense WHERE pay50_expense_id = ast06_expense_id)
+			    AND     ( ( '1' = #{abroType}                      AND     /* 1:국내 */
+			                COALESCE(ast06_cur_cd,'KRW') = 'KRW'   ) OR
+			              ( '2' = #{abroType}                      AND     /* 2:국외 */
+			                COALESCE(ast06_cur_cd,'KRW') != 'KRW'  ) )
+				AND     ( ( #{userId} IN ( SELECT ast06_person_id
+			                                UNION ALL
+			                               SELECT ast10_person_id
+			                                 FROM ast10_manager
+			                                WHERE ast10_manager_type = '1'
+			                                  AND ast10_link_id      IN (ast06_tr_id,ast06_ast_class_tree_id) ) ) OR
+			              ( #{orgId} IN ( SELECT ast10_org_id
+			                                FROM ast10_manager
+			                               WHERE ast10_manager_type = '2'
+			                                 AND ast10_link_id      IN (ast06_tr_id,ast06_ast_class_tree_id)
+			                               UNION ALL
+			                              SELECT CAST(f_get_empTrans(ast06_person_id, to_date(substr(ast06_tr_id||'',1,8),'yyyymmdd'), 'org_code_id') AS NUMERIC) ) ) )
+                UNION ALL
+               SELECT  pay50_expense_id                                             as ast06_tr_id
+                    ,  pay50_company_id                                             as ast06_company_id
+                    ,  pay50_occ_date                                               as ast06_date
+                    ,  '9100'                                                       as ast06_tr_cd          /*(9100:사업비 발생)*/
+                    ,  pay50_settle_amt                                             as ast06_amt
+                    ,  pay50_settle_amt                                             as ast06_for_amt
+                    ,  pay50_desc                                                   as ast06_note
+                    ,  null                                                         as ast06_class_tree_nm
+                    ,  null                                                         as ast06_class_tree_full_nm
+                    ,  f_cdnm('trCode', '9100', pay50_company_id, pay50_occ_date)   as ast06_tr_nm
+                    ,  '02'                                                         as ast06_rcv_pay_cd     /*(01:수령/02:지급)*/
+                    ,  accrued_amt                                                  as ast06_accrued_amt
+                    ,  pay50_corp_id                                                as ast06_corp_id
+                    ,  f_get_corp_nm(pay50_corp_id)                                 as ast06_corp_nm
+                    ,  pay50_deposit_id                                             as ast06_deposit_id
+                    ,  ast01_class_tree_nm                                          as ast06_deposit_name
+                    ,  pay50_desc                                                   as ast06_input_note
+                    ,  null                                                         as note
+                    ,  null                                                         as ast_class_tree_id
+                 FROM  pay50_expense
+                       INNER JOIN apr01_appr       ON ( apr01_appr_id   = pay50_settle_appr_id  AND
+                                                        apr01_status_cd = '30'                  )
+                       INNER JOIN ast01_class_tree ON ast01_class_tree_id = pay50_deposit_id
+                       CROSS JOIN LATERAL ( SELECT pay50_settle_amt - COALESCE(sum(ast07_amt), 0) AS accrued_amt
+                                              FROM ast07_settle
+                                             WHERE ast07_expense_id = pay50_expense_id ) acc
+                WHERE  pay50_company_id  = #{companyId}
+                AND    accrued_amt      != 0
+                  AND  '02'             like #{payCode}
+                  AND  '1'               = #{abroType}  /*(1:국내/2:해외) */
+                  AND  'Y' = CASE WHEN pay50_expense_cd = '50' THEN 'Y'   /*(50:법인카드)*/
+                                  ELSE (CASE WHEN COALESCE(( SELECT count(*)
+                                                               FROM act03_journal_dtl
+                                                                    INNER JOIN act13_real_account_map ON ( act13_company_id    = pay50_company_id                              AND
+                                                                                                           act13_real_account_cd IN (act03_dr_account_cd, act03_cr_account_cd) )
+                                                              WHERE act03_journal_id IN ( SELECT pay50_journal_id
+                                                                                           UNION ALL
+                                                                                          SELECT act02_journal_id
+                                                                                            FROM act02_journal
+                                                                                                 INNER JOIN ast06_tr ON ast06_tr_id = act02_tr_id
+                                                                                           WHERE ast06_expense_id = pay50_expense_id )
+                                                                AND substr(act13_repr_account_cd,1,2) IN ('12','22') ),0) = 0 THEN 'N' ELSE 'Y' END) END
+            ) t
+     WHERE 1=1
+       AND ast06_tr_cd LIKE #{trCode}
+]]><if test="corpId != null">AND ast06_corp_id = #{corpId}</if><![CDATA[
+       AND CONCAT(ast06_tr_nm, ast06_corp_nm, ast06_class_tree_nm, ast06_note, note) ILIKE '%'||#{searchText}||'%'
+     ORDER BY ast06_date, ast06_tr_id
+        ]]>
+    </select>
+
+    <!-- AS-IS ast07_settle.selectByHistory (최근입력순 최대 20건 · 사업비지출 거래만) — 바깥 열만 DTO 이름으로 -->
+    <select id="selectHistory" resultType="kr.co.kfs.asseterp.biz.ast.dto.SettleHistoryRes">
+        <![CDATA[
+SELECT ast07_settle_id AS settle_id, ast07_settle_date AS settle_date, ast07_tr_nm AS tr_name, ast07_org_tr_nm AS org_tr_name,
+               ast07_corp_nm AS corp_name, ast07_note AS note, ast07_settle_amt AS settle_amt, ast07_journal_id AS journal_id,
+               ast07_expense_id AS expense_id, ast07_tr_id AS tr_id, ast07_tr_cd AS tr_code, ast07_person_id AS person_id
+          FROM (
+SELECT ast07_settle_id
+         , ast07_tr_id
+         , ast07_settle_date
+         , ast07_settle_amt
+         , ast07_deposit_id
+         , ast07_tr_cd
+         , ast07_person_id
+         , ast07_for_settle_amt
+         , ast07_fx_rate
+         , ast07_amt
+         , ast07_for_amt
+         , ast07_expense_id
+         , cur_cd                                                                                   as ast07_cur_cd
+         , f_ast_class_tree_nm_allpath(ast_class_tree_id)                                           as ast07_class_tree_full_nm
+         , ast05_tr_nm                                                                              as ast07_tr_nm
+         , CONCAT(     f_cdnm('trCode'     , tr_cd       , #{companyId}, ast07_settle_date)
+                 ,'('||f_cdnm('ExpenseType', detail_tr_cd, #{companyId}, ast07_settle_date)||')')   as ast07_org_tr_nm
+         , f_get_corp_nm(corp_id)                                                                   as ast07_corp_nm
+         , act02_journal_id                                                                         as ast07_journal_id
+         , ast01_class_tree_nm                                                                      as ast07_deposit_name
+         , f_get_journal_note(act02_journal_id)                                                     as ast07_note
+         , ast05_rcv_pay_cd                                                                         as rcv_pay_cd
+         , tr.*
+      FROM ast07_settle
+           INNER JOIN ( SELECT ast06_tr_id                      tr_id
+                             , ast06_tr_cd                      tr_cd
+                             , null                             detail_tr_cd
+                             , ast06_ast_class_tree_id          ast_class_tree_id
+                             , ast06_corp_id                    corp_id
+                             , COALESCE(ast06_cur_cd,'KRW')     cur_cd
+                          FROM ast06_tr
+                               LEFT OUTER JOIN ast01_class_tree ON ast01_class_tree_id = ast06_ast_class_tree_id
+                         WHERE ast06_company_id               = #{companyId}
+                           AND COALESCE(ast01_asset_type,'1') = #{assetType}      /* 1:고유자산 */
+                           AND ( ( '1' = #{abroType}                      AND     /* 1:국내 */
+                                   COALESCE(ast06_cur_cd,'KRW') = 'KRW'   ) OR
+                                 ( '2' = #{abroType}                      AND     /* 2:국외 */
+                                   COALESCE(ast06_cur_cd,'KRW') != 'KRW'  ) )
+                           AND NOT EXISTS (SELECT 1 FROM pay50_expense WHERE pay50_expense_id = ast06_expense_id)
+                         UNION ALL
+                        SELECT pay50_expense_id     tr_id
+                             , '9100'               tr_cd
+                             , pay50_expense_cd     detail_tr_cd
+                             , null                 ast_class_tree_id
+                             , pay50_corp_id        corp_id
+                             , 'KRW'                cur_cd
+                          FROM pay50_expense
+                         WHERE pay50_company_id = #{companyId}
+                      ) tr ON tr_id = COALESCE(ast07_expense_id, ast07_tr_id)
+           INNER JOIN ast05_tr_code         ON (ast05_tr_cd = ast07_tr_cd AND ast05_company_id = #{companyId}) 
+           LEFT OUTER JOIN act02_journal    ON act02_tr_id = ast07_settle_id
+           LEFT OUTER JOIN ast01_class_tree ON ast01_class_tree_id = ast07_deposit_id
+     WHERE 1=1
+       AND ( ( #{selectType}  = '3'         AND   /*(3:사업비지출 거래유형만 조회)*/
+               tr_cd          = '9100'      ) OR  /* 9100:사업비 발생 */
+             ( #{selectType} != '3'         ) )
+       AND ( ( #{userId} IN ( SELECT ast07_person_id
+                               UNION ALL
+                              SELECT ast10_person_id
+                                FROM ast10_manager
+                               WHERE ast10_manager_type = '1'
+                                 AND ast10_link_id IN (tr_id, ast_class_tree_id) ) ) OR
+             ( #{orgId} IN ( SELECT ast10_org_id
+                               FROM ast10_manager
+                              WHERE ast10_manager_type = '2'
+                                AND ast10_link_id  IN (tr_id, ast_class_tree_id)
+                              UNION ALL
+                             SELECT CAST(f_get_empTrans(ast07_person_id, to_date(substr(ast07_settle_id||'',1,8),'yyyymmdd'), 'org_code_id') AS NUMERIC) ) ) )
+
+               ) t
+         ORDER BY ast07_settle_id DESC
+         LIMIT 20
+        ]]>
+    </select>
+
+    <!-- AS-IS ast07_settle.selectByHistoryPaing (조회조건 적용, 쪽 나누기) -->
+    <select id="selectHistoryPaging" resultType="kr.co.kfs.asseterp.biz.ast.dto.SettleHistoryRes">
+        <![CDATA[
+SELECT ast07_settle_id AS settle_id, ast07_settle_date AS settle_date, ast07_tr_nm AS tr_name, ast07_org_tr_nm AS org_tr_name,
+               ast07_corp_nm AS corp_name, ast07_note AS note, ast07_settle_amt AS settle_amt, ast07_journal_id AS journal_id,
+               ast07_expense_id AS expense_id, ast07_tr_id AS tr_id, ast07_tr_cd AS tr_code, ast07_person_id AS person_id
+      FROM (
+    SELECT ast07_settle_id
+         , ast07_tr_id
+         , ast07_settle_date
+         , ast07_settle_amt
+         , ast07_deposit_id
+         , ast07_tr_cd
+         , ast07_person_id
+         , ast07_for_settle_amt
+         , ast07_fx_rate
+         , ast07_amt
+         , ast07_for_amt
+         , ast07_expense_id
+         , cur_cd                                                                                   as ast07_cur_cd
+         , f_ast_class_tree_nm_allpath(ast_class_tree_id)                                           as ast07_class_tree_full_nm
+         , ast05_tr_nm                                                                              as ast07_tr_nm
+         , CONCAT(     f_cdnm('trCode'     , tr_cd       , #{companyId}, ast07_settle_date)
+                 ,'('||f_cdnm('ExpenseType', detail_tr_cd, #{companyId}, ast07_settle_date)||')')   as ast07_org_tr_nm
+         , f_get_corp_nm(corp_id)                                                                   as ast07_corp_nm
+         , act02_journal_id                                                                         as ast07_journal_id
+         , ast01_class_tree_nm                                                                      as ast07_deposit_name
+         , f_get_journal_note(act02_journal_id)                                                     as ast07_note
+         , ast05_rcv_pay_cd                                                                         as rcv_pay_cd
+         , tr.*
+      FROM ast07_settle
+           INNER JOIN ( SELECT ast06_tr_id                      tr_id
+                             , ast06_tr_cd                      tr_cd
+                             , null                             detail_tr_cd
+                             , ast06_ast_class_tree_id          ast_class_tree_id
+                             , ast06_corp_id                    corp_id
+                             , COALESCE(ast06_cur_cd,'KRW')     cur_cd
+                          FROM ast06_tr
+                               LEFT OUTER JOIN ast01_class_tree ON ast01_class_tree_id = ast06_ast_class_tree_id
+                         WHERE ast06_company_id               = #{companyId}
+                           AND COALESCE(ast01_asset_type,'1') = #{assetType}      /* 1:고유자산 */
+                           AND ( ( '1' = #{abroType}                      AND     /* 1:국내 */
+                                   COALESCE(ast06_cur_cd,'KRW') = 'KRW'   ) OR
+                                 ( '2' = #{abroType}                      AND     /* 2:국외 */
+                                   COALESCE(ast06_cur_cd,'KRW') != 'KRW'  ) )
+                           AND NOT EXISTS (SELECT 1 FROM pay50_expense WHERE pay50_expense_id = ast06_expense_id)
+                         UNION ALL
+                        SELECT pay50_expense_id     tr_id
+                             , '9100'               tr_cd
+                             , pay50_expense_cd     detail_tr_cd
+                             , null                 ast_class_tree_id
+                             , pay50_corp_id        corp_id
+                             , 'KRW'                cur_cd
+                          FROM pay50_expense
+                         WHERE pay50_company_id = #{companyId}
+                      ) tr ON tr_id = COALESCE(ast07_expense_id, ast07_tr_id)
+           INNER JOIN ast05_tr_code         ON (ast05_tr_cd = ast07_tr_cd AND ast05_company_id = #{companyId}) 
+           LEFT OUTER JOIN act02_journal    ON act02_tr_id = ast07_settle_id
+           LEFT OUTER JOIN ast01_class_tree ON ast01_class_tree_id = ast07_deposit_id
+     WHERE 1=1
+       AND ( ( #{selectType}  = '3'         AND   /*(3:사업비지출 거래유형만 조회)*/
+               tr_cd          = '9100'      ) OR  /* 9100:사업비 발생 */
+             ( #{selectType} != '3'         ) )
+       AND ( ( #{userId} IN ( SELECT ast07_person_id
+                               UNION ALL
+                              SELECT ast10_person_id
+                                FROM ast10_manager
+                               WHERE ast10_manager_type = '1'
+                                 AND ast10_link_id IN (tr_id, ast_class_tree_id) ) ) OR
+             ( #{orgId} IN ( SELECT ast10_org_id
+                               FROM ast10_manager
+                              WHERE ast10_manager_type = '2'
+                                AND ast10_link_id  IN (tr_id, ast_class_tree_id)
+                              UNION ALL
+                             SELECT CAST(f_get_empTrans(ast07_person_id, to_date(substr(ast07_settle_id||'',1,8),'yyyymmdd'), 'org_code_id') AS NUMERIC) ) ) )
+) t
+     WHERE 1=1
+AND rcv_pay_cd LIKE #{payCode}
+AND tr_cd LIKE #{trCode}
+AND COALESCE(corp_id||'','') LIKE #{corpId}
+     AND UPPER(CONCAT(ast07_tr_nm,ast07_corp_nm,ast07_class_tree_full_nm,ast07_note,COALESCE(ast07_cur_cd,'KRW'))) LIKE '%'||UPPER(#{searchText})||'%'
+     ORDER BY ast07_settle_date DESC, ast07_settle_id DESC
+     LIMIT #{limit}
+     OFFSET #{offset}
+        ]]>
+    </select>
+
+    <!-- AS-IS ast07_settle.selectByHistoryPaingTotal -->
+    <select id="selectHistoryTotal" resultType="long">
+        <![CDATA[
+SELECT count(*)
+      FROM (
+    SELECT ast07_settle_id
+         , ast07_tr_id
+         , ast07_settle_date
+         , ast07_settle_amt
+         , ast07_deposit_id
+         , ast07_tr_cd
+         , ast07_person_id
+         , ast07_for_settle_amt
+         , ast07_fx_rate
+         , ast07_amt
+         , ast07_for_amt
+         , ast07_expense_id
+         , cur_cd                                                                                   as ast07_cur_cd
+         , f_ast_class_tree_nm_allpath(ast_class_tree_id)                                           as ast07_class_tree_full_nm
+         , ast05_tr_nm                                                                              as ast07_tr_nm
+         , CONCAT(     f_cdnm('trCode'     , tr_cd       , #{companyId}, ast07_settle_date)
+                 ,'('||f_cdnm('ExpenseType', detail_tr_cd, #{companyId}, ast07_settle_date)||')')   as ast07_org_tr_nm
+         , f_get_corp_nm(corp_id)                                                                   as ast07_corp_nm
+         , act02_journal_id                                                                         as ast07_journal_id
+         , ast01_class_tree_nm                                                                      as ast07_deposit_name
+         , f_get_journal_note(act02_journal_id)                                                     as ast07_note
+         , ast05_rcv_pay_cd                                                                         as rcv_pay_cd
+         , tr.*
+      FROM ast07_settle
+           INNER JOIN ( SELECT ast06_tr_id                      tr_id
+                             , ast06_tr_cd                      tr_cd
+                             , null                             detail_tr_cd
+                             , ast06_ast_class_tree_id          ast_class_tree_id
+                             , ast06_corp_id                    corp_id
+                             , COALESCE(ast06_cur_cd,'KRW')     cur_cd
+                          FROM ast06_tr
+                               LEFT OUTER JOIN ast01_class_tree ON ast01_class_tree_id = ast06_ast_class_tree_id
+                         WHERE ast06_company_id               = #{companyId}
+                           AND COALESCE(ast01_asset_type,'1') = #{assetType}      /* 1:고유자산 */
+                           AND ( ( '1' = #{abroType}                      AND     /* 1:국내 */
+                                   COALESCE(ast06_cur_cd,'KRW') = 'KRW'   ) OR
+                                 ( '2' = #{abroType}                      AND     /* 2:국외 */
+                                   COALESCE(ast06_cur_cd,'KRW') != 'KRW'  ) )
+                           AND NOT EXISTS (SELECT 1 FROM pay50_expense WHERE pay50_expense_id = ast06_expense_id)
+                         UNION ALL
+                        SELECT pay50_expense_id     tr_id
+                             , '9100'               tr_cd
+                             , pay50_expense_cd     detail_tr_cd
+                             , null                 ast_class_tree_id
+                             , pay50_corp_id        corp_id
+                             , 'KRW'                cur_cd
+                          FROM pay50_expense
+                         WHERE pay50_company_id = #{companyId}
+                      ) tr ON tr_id = COALESCE(ast07_expense_id, ast07_tr_id)
+           INNER JOIN ast05_tr_code         ON (ast05_tr_cd = ast07_tr_cd AND ast05_company_id = #{companyId}) 
+           LEFT OUTER JOIN act02_journal    ON act02_tr_id = ast07_settle_id
+           LEFT OUTER JOIN ast01_class_tree ON ast01_class_tree_id = ast07_deposit_id
+     WHERE 1=1
+       AND ( ( #{selectType}  = '3'         AND   /*(3:사업비지출 거래유형만 조회)*/
+               tr_cd          = '9100'      ) OR  /* 9100:사업비 발생 */
+             ( #{selectType} != '3'         ) )
+       AND ( ( #{userId} IN ( SELECT ast07_person_id
+                               UNION ALL
+                              SELECT ast10_person_id
+                                FROM ast10_manager
+                               WHERE ast10_manager_type = '1'
+                                 AND ast10_link_id IN (tr_id, ast_class_tree_id) ) ) OR
+             ( #{orgId} IN ( SELECT ast10_org_id
+                               FROM ast10_manager
+                              WHERE ast10_manager_type = '2'
+                                AND ast10_link_id  IN (tr_id, ast_class_tree_id)
+                              UNION ALL
+                             SELECT CAST(f_get_empTrans(ast07_person_id, to_date(substr(ast07_settle_id||'',1,8),'yyyymmdd'), 'org_code_id') AS NUMERIC) ) ) )
+) t
+     WHERE 1=1
+AND rcv_pay_cd LIKE #{payCode}
+AND tr_cd LIKE #{trCode}
+AND COALESCE(corp_id||'','') LIKE #{corpId}
+     AND UPPER(CONCAT(ast07_tr_nm,ast07_corp_nm,ast07_class_tree_full_nm,ast07_note,COALESCE(ast07_cur_cd,'KRW'))) LIKE '%'||UPPER(#{searchText})||'%'
+        ]]>
+    </select>
+
+    <!-- 결제등록 창이 쓰는 지출결의서 정보 (AS-IS pay50_expense.selectById 중 필요한 열). 미결제액 = 결제 대상금액 - 결제한 외화금액 합 — 로그인 회사 조건 추가 -->
+    <select id="selectExpenseSettleInfo" resultType="kr.co.kfs.asseterp.biz.ast.dto.SettleExpenseRes">
+        SELECT pay50_expense_id                                                                            AS expense_id
+             , pay50_company_id                                                                            AS company_id
+             , pay50_desc                                                                                  AS desc
+             , pay50_settle_amt                                                                            AS settle_amt
+             , pay50_settle_amt - COALESCE((SELECT SUM(ast07_for_amt) FROM ast07_settle WHERE ast07_expense_id = pay50_expense_id),0) AS un_settle_amt
+             , pay50_deposit_id                                                                            AS deposit_id
+             , ast01_class_tree_nm                                                                         AS deposit_name
+          FROM pay50_expense
+               LEFT OUTER JOIN ast01_class_tree ON ast01_class_tree_id = pay50_deposit_id
+         WHERE pay50_expense_id = #{expenseId}
+           AND pay50_company_id = #{companyId}
+    </select>
+
+    <!-- 거래(ast06) 원거래 금액 — AS-IS ast06_tr.selectById 중 amt·forAmt·companyId -->
+    <select id="selectTrAmt" resultType="kr.co.kfs.asseterp.biz.ast.dto.SettleTrAmtRes">
+        SELECT ast06_company_id AS company_id, ast06_amt AS amt, ast06_for_amt AS for_amt
+          FROM ast06_tr
+         WHERE ast06_tr_id = #{trId}
+           AND ast06_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS act02_journal.countByTrId — 승인된 전표 수 -->
+    <select id="countFixedJournal" resultType="int">
+        SELECT count(*) FROM act02_journal WHERE act02_tr_id = #{settleId} AND COALESCE(act02_fix_yn,'false') = 'true'
+    </select>
+
+    <!-- AS-IS ast07_settle.sumForAmt -->
+    <select id="sumForAmt" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(ast07_for_amt),0) FROM ast07_settle WHERE ( ast07_tr_id = #{trId} OR ast07_expense_id = #{trId} )
+    </select>
+
+    <!-- AS-IS ast07_settle.selectAmt -->
+    <select id="selectAmt" resultType="long">
+        SELECT COALESCE(SUM(ast07_amt),0)
+          FROM ast07_settle
+         WHERE ( ast07_tr_id IN ( SELECT ast07_tr_id FROM ast07_settle WHERE ast07_settle_id = #{settleId} AND ast07_tr_id != 0 )
+                 OR
+                 ast07_expense_id IN ( SELECT ast07_expense_id FROM ast07_settle WHERE ast07_settle_id = #{settleId} ) )
+           AND ast07_settle_id != #{settleId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS ast07_settle.insert -->
+    <insert id="insertSettle">
+        INSERT INTO ast07_settle (ast07_settle_id, ast07_tr_id, ast07_settle_date, ast07_settle_amt, ast07_note, ast07_deposit_id, ast07_tr_cd,
+                                  ast07_person_id, ast07_for_settle_amt, ast07_fx_rate, ast07_amt, ast07_for_amt, ast07_expense_id)
+        VALUES (#{settleId}, #{trId}, #{settleDate}, #{settleAmt}, #{note,jdbcType=VARCHAR}, #{depositId,jdbcType=NUMERIC}, #{trCode},
+                #{personId}, #{forSettleAmt}, #{fxRate}, #{amt}, #{forAmt}, #{expenseId,jdbcType=NUMERIC})
+    </insert>
+
+    <!-- AS-IS ast07_settle.updateAmt -->
+    <update id="updateAmt">
+        UPDATE ast07_settle SET ast07_amt = #{amt}, ast07_for_amt = #{forAmt} WHERE ast07_settle_id = #{settleId}
+    </update>
+
+    <!-- 일괄 결제등록(updateMulti) 한 건의 결제 — AS-IS Ast07_Settle.updateMulti 의 insert -->
+    <insert id="insertSettleMulti">
+        INSERT INTO ast07_settle (ast07_settle_id, ast07_tr_id, ast07_expense_id, ast07_settle_date, ast07_settle_amt, ast07_for_settle_amt, ast07_amt, ast07_for_amt,
+                                  ast07_note, ast07_deposit_id, ast07_fx_rate, ast07_tr_cd, ast07_person_id)
+        VALUES (#{settleId}, #{trId}, #{expenseId,jdbcType=NUMERIC}, #{settleDate}, #{settleAmt}, #{forSettleAmt}, #{settleAmt}, #{forSettleAmt},
+                #{note,jdbcType=VARCHAR}, #{depositId}, 1, #{trCode}, #{personId})
+    </insert>
+
+    <!-- 취소(삭제)할 결제 — 로그인 회사의 결제만(지출결의서 또는 거래의 회사로 판단) -->
+    <select id="selectSettleForDelete" resultType="kr.co.kfs.asseterp.biz.ast.dto.SettleDeleteRes">
+        SELECT ast07_settle_id AS settle_id, ast07_person_id AS person_id, ast07_tr_cd AS tr_code, ast07_settle_date AS settle_date
+          FROM ast07_settle
+               LEFT OUTER JOIN pay50_expense ON pay50_expense_id = ast07_expense_id
+               LEFT OUTER JOIN ast06_tr      ON ast06_tr_id      = ast07_tr_id
+         WHERE ast07_settle_id = #{settleId}
+           AND COALESCE(pay50_company_id, ast06_company_id) = #{companyId}
+    </select>
+
+    <delete id="deleteSettle">
+        DELETE FROM ast07_settle WHERE ast07_settle_id = #{settleId}
+    </delete>
+</mapper>

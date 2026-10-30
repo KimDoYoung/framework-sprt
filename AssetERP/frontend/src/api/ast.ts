@@ -1,5 +1,6 @@
 import { apiClient } from './client';
-import { ApiResponse } from '../types/auth';
+import { ApiResponse, PageRes } from '../types/auth';
+import { SettleAccrued, SettleExpense, SettleHistory, SettleSaveReq } from '../types/ast';
 import {
   AstCf,
   AstCfBatchCreateReq,
@@ -379,5 +380,43 @@ export const astApi = {
   getInsureGenLedger: async (date: string): Promise<AstTr4InsureLedger | null> => {
     const res = await apiClient.get<ApiResponse<AstTr4InsureLedger | null>>('v1/ast/tr-4insures/gen-ledger', { params: { date } });
     return res.data.data ?? null;
+  },
+
+  // ── U11 미수/미지급 결제 (Pay50_Tab_ExpenseSettle) ──
+
+  /** AS-IS ast.Ast06_Tr.selectByAccrued (고유자산·국내·지급): corpId가 없으면 전체 */
+  searchSettleAccrueds: async (p: { corpId?: number | null; searchText: string; trCode: string }): Promise<SettleAccrued[]> => {
+    const res = await apiClient.get<ApiResponse<SettleAccrued[]>>('v1/ast/settles/accrueds', { params: { corpId: p.corpId ?? undefined, searchText: p.searchText, trCode: p.trCode } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast07_Settle.selectByHistoryPaging — selectType 1·3 최근 20건 / 2 조회조건(쪽 나누기) */
+  searchSettleHistories: async (p: { assetType: string; selectType: string; payCode: string; trCode: string; corpId: string; searchText: string; limit: number; offset: number }): Promise<PageRes<SettleHistory>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<SettleHistory>>>('v1/ast/settles/histories', { params: p });
+    return res.data.data;
+  },
+
+  /** AS-IS pay.Pay50_Expense.selectById 중 결제등록 창이 쓰는 값 */
+  getSettleExpense: async (expenseId: number): Promise<SettleExpense> => {
+    const res = await apiClient.get<ApiResponse<SettleExpense>>('v1/ast/settles/expense-info', { params: { expenseId } });
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast07_Settle.update (새 결제) → 새 결제 ID */
+  createSettle: async (req: SettleSaveReq): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ast/settles', req);
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast07_Settle.updateMulti (일괄 결제등록) */
+  createSettleMulti: async (settleDate: string, depositId: number, rows: SettleAccrued[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/ast/settles/multi', {
+      settleDate, depositId, rows: rows.map(r => ({ trId: r.trId, trCode: r.trCode, rcvPayCode: r.rcvPayCode, accruedAmt: r.accruedAmt, note: r.note })),
+    });
+  },
+
+  /** AS-IS ast.Ast07_Settle.delete (취소) */
+  deleteSettles: async (settleIds: number[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/ast/settles/delete', { settleIds });
   },
 };

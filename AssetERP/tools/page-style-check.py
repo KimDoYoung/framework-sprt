@@ -28,7 +28,7 @@ TARGETS = {
     "TO": ("Org01_Tab_OrgCode", ["Chk01_Tab_ClassTree"]),
     "GO": ("Tdm54_Tab_CheckInsuff", []),
     "SG": ("Tdm01_Tab_Hr", ["Emp50_Tab_TransportExpenseMng", "Pay50_Tab_ExpensePayWrite"]),  # U06: 기존 SG 화면 91개는 일괄 점검하지 않고 다시 건드릴 때 맞춘다(03 원칙 22 ④)
-    "GG": ("Est02_Tab_PfResultReport", ["Ast06_Tab_TrTax", "Emp17_Tab_BenefitManager", "Pay50_Tab_ExpenseJournal", "Act02_Tab_CreateJournalBiz"]),  # U04: 아래 크기는 원본이 300 고정이라 defaultSize는 점검하지 않는다
+    "GG": ("Est02_Tab_PfResultReport", ["Ast06_Tab_TrTax", "Emp17_Tab_BenefitManager", "Pay50_Tab_ExpenseJournal", "Act02_Tab_CreateJournalBiz", "Pay50_Tab_ExpenseSettle"]),  # U04: 아래 크기는 원본이 300 고정이라 defaultSize는 점검하지 않는다
     "GGH": ("Pay50_Tab_ExpensePay", []),  # U08: 좌우 분할 마스터-상세(제안 2026-10-30). 견본 docs/page-style/GGH/
     "GDP": ("Sms02_Tab_TotalCount", ["Sys10_Tab_TotalSize", "Sms03_Tab_SendAdmin", "Ics02_Tab_Manager"]),
     "DSBRD": ("Tdm50_Tab_TotalDashboard", ["Tdm35_Tab_TaskList"]),

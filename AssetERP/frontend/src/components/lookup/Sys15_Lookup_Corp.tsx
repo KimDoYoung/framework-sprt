@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/sys/Sys15_Lookup_Corp.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open(regYn, callback) L72: regYn이면 [거래처추가]가 보이고 [전체]가 [선택안함]이 된다. 창 610×500, 열 때 검색칸에 커서
  * open(corpTypeName, regYn, callback) L66: 구분 콤보를 그 이름("증권회사" 등)으로 맞추고 조회한다 (Q01 Adv02_Edit_Account)
- * empYn(임직원 포함, openSearch·open(regYn, empYn, …))과 [거래처추가] 창(Sys15_Lookup_AddCorp)은 다음 단계 — 쓰는 화면이 생길 때 만든다
+ * empYn(임직원 포함, open(regYn, empYn, …), U11): 구분 콤보 끝에 Z99 "임직원"을 더하고 서버가 임직원을 UNION한다. openSearch(검색어 미리 채움)와 [거래처추가] 창(Sys15_Lookup_AddCorp)은 다음 단계 — 쓰는 화면이 생길 때 만든다
  * UX보강(10): 검색 줄 = SearchBar(UX-01·04), 조회창 UX-05·06
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -33,12 +33,14 @@ interface Props {
   regYn?: boolean;
   /** open(corpTypeName, …): 열 때 구분 콤보를 이 이름으로 맞추고 조회한다(없거나 코드에 없으면 "전체") */
   corpTypeName?: string;
+  /** open(regYn, empYn, callback): true면 임직원(구분 Z99)도 목록에 넣는다 */
+  empYn?: boolean;
   /** callback.execute(result): [확인]·더블클릭이면 고른 거래처, [전체]·[선택안함]이면 null */
   onResult: (corp: Corp | null) => void;
   onClose: () => void;
 }
 
-export const Sys15_Lookup_Corp: React.FC<Props> = ({ open, regYn = false, corpTypeName, onResult, onClose }) => {
+export const Sys15_Lookup_Corp: React.FC<Props> = ({ open, regYn = false, corpTypeName, empYn = false, onResult, onClose }) => {
   const gridRef = useRef<AgGridReact<Corp>>(null);
   const lastSelected = useRef<Corp | undefined>(undefined);
   const [corpType, setCorpType] = useState('%');
@@ -49,11 +51,11 @@ export const Sys15_Lookup_Corp: React.FC<Props> = ({ open, regYn = false, corpTy
   // retrieve() L218-239: 서비스 sys.Sys15_Corp.selectByUseYn(companyId, corpType, searchText "%…%", empYn). 검색어가 없으면 "%"
   const retrieve = useCallback(async (type: string, text: string) => {
     try {
-      setRows(await sysApi.lookupCorps(type, text));
+      setRows(await sysApi.lookupCorps(type, text, empYn));
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, []);
+  }, [empYn]);
 
   // open() L83-120: 원본은 열 때마다 새 창 → 검색을 비우고, 구분 콤보(CorpType, "전체") 로드가 끝나면 retrieve() (setting() L123-138)
   // corpTypeName이 있으면 콤보 로드 뒤 그 이름으로 맞추고(setting() L126-130 corpTypeComboBox.setText) 조회한다
@@ -123,6 +125,7 @@ export const Sys15_Lookup_Corp: React.FC<Props> = ({ open, regYn = false, corpTy
             <SystemCodeComboBox
               kindCd="CorpType"
               altCode={['%', '전체']}
+              addCodes={empYn ? [['Z99', '임직원']] : undefined}
               style={{ width: 100 }}
               value={corpType}
               onChange={code => { const v = code ?? '%'; setCorpType(v); void retrieve(v, searchText); }}

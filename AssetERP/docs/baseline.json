@@ -10634,5 +10634,28 @@
     "note": "docs/work/U/U10-작업기록.md",
     "history": [],
     "id": "U10"
+  },
+  "Pay50_Tab_ExpenseSettle": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/pay/Pay50_Tab_ExpenseSettle.java": "85c40d5b7b40408aa03a32dabbb3486ced01e623",
+      "application/src/main/java/myApp/server/ast/Ast06_Tr.java": "2702058b182da45864e4313e8ce23ed2b4268dc8",
+      "application/src/main/java/myApp/server/ast/mapper/ast06_tr.xml": "920b374e2a153a0c08ca47690139d316723fede4"
+    },
+    "shared_links": [
+      "Ast07_Grid_History",
+      "Ast07_Lookup_Settle",
+      "Ast07_Lookup_SettleMulti",
+      "Sys15_Lookup_Corp"
+    ],
+    "recorded_at": "2026-10-30T11:49:51+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/U/U11-작업기록.md",
+    "history": [],
+    "id": "U11"
   }
 }

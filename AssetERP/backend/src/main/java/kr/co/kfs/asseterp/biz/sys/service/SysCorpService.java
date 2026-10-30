@@ -29,9 +29,10 @@ public class SysCorpService {
     }
 
     /** AS-IS selectByUseYn(거래처 조회창, empYn=false): 구분 콤보 코드('%'면 전체), 검색어는 "%"+값+"%" (거래처명·기관코드·비고) */
-    public List<CorpRes> lookup(UserPrincipal user, String corpType, String searchText) {
+    public List<CorpRes> lookup(UserPrincipal user, String corpType, String searchText, boolean empYn) {
         String type = corpType == null || corpType.isEmpty() ? "%" : corpType;
         String text = searchText == null || searchText.isEmpty() ? "%" : "%" + searchText + "%";
+        if (empYn) return mapper.selectLookupWithEmp(user.getCompanyId(), type, text);
         return mapper.selectLookup(user.getCompanyId(), type, text);
     }
 

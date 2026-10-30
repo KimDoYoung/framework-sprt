@@ -1061,8 +1061,8 @@ export const sysApi = {
   },
 
   /** AS-IS sys.Sys15_Corp.selectByUseYn (거래처 조회창 Sys15_Lookup_Corp): corpType 코드('%'면 전체), searchText는 거래처명·코드·비고 포함 */
-  lookupCorps: async (corpType: string, searchText: string): Promise<Corp[]> => {
-    const res = await apiClient.get<ApiResponse<Corp[]>>('v1/sys/corps/lookup', { params: { corpType, searchText } });
+  lookupCorps: async (corpType: string, searchText: string, empYn = false): Promise<Corp[]> => {
+    const res = await apiClient.get<ApiResponse<Corp[]>>('v1/sys/corps/lookup', { params: { corpType, searchText, empYn: empYn || undefined } });
     return res.data.data ?? [];
   },
 

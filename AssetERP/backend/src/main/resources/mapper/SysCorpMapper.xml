@@ -53,6 +53,52 @@
          ORDER BY sys15_corp_type, COALESCE(sys15_seq, 999999999), sys15_corp_nm collate "ko_KR.utf8" asc
     </select>
 
+    <!-- AS-IS(IDMS-IC) sys15_corp.selectByUseYn (empYn=true 가지, U11) — 거래처 뒤에 임직원(구분 Z99)을 UNION. 계좌정보 열(pay_account_info)은 조회창이 쓰지 않아 뺐다 -->
+    <select id="selectLookupWithEmp" resultType="kr.co.kfs.asseterp.biz.sys.dto.CorpRes">
+        SELECT *
+          FROM (
+                 SELECT <include refid="corpColumns"/>
+                   FROM sys15_corp
+                  WHERE sys15_company_id = #{companyId}
+                    AND COALESCE(sys15_use_yn,'false') = 'true'
+                  UNION
+                 SELECT emp01_person_id                                    AS corp_id
+                      , emp01_company_id                                   AS company_id
+                      , 'Z99'                                              AS corp_type
+                      , '임직원'                                            AS corp_type_name
+                      , emp01_kor_nm                                       AS corp_name
+                      , NULL                                               AS biz_no
+                      , NULL                                               AS corp_code
+                      , NULL                                               AS seq
+                      , 'true'                                             AS use_yn
+                      , NULL                                               AS note
+                      , emp01_mobile_telno                                 AS tel
+                      , emp02_zip_addr                                     AS addr
+                      , NULL                                               AS iss_corp_code
+                      , COUNT(*) OVER (PARTITION BY emp01_person_id) || '건' AS corp_account_cnt
+                   FROM emp01_person
+                        LEFT OUTER JOIN emp02_others ON emp02_person_id = emp01_person_id
+                        INNER JOIN emp03_trans ON (    emp03_person_id  = emp01_person_id
+                                                   AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                                                              FROM emp03_trans
+                                                                             WHERE emp03_person_id = emp01_person_id
+                                                                               AND emp03_trans_date <![CDATA[<=]]> f_today() ))
+                        LEFT OUTER JOIN ( SELECT *
+                                            FROM emp14_account a
+                                           WHERE emp14_company_id = #{companyId}
+                                             AND emp14_start_date = ( SELECT MAX(b.emp14_start_date)
+                                                                        FROM emp14_account b
+                                                                       WHERE b.emp14_person_id = a.emp14_person_id
+                                                                         AND b.emp14_start_date <![CDATA[<=]]> f_today() )
+                                        ) emp14 ON emp14_person_id = emp01_person_id
+                  WHERE emp01_company_id = #{companyId}
+                    AND emp03_trans_cd NOT IN ('800')
+               ) t
+         WHERE COALESCE(corp_type,'9') LIKE #{corpType}
+           AND CONCAT(corp_name, corp_code, note) ILIKE #{searchText}
+         ORDER BY corp_type, COALESCE(seq, 999999999), corp_name collate "ko_KR.utf8" asc
+    </select>
+
     <!-- AS-IS(IDMS-IC) sys15_corp.selectById -->
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.sys.dto.CorpRes">
         SELECT <include refid="corpColumns"/>

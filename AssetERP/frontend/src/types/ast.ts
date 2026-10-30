@@ -441,3 +441,58 @@ export interface AstTr4InsureLedger {
   eiWithholding: number | null;
 }
 
+
+// ── U11 미수/미지급 결제 (Pay50_Tab_ExpenseSettle) ──
+
+/** AS-IS ast.Ast06_Tr.selectByAccrued — 미수/미지급 결제 위 그리드 한 행. trCode가 9100이면 trId는 지출결의서 ID */
+export interface SettleAccrued {
+  trId: number;
+  companyId: number | null;
+  date: string | null;
+  trCode: string | null;
+  amt: number | null;
+  corpId: number | null;
+  corpName: string | null;
+  rcvPayCode: string | null;
+  accruedAmt: number | null;
+  note: string | null;
+}
+
+/** AS-IS ast.Ast07_Settle.selectByHistoryPaging — 실수령/지급 History 한 행 */
+export interface SettleHistory {
+  settleId: number;
+  settleDate: string | null;
+  trName: string | null;
+  orgTrName: string | null;
+  corpName: string | null;
+  note: string | null;
+  settleAmt: number | null;
+  journalId: number | null;
+  expenseId: number | null;
+  trId: number | null;
+  trCode: string | null;
+  personId: number | null;
+}
+
+/** 결제등록 창이 쓰는 지출결의서 정보 (AS-IS Pay50_ExpenseModel 중 일부) */
+export interface SettleExpense {
+  expenseId: number;
+  companyId: number;
+  desc: string | null;
+  settleAmt: number | null;
+  unSettleAmt: number | null;
+  depositId: number | null;
+  depositName: string | null;
+}
+
+/** AS-IS ast.Ast07_Settle.update 의 새 결제 */
+export interface SettleSaveReq {
+  expenseId: number | null;
+  trId: number | null;
+  settleDate: string;
+  note: string | null;
+  depositId: number | null;
+  trCode: string;
+  amt: number;
+  settleAmt: number;
+}
