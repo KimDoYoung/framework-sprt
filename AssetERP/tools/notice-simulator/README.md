@@ -6,16 +6,20 @@ AS-IS가 부르는 외부 알림 서비스 3종을 흉내 내는 개발용 서�
 tools/run-notice-server.sh start        # http://127.0.0.1:5161 (talk·sms), smtp :2525
 tools/run-notice-server.sh calls [talk|sms|mail]
 tools/run-notice-server.sh reset
-NOTICE_SIM_HOST=127.0.0.1,172.18.0.1 tools/run-notice-server.sh start   # ERP가 Docker 안이면 게이트웨이 주소도 연다
+NOTICE_SIM_HOST=0.0.0.0 tools/run-notice-server.sh start   # 서버 프로파일의 주소(집 192.168.0.130 · 사무실 172.20.100.114)로 Docker 안 Tomcat이 접속하려면 0.0.0.0
 ```
 
 | env | 기본 | 뜻 |
 |:---|:---|:---|
-| `NOTICE_SIM_HOST` | 127.0.0.1 | 접속을 받을 주소(쉼표로 여러 개). Tomcat이 Docker(`docker_default`)면 `127.0.0.1,172.18.0.1` |
+| `NOTICE_SIM_HOST` | 127.0.0.1 | 접속을 받을 주소(쉼표로 여러 개). ERP Tomcat은 Docker 안이라 서버 프로파일의 주소로 접속하므로 `0.0.0.0`(RD 시뮬레이터와 같다) |
 | `NOTICE_SIM_PORT` | 5161 | talk·sms HTTP 포트 |
 | `NOTICE_SIM_SMTP_PORT` | 2525 | 메일(SMTP) 포트 |
 | `NOTICE_SIM_FAIL` | 없음 | 쉼표 목록 `talk,sms,mail` — 그 종류는 실패로 답한다(오류 경로 시험) |
 | `NOTICE_SIM_TALK_KEY` | sim-talk-key | 앱알림 `x-api-key`로 기대하는 값 (다르면 기록의 `problems`) |
+
+- **주소는 서버 프로파일**에 둔다(RD 주소 `asseterp.rd.url`과 같은 방식): `application-omen.properties`(집, 192.168.0.130)·`application-t3600.properties`·`application-test.properties`(사무실, 172.20.100.114)의 `asseterp.notice.talk-url`·`sms-url`·`mail-host`. 공통 `application.properties`는 `mode=sim`과 기본값(localhost)만.
+
+- **방화벽**: 호스트가 ufw를 쓰면 Docker 안 Tomcat이 호스트 포트(5161·2525)에 닿지 않는다(패킷이 버려져 접속이 멈춘다). 한 번 열어 둔다: `sudo ufw allow from 172.16.0.0/12 to any port 5161,2525 proto tcp`. 확인: `docker exec omen-tomcat bash -c 'timeout 3 bash -c "echo > /dev/tcp/192.168.0.130/5161"; echo rc=$?'` → `rc=0`이어야 한다(`124`면 막힌 것).
 
 ## 계약 (AS-IS 기준)
 | 종류 | 호출 | 요청 | 응답 | AS-IS |
