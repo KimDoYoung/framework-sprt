@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ast/mapper/ast06_tr.xml (selectTaxTr · selectById · updateApprId) · ast20_tr_tax.xml (selectGenLedgerTax · deleteByTrId) · ast21_tr_4insure.xml (selectGenLedgerInsure · deleteByTrId)
+     · act02_journal/act03_journal_dtl/act06_journal_tmp/act80_relate_appr/ast07_settle 의 deleteByTrId · act02_journal.countByTrId · ast09_book.createDepnBook — 세금/4대보험 등록 U04.
+     ast06_tr·ast20·ast21 저장은 UpdateDataModel의 동적 INSERT/UPDATE라 화면이 바꾸는 열만 명시했다(port-save). -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstTrMapper">
+
+    <sql id="trColumns">
+        ast06_tr_id                                                         AS tr_id,
+        ast06_date                                                          AS date,
+        ast06_tr_cd                                                         AS tr_code,
+        f_cdnm('trCode', ast06_tr_cd, ast06_company_id, ast06_date)         AS tr_name,
+        ast06_note                                                          AS note,
+        ast06_amt                                                           AS amt,
+        ast06_settle_mng_yn                                                 AS settle_mng_yn,
+        ast06_deposit_id                                                    AS deposit_id,
+        f_ast_class_tree_nm(ast06_deposit_id)                               AS deposit_name,
+        ast06_appr_id                                                       AS appr_id,
+        apr01_status_cd                                                     AS appr_status_code,
+        f_cdnm('AprStatusCode', apr01_status_cd, ast06_company_id, f_sysdate()) AS appr_status_name,
+        ast06_person_id                                                     AS person_id,
+        f_emp_kor_nm(ast06_person_id)                                       AS person_name,
+        act02_journal_id                                                    AS journal_id,
+        ast06_ast_class_tree_id                                             AS ast_class_tree_id,
+        ast20_tr_tax_id                                                     AS tr_tax_id,
+        ast20_income_tax                                                    AS income_tax,
+        ast20_local_tax                                                     AS local_tax,
+        ast20_etc_tax                                                       AS etc_tax,
+        ast20_pre_pay_vat                                                   AS pre_pay_vat,
+        ast20_pre_rcv_vat                                                   AS pre_rcv_vat,
+        ast21_tr_4insure_id                                                 AS tr4_insure_id,
+        ast21_np_withholding                                                AS np_withholding,
+        ast21_np_company                                                    AS np_company,
+        ast21_np_etc                                                        AS np_etc,
+        ast21_np_etc_note                                                   AS np_etc_note,
+        ast21_hi_withholding                                                AS hi_withholding,
+        ast21_hi_company                                                    AS hi_company,
+        ast21_hi_etc                                                        AS hi_etc,
+        ast21_hi_etc_note                                                   AS hi_etc_note,
+        ast21_ei_withholding                                                AS ei_withholding,
+        ast21_ei_company                                                    AS ei_company,
+        ast21_ei_etc                                                        AS ei_etc,
+        ast21_ei_etc_note                                                   AS ei_etc_note,
+        ast21_oh_company                                                    AS oh_company,
+        ast21_oh_etc                                                        AS oh_etc,
+        ast21_oh_etc_note                                                   AS oh_etc_note,
+        CASE WHEN ast06_tr_cd = '5052'   /*(5052:4대보험납부)*/
+             THEN  COALESCE(ast21_np_withholding,0)
+                 + COALESCE(ast21_np_company    ,0)
+                 + COALESCE(ast21_np_etc        ,0) ELSE 0 END              AS np_settle_amt,
+        CASE WHEN ast06_tr_cd = '5052'
+             THEN  COALESCE(ast21_hi_withholding,0)
+                 + COALESCE(ast21_hi_company    ,0)
+                 + COALESCE(ast21_hi_etc        ,0) ELSE 0 END              AS hi_settle_amt,
+        CASE WHEN ast06_tr_cd = '5052'
+             THEN  COALESCE(ast21_ei_withholding,0)
+                 + COALESCE(ast21_ei_company    ,0)
+                 + COALESCE(ast21_ei_etc        ,0) ELSE 0 END              AS ei_settle_amt,
+        CASE WHEN ast06_tr_cd = '5052'
+             THEN  COALESCE(ast21_oh_company    ,0)
+                 + COALESCE(ast21_oh_etc        ,0) ELSE 0 END              AS oh_settle_amt
+    </sql>
+
+    <sql id="trFrom">
+          FROM ast06_tr
+               LEFT OUTER JOIN ast20_tr_tax     ON ast20_tr_id      = ast06_tr_id
+               LEFT OUTER JOIN ast21_tr_4insure ON ast21_tr_id      = ast06_tr_id
+               LEFT OUTER JOIN act02_journal    ON act02_tr_id      = ast06_tr_id
+               LEFT OUTER JOIN apr01_appr       ON apr01_appr_id    = ast06_appr_id
+             , ( SELECT f_get_account_nm(act13_company_id, act13_real_account_cd) insure_account_nm
+                   FROM act13_real_account_map
+                  WHERE act13_company_id      = #{companyId}
+                    AND act13_repr_account_cd = '5804'          /*(5804:복리후생비계정)*/
+                    AND act13_account_map     LIKE '953003%'    /*(953003:사대보험)*/
+                  LIMIT 1 ) act
+    </sql>
+
+    <!-- AS-IS ast06_tr.selectTaxTr (파라미터: closeDate, companyId, startDate, trCode). 연결문서 건수(ast06_appr_cnt)는 이 화면이 안 써서 뺐다 -->
+    <select id="selectTaxTr" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrRes">
+        SELECT <include refid="trColumns"/>
+        <include refid="trFrom"/>
+         WHERE ast06_company_id = #{companyId}
+           AND ast06_date BETWEEN #{startDate} AND #{closeDate}
+           AND ast06_tr_cd LIKE #{trCode}
+           AND ast06_tr_cd IN ( SELECT ast15_tr_cd
+                                  FROM ast15_tr_code_window
+                                 WHERE ast15_company_id      = ast06_company_id
+                                   AND ast15_window_class_nm = 'Ast06_Tab_TrTax' )
+         ORDER BY ast06_date desc, ast06_tr_id desc
+    </select>
+
+    <!-- AS-IS ast06_tr.selectById(저장 뒤 한 건 다시 읽기). 원본의 자산·정산 조인 열은 이 화면이 읽지 않아 selectTaxTr와 같은 열만. 회사 조건 추가 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrRes">
+        SELECT <include refid="trColumns"/>
+        <include refid="trFrom"/>
+         WHERE ast06_company_id = #{companyId}
+           AND ast06_tr_id      = #{trId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertTr">
+        INSERT INTO ast06_tr (ast06_tr_id, ast06_company_id, ast06_person_id, ast06_date, ast06_tr_cd, ast06_amt, ast06_cont_amt,
+                              ast06_settle_mng_yn, ast06_note, ast06_deposit_id, ast06_ast_class_tree_id,
+                              ast06_cur_cd, ast06_fx_rate, ast06_for_amt, ast06_for_cont_amt)
+        VALUES (#{trId}, #{companyId}, #{personId}, #{date}, #{trCode}, #{amt}, #{contAmt},
+                #{settleMngYn}, #{note}, #{depositId}, #{astClassTreeId},
+                'KRW', 1.0, #{amt}, COALESCE(CAST(#{contAmt} AS numeric), #{amt}))
+    </insert>
+
+    <update id="updateTr">
+        UPDATE ast06_tr
+           SET ast06_amt            = #{amt},
+               ast06_settle_mng_yn  = #{settleMngYn},
+               ast06_note           = #{note},
+               ast06_deposit_id     = #{depositId},
+               ast06_for_amt        = #{amt},
+               ast06_cont_amt       = COALESCE(CAST(#{contAmt} AS numeric), ast06_cont_amt),
+               ast06_for_cont_amt   = COALESCE(CAST(#{contAmt} AS numeric), #{amt})
+         WHERE ast06_tr_id      = #{trId}
+           AND ast06_company_id = #{companyId}
+    </update>
+
+    <select id="selectTaxId" resultType="long">
+        SELECT ast20_tr_tax_id FROM ast20_tr_tax WHERE ast20_tr_id = #{trId} LIMIT 1
+    </select>
+
+    <insert id="insertTax">
+        INSERT INTO ast20_tr_tax (ast20_tr_tax_id, ast20_tr_id, ast20_income_tax, ast20_local_tax, ast20_etc_tax, ast20_pre_pay_vat, ast20_pre_rcv_vat)
+        VALUES (#{taxId}, #{trId}, #{r.incomeTax}, #{r.localTax}, #{r.etcTax}, #{r.prePayVat}, #{r.preRcvVat})
+    </insert>
+
+    <update id="updateTax">
+        UPDATE ast20_tr_tax
+           SET ast20_income_tax  = #{r.incomeTax},
+               ast20_local_tax   = #{r.localTax},
+               ast20_etc_tax     = #{r.etcTax},
+               ast20_pre_pay_vat = #{r.prePayVat},
+               ast20_pre_rcv_vat = #{r.preRcvVat}
+         WHERE ast20_tr_tax_id = #{taxId}
+    </update>
+
+    <select id="select4InsureId" resultType="long">
+        SELECT ast21_tr_4insure_id FROM ast21_tr_4insure WHERE ast21_tr_id = #{trId} LIMIT 1
+    </select>
+
+    <insert id="insert4Insure">
+        INSERT INTO ast21_tr_4insure (ast21_tr_4insure_id, ast21_tr_id,
+               ast21_np_withholding, ast21_np_company, ast21_np_etc, ast21_np_etc_note,
+               ast21_hi_withholding, ast21_hi_company, ast21_hi_etc, ast21_hi_etc_note,
+               ast21_ei_withholding, ast21_ei_company, ast21_ei_etc, ast21_ei_etc_note,
+               ast21_oh_company, ast21_oh_etc, ast21_oh_etc_note)
+        VALUES (#{insureId}, #{trId},
+               #{r.npWithholding}, #{r.npCompany}, #{r.npEtc}, #{r.npEtcNote},
+               #{r.hiWithholding}, #{r.hiCompany}, #{r.hiEtc}, #{r.hiEtcNote},
+               #{r.eiWithholding}, #{r.eiCompany}, #{r.eiEtc}, #{r.eiEtcNote},
+               #{r.ohCompany}, #{r.ohEtc}, #{r.ohEtcNote})
+    </insert>
+
+    <update id="update4Insure">
+        UPDATE ast21_tr_4insure
+           SET ast21_np_withholding = #{r.npWithholding},
+               ast21_np_company     = #{r.npCompany},
+               ast21_np_etc         = #{r.npEtc},
+               ast21_np_etc_note    = #{r.npEtcNote},
+               ast21_hi_withholding = #{r.hiWithholding},
+               ast21_hi_company     = #{r.hiCompany},
+               ast21_hi_etc         = #{r.hiEtc},
+               ast21_hi_etc_note    = #{r.hiEtcNote},
+               ast21_ei_withholding = #{r.eiWithholding},
+               ast21_ei_company     = #{r.eiCompany},
+               ast21_ei_etc         = #{r.eiEtc},
+               ast21_ei_etc_note    = #{r.eiEtcNote},
+               ast21_oh_company     = #{r.ohCompany},
+               ast21_oh_etc         = #{r.ohEtc},
+               ast21_oh_etc_note    = #{r.ohEtcNote}
+         WHERE ast21_tr_4insure_id = #{insureId}
+    </update>
+
+    <!-- AS-IS ast06_tr.updateApprId + 회사 조건 -->
+    <update id="updateApprId">
+        UPDATE ast06_tr
+           SET ast06_appr_id = #{apprId}
+         WHERE ast06_tr_id      = #{trId}
+           AND ast06_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS ast20_tr_tax.selectGenLedgerTax -->
+    <select id="selectGenLedgerTax" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrTaxLedgerRes">
+        WITH ledger AS ( SELECT act13_repr_account_cd                                               AS repr_account_cd
+                              , (act04_dr_today_bal_amt - act04_cr_today_bal_amt)
+                                 * CASE WHEN act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END AS bal_amt
+                           FROM act04_gen_ledger
+                                INNER JOIN act01_account_code ON ( act01_company_id = act04_company_id AND
+                                                                   act01_account_cd = act04_account_cd )
+                                INNER JOIN ( SELECT DISTINCT act13_company_id, act13_repr_account_cd, act13_real_account_cd
+                                               FROM act13_real_account_map
+                                              WHERE act13_company_id      = #{companyId}
+                                                AND act13_account_map     = '0000000000'
+                                                AND act13_repr_account_cd IN ('1902','2700'
+                                                                             ,'2604','2605','2606') ) act13 ON ( act13_company_id      = act04_company_id AND
+                                                                                                                 act13_real_account_cd = act04_account_cd )
+                          WHERE ( ( #{trCode} = '5050'  /*(5050:원천세납부)이면 전월말일 잔액 */                                          AND
+                                    act04_std_date = f_get_last_day(to_date(to_char(CAST(#{date} AS date),'yyyymm')||'01','yyyymmdd')-1) ) OR
+                                  ( #{trCode} = '5051'  /*(5051:부가세납부)이면 당일 잔액 */                                             AND
+                                    act04_std_date = CAST(#{date} AS date)                                                     ) )
+        )
+        SELECT SUM(CASE WHEN repr_account_cd = '2604' THEN bal_amt ELSE 0 END)  AS income_tax     /* 2604 : 소득세예수금 계정 */
+             , SUM(CASE WHEN repr_account_cd = '2605' THEN bal_amt ELSE 0 END)  AS local_tax      /* 2605 : 지방세예수금 계정 */
+             , SUM(CASE WHEN repr_account_cd = '2606' THEN bal_amt ELSE 0 END)  AS etc_tax        /* 2606 : 기타원천징수예수금 계정 */
+             , SUM(CASE WHEN repr_account_cd = '1902' THEN bal_amt ELSE 0 END)  AS pre_pay_vat    /* 1902 : 선급부가세 계정 */
+             , SUM(CASE WHEN repr_account_cd = '2700' THEN bal_amt ELSE 0 END)  AS pre_rcv_vat    /* 2700 : 부가세예수금 계정 */
+          FROM ledger
+    </select>
+
+    <!-- AS-IS ast21_tr_4insure.selectGenLedgerInsure -->
+    <select id="selectGenLedgerInsure" resultType="kr.co.kfs.asseterp.biz.ast.dto.Tr4InsureLedgerRes">
+        WITH ledger AS ( SELECT act13_repr_account_cd                                               AS repr_account_cd
+                              , (act04_dr_today_bal_amt - act04_cr_today_bal_amt)
+                                 * CASE WHEN act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END AS bal_amt
+                           FROM act04_gen_ledger
+                                INNER JOIN act01_account_code ON ( act01_company_id = act04_company_id AND
+                                                                   act01_account_cd = act04_account_cd )
+                                INNER JOIN ( SELECT DISTINCT act13_company_id, act13_repr_account_cd, act13_real_account_cd
+                                               FROM act13_real_account_map
+                                              WHERE act13_company_id      = #{companyId}
+                                                AND act13_account_map     = '0000000000'
+                                                AND act13_repr_account_cd IN ('2601','2602','2603') ) act13 ON ( act13_company_id      = act04_company_id AND
+                                                                                                                 act13_real_account_cd = act04_account_cd )
+                          WHERE act04_std_date = f_get_last_day(to_date(to_char(CAST(#{date} AS date),'yyyymm')||'01','yyyymmdd')-1)
+        )
+        SELECT SUM(CASE WHEN repr_account_cd = '2601' THEN bal_amt ELSE 0 END)  AS np_withholding /* 2601 : 국민연금 예수금 계정 */
+             , SUM(CASE WHEN repr_account_cd = '2602' THEN bal_amt ELSE 0 END)  AS hi_withholding /* 2602 : 건강보험 예수금 계정 */
+             , SUM(CASE WHEN repr_account_cd = '2603' THEN bal_amt ELSE 0 END)  AS ei_withholding /* 2603 : 고용보험 예수금 계정 */
+          FROM ledger
+    </select>
+
+    <!-- 삭제: 거래의 자산분류 ID (AS-IS는 화면이 들고 있던 모델 값. 서버가 직접 읽는다) -->
+    <select id="selectAstClassTreeId" resultType="long">
+        SELECT ast06_ast_class_tree_id FROM ast06_tr WHERE ast06_company_id = #{companyId} AND ast06_tr_id = #{trId}
+    </select>
+
+    <select id="selectClassCodes" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstClassCodeRes">
+        SELECT ast01_item_l_class_cd AS item_l_class_code,
+               ast01_item_s_class_cd AS item_s_class_code
+          FROM ast01_class_tree
+         WHERE ast01_class_tree_id = #{astClassTreeId}
+    </select>
+
+    <!-- AS-IS ast09_book.createDepnBook -->
+    <select id="createDepnBook" resultType="string" flushCache="true">
+        SELECT f_create_depnBook(#{procType}, #{trId})
+    </select>
+
+    <delete id="deleteTaxByTrId">DELETE FROM ast20_tr_tax WHERE ast20_tr_id = #{trId}</delete>
+
+    <delete id="delete4InsureByTrId">DELETE FROM ast21_tr_4insure WHERE ast21_tr_id = #{trId}</delete>
+
+    <select id="countFixedJournalByTrId" resultType="int">
+        SELECT count(*)
+          FROM act02_journal
+         WHERE act02_tr_id = #{trId}
+           AND COALESCE(act02_fix_yn,'false') = 'true'
+    </select>
+
+    <delete id="deleteJournalTmpByTrId">
+        DELETE FROM act06_journal_tmp
+         WHERE act06_journal_id IN ( SELECT act02_journal_id
+                                       FROM act02_journal
+                                      WHERE act02_tr_id IN ( SELECT CAST(#{trId} AS numeric)
+                                                              UNION
+                                                             SELECT ast07_settle_id
+                                                               FROM ast07_settle
+                                                              WHERE ast07_tr_id = #{trId} ) )
+    </delete>
+
+    <delete id="deleteJournalDtlByTrId">
+        DELETE FROM act03_journal_dtl
+         WHERE act03_journal_id IN ( SELECT act02_journal_id
+                                       FROM act02_journal
+                                      WHERE act02_tr_id IN ( SELECT CAST(#{trId} AS numeric)
+                                                              UNION
+                                                             SELECT ast07_settle_id
+                                                               FROM ast07_settle
+                                                              WHERE ast07_tr_id = #{trId} ) )
+    </delete>
+
+    <delete id="deleteJournalByTrId">
+        DELETE FROM act02_journal
+         WHERE act02_tr_id IN ( SELECT CAST(#{trId} AS numeric)
+                                 UNION
+                                SELECT ast07_settle_id
+                                  FROM ast07_settle
+                                 WHERE ast07_tr_id = #{trId} )
+    </delete>
+
+    <delete id="deleteRelateApprByTrId">DELETE FROM act80_relate_appr WHERE act80_tr_id = #{trId}</delete>
+
+    <delete id="deleteSettleByTrId">DELETE FROM ast07_settle WHERE ast07_tr_id = #{trId}</delete>
+
+    <delete id="deleteTr">
+        DELETE FROM ast06_tr WHERE ast06_company_id = #{companyId} AND ast06_tr_id = #{trId}
+    </delete>
+</mapper>

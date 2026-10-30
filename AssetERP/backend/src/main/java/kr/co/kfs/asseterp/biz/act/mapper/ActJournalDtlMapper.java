@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.act.mapper;
 
 import kr.co.kfs.asseterp.biz.act.dto.JournalDtlRes;
+import kr.co.kfs.asseterp.biz.act.dto.JournalLineRes;
 import kr.co.kfs.asseterp.biz.act.dto.JournalPayMonthRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -18,4 +19,7 @@ public interface ActJournalDtlMapper {
     /** AS-IS selectByAstId — drCrType D(입금)·C(출금) */
     List<JournalDtlRes> selectByAstId(@Param("companyId") Long companyId, @Param("date") LocalDate date,
                                       @Param("astId") Long astId, @Param("drCrType") String drCrType);
+
+    /** AS-IS selectByJournalId (Ast06_Grid_Journal, U04) */
+    List<JournalLineRes> selectByJournalId(@Param("companyId") Long companyId, @Param("journalId") Long journalId);
 }

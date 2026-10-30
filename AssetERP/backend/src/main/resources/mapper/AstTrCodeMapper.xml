@@ -50,6 +50,27 @@
          ORDER BY a.ast05_tr_cd
     </select>
 
+    <!-- AS-IS ast05_tr_code.selectByWindowClassName (IDMS-IC, U04 Ast05_Lookup_TrCodeWindow). 그리드가 읽는 열만, 비고는 화면별 비고(ast15_note, 원본 SELECT의 첫 열) -->
+    <select id="selectByWindowClassName" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrCodeByWindowRes">
+        SELECT a.ast05_tr_code_id          AS tr_code_id
+             , a.ast05_company_id          AS company_id
+             , a.ast05_tr_cd               AS tr_code
+             , a.ast05_tr_nm               AS tr_name
+             , a.ast05_rcv_pay_cd          AS rcv_pay_code
+             , f_cdnm('RcvPayCode', a.ast05_rcv_pay_cd, a.ast05_company_id, f_sysdate()) AS rcv_pay_name
+             , a.ast05_ast_class_tree_id   AS ast_class_tree_id
+             , w.ast15_note                AS note
+          FROM ast15_tr_code_window w
+               INNER JOIN ast05_tr_code a ON ( a.ast05_company_id = w.ast15_company_id AND
+                                               a.ast05_tr_cd      = w.ast15_tr_cd      )
+         WHERE w.ast15_company_id      = #{companyId}
+           AND w.ast15_window_class_nm = #{windowClassName}
+           AND COALESCE(a.ast05_use_yn,'false') = 'true'
+           AND a.ast05_rcv_pay_cd LIKE #{rcvPayCode}
+           AND a.ast05_tr_cd||a.ast05_tr_nm LIKE #{searchText}
+         ORDER BY w.ast15_tr_cd
+    </select>
+
     <!-- AS-IS ast05_tr_code.selectById (IDMS-IC) -->
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrCodeRes">
         SELECT <include refid="trCodeColumns"/>

@@ -17,6 +17,12 @@ import {
   AstBookPeriod,
   AstBookSum,
   AstCorpAccount,
+  AstTr,
+  AstTrCodeByWindow,
+  AstTr4InsureLedger,
+  AstTr4InsureSaveReq,
+  AstTrTaxLedger,
+  AstTrTaxSaveReq,
   AstItemTreeNode,
   AstManager,
   AstManagerSaveReq,
@@ -321,5 +327,57 @@ export const astApi = {
   searchCorpAccounts: async (stdDate: string, searchText: string, prePayOnly?: boolean, corpId?: number | null): Promise<AstCorpAccount[]> => {
     const res = await apiClient.get<ApiResponse<AstCorpAccount[]>>('v1/ast/corp-accounts', { params: { stdDate, searchText, prePayOnlyYn: prePayOnly || undefined, corpId: corpId ?? undefined } });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast05_TrCode.selectByWindowClassName (Ast05_Lookup_TrCodeWindow, U04): 그 화면에 지정된 사용 중인 거래유형. rcvPayCode 비면 전체 */
+  lookupTrCodesByWindow: async (windowClassName: string, searchText: string, rcvPayCode: string): Promise<AstTrCodeByWindow[]> => {
+    const res = await apiClient.get<ApiResponse<AstTrCodeByWindow[]>>('v1/ast/tr-codes/by-window', { params: { windowClassName, searchText, rcvPayCode } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast06_Tr.selectTaxTr (Ast06_Tab_TrTax, U04): 기간·거래코드(없으면 전체)의 세금/4대보험 거래 */
+  searchTaxTrs: async (startDate: string, closeDate: string, trCode: string | null): Promise<AstTr[]> => {
+    const res = await apiClient.get<ApiResponse<AstTr[]>>('v1/ast/trs/tax', { params: { startDate, closeDate, trCode: trCode ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast06_Tr.selectById (U04): 저장·분개생성 뒤 한 건 다시 읽기 */
+  getTr: async (trId: number): Promise<AstTr> => {
+    const res = await apiClient.get<ApiResponse<AstTr>>(`v1/ast/trs/${trId}`);
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast06_Tr.updateTax (U04): 원천세·부가세 거래 저장 → 저장한 거래 ID */
+  saveTaxTr: async (req: AstTrTaxSaveReq): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/ast/trs/tax', req);
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast06_Tr.update4Insure (U04): 4대보험 거래 저장 → 저장한 거래 ID */
+  save4InsureTr: async (req: AstTr4InsureSaveReq): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/ast/trs/4insure', req);
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast06_Tr.delete (U04): 회계마감 검사 뒤 거래·분개·상세 삭제 */
+  deleteTrs: async (trIds: number[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/ast/trs/delete', { trIds });
+  },
+
+  /** AS-IS ast.Ast06_Tr.updateApprId (U04): 상신한 문서 ID 기록 */
+  updateTrApprId: async (trId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/ast/trs/${trId}/appr`, { apprId });
+  },
+
+  /** AS-IS ast.Ast20_TrTax.selectGenLedgerTax (U04): 총계정원장의 예수금·부가세 잔액 */
+  getTaxGenLedger: async (date: string, trCode: string): Promise<AstTrTaxLedger | null> => {
+    const res = await apiClient.get<ApiResponse<AstTrTaxLedger | null>>('v1/ast/tr-taxes/gen-ledger', { params: { date, trCode } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS ast.Ast21_Tr4Insure.selectGenLedgerInsure (U04): 총계정원장의 보험 예수금 잔액 */
+  getInsureGenLedger: async (date: string): Promise<AstTr4InsureLedger | null> => {
+    const res = await apiClient.get<ApiResponse<AstTr4InsureLedger | null>>('v1/ast/tr-4insures/gen-ledger', { params: { date } });
+    return res.data.data ?? null;
   },
 };

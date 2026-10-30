@@ -27,6 +27,7 @@ TARGETS = {
     # Fbx01_Tab_Document는 TO가 아니다(SID 미정)
     "TO": ("Org01_Tab_OrgCode", ["Chk01_Tab_ClassTree"]),
     "GO": ("Tdm54_Tab_CheckInsuff", []),
+    "GG": ("Est02_Tab_PfResultReport", ["Ast06_Tab_TrTax"]),  # U04: 아래 크기는 원본이 300 고정이라 defaultSize는 점검하지 않는다
     "GDP": ("Sms02_Tab_TotalCount", ["Sys10_Tab_TotalSize", "Sms03_Tab_SendAdmin", "Ics02_Tab_Manager"]),
     "DSBRD": ("Tdm50_Tab_TotalDashboard", ["Tdm35_Tab_TaskList"]),
     "STP": ("Pay10_Tab_Retire", ["Tdm50_Tab_CheckJob"]),
@@ -59,6 +60,13 @@ RULES = {
         ("Splitter 없음", r"<Splitter\b", False),
         ("useTreeGrid", r"useTreeGrid", True),
         ("툴바 Space wrap", r"<Space\b[^>]*wrap", True),
+        ("외곽 테두리 없음", BORDER, False),
+    ],
+    "GG": [
+        ("세로 Splitter", r"<Splitter\b[^>]*vertical", True),
+        ("위 최소 120", r"min=\{120\}", True),
+        ("아래 최소 200", r"min=\{200\}", True),
+        ("SearchBar", r"<SearchBar\b", True),
         ("외곽 테두리 없음", BORDER, False),
     ],
     "GO": [

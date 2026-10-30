@@ -179,3 +179,18 @@ export interface JournalDtl {
   drForAmt: number | null;
   crForAmt: number | null;
 }
+
+/** AS-IS act.Act03_JournalDtl.selectByJournalId (Ast06_Grid_Journal, U04) — 분개 그리드(차변/대변) 한 행 */
+export interface JournalLine {
+  journalDtlId: number;
+  trName: string | null;
+  drAccountCode: string | null;
+  drAstAccountName: string | null;
+  drAmt: number | null;
+  drNote: string | null;
+  crAccountCode: string | null;
+  crAstAccountName: string | null;
+  crAmt: number | null;
+  crNote: string | null;
+}
+

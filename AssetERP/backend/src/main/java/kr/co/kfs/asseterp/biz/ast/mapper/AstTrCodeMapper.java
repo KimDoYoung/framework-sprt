@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.ast.mapper;
 
+import kr.co.kfs.asseterp.biz.ast.dto.TrCodeByWindowRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeSaveReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -20,6 +21,10 @@ public interface AstTrCodeMapper {
                                        @Param("financeYn") String financeYn);
 
     /** AS-IS selectById */
+    /** selectByWindowClassName (Ast05_Lookup_TrCodeWindow, U04) */
+    List<TrCodeByWindowRes> selectByWindowClassName(@Param("companyId") Long companyId, @Param("windowClassName") String windowClassName,
+                                            @Param("searchText") String searchText, @Param("rcvPayCode") String rcvPayCode);
+
     TrCodeRes selectById(@Param("trCodeId") Long trCodeId);
 
     /** AS-IS checkTrCode: 같은 회사·거래코드의 ID */

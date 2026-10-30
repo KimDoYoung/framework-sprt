@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.act.service;
 
 import kr.co.kfs.asseterp.biz.act.dto.JournalDtlRes;
+import kr.co.kfs.asseterp.biz.act.dto.JournalLineRes;
 import kr.co.kfs.asseterp.biz.act.dto.JournalPayMonthRes;
 import kr.co.kfs.asseterp.biz.act.mapper.ActJournalDtlMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
@@ -27,5 +28,10 @@ public class ActJournalDtlService {
     /** act03_journal_dtl.selectByAstId (Act02_Tab_DepositIoList, U01) — AS-IS는 companyId를 선택한 원장 행에서 가져오지만 로그인 회사와 같다 */
     public List<JournalDtlRes> searchByAstId(UserPrincipal user, LocalDate date, Long astId, String drCrType) {
         return mapper.selectByAstId(user.getCompanyId(), date, astId, drCrType);
+    }
+
+    /** act03_journal_dtl.selectByJournalId (Ast06_Grid_Journal, U04) — 분개가 없으면(journalId null) 빈 목록 */
+    public List<JournalLineRes> searchByJournalId(UserPrincipal user, Long journalId) {
+        return mapper.selectByJournalId(user.getCompanyId(), journalId);
     }
 }

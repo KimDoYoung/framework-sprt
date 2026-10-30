@@ -322,3 +322,122 @@ export interface AstCorpAccount {
   /** 지출처의 대표계좌 "은행 계좌번호 예금주" (U03 — 지급요청계좌에 채운다) */
   corpPayAccountInfo: string | null;
 }
+
+/** AS-IS ast.Ast05_TrCode.selectByWindowClassName (Ast05_Lookup_TrCodeWindow, U04) — 화면별 거래유형 */
+export interface AstTrCodeByWindow {
+  trCodeId: number;
+  companyId: number;
+  trCode: string;
+  trName: string | null;
+  rcvPayCode: string | null;
+  rcvPayName: string | null;
+  astClassTreeId: number | null;
+  note: string | null;
+}
+
+/** AS-IS ast.Ast06_Tr.selectTaxTr (Ast06_Tab_TrTax, U04) — 그리드 한 행 + 편집창이 받는 세금·4대보험 상세 */
+export interface AstTr {
+  trId: number;
+  date: string;
+  trCode: string;
+  trName: string | null;
+  note: string | null;
+  amt: number | null;
+  settleMngYn: boolean | null;
+  depositId: number | null;
+  depositName: string | null;
+  apprId: number | null;
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+  personId: number | null;
+  personName: string | null;
+  journalId: number | null;
+  astClassTreeId: number | null;
+  trTaxId: number | null;
+  incomeTax: number | null;
+  localTax: number | null;
+  etcTax: number | null;
+  prePayVat: number | null;
+  preRcvVat: number | null;
+  tr4InsureId: number | null;
+  npWithholding: number | null;
+  npCompany: number | null;
+  npEtc: number | null;
+  npEtcNote: string | null;
+  hiWithholding: number | null;
+  hiCompany: number | null;
+  hiEtc: number | null;
+  hiEtcNote: string | null;
+  eiWithholding: number | null;
+  eiCompany: number | null;
+  eiEtc: number | null;
+  eiEtcNote: string | null;
+  ohCompany: number | null;
+  ohEtc: number | null;
+  ohEtcNote: string | null;
+  npSettleAmt: number | null;
+  hiSettleAmt: number | null;
+  eiSettleAmt: number | null;
+  ohSettleAmt: number | null;
+}
+
+/** AS-IS ast.Ast06_Tr.updateTax 요청 — trId가 없으면 새 거래 */
+export interface AstTrTaxSaveReq {
+  trId: number | null;
+  date: string;
+  trCode: string;
+  amt: number | null;
+  settleMngYn: boolean;
+  note: string | null;
+  depositId: number | null;
+  incomeTax: number | null;
+  localTax: number | null;
+  etcTax: number | null;
+  prePayVat: number | null;
+  preRcvVat: number | null;
+}
+
+/** AS-IS ast.Ast06_Tr.update4Insure 요청 — settleAmt는 네 보험 납부금액의 합 */
+export interface AstTr4InsureSaveReq {
+  trId: number | null;
+  /** 거래유형(화면별)이 정한 자산분류 — 새 거래에만 쓴다 */
+  astClassTreeId: number | null;
+  date: string;
+  trCode: string;
+  settleMngYn: boolean;
+  note: string | null;
+  depositId: number | null;
+  npWithholding: number | null;
+  npCompany: number | null;
+  npEtc: number | null;
+  npEtcNote: string | null;
+  hiWithholding: number | null;
+  hiCompany: number | null;
+  hiEtc: number | null;
+  hiEtcNote: string | null;
+  eiWithholding: number | null;
+  eiCompany: number | null;
+  eiEtc: number | null;
+  eiEtcNote: string | null;
+  ohCompany: number | null;
+  ohEtc: number | null;
+  ohEtcNote: string | null;
+  settleAmt: number;
+}
+
+/** AS-IS ast.Ast20_TrTax.selectGenLedgerTax */
+export interface AstTrTaxLedger {
+  incomeTax: number | null;
+  localTax: number | null;
+  etcTax: number | null;
+  prePayVat: number | null;
+  preRcvVat: number | null;
+}
+
+/** AS-IS ast.Ast21_Tr4Insure.selectGenLedgerInsure */
+export interface AstTr4InsureLedger {
+  npWithholding: number | null;
+  hiWithholding: number | null;
+  eiWithholding: number | null;
+}
+

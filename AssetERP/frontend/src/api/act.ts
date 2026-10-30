@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, JournalDtl, JournalMap, JournalPayMonth, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, JournalDtl, JournalLine, JournalMap, JournalPayMonth, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { AstBook } from '../types/ast';
 import { readBlobError } from './file';
 
@@ -240,5 +240,21 @@ export const actApi = {
   rdPrintDepositIo: async (rows: AstBook[]): Promise<string> => {
     const res = await apiClient.post<ApiResponse<string>>('v1/act/deposit-ios/rd-print', { rows });
     return res.data.data;
+  },
+
+  /** AS-IS act.Act03_JournalDtl.selectByJournalId (Ast06_Grid_Journal, U04): 분개(차변/대변) */
+  searchJournalLines: async (journalId: number): Promise<JournalLine[]> => {
+    const res = await apiClient.get<ApiResponse<JournalLine[]>>('v1/act/journal-dtls/by-journal', { params: { journalId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act02_Journal.createJournal (U04): 거래의 자동분개 생성(procType P, exceptYn true) */
+  createJournal: async (trId: number, trCode: string): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/act/journals/create', { trId, trCode, procType: 'P', exceptYn: true });
+  },
+
+  /** AS-IS act.Act04_GenLedger.checkClose (U04): 마감이면 AS-IS 메시지로 실패 */
+  checkLedgerClose: async (stdDate: string): Promise<void> => {
+    await apiClient.get<ApiResponse<void>>('v1/act/gen-ledgers/close-check', { params: { stdDate } });
   },
 };

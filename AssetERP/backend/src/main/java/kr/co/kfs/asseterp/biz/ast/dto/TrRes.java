@@ -1,0 +1,50 @@
+package kr.co.kfs.asseterp.biz.ast.dto;
+
+import java.time.LocalDate;
+
+/** AS-IS ast.Ast06_Tr.selectTaxTr / selectById — 세금/4대보험 등록 그리드 한 행(편집창이 받는 값 포함) */
+public record TrRes(
+        Long trId,
+        LocalDate date,
+        String trCode,
+        String trName,
+        String note,
+        Long amt,
+        Boolean settleMngYn,
+        Long depositId,
+        String depositName,
+        Long apprId,
+        String apprStatusCode,
+        String apprStatusName,
+        Long personId,
+        String personName,
+        Long journalId,
+        Long astClassTreeId,
+        Long trTaxId,
+        Long incomeTax,
+        Long localTax,
+        Long etcTax,
+        Long prePayVat,
+        Long preRcvVat,
+        Long tr4InsureId,
+        Long npWithholding,
+        Long npCompany,
+        Long npEtc,
+        String npEtcNote,
+        Long hiWithholding,
+        Long hiCompany,
+        Long hiEtc,
+        String hiEtcNote,
+        Long eiWithholding,
+        Long eiCompany,
+        Long eiEtc,
+        String eiEtcNote,
+        Long ohCompany,
+        Long ohEtc,
+        String ohEtcNote,
+        Long npSettleAmt,
+        Long hiSettleAmt,
+        Long eiSettleAmt,
+        Long ohSettleAmt
+) {
+}

@@ -6,7 +6,7 @@
 - **SID** = 화면스타일-ID(Style ID). 이름 대신 짧게 부르는 약어다. 예: "이 화면은 SGVF".
 - 스타일은 **Tab 파일(화면 껍데기)** 에 붙인다. `*_Edit_*` 파일은 Tab 안에 붙는 폼 부품이며, 위치는 스타일이 정하고 폼 종류(읽기 전용/편집)는 SGVF·SGEF가 구분한다.
 - Tab 파일 머리 주석에 `스타일: SGVF` 한 줄을 적는다.
-
+2-2-2
 > 상태: **견본 확정(2026-10-29)**. 아래 SID 19개 모두 `docs/page-style/{SID}/`에 견본이 있다. 견본은 사용자가 화면을 열어 확인·수정한 것이다. 판별기(`yunhee page-style`) 수정 의뢰는 `docs/yunhee-page-style-판별.md`. 나중에 들어온 SID(SGHF·TO·GO·DSBRD·GDP·IN)는 대표 화면 하나만 보고 정했으므로, 같은 SID로 묶은 다른 화면을 맞추다가 규칙이 바뀔 수 있다(그때 이 문서와 견본을 같이 고친다).
 
 ## 스타일 목록
@@ -176,6 +176,7 @@
 - 위·아래 모두 **외곽 테두리 박스를 두지 않는다**(SGTP는 아래 탭에 테두리가 있다).
 - 열 때 조회하고, 조회가 끝나면 첫 행을 고른다. 행을 누르면 아래가 그 행의 id로 다시 읽는다(`pfContractId` + `nonce` — 같은 행을 다시 눌러도 다시 읽는다).
 - SGTP와 구조가 같고 아래가 탭 영역이 아니라 그리드 하나인 경우가 GG다.
+- 점검 규칙(`tools/page-style-check.py GG`, U04에서 추가): 세로 `Splitter` · 위 최소 120 · 아래 최소 200 · `SearchBar` · 외곽 테두리 없음. 아래 크기는 원본이 정하면(U04 `Ast06_Tab_TrTax`는 300 고정) 그대로 `defaultSize`에 둔다. 적용 화면: `Est02_Tab_PfResultReport`(견본), `Ast06_Tab_TrTax`.
 
 ### SGP — SearchGrid+Popup (초안)
 

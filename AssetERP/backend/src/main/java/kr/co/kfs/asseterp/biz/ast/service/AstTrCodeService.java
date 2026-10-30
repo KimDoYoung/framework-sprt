@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.ast.service;
 
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeInitReq;
+import kr.co.kfs.asseterp.biz.ast.dto.TrCodeByWindowRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeSaveReq;
 import kr.co.kfs.asseterp.biz.ast.mapper.AstTrCodeMapper;
@@ -36,6 +37,12 @@ public class AstTrCodeService {
     public List<TrCodeRes> lookup(UserPrincipal user, String searchText, String rcvPayCode, String assetType, Boolean financeYn) {
         return mapper.selectBySearchText(user.getCompanyId(), "%" + (searchText == null ? "" : searchText) + "%",
                 isBlank(rcvPayCode) ? "%" : rcvPayCode, assetType, financeYn == null ? null : String.valueOf(financeYn));
+    }
+
+    /** AS-IS Ast05_Lookup_TrCodeWindow.retrieve() L155-186: "%검색어%", 수령/지급(전체면 "%") — 그 화면에 지정된 사용 중인 코드만 */
+    public List<TrCodeByWindowRes> searchByWindow(UserPrincipal user, String windowClassName, String searchText, String rcvPayCode) {
+        return mapper.selectByWindowClassName(user.getCompanyId(), windowClassName, "%" + (searchText == null ? "" : searchText) + "%",
+                isBlank(rcvPayCode) ? "%" : rcvPayCode);
     }
 
     /**

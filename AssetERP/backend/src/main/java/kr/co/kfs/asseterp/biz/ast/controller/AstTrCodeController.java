@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.ast.controller;
 
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeInitReq;
+import kr.co.kfs.asseterp.biz.ast.dto.TrCodeByWindowRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrCodeSaveReq;
 import kr.co.kfs.asseterp.biz.ast.service.AstTrCodeService;
@@ -43,6 +44,15 @@ public class AstTrCodeController {
                                                @RequestParam(defaultValue = "1") String assetType,
                                                @RequestParam(required = false) Boolean financeYn) {
         return ApiResponse.ok(service.lookup(principal, searchText, rcvPayCode, assetType, financeYn));
+    }
+
+    /** AS-IS ast.Ast05_TrCode.selectByWindowClassName (Ast05_Lookup_TrCodeWindow, U04) */
+    @GetMapping("/by-window")
+    public ApiResponse<List<TrCodeByWindowRes>> byWindow(@AuthenticationPrincipal UserPrincipal principal,
+                                                 @RequestParam String windowClassName,
+                                                 @RequestParam(required = false) String searchText,
+                                                 @RequestParam(required = false) String rcvPayCode) {
+        return ApiResponse.ok(service.searchByWindow(principal, windowClassName, searchText, rcvPayCode));
     }
 
     /** AS-IS ast.Ast05_TrCode.update → 저장된 행(요청 순서) */

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/act/mapper/act02_journal.xml (createJournal) · act04_gen_ledger.xml (checkCloseCount · selectCloseDateCount) — 세금/4대보험 등록 U04 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActJournalMapper">
+
+    <select id="createJournal" resultType="string" flushCache="true">
+        SELECT f_create_journal(#{procType}, #{companyId}, #{personId}, #{trCode}, #{trId}, #{exceptYn})
+    </select>
+
+    <select id="countCloseAfter" resultType="long">
+        SELECT count(*)
+          FROM act05_gen_ledger_close
+         WHERE act05_company_id = #{companyId}
+           AND act05_std_date   > #{closeDate}
+    </select>
+
+    <select id="countCloseOn" resultType="long">
+        SELECT count(*)
+          FROM act05_gen_ledger_close
+         WHERE act05_company_id = #{companyId}
+           AND act05_std_date   = #{closeDate}
+    </select>
+</mapper>

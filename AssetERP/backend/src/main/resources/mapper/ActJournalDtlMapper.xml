@@ -41,4 +41,31 @@
                 OR (#{drCrType} = 'C' AND act03_cr_ast_id = #{astId}) )
          ORDER BY act02_journal_no, act03_seq
     </select>
+
+    <!-- AS-IS act03_journal_dtl.selectByJournalId (Ast06_Grid_Journal, U04). 그리드가 읽는 열만, 회사 조건 추가 -->
+    <select id="selectByJournalId" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalLineRes">
+        SELECT act03_journal_dtl_id                                                                  AS journal_dtl_id
+             , f_cdnm('trCode', f_get_journal_tr_cd(act02_journal_id), act02_company_id, act02_date) AS tr_name
+             , act03_dr_account_cd                                                                   AS dr_account_code
+             , f_get_account_nm(act02_company_id, act03_dr_account_cd)
+               ||CASE WHEN act03_dr_ast_id is null THEN ''
+                      ELSE '('||f_ast_class_tree_nm(act03_dr_ast_id)||')' END                        AS dr_ast_account_name
+             , act03_dr_amt                                                                          AS dr_amt
+             , act03_dr_note                                                                         AS dr_note
+             , act03_cr_account_cd                                                                   AS cr_account_code
+             , f_get_account_nm(act02_company_id, act03_cr_account_cd)
+               ||CASE WHEN act03_cr_ast_id is null THEN ''
+                      ELSE '('||f_ast_class_tree_nm(act03_cr_ast_id)||')' END                        AS cr_ast_account_name
+             , act03_cr_amt                                                                          AS cr_amt
+             , act03_cr_note                                                                         AS cr_note
+          FROM act02_journal
+               LEFT OUTER JOIN ast06_tr     ON ast06_tr_id     = act02_tr_id
+               LEFT OUTER JOIN ast07_settle ON ast07_settle_id = act02_tr_id
+               LEFT OUTER JOIN biz01_promo  ON biz01_promo_id  = act02_biz_id
+             , act03_journal_dtl
+         WHERE act02_journal_id = act03_journal_id
+           AND act02_company_id = #{companyId}
+           AND act02_journal_id = #{journalId}
+         ORDER BY act03_seq
+    </select>
 </mapper>

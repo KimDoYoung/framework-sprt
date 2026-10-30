@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.act.controller;
 
 import kr.co.kfs.asseterp.biz.act.dto.JournalDtlRes;
+import kr.co.kfs.asseterp.biz.act.dto.JournalLineRes;
 import kr.co.kfs.asseterp.biz.act.dto.JournalPayMonthRes;
 import kr.co.kfs.asseterp.biz.act.service.ActJournalDtlService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
@@ -38,5 +39,12 @@ public class ActJournalDtlController {
                                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                                                   @RequestParam Long astId, @RequestParam String drCrType) {
         return ApiResponse.ok(service.searchByAstId(principal, date, astId, drCrType));
+    }
+
+    /** act.Act03_JournalDtl.selectByJournalId (U04 세금/4대보험 등록의 아래 분개 그리드) */
+    @GetMapping("/by-journal")
+    public ApiResponse<List<JournalLineRes>> byJournal(@AuthenticationPrincipal UserPrincipal principal,
+                                                       @RequestParam Long journalId) {
+        return ApiResponse.ok(service.searchByJournalId(principal, journalId));
     }
 }
