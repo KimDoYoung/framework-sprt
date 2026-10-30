@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sys/Sys99_Print.java insertCardReport·2·3 (L415-648) + crd03_trans.selectByYear + biz03_account_map.selectByYear·selectByMonth + biz01_promo.selectByYear·selectMonthAmt·selectMonthAmt2 + sys99_print.deleteByPersonId·insert  (U17 Biz01_Tab_CardReport) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizCardReportMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId L695 (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS crd03_trans.selectByYear (IDMS-IC) -->
+    <select id="selectCardPersons" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCardReportPersonRes">
+        SELECT crd03_person_id AS person_id
+             , crd03_person_nm AS person_name
+          FROM (SELECT CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN 0     ELSE crd03_person_id END                 AS crd03_person_id
+                     , CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(crd03_person_id) END AS crd03_person_nm
+                  FROM crd01_card
+                       INNER JOIN crd03_trans ON crd03_card_id = crd01_card_id
+                 WHERE crd01_company_id = #{companyId}
+                   AND TO_DATE(EXTRACT(YEAR FROM crd03_fr_dt)::text, 'YYYY')  &lt;=   TO_DATE(#{year}, 'YYYY')
+                   AND crd03_fr_dt IS NOT NULL
+                   AND (TO_DATE(EXTRACT(YEAR FROM crd03_to_dt)::text, 'YYYY')   &gt;=   TO_DATE(#{year}, 'YYYY')
+                    OR crd03_to_dt IS NULL)
+                 GROUP BY CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN 0     ELSE crd03_person_id END
+                        , CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(crd03_person_id) END) t
+         ORDER BY CASE WHEN crd03_person_nm = '공통' THEN 1 ELSE 0 END, crd03_person_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS biz01_promo.selectByYear (IDMS-IC) — 원본의 closeDate는 'yyyy-MM-dd' 글자로 TO_DATE에 들어간다 -->
+    <select id="selectRealPersons" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCardReportPersonRes">
+        SELECT biz01_real_person_id AS person_id
+             , biz01_real_person_nm AS person_name
+          FROM (SELECT *
+                  FROM (SELECT CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN 0      ELSE crd03_person_id               END AS biz01_real_person_id
+                             , CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(crd03_person_id) END AS biz01_real_person_nm
+                          FROM crd01_card
+                               INNER JOIN crd03_trans ON crd03_card_id = crd01_card_id
+                         WHERE crd01_company_id = #{companyId}
+                           AND TO_DATE(crd03_fr_dt::text,  'YYYY-MM-dd') &lt;= TO_DATE(#{closeDate}::text, 'YYYY-MM-dd')
+                           AND crd03_fr_dt IS NOT NULL
+                           AND (TO_DATE(crd03_to_dt::text, 'YYYY-MM-dd') &gt;= TO_DATE(#{closeDate}::text, 'YYYY-MM-dd')
+                               OR crd03_to_dt IS NULL)
+                         GROUP BY COALESCE(crd03_public_yn,'false'), crd03_person_id) t
+                 GROUP BY biz01_real_person_id, biz01_real_person_nm
+                 UNION ALL
+                SELECT CASE WHEN biz01_real_person_id IS NULL THEN 0 ELSE biz01_real_person_id END                       AS biz01_real_person_id
+                     , CASE WHEN biz01_real_person_id IS NULL THEN '공통' ELSE f_emp_kor_nm(biz01_real_person_id) END    AS biz01_real_person_nm
+                  FROM biz01_promo
+                 WHERE biz01_std_ym LIKE #{year}||'%'
+                   AND biz01_company_id = #{companyId}
+                 GROUP BY biz01_real_person_id) t
+         GROUP BY biz01_real_person_id, biz01_real_person_nm
+         ORDER BY CASE WHEN biz01_real_person_nm = '공통' THEN 1 ELSE 0 END,
+                  biz01_real_person_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- 사용항목 코드(법인카드사용항목) 목록 — selectByYear·selectByMonth 가 같이 쓴다 -->
+    <sql id="useItems">
+        SELECT sys09_code.*
+          FROM sys08_code_kind
+               INNER JOIN sys09_code ON sys09_code_kind_id = sys08_code_kind_id
+         WHERE sys08_kind_cd = 'BizCardUseItemCode'
+           AND #{startDate} BETWEEN sys09_apply_date AND COALESCE(sys09_close_date,'9999-12-31')
+           AND ( ( sys08_sys_yn     = 'true'        AND
+                   sys09_company_id = 0             ) OR
+                 ( sys08_sys_yn    != 'true'        AND
+                   sys09_company_id = #{companyId}  ) )
+    </sql>
+
+    <!-- AS-IS biz03_account_map.selectByYear (IDMS-IC) — 바깥의 사원ID·사원명 열(biz03_person_id·nm)은 화면이 쓰지 않아 뺐다 -->
+    <select id="selectItemSumsByPerson" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCardReportItemSumRes">
+        SELECT biz03_use_item_cd AS use_item_code
+             , biz03_use_item_nm AS use_item_name
+             , SUM(biz03_use_item_sum) AS use_item_sum
+          FROM (
+                SELECT sys09_code                    AS biz03_use_item_cd
+                     , sys09_name                    AS biz03_use_item_nm
+                     , COALESCE((SELECT SUM(biz01_provide_amt)
+                                   FROM biz01_promo
+                                        INNER JOIN sys01_company ON sys01_company_id = biz01_company_id
+                                        LEFT OUTER JOIN crd03_trans ON (    crd03_card_id = biz01_card_id
+                                                                        AND biz01_provide_date BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,'9999-12-31') )
+                                        LEFT JOIN act01_account_code ON act01_account_code_id = biz01_account_code_id
+                                        INNER JOIN crd02_data ON crd02_data_id = biz01_card_data_id
+                                  WHERE biz01_company_id = #{companyId}
+                                    AND biz01_std_ym = #{year}||'.'||#{month}
+                                    AND (
+                                        CASE
+                                            WHEN #{cardRealUserType} = '관리자'
+                                                THEN CASE WHEN crd03_public_yn = 'true' THEN 0
+                                                          ELSE crd03_person_id END
+                                            ELSE CASE WHEN crd03_public_yn = 'true'
+                                                       AND biz01_real_person_id IS NULL THEN 0
+                                                      WHEN crd03_public_yn = 'true'
+                                                       AND biz01_real_person_id IS NOT NULL THEN biz01_real_person_id
+                                                      ELSE crd03_person_id END
+                                        END
+                                        ) = #{personId}
+                                    AND act01_account_code_id = biz.biz03_account_code_id
+                                  GROUP BY biz03_use_item_cd),0) AS biz03_use_item_sum
+                  FROM biz03_account_map biz
+                       RIGHT JOIN ( <include refid="useItems"/> ) sys ON sys.sys09_code = biz.biz03_use_item_cd) t
+         GROUP BY biz03_use_item_cd, biz03_use_item_nm
+        UNION ALL
+        SELECT '99'                  AS use_item_code
+             , '기타'                AS use_item_name
+             , COALESCE((SELECT SUM(biz01_provide_amt)
+                           FROM biz01_promo
+                                INNER JOIN sys01_company ON sys01_company_id = biz01_company_id
+                                LEFT OUTER JOIN crd03_trans ON (    crd03_card_id = biz01_card_id
+                                                                AND biz01_provide_date BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,'9999-12-31') )
+                                LEFT JOIN act01_account_code ON act01_account_code_id = biz01_account_code_id
+                                INNER JOIN crd02_data ON crd02_data_id = biz01_card_data_id
+                          WHERE biz01_company_id = #{companyId}
+                            AND biz01_std_ym = #{year}||'.'||#{month}
+                            AND (
+                                CASE
+                                    WHEN #{cardRealUserType} = '관리자'
+                                        THEN CASE WHEN crd03_public_yn = 'true' THEN 0
+                                                  ELSE crd03_person_id END
+                                    ELSE CASE WHEN crd03_public_yn = 'true'
+                                               AND biz01_real_person_id IS NULL THEN 0
+                                              WHEN crd03_public_yn = 'true'
+                                               AND biz01_real_person_id IS NOT NULL THEN biz01_real_person_id
+                                              ELSE crd03_person_id END
+                                END
+                                ) = #{personId}
+                            AND (act01_account_code_id IS NULL OR
+                                 act01_account_code_id NOT IN (SELECT biz03_account_code_id
+                                                                 FROM biz03_account_map biz
+                                                                      RIGHT JOIN ( <include refid="useItems"/> ) sys ON sys.sys09_code = biz.biz03_use_item_cd
+                                                                WHERE biz03_account_code_id IS NOT NULL))),0) AS use_item_sum
+         ORDER BY use_item_code
+    </select>
+
+    <!-- AS-IS biz03_account_map.selectByMonth (IDMS-IC) -->
+    <select id="selectItemSumsByMonth" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCardReportItemSumRes">
+        SELECT biz03_use_item_cd AS use_item_code
+             , biz03_use_item_nm AS use_item_name
+             , SUM(biz03_use_item_sum) AS use_item_sum
+          FROM (
+                SELECT sys09_code                    AS biz03_use_item_cd
+                     , sys09_name                    AS biz03_use_item_nm
+                     , COALESCE((SELECT SUM(biz01_provide_amt)
+                                   FROM biz01_promo
+                                        LEFT JOIN act01_account_code ON act01_account_code_id = biz01_account_code_id
+                                        INNER JOIN crd02_data ON crd02_data_id = biz01_card_data_id
+                                  WHERE biz01_company_id = #{companyId}
+                                    AND TO_DATE(biz01_std_ym, 'YYYY.MM') + INTERVAL '0 day' = To_DATE(#{year}||'.'||#{month}, 'YYYY.MM')
+                                    AND TO_DATE(biz01_std_ym, 'YYYY.MM') + INTERVAL '0 day' &lt;= #{closeDate}
+                                    AND act01_account_code_id = biz.biz03_account_code_id
+                                  GROUP BY biz03_use_item_cd),0) AS biz03_use_item_sum
+                  FROM biz03_account_map biz
+                       RIGHT JOIN ( <include refid="useItems"/> ) sys ON sys.sys09_code = biz.biz03_use_item_cd) t
+         GROUP BY biz03_use_item_cd, biz03_use_item_nm
+        UNION ALL
+        SELECT '99'                  AS use_item_code
+             , '기타'                AS use_item_name
+             , COALESCE((SELECT SUM(biz01_provide_amt)
+                           FROM biz01_promo
+                                LEFT JOIN act01_account_code ON act01_account_code_id = biz01_account_code_id
+                                INNER JOIN crd02_data ON crd02_data_id = biz01_card_data_id
+                          WHERE biz01_company_id = #{companyId}
+                            AND TO_DATE(biz01_std_ym, 'YYYY.MM') + INTERVAL '0 day' = To_DATE(#{year}||'.'||#{month}, 'YYYY.MM')
+                            AND TO_DATE(biz01_std_ym, 'YYYY.MM') + INTERVAL '0 day' &lt;= #{closeDate}
+                            AND (act01_account_code_id IS NULL OR
+                                 act01_account_code_id NOT IN (SELECT biz03_account_code_id
+                                                                 FROM biz03_account_map biz
+                                                                      RIGHT JOIN ( <include refid="useItems"/> ) sys ON sys.sys09_code = biz.biz03_use_item_cd
+                                                                WHERE biz03_account_code_id IS NOT NULL))),0) AS use_item_sum
+         ORDER BY use_item_code
+    </select>
+
+    <!-- selectMonthAmt·selectMonthAmt2 바깥 SELECT (사용자별 1~12월 합) — 안쪽 t 는 각 문장이 채운다 -->
+    <sql id="monthAmtColumns">
+        SELECT biz01_emp_nm AS emp_name
+             , SUM(biz01_jan_sum  ) AS jan_sum
+             , SUM(biz01_feb_sum  ) AS feb_sum
+             , SUM(biz01_mar_sum  ) AS mar_sum
+             , SUM(biz01_apr_sum  ) AS apr_sum
+             , SUM(biz01_may_sum  ) AS may_sum
+             , SUM(biz01_jun_sum  ) AS jun_sum
+             , SUM(biz01_jul_sum  ) AS jul_sum
+             , SUM(biz01_aug_sum  ) AS aug_sum
+             , SUM(biz01_sep_sum  ) AS sep_sum
+             , SUM(biz01_oct_sum  ) AS oct_sum
+             , SUM(biz01_nov_sum  ) AS nov_sum
+             , SUM(biz01_dec_sum  ) AS dec_sum
+             , SUM(biz01_total_sum) AS total_sum
+    </sql>
+    <sql id="monthAmtCases">
+        SELECT biz01_emp_nm                                                 biz01_emp_nm
+             , CASE WHEN COALESCE(month,'00') = '01' THEN amt ELSE 0 END    biz01_jan_sum
+             , CASE WHEN COALESCE(month,'00') = '02' THEN amt ELSE 0 END    biz01_feb_sum
+             , CASE WHEN COALESCE(month,'00') = '03' THEN amt ELSE 0 END    biz01_mar_sum
+             , CASE WHEN COALESCE(month,'00') = '04' THEN amt ELSE 0 END    biz01_apr_sum
+             , CASE WHEN COALESCE(month,'00') = '05' THEN amt ELSE 0 END    biz01_may_sum
+             , CASE WHEN COALESCE(month,'00') = '06' THEN amt ELSE 0 END    biz01_jun_sum
+             , CASE WHEN COALESCE(month,'00') = '07' THEN amt ELSE 0 END    biz01_jul_sum
+             , CASE WHEN COALESCE(month,'00') = '08' THEN amt ELSE 0 END    biz01_aug_sum
+             , CASE WHEN COALESCE(month,'00') = '09' THEN amt ELSE 0 END    biz01_sep_sum
+             , CASE WHEN COALESCE(month,'00') = '10' THEN amt ELSE 0 END    biz01_oct_sum
+             , CASE WHEN COALESCE(month,'00') = '11' THEN amt ELSE 0 END    biz01_nov_sum
+             , CASE WHEN COALESCE(month,'00') = '12' THEN amt ELSE 0 END    biz01_dec_sum
+             , COALESCE(amt,0)                                              biz01_total_sum
+    </sql>
+
+    <!-- AS-IS biz01_promo.selectMonthAmt2 (IDMS-IC) — 관리자 기준 -->
+    <select id="selectMonthAmtByManager" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCardReportMonthAmtRes">
+        <include refid="monthAmtColumns"/>
+          FROM (
+                <include refid="monthAmtCases"/>
+                  FROM (
+                         SELECT CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN 0      ELSE crd03_person_id               END AS crd03_person_id
+                              , CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(crd03_person_id) END AS biz01_emp_nm
+                           FROM crd01_card
+                                INNER JOIN crd03_trans ON crd03_card_id = crd01_card_id
+                          WHERE crd01_company_id = #{companyId}
+                            AND TO_DATE(EXTRACT(YEAR FROM crd03_fr_dt)::text, 'YYYY') &lt;=  TO_DATE(#{year}, 'YYYY')
+                            AND crd03_fr_dt IS NOT NULL
+                            AND (TO_DATE(EXTRACT(YEAR FROM crd03_to_dt)::text, 'YYYY') &gt;= TO_DATE(#{year}, 'YYYY') OR crd03_to_dt IS NULL)
+                          GROUP BY CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN 0 ELSE crd03_person_id END,
+                                   CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(crd03_person_id) END
+                       ) t
+                       LEFT OUTER JOIN ( SELECT month
+                                              , CASE WHEN manager_id IS NULL THEN 0
+                                                     ELSE manager_id END                AS manager_id
+                                              , SUM(amt) amt
+                                           FROM ( SELECT SUBSTR(biz01_std_ym,6,2)                                AS month
+                                                       , f_get_crdManagerId2(biz01_card_id, biz01_provide_date)  AS manager_id
+                                                       , COALESCE(biz01_provide_amt,0)                           AS amt
+                                                    FROM biz01_promo
+                                                   WHERE biz01_company_id         = #{companyId}
+                                                     AND SUBSTR(biz01_std_ym,1,4) = #{year}
+                                                     AND TO_DATE(biz01_std_ym||'.01','yyyy.mm.dd') &lt;= #{closeDate}
+                                                ) t
+                                          GROUP BY month, manager_id
+                                        ) biz ON manager_id = crd03_person_id
+               ) t2
+         GROUP BY biz01_emp_nm
+         ORDER BY CASE WHEN biz01_emp_nm = '공통' THEN 1 ELSE 0 END
+                , biz01_emp_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS biz01_promo.selectMonthAmt (IDMS-IC) — 실사용자 기준 -->
+    <select id="selectMonthAmtByRealUser" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCardReportMonthAmtRes">
+        WITH emp_list AS (
+        SELECT biz01_manager_id
+             , biz01_emp_nm
+          FROM (
+                SELECT CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN 0
+                            ELSE crd03_person_id END                               AS biz01_manager_id
+                     , CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통'
+                        ELSE f_emp_kor_nm(crd03_person_id) END                     AS biz01_emp_nm
+                  FROM crd01_card
+                       INNER JOIN crd03_trans ON crd03_card_id = crd01_card_id
+                 WHERE crd01_company_id = #{companyId}
+                   AND TO_DATE(crd03_fr_dt::text,  'YYYY-MM-dd') &lt;= TO_DATE(#{closeDate}::text, 'YYYY-MM-dd')
+                   AND crd03_fr_dt IS NOT NULL
+                   AND (TO_DATE(crd03_to_dt::text, 'YYYY-MM-dd') &gt;= TO_DATE(#{closeDate}::text, 'YYYY-MM-dd')
+                       OR crd03_to_dt IS NULL)
+                 GROUP BY CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN 0 ELSE crd03_person_id END
+                        , CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(crd03_person_id) END
+                 UNION ALL
+                SELECT CASE WHEN biz01_real_person_id IS NULL THEN 0 ELSE biz01_real_person_id END
+                     , CASE WHEN biz01_real_person_id IS NULL THEN '공통' ELSE f_emp_kor_nm(biz01_real_person_id) END
+                  FROM biz01_promo
+                 WHERE biz01_std_ym LIKE #{year}||'%'
+                   AND biz01_company_id = #{companyId}
+                 GROUP BY biz01_real_person_id
+                 ) t
+         GROUP BY biz01_manager_id, biz01_emp_nm
+        )
+        , biz_data AS (
+        SELECT SUBSTR(biz01_std_ym,6,2) AS month,
+               CASE
+                   WHEN sys01_card_real_user_yn = 'true' THEN
+                       CASE WHEN crd03_public_yn = 'true' AND biz01_real_person_id IS NULL
+                            THEN 0
+                            WHEN crd03_public_yn = 'true' AND biz01_real_person_id IS NOT NULL
+                            THEN biz01_real_person_id
+                            ELSE crd03_person_id
+                       END
+                   ELSE crd03_person_id END         AS manager_id
+             , COALESCE(biz01_provide_amt,0)        AS amt
+          FROM biz01_promo
+               INNER JOIN sys01_company ON sys01_company_id = biz01_company_id
+               LEFT OUTER JOIN crd03_trans ON (crd03_card_id = biz01_card_id
+                                           AND biz01_provide_date BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,'9999-12-31'))
+         WHERE biz01_company_id = #{companyId}
+           AND SUBSTR(biz01_std_ym,1,4) = #{year}
+           AND TO_DATE(biz01_std_ym||'.01','yyyy.mm.dd') &lt;= #{closeDate}
+        )
+        <include refid="monthAmtColumns"/>
+          FROM (
+                <include refid="monthAmtCases"/>
+                  FROM (SELECT e.biz01_manager_id
+                             , e.biz01_emp_nm
+                             , b.month
+                             , COALESCE(b.amt, 0) AS amt
+                          FROM emp_list e
+                               LEFT JOIN biz_data b ON e.biz01_manager_id = b.manager_id
+                         ORDER BY CASE WHEN e.biz01_emp_nm = '공통' THEN 1 ELSE 0 END
+                                , e.biz01_emp_nm COLLATE "ko_KR.utf8") t
+               ) t2
+         GROUP BY biz01_emp_nm
+         ORDER BY CASE WHEN biz01_emp_nm = '공통' THEN 1 ELSE 0 END
+                , biz01_emp_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS sys99_print.insert L500 (IDMS-IC) — Sys99_Print.insertCardReport 가 채우는 열. long01 순번 · long02 사원ID · string01 사원명 · string02 사용항목명 · long03 사용항목합 -->
+    <insert id="insertPrint1">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_long01, sys99_long02, sys99_string01, sys99_string02, sys99_long03 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{seq}, #{empId}, #{empName,jdbcType=VARCHAR}, #{itemName,jdbcType=VARCHAR}, #{itemSum} )
+    </insert>
+
+    <!-- insertCardReport2 가 채우는 열. long01 순번 · string01 월 · string02 사용항목명 · long03 사용항목합 · string03 사용항목코드 -->
+    <insert id="insertPrint2">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_long01, sys99_string01, sys99_string02, sys99_long03, sys99_string03 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{seq}, #{monthName}, #{itemName,jdbcType=VARCHAR}, #{itemSum}, #{itemCode,jdbcType=VARCHAR} )
+    </insert>
+
+    <!-- insertCardReport3 이 채우는 열. string01 사용자 · long01~12 1~12월 · long13 전체 합계 -->
+    <insert id="insertPrint3">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01
+               , sys99_long01, sys99_long02, sys99_long03, sys99_long04, sys99_long05, sys99_long06
+               , sys99_long07, sys99_long08, sys99_long09, sys99_long10, sys99_long11, sys99_long12, sys99_long13 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{row.empName,jdbcType=VARCHAR}
+               , #{row.janSum,jdbcType=NUMERIC}, #{row.febSum,jdbcType=NUMERIC}, #{row.marSum,jdbcType=NUMERIC}, #{row.aprSum,jdbcType=NUMERIC}, #{row.maySum,jdbcType=NUMERIC}, #{row.junSum,jdbcType=NUMERIC}
+               , #{row.julSum,jdbcType=NUMERIC}, #{row.augSum,jdbcType=NUMERIC}, #{row.sepSum,jdbcType=NUMERIC}, #{row.octSum,jdbcType=NUMERIC}, #{row.novSum,jdbcType=NUMERIC}, #{row.decSum,jdbcType=NUMERIC}, #{row.totalSum,jdbcType=NUMERIC} )
+    </insert>
+
+</mapper>

@@ -345,3 +345,26 @@ export interface BizCardUserAllocationUpdateReq {
   promoIds: number[];
   realPersonId: number | null;
 }
+
+/** U17 [조회] 때 만든 세 보고서의 RD 출력 그룹 ID (AS-IS rdGroupId1·2·3) */
+export interface BizCardReportPrint {
+  groupId1: string;
+  groupId2: string;
+  groupId3: string;
+}
+
+/** U17 항목별 계정연결 창 왼쪽 그리드 한 행 (AS-IS Sys09_CodeModel — 법인카드사용항목) */
+export interface BizCardUseItem {
+  code: string;
+  name: string;
+  seq: string | null;
+}
+
+/** U17 항목별 계정연결 창 오른쪽 그리드 한 행 (AS-IS Biz03_AccountMapModel). accountMapId가 0 이하면 새 행 */
+export interface BizAccountMap {
+  accountMapId: number;
+  useItemCode: string;
+  accountCodeId: number | null;
+  accountCode: string | null;
+  accountName: string | null;
+}

@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
 import {
-  BizAccountOption, BizBuyPromo, BizCardCompare, BizCardContents, BizCardContentsPrintReq, BizCardManagement, BizCardManagementPrintReq, BizCardManagementUpdateReq, BizCardUserAllocation, BizCardUserAllocationUpdateReq, BizCodeOption, BizDocClass, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq, BizPromoOtherSimpleReq,
+  BizAccountMap, BizAccountOption, BizBuyPromo, BizCardCompare, BizCardContents, BizCardContentsPrintReq, BizCardManagement, BizCardManagementPrintReq, BizCardManagementUpdateReq, BizCardReportPrint, BizCardUseItem, BizCardUserAllocation, BizCardUserAllocationUpdateReq, BizCodeOption, BizDocClass, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq, BizPromoOtherSimpleReq,
   BizPromoSimpleUpdateReq, BizPromoUpdateReq, BizProvideCompany, BizProvideList, BizProvideListCond, BizProvideSetup, BizProvideSimple, BizProvideSimpleCond, BizRelateAppr,
 } from '../types/biz';
 import { MktTarget } from '../types/mkt';
@@ -377,6 +377,40 @@ export const bizCardUserAllocationApi = {
   /** AS-IS biz.Biz01_Promo.updateRealPersonId — realPersonId null = 공통. 저장한 건수 */
   update: async (req: BizCardUserAllocationUpdateReq): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>('v1/biz/card-user-allocations', req);
+    return res.data.data ?? 0;
+  },
+};
+
+/** U17 AS-IS Biz01_Tab_CardReport (법인카드 현황) → sys.Sys99_Print.insertCardReport·2·3 */
+export const bizCardReportApi = {
+  /** 세 보고서의 RD 출력 자료를 만들고 그룹 ID를 받는다. year 'yyyy', month '01'~'12', cardRealUserType '관리자'|'실사용자' */
+  print: async (year: string, month: string, cardRealUserType: string): Promise<BizCardReportPrint> => {
+    const res = await apiClient.post<ApiResponse<BizCardReportPrint>>('v1/biz/card-reports/rd-print', { year, month, cardRealUserType });
+    return res.data.data;
+  },
+};
+
+/** U17 AS-IS Biz03_Lookup_AccountMap (항목별 계정연결) → server/biz/Biz03_AccountMap */
+export const bizAccountMapApi = {
+  /** AS-IS sys.Sys09_Code.selectByCodeKind(BizCardUseItemCode, 오늘) */
+  searchUseItems: async (): Promise<BizCardUseItem[]> => {
+    const res = await apiClient.get<ApiResponse<BizCardUseItem[]>>('v1/biz/account-maps/use-items');
+    return res.data.data ?? [];
+  },
+  /** AS-IS biz.Biz03_AccountMap.selectByUseItemCode */
+  searchByUseItemCode: async (useItemCode: string): Promise<BizAccountMap[]> => {
+    const res = await apiClient.get<ApiResponse<BizAccountMap[]>>('v1/biz/account-maps', { params: { useItemCode } });
+    return res.data.data ?? [];
+  },
+  /** AS-IS biz.Biz03_AccountMap.update — 요청과 같은 순서로 돌려준다(저장한 뒤 목록은 다시 읽는다) */
+  save: async (rows: BizAccountMap[]): Promise<BizAccountMap[]> => {
+    const body = rows.map(({ accountMapId, useItemCode, accountCodeId }) => ({ accountMapId, useItemCode, accountCodeId }));
+    await apiClient.put<ApiResponse<number>>('v1/biz/account-maps', body);
+    return rows;
+  },
+  /** AS-IS biz.Biz03_AccountMap.delete */
+  remove: async (accountMapIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/biz/account-maps', { data: accountMapIds });
     return res.data.data ?? 0;
   },
 };

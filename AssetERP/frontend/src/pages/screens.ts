@@ -176,6 +176,7 @@ import { Crd01_Tab_Card } from './crd/Crd01_Tab_Card';
 import { Crd02_Tab_DataUpload } from './crd/Crd02_Tab_DataUpload';
 import { Biz01_Tab_CardManagement } from './biz/Biz01_Tab_CardManagement';
 import { Biz01_Tab_CardUserAllocation } from './biz/Biz01_Tab_CardUserAllocation';
+import { Biz01_Tab_CardReport } from './biz/Biz01_Tab_CardReport';
 import { Pay10_Tab_List } from './pay/Pay10_Tab_List';
 import { Pay10_Tab_Retire } from './pay/Pay10_Tab_Retire';
 import { Pay34_Tab_WorkTimeConfig } from './pay/Pay34_Tab_WorkTimeConfig';
@@ -568,6 +569,7 @@ export const SCREENS: Record<string, React.FC> = {
   Crd02_Tab_DataUpload, // U14 (메뉴 #1039·#1479. 하위 Crd02_Edit_DataUpload·Crd11_Lookup_ExcelCode, 엑셀업로드·내역확정(Biz01_Promo) 서버 포함)
   Biz01_Tab_CardManagement, // U15 (메뉴 #1141. 하위 Biz01_Edit_Account·Biz01_Lookup_Message·Biz01_Lookup_CardManagementDownload·Crd02_Lookup_OtherList. 일괄저장 창·증빙자료 창은 L02 부품 재사용. 1단계: 전자결재·계정과목연결·비품대장 조회창은 안내만)
   Biz01_Tab_CardUserAllocation, // U16 (메뉴 #1406. 하위 Emp00_Lookup_SelectSingle 재사용. 클래스 1개)
+  Biz01_Tab_CardReport, // U17 (메뉴 #1333. 하위 Biz01_Rd_CardReport(RD 영역)·Biz03_Lookup_AccountMap. 1단계: 전자결재 편집창은 안내만)
   Crd01_Tab_Card, // U13 (메뉴 #1038·#1478. 하위 Crd01_Edit_Card·Crd03_Grid_User, 결제계좌 Ast01_Lookup_CorpAccount·직원 Emp00_Lookup_SelectSingle 재사용)
   Pay50_Tab_ExpenseSettle, // U11 (메뉴 #1390. 하위 Ast07_Grid_History·Ast07_Lookup_Settle·Ast07_Lookup_SettleMulti, 거래처 조회창은 임직원 포함(empYn). History [전표변경] 아이콘의 Act02_Lookup_ModiJournal은 안내만)
   Ast09_Tab_DepositBookPeriod, // U02 (메뉴 #1238·#1471. 하위 Ast01_Lookup_CorpAccount. 계정별원장 아이콘은 메뉴 1150을 열고 값만 보냄 — 받는 화면 Act02_Tab_JournalSub는 다음 단계)

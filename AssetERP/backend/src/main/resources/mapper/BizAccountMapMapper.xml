@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz03_account_map.xml (selectByUseItemCode + UpdateDataModel 저장) + sys09_code.selectByCodeKind  (U17 Biz03_Lookup_AccountMap) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizAccountMapMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys09_code.selectByCodeKind (IDMS-IC) — kindCode 는 BizCardUseItemCode 고정, 열은 화면이 쓰는 code·name·seq -->
+    <select id="selectUseItems" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCardUseItemRes">
+        SELECT sys09_code        AS code
+             , sys09_name        AS name
+             , sys09_seq::text   AS seq
+          FROM sys09_code c
+             , sys08_code_kind k
+         WHERE sys08_code_kind_id = sys09_code_kind_id
+           AND ( ( COALESCE(sys08_sys_yn,'false') = 'true'     AND
+                   sys09_company_id = 0       ) OR
+                 ( COALESCE(sys08_sys_yn,'false') != 'true'    AND
+                   sys09_company_id = #{companyId}             ) )
+           AND sys08_kind_cd = 'BizCardUseItemCode'
+           AND ( ( COALESCE(sys09_close_yn  ,'false') = 'true'                                                 AND
+                   COALESCE(sys09_close_date,'1900-12-31') >= f_trunc(#{applyDate}) ) OR
+                 ( COALESCE(sys09_close_yn  ,'false') = 'false'                                                ) )
+           AND sys09_apply_date = (SELECT max(x.sys09_apply_date)
+                                     FROM sys09_code x
+                                    WHERE x.sys09_code_kind_id = c.sys09_code_kind_id
+                                      AND x.sys09_company_id = c.sys09_company_id
+                                      AND x.sys09_code = c.sys09_code
+                                      AND x.sys09_apply_date  &lt;=  f_trunc(#{applyDate}))
+         ORDER BY sys09_seq
+    </select>
+
+    <!-- AS-IS biz03_account_map.selectByUseItemCode (IDMS-IC) — 계정코드·계정과목명은 서브쿼리 대신 같은 값을 조인 없이 -->
+    <select id="selectByUseItemCode" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizAccountMapRes">
+        SELECT biz03_account_map_id    AS account_map_id
+             , biz03_use_item_cd       AS use_item_code
+             , biz03_account_code_id   AS account_code_id
+             , (SELECT act01_account_cd
+                  FROM act01_account_code
+                 WHERE act01_company_id = biz03_company_id
+                   AND act01_account_code_id = biz03_account_code_id) AS account_code
+             , (SELECT act01_account_nm
+                  FROM act01_account_code
+                 WHERE act01_company_id = biz03_company_id
+                   AND act01_account_code_id = biz03_account_code_id) AS account_name
+          FROM biz03_account_map
+         WHERE biz03_company_id = #{companyId}
+           AND biz03_use_item_cd = #{useItemCode}
+    </select>
+
+    <insert id="insertAccountMap">
+        INSERT INTO biz03_account_map (biz03_account_map_id, biz03_company_id, biz03_use_item_cd, biz03_account_code_id)
+        VALUES (#{accountMapId}, #{companyId}, #{row.useItemCode}, #{row.accountCodeId})
+    </insert>
+
+    <update id="updateAccountMap">
+        UPDATE biz03_account_map
+           SET biz03_account_code_id = #{row.accountCodeId}
+         WHERE biz03_account_map_id  = #{row.accountMapId}
+           AND biz03_company_id      = #{companyId}
+    </update>
+
+    <delete id="deleteAccountMaps">
+        DELETE FROM biz03_account_map
+         WHERE biz03_company_id = #{companyId}
+           AND biz03_account_map_id IN
+        <foreach collection="accountMapIds" item="accountMapId" open="(" separator="," close=")">#{accountMapId}</foreach>
+    </delete>
+
+</mapper>

@@ -10832,5 +10832,46 @@
     "note": "docs/work/U/U16-작업기록.md",
     "history": [],
     "id": "U16"
+  },
+  "Biz01_Tab_CardReport": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/biz/Biz01_Rd_CardReport.java": "ba44b4a20b304fabcb3c814206a983e66e2f0e7d",
+      "application/src/main/java/myApp/client/vi/biz/Biz01_Tab_CardReport.java": "0b9caf7067ebfad33734b2a12673e936418945fa",
+      "application/src/main/java/myApp/client/vi/biz/Biz03_Lookup_AccountMap.java": "2c0b0d9ec3d57d75e2ea18ef8e8ebd40ec23f88f",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz03_AccountMapModel.java": "6fa5ddfe85e3e872a4e1261fa1e28f7d0aee420b",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz03_AccountMapModelProperties.java": "f1cb64d94b07a4bd7a35f8f52b7d989f15434a13",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz05_RelateApprModel.java": "946892a110c8fd15f179e42d9b59399423764e8e",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/biz/Biz03_AccountMap.java": "abb10c2486131de76a7746234600d7799e256152",
+      "application/src/main/java/myApp/server/biz/Biz05_RelateAppr.java": "3ee96083b21a149ec076c5656b39de3d67c40aed",
+      "application/src/main/java/myApp/server/biz/mapper/biz01_promo.xml": "4146dbb852af9dc7b73367ab57014bca38065854",
+      "application/src/main/java/myApp/server/biz/mapper/biz03_account_map.xml": "23d8105ef5b20fd89f2540852c1f74d1584f1b79",
+      "application/src/main/java/myApp/server/biz/mapper/biz05_relate_appr.xml": "11dbff8a64973950093cc4ef1ba4e9226e3ccd64",
+      "application/src/main/java/myApp/server/crd/mapper/crd03_trans.xml": "32b854edb775b96a696b6968186be9bc08f7eaa6",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/sys/Sys09_Code.java": "28d486d654b122ebef05ff7d0c2e7c8f8fd59e2d",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "02073a29bc7feb680d7fefea312fd41a0ccecc98",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Act01_Lookup_AccountCode",
+      "Apr01_Edit_ApprDoc",
+      "Dcr30_Move_DcrClass"
+    ],
+    "recorded_at": "2026-10-30T14:33:40+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/U/U17-작업기록.md",
+    "history": [],
+    "id": "U17"
   }
 }
