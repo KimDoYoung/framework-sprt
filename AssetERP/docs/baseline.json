@@ -11050,5 +11050,44 @@
     "note": "docs/work/W/W03-작업기록.md",
     "history": [],
     "id": "W03"
+  },
+  "Sch10_Tab_Ipo2": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/sch/Sch02_Lookup_Share.java": "14affb88a0874ac568d410c0ba67f630ecac4654",
+      "application/src/main/java/myApp/client/vi/sch/Sch10_Tab_Ipo2.java": "807656f09cde951c3f49ec8681a70c045a24a38f",
+      "application/src/main/java/myApp/client/vi/sch/Sch12_Lookup_IpoCorpList.java": "fd597e0d9a8872c5a9ef197d93c1e2d237958348",
+      "application/src/main/java/myApp/client/vi/sch/model/Sch02_ShareModel.java": "f3fd8ea55dcff089ee83db22f93f0678247de137",
+      "application/src/main/java/myApp/client/vi/sch/model/Sch02_ShareModelProperties.java": "cba77184e669f3952e2320509140ff40100d7107",
+      "application/src/main/java/myApp/client/vi/sch/model/Sch10_IpoModel.java": "824c6b72eb310a83edb5c74607268590e4667cf3",
+      "application/src/main/java/myApp/client/vi/sch/model/Sch10_IpoModelProperties.java": "998da36a0adb4c895709ac4795f734a95623bf2d",
+      "application/src/main/java/myApp/client/vi/sch/model/Sch12_IpoCorpModel.java": "d664eaf44a52ddad9869c81500426c9addc29f43",
+      "application/src/main/java/myApp/client/vi/sch/model/Sch12_IpoCorpModelProperties.java": "687886713e4cd3adb2016f309087fddef1bdf059",
+      "application/src/main/java/myApp/server/sch/Sch02_Share.java": "6b49ee2f320295f21cea27fdee9fe393d7bdf1ec",
+      "application/src/main/java/myApp/server/sch/Sch10_Ipo.java": "3f528440c6e69083c5584213e1f9a611a844330c",
+      "application/src/main/java/myApp/server/sch/Sch11_IpoCompany.java": "1bc3997a3b58e78fe082066019ca92a799be9f19",
+      "application/src/main/java/myApp/server/sch/Sch12_IpoCorp.java": "0fd4bc44fc74d0627b96d145b67dd62a8a0e14c4",
+      "application/src/main/java/myApp/server/sch/mapper/sch02_share.xml": "566b93aab68814295ac8220f3d5b7c7223e11ad0",
+      "application/src/main/java/myApp/server/sch/mapper/sch10_ipo.xml": "66a3b2d1d059ceaabb9f5220605c0fa2ea56a092",
+      "application/src/main/java/myApp/server/sch/mapper/sch11_ipo_company.xml": "b0f807b39041b7cfd612cdef9721ada3cd2526bf",
+      "application/src/main/java/myApp/server/sch/mapper/sch12_ipo_corp.xml": "cb0a48c66322500e94326d08b700c7403ae61a36",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "02073a29bc7feb680d7fefea312fd41a0ccecc98",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectMulti",
+      "Org00_Lookup_SelectMulti",
+      "Sch06_Lookup_AlarmSetup"
+    ],
+    "recorded_at": "2026-10-30T20:41:56+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/W/W04-작업기록.md",
+    "history": [],
+    "id": "W04"
   }
 }

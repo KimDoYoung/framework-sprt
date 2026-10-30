@@ -306,6 +306,7 @@ import { Sch04_Tab_IcsList } from './sch/Sch04_Tab_IcsList';
 import { Sch04_Tab_IcsListManager } from './sch/Sch04_Tab_IcsListManager';
 import { Sch10_Tab_IpoAdmin } from './sch/Sch10_Tab_IpoAdmin';
 import { Sch10_Tab_Ipo } from './sch/Sch10_Tab_Ipo';
+import { Sch10_Tab_Ipo2 } from './sch/Sch10_Tab_Ipo2';
 import { Fnd30_Tab_DemandOpr } from './fnd/Fnd30_Tab_DemandOpr';
 import { Fnd30_Tab_Opr } from './fnd/Fnd30_Tab_Opr';
 import { Fnd32_Tab_Account } from './fnd/Fnd32_Tab_Account';
@@ -505,6 +506,7 @@ export const SCREENS: Record<string, React.FC> = {
   Sch04_Tab_IcsList, // H06 (+ Sch04_Lookup_IcsMsg·Ics01/Icr01_Lookup_ClassTreeDetail. Apr01_Edit_ApprDoc은 다른 도메인이라 안내만)
   Sch04_Tab_IcsListManager, // H12 (H06의 관리자용 짝. Sch04_Lookup_IcsMsg actionType "2"·Org00_Lookup_SelectMulti 재사용. Apr01_Edit_ApprDoc은 안내만)
   Sch10_Tab_Ipo, // Q04 (+ Sch02_Lookup_Share·Sch12_Lookup_IpoCorpList·RdViewer_Sch10. 알람 Sch06_Lookup_AlarmSetup은 O01, 사원·조직 찾기는 재사용)
+  Sch10_Tab_Ipo2, // W04 (#1296. Q04 Sch10_Tab_Ipo의 짝 — 수요예측참여·청약운용지시 열·고정 열 없음. Sch02_Lookup_Share·Sch12_Lookup_IpoCorpList·RdViewer_Sch10 재사용)
   Fnd30_Tab_DemandOpr, // Q05 1단계 (메뉴 #1341. + Fnd31_Page_DemandOprFund·Fnd31_Edit_DemandOprFund·Fnd30_Edit_DemandOpr·components/lookup/Adv02_Lookup_SelectSingle. [결재요청]·[상세보기]가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·문서분류지정 Dcr30_Lookup_Link는 다음 단계)
   Fnd30_Tab_Opr, // Q06 1단계 (메뉴 #1227. + Fnd31_Page_OprFund·Fnd31_Edit_OprFund·Fnd30_Edit_Opr·Fnd30_Lookup_DemandOprList. [결재요청]·[상세보기]가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·문서분류지정 Dcr30_Lookup_Link는 다음 단계)
   Fnd32_Tab_Account, // Q07 (메뉴 #1290. 공모주 참여계좌 — 거래처 조회창 Sys15_Lookup_Corp 재사용)
