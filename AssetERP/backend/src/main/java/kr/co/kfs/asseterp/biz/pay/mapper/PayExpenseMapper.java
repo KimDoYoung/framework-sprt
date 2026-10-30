@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.pay.mapper;
 
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseAccountSumRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalExpenseRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalInfoRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalRes;
@@ -114,6 +115,16 @@ public interface PayExpenseMapper {
     int insertSettlePrint(@Param("printId") Long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
                           @Param("windowClassName") String windowClassName, @Param("groupId") Long groupId,
                           @Param("row") ExpenseSettleRes row, @Param("mark") String mark);
+
+    // ===== U12 Pay50_Tab_AccountSumList =====
+
+    /** AS-IS pay50_expense.selectExpenseAccountSum — searchText는 "%…%"로 감싼 값 */
+    List<ExpenseAccountSumRes> selectExpenseAccountSum(@Param("companyId") Long companyId, @Param("year") String year, @Param("searchText") String searchText);
+
+    /** AS-IS sys99_print.insert (insertRdAccountSumList가 채우는 열) */
+    int insertAccountSumPrint(@Param("printId") Long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
+                              @Param("windowClassName") String windowClassName, @Param("groupId") Long groupId,
+                              @Param("row") ExpenseAccountSumRes row);
 
     // ===== U09 Pay50_Tab_ExpenseJournal =====
 

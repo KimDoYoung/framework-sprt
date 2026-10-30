@@ -1150,4 +1150,166 @@
          WHERE pay50_expense_id  = #{expenseId}
            AND pay50_company_id  = #{companyId}
     </update>
+
+    <!-- ===== U12 Pay50_Tab_AccountSumList (사업비발생현황) ===== -->
+    <sql id="accountSumColumns">
+        pay50_account_nm                                                         AS account_name,
+        pay50_month01_amt                                                        AS month01_amt,
+        pay50_month02_amt                                                        AS month02_amt,
+        pay50_month03_amt                                                        AS month03_amt,
+        pay50_month04_amt                                                        AS month04_amt,
+        pay50_month05_amt                                                        AS month05_amt,
+        pay50_month06_amt                                                        AS month06_amt,
+        pay50_month07_amt                                                        AS month07_amt,
+        pay50_month08_amt                                                        AS month08_amt,
+        pay50_month09_amt                                                        AS month09_amt,
+        pay50_month10_amt                                                        AS month10_amt,
+        pay50_month11_amt                                                        AS month11_amt,
+        pay50_month12_amt                                                        AS month12_amt,
+        pay50_year_amt                                                           AS year_amt,
+        row_number() over(ORDER BY seq, pay50_account_nm COLLATE "ko_KR.utf8")   AS expense_id
+    </sql>
+
+    <!-- AS-IS pay50_expense.selectExpenseAccountSum L1076 (IDMS-IC) — 파라미터: companyId, searchText, year. 열 이름만 DTO 이름으로 -->
+    <select id="selectExpenseAccountSum" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseAccountSumRes">
+    WITH list AS ( SELECT seq
+                    , account_nm                                            AS pay50_account_nm
+                    , SUM(CASE WHEN occ_month = '01' THEN amt ELSE 0 END)   AS pay50_month01_amt
+                    , SUM(CASE WHEN occ_month = '02' THEN amt ELSE 0 END)   AS pay50_month02_amt
+                    , SUM(CASE WHEN occ_month = '03' THEN amt ELSE 0 END)   AS pay50_month03_amt
+                    , SUM(CASE WHEN occ_month = '04' THEN amt ELSE 0 END)   AS pay50_month04_amt
+                    , SUM(CASE WHEN occ_month = '05' THEN amt ELSE 0 END)   AS pay50_month05_amt
+                    , SUM(CASE WHEN occ_month = '06' THEN amt ELSE 0 END)   AS pay50_month06_amt
+                    , SUM(CASE WHEN occ_month = '07' THEN amt ELSE 0 END)   AS pay50_month07_amt
+                    , SUM(CASE WHEN occ_month = '08' THEN amt ELSE 0 END)   AS pay50_month08_amt
+                    , SUM(CASE WHEN occ_month = '09' THEN amt ELSE 0 END)   AS pay50_month09_amt
+                    , SUM(CASE WHEN occ_month = '10' THEN amt ELSE 0 END)   AS pay50_month10_amt
+                    , SUM(CASE WHEN occ_month = '11' THEN amt ELSE 0 END)   AS pay50_month11_amt
+                    , SUM(CASE WHEN occ_month = '12' THEN amt ELSE 0 END)   AS pay50_month12_amt
+                    , SUM(amt)                                              AS pay50_year_amt
+                 FROM (
+                        ------------------------------------------------------
+                        -- 사업비
+                        ------------------------------------------------------
+                        SELECT 3                                                    seq
+                             , TO_CHAR(pay50_occ_date,'MM')                         occ_month
+                             , f_get_account_nm(pay50_company_id, pay50_account_cd) account_nm
+                             , pay50_settle_amt                                     amt
+                          FROM pay50_expense
+                               INNER JOIN apr01_appr ON apr01_appr_id = pay50_expense_appr_id
+                         WHERE pay50_company_id                 = #{companyId}
+                           AND TO_CHAR(pay50_occ_date,'YYYY')   = #{year}
+                           AND apr01_status_cd                  = '30'
+                           AND pay50_expense_cd     NOT IN ('90','91')                      /*(기타출금,선급처리)제외*/
+                           AND pay50_expense_cd     NOT IN ('50','53','55','60','61','62')  /*(법카,원천세/부가세,4대보험,급여,상여,퇴직정산)제외*/
+                           AND pay50_pay_method_cd  NOT IN ('15')                           /*(지급방법:법인카드)제외*/
+                        ------------------------------------------------------
+                        -- 법인카드
+                        ------------------------------------------------------
+                         UNION ALL
+                        SELECT 3                                                    seq
+                             , SUBSTR(biz01_std_ym,6,2)                             occ_month
+                             , act01_account_nm                                     account_nm
+                             , biz01_provide_amt                                    amt
+                          FROM biz01_promo
+                               INNER JOIN biz05_relate_appr  ON ( biz05_company_id = biz01_company_id   AND
+                                                                  biz05_std_ym     = biz01_std_ym       AND
+                                                                  biz05_link_cd    = 'A13'              )   /*(A13:법인카드 사용내역서)*/
+                               INNER JOIN apr01_appr         ON apr01_appr_id         = biz05_appr_id
+                               INNER JOIN act01_account_code ON act01_account_code_id = biz01_account_code_id
+                         WHERE biz01_company_id = #{companyId}
+                           AND biz01_std_ym     LIKE #{year}||'%'
+                           AND COALESCE(biz01_close_yn,'false') = 'true'
+                           AND apr01_status_cd = '30'
+                        ------------------------------------------------------
+                        -- 부가세
+                        ------------------------------------------------------
+                         UNION ALL
+                        SELECT 3                                                    seq
+                             , TO_CHAR(ast06_date,'MM')                             occ_month
+                             , '부가세'                                               account_nm
+                             , ast06_amt                                            amt
+                          FROM ast06_tr
+                               INNER JOIN apr01_appr ON apr01_appr_id = ast06_appr_id
+                         WHERE ast06_company_id             = #{companyId}
+                           AND TO_CHAR(ast06_date,'YYYY')   = #{year}
+                           AND ast06_tr_cd     = '5051'
+                           AND apr01_status_cd = '30'
+                        ------------------------------------------------------
+                        -- 4대보험
+                        ------------------------------------------------------
+                         UNION ALL
+                        SELECT 3                                                        seq
+                             , TO_CHAR(ast06_date,'MM')                                 occ_month
+                             , '4대보험'                                                  account_nm
+                             , COALESCE(ast21_np_company,0) + COALESCE(ast21_np_etc,0)
+                             + COALESCE(ast21_hi_company,0) + COALESCE(ast21_hi_etc,0)
+                             + COALESCE(ast21_ei_company,0) + COALESCE(ast21_ei_etc,0)
+                             + COALESCE(ast21_oh_company,0) + COALESCE(ast21_oh_etc,0)  amt
+                          FROM ast06_tr
+                               INNER JOIN apr01_appr       ON apr01_appr_id = ast06_appr_id
+                               INNER JOIN ast21_tr_4insure ON ast21_tr_id   = ast06_tr_id
+                         WHERE ast06_company_id             = #{companyId}
+                           AND TO_CHAR(ast06_date,'YYYY')   = #{year}
+                           AND ast06_tr_cd     = '5052'
+                           AND apr01_status_cd = '30'
+                        ------------------------------------------------------
+                        -- 급여/상여금
+                        ------------------------------------------------------
+                         UNION ALL
+                        SELECT 1                                                                    seq
+                             , SUBSTR(pay10_std_month,6,2)                                          occ_month
+                             , f_cdnm('PayMonthCode', pay10_pay_cd, pay10_company_id, pay10_date)   account_nm
+                             , COALESCE(( SELECT SUM(pay11_item_amt * CASE WHEN substr(pay11_item_type,1,1) = '1' THEN 1 ELSE -1 END)
+                                            FROM pay11_month_item
+                                           WHERE pay11_month_id = pay10_month_id
+                                             AND pay11_item_type = '1' ),0)                         amt
+                          FROM pay10_month
+                               INNER JOIN pay05_relate_appr ON ( pay05_company_id   = pay10_company_id  AND
+                                                                 pay05_start_date   = pay10_date        AND
+                                                                 pay05_pay_cd       = pay10_pay_cd      )
+                               INNER JOIN apr01_appr ON apr01_appr_id = pay05_appr_id
+                         WHERE pay10_company_id = #{companyId}
+                           AND pay10_std_month  LIKE #{year}||'%'
+                           AND apr01_status_cd  = '30'
+                           AND pay05_pay_cd    != '03' /*(03:퇴직정산)제외*/
+                        ------------------------------------------------------
+                        -- 퇴직정산
+                        ------------------------------------------------------
+                         UNION ALL
+                        SELECT 2                                                                    seq
+                             , SUBSTR(pay10_std_month,6,2)                                          occ_month
+                             , f_cdnm('PayMonthCode', pay10_pay_cd, pay10_company_id, pay10_date)   account_nm
+                             , COALESCE(( SELECT SUM(pay11_item_amt * CASE WHEN substr(pay11_item_type,1,1) = '1' THEN 1 ELSE -1 END)
+                                            FROM pay11_month_item
+                                           WHERE pay11_month_id = pay10_month_id
+                                             AND pay11_item_type = '1' ),0)                         amt
+                          FROM pay10_month
+                               INNER JOIN pay05_relate_appr ON pay05_retire_id  = pay10_month_id
+                               INNER JOIN apr01_appr        ON apr01_appr_id    = pay05_appr_id
+                         WHERE pay10_company_id = #{companyId}
+                           AND pay10_std_month  LIKE #{year}||'%'
+                           AND apr01_status_cd  = '30'
+                           AND pay05_pay_cd     = '03' /*(03:퇴직정산)*/
+                      ) t
+                GROUP BY seq, account_nm
+)
+        SELECT <include refid="accountSumColumns"/>
+          FROM list
+        WHERE pay50_account_nm LIKE #{searchText}
+    </select>
+
+    <!-- AS-IS sys99_print.insert L500 (IDMS-IC) — Sys99_Print.insertRdAccountSumList가 채우는 열만. string01 계정과목 · long01~12 1~12월 · long13 계 -->
+    <insert id="insertAccountSumPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01
+               , sys99_long01, sys99_long02, sys99_long03, sys99_long04, sys99_long05, sys99_long06
+               , sys99_long07, sys99_long08, sys99_long09, sys99_long10, sys99_long11, sys99_long12, sys99_long13 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{row.accountName,jdbcType=VARCHAR}
+               , #{row.month01Amt,jdbcType=NUMERIC}, #{row.month02Amt,jdbcType=NUMERIC}, #{row.month03Amt,jdbcType=NUMERIC}, #{row.month04Amt,jdbcType=NUMERIC}, #{row.month05Amt,jdbcType=NUMERIC}, #{row.month06Amt,jdbcType=NUMERIC}
+               , #{row.month07Amt,jdbcType=NUMERIC}, #{row.month08Amt,jdbcType=NUMERIC}, #{row.month09Amt,jdbcType=NUMERIC}, #{row.month10Amt,jdbcType=NUMERIC}, #{row.month11Amt,jdbcType=NUMERIC}, #{row.month12Amt,jdbcType=NUMERIC}, #{row.yearAmt,jdbcType=NUMERIC} )
+    </insert>
+
 </mapper>

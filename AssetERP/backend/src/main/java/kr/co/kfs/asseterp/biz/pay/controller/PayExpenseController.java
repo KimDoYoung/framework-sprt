@@ -6,6 +6,7 @@ import kr.co.kfs.asseterp.biz.pay.dto.ExpenseAccountCodeReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseContentReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseDepositReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalCreateReq;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseAccountSumRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseNewRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRejectReq;
@@ -113,6 +114,24 @@ public class PayExpenseController {
     @PostMapping("/rd-settle-print")
     public ApiResponse<String> rdSettlePrint(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ExpenseSettlePrintReq req) {
         return ApiResponse.ok(service.printSettles(principal, req));
+    }
+
+    // ── U12 사업비발생현황(Pay50_Tab_AccountSumList) ──
+
+    /** pay.Pay50_Expense.selectExpenseAccountSum — 검색어는 서버가 "%…%"로 감싼다 */
+    @GetMapping("/account-sums")
+    public ApiResponse<List<ExpenseAccountSumRes>> searchAccountSums(@AuthenticationPrincipal UserPrincipal principal,
+                                                                     @RequestParam String year,
+                                                                     @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchAccountSums(principal, year, searchText));
+    }
+
+    /** sys.Sys99_Print.insertRdAccountSumList — [엑셀다운로드] 그룹 ID */
+    @PostMapping("/rd-account-sum-print")
+    public ApiResponse<String> rdAccountSumPrint(@AuthenticationPrincipal UserPrincipal principal,
+                                                 @RequestParam String year,
+                                                 @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.printAccountSums(principal, year, searchText));
     }
 
     // ── U09 사업비 회계처리(Pay50_Tab_ExpenseJournal) ──

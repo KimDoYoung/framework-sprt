@@ -7,6 +7,7 @@ import kr.co.kfs.asseterp.biz.pay.dto.ExpenseDepositReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalCreateReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalExpenseRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalInfoRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseAccountSumRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseNewRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRequestRes;
@@ -246,6 +247,31 @@ public class PayExpenseService {
                 req.statusCheckYn(), req.searchText())) {
             mapper.insertSettlePrint(mapper.selectNextId(), companyId, personId, PRINT_WINDOW, groupId, row,
                     Boolean.TRUE.equals(row.payYn()) ? "✓" : " ");
+        }
+        return String.valueOf(groupId);
+    }
+
+    // ===== U12 Pay50_Tab_AccountSumList (사업비발생현황) =====
+
+    private static final String ACCOUNT_SUM_WINDOW = "Pay50_Tab_AccountSumList";
+
+    /** pay50_expense.selectExpenseAccountSum (L1076) — 검색어는 "%…%"로 감싼다 */
+    public List<ExpenseAccountSumRes> searchAccountSums(UserPrincipal user, String year, String searchText) {
+        return mapper.selectExpenseAccountSum(user.getCompanyId(), year, like(searchText));
+    }
+
+    /**
+     * AS-IS Sys99_Print.insertRdAccountSumList L4342-4388 — [엑셀다운로드] RD 출력 자료. 내 출력 자료를 지우고 현재 조회 조건의 목록을 한 줄씩 넣는다.
+     * 돌려주는 값 = 그룹 ID(RD 리포트의 rdGroupId)
+     */
+    @Transactional
+    public String printAccountSums(UserPrincipal user, String year, String searchText) {
+        Long companyId = user.getCompanyId();
+        Long personId = user.getUserId();
+        long groupId = mapper.selectNextId();
+        mapper.deletePrint(companyId, personId, ACCOUNT_SUM_WINDOW);
+        for (ExpenseAccountSumRes row : searchAccountSums(user, year, searchText)) {
+            mapper.insertAccountSumPrint(mapper.selectNextId(), companyId, personId, ACCOUNT_SUM_WINDOW, groupId, row);
         }
         return String.valueOf(groupId);
     }

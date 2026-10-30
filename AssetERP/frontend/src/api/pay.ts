@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq, PayBasicSetup, PayBasicSetupSaveReq, PayExpense, PayExpenseForm, PayExpenseRequest, PayExpenseUpdateReq, PayFavoriteAccount, PayExpenseSettle, PayExpenseSettleSaveReq, PayExpenseNew, PayExpenseJournal, PayExpenseSettleAppr, PayExpenseSettleApprRow } from '../types/pay';
+import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq, PayBasicSetup, PayBasicSetupSaveReq, PayExpense, PayExpenseForm, PayExpenseRequest, PayExpenseUpdateReq, PayFavoriteAccount, PayExpenseSettle, PayExpenseSettleSaveReq, PayExpenseNew, PayExpenseJournal, PayExpenseSettleAppr, PayExpenseSettleApprRow, PayExpenseAccountSum } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -999,6 +999,19 @@ export const payApi = {
   /** AS-IS sys.Sys99_Print.insertRdExpensePay ([엑셀다운로드]) → rdGroupId */
   rdPrintExpenseSettles: async (p: { startDate: string; closeDate: string; expenseCode: string; payYnCode: string; statusCheckYn: boolean; searchText: string }): Promise<string> => {
     const res = await apiClient.post<ApiResponse<string>>('v1/pay/expenses/rd-settle-print', p);
+    return res.data.data as string;
+  },
+
+  // ── U12 사업비발생현황 Pay50_Tab_AccountSumList ──
+  /** AS-IS pay.Pay50_Expense.selectExpenseAccountSum — 검색어는 서버가 "%…%"로 감싼다 */
+  searchExpenseAccountSums: async (year: string, searchText: string): Promise<PayExpenseAccountSum[]> => {
+    const res = await apiClient.get<ApiResponse<PayExpenseAccountSum[]>>('v1/pay/expenses/account-sums', { params: { year, searchText } });
+    return res.data.data as PayExpenseAccountSum[];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdAccountSumList ([엑셀다운로드]) → rdGroupId */
+  rdPrintExpenseAccountSums: async (year: string, searchText: string): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/pay/expenses/rd-account-sum-print', null, { params: { year, searchText } });
     return res.data.data as string;
   },
 

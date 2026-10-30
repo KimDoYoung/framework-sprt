@@ -10657,5 +10657,28 @@
     "note": "docs/work/U/U11-작업기록.md",
     "history": [],
     "id": "U11"
+  },
+  "Pay50_Tab_AccountSumList": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/pay/Pay50_Tab_AccountSumList.java": "2b060ba1f37193e80cebf45212d1a686807ad0ef",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay50_ExpenseModel.java": "f0b7b3e070e4bc8ca11cd4363404eafc601b3e26",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay50_ExpenseModelProperties.java": "d9bfd9609f9d67c0dd6e873148d48e0291f9e1c9",
+      "application/src/main/java/myApp/server/pay/Pay50_Expense.java": "0e2dddff2b9e0381b6839980838ec1a3ac85ac7c",
+      "application/src/main/java/myApp/server/pay/mapper/pay50_expense.xml": "b778178d41cd12e6537c1f53875659a6ff46f5b9",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "02073a29bc7feb680d7fefea312fd41a0ccecc98",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-30T12:33:01+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/U/U12-작업기록.md",
+    "history": [],
+    "id": "U12"
   }
 }

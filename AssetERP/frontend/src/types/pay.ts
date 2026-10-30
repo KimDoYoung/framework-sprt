@@ -781,3 +781,22 @@ export interface PayExpenseSettleApprRow {
   settleAmt: number | null;
   payMethodName: string | null;
 }
+
+/** pay.Pay50_Expense.selectExpenseAccountSum — U12 사업비발생현황 한 줄 (expenseId는 행 구분용 순번) */
+export interface PayExpenseAccountSum {
+  expenseId: number;
+  accountName: string | null;
+  month01Amt: number | null;
+  month02Amt: number | null;
+  month03Amt: number | null;
+  month04Amt: number | null;
+  month05Amt: number | null;
+  month06Amt: number | null;
+  month07Amt: number | null;
+  month08Amt: number | null;
+  month09Amt: number | null;
+  month10Amt: number | null;
+  month11Amt: number | null;
+  month12Amt: number | null;
+  yearAmt: number | null;
+}
