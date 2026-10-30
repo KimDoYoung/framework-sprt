@@ -8,15 +8,23 @@
  *   권한이 없으면 `defaultClassTreeId`(open의 defaultModel)와 같은 분류일 때만 통과, 아니면 "권한이 없는 문서분류입니다. 관리자에게 문의하세요"
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { message, Modal, Space, Tree } from 'antd';
+import { message, Space, Tree } from 'antd';
 import type { GetRef } from 'antd';
+import type { DataNode } from 'antd/es/tree';
+import { FileTextOutlined } from '@ant-design/icons';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
 import { DcrClassTree } from '@/types/dcr';
 import { Button } from '@/components/button';
+import { SingleGrid, gbFor } from '@/components/grid';
+import { ExpandCollapseButtons } from '@/components/button/ExpandCollapseButtons';
+import { TreeListToggle } from '@/components/button/TreeListToggle';
 import { SearchBar } from '@/components/search';
 import { useLoginUser } from '@/hooks/useLoginUser';
+import { LookupModal } from './LookupModal';
 import { ancestorKeys, toTree } from '@/pages/dcr/dcr01Tree';
+
+const gb = gbFor<{ classTreeId: number; fullName: string }>();
 
 export interface Dcr30ClassResult {
   classTreeId: number | null;
@@ -40,8 +48,8 @@ interface Props {
   onClose: () => void;
 }
 
-/** f_class_tree_nm_allpath: 루트부터 이름을 '/'로 이은 전체 이름 */
-const fullName = (rows: DcrClassTree[], id: number): string => {
+/** f_class_tree_nm_allpath: 루트부터 이름을 '/'로 이은 전체 이름 (callback 값은 이대로, 리스트 보기 표시만 sep ' ➡︎ ') */
+const fullName = (rows: DcrClassTree[], id: number, sep = '/'): string => {
   const byId = new Map(rows.map(r => [r.classTreeId, r]));
   const names: string[] = [];
   let cur = byId.get(id);
@@ -49,7 +57,7 @@ const fullName = (rows: DcrClassTree[], id: number): string => {
     names.unshift(cur.classTreeName);
     cur = byId.get(cur.parentTreeId);
   }
-  return names.join('/');
+  return names.join(sep);
 };
 
 export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyName, authCheck, hideNull, defaultClassTreeId, onResult, onClose }) => {
@@ -58,8 +66,21 @@ export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyN
   const [expanded, setExpanded] = useState<React.Key[]>([]);
   const [selected, setSelected] = useState<DcrClassTree | null>(null);
   const [docSearch, setDocSearch] = useState('');
+  // 보기 방식: 트리(AS-IS) / 리스트(UX보강 — 선택할 수 있는 최하위 분류만 전체 경로로, 검색어가 든 것만)
+  const [view, setView] = useState<'tree' | 'list'>('tree');
   const treeRef = useRef<GetRef<typeof Tree>>(null);
-  const treeData = useMemo(() => toTree(rows), [rows]);
+  // 최하위 분류(typeCode 'T', 선택할 수 있는 것)에 문서 아이콘 — 폴더와 구분. toTree는 말단에도 children: []를 넣어 antd의 isLeaf를 쓸 수 없다
+  const treeData = useMemo(() => {
+    const typeById = new Map(rows.map(x => [x.classTreeId, x.typeCode]));
+    const decorate = (nodes: DataNode[]): DataNode[] => nodes.map(n => ({
+      ...n,
+      icon: typeById.get(Number(n.key)) === 'T' ? <FileTextOutlined style={{ color: '#8c8c8c' }} /> : undefined,
+      children: n.children ? decorate(n.children) : undefined,
+    }));
+    return decorate(toTree(rows));
+  }, [rows]);
+  // AS-IS 500×700 안의 트리(560). 화면이 작으면 줄여 모달이 화면 밖으로 나가 바깥 스크롤이 생기지 않게 한다 (머리·검색·푸터·여백 약 250)
+  const treeHeight = Math.max(200, Math.min(560, window.innerHeight - 250));
 
   // [E0] 화면 열림 (생성자 L63-69, open L93-112) → retrieve() L260-270: dcr.Dcr01_ClassTree.selectByCompanyId(companyId, typeCode %)
   useEffect(() => {
@@ -72,6 +93,17 @@ export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyN
       .catch(err => message.error(errorMessage(err, '매뉴조회 오류')));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  const listRows = useMemo(() => {
+    const q = docSearch.trim().toLowerCase();
+    return rows
+      .filter(x => x.typeCode === 'T')
+      .map(x => ({ classTreeId: x.classTreeId, fullName: fullName(rows, x.classTreeId, ' ➡︎ ') }))
+      .filter(x => q === '' || x.fullName.toLowerCase().includes(q));
+  }, [rows, docSearch]);
+
+  // 자식이 있는 분류(부모로 쓰인 분류)를 모두 펼친다
+  const expandAll = () => setExpanded([...new Set(rows.map(x => x.parentTreeId).filter(id => rows.some(x => x.classTreeId === id)))]);
 
   // [E1] docSearch.KeyPress [Enter] (L117), [E2] searchButton[찾기].Select (L125) → search() L272-315
   const search = () => {
@@ -119,10 +151,13 @@ export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyN
   };
 
   return (
-    <Modal
+    <LookupModal
       open={open}
       title={companyName ? `문서분류 - ${companyName}` : '문서분류'}
-      width={500}
+      width={580}
+      style={{ top: 20 }}
+      // 조회창 원칙: 머리 아래 선(푸터 위 선은 LookupModal이 둔다)
+      styles={{ header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 12 } }}
       maskClosable={false}
       onCancel={onClose}
       destroyOnClose
@@ -131,25 +166,41 @@ export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyN
           <Space>
             <Button type="save" onClick={update}>확인</Button>
             {/* [E4] nullButton[선택안함].Select (L142) → 전체이름·ID를 null로 callback·hide */}
-            {!authCheck && !hideNull && <Button type="select" onClick={() => { onResult({ classTreeId: null, classTreeFullName: null }); onClose(); }}>선택안함</Button>}
+            {!authCheck && !hideNull && <Button type="select" style={{ background: '#a6a6a6' }} onClick={() => { onResult({ classTreeId: null, classTreeFullName: null }); onClose(); }}>선택안함</Button>}
             {/* [E5] cancleButton[닫기].Select (L151) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </Space>
         </div>
       }
     >
-      <SearchBar onSearch={search} searchText="찾기">
-        <SearchBar.Field label="문서분류">
-          <SearchBar.Input style={{ width: 250 }} value={docSearch} onChange={e => setDocSearch(e.target.value)} />
-        </SearchBar.Field>
-      </SearchBar>
+      {/* 검색 줄은 연한 회색 바탕으로 트리와 구분한다(선을 늘리지 않는다). [입력 200] [찾기] 는 왼쪽, 모두 펼치기·접기(UX-09)는 맨 오른쪽 — 폭은 모달에 맞춰 늘고 준다 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: '#f5f5f5', borderRadius: 4 }}>
+        <div style={{ flex: 1, minWidth: 0}}>
+          <SearchBar onSearch={search} searchText="찾기">
+            <SearchBar.Field label={null}>
+              <SearchBar.Input style={{ width: 200 }} value={docSearch} placeholder='분류명의 일부로 검색..' onChange={e => setDocSearch(e.target.value)} />
+            </SearchBar.Field>
+          </SearchBar>
+        </div>
+        <TreeListToggle value={view} onChange={setView} />
+        <ExpandCollapseButtons onExpandAll={expandAll} onCollapseAll={() => setExpanded([])} disabled={view === 'list' || treeData.length === 0} />
+      </div>
       {/* getMenuTree() L211-247: 한 번 눌러도 노드가 열리고 닫힌다(onClick → onDoubleClick). [E6] tree.Selection (L158) → classTreeModel = 선택 항목 */}
-      <div style={{ height: 560, overflow: 'auto', marginTop: 8 }}>
-        {treeData.length > 0 && (
+      <div style={{ height: treeHeight, overflow: 'hidden', marginTop: 8}}>
+        {view === 'list' ? (
+          <SingleGrid<{ classTreeId: number; fullName: string }>
+            rowData={listRows}
+            columnDefs={[gb.text('fullName', 440, '문서분류')]}
+            getRowId={p => String(p.data.classTreeId)}
+            onSelect={row => setSelected(row ? rows.find(x => x.classTreeId === row.classTreeId) ?? null : null)}
+            onRowDoubleClicked={() => void update()}
+          />
+        ) : treeData.length > 0 && (
           <Tree
             ref={treeRef}
-            height={560}
+            height={treeHeight}
             treeData={treeData}
+            showIcon
             expandedKeys={expanded}
             onExpand={keys => setExpanded(keys)}
             selectedKeys={selected == null ? [] : [selected.classTreeId]}
@@ -161,6 +212,6 @@ export const Dcr30_Move_DcrClass: React.FC<Props> = ({ open, companyId, companyN
           />
         )}
       </div>
-    </Modal>
+    </LookupModal>
   );
 };

@@ -12,7 +12,7 @@ import { bizEntertmExpenseApi } from '@/api/biz';
 import { errorMessage } from '@/api/client';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { BizEntertmCompany, BizEntertmHistory } from '@/types/biz';
-import { EntertmParam, EntertmTabHandle } from './bizEntertmTab';
+import { EntertmParam, EntertmTabHandle, fitCols, gridSumCss, totalRowClass, withTotalRow } from './bizEntertmTab';
 
 const gbCompany = gbFor<BizEntertmCompany>();
 const gbReport = gbFor<BizEntertmHistory>();
@@ -26,11 +26,14 @@ export const Biz02_TabPage_CompanyEntertmExpense = forwardRef<EntertmTabHandle>(
   const [loading, setLoading] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
 
-  const companyCols = useMemo(() => [
+  // 합계 행(AS-IS getSumGrid("계", 1, 2, 2) — 회사명 열에 "계", 접대비 합)은 마지막 거래처 바로 다음 행 (grid-SUM)
+  const companyData = useMemo(() => withTotalRow(companies, 'personId', 'htmlTargetCompanyName', ['entertmExpenseSum']), [companies]);
+
+  const companyCols = useMemo(() => fitCols([
     gbCompany.textHtml('htmlTargetCompanyName', 200, '회사명'),
     gbCompany.long('entertmExpenseSum', 200, '접대비'),
-  ], []);
-  const reportCols = useMemo(() => [
+  ], companies), [companies]);
+  const reportCols = useMemo(() => fitCols([
     gbReport.textCenter('regEmpName', 70, '사용자'),
     gbReport.date('approvalDt', 100, '카드승인일'),
     gbReport.text('franchiseName', 240, '가맹점명'),
@@ -39,7 +42,7 @@ export const Biz02_TabPage_CompanyEntertmExpense = forwardRef<EntertmTabHandle>(
     gbReport.long('totalPeple', 70, '인원'),
     gbReport.long('averagePrice', 100, '인당 경제적가치'),
     gbReport.text('note', 270, '비고'),
-  ], []);
+  ], reports), [reports]);
 
   // [E1] grid.SelectionChanged [선택>0] (L52) → retrieve(personModel) L131-147: 서비스 biz.Biz01_Promo.selectByTargetCompanyName(companyId, year, closeDate, cardRealUserType, targetCompanyName)
   const retrieveReport = useCallback(async (row: BizEntertmCompany | undefined) => {
@@ -76,18 +79,20 @@ export const Biz02_TabPage_CompanyEntertmExpense = forwardRef<EntertmTabHandle>(
 
   return (
     <div style={{ height: '100%', display: 'flex', minHeight: 0 }}>
-      <div style={{ flex: '0 0 30%', minWidth: 0, boxSizing: 'border-box', borderRight: '1px solid #d9d9d9' }}>
+      <div className="entertm-company" style={{ flex: '0 0 30%', minWidth: 0, boxSizing: 'border-box', borderRight: '1px solid #d9d9d9' }}>
+        <style>{gridSumCss('entertm-company')}</style>
         <SingleGrid<BizEntertmCompany>
           gridRef={gridRef}
-          rowData={companies}
+          rowData={companyData}
           columnDefs={companyCols}
           loading={loading}
           getRowId={p => String(p.data.personId)}
           onSelect={row => void retrieveReport(row)}
-          sumRow={{ labelField: 'htmlTargetCompanyName', label: '계', sum: ['entertmExpenseSum'] }}
+          getRowClass={totalRowClass<BizEntertmCompany>('personId')}
         />
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="entertm-company-report" style={{ flex: 1, minWidth: 0 }}>
+        <style>{gridSumCss('entertm-company-report')}</style>
         <SingleGrid<BizEntertmHistory>
           rowData={reports}
           columnDefs={reportCols}

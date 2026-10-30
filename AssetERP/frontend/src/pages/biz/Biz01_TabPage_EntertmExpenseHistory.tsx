@@ -12,7 +12,7 @@ import { errorMessage } from '@/api/client';
 import { SingleGrid, gbFor } from '@/components/grid';
 import { BizEntertmHistory } from '@/types/biz';
 import { Biz02_Grid_PersonList } from './Biz02_Grid_PersonList';
-import { EntertmParam, EntertmTabHandle } from './bizEntertmTab';
+import { EntertmParam, EntertmTabHandle, fitCols, gridSumCss, totalRowClass, withTotalRow } from './bizEntertmTab';
 
 const gb = gbFor<BizEntertmHistory>();
 
@@ -23,7 +23,10 @@ export const Biz01_TabPage_EntertmExpenseHistory = forwardRef<EntertmTabHandle>(
   const [loading, setLoading] = useState(false);
   const [promoId, setPromoId] = useState<number | null>(null);
 
-  const columnDefs = useMemo(() => [
+  // 합계 행(AS-IS getSumGrid("계", 2, 4, 5) — 카드승인일 열에 "계", 결제금액·제공금액 합)은 마지막 내역 바로 다음 행 (grid-SUM)
+  const data = useMemo(() => withTotalRow(rows, 'promoId', 'approvalDt', ['provideAmt', 'averageProvideAmt']), [rows]);
+
+  const columnDefs = useMemo(() => fitCols([
     gb.textCenter('regEmpName', 70, '사용자'),
     gb.date('approvalDt', 100, '카드승인일'),
     gb.text('franchiseName', 240, '가맹점명'),
@@ -32,7 +35,7 @@ export const Biz01_TabPage_EntertmExpenseHistory = forwardRef<EntertmTabHandle>(
     gb.long('totalPeple', 70, '인원'),
     gb.long('averagePrice', 100, '인당 경제적가치'),
     gb.text('note', 270, '비고'),
-  ], []);
+  ], rows), [rows]);
 
   // retrieve() L109-123: 서비스 biz.Biz01_Promo.selectByAccountName(companyId, year, closeDate, cardRealUserType) → personList.setting()(비활성)
   useImperativeHandle(ref, () => ({
@@ -52,15 +55,16 @@ export const Biz01_TabPage_EntertmExpenseHistory = forwardRef<EntertmTabHandle>(
 
   return (
     <div style={{ height: '100%', display: 'flex', minHeight: 0 }}>
-      <div style={{ flex: '0 0 70%', minWidth: 0, boxSizing: 'border-box', borderRight: '1px solid #d9d9d9' }}>
+      <div className="entertm-history" style={{ flex: '0 0 70%', minWidth: 0, boxSizing: 'border-box', borderRight: '1px solid #d9d9d9' }}>
+        <style>{gridSumCss('entertm-history')}</style>
         {/* [E1] grid.RowClick (L59) → retrieveTabpage() L100-107: personList.retrieve(고른 내역) — 직원·거래상대방 두 목록을 읽는다 */}
         <SingleGrid<BizEntertmHistory>
-          rowData={rows}
+          rowData={data}
           columnDefs={columnDefs}
           loading={loading}
           getRowId={p => String(p.data.promoId)}
           onSelect={row => setPromoId(row?.promoId ?? null)}
-          sumRow={{ labelField: 'approvalDt', label: '계', sum: ['provideAmt', 'averageProvideAmt'] }}
+          getRowClass={totalRowClass<BizEntertmHistory>('promoId')}
         />
       </div>
       <div style={{ flex: 1, minWidth: 0, opacity: 0.6 }}>

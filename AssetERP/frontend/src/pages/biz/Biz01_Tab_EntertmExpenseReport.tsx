@@ -183,8 +183,8 @@ export const Biz01_Tab_EntertmExpenseReport: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', boxSizing: 'border-box', padding: 20, background: '#fff', display: 'flex', flexDirection: 'column', gap: 0 }}>
-      <div style={{ boxSizing: 'border-box', padding: 10, flex: 'none' }}>
+    <div style={{ height: '100%', boxSizing: 'border-box', padding: 20, background: '#fff', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ flex: 'none' }}>
         {/* [E3] retrieveButton[조회].Select (L193) · [E2] yyyyText.KeyPress [Enter] (L184) → retrieveTabpage() */}
         <SearchBar
           onSearch={() => retrieveTabpage()}
@@ -194,7 +194,7 @@ export const Biz01_Tab_EntertmExpenseReport: React.FC = () => {
           }
         >
           <SearchBar.Field label="기준년월">
-            <SearchBar.Input style={{ width: 70 }} maxLength={4} value={year} onChange={e => setYear(e.target.value)} />
+            <SearchBar.Input style={{ width: 80 }} maxLength={4} value={year} onChange={e => setYear(e.target.value)} />
             <Select<string> style={{ width: 80, marginLeft: 8 }} value={month} onChange={setMonth} options={MONTH_OPTIONS} />
             {realUser && (
               <Select<string> style={{ width: 100, marginLeft: 8 }} value={cardRealUserType} onChange={setCardRealUserType}
@@ -203,7 +203,7 @@ export const Biz01_Tab_EntertmExpenseReport: React.FC = () => {
           </SearchBar.Field>
         </SearchBar>
       </div>
-      <div style={{ flex: 1, minHeight: 0, boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <PageTabs
           activeKey={activeKey}
           onChange={onTabChange}
@@ -218,10 +218,10 @@ export const Biz01_Tab_EntertmExpenseReport: React.FC = () => {
         </div>
       </div>
       {/* [E5] classTreeFullName[문서분류].TriggerClick (L228) → openLookupDoc() L289-298: Dcr30_Move_DcrClass.open(callback) → 고른 분류를 칸에 넣는다 */}
-      <div style={{ flex: 'none', height: 70, boxSizing: 'border-box', display: 'flex', alignItems: 'center', gap: 10, padding: '0 10px', border: '1px solid #d9d9d9', background: '#fff' }}>
-        <span style={{ fontWeight: 'bold' }}>문서분류</span>
+      <div style={{ flex: 'none', height: 70, boxSizing: 'border-box', display: 'flex', alignItems: 'center', gap: 8, padding: '0 10px', border: '1px solid #d9d9d9', background: '#fff', marginTop: -9 }}>
+        <span style={{ fontWeight: 'bold', width: 60, textAlign: 'right' }}>문서분류</span>
         <LookupInput value={docText} placeholder={docPlaceholder} width={500} onOpen={() => setDocOpen(true)} />
-        <span style={{ fontWeight: 'bold' }}>상신상태</span>
+        <span style={{ fontWeight: 'bold', width: 60, textAlign: 'right', marginLeft: 8 }}>상신상태</span>
         <Input style={{ width: 150 }} readOnly value={appr.name} />
         <Button type="register" disabled={!appr.apprEnabled} onClick={insertLinkApproval}>상신</Button>
         <Button type="search" disabled={!appr.viewEnabled} onClick={apprView}>문서보기</Button>
