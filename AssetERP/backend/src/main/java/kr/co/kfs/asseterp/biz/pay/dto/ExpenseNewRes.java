@@ -32,4 +32,11 @@ public record ExpenseNewRes(
         String accountName,
         Long trId
 ) {
+
+    /** 회계처리 쪽 새 행 INSERT — 자금집행일(settleDate)은 비우고 계정과목은 accountCode로 한다 (AS-IS는 insertModel에 이 값들을 넣지 않는다) */
+    public ExpenseNewRes forJournal(String accountCode) {
+        return new ExpenseNewRes(expenseId, companyId, expenseCode, expenseName, occDate, dueDate, desc, corpId, corpName,
+                payMethodCode, payMethodName, payAccountInfo, taxType, amt, tax, settleAmt, apprEmpId, expenseApprId, benefitId,
+                transportStdYm, bizCardStdYm, bizCardCorpCode, depositId, null, accountCode, accountName, trId);
+    }
 }

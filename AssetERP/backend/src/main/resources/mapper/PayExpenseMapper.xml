@@ -1045,4 +1045,109 @@
                , #{row.dueDate}, #{row.expenseName,jdbcType=VARCHAR}, #{row.desc,jdbcType=VARCHAR}, #{row.corpName,jdbcType=VARCHAR}, #{row.tel,jdbcType=VARCHAR}, #{row.addr,jdbcType=VARCHAR}
                , #{row.settleAmt,jdbcType=NUMERIC}, #{row.payMethodName,jdbcType=VARCHAR}, #{row.payAccountInfo,jdbcType=VARCHAR}, #{row.settleDate}, #{row.depositName,jdbcType=VARCHAR}, #{mark} )
     </insert>
+
+    <!-- ===== U09 Pay50_Tab_ExpenseJournal (사업비 회계처리) ===== -->
+    <!-- AS-IS pay50_expense.selectExpenseJournal L1046 (IDMS-IC) — 열만 DTO 이름으로. 바깥 WHERE의 pay50_expense_cd·이름 조건은 그대로 -->
+    <select id="selectExpenseJournal" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalRes">
+        SELECT row_number() over()  AS expenseId
+             , t.pay50_company_id   AS companyId
+             , t.pay50_occ_date     AS occDate
+             , t.pay50_expense_cd   AS expenseCode
+             , t.pay50_expense_nm   AS expenseName
+             , t.pay50_desc         AS desc
+             , t.pay50_corp_nm      AS corpName
+             , t.pay50_amt          AS amt
+             , t.pay50_tax          AS tax
+             , t.pay50_settle_amt   AS settleAmt
+             , t.pay50_pay_method_nm   AS payMethodName
+             , t.pay50_file_count_str  AS fileCountStr
+             , t.pay50_journal_id   AS journalId
+             , t.pay50_journal_no   AS journalNo
+             , t.pay50_journal_fix_yn = 'true' AS journalFixYn
+          FROM (
+                SELECT act02_company_id                                                                 pay50_company_id
+                     , act02_date                                                                       pay50_occ_date
+                     , pay50_expense_cd
+                     , f_cdnm('ExpenseType', pay50_expense_cd, act02_company_id, act02_date)            pay50_expense_nm
+                     , act02_note                                                                       pay50_desc
+                     , f_get_journal_corp_nm(act02_journal_id)                                          pay50_corp_nm
+                     , COALESCE(SUM(pay50_amt)       ,0)                                                pay50_amt
+                     , COALESCE(SUM(pay50_tax)       ,0)                                                pay50_tax
+                     , COALESCE(SUM(pay50_settle_amt),0)                                                pay50_settle_amt
+                     , f_cdnm('PayMethodCode', pay50_pay_method_cd, act02_company_id, act02_date)       pay50_pay_method_nm
+                     , f_get_relate_dcr_count(act02_journal_id)||' 건'                                   pay50_file_count_str
+                     , act02_journal_id                                                                 pay50_journal_id
+                     , act02_journal_no                                                                 pay50_journal_no
+                     , COALESCE(act02_fix_yn,'false')                                                   pay50_journal_fix_yn
+                  FROM act02_journal
+                       INNER JOIN pay50_expense ON pay50_journal_id = act02_journal_id
+                 WHERE act02_company_id = #{companyId}
+                   AND act02_date BETWEEN #{startDate} AND #{closeDate}
+                 GROUP BY act02_company_id, act02_date, pay50_expense_cd, act02_note, act02_journal_id, act02_journal_no, act02_fix_yn, pay50_pay_method_cd
+               ) t
+         WHERE t.pay50_expense_cd LIKE #{expenseCode}
+           AND CONCAT(t.pay50_expense_nm, t.pay50_desc, t.pay50_corp_nm) ILIKE #{searchText}
+         ORDER BY t.pay50_occ_date desc, t.pay50_journal_id desc
+    </select>
+
+    <!-- AS-IS pay50_expense.updateAccountCode L1109 -->
+    <update id="updateAccountCode">
+        UPDATE pay50_expense
+           SET pay50_account_cd  = #{accountCode}
+         WHERE pay50_expense_id  = #{expenseId}
+           AND pay50_company_id  = #{companyId}
+    </update>
+
+    <!-- AS-IS pay50_expense.createJournal L1300 — DB 함수가 'Y' 또는 실패 메시지를 돌려준다. expenseIds가 있으면 하나의 전표로 -->
+    <select id="createJournal" resultType="string">
+        SELECT f_create_journalExpense(#{companyId}, #{personId}, #{occDate}::date, #{desc,jdbcType=VARCHAR}, #{corpId,jdbcType=NUMERIC}, #{expenseId,jdbcType=NUMERIC},
+        <choose>
+            <when test="expenseIds != null">ARRAY[<foreach collection="expenseIds" item="id" separator=",">#{id}</foreach>]::numeric[]</when>
+            <otherwise>NULL::numeric[]</otherwise>
+        </choose>
+        )
+    </select>
+
+    <!-- 삭제할 전표의 회사·일자·승인 여부 (AS-IS는 화면 행의 값을 믿었다 — TOBE는 DB 값으로 다시 본다) -->
+    <select id="selectJournalInfo" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalInfoRes">
+        SELECT act02_journal_id AS journalId
+             , act02_company_id AS companyId
+             , act02_date       AS occDate
+             , COALESCE(act02_fix_yn,'false') = 'true' AS journalFixYn
+          FROM act02_journal
+         WHERE act02_journal_id = #{journalId}
+           AND act02_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS act03_journal_dtl.deleteByJournalId · act06_journal_tmp.deleteByJournalId · act02_journal.deleteByJournalId · com01_relate_appr.deleteByKeyTableId -->
+    <delete id="deleteJournalDtl">
+        DELETE FROM act03_journal_dtl WHERE act03_journal_id = #{journalId}
+    </delete>
+    <delete id="deleteJournalTmp">
+        DELETE FROM act06_journal_tmp WHERE act06_journal_id = #{journalId}
+    </delete>
+    <delete id="deleteJournal">
+        DELETE FROM act02_journal WHERE act02_journal_id = #{journalId}
+    </delete>
+    <delete id="deleteRelateAppr">
+        DELETE FROM com01_relate_appr WHERE com01_key_table_id = #{journalId}
+    </delete>
+
+    <!-- AS-IS pay50_expense.selectByJournalId (SELECT *) — 정리에 쓰는 세 열만 -->
+    <select id="selectByJournalId" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalExpenseRes">
+        SELECT pay50_expense_id    AS expenseId
+             , pay50_expense_cd    AS expenseCode
+             , pay50_settle_emp_id AS settleEmpId
+          FROM pay50_expense
+         WHERE pay50_journal_id = #{journalId}
+           AND pay50_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS pay50_expense.initExpenseJournal -->
+    <update id="initExpenseJournal">
+        UPDATE pay50_expense
+           SET pay50_journal_id  = null
+         WHERE pay50_expense_id  = #{expenseId}
+           AND pay50_company_id  = #{companyId}
+    </update>
 </mapper>

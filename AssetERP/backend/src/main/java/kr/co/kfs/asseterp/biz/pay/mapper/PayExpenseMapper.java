@@ -1,5 +1,8 @@
 package kr.co.kfs.asseterp.biz.pay.mapper;
 
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalExpenseRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalInfoRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseNewRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRequestRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRes;
@@ -111,4 +114,35 @@ public interface PayExpenseMapper {
     int insertSettlePrint(@Param("printId") Long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
                           @Param("windowClassName") String windowClassName, @Param("groupId") Long groupId,
                           @Param("row") ExpenseSettleRes row, @Param("mark") String mark);
+
+    // ===== U09 Pay50_Tab_ExpenseJournal =====
+
+    /** AS-IS selectExpenseJournal */
+    List<ExpenseJournalRes> selectExpenseJournal(@Param("companyId") Long companyId, @Param("startDate") LocalDate startDate,
+                                                 @Param("closeDate") LocalDate closeDate, @Param("expenseCode") String expenseCode,
+                                                 @Param("searchText") String searchText);
+
+    /** AS-IS updateAccountCode */
+    int updateAccountCode(@Param("companyId") Long companyId, @Param("expenseId") Long expenseId, @Param("accountCode") String accountCode);
+
+    /** AS-IS createJournal — 'Y' 또는 실패 메시지. expenseIds가 있으면 하나의 전표 */
+    String createJournal(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("occDate") LocalDate occDate,
+                         @Param("desc") String desc, @Param("corpId") Long corpId, @Param("expenseId") Long expenseId,
+                         @Param("expenseIds") List<Long> expenseIds);
+
+    ExpenseJournalInfoRes selectJournalInfo(@Param("companyId") Long companyId, @Param("journalId") Long journalId);
+
+    int deleteJournalDtl(@Param("journalId") Long journalId);
+
+    int deleteJournalTmp(@Param("journalId") Long journalId);
+
+    int deleteJournal(@Param("journalId") Long journalId);
+
+    int deleteRelateAppr(@Param("journalId") Long journalId);
+
+    /** AS-IS selectByJournalId */
+    List<ExpenseJournalExpenseRes> selectByJournalId(@Param("companyId") Long companyId, @Param("journalId") Long journalId);
+
+    /** AS-IS initExpenseJournal */
+    int initExpenseJournal(@Param("companyId") Long companyId, @Param("expenseId") Long expenseId);
 }

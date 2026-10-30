@@ -10555,5 +10555,45 @@
     "note": "docs/work/U/U08-작업기록.md",
     "history": [],
     "id": "U08"
+  },
+  "Pay50_Tab_ExpenseJournal": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/pay/Pay50_Lookup_ExpenseUnJournal.java": "ede42fac8aee86e84a05ae33627ee2e04b344a23",
+      "application/src/main/java/myApp/client/vi/pay/Pay50_Lookup_UpdateAccount.java": "599f8db922e367697b47c452f080fbc6c699c61d",
+      "application/src/main/java/myApp/client/vi/pay/Pay50_Tab_ExpenseJournal.java": "7dbb00f2fca1d96c3c2b219e6f0c0b28b22df64d",
+      "application/src/main/java/myApp/client/vi/pay/Pay52_Lookup_AccountCode.java": "6f0f24638e623c516533107c3c307426f5a8258c",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay50_ExpenseModel.java": "f0b7b3e070e4bc8ca11cd4363404eafc601b3e26",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay50_ExpenseModelProperties.java": "d9bfd9609f9d67c0dd6e873148d48e0291f9e1c9",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay52_FavoriteAccountModel.java": "b3ca8513227f9dcecca6a8a75bf13d78f1e45b5d",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay52_FavoriteAccountModelProperties.java": "6a013028df1de432a000893d55e160ce6a1b9c24",
+      "application/src/main/java/myApp/server/act/Act02_Journal.java": "2b47b76448d8e80fb79a9474ff98126cbe522804",
+      "application/src/main/java/myApp/server/act/mapper/act02_journal.xml": "2c7804f20ce46eeb9247b46d67d96de1fbfc8571",
+      "application/src/main/java/myApp/server/act/mapper/act03_journal_dtl.xml": "30693776bf7e446ac02e9099bd5aca30c8dca83e",
+      "application/src/main/java/myApp/server/act/mapper/act06_journal_tmp.xml": "25dd7957dfe95fa25bf0d0e4b585a698611dff8b",
+      "application/src/main/java/myApp/server/com/mapper/com01_relate_appr.xml": "dfb8d01d5a409fecc59ef532238d85c4e4041a16",
+      "application/src/main/java/myApp/server/pay/Pay50_Expense.java": "0e2dddff2b9e0381b6839980838ec1a3ac85ac7c",
+      "application/src/main/java/myApp/server/pay/Pay52_FavoriteAccount.java": "c55667617f41c9d3e2be9176c35e2a2acf90e749",
+      "application/src/main/java/myApp/server/pay/mapper/pay50_expense.xml": "b778178d41cd12e6537c1f53875659a6ff46f5b9",
+      "application/src/main/java/myApp/server/pay/mapper/pay52_favorite_account.xml": "bcb54fe654defdb6f967e5eff0caaf17f0dc3f23",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Act01_Lookup_AccountCode",
+      "Act02_Grid_CreateJournal",
+      "Act02_Lookup_CreateJournal",
+      "Act80_Lookup_RelateAppr"
+    ],
+    "recorded_at": "2026-10-30T11:03:58+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/U/U09-작업기록.md",
+    "history": [],
+    "id": "U09"
   }
 }

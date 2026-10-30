@@ -1,8 +1,12 @@
 package kr.co.kfs.asseterp.biz.pay.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import jakarta.validation.Valid;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseAccountCodeReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseContentReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseDepositReq;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalCreateReq;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseNewRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRejectReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRequestRes;
@@ -109,6 +113,45 @@ public class PayExpenseController {
     @PostMapping("/rd-settle-print")
     public ApiResponse<String> rdSettlePrint(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ExpenseSettlePrintReq req) {
         return ApiResponse.ok(service.printSettles(principal, req));
+    }
+
+    // ── U09 사업비 회계처리(Pay50_Tab_ExpenseJournal) ──
+
+    /** pay.Pay50_Expense.selectExpenseJournal */
+    @GetMapping("/journals")
+    public ApiResponse<List<ExpenseJournalRes>> searchJournals(@AuthenticationPrincipal UserPrincipal principal,
+                                                               @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                               @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                               @RequestParam(required = false) String expenseCode,
+                                                               @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchJournals(principal, startDate, closeDate, expenseCode, searchText));
+    }
+
+    /** pay.Pay50_Expense.selectNewExpenseAppr (targetType JOURNAL) — 회계처리 대상(전표 없는 내역) */
+    @GetMapping("/new-journals")
+    public ApiResponse<List<ExpenseNewRes>> newJournals(@AuthenticationPrincipal UserPrincipal principal,
+                                                        @RequestParam(required = false) String expenseCode,
+                                                        @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.newJournals(principal, expenseCode, searchText));
+    }
+
+    /** pay.Pay50_Expense.updateAccountCode — 회계처리 대상의 [저장]·[일괄저장] */
+    @PutMapping("/account-codes")
+    public ApiResponse<Integer> updateAccountCodes(@AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody ExpenseAccountCodeReq req) {
+        return ApiResponse.ok(service.updateAccountCodes(principal, req));
+    }
+
+    /** pay.Pay50_Expense.createJournal — [전표생성] */
+    @PostMapping("/journals")
+    public ApiResponse<Void> createJournals(@AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody ExpenseJournalCreateReq req) {
+        service.createJournals(principal, req);
+        return ApiResponse.ok(null);
+    }
+
+    /** pay.Pay50_Expense.deleteJournal — [삭제] (전표 ID 목록) */
+    @PostMapping("/delete-journals")
+    public ApiResponse<Integer> deleteJournals(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> journalIds) {
+        return ApiResponse.ok(service.deleteJournals(principal, journalIds));
     }
 
     /** pay.Pay50_Expense.selectBySettleDate */

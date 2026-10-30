@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq, PayBasicSetup, PayBasicSetupSaveReq, PayExpense, PayExpenseForm, PayExpenseRequest, PayExpenseUpdateReq, PayFavoriteAccount, PayExpenseSettle, PayExpenseSettleSaveReq, PayExpenseNew, PayExpenseSettleAppr, PayExpenseSettleApprRow } from '../types/pay';
+import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq, PayBasicSetup, PayBasicSetupSaveReq, PayExpense, PayExpenseForm, PayExpenseRequest, PayExpenseUpdateReq, PayFavoriteAccount, PayExpenseSettle, PayExpenseSettleSaveReq, PayExpenseNew, PayExpenseJournal, PayExpenseSettleAppr, PayExpenseSettleApprRow } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -1000,6 +1000,36 @@ export const payApi = {
   rdPrintExpenseSettles: async (p: { startDate: string; closeDate: string; expenseCode: string; payYnCode: string; statusCheckYn: boolean; searchText: string }): Promise<string> => {
     const res = await apiClient.post<ApiResponse<string>>('v1/pay/expenses/rd-settle-print', p);
     return res.data.data as string;
+  },
+
+  // ── U09 사업비 회계처리 Pay50_Tab_ExpenseJournal ──
+  /** AS-IS pay.Pay50_Expense.selectExpenseJournal — 코드는 콤보의 "전체"가 '%', 검색어는 서버가 "%…%"로 감싼다 */
+  searchExpenseJournals: async (p: { startDate: string; closeDate: string; expenseCode: string; searchText: string }): Promise<PayExpenseJournal[]> => {
+    const res = await apiClient.get<ApiResponse<PayExpenseJournal[]>>('v1/pay/expenses/journals', { params: p });
+    return res.data.data as PayExpenseJournal[];
+  },
+
+  /** AS-IS pay.Pay50_Expense.selectNewExpenseAppr (targetType JOURNAL) — 회계처리 대상(전표 없는 내역) */
+  searchNewExpenseJournals: async (p: { expenseCode?: string; searchText: string }): Promise<PayExpenseNew[]> => {
+    const res = await apiClient.get<ApiResponse<PayExpenseNew[]>>('v1/pay/expenses/new-journals', { params: p });
+    return res.data.data as PayExpenseNew[];
+  },
+
+  /** AS-IS pay.Pay50_Expense.updateAccountCode — accountCode를 주면 모든 행에 그 코드(일괄저장), 아니면 행마다 자기 accountCode */
+  updateExpenseAccountCodes: async (rows: PayExpenseNew[], accountCode?: string): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/pay/expenses/account-codes', { accountCode: accountCode ?? null, rows });
+    return res.data.data as number;
+  },
+
+  /** AS-IS pay.Pay50_Expense.createJournal ([전표생성]) */
+  createExpenseJournals: async (rows: PayExpenseNew[], oneJournalYn: boolean): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/pay/expenses/journals', { oneJournalYn, rows });
+  },
+
+  /** AS-IS pay.Pay50_Expense.deleteJournal ([삭제]) — 전표 ID 목록 */
+  deleteExpenseJournals: async (journalIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/pay/expenses/delete-journals', journalIds);
+    return res.data.data as number;
   },
 
   /** AS-IS pay.Pay50_Expense.selectBySettleDate */

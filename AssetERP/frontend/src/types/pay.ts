@@ -738,6 +738,25 @@ export interface PayExpenseNew {
   trId: number | null;
 }
 
+/** 사업비 회계처리 위 그리드 한 행 (pay50_expense.selectExpenseJournal, U09) — expenseId는 행번호일 뿐이다 */
+export interface PayExpenseJournal {
+  expenseId: number;
+  companyId: number;
+  occDate: string | null;
+  expenseCode: string | null;
+  expenseName: string | null;
+  desc: string | null;
+  corpName: string | null;
+  amt: number | null;
+  tax: number | null;
+  settleAmt: number | null;
+  payMethodName: string | null;
+  fileCountStr: string | null;
+  journalId: number;
+  journalNo: number | null;
+  journalFixYn: boolean | null;
+}
+
 /** 자금집행결의서 조회 위 그리드 한 행 (pay50_expense.selectBySettleDate) */
 export interface PayExpenseSettleAppr {
   expenseId: number;
