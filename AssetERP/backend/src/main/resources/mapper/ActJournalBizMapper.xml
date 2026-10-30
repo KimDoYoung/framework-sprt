@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 급여/카드 회계처리 Act02_Tab_CreateJournalBiz (U10)
+     AS-IS(IDMS-IC) server/act/mapper/act02_journal.xml(selectMonthBiz L187 · createJournalPayMonth · selectOneJournalIdByTrId · deleteByBizId · deleteByTrId)
+       · act03_journal_dtl.xml(selectBizCard L309 · selectChargeFee · selectErpChargeFee · selectByJournalId) · biz01_promo.selectBizCard · biz20_fee_charge.* · biz55_erp_fee_charge.*
+       · ast06_tr.(insert · selectByDate) · act80_relate_appr.insert -->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActJournalBizMapper">
+
+    <!-- AS-IS act02_journal.selectMonthBiz — 바깥 열만 DTO 이름으로(첫 열 act02_journal_id → row_key) -->
+    <select id="selectMonthBiz" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalBizRes">
+        <![CDATA[
+SELECT CASE WHEN act02_journal_id IS NULL THEN row_number() over()
+                    ELSE act02_journal_id END                                                      as row_key
+             , CASE WHEN act02_tr_count = act02_biz_close_count THEN '내역확정' ELSE '' END          as biz_close_yn
+             , CASE WHEN act02_tr_cd = '9001' THEN (CASE WHEN act02_tr_count = act02_journal_count THEN '생성완료' ELSE '미생성' END)
+                    ELSE (CASE WHEN act02_journal_count != 0 THEN '생성완료' ELSE '미생성' END) END    as journal_yn
+             , CASE WHEN ( SELECT count(*) 
+                             FROM act05_gen_ledger_close
+                            WHERE act05_company_id = #{companyId}
+                              AND TO_CHAR(act05_std_date,'YYYY.MM') = #{stdMonth} ) != 0
+                    THEN '회계마감' ELSE '' END                                                       as account_close_yn
+             , biz.act02_journal_id AS journal_id, biz.act02_retire_id AS retire_id, biz.act02_company_id AS company_id
+             , biz.act02_note AS note, biz.act02_tr_cd AS tr_code, biz.act02_tr_count AS tr_count
+             , biz.act02_journal_amt AS journal_amt, biz.act02_fix_yn_nm AS fix_yn_name
+             , biz.act02_date AS date, biz.act02_pay_month_cd AS pay_month_code
+          FROM ( /*---------------------------*/
+                 /*       급여                              */
+                 /*---------------------------*/
+                 SELECT act02_journal_id                                                                                        as act02_journal_id
+                      , 0                                                                                                       as act02_retire_id
+                      , CAST(#{companyId} AS numeric)                                                                                            as act02_company_id
+                      , pay10_date||' '||f_cdnm('PayMonthCode', pay10_pay_cd, pay10_company_id, pay10_date)||' 지급'             as act02_note
+                      , CASE pay10_pay_cd WHEN '01' THEN '5020'
+                                          WHEN '02' THEN '5021'
+                                          WHEN '04' THEN '5023' END                                                             as act02_tr_cd
+                      , 1                                                                                                       as act02_tr_count
+                      , CASE WHEN COALESCE(( SELECT apr01_status_cd
+					                           FROM pay05_relate_appr
+					                                INNER JOIN apr01_appr ON apr01_appr_id = pay05_appr_id
+					                          WHERE pay05_company_id = pay10_company_id
+					                            AND pay05_start_date = pay10_date
+					                            AND pay05_pay_cd     = pay10_pay_cd ),'99') = '30' THEN 1 ELSE 0 END            as act02_biz_close_count
+                      , CASE WHEN act02_journal_id IS NOT NULL THEN 1 ELSE 0 END                                                as act02_journal_count
+                      , pay10_date                                                                                              as act02_date
+                      , pay10_pay_cd                                                                                            as act02_pay_month_cd
+                      , SUM(pay_amt)                                                                                            as act02_journal_amt
+                      , CASE WHEN COALESCE(act02_fix_yn,'false') = 'true' THEN '승인' ELSE '' END                                as act02_fix_yn_nm
+                   FROM ( SELECT pay10_month.*
+                               , ( SELECT SUM(pay11_item_amt)
+		                             FROM pay11_month_item
+		                                  INNER JOIN pay20_item ON pay20_item_cd = pay11_item_cd
+		                            WHERE pay11_month_id  = pay10_month_id
+		                              AND pay20_item_type = '1' ) pay_amt
+                            FROM pay10_month
+		                   WHERE pay10_company_id                  = #{companyId}
+		                     AND TO_CHAR(pay10_date,'YYYY.MM')     = #{stdMonth}
+		                     AND pay10_pay_cd                      != '03'   /* (03:퇴직정산)제외 */
+                        ) t
+                        LEFT OUTER JOIN act02_journal ON ( act02_company_id     = pay10_company_id  AND
+                                                           act02_date           = pay10_date        AND
+                                                           act02_pay_month_cd   = pay10_pay_cd      )
+                  GROUP BY pay10_company_id, pay10_date, pay10_pay_cd, act02_journal_id, act02_fix_yn
+                 /*---------------------------*/
+                 /*          퇴직정산                    */
+                 /*---------------------------*/
+                  UNION ALL
+                 SELECT act02_journal_id                                                                                        as act02_journal_id
+                      , pay10_month_id                                                                                          as act02_retire_id
+                      , CAST(#{companyId} AS numeric)                                                                                            as act02_company_id
+                      , pay10_date||' '||f_cdnm('PayMonthCode', pay10_pay_cd, pay10_company_id, pay10_date)||' 지급'
+                        ||' - '||f_emp_kor_nm(pay10_person_id)                                                                  as act02_note
+                      , '5022'                                                                                                  as act02_tr_cd
+                      , 1                                                                                                       as act02_tr_count
+                      , CASE WHEN COALESCE(( SELECT apr01_status_cd
+                                               FROM pay05_relate_appr
+                                                    INNER JOIN apr01_appr ON apr01_appr_id = pay05_appr_id
+                                              WHERE pay05_company_id = pay10_company_id
+                                                AND pay05_start_date = pay10_date
+                                                AND pay05_pay_cd     = pay10_pay_cd
+                                                AND pay05_retire_id  = pay10_month_id ),'99') = '30' THEN 1 ELSE 0 END          as act02_biz_close_count
+                      , CASE WHEN act02_journal_id IS NOT NULL THEN 1 ELSE 0 END                                                as act02_journal_count
+                      , pay10_date                                                                                              as act02_date
+                      , pay10_pay_cd                                                                                            as act02_pay_month_cd
+                      , SUM(pay_amt)                                                                                            as act02_journal_amt
+                      , CASE WHEN COALESCE(act02_fix_yn,'false') = 'true' THEN '승인' ELSE '' END                                as act02_fix_yn_nm
+                   FROM ( SELECT pay10_month.*
+                               , ( SELECT SUM(pay11_item_amt)
+                                     FROM pay11_month_item
+                                          INNER JOIN pay20_item ON pay20_item_cd = pay11_item_cd
+                                    WHERE pay11_month_id  = pay10_month_id
+                                      AND pay20_item_type = '1' ) pay_amt
+                            FROM pay10_month
+                           WHERE pay10_company_id                  = #{companyId}
+                             AND TO_CHAR(pay10_date,'YYYY.MM')     = #{stdMonth}
+                             AND pay10_pay_cd                      = '03'   /* (03:퇴직정산) */   
+                        ) t
+                        LEFT OUTER JOIN act02_journal ON ( act02_company_id     = pay10_company_id  AND
+                                                           act02_date           = pay10_date        AND
+                                                           act02_pay_month_cd   = pay10_pay_cd      AND
+                                                           act02_retire_id      = pay10_month_id    )
+                  GROUP BY pay10_company_id, pay10_date, pay10_pay_cd, pay10_month_id, pay10_person_id, act02_journal_id, act02_fix_yn
+                 /*---------------------------*/
+                 /*          법인카드                    */
+                 /*---------------------------*/
+                  UNION ALL
+                 SELECT null                                                                                                    as act02_journal_id
+                      , 0                                                                                                       as act02_retire_id
+                      , CAST(#{companyId} AS numeric)                                                                                            as act02_company_id
+                      , #{stdMonth}||' 법인카드 사용'                                                                               as act02_note
+                      , '9001'                                                                                                  as act02_tr_cd
+                      , count(*)                                                                                                as act02_tr_count
+                      , SUM(CASE WHEN COALESCE(biz01_close_yn,'false') = 'true' THEN 1 ELSE 0 END)                              as act02_biz_close_count
+                      , SUM(CASE WHEN act02_journal_id IS NOT NULL THEN 1 ELSE 0 END)                                           as act02_journal_count
+                      , null                                                                                                    as act02_date
+                      , null                                                                                                    as act02_pay_month_cd
+                      , SUM(biz01_provide_amt)                                                                                  as act02_journal_amt
+                      , '해당없음'                                                                                                as act02_fix_yn_nm
+                   FROM biz01_promo
+                        INNER JOIN crd01_card         ON crd01_card_id = biz01_card_id
+                        LEFT OUTER JOIN act02_journal ON act02_biz_id  = biz01_promo_id
+                  WHERE biz01_company_id                      = #{companyId}
+                    AND TO_CHAR(biz01_provide_date,'YYYY.MM') = #{stdMonth}
+
+                    AND biz01_card_data_id IS NOT NULL
+                    AND crd01_card_type = '1'   /* (1:신용카드/2:체크카드) */
+                 /*---------------------------*/
+                 /*     사무관리 최저보수 청구           */
+                 /*---------------------------*/
+                  UNION ALL
+                 SELECT null                                                                                                    as act02_journal_id
+                      , 0                                                                                                       as act02_retire_id
+                      , biz20_company_id                                                                                        as act02_company_id
+                      /*, biz20_charge_date||' '
+                        ||CASE WHEN biz13_manage_type = '1' 
+                               THEN f_cdnm('trCode', '1001', biz20_company_id, biz20_charge_date)
+                               ELSE f_cdnm('trCode', '1002', biz20_company_id, biz20_charge_date) END */
+                      , biz20_charge_date||' 최저보수 청구-'
+                        ||f_cdnm('ManageType', biz13_manage_type, biz20_company_id, biz20_charge_date)                          as act02_note
+                      , CASE WHEN biz13_manage_type = '1' THEN '1001' ELSE '1002' END                                           as act02_tr_cd
+                      , count(*)                                                                                                as act02_tr_count
+                      , SUM(CASE WHEN COALESCE(biz20_fix_yn,'false') = 'true' THEN 1 ELSE 0 END)                                as act02_biz_close_count
+                      , SUM(CASE WHEN act02_journal_id IS NOT NULL THEN 1 ELSE 0 END)                                           as act02_journal_count
+                      , null                                                                                                    as act02_date
+                      , null                                                                                                    as act02_pay_month_cd
+                      , SUM(COALESCE(biz20_charge_fee,0) + COALESCE(biz20_tax,0))                                               as act02_journal_amt
+                      , CASE WHEN COUNT(*) = SUM(act02_fix_count) THEN '승인' ELSE '' END                                        as act02_fix_yn_nm
+                   FROM (
+                          SELECT biz20_fee_charge.*
+                               , j.*
+                               , ( SELECT biz13_manage_type
+			                         FROM biz13_with_corp
+			                        WHERE biz13_corp_id = biz20_corp_id
+			                          AND biz13_first_start_date <= biz20_charge_date
+			                        LIMIT 1 ) AS biz13_manage_type
+			                FROM biz20_fee_charge
+			                     LEFT OUTER JOIN ( SELECT *
+                                                        , CASE WHEN COALESCE(act02_fix_yn,'false') = 'true' THEN 1 ELSE 0 END as act02_fix_count
+                                                     FROM ast06_tr
+                                                          INNER JOIN act02_journal ON act02_tr_id = ast06_tr_id
+                                                    WHERE ast06_company_id              = #{companyId}
+                                                      AND TO_CHAR(ast06_date,'YYYY.MM') = #{stdMonth}
+                                                 ) j ON ast06_tr_id = biz20_tr_id
+			               WHERE biz20_company_id = #{companyId}
+			                 AND biz20_company_id IN (1, 28000)  /* 한국펀드서비스 전용!! */
+			                 AND TO_CHAR(biz20_charge_date,'YYYY.MM') = #{stdMonth}
+                             AND COALESCE(biz20_charge_fee,0) != 0
+                        ) fee
+                  GROUP BY biz20_company_id, biz20_charge_date, biz13_manage_type
+                 /*---------------------------*/
+                 /* AssetERP 사용료 청구 (한펀전용) */
+                 /*---------------------------*/
+                  UNION ALL
+                 SELECT null                                                                        as act02_journal_id
+                      , 0                                                                           as act02_retire_id
+                      , CAST(#{companyId} AS numeric)                                                                as act02_company_id
+                      , biz55_charge_date||' AssetERP 사용료 청구'                                     as act02_note
+                      , '1004'                                                                      as act02_tr_cd
+                      , count(*)                                                                    as act02_tr_count
+                      , SUM(CASE WHEN COALESCE(biz55_fix_yn,'false') = 'true' THEN 1 ELSE 0 END)    as act02_biz_close_count
+                      , SUM(CASE WHEN act02_journal_id IS NOT NULL THEN 1 ELSE 0 END)               as act02_journal_count
+                      , biz55_charge_date                                                           as act02_date
+                      , null                                                                        as act02_pay_month_cd
+                      , SUM(COALESCE(biz55_charge_amt,0))                                           as act02_journal_amt
+                      , CASE WHEN COUNT(*) = SUM(act02_fix_count) THEN '승인' ELSE '' END            as act02_fix_yn_nm
+                   FROM (
+                          SELECT biz55_erp_fee_charge.*
+                               , j.*
+                            FROM biz55_erp_fee_charge
+                                 LEFT OUTER JOIN ( SELECT *
+                                                        , CASE WHEN COALESCE(act02_fix_yn,'false') = 'true' THEN 1 ELSE 0 END as act02_fix_count
+                                                     FROM ast06_tr
+                                                          INNER JOIN act02_journal ON act02_tr_id = ast06_tr_id
+                                                    WHERE ast06_company_id              = #{companyId}
+                                                      AND TO_CHAR(ast06_date,'YYYY.MM') = #{stdMonth}
+                                                 ) j ON ast06_tr_id = biz55_tr_id
+                           WHERE TO_CHAR(biz55_charge_date,'YYYY.MM') = #{stdMonth}
+                             AND #{companyId} IN (1, 28000)   /* 한국펀드서비스 전용!! */
+                             AND COALESCE(biz55_charge_amt,0) != 0
+                        ) fee
+                  GROUP BY biz55_charge_date
+               ) biz
+         ORDER BY act02_tr_cd, act02_note
+        ]]>
+    </select>
+
+    <sql id="lineColumns">
+        f_get_account_nm(act02_company_id, act03_dr_account_cd)
+               ||CASE WHEN act03_dr_ast_id is null THEN '' ELSE '('||f_ast_class_tree_nm(act03_dr_ast_id)||')' END AS dr_ast_account_name
+             , f_get_account_nm(act02_company_id, act03_cr_account_cd)
+               ||CASE WHEN act03_cr_ast_id is null THEN '' ELSE '('||f_ast_class_tree_nm(act03_cr_ast_id)||')' END AS cr_ast_account_name
+             , act03_journal_dtl_id AS journal_dtl_id
+             , act02_date           AS date
+             , act02_journal_no     AS journal_no_str
+             , act02_note           AS note
+             , act03_dr_account_cd  AS dr_account_code
+             , act03_dr_amt         AS dr_amt
+             , act03_dr_note        AS dr_note
+             , act03_cr_account_cd  AS cr_account_code
+             , act03_cr_amt         AS cr_amt
+             , act03_cr_note        AS cr_note
+    </sql>
+
+    <!-- AS-IS act03_journal_dtl.selectBizCard (법인카드 9001) -->
+    <select id="selectBizCardLines" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalBizLineRes">
+        SELECT <include refid="lineColumns"/>
+          FROM biz01_promo
+               INNER JOIN act02_journal     ON act02_biz_id     = biz01_promo_id
+               INNER JOIN act03_journal_dtl ON act03_journal_id = act02_journal_id
+         WHERE biz01_company_id                      = #{companyId}
+           AND TO_CHAR(biz01_provide_date,'YYYY.MM') = #{stdMonth}
+           AND biz01_card_data_id IS NOT NULL
+         ORDER BY act02_date, act02_journal_id, act03_seq
+    </select>
+
+    <!-- AS-IS act03_journal_dtl.selectChargeFee (사무관리 최저보수 1001·1002) -->
+    <select id="selectChargeFeeLines" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalBizLineRes">
+        SELECT <include refid="lineColumns"/>
+          FROM biz20_fee_charge
+               INNER JOIN ast06_tr          ON ast06_tr_id      = biz20_tr_id
+               INNER JOIN act02_journal     ON act02_tr_id      = biz20_tr_id
+               INNER JOIN act03_journal_dtl ON act03_journal_id = act02_journal_id
+         WHERE biz20_company_id                     = #{companyId}
+           AND TO_CHAR(biz20_charge_date,'YYYY.MM') = #{stdMonth}
+           AND ast06_tr_cd                          = #{trCode}
+           AND #{manageType} = ( SELECT biz13_manage_type
+                                    FROM biz13_with_corp
+                                   WHERE biz13_corp_id = biz20_corp_id
+                                     AND biz13_first_start_date <![CDATA[<=]]> biz20_charge_date
+                                   ORDER BY biz13_first_start_date DESC
+                                   LIMIT 1 )
+         ORDER BY act02_date, act02_journal_id, act03_seq
+    </select>
+
+    <!-- AS-IS act03_journal_dtl.selectErpChargeFee (AssetERP 사용료 1004) — 로그인 회사 조건 추가 -->
+    <select id="selectErpChargeFeeLines" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalBizLineRes">
+        SELECT <include refid="lineColumns"/>
+          FROM biz55_erp_fee_charge
+               INNER JOIN ast06_tr          ON ast06_tr_id      = biz55_tr_id
+               INNER JOIN act02_journal     ON act02_tr_id      = biz55_tr_id
+               INNER JOIN act03_journal_dtl ON act03_journal_id = act02_journal_id
+         WHERE biz55_charge_date = #{chargeDate}
+           AND ast06_tr_cd       = #{trCode}
+           AND ast06_company_id  = #{companyId}
+         ORDER BY act02_date, act02_journal_id, act03_seq
+    </select>
+
+    <!-- AS-IS act03_journal_dtl.selectByJournalId (급여·퇴직정산) — 회사 조건 추가 -->
+    <select id="selectJournalLines" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalBizLineRes">
+        SELECT <include refid="lineColumns"/>
+          FROM act02_journal
+               INNER JOIN act03_journal_dtl ON act03_journal_id = act02_journal_id
+         WHERE act02_journal_id = #{journalId}
+           AND act02_company_id = #{companyId}
+         ORDER BY act03_seq
+    </select>
+
+    <!-- AS-IS biz01_promo.selectBizCard — 필요한 열만 -->
+    <select id="selectBizCards" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalBizCardRes">
+        SELECT biz01_promo_id    AS promo_id
+             , crd01_card_type   AS card_type
+             , biz01_provide_amt AS provide_amt
+          FROM biz01_promo
+               INNER JOIN crd01_card ON crd01_card_id = biz01_card_id
+         WHERE biz01_company_id = #{companyId}
+           AND biz01_std_ym     = #{stdMonth}
+           AND biz01_card_data_id IS NOT NULL
+         ORDER BY biz01_provide_date
+    </select>
+
+    <!-- AS-IS biz20_fee_charge.selectByTrCode — 필요한 열만 -->
+    <select id="selectFeeCharges" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalBizFeeRes">
+        SELECT t.biz20_fee_charge_id AS fee_charge_id
+             , t.biz20_tr_id         AS tr_id
+             , t.biz20_charge_date   AS charge_date
+             , t.biz20_corp_id       AS corp_id
+             , t.biz20_ast_class_tree_id AS ast_class_tree_id
+             , t.biz20_charge_fee    AS charge_fee
+             , t.biz20_tax           AS tax
+             , t.biz20_appr_id       AS appr_id
+          FROM (
+                 SELECT biz20_fee_charge.*
+                      , ( SELECT biz13_manage_type
+                            FROM biz13_with_corp
+                           WHERE biz13_cont_corp_id = biz20_cont_corp_id
+                             AND biz13_corp_id      = biz20_corp_id
+                             AND biz13_first_start_date <![CDATA[<=]]> biz20_charge_date
+                           ORDER BY biz13_first_start_date DESC
+                           LIMIT 1 ) AS biz20_manage_type
+                      , ( SELECT ast05_ast_class_tree_id
+                            FROM ast05_tr_code
+                           WHERE ast05_company_id = biz20_company_id
+                             AND ast05_tr_cd      = #{trCode} ) AS biz20_ast_class_tree_id
+                   FROM biz20_fee_charge
+                  WHERE biz20_company_id                     = #{companyId}
+                    AND TO_CHAR(biz20_charge_date,'YYYY.MM') = #{stdMonth}
+                    AND COALESCE(biz20_charge_fee,0)        != 0
+               ) t
+         WHERE #{manageType} = t.biz20_manage_type
+    </select>
+
+    <update id="updateFeeChargeTrId">
+        UPDATE biz20_fee_charge
+           SET biz20_tr_id = #{trId,jdbcType=NUMERIC}
+         WHERE biz20_fee_charge_id = #{feeChargeId}
+    </update>
+
+    <!-- AS-IS biz55_erp_fee_charge.selectByChargeDate — 필요한 열만 -->
+    <select id="selectErpFeeCharges" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalBizErpFeeRes">
+        SELECT biz55_erp_fee_charge_id AS erp_fee_charge_id
+             , biz55_tr_id             AS tr_id
+             , biz55_charge_date       AS charge_date
+             , biz51_corp_id           AS corp_id
+             , ast_id                  AS ast_class_tree_id
+             , biz55_charge_amt        AS charge_amt
+             , biz55_total_amt         AS total_amt
+             , biz55_total_vat         AS total_vat
+             , biz55_appr_id           AS appr_id
+             , 'AssetERP 사용료 청구 ('||TO_CHAR(biz55_charge_date,'yyyy-mm-dd')||')' AS note
+          FROM biz55_erp_fee_charge
+               INNER JOIN biz51_erp_cont_corp ON biz51_erp_cont_corp_id = biz55_erp_cont_corp_id
+             , ( SELECT ast05_ast_class_tree_id AS ast_id
+                   FROM ast05_tr_code
+                  WHERE ast05_company_id = #{companyId}
+                    AND ast05_tr_cd      = #{trCode} ) t
+         WHERE biz55_charge_date = #{chargeDate}
+    </select>
+
+    <update id="updateErpFeeChargeTrId">
+        UPDATE biz55_erp_fee_charge
+           SET biz55_tr_id = #{trId,jdbcType=NUMERIC}
+         WHERE biz55_erp_fee_charge_id = #{erpFeeChargeId}
+    </update>
+
+    <!-- AS-IS ast06_tr.insert — 이 화면이 채우는 열(통화 KRW·환율 1·외화금액 = 원화금액, 나머지는 null) -->
+    <insert id="insertTr">
+        INSERT INTO ast06_tr (ast06_tr_id, ast06_ast_class_tree_id, ast06_date, ast06_tr_cd, ast06_amt, ast06_settle_mng_yn, ast06_note,
+                              ast06_person_id, ast06_company_id, ast06_corp_id, ast06_tax, ast06_deposit_id, ast06_cur_cd,
+                              ast06_for_amt, ast06_fx_rate, ast06_cont_amt, ast06_for_cont_amt)
+        VALUES (#{trId}, #{astClassTreeId,jdbcType=NUMERIC}, #{date}, #{trCode}, #{amt}, true, #{note,jdbcType=VARCHAR},
+                #{personId}, #{companyId}, #{corpId,jdbcType=NUMERIC}, #{tax,jdbcType=NUMERIC}, NULL, 'KRW',
+                #{amt}, 1, #{contAmt}, #{contAmt})
+    </insert>
+
+    <!-- AS-IS ast06_tr.selectByDate — 법인카드미지급금(9006) 거래 -->
+    <select id="selectTrIdsByDate" resultType="long">
+        SELECT ast06_tr_id
+          FROM ast06_tr
+         WHERE ast06_company_id = #{companyId}
+           AND ast06_tr_cd      = #{trCode}
+           AND ast06_date       = #{date}
+    </select>
+
+    <select id="createJournalPayMonth" resultType="string" flushCache="true">
+        SELECT f_create_journalPayMonth(#{companyId}, #{personId}, #{payDate}, #{payType}, #{retireId,jdbcType=NUMERIC})
+    </select>
+
+    <select id="selectJournalIdByTrId" resultType="long">
+        SELECT act02_journal_id FROM act02_journal WHERE act02_tr_id = #{trId}
+    </select>
+
+    <insert id="insertRelateAppr">
+        INSERT INTO act80_relate_appr SELECT f_create_seq(), #{apprId}, #{journalId}, #{trId}
+    </insert>
+
+    <!-- AS-IS act06_journal_tmp.deleteByBizId · act03_journal_dtl.deleteByBizId · act02_journal.deleteByBizId -->
+    <delete id="deleteJournalTmpByBizId">
+        DELETE FROM act06_journal_tmp WHERE act06_journal_id IN ( SELECT act02_journal_id FROM act02_journal WHERE act02_biz_id = #{bizId} )
+    </delete>
+    <delete id="deleteJournalDtlByBizId">
+        DELETE FROM act03_journal_dtl WHERE act03_journal_id IN ( SELECT act02_journal_id FROM act02_journal WHERE act02_biz_id = #{bizId} )
+    </delete>
+    <delete id="deleteJournalByBizId">
+        DELETE FROM act02_journal WHERE act02_biz_id = #{bizId}
+    </delete>
+
+    <!-- AS-IS act06_journal_tmp·act03_journal_dtl·act02_journal.deleteByJournalId — 로그인 회사의 전표만 -->
+    <delete id="deleteJournalTmpById">
+        DELETE FROM act06_journal_tmp
+         WHERE act06_journal_id IN ( SELECT act02_journal_id FROM act02_journal WHERE act02_journal_id = #{journalId} AND act02_company_id = #{companyId} )
+    </delete>
+    <delete id="deleteJournalDtlById">
+        DELETE FROM act03_journal_dtl
+         WHERE act03_journal_id IN ( SELECT act02_journal_id FROM act02_journal WHERE act02_journal_id = #{journalId} AND act02_company_id = #{companyId} )
+    </delete>
+    <delete id="deleteJournalById">
+        DELETE FROM act02_journal WHERE act02_journal_id = #{journalId} AND act02_company_id = #{companyId}
+    </delete>
+</mapper>

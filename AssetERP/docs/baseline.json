@@ -10595,5 +10595,44 @@
     "note": "docs/work/U/U09-작업기록.md",
     "history": [],
     "id": "U09"
+  },
+  "Act02_Tab_CreateJournalBiz": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/act/Act02_Grid_CreateJournalBiz.java": "ac69d49cfec6fddff6859db2791b92c5d760730e",
+      "application/src/main/java/myApp/client/vi/act/Act02_Tab_CreateJournalBiz.java": "84f97108fb24b379665a9667c3d4fdcfe19786be",
+      "application/src/main/java/myApp/client/vi/act/model/Act02_JournalModel.java": "4ebb3e69f0b7dba94668c6e774ff700eaa1cf06c",
+      "application/src/main/java/myApp/client/vi/act/model/Act02_JournalModelProperties.java": "b1314afe3486972b2c93556f81385eaed84c9b4e",
+      "application/src/main/java/myApp/client/vi/act/model/Act03_JournalDtlModel.java": "1ad5d7a66b81b62c880b4ba07e93299bd4c66d54",
+      "application/src/main/java/myApp/client/vi/act/model/Act03_JournalDtlModelProperties.java": "987fea07eb1401d88c54e595f2a97ea6b0c08d43",
+      "application/src/main/java/myApp/server/act/Act02_Journal.java": "2b47b76448d8e80fb79a9474ff98126cbe522804",
+      "application/src/main/java/myApp/server/act/Act03_JournalDtl.java": "ea4892fe161b44e445c18470a6d7a4956e03a859",
+      "application/src/main/java/myApp/server/act/Act04_GenLedger.java": "49a3f72f8d6395c5479d57ef6935a0149218ef4d",
+      "application/src/main/java/myApp/server/act/mapper/act02_journal.xml": "2c7804f20ce46eeb9247b46d67d96de1fbfc8571",
+      "application/src/main/java/myApp/server/act/mapper/act03_journal_dtl.xml": "30693776bf7e446ac02e9099bd5aca30c8dca83e",
+      "application/src/main/java/myApp/server/act/mapper/act04_gen_ledger.xml": "d8900a92e94b48cefec9e7431c42f3547bdadbd7",
+      "application/src/main/java/myApp/server/act/mapper/act06_journal_tmp.xml": "25dd7957dfe95fa25bf0d0e4b585a698611dff8b",
+      "application/src/main/java/myApp/server/act/mapper/act80_relate_appr.xml": "83efce1a67bacbae17dd671a739e68a47e610dec",
+      "application/src/main/java/myApp/server/ast/Ast06_Tr.java": "2702058b182da45864e4313e8ce23ed2b4268dc8",
+      "application/src/main/java/myApp/server/ast/mapper/ast06_tr.xml": "920b374e2a153a0c08ca47690139d316723fede4",
+      "application/src/main/java/myApp/server/ast/mapper/ast07_settle.xml": "8cb313a1bd9e72bb8f913912f56696b73f191cc4",
+      "application/src/main/java/myApp/server/ast/mapper/ast09_book.xml": "fb0636ccfd391f1efae798a56d6aaa46ce71ea4a",
+      "application/src/main/java/myApp/server/biz/mapper/biz01_promo.xml": "4146dbb852af9dc7b73367ab57014bca38065854",
+      "application/src/main/java/myApp/server/biz/mapper/biz20_fee_charge.xml": "e96f6a85a84621d45477cc9361b35fd5ee614dd1",
+      "application/src/main/java/myApp/server/biz/mapper/biz55_erp_fee_charge.xml": "0e9ce8f771fe76019512ef6215950e4882cbbb54",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Act02_Lookup_ModiJournal"
+    ],
+    "recorded_at": "2026-10-30T11:23:45+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/U/U10-작업기록.md",
+    "history": [],
+    "id": "U10"
   }
 }

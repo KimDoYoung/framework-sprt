@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, JournalDtl, JournalLine, JournalMap, JournalPayMonth, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, JournalLine, JournalMap, JournalPayMonth, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { AstBook } from '../types/ast';
 import { readBlobError } from './file';
 
@@ -262,5 +262,31 @@ export const actApi = {
   /** AS-IS act.Act04_GenLedger.checkClose (U04): 마감이면 AS-IS 메시지로 실패 */
   checkLedgerClose: async (stdDate: string): Promise<void> => {
     await apiClient.get<ApiResponse<void>>('v1/act/gen-ledgers/close-check', { params: { stdDate } });
+  },
+
+  // ── U10 급여/카드 회계처리 (Act02_Tab_CreateJournalBiz) ──
+
+  /** AS-IS act.Act02_Journal.selectMonthBiz: stdMonth = "yyyy.MM" */
+  searchJournalBizs: async (stdMonth: string): Promise<JournalBiz[]> => {
+    const res = await apiClient.get<ApiResponse<JournalBiz[]>>('v1/act/journal-bizs', { params: { stdMonth } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act03_JournalDtl.selectBizCard·selectChargeFee·selectErpChargeFee·selectByJournalId — 고른 행의 거래 코드로 서버가 가른다 */
+  searchJournalBizLines: async (stdMonth: string, row: JournalBizRow): Promise<JournalBizLine[]> => {
+    const res = await apiClient.get<ApiResponse<JournalBizLine[]>>('v1/act/journal-bizs/lines', {
+      params: { stdMonth, trCode: row.trCode || undefined, note: row.note || undefined, date: row.date || undefined, journalId: row.journalId ?? undefined },
+    });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act02_Journal.createJournalBiz */
+  createJournalBizs: async (stdMonth: string, rows: JournalBizRow[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/act/journal-bizs/create', { stdMonth, rows });
+  },
+
+  /** AS-IS act.Act02_Journal.deleteJournalBiz */
+  deleteJournalBizs: async (stdMonth: string, rows: JournalBizRow[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/act/journal-bizs/delete', { stdMonth, rows });
   },
 };

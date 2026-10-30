@@ -194,3 +194,47 @@ export interface JournalLine {
   crNote: string | null;
 }
 
+
+/** AS-IS act.Act02_Journal.selectMonthBiz (Act02_Tab_CreateJournalBiz, U10) — 급여/카드 회계처리 위 그리드 한 행. rowKey는 전표가 없는 행의 행번호일 뿐이다 */
+export interface JournalBiz {
+  rowKey: number;
+  journalId: number | null;
+  retireId: number | null;
+  companyId: number | null;
+  note: string | null;
+  trCode: string | null;
+  trCount: number | null;
+  journalAmt: number | null;
+  bizCloseYn: string | null;
+  journalYn: string | null;
+  fixYnName: string | null;
+  accountCloseYn: string | null;
+  date: string | null;
+  payMonthCode: string | null;
+}
+
+/** AS-IS act.Act03_JournalDtl.selectBizCard·selectChargeFee·selectErpChargeFee·selectByJournalId (Act02_Grid_CreateJournalBiz, U10) — 분개 한 행 */
+export interface JournalBizLine {
+  journalDtlId: number;
+  date: string | null;
+  journalNoStr: string | null;
+  note: string | null;
+  drAccountCode: string | null;
+  drAstAccountName: string | null;
+  drAmt: number | null;
+  drNote: string | null;
+  crAccountCode: string | null;
+  crAstAccountName: string | null;
+  crAmt: number | null;
+  crNote: string | null;
+}
+
+/** createJournalBiz·deleteJournalBiz가 읽는 행 속성 */
+export interface JournalBizRow {
+  journalId: number | null;
+  retireId: number | null;
+  trCode: string | null;
+  note: string | null;
+  date: string | null;
+  payMonthCode: string | null;
+}
