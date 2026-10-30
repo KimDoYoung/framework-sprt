@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { CrdCard, CrdCardManager, CrdCardUser, CrdExcelCode, CrdExcelCompany } from '../types/crd';
+import { CrdCard, CrdCardManager, CrdCardUser, CrdData, CrdDataAmount, CrdDataCheck, CrdDataConfirm, CrdDataTarget, CrdExcelCode, CrdExcelCompany } from '../types/crd';
 
 /** crd(법인카드) API (E24 법인카드 업로드 기초자료) */
 export const crdApi = {
@@ -24,10 +24,16 @@ export const crdApi = {
     return res.data.data ?? 0;
   },
 
-  /** AS-IS crd.Crd11_ExcelCode.selectByCompanyId — 카드사 코드 */
-  searchExcelCodes: async (bankCode: string): Promise<CrdExcelCode[]> => {
-    const res = await apiClient.get<ApiResponse<CrdExcelCode[]>>('v1/crd/excel-codes', { params: { bankCode } });
+  /** AS-IS crd.Crd11_ExcelCode.selectByCompanyId — 카드사 코드. defaults면 회사 0의 기본 맵핑 */
+  searchExcelCodes: async (bankCode: string, defaults = false): Promise<CrdExcelCode[]> => {
+    const res = await apiClient.get<ApiResponse<CrdExcelCode[]>>('v1/crd/excel-codes', { params: { bankCode, defaults } });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS crd.Crd11_ExcelCode.copyData — [커스텀 설정]: 기본 맵핑을 이 회사의 맵핑으로 복사 → 복사한 건수 */
+  copyExcelCodes: async (bankCode: string, rows: CrdExcelCode[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/crd/excel-codes/copy', rows, { params: { bankCode } });
+    return res.data.data ?? 0;
   },
 
   /** AS-IS crd.Crd11_ExcelCode.update → 저장된 행(요청 순서) */
@@ -108,6 +114,64 @@ export const crdApi = {
     const form = new FormData();
     form.append('excelUpload', file);
     const res = await apiClient.post<ApiResponse<number>>('v1/crd/cards/excel', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data.data ?? 0;
+  },
+
+  // ===== 법인카드 내역 업로드 (U14 Crd02_Tab_DataUpload) =====
+
+  /** AS-IS crd.Crd02_Data.selectByPaging — 은행·년월이 비면 서버가 "%" */
+  searchData: async (p: { searchText: string; dataBankCode: string; dataYm: string; confirm: CrdDataConfirm; offset: number; limit: number }): Promise<{ total: number; rows: CrdData[] }> => {
+    const res = await apiClient.get<ApiResponse<{ total: number; rows: CrdData[] }>>('v1/crd/data', { params: p });
+    return res.data.data ?? { total: 0, rows: [] };
+  },
+
+  /** AS-IS crd.Crd02_Data.selectByAmt — 총 승인금액·총 부가세 */
+  getDataAmount: async (p: { searchText: string; dataBankCode: string; dataYm: string; confirm: CrdDataConfirm }): Promise<CrdDataAmount> => {
+    const res = await apiClient.get<ApiResponse<CrdDataAmount>>('v1/crd/data/amount', { params: p });
+    return res.data.data ?? {};
+  },
+
+  /** AS-IS biz.Biz01_Promo.targetCheck — checkType 1 엑셀업로드 / 2 내역확정 / 3 등록 */
+  dataTargetCheck: async (dataYm: string, checkType: string): Promise<CrdDataCheck> => {
+    const res = await apiClient.get<ApiResponse<CrdDataCheck>>('v1/crd/data/target-check', { params: { dataYm, checkType } });
+    return res.data.data as CrdDataCheck;
+  },
+
+  /** AS-IS biz.Biz01_Promo.targetListCheck — checkType 1 삭제 / 4 저장 */
+  dataListCheck: async (checkType: string, ids: number[]): Promise<CrdDataCheck> => {
+    const res = await apiClient.post<ApiResponse<CrdDataCheck>>('v1/crd/data/list-check', { ids }, { params: { checkType } });
+    return res.data.data as CrdDataCheck;
+  },
+
+  /** AS-IS crd.Crd02_Data.update / copyUpdate — dataId가 0 이하면 새 내역 → 저장한 내역 */
+  saveData: async (row: CrdData): Promise<CrdData> => {
+    const res = await apiClient.put<ApiResponse<CrdData>>('v1/crd/data', row);
+    return res.data.data as CrdData;
+  },
+
+  /** AS-IS crd.Crd02_Data.delete + deleteBiz → 지운 건수 */
+  deleteData: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/crd/data', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** 선택내역확정(ids)·전체내역확정(조회조건) 전의 확인 */
+  dataConfirmCheck: async (target: CrdDataTarget): Promise<CrdDataCheck> => {
+    const res = await apiClient.post<ApiResponse<CrdDataCheck>>('v1/crd/data/confirm-check', target);
+    return res.data.data as CrdDataCheck;
+  },
+
+  /** AS-IS biz.Biz01_Promo.insertList → 확정한 건수 */
+  confirmData: async (target: CrdDataTarget): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/crd/data/confirm', target);
+    return res.data.data ?? 0;
+  },
+
+  /** 엑셀업로드 (AS-IS ExcelUpload?uploadType=crdExcelUpload) → 등록한 내역 수 */
+  uploadDataExcel: async (file: File, cardCode: string, dataYm: string): Promise<number> => {
+    const form = new FormData();
+    form.append('excelUpload', file);
+    const res = await apiClient.post<ApiResponse<number>>('v1/crd/data/excel', form, { params: { cardCode, dataYm }, headers: { 'Content-Type': 'multipart/form-data' } });
     return res.data.data ?? 0;
   },
 };

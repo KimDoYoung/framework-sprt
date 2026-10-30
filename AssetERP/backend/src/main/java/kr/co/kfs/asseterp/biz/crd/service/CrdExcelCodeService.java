@@ -23,8 +23,18 @@ public class CrdExcelCodeService {
 
     private final CrdExcelCodeMapper mapper;
 
-    public List<CrdExcelCodeRes> search(UserPrincipal user, String bankCode) {
-        return mapper.selectByCompanyId(user.getCompanyId(), bankCode);
+    /** defaults이면 회사 0의 기본 맵핑(Crd11_Lookup_ExcelCode.excelCodeChk가 회사 맵핑이 없을 때 retrieve(0L)로 읽는다) */
+    public List<CrdExcelCodeRes> search(UserPrincipal user, String bankCode, boolean defaults) {
+        return mapper.selectByCompanyId(defaults ? 0L : user.getCompanyId(), bankCode);
+    }
+
+    /** AS-IS crd.Crd11_ExcelCode.copyData L35-53 ([커스텀 설정]) — 화면에 보이는 기본 맵핑을 로그인 회사의 맵핑으로 복사한다 → 복사한 건수 */
+    @Transactional
+    public int copy(UserPrincipal user, String bankCode, List<CrdExcelCodeSaveReq> rows) {
+        for (CrdExcelCodeSaveReq r : rows) {
+            mapper.insert(mapper.selectNextId(), user.getCompanyId(), new CrdExcelCodeSaveReq(null, bankCode, r.bankExcelCode(), r.seq(), r.text()));
+        }
+        return rows.size();
     }
 
     /**

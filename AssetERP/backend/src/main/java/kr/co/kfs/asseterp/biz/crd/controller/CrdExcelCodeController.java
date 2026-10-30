@@ -19,10 +19,18 @@ public class CrdExcelCodeController {
 
     private final CrdExcelCodeService service;
 
-    /** AS-IS crd.Crd11_ExcelCode.selectByCompanyId (회사 + 카드사) */
+    /** AS-IS crd.Crd11_ExcelCode.selectByCompanyId (회사 + 카드사). defaults=true면 회사 0의 기본 맵핑 */
     @GetMapping
-    public ApiResponse<List<CrdExcelCodeRes>> search(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String bankCode) {
-        return ApiResponse.ok(service.search(principal, bankCode));
+    public ApiResponse<List<CrdExcelCodeRes>> search(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String bankCode,
+                                                     @RequestParam(defaultValue = "false") boolean defaults) {
+        return ApiResponse.ok(service.search(principal, bankCode, defaults));
+    }
+
+    /** AS-IS crd.Crd11_ExcelCode.copyData — [커스텀 설정] → 복사한 건수 */
+    @PostMapping("/copy")
+    public ApiResponse<Integer> copy(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String bankCode,
+                                     @RequestBody List<CrdExcelCodeSaveReq> rows) {
+        return ApiResponse.ok(service.copy(principal, bankCode, rows));
     }
 
     /** AS-IS crd.Crd11_ExcelCode.update → 저장된 행(요청 순서) */

@@ -58,3 +58,60 @@ export interface CrdCardUser {
   titleName?: string | null;
   orgName?: string | null;
 }
+
+/** 법인카드 내역 한 행 (crd02_data, U14 Crd02_Tab_DataUpload) — 날짜는 yyyy-MM-dd. confirmYn은 내역확정이면 'O' */
+export interface CrdData {
+  dataId: number;
+  companyId?: number | null;
+  dataYm?: string | null;
+  dataBankCode?: string | null;
+  dataBankName?: string | null;
+  approvalDt?: string | null;
+  approvalTime?: string | null;
+  partCode?: string | null;
+  partName?: string | null;
+  cardNo?: string | null;
+  cardName?: string | null;
+  franchiseName?: string | null;
+  sectorName?: string | null;
+  paymentMethod?: string | null;
+  monthlyPayments?: number | null;
+  approvalAmount?: number | null;
+  surtax?: number | null;
+  approvalClassification?: string | null;
+  approvalMethod?: string | null;
+  approvalNo?: string | null;
+  stateName?: string | null;
+  taxTy?: string | null;
+  merchantStatus?: string | null;
+  merchantNo?: string | null;
+  bizLicenseNo?: string | null;
+  representativeName?: string | null;
+  merchantAddr?: string | null;
+  merchantPhone?: string | null;
+  confirmYn?: string | null;
+}
+
+/** 확정여부 콤보 (AS-IS confirmComboBox) → 서버 confirm 값 */
+export type CrdDataConfirm = 'ALL' | 'DONE' | 'NOT_ALL' | 'NOT_EXCEPT_CANCEL';
+
+/** biz.Biz01_Promo.targetCheck·targetListCheck 결과 — status -1 거절 / 0 진행 / 1 확인 후 진행 / 2 저장 완료 */
+export interface CrdDataCheck {
+  status: number;
+  message?: string | null;
+  count: number;
+}
+
+export interface CrdDataAmount {
+  totalApprovalAmount?: number | null;
+  totalSurtax?: number | null;
+}
+
+/** 선택내역확정·삭제는 ids, 전체내역확정은 조회조건 */
+export interface CrdDataTarget {
+  ids?: number[];
+  searchText?: string;
+  dataBankCode?: string;
+  dataYm?: string;
+  confirm?: CrdDataConfirm;
+}

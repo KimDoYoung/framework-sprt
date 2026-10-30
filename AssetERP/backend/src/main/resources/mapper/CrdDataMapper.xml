@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/crd/mapper/crd02_data.xml (selectByTextPaging·selectByTextTotal·selectByText·selectByAmt·selectByCompanyId·getApprovalNo·insert·selectById)
+  · biz/mapper/biz01_promo.xml (checkData·selectByCardDataId·insert·update·selectByApprovalNo·deleteApprovalNo·partCancelUpdate·deleteBiz)
+  · crd01_card.xml selectCardManager · sys01_company.xml getTaxType + UpdateDataModel(crd02_data) 저장·삭제  (U14)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.crd.mapper.CrdDataMapper">
+
+    <sql id="dataCols">
+        crd02_data_id                                                               AS data_id
+      , crd02_company_id                                                            AS company_id
+      , crd02_data_ym                                                               AS data_ym
+      , crd02_data_bank_cd                                                          AS data_bank_code
+      , f_cdnm('CreditCardCompany', crd02_data_bank_cd, crd02_company_id, f_sysdate()) AS data_bank_name
+      , crd02_approval_dt                                                           AS approval_dt
+      , crd02_approval_time                                                         AS approval_time
+      , crd02_part_cd                                                               AS part_code
+      , crd02_part_nm                                                               AS part_name
+      , crd02_card_no                                                               AS card_no
+      , crd02_card_nm                                                               AS card_name
+      , crd02_franchise_nm                                                          AS franchise_name
+      , crd02_sector_nm                                                             AS sector_name
+      , crd02_payment_method                                                        AS payment_method
+      , crd02_monthly_payments                                                      AS monthly_payments
+      , crd02_approval_amount                                                       AS approval_amount
+      , crd02_surtax                                                                AS surtax
+      , crd02_approval_classification                                               AS approval_classification
+      , crd02_approval_method                                                       AS approval_method
+      , crd02_approval_no                                                           AS approval_no
+      , crd02_state_nm                                                              AS state_name
+      , crd02_tax_ty                                                                AS tax_ty
+      , crd02_merchant_status                                                       AS merchant_status
+      , crd02_merchant_no                                                           AS merchant_no
+      , crd02_biz_license_no                                                        AS biz_license_no
+      , crd02_representative_nm                                                     AS representative_name
+      , crd02_merchant_addr                                                         AS merchant_addr
+      , crd02_merchant_phone                                                        AS merchant_phone
+    </sql>
+
+    <!-- AS-IS crd02_data.selectByTextPaging/selectByText 의 안쪽 조회 — 내역확정 여부(crd02_confirm_yn)는 그 달(dataYm) 기준 -->
+    <sql id="dataFrom">
+        FROM (SELECT crd02_data.*
+                   , COALESCE((SELECT 'O'
+                                 FROM biz01_promo
+                                WHERE biz01_std_ym = #{dataYm}
+                                  AND biz01_company_id = #{companyId}
+                                  AND crd02_data_id = biz01_card_data_id), '') AS crd02_confirm_yn
+                FROM crd02_data
+               WHERE COALESCE(crd02_card_no, '') || COALESCE(crd02_franchise_nm, '') || COALESCE(crd02_biz_license_no, '')
+                     || COALESCE(crd02_representative_nm, '') LIKE #{searchText}
+                 AND crd02_data_ym LIKE #{dataYm}
+                 AND crd02_data_bank_cd LIKE #{dataBankCode}
+                 AND crd02_company_id = #{companyId}) t
+       WHERE crd02_confirm_yn LIKE #{confirmCode}
+         AND crd02_state_nm NOT LIKE #{stateCode}
+    </sql>
+
+    <select id="selectPaging" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdDataRes">
+        SELECT <include refid="dataCols"/>
+             , crd02_confirm_yn AS confirm_yn
+        <include refid="dataFrom"/>
+        ORDER BY crd02_approval_dt, crd02_approval_time, crd02_franchise_nm
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="selectTotal" resultType="long">
+        SELECT count(*)
+        <include refid="dataFrom"/>
+    </select>
+
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdDataRes">
+        SELECT <include refid="dataCols"/>
+             , crd02_confirm_yn AS confirm_yn
+        <include refid="dataFrom"/>
+        ORDER BY crd02_approval_dt, crd02_approval_time, crd02_franchise_nm
+    </select>
+
+    <!-- AS-IS crd02_data.selectByAmt L(IDMS-IC) -->
+    <select id="selectAmount" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdDataAmountRes">
+        SELECT SUM(crd02_approval_amount) AS total_approval_amount
+             , SUM(crd02_surtax)          AS total_surtax
+          FROM crd02_data
+         WHERE COALESCE(crd02_card_no, '') || COALESCE(crd02_franchise_nm, '') || COALESCE(crd02_biz_license_no, '')
+               || COALESCE(crd02_representative_nm, '') LIKE #{searchText}
+           AND crd02_data_ym LIKE #{dataYm}
+           AND crd02_data_bank_cd LIKE #{dataBankCode}
+           AND crd02_company_id = #{companyId}
+           AND COALESCE((SELECT 'O'
+                           FROM biz01_promo
+                          WHERE biz01_std_ym = #{dataYm}
+                            AND biz01_company_id = #{companyId}
+                            AND crd02_data_id = biz01_card_data_id), '') LIKE #{confirmCode}
+           AND crd02_state_nm NOT LIKE #{stateCode}
+    </select>
+
+    <select id="selectByIds" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdDataRes">
+        SELECT <include refid="dataCols"/>
+             , COALESCE((SELECT 'O' FROM biz01_promo WHERE biz01_company_id = crd02_company_id AND crd02_data_id = biz01_card_data_id LIMIT 1), '') AS confirm_yn
+          FROM crd02_data
+         WHERE crd02_company_id = #{companyId}
+           AND crd02_data_id IN <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+         ORDER BY crd02_approval_dt, crd02_approval_time, crd02_franchise_nm
+    </select>
+
+    <!-- AS-IS crd02_data.selectById — 로그인 회사 조건을 더했다 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdDataRes">
+        SELECT <include refid="dataCols"/>
+             , COALESCE((SELECT 'O' FROM biz01_promo WHERE biz01_company_id = crd02_company_id AND crd02_data_id = biz01_card_data_id LIMIT 1), '') AS confirm_yn
+          FROM crd02_data
+         WHERE crd02_data_id = #{dataId}
+           AND crd02_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS crd11_excel_code.selectByBankCode — 그 회사가 직접 맵핑한 행이 있으면 그것, 없으면 회사 0(기본 맵핑) -->
+    <select id="selectExcelCodes" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdExcelCodeRes">
+        SELECT crd11_excel_code_id   AS excel_code_id
+             , crd11_company_id      AS company_id
+             , crd11_bank_cd         AS bank_code
+             , f_cdnm('CreditCardCompany', crd11_bank_cd, crd11_company_id, f_sysdate())       AS bank_name
+             , crd11_bank_excel_cd   AS bank_excel_code
+             , f_cdnm('CreditCardExcelCode', crd11_bank_excel_cd, crd11_company_id, f_sysdate()) AS bank_excel_name
+             , crd11_seq             AS seq
+             , crd11_note            AS text
+          FROM crd11_excel_code
+         WHERE crd11_bank_cd = #{bankCode}
+           AND crd11_company_id = CASE WHEN EXISTS (SELECT 1 FROM crd11_excel_code
+                                                     WHERE crd11_company_id = #{companyId}
+                                                       AND crd11_bank_cd = #{bankCode}) THEN #{companyId} ELSE 0 END
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS crd02_data.getApprovalNo -->
+    <select id="selectApprovalNo" resultType="string">
+        WITH approval_number AS (
+            SELECT 'syscode' || LPAD((ROW_NUMBER() OVER (ORDER BY crd02_approval_no) + 1)::text, 3, '0') AS syscode_value
+              FROM crd02_data
+             WHERE crd02_data_ym = #{dataYm}
+               AND crd02_company_id = #{companyId}
+               AND crd02_approval_no LIKE '%syscode%'
+        )
+        SELECT COALESCE(MAX(syscode_value), 'syscode001') AS crd02_approval_no
+          FROM approval_number
+    </select>
+
+    <!-- AS-IS crd02_data.insert -->
+    <insert id="insert">
+        INSERT INTO crd02_data
+             ( crd02_data_id, crd02_company_id, crd02_data_ym, crd02_data_bank_cd, crd02_approval_dt, crd02_approval_time
+             , crd02_part_cd, crd02_part_nm, crd02_card_no, crd02_card_nm, crd02_franchise_nm, crd02_sector_nm
+             , crd02_payment_method, crd02_monthly_payments, crd02_approval_amount, crd02_surtax
+             , crd02_approval_classification, crd02_approval_method, crd02_approval_no, crd02_state_nm, crd02_tax_ty
+             , crd02_merchant_status, crd02_merchant_no, crd02_biz_license_no, crd02_representative_nm
+             , crd02_merchant_addr, crd02_merchant_phone )
+        VALUES
+             ( #{dataId}, #{companyId}, #{req.dataYm}, #{req.dataBankCode}, #{req.approvalDt}, #{req.approvalTime}
+             , #{req.partCode}, #{req.partName}, #{req.cardNo}, #{req.cardName}, #{req.franchiseName}, #{req.sectorName}
+             , #{req.paymentMethod}, #{req.monthlyPayments}, #{req.approvalAmount}, #{req.surtax}
+             , #{req.approvalClassification}, #{req.approvalMethod}, #{req.approvalNo}, #{req.stateName}, #{req.taxTy}
+             , #{req.merchantStatus}, #{req.merchantNo}, #{req.bizLicenseNo}, #{req.representativeName}
+             , #{req.merchantAddr}, #{req.merchantPhone} )
+    </insert>
+
+    <update id="update">
+        UPDATE crd02_data
+           SET crd02_data_ym = #{req.dataYm}
+             , crd02_data_bank_cd = #{req.dataBankCode}
+             , crd02_approval_dt = #{req.approvalDt}
+             , crd02_approval_time = #{req.approvalTime}
+             , crd02_part_cd = #{req.partCode}
+             , crd02_part_nm = #{req.partName}
+             , crd02_card_no = #{req.cardNo}
+             , crd02_card_nm = #{req.cardName}
+             , crd02_franchise_nm = #{req.franchiseName}
+             , crd02_sector_nm = #{req.sectorName}
+             , crd02_payment_method = #{req.paymentMethod}
+             , crd02_monthly_payments = #{req.monthlyPayments}
+             , crd02_approval_amount = #{req.approvalAmount}
+             , crd02_surtax = #{req.surtax}
+             , crd02_approval_classification = #{req.approvalClassification}
+             , crd02_approval_method = #{req.approvalMethod}
+             , crd02_approval_no = #{req.approvalNo}
+             , crd02_state_nm = #{req.stateName}
+             , crd02_tax_ty = #{req.taxTy}
+             , crd02_merchant_status = #{req.merchantStatus}
+             , crd02_merchant_no = #{req.merchantNo}
+             , crd02_biz_license_no = #{req.bizLicenseNo}
+             , crd02_representative_nm = #{req.representativeName}
+             , crd02_merchant_addr = #{req.merchantAddr}
+             , crd02_merchant_phone = #{req.merchantPhone}
+         WHERE crd02_data_id = #{req.dataId}
+           AND crd02_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM crd02_data
+         WHERE crd02_company_id = #{companyId}
+           AND crd02_data_id IN <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- ===== biz.Biz01_Promo ===== -->
+
+    <sql id="countCols">
+        count(*)                                                AS data_count
+      , count(*) FILTER (WHERE pid IS NOT NULL)                 AS confirm_count
+      , count(*) FILTER (WHERE pid IS NOT NULL AND cl = 'true') AS close_count
+    </sql>
+
+    <!-- AS-IS targetCheck: crd02_data.selectByCompanyId(dataYm LIKE) 각 행의 biz01_promo.selectByCardDataId 첫 행으로 확정·마감을 센다 -->
+    <select id="countPromoByMonth" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdPromoCountRow">
+        SELECT <include refid="countCols"/>
+          FROM (SELECT (SELECT biz01_promo_id  FROM biz01_promo WHERE biz01_card_data_id = d.crd02_data_id AND biz01_company_id = #{companyId} LIMIT 1) AS pid
+                     , (SELECT biz01_close_yn  FROM biz01_promo WHERE biz01_card_data_id = d.crd02_data_id AND biz01_company_id = #{companyId} LIMIT 1) AS cl
+                  FROM crd02_data d
+                 WHERE d.crd02_data_ym LIKE #{dataYm}
+                   AND d.crd02_company_id = #{companyId}) t
+    </select>
+
+    <!-- AS-IS targetListCheck: 고른 내역마다 biz01_promo.selectByCardDataId 첫 행 -->
+    <select id="countPromoByIds" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdPromoCountRow">
+        SELECT <include refid="countCols"/>
+          FROM (SELECT (SELECT biz01_promo_id  FROM biz01_promo WHERE biz01_card_data_id = d.crd02_data_id AND biz01_company_id = #{companyId} LIMIT 1) AS pid
+                     , (SELECT biz01_close_yn  FROM biz01_promo WHERE biz01_card_data_id = d.crd02_data_id AND biz01_company_id = #{companyId} LIMIT 1) AS cl
+                  FROM crd02_data d
+                 WHERE d.crd02_company_id = #{companyId}
+                   AND d.crd02_data_id IN <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>) t
+    </select>
+
+    <select id="selectPromoIdsByDataId" resultType="long">
+        SELECT biz01_promo_id
+          FROM biz01_promo
+         WHERE biz01_company_id = #{companyId}
+           AND biz01_card_data_id = #{dataId}
+    </select>
+
+    <select id="selectCardManager" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdCardManagerRow">
+        SELECT crd01_card_id    AS card_id
+             , crd03_public_yn  AS public_yn
+             , crd03_person_id  AS card_manager_id
+          FROM crd01_card
+               INNER JOIN crd03_trans ON (    crd03_card_id = crd01_card_id
+                                          AND #{approvalDate}::date BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt, '9999-12-31'))
+         WHERE crd01_card_no = #{cardNo}
+           AND crd01_company_id = #{companyId}
+    </select>
+
+    <select id="selectTaxType" resultType="string">
+        SELECT COALESCE(sys01_tax_type, '')
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS biz01_promo.insert — 제공구분 1, 정산구분 1 -->
+    <insert id="insertPromo">
+        INSERT INTO biz01_promo
+             ( biz01_promo_id, biz01_company_id, biz01_provide_date, biz01_provide_rcv_type, biz01_settle_type
+             , biz01_card_data_id, biz01_card_id, biz01_provide_amt, biz01_tax, biz01_std_ym, biz01_tax_type, biz01_real_person_id )
+        VALUES
+             ( #{promoId}, #{companyId}, #{row.approvalDt}, '1', '1'
+             , #{row.dataId}, #{cardId}, #{amount}, #{tax}, #{row.dataYm}, #{taxType}, #{realPersonId} )
+    </insert>
+
+    <update id="updatePromo">
+        UPDATE biz01_promo
+           SET biz01_company_id = #{companyId}
+             , biz01_provide_date = #{row.approvalDt}
+             , biz01_provide_rcv_type = '1'
+             , biz01_settle_type = '1'
+             , biz01_card_data_id = #{row.dataId}
+             , biz01_card_id = #{cardId}
+             , biz01_provide_amt = #{amount}
+             , biz01_tax = #{tax}
+             , biz01_std_ym = #{row.dataYm}
+             , biz01_tax_type = #{taxType}
+         WHERE biz01_promo_id = #{promoId}
+    </update>
+
+    <select id="selectPromoByApprovalNo" resultType="kr.co.kfs.asseterp.biz.crd.dto.CrdPromoAmtRow">
+        SELECT biz01_promo_id    AS promo_id
+             , biz01_provide_amt AS provide_amt
+             , biz01_tax         AS tax
+          FROM biz01_promo
+         WHERE biz01_company_id = #{companyId}
+           AND biz01_std_ym = #{dataYm}
+           AND biz01_card_data_id IN (SELECT crd02_data_id
+                                        FROM crd02_data
+                                       WHERE crd02_approval_no = #{approvalNo}
+                                         AND crd02_company_id = #{companyId}
+                                         AND crd02_state_nm LIKE #{stateName})
+         LIMIT 1
+    </select>
+
+    <delete id="deletePromoByApprovalNo">
+        DELETE FROM biz01_promo
+         WHERE biz01_company_id = #{companyId}
+           AND biz01_std_ym = #{dataYm}
+           AND biz01_card_data_id IN (SELECT crd02_data_id
+                                        FROM crd02_data
+                                       WHERE crd02_approval_no = #{approvalNo}
+                                         AND crd02_company_id = #{companyId}
+                                         AND crd02_state_nm LIKE #{stateName})
+    </delete>
+
+    <update id="partCancelUpdate">
+        UPDATE biz01_promo
+           SET biz01_provide_amt = #{provideAmt}
+             , biz01_tax = #{tax}
+         WHERE biz01_promo_id = #{promoId}
+    </update>
+
+    <delete id="deletePromoByDataIds">
+        DELETE FROM biz01_promo
+         WHERE biz01_company_id = #{companyId}
+           AND biz01_card_data_id IN <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

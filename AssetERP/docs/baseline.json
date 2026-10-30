@@ -10713,5 +10713,36 @@
     "note": "docs/work/U/U13-작업기록.md",
     "history": [],
     "id": "U13"
+  },
+  "Crd02_Tab_DataUpload": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/crd/Crd02_Edit_DataUpload.java": "216b51e34f3cd499788241d20aa45ad34fb725ae",
+      "application/src/main/java/myApp/client/vi/crd/Crd02_Tab_DataUpload.java": "0c87ff3b95f84c33db6f2b37f8e6995df2c3f479",
+      "application/src/main/java/myApp/client/vi/crd/Crd11_Lookup_ExcelCode.java": "b6a4a7f015b7d96cf16679c6804f6c6e1bd10889",
+      "application/src/main/java/myApp/client/vi/crd/model/Crd02_DataModel.java": "ffc51ec81327255e765df6470acabffe88edadd8",
+      "application/src/main/java/myApp/client/vi/crd/model/Crd02_DataModelProperties.java": "875e9fe24a62b8f8687ff7d5625788c97d069557",
+      "application/src/main/java/myApp/client/vi/crd/model/Crd11_ExcelCodeModel.java": "8f1511cac82b7e380f3ba57b96d9e4e71a18383e",
+      "application/src/main/java/myApp/client/vi/crd/model/Crd11_ExcelCodeModelProperties.java": "cddc9e13b4df889904dbaa069a022a049d4afcd0",
+      "application/src/main/java/myApp/server/biz/Biz01_Promo.java": "d6fd40b02763302b9b8b7614d935ff1058a04be1",
+      "application/src/main/java/myApp/server/biz/mapper/biz01_promo.xml": "4146dbb852af9dc7b73367ab57014bca38065854",
+      "application/src/main/java/myApp/server/crd/Crd02_Data.java": "0b8c345316d1c6b3cd857c1d95830920d5e9e171",
+      "application/src/main/java/myApp/server/crd/Crd11_ExcelCode.java": "e5994e0237effab49506b86b1b6e786c59d1076d",
+      "application/src/main/java/myApp/server/crd/mapper/crd01_card.xml": "91af22f4b24af26fb17eaca045b98a49b748ef7e",
+      "application/src/main/java/myApp/server/crd/mapper/crd02_data.xml": "6863dfab03893c89e542335f02bab35811243d72",
+      "application/src/main/java/myApp/server/crd/mapper/crd11_excel_code.xml": "b238667d98de79f1d7c533e70c6b48aeee8ef31a",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-10-30T13:29:23+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/U/U14-작업기록.md",
+    "history": [],
+    "id": "U14"
   }
 }

@@ -173,6 +173,7 @@ import { Pay50_Tab_ExpenseJournal } from './pay/Pay50_Tab_ExpenseJournal';
 import { Pay50_Tab_ExpenseSettle } from './pay/Pay50_Tab_ExpenseSettle';
 import { Pay50_Tab_AccountSumList } from './pay/Pay50_Tab_AccountSumList';
 import { Crd01_Tab_Card } from './crd/Crd01_Tab_Card';
+import { Crd02_Tab_DataUpload } from './crd/Crd02_Tab_DataUpload';
 import { Pay10_Tab_List } from './pay/Pay10_Tab_List';
 import { Pay10_Tab_Retire } from './pay/Pay10_Tab_Retire';
 import { Pay34_Tab_WorkTimeConfig } from './pay/Pay34_Tab_WorkTimeConfig';
@@ -562,6 +563,7 @@ export const SCREENS: Record<string, React.FC> = {
   Act02_Tab_DepositIoList, // U01 (메뉴 #1164·#1470. 상신의 전자결재 편집창은 다음 단계, 문서분류 조회창 Dcr30_Move_DcrClass·RD 출력 재사용)
   Act02_Tab_CreateJournalBiz, // U10 (메뉴 #1180. 하위 Act02_Grid_CreateJournalBiz. 1단계: 분개 [변경] 아이콘의 Act02_Lookup_ModiJournal은 안내만)
   Pay50_Tab_AccountSumList, // U12 (메뉴 #1399. 단독 화면, [엑셀다운로드]는 RD)
+  Crd02_Tab_DataUpload, // U14 (메뉴 #1039·#1479. 하위 Crd02_Edit_DataUpload·Crd11_Lookup_ExcelCode, 엑셀업로드·내역확정(Biz01_Promo) 서버 포함)
   Crd01_Tab_Card, // U13 (메뉴 #1038·#1478. 하위 Crd01_Edit_Card·Crd03_Grid_User, 결제계좌 Ast01_Lookup_CorpAccount·직원 Emp00_Lookup_SelectSingle 재사용)
   Pay50_Tab_ExpenseSettle, // U11 (메뉴 #1390. 하위 Ast07_Grid_History·Ast07_Lookup_Settle·Ast07_Lookup_SettleMulti, 거래처 조회창은 임직원 포함(empYn). History [전표변경] 아이콘의 Act02_Lookup_ModiJournal은 안내만)
   Ast09_Tab_DepositBookPeriod, // U02 (메뉴 #1238·#1471. 하위 Ast01_Lookup_CorpAccount. 계정별원장 아이콘은 메뉴 1150을 열고 값만 보냄 — 받는 화면 Act02_Tab_JournalSub는 다음 단계)
