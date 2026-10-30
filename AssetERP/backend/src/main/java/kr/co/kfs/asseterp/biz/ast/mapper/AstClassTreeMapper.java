@@ -6,6 +6,7 @@ import kr.co.kfs.asseterp.biz.ast.dto.AstClassTreeRes;
 import kr.co.kfs.asseterp.biz.ast.dto.AstItemClassUpdateReq;
 import kr.co.kfs.asseterp.biz.ast.dto.AstItemTreeCond;
 import kr.co.kfs.asseterp.biz.ast.dto.AstItemTreeRes;
+import kr.co.kfs.asseterp.biz.ast.dto.AstTrCodeTreeRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -86,4 +87,23 @@ public interface AstClassTreeMapper {
     int deleteManagerByLinkId(@Param("classTreeId") Long classTreeId);
 
     int deleteClassTree(@Param("classTreeId") Long classTreeId);
+
+    // ---- W05 청약처리: 종목선택(Ast01_Lookup_Info) · IPO 종목 생성(insertIpo) ----
+
+    /** ast01_class_tree.selectByTrCode — 거래유형의 종목분류 그룹·국내외 구분으로 거른 트리(전위 순서) */
+    List<AstTrCodeTreeRes> selectByTrCode(@Param("companyId") Long companyId, @Param("userId") Long userId, @Param("orgId") Long orgId,
+                                          @Param("trCode") String trCode, @Param("itemLClass") String itemLClass, @Param("abroType") String abroType,
+                                          @Param("assetType") String assetType);
+
+    /** ast05_tr_code.selectByTrCode의 종목분류 그룹코드(없으면 null) */
+    String selectItemClassGroupCode(@Param("companyId") Long companyId, @Param("trCode") String trCode);
+
+    /** ast01_class_tree.selectIpoAssignClassTreeId — IPO 생성 지정 분류 */
+    Long selectIpoAssignClassTreeId(@Param("companyId") Long companyId);
+
+    /** ast01_class_tree.checkAstClassTreeName */
+    int checkAstClassTreeName(@Param("companyId") Long companyId, @Param("parentId") Long parentId, @Param("astName") String astName);
+
+    /** ast01_class_tree.selectSeqByParentId */
+    long selectSeqByParentId(@Param("companyId") Long companyId, @Param("parentId") Long parentId);
 }

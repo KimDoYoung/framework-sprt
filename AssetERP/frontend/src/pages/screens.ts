@@ -216,6 +216,7 @@ import { Act02_Tab_DepositIoList } from './act/Act02_Tab_DepositIoList';
 import { Act02_Tab_CreateJournalBiz } from './act/Act02_Tab_CreateJournalBiz';
 import { Ast09_Tab_DepositBookPeriod } from './ast/Ast09_Tab_DepositBookPeriod';
 import { Ast06_Tab_TrTax } from './ast/Ast06_Tab_TrTax';
+import { Ast06_Tab_TrIPO } from './ast/Ast06_Tab_TrIPO';
 import { Emp17_Tab_BenefitManager } from './emp/Emp17_Tab_BenefitManager';
 import { Emp50_Tab_TransportExpenseMng } from './emp/Emp50_Tab_TransportExpenseMng';
 import { Sms02_Tab_TotalCount } from './sms/Sms02_Tab_TotalCount';
@@ -586,6 +587,7 @@ export const SCREENS: Record<string, React.FC> = {
   Emp17_Tab_BenefitManager, // U05 (메뉴 #1222. 하위 Emp17_Edit_Note·Emp55_Lookup_account. 상신·문서보기의 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Emp50_Tab_TransportExpenseMng, // U06 (메뉴 #1348. 문서보기·상신의 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Ast06_Tab_TrTax, // U04 (메뉴 #1196. 하위 Ast06_Lookup_TrTax·Ast06_Lookup_Tr4Insure·Ast06_Grid_Journal·Ast05_Lookup_TrCodeWindow. 결재요청·문서보기의 전자결재 편집창, 분개 [변경]의 Act02_Lookup_ModiJournal은 다음 단계)
+  Ast06_Tab_TrIPO, // W05 1단계 (메뉴 #1288. + Ast06_Lookup_TrIPO·Ast06_Lookup_CreateIpoAstClass·Ast01_Lookup_Info. 연관문서 Act80_Lookup_RelateAppr·분개 [변경] Act02_Lookup_ModiJournal은 다음 단계)
   Tdm50_Tab_TotalDashboard, // N01 1단계 (+ Tdm50_Tab_Dashboard·DashboardExct·DashboardOrg·Tdm01_Lookup_SelectSingle, [보기] 아이콘의 점검 편집창·미흡 조치 상세는 N22·N24)
   Tdm50_Tab_CheckJob, // N20 1단계 (+ Tdm50_TabPage_CheckJob·Tdm50_Edit_CheckJob·Tdm55_Lookup_ChckRecord, 결재요청·문서보기·알림발송의 문자 창은 다른 도메인이라 점검 후 안내, 보고서 PDF는 서버 CheckExctPdfMaker)
   Tdm51_Tab_CheckOrg, // N21 (+ Tdm51_TabPage_CheckOrg·Tdm58_Lookup_ChckApprStep·Emp00_Lookup_SelectSingleTdm, 점검항목 [상세]의 Tdm52_Edit_ChckManl은 N22에서)

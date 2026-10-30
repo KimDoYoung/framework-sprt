@@ -8,6 +8,7 @@ import kr.co.kfs.asseterp.biz.ast.dto.AstItemClassUpdateReq;
 import kr.co.kfs.asseterp.biz.ast.dto.AstItemTreeCond;
 import kr.co.kfs.asseterp.biz.ast.dto.AstItemTreeRes;
 import kr.co.kfs.asseterp.biz.ast.dto.AstManagerSaveReq;
+import kr.co.kfs.asseterp.biz.ast.dto.AstTrCodeTreeRes;
 import kr.co.kfs.asseterp.biz.ast.mapper.Ast10ManagerMapper;
 import kr.co.kfs.asseterp.biz.ast.mapper.AstClassTreeMapper;
 import kr.co.kfs.asseterp.biz.org.dto.OrgInfoRes;
@@ -261,5 +262,59 @@ public class AstClassTreeService {
         mapper.deleteByAstClassTreeId(classTreeId);
         mapper.deleteManagerByLinkId(classTreeId);
         mapper.deleteClassTree(classTreeId);
+    }
+
+    /**
+     * W05 종목선택 창 트리 (AS-IS Ast01_ClassTree.selectByTrCode L57-111). 거래유형에 종목분류 그룹이 없으면 거래유형 조건을 뺀다. itemLClass(예 20 증권)·국내외 '%'는 조건 없음.
+     * 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0. 국내외 '%'는 조건 없음
+     */
+    public List<AstTrCodeTreeRes> searchByTrCode(UserPrincipal user, String trCode, String itemLClass, String abroType, String assetType) {
+        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        String code = trCode == null || trCode.isEmpty() ? null : trCode;
+        if (code != null) {
+            String group = mapper.selectItemClassGroupCode(user.getCompanyId(), code);
+            if (group == null || group.isEmpty()) code = null;
+        }
+        String lClass = itemLClass == null || itemLClass.isEmpty() || "%".equals(itemLClass) ? null : itemLClass;
+        String abro = abroType == null || abroType.isEmpty() || "%".equals(abroType) ? null : abroType;
+        String asset = assetType == null || assetType.isEmpty() ? "%" : assetType;
+        return mapper.selectByTrCode(user.getCompanyId(), user.getUserId(), orgId, code, lClass, abro, asset);
+    }
+
+    /**
+     * W05 IPO 종목정보 생성 (AS-IS Ast01_ClassTree.insertIpo L272-360): IPO 생성 지정 분류 아래에 증권 > 주식 > IPO 종목(고유자산)을 만들고
+     * 담당자를 넣는다 — 회사가 담당자 자동셋팅이면 열린 부서 전부(2), 아니면 만든 사람(1, 대표). 만든 종목을 돌려준다
+     */
+    @Transactional
+    public AstClassTreeRes createIpo(UserPrincipal user, String classTreeName) {
+        Long companyId = user.getCompanyId();
+        String name = classTreeName.trim();
+        Long parentId = mapper.selectIpoAssignClassTreeId(companyId);
+        if (parentId == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "IPO생성 지정 된 자산디렉토리가 존재하지 않습니다. 고유자산 기본등록에서 지정해주세요");
+        }
+        if (mapper.checkAstClassTreeName(companyId, parentId, name) > 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "이미 등록된 종목명입니다.");
+        }
+        long newId = mapper.selectNextId();
+        mapper.insertClassTree(new AstClassTreeRes(
+                newId, companyId, parentId, name, mapper.createCode(companyId, parentId, "IT"),
+                mapper.selectSeqByParentId(companyId, parentId), "IT", null, "true", null, null,
+                "20", "2010", "201011", null,   // 증권 > 주식 > IPO
+                "10", "1", "1",                 // 당기손익(PL), 고유자산, 거래단위 1
+                null, null, null, null, null, null, null,
+                "1",                            // 시가평가
+                null, null, null, null, null, null, null, null, null, null, null, null, 1));
+        if (mapper.selectAstManagerAutoYn(companyId)) {
+            for (Long orgId : mapper.selectOpenOrgCodeIds(companyId, LocalDate.now())) {
+                managerMapper.insertManager(managerMapper.selectNextId(), companyId, newId,
+                        new AstManagerSaveReq(null, newId, "2", orgId, null, "false", "ast01_class_tree_id"));
+            }
+        } else {
+            Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+            managerMapper.insertManager(managerMapper.selectNextId(), companyId, newId,
+                    new AstManagerSaveReq(null, newId, "1", orgId, user.getUserId(), "true", "ast01_class_tree_id"));
+        }
+        return mapper.selectById(newId);
     }
 }

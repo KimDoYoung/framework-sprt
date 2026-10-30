@@ -102,7 +102,7 @@ public class AstTrService {
     /**
      * Ast06_Tr.delete — 먼저 거래일마다 회계마감 검사(Act04_GenLedger.checkClose), 거래마다: 비품원장 되돌리기(자산분류가 50·55·952002일 때, 거래를 지우기 전에)
      * → 세금·4대보험 상세 → 확정 전표가 있으면 "승인완료 전표입니다." → 분개 임시·상세·분개 → 연결문서 → 결제내역, 마지막에 거래. 한 건이라도 실패하면 전부 되돌린다.
-     * 금융자산 원장(ast09_book.createFinanceBook)은 AS-IS도 selectTaxTr가 금융 상세를 안 읽어 항상 건너뛰므로 만들지 않았다
+     * 금융자산 원장(ast09_book.createFinanceBook)은 U04에서는 금융 상세가 없어 건너뛰었고, W05(청약처리)부터 금융 상세(ast08)가 있는 거래에서 돌린다
      */
     @Transactional
     public void delete(UserPrincipal user, List<Long> trIds) {
@@ -113,6 +113,12 @@ public class AstTrService {
             journalService.checkClose(companyId, tr.date());
         }
         for (Long trId : trIds) {
+            // 금융자산 보유원장 되돌리기(거래를 지우기 전에) → 금융상품 상세 제거 (W05, AS-IS는 financeModel.trFinanceId가 있을 때)
+            if (mapper.selectFinanceId(trId) != null) {
+                String msg = mapper.createFinanceBook("C", trId);
+                if (!"Y".equals(msg)) throw new BusinessException(ErrorCode.INVALID_INPUT, msg);
+                mapper.deleteFinanceByTrId(trId);
+            }
             Long astClassTreeId = mapper.selectAstClassTreeId(companyId, trId);
             if (astClassTreeId != null) {
                 AstClassCodeRes codes = mapper.selectClassCodes(astClassTreeId);

@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ast/mapper/ast06_tr.xml selectByPayCode L197 · selectById L106 · ast08_tr_finance 저장(UpdateDataModel 동적 INSERT/UPDATE) — 청약처리 Ast06_Tab_TrIPO (W05).
+     원본의 `ast06_tr.*, ast08_tr_finance.*`는 화면이 읽는 열만 남기고 별칭으로 풀었다. -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstTrFinanceMapper">
+
+    <sql id="financeColumns">
+        ast06_tr_id                                                                  AS tr_id,
+        ast06_date                                                                   AS date,
+        ast06_tr_cd                                                                  AS tr_code,
+        ast05_tr_nm                                                                  AS tr_name,
+        ast06_corp_id                                                                AS corp_id,
+        COALESCE(sys15_corp_nm, f_emp_kor_nm(ast06_corp_id))                         AS corp_name,
+        CONCAT(sys15_corp_nm, '(' || f_ast_class_tree_nm(ast08_account_id) || ')')   AS corp_account_name,
+        ast06_ast_class_tree_id                                                      AS ast_class_tree_id,
+        f_cdnm('ItemMClassCode', a.ast01_item_m_class_cd, ast06_company_id, ast06_date)
+          || CASE WHEN substr(a.ast01_item_s_class_cd, 5) = '99' THEN ''
+                  ELSE '(' || f_cdnm('ItemSClassCode', a.ast01_item_s_class_cd, ast06_company_id, ast06_date) || ')' END
+                                                                                     AS ast_class_name,
+        f_ast_class_tree_nm(ast06_ast_class_tree_id)                                 AS class_tree_name,
+        f_ast_class_tree_nm_allpath(ast06_ast_class_tree_id)                         AS class_tree_full_name,
+        ast06_cur_cd                                                                 AS cur_code,
+        a.ast01_tr_unit                                                              AS tr_unit,
+        ast08_qty                                                                    AS qty,
+        ast08_price                                                                  AS price,
+        ast08_tr_amt                                                                 AS tr_amt,
+        ast06_fee                                                                    AS fee,
+        ast06_amt                                                                    AS amt,
+        ast08_lock_up_period_cd                                                      AS lock_up_period_code,
+        f_cdnm('LockUpPeriodCode', ast08_lock_up_period_cd, ast06_company_id, ast06_date) AS lock_up_period_name,
+        ast08_lock_up_date                                                           AS lock_up_date,
+        ast08_list_date                                                              AS list_date,
+        ast08_account_id                                                             AS account_id,
+        f_ast_class_tree_nm(ast08_account_id)                                        AS account_name,
+        ast08_tr_finance_id                                                          AS tr_finance_id,
+        COALESCE(ast06_settle_mng_yn, 'false') = 'true'                              AS settle_mng_yn,
+        ast06_deposit_id                                                             AS deposit_id,
+        b.ast01_class_tree_nm                                                        AS deposit_name,
+        ast06_note                                                                   AS note,
+        ast06_person_id                                                              AS person_id,
+        f_emp_kor_nm(ast06_person_id)                                                AS person_name,
+        act02_journal_id                                                             AS journal_id,
+        ast06_appr_id                                                                AS appr_id,
+        apr01_status_cd                                                              AS appr_status_code,
+        CASE WHEN act02_journal_id IS NULL THEN
+                  ( SELECT count(*)
+                      FROM act80_relate_appr
+                           INNER JOIN apr01_appr r ON r.apr01_appr_id = act80_appr_id
+                           LEFT OUTER JOIN act02_journal j ON j.act02_journal_id = act80_journal_id
+                     WHERE ( act80_tr_id IN ( SELECT ast06_tr_id
+                                               UNION
+                                              SELECT ast07_settle_id
+                                                FROM ast07_settle
+                                               WHERE ast07_tr_id = ast06_tr_id ) OR
+                             j.act02_tr_id IN ( SELECT ast06_tr_id
+                                                 UNION
+                                                SELECT ast07_settle_id
+                                                  FROM ast07_settle
+                                                 WHERE ast07_tr_id = ast06_tr_id ) )
+                       AND r.apr01_status_cd NOT IN ('40','99') )
+             ELSE f_get_relate_dcr_count(act02_journal_id) END || ' 건'              AS appr_cnt,
+        ast05_dcr_class_tree_id                                                      AS dcr_class_tree_id
+    </sql>
+
+    <sql id="financeFrom">
+          FROM ast06_tr
+               INNER JOIN ast05_tr_code ON (ast05_tr_cd = ast06_tr_cd AND ast05_company_id = ast06_company_id)
+               LEFT OUTER JOIN ast01_class_tree a ON a.ast01_class_tree_id = ast06_ast_class_tree_id
+               LEFT OUTER JOIN ast01_class_tree b ON b.ast01_class_tree_id = ast06_deposit_id
+               LEFT OUTER JOIN sys15_corp         ON sys15_corp_id         = ast06_corp_id
+               LEFT OUTER JOIN act02_journal      ON act02_tr_id           = ast06_tr_id
+               LEFT OUTER JOIN ast08_tr_finance   ON ast08_tr_id           = ast06_tr_id
+               LEFT OUTER JOIN apr01_appr         ON apr01_appr_id         = ast06_appr_id
+    </sql>
+
+    <!-- AS-IS ast06_tr.selectByPayCode. 거래유형·거래처·계좌·종목은 0이면 서비스가 null로 보내 조건을 뺀다. bookIoCheck 분기는 이 화면이 안 써서 뺐다 -->
+    <select id="selectByPayCode" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrFinanceRes">
+        SELECT *
+          FROM ( SELECT <include refid="financeColumns"/>
+                 <include refid="financeFrom"/>
+                  WHERE ast05_rcv_pay_cd LIKE #{c.payCode}
+                    AND COALESCE(a.ast01_asset_type, '1') LIKE #{c.assetType}
+                    AND ( ( '1' = #{c.abroType} AND COALESCE(ast06_cur_cd, 'KRW') = 'KRW' ) OR
+                          ( '2' = #{c.abroType} AND COALESCE(ast06_cur_cd, 'KRW') != 'KRW' ) )
+                    <if test="c.trCodeId != null">
+                    AND ast05_tr_code_id = #{c.trCodeId}
+                    </if>
+                    <if test="c.corpId != null">
+                    AND ast06_corp_id = #{c.corpId}
+                    </if>
+                    <if test="c.accountId != null">
+                    AND ast08_account_id = #{c.accountId}
+                    </if>
+                    <if test="c.astClassTreeId != null">
+                    AND ast06_ast_class_tree_id = #{c.astClassTreeId}
+                    </if>
+                    AND ast06_date BETWEEN #{c.startDate} AND #{c.closeDate}
+                    AND ast06_tr_cd IN ( SELECT ast15_tr_cd
+                                           FROM ast15_tr_code_window
+                                          WHERE ast15_company_id      = ast06_company_id
+                                            AND ast15_window_class_nm = #{c.windowClassName} )
+                    AND ast06_company_id = #{c.companyId}
+                    AND ( ( #{c.userId} IN ( SELECT ast06_person_id
+                                              UNION ALL
+                                             SELECT ast10_person_id
+                                               FROM ast10_manager
+                                              WHERE ast10_manager_type = '1'
+                                                AND ast10_link_id IN (ast06_tr_id, ast06_ast_class_tree_id) ) ) OR
+                          ( #{c.orgId} IN ( SELECT ast10_org_id
+                                              FROM ast10_manager
+                                             WHERE ast10_manager_type = '2'
+                                               AND ast10_link_id IN (ast06_tr_id, ast06_ast_class_tree_id)
+                                             UNION ALL
+                                            SELECT CAST(f_get_empTrans(ast06_person_id, to_date(substr(ast06_tr_id || '', 1, 8), 'yyyymmdd'), 'org_code_id') AS NUMERIC) ) ) )
+               ) t
+         WHERE UPPER(COALESCE(tr_name, '') || COALESCE(corp_account_name, '') || COALESCE(ast_class_name, '')
+                     || COALESCE(class_tree_name, '') || COALESCE(note, '')) LIKE '%' || UPPER(#{c.searchText}) || '%'
+         ORDER BY date, tr_id
+    </select>
+
+    <!-- AS-IS ast06_tr.selectById — 저장 뒤·분개생성 뒤 한 건 다시 읽기 / 편집창에 넘길 값. 회사 조건 추가 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrFinanceRes">
+        SELECT <include refid="financeColumns"/>
+        <include refid="financeFrom"/>
+         WHERE ast06_company_id = #{companyId}
+           AND ast06_tr_id      = #{trId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertTr">
+        INSERT INTO ast06_tr (ast06_tr_id, ast06_company_id, ast06_person_id, ast06_date, ast06_tr_cd, ast06_amt, ast06_fee,
+                              ast06_settle_mng_yn, ast06_note, ast06_deposit_id, ast06_ast_class_tree_id, ast06_corp_id,
+                              ast06_cur_cd, ast06_fx_rate, ast06_for_amt)
+        VALUES (#{trId}, #{companyId}, #{personId}, #{r.date}, #{r.trCode}, #{r.amt}, #{r.fee},
+                #{r.settleMngYn}, #{r.note}, #{r.depositId}, #{r.astClassTreeId}, #{r.corpId},
+                COALESCE(#{r.curCode}, 'KRW'), 1.0, #{r.amt})
+    </insert>
+
+    <!-- 고칠 때 바뀌는 열: 거래일자·거래유형·종목·거래처는 편집창에서 막혀 있어 건드리지 않는다 -->
+    <update id="updateTr">
+        UPDATE ast06_tr
+           SET ast06_amt            = #{r.amt},
+               ast06_fee            = #{r.fee},
+               ast06_settle_mng_yn  = #{r.settleMngYn},
+               ast06_note           = #{r.note},
+               ast06_deposit_id     = #{r.depositId},
+               ast06_for_amt        = #{r.amt}
+         WHERE ast06_tr_id      = #{r.trId}
+           AND ast06_company_id = #{companyId}
+    </update>
+
+    <select id="selectFinanceId" resultType="long">
+        SELECT ast08_tr_finance_id FROM ast08_tr_finance WHERE ast08_tr_id = #{trId} LIMIT 1
+    </select>
+
+    <insert id="insertFinance">
+        INSERT INTO ast08_tr_finance (ast08_tr_finance_id, ast08_tr_id, ast08_account_id, ast08_qty, ast08_price, ast08_tr_amt, ast08_fee,
+                                      ast08_lock_up_period_cd, ast08_lock_up_date, ast08_list_date)
+        VALUES (#{financeId}, #{trId}, #{r.accountId}, #{r.qty}, #{r.price}, #{r.trAmt}, #{r.fee},
+                #{r.lockUpPeriodCode}, #{r.lockUpDate}, #{r.listDate})
+    </insert>
+
+    <update id="updateFinance">
+        UPDATE ast08_tr_finance
+           SET ast08_account_id         = #{r.accountId},
+               ast08_qty                = #{r.qty},
+               ast08_price              = #{r.price},
+               ast08_tr_amt             = #{r.trAmt},
+               ast08_fee                = #{r.fee},
+               ast08_lock_up_period_cd  = #{r.lockUpPeriodCode},
+               ast08_lock_up_date       = #{r.lockUpDate},
+               ast08_list_date          = #{r.listDate}
+         WHERE ast08_tr_finance_id = #{financeId}
+    </update>
+
+    <!-- AS-IS ast09_book.createFinanceBook -->
+    <select id="createFinanceBook" resultType="string" flushCache="true">
+        SELECT f_create_financeBook(#{procType}, #{trId})
+    </select>
+
+</mapper>

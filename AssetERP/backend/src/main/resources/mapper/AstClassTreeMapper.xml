@@ -481,7 +481,7 @@
                , #{itemDClassCode}
                , #{accountType}
                , #{assetType}
-               , #{trUnit}
+               , CAST(#{trUnit} AS numeric)
                , #{issueDate}
                , #{matDate}
                , #{corpId}
@@ -564,5 +564,128 @@
         DELETE FROM ast01_class_tree
          WHERE ast01_class_tree_id = #{classTreeId}
     </delete>
+
+    <!-- === W05 청약처리: AS-IS(IDMS-IC) ast01_class_tree.selectByTrCode L175 — 재귀 CTE는 정렬 경로(seq)에 필요한 열과 화면이 쓰는 열만 -->
+    <select id="selectByTrCode" resultType="kr.co.kfs.asseterp.biz.ast.dto.AstTrCodeTreeRes">
+        WITH RECURSIVE ast ( ast01_class_tree_id, ast01_parent_tree_id, ast01_class_tree_nm, ast01_seq, ast01_type_cd, ast01_isin,
+                             ast01_item_l_class_cd, ast01_item_m_class_cd, ast01_item_s_class_cd, ast01_cur_cd, ast01_tr_unit,
+                             depth, path, seq, cycle ) AS (
+            SELECT ast01_class_tree_id, ast01_parent_tree_id, ast01_class_tree_nm, ast01_seq, ast01_type_cd, ast01_isin,
+                   ast01_item_l_class_cd, ast01_item_m_class_cd, ast01_item_s_class_cd, ast01_cur_cd, ast01_tr_unit
+                 , 0                                                 AS depth
+                 , ARRAY[ast01_class_tree_id]                        AS path
+                 , ARRAY[LPAD(ast01_seq||'',10,'0')]                 AS seq
+                 , false                                             AS cycle
+              FROM ast01_class_tree
+             WHERE ast01_company_id      = #{companyId}
+               AND ast01_asset_type      LIKE #{assetType}
+               AND ast01_parent_tree_id  = 0
+             UNION ALL
+            SELECT b.ast01_class_tree_id, b.ast01_parent_tree_id, b.ast01_class_tree_nm, b.ast01_seq, b.ast01_type_cd, b.ast01_isin,
+                   b.ast01_item_l_class_cd, b.ast01_item_m_class_cd, b.ast01_item_s_class_cd, b.ast01_cur_cd, b.ast01_tr_unit
+                 , depth + 1                                         AS depth
+                 , ARRAY_APPEND(path, b.ast01_class_tree_id)         AS path
+                 , ARRAY_APPEND(seq, LPAD(b.ast01_seq||'',10,'0'))   AS seq
+                 , b.ast01_class_tree_id = ANY(path)                 AS cycle
+              FROM ast01_class_tree b
+                   INNER JOIN ast ON ast.ast01_class_tree_id = b.ast01_parent_tree_id
+             WHERE b.ast01_company_id = #{companyId}
+               AND NOT cycle
+        )
+        SELECT a.ast01_class_tree_id                                                    AS class_tree_id
+             , a.ast01_parent_tree_id                                                   AS parent_tree_id
+             , a.ast01_class_tree_nm
+               ||CASE WHEN a.ast01_type_cd != 'IT' THEN ''
+                      ELSE (CASE WHEN COALESCE(a.ast01_isin,'X') != 'X' THEN ' ('||a.ast01_isin||')' ELSE '' END) END AS class_tree_name
+             , a.ast01_type_cd                                                          AS type_code
+             , a.depth                                                                  AS depth
+             , f_ast_class_tree_nm_allpath(a.ast01_class_tree_id)                       AS class_tree_full_name
+             , a.ast01_cur_cd                                                           AS cur_code
+             , a.ast01_tr_unit                                                          AS tr_unit
+          FROM ast a
+         WHERE 1=1
+        <if test="trCode != null">
+           AND ast01_class_tree_id IN ( SELECT UNNEST(path)
+                                          FROM ast
+                                         WHERE ( ast01_item_l_class_cd IN ( SELECT sys09_code
+                                                                              FROM ast05_tr_code
+                                                                                   INNER JOIN sys13_code_group ON sys13_kind_group_cd = ast05_item_class_group_cd
+                                                                                   INNER JOIN sys09_code       ON sys09_code_id       = sys13_code_id
+                                                                             WHERE ast05_company_id = #{companyId}
+                                                                               AND ast05_tr_cd      = #{trCode} )
+                                              OR ast01_item_m_class_cd IN ( SELECT sys09_code
+                                                                              FROM ast05_tr_code
+                                                                                   INNER JOIN sys13_code_group ON sys13_kind_group_cd = ast05_item_class_group_cd
+                                                                                   INNER JOIN sys09_code       ON sys09_code_id       = sys13_code_id
+                                                                             WHERE ast05_company_id = #{companyId}
+                                                                               AND ast05_tr_cd      = #{trCode} )
+                                              OR ast01_item_s_class_cd IN ( SELECT sys09_code
+                                                                              FROM ast05_tr_code
+                                                                                   INNER JOIN sys13_code_group ON sys13_kind_group_cd = ast05_item_class_group_cd
+                                                                                   INNER JOIN sys09_code       ON sys09_code_id       = sys13_code_id
+                                                                             WHERE ast05_company_id = #{companyId}
+                                                                               AND ast05_tr_cd      = #{trCode} ) ) )
+        </if>
+        <if test="itemLClass != null">
+           AND ast01_class_tree_id IN ( SELECT UNNEST(path)
+                                          FROM ast
+                                         WHERE ast01_type_cd = 'IT'
+                                           AND ast01_item_l_class_cd LIKE #{itemLClass} )
+        </if>
+        <if test="abroType != null">
+           AND ast01_class_tree_id IN ( SELECT UNNEST(path)
+                                          FROM ast
+                                         WHERE ast01_type_cd = 'IT'
+                                           AND ( ( '1' = #{abroType} AND COALESCE(ast01_cur_cd,'KRW')  = 'KRW' ) OR
+                                                 ( '2' = #{abroType} AND COALESCE(ast01_cur_cd,'KRW') != 'KRW' ) ) )
+        </if>
+           AND ( ( a.ast01_type_cd = 'IT' AND
+                   ( ( #{userId} IN ( SELECT ast10_person_id
+                                        FROM ast10_manager
+                                       WHERE ast10_manager_type = '1'
+                                         AND ast10_link_id      = a.ast01_class_tree_id ) ) OR
+                     ( #{orgId}  IN ( SELECT ast10_org_id
+                                        FROM ast10_manager
+                                       WHERE ast10_manager_type = '2'
+                                         AND ast10_link_id      = a.ast01_class_tree_id ) ) ) ) OR
+                 ( a.ast01_type_cd != 'IT' ) )
+         ORDER BY seq
+    </select>
+
+    <select id="selectItemClassGroupCode" resultType="string">
+        SELECT ast05_item_class_group_cd FROM ast05_tr_code WHERE ast05_company_id = #{companyId} AND ast05_tr_cd = #{trCode} LIMIT 1
+    </select>
+
+    <!-- AS-IS ast01_class_tree.selectIpoAssignClassTreeId -->
+    <select id="selectIpoAssignClassTreeId" resultType="long">
+        SELECT ast01_class_tree_id
+          FROM ast01_class_tree
+         WHERE ast01_company_id    = #{companyId}
+           AND ast01_type_cd       = 'IC'
+           AND ast01_asset_type    = '1'
+           AND ast01_ipo_assign_yn = 'true'
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS ast01_class_tree.checkAstClassTreeName -->
+    <select id="checkAstClassTreeName" resultType="int">
+        SELECT COUNT(*)
+          FROM ast01_class_tree
+         WHERE ast01_company_id     = #{companyId}
+           AND ast01_parent_tree_id = #{parentId}
+           AND ast01_class_tree_nm  = #{astName}
+           AND ast01_type_cd        = 'IT'
+           AND ast01_asset_type     = '1'
+    </select>
+
+    <!-- AS-IS ast01_class_tree.selectSeqByParentId -->
+    <select id="selectSeqByParentId" resultType="long">
+        SELECT COALESCE(MAX(ast01_seq),0) + 1
+          FROM ast01_class_tree
+         WHERE ast01_company_id     = #{companyId}
+           AND ast01_parent_tree_id = #{parentId}
+           AND ast01_type_cd        = 'IT'
+           AND ast01_asset_type     = '1'
+    </select>
 
 </mapper>

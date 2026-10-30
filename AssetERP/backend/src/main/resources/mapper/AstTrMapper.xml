@@ -258,6 +258,17 @@
         SELECT f_create_depnBook(#{procType}, #{trId})
     </select>
 
+    <!-- AS-IS ast08_tr_finance 존재 확인(W05) · ast09_book.createFinanceBook · ast08_tr_finance.deleteByTrId -->
+    <select id="selectFinanceId" resultType="long">
+        SELECT ast08_tr_finance_id FROM ast08_tr_finance WHERE ast08_tr_id = #{trId} LIMIT 1
+    </select>
+
+    <select id="createFinanceBook" resultType="string" flushCache="true">
+        SELECT f_create_financeBook(#{procType}, #{trId})
+    </select>
+
+    <delete id="deleteFinanceByTrId">DELETE FROM ast08_tr_finance WHERE ast08_tr_id = #{trId}</delete>
+
     <delete id="deleteTaxByTrId">DELETE FROM ast20_tr_tax WHERE ast20_tr_id = #{trId}</delete>
 
     <delete id="delete4InsureByTrId">DELETE FROM ast21_tr_4insure WHERE ast21_tr_id = #{trId}</delete>

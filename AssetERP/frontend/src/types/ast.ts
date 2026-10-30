@@ -521,3 +521,77 @@ export interface InvestLimit {
   stopLossRate: number | null;
   note: string | null;
 }
+
+/** AS-IS ast.Ast06_Tr.selectByPayCode·selectById (Ast06_Tab_TrIPO, W05) — 금융상품 거래 그리드 한 행 + 편집창 값 */
+export interface AstTrFinance {
+  trId: number;
+  date: string;
+  trCode: string;
+  trName: string | null;
+  corpId: number | null;
+  corpName: string | null;
+  corpAccountName: string | null;
+  astClassTreeId: number | null;
+  astClassName: string | null;
+  classTreeName: string | null;
+  classTreeFullName: string | null;
+  curCode: string | null;
+  trUnit: number | null;
+  qty: number | null;
+  price: number | null;
+  trAmt: number | null;
+  fee: number | null;
+  amt: number | null;
+  lockUpPeriodCode: string | null;
+  lockUpPeriodName: string | null;
+  lockUpDate: string | null;
+  listDate: string | null;
+  accountId: number | null;
+  accountName: string | null;
+  trFinanceId: number | null;
+  settleMngYn: boolean;
+  depositId: number | null;
+  depositName: string | null;
+  note: string | null;
+  personId: number | null;
+  personName: string | null;
+  journalId: number | null;
+  apprId: number | null;
+  apprStatusCode: string | null;
+  apprCnt: string | null;
+  dcrClassTreeId: number | null;
+}
+
+/** AS-IS ast.Ast06_Tr.updateFinance 요청 — trId가 없으면 새 거래 */
+export interface AstTrFinanceSaveReq {
+  trId: number | null;
+  date: string;
+  trCode: string;
+  astClassTreeId: number | null;
+  corpId: number | null;
+  depositId: number | null;
+  settleMngYn: boolean;
+  amt: number | null;
+  fee: number | null;
+  note: string | null;
+  curCode: string | null;
+  accountId: number | null;
+  qty: number | null;
+  price: number | null;
+  trAmt: number | null;
+  lockUpPeriodCode: string | null;
+  lockUpDate: string | null;
+  listDate: string | null;
+}
+
+/** AS-IS ast.Ast01_ClassTree.selectByTrCode (Ast01_Lookup_Info, W05) — 종목선택 트리 한 노드(전위 순서 평평한 목록) */
+export interface AstTrCodeTreeNode {
+  classTreeId: number;
+  parentTreeId: number;
+  classTreeName: string;
+  typeCode: string;
+  depth: number;
+  classTreeFullName: string | null;
+  curCode: string | null;
+  trUnit: number | null;
+}

@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
 import { SettleAccrued, SettleExpense, SettleHistory, SettleSaveReq } from '../types/ast';
 import {
@@ -20,6 +21,9 @@ import {
   AstCorpAccount,
   AstTr,
   AstTrCodeByWindow,
+  AstTrCodeTreeNode,
+  AstTrFinance,
+  AstTrFinanceSaveReq,
   InvestLimit,
   InvestLimitDate,
   OwnerCapital,
@@ -377,6 +381,55 @@ export const astApi = {
   /** AS-IS ast.Ast06_Tr.delete (U04): 회계마감 검사 뒤 거래·분개·상세 삭제 */
   deleteTrs: async (trIds: number[]): Promise<void> => {
     await apiClient.post<ApiResponse<void>>('v1/ast/trs/delete', { trIds });
+  },
+
+  // ── W05 청약처리 (Ast06_Tab_TrIPO) ──
+
+  /** AS-IS ast.Ast06_Tr.selectByPayCode (W05): 기간·거래유형·계좌·종목·검색어의 금융상품 거래. 0·빈 값은 조건 없음 */
+  searchTrFinances: async (params: { startDate: string; closeDate: string; windowClassName: string; assetType?: string; abroType?: string; accountId?: number | null; classTreeId?: number | null; trCodeId?: number | null; searchText?: string }): Promise<AstTrFinance[]> => {
+    const res = await apiClient.get<ApiResponse<AstTrFinance[]>>('v1/ast/trs/finance', { params: { ...params, accountId: params.accountId ?? undefined, classTreeId: params.classTreeId ?? undefined, trCodeId: params.trCodeId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast06_Tr.selectById (W05): 저장·분개생성 뒤 한 건 다시 읽기 */
+  getTrFinance: async (trId: number): Promise<AstTrFinance> => {
+    const res = await apiClient.get<ApiResponse<AstTrFinance>>(`v1/ast/trs/finance/${trId}`);
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast06_Tr.updateFinance (W05): 금융상품 거래 저장 → 저장한 거래 ID */
+  saveTrFinance: async (req: AstTrFinanceSaveReq): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/ast/trs/finance', req);
+    return res.data.data;
+  },
+
+  /** 엑셀다운로드 (AS-IS ExcelDownload ast06IpoList, W05) — 조회 조건 그대로, 브라우저 저장 */
+  downloadIpoExcel: async (params: { startDate: string; closeDate: string; accountId?: number | null; classTreeId?: number | null; trCodeId?: number | null; searchText?: string }): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/ast/trs/finance/ipo-excel', { params: { ...params, accountId: params.accountId ?? undefined, classTreeId: params.classTreeId ?? undefined, trCodeId: params.trCodeId ?? undefined }, responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `공모주청약(${params.startDate} ~ ${params.closeDate}).xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** AS-IS ast.Ast01_ClassTree.selectByTrCode (Ast01_Lookup_Info, W05): 거래유형에 맞는 종목 트리 */
+  searchClassTreeByTrCode: async (trCode: string | null, itemLClass: string | null, abroType: string | null, assetType: string): Promise<AstTrCodeTreeNode[]> => {
+    const res = await apiClient.get<ApiResponse<AstTrCodeTreeNode[]>>('v1/ast/class-trees/by-tr-code', { params: { trCode: trCode ?? undefined, itemLClass: itemLClass ?? undefined, abroType: abroType ?? undefined, assetType } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast01_ClassTree.insertIpo (Ast06_Lookup_CreateIpoAstClass, W05): IPO 종목정보 생성 → 만든 종목 */
+  createIpoClass: async (classTreeName: string): Promise<AstClassTree> => {
+    const res = await apiClient.post<ApiResponse<AstClassTree>>('v1/ast/class-trees/ipo', { classTreeName });
+    return res.data.data;
   },
 
   /** AS-IS ast.Ast06_Tr.updateApprId (U04): 상신한 문서 ID 기록 */

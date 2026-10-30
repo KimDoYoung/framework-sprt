@@ -1,11 +1,14 @@
 package kr.co.kfs.asseterp.biz.ast.controller;
 
+import jakarta.validation.Valid;
 import kr.co.kfs.asseterp.biz.ast.dto.AstAssetItemRes;
 import kr.co.kfs.asseterp.biz.ast.dto.AstClassTreeItemRes;
 import kr.co.kfs.asseterp.biz.ast.dto.AstClassTreeRes;
 import kr.co.kfs.asseterp.biz.ast.dto.AstClassTreeSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.AstItemClassUpdateReq;
 import kr.co.kfs.asseterp.biz.ast.dto.AstItemTreeRes;
+import kr.co.kfs.asseterp.biz.ast.dto.AstTrCodeTreeRes;
+import kr.co.kfs.asseterp.biz.ast.dto.IpoClassCreateReq;
 import kr.co.kfs.asseterp.biz.ast.service.AstClassTreeService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -193,5 +196,26 @@ public class AstClassTreeController {
     ) {
         service.deleteClassTree(principal, id);
         return ApiResponse.ok(null);
+    }
+
+    /** W05 종목선택 창 — AS-IS ast.Ast01_ClassTree.selectByTrCode (전위 순서 평평한 트리) */
+    @GetMapping("/by-tr-code")
+    public ApiResponse<List<AstTrCodeTreeRes>> searchByTrCode(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(required = false) String trCode,
+            @RequestParam(required = false) String itemLClass,
+            @RequestParam(required = false) String abroType,
+            @RequestParam(required = false) String assetType
+    ) {
+        return ApiResponse.ok(service.searchByTrCode(principal, trCode, itemLClass, abroType, assetType));
+    }
+
+    /** W05 IPO 종목정보 생성 — AS-IS ast.Ast01_ClassTree.insertIpo */
+    @PostMapping("/ipo")
+    public ApiResponse<AstClassTreeRes> createIpo(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody IpoClassCreateReq req
+    ) {
+        return ApiResponse.ok(service.createIpo(principal, req.classTreeName()));
     }
 }

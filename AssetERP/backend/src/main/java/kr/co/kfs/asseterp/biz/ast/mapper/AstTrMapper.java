@@ -65,6 +65,15 @@ public interface AstTrMapper {
     /** ast09_book.createDepnBook — 'Y'면 정상 */
     String createDepnBook(@Param("procType") String procType, @Param("trId") Long trId);
 
+    /** ast08_tr_finance 상세 존재 여부(trFinanceId) — W05. AS-IS는 화면 모델의 financeModel.trFinanceId */
+    Long selectFinanceId(@Param("trId") Long trId);
+
+    /** ast09_book.createFinanceBook — 'Y'면 정상 */
+    String createFinanceBook(@Param("procType") String procType, @Param("trId") Long trId);
+
+    /** ast08_tr_finance.deleteByTrId */
+    int deleteFinanceByTrId(@Param("trId") Long trId);
+
     int deleteTaxByTrId(@Param("trId") Long trId);
 
     int delete4InsureByTrId(@Param("trId") Long trId);
