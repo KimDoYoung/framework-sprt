@@ -28,6 +28,22 @@
            AND UPPER(CONCAT(emp55_benefit_cd)) LIKE UPPER(#{searchText})
     </select>
 
+    <!-- AS-IS emp55_benefit_info.selectByCompanyId (IDMS-IC, U05 Emp55_Lookup_account) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.emp.dto.BenefitInfoRes">
+        SELECT <include refid="benefitInfoColumns"/>
+          FROM emp55_benefit_info
+         WHERE emp55_company_id = #{companyId}
+         ORDER BY emp55_benefit_cd collate "ko_KR.utf8" asc
+    </select>
+
+    <!-- AS-IS emp55_benefit_info.selectByBenefitCode (IDMS-IC, U05 Emp17_Tab_BenefitManager.defaultName) -->
+    <select id="selectByBenefitCode" resultType="kr.co.kfs.asseterp.biz.emp.dto.BenefitInfoRes">
+        SELECT <include refid="benefitInfoColumns"/>
+          FROM emp55_benefit_info
+         WHERE emp55_company_id = #{companyId}
+           AND emp55_benefit_cd = #{benefitCode}
+    </select>
+
     <!-- AS-IS emp55_benefit_info.selectById (IDMS-IC) -->
     <select id="selectById" resultType="kr.co.kfs.asseterp.biz.emp.dto.BenefitInfoRes">
         SELECT <include refid="benefitInfoColumns"/>

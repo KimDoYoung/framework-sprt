@@ -95,4 +95,14 @@
            AND act13_repr_account_cd = #{reprAccountCode}
            AND act13_account_map     = #{accountMap}
     </insert>
+
+    <!-- AS-IS act13_real_account_map.getAccountName (IDMS-IC) -->
+    <select id="selectAccountName" resultType="string">
+        SELECT f_get_account_nm(act13_company_id, act13_real_account_cd)
+          FROM act13_real_account_map
+         WHERE act13_company_id      = #{companyId}
+           AND act13_repr_account_cd = #{reprAccountCode}
+           AND act13_account_map     = #{accountMap}
+         LIMIT 1
+    </select>
 </mapper>

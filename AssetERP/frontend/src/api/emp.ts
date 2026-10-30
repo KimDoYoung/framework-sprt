@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { TransTarget, BizTrip, Errand, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { TransTarget, BizTrip, Errand, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -532,6 +532,18 @@ export const empBenefitInfoApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS emp.Emp55_BenefitInfo.selectByCompanyId (U05 Emp55_Lookup_account) */
+  searchBenefitInfosByCompany: async (): Promise<BenefitInfo[]> => {
+    const res = await apiClient.get<ApiResponse<BenefitInfo[]>>('v1/emp/benefit-infos/by-company');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp55_BenefitInfo.selectByBenefitCode (U05) — 없으면 null */
+  getBenefitInfoByCode: async (benefitCode: string): Promise<BenefitInfo | null> => {
+    const res = await apiClient.get<ApiResponse<BenefitInfo | null>>('v1/emp/benefit-infos/by-code', { params: { benefitCode } });
+    return res.data.data ?? null;
+  },
+
   /** AS-IS emp.Emp55_BenefitInfo.update → 저장된 행(요청 순서) */
   updateBenefitInfos: async (rows: BenefitInfo[], companyId?: number): Promise<BenefitInfo[]> => {
     const body = rows.map(({ benefitInfoId, benefitCode, issueLinkCode, expenseLinkCode, accountCode, unUseYn }) =>
@@ -549,6 +561,116 @@ export const empBenefitInfoApi = {
   /** AS-IS emp.Emp55_BenefitInfo.insertInitData: 고른 설정을 고른 고객사들로 복사 (관리자) → 복사한 건수 */
   copyBenefitInfos: async (companyIds: number[], benefitInfoIds: number[]): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/emp/benefit-infos/copy', { companyIds, benefitInfoIds });
+    return res.data.data ?? 0;
+  },
+};
+
+/** U05 AS-IS Emp17_Tab_BenefitManager (복리후생비 관리) → server/emp/Emp17_Benefit */
+export const empBenefitApi = {
+  /** AS-IS emp.Emp17_Benefit.selectByText (위 그리드) — benefitCode 없으면 전체 */
+  searchBenefits: async (p: { startDate: string; closeDate: string; benefitCode?: string; searchText: string }): Promise<Benefit[]> => {
+    const res = await apiClient.get<ApiResponse<Benefit[]>>('v1/emp/benefits', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp17_Benefit.selectByBenefitCode (아래 그리드) — benefitYn: 'true' 지급완료 / 'false' 미지급 / 없으면 전체 */
+  searchPayRequests: async (p: { yyyymm: string; benefitCode?: string; benefitYn?: string; searchText: string }): Promise<Benefit[]> => {
+    const res = await apiClient.get<ApiResponse<Benefit[]>>('v1/emp/benefits/pay-requests', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp17_Benefit.selectByYyyymm (apprChk) — 지출결의서가 없으면 null */
+  getPayRequest: async (yyyymm: string, benefitCode?: string): Promise<BenefitPayRequest | null> => {
+    const res = await apiClient.get<ApiResponse<BenefitPayRequest | null>>('v1/emp/benefits/pay-requests/appr', { params: { yyyymm, benefitCode } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS emp.Emp17_Benefit.selectApprId */
+  getPayRequestApprId: async (yyyymm: string, benefitCode?: string): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/emp/benefits/pay-requests/appr-id', { params: { yyyymm, benefitCode } });
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys00_Common.selectBenefit */
+  searchBenefitTypes: async (): Promise<BenefitType[]> => {
+    const res = await apiClient.get<ApiResponse<BenefitType[]>>('v1/emp/benefits/types');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp17_Benefit.payRequestApprCheck → 막는 메시지, 없으면 null */
+  checkPayRequest: async (year: string, month: string, benefitIds: number[]): Promise<string | null> => {
+    const res = await apiClient.post<ApiResponse<string | null>>('v1/emp/benefits/pay-requests/check', { year, month, benefitIds });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS emp.Emp17_Benefit.updatePayRequestYm — payRequestYyyymm이 null이면 제거 */
+  updatePayRequestYm: async (benefitIds: number[], payRequestYyyymm: string | null): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/emp/benefits/pay-requests/ym', { benefitIds, payRequestYyyymm });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp17_Benefit.updatePayRequestApprId (지출결의서 상신 뒤) */
+  updatePayRequestApprId: async (benefitIds: number[], apprId: number): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/emp/benefits/pay-requests/appr-id', { benefitIds, apprId });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp17_Benefit.update ([지급확인]·[지급취소]) */
+  updateBenefitYn: async (benefitIds: number[], benefitYn: boolean): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/emp/benefits/benefit-yn', { benefitIds, benefitYn });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp17_Benefit.deleteApprId (문서폐기) */
+  discardAppr: async (benefitId: number): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>(`v1/emp/benefits/${benefitId}/discard-appr`);
+  },
+
+  /** AS-IS emp.Emp17_Benefit.modelUpdate (알림 등록 창 [저장]) */
+  updateNote: async (benefitId: number, note: string): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/emp/benefits/${benefitId}/note`, { note });
+  },
+
+  /** AS-IS emp.Emp17_Benefit.sendMessage (알림 등록 창 [문자발송]) */
+  sendMessage: async (benefitId: number, note: string): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>(`v1/emp/benefits/${benefitId}/send-message`, { note });
+  },
+};
+
+/** U06 AS-IS Emp50_Tab_TransportExpenseMng (여비교통비 관리) → server/emp/Emp51_RelateAppr·Emp52_RelateAppr */
+export const empRelateApprApi = {
+  /** AS-IS emp.Emp51_RelateAppr.selectByCompanyId (yyyymm = 'yyyy.MM') */
+  searchRelateApprs: async (yyyymm: string): Promise<RelateAppr[]> => {
+    const res = await apiClient.get<ApiResponse<RelateAppr[]>>('v1/emp/relate-apprs', { params: { yyyymm } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp52_RelateAppr.selectByCompanyId — 기준년월의 상신 문서, 없으면 null */
+  getRelateApprStatus: async (yyyymm: string): Promise<RelateApprStatus | null> => {
+    const res = await apiClient.get<ApiResponse<RelateApprStatus | null>>('v1/emp/relate-apprs/status', { params: { yyyymm } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS emp.Emp52_RelateAppr.selectApprId */
+  getRelateApprApprId: async (yyyymm: string): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/emp/relate-apprs/appr-id', { params: { yyyymm } });
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp52_RelateAppr.insert → relateApprId (2단계 상신에서 쓴다) */
+  createRelateApprStatus: async (yyyymm: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/emp/relate-apprs/status', null, { params: { yyyymm } });
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp52_RelateAppr.updateApprId (상신 뒤, 2단계) */
+  updateRelateApprApprId: async (relateApprId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/emp/relate-apprs/${relateApprId}/appr-id`, { apprId });
+  },
+
+  /** AS-IS emp.Emp51_RelateAppr.updateCloseYn ([마감]·[취소]) → 바뀐 건수 */
+  updateRelateApprClose: async (yyyymm: string, closeYn: boolean): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/emp/relate-apprs/close', { yyyymm, closeYn });
     return res.data.data ?? 0;
   },
 };

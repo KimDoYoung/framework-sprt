@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/emp/mapper/emp51_relate_appr.xml selectByCompanyId·updateCloseYn + emp52_relate_appr.xml selectByCompanyId·insert·deleteByApprId·updateApprId  (U06 Emp50_Tab_TransportExpenseMng)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpRelateApprMapper">
+
+    <!-- AS-IS emp51_relate_appr.selectByCompanyId (IDMS-IC) — select *는 화면이 읽는 열로 풀었다 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.emp.dto.RelateApprRes">
+        SELECT emp51_relate_appr_id   AS relate_appr_id
+             , emp51_company_id       AS company_id
+             , emp51_person_id        AS person_id
+             , emp51_yyyymm           AS yyyymm
+             , emp51_reg_no           AS reg_no
+             , emp51_reg_date         AS reg_date
+             , emp51_reg_amt          AS reg_amt
+             , emp51_appr_id          AS appr_id
+             , emp51_close_yn         AS close_yn
+             , CASE WHEN COALESCE(emp51_close_yn, 'false') = 'true' THEN '마감' ELSE '' END AS close_name
+             , f_emp_kor_nm(emp51_person_id) AS person_name
+             , f_get_empTrans(emp51_person_id, emp51_reg_date::date, 'pos_nm') AS pos_name
+             , f_get_empTrans(emp51_person_id, emp51_reg_date::date, 'org_code_nm') AS org_name
+             , apr01_status_cd        AS status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, emp51_company_id, apr01_reg_date) AS status_name
+             , apr01_title            AS appr_title
+             , apr01_inout_cd         AS inout_code
+          FROM emp51_relate_appr
+               LEFT OUTER JOIN apr01_appr b ON emp51_appr_id = apr01_appr_id
+         WHERE emp51_company_id = #{companyId}
+           AND emp51_yyyymm LIKE #{yyyymm}
+           AND apr01_status_cd IN ('10', '20', '30')
+         ORDER BY emp51_reg_no
+    </select>
+
+    <!-- AS-IS emp51_relate_appr.updateCloseYn (IDMS-IC) -->
+    <update id="updateCloseYn">
+        UPDATE emp51_relate_appr
+           SET emp51_close_yn = #{closeYn}
+         WHERE emp51_company_id = #{companyId}
+           AND emp51_yyyymm LIKE #{yyyymm}
+    </update>
+
+    <!-- AS-IS emp52_relate_appr.selectByCompanyId (IDMS-IC) -->
+    <select id="selectStatusByCompanyId" resultType="kr.co.kfs.asseterp.biz.emp.dto.RelateApprStatusRes">
+        SELECT emp52_relate_appr_id   AS relate_appr_id
+             , emp52_appr_id          AS appr_id
+             , apr01_status_cd        AS status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, emp52_company_id, apr01_reg_date) AS status_name
+          FROM emp52_relate_appr
+               LEFT OUTER JOIN apr01_appr b ON emp52_appr_id = apr01_appr_id
+         WHERE emp52_company_id = #{companyId}
+           AND emp52_yyyymm LIKE #{yyyymm}
+    </select>
+
+    <!-- dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS emp52_relate_appr.insert (IDMS-IC) -->
+    <insert id="insertStatus">
+        INSERT INTO emp52_relate_appr (emp52_relate_appr_id, emp52_company_id, emp52_yyyymm, emp52_appr_id)
+        VALUES (#{relateApprId}, #{companyId}, #{yyyymm}, NULL)
+    </insert>
+
+    <!-- AS-IS emp52_relate_appr.deleteByApprId (IDMS-IC) -->
+    <delete id="deleteStatus">
+        DELETE FROM emp52_relate_appr
+         WHERE emp52_relate_appr_id = #{relateApprId}
+    </delete>
+
+    <!-- AS-IS emp52_relate_appr.updateApprId (IDMS-IC) — 회사 조건 추가 -->
+    <update id="updateApprId">
+        UPDATE emp52_relate_appr
+           SET emp52_appr_id = #{apprId}
+         WHERE emp52_relate_appr_id = #{relateApprId}
+           AND emp52_company_id = #{companyId}
+    </update>
+</mapper>

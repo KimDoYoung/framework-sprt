@@ -1,7 +1,6 @@
 # AssetERP/CLAUDE.md
 
-실제 AssetERP 원본의 **sys 메뉴 화면**을 Spring Boot + React로 변환하는 작업 폴더(브랜치 `AssetERP`).
-OMS(`../OMS`, AssetERP subset)에서 해 본 변환을 실제 원본으로 다시 해 보고, AssetERP 전체 전환에 드는 비용을 가늠하는 것이 목적이다.
+실제 AssetERP 원본을 Spring Boot + React로 변환하는 작업 폴더.
 상위 `../CLAUDE.md`(저장소 공통 규칙, yunhee 사용 규칙)도 함께 적용된다.
 
 ## 읽는 순서
@@ -61,5 +60,4 @@ TOBE는 새로 설계하지 않고 원본의 레이아웃·버튼·이벤트·�
   yunhee sql-check --src-index AssetERP/docs/as-is/src -t AssetERP/docs/as-is/sql-check.md
   ```
 - 패키지·네이밍: `../docs/TOBE-Framework.md` (`kr.co.kfs.asseterp`).
-- OMS 결과(`../OMS`, `../docs/OMS-convert.md`)는 **비교만** 한다. 코드를 복사하지 않는다.
 - 세션 하나에 ID 최대 3개(묶음 세션, 03 원칙 8). ID마다 끝까지 마치고 01의 상태와 `{id}-작업기록`을 갱신한 뒤 다음 ID로 간다. 묶음이 끝나면 세션을 끝낸다(`/clear`).

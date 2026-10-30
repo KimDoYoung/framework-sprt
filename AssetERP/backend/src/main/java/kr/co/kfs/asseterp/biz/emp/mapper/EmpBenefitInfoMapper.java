@@ -13,6 +13,12 @@ public interface EmpBenefitInfoMapper {
     /** AS-IS selectBySearchText */
     List<BenefitInfoRes> selectBySearchText(@Param("companyId") Long companyId, @Param("searchText") String searchText);
 
+    /** AS-IS selectByCompanyId (U05 계정코드 창 — 복리후생비 코드순) */
+    List<BenefitInfoRes> selectByCompanyId(@Param("companyId") Long companyId);
+
+    /** AS-IS selectByBenefitCode (U05 — 신청구분의 문서분류 연결코드·계정과목) */
+    List<BenefitInfoRes> selectByBenefitCode(@Param("companyId") Long companyId, @Param("benefitCode") String benefitCode);
+
     /** AS-IS selectById */
     BenefitInfoRes selectById(@Param("benefitInfoId") Long benefitInfoId);
 

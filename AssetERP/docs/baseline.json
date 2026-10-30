@@ -10417,5 +10417,79 @@
     "note": "docs/work/U/U04-작업기록.md",
     "history": [],
     "id": "U04"
+  },
+  "Emp17_Tab_BenefitManager": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp17_Edit_Note.java": "c3b044e8b75398121211d362e652c5f4202fa0e8",
+      "application/src/main/java/myApp/client/vi/emp/Emp17_Tab_BenefitManager.java": "f2fa823b9e630c632c0b980088fbddf3a9b5bcf8",
+      "application/src/main/java/myApp/client/vi/emp/Emp55_Lookup_account.java": "da9d92dc7b405d71f5f37eb6af4efe0f6c2a94fd",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp17_BenefitModel.java": "249e3413f88c27bd5ad048ca6d1f49b6645b04f2",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp17_BenefitModelProperties.java": "f77e9f51dc9c20eb336dc79bcdc8ae57d46c9c46",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp55_BenefitInfoModel.java": "1e57371f25b1d4f7fe9f72ab6ff12bff711c1198",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp55_BenefitInfoModelProperties.java": "3ed5cdaf4e48a50aea483a82f55b8d2205aab7cf",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/emp/Emp17_Benefit.java": "b0e0d1cad3c2463f4be9d5c9b620af4226f4751e",
+      "application/src/main/java/myApp/server/emp/Emp55_BenefitInfo.java": "7b515f50b5d75fd23485adfdc242f43d3c90f824",
+      "application/src/main/java/myApp/server/emp/mapper/emp01_person.xml": "996a542c6a2637d37b8ad6dafdc1de2019cbe902",
+      "application/src/main/java/myApp/server/emp/mapper/emp17_benefit.xml": "0a6163bc18f433f0d9dfc074f23c87e0f1bcd65a",
+      "application/src/main/java/myApp/server/emp/mapper/emp55_benefit_info.xml": "413aaf366d1c1b248c7ede6bb0943b0c47df5dec",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+      "application/src/main/java/myApp/server/sys/mapper/sys00_common.xml": "85fc049879ba7a4782049091661f16e02c426f98",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Act01_Lookup_AccountCode",
+      "Apr01_Edit_ApprDoc",
+      "Dcr30_Lookup_Link",
+      "Dcr30_Move_DcrClass"
+    ],
+    "recorded_at": "2026-10-30T09:55:32+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/U/U05-작업기록.md",
+    "history": [],
+    "id": "U05"
+  },
+  "Emp50_Tab_TransportExpenseMng": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp50_Tab_TransportExpenseMng.java": "b40560e9b1641ab922bfc293d882e189b15d01bb",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp51_RelateApprModel.java": "6798f3af55f4e5612dc22489f13a680657a1f5d0",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp51_RelateApprModelProperties.java": "bae58b1665982d1c3cfb3c9dac2d69788a4f1e6b",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp52_RelateApprModel.java": "94e43e11eddf0b90137d7b6388a0721833514913",
+      "application/src/main/java/myApp/server/act/Act13_RealAccountMap.java": "5276c56a1a94a469c56effafa65c446c967635d8",
+      "application/src/main/java/myApp/server/act/mapper/act13_real_account_map.xml": "dfe4709309a9016dad6b54591cf970bea4faa980",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/emp/Emp51_RelateAppr.java": "10dc9800580248d08866c80a5fc3fbc1b9d66173",
+      "application/src/main/java/myApp/server/emp/Emp52_RelateAppr.java": "7b02726e3f6a35660ad89c44bfc99d28502a421f",
+      "application/src/main/java/myApp/server/emp/mapper/emp51_relate_appr.xml": "a1ee33fe49caa0f678877c4f83dc6321034a933d",
+      "application/src/main/java/myApp/server/emp/mapper/emp52_relate_appr.xml": "3f12e3f453a72201c86e26f0f148680702c22a60",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Dcr30_Move_DcrClass"
+    ],
+    "recorded_at": "2026-10-30T10:03:39+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/U/U06-작업기록.md",
+    "history": [],
+    "id": "U06"
   }
 }

@@ -33,4 +33,7 @@ public interface ActRealAccountMapMapper {
 
     /** AS-IS insertInitData: 관리자 회사(0)의 그 (대표계정, 맵핑ID)를 대상 회사로 복사 */
     int insertInitData(@Param("companyId") Long companyId, @Param("reprAccountCode") String reprAccountCode, @Param("accountMap") String accountMap);
+
+    /** AS-IS act13_real_account_map.getAccountName (LIMIT 1) — U06 여비교통비 계정과목 */
+    String selectAccountName(@Param("companyId") Long companyId, @Param("reprAccountCode") String reprAccountCode, @Param("accountMap") String accountMap);
 }

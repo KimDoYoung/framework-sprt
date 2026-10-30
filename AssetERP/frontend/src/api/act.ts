@@ -167,6 +167,12 @@ export const actApi = {
     return res.data.data;
   },
 
+  /** AS-IS act.Act13_RealAccountMap.getAccountName (U06): 대표계정·매핑에 연결된 실계정 이름, 없으면 빈 글자 */
+  getRealAccountName: async (reprAccountCode: string, accountMap: string): Promise<string> => {
+    const res = await apiClient.get<ApiResponse<string>>('v1/act/real-account-maps/account-name', { params: { reprAccountCode, accountMap } });
+    return res.data.data ?? '';
+  },
+
   // ── E32 마감검증 체크항목 (Act15_Tab_CloseCheck) ──
 
   /** AS-IS act.Act15_CloseCheck.selectByText: 활성 고객사 전부, 검색어는 서버가 "%검색어%" */

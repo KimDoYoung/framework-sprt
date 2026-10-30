@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 개요
 
-레거시 자산운용사 ERP "AssetERP"(GWT/GXT + PostgreSQL + MyBatis, 수백 페이지 규모)를 **Spring Boot + React** 스택(TOBE)으로 전환하기 위한 테스트/프로토타입 프로젝트다. GWT/GXT가 더 이상 발전하지 않는 기술이고 Java 8에 묶여 있는 것이 전환 동기다. `antdesign/`은 Ant Design 기반으로 화면 디자인을 시험하는 하위 프로젝트다.
+레거시 자산운용사 ERP "AssetERP"(GWT/GXT + PostgreSQL + MyBatis, 수백 페이지 규모)를 **Spring Boot + React** 스택(TOBE)으로 전환하기 위한 테스트/프로토타입 프로젝트다. GWT/GXT가 더 이상 발전하지 않는 기술이고 Java 8에 묶여 있는 것이 전환 동기다. 
 
 전환 규칙(네이밍/레이어 규칙 등)은 `docs/TOBE-Framework.md`에 정의되어 있다 — backend/frontend 코드를 작성하기 전에 반드시 확인할 것. 레거시 화면 스크린샷은 `docs/asis-asseterp/`(git-ignored)에 있다.
 

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/emp/mapper/emp17_benefit.xml selectByText·selectByBenefitCode·selectByYyyymm·updateModel·deleteApprId
+  + apr01_appr.xml insertApprDel·deleteAppr + sys00_common.xml selectBenefit  (U05 Emp17_Tab_BenefitManager)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpBenefitMapper">
+
+    <!-- BenefitRes 열 (record 생성자 매핑은 모든 열이 결과에 있어야 한다) -->
+    <sql id="benefitColumns">
+             emp17_benefit_id         AS benefit_id
+             , emp17_company_id         AS company_id
+             , emp17_issue_date         AS issue_date
+             , emp17_benefit_cd         AS benefit_code
+             , f_cdnm('EmpBenefitType', emp17_benefit_cd, emp17_company_id, f_sysdate()) AS benefit_name
+             , emp17_person_id          AS person_id
+             , f_emp_kor_nm(emp17_person_id) AS person_name
+             , emp17_appr_id            AS appr_id
+             , apr01_title              AS appr_title_name
+             , emp17_issue_amt          AS issue_amt
+             , emp17_occ_date           AS occ_date
+             , emp17_benefit_detail     AS benefit_detail
+             , emp17_note               AS note
+             , emp17_benefit_yn         AS benefit_yn
+             , apr01_status_cd          AS appr_status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) AS appr_status_name
+             , emp17_pay_request_yyyymm AS pay_request_yyyymm
+    </sql>
+
+
+    <!-- AS-IS emp17_benefit.selectByText (IDMS-IC) — 열은 화면이 읽는 것만 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.emp.dto.BenefitRes">
+        SELECT <include refid="benefitColumns"/>
+             , NULL AS account_name
+          FROM emp17_benefit
+               INNER JOIN apr01_appr ON emp17_appr_id = apr01_appr_id
+         WHERE emp17_company_id = #{companyId}
+           AND emp17_issue_date BETWEEN #{startDate} AND #{closeDate}
+           AND emp17_benefit_cd LIKE #{benefitCode}
+           AND emp17_pay_request_yyyymm IS NULL
+           AND COALESCE(emp17_benefit_yn, 'false') != 'true'
+           AND apr01_status_cd IN ('10', '20', '30')
+           AND UPPER(CONCAT(f_cdnm('LinkCode', emp17_link_cd, emp17_company_id, f_sysdate()), f_emp_kor_nm(emp17_person_id), apr01_title)) LIKE UPPER(#{searchText})
+         ORDER BY emp17_issue_date DESC, emp17_person_id
+    </select>
+
+    <!-- AS-IS emp17_benefit.selectByBenefitCode (IDMS-IC) -->
+    <select id="selectByBenefitCode" resultType="kr.co.kfs.asseterp.biz.emp.dto.BenefitRes">
+        SELECT <include refid="benefitColumns"/>
+             , act01_account_nm         AS account_name
+          FROM emp17_benefit
+               LEFT OUTER JOIN apr01_appr ON emp17_appr_id = apr01_appr_id
+               INNER JOIN emp55_benefit_info ON ( emp55_company_id = emp17_company_id AND
+                                                  emp55_benefit_cd = emp17_benefit_cd )
+               LEFT OUTER JOIN act01_account_code ON ( act01_company_id = emp17_company_id AND
+                                                       act01_account_cd = emp55_account_cd )
+         WHERE emp17_company_id           = #{companyId}
+           AND emp17_pay_request_yyyymm   = #{yyyymm}
+           AND emp17_benefit_cd           LIKE #{benefitCode}
+           AND COALESCE(emp17_benefit_yn) LIKE #{benefitYnStr}
+           AND emp17_pay_request_yyyymm IS NOT NULL
+           AND UPPER(CONCAT(f_cdnm('LinkCode', emp17_link_cd, emp17_company_id, f_sysdate()), f_emp_kor_nm(emp17_person_id), apr01_title)) LIKE UPPER(#{searchText})
+         ORDER BY emp17_issue_date DESC, emp17_person_id
+    </select>
+
+    <!-- AS-IS emp17_benefit.selectByYyyymm (IDMS-IC) -->
+    <select id="selectByYyyymm" resultType="kr.co.kfs.asseterp.biz.emp.dto.BenefitPayRequestRes">
+        SELECT emp17_pay_request_appr_id AS pay_request_appr_id
+             , apr01_status_cd           AS pay_request_appr_status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, emp17_company_id, apr01_reg_date) AS pay_request_appr_status_name
+          FROM emp17_benefit
+               LEFT OUTER JOIN apr01_appr b ON emp17_pay_request_appr_id = apr01_appr_id
+         WHERE emp17_company_id = #{companyId}
+           AND emp17_pay_request_yyyymm = #{yyyymm}
+           AND emp17_benefit_cd LIKE #{benefitCode}
+         LIMIT 1
+    </select>
+
+    <!-- payRequestApprCheck가 행마다 읽는 신청구분 (행의 benefitCode·benefitName) -->
+    <select id="selectCodesByIds" resultType="kr.co.kfs.asseterp.biz.emp.dto.BenefitRes">
+        SELECT <include refid="benefitColumns"/>
+             , NULL AS account_name
+          FROM emp17_benefit
+               LEFT OUTER JOIN apr01_appr ON emp17_appr_id = apr01_appr_id
+         WHERE emp17_company_id = #{companyId}
+           AND emp17_benefit_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+         ORDER BY emp17_benefit_id
+    </select>
+
+    <!-- 문서폐기: 신청 한 건 (AS-IS는 화면 행의 benefitId·apprId·상태를 쓴다) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.emp.dto.BenefitRes">
+        SELECT <include refid="benefitColumns"/>
+             , NULL AS account_name
+          FROM emp17_benefit
+               LEFT OUTER JOIN apr01_appr ON emp17_appr_id = apr01_appr_id
+         WHERE emp17_company_id = #{companyId}
+           AND emp17_benefit_id = #{benefitId}
+    </select>
+
+    <!-- AS-IS sys00_common.selectBenefit (IDMS-IC): 정렬 없음 그대로 -->
+    <select id="selectBenefitTypes" resultType="kr.co.kfs.asseterp.biz.emp.dto.BenefitTypeRes">
+        SELECT sys09_code AS code
+             , sys09_name AS name
+          FROM sys08_code_kind
+               INNER JOIN sys09_code a1 ON sys09_code_kind_id = sys08_code_kind_id
+               LEFT OUTER JOIN emp55_benefit_info ON ( emp55_company_id  = #{companyId} AND
+                                                       emp55_benefit_cd  = sys09_code   )
+         WHERE sys08_kind_cd    = 'EmpBenefitType'
+           AND sys09_company_id = 0
+           AND COALESCE(sys09_close_yn,'false') = 'false'
+           AND sys09_apply_date = ( SELECT MAX(a2.sys09_apply_date)
+                                      FROM sys09_code a2
+                                     WHERE a2.sys09_code_kind_id = a1.sys09_code_kind_id
+                                       AND a2.sys09_code         = a1.sys09_code
+                                       AND a2.sys09_company_id   = a1.sys09_company_id
+                                       AND a2.sys09_apply_date <![CDATA[ <= ]]> f_today() )
+           AND COALESCE(emp55_un_use_yn, 'false') != 'true'
+         GROUP BY sys09_code, sys09_name, sys09_seq
+    </select>
+
+    <!-- emp17_benefit.updateModel 중 emp17_pay_request_yyyymm만 (화면이 바꾸는 열만 명시) -->
+    <update id="updatePayRequestYm">
+        UPDATE emp17_benefit
+           SET emp17_pay_request_yyyymm = #{payRequestYyyymm}
+         WHERE emp17_company_id = #{companyId}
+           AND emp17_benefit_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </update>
+
+    <!-- emp17_benefit.updateModel 중 emp17_pay_request_appr_id만 -->
+    <update id="updatePayRequestApprId">
+        UPDATE emp17_benefit
+           SET emp17_pay_request_appr_id = #{apprId}
+         WHERE emp17_company_id = #{companyId}
+           AND emp17_benefit_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </update>
+
+    <!-- UpdateDataModel(emp17_benefit) 중 emp17_benefit_yn만 -->
+    <update id="updateBenefitYn">
+        UPDATE emp17_benefit
+           SET emp17_benefit_yn = #{benefitYn}
+         WHERE emp17_company_id = #{companyId}
+           AND emp17_benefit_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </update>
+
+    <!-- modelUpdate(UpdateDataModel) 중 emp17_note만 -->
+    <update id="updateNote">
+        UPDATE emp17_benefit
+           SET emp17_note = #{note}
+         WHERE emp17_company_id = #{companyId}
+           AND emp17_benefit_id = #{benefitId}
+    </update>
+
+    <!-- AS-IS apr01_appr.insertApprDel (열 순서 그대로) -->
+    <insert id="insertApprDel">
+        INSERT INTO apr99_appr_del
+        SELECT f_create_seq()
+             , apr01_appr_id
+             , apr01_title
+             , apr01_reg_date
+             , apr01_status_cd
+             , apr01_content
+             , apr01_note
+             , apr01_reg_emp_id
+             , apr01_effect_date
+             , apr01_class_tree_id
+             , apr01_stamp_id
+             , apr01_receive_nm
+             , apr01_reference_nm
+             , apr01_stamp_seq
+             , apr01_inout_cd
+             , f_sysdate()
+             , #{empId}
+             , apr01_company_id
+             , apr01_form_type
+             , apr01_dcr_id_word
+             , apr01_sign_company
+             , apr01_sign_ceo
+             , apr01_stamp_position
+             , apr01_link_cd
+          FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </insert>
+
+    <delete id="deleteAppr">
+        DELETE FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </delete>
+
+    <!-- AS-IS emp17_benefit.deleteApprId (IDMS-IC) — 회사 조건 추가 -->
+    <update id="deleteApprId">
+        UPDATE emp17_benefit
+           SET emp17_appr_id = null
+         WHERE emp17_benefit_id = #{benefitId}
+           AND emp17_company_id = #{companyId}
+    </update>
+
+    <!-- emp01_person.selectById 중 휴대폰번호 -->
+    <select id="selectMobileTelNo" resultType="string">
+        SELECT emp01_mobile_telno
+          FROM emp01_person
+         WHERE emp01_person_id = #{personId}
+    </select>
+</mapper>

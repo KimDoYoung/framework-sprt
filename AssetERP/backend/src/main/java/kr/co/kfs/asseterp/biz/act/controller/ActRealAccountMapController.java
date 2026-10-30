@@ -52,4 +52,10 @@ public class ActRealAccountMapController {
     public ApiResponse<Integer> insertInitData(@AuthenticationPrincipal UserPrincipal principal, @RequestBody RealAccountMapInitReq req) {
         return ApiResponse.ok(service.insertInitData(principal, req));
     }
+
+    /** AS-IS act.Act13_RealAccountMap.getAccountName (U06) */
+    @GetMapping("/account-name")
+    public ApiResponse<String> getAccountName(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String reprAccountCode, @RequestParam String accountMap) {
+        return ApiResponse.ok(service.getAccountName(principal, reprAccountCode, accountMap));
+    }
 }

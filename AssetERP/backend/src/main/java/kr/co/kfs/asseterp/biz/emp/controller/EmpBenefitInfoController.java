@@ -35,6 +35,18 @@ public class EmpBenefitInfoController {
         return ApiResponse.ok(service.search(principal, companyId, searchText));
     }
 
+    /** AS-IS emp.Emp55_BenefitInfo.selectByCompanyId (U05 계정코드 창) */
+    @GetMapping("/by-company")
+    public ApiResponse<List<BenefitInfoRes>> searchByCompany(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.searchByCompany(principal));
+    }
+
+    /** AS-IS emp.Emp55_BenefitInfo.selectByBenefitCode (U05 — 없으면 null) */
+    @GetMapping("/by-code")
+    public ApiResponse<BenefitInfoRes> getByBenefitCode(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String benefitCode) {
+        return ApiResponse.ok(service.getByBenefitCode(principal, benefitCode));
+    }
+
     /** AS-IS emp.Emp55_BenefitInfo.update → 저장된 행(요청 순서) */
     @PutMapping
     public ApiResponse<List<BenefitInfoRes>> update(@AuthenticationPrincipal UserPrincipal principal,

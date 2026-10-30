@@ -79,4 +79,10 @@ public class ActRealAccountMapService {
         }
         return companyIds.size();
     }
+
+    /** AS-IS Act13_RealAccountMap.getAccountName: 대표계정·매핑에 연결된 실계정 이름, 없으면 빈 글자(원본은 status 0 + 빈 메시지) */
+    public String getAccountName(UserPrincipal user, String reprAccountCode, String accountMap) {
+        String name = mapper.selectAccountName(user.getCompanyId(), reprAccountCode, accountMap);
+        return name == null ? "" : name;
+    }
 }

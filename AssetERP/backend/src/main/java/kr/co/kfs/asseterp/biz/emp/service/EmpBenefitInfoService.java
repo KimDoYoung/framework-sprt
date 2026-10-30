@@ -30,6 +30,17 @@ public class EmpBenefitInfoService {
         return mapper.selectBySearchText(targetCompany(user, companyId), "%" + (searchText == null ? "" : searchText) + "%");
     }
 
+    /** AS-IS selectByCompanyId: 로그인 회사의 복리후생비 설정 전체(복리후생비 코드순) — U05 계정코드 창 */
+    public List<BenefitInfoRes> searchByCompany(UserPrincipal user) {
+        return mapper.selectByCompanyId(user.getCompanyId());
+    }
+
+    /** AS-IS selectByBenefitCode: 신청구분 한 건의 설정(없으면 null) — U05 문서분류 연결코드·계정과목 */
+    public BenefitInfoRes getByBenefitCode(UserPrincipal user, String benefitCode) {
+        List<BenefitInfoRes> list = mapper.selectByBenefitCode(user.getCompanyId(), benefitCode);
+        return list.isEmpty() ? null : list.get(0);
+    }
+
     /** AS-IS update(UpdateDataModel): 신규(화면 임시 ID 0 이하·없음)면 INSERT, 아니면 UPDATE 하고 selectById로 다시 읽어 요청 순서대로 */
     @Transactional
     public List<BenefitInfoRes> update(UserPrincipal user, Long companyId, List<BenefitInfoSaveReq> rows) {

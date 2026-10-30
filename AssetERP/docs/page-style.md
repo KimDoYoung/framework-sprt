@@ -44,6 +44,7 @@
 - 가장 단순한 형태: 바깥 여백 20, 안쪽 `padding 10`, 테두리 없음. 세로 flex로 `SearchBar` + `SingleGrid`를 쌓고 툴바-그리드 간격은 `gap: 8`(SGVF 등의 `marginTop: 8`과 같은 간격).
 - 조회 외 원본 버튼(예: [인사정보 가져오기])은 `SearchBar`의 `extra`. 조회창(`*_Lookup_*`)은 화면 끝에 `open`/`onClose`로 붙인다(편집 팝업이 아니라 조회창이면 SGP가 아니라 SG).
 - 이 견본은 열 때 조회한다(원본이 그렇다). 조건이 2개라 초기화(UX-02)는 넣지 않는다.
+- 점검 규칙(`tools/page-style-check.py SG`, U06에서 추가): Splitter 없음 · 바깥 `padding: 20` · 안쪽 `padding: 10` · `gap: 8` · `SearchBar` · 외곽 테두리 없음. 적용 화면: `Tdm01_Tab_Hr`(견본), `Emp50_Tab_TransportExpenseMng`(기존 SG 91개는 다시 건드릴 때 맞춘다). 그리드 아래에 폼 줄(문서분류·상신상태·[상신][문서보기])이 붙는 화면도 테두리 없이 같은 안쪽 `div`에 `flex: none` 높이 70으로 쌓는다.
 
 ### SGVF — SearchGrid+ViewForm
 
@@ -176,7 +177,7 @@
 - 위·아래 모두 **외곽 테두리 박스를 두지 않는다**(SGTP는 아래 탭에 테두리가 있다).
 - 열 때 조회하고, 조회가 끝나면 첫 행을 고른다. 행을 누르면 아래가 그 행의 id로 다시 읽는다(`pfContractId` + `nonce` — 같은 행을 다시 눌러도 다시 읽는다).
 - SGTP와 구조가 같고 아래가 탭 영역이 아니라 그리드 하나인 경우가 GG다.
-- 점검 규칙(`tools/page-style-check.py GG`, U04에서 추가): 세로 `Splitter` · 위 최소 120 · 아래 최소 200 · `SearchBar` · 외곽 테두리 없음. 아래 크기는 원본이 정하면(U04 `Ast06_Tab_TrTax`는 300 고정) 그대로 `defaultSize`에 둔다. 적용 화면: `Est02_Tab_PfResultReport`(견본), `Ast06_Tab_TrTax`.
+- 점검 규칙(`tools/page-style-check.py GG`, U04에서 추가): 세로 `Splitter` · 위 최소 120 · 아래 최소 200 · `SearchBar` · 외곽 테두리 없음. 아래 크기는 원본이 정하면(U04 `Ast06_Tab_TrTax`는 300 고정) 그대로 `defaultSize`에 둔다. 적용 화면: `Est02_Tab_PfResultReport`(견본), `Ast06_Tab_TrTax`, `Emp17_Tab_BenefitManager`(U05 — 아래에 폼 줄이 붙고 위 크기는 원본 0.45에 맞춰 `45%`).
 
 ### SGP — SearchGrid+Popup (초안)
 

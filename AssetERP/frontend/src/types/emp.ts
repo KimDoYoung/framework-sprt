@@ -436,6 +436,74 @@ export interface BenefitInfo {
   unUseYn: string;
 }
 
+// ── U05 복리후생비 관리 (Emp17_Tab_BenefitManager) ──
+
+/** 복리후생비 신청 한 행 (AS-IS Emp17_BenefitModel). benefitYn은 'true'/'false'/null */
+export interface Benefit {
+  benefitId: number;
+  companyId: number;
+  issueDate: string;
+  benefitCode: string;
+  benefitName: string;
+  personId: number;
+  personName: string;
+  apprId: number | null;
+  apprTitleName: string | null;
+  issueAmt: number | null;
+  occDate: string | null;
+  benefitDetail: string | null;
+  note: string | null;
+  benefitYn: string | null;
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+  payRequestYyyymm: string | null;
+  accountName: string | null;
+}
+
+/** 신청구분 콤보 항목 (AS-IS sys.Sys00_Common.selectBenefit) */
+export interface BenefitType {
+  code: string;
+  name: string;
+}
+
+/** 기준년월·신청구분의 지출결의서 상신 상태 (AS-IS emp17_benefit.selectByYyyymm) */
+export interface BenefitPayRequest {
+  payRequestApprId: number | null;
+  payRequestApprStatusCode: string | null;
+  payRequestApprStatusName: string | null;
+}
+
+// ── U06 여비교통비 관리 (Emp50_Tab_TransportExpenseMng) ──
+
+/** 여비교통비 신청서 한 행 (AS-IS Emp51_RelateApprModel). closeYn은 'true'/'false'/null */
+export interface RelateAppr {
+  relateApprId: number;
+  companyId: number;
+  personId: number;
+  yyyymm: string;
+  regNo: string;
+  regDate: string;
+  regAmt: number | null;
+  apprId: number | null;
+  closeYn: string | null;
+  closeName: string;
+  personName: string | null;
+  posName: string | null;
+  orgName: string | null;
+  statusCode: string | null;
+  statusName: string | null;
+  apprTitle: string | null;
+  inoutCode: string | null;
+}
+
+/** 기준년월의 여비교통비 지출결의 상신 문서 (AS-IS Emp52_RelateApprModel). 문서가 없으면 statusCode가 null */
+export interface RelateApprStatus {
+  relateApprId: number;
+  apprId: number | null;
+  statusCode: string | null;
+  statusName: string | null;
+}
+
 // ── E26 인사평가 항목 (Emp41_Tab_EvalList) ──
 
 /** 인사평가 항목리스트 기준 적용일 한 행 (AS-IS emp40_eval_list_std.selectByCompanyId). 확정은 'true'/'false' 문자열 */
