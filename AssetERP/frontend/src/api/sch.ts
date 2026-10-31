@@ -391,6 +391,11 @@ export const schApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS sch.Sch04_List.updateApprId — 일일업무체크 [상신]으로 만든 결재문서 ID를 그리드 전체 행에 기록 (O05, V31) */
+  updateApprId: async (ids: number[], apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<number>>('v1/sch/lists/appr-id', { ids, apprId });
+  },
+
   /** AS-IS sch.Sch04_List.statusUpdateCheck — 체크(처리완료·해당없음) 한 건 저장, 그 행의 listId를 돌려준다 (O05) */
   updateDailyCheckStatus: async (row: Sch04DailyCheck): Promise<number> => {
     const { listId, closeDate, manageDate, infoId, title, scheduleCode, cycleCode, managerId, statusCode, note, deadlineId, mngOrgId } = row;

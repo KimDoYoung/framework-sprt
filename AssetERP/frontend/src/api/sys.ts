@@ -532,6 +532,11 @@ export const sysApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS Sys53_Tab_SpecificMenuRequest.updateApprId L232 — [결재요청]으로 만든 결재문서 ID를 행에 기록 (A80, V31) */
+  updateSpecificMenuRequestApprId: async (specificMenuRequestId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<number>>(`v1/sys/specific-menu-requests/${specificMenuRequestId}/appr-id`, { apprId });
+  },
+
   /** AS-IS sys.Sys53_SpecificMenuRequest.delete → 지운 건수 */
   deleteSpecificMenuRequests: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/sys/specific-menu-requests', { data: ids });

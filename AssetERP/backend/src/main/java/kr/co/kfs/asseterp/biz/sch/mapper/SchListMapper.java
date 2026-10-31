@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.sch.mapper;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04CheckStatusRes;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04CheckStatusSearchCond;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04DailyCheckRes;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04LinkRow;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04ListRes;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04ListSaveReq;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04ListSearchCond;
@@ -59,6 +60,12 @@ public interface SchListMapper {
     /** AS-IS sch04_list.updateStatusCode (O05). 회사 범위를 더했다 */
     int updateStatusCode(@Param("companyId") Long companyId, @Param("listId") Long listId, @Param("statusCode") String statusCode,
                          @Param("manageDate") LocalDate manageDate, @Param("personId") Long personId);
+
+    /** A31 일일업무체크 상신 본문의 행 (V31). 요청한 listId 중 이 회사의 것만 — 순서는 호출한 쪽이 ids 순서로 맞춘다 */
+    List<Sch04LinkRow> selectLinkRows(@Param("companyId") Long companyId, @Param("ids") List<Long> ids);
+
+    /** AS-IS sch04_list.updateApprId (V31) — 상신한 결재문서 ID 기록 */
+    int updateApprId(@Param("companyId") Long companyId, @Param("listId") Long listId, @Param("apprId") Long apprId);
 
     /** AS-IS sch04_list.selectCheckListStatus (O06 업무일정 체크내역) */
     List<Sch04CheckStatusRes> selectCheckListStatus(Sch04CheckStatusSearchCond cond);

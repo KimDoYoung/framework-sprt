@@ -140,6 +140,19 @@ public class SchListService {
         return listId;
     }
 
+    /** AS-IS sch.Sch04_List.updateApprId (V31) — 일일업무체크 상신 뒤 그리드 전체 행에 결재문서 ID를 기록한다 */
+    @Transactional
+    public int updateApprId(UserPrincipal user, List<Long> ids, Long apprId) {
+        if (ids == null || ids.isEmpty() || apprId == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "결재문서 정보가 없습니다.");
+        }
+        int n = 0;
+        for (Long id : ids) {
+            n += mapper.updateApprId(user.getCompanyId(), id, apprId);
+        }
+        return n;
+    }
+
     /**
      * AS-IS Sch04_Tab_DailyCheckListStatus.retrieve L181-205 → Sch04_List.selectCheckListStatus L101: 로그인 사용자가 처리한(처리자) 데일리 체크 건을 처리일 기간으로 읽는다.
      * 처리여부(전체 '%')·분류(없으면 전체)·검색어(체크항목/체크내용에 들어 있는 글자, 서비스가 %…%로 만든다)

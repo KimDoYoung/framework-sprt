@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.sch.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.sch.dto.Sch04ApprIdReq;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04CheckStatusRes;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04CheckStatusSearchCond;
 import kr.co.kfs.asseterp.biz.sch.dto.Sch04DailyCheckRes;
@@ -140,6 +141,12 @@ public class SchListController {
     @PutMapping("/daily-check/status")
     public ApiResponse<Long> updateDailyCheckStatus(@AuthenticationPrincipal UserPrincipal principal, @RequestBody Sch04DailyCheckStatusReq req) {
         return ApiResponse.ok(service.updateStatus(principal, req));
+    }
+
+    /** AS-IS sch.Sch04_List.updateApprId — 일일업무체크 [상신] 뒤 결재문서 ID 기록 (V31) */
+    @PutMapping("/appr-id")
+    public ApiResponse<Integer> updateApprId(@AuthenticationPrincipal UserPrincipal principal, @RequestBody Sch04ApprIdReq req) {
+        return ApiResponse.ok(service.updateApprId(principal, req.ids(), req.apprId()));
     }
 
     /** AS-IS sch.Sch04_List.upsert — 고친 행(처리구분·처리일)을 저장한다 */

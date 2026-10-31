@@ -1,18 +1,19 @@
 /**
  * [1308] 스케줄 > 02. 업무일정 체크 > 데일리 체크리스트(상신) (O05)
  * AS-IS: myApp/client/vi/sch/Sch04_Tab_DailyCheckList.java (605줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
- * 레이아웃 생성자 L83-140: center=세로 테두리 박스(툴바 + 그리드). 툴바 = 기준일자 ◀ 날짜(100) ▶ · 분류(150) · 검색어(300) · [조회] [상신].
+ * 레이아웃 생성자 L83-140: center=세로 박스(V31에서 page-style 견본에 맞춰 테두리 없음)(툴바 + 그리드). 툴바 = 기준일자 ◀ 날짜(100) ▶ · 분류(150) · 검색어(300) · [조회] [상신].
  *   그리드는 단일 선택이고 처리완료·해당없음 두 체크 열(묶음 헤더 "체크")을 누르면 곧바로 저장한다. 아이콘 열 3(상세보기·비고 수정·결재 문서 보기).
  *   [문서분류지정](dcrLinkButton)은 툴바에 붙어 있지 않아(E7 도달 불가) 만들지 않는다
  * 연결: Sch04_Edit_Note(비고 창, AreaMessage) · Sch01_Lookup_InfoView(업무일정 보기) · Sch10_Lookup_Ipo(공모주)
- * 1단계(F·I·M과 같은 방침): 전자결재 편집창 Apr01_Edit_ApprDoc(다른 도메인)을 여는 [상신]·결재 문서 보기는 검사까지 하고 안내만 띄운다 — 다음 단계(전자결재 편집창)에서 연결.
- *   Dcr30_Lookup_Link(문서분류 지정)·Dcr30_Link.selectByLinkCode(retrieveDoc)·Sch04_List.updateApprId는 그 단계에서 함께 한다
+ * 1단계(F·I·M과 같은 방침)는 전자결재 편집창을 여는 [상신]·결재 문서 보기를 안내만 했다. V31(2026-10-31)에서 연결했다:
+ *   [상신] → Apr01_Edit_ApprDoc.insertLinkApprovals("A31", 그리드 전체 행) → sch.Sch04_List.updateApprId, 결재 문서 보기 → retrieveApproval, 문서분류는 retrieveDoc(A31)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 조건이 많아 줄바꿈 위험이라 넣지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Modal, Select, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { schApi } from '@/api/sch';
+import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
 import { Sch04DailyCheck, Sch08ClassCombo, Sch10Ipo } from '@/types/sch';
 import { Button } from '@/components/button';
@@ -21,6 +22,7 @@ import { SearchBar } from '@/components/search';
 import { AreaMessage } from '@/components/lookup/AreaMessage';
 import { Sch01_Lookup_InfoView, InfoViewTarget } from '@/components/lookup/Sch01_Lookup_InfoView';
 import { Sch10_Lookup_Ipo } from '@/components/lookup/Sch10_Lookup_Ipo';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import type { CellValueChangedEvent, GridApi } from 'ag-grid-community';
 
 const gb = gbFor<Sch04DailyCheck>();
@@ -40,6 +42,11 @@ export const Sch04_Tab_DailyCheckList: React.FC = () => {
   const [ipo, setIpo] = useState<Sch10Ipo | null>(null);
   const [noteRow, setNoteRow] = useState<Sch04DailyCheck | null>(null);
   const apiRef = useRef<GridApi<Sch04DailyCheck> | null>(null);
+  // retrieveDoc() L573-591: Link 코드 A31에 지정된 문서분류가 정확히 1건이면 쓰고, 아니면 null
+  const [classTreeId, setClassTreeId] = useState<number | null>(null);
+  // insertLinkApprovals()가 연 결재창의 대상(그리드 전체 행의 listId) · 결재 문서 보기로 연 문서
+  const [linkIds, setLinkIds] = useState<number[] | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
 
   // 콤보를 닫는 순간(Collapse)에는 방금 고른 값이 아직 state에 반영되지 않았을 수 있어 ref로 최신 값을 읽는다
   const latest = useRef({ stdDate, classId, searchText });
@@ -63,12 +70,21 @@ export const Sch04_Tab_DailyCheckList: React.FC = () => {
     }
   }, []);
 
+  // retrieveDoc() L573-591
+  const retrieveDoc = useCallback(async () => {
+    try {
+      const list = await dcrApi.searchClassTreeByLinkCode('A31');
+      setClassTreeId(list.length === 1 ? list[0].classTreeId : null);
+    } catch { setClassTreeId(null); }
+  }, []);
+
   // [E0] 화면 열림 (생성자 L83-140) → retrieveDoc(), settings(), setIconStyle(), retrieve()
-  //   [E0 생략] retrieveDoc(): 문서분류 A31을 읽어 두는 것은 상신(전자결재 편집창)에서만 쓰인다 — 다음 단계
   useEffect(() => {
+    void retrieveDoc();
+    // [E3] scheduleClassComboBox (CommonComboBoxField).callbackOnCreate (L149) → 인라인 L149-154: 분류 콤보 목록 읽기
     schApi.searchClassCombo(true).then(setClasses).catch(() => setClasses([]));
     void retrieve();
-  }, [retrieve]);
+  }, [retrieve, retrieveDoc]);
 
   // [E1] anchor01.MouseDown (L90) / [E2] anchor02.MouseDown (L102) → 기준일 -1일 / +1일 뒤 retrieve()
   const moveDate = (days: number) => {
@@ -78,7 +94,7 @@ export const Sch04_Tab_DailyCheckList: React.FC = () => {
     void retrieve();
   };
 
-  // [E8] grid.getStore().StoreRecordChange (L201) → 서비스 sch.Sch04_List.statusUpdateCheck: 처리완료/해당없음 체크를 곧바로 저장한다.
+  // [E9] grid.getStore().StoreRecordChange (L201) → 서비스 sch.Sch04_List.statusUpdateCheck: 처리완료/해당없음 체크를 곧바로 저장한다.
   //   AS-IS 모델 setYes/setNot은 값과 상관없이 statusCode를 '1'/'5'로 바꾸므로 체크를 풀어도 그대로 남는다(처리일은 오늘).
   //   상신중(10·20·30)이면 "상신중인 업무는 수정이 불가능합니다." 하고 되돌린다
   const checkValue = (code: '1' | '5') => ({
@@ -152,12 +168,23 @@ export const Sch04_Tab_DailyCheckList: React.FC = () => {
       message.warning('관련 상신문서가 존재하지 않습니다');
       return;
     }
-    // [E생략] 전자결재 편집창 Apr01_Edit_ApprDoc.retrieveApproval은 다른 도메인 — 다음 단계
-    message.info('전자결재 문서보기는 아직 연결되지 않았습니다 (다음 단계)');
+    // [E10] actionCell (ImageCell).callbackOnCreate (L307) → apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback → retrieve())
+    setViewApprId(row.apprId);
   };
 
-  // [E7 생략] dcrLinkButton[문서분류지정].Select (L188) → retrieveDoc() — 컬럼·툴바에 붙어 있지 않아 도달 불가(색인 표시), 만들지 않는다
-  // [E6] apprButton[상신].Select (L181) → retrieveCheck() L469-500: 분류 "전체"·검색어 비움으로 다시 조회한 뒤 insertLinkApprovals() L503-549
+  // updateApprId() L551-571: sch.Sch04_List.updateApprId(그리드 전체 행, apprId) → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkIds) return;
+    try {
+      await schApi.updateApprId(linkIds, apprId);
+      void retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+  };
+
+  // [E8 생략] dcrLinkButton[문서분류지정].Select (L188) → retrieveDoc() — 컬럼·툴바에 붙어 있지 않아 도달 불가(색인 표시), 만들지 않는다
+  // [E7] apprButton[상신].Select (L181) → retrieveCheck() L469-500: 분류 "전체"·검색어 비움으로 다시 조회한 뒤 insertLinkApprovals() L503-549
   const retrieveCheck = async () => {
     latest.current.classId = '';
     latest.current.searchText = '';
@@ -180,9 +207,12 @@ export const Sch04_Tab_DailyCheckList: React.FC = () => {
       okText: '예',
       cancelText: '아니오',
       width: 500,
-      // [E9] msgBox.DialogHide [YES] (L521) → Apr01_Edit_ApprDoc.insertLinkApprovals → updateApprId()
-      //   [E9 생략] 전자결재 편집창 Apr01_Edit_ApprDoc·sch.Sch04_List.updateApprId는 다음 단계
-      onOk: () => { message.info('전자결재 상신 화면은 아직 연결되지 않았습니다 (다음 단계)'); },
+      // [E11] msgBox.DialogHide [YES] (L521) → Apr01_Edit_ApprDoc.insertLinkApprovals(classTreeModel, "A31", { gridList }, false, cb → updateApprId())
+      //   문서분류가 없으면 AS-IS는 classTreeModel이 null이라 NullPointerException으로 아무것도 열리지 않는다 — TOBE는 안내만 띄운다(원본-이상한점 #69)
+      onOk: () => {
+        if (classTreeId == null) { message.warning('일일업무체크(A31)에 지정된 문서분류가 없습니다'); return; }
+        setLinkIds(list.map(r => r.listId));
+      },
     });
   };
 
@@ -203,8 +233,8 @@ export const Sch04_Tab_DailyCheckList: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {/* [E5] retrieveButton[조회].Select (L174) → retrieve() / [E4] searchText[].KeyPress [Enter] (L165) → retrieve() */}
+      <div style={{ height: '100%', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* [E6] retrieveButton[조회].Select (L174) → retrieve() / [E5] searchText[].KeyPress [Enter] (L165) → retrieve() */}
         <SearchBar
           onSearch={() => retrieve()}
           loading={loading}
@@ -219,7 +249,7 @@ export const Sch04_Tab_DailyCheckList: React.FC = () => {
             </span>
           </SearchBar.Field>
           <SearchBar.Field label="분류">
-            {/* [E3] scheduleClassComboBox[sys.Sys00_Common.selectScheduleClass2].Collapse (L156) → retrieve() */}
+            {/* [E4] scheduleClassComboBox[sys.Sys00_Common.selectScheduleClass2].Collapse (L156) → retrieve() */}
             <Select
               style={{ width: 150 }}
               value={classId}
@@ -249,6 +279,14 @@ export const Sch04_Tab_DailyCheckList: React.FC = () => {
         width={710} height={390} onResult={saveNote} onClose={() => setNoteRow(null)} />
       <Sch01_Lookup_InfoView target={viewTarget} onClose={() => setViewTarget(null)} />
       <Sch10_Lookup_Ipo ipo={ipo} onClose={() => setIpo(null)} />
+      {/* insertLinkApprovals() L503-549: Apr01_Edit_ApprDoc.insertLinkApprovals("A31") / 결재 문서 보기 retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkIds && classTreeId != null ? { classTreeId, linkCode: 'A31', args: { ids: linkIds.join(',') } } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void retrieve()}
+        onClose={() => { setViewApprId(null); setLinkIds(null); }}
+      />
     </div>
   );
 };

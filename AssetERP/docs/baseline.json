@@ -1045,17 +1045,17 @@
     "id": "A24"
   },
   "Sys53_Tab_SpecificMenuRequest": {
-    "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
-    "commit_short": "546a87d",
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
     "branch": "ioc",
-    "commit_date": "2026-10-16",
+    "commit_date": "2026-10-29",
     "repo_name": "IDMS-IC",
     "files": {
       "application/src/main/java/myApp/client/vi/sys/Sys53_Tab_SpecificMenuRequest.java": "1c5f861b07e422b7bb636b44e604b344518aa316",
       "application/src/main/java/myApp/client/vi/sys/model/Sys53_SpecificMenuRequestModel.java": "555477569ef676e6b8e81d56a0cc3fd3aa6fbc7e",
       "application/src/main/java/myApp/client/vi/sys/model/Sys53_SpecificMenuRequestModelProperties.java": "13d5cb015338752a45b04e1f5e7c875adb6dd920",
-      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "ec2e1b8d30204b370115db8f4a4009b721f12088",
-      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "490cfa74239bbac67406ebb07d53662a9fadf0fd",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
       "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
       "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
       "application/src/main/java/myApp/server/sys/Sys53_SpecificMenuRequest.java": "6d68e1ff0e2fa3fb45626caa0bce1b5e7c763248",
@@ -1066,11 +1066,31 @@
       "Apr01_Edit_ApprDoc",
       "Dcr01_Lookup_Class"
     ],
-    "recorded_at": "2026-10-16T23:34:28+09:00",
+    "recorded_at": "2026-10-31T22:42:43+09:00",
     "recorded_by": "kdy987",
-    "note": "docs/work/A/A27-작업기록.md",
-    "history": [],
-    "id": "A27"
+    "note": "docs/work/V/V31-작업기록.md",
+    "history": [
+      {
+        "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
+        "commit_short": "546a87d",
+        "recorded_at": "2026-10-16T23:34:28+09:00",
+        "recorded_by": "kdy987",
+        "files": {
+          "application/src/main/java/myApp/client/vi/sys/Sys53_Tab_SpecificMenuRequest.java": "1c5f861b07e422b7bb636b44e604b344518aa316",
+          "application/src/main/java/myApp/client/vi/sys/model/Sys53_SpecificMenuRequestModel.java": "555477569ef676e6b8e81d56a0cc3fd3aa6fbc7e",
+          "application/src/main/java/myApp/client/vi/sys/model/Sys53_SpecificMenuRequestModelProperties.java": "13d5cb015338752a45b04e1f5e7c875adb6dd920",
+          "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "ec2e1b8d30204b370115db8f4a4009b721f12088",
+          "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "490cfa74239bbac67406ebb07d53662a9fadf0fd",
+          "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+          "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+          "application/src/main/java/myApp/server/sys/Sys53_SpecificMenuRequest.java": "6d68e1ff0e2fa3fb45626caa0bce1b5e7c763248",
+          "application/src/main/java/myApp/server/sys/mapper/sys53_specific_menu_request.xml": "d7c291a8979f2291aeb4b9225af1ebfebb0e9122",
+          "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+        },
+        "note": "docs/work/A/A27-작업기록.md"
+      }
+    ],
+    "id": "V31"
   },
   "Sys53_Tab_SpecificMenuRequestAdmin": {
     "commit": "546a87d42f647f576fcd827ca67a5f4be9bc8411",
@@ -7430,10 +7450,10 @@
     "id": "O04"
   },
   "Sch04_Tab_DailyCheckList": {
-    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
-    "commit_short": "d538228",
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
     "branch": "ioc",
-    "commit_date": "2026-10-23",
+    "commit_date": "2026-10-29",
     "repo_name": "IDMS-IC",
     "files": {
       "application/src/main/java/myApp/client/vi/sch/Sch04_Edit_Note.java": "343583d4665b4ca52b2ca8d7d425e3ae090ea0e3",
@@ -7442,7 +7462,7 @@
       "application/src/main/java/myApp/client/vi/sch/model/Sch04_ListModelProperties.java": "4b78b06ed650c971179e2b8166c3e108dcb88880",
       "application/src/main/java/myApp/client/vi/sch/model/Sch10_IpoModel.java": "824c6b72eb310a83edb5c74607268590e4667cf3",
       "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
-      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "7f4b0fb215e50834fd6180ab89005f6d73d52cd6",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
       "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
       "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
       "application/src/main/java/myApp/server/sch/Sch04_List.java": "95ef763d624d0552b628895c117d34fa43140577",
@@ -7460,11 +7480,38 @@
       "Sch01_Lookup_InfoView",
       "Sch10_Lookup_Ipo"
     ],
-    "recorded_at": "2026-10-26T11:02:46+09:00",
+    "recorded_at": "2026-10-31T22:42:43+09:00",
     "recorded_by": "kdy987",
-    "note": "docs/work/O/O05-작업기록.md",
-    "history": [],
-    "id": "O05"
+    "note": "docs/work/V/V31-작업기록.md",
+    "history": [
+      {
+        "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+        "commit_short": "d538228",
+        "recorded_at": "2026-10-26T11:02:46+09:00",
+        "recorded_by": "kdy987",
+        "files": {
+          "application/src/main/java/myApp/client/vi/sch/Sch04_Edit_Note.java": "343583d4665b4ca52b2ca8d7d425e3ae090ea0e3",
+          "application/src/main/java/myApp/client/vi/sch/Sch04_Tab_DailyCheckList.java": "a05678a8deb228c2da8ef22668554d1dc5ee5276",
+          "application/src/main/java/myApp/client/vi/sch/model/Sch04_ListModel.java": "740582cfe1c36ac735f2d25c53c8d82619a31d95",
+          "application/src/main/java/myApp/client/vi/sch/model/Sch04_ListModelProperties.java": "4b78b06ed650c971179e2b8166c3e108dcb88880",
+          "application/src/main/java/myApp/client/vi/sch/model/Sch10_IpoModel.java": "824c6b72eb310a83edb5c74607268590e4667cf3",
+          "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+          "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "7f4b0fb215e50834fd6180ab89005f6d73d52cd6",
+          "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+          "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+          "application/src/main/java/myApp/server/sch/Sch04_List.java": "95ef763d624d0552b628895c117d34fa43140577",
+          "application/src/main/java/myApp/server/sch/Sch10_Ipo.java": "3f528440c6e69083c5584213e1f9a611a844330c",
+          "application/src/main/java/myApp/server/sch/mapper/sch04_list.xml": "a049546c4638535f640f4ee26434aa0b5eae156b",
+          "application/src/main/java/myApp/server/sch/mapper/sch10_ipo.xml": "66a3b2d1d059ceaabb9f5220605c0fa2ea56a092",
+          "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+          "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+          "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+          "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+        },
+        "note": "docs/work/O/O05-작업기록.md"
+      }
+    ],
+    "id": "V31"
   },
   "Sch04_Tab_DailyCheckListStatus": {
     "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",

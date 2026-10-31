@@ -2,18 +2,22 @@
  * [1409] 관리자 > 01. 화면권한관리 > 특정화면 사용요청 (A27)
  * AS-IS: myApp/client/vi/sys/Sys53_Tab_SpecificMenuRequest.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L67-95: 툴바(구분·특정업무구분 콤보·조회·등록·저장·삭제) + 셀 편집 그리드(행번호, 체크박스 단일)
- * 결재요청 아이콘이 여는 전자결재(Apr01_Edit_ApprDoc)·분류선택(Dcr01_Lookup_Class)은 다른 도메인이라 이 단계에서 제외 — 작업기록 "의존"
+ * 결재요청 아이콘의 전자결재(Apr01_Edit_ApprDoc, link A80)·분류선택(Dcr01_Lookup_Class)은 V31에서 연결했다
  * UX보강(10) B12-2: 툴바 = SearchBar(UX-01·02, 조건 2개 콤보 → 초기화는 전체·전체, 자동 조회 없음), 저장 = 저장(n)(UX-03). 1410과 같은 패턴
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message } from 'antd';
 import { sysApi } from '@/api/sys';
+import { dcrApi } from '@/api/dcr';
+import { errorMessage } from '@/api/client';
 import { Code, SpecificMenuRequest } from '@/types/sys';
 import { Button } from '@/components/button';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { CellEditGrid, gbFor, iconCell } from '@/components/grid';
 import { SearchBar, useSearchParams } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
+import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 
 type Row = SpecificMenuRequest;
 const gb = gbFor<Row>();
@@ -65,20 +69,47 @@ export const Sys53_Tab_SpecificMenuRequest: React.FC = () => {
       }
       return undefined;
     },
-    // deleteChk() L297-326 → [E6] messageBox.DialogHide [YES] (L311) → deleteRow() L328-337
+    // deleteChk() L297-326 → [E7] messageBox.DialogHide [YES] (L311) → deleteRow() L328-337
     deleteConfirm: '선택한 내용을 삭제하시겠습니까?',
   });
 
+  // [E6] actionCell (ImageCell).callbackOnCreate (L161) → 인라인 L161-166
   // 결재요청 아이콘 (buildGrid L131-173): 특정업무가 없으면 막는다. apr.Apr01_Appr.selectById 결과에 따라
-  // 결재문서가 있으면 Apr01_Edit_ApprDoc.retrieveApproval, 없으면 checkdcr() L185-217 → Dcr01_Lookup_Class → insertLinkApproval() L219-230
-  // → updateApprId() L232-249 (sys.Sys53_SpecificMenuRequest.update 후 retrieve). 전자결재·분류선택은 다른 도메인이라 아직 없음
+  // 결재문서가 있으면 Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false), 없으면 checkdcr() L185-217 → Dcr01_Lookup_Class → insertLinkApproval() L219-230
+  // → updateApprId() L232-249 (sys.Sys53_SpecificMenuRequest.update 후 retrieve)
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [classPick, setClassPick] = useState<{ row: Row; classTreeId?: number } | null>(null); // 문서분류를 고르는 중인 행
+  const [linkDoc, setLinkDoc] = useState<{ row: Row; classTreeId: number } | null>(null);
+
+  // checkdcr() L185-217: dcr.Dcr30_Link.selectByLinkCode(companyId, "A80") — 없으면 빈 Dcr01_Lookup_Class, 있으면(첫 행) 그 분류를 채워 연다. 어느 쪽이든 [확인] 뒤 insertLinkApproval
+  const checkdcr = useCallback(async (row: Row) => {
+    try {
+      const list = await dcrApi.searchClassTreeByLinkCode('A80');
+      setClassPick({ row, classTreeId: list.length === 0 ? undefined : list[0].classTreeId });
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  }, []);
+
   const requestApproval = useCallback((r: Row) => {
     if (!r.specificWorkCd) {
       message.warning('저장 후에 결재요청을 진행해주세요');
       return;
     }
-    message.info('전자결재 화면(Apr01_Edit_ApprDoc)은 아직 변환 전입니다');
-  }, []);
+    if (r.apprId != null) setViewApprId(r.apprId);
+    else void checkdcr(r);
+  }, [checkdcr]);
+
+  // updateApprId() L232-249
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await sysApi.updateSpecificMenuRequestApprId(linkDoc.row.specificMenuRequestId, apprId);
+      void crud.retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+  };
 
   const columnDefs = useMemo(() => buildGrid(works, requestApproval), [works, requestApproval]);
 
@@ -112,7 +143,8 @@ export const Sys53_Tab_SpecificMenuRequest: React.FC = () => {
   useEffect(() => { void crud.retrieve(); }, []);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 8, boxSizing: 'border-box' }}>
+    <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 10, boxSizing: 'border-box' }}>
       {/* [E1] retrieveButton[조회].Select (L103) → retrieve(). 초기화는 UX-02 */}
       <SearchBar onSearch={crud.retrieve} onReset={sp.reset} loading={crud.loading} extra={<>
         {/* [E2] insertButton[등록].Select (L109) → insertRow() L266-274 */}
@@ -135,6 +167,22 @@ export const Sys53_Tab_SpecificMenuRequest: React.FC = () => {
         <CellEditGrid<Row> crud={crud} columnDefs={columnDefs} sortable={false}
           rowSelection={{ mode: 'singleRow', checkboxes: true, enableClickSelection: false }} />
       </div>
+      {/* checkdcr() L185-217: Dcr01_Lookup_Class.open(classTreeId, classTreeModel, callback → classTreeModel = result, insertLinkApproval) */}
+      <Dcr01_Lookup_Class
+        open={classPick != null}
+        classTreeId={classPick?.classTreeId}
+        onResult={r => { if (classPick) setLinkDoc({ row: classPick.row, classTreeId: r.classTreeId }); setClassPick(null); }}
+        onClose={() => setClassPick(null)}
+      />
+      {/* insertLinkApproval() L219-230: Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, "A80", 행, false, callback → updateApprId) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: 'A80', refId: linkDoc.row.specificMenuRequestId } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void crud.retrieve()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
+    </div>
     </div>
   );
 };

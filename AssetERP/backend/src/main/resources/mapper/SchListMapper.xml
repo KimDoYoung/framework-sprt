@@ -998,4 +998,30 @@
         </if>
          ORDER BY sch04_manage_date, seq, sch04_title COLLATE "ko_KR.utf8"
     </select>
+
+    <!-- A31 일일업무체크 상신 본문의 행 (O05 → V31). AS-IS는 호출 화면의 그리드 모델(Sch04_ListModel)을 그대로 썼다 — TOBE는 listId만 받아 같은 열을 다시 읽는다.
+         className·statusName은 selectByManagerId와 같은 식(공모주 일정 '5' 또는 분류 0 = '공모주', f_cdnm('ScheduleStatusCode'…)) -->
+    <select id="selectLinkRows" resultType="kr.co.kfs.asseterp.biz.sch.dto.Sch04LinkRow">
+        SELECT sch04_list_id                                                                         AS list_id
+             , sch04_close_date                                                                      AS close_date
+             , CASE WHEN sch04_schedule_cd = '5' OR sch01_class_id = 0 THEN '공모주'
+                    ELSE sch08_class_nm END                                                          AS class_name
+             , sch04_title                                                                           AS title
+             , f_cdnm('ScheduleStatusCode', sch04_status_cd, sch04_company_id, f_sysdate())          AS status_name
+             , sch04_note                                                                            AS note
+          FROM sch04_list
+               LEFT OUTER JOIN sch01_info  ON sch01_info_id  = sch04_info_id
+               LEFT OUTER JOIN sch08_class ON sch08_class_id = CASE WHEN sch04_schedule_cd = '5' THEN 0 ELSE sch01_class_id END
+         WHERE sch04_company_id = #{companyId}
+           AND sch04_list_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <!-- AS-IS sch04_list.updateApprId L1231 (IDMS-IC) — 회사 조건을 더했다 -->
+    <update id="updateApprId">
+        UPDATE sch04_list
+           SET sch04_appr_id = #{apprId}
+         WHERE sch04_list_id = #{listId}
+           AND sch04_company_id = #{companyId}
+    </update>
 </mapper>

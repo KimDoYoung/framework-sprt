@@ -136,4 +136,13 @@
            AND sys53_specific_menu_request_id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
     </delete>
+
+    <!-- A80 [결재요청] 뒤 결재문서 ID 기록 (V31). AS-IS Sys53_Tab_SpecificMenuRequest.updateApprId L232는 선택한 행 모델에 apprId만 얹어 sys.Sys53_SpecificMenuRequest.update로 보낸다 —
+         다른 열은 저장된 값 그대로라 TOBE는 apprId 한 열만 바꾼다(회사 조건 포함) -->
+    <update id="updateApprId">
+        UPDATE sys53_specific_menu_request
+           SET sys53_appr_id = #{apprId}
+         WHERE sys53_specific_menu_request_id = #{specificMenuRequestId}
+           AND sys53_company_id               = #{companyId}
+    </update>
 </mapper>

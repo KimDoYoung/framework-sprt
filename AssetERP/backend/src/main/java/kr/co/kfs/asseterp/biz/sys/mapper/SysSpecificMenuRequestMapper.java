@@ -25,6 +25,9 @@ public interface SysSpecificMenuRequestMapper {
     int insertSpecificMenuRequest(@Param("specificMenuRequestId") Long specificMenuRequestId, @Param("companyId") Long companyId,
                                   @Param("personId") Long personId, @Param("req") SpecificMenuRequestSaveReq req);
 
+    /** A80 [결재요청] 뒤 결재문서 ID 기록 (V31) */
+    int updateApprId(@Param("companyId") Long companyId, @Param("specificMenuRequestId") Long specificMenuRequestId, @Param("apprId") Long apprId);
+
     int updateSpecificMenuRequest(@Param("companyId") Long companyId, @Param("req") SpecificMenuRequestSaveReq req);
 
     int deleteSpecificMenuRequests(@Param("companyId") Long companyId, @Param("ids") List<Long> ids);

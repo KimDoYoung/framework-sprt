@@ -85,6 +85,19 @@ public class SysSpecificMenuRequestService {
         return saved;
     }
 
+    /** AS-IS Sys53_Tab_SpecificMenuRequest.updateApprId L232-249 — [결재요청]으로 만든 결재문서 ID를 이 요청 행에 기록한다 (V31) */
+    @Transactional
+    public int updateApprId(UserPrincipal user, Long specificMenuRequestId, Long apprId) {
+        if (specificMenuRequestId == null || apprId == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "결재문서 정보가 없습니다.");
+        }
+        int n = sysSpecificMenuRequestMapper.updateApprId(user.getCompanyId(), specificMenuRequestId, apprId);
+        if (n == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return n;
+    }
+
     private static void requireSysAdmin(UserPrincipal user) {
         if (!user.isSysAdmin()) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);

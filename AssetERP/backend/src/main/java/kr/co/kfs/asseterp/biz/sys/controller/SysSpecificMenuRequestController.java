@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.sys.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuRequestApprIdReq;
 import kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuRequestAdminRes;
 import kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuRequestAdminSaveReq;
 import kr.co.kfs.asseterp.biz.sys.dto.SpecificMenuRequestRes;
@@ -56,6 +57,13 @@ public class SysSpecificMenuRequestController {
     public ApiResponse<List<SpecificMenuRequestAdminRes>> updateAdmin(@AuthenticationPrincipal UserPrincipal principal,
                                                                       @RequestBody List<SpecificMenuRequestAdminSaveReq> rows) {
         return ApiResponse.ok(sysSpecificMenuRequestService.updateAdmin(principal, rows));
+    }
+
+    /** AS-IS sys.Sys53_SpecificMenuRequest.update(apprId) — [결재요청] 뒤 결재문서 ID 기록 (V31) */
+    @PutMapping("/{specificMenuRequestId}/appr-id")
+    public ApiResponse<Integer> updateApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long specificMenuRequestId,
+                                             @RequestBody SpecificMenuRequestApprIdReq req) {
+        return ApiResponse.ok(sysSpecificMenuRequestService.updateApprId(principal, specificMenuRequestId, req.apprId()));
     }
 
     /** AS-IS sys.Sys53_SpecificMenuRequest.delete → 지운 건수 */
