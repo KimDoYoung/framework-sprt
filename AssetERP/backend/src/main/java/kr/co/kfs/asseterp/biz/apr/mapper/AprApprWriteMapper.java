@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import kr.co.kfs.asseterp.biz.apr.dto.AprApprBrief;
+import kr.co.kfs.asseterp.biz.apr.dto.AprApprRelateReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprApprSaveReq;
 
 /** 전자결재 상신·임시저장 (AS-IS server/apr/Apr01_Appr.update·deleteByApprId + UpdateDataModel(apr01_appr·apr04_appr_step), V03) */
@@ -56,4 +57,25 @@ public interface AprApprWriteMapper {
 
     /** AS-IS sys10_file.deleteByParentId */
     int deleteFilesByParentId(@Param("parentId") Long parentId);
+
+    // ───────── 연관 탭 다섯 개 (V13, AS-IS UpdateDataModel(apr03_relate_fund·apr12_relate_adv·apr21_relate_appr·apr20_relate_ics·apr22_relate_icr)) ─────────
+
+    /** 연관 줄은 화면 내용 전체로 바꾼다 — 지우고 다시 넣는다(AS-IS는 삭제 단추가 그 자리에서 지웠다, 작업방법 "다른 점") */
+    int deleteRelateAdvsByApprId(@Param("apprId") Long apprId);
+
+    int deleteRelateApprsByApprId(@Param("apprId") Long apprId);
+
+    int deleteRelateIcsByApprId(@Param("apprId") Long apprId);
+
+    int deleteRelateIcrByApprId(@Param("apprId") Long apprId);
+
+    int insertRelateFund(@Param("id") Long id, @Param("apprId") Long apprId, @Param("row") AprApprRelateReq.Fund row);
+
+    int insertRelateAdv(@Param("id") Long id, @Param("apprId") Long apprId, @Param("row") AprApprRelateReq.Adv row);
+
+    int insertRelateAppr(@Param("id") Long id, @Param("apprId") Long apprId, @Param("row") AprApprRelateReq.Appr row);
+
+    int insertRelateIcs(@Param("id") Long id, @Param("apprId") Long apprId, @Param("row") AprApprRelateReq.Law row);
+
+    int insertRelateIcr(@Param("id") Long id, @Param("apprId") Long apprId, @Param("row") AprApprRelateReq.Law row);
 }

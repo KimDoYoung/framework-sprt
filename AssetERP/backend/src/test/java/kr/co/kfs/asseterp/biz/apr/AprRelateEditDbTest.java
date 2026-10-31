@@ -102,9 +102,11 @@ class AprRelateEditDbTest {
 
     @Test
     void 마감일_계산과_새_줄_정보() {
-        AprRelateIcsRow info = service.getInfo(LAW, DEADLINE);
+        AprRelateIcsRow info = service.getInfo(LAW, DEADLINE, false);
         assertThat(info.classTreeFullName()).isNotBlank();
         assertThat(info.relatedLaw()).isNull();
+        // V13: 상신 문서창의 연관법규 [등록]은 조회창 결과처럼 관련조문도 채운다
+        assertThat(service.getInfo(LAW, DEADLINE, true).classTreeFullName()).isEqualTo(info.classTreeFullName());
         assertThat(service.getCloseDate(user(REG), DEADLINE, LocalDate.of(2026, 10, 31))).isNotNull();
     }
 

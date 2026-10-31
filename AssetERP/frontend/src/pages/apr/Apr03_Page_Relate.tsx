@@ -4,16 +4,22 @@
  * 생성자 L210-346: [첨부파일 옵션설정][등록] 툴바 40 + 탭(가운데 위 0.5) + [결재선 설정][직급순 재정렬] 툴바 40 + 결재선 그리드(아래 0.5)
  * V01은 읽기만이다: 툴바의 네 단추는 편집 모드(상신·반려·임시저장 본인 / 관리자)에서만 켜진다(retrieve L925-997 editable). 연관 그리드의 삭제·설정 열은 편집 모드에서만 보인다 → 연관 설정은 V05
  * V05: 첨부 툴바 [첨부파일 옵션설정]·[등록](첨부 탭 올리기)·삭제 열을 켠다(연관 탭의 [등록]은 V13).
+ * V13 연관 설정: 연관 탭 [등록](insert L1029-1093) — 펀드 Fnd01_Lookup_SelectMulti·일임 Adv02_Lookup_SelectMulti·문서 Apr21_Lookup_RelateAppr·법규 Ics01/내규 Icr01 "deadline" 조회창,
+ *   편집 모드의 삭제·설정 열(openButton L1887-1910)과 상세보기(Apr20_Lookup_RelateIcs.view·Apr22_Lookup_RelateIcr.view). 목록은 이 안에 두고 [저장]·[결재요청] 때 부른 쪽이 onRelatesChange 값을 보낸다.
  * V07 편집 모드(editable): 결재선 툴바 [결재선 설정](Apr04_Edit_ApprStep)·[직급순 재정렬](arrayStepTypeCode L1920-1974)과 ▲▼(changeRow L1682-1725)를 켠다. 
  *   새 문서(isNew)는 아직 DB에 없으므로 서버를 읽지 않고 seed(새 문서 열기 응답)로 채운다.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';
 import type { ColDef } from 'ag-grid-community';
-import { aprAttachApi, aprDetailApi, aprExtraApi, aprStepEditApi } from '@/api/apr';
+import { aprAttachApi, aprDetailApi, aprExtraApi, aprRelateEditApi, aprStepEditApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
 import { fileApi, FILE_DELETE_STATUS } from '@/api/file';
-import { AprTypo, AprApprDetail, AprApprFile, AprApprAdv, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw } from '@/types/apr';
+import { AprTypo, AprApprDetail, AprApprFile, AprApprAdv, AprApprFund, AprApprRelateReq, AprApprStampAppl, AprApprStep, AprLoadDoc2, AprRelateAppr, AprRelateIcsRow, AprRelateLaw } from '@/types/apr';
+import { FundMulti } from '@/types/fnd';
+import { AdvAccount } from '@/types/adv';
+import { IcsLawDeadline } from '@/types/ics';
+import { IcrClassTreeDeadline } from '@/types/icr';
 import { FileInfo } from '@/types/sys';
 import { PageTabs } from '@/components/tabs/PageTabs';
 import { Button } from '@/components/button';
@@ -27,6 +33,13 @@ import { Apr04_Edit_RetouchApprStep } from './Apr04_Edit_RetouchApprStep';
 import { Apr01_Lookup_ApprFileList } from './Apr01_Lookup_ApprFileList';
 import { Sys61_Lookup_FileList } from '../sys/Sys61_Lookup_FileList';
 import { Sys61_Lookup_DelList } from '../sys/Sys61_Lookup_DelList';
+import { Fnd01_Lookup_SelectMulti } from '@/components/lookup/Fnd01_Lookup_SelectMulti';
+import { Adv02_Lookup_SelectMulti } from '@/components/lookup/Adv02_Lookup_SelectMulti';
+import { Ics01_Lookup_SelectMulti } from '../ics/Ics01_Lookup_SelectMulti';
+import { Icr01_Lookup_SelectMulti } from '../icr/Icr01_Lookup_SelectMulti';
+import { Apr21_Lookup_RelateAppr } from './Apr21_Lookup_RelateAppr';
+import { Apr20_Lookup_RelateIcs } from './Apr20_Lookup_RelateIcs';
+import { Apr22_Lookup_RelateIcr } from './Apr22_Lookup_RelateIcr';
 import { FileUpdownForm, FileUpdownFormHandle } from '@/components/form/FileUpdownForm';
 
 const gbFile = gbFor<AprApprFile>();
@@ -62,6 +75,8 @@ interface Props {
   /** 새 문서 — 서버를 읽지 않고 seed로 채운다 */
   isNew?: boolean;
   seed?: { steps: AprApprStep[]; ics: AprRelateLaw[]; icr: AprRelateLaw[] };
+  /** 연관 탭 다섯 개가 바뀔 때마다, 처음 읽은 뒤부터 (저장 때 부른 쪽이 쓴다, V13) */
+  onRelatesChange?: (relates: AprApprRelateReq | undefined) => void;
   /** 결재선이 바뀔 때마다 (저장 때 부른 쪽이 쓴다) */
   onStepsChange?: (steps: AprApprStep[]) => void;
   /** 내 차례인 결재자의 [결재선 수정] (enableButton L2008-2014, V08) — 저장이 끝나면 부른 쪽이 문서를 다시 연다 */
@@ -74,7 +89,7 @@ interface Props {
   stepsReplace?: { version: number; steps: AprApprStep[] };
 }
 
-export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNew = false, seed, onStepsChange, canRetouch = false, onRetouched, stepsReplace }) => {
+export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNew = false, seed, onRelatesChange, onStepsChange, canRetouch = false, onRetouched, stepsReplace }) => {
   const user = useLoginUser();
   const [files, setFiles] = useState<AprApprFile[]>([]);
   const [ics, setIcs] = useState<AprRelateLaw[]>([]);
@@ -93,6 +108,12 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
   // V05: 첨부 옵션설정(세 갈래)·등록
   const [fileOptOpen, setFileOptOpen] = useState<'options' | 'rejected' | 'deleted' | null>(null);
   const upload = useRef<FileUpdownFormHandle>(null);
+  // V13: 연관 설정 — 어느 조회창이 열렸는지, 법규·내규 설정/상세보기 창, 처음 읽었는지(읽기 전에는 저장 값을 내보내지 않는다)
+  const [lookup, setLookup] = useState<'ics' | 'icr' | 'fund' | 'adv' | 'appr' | null>(null);
+  const [lawWin, setLawWin] = useState<{ kind: 'ics' | 'icr'; view: boolean; relateId: number; row: AprRelateIcsRow } | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  /** DBUtil.setSeq 대신 — 저장 전 새 줄의 임시 번호(음수). 서버가 저장할 때 새 번호를 받는다 */
+  const tmpId = useRef(0);
   const isManager = user.userId < 0 || user.companyId === 0;
 
   // [E0] 화면 열림 (생성자 L210-346) → pannelEvents() L348-413
@@ -105,6 +126,7 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
       setIcs(seed?.ics ?? []); setIcr(seed?.icr ?? []); setSteps(seed?.steps ?? []);
       const first = [0, (seed?.ics ?? []).length, (seed?.icr ?? []).length].findIndex((c, i) => i > 0 && c > 0);
       setActiveKey(String(first < 0 ? 0 : first));
+      setLoaded(true);
       return;
     }
     try {
@@ -120,6 +142,7 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
       const counts = [fileList.length, icsList.length, icrList.length, fundList.length, advList.length, apprList.length, stampList.length];
       const first = counts.findIndex(c => c > 0);
       setActiveKey(String(first < 0 ? 0 : first));
+      setLoaded(true);
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
@@ -128,6 +151,20 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
 
   useEffect(() => { void retrieve(); }, [retrieve]);
   useEffect(() => { onStepsChange?.(steps); }, [steps]); // eslint-disable-line react-hooks/exhaustive-deps
+  // 창이 닫히거나 다시 그려질 때는 옛 값을 지운다(읽기 전의 저장이 연관 줄을 지우지 않게)
+  useEffect(() => () => onRelatesChange?.(undefined), []); // eslint-disable-line react-hooks/exhaustive-deps
+  // getRelateFundList L1740·AdvList L1758·ApprList L1767·IcsList L1776·IcrList L1785: 화면에 남은 줄 전체. 새 줄(임시 번호 < 0)은 번호 없이 보낸다
+  useEffect(() => {
+    if (!editable || !loaded) return;
+    const id = (n: number) => (n > 0 ? n : null);
+    const law = (r: AprRelateLaw) => ({ relateId: id(r.relateId), classTreeId: r.classTreeId, deadlineId: r.deadlineId ?? null, standCode: r.standCode ?? null, standDate: r.standDate ?? null, closeDate: r.closeDate ?? null, standYn: r.standYn ?? null });
+    onRelatesChange?.({
+      funds: funds.map(f => ({ relateFundId: id(f.relateFundId), fundId: f.fundId as number, printYn: f.printYn ?? null, afterYn: f.afterYn ?? null })),
+      advs: advs.map(a => ({ relateAdvId: id(a.relateAdvId), advId: a.advId as number })),
+      apprs: apprs.map(a => ({ relateApprId: id(a.relateApprId), targetApprId: a.targetApprId })),
+      ics: ics.map(law), icr: icr.map(law),
+    });
+  }, [funds, advs, apprs, ics, icr, editable, loaded]); // eslint-disable-line react-hooks/exhaustive-deps
   // 다시 그릴 때(key)는 처음 version을 이미 반영한 것으로 본다
   const appliedVersion = useRef(stepsReplace?.version ?? 0);
   useEffect(() => {
@@ -201,10 +238,58 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
     }
     setFileOptOpen(optionsMode);
   };
-  // [E4] insertButton[등록].Select (L260) → insert() L1029-1093: 첨부파일 탭이면 파일 선택 → FileUpload?parentId={apprId}, 연관 탭이면 각 연관 설정 창(V13)
+  // [E4] insertButton[등록].Select (L260) → insert() L1029-1093: 첨부파일 탭이면 파일 선택 → FileUpload?parentId={apprId}, 연관 탭이면 각 연관 설정 창.
+  //   날인신청 탭(relateCorpDocList)에는 갈래가 없다 — 그대로 아무 일도 안 한다
   const insert = () => {
     if (activeKey === '0') upload.current?.click();
-    else message.info('연관 설정 창은 V13에서 연결합니다.');
+    else if (activeKey === '1') setLookup('ics');
+    else if (activeKey === '2') setLookup('icr');
+    else if (activeKey === '3') setLookup('fund');
+    else if (activeKey === '4') setLookup('adv');
+    else if (activeKey === '5') setLookup('appr');
+  };
+  const newId = () => --tmpId.current;
+  // insertRelateFundList L415-450: 고른 펀드마다 연관펀드 한 줄 — 출력(printYn)은 문서분류의 대외문서 출력여부, 결재이후(afterYn)는 비운다. 맨 아래에 붙인다(03 원칙 17)
+  const onFundsPicked = (list: FundMulti[]) => setFunds(prev => [...prev, ...list.map<AprApprFund>(f => ({
+    relateFundId: newId(), fundId: f.fundId, fundTypeName: f.kofiaFundTypeName, fundCode: f.fundCode, fundName: f.fundName, afterYn: null, printYn: doc.printFundYn ?? 'false',
+  }))]);
+  // insertRelateAdvList L796-831
+  const onAdvsPicked = (list: AdvAccount[]) => setAdvs(prev => [...prev, ...list.map<AprApprAdv>(a => ({
+    relateAdvId: newId(), advId: a.accountId, manageCode: a.manageCode, manageName: a.manageName,
+  }))]);
+  // Apr21_Lookup_RelateAppr.insert L222-249
+  const onApprsPicked = (list: AprLoadDoc2[]) => {
+    setLookup(null);
+    setApprs(prev => [...prev, ...list.map<AprRelateAppr>(d => ({
+      relateApprId: newId(), targetApprId: d.apprId, inOutTypeCode: d.inOutTypeCode, inOutTypeName: d.inOutTypeCode === '10' ? '대외' : '사내', targetRegDate: d.regDate, targetTitle: d.title,
+    }))]);
+  };
+  // insertRelateIcsList L833-877·insertRelateIcrList L879-923: 고른 법규(내규)·기한마다 한 줄 — 기준·마감일은 [설정]에서 정한다
+  const onLawsPicked = (list: (IcsLawDeadline | IcrClassTreeDeadline)[], kind: 'ics' | 'icr') => {
+    const rows = list.map<AprRelateLaw>(m => ({
+      relateId: newId(), classTreeId: m.classTreeId, classTreeFullName: m.classTreeFullName, cycleName: m.cycleName, closeDate: null, deadlineId: m.deadlineId ?? null, standCode: null, standDate: null, standYn: null,
+    }));
+    (kind === 'ics' ? setIcs : setIcr)(prev => [...prev, ...rows]);
+  };
+  // 삭제 열: 연관문서는 목록에서 빼고(L1495), 펀드·일임·법규·내규는 AS-IS가 그 자리에서 DB를 지웠다 — TOBE는 [저장] 때 화면에 남은 줄로 바꾼다(작업방법 "다른 점")
+  const removeFund = (row: AprApprFund) => setFunds(prev => prev.filter(r => r.relateFundId !== row.relateFundId));
+  const removeAdv = (row: AprApprAdv) => setAdvs(prev => prev.filter(r => r.relateAdvId !== row.relateAdvId));
+  const removeAppr = (row: AprRelateAppr) => setApprs(prev => prev.filter(r => r.relateApprId !== row.relateApprId));
+  const removeLaw = (kind: 'ics' | 'icr', row: AprRelateLaw) => (kind === 'ics' ? setIcs : setIcr)(prev => prev.filter(r => r.relateId !== row.relateId));
+  // [설정]·[상세보기] — 법규(내규) 정보는 기한을 포함해 읽고 기준·마감은 그 줄의 값을 얹는다 (Apr20_Lookup_RelateIcs.open/view)
+  const openLaw = async (kind: 'ics' | 'icr', row: AprRelateLaw, view: boolean) => {
+    try {
+      const info = kind === 'ics'
+        ? await aprRelateEditApi.getRelateIcsInfo(row.classTreeId, row.deadlineId ?? null, true)
+        : await aprRelateEditApi.getRelateIcrInfo(row.classTreeId, row.deadlineId ?? null);
+      setLawWin({ kind, view, relateId: row.relateId, row: { ...info, relateIcsId: row.relateId, standCode: row.standCode ?? null, standDate: row.standDate ?? null, closeDate: row.closeDate ?? null, standYn: row.standYn ?? null } });
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+  const onLawSet = (patch: { standCode: string | null; standDate: string | null; closeDate: string | null; standYn: string }) => {
+    if (!lawWin) return;
+    (lawWin.kind === 'ics' ? setIcs : setIcr)(prev => prev.map(r => (r.relateId === lawWin.relateId ? { ...r, ...patch } : r)));
   };
   const onFilesChange = async (picked: File[]) => {
     if (picked.length === 0) return;
@@ -252,37 +337,49 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
   }, [canDown, canDelete]);
 
   // buildRelateIcsGrid L1506-1551 / buildRelateIcrGrid L1554-1599: 법규명(내규명) 405 · 주기 80 · 마감일 100 · 설정/삭제(편집 모드만) · 상세보기 60
-  const lawCols = (title: string): ColDef<AprRelateLaw>[] => [
+  //   편집 모드(openButton L1887-1910)는 설정·삭제 열, 아니면 상세보기 열(retrieve L925-997: 삭제가 숨으면 상세보기가 보인다)
+  const lawCols = (title: string, kind: 'ics' | 'icr'): ColDef<AprRelateLaw>[] => [
     gbLaw.textArea('classTreeFullName', 405, title),
     gbLaw.text('cycleName', 80, '주기'),
     gbLaw.date('closeDate', 100, '마감일'),
-    // [E] viewCell → Apr20_Lookup_RelateIcs.view / Apr22_Lookup_RelateIcr.view — 연관 설정 창은 V03에서
-    iconCell<AprRelateLaw>('view', 'viewAction', 60, '상세보기', () => message.info('연관법규·내규 창은 V03에서 연결합니다.')),
+    ...(editable ? [
+      iconCell<AprRelateLaw>('edit', 'editAction', 60, '설정', row => { void openLaw(kind, row, false); }),
+      iconCell<AprRelateLaw>('delete', 'deleteAction', 60, '삭제', row => removeLaw(kind, row)),
+    ] : [
+      iconCell<AprRelateLaw>('view', 'viewAction', 60, '상세보기', row => { void openLaw(kind, row, true); }),
+    ]),
   ];
 
   // buildRelateFundGrid L1390-1412: 펀드유형 80 · 코드 80 · 연관펀드명 310(삭제 숨김 시 390) · 결재이후 80 · 출력 80
+  //   편집 모드(openButton)에는 삭제 열(80)이 켜지고 펀드명은 310
   const fundCols = useMemo<ColDef<AprApprFund>[]>(() => [
     gbFund.text('fundTypeName', 80, '펀드유형'),
     gbFund.text('fundCode', 80, '코드'),
-    gbFund.text('fundName', 390, '연관펀드명'),
+    gbFund.text('fundName', editable ? 310 : 390, '연관펀드명'),
     gbFund.booleanYn2('afterYn', 80, '결재이후'),
+    ...(editable ? [iconCell<AprApprFund>('delete', 'deleteAction', 80, '삭제', row => removeFund(row))] : []),
     gbFund.boolean('printYn', 80, '출력'),
-  ], []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [editable]);
 
   // buildRelateAdvGrid L1415-1434: 코드 130 · 일임계좌명 500(삭제 숨김 시 580)
   const advCols = useMemo<ColDef<AprApprAdv>[]>(() => [
     gbAdv.text('manageCode', 130, '코드'),
-    gbAdv.text('manageName', 580, '일임계좌명'),
-  ], []);
+    gbAdv.text('manageName', editable ? 500 : 580, '일임계좌명'),
+    ...(editable ? [iconCell<AprApprAdv>('delete', 'deleteAction', 80, '삭제', row => removeAdv(row))] : []),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [editable]);
 
   // buildRelateApprGrid L1437-1503: 구분 50 · 등록일 100 · 문서명 400(삭제 숨김 시 480) · 미리보기 80
   const apprCols = useMemo<ColDef<AprRelateAppr>[]>(() => [
     gbAppr.textCenter('inOutTypeName', 50, '구분'),
     gbAppr.date('targetRegDate', 100, '등록일'),
-    gbAppr.text('targetTitle', 480, '문서명'),
+    gbAppr.text('targetTitle', editable ? 400 : 480, '문서명'),
     // [E] viewCell → PDFViewer(apr.Apr10_StampPDF7) — 문서 PDF 미리보기는 V04
     iconCell<AprRelateAppr>('view', 'viewAction', 80, '미리보기', () => message.info(`PDF 미리보기: ${NEXT_V04}`)),
-  ], []);
+    ...(editable ? [iconCell<AprRelateAppr>('delete', 'deleteAction', 80, '삭제', row => removeAppr(row))] : []),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [editable]);
 
   // Apr16_Grid_StampApplList: 구분 110 · 인감 및 대표명의 220 · 부수 40 · 반출 40
   const stampCols = useMemo<ColDef<AprApprStampAppl>[]>(() => [
@@ -323,8 +420,8 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
   // [E3] optionsButton[첨부파일 옵션설정] · [E4] insertButton[등록] · [E5][E6] reArrangeButton[직급순 재정렬] · [E7] apprStepLineButton[결재선 설정] · [E18][E19][E21] fileUpload · [E20] editor.callbackOnCreate — 편집 모드 전용이라 V03(상신·임시저장)에서 연결한다
   const items = [
     { key: '0', label: tabLabel('첨부파일', files.length), children: <SingleGrid<AprApprFile> rowData={files} columnDefs={fileCols} getRowId={p => String(p.data.fileId)} /> },
-    { key: '1', label: tabLabel('연관법규', ics.length), children: <SingleGrid<AprRelateLaw> rowData={ics} columnDefs={lawCols('법규명')} getRowId={p => String(p.data.relateId)} /> },
-    { key: '2', label: tabLabel('연관내규', icr.length), children: <SingleGrid<AprRelateLaw> rowData={icr} columnDefs={lawCols('내규명')} getRowId={p => String(p.data.relateId)} /> },
+    { key: '1', label: tabLabel('연관법규', ics.length), children: <SingleGrid<AprRelateLaw> rowData={ics} columnDefs={lawCols('법규명', 'ics')} getRowId={p => String(p.data.relateId)} /> },
+    { key: '2', label: tabLabel('연관내규', icr.length), children: <SingleGrid<AprRelateLaw> rowData={icr} columnDefs={lawCols('내규명', 'icr')} getRowId={p => String(p.data.relateId)} /> },
     { key: '3', label: tabLabel('연관펀드', funds.length), children: <SingleGrid<AprApprFund> rowData={funds} columnDefs={fundCols} getRowId={p => String(p.data.relateFundId)} /> },
     { key: '4', label: tabLabel('연관일임', advs.length), children: <SingleGrid<AprApprAdv> rowData={advs} columnDefs={advCols} getRowId={p => String(p.data.relateAdvId)} /> },
     { key: '5', label: tabLabel('연관문서', apprs.length), children: <SingleGrid<AprRelateAppr> rowData={apprs} columnDefs={apprCols} getRowId={p => String(p.data.relateApprId)} /> },
@@ -376,6 +473,14 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
       <Apr01_Lookup_ApprFileList apprId={fileOptOpen === 'options' ? doc.apprId : null} onClosed={() => void refreshFiles()} onClose={() => setFileOptOpen(null)} />
       <Sys61_Lookup_FileList parentId={fileOptOpen === 'rejected' ? doc.apprId : null} onClosed={() => void refreshFiles()} onClose={() => setFileOptOpen(null)} />
       <Sys61_Lookup_DelList parentId={fileOptOpen === 'deleted' ? doc.apprId : null} onClose={() => setFileOptOpen(null)} />
+      {/* V13 연관 설정 조회창: insertRelateFundList(이미 연관된 펀드는 뺀다)·insertRelateAdvList·Apr21_Lookup_RelateAppr·insertRelateIcsList/IcrList("deadline") */}
+      <Fnd01_Lookup_SelectMulti open={lookup === 'fund'} excludeIds={funds.map(f => f.fundId as number)} onSelect={onFundsPicked} onClose={() => setLookup(null)} />
+      <Adv02_Lookup_SelectMulti open={lookup === 'adv'} onSelect={onAdvsPicked} onClose={() => setLookup(null)} />
+      <Apr21_Lookup_RelateAppr open={lookup === 'appr'} onResult={onApprsPicked} onClose={() => setLookup(null)} />
+      <Ics01_Lookup_SelectMulti open={lookup === 'ics'} actionCode="deadline" onResultDeadlines={list => { setLookup(null); onLawsPicked(list, 'ics'); }} onClose={() => setLookup(null)} />
+      <Icr01_Lookup_SelectMulti open={lookup === 'icr'} actionCode="deadline" onResultDeadlines={list => { setLookup(null); onLawsPicked(list, 'icr'); }} onClose={() => setLookup(null)} />
+      <Apr20_Lookup_RelateIcs row={lawWin?.kind === 'ics' ? lawWin.row : null} view={lawWin?.view} onSet={onLawSet} onClose={() => setLawWin(null)} />
+      <Apr22_Lookup_RelateIcr row={lawWin?.kind === 'icr' ? lawWin.row : null} view={lawWin?.view} onSet={onLawSet} onClose={() => setLawWin(null)} />
       <Apr01_Edit_Message message={opinion} onClose={() => setOpinion(null)} />
       <Apr01_Edit_ApprModi typo={typoView} onClose={() => setTypoView(null)} />
       <Sys10_Lookup_FileViewer file={viewFile ? toFileInfo(viewFile) : null} onClose={() => setViewFile(null)} />

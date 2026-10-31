@@ -1,5 +1,6 @@
 /**
- * 연관펀드 조회창 — 여러 펀드 선택 (P06 Fnd08_Lookup_OrgAuth의 [행 추가]가 연다). AS-IS openAdmin(callback)만 변환했다(관리자 SQL, orgId 없음)
+ * 연관펀드 조회창 — 여러 펀드 선택 (P06 Fnd08_Lookup_OrgAuth의 [행 추가]가 연다). AS-IS openAdmin(callback) = 관리자 SQL(orgId 없음).
+ * V13: 상신 문서창의 연관펀드 [등록]이 쓰는 open(fundIdList, callback)도 같은 창이다 — excludeIds를 주면 내 조직 권한 펀드 중 이미 연관된 펀드를 뺀 목록(selectBySearchText)
  * AS-IS: myApp/client/vi/fnd/Fnd01_Lookup_SelectMulti.java (261줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * open() L77-180: 모달 1200×500 "연관펀드", 위 툴바(일반펀드/임시펀드 라디오 · 펀드유형 120 · 검색 120 · 해지펀드포함 · 클래스펀드&차등배분형 제외 · [조회]),
  *   체크박스 다중 그리드(펀드코드 80 · 펀드명 350 · 펀드유형 100 · 클래스구분 80 · 수탁사 150 · 설정일 90 · 운용역 90 · 비고 200), 아래 가운데 [확인][취소]
@@ -25,9 +26,11 @@ interface Props {
   /** confirm() L222-233: callback.execute(고른 펀드들) 뒤 hide() — 고른 것이 없어도 빈 목록으로 닫는다(원본: getSelectedItems()는 null이 아니다) */
   onSelect: (funds: FundMulti[]) => void;
   onClose: () => void;
+  /** open(fundIdList, callback) — 이미 연관된 펀드 ID. 주면(빈 배열도) 내 조직 권한 펀드만 보이는 selectBySearchText를 쓴다 */
+  excludeIds?: number[];
 }
 
-export const Fnd01_Lookup_SelectMulti: React.FC<Props> = ({ open, onSelect, onClose }) => {
+export const Fnd01_Lookup_SelectMulti: React.FC<Props> = ({ open, onSelect, onClose, excludeIds }) => {
   const gridRef = useRef<AgGridReact<FundMulti>>(null);
   const [planYn, setPlanYn] = useState(false);
   const [fundType, setFundType] = useState('%');
@@ -37,11 +40,14 @@ export const Fnd01_Lookup_SelectMulti: React.FC<Props> = ({ open, onSelect, onCl
   const [rows, setRows] = useState<FundMulti[]>([]);
   const [busy, setBusy] = useState(false);
 
+  const search = (p: { planYn: boolean; fundType: string; searchText: string; closeYn: boolean; classYn: boolean }) =>
+    excludeIds ? fndApi.searchFundMultiOrg({ ...p, excludeIds }) : fndApi.searchFundMulti(p);
+
   // retrieve() L199-220: fnd.Fnd00_Fund.selectBySearchText (orgId 없음 → selectBySearchTextAdmin)
   const retrieve = async (over?: { planYn?: boolean }) => {
     setBusy(true);  // grid.mask("Loading")
     try {
-      setRows(await fndApi.searchFundMulti({ planYn: over?.planYn ?? planYn, fundType, searchText, closeYn, classYn }));
+      setRows(await search({ planYn: over?.planYn ?? planYn, fundType, searchText, closeYn, classYn }));
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     } finally {
@@ -54,7 +60,7 @@ export const Fnd01_Lookup_SelectMulti: React.FC<Props> = ({ open, onSelect, onCl
     if (!open) return;
     setPlanYn(false); setFundType('%'); setSearchText(''); setCloseYn(false); setClassYn(true); setRows([]);
     setBusy(true);
-    fndApi.searchFundMulti({ planYn: false, fundType: '%', searchText: '', closeYn: false, classYn: true })
+    search({ planYn: false, fundType: '%', searchText: '', closeYn: false, classYn: true })
       .then(setRows)
       .catch(err => message.error(errorMessage(err, '조회 실패')))
       .finally(() => setBusy(false));

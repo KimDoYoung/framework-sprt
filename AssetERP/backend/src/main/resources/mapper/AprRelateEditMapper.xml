@@ -41,7 +41,7 @@
              , f_ics_class_tree_nm_allpath(b.ics01_class_tree_id)                           AS class_tree_full_name
              , b.ics01_content                                                              AS content
              , b.ics01_submit_to                                                            AS submit_to
-             , NULL                                                                         AS related_law
+             , CASE WHEN #{withLaw} THEN b.ics01_related_law END                            AS related_law
              , c.sch03_deadline_id                                                          AS deadline_id
              , f_get_deadline_nm(c.sch03_deadline_id, '2')                                  AS deadline_full_name
              , c.sch03_note                                                                 AS deadline_note
@@ -55,12 +55,41 @@
          WHERE b.ics01_class_tree_id = #{classTreeId}
     </select>
 
+    <!-- 새 줄(연관내규): 내규·기한의 보기 값 (Icr01_Lookup_SelectMulti "deadline" 결과 모델의 값, V13) -->
+    <select id="selectRelateIcrInfo" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsRow">
+        SELECT NULL::numeric                                                                AS relate_ics_id
+             , b.icr01_class_tree_id                                                        AS class_tree_id
+             , f_icr_class_tree_nm_allpath(b.icr01_class_tree_id)                           AS class_tree_full_name
+             , b.icr01_content                                                              AS content
+             , b.icr01_submit_to                                                            AS submit_to
+             , b.icr01_related_law                                                          AS related_law
+             , c.sch03_deadline_id                                                          AS deadline_id
+             , f_get_deadline_nm(c.sch03_deadline_id, '2')                                  AS deadline_full_name
+             , c.sch03_note                                                                 AS deadline_note
+             , f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate())       AS cycle_name
+             , NULL                                                                         AS stand_code
+             , NULL::date                                                                   AS stand_date
+             , NULL::date                                                                   AS close_date
+             , NULL                                                                         AS stand_yn
+          FROM icr01_class_tree b
+               LEFT OUTER JOIN sch03_deadline c ON c.sch03_deadline_id = #{deadlineId} AND c.sch03_schedule_cd IN ('6','7')
+         WHERE b.icr01_class_tree_id = #{classTreeId}
+    </select>
+
     <!-- AS-IS apr20_relate_ics.getCloseDate (IDMS-IC) -->
     <select id="selectCloseDate" resultType="java.time.LocalDate">
         SELECT f_get_std_date(#{deadlineId}, #{standDate}, #{companyId}) AS apr20_close_date
     </select>
 
     <!-- selectByApprId의 cycle_nm과 같은 식 -->
+    <!-- apr22_relate_icr.selectByApprId의 cycle_nm과 같은 식 (내규는 스케줄 구분 6·7) -->
+    <select id="selectCycleNameIcr" resultType="string">
+        SELECT f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate())
+          FROM sch03_deadline c
+         WHERE c.sch03_deadline_id = #{deadlineId}
+           AND c.sch03_schedule_cd IN ('6','7')
+    </select>
+
     <select id="selectCycleName" resultType="string">
         SELECT f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate())
           FROM sch03_deadline c

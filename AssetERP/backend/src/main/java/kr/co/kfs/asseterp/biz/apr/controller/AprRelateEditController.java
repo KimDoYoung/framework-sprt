@@ -44,8 +44,15 @@ public class AprRelateEditController {
 
     /** [행 추가]로 고른 법규·기한의 보기 값 */
     @GetMapping("/relate-ics/info")
-    public ApiResponse<AprRelateIcsRow> getInfo(@RequestParam Long classTreeId, @RequestParam(required = false) Long deadlineId) {
-        return ApiResponse.ok(service.getInfo(classTreeId, deadlineId));
+    public ApiResponse<AprRelateIcsRow> getInfo(@RequestParam Long classTreeId, @RequestParam(required = false) Long deadlineId,
+            @RequestParam(defaultValue = "false") boolean withLaw) {
+        return ApiResponse.ok(service.getInfo(classTreeId, deadlineId, withLaw));
+    }
+
+    /** 새 연관내규 줄의 보기 값 (V13) */
+    @GetMapping("/relate-icr/info")
+    public ApiResponse<AprRelateIcsRow> getInfoIcr(@RequestParam Long classTreeId, @RequestParam(required = false) Long deadlineId) {
+        return ApiResponse.ok(service.getInfoIcr(classTreeId, deadlineId));
     }
 
     /** AS-IS apr.Apr20_RelateIcs.getCloseDate */

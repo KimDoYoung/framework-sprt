@@ -18,13 +18,19 @@ public interface AprRelateEditMapper {
     List<AprRelateIcsRow> selectRelateIcs(@Param("apprId") Long apprId);
 
     /** 새로 고른 법규·기한의 보기 값 (selectByApprId와 같은 조인, 관련조문은 AS-IS처럼 비워 둔다) */
-    AprRelateIcsRow selectRelateIcsInfo(@Param("classTreeId") Long classTreeId, @Param("deadlineId") Long deadlineId);
+    AprRelateIcsRow selectRelateIcsInfo(@Param("classTreeId") Long classTreeId, @Param("deadlineId") Long deadlineId, @Param("withLaw") boolean withLaw);
+
+    /** 새 연관내규 줄: 내규·기한의 보기 값 (V13) */
+    AprRelateIcsRow selectRelateIcrInfo(@Param("classTreeId") Long classTreeId, @Param("deadlineId") Long deadlineId);
 
     /** AS-IS apr20_relate_ics.getCloseDate */
     LocalDate selectCloseDate(@Param("deadlineId") Long deadlineId, @Param("standDate") LocalDate standDate, @Param("companyId") Long companyId);
 
     /** 기한의 주기 이름 (selectByApprId의 cycle_nm과 같은 식) */
     String selectCycleName(@Param("deadlineId") Long deadlineId);
+
+    /** 내규 기한의 주기 이름 (apr22_relate_icr.selectByApprId의 cycle_nm과 같은 식, V13) */
+    String selectCycleNameIcr(@Param("deadlineId") Long deadlineId);
 
     /** AS-IS UpdateDataModel(apr20_relate_ics) INSERT */
     int insertRelateIcs(@Param("id") Long id, @Param("apprId") Long apprId, @Param("classTreeId") Long classTreeId, @Param("standCode") String standCode,

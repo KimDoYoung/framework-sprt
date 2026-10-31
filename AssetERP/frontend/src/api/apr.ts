@@ -746,8 +746,14 @@ export const aprRelateEditApi = {
   },
 
   /** [행 추가]로 고른 법규·기한의 보기 값 */
-  getRelateIcsInfo: async (classTreeId: number, deadlineId: number | null): Promise<AprRelateIcsRow> => {
-    const res = await apiClient.get<ApiResponse<AprRelateIcsRow>>('v1/apr/relate-ics/info', { params: deadlineId != null ? { classTreeId, deadlineId } : { classTreeId } });
+  getRelateIcsInfo: async (classTreeId: number, deadlineId: number | null, withLaw = false): Promise<AprRelateIcsRow> => {
+    const res = await apiClient.get<ApiResponse<AprRelateIcsRow>>('v1/apr/relate-ics/info', { params: { classTreeId, ...(deadlineId != null ? { deadlineId } : {}), ...(withLaw ? { withLaw } : {}) } });
+    return res.data.data;
+  },
+
+  /** [등록]으로 고른 내규·기한의 보기 값 (V13) */
+  getRelateIcrInfo: async (classTreeId: number, deadlineId: number | null): Promise<AprRelateIcsRow> => {
+    const res = await apiClient.get<ApiResponse<AprRelateIcsRow>>('v1/apr/relate-icr/info', { params: deadlineId != null ? { classTreeId, deadlineId } : { classTreeId } });
     return res.data.data;
   },
 

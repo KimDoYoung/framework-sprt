@@ -1,6 +1,7 @@
 /**
  * 전자결재 문서 상세 (V01 문서 읽기 + V02 결재 처리 + V07 상신·임시저장) — 결재선·연관 그리드·첨부를 보고, 내 차례면 [승인][반려], 승인한 문서면 [승인취소], 아무도 결재 안 한 내 문서면 [상신취소].
- * V07 편집 모드: 새 문서(newClassTreeId, insertApproval) 또는 내 임시저장(99) 문서는 칸을 고치고 [결재요청][저장](임시저장 문서는 [삭제])을 쓴다. 열람기록·댓글(V04), 오타수정·공람·폐기·중요표시(V09), 연관법규·결재완료후 첨부(V10), 불러오기·양식·첨부 등록·옵션(V05), 미리보기 PDF(V11), 연관 설정(V13), 날인신청(V14), 링크코드 본문(V15)은 다음 ID.
+ * V07 편집 모드: 새 문서(newClassTreeId, insertApproval) 또는 내 임시저장(99) 문서는 칸을 고치고 [결재요청][저장](임시저장 문서는 [삭제])을 쓴다. 열람기록·댓글(V04), 오타수정·공람·폐기·중요표시(V09), 연관법규·결재완료후 첨부(V10), 불러오기·양식·첨부 등록·옵션(V05), 미리보기 PDF(V11), 날인신청(V14), 링크코드 본문(V15)은 다음 ID.
+ * V13 연관 설정: 연관 탭 [등록]·삭제·설정(Apr03_Page_Relate)의 화면 내용 전체를 [저장]·[결재요청]에 relates로 함께 보낸다(Apr01_Appr.update L172-232).
  * AS-IS: myApp/client/vi/apr/Apr01_Edit_ApprDoc.java (5864줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L339-507: 1600×870 모달 "문서상세"(닫기 X 없음), 머리 오른쪽 [열람기록][댓글(n)], 위 150 = 왼쪽 문서구분·상신제목(getApprovalForm01 L4648-4704) + 오른쪽 시행일자·상신일자·인감종류·대표회사·대표서명·수신·참조·비고(getApprovalForm02 L4706-4794),
  *   가운데 = 왼쪽 상신내용(getHtmlForm L4796-4817) + 오른쪽 Apr03_Page_Relate(탭 7개 + 결재선), 푸터 가운데 [미리보기][닫기] + 북마크 별
@@ -14,7 +15,7 @@ import { SearchOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { aprActionApi, aprDetailApi, aprExtraApi, aprWriteApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
-import { AprApprActionRes, AprApprActionState, AprApprDetail, AprApprNew, AprApprSaveReq, AprApprStep, AprApprWriteRes, AprRelateLaw, AprReprCorpLookup, AprStamp, AprStampLine } from '@/types/apr';
+import { AprApprActionRes, AprApprActionState, AprApprDetail, AprApprNew, AprApprRelateReq, AprApprSaveReq, AprApprStep, AprApprWriteRes, AprRelateLaw, AprReprCorpLookup, AprStamp, AprStampLine } from '@/types/apr';
 import { Button } from '@/components/button';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { HtmlView } from '@/components/form/HtmlView';
@@ -115,6 +116,8 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
   const [corpOpen, setCorpOpen] = useState(false);
   const [stepsReplace, setStepsReplace] = useState<{ version: number; steps: AprApprStep[] }>({ version: 0, steps: [] });
   const stepsRef = useRef<AprApprStep[]>([]);
+  /** 연관 탭 다섯 개의 화면 내용 (V13) — 처음 읽기 전에는 없어 보내지 않는다 */
+  const relatesRef = useRef<AprApprRelateReq | undefined>(undefined);
   /** 내 임시저장(99) 문서이거나 새 문서면 칸을 고칠 수 있다 (makeButton: 상신자 본인의 편집 모드) */
   const editable = isNew || (doc != null && doc.statusCode === '99' && doc.regEmpId === user.userId);
   const open = apprId != null || newClassTreeId != null;
@@ -154,8 +157,8 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
           setIsNew(true);
           setSeed({
             steps,
-            ics: n.relateIcs.map(l => ({ relateId: l.relateId, classTreeId: l.classTreeId, classTreeFullName: l.classTreeFullName, cycleName: l.cycleName, closeDate: null })),
-            icr: n.relateIcr.map(l => ({ relateId: l.relateId, classTreeId: l.classTreeId, classTreeFullName: l.classTreeFullName, cycleName: l.cycleName, closeDate: null })),
+            ics: n.relateIcs.map(l => ({ relateId: l.relateId, classTreeId: l.classTreeId, classTreeFullName: l.classTreeFullName, cycleName: l.cycleName, closeDate: null, deadlineId: l.deadlineId ?? null })),
+            icr: n.relateIcr.map(l => ({ relateId: l.relateId, classTreeId: l.classTreeId, classTreeFullName: l.classTreeFullName, cycleName: l.cycleName, closeDate: null, deadlineId: l.deadlineId ?? null })),
           });
           const f = toForm(d);
           if (stamp?.ok && stamp.outType) { f.inOutTypeCode = '10'; f.stampId = stamp.stampId ?? null; f.stampName = stamp.stampName ?? ''; }
@@ -308,6 +311,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
         apprStepId: s.apprStepId, stepTypeCode: s.stepTypeCode, seq: s.seq ?? '001', stepStatusCode: s.stepStatusCode ?? null,
         stepEmpId: s.stepEmpId, lockYn: s.lockYn ? 'true' : 'false', addEmpId: null,
       })),
+      relates: relatesRef.current,
     };
   };
 
@@ -591,6 +595,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
                 isNew={isNew}
                 seed={seed}
                 onStepsChange={steps => { stepsRef.current = steps; }}
+                onRelatesChange={relates => { relatesRef.current = relates; }}
                 stepsReplace={stepsReplace}
                 canRetouch={!!state?.canRetouchSteps}
                 onRetouched={() => { onClosed?.(); setReloadKey(k => k + 1); }}

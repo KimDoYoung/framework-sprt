@@ -42,6 +42,18 @@ public class FndFundController {
         return ApiResponse.ok(service.searchMultiAdmin(principal, planYn, fundType, searchText, closeYn, classYn));
     }
 
+    /** AS-IS fnd.Fnd00_Fund.selectBySearchText + fundIdList (상신 연관펀드 조회창 Fnd01_Lookup_SelectMulti.open(fundIdList, cb), V13) — 내 조직 권한 펀드, 이미 연관된 펀드는 뺀다 */
+    @GetMapping("/multi-org")
+    public ApiResponse<List<FundMultiRes>> searchMultiOrg(@AuthenticationPrincipal UserPrincipal principal,
+                                                          @RequestParam(defaultValue = "false") boolean planYn,
+                                                          @RequestParam(required = false) String fundType,
+                                                          @RequestParam(defaultValue = "") String searchText,
+                                                          @RequestParam(defaultValue = "false") boolean closeYn,
+                                                          @RequestParam(defaultValue = "true") boolean classYn,
+                                                          @RequestParam(required = false) List<Long> excludeIds) {
+        return ApiResponse.ok(service.searchMultiOrg(principal, planYn, fundType, searchText, closeYn, classYn, excludeIds));
+    }
+
     /** AS-IS fnd.Fnd00_Fund.selectBySearchText (P12 연관펀드 단일 선택 조회창 Fnd01_Lookup_SelectSingle) — 내 조직 권한 펀드 */
     @GetMapping("/single")
     public ApiResponse<List<FundSingleRes>> searchSingle(@AuthenticationPrincipal UserPrincipal principal,

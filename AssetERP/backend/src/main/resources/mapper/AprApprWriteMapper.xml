@@ -129,4 +129,47 @@
         DELETE FROM sys10_file
          WHERE sys10_parent_id = #{parentId}
     </delete>
+
+    <!-- ───── 연관 탭 다섯 개 (V13): yunhee port-save apr03_relate_fund·apr12_relate_adv·apr21_relate_appr·apr20_relate_ics·apr22_relate_icr ───── -->
+    <insert id="insertRelateFund">
+        INSERT INTO apr03_relate_fund (apr03_relate_fund_id, apr03_appr_id, apr03_fund_id, apr03_print_yn, apr03_after_yn)
+        VALUES (#{id}, #{apprId}, #{row.fundId}, #{row.printYn}, #{row.afterYn})
+    </insert>
+
+    <delete id="deleteRelateAdvsByApprId">
+        DELETE FROM apr12_relate_adv WHERE apr12_appr_id = #{apprId}
+    </delete>
+
+    <insert id="insertRelateAdv">
+        INSERT INTO apr12_relate_adv (apr12_relate_adv_id, apr12_appr_id, apr12_adv_id)
+        VALUES (#{id}, #{apprId}, #{row.advId})
+    </insert>
+
+    <!-- AS-IS apr21_relate_appr.deleteByApprId -->
+    <delete id="deleteRelateApprsByApprId">
+        DELETE FROM apr21_relate_appr WHERE apr21_appr_id = #{apprId}
+    </delete>
+
+    <insert id="insertRelateAppr">
+        INSERT INTO apr21_relate_appr (apr21_relate_appr_id, apr21_appr_id, apr21_targer_appr_id)
+        VALUES (#{id}, #{apprId}, #{row.targetApprId})
+    </insert>
+
+    <delete id="deleteRelateIcsByApprId">
+        DELETE FROM apr20_relate_ics WHERE apr20_appr_id = #{apprId}
+    </delete>
+
+    <insert id="insertRelateIcs">
+        INSERT INTO apr20_relate_ics (apr20_relate_ics_id, apr20_appr_id, apr20_class_tree_id, apr20_stand_cd, apr20_stand_date, apr20_close_date, apr20_deadline_id, apr20_stand_yn)
+        VALUES (#{id}, #{apprId}, #{row.classTreeId}, #{row.standCode}, #{row.standDate}, #{row.closeDate}, #{row.deadlineId}, #{row.standYn})
+    </insert>
+
+    <delete id="deleteRelateIcrByApprId">
+        DELETE FROM apr22_relate_icr WHERE apr22_appr_id = #{apprId}
+    </delete>
+
+    <insert id="insertRelateIcr">
+        INSERT INTO apr22_relate_icr (apr22_relate_icr_id, apr22_appr_id, apr22_class_tree_id, apr22_stand_cd, apr22_stand_date, apr22_close_date, apr22_deadline_id, apr22_stand_yn)
+        VALUES (#{id}, #{apprId}, #{row.classTreeId}, #{row.standCode}, #{row.standDate}, #{row.closeDate}, #{row.deadlineId}, #{row.standYn})
+    </insert>
 </mapper>

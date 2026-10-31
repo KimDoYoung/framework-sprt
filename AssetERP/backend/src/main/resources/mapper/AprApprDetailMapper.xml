@@ -188,6 +188,7 @@
              , COALESCE(fnd02_r.fnd02_fund_nm, fnd02.fnd02_fund_nm)                                                  AS fund_name
              , apr03_after_yn                                                                                        AS after_yn
              , apr03_print_yn                                                                                        AS print_yn
+             , apr03_fund_id                                                                                         AS fund_id
           FROM apr01_appr
                INNER JOIN apr03_relate_fund ON apr03_appr_id = apr01_appr_id
                INNER JOIN fnd01_fund_code fnd01 ON fnd01.fnd01_fund_code_id = apr03_fund_id
@@ -212,6 +213,7 @@
         SELECT a.apr12_relate_adv_id AS relate_adv_id
              , b.adv02_manage_cd     AS manage_code
              , b.adv02_manage_nm     AS manage_name
+             , a.apr12_adv_id        AS adv_id
           FROM apr12_relate_adv a
                INNER JOIN adv02_account b ON a.apr12_adv_id = b.adv02_account_id
          WHERE apr12_appr_id = #{apprId}
@@ -239,6 +241,10 @@
              , f_ics_class_tree_nm_allpath(b.ics01_class_tree_id)                           AS class_tree_full_name
              , f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate())       AS cycle_name
              , a.apr20_close_date                                                           AS close_date
+             , a.apr20_deadline_id                                                          AS deadline_id
+             , a.apr20_stand_cd                                                             AS stand_code
+             , a.apr20_stand_date                                                           AS stand_date
+             , a.apr20_stand_yn                                                             AS stand_yn
           FROM apr20_relate_ics a
                INNER JOIN ics01_class_tree b ON a.apr20_class_tree_id = b.ics01_class_tree_id
                LEFT OUTER JOIN sch03_deadline c ON c.sch03_deadline_id = a.apr20_deadline_id AND c.sch03_schedule_cd IN ('2','3')
@@ -253,6 +259,10 @@
              , f_icr_class_tree_nm_allpath(b.icr01_class_tree_id)                           AS class_tree_full_name
              , f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate())       AS cycle_name
              , a.apr22_close_date                                                           AS close_date
+             , a.apr22_deadline_id                                                          AS deadline_id
+             , a.apr22_stand_cd                                                             AS stand_code
+             , a.apr22_stand_date                                                           AS stand_date
+             , a.apr22_stand_yn                                                             AS stand_yn
           FROM apr22_relate_icr a
                INNER JOIN icr01_class_tree b ON a.apr22_class_tree_id = b.icr01_class_tree_id
                LEFT OUTER JOIN sch03_deadline c ON c.sch03_deadline_id = a.apr22_deadline_id AND c.sch03_schedule_cd IN ('6','7')

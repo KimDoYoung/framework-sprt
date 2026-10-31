@@ -20,6 +20,11 @@ public interface FndFundMapper {
                                                @Param("planYn") String planYn, @Param("fundType") String fundType,
                                                @Param("searchText") String searchText, @Param("classYn") String classYn);
 
+    /** AS-IS fnd00_fund.selectBySearchText + fundIdList(제외 목록) — 상신 연관펀드 조회창 Fnd01_Lookup_SelectMulti.open(fundIdList, cb), V13 */
+    List<FundMultiRes> selectBySearchTextMulti(@Param("companyId") Long companyId, @Param("orgId") Long orgId, @Param("closeYn") String closeYn,
+                                               @Param("planYn") String planYn, @Param("fundType") String fundType, @Param("searchText") String searchText,
+                                               @Param("classYn") String classYn, @Param("excludeIds") List<Long> excludeIds);
+
     /** AS-IS fnd00_fund.selectBySearchText (P12 연관펀드 단일 선택 조회창) — 내 조직 권한 펀드 */
     List<FundSingleRes> selectBySearchText(@Param("companyId") Long companyId, @Param("orgId") Long orgId, @Param("closeYn") String closeYn,
                                            @Param("planYn") String planYn, @Param("fundType") String fundType, @Param("searchText") String searchText,

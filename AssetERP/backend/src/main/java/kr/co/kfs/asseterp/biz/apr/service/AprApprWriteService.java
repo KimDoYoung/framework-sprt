@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.co.kfs.asseterp.biz.apr.dto.AprApprBrief;
+import kr.co.kfs.asseterp.biz.apr.dto.AprApprRelateReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprApprSaveReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprApprSaveStepReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprApprWriteRes;
@@ -18,6 +19,7 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprFileDelRow;
 import kr.co.kfs.asseterp.biz.apr.dto.AprNoticeStep;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprApprActionMapper;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprApprWriteMapper;
+import kr.co.kfs.asseterp.biz.apr.mapper.AprRelateEditMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +39,7 @@ public class AprApprWriteService {
     private final AprApprWriteMapper mapper;
     private final AprApprActionMapper actionMapper;
     private final AprNoticeService notice;
+    private final AprRelateEditMapper relateMapper;
 
     /** 새 문서 번호 (AS-IS insertApproval의 DBUtil.setSeq) */
     @Transactional
@@ -59,6 +62,9 @@ public class AprApprWriteService {
             return fail("문서분류가 없습니다.");
         }
         String message = request ? checkRequest(req) : checkSave(req);
+        if (message == null && request) {
+            message = checkRelates(req.relates());
+        }
         if (message != null) {
             return fail(message);
         }
@@ -127,6 +133,8 @@ public class AprApprWriteService {
             mapper.insertStep(apprStepId, apprId, type, s.seq(), stepStatus, s.stepEmpId(), apprEmpId, apprDate, note, s.lockYn(), s.addEmpId(), signId);
             noticeSteps.add(new AprNoticeStep(apprId, s.seq(), type, stepStatus, s.stepEmpId(), apprDate));
         }
+
+        saveRelates(apprId, req.relates());
 
         // L646-660: 바로 완료된 광고심사 문서는 광고대장에 한 줄
         if ("30".equals(statusCode)) {
@@ -211,7 +219,7 @@ public class AprApprWriteService {
         return null;
     }
 
-    /** beforePDFChk L4443-4447 → updateChk L4837-4847 → preCheck L5389-5437 (연관법규/내규 마감일 검사는 연관 설정을 만드는 V05) */
+    /** beforePDFChk L4443-4447 → updateChk L4837-4847 → preCheck L5389-5437 (연관법규/내규 마감일 검사는 checkRelates, V13) */
     private static String checkRequest(AprApprSaveReq r) {
         if ("10".equals(r.inOutTypeCode())) {
             if (isBlank(r.signCompany())) {
@@ -238,6 +246,60 @@ public class AprApprWriteService {
         return null;
     }
 
+    /**
+     * 연관 탭 다섯 개 저장 (Apr01_Appr.update L172-232). 화면 내용 전체로 바꾼다: 목록이 null이면 그 탭은 건드리지 않고,
+     * 연관문서는 AS-IS처럼 늘 지우고 다시 넣는다. 새 줄(id 없음)은 번호를 새로 받는다.
+     */
+    private void saveRelates(Long apprId, AprApprRelateReq r) {
+        if (r == null) {
+            return;
+        }
+        if (r.funds() != null) {
+            mapper.deleteRelateFundsByApprId(apprId);
+            r.funds().forEach(f -> mapper.insertRelateFund(f.relateFundId() != null ? f.relateFundId() : mapper.selectNextId(), apprId, f));
+        }
+        if (r.advs() != null) {
+            mapper.deleteRelateAdvsByApprId(apprId);
+            r.advs().forEach(a -> mapper.insertRelateAdv(a.relateAdvId() != null ? a.relateAdvId() : mapper.selectNextId(), apprId, a));
+        }
+        if (r.apprs() != null) {
+            mapper.deleteRelateApprsByApprId(apprId);
+            r.apprs().forEach(a -> mapper.insertRelateAppr(a.relateApprId() != null ? a.relateApprId() : mapper.selectNextId(), apprId, a));
+        }
+        if (r.ics() != null) {
+            mapper.deleteRelateIcsByApprId(apprId);
+            r.ics().forEach(l -> mapper.insertRelateIcs(l.relateId() != null ? l.relateId() : mapper.selectNextId(), apprId, l));
+        }
+        if (r.icr() != null) {
+            mapper.deleteRelateIcrByApprId(apprId);
+            r.icr().forEach(l -> mapper.insertRelateIcr(l.relateId() != null ? l.relateId() : mapper.selectNextId(), apprId, l));
+        }
+    }
+
+    /** updateChk L4851-4885: 수시 법규·내규는 기준이 발생일(20)이면 마감일이, 그 밖의 주기는(해당없음 제외) 마감일이 있어야 한다 */
+    private String checkRelates(AprApprRelateReq r) {
+        if (r == null) {
+            return null;
+        }
+        String ics = checkLaws(r.ics(), false, "연관법규의 마감일을 입력해주세요");
+        return ics != null ? ics : checkLaws(r.icr(), true, "연관내규의 마감일을 입력해주세요");
+    }
+
+    private String checkLaws(List<AprApprRelateReq.Law> laws, boolean icr, String message) {
+        if (laws == null) {
+            return null;
+        }
+        for (AprApprRelateReq.Law l : laws) {
+            String cycle = l.deadlineId() == null ? null : icr ? relateMapper.selectCycleNameIcr(l.deadlineId()) : relateMapper.selectCycleName(l.deadlineId());
+            boolean missing = "수시".equals(cycle) ? "20".equals(l.standCode()) && l.closeDate() == null
+                    : !"해당없음".equals(cycle) && l.closeDate() == null;
+            if (missing) {
+                return message;
+            }
+        }
+        return null;
+    }
+
     private static boolean isBlank(String s) {
         return s == null || s.isEmpty();
     }
@@ -254,7 +316,7 @@ public class AprApprWriteService {
     private static AprApprSaveReq withStampId(AprApprSaveReq r, Long stampId) {
         return new AprApprSaveReq(r.mode(), r.classTreeId(), r.linkCode(), r.title(), r.content(), r.note(), r.effectDate(), r.regDate(), stampId,
                 r.receiveName(), r.referenceName(), r.inOutTypeCode(), r.signCompany(), r.signCeo(), r.stampPosition(), r.formType(),
-                r.message(), r.confirmed(), r.steps());
+                r.message(), r.confirmed(), r.steps(), r.relates());
     }
 
     private static AprApprWriteRes fail(String message) {

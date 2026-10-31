@@ -91,6 +91,7 @@
              , true                         AS auth_yn
              , t.apr01_status_cd            AS status_code
              , t.apr01_content              AS content
+             , t.apr01_inout_cd             AS in_out_type_code
           FROM ( SELECT f1.fnd01_fund_cd                                                                        AS fnd00_fund_cd
                       , f2.fnd02_fund_nm                                                                        AS fnd00_fund_nm
                       , f3.fnd01_fund_cd                                                                        AS fnd00_relate_fund_cd

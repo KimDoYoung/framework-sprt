@@ -35,8 +35,17 @@ public class AprRelateEditService {
     }
 
     /** [행 추가]로 고른 법규·기한의 보기 값 (AS-IS는 조회창 결과 모델에서 가져왔다) */
-    public AprRelateIcsRow getInfo(Long classTreeId, Long deadlineId) {
-        AprRelateIcsRow row = mapper.selectRelateIcsInfo(classTreeId, deadlineId);
+    public AprRelateIcsRow getInfo(Long classTreeId, Long deadlineId, boolean withLaw) {
+        AprRelateIcsRow row = mapper.selectRelateIcsInfo(classTreeId, deadlineId, withLaw);
+        if (row == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return row;
+    }
+
+    /** 새 연관내규 줄의 보기 값 (V13) */
+    public AprRelateIcsRow getInfoIcr(Long classTreeId, Long deadlineId) {
+        AprRelateIcsRow row = mapper.selectRelateIcrInfo(classTreeId, deadlineId);
         if (row == null) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }

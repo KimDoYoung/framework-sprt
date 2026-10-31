@@ -574,6 +574,11 @@ export interface AprRelateLaw {
   classTreeFullName?: string | null;
   cycleName?: string | null;
   closeDate?: string | null;
+  /** V13: 편집 모드에서 [저장]에 다시 보내는 값 */
+  deadlineId?: number | null;
+  standCode?: string | null;
+  standDate?: string | null;
+  standYn?: string | null;
 }
 
 /** 날인신청 탭 한 줄 (AS-IS Apr16_Grid_StampApplList, V01) */
@@ -603,6 +608,8 @@ export interface AprApprFund {
   fundName?: string | null;
   afterYn?: string | null;
   printYn?: string | null;
+  /** V13: 편집 모드에서 [저장]에 다시 보내는 펀드 ID */
+  fundId?: number;
 }
 
 /** 연관일임 탭 한 줄 (AS-IS Apr12_RelateAdvModel 중 buildRelateAdvGrid 열, V01) */
@@ -610,6 +617,8 @@ export interface AprApprAdv {
   relateAdvId: number;
   manageCode?: string | null;
   manageName?: string | null;
+  /** V13: 편집 모드에서 [저장]에 다시 보내는 일임계좌 ID */
+  advId?: number;
 }
 
 /** 문서를 연 사원에게 켜질 결재 처리 단추 (AS-IS myTurnCheck·myCancelApprovalCheck·retrieveApproval, V02) */
@@ -729,6 +738,27 @@ export interface AprApprSaveReq {
   message?: string | null;
   confirmed: boolean;
   steps: AprApprSaveStep[];
+  /** V13: 연관 탭 다섯 개의 화면 내용 전체(없으면 서버가 연관 테이블을 건드리지 않는다) */
+  relates?: AprApprRelateReq;
+}
+
+/** [저장]·[결재요청]에 함께 보내는 연관 탭 다섯 개 (V13, AS-IS Apr03_Page_Relate.getRelate*List) */
+export interface AprApprRelateReq {
+  funds?: { relateFundId: number | null; fundId: number; printYn: string | null; afterYn: string | null }[];
+  advs?: { relateAdvId: number | null; advId: number }[];
+  apprs?: { relateApprId: number | null; targetApprId: number }[];
+  ics?: AprRelateLawSave[];
+  icr?: AprRelateLawSave[];
+}
+
+export interface AprRelateLawSave {
+  relateId: number | null;
+  classTreeId: number;
+  deadlineId: number | null;
+  standCode: string | null;
+  standDate: string | null;
+  closeDate: string | null;
+  standYn: string | null;
 }
 
 export interface AprApprWriteRes {
@@ -886,6 +916,8 @@ export interface AprLoadDoc2 {
   authYn: boolean;
   statusCode: string | null;
   content: string | null;
+  /** 문서구분 코드(10 대외 / 20 사내) — 연관문서 창이 구분 열을 만든다 (V13) */
+  inOutTypeCode?: string | null;
 }
 
 /** [양식] 창 목록 한 줄 (GET apr/doc-forms, AS-IS Dcr05_DocTypeModel) */

@@ -136,6 +136,12 @@ export const fndApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS fnd.Fnd00_Fund.selectBySearchText(orgId·fundIdList 있음): 상신 연관펀드 조회창 (Fnd01_Lookup_SelectMulti.open(fundIdList, cb), V13) — 내 조직 권한 펀드, 이미 연관된 펀드(excludeIds)는 뺀다 */
+  searchFundMultiOrg: async (params: { planYn: boolean; fundType: string; searchText: string; closeYn: boolean; classYn: boolean; excludeIds: number[] }): Promise<FundMulti[]> => {
+    const res = await apiClient.get<ApiResponse<FundMulti[]>>('v1/fnd/funds/multi-org', { params: { ...params, excludeIds: params.excludeIds.length ? params.excludeIds.join(',') : undefined } });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS fnd.Fnd08_OrgAuth.updateAuthYn: 펀드 × 조직 모두에 권한 부여(confirm 'true') 또는 삭제('false') → 처리 건수 */
   updateOrgAuths: async (body: { fundCodeIds: number[]; orgCodeIds: number[]; confirm: 'true' | 'false' }): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>('v1/fnd/org-auths', body);

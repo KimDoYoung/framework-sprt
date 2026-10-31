@@ -47,4 +47,16 @@ public class FndFundService {
                 fundType == null || fundType.isBlank() ? "%" : fundType, "%" + (searchText == null ? "" : searchText) + "%",
                 String.valueOf(classYn));
     }
+
+    /**
+     * AS-IS fnd.Fnd00_Fund.selectBySearchText L32 (orgId와 fundIdList가 있으면) — 상신 연관펀드 조회창(Fnd01_Lookup_SelectMulti.open(fundIdList, cb), V13).
+     * 내 조직 권한 펀드 중 이미 연관된 펀드(excludeIds)는 뺀다
+     */
+    public List<FundMultiRes> searchMultiOrg(UserPrincipal user, boolean planYn, String fundType, String searchText, boolean closeYn, boolean classYn,
+                                             List<Long> excludeIds) {
+        Long orgId = user.getUserId() < 0 ? 0L : transInfoService.getCurrentTransInfo(user, user.getUserId()).orgCodeId();
+        return mapper.selectBySearchTextMulti(user.getCompanyId(), orgId, String.valueOf(closeYn), String.valueOf(planYn),
+                fundType == null || fundType.isBlank() ? "%" : fundType, "%" + (searchText == null ? "" : searchText) + "%",
+                String.valueOf(classYn), excludeIds == null ? List.of() : excludeIds);
+    }
 }
