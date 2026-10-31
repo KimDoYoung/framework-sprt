@@ -56,4 +56,25 @@
          WHERE pay05_relate_appr_id = #{relateApprId}
            AND pay05_company_id     = #{companyId}
     </update>
+
+    <!-- AS-IS pay05_relate_appr.insert (IDMS-IC) — 급여대장(retire_id 없음) (V25) -->
+    <insert id="insertMonth">
+        INSERT INTO pay05_relate_appr (pay05_relate_appr_id, pay05_company_id, pay05_start_date, pay05_pay_cd)
+        VALUES (#{relateApprId}, #{companyId}, #{payDate}, #{payCode})
+    </insert>
+
+    <!-- A02 제목의 구분명: 화면의 "지급일 / 구분명"(pay10_month.selectByYear)과 같은 글자 -->
+    <select id="selectBase" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRelateApprBase">
+        SELECT pay05_relate_appr_id AS relate_appr_id,
+               pay05_pay_cd         AS pay_code,
+               pay05_start_date     AS start_date,
+               (to_char(pay05_start_date,'yyyy-mm-dd')||' / '||f_cdnm('PayMonthCode', pay05_pay_cd, pay05_company_id, f_sysdate())) AS pay_group_name
+          FROM pay05_relate_appr
+         WHERE pay05_relate_appr_id = #{relateApprId}
+           AND pay05_company_id     = #{companyId}
+    </select>
+
+    <select id="selectLocName" resultType="string">
+        SELECT sys01_loc_nm FROM sys01_company WHERE sys01_company_id = #{companyId}
+    </select>
 </mapper>

@@ -343,4 +343,135 @@
            AND pay11_item_amt != 0
            AND pay11_item_type = #{itemType}
     </select>
+
+    <!-- AS-IS pay10_month.selectByList (IDMS-IC) — 급여대장 PDF(V25). 원문 그대로이고 양식에 쓰는 열만 고른다 -->
+    <select id="selectList" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayMonthListRow">
+        SELECT  emp01_emp_no                                                       AS person_no
+             ,  f_emp_kor_nm(pay10_person_id)                                      AS person_name
+             ,  f_cdnm('EmpPosCode', emp03_pos_cd, emp01_company_id, f_sysdate())  AS pos_name
+             ,  pay11.code110, pay11.code111, pay11.code112, pay11.code113
+             ,  pay11.code120, pay11.code121, pay11.code122, pay11.code123
+             ,  pay11.code130, pay11.code140, pay11.code190
+             ,  pay11.code210, pay11.code220, pay11.code221, pay11.code230, pay11.code231
+             ,  pay11.code240, pay11.code241, pay11.code250, pay11.code251, pay11.code260, pay11.code261
+             ,  (
+                    SELECT  COALESCE(SUM(pay11_item_amt), 0)
+                      FROM  pay11_month_item
+                     WHERE  pay11_month_id = pay10_month_id
+                       AND  pay11_item_type = '1'
+                )                                                                  AS pay_sum
+             ,  (
+                    SELECT  COALESCE(SUM(pay11_item_amt), 0)
+                      FROM  pay11_month_item
+                     WHERE  pay11_month_id = pay10_month_id
+                       AND  pay11_item_type = '2'
+                )                                                                  AS tax_ddc_sum
+             ,  (
+                    SELECT  COALESCE(SUM(pay11_item_amt), 0)
+                      FROM  pay11_month_item
+                     WHERE  pay11_month_id = pay10_month_id
+                       AND  pay11_item_type = '1'
+                )
+                -
+                (
+                    SELECT  COALESCE(SUM(pay11_item_amt), 0)
+                      FROM  pay11_month_item
+                     WHERE  pay11_month_id = pay10_month_id
+                       AND  pay11_item_type = '2'
+                )                                                                  AS deduction_sum
+             ,  pay10_work_day          AS work_day
+             ,  pay10_total_work_time   AS total_work_time
+             ,  pay10_extend_work_time  AS extend_work_time
+             ,  pay10_night_work_time   AS night_work_time
+             ,  pay10_holiday_work_time AS holiday_work_time
+          FROM  pay10_month
+                INNER JOIN emp01_person ON pay10_person_id = emp01_person_id
+                INNER JOIN emp02_others ON pay10_person_id = emp02_person_id
+                INNER JOIN emp03_trans  ON pay10_person_id = emp03_person_id
+                INNER JOIN (
+                        SELECT  pay11_month_id
+                             ,  SUM(CASE WHEN pay11_item_cd = '110' THEN pay11_item_amt ELSE 0 END) AS code110
+                             ,  SUM(CASE WHEN pay11_item_cd = '111' THEN pay11_item_amt ELSE 0 END) AS code111
+                             ,  SUM(CASE WHEN pay11_item_cd = '112' THEN pay11_item_amt ELSE 0 END) AS code112
+                             ,  SUM(CASE WHEN pay11_item_cd = '113' THEN pay11_item_amt ELSE 0 END) AS code113
+                             ,  SUM(CASE WHEN pay11_item_cd = '120' THEN pay11_item_amt ELSE 0 END) AS code120
+                             ,  SUM(CASE WHEN pay11_item_cd = '121' THEN pay11_item_amt ELSE 0 END) AS code121
+                             ,  SUM(CASE WHEN pay11_item_cd = '122' THEN pay11_item_amt ELSE 0 END) AS code122
+                             ,  SUM(CASE WHEN pay11_item_cd = '123' THEN pay11_item_amt ELSE 0 END) AS code123
+                             ,  SUM(CASE WHEN pay11_item_cd = '130' THEN pay11_item_amt ELSE 0 END) AS code130
+                             ,  SUM(CASE WHEN pay11_item_cd = '140' THEN pay11_item_amt ELSE 0 END) AS code140
+                             ,  SUM(CASE WHEN (pay11_item_cd NOT IN ('110','111','112','120'
+                                                                    ,'121','122','130','140') AND
+                                               pay11_item_type = '1') THEN pay11_item_amt ELSE 0 END) AS code190
+                             ,  SUM(CASE WHEN pay11_item_cd = '210' THEN pay11_item_amt ELSE 0 END) AS code210
+                             ,  SUM(CASE WHEN pay11_item_cd = '220' THEN pay11_item_amt ELSE 0 END) AS code220
+                             ,  SUM(CASE WHEN pay11_item_cd = '221' THEN pay11_item_amt ELSE 0 END) AS code221
+                             ,  SUM(CASE WHEN pay11_item_cd = '230' THEN pay11_item_amt ELSE 0 END) AS code230
+                             ,  SUM(CASE WHEN pay11_item_cd = '231' THEN pay11_item_amt ELSE 0 END) AS code231
+                             ,  SUM(CASE WHEN pay11_item_cd = '240' THEN pay11_item_amt ELSE 0 END) AS code240
+                             ,  SUM(CASE WHEN pay11_item_cd = '241' THEN pay11_item_amt ELSE 0 END) AS code241
+                             ,  SUM(CASE WHEN pay11_item_cd = '250' THEN pay11_item_amt ELSE 0 END) AS code250
+                             ,  SUM(CASE WHEN pay11_item_cd = '251' THEN pay11_item_amt ELSE 0 END) AS code251
+                             ,  SUM(CASE WHEN pay11_item_cd = '260' THEN pay11_item_amt ELSE 0 END) AS code260
+                             ,  SUM(CASE WHEN pay11_item_cd = '261' THEN pay11_item_amt ELSE 0 END) AS code261
+                          FROM  pay11_month_item
+                         GROUP BY pay11_month_id
+                         ORDER BY pay11_month_id
+                ) pay11 ON pay11.pay11_month_id = pay10_month_id
+         WHERE  (emp03_person_id, emp03_trans_date) IN (
+                    SELECT  emp03_person_id, MAX(emp03_trans_date)
+                      FROM  emp01_person
+                            INNER JOIN emp03_trans ON emp03_person_id = emp01_person_id
+                     WHERE  emp01_company_id = #{companyId}
+                       AND  emp03_trans_date <![CDATA[ <= ]]> #{payDate}
+                     GROUP BY emp03_person_id
+                )
+           AND  pay10_company_id = #{companyId}
+           AND  pay10_date       = #{payDate}
+           AND  pay10_pay_cd     = #{payCode}
+         ORDER BY emp01_emp_no
+    </select>
+
+    <!-- AS-IS pay10_month.getHtmlData10 (IDMS-IC) — 원문 그대로(V25) -->
+    <select id="selectItemSums" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayItemAmtRow">
+        SELECT  pay20_item_nm                       AS item_name
+             ,  COALESCE(SUM(pay11_item_amt), 0)    AS item_amt
+          FROM  (
+                    SELECT  *
+                      FROM  pay10_month
+                            INNER JOIN pay11_month_item ON pay10_month_id = pay11_month_id
+                     WHERE  pay10_company_id = #{companyId}
+                       AND  pay10_pay_cd = #{payCode}
+                ) a
+                INNER JOIN pay20_item ON pay11_item_cd = pay20_item_cd
+         WHERE  pay11_item_type = #{itemType}
+           AND  pay10_date = #{payDate}
+         GROUP BY pay20_item_nm
+    </select>
+
+    <!-- AS-IS pay10_month.selectBypayCode (IDMS-IC) — 원문 그대로(V25). 월 ID(ROW_NUMBER)는 쓰지 않아 내지 않는다 -->
+    <select id="selectSums" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayMonthSumRow">
+        SELECT  SUM(pay11.pay_sum)                          AS pay_sum
+             ,  SUM(pay11.tax_ddc_sum)                      AS tax_ddc_sum
+             ,  SUM(pay11.pay_sum)-SUM(pay11.tax_ddc_sum)   AS deduction_sum
+          FROM  pay10_month
+                INNER JOIN emp03_trans  ON  emp03_person_id = pay10_person_id
+                                        AND emp03_trans_date = (
+                                                SELECT  MAX(emp03_trans_date)
+                                                  FROM  emp03_trans
+                                                 WHERE  emp03_person_id = pay10_person_id
+                                                   AND  emp03_trans_date <![CDATA[ <= ]]> #{payDate}
+                                        )
+                INNER JOIN (
+                        SELECT  pay11_month_id
+                             ,  SUM(CASE WHEN pay11_item_type = '1' THEN pay11_item_amt ELSE 0 END) AS pay_sum
+                             ,  SUM(CASE WHEN pay11_item_type = '2' THEN pay11_item_amt ELSE 0 END) AS tax_ddc_sum
+                          FROM  pay11_month_item
+                         GROUP BY pay11_month_id
+                         ORDER BY pay11_month_id
+                ) pay11 ON pay11.pay11_month_id = pay10_month_id
+         WHERE  pay10_company_id = #{companyId}
+           AND  pay10_date = #{payDate}
+           AND  pay10_pay_cd LIKE #{payCode}
+    </select>
 </mapper>

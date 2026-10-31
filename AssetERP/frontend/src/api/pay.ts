@@ -771,6 +771,12 @@ export const payApi = {
     return res.data.data;
   },
 
+  /** AS-IS pay.Pay05_RelateAppr.insert + utils.pdf.PDFCreate.createPayMonth10 — 급여대장 상신 행(없으면 만든다)과 PDF 첨부 → 상신 행 ID (V25) */
+  createMonthRelateAppr: async (payCode: string, payDate: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/pay/relate-apprs/month', { payCode, payDate });
+    return res.data.data;
+  },
+
   /** AS-IS pay.Pay05_RelateAppr.updateApprId — 결재창에서 상신·저장한 문서 ID 기록 (V18) */
   updateRelateApprId: async (relateApprId: number, apprId: number): Promise<void> => {
     await apiClient.put(`v1/pay/relate-apprs/${relateApprId}/appr-id`, { apprId });

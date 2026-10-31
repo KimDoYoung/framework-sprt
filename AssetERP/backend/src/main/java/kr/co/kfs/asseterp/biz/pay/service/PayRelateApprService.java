@@ -7,13 +7,16 @@ import kr.co.kfs.asseterp.biz.pay.mapper.PayRetireMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
 /** AS-IS server/pay/Pay05_RelateAppr.java (selectByCompanyId L26) — 급여대장 상신 상태 (S18). 상신(insert L60)·updateApprId(L119)는 결재문서 작성과 함께 다음 단계 */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -21,6 +24,7 @@ public class PayRelateApprService {
 
     private final PayRelateApprMapper mapper;
     private final PayRetireMapper retireMapper;
+    private final PayMonthPdfService pdfService;
 
     /** AS-IS retrieve(): 한 건일 때만 상신 상태로 본다 — 없거나 둘 이상이면 null(미상신) */
     public PayRelateApprRes current(UserPrincipal user, String payCode, LocalDate payDate) {
@@ -61,5 +65,33 @@ public class PayRelateApprService {
         if (mapper.updateApprId(relateApprId, user.getCompanyId(), apprId) == 0) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "상신 내역을 찾을 수 없습니다.");
         }
+    }
+
+    /**
+     * AS-IS Pay05_RelateAppr.insert(L60-86) + PDFCreate.createPayMonth10 (V25): 이 구분·지급일의 상신 행이 있으면 그 ID, 없으면 새로 만든다.
+     * 그리고 (있든 없든) 급여대장 PDF를 만들어 그 상신 행에 첨부한다. PDF 실패는 AS-IS처럼 상신을 막지 않고 기록만 남긴다.
+     */
+    @Transactional
+    public Long createMonth(UserPrincipal user, String payCode, LocalDate payDate) {
+        if (payCode == null || payCode.isBlank() || payDate == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "구분을 선택해주세요");
+        }
+        List<PayRelateApprRes> list = mapper.selectByCompanyId(user.getCompanyId(), payCode, payDate);
+        if (list.size() > 1) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "급여대장 상신 내역이 둘 이상입니다.");
+        }
+        Long id;
+        if (list.size() == 1) {
+            id = list.get(0).relateApprId();
+        } else {
+            id = retireMapper.selectNextId();
+            mapper.insertMonth(id, user.getCompanyId(), payCode, payDate);
+        }
+        try {
+            pdfService.createPayMonth10(user, id, payCode, payDate);
+        } catch (IOException | RuntimeException e) {
+            log.error("급여대장 PDF 첨부 실패 relateApprId={}", id, e);
+        }
+        return id;
     }
 }

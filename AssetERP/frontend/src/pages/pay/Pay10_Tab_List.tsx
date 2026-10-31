@@ -3,12 +3,12 @@
  * AS-IS: myApp/client/vi/pay/Pay10_Tab_List.java (626줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * init() L273-305: 위 툴바 45 (해당 연도 45 · 구분 칸 "구분을 선택해주세요" · [조회][은행이체명세서][임금계산방법][급여출금계좌][전표확인][비고작성][문서분류지정])
  *   + 가운데 RD 보고서 폼(Pay10_Lookup_Rd_List) + 아래 70 (문서분류 800 · 상신상태 250 · [상신][문서보기]). 그리드는 없다(buildGrid()는 열 정의가 모두 주석).
- * 1단계: [상신]의 결재문서 작성(Pay05_RelateAppr.insert·PDFCreate.createPayMonth10·Apr01_Edit_ApprDoc.insertLinkApproval·updateApprId L495-612)과
- *   [문서보기]의 결재문서 보기(Apr01_Edit_ApprDoc.retrieveApproval, 다른 도메인 apr)는 다음 단계 — 상신 검사까지만 하고 안내한다.
- *   계좌연결(Pay03_Lookup_PayAccount)의 자산 조회창(Ast01_Lookup_Info, 다른 도메인 ast)도 다음 단계.
+ * V25: [상신]의 상신 행·PDF 첨부(Pay05_RelateAppr.insert·PDFCreate.createPayMonth10)·결재창(Apr01_Edit_ApprDoc.insertLinkApproval, 링크코드 A02)·updateApprId(L495-612)와
+ *   [문서보기]의 결재문서 보기(Apr01_Edit_ApprDoc.retrieveApproval)를 연결했다. updateApprId 뒤에는 retrieve()로 상신 상태를 다시 읽는다(L609).
+ *   계좌연결(Pay03_Lookup_PayAccount)의 자산 조회창(Ast01_Lookup_Info, 다른 도메인 ast)은 다음 단계.
  * UX보강(10): 툴바 = SearchBar(UX-01·04)
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Input, message } from 'antd';
 import dayjs from 'dayjs';
 import { payApi } from '@/api/pay';
@@ -28,6 +28,7 @@ import { Pay09_Lookup_Note } from './Pay09_Lookup_Note';
 import { Pay10_Lookup_GroupList } from './Pay10_Lookup_GroupList';
 import { Pay10_Lookup_Journal } from './Pay10_Lookup_Journal';
 import { Pay10_Lookup_Rd_List } from './Pay10_Lookup_Rd_List';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 
 const LABEL_STYLE: React.CSSProperties = { width: 105, textAlign: 'right', paddingRight: 10, fontWeight: 'bold', flex: 'none' };
 
@@ -46,6 +47,11 @@ export const Pay10_Tab_List: React.FC = () => {
   const [apprStepName, setApprStepName] = useState('미상신');
   const [apprButtonEnabled, setApprButtonEnabled] = useState(false);
   const [apprViewEnabled, setApprViewEnabled] = useState(false);
+  const [classTreeId, setClassTreeId] = useState<number | null>(null); // classTreeModel — 문서분류 조회창에서 고른 것(없으면 연결 코드 A02의 문서분류)
+  // 결재창: 새 문서(insertLinkApproval, 상신 행 ID를 들고 있다가 저장 뒤 updateApprId) 또는 기존 문서(apprView)
+  const [linkDoc, setLinkDoc] = useState<{ classTreeId: number; relateApprId: number } | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const apprIdRef = useRef<number | null>(null);
   const [rdListUrl, setRdListUrl] = useState<string | null>(null);
   const [rdViewerUrl, setRdViewerUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -82,6 +88,7 @@ export const Pay10_Tab_List: React.FC = () => {
       // 상신 체크 → pay.Pay05_RelateAppr.selectByCompanyId (한 건일 때만 상신 상태)
       setApprStepName('');
       const appr = await payApi.getRelateAppr(payCode, payDate);
+      apprIdRef.current = appr?.apprId ?? null; // apprId = resultModel.getApprId() (미상신이면 null)
       if (appr == null || appr.statusCode == null) {
         setApprStepCode('00');
         setApprStepName('미상신');
@@ -147,7 +154,7 @@ export const Pay10_Tab_List: React.FC = () => {
   };
 
   // [E3] apprButton[상신].Select [선택>0] (L166): pay.Pay03_Account.selectByStartDate가 비면 "급여출금계좌를 먼저 지정해주세요"
-  //   → insertPayRelateAppr() L495-532: 구분 없음 / 이미 상신 중(10·20·30) 검사 → (다음 단계) 상신 행·PDF·Apr01_Edit_ApprDoc
+  //   → insertPayRelateAppr() L495-532: 구분 없음 / 이미 상신 중(10·20·30) 검사 → 상신 행·PDF(pay.Pay05_RelateAppr.insert + PDFCreate.createPayMonth10) → insertLinkApproval(relateApprId) L534-583
   const apprRequest = async () => {
     try {
       const account = payDate == null ? null : await payApi.getAccountByDate(payDate);
@@ -159,7 +166,7 @@ export const Pay10_Tab_List: React.FC = () => {
       message.error(errorMessage(err, '확인 실패'));
       return;
     }
-    if (payCode == null) {
+    if (payCode == null || payDate == null) {
       message.warning('구분을 선택해주세요');
       return;
     }
@@ -167,12 +174,38 @@ export const Pay10_Tab_List: React.FC = () => {
       message.warning('이미 상신 중입니다');
       return;
     }
-    message.info('전자결재 상신(결재문서 작성)은 다음 단계에서 제공됩니다.');
+    setLoading(true);
+    try {
+      const relateApprId = await payApi.createMonthRelateAppr(payCode, payDate);
+      // insertLinkApproval(): 문서분류를 고르지 않았으면 연결 코드 A02의 문서분류(dcr.Dcr30_Link.selectByLinkCode) — 없으면 아무 일도 하지 않는다(L535-564)
+      let treeId = classTreeId;
+      if (treeId == null) {
+        const list = await dcrApi.searchClassTreeByLinkCode('A02');
+        if (list.length === 0) return;
+        treeId = list[0].classTreeId;
+      }
+      setLinkDoc({ classTreeId: treeId, relateApprId });
+    } catch (err) {
+      message.error(errorMessage(err, '상신 실패'));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // [E4] apprViewButton[문서보기].Select (L187): apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval — 다음 단계
+  // updateApprId() L586-612: pay.Pay03_Account.selectByStartDate → pay.Pay05_RelateAppr.updateApprId(relateApprId, apprId, accountId) — 계좌는 서버가 정한다. 끝나면 retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await payApi.updateRelateApprId(linkDoc.relateApprId, apprId);
+      await retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+  };
+
+  // [E4] apprViewButton[문서보기].Select (L187): apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval
   const apprView = () => {
-    message.info('결재문서 보기는 다음 단계에서 제공됩니다.');
+    if (apprIdRef.current != null) setViewApprId(apprIdRef.current);
   };
 
   return (
@@ -228,7 +261,7 @@ export const Pay10_Tab_List: React.FC = () => {
       <Dcr30_Move_DcrClass
         open={classOpen}
         hideNull
-        onResult={r => setClassTreeFullName(r.classTreeFullName ?? '')}
+        onResult={r => { setClassTreeFullName(r.classTreeFullName ?? ''); setClassTreeId(r.classTreeId ?? null); }}
         onClose={() => setClassOpen(false)}
       />
       <Pay04_Lookup_Formula open={formulaOpen} onClose={() => setFormulaOpen(false)} />
@@ -237,6 +270,13 @@ export const Pay10_Tab_List: React.FC = () => {
       <Pay09_Lookup_Note target={noteTarget} onClose={() => setNoteTarget(null)} />
       <Dcr30_Lookup_Link open={linkOpen} linkCodeList="A02" onClose={() => setLinkOpen(false)} />
       {/* 은행이체명세서는 RdViewer (AS-IS RDViewer.viewer) */}
+      {/* insertLinkApproval(classTreeModel, "A02", 급여대장 상신 행, isAdmin, callback → updateApprId) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: 'A02', refId: linkDoc.relateApprId } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
       <RdViewer url={rdViewerUrl} title="은행이체명세서" onClose={() => setRdViewerUrl(null)} />
     </div>
   );

@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.pay.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.pay.dto.PayMonthRelateReq;
 import kr.co.kfs.asseterp.biz.pay.dto.PayRelateApprIdReq;
 import kr.co.kfs.asseterp.biz.pay.dto.PayRelateApprRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayRetireRelateReq;
@@ -45,6 +46,12 @@ public class PayRelateApprController {
     @PostMapping("/retire")
     public ApiResponse<Long> createRetire(@AuthenticationPrincipal UserPrincipal principal, @RequestBody PayRetireRelateReq req) {
         return ApiResponse.ok(service.createRetire(principal, req.monthId()));
+    }
+
+    /** pay.Pay05_RelateAppr.insert + PDFCreate.createPayMonth10 — 급여대장 상신 행(없으면 만든다)과 PDF 첨부 → 상신 행 ID (V25) */
+    @PostMapping("/month")
+    public ApiResponse<Long> createMonth(@AuthenticationPrincipal UserPrincipal principal, @RequestBody PayMonthRelateReq req) {
+        return ApiResponse.ok(service.createMonth(principal, req.payCode(), req.payDate()));
     }
 
     /** pay.Pay05_RelateAppr.updateApprId — 결재창 상신·저장 뒤 (V18) */

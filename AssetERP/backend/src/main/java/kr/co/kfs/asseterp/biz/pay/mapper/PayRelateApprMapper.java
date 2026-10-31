@@ -23,4 +23,13 @@ public interface PayRelateApprMapper {
     /** AS-IS pay05_relate_appr.updateApprId — 회사 출금계좌는 지급일 기준 최신 계좌(pay03_account.selectByStartDate) (V18) */
     int updateApprId(Long relateApprId, Long companyId, Long apprId);
 
+
+    /** AS-IS pay05_relate_appr.insert (V25) — 급여대장(01·02 등) 상신 행 */
+    int insertMonth(Long relateApprId, Long companyId, String payCode, LocalDate payDate);
+
+    /** 상신 행 하나와 그 급여 구분명(A02 제목용) */
+    kr.co.kfs.asseterp.biz.pay.dto.PayRelateApprBase selectBase(Long companyId, Long relateApprId);
+
+    /** 회사의 지역 폴더명(sys01_loc_nm) — 업로드 폴더·문서 접두사 키 */
+    String selectLocName(Long companyId);
 }

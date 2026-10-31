@@ -107,4 +107,13 @@ public interface PayMonthMapper {
 
     /** AS-IS pay10_month.selectByMonthIdCount — 항목 수(itemType 1 지급 / 2 공제) */
     int countItems(@Param("monthId") Long monthId, @Param("itemType") String itemType);
+
+    /** AS-IS pay10_month.selectByList (V25) — 급여대장 PDF의 사원별 줄. 양식에 쓰는 열만 낸다 */
+    List<kr.co.kfs.asseterp.biz.pay.dto.PayMonthListRow> selectList(Long companyId, String payCode, LocalDate payDate);
+
+    /** AS-IS pay10_month.getHtmlData10 (V25) — 항목명별 합계. itemType 1 지급 · 2 공제 */
+    List<kr.co.kfs.asseterp.biz.pay.dto.PayItemAmtRow> selectItemSums(Long companyId, String payCode, LocalDate payDate, String itemType);
+
+    /** AS-IS pay10_month.selectBypayCode (V25) — 지급액·공제액 합계 */
+    List<kr.co.kfs.asseterp.biz.pay.dto.PayMonthSumRow> selectSums(Long companyId, String payCode, LocalDate payDate);
 }
