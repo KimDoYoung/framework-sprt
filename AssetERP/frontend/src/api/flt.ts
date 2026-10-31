@@ -227,6 +227,24 @@ export const fltApi = {
     return res.data.data ?? 0;
   },
 
+  /** AS-IS flt.Flt10_Tr.updateApprId + flt.Flt14_RelateAppr.insertApprId: 상신한 문서 ID를 고른 매매내역에 기록 (V30 A09) */
+  updateRealTrApprId: async (apprId: number, ids: number[], stdDate: string, checkCycle: string): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/flt/real-trs/appr-id', { apprId, ids, stdDate, checkCycle });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS flt.Flt03_Account.updateApprId: 계좌개설 신고서(B05) 상신 문서 ID를 고른 계좌에 기록 (V30) */
+  updateAccountApprId: async (apprId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/flt/accounts/appr-id', { apprId, ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS flt.Flt06_AccountClose.updateApprId: 계좌폐쇄 신고서(B06) 상신 문서 ID를 고른 폐쇄계좌에 기록 (V30) */
+  updateAccountCloseApprId: async (apprId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/flt/accounts/closes/appr-id', { apprId, ids });
+    return res.data.data ?? 0;
+  },
+
   /** AS-IS flt.Flt10_Tr.getBizDate: 기준일(말일)의 영업일 */
   getBizDate: async (baseDate: string): Promise<string> => {
     const res = await apiClient.get<ApiResponse<string>>('v1/flt/real-trs/biz-date', { params: { baseDate } });

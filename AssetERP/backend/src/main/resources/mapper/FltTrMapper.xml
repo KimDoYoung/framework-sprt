@@ -1958,4 +1958,35 @@
          ORDER BY flt10_tr_id
     </select>
 
+
+    <!-- V30 A09: AS-IS(IDMS-IC) flt10_tr.updateApprId (TOBE: 회사·본인 조건 추가) -->
+    <update id="updateTrApprId">
+        UPDATE flt10_tr
+           SET flt10_appr_id = #{apprId}
+         WHERE flt10_company_id = #{companyId}
+           AND flt10_person_id  = #{personId}
+           AND flt10_tr_id IN
+        <foreach collection="trIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </update>
+
+    <!-- V30 A09: AS-IS(IDMS-IC) flt14_relate_appr.insertApprId -->
+    <insert id="insertRelateAppr">
+        INSERT INTO flt14_relate_appr
+        SELECT f_create_seq()
+             , #{personId}
+             , CAST(#{stdDate} AS date)
+             , #{apprId}
+             , #{checkCycle}
+    </insert>
+
+    <!-- V30 A09: 고른 실거래 행을 다시 읽는다(신고서 본문용). 정기보고 목록(selectRealTrs)과 같은 열이고 본인 행만 읽는다 -->
+    <select id="selectRealTrsByIds" resultType="kr.co.kfs.asseterp.biz.flt.dto.RealTrRes">
+        SELECT <include refid="realTrColumns"/>
+          FROM ( <include refid="realTrInner"/>
+                  WHERE flt10_company_id = #{companyId}
+                    AND flt10_person_id  = #{personId}
+                    AND flt10_tr_id IN
+        <foreach collection="trIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+               ) a
+    </select>
 </mapper>

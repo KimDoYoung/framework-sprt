@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/flt/Flt03_Tab_AccountReport.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L110-163: center(60%, 분할) = 위 안내 두 줄(보고주기·서약서) + [보고주기 변경 및 서약서 서명] / 툴바 / 체크박스 다중 셀 편집 그리드 / 아래 "문서분류" 칸 + [상신],
  *                  south(40%) = Flt06_TabPage_AccountClose(폐쇄계좌)
- * 1단계: [보고주기 변경 및 서약서 서명](Flt02_Lookup_Emp)·[최초원장 등록](Flt13_Lookup_BookInit)·[상신]/상세보기(전자결재 편집창 Apr01_Edit_ApprDoc)는 다음 단계
+ * 1단계: [보고주기 변경 및 서약서 서명](Flt02_Lookup_Emp)·[최초원장 등록](Flt13_Lookup_BookInit)은 다음 단계. [상신]/상세보기(전자결재 편집창 Apr01_Edit_ApprDoc, link B05)는 V30에서 연결했다
  * UX보강(10): 저장 = 저장(n)(UX-03)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -26,6 +26,7 @@ import { Flt03_Lookup_AccountClose } from './Flt03_Lookup_AccountClose';
 import { Flt03_Lookup_ItemType, ItemTypeResult } from './Flt03_Lookup_ItemType';
 import { Flt03_Lookup_MainAccount } from './Flt03_Lookup_MainAccount';
 import { Flt06_TabPage_AccountClose } from './Flt06_TabPage_AccountClose';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 
 const gb = gbFor<FltAccount>();
 
@@ -49,6 +50,9 @@ export const Flt03_Tab_AccountReport: React.FC = () => {
   const [regReasons, setRegReasons] = useState<Code[]>([]);
   const [familyRelates, setFamilyRelates] = useState<Code[]>([]);
   const [closeKey, setCloseKey] = useState(0);
+  // 상신 창(B05): linkDoc = insertLinkApprovals에 넘기는 값(고른 계좌 ID는 열 때 값을 붙잡아 둔다), viewApprId = 상세보기
+  const [linkDoc, setLinkDoc] = useState<{ ids: number[]; checkCycle: string } | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
 
   const crud = useGridCrud<FltAccount>({
     idField: 'accountId',
@@ -112,8 +116,7 @@ export const Flt03_Tab_AccountReport: React.FC = () => {
       message.warning('상신문서가 존재하지 않습니다');
       return;
     }
-    // [생략] 편집창은 다음 단계
-    message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+    setViewApprId(row.apprId);  // apr.Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false)
   };
 
   // [E13] corpLookup.TriggerClick (L354) → Sys15_Lookup_Corp.open(true, …): 고른 거래처의 ID·이름
@@ -260,8 +263,19 @@ export const Flt03_Tab_AccountReport: React.FC = () => {
       message.warning('보고주기를 먼저 입력해주세요');
       return;
     }
-    // [E10 다음 단계] flt.Flt13_BookInit.getInfo → Apr01_Edit_ApprDoc.insertLinkApprovals(classTreeModel, "B05", param) → updateApprId() (flt.Flt03_Account.updateApprId)
-    message.info('전자결재 상신 창은 다음 단계에서 연결합니다.');
+    // flt.Flt13_BookInit.getInfo(고른 계좌) → Apr01_Edit_ApprDoc.insertLinkApprovals(classTreeModel, "B05", param{gridList, checkCycle, setupDate, regReason}) — 계좌·보유종목·신고일·신고사유는 서버가 link-seed에서 읽는다
+    setLinkDoc({ ids: list.map(m => m.accountId), checkCycle: status.checkCycle });
+  };
+
+  // updateApprId(apprModel) L697-717: flt.Flt03_Account.updateApprId(고른 계좌) → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await fltApi.updateAccountApprId(apprId, linkDoc.ids);
+      void crud.retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
   };
 
   const cycleLabel = status.checkCycle === '1' ? { text: '분기별', color: BLUE }
@@ -329,6 +343,14 @@ export const Flt03_Tab_AccountReport: React.FC = () => {
         accountIds={closeIds ?? []}
         onDone={() => { setCloseIds(null); void crud.retrieve(); }}
         onClose={() => setCloseIds(null)}
+      />
+      {/* insertLinkApproval() — classTreeModel은 화면의 "문서분류" 칸 값. 상세보기 viewAppr */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc && classTree.id != null ? { classTreeId: classTree.id, linkCode: 'B05', args: { ids: linkDoc.ids.join(','), checkCycle: linkDoc.checkCycle } } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void crud.retrieve()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
       />
       <Sys15_Lookup_Corp open={corpRow != null} regYn onResult={c => corpRow && pickCorp(corpRow, c)} onClose={() => setCorpRow(null)} />
       <Flt03_Lookup_ItemType open={itemRow != null} itemType={itemRow?.itemType ?? null} onResult={r => itemRow && pickItem(itemRow, r)} onClose={() => setItemRow(null)} />

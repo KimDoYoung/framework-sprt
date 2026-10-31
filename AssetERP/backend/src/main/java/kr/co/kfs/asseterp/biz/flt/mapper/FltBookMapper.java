@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.flt.mapper;
 
+import kr.co.kfs.asseterp.biz.flt.dto.LinkBookRes;
 import kr.co.kfs.asseterp.biz.flt.dto.BookListRes;
 import kr.co.kfs.asseterp.biz.flt.dto.BookRes;
 import kr.co.kfs.asseterp.biz.flt.dto.LockupStdRes;
@@ -28,4 +29,8 @@ public interface FltBookMapper {
 
     /** AS-IS flt01_company_std.selectByDate 에서 의무보유기간 열 */
     LockupStdRes selectLockupStd(@Param("companyId") Long companyId, @Param("stdDate") String stdDate);
+
+    /** AS-IS flt11_book.selectByDate (V30 A09 신고서 본문의 보유내역) */
+    List<LinkBookRes> selectLinkBooks(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                      @Param("baseDate") String baseDate);
 }

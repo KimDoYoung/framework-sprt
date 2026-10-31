@@ -38,7 +38,9 @@ public class AprLinkSeedController {
                                             @RequestParam(required = false) String cycleName, @RequestParam(required = false) String ids,
                                             @RequestParam(required = false) String yyyymm, @RequestParam(required = false) String accountName,
                                             @RequestParam(required = false) String actMappingId,
-                                            @RequestParam(required = false) String typeName) {
+                                            @RequestParam(required = false) String typeName,
+                                            @RequestParam(required = false) String closeDate, @RequestParam(required = false) String periodString,
+                                            @RequestParam(required = false) String checkCycle) {
         Map<String, String> args = new HashMap<>();
         put(args, "stdDate", stdDate);
         put(args, "cycleType", cycleType);
@@ -49,6 +51,9 @@ public class AprLinkSeedController {
         put(args, "accountName", accountName); // A43 계정과목 이름
         put(args, "actMappingId", actMappingId); // D01 연봉계약 — 양식이 둘 이상일 때 Pay06_Lookup_LinkContent에서 고른 계약서 양식(pay06_act_mapping_id)
         put(args, "typeName", typeName); // A10~A12 이익제공(수령) — 신청서 구분 콤보의 이름(제목 앞부분)
+        put(args, "closeDate", closeDate); // A09 자기매매 실거래 — 보고 기준일(TempData.closeDate)
+        put(args, "periodString", periodString); // A09 — 보고 기간 이름("3월"·"1분기", TempData.periodString)
+        put(args, "checkCycle", checkCycle); // B05 계좌개설 — 보고주기(1 분기별·2 월별)
         put(args, "ids", ids); // 여러 행을 한 문서로 묶는 코드(A77 기준가 정정 월보고)의 행 ID, 쉼표 구분
         return ApiResponse.ok(service.seed(principal, classTreeId, linkCode, refId, args));
     }

@@ -2,7 +2,7 @@
  * 폐쇄계좌 탭 (I02) — Flt03_Tab_AccountReport 아래(south, 40%)에 붙는 폐쇄한 계좌 목록.
  * AS-IS: myApp/client/vi/flt/Flt06_TabPage_AccountClose.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L69-90: 위 [폐쇄취소], 가운데 체크박스 다중 그리드, 아래 "문서분류" 칸(550) + [상신]
- * [상신](전자결재 편집창 Apr01_Edit_ApprDoc, 다른 도메인)·상세보기는 다음 단계 — 편집창이 생길 때 연결한다
+ * [상신](전자결재 편집창 Apr01_Edit_ApprDoc, link B06)·상세보기는 V30에서 연결했다
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { message, Modal } from 'antd';
@@ -14,6 +14,7 @@ import { MultiGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Dcr30_Move_DcrClass } from '@/components/lookup/Dcr30_Move_DcrClass';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 
 const gb = gbFor<FltAccountClose>();
 
@@ -33,6 +34,9 @@ export const Flt06_TabPage_AccountClose: React.FC<Props> = ({ refreshKey, onChan
   const [checked, setChecked] = useState<FltAccountClose[]>([]);
   const [classTree, setClassTree] = useState<{ id: number | null; name: string }>({ id: null, name: '' });
   const [docOpen, setDocOpen] = useState(false);
+  // 상신 창(B06): linkIds = insertLinkApprovals에 넘기는 고른 폐쇄계좌 ID(열 때 값을 붙잡아 둔다), viewApprId = 상세보기
+  const [linkIds, setLinkIds] = useState<number[] | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
 
   // retrieve() L184-195: 서비스 flt.Flt06_AccountClose.selectByPersonId(companyId, personId)
   const retrieve = async () => {
@@ -64,8 +68,7 @@ export const Flt06_TabPage_AccountClose: React.FC<Props> = ({ refreshKey, onChan
       message.warning('상신문서가 존재하지 않습니다');
       return;
     }
-    // [생략] 편집창은 다음 단계
-    message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+    setViewApprId(row.apprId);  // apr.Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false)
   };
 
   // buildGrid() L135-182: setChecked(MULTI). 신고사유 열(L169)과 상신제목 열(L179)은 주석 처리
@@ -127,8 +130,19 @@ export const Flt06_TabPage_AccountClose: React.FC<Props> = ({ refreshKey, onChan
       message.warning('결재 중인 문서이거나, 완료된 문서가 포함되어있습니다');
       return;
     }
-    // [E3 다음 단계] Apr01_Edit_ApprDoc.insertLinkApprovals(classTreeModel, "B06", param) → 결과 apprModel로 updateApprId() (flt.Flt06_AccountClose.updateApprId)
-    message.info('전자결재 상신 창은 다음 단계에서 연결합니다.');
+    // Apr01_Edit_ApprDoc.insertLinkApprovals(classTreeModel, "B06", param{gridList}) — 폐쇄 계좌 줄은 서버가 link-seed에서 읽는다
+    setLinkIds(checked.map(m => m.accountCloseId));
+  };
+
+  // updateApprId(apprModel) L291-311: flt.Flt06_AccountClose.updateApprId(고른 폐쇄계좌) → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkIds) return;
+    try {
+      await fltApi.updateAccountCloseApprId(apprId, linkIds);
+      void retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
   };
 
   return (
@@ -157,6 +171,13 @@ export const Flt06_TabPage_AccountClose: React.FC<Props> = ({ refreshKey, onChan
         open={docOpen}
         onResult={r => { setClassTree({ id: r.classTreeId, name: r.classTreeFullName ?? '' }); setDocOpen(false); }}
         onClose={() => setDocOpen(false)}
+      />
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkIds && classTree.id != null ? { classTreeId: classTree.id, linkCode: 'B06', args: { ids: linkIds.join(',') } } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void retrieve()}
+        onClose={() => { setViewApprId(null); setLinkIds(null); }}
       />
     </div>
   );

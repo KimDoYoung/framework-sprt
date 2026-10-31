@@ -283,4 +283,52 @@
          ORDER BY flt01_start_date DESC
          LIMIT 1
     </select>
+
+    <!-- V30 A09: AS-IS(IDMS-IC) flt11_book.selectByDate — 기준일(영업일) 보유내역. 신고서 본문의 "2. 보유내역" 표 -->
+    <select id="selectLinkBooks" resultType="kr.co.kfs.asseterp.biz.flt.dto.LinkBookRes">
+        SELECT flt11_account_no           AS account_no
+             , flt11_account_relate_nm    AS account_relate_name
+             , flt11_item_nm              AS item_name
+             , flt11_book_qty             AS book_qty
+             , flt11_book_amt             AS book_amt
+             , flt11_item_type_nm         AS item_type_name
+          FROM (
+                SELECT flt11_item_nm
+                     , flt11_book_qty
+                     , flt11_book_amt
+                     , flt05_item_type_nm                                                                AS flt11_item_type_nm
+                     , TO_DECRYPTS(flt03_account_no) || ' (' || sys15_corp_nm || ')'                     AS flt11_account_no
+                     , f_cdnm('FamilyRelateCode', flt03_family_relate_cd, flt03_company_id, f_sysdate()) AS flt11_account_relate_nm
+                     , sys15_corp_nm                                                                     AS corp_nm
+                  FROM flt03_account
+                       INNER JOIN getPerson(#{companyId}, CAST(#{baseDate} AS date)) emp01 ON emp00_person_id = flt03_person_id
+                       INNER JOIN sys15_corp ON sys15_corp_id = flt03_corp_id
+                       LEFT JOIN ( SELECT *
+                                     FROM flt11_book
+                                          INNER JOIN flt05_item_type ON ( flt05_company_id   = flt11_company_id
+                                                                      AND flt05_item_type_cd = flt11_item_type
+                                                                      AND flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                                                   FROM flt05_item_type
+                                                                                                  WHERE flt05_company_id   = flt11_company_id
+                                                                                                    AND flt05_item_type_cd = flt11_item_type
+                                                                                                    AND flt05_start_date <![CDATA[<=]]> flt11_book_date ) )
+                                    WHERE flt11_company_id = #{companyId}
+                                      AND flt11_person_id  = #{personId}
+                                      AND flt11_book_date  = f_get_biz_date(#{companyId}, CAST(#{baseDate} AS date), '-0')
+                                      AND flt11_item_type != '99' /*(99:예치금)제외*/
+                                      AND flt11_book_qty   > 0
+                                 ) flt11 ON flt11_account_id = flt03_account_id
+                 WHERE flt03_company_id = #{companyId}
+                   AND flt03_person_id  = #{personId}
+                   AND flt03_setup_date <![CDATA[<=]]> CAST(#{baseDate} AS date)
+                   AND NOT EXISTS ( SELECT 1
+                                      FROM flt06_account_close
+                                           INNER JOIN apr01_appr ON apr01_appr_id = flt06_appr_id
+                                     WHERE flt06_account_id = flt03_account_id
+                                       AND COALESCE(apr01_status_cd,'99') NOT IN ('99','40') )
+               ) t
+         ORDER BY corp_nm collate "ko_KR.utf8" asc
+                , flt11_account_no
+                , flt11_item_nm collate "ko_KR.utf8" asc
+    </select>
 </mapper>

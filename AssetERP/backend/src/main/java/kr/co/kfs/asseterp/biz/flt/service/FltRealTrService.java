@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.flt.service;
 
+import kr.co.kfs.asseterp.biz.flt.dto.LinkApprIdReq;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.flt.dto.EmpLimitRes;
 import kr.co.kfs.asseterp.biz.flt.dto.RealTrRes;
@@ -389,5 +390,21 @@ public class FltRealTrService {
             date = cell.getDateCellValue();
         }
         return date == null ? null : date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    }
+
+    /**
+     * AS-IS Flt10_Tab_RealTransaction.updateApprId L2136-2166 — flt10_tr.updateApprId(고른 거래마다) 뒤 flt14_relate_appr.insertApprId.
+     * 화면이 두 서비스를 차례로 부르던 것을 한 트랜잭션으로 묶었다(회사·본인 조건 추가)
+     */
+    @Transactional
+    public int updateApprId(UserPrincipal user, LinkApprIdReq req) {
+        if (req == null || req.apprId() == null || req.stdDate() == null || req.checkCycle() == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "상신문서 ID·기준일·보고주기가 필요합니다.");
+        }
+        // 고른 매매내역이 없어도(매매내역 없이 상신) 상신 연결(flt14)은 남긴다 — 원본도 고른 행이 없으면 갱신 없이 연결만 넣는다
+        int n = req.ids() == null || req.ids().isEmpty() ? 0
+                : mapper.updateTrApprId(user.getCompanyId(), user.getUserId(), req.apprId(), req.ids());
+        mapper.insertRelateAppr(user.getUserId(), req.stdDate(), req.apprId(), req.checkCycle());
+        return n;
     }
 }

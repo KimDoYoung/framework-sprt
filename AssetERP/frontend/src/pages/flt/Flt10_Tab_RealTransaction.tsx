@@ -4,8 +4,8 @@
  * 생성자 L187-278: north(65%) = 툴바 2줄(보고구분 · 년도 · 월별/분기별 · 검색 · 본인계좌만 조회 · [조회][보유원장 정리] / 계좌선택 · 사전신고 포함 · 상신상태 ·
  *                  [정기보고서 작성][문서보기] · 안내) + 툴바(▶ 보고기간 매매내역 · [등록][저장][삭제] · [템플릿][엑셀업로드][종목유형코드]) + 매매내역 체크박스 다중 셀 편집 그리드(합계 행 "계"),
  *                  center(35%) = 툴바(▶ 월말 평가금액 · [저장][상장주식 평가처리][평가금액을 취득금액으로 저장] · 안내) + 월말 평가금액 셀 편집 그리드
- * 1단계: [정기보고서 작성]은 상신 창(Apr01_Edit_ApprDoc, 문서분류 Dcr01_Lookup_Class)을 열기 직전까지(월말 평가금액·전/후 보고·선택 검사),
- *        [문서보기]·상세보기 셀(Flt14_Lookup_RelateAppr·Apr01_Edit_ApprDoc)은 다음 단계
+ * [정기보고서 작성](월말 평가금액·전/후 보고·선택 검사 → 문서분류 Dcr01_Lookup_Class → 상신 창 Apr01_Edit_ApprDoc link A09 → updateApprId)과
+ * [문서보기]·상세보기 셀(Flt14_Lookup_RelateAppr·Apr01_Edit_ApprDoc)은 V30에서 연결했다
  * UX보강(10): 저장 = 저장(n)(UX-03), 조회창 UX-05·06
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -17,6 +17,7 @@ import type { CellClickedEvent } from 'ag-grid-community';
 import { fltApi } from '@/api/flt';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
+import { dcrApi } from '@/api/dcr';
 import { FltBook, FltBookMonth, FltItemTypeCode, FltRealTr, FltRelateAppr, FltTrAccount } from '@/types/flt';
 import { Code } from '@/types/sys';
 import { Button } from '@/components/button';
@@ -31,6 +32,10 @@ import { Flt03_Lookup_Account, accountLabel } from './Flt03_Lookup_Account';
 import { Flt05_Lookup_ItemTypeConfirm } from './Flt05_Lookup_ItemTypeConfirm';
 import { Flt10_Lookup_Item } from './Flt10_Lookup_Item';
 import { Flt11_Lookup_BookList } from './Flt11_Lookup_BookList';
+import { Flt14_Lookup_RelateAppr } from './Flt14_Lookup_RelateAppr';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
+import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
+import type { AprLinkArgs } from '@/types/apr';
 
 const gb = gbFor<FltRealTr>();
 const gbBook = gbFor<FltBookMonth>();
@@ -86,12 +91,18 @@ export const Flt10_Tab_RealTransaction: React.FC = () => {
   const [stkLookup, setStkLookup] = useState<{ row: FltRealTr; text: string | null } | null>(null);
   const [bookLookup, setBookLookup] = useState<{ row: FltRealTr; text: string | null } | null>(null);
   const [typeConfirmGroup, setTypeConfirmGroup] = useState<string | null>(null);
+  // 상신 창(A09) — classPick: 문서분류가 정해져 있지 않을 때 Dcr01_Lookup_Class, linkDoc: 상신 창에 넘기는 값(고른 매매내역 ID는 열 때 값을 붙잡아 둔다)
+  const [classPick, setClassPick] = useState(false);
+  const [linkDoc, setLinkDoc] = useState<{ classTreeId: number; ids: number[]; args: AprLinkArgs } | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [relateStdDate, setRelateStdDate] = useState<string | null>(null);
 
   // 화면 필드 (AS-IS accountId·checkCycle·startDate·closeDate·investAmt*·apprId·accountSetupDate)
   const accountIdRef = useRef<number | null>(null);
   const checkCycleRef = useRef<string | null>(null);
   const startDateRef = useRef('');
   const closeDateRef = useRef('');
+  const periodStringRef = useRef('');  // TempData.periodString — 조회(getDate)한 때의 "n월"·"n분기", 상신 제목에 쓴다
   const calcTargetRef = useRef<string | null>(null);
   const overCheckRef = useRef<boolean>(false);
   const limitRef = useRef<Limits>({ yearInvestLimit: 0, yearInvestAmt: 0, totalInvestLimit: 0, totalInvestAmt: 0 });
@@ -150,6 +161,7 @@ export const Flt10_Tab_RealTransaction: React.FC = () => {
     try {
       startDateRef.current = start.format(DATE_FORMAT);
       closeDateRef.current = await fltApi.getBizDate(close.format(DATE_FORMAT));
+      periodStringRef.current = p.monthMode ? `${p.month}월` : `${p.quarter}분기`;  // TempData.setPeriodString L1846·L1884
       return true;
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
@@ -589,8 +601,43 @@ export const Flt10_Tab_RealTransaction: React.FC = () => {
         return;
       }
     }
-    // [E39 다음 단계] 전자결재 상신 창(Apr01_Edit_ApprDoc)은 아직 없다
-    message.info('전자결재 상신 창은 다음 단계에서 연결합니다.');
+    // 서비스 dcr.Dcr30_Link.selectByLinkCode("A09") → 문서분류가 없으면 Dcr01_Lookup_Class → familyAccountYn() → insertLinkApprovals()
+    const ids = selected().map(m => m.trId);
+    void (async () => {
+      try {
+        const list = await dcrApi.searchClassTreeByLinkCode('A09');
+        if (list.length === 0 || list[0].classTreeId == null) {
+          pendingIdsRef.current = ids;
+          setClassPick(true);
+        } else {
+          startLinkDoc(list[0].classTreeId, ids);
+        }
+      } catch (err) {
+        message.error(errorMessage(err, '조회 실패'));
+      }
+    })();
+  };
+
+  // insertLinkApprovals(classTreeModel, "A09", param) L2099-2134 — 고른 매매내역·보유내역·가족계좌 여부는 서버가 link-seed에서 읽는다
+  const pendingIdsRef = useRef<number[]>([]);
+  const startLinkDoc = (classTreeId: number, ids: number[]) => {
+    // TempData.getCloseDate()·getPeriodString()은 마지막으로 조회(getDate)한 값이다
+    setLinkDoc({
+      classTreeId,
+      ids,
+      args: { ids: ids.join(','), closeDate: closeDateRef.current, periodString: periodStringRef.current },
+    });
+  };
+
+  // updateApprId(apprModel) L2136-2166: flt.Flt10_Tr.updateApprId(고른 매매내역) → flt.Flt14_RelateAppr.insertApprId(personId, stdDate=TempData.closeDate, checkCycle) → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await fltApi.updateRealTrApprId(apprId, linkDoc.ids, closeDateRef.current, checkCycleRef.current ?? '');
+      void retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
   };
 
   // [E20] apprViewButton[문서보기].Select (L616) → apprView() L2168-2238: 서비스 flt.Flt14_RelateAppr.selectByStdDate → 2건 이상 Flt14_Lookup_RelateAppr, 1건 Apr01_Edit_ApprDoc (다음 단계)
@@ -606,8 +653,9 @@ export const Flt10_Tab_RealTransaction: React.FC = () => {
     }
     try {
       const list = await fltApi.searchRelateApprs(stdDate);
-      if (list.length === 0) message.warning('문서가 조회되지 않습니다.');
-      else message.info('전자결재 문서 창은 다음 단계에서 연결합니다.');
+      if (list.length > 1) setRelateStdDate(stdDate);  // Flt14_Lookup_RelateAppr.open → [닫기] callback → apprChk()
+      else if (list.length === 1) setViewApprId(apprIdRef.current);  // apr.Apr01_Appr.selectById(apprId) → retrieveApproval → 닫으면 apprChk()
+      else message.warning('문서가 조회되지 않습니다.');
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
@@ -811,10 +859,10 @@ export const Flt10_Tab_RealTransaction: React.FC = () => {
     gb.textArea('trNote', 150, '비고', { editor: 'largeText' }),
     gb.date('apprRegDate', 90, '상신일'),
     gb.textCenter('apprStatusName', 100, '상신상태'),
-    // 상세보기 L920-948: 상신문서 보기(Apr01_Edit_ApprDoc, 다음 단계)
+    // 상세보기 L920-948: 상신문서 보기(Apr01_Edit_ApprDoc)
     iconCell<FltRealTr>('view', 'detailCell', 60, '상세보기', row => {
       if (row.apprId == null) message.warning('상신문서가 없습니다. 먼저 상신을 진행해주세요');
-      else message.info('전자결재 문서 창은 다음 단계에서 연결합니다.');
+      else setViewApprId(row.apprId);
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [preTr, trTypes, itemTypes, calcTarget, accountTriggerCell, itemTriggerCell, pickTrType, pickItemType, checkTrDate, lookupItemMain]);
@@ -964,6 +1012,21 @@ export const Flt10_Tab_RealTransaction: React.FC = () => {
         onResult={pickHoldItem}
         onClose={() => setBookLookup(null)}
       />
+      {/* 문서분류가 없을 때: Dcr01_Lookup_Class.open(null, null, callback → familyAccountYn(classTreeModel)) */}
+      <Dcr01_Lookup_Class
+        open={classPick}
+        onResult={r => { setClassPick(false); startLinkDoc(r.classTreeId, pendingIdsRef.current); }}
+        onClose={() => setClassPick(false)}
+      />
+      {/* insertLinkApprovals(…, "A09", …) / 상세보기 / [문서보기] 한 건 — 닫으면 apprChk()로 상신상태를 다시 읽는다 */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: 'A09', args: linkDoc.args } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void apprChk()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
+      <Flt14_Lookup_RelateAppr stdDate={relateStdDate} onClosed={() => void apprChk()} onClose={() => setRelateStdDate(null)} />
     </div>
   );
 };

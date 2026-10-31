@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.flt.service;
 
+import kr.co.kfs.asseterp.biz.flt.dto.LinkApprIdReq;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountAdminRes;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountCloseReq;
@@ -127,5 +128,25 @@ public class FltAccountService {
             return 0;
         }
         return mapper.deleteAccountCloses(user.getCompanyId(), user.getUserId(), ids);
+    }
+
+    /** AS-IS Flt03_Tab_AccountReport.updateApprId L697-717 → flt.Flt03_Account.updateApprId (회사·본인 조건 추가) */
+    @Transactional
+    public int updateAccountApprId(UserPrincipal user, LinkApprIdReq req) {
+        checkLinkReq(req);
+        return mapper.updateAccountApprId(user.getCompanyId(), user.getUserId(), req.apprId(), req.ids());
+    }
+
+    /** AS-IS Flt06_TabPage_AccountClose.updateApprId L291-311 → flt.Flt06_AccountClose.updateApprId (본인 계좌 조건 추가) */
+    @Transactional
+    public int updateCloseApprId(UserPrincipal user, LinkApprIdReq req) {
+        checkLinkReq(req);
+        return mapper.updateCloseApprId(user.getCompanyId(), user.getUserId(), req.apprId(), req.ids());
+    }
+
+    private static void checkLinkReq(LinkApprIdReq req) {
+        if (req == null || req.apprId() == null || req.ids() == null || req.ids().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "상신문서 ID와 대상 행이 필요합니다.");
+        }
     }
 }

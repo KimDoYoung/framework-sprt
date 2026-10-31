@@ -128,4 +128,14 @@
          WHERE flt01_company_std_id = #{companyStdId}
            AND flt01_company_id     = #{companyId}
     </update>
+
+    <!-- V30 A09: AS-IS(IDMS-IC) flt01_company_std.selectByDate — 기준일에 유효한 가장 최근 기준(승인 유효일수·거래증빙 필요 여부) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.flt.dto.CompanyStdRes">
+        SELECT <include refid="companyStdColumns"/>
+          FROM flt01_company_std
+         WHERE flt01_company_id = #{companyId}
+           AND flt01_start_date <![CDATA[<=]]> CAST(#{toDay} AS date)
+         ORDER BY flt01_start_date DESC
+         LIMIT 1
+    </select>
 </mapper>

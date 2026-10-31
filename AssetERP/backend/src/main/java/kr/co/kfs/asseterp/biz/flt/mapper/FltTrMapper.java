@@ -181,4 +181,16 @@ public interface FltTrMapper {
 
     /** AS-IS flt10_tr.selectViolate (I10 위반내역조회) — personId가 null이면 회사 전체 사원 */
     List<ViolateRes> selectViolate(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("stdDate") String stdDate);
+
+    /** AS-IS flt10_tr.updateApprId (V30 A09 실거래 보고 상신) */
+    int updateTrApprId(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                       @Param("apprId") Long apprId, @Param("trIds") List<Long> trIds);
+
+    /** AS-IS flt14_relate_appr.insertApprId */
+    int insertRelateAppr(@Param("personId") Long personId, @Param("stdDate") String stdDate,
+                         @Param("apprId") Long apprId, @Param("checkCycle") String checkCycle);
+
+    /** V30 A09: 고른 실거래 행(본인 것만) — closeDate는 realTrInner의 기준일 */
+    List<RealTrRes> selectRealTrsByIds(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                       @Param("closeDate") String closeDate, @Param("trIds") List<Long> trIds);
 }

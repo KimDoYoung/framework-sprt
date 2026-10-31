@@ -26,4 +26,7 @@ public interface FltCompanyStdMapper {
 
     /** AS-IS Flt01_CompanyStd.updateOne — 의무보유기간 위반 체크 방식 5개 열 */
     int updateLockup(@Param("companyId") Long companyId, @Param("companyStdId") Long companyStdId, @Param("req") CompanyStdLockupReq req);
+
+    /** AS-IS flt01_company_std.selectByDate — toDay(yyyy-MM-dd) 이전 시작일 중 가장 최근 한 건, 없으면 null */
+    CompanyStdRes selectByDate(@Param("companyId") Long companyId, @Param("toDay") String toDay);
 }

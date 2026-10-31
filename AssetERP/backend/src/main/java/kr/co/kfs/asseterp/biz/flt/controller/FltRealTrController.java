@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.flt.controller;
 
+import kr.co.kfs.asseterp.biz.flt.dto.LinkApprIdReq;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.flt.dto.EmpLimitRes;
 import kr.co.kfs.asseterp.biz.flt.dto.RealTrRes;
@@ -122,5 +123,11 @@ public class FltRealTrController {
     @PostMapping("/excel")
     public ApiResponse<Integer> upload(@AuthenticationPrincipal UserPrincipal principal, @RequestParam("excelUpload") MultipartFile file) {
         return ApiResponse.ok(service.upload(principal, file));
+    }
+
+    /** AS-IS flt.Flt10_Tr.updateApprId + flt.Flt14_RelateAppr.insertApprId — 상신한 문서 ID를 고른 매매내역에 기록 (V30 A09) */
+    @PutMapping("/appr-id")
+    public ApiResponse<Integer> updateApprId(@AuthenticationPrincipal UserPrincipal principal, @RequestBody LinkApprIdReq req) {
+        return ApiResponse.ok(service.updateApprId(principal, req));
     }
 }

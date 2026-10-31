@@ -710,6 +710,11 @@ export interface AprLinkArgs {
   actMappingId?: string;
   /** A10~A12 이익제공(수령) — 신청서 구분 콤보에 보이는 이름, 제목은 "이름_로그인 사원 이름"(V29) */
   typeName?: string;
+  /** A09 자기매매 실거래 보고 — 보고 기준일(yyyy-MM-dd)·보고 기간 이름("3월"·"1분기") (V30) */
+  closeDate?: string;
+  periodString?: string;
+  /** B05 계좌개설 신고 — 보고주기 코드(V30) */
+  checkCycle?: string;
 }
 
 /** 링크코드별 제목·본문·시행일자 (GET apr/apprs/link-seed, V17) */

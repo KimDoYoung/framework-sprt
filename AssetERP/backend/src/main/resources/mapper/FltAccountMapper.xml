@@ -261,4 +261,67 @@
            AND dcr30_link_cd = #{linkCode}
          LIMIT 1
     </select>
+
+    <!-- V30 B05: AS-IS(IDMS-IC) flt13_book_init.getInfo — 고른 계좌의 계좌·보유종목(최초원장) 줄 -->
+    <select id="selectBookInitInfo" resultType="kr.co.kfs.asseterp.biz.flt.dto.LinkBookInitRes">
+        SELECT f_cdnm('FamilyRelateCode', flt03_family_relate_cd, flt03_company_id, f_sysdate())  AS account_relate_name
+             , flt03_account_nm                                                                  AS account_name
+             , sys15_corp_nm                                                                     AS account_bank_name
+             , TO_DECRYPTS(flt03_account_no)                                                     AS account_no
+             , flt03_note                                                                        AS account_note
+             , flt13_item_nm                                                                     AS item_name
+             , flt13_book_qty                                                                    AS book_qty
+          FROM flt03_account
+               LEFT OUTER JOIN sys15_corp ON sys15_corp_id = flt03_corp_id AND sys15_company_id = flt03_company_id
+               LEFT OUTER JOIN ( SELECT flt13_book_init.*
+                                   FROM flt13_book_init
+                                        INNER JOIN flt05_item_type ON ( flt05_company_id   = flt13_company_id
+                                                                    AND flt05_item_type_cd = flt13_item_type
+                                                                    AND flt05_start_date   = ( SELECT MAX(flt05_start_date)
+                                                                                                 FROM flt05_item_type
+                                                                                                WHERE flt05_company_id   = flt13_company_id
+                                                                                                  AND flt05_item_type_cd = flt13_item_type
+                                                                                                  AND flt05_start_date <![CDATA[<=]]> flt13_book_date ) )
+                                  WHERE flt13_company_id = #{companyId}
+                                    AND flt13_person_id  = #{personId}
+                               ) t ON flt03_account_id = flt13_account_id
+         WHERE flt03_account_id IN
+        <foreach collection="accountIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+         ORDER BY flt03_account_id
+    </select>
+
+    <!-- V30 B05·A09: AS-IS flt03_account.getFamilyAccount — 가족계좌(본인 외, 폐쇄 안 된 것)가 있는지. 원본은 열 전부를 읽지만 쓰는 것은 행 수뿐이라 COUNT로 줄였다(조인은 행 수에 영향 없음) -->
+    <select id="countFamilyAccount" resultType="int">
+        SELECT COUNT(*)
+          FROM flt03_account
+         WHERE flt03_company_id = #{companyId}
+           AND flt03_person_id  = #{personId}
+           AND flt03_family_relate_cd != '1'
+           AND flt03_account_id NOT IN ( SELECT flt06_account_id
+                                           FROM flt06_account_close
+                                                INNER JOIN flt03_account ON flt03_account_id = flt06_account_id
+                                          WHERE flt03_person_id = #{personId} )
+    </select>
+
+    <!-- V30 B05: AS-IS flt03_account.updateApprId (TOBE: 회사·본인 조건 추가) -->
+    <update id="updateAccountApprId">
+        UPDATE flt03_account
+           SET flt03_appr_id = #{apprId}
+         WHERE flt03_company_id = #{companyId}
+           AND flt03_person_id  = #{personId}
+           AND flt03_account_id IN
+        <foreach collection="accountIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </update>
+
+    <!-- V30 B06: AS-IS flt06_account_close.updateApprId (TOBE: 본인 계좌 조건 추가) -->
+    <update id="updateCloseApprId">
+        UPDATE flt06_account_close
+           SET flt06_appr_id = #{apprId}
+         WHERE flt06_account_close_id IN
+        <foreach collection="accountCloseIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+           AND flt06_account_id IN ( SELECT flt03_account_id
+                                       FROM flt03_account
+                                      WHERE flt03_company_id = #{companyId}
+                                        AND flt03_person_id  = #{personId} )
+    </update>
 </mapper>

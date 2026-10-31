@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.flt.controller;
 
+import kr.co.kfs.asseterp.biz.flt.dto.LinkApprIdReq;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountAdminRes;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountCloseReq;
@@ -92,5 +93,17 @@ public class FltAccountController {
     @DeleteMapping("/closes")
     public ApiResponse<Integer> deleteCloses(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> ids) {
         return ApiResponse.ok(service.deleteCloses(principal, ids));
+    }
+
+    /** AS-IS flt.Flt03_Account.updateApprId — 계좌개설 신고서(B05) 상신 ID 기록 */
+    @PutMapping("/appr-id")
+    public ApiResponse<Integer> updateAccountApprId(@AuthenticationPrincipal UserPrincipal principal, @RequestBody LinkApprIdReq req) {
+        return ApiResponse.ok(service.updateAccountApprId(principal, req));
+    }
+
+    /** AS-IS flt.Flt06_AccountClose.updateApprId — 계좌폐쇄 신고서(B06) 상신 ID 기록 */
+    @PutMapping("/closes/appr-id")
+    public ApiResponse<Integer> updateCloseApprId(@AuthenticationPrincipal UserPrincipal principal, @RequestBody LinkApprIdReq req) {
+        return ApiResponse.ok(service.updateCloseApprId(principal, req));
     }
 }

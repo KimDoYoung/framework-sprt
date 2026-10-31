@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.flt.mapper;
 
+import kr.co.kfs.asseterp.biz.flt.dto.LinkBookInitRes;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountAdminRes;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountCloseRes;
 import kr.co.kfs.asseterp.biz.flt.dto.AccountRes;
@@ -60,4 +61,20 @@ public interface FltAccountMapper {
 
     /** AS-IS dcr01_class_tree.selectByLinkCode */
     DocClassRes selectDocClassByLinkCode(@Param("companyId") Long companyId, @Param("linkCode") String linkCode);
+
+    // V30 링크 상신(B05 계좌개설·B06 계좌폐쇄·A09 실거래)
+    /** AS-IS flt13_book_init.getInfo */
+    List<LinkBookInitRes> selectBookInitInfo(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                             @Param("accountIds") List<Long> accountIds);
+
+    /** AS-IS flt03_account.getFamilyAccount (행 수만) */
+    int countFamilyAccount(@Param("companyId") Long companyId, @Param("personId") Long personId);
+
+    /** AS-IS flt03_account.updateApprId */
+    int updateAccountApprId(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                            @Param("apprId") Long apprId, @Param("accountIds") List<Long> accountIds);
+
+    /** AS-IS flt06_account_close.updateApprId */
+    int updateCloseApprId(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                          @Param("apprId") Long apprId, @Param("accountCloseIds") List<Long> accountCloseIds);
 }
