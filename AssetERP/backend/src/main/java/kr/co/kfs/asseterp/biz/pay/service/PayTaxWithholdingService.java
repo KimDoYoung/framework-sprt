@@ -90,6 +90,14 @@ public class PayTaxWithholdingService {
         return mapper.deleteByIds(companyId, ids);
     }
 
+    /** AS-IS pay.Pay40_IncomeTaxWithholding.updateApprId (V26): 결재창에서 상신·저장한 문서 ID를 발급 행에 기록 */
+    @Transactional
+    public void updateApprId(UserPrincipal user, Long id, Long apprId) {
+        if (mapper.updateApprId(id, user.getCompanyId(), apprId) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "갑근세확인서 발급 내역을 찾을 수 없습니다.");
+        }
+    }
+
     private PayTaxWithholdingRes existing(Long companyId, Long id) {
         return id != null && id > 0 ? mapper.selectById(companyId, id) : null;
     }

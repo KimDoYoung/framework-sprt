@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.pay.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.pay.dto.PayRelateApprIdReq;
 import kr.co.kfs.asseterp.biz.pay.dto.PayTaxWithholdingRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayTaxWithholdingSaveReq;
 import kr.co.kfs.asseterp.biz.pay.service.PayTaxWithholdingService;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,6 +39,14 @@ public class PayTaxWithholdingController {
     public ApiResponse<List<PayTaxWithholdingRes>> save(@AuthenticationPrincipal UserPrincipal principal,
                                                         @RequestBody List<PayTaxWithholdingSaveReq> rows) {
         return ApiResponse.ok(service.save(principal, rows));
+    }
+
+    /** pay.Pay40_IncomeTaxWithholding.updateApprId — 결재창(링크코드 X01)에서 상신·저장한 문서 ID 기록 (V26) */
+    @PutMapping("/{id}/appr-id")
+    public ApiResponse<Void> updateApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long id,
+                                          @RequestBody PayRelateApprIdReq req) {
+        service.updateApprId(principal, id, req.apprId());
+        return ApiResponse.ok(null);
     }
 
     /** pay.Pay40_IncomeTaxWithholding.delete */

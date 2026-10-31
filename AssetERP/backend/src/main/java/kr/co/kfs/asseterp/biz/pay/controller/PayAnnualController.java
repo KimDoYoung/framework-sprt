@@ -1,7 +1,9 @@
 package kr.co.kfs.asseterp.biz.pay.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.pay.dto.PayActMappingRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayAnnualRes;
+import kr.co.kfs.asseterp.biz.pay.dto.PayRelateApprIdReq;
 import kr.co.kfs.asseterp.biz.pay.dto.PayAnnualSaveReq;
 import kr.co.kfs.asseterp.biz.pay.service.PayAnnualService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -70,6 +73,20 @@ public class PayAnnualController {
     @DeleteMapping
     public ApiResponse<Integer> delete(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> ids) {
         return ApiResponse.ok(service.delete(principal, ids));
+    }
+
+    /** D01 연봉계약 상신(V26): 사원 유형에 맞는 계약서 양식 후보 — 둘 이상이면 Pay06_Lookup_LinkContent로 고른다 */
+    @GetMapping("/{annualId}/link-contents")
+    public ApiResponse<List<PayActMappingRes>> linkContents(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long annualId) {
+        return ApiResponse.ok(service.linkContents(principal, annualId));
+    }
+
+    /** pay.Pay01_Annual.updateApprId — 결재창(링크코드 D01)에서 상신·저장한 문서 ID 기록 (V26) */
+    @PutMapping("/{annualId}/appr-id")
+    public ApiResponse<Void> updateApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long annualId,
+                                          @RequestBody PayRelateApprIdReq req) {
+        service.updateApprId(principal, annualId, req.apprId());
+        return ApiResponse.ok(null);
     }
 
     /** 템플릿 (AS-IS ./excelTemplete/Template_연봉계약정보.xlsx) */

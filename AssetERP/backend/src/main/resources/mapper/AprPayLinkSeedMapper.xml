@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  V26 링크코드 D01 연봉계약 · X01 갑근세원천징수확인서의 본문 값 (Apr01_Edit_ApprDoc.insertLinkApproval)
+  emp03_trans.selectByDate (IDMS-IC server/emp/mapper/emp03_trans.xml:270) — 사원 유형 코드(EmpKindCode)만 읽는다
+  sys99_print.getIncomeTaxWithholding (IDMS-IC server/sys/mapper/sys99_print.xml) — 원문 그대로, 열 별칭만 sys99_text01 → text01 식으로 줄이고
+    `sys99_print_id`(ROW_NUMBER)는 뺐다. 회사 조건(pay40_company_id)은 TOBE 추가.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprPayLinkSeedMapper">
+
+    <select id="selectTransKindCode" resultType="string">
+        SELECT emp03_kind_cd
+          FROM emp03_trans
+         WHERE emp03_person_id = #{personId}
+           AND emp03_trans_date IN (
+                   SELECT MAX(emp03_trans_date)
+                     FROM emp03_trans
+                    WHERE emp03_person_id = #{personId}
+                      AND emp03_trans_date <![CDATA[<=]]> #{startDate}
+               )
+    </select>
+
+    <select id="selectIncomeTaxPrint" resultType="kr.co.kfs.asseterp.biz.apr.dto.PayIncomeTaxPrintRow">
+<![CDATA[
+SELECT	(
+     		CASE WHEN sys01_income_tax_filing_cd = 'M'
+                 THEN '( ☑ 매월신고납부대상자 확인'||E'\u00A0'||E'\u00A0'||'☐ 반기별 신고납부 대상자 확인 )'
+ 		         ELSE '( ☐ 매월신고납부대상자 확인'||E'\u00A0'||E'\u00A0'||'☑ 반기별 신고납부 대상자 확인 )'
+
+
+     			 END
+     	)																										AS text01
+     ,	pay40_std_year||'-'||LPAD(pay40_issue_no::text,3,'0')													AS text02
+	 ,	emp01_kor_nm																							AS string01
+	 , 	(
+	 		CASE WHEN to_decrypts(emp02_ctz_no) LIKE '%-%'
+	 			 THEN LEFT(to_decrypts(emp02_ctz_no), POSITION('-' IN to_decrypts(emp02_ctz_no))) || '******'
+			     ELSE LEFT(to_decrypts(emp02_ctz_no), 6) || '-******'
+       			 END
+        )						 																				AS string02
+     ,	'('||COALESCE(emp02_zip_cd,'')||')'||COALESCE(emp02_zip_addr,'')||' '||COALESCE(emp02_addr_detail,'')	AS string03
+     ,	sys01_company_nm 																						AS string04
+     ,	sys01_biz_no 																							AS string05
+     ,	'('||COALESCE(sys01_zip_cd,'')||')'||COALESCE(sys01_zip_addr,'')||' '||COALESCE(sys01_zip_detail,'')	AS string06
+     ,	(
+	 		SELECT	f_emp_kor_nm(emp03_person_id)
+  			  FROM	emp03_trans
+  			  		INNER JOIN emp01_person ON emp01_person_id = emp03_person_id AND emp01_company_id = #{companyId}
+ 			 WHERE	emp03_title_cd = '100'
+ 			 ORDER BY emp03_trans_date
+ 			 LIMIT 1
+ 		)																										AS string07
+	 , 	(
+	 		CASE WHEN to_decrypts(sys01_corp_reg_no) LIKE '%-%'
+	 			 THEN LEFT(to_decrypts(sys01_corp_reg_no), POSITION('-' IN to_decrypts(sys01_corp_reg_no))) || '******'
+			     ELSE LEFT(to_decrypts(sys01_corp_reg_no), 6) || '-******'
+       			 END
+        )						 																				AS string08
+
+
+
+
+
+
+     ,	f_cdnm('CertUseCode',	pay40_pur_use_cd,	pay40_company_id, f_sysdate())								AS string09
+     ,	pay40_submit_to																							AS string10
+     ,	pay40_cnt||'통'																							AS string11     
+     ,	MAX(CASE WHEN rn = 1  THEN amt ELSE NULL END)															AS long01
+     ,	MAX(CASE WHEN rn = 1  THEN tax ELSE NULL END)															AS long02
+     ,	MAX(CASE WHEN rn = 2  THEN amt ELSE NULL END)															AS long03
+     ,	MAX(CASE WHEN rn = 2  THEN tax ELSE NULL END)															AS long04
+     ,	MAX(CASE WHEN rn = 3  THEN amt ELSE NULL END)															AS long05
+     ,	MAX(CASE WHEN rn = 3  THEN tax ELSE NULL END)															AS long06
+     ,	MAX(CASE WHEN rn = 4  THEN amt ELSE NULL END)															AS long07
+     ,	MAX(CASE WHEN rn = 4  THEN tax ELSE NULL END)															AS long08
+     ,	MAX(CASE WHEN rn = 5  THEN amt ELSE NULL END)															AS long09
+     ,	MAX(CASE WHEN rn = 5  THEN tax ELSE NULL END)															AS long10
+     ,	MAX(CASE WHEN rn = 6  THEN amt ELSE NULL END)															AS long11
+     ,	MAX(CASE WHEN rn = 6  THEN tax ELSE NULL END)															AS long12
+     ,	MAX(CASE WHEN rn = 7  THEN amt ELSE NULL END)															AS long13
+     ,	MAX(CASE WHEN rn = 7  THEN tax ELSE NULL END)															AS long14
+     ,	MAX(CASE WHEN rn = 8  THEN amt ELSE NULL END)															AS long15
+     ,	MAX(CASE WHEN rn = 8  THEN tax ELSE NULL END)															AS long16
+     ,	MAX(CASE WHEN rn = 9  THEN amt ELSE NULL END)															AS long17
+     ,	MAX(CASE WHEN rn = 9  THEN tax ELSE NULL END)															AS long18
+     ,	MAX(CASE WHEN rn = 10 THEN amt ELSE NULL END)															AS long19
+     ,	MAX(CASE WHEN rn = 10 THEN tax ELSE NULL END)															AS long20
+     ,	MAX(CASE WHEN rn = 11 THEN amt ELSE NULL END)															AS long21
+     ,	MAX(CASE WHEN rn = 11 THEN tax ELSE NULL END)															AS long22
+     ,	MAX(CASE WHEN rn = 12 THEN amt ELSE NULL END)															AS long23
+     ,	MAX(CASE WHEN rn = 12 THEN tax ELSE NULL END)															AS long24     
+     ,	MAX(CASE WHEN rn = 1  THEN std_date ELSE NULL END)														AS date01
+     ,	MAX(CASE WHEN rn = 1  THEN pay_date ELSE NULL END)														AS date02
+     ,	MAX(CASE WHEN rn = 2  THEN std_date ELSE NULL END)														AS date03
+     ,	MAX(CASE WHEN rn = 2  THEN pay_date ELSE NULL END)														AS date04
+     ,	MAX(CASE WHEN rn = 3  THEN std_date ELSE NULL END)														AS date05
+     ,	MAX(CASE WHEN rn = 3  THEN pay_date ELSE NULL END)														AS date06
+     ,	MAX(CASE WHEN rn = 4  THEN std_date ELSE NULL END)														AS date07
+     ,	MAX(CASE WHEN rn = 4  THEN pay_date ELSE NULL END)														AS date08
+     ,	MAX(CASE WHEN rn = 5  THEN std_date ELSE NULL END)														AS date09
+     ,	MAX(CASE WHEN rn = 5  THEN pay_date ELSE NULL END)														AS date10
+     ,	MAX(CASE WHEN rn = 6  THEN std_date ELSE NULL END)														AS date11
+     ,	MAX(CASE WHEN rn = 6  THEN pay_date ELSE NULL END)														AS date12
+     ,	MAX(CASE WHEN rn = 7  THEN std_date ELSE NULL END)														AS date13
+     ,	MAX(CASE WHEN rn = 7  THEN pay_date ELSE NULL END)														AS date14
+     ,	MAX(CASE WHEN rn = 8  THEN std_date ELSE NULL END)														AS date15
+     ,	MAX(CASE WHEN rn = 8  THEN pay_date ELSE NULL END)														AS date16
+     ,	MAX(CASE WHEN rn = 9  THEN std_date ELSE NULL END)														AS date17
+     ,	MAX(CASE WHEN rn = 9  THEN pay_date ELSE NULL END)														AS date18
+     ,	MAX(CASE WHEN rn = 10 THEN std_date ELSE NULL END)														AS date19
+     ,	MAX(CASE WHEN rn = 10 THEN pay_date ELSE NULL END)														AS date20
+     ,	MAX(CASE WHEN rn = 11 THEN std_date ELSE NULL END)														AS date21
+     ,	MAX(CASE WHEN rn = 11 THEN pay_date ELSE NULL END)														AS date22
+     ,	MAX(CASE WHEN rn = 12 THEN std_date ELSE NULL END)														AS date23
+     ,	MAX(CASE WHEN rn = 12 THEN pay_date ELSE NULL END)														AS date24     
+     ,	pay40_reg_date																							AS date25
+  FROM	pay40_income_tax_withholding
+  		INNER JOIN sys01_company	ON sys01_company_id = pay40_company_id
+  		INNER JOIN emp01_person		ON emp01_person_id = pay40_person_id
+  		INNER JOIN emp02_others		ON emp02_person_id = pay40_person_id
+  		LEFT OUTER JOIN (
+  							SELECT	ROW_NUMBER() OVER(ORDER BY t.std_month)			AS rn
+  								 ,	t.std_month										AS std_month
+							     ,	SUM(t.amt)										AS amt
+							     ,	SUM(t.tax)										AS tax
+							     ,	TO_DATE(t.std_month||'-01','YYYY-MM-DD')		AS std_date
+							     ,	(
+							     		CASE WHEN CAST(SUBSTRING(t.std_month, 6, 2) AS INTEGER) BETWEEN 1 AND 6
+							        		 THEN CASE WHEN sys01_income_tax_filing_cd = 'M' 
+							            			   THEN TO_DATE(t.std_month || '-10', 'YYYY-MM-DD') + INTERVAL '1 MONTH'
+							            	 		   ELSE TO_DATE(SUBSTRING(std_month, 1, 4) || '-07-10', 'YYYY-MM-DD')
+													   END
+							        		 WHEN CAST(SUBSTRING(std_month, 6, 2) AS INTEGER) BETWEEN 7 AND 12
+							        		 THEN CASE WHEN sys01_income_tax_filing_cd = 'M' 
+							          				   THEN TO_DATE(std_month || '-10', 'YYYY-MM-DD') + INTERVAL '1 MONTH'
+							            			   ELSE TO_DATE((CAST(SUBSTRING(std_month, 1, 4) AS INTEGER) + 1) || '-01-10', 'YYYY-MM-DD')
+							        				   END
+											 ELSE NULL
+							    			 END
+							     	)												AS pay_date
+							  FROM	( 
+							         	SELECT	TO_CHAR(pay10_date, 'YYYY-MM')	AS std_month
+									    	 ,	(
+									    	 		SELECT	SUM(pay11_item_amt) 
+											          FROM	pay11_month_item 
+											         WHERE	pay11_month_id = pay10_month_id 
+											           AND	pay11_item_type = '1'
+											    )								AS amt
+											 ,	(
+											 		SELECT	SUM(pay11_item_amt)
+											          FROM	pay11_month_item 
+											         WHERE	pay11_month_id = pay10_month_id 
+											           AND	pay11_item_cd = '250'
+											    )								AS tax
+									      FROM	pay10_month
+									     WHERE	pay10_company_id = #{companyId}
+									       AND	pay10_person_id = #{personId}
+									       AND	pay10_std_month LIKE #{stdYear}
+									       AND	pay10_pay_cd != '30'
+							  		) t
+							  		INNER JOIN sys01_company ON sys01_company_id = #{companyId}
+							 GROUP BY std_month, sys01_income_tax_filing_cd
+							 ORDER BY std_month, sys01_income_tax_filing_cd
+		) f ON LEFT(f.std_month,4) = pay40_std_year
+ WHERE	pay40_income_tax_withholding_id = #{incomeTaxWithholdingId}
+   AND	pay40_company_id = #{companyId}
+ GROUP BY	sys01_income_tax_filing_cd
+        ,	emp01_kor_nm
+        ,	emp02_ctz_no
+        ,	emp02_zip_cd
+        ,	emp02_zip_addr
+        ,	emp02_addr_detail
+        ,	sys01_company_nm
+        ,	sys01_biz_no
+        ,	sys01_zip_cd
+        ,	sys01_zip_addr
+        ,	sys01_zip_detail
+        ,	sys01_corp_reg_no
+        ,	pay40_issue_no
+        ,	pay40_pur_use_cd
+        ,	pay40_submit_to
+        ,	pay40_cnt
+        ,	pay40_reg_date
+        ,	pay40_std_year
+        ,	pay40_income_tax_withholding_id
+]]>
+    </select>
+</mapper>

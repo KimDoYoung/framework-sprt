@@ -2,8 +2,8 @@
  * 갑근세확인서 발급 (S23) — 경영관리 > 04. 급여관리 > 갑근세확인서 발급 #1364
  * AS-IS: myApp/client/vi/pay/Pay40_Tab_TaxWithholding.java (459줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 Pay40_Tab_TaxWithholding(): 툴바 50(기준연도 50 · [조회][등록][저장][삭제]) + 셀 편집 그리드(체크 다중). 문서분류 칸은 원본도 툴바에 넣지 않는다(L91-93 주석 처리).
- * 1단계: [결재요청] 아이콘의 결재문서 작성(Apr01_Edit_ApprDoc.insertLinkApproval, sys.Sys99_Print.getIncomeTaxWithholding, updateApprId)과
- *        [상세보기] 아이콘의 결재문서 보기(Apr01_Appr.selectById, retrieveApproval)는 다음 단계 — 검사까지만 하고 안내한다.
+ * V26: [결재요청] 아이콘의 결재문서 작성(Apr01_Edit_ApprDoc.insertLinkApproval 링크코드 X01, sys.Sys99_Print.getIncomeTaxWithholding, updateApprId)과
+ *      [상세보기] 아이콘의 결재문서 보기(Apr01_Appr.selectById, retrieveApproval)를 연결했다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03), 날짜 편집 열 120(UX-08)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -13,6 +13,7 @@ import dayjs from 'dayjs';
 import { payApi } from '@/api/pay';
 import { dcrApi } from '@/api/dcr';
 import { sysApi } from '@/api/sys';
+import { errorMessage } from '@/api/client';
 import { PayTaxWithholding } from '@/types/pay';
 import { Code } from '@/types/sys';
 import { TransInfo } from '@/types/emp';
@@ -21,6 +22,7 @@ import { SearchBar } from '@/components/search';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { Emp00_Lookup_SelectSingle } from '@/components/lookup/Emp00_Lookup_SelectSingle';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { useGridCrud } from '@/hooks/useGridCrud';
 
 const gb = gbFor<PayTaxWithholding>();
@@ -37,6 +39,9 @@ export const Pay40_Tab_TaxWithholding: React.FC = () => {
   const [purUseCodes, setPurUseCodes] = useState<Code[]>([]);
   const [classTreeId, setClassTreeId] = useState<number | null>(null);
   const [empRow, setEmpRow] = useState<PayTaxWithholding | null>(null);
+  // 결재창(V26): 새 문서(insertLinkApproval — 발급 행 ID를 들고 있다가 저장 뒤 updateApprId) / 기존 문서(retrieveApproval)
+  const [linkRow, setLinkRow] = useState<{ id: number; treeId: number } | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
 
   const crud = useGridCrud<PayTaxWithholding>({
     idField: 'incomeTaxWithholdingId',
@@ -102,13 +107,15 @@ export const Pay40_Tab_TaxWithholding: React.FC = () => {
     crud.deleteChecked();
   };
 
-  // buildGrid() L182-292 [E9] actionCell2 (ImageCell "View").callbackOnCreate (L268) → 인라인 L268-273: 상신문서가 있으면 Apr01_Edit_ApprDoc.retrieveApproval (다음 단계)
+  // buildGrid() L182-292 [E9] actionCell2 (ImageCell "View").callbackOnCreate (L268) → 인라인 L268-273: 상신문서가 있으면 apr.Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval (V26)
   const viewAppr = (row: PayTaxWithholding) => {
     if (row.apprId == null) return;
-    message.info('결재문서 보기는 다음 단계에서 제공됩니다.');
+    setViewApprId(row.apprId);
   };
 
-  // actionCell1 (ImageCell "Edit") L211-266: 저장 안 한 변경이 있으면 막고, 문서분류가 없거나 이미 결재 중·완료면 안내 → (1단계) 결재문서 작성은 다음 단계
+  // actionCell1 (ImageCell "Edit") L211-266: 저장 안 한 변경이 있으면 막고, 문서분류가 없거나 이미 결재 중·완료면 안내 →
+  //   sys.Sys99_Print.getIncomeTaxWithholding → Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, "X01", …) (V26) → 저장·상신 뒤 updateApprId() L440-454
+  //   (AS-IS는 Sys99_Print 행을 클라이언트가 읽어 넘기고, TOBE는 결재창의 link-seed가 발급 행 ID로 서버에서 읽는다)
   const requestAppr = (row: PayTaxWithholding) => {
     if (crudRef.current.hasChanges()) {
       message.warning('저장 후 다시 시도해 주세요');
@@ -122,7 +129,18 @@ export const Pay40_Tab_TaxWithholding: React.FC = () => {
       message.warning('이미 결재 중이거나 완료된 문서입니다');
       return;
     }
-    message.info('전자결재 상신(결재문서 작성)은 다음 단계에서 제공됩니다.');
+    setLinkRow({ id: row.incomeTaxWithholdingId, treeId: classTreeId });
+  };
+
+  // updateApprId() L440-454: pay.Pay40_IncomeTaxWithholding.updateApprId → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkRow) return;
+    try {
+      await payApi.updateTaxWithholdingApprId(linkRow.id, apprId);
+      await retrieveRows();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
   };
 
   const columnDefs = useMemo(() => [
@@ -177,6 +195,13 @@ export const Pay40_Tab_TaxWithholding: React.FC = () => {
         </div>
       </div>
       <Emp00_Lookup_SelectSingle open={empRow != null} noneLabel={null} transDate={dayjs().format('YYYY-MM-DD')} onResult={onEmpPicked} onClose={() => setEmpRow(null)} />
+      {/* insertLinkApproval(classTreeModel, "X01", 갑근세 발급 행, false, callback → updateApprId) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkRow ? { classTreeId: linkRow.treeId, linkCode: 'X01', refId: linkRow.id } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClose={() => { setViewApprId(null); setLinkRow(null); }}
+      />
     </div>
   );
 };

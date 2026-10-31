@@ -421,6 +421,17 @@ export const payApi = {
     return res.data.data ?? 0;
   },
 
+  /** D01 상신(V26) — 이 연봉계약의 사원 유형에 맞는 계약서 양식 후보(AS-IS Pay06_ActMapping.selectByLinkCode). 둘 이상이면 Pay06_Lookup_LinkContent로 고른다 */
+  getAnnualLinkContents: async (annualId: number): Promise<PayActMapping[]> => {
+    const res = await apiClient.get<ApiResponse<PayActMapping[]>>(`v1/pay/annuals/${annualId}/link-contents`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay01_Annual.updateApprId — 결재창에서 상신·저장한 문서 ID 기록 (V26) */
+  updateAnnualApprId: async (annualId: number, apprId: number): Promise<void> => {
+    await apiClient.put(`v1/pay/annuals/${annualId}/appr-id`, { apprId });
+  },
+
   /** [템플릿] — AS-IS downloadForm.submit() (./excelTemplete/Template_연봉계약정보.xlsx) */
   downloadAnnualTemplate: async (): Promise<void> => {
     try {
@@ -819,6 +830,11 @@ export const payApi = {
     const body = rows.map(({ incomeTaxWithholdingId, personId, regDate, stdYear, purUseCode, submitTo, cnt }) => ({ incomeTaxWithholdingId, personId, regDate, stdYear, purUseCode, submitTo, cnt }));
     const res = await apiClient.put<ApiResponse<PayTaxWithholding[]>>('v1/pay/tax-withholdings', body);
     return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay40_IncomeTaxWithholding.updateApprId — 결재창(X01)에서 상신·저장한 문서 ID 기록 (V26) */
+  updateTaxWithholdingApprId: async (id: number, apprId: number): Promise<void> => {
+    await apiClient.put(`v1/pay/tax-withholdings/${id}/appr-id`, { apprId });
   },
 
   /** AS-IS pay.Pay40_IncomeTaxWithholding.delete → 지운 건수 */

@@ -35,6 +35,9 @@ public interface PayAnnualMapper {
     /** UpdateDataModel.deleteModel (ID로 DELETE) */
     int deleteByIds(@Param("companyId") Long companyId, @Param("ids") List<Long> ids);
 
+    /** pay.Pay01_Annual.updateApprId (V26 D01) — 결재창에서 상신한 문서 ID 기록. 회사 조건은 TOBE 추가 */
+    int updateApprId(@Param("annualId") Long annualId, @Param("companyId") Long companyId, @Param("apprId") Long apprId);
+
     /** TOBE 추가: 저장 대상 사원이 로그인 회사 소속인지 */
     int countPerson(@Param("companyId") Long companyId, @Param("personId") Long personId);
 

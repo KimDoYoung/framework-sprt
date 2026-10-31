@@ -267,6 +267,14 @@
            AND pay01_company_id = #{companyId}
     </update>
 
+    <!-- AS-IS pay01_annual.updateApprId (IDMS-IC) — 회사 조건은 TOBE 추가 -->
+    <update id="updateApprId">
+        UPDATE pay01_annual
+           SET pay01_appr_id = #{apprId}
+         WHERE pay01_annual_id = #{annualId}
+           AND pay01_company_id = #{companyId}
+    </update>
+
     <delete id="deleteByIds">
         DELETE FROM pay01_annual
          WHERE pay01_company_id = #{companyId}

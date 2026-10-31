@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.pay.service;
 
+import kr.co.kfs.asseterp.biz.apr.service.link.PayAnnualLinkSeedProvider;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.pay.dto.PayActMappingRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayAnnualRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayAnnualSaveReq;
 import kr.co.kfs.asseterp.biz.pay.mapper.PayAnnualMapper;
@@ -43,6 +45,7 @@ public class PayAnnualService {
     private static final String RD_WINDOW_CLASS_NAME = "Pay01_Tab_AnnualList";
 
     private final PayAnnualMapper mapper;
+    private final PayAnnualLinkSeedProvider linkSeedProvider;
 
     /** AS-IS retrieve() L565: 사원을 골랐으면 selectByPersonId, 아니면 selectByAll. radioOption 1 최근등록내역 / 2 년도별 / 3 전체 */
     public List<PayAnnualRes> search(UserPrincipal user, Long personId, int radioOption, String yearStr, boolean retireYn, boolean apprCheckYn) {
@@ -183,6 +186,26 @@ public class PayAnnualService {
             throw e;
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, e.getMessage() == null ? "엑셀 파일을 읽을 수 없습니다." : e.getMessage());
+        }
+    }
+
+    /**
+     * D01 연봉계약 상신(V26): 이 연봉계약의 사원 유형에 맞는 계약서 양식 후보.
+     * AS-IS는 결재창을 연 뒤 `Pay06_ActMapping.selectByLinkCode` 결과가 둘 이상이면 `Pay06_Lookup_LinkContent`로 고르게 한다.
+     */
+    public List<PayActMappingRes> linkContents(UserPrincipal user, Long annualId) {
+        PayAnnualRes a = existing(user.getCompanyId(), annualId);
+        if (a == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "연봉계약 내역을 찾을 수 없습니다.");
+        }
+        return linkSeedProvider.forms(user.getCompanyId(), a);
+    }
+
+    /** AS-IS pay.Pay01_Annual.updateApprId (V26): 결재창에서 상신·저장한 문서 ID를 연봉계약 행에 기록 */
+    @Transactional
+    public void updateApprId(UserPrincipal user, Long annualId, Long apprId) {
+        if (mapper.updateApprId(annualId, user.getCompanyId(), apprId) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "연봉계약 내역을 찾을 수 없습니다.");
         }
     }
 

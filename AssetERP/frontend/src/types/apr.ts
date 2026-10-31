@@ -706,6 +706,8 @@ export interface AprLinkArgs {
   /** A43 여비교통비 관리 — 기준년월(yyyy.MM)과 계정과목 이름(호출 화면이 읽은 값, V23) */
   yyyymm?: string;
   accountName?: string;
+  /** D01 연봉계약 — 계약서 양식이 둘 이상일 때 Pay06_Lookup_LinkContent에서 고른 양식 ID(V26) */
+  actMappingId?: string;
 }
 
 /** 링크코드별 제목·본문·시행일자 (GET apr/apprs/link-seed, V17) */

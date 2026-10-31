@@ -3,7 +3,8 @@
  * AS-IS: myApp/client/vi/pay/Pay01_Tab_Annual.java (797줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 getEditor(): 툴바 45(사원명 · 기간 라디오(최근등록내역/년도별 [년도]/전체) · 퇴사자 포함 · [조회][등록][저장][삭제] · [템플릿][엑셀업로드] · [계약서 양식작성])
  *   + 연봉계약 셀 편집 그리드(체크 다중, 2단 헤더 "기본정보"·"연봉 구성"·"월급여 구성") + 아래 70(문서분류 트리거 칸 800 · [상신] 120).
- * 1단계: [상신]의 결재문서 작성 Apr01_Edit_ApprDoc과 상신상태 아이콘의 결재문서 보기(다른 도메인 apr)는 다음 단계 — 상신 검사까지만 하고 안내한다.
+ * V26: [상신]의 결재문서 작성(Apr01_Edit_ApprDoc.insertLinkApproval, 링크코드 D01, 계약서 양식이 둘 이상이면 Pay06_Lookup_LinkContent)과 updateApprId,
+ *      상신상태 아이콘의 결재문서 보기(retrieveApproval)를 연결했다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03), 날짜 편집 열 120(UX-08)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -13,7 +14,7 @@ import { payApi } from '@/api/pay';
 import { empApi } from '@/api/emp';
 import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
-import { PayAnnual } from '@/types/pay';
+import { PayActMapping, PayAnnual } from '@/types/pay';
 import { TransInfo } from '@/types/emp';
 import { Button } from '@/components/button';
 import { SearchBar } from '@/components/search';
@@ -27,6 +28,8 @@ import { useGridCrud } from '@/hooks/useGridCrud';
 import dayjs from 'dayjs';
 import { ACT_MAPPING_KEYS, setActMappingKeys } from './pay06Tags';
 import { Pay06_Lookup_ActList } from './Pay06_Lookup_ActList';
+import { Pay06_Lookup_LinkContent } from './Pay06_Lookup_LinkContent';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 
 const gb = gbFor<PayAnnual>();
 
@@ -51,6 +54,10 @@ export const Pay01_Tab_Annual: React.FC = () => {
   const [docOpen, setDocOpen] = useState(false);
   const [docEmpty, setDocEmpty] = useState(DOC_EMPTY_TEXT);
   const [actListOpen, setActListOpen] = useState(false);
+  // 결재창(V26): 새 문서(insertLinkApproval — 행 ID를 들고 있다가 저장 뒤 updateApprId) / 기존 문서(retrieveApproval) / 양식 고르기(Pay06_Lookup_LinkContent)
+  const [linkDoc, setLinkDoc] = useState<{ annualId: number; treeId: number; actMappingId?: number } | null>(null);
+  const [linkForms, setLinkForms] = useState<{ annualId: number; treeId: number; rows: PayActMapping[] } | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
   const excelForm = useRef<FileUpdownFormHandle>(null);
 
   const search = useCallback(() => payApi.searchAnnuals({ personId: personIdRef.current, radioOption, yearStr: yearText, retireYn }),
@@ -177,8 +184,9 @@ export const Pay01_Tab_Annual: React.FC = () => {
     await retrieveRows();
   };
 
-  // [E10] apprButton[상신].Select (L326) → insertLinkApproval() L493-547: 고른 행 검사 → (1단계) Apr01_Edit_ApprDoc.insertLinkApproval은 다음 단계
-  const insertLinkApproval = () => {
+  // [E10] apprButton[상신].Select (L326) → insertLinkApproval() L493-547: 고른 행 검사 → 문서분류(고르지 않았으면 연결 코드 D01의 분류)로
+  //   Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, "D01", 연봉계약 행, …) (V26) → 저장·상신 뒤 updateApprId() L549-563
+  const insertLinkApproval = async () => {
     const selected = (crud.gridRef.current?.api.getSelectedRows() ?? [])[0] as PayAnnual | undefined;
     if (!selected) {
       message.warning('상신을 진행할 연봉계약정보를 선택해주세요');
@@ -192,7 +200,44 @@ export const Pay01_Tab_Annual: React.FC = () => {
       message.warning('이미 결재가 완료된 정보(문서)입니다.');
       return;
     }
-    message.info('전자결재 상신(결재문서 작성)은 다음 단계에서 제공됩니다.');
+    try {
+      // classTreeModel.getClassTreeId() == null이면 dcr.Dcr30_Link.selectByLinkCode("D01") — 없으면 아무 일도 하지 않는다
+      let treeId = classTree?.classTreeId ?? null;
+      if (treeId == null) {
+        const list = await dcrApi.searchClassTreeByLinkCode('D01');
+        if (list.length === 0) return;
+        treeId = list[0].classTreeId;
+      }
+      // 결재창을 연 뒤 pay.Pay06_ActMapping.selectByLinkCode — 양식이 둘 이상이면 Pay06_Lookup_LinkContent로 고른다(TOBE는 고른 뒤 결재창을 연다)
+      const forms = await payApi.getAnnualLinkContents(selected.annualId);
+      if (forms.length > 1) {
+        setLinkForms({ annualId: selected.annualId, treeId, rows: forms });
+        return;
+      }
+      setLinkDoc({ annualId: selected.annualId, treeId });
+    } catch (err) {
+      message.error(errorMessage(err, '상신 실패'));
+    }
+  };
+
+  // Pay06_Lookup_LinkContent.callback — 고르면 그 양식으로, 닫으면(null) 본문을 채우지 않고(문서분류의 대표 양식) 결재창을 연다
+  const onFormPicked = (row: PayActMapping | null) => {
+    const pending = linkForms;
+    setLinkForms(null);
+    if (!pending) return;
+    setLinkDoc({ annualId: pending.annualId, treeId: pending.treeId, actMappingId: row?.actMappingId });
+  };
+
+  // updateApprId() L549-563: pay.Pay01_Annual.updateApprId(annualId, apprId) → "해당 연봉정보의 상신이 완료되었습니다" → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await payApi.updateAnnualApprId(linkDoc.annualId, apprId);
+      message.info('해당 연봉정보의 상신이 완료되었습니다');
+      await retrieveRows();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
   };
 
   // [E14] grid.CellClick (L362) → createMapping() L682-727: 계약서 양식에 쓸 태그(매핑 키) 목록을 정한다
@@ -233,10 +278,10 @@ export const Pay01_Tab_Annual: React.FC = () => {
     ]),
     gb.long('monthPay', 100, '합계'),
     gb.textCenter('apprStatusName', 100, '상신상태'),
-    // [E17] viewCell (ImageCell).callbackOnCreate (L428) → 인라인 L428-433. viewCell(ImageCell "View") L409-438: 상신문서가 없으면 "상신문서가 없습니다", 있으면 Apr01_Edit_ApprDoc.retrieveApproval (다음 단계)
+    // [E17] viewCell (ImageCell).callbackOnCreate (L428) → 인라인 L428-433. viewCell(ImageCell "View") L409-438: 상신문서가 없으면 "상신문서가 없습니다", 있으면 Apr01_Edit_ApprDoc.retrieveApproval (V26)
     iconCell<PayAnnual>('view', 'actionCell', 60, '', row => {
       if (row.apprId == null) { message.warning('상신문서가 없습니다'); return; }
-      message.info('결재문서 보기는 다음 단계에서 제공됩니다.');
+      setViewApprId(row.apprId);
     }),
   ], []);
 
@@ -301,6 +346,18 @@ export const Pay01_Tab_Annual: React.FC = () => {
         onClose={() => setDocOpen(false)}
       />
       <Pay06_Lookup_ActList open={actListOpen} menuCode="D01" menuName="연봉계약" onClosed={() => void defaultName()} onClose={() => setActListOpen(false)} />
+      {/* 양식이 둘 이상이면 연봉계약서 선택 → 결재창 */}
+      <Pay06_Lookup_LinkContent open={linkForms != null} rows={linkForms?.rows ?? []} onResult={onFormPicked} />
+      {/* insertLinkApproval(classTreeModel, "D01", 연봉계약 행, isAdmin, callback → updateApprId) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? {
+          classTreeId: linkDoc.treeId, linkCode: 'D01', refId: linkDoc.annualId,
+          args: linkDoc.actMappingId != null ? { actMappingId: String(linkDoc.actMappingId) } : undefined,
+        } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </div>
   );
 };

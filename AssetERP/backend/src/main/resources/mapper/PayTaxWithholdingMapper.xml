@@ -74,6 +74,14 @@
            AND pay40_company_id = #{companyId}
     </update>
 
+    <!-- AS-IS pay40_income_tax_withholding.updateApprId (IDMS-IC) — 회사 조건은 TOBE 추가 -->
+    <update id="updateApprId">
+        UPDATE pay40_income_tax_withholding
+           SET pay40_appr_id = #{apprId}
+         WHERE pay40_income_tax_withholding_id = #{incomeTaxWithholdingId}
+           AND pay40_company_id = #{companyId}
+    </update>
+
     <delete id="deleteByIds">
         DELETE FROM pay40_income_tax_withholding
          WHERE pay40_company_id = #{companyId}
