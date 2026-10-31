@@ -1312,4 +1312,49 @@
                , #{row.month07Amt,jdbcType=NUMERIC}, #{row.month08Amt,jdbcType=NUMERIC}, #{row.month09Amt,jdbcType=NUMERIC}, #{row.month10Amt,jdbcType=NUMERIC}, #{row.month11Amt,jdbcType=NUMERIC}, #{row.month12Amt,jdbcType=NUMERIC}, #{row.yearAmt,jdbcType=NUMERIC} )
     </insert>
 
+    <!-- V27 AS-IS pay50_expense.updateExpenseApprId / updateSettleApprId (IDMS-IC) — 회사 조건 추가 -->
+    <update id="updateExpenseApprId">
+        UPDATE pay50_expense
+           SET pay50_expense_appr_id = #{apprId}
+         WHERE pay50_expense_id = #{expenseId}
+           AND pay50_company_id = #{companyId}
+    </update>
+
+    <update id="updateSettleApprId">
+        UPDATE pay50_expense
+           SET pay50_settle_appr_id = #{apprId}
+         WHERE pay50_expense_id = #{expenseId}
+           AND pay50_company_id = #{companyId}
+    </update>
+
+    <!-- V27 AS-IS sys10_file.selectByParentId (IDMS-IC) 의 파일 ID, 정렬은 sys10_file_yn·sys10_seq·sys10_title_yn·파일명 -->
+    <select id="selectExpenseFileIds" resultType="long">
+        SELECT file.sys10_file_id
+          FROM (
+                SELECT *
+                  FROM sys10_file
+                 WHERE sys10_parent_id = #{expenseId}
+                 UNION
+                SELECT sys10_file.*
+                  FROM sys11_relate_file
+                       INNER JOIN sys10_file ON sys10_file_id = sys11_file_id
+                 WHERE sys11_parent_id = #{expenseId}
+               ) AS file
+         ORDER BY COALESCE(sys10_file_yn, 'false') ASC, LPAD(COALESCE(sys10_seq, '99999'), 5, '0'), COALESCE(sys10_title_yn, 'false') DESC, sys10_file_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <select id="countApprRelateFile" resultType="int">
+        SELECT COUNT(*)
+          FROM sys11_relate_file
+         WHERE sys11_file_id = #{fileId}
+           AND sys11_parent_id = #{apprId}
+           AND sys11_parent_table = 'apr01_appr'
+    </select>
+
+    <!-- V27 AS-IS sys11_relate_file.insert (IDMS-IC) -->
+    <insert id="insertApprRelateFile">
+        INSERT INTO sys11_relate_file ( sys11_relate_file_id, sys11_file_id, sys11_parent_id, sys11_parent_table )
+        VALUES ( #{relateFileId}, #{fileId}, #{apprId}, 'apr01_appr' )
+    </insert>
+
 </mapper>

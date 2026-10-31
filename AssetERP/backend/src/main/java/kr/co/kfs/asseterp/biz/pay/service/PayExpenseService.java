@@ -402,4 +402,33 @@ public class PayExpenseService {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
     }
+
+    /**
+     * AS-IS pay.Pay50_Expense.updateExpenseApprId (A63 지출결의서) — 상신한 결재문서 ID를 지출요청마다 기록하고,
+     * 문서의 파일 자동등록(Apr03_Page_Relate.insertPay50FileList → Sys10_File.copyFile)으로 지출요청의 첨부파일을 그 결재문서에 연결한다
+     * (AS-IS는 문서를 열 때 연결, TOBE는 문서 ID가 정해지는 이 때. 이미 연결된 파일은 다시 넣지 않는다)
+     */
+    @Transactional
+    public int updateExpenseApprId(UserPrincipal user, List<Long> ids, Long apprId) {
+        int n = 0;
+        for (Long id : ids) {
+            n += mapper.updateExpenseApprId(user.getCompanyId(), id, apprId);
+            for (Long fileId : mapper.selectExpenseFileIds(id)) {
+                if (mapper.countApprRelateFile(fileId, apprId) == 0) {
+                    mapper.insertApprRelateFile(mapper.selectNextId(), fileId, apprId);
+                }
+            }
+        }
+        return n;
+    }
+
+    /** AS-IS pay.Pay50_Expense.updatesSttleApprId (A64 자금집행결의서) */
+    @Transactional
+    public int updateSettleApprId(UserPrincipal user, List<Long> ids, Long apprId) {
+        int n = 0;
+        for (Long id : ids) {
+            n += mapper.updateSettleApprId(user.getCompanyId(), id, apprId);
+        }
+        return n;
+    }
 }

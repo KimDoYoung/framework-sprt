@@ -986,6 +986,18 @@ export const payApi = {
     return res.data.data ?? 0;
   },
 
+  /** AS-IS pay.Pay50_Expense.updateExpenseApprId — 지출결의서(A63) 결재창에서 상신·저장한 문서 ID 기록 + 지출요청 첨부파일을 그 문서에 연결 (V27) */
+  updateExpenseApprId: async (ids: number[], apprId: number): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/pay/expenses/appr-id', { ids, apprId });
+    return res.data.data as number;
+  },
+
+  /** AS-IS pay.Pay50_Expense.updatesSttleApprId — 자금집행결의서(A64) 결재창에서 상신·저장한 문서 ID 기록 (V27) */
+  updateSettleApprId: async (ids: number[], apprId: number): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/pay/expenses/settle-appr-id', { ids, apprId });
+    return res.data.data as number;
+  },
+
   /** AS-IS pay.Pay50_Expense.updateApprEmpId ([지출요청내역 가져오기]) */
   takeExpenseRequests: async (rows: PayExpenseRequest[]): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>('v1/pay/expenses/take-requests', rows);

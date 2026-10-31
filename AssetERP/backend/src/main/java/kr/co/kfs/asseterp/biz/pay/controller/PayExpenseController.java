@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.pay.controller;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import jakarta.validation.Valid;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseAccountCodeReq;
+import kr.co.kfs.asseterp.biz.pay.dto.PayExpenseApprIdReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseContentReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseDepositReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalCreateReq;
@@ -227,5 +228,17 @@ public class PayExpenseController {
                                            @RequestBody ExpenseContentReq req) {
         service.updateContent(principal, expenseId, req.content());
         return ApiResponse.ok(null);
+    }
+
+    /** AS-IS pay.Pay50_Expense.updateExpenseApprId — 지출결의서(A63) 상신 뒤 문서 ID 기록 + 첨부파일 연결 (V27) */
+    @PutMapping("/appr-id")
+    public ApiResponse<Integer> updateExpenseApprId(@AuthenticationPrincipal UserPrincipal principal, @RequestBody PayExpenseApprIdReq req) {
+        return ApiResponse.ok(service.updateExpenseApprId(principal, req.ids(), req.apprId()));
+    }
+
+    /** AS-IS pay.Pay50_Expense.updatesSttleApprId — 자금집행결의서(A64) 상신 뒤 문서 ID 기록 (V27) */
+    @PutMapping("/settle-appr-id")
+    public ApiResponse<Integer> updateSettleApprId(@AuthenticationPrincipal UserPrincipal principal, @RequestBody PayExpenseApprIdReq req) {
+        return ApiResponse.ok(service.updateSettleApprId(principal, req.ids(), req.apprId()));
     }
 }

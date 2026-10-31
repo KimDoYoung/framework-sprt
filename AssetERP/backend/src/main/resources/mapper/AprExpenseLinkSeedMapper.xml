@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  V27 링크코드 A63 지출결의서 · A64 자금집행결의서 · A65 비품관리대장 · A69 Asset-ERP 사용료청구의 본문 값 (Apr01_Edit_ApprDoc.insertLinkApprovals)
+  selectExpenseRows — pay50_expense.selectExpenseAppr(A63, 기준일 pay50_reg_date)·selectExpensePay(A64, 기준일 pay50_due_date)의 같은 열을 ID 목록으로 읽는다
+    (AS-IS는 그리드에서 고른 행 모델을 그대로 넘겼다). 회사 조건은 TOBE 추가.
+  selectRelateApprsByExpenseIds — com01_relate_appr.selectByExpenseIdList 원문 그대로
+  selectExpenseApprsByExpenseIds — pay50_expense.selectByExpenseApprIdList 원문 그대로
+  selectOfficeAssetsGroup — ast13_book_depn.selectOfficeAssetsGroup 원문 그대로 (열 별칭만 줄임)
+  selectErpFeeCharge — biz55_erp_fee_charge.selectByStdDate의 한 행(ID 조건), 입금기한의 연월은 그 행의 청구일자
+  selectErpFeeByStartDate — biz52_erp_fee.selectByStartDate 원문 그대로 (열 별칭만 줄임)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprExpenseLinkSeedMapper">
+
+    <select id="selectExpenseRows" resultType="kr.co.kfs.asseterp.biz.apr.dto.PayExpenseLinkRow">
+        SELECT p.pay50_expense_id                                                              AS expense_id
+             , p.pay50_occ_date                                                                AS occ_date
+             , p.pay50_desc                                                                    AS "desc"
+             , p.pay50_content                                                                 AS content
+             , COALESCE(sys15_corp_nm, f_emp_kor_nm(p.pay50_corp_id))                          AS corp_name
+             , p.pay50_amt                                                                     AS amt
+             , p.pay50_tax                                                                     AS tax
+             , p.pay50_settle_amt                                                              AS settle_amt
+             , f_cdnm('TaxType'      , p.pay50_tax_type      , p.pay50_company_id, p.ref_date) AS tax_type_name
+             , p.pay50_due_date                                                                AS due_date
+             , p.pay50_pay_method_cd                                                           AS pay_method_code
+             , f_cdnm('PayMethodCode', p.pay50_pay_method_cd , p.pay50_company_id, p.ref_date) AS pay_method_name
+             , p.pay50_pay_account_info                                                        AS pay_account_info
+             , p.pay50_note                                                                    AS note
+             , f_get_empTrans(p.pay50_reg_emp_id  , p.pay50_reg_date, 'title_nm')              AS reg_emp_title_name
+             , f_get_empTrans(p.pay50_reg_emp_id  , p.ref_date, 'person_org_info')             AS reg_emp_org_name
+             , f_get_empTrans(p.pay50_confirmer_id, p.pay50_reg_date, 'title_nm')              AS confirmer_title_name
+             , f_get_empTrans(p.pay50_confirmer_id, p.pay50_reg_date, 'person_org_info')       AS confirmer_org_name
+             , f_get_empTrans(p.pay50_reg_emp_id  , p.pay50_reg_date, 'org_code_nm')           AS org_name
+             , f_get_account_nm(p.pay50_company_id, p.pay50_account_cd)                        AS account_name
+             , ast01_class_tree_nm                                                             AS deposit_name
+             , p.pay50_settle_date                                                             AS settle_date
+          FROM ( SELECT x.*
+                      , CASE WHEN #{byDueDate} THEN x.pay50_due_date ELSE x.pay50_reg_date END AS ref_date
+                   FROM pay50_expense x
+                  WHERE x.pay50_company_id = #{companyId}
+                    AND x.pay50_expense_id IN
+                        <foreach collection="ids" item="id" open="(" close=")" separator=",">#{id}</foreach>
+               ) p
+               LEFT OUTER JOIN sys15_corp        ON sys15_corp_id       = p.pay50_corp_id
+               LEFT OUTER JOIN ast01_class_tree  ON ast01_class_tree_id = p.pay50_deposit_id
+    </select>
+
+    <select id="selectRelateApprsByExpenseIds" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprLinkRelateApprRes">
+        SELECT a.com01_appr_id                  AS target_appr_id
+             , MAX(b.apr01_reg_date)            AS reg_date
+             , MAX(b.apr01_title)               AS title
+             , MAX(b.apr01_inout_cd)            AS in_out_type_code
+          FROM com01_relate_appr a
+               INNER JOIN apr01_appr b ON b.apr01_appr_id = a.com01_appr_id
+         WHERE a.com01_key_table_id IN
+               <foreach collection="ids" item="id" open="(" close=")" separator=",">#{id}</foreach>
+         GROUP BY a.com01_appr_id
+    </select>
+
+    <select id="selectExpenseApprsByExpenseIds" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprLinkRelateApprRes">
+        SELECT a.pay50_expense_appr_id          AS target_appr_id
+             , MAX(b.apr01_reg_date)            AS reg_date
+             , MAX(b.apr01_title)               AS title
+             , MAX(b.apr01_inout_cd)            AS in_out_type_code
+          FROM pay50_expense a
+               INNER JOIN apr01_appr b ON b.apr01_appr_id = a.pay50_expense_appr_id
+         WHERE a.pay50_expense_id IN
+               <foreach collection="ids" item="id" open="(" close=")" separator=",">#{id}</foreach>
+         GROUP BY a.pay50_expense_appr_id
+    </select>
+
+    <select id="selectOfficeAssetsGroup" resultType="kr.co.kfs.asseterp.biz.apr.dto.BookDepnGroupRow">
+        SELECT ast13_item_type                                      AS item_type
+             , sum(ast13_pur_amt)                                   AS pur_amt
+          FROM (
+                SELECT ast13_pur_amt
+                     , ast01_item_s_class_cd
+                     , CASE WHEN SUBSTR(ast01_item_s_class_cd,5,2) = '99'
+                              THEN f_cdnm('ItemMClassCode', ast01_item_m_class_cd, ast13_company_id, ast13_pur_date)
+                            WHEN SUBSTR(ast01_item_s_class_cd,1,2) = '95'
+                              THEN '소모품(비품)'
+                            ELSE f_cdnm('ItemSClassCode', ast01_item_s_class_cd, ast13_company_id, ast13_pur_date)
+                       END ast13_item_type
+                  FROM ast13_book_depn a
+                       INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast13_ast_class_tree_id
+                 WHERE ast13_company_id = #{companyId}
+                   AND ast13_depn_date  = ( SELECT MAX(ast13_depn_date)
+                                              FROM ast13_book_depn b
+                                             WHERE b.ast13_company_id = a.ast13_company_id
+                                               AND b.ast13_pur_tr_id  = a.ast13_pur_tr_id
+                                               AND b.ast13_depn_date <![CDATA[<=]]> #{depnDate} )
+                   AND COALESCE(ast13_retire_date,'9999-12-31') <![CDATA[>]]> #{depnDate}
+               ) t
+         GROUP BY ast01_item_s_class_cd, ast13_item_type
+         ORDER BY ast01_item_s_class_cd
+    </select>
+
+    <select id="selectErpFeeCharge" resultType="kr.co.kfs.asseterp.biz.apr.dto.ErpFeeChargeLinkRow">
+        SELECT biz55_erp_fee_charge_id                                                      AS erp_fee_charge_id
+             , biz55_erp_cont_corp_id                                                       AS erp_cont_corp_id
+             , sys15_corp_nm                                                                AS corp_name
+             , biz55_charge_date                                                            AS charge_date
+             , biz55_start_date                                                             AS start_date
+             , biz55_close_date                                                             AS close_date
+             , biz55_erp_fee                                                                AS erp_fee
+             , biz55_data_fee                                                               AS data_fee
+             , biz55_add_sms_fee                                                            AS add_sms_fee
+             , biz55_add_server_fee                                                         AS add_server_fee
+             , biz55_add_user_fee                                                           AS add_user_fee
+             , COALESCE(biz55_etc_amt,0)                                                    AS etc_amt
+             , biz55_etc_desc                                                               AS etc_desc
+             , (biz55_erp_fee + biz55_data_fee + biz55_add_sms_fee + biz55_add_server_fee + biz55_add_user_fee + biz55_etc_amt)                                                       AS total_amt
+             , FLOOR((biz55_erp_fee + biz55_data_fee + biz55_add_sms_fee + biz55_add_server_fee + biz55_add_user_fee + biz55_etc_amt) * 0.1)                                          AS total_vat
+             , (biz55_erp_fee + biz55_data_fee + biz55_add_sms_fee + biz55_add_server_fee + biz55_add_user_fee + biz55_etc_amt)
+               + FLOOR((biz55_erp_fee + biz55_data_fee + biz55_add_sms_fee + biz55_add_server_fee + biz55_add_user_fee + biz55_etc_amt) * 0.1)                                       AS charge_amt
+             , biz55_sms_count                                                              AS sms_count
+             , biz55_server_usage                                                           AS server_usage
+             , biz55_user_count                                                             AS user_count
+             , (select BOOL_OR(COALESCE(biz52_add_fee_sms_yn::boolean, false))
+                  from biz52_erp_fee
+                 where biz52_erp_cont_corp_id = biz55_erp_cont_corp_id
+                   and biz52_start_date <![CDATA[ <= ]]> biz55_close_date
+                   and COALESCE(biz52_close_date, current_timestamp) <![CDATA[ >= ]]> biz55_start_date )   AS add_fee_sms_yn
+             , (select BOOL_OR(COALESCE(biz52_add_fee_server_yn::boolean, false))
+                  from biz52_erp_fee
+                 where biz52_erp_cont_corp_id = biz55_erp_cont_corp_id
+                   and biz52_start_date <![CDATA[ <= ]]> biz55_close_date
+                   and COALESCE(biz52_close_date, current_timestamp) <![CDATA[ >= ]]> biz55_start_date )   AS add_fee_server_yn
+             , (select BOOL_OR(COALESCE(biz52_add_fee_user_yn::boolean, false))
+                  from biz52_erp_fee
+                 where biz52_erp_cont_corp_id = biz55_erp_cont_corp_id
+                   and biz52_start_date <![CDATA[ <= ]]> biz55_close_date
+                   and COALESCE(biz52_close_date, current_timestamp) <![CDATA[ >= ]]> biz55_start_date )   AS add_fee_user_yn
+             , (select EXTRACT(YEAR FROM biz55_charge_date) || '.' || EXTRACT(MONTH FROM biz55_charge_date) || '.' || biz52_deposit_due_day
+                  from biz52_erp_fee
+                 where biz52_erp_cont_corp_id = biz55_erp_cont_corp_id
+                   and biz52_start_date <![CDATA[ <= ]]> biz55_close_date
+                   and COALESCE(biz52_close_date, current_timestamp) <![CDATA[ >= ]]> biz55_start_date
+                 order by biz52_start_date DESC
+                 limit 1)                                                                   AS deposit_due_day
+          FROM biz55_erp_fee_charge
+               INNER JOIN biz51_erp_cont_corp ON biz51_erp_cont_corp_id = biz55_erp_cont_corp_id
+               INNER JOIN sys15_corp ON sys15_corp_id = biz51_corp_id
+         WHERE biz55_erp_fee_charge_id = #{erpFeeChargeId}
+    </select>
+
+    <select id="selectErpFeeByStartDate" resultType="kr.co.kfs.asseterp.biz.apr.dto.ErpFeeLinkRow">
+        SELECT biz52_sms_base_count                                                                AS sms_base_count
+             , biz52_sms_add_price                                                                 AS sms_add_price
+             , biz52_server_base_usage                                                             AS server_base_usage
+             , biz52_server_add_unit                                                               AS server_add_unit
+             , biz52_server_add_price                                                              AS server_add_price
+             , biz52_user_base_count                                                               AS user_base_count
+             , biz52_user_add_price                                                                AS user_add_price
+             , f_cdnm('UserCountStdMonthCode', biz52_user_count_std_cd, #{companyId}, biz52_start_date) AS user_count_std_str
+          FROM biz52_erp_fee
+         WHERE biz52_erp_cont_corp_id = #{erpContCorpId}
+           AND #{stdDate} <![CDATA[ >= ]]> biz52_start_date
+         ORDER BY biz52_start_date DESC
+         LIMIT 1
+    </select>
+</mapper>

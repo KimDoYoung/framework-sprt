@@ -156,4 +156,19 @@ public interface PayExpenseMapper {
 
     /** AS-IS initExpenseJournal */
     int initExpenseJournal(@Param("companyId") Long companyId, @Param("expenseId") Long expenseId);
+
+    /** AS-IS updateExpenseApprId (A63 지출결의서 상신문서 ID 기록, V27) — 회사 조건은 TOBE 추가 */
+    int updateExpenseApprId(@Param("companyId") Long companyId, @Param("expenseId") Long expenseId, @Param("apprId") Long apprId);
+
+    /** AS-IS updateSettleApprId (A64 자금집행결의서 상신문서 ID 기록, V27) — 회사 조건은 TOBE 추가 */
+    int updateSettleApprId(@Param("companyId") Long companyId, @Param("expenseId") Long expenseId, @Param("apprId") Long apprId);
+
+    /** AS-IS sys10_file.selectByParentId의 파일 ID — 지출요청에 올린 파일 + sys11로 연결된 파일 (A63 파일 자동등록, V27) */
+    List<Long> selectExpenseFileIds(@Param("expenseId") Long expenseId);
+
+    /** 이미 그 결재문서에 연결된 파일인지 (TOBE 추가 — 같은 문서에 ID를 다시 기록해도 첨부가 겹치지 않게) */
+    int countApprRelateFile(@Param("fileId") Long fileId, @Param("apprId") Long apprId);
+
+    /** AS-IS sys11_relate_file.insert (parentTable = apr01_appr) */
+    int insertApprRelateFile(@Param("relateFileId") Long relateFileId, @Param("fileId") Long fileId, @Param("apprId") Long apprId);
 }

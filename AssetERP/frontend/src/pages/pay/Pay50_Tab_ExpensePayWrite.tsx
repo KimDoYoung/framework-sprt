@@ -5,8 +5,8 @@
  * 레이아웃 L115-166: Center(여백 20) = 툴바 두 줄(조회기간 100~100 · 구분 150 · 지급여부 80 · 검색 200 "지출내역/지출처" · 완료(과거)/반려건 제외 · [조회][삭제] /
  *   [상신][저장][일괄저장][엑셀다운로드] + 새로고침·안내·링크) + 자금집행결의서 그리드(체크 다중, 14열, 합계 행 "계")
  * 열 때 한 번 조회한다(구분 콤보 생성 콜백 → retrieve)
- * 1단계: [상신]이 여는 전자결재 편집창 Apr01_Edit_ApprDoc(문서분류 Dcr01_Lookup_Class 포함 apprSelect·insertLinkApproval·updateExpenseApprId)과
- *   그리드 [지출결의서]·[집행결의서] 문서보기 아이콘의 상신문서 열기는 다른 도메인(apr·dcr)이라 다음 단계 — 원본의 검사·확인창까지만 하고 안내만 띄운다
+ * 1단계(2026-10-28)는 [상신]이 여는 전자결재 편집창 Apr01_Edit_ApprDoc(문서분류 Dcr01_Lookup_Class 포함 apprSelect·insertLinkApproval·updatesSttleApprId)과
+ *   그리드 [지출결의서]·[집행결의서] 문서보기 아이콘의 상신문서 열기를 안내만 했다. V27(2026-10-31)에서 연결했다(링크코드 A64)
  * 스타일: SG (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장(n)(UX-03). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
@@ -18,6 +18,7 @@ import { payApi } from '@/api/pay';
 import { rdApi } from '@/api/rd';
 import { sysApi } from '@/api/sys';
 import { errorMessage } from '@/api/client';
+import { dcrApi } from '@/api/dcr';
 import { PayExpenseNew, PayExpenseSettle } from '@/types/pay';
 import { Code } from '@/types/sys';
 import { useGridCrud } from '@/hooks/useGridCrud';
@@ -29,6 +30,8 @@ import { SearchBar } from '@/components/search';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Ast01_Lookup_CorpAccount } from '@/pages/ast/Ast01_Lookup_CorpAccount';
 import { Sys15_Lookup_TelInfo } from '@/pages/sys/Sys15_Lookup_TelInfo';
+import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Pay50_Lookup_NewExpenseApprList } from './Pay50_Lookup_NewExpenseApprList';
 import { Pay50_Lookup_UpdateDeposit } from './Pay50_Lookup_UpdateDeposit';
 
@@ -75,6 +78,11 @@ export const Pay50_Tab_ExpensePayWrite: React.FC = () => {
   /** 출금계좌 조회창을 연 행 (lookupDeposit() L594-627) */
   const [accountRow, setAccountRow] = useState<PayExpenseSettle | null>(null);
   const [busy, setBusy] = useState(false);
+  /** 상신(apprSelect → insertLinkApproval): 문서분류를 고르는 중인 건(prefill = 문서분류 지정이 있으면 그 분류) → 고른 뒤 결재창을 연다 */
+  const [classPick, setClassPick] = useState<{ prefillId: number | null; ids: number[] } | null>(null);
+  const [linkDoc, setLinkDoc] = useState<{ classTreeId: number; ids: number[] } | null>(null);
+  /** retrieveApproval: 이미 상신한 문서 열기 */
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
 
   /** search()가 읽는 조건 — 콤보를 바꾸자마자 조회해도 새 값으로 간다 */
   const condRef = useRef({ startDate, closeDate, expenseCode, payYnCode, searchText, statusCheckYn });
@@ -168,7 +176,7 @@ export const Pay50_Tab_ExpensePayWrite: React.FC = () => {
     setDepositOpen(true);
   };
 
-  // [E12] apprButton[상신].Select (L263) → apprCheck() L629-697: 행 검사 + 자금집행일이 모두 같아야 한다 → [E17] YES → apprSelect() L699-729 (다음 단계)
+  // [E12] apprButton[상신].Select (L263) → apprCheck() L629-697: 행 검사 + 자금집행일이 모두 같아야 한다 → [E17] YES → apprSelect() L699-729 (V27)
   const apprCheck = () => {
     const list = checkedRows();
     if (list.length < 1) { message.warning('상신할 내용을 선택해주세요'); return; }
@@ -181,11 +189,29 @@ export const Pay50_Tab_ExpensePayWrite: React.FC = () => {
     }
     Modal.confirm({
       title: '확인', content: `${list.length}건의 상신을 진행하시겠습니까?`, width: 380, okText: '예', cancelText: '아니오',
-      onOk: () => {
-        // apprSelect: dcr.Dcr30_Link.selectByLinkCode("A64") → Dcr01_Lookup_Class → insertLinkApproval → Apr01_Edit_ApprDoc → updateExpenseApprId(updatesSttleApprId) — 다음 단계
-        message.info('전자결재 편집창(Apr01_Edit_ApprDoc)은 다음 단계에서 변환합니다.');
-      },
+      onOk: () => { void apprSelect(list.map(r => r.expenseId)); },
     });
+  };
+
+  // apprSelect() L699-729: dcr.Dcr30_Link.selectByLinkCode("A64") → 항상 Dcr01_Lookup_Class를 연다(문서분류가 지정돼 있으면 그 분류로 채워서) → 고르면 insertLinkApproval()
+  const apprSelect = async (ids: number[]) => {
+    try {
+      const trees = await dcrApi.searchClassTreeByLinkCode('A64');
+      setClassPick({ prefillId: trees.length === 0 ? null : trees[0].classTreeId, ids });
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
+  // updateExpenseApprId() L750-762: pay.Pay50_Expense.updatesSttleApprId(settleApprId, expenseList) → retrieve()
+  const updateSettleApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await payApi.updateSettleApprId(linkDoc.ids, apprId);
+      await crud.retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
   };
 
   // [E13] downloadButton[엑셀다운로드].Select (L269) → createRdExcel() L789-845: sys.Sys99_Print.insertRdExpensePay(companyId, personId, "Pay50_Tab_ExpensePay", 조회 조건)
@@ -211,10 +237,10 @@ export const Pay50_Tab_ExpensePayWrite: React.FC = () => {
     }
   };
 
-  // viewExpenseAppr() L420-454 / viewAppr() L456-490: 상신문서가 없으면 "상신문서가 존재하지 않습니다", 있으면 Apr01_Edit_ApprDoc.retrieveApproval — 다른 도메인 컴포넌트라 다음 단계
+  // viewExpenseAppr() L420-454 / viewAppr() L456-490: 상신문서가 없으면 "상신문서가 존재하지 않습니다", 있으면 apr.Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval (V27)
   const viewAppr = useCallback((apprId: number | null) => {
     if (apprId == null) { message.warning('상신문서가 존재하지 않습니다'); return; }
-    message.info('전자결재 문서창(Apr01_Edit_ApprDoc)은 다음 단계에서 변환합니다.');
+    setViewApprId(apprId);
   }, []);
 
   // lookupDeposit() L594-627: 자금집행일이 없으면 "자금집행일을 선택하세요", 기준일 = 자금집행일(오늘보다 뒤면 오늘), Ast01_Lookup_CorpAccount.open(기준일, "NOT", callback)
@@ -336,6 +362,21 @@ export const Pay50_Tab_ExpensePayWrite: React.FC = () => {
           setAccountRow(null);
         }}
         onClose={() => setAccountRow(null)} />
+      {/* apprSelect(): Dcr01_Lookup_Class.open(classTreeId, classTreeModel, callback → insertLinkApproval) */}
+      <Dcr01_Lookup_Class
+        open={classPick != null}
+        classTreeId={classPick?.prefillId ?? null}
+        onResult={r => { if (classPick) setLinkDoc({ classTreeId: r.classTreeId, ids: classPick.ids }); setClassPick(null); }}
+        onClose={() => setClassPick(null)}
+      />
+      {/* insertLinkApproval() L731-747: Apr01_Edit_ApprDoc.insertLinkApprovals(classTreeModel, "A64", {expenseList, settleDate}, false, callback → updatesSttleApprId) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: 'A64', args: { ids: linkDoc.ids.join(',') } } : null}
+        onLinkSaved={id => void updateSettleApprId(id)}
+        onClosed={() => void crud.retrieve()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </div>
   );
 };
