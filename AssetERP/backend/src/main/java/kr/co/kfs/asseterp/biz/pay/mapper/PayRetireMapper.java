@@ -1,7 +1,9 @@
 package kr.co.kfs.asseterp.biz.pay.mapper;
 
+import kr.co.kfs.asseterp.biz.pay.dto.PayItemAmtRow;
 import kr.co.kfs.asseterp.biz.pay.dto.PayRetireInsureRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayRetireLeaveRowRes;
+import kr.co.kfs.asseterp.biz.pay.dto.PayRetireLinkRow;
 import kr.co.kfs.asseterp.biz.pay.dto.PayRetireLeaveSummary;
 import kr.co.kfs.asseterp.biz.pay.dto.PayRetireMonthRes;
 import kr.co.kfs.asseterp.biz.pay.dto.PayRetireTaxItemRes;
@@ -21,6 +23,12 @@ public interface PayRetireMapper {
 
     /** pay10_month.selectByRetirePayCode — RD 폼 행 수 계산용(지급 1·공제 2 항목 수) */
     long countRetireItems(Long personId, String itemType);
+
+    /** AS-IS pay10_month.selectByPersonId(payCode 03)를 월 ID로 좁힌 퇴직정산서 결재문서 머리 (V18) */
+    PayRetireLinkRow selectRetireLink(Long companyId, Long monthId);
+
+    /** AS-IS pay10_month.selectByRetirePayCode — 지급(1)·공제(2) 항목 (V18) */
+    List<PayItemAmtRow> selectRetireItems(Long personId, String payCode, String itemType);
 
     // ── 생성·삭제 (Pay12_RetireInsure.getInsureRetire) ──
     String callLeavePayRetire(Long personId, String gubun);

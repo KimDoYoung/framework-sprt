@@ -16,4 +16,11 @@ public interface PayRelateApprMapper {
 
     /** AS-IS selectByRetire (S22) — 퇴직정산서(monthId)의 상신 상태 */
     List<PayRelateApprRes> selectByRetire(@Param("companyId") Long companyId, @Param("monthId") Long monthId);
+
+    /** AS-IS pay05_relate_appr.insert — 퇴직정산 상신 행(지급일은 퇴직정산 급여의 지급일자) (V18) */
+    int insertRetire(Long relateApprId, Long companyId, Long monthId);
+
+    /** AS-IS pay05_relate_appr.updateApprId — 회사 출금계좌는 지급일 기준 최신 계좌(pay03_account.selectByStartDate) (V18) */
+    int updateApprId(Long relateApprId, Long companyId, Long apprId);
+
 }

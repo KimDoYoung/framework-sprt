@@ -1,13 +1,19 @@
 package kr.co.kfs.asseterp.biz.pay.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.pay.dto.PayRelateApprIdReq;
 import kr.co.kfs.asseterp.biz.pay.dto.PayRelateApprRes;
+import kr.co.kfs.asseterp.biz.pay.dto.PayRetireRelateReq;
 import kr.co.kfs.asseterp.biz.pay.service.PayRelateApprService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,5 +39,18 @@ public class PayRelateApprController {
     @GetMapping("/retire")
     public ApiResponse<PayRelateApprRes> retire(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long monthId) {
         return ApiResponse.ok(service.retire(principal, monthId));
+    }
+
+    /** pay.Pay05_RelateAppr.insertRetire — 퇴직정산서 상신 행(없으면 만든다) → 상신 행 ID (V18) */
+    @PostMapping("/retire")
+    public ApiResponse<Long> createRetire(@AuthenticationPrincipal UserPrincipal principal, @RequestBody PayRetireRelateReq req) {
+        return ApiResponse.ok(service.createRetire(principal, req.monthId()));
+    }
+
+    /** pay.Pay05_RelateAppr.updateApprId — 결재창 상신·저장 뒤 (V18) */
+    @PutMapping("/{relateApprId}/appr-id")
+    public ApiResponse<Void> updateApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long relateApprId, @RequestBody PayRelateApprIdReq req) {
+        service.updateApprId(principal, relateApprId, req.apprId());
+        return ApiResponse.ok(null);
     }
 }

@@ -765,6 +765,17 @@ export const payApi = {
     return res.data.data ?? null;
   },
 
+  /** AS-IS pay.Pay05_RelateAppr.insertRetire — 퇴직정산서 상신 행(없으면 만든다) → 상신 행 ID (V18) */
+  createRetireRelateAppr: async (monthId: number): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/pay/relate-apprs/retire', { monthId });
+    return res.data.data;
+  },
+
+  /** AS-IS pay.Pay05_RelateAppr.updateApprId — 결재창에서 상신·저장한 문서 ID 기록 (V18) */
+  updateRelateApprId: async (relateApprId: number, apprId: number): Promise<void> => {
+    await apiClient.put(`v1/pay/relate-apprs/${relateApprId}/appr-id`, { apprId });
+  },
+
   /** AS-IS pay.Pay24_DeductTable.selectByMonthId — Pay24_Lookup_DeductTable */
   getRetireDeductTable: async (monthId: number): Promise<PayRetireDeduct> => {
     const res = await apiClient.get<ApiResponse<PayRetireDeduct>>('v1/pay/retire-tables/deduct', { params: { monthId } });

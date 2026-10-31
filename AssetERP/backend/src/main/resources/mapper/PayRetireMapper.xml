@@ -347,4 +347,53 @@
           FROM pay16_retire_rem_leave
          WHERE pay16_person_id = #{personId}
     </select>
+
+    <!-- ───── 전자결재 링크 A05 퇴직정산서 (V18) ───── -->
+    <!-- AS-IS pay10_month.selectByPersonId (IDMS-IC) — 월 ID 조건으로 좁힘, payCode 03 -->
+    <select id="selectRetireLink" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayRetireLinkRow">
+        <![CDATA[
+        SELECT pay10_month_id                                                         AS month_id
+             , pay10_person_id                                                        AS person_id
+             , pay10_pay_cd                                                           AS pay_cd
+             , pay10_date                                                             AS date
+             , f_emp_kor_nm(pay10_person_id)                                          AS person_name
+             , (SELECT f_org_nm(emp03_org_code_id, CAST(f_sysdate() as DATE))
+                  FROM emp03_trans
+                 WHERE emp03_person_id = pay10_person_id
+                   AND emp03_trans_date IN (SELECT MAX(emp03_trans_date)
+                                              FROM emp03_trans
+                                             WHERE emp03_person_id = pay10_person_id
+                                               AND emp03_trans_date <= CAST(f_sysdate() as DATE)))  AS org_name
+             , f_get_emptrans(pay10_person_id, CAST(f_sysdate() as DATE), 'pos_nm')   AS pos_name
+             , f_get_emptrans(pay10_person_id, NULL, 'retire_date')                   AS retire_date
+          FROM pay10_month
+         WHERE pay10_company_id = #{companyId}
+           AND pay10_month_id   = #{monthId}
+           AND pay10_pay_cd     = '03'
+        ]]>
+    </select>
+
+    <!-- AS-IS pay10_month.selectByRetirePayCode (IDMS-IC) — 항목이 없으면 이름 빈 글자·금액 0 한 줄 -->
+    <select id="selectRetireItems" resultType="kr.co.kfs.asseterp.biz.pay.dto.PayItemAmtRow">
+        SELECT pay20_item_nm                 AS item_name
+             , COALESCE(pay11_item_amt, 0)   AS item_amt
+          FROM (SELECT *
+                  FROM pay10_month
+                       INNER JOIN pay11_month_item ON pay10_month_id = pay11_month_id
+                 WHERE pay10_person_id = #{personId}
+                   AND pay10_pay_cd    = #{payCode}) a
+               INNER JOIN pay20_item ON pay11_item_cd = pay20_item_cd
+         WHERE pay11_item_type = #{itemType}
+         UNION ALL
+        SELECT '' AS item_name
+             , 0  AS item_amt
+         WHERE NOT EXISTS ( SELECT pay20_item_nm
+                              FROM (SELECT *
+                                      FROM pay10_month
+                                           INNER JOIN pay11_month_item ON pay10_month_id = pay11_month_id
+                                     WHERE pay10_person_id = #{personId}
+                                       AND pay10_pay_cd    = #{payCode}) a
+                                   INNER JOIN pay20_item ON pay11_item_cd = pay20_item_cd
+                             WHERE pay11_item_type = #{itemType} )
+    </select>
 </mapper>

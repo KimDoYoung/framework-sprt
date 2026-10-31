@@ -32,4 +32,28 @@
            AND pay05_start_date = ( SELECT pay10_date FROM pay10_month
                                      WHERE pay10_month_id = #{monthId} AND pay10_company_id = #{companyId} AND pay10_pay_cd = '03' )
     </select>
+
+    <!-- AS-IS pay05_relate_appr.insert (IDMS-IC) — 퇴직정산(03): 지급일은 pay10_month의 지급일자 (V18) -->
+    <insert id="insertRetire">
+        INSERT INTO pay05_relate_appr (pay05_relate_appr_id, pay05_company_id, pay05_start_date, pay05_pay_cd, pay05_retire_id)
+        SELECT #{relateApprId}, pay10_company_id, pay10_date, pay10_pay_cd, pay10_month_id
+          FROM pay10_month
+         WHERE pay10_month_id   = #{monthId}
+           AND pay10_company_id = #{companyId}
+           AND pay10_pay_cd     = '03'
+    </insert>
+
+    <!-- AS-IS pay05_relate_appr.updateApprId (IDMS-IC) + pay03_account.selectByStartDate(지급일 이전 최신 계좌) — 회사 조건 추가 (V18) -->
+    <update id="updateApprId">
+        UPDATE pay05_relate_appr
+           SET pay05_appr_id    = #{apprId}
+             , pay05_account_id = (SELECT pay03_account_id
+                                     FROM pay03_account
+                                    WHERE pay03_company_id = pay05_company_id
+                                      AND pay03_start_date <![CDATA[<=]]> pay05_start_date
+                                    ORDER BY pay03_start_date DESC
+                                    LIMIT 1)
+         WHERE pay05_relate_appr_id = #{relateApprId}
+           AND pay05_company_id     = #{companyId}
+    </update>
 </mapper>
