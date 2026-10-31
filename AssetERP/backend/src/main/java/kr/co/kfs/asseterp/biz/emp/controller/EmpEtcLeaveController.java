@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.emp.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.EtcLeaveApprIdReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EtcLeaveManageRes;
 import kr.co.kfs.asseterp.biz.emp.dto.EtcLeaveManageSaveReq;
 import kr.co.kfs.asseterp.biz.emp.service.EmpEtcLeaveService;
@@ -34,6 +35,13 @@ public class EmpEtcLeaveController {
     @PutMapping
     public ApiResponse<List<EtcLeaveManageRes>> save(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<EtcLeaveManageSaveReq> rows) {
         return ApiResponse.ok(service.save(principal, rows));
+    }
+
+    /** AS-IS emp.Emp22_EtcLeave.updateApprId (결재창 상신·저장 뒤, V17) */
+    @PutMapping("/{etcLeaveId}/appr-id")
+    public ApiResponse<Void> updateApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long etcLeaveId, @RequestBody EtcLeaveApprIdReq req) {
+        service.updateApprId(principal, etcLeaveId, req.apprId());
+        return ApiResponse.ok(null);
     }
 
     /** AS-IS emp.Emp22_EtcLeave.deleteApprId + delete */

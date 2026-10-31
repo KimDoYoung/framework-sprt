@@ -686,6 +686,23 @@ export interface AprNewLaw {
   deadlineNote?: string | null;
 }
 
+/** 다른 화면이 링크코드로 결재창을 여는 값 (AS-IS insertLinkApproval(classTreeModel, linkCode, gridDataModel, …), V17) — refId = 그 화면 행의 번호 */
+export interface AprLinkOpen {
+  classTreeId: number;
+  linkCode: string;
+  refId?: number | null;
+}
+
+/** 링크코드별 제목·본문·시행일자 (GET apr/apprs/link-seed, V17) */
+export interface AprLinkSeed {
+  linkCode: string;
+  title?: string | null;
+  content?: string | null;
+  effectDate: string;
+  titleReadOnly: boolean;
+  saveVisible: boolean;
+}
+
 /** 새 문서 열기 (GET apr/apprs/new, V06) */
 export interface AprApprNew {
   apprId: number;

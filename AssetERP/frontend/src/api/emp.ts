@@ -1226,7 +1226,7 @@ export const empJointLeaveApi = {
   },
 };
 
-/** S10 포상휴가관리 (Emp22_Tab_EtcLeave) — 그리드 `etc-leaves`, 오른쪽 대상 직원 `etc-leave-persons`. 1단계: [결재요청]의 결재문서 생성·상세보기는 다음 단계 */
+/** S10 포상휴가관리 (Emp22_Tab_EtcLeave) — 그리드 `etc-leaves`, 오른쪽 대상 직원 `etc-leave-persons`. [결재요청]의 결재문서 생성은 V17(A25) */
 export const empEtcLeaveApi = {
   /** AS-IS emp.Emp22_EtcLeave.selectByDate */
   search: async (startDate: string, closeDate: string, searchText: string): Promise<EtcLeaveManage[]> => {
@@ -1238,6 +1238,11 @@ export const empEtcLeaveApi = {
   save: async (rows: EtcLeaveManage[]): Promise<EtcLeaveManage[]> => {
     const res = await apiClient.put<ApiResponse<EtcLeaveManage[]>>('v1/emp/etc-leaves', rows.map(r => ({ etcLeaveId: r.etcLeaveId, reason: r.reason, days: r.days, startDate: r.startDate, closeDate: r.closeDate, note: r.note })));
     return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp22_EtcLeave.updateApprId — 결재창에서 저장·결재요청한 문서 ID 기록 (V17) */
+  updateApprId: async (etcLeaveId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/emp/etc-leaves/${etcLeaveId}/appr-id`, { apprId });
   },
 
   /** AS-IS emp.Emp22_EtcLeave.deleteApprId + delete */

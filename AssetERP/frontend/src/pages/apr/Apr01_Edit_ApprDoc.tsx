@@ -15,7 +15,7 @@ import { SearchOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { aprActionApi, aprDetailApi, aprExtraApi, aprWriteApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
-import { AprApprActionRes, AprApprActionState, AprApprDetail, AprApprNew, AprApprRelateReq, AprApprSaveReq, AprApprStep, AprApprWriteRes, AprRelateLaw, AprReprCorpLookup, AprStamp, AprStampLine } from '@/types/apr';
+import { AprApprActionRes, AprApprActionState, AprApprDetail, AprApprNew, AprApprRelateReq, AprApprSaveReq, AprApprStep, AprApprWriteRes, AprLinkOpen, AprRelateLaw, AprReprCorpLookup, AprStamp, AprStampLine } from '@/types/apr';
 import { Button } from '@/components/button';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { HtmlView } from '@/components/form/HtmlView';
@@ -66,6 +66,10 @@ interface Props {
   apprId: number | null;
   /** 값이 있으면 새 문서 작성으로 열림 — AS-IS insertApproval(classTreeModel, …) (V07) */
   newClassTreeId?: number | null;
+  /** 값이 있으면 링크코드로 열린 새 문서 — AS-IS insertLinkApproval(classTreeModel, linkCode, gridDataModel, …) (V17). 제목·본문·시행일자를 링크코드별로 채운다 */
+  link?: AprLinkOpen | null;
+  /** 링크 문서를 [저장]·[결재요청]한 뒤 (AS-IS callbackResult.execute(apprModel) L807·L5780) — 부른 화면이 문서 ID를 자기 행에 기록한다(updateApprId) */
+  onLinkSaved?: (apprId: number) => void;
   /** 목록 행의 상태 코드(있으면) — '99'(임시저장)이면 열람기록을 남기지 않는다. 없으면 문서의 상태로 서버가 정한다 */
   statusCode?: string | null;
   /** [닫기] 단추와 결재 처리(승인·반려·승인취소·상신취소) 뒤 (AS-IS callback.execute() 뒤 hide) — 부른 화면이 목록을 다시 읽는 용 */
@@ -81,7 +85,7 @@ const Row: React.FC<{ label: string; children: React.ReactNode; grow?: boolean }
   </div>
 );
 
-export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = null, statusCode, onClosed, onClose }) => {
+export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = null, link = null, onLinkSaved, statusCode, onClosed, onClose }) => {
   const user = useLoginUser();
   const [doc, setDoc] = useState<AprApprDetail | null>(null);
   const [bookmarked, setBookmarked] = useState(false);
@@ -106,6 +110,8 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
   const [rejectOpen, setRejectOpen] = useState(false);
   // V07 편집 모드
   const [isNew, setIsNew] = useState(false);
+  /** 링크 문서의 제목 읽기전용·[저장] 보임 (insertLinkApproval L1572-1573 기본: 제목 읽기전용, [저장] 숨김, 코드별로 바뀜) */
+  const [linkLock, setLinkLock] = useState<{ titleReadOnly: boolean; saveVisible: boolean } | null>(null);
   const [seed, setSeed] = useState<{ steps: AprApprStep[]; ics: AprRelateLaw[]; icr: AprRelateLaw[] } | undefined>(undefined);
   const [form, setForm] = useState<EditForm>(EMPTY_FORM);
   const [requestNoteOpen, setRequestNoteOpen] = useState(false);
@@ -122,7 +128,8 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
   const stampDocRef = useRef<{ count: number; provideCo: string; purpose: string; note: string } | undefined>(undefined);
   /** 내 임시저장(99) 문서이거나 새 문서면 칸을 고칠 수 있다 (makeButton: 상신자 본인의 편집 모드) */
   const editable = isNew || (doc != null && doc.statusCode === '99' && doc.regEmpId === user.userId);
-  const open = apprId != null || newClassTreeId != null;
+  const treeId = link?.classTreeId ?? newClassTreeId;
+  const open = apprId != null || treeId != null;
   const set = (patch: Partial<EditForm>) => setForm(prev => ({ ...prev, ...patch }));
 
   // [E0] 화면 열림 (생성자 L339-507) → getCommentSize(), getApprovalForm01(), getApprovalForm02(), getHtmlForm()
@@ -134,13 +141,14 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
     setCommentSize(0);
     setState(null);
     setIsNew(false);
+    setLinkLock(null);
     setSeed(undefined);
-    if (apprId == null && newClassTreeId == null) return;
+    if (apprId == null && treeId == null) return;
     let alive = true;
     void (async () => {
       try {
-        if (newClassTreeId != null) {
-          const n = await aprWriteApi.openNew(newClassTreeId);
+        if (treeId != null) {
+          const n = await aprWriteApi.openNew(treeId);
           if (!alive) return;
           const d = newToDoc(n);
           // 기본 인감: createApprStepLine 뒤 retrieveRoleStamp(sealCode) L4586-4646 — 사용 가능한 인감이면 대외문서로 바꾸고 인감 줄을 넣는다, 아니면 안내하고 사내문서
@@ -163,6 +171,17 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
             icr: n.relateIcr.map(l => ({ relateId: l.relateId, classTreeId: l.classTreeId, classTreeFullName: l.classTreeFullName, cycleName: l.cycleName, closeDate: null, deadlineId: l.deadlineId ?? null })),
           });
           const f = toForm(d);
+          // insertLinkApproval: 링크코드별 제목·본문·시행일자(서버가 만든다), 본문이 없으면 문서분류 대표 양식(checkContent)
+          if (link) {
+            const ls = await aprWriteApi.linkSeed(link.classTreeId, link.linkCode, link.refId);
+            if (!alive) return;
+            if (ls.title != null) { f.title = ls.title; d.title = ls.title; }
+            if (ls.content != null) { f.content = ls.content; d.content = ls.content; }
+            f.effectDate = day(ls.effectDate);
+            d.effectDate = ls.effectDate;
+            d.linkCode = link.linkCode;
+            setLinkLock({ titleReadOnly: ls.titleReadOnly, saveVisible: ls.saveVisible });
+          }
           if (stamp?.ok && stamp.outType) { f.inOutTypeCode = '10'; f.stampId = stamp.stampId ?? null; f.stampName = stamp.stampName ?? ''; }
           setForm(f);
           setDoc(d);
@@ -181,7 +200,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
     })();
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apprId, newClassTreeId, reloadKey]);
+  }, [apprId, treeId, link?.linkCode, link?.refId, reloadKey]);
 
   const next = (text: string) => message.info(text);
 
@@ -368,7 +387,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
     setSaving(true);
     try {
       const res = await aprWriteApi.save(doc.apprId, buildReq(mode, msg, confirmed));
-      if (res.ok) { afterWrite(res); return; }
+      if (res.ok) { onLinkSaved?.(doc.apprId); afterWrite(res); return; }
       if (res.notice === 'confirm') {
         Modal.confirm({
           title: '확인', content: res.message, width: 490, okText: '예', cancelText: '아니오',
@@ -497,7 +516,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
             <Space>
               {/* [E24] updateButton[결재요청] · [E25] saveButton[저장] · [E14] deleteButton[삭제] — 편집 모드(내 임시저장·새 문서) */}
               {editable && <Button type="register" loading={saving} onClick={requestApproval}>결재요청</Button>}
-              {editable && <Button type="save" loading={saving} onClick={save}>저장</Button>}
+              {editable && !(linkLock && !linkLock.saveVisible) && <Button type="save" loading={saving} onClick={save}>저장</Button>}
               {editable && !isNew && <Button type="delete" onClick={deleteDoc}>삭제</Button>}
               {/* [E9] confirmButton[승인] · [E10] rejectButton[반려] — myTurnCheck L1097-1112: 내 차례일 때만 */}
               {state?.canConfirm && <Button type="save" onClick={() => void confirmCheck('confirm')}>승인</Button>}
@@ -544,7 +563,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
                 </Radio.Group>
               </Row>
               <Row label="상신제목" grow>
-                <Input value={editable ? form.title : (doc.title ?? '')} readOnly={!editable} onChange={e => set({ title: e.target.value })} style={{ flex: 1 }} />
+                <Input value={editable ? form.title : (doc.title ?? '')} readOnly={!editable || (linkLock?.titleReadOnly ?? false)} onChange={e => set({ title: e.target.value })} style={{ flex: 1 }} />
               </Row>
             </div>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>

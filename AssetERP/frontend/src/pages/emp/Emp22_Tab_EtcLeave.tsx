@@ -3,8 +3,8 @@
  * AS-IS: myApp/client/vi/emp/Emp22_Tab_EtcLeave.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃(생성자 L76-117, SGP 옆 페이지): 가운데 테두리 박스(툴바: 조회기간 · 검색 250 · [조회][등록][삭제][저장][문서분류지정] + 체크 다중 셀 편집 그리드)
  *   + 오른쪽 400(드래그로 조절, 최대 1000) 대상 직원 페이지(Emp23_Page_EtcLeavePerson). 그리드에서 행을 고르면 대상 직원을 읽는다.
- * 1단계(사용자 묶음 요청 2026-10-28): [결재요청] 아이콘의 결재문서 생성(Apr01_Edit_ApprDoc.insertLinkApproval → updateApprId)·결재문서 보기(retrieveApproval)는
- *   다음 단계 — 원본의 문서분류·상태·저장 여부 검사까지만 한다.
+ * 1단계(사용자 묶음 요청 2026-10-28): [결재요청] 아이콘의 결재문서 생성·보기는 다음 단계로 두었다가, V17(2026-10-31)에서
+ *   Apr01_Edit_ApprDoc.insertLinkApproval("A25") → updateApprId와 retrieveApproval을 연결했다.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Modal, Splitter, message } from 'antd';
@@ -19,6 +19,7 @@ import { iconCell } from '@/components/grid/iconCell';
 import { Dcr30_Lookup_Link } from '@/components/lookup/Dcr30_Lookup_Link';
 import { useGridCrud, editableCol } from '@/hooks/useGridCrud';
 import { Emp23_Page_EtcLeavePerson } from './Emp23_Page_EtcLeavePerson';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 
 const gb = gbFor<EtcLeaveManage>();
 
@@ -51,6 +52,9 @@ export const Emp22_Tab_EtcLeave: React.FC = () => {
   // 고른 포상휴가 (대상 직원 페이지의 부모)
   const [etcLeaveId, setEtcLeaveId] = useState<number | null>(null);
   const selectFirst = useRef(false);
+  // 결재창: 새 문서(insertLinkApproval, 고른 행 = refId) 또는 기존 문서(retrieveApproval)
+  const [linkRow, setLinkRow] = useState<EtcLeaveManage | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
 
   // retrieve() L285-301: 서비스 emp.Emp22_EtcLeave.selectByDate(companyId, startDate, closeDate, "%검색어%") → retrieveDoc(), 첫 행 선택
   const crud = useGridCrud<EtcLeaveManage>({
@@ -140,17 +144,26 @@ export const Emp22_Tab_EtcLeave: React.FC = () => {
   const openLink = () => setLinkOpen(true);
 
   // [E8] actionCell (ImageCell).callbackOnCreate (L212) → 서비스 apr.Apr01_Appr.selectById(apprId):
-  //   상신 문서가 있으면 Apr01_Edit_ApprDoc.retrieveApproval(편집창은 다음 단계),
-  //   없으면 저장된 행인지 확인("저장 후 결재요청이 가능합니다") → insertLinkApproval() L238-261(문서분류·상태 검사 뒤 Apr01_Edit_ApprDoc.insertLinkApproval — 다음 단계)
+  //   상신 문서가 있으면 Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback{}) (L211-217),
+  //   없으면 저장된 행인지 확인("저장 후 결재요청이 가능합니다") → insertLinkApproval() L238-261(문서분류·상태 검사 뒤 Apr01_Edit_ApprDoc.insertLinkApproval("A25", 행, false, cb → updateApprId → retrieve()))
   const requestAppr = (row: EtcLeaveManage) => {
-    if (row.apprId != null) { message.info('전자결재 문서 보기는 아직 변환 전입니다(다음 단계).'); return; }
+    if (row.apprId != null) { setViewApprId(row.apprId); return; }
     if (row.etcLeaveId <= 0) { message.warning('저장 후 결재요청이 가능합니다'); return; }
     if (classTreeId == null) { message.warning('[문서분류지정]에서 먼저 문서분류를 선택해주세요'); return; }
     if (row.apprStatusCode === '10' || row.apprStatusCode === '20' || row.apprStatusCode === '30') {
       message.warning('결재 중인 문서이거나, 완료된 문서가 포함되어있습니다');
       return;
     }
-    message.info('결재문서 작성(전자결재 편집창)은 아직 변환 전입니다(다음 단계).');
+    setLinkRow(row);
+  };
+
+  // updateApprId() L263-275: emp.Emp22_EtcLeave.updateApprId(apprId, etcLeaveId) → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkRow) return;
+    try {
+      await empEtcLeaveApi.updateApprId(linkRow.etcLeaveId, apprId);
+      void retrieve();
+    } catch { message.error('결재문서 ID를 기록하지 못했습니다'); }
   };
 
   // AS-IS buildGrid() L180-236 (setChecked MULTI)
@@ -206,6 +219,13 @@ export const Emp22_Tab_EtcLeave: React.FC = () => {
           </div>
         </Splitter.Panel>
       </Splitter>
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkRow && classTreeId != null ? { classTreeId, linkCode: 'A25', refId: linkRow.etcLeaveId } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void retrieve()}
+        onClose={() => { setViewApprId(null); setLinkRow(null); }}
+      />
       <Dcr30_Lookup_Link open={linkOpen} linkCodeList="A25" onClose={() => { setLinkOpen(false); void retrieveDoc(); }} />
     </div>
   );

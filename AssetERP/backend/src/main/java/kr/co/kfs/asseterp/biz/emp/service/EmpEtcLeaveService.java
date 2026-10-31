@@ -14,7 +14,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/** 포상휴가관리 (AS-IS Emp22_Tab_EtcLeave) — 1단계: [결재요청]의 결재문서 생성(Apr01_Edit_ApprDoc)·상세보기는 다음 단계 */
+/** 포상휴가관리 (AS-IS Emp22_Tab_EtcLeave) — [결재요청]의 결재문서 생성(Apr01_Edit_ApprDoc, V17 A25)·상세보기(V01) */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -30,6 +30,15 @@ public class EmpEtcLeaveService {
     /** AS-IS emp.Emp22_EtcLeave.selectByDate — 검색어는 사유+비고에 대한 `%검색어%` */
     public List<EtcLeaveManageRes> search(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText) {
         return mapper.selectByDate(user.getCompanyId(), startDate, closeDate, "%" + (searchText == null ? "" : searchText) + "%");
+    }
+
+    /** AS-IS emp.Emp22_EtcLeave.updateApprId — 결재창에서 저장·결재요청한 문서 ID를 포상휴가 행에 기록 (V17) */
+    @Transactional
+    public void updateApprId(UserPrincipal user, Long etcLeaveId, Long apprId) {
+        if (mapper.selectById(user.getCompanyId(), etcLeaveId) == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "포상휴가 정보를 찾을 수 없습니다.");
+        }
+        mapper.updateApprId(user.getCompanyId(), etcLeaveId, apprId);
     }
 
     /**

@@ -33,5 +33,8 @@ public interface EmpEtcLeaveMapper {
     /** AS-IS apr01_appr.deleteAppr */
     int deleteAppr(@Param("apprId") Long apprId);
 
+    /** AS-IS emp22_etc_leave.updateApprId — 상신한 결재문서 ID를 기록 */
+    int updateApprId(@Param("companyId") Long companyId, @Param("etcLeaveId") Long etcLeaveId, @Param("apprId") Long apprId);
+
     int deleteEtcLeaves(@Param("companyId") Long companyId, @Param("etcLeaveIds") List<Long> etcLeaveIds);
 }

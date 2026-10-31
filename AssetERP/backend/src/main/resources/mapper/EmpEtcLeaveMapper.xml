@@ -113,4 +113,12 @@
         <foreach collection="etcLeaveIds" item="etcLeaveId" open="(" separator="," close=")">#{etcLeaveId}</foreach>
     </delete>
 
+    <!-- AS-IS emp22_etc_leave.updateApprId (L133-137) — 회사 조건 추가 -->
+    <update id="updateApprId">
+        UPDATE emp22_etc_leave
+           SET emp22_appr_id = #{apprId}
+         WHERE emp22_company_id = #{companyId}
+           AND emp22_etc_leave_id = #{etcLeaveId}
+    </update>
+
 </mapper>
