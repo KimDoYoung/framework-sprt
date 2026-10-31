@@ -2,8 +2,9 @@
  * [1419] 책무 > 02. 책무구조도 > 책무체계도 (N13)
  * AS-IS: myApp/client/vi/tdm/Tdm32_Tab_RoleDigm.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L101-134: 가운데 = 툴바(조회기간 [시작 100 ~ 종료 100] + 전체보기 · 미처리건만 조회 · [조회][등록][저장][삭제]) + 책무체계도 CellEditGrid(체크박스 단일)
- * 1단계: 결재요청(updateUseFileType·dcrChk·createRd·relateRdFile·insertLinkApproval·updateApprId)과 문서보기(ApprCallbackResult·Apr01_Edit_ApprDoc)는
- *        전자결재·RD라 다음 단계 — 사전 검사까지만 하고 안내한다. 책무체계도 RD 뷰어(viewRd)는 RD 연동이 없어 안내한다(E12 `Tdm32_Tab_RoleDigmAdmin`과 같다).
+ * 결재요청(upsertByRoleDigmId·updateUseFileType·dcrChk·insertLinkApproval·updateApprId)과 문서보기(retrieveApproval)는 V34에서 전자결재 편집창에 연결했다
+ *        (링크코드 A92, 제목·본문은 서버가 만든다 `GET apr/apprs/link-seed`). 시스템 생성 파일을 만드는 createRd·relateRdFile은 RD 연동이 없어 원본의 "개발계는 파일생성기능 제한" 길
+ *        (알리고 그대로 상신)로 옮겼다 — 이미 있는 첨부는 지우지 않는다. 책무체계도 RD 뷰어(viewRd)는 RD 연동이 없어 안내한다(E12 `Tdm32_Tab_RoleDigmAdmin`과 같다).
  *        사용자 파일 올리기·삭제(fileUpload·deleteRoleDigmFile)는 전자결재와 무관해 변환했다.
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03), 날짜 편집 열 120(UX-08), 등록은 맨 아래(03 원칙 17)
  */
@@ -14,6 +15,7 @@ import type { CustomCellRendererProps } from 'ag-grid-react';
 import dayjs, { Dayjs } from 'dayjs';
 import { errorMessage } from '@/api/client';
 import { fileApi } from '@/api/file';
+import { dcrApi } from '@/api/dcr';
 import { sysApi } from '@/api/sys';
 import { tdmApi } from '@/api/tdm';
 import { Code, FileInfo } from '@/types/sys';
@@ -24,11 +26,14 @@ import { CellEditGrid, gbFor, iconCell } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { Sys10_Lookup_FileViewer } from '../sys/Sys10_Lookup_FileViewer';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
+import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 import { dynamicIconCell } from './tdmGridCells';
 
 const gb = gbFor<TdmRoleDigmCompany>();
 const FORMAT = 'YYYY-MM-DD';
 const APPR_SENT = ['10', '20', '30'];   // 상신 진행·완료
+const LINK_CODE = 'A92';                // 책무체계도
 const SINGLE_SELECTION = { mode: 'singleRow', checkboxes: true, enableClickSelection: false } as const;   // setChecked(SelectionMode.SINGLE)
 
 /**
@@ -49,6 +54,10 @@ export const Tdm32_Tab_RoleDigm: React.FC = () => {
   const [notEndYn, setNotEndYn] = useState(false);                               // notEndYn "미처리건만 조회" = false
   const [reasonCodes, setReasonCodes] = useState<Code[]>([]);                    // reasonComboBox[TdmDescRegReason]
   const [viewFile, setViewFile] = useState<FileInfo | null>(null);               // 책무체계도 첨부 보기
+  // 전자결재 창: 새 문서(insertLinkApproval, 문서분류 + 고른 행) 또는 기존 문서(retrieveApproval)
+  const [linkDoc, setLinkDoc] = useState<{ row: TdmRoleDigmCompany; classTreeId: number } | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [classPick, setClassPick] = useState<{ row: TdmRoleDigmCompany; useFileType: string } | null>(null);   // 문서분류가 없을 때 Dcr01_Lookup_Class로 고르는 중인 행
   const fileForm = useRef<FileUpdownFormHandle>(null);                           // fileUpdownForm (숨은 파일 선택)
   const fileParentId = useRef<number | null>(null);                              // fileParentId — 올릴 파일의 파일정보 ID
 
@@ -120,7 +129,7 @@ export const Tdm32_Tab_RoleDigm: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { void crud.retrieve(); }, []);
 
-  // [E6] deleteButton[삭제].Select (L187) → deleteChk() L484-516: 상신 중·완료가 하나라도 있으면 안내, 없으면 "n건을 삭제하시겠습니까?" → [YES] [E11] deleteRow()
+  // [E6] deleteButton[삭제].Select (L187) → deleteChk() L484-516: 상신 중·완료가 하나라도 있으면 안내, 없으면 "n건을 삭제하시겠습니까?" → [YES] [E12] deleteRow()
   const deleteChk = () => {
     const checked = (api()?.getSelectedRows() ?? []) as TdmRoleDigmCompany[];
     for (const r of checked) {
@@ -169,19 +178,48 @@ export const Tdm32_Tab_RoleDigm: React.FC = () => {
     }
   };
 
-  // 결재요청 (actionCell03 L287-324): 저장하지 않은 변경이 있으면 안내
-  // 그다음 사용 파일구분 결정(upsertByRoleDigmId·updateUseFileType)·dcrChk(Dcr01_Lookup_Class)·createRd(RD)·Apr01_Edit_ApprDoc·updateApprId는 전자결재/RD라 다음 단계
-  const apprRequest = (_row: TdmRoleDigmCompany) => {
+  // 결재요청 (actionCell03 L287-324): 저장하지 않은 변경이 있으면 안내. 올린 파일(fileType "2")이 정확히 한 건이면 useFileType "2", 아니면 시스템 생성 파일 정보 "1"을 두고
+  // updateUseFileType(L583-595) → dcrChk() L542-581
+  const apprRequest = async (row: TdmRoleDigmCompany) => {
     if (crud.hasChanges()) { message.warning('작업중인 내용을 저장 후 이용해주세요'); return; }
-    // [E생략] updateUseFileType → dcrChk → createRd(Sys99_Print.CreateTdmRoleDigm·RDUtil)/insertLinkApproval → Apr01_Edit_ApprDoc → updateApprId: 전자결재·RD는 다음 단계
-    message.info('전자결재 상신(Apr01_Edit_ApprDoc)은 아직 변환 전입니다');
+    try {
+      const useFileType = await tdmApi.readyRoleDigmAppr(row.roleDigmId);
+      await dcrChk(row, useFileType);
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
   };
 
-  // 문서보기 (actionCell04 L326-352): 결재 ID가 없으면 "문서가 존재하지않습니다". ApprCallbackResult·Apr01_Edit_ApprDoc.retrieveApproval은 다음 단계
+  // dcrChk() L542-581: 이미 상신중·완료면 막고, dcr.Dcr30_Link.selectByLinkCode(A92) — 문서분류가 없으면 Dcr01_Lookup_Class로 고르고, 있으면(첫 행) 그 분류로
+  // 시스템 생성 파일(useFileType "1")이면 createRd() L657-, 올린 파일이면 바로 insertLinkApproval() L597-610
+  const dcrChk = async (row: TdmRoleDigmCompany, useFileType: string) => {
+    if (row.apprStatusCode && APPR_SENT.includes(row.apprStatusCode)) { message.warning('이미 상신중이거나 완료된 문서가 존재합니다'); return; }
+    const list = await dcrApi.searchClassTreeByLinkCode(LINK_CODE);
+    if (list.length === 0) setClassPick({ row, useFileType });
+    else openLinkDoc(row, list[0].classTreeId, useFileType);
+  };
+
+  const openLinkDoc = (row: TdmRoleDigmCompany, classTreeId: number, useFileType: string) => {
+    // createRd(Sys99_Print.CreateTdmRoleDigm·RDUtil)·relateRdFile은 RD 연동이 없어 하지 않는다 — 원본 개발계 분기 SimpleMessage "개발계는 파일생성기능 제한" 뒤 insertLinkApproval
+    if (useFileType === '1') message.info('RD 연동이 없어 책무체계도 파일은 새로 만들지 않습니다');
+    setLinkDoc({ row, classTreeId });
+  };
+
+  // updateApprId() L612-625: tdm.Tdm32_RoleDigm.updateApprId(roleDigmId, apprId) → unmask → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await tdmApi.updateRoleDigmApprId(linkDoc.row.roleDigmId, apprId);
+      await crud.retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+  };
+
+  // [E10] actionCell04 (ImageCell).callbackOnCreate (L349) — 문서보기 (actionCell04 L326-352): 결재 ID가 없으면 "문서가 존재하지않습니다". ApprCallbackResult + Apr01_Edit_ApprDoc.retrieveApproval
   const viewAppr = (row: TdmRoleDigmCompany) => {
     if (row.apprId == null) { message.warning('문서가 존재하지않습니다'); return; }
-    // [E생략] ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval: 전자결재는 다른 도메인 — 다음 단계
-    message.info('전자결재 문서 보기(Apr01_Edit_ApprDoc)는 아직 변환 전입니다');
+    setViewApprId(row.apprId);
   };
 
   // 파일업로드 (actionCell02 → fileUploadChk() L832-842 → fileUpload() L844-860): 상신 중·완료면 안내, 아니면 파일정보(fileType "2")를 만들고 파일 선택 창을 연다
@@ -209,7 +247,7 @@ export const Tdm32_Tab_RoleDigm: React.FC = () => {
   };
 
   // [E7 생략] fileDeleteForm.SubmitComplete (L195) → retrieve(): 숨은 삭제 폼(setVisible(false))으로 쓰는 곳이 없다 — 파일 삭제는 서비스 호출 뒤 직접 retrieve()한다
-  // 파일삭제 (actionCell05 L214-231): 상신 중·완료면 안내, 아니면 "해당 파일을 삭제하시겠습니까?"(350) → [YES] [E10] deleteRoleDigmFile() L862-875
+  // 파일삭제 (actionCell05 L214-231): 상신 중·완료면 안내, 아니면 "해당 파일을 삭제하시겠습니까?"(350) → [YES] [E11] deleteRoleDigmFile() L862-875
   const fileDelete = (row: TdmRoleDigmCompany) => {
     if (row.apprStatusCode && APPR_SENT.includes(row.apprStatusCode)) { message.warning('이미 상신중이거나 완료된 문서는 변경할 수 없습니다'); return; }
     Modal.confirm({
@@ -280,6 +318,20 @@ export const Tdm32_Tab_RoleDigm: React.FC = () => {
       </div>
       <FileUpdownForm ref={fileForm} onChange={file => { void onFilePicked(file); }} />
       <Sys10_Lookup_FileViewer file={viewFile} onClose={() => setViewFile(null)} />
+      {/* dcrChk() 문서분류가 없을 때: Dcr01_Lookup_Class.open(null, null, callback → createRd/insertLinkApproval) */}
+      <Dcr01_Lookup_Class
+        open={classPick != null}
+        onResult={r => { if (classPick) openLinkDoc(classPick.row, r.classTreeId, classPick.useFileType); setClassPick(null); }}
+        onClose={() => setClassPick(null)}
+      />
+      {/* insertLinkApproval() L597-610: Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, "A92", 행, false, callback → updateApprId / 취소면 unmask) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: LINK_CODE, refId: linkDoc.row.roleDigmId } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void crud.retrieve()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </div>
   );
 };

@@ -715,9 +715,20 @@ export interface AprLinkArgs {
   periodString?: string;
   /** B05 계좌개설 신고 — 보고주기 코드(V30) */
   checkCycle?: string;
+  /** A94 책무이행점검보고서 — 이행점검 탭의 보고CEO 직책 ID(tdm20_role_id), 제목의 직책 이름과 본문 현황의 기준(V34) */
+  roleId?: string;
 }
 
 /** 링크코드별 제목·본문·시행일자 (GET apr/apprs/link-seed, V17) */
+/** 결재문서 번호 목록으로 읽은 문서 한 줄 (AS-IS apr.Apr01_Appr.selectByApprIdList — Apr01_Lookup_ApprLink, V34) */
+export interface AprApprIdRow {
+  apprId: number;
+  regDate: string | null;
+  title: string | null;
+  statusCode: string | null;
+  statusName: string | null;
+}
+
 export interface AprLinkSeed {
   linkCode: string;
   title?: string | null;

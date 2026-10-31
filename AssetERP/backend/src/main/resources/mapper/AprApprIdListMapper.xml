@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr01_appr.xml selectByApprIdList (Apr01_Lookup_ApprLink, V34 A94 문서보기) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprApprIdListMapper">
+
+    <!-- 그리드가 쓰는 열만. 회사 조건 추가(AS-IS는 번호만으로 읽는다) -->
+    <select id="selectByApprIdList" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprApprIdRowRes">
+        SELECT  apr01_appr_id                                                         AS appr_id
+             ,  TO_CHAR(apr01_reg_date, 'YYYY-MM-DD')                                 AS reg_date
+             ,  apr01_title                                                           AS title
+             ,  apr01_status_cd                                                       AS status_code
+             ,  f_cdnm('AprStatusCode', apr01_status_cd, #{companyId}, f_sysdate())   AS status_name
+          FROM  apr01_appr
+         WHERE  apr01_company_id = #{companyId}
+           AND  apr01_appr_id IN
+        <foreach collection="apprIdList" item="apprId" open="(" close=")" separator=",">#{apprId}</foreach>
+    </select>
+</mapper>

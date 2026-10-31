@@ -2,14 +2,15 @@
  * 이행점검 작업 및 보고 — 보고CEO 직책 한 탭 (N20)
  * AS-IS: myApp/client/vi/tdm/Tdm50_TabPage_CheckJob.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L99-138: 위 = 툴바(왼쪽 [잠금][잠금해제], 오른쪽 결재상태 글 + [결재요청][문서보기], 높이 50) + 아래 = 임원 승인현황 그리드(650) | 부서 점검현황 그리드(나머지)
- * 1단계: 결재요청(dcrChk → Dcr30_Link.selectByLinkCode("A94") → Apr01_Edit_ApprDoc.insertLinkApprovals → insertApprId)·문서보기(Apr01_Lookup_ApprLink·Apr01_Edit_ApprDoc.retrieveApproval)는
- *        다른 도메인(apr·dcr) 전자결재 창이라 점검까지만 하고 안내한다. 이행점검보고서 PDF 생성은 서버 CheckExctPdfMaker(RD 연동)가 한다.
+ * 결재요청(dcrChk → Dcr30_Link.selectByLinkCode("A94") → Apr01_Edit_ApprDoc.insertLinkApprovals → insertApprId)·문서보기(Apr01_Lookup_ApprLink·Apr01_Edit_ApprDoc.retrieveApproval)는
+ *        V34에서 전자결재 편집창에 연결했다 (링크코드 A94, 제목·본문은 서버가 만든다 `GET apr/apprs/link-seed`). 이행점검보고서 PDF 생성은 서버 CheckExctPdfMaker(RD 연동)가 한다.
  * UX보강(10): 툴바 = Button(UX-01)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, message } from 'antd';
 import type { AgGridReact } from 'ag-grid-react';
 import { errorMessage } from '@/api/client';
+import { dcrApi } from '@/api/dcr';
 import { fileApi } from '@/api/file';
 import { rdApi } from '@/api/rd';
 import { tdmApi } from '@/api/tdm';
@@ -20,12 +21,16 @@ import { MultiGrid, SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { RdViewer } from '@/components/lookup/RdViewer';
 import { Sys10_Lookup_FileViewer } from '../sys/Sys10_Lookup_FileViewer';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
+import { Apr01_Lookup_ApprLink } from '../apr/Apr01_Lookup_ApprLink';
+import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 import { dynamicViewCell } from './tdmGridCells';
 import { Tdm55_Lookup_ChckRecord } from './Tdm55_Lookup_ChckRecord';
 
 const gb01 = gbFor<TdmCheckExct>();
 const gb02 = gbFor<TdmChckOrg>();
 
+const LINK_CODE = 'A94';   // 책무이행점검보고서
 const RD_MRD = 'Tdm50_Rd_CheckJob';
 const RD_OPTIONS = '/rpdflinebreak [1] /rwordbreakopt [1] /rsaveopt [2049]';
 const SUM01 = { labelField: 'roleName', label: '계', sum: ['chckManlCnt'] };                                     // getSumGrid("계", 2, 4, 4)
@@ -52,6 +57,11 @@ export const Tdm50_TabPage_CheckJob: React.FC<Props> = ({ target }) => {
   const [viewFile, setViewFile] = useState<FileInfo | null>(null);
   const [rdUrl, setRdUrl] = useState<string | null>(null);
   const [recordOrgId, setRecordOrgId] = useState<number | null>(null);
+  // 전자결재 창: 새 문서(insertLinkApprovals, 문서분류) 또는 기존 문서(retrieveApproval) / 문서가 둘 이상이면 Apr01_Lookup_ApprLink
+  const [linkClassTreeId, setLinkClassTreeId] = useState<number | null>(null);
+  const [classPickOpen, setClassPickOpen] = useState(false);          // 문서분류가 없을 때 Dcr01_Lookup_Class로 고르는 중
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [linkApprIds, setLinkApprIds] = useState<number[] | null>(null);
   const [progress, setProgress] = useState<{ text: React.ReactNode; done: boolean } | null>(null);   // messageBox "파일 생성"
   const grid01Ref = useRef<AgGridReact<TdmCheckExct>>(null);
 
@@ -187,7 +197,7 @@ export const Tdm50_TabPage_CheckJob: React.FC<Props> = ({ target }) => {
     // updateChk() — grid01은 편집 그리드가 아니라 바뀐 행이 없다("저장 후 진행해주세요"는 나올 수 없다)
     const code = apprStatus?.apprStatusCode;
     if (code == null || code === '40') {
-      message.info('전자결재 상신 창은 다음 단계에서 연결됩니다');   // dcrChk() L447-471 → insertLinkApproval() L473-498 → insertApprId() L500-514
+      void dcrChk();
     } else if (code === '99') {
       message.warning('임시저장된 문서가 존재합니다');
     } else {
@@ -195,13 +205,37 @@ export const Tdm50_TabPage_CheckJob: React.FC<Props> = ({ target }) => {
     }
   };
 
+  // dcrChk() L447-471: dcr.Dcr30_Link.selectByLinkCode(A94) — 문서분류가 없으면 Dcr01_Lookup_Class로 고르고, 있으면(첫 행) 그 분류로 insertLinkApproval() L473-498
+  // (제목·본문은 서버 link-seed가 점검시작일·보고CEO 직책(roleId)·점검 현황으로 만든다)
+  const dcrChk = async () => {
+    try {
+      const list = await dcrApi.searchClassTreeByLinkCode(LINK_CODE);
+      if (list.length === 0) setClassPickOpen(true);
+      else setLinkClassTreeId(list[0].classTreeId);
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
+  // insertApprId() L500-514: tdm.Tdm56_ChckRelateAppr.insertApprId(apprId, relateTableId = chckJobId, ceoRoleId = roleId) → getApprStatus() → "상신 완료되었습니다"
+  const insertApprId = async (apprId: number) => {
+    try {
+      await tdmApi.insertCheckRelateAppr(job.chckJobId, roleId, apprId);
+      await getApprStatus();
+      message.info('상신 완료되었습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+  };
+
   // [E4] apprViewButton[문서보기].Select (L170) → viewAppr() L516-564: tdm.Tdm56_ChckRelateAppr.selectByCeoRoleId
+  // 둘 이상이면 Apr01_Lookup_ApprLink.checkJobOpen, 하나면 ApprCallbackResult + Apr01_Edit_ApprDoc.retrieveApproval (닫으면 getApprStatus())
   const viewAppr = async () => {
     try {
       const list = await tdmApi.searchCheckApprs(job.chckJobId, roleId);
       if (list.length === 0) message.warning('문서가 존재하지않습니다');
-      else if (list.length > 1) message.info('상신문서 선택 창(Apr01_Lookup_ApprLink)은 다음 단계에서 연결됩니다');
-      else message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');   // ApprCallbackResult + Apr01_Edit_ApprDoc.retrieveApproval
+      else if (list.length > 1) setLinkApprIds(list.map(a => a.apprId));
+      else setViewApprId(list[0].apprId);
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
@@ -314,6 +348,22 @@ export const Tdm50_TabPage_CheckJob: React.FC<Props> = ({ target }) => {
         </div>
       </div>
       <Sys10_Lookup_FileViewer file={viewFile} onClose={() => setViewFile(null)} />
+      {/* dcrChk() 문서분류가 없을 때: Dcr01_Lookup_Class.open(null, null, callback → insertLinkApproval) */}
+      <Dcr01_Lookup_Class
+        open={classPickOpen}
+        onResult={r => { setLinkClassTreeId(r.classTreeId); setClassPickOpen(false); }}
+        onClose={() => setClassPickOpen(false)}
+      />
+      {/* insertLinkApproval() L473-498: Apr01_Edit_ApprDoc.insertLinkApprovals(classTreeModel, "A94", {gridList, checkJobModel, stdDate}, false, callback → insertApprId) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkClassTreeId != null ? { classTreeId: linkClassTreeId, linkCode: LINK_CODE, refId: job.chckJobId, args: { roleId: String(roleId) } } : null}
+        onLinkSaved={id => void insertApprId(id)}
+        onClosed={() => void getApprStatus()}
+        onClose={() => { setViewApprId(null); setLinkClassTreeId(null); }}
+      />
+      {/* viewAppr() L525-536: 문서가 둘 이상이면 Apr01_Lookup_ApprLink.checkJobOpen(list, "CheckJob", callback → getApprStatus()) */}
+      <Apr01_Lookup_ApprLink apprIds={linkApprIds} onClosed={() => void getApprStatus()} onClose={() => setLinkApprIds(null)} />
       <RdViewer url={rdUrl} title="이행점검보고서" onClose={() => setRdUrl(null)} />
       <Tdm55_Lookup_ChckRecord chckOrgId={recordOrgId} onClose={() => setRecordOrgId(null)} />
       {/* messageBox "파일 생성" (L566-594): 430×170, 진행 중 닫을 수 없고 끝나면 [닫기] — [E6] button01[닫기].Select (L582) → messageBox.hide() */}

@@ -2,7 +2,7 @@
  * 임원별 직책배정의 책무배분일 탭 (N11) — 직책배정 그리드에서 고른 행의 책무배분일을 편집한다.
  * AS-IS: myApp/client/vi/tdm/Tdm34_TabPage_RoleAllcDetail.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L80-103: 툴바([조회][등록][저장][삭제]) + 책무배분일 그리드(행번호, 셀 편집)
- * 1단계: 상신(Apr01_Edit_ApprDoc·Dcr01_Lookup_Class·insertLinkApprovals·updateApprId)과 상신문서보기는 전자결재라 다음 단계 — 검사까지만 하고 안내한다.
+ * 상신(dcrChk·Dcr01_Lookup_Class·insertLinkApprovals·updateApprId)과 상신문서보기(retrieveApproval)는 V34에서 전자결재 편집창에 연결했다 (링크코드 A90, 제목·본문은 서버가 만든다 `GET apr/apprs/link-seed`).
  *        책무기술서 미리보기의 RD 뷰어(viewRd)는 RD 연동이 없어 안내한다(E11 `Tdm31_Tab_RoleDescAdmin`과 같다).
  * UX보강(10): 저장 = 저장(n)(UX-03), 등록은 맨 아래(03 원칙 17)
  */
@@ -12,17 +12,21 @@ import dayjs from 'dayjs';
 import { errorMessage } from '@/api/client';
 import { fileApi } from '@/api/file';
 import { tdmApi } from '@/api/tdm';
+import { dcrApi } from '@/api/dcr';
 import { FileInfo } from '@/types/sys';
 import { TdmRoleAllc, TdmRoleAllcDetail } from '@/types/tdm';
 import { Button } from '@/components/button';
 import { CellEditGrid, gbFor, iconCell } from '@/components/grid';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { Sys10_Lookup_FileViewer } from '../sys/Sys10_Lookup_FileViewer';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
+import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 import { Tdm35_Lookup_RoleAllcTask } from './Tdm35_Lookup_RoleAllcTask';
 import { dynamicIconCell } from './tdmGridCells';
 
 const gb = gbFor<TdmRoleAllcDetail>();
 const APPR_SENT = ['10', '20', '30'];   // 상신 진행·완료 (99 임시저장·40 반려는 상신 전으로 본다)
+const LINK_CODE = 'A90';                // 임원책무동의서
 
 /** validate: updateChk01() L310-338 — 바뀐 행마다 책무배분일 → 등록사유 필수, 그다음 전체 행의 책무배분일 중복 */
 const validate = (changed: TdmRoleAllcDetail[], all: TdmRoleAllcDetail[]) => {
@@ -52,6 +56,10 @@ export const Tdm34_TabPage_RoleAllcDetail: React.FC<Props> = ({ roleAllc, nonce 
   idRef.current = roleAllcId;
   const [taskDetailId, setTaskDetailId] = useState<number | null>(null);   // 책무 및 세부내용 창
   const [viewFile, setViewFile] = useState<FileInfo | null>(null);         // 책무기술서 첨부 보기
+  // 전자결재 창: 새 문서(insertLinkApprovals, 문서분류 + 고른 행) 또는 기존 문서(retrieveApproval)
+  const [linkDoc, setLinkDoc] = useState<{ row: TdmRoleAllcDetail; classTreeId: number } | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [classPickRow, setClassPickRow] = useState<TdmRoleAllcDetail | null>(null);   // 문서분류가 없을 때 Dcr01_Lookup_Class로 고르는 중인 행
 
   // retrieve() L285-299: tdm.Tdm34_RoleAllcDetail.selectByRoleAllcId(roleAllcId) → 첫 행 선택
   const crud = useGridCrud<TdmRoleAllcDetail>({
@@ -89,7 +97,7 @@ export const Tdm34_TabPage_RoleAllcDetail: React.FC<Props> = ({ roleAllc, nonce 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roleAllcId, nonce]);
 
-  // [E4] deleteButton[삭제].Select (L124) → deleteChk() L345-363: "n건을 삭제하시겠습니까?" → [YES] [E7] deleteRow() L365-393
+  // [E4] deleteButton[삭제].Select (L124) → deleteChk() L345-363: "n건을 삭제하시겠습니까?" → [YES] [E8] deleteRow() L365-393
   const deleteChk = () => {
     const count = api()?.getSelectedRows().length ?? 0;
     Modal.confirm({
@@ -128,20 +136,37 @@ export const Tdm34_TabPage_RoleAllcDetail: React.FC<Props> = ({ roleAllc, nonce 
     }
   };
 
-  // dcrChk() L395-432: 저장하지 않은 변경이 있으면 / 이미 상신중·완료면 안내. 그다음 분류 조회(Dcr30_Link A90)·책무 HTML·전자결재 편집창은 다음 단계
-  const dcrChk = (row: TdmRoleAllcDetail) => {
+  // dcrChk() L395-432: 저장하지 않은 변경이 있으면 / 이미 상신중·완료면 안내. 그다음 dcr.Dcr30_Link.selectByLinkCode(A90) — 문서분류가 없으면 Dcr01_Lookup_Class로 고르고,
+  // 있으면(첫 행) 그 분류로 getHtmlData() L434-453("관련 책무가 존재하지 않습니다")·getModel() L455-467 → insertLinkApprovals() L469-487 (본문·"관련 책무가 존재하지 않습니다"는 서버 link-seed가 한다)
+  const dcrChk = async (row: TdmRoleAllcDetail) => {
     if (crud.hasChanges()) { message.warning('저장 후 진행가능합니다'); return; }
     if (row.apprStatusCode && APPR_SENT.includes(row.apprStatusCode)) { message.warning('이미 상신중이거나 완료된 문서가 존재합니다'); return; }
-    // [E생략] Dcr30_Link.selectByLinkCode → Dcr01_Lookup_Class → Tdm12_TaskRelateDetail.getHtmlData → Apr01_Edit_ApprDoc → updateApprId: 전자결재는 다른 도메인 — 다음 단계
-    message.info('전자결재 상신(Apr01_Edit_ApprDoc)은 아직 변환 전입니다');
+    try {
+      const list = await dcrApi.searchClassTreeByLinkCode(LINK_CODE);
+      if (list.length === 0) setClassPickRow(row);
+      else setLinkDoc({ row, classTreeId: list[0].classTreeId });
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
   };
 
-  // 상신문서보기 (actionCell03 L171-206)
+  // updateApprId() L489-505: tdm.Tdm34_RoleAllcDetail.updateApprId(apprId, roleAllcDetailId, updName) → callback(retrieve) → "상신 완료되었습니다"
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await tdmApi.updateRoleAllcDetailApprId(linkDoc.row.roleAllcDetailId, apprId);
+      await crud.retrieve();
+      message.info('상신 완료되었습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+  };
+
+  // [E6] actionCell03 (ImageCell).callbackOnCreate (L198) → callback.execute() — 상신문서보기 (actionCell03 L171-206): ApprCallbackResult + Apr01_Edit_ApprDoc.retrieveApproval
   const viewAppr = (row: TdmRoleAllcDetail) => {
     if (row.apprId == null) { message.warning('상신문서가 없습니다'); return; }
     if (row.apprStatusCode === '99') { message.warning('임시저장 문서는 열람이 불가능합니다'); return; }
-    // [E생략] ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval: 전자결재는 다른 도메인 — 다음 단계
-    message.info('전자결재 문서 보기(Apr01_Edit_ApprDoc)는 아직 변환 전입니다');
+    setViewApprId(row.apprId);
   };
 
   // viewRd() L545-588: Sys99_Print.CreateTdmRoleDesc → RD 뷰어(Tdm31_Rd_DescRpt) — RD 연동이 없어 열 수 없다 (E11과 같다)
@@ -208,7 +233,7 @@ export const Tdm34_TabPage_RoleAllcDetail: React.FC<Props> = ({ roleAllc, nonce 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
-  // [E6] gridBuilder.BeforeStartEdit [model != null] (L260) → 상신 진행·완료이면 책무배분일 편집을 시작할 때 "상신문서 존재시 책무배분일은 수정할 수 없습니다" (AS-IS는 안내만 하고 편집은 막지 않는다)
+  // [E7] gridBuilder.BeforeStartEdit [model != null] (L260) → 상신 진행·완료이면 책무배분일 편집을 시작할 때 "상신문서 존재시 책무배분일은 수정할 수 없습니다" (AS-IS는 안내만 하고 편집은 막지 않는다)
   const gridCrud = {
     ...crud,
     gridProps: {
@@ -240,6 +265,20 @@ export const Tdm34_TabPage_RoleAllcDetail: React.FC<Props> = ({ roleAllc, nonce 
       </div>
       <Tdm35_Lookup_RoleAllcTask roleAllcDetailId={taskDetailId} onClose={() => setTaskDetailId(null)} />
       <Sys10_Lookup_FileViewer file={viewFile} onClose={() => setViewFile(null)} />
+      {/* dcrChk() 문서분류가 없을 때: Dcr01_Lookup_Class.open(null, null, callback → getHtmlData) */}
+      <Dcr01_Lookup_Class
+        open={classPickRow != null}
+        onResult={r => { if (classPickRow) setLinkDoc({ row: classPickRow, classTreeId: r.classTreeId }); setClassPickRow(null); }}
+        onClose={() => setClassPickRow(null)}
+      />
+      {/* insertLinkApprovals() L469-487: Apr01_Edit_ApprDoc.insertLinkApprovals(classTreeModel, "A90", {gridList, roleAllcModel}, false, callback → updateApprId / 취소면 callback.execute()) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: LINK_CODE, refId: linkDoc.row.roleAllcDetailId } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void crud.retrieve()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </div>
   );
 };

@@ -1049,6 +1049,37 @@ export const tdmApi = {
     return res.data.data ?? [];
   },
 
+  /** A94 AS-IS tdm.Tdm56_ChckRelateAppr.insertApprId — 이행점검보고서(A94) 상신 뒤 결재문서 연결을 기록하고 임원 이행점검 첨부를 문서에 붙인다 (V34) */
+  insertCheckRelateAppr: async (chckJobId: number, roleId: number, apprId: number): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>(`v1/tdm/check-jobs/${chckJobId}/relate-appr`, { roleId, apprId });
+  },
+
+  /** A90 AS-IS tdm.Tdm34_RoleAllcDetail.updateApprId — 임원책무동의서 결재 문서를 기록한다 (V34) */
+  updateRoleAllcDetailApprId: async (roleAllcDetailId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/tdm/role-allc-details/${roleAllcDetailId}/appr-id`, { apprId });
+  },
+
+  /** A91 AS-IS tdm.Tdm31_RoleDesc.updateApprId — 책무기술서 결재 문서를 기록하고 첨부를 문서에 붙인다 (V34) */
+  updateRoleDescApprId: async (roleDescId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/tdm/role-descs/${roleDescId}/appr-id`, { apprId });
+  },
+
+  /** A91 AS-IS tdm.Tdm31_RoleDesc.updateWorkDate — on: workStatus "99"(작업중 시각), off: "10"(비움) (V34) */
+  updateRoleDescWorkDate: async (roleDescId: number, on: boolean): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/tdm/role-descs/${roleDescId}/work-date`, { on });
+  },
+
+  /** A92 결재요청 앞부분 — 올린 파일이 한 건이면 "2", 아니면 시스템 생성 파일 정보를 두고 "1"로 기록해 돌려준다 (upsertByRoleDigmId·updateUseFileType, V34) */
+  readyRoleDigmAppr: async (roleDigmId: number): Promise<string> => {
+    const res = await apiClient.put<ApiResponse<string>>(`v1/tdm/role-digms/${roleDigmId}/use-file-type`);
+    return res.data.data;
+  },
+
+  /** A92 AS-IS tdm.Tdm32_RoleDigm.updateApprId — 책무체계도 결재 문서를 기록하고 첨부를 문서에 붙인다 (V34) */
+  updateRoleDigmApprId: async (roleDigmId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/tdm/role-digms/${roleDigmId}/appr-id`, { apprId });
+  },
+
   /** AS-IS tdm.Tdm53_ChckExct.updateLockYn */
   updateCheckExctLock: async (isLock: boolean, chckExctIds: number[]): Promise<void> => {
     await apiClient.put<ApiResponse<null>>('v1/tdm/check-jobs/excts/lock', { isLock, chckExctIds });

@@ -2,7 +2,8 @@
  * [1418] 책무 > 02. 책무구조도 > 임원별 책무기술서 (N12)
  * AS-IS: myApp/client/vi/tdm/Tdm31_Tab_RoleDesc.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L101-138: 가운데 = 툴바(조회기간 [시작 100 ~ 종료 100] + 전체보기 · 검색 250 "직책/담당임원" + 미처리건만 조회 · [조회][등록][저장][삭제]) + 책무기술서 CellEditGrid(체크박스 다중)
- * 1단계: 결재요청(createRd·dcrChk·insertLinkApproval·updateApprId)과 문서보기(ApprCallbackResult·Apr01_Edit_ApprDoc)는 전자결재라 다음 단계 — 사전 검사까지만 하고 안내한다.
+ * 결재요청(aprWorkCheck·updateWorkDate·dcrChk·insertLinkApproval·updateApprId)과 문서보기(retrieveApproval)는 V34에서 전자결재 편집창에 연결했다 (링크코드 A91, 제목·본문은 서버가 만든다 `GET apr/apprs/link-seed`).
+ *        결재요청 중 책무기술서 파일을 새로 만드는 fileCheck·createRd·relateRdFile은 RD 연동이 없어 원본의 "파일생성기능 제한/파일생성실패" 길(상신은 그대로 이어간다)로 옮겼다 — 이미 있는 첨부는 지우지 않는다.
  *        책무기술서 RD 뷰어(viewRd)는 RD 연동이 없어 안내한다(E11 `Tdm31_Tab_RoleDescAdmin`·N11 `Tdm34_TabPage_RoleAllcDetail`과 같다).
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = 저장(n)(UX-03), 날짜 편집 열 120(UX-08), 등록은 맨 아래(03 원칙 17)
  */
@@ -11,6 +12,7 @@ import { Checkbox, DatePicker, message, Modal } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { errorMessage } from '@/api/client';
 import { fileApi } from '@/api/file';
+import { dcrApi } from '@/api/dcr';
 import { sysApi } from '@/api/sys';
 import { tdmApi } from '@/api/tdm';
 import { Code, FileInfo } from '@/types/sys';
@@ -20,12 +22,15 @@ import { CellEditGrid, gbFor, iconCell } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { Sys10_Lookup_FileViewer } from '../sys/Sys10_Lookup_FileViewer';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
+import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 import { RoleDescPick, Tdm30_Lookup_SelectMulti } from './Tdm30_Lookup_SelectMulti';
 import { dynamicIconCell } from './tdmGridCells';
 
 const gb = gbFor<TdmRoleDescCompany>();
 const FORMAT = 'YYYY-MM-DD';
 const APPR_SENT = ['10', '20', '30'];   // 상신 진행·완료
+const LINK_CODE = 'A91';                // 임원별 책무기술서
 
 export const Tdm31_Tab_RoleDesc: React.FC = () => {
   // [E0] 화면 열림 (생성자 L101-138) → settings() L140-220: 기간 올해 1/1~오늘(전체보기라 비활성), 전체보기 켬·미처리건만 조회 끔 → retrieve()
@@ -37,6 +42,10 @@ export const Tdm31_Tab_RoleDesc: React.FC = () => {
   const [reasonCodes, setReasonCodes] = useState<Code[]>([]);                    // reasonComboBox[TdmDescRegReason]
   const [lookupOpen, setLookupOpen] = useState(false);                           // Tdm30_Lookup_SelectMulti
   const [viewFile, setViewFile] = useState<FileInfo | null>(null);               // 책무기술서 첨부 보기
+  // 전자결재 창: 새 문서(insertLinkApproval, 문서분류 + 고른 행) 또는 기존 문서(retrieveApproval)
+  const [linkDoc, setLinkDoc] = useState<{ row: TdmRoleDescCompany; classTreeId: number } | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [classPickRow, setClassPickRow] = useState<TdmRoleDescCompany | null>(null);   // 문서분류가 없을 때 Dcr01_Lookup_Class로 고르는 중인 행
 
   useEffect(() => {
     sysApi.searchCodes('TdmDescRegReason').then(setReasonCodes).catch(() => {});
@@ -110,7 +119,7 @@ export const Tdm31_Tab_RoleDesc: React.FC = () => {
     })), true);
   };
 
-  // [E7] deleteButton[삭제].Select (L202) → deleteChk() L468-499: 상신 중·완료가 하나라도 있으면 안내, 없으면 "n건을 삭제하시겠습니까?" → [YES] [E10] deleteRow()
+  // [E7] deleteButton[삭제].Select (L202) → deleteChk() L468-499: 상신 중·완료가 하나라도 있으면 안내, 없으면 "n건을 삭제하시겠습니까?" → [YES] [E11] deleteRow()
   const deleteChk = () => {
     const checked = (api()?.getSelectedRows() ?? []) as TdmRoleDescCompany[];
     for (const r of checked) {
@@ -151,25 +160,71 @@ export const Tdm31_Tab_RoleDesc: React.FC = () => {
     else viewRd();
   };
 
-  // 결재요청 (actionCell02 L262-300): 저장하지 않은 변경이 있으면 안내, 1분 안에 파일을 만들고 있으면 "현재 작업중인 기술서입니다."
-  // 그다음 작업일시 표시·fileCheck·createRd·dcrChk(Dcr01_Lookup_Class)·Apr01_Edit_ApprDoc·updateApprId는 전자결재/RD라 다음 단계
+  // 결재요청 (actionCell02 L262-300): 저장하지 않은 변경이 있으면 안내, 1분 안에 파일을 만들고 있으면(aprWorkCheck) "현재 작업중인 기술서입니다."
+  // 아니면 작업일시 표시 updateWorkDate(99) → fileCheck → dcrChk()
   const apprRequest = async (row: TdmRoleDescCompany) => {
     if (crud.hasChanges()) { message.warning('작업중인 내용을 저장 후 이용해주세요'); return; }
     try {
       if (await tdmApi.isRoleDescWorking(row.roleDescId)) { message.info('현재 작업중인 기술서입니다.'); return; }
+      await tdmApi.updateRoleDescWorkDate(row.roleDescId, true);
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
       return;
     }
-    // [E생략] updateWorkDate(99) → fileCheck → createRd(Sys99_Print.CreateTdmRoleDesc·RDUtil) → Dcr01_Lookup_Class·Dcr30_Link.selectByLinkCode → Apr01_Edit_ApprDoc → updateApprId: 전자결재·RD는 다음 단계
-    message.info('전자결재 상신(Apr01_Edit_ApprDoc)은 아직 변환 전입니다');
+    // fileCheck(L785-796: 기존 첨부 지우기) → createRd(L517-597: RD로 PDF 생성) → relateRdFile(L713-761)은 RD 연동이 없어 하지 않는다
+    // (원본도 파일을 못 만들면 "개발계는 파일생성기능 제한"·"파일생성실패"를 알리고 그대로 insertLinkApproval로 이어간다)
+    await dcrChk(row);
   };
 
-  // 문서보기 (actionCell03 L302-340): 결재상태가 없으면 "문서가 존재하지않습니다". ApprCallbackResult·Apr01_Edit_ApprDoc.retrieveApproval은 다음 단계
+  // rollBackWorkDate() L798-811: tdm.Tdm31_RoleDesc.updateWorkDate(10) — 작업중 표시를 비운다
+  const rollBackWorkDate = async (roleDescId: number) => {
+    try {
+      await tdmApi.updateRoleDescWorkDate(roleDescId, false);
+    } catch {
+      // 원본도 결과를 보지 않는다
+    }
+  };
+
+  // dcrChk() L599-634: 이미 상신중·완료면 막고(작업중 표시는 비운다), dcr.Dcr30_Link.selectByLinkCode(A91) — 문서분류가 없으면 Dcr01_Lookup_Class로 고르고,
+  // 있으면(첫 행) 그 분류로 createRd() → insertLinkApproval() L636-652
+  const dcrChk = async (row: TdmRoleDescCompany) => {
+    if (row.apprStatusCode && APPR_SENT.includes(row.apprStatusCode)) {
+      message.warning('이미 상신중이거나 완료된 문서가 존재합니다');
+      await rollBackWorkDate(row.roleDescId);
+      return;
+    }
+    try {
+      const list = await dcrApi.searchClassTreeByLinkCode(LINK_CODE);
+      if (list.length === 0) setClassPickRow(row);
+      else openLinkDoc(row, list[0].classTreeId);
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+      await rollBackWorkDate(row.roleDescId);
+    }
+  };
+
+  const openLinkDoc = (row: TdmRoleDescCompany, classTreeId: number) => {
+    message.info('RD 연동이 없어 책무기술서 파일은 새로 만들지 않습니다');   // 원본 createRd 개발계 분기 Info.display "개발계는 파일생성기능 제한"
+    setLinkDoc({ row, classTreeId });
+  };
+
+  // updateApprId() L654-667: tdm.Tdm31_RoleDesc.updateApprId(roleDescId, apprId) → retrieve() → rollBackWorkDate()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await tdmApi.updateRoleDescApprId(linkDoc.row.roleDescId, apprId);
+      await crud.retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+    await rollBackWorkDate(linkDoc.row.roleDescId);
+  };
+
+  // [E10] actionCell03 (ImageCell).callbackOnCreate (L326) — 문서보기 (actionCell03 L302-340): 결재상태가 없으면 "문서가 존재하지않습니다". ApprCallbackResult + Apr01_Edit_ApprDoc.retrieveApproval
   const viewAppr = (row: TdmRoleDescCompany) => {
     if (!row.apprStatusCode) { message.warning('문서가 존재하지않습니다'); return; }
-    // [E생략] ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval: 전자결재는 다른 도메인 — 다음 단계
-    message.info('전자결재 문서 보기(Apr01_Edit_ApprDoc)는 아직 변환 전입니다');
+    if (row.apprId == null) { message.warning('문서가 존재하지않습니다'); return; }
+    setViewApprId(row.apprId);
   };
 
   // buildGrid() L222-359
@@ -243,6 +298,24 @@ export const Tdm31_Tab_RoleDesc: React.FC = () => {
       </div>
       <Tdm30_Lookup_SelectMulti open={lookupOpen} onSelect={insertRow} onClose={() => setLookupOpen(false)} />
       <Sys10_Lookup_FileViewer file={viewFile} onClose={() => setViewFile(null)} />
+      {/* dcrChk() 문서분류가 없을 때: Dcr01_Lookup_Class.open(null, null, callback → createRd) */}
+      <Dcr01_Lookup_Class
+        open={classPickRow != null}
+        onResult={r => { if (classPickRow) openLinkDoc(classPickRow, r.classTreeId); setClassPickRow(null); }}
+        onClose={() => { if (classPickRow) void rollBackWorkDate(classPickRow.roleDescId); setClassPickRow(null); }}
+      />
+      {/* insertLinkApproval() L636-652: Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, "A91", 행, false, callback → updateApprId / 취소면 retrieve()+rollBackWorkDate()) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: LINK_CODE, refId: linkDoc.row.roleDescId } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => { void crud.retrieve(); }}
+        onClose={() => {
+          if (linkDoc) void rollBackWorkDate(linkDoc.row.roleDescId);
+          setViewApprId(null);
+          setLinkDoc(null);
+        }}
+      />
     </div>
   );
 };

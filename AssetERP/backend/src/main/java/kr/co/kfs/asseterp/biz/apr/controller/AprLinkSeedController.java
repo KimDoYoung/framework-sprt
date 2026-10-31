@@ -40,7 +40,8 @@ public class AprLinkSeedController {
                                             @RequestParam(required = false) String actMappingId,
                                             @RequestParam(required = false) String typeName,
                                             @RequestParam(required = false) String closeDate, @RequestParam(required = false) String periodString,
-                                            @RequestParam(required = false) String checkCycle) {
+                                            @RequestParam(required = false) String checkCycle,
+                                            @RequestParam(required = false) String roleId) {
         Map<String, String> args = new HashMap<>();
         put(args, "stdDate", stdDate);
         put(args, "cycleType", cycleType);
@@ -54,6 +55,7 @@ public class AprLinkSeedController {
         put(args, "closeDate", closeDate); // A09 자기매매 실거래 — 보고 기준일(TempData.closeDate)
         put(args, "periodString", periodString); // A09 — 보고 기간 이름("3월"·"1분기", TempData.periodString)
         put(args, "checkCycle", checkCycle); // B05 계좌개설 — 보고주기(1 분기별·2 월별)
+        put(args, "roleId", roleId); // A94 책무이행점검보고서 — 탭의 보고CEO 직책(tdm20_role_id)
         put(args, "ids", ids); // 여러 행을 한 문서로 묶는 코드(A77 기준가 정정 월보고)의 행 ID, 쉼표 구분
         return ApiResponse.ok(service.seed(principal, classTreeId, linkCode, refId, args));
     }

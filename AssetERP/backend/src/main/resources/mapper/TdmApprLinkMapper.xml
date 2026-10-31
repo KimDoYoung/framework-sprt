@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  책무 결재 상신 A90·A91·A92·A94 (V34) — AS-IS(IDMS-IC) server/tdm/mapper/tdm30_role_allc.xml · tdm12_task_relate_detail.xml ·
+  tdm31_role_desc.xml · tdm32_role_digm.xml · tdm34_role_allc_detail.xml · tdm51_chck_org.xml · tdm56_chck_relate_appr.xml
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.tdm.mapper.TdmApprLinkMapper">
+
+    <!-- A90: AS-IS tdm30_role_allc.selectById 의 이름 열(tdm30_role_nm·tdm30_person_nm) + tdm34 책무배분일. tdm34에는 회사 열이 없어 tdm30의 회사로 막는다 -->
+    <select id="selectRoleAllcDetail" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TdmLinkRoleAllcDetailRow">
+        SELECT  tdm30_role_id                  AS role_id
+             ,  tdm34_role_allc_date           AS role_allc_date
+             ,  f_emp_kor_nm(tdm30_person_id)  AS person_name
+             ,  tdm20_role_nm                  AS role_name
+          FROM  tdm34_role_allc_detail
+                INNER JOIN tdm30_role_allc ON tdm30_role_allc_id = tdm34_role_allc_id
+                LEFT OUTER JOIN tdm20_role ON tdm20_role_id = tdm30_role_id
+         WHERE  tdm34_role_allc_detail_id = #{roleAllcDetailId}
+           AND  tdm30_company_id = #{companyId}
+    </select>
+
+    <!-- A90: AS-IS tdm12_task_relate_detail.getHtmlData -->
+    <select id="selectTaskDetails" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TdmLinkTaskDetailRow">
+        SELECT  tdm10_task_nm       AS task_name
+             ,  tdm12_content       AS content
+          FROM  tdm12_task_relate_detail
+                INNER JOIN tdm10_task ON tdm10_task_id = tdm12_task_id
+                INNER JOIN tdm21_role_relate_task ON tdm21_task_id = tdm10_task_id
+                INNER JOIN tdm20_role ON tdm20_role_id = tdm21_role_id
+         WHERE  tdm10_company_id = #{companyId}
+           AND  tdm20_role_id = #{roleId}
+           AND  tdm12_use_yn = 'true'
+           AND  CAST(#{stdDate} AS date) BETWEEN tdm10_start_date AND COALESCE(tdm10_end_date, TO_DATE('29991231','yyyyMMdd'))
+         ORDER BY tdm10_task_nm, tdm12_seq, tdm12_content
+    </select>
+
+    <!-- AS-IS tdm34_role_allc_detail.updateApprId — 회사 조건 추가 -->
+    <update id="updateRoleAllcDetailApprId">
+        UPDATE  tdm34_role_allc_detail
+           SET  tdm34_appr_id = #{apprId}
+         WHERE  tdm34_role_allc_detail_id = #{roleAllcDetailId}
+           AND  EXISTS ( SELECT 1 FROM tdm30_role_allc
+                          WHERE tdm30_role_allc_id = tdm34_role_allc_id
+                            AND tdm30_company_id = #{companyId} )
+    </update>
+
+    <!-- A91: tdm31_role_desc.selectByRegDate(TdmRoleDescMapper)와 같은 조인으로 한 건 — 그리드가 보여 주던 임원명·직책 -->
+    <select id="selectRoleDesc" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TdmLinkRoleDescRow">
+        SELECT  tdm31_person_id        AS person_id
+             ,  tdm31_allc_std_date    AS allc_std_date
+             ,  tdm01_person_nm        AS person_name
+             ,  tdm20_role_nm          AS role_name
+          FROM  tdm31_role_desc
+                INNER JOIN LATERAL getTdm30RoleAllc(tdm31_company_id, tdm31_allc_std_date, true) ON tdm30_role_allc_id = tdm31_role_allc_id
+                INNER JOIN       tdm20_role      ON tdm20_role_id        = tdm30_role_id
+                INNER JOIN       tdm01_hr        ON tdm01_person_id      = tdm31_person_id
+         WHERE  tdm31_role_desc_id = #{roleDescId}
+           AND  tdm31_company_id = #{companyId}
+    </select>
+
+    <!-- A91: AS-IS tdm30_role_allc.selectByPersonId -->
+    <select id="selectRoleAllcByPersonId" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TdmLinkRoleDescTaskRow">
+        SELECT DISTINCT tdm01.tdm01_person_nm  AS person_name
+             , tdm30.tdm30_add_title_yn        AS add_title_yn
+             , tdm30.tdm30_role_id             AS role_id
+             , tdm20.tdm20_role_nm             AS role_name
+             , tdm35.tdm35_task_id             AS task_id
+             , tdm35.tdm35_task_nm             AS task_name
+          FROM getTdm30RoleAllc(#{companyId}, CAST(#{roleStartDate} AS date), true) tdm30
+               LEFT OUTER JOIN tdm20_role tdm20 ON tdm30.tdm30_role_id = tdm20.tdm20_role_id
+               LEFT OUTER JOIN tdm01_hr tdm01 ON tdm30.tdm30_person_id = tdm01.tdm01_person_id
+               JOIN tdm35_role_allc_task tdm35 ON tdm35.tdm35_role_allc_detail_id = tdm30.tdm30_role_allc_detail_id
+         WHERE tdm30.tdm30_person_id = #{personId}
+         ORDER BY tdm30.tdm30_add_title_yn, tdm30.tdm30_role_id, tdm35.tdm35_task_id
+    </select>
+
+    <!-- AS-IS tdm31_role_desc.updateApprId — 회사 조건 추가 -->
+    <update id="updateRoleDescApprId">
+        UPDATE  tdm31_role_desc
+           SET  tdm31_appr_id = #{apprId}
+         WHERE  tdm31_role_desc_id = #{roleDescId}
+           AND  tdm31_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS tdm31_role_desc.updateWorkDate1 / updateWorkDate2 — 회사 조건 추가 -->
+    <update id="updateRoleDescWorkDate">
+        UPDATE  tdm31_role_desc
+           SET  tdm31_work_date = CASE WHEN #{on} THEN f_sysdate() ELSE NULL END
+         WHERE  tdm31_role_desc_id = #{roleDescId}
+           AND  tdm31_company_id = #{companyId}
+    </update>
+
+    <select id="selectRoleDigmAllcStdDate" resultType="java.time.LocalDate">
+        SELECT  tdm32_allc_std_date
+          FROM  tdm32_role_digm
+         WHERE  tdm32_role_digm_id = #{roleDigmId}
+           AND  tdm32_company_id = #{companyId}
+    </select>
+
+    <!-- A92: AS-IS tdm30_role_allc.selectByAllcStdDate -->
+    <select id="selectRoleAllcByAllcStdDate" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TdmLinkRoleDigmRow">
+        WITH lists AS (
+                    SELECT tdm20_role_id
+                         , tdm20_role_nm
+                         , tdm20_role_type
+                         , tdm20_role_type_etc_nm
+                      FROM tdm20_role
+                     WHERE tdm20_company_id = #{companyId}
+                       AND tdm20_start_date &lt;= CAST(#{allcStdDate} AS date)
+                       AND coalesce(tdm20_end_date, '2999-12-31'::date ) &gt;= CAST(#{allcStdDate} AS date)
+                  )
+        SELECT tdm20_role_nm                         AS role_name
+             , tdm01_person_nm                       AS person_name
+             , f_Cdnm('EmpPosCode',tdm01_pos_cd, tdm01_company_id, f_today() ) AS pos_name
+             , tdm30_add_title_yn                    AS add_title_yn
+          FROM getTdm30RoleAllc(#{companyId}, CAST(#{allcStdDate} AS date), true)
+               LEFT OUTER JOIN tdm01_hr  on    tdm30_person_id = tdm01_person_id
+               JOIN lists  on  tdm20_role_id = tdm30_role_id
+         ORDER BY tdm30_role_id
+    </select>
+
+    <!-- tdm32_role_digm.selectByRegDate(TdmRoleDigmMapper)의 tdm32_role_digm_file_id 와 같은 식 -->
+    <select id="selectRoleDigmFileId" resultType="java.lang.Long">
+        SELECT  CASE WHEN b.tdm33_role_digm_file_id IS NOT NULL
+                     THEN b.tdm33_role_digm_file_id
+                     ELSE a.tdm33_role_digm_file_id END
+          FROM  tdm32_role_digm
+                LEFT OUTER JOIN tdm33_role_digm_file a ON a.tdm33_role_digm_id = tdm32_role_digm_id AND a.tdm33_file_type = '1'
+                LEFT OUTER JOIN tdm33_role_digm_file b ON b.tdm33_role_digm_id = tdm32_role_digm_id AND b.tdm33_file_type = '2'
+         WHERE  tdm32_role_digm_id = #{roleDigmId}
+    </select>
+
+    <!-- AS-IS tdm32_role_digm.updateApprId — 회사 조건 추가 -->
+    <update id="updateRoleDigmApprId">
+        UPDATE  tdm32_role_digm
+           SET  tdm32_appr_id = #{apprId}
+         WHERE  tdm32_role_digm_id = #{roleDigmId}
+           AND  tdm32_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS tdm32_role_digm.updateUseFileType — 회사 조건 추가 -->
+    <update id="updateRoleDigmUseFileType">
+        UPDATE  tdm32_role_digm
+           SET  tdm32_use_file_type = #{useFileType}
+         WHERE  tdm32_role_digm_id = #{roleDigmId}
+           AND  tdm32_company_id = #{companyId}
+    </update>
+
+    <select id="selectChckJob" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TdmLinkChckJobRow">
+        SELECT  tdm50_check_ym     AS check_ym
+             ,  tdm50_start_date   AS start_date
+          FROM  tdm50_chck_job
+         WHERE  tdm50_chck_job_id = #{chckJobId}
+           AND  tdm50_company_id = #{companyId}
+    </select>
+
+    <select id="selectRoleName" resultType="java.lang.String">
+        SELECT  tdm20_role_nm
+          FROM  tdm20_role
+         WHERE  tdm20_role_id = #{roleId}
+           AND  tdm20_company_id = #{companyId}
+    </select>
+
+    <!-- A94: AS-IS tdm51_chck_org.selectApprContent (IDMS-IC). 날짜·숫자 인자는 그대로, 정렬 collation ko_KR.utf8 (03 원칙 19) -->
+    <select id="selectApprContent" resultType="kr.co.kfs.asseterp.biz.tdm.dto.TdmLinkChckJobHtmlRow">
+        SELECT tdm20_role_nm                                                                                                    AS role_name
+             , f_emp_kor_nm(tdm51_exct_id)                                                                                      AS exct_name
+             , SUM(month_manl_cnt)                                                                                              AS month_manl_cnt
+             , COALESCE(CASE WHEN COALESCE(tdm53_exct_appr_yn,'false') != 'true' THEN 0 ELSE SUM(month_check1_cnt) END, 0)      AS month_check1_cnt
+             , COALESCE(CASE WHEN COALESCE(tdm53_exct_appr_yn,'false') != 'true' THEN 0 ELSE SUM(month_check2_cnt) END, 0)      AS month_check2_cnt
+             , COALESCE(CASE WHEN COALESCE(tdm53_exct_appr_yn,'false') != 'true' THEN 0 ELSE SUM(month_check9_cnt) END, 0)      AS month_check9_cnt
+             , COALESCE(SUM(insuff_undone_cnt)
+                        + CASE WHEN COALESCE(tdm53_exct_appr_yn,'false') != 'true' THEN 0 ELSE SUM(insuff_done_cnt) END, 0)     AS insuff_undone_cnt
+             , COALESCE(CASE WHEN COALESCE(tdm53_exct_appr_yn,'false') != 'true' THEN 0 ELSE SUM(insuff_done_cnt) END, 0)       AS insuff_done_cnt
+             , CASE WHEN COALESCE(tdm53_exct_appr_yn,'false') = 'true' THEN '점검완료'
+                    WHEN SUM(month_manl_cnt) = 0                       THEN '점검대상없음' ELSE '미점검' END                      AS check_status_code
+          FROM tdm51_chck_org
+               INNER JOIN tdm53_chck_exct ON ( tdm53_company_id         = tdm51_company_id  AND
+                                               tdm53_check_ym           = tdm51_check_ym    AND
+                                               tdm53_role_id            = tdm51_role_id     )
+               INNER JOIN tdm20_role ON tdm20_role_id = tdm51_role_id
+               INNER JOIN LATERAL ( SELECT COUNT(*)                                                                                                                     month_manl_cnt
+                                         , SUM(CASE WHEN COALESCE(tdm52_check_status_cd,'10') NOT IN ('','10','11') AND tdm52_check_result_cd = '1' THEN 1 ELSE 0 END)  month_check1_cnt
+                                         , SUM(CASE WHEN COALESCE(tdm52_check_status_cd,'10') NOT IN ('','10','11') AND tdm52_check_result_cd = '2' THEN 1 ELSE 0 END)  month_check2_cnt
+                                         , SUM(CASE WHEN COALESCE(tdm52_check_status_cd,'10') NOT IN ('','10','11') AND tdm52_check_result_cd = '9' THEN 1 ELSE 0 END)  month_check9_cnt
+                                      FROM tdm52_chck_manl
+                                     WHERE tdm52_chck_org_id = tdm51_chck_org_id
+                                  ) tdm52 ON TRUE
+               LEFT  JOIN LATERAL ( SELECT SUM(CASE WHEN tdm54_status_cd IN ('10','11') THEN 0 ELSE 1 END)  insuff_done_cnt
+                                         , SUM(CASE WHEN tdm54_status_cd IN ('10','11') THEN 1 ELSE 0 END)  insuff_undone_cnt
+                                      FROM tdm54_chck_insuff
+                                     WHERE tdm54_company_id = tdm53_company_id
+                                       AND tdm54_role_id    = tdm53_role_id
+                                       AND tdm54_org_id     = tdm51_org_id
+                                       AND tdm54_occ_ym    != tdm51_check_ym
+                                       AND 'Y' = (CASE WHEN tdm54_action_appr_ym &lt; tdm51_check_ym THEN 'N' ELSE 'Y' END)
+                                  ) tdm54 ON TRUE
+         WHERE tdm51_company_id  = #{companyId}
+           AND tdm51_check_ym    = #{checkYm}
+           AND tdm20_ceo_role_id = #{ceoRoleId}
+         GROUP BY tdm20_role_nm, tdm51_exct_id, tdm53_exct_appr_yn
+         ORDER BY tdm20_role_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS tdm56_chck_relate_appr.insertApprId -->
+    <insert id="insertChckRelateAppr">
+        INSERT INTO tdm56_chck_relate_appr
+        SELECT  f_create_seq()
+             ,  #{relateTableId}
+             ,  #{apprId}
+             ,  f_sysdate()
+             ,  #{ceoRoleId}
+    </insert>
+
+    <!-- AS-IS sys10_file.selectByParentId (IDMS-IC) 의 파일 ID — BizFundPriceModiMapper.selectFileIds와 같은 식 -->
+    <select id="selectFileIds" resultType="long">
+        SELECT file.sys10_file_id
+          FROM (
+                SELECT *
+                  FROM sys10_file
+                 WHERE sys10_parent_id = #{parentId}
+                 UNION
+                SELECT sys10_file.*
+                  FROM sys11_relate_file
+                       INNER JOIN sys10_file ON sys10_file_id = sys11_file_id
+                 WHERE sys11_parent_id = #{parentId}
+               ) AS file
+         ORDER BY COALESCE(sys10_file_yn, 'false') ASC, LPAD(COALESCE(sys10_seq, '99999'), 5, '0'), COALESCE(sys10_title_yn, 'false') DESC, sys10_file_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <select id="countApprRelateFile" resultType="int">
+        SELECT COUNT(*)
+          FROM sys11_relate_file
+         WHERE sys11_file_id = #{fileId}
+           AND sys11_parent_id = #{apprId}
+           AND sys11_parent_table = 'apr01_appr'
+    </select>
+
+    <!-- AS-IS sys11_relate_file.insert -->
+    <insert id="insertApprRelateFile">
+        INSERT INTO sys11_relate_file ( sys11_relate_file_id, sys11_file_id, sys11_parent_id, sys11_parent_table )
+        VALUES ( #{relateFileId}, #{fileId}, #{apprId}, 'apr01_appr' )
+    </insert>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+</mapper>
