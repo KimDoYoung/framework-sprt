@@ -42,6 +42,14 @@ public class EmpCertService {
         return certId;
     }
 
+    /** AS-IS Emp15_Tab_Cert.updateApprId → emp.Emp15_Cert.update — 결재창에서 상신·저장한 문서 ID를 증명서 행에 기록 (V22) */
+    @Transactional
+    public void updateApprId(UserPrincipal user, Long certId, Long apprId) {
+        if (mapper.updateApprId(user.getCompanyId(), certId, apprId) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "증명서 정보를 찾을 수 없습니다.");
+        }
+    }
+
     /** AS-IS delete — 화면이 결재상태가 있는 행은 막는다. TOBE는 로그인 회사 행만 지운다 */
     @Transactional
     public int deleteCert(UserPrincipal user, Long certId) {

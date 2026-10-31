@@ -180,6 +180,9 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
             f.effectDate = day(ls.effectDate);
             d.effectDate = ls.effectDate;
             d.linkCode = link.linkCode;
+            // 증명서 발급(B01~B04, L2450-2451): 수신·참조를 "-"로 채운다
+            if (ls.receiveName != null) { f.receiveName = ls.receiveName; d.receiveName = ls.receiveName; }
+            if (ls.referenceName != null) { f.referenceName = ls.referenceName; d.referenceName = ls.referenceName; }
             setLinkLock({ titleReadOnly: ls.titleReadOnly, saveVisible: ls.saveVisible });
           }
           if (stamp?.ok && stamp.outType) { f.inOutTypeCode = '10'; f.stampId = stamp.stampId ?? null; f.stampName = stamp.stampName ?? ''; }

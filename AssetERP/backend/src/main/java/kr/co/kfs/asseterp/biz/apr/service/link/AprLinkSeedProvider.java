@@ -15,8 +15,13 @@ public interface AprLinkSeedProvider {
     /** content가 null이면 문서분류의 대표 양식을 쓴다(AS-IS checkContent) */
     Seed seed(UserPrincipal user, String linkCode, Long refId);
 
-    /** effectDate가 null이면 오늘, titleReadOnly 기본은 true */
-    record Seed(String title, String content, java.time.LocalDate effectDate, boolean titleReadOnly, boolean saveVisible) {
+    /** effectDate가 null이면 오늘, titleReadOnly 기본은 true, receiveName·referenceName은 null이면 비워 둔다(증명서는 둘 다 "-", V22) */
+    record Seed(String title, String content, java.time.LocalDate effectDate, boolean titleReadOnly, boolean saveVisible,
+                String receiveName, String referenceName) {
+        public Seed(String title, String content, java.time.LocalDate effectDate, boolean titleReadOnly, boolean saveVisible) {
+            this(title, content, effectDate, titleReadOnly, saveVisible, null, null);
+        }
+
         public static Seed of(String title, String content) {
             return new Seed(title, content, null, true, false);
         }

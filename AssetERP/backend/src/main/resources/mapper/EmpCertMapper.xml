@@ -57,4 +57,101 @@
          WHERE emp15_company_id = #{companyId}
            AND emp15_cert_id    = #{certId}
     </delete>
+
+    <!-- AS-IS emp15_cert.update (UpdateDataModel) — 결재창에서 상신·저장한 문서 ID 기록 (V22). 회사 조건 추가 -->
+    <update id="updateApprId">
+        UPDATE emp15_cert
+           SET emp15_appr_id = #{apprId}
+         WHERE emp15_company_id = #{companyId}
+           AND emp15_cert_id    = #{certId}
+    </update>
+
+    <!--
+      AS-IS emp15_cert.selectByCompanyId (IDMS-IC) 한 행의 양식 치환 열 (V22, Emp15_Tab_Cert.createMapping L418-443).
+      AS-IS는 그리드 행(Emp15_CertModel)에서 읽던 값이라 같은 SELECT에 증명서 ID 조건만 건다.
+    -->
+    <select id="selectCertMapping" resultType="kr.co.kfs.asseterp.biz.emp.dto.CertMappingRow">
+        <![CDATA[
+        SELECT cert.emp15_cert_id                                                                   AS cert_id
+             , cert.emp15_issue_date                                                                AS issue_date
+             , cert.emp15_link_cd                                                                   AS link_code
+             , per.emp01_emp_no                                                                     AS person_no
+             , per.emp01_hire_date                                                                  AS hire_date
+             , com.sys01_company_nm                                                                 AS company_name
+             , '(' || COALESCE(com.sys01_zip_cd,'') || ')'
+                   || COALESCE(com.sys01_zip_addr,'')
+                   || COALESCE(com.sys01_zip_detail,'')                                             AS company_address
+             , (SELECT emp02_birthday
+                  FROM emp02_others
+                 WHERE emp02_person_id = emp01_person_id)                                           AS birth_day
+             , (SELECT to_decrypts(emp02_ctz_no)
+                  FROM emp02_others
+                 WHERE emp02_person_id = emp01_person_id)                                           AS person_ctz_no
+             , (SELECT '(' || COALESCE(emp02_zip_cd,'') || ')'
+                          || COALESCE(emp02_zip_addr,'')
+                          || ' '
+                          || COALESCE(emp02_addr_detail,'')
+                  FROM emp02_others
+                 WHERE emp02_person_id = emp15_person_id)                                           AS person_address
+             , (SELECT f_org_nm(emp03_org_code_id, emp15_issue_date)
+                  FROM emp03_trans
+                 WHERE emp03_person_id = emp15_person_id
+                   AND emp03_trans_date IN (SELECT MAX(emp03_trans_date)
+                                              FROM emp03_trans
+                                             WHERE emp03_person_id = emp15_person_id
+                                               AND emp03_trans_date <= emp15_issue_date))           AS org_name
+             , (SELECT f_emp_kor_nm(emp01_person_id)
+                  FROM emp03_trans
+                       INNER JOIN emp01_person ON emp01_person_id = emp03_person_id
+                 WHERE emp03_pos_cd = '100'
+                   AND emp01_company_id = emp15_company_id
+                   AND emp03_trans_date <= emp15_issue_date
+                 LIMIT 1)                                                                           AS company_agent
+             , (CASE WHEN cert.emp15_cert_use_cd = '9'
+                     THEN cert.emp15_cert_use
+                     ELSE f_cdnm('CertUseCode', cert.emp15_cert_use_cd, cert.emp15_company_id, f_sysdate())
+                     END)                                                                           AS cert_use_name
+             , f_cdnm('LinkCode', cert.emp15_link_cd, cert.emp15_company_id, f_sysdate())           AS link_name
+             , f_emp_kor_nm(cert.emp15_person_id)                                                   AS person_name
+             , f_get_emptrans(cert.emp15_person_id, cert.emp15_issue_date, 'pos_nm')                AS person_pos
+             , f_get_emptrans(cert.emp15_person_id, cert.emp15_issue_date, 'title_nm')              AS person_title
+             , f_get_emptrans(cert.emp15_person_id, cert.emp15_issue_date, 'retire_date')           AS retire_date
+             , COALESCE((SELECT STRING_AGG( '<' || 'br' || '>' || ' 조치기관 : ' || emp11_reward_group::text ||
+                                            '<' || 'br' || '>' || ' 징계일자 : ' || TO_CHAR(emp11_reward_dt,'yyyy-MM-dd')::text ||
+                                            '<' || 'br' || '>' || ' 징계사유 : ' || emp11_reward_nm::text ||
+                                            '<' || 'br' || '>' || ' 징계처분  : ' || emp11_reward_desc::text ||
+                                            '<' || 'br' || '>', '<' || 'br' || '>')
+                           FROM emp11_reward
+                          WHERE emp11_person_id = cert.emp15_person_id
+                            AND emp11_reward_cd = '20'
+                            AND emp11_reward_dt <= cert.emp15_issue_date), '')                      AS reward_list
+             , (SELECT STRING_AGG(emp03.trans_list, '<' || 'br' || '>' ORDER BY emp03.trans_list)
+                  FROM (SELECT ROW_NUMBER() OVER ()                                                 AS row_num
+                             , (TO_CHAR(e.emp03_trans_date, 'yyyy-MM-dd')::text || ' ~ ' ||
+                                (SELECT COALESCE(TO_CHAR(MIN(a.emp03_trans_date), 'yyyy-MM-dd'), TO_CHAR(cert.emp15_issue_date, 'yyyy-MM-dd'))
+                                   FROM emp03_trans a
+                                  WHERE a.emp03_person_id = cert.emp15_person_id
+                                    AND e.emp03_trans_date < a.emp03_trans_date)::text || ' ' ||
+                                f_org_nm(e.emp03_org_code_id, e.emp03_trans_date)::text ||
+                                COALESCE(' (' || (SELECT a.org02_note
+                                                    FROM org02_info a
+                                                   WHERE a.org02_code_id  = e.emp03_org_code_id
+                                                     AND a.org02_mod_date = (SELECT MAX(x.org02_mod_date)
+                                                                               FROM org02_info x
+                                                                              WHERE x.org02_code_id  = a.org02_code_id
+                                                                                AND x.org02_mod_date <= e.emp03_trans_date)
+                                                 ) || ')', '')
+                               )                                                                    AS trans_list
+                          FROM emp03_trans e
+                         WHERE e.emp03_person_id = cert.emp15_person_id
+                           AND e.emp03_trans_date <= cert.emp15_issue_date
+                           AND e.emp03_trans_cd != '900'
+                       ) emp03)                                                                     AS trans_list
+          FROM emp15_cert cert
+               INNER JOIN sys01_company com ON cert.emp15_company_id = com.sys01_company_id
+               INNER JOIN emp01_person per  ON cert.emp15_person_id  = per.emp01_person_id
+         WHERE cert.emp15_company_id = #{companyId}
+           AND cert.emp15_cert_id    = #{certId}
+        ]]>
+    </select>
 </mapper>

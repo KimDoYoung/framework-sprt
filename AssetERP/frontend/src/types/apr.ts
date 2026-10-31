@@ -701,6 +701,9 @@ export interface AprLinkSeed {
   effectDate: string;
   titleReadOnly: boolean;
   saveVisible: boolean;
+  /** 증명서(B01~B04)는 대외문서라 수신·참조를 "-"로 채운다 (V22) */
+  receiveName?: string | null;
+  referenceName?: string | null;
 }
 
 /** 새 문서 열기 (GET apr/apprs/new, V06) */

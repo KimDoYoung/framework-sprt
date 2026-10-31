@@ -20,6 +20,11 @@ export const empCertApi = {
     return res.data.data;
   },
 
+  /** AS-IS Emp15_Tab_Cert.updateApprId → emp.Emp15_Cert.update — 결재창에서 상신·저장한 문서 ID 기록 (V22) */
+  updateApprId: async (certId: number, apprId: number): Promise<void> => {
+    await apiClient.put(`v1/emp/certs/${certId}/appr-id`, { apprId });
+  },
+
   /** AS-IS emp.Emp15_Cert.delete */
   deleteCert: async (certId: number): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>(`v1/emp/certs/${certId}`);

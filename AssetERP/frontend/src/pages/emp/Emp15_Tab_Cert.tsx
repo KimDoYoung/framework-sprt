@@ -2,8 +2,8 @@
  * [1115] 경영관리 > 01. 조직 및 사원관리 > 증명서 발급 (S05)
  * AS-IS: myApp/client/vi/emp/Emp15_Tab_Cert.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(init() L87-182, SG): 가운데 테두리 박스 = 툴바(조회기간 · [조회][생성][삭제] · [문서분류지정](문서관리자만) · 신청내역 안내) + 증명서 그리드
- * 1단계: 전자결재 상신(checkAppr·checkDcr·apprView·insertLinkApproval·updateApprId — Apr01_Edit_ApprDoc·Dcr01_Lookup_Class)과
- *        메일보내기(Dcr10_Lookup_MailSender)는 다음 단계 — 아이콘 열은 그리고, 눌렀을 때 원본의 조건 검사까지만 한다
+ * 전자결재 상신(checkAppr·checkDcr·apprView·insertLinkApproval·updateApprId — Apr01_Edit_ApprDoc·Dcr01_Lookup_Class)은 V22에서 연결했다
+ * (링크코드 B01~B04, 제목·본문은 서버가 만든다 `GET apr/apprs/link-seed`). 메일보내기(Dcr10_Lookup_MailSender)는 다음 단계 — 눌렀을 때 원본의 조건 검사까지만 한다
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, message, Modal } from 'antd';
@@ -24,6 +24,8 @@ import { Dcr30_Lookup_Link } from '@/components/lookup/Dcr30_Lookup_Link';
 import { Emp15_Lookup_Cert } from './Emp15_Lookup_Cert';
 import { Emp15_Lookup_GetCert } from './Emp15_Lookup_GetCert';
 import { Emp15_Lookup_StampDocCert } from './Emp15_Lookup_StampDocCert';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
+import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 
 const gb = gbFor<Cert>();
 
@@ -45,6 +47,10 @@ export const Emp15_Tab_Cert: React.FC = () => {
   const [getOpen, setGetOpen] = useState(false);
   const [application, setApplication] = useState<BbsApplication | null>(null);
   const [linkOpen, setLinkOpen] = useState(false);
+  // 전자결재 창: 새 문서(insertLinkApproval, 문서분류 + 고른 행) 또는 기존 문서(apprView)
+  const [linkDoc, setLinkDoc] = useState<{ row: Cert; classTreeId: number } | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [classPickRow, setClassPickRow] = useState<Cert | null>(null); // 문서분류가 없을 때 Dcr01_Lookup_Class로 고르는 중인 행
 
   // [E1] retrieveButton[조회].Select (L119) / [E5] hiperLink 저장 뒤 → retrieve() L214-228: 서비스 emp.Emp15_Cert.selectByCompanyId(companyId, startDate, closeDate) → checkStampDoc()
   const retrieve = async () => {
@@ -90,20 +96,36 @@ export const Emp15_Tab_Cert: React.FC = () => {
     });
   };
 
-  // 다음 단계: 결재 문서 작성·보기(Apr01_Edit_ApprDoc)
-  const apprNext = () => message.info('전자결재 상신·결재문서 보기(Apr01_Edit_ApprDoc)는 아직 변환 전입니다.');
+  // apprView(apprId) L307-327: 서비스 apr.Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback → retrieve())
+  const apprView = (apprId: number | null | undefined) => {
+    if (apprId == null) return;
+    setViewApprId(apprId);
+  };
 
-  // checkDcr() L329-357: 서비스 dcr.Dcr30_Link.selectByLinkCode — 문서분류가 없으면 Dcr01_Lookup_Class로 고르고, 있으면 그 분류로 insertLinkApproval(결재 문서 작성)
+  // checkDcr() L329-357: createMapping(양식 치환 값)은 서버가 만든다. 서비스 dcr.Dcr30_Link.selectByLinkCode —
+  // 문서분류가 없으면 Dcr01_Lookup_Class로 고르고, 있으면(첫 행) 그 분류로 insertLinkApproval(결재 문서 작성)
   const checkDcr = async (row: Cert) => {
     try {
-      await dcrApi.searchClassTreeByLinkCode(row.linkCode ?? '');
-      apprNext();
+      const list = await dcrApi.searchClassTreeByLinkCode(row.linkCode ?? '');
+      if (list.length === 0) setClassPickRow(row);
+      else setLinkDoc({ row, classTreeId: list[0].classTreeId });
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
   };
 
-  // [E7] msgBox.DialogHide [YES] (L284) → checkDcr(), apprView() / checkAppr() L275-305 (결재요청 아이콘)
+  // updateApprId() L373-390: emp.Emp15_Cert.update(apprId) → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await empCertApi.updateApprId(linkDoc.row.certId, apprId);
+      void retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+  };
+
+  // [E7] msgBox.DialogHide [YES] (L284) → checkDcr(), [NO] → apprView() / checkAppr() L275-305 (결재요청 아이콘)
   const checkAppr = (row: Cert) => {
     gridRef.current?.api?.getRowNode(String(row.certId))?.setSelected(true, true);
     if (row.apprStatusName === '') {
@@ -116,10 +138,10 @@ export const Emp15_Tab_Cert: React.FC = () => {
         cancelText: '아니오',
         width: 450,
         onOk: () => checkDcr(row),
-        onCancel: apprNext, // NO → apprView(selectModel.getApprId())
+        onCancel: () => apprView(row.apprId),
       });
     } else {
-      apprNext(); // apprView(selectModel.getApprId()) L307-327: 서비스 apr.Apr01_Appr.selectById → Apr01_Edit_ApprDoc 열기
+      apprView(row.apprId);
     }
   };
 
@@ -184,6 +206,20 @@ export const Emp15_Tab_Cert: React.FC = () => {
       <Emp15_Lookup_GetCert open={getOpen} onResult={setApplication} onClose={() => setGetOpen(false)} />
       <Emp15_Lookup_StampDocCert application={application} onSaved={retrieve} onClose={() => setApplication(null)} />
       <Dcr30_Lookup_Link open={linkOpen} linkCodeList="LinkCode0003" onClose={() => setLinkOpen(false)} />
+      {/* checkDcr() 문서분류가 없을 때: Dcr01_Lookup_Class.open(null, null, callback → classTreeModel = result, insertLinkApproval) */}
+      <Dcr01_Lookup_Class
+        open={classPickRow != null}
+        onResult={r => { if (classPickRow) setLinkDoc({ row: classPickRow, classTreeId: r.classTreeId }); setClassPickRow(null); }}
+        onClose={() => setClassPickRow(null)}
+      />
+      {/* insertLinkApproval() L359-370: Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, linkCode, 행, isAdmin, callback → updateApprId) / apprView() */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: linkDoc.row.linkCode ?? '', refId: linkDoc.row.certId } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void retrieve()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </div>
   );
 };

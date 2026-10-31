@@ -24,6 +24,22 @@
            AND com10_form_mapping_id = #{formMappingId}
     </select>
 
+    <!-- AS-IS(IDMS-IC) com10_form_mapping.selectByLinkCode (V22, 결재창 링크 본문). 같은 링크코드 중 제목순 첫 행을 쓴다 -->
+    <select id="selectByLinkCode" resultType="kr.co.kfs.asseterp.biz.com.dto.FormMappingRes">
+        SELECT com10_form_mapping_id            AS form_mapping_id,
+               com10_company_id                 AS company_id,
+               COALESCE(dcr30_link_cd, '0')     AS link_code,
+               com10_title                      AS title,
+               com10_content                    AS content,
+               com10_default_yn                 AS default_yn,
+               com10_note                       AS note
+          FROM com10_form_mapping
+               INNER JOIN dcr30_link ON dcr30_form_mapping_id = com10_form_mapping_id
+         WHERE com10_company_id = #{companyId}
+           AND dcr30_link_cd    = #{linkCode}
+         ORDER BY com10_title
+    </select>
+
     <select id="selectCompanyIdById" resultType="long">
         SELECT com10_company_id
           FROM com10_form_mapping

@@ -4,10 +4,15 @@ import kr.co.kfs.asseterp.biz.com.dto.FormMappingRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /** AS-IS server/com/mapper/com10_form_mapping.xml + dcr30_link.updateFormMappingId + UpdateDataModel(com10_form_mapping) */
 @Mapper
 public interface ComFormMappingMapper {
     FormMappingRes selectById(@Param("formMappingId") Long formMappingId);
+
+    /** AS-IS com10_form_mapping.selectByLinkCode — 제목순 (V22) */
+    List<FormMappingRes> selectByLinkCode(@Param("companyId") Long companyId, @Param("linkCode") String linkCode);
 
     Long selectCompanyIdById(@Param("formMappingId") Long formMappingId);
 

@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.emp.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.CertApprIdReq;
 import kr.co.kfs.asseterp.biz.emp.dto.CertRes;
 import kr.co.kfs.asseterp.biz.emp.dto.CertSaveReq;
 import kr.co.kfs.asseterp.biz.emp.service.EmpCertService;
@@ -33,6 +34,13 @@ public class EmpCertController {
     @PostMapping
     public ApiResponse<Long> createCert(@AuthenticationPrincipal UserPrincipal principal, @RequestBody CertSaveReq req) {
         return ApiResponse.ok(service.createCert(principal, req));
+    }
+
+    /** AS-IS emp.Emp15_Cert.update(apprId) — 결재창 상신·저장 뒤 (V22) */
+    @PutMapping("/{certId}/appr-id")
+    public ApiResponse<Void> updateApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long certId, @RequestBody CertApprIdReq req) {
+        service.updateApprId(principal, certId, req.apprId());
+        return ApiResponse.ok(null);
     }
 
     /** AS-IS emp.Emp15_Cert.delete */

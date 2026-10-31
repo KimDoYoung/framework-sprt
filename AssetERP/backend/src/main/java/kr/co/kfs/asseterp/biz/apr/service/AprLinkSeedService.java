@@ -54,6 +54,6 @@ public class AprLinkSeedService {
                 content = docType.content();
             }
         }
-        return new AprLinkSeedRes(linkCode, title, content, s.effectDate() != null ? s.effectDate() : mapper.selectToday(), s.titleReadOnly(), s.saveVisible());
+        return new AprLinkSeedRes(linkCode, title, content, s.effectDate() != null ? s.effectDate() : mapper.selectToday(), s.titleReadOnly(), s.saveVisible(), s.receiveName(), s.referenceName());
     }
 }
