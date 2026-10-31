@@ -3,15 +3,16 @@
  * AS-IS: myApp/client/vi/apr/Apr03_Page_Relate.java (2181줄) + Apr01_Grid_ApprFile (861줄) + Apr16_Grid_StampDoc/StampApplList — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L210-346: [첨부파일 옵션설정][등록] 툴바 40 + 탭(가운데 위 0.5) + [결재선 설정][직급순 재정렬] 툴바 40 + 결재선 그리드(아래 0.5)
  * V01은 읽기만이다: 툴바의 네 단추는 편집 모드(상신·반려·임시저장 본인 / 관리자)에서만 켜진다(retrieve L925-997 editable). 연관 그리드의 삭제·설정 열은 편집 모드에서만 보인다 → 연관 설정은 V05
- * V07 편집 모드(editable): 결재선 툴바 [결재선 설정](Apr04_Edit_ApprStep)·[직급순 재정렬](arrayStepTypeCode L1920-1974)과 ▲▼(changeRow L1682-1725)를 켠다. 첨부 툴바 [첨부파일 옵션설정][등록]은 V05.
+ * V05: 첨부 툴바 [첨부파일 옵션설정]·[등록](첨부 탭 올리기)·삭제 열을 켠다(연관 탭의 [등록]은 V13).
+ * V07 편집 모드(editable): 결재선 툴바 [결재선 설정](Apr04_Edit_ApprStep)·[직급순 재정렬](arrayStepTypeCode L1920-1974)과 ▲▼(changeRow L1682-1725)를 켠다. 
  *   새 문서(isNew)는 아직 DB에 없으므로 서버를 읽지 않고 seed(새 문서 열기 응답)로 채운다.
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';
 import type { ColDef } from 'ag-grid-community';
-import { aprDetailApi, aprExtraApi, aprStepEditApi } from '@/api/apr';
+import { aprAttachApi, aprDetailApi, aprExtraApi, aprStepEditApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
-import { fileApi } from '@/api/file';
+import { fileApi, FILE_DELETE_STATUS } from '@/api/file';
 import { AprTypo, AprApprDetail, AprApprFile, AprApprAdv, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw } from '@/types/apr';
 import { FileInfo } from '@/types/sys';
 import { PageTabs } from '@/components/tabs/PageTabs';
@@ -23,6 +24,10 @@ import { Apr01_Edit_Message } from './Apr01_Edit_Message';
 import { Apr01_Edit_ApprModi } from './Apr01_Edit_ApprModi';
 import { Apr04_Edit_ApprStep, renumber } from './Apr04_Edit_ApprStep';
 import { Apr04_Edit_RetouchApprStep } from './Apr04_Edit_RetouchApprStep';
+import { Apr01_Lookup_ApprFileList } from './Apr01_Lookup_ApprFileList';
+import { Sys61_Lookup_FileList } from '../sys/Sys61_Lookup_FileList';
+import { Sys61_Lookup_DelList } from '../sys/Sys61_Lookup_DelList';
+import { FileUpdownForm, FileUpdownFormHandle } from '@/components/form/FileUpdownForm';
 
 const gbFile = gbFor<AprApprFile>();
 const gbFund = gbFor<AprApprFund>();
@@ -62,9 +67,14 @@ interface Props {
   /** 내 차례인 결재자의 [결재선 수정] (enableButton L2008-2014, V08) — 저장이 끝나면 부른 쪽이 문서를 다시 연다 */
   canRetouch?: boolean;
   onRetouched?: () => void;
+  /**
+   * 인감을 고른 뒤 결재선을 새로 만든다 (V12: resetApprStep L5197-5210). version이 바뀔 때마다 결재선을 steps로 바꾸고,
+   * 원본은 이때 연관문서 그리드(getRelateApprGrid)를 비운다 — 그대로 따른다(원본 이상한점 #34)
+   */
+  stepsReplace?: { version: number; steps: AprApprStep[] };
 }
 
-export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNew = false, seed, onStepsChange, canRetouch = false, onRetouched }) => {
+export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNew = false, seed, onStepsChange, canRetouch = false, onRetouched, stepsReplace }) => {
   const user = useLoginUser();
   const [files, setFiles] = useState<AprApprFile[]>([]);
   const [ics, setIcs] = useState<AprRelateLaw[]>([]);
@@ -80,6 +90,10 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
   const [viewFile, setViewFile] = useState<AprApprFile | null>(null);
   const [stepEditOpen, setStepEditOpen] = useState(false);
   const [retouchOpen, setRetouchOpen] = useState(false);
+  // V05: 첨부 옵션설정(세 갈래)·등록
+  const [fileOptOpen, setFileOptOpen] = useState<'options' | 'rejected' | 'deleted' | null>(null);
+  const upload = useRef<FileUpdownFormHandle>(null);
+  const isManager = user.userId < 0 || user.companyId === 0;
 
   // [E0] 화면 열림 (생성자 L210-346) → pannelEvents() L348-413
   // [E1] apprFileList (Apr01_Grid_ApprFile).callbackOnCreate (L135) · [E2] relateCorpDocList (Apr16_Grid_StampDoc).callbackOnCreate (L146) · [E8]~[E17] 연관 그리드 store Add/Remove → clearPanel():
@@ -114,6 +128,14 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
 
   useEffect(() => { void retrieve(); }, [retrieve]);
   useEffect(() => { onStepsChange?.(steps); }, [steps]); // eslint-disable-line react-hooks/exhaustive-deps
+  // 다시 그릴 때(key)는 처음 version을 이미 반영한 것으로 본다
+  const appliedVersion = useRef(stepsReplace?.version ?? 0);
+  useEffect(() => {
+    if (!stepsReplace || stepsReplace.version === appliedVersion.current) return;
+    appliedVersion.current = stepsReplace.version;
+    setSteps(stepsReplace.steps);
+    setApprs([]);
+  }, [stepsReplace]);
 
   // changeRow L1682-1725 (▲▼): 상신자는 못 바꾸고, 위로는 둘째 줄까지, 아래로는 끝까지. 번호는 위에서부터 다시 매긴다
   const changeRow = (action: 'up' | 'down', row: AprApprStep) => {
@@ -157,20 +179,77 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
     setStepEditOpen(true);
   };
 
+  // 첨부 목록만 다시 읽는다 (Apr01_Grid_ApprFile.retrieve L109-143: 표지(titleYn)는 뺀다)
+  const refreshFiles = useCallback(async () => {
+    try {
+      const list = await aprAttachApi.getEditFiles(doc.apprId);
+      setFiles(list.filter(f => f.titleYn !== 'true').map(f => ({ fileId: f.fileId, fileName: f.fileName, fileExt: f.fileExt, fileYn: f.fileYn, printYn: String(f.printYn) })));
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  }, [doc.apprId]);
+
+  // 첨부 툴바 (retrieve L925-997): [첨부파일 옵션설정]은 반려(40)면 "첨부파일 추가/삭제", 결재완료(30)면 "삭제된 첨부파일 내역"(둘 다 늘 켜짐), 그 밖에는 관리자·편집 모드일 때만
+  const optionsMode: 'options' | 'rejected' | 'deleted' = doc.statusCode === '40' ? 'rejected' : doc.statusCode === '30' ? 'deleted' : 'options';
+  const optionsLabel = optionsMode === 'rejected' ? '첨부파일 추가/삭제' : optionsMode === 'deleted' ? '삭제된 첨부파일 내역' : '첨부파일 옵션설정';
+  const optionsEnabled = optionsMode !== 'options' || isManager || editable;
+  // [E3] optionsButton[첨부파일 옵션설정].Select (L254) → options() L999-1027
+  const options = () => {
+    if (optionsMode === 'options' && files.length === 0) {
+      Modal.info({ title: '확인', content: '등록된 첨부파일이 없습니다', okText: '확인' });
+      return;
+    }
+    setFileOptOpen(optionsMode);
+  };
+  // [E4] insertButton[등록].Select (L260) → insert() L1029-1093: 첨부파일 탭이면 파일 선택 → FileUpload?parentId={apprId}, 연관 탭이면 각 연관 설정 창(V13)
+  const insert = () => {
+    if (activeKey === '0') upload.current?.click();
+    else message.info('연관 설정 창은 V13에서 연결합니다.');
+  };
+  const onFilesChange = async (picked: File[]) => {
+    if (picked.length === 0) return;
+    try {
+      for (const f of picked) await fileApi.upload(doc.apprId, f);
+    } catch (err) {
+      message.error(errorMessage(err, '파일 올리기 실패'));
+    }
+    await refreshFiles();
+    setActiveKey('0');
+  };
+  // 삭제 열 (Apr01_Grid_ApprFile showDelete L778-783): 편집 모드·관리자·반려 문서의 상신자 — checkFileDelete() L741-767
+  const canDelete = editable || isManager || (doc.statusCode === '40' && doc.regEmpId === user.userId);
+  const checkFileDelete = async (row: AprApprFile) => {
+    try {
+      const { status, message: text } = await fileApi.checkFileDeleteResult(row.fileId, doc.apprId);
+      if (status === FILE_DELETE_STATUS.RELATE_DELETED) {
+        await refreshFiles();
+      } else if (status === FILE_DELETE_STATUS.IN_USE) {
+        Modal.info({ title: '확인', content: text ?? '해당 파일은 삭제할 수 없습니다', okText: '확인' });
+      } else if (status === FILE_DELETE_STATUS.DELETABLE) {
+        await fileApi.deleteFile(row.fileId);
+        await refreshFiles();
+      }
+    } catch (err) {
+      message.error(errorMessage(err, '삭제 실패'));
+    }
+  };
+
   // fileDownloadCheck() L839-856: 결재선에 내가 있거나 결재완료(30)가 아니면 받기 열을 숨긴다
   const canDown = useMemo(() => doc.statusCode === '30' || steps.some(s => s.apprEmpId != null && s.apprEmpId === user.userId), [doc.statusCode, steps, user.userId]);
 
   // buildGrid() (Apr01_Grid_ApprFile L690-727): 첨부파일 · "확정문서" · 받기 · (삭제=편집 모드만) · 보기 · 출력
   const fileCols = useMemo<ColDef<AprApprFile>[]>(() => {
     const cols: ColDef<AprApprFile>[] = [
-      gbFile.text('fileName', canDown ? 405 : 465, '첨부파일'),
+      gbFile.text('fileName', (canDown ? 405 : 465) - (canDelete ? 50 : 0), '첨부파일'),
       { colId: 'fileYnCheck', headerName: ' ', width: 65, valueGetter: p => (p.data?.fileYn === 'true' ? '확정문서' : ' ') },
     ];
     if (canDown) cols.push(iconCell<AprApprFile>('down', 'downAction', 50, '받기', row => { void fileApi.download(row.fileId); }));
+    if (canDelete) cols.push(iconCell<AprApprFile>('delete', 'deleteAction', 50, '삭제', row => { void checkFileDelete(row); }));
     cols.push(iconCell<AprApprFile>('view', 'viewAction', 50, '보기', row => setViewFile(row)));
     cols.push(gbFile.booleanYn2('printYn', 50, '출력'));
     return cols;
-  }, [canDown]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canDown, canDelete]);
 
   // buildRelateIcsGrid L1506-1551 / buildRelateIcrGrid L1554-1599: 법규명(내규명) 405 · 주기 80 · 마감일 100 · 설정/삭제(편집 모드만) · 상세보기 60
   const lawCols = (title: string): ColDef<AprRelateLaw>[] => [
@@ -254,13 +333,11 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0 }}>
-      {/* 첨부 툴바(hlc01 40): [첨부파일 옵션설정][등록] — 편집 모드 전용, 첨부 등록은 V05 */}
-      {editable && (
-        <div style={{ display: 'flex', gap: 6 }}>
-          <Button type="register" onClick={() => message.info('첨부파일 옵션설정은 V05에서 연결합니다.')}>첨부파일 옵션설정</Button>
-          <Button type="register" onClick={() => message.info('첨부파일 등록은 V05에서 연결합니다.')}>등록</Button>
-        </div>
-      )}
+      {/* 첨부 툴바(hlc01 40): [첨부파일 옵션설정][등록] — 관리자·편집 모드(반려·결재완료 문서의 옵션 단추는 늘) 켜진다 */}
+      <div style={{ display: 'flex', gap: 6 }}>
+        <Button type="register" disabled={!optionsEnabled} onClick={options}>{optionsLabel}</Button>
+        <Button type="register" disabled={!(isManager || editable)} onClick={insert}>등록</Button>
+      </div>
       {/* plainTabPanel (가운데 위 0.5) */}
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <PageTabs
@@ -295,6 +372,10 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
       </div>
       <Apr04_Edit_ApprStep open={stepEditOpen} steps={steps} onConfirm={setSteps} onClose={() => setStepEditOpen(false)} />
       <Apr04_Edit_RetouchApprStep open={retouchOpen} apprId={doc.apprId} steps={steps} onSaved={() => onRetouched?.()} onClose={() => setRetouchOpen(false)} />
+      <FileUpdownForm ref={upload} onChange={() => undefined} onChangeFiles={onFilesChange} />
+      <Apr01_Lookup_ApprFileList apprId={fileOptOpen === 'options' ? doc.apprId : null} onClosed={() => void refreshFiles()} onClose={() => setFileOptOpen(null)} />
+      <Sys61_Lookup_FileList parentId={fileOptOpen === 'rejected' ? doc.apprId : null} onClosed={() => void refreshFiles()} onClose={() => setFileOptOpen(null)} />
+      <Sys61_Lookup_DelList parentId={fileOptOpen === 'deleted' ? doc.apprId : null} onClose={() => setFileOptOpen(null)} />
       <Apr01_Edit_Message message={opinion} onClose={() => setOpinion(null)} />
       <Apr01_Edit_ApprModi typo={typoView} onClose={() => setTypoView(null)} />
       <Sys10_Lookup_FileViewer file={viewFile ? toFileInfo(viewFile) : null} onClose={() => setViewFile(null)} />

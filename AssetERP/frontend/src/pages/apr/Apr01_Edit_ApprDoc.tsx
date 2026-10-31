@@ -1,23 +1,25 @@
 /**
  * 전자결재 문서 상세 (V01 문서 읽기 + V02 결재 처리 + V07 상신·임시저장) — 결재선·연관 그리드·첨부를 보고, 내 차례면 [승인][반려], 승인한 문서면 [승인취소], 아무도 결재 안 한 내 문서면 [상신취소].
- * V07 편집 모드: 새 문서(newClassTreeId, insertApproval) 또는 내 임시저장(99) 문서는 칸을 고치고 [결재요청][저장](임시저장 문서는 [삭제])을 쓴다. 열람기록·댓글(V04), 오타수정·공람·폐기·중요표시(V09), 연관법규·결재완료후 첨부(V10), 미리보기 PDF(V11), 연관 설정·인감·첨부 등록·양식 불러오기(V05)는 다음 ID.
+ * V07 편집 모드: 새 문서(newClassTreeId, insertApproval) 또는 내 임시저장(99) 문서는 칸을 고치고 [결재요청][저장](임시저장 문서는 [삭제])을 쓴다. 열람기록·댓글(V04), 오타수정·공람·폐기·중요표시(V09), 연관법규·결재완료후 첨부(V10), 불러오기·양식·첨부 등록·옵션(V05), 미리보기 PDF(V11), 연관 설정(V13), 날인신청(V14), 링크코드 본문(V15)은 다음 ID.
  * AS-IS: myApp/client/vi/apr/Apr01_Edit_ApprDoc.java (5864줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L339-507: 1600×870 모달 "문서상세"(닫기 X 없음), 머리 오른쪽 [열람기록][댓글(n)], 위 150 = 왼쪽 문서구분·상신제목(getApprovalForm01 L4648-4704) + 오른쪽 시행일자·상신일자·인감종류·대표회사·대표서명·수신·참조·비고(getApprovalForm02 L4706-4794),
  *   가운데 = 왼쪽 상신내용(getHtmlForm L4796-4817) + 오른쪽 Apr03_Page_Relate(탭 7개 + 결재선), 푸터 가운데 [미리보기][닫기] + 북마크 별
+ * V12: 인감종류 [E32] findLookupStamp·대표회사 [E33] 조회창 → resetApprStep(인감 줄을 넣은 결재선 다시 만들기), 새 문서의 기본 인감 retrieveRoleStamp.
  * 열기: retrieveApproval(apprId | apprModel, adminFlag, callback) L510-525 → getApprModel L535-560(selectById, 임시저장·관리자가 아니면 열람기록, 북마크 조회) → retrieveApproval L643-728
  * 조회창 규격(11a)·12 원칙: LookupModal, 머리 아래 선·푸터 위 선, 안쪽 스크롤은 그리드·상신내용 하나씩. 상신내용은 읽기 전용 HtmlView(AS-IS는 CKEditor — 수정은 V04 오타수정)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Radio, Space } from 'antd';
-import { StarFilled, StarOutlined } from '@ant-design/icons';
+import { SearchOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { aprActionApi, aprDetailApi, aprExtraApi, aprWriteApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
-import { AprApprActionRes, AprApprActionState, AprApprDetail, AprApprNew, AprApprSaveReq, AprApprStep, AprApprWriteRes, AprRelateLaw } from '@/types/apr';
+import { AprApprActionRes, AprApprActionState, AprApprDetail, AprApprNew, AprApprSaveReq, AprApprStep, AprApprWriteRes, AprRelateLaw, AprReprCorpLookup, AprStamp, AprStampLine } from '@/types/apr';
 import { Button } from '@/components/button';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { HtmlView } from '@/components/form/HtmlView';
 import { HtmlEditor } from '@/components/form/HtmlEditor';
+import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import { Apr01_Edit_NoteMessage } from './Apr01_Edit_NoteMessage';
 import { Apr01_Edit_RejectMessage } from './Apr01_Edit_RejectMessage';
@@ -30,6 +32,10 @@ import { Apr50_Lookup_PersonList } from './Apr50_Lookup_PersonList';
 import { Apr90_Lookup_DisposalList } from './Apr90_Lookup_DisposalList';
 import { Apr20_Lookup_RelateIcsList } from './Apr20_Lookup_RelateIcsList';
 import { Apr01_Lookup_ApprFile } from './Apr01_Lookup_ApprFile';
+import { Apr05_Lookup_LoadDoc2 } from './Apr05_Lookup_LoadDoc2';
+import { Dcr05_Lookup_FormView } from '../dcr/Dcr05_Lookup_FormView';
+import { Apr10_Lookup_DocStamp } from './Apr10_Lookup_DocStamp';
+import { Apr15_Lookup_ReprCorp } from './Apr15_Lookup_ReprCorp';
 
 const day = (v?: string | null) => (v ? v.slice(0, 10) : '');
 const LABEL_W = 90;
@@ -38,11 +44,14 @@ const LABEL_W = 90;
 interface EditForm {
   inOutTypeCode: string; title: string; effectDate: string; regDate: string; signCompany: string; signCeo: string;
   receiveName: string; referenceName: string; note: string; content: string;
+  /** 인감종류(stampId·stampName 칸)와 위치 콤보(stampPosition, 'StampLocation') */
+  stampId: number | null; stampName: string; stampPosition: string;
 }
-const EMPTY_FORM: EditForm = { inOutTypeCode: '20', title: '', effectDate: '', regDate: '', signCompany: '', signCeo: '', receiveName: '', referenceName: '', note: '', content: '' };
+const EMPTY_FORM: EditForm = { inOutTypeCode: '20', title: '', effectDate: '', regDate: '', signCompany: '', signCeo: '', receiveName: '', referenceName: '', note: '', content: '', stampId: null, stampName: '', stampPosition: '' };
 const toForm = (d: AprApprDetail): EditForm => ({
   inOutTypeCode: d.inOutTypeCode === '10' ? '10' : '20', title: d.title ?? '', effectDate: day(d.effectDate), regDate: day(d.regDate), signCompany: d.signCompany ?? '',
   signCeo: d.signCeo ?? '', receiveName: d.receiveName ?? '', referenceName: d.referenceName ?? '', note: d.note ?? '', content: d.content ?? '',
+  stampId: d.stampId ?? null, stampName: d.stampName ?? '', stampPosition: d.stampPosition ?? '',
 });
 /** 새 문서 열기 응답 → 화면이 쓰는 문서 (statusCode '10': 처음 상신등록 상태, L4473) */
 const newToDoc = (n: AprApprNew): AprApprDetail => ({
@@ -86,6 +95,10 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
   const [relateKey, setRelateKey] = useState(0);
   // V10: [연관법규 추가/수정/삭제]·[결재완료후 첨부파일등록]
   const [icsOpen, setIcsOpen] = useState(false);
+  // V05: [불러오기]·[양식] — 본문 편집기는 값을 열 때 한 번만 받아서 새 값을 넣으면 key를 바꿔 다시 연다
+  const [loadDocOpen, setLoadDocOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editorKey, setEditorKey] = useState(0);
   const [afterFileOpen, setAfterFileOpen] = useState(false);
   const [state, setState] = useState<AprApprActionState | null>(null);
   const [noteOpen, setNoteOpen] = useState(false);
@@ -97,6 +110,10 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
   const [requestNoteOpen, setRequestNoteOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  // V12: 인감종류 조회창(findLookupStamp)·대표회사 조회창, 인감을 고른 뒤 결재선 다시 만들기(resetApprStep)
+  const [stampOpen, setStampOpen] = useState(false);
+  const [corpOpen, setCorpOpen] = useState(false);
+  const [stepsReplace, setStepsReplace] = useState<{ version: number; steps: AprApprStep[] }>({ version: 0, steps: [] });
   const stepsRef = useRef<AprApprStep[]>([]);
   /** 내 임시저장(99) 문서이거나 새 문서면 칸을 고칠 수 있다 (makeButton: 상신자 본인의 편집 모드) */
   const editable = isNew || (doc != null && doc.statusCode === '99' && doc.regEmpId === user.userId);
@@ -121,13 +138,28 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
           const n = await aprWriteApi.openNew(newClassTreeId);
           if (!alive) return;
           const d = newToDoc(n);
+          // 기본 인감: createApprStepLine 뒤 retrieveRoleStamp(sealCode) L4586-4646 — 사용 가능한 인감이면 대외문서로 바꾸고 인감 줄을 넣는다, 아니면 안내하고 사내문서
+          let steps = n.steps;
+          let stamp: AprStampLine | null = null;
+          if (n.sealCode) {
+            try {
+              stamp = await aprWriteApi.stampLine(n.classTreeId, Number(n.sealCode), true);
+            } catch (err) {
+              message.error(errorMessage(err, '기본 인감을 읽을 수 없습니다'));
+            }
+            if (!alive) return;
+            if (stamp && !stamp.ok) Modal.info({ title: '확인', content: stamp.message ?? '', okText: '확인' });
+            else if (stamp?.outType) steps = stamp.steps;
+          }
           setIsNew(true);
           setSeed({
-            steps: n.steps,
+            steps,
             ics: n.relateIcs.map(l => ({ relateId: l.relateId, classTreeId: l.classTreeId, classTreeFullName: l.classTreeFullName, cycleName: l.cycleName, closeDate: null })),
             icr: n.relateIcr.map(l => ({ relateId: l.relateId, classTreeId: l.classTreeId, classTreeFullName: l.classTreeFullName, cycleName: l.cycleName, closeDate: null })),
           });
-          setForm(toForm(d));
+          const f = toForm(d);
+          if (stamp?.ok && stamp.outType) { f.inOutTypeCode = '10'; f.stampId = stamp.stampId ?? null; f.stampName = stamp.stampName ?? ''; }
+          setForm(f);
           setDoc(d);
           return;
         }
@@ -147,6 +179,42 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
   }, [apprId, newClassTreeId, reloadKey]);
 
   const next = (text: string) => message.info(text);
+
+  /** resetApprStep L5197-5210: 인감 줄(인감책임자·준법감시인·컴플라이언스)까지 넣은 결재선으로 바꾼다. 새 문서는 다시 그릴 때도 이 결재선을 쓰도록 seed도 바꾼다 */
+  const applyStampLine = (res: AprStampLine) => {
+    const steps = res.steps as AprApprStep[];
+    setStepsReplace(prev => ({ version: prev.version + 1, steps }));
+    setSeed(prev => (prev ? { ...prev, steps } : prev));
+  };
+
+  // [E32] stampName[인감종류].TriggerClick (L4721) → findLookupStamp() L5160-5194: 고른 인감(없음이면 빈 인감)을 칸에 넣고 결재선 재생성. 사용 부서·기한은 검사하지 않는다
+  const pickStamp = async (stamp: AprStamp | null) => {
+    setStampOpen(false);
+    if (!doc) return;
+    try {
+      const res = await aprWriteApi.stampLine(doc.classTreeId, stamp?.stampId ?? null, false);
+      set({ stampId: stamp?.stampId ?? null, stampName: stamp?.stampName ?? '' });
+      applyStampLine(res);
+    } catch (err) {
+      message.error(errorMessage(err, '결재선 생성 실패'));
+    }
+  };
+
+  // [E33] signCompany[대표회사].TriggerClick [result != null] (L4727) → 대표회사·대표서명을 넣고, 대표명의에 인감이 있으면 인감종류도 채워 결재선 재생성
+  const pickReprCorp = async (row: AprReprCorpLookup | null) => {
+    setCorpOpen(false);
+    if (!row || !doc) return;
+    set({ signCompany: row.corpName ?? '', signCeo: row.reprName ?? '' });
+    if (row.stampId == null) return;
+    try {
+      const res = await aprWriteApi.stampLine(doc.classTreeId, row.stampId, false);
+      if (res.stampId == null) return;
+      set({ stampId: res.stampId, stampName: res.stampName ?? '' });
+      applyStampLine(res);
+    } catch (err) {
+      message.error(errorMessage(err, '결재선 생성 실패'));
+    }
+  };
 
   /** 처리가 끝나면 창을 닫는다 — getServiceResult L5759-5783: callback.execute() 뒤 hide() */
   const finish = (res: AprApprActionRes) => {
@@ -233,9 +301,9 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
       title: form.title, content: html, note: form.note || null,
       effectDate: form.effectDate ? `${form.effectDate}T00:00:00` : null,
       regDate: form.regDate ? `${form.regDate}T00:00:00` : null,
-      stampId: doc?.stampId ?? null, receiveName: form.receiveName || null, referenceName: form.referenceName || null,
+      stampId: form.stampId, receiveName: form.receiveName || null, referenceName: form.referenceName || null,
       inOutTypeCode: form.inOutTypeCode, signCompany: form.signCompany || null, signCeo: form.signCeo || null,
-      stampPosition: doc?.stampPosition ?? null, formType: null,
+      stampPosition: form.stampPosition || null, formType: null,
       steps: stepsRef.current.map(s => ({
         apprStepId: s.apprStepId, stepTypeCode: s.stepTypeCode, seq: s.seq ?? '001', stepStatusCode: s.stepStatusCode ?? null,
         stepEmpId: s.stepEmpId, lockYn: s.lockYn ? 'true' : 'false', addEmpId: null,
@@ -253,7 +321,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
     if (!form.regDate) return '상신일은 필수입력 항목입니다';
     if (!form.content) return '내용은 필수입력 항목입니다';
     if (out) {
-      if (!doc?.stampId) return '대외문서는 인감선택이 필수입니다';
+      if (!form.stampId) return '대외문서는 인감선택이 필수입니다';
       if (!form.receiveName) return '수신자는 필수입력 항목입니다';
     }
     return null;
@@ -263,7 +331,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
   const checkRequest = (): string | null => {
     if (form.inOutTypeCode === '10') {
       if (!form.signCompany) return '대외문서에 대표회사는 필수입력항목입니다.';
-    } else if (doc?.stampId) return '사내문서는 인감사용이 불가능합니다.';
+    } else if (form.stampId) return '사내문서는 인감사용이 불가능합니다.';
     if (!form.title) return '상신제목은 필수입력 항목입니다';
     if (form.title.length > 200) return '상신제목의 글자수가 초과하였습니다';
     if (!form.effectDate) return '시행일은 필수입력 항목입니다';
@@ -464,15 +532,22 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
                     ? <DatePicker value={form.regDate ? dayjs(form.regDate) : null} disabled style={{ width: 130 }} />
                     : <Input value={day(doc.regDate)} readOnly style={{ width: 110 }} />}
                 </Row>
-                {/* 인감종류: Apr10_Lookup_Stamp 조회창은 V05 (findLookupStamp L4721) */}
+                {/* [E32] 인감종류 트리거 → Apr10_Lookup_DocStamp (findLookupStamp L4721), 오른쪽은 위치 콤보(StampLocation) */}
                 <Row label="인감종류" grow>
-                  <Input value={doc.stampName ?? ''} readOnly style={{ flex: 1 }} />
-                  <Input value={doc.stampPositionName ?? ''} readOnly style={{ width: 90 }} />
+                  {editable
+                    ? <Input value={form.stampName} readOnly style={{ flex: 1 }}
+                        addonAfter={<SearchOutlined aria-label="인감종류 찾기" style={{ cursor: 'pointer' }} onClick={() => setStampOpen(true)} />} />
+                    : <Input value={doc.stampName ?? ''} readOnly style={{ flex: 1 }} />}
+                  {editable
+                    ? <SystemCodeComboBox kindCd="StampLocation" value={form.stampPosition || undefined} onChange={c => set({ stampPosition: c ?? '' })} style={{ width: 90 }} />
+                    : <Input value={doc.stampPositionName ?? ''} readOnly style={{ width: 90 }} />}
                 </Row>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <Row label="대표회사" grow>
-                  <Input value={editable ? form.signCompany : (doc.signCompany ?? '')} placeholder="대외문서 하단표기" readOnly={!editable} onChange={e => set({ signCompany: e.target.value })} style={{ flex: 1 }} />
+                  {/* [E33] 대표회사 트리거 → Apr15_Lookup_ReprCorp (L4727) */}
+                  <Input value={editable ? form.signCompany : (doc.signCompany ?? '')} placeholder="대외문서 하단표기" readOnly={!editable} onChange={e => set({ signCompany: e.target.value })} style={{ flex: 1 }}
+                    addonAfter={editable ? <SearchOutlined aria-label="대표회사 찾기" style={{ cursor: 'pointer' }} onClick={() => setCorpOpen(true)} /> : undefined} />
                 </Row>
                 <Row label="대표서명" grow>
                   <Input value={editable ? form.signCeo : (doc.signCeo ?? '')} placeholder="대외문서 하단표기" readOnly={!editable} onChange={e => set({ signCeo: e.target.value })} style={{ flex: 1 }} />
@@ -494,11 +569,17 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
           {/* center: 왼쪽 상신내용 / 오른쪽 탭 + 결재선 */}
           <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 12 }}>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ fontWeight: 'bold', fontSize: 12 }}>상신내용</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontWeight: 'bold', fontSize: 12 }}>상신내용</span>
+                {/* getHtmlForm L4796-4817: [E30] copyButton[불러오기] (L4674) → loadDoc() · [E31] formButton[양식] (L4680) → loadForm() — 편집 모드에서만 켜진다 (setReadOnly L5847).
+                    [E22] fileUpload.Change (L4294) · [E23] fileUploadForm.SubmitComplete (L4304) · [E34] fileUpload.Change (L5792)은 본체의 숨은 올리기 폼이라 Apr03_Page_Relate [등록]이 대신한다(V05) */}
+                <Button type="register" disabled={!editable} onClick={() => setLoadDocOpen(true)}>불러오기</Button>
+                <Button type="register" disabled={!editable} onClick={() => setFormOpen(true)}>양식</Button>
+              </div>
               <div style={{ flex: 1, minHeight: 0 }}>
                 {/* 편집 모드는 HTML 편집기(AS-IS CKEditor, getHtmlForm L4796-4817) — 값은 열 때 한 번만 넣는다 */}
                 {editable
-                  ? <HtmlEditor key={doc.apprId} value={doc.content} onChange={html => set({ content: html })} height={Math.max(300, window.innerHeight - 450)} />
+                  ? <HtmlEditor key={`${doc.apprId}-${editorKey}`} value={form.content} onChange={html => set({ content: html })} height={Math.max(300, window.innerHeight - 450)} />
                   : <HtmlView html={doc.content} height="100%" />}
               </div>
             </div>
@@ -510,6 +591,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
                 isNew={isNew}
                 seed={seed}
                 onStepsChange={steps => { stepsRef.current = steps; }}
+                stepsReplace={stepsReplace}
                 canRetouch={!!state?.canRetouchSteps}
                 onRetouched={() => { onClosed?.(); setReloadKey(k => k + 1); }}
               />
@@ -531,11 +613,26 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
         onSaved={updated => { setTypoOpen(false); setDoc(updated); setForm(toForm(updated)); setRelateKey(k => k + 1); onClosed?.(); }}
         onClose={() => setTypoOpen(false)}
       />
+      {/* V05: [불러오기] loadDoc() L5580 — 제목·본문을 가져온다 / [양식] loadForm() L5593 — 본문만 */}
+      <Apr05_Lookup_LoadDoc2
+        open={loadDocOpen}
+        onResult={d => { set({ title: d.title, content: d.content }); setEditorKey(k => k + 1); setLoadDocOpen(false); }}
+        onClose={() => setLoadDocOpen(false)}
+      />
+      <Dcr05_Lookup_FormView
+        open={formOpen}
+        classTreeId={doc?.classTreeId ?? null}
+        onResult={html => { set({ content: html }); setEditorKey(k => k + 1); setFormOpen(false); }}
+        onClose={() => setFormOpen(false)}
+      />
       <Apr20_Lookup_RelateIcsList
         target={icsOpen && doc != null && apprId != null ? { apprId, statusCode: doc.statusCode } : null}
         onClosed={() => setRelateKey(k => k + 1)}
         onClose={() => setIcsOpen(false)}
       />
+      {/* V12: 인감종류·대표회사 조회창 */}
+      <Apr10_Lookup_DocStamp classTreeId={stampOpen && doc != null ? doc.classTreeId : null} onResult={s => void pickStamp(s)} onClose={() => setStampOpen(false)} />
+      <Apr15_Lookup_ReprCorp open={corpOpen} companyAddYn={false} onResult={r => void pickReprCorp(r)} onClose={() => setCorpOpen(false)} />
       <Apr01_Lookup_ApprFile apprId={afterFileOpen && apprId != null ? apprId : null} onClosed={() => setRelateKey(k => k + 1)} onClose={() => setAfterFileOpen(false)} />
       <Apr13_Lookup_PersonAuth apprId={authOpen && apprId != null ? apprId : null} onClose={() => setAuthOpen(false)} />
       <Apr90_Lookup_DisposalList

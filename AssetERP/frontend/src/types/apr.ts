@@ -489,6 +489,8 @@ export interface AprReprCorpLookup {
   corpTypeName?: string | null;
   corpName?: string | null;
   reprName?: string | null;
+  /** 대표명의에 지정된 인감 — 문서창 [대표회사]를 고르면 인감종류도 채운다 (V12) */
+  stampId?: number | null;
 }
 
 /** 기본 법인인감 (selectCorpStampYn) */
@@ -647,6 +649,17 @@ export interface AprNewStep {
   titleName?: string | null;
   empKorName?: string | null;
   orgKorName?: string | null;
+}
+
+/** 인감을 고른 뒤의 결재선 (GET apr/apprs/stamp-line, V12) — ok가 false면 인감을 쓸 수 없는 경우(message), outType은 대외문서로 바꿔야 하는 경우 */
+export interface AprStampLine {
+  ok: boolean;
+  message?: string | null;
+  stampId?: number | null;
+  stampName?: string | null;
+  stampIdString?: string | null;
+  outType: boolean;
+  steps: AprNewStep[];
 }
 
 /** 새 문서에 따라오는 연관법규·내규 한 줄 (V06) */
@@ -856,4 +869,54 @@ export interface AprAfterFile {
   parentId: number;
   fileName: string;
   stampYn: boolean;
+}
+
+/** [불러오기] 창 목록 한 줄 (GET apr/doc-picks, AS-IS Dcr00_DocListModel). 날짜는 'yyyy-MM-ddTHH:mm:ss' */
+export interface AprLoadDoc2 {
+  docId: number;
+  apprId: number;
+  regDate: string;
+  title: string | null;
+  receiveName: string | null;
+  fundDisplayName: string | null;
+  /** 상태 이름(굵은 글씨 HTML) */
+  statusName: string | null;
+  empName: string | null;
+  classTreeName: string | null;
+  authYn: boolean;
+  statusCode: string | null;
+  content: string | null;
+}
+
+/** [양식] 창 목록 한 줄 (GET apr/doc-forms, AS-IS Dcr05_DocTypeModel) */
+export interface AprDocForm {
+  docTypeId: number;
+  formClassName: string | null;
+  title: string | null;
+  note: string | null;
+  content: string | null;
+}
+
+/** 상신 문서의 첨부파일 한 줄 — 옵션 열 포함 (GET apr/apprs/{id}/edit-files) */
+export interface AprEditFile {
+  fileId: number;
+  parentId: number;
+  fileName: string;
+  fileExt: string | null;
+  fileYn: string | null;
+  titleYn: string | null;
+  printYn: boolean;
+  extYn: boolean;
+  seq: string | null;
+}
+
+/** 삭제된 첨부파일 한 줄 (GET apr/apprs/{id}/file-dels, AS-IS Sys61_FileDelModel) */
+export interface AprFileDel {
+  fileDelId: number;
+  fileId: number;
+  parentId: number;
+  fileName: string;
+  personName: string | null;
+  delDate: string | null;
+  reason: string | null;
 }

@@ -249,4 +249,49 @@
            AND COALESCE(icr01_use_yn,'false') = 'true'
     </select>
 
+    <!-- AS-IS apr10_stamp.selectById (V12) -->
+    <select id="selectStampById" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStampInfoRow">
+        SELECT apr10_stamp_id        AS stamp_id
+             , apr10_stamp_nm        AS stamp_name
+             , apr10_stamp_id || ''  AS stamp_id_string
+             , apr10_emp_id          AS apr_emp_id
+             , apr10_org_id          AS org_id
+             , apr10_step_use_yn     AS step_use_yn
+             , apr10_second_emp_id   AS second_emp_id
+          FROM apr10_stamp
+         WHERE apr10_stamp_id = #{stampId}
+    </select>
+
+    <!-- AS-IS apr10_stamp.checkCloseDate (V12) -->
+    <select id="countStampOpen" resultType="int">
+        SELECT COUNT(*)
+          FROM apr10_stamp
+         WHERE apr10_stamp_id = #{stampId}
+           AND f_today() BETWEEN apr10_start_date AND COALESCE(apr10_close_date, to_date('29991231','yyyymmdd'))
+    </select>
+
+    <!-- AS-IS org10_role_stamp.checkRole (V12) -->
+    <select id="countStampRole" resultType="int">
+        SELECT COUNT(*)
+          FROM apr10_stamp
+               LEFT OUTER JOIN org10_role_stamp ON org10_stamp_id = apr10_stamp_id
+         WHERE apr10_stamp_id = #{stampId}
+           AND ( ( COALESCE(apr10_all_use_yn, 'false') != 'true' AND org10_org_code_id = #{orgId} )
+              OR   COALESCE(apr10_all_use_yn, 'false') = 'true' )
+    </select>
+
+    <!-- AS-IS emp00_trans_info.selectByStampEmpId · selectOneEmpInfo (V12) — 사원의 오늘 발령(추가 직책 기간 밖이면 제외) -->
+    <select id="selectStampEmp" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStepPersonRow">
+        WITH <include refid="emp00Cte"/>
+        SELECT <include refid="personColumns"/>
+          FROM emp00
+         WHERE emp00_person_id = #{personId}
+           AND f_trunc(f_sysdate()) BETWEEN emp00_trans_date AND COALESCE(emp00_close_date, to_date('99991231', 'yyyyMMdd'))
+           AND NOT EXISTS ( SELECT 1
+                              FROM emp04_add_title
+                             WHERE emp04_add_person_id = emp00_person_id
+                               AND ( emp04_start_date &gt; f_today() OR COALESCE(emp04_close_date, '9999-12-31') &lt; f_today() ) )
+         LIMIT 1
+    </select>
+
 </mapper>

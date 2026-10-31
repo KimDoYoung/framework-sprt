@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/sys/mapper/sys10_file.xml selectByParentId·updateOthers·updateParentId, sys61_file_del.xml selectByParentId·insert, dcr/mapper/dcr00_doc_list.xml selectByText, dcr05_doc_type.xml selectByClassTreeId·selectByName (V05, Apr01_Lookup_ApprFileList·Sys61_Lookup_FileList·DelList·Apr05_Lookup_LoadDoc2·Dcr05_Lookup_FormView) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprAttachMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys10_file.selectByParentId (IDMS-IC) — SELECT *·창이 쓰는 열만, 정렬은 그대로 -->
+    <select id="selectEditFiles" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprEditFileRes">
+        SELECT sys10_file_id                              AS file_id
+             , sys10_parent_id                            AS parent_id
+             , sys10_file_nm                              AS file_name
+             , sys10_file_ext                             AS file_ext
+             , sys10_file_yn                              AS file_yn
+             , sys10_title_yn                             AS title_yn
+             , (COALESCE(sys10_print_yn, 'false') = 'true') AS print_yn
+             , (COALESCE(sys10_ext_yn, 'false') = 'true')   AS ext_yn
+             , sys10_seq                                  AS seq
+          FROM sys10_file
+         WHERE sys10_parent_id = #{parentId}
+         ORDER BY LPAD(COALESCE(sys10_seq, '99999'), 5, '0'), COALESCE(sys10_title_yn, 'false') DESC, sys10_file_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS sys10_file.updateOthers (IDMS-IC) — 이 문서의 파일만 -->
+    <update id="updateFileOthers">
+        UPDATE sys10_file
+           SET sys10_print_yn = #{printYn}
+             , sys10_ext_yn   = #{extYn}
+             , sys10_seq      = #{seq}
+         WHERE sys10_file_id = #{fileId}
+           AND sys10_parent_id = #{parentId}
+    </update>
+
+    <!-- AS-IS sys61_file_del.selectByParentId (IDMS-IC) — 열은 창이 쓰는 것만 -->
+    <select id="selectFileDels" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprFileDelRes">
+        SELECT sys61_file_del_id                AS file_del_id
+             , sys61_file_id                    AS file_id
+             , sys61_parent_id                  AS parent_id
+             , sys10_file_nm                    AS file_name
+             , f_emp_kor_nm(sys61_person_id)    AS person_name
+             , sys61_del_date                   AS del_date
+             , sys61_reason                     AS reason
+          FROM sys61_file_del
+               INNER JOIN sys10_file ON sys10_file_id = sys61_file_id
+         WHERE sys61_parent_id = #{parentId}
+         ORDER BY sys61_del_date DESC
+    </select>
+
+    <select id="countFilesIn" resultType="int">
+        SELECT COUNT(*)
+          FROM sys10_file
+         WHERE sys10_parent_id = #{parentId}
+           AND sys10_file_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <!-- AS-IS sys61_file_del.insert (IDMS-IC) -->
+    <insert id="insertFileDel">
+        INSERT INTO sys61_file_del (sys61_file_del_id, sys61_file_id, sys61_parent_id, sys61_del_date, sys61_reason, sys61_note, sys61_person_id)
+        VALUES (#{fileDelId}, #{fileId}, #{parentId}, f_sysdate(), #{reason}, NULL, #{personId})
+    </insert>
+
+    <!-- AS-IS sys10_file.updateParentId (IDMS-IC) note가 있는 가지 -->
+    <update id="moveFileParent">
+        UPDATE sys10_file
+           SET sys10_parent_id = #{parentId}
+             , sys10_note = COALESCE(sys10_note,'')||' '||#{note}
+         WHERE sys10_file_id = #{fileId}
+    </update>
+
+    <!-- AS-IS dcr00_doc_list.selectByText (IDMS-IC) — SELECT t.*·모델 열 중 창이 쓰는 열만, 조건·정렬은 그대로. admin == 'false'·statusCheckYn == 'false'·keyTable 없음 가지.
+         ${orgId}·${empId}는 #{}로, 분류 조건은 common.dcr_tree_down을 푼 것(typeCode '%'). authYn은 늘 true -->
+    <select id="selectLoadDocs" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprLoadDoc2Row">
+        SELECT ROW_NUMBER() OVER()          AS doc_id
+             , t.apr01_appr_id              AS appr_id
+             , t.apr01_reg_date             AS reg_date
+             , t.apr01_title                AS title
+             , t.apr01_receive_nm           AS receive_name
+             , CASE WHEN t.fnd00_fund_cd IS NULL THEN COALESCE(t.fnd00_fund_nm, '-')
+                    WHEN t.fnd00_fund_nm IS NULL THEN '(' || t.fnd00_fund_cd || ')'
+                    ELSE '(' || t.fnd00_fund_cd || ') ' || t.fnd00_fund_nm END AS fund_display_name
+             , t.apr01_status_nm            AS status_name
+             , t.emp01_kor_nm               AS emp_name
+             , t.dcr01_class_tree_nm        AS class_tree_name
+             , true                         AS auth_yn
+             , t.apr01_status_cd            AS status_code
+             , t.apr01_content              AS content
+          FROM ( SELECT f1.fnd01_fund_cd                                                                        AS fnd00_fund_cd
+                      , f2.fnd02_fund_nm                                                                        AS fnd00_fund_nm
+                      , f3.fnd01_fund_cd                                                                        AS fnd00_relate_fund_cd
+                      , f4.fnd02_fund_nm                                                                        AS fnd00_relate_fund_nm
+                      , dcr01_class_tree_id                                                                     AS dcr01_class_tree_id
+                      , f_class_tree_nm_allpath(dcr01_class_tree_id)                                            AS dcr01_class_tree_nm
+                      , f_emp_kor_nm(apr01_reg_emp_id)                                                          AS emp01_kor_nm
+                      , apr.*
+                      , (
+                            CASE WHEN apr01_status_cd = '40' THEN '&lt;'||'b style=color:#E33E31;'||'&gt;'||f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)||'&lt;'||'/b'||'&gt;'
+                                 WHEN apr01_status_cd = '99' THEN '&lt;'||'b style=color:#4B81B9;'||'&gt;'||f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)||'&lt;'||'/b'||'&gt;'
+                                                             ELSE '&lt;'||'b style=color:#404040;'||'&gt;'||f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)||'&lt;'||'/b'||'&gt;'
+                                 END
+                        )                                                                                       AS apr01_status_nm
+                   FROM ( /* 연관펀드가 있는 문서 */
+                          SELECT apr01_appr.*
+                               , apr03_fund_id AS apr01_fund_id
+                               , CASE WHEN COALESCE(fnd01_plan_yn,'false') = 'true' THEN fnd01_real_fund_id
+                                      ELSE ( SELECT x.fnd01_fund_code_id
+                                               FROM fnd01_fund_code x
+                                              WHERE x.fnd01_real_fund_id = fnd01.fnd01_fund_code_id ) END AS apr01_relate_fund_id
+                            FROM apr01_appr
+                                 INNER JOIN apr03_relate_fund       ON apr03_appr_id            = apr01_appr_id
+                                 INNER JOIN fnd01_fund_code fnd01   ON fnd01.fnd01_fund_code_id = apr03_fund_id
+                                 INNER JOIN fnd08_org_auth          ON ( fnd08_fund_code_id     = apr03_fund_id AND
+                                                                         fnd08_auth_yn          = 'true'        AND
+                                                                         fnd08_org_code_id      = #{c.orgId}    )
+                           WHERE apr01_company_id = #{c.companyId}
+                             AND apr01_reg_date BETWEEN coalesce(#{c.regDate}   , to_date('19000101', 'yyyyMMdd'))
+                                                AND     coalesce(#{c.endRegDate}, to_date('29991231', 'yyyyMMdd'))
+                           UNION ALL
+                          /* 연관펀드가 없는 문서 */
+                          SELECT apr01_appr.*
+                               , NULL       AS apr01_fund_id
+                               , NULL       AS apr01_relate_fund_id
+                            FROM apr01_appr
+                           WHERE apr01_company_id = #{c.companyId}
+                             AND apr01_reg_date BETWEEN coalesce(#{c.regDate}   , to_date('19000101', 'yyyyMMdd'))
+                                                AND     coalesce(#{c.endRegDate}, to_date('29991231', 'yyyyMMdd'))
+                             AND NOT EXISTS ( SELECT 1
+                                                FROM apr03_relate_fund
+                                               WHERE apr03_appr_id = apr01_appr_id )
+                        ) apr
+                        INNER JOIN dcr01_class_tree ON dcr01_class_tree_id = apr01_class_tree_id
+                        LEFT OUTER JOIN dcr03_org_auth ON (dcr03_class_tree_id = apr01_class_tree_id AND dcr03_org_code_id = #{c.orgId})
+                        LEFT OUTER JOIN dcr04_emp_auth ON (apr01_class_tree_id = dcr04_class_tree_id AND dcr04_person_id = #{c.empId})
+                        LEFT OUTER JOIN fnd01_fund_code f1 ON f1.fnd01_fund_code_id = apr01_fund_id
+                        LEFT OUTER JOIN fnd02_fund_info f2 ON (    f2.fnd02_fund_code_id = apr01_fund_id
+                                                               AND f2.fnd02_work_date    = ( SELECT MAX(x.fnd02_work_date)
+                                                                                               FROM fnd02_fund_info x
+                                                                                              WHERE x.fnd02_fund_code_id = apr01_fund_id
+                                                                                                AND x.fnd02_work_date &lt;= f_today() ) )
+                        LEFT OUTER JOIN fnd01_fund_code f3 ON f3.fnd01_fund_code_id = apr01_relate_fund_id
+                        LEFT OUTER JOIN fnd02_fund_info f4 ON (    f4.fnd02_fund_code_id = apr01_relate_fund_id
+                                                               AND f4.fnd02_work_date    = ( SELECT MAX(x.fnd02_work_date)
+                                                                                               FROM fnd02_fund_info x
+                                                                                              WHERE x.fnd02_fund_code_id = apr01_relate_fund_id
+                                                                                                AND x.fnd02_work_date &lt;= f_today() ) )
+                  WHERE  1=1
+                    AND  (
+                            (
+                                COALESCE(dcr04_retrieve_yn, dcr03_retrieve_yn, 'false') = 'true'
+                                AND
+                                (
+                                    (
+                                        apr01_link_cd IS NULL
+                                        OR
+                                        NOT EXISTS (
+                                                    SELECT 1
+                                                      FROM sys52_specific_menu_link l
+                                                     WHERE l.sys52_company_id = apr01_company_id
+                                                       AND l.sys52_link_cd = apr01_link_cd
+                                                   )
+                                        OR
+                                        EXISTS (
+                                                    SELECT 1
+                                                      FROM sys52_specific_menu_link l
+                                                           INNER JOIN sys50_specific_menu m ON l.sys52_specific_work_cd = m.sys50_specific_work_cd AND m.sys50_company_id = apr01_company_id
+                                                           INNER JOIN sys51_specific_menu_person p ON p.sys51_specific_menu_id = m.sys50_specific_menu_id AND p.sys51_person_id = #{c.empId}
+                                                     WHERE l.sys52_company_id = apr01_company_id
+                                                       AND l.sys52_link_cd = apr01_link_cd
+                                        )
+                                    )
+                                )
+                            )
+                            OR
+                            #{c.empId} IN (
+                                            SELECT apr04_step_emp_id
+                                              FROM apr04_appr_step
+                                             WHERE apr04_appr_id = apr.apr01_appr_id
+                                             UNION
+                                            SELECT apr13_person_id
+                                              FROM apr13_person_auth
+                                             WHERE apr13_appr_id = apr.apr01_appr_id
+                                          )
+                         )
+                <if test="c.classTreeId != null">
+                    AND dcr01_class_tree_id IN (
+                        WITH RECURSIVE dcr_tree_down(dcr01_class_tree_id, dcr01_class_tree_nm, dcr01_parent_tree_id, depth, path, cycle) AS (
+                            SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, 1,
+                                   ARRAY[CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id],
+                                   false
+                              FROM dcr01_class_tree a
+                             WHERE a.dcr01_company_id = #{c.companyId}
+                               AND a.dcr01_class_tree_id = #{c.classTreeId}
+                               AND a.dcr01_use_yn = 'true'
+                               AND a.dcr01_type_cd LIKE '%'
+                            UNION ALL
+                            SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, b.depth + 1,
+                                   array_append(b.path, CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar), 10, '0') || a.dcr01_class_tree_cd || LPAD(CAST(a.dcr01_class_tree_id AS varchar), 15, '0')),
+                                   a.dcr01_class_tree_nm = any(b.path)
+                              FROM dcr01_class_tree a
+                                   INNER JOIN dcr_tree_down b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+                             WHERE a.dcr01_company_id = #{c.companyId}
+                               AND a.dcr01_use_yn = 'true'
+                               AND a.dcr01_type_cd LIKE '%'
+                               AND NOT cycle
+                        )
+                        SELECT a.dcr01_class_tree_id FROM dcr_tree_down a )
+                </if>
+               ) t
+         WHERE 1=1
+           AND CONCAT( apr01_title
+                     , REGEXP_REPLACE(apr01_content, E'&lt;[^&gt;]+&gt;', '', 'gi')
+                     , fnd00_fund_cd, fnd00_relate_fund_cd
+                     , fnd00_fund_nm, fnd00_relate_fund_nm
+                     , apr01_note
+                     , emp01_kor_nm
+                     ) ILIKE #{c.searchText}
+         ORDER BY apr01_reg_date DESC
+                , dcr01_class_tree_nm collate "ko_KR.utf8" asc
+                , apr01_title collate "ko_KR.utf8" asc
+                , apr01_appr_id DESC
+    </select>
+
+    <!-- AS-IS dcr05_doc_type.selectByClassTreeId (IDMS-IC) — a.*·창이 쓰는 열만 -->
+    <select id="selectDocFormsByClassTree" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprDocFormRow">
+        SELECT a.dcr05_doc_type_id  AS doc_type_id
+             , c.sys09_name         AS form_class_name
+             , a.dcr05_title        AS title
+             , a.dcr05_note         AS note
+             , a.dcr05_content      AS content
+          FROM dcr05_doc_type a
+               INNER JOIN dcr06_relate_doc_Type b ON a.dcr05_doc_type_id = b.dcr06_doc_type_id
+               INNER JOIN (
+                            SELECT a.*
+                              FROM sys08_code_kind
+                                   INNER JOIN sys09_code a ON sys09_code_kind_id = sys08_code_kind_id AND sys09_company_id = #{companyId}
+                             WHERE sys08_kind_cd = 'DocFormClassCode'
+                               AND sys09_apply_date = (
+                                                        SELECT MAX(sys09_apply_date)
+                                                          FROM sys09_code
+                                                         WHERE sys09_code_kind_id = sys08_code_kind_id
+                                                           AND sys09_company_id   = #{companyId}
+                                                           AND sys09_code         = a.sys09_code
+                                                           AND sys09_apply_date &lt;= f_today()
+                                                      )
+                          ) c ON c.sys09_code = a.dcr05_doc_form_class_cd
+         WHERE 1=1
+           AND dcr06_class_tree_id = #{classTreeId}
+           AND dcr05_company_id = #{companyId}
+           AND dcr05_title LIKE #{titleName}
+           AND dcr05_doc_form_class_cd LIKE #{formClassCode}
+         ORDER BY dcr05_title
+    </select>
+
+    <!-- AS-IS dcr05_doc_type.selectByName (IDMS-IC) -->
+    <select id="selectDocFormsByName" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprDocFormRow">
+        SELECT a.dcr05_doc_type_id  AS doc_type_id
+             , b.sys09_name         AS form_class_name
+             , a.dcr05_title        AS title
+             , a.dcr05_note         AS note
+             , a.dcr05_content      AS content
+          FROM dcr05_doc_type a
+               INNER JOIN (
+                            SELECT a.*
+                              FROM sys08_code_kind
+                                   INNER JOIN sys09_code a ON sys09_code_kind_id = sys08_code_kind_id AND sys09_company_id = #{companyId}
+                             WHERE sys08_kind_cd = 'DocFormClassCode'
+                               AND sys09_apply_date = (
+                                                        SELECT MAX(sys09_apply_date)
+                                                          FROM sys09_code
+                                                         WHERE sys09_code_kind_id = sys08_code_kind_id
+                                                           AND sys09_company_id   = #{companyId}
+                                                           AND sys09_code         = a.sys09_code
+                                                           AND sys09_apply_date &lt;= f_today()
+                                                      )
+                          ) b ON b.sys09_code = a.dcr05_doc_form_class_cd
+         WHERE 1=1
+           AND dcr05_company_id = #{companyId}
+           AND dcr05_doc_form_class_cd LIKE #{formClassCode}
+           AND UPPER(CONCAT(dcr05_title, dcr05_note)) LIKE UPPER(#{titleName})
+         ORDER BY COALESCE(LPAD(sys09_seq,3,'0'),'000'), sys09_code, dcr05_title
+    </select>
+</mapper>

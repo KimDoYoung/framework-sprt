@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import kr.co.kfs.asseterp.biz.apr.dto.AprApprNewRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprStampLineRes;
 import kr.co.kfs.asseterp.biz.apr.service.AprApprNewService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -24,5 +25,15 @@ public class AprApprNewController {
     @GetMapping("/new")
     public ApiResponse<AprApprNewRes> open(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long classTreeId) {
         return ApiResponse.ok(service.open(principal, classTreeId));
+    }
+
+    /**
+     * AS-IS 인감 선택 뒤 결재선 다시 만들기 — retrieveRoleStamp(checkRole=true, 새 문서의 기본 인감) · findLookupStamp/대표회사 선택의 resetApprStep (V12).
+     * stampId가 없으면 인감 없는 기본 결재선
+     */
+    @GetMapping("/stamp-line")
+    public ApiResponse<AprStampLineRes> stampLine(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long classTreeId,
+                                                  @RequestParam(required = false) Long stampId, @RequestParam(defaultValue = "false") boolean checkRole) {
+        return ApiResponse.ok(service.stampLine(principal, classTreeId, stampId, checkRole));
     }
 }

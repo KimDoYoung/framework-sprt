@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprDetail, AprAfterFile, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcsRow, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
+import { AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprDetail, AprAfterFile, AprDocForm, AprEditFile, AprFileDel, AprLoadDoc2, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcsRow, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampLine, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -564,6 +564,15 @@ export const aprWriteApi = {
     return res.data.data;
   },
 
+  /**
+   * AS-IS 인감을 고른 뒤 결재선 다시 만들기 (V12): retrieveRoleStamp(checkRole, 새 문서의 기본 인감) · findLookupStamp/대표회사 선택의 resetApprStep.
+   * stampId가 없으면 인감 줄이 없는 기본 결재선
+   */
+  stampLine: async (classTreeId: number, stampId: number | null, checkRole = false): Promise<AprStampLine> => {
+    const res = await apiClient.get<ApiResponse<AprStampLine>>('v1/apr/apprs/stamp-line', { params: { classTreeId, stampId: stampId ?? undefined, checkRole } });
+    return res.data.data;
+  },
+
   /** AS-IS apr.Apr01_Appr.update: mode 'save'(임시저장) | 'request'(결재요청) */
   save: async (apprId: number, req: AprApprSaveReq): Promise<AprApprWriteRes> => {
     const res = await apiClient.put<ApiResponse<AprApprWriteRes>>(`v1/apr/apprs/${apprId}`, req);
@@ -757,5 +766,42 @@ export const aprRelateEditApi = {
   /** AS-IS sys.Sys10_File.update (인감날인본) */
   saveAfterFiles: async (apprId: number, items: { fileId: number; stampYn: boolean }[]): Promise<void> => {
     await apiClient.put(`v1/apr/apprs/${apprId}/after-files`, { items });
+  },
+};
+
+/** 상신 편집창의 [불러오기]·[양식]과 첨부파일 옵션설정·추가/삭제 (AS-IS client/vi/apr/Apr05_Lookup_LoadDoc2 · dcr/Dcr05_Lookup_FormView · apr/Apr01_Lookup_ApprFileList · sys/Sys61_Lookup_FileList·DelList, V05) */
+export const aprAttachApi = {
+  /** AS-IS dcr.Dcr00_DocList.selectByText */
+  loadDocs: async (params: { classTreeId?: number | null; startDate: string; endDate: string; searchText: string }): Promise<AprLoadDoc2[]> => {
+    const res = await apiClient.get<ApiResponse<AprLoadDoc2[]>>('v1/apr/doc-picks', { params: { ...params, classTreeId: params.classTreeId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr05_DocType.selectByClassTreeId (all=false) / selectByName (all=true) */
+  docForms: async (params: { classTreeId?: number | null; all: boolean; searchText: string; formClassCode?: string }): Promise<AprDocForm[]> => {
+    const res = await apiClient.get<ApiResponse<AprDocForm[]>>('v1/apr/doc-forms', { params: { ...params, classTreeId: params.classTreeId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys10_File.selectByParentId (옵션 열 포함) */
+  getEditFiles: async (apprId: number): Promise<AprEditFile[]> => {
+    const res = await apiClient.get<ApiResponse<AprEditFile[]>>(`v1/apr/apprs/${apprId}/edit-files`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys10_File.updateOthers */
+  saveOptions: async (apprId: number, items: { fileId: number; printYn: boolean; extYn: boolean; seq: string }[]): Promise<void> => {
+    await apiClient.put(`v1/apr/apprs/${apprId}/edit-files/options`, { items });
+  },
+
+  /** AS-IS sys.Sys61_FileDel.selectByParentId */
+  getFileDels: async (apprId: number): Promise<AprFileDel[]> => {
+    const res = await apiClient.get<ApiResponse<AprFileDel[]>>(`v1/apr/apprs/${apprId}/file-dels`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys61_FileDel.insert */
+  deleteFiles: async (apprId: number, fileIds: number[], reason: string): Promise<void> => {
+    await apiClient.post(`v1/apr/apprs/${apprId}/file-dels`, { fileIds, reason });
   },
 };

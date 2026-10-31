@@ -93,6 +93,7 @@
              , apr15_corp_type_nm  AS corp_type_name
              , apr15_corp_nm       AS corp_name
              , apr15_repr_nm       AS repr_name
+             , apr15_stamp_id      AS stamp_id
           FROM (
                 SELECT apr15_repr_corp.*
                      , f_cdnm('ReprCorpType', apr15_corp_type, apr15_company_id, f_today()) AS apr15_corp_type_nm
