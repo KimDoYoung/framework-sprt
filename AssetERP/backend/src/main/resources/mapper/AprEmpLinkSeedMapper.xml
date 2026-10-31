@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  V36 링크코드 A15 미사용 연차·월차 사용 시기 지정통보서 · A42 여비교통비 신청서의 본문 값 (Apr01_Edit_ApprDoc.insertLinkApproval)
+  AS-IS 호출 화면이 그리드 행에서 읽던 값을 서버가 행 번호로 다시 읽는다. SQL은 IDMS-IC 원본에서 열만 줄이고 회사 조건을 더했다.
+  emp21_un_leave.selectByPersonId(행 한 건으로 좁힘) · emp50_transport_expense.selectById
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprEmpLinkSeedMapper">
+
+    <!-- AS-IS emp21_un_leave.selectByPersonId: WHERE 사원·기간 → 미사용휴가 ID (기간 계산은 기준연도 stdYear 그대로) -->
+    <select id="selectUnLeaveLink" resultType="kr.co.kfs.asseterp.biz.apr.dto.UnLeaveLinkRow">
+        SELECT emp21_un_leave_cd                                                        AS un_leave_code
+             , f_cdnm('unLeaveCode', emp21_un_leave_cd, emp21_company_id, f_sysdate())  AS un_leave_name
+             , f_emp_kor_nm(emp21_person_id)                                            AS person_name
+             , f_get_emptrans(emp21_person_id, emp21_start_date::date, 'org_code_nm')   AS org_name
+             , COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)                    AS hire_date
+             , apr01.apr01_reg_date                                                     AS notice_date
+             , sys01_leave_compulsion_rt                                                AS duty_rt
+             , CASE WHEN emp21_un_leave_cd IN ('01','02') THEN f_get_close_date(#{companyId}, #{stdYear}, '1') - INTERVAL '1 years'
+                    WHEN emp21_un_leave_cd IN ('03','04') THEN COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)
+                    WHEN emp21_un_leave_cd IN ('05','06') THEN date_trunc('month', COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)) + interval '+10month'
+                    END::date                                                                 AS leave_occur_start_date
+             , CASE WHEN emp21_un_leave_cd IN ('01','02') THEN f_get_close_date(#{companyId}, #{stdYear}, '2') - INTERVAL '1 years'
+                    WHEN emp21_un_leave_cd IN ('03','04') THEN date_trunc('month', COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)) + interval '+10month -1day'
+                    WHEN emp21_un_leave_cd IN ('05','06') THEN date_trunc('month', COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)) + interval '+12month -1day'
+                    END::date                                                                 AS leave_occur_close_date
+             , CASE WHEN emp21_un_leave_cd IN ('01','02') THEN f_get_close_date(#{companyId}, #{stdYear}, '1')
+                    WHEN emp21_un_leave_cd IN ('03','04') THEN date_trunc('month', COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)) + interval '+1month'
+                    WHEN emp21_un_leave_cd IN ('05','06') THEN date_trunc('month', COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)) + interval '+10month'
+                    END::date                                                                 AS leave_target_start_date
+             , CASE WHEN emp21_un_leave_cd IN ('01','02') THEN f_get_close_date(#{companyId}, #{stdYear}, '2')
+                    ELSE date_trunc('month', COALESCE(emp02_hire_date_leave_calc, emp01_hire_date)) + interval '+12month -1day'
+                    END::date                                                                 AS leave_target_close_date
+             , emp21_total_days                                                         AS total_days
+             , emp21_use_days                                                           AS use_days
+             , CASE WHEN emp21_un_leave_cd = '01'
+                    THEN to_char(f_get_close_date(#{companyId}, #{stdYear}, '2') - INTERVAL '5 months', 'YYYY년 MM월')
+                    ELSE to_char(f_get_close_date(#{companyId}, #{stdYear}, '2') - INTERVAL '1 months', 'YYYY년 MM월')
+                    END                                                                 AS month01
+             , CASE WHEN emp21_un_leave_cd = '01'
+                    THEN to_char(f_get_close_date(#{companyId}, #{stdYear}, '2') - INTERVAL '4 months', 'YYYY년 MM월')
+                    ELSE to_char(f_get_close_date(#{companyId}, #{stdYear}, '2'), 'YYYY년 MM월')
+                    END                                                                 AS month02
+             , CASE WHEN emp21_un_leave_cd = '01'
+                    THEN to_char(f_get_close_date(#{companyId}, #{stdYear}, '2') - INTERVAL '3 months', 'YYYY년 MM월')
+                    ELSE ''
+                    END                                                                 AS month03
+             , CASE WHEN emp21_un_leave_cd = '01'
+                    THEN to_char(f_get_close_date(#{companyId}, #{stdYear}, '2') - INTERVAL '2 months', 'YYYY년 MM월')
+                    ELSE ''
+                    END                                                                 AS month04
+             , CASE WHEN emp21_un_leave_cd = '01'
+                    THEN to_char(f_get_close_date(#{companyId}, #{stdYear}, '2') - INTERVAL '1 months', 'YYYY년 MM월')
+                    ELSE ''
+                    END                                                                 AS month05
+             , CASE WHEN emp21_un_leave_cd = '01'
+                    THEN to_char(f_get_close_date(#{companyId}, #{stdYear}, '2'), 'YYYY년 MM월')
+                    ELSE ''
+                    END                                                                 AS month06
+             , sys01_company_nm                                                         AS company_name
+          FROM emp21_un_leave
+               INNER JOIN emp01_person ON emp01_person_id = emp21_person_id
+               INNER JOIN emp02_others ON emp02_person_id = emp21_person_id
+               INNER JOIN sys01_company ON sys01_company_id = emp21_company_id
+               INNER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = emp21_appr_id
+         WHERE emp21_company_id = #{companyId}
+           AND emp21_un_leave_id = #{unLeaveId}
+    </select>
+
+    <!-- AS-IS emp50_transport_expense.selectById (열을 줄임, 회사·사원 조건 추가: 호출 화면 그리드는 로그인 사원 본인 행만 보인다) -->
+    <select id="selectTransportLink" resultType="kr.co.kfs.asseterp.biz.apr.dto.TransportLinkRow">
+        SELECT emp50_date                                                                        AS date
+             , emp50_start_point                                                                 AS start_point
+             , emp50_close_point                                                                 AS close_point
+             , emp50_start_time                                                                  AS start_time
+             , emp50_close_time                                                                  AS close_time
+             , emp50_amt                                                                         AS amt
+             , f_cdnm('TransportCode', emp50_transport_cd, emp50_company_id, f_sysdate())        AS transport_name
+             , emp50_note                                                                        AS note
+             , f_get_empTrans(emp50_person_id, f_sysdate()::date, 'org_code_nm')                 AS org_name
+             , f_emp_kor_nm(emp50_person_id)                                                     AS person_name
+          FROM emp50_transport_expense
+         WHERE emp50_company_id = #{companyId}
+           AND emp50_person_id = #{personId}
+           AND emp50_transport_expense_id = #{transportExpenseId}
+    </select>
+
+</mapper>

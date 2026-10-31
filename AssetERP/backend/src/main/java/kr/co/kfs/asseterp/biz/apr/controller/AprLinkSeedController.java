@@ -41,7 +41,9 @@ public class AprLinkSeedController {
                                             @RequestParam(required = false) String typeName,
                                             @RequestParam(required = false) String closeDate, @RequestParam(required = false) String periodString,
                                             @RequestParam(required = false) String checkCycle,
-                                            @RequestParam(required = false) String roleId) {
+                                            @RequestParam(required = false) String roleId,
+                                            @RequestParam(required = false) String stdYear, @RequestParam(required = false) String regNo,
+                                            @RequestParam(required = false) String regDate) {
         Map<String, String> args = new HashMap<>();
         put(args, "stdDate", stdDate);
         put(args, "cycleType", cycleType);
@@ -56,6 +58,9 @@ public class AprLinkSeedController {
         put(args, "periodString", periodString); // A09 — 보고 기간 이름("3월"·"1분기", TempData.periodString)
         put(args, "checkCycle", checkCycle); // B05 계좌개설 — 보고주기(1 분기별·2 월별)
         put(args, "roleId", roleId); // A94 책무이행점검보고서 — 탭의 보고CEO 직책(tdm20_role_id)
+        put(args, "stdYear", stdYear); // A15 미사용휴가 지정통보서 — 화면의 해당 연도(기간 계산)
+        put(args, "regNo", regNo); // A42 여비교통비 신청서 — 신청번호(emp51_reg_no)
+        put(args, "regDate", regDate); // A42 — 기준년월(yyyy.MM, 제목에 들어감)
         put(args, "ids", ids); // 여러 행을 한 문서로 묶는 코드(A77 기준가 정정 월보고)의 행 ID, 쉼표 구분
         return ApiResponse.ok(service.seed(principal, classTreeId, linkCode, refId, args));
     }
