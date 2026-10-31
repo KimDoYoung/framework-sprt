@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ExpenseLinkSeedProvider implements AprLinkSeedProvider {
 
-    private static final String TABLE_START = "<table border=2 style='border-collapse:collapse; border:0px black solid; font-family:\"NotoCustom\"; font-size:12px; margin:0px; padding:0px; width:100%;'>";
+    static final String TABLE_START = "<table border=2 style='border-collapse:collapse; border:0px black solid; font-family:\"NotoCustom\"; font-size:12px; margin:0px; padding:0px; width:100%;'>";
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private final AprExpenseLinkSeedMapper mapper;
@@ -125,55 +125,55 @@ public class ExpenseLinkSeedProvider implements AprLinkSeedProvider {
 
     // ───── ExpenseHtmlData ─────
 
-    private static String tdStColor(int colspan, int rowspan, int border, String align, int size, String text, String bg) {
+    static String tdStColor(int colspan, int rowspan, int border, String align, int size, String text, String bg) {
         return "<td colspan=\"" + colspan + "\" rowspan=\"" + rowspan
                 + "\" style=\"border:" + border + "px;border-color:black; border-style:solid; border-width:1px; background-color:" + bg + "; text-align:"
                 + align + "; height:20px; width:" + colspan + "%;\">"
                 + "<strong><span style=\"font-size:" + size + "px;\">" + text + "</span></strong></td>";
     }
 
-    private static String tdColor(int colspan, int rowspan, int border, String align, int size, String text, String bg) {
+    static String tdColor(int colspan, int rowspan, int border, String align, int size, String text, String bg) {
         return "<td colspan=\"" + colspan + "\" rowspan=\"" + rowspan
                 + "\" style=\"border:" + border + "px;border-color:black; border-style:solid; border-width:1px; background-color:" + bg + "; text-align:"
                 + align + "; height:25px; width:" + colspan + "%;\">"
                 + "<span style=\"font-size:" + size + "px;\">" + text + "</span></td>";
     }
 
-    private static String tdEmpty(int colspan, int rowspan, int border) {
+    static String tdEmpty(int colspan, int rowspan, int border) {
         return "<td colspan=\"" + colspan + "\" rowspan=\"" + rowspan
                 + "\" style=\"border:" + border + "px; height:15px; width:" + colspan + "%;\">"
                 + "<span></span></td>";
     }
 
-    private static String tdStNone(int colspan, int rowspan, String align, int size, String text) {
+    static String tdStNone(int colspan, int rowspan, String align, int size, String text) {
         return "<td colspan=\"" + colspan + "\" rowspan=\"" + rowspan
                 + "\" style=\"border-style:none; border-width:2px; text-align:" + align + "; height:2px; width:" + colspan + "%;\">"
                 + "<span style=\"font-size:" + size + "px;\">" + text + "</span></td>";
     }
 
-    private static String tdStNoneStrong(int colspan, int rowspan, String align, int size, String text) {
+    static String tdStNoneStrong(int colspan, int rowspan, String align, int size, String text) {
         return "<td colspan=\"" + colspan + "\" rowspan=\"" + rowspan
                 + "\" style=\"border-style:none; border-width:2px; text-align:" + align + "; height:1px; width:" + colspan + "%;\">"
                 + "<strong><span style=\"font-size:" + size + "px;\">" + text + "</span></strong></td>";
     }
 
-    private static String checkNull(String text) {
+    static String checkNull(String text) {
         return text == null || "undefined".equals(text) || "null".equals(text) ? " " : text;
     }
 
-    private static String checkLongNull(Long num) {
+    static String checkLongNull(Long num) {
         return num == null ? "- " : String.format(Locale.US, "%,d", num);
     }
 
-    private static String checkDateNull(LocalDate date) {
+    static String checkDateNull(LocalDate date) {
         return date == null ? " " : date.format(DATE);
     }
 
-    private static long nz(Long n) {
+    static long nz(Long n) {
         return n == null ? 0L : n;
     }
 
-    private static String tr(String... tds) {
+    static String tr(String... tds) {
         return "<tr>" + String.join("", tds) + "</tr>";
     }
 

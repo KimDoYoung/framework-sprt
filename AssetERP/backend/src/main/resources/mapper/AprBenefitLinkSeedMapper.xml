@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  V40 링크코드 A46~A51 복리후생비 지출결의서의 본문 값 (Apr01_Edit_ApprDoc.insertLinkApproval, 호출 Emp17_Tab_BenefitManager)
+  selectPayRows — emp17_benefit.selectByBenefitCode(지출결의내역 그리드)의 같은 열을 행 ID 목록으로 읽는다(AS-IS는 그리드 행 모델을 그대로 넘김). 회사 조건은 TOBE 추가.
+  selectAccountName — emp55_benefit_info.selectAccountName · selectOrgName — 로그인 사원 소속(LoginUser org korName)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprBenefitLinkSeedMapper">
+
+    <select id="selectPayRows" resultType="kr.co.kfs.asseterp.biz.apr.dto.BenefitPayLinkRow">
+        SELECT emp17_benefit_id                  AS benefit_id
+             , f_emp_kor_nm(emp17_person_id)     AS person_name
+             , emp17_issue_amt                   AS issue_amt
+             , emp17_occ_date                    AS occ_date
+             , emp17_benefit_detail              AS benefit_detail
+             , emp17_appr_id                     AS appr_id
+             , apr01_title                       AS appr_title_name
+             , CAST(apr01_reg_date AS date)      AS appr_reg_date
+             , apr01_inout_cd                    AS appr_inout_code
+          FROM emp17_benefit
+               LEFT OUTER JOIN apr01_appr ON emp17_appr_id = apr01_appr_id
+         WHERE emp17_company_id = #{companyId}
+           AND emp17_benefit_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <select id="selectAccountName" resultType="string">
+        SELECT f_get_account_nm(emp55_company_id, emp55_account_cd)
+          FROM emp55_benefit_info
+         WHERE emp55_company_id = #{companyId}
+           AND emp55_benefit_cd = #{benefitCode}
+         LIMIT 1
+    </select>
+
+    <select id="selectOrgName" resultType="string">
+        SELECT f_get_emptrans(#{personId}, f_today(), 'org_code_nm')
+    </select>
+
+</mapper>

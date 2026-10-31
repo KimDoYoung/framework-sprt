@@ -5,8 +5,8 @@
  *   가운데(여백 -1,20,20,20) = 툴바 50("▼ 지출결의내역" · 기준년월 년 45 + 월 콤보 55 · 신청구분 120 · 지급여부 100 · 검색 230 · [조회][지출결의제거][지급확인][지급취소]) + 그리드(행번호, 체크 다중, 9열, 합계 행) + 폼 70(문서분류 800 · 상신상태 250 · [상신][문서보기])
  * 스타일: GG (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
- * [다음 단계] 위 그리드 [신청문서보기] 아이콘·아래 그리드 [신청문서보기] 아이콘·[상신]·[문서보기]가 여는 전자결재 편집창 Apr01_Edit_ApprDoc(retrieveApproval·insertLinkApprovals)은 다른 도메인이라 지금은 안내만 한다.
- *   [상신]은 편집창이 열릴 자리까지(내용 없음·문서분류 미지정 검사)를 원본 그대로 하고, 결재 뒤 updatePayRequestApprId API(PUT emp/benefits/pay-requests/appr-id)는 만들어 두었다
+ * 전자결재 편집창(Apr01_Edit_ApprDoc): 1단계는 안내만 했고 V40(2026-11-01)에서 연결했다 — 위·아래 그리드 [신청문서보기] 아이콘·[문서보기]는 retrieveApproval,
+ *   [상신]은 insertLinkApprovals(linkCode = 신청구분 설정의 지출결의 연결코드 A46~A51, 서버 link-seed가 제목·본문·연관문서를 만든다) 뒤 updatePayRequestApprId(PUT emp/benefits/pay-requests/appr-id)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, Input, message, Modal, Select, Splitter } from 'antd';
@@ -23,6 +23,7 @@ import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Dcr30_Lookup_Link } from '@/components/lookup/Dcr30_Lookup_Link';
 import { Dcr30_Move_DcrClass, Dcr30ClassResult } from '@/components/lookup/Dcr30_Move_DcrClass';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Emp17_Edit_Note } from './Emp17_Edit_Note';
 import { Emp55_Lookup_account } from './Emp55_Lookup_account';
 
@@ -69,6 +70,10 @@ export const Emp17_Tab_BenefitManager: React.FC = () => {
   const [linkOpen, setLinkOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [noteTarget, setNoteTarget] = useState<Benefit | null>(null);
+  // 전자결재 편집창: 열 문서(viewApprId) · 새 지출결의서(link, AS-IS insertLinkApprovals) · 신청구분 설정의 지출결의 연결코드(linkCode, defaultName())
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [linkOpenReq, setLinkOpenReq] = useState<{ classTreeId: number; linkCode: string; ids: number[]; yyyy: string; mm: string; benefitName: string; benefitCode: string } | null>(null);
+  const [linkCode, setLinkCode] = useState<string | null>(null);
 
   const monthName = `${Number(month)}월`;
 
@@ -105,7 +110,9 @@ export const Emp17_Tab_BenefitManager: React.FC = () => {
       const info = code ? await empBenefitInfoApi.getBenefitInfoByCode(code) : null;
       if (info == null) {
         setClassTree({ id: null, name: '' });
+        setLinkCode(null);
       } else {
+        setLinkCode(info.expenseLinkCode);
         const trees = await dcrApi.searchClassTreeByLinkCode(info.expenseLinkCode);
         if (trees.length === 1) {
           setClassTree({ id: trees[0].classTreeId, name: trees[0].classTreeFullName });
@@ -161,7 +168,7 @@ export const Emp17_Tab_BenefitManager: React.FC = () => {
   // [E20]·[E22] actionCell (ImageCell).callbackOnCreate (L413·L516) → 인라인: 신청문서보기 아이콘 (buildGrid L395-497 · payRequestdGrid L499-546): 상신문서가 없으면 안내, 있으면 Apr01_Edit_ApprDoc.retrieveApproval() (다음 단계)
   const viewAppr = (row: Benefit) => {
     if (row.apprId == null) { message.warning('상신문서가 존재하지 않습니다'); return; }
-    message.info('전자결재 편집창(Apr01_Edit_ApprDoc)은 다음 단계에서 연결합니다.');
+    setViewApprId(row.apprId);
   };
 
   // [E21] 문서폐기 아이콘 deleteCell (L411-468): 상신문서가 없으면 안내 → 결재상태가 완료(30)가 아니면 안내 → 확인(400) → emp.Emp17_Benefit.deleteApprId → 안내 후 retrieve() [E21 YES L435]
@@ -287,16 +294,38 @@ export const Emp17_Tab_BenefitManager: React.FC = () => {
     });
   };
 
-  // [E18] apprButton[상신].Select (L362) → insertLinkApproval() L968-1048: 지출결의내역이 없으면 / 문서분류가 없으면 안내, 그 뒤 Apr01_Edit_ApprDoc (다음 단계)
-  const insertLinkApproval = () => {
+  // [E18] apprButton[상신].Select (L362) → insertLinkApproval() L968-1048: 지출결의내역이 없으면 / 문서분류가 없으면 안내,
+  //   상신상태가 10·20·30·99면 emp.Emp17_Benefit.selectApprId → 그 문서 열기, 아니면 Apr01_Edit_ApprDoc.insertLinkApprovals(분류, linkCode, {gridList·year·month·benefitName·totalIssueAmt·accountName}) → updateApprId → retrieve2()
+  const insertLinkApproval = async () => {
     if (payRows.length === 0) { message.warning('상신할 내용이 없습니다.'); return; }
     if (classTree.id == null) { message.warning('문서분류를 선택해주세요.'); return; }
-    message.info('전자결재 편집창(Apr01_Edit_ApprDoc)은 다음 단계에서 연결합니다.');
+    if (['10', '20', '30', '99'].includes(apprStep.code)) {
+      try {
+        const id = await empBenefitApi.getPayRequestApprId(`${year}.${month}`, benefitCode2 || '%');
+        setViewApprId(id);
+      } catch (err) { message.error(errorMessage(err, '조회 실패')); }
+      return;
+    }
+    if (linkCode == null) { message.warning('문서분류가 미지정 상태입니다. 관리자에게 문의해주세요'); return; }
+    setLinkOpenReq({ classTreeId: classTree.id, linkCode, ids: payRows.map(r => r.benefitId), yyyy: year, mm: month,
+      benefitName: types.find(t => t.code === benefitCode2)?.name ?? '', benefitCode: benefitCode2 });
+  };
+
+  // updateApprId(apprId) L1050-1062: 지출결의내역 전체의 지출결의서 상신 ID를 기록
+  const updateApprId = async (apprId: number) => {
+    const req = linkOpenReq;
+    if (req == null) return;
+    try {
+      await empBenefitApi.updatePayRequestApprId(req.ids, apprId);
+    } catch (err) { message.error(errorMessage(err, '저장 실패')); }
   };
 
   // [E19] apprViewButton[문서보기].Select (L368) → apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval() (다음 단계)
-  const viewPayAppr = () => {
-    message.info('전자결재 편집창(Apr01_Edit_ApprDoc)은 다음 단계에서 연결합니다.');
+  const viewPayAppr = async () => {
+    try {
+      const id = await empBenefitApi.getPayRequestApprId(`${year}.${month}`, benefitCode2 || '%');
+      setViewApprId(id);
+    } catch (err) { message.error(errorMessage(err, '조회 실패')); }
   };
 
   // [E13] classTreeFullName[문서분류].TriggerClick (L331) → openLookupDoc() L840-849: Dcr30_Move_DcrClass.open(callback) → 고른 분류를 칸에 넣는다
@@ -412,6 +441,14 @@ export const Emp17_Tab_BenefitManager: React.FC = () => {
       <Dcr30_Move_DcrClass open={moveOpen} hideNull onResult={onClassResult} onClose={() => setMoveOpen(false)} />
       <Emp55_Lookup_account open={accountOpen} onClose={() => { setAccountOpen(false); void comboBoxRetrieve(); }} />
       <Emp17_Edit_Note model={noteTarget} onClose={() => setNoteTarget(null)} />
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkOpenReq ? { classTreeId: linkOpenReq.classTreeId, linkCode: linkOpenReq.linkCode,
+          args: { ids: linkOpenReq.ids.join(','), yyyy: linkOpenReq.yyyy, mm: linkOpenReq.mm, benefitName: linkOpenReq.benefitName, benefitCode: linkOpenReq.benefitCode } } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => { void retrieve2(); void retrieve(); }}
+        onClose={() => { setViewApprId(null); setLinkOpenReq(null); }}
+      />
     </div>
   );
 };

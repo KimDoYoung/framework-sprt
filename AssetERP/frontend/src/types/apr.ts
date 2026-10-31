@@ -726,6 +726,9 @@ export interface AprLinkArgs {
   regDate?: string;
   /** A13 법인카드 내역관리 — 기준년월(yyyy.MM, V38). 마감일은 closeDate */
   dataYm?: string;
+  /** A46~A51 복리후생비 지출결의 — 신청구분 콤보 이름과 구분 코드(계정과목 이름을 읽음, V40). 행은 ids, 기준년월은 yyyy·mm */
+  benefitName?: string;
+  benefitCode?: string;
 }
 
 /** 링크코드별 제목·본문·시행일자 (GET apr/apprs/link-seed, V17) */
