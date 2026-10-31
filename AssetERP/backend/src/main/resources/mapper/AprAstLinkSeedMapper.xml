@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  V33 링크코드 A17 일일자금관리 · A68 4대보험 납부의 본문 값 (Apr01_Edit_ApprDoc.insertLinkApproval)
+  AS-IS 호출 화면이 그리드 행으로 넘기던 모델을 서버가 번호로 다시 읽는다. SQL은 AS-IS 원본(IDMS-IC)에서 열만 줄이고 회사 조건을 더했다.
+  sys99_print.selectByDepositIoList · ast06_tr.selectTaxTr · ast21_tr_4insure.selectExpenseAppr
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprAstLinkSeedMapper">
+
+    <!-- AS-IS sys99_print.selectByDepositIoList (IDMS-IC server/sys/mapper/sys99_print.xml:206) — 회사 조건 추가 -->
+    <select id="selectDepositIoPrint" resultType="kr.co.kfs.asseterp.biz.apr.dto.DepositIoPrintRow">
+        SELECT sys99_string02                                  AS cur_code
+             , sys99_string04                                  AS class_name
+             , sys99_string01                                  AS account_name
+             , sys99_double01                                  AS pre_day_amt
+             , sys99_double02                                  AS hold_qty
+             , SUM(CAST(sys99_double10 AS FLOAT))              AS in_amt
+             , SUM(CAST(sys99_double20 AS FLOAT))              AS out_amt
+          FROM sys99_print
+         WHERE sys99_group_id   = #{groupId}
+           AND sys99_company_id = #{companyId}
+         GROUP BY sys99_string02, sys99_string03, sys99_string04, sys99_string01, sys99_double01, sys99_double02, sys99_string05, sys99_long10, sys99_long11
+         ORDER BY sys99_string05, sys99_long10, sys99_long11
+    </select>
+
+    <!-- AS-IS ast06_tr.selectTaxTr 한 행의 열 중 본문에 쓰는 것만. 계정과목 이름(insure_account_nm)은 AS-IS가 FROM의 서브쿼리로 붙이던 것을 열 하나로 읽는다 -->
+    <select id="selectTrLink" resultType="kr.co.kfs.asseterp.biz.apr.dto.AstTrLinkRow">
+        SELECT ast06_tr_id                                      AS tr_id
+             , ast06_date                                       AS date
+             , ast06_amt                                        AS amt
+             , ast06_note                                       AS note
+             , ( SELECT f_get_account_nm(act13_company_id, act13_real_account_cd)
+                   FROM act13_real_account_map
+                  WHERE act13_company_id      = ast06_company_id
+                    AND act13_repr_account_cd = '5804'          /*(5804:복리후생비계정)*/
+                    AND act13_account_map     LIKE '953003%'    /*(953003:사대보험)*/
+                  LIMIT 1 )                                     AS insure_account_name
+             , ast21_np_etc_note                                AS np_etc_note
+             , ast21_hi_etc_note                                AS hi_etc_note
+             , ast21_ei_etc_note                                AS ei_etc_note
+             , ast21_oh_etc_note                                AS oh_etc_note
+          FROM ast06_tr
+               LEFT OUTER JOIN ast21_tr_4insure ON ast21_tr_id = ast06_tr_id
+         WHERE ast06_company_id = #{companyId}
+           AND ast06_tr_id      = #{trId}
+    </select>
+
+    <!-- AS-IS ast21_tr_4insure.selectExpenseAppr (IDMS-IC) — :companyId/:trDate를 #{}로 -->
+    <select id="selectInsureExpense" resultType="kr.co.kfs.asseterp.biz.apr.dto.Tr4InsureLinkRow">
+        WITH tr AS ( SELECT *
+                          , TO_CHAR((ast06_date + INTERVAL '-1month')::date, 'YYYY월 MM월') AS notice_month
+                       FROM ast06_tr
+                            INNER JOIN ast21_tr_4insure ON ast21_tr_id = ast06_tr_id
+                      WHERE ast06_company_id = #{companyId}
+                        AND ast06_date       = #{trDate}
+        )
+        , cnt AS ( SELECT pay11_item_cd
+                        , count(*) ast21_emp_cnt
+                     FROM (
+                            SELECT DISTINCT pay11_item_cd, pay10_person_id
+                              FROM pay10_month
+                                   INNER JOIN pay11_month_item ON pay11_month_id = pay10_month_id
+                             WHERE pay10_company_id = #{companyId}
+                               AND pay10_std_month  = TO_CHAR((#{trDate}::date + INTERVAL '-1month')::date,'YYYY.MM')
+                               AND pay11_item_amt != 0
+                               AND pay11_item_cd IN ('210','220','240')
+                          ) t
+                    GROUP BY pay11_item_cd
+        )
+        SELECT type_nm AS type_name, notice_month, emp_cnt, company_amt, emp_amt, pay_amt, etc_amt, real_pay_amt
+          FROM (
+        SELECT '210'                                                                                        AS type_cd
+             , '국민연금'                                                                                     AS type_nm
+             , notice_month                                                                                 AS notice_month
+             , (SELECT ast21_emp_cnt FROM cnt WHERE pay11_item_cd = '210')                                  AS emp_cnt
+             , COALESCE(ast21_np_company,0)                                                                 AS company_amt
+             , COALESCE(ast21_np_withholding,0)                                                             AS emp_amt
+             , COALESCE(ast21_np_company,0) + COALESCE(ast21_np_withholding,0)                              AS pay_amt
+             , COALESCE(ast21_np_etc,0)                                                                     AS etc_amt
+             , COALESCE(ast21_np_company,0) + COALESCE(ast21_np_withholding,0) + COALESCE(ast21_np_etc,0)   AS real_pay_amt
+          FROM tr
+         UNION ALL
+        SELECT '220'
+             , '국민건강'
+             , notice_month
+             , (SELECT ast21_emp_cnt FROM cnt WHERE pay11_item_cd = '220')
+             , COALESCE(ast21_hi_company,0)
+             , COALESCE(ast21_hi_withholding,0)
+             , COALESCE(ast21_hi_company,0) + COALESCE(ast21_hi_withholding,0)
+             , COALESCE(ast21_hi_etc,0)
+             , COALESCE(ast21_hi_company,0) + COALESCE(ast21_hi_withholding,0) + COALESCE(ast21_hi_etc,0)
+          FROM tr
+         UNION ALL
+        SELECT '240'
+             , '고용보험'
+             , notice_month
+             , (SELECT ast21_emp_cnt FROM cnt WHERE pay11_item_cd = '240')
+             , COALESCE(ast21_ei_company,0)
+             , COALESCE(ast21_ei_withholding,0)
+             , COALESCE(ast21_ei_company,0) + COALESCE(ast21_ei_withholding,0)
+             , COALESCE(ast21_ei_etc,0)
+             , COALESCE(ast21_ei_company,0) + COALESCE(ast21_ei_withholding,0) + COALESCE(ast21_ei_etc,0)
+          FROM tr
+         UNION ALL
+        SELECT '900'
+             , '산재보험'
+             , notice_month
+             , (SELECT ast21_emp_cnt FROM cnt WHERE pay11_item_cd = '240')
+             , COALESCE(ast21_oh_company,0)
+             , 0
+             , COALESCE(ast21_oh_company,0)
+             , COALESCE(ast21_oh_etc,0)
+             , COALESCE(ast21_oh_company,0) + COALESCE(ast21_oh_etc,0)
+          FROM tr
+          ) u
+         ORDER BY type_cd
+    </select>
+
+    <!-- 로그인 사원의 현재 조직 이름 — emp03_trans 최신 발령(퇴직·휴직 코드 800/900 제외)의 조직. 다른 링크 매퍼(AprHrLinkSeedMapper errand)와 같은 식 -->
+    <select id="selectUserOrgName" resultType="string">
+        SELECT f_org_nm(emp03_org_code_id, f_sysdate())
+          FROM emp03_trans
+         WHERE emp03_person_id = #{personId}
+           AND emp03_trans_cd NOT IN ('800','900')
+           AND emp03_trans_date = ( SELECT MAX(x.emp03_trans_date)
+                                      FROM emp03_trans x
+                                     WHERE x.emp03_person_id = #{personId}
+                                       AND x.emp03_trans_date &lt;= f_sysdate() )
+         LIMIT 1
+    </select>
+</mapper>

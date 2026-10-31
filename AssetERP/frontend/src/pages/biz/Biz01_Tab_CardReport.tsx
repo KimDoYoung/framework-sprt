@@ -4,7 +4,7 @@
  * 생성자 L74-192: north(여백 20/20/0/20) = 툴바(기준년월 [yyyy 45] [월 콤보 60] [관리자|실사용자 콤보 80 — 회사가 실사용자 관리를 쓸 때만] [조회] [항목별 계정연결]),
  *   center = RD 영역(Biz01_Rd_CardReport), south(높이 70) = 테두리 칸(문서분류 800 · 상신상태 250 · [상신] 120 · [문서보기] 120)
  * 함께: Biz01_Rd_CardReport(RD 영역), Biz03_Lookup_AccountMap(항목별 계정연결), Dcr30_Move_DcrClass(문서분류, 기존)
- * 1단계(다른 U 화면과 같은 사유): 상신·문서보기가 여는 전자결재 편집창 `Apr01_Edit_ApprDoc`(apr 도메인)은 다음 단계 — [상신]은 AS-IS 점검까지 하고 편집창 자리에 안내만 띄운다
+ * 전자결재 편집창 `Apr01_Edit_ApprDoc`은 V33에서 연결했다 — [상신](링크코드 A35, 제목은 서버가 만든다 `GET apr/apprs/link-seed`, 저장 뒤 `POST biz/relate-apprs/data-ym`이 월 상신 연결을 기록한다)·[문서보기].
  * 스타일: SR (견본 Emp01_Tab_InoutState — docs/page-style.md) + 아래 문서분류·상신상태 줄은 SG처럼 flex none 70 한 줄
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 조건이 3개이나 버튼이 둘이라 UX-02 초기화는 뺀다)
  */
@@ -18,6 +18,7 @@ import { SearchBar } from '@/components/search';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Dcr30_Move_DcrClass, Dcr30ClassResult } from '@/components/lookup/Dcr30_Move_DcrClass';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Biz01_Rd_CardReport, CardReportRdHandle } from './Biz01_Rd_CardReport';
 import { Biz03_Lookup_AccountMap } from './Biz03_Lookup_AccountMap';
 
@@ -46,6 +47,9 @@ export const Biz01_Tab_CardReport: React.FC = () => {
   const [docOpen, setDocOpen] = useState(false);
   const [appr, setAppr] = useState<ApprState>(NOT_SUBMITTED);
   const [mappingOpen, setMappingOpen] = useState(false);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  /** insertLinkApproval()이 만든 printModel — 상신 문서를 연 순간의 기준년도(string01)·월 코드(string02) */
+  const [linkDoc, setLinkDoc] = useState<{ classTreeId: number; yyyy: string; mm: string } | null>(null);
   const cond = useRef({ year, month });
   cond.current = { year, month };
 
@@ -106,17 +110,30 @@ export const Biz01_Tab_CardReport: React.FC = () => {
   }, [apprChk]);
 
   // [E3] apprButton[상신].Select (L120) → insertLinkApproval() L315-348: 문서분류가 없으면 "문서분류를 선택해주세요."
-  //   → Apr01_Edit_ApprDoc.insertLinkApproval(분류, "A35", 출력 자료(년·월·rdGroupId1·2·시작·종료일·사용자·도메인)) → updateApprId() L350-366 (biz.Biz05_RelateAppr.insert, "정상적으로 상신이 완료되었습니다") — 전자결재 편집창은 다음 단계
+  //   → Apr01_Edit_ApprDoc.insertLinkApproval(분류, "A35", 출력 자료(년·월·rdGroupId1·2·시작·종료일·사용자·도메인)) → updateApprId() L350-366 (biz.Biz05_RelateAppr.insert, "정상적으로 상신이 완료되었습니다")
+  //   제목(`yyyy.월 법인카드 현황`)에 쓰는 것은 년·월뿐이라 나머지 출력 자료는 넘기지 않는다. 본문은 문서분류의 대표 양식(AS-IS도 같음)
   const insertLinkApproval = () => {
     if (classTree?.classTreeId == null) {
       message.warning('문서분류를 선택해주세요.');
       return;
     }
-    message.info('전자결재 작성 창은 다음 단계에서 연결됩니다');
+    setLinkDoc({ classTreeId: classTree.classTreeId, yyyy: cond.current.year.trim(), mm: cond.current.month ?? '' });
   };
 
-  // [E4] apprViewButton[문서보기].Select (L126) → 서비스 apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(…, callback → apprChk()) — 전자결재 편집창은 다음 단계
-  const apprView = () => { message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다'); };
+  // updateApprId(apprId) L350-366: biz.Biz05_RelateAppr.insert(dataYm = yyyy + "." + 월, apprId, "A35") → "정상적으로 상신이 완료되었습니다" → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await bizRelateApprApi.insertDataYm({ dataYm: `${linkDoc.yyyy}.${linkDoc.mm}`, apprId, linkCode: LINK_CODE });
+      message.success('정상적으로 상신이 완료되었습니다');
+      void retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '상신 연결을 기록하지 못했습니다'));
+    }
+  };
+
+  // [E4] apprViewButton[문서보기].Select (L126) → 서비스 apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(…, callback → apprChk())
+  const apprView = () => { setViewApprId(appr.apprId); };
 
   const docText = classTree?.classTreeFullName ?? '';
   const docPlaceholder = defaultDoc?.classTreeFullName ?? '문서분류가 미지정 상태입니다. 관리자에게 문의해주세요';
@@ -152,6 +169,14 @@ export const Biz01_Tab_CardReport: React.FC = () => {
         <Button type="search" disabled={!appr.viewEnabled} onClick={apprView}>문서보기</Button>
       </div>
       <Dcr30_Move_DcrClass open={docOpen} onResult={r => { setDocOpen(false); setClassTree(r); }} onClose={() => setDocOpen(false)} />
+      {/* insertLinkApproval() / apprView(): Apr01_Edit_ApprDoc — 결재창을 닫으면 apprChk() */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: LINK_CODE, args: { yyyy: linkDoc.yyyy, mm: linkDoc.mm } } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void apprChk()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
       <Biz03_Lookup_AccountMap open={mappingOpen} onClose={() => { setMappingOpen(false); void retrieve(); }} />
     </div>
   );

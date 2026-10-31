@@ -47,6 +47,20 @@ public class BizRelateApprService {
     }
 
     /**
+     * AS-IS Biz05_RelateAppr.insert L124-162 — 그 달(dataYm = yyyy.MM) 상신 연결을 새 문서로 바꾼다(있으면 지우고 넣는다). 반환은 새 연결 ID.
+     * 있는지 보는 질의는 `selectByDataYm`(결재문서와 조인, 같은 값만 — LIKE에 % 없이)이다
+     */
+    @Transactional
+    public long insertDataYm(UserPrincipal user, String dataYm, String linkCode, Long apprId) {
+        for (BizRelateApprRes old : mapper.selectByDataYm(user.getCompanyId(), dataYm, linkCode)) {
+            mapper.deleteById(user.getCompanyId(), old.relateApprId());
+        }
+        long id = mapper.selectNextId();
+        mapper.insertDataYm(id, user.getCompanyId(), dataYm, linkCode, apprId);
+        return id;
+    }
+
+    /**
      * AS-IS insertPersonId L164-206 — 로그인 사원의 그 달 상신 연결을 새 문서로 바꾼다(있으면 지우고 넣는다). 반환은 새 연결 ID.
      * A41(법인카드)이면 문서 첨부 엑셀 `createCardExcel2`도 만든다(AS-IS는 문서 저장 때, TOBE는 문서 ID가 정해지는 이 때).
      * AS-IS는 기존 연결이 둘 이상이면 selectOne 오류, TOBE는 모두 지운다

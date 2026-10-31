@@ -6,8 +6,8 @@
  *   아래 300(여백 0,20,20,20) = Ast06_Grid_Journal
  * 스타일: GG (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 조건이 2개라 넣지 않는다
- * [다음 단계] 결재요청·문서보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc(insertLinkApproval·retrieveApproval)과 분개 그리드의 [변경]이 여는 Act02_Lookup_ModiJournal은 다른 도메인이라 지금은 안내만 한다.
- *   결재요청은 편집창이 열릴 자리까지(결재 상태 검사 → 재상신 확인 → 거래유형별 Link 코드 → 문서분류 지정 여부)를 원본 그대로 한다. 결재 뒤 updateApprId API(PUT ast/trs/{id}/appr)는 만들어 두었다
+ * [다음 단계] 분개 그리드의 [변경]이 여는 Act02_Lookup_ModiJournal은 다른 도메인이라 지금은 안내만 한다.
+ * 전자결재 편집창 Apr01_Edit_ApprDoc은 V33에서 연결했다 — 결재요청(거래유형별 링크코드 A66·A67·A68, 제목·본문은 서버가 만든다 `GET apr/apprs/link-seed`, 저장 뒤 `PUT ast/trs/{id}/appr`)·상세보기.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Modal, Splitter } from 'antd';
@@ -22,6 +22,7 @@ import { Button } from '@/components/button';
 import { SearchBar } from '@/components/search';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Dcr30_Lookup_Link } from '@/components/lookup/Dcr30_Lookup_Link';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Ast05_Lookup_TrCodeWindow } from './Ast05_Lookup_TrCodeWindow';
 import { Ast06_Lookup_TrTax, AstTrTaxTarget } from './Ast06_Lookup_TrTax';
 import { Ast06_Lookup_Tr4Insure, AstTr4InsureTarget } from './Ast06_Lookup_Tr4Insure';
@@ -30,7 +31,6 @@ import { Ast06_Grid_Journal, Ast06_Grid_JournalHandle } from './Ast06_Grid_Journ
 const gb = gbFor<AstTr>();
 const FORMAT = 'YYYY-MM-DD';
 const ALL_LABEL = '전체';
-const NEXT_STEP = '전자결재 편집창(Apr01_Edit_ApprDoc)은 다음 단계에서 연결합니다.';
 
 export const Ast06_Tab_TrTax: React.FC = () => {
   const gridRef = useRef<AgGridReact<AstTr>>(null);
@@ -46,6 +46,11 @@ export const Ast06_Tab_TrTax: React.FC = () => {
   const [linkOpen, setLinkOpen] = useState(false);
   const [taxTarget, setTaxTarget] = useState<AstTrTaxTarget | null>(null);
   const [insureTarget, setInsureTarget] = useState<AstTr4InsureTarget | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  /** insertLinkApproval(classTreeModel, linkCode, selectModel) — 결재요청을 누른 행(trId)과 거래유형별 링크코드·문서분류 */
+  const [linkDoc, setLinkDoc] = useState<{ classTreeId: number; linkCode: string; trId: number } | null>(null);
+  /** 결재창에서 문서를 저장해 updateApprId가 돌았는지 — 저장 없이 닫으면 AS-IS는 retrieve()만 한다(callback result == null) */
+  const linkSaved = useRef(false);
   /** 변경 창을 연 행 — 닫을 때 그 행의 분개를 다시 읽는다(callback.execute(trModel)) */
   const editRowId = useRef<number | null>(null);
   const rowsRef = useRef<AstTr[]>([]);
@@ -119,16 +124,31 @@ export const Ast06_Tab_TrTax: React.FC = () => {
     else setTaxTarget({ mode: 'MODI', tr: row });
   };
 
-  // searchDcr() L518-556: 거래유형별 Link 코드(5050 A66 · 5051 A67 · 5052 A68, 그 밖은 오류) → dcr.Dcr30_Link.selectByLinkCode → 없으면 안내, 있으면 insertLinkApproval() (다음 단계)
-  const searchDcr = async (code: string | null) => {
+  // searchDcr() L518-556: 거래유형별 Link 코드(5050 A66 · 5051 A67 · 5052 A68, 그 밖은 오류) → dcr.Dcr30_Link.selectByLinkCode → 없으면 안내,
+  //   있으면 insertLinkApproval(classTreeModel, linkCode, 선택 행) L558-572 — 분류가 여럿이면 마지막 것(for 문이 덮어쓴다)으로 결재창 하나
+  const searchDcr = async (row: AstTr) => {
+    const code = row.trCode;
     const linkCode = code === '5050' ? 'A66' : code === '5051' ? 'A67' : code === '5052' ? 'A68' : null;
     if (linkCode == null) { message.warning('거래코드 에러(관리자에게 문의하세요.)'); return; }
     try {
       const list = await dcrApi.searchClassTreeByLinkCode(linkCode);
       if (list.length === 0) { message.warning('문서분류가 지정되어있지 않습니다.'); return; }
-      message.info(NEXT_STEP);
+      linkSaved.current = false;
+      setLinkDoc({ classTreeId: list[list.length - 1].classTreeId, linkCode, trId: row.trId });
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
+  // updateApprId(apprId, trId) L574-: ast.Ast06_Tr.updateApprId → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    linkSaved.current = true;
+    try {
+      await astApi.updateTrApprId(linkDoc.trId, apprId);
+      void retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '상신 문서를 기록하지 못했습니다'));
     }
   };
 
@@ -138,27 +158,27 @@ export const Ast06_Tab_TrTax: React.FC = () => {
     try {
       const fresh = await astApi.getTr(row.trId);
       const status = fresh.apprId == null ? null : fresh.apprStatusCode;
-      if (status == null) { await searchDcr(fresh.trCode); return; }
+      if (status == null) { await searchDcr(fresh); return; }
       if (status === '10' || status === '20' || status === '30') { message.warning('결재진행중/완료된 문서가 존재합니다'); return; }
       if (status === '99') return;
       // [E7] msgBox.DialogHide [YES] (L296) → searchDcr()
       Modal.confirm({
         title: '확인', content: '문서상신이 반려된 경우 재상신합니다. 진행하시겠습니까?', width: 550, okText: '예', cancelText: '아니오',
-        onOk: () => searchDcr(fresh.trCode),
+        onOk: () => searchDcr(fresh),
       });
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
   };
 
-  // 상세보기 아이콘 viewCell (L289-): apprId가 없거나 문서가 없으면 안내, 있으면 Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false) (다음 단계)
+  // 상세보기 아이콘 viewCell (L289-): apprId가 없거나 문서가 없으면 안내, 있으면 Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false)
   const viewAppr = async (row: AstTr) => {
     const noDoc = () => message.warning('해당 문서가 없습니다. 결재상태를 확인해주세요.');
     if (row.apprId == null) { noDoc(); return; }
     try {
       const fresh = await astApi.getTr(row.trId);
       if (fresh.apprId == null || fresh.apprStatusCode == null) { noDoc(); return; }
-      message.info(NEXT_STEP);
+      setViewApprId(fresh.apprId);
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
@@ -245,6 +265,14 @@ export const Ast06_Tab_TrTax: React.FC = () => {
       <Ast06_Lookup_TrTax target={taxTarget} onChanged={onChanged} onClose={() => closeEdit(taxTarget?.mode === 'MODI')} />
       <Ast06_Lookup_Tr4Insure target={insureTarget} onChanged={onChanged} onClose={() => closeEdit(insureTarget?.mode === 'MODI')} />
       <Dcr30_Lookup_Link open={linkOpen} linkCodeList="LinkCode0006" onClose={() => setLinkOpen(false)} />
+      {/* insertLinkApproval() / retrieveApproval(): Apr01_Edit_ApprDoc — 문서를 저장하지 않고 닫으면 retrieve() */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: linkDoc.linkCode, refId: linkDoc.trId } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => { if (linkDoc && !linkSaved.current) void retrieve(); }}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </div>
   );
 };

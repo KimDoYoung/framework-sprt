@@ -293,6 +293,11 @@ export const bizRelateApprApi = {
     const res = await apiClient.post<ApiResponse<number>>('v1/biz/relate-apprs/person', req);
     return res.data.data;
   },
+  /** AS-IS biz.Biz05_RelateAppr.insert — 법인카드 현황(A35)·접대비 현황(A36)의 월 상신 연결을 새 문서로 바꾼다 → 새 연결 ID (V33) */
+  insertDataYm: async (req: { dataYm: string; apprId: number; linkCode: string }): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/biz/relate-apprs/data-ym', req);
+    return res.data.data;
+  },
   /** AS-IS biz.Biz05_RelateAppr.delete → 지운 건수 */
   deleteRelateApprs: async (relateApprIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/biz/relate-apprs', { data: relateApprIds });

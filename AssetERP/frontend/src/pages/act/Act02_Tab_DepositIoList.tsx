@@ -4,10 +4,8 @@
  * 생성자 L92-138: BorderLayout 위(여백 20,20,0,20) = 툴바 50(기준일 100 · [조회] · [출력/다운로드] · [예금잔고정리]),
  *   가운데(여백 -2,20,20,20) = 위 가로 3칸(0.3 · 0.35 · 0.35: 왼쪽 = 예금원장 그리드 + 아래 200 통화별 합계 그리드, 가운데 = 입금 그리드, 오른쪽 = 출금 그리드)
  *   + 아래 70 테두리 칸(문서분류 800 · 상신상태 250 · [상신] 120 · [문서보기] 120)
- * 1단계(Biz01_Tab_Card와 같은 사유): [상신]이 여는 전자결재 편집창 Apr01_Edit_ApprDoc(다른 도메인 apr)은 다음 단계 — [상신]은 문서분류 점검까지 하고 편집창 자리에 안내만 띄운다.
- *   AS-IS는 편집창을 열기 전에 ast.Ast80_RelateAppr.insert(기존 연관문서를 지우고 새로 넣음)·sys.Sys99_Print.insertRdDepositIoList를 먼저 부르는데,
- *   편집창이 없으면 지운 연관문서(반려 40 문서 연결)를 되살릴 수 없으므로 그 두 호출은 편집창과 함께 다음 단계에서 한다(API는 만들어 두었다).
- *   [문서보기]도 apr.Apr01_Appr.selectById 뒤 Apr01_Edit_ApprDoc.retrieveApproval(…, callback → retrieveApprStep)이라 안내만 한다.
+ * 전자결재 편집창 `Apr01_Edit_ApprDoc`은 V33에서 연결했다 — [상신](링크코드 A17, 제목·본문은 서버가 만든다 `GET apr/apprs/link-seed` — 편집창을 열기 전에
+ *   ast.Ast80_RelateAppr.insert(같은 일자·링크코드를 지우고 새로 넣음)와 sys.Sys99_Print.insertRdDepositIoList(출력 자료 묶음)를 먼저 부르는 것도 AS-IS 그대로, 저장 뒤 `PUT ast/relate-apprs/{id}/appr-id`)·[문서보기].
  *   RD 출력은 `rdApi`로 주소를 받아 `RdViewer`에 띄운다(docs/RD-대책.md).
  * 스타일: 원본 레이아웃(03 원칙 12). yunhee page-style은 GG로 판별하지만 원본은 위아래 분할이 아니라 가로 3칸 + 아래 문서 칸이라 GG 견본을 그대로 쓰지 않았다(결과확인 13).
  * UX보강(10): 툴바 = SearchBar(UX-01)
@@ -29,6 +27,7 @@ import { SingleGrid, gbFor } from '@/components/grid';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Dcr30_Move_DcrClass, Dcr30ClassResult } from '@/components/lookup/Dcr30_Move_DcrClass';
 import { RdViewer } from '@/components/lookup/RdViewer';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 
 const gbBook = gbFor<AstBook>();
 const gbSum = gbFor<AstBookSum>();
@@ -69,6 +68,9 @@ export const Act02_Tab_DepositIoList: React.FC = () => {
   const [docOpen, setDocOpen] = useState(false);
   const [appr, setAppr] = useState<ApprState>(INITIAL_APPR);
   const [rdUrl, setRdUrl] = useState<string | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  /** insertLinkApproval()이 Ast80_RelateAppr.insert로 만든 상신 행(relateApprId)과 출력 자료 묶음(printModel.groupId)·기준일(date01) */
+  const [linkDoc, setLinkDoc] = useState<{ classTreeId: number; relateApprId: number; groupId: number; stdDate: string } | null>(null);
 
   // retrieveApprStep() L515-564: 서비스 ast.Ast80_RelateAppr.selectByCompanyId(companyId, date = 기준일, linkCode A17) — 한 건이 아니거나 상태가 없으면 미상신(상신 가능),
   //   상태 40(반려)이면 [상신]·[문서보기] 둘 다 가능, 그 밖의 상태는 [상신] 불가·[문서보기]만 가능
@@ -187,20 +189,37 @@ export const Act02_Tab_DepositIoList: React.FC = () => {
     setClassTree(r);
   };
 
-  // [E6] apprButton[상신].Select (L234) → insertLinkApproval() L405-454: 분류가 없으면 "문서분류를 지정해주세요" → (다음 단계) Ast80_RelateAppr.insert → Sys99_Print.insertRdDepositIoList
-  //   → Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, "A17", printModel, isAdmin, callback → updateApprId(apprId, relateApprId) L457-470 → retrieveApprStep())
-  const insertLinkApproval = () => {
+  // [E6] apprButton[상신].Select (L234) → insertLinkApproval() L405-454: 분류가 없으면 "문서분류를 지정해주세요" → ast.Ast80_Relate_Appr.insert(companyId, date = 기준일, "A17")
+  //   → sys.Sys99_Print.insertRdDepositIoList(…, 예금원장 그리드 전체 행) → 성공이면 Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, "A17", printModel(printId 1 · groupId · date01 = 기준일), isAdmin,
+  //   callback → updateApprId(apprId, relateApprId) L457-470 → retrieveApprStep())
+  const insertLinkApproval = async () => {
     if (classTree?.classTreeId == null) {
       Modal.info({ title: '알림', content: '문서분류를 지정해주세요', okText: '확인' });
       return;
     }
-    message.info('전자결재 작성 창은 다음 단계에서 연결됩니다');
+    const std = stdDateRef.current.format(FORMAT);
+    try {
+      const relateApprId = await astApi.createRelateAppr(std, LINK_CODE);
+      const groupId = await actApi.rdPrintDepositIo(rows);
+      setLinkDoc({ classTreeId: classTree.classTreeId, relateApprId, groupId: Number(groupId), stdDate: std });
+    } catch (err) {
+      message.error(errorMessage(err, '상신 준비 실패'));
+    }
   };
 
-  // [E7] apprViewButton[문서보기].Select (L240) → apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback → retrieveApprStep()) — 전자결재 편집창은 다음 단계
-  const apprView = () => {
-    message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+  // updateApprId(apprId, relateApprId) L457-470: ast.Ast80_RelateAppr.updateApprId(relateApprId, apprId) → retrieveApprStep()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await astApi.updateRelateApprId(linkDoc.relateApprId, apprId);
+      void retrieveApprStep(dayjs(linkDoc.stdDate));
+    } catch (err) {
+      message.error(errorMessage(err, '상신 문서를 기록하지 못했습니다'));
+    }
   };
+
+  // [E7] apprViewButton[문서보기].Select (L240) → apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, callback → retrieveApprStep())
+  const apprView = () => { setViewApprId(appr.apprId); };
 
   // buildGrid() L274-284
   const columnDefs = useMemo(() => [
@@ -292,6 +311,14 @@ export const Act02_Tab_DepositIoList: React.FC = () => {
       </div>
       <Dcr30_Move_DcrClass open={docOpen} authCheck defaultClassTreeId={defaultDoc?.classTreeId ?? null} onResult={onDocResult} onClose={() => setDocOpen(false)} />
       <RdViewer url={rdUrl} title="일일자금관리" onClose={() => setRdUrl(null)} />
+      {/* insertLinkApproval() / apprView(): Apr01_Edit_ApprDoc — 결재창을 닫으면 retrieveApprStep() */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: LINK_CODE, refId: linkDoc.groupId, args: { stdDate: linkDoc.stdDate } } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void retrieveApprStep(stdDateRef.current)}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </div>
   );
 };

@@ -91,6 +91,13 @@
         VALUES ( #{relateApprId}, #{apprId}, #{companyId}, #{dataYm}, #{linkCode}, #{personId} )
     </insert>
 
+    <!-- V33 AS-IS biz05_relate_appr.insert (IDMS-IC) — 사원·내역(promo) 열은 값이 없어 NULL (A35·A36 월 단위 상신 연결) -->
+    <insert id="insertDataYm">
+        INSERT INTO biz05_relate_appr
+             ( biz05_relate_appr_id, biz05_appr_id, biz05_company_id, biz05_std_ym, biz05_link_cd )
+        VALUES ( #{relateApprId}, #{apprId}, #{companyId}, #{dataYm}, #{linkCode} )
+    </insert>
+
     <select id="selectLocName" resultType="string">
         SELECT sys01_loc_nm FROM sys01_company WHERE sys01_company_id = #{companyId}
     </select>

@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.biz.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.biz.dto.BizRelateApprDataYmReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizRelateApprPersonReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizRelateApprRes;
 import kr.co.kfs.asseterp.biz.biz.service.BizRelateApprService;
@@ -47,6 +48,12 @@ public class BizRelateApprController {
     @DeleteMapping
     public ApiResponse<Integer> delete(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> relateApprIds) {
         return ApiResponse.ok(service.delete(principal, relateApprIds));
+    }
+
+    /** AS-IS biz.Biz05_RelateAppr.insert (A35·A36 월 단위 상신 연결) → 새 연결 ID */
+    @PostMapping("/data-ym")
+    public ApiResponse<Long> insertDataYm(@AuthenticationPrincipal UserPrincipal principal, @RequestBody @jakarta.validation.Valid BizRelateApprDataYmReq req) {
+        return ApiResponse.ok(service.insertDataYm(principal, req.dataYm(), req.linkCode(), req.apprId()));
     }
 
     /** AS-IS biz.Biz05_RelateAppr.insertPersonId (+ A41 첨부 엑셀) → 새 연결 ID */

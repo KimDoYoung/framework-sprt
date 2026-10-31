@@ -4,7 +4,7 @@
  * 생성자 L81-173: BorderLayout — north 50(여백 20/20/-1/20) = 툴바(기준년월 [yyyy 45] [월 콤보 60, 기본 "전체"] [관리자|실사용자 콤보 80 — 회사가 실사용자 관리를 쓸 때만] [조회] [출력/다운로드]),
  *   center(여백 0/20/0/20) = 탭 3개(월별 제공금액 누계 · 제공 내역 · 거래처별 제공금액), south 70(여백 -1/20/20/20) = 테두리 칸(문서분류 800 · 상신상태 250 · [상신] 120 · [문서보기] 120)
  * 함께: Biz01_TabPage_MonthEntertmExpense · Biz01_TabPage_EntertmExpenseHistory(+ 기존 Biz02_Grid_PersonList·InternalList·ExternalList) · Biz02_TabPage_CompanyEntertmExpense · Dcr30_Move_DcrClass(문서분류, 기존)
- * 1단계(다른 U 화면과 같은 사유): 상신·문서보기가 여는 전자결재 편집창 `Apr01_Edit_ApprDoc`(apr 도메인)은 다음 단계 — [상신]은 AS-IS 점검·확인 창까지 하고 편집창 자리에 안내만 띄운다
+ * 전자결재 편집창 `Apr01_Edit_ApprDoc`은 V33에서 연결했다 — [상신](링크코드 A36, 제목은 서버가 만든다 `GET apr/apprs/link-seed`, 저장 뒤 `POST biz/relate-apprs/data-ym`이 월 상신 연결을 기록한다)·[문서보기].
  * 스타일: STP (견본 Pay10_Tab_Retire — docs/page-style.md) + 아래 문서분류·상신상태 줄은 SG처럼 flex none 70 한 줄
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 조건이 3개이나 버튼이 둘이라 UX-02 초기화는 뺀다)
  */
@@ -20,6 +20,7 @@ import { SearchBar } from '@/components/search';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Dcr30_Move_DcrClass, Dcr30ClassResult } from '@/components/lookup/Dcr30_Move_DcrClass';
 import { RdViewer } from '@/components/lookup/RdViewer';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Biz01_TabPage_EntertmExpenseHistory } from './Biz01_TabPage_EntertmExpenseHistory';
 import { Biz01_TabPage_MonthEntertmExpense } from './Biz01_TabPage_MonthEntertmExpense';
 import { Biz02_TabPage_CompanyEntertmExpense } from './Biz02_TabPage_CompanyEntertmExpense';
@@ -64,6 +65,9 @@ export const Biz01_Tab_EntertmExpenseReport: React.FC = () => {
   const [docOpen, setDocOpen] = useState(false);
   const [appr, setAppr] = useState<ApprState>(NOT_SUBMITTED);
   const [rd, setRd] = useState<{ url: string } | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  /** insertLinkApproval()이 만든 printModel — 확인 창에서 [예]를 누른 순간의 기준년도(string01)·월(string02, getMonth()) */
+  const [linkDoc, setLinkDoc] = useState<{ classTreeId: number; yyyy: string; mm: string } | null>(null);
   const refs = useRef<Record<string, EntertmTabHandle | null>>({});
   const bind = (key: string) => (h: EntertmTabHandle | null) => { refs.current[key] = h; };
   const cond = useRef({ year, month, cardRealUserType, realUser });
@@ -146,7 +150,7 @@ export const Biz01_Tab_EntertmExpenseReport: React.FC = () => {
 
   // [E6] apprButton[상신].Select (L235) → insertLinkApproval() L322-366: 문서분류가 없으면 "문서분류를 선택해주세요." / 월이 "전체"면 "상신할 월을 선택하여 주세요."
   //   → 확인(400) "yyyy년 n월 상신을 진행하시겠습니까?" → [E8] msgBox.DialogHide [YES] (L339) → Apr01_Edit_ApprDoc.insertLinkApproval(분류, "A36", 출력 자료(년·월), …)
-  //   → updateApprId() L368-384 (biz.Biz05_RelateAppr.insert, "정상적으로 상신이 완료되었습니다") — 전자결재 편집창은 다음 단계
+  //   → updateApprId() L368-384 (biz.Biz05_RelateAppr.insert, "정상적으로 상신이 완료되었습니다"). 본문은 문서분류의 대표 양식(AS-IS도 같음)
   const insertLinkApproval = () => {
     if (classTree?.classTreeId == null) {
       message.warning('문서분류를 선택해주세요.');
@@ -163,12 +167,24 @@ export const Biz01_Tab_EntertmExpenseReport: React.FC = () => {
       width: 400,
       okText: '예',
       cancelText: '아니오',
-      onOk: () => { message.info('전자결재 작성 창은 다음 단계에서 연결됩니다'); },
+      onOk: () => { setLinkDoc({ classTreeId: classTree.classTreeId as number, yyyy: cond.current.year.trim(), mm: getMonth() }); },
     });
   };
 
-  // [E7] apprViewButton[문서보기].Select (L242) → 서비스 apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(…, callback → apprChk()) — 전자결재 편집창은 다음 단계
-  const apprView = () => { message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다'); };
+  // updateApprId(apprId) L368-384: biz.Biz05_RelateAppr.insert(dataYm = yyyy + "." + getMonth(), apprId, "A36") → "정상적으로 상신이 완료되었습니다" → apprChk()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await bizRelateApprApi.insertDataYm({ dataYm: `${linkDoc.yyyy}.${linkDoc.mm}`, apprId, linkCode: LINK_CODE });
+      message.success('정상적으로 상신이 완료되었습니다');
+      void apprChk();
+    } catch (err) {
+      message.error(errorMessage(err, '상신 연결을 기록하지 못했습니다'));
+    }
+  };
+
+  // [E7] apprViewButton[문서보기].Select (L242) → 서비스 apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(…, callback → apprChk())
+  const apprView = () => { setViewApprId(appr.apprId); };
 
   const docText = classTree?.classTreeFullName ?? '';
   const docPlaceholder = defaultDoc?.classTreeFullName ?? '문서분류가 미지정 상태입니다. 관리자에게 문의해주세요';
@@ -228,6 +244,14 @@ export const Biz01_Tab_EntertmExpenseReport: React.FC = () => {
       </div>
       <Dcr30_Move_DcrClass open={docOpen} onResult={r => { setDocOpen(false); setClassTree(r); }} onClose={() => setDocOpen(false)} />
       <RdViewer url={rd?.url ?? null} title="접대비 현황" onClose={() => setRd(null)} />
+      {/* insertLinkApproval() / apprView(): Apr01_Edit_ApprDoc — 결재창을 닫으면 apprChk() */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: LINK_CODE, args: { yyyy: linkDoc.yyyy } } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void apprChk()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </div>
   );
 };

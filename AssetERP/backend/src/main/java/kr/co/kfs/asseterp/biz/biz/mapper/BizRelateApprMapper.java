@@ -33,6 +33,10 @@ public interface BizRelateApprMapper {
     int insertPersonId(@Param("relateApprId") long relateApprId, @Param("companyId") Long companyId, @Param("dataYm") String dataYm,
                        @Param("linkCode") String linkCode, @Param("apprId") Long apprId, @Param("personId") Long personId);
 
+    /** AS-IS biz05_relate_appr.insert — A35·A36(법인카드 현황·접대비 현황) 월 단위 상신 연결 */
+    int insertDataYm(@Param("relateApprId") long relateApprId, @Param("companyId") Long companyId, @Param("dataYm") String dataYm,
+                     @Param("linkCode") String linkCode, @Param("apprId") Long apprId);
+
     /** AS-IS sys01_company.selectById의 위치 이름(첨부 폴더) */
     String selectLocName(@Param("companyId") Long companyId);
 }
