@@ -178,7 +178,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
           const f = toForm(d);
           // insertLinkApproval: 링크코드별 제목·본문·시행일자(서버가 만든다), 본문이 없으면 문서분류 대표 양식(checkContent)
           if (link) {
-            const ls = await aprWriteApi.linkSeed(link.classTreeId, link.linkCode, link.refId);
+            const ls = await aprWriteApi.linkSeed(link.classTreeId, link.linkCode, link.refId, link.args);
             if (!alive) return;
             if (ls.title != null) { f.title = ls.title; d.title = ls.title; }
             if (ls.content != null) { f.content = ls.content; d.content = ls.content; }
@@ -208,7 +208,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
     })();
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apprId, treeId, link?.linkCode, link?.refId, reloadKey]);
+  }, [apprId, treeId, link?.linkCode, link?.refId, JSON.stringify(link?.args ?? null), reloadKey]);
 
   const next = (text: string) => message.info(text);
 

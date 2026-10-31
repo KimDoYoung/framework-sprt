@@ -122,4 +122,40 @@
            AND ics32_cycle_type = #{cycleType}
          LIMIT 1
     </select>
+
+    <!-- AS-IS ics32_relate_appr.selectByCompanyId (IDMS-IC) — 연결 행 ID만. ics32_person_id·ics32_appr_type 열은 로컬 DB에 없어 조건에서 뺐다 -->
+    <select id="selectRelateApprId" resultType="long">
+        SELECT ics32_relate_appr_id
+          FROM ics32_relate_appr
+         WHERE ics32_company_id = #{companyId}
+           AND ics32_yyyymm     = #{yyyymm}
+           AND ics32_cycle_type = #{cycleType}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS ics32_relate_appr.insert (IDMS-IC) — person_id·appr_type 열은 로컬 DB에 없어 뺐다 -->
+    <insert id="insertRelateAppr">
+        INSERT INTO ics32_relate_appr
+             ( ics32_relate_appr_id, ics32_company_id, ics32_yyyymm, ics32_cycle_type )
+        VALUES
+             ( #{relateApprId}, #{companyId}, #{yyyymm}, #{cycleType} )
+    </insert>
+
+    <!-- AS-IS ics32_relate_appr.updateApprId (IDMS-IC) — 회사 조건 추가 -->
+    <update id="updateRelateApprId">
+        UPDATE ics32_relate_appr
+           SET ics32_appr_id = #{apprId}
+         WHERE ics32_relate_appr_id = #{relateApprId}
+           AND ics32_company_id     = #{companyId}
+    </update>
+
+    <select id="countAppr" resultType="int">
+        SELECT COUNT(*) FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId} AND apr01_company_id = #{companyId}
+    </select>
 </mapper>

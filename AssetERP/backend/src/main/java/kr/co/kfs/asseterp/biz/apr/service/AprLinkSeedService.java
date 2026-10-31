@@ -38,11 +38,15 @@ public class AprLinkSeedService {
     }
 
     public AprLinkSeedRes seed(UserPrincipal user, Long classTreeId, String linkCode, Long refId) {
+        return seed(user, classTreeId, linkCode, refId, Map.of());
+    }
+
+    public AprLinkSeedRes seed(UserPrincipal user, Long classTreeId, String linkCode, Long refId, Map<String, String> args) {
         AprLinkSeedProvider provider = providers.get(linkCode);
         if (provider == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "아직 지원하지 않는 링크코드입니다: " + linkCode);
         }
-        Seed s = provider.seed(user, linkCode, refId);
+        Seed s = provider.seed(user, linkCode, refId, args == null ? Map.of() : args);
         String title = s.title();
         String content = s.content();
         if (content == null) {

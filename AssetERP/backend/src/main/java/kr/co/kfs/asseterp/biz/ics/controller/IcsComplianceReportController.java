@@ -2,6 +2,8 @@ package kr.co.kfs.asseterp.biz.ics.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportApprRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportApprIdReq;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportRelateReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportRes;
 import kr.co.kfs.asseterp.biz.ics.service.IcsComplianceReportService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -34,5 +36,19 @@ public class IcsComplianceReportController {
     public ApiResponse<IcsComplianceReportApprRes> appr(@AuthenticationPrincipal UserPrincipal principal,
                                                         @RequestParam String yyyymm, @RequestParam String cycleType) {
         return ApiResponse.ok(service.appr(principal, yyyymm, cycleType));
+    }
+
+    /** AS-IS ics.Ics32_RelateAppr.insert — 상신 연결 ID를 만들거나 있으면 돌려준다 (V19, A32) */
+    @PostMapping("/relate-apprs")
+    public ApiResponse<Long> createRelateAppr(@AuthenticationPrincipal UserPrincipal principal, @RequestBody IcsComplianceReportRelateReq req) {
+        return ApiResponse.ok(service.createRelateAppr(principal, req.yyyymm(), req.cycleType()));
+    }
+
+    /** AS-IS ics.Ics32_RelateAppr.updateApprId */
+    @PutMapping("/relate-apprs/{relateApprId}/appr-id")
+    public ApiResponse<Void> updateRelateApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long relateApprId,
+                                                @RequestBody IcsComplianceReportApprIdReq req) {
+        service.updateRelateApprId(principal, relateApprId, req.apprId());
+        return ApiResponse.ok(null);
     }
 }

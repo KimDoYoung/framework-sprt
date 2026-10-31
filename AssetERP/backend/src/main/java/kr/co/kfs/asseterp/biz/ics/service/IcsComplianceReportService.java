@@ -6,6 +6,8 @@ import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportEmp;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportResult;
 import kr.co.kfs.asseterp.biz.ics.mapper.IcsComplianceReportMapper;
+import kr.co.kfs.asseterp.common.error.BusinessException;
+import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,5 +59,35 @@ public class IcsComplianceReportService {
     /** AS-IS defaultApprName(): 그 달 상신 연결과 결재 상태. 연결이 없으면 null(미상신) */
     public IcsComplianceReportApprRes appr(UserPrincipal user, String yyyymm, String cycleType) {
         return mapper.selectAppr(user.getCompanyId(), yyyymm, cycleType);
+    }
+
+    /**
+     * AS-IS ics.Ics32_RelateAppr.insert L61-94 (A32 상신 전) — 그 달 연결 행이 있으면 그 ID, 없으면 만들어 그 ID.
+     * AS-IS는 ics32_person_id(NULL)·ics32_appr_type('1')도 넣고 같은 조건으로 찾지만 로컬 asseterpdb의 ics32_relate_appr에는 두 열이 없어
+     * (원본보다 오래된 스키마) 넣지도 걸지도 않는다 — 이 화면의 연결은 모두 그 값이라 같은 행이 잡힌다.
+     */
+    @Transactional
+    public Long createRelateAppr(UserPrincipal user, String yyyymm, String cycleType) {
+        if (yyyymm == null || !yyyymm.matches("\\d{4}\\.\\d{2}") || cycleType == null || cycleType.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "기준 분기(월) 정보가 올바르지 않습니다.");
+        }
+        Long id = mapper.selectRelateApprId(user.getCompanyId(), yyyymm, cycleType);
+        if (id != null) {
+            return id;
+        }
+        id = mapper.selectNextId();
+        mapper.insertRelateAppr(id, user.getCompanyId(), yyyymm, cycleType);
+        return id;
+    }
+
+    /** AS-IS ics.Ics32_RelateAppr.updateApprId L96-103 (A32 상신 뒤) */
+    @Transactional
+    public void updateRelateApprId(UserPrincipal user, Long relateApprId, Long apprId) {
+        if (apprId == null || mapper.countAppr(user.getCompanyId(), apprId) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "상신 문서를 찾을 수 없습니다.");
+        }
+        if (mapper.updateRelateApprId(user.getCompanyId(), relateApprId, apprId) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "상신 연결 정보를 찾을 수 없습니다.");
+        }
     }
 }

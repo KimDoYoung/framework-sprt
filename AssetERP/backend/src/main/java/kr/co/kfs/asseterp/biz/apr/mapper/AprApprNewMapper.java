@@ -24,6 +24,9 @@ public interface AprApprNewMapper {
 
     Long selectOrgCodeId(@Param("personId") Long personId);
 
+    /** 로그인 사원 조직의 이름 (AS-IS LoginUser.getUserModel().getOrgInfoModel().getKorName()) */
+    String selectOrgName(@Param("orgCodeId") Long orgCodeId);
+
     AprNewClassRow selectClassTree(@Param("classTreeId") Long classTreeId, @Param("companyId") Long companyId);
 
     AprNewDocTypeRow selectDefaultDocType(@Param("classTreeId") Long classTreeId, @Param("companyId") Long companyId);

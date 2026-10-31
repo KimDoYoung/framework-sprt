@@ -1,0 +1,23 @@
+{
+  "id": "V19",
+  "menu": [
+    "(창)",
+    "준법감시 > 30. 내부통제 체크리스트 > 내부통제내역 확인(부서장) > [상신] > 결재요청"
+  ],
+  "menuId": 1230,
+  "className": "Apr01_Edit_ApprDoc",
+  "api": [
+    "apr/apprs/link-seed",
+    "ics/checklist-confirms/relate-apprs",
+    "ics/checklist-confirms/relate-apprs/appr-id",
+    "ics/compliance-reports/relate-apprs",
+    "ics/compliance-reports/relate-apprs/{id}/appr-id",
+    "dcr/links/class-tree-by-code"
+  ],
+  "opens": {
+    "via": "내부통제내역 확인(부서장) [상신] → 상신 조회창의 결재상태 비어 있는 행 [결재요청] 아이콘 → 문서분류 확인 창 [확인]. (준수보고는 내부통제 준수보고(준감인) #1312 의 [상신])",
+    "headers": "문서상세"
+  },
+  "grid": true,
+  "notes": "[결재요청] 아이콘을 누르면 `문서분류` 확인 창이 먼저 뜬다 — [확인] 뒤 `문서상세` 창에 제목 `대분류명 체크리스트 (2026년 09월 - 조직명)`이 들어 있고 제목은 고칠 수 있으며 [저장]은 없다. [결재요청]은 누르지 않고 [닫기]로 닫는다(쓰기 안 함). #1312 화면은 조회 뒤 [문서분류]를 고르고 [상신]을 누르면 제목 `2026년 3분기_임직원 내부통제 준수보고`. [상신]은 상신 연결 행(ics32)을 만들므로 시험에서는 누르지 않는다(문서분류 선택·[문서보기] 비활성까지만 확인)."
+}

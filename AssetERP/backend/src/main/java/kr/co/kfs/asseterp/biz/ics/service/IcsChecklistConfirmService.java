@@ -3,9 +3,13 @@ package kr.co.kfs.asseterp.biz.ics.service;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistConfirmReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistConfirmRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistRelateApprIdReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistRelateApprRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsRelateApprRow;
 import kr.co.kfs.asseterp.biz.ics.mapper.IcsChecklistConfirmMapper;
 import kr.co.kfs.asseterp.common.dto.PageRes;
+import kr.co.kfs.asseterp.common.error.BusinessException;
+import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,6 +75,36 @@ public class IcsChecklistConfirmService {
     /** AS-IS ics.Ics16_RelateAppr.selectByConfirmerId: 대분류별 전체·확인 건수와 결재 상태 */
     public List<IcsChecklistRelateApprRes> relateApprs(UserPrincipal user, LocalDate stdDate, String cycleType) {
         return mapper.selectRelateApprs(user.getCompanyId(), user.getUserId(), stdDate, cycleType);
+    }
+
+    /**
+     * AS-IS ics.Ics16_RelateAppr.updateApprId L63-116 (A27 상신 뒤) — 이전 상신 문서(lastApprId)가 있으면 폐기 보관 후 지우고,
+     * 그 달·대분류의 연결 행이 없으면 만들고 있으면 상신 문서 ID를 바꾼다.
+     * 폐기할 문서는 이 연결 행에 기록된 문서만 받는다(원본은 클라이언트가 준 번호를 그대로 지운다).
+     */
+    @Transactional
+    public void updateRelateApprId(UserPrincipal user, IcsChecklistRelateApprIdReq req) {
+        if (req.stdDate() == null || req.cycleType() == null || req.checklistLClassId() == null || req.apprId() == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "상신 정보가 올바르지 않습니다.");
+        }
+        Long companyId = user.getCompanyId();
+        if (mapper.countAppr(companyId, req.apprId()) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "상신 문서를 찾을 수 없습니다.");
+        }
+        String yyyymm = req.stdDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyy.MM"));
+        IcsRelateApprRow row = mapper.selectRelateAppr(companyId, yyyymm, req.cycleType(), req.checklistLClassId());
+        if (req.lastApprId() != null) {
+            if (row == null || !req.lastApprId().equals(row.apprId())) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "폐기할 이전 상신 문서가 이 체크리스트의 문서가 아닙니다.");
+            }
+            mapper.insertApprDel(companyId, req.lastApprId(), user.getUserId());  // (4) apr99_appr_del insert
+            mapper.deleteAppr(companyId, req.lastApprId());                       // (5) apr01_appr delete
+        }
+        if (row == null) {
+            mapper.insertRelateAppr(mapper.selectNextId(), companyId, yyyymm, req.cycleType(), req.apprId(), user.getUserId(), req.checklistLClassId());
+        } else {
+            mapper.updateRelateApprId(companyId, yyyymm, req.cycleType(), req.checklistLClassId(), req.apprId());
+        }
     }
 
     private static String like(String searchText) {

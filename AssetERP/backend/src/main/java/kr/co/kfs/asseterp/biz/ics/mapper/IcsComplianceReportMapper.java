@@ -31,4 +31,18 @@ public interface IcsComplianceReportMapper {
 
     /** AS-IS ics32_relate_appr.selectByCompanyId — 없으면 null */
     IcsComplianceReportApprRes selectAppr(@Param("companyId") Long companyId, @Param("yyyymm") String yyyymm, @Param("cycleType") String cycleType);
+
+    /** AS-IS ics32_relate_appr.selectByCompanyId — 그 달 연결 행의 ID (없으면 null) */
+    Long selectRelateApprId(@Param("companyId") Long companyId, @Param("yyyymm") String yyyymm, @Param("cycleType") String cycleType);
+
+    long selectNextId();
+
+    /** AS-IS ics32_relate_appr.insert */
+    int insertRelateAppr(@Param("relateApprId") Long relateApprId, @Param("companyId") Long companyId,
+                         @Param("yyyymm") String yyyymm, @Param("cycleType") String cycleType);
+
+    /** AS-IS ics32_relate_appr.updateApprId — 회사 조건 추가. 상신 문서가 이 회사 것인지는 countAppr로 먼저 본다 */
+    int updateRelateApprId(@Param("companyId") Long companyId, @Param("relateApprId") Long relateApprId, @Param("apprId") Long apprId);
+
+    int countAppr(@Param("companyId") Long companyId, @Param("apprId") Long apprId);
 }

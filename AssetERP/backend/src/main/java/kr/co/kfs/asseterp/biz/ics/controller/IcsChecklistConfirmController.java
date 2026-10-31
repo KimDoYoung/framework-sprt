@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.ics.controller;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistConfirmReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistConfirmRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistRelateApprIdReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistRelateApprRes;
 import kr.co.kfs.asseterp.biz.ics.service.IcsChecklistConfirmService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -67,5 +68,12 @@ public class IcsChecklistConfirmController {
                                                                     @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
                                                                     @RequestParam String cycleType) {
         return ApiResponse.ok(service.relateApprs(principal, stdDate, cycleType));
+    }
+
+    /** AS-IS ics.Ics16_RelateAppr.updateApprId — 체크리스트 상신 문서를 연결하고 이전 문서를 폐기 (V19, A27) */
+    @PutMapping("/relate-apprs/appr-id")
+    public ApiResponse<Void> updateRelateApprId(@AuthenticationPrincipal UserPrincipal principal, @RequestBody IcsChecklistRelateApprIdReq req) {
+        service.updateRelateApprId(principal, req);
+        return ApiResponse.ok(null);
     }
 }

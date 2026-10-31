@@ -754,6 +754,11 @@ export const icsApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS ics.Ics16_RelateAppr.updateApprId — 상신한 문서를 연결하고 lastApprId(이전 문서)가 있으면 폐기한다 (V19, A27) */
+  updateChecklistRelateApprId: async (req: { stdDate: string; cycleType: string; checklistLClassId: number; apprId: number; lastApprId: number | null }): Promise<void> => {
+    await apiClient.put('v1/ics/checklist-confirms/relate-apprs/appr-id', req);
+  },
+
   // ── K07 내부통제내역 현황(준감인) (Ics15_Tab_ChecklistStatus·Ics15_Lookup_ChecklistStatusDetail) ──
 
   /** AS-IS sys.Sys99_Print.insertIcsCheckListStatus: 체크리스트별 월(분기)별 체크·확인 현황. year = 조회년도 4자리, 검색어의 앞뒤 %는 서버가 붙인다 */
@@ -790,6 +795,17 @@ export const icsApi = {
   },
 
   /** AS-IS ics.Ics32_RelateAppr.selectByCompanyId: 그 달 상신 연결과 결재 상태, 연결이 없으면 null (yyyymm = 'yyyy.MM') */
+  /** AS-IS ics.Ics32_RelateAppr.insert — 그 달 상신 연결 ID를 만들거나(없을 때) 돌려준다 (V19, A32) */
+  createComplianceReportRelate: async (yyyymm: string, cycleType: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ics/compliance-reports/relate-apprs', { yyyymm, cycleType });
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics32_RelateAppr.updateApprId */
+  updateComplianceReportApprId: async (relateApprId: number, apprId: number): Promise<void> => {
+    await apiClient.put(`v1/ics/compliance-reports/relate-apprs/${relateApprId}/appr-id`, { apprId });
+  },
+
   getComplianceReportAppr: async (yyyymm: string, cycleType: string): Promise<IcsComplianceReportAppr | null> => {
     const res = await apiClient.get<ApiResponse<IcsComplianceReportAppr | null>>('v1/ics/compliance-reports/appr', { params: { yyyymm, cycleType } });
     return res.data.data ?? null;

@@ -85,6 +85,11 @@
         SELECT CAST(f_get_emptrans(#{personId}, f_today()::date, 'org_code_id') AS NUMERIC)
     </select>
 
+    <!-- 조직 이름 (AS-IS OrgInfoModel.korName — f_org_nm은 AS-IS 쿼리들이 쓰는 조직 이름 함수) -->
+    <select id="selectOrgName" resultType="string">
+        SELECT f_org_nm(#{orgCodeId}, f_today()::date)
+    </select>
+
     <!-- AS-IS dcr01_class_tree.selectById 중 새 문서가 쓰는 열 -->
     <select id="selectClassTree" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprNewClassRow">
         SELECT dcr01_class_tree_id                              AS class_tree_id

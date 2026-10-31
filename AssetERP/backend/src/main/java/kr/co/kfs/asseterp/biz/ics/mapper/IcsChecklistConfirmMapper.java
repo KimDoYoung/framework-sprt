@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.ics.mapper;
 
 import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistConfirmRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistRelateApprRes;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsRelateApprRow;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -42,4 +43,26 @@ public interface IcsChecklistConfirmMapper {
     /** AS-IS ics16_relate_appr.selectByConfirmerId */
     List<IcsChecklistRelateApprRes> selectRelateApprs(@Param("companyId") Long companyId, @Param("confirmerId") Long confirmerId,
                                                       @Param("stdDate") LocalDate stdDate, @Param("cycleType") String cycleType);
+
+    /** AS-IS ics16_relate_appr.selectByCompanyId — 그 달·대분류의 상신 연결 행 */
+    IcsRelateApprRow selectRelateAppr(@Param("companyId") Long companyId, @Param("checkYyyymm") String checkYyyymm,
+                                      @Param("cycleType") String cycleType, @Param("checklistLClassId") Long checklistLClassId);
+
+    /** AS-IS UpdateDataModel INSERT(ics16_relate_appr) */
+    int insertRelateAppr(@Param("relateApprId") Long relateApprId, @Param("companyId") Long companyId, @Param("checkYyyymm") String checkYyyymm,
+                         @Param("cycleType") String cycleType, @Param("apprId") Long apprId, @Param("confirmerId") Long confirmerId,
+                         @Param("checklistLClassId") Long checklistLClassId);
+
+    /** AS-IS ics16_relate_appr.updateApprId */
+    int updateRelateApprId(@Param("companyId") Long companyId, @Param("checkYyyymm") String checkYyyymm, @Param("cycleType") String cycleType,
+                           @Param("checklistLClassId") Long checklistLClassId, @Param("apprId") Long apprId);
+
+    /** 상신 문서가 이 회사 것인지 */
+    int countAppr(@Param("companyId") Long companyId, @Param("apprId") Long apprId);
+
+    /** AS-IS apr01_appr.insertApprDel — 폐기 보관(apr99_appr_del). 이 회사 문서만 */
+    int insertApprDel(@Param("companyId") Long companyId, @Param("apprId") Long apprId, @Param("empId") Long empId);
+
+    /** AS-IS apr01_appr.deleteAppr — 이 회사 문서만 */
+    int deleteAppr(@Param("companyId") Long companyId, @Param("apprId") Long apprId);
 }

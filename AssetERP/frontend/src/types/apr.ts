@@ -691,6 +691,16 @@ export interface AprLinkOpen {
   classTreeId: number;
   linkCode: string;
   refId?: number | null;
+  /** 행 번호 하나로 모자란 코드가 더 넘기는 값 — 호출 화면의 입력칸(기준일자 stdDate·체크주기 cycleType·기준년도 yyyy·월/분기 코드 mm·월/분기 이름 cycleName, V19) */
+  args?: AprLinkArgs;
+}
+
+export interface AprLinkArgs {
+  stdDate?: string;
+  cycleType?: string;
+  yyyy?: string;
+  mm?: string;
+  cycleName?: string;
 }
 
 /** 링크코드별 제목·본문·시행일자 (GET apr/apprs/link-seed, V17) */
