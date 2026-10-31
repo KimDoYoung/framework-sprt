@@ -103,4 +103,12 @@
            <foreach collection="buyIds" item="id" open="(" separator="," close=")">#{id}</foreach>
     </delete>
 
+
+    <!-- AS-IS Bmt01_Tab_Buy.updateApprId: 그리드 행의 apprId만 바꿔 bmt.Bmt01_Buy.update (V38 A04). 회사 조건을 더했다 -->
+    <update id="updateApprId">
+        UPDATE bmt01_buy
+           SET bmt01_appr_id = #{apprId}
+         WHERE bmt01_company_id = #{companyId}
+           AND bmt01_buy_id     = #{buyId}
+    </update>
 </mapper>

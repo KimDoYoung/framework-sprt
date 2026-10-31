@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.biz.dto.BizRelateApprDataYmReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizRelateApprPersonReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizRelateApprRes;
+import kr.co.kfs.asseterp.biz.biz.service.BizCardManagementApprService;
 import kr.co.kfs.asseterp.biz.biz.service.BizRelateApprService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import java.util.List;
 public class BizRelateApprController {
 
     private final BizRelateApprService service;
+    private final BizCardManagementApprService cardManagementService;
 
     /** AS-IS biz.Biz05_RelateAppr.selectByPromoId */
     @GetMapping
@@ -60,5 +62,20 @@ public class BizRelateApprController {
     @PostMapping("/person")
     public ApiResponse<Long> insertPersonId(@AuthenticationPrincipal UserPrincipal principal, @RequestBody BizRelateApprPersonReq req) throws java.io.IOException {
         return ApiResponse.ok(service.insertPersonId(principal, req));
+    }
+
+    /**
+     * A13 법인카드 내역관리 상신 뒤 처리 — Biz05_RelateAppr.insert(A13) + 첨부 엑셀 + 증빙 파일 복사 (V38).
+     * excelCreated가 false면 AS-IS처럼 "Excel 생성 중 오류가 발생했습니다. 관리자에게 연락해주세요"를 알리고 증빙 복사는 하지 않았다.
+     */
+    @PostMapping("/card-management")
+    public ApiResponse<CardManagementApprRes> afterCardManagementAppr(@AuthenticationPrincipal UserPrincipal principal, @RequestBody CardManagementApprReq req) {
+        return ApiResponse.ok(new CardManagementApprRes(cardManagementService.afterApproval(principal, req.dataYm(), req.apprId())));
+    }
+
+    public record CardManagementApprReq(String dataYm, Long apprId) {
+    }
+
+    public record CardManagementApprRes(boolean excelCreated) {
     }
 }

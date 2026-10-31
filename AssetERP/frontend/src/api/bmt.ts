@@ -19,6 +19,10 @@ export const bmtBuyApi = {
     const res = await apiClient.delete<ApiResponse<number>>('v1/bmt/buys', { data: buyIds });
     return res.data.data ?? 0;
   },
+  /** AS-IS Bmt01_Tab_Buy.updateApprId → bmt.Bmt01_Buy.update (A04 상신 뒤 결재문서 ID 기록, V38) */
+  updateApprId: async (buyId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/bmt/buys/${buyId}/appr-id`, { apprId });
+  },
 };
 
 /** T20 AS-IS Bmt12_Tab_EmpIct (임직원 정보통신수단) */

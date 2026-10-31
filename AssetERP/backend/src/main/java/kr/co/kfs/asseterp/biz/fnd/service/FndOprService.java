@@ -205,4 +205,22 @@ public class FndOprService {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "결재진행 중인 문서가 존재합니다");
         }
     }
+
+    /**
+     * A26·A38 상신 뒤 결재문서 ID 기록 (AS-IS Fnd30_Opr.updateApprId L97-121).
+     * lastApprId(이전에 반려된 문서)가 있으면 apr99_appr_del로 보관하고 apr01_appr에서 지운 뒤 새 문서 ID를 기록한다.
+     */
+    @Transactional
+    public void updateApprId(UserPrincipal user, Long oprId, Long apprId, Long lastApprId) {
+        if (apprId == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "결재문서 ID가 없습니다.");
+        }
+        if (lastApprId != null) {
+            mapper.insertApprDel(user.getCompanyId(), lastApprId, user.getUserId());
+            mapper.deleteAppr(lastApprId);
+        }
+        if (mapper.updateApprId(user.getCompanyId(), oprId, apprId) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+    }
 }

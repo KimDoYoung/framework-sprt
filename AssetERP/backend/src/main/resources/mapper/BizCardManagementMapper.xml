@@ -338,4 +338,89 @@
         </if>
          ORDER BY biz01_approval_dt, biz01_approval_time, biz01_franchise_nm
     </insert>
+
+    <!-- AS-IS biz01_promo.selectCardManagement (IDMS-IC) — A13 상신: 그 달 전체(managerId·searchText 없음, 제공목적 '%'). 열은 본문·엑셀에 쓰는 것만 -->
+    <select id="selectAllForAppr" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCardApprRow">
+        <![CDATA[
+        SELECT tt.biz01_promo_id                                    AS promo_id
+             , COALESCE(tt.biz01_close_yn, 'false') = 'true'        AS close_yn
+             , tt.biz01_html_card_nm                                AS html_card_name
+             , tt.biz01_reg_emp_nm                                  AS reg_emp_name
+             , tt.biz01_approval_dt                                 AS approval_dt
+             , tt.biz01_franchise_nm                                AS franchise_name
+             , tt.biz01_sector_nm                                   AS sector_name
+             , tt.biz01_provide_amt                                 AS provide_amt
+             , tt.biz01_approval_amount                             AS approval_amount
+             , tt.biz01_provide_pur_nm                              AS provide_pur_name
+             , tt.biz01_provide_content_nm                          AS provide_content_name
+             , tt.biz01_account_cd                                  AS account_code
+             , tt.biz01_account_nm                                  AS account_name
+             , tt.biz01_tax_type_nm                                 AS tax_type_name
+             , tt.biz01_file_count_str                              AS file_count_str
+             , tt.biz01_note                                        AS note
+          FROM (
+                SELECT  t.*
+                     ,  f_cdnm('ProvidePurCode'     , biz01_provide_pur_cd      , biz01_company_id, biz01_provide_date)     AS biz01_provide_pur_nm
+                     ,  f_cdnm('ProvideContentCode' , biz01_provide_content_cd  , biz01_company_id, biz01_provide_date)     AS biz01_provide_content_nm
+                     ,  f_cdnm('TaxType'            , biz01_tax_type            , biz01_company_id, biz01_provide_date)     AS biz01_tax_type_nm
+                     ,  crd02_approval_dt                                                                                   AS biz01_approval_dt
+                     ,  crd02_franchise_nm                                                                                  AS biz01_franchise_nm
+                     ,  crd02_sector_nm                                                                                     AS biz01_sector_nm
+                     ,  crd02_approval_amount                                                                               AS biz01_approval_amount
+                     ,  act01_account_cd                                                                                    AS biz01_account_cd
+                     ,  CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||act01_account_nm      AS biz01_account_nm
+                     ,  crd01_card_nm                                                                                       AS biz01_html_card_nm
+                     ,  CASE WHEN sys01_card_real_user_yn = 'true' THEN
+                                 CASE WHEN crd03_public_yn = 'true'
+                                       AND biz01_real_person_id IS NULL THEN '공통('||f_emp_kor_nm(crd03_person_id)||')'
+                                      WHEN crd03_public_yn = 'true'
+                                       AND biz01_real_person_id IS NOT NULL THEN '공통('||f_emp_kor_nm(biz01_real_person_id)||')'
+                                      ELSE f_emp_kor_nm(crd03_person_id) END
+                             ELSE CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(crd03_person_id) END END AS biz01_reg_emp_nm
+                     ,  crd02_approval_time                                                                                 AS biz01_approval_time
+                     ,  (
+                         SELECT ( COUNT(*) FILTER (WHERE biz05_promo_id  = biz01_promo_id)
+                                + COUNT(*) FILTER (WHERE sys10_parent_id = biz01_promo_id) )||'건'
+                           FROM ( SELECT biz05_promo_id
+                                       , NULL::bigint   as sys10_parent_id
+                                    FROM biz05_relate_appr
+                                   UNION ALL
+                                 SELECT NULL::bigint    as biz05_promo_id
+                                      , sys10_parent_id
+                                   FROM sys10_file ) a      )                                                               AS biz01_file_count_str
+                  FROM (
+                        SELECT  *
+                          FROM  biz01_promo
+                                INNER JOIN crd02_data ON crd02_data_id = biz01_card_data_id
+                                INNER JOIN sys01_company ON sys01_company_id = biz01_company_id
+                                LEFT OUTER JOIN crd01_card  ON crd01_card_id = biz01_card_id
+                                LEFT OUTER JOIN crd03_trans ON (    crd03_card_id = biz01_card_id
+                                                                AND biz01_provide_date BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,'9999-12-31') )
+                                LEFT OUTER JOIN act01_account_code ON (act01_account_code_id = biz01_account_code_id)
+                         WHERE  biz01_company_id = #{companyId}
+                           AND  COALESCE(biz01_provide_pur_cd,'%') LIKE '%'
+                           AND  biz01_std_ym = #{dataYm}
+                       ) t
+               ) tt
+         ORDER BY tt.biz01_approval_dt, tt.biz01_approval_time, tt.biz01_franchise_nm
+        ]]>
+    </select>
+
+    <!-- AS-IS biz01_promo.getHtmlData (IDMS-IC) — 카드별(카드명 (관리 사원)) 제공금액 합. 정렬은 ko_KR.utf8 -->
+    <select id="selectCardHtml" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCardHtmlRow">
+        SELECT t.card_name, t.card_price
+          FROM (
+                SELECT crd01_card_nm || ' (' || f_emp_kor_nm(f_get_crdManagerId(biz01_card_id, biz01_provide_date)) || ')' AS card_name
+                     , SUM(a.biz01_provide_amt)                                                                          AS card_price
+                  FROM biz01_promo a
+                       INNER JOIN crd02_data b ON b.crd02_data_id = a.biz01_card_data_id
+                       LEFT OUTER JOIN act01_account_code c ON c.act01_account_code_id = a.biz01_account_code_id
+                       INNER JOIN crd01_card ON crd01_card_id = biz01_card_id
+                 WHERE biz01_company_id       = #{companyId}
+                   AND biz01_std_ym           = #{dataYm}
+                   AND biz01_provide_rcv_type = '1'
+                 GROUP BY biz01_card_id, crd01_card_nm, f_get_crdManagerId(biz01_card_id, biz01_provide_date)
+               ) t
+         ORDER BY t.card_name COLLATE "ko_KR.utf8" ASC
+    </select>
 </mapper>

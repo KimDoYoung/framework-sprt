@@ -724,6 +724,8 @@ export interface AprLinkArgs {
   /** A42 여비교통비 신청서 — 신청번호·기준년월(V36) */
   regNo?: string;
   regDate?: string;
+  /** A13 법인카드 내역관리 — 기준년월(yyyy.MM, V38). 마감일은 closeDate */
+  dataYm?: string;
 }
 
 /** 링크코드별 제목·본문·시행일자 (GET apr/apprs/link-seed, V17) */
@@ -750,6 +752,22 @@ export interface AprLinkSeed {
   inOutTypeCode?: string | null;
   /** 문서를 열자마자 연관문서 탭에 넣을 문서(A43 여비교통비 관리 — insertRelateApprList, V23) */
   relateApprs?: AprLinkRelateAppr[] | null;
+  /** 공모주(A26·A38)의 연관펀드·연관일임 자동등록 (insertRelateFundList, V38) */
+  relateFunds?: AprLinkRelateFund[] | null;
+  relateAdvs?: AprLinkRelateAdv[] | null;
+}
+
+export interface AprLinkRelateFund {
+  fundId: number;
+  fundTypeName?: string | null;
+  fundCode?: string | null;
+  fundName?: string | null;
+}
+
+export interface AprLinkRelateAdv {
+  advId: number;
+  manageCode?: string | null;
+  manageName?: string | null;
 }
 
 export interface AprLinkRelateAppr {

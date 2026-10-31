@@ -3,8 +3,8 @@
  * AS-IS: myApp/client/vi/bmt/Bmt01_Tab_Buy.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L90-126: center(50%, 여백 20) = 툴바(조회기간 ~ · ☑재고없음 제외 · [조회][등록][저장][삭제]) + 셀 편집 그리드(행번호, 체크박스 없음),
  *   south(50%, 여백 0 20 20 20) = `Biz01_TabPage_List`(제공내역, 상신상태 "완료"인 구매내역에만 켜진다)
- * 결재요청 아이콘(updateCheck L240-258 이후 checkAppr·checkdcr·insertLinkApproval·updateApprId)은 검사까지만 한다.
- *   그 뒤 전자결재 편집창(Apr01_Edit_ApprDoc)·문서분류 조회창(Dcr01_Lookup_Class)은 다른 도메인이라 아직 없다 — L05 작업기록 "다음 단계"
+ * 결재요청 아이콘(updateCheck L240-258 → checkAppr L260-289 → checkdcr L291-323 → insertLinkApproval L325-336 → updateApprId L338-355)의
+ *   전자결재 편집창(Apr01_Edit_ApprDoc, link A04)·문서분류 조회창(Dcr01_Lookup_Class)은 V38에서 연결했다
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 초기화는 원본 버튼이 넷 붙어 넣지 않음), 저장 = 저장(n)(UX-03), 그리드 날짜 폭(UX-08)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -12,6 +12,8 @@ import { Button as AntButton, Checkbox, DatePicker, message, Splitter } from 'an
 import { SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { bmtBuyApi } from '@/api/bmt';
+import { dcrApi } from '@/api/dcr';
+import { errorMessage } from '@/api/client';
 import { sysApi } from '@/api/sys';
 import { BmtBuy } from '@/types/bmt';
 import { TransInfo } from '@/types/emp';
@@ -22,7 +24,9 @@ import { Emp00_Lookup_SelectSingle } from '@/components/lookup/Emp00_Lookup_Sele
 import { SearchBar, useSearchParams } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
 import { useLoginUser } from '@/hooks/useLoginUser';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Biz01_TabPage_List, Biz01_TabPage_ListHandle } from '../biz/Biz01_TabPage_List';
+import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 
 const gb = gbFor<BmtBuy>();
 /** setChecked 없음 → 체크박스 없는 단일 선택. 렌더마다 새 객체를 주면 AG Grid가 선택을 지우므로 한 번만 만든다 */
@@ -37,6 +41,9 @@ export const Bmt01_Tab_Buy: React.FC = () => {
   const [contents, setContents] = useState<Code[]>([]);
   const [promoEnabled, setPromoEnabled] = useState(false);
   const [pickRowId, setPickRowId] = useState<number | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [classPick, setClassPick] = useState<{ row: BmtBuy; classTreeId?: number } | null>(null);  // 문서분류를 고르는 중인 행
+  const [linkDoc, setLinkDoc] = useState<{ row: BmtBuy; classTreeId: number } | null>(null);
   // setting() L128-176: 조회기간 = 올해 1월 1일 ~ 이번 달 말일, 체크 "재고없음 제외" 켜짐
   const sp = useSearchParams(() => ({ startDate: dayjs().startOf('year'), closeDate: dayjs().endOf('month'), leftYn: true }));
   const { startDate, closeDate, leftYn } = sp.values;
@@ -143,7 +150,16 @@ export const Bmt01_Tab_Buy: React.FC = () => {
   };
 
   // 결재요청 아이콘 actionCell(ImageCell "Edit") → updateCheck() L240-258 → checkAppr() L260-289 → checkdcr() L291-323 → insertLinkApproval() L325-336 → updateApprId() L338-355
-  //   검사까지만 한다. 전자결재(Apr01_Edit_ApprDoc)·분류 선택(Dcr01_Lookup_Class)은 다른 도메인이라 아직 없다
+  // checkdcr(): dcr.Dcr30_Link.selectByLinkCode(companyId, "A04") — 없으면 빈 Dcr01_Lookup_Class, 있으면 첫 행을 채워 연다. 어느 쪽이든 [확인] 뒤 insertLinkApproval
+  const checkdcr = useCallback(async (row: BmtBuy) => {
+    try {
+      const list = await dcrApi.searchClassTreeByLinkCode('A04');
+      setClassPick({ row, classTreeId: list.length === 0 ? undefined : list[0].classTreeId });
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  }, []);
+
   const updateCheck = useCallback((r: BmtBuy) => {
     if (crud.hasChanges()) {
       message.warning('수정한 판촉물 구매내역을 저장 후 결재요청을 진행해주세요');
@@ -153,8 +169,21 @@ export const Bmt01_Tab_Buy: React.FC = () => {
       message.warning('판촉물 구매내역을 입력 후 결재요청을 진행해주세요');
       return;
     }
-    message.info('전자결재 화면(Apr01_Edit_ApprDoc)은 아직 변환 전입니다');
-  }, [crud]);
+    // checkAppr() L260-289: 결재문서가 있고 상태가 상신·완료·결재중이면 retrieveApproval, 아니면 checkdcr()
+    if (r.apprId != null && isLocked(r)) setViewApprId(r.apprId);
+    else void checkdcr(r);
+  }, [crud, checkdcr]);
+
+  // updateApprId() L338-355: bmt.Bmt01_Buy.update(apprId) 뒤 retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await bmtBuyApi.updateApprId(linkDoc.row.buyId, apprId);
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+    void retrieve();
+  };
 
   // buildGrid() L178-223
   const columnDefs = useMemo(() => [
@@ -226,6 +255,21 @@ export const Bmt01_Tab_Buy: React.FC = () => {
         </div>
       </Splitter.Panel>
       <Emp00_Lookup_SelectSingle open={pickRowId != null} noneLabel={null} transDate={dayjs().format('YYYY-MM-DD')} onResult={onPickEmp} onClose={() => setPickRowId(null)} />
+      {/* checkdcr() L291-323: Dcr01_Lookup_Class.open(classTreeId?, classTreeModel, callback → classTreeModel = result, insertLinkApproval) */}
+      <Dcr01_Lookup_Class
+        open={classPick != null}
+        classTreeId={classPick?.classTreeId}
+        onResult={r => { if (classPick) setLinkDoc({ row: classPick.row, classTreeId: r.classTreeId }); setClassPick(null); }}
+        onClose={() => setClassPick(null)}
+      />
+      {/* insertLinkApproval() L325-336: Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, "A04", 행, false, callback → updateApprId) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: 'A04', refId: linkDoc.row.buyId } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void retrieve()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </Splitter>
   );
 };

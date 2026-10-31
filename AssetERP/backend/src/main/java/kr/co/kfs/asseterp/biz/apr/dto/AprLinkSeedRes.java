@@ -8,5 +8,6 @@ import java.util.List;
  * titleReadOnly/saveVisible은 AS-IS가 창을 열 때 정하는 값이다(기본: 제목 읽기전용, [저장] 숨김).
  */
 public record AprLinkSeedRes(String linkCode, String title, String content, LocalDate effectDate, boolean titleReadOnly, boolean saveVisible, String receiveName, String referenceName,
-                          String inOutTypeCode, List<AprLinkRelateApprRes> relateApprs) {
+                          String inOutTypeCode, List<AprLinkRelateApprRes> relateApprs,
+                          List<AprLinkRelateFundRes> relateFunds, List<AprLinkRelateAdvRes> relateAdvs) {
 }

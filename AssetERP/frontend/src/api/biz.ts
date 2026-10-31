@@ -280,6 +280,11 @@ export const bizRelateApprApi = {
     const res = await apiClient.get<ApiResponse<BizRelateAppr | null>>('v1/biz/relate-apprs/by-data-ym', { params: { dataYm, linkCode } });
     return res.data.data ?? null;
   },
+  /** A13 상신 뒤 처리 — Biz05_RelateAppr.insert(A13) + 첨부 엑셀 + 증빙 복사 (V38). excelCreated가 false면 엑셀 생성 실패 */
+  afterCardManagementAppr: async (dataYm: string, apprId: number): Promise<{ excelCreated: boolean }> => {
+    const res = await apiClient.post<ApiResponse<{ excelCreated: boolean }>>('v1/biz/relate-apprs/card-management', { dataYm, apprId });
+    return res.data.data as { excelCreated: boolean };
+  },
   /** AS-IS biz.Biz05_RelateAppr.selectFileCount → 'n건' */
   getFileCount: async (promoId: number): Promise<string> => {
     const res = await apiClient.get<ApiResponse<string>>('v1/biz/relate-apprs/file-count', { params: { promoId } });

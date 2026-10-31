@@ -104,4 +104,14 @@ public class FndOprController {
                                                      @RequestBody OprSubSaveReq req) {
         return ApiResponse.ok(service.updateSubscription(principal, oprId, req));
     }
+
+    /** A26·A38 상신 뒤 결재문서 ID 기록 — AS-IS fnd.Fnd30_Opr.updateApprId (lastApprId = 이전에 반려된 문서) */
+    @PutMapping("/{oprId}/appr-id")
+    public ApiResponse<Void> updateApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long oprId, @RequestBody ApprIdReq req) {
+        service.updateApprId(principal, oprId, req.apprId(), req.lastApprId());
+        return ApiResponse.ok(null);
+    }
+
+    public record ApprIdReq(Long apprId, Long lastApprId) {
+    }
 }

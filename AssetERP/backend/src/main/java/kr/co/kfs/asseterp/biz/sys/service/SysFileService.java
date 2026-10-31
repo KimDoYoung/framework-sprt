@@ -286,6 +286,12 @@ public class SysFileService {
      */
     @Transactional
     public Long copyToParent(UserPrincipal user, Long fileId, Long newParentId) {
+        return copyToParent(user, fileId, newParentId, null);
+    }
+
+    /** 복사하면서 파일 이름을 바꾼다(AS-IS Sys10_File.copySetFileName — 이름은 확장자를 포함해 호출한 쪽이 정한다). newFileNm이 null이면 원래 이름 */
+    @Transactional
+    public Long copyToParent(UserPrincipal user, Long fileId, Long newParentId, String newFileNm) {
         FileRes src = sysFileMapper.selectById(fileId);
         if (src == null) {
             throw new BusinessException(ErrorCode.FILE_NOT_FOUND, "등록된 파일정보를 찾을 수 없습니다.");
@@ -305,7 +311,7 @@ public class SysFileService {
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "파일 복사 중 오류가 발생하였습니다.");
         }
         try {
-            sysFileMapper.insertFile(newFileId, newParentId, src.fileNm(), serverPath, (double) (target.length() / 1024), src.fileExt(), src.fileYn());
+            sysFileMapper.insertFile(newFileId, newParentId, newFileNm != null ? newFileNm : src.fileNm(), serverPath, (double) (target.length() / 1024), src.fileExt(), src.fileYn());
         } catch (RuntimeException e) {
             deletePhysical(target, newFileId);
             throw e;

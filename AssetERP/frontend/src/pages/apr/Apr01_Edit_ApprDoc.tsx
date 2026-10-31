@@ -15,7 +15,7 @@ import { SearchOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { aprActionApi, aprDetailApi, aprExtraApi, aprWriteApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
-import { AprApprActionRes, AprApprActionState, AprApprDetail, AprApprNew, AprApprRelateReq, AprApprSaveReq, AprApprStep, AprApprWriteRes, AprLinkOpen, AprLinkRelateAppr, AprRelateLaw, AprReprCorpLookup, AprStamp, AprStampLine } from '@/types/apr';
+import { AprApprActionRes, AprApprActionState, AprApprDetail, AprApprNew, AprApprRelateReq, AprApprSaveReq, AprApprStep, AprApprWriteRes, AprLinkOpen, AprLinkRelateAdv, AprLinkRelateAppr, AprLinkRelateFund, AprRelateLaw, AprReprCorpLookup, AprStamp, AprStampLine } from '@/types/apr';
 import { Button } from '@/components/button';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { HtmlView } from '@/components/form/HtmlView';
@@ -117,7 +117,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
   const [isNew, setIsNew] = useState(false);
   /** 링크 문서의 제목 읽기전용·[저장] 보임 (insertLinkApproval L1572-1573 기본: 제목 읽기전용, [저장] 숨김, 코드별로 바뀜) */
   const [linkLock, setLinkLock] = useState<{ titleReadOnly: boolean; saveVisible: boolean } | null>(null);
-  const [seed, setSeed] = useState<{ steps: AprApprStep[]; ics: AprRelateLaw[]; icr: AprRelateLaw[]; apprs?: AprLinkRelateAppr[] } | undefined>(undefined);
+  const [seed, setSeed] = useState<{ steps: AprApprStep[]; ics: AprRelateLaw[]; icr: AprRelateLaw[]; apprs?: AprLinkRelateAppr[]; funds?: AprLinkRelateFund[]; advs?: AprLinkRelateAdv[] } | undefined>(undefined);
   const [form, setForm] = useState<EditForm>(EMPTY_FORM);
   const [requestNoteOpen, setRequestNoteOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -193,6 +193,8 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
             setLinkLock({ titleReadOnly: ls.titleReadOnly, saveVisible: ls.saveVisible });
             // 여비교통비 관리(A43, L3775-3786): 신청서의 상신문서를 신청번호 순으로 연관문서 탭에 넣는다(저장은 [저장]·[결재요청]의 relates)
             if (ls.relateApprs?.length) setSeed(prev => (prev ? { ...prev, apprs: ls.relateApprs ?? [] } : prev));
+            // 공모주(A26·A38, 저장 직후 relateList.insertRelateFundList): 운용지시의 펀드를 연관펀드·연관일임 탭에 넣는다
+            if (ls.relateFunds?.length || ls.relateAdvs?.length) setSeed(prev => (prev ? { ...prev, funds: ls.relateFunds ?? [], advs: ls.relateAdvs ?? [] } : prev));
           }
           if (stamp?.ok && stamp.outType) { f.inOutTypeCode = '10'; f.stampId = stamp.stampId ?? null; f.stampName = stamp.stampName ?? ''; }
           setForm(f);

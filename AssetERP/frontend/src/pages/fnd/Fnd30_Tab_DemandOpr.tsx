@@ -3,12 +3,13 @@
  * AS-IS: myApp/client/vi/fnd/Fnd30_Tab_DemandOpr.java (494줄) + Fnd31_Page_DemandOprFund.java (286줄, 아래 펀드별 신청 목록) + Fnd31_Edit_DemandOprFund.java (358줄) + Fnd30_Edit_DemandOpr.java (332줄) + components/lookup/Adv02_Lookup_SelectSingle — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L73-120: BorderLayout 가운데(여백 20, 테두리) = 툴바 50(신청일 [시작 100 ~ 종료 100] · 검색 250 "종목/주간사" · [조회][등록][삭제] · [문서분류지정]) + 수요예측 그리드(체크 단일) / 아래 400(여백 0·20·20·20, 테두리) = Fnd31_Page_DemandOprFund
  * UX보강(10): 툴바 = SearchBar(UX-01). 초기화(UX-02)는 원본에 없어 넣지 않는다
- * [다음 단계] 전자결재 편집창 Apr01_Edit_ApprDoc([결재요청]이 문서분류 조회창 Dcr01_Lookup_Class를 거쳐 여는 insertLinkApproval·[상세보기]의 retrieveApproval, 끝난 뒤 updateApprId)과
- *   문서분류지정 창 Dcr30_Lookup_Link는 B15에서 연결했다(열 때 defaultName은 다음 단계). 결재요청은 편집창이 열릴 자리까지의 사전 검사·확인 창을 원본 그대로 한다
+ * 전자결재 편집창 Apr01_Edit_ApprDoc(link A38 — [결재요청]이 문서분류 조회창 Dcr01_Lookup_Class를 거쳐 여는 insertLinkApproval·[상세보기]의 retrieveApproval, 끝난 뒤 updateApprId)은 V38에서 연결했다.
+ *   문서분류지정 창 Dcr30_Lookup_Link는 B15
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Modal } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
+import { dcrApi } from '@/api/dcr';
 import { fndApi } from '@/api/fnd';
 import { errorMessage } from '@/api/client';
 import { OprDemand } from '@/types/fnd';
@@ -18,6 +19,8 @@ import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
 import { AgGridReact } from 'ag-grid-react';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
+import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 import { DemandOprTarget, Fnd30_Edit_DemandOpr } from './Fnd30_Edit_DemandOpr';
 import { Fnd31_Page_DemandOprFund } from './Fnd31_Page_DemandOprFund';
 
@@ -38,6 +41,12 @@ export const Fnd30_Tab_DemandOpr: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [selectedOprId, setSelectedOprId] = useState<number | null>(null);
   const [target, setTarget] = useState<DemandOprTarget | null>(null);
+  // defaultName(): dcr.Dcr30_Link.selectByLinkCode("A38")가 딱 한 건이면 그 분류가 기본(defaultModel)
+  const [defaultClassId, setDefaultClassId] = useState<number | undefined>(undefined);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  // insertApproval(lastApprId) L330-348: 분류 조회창 → insertLinkApproval → 결재창 → updateApprId
+  const [classPick, setClassPick] = useState<{ row: OprDemand; lastApprId: number | null } | null>(null);
+  const [linkDoc, setLinkDoc] = useState<{ row: OprDemand; lastApprId: number | null; classTreeId: number } | null>(null);
 
   // retrieve() L393-408: fnd.Fnd30_Opr.selectByDemandDate(oprCode "02"). 조회가 끝나면 첫 행을 선택한다(grid.getSelectionModel().select(0, false))
   const retrieve = useCallback(async () => {
@@ -53,9 +62,12 @@ export const Fnd30_Tab_DemandOpr: React.FC = () => {
     }
   }, [startDate, closeDate, searchText]);
 
-  // [E0] 화면 열림 (생성자 L73-120) → settings(), defaultName(다음 단계), retrieve()
+  // [E0] 화면 열림 (생성자 L73-120) → settings(), defaultName(), retrieve()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { void retrieve(); }, []);
+  useEffect(() => {
+    dcrApi.searchClassTreeByLinkCode('A38').then(l => setDefaultClassId(l.length === 1 ? l[0].classTreeId : undefined)).catch(() => setDefaultClassId(undefined));
+  }, []);
 
   // [E1] grid.SelectionChanged (L111) → retrieveEtcPerson() L385-391: 고른 행이 있을 때만 아래 목록을 그 수요예측으로 바꾼다
   const retrieveEtcPerson = () => {
@@ -103,7 +115,7 @@ export const Fnd30_Tab_DemandOpr: React.FC = () => {
         return;
       }
     }
-    const proceed = () => message.info('전자결재 편집창(Apr01_Edit_ApprDoc)은 다음 단계에서 연결합니다.');  // insertApproval() L330-348 → insertLinkApproval() L350 → updateApprId() L365
+    const proceed = () => setClassPick({ row, lastApprId: status == null ? null : row.apprId ?? null });  // insertApproval(resultModel.getApprId() / null) L330-348
     if (status == null) { proceed(); return; }
     if (status === '10' || status === '20') { message.warning('결재진행 중인 문서가 존재합니다'); return; }
     Modal.confirm({
@@ -119,7 +131,18 @@ export const Fnd30_Tab_DemandOpr: React.FC = () => {
   // [E10] viewCell [상세보기] (L275-305): 문서가 없으면 안내, 있으면 Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false)
   const viewAppr = (row: OprDemand) => {
     if (row.apprId == null) { message.warning('해당 문서가 없습니다. 결재상태를 확인해주세요.'); return; }
-    message.info('전자결재 편집창(Apr01_Edit_ApprDoc)은 다음 단계에서 연결합니다.');
+    setViewApprId(row.apprId);  // apr.Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false)
+  };
+
+  // updateApprId() L365-383: fnd.Fnd30_Opr.updateApprId(apprId, oprId, lastApprId) 뒤 retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await fndApi.updateOprApprId(linkDoc.row.oprId, apprId, linkDoc.lastApprId);
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+    void retrieve();
   };
 
   // buildGrid() L191-328
@@ -180,7 +203,22 @@ export const Fnd30_Tab_DemandOpr: React.FC = () => {
         <Fnd31_Page_DemandOprFund oprId={selectedOprId} />
       </div>
       <Fnd30_Edit_DemandOpr target={target} onSaved={() => void retrieve()} onClose={() => setTarget(null)} />
-      <Dcr30_Lookup_Link open={linkOpen} linkCodeList="A38" onClose={() => setLinkOpen(false)} />
+      <Dcr30_Lookup_Link open={linkOpen} linkCodeList="A38" onClose={() => { setLinkOpen(false); dcrApi.searchClassTreeByLinkCode('A38').then(l => setDefaultClassId(l.length === 1 ? l[0].classTreeId : undefined)).catch(() => undefined); }} />
+      {/* insertApproval() L330-348: Dcr01_Lookup_Class.open(classTreeId?, defaultModel, callback → insertLinkApproval) */}
+      <Dcr01_Lookup_Class
+        open={classPick != null}
+        classTreeId={defaultClassId}
+        onResult={r => { if (classPick) setLinkDoc({ row: classPick.row, lastApprId: classPick.lastApprId, classTreeId: r.classTreeId }); setClassPick(null); }}
+        onClose={() => setClassPick(null)}
+      />
+      {/* insertLinkApproval() L350-363: Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, "A38", 행, false, callback → updateApprId) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: 'A38', refId: linkDoc.row.oprId } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void retrieve()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </div>
   );
 };

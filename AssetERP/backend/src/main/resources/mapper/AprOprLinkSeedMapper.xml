@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  V38 링크코드 A26 공모주 청약 및 납입 운용지시 · A38 공모주 수요예측의 연관펀드·연관일임 자동등록 (Apr01_Edit_ApprDoc 저장 직후 relateList.insertRelateFundList)
+  fnd31_opr_fund.selectByDistinctOprId는 펀드·일임계좌 정보와 조인해 펀드 ID만 쓰므로 펀드 ID만 읽고, 정보가 없는 ID는 아래 두 조회가 null이라 건너뛴다.
+  펀드 열은 연관펀드 탭 조회(AprApprDetailMapper.selectApprFunds)와 같은 식(펀드유형·확정 펀드 코드/명)에 기준일만 오늘로 했다. 회사 조건을 더했다.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprOprLinkSeedMapper">
+
+    <select id="selectDistinctFundIds" resultType="long">
+        SELECT DISTINCT fnd31_fund_id
+          FROM fnd31_opr_fund
+         WHERE fnd31_opr_id = #{oprId}
+         ORDER BY fnd31_fund_id
+    </select>
+
+    <select id="selectFund" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprLinkRelateFundRes">
+        <![CDATA[
+        SELECT fnd01.fnd01_fund_code_id                                                                                 AS fund_id
+             , f_cdnm('IcamFundType', fnd02.fnd02_kofia_fund_type_cd, fnd01.fnd01_company_id, fnd02.fnd02_work_date)    AS fund_type_name
+             , COALESCE(fnd01_r.fnd01_fund_cd, fnd01.fnd01_fund_cd)                                                     AS fund_code
+             , COALESCE(fnd02_r.fnd02_fund_nm, fnd02.fnd02_fund_nm)                                                     AS fund_name
+          FROM fnd01_fund_code fnd01
+               INNER JOIN fnd02_fund_info fnd02 ON ( fnd02.fnd02_fund_code_id = fnd01.fnd01_fund_code_id
+                                                     AND fnd02.fnd02_work_date = ( SELECT MAX(x.fnd02_work_date)
+                                                                                     FROM fnd02_fund_info x
+                                                                                    WHERE x.fnd02_fund_code_id = fnd01.fnd01_fund_code_id
+                                                                                      AND x.fnd02_work_date <= f_today() ) )
+               LEFT OUTER JOIN fnd01_fund_code fnd01_r ON fnd01_r.fnd01_fund_code_id = fnd01.fnd01_real_fund_id
+               LEFT OUTER JOIN fnd02_fund_info fnd02_r ON ( fnd02_r.fnd02_fund_code_id = fnd01.fnd01_real_fund_id
+                                                            AND fnd02_r.fnd02_work_date = ( SELECT MAX(x.fnd02_work_date)
+                                                                                              FROM fnd02_fund_info x
+                                                                                             WHERE x.fnd02_fund_code_id = fnd01.fnd01_real_fund_id
+                                                                                               AND x.fnd02_work_date <= f_today() ) )
+         WHERE fnd01.fnd01_fund_code_id = #{fundId}
+           AND fnd01.fnd01_company_id   = #{companyId}
+        ]]>
+    </select>
+
+    <select id="selectAdv" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprLinkRelateAdvRes">
+        SELECT adv02_account_id AS adv_id
+             , adv02_manage_cd  AS manage_code
+             , adv02_manage_nm  AS manage_name
+          FROM adv02_account
+         WHERE adv02_account_id = #{accountId}
+           AND adv02_company_id = #{companyId}
+    </select>
+</mapper>

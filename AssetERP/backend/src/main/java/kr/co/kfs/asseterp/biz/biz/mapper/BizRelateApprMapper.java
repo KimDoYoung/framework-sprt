@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.biz.mapper;
 
+import kr.co.kfs.asseterp.biz.biz.dto.BizPromoRelateApprRow;
 import kr.co.kfs.asseterp.biz.biz.dto.BizRelateApprRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -39,4 +40,7 @@ public interface BizRelateApprMapper {
 
     /** AS-IS sys01_company.selectById의 위치 이름(첨부 폴더) */
     String selectLocName(@Param("companyId") Long companyId);
+
+    /** AS-IS biz05_relate_appr.selectByPromoIdList — 내역들이 이미 걸린 결재문서 (A13 연관문서 자동등록, V38) */
+    List<BizPromoRelateApprRow> selectByPromoIds(@Param("promoIds") List<Long> promoIds);
 }

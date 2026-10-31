@@ -101,4 +101,17 @@
     <select id="selectLocName" resultType="string">
         SELECT sys01_loc_nm FROM sys01_company WHERE sys01_company_id = #{companyId}
     </select>
+
+    <!-- AS-IS biz05_relate_appr.selectByPromoIdList (IDMS-IC) — 결재문서별 한 줄 -->
+    <select id="selectByPromoIds" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizPromoRelateApprRow">
+        SELECT a.biz05_appr_id          AS appr_id
+             , MAX(b.apr01_title)       AS title
+             , MAX(b.apr01_reg_date)    AS reg_date
+             , MAX(b.apr01_inout_cd)    AS inout_code
+          FROM biz05_relate_appr a
+               INNER JOIN apr01_appr b ON b.apr01_appr_id = a.biz05_appr_id
+         WHERE a.biz05_promo_id IN
+        <foreach collection="promoIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+         GROUP BY a.biz05_appr_id
+    </select>
 </mapper>

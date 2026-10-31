@@ -41,4 +41,14 @@ public class BmtBuyController {
     public ApiResponse<Integer> delete(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> buyIds) {
         return ApiResponse.ok(service.delete(principal, buyIds));
     }
+
+    /** A04 상신 뒤 결재문서 ID 기록 — AS-IS Bmt01_Tab_Buy.updateApprId (bmt.Bmt01_Buy.update) */
+    @PutMapping("/{buyId}/appr-id")
+    public ApiResponse<Void> updateApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long buyId, @RequestBody ApprIdReq req) {
+        service.updateApprId(principal, buyId, req.apprId());
+        return ApiResponse.ok(null);
+    }
+
+    public record ApprIdReq(Long apprId) {
+    }
 }

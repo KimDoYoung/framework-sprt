@@ -3,8 +3,8 @@
  * AS-IS: myApp/client/vi/biz/Biz01_Tab_CardManagement.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L124-217: north(95) = 왼쪽 86% 툴바 두 줄(1줄 기준년월 70 · 사용자 85 · 제공목적 90 · 검색 320 · [조회][엑셀다운로드] / 2줄 [일괄저장][마감][취소][마감문자발송][계정과목연결]) + 오른쪽 14% 총 승인금액,
  *   center = 사용내역 그리드(체크박스 다중) + 페이징 툴바(500건) + 아래 테두리 칸(문서분류 600 · 상신상태 200 · [상신] · [문서보기]), east 420 = `Biz01_Edit_Account`
- * 1단계(다른 U 화면과 같은 사유): 상신·문서보기가 여는 전자결재 편집창 `Apr01_Edit_ApprDoc`(apr 도메인), [계정과목연결]의 `Act14_Lookup_LinkProvideContent`(act 도메인)는 다음 단계 — [상신]은 AS-IS 점검·확인 창까지 하고
- *   편집창 자리에 안내만 띄운다. RD 엑셀은 `rdDownload`(docs/RD-대책.md).
+ * 상신·문서보기가 여는 전자결재 편집창 `Apr01_Edit_ApprDoc`(link A13)은 V38에서 연결했다. [계정과목연결]의 `Act14_Lookup_LinkProvideContent`(act 도메인)는 다음 단계.
+ *   RD 엑셀은 `rdDownload`(docs/RD-대책.md).
  * 스타일: SGHF (견본 — docs/page-style.md; `yunhee page-style`은 SGVF로 판정하나 구조는 좌우 분할 + 오른쪽 편집 폼). 툴바가 전체 폭 north(총 승인금액 라벨 포함)라 견본처럼 왼쪽 패널 안에 두지 않는다 (L04와 같음)
  * UX보강(10): 툴바 = SearchBar(UX-01·04, 버튼이 많아 UX-02 초기화는 뺀다), 그리드 날짜 폭(UX-08)
  */
@@ -23,6 +23,7 @@ import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Dcr30_Move_DcrClass, Dcr30ClassResult } from '@/components/lookup/Dcr30_Move_DcrClass';
 import { rdDownload } from '@/utils/rdDownload';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Crd02_Lookup_OtherList } from '../crd/Crd02_Lookup_OtherList';
 import { Biz01_Edit_Account } from './Biz01_Edit_Account';
 import { Biz01_Lookup_CardManagement } from './Biz01_Lookup_CardManagement';
@@ -91,6 +92,8 @@ export const Biz01_Tab_CardManagement: React.FC = () => {
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [messageOpen, setMessageOpen] = useState(false);
   const [compareYm, setCompareYm] = useState<string | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [linkDoc, setLinkDoc] = useState<{ dataYm: string; closeDate: string; classTreeId: number } | null>(null);
 
   // getDataYm(): 읽을 수 없는 기준년월은 안내한다
   const cardDate = (): string | null => {
@@ -339,13 +342,31 @@ export const Biz01_Tab_CardManagement: React.FC = () => {
       cancelText: '아니오',
       width: 400,
       // [E17] msgBox.DialogHide [YES] (L627) → getPromoList() L646-668: biz.Biz01_Promo.selectCardManagement(그 달 전체) → insertLinkApprovals() L670-754:
-      //   Apr01_Edit_ApprDoc.insertLinkApprovals(분류, "A13", {내역들, 마감일}, isAdmin, callback → updateApprId(apprId)) → biz.Biz05_RelateAppr.insert — 전자결재 편집창은 다음 단계
-      onOk: () => { message.info('전자결재 작성 창은 다음 단계에서 연결됩니다'); },
+      //   Apr01_Edit_ApprDoc.insertLinkApprovals(분류, "A13", {내역들, 마감일}, isAdmin, callback → updateApprId(apprId)) → biz.Biz05_RelateAppr.insert
+      //   내역 조회·마감 검사·계정과목별 합산은 서버(link-seed)가 한다 — 마감 안 된 내역이 있으면 결재창이 같은 문구를 알리고 닫힌다
+      onOk: () => {
+        // getCloseDate() L949-955: 기준년월의 마지막 날
+        const closeDate = dayjs(`${ym.replace('.', '-')}-01`).endOf('month').format('YYYY-MM-DD');
+        setLinkDoc({ dataYm: ym, closeDate, classTreeId: classTree.classTreeId as number });
+      },
     });
   };
 
-  // [E14] apprViewButton[문서보기].Select (L335) → 서비스 apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(…, callback → apprChk()) — 전자결재 편집창은 다음 단계
-  const apprView = () => { message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다'); };
+  // updateApprId() L756-772: biz.Biz05_RelateAppr.insert(A13) (+ 첨부 엑셀·증빙 복사 — 원본은 결재창 저장 때 한다) → "정상적으로 상신이 완료되었습니다" → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      const r = await bizRelateApprApi.afterCardManagementAppr(linkDoc.dataYm, apprId);
+      if (!r.excelCreated) message.error('Excel 생성 중 오류가 발생했습니다. 관리자에게 연락해주세요');
+      message.success('정상적으로 상신이 완료되었습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '상신 연결을 기록하지 못했습니다'));
+    }
+    void retrieve();
+  };
+
+  // [E14] apprViewButton[문서보기].Select (L335) → 서비스 apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(…, callback → apprChk())
+  const apprView = () => { if (appr.apprId != null) setViewApprId(appr.apprId); };
 
   // buildGrid(): 행번호 + 체크박스(다중) + 12열
   const columnDefs = useMemo(() => [
@@ -458,6 +479,14 @@ export const Biz01_Tab_CardManagement: React.FC = () => {
       <Biz01_Lookup_CardManagementDownload open={downloadOpen} dataYm={ym} onResult={p => void createRdExcel(p)} onClose={() => setDownloadOpen(false)} />
       <Biz01_Lookup_Message open={messageOpen} dataYm={ym} onClose={() => setMessageOpen(false)} />
       <Crd02_Lookup_OtherList open={compareYm != null} dataYm={compareYm ?? ym} onClose={() => setCompareYm(null)} />
+      {/* insertLinkApprovals() L726-754: Apr01_Edit_ApprDoc.insertLinkApprovals(classTreeModel, "A13", 내역·마감일, isAdmin, callback → updateApprId) / [문서보기] retrieveApproval(callback → apprChk()) */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: 'A13', args: { dataYm: linkDoc.dataYm, closeDate: linkDoc.closeDate } } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void apprChk()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </div>
   );
 };

@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.biz.mapper;
 
+import kr.co.kfs.asseterp.biz.biz.dto.BizCardApprRow;
 import kr.co.kfs.asseterp.biz.biz.dto.BizCardCompareRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizCardHtmlRow;
 import kr.co.kfs.asseterp.biz.biz.dto.BizCardManagementRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizCardManagementUpdateReq;
 import org.apache.ibatis.annotations.Mapper;
@@ -63,4 +65,10 @@ public interface BizCardManagementMapper {
                     @Param("groupId") long groupId, @Param("dataYm") String dataYm,
                     @Param("startYm") String startYm, @Param("closeYm") String closeYm,
                     @Param("managerId") Long managerId, @Param("providePurCode") String providePurCode, @Param("searchText") String searchText);
+
+    /** AS-IS biz01_promo.selectCardManagement — 그 달 전체(관리자·제공목적 조건 없음, 검색어 없음). A13 상신 본문·엑셀 (V38) */
+    List<BizCardApprRow> selectAllForAppr(@Param("companyId") Long companyId, @Param("dataYm") String dataYm);
+
+    /** AS-IS biz01_promo.getHtmlData — 카드별 제공금액 합 (A13 본문 1) */
+    List<BizCardHtmlRow> selectCardHtml(@Param("companyId") Long companyId, @Param("dataYm") String dataYm);
 }

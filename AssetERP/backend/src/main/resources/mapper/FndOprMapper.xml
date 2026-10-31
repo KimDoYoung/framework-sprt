@@ -213,4 +213,44 @@
         DELETE FROM apr01_appr
          WHERE apr01_appr_id = #{apprId}
     </delete>
+
+    <!-- AS-IS fnd30_opr.updateApprId (V38 A26·A38). 회사 조건을 더했다 -->
+    <update id="updateApprId">
+        UPDATE fnd30_opr
+           SET fnd30_appr_id = #{apprId}
+         WHERE fnd30_company_id = #{companyId}
+           AND fnd30_opr_id     = #{oprId}
+    </update>
+
+    <!-- AS-IS apr01_appr.insertApprDel (IDMS-IC, apr99_appr_del 열 순서 그대로). 이 회사 문서만 -->
+    <insert id="insertApprDel">
+        INSERT INTO apr99_appr_del
+        SELECT f_create_seq()
+             , apr01_appr_id
+             , apr01_title
+             , apr01_reg_date
+             , apr01_status_cd
+             , apr01_content
+             , apr01_note
+             , apr01_reg_emp_id
+             , apr01_effect_date
+             , apr01_class_tree_id
+             , apr01_stamp_id
+             , apr01_receive_nm
+             , apr01_reference_nm
+             , apr01_stamp_seq
+             , apr01_inout_cd
+             , f_sysdate()
+             , #{empId}
+             , apr01_company_id
+             , apr01_form_type
+             , apr01_dcr_id_word
+             , apr01_sign_company
+             , apr01_sign_ceo
+             , apr01_stamp_position
+             , apr01_link_cd
+          FROM apr01_appr
+         WHERE apr01_appr_id    = #{apprId}
+           AND apr01_company_id = #{companyId}
+    </insert>
 </mapper>

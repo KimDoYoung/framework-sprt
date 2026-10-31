@@ -505,6 +505,11 @@ export const fndApi = {
     await apiClient.delete(`v1/fnd/oprs/${oprId}`);
   },
 
+  /** AS-IS fnd.Fnd30_Opr.updateApprId — A26·A38 상신 뒤 결재문서 ID 기록 (lastApprId = 이전에 반려된 문서, V38) */
+  updateOprApprId: async (oprId: number, apprId: number, lastApprId: number | null): Promise<void> => {
+    await apiClient.put(`v1/fnd/oprs/${oprId}/appr-id`, { apprId, lastApprId });
+  },
+
   /** AS-IS fnd.Fnd31_OprFund.selectByOprId */
   searchOprFunds: async (oprId: number): Promise<OprFund[]> => {
     const res = await apiClient.get<ApiResponse<OprFund[]>>('v1/fnd/opr-funds', { params: { oprId } });

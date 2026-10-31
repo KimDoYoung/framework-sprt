@@ -55,4 +55,15 @@ public class BmtBuyService {
         }
         return mapper.deleteByIds(user.getCompanyId(), buyIds);
     }
+
+    /** A04 판촉물 구매 상신 뒤 결재문서 ID 기록 (AS-IS Bmt01_Tab_Buy.updateApprId) */
+    @Transactional
+    public void updateApprId(UserPrincipal user, Long buyId, Long apprId) {
+        if (apprId == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "결재문서 ID가 없습니다.");
+        }
+        if (mapper.updateApprId(user.getCompanyId(), buyId, apprId) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+    }
 }

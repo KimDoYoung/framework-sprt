@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import kr.co.kfs.asseterp.biz.apr.dto.AprLinkRelateAdvRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprLinkRelateApprRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprLinkRelateFundRes;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 
 /**
@@ -28,7 +30,13 @@ public interface AprLinkSeedProvider {
 
     /** effectDate가 null이면 오늘, titleReadOnly 기본은 true, receiveName·referenceName은 null이면 비워 둔다(증명서는 둘 다 "-", V22) */
     record Seed(String title, String content, java.time.LocalDate effectDate, boolean titleReadOnly, boolean saveVisible,
-                String receiveName, String referenceName, String inOutTypeCode, List<AprLinkRelateApprRes> relateApprs) {
+                String receiveName, String referenceName, String inOutTypeCode, List<AprLinkRelateApprRes> relateApprs,
+                List<AprLinkRelateFundRes> relateFunds, List<AprLinkRelateAdvRes> relateAdvs) {
+        public Seed(String title, String content, java.time.LocalDate effectDate, boolean titleReadOnly, boolean saveVisible,
+                    String receiveName, String referenceName, String inOutTypeCode, List<AprLinkRelateApprRes> relateApprs) {
+            this(title, content, effectDate, titleReadOnly, saveVisible, receiveName, referenceName, inOutTypeCode, relateApprs, null, null);
+        }
+
         public Seed(String title, String content, java.time.LocalDate effectDate, boolean titleReadOnly, boolean saveVisible,
                     String receiveName, String referenceName, String inOutTypeCode) {
             this(title, content, effectDate, titleReadOnly, saveVisible, receiveName, referenceName, inOutTypeCode, null);
@@ -45,12 +53,17 @@ public interface AprLinkSeedProvider {
 
         /** 문서구분을 고정하는 코드(A93 책무매뉴얼 보고는 내부문서 20, 인감 끔) — null이면 창이 정한다 */
         public Seed withInOutType(String inOutTypeCode) {
-            return new Seed(title, content, effectDate, titleReadOnly, saveVisible, receiveName, referenceName, inOutTypeCode, relateApprs);
+            return new Seed(title, content, effectDate, titleReadOnly, saveVisible, receiveName, referenceName, inOutTypeCode, relateApprs, relateFunds, relateAdvs);
         }
 
         /** 문서를 열자마자 연관문서 탭에 넣을 문서들(A43 여비교통비 관리의 insertRelateApprList — 저장은 연관 탭의 [저장]·[결재요청] 때) */
         public Seed withRelateApprs(List<AprLinkRelateApprRes> relateApprs) {
-            return new Seed(title, content, effectDate, titleReadOnly, saveVisible, receiveName, referenceName, inOutTypeCode, relateApprs);
+            return new Seed(title, content, effectDate, titleReadOnly, saveVisible, receiveName, referenceName, inOutTypeCode, relateApprs, relateFunds, relateAdvs);
+        }
+
+        /** 문서를 열자마자 연관펀드·연관일임 탭에 넣을 것(A26·A38 공모주의 relateList.insertRelateFundList — 저장은 연관 탭의 [저장]·[결재요청] 때) */
+        public Seed withRelateFunds(List<AprLinkRelateFundRes> relateFunds, List<AprLinkRelateAdvRes> relateAdvs) {
+            return new Seed(title, content, effectDate, titleReadOnly, saveVisible, receiveName, referenceName, inOutTypeCode, relateApprs, relateFunds, relateAdvs);
         }
 
         public static Seed of(String title, String content) {
