@@ -11837,5 +11837,44 @@
     "note": "docs/work/V/V12-작업기록.md",
     "history": [],
     "id": "V12"
+  },
+  "Biz60_Tab_FundPriceModiReport": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/biz/Biz60_Edit_FundPriceModi.java": "987c9d09c95bb270524bc38653b9e4b9203c8427",
+      "application/src/main/java/myApp/client/vi/biz/Biz60_Tab_FundPriceModiReport.java": "6c4c8ca30cf07f074352d2c1b4fac36e2872df33",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz60_FundPriceModiModel.java": "aa905f749f64eea82f10af583684555eeba89298",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz60_FundPriceModiModelProperties.java": "41f6cd875332665bd0df52c4dd6fc1faca312dc5",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz61_ModiRptRelateApprModel.java": "931f1d9f52835ed86c7985aa7faac957b173d42c",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/biz/Biz60_FundPriceModi.java": "715068e5f82408daadd88fb5256417da24431bc2",
+      "application/src/main/java/myApp/server/biz/Biz61_ModiRptRelateAppr.java": "eba926d75c673839d1330599887e2605c52c0189",
+      "application/src/main/java/myApp/server/biz/mapper/biz60_fund_price_modi.xml": "e81cdfb67b54b4fe7cda7be559ab2f2345e54ff5",
+      "application/src/main/java/myApp/server/biz/mapper/biz61_modi_rpt_relate_appr.xml": "780d2191fee2c255659aabc0644730f49c2eca7e",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/Sys11_RelateFile.java": "3aa633bf0b24c8da3c85ea2f505fb68616f92a11",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/sys/mapper/sys11_relate_file.xml": "35c5b410b79c0d900e2332f08e15c5f024b05aa6",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Dcr10_Lookup_MailSender",
+      "Dcr30_Move_DcrClass",
+      "Sys10_Lookup_FileViewer"
+    ],
+    "recorded_at": "2026-10-31T23:08:51+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/V/V32-작업기록.md",
+    "history": [],
+    "id": "V32"
   }
 }

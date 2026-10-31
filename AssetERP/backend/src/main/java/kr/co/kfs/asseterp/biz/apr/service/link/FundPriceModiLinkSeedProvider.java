@@ -27,7 +27,9 @@ import lombok.RequiredArgsConstructor;
  * <li>A75·A76: refId = 기준가정정보고 ID. 제목 `운용사 + " 기준가 정정의 건"` 읽기전용, 시행일자 = 기준가 변경일, 보고서구분 1 → 오류 발생 보고서, 그 밖 → 변경 발생 보고서.</li>
  * <li>A77: args `ids` = 화면 그리드의 행 ID를 쉼표로 이은 것(AS-IS `linkParam.gridList`). 제목 `yyyy년 MM월 기준가 정정 내역 보고`(첫 행의 변경일, 제목 편집 가능), 시행일자 오늘.</li>
  * </ul>
- * 저장 직후의 첨부 복사(`copyFileLine`)·문서 자동등록(`insertRelateApprIdList`)·`Biz61_ModiRptRelateAppr.updateApprId`는 호출 화면(Biz60) 변환 때 연결한다.
+ * 저장 직후 처리는 V32(호출 화면 Biz60) — 첨부 복사 `copyFileLine`은 `PUT biz/fund-price-modis/{id}/appr-id`(BizFundPriceModiService)가,
+ * A77 문서 자동등록 `insertRelateApprIdList`는 이 제공자의 `relateApprs`(새 문서의 연관문서 탭, A43과 같은 방식)가,
+ * `Biz61_ModiRptRelateAppr.updateApprId`는 `PUT biz/fund-price-modis/month`가 한다.
  */
 @Component
 @RequiredArgsConstructor
@@ -72,6 +74,7 @@ public class FundPriceModiLinkSeedProvider implements AprLinkSeedProvider {
 
     private Seed monthly(UserPrincipal user, String ids) {
         List<BizFundPriceModiLinkRow> list = new ArrayList<>();
+        List<Long> idList = new ArrayList<>();
         if (ids != null && !ids.isBlank()) {
             for (String id : ids.split(",")) {
                 BizFundPriceModiLinkRow row = mapper.selectLinkById(user.getCompanyId(), Long.valueOf(id.trim()));
@@ -79,13 +82,15 @@ public class FundPriceModiLinkSeedProvider implements AprLinkSeedProvider {
                     throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "기준가 정정 보고 내역을 찾을 수 없습니다.");
                 }
                 list.add(row);
+                idList.add(Long.valueOf(id.trim()));
             }
         }
         if (list.isEmpty()) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "기준가 정정 보고 내역을 찾을 수 없습니다.");
         }
         String title = ym(list.get(0).modiDate()) + " 기준가 정정 내역 보고";
-        return new Seed(title, contents(list), null, false, false);
+        // L3832-3844 문서 자동등록: 행의 결재문서를 새 문서의 연관문서로 (저장은 연관 탭의 [저장]·[결재요청] 때)
+        return new Seed(title, contents(list), null, false, false).withRelateApprs(mapper.selectRelateApprs(user.getCompanyId(), idList));
     }
 
     private static String ym(LocalDate date) {

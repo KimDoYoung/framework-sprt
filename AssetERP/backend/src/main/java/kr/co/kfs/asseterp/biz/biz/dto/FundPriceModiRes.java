@@ -1,0 +1,17 @@
+package kr.co.kfs.asseterp.biz.biz.dto;
+
+import java.time.LocalDate;
+
+/**
+ * 기준가 정정내역 보고 한 행 (AS-IS Biz60_FundPriceModiModel — biz60_fund_price_modi.selectByText).
+ * 생성자 순서 = 매퍼 SELECT 순서. 불리언은 DB가 'true'/'false' 글자라 SQL에서 바꿔 돌려준다.
+ */
+public record FundPriceModiRes(
+        Long fundPriceModiId, String reportType, String amCorpName, String fundName,
+        LocalDate priceStdDate, LocalDate modiDate, Boolean fundCloseYn,
+        Double befPrice, Double befFullPrice, Double befTaxPrice, Double befFullTaxPrice, Double befClosePrice, Double befCloseFullPrice, Double befCloseTaxPrice, Double befCloseFullTaxPrice,
+        Double aftPrice, Double aftFullPrice, Double aftTaxPrice, Double aftFullTaxPrice, Double aftClosePrice, Double aftCloseFullPrice, Double aftCloseTaxPrice, Double aftCloseFullTaxPrice,
+        String firstPersonName, String discCause, String modiReason, String prevPlan,
+        Boolean ksdNoticeYn, Boolean kofiaNoticeYn, Double cmpsAmt,
+        Long companyId, Long apprId, String statusCode, String statusName, String reportTypeName, String fileListHtmlStr, String updName) {
+}

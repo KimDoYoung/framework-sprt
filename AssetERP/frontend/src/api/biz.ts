@@ -4,6 +4,7 @@ import { readBlobError } from './file';
 import {
   BizAccountMap, BizAccountOption, BizBuyPromo, BizCardCompare, BizCardContents, BizCardContentsPrintReq, BizCardManagement, BizCardManagementPrintReq, BizCardManagementUpdateReq, BizCardReportPrint, BizCardUseItem, BizCardUserAllocation, BizCardUserAllocationUpdateReq, BizCodeOption, BizDocClass, BizEntertmCompany, BizEntertmHistory, BizEntertmMonth, BizLimit, BizLimitCompanyYear, BizLimitPersonDay, BizLimitPersonYear, BizPerson, BizPromoAccountReq, BizPromoCard, BizPromoOther, BizPromoOtherReq, BizPromoOtherSimpleReq,
   BizPromoSimpleUpdateReq, BizPromoUpdateReq, BizProvideCompany, BizProvideList, BizProvideListCond, BizProvideSetup, BizProvideSimple, BizProvideSimpleCond, BizRelateAppr,
+  FundPriceModi, FundPriceModiMonth,
 } from '../types/biz';
 import { MktTarget } from '../types/mkt';
 import { CrmContact } from '../types/crm';
@@ -449,5 +450,38 @@ export const bizEntertmExpenseApi = {
   searchByTargetCompany: async (c: EntertmCond, targetCompanyName: string): Promise<BizEntertmHistory[]> => {
     const res = await apiClient.get<ApiResponse<BizEntertmHistory[]>>('v1/biz/entertm-expenses/company-history', { params: { ...c, targetCompanyName } });
     return res.data.data;
+  },
+};
+
+
+/** V32 AS-IS Biz60_Tab_FundPriceModiReport · Biz60_Edit_FundPriceModi (기준가 정정내역 보고) */
+export const bizFundPriceModiApi = {
+  /** AS-IS biz.Biz60_FundPriceModi.selectByText — yyyymm = `yyyy.mm` */
+  search: async (yyyymm: string, searchText: string): Promise<FundPriceModi[]> => {
+    const res = await apiClient.get<ApiResponse<FundPriceModi[]>>('v1/biz/fund-price-modis', { params: { yyyymm, searchText } });
+    return res.data.data ?? [];
+  },
+  /** AS-IS getSeq — 새 보고 편집창이 첨부파일을 올리기 전에 받는 번호 */
+  newId: async (): Promise<number> => (await apiClient.get<ApiResponse<number>>('v1/biz/fund-price-modis/new-id')).data.data,
+  /** AS-IS biz.Biz60_FundPriceModi.modelUpdate → 저장된 행 */
+  save: async (row: Partial<FundPriceModi> & { fundPriceModiId: number }): Promise<FundPriceModi> => {
+    const { companyId: _c, apprId: _a, statusCode: _s, statusName: _n, reportTypeName: _r, fileListHtmlStr: _f, updName: _u, ...body } = row as FundPriceModi;
+    const res = await apiClient.put<ApiResponse<FundPriceModi>>('v1/biz/fund-price-modis', body);
+    return res.data.data;
+  },
+  /** AS-IS biz.Biz60_FundPriceModi.delete → 지운 건수 */
+  remove: async (ids: number[]): Promise<number> => (await apiClient.delete<ApiResponse<number>>('v1/biz/fund-price-modis', { data: ids })).data.data ?? 0,
+  /** AS-IS biz.Biz60_FundPriceModi.update(apprId) — 개별 상신(A75·A76) 뒤 결재문서 ID 기록 */
+  updateApprId: async (id: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<number>>(`v1/biz/fund-price-modis/${id}/appr-id`, { apprId });
+  },
+  /** AS-IS biz.Biz61_ModiRptRelateAppr.selectByCompanyId — 변경년월의 월 통합 상신(없으면 null) */
+  month: async (yyyymm: string): Promise<FundPriceModiMonth | null> => {
+    const res = await apiClient.get<ApiResponse<FundPriceModiMonth | null>>('v1/biz/fund-price-modis/month', { params: { yyyymm } });
+    return res.data.data ?? null;
+  },
+  /** AS-IS biz.Biz61_ModiRptRelateAppr.updateApprId — 월 통합 상신(A77) 뒤 결재문서 ID 기록 */
+  saveMonth: async (yyyymm: string, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/biz/fund-price-modis/month', { yyyymm, apprId });
   },
 };

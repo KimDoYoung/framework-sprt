@@ -49,4 +49,215 @@
            AND biz60_fund_price_modi_id = #{fundPriceModiId}
         ]]>
     </select>
+
+    <!-- 생성자 순서 = SELECT 순서 (FundPriceModiRes). 불리언 열은 'true'/'false' 글자 -->
+    <sql id="modiColumns">
+               biz60_fund_price_modi_id AS fund_price_modi_id
+             , biz60_report_type AS report_type
+             , biz60_am_corp_nm AS am_corp_name
+             , biz60_fund_nm AS fund_name
+             , biz60_price_std_date AS price_std_date
+             , biz60_modi_date AS modi_date
+             , (biz60_fund_close_yn = 'true') AS fund_close_yn
+             , biz60_bef_price AS bef_price
+             , biz60_bef_full_price AS bef_full_price
+             , biz60_bef_tax_price AS bef_tax_price
+             , biz60_bef_full_tax_price AS bef_full_tax_price
+             , biz60_bef_close_price AS bef_close_price
+             , biz60_bef_close_full_price AS bef_close_full_price
+             , biz60_bef_close_tax_price AS bef_close_tax_price
+             , biz60_bef_close_full_tax_price AS bef_close_full_tax_price
+             , biz60_aft_price AS aft_price
+             , biz60_aft_full_price AS aft_full_price
+             , biz60_aft_tax_price AS aft_tax_price
+             , biz60_aft_full_tax_price AS aft_full_tax_price
+             , biz60_aft_close_price AS aft_close_price
+             , biz60_aft_close_full_price AS aft_close_full_price
+             , biz60_aft_close_tax_price AS aft_close_tax_price
+             , biz60_aft_close_full_tax_price AS aft_close_full_tax_price
+             , biz60_first_person_nm AS first_person_name
+             , biz60_disc_cause AS disc_cause
+             , biz60_modi_reason AS modi_reason
+             , biz60_prev_plan AS prev_plan
+             , (biz60_ksd_notice_yn = 'true') AS ksd_notice_yn
+             , (biz60_kofia_notice_yn = 'true') AS kofia_notice_yn
+             , biz60_cmps_amt AS cmps_amt
+             , biz60_company_id AS company_id
+             , biz60_appr_id AS appr_id
+             , apr01_status_cd AS status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) AS status_name
+             , f_cdnm('FundPriceModifyReportType', biz60_report_type, biz60_company_id, f_sysdate()) AS report_type_name
+             , (SELECT STRING_AGG(sys10_file_nm, '&lt;'||'br'||'&gt;' ORDER BY sys10_file_id) FROM sys10_file WHERE sys10_parent_id = biz60_fund_price_modi_id) AS file_list_html_str
+             , biz60_upd_nm AS upd_name
+    </sql>
+
+    <!-- AS-IS biz60_fund_price_modi.selectByText (IDMS-IC) L65 — 목록(조인 apr01_appr, 첨부 파일명 목록) -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.biz.dto.FundPriceModiRes">
+        <![CDATA[
+        SELECT ]]><include refid="modiColumns"/><![CDATA[
+          FROM biz60_fund_price_modi
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = biz60_appr_id
+         WHERE biz60_company_id = #{companyId}
+           AND TO_CHAR(biz60_modi_date,'yyyy.mm') = #{yyyymm}
+           AND UPPER(CONCAT(biz60_am_corp_nm, biz60_fund_nm)) LIKE UPPER(#{searchText})
+         ORDER BY biz60_modi_date, biz60_am_corp_nm COLLATE "ko_KR.utf8", biz60_fund_nm COLLATE "ko_KR.utf8"
+        ]]>
+    </select>
+
+    <!-- AS-IS biz60_fund_price_modi.selectById (저장 뒤 다시 읽기) — 회사 조건 추가 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.biz.dto.FundPriceModiRes">
+        <![CDATA[
+        SELECT ]]><include refid="modiColumns"/><![CDATA[
+          FROM biz60_fund_price_modi
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = biz60_appr_id
+         WHERE biz60_company_id = #{companyId}
+           AND biz60_fund_price_modi_id = #{fundPriceModiId}
+        ]]>
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT COUNT(*) FROM biz60_fund_price_modi
+         WHERE biz60_company_id = #{companyId} AND biz60_fund_price_modi_id = #{fundPriceModiId}
+    </select>
+
+    <!-- AS-IS Biz60_FundPriceModi.modelUpdate (UpdateDataModel) — 등록(변경)자 = 로그인 사용자 이름, 일시 = 지금 -->
+    <insert id="insert">
+        INSERT INTO biz60_fund_price_modi
+             ( biz60_fund_price_modi_id, biz60_company_id, biz60_report_type, biz60_am_corp_nm, biz60_fund_nm, biz60_price_std_date, biz60_modi_date, biz60_fund_close_yn, biz60_bef_price, biz60_bef_full_price, biz60_bef_tax_price, biz60_bef_full_tax_price, biz60_bef_close_price, biz60_bef_close_full_price, biz60_bef_close_tax_price, biz60_bef_close_full_tax_price, biz60_aft_price, biz60_aft_full_price, biz60_aft_tax_price, biz60_aft_full_tax_price, biz60_aft_close_price, biz60_aft_close_full_price, biz60_aft_close_tax_price, biz60_aft_close_full_tax_price, biz60_first_person_nm, biz60_disc_cause, biz60_modi_reason, biz60_prev_plan, biz60_ksd_notice_yn, biz60_kofia_notice_yn, biz60_cmps_amt, biz60_upd_nm, biz60_upd_date )
+        VALUES
+             ( #{r.fundPriceModiId}, #{companyId}, #{r.reportType}, #{r.amCorpName}, #{r.fundName}, #{r.priceStdDate}, #{r.modiDate}, COALESCE(#{r.fundCloseYn}, false)::text, #{r.befPrice}, #{r.befFullPrice}, #{r.befTaxPrice}, #{r.befFullTaxPrice}, #{r.befClosePrice}, #{r.befCloseFullPrice}, #{r.befCloseTaxPrice}, #{r.befCloseFullTaxPrice}, #{r.aftPrice}, #{r.aftFullPrice}, #{r.aftTaxPrice}, #{r.aftFullTaxPrice}, #{r.aftClosePrice}, #{r.aftCloseFullPrice}, #{r.aftCloseTaxPrice}, #{r.aftCloseFullTaxPrice}, #{r.firstPersonName}, #{r.discCause}, #{r.modiReason}, #{r.prevPlan}, COALESCE(#{r.ksdNoticeYn}, false)::text, COALESCE(#{r.kofiaNoticeYn}, false)::text, #{r.cmpsAmt}, #{updName}, now() )
+    </insert>
+
+    <update id="update">
+        UPDATE biz60_fund_price_modi
+           SET biz60_report_type = #{r.reportType},
+               biz60_am_corp_nm = #{r.amCorpName},
+               biz60_fund_nm = #{r.fundName},
+               biz60_price_std_date = #{r.priceStdDate},
+               biz60_modi_date = #{r.modiDate},
+               biz60_fund_close_yn = COALESCE(#{r.fundCloseYn}, false)::text,
+               biz60_bef_price = #{r.befPrice},
+               biz60_bef_full_price = #{r.befFullPrice},
+               biz60_bef_tax_price = #{r.befTaxPrice},
+               biz60_bef_full_tax_price = #{r.befFullTaxPrice},
+               biz60_bef_close_price = #{r.befClosePrice},
+               biz60_bef_close_full_price = #{r.befCloseFullPrice},
+               biz60_bef_close_tax_price = #{r.befCloseTaxPrice},
+               biz60_bef_close_full_tax_price = #{r.befCloseFullTaxPrice},
+               biz60_aft_price = #{r.aftPrice},
+               biz60_aft_full_price = #{r.aftFullPrice},
+               biz60_aft_tax_price = #{r.aftTaxPrice},
+               biz60_aft_full_tax_price = #{r.aftFullTaxPrice},
+               biz60_aft_close_price = #{r.aftClosePrice},
+               biz60_aft_close_full_price = #{r.aftCloseFullPrice},
+               biz60_aft_close_tax_price = #{r.aftCloseTaxPrice},
+               biz60_aft_close_full_tax_price = #{r.aftCloseFullTaxPrice},
+               biz60_first_person_nm = #{r.firstPersonName},
+               biz60_disc_cause = #{r.discCause},
+               biz60_modi_reason = #{r.modiReason},
+               biz60_prev_plan = #{r.prevPlan},
+               biz60_ksd_notice_yn = COALESCE(#{r.ksdNoticeYn}, false)::text,
+               biz60_kofia_notice_yn = COALESCE(#{r.kofiaNoticeYn}, false)::text,
+               biz60_cmps_amt = #{r.cmpsAmt},
+               biz60_upd_nm = #{updName},
+               biz60_upd_date = now()
+         WHERE biz60_fund_price_modi_id = #{r.fundPriceModiId}
+           AND biz60_company_id = #{companyId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM biz60_fund_price_modi
+         WHERE biz60_company_id = #{companyId}
+           AND biz60_fund_price_modi_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <update id="updateApprId">
+        UPDATE biz60_fund_price_modi
+           SET biz60_appr_id = #{apprId}
+         WHERE biz60_fund_price_modi_id = #{fundPriceModiId}
+           AND biz60_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS biz61_modi_rpt_relate_appr.selectByCompanyId L26 -->
+    <select id="selectMonth" resultType="kr.co.kfs.asseterp.biz.biz.dto.FundPriceModiMonthRes">
+        SELECT biz61_modi_rpt_relate_appr_id                                           AS modi_rpt_relate_appr_id
+             , biz61_appr_id                                                           AS appr_id
+             , apr01_status_cd                                                         AS status_code
+             , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) AS status_name
+          FROM biz61_modi_rpt_relate_appr
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = biz61_appr_id
+         WHERE biz61_company_id = #{companyId}
+           AND biz61_modi_ym = #{yyyymm}
+    </select>
+
+    <!-- AS-IS biz61_modi_rpt_relate_appr.insert L37 -->
+    <insert id="insertMonth">
+        INSERT INTO biz61_modi_rpt_relate_appr
+             ( biz61_modi_rpt_relate_appr_id, biz61_company_id, biz61_modi_ym, biz61_appr_id )
+        VALUES
+             ( f_create_seq(), #{companyId}, #{yyyymm}, #{apprId} )
+    </insert>
+
+    <!-- AS-IS biz61_modi_rpt_relate_appr.updateApprId L53 -->
+    <update id="updateMonthApprId">
+        UPDATE biz61_modi_rpt_relate_appr
+           SET biz61_appr_id = #{apprId}
+         WHERE biz61_company_id = #{companyId}
+           AND biz61_modi_ym = #{yyyymm}
+    </update>
+
+    <!-- A77 문서 자동등록: AS-IS apr01_appr.getApprIdList L2570 (회사 조건 + 고른 보고의 apprId) — 문서 번호 순 -->
+    <select id="selectRelateApprs" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprLinkRelateApprRes">
+        SELECT apr01_appr_id    AS target_appr_id
+             , apr01_reg_date   AS reg_date
+             , apr01_title      AS title
+             , apr01_inout_cd   AS in_out_type_code
+          FROM apr01_appr
+         WHERE apr01_company_id = #{companyId}
+           AND apr01_appr_id IN (
+                SELECT biz60_appr_id
+                  FROM biz60_fund_price_modi
+                 WHERE biz60_company_id = #{companyId}
+                   AND biz60_appr_id IS NOT NULL
+                   AND biz60_fund_price_modi_id IN
+                <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+               )
+         ORDER BY apr01_appr_id
+    </select>
+
+    <!-- AS-IS sys10_file.selectByParentId (IDMS-IC) 의 파일 ID — IcsExtrActivityMapper.selectFileIds와 같은 식 -->
+    <select id="selectFileIds" resultType="long">
+        SELECT file.sys10_file_id
+          FROM (
+                SELECT *
+                  FROM sys10_file
+                 WHERE sys10_parent_id = #{parentId}
+                 UNION
+                SELECT sys10_file.*
+                  FROM sys11_relate_file
+                       INNER JOIN sys10_file ON sys10_file_id = sys11_file_id
+                 WHERE sys11_parent_id = #{parentId}
+               ) AS file
+         ORDER BY COALESCE(sys10_file_yn, 'false') ASC, LPAD(COALESCE(sys10_seq, '99999'), 5, '0'), COALESCE(sys10_title_yn, 'false') DESC, sys10_file_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <select id="countApprRelateFile" resultType="int">
+        SELECT COUNT(*)
+          FROM sys11_relate_file
+         WHERE sys11_file_id = #{fileId}
+           AND sys11_parent_id = #{apprId}
+           AND sys11_parent_table = 'apr01_appr'
+    </select>
+
+    <!-- AS-IS sys11_relate_file.insert -->
+    <insert id="insertApprRelateFile">
+        INSERT INTO sys11_relate_file ( sys11_relate_file_id, sys11_file_id, sys11_parent_id, sys11_parent_table )
+        VALUES ( #{relateFileId}, #{fileId}, #{apprId}, 'apr01_appr' )
+    </insert>
 </mapper>

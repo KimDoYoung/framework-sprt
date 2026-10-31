@@ -408,3 +408,54 @@ export interface BizEntertmCompany {
   htmlTargetCompanyName: string | null;
   entertmExpenseSum: number | null;
 }
+
+
+/** 기준가 정정내역 보고 한 행 (V32, AS-IS Biz60_FundPriceModiModel). 날짜는 'YYYY-MM-DD' */
+export interface FundPriceModi {
+  fundPriceModiId: number;
+  reportType: string | null;
+  amCorpName: string | null;
+  fundName: string | null;
+  priceStdDate: string | null;
+  modiDate: string | null;
+  fundCloseYn: boolean | null;
+  befPrice: number | null;
+  befFullPrice: number | null;
+  befTaxPrice: number | null;
+  befFullTaxPrice: number | null;
+  befClosePrice: number | null;
+  befCloseFullPrice: number | null;
+  befCloseTaxPrice: number | null;
+  befCloseFullTaxPrice: number | null;
+  aftPrice: number | null;
+  aftFullPrice: number | null;
+  aftTaxPrice: number | null;
+  aftFullTaxPrice: number | null;
+  aftClosePrice: number | null;
+  aftCloseFullPrice: number | null;
+  aftCloseTaxPrice: number | null;
+  aftCloseFullTaxPrice: number | null;
+  firstPersonName: string | null;
+  discCause: string | null;
+  modiReason: string | null;
+  prevPlan: string | null;
+  ksdNoticeYn: boolean | null;
+  kofiaNoticeYn: boolean | null;
+  cmpsAmt: number | null;
+  companyId: number;
+  apprId: number | null;
+  statusCode: string | null;
+  statusName: string | null;
+  reportTypeName: string | null;
+  /** 첨부 파일명 목록(`<br>` 이음) */
+  fileListHtmlStr: string | null;
+  updName: string | null;
+}
+
+/** 변경년월의 월 통합 상신 (V32, AS-IS Biz61_ModiRptRelateApprModel) */
+export interface FundPriceModiMonth {
+  modiRptRelateApprId: number;
+  apprId: number | null;
+  statusCode: string | null;
+  statusName: string | null;
+}
