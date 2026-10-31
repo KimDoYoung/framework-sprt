@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr04_appr_step.xml selectApprStepByType L252·valid_org_code_postgresql L191, emp00_trans_info.xml selectByPersonId L101·selectByObseverOfficer L736·selectByRiskManager·selectByManagementOfficer·selectByRiskOfficer·selectByComplianceOfficer,
+     apr31_appr_step_group_member.xml selectByClassTreeId L122, dcr05_doc_type.xml selectByDefaultClassTreeId, dcr20_relate_ics.xml selectByClassTreeId L115, dcr21_relate_icr.xml selectByClassTreeId L66,
+     sys01_company.xml selectById — V06 새 문서 열기·기본 결재선 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprApprNewMapper">
+
+    <!-- common.emp00_trans_info (Common.xml L1372) 중 이 화면이 쓰는 열: 사람별 기준일(오늘) 최신 발령. 기준일은 퇴직(900)이면 그날 전, 아니면 그날까지 -->
+    <sql id="emp00Cte">
+        emp00 AS (
+            SELECT t2.emp03_trans_id                                                    AS emp00_trans_id
+                 , t2.emp03_trans_date                                                  AS emp00_trans_date
+                 , CASE WHEN t2.emp03_trans_cd = '900'
+                        THEN t2.emp03_trans_date
+                        ELSE ( SELECT MIN(a.emp03_trans_date) - '1day'::interval
+                                 FROM emp03_trans a
+                                WHERE a.emp03_person_id = t2.emp03_person_id
+                                  AND a.emp03_trans_date &gt; t2.emp03_trans_date )
+                   END                                                                  AS emp00_close_date
+                 , t2.emp03_person_id                                                   AS emp00_person_id
+                 , t2.emp03_pos_cd                                                      AS emp00_pos_cd
+                 , t2.emp03_trans_cd                                                    AS emp00_trans_cd
+                 , t2.emp03_title_cd                                                    AS emp00_title_cd
+                 , t2.emp03_trans_date                                                  AS emp00_date
+                 , t1.emp01_order_seq                                                   AS emp00_order_seq
+                 , t1.emp01_company_id                                                  AS emp00_company_id
+                 , t2.emp03_grade_cd                                                    AS emp00_grade_cd
+                 , t2.emp03_org_code_id                                                 AS emp00_org_code_id
+                 , t2.emp03_org_head_yn                                                 AS emp00_org_head_yn
+                 , t1.emp01_emp_no                                                      AS emp00_emp_no
+                 , t1.emp01_kor_nm                                                      AS emp00_kor_nm
+              FROM emp01_person t1
+                   INNER JOIN emp03_trans t2 ON t2.emp03_person_id = t1.emp01_person_id
+             WHERE 1 = 1
+            <if test="companyId != null">
+               AND t1.emp01_company_id = #{companyId}
+            </if>
+            <if test="personId != null">
+               AND t1.emp01_person_id = #{personId}
+            </if>
+               AND t2.emp03_trans_date = ( SELECT MAX(x.emp03_trans_date)
+                                             FROM emp03_trans x
+                                            WHERE x.emp03_person_id = t1.emp01_person_id
+                                              AND (   (x.emp03_trans_cd  = '900' AND x.emp03_trans_date &lt;  f_today())
+                                                   OR (x.emp03_trans_cd != '900' AND x.emp03_trans_date &lt;= f_today()) ) )
+               AND 'Y' = (CASE WHEN (SELECT COUNT(*) FROM emp04_add_title WHERE emp04_add_person_id = t1.emp01_person_id) = 0 THEN 'Y'
+                               ELSE (CASE WHEN (SELECT COUNT(*)
+                                                  FROM emp01_person a
+                                                       INNER JOIN emp04_add_title ON emp04_person_id = a.emp01_person_id
+                                                 WHERE emp04_add_person_id = t1.emp01_person_id) = 0 THEN 'N'
+                                          ELSE 'Y' END) END)
+        )
+    </sql>
+
+    <!-- 이름 문구에 쓰는 열 (titleName · korName · 발령일 기준 조직명 · 오늘 기준 조직명) -->
+    <sql id="personColumns">
+          emp00_person_id                                                               AS person_id
+        , emp00_org_code_id                                                             AS org_code_id
+        , f_get_empTrans(emp00_person_id, emp00_trans_date::date, 'title_nm')           AS title_name
+        , emp00_kor_nm                                                                  AS kor_name
+        , ( SELECT i.org02_kor_nm
+              FROM org02_info i
+             WHERE i.org02_code_id = emp00_org_code_id
+               AND i.org02_mod_date = ( SELECT MAX(y.org02_mod_date)
+                                          FROM org02_info y
+                                         WHERE y.org02_code_id = i.org02_code_id
+                                           AND y.org02_mod_date &lt;= emp00_trans_date ) ) AS org_kor_name
+        , f_org_nm(emp00_org_code_id, f_today())                                        AS org_title_name
+    </sql>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS LoginUser.getToday — 서버(UTC)가 아니라 DB 날짜 -->
+    <select id="selectToday" resultType="java.time.LocalDate">
+        SELECT CAST(f_today() AS date)
+    </select>
+
+    <!-- 로그인 사원의 오늘 조직 (AS-IS LoginUser.getOrgCodeId) -->
+    <select id="selectOrgCodeId" resultType="long">
+        SELECT CAST(f_get_emptrans(#{personId}, f_today()::date, 'org_code_id') AS NUMERIC)
+    </select>
+
+    <!-- AS-IS dcr01_class_tree.selectById 중 새 문서가 쓰는 열 -->
+    <select id="selectClassTree" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprNewClassRow">
+        SELECT dcr01_class_tree_id                              AS class_tree_id
+             , f_class_tree_nm_allpath(dcr01_class_tree_id)     AS class_tree_full_name
+             , dcr01_approval_type_cd                           AS approval_type_code
+             , dcr01_seal_cd                                    AS seal_code
+             , dcr01_print_fund_yn                              AS print_fund_yn
+          FROM dcr01_class_tree
+         WHERE dcr01_class_tree_id = #{classTreeId}
+           AND dcr01_company_id    = #{companyId}
+    </select>
+
+    <!-- AS-IS dcr05_doc_type.selectByDefaultClassTreeId(defaultYn = true) 의 첫 줄 -->
+    <select id="selectDefaultDocType" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprNewDocTypeRow">
+        SELECT a.dcr05_title    AS title
+             , a.dcr05_content  AS content
+          FROM dcr05_doc_type a
+               INNER JOIN dcr06_relate_doc_type b ON a.dcr05_doc_type_id = b.dcr06_doc_type_id
+         WHERE dcr05_company_id    = #{companyId}
+           AND dcr06_class_tree_id = #{classTreeId}
+           AND dcr06_default_yn    = 'true'
+         ORDER BY dcr05_title
+         LIMIT 1
+    </select>
+
+    <select id="selectCompany" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprNewCompanyRow">
+        SELECT sys01_company_nm            AS company_name
+             , sys01_company_rep_nm        AS company_rep_name
+             , sys01_appr_step_lock_yn     AS appr_step_lock_yn
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS apr04_appr_step.selectApprStepByType — 내 조직에서 위로 올라가며 결재 단계 이상인 조직의 장(長) -->
+    <select id="selectOrgHeads" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprOrgHeadRow">
+        WITH RECURSIVE org_list(org02_code_id, org02_parent_code_id, org02_kor_nm, org01_open_date, org01_close_date, org02_mod_date, depth, path, cycle) AS
+        (
+            SELECT b.org02_code_id, b.org02_parent_code_id, b.org02_kor_nm, a.org01_open_date, a.org01_close_date, b.org02_mod_date, 1, ARRAY[b.org02_kor_nm::text], false
+              FROM org01_code a
+                   INNER JOIN org02_info b ON a.org01_code_id = b.org02_code_id
+             WHERE org01_company_id = #{companyId}
+               AND org01_code_id    = #{orgId}
+               AND f_to_number(org02_level_cd) &gt;= CAST(#{approvalTypeCode} AS NUMERIC)
+               AND f_trunc(f_sysdate()) BETWEEN org01_open_date AND COALESCE(org01_close_date, to_date('99991231', 'yyyyMMdd'))
+               AND org02_mod_date = ( SELECT MAX(x.org02_mod_date) FROM org02_info x
+                                       WHERE x.org02_code_id = b.org02_code_id AND x.org02_mod_date &lt;= f_sysdate() )
+            UNION ALL
+            SELECT b.org02_code_id, b.org02_parent_code_id, b.org02_kor_nm, a.org01_open_date, a.org01_close_date, b.org02_mod_date, c.depth + 1, array_append(c.path, b.org02_kor_nm::text), b.org02_kor_nm = ANY(c.path)
+              FROM org01_code a, org02_info b, org_list c
+             WHERE a.org01_code_id = b.org02_code_id
+               AND c.org02_parent_code_id = b.org02_code_id
+               AND f_to_number(org02_level_cd) &gt;= CAST(#{approvalTypeCode} AS NUMERIC)
+               AND f_trunc(f_sysdate()) BETWEEN a.org01_open_date AND COALESCE(a.org01_close_date, to_date('99991231', 'yyyyMMdd'))
+               AND b.org02_mod_date = ( SELECT MAX(x.org02_mod_date) FROM org02_info x
+                                         WHERE x.org02_code_id = b.org02_code_id AND x.org02_mod_date &lt;= f_sysdate() )
+               AND NOT cycle
+        ), <include refid="emp00Cte"/>
+        SELECT t2.emp00_person_id   AS person_id
+             , t2.emp00_org_code_id AS org_code_id
+          FROM ( SELECT b.org01_code_id, c.org02_level_cd
+                   FROM org_list a
+                        INNER JOIN org01_code b ON a.org02_code_id = b.org01_code_id
+                        INNER JOIN org02_info c ON b.org01_code_id = c.org02_code_id ) t1
+               INNER JOIN emp00 t2 ON t2.emp00_org_code_id = t1.org01_code_id
+                                  AND f_today() BETWEEN t2.emp00_trans_date AND COALESCE(t2.emp00_close_date, to_date('99991231','yyyyMMdd'))
+                                  AND COALESCE(t2.emp00_org_head_yn, 'false') LIKE 'true'
+         ORDER BY t1.org02_level_cd DESC, t2.emp00_pos_cd DESC, t2.emp00_emp_no
+    </select>
+
+    <!-- AS-IS emp00_trans_info.selectByPersonId — 사원의 오늘 발령, 그 발령 조직이 orgId일 때만 -->
+    <select id="selectPersonLine" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStepPersonRow">
+        WITH <include refid="emp00Cte"/>
+        SELECT <include refid="personColumns"/>
+          FROM emp00
+         WHERE emp00_org_code_id = #{orgId}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS emp00_trans_info.selectByObseverOfficer(flag=comp, 120) · selectByRiskManager(risk, 130) · selectByManagementOfficer(mngm, 110) · selectByRiskOfficer(risk, 131) · selectByComplianceOfficer(comp, 121)
+         직급(grade)이 같고 오늘 재직 중이며, 문서분류가 해당 여부(준법감시·위험관리·경영관리)일 때. AS-IS의 selectOne은 둘 이상이면 오류 → 사원번호 순 첫 줄 -->
+    <select id="selectOfficers" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStepPersonRow">
+        WITH <include refid="emp00Cte"/>
+        SELECT <include refid="personColumns"/>
+          FROM emp00
+         WHERE emp00_grade_cd = #{gradeCd}
+           AND f_trunc(f_sysdate()) BETWEEN emp00_trans_date AND COALESCE(emp00_close_date, to_date('99991231', 'yyyyMMdd'))
+           AND EXISTS ( SELECT 1
+                          FROM dcr01_class_tree
+                         WHERE dcr01_class_tree_id = #{classTreeId}
+                        <choose>
+                            <when test="flag == 'comp'">AND dcr01_comp_yn = 'true'</when>
+                            <when test="flag == 'risk'">AND dcr01_risk_yn = 'true'</when>
+                            <otherwise>AND dcr01_mngm_yn = 'true'</otherwise>
+                        </choose> )
+           AND NOT EXISTS ( SELECT 1
+                              FROM emp04_add_title
+                             WHERE emp04_add_person_id = emp00_person_id
+                               AND ( emp04_start_date &gt; f_today() OR COALESCE(emp04_close_date, '9999-12-31') &lt; f_today() ) )
+         ORDER BY emp00_emp_no
+    </select>
+
+    <!-- AS-IS apr31_appr_step_group_member.selectByClassTreeId -->
+    <select id="selectGroupMembers" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprGroupMemberRow">
+        WITH <include refid="emp00Cte"/>
+        SELECT m.apr31_step_emp_id                                                       AS person_id
+             , m.apr31_step_type_cd                                                      AS step_type_code
+             , f_cdnm('AprStepTypeCode', m.apr31_step_type_cd, #{companyId}, f_today())  AS step_type_name
+             , emp00_org_code_id                                                         AS org_code_id
+             , f_get_empTrans(emp00_person_id, emp00_trans_date::date, 'title_nm')       AS title_name
+             , emp00_kor_nm                                                              AS kor_name
+             , f_org_nm(emp00_org_code_id, f_today())                                    AS org_title_name
+          FROM apr31_appr_step_group_member m
+               INNER JOIN emp00 ON m.apr31_step_emp_id = emp00_person_id
+                               AND f_today() BETWEEN emp00_trans_date AND COALESCE(emp00_close_date, TO_DATE('99991231','yyyyMMdd'))
+               INNER JOIN dcr01_class_tree ON m.apr31_appr_step_group_id = dcr01_appr_step_group_id
+         WHERE dcr01_class_tree_id = #{classTreeId}
+           AND dcr01_company_id    = #{companyId}
+         ORDER BY m.apr31_seq
+    </select>
+
+    <!-- AS-IS dcr20_relate_ics.selectByClassTreeId 에서 Apr20_RelateIcs.selectByDcrClassTreeId가 채우는 열 -->
+    <select id="selectIcsLines" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprNewLawRes">
+        SELECT b.ics01_class_tree_id                                            AS class_tree_id
+             , b.ics01_class_tree_nm                                            AS class_tree_name
+             , f_ics_class_tree_nm_allpath(b.ics01_class_tree_id)               AS class_tree_full_name
+             , b.ics01_content                                                  AS content
+             , b.ics01_submit_to                                                AS submit_to
+             , b.ics01_related_law                                              AS related_law
+             , f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate()) AS cycle_name
+             , c.sch03_deadline_id                                              AS deadline_id
+             , f_get_deadline_nm(c.sch03_deadline_id, '2')                      AS deadline_full_name
+             , c.sch03_note                                                     AS deadline_note
+          FROM dcr20_relate_ics a
+               INNER JOIN ics01_class_tree b ON a.dcr20_ics_class_tree_id = b.ics01_class_tree_id
+               LEFT OUTER JOIN ics03_company_info ON ( ics03_company_id        = dcr20_company_id
+                                                   AND ics03_ics_class_tree_id = dcr20_ics_class_tree_id )
+               LEFT OUTER JOIN sch03_deadline c ON c.sch03_info_id = a.dcr20_ics_class_tree_id
+                                               AND c.sch03_schedule_cd IN ('2','3')
+                                               AND c.sch03_company_id = b.ics01_company_id
+         WHERE dcr20_dcr_class_tree_id = #{classTreeId}
+           AND COALESCE(ics03_except_yn,'false') != 'true'
+    </select>
+
+    <!-- AS-IS dcr21_relate_icr.selectByClassTreeId -->
+    <select id="selectIcrLines" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprNewLawRes">
+        SELECT b.icr01_class_tree_id                                            AS class_tree_id
+             , b.icr01_class_tree_nm                                            AS class_tree_name
+             , f_icr_class_tree_nm_allpath(b.icr01_class_tree_id)               AS class_tree_full_name
+             , b.icr01_content                                                  AS content
+             , b.icr01_submit_to                                                AS submit_to
+             , b.icr01_related_law                                              AS related_law
+             , f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate()) AS cycle_name
+             , c.sch03_deadline_id                                              AS deadline_id
+             , f_get_deadline_nm(c.sch03_deadline_id, '2')                      AS deadline_full_name
+             , c.sch03_note                                                     AS deadline_note
+          FROM dcr21_relate_icr a
+               INNER JOIN icr01_class_tree b ON a.dcr21_icr_class_tree_id = b.icr01_class_tree_id
+               LEFT OUTER JOIN sch03_deadline c ON c.sch03_info_id = a.dcr21_icr_class_tree_id
+                                               AND c.sch03_schedule_cd IN ('6','7')
+                                               AND c.sch03_company_id = b.icr01_company_id
+         WHERE dcr21_dcr_class_tree_id = #{classTreeId}
+           AND COALESCE(icr01_use_yn,'false') = 'true'
+    </select>
+
+</mapper>

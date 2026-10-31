@@ -94,6 +94,70 @@ public class AprNoticeService {
         return out;
     }
 
+    /**
+     * [결재요청] 뒤 — apr.Apr01_Appr.update(V03). 결재선에 결재·합의·인감이 없어 바로 결재완료(30)면 참조자에게 L417-519(번호 없는 참조자를 만나면 남은 참조자까지 멈춘다),
+     * 아니면 L664-826: 첫 결재·합의·인감 단계의 사원에게 "결재문서가 도착했습니다"(대결자가 아니라 단계 담당자 본인). 합의가 이어지면 다음 합의까지, 결재가 나오면 멈춘다
+     */
+    public List<AprNoticeCall> planAfterRequest(Long companyId, Long classTreeId, String title, String regName, String docStatus, List<AprNoticeStep> steps) {
+        List<AprNoticeCall> out = new ArrayList<>();
+        String classTreeName = mapper.selectClassTreeName(classTreeId);
+        String loc = mapper.selectCompanyLoc(companyId);
+        if ("30".equals(docStatus)) {
+            for (AprNoticeStep m : steps) {
+                if ("30".equals(m.stepTypeCode())) {
+                    AprNoticePerson p = mapper.selectPerson(m.stepEmpId());
+                    if (p != null) {
+                        if (p.mobileTelNo() == null) {
+                            break;
+                        }
+                        plan(out, p, loc, loc, "30", p.korName(), classTreeName, title, "T012", "30");
+                    }
+                }
+            }
+            return out;
+        }
+        boolean send = false;
+        for (AprNoticeStep m : steps) {
+            String type = m.stepTypeCode();
+            if (!("10".equals(type) || "20".equals(type) || "40".equals(type))) {
+                continue;
+            }
+            if (send && "10".equals(type)) {
+                break;
+            }
+            AprNoticePerson p = person(m.stepEmpId());
+            if (p != null) {
+                plan(out, p, loc, loc, "20", regName, classTreeName, title, "T011", "20");
+            }
+            if ("20".equals(type)) {
+                send = true;
+                continue;
+            }
+            break;
+        }
+        return out;
+    }
+
+    /**
+     * 결재선 수정 [저장] 뒤 — apr.Apr04_ApprStep.updateList L2125-2257(V08): 저장할 결재선에서 처음으로 대기(10)인 결재·합의 단계의 사원 한 명에게 "결재문서가 도착했습니다".
+     * SMS 문구의 보낸 사람 이름은 상신자가 아니라 받는 사람 자신의 이름이다(원본 그대로, model.getEmpPersonModel().getKorName())
+     */
+    public List<AprNoticeCall> planAfterRetouch(Long companyId, Long classTreeId, String title, List<AprNoticeStep> steps) {
+        List<AprNoticeCall> out = new ArrayList<>();
+        String classTreeName = mapper.selectClassTreeName(classTreeId);
+        String loc = mapper.selectCompanyLoc(companyId);
+        for (AprNoticeStep m : steps) {
+            if (("10".equals(m.stepTypeCode()) || "20".equals(m.stepTypeCode())) && "10".equals(m.stepStatusCode())) {
+                AprNoticePerson p = person(m.stepEmpId());
+                if (p != null) {
+                    plan(out, p, loc, loc, "20", p.korName(), classTreeName, title, "T011", "20");
+                }
+                break;
+            }
+        }
+        return out;
+    }
+
     /** [승인취소] 전 — clearApprStepId L960-1131: 취소 직전 상태에서 아직 대기인 단계의 결재자에게 "직전 결재자의 승인 취소" (code 50) */
     public List<AprNoticeCall> planBeforeCancelApproval(UserPrincipal user, AprApprDetailRes doc) {
         List<AprNoticeCall> out = new ArrayList<>();
@@ -157,6 +221,30 @@ public class AprNoticeService {
         if (props.smsEnabled(flagLoc) && p.mobileTelNo() != null && mapper.countSmsBlocked(p.personId(), noticeCode) == 0) {
             out.add(new AprNoticeCall("sms", p.mobileTelNo().replace("-", ""), "[Asset-ERP 알림]", smsMessage(code, name, title, urlLoc)));
         }
+    }
+
+    /**
+     * [문서폐기 신청] 뒤 — apr.Apr90_DisposalList.modelUpdate L123-226: 승인자에게 앱알림(이메일 있고 T013 차단 아님) · 메일(회사 발송 여부 + 이메일 + 수신설정) · SMS(회사 발송 여부 + 번호 + 수신설정).
+     * 문구는 세 가지 모두 "'제목' 문서폐기 신청이 도착했습니다. ※ 승인처리 화면:[1490 폐기문서 승인]" (메일·SMS는 줄바꿈 + 접속 주소가 붙는다)
+     */
+    public List<AprNoticeCall> planDisposalRequest(Long companyId, Long confirmEmpId, String title) {
+        List<AprNoticeCall> out = new ArrayList<>();
+        AprNoticePerson p = person(confirmEmpId);
+        if (p == null) {
+            return out;
+        }
+        String loc = mapper.selectCompanyLoc(companyId);
+        String msg = "'" + title + "'\r\n문서폐기 신청이 도착했습니다.\r\n※ 승인처리 화면:[1490 폐기문서 승인]" + "\r\n\r\n https://" + loc + ".k-fs.co.kr:5151/";
+        if (p.emailAddress() != null && mapper.countTalkBlocked(p.personId(), "T013") == 0) {
+            out.add(new AprNoticeCall("talk", p.emailAddress(), "상신문서(폐기문서)", "'" + title + "' 문서폐기 신청이 도착했습니다. ※ 승인처리 화면:[1490 폐기문서 승인]"));
+        }
+        if (props.mailEnabled(loc) && p.emailAddress() != null && mapper.countMailBlocked(p.personId(), "T013") == 0) {
+            out.add(new AprNoticeCall("mail", p.emailAddress(), "[알림] Asset-ERP", msg));
+        }
+        if (props.smsEnabled(loc) && p.mobileTelNo() != null && mapper.countSmsBlocked(p.personId(), "T013") == 0) {
+            out.add(new AprNoticeCall("sms", p.mobileTelNo().replace("-", ""), "[Asset-ERP 알림]", msg));
+        }
+        return out;
     }
 
     private AprNoticePerson person(Long personId) {

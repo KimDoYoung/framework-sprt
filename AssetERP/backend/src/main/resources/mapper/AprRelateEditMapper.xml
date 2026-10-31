@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr20_relate_ics.xml selectByApprId·getCloseDate + UpdateDataModel(apr20_relate_ics), sys10_file.xml selectByFileYn + UpdateDataModel(sys10_file), bbs02_notice.insert, bbs03_target.insert (V10, Apr20_Lookup_RelateIcsList·Apr20_Lookup_RelateIcs·Apr01_Lookup_ApprFile) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprRelateEditMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS apr20_relate_ics.selectByApprId (IDMS-IC) — a.*·모델 열 중 이 창이 쓰는 열만, 조인·조건은 그대로 -->
+    <select id="selectRelateIcs" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsRow">
+        SELECT a.apr20_relate_ics_id                                                        AS relate_ics_id
+             , a.apr20_class_tree_id                                                        AS class_tree_id
+             , f_ics_class_tree_nm_allpath(b.ics01_class_tree_id)                           AS class_tree_full_name
+             , b.ics01_content                                                              AS content
+             , b.ics01_submit_to                                                            AS submit_to
+             , b.ics01_related_law                                                          AS related_law
+             , a.apr20_deadline_id                                                          AS deadline_id
+             , f_get_deadline_nm(c.sch03_deadline_id, '2')                                  AS deadline_full_name
+             , c.sch03_note                                                                 AS deadline_note
+             , f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate())       AS cycle_name
+             , a.apr20_stand_cd                                                             AS stand_code
+             , a.apr20_stand_date                                                           AS stand_date
+             , a.apr20_close_date                                                           AS close_date
+             , a.apr20_stand_yn                                                             AS stand_yn
+          FROM apr20_relate_ics a
+               INNER JOIN ics01_class_tree b ON a.apr20_class_tree_id = b.ics01_class_tree_id
+               LEFT OUTER JOIN sch03_deadline c ON c.sch03_deadline_id = a.apr20_deadline_id AND c.sch03_schedule_cd IN ('2','3')
+         WHERE 1=1
+           AND apr20_appr_id = #{apprId}
+    </select>
+
+    <!-- 새 줄: 위와 같은 조인을 법규·기한으로 (AS-IS는 Ics01_Lookup_SelectMulti 결과 모델에서 가져왔다. 관련조문은 AS-IS 새 줄처럼 비움) -->
+    <select id="selectRelateIcsInfo" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsRow">
+        SELECT NULL::numeric                                                                AS relate_ics_id
+             , b.ics01_class_tree_id                                                        AS class_tree_id
+             , f_ics_class_tree_nm_allpath(b.ics01_class_tree_id)                           AS class_tree_full_name
+             , b.ics01_content                                                              AS content
+             , b.ics01_submit_to                                                            AS submit_to
+             , NULL                                                                         AS related_law
+             , c.sch03_deadline_id                                                          AS deadline_id
+             , f_get_deadline_nm(c.sch03_deadline_id, '2')                                  AS deadline_full_name
+             , c.sch03_note                                                                 AS deadline_note
+             , f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate())       AS cycle_name
+             , NULL                                                                         AS stand_code
+             , NULL::date                                                                   AS stand_date
+             , NULL::date                                                                   AS close_date
+             , NULL                                                                         AS stand_yn
+          FROM ics01_class_tree b
+               LEFT OUTER JOIN sch03_deadline c ON c.sch03_deadline_id = #{deadlineId} AND c.sch03_schedule_cd IN ('2','3')
+         WHERE b.ics01_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- AS-IS apr20_relate_ics.getCloseDate (IDMS-IC) -->
+    <select id="selectCloseDate" resultType="java.time.LocalDate">
+        SELECT f_get_std_date(#{deadlineId}, #{standDate}, #{companyId}) AS apr20_close_date
+    </select>
+
+    <!-- selectByApprId의 cycle_nm과 같은 식 -->
+    <select id="selectCycleName" resultType="string">
+        SELECT f_cdnm('CycleCode', c.sch03_cycle_cd, c.sch03_company_id, f_sysdate())
+          FROM sch03_deadline c
+         WHERE c.sch03_deadline_id = #{deadlineId}
+           AND c.sch03_schedule_cd IN ('2','3')
+    </select>
+
+    <insert id="insertRelateIcs">
+        INSERT INTO apr20_relate_ics (apr20_relate_ics_id, apr20_appr_id, apr20_class_tree_id, apr20_stand_cd, apr20_stand_date, apr20_close_date, apr20_deadline_id)
+        VALUES (#{id}, #{apprId}, #{classTreeId}, #{standCode}, #{standDate}, #{closeDate}, #{deadlineId})
+    </insert>
+
+    <update id="updateRelateIcs">
+        UPDATE apr20_relate_ics
+           SET apr20_stand_cd   = #{standCode}
+             , apr20_stand_date = #{standDate}
+             , apr20_close_date = #{closeDate}
+         WHERE apr20_relate_ics_id = #{id}
+           AND apr20_appr_id = #{apprId}
+    </update>
+
+    <delete id="deleteRelateIcs">
+        DELETE FROM apr20_relate_ics
+         WHERE apr20_appr_id = #{apprId}
+           AND apr20_relate_ics_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS bbs02_notice.insert (IDMS-IC) — 알림(open_yn "알림"), 유형 02, 비공개, 작성자 system -->
+    <insert id="insertNotice">
+        INSERT INTO bbs02_notice (bbs02_notice_id, bbs02_company_id, bbs02_title, bbs02_notice, bbs02_from_date, bbs02_to_date, bbs02_open_yn,
+                                  bbs02_notice_type, bbs02_notice_detail_cd, bbs02_public_yn, bbs02_create_date, bbs02_user_nm)
+        VALUES (#{noticeId}, #{companyId}, #{title}, #{notice}, f_sysdate()::date, f_sysdate()::date, '알림',
+                '02', NULL, 'false', f_sysdate(), 'system')
+    </insert>
+
+    <!-- AS-IS bbs03_target.insert (IDMS-IC) -->
+    <insert id="insertNoticeTarget">
+        INSERT INTO bbs03_target (bbs03_target_id, bbs03_notice_id, bbs03_person_id)
+        VALUES (#{targetId}, #{noticeId}, #{personId})
+    </insert>
+
+    <!-- AS-IS sys10_file.selectByFileYn (IDMS-IC) — 화면이 지우는 표지(title_yn 'true')는 처음부터 뺀다 -->
+    <select id="selectAfterFiles" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprAfterFileRes">
+        SELECT sys10_file_id                          AS file_id
+             , sys10_parent_id                        AS parent_id
+             , sys10_file_nm                          AS file_name
+             , (COALESCE(sys10_stamp_yn, 'false') = 'true') AS stamp_yn
+          FROM sys10_file
+         WHERE sys10_parent_id = #{apprId}
+           AND sys10_file_yn like 'true'
+           AND COALESCE(sys10_title_yn, 'false') &lt;&gt; 'true'
+         ORDER BY 1
+    </select>
+
+    <!-- AS-IS UpdateDataModel(sys10_file) UPDATE — 이 창이 바꾸는 인감날인본만 (yunhee port-save sys10_file) -->
+    <update id="updateFileStamp">
+        UPDATE sys10_file
+           SET sys10_stamp_yn = #{stampYn}
+         WHERE sys10_file_id = #{fileId}
+           AND sys10_parent_id = #{parentId}
+    </update>
+</mapper>

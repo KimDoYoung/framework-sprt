@@ -22,6 +22,7 @@ import { PagingToolBar, SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
 import { Dcr08_Lookup_SelectSingle } from './Dcr08_Lookup_SelectSingle';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 
 const gb = gbFor<AprDcrWrite>();
 const LIMIT = 100;  // gridToolBar.setToolBar(100)
@@ -43,6 +44,9 @@ export const Dcr01_Tab_DcrWrite: React.FC = () => {
   const [classTreeId, setClassTreeId] = useState<number | null>(null);
   /** classTreeModel: 문서분류(S)를 고르면 서버에서 읽어 둔다. 1단계는 ID만 쓴다 — 전체 모델은 편집창(F01-2)이 쓴다 */
   const [classTreeModelId, setClassTreeModelId] = useState<number | null>(null);
+  // V07: 전자결재 편집창 — 새 문서(newClassTreeId) 또는 보기(apprId)
+  const [newClassTreeId, setNewClassTreeId] = useState<number | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
   const [classDetailModel, setClassDetailModel] = useState<DcrClassDetail | null>(null);
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
@@ -212,13 +216,13 @@ export const Dcr01_Tab_DcrWrite: React.FC = () => {
   };
 
   // insertApproval() L523-536: 문서분류를 안 골랐으면 "상단 문서분류를 선택해주세요", 아니면 Apr01_Edit_ApprDoc 신규 작성 창을 열고 닫힌 뒤 retrieve()
-  // [E8 일부 생략] 편집창은 다음 단계(F01-2)에서 연결한다
+  // [E8 일부 생략] dcr.Dcr08_OftenUse.insertUpdate(최근 사용 횟수 올리기)는 아직 하지 않는다 — 창을 열기만 한다(V07)
   const insertApproval = () => {
     if (classTreeModelId == null) {
       message.warning('상단 문서분류를 선택해주세요');
       return;
     }
-    message.info('전자결재 문서 작성 창은 다음 단계에서 연결됩니다');
+    setNewClassTreeId(classTreeModelId);
   };
 
   // [E8] insertButton[신규문서 작성].Select (L387) → insertApproval(): 전용화면을 쓰는 세부분류(linkYn)는 안내만 하고 끝낸다
@@ -248,12 +252,12 @@ export const Dcr01_Tab_DcrWrite: React.FC = () => {
     gb.text('relateDisplayName', 250, '연관펀드(일임)'),  // L569
     gb.textHtml('statusNameBold', 80, '상태'),  // L570
     // L571 actionCell(View): 폐기 문서는 "해당문서는 폐기되어 열람이 불가능합니다", 아니면 Apr01_Edit_ApprDoc.retrieveApproval(model, false) 뒤 retrieveOne()
-    // [L571 일부 생략] 편집창·retrieveOne(apr.Apr01_Appr.selectByApprId2)은 다음 단계(F01-2)
+    // 닫힌 뒤 목록을 다시 읽는다(onClosed → retrieve). retrieveOne(selectByApprId2, 그 한 줄만 새로고침)은 목록 전체 조회로 대신한다
     iconCell<AprDcrWrite>('view', 'actionCell', 80, '상세보기', row => {
       if ((row.title ?? '').indexOf('style=color:#E33E31;>[폐기]') !== -1) {
         message.warning('해당문서는 폐기되어 열람이 불가능합니다');
       } else {
-        message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+        setViewApprId(row.apprId);
       }
     }),
     gb.text('note', 300, '비고'),  // L572
@@ -319,6 +323,12 @@ export const Dcr01_Tab_DcrWrite: React.FC = () => {
         <PagingToolBar page={page} limit={LIMIT} total={total} loading={loading} onChange={getPaging} />
       </div>
 
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        newClassTreeId={newClassTreeId}
+        onClosed={() => retrieveRef.current()}
+        onClose={() => { setViewApprId(null); setNewClassTreeId(null); }}
+      />
       <Dcr08_Lookup_SelectSingle
         open={oftenOpen}
         onResult={row => void applyOftenUse(row)}

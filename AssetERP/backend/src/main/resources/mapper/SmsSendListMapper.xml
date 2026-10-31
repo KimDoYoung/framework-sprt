@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/emp/mapper/emp00_trans_info.xml selectByList (V04, Sms03_Lookup_SendList) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.sms.mapper.SmsSendListMapper">
+
+    <!-- AS-IS emp00_trans_info.selectByList (IDMS-IC) — SELECT emp01_person.*·모델 열 중 그리드가 쓰는 열만, 조건·정렬은 그대로 -->
+    <select id="selectByList" resultType="kr.co.kfs.asseterp.biz.sms.dto.SmsSendTargetRes">
+        SELECT emp01_person_id                                                      AS person_id
+             , f_get_empTrans(emp01_person_id, f_sysdate()::date, 'org_code_nm')    AS org_title_name
+             , f_get_empTrans(emp01_person_id, f_sysdate()::date, 'title_nm')       AS title_name
+             , emp01_emp_no                                                         AS emp_no
+             , emp01_kor_nm                                                         AS emp_kor_name
+          FROM emp01_person
+         WHERE 1=1
+           AND emp01_company_id = #{companyId}
+           AND emp01_person_id IN
+        <foreach collection="personIds" item="personId" open="(" separator="," close=")">#{personId}</foreach>
+         ORDER BY emp01_emp_no
+    </select>
+
+    <select id="selectMobile" resultType="string">
+        SELECT emp01_mobile_telno
+          FROM emp01_person
+         WHERE emp01_company_id = #{companyId}
+           AND emp01_person_id = #{personId}
+    </select>
+</mapper>

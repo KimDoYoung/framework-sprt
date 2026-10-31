@@ -35,13 +35,34 @@ public class AprApprActionService {
     /** retrieveApproval 판정의 결과 (내부용) */
     record Turn(boolean canConfirm, AprApprStepRes myStep, boolean canCancelApproval, boolean canCancelRequest) {
         static final Turn NONE = new Turn(false, null, false, false);
+
+        /** [결재선 수정] — 내 차례이고 합의가 아닌 결재 단계 (V08) */
+        boolean retouch() {
+            return canConfirm && myStep != null && !"20".equals(myStep.stepTypeCode());
+        }
     }
 
     /** 열린 문서에서 켤 단추 */
     public AprApprActionStateRes getState(UserPrincipal user, Long apprId) {
         AprApprDetailRes doc = detail.getDetail(user, apprId);
         Turn t = turn(user, doc, detail.getSteps(user, apprId));
-        return new AprApprActionStateRes(t.canConfirm(), t.canCancelApproval(), t.canCancelRequest());
+        return new AprApprActionStateRes(t.canConfirm(), t.canCancelApproval(), t.canCancelRequest(), t.retouch(), typo(doc, t));
+    }
+
+    /** [오타수정]을 쓸 수 있는가 — 결재 전·결재중(10·20) 문서에서 내 차례 (makeTypoButton L4195-4286, V09) */
+    public boolean canTypo(UserPrincipal user, Long apprId) {
+        AprApprDetailRes doc = detail.getDetail(user, apprId);
+        return typo(doc, turn(user, doc, detail.getSteps(user, apprId)));
+    }
+
+    private static boolean typo(AprApprDetailRes doc, Turn t) {
+        return t.canConfirm() && ("10".equals(doc.statusCode()) || "20".equals(doc.statusCode()));
+    }
+
+    /** [결재선 수정]을 쓸 수 있는가 (V08) */
+    public boolean canRetouchSteps(UserPrincipal user, Long apprId) {
+        AprApprDetailRes doc = detail.getDetail(user, apprId);
+        return turn(user, doc, detail.getSteps(user, apprId)).retouch();
     }
 
     /** [승인]·[반려]를 누르면 결재의견 창을 열기 전에 먼저 하는 확인 — apr.Apr04_ApprStep.confirmCheck (L1134-1145, 1193-1196) */
@@ -181,12 +202,12 @@ public class AprApprActionService {
 
     /**
      * AS-IS apr.Apr01_Appr.deleteByApprId (server/apr/Apr01_Appr.java L1017-1070) 중 임시저장이 아닌 문서: 폐기문서(apr99)로 옮기고 상신문서를 지운다.
-     * 임시저장(99) 문서의 완전 삭제(연관펀드·파일 실물·결재선 삭제)는 [삭제] 단추를 만드는 V04에서 연결한다.
+     * 임시저장(99) 문서의 완전 삭제는 AprApprWriteService.delete(V03)가 한다.
      */
     private AprApprActionRes deleteAppr(UserPrincipal user, AprApprDetailRes doc) {
         Long apprId = doc.apprId();
         if ("99".equals(doc.statusCode())) {
-            return fail("임시저장 문서의 삭제는 V04에서 연결합니다.");
+            return fail("임시저장 문서는 [삭제](DELETE apr/apprs/{id})로 지웁니다.");
         }
         mapper.insertApprDel(apprId, user.getUserId());
         mapper.deleteAppr(apprId);

@@ -546,6 +546,13 @@ export interface AprApprStep {
   rejectReason?: string | null;
   stepEmpId: number;
   apprEmpId?: number | null;
+  /** 결재선 설정 창의 칸 (V07) */
+  titleName?: string | null;
+  empKorName?: string | null;
+  orgKorName?: string | null;
+  lockYn?: boolean;
+  /** 이 줄을 결재선에 넣은 사원 — 결재선 수정(V08)에서 내가 넣은 줄만 지울 수 있다 */
+  addEmpId?: number | null;
 }
 
 /** 연관문서 탭 한 줄 (AS-IS Apr21_RelateApprModel, V01) */
@@ -608,6 +615,10 @@ export interface AprApprActionState {
   canConfirm: boolean;
   canCancelApproval: boolean;
   canCancelRequest: boolean;
+  /** [결재선 수정] — 내 차례이고 합의가 아닐 때 (V08) */
+  canRetouchSteps: boolean;
+  /** [오타수정] — 결재 전·결재중 문서에서 내 차례일 때 (V09) */
+  canTypo: boolean;
 }
 
 /** 결재 처리 결과 (V02) — ok가 false면 message를 안내로, needConfirm이면 message로 확인을 받고 다시 보낸다 */
@@ -618,4 +629,231 @@ export interface AprApprActionRes {
   makePdf: boolean;
   message?: string | null;
   notice?: string | null;
+}
+
+/** 새 문서 열기의 기본 결재선 한 줄 (Apr04_ApprStep.createApprovalTypeCd, V06) */
+export interface AprNewStep {
+  apprStepId: number;
+  seq?: string | null;
+  stepTypeCode: string;
+  stepTypeName?: string | null;
+  stepStatusCode?: string | null;
+  stepStatusName?: string | null;
+  stepEmpId: number;
+  apprEmpId?: number | null;
+  /** 이름 문구 — 대결이면 HTML */
+  stepApprName?: string | null;
+  lockYn: boolean;
+  titleName?: string | null;
+  empKorName?: string | null;
+  orgKorName?: string | null;
+}
+
+/** 새 문서에 따라오는 연관법규·내규 한 줄 (V06) */
+export interface AprNewLaw {
+  relateId: number;
+  classTreeId: number;
+  classTreeName?: string | null;
+  classTreeFullName?: string | null;
+  content?: string | null;
+  submitTo?: string | null;
+  relatedLaw?: string | null;
+  cycleName?: string | null;
+  deadlineId?: number | null;
+  deadlineFullName?: string | null;
+  deadlineNote?: string | null;
+}
+
+/** 새 문서 열기 (GET apr/apprs/new, V06) */
+export interface AprApprNew {
+  apprId: number;
+  classTreeId: number;
+  classTreeFullName?: string | null;
+  printFundYn?: string | null;
+  sealCode?: string | null;
+  title?: string | null;
+  content?: string | null;
+  regDate: string;
+  signCompany?: string | null;
+  signCeo?: string | null;
+  statusCode: string;
+  regEmpId: number;
+  regEmpName?: string | null;
+  steps: AprNewStep[];
+  relateIcs: AprNewLaw[];
+  relateIcr: AprNewLaw[];
+}
+
+/** [저장]·[결재요청]의 결재선 한 줄 (V03) */
+export interface AprApprSaveStep {
+  apprStepId?: number | null;
+  stepTypeCode: string;
+  seq: string;
+  stepStatusCode?: string | null;
+  stepEmpId: number;
+  lockYn?: string | null;
+  addEmpId?: number | null;
+}
+
+/** [저장]·[결재요청] (PUT apr/apprs/{id}, V03) */
+export interface AprApprSaveReq {
+  mode: 'save' | 'request';
+  classTreeId?: number | null;
+  linkCode?: string | null;
+  title?: string | null;
+  content?: string | null;
+  note?: string | null;
+  effectDate?: string | null;
+  regDate?: string | null;
+  stampId?: number | null;
+  receiveName?: string | null;
+  referenceName?: string | null;
+  inOutTypeCode?: string | null;
+  signCompany?: string | null;
+  signCeo?: string | null;
+  stampPosition?: string | null;
+  formType?: string | null;
+  message?: string | null;
+  confirmed: boolean;
+  steps: AprApprSaveStep[];
+}
+
+export interface AprApprWriteRes {
+  ok: boolean;
+  message?: string | null;
+  apprId?: number | null;
+  statusCode?: string | null;
+  makePdf: boolean;
+  /** 'confirm'이면 message를 확인 창으로 묻고 confirmed=true로 다시 보낸다 */
+  notice?: string | null;
+}
+
+/** 결재선 설정 창의 사원 조회 한 줄 (V07) */
+export interface AprStepEmp {
+  personId: number;
+  orgCodeId: number;
+  orgKorName?: string | null;
+  titleName?: string | null;
+  titleName2?: string | null;
+  empKorName?: string | null;
+}
+
+/** 최근 결재선 불러오기 창의 문서 한 줄 (apr01_appr.selectByWeek·selectByDcrGroup, V08) */
+export interface AprRecentDoc {
+  apprId: number;
+  statusName?: string | null;
+  regDate?: string | null;
+  classTreeNameAllpath?: string | null;
+  title?: string | null;
+}
+
+/** 열람기록 한 줄 (GET apr/apprs/{id}/open-histories, AS-IS Apr41_OpenHistoryModel) */
+export interface AprOpenHistory {
+  openHistoryId: number;
+  openDateStr: string;
+  orgName: string | null;
+  personName: string | null;
+  loginModeName: string | null;
+}
+
+/** 댓글 한 줄 (GET apr/apprs/{id}/comments, AS-IS Apr42_CommentModel). commentFullStr는 HTML 머리, deleteStr은 내가 쓴 글이면 ✕ */
+export interface AprComment {
+  commentId: number;
+  personId: number;
+  comment: string;
+  commentFullStr: string;
+  fileStr: string;
+  deleteStr: string;
+}
+
+/** 댓글 창 [알림발송]이 문자 발송 창에 넘기는 값 (GET apr/apprs/{id}/comment-notice) */
+export interface AprCommentNotice {
+  personIds: number[];
+  message: string;
+}
+
+/** 오타수정 기록 — 수정자가 처음 고치기 전의 문서 내용 + 변경사유 (GET apr/apprs/{id}/typo, AS-IS Apr92_ApprModiModel) */
+export interface AprTypo {
+  apprModiId: number;
+  title: string | null;
+  content: string | null;
+  receiveName: string | null;
+  referenceName: string | null;
+  note: string | null;
+  reason: string | null;
+  signCompany: string | null;
+  signCeo: string | null;
+}
+
+/** [오타수정] 저장 (PUT apr/apprs/{id}/typo) */
+export interface AprTypoSaveReq {
+  title: string;
+  receiveName: string;
+  referenceName: string;
+  note: string;
+  signCompany: string;
+  signCeo: string;
+  content: string;
+  reason: string;
+}
+
+/** 중요표시 한 줄 (GET apr/apprs/{id}/bookmarks) — personId가 없는 줄은 "전체 중요표시" 스위치 줄 (publicYn 'true'/'false') */
+export interface AprBookmark {
+  bookmarkId: number;
+  personId: number | null;
+  personInfo: string | null;
+  publicYn: string | null;
+}
+
+/** 공람 사원 한 줄 (GET apr/apprs/{id}/person-auths) */
+export interface AprPersonAuth {
+  personAuthId: number;
+  personId: number;
+  personNo: string | null;
+  personName: string | null;
+}
+
+/** [문서폐기 신청] 확인 (GET apr/apprs/{id}/disposal-check) — ok가 false면 message를 보여 주고 멈춘다 */
+export interface AprDisposalCheck {
+  ok: boolean;
+  message: string | null;
+}
+
+/** 승인자 지정 창의 처음 값 */
+export interface AprDisposalConfirmEmp {
+  personId: number;
+  korName: string;
+}
+
+/** 연관법규 한 줄 (GET apr/apprs/{id}/relate-ics-edit, AS-IS Apr20_RelateIcsModel). relateIcsId가 없으면 아직 저장 안 한 새 줄. 날짜는 'yyyy-MM-dd' */
+export interface AprRelateIcsRow {
+  relateIcsId: number | null;
+  classTreeId: number;
+  classTreeFullName: string | null;
+  content: string | null;
+  submitTo: string | null;
+  relatedLaw: string | null;
+  deadlineId: number | null;
+  deadlineFullName: string | null;
+  deadlineNote: string | null;
+  cycleName: string | null;
+  /** 기준코드 10 결재완료일 / 20 발생일 */
+  standCode: string | null;
+  standDate: string | null;
+  closeDate: string | null;
+  standYn: string | null;
+}
+
+/** 연관법규 저장 (PUT apr/apprs/{id}/relate-ics) */
+export interface AprRelateIcsSaveReq {
+  rows: { relateIcsId: number | null; classTreeId: number; deadlineId: number | null; standCode: string | null; standDate: string | null; closeDate: string | null }[];
+  deleteIds: number[];
+}
+
+/** 결재완료후 첨부파일 한 줄 (GET apr/apprs/{id}/after-files) */
+export interface AprAfterFile {
+  fileId: number;
+  parentId: number;
+  fileName: string;
+  stampYn: boolean;
 }

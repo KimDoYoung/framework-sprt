@@ -11147,5 +11147,26 @@
     "note": "docs/work/W/W05-작업기록.md",
     "history": [],
     "id": "W05"
+  },
+  "Sms03_Lookup_SendList": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/sms/Sms03_Lookup_SendList.java": "dc87b383de35e1b67f2cffc5cd311afb4f8233c7",
+      "application/src/main/java/myApp/server/emp/Emp00_TransInfo.java": "df97d7f0f13eb8c414b2ce628d93cc02138f6963",
+      "application/src/main/java/myApp/server/emp/mapper/emp00_trans_info.xml": "76c324eda8ede6658a765beeaaebf929930afd47",
+      "application/src/main/java/myApp/server/sms/Sms03_GroupSend.java": "f51945bbaf33df13ab3bb9081a068b7780706dae"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectMulti"
+    ],
+    "recorded_at": "2026-10-31T08:43:10+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/V/V04-작업기록.md",
+    "history": [],
+    "id": "V04"
   }
 }

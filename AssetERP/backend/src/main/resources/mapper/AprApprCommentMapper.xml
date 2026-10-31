@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr41_open_history.xml selectByApprIdPaging·selectByApprIdTotal, apr42_comment.xml selectByApprId + Apr42_Comment.modelUpdate·delete (V04, Apr41_Lookup_OpenHistory·Apr42_Lookup_Comment) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprApprCommentMapper">
+
+    <!-- AS-IS apr41_open_history.selectByApprIdPaging (IDMS-IC) — SELECT *·모델 열 중 그리드가 쓰는 열만, 조건·정렬·페이징은 그대로 -->
+    <select id="selectOpenHistoryPaging" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprOpenHistoryRes">
+        SELECT apr41_open_history_id                                                    AS open_history_id
+             , TO_CHAR(apr41_open_date, 'YYYY.MM.DD HH24:MI:SS')                        AS open_date_str
+             , f_get_empTrans(apr41_person_id, apr41_open_date::date, 'org_code_nm')    AS org_name
+             , f_emp_kor_nm(apr41_person_id)                                            AS person_name
+             , f_cdnm('LoginModeCode', apr41_login_mode, 0, f_sysdate())                AS login_mode_name
+          FROM apr41_open_history
+         WHERE apr41_appr_id = #{c.apprId}
+         ORDER BY apr41_open_date DESC
+         LIMIT #{c.limit}
+        OFFSET #{c.offset}
+    </select>
+
+    <!-- AS-IS apr41_open_history.selectByApprIdTotal (IDMS-IC) -->
+    <select id="selectOpenHistoryTotal" resultType="long">
+        SELECT COUNT(*)
+          FROM apr41_open_history
+         WHERE apr41_appr_id = #{apprId}
+    </select>
+
+    <!-- AS-IS apr42_comment.selectByApprId (IDMS-IC) — SELECT *·모델 열 중 comment·commentId·personId만 더해 가져온다 -->
+    <select id="selectComments" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprCommentRes">
+        SELECT apr42_comment_id                                                         AS comment_id
+             , apr42_person_id                                                          AS person_id
+             , apr42_comment                                                            AS comment
+             , (
+                   '&lt;'||'b'||'&gt;'||
+                   f_emp_kor_nm(apr42_person_id)
+                   ||' ('||
+                   f_get_empTrans(apr42_person_id, apr42_date::date, 'org_code_nm')
+                   ||' '||
+                   f_get_empTrans(apr42_person_id, apr42_date::date, 'pos_nm')
+                   ||') '||
+                   '&lt;'||'/b'||'&gt;'||
+                   TO_CHAR(apr42_date,'YY.MM.DD')
+                   ||' '||
+                   apr42_time
+               )                                                                        AS comment_full_str
+             , (
+                   SELECT '파일('||COUNT(sys10_file_id)||')'
+                     FROM sys10_file
+                    WHERE sys10_parent_id = apr42_comment_id
+               )                                                                        AS file_str
+             , (
+                   CASE WHEN apr42_person_id = #{personId}
+                        THEN '✕'
+                        ELSE ''
+                        END
+               )                                                                        AS delete_str
+          FROM apr42_comment
+         WHERE apr42_appr_id = #{apprId}
+           AND apr42_company_id = #{companyId}
+         ORDER BY apr42_date, apr42_time
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Apr42_Comment.modelUpdate L50-77 — 등록일 = 지금, 등록시간 = HH:mm:ss -->
+    <insert id="insertComment">
+        INSERT INTO apr42_comment (apr42_comment_id, apr42_company_id, apr42_person_id, apr42_appr_id, apr42_date, apr42_time, apr42_comment)
+        VALUES (#{commentId}, #{companyId}, #{personId}, #{apprId}, f_sysdate(), TO_CHAR(f_sysdate(), 'HH24:MI:SS'), #{comment})
+    </insert>
+
+    <select id="selectCommentById" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprCommentRes">
+        SELECT apr42_comment_id   AS comment_id
+             , apr42_person_id    AS person_id
+             , apr42_comment      AS comment
+             , NULL               AS comment_full_str
+             , NULL               AS file_str
+             , NULL               AS delete_str
+          FROM apr42_comment
+         WHERE apr42_comment_id = #{commentId}
+           AND apr42_appr_id = #{apprId}
+           AND apr42_company_id = #{companyId}
+    </select>
+
+    <delete id="deleteComment">
+        DELETE FROM apr42_comment
+         WHERE apr42_comment_id = #{commentId}
+           AND apr42_company_id = #{companyId}
+    </delete>
+</mapper>

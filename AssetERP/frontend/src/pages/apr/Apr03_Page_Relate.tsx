@@ -2,21 +2,27 @@
  * 문서 상세의 오른쪽 패널 (V01) — 위 탭 7개(첨부파일·연관법규·연관내규·연관펀드·연관일임·연관문서·날인신청) + 아래 결재선 그리드
  * AS-IS: myApp/client/vi/apr/Apr03_Page_Relate.java (2181줄) + Apr01_Grid_ApprFile (861줄) + Apr16_Grid_StampDoc/StampApplList — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L210-346: [첨부파일 옵션설정][등록] 툴바 40 + 탭(가운데 위 0.5) + [결재선 설정][직급순 재정렬] 툴바 40 + 결재선 그리드(아래 0.5)
- * V01은 읽기만이다: 툴바의 네 단추는 편집 모드(상신·반려·임시저장 본인 / 관리자)에서만 켜지므로 V03에서 더한다(retrieve L925-997 editable). 연관 그리드의 삭제·설정 열은 편집 모드에서만 보인다 → 이 단계에서는 숨긴 상태
+ * V01은 읽기만이다: 툴바의 네 단추는 편집 모드(상신·반려·임시저장 본인 / 관리자)에서만 켜진다(retrieve L925-997 editable). 연관 그리드의 삭제·설정 열은 편집 모드에서만 보인다 → 연관 설정은 V05
+ * V07 편집 모드(editable): 결재선 툴바 [결재선 설정](Apr04_Edit_ApprStep)·[직급순 재정렬](arrayStepTypeCode L1920-1974)과 ▲▼(changeRow L1682-1725)를 켠다. 첨부 툴바 [첨부파일 옵션설정][등록]은 V05.
+ *   새 문서(isNew)는 아직 DB에 없으므로 서버를 읽지 않고 seed(새 문서 열기 응답)로 채운다.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { message } from 'antd';
+import { message, Modal } from 'antd';
 import type { ColDef } from 'ag-grid-community';
-import { aprDetailApi } from '@/api/apr';
+import { aprDetailApi, aprExtraApi, aprStepEditApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
 import { fileApi } from '@/api/file';
-import { AprApprDetail, AprApprFile, AprApprAdv, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw } from '@/types/apr';
+import { AprTypo, AprApprDetail, AprApprFile, AprApprAdv, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw } from '@/types/apr';
 import { FileInfo } from '@/types/sys';
 import { PageTabs } from '@/components/tabs/PageTabs';
+import { Button } from '@/components/button';
 import { SingleGrid, gbFor, iconCell } from '@/components/grid';
 import { useLoginUser } from '@/hooks/useLoginUser';
 import { Sys10_Lookup_FileViewer } from '../sys/Sys10_Lookup_FileViewer';
 import { Apr01_Edit_Message } from './Apr01_Edit_Message';
+import { Apr01_Edit_ApprModi } from './Apr01_Edit_ApprModi';
+import { Apr04_Edit_ApprStep, renumber } from './Apr04_Edit_ApprStep';
+import { Apr04_Edit_RetouchApprStep } from './Apr04_Edit_RetouchApprStep';
 
 const gbFile = gbFor<AprApprFile>();
 const gbFund = gbFor<AprApprFund>();
@@ -46,9 +52,19 @@ const boldCenter = (p: { value?: string | null }) => <span style={{ fontWeight: 
 
 interface Props {
   doc: AprApprDetail;
+  /** 편집 모드(상신·임시저장 본인) — 결재선 툴바와 ▲▼를 켠다 (V07) */
+  editable?: boolean;
+  /** 새 문서 — 서버를 읽지 않고 seed로 채운다 */
+  isNew?: boolean;
+  seed?: { steps: AprApprStep[]; ics: AprRelateLaw[]; icr: AprRelateLaw[] };
+  /** 결재선이 바뀔 때마다 (저장 때 부른 쪽이 쓴다) */
+  onStepsChange?: (steps: AprApprStep[]) => void;
+  /** 내 차례인 결재자의 [결재선 수정] (enableButton L2008-2014, V08) — 저장이 끝나면 부른 쪽이 문서를 다시 연다 */
+  canRetouch?: boolean;
+  onRetouched?: () => void;
 }
 
-export const Apr03_Page_Relate: React.FC<Props> = ({ doc }) => {
+export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNew = false, seed, onStepsChange, canRetouch = false, onRetouched }) => {
   const user = useLoginUser();
   const [files, setFiles] = useState<AprApprFile[]>([]);
   const [ics, setIcs] = useState<AprRelateLaw[]>([]);
@@ -60,13 +76,23 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc }) => {
   const [steps, setSteps] = useState<AprApprStep[]>([]);
   const [activeKey, setActiveKey] = useState('0');
   const [opinion, setOpinion] = useState<string | null>(null);
+  const [typoView, setTypoView] = useState<AprTypo | null>(null);
   const [viewFile, setViewFile] = useState<AprApprFile | null>(null);
+  const [stepEditOpen, setStepEditOpen] = useState(false);
+  const [retouchOpen, setRetouchOpen] = useState(false);
 
   // [E0] 화면 열림 (생성자 L210-346) → pannelEvents() L348-413
   // [E1] apprFileList (Apr01_Grid_ApprFile).callbackOnCreate (L135) · [E2] relateCorpDocList (Apr16_Grid_StampDoc).callbackOnCreate (L146) · [E8]~[E17] 연관 그리드 store Add/Remove → clearPanel():
   //   탭 글자의 개수·색(0보다 크면 빨강)과 처음 값이 있는 탭 열기를 모두 아래 상태(개수)에서 바로 계산한다
   // retrieve() L925-997: retrieveRelateFundGrid·AdvGrid·ApprGrid·IcsGrid·IcrGrid·ApprStepGrid + 첨부파일(setApprFileList)·날인신청(setCorpDocList)
   const retrieve = useCallback(async () => {
+    if (isNew) {
+      // 새 문서(insertApproval L4500-4518): createIcsLine·createIcrLine·createApprStepLine 결과가 seed
+      setIcs(seed?.ics ?? []); setIcr(seed?.icr ?? []); setSteps(seed?.steps ?? []);
+      const first = [0, (seed?.ics ?? []).length, (seed?.icr ?? []).length].findIndex((c, i) => i > 0 && c > 0);
+      setActiveKey(String(first < 0 ? 0 : first));
+      return;
+    }
     try {
       const id = doc.apprId;
       const [fileList, icsList, icrList, fundList, advList, apprList, stampList, stepList] = await Promise.all([
@@ -83,9 +109,53 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc }) => {
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, [doc.apprId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doc.apprId, isNew]);
 
   useEffect(() => { void retrieve(); }, [retrieve]);
+  useEffect(() => { onStepsChange?.(steps); }, [steps]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // changeRow L1682-1725 (▲▼): 상신자는 못 바꾸고, 위로는 둘째 줄까지, 아래로는 끝까지. 번호는 위에서부터 다시 매긴다
+  const changeRow = (action: 'up' | 'down', row: AprApprStep) => {
+    if (!editable) return;
+    if (row.stepTypeCode === '00') { message.warning('상신자는 수정할 수 없습니다'); return; }
+    const idx = steps.findIndex(s => s.apprStepId === row.apprStepId);
+    const next = [...steps];
+    if (action === 'down' && idx + 1 < next.length) { next.splice(idx, 1); next.splice(idx + 1, 0, row); }
+    else if (action === 'up' && idx > 1) { next.splice(idx, 1); next.splice(idx - 1, 0, row); }
+    else return;
+    setSteps(renumber(next));
+  };
+
+  // [E5][E6] reArrangeButton[직급순 재정렬] → "직급순으로 결재선을 재정렬하겠습니까?" → arrayStepTypeCode() L1920-1950 + arrayPosCode() L1952-1974:
+  //   상신자 → 결재·합의·인감 → 참조 순으로 묶고, 각 묶음을 직위 코드 900부터 1까지 큰 순으로 다시 센다(1~900 밖이거나 직위가 없는 줄은 원본도 빠진다)
+  const reArrange = () => {
+    Modal.confirm({
+      title: '확인', content: '직급순으로 결재선을 재정렬하겠습니까?', width: 400, okText: '예', cancelText: '아니오',
+      onOk: async () => {
+        try {
+          const pos = new Map((await aprStepEditApi.posCodes(steps.map(s => s.stepEmpId))).map(p => [p.personId, p.posCode ?? '']));
+          const byPos = (list: AprApprStep[]) => {
+            const out: AprApprStep[] = [];
+            for (let i = 900; i > 0; i--) list.forEach(s => { if (pos.get(s.stepEmpId) === String(i)) out.push(s); });
+            return out;
+          };
+          const g1 = steps.filter(s => s.stepTypeCode === '00');
+          const g2 = byPos(steps.filter(s => ['10', '20', '40'].includes(s.stepTypeCode)));
+          const g3 = byPos(steps.filter(s => s.stepTypeCode === '30'));
+          setSteps(renumber([...g1.slice(0, 1), ...g2, ...g3]));
+        } catch (err) {
+          message.error(errorMessage(err, '재정렬 실패'));
+        }
+      },
+    });
+  };
+
+  // [E7] apprStepLineButton[결재선 설정] (L289): 결재중 문서는 Apr04_Edit_RetouchApprStep(V08), 아니면 결재선이 만들어진 뒤 Apr04_Edit_ApprStep
+  const openStepEditor = () => {
+    if (steps.length === 0) { message.warning('결재선을 생성 중입니다. 잠시만 기다려주세요'); return; }
+    setStepEditOpen(true);
+  };
 
   // fileDownloadCheck() L839-856: 결재선에 내가 있거나 결재완료(30)가 아니면 받기 열을 숨긴다
   const canDown = useMemo(() => doc.statusCode === '30' || steps.some(s => s.apprEmpId != null && s.apprEmpId === user.userId), [doc.statusCode, steps, user.userId]);
@@ -149,9 +219,9 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc }) => {
     gbStep.text('stepStatusName', 65, '결재상태', { cellRenderer: stepStyle, cellStyle: { textAlign: 'center' } }),
     gbStep.date('apprDate', 100, '결재일'),
     // ▲▼ = changeRow("up"/"down") L1682-1725 — 결재선 수정은 V03(상신·임시저장)에서
-    { colId: 'upAction', headerName: '', width: 25, cellRenderer: () => '▲', onCellClicked: () => message.info('결재선 수정은 V03에서 연결합니다.'), cellStyle: { cursor: 'pointer', textAlign: 'center' } },
+    { colId: 'upAction', headerName: '', width: 25, cellRenderer: () => (editable ? '▲' : ''), onCellClicked: p => p.data && changeRow('up', p.data), cellStyle: { cursor: editable ? 'pointer' : 'default', textAlign: 'center' } },
     gbStep.textHtml('stepApprName', 280, '결재자'),
-    { colId: 'downAction', headerName: '', width: 25, cellRenderer: () => '▼', onCellClicked: () => message.info('결재선 수정은 V03에서 연결합니다.'), cellStyle: { cursor: 'pointer', textAlign: 'center' } },
+    { colId: 'downAction', headerName: '', width: 25, cellRenderer: () => (editable ? '▼' : ''), onCellClicked: p => p.data && changeRow('down', p.data), cellStyle: { cursor: editable ? 'pointer' : 'default', textAlign: 'center' } },
     gbStep.text('opinionYnStr', 45, ' ', { cellRenderer: boldCenter, cellStyle: { textAlign: 'center' } }),
     // opinionCell L1621-1640: 의견이 없으면 "해당 문서에 대한 의견이 없습니다", 있으면 Apr01_Edit_Message
     iconCell<AprApprStep>('view', 'opinionAction', 25, ' ', row => {
@@ -159,12 +229,14 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc }) => {
       else message.info('해당 문서에 대한 의견이 없습니다');
     }),
     gbStep.text('typoYnStr', 45, ' ', { cellRenderer: boldCenter, cellStyle: { textAlign: 'center' } }),
-    // typoCell L1641-1666: 수정사항이 없으면 "해당 문서에 대한 수정사항이 없습니다", 있으면 Apr01_Edit_ApprModi(오타수정 창) — V04
+    // typoCell L1641-1666: 수정사항이 없으면 "해당 문서에 대한 수정사항이 없습니다", 있으면 apr.Apr92_ApprModi.selectByPersonId(결재자, 문서) → Apr01_Edit_ApprModi.open(수정 전 내용) — V09
     iconCell<AprApprStep>('view', 'typoAction', 25, ' ', row => {
-      if ((row.typoYnStr ?? '').length > 1) message.info(`오타수정 내역 창: ${NEXT_V04}`);
-      else message.info('해당 문서에 대한 수정사항이 없습니다');
+      if ((row.typoYnStr ?? '').length > 1) {
+        aprExtraApi.getTypo(doc.apprId, row.apprEmpId).then(t => { if (t) setTypoView(t); }).catch(err => message.error(errorMessage(err, '조회 실패')));
+      } else message.info('해당 문서에 대한 수정사항이 없습니다');
     }),
-  ], []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [editable, steps]);
 
   const toFileInfo = (f: AprApprFile): FileInfo => ({ fileId: f.fileId, parentId: doc.apprId, fileNm: f.fileName, fileExt: f.fileExt ?? null });
 
@@ -182,6 +254,13 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc }) => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0 }}>
+      {/* 첨부 툴바(hlc01 40): [첨부파일 옵션설정][등록] — 편집 모드 전용, 첨부 등록은 V05 */}
+      {editable && (
+        <div style={{ display: 'flex', gap: 6 }}>
+          <Button type="register" onClick={() => message.info('첨부파일 옵션설정은 V05에서 연결합니다.')}>첨부파일 옵션설정</Button>
+          <Button type="register" onClick={() => message.info('첨부파일 등록은 V05에서 연결합니다.')}>등록</Button>
+        </div>
+      )}
       {/* plainTabPanel (가운데 위 0.5) */}
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <PageTabs
@@ -192,6 +271,19 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc }) => {
           size="small"
         />
       </div>
+      {/* [결재선 수정] — 결재중 문서에서 내 차례인 결재자(합의 제외)에게만 켜진다. [직급순 재정렬]은 편집 모드가 아니라 꺼진 채 */}
+      {!editable && canRetouch && (
+        <div style={{ display: 'flex', gap: 6 }}>
+          <Button type="register" onClick={() => setRetouchOpen(true)}>결재선 수정</Button>
+        </div>
+      )}
+      {/* 결재선 툴바(hlc02 40): [결재선 설정][직급순 재정렬] — 편집 모드 전용 */}
+      {editable && (
+        <div style={{ display: 'flex', gap: 6 }}>
+          <Button type="register" onClick={openStepEditor}>결재선 설정</Button>
+          <Button type="register" onClick={reArrange}>직급순 재정렬</Button>
+        </div>
+      )}
       {/* apprStepGrid (아래 0.5) */}
       <div style={{ flex: 1, minHeight: 0 }}>
         <SingleGrid<AprApprStep>
@@ -201,7 +293,10 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc }) => {
           getRowHeight={p => ((p.data?.stepApprName ?? '').includes('<br>') ? 56 : undefined)}
         />
       </div>
+      <Apr04_Edit_ApprStep open={stepEditOpen} steps={steps} onConfirm={setSteps} onClose={() => setStepEditOpen(false)} />
+      <Apr04_Edit_RetouchApprStep open={retouchOpen} apprId={doc.apprId} steps={steps} onSaved={() => onRetouched?.()} onClose={() => setRetouchOpen(false)} />
       <Apr01_Edit_Message message={opinion} onClose={() => setOpinion(null)} />
+      <Apr01_Edit_ApprModi typo={typoView} onClose={() => setTypoView(null)} />
       <Sys10_Lookup_FileViewer file={viewFile ? toFileInfo(viewFile) : null} onClose={() => setViewFile(null)} />
     </div>
   );

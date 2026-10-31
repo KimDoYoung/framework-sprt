@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr92_appr_modi.xml · apr50_bookmark.xml · apr13_person_auth.xml · apr90_disposal_list.xml + UpdateDataModel (V09, Apr01_Edit_ApprModi·Apr50_Lookup_PersonList·Apr13_Lookup_PersonAuth·Apr90_Lookup_DisposalList) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprApprExtraMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS apr92_appr_modi.selectByPersonId (IDMS-IC) — SELECT *·창이 보여 주는 열만 -->
+    <select id="selectTypo" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprTypoRes">
+        SELECT apr92_appr_modi_id     AS appr_modi_id
+             , apr92_title            AS title
+             , apr92_content          AS content
+             , apr92_receive_nm       AS receive_name
+             , apr92_reference_nm     AS reference_name
+             , apr92_note             AS note
+             , apr92_reason           AS reason
+             , apr92_sign_company     AS sign_company
+             , apr92_sign_ceo         AS sign_ceo
+          FROM apr92_appr_modi
+         WHERE 1=1
+           AND apr92_appr_id = #{apprId}
+           AND apr92_reg_emp_id = #{personId}
+         ORDER BY apr92_reg_date
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS apr92_appr_modi.insert (IDMS-IC) — INSERT … SELECT 위치 열을 열 이름으로 풀어 씀 -->
+    <insert id="insertTypoSnapshot">
+        INSERT INTO apr92_appr_modi (apr92_appr_modi_id, apr92_appr_id, apr92_company_id, apr92_reg_date, apr92_reg_emp_id, apr92_title, apr92_content,
+                                     apr92_receive_nm, apr92_reference_nm, apr92_note, apr92_reason, apr92_sign_company, apr92_sign_ceo, apr92_stamp_position, apr92_link_cd)
+        SELECT #{apprModiId}
+             , apr01_appr_id
+             , apr01_company_id
+             , f_sysdate()
+             , #{regEmpId}
+             , apr01_title
+             , apr01_content
+             , apr01_receive_nm
+             , apr01_reference_nm
+             , apr01_note
+             , #{reason}
+             , apr01_sign_company
+             , apr01_sign_ceo
+             , apr01_stamp_position
+             , apr01_link_cd
+          FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+    </insert>
+
+    <!-- AS-IS apr92_appr_modi.updateReason (IDMS-IC) -->
+    <update id="updateTypoReason">
+        UPDATE apr92_appr_modi
+           SET apr92_reason = #{reason}
+             , apr92_reg_date = f_sysdate()
+         WHERE apr92_appr_modi_id = #{apprModiId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel(apr01_appr) 동적 UPDATE — 이 창이 바꾸는 열만 (yunhee port-save apr01_appr) -->
+    <update id="updateApprTypo">
+        UPDATE apr01_appr
+           SET apr01_title        = #{r.title}
+             , apr01_receive_nm   = #{r.receiveName}
+             , apr01_reference_nm = #{r.referenceName}
+             , apr01_note         = #{r.note}
+             , apr01_sign_company = #{r.signCompany}
+             , apr01_sign_ceo     = #{r.signCeo}
+             , apr01_content      = #{content}
+         WHERE apr01_appr_id    = #{apprId}
+           AND apr01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS apr50_bookmark.selectByApprId (IDMS-IC) — SELECT bookmark.*·결재 문서 열은 이 창이 안 보여서 뺐다, 조건·정렬은 그대로 -->
+    <select id="selectBookmarks" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprBookmarkRes">
+        SELECT apr50_bookmark_id    AS bookmark_id
+             , apr50_person_id      AS person_id
+             , (
+                   f_emp_kor_nm(apr50_person_id)
+                   ||' ('
+                   ||f_get_emptrans(apr50_person_id, f_sysdate()::date, 'org_code_nm')
+                   ||')'
+               )                    AS person_info
+             , apr50_public_yn      AS public_yn
+          FROM apr50_bookmark
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = apr50_appr_id
+         WHERE apr50_company_id = #{companyId}
+           AND apr50_appr_id = #{apprId}
+         ORDER BY apr50_person_id
+    </select>
+
+    <!-- AS-IS apr50_bookmark.insertCheck (IDMS-IC) -->
+    <select id="countBookmarkAllRow" resultType="int">
+        SELECT COUNT(*)
+          FROM apr50_bookmark
+         WHERE apr50_appr_id = #{apprId}
+           AND apr50_person_id IS NULL
+    </select>
+
+    <!-- AS-IS apr50_bookmark.insert (IDMS-IC) -->
+    <insert id="insertBookmarkAllRow">
+        INSERT INTO apr50_bookmark (apr50_bookmark_id, apr50_company_id, apr50_person_id, apr50_appr_id, apr50_public_yn)
+        VALUES (#{bookmarkId}, #{companyId}, NULL, #{apprId}, #{publicYn})
+    </insert>
+
+    <!-- AS-IS apr50_bookmark.updatePublicYn (IDMS-IC) -->
+    <update id="updateBookmarkAllRow">
+        UPDATE apr50_bookmark
+           SET apr50_public_yn = #{publicYn}
+         WHERE apr50_appr_id = #{apprId}
+           AND apr50_person_id IS NULL
+    </update>
+
+    <!-- AS-IS apr50_bookmark.deleteByApprId (IDMS-IC) -->
+    <delete id="deleteBookmarksByApprId">
+        DELETE
+          FROM apr50_bookmark
+         WHERE apr50_company_id = #{companyId}
+           AND apr50_appr_id = #{apprId}
+    </delete>
+
+    <!-- AS-IS UpdateDataModel(apr50_bookmark) INSERT — 사원 줄은 전체공유여부가 비어 있다 -->
+    <insert id="insertBookmarkPerson">
+        INSERT INTO apr50_bookmark (apr50_bookmark_id, apr50_company_id, apr50_person_id, apr50_appr_id)
+        VALUES (#{bookmarkId}, #{companyId}, #{personId}, #{apprId})
+    </insert>
+
+    <delete id="deleteBookmarks">
+        DELETE FROM apr50_bookmark
+         WHERE apr50_company_id = #{companyId}
+           AND apr50_appr_id = #{apprId}
+           AND apr50_bookmark_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS apr13_person_auth.selectByApprId (IDMS-IC) — SELECT *·그리드가 쓰는 열만 -->
+    <select id="selectPersonAuths" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprPersonAuthRes">
+        SELECT apr13_person_auth_id AS person_auth_id
+             , apr13_person_id      AS person_id
+             , emp01_emp_no         AS person_no
+             , emp01_kor_nm         AS person_name
+          FROM apr13_person_auth
+               INNER JOIN emp01_person ON emp01_person_id = apr13_person_id
+         WHERE 1=1
+           AND apr13_appr_id = #{apprId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(apr13_person_auth) INSERT -->
+    <insert id="insertPersonAuth">
+        INSERT INTO apr13_person_auth (apr13_person_auth_id, apr13_person_id, apr13_appr_id)
+        VALUES (#{personAuthId}, #{personId}, #{apprId})
+    </insert>
+
+    <delete id="deletePersonAuths">
+        DELETE FROM apr13_person_auth
+         WHERE apr13_appr_id = #{apprId}
+           AND apr13_person_auth_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS apr90_disposal_list.checkDisposal (IDMS-IC) -->
+    <select id="countDisposal" resultType="int">
+        SELECT COUNT(*)
+          FROM apr90_disposal_list
+         WHERE 1=1
+           AND apr90_appr_id = #{apprId}
+           AND apr90_disposal_cd IN ('10','20')
+    </select>
+
+    <!-- AS-IS pay50_expense.selectByExpenseApprId (IDMS-IC) -->
+    <select id="countSettledExpense" resultType="int">
+        SELECT COUNT(*)
+          FROM pay50_expense
+         WHERE pay50_expense_appr_id = #{apprId}
+           AND pay50_settle_emp_id IS NOT NULL
+    </select>
+
+    <!-- AS-IS com01_relate_appr.checkUseRelateApprId (IDMS-IC) = SELECT f_check_use_relate_appr_id(:apprId). 로컬 asseterpdb에 이 함수가 없어(03 원칙 1, 본문을 알 수 없다)
+         증빙자료 연결 표(com01_relate_appr)에 이 문서가 걸린 횟수로 대신한다 — 작업방법 "SQL 이식", 원본 이상한점 #29 -->
+    <select id="countRelateUse" resultType="int">
+        SELECT COUNT(*)
+          FROM com01_relate_appr
+         WHERE com01_appr_id = #{apprId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(apr90_disposal_list) INSERT — 폐기구분 10(신청), 신청일 = 오늘 -->
+    <insert id="insertDisposal">
+        INSERT INTO apr90_disposal_list (apr90_disposal_list_id, apr90_company_id, apr90_reg_emp_id, apr90_reg_date, apr90_reason, apr90_confirm_emp_id, apr90_appr_id, apr90_disposal_cd)
+        VALUES (#{disposalListId}, #{companyId}, #{regEmpId}, f_sysdate()::date, #{reason}, #{confirmEmpId}, #{apprId}, '10')
+    </insert>
+</mapper>

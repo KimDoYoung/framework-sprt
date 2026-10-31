@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/emp/mapper/emp00_trans_info.xml selectByText·selectByOrgCodeId·getTransDate·getOrgCodeId (Apr04_Edit_ApprStep이 부르는 사원 조회 넷) — V07 결재선 설정 창.
+     emp00 CTE는 AprApprNewMapper.emp00Cte를 같이 쓴다 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprStepEditMapper">
+
+    <sql id="empColumns">
+          emp00_person_id                                                                              AS person_id
+        , emp00_org_code_id                                                                            AS org_code_id
+        , ( SELECT i.org02_kor_nm
+              FROM org02_info i
+             WHERE i.org02_code_id = emp00_org_code_id
+               AND i.org02_mod_date = ( SELECT MAX(y.org02_mod_date)
+                                          FROM org02_info y
+                                         WHERE y.org02_code_id = i.org02_code_id
+                                           AND y.org02_mod_date &lt;= emp00_date ) )                      AS org_kor_name
+        , f_cdnm('EmpTitleCode', emp00_title_cd, emp00_company_id, emp00_date)                         AS title_name
+        , CASE WHEN COALESCE(emp00_grade_cd, '00') = '00'
+               THEN f_cdnm('EmpTitleCode', emp00_title_cd, emp00_company_id, emp00_date)
+               ELSE f_cdnm('EmpGradeCode', emp00_grade_cd, emp00_company_id, emp00_date) END           AS title_name2
+        , emp00_kor_nm                                                                                 AS emp_kor_name
+    </sql>
+
+    <select id="selectEmps" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStepEmpRes">
+        WITH RECURSIVE org_down(org_code_id, depth) AS (
+            SELECT CAST(#{orgCodeId} AS NUMERIC), 0
+            UNION ALL
+            SELECT b.org02_code_id, d.depth + 1
+              FROM org_down d
+                   INNER JOIN org02_info b ON b.org02_parent_code_id = d.org_code_id
+             WHERE d.depth &lt; 20
+               AND b.org02_mod_date = ( SELECT MAX(x.org02_mod_date) FROM org02_info x
+                                         WHERE x.org02_code_id = b.org02_code_id AND x.org02_mod_date &lt;= f_sysdate() )
+        ), <include refid="kr.co.kfs.asseterp.biz.apr.mapper.AprApprNewMapper.emp00Cte"/>
+        SELECT <include refid="empColumns"/>
+          FROM emp00
+         WHERE 1 = 1
+        <choose>
+            <when test="mode == 'text'">
+           AND emp00_trans_cd &lt;= '899'
+           AND ( emp00_kor_nm
+                 || COALESCE(( SELECT i.org02_kor_nm FROM org02_info i
+                                WHERE i.org02_code_id = emp00_org_code_id
+                                  AND i.org02_mod_date = ( SELECT MAX(y.org02_mod_date) FROM org02_info y
+                                                            WHERE y.org02_code_id = i.org02_code_id AND y.org02_mod_date &lt;= emp00_date ) ), '')
+                 || COALESCE(emp00_emp_no, '')
+                 || COALESCE(f_cdnm('EmpTitleCode', emp00_title_cd, emp00_company_id, emp00_date), '') ) LIKE '%' || #{searchText} || '%'
+           AND NOT EXISTS ( SELECT 1 FROM emp04_add_title
+                             WHERE emp04_add_person_id = emp00_person_id
+                               AND ( emp04_start_date &gt; f_today() OR COALESCE(emp04_close_date, '9999-12-31') &lt; f_today() ) )
+            </when>
+            <when test="mode == 'org'">
+           AND emp00_org_code_id = #{orgCodeId}
+           AND f_today() BETWEEN emp00_date AND COALESCE(emp00_close_date, f_today())
+           AND NOT EXISTS ( SELECT 1 FROM emp04_add_title
+                             WHERE emp04_add_person_id = emp00_person_id
+                               AND ( emp04_start_date &gt; f_today() OR COALESCE(emp04_close_date, '9999-12-31') &lt; f_today() ) )
+            </when>
+            <when test="mode == 'orgDown'">
+           AND emp00_trans_cd &lt;= '799'
+            <choose>
+                <when test="includeYn">AND emp00_org_code_id IN (SELECT org_code_id FROM org_down)</when>
+                <otherwise>AND emp00_org_code_id = #{orgCodeId}</otherwise>
+            </choose>
+            </when>
+            <otherwise>
+           AND emp00_trans_cd &lt;= '799'
+            </otherwise>
+        </choose>
+         ORDER BY ( SELECT org01_org_cd FROM org01_code WHERE org01_code_id = emp00_org_code_id )
+                , emp00_title_cd, emp00_pos_cd, emp00_order_seq
+    </select>
+
+    <select id="selectPosCodes" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStepPosRes">
+        WITH <include refid="kr.co.kfs.asseterp.biz.apr.mapper.AprApprNewMapper.emp00Cte"/>
+        SELECT emp00_person_id AS person_id, emp00_pos_cd AS pos_code
+          FROM emp00
+         WHERE emp00_person_id IN
+        <foreach collection="personIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <!-- AS-IS apr01_appr.selectByWeek — 최근 7일에 결재(20)·반려(30)가 있는 내 문서. 제목 검색어는 원본도 쓰지 않는다(주석 처리됨). 결재선 줄마다 한 줄씩 나온다(원본 그대로, DISTINCT 없음) -->
+    <select id="selectRecentByWeek" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRecentDocRes">
+        <![CDATA[
+        SELECT a.apr01_appr_id                                           AS appr_id
+             , f_cdnm('AprStatusCode', a.apr01_status_cd, #{companyId}, a.apr01_reg_date) AS status_name
+             , a.apr01_reg_date                                          AS reg_date
+             , CAST(NULL AS varchar)                                     AS class_tree_name_allpath
+             , a.apr01_title                                             AS title
+          FROM apr01_appr a
+               INNER JOIN apr04_appr_step b ON a.apr01_appr_id = b.apr04_appr_id
+         WHERE a.apr01_status_cd NOT IN ('99')
+           AND b.apr04_step_status_cd IN ('20','30')
+           AND f_trunc(apr04_appr_date) BETWEEN f_add_day(#{toDay}, -7) AND #{toDay}
+           AND a.apr01_reg_emp_id = #{personId}
+         ORDER BY a.apr01_reg_date DESC, a.apr01_appr_id DESC
+        ]]>
+    </select>
+
+    <!-- AS-IS apr01_appr.selectByDcrGroup — 문서분류마다 가장 최근 내 문서 한 건 -->
+    <select id="selectRecentByGroup" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRecentDocRes">
+        <![CDATA[
+        SELECT a.apr01_appr_id                                           AS appr_id
+             , f_cdnm('AprStatusCode', a.apr01_status_cd, #{companyId}, a.apr01_reg_date) AS status_name
+             , a.apr01_reg_date                                          AS reg_date
+             , c.dcr01_class_tree_nm                                     AS class_tree_name_allpath
+             , a.apr01_title                                             AS title
+          FROM ( SELECT a.*
+                      , ROW_NUMBER() OVER (PARTITION BY a.apr01_class_tree_id ORDER BY apr01_reg_date DESC) AS rn
+                   FROM apr01_appr a
+                        INNER JOIN apr04_appr_step b ON a.apr01_appr_id = b.apr04_appr_id
+                  WHERE a.apr01_status_cd NOT IN ('99')
+                    AND b.apr04_step_status_cd IN ('20','30')
+                    AND a.apr01_reg_emp_id = #{personId}
+                    AND a.apr01_title LIKE #{searchText} ) a
+               INNER JOIN dcr01_class_tree c ON a.apr01_class_tree_id = c.dcr01_class_tree_id
+         WHERE a.rn = 1
+         ORDER BY a.apr01_reg_date DESC, a.apr01_appr_id DESC
+        ]]>
+    </select>
+
+    <!-- AS-IS apr04_appr_step.getApprStepList — 불러올 문서의 결재선 (LPAD(seq,4,'0') 순) -->
+    <select id="selectStepList" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprRetouchStepRow">
+        SELECT apr04_appr_step_id    AS appr_step_id
+             , apr04_seq             AS seq
+             , apr04_step_type_cd    AS step_type_code
+             , apr04_step_status_cd  AS step_status_code
+             , apr04_step_emp_id     AS step_emp_id
+             , apr04_lock_yn         AS lock_yn
+             , apr04_add_emp_id      AS add_emp_id
+             , apr04_appr_date       AS appr_date
+          FROM apr04_appr_step
+         WHERE apr04_appr_id = #{apprId}
+         ORDER BY LPAD(apr04_seq, 4, '0')
+    </select>
+
+    <!-- AS-IS UpdateDataModel(apr04_appr_step) 변경 — 결재선 수정 창이 바꾸는 열은 순번뿐이다 -->
+    <update id="updateStepSeq">
+        UPDATE apr04_appr_step SET apr04_seq = #{seq}
+         WHERE apr04_appr_step_id = #{apprStepId} AND apr04_appr_id = #{apprId}
+    </update>
+
+    <!-- AS-IS UpdateDataModel.deleteModel(apr04_appr_step) -->
+    <delete id="deleteStep">
+        DELETE FROM apr04_appr_step WHERE apr04_appr_step_id = #{apprStepId} AND apr04_appr_id = #{apprId}
+    </delete>
+
+</mapper>

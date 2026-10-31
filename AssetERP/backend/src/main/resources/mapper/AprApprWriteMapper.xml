@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr01_appr.xml getDcrIdWord L2511·selectById L107, apr04_appr_step.xml deleteByApprId, emp60_sign.xml getSignId, apr03_relate_fund.xml deleteByApprId, sys10_file.xml deleteCheck
+     + UpdateDataModel(apr01_appr·apr04_appr_step) (결과 map apr01_appr.mapper의 열 중 화면이 바꾸는 것만) — V03 상신·임시저장 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprApprWriteMapper">
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="selectBrief" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprApprBrief">
+        SELECT a.apr01_appr_id        AS appr_id
+             , a.apr01_reg_emp_id     AS reg_emp_id
+             , a.apr01_status_cd      AS status_code
+             , a.apr01_class_tree_id  AS class_tree_id
+             , c.dcr01_advert_yn      AS advert_yn
+          FROM apr01_appr a
+               LEFT JOIN dcr01_class_tree c ON c.dcr01_class_tree_id = a.apr01_class_tree_id
+         WHERE a.apr01_appr_id    = #{apprId}
+           AND a.apr01_company_id = #{companyId}
+    </select>
+
+    <select id="selectAdvertYn" resultType="string">
+        SELECT dcr01_advert_yn FROM dcr01_class_tree WHERE dcr01_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- AS-IS apr01_appr.getDcrIdWord -->
+    <select id="selectDcrIdWord" resultType="string">
+        <![CDATA[
+        SELECT COALESCE(org02_dcr_id_word, null)
+          FROM org02_info
+               INNER JOIN org01_code ON org01_code_id = org02_code_id
+               INNER JOIN sys01_company ON sys01_company_id = org01_company_id
+         WHERE org02_code_id = CAST(f_get_emptrans(#{regEmpId}, CAST(#{regDate} AS date), 'org_code_id') AS NUMERIC)
+           AND sys01_company_id = #{companyId}
+           AND sys01_dcr_numbering_cd = '2'
+           AND org02_mod_date = ( SELECT MAX(x.org02_mod_date)
+                                    FROM org02_info x
+                                   WHERE x.org02_code_id = CAST(f_get_emptrans(#{regEmpId}, CAST(#{regDate} AS date), 'org_code_id') AS NUMERIC)
+                                     AND x.org02_mod_date <= #{regDate} )
+        ]]>
+    </select>
+
+    <insert id="insertAppr">
+        INSERT INTO apr01_appr
+             ( apr01_appr_id, apr01_company_id, apr01_reg_emp_id, apr01_class_tree_id, apr01_link_cd
+             , apr01_title, apr01_content, apr01_note, apr01_status_cd, apr01_effect_date, apr01_reg_date
+             , apr01_stamp_id, apr01_receive_nm, apr01_reference_nm, apr01_stamp_seq, apr01_inout_cd
+             , apr01_form_type, apr01_dcr_id_word, apr01_stamp_position, apr01_sign_company, apr01_sign_ceo )
+        VALUES
+             ( #{apprId}, #{companyId}, #{regEmpId}, #{req.classTreeId}, #{req.linkCode}
+             , #{req.title}, #{req.content}, #{req.note}, #{statusCode}, #{req.effectDate}, #{req.regDate}
+             , #{req.stampId}, #{req.receiveName}, #{req.referenceName}, #{stampSeq}, #{req.inOutTypeCode}
+             , #{req.formType}, #{dcrIdWord}, #{req.stampPosition}, #{req.signCompany}, #{req.signCeo} )
+    </insert>
+
+    <!-- 문서번호 식별단어는 대외문서(10)일 때만 다시 구한다(AS-IS update L390-392), 인감대장번호는 새로 구했을 때만 바꾼다 -->
+    <update id="updateAppr">
+        UPDATE apr01_appr
+           SET apr01_title          = #{req.title}
+             , apr01_content        = #{req.content}
+             , apr01_note           = #{req.note}
+             , apr01_status_cd      = #{statusCode}
+             , apr01_effect_date    = #{req.effectDate}
+             , apr01_reg_date       = #{req.regDate}
+             , apr01_stamp_id       = #{req.stampId}
+             , apr01_receive_nm     = #{req.receiveName}
+             , apr01_reference_nm   = #{req.referenceName}
+             , apr01_inout_cd       = #{req.inOutTypeCode}
+             , apr01_form_type      = #{req.formType}
+             , apr01_stamp_position = #{req.stampPosition}
+             , apr01_sign_company   = #{req.signCompany}
+             , apr01_sign_ceo       = #{req.signCeo}
+            <if test="req.inOutTypeCode == '10'">
+             , apr01_dcr_id_word    = #{dcrIdWord}
+            </if>
+            <if test="stampSeq != null">
+             , apr01_stamp_seq      = #{stampSeq}
+            </if>
+         WHERE apr01_appr_id    = #{apprId}
+           AND apr01_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteStepsByApprId">
+        DELETE FROM apr04_appr_step WHERE apr04_appr_id = #{apprId}
+    </delete>
+
+    <!-- AS-IS emp60_sign.getSignId -->
+    <select id="selectSignId" resultType="long">
+        SELECT emp60_sign_id
+          FROM emp60_sign
+         WHERE emp60_person_id = #{personId}
+           AND COALESCE(emp60_use_yn, 'false') = 'true'
+         LIMIT 1
+    </select>
+
+    <insert id="insertStep">
+        INSERT INTO apr04_appr_step
+             ( apr04_appr_step_id, apr04_appr_id, apr04_step_type_cd, apr04_seq, apr04_step_status_cd, apr04_step_emp_id
+             , apr04_appr_emp_id, apr04_appr_date, apr04_note, apr04_lock_yn, apr04_add_emp_id, apr04_sign_id )
+        VALUES
+             ( #{apprStepId}, #{apprId}, #{stepTypeCode}, #{seq}, #{stepStatusCode}, #{stepEmpId}
+             , #{apprEmpId}, #{apprDate}, #{note}, #{lockYn}, #{addEmpId}, #{signId} )
+    </insert>
+
+    <delete id="deleteRelateFundsByApprId">
+        DELETE FROM apr03_relate_fund WHERE apr03_appr_id = #{apprId}
+    </delete>
+
+    <select id="countFilesByParentId" resultType="int">
+        SELECT COUNT(*) FROM sys10_file WHERE sys10_parent_id = #{parentId}
+    </select>
+
+
+    <!-- AS-IS sys10_file.deleteCheck (IDMS-IC) — 실제 파일 위치만 -->
+    <select id="selectFilesForDelete" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprFileDelRow">
+        SELECT sys10_file_id     AS file_id
+             , sys10_server_path AS server_path
+          FROM sys10_file
+         WHERE sys10_parent_id = #{parentId}
+    </select>
+
+    <!-- AS-IS sys10_file.deleteByParentId (IDMS-IC) -->
+    <delete id="deleteFilesByParentId">
+        DELETE FROM sys10_file
+         WHERE sys10_parent_id = #{parentId}
+    </delete>
+</mapper>

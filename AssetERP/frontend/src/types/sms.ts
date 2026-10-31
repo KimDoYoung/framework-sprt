@@ -69,3 +69,12 @@ export interface GroupSendTarget {
   korName: string | null;
   mobileTelNo: string | null;
 }
+
+/** 문자 발송 창 목록 한 줄 (GET sms/send-list/targets, AS-IS Emp00_TransInfoModel) */
+export interface SmsSendTarget {
+  personId: number;
+  orgTitleName: string | null;
+  titleName: string | null;
+  empNo: string | null;
+  empKorName: string | null;
+}

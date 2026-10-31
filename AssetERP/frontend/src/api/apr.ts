@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprApprAdv, AprApprDetail, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
+import { AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprDetail, AprAfterFile, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcsRow, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -553,5 +553,209 @@ export const aprActionApi = {
   cancelRequest: async (apprId: number, confirmed: boolean): Promise<AprApprActionRes> => {
     const res = await apiClient.post<ApiResponse<AprApprActionRes>>(`v1/apr/apprs/${apprId}/cancel-request`, { confirmed });
     return res.data.data;
+  },
+};
+
+/** 전자결재 새 문서·상신·임시저장 (AS-IS client/vi/apr/Apr01_Edit_ApprDoc.insertApproval·save·update·deleteChk01, V03·V06) */
+export const aprWriteApi = {
+  /** AS-IS insertApproval: 문서 번호·기본 제목/본문·기본 결재선·연관법규/내규 (DB는 안 바뀐다) */
+  openNew: async (classTreeId: number): Promise<AprApprNew> => {
+    const res = await apiClient.get<ApiResponse<AprApprNew>>('v1/apr/apprs/new', { params: { classTreeId } });
+    return res.data.data;
+  },
+
+  /** AS-IS apr.Apr01_Appr.update: mode 'save'(임시저장) | 'request'(결재요청) */
+  save: async (apprId: number, req: AprApprSaveReq): Promise<AprApprWriteRes> => {
+    const res = await apiClient.put<ApiResponse<AprApprWriteRes>>(`v1/apr/apprs/${apprId}`, req);
+    return res.data.data;
+  },
+
+  /** AS-IS deleteChk01 → apr.Apr01_Appr.deleteByApprId (임시저장 문서) */
+  remove: async (apprId: number): Promise<AprApprWriteRes> => {
+    const res = await apiClient.delete<ApiResponse<AprApprWriteRes>>(`v1/apr/apprs/${apprId}`);
+    return res.data.data;
+  },
+};
+
+/** 결재선 설정 창 (AS-IS client/vi/apr/Apr04_Edit_ApprStep, V07) */
+export const aprStepEditApi = {
+  /** mode: text(selectByText) | org(selectByOrgCodeId) | all(getTransDate) | orgDown(getOrgCodeId, includeYn이면 하위 조직까지) */
+  emps: async (mode: 'text' | 'org' | 'all' | 'orgDown', params: { searchText?: string; orgCodeId?: number; includeYn?: boolean } = {}): Promise<AprStepEmp[]> => {
+    const res = await apiClient.get<ApiResponse<AprStepEmp[]>>('v1/apr/step-lines/emps', { params: { mode, ...params } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS insertApprovalEmp: 고른 사원으로 결재선 줄 만들기 (stepTypeCode 10 결재·20 합의·30 참조) */
+  lines: async (stepTypeCode: string, persons: { personId: number; orgCodeId: number }[]): Promise<AprNewStep[]> => {
+    const res = await apiClient.post<ApiResponse<AprNewStep[]>>('v1/apr/step-lines/lines', { stepTypeCode, persons });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS arrayPosCode: 직급순 재정렬용 직위 코드 */
+  posCodes: async (personIds: number[]): Promise<{ personId: number; posCode?: string | null }[]> => {
+    const res = await apiClient.post<ApiResponse<{ personId: number; posCode?: string | null }[]>>('v1/apr/step-lines/pos-codes', personIds);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apprStepLockYnChk: 회사가 결재선을 잠그면 [불러오기]를 숨긴다 */
+  locked: async (): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/apr/step-lines/lock');
+    return res.data.data;
+  },
+
+  /** AS-IS apr.Apr01_Appr.selectByWeek(week) · selectByDcrGroup(group): 최근결재선 불러오기 창의 내 상신 문서 */
+  recentDocs: async (mode: 'week' | 'group', searchText = ''): Promise<AprRecentDoc[]> => {
+    const res = await apiClient.get<ApiResponse<AprRecentDoc[]>>('v1/apr/step-lines/recent-docs', { params: { mode, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS getApprStepList + recentLoad: 고른 문서의 결재선(상신자 제외)을 지금 재직 정보로 다시 만든 줄 */
+  recentLines: async (apprId: number): Promise<AprNewStep[]> => {
+    const res = await apiClient.get<ApiResponse<AprNewStep[]>>(`v1/apr/step-lines/recent-docs/${apprId}/lines`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr04_ApprStep.updateList: 결재중 문서의 결재선 수정 (steps = 창에 남은 전체, deleteStepIds = 지운 기존 줄) */
+  retouch: async (apprId: number, steps: AprApprSaveStep[], deleteStepIds: number[]): Promise<AprApprWriteRes> => {
+    const res = await apiClient.put<ApiResponse<AprApprWriteRes>>(`v1/apr/step-lines/apprs/${apprId}`, { steps, deleteStepIds });
+    return res.data.data;
+  },
+};
+
+/** 전자결재 문서창의 [열람기록]·[댓글] (AS-IS client/vi/apr/Apr41_Lookup_OpenHistory · Apr42_Lookup_Comment, V04) */
+export const aprCommentApi = {
+  /** AS-IS apr.Apr41_OpenHistory.selectByApprIdPaging(+Total) */
+  searchOpenHistories: async (apprId: number, offset: number, limit: number): Promise<PageRes<AprOpenHistory>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<AprOpenHistory>>>(`v1/apr/apprs/${apprId}/open-histories`, { params: { offset, limit } });
+    return res.data.data;
+  },
+
+  /** AS-IS apr.Apr42_Comment.selectByApprId */
+  searchComments: async (apprId: number): Promise<AprComment[]> => {
+    const res = await apiClient.get<ApiResponse<AprComment[]>>(`v1/apr/apprs/${apprId}/comments`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr42_Comment.modelUpdate */
+  createComment: async (apprId: number, comment: string): Promise<void> => {
+    await apiClient.post(`v1/apr/apprs/${apprId}/comments`, { comment });
+  },
+
+  /** AS-IS apr.Apr42_Comment.delete (작성자만) */
+  deleteComment: async (apprId: number, commentId: number): Promise<void> => {
+    await apiClient.delete(`v1/apr/apprs/${apprId}/comments/${commentId}`);
+  },
+
+  /** AS-IS Apr42_Lookup_Comment [알림발송]: 결재선 사원 + 문구 */
+  getNotice: async (apprId: number): Promise<AprCommentNotice> => {
+    const res = await apiClient.get<ApiResponse<AprCommentNotice>>(`v1/apr/apprs/${apprId}/comment-notice`);
+    return res.data.data;
+  },
+};
+
+/** 전자결재 문서창의 [오타수정]·[중요표시]·[공람설정]·[문서폐기 신청] (AS-IS client/vi/apr/Apr01_Edit_ApprModi · Apr50_Lookup_PersonList · Apr13_Lookup_PersonAuth · Apr90_Lookup_DisposalList, V09) */
+export const aprExtraApi = {
+  /** AS-IS apr.Apr92_ApprModi.selectByPersonId (personId 없으면 로그인 사원). 기록이 없으면 null */
+  getTypo: async (apprId: number, personId?: number | null): Promise<AprTypo | null> => {
+    const res = await apiClient.get<ApiResponse<AprTypo | null>>(`v1/apr/apprs/${apprId}/typo`, { params: personId != null ? { personId } : {} });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS apr.Apr01_Appr.modelUpdate (오타수정) — 바뀐 문서를 돌려준다 */
+  saveTypo: async (apprId: number, req: AprTypoSaveReq): Promise<AprApprDetail> => {
+    const res = await apiClient.put<ApiResponse<AprApprDetail>>(`v1/apr/apprs/${apprId}/typo`, req);
+    return res.data.data;
+  },
+
+  /** AS-IS apr.Apr50_Bookmark.selectByApprId */
+  getBookmarks: async (apprId: number): Promise<AprBookmark[]> => {
+    const res = await apiClient.get<ApiResponse<AprBookmark[]>>(`v1/apr/apprs/${apprId}/bookmarks`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr50_Bookmark.insert (전체 중요표시 스위치) */
+  setBookmarkPublic: async (apprId: number, publicYn: boolean): Promise<void> => {
+    await apiClient.put(`v1/apr/apprs/${apprId}/bookmarks/public`, { publicYn });
+  },
+
+  /** AS-IS apr.Apr50_Bookmark.update (새 사원 줄) */
+  addBookmarkPersons: async (apprId: number, personIds: number[]): Promise<void> => {
+    await apiClient.put(`v1/apr/apprs/${apprId}/bookmarks`, { personIds });
+  },
+
+  /** AS-IS apr.Apr50_Bookmark.delete (체크한 줄) */
+  deleteBookmarks: async (apprId: number, ids: number[]): Promise<void> => {
+    await apiClient.delete(`v1/apr/apprs/${apprId}/bookmarks`, { params: { ids: ids.join(',') } });
+  },
+
+  /** AS-IS apr.Apr50_Bookmark.deleteByApprId ([초기화]) */
+  clearBookmarks: async (apprId: number): Promise<void> => {
+    await apiClient.delete(`v1/apr/apprs/${apprId}/bookmarks/all`);
+  },
+
+  /** AS-IS apr.Apr13_PersonAuth.selectByApprId */
+  getPersonAuths: async (apprId: number): Promise<AprPersonAuth[]> => {
+    const res = await apiClient.get<ApiResponse<AprPersonAuth[]>>(`v1/apr/apprs/${apprId}/person-auths`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr13_PersonAuth.update + delete */
+  savePersonAuths: async (apprId: number, addPersonIds: number[], deleteIds: number[]): Promise<void> => {
+    await apiClient.put(`v1/apr/apprs/${apprId}/person-auths`, { addPersonIds, deleteIds });
+  },
+
+  /** AS-IS apr.Apr90_DisposalList.checkDisposal */
+  checkDisposal: async (apprId: number): Promise<AprDisposalCheck> => {
+    const res = await apiClient.get<ApiResponse<AprDisposalCheck>>(`v1/apr/apprs/${apprId}/disposal-check`);
+    return res.data.data;
+  },
+
+  /** AS-IS Apr90_Lookup_ConfirmEmp.getApprStep — 승인자 처음 값 (없으면 null) */
+  getDisposalConfirmEmp: async (): Promise<AprDisposalConfirmEmp | null> => {
+    const res = await apiClient.get<ApiResponse<AprDisposalConfirmEmp | null>>('v1/apr/apprs/disposal-confirm-emp');
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS apr.Apr90_DisposalList.modelUpdate */
+  submitDisposal: async (apprId: number, reason: string, confirmEmpId: number): Promise<void> => {
+    await apiClient.post(`v1/apr/apprs/${apprId}/disposal`, { reason, confirmEmpId });
+  },
+};
+
+/** 전자결재 문서창의 [연관법규 추가/수정/삭제]·[결재완료후 첨부파일등록] (AS-IS client/vi/apr/Apr20_Lookup_RelateIcsList · Apr20_Lookup_RelateIcs · Apr01_Lookup_ApprFile, V10) */
+export const aprRelateEditApi = {
+  /** AS-IS apr.Apr20_RelateIcs.selectByApprId */
+  getRelateIcs: async (apprId: number): Promise<AprRelateIcsRow[]> => {
+    const res = await apiClient.get<ApiResponse<AprRelateIcsRow[]>>(`v1/apr/apprs/${apprId}/relate-ics-edit`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr20_RelateIcs.check + deleteList — 변경이 있어 저장했으면 true */
+  saveRelateIcs: async (apprId: number, req: AprRelateIcsSaveReq): Promise<boolean> => {
+    const res = await apiClient.put<ApiResponse<boolean>>(`v1/apr/apprs/${apprId}/relate-ics`, req);
+    return !!res.data.data;
+  },
+
+  /** [행 추가]로 고른 법규·기한의 보기 값 */
+  getRelateIcsInfo: async (classTreeId: number, deadlineId: number | null): Promise<AprRelateIcsRow> => {
+    const res = await apiClient.get<ApiResponse<AprRelateIcsRow>>('v1/apr/relate-ics/info', { params: deadlineId != null ? { classTreeId, deadlineId } : { classTreeId } });
+    return res.data.data;
+  },
+
+  /** AS-IS apr.Apr20_RelateIcs.getCloseDate */
+  getCloseDate: async (deadlineId: number, standDate: string): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>('v1/apr/relate-ics/close-date', { params: { deadlineId, standDate } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS sys.Sys10_File.selectByFileYn */
+  getAfterFiles: async (apprId: number): Promise<AprAfterFile[]> => {
+    const res = await apiClient.get<ApiResponse<AprAfterFile[]>>(`v1/apr/apprs/${apprId}/after-files`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys10_File.update (인감날인본) */
+  saveAfterFiles: async (apprId: number, items: { fileId: number; stampYn: boolean }[]): Promise<void> => {
+    await apiClient.put(`v1/apr/apprs/${apprId}/after-files`, { items });
   },
 };

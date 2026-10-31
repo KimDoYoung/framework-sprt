@@ -82,6 +82,8 @@
              , f_get_empTrans(emp03_person_id, emp03_trans_date::date, 'title_nm')              AS title_name
              , emp01_kor_nm                                                                    AS kor_name
              , f_org_nm(emp03_org_code_id, emp03_trans_date)                                   AS org_title_name
+             , apr04_lock_yn                                                                   AS lock_yn
+             , apr04_add_emp_id                                                                AS add_emp_id
           FROM apr04_appr_step
                INNER JOIN emp01_person t1 ON emp01_person_id = apr04_step_emp_id
                INNER JOIN emp03_trans t2 ON ( emp03_person_id = apr04_step_emp_id

@@ -113,7 +113,7 @@ public class AprApprDetailService {
                 apprEmpId = r.stepEmpId();
             }
             out.add(new AprApprStepRes(r.apprStepId(), r.seq(), type, r.stepTypeName(), r.stepStatusCode(), r.stepStatusName(), r.apprDate(), name,
-                    r.opinionYnStr(), r.typoYnStr(), r.note(), r.rejectReason(), r.stepEmpId(), apprEmpId));
+                    r.opinionYnStr(), r.typoYnStr(), r.note(), r.rejectReason(), r.stepEmpId(), apprEmpId, r.titleName(), r.korName(), r.orgTitleName(), "true".equals(r.lockYn()), r.addEmpId()));
         }
         return out;
     }

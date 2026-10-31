@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { GroupSend, GroupSendHistory, GroupSendTarget, SmsHistory, SmsHistoryMonth, SmsHistoryTotal, SmsHistoryYear } from '../types/sms';
+import { GroupSend, GroupSendHistory, GroupSendTarget, SmsHistory, SmsHistoryMonth, SmsHistoryTotal, SmsHistoryYear, SmsSendTarget } from '../types/sms';
 
 /** 문자(sms) 화면 API (C05~) */
 export const smsApi = {
@@ -66,5 +66,18 @@ export const smsApi = {
   searchGroupSendHistories: async (groupSendId: number, searchText: string): Promise<GroupSendHistory[]> => {
     const res = await apiClient.get<ApiResponse<GroupSendHistory[]>>(`v1/sms/group-sends/${groupSendId}/histories`, { params: { searchText } });
     return res.data.data ?? [];
+  },
+
+  // ── 문자 발송 창 (Sms03_Lookup_SendList, V04) ──
+
+  /** AS-IS emp.Emp00_TransInfo.selectByList: 사원 목록(조직·직책·사번·성명) */
+  searchSendTargets: async (personIds: number[]): Promise<SmsSendTarget[]> => {
+    const res = await apiClient.get<ApiResponse<SmsSendTarget[]>>('v1/sms/send-list/targets', { params: { personIds: personIds.join(',') } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sms.Sms03_GroupSend.sendMessageList: 목록의 사원(행마다)에게 같은 글 */
+  sendList: async (personIds: number[], message: string): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/sms/send-list', { personIds, message });
   },
 };
