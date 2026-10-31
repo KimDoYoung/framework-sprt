@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 차량 운행일지 결재 상신 A16 (V35) — AS-IS(IDMS-IC) server/car/mapper/car05_relate_appr.xml -->
+<mapper namespace="kr.co.kfs.asseterp.biz.car.mapper.CarJournalApprMapper">
+
+    <!-- AS-IS car05_relate_appr.insert -->
+    <insert id="insertRelateAppr">
+        INSERT INTO car05_relate_appr
+        (   car05_relate_appr_id
+          , car05_company_id
+          , car05_yyyymm
+          , car05_info_id
+        )
+        VALUES
+        (   #{relateApprId}
+          , #{companyId}
+          , #{yyyymm}
+          , #{infoId}
+        )
+    </insert>
+
+    <!-- AS-IS car05_relate_appr.updateApprId — 회사 조건 추가 -->
+    <update id="updateApprId">
+        UPDATE  car05_relate_appr
+           SET  car05_appr_id = #{apprId}
+         WHERE  car05_relate_appr_id = #{relateApprId}
+           AND  car05_company_id = #{companyId}
+    </update>
+
+    <select id="countRelateAppr" resultType="int">
+        SELECT COUNT(*)
+          FROM car05_relate_appr
+         WHERE car05_relate_appr_id = #{relateApprId}
+           AND car05_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS sys10_file.selectByParentId (IDMS-IC) 의 파일 ID — BizFundPriceModiMapper.selectFileIds와 같은 식 -->
+    <select id="selectFileIds" resultType="long">
+        SELECT file.sys10_file_id
+          FROM (
+                SELECT *
+                  FROM sys10_file
+                 WHERE sys10_parent_id = #{parentId}
+                 UNION
+                SELECT sys10_file.*
+                  FROM sys11_relate_file
+                       INNER JOIN sys10_file ON sys10_file_id = sys11_file_id
+                 WHERE sys11_parent_id = #{parentId}
+               ) AS file
+         ORDER BY COALESCE(sys10_file_yn, 'false') ASC, LPAD(COALESCE(sys10_seq, '99999'), 5, '0'), COALESCE(sys10_title_yn, 'false') DESC, sys10_file_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <select id="countApprRelateFile" resultType="int">
+        SELECT COUNT(*)
+          FROM sys11_relate_file
+         WHERE sys11_file_id = #{fileId}
+           AND sys11_parent_id = #{apprId}
+           AND sys11_parent_table = 'apr01_appr'
+    </select>
+
+    <!-- AS-IS sys11_relate_file.insert -->
+    <insert id="insertApprRelateFile">
+        INSERT INTO sys11_relate_file ( sys11_relate_file_id, sys11_file_id, sys11_parent_id, sys11_parent_table )
+        VALUES ( #{relateFileId}, #{fileId}, #{apprId}, 'apr01_appr' )
+    </insert>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+</mapper>

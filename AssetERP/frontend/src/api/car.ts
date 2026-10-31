@@ -220,6 +220,17 @@ export const carApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS car.Car05_RelateAppr.insert + utils.pdf.PDFCreate.createCarJournal — 상신 행을 만들고 운행일지 PDF를 그 첨부로 올린다. 돌려준 번호가 결재창(A16)의 refId (V35) */
+  createJournalRelateAppr: async (p: { infoId: number; stdMonth: string }): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/car/journals/relate-appr', p);
+    return res.data.data;
+  },
+
+  /** AS-IS car.Car05_RelateAppr.updateApprId — 결재문서 번호를 기록하고 PDF를 문서에 붙인다 (V35) */
+  updateJournalApprId: async (relateApprId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/car/journals/relate-appr/${relateApprId}/appr-id`, { apprId });
+  },
+
   /** AS-IS car.Car05_RelateAppr.selectByStdMonth — 상신한 적 없으면 null */
   getJournalApprStatus: async (p: { infoId: number; stdMonth: string }): Promise<CarRelateAppr | null> => {
     const res = await apiClient.get<ApiResponse<CarRelateAppr | null>>('v1/car/journals/appr-status', { params: p });

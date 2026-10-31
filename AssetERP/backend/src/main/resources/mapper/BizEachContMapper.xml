@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz16_each_cont.xml selectById · biz10_cont_corp.xml selectByText (V35, 결재창 C01) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizEachContMapper">
+
+    <!--
+      본문에 쓰는 열만. 계약사 이름·주소·대표이사는 호출 화면이 계약사 그리드(biz10_cont_corp.selectByText)에서 고른 행의 최신 계약 이력 —
+      (계약사, MAX(등록일) ≤ 오늘) 한 건. 회사 조건 추가
+    -->
+    <select id="selectLinkById" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizEachContLinkRow">
+        SELECT  biz16_fund_nm              AS fund_name
+             ,  biz16_fund_fee             AS fund_fee
+             ,  biz16_date                 AS cont_date
+             ,  biz16_fund_start_date      AS fund_start_date
+             ,  biz16_note                 AS note
+             ,  biz11_cont_corp_nm         AS cont_corp_name
+             ,  biz11_address              AS address
+             ,  biz11_ceo                  AS ceo
+          FROM  biz16_each_contract
+                LEFT OUTER JOIN biz11_cont_history ON biz11_cont_corp_id = biz16_cont_corp_id
+                                                  AND biz11_reg_date = ( SELECT MAX(h.biz11_reg_date)
+                                                                           FROM biz11_cont_history h
+                                                                          WHERE h.biz11_cont_corp_id = biz16_cont_corp_id
+                                                                            AND h.biz11_reg_date &lt;= f_today() )
+         WHERE  biz16_each_contract_id = #{contractId}
+           AND  biz16_company_id = #{companyId}
+         LIMIT 1
+    </select>
+</mapper>

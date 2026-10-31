@@ -4,15 +4,17 @@
  *   — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L92-144: 가운데(여백 20, 최대 1000, 테두리) = 툴바(기준년월 70 · 차량구분 100 · 차량번호 300 · 조회 · 마감 · 마감취소 · 출력/다운로드) + 운행일지 그리드(합계 행),
  *   아래 70(여백 -2,20,20,20) = 문서분류 · 결재상태 · [상신] · [문서보기]
- * 1단계: [상신]·[문서보기]·문서분류가 여는 전자결재 편집창 Apr01_Edit_ApprDoc과 상신용 PDF 만들기(PDFCreate.createCarJournal)는 다음 단계 — 결재상태 표시와 "상신 중" 검사는 한다
+ * [상신]·[문서보기]·문서분류(defaultName·openLookupDoc·insertApprCheck·insertAppr·updateApprId)는 V35에서 전자결재 편집창에 연결했다
+ *        (링크코드 A16, 제목은 서버가 만든다 `GET apr/apprs/link-seed`, 상신용 PDF는 서버 `POST car/journals/relate-appr`가 만든다).
  * 스타일: SG (견본 Tdm01_Tab_Hr — 바깥 여백 20, 안쪽 padding 10, 툴바-그리드 간격 8)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Select, Space } from 'antd';
 import dayjs from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { carApi } from '@/api/car';
+import { dcrApi } from '@/api/dcr';
 import { errorMessage } from '@/api/client';
 import { rdApi } from '@/api/rd';
 import { CarInfo, CarJournal, CarPublicJournal, CarRelateAppr } from '@/types/car';
@@ -22,7 +24,9 @@ import { SingleGrid, gbFor, iconCell } from '@/components/grid';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { Car01_Lookup_Info } from '@/components/lookup/Car01_Lookup_Info';
+import { Dcr30_Move_DcrClass } from '@/components/lookup/Dcr30_Move_DcrClass';
 import { SearchBar } from '@/components/search';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Car04_Lookup_PrivateJournal, PrivateJournalTarget } from './Car04_Lookup_PrivateJournal';
 import { Car04_Lookup_PublicJournal } from './Car04_Lookup_PublicJournal';
 
@@ -89,6 +93,28 @@ export const Car04_Tab_Journal: React.FC = () => {
   const [publicTarget, setPublicTarget] = useState<CarPublicJournal | null>(null);
   const [rdInfoId, setRdInfoId] = useState<number | null>(null);
   const retrieveSeq = useRef(0);
+  // 아래 70: 문서분류(classTreeModel, 처음 A16에 지정된 한 건 = defaultModel) · 전자결재 창
+  const [defaultClass, setDefaultClass] = useState<{ classTreeId: number; classTreeFullName: string } | null>(null);
+  const [classTree, setClassTree] = useState<{ classTreeId: number; classTreeFullName: string } | null>(null);
+  const [classNone, setClassNone] = useState(false);                  // 지정된 분류가 없음 → 빈칸 문구가 달라진다
+  const [classLookupOpen, setClassLookupOpen] = useState(false);
+  const [linkDoc, setLinkDoc] = useState<{ classTreeId: number; relateApprId: number } | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+
+  // defaultName() L568-588: dcr.Dcr30_Link.selectByLinkCode(A16) 정확히 한 건이면 그 분류, 아니면 "문서분류가 미지정 상태입니다. 관리자에게 문의해주세요"
+  useEffect(() => {
+    dcrApi.searchClassTreeByLinkCode('A16')
+      .then(list => {
+        if (list.length === 1) {
+          const m = { classTreeId: list[0].classTreeId, classTreeFullName: list[0].classTreeFullName };
+          setDefaultClass(m);
+          setClassTree(m);
+        } else {
+          setClassNone(true);
+        }
+      })
+      .catch(() => setClassNone(true));
+  }, []);
 
   /** 검사 3개 (retrieve() L333-346): 기준년월 → 차량구분 → 차량번호 */
   const check = (target = info): { ym: string; infoId: number } | null => {
@@ -220,9 +246,49 @@ export const Car04_Tab_Journal: React.FC = () => {
     if (c) setRdInfoId(c.infoId);
   };
 
-  // [E7] classTreeFullName[문서분류].TriggerClick (L222) → openLookupDoc() / [E8] apprButton[상신].Select (L228) → insertApprCheck() /
-  // [E9] apprViewButton[문서보기].Select (L234) → apr.Apr01_Appr.selectById → Apr01_Edit_ApprDoc.retrieveApproval(): 전자결재 편집창 Apr01_Edit_ApprDoc과 상신용 PDF 만들기는 다음 단계
+  // [E7] classTreeFullName[문서분류].TriggerClick (L222) → openLookupDoc() L591-600: Dcr30_Move_DcrClass.open(defaultModel, cb) — 고른 분류가 classTreeModel
   const apprStatusText = appr?.apprId != null ? (appr.statusName ?? '') : '미상신';
+  const statusCode = appr?.apprId != null ? (appr.statusCode ?? '00') : '00';
+  // retrieveApprStatus() L374-420: 미상신(00)·반려(40)이면 [상신] 사용, 문서가 있으면 [문서보기] 사용 — 40은 둘 다, 그 밖(진행·완료)은 [문서보기]만
+  const apprEnabled = statusCode === '00' || statusCode === '40';
+  const viewEnabled = appr?.apprId != null;
+
+  // [E8] apprButton[상신].Select (L228) → insertApprCheck() L602-650: 검사 → car.Car05_RelateAppr.insert + PDFCreate.createCarJournal → insertAppr(relateApprId)
+  const insertApprCheck = async () => {
+    if (!stdMonth) { message.warning('기준년월을 입력해주세요'); return; }
+    if (info == null) { message.warning('차량번호를 선택해주세요'); return; }
+    if (['10', '20', '30'].includes(statusCode)) { message.warning('이미 상신 중인 차량 운행일지 정보입니다'); return; }
+    if (rows.some(r => !r.closeYn)) { message.warning('마감처리가 되지않은 운행일지가 포함되어있습니다'); return; }
+    const ym = carDate(stdMonth);
+    if (!ym) { message.warning('기준년월을 입력해주세요'); return; }
+    try {
+      const relateApprId = await carApi.createJournalRelateAppr({ infoId: info.infoId, stdMonth: ym });
+      // insertAppr() L652-672: 문서분류가 없으면 "문서분류를 먼저 선택해주세요"(상신 행은 이미 만들어졌다 — 원본 그대로)
+      if (classTree == null) { message.warning('문서분류를 먼저 선택해주세요'); return; }
+      setLinkDoc({ classTreeId: classTree.classTreeId, relateApprId });
+    } catch (err) {
+      message.error(errorMessage(err, '상신 실패'));
+    }
+  };
+
+  // updateApprId() L674-687: car.Car05_RelateAppr.updateApprId(apprId, relateApprId) → "차량 운행일지 상신이 완료되었습니다" → retrieveApprStatus()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc || info == null) return;
+    try {
+      await carApi.updateJournalApprId(linkDoc.relateApprId, apprId);
+      message.info('차량 운행일지 상신이 완료되었습니다');
+      const ym = carDate(stdMonth);
+      if (ym) await retrieveApprStatus(info.infoId, ym);
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+  };
+
+  // [E9] apprViewButton[문서보기].Select (L234) → apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval (닫으면 retrieveApprStatus())
+  const viewAppr = () => {
+    if (appr?.apprId == null) return;
+    setViewApprId(appr.apprId);
+  };
 
   // buildGrid() L303-330 (setChecked 없음 = 단일 선택, getSumGrid("합계", 6, 8, 11))
   const columnDefs = useMemo(() => [
@@ -276,16 +342,43 @@ export const Car04_Tab_Journal: React.FC = () => {
           />
         </div>
       </div>
-      {/* 아래 70: 결재상태(읽기 전용, 빈칸 "결재상태 정보없음") — 문서분류·[상신]·[문서보기]는 다음 단계 */}
+      {/* 아래 70 (L122-130): 문서분류(800, 읽기 전용 + 돋보기) · 결재상태(150) · [상신](120) · [문서보기](120) */}
       <div style={{ height: 70, flexShrink: 0, boxSizing: 'border-box', border: '1px solid #d9d9d9', display: 'flex', alignItems: 'center', padding: '0 20px', gap: 10 }}>
-        <label>결재상태</label>
+        <label style={{ width: 105, textAlign: 'right', flexShrink: 0 }}>문서분류</label>
+        <div style={{ flex: '0 1 800px', minWidth: 0 }}>
+          <LookupInput
+            width={800}
+            empty={[]}
+            value={classTree?.classTreeFullName ?? ''}
+            placeholder={classNone ? '문서분류가 미지정 상태입니다. 관리자에게 문의해주세요' : ''}
+            onOpen={() => setClassLookupOpen(true)}
+          />
+        </div>
         <Input style={{ width: 150 }} disabled readOnly placeholder="결재상태 정보없음" value={appr == null && rows.length === 0 ? '' : apprStatusText} />
+        <Button type="register" disabled={!apprEnabled} onClick={insertApprCheck}>상신</Button>
+        <Button type="view" disabled={!viewEnabled} onClick={viewAppr}>문서보기</Button>
       </div>
       {/* openAll(carType): 사용자 조건 없이 그 구분의 차량 전부 */}
       <Car01_Lookup_Info open={lookupInfoOpen} carType={(carType ?? '1') as '1' | '2'} admin onResult={selectInfo} onClose={() => setLookupInfoOpen(false)} />
       <Car04_Lookup_PrivateJournal target={privateTarget} onResult={m => { setPrivateTarget(null); void modelUpdate(m); }} onClose={() => setPrivateTarget(null)} />
       <Car04_Lookup_PublicJournal target={publicTarget} onResult={m => { setPublicTarget(null); void modelUpdate(m); }} onClose={() => setPublicTarget(null)} />
       <RdJournalViewer infoId={rdInfoId} onClose={() => setRdInfoId(null)} />
+      {/* openLookupDoc() L591-600: Dcr30_Move_DcrClass.open(defaultModel, callback → classTreeModel) */}
+      <Dcr30_Move_DcrClass
+        open={classLookupOpen}
+        authCheck
+        defaultClassTreeId={defaultClass?.classTreeId ?? null}
+        onResult={r => { if (r.classTreeId != null && r.classTreeFullName != null) setClassTree({ classTreeId: r.classTreeId, classTreeFullName: r.classTreeFullName }); }}
+        onClose={() => setClassLookupOpen(false)}
+      />
+      {/* insertAppr() L652-672: Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, "A16", linkModel{journalId = relateApprId}, false, callback → updateApprId) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: 'A16', refId: linkDoc.relateApprId } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => { if (info) { const ym = carDate(stdMonth); if (ym) void retrieveApprStatus(info.infoId, ym); } }}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </div>
   );
 };
