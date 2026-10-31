@@ -315,6 +315,25 @@
            AND  tdm42_company_id  = #{companyId}
     </update>
 
+    <!-- AS-IS(IDMS-IC) tdm42_manl_org.selectById (V21 결재창 A93) — 제목·본문의 부서 이름(f_org_nm)·책무 이름(tdm20_role_nm)만, 회사 조건 추가 -->
+    <select id="selectLinkById" resultType="kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgLinkRow">
+        SELECT  f_org_nm(tdm42_org_id, f_sysdate())  AS org_name
+             ,  tdm20_role_nm                        AS role_name
+          FROM  tdm42_manl_org
+                INNER JOIN tdm40_manl_job  ON tdm40_manl_job_id = tdm42_manl_job_id
+                INNER JOIN tdm20_role      ON tdm20_role_id     = tdm42_role_id
+         WHERE  tdm42_manl_org_id = #{manlOrgId}
+           AND  tdm42_company_id  = #{companyId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) tdm42_manl_org.updateApprId (V21) — 회사 조건 추가 -->
+    <update id="updateApprId">
+        UPDATE  tdm42_manl_org
+           SET  tdm42_appr_id = #{apprId}
+         WHERE  tdm42_manl_org_id = #{manlOrgId}
+           AND  tdm42_company_id  = #{companyId}
+    </update>
+
     <!-- AS-IS(IDMS-IC) tdm42_manl_org.updateLockYn L258. current_setting('app.current_user') → #{updName}(N15와 같은 이유), 회사 조건 추가 -->
     <update id="updateLockYn">
         UPDATE  tdm42_manl_org

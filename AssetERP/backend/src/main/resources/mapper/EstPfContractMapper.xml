@@ -103,6 +103,72 @@
         <foreach collection="pfContractIds" item="pfContractId" open="(" separator="," close=")">#{pfContractId}</foreach>
     </delete>
 
+    <!-- AS-IS(IDMS-IC) est02_pf_contract.selectByText의 같은 열 + 첨부 목록 2열(est02_file_list_html·est02_file_list_result_html) — 결재창 A60·A61 양식 치환용(V21), 계약 한 건·로그인 회사 -->
+    <select id="selectLinkById" resultType="kr.co.kfs.asseterp.biz.est.dto.PfContractLinkRow">
+        <![CDATA[
+        SELECT est02_pf_contract_id                                                 AS pf_contract_id,
+               est02_borrower                                                       AS borrower,
+               est02_project_site_nm                                                AS project_site_name,
+               est02_project_site_addr                                              AS project_site_addr,
+               est01_fee_cd                                                         AS fee_code,
+               f_cdnm('EstPfFeeCode', est01_fee_cd, est02_company_id, f_sysdate())  AS fee_name,
+               est02_start_date                                                     AS start_date,
+               est02_close_date                                                     AS close_date,
+               (
+                   f_get_empTrans(est02_manager_id, est02_start_date::date, 'org_code_nm')
+                   ||' '||
+                   emp01_kor_nm
+                   ||' ('||
+                   emp01_office_telno
+                   ||', '||
+                   emp01_email_addr
+                   ||')'
+               )                                                                    AS manager_info,
+               est02_plan                                                           AS plan,
+               (
+                   SELECT CASE WHEN COUNT(*) = 0
+                               THEN ''
+                               ELSE string_agg(sys10_file_nm, '<'||'br'||'>')
+                               END
+                     FROM sys10_file
+                    WHERE sys10_parent_id = est02_pf_contract_id
+               )                                                                    AS file_list_html,
+               (
+                   SELECT CASE WHEN COUNT(*) = 0
+                               THEN ''
+                               ELSE string_agg('('||f3.est03_no||') '||f1.est04_file_desc, '<'||'br'||'>')
+                               END
+                     FROM est04_pf_file f1
+                          INNER JOIN sys10_file f2        ON f2.sys10_parent_id = f1.est04_pf_file_id
+                          INNER JOIN est03_pf_history f3  ON f3.est03_pf_history_id = f1.est04_pf_history_id
+                                                         AND f3.est03_pf_contract_id = est02_pf_contract_id
+                          INNER JOIN est02_pf_contract f4 ON f4.est02_pf_contract_id = f3.est03_pf_contract_id
+                                                         AND f4.est02_pf_contract_id = est02_pf_contract.est02_pf_contract_id
+               )                                                                    AS file_list_result_html
+          FROM est02_pf_contract
+               INNER JOIN emp01_person ON emp01_person_id = est02_manager_id
+               LEFT OUTER JOIN est01_pf_fee_type ON est01_pf_fee_type_id = est02_pf_fee_type_id
+         WHERE est02_pf_contract_id = #{pfContractId}
+           AND est02_company_id = #{companyId}
+        ]]>
+    </select>
+
+    <!-- AS-IS(IDMS-IC) est02_pf_contract.updateApprId (계획서 A60) — 회사 조건 추가 -->
+    <update id="updatePlanApprId">
+        UPDATE est02_pf_contract
+           SET est02_plan_appr_id = #{apprId}
+         WHERE est02_pf_contract_id = #{pfContractId}
+           AND est02_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS(IDMS-IC) est02_pf_contract.updateResultApprId (결과보고서 A61) — 회사 조건 추가 -->
+    <update id="updateResultApprId">
+        UPDATE est02_pf_contract
+           SET est02_result_appr_id = #{apprId}
+         WHERE est02_pf_contract_id = #{pfContractId}
+           AND est02_company_id = #{companyId}
+    </update>
+
     <!-- AS-IS(IDMS-IC) est03_pf_history.checkList (SELECT *는 ID만) -->
     <select id="selectHistoryIdsByContracts" resultType="long">
         SELECT est03_pf_history_id

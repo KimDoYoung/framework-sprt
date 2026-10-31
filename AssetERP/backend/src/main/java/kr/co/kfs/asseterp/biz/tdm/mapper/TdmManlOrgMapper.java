@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.tdm.mapper;
 
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgApprParam;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgApprRes;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgLinkRow;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgMgrRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgParam;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgPeriodRes;
@@ -32,6 +33,12 @@ public interface TdmManlOrgMapper {
     /** UpdateDataModel(tdm42_manl_org) — 화면이 바꾸는 적용시작일·적용종료일만. 회사 조건 포함, 건수를 돌려준다 */
     int updatePeriod(@Param("manlOrgId") Long manlOrgId, @Param("companyId") Long companyId,
                      @Param("startDate") String startDate, @Param("endDate") String endDate, @Param("updName") String updName);
+
+    /** 결재창 A93 제목·본문용 부서·책무 이름 (tdm42_manl_org.selectByText와 같은 이름 열) — 로그인 회사 행만 */
+    ManlOrgLinkRow selectLinkById(@Param("manlOrgId") Long manlOrgId, @Param("companyId") Long companyId);
+
+    /** AS-IS tdm42_manl_org.updateApprId (회사 조건 추가) */
+    int updateApprId(@Param("manlOrgId") Long manlOrgId, @Param("companyId") Long companyId, @Param("apprId") Long apprId);
 
     /** AS-IS tdm42_manl_org.updateLockYn (회사 조건 추가) */
     int updateLockYn(@Param("manlOrgId") Long manlOrgId, @Param("companyId") Long companyId,

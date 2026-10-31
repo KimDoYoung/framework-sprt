@@ -701,6 +701,11 @@ export interface AprLinkArgs {
   yyyy?: string;
   mm?: string;
   cycleName?: string;
+  /** 여러 행을 한 문서로 묶는 코드의 행 ID 쉼표 목록 — A77 기준가 정정 월보고(AS-IS linkParam.gridList, V20) */
+  ids?: string;
+  /** A43 여비교통비 관리 — 기준년월(yyyy.MM)과 계정과목 이름(호출 화면이 읽은 값, V23) */
+  yyyymm?: string;
+  accountName?: string;
 }
 
 /** 링크코드별 제목·본문·시행일자 (GET apr/apprs/link-seed, V17) */
@@ -714,6 +719,17 @@ export interface AprLinkSeed {
   /** 증명서(B01~B04)는 대외문서라 수신·참조를 "-"로 채운다 (V22) */
   receiveName?: string | null;
   referenceName?: string | null;
+  /** 문서구분을 고정하는 코드(A93 책무매뉴얼 보고 = '20' 사내문서, V21) */
+  inOutTypeCode?: string | null;
+  /** 문서를 열자마자 연관문서 탭에 넣을 문서(A43 여비교통비 관리 — insertRelateApprList, V23) */
+  relateApprs?: AprLinkRelateAppr[] | null;
+}
+
+export interface AprLinkRelateAppr {
+  targetApprId: number;
+  regDate?: string | null;
+  title?: string | null;
+  inOutTypeCode?: string | null;
 }
 
 /** 새 문서 열기 (GET apr/apprs/new, V06) */

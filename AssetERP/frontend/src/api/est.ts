@@ -122,6 +122,16 @@ export const estApi = {
     await apiClient.put(`v1/est/pf-histories/${pfHistoryId}/confirm`, null, { params: { confirm } });
   },
 
+  /** AS-IS est.Est02_PfContract.updateApprId: 용역수행 계획서(A60) 결재 문서를 기록한다 (V21) */
+  updatePfContractPlanApprId: async (pfContractId: number, apprId: number): Promise<void> => {
+    await apiClient.put(`v1/est/pf-contracts/${pfContractId}/plan-appr-id`, { apprId });
+  },
+
+  /** AS-IS est.Est02_PfContract.updateResultApprId: 용역 결과보고서(A61) 결재 문서를 기록한다 (V21) */
+  updatePfContractResultApprId: async (pfContractId: number, apprId: number): Promise<void> => {
+    await apiClient.put(`v1/est/pf-contracts/${pfContractId}/result-appr-id`, { apprId });
+  },
+
   /** AS-IS est.Est02_PfContract.selectById: 승인취소 전에 결과보고서(resultApprId)가 있는지 본다 */
   getPfContract: async (pfContractId: number): Promise<PfContract> => {
     const res = await apiClient.get<ApiResponse<PfContract>>(`v1/est/pf-contracts/${pfContractId}`);

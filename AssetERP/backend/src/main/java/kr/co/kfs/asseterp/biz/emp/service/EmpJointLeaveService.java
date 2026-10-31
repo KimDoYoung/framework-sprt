@@ -61,4 +61,17 @@ public class EmpJointLeaveService {
         }
         return mapper.deleteJointLeaves(user.getCompanyId(), ids);
     }
+
+    /** AS-IS emp.Emp24_JointLeave.updateApprId — 승인신청 문서를 만든 뒤 고른 공동연차마다 결재문서 ID를 기록한다 */
+    @Transactional
+    public int updateApprId(UserPrincipal user, List<Long> ids, Long apprId) {
+        if (ids == null || ids.isEmpty() || apprId == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "결재문서 정보가 없습니다.");
+        }
+        int n = 0;
+        for (Long id : ids) {
+            n += mapper.updateApprId(user.getCompanyId(), id, apprId);
+        }
+        return n;
+    }
 }

@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.tdm.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgApprIdReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgApprRes;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgIdsReq;
 import kr.co.kfs.asseterp.biz.tdm.dto.ManlOrgLockReq;
@@ -77,6 +78,14 @@ public class TdmManlOrgController {
     @PutMapping("/appr/periods")
     public ApiResponse<Void> savePeriods(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<ManlOrgPeriodReq> rows) {
         service.savePeriods(principal, rows);
+        return ApiResponse.ok(null);
+    }
+
+    /** N18 AS-IS tdm.Tdm42_ManlOrg.updateApprId — 책무매뉴얼 보고(A93) 결재 문서 기록 (V21) */
+    @PutMapping("/{manlOrgId}/appr-id")
+    public ApiResponse<Void> updateApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long manlOrgId,
+                                          @RequestBody @jakarta.validation.Valid ManlOrgApprIdReq req) {
+        service.updateApprId(principal, manlOrgId, req.apprId());
         return ApiResponse.ok(null);
     }
 

@@ -96,6 +96,14 @@
          WHERE apr01_appr_id = #{apprId}
     </delete>
 
+    <!-- AS-IS emp24_joint_leave.updateApprId (IDMS-IC emp24_joint_leave.xml:48, 회사 조건 추가) -->
+    <update id="updateApprId">
+        UPDATE emp24_joint_leave
+           SET emp24_appr_id = #{apprId}
+         WHERE emp24_joint_leave_id = #{jointLeaveId}
+           AND emp24_company_id = #{companyId}
+    </update>
+
     <delete id="deleteJointLeaves">
         DELETE FROM emp24_joint_leave
          WHERE emp24_company_id = #{companyId}

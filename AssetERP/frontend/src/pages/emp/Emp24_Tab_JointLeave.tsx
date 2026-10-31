@@ -3,20 +3,22 @@
  * AS-IS: myApp/client/vi/emp/Emp24_Tab_JointLeave.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃(생성자 L87-130, GG): 위 58% 테두리 박스(툴바: 기준연도 · [조회][등록][저장][삭제] · [승인신청][문서분류지정] + 단일 체크 셀 편집 그리드)
  *   + 아래 테두리 박스(툴바: "▼ 제외사원" · [등록][저장][삭제] + 체크 다중 셀 편집 그리드). 위 그리드 행을 고르면 아래 제외사원을 읽는다.
- * 1단계(사용자 결정 2026-10-28): [승인신청]의 결재문서 생성(Apr01_Edit_ApprDoc.insertLinkApprovals → updateApprId)·상세보기(Apr01_Edit_ApprDoc.retrieveApproval)는
- *   다음 단계 — 원본의 문서분류·선택·상태 검사까지만 한다.
+ * 1단계(사용자 결정 2026-10-28)는 [승인신청]·상세보기를 안내만 했다. V23(2026-10-31)에서 연결했다: [승인신청] → Apr01_Edit_ApprDoc.insertLinkApprovals("A24") → updateApprId,
+ *   상세보기 → retrieveApproval (본문 JointLeaveHtmlData는 서버가 만든다 `GET apr/apprs/link-seed`).
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, Modal, message } from 'antd';
 import dayjs from 'dayjs';
 import { empJointLeaveApi } from '@/api/emp';
 import { dcrApi } from '@/api/dcr';
+import { errorMessage } from '@/api/client';
 import { JointLeave, JointLeaveExcept, TransPerson } from '@/types/emp';
 import { Button } from '@/components/button';
 import { SearchBar } from '@/components/search';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { Dcr30_Lookup_Link } from '@/components/lookup/Dcr30_Lookup_Link';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Emp01_Lookup_PersonModel } from '@/components/lookup/Emp01_Lookup_PersonModel';
 import { useGridCrud, editableCol } from '@/hooks/useGridCrud';
 
@@ -37,6 +39,9 @@ export const Emp24_Tab_JointLeave: React.FC = () => {
   // 위 그리드에서 고른 공동연차 (아래 제외사원의 부모)
   const selectedId = useRef<number | null>(null);
   const selectFirst = useRef(false);
+  // insertLinkApprovals()가 연 결재창의 대상(고른 공동연차 ID) · 상세보기로 연 문서
+  const [linkIds, setLinkIds] = useState<number[] | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
 
   // 아래 제외사원 그리드 — exceptRetrieve() L373-390: 서비스 emp.Emp28_JointLeaveExcept.selectByJointLeaveId
   const exceptCrud = useGridCrud<JointLeaveExcept>({
@@ -134,8 +139,19 @@ export const Emp24_Tab_JointLeave: React.FC = () => {
       message.warning('결재 중인 문서이거나, 완료된 문서가 포함되어있습니다');
       return;
     }
-    // Apr01_Edit_ApprDoc.insertLinkApprovals(classTreeModel, "A24", gridList, false, cb) → updateApprId(apprModel) L308-328 — 다음 단계
-    message.info('결재문서 작성(전자결재 편집창)은 아직 변환 전입니다(다음 단계).');
+    // Apr01_Edit_ApprDoc.insertLinkApprovals(classTreeModel, "A24", gridList, false, cb) → updateApprId(apprModel) L308-328
+    setLinkIds(selected.map(r => r.jointLeaveId));
+  };
+
+  // updateApprId() L308-328: emp.Emp24_JointLeave.updateApprId(고른 행, apprId) → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkIds) return;
+    try {
+      await empJointLeaveApi.updateApprId(linkIds, apprId);
+      void retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
   };
 
   // [E8] exceptInsertButton[등록].Select (L189) → exceptInsertRow() L439-465: Emp01_Lookup_PersonModel.open → 고른 사원마다 행 추가(조직·사원명 채움, 변경으로 친다)
@@ -152,7 +168,7 @@ export const Emp24_Tab_JointLeave: React.FC = () => {
   // [E12] actionCell (ImageCell).callbackOnCreate (L235) → 서비스 apr.Apr01_Appr.selectById(apprId) → 없으면 "관련 상신문서가 존재하지 않습니다", 있으면 Apr01_Edit_ApprDoc.retrieveApproval — 편집창은 다음 단계
   const viewAppr = (apprId: number | null) => {
     if (apprId == null) { message.warning('관련 상신문서가 존재하지 않습니다'); return; }
-    message.info('전자결재 문서 보기는 아직 변환 전입니다(다음 단계).');
+    setViewApprId(apprId);
   };
 
   // AS-IS buildGrid() L216-258 (setChecked SINGLE)
@@ -213,6 +229,14 @@ export const Emp24_Tab_JointLeave: React.FC = () => {
         </div>
       </div>
       <Dcr30_Lookup_Link open={linkOpen} linkCodeList="A24" onClose={() => { setLinkOpen(false); void retrieveDoc(); }} />
+      {/* insertLinkApprovals() L270-306: Apr01_Edit_ApprDoc.insertLinkApprovals(classTreeModel, "A24", { gridList }, false, callback → updateApprId) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkIds && classTreeId != null ? { classTreeId, linkCode: 'A24', args: { ids: linkIds.join(',') } } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void retrieve()}
+        onClose={() => { setViewApprId(null); setLinkIds(null); }}
+      />
       <Emp01_Lookup_PersonModel open={personOpen} onSelect={onPickPersons} onClose={() => setPersonOpen(false)} />
     </div>
   );

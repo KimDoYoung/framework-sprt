@@ -30,5 +30,8 @@ public interface EmpJointLeaveMapper {
     /** AS-IS apr01_appr.deleteAppr */
     int deleteAppr(@Param("apprId") Long apprId);
 
+    /** AS-IS emp24_joint_leave.updateApprId (회사 조건 추가) — 승인신청 뒤 결재문서 ID 기록 */
+    int updateApprId(@Param("companyId") Long companyId, @Param("jointLeaveId") Long jointLeaveId, @Param("apprId") Long apprId);
+
     int deleteJointLeaves(@Param("companyId") Long companyId, @Param("jointLeaveIds") List<Long> jointLeaveIds);
 }

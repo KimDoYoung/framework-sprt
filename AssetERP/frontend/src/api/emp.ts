@@ -1206,6 +1206,12 @@ export const empJointLeaveApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS emp.Emp24_JointLeave.updateApprId — 승인신청 뒤 고른 공동연차에 결재문서 ID 기록 (V23) */
+  updateApprId: async (ids: number[], apprId: number): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/emp/joint-leaves/appr-id', { ids, apprId });
+    return res.data.data ?? 0;
+  },
+
   /** AS-IS emp.Emp24_JointLeave.deleteApprId + delete */
   remove: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/emp/joint-leaves', { data: ids });

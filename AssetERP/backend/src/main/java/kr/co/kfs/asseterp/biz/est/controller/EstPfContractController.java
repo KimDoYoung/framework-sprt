@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.est.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.est.dto.PfContractApprIdReq;
 import kr.co.kfs.asseterp.biz.est.dto.PfContractRes;
 import kr.co.kfs.asseterp.biz.est.dto.PfContractSaveReq;
 import kr.co.kfs.asseterp.biz.est.service.EstPfContractService;
@@ -52,6 +53,22 @@ public class EstPfContractController {
     @PostMapping("/history-count")
     public ApiResponse<Integer> countHistories(@RequestBody List<Long> pfContractIds) {
         return ApiResponse.ok(service.countHistories(pfContractIds));
+    }
+
+    /** AS-IS est.Est02_PfContract.updateApprId — 용역수행 계획서(A60) 결재 문서를 기록한다 */
+    @PutMapping("/{pfContractId}/plan-appr-id")
+    public ApiResponse<Void> updatePlanApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long pfContractId,
+                                              @RequestBody @jakarta.validation.Valid PfContractApprIdReq req) {
+        service.updateApprId(principal, pfContractId, req.apprId(), false);
+        return ApiResponse.ok(null);
+    }
+
+    /** AS-IS est.Est02_PfContract.updateResultApprId — 용역 결과보고서(A61) 결재 문서를 기록한다 */
+    @PutMapping("/{pfContractId}/result-appr-id")
+    public ApiResponse<Void> updateResultApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long pfContractId,
+                                                @RequestBody @jakarta.validation.Valid PfContractApprIdReq req) {
+        service.updateApprId(principal, pfContractId, req.apprId(), true);
+        return ApiResponse.ok(null);
     }
 
     /** AS-IS est.Est02_PfContract.selectById — Q11 승인취소 전에 결과보고서(resultApprId)가 있는지 본다 */

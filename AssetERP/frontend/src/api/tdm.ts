@@ -309,6 +309,11 @@ export const tdmApi = {
     await apiClient.put<ApiResponse<null>>('v1/tdm/manl-orgs/appr/periods', rows);
   },
 
+  /** N18 AS-IS tdm.Tdm42_ManlOrg.updateApprId — 책무매뉴얼 보고(A93) 결재 문서를 기록한다 (V21) */
+  updateManlOrgApprId: async (manlOrgId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/tdm/manl-orgs/${manlOrgId}/appr-id`, { apprId });
+  },
+
   /** N18 AS-IS tdm.Tdm42_ManlOrg.updateLock — 'P' 잠금 / 'C' 잠금해제 */
   updateManlOrgLock: async (actionType: 'P' | 'C', manlOrgIds: number[]): Promise<void> => {
     await apiClient.put<ApiResponse<null>>('v1/tdm/manl-orgs/appr/lock', { actionType, manlOrgIds });

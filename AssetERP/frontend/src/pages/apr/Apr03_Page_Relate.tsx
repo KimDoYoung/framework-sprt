@@ -16,7 +16,7 @@ import type { ColDef } from 'ag-grid-community';
 import { aprAttachApi, aprDetailApi, aprExtraApi, aprRelateEditApi, aprStampApplApi, aprStepEditApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
 import { fileApi, FILE_DELETE_STATUS } from '@/api/file';
-import { AprTypo, AprApprDetail, AprApprFile, AprApprAdv, AprApprFund, AprApprRelateReq, AprApprStampAppl, AprApprStep, AprLoadDoc2, AprRelateAppr, AprRelateIcsRow, AprRelateLaw } from '@/types/apr';
+import { AprTypo, AprApprDetail, AprApprFile, AprApprAdv, AprApprFund, AprApprRelateReq, AprApprStampAppl, AprApprStep, AprLinkRelateAppr, AprLoadDoc2, AprRelateAppr, AprRelateIcsRow, AprRelateLaw } from '@/types/apr';
 import { FundMulti } from '@/types/fnd';
 import { AdvAccount } from '@/types/adv';
 import { IcsLawDeadline } from '@/types/ics';
@@ -75,7 +75,7 @@ interface Props {
   editable?: boolean;
   /** 새 문서 — 서버를 읽지 않고 seed로 채운다 */
   isNew?: boolean;
-  seed?: { steps: AprApprStep[]; ics: AprRelateLaw[]; icr: AprRelateLaw[] };
+  seed?: { steps: AprApprStep[]; ics: AprRelateLaw[]; icr: AprRelateLaw[]; apprs?: AprLinkRelateAppr[] };
   /** 연관 탭 다섯 개가 바뀔 때마다, 처음 읽은 뒤부터 (저장 때 부른 쪽이 쓴다, V13) */
   onRelatesChange?: (relates: AprApprRelateReq | undefined) => void;
   /** 문서의 인감 (setStampId L1999-2006) — 날인신청 [+]의 법인인감증명서·인감날인이 처음 값으로 쓴다 (V14) */
@@ -143,7 +143,12 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
     if (isNew) {
       // 새 문서(insertApproval L4500-4518): createIcsLine·createIcrLine·createApprStepLine 결과가 seed
       setIcs(seed?.ics ?? []); setIcr(seed?.icr ?? []); setSteps(seed?.steps ?? []);
-      const first = [0, (seed?.ics ?? []).length, (seed?.icr ?? []).length].findIndex((c, i) => i > 0 && c > 0);
+      // 링크 문서의 연관문서 자동등록(insertRelateApprList L517-552, 여비교통비 관리 A43): 구분은 inoutCode 10이면 대외, 아니면 사내
+      setApprs((seed?.apprs ?? []).map<AprRelateAppr>(a => ({
+        relateApprId: newId(), targetApprId: a.targetApprId, inOutTypeCode: a.inOutTypeCode, inOutTypeName: a.inOutTypeCode === '10' ? '대외' : '사내', targetRegDate: a.regDate, targetTitle: a.title,
+      })));
+      // 탭 순서: 첨부 · 연관법규 · 연관내규 · 연관펀드 · 연관일임 · 연관문서 · 날인신청
+      const first = [0, (seed?.ics ?? []).length, (seed?.icr ?? []).length, 0, 0, (seed?.apprs ?? []).length].findIndex(c => c > 0);
       setActiveKey(String(first < 0 ? 0 : first));
       void loadStampAppl();
       setLoaded(true);

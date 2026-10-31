@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz60_fund_price_modi.xml selectById (V20, 결재창 A75~A77 본문) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizFundPriceModiMapper">
+
+    <!-- AS-IS biz60_fund_price_modi.selectById (IDMS-IC) — 본문에 쓰는 열만, 회사 조건 추가 -->
+    <select id="selectLinkById" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFundPriceModiLinkRow">
+        <![CDATA[
+        SELECT biz60_fund_price_modi_id           AS fund_price_modi_id
+             , biz60_report_type                  AS report_type
+             , biz60_am_corp_nm                   AS am_corp_name
+             , biz60_fund_nm                      AS fund_name
+             , biz60_price_std_date               AS price_std_date
+             , biz60_modi_date                    AS modi_date
+             , biz60_fund_close_yn                AS fund_close_yn
+             , biz60_bef_price                    AS bef_price
+             , biz60_bef_full_price               AS bef_full_price
+             , biz60_bef_tax_price                AS bef_tax_price
+             , biz60_bef_full_tax_price           AS bef_full_tax_price
+             , biz60_aft_price                    AS aft_price
+             , biz60_aft_full_price               AS aft_full_price
+             , biz60_aft_tax_price                AS aft_tax_price
+             , biz60_aft_full_tax_price           AS aft_full_tax_price
+             , biz60_bef_close_price              AS bef_close_price
+             , biz60_bef_close_full_price         AS bef_close_full_price
+             , biz60_bef_close_tax_price          AS bef_close_tax_price
+             , biz60_bef_close_full_tax_price     AS bef_close_full_tax_price
+             , biz60_aft_close_price              AS aft_close_price
+             , biz60_aft_close_full_price         AS aft_close_full_price
+             , biz60_aft_close_tax_price          AS aft_close_tax_price
+             , biz60_aft_close_full_tax_price     AS aft_close_full_tax_price
+             , biz60_first_person_nm              AS first_person_name
+             , biz60_disc_cause                   AS disc_cause
+             , biz60_modi_reason                  AS modi_reason
+             , biz60_prev_plan                    AS prev_plan
+             , biz60_ksd_notice_yn                AS ksd_notice_yn
+             , biz60_kofia_notice_yn              AS kofia_notice_yn
+             , biz60_cmps_amt                     AS cmps_amt
+             , (
+                  SELECT STRING_AGG(sys10_file_nm, '<'||'br'||'>' ORDER BY sys10_file_id)
+                    FROM sys10_file
+                   WHERE sys10_parent_id = biz60_fund_price_modi_id
+               )                                  AS file_list_html_str
+          FROM biz60_fund_price_modi
+         WHERE biz60_company_id = #{companyId}
+           AND biz60_fund_price_modi_id = #{fundPriceModiId}
+        ]]>
+    </select>
+</mapper>

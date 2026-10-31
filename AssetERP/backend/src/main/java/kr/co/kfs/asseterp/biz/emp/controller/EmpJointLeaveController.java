@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.emp.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.JointLeaveApprIdReq;
 import kr.co.kfs.asseterp.biz.emp.dto.JointLeaveRes;
 import kr.co.kfs.asseterp.biz.emp.dto.JointLeaveSaveReq;
 import kr.co.kfs.asseterp.biz.emp.service.EmpJointLeaveService;
@@ -35,5 +36,11 @@ public class EmpJointLeaveController {
     @DeleteMapping
     public ApiResponse<Integer> delete(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> ids) {
         return ApiResponse.ok(service.delete(principal, ids));
+    }
+
+    /** AS-IS emp.Emp24_JointLeave.updateApprId — 승인신청으로 만든 결재문서 ID 기록 (V23) */
+    @PutMapping("/appr-id")
+    public ApiResponse<Integer> updateApprId(@AuthenticationPrincipal UserPrincipal principal, @RequestBody JointLeaveApprIdReq req) {
+        return ApiResponse.ok(service.updateApprId(principal, req.ids(), req.apprId()));
     }
 }

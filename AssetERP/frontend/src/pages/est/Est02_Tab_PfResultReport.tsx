@@ -4,8 +4,7 @@
  * 생성자 L61-89: BorderLayout 가운데(여백 20) = 툴바 50(조회기준일 100 · 검색 300 "차주명/사업자명/수수료명" · [조회]) + 그리드(행번호, 단일 선택), 아래 330(여백 0,20,20,20) = Est03_TabPage_PfHistoryList
  * 스타일: GG (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
- * [다음 단계] 결재 아이콘이 여는 전자결재 편집창 Apr01_Edit_ApprDoc(insertLinkApproval)·문서분류 조회창 Dcr01_Lookup_Class·문서분류지정 Dcr30_Link(getClassTreeModel)·문서보기 아이콘의 retrieveApproval은 다른 도메인이라 지금은 안내만 한다.
- *   결재 아이콘은 편집창이 열릴 자리까지의 사전 검사(수행내역 모두 승인·작성자 조직원·결재 상태)를 원본 그대로 한다. 결재가 끝나면 updateResultApprId와 TempData 태그 양식(createMapping)이 필요하다
+ * 전자결재 상신(getClassTreeModel·insertLinkApproval·updateResultApprId — Apr01_Edit_ApprDoc·Dcr01_Lookup_Class)과 문서보기(retrieveApproval)는 V21에서 연결했다 (링크코드 A61, 양식 치환 값은 서버가 만든다 `GET apr/apprs/link-seed`)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker, message, Splitter } from 'antd';
@@ -18,9 +17,13 @@ import { useLoginUser } from '@/hooks/useLoginUser';
 import { PfContract } from '@/types/est';
 import { SingleGrid, gbFor, iconCell } from '@/components/grid';
 import { SearchBar } from '@/components/search';
+import { dcrApi } from '@/api/dcr';
 import { Est03_TabPage_PfHistoryList } from './Est03_TabPage_PfHistoryList';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
+import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 
 const gb = gbFor<PfContract>();
+const LINK_CODE = 'A61'; // 용역결과보고서 (문서분류 링크코드)
 const FORMAT = 'YYYY-MM-DD';
 
 export const Est02_Tab_PfResultReport: React.FC = () => {
@@ -35,6 +38,10 @@ export const Est02_Tab_PfResultReport: React.FC = () => {
   const [nonce, setNonce] = useState(0);
   /** LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0 */
   const [myOrgId, setMyOrgId] = useState<number | null>(null);
+  // 전자결재 창: 새 문서(insertLinkApproval, 문서분류 + 고른 행) 또는 기존 문서(retrieveApproval)
+  const [linkDoc, setLinkDoc] = useState<{ row: PfContract; classTreeId: number } | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [classPickRow, setClassPickRow] = useState<PfContract | null>(null); // 문서분류가 없을 때 Dcr01_Lookup_Class로 고르는 중인 행
 
   // retrieve() L203-221: est.Est02_PfContract.selectByText(companyId, startDate, "%검색어%") → 첫 행 선택 → tabPage.retrieve(첫 행의 pfContractId)
   const retrieve = useCallback(async () => {
@@ -82,13 +89,36 @@ export const Est02_Tab_PfResultReport: React.FC = () => {
     if (!isMyOrg(row)) { message.warning('작성자 또는 작성자의 조직원만 결재가 가능합니다'); return; }
     const status = row.resultApprStatusName;
     if (status === '상신' || status === '결재중' || status === '완료') { message.warning('결재진행중/완료된 문서가 존재합니다'); return; }
-    message.info('전자결재 편집창(Apr01_Edit_ApprDoc)은 다음 단계에서 연결합니다.');
+    void getClassTreeModel(row);
+  };
+
+  // getClassTreeModel() L223-247: dcr.Dcr30_Link.selectByLinkCode(A61) — 문서분류가 없으면 Dcr01_Lookup_Class로 고르고, 있으면(첫 행) 그 분류로 insertLinkApproval()
+  // createMapping(양식 치환 값, 수행내역 표 포함)은 서버가 만든다 (GET apr/apprs/link-seed, 링크코드 A61)
+  const getClassTreeModel = async (row: PfContract) => {
+    try {
+      const list = await dcrApi.searchClassTreeByLinkCode(LINK_CODE);
+      if (list.length === 0) setClassPickRow(row);
+      else setLinkDoc({ row, classTreeId: list[0].classTreeId });
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
+  // updateResultApprId() L264-276: est.Est02_PfContract.updateResultApprId(pfContractId, apprId) → retrieve()
+  const updateResultApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await estApi.updatePfContractResultApprId(linkDoc.row.pfContractId, apprId);
+      void retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
   };
 
   // [E4] 문서보기 아이콘 actionCell02 (L153-188, callbackOnCreate L174): apr.Apr01_Appr.selectById(resultApprId) — 문서가 없으면 안내, 있으면 Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false)
   const viewAppr = (row: PfContract) => {
     if (row.resultApprId == null || row.resultApprStatusName == null) { message.warning('문서가 존재하지않습니다'); return; }
-    message.info('전자결재 편집창(Apr01_Edit_ApprDoc)은 다음 단계에서 연결합니다.');
+    setViewApprId(row.resultApprId);
   };
 
   // buildGrid() L128-201
@@ -138,6 +168,20 @@ export const Est02_Tab_PfResultReport: React.FC = () => {
           </div>
         </Splitter.Panel>
       </Splitter>
+      {/* getClassTreeModel() 문서분류가 없을 때: Dcr01_Lookup_Class.open(null, null, callback → insertLinkApproval) */}
+      <Dcr01_Lookup_Class
+        open={classPickRow != null}
+        onResult={r => { if (classPickRow) setLinkDoc({ row: classPickRow, classTreeId: r.classTreeId }); setClassPickRow(null); }}
+        onClose={() => setClassPickRow(null)}
+      />
+      {/* insertLinkApproval() L249-262: Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, "A61", 행, false, callback → updateResultApprId) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: LINK_CODE, refId: linkDoc.row.pfContractId } : null}
+        onLinkSaved={id => void updateResultApprId(id)}
+        onClosed={() => void retrieve()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </div>
   );
 };

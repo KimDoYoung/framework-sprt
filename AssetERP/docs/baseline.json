@@ -6377,10 +6377,10 @@
     "id": "N17"
   },
   "Tdm42_Tab_ManlOrgAppr": {
-    "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
-    "commit_short": "d538228",
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
     "branch": "ioc",
-    "commit_date": "2026-10-23",
+    "commit_date": "2026-10-29",
     "repo_name": "IDMS-IC",
     "files": {
       "application/src/main/java/myApp/client/vi/tdm/Tdm42_Tab_ManlOrgAppr.java": "4679b616714637a49be98fbe0abe3de1ad4f0a40",
@@ -6389,7 +6389,7 @@
       "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
       "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
       "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
-      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "02073a29bc7feb680d7fefea312fd41a0ccecc98",
       "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
       "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
       "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
@@ -6402,11 +6402,34 @@
       "Dcr01_Lookup_Class",
       "Sys10_Lookup_FileViewer"
     ],
-    "recorded_at": "2026-10-24T23:02:35+09:00",
+    "recorded_at": "2026-10-31T19:30:44+09:00",
     "recorded_by": "kdy987",
-    "note": "docs/work/N/N18-작업기록.md",
-    "history": [],
-    "id": "N18"
+    "note": "docs/work/V/V21-작업기록.md",
+    "history": [
+      {
+        "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",
+        "commit_short": "d538228",
+        "recorded_at": "2026-10-24T23:02:35+09:00",
+        "recorded_by": "kdy987",
+        "files": {
+          "application/src/main/java/myApp/client/vi/tdm/Tdm42_Tab_ManlOrgAppr.java": "4679b616714637a49be98fbe0abe3de1ad4f0a40",
+          "application/src/main/java/myApp/client/vi/tdm/model/Tdm42_ManlOrgModel.java": "fe03aa9bc6e437922ced60a0f515c3c8e20bbf2b",
+          "application/src/main/java/myApp/client/vi/tdm/model/Tdm42_ManlOrgModelProperties.java": "936f02f78a63895729318efe279f3c021a293dc1",
+          "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+          "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+          "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+          "application/src/main/java/myApp/server/sys/Sys99_Print.java": "21675d0ddbf16b0d30215b07180e431d5fa0f374",
+          "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+          "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+          "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+          "application/src/main/java/myApp/server/tdm/Tdm42_ManlOrg.java": "a1f15de8358f1581e4d732909af9e8d88a35934f",
+          "application/src/main/java/myApp/server/tdm/mapper/tdm42_manl_org.xml": "e2e8ee305ff602c05cbb7e3eaf7307a9bbe724cf",
+          "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+        },
+        "note": "docs/work/N/N18-작업기록.md"
+      }
+    ],
+    "id": "V21"
   },
   "Tdm42_Tab_ManlManager": {
     "commit": "d53822822a823af38e9fc3c78d7cddc4114f9454",

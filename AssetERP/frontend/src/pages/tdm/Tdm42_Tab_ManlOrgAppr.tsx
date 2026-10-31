@@ -2,7 +2,7 @@
  * [1423] 책무 > 03. 부서책무매뉴얼 > 매뉴얼 보고(부서별) (N18, 1단계)
  * AS-IS: myApp/client/vi/tdm/Tdm42_Tab_ManlOrgAppr.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L93-122: 위 = 툴바(검색 300 "직책/임원" · 사용 & 작성중인 매뉴얼만 조회 · [조회][저장][잠금][잠금해제]) + 아래 = 부서 책무매뉴얼 그리드(행번호, 체크박스 다중, 건수 묶음 헤더, 합계 행, 적용기간 셀 편집)
- * 1단계: 결재요청(Apr01_Edit_ApprDoc.insertLinkApproval)·문서보기(Apr01_Edit_ApprDoc.retrieveApproval)는 다른 도메인(apr) 전자결재 편집창이라 점검만 하고 안내한다.
+ * 결재요청(dcrChk·insertLinkApproval·updateApprId)·문서보기(retrieveApproval)는 V21에서 전자결재 편집창에 연결했다 (링크코드 A93, 제목·본문은 서버가 만든다 `GET apr/apprs/link-seed`).
  *        잠금의 파일 생성(RD 리포트 PDF)은 E13처럼 서버 ManlOrgPdfMaker 기본 구현이 거절한다 — 연동이 서면 같은 흐름이 그대로 동작한다.
  * UX보강(10): 툴바 = SearchBar(UX-01), 저장 = count(UX-03)
  */
@@ -17,12 +17,16 @@ import { Button } from '@/components/button';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { useGridCrud } from '@/hooks/useGridCrud';
+import { dcrApi } from '@/api/dcr';
 import { Sys10_Lookup_FileViewer } from '../sys/Sys10_Lookup_FileViewer';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
+import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 import { dynamicIconCell, dynamicViewCell } from './tdmGridCells';
 
 type Row = TdmManlOrgAppr;
 
 const gb = gbFor<Row>();
+const LINK_CODE = 'A93';                                              // 책무매뉴얼 보고(부서별) 문서분류 링크코드
 const APPR_SENT = ['10', '20', '30'];                                 // 상신(결재 진행·완료) 상태 코드
 const END_OF_TIME = '2999-01-01';                                     // 종료일이 없을 때 쓰는 값 (AS-IS L333)
 
@@ -31,6 +35,10 @@ export const Tdm42_Tab_ManlOrgAppr: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [useYn, setUseYn] = useState(false);                          // useYn.setBoxLabel("사용 & 작성중인 매뉴얼만 조회"), setValue(false)
   const [viewFile, setViewFile] = useState<FileInfo | null>(null);
+  // 전자결재 창: 새 문서(insertLinkApproval, 문서분류 + 고른 행) 또는 기존 문서(retrieveApproval)
+  const [linkDoc, setLinkDoc] = useState<{ row: Row; classTreeId: number } | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [classPickRow, setClassPickRow] = useState<Row | null>(null); // 문서분류가 없을 때 Dcr01_Lookup_Class로 고르는 중인 행
   const [progress, setProgress] = useState<{ text: React.ReactNode; done: boolean } | null>(null);   // messageBox "파일 생성 및 잠금"
 
   // retrieve() L284-298: 서비스 tdm.Tdm42_ManlOrg.selectByText(companyId, orgId(서버가 로그인 부서), "%검색어%", useYn)
@@ -191,13 +199,37 @@ export const Tdm42_Tab_ManlOrgAppr: React.FC = () => {
     if (!row.lockYn) return void message.warning('잠금설정된 매뉴얼만 결재요청이 가능합니다');
     const code = row.apprStatusCode;
     if (code && !['00', '40', '99'].includes(code)) return void message.warning('결재 중인 문서가 존재합니다');
-    message.info('전자결재 상신 창은 다음 단계에서 연결됩니다');       // Apr01_Edit_ApprDoc.insertLinkApproval → updateApprId() L547-561
+    void dcrChk(row);
   };
 
-  // buildGrid() actionCell03(ImageCell "View", 문서보기 열) → ApprCallbackResult + Apr01_Edit_ApprDoc.retrieveApproval
+  // dcrChk() L497-529: 상신·결재중·완료면 막고, dcr.Dcr30_Link.selectByLinkCode(A93) — 문서분류가 없으면 Dcr01_Lookup_Class로 고르고, 있으면(첫 행) 그 분류로 insertLinkApproval()
+  const dcrChk = async (row: Row) => {
+    if (row.apprStatusCode && APPR_SENT.includes(row.apprStatusCode)) return void message.warning('이미 상신중이거나 완료된 문서가 존재합니다');
+    try {
+      const list = await dcrApi.searchClassTreeByLinkCode(LINK_CODE);
+      if (list.length === 0) setClassPickRow(row);
+      else setLinkDoc({ row, classTreeId: list[0].classTreeId });
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
+
+  // updateApprId() L547-561: tdm.Tdm42_ManlOrg.updateApprId(apprId, manlOrgId) → retrieve() → "상신 완료되었습니다"
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await tdmApi.updateManlOrgApprId(linkDoc.row.manlOrgId, apprId);
+      await crud.retrieve();
+      message.info('상신 완료되었습니다');
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+  };
+
+  // buildGrid() actionCell03(ImageCell "View", 문서보기 열) → ApprCallbackResult + Apr01_Edit_ApprDoc.retrieveApproval (닫으면 retrieve())
   const onViewAppr = (row: Row) => {
     if (row.apprId == null) return void message.warning('문서가 존재하지않습니다');
-    message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+    setViewApprId(row.apprId);
   };
 
   // buildGrid() L170-282. 묶음 헤더 "건수"(HeaderGroupMap(0,4), 4열: 책무~점검항목), getSumGrid("", 2, 4, 7): 직책 열 라벨 없음, 합계는 4~7번째 열(책무~점검항목)
@@ -265,6 +297,20 @@ export const Tdm42_Tab_ManlOrgAppr: React.FC = () => {
         />
       </div>
       <Sys10_Lookup_FileViewer file={viewFile} onClose={() => setViewFile(null)} />
+      {/* dcrChk() 문서분류가 없을 때: Dcr01_Lookup_Class.open(null, null, callback → insertLinkApproval) */}
+      <Dcr01_Lookup_Class
+        open={classPickRow != null}
+        onResult={r => { if (classPickRow) setLinkDoc({ row: classPickRow, classTreeId: r.classTreeId }); setClassPickRow(null); }}
+        onClose={() => setClassPickRow(null)}
+      />
+      {/* insertLinkApproval() L531-545: Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, "A93", 행, false, callback → updateApprId / 취소면 retrieve()) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: LINK_CODE, refId: linkDoc.row.manlOrgId } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void crud.retrieve()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
       {/* messageBox "파일 생성 및 잠금" (L563-593): 430×170, 진행 중 닫을 수 없고 끝나면 [닫기] — [E8] button01[닫기].Select (L581) → messageBox.hide() */}
       <Modal
         open={progress !== null}

@@ -4,8 +4,8 @@
  * 생성자 L90-239: BorderLayout 가운데(여백 20) = 툴바 50(기준년월 년 45 + 월 콤보 60 · [조회][마감][취소]) + 그리드(행번호, 단일 선택, 10열, 합계 행 "계") + 폼 70(문서분류 800 · 상신상태 250 · [상신][문서보기])
  * 스타일: SG (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 조건이 2개 미만이라 넣지 않는다
- * [다음 단계] 그리드 [문서보기] 아이콘·[상신]·[문서보기]가 여는 전자결재 편집창 Apr01_Edit_ApprDoc(retrieveApproval·insertLinkApprovals)은 다른 도메인이라 지금은 안내만 한다.
- *   [상신]은 편집창이 열릴 자리까지(내용 없음·마감 전·문서분류 미지정 검사)를 원본 그대로 하고, 결재 뒤 상신 문서 기록 API(POST emp/relate-apprs/status·PUT emp/relate-apprs/{id}/appr-id)는 만들어 두었다
+ * 전자결재 편집창 Apr01_Edit_ApprDoc(그리드 [문서보기] 아이콘·[상신]=insertLinkApprovals "A43"·[문서보기]=retrieveApproval)은 V23(2026-10-31)에서 연결했다.
+ *   본문 TransportMngListHtmlData·연관문서 자동등록(insertRelateApprList)은 서버가 만든다 `GET apr/apprs/link-seed`(args yyyymm·accountName), 상신 문서 기록은 POST emp/relate-apprs/status·PUT emp/relate-apprs/{id}/appr-id
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message } from 'antd';
@@ -21,6 +21,7 @@ import { SearchBar } from '@/components/search';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Dcr30_Move_DcrClass, Dcr30ClassResult } from '@/components/lookup/Dcr30_Move_DcrClass';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 
 const gb = gbFor<RelateAppr>();
 const NO_CLASS_TEXT = '문서분류가 미지정 상태입니다. 관리자에게 문의해주세요';
@@ -42,6 +43,10 @@ export const Emp50_Tab_TransportExpenseMng: React.FC = () => {
   const [apprEnabled, setApprEnabled] = useState(true);
   const [apprViewEnabled, setApprViewEnabled] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
+  /** apprChk()가 읽은 기준년월 상신 문서(apprId) · 열려 있는 문서 · insertLinkApproval()이 연 새 결재창의 기록 대상(emp52 행) */
+  const [statusApprId, setStatusApprId] = useState<number | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [linkDoc, setLinkDoc] = useState<{ relateApprId: number; yyyymm: string } | null>(null);
   /** 마지막으로 조회한 년도 — 년도 칸의 ValueChange(값이 바뀌고 칸을 떠날 때)만 다시 조회한다 */
   const committedYear = useRef(year);
   /** 상신 때 문서에 넣는 계정과목 이름 (다음 단계에서 쓴다) */
@@ -55,10 +60,12 @@ export const Emp50_Tab_TransportExpenseMng: React.FC = () => {
       const st = await empRelateApprApi.getRelateApprStatus(ym);
       if (st == null || st.statusCode == null) {
         setApprStep({ code: '00', name: '미상신' });
+        setStatusApprId(null);
         setApprEnabled(true);
         setApprViewEnabled(false);
       } else {
         setApprStep({ code: st.statusCode, name: st.statusName ?? '' });
+        setStatusApprId(st.apprId);
         setApprEnabled(st.statusCode === '40');
         setApprViewEnabled(true);
       }
@@ -110,10 +117,10 @@ export const Emp50_Tab_TransportExpenseMng: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // [E11] viewCell (ImageCell "Detail").callbackOnCreate (L264-269) → 인라인: 상신문서가 없으면 안내, 있으면 Apr01_Edit_ApprDoc.retrieveApproval() (다음 단계)
+  // [E11] viewCell (ImageCell "Detail").callbackOnCreate (L264-269) → 인라인: 상신문서가 없으면 안내, 있으면 Apr01_Edit_ApprDoc.retrieveApproval()
   const viewAppr = (row: RelateAppr) => {
     if (row.apprId == null) { message.warning('해당 문서가 없습니다. 결재상태를 확인해주세요.'); return; }
-    message.info('전자결재 편집창(Apr01_Edit_ApprDoc)은 다음 단계에서 연결합니다.');
+    setViewApprId(row.apprId);
   };
 
   // buildGrid() L241-288 (단일 선택, getSumGrid("계", 1, 8, 8) → 마감여부 칸에 "계", 금액 합)
@@ -149,17 +156,38 @@ export const Emp50_Tab_TransportExpenseMng: React.FC = () => {
     }
   };
 
-  // [E6] apprButton[상신].Select (L154) → insertLinkApproval() L388-483: 내용 없음 / 마감 전 / 문서분류 없음 안내까지 → Apr01_Edit_ApprDoc (다음 단계)
-  const insertLinkApproval = () => {
+  // [E6] apprButton[상신].Select (L154) → insertLinkApproval() L388-483: 내용 없음 / 마감 전 / 문서분류 없음 안내 →
+  //   상신 중(10·20·30)이면 emp.Emp52_RelateAppr.selectApprId로 그 문서를 열고, 아니면 emp.Emp52_RelateAppr.insert → Apr01_Edit_ApprDoc.insertLinkApprovals("A43") → updateApprId
+  const insertLinkApproval = async () => {
     if (rows.length === 0) { message.warning('상신할 내용이 없습니다.'); return; }
     if (rows.some(r => r.closeYn !== 'true')) { message.warning('마감후 상신을 진행해주시길 바랍니다.'); return; }
     if (classTree.id == null) { message.warning('문서분류를 선택해주세요.'); return; }
-    message.info('전자결재 편집창(Apr01_Edit_ApprDoc)은 다음 단계에서 연결합니다.');
+    try {
+      if (['10', '20', '30'].includes(apprStep.code)) {
+        setViewApprId(await empRelateApprApi.getRelateApprApprId(yyyymm()));
+      } else {
+        const relateApprId = await empRelateApprApi.createRelateApprStatus(yyyymm());
+        setLinkDoc({ relateApprId, yyyymm: yyyymm() });
+      }
+    } catch (err) {
+      message.error(errorMessage(err, '상신 실패'));
+    }
   };
 
-  // [E7] apprViewButton[문서보기].Select (L161) → apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval() (다음 단계)
+  // updateApprId() L486-498: emp.Emp52_RelateAppr.updateApprId(relateApprId, apprId) → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await empRelateApprApi.updateRelateApprApprId(linkDoc.relateApprId, apprId);
+      void retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+  };
+
+  // [E7] apprViewButton[문서보기].Select (L161) → apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false, 닫으면 apprChk())
   const viewPayAppr = () => {
-    message.info('전자결재 편집창(Apr01_Edit_ApprDoc)은 다음 단계에서 연결합니다.');
+    if (statusApprId != null) setViewApprId(statusApprId);
   };
 
   // [E10] classTreeFullName[문서분류].TriggerClick (L201) → openLookupDoc() L356-365: Dcr30_Move_DcrClass.open(callback) → 고른 분류를 칸에 넣는다
@@ -209,6 +237,14 @@ export const Emp50_Tab_TransportExpenseMng: React.FC = () => {
         </div>
       </div>
       <Dcr30_Move_DcrClass open={moveOpen} hideNull onResult={onClassResult} onClose={() => setMoveOpen(false)} />
+      {/* insertLinkApprovals L460-480: 상신 문서 — 계정과목 이름(setAccountName)·기준년월을 서버에 넘기면 본문·연관문서를 서버가 만든다 */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc && classTree.id != null ? { classTreeId: classTree.id, linkCode: 'A43', args: { yyyymm: linkDoc.yyyymm, accountName: accountNameRef.current } } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void retrieve()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); void retrieve(); }}
+      />
     </div>
   );
 };

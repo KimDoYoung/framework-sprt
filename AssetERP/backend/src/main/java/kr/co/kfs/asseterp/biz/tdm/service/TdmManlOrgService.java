@@ -105,6 +105,14 @@ public class TdmManlOrgService {
         }
     }
 
+    /** AS-IS tdm.Tdm42_ManlOrg.updateApprId — 부서별 매뉴얼 보고(A93)의 결재 문서를 기록한다. 로그인 회사 행만 */
+    @Transactional
+    public void updateApprId(UserPrincipal user, Long manlOrgId, Long apprId) {
+        if (mapper.updateApprId(manlOrgId, user.getCompanyId(), apprId) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+    }
+
     private static String blankToNull(String s) {
         return s == null || s.isBlank() ? null : s;
     }

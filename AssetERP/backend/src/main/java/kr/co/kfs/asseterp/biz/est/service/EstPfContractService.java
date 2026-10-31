@@ -4,6 +4,8 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.est.dto.PfContractRes;
 import kr.co.kfs.asseterp.biz.est.dto.PfContractSaveReq;
 import kr.co.kfs.asseterp.biz.est.mapper.EstPfContractMapper;
+import kr.co.kfs.asseterp.common.error.BusinessException;
+import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,6 +61,16 @@ public class EstPfContractService {
             return 0;
         }
         return mapper.selectHistoryIdsByContracts(pfContractIds).size();
+    }
+
+    /** AS-IS est.Est02_PfContract.updateApprId (A60 계획서) / updateResultApprId (A61 결과보고서). 로그인 회사 행만 */
+    @Transactional
+    public void updateApprId(UserPrincipal user, Long pfContractId, Long apprId, boolean result) {
+        int n = result ? mapper.updateResultApprId(user.getCompanyId(), pfContractId, apprId)
+                : mapper.updatePlanApprId(user.getCompanyId(), pfContractId, apprId);
+        if (n == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
     }
 
     /** AS-IS selectById: 로그인 회사 행만 */

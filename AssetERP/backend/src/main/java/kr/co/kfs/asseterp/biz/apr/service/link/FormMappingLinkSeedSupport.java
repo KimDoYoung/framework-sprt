@@ -7,8 +7,10 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
+import kr.co.kfs.asseterp.biz.com.dto.FormMappingMultiRes;
 import kr.co.kfs.asseterp.biz.com.dto.FormMappingRes;
 import kr.co.kfs.asseterp.biz.com.mapper.ComFormMappingMapper;
+import kr.co.kfs.asseterp.biz.com.mapper.ComFormMappingMultiMapper;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -23,6 +25,7 @@ public class FormMappingLinkSeedSupport {
     private static final DateTimeFormatter YYMMDD = DateTimeFormatter.ofPattern("yyMMdd");
 
     private final ComFormMappingMapper formMappingMapper;
+    private final ComFormMappingMultiMapper formMappingMultiMapper;
 
     /** 양식 본문에 치환 값을 넣는다. AS-IS는 `replaceAll("#{" + key + "}", value)`이고 TOBE는 글자 그대로 바꾼다 */
     public String fill(Long companyId, String linkCode, Map<String, String> mapping) {
@@ -31,6 +34,22 @@ public class FormMappingLinkSeedSupport {
             return null;
         }
         String content = forms.get(0).content();
+        for (Map.Entry<String, String> e : mapping.entrySet()) {
+            content = content.replace("#{" + e.getKey() + "}", e.getValue());
+        }
+        return content;
+    }
+
+    /**
+     * 상세코드별 양식 (AS-IS `com.Com11_FormMappingMulti.selectByDetailCode`, V21 A60·A61) — 같은 치환, 양식이 없으면 null.
+     * kindCode는 시스템 코드 종류(예: EstPfFeeCode), detailCode는 그 상세코드(수수료 코드)
+     */
+    public String fillMulti(Long companyId, String kindCode, String detailCode, String linkCode, Map<String, String> mapping) {
+        FormMappingMultiRes form = formMappingMultiMapper.selectByDetailCode(companyId, kindCode, detailCode, linkCode);
+        if (form == null || form.content() == null) {
+            return null;
+        }
+        String content = form.content();
         for (Map.Entry<String, String> e : mapping.entrySet()) {
             content = content.replace("#{" + e.getKey() + "}", e.getValue());
         }

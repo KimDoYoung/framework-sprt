@@ -35,13 +35,17 @@ public class AprLinkSeedController {
                                             @RequestParam String linkCode, @RequestParam(required = false) Long refId,
                                             @RequestParam(required = false) String stdDate, @RequestParam(required = false) String cycleType,
                                             @RequestParam(required = false) String yyyy, @RequestParam(required = false) String mm,
-                                            @RequestParam(required = false) String cycleName) {
+                                            @RequestParam(required = false) String cycleName, @RequestParam(required = false) String ids,
+                                            @RequestParam(required = false) String yyyymm, @RequestParam(required = false) String accountName) {
         Map<String, String> args = new HashMap<>();
         put(args, "stdDate", stdDate);
         put(args, "cycleType", cycleType);
         put(args, "yyyy", yyyy);
         put(args, "mm", mm);
         put(args, "cycleName", cycleName);
+        put(args, "yyyymm", yyyymm); // A43 여비교통비 관리의 기준년월(yyyy.MM)
+        put(args, "accountName", accountName); // A43 계정과목 이름
+        put(args, "ids", ids); // 여러 행을 한 문서로 묶는 코드(A77 기준가 정정 월보고)의 행 ID, 쉼표 구분
         return ApiResponse.ok(service.seed(principal, classTreeId, linkCode, refId, args));
     }
 }
