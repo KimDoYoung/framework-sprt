@@ -61,31 +61,31 @@ public class UnLeaveLinkSeedProvider implements AprLinkSeedProvider {
 
     // ───── UnLeaveHtmlData.getHtmlContent02_1 / 02_2 (두 양식은 연차/월차 낱말만 다르다) ─────
 
-    private static String tdStColor(int colspan, int rowspan, int border, String align, int size, String text, String bg) {
+    static String tdStColor(int colspan, int rowspan, int border, String align, int size, String text, String bg) {
         return "<td colspan=\"" + colspan + "\" rowspan=\"" + rowspan
                 + "\" style=\"border:" + border + "px;border-color:black; border-style:solid; border-width:1px; background-color:" + bg + "; text-align:"
                 + align + "; height:15px; width:" + (colspan * 3.3) + "%;\">"
                 + "<strong><span style=\"font-size:" + size + "px;\">" + text + "</span></strong></td>";
     }
 
-    private static String tdColor(int colspan, int rowspan, int border, String align, int size, String text, String bg) {
+    static String tdColor(int colspan, int rowspan, int border, String align, int size, String text, String bg) {
         return "<td colspan=\"" + colspan + "\" rowspan=\"" + rowspan
                 + "\" style=\"border:" + border + "px;border-color:black; border-style:solid; border-width:1px; background-color:" + bg + "; text-align:"
                 + align + "; height:15px; width:" + (colspan * 3.3) + "%;\">"
                 + "<span style=\"font-size:" + size + "px;\">" + text + "</span></td>";
     }
 
-    private static String tdEmpty(int colspan, int rowspan, int border) {
+    static String tdEmpty(int colspan, int rowspan, int border) {
         return "<td colspan=\"" + colspan + "\" rowspan=\"" + rowspan
                 + "\" style=\"border:" + border + "px; height:1px; width:" + (colspan * 3.3) + "%;\">"
                 + "<span></span></td>";
     }
 
-    private static String checkNull(String text) {
+    static String checkNull(String text) {
         return text == null || "undefined".equals(text) || "null".equals(text) ? " " : text;
     }
 
-    private static String checkDoubleNull(Double num) {
+    static String checkDoubleNull(Double num) {
         return num == null ? "- " : new DecimalFormat("###,###,###.##").format(num);
     }
 

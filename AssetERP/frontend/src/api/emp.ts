@@ -1190,6 +1190,18 @@ export const empUnLeaveApi = {
     return res.data.data ?? 0;
   },
 
+  /** AS-IS emp.Emp21_UnLeave.insertAppr (연차 탭 [상신]) → 만든 결재문서 수. 서버가 선택한 행을 다시 읽는다 */
+  createYearAppr: async (stdYear: string, classTreeId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/emp/un-leaves/appr', { stdYear, classTreeId, ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp21_UnLeave.insertAppr2 (월차 탭 [상신]) → 만든 결재문서 수 */
+  createMonthAppr: async (stdYear: string, classTreeId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/emp/un-leaves/month/appr', { stdYear, classTreeId, ids });
+    return res.data.data ?? 0;
+  },
+
   /** AS-IS emp.Emp21_UnLeave.update (발생·사용·잔여 휴가) → 저장한 건수 */
   save: async (rows: UnLeave[]): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>('v1/emp/un-leaves', rows.map(r => ({ unLeaveId: r.unLeaveId, totalDays: r.totalDays, useDays: r.useDays, remainDays: r.remainDays })));

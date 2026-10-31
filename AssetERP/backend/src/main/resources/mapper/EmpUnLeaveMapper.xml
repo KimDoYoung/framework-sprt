@@ -365,4 +365,121 @@ SELECT	row_number() over()                                          AS emp01_per
         <foreach collection="unLeaveIds" item="unLeaveId" open="(" separator="," close=")">#{unLeaveId}</foreach>
     </delete>
 
+    <!-- ───── V39 [상신]: 결재문서 일괄 생성 (AS-IS Emp21_UnLeave.insertAppr·insertAppr2) ───── -->
+
+    <!-- 그리드 조회 SQL(yearQuery·monthQuery)의 같은 열을 선택한 행 ID로 다시 읽는다. AS-IS는 행 모델을 화면에서 받았다 -->
+    <sql id="noticeCols">
+        SELECT u.emp21_un_leave_id          AS un_leave_id
+             , u.emp21_person_id             AS person_id
+             , u.emp21_un_leave_cd           AS un_leave_code
+             , u.emp21_un_leave_nm           AS un_leave_name
+             , u.emp21_person_no             AS person_no
+             , u.emp21_person_nm             AS person_name
+             , u.emp21_org_nm                AS org_name
+             , u.emp21_pos_nm                AS pos_name
+             , u.emp21_company_nm            AS company_name
+             , u.emp21_hire_date             AS hire_date
+             , u.emp21_start_date            AS start_date
+             , u.emp21_duty_rt               AS duty_rt
+             , u.emp21_total_days            AS total_days
+             , u.emp21_use_days              AS use_days
+             , u.emp21_remain_days           AS remain_days
+             , CAST(u.emp21_leave_occur_start_date AS date) AS leave_occur_start_date
+             , CAST(u.emp21_leave_occur_close_date AS date) AS leave_occur_close_date
+             , CAST(u.emp21_leave_target_start_date AS date) AS leave_target_start_date
+             , CAST(u.emp21_leave_target_close_date AS date) AS leave_target_close_date
+    </sql>
+
+    <select id="selectNoticeYear" resultType="kr.co.kfs.asseterp.biz.emp.dto.UnLeaveNoticeRow">
+        <include refid="noticeCols"/>
+          FROM (<include refid="yearQuery"/>) u
+         WHERE u.emp21_un_leave_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <select id="selectNoticeMonth" resultType="kr.co.kfs.asseterp.biz.emp.dto.UnLeaveNoticeRow">
+        <include refid="noticeCols"/>
+          FROM (<include refid="monthQuery"/>) u
+         WHERE u.emp21_un_leave_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <!-- AS-IS sys01_company.selectById: 쓰는 열(휴가결산월)만 -->
+    <select id="selectLeaveMonthCode" resultType="string">
+        SELECT sys01_leave_month_cd
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS sys12_calendar.selectByDate: 영업일(sys12_working_yn = 'true')만 일자 순으로. AS-IS는 전부 읽어 자바에서 걸렀다 -->
+    <select id="selectWorkDays" resultType="java.time.LocalDate">
+        SELECT CAST(sys12_day AS date)
+          FROM sys12_calendar
+         WHERE sys12_company_id = #{companyId}
+           AND sys12_day BETWEEN CAST(#{startDate} AS timestamp) AND CAST(#{closeDate} AS timestamp)
+           AND sys12_working_yn = 'true'
+         ORDER BY sys12_day
+    </select>
+
+    <!-- AS-IS emp22_etc_leave.getLeaveDate: 결재 완료(30)된 특별휴가 중 기간이 겹치는 사원의 건 -->
+    <select id="selectEtcLeaveRanges" resultType="kr.co.kfs.asseterp.biz.emp.dto.UnLeaveEtcRange">
+        SELECT emp22_start_date AS start_date
+             , emp22_close_date AS close_date
+          FROM emp22_etc_leave
+               INNER JOIN apr01_appr             ON apr01_appr_id = emp22_appr_id AND apr01_status_cd LIKE '30'
+               INNER JOIN emp23_etc_leave_person ON emp23_etc_leave_id = emp22_etc_leave_id
+         WHERE emp22_company_id = #{companyId}
+           AND emp23_person_id  = #{personId}
+           AND emp22_start_date &lt;= CAST(#{closeDate} AS timestamp)
+           AND emp22_close_date &gt;= CAST(#{startDate} AS timestamp)
+         ORDER BY emp22_start_date, emp22_close_date
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS apr01_appr.insertApproval L2997 (IDMS-IC): 서명·인감위치·링크코드는 이 흐름에서 값이 없다(NULL) -->
+    <insert id="insertNoticeAppr">
+        INSERT INTO apr01_appr
+             ( apr01_appr_id, apr01_company_id, apr01_reg_emp_id, apr01_class_tree_id
+             , apr01_reg_date, apr01_effect_date, apr01_status_cd, apr01_inout_cd
+             , apr01_title, apr01_content, apr01_dcr_id_word
+             , apr01_sign_company, apr01_sign_ceo, apr01_stamp_position, apr01_link_cd )
+        VALUES
+             ( #{apprId}, #{companyId}, #{regEmpId}, #{classTreeId}
+             , #{regDate}, #{effectDate}, #{statusCode}, #{inOutTypeCode}
+             , #{title}, #{content}
+             , ( SELECT COALESCE(org02_dcr_id_word, null)
+                   FROM org02_info
+                        INNER JOIN org01_code    ON org01_code_id = org02_code_id
+                        INNER JOIN sys01_company ON sys01_company_id = org01_company_id
+                  WHERE org02_code_id = CAST(f_get_emptrans(#{regEmpId}, CAST(#{regDate} AS date), 'org_code_id') AS NUMERIC)
+                    AND sys01_company_id = #{companyId}
+                    AND sys01_dcr_numbering_cd = '2'
+                    AND org02_mod_date = ( SELECT max(x.org02_mod_date)
+                                             FROM org02_info x
+                                            WHERE x.org02_code_id = CAST(f_get_emptrans(#{regEmpId}, CAST(#{regDate} AS date), 'org_code_id') AS NUMERIC)
+                                              AND x.org02_mod_date &lt;= #{regDate} ) )
+             , NULL, NULL, NULL, NULL )
+    </insert>
+
+    <!-- AS-IS apr04_appr_step.insertApproval -->
+    <insert id="insertNoticeStep">
+        INSERT INTO apr04_appr_step
+             ( apr04_appr_step_id, apr04_appr_id, apr04_step_type_cd, apr04_seq, apr04_step_status_cd
+             , apr04_appr_date, apr04_step_emp_id, apr04_appr_emp_id )
+        VALUES
+             ( #{apprStepId}, #{apprId}, #{stepTypeCode}, #{seq}, #{stepStatusCode}
+             , #{apprDate}, #{stepEmpId}, #{apprEmpId} )
+    </insert>
+
+    <!-- AS-IS emp21_un_leave.updateApprId: 연차·월차 모두 상신문서 ID(emp21_appr_id)를 채운다 — 회사 조건을 더했다 -->
+    <update id="updateNoticeApprId">
+        UPDATE emp21_un_leave
+           SET emp21_appr_id = #{apprId}
+         WHERE emp21_un_leave_id = #{unLeaveId}
+           AND emp21_company_id  = #{companyId}
+    </update>
+
 </mapper>

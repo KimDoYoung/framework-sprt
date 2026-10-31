@@ -3,8 +3,8 @@
  * AS-IS: myApp/client/vi/emp/Emp21_TabPage_UnLeaveList2.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃(생성자 L92-131, CG): 툴바(해당 연도 · 구분 · [조회][저장][삭제][생성] + 안내 글) + 셀 편집 그리드(체크 다중) + 아래 문서분류 줄(문서분류 · [상신][문자발송])
  * 연차 탭과 다른 점: 구분 콤보는 코드그룹 unLeaveCode002 + 맨 앞 "전체", 조회는 selectByUnLeaveCode2, [생성]은 구분 창 없이 바로 insert2(기준년도만).
- * 1단계(사용자 결정 2026-10-28): [상신]의 결재문서 일괄 생성(insertAppr)·[문자발송](sendMessage)·상세보기(Apr01_Edit_ApprDoc)는 다음 단계 —
- * 원본의 선택·상태 검사와 확인창까지만 한다.
+ * 1단계(사용자 결정 2026-10-28)는 [상신]의 결재문서 생성·[문자발송]·상세보기를 확인창까지만 했다. V39(2026-11-01)에서 [상신](서버가 결재문서 일괄 생성, emp.Emp21_UnLeave.insertAppr2)과 상세보기(Apr01_Edit_ApprDoc)를 연결했다.
+ * [문자발송](sendMessage)은 다음 단계.
  */
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Input, Modal, message } from 'antd';
@@ -19,6 +19,7 @@ import { CellEditGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Dcr30_Move_DcrClass } from '@/components/lookup/Dcr30_Move_DcrClass';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { useGridCrud, editableCol } from '@/hooks/useGridCrud';
 
@@ -34,6 +35,8 @@ export const Emp21_TabPage_UnLeaveList2: React.FC = () => {
   const [year, setYear] = useState(dayjs().format('YYYY'));
   const [code, setCode] = useState<string | undefined>('%');
   const [classOpen, setClassOpen] = useState(false);
+  // 상세보기: 열 결재문서 ID (Apr01_Edit_ApprDoc.retrieveApproval)
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
   // 문서분류: 기본(defaultName)·고른 값(openLookupDoc)
   const [defaultClassTreeId, setDefaultClassTreeId] = useState<number | null>(null);
   const [classTreeId, setClassTreeId] = useState<number | null>(null);
@@ -131,8 +134,12 @@ export const Emp21_TabPage_UnLeaveList2: React.FC = () => {
       width: 380,
       okText: '예',
       cancelText: '아니오',
-      // [E11] msgBox.DialogHide [YES] (L402) → insertAppr() L420-441: 서비스 emp.Emp21_UnLeave.insertAppr(companyId, regEmpId, classTreeId, 선택 행) — 다음 단계
-      onOk: () => { message.info('결재문서 일괄 자동생성은 아직 변환 전입니다(다음 단계).'); },
+      // [E11] msgBox.DialogHide [YES] (L402) → insertAppr() L420-441: 서비스 emp.Emp21_UnLeave.insertAppr(companyId, regEmpId, classTreeId, 선택 행)
+      onOk: async () => {
+        // 서버가 같은 조회 SQL로 선택한 행을 다시 읽어 결재문서(상태 30)·결재선을 만든다. 성공하면 retrieve()
+        await empUnLeaveApi.createMonthAppr(cur.current.year, classTreeId!, selected.map(r => r.unLeaveId as number));
+        await crud.retrieve();
+      },
     });
   };
 
@@ -155,7 +162,7 @@ export const Emp21_TabPage_UnLeaveList2: React.FC = () => {
   // [E9] actionCell (ImageCell).callbackOnCreate (L258) → 서비스 apr.Apr01_Appr.selectById(apprId) → 없으면 "관련 상신문서가 존재하지 않습니다", 있으면 Apr01_Edit_ApprDoc.retrieveApproval(apprModel, false) — 편집창은 다음 단계
   const viewAppr = (apprId: number | null) => {
     if (apprId == null) { message.warning('관련 상신문서가 존재하지 않습니다'); return; }
-    message.info('전자결재 문서 보기는 아직 변환 전입니다(다음 단계).');
+    setViewApprId(apprId);
   };
 
   // retrieve() L297-301: 구분 03·05이면 열 12(지정통보여부)를 보이고, 그 밖이면 감춘다
@@ -224,6 +231,7 @@ export const Emp21_TabPage_UnLeaveList2: React.FC = () => {
         onResult={onPickClass}
         onClose={() => setClassOpen(false)}
       />
+      <Apr01_Edit_ApprDoc apprId={viewApprId} onClose={() => setViewApprId(null)} />
     </div>
   );
 };

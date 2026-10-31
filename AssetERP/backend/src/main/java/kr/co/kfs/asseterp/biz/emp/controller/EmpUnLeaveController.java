@@ -1,9 +1,11 @@
 package kr.co.kfs.asseterp.biz.emp.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.UnLeaveApprReq;
 import kr.co.kfs.asseterp.biz.emp.dto.UnLeaveCreateReq;
 import kr.co.kfs.asseterp.biz.emp.dto.UnLeaveRes;
 import kr.co.kfs.asseterp.biz.emp.dto.UnLeaveSaveReq;
+import kr.co.kfs.asseterp.biz.emp.service.EmpUnLeaveApprService;
 import kr.co.kfs.asseterp.biz.emp.service.EmpUnLeaveService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import java.util.List;
 public class EmpUnLeaveController {
 
     private final EmpUnLeaveService service;
+    private final EmpUnLeaveApprService apprService;
 
     /** AS-IS emp.Emp21_UnLeave.selectByUnLeaveCode (연차 탭) */
     @GetMapping
@@ -56,5 +59,17 @@ public class EmpUnLeaveController {
     @DeleteMapping
     public ApiResponse<Integer> delete(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> ids) {
         return ApiResponse.ok(service.delete(principal, ids));
+    }
+
+    /** AS-IS emp.Emp21_UnLeave.insertAppr ([상신], 연차 탭) → 만든 결재문서 수 */
+    @PostMapping("/appr")
+    public ApiResponse<Integer> createYearAppr(@AuthenticationPrincipal UserPrincipal principal, @RequestBody UnLeaveApprReq req) {
+        return ApiResponse.ok(apprService.createYear(principal, req));
+    }
+
+    /** AS-IS emp.Emp21_UnLeave.insertAppr2 ([상신], 월차 탭) → 만든 결재문서 수 */
+    @PostMapping("/month/appr")
+    public ApiResponse<Integer> createMonthAppr(@AuthenticationPrincipal UserPrincipal principal, @RequestBody UnLeaveApprReq req) {
+        return ApiResponse.ok(apprService.createMonth(principal, req));
     }
 }

@@ -134,3 +134,15 @@ CREATE TABLE public.att13_overtime_req_hist (
 	CONSTRAINT att13_overtime_req_hist_pkey PRIMARY KEY (att13_overtime_req_hist_id)
 );
 ```
+
+---
+
+```sql
+  ALTER TABLE ics32_relate_appr ADD COLUMN ics32_person_id numeric;
+  ALTER TABLE ics32_relate_appr ADD COLUMN ics32_appr_type character varying(1);
+
+  COMMENT ON COLUMN ics32_relate_appr.ics32_person_id IS '상신자(확인자)ID — 부서장 준수확인서(A52)만
+  값이 있고 준수보고(A32)는 NULL';
+  COMMENT ON COLUMN ics32_relate_appr.ics32_appr_type IS '상신구분(1:준수보고 A32 / 2:부서장 준수확인서
+  A52)';
+```
