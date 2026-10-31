@@ -20,6 +20,7 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprNoticeStep;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprApprActionMapper;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprApprWriteMapper;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprRelateEditMapper;
+import kr.co.kfs.asseterp.biz.apr.mapper.AprStampApplMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,7 @@ public class AprApprWriteService {
     private final AprApprActionMapper actionMapper;
     private final AprNoticeService notice;
     private final AprRelateEditMapper relateMapper;
+    private final AprStampApplMapper stampApplMapper;
 
     /** 새 문서 번호 (AS-IS insertApproval의 DBUtil.setSeq) */
     @Transactional
@@ -273,6 +275,10 @@ public class AprApprWriteService {
         if (r.icr() != null) {
             mapper.deleteRelateIcrByApprId(apprId);
             r.icr().forEach(l -> mapper.insertRelateIcr(l.relateId() != null ? l.relateId() : mapper.selectNextId(), apprId, l));
+        }
+        // Apr01_Appr.update L247-259: 날인신청 줄에 제공처·제공목적·비고를 쓴다
+        if (r.stampDoc() != null) {
+            stampApplMapper.updateProvide(apprId, r.stampDoc().provideCo(), r.stampDoc().purpose(), r.stampDoc().note());
         }
     }
 

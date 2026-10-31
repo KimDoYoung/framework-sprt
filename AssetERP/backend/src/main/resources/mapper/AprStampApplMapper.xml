@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr16_stamp_doc.xml selectProvideCoByApprId·updateByApprId + UpdateDataModel(apr16_stamp_doc), apr04_appr_step.xml checkApprId (V14, Apr16_Grid_StampDoc·Apr16_Lookup_StampApplQty) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprStampApplMapper">
+
+    <select id="selectMeta" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStampApplMeta">
+        SELECT apr16_provide_co AS provide_co
+             , apr16_purpose    AS purpose
+             , apr16_note       AS note
+          FROM apr16_stamp_doc
+         WHERE apr16_appr_id = #{apprId}
+         GROUP BY apr16_provide_co, apr16_purpose, apr16_note
+         LIMIT 1
+    </select>
+
+    <select id="countApprovedSteps" resultType="int">
+        SELECT COUNT(*)
+          FROM apr04_appr_step
+         WHERE apr04_appr_id = #{apprId}
+           AND apr04_appr_date IS NOT NULL
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- yunhee port-save apr16_stamp_doc — 화면이 바꾸는 열만 -->
+    <insert id="insertStampDoc">
+        INSERT INTO apr16_stamp_doc (apr16_stamp_doc_id, apr16_company_id, apr16_appl_date, apr16_appl_emp_id, apr16_appl_type, apr16_appr_id,
+                                     apr16_stamp_id, apr16_repr_corp_id, apr16_doc_appl_qty, apr16_stamp_qty, apr16_stamp_out_yn)
+        VALUES (#{id}, #{companyId}, CURRENT_DATE, #{empId}, #{applType}, #{apprId},
+                #{stampId}, #{reprCorpId}, #{docApplQty}, #{stampQty}, #{stampOutYn})
+    </insert>
+
+    <delete id="deleteStampDoc">
+        DELETE FROM apr16_stamp_doc
+         WHERE apr16_stamp_doc_id = #{stampDocId}
+           AND apr16_appr_id      = #{apprId}
+           AND apr16_company_id   = #{companyId}
+    </delete>
+
+    <update id="updateProvide">
+        UPDATE apr16_stamp_doc
+           SET apr16_provide_co = #{provideCo}
+             , apr16_purpose    = #{purpose}
+             , apr16_note       = #{note}
+         WHERE apr16_appr_id = #{apprId}
+    </update>
+</mapper>

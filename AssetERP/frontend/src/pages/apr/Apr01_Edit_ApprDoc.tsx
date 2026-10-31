@@ -118,6 +118,8 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
   const stepsRef = useRef<AprApprStep[]>([]);
   /** 연관 탭 다섯 개의 화면 내용 (V13) — 처음 읽기 전에는 없어 보내지 않는다 */
   const relatesRef = useRef<AprApprRelateReq | undefined>(undefined);
+  /** 날인신청 줄 수와 제공처·제공목적·비고 (V14) */
+  const stampDocRef = useRef<{ count: number; provideCo: string; purpose: string; note: string } | undefined>(undefined);
   /** 내 임시저장(99) 문서이거나 새 문서면 칸을 고칠 수 있다 (makeButton: 상신자 본인의 편집 모드) */
   const editable = isNew || (doc != null && doc.statusCode === '99' && doc.regEmpId === user.userId);
   const open = apprId != null || newClassTreeId != null;
@@ -293,6 +295,17 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
     }
   };
 
+  /** getStampDocMap() L5130-5158: 날인신청 줄이 있으면 제공처는 수신, 제공목적은 상신제목으로 대신한다 */
+  const stampDocMap = () => {
+    const s = stampDocRef.current;
+    if (!s || s.count === 0) return undefined;
+    return { provideCo: s.provideCo || form.receiveName || null, purpose: s.purpose || form.title || null, note: s.note || null };
+  };
+  const stampDocError = (): string | null => {
+    const s = stampDocRef.current;
+    return s && s.count > 0 && !s.provideCo && !form.receiveName ? '제공처를 입력해주세요' : null;
+  };
+
   /** 요청 본문 — save() L5060-5070 · update() L4905-4926 */
   const buildReq = (mode: 'save' | 'request', msg: string | null, confirmed: boolean): AprApprSaveReq => {
     // getHtmlText().replaceAll("text-decoration-line", "text-decoration"), 작은따옴표 → 큰따옴표, 결재요청은 <p>로 감싼다
@@ -311,7 +324,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
         apprStepId: s.apprStepId, stepTypeCode: s.stepTypeCode, seq: s.seq ?? '001', stepStatusCode: s.stepStatusCode ?? null,
         stepEmpId: s.stepEmpId, lockYn: s.lockYn ? 'true' : 'false', addEmpId: null,
       })),
-      relates: relatesRef.current,
+      relates: relatesRef.current ? { ...relatesRef.current, stampDoc: stampDocMap() } : undefined,
     };
   };
 
@@ -328,7 +341,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
       if (!form.stampId) return '대외문서는 인감선택이 필수입니다';
       if (!form.receiveName) return '수신자는 필수입력 항목입니다';
     }
-    return null;
+    return stampDocError();
   };
 
   /** beforePDFChk L4443-4447 → updateChk L4837-4847 → preCheck L5389-5437 */
@@ -341,7 +354,7 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
     if (!form.effectDate) return '시행일은 필수입력 항목입니다';
     if (!form.regDate) return '상신일은 필수입력 항목입니다';
     if (!form.content) return '내용은 필수입력 항목입니다';
-    return null;
+    return stampDocError();
   };
 
   const afterWrite = (res: AprApprWriteRes) => {
@@ -380,9 +393,20 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
 
   // [E24] updateButton[결재요청].Select (L4327) → apprStepLockChk01() L4407-4430(결재권자가 없으면 "계속 진행하시겠습니까?") → beforePDFChk() → updateChk() → preCheck() → 결재의견 창(updateContinue L4892) → update(msg) L4904
   const confirmedStepLine = useRef(false);
+  const stampFieldsConfirmed = useRef(false);
   const requestApproval = () => {
     const err = checkRequest();
     if (err) { message.warning(err); return; }
+    // apprStepLockChk L4376-4405 → fieldChk(): 날인신청 줄이 없는데 제공처·제공목적·비고에 글이 있으면 한 번 묻는다. 날인부수(stampQtyChk)는 [+]가 늘 1 이상으로 넣어 걸릴 일이 없다
+    const sd = stampDocRef.current;
+    if (sd && sd.count === 0 && (sd.provideCo || sd.purpose || sd.note) && !stampFieldsConfirmed.current) {
+      Modal.confirm({
+        title: '확인', content: '[날인신청]이 등록되지 않아 [제공처, 제공목적, 비고] 입력 내용이 삭제됩니다. 계속하시겠습니까?', width: 680, okText: '예', cancelText: '아니오',
+        onOk: () => { stampFieldsConfirmed.current = true; requestApproval(); },
+      });
+      return;
+    }
+    stampFieldsConfirmed.current = false;
     // checkStepLine L1872-1885: 결재·합의가 하나도 없으면 한 번 묻는다
     if (!stepsRef.current.some(st => st.stepTypeCode === '10' || st.stepTypeCode === '20')) {
       Modal.confirm({
@@ -596,6 +620,8 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
                 seed={seed}
                 onStepsChange={steps => { stepsRef.current = steps; }}
                 onRelatesChange={relates => { relatesRef.current = relates; }}
+                stamp={{ id: form.stampId ?? null, name: form.stampName ?? '' }}
+                onStampDocChange={v => { stampDocRef.current = v; }}
                 stepsReplace={stepsReplace}
                 canRetouch={!!state?.canRetouchSteps}
                 onRetouched={() => { onClosed?.(); setReloadKey(k => k + 1); }}

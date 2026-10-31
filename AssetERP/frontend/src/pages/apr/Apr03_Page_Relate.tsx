@@ -6,13 +6,14 @@
  * V05: 첨부 툴바 [첨부파일 옵션설정]·[등록](첨부 탭 올리기)·삭제 열을 켠다(연관 탭의 [등록]은 V13).
  * V13 연관 설정: 연관 탭 [등록](insert L1029-1093) — 펀드 Fnd01_Lookup_SelectMulti·일임 Adv02_Lookup_SelectMulti·문서 Apr21_Lookup_RelateAppr·법규 Ics01/내규 Icr01 "deadline" 조회창,
  *   편집 모드의 삭제·설정 열(openButton L1887-1910)과 상세보기(Apr20_Lookup_RelateIcs.view·Apr22_Lookup_RelateIcr.view). 목록은 이 안에 두고 [저장]·[결재요청] 때 부른 쪽이 onRelatesChange 값을 보낸다.
+ * V14 날인신청 탭: 원본 Apr16_Grid_StampDoc(왼쪽 [+][-]와 Apr16_Grid_StampApplList 그리드, 오른쪽 제공처·제공목적·비고) — [+]는 SettingPopup 메뉴 → Apr16_Lookup_StampApplQty, 줄은 그 자리에서 DB에 넣고 지운다.
  * V07 편집 모드(editable): 결재선 툴바 [결재선 설정](Apr04_Edit_ApprStep)·[직급순 재정렬](arrayStepTypeCode L1920-1974)과 ▲▼(changeRow L1682-1725)를 켠다. 
  *   새 문서(isNew)는 아직 DB에 없으므로 서버를 읽지 않고 seed(새 문서 열기 응답)로 채운다.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { message, Modal } from 'antd';
 import type { ColDef } from 'ag-grid-community';
-import { aprAttachApi, aprDetailApi, aprExtraApi, aprRelateEditApi, aprStepEditApi } from '@/api/apr';
+import { aprAttachApi, aprDetailApi, aprExtraApi, aprRelateEditApi, aprStampApplApi, aprStepEditApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
 import { fileApi, FILE_DELETE_STATUS } from '@/api/file';
 import { AprTypo, AprApprDetail, AprApprFile, AprApprAdv, AprApprFund, AprApprRelateReq, AprApprStampAppl, AprApprStep, AprLoadDoc2, AprRelateAppr, AprRelateIcsRow, AprRelateLaw } from '@/types/apr';
@@ -40,6 +41,7 @@ import { Icr01_Lookup_SelectMulti } from '../icr/Icr01_Lookup_SelectMulti';
 import { Apr21_Lookup_RelateAppr } from './Apr21_Lookup_RelateAppr';
 import { Apr20_Lookup_RelateIcs } from './Apr20_Lookup_RelateIcs';
 import { Apr22_Lookup_RelateIcr } from './Apr22_Lookup_RelateIcr';
+import { Apr16_Grid_StampDoc } from './Apr16_Grid_StampDoc';
 import { FileUpdownForm, FileUpdownFormHandle } from '@/components/form/FileUpdownForm';
 
 const gbFile = gbFor<AprApprFile>();
@@ -47,7 +49,6 @@ const gbFund = gbFor<AprApprFund>();
 const gbAdv = gbFor<AprApprAdv>();
 const gbAppr = gbFor<AprRelateAppr>();
 const gbLaw = gbFor<AprRelateLaw>();
-const gbStamp = gbFor<AprApprStampAppl>();
 const gbStep = gbFor<AprApprStep>();
 
 const NEXT_V04 = '이 창은 V04(사후 처리)에서 연결합니다.';
@@ -77,6 +78,10 @@ interface Props {
   seed?: { steps: AprApprStep[]; ics: AprRelateLaw[]; icr: AprRelateLaw[] };
   /** 연관 탭 다섯 개가 바뀔 때마다, 처음 읽은 뒤부터 (저장 때 부른 쪽이 쓴다, V13) */
   onRelatesChange?: (relates: AprApprRelateReq | undefined) => void;
+  /** 문서의 인감 (setStampId L1999-2006) — 날인신청 [+]의 법인인감증명서·인감날인이 처음 값으로 쓴다 (V14) */
+  stamp?: { id: number | null; name: string };
+  /** 날인신청 줄 수와 오른쪽 세 칸 (getCorpDocInfo L193-200·getStampList) — 부른 쪽이 저장 때 기본값(제공처 = 수신, 제공목적 = 상신제목)을 정한다 */
+  onStampDocChange?: (v: { count: number; provideCo: string; purpose: string; note: string }) => void;
   /** 결재선이 바뀔 때마다 (저장 때 부른 쪽이 쓴다) */
   onStepsChange?: (steps: AprApprStep[]) => void;
   /** 내 차례인 결재자의 [결재선 수정] (enableButton L2008-2014, V08) — 저장이 끝나면 부른 쪽이 문서를 다시 연다 */
@@ -89,7 +94,7 @@ interface Props {
   stepsReplace?: { version: number; steps: AprApprStep[] };
 }
 
-export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNew = false, seed, onRelatesChange, onStepsChange, canRetouch = false, onRetouched, stepsReplace }) => {
+export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNew = false, seed, onRelatesChange, stamp, onStampDocChange, onStepsChange, canRetouch = false, onRetouched, stepsReplace }) => {
   const user = useLoginUser();
   const [files, setFiles] = useState<AprApprFile[]>([]);
   const [ics, setIcs] = useState<AprRelateLaw[]>([]);
@@ -112,6 +117,9 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
   const [lookup, setLookup] = useState<'ics' | 'icr' | 'fund' | 'adv' | 'appr' | null>(null);
   const [lawWin, setLawWin] = useState<{ kind: 'ics' | 'icr'; view: boolean; relateId: number; row: AprRelateIcsRow } | null>(null);
   const [loaded, setLoaded] = useState(false);
+  // V14: 날인신청 — 오른쪽 세 칸, 이미 결재한 사람이 있어 [+][-]가 꺼짐(chkYn)
+  const [stampMeta, setStampMeta] = useState({ provideCo: '', purpose: '', note: '' });
+  const [stampLocked, setStampLocked] = useState(true);
   /** DBUtil.setSeq 대신 — 저장 전 새 줄의 임시 번호(음수). 서버가 저장할 때 새 번호를 받는다 */
   const tmpId = useRef(0);
   const isManager = user.userId < 0 || user.companyId === 0;
@@ -120,12 +128,24 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
   // [E1] apprFileList (Apr01_Grid_ApprFile).callbackOnCreate (L135) · [E2] relateCorpDocList (Apr16_Grid_StampDoc).callbackOnCreate (L146) · [E8]~[E17] 연관 그리드 store Add/Remove → clearPanel():
   //   탭 글자의 개수·색(0보다 크면 빨강)과 처음 값이 있는 탭 열기를 모두 아래 상태(개수)에서 바로 계산한다
   // retrieve() L925-997: retrieveRelateFundGrid·AdvGrid·ApprGrid·IcsGrid·IcrGrid·ApprStepGrid + 첨부파일(setApprFileList)·날인신청(setCorpDocList)
+  // retrieve L254-275 + chkYn L277-297: 줄·제공처·제공목적·비고와 [+][-] 켜짐
+  const loadStampAppl = useCallback(async () => {
+    try {
+      const sa = await aprStampApplApi.get(doc.apprId);
+      setStamps(sa.rows); setStampLocked(sa.locked);
+      setStampMeta({ provideCo: sa.meta.provideCo ?? '', purpose: sa.meta.purpose ?? '', note: sa.meta.note ?? '' });
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  }, [doc.apprId]);
+
   const retrieve = useCallback(async () => {
     if (isNew) {
       // 새 문서(insertApproval L4500-4518): createIcsLine·createIcrLine·createApprStepLine 결과가 seed
       setIcs(seed?.ics ?? []); setIcr(seed?.icr ?? []); setSteps(seed?.steps ?? []);
       const first = [0, (seed?.ics ?? []).length, (seed?.icr ?? []).length].findIndex((c, i) => i > 0 && c > 0);
       setActiveKey(String(first < 0 ? 0 : first));
+      void loadStampAppl();
       setLoaded(true);
       return;
     }
@@ -142,6 +162,7 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
       const counts = [fileList.length, icsList.length, icrList.length, fundList.length, advList.length, apprList.length, stampList.length];
       const first = counts.findIndex(c => c > 0);
       setActiveKey(String(first < 0 ? 0 : first));
+      void loadStampAppl();
       setLoaded(true);
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
@@ -151,6 +172,7 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
 
   useEffect(() => { void retrieve(); }, [retrieve]);
   useEffect(() => { onStepsChange?.(steps); }, [steps]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (loaded) onStampDocChange?.({ count: stamps.length, ...stampMeta }); }, [stamps, stampMeta, loaded]); // eslint-disable-line react-hooks/exhaustive-deps
   // 창이 닫히거나 다시 그려질 때는 옛 값을 지운다(읽기 전의 저장이 연관 줄을 지우지 않게)
   useEffect(() => () => onRelatesChange?.(undefined), []); // eslint-disable-line react-hooks/exhaustive-deps
   // getRelateFundList L1740·AdvList L1758·ApprList L1767·IcsList L1776·IcrList L1785: 화면에 남은 줄 전체. 새 줄(임시 번호 < 0)은 번호 없이 보낸다
@@ -381,13 +403,6 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [editable]);
 
-  // Apr16_Grid_StampApplList: 구분 110 · 인감 및 대표명의 220 · 부수 40 · 반출 40
-  const stampCols = useMemo<ColDef<AprApprStampAppl>[]>(() => [
-    gbStamp.text('applTypeName', 110, '구분'),
-    gbStamp.text('stampReprCorpName', 220, '인감 및 대표명의'),
-    gbStamp.longCenter('applQty', 40, '부수'),
-    gbStamp.booleanYn2('stampOutYn', 40, '반출'),
-  ], []);
 
   // buildApprStepGrid L1602-1680: 구분 65 · 결재상태 65 · 결재일 100 · ▲ 25 · 결재자 280 · ▼ 25 · 의견 45 · 보기 25 · 수정 45 · 보기 25
   const stepCols = useMemo<ColDef<AprApprStep>[]>(() => [
@@ -425,7 +440,7 @@ export const Apr03_Page_Relate: React.FC<Props> = ({ doc, editable = false, isNe
     { key: '3', label: tabLabel('연관펀드', funds.length), children: <SingleGrid<AprApprFund> rowData={funds} columnDefs={fundCols} getRowId={p => String(p.data.relateFundId)} /> },
     { key: '4', label: tabLabel('연관일임', advs.length), children: <SingleGrid<AprApprAdv> rowData={advs} columnDefs={advCols} getRowId={p => String(p.data.relateAdvId)} /> },
     { key: '5', label: tabLabel('연관문서', apprs.length), children: <SingleGrid<AprRelateAppr> rowData={apprs} columnDefs={apprCols} getRowId={p => String(p.data.relateApprId)} /> },
-    { key: '6', label: tabLabel('날인신청', stamps.length), children: <SingleGrid<AprApprStampAppl> rowData={stamps} columnDefs={stampCols} getRowId={p => String(p.data.stampDocId)} /> },
+    { key: '6', label: tabLabel('날인신청', stamps.length), children: <Apr16_Grid_StampDoc apprId={doc.apprId} rows={stamps} meta={stampMeta} locked={stampLocked} editable={editable} stamp={stamp ?? { id: null, name: '' }} onMetaChange={setStampMeta} onChanged={() => void loadStampAppl()} /> },
   ];
 
   return (

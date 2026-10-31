@@ -749,6 +749,23 @@ export interface AprApprRelateReq {
   apprs?: { relateApprId: number | null; targetApprId: number }[];
   ics?: AprRelateLawSave[];
   icr?: AprRelateLawSave[];
+  /** V14: 날인신청 탭의 제공처·제공목적·비고 (줄은 [+]·[-]가 그 자리에서 넣고 지운다) */
+  stampDoc?: { provideCo: string | null; purpose: string | null; note: string | null };
+}
+
+/** 날인신청 탭 편집 (GET apr/apprs/{id}/stamp-docs, V14) — locked는 이미 결재한 사람이 있어 [+]·[-]가 꺼지는 경우 */
+export interface AprStampApplEdit {
+  rows: AprApprStampAppl[];
+  meta: { provideCo: string | null; purpose: string | null; note: string | null };
+  locked: boolean;
+}
+
+/** 날인신청 한 줄 더하기 (POST …/stamp-docs) — applType 1 법인인감증명서 / 2 법인등기부등본 / 3 인감날인 */
+export interface AprStampApplAddReq {
+  applType: string;
+  stampReprCorpId: number;
+  qty: number;
+  outYn?: boolean;
 }
 
 export interface AprRelateLawSave {
