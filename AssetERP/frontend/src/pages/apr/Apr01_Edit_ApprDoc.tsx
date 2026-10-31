@@ -33,6 +33,8 @@ import { Apr50_Lookup_PersonList } from './Apr50_Lookup_PersonList';
 import { Apr90_Lookup_DisposalList } from './Apr90_Lookup_DisposalList';
 import { Apr20_Lookup_RelateIcsList } from './Apr20_Lookup_RelateIcsList';
 import { Apr01_Lookup_ApprFile } from './Apr01_Lookup_ApprFile';
+import { Apr01_Lookup_RelateAppr } from './Apr01_Lookup_RelateAppr';
+import { Apr01_Lookup_RelateFund } from './Apr01_Lookup_RelateFund';
 import { Apr05_Lookup_LoadDoc2 } from './Apr05_Lookup_LoadDoc2';
 import { Dcr05_Lookup_FormView } from '../dcr/Dcr05_Lookup_FormView';
 import { Apr10_Lookup_DocStamp } from './Apr10_Lookup_DocStamp';
@@ -105,6 +107,9 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
   const [formOpen, setFormOpen] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
   const [afterFileOpen, setAfterFileOpen] = useState(false);
+  // V16: [연관문서설정]·[연관펀드설정] — 결재완료(30) 문서
+  const [relateApprOpen, setRelateApprOpen] = useState(false);
+  const [relateFundOpen, setRelateFundOpen] = useState(false);
   const [state, setState] = useState<AprApprActionState | null>(null);
   const [noteOpen, setNoteOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
@@ -528,6 +533,9 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
               {!isNew && doc != null && (doc.statusCode === '10' || doc.statusCode === '20') && <Button type="register" onClick={() => setIcsOpen(true)}>연관법규 추가/수정/삭제</Button>}
               {/* [E15] makeFileAddButton[결재완료후 첨부파일등록] (L4117) — 결재완료(30) 문서 (makeAfterAddButton L4115-4140) */}
               {!isNew && doc?.statusCode === '30' && <Button type="attach" onClick={() => setAfterFileOpen(true)}>결재완료후 첨부파일등록</Button>}
+              {/* [E16] makeApprAddButton[연관문서설정] (L4123) → apprAdd() L1332 · [E17] makeFundAddButton[연관펀드설정] (L4130) → fundAdd() L1342 — 같은 결재완료(30) 문서 */}
+              {!isNew && doc?.statusCode === '30' && <Button type="register" onClick={() => setRelateApprOpen(true)}>연관문서설정</Button>}
+              {!isNew && doc?.statusCode === '30' && <Button type="register" onClick={() => setRelateFundOpen(true)}>연관펀드설정</Button>}
               {/* [E21] makeTypoButton[오타수정] (L4264) — 결재 전·결재중 문서에서 내 차례일 때 (makeTypoButton L4195-4286) */}
               {!isNew && state?.canTypo && <Button type="view" onClick={() => setTypoOpen(true)}>오타수정</Button>}
               {/* [E19] makePersonAuthAddButton[공람설정] (L4175) — 결재완료(30) 문서 (retrieveApproval L706-709) */}
@@ -687,6 +695,9 @@ export const Apr01_Edit_ApprDoc: React.FC<Props> = ({ apprId, newClassTreeId = n
       <Apr10_Lookup_DocStamp classTreeId={stampOpen && doc != null ? doc.classTreeId : null} onResult={s => void pickStamp(s)} onClose={() => setStampOpen(false)} />
       <Apr15_Lookup_ReprCorp open={corpOpen} companyAddYn={false} onResult={r => void pickReprCorp(r)} onClose={() => setCorpOpen(false)} />
       <Apr01_Lookup_ApprFile apprId={afterFileOpen && apprId != null ? apprId : null} onClosed={() => setRelateKey(k => k + 1)} onClose={() => setAfterFileOpen(false)} />
+      {/* callback.execute() → relateList.setRelateApprList(apprModel)·setRelateFundList(apprModel): 연관 탭을 다시 읽는다 */}
+      <Apr01_Lookup_RelateAppr apprId={relateApprOpen && apprId != null ? apprId : null} onClosed={() => setRelateKey(k => k + 1)} onClose={() => setRelateApprOpen(false)} />
+      <Apr01_Lookup_RelateFund apprId={relateFundOpen && apprId != null ? apprId : null} onClosed={() => setRelateKey(k => k + 1)} onClose={() => setRelateFundOpen(false)} />
       <Apr13_Lookup_PersonAuth apprId={authOpen && apprId != null ? apprId : null} onClose={() => setAuthOpen(false)} />
       <Apr90_Lookup_DisposalList
         apprId={disposalOpen && apprId != null ? apprId : null}

@@ -2,10 +2,16 @@ package kr.co.kfs.asseterp.biz.apr.service;
 
 import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFileRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFileStampReq;
+import kr.co.kfs.asseterp.biz.apr.dto.AprAfterApprSaveReq;
+import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFundRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFundSaveReq;
+import kr.co.kfs.asseterp.biz.apr.dto.AprApprBrief;
+import kr.co.kfs.asseterp.biz.apr.dto.AprApprRelateReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprApprDetailRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsRow;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsSaveReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsSaveRow;
+import kr.co.kfs.asseterp.biz.apr.mapper.AprApprWriteMapper;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprRelateEditMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -27,6 +33,7 @@ public class AprRelateEditService {
 
     private final AprRelateEditMapper mapper;
     private final AprApprDetailService detailService;
+    private final AprApprWriteMapper writeMapper;
 
     /** AS-IS apr.Apr20_RelateIcs.selectByApprId */
     public List<AprRelateIcsRow> getRelateIcs(UserPrincipal user, Long apprId) {
@@ -127,5 +134,69 @@ public class AprRelateEditService {
         for (AprAfterFileStampReq.Item item : req.items()) {
             mapper.updateFileStamp(item.fileId(), apprId, String.valueOf(item.stampYn()));
         }
+    }
+
+    /** AS-IS apr.Apr03_RelateFund.selectByAfterYn — [연관펀드설정] 창 (V16) */
+    public List<AprAfterFundRes> getAfterFunds(UserPrincipal user, Long apprId) {
+        detailService.getDetail(user, apprId);
+        return mapper.selectAfterFunds(apprId);
+    }
+
+    /**
+     * AS-IS apr.Apr03_RelateFund.insert — [확정]: 결재완료 이후 등록한 줄을 모두 지우고 창에 남은 줄을 UpdateDataModel로 넣는다
+     * (남아 있는 줄은 UPDATE, 지워진 줄과 새 줄은 INSERT). 새 줄은 결재이후(afterYn)=true, 출력(printYn)=false(Apr01_Lookup_RelateFund L84-90).
+     * AS-IS는 단추만 결재완료(30) 문서에 보이게 했지만 TOBE는 서버도 확인한다.
+     */
+    @Transactional
+    public void saveAfterFunds(UserPrincipal user, Long apprId, AprAfterFundSaveReq req) {
+        requireCompleted(user, apprId);
+        mapper.deleteAfterFunds(apprId);
+        if (req == null || req.funds() == null) {
+            return;
+        }
+        for (AprApprRelateReq.Fund row : req.funds()) {
+            if (row.fundId() == null) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "펀드가 없는 줄이 있습니다.");
+            }
+            boolean isNew = row.relateFundId() == null || row.relateFundId() <= 0;
+            Long id = isNew ? writeMapper.selectNextId() : row.relateFundId();
+            if (!isNew && mapper.countRelateFund(apprId, id) > 0) {
+                mapper.updateRelateFund(apprId, id, row.fundId(), row.printYn(), row.afterYn()); // 빈 값은 빈 채로(옛 행은 afterYn이 NULL)
+            } else {
+                // 새 줄이거나, 방금 지워진 결재이후 줄을 같은 번호로 다시 넣는다
+                writeMapper.insertRelateFund(id, apprId, new AprApprRelateReq.Fund(id, row.fundId(), orFalse(row.printYn()), isNew ? "true" : orFalse(row.afterYn())));
+            }
+        }
+    }
+
+    /** AS-IS apr.Apr21_RelateAppr.insert — [확정]: 이 문서의 연관문서를 모두 지우고 창에 남은 줄을 넣는다 */
+    @Transactional
+    public void saveAfterApprs(UserPrincipal user, Long apprId, AprAfterApprSaveReq req) {
+        requireCompleted(user, apprId);
+        writeMapper.deleteRelateApprsByApprId(apprId);
+        if (req == null || req.apprs() == null) {
+            return;
+        }
+        for (AprApprRelateReq.Appr row : req.apprs()) {
+            if (row.targetApprId() == null) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "연관문서가 없는 줄이 있습니다.");
+            }
+            Long id = row.relateApprId() == null || row.relateApprId() <= 0 ? writeMapper.selectNextId() : row.relateApprId();
+            writeMapper.insertRelateAppr(id, apprId, new AprApprRelateReq.Appr(id, row.targetApprId()));
+        }
+    }
+
+    private void requireCompleted(UserPrincipal user, Long apprId) {
+        AprApprBrief brief = writeMapper.selectBrief(apprId, user.getCompanyId());
+        if (brief == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "문서를 찾을 수 없습니다.");
+        }
+        if (!"30".equals(brief.statusCode())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "결재완료된 문서만 연관문서·연관펀드를 설정할 수 있습니다.");
+        }
+    }
+
+    private static String orFalse(String yn) {
+        return yn == null ? "false" : yn;
     }
 }

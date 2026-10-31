@@ -152,4 +152,67 @@
          WHERE sys10_file_id = #{fileId}
            AND sys10_parent_id = #{parentId}
     </update>
+
+    <!-- ───── [연관펀드설정] (V16) ───── -->
+    <!-- AS-IS(IDMS-IC) apr03_relate_fund.selectByAfterYn (L223) — 원본도 afterYn 조건을 쓰지 않아 이 문서의 연관펀드 전부가 나온다(이상한점 #42) -->
+    <select id="selectAfterFunds" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprAfterFundRes">
+        SELECT t.relate_fund_id   AS relate_fund_id
+             , t.apr03_fund_id    AS fund_id
+             , t.kofia_type_nm    AS fund_type_name
+             , t.fund_cd          AS fund_code
+             , t.fund_nm          AS fund_name
+             , t.apr03_print_yn   AS print_yn
+             , t.apr03_after_yn   AS after_yn
+          FROM (
+                SELECT fund_cd
+                     , CASE WHEN fund_id IS NOT NULL THEN f_get_fund_nm2(fund_id, f_today()::date) ELSE '' END AS fund_nm
+                     , (
+                         SELECT f_cdnm('IcamFundType', fnd02_kofia_fund_type_cd, apr03.apr01_company_id, fnd02_work_date)
+                           FROM fnd02_fund_info
+                          WHERE fnd02_fund_code_id = apr03.apr03_fund_id
+                            AND fnd02_work_date = f_max_workdate(fnd02_fund_code_id, f_trunc(apr03.apr01_reg_date))
+                          LIMIT 1
+                       )                                       AS kofia_type_nm
+                     , apr03.apr03_relate_fund_id              AS relate_fund_id
+                     , apr03.apr03_fund_id
+                     , apr03.apr03_print_yn
+                     , apr03.apr03_after_yn
+                  FROM (
+                        SELECT apr03_relate_fund.*
+                             , apr01_company_id
+                             , apr01_reg_date
+                             , COALESCE(fnd01_r.fnd01_fund_code_id, fnd01.fnd01_fund_code_id) AS fund_id
+                             , COALESCE(fnd01_r.fnd01_fund_cd,      fnd01.fnd01_fund_cd)      AS fund_cd
+                          FROM apr03_relate_fund
+                               INNER JOIN apr01_appr ON apr01_appr_id = apr03_appr_id
+                               INNER JOIN fnd01_fund_code fnd01 ON fnd01.fnd01_fund_code_id = apr03_fund_id
+                               LEFT OUTER JOIN fnd01_fund_code fnd01_r ON fnd01_r.fnd01_fund_code_id = fnd01.fnd01_real_fund_id
+                         WHERE apr03_appr_id = #{apprId}
+                       ) apr03
+               ) t
+         ORDER BY t.fund_cd DESC
+    </select>
+
+    <!-- AS-IS apr03_relate_fund.deleteByAfterYn -->
+    <delete id="deleteAfterFunds">
+        DELETE FROM apr03_relate_fund
+         WHERE apr03_appr_id = #{apprId}
+           AND COALESCE(apr03_after_yn, 'false') LIKE 'true'
+    </delete>
+
+    <select id="countRelateFund" resultType="int">
+        SELECT COUNT(*)
+          FROM apr03_relate_fund
+         WHERE apr03_appr_id = #{apprId}
+           AND apr03_relate_fund_id = #{relateFundId}
+    </select>
+
+    <update id="updateRelateFund">
+        UPDATE apr03_relate_fund
+           SET apr03_fund_id  = #{fundId}
+             , apr03_print_yn = #{printYn}
+             , apr03_after_yn = #{afterYn}
+         WHERE apr03_appr_id = #{apprId}
+           AND apr03_relate_fund_id = #{relateFundId}
+    </update>
 </mapper>

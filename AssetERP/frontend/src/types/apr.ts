@@ -931,6 +931,17 @@ export interface AprRelateIcsSaveReq {
 }
 
 /** 결재완료후 첨부파일 한 줄 (GET apr/apprs/{id}/after-files) */
+/** [연관펀드설정] 창 한 줄 (AS-IS Apr03_RelateFundModel, apr03_relate_fund.selectByAfterYn, V16) */
+export interface AprAfterFund {
+  relateFundId: number;
+  fundId: number;
+  fundTypeName?: string | null;
+  fundCode?: string | null;
+  fundName?: string | null;
+  printYn?: string | null;
+  afterYn?: string | null;
+}
+
 export interface AprAfterFile {
   fileId: number;
   parentId: number;

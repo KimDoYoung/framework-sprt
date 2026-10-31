@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.mapper;
 
 import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFileRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFundRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsRow;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -54,4 +55,16 @@ public interface AprRelateEditMapper {
 
     /** AS-IS Sys10_File.update(UpdateDataModel) — 인감날인본만 */
     int updateFileStamp(@Param("fileId") Long fileId, @Param("parentId") Long parentId, @Param("stampYn") String stampYn);
+
+    /** AS-IS apr03_relate_fund.selectByAfterYn (V16) */
+    List<AprAfterFundRes> selectAfterFunds(@Param("apprId") Long apprId);
+
+    /** AS-IS apr03_relate_fund.deleteByAfterYn — 결재완료 이후 등록한 줄만 */
+    int deleteAfterFunds(@Param("apprId") Long apprId);
+
+    /** 이 문서에 남아 있는 연관펀드 줄인가 (AS-IS UpdateDataModel이 있으면 UPDATE, 없으면 INSERT) */
+    int countRelateFund(@Param("apprId") Long apprId, @Param("relateFundId") Long relateFundId);
+
+    /** AS-IS UpdateDataModel(apr03_relate_fund) UPDATE */
+    int updateRelateFund(@Param("apprId") Long apprId, @Param("relateFundId") Long relateFundId, @Param("fundId") Long fundId, @Param("printYn") String printYn, @Param("afterYn") String afterYn);
 }

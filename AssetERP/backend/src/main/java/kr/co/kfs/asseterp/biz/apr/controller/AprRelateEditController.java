@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFileRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprAfterApprSaveReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFileStampReq;
+import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFundRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprAfterFundSaveReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsRow;
 import kr.co.kfs.asseterp.biz.apr.dto.AprRelateIcsSaveReq;
 import kr.co.kfs.asseterp.biz.apr.service.AprRelateEditService;
@@ -72,6 +75,26 @@ public class AprRelateEditController {
     @PutMapping("/apprs/{apprId}/after-files")
     public ApiResponse<Void> saveAfterFiles(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long apprId, @RequestBody AprAfterFileStampReq req) {
         service.saveAfterFiles(principal, apprId, req);
+        return ApiResponse.ok(null);
+    }
+
+    /** AS-IS apr.Apr03_RelateFund.selectByAfterYn — [연관펀드설정] 창 (V16) */
+    @GetMapping("/apprs/{apprId}/after-relate-funds")
+    public ApiResponse<List<AprAfterFundRes>> getAfterFunds(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long apprId) {
+        return ApiResponse.ok(service.getAfterFunds(principal, apprId));
+    }
+
+    /** AS-IS apr.Apr03_RelateFund.insert — [연관펀드설정] [확정] (결재완료 문서만) */
+    @PutMapping("/apprs/{apprId}/after-relate-funds")
+    public ApiResponse<Void> saveAfterFunds(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long apprId, @RequestBody AprAfterFundSaveReq req) {
+        service.saveAfterFunds(principal, apprId, req);
+        return ApiResponse.ok(null);
+    }
+
+    /** AS-IS apr.Apr21_RelateAppr.insert — [연관문서설정] [확정] (결재완료 문서만). 읽기는 `GET apprs/{id}/relate-apprs` */
+    @PutMapping("/apprs/{apprId}/after-relate-apprs")
+    public ApiResponse<Void> saveAfterApprs(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long apprId, @RequestBody AprAfterApprSaveReq req) {
+        service.saveAfterApprs(principal, apprId, req);
         return ApiResponse.ok(null);
     }
 }
