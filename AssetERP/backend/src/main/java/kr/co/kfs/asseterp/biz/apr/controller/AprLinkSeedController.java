@@ -43,7 +43,7 @@ public class AprLinkSeedController {
                                             @RequestParam(required = false) String checkCycle,
                                             @RequestParam(required = false) String roleId,
                                             @RequestParam(required = false) String stdYear, @RequestParam(required = false) String regNo,
-                                            @RequestParam(required = false) String regDate) {
+                                            @RequestParam(required = false) String regDate, @RequestParam(required = false) String stdTermCode) {
         Map<String, String> args = new HashMap<>();
         put(args, "stdDate", stdDate);
         put(args, "cycleType", cycleType);
@@ -61,6 +61,7 @@ public class AprLinkSeedController {
         put(args, "stdYear", stdYear); // A15 미사용휴가 지정통보서 — 화면의 해당 연도(기간 계산)
         put(args, "regNo", regNo); // A42 여비교통비 신청서 — 신청번호(emp51_reg_no)
         put(args, "regDate", regDate); // A42 — 기준년월(yyyy.MM, 제목에 들어감)
+        put(args, "stdTermCode", stdTermCode); // A70·A71 인사평가 보고 — 평가기간 코드(반기별 회사가 아니면 10)
         put(args, "ids", ids); // 여러 행을 한 문서로 묶는 코드(A77 기준가 정정 월보고)의 행 ID, 쉼표 구분
         return ApiResponse.ok(service.seed(principal, classTreeId, linkCode, refId, args));
     }

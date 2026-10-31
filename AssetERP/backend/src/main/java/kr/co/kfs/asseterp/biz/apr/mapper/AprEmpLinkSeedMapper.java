@@ -14,4 +14,7 @@ public interface AprEmpLinkSeedMapper {
 
     TransportLinkRow selectTransportLink(@Param("companyId") Long companyId, @Param("personId") Long personId,
                                          @Param("transportExpenseId") Long transportExpenseId);
+
+    /** A70·A71 제목에 들어가는 평가기간 이름 (AS-IS emp43_std_term_nm = f_cdnm('EmpEvalTermCode', …)) */
+    String selectEvalTermName(@Param("companyId") Long companyId, @Param("stdTermCode") String stdTermCode);
 }

@@ -93,4 +93,10 @@ public interface EmpEvalTargetMapper {
 
     /** AS-IS emp45_eval_relate_appr.selectByTermCode — 상신 상태 전체 */
     List<EvalRelateApprRes> selectRelateAppr(@Param("companyId") Long companyId, @Param("stdYear") String stdYear, @Param("stdTermCode") String stdTermCode);
+
+    int insertRelateAppr(@Param("companyId") Long companyId, @Param("relateApprId") Long relateApprId, @Param("stdYear") String stdYear, @Param("stdTermCode") String stdTermCode);
+
+    int updateRelateApprId(@Param("companyId") Long companyId, @Param("relateApprId") Long relateApprId, @Param("apprId") Long apprId);
+
+    int updateRelateFinalApprId(@Param("companyId") Long companyId, @Param("relateApprId") Long relateApprId, @Param("finalApprId") Long finalApprId);
 }

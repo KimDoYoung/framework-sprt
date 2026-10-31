@@ -108,6 +108,38 @@ public class EmpEvalTargetService {
         return list.isEmpty() ? null : list.get(0);
     }
 
+    /**
+     * AS-IS Emp45_EvalRelateAppr.insert(1차 A70) / insertFinal(최종 A71) — 그 기간의 상신 연결 행이 없으면 만들고, 있으면 그 행의 해당 문서 ID를 비운다.
+     * 만든(또는 있던) 행 번호를 돌려준다. (AS-IS insertFinal은 비우는 문장에 값 대신 행 번호를 넘겨 최종 문서 ID가 행 번호로 남는다 — 이상한점 #88, TOBE는 비운다)
+     */
+    @Transactional
+    public Long createRelateAppr(UserPrincipal user, String stdYear, String stdTermCode, boolean finalAppr) {
+        List<EvalRelateApprRes> list = mapper.selectRelateAppr(user.getCompanyId(), stdYear, stdTermCode);
+        if (list.isEmpty()) {
+            Long id = mapper.selectNextId();
+            mapper.insertRelateAppr(user.getCompanyId(), id, stdYear, stdTermCode);
+            return id;
+        }
+        Long id = list.get(0).evalRelateApprId();
+        if (finalAppr) {
+            mapper.updateRelateFinalApprId(user.getCompanyId(), id, null);
+        } else {
+            mapper.updateRelateApprId(user.getCompanyId(), id, null);
+        }
+        return id;
+    }
+
+    /** AS-IS Emp45_EvalRelateAppr.updateApprId(A70) / updateFinalApprId(A71) — 상신한 결재문서 ID 기록 */
+    @Transactional
+    public void updateRelateApprId(UserPrincipal user, Long relateApprId, Long apprId, boolean finalAppr) {
+        int n = finalAppr
+                ? mapper.updateRelateFinalApprId(user.getCompanyId(), relateApprId, apprId)
+                : mapper.updateRelateApprId(user.getCompanyId(), relateApprId, apprId);
+        if (n == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+    }
+
     /** AS-IS Emp43_EvalTarget.modelUpdate (Emp43_Edit_Score) — 상점·벌점·평정사유가감 */
     @Transactional
     public void updateScore(UserPrincipal user, Long evalTargetId, EvalScoreReq req) {

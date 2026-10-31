@@ -1072,4 +1072,26 @@ SELECT emp43_eval_target_id AS eval_target_id,
         ]]>
     </select>
 
+    <!-- V37 AS-IS emp45_eval_relate_appr.insert (인사평가 상신 연결 행 만들기) -->
+    <insert id="insertRelateAppr">
+        INSERT INTO emp45_eval_relate_appr ( emp45_eval_relate_appr_id, emp45_company_id, emp45_std_year, emp45_std_term_cd )
+        VALUES ( #{relateApprId}, #{companyId}, #{stdYear}, #{stdTermCode} )
+    </insert>
+
+    <!-- V37 AS-IS emp45_eval_relate_appr.updateApprId (1차 보고 A70, 회사 조건 추가) -->
+    <update id="updateRelateApprId">
+        UPDATE emp45_eval_relate_appr
+           SET emp45_appr_id = #{apprId}
+         WHERE emp45_company_id = #{companyId}
+           AND emp45_eval_relate_appr_id = #{relateApprId}
+    </update>
+
+    <!-- V37 AS-IS emp45_eval_relate_appr.updateFinalApprId (최종 보고 A71, 회사 조건 추가) -->
+    <update id="updateRelateFinalApprId">
+        UPDATE emp45_eval_relate_appr
+           SET emp45_final_appr_id = #{finalApprId}
+         WHERE emp45_company_id = #{companyId}
+           AND emp45_eval_relate_appr_id = #{relateApprId}
+    </update>
+
 </mapper>

@@ -4,12 +4,12 @@
  * 레이아웃 L91-134: 위 툴바 50 = 평가기간 [년도 45] 년 [상반기/하반기 콤보 100] · 검색 [조직/직위/성명 200] · [조회],
  *   가운데 = 인사평가결과 그리드(행번호, 체크박스 다중, 2단 헤더: 인사평가 대상자 / 1차 평가결과(파랑 456EA6) / 2차 평가결과(빨강 DD5E5E) / 평가결과 합계 / (수정 아이콘) / 상벌가감 / 변경결과),
  *   아래 70 = 문서분류 [LookupTriggerField 800] · 상신상태 [읽기 전용 250] · [상신] · [문서보기]
- * 1단계(F01~F12·S05와 같은 사유): [상신]·[문서보기]가 여는 전자결재 편집창 Apr01_Edit_ApprDoc과 문서분류 선택창 Dcr30_Move_DcrClass는 다음 단계 —
- *   [상신]은 원본의 조건 검사("평정사유 누락"·"완료되지 않은 인사평가내역"·"이미 상신 중")까지만 하고 상신 행(emp45)을 만들지 않는다
+ * 1단계는 [상신]·[문서보기]가 안내만 했다. V37(2026-11-01)에서 연결했다: [상신] → 조건 검사 → emp.Emp45_EvalRelateAppr.insert → Apr01_Edit_ApprDoc.insertLinkApprovals("A70") → updateApprId,
+ *   [문서보기] → Apr01_Edit_ApprDoc.retrieveApproval, 문서분류 → Dcr30_Move_DcrClass
  * 스타일: SGP (견본 docs/page-style/SGP/Chk02_Tab_DailyList.tsx). UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 조건이 3개지만 한 줄에 다 들어가지 않아 넣지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button as AntButton, Input, message, Modal } from 'antd';
+import { Button as AntButton, Input, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { empEvalApi } from '@/api/emp';
@@ -22,6 +22,8 @@ import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { AreaMessage } from '@/components/lookup/AreaMessage';
 import { SearchBar } from '@/components/search';
+import { Dcr30_Move_DcrClass } from '@/components/lookup/Dcr30_Move_DcrClass';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Emp43_Edit_Score } from './Emp43_Edit_Score';
 
 const gb = gbFor<EvalAdmin>();
@@ -51,6 +53,12 @@ export const Emp43_Tab_FirstAppr: React.FC = () => {
   const [apprStepName, setApprStepName] = useState('');
   const [apprEnabled, setApprEnabled] = useState(false);
   const [apprOpenEnabled, setApprOpenEnabled] = useState(false);
+  // 문서분류(classTreeModel — 처음엔 비어 있고 돋보기로 고른다) · 전자결재 창
+  const [classTree, setClassTree] = useState<{ classTreeId: number; classTreeFullName: string } | null>(null);
+  const [classLookupOpen, setClassLookupOpen] = useState(false);
+  const [linkDoc, setLinkDoc] = useState<{ classTreeId: number; relateApprId: number; stdYear: string; stdTermCode: string } | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const apprIdRef = useRef<number | null>(null);  // 1차 보고 상신문서 ID ([문서보기])
 
   // 조회 조건을 동기로 들고 있는다 (이벤트에서 상태 반영 전 값으로 조회하려고)
   const query = useRef({ stdYear, termCode, searchText, cycle: null as string | null });
@@ -65,6 +73,7 @@ export const Emp43_Tab_FirstAppr: React.FC = () => {
     setApprStepName('');
     try {
       const r = await empEvalApi.getEvalRelateAppr(query.current.stdYear, termParam());
+      apprIdRef.current = r?.apprId ?? null;
       if (r?.apprStatusCode != null) {
         setApprEnabled(!isApprLocked(r.finalApprStatusCode ?? ''));
         apprCodeRef.current = r.apprStatusCode;
@@ -133,11 +142,11 @@ export const Emp43_Tab_FirstAppr: React.FC = () => {
     void retrieve();
   };
 
-  // [E2 생략] classTreeFullName[문서분류].TriggerClick (L197) → openLookupDoc() L451-460: Dcr30_Move_DcrClass 문서분류 선택창은 다음 단계
-  const openLookupDoc = () => message.info('문서분류 선택창(Dcr30_Move_DcrClass)은 아직 변환 전입니다.');
+  // [E2] classTreeFullName[문서분류].TriggerClick (L197) → openLookupDoc() L451-460: Dcr30_Move_DcrClass.open(callback) — 고른 분류가 classTreeModel
+  const openLookupDoc = () => setClassLookupOpen(true);
 
   // [E3] apprButton[상신].Select (L203) → insertRelateAppr() L462-485
-  //   목록 검사(L204-218) → 목록을 "%"로 다시 조회 → "이미 상신 중입니다" 검사 → emp.Emp45_EvalRelateAppr.insert → insertLinkApprovals() L487-533 (Apr01_Edit_ApprDoc 상신창 — 다음 단계)
+  //   목록 검사(L204-218) → 목록을 "%"로 다시 조회 → "이미 상신 중입니다" 검사 → emp.Emp45_EvalRelateAppr.insert → insertLinkApprovals() L487-533
   const onAppr = async () => {
     for (const m of rowsRef.current) {
       if (m.firstOrderReason === '작성필요') { message.warning('1차 평정사유가 누락되었습니다.(특정 등급 필수입력)'); return; }
@@ -153,11 +162,34 @@ export const Emp43_Tab_FirstAppr: React.FC = () => {
       return;
     }
     if (isApprLocked(apprStepCode)) { message.warning('이미 상신 중입니다'); return; }
-    Modal.info({ title: '상신', content: '전자결재 상신(Apr01_Edit_ApprDoc)은 아직 변환 전입니다.' });
+    try {
+      const relateApprId = await empEvalApi.createEvalRelateAppr(query.current.stdYear, termParam(), false);
+      // insertLinkApprovals() L487-533: 문서분류를 안 골랐으면 dcr.Dcr30_Link.selectByLinkCode("A70")의 분류(AS-IS는 결과마다 창을 연다 — 첫 건), 없으면 아무 일도 안 일어난다(여기서는 안내)
+      let target = classTree;
+      if (target == null) {
+        const links = await dcrApi.searchClassTreeByLinkCode('A70');
+        if (links.length === 0) { message.warning('문서분류가 미지정 상태입니다. 관리자에게 문의해주세요'); return; }
+        target = { classTreeId: links[0].classTreeId, classTreeFullName: links[0].classTreeFullName };
+      }
+      setLinkDoc({ classTreeId: target.classTreeId, relateApprId, stdYear: query.current.stdYear, stdTermCode: termParam() });
+    } catch (err) {
+      message.error(errorMessage(err, '상신 실패'));
+    }
   };
 
-  // [E4 생략] apprOpenButton[문서보기].Select (L240) → apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(model, false): 결재 문서창은 다음 단계
-  const onApprOpen = () => message.info('전자결재 문서보기(Apr01_Edit_ApprDoc)는 아직 변환 전입니다.');
+  // updateApprId() L543-555: emp.Emp45_EvalRelateAppr.updateApprId(relateApprId, apprId) → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await empEvalApi.updateEvalRelateApprId(linkDoc.relateApprId, apprId, false);
+      void retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+  };
+
+  // [E4] apprOpenButton[문서보기].Select (L240) → apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(model, false)
+  const onApprOpen = () => { if (apprIdRef.current != null) setViewApprId(apprIdRef.current); };
 
   // [E9] actionCell03 (ImageCell Edit).callbackOnCreate (L331) → 상신 중이거나 완료된 문서는 수정 불가, 아니면 Emp43_Edit_Score.edit(선택한 행, callback → retrieve())
   const onEdit = (row: EvalAdmin) => {
@@ -237,13 +269,26 @@ export const Emp43_Tab_FirstAppr: React.FC = () => {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderTop: '1px solid #d9d9d9' }}>
           <span style={{ width: 105, textAlign: 'right', paddingRight: 10, flex: 'none' }}>문서분류</span>
-          <LookupInput width={800} value="" placeholder={classEmptyText} onOpen={openLookupDoc} />
+          <LookupInput width={800} value={classTree?.classTreeFullName ?? ''} placeholder={classEmptyText} onOpen={openLookupDoc} />
           <span style={{ paddingLeft: 10 }}>상신상태</span>
           <Input readOnly style={{ width: 250 }} value={apprStepName} />
           <Button type="register" disabled={!apprEnabled} onClick={onAppr}>상신</Button>
           <Button type="search" disabled={!apprOpenEnabled} onClick={onApprOpen}>문서보기</Button>
         </div>
       </div>
+      <Dcr30_Move_DcrClass
+        open={classLookupOpen}
+        onResult={r => { if (r.classTreeId != null && r.classTreeFullName != null) setClassTree({ classTreeId: r.classTreeId, classTreeFullName: r.classTreeFullName }); }}
+        onClose={() => setClassLookupOpen(false)}
+      />
+      {/* insertLinkApprovals() L487-533: Apr01_Edit_ApprDoc.insertLinkApprovals(classTreeModel, "A70", { gridList }, false, callback → updateApprId) / retrieveApproval */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: 'A70', args: { stdYear: linkDoc.stdYear, stdTermCode: linkDoc.stdTermCode } } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void retrieve()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
       <Emp43_Edit_Score target={scoreTarget} onSaved={() => { void retrieve(); }} onClose={() => setScoreTarget(null)} />
       <AreaMessage open={reasonView != null} title={reasonView?.title ?? ''} value={reasonView?.text} readOnly width={450} height={250} onClose={() => setReasonView(null)} />
     </div>

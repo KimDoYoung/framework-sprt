@@ -860,6 +860,17 @@ export const empEvalApi = {
     return res.data.data ?? null;
   },
 
+  /** AS-IS emp.Emp45_EvalRelateAppr.insert(1차 A70) / insertFinal(최종 A71) (T03·T04 [상신]) — 상신 연결 행 번호 */
+  createEvalRelateAppr: async (stdYear: string, stdTermCode: string, finalAppr: boolean): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/emp/eval-targets/relate-appr', null, { params: { stdYear, stdTermCode, finalAppr } });
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp45_EvalRelateAppr.updateApprId(A70) / updateFinalApprId(A71) — 상신한 결재문서 ID 기록 */
+  updateEvalRelateApprId: async (relateApprId: number, apprId: number, finalAppr: boolean): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/emp/eval-targets/relate-appr/${relateApprId}/appr-id`, { apprId }, { params: { finalAppr } });
+  },
+
   /** AS-IS emp.Emp43_EvalTarget.modelUpdate (T03 Emp43_Edit_Score) — 상점·벌점·평정사유가감 */
   updateEvalScore: async (evalTargetId: number, body: { plusScore: number | null; minusScore: number | null; reasonAdjustScore: number | null }): Promise<void> => {
     await apiClient.put<ApiResponse<void>>(`v1/emp/eval-targets/${evalTargetId}/score`, body);

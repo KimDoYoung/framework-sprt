@@ -1,0 +1,21 @@
+{
+  "id": "V37",
+  "menu": [
+    "경영관리 > 05. 인사평가 > 인사평가결과(인사부) [상신]·[문서보기] (menuId 1394)",
+    "경영관리 > 05. 인사평가 > 인사평가보고(대표이사) [상신]·[문서보기] (menuId 1395)"
+  ],
+  "menuId": 1394,
+  "className": "Emp43_Tab_FirstAppr",
+  "api": [
+    "emp/eval-targets/relate-appr",
+    "emp/eval-targets/relate-appr/{id}/appr-id",
+    "apr/apprs/link-seed",
+    "apr/apprs/{id}/detail"
+  ],
+  "opens": {
+    "via": "1394: 평가기간을 고르고 [상신] (조건이 맞으면) → 결재창이 제목 `yyyy년도 … 인사평가 수행결과 보고`, 본문 평가 표 + `## 평정사유 ##`로 열림 확인 후 닫기. 1395: [상신] → 제목 `… 인사평가결과 최종보고`, 대표이사 평가 열이 있는 표. 상신된 기간이면 [문서보기]가 켜지고 결재창이 읽기로 열림.",
+    "headers": "문서"
+  },
+  "grid": true,
+  "notes": "[상신]은 결재창을 열기 전에 emp45_eval_relate_appr 행을 만들거나 문서 ID를 비운다(AS-IS 그대로). 결재창에서 [저장]·[결재요청]은 누르지 말고 열어 보고 닫기만 한다."
+}

@@ -7,6 +7,7 @@ import kr.co.kfs.asseterp.biz.emp.dto.EvalCeoScoreReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalEndReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalExecuteRes;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalReasonReq;
+import kr.co.kfs.asseterp.biz.emp.dto.EvalRelateApprIdReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalRelateApprRes;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalScoreReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EvalSettingRes;
@@ -23,6 +24,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -83,6 +85,21 @@ public class EmpEvalTargetController {
     public ApiResponse<EvalRelateApprRes> relateAppr(@AuthenticationPrincipal UserPrincipal principal,
                                                      @RequestParam String stdYear, @RequestParam String stdTermCode) {
         return ApiResponse.ok(service.getRelateAppr(principal, stdYear, stdTermCode));
+    }
+
+    /** AS-IS emp.Emp45_EvalRelateAppr.insert(1차 A70) / insertFinal(최종 A71) — 상신 연결 행 번호 (V37) */
+    @PostMapping("/relate-appr")
+    public ApiResponse<Long> createRelateAppr(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String stdYear,
+                                              @RequestParam String stdTermCode, @RequestParam(defaultValue = "false") boolean finalAppr) {
+        return ApiResponse.ok(service.createRelateAppr(principal, stdYear, stdTermCode, finalAppr));
+    }
+
+    /** AS-IS emp.Emp45_EvalRelateAppr.updateApprId(A70) / updateFinalApprId(A71) — 상신한 결재문서 ID 기록 (V37) */
+    @PutMapping("/relate-appr/{relateApprId}/appr-id")
+    public ApiResponse<Void> updateRelateApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long relateApprId,
+                                                @RequestBody EvalRelateApprIdReq req, @RequestParam(defaultValue = "false") boolean finalAppr) {
+        service.updateRelateApprId(principal, relateApprId, req.apprId(), finalAppr);
+        return ApiResponse.ok(null);
     }
 
     /** AS-IS emp.Emp43_EvalTarget.modelUpdate (Emp43_Edit_Score) — 상점·벌점·평정사유가감 */

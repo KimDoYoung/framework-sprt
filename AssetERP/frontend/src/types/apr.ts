@@ -717,6 +717,13 @@ export interface AprLinkArgs {
   checkCycle?: string;
   /** A94 책무이행점검보고서 — 이행점검 탭의 보고CEO 직책 ID(tdm20_role_id), 제목의 직책 이름과 본문 현황의 기준(V34) */
   roleId?: string;
+  /** A15 미사용휴가 지정통보서 — 화면의 해당 연도(V36). A70·A71 인사평가 보고 — 평가년도(V37) */
+  stdYear?: string;
+  /** A70·A71 인사평가 보고 — 평가기간 코드(반기별 회사가 아니면 10, V37) */
+  stdTermCode?: string;
+  /** A42 여비교통비 신청서 — 신청번호·기준년월(V36) */
+  regNo?: string;
+  regDate?: string;
 }
 
 /** 링크코드별 제목·본문·시행일자 (GET apr/apprs/link-seed, V17) */
