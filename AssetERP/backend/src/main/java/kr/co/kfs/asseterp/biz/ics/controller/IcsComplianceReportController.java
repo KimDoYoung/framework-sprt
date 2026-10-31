@@ -34,14 +34,15 @@ public class IcsComplianceReportController {
     /** AS-IS ics.Ics32_RelateAppr.selectByCompanyId — yyyymm = 'yyyy.MM', 연결이 없으면 null */
     @GetMapping("/appr")
     public ApiResponse<IcsComplianceReportApprRes> appr(@AuthenticationPrincipal UserPrincipal principal,
-                                                        @RequestParam String yyyymm, @RequestParam String cycleType) {
-        return ApiResponse.ok(service.appr(principal, yyyymm, cycleType));
+                                                        @RequestParam String yyyymm, @RequestParam String cycleType,
+                                                        @RequestParam(required = false) String apprType) {
+        return ApiResponse.ok(service.appr(principal, yyyymm, cycleType, apprType));
     }
 
     /** AS-IS ics.Ics32_RelateAppr.insert — 상신 연결 ID를 만들거나 있으면 돌려준다 (V19, A32) */
     @PostMapping("/relate-apprs")
     public ApiResponse<Long> createRelateAppr(@AuthenticationPrincipal UserPrincipal principal, @RequestBody IcsComplianceReportRelateReq req) {
-        return ApiResponse.ok(service.createRelateAppr(principal, req.yyyymm(), req.cycleType()));
+        return ApiResponse.ok(service.createRelateAppr(principal, req.yyyymm(), req.cycleType(), req.apprType()));
     }
 
     /** AS-IS ics.Ics32_RelateAppr.updateApprId */

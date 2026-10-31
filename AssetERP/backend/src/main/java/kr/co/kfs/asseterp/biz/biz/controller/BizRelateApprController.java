@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.biz.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.biz.dto.BizRelateApprPersonReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizRelateApprRes;
 import kr.co.kfs.asseterp.biz.biz.service.BizRelateApprService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -46,5 +47,11 @@ public class BizRelateApprController {
     @DeleteMapping
     public ApiResponse<Integer> delete(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> relateApprIds) {
         return ApiResponse.ok(service.delete(principal, relateApprIds));
+    }
+
+    /** AS-IS biz.Biz05_RelateAppr.insertPersonId (+ A41 첨부 엑셀) → 새 연결 ID */
+    @PostMapping("/person")
+    public ApiResponse<Long> insertPersonId(@AuthenticationPrincipal UserPrincipal principal, @RequestBody BizRelateApprPersonReq req) throws java.io.IOException {
+        return ApiResponse.ok(service.insertPersonId(principal, req));
     }
 }

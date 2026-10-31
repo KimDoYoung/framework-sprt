@@ -551,6 +551,16 @@ export interface IcsComplianceReportRow {
   reason: string | null;
 }
 
+/** 준수점검(준감인) 사원명 조회창의 한 줄 (V28, 서버 IcsComplianceWriterRes — AS-IS Ics31_Lookup_SelectPerson) */
+export interface IcsComplianceWriter {
+  personId: number;
+  orgName: string | null;
+  titleName: string | null;
+  empNo: string | null;
+  personName: string | null;
+  transDate: string | null;
+}
+
 /** 그 달 준수보고의 상신 연결 (K03, 서버 IcsComplianceReportApprRes) — 상신 전이면 statusCode 없음 */
 export interface IcsComplianceReportAppr {
   relateApprId: number;

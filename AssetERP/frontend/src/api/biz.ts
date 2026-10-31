@@ -284,6 +284,14 @@ export const bizRelateApprApi = {
     const res = await apiClient.get<ApiResponse<string>>('v1/biz/relate-apprs/file-count', { params: { promoId } });
     return res.data.data ?? '0건';
   },
+  /**
+   * AS-IS biz.Biz05_RelateAppr.insertPersonId — 그 달 상신 연결을 새 문서로 바꾼다 → 새 연결 ID (V29).
+   * A41(법인카드)이면 서버가 상신 문서의 첨부 엑셀(createCardExcel2)도 만든다 — startDate·closeDate·searchText는 그 내역의 조건
+   */
+  insertPerson: async (req: { dataYm: string; apprId: number; linkCode: string; startDate?: string; closeDate?: string; searchText?: string }): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/biz/relate-apprs/person', req);
+    return res.data.data;
+  },
   /** AS-IS biz.Biz05_RelateAppr.delete → 지운 건수 */
   deleteRelateApprs: async (relateApprIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/biz/relate-apprs', { data: relateApprIds });

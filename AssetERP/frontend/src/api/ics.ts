@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { IcsChecklistUser, ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsChecklistWrite, IcsChecklistWriteItem, IcsComplianceConfirm, IcsComplianceReportRow, IcsComplianceReportAppr, IcsChecklistConfirm, IcsChecklistRelateAppr, ChecklistConfirmParams, IcsChecklistStatus, IcsChecklistStatusDetail, IcsExtrActivity, IcsExtrActivitySaveReq, IcsDcrPreconfirm, IcsDcrType, IcsDcrTypeOption } from '../types/ics';
+import { IcsChecklistUser, ClassTreeNode, IcsWriteTreeNode, IcsChecklist, IcsCompliance, IcsComplianceAnswer, IcsComplianceDate, IcsChecklistClassCode, IcsChecklistLClass, IcsChecklistMClass, IcsLawDeadline, ClassTreeSaveReq, IcsFormFile, IcsFormFileAdmin, IcsLaw, IcsLawDetail, IcsLawLookup, IcsLawPeriod, IcsLawView, IcsLawManage, IcsLawExcept, IcsManager, IcsManagerSaveReq, IcsShare, IcsShareSaveReq, IcsCompanyInfoSave, IcsClassTreeItem, IcsRelateFile, IcsRevisionHistory, IcsRevisionHistoryAdmin, IcsRevisionHistoryAdminSaveReq, IcsRevisionLaw, IcsUserRequest, IcsUserRequestSaveReq, IcsUserRequestSearch, IcsUserRequestMySearch, IcsUserRequestMyReq, IcsComplianceWrite, IcsComplianceWriteItem, IcsChecklistWrite, IcsChecklistWriteItem, IcsComplianceConfirm, IcsComplianceWriter, IcsComplianceReportRow, IcsComplianceReportAppr, IcsChecklistConfirm, IcsChecklistRelateAppr, ChecklistConfirmParams, IcsChecklistStatus, IcsChecklistStatusDetail, IcsExtrActivity, IcsExtrActivitySaveReq, IcsDcrPreconfirm, IcsDcrType, IcsDcrTypeOption } from '../types/ics';
 
 /** ics(내부통제) 화면 API (E01~) */
 /** 파일을 받아 저장한다(blob). 오류 응답은 메시지로 바꿔 던진다 */
@@ -720,9 +720,21 @@ export const icsApi = {
   // ── K02 내부통제 준수점검(준감인) (Ics31_Tab_ComplianceConfirm) ──
 
   /** AS-IS ics.Ics30_Compliance.selectByPaging: stdDate = 기준 분기(월)의 말일, checkBox = 미확인건만 조회. 검색어의 앞뒤 %는 서버가 붙인다 */
-  searchComplianceConfirms: async (params: { stdDate: string; cycleType: string; searchText: string; checkBox: boolean; offset: number; limit: number }): Promise<PageRes<IcsComplianceConfirm>> => {
+  searchComplianceConfirms: async (params: { stdDate: string; cycleType: string; searchText: string; checkBox: boolean; writerId?: number | null; offset: number; limit: number }): Promise<PageRes<IcsComplianceConfirm>> => {
     const res = await apiClient.get<ApiResponse<PageRes<IcsComplianceConfirm>>>('v1/ics/compliance-confirms', { params });
     return res.data.data as PageRes<IcsComplianceConfirm>;
+  },
+
+  /** AS-IS ics.Ics30_Compliance.getConfirmYn: 내가 확인할 기준 분기(월)의 미확인 건수 (V28 — [상신]) */
+  getComplianceConfirmUnconfirmed: async (stdDate: string, cycleType: string): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/ics/compliance-confirms/unconfirmed-count', { params: { stdDate, cycleType } });
+    return res.data.data;
+  },
+
+  /** AS-IS ics.Ics30_Compliance.selectWriterId: 사원명 조회창(Ics31_Lookup_SelectPerson)의 목록 (V28). 검색어의 앞뒤 %는 서버가 붙인다 */
+  searchComplianceConfirmWriters: async (stdDate: string, cycleType: string, searchText: string): Promise<IcsComplianceWriter[]> => {
+    const res = await apiClient.get<ApiResponse<IcsComplianceWriter[]>>('v1/ics/compliance-confirms/writers', { params: { stdDate, cycleType, searchText } });
+    return res.data.data as IcsComplianceWriter[];
   },
 
   /** AS-IS ics.Ics31_ComplianceWrite.updateConfirmYn: 고른 작성 행을 확인(true)·확인취소(false) */
@@ -796,8 +808,8 @@ export const icsApi = {
 
   /** AS-IS ics.Ics32_RelateAppr.selectByCompanyId: 그 달 상신 연결과 결재 상태, 연결이 없으면 null (yyyymm = 'yyyy.MM') */
   /** AS-IS ics.Ics32_RelateAppr.insert — 그 달 상신 연결 ID를 만들거나(없을 때) 돌려준다 (V19, A32) */
-  createComplianceReportRelate: async (yyyymm: string, cycleType: string): Promise<number> => {
-    const res = await apiClient.post<ApiResponse<number>>('v1/ics/compliance-reports/relate-apprs', { yyyymm, cycleType });
+  createComplianceReportRelate: async (yyyymm: string, cycleType: string, apprType?: '1' | '2'): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ics/compliance-reports/relate-apprs', { yyyymm, cycleType, apprType });
     return res.data.data;
   },
 
@@ -806,8 +818,9 @@ export const icsApi = {
     await apiClient.put(`v1/ics/compliance-reports/relate-apprs/${relateApprId}/appr-id`, { apprId });
   },
 
-  getComplianceReportAppr: async (yyyymm: string, cycleType: string): Promise<IcsComplianceReportAppr | null> => {
-    const res = await apiClient.get<ApiResponse<IcsComplianceReportAppr | null>>('v1/ics/compliance-reports/appr', { params: { yyyymm, cycleType } });
+  /** apprType: '1' 준수보고(A32, 기본) / '2' 부서장 준수확인서(A52, 로그인 사원 기준) */
+  getComplianceReportAppr: async (yyyymm: string, cycleType: string, apprType?: '1' | '2'): Promise<IcsComplianceReportAppr | null> => {
+    const res = await apiClient.get<ApiResponse<IcsComplianceReportAppr | null>>('v1/ics/compliance-reports/appr', { params: { yyyymm, cycleType, apprType } });
     return res.data.data ?? null;
   },
 
@@ -841,6 +854,16 @@ export const icsApi = {
   deleteExtrActivities: async (extrActivityIds: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/ics/extr-activities', { data: extrActivityIds });
     return res.data.data;
+  },
+
+  /** AS-IS ics.Ics35_ExtrActivity.updateApprId — B15 활동신청 결재문서 ID 기록(서버가 신청의 첨부파일도 문서에 연결) (V29) */
+  updateExtrActivityApprId: async (extrActivityId: number, apprId: number): Promise<void> => {
+    await apiClient.put(`v1/ics/extr-activities/${extrActivityId}/appr-id`, { apprId });
+  },
+
+  /** AS-IS ics.Ics35_ExtrActivity.updateResultApprId — B16 결과보고 결재문서 ID 기록 (V29) */
+  updateExtrActivityResultApprId: async (extrActivityId: number, apprId: number): Promise<void> => {
+    await apiClient.put(`v1/ics/extr-activities/${extrActivityId}/result-appr-id`, { apprId });
   },
 
   // ── M05·M06 준감인 사전확인대장 (Ics40_Tab_DcrPreConfirm·Ics40_Tab_DcrReviewConfirm) ──

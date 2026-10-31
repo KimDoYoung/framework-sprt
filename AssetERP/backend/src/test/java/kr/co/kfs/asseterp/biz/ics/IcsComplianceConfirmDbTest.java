@@ -26,40 +26,40 @@ class IcsComplianceConfirmDbTest {
     @Autowired IcsComplianceConfirmService service;
     @Autowired JdbcTemplate jdbc;
 
-    private static final UserPrincipal ME = UserPrincipal.builder().userId(-28656L).companyId(28000L).build();
+    private static final UserPrincipal ME = UserPrincipal.builder().userId(202204180108329L).companyId(28000L).build();  // 2026.08 제출분의 확인자(V28: 내가 확인자인 내역만 읽는다)
     /** 2026.08 월 주기 제출분이 회사 28000에 25건 있다(AS-IS selectByCompanyIdTotal로도 25) */
     private static final LocalDate STD_DATE = LocalDate.of(2026, 8, 31);
 
     @Test
     void 제출된_작성_내역을_페이지로_읽는다() {
-        PageRes<IcsComplianceConfirmRes> all = service.search(ME, STD_DATE, "", false, "M", 0, 100);
+        PageRes<IcsComplianceConfirmRes> all = service.search(ME, STD_DATE, "", false, "M", null, 0, 100);
         assertThat(all.total()).isEqualTo(25);
         assertThat(all.rows()).hasSize(25).allMatch(r -> r.fixYn() && r.complianceWriteId() != null);
 
-        PageRes<IcsComplianceConfirmRes> page2 = service.search(ME, STD_DATE, "", false, "M", 10, 10);
+        PageRes<IcsComplianceConfirmRes> page2 = service.search(ME, STD_DATE, "", false, "M", null, 10, 10);
         assertThat(page2.total()).isEqualTo(25);
         assertThat(page2.rows()).hasSize(10).first().isEqualTo(all.rows().get(10));
 
-        PageRes<IcsComplianceConfirmRes> found = service.search(ME, STD_DATE, all.rows().get(0).personName(), false, "M", 0, 100);
+        PageRes<IcsComplianceConfirmRes> found = service.search(ME, STD_DATE, all.rows().get(0).personName(), false, "M", null, 0, 100);
         assertThat(found.total()).isBetween(1L, 25L);
     }
 
     @Test
     void 확인하고_확인취소한다() {
-        List<IcsComplianceConfirmRes> rows = service.search(ME, STD_DATE, "", false, "M", 0, 100).rows();
+        List<IcsComplianceConfirmRes> rows = service.search(ME, STD_DATE, "", false, "M", null, 0, 100).rows();
         List<Long> ids = rows.stream().limit(2).map(IcsComplianceConfirmRes::complianceWriteId).toList();
         // 먼저 확인취소로 시작 상태를 맞춘다(실제 데이터는 이미 확인된 건이 있을 수 있다 — 롤백)
         assertThat(service.updateConfirmYn(ME, new IcsComplianceConfirmReq(false, ids))).isEqualTo(2);
-        long confirmedBefore = service.search(ME, STD_DATE, "", true, "M", 0, 100).total();
+        long confirmedBefore = service.search(ME, STD_DATE, "", true, "M", null, 0, 100).total();
 
         assertThat(service.updateConfirmYn(ME, new IcsComplianceConfirmReq(true, ids))).isEqualTo(2);
-        assertThat(service.search(ME, STD_DATE, "", false, "M", 0, 100).rows()).filteredOn(r -> ids.contains(r.complianceWriteId())).allMatch(IcsComplianceConfirmRes::confirmYn);
+        assertThat(service.search(ME, STD_DATE, "", false, "M", null, 0, 100).rows()).filteredOn(r -> ids.contains(r.complianceWriteId())).allMatch(IcsComplianceConfirmRes::confirmYn);
         // 미확인건만 조회: 확인한 건은 빠진다
-        assertThat(service.search(ME, STD_DATE, "", true, "M", 0, 100).total()).isEqualTo(confirmedBefore - 2);
-        assertThat(jdbc.queryForObject("select ics31_confirmer_id from ics31_compliance_write where ics31_compliance_write_id = ?", Long.class, ids.get(0))).isEqualTo(-28656L);
+        assertThat(service.search(ME, STD_DATE, "", true, "M", null, 0, 100).total()).isEqualTo(confirmedBefore - 2);
+        assertThat(jdbc.queryForObject("select ics31_confirmer_id from ics31_compliance_write where ics31_compliance_write_id = ?", Long.class, ids.get(0))).isEqualTo(202204180108329L);
 
         assertThat(service.updateConfirmYn(ME, new IcsComplianceConfirmReq(false, ids))).isEqualTo(2);
-        assertThat(service.search(ME, STD_DATE, "", true, "M", 0, 100).total()).isEqualTo(confirmedBefore);
+        assertThat(service.search(ME, STD_DATE, "", true, "M", null, 0, 100).total()).isEqualTo(confirmedBefore);
     }
 
     @Test

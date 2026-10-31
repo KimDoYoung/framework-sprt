@@ -2,12 +2,15 @@ package kr.co.kfs.asseterp.biz.apr.service.link;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.springframework.stereotype.Component;
 
+import kr.co.kfs.asseterp.biz.apr.dto.IcsWriterLinkRow;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprApprNewMapper;
+import kr.co.kfs.asseterp.biz.apr.mapper.AprIcsWriterLinkMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsChecklistRelateApprRes;
 import kr.co.kfs.asseterp.biz.ics.mapper.IcsChecklistConfirmMapper;
@@ -35,10 +38,11 @@ public class IcsLinkSeedProvider implements AprLinkSeedProvider {
 
     private final IcsChecklistConfirmMapper checklistMapper;
     private final AprApprNewMapper newMapper;
+    private final AprIcsWriterLinkMapper writerMapper;
 
     @Override
     public Set<String> linkCodes() {
-        return Set.of("A27", "A32");
+        return Set.of("A27", "A32", "A52");
     }
 
     @Override
@@ -65,6 +69,12 @@ public class IcsLinkSeedProvider implements AprLinkSeedProvider {
             return new Seed(title, checklistHtml(yyyy, mm, orgName, row.checkLClassName()), null, false, false);
         }
         String cycleName = arg(args, "cycleName");
+        if ("A52".equals(linkCode)) {
+            // Apr01_Edit_ApprDoc L2206-2238: 제목 `yyyy년 주기이름_임직원 내부통제 준수확인서 - 조직명 사원명`(고칠 수 있음), 본문 ComplianceWriteHtmlData.getHtmlContent2
+            List<IcsWriterLinkRow> list = writerMapper.selectWriterList(user.getCompanyId(), user.getUserId(), arg(args, "cycleType"), stdDate(args));
+            String title52 = yyyy + "년 " + cycleName + "_임직원 내부통제 준수확인서 - " + orgName + " " + user.getName();
+            return new Seed(title52, complianceWriteHtml2(list), null, false, false);
+        }
         String title = yyyy + "년 " + cycleName + "_임직원 내부통제 준수보고";
         return new Seed(title, complianceHtml(yyyy, cycleName), null, false, false);
     }
@@ -103,6 +113,37 @@ public class IcsLinkSeedProvider implements AprLinkSeedProvider {
         return "<td colspan=\"" + colspan + "\" rowspan=\"" + rowspan
                 + "\" style=\"border:" + border + "px; height:15px; width:" + (colspan * 5) + "%;\">"
                 + "<span></span></td>";
+    }
+
+    private static final String TABLE_START_NOTO = "<table border=2 style='border-collapse:collapse; border:0px black solid; font-family:\"NotoCustom\"; font-size:12px; margin:0px; padding:0px; width:100%;'>";
+
+    private static String tdColor(int colspan, int rowspan, int border, String align, int size, String text, String bg) {
+        return "<td colspan=\"" + colspan + "\" rowspan=\"" + rowspan
+                + "\" style=\"border:" + border + "px;border-color:black; border-style:solid; border-width:1px; background-color:" + bg + "; text-align:"
+                + align + "; height:25px; width:" + (colspan * 5) + "%;\">"
+                + "<span style=\"font-size:" + size + "px;\">" + text + "</span></td>";
+    }
+
+    /** ComplianceWriteHtmlData.getHtmlContent2 L83-119 (표 글꼴은 현재 원본의 NotoCustom) */
+    private static String complianceWriteHtml2(List<IcsWriterLinkRow> list) {
+        StringBuilder t = new StringBuilder(TABLE_START_NOTO + TBODY_START
+                + TR_START + tdStNone(20, 1, "left", 14, "다음과 같이 임직원 내부통제 준수내역을 보고합니다.") + TR_CLOSE
+                + TR_START + tdEmpty(20, 1, 0) + TR_CLOSE
+                + TR_START + tdStNone(20, 1, "center", 14, "- 다 음 -") + TR_CLOSE
+                + TR_START + tdEmpty(20, 1, 0) + TR_CLOSE
+                + TR_START + tdColor(2, 1, 1, "center", 12, "이름", "#EAEFF4")
+                + tdColor(5, 1, 1, "center", 12, "부서", "#EAEFF4")
+                + tdColor(2, 1, 1, "center", 12, "직위", "#EAEFF4")
+                + tdColor(7, 1, 1, "center", 12, "준수여부", "#EAEFF4")
+                + tdColor(4, 1, 1, "center", 12, "비고", "#EAEFF4") + TR_CLOSE);
+        for (IcsWriterLinkRow m : list) {
+            t.append(TR_START + tdColor(2, 1, 1, "center", 12, String.valueOf(m.personName()), "none")
+                    + tdColor(5, 1, 1, "left", 12, String.valueOf(m.orgName()), "none")
+                    + tdColor(2, 1, 1, "center", 12, String.valueOf(m.posName()), "none")
+                    + tdColor(7, 1, 1, "left", 12, String.valueOf(m.complianceResult()), "none")
+                    + tdColor(4, 1, 1, "left", 12, "", "none") + TR_CLOSE);
+        }
+        return t.append(TBODY_CLOSE + TABLE_CLOSE).toString();
     }
 
     /** ChecklistWriteHtmlData.getHtmlContent L32-74 */

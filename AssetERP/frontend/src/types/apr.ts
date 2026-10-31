@@ -708,6 +708,8 @@ export interface AprLinkArgs {
   accountName?: string;
   /** D01 연봉계약 — 계약서 양식이 둘 이상일 때 Pay06_Lookup_LinkContent에서 고른 양식 ID(V26) */
   actMappingId?: string;
+  /** A10~A12 이익제공(수령) — 신청서 구분 콤보에 보이는 이름, 제목은 "이름_로그인 사원 이름"(V29) */
+  typeName?: string;
 }
 
 /** 링크코드별 제목·본문·시행일자 (GET apr/apprs/link-seed, V17) */

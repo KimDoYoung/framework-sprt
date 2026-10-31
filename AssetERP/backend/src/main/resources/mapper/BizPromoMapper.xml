@@ -810,4 +810,73 @@
           FROM ( <include refid="provideListQuery"/> ) q
          ORDER BY q.row_id
     </insert>
+
+    <!-- V29 AS-IS biz01_promo.selectByCardExcel L724 (IDMS-IC) — A41 상신 첨부 엑셀. 열은 엑셀에 쓰는 것만 별칭으로, 조건·정렬은 그대로 -->
+    <select id="selectByCardExcel" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizCardExcelRow">
+        <![CDATA[
+        SELECT crd01_card_nm                                                                                      AS html_card_name
+             , CASE WHEN sys01_card_real_user_yn = 'true' THEN
+                     CASE WHEN crd03_public_yn = 'true'
+                           AND biz01_real_person_id IS NULL THEN '공통('||f_emp_kor_nm(crd03_person_id)||')'
+                          WHEN crd03_public_yn = 'true'
+                           AND biz01_real_person_id IS NOT NULL THEN '공통('||f_emp_kor_nm(biz01_real_person_id)||')'
+                          ELSE f_emp_kor_nm(crd03_person_id) END
+                    ELSE CASE WHEN COALESCE(crd03_public_yn,'false') = 'true' THEN '공통' ELSE f_emp_kor_nm(crd03_person_id) END END AS card_user_name
+             , b.crd02_approval_dt                                                                                AS approval_dt
+             , b.crd02_franchise_nm                                                                               AS franchise_name
+             , b.crd02_sector_nm                                                                                  AS sector_name
+             , a.biz01_provide_amt                                                                                AS provide_amt
+             , f_cdnm('ProvidePurCode',     a.biz01_provide_pur_cd,     a.biz01_company_id, a.biz01_provide_date) AS provide_pur_name
+             , f_cdnm('ProvideContentCode', a.biz01_provide_content_cd, a.biz01_company_id, a.biz01_provide_date) AS provide_content_name
+             , CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||d.act01_account_nm AS account_name
+             , d.act01_account_cd                                                                                 AS account_code
+             , c.biz02_count                                                                                      AS total_peple
+             , TRUNC(a.biz01_provide_amt / CASE WHEN biz01_provide_rcv_type = '2'
+                                                THEN f_nvl(c.biz02_emp_count,1)
+                                                ELSE f_nvl(c.biz02_count    ,1)
+                                           END)                                                                   AS average_price
+             , (SELECT STRING_AGG(f_emp_kor_nm(p.biz02_emp_id), E'\n' ORDER BY p.biz02_emp_id)
+                  FROM biz02_person p
+                 WHERE biz02_promo_id = biz01_promo_id
+                   AND biz02_emp_yn = 'true')                                                                     AS reg_emp_name
+             , (SELECT STRING_AGG(biz02_target_nm, E'\n' ORDER BY biz02_target_nm)
+                  FROM (SELECT biz02_promo_id
+                             , (biz02_target_company_nm || ' ' || biz02_target_emp_nm) AS biz02_target_nm
+                          FROM biz02_person p
+                         WHERE biz02_promo_id = biz01_promo_id
+                           AND biz02_emp_yn = 'false') t)                                                         AS target_name
+             , a.biz01_note                                                                                       AS note
+          FROM biz01_promo a
+               INNER JOIN crd01_card ON crd01_card_id = biz01_card_id
+               INNER JOIN crd02_data b ON crd02_data_id = a.biz01_card_data_id
+               LEFT OUTER JOIN crd03_trans ON (    crd03_card_id = biz01_card_id
+                                               AND biz01_provide_date BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,'9999-12-31') )
+               INNER JOIN sys01_company ON sys01_company_id = biz01_company_id
+               LEFT OUTER JOIN LATERAL ( SELECT COUNT(*)                                                                 AS biz02_count
+                                              , SUM(CASE WHEN COALESCE(biz02_emp_yn,'false') = 'true' THEN 1 ELSE 0 END) AS biz02_emp_count
+                                           FROM biz02_person
+                                          WHERE biz02_promo_id = biz01_promo_id
+                                       ) c ON TRUE
+               LEFT OUTER JOIN act01_account_code d ON d.act01_account_code_id = a.biz01_account_code_id
+         WHERE 1=1
+           AND biz01_company_id = #{companyId}
+           AND (
+                 (sys01_card_real_user_yn = 'true' AND biz01_real_person_id = #{personId})
+              OR ( (sys01_card_real_user_yn IS DISTINCT FROM 'true')
+                    AND #{personId} IN (
+                          SELECT crd03_person_id
+                            FROM crd03_trans
+                                 INNER JOIN crd01_card
+                                         ON crd01_card_id = crd03_card_id
+                           WHERE a.biz01_provide_date
+                                 BETWEEN crd03_fr_dt AND COALESCE(crd03_to_dt,to_date('29991231','yyyyMMdd'))
+                             AND a.biz01_card_id = crd03_card_id
+                      )
+                 )
+               )
+           AND biz01_provide_date BETWEEN #{startDate} AND #{closeDate}
+           AND CONCAT(crd01_card_nm,crd02_franchise_nm,crd02_sector_nm, biz01_note) ILIKE #{searchText}
+         ORDER BY biz01_provide_date
+        ]]>
+    </select>
 </mapper>

@@ -78,4 +78,20 @@
            AND ( biz05_company_id = #{companyId}
               OR biz05_promo_id IN (SELECT biz01_promo_id FROM biz01_promo WHERE biz01_company_id = #{companyId}) )
     </delete>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- V29 AS-IS biz05_relate_appr.insertPersonId (IDMS-IC) — promo 열은 값이 없어 NULL -->
+    <insert id="insertPersonId">
+        INSERT INTO biz05_relate_appr
+             ( biz05_relate_appr_id, biz05_appr_id, biz05_company_id, biz05_std_ym, biz05_link_cd, biz05_person_id )
+        VALUES ( #{relateApprId}, #{apprId}, #{companyId}, #{dataYm}, #{linkCode}, #{personId} )
+    </insert>
+
+    <select id="selectLocName" resultType="string">
+        SELECT sys01_loc_nm FROM sys01_company WHERE sys01_company_id = #{companyId}
+    </select>
 </mapper>

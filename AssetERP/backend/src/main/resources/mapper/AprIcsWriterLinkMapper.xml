@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  V28 링크코드 A52 임직원 내부통제 준수확인서(부서장)의 본문 값 (Apr01_Edit_ApprDoc.insertLinkApproval A52)
+  ics30_compliance.selectWriterList (IDMS-IC server/ics/mapper/ics30_compliance.xml:343) — yunhee port-sql로 include(common.sys_codeByDate·common.org00_org_info)를 펼쳐 옮김.
+    바뀐 곳: to_date(#{stdDate},'yyyy-mm-dd') → #{stdDate}(날짜로 바인딩), org00 조건은 회사만(org00CompanyId = companyId), 끝의 ';' 제거. 열 별칭만 DTO에 맞춤.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprIcsWriterLinkMapper">
+
+    <select id="selectWriterList" resultType="kr.co.kfs.asseterp.biz.apr.dto.IcsWriterLinkRow">
+<![CDATA[
+WITH sys_code AS ( SELECT a.*
+                     FROM sys08_code_kind
+                          INNER JOIN sys09_code a ON sys09_code_kind_id = sys08_code_kind_id
+                    WHERE sys08_kind_cd    = 'IcsComplianceType'
+                      AND sys09_company_id = #{companyId}
+                      AND sys09_apply_date = ( SELECT MAX(b.sys09_apply_date)
+                                                 FROM sys09_code b
+                                                WHERE b.sys09_code_kind_id = a.sys09_code_kind_id
+                                                  AND b.sys09_company_id   = a.sys09_company_id
+                                                  AND b.sys09_code         = a.sys09_code
+                                                  AND b.sys09_apply_date <= #{stdDate} )
+                      AND ( ( COALESCE(sys09_close_yn,'false') = 'true'                         AND
+                              COALESCE(sys09_close_date,'1900-12-31') >= #{stdDate} ) OR
+                            ( COALESCE(sys09_close_yn,'false') != 'true'                        ) )
+)
+,
+org00 AS (
+    SELECT org01_code_id                                                            AS org00_org_code_id
+         , org01_company_id                                                         AS org00_company_id
+         , org01_org_cd                                                             AS org00_org_cd
+         , org01_open_date                                                          AS org00_open_date
+         , org01_close_date                                                         AS org00_close_date
+         , org01_open_reason                                                        AS org00_open_reason
+         , org01_close_reason                                                       AS org00_close_reason
+         , org02_info_id                                                            AS org00_org_info_id
+         , org02_kor_nm                                                             AS org00_kor_nm
+         , org02_mod_date                                                           AS org00_mod_date
+         , org02_mod_reason                                                         AS org00_mod_reason
+         , org02_parent_code_id                                                     AS org00_parent_code_id
+         , org02_inner_type                                                         AS org00_inner_type
+         , org02_eng_nm                                                             AS org00_eng_nm
+         , org02_note                                                               AS org00_note
+         , org02_level_cd                                                           AS org00_level_cd
+         , org02_sort_order                                                         AS org00_seq
+         , org02_mod_detail                                                         AS org00_mod_detail
+         , org02_dcr_id_word                                                        AS org00_dcr_id_word
+
+
+         , CASE WHEN SUBSTR(org01_org_cd,1,2) = '11' THEN 'true' ELSE 'false' END   AS org00_ignore_stamp
+      FROM org01_code
+           INNER JOIN org02_info ON org02_code_id = org01_code_id
+     WHERE 1=1
+      AND org01_company_id = #{companyId}
+
+),
+ics31_person AS (
+SELECT DISTINCT ON (ics31_person_id)
+       emp01_person_id																AS ics31_person_id
+     , f_org_nm(emp03_org_code_id, #{stdDate})                AS ics30_org_nm
+     , f_cdnm('EmpTitleCode', emp03_title_cd, emp01_company_id, #{stdDate})	     	AS ics30_title_nm
+     , f_cdnm('EmpPosCode', emp03_pos_cd, emp01_company_id, #{stdDate})		        AS ics30_pos_nm
+     , emp01_emp_no																	AS ics30_emp_no
+     , emp01_kor_nm																	AS ics30_person_nm
+     , emp03_trans_date																AS ics30_trans_date
+  FROM ics31_compliance_write
+       INNER JOIN ics30_compliance ON (    ics30_compliance_id = ics31_compliance_id
+                                       AND ics30_start_date = ( SELECT MAX(ics30_start_date)
+							                                      FROM ics30_compliance
+							                                     WHERE ics30_company_id = ics31_company_id
+							                                       AND ics30_start_date <= #{stdDate}
+							                                       AND COALESCE(ics30_date_fix_yn,'false') = 'true')
+							           AND #{stdDate} <= COALESCE(ics30_use_close_date, '2999-12-31'::date) )
+       INNER JOIN emp01_person emp01 ON emp01.emp01_person_id = ics31_person_id
+       LEFT OUTER JOIN  emp02_others emp02 ON emp01_person_id = emp02_person_id
+       INNER JOIN emp03_trans emp03 ON emp03.emp03_person_id = emp01_person_id
+       INNER JOIN org00                ON emp03_org_code_id = org00_org_code_id
+ WHERE ics31_company_id       = #{companyId}
+   AND ics31_yyyymm           = TO_CHAR(#{stdDate}::date,'YYYY.MM')
+   AND ics31_cycle_type       = #{cycleType}
+   AND COALESCE(ics31_fix_yn,'false') = 'true'
+   AND ics31_confirmer_id = #{confirmerId}
+   AND emp03_trans_date = ( SELECT	MAX(emp03_trans_date)
+                              FROM	emp03_trans x
+                             WHERE	x.emp03_person_id = emp01.emp01_person_id
+                               AND (  (x.emp03_trans_cd  = '900' AND x.emp03_trans_date <  #{stdDate}::date)
+                                   OR (x.emp03_trans_cd != '900' AND x.emp03_trans_date <= #{stdDate}::date)))
+   AND  org00_mod_date = (
+                            SELECT  max(org00_mod_date)
+                              FROM  org00
+                             WHERE  org00_org_code_id = emp03_org_code_id
+                               AND  org00_mod_date <= emp03_trans_date
+                            )
+),
+compliance_items AS (
+SELECT c.ics30_compliance_type
+     , c.ics30_start_date
+     , s.sys09_name AS ics30_compliance_type_nm
+     , LPAD(s.sys09_seq, 5, '0') AS sort_seq
+  FROM ics30_compliance c
+       INNER JOIN sys_code s ON s.sys09_code = c.ics30_compliance_type
+ WHERE c.ics30_company_id = #{companyId}
+   AND c.ics30_start_date = ( SELECT MAX(c2.ics30_start_date)
+                                FROM ics30_compliance c2
+                               WHERE c2.ics30_company_id = #{companyId}
+                                 AND c2.ics30_start_date <= #{stdDate}
+                                 AND COALESCE(c2.ics30_date_fix_yn, 'false') = 'true')
+   AND (   (c.ics30_use_yn = 'false'
+        AND c.ics30_use_close_date >= #{stdDate})
+         OR c.ics30_use_yn != 'false')
+ GROUP BY c.ics30_compliance_type
+        , c.ics30_start_date
+        , s.sys09_code
+        , s.sys09_name
+        , s.sys09_seq
+),
+compliance_detail AS (
+SELECT p.ics31_person_id AS ics30_person_id
+     , i.ics30_compliance_type_nm
+     , f_get_compliance_result(p.ics31_person_id, #{stdDate}, #{cycleType}, i.ics30_compliance_type, i.ics30_start_date) AS ics30_compliance_result
+     , i.sort_seq
+  FROM ics31_person p
+       CROSS JOIN compliance_items i
+),
+compliance_summary AS (
+SELECT ics30_person_id
+     , STRING_AGG(ics30_compliance_type_nm, ', ' ORDER BY sort_seq) 
+       FILTER (WHERE ics30_compliance_result NOT LIKE '준수%') AS non_compliance_names
+  FROM compliance_detail
+ GROUP BY ics30_person_id
+)
+        SELECT p.ics31_person_id                                              AS person_id
+             , p.ics30_person_nm                                             AS person_name
+             , ics30_org_nm                                                  AS org_name
+             , ics30_pos_nm                                                  AS pos_name
+             , CASE WHEN s.non_compliance_names IS NULL THEN '준수'
+                    ELSE CONCAT('미준수(', s.non_compliance_names, ')') END   AS compliance_result
+          FROM ics31_person p
+               INNER JOIN compliance_summary s ON s.ics30_person_id = p.ics31_person_id
+         ORDER BY p.ics31_person_id
+]]>
+    </select>
+</mapper>

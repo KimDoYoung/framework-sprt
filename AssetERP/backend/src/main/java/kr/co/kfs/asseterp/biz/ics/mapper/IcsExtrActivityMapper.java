@@ -33,4 +33,18 @@ public interface IcsExtrActivityMapper {
 
     /** AS-IS Ics35_ExtrActivity.delete(UpdateDataModel.deleteModel) — 로그인 회사 행만 */
     int deleteExtrActivity(@Param("extrActivityId") Long extrActivityId, @Param("companyId") Long companyId);
+
+    /** AS-IS ics35_extr_activity.updateApprId — 활동신청(B15) 상신 문서 ID. 회사 조건은 TOBE에서 추가 */
+    int updateApprId(@Param("companyId") Long companyId, @Param("extrActivityId") Long extrActivityId, @Param("apprId") Long apprId);
+
+    /** AS-IS ics35_extr_activity.updateResultApprId — 결과보고(B16) 상신 문서 ID. 회사 조건은 TOBE에서 추가 */
+    int updateResultApprId(@Param("companyId") Long companyId, @Param("extrActivityId") Long extrActivityId, @Param("resultApprId") Long resultApprId);
+
+    /** AS-IS sys10_file.selectByParentId의 파일 ID (Sys10_File.copyFile이 돌린다) */
+    List<Long> selectFileIds(@Param("parentId") Long parentId);
+
+    int countApprRelateFile(@Param("fileId") Long fileId, @Param("apprId") Long apprId);
+
+    /** AS-IS sys11_relate_file.insert (부모 테이블 apr01_appr) */
+    int insertApprRelateFile(@Param("relateFileId") Long relateFileId, @Param("fileId") Long fileId, @Param("apprId") Long apprId);
 }

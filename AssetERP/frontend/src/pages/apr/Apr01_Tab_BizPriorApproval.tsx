@@ -2,8 +2,8 @@
  * [1134] 준법감시 > 40. 이익제공(수령)현황 > 이익제공 사전승인신청 (L06, 1단계)
  * AS-IS: myApp/client/vi/apr/Apr01_Tab_BizPriorApproval.java (393줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L84-106: north(100) = 위 양식 한 줄(신청서 구분 콤보 · 문서분류 칸 · [승인신청] · 관리자만 [문서분류지정]), center = 툴바(조회기간 ~ [조회]) + 문서 그리드(체크박스 단일 선택)
- * 1단계(F·G·L02와 같은 사유): [승인신청]·[상세보기]가 여는 전자결재 편집창 `Apr01_Edit_ApprDoc`(5831줄, 다른 도메인 apr)과 [문서분류지정]이 여는
- *   (B15에서 [문서분류지정]의 `Dcr30_Lookup_Link`를 연결했다.) 편집창은 다음 단계 — 지금은 원본의 사전 검사 메시지까지만 하고 안내를 띄운다.
+ * 전자결재 편집창 `Apr01_Edit_ApprDoc`은 V29에서 연결했다 — [승인신청](링크코드 A10·A11·A12, 제목 "{신청서 구분 이름}_{로그인 사원 이름}"·본문은 문서분류의 대표 양식,
+ *   `GET apr/apprs/link-seed`)·[상세보기](문서 열기). [문서분류지정]의 `Dcr30_Lookup_Link`는 B15에서 연결했다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
  */
 import React, { useMemo, useRef, useState } from 'react';
@@ -22,6 +22,7 @@ import { LookupInput } from '@/components/lookup/LookupInput';
 import { Dcr30_Lookup_Link } from '@/components/lookup/Dcr30_Lookup_Link';
 import { Dcr30_Move_DcrClass, Dcr30ClassResult } from '@/components/lookup/Dcr30_Move_DcrClass';
 import { useLoginUser } from '@/hooks/useLoginUser';
+import { Apr01_Edit_ApprDoc } from './Apr01_Edit_ApprDoc';
 
 const gb = gbFor<AprPreProvide>();
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -41,6 +42,8 @@ export const Apr01_Tab_BizPriorApproval: React.FC = () => {
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().startOf('year'));
   const [endDate, setEndDate] = useState<Dayjs>(() => dayjs());
   const [apprCode, setApprCode] = useState<string | undefined>(undefined);
+  /** apprComboBox.getText() — 신청서 구분 이름(제목 앞부분) */
+  const [apprName, setApprName] = useState<string | undefined>(undefined);
   /** classTreeFullName 칸의 emptyText — 신청서 구분을 고르면 그 Link에 지정된 분류 이름, 없으면 미지정 안내 */
   const [docPlaceholder, setDocPlaceholder] = useState('');
   /** classTreeFullName 칸에 setValue 한 글자 — 문서분류 조회창에서 고른 값 */
@@ -51,6 +54,8 @@ export const Apr01_Tab_BizPriorApproval: React.FC = () => {
   const [rows, setRows] = useState<AprPreProvide[]>([]);
   const [loading, setLoading] = useState(false);
   const [docOpen, setDocOpen] = useState(false);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [linkDoc, setLinkDoc] = useState<{ classTreeId: number; linkCode: string; typeName: string } | null>(null);
   const seq = useRef(0);
 
   // [E5] retrieveButton[조회].Select (L193) → retrieve() L277-295: apr.Apr01_Appr.selectByText(preProvideRcvApprYn true, 기간, 로그인 사원·회사)
@@ -101,15 +106,14 @@ export const Apr01_Tab_BizPriorApproval: React.FC = () => {
   const [linkOpen, setLinkOpen] = useState(false);
   const openLinkLookup = () => setLinkOpen(true);
 
-  // insertLinkApproval() L362-382: 문서분류가 없으면 "문서분류를 선택해주세요", 아니면 제목 "{신청서 구분 이름}_{로그인 사원 이름}"으로(다음 단계에서 콤보 이름을 받는다)
+  // insertLinkApproval() L362-382: 문서분류가 없으면 "문서분류를 선택해주세요", 아니면 제목 "{신청서 구분 이름}_{로그인 사원 이름}"으로
   //   Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, linkCode, model, false, callback → 결과가 있으면 retrieve())
-  // [생략] 전자결재 편집창(Apr01_Edit_ApprDoc, 다른 도메인 apr)은 다음 단계
   const insertLinkApproval = () => {
     if (classDoc?.classTreeId == null) {
       message.warning('문서분류를 선택해주세요');
       return;
     }
-    message.info('전자결재 상신 창은 다음 단계에서 연결됩니다');
+    setLinkDoc({ classTreeId: classDoc.classTreeId, linkCode: apprCode ?? '', typeName: apprName ?? '' });
   };
 
   // [E4] insertButton[승인신청].Select (L168) → 신청서 구분을 안 골랐으면 "신청서 구분을 선택해주세요", 아니면 insertLinkApproval()
@@ -129,10 +133,7 @@ export const Apr01_Tab_BizPriorApproval: React.FC = () => {
     gb.text('title', 600, '문서명'),  // L270
     gb.textCenter('statusName', 100, '결재상태'),  // L271
     // actionCell(Detail) L249-258 → 선택 행으로 Apr01_Edit_ApprDoc.retrieveApproval(model, isAdmin, callback → retrieve())
-    // [생략] 전자결재 문서 보기 창은 다음 단계
-    iconCell<AprPreProvide>('view', 'actionCell', 70, '상세보기', () => {
-      message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
-    }),
+    iconCell<AprPreProvide>('view', 'actionCell', 70, '상세보기', row => setViewApprId(row.apprId)),
   ], []);
 
   const labelStyle: React.CSSProperties = { width: 95, fontWeight: 600, whiteSpace: 'nowrap' };
@@ -148,7 +149,7 @@ export const Apr01_Tab_BizPriorApproval: React.FC = () => {
             style={{ width: 400 }}
             placeholder="(선택하세요)"
             value={apprCode}
-            onChange={code => { setApprCode(code); void retrieveDoc(code); }}
+            onChange={(code, name) => { setApprCode(code); setApprName(name); void retrieveDoc(code); }}
           />
           <span style={{ ...labelStyle, marginLeft: 50 }}>문서분류</span>
           <LookupInput value={docText} placeholder={docPlaceholder} width={400} onOpen={() => setDocOpen(true)} />
@@ -182,6 +183,14 @@ export const Apr01_Tab_BizPriorApproval: React.FC = () => {
         defaultClassTreeId={defaultDoc?.classTreeId}
         onResult={onDocResult}
         onClose={() => setDocOpen(false)}
+      />
+      {/* insertLinkApproval() / actionCell(Detail): Apr01_Edit_ApprDoc — [E6] actionCell (ImageCell).callbackOnCreate (L255) → 저장·닫힘 뒤 retrieve() */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: linkDoc.linkCode, args: { typeName: linkDoc.typeName } } : null}
+        onLinkSaved={() => void retrieve()}
+        onClosed={() => void retrieve()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
       />
     </div>
   );

@@ -104,17 +104,36 @@ class AprIcsLinkSeedDbTest {
 
     @Test
     void A32_상신_연결은_있으면_그대로_없으면_만든다() {
-        Long exist = jdbc.queryForObject("select ics32_relate_appr_id from ics32_relate_appr where ics32_company_id = 28000 and ics32_yyyymm = '2025.01' and ics32_cycle_type = 'M'", Long.class);
-        assertThat(reportService.createRelateAppr(user(), "2025.01", "M")).isEqualTo(exist);
+        // 기존 행은 ics32_appr_type이 비어 있다 — 새 열을 채우는 작업(UPDATE … SET ics32_appr_type = '1')을 이 테스트 안에서만 한다(롤백)
+        jdbc.update("update ics32_relate_appr set ics32_appr_type = '1' where ics32_appr_type is null");
+        Long exist = jdbc.queryForObject("select ics32_relate_appr_id from ics32_relate_appr where ics32_company_id = 28000 and ics32_yyyymm = '2025.01' and ics32_cycle_type = 'M' and ics32_person_id is null", Long.class);
+        assertThat(reportService.createRelateAppr(user(), "2025.01", "M", null)).isEqualTo(exist);
 
-        Long created = reportService.createRelateAppr(user(), "2099.02", "M");
+        Long created = reportService.createRelateAppr(user(), "2099.02", "M", "1");
         assertThat(created).isNotNull().isNotEqualTo(exist);
-        assertThat(reportService.createRelateAppr(user(), "2099.02", "M")).isEqualTo(created);
+        assertThat(reportService.createRelateAppr(user(), "2099.02", "M", null)).isEqualTo(created);
         reportService.updateRelateApprId(user(), created, NEW_APPR);
         assertThat(jdbc.queryForObject("select ics32_appr_id from ics32_relate_appr where ics32_relate_appr_id = ?", Long.class, created)).isEqualTo(NEW_APPR);
-        assertThat(reportService.appr(user(), "2099.02", "M").statusCode()).isEqualTo("10");
+        assertThat(reportService.appr(user(), "2099.02", "M", null).statusCode()).isEqualTo("10");
         assertThrows(BusinessException.class, () -> reportService.updateRelateApprId(user(), -1L, NEW_APPR));
         assertThrows(BusinessException.class, () -> reportService.updateRelateApprId(user(), created, -1L));
-        assertThrows(BusinessException.class, () -> reportService.createRelateAppr(user(), "2099-02", "M"));
+        assertThrows(BusinessException.class, () -> reportService.createRelateAppr(user(), "2099-02", "M", null));
+        assertThrows(BusinessException.class, () -> reportService.createRelateAppr(user(), "2099.02", "M", "9"));
+    }
+
+    @Test
+    void A52_상신_연결은_로그인_사원별_구분_2로_따로_만든다() {
+        Long a32 = reportService.createRelateAppr(user(), "2099.03", "M", "1");
+        Long a52 = reportService.createRelateAppr(user(), "2099.03", "M", "2");
+        assertThat(a52).isNotEqualTo(a32);
+        assertThat(reportService.createRelateAppr(user(), "2099.03", "M", "2")).isEqualTo(a52);
+        assertThat(jdbc.queryForObject("select ics32_person_id from ics32_relate_appr where ics32_relate_appr_id = ?", Long.class, a52)).isEqualTo(29049L);
+        assertThat(jdbc.queryForObject("select ics32_appr_type from ics32_relate_appr where ics32_relate_appr_id = ?", String.class, a52)).isEqualTo("2");
+        assertThat(jdbc.queryForObject("select count(*) from ics32_relate_appr where ics32_relate_appr_id = ? and ics32_person_id is null", Integer.class, a32)).isEqualTo(1);
+        assertThat(reportService.appr(user(), "2099.03", "M", "2").relateApprId()).isEqualTo(a52);
+        assertThat(reportService.appr(user(), "2099.03", "M", "2").statusCode()).isNull();
+        reportService.updateRelateApprId(user(), a52, NEW_APPR);
+        assertThat(reportService.appr(user(), "2099.03", "M", "2").statusCode()).isEqualTo("10");
+        assertThat(reportService.appr(user(), "2099.03", "M", "1").statusCode()).isNull();
     }
 }

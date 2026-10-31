@@ -3,7 +3,8 @@
  * AS-IS: myApp/client/vi/ics/Ics35_Tab_ExtrActivity.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃: 툴바(조회기간 ~ · 조회 · 등록 · 삭제) + 대외활동 그리드(행번호, 체크박스 단일). 그리드 L123-204: 수정 50 · 신청일자 100 · 활동처 200 · 활동대상 300 · 활동기간 280 · 첨부자료 80 · (보기 30) ·
  *   [활동신청] 결재요청 80 · 결재상태 100 · 문서보기 80 / [결과보고] 결재요청 80 · 결재상태 100 · 문서보기 80. 짝: Ics35_Tab_ExtrActivityList(M02)
- * 1단계(F·I와 같은 방침): 전자결재 편집창 Apr01_Edit_ApprDoc(다른 도메인)을 여는 [결재요청]·[문서보기]는 상태 검사까지 하고 안내만 띄운다 — 다음 단계(전자결재 편집창)에서 연결
+ * 전자결재 상신(dcrChk·insertLinkApproval·updateApprId·updateResultApprId·viewAppr — Apr01_Edit_ApprDoc·Dcr01_Lookup_Class)은 V29에서 연결했다
+ *   (링크코드 B15 활동신청·B16 결과보고, 제목·본문은 서버가 만든다 `GET apr/apprs/link-seed`)
  * UX보강(10): 툴바 = SearchBar(UX-01 조회 로딩·Enter). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -17,6 +18,9 @@ import { SingleGrid, gbFor, iconCell } from '@/components/grid';
 import { Button } from '@/components/button';
 import { SearchBar } from '@/components/search';
 import { Sys10_Lookup_File } from '@/pages/sys/Sys10_Lookup_File';
+import { dcrApi } from '@/api/dcr';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
+import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
 import { Ics35_Edit_ExtrActivity, Ics35_Edit_ExtrActivityTarget } from './Ics35_Edit_ExtrActivity';
 
 const gb = gbFor<IcsExtrActivity>();
@@ -35,6 +39,9 @@ export const Ics35_Tab_ExtrActivity: React.FC = () => {
   const [closeDate, setCloseDate] = useState<Dayjs>(() => dayjs());
   const [editTarget, setEditTarget] = useState<Ics35_Edit_ExtrActivityTarget | null>(null);
   const [fileParentId, setFileParentId] = useState<number | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [classPick, setClassPick] = useState<{ linkCode: 'B15' | 'B16'; row: IcsExtrActivity } | null>(null);
+  const [linkDoc, setLinkDoc] = useState<{ linkCode: 'B15' | 'B16'; row: IcsExtrActivity; classTreeId: number } | null>(null);
 
   // retrieve() L254-268: 서비스 ics.Ics35_ExtrActivity.selectByPersonId(companyId, personId, startDate, closeDate)
   const retrieve = useCallback(async () => {
@@ -70,6 +77,7 @@ export const Ics35_Tab_ExtrActivity: React.FC = () => {
       okText: '예',
       cancelText: '아니오',
       width: 350,
+      // [E5] msgBox.DialogHide [YES] (L234) → 서비스 ics.Ics35_ExtrActivity.delete
       onOk: async () => {
         try {
           await icsApi.deleteExtrActivities(selected.map(r => r.extrActivityId));
@@ -88,15 +96,33 @@ export const Ics35_Tab_ExtrActivity: React.FC = () => {
       message.warning(BUSY_MSG);
       return;
     }
-    // [E생략] 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인 — 다음 단계
-    message.info('전자결재 상신 화면은 아직 연결되지 않았습니다 (다음 단계)');
+    void (async () => {
+      try {
+        const list = await dcrApi.searchClassTreeByLinkCode(linkCode);
+        if (list.length === 0) setClassPick({ linkCode, row });
+        else setLinkDoc({ linkCode, row, classTreeId: list[0].classTreeId });
+      } catch (err) {
+        message.error(errorMessage(err, '조회 실패'));
+      }
+    })();
   };
 
-  // viewAppr(apprId) L270-292: ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval(model, false), 없으면 "해당문서의 열람권한이 없습니다"
+  // updateApprId() L355-367 / updateResultApprId() L369-381 → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      if (linkDoc.linkCode === 'B15') await icsApi.updateExtrActivityApprId(linkDoc.row.extrActivityId, apprId);
+      else await icsApi.updateExtrActivityResultApprId(linkDoc.row.extrActivityId, apprId);
+      void retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '결재문서 ID를 기록하지 못했습니다'));
+    }
+  };
+
+  // viewAppr(apprId) L270-292: ApprCallbackResult → Apr01_Edit_ApprDoc.retrieveApproval(model, false) (열람권한이 없으면 결재창이 안내)
   const viewAppr = (apprId: number | null) => {
-    // [E생략] 전자결재 편집창 Apr01_Edit_ApprDoc은 다른 도메인 — 다음 단계
-    void apprId;
-    message.info('전자결재 문서보기는 아직 연결되지 않았습니다 (다음 단계)');
+    if (apprId == null) return;
+    setViewApprId(apprId);
   };
 
   // buildGrid() L123-204
@@ -159,6 +185,20 @@ export const Ics35_Tab_ExtrActivity: React.FC = () => {
       </div>
       <Ics35_Edit_ExtrActivity target={editTarget} onSaved={() => void retrieve()} onClose={() => setEditTarget(null)} />
       <Sys10_Lookup_File parentId={fileParentId} onClose={() => setFileParentId(null)} />
+      {/* dcrChk() 문서분류가 없을 때: Dcr01_Lookup_Class.open(null, null, callback → classTreeModel = result, insertLinkApproval) */}
+      <Dcr01_Lookup_Class
+        open={classPick != null}
+        onResult={r => { if (classPick) setLinkDoc({ ...classPick, classTreeId: r.classTreeId }); setClassPick(null); }}
+        onClose={() => setClassPick(null)}
+      />
+      {/* insertLinkApproval() L337-353: Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, linkCode, 행, false, callback → updateApprId) / viewAppr() */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: linkDoc.linkCode, refId: linkDoc.row.extrActivityId } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void retrieve()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </div>
   );
 };

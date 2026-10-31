@@ -56,27 +56,44 @@ public class IcsComplianceReportService {
         return rows;
     }
 
+    /** 상신 구분: 1 = 준수보고(A32, 사원 NULL), 2 = 부서장 준수확인서(A52, 로그인 사원). 비면 1 */
+    private static String apprType(String apprType) {
+        if (apprType == null || apprType.isBlank()) {
+            return "1";
+        }
+        if (!"1".equals(apprType) && !"2".equals(apprType)) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "상신 구분이 올바르지 않습니다.");
+        }
+        return apprType;
+    }
+
+    private static Long personId(UserPrincipal user, String apprType) {
+        return "2".equals(apprType) ? user.getUserId() : null;
+    }
+
     /** AS-IS defaultApprName(): 그 달 상신 연결과 결재 상태. 연결이 없으면 null(미상신) */
-    public IcsComplianceReportApprRes appr(UserPrincipal user, String yyyymm, String cycleType) {
-        return mapper.selectAppr(user.getCompanyId(), yyyymm, cycleType);
+    public IcsComplianceReportApprRes appr(UserPrincipal user, String yyyymm, String cycleType, String apprType) {
+        String type = apprType(apprType);
+        return mapper.selectAppr(user.getCompanyId(), yyyymm, cycleType, type, personId(user, type));
     }
 
     /**
-     * AS-IS ics.Ics32_RelateAppr.insert L61-94 (A32 상신 전) — 그 달 연결 행이 있으면 그 ID, 없으면 만들어 그 ID.
-     * AS-IS는 ics32_person_id(NULL)·ics32_appr_type('1')도 넣고 같은 조건으로 찾지만 로컬 asseterpdb의 ics32_relate_appr에는 두 열이 없어
-     * (원본보다 오래된 스키마) 넣지도 걸지도 않는다 — 이 화면의 연결은 모두 그 값이라 같은 행이 잡힌다.
+     * AS-IS ics.Ics32_RelateAppr.insert L61-94 (A32·A52 상신 전) — 그 달·구분·사원의 연결 행이 있으면 그 ID, 없으면 만들어 그 ID.
+     * 구분 1(A32)은 사원 NULL, 구분 2(A52)는 로그인 사원 (V28에서 ics32_person_id·ics32_appr_type 열이 로컬 DB에 생겨 조건에 넣음)
      */
     @Transactional
-    public Long createRelateAppr(UserPrincipal user, String yyyymm, String cycleType) {
+    public Long createRelateAppr(UserPrincipal user, String yyyymm, String cycleType, String apprTypeCode) {
+        String type = apprType(apprTypeCode);
+        Long personId = personId(user, type);
         if (yyyymm == null || !yyyymm.matches("\\d{4}\\.\\d{2}") || cycleType == null || cycleType.isBlank()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "기준 분기(월) 정보가 올바르지 않습니다.");
         }
-        Long id = mapper.selectRelateApprId(user.getCompanyId(), yyyymm, cycleType);
+        Long id = mapper.selectRelateApprId(user.getCompanyId(), yyyymm, cycleType, type, personId);
         if (id != null) {
             return id;
         }
         id = mapper.selectNextId();
-        mapper.insertRelateAppr(id, user.getCompanyId(), yyyymm, cycleType);
+        mapper.insertRelateAppr(id, user.getCompanyId(), yyyymm, cycleType, personId, type);
         return id;
     }
 

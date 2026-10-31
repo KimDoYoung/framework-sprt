@@ -58,4 +58,28 @@ public class IcsExtrActivityService {
     public int delete(UserPrincipal user, List<Long> extrActivityIds) {
         return extrActivityIds.stream().mapToInt(id -> mapper.deleteExtrActivity(id, user.getCompanyId())).sum();
     }
+
+    /**
+     * AS-IS updateApprId L355-367 (B15 활동신청). 문서의 첨부 자동등록 `copyFileLine`(Sys10_File.copyFile)도 같이 한다 —
+     * AS-IS는 문서를 저장할 때 신청의 첨부파일을 결재문서에 연결하고, TOBE는 문서 ID가 정해지는 이 때 한다(이미 연결된 파일은 다시 넣지 않는다)
+     */
+    @Transactional
+    public void updateApprId(UserPrincipal user, Long extrActivityId, Long apprId) {
+        if (mapper.updateApprId(user.getCompanyId(), extrActivityId, apprId) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        for (Long fileId : mapper.selectFileIds(extrActivityId)) {
+            if (mapper.countApprRelateFile(fileId, apprId) == 0) {
+                mapper.insertApprRelateFile(mapper.selectNextId(), fileId, apprId);
+            }
+        }
+    }
+
+    /** AS-IS updateResultApprId L369-381 (B16 결과보고) — 첨부 자동등록은 B15만 한다(L2899) */
+    @Transactional
+    public void updateResultApprId(UserPrincipal user, Long extrActivityId, Long resultApprId) {
+        if (mapper.updateResultApprId(user.getCompanyId(), extrActivityId, resultApprId) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+    }
 }

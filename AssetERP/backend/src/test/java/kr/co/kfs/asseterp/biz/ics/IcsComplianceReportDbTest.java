@@ -47,8 +47,10 @@ class IcsComplianceReportDbTest {
 
     @Test
     void 상신_연결은_없으면_null이다() {
-        assertThat(service.appr(ME, "2026.08", "M")).isNull();
-        IcsComplianceReportApprRes linked = service.appr(ME, "2026.06", "M");
+        // 기존 행은 ics32_appr_type이 비어 있다 — 새 열 채우기(UPDATE … SET '1')를 이 테스트 안에서만 한다(롤백)
+        jdbc.update("update ics32_relate_appr set ics32_appr_type = '1' where ics32_appr_type is null");
+        assertThat(service.appr(ME, "2026.08", "M", null)).isNull();
+        IcsComplianceReportApprRes linked = service.appr(ME, "2026.06", "M", null);
         assertThat(linked).isNotNull();
         assertThat(linked.relateApprId()).isPositive();
     }

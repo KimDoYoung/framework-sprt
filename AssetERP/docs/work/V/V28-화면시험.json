@@ -1,0 +1,20 @@
+{
+  "id": "V28",
+  "menu": ["준법감시 > 20. 임직원 내부통제 준수 > 내부통제 준수점검(준감인)"],
+  "menuId": 1311,
+  "className": "Ics31_Tab_ComplianceConfirm",
+  "api": [
+    "ics/compliance-confirms",
+    "ics/compliance-confirms/unconfirmed-count",
+    "ics/compliance-confirms/writers",
+    "ics/compliance-reports/appr",
+    "ics/compliance-reports/relate-apprs",
+    "apr/apprs/link-seed"
+  ],
+  "opens": {
+    "via": "내부통제 준수점검(준감인): 기준 분기(월)를 고르고 [조회] → 사원명 칸을 눌러 사원 선택 창 열기 → 닫기 / 상신 문서가 있으면 [문서보기]",
+    "headers": "준수점검, 사원선택"
+  },
+  "grid": true,
+  "notes": "[상신]은 확인 창 없이 곧바로 연결 행(ics32)을 만들고 결재창을 연다. 저장하면 상신 문서와 appr-id 기록(DB 쓰기)이 일어나므로 일괄 시험에서는 누르지 않는다. 조회 전에 [상신]을 누르면 '조회 후 진행바랍니다.', 문서분류가 없으면 '문서분류를 먼저 선택해주세요', 미확인 건이 있으면 '미확인 건이 존재합니다.'가 뜨는지만 본다. 사원명 칸을 눌러 열린 '사원선택' 창에서 [전체]를 누르면 사원명이 비고 다시 조회된다. 로그인 사원이 확인자인 제출 내역(예: 2026.08 월 주기 202204180108329)이 있어야 목록이 나온다."
+}

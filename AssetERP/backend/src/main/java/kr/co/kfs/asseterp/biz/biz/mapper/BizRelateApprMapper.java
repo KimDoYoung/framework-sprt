@@ -25,4 +25,14 @@ public interface BizRelateApprMapper {
 
     /** AS-IS Biz05_RelateAppr.delete → UpdateDataModel.deleteModel */
     int deleteById(@Param("companyId") Long companyId, @Param("relateApprId") Long relateApprId);
+
+    /** AS-IS dbConfig.getSeq와 같은 식 */
+    long selectNextId();
+
+    /** AS-IS biz05_relate_appr.insertPersonId */
+    int insertPersonId(@Param("relateApprId") long relateApprId, @Param("companyId") Long companyId, @Param("dataYm") String dataYm,
+                       @Param("linkCode") String linkCode, @Param("apprId") Long apprId, @Param("personId") Long personId);
+
+    /** AS-IS sys01_company.selectById의 위치 이름(첨부 폴더) */
+    String selectLocName(@Param("companyId") Long companyId);
 }

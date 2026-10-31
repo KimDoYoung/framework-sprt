@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.ics.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.ics.dto.IcsExtrActivityApprIdReq;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsExtrActivityRes;
 import kr.co.kfs.asseterp.biz.ics.dto.IcsExtrActivitySaveReq;
 import kr.co.kfs.asseterp.biz.ics.service.IcsExtrActivityService;
@@ -54,5 +55,21 @@ public class IcsExtrActivityController {
     @DeleteMapping
     public ApiResponse<Integer> delete(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> extrActivityIds) {
         return ApiResponse.ok(service.delete(principal, extrActivityIds));
+    }
+
+    /** AS-IS ics.Ics35_ExtrActivity.updateApprId (B15 활동신청 결재문서 ID 기록) */
+    @PutMapping("/{extrActivityId}/appr-id")
+    public ApiResponse<Void> updateApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long extrActivityId,
+                                          @RequestBody IcsExtrActivityApprIdReq req) {
+        service.updateApprId(principal, extrActivityId, req.apprId());
+        return ApiResponse.ok(null);
+    }
+
+    /** AS-IS ics.Ics35_ExtrActivity.updateResultApprId (B16 결과보고 결재문서 ID 기록) */
+    @PutMapping("/{extrActivityId}/result-appr-id")
+    public ApiResponse<Void> updateResultApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long extrActivityId,
+                                                @RequestBody IcsExtrActivityApprIdReq req) {
+        service.updateResultApprId(principal, extrActivityId, req.apprId());
+        return ApiResponse.ok(null);
     }
 }

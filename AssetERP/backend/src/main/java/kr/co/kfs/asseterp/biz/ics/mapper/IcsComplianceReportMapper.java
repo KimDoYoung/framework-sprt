@@ -30,16 +30,19 @@ public interface IcsComplianceReportMapper {
                                      @Param("complianceType") String complianceType);
 
     /** AS-IS ics32_relate_appr.selectByCompanyId — 없으면 null */
-    IcsComplianceReportApprRes selectAppr(@Param("companyId") Long companyId, @Param("yyyymm") String yyyymm, @Param("cycleType") String cycleType);
+    IcsComplianceReportApprRes selectAppr(@Param("companyId") Long companyId, @Param("yyyymm") String yyyymm, @Param("cycleType") String cycleType,
+                                          @Param("apprType") String apprType, @Param("personId") Long personId);
 
     /** AS-IS ics32_relate_appr.selectByCompanyId — 그 달 연결 행의 ID (없으면 null) */
-    Long selectRelateApprId(@Param("companyId") Long companyId, @Param("yyyymm") String yyyymm, @Param("cycleType") String cycleType);
+    Long selectRelateApprId(@Param("companyId") Long companyId, @Param("yyyymm") String yyyymm, @Param("cycleType") String cycleType,
+                            @Param("apprType") String apprType, @Param("personId") Long personId);
 
     long selectNextId();
 
     /** AS-IS ics32_relate_appr.insert */
     int insertRelateAppr(@Param("relateApprId") Long relateApprId, @Param("companyId") Long companyId,
-                         @Param("yyyymm") String yyyymm, @Param("cycleType") String cycleType);
+                         @Param("yyyymm") String yyyymm, @Param("cycleType") String cycleType,
+                         @Param("personId") Long personId, @Param("apprType") String apprType);
 
     /** AS-IS ics32_relate_appr.updateApprId — 회사 조건 추가. 상신 문서가 이 회사 것인지는 countAppr로 먼저 본다 */
     int updateRelateApprId(@Param("companyId") Long companyId, @Param("relateApprId") Long relateApprId, @Param("apprId") Long apprId);

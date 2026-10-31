@@ -3,7 +3,8 @@
  * AS-IS: myApp/client/vi/biz/Biz01_Tab_Card.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L99-164: center = 툴바1(승인기간 ~ · 검색 · [조회] · [출력/다운로드]) + 툴바2([일괄저장] · [거래처 관리 바로가기]) + 카드 사용내역 그리드(체크박스 다중)
  *   + 아래 테두리 칸(문서분류 · 상신상태 · [상신] · [문서보기]), east 420 = 위 `Biz01_Edit_Card`(300) + 아래 `Biz02_Grid_PersonList`(직원 · 거래상대방)
- * 1단계(F·G 변환과 같은 사유): 상신이 여는 전자결재 편집창 `Apr01_Edit_ApprDoc`(다른 도메인 apr)은 다음 단계 — [상신]·[문서보기]는 AS-IS 점검·확인 창까지 하고 편집창 자리에 안내만 띄운다.
+ * 전자결재 편집창 `Apr01_Edit_ApprDoc`은 V29에서 연결했다 — [상신](링크코드 A41, 제목·본문은 서버가 만든다 `GET apr/apprs/link-seed`, 저장 뒤 `POST biz/relate-apprs/person`이
+ *   상신 연결 기록과 첨부 엑셀을 만든다)·[문서보기].
  *   RD 출력은 `rdApi`로 주소를 받아 `RdViewer`에 띄운다(docs/RD-대책.md).
  * UX보강(10): 툴바 = SearchBar(UX-01·02·04), 그리드 날짜 폭(UX-08)
  * 스타일: SGHF (견본 — docs/page-style.md)
@@ -23,6 +24,7 @@ import { LookupInput } from '@/components/lookup/LookupInput';
 import { Dcr30_Move_DcrClass, Dcr30ClassResult } from '@/components/lookup/Dcr30_Move_DcrClass';
 import { RdViewer } from '@/components/lookup/RdViewer';
 import { openMenuByNo } from '@/utils/tempData';
+import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Biz01_Edit_Card } from './Biz01_Edit_Card';
 import { Biz02_Grid_PersonList } from './Biz02_Grid_PersonList';
 import { Biz01_Lookup_CardManagement } from './Biz01_Lookup_CardManagement';
@@ -72,6 +74,9 @@ export const Biz01_Tab_Card: React.FC = () => {
   const [appr, setAppr] = useState<ApprState>(NOT_SUBMITTED);
   const [accountOpen, setAccountOpen] = useState(false);
   const [rdUrl, setRdUrl] = useState<string | null>(null);
+  const [viewApprId, setViewApprId] = useState<number | null>(null);
+  /** insertLinkApprovals()가 만든 printModel — 상신 문서를 연 순간의 기간·검색어(date01·date02·string01) */
+  const [linkDoc, setLinkDoc] = useState<{ classTreeId: number; startDate: string; closeDate: string; searchText: string } | null>(null);
 
   // apprChk() L572-622: 서비스 biz.Biz05_RelateAppr.selectByPersonId(companyId, dataYm = 승인기간 시작월 yyyy.MM, linkCode A41, personId = 로그인 사원)
   const apprChk = useCallback(async () => {
@@ -236,14 +241,31 @@ export const Biz01_Tab_Card: React.FC = () => {
       cancelText: '아니오',
       width: 400,
       // [E10] msgBox.DialogHide [YES] (L491) → insertLinkApprovals() L510-528: Apr01_Edit_ApprDoc.insertLinkApproval(classTreeModel, "A41", printModel, isAdmin, callback → updateApprId(apprId)
-      //   → biz.Biz05_RelateAppr.insertPersonId → "정상적으로 상신이 완료되었습니다") — 전자결재 편집창은 다음 단계
-      onOk: () => { message.info('전자결재 작성 창은 다음 단계에서 연결됩니다'); },
+      //   → biz.Biz05_RelateAppr.insertPersonId → "정상적으로 상신이 완료되었습니다")
+      onOk: () => {
+        setLinkDoc({ classTreeId: classTree.classTreeId as number, startDate: fmtDate(v.startDate), closeDate: fmtDate(v.closeDate), searchText: v.searchText });
+      },
     });
   };
 
-  // [E9] apprViewButton[문서보기].Select (L295) → 상태 99(임시저장)면 안내 뒤 apprView() L549-570: apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(…, callback → apprChk()) — 전자결재 편집창은 다음 단계
+  // updateApprId(apprId) L530-547: biz.Biz05_RelateAppr.insertPersonId(dataYm = 승인기간 시작월, apprId, "A41", 로그인 사원) → "정상적으로 상신이 완료되었습니다" → retrieve()
+  const updateApprId = async (apprId: number) => {
+    if (!linkDoc) return;
+    try {
+      await bizRelateApprApi.insertPerson({
+        dataYm: fmtYm(dayjs(linkDoc.startDate)), apprId, linkCode: LINK_CODE,
+        startDate: linkDoc.startDate, closeDate: linkDoc.closeDate, searchText: linkDoc.searchText,
+      });
+      message.success('정상적으로 상신이 완료되었습니다');
+      void retrieve();
+    } catch (err) {
+      message.error(errorMessage(err, '상신 연결을 기록하지 못했습니다'));
+    }
+  };
+
+  // [E9] apprViewButton[문서보기].Select (L295) → 상태 99(임시저장)면 안내 뒤 apprView() L549-570: apr.Apr01_Appr.selectById(apprId) → Apr01_Edit_ApprDoc.retrieveApproval(…, callback → apprChk())
   const apprView = () => {
-    const open = () => message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다');
+    const open = () => setViewApprId(appr.apprId);
     if (appr.code === '99') {
       Modal.info({ title: '알림', content: '해당 문서는 과거에 임시저장한 문서입니다. 현재 데이터와 상이할 수 있습니다.', okText: '확인', onOk: open });
     } else {
@@ -324,6 +346,14 @@ export const Biz01_Tab_Card: React.FC = () => {
       <Dcr30_Move_DcrClass open={docOpen} onResult={onDocResult} onClose={() => setDocOpen(false)} />
       <Biz01_Lookup_CardManagement open={accountOpen} rows={checked} menuName="Biz01_Tab_Card" onSaved={() => void retrieve()} onClose={() => setAccountOpen(false)} />
       <RdViewer url={rdUrl} title="이익제공(수령) 법인카드 사용내역" onClose={() => setRdUrl(null)} />
+      {/* insertLinkApprovals() / apprView(): Apr01_Edit_ApprDoc — 결재창을 닫으면 apprChk() */}
+      <Apr01_Edit_ApprDoc
+        apprId={viewApprId}
+        link={linkDoc ? { classTreeId: linkDoc.classTreeId, linkCode: LINK_CODE, args: { stdDate: linkDoc.startDate } } : null}
+        onLinkSaved={id => void updateApprId(id)}
+        onClosed={() => void apprChk()}
+        onClose={() => { setViewApprId(null); setLinkDoc(null); }}
+      />
     </div>
   );
 };

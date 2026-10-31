@@ -460,7 +460,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ics15_Tab_ChecklistStatus, // K07 (+ Ics15_Lookup_ChecklistStatusDetail. 보기 창은 K04의 Ics10_Edit_Checklist readOnly)
   Ics15_Tab_ChecklistStatusDetail, // K08 (보기 창은 K04의 Ics10_Edit_Checklist readOnly. 출력은 RD 대신 서버 xlsx)
   Ics31_Tab_ComplianceWrite, // K01 (+ Ics31_Edit_Reason. 엑셀은 RD 리포트 대신 서버 xlsx)
-  Ics31_Tab_ComplianceConfirm, // K02 ([상신] Ics32_Lookup_RelateAppr은 원본도 툴바에 안 붙인 도달 불가 버튼이라 제외)
+  Ics31_Tab_ComplianceConfirm, // K02 (V28: 문서분류·상신상태·[상신][문서보기]·사원명 조회 — 옛 조회창 Ics32_Lookup_RelateAppr는 어디서도 안 열려 제외)
   Ics31_Tab_ComplianceReport, // K03 1단계 (RD 미리보기 대신 표. [상신]·[문서보기]·문서분류 선택은 전자결재 단계 — 안내만)
   Icam03_Tab_Fund, // D07 (ICAM Get·타사무 Get은 외부 ICAM DB 연동이 없어 서버가 거절)
   Icam06_Tab_FundPrice, // R05 (메뉴 #1475. 펀드별 기준가 현황)

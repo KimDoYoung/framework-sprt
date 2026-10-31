@@ -37,7 +37,8 @@ public class AprLinkSeedController {
                                             @RequestParam(required = false) String yyyy, @RequestParam(required = false) String mm,
                                             @RequestParam(required = false) String cycleName, @RequestParam(required = false) String ids,
                                             @RequestParam(required = false) String yyyymm, @RequestParam(required = false) String accountName,
-                                            @RequestParam(required = false) String actMappingId) {
+                                            @RequestParam(required = false) String actMappingId,
+                                            @RequestParam(required = false) String typeName) {
         Map<String, String> args = new HashMap<>();
         put(args, "stdDate", stdDate);
         put(args, "cycleType", cycleType);
@@ -47,6 +48,7 @@ public class AprLinkSeedController {
         put(args, "yyyymm", yyyymm); // A43 여비교통비 관리의 기준년월(yyyy.MM)
         put(args, "accountName", accountName); // A43 계정과목 이름
         put(args, "actMappingId", actMappingId); // D01 연봉계약 — 양식이 둘 이상일 때 Pay06_Lookup_LinkContent에서 고른 계약서 양식(pay06_act_mapping_id)
+        put(args, "typeName", typeName); // A10~A12 이익제공(수령) — 신청서 구분 콤보의 이름(제목 앞부분)
         put(args, "ids", ids); // 여러 행을 한 문서로 묶는 코드(A77 기준가 정정 월보고)의 행 ID, 쉼표 구분
         return ApiResponse.ok(service.seed(principal, classTreeId, linkCode, refId, args));
     }

@@ -111,4 +111,50 @@
          WHERE ics35_extr_activity_id = #{extrActivityId}
            AND ics35_company_id = #{companyId}
     </delete>
+
+    <!-- V29 AS-IS ics35_extr_activity.updateApprId (IDMS-IC) + 로그인 회사 조건 -->
+    <update id="updateApprId">
+        UPDATE ics35_extr_activity
+           SET ics35_appr_id = #{apprId}
+         WHERE ics35_extr_activity_id = #{extrActivityId}
+           AND ics35_company_id = #{companyId}
+    </update>
+
+    <!-- V29 AS-IS ics35_extr_activity.updateResultApprId (IDMS-IC) + 로그인 회사 조건 -->
+    <update id="updateResultApprId">
+        UPDATE ics35_extr_activity
+           SET ics35_result_appr_id = #{resultApprId}
+         WHERE ics35_extr_activity_id = #{extrActivityId}
+           AND ics35_company_id = #{companyId}
+    </update>
+
+    <!-- V29 AS-IS sys10_file.selectByParentId (IDMS-IC) 의 파일 ID (V27 지출요청과 같은 식) -->
+    <select id="selectFileIds" resultType="long">
+        SELECT file.sys10_file_id
+          FROM (
+                SELECT *
+                  FROM sys10_file
+                 WHERE sys10_parent_id = #{parentId}
+                 UNION
+                SELECT sys10_file.*
+                  FROM sys11_relate_file
+                       INNER JOIN sys10_file ON sys10_file_id = sys11_file_id
+                 WHERE sys11_parent_id = #{parentId}
+               ) AS file
+         ORDER BY COALESCE(sys10_file_yn, 'false') ASC, LPAD(COALESCE(sys10_seq, '99999'), 5, '0'), COALESCE(sys10_title_yn, 'false') DESC, sys10_file_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <select id="countApprRelateFile" resultType="int">
+        SELECT COUNT(*)
+          FROM sys11_relate_file
+         WHERE sys11_file_id = #{fileId}
+           AND sys11_parent_id = #{apprId}
+           AND sys11_parent_table = 'apr01_appr'
+    </select>
+
+    <!-- V29 AS-IS sys11_relate_file.insert (IDMS-IC) -->
+    <insert id="insertApprRelateFile">
+        INSERT INTO sys11_relate_file ( sys11_relate_file_id, sys11_file_id, sys11_parent_id, sys11_parent_table )
+        VALUES ( #{relateFileId}, #{fileId}, #{apprId}, 'apr01_appr' )
+    </insert>
 </mapper>

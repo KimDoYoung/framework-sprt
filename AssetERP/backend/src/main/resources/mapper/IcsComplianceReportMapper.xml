@@ -109,7 +109,7 @@
            AND ics30_compliance_type = #{complianceType}
     </select>
 
-    <!-- AS-IS ics32_relate_appr.selectByCompanyId (IDMS-IC) — SELECT *는 상신 연결과 결재 상태만 -->
+    <!-- AS-IS ics32_relate_appr.selectByCompanyId (IDMS-IC) — SELECT *는 상신 연결과 결재 상태만. V28: apprType(1 준수보고 A32 / 2 부서장 준수확인서 A52)·personId(A52는 로그인 사원, A32는 NULL) 조건 -->
     <select id="selectAppr" resultType="kr.co.kfs.asseterp.biz.ics.dto.IcsComplianceReportApprRes">
         SELECT ics32_relate_appr_id                                                              AS relate_appr_id,
                ics32_appr_id                                                                     AS appr_id,
@@ -120,16 +120,26 @@
          WHERE ics32_company_id = #{companyId}
            AND ics32_yyyymm     = #{yyyymm}
            AND ics32_cycle_type = #{cycleType}
+           AND ics32_appr_type  = #{apprType}
+        <choose>
+            <when test="personId != null">AND ics32_person_id = #{personId}</when>
+            <otherwise>AND ics32_person_id IS NULL</otherwise>
+        </choose>
          LIMIT 1
     </select>
 
-    <!-- AS-IS ics32_relate_appr.selectByCompanyId (IDMS-IC) — 연결 행 ID만. ics32_person_id·ics32_appr_type 열은 로컬 DB에 없어 조건에서 뺐다 -->
+    <!-- AS-IS ics32_relate_appr.selectByCompanyId (IDMS-IC) — 연결 행 ID만 (V28: 구분·사원 조건 포함) -->
     <select id="selectRelateApprId" resultType="long">
         SELECT ics32_relate_appr_id
           FROM ics32_relate_appr
          WHERE ics32_company_id = #{companyId}
            AND ics32_yyyymm     = #{yyyymm}
            AND ics32_cycle_type = #{cycleType}
+           AND ics32_appr_type  = #{apprType}
+        <choose>
+            <when test="personId != null">AND ics32_person_id = #{personId}</when>
+            <otherwise>AND ics32_person_id IS NULL</otherwise>
+        </choose>
          LIMIT 1
     </select>
 
@@ -138,12 +148,12 @@
         SELECT f_create_seq()
     </select>
 
-    <!-- AS-IS ics32_relate_appr.insert (IDMS-IC) — person_id·appr_type 열은 로컬 DB에 없어 뺐다 -->
+    <!-- AS-IS ics32_relate_appr.insert (IDMS-IC) -->
     <insert id="insertRelateAppr">
         INSERT INTO ics32_relate_appr
-             ( ics32_relate_appr_id, ics32_company_id, ics32_yyyymm, ics32_cycle_type )
+             ( ics32_relate_appr_id, ics32_company_id, ics32_yyyymm, ics32_cycle_type, ics32_person_id, ics32_appr_type )
         VALUES
-             ( #{relateApprId}, #{companyId}, #{yyyymm}, #{cycleType} )
+             ( #{relateApprId}, #{companyId}, #{yyyymm}, #{cycleType}, #{personId}, #{apprType} )
     </insert>
 
     <!-- AS-IS ics32_relate_appr.updateApprId (IDMS-IC) — 회사 조건 추가 -->

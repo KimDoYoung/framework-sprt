@@ -6,6 +6,7 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizBuyPromoSaveReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizCardContentsRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizCodeOptionRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizDocClassRes;
+import kr.co.kfs.asseterp.biz.biz.dto.BizCardExcelRow;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoCardRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizPromoOtherRes;
@@ -28,6 +29,11 @@ public interface BizPromoMapper {
     List<BizPromoCardRes> selectByCard(@Param("companyId") Long companyId, @Param("personId") Long personId,
                                        @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate,
                                        @Param("searchText") String searchText);
+
+    /** AS-IS biz01_promo.selectByCardExcel — A41 상신 첨부 엑셀의 내역(검색어는 "%…%"로 감싼 글자) */
+    List<BizCardExcelRow> selectByCardExcel(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                            @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate,
+                                            @Param("searchText") String searchText);
 
     /** AS-IS biz01_promo.closeCheck — 마감된 내역의 개수 */
     int countClosed(@Param("companyId") Long companyId, @Param("promoIds") List<Long> promoIds);
