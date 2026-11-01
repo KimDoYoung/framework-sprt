@@ -27,10 +27,14 @@ interface Props {
   open: boolean;
   /** [확인] — callback.execute(apprModel): 고른 문서의 제목·본문 */
   onResult: (doc: { title: string; content: string }) => void;
+  /** Apr05_Lookup_LoadDoc2(aprStatusYn, callback) L127 (Y08): true면 결재완료(30) 문서만 고를 수 있다("결재완료된 문서만 연결할 수 있습니다", L416-424) — 증빙문서 연결 */
+  aprStatusYn?: boolean;
+  /** [확인]에서 고른 문서 전체(apprId 포함) — callback.execute(apprModel)의 apprId가 필요한 부르는 쪽용(Y08). onResult 다음에 불린다 */
+  onSelected?: (doc: AprLoadDoc2) => void;
   onClose: () => void;
 }
 
-export const Apr05_Lookup_LoadDoc2: React.FC<Props> = ({ open, onResult, onClose }) => {
+export const Apr05_Lookup_LoadDoc2: React.FC<Props> = ({ open, onResult, aprStatusYn = false, onSelected, onClose }) => {
   // init() L133-148: 기간 = 지난달 1일 ~ 오늘
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().subtract(1, 'month').startOf('month'));
   const [endDate, setEndDate] = useState<Dayjs>(() => dayjs());
@@ -70,7 +74,10 @@ export const Apr05_Lookup_LoadDoc2: React.FC<Props> = ({ open, onResult, onClose
   // [E6] insertButton[확인].Select (L300) → insert() L408-442: 고른 문서가 없으면 "문서를 선택해주세요"
   const insert = () => {
     if (!selected) { Modal.info({ title: '확인', content: '문서를 선택해주세요', okText: '확인' }); return; }
+    // 완료된 상신문서만 증빙자료로 연결할 수 있음 (L416-424)
+    if (aprStatusYn && selected.statusCode !== '30') { Modal.info({ title: '확인', content: '결재완료된 문서만 연결할 수 있습니다', okText: '확인' }); return; }
     onResult({ title: selected.title ?? '', content: selected.content ?? '' });
+    onSelected?.(selected);
   };
 
   // buildGrid() L323-342 (단일 선택)

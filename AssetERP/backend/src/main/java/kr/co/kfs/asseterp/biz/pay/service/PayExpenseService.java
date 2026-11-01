@@ -5,6 +5,10 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprNoticeCall;
 import kr.co.kfs.asseterp.biz.apr.service.AprNoticeService;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmSendRow;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmerRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseMineRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseMineSaveReq;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRelateApprRes;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseAccountCodeReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseDepositReq;
@@ -186,6 +190,91 @@ public class PayExpenseService {
         }
         noticeService.dispatchAfterCommit(calls);
         return rows.size();
+    }
+
+    // ── Y08 사업비 지출요청 Pay50_Tab_ExpenseRequest · 등록창 Pay50_Lookup_ExpenseRequestInsert ──
+
+    /** AS-IS 바로등록(PASS) 때 클라이언트가 넣던 값 */
+    private static final String PASS_REASON = "지출결의서 화면에서 바로등록";
+
+    /** pay50_expense.selectByDate — 요청자는 로그인 사원 */
+    public List<ExpenseMineRes> searchMine(UserPrincipal user, LocalDate startDate, LocalDate closeDate) {
+        return mapper.selectExpenseMine(user.getCompanyId(), user.getUserId(), startDate, closeDate);
+    }
+
+    /** pay50_expense.getConfirmerId (stdDate = 오늘) */
+    public ExpenseConfirmerRes confirmer(UserPrincipal user) {
+        return mapper.selectConfirmer(user.getCompanyId(), user.getUserId(), LocalDate.now());
+    }
+
+    /** dbConfig.getSeq — 등록창이 열릴 때 번호를 먼저 받아 첨부파일·증빙문서를 그 번호에 붙인다. f_create_seq()가 순번 표를 갱신하므로 쓰기 트랜잭션 */
+    @Transactional
+    public long nextId() {
+        return mapper.selectNextId();
+    }
+
+    /**
+     * pay.Pay50_Expense.modelUpdate — 번호에 행이 없으면 등록, 있으면 수정. 요청자·등록일은 서버가 정한다.
+     * 수정은 본인이 요청했고 승인상태가 없는 건만(TOBE 추가 — 수정창은 그때만 열린다)
+     */
+    @Transactional
+    public ExpenseRes saveMine(UserPrincipal user, Long expenseId, ExpenseMineSaveReq req) {
+        Long companyId = user.getCompanyId();
+        if (mapper.countById(companyId, expenseId) == 0) {
+            boolean pass = req.pass();
+            mapper.insertMine(companyId, expenseId, user.getUserId(), req,
+                    pass ? user.getUserId() : req.confirmerId(), pass ? "80" : null, pass ? PASS_REASON : null, pass ? user.getUserId() : null);
+        } else if (mapper.updateMine(companyId, expenseId, user.getUserId(), req) == 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "수정할 수 없는 내역입니다.");
+        }
+        return get(user, expenseId);
+    }
+
+    /** pay.Pay50_Expense.updateConfirmStatusCode — [요청하기](10)·[요청취소](비움) */
+    @Transactional
+    public int updateMineStatus(UserPrincipal user, List<Long> ids, boolean request) {
+        for (Long id : ids) {
+            ExpenseRes row = get(user, id);
+            if (!user.getUserId().equals(row.regEmpId())) {
+                throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+            }
+            mapper.updateConfirmStatusCode(user.getCompanyId(), id, request ? "10" : null);
+        }
+        return ids.size();
+    }
+
+    /** pay.Pay50_Expense.deleteRequest — 증빙문서 연결·첨부파일·행을 지운다. 승인상태가 있는 건은 지울 수 없다(AS-IS는 화면이 막았다) */
+    @Transactional
+    public int deleteMine(UserPrincipal user, List<Long> ids) {
+        for (Long id : ids) {
+            ExpenseRes row = get(user, id);
+            if (!user.getUserId().equals(row.regEmpId()) || row.confirmStatusCode() != null) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "삭제할 수 없는 내역이 있습니다.");
+            }
+            mapper.deleteRelateApprByKey(id);
+            for (FileRes file : fileService.searchByParentId(id)) {
+                fileService.delete(file.fileId());
+            }
+            mapper.deleteById(user.getCompanyId(), id);
+        }
+        return ids.size();
+    }
+
+    /** com.Com01_RelateAppr.selectByKeyTableId */
+    public List<ExpenseRelateApprRes> relateApprs(UserPrincipal user, Long expenseId) {
+        return mapper.selectRelateApprs(user.getCompanyId(), expenseId);
+    }
+
+    /** com.Com01_RelateAppr.modelUpdate (keyTable = pay50) */
+    @Transactional
+    public void addRelateAppr(UserPrincipal user, Long expenseId, Long apprId) {
+        mapper.insertRelateAppr(mapper.selectNextId(), expenseId, apprId);
+    }
+
+    /** com.Com01_RelateAppr.delete */
+    @Transactional
+    public int deleteRelateApprs(UserPrincipal user, Long expenseId, List<Long> ids) {
+        return mapper.deleteRelateApprs(expenseId, ids);
     }
 
     // ── U07 자금집행결의서 작성(Pay50_Tab_ExpensePayWrite) · U08 조회(Pay50_Tab_ExpensePay) ──

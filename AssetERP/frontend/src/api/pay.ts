@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq, PayBasicSetup, PayBasicSetupSaveReq, PayExpense, PayExpenseForm, PayExpenseRequest, PayExpenseUpdateReq, PayFavoriteAccount, PayExpenseSettle, PayExpenseSettleSaveReq, PayExpenseNew, PayExpenseJournal, PayExpenseSettleAppr, PayExpenseSettleApprRow, PayExpenseAccountSum, PayExpenseConfirm } from '../types/pay';
+import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq, PayBasicSetup, PayBasicSetupSaveReq, PayExpense, PayExpenseForm, PayExpenseRequest, PayExpenseUpdateReq, PayFavoriteAccount, PayExpenseSettle, PayExpenseSettleSaveReq, PayExpenseNew, PayExpenseJournal, PayExpenseSettleAppr, PayExpenseSettleApprRow, PayExpenseAccountSum, PayExpenseConfirm, PayExpenseMine, PayExpenseConfirmer, PayExpenseMineSaveReq, PayExpenseRelateAppr } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -1002,6 +1002,60 @@ export const payApi = {
   /** AS-IS pay.Pay50_Expense.confirmSendMessage — [반려건 일괄 알림발송]. 돌려주는 값 = 요청자 수("N건이 발송완료되었습니다"의 N) */
   sendExpenseConfirmNotices: async (): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/pay/expenses/confirm-notices');
+    return res.data.data ?? 0;
+  },
+
+  // ── Y08 사업비 지출요청 Pay50_Tab_ExpenseRequest · 등록창 Pay50_Lookup_ExpenseRequestInsert ──
+  /** AS-IS pay.Pay50_Expense.selectByDate — 요청자는 로그인 사원(서버) */
+  searchExpenseMine: async (p: { startDate: string; closeDate: string }): Promise<PayExpenseMine[]> => {
+    const res = await apiClient.get<ApiResponse<PayExpenseMine[]>>('v1/pay/expenses/mine', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay50_Expense.getConfirmerId */
+  getExpenseConfirmer: async (): Promise<PayExpenseConfirmer> => {
+    const res = await apiClient.get<ApiResponse<PayExpenseConfirmer>>('v1/pay/expenses/confirmer');
+    return res.data.data as PayExpenseConfirmer;
+  },
+
+  /** AS-IS dbConfig.getSeq — 등록창이 열릴 때 받는 새 번호 */
+  nextExpenseId: async (): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/pay/expenses/next-id');
+    return res.data.data as number;
+  },
+
+  /** AS-IS pay.Pay50_Expense.modelUpdate — 번호에 행이 없으면 등록, 있으면 수정 → 저장된 행 */
+  saveExpenseMine: async (expenseId: number, req: PayExpenseMineSaveReq): Promise<PayExpense> => {
+    const res = await apiClient.put<ApiResponse<PayExpense>>(`v1/pay/expenses/mine/${expenseId}`, req);
+    return res.data.data as PayExpense;
+  },
+
+  /** AS-IS pay.Pay50_Expense.updateConfirmStatusCode — [요청하기](request=true)·[요청취소] */
+  updateExpenseMineStatus: async (ids: number[], request: boolean): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/pay/expenses/mine-status', { ids, request });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS pay.Pay50_Expense.deleteRequest */
+  deleteExpenseMine: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/pay/expenses/mine', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS com.Com01_RelateAppr.selectByKeyTableId */
+  searchExpenseRelateApprs: async (expenseId: number): Promise<PayExpenseRelateAppr[]> => {
+    const res = await apiClient.get<ApiResponse<PayExpenseRelateAppr[]>>(`v1/pay/expenses/${expenseId}/relate-apprs`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS com.Com01_RelateAppr.modelUpdate (keyTable = pay50) */
+  addExpenseRelateAppr: async (expenseId: number, apprId: number): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>(`v1/pay/expenses/${expenseId}/relate-apprs`, { apprId });
+  },
+
+  /** AS-IS com.Com01_RelateAppr.delete */
+  deleteExpenseRelateApprs: async (expenseId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/pay/expenses/${expenseId}/relate-apprs`, { data: ids });
     return res.data.data ?? 0;
   },
 

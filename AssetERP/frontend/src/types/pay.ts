@@ -823,3 +823,65 @@ export interface PayExpenseConfirm {
   confirmReason: string | null;
   apprEmpId: number | null;
 }
+
+/** 사업비 지출요청 목록 한 행 (Y08, pay50_expense.selectByDate) */
+export interface PayExpenseMine {
+  expenseId: number;
+  regDate: string | null;
+  occDate: string | null;
+  desc: string | null;
+  corpName: string | null;
+  settleAmt: number | null;
+  dueDate: string | null;
+  payMethodName: string | null;
+  payAccountInfo: string | null;
+  fileCountStr: string | null;
+  confirmerName: string | null;
+  /** 10 요청 · 20 승인 · 30 반려 (없으면 아직 요청하지 않음) */
+  confirmStatusCode: string | null;
+  confirmStatusName: string | null;
+  expenseStatusName: string | null;
+  settleApprStatusName: string | null;
+  rejectReason: string | null;
+  confirmReason: string | null;
+}
+
+/** 지출요청 등록창의 첫 값 (Y08, pay50_expense.getConfirmerId) */
+export interface PayExpenseConfirmer {
+  confirmerId: number | null;
+  confirmerName: string | null;
+  taxType: string | null;
+  taxTypeName: string | null;
+}
+
+/** 지출요청 등록·수정 요청 (Y08, pay.Pay50_Expense.modelUpdate) — pass는 [바로등록] */
+export interface PayExpenseMineSaveReq {
+  expenseCode: string | null;
+  occDate: string | null;
+  desc: string | null;
+  content: string | null;
+  corpId: number | null;
+  taxType: string | null;
+  amt: number | null;
+  tax: number | null;
+  settleAmt: number | null;
+  dueDate: string | null;
+  payMethodCode: string | null;
+  payAccountInfo: string | null;
+  confirmerId: number | null;
+  accountCode: string | null;
+  astId: number | null;
+  depositId: number | null;
+  pass: boolean;
+}
+
+/** 지출요청의 증빙문서 한 행 (Y08, com01_relate_appr.selectByKeyTableId) */
+export interface PayExpenseRelateAppr {
+  relateApprId: number;
+  apprId: number;
+  regDate: string | null;
+  effectDate: string | null;
+  title: string | null;
+  regEmpName: string | null;
+  statusName: string | null;
+}

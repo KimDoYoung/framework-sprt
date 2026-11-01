@@ -6,6 +6,12 @@ import kr.co.kfs.asseterp.biz.pay.dto.ExpenseAccountCodeReq;
 import kr.co.kfs.asseterp.biz.pay.dto.PayExpenseApprIdReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmerRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseMineRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseMineSaveReq;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseMineStatusReq;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRelateApprReq;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRelateApprRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseContentReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseDepositReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalCreateReq;
@@ -26,6 +32,7 @@ import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -88,6 +95,68 @@ public class PayExpenseController {
     @PostMapping("/confirm-notices")
     public ApiResponse<Integer> sendConfirmNotices(@AuthenticationPrincipal UserPrincipal principal) {
         return ApiResponse.ok(service.sendConfirmRejectNotices(principal));
+    }
+
+    // ── Y08 사업비 지출요청 Pay50_Tab_ExpenseRequest · 등록창 Pay50_Lookup_ExpenseRequestInsert ──
+
+    /** pay.Pay50_Expense.selectByDate */
+    @GetMapping("/mine")
+    public ApiResponse<List<ExpenseMineRes>> searchMine(@AuthenticationPrincipal UserPrincipal principal,
+                                                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate) {
+        return ApiResponse.ok(service.searchMine(principal, startDate, closeDate));
+    }
+
+    /** pay.Pay50_Expense.getConfirmerId */
+    @GetMapping("/confirmer")
+    public ApiResponse<ExpenseConfirmerRes> confirmer(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.confirmer(principal));
+    }
+
+    /** dbConfig.getSeq */
+    @GetMapping("/next-id")
+    public ApiResponse<Long> nextId() {
+        return ApiResponse.ok(service.nextId());
+    }
+
+    /** pay.Pay50_Expense.modelUpdate */
+    @PutMapping("/mine/{expenseId}")
+    public ApiResponse<ExpenseRes> saveMine(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long expenseId,
+                                            @RequestBody ExpenseMineSaveReq req) {
+        return ApiResponse.ok(service.saveMine(principal, expenseId, req));
+    }
+
+    /** pay.Pay50_Expense.updateConfirmStatusCode — [요청하기]·[요청취소] */
+    @PutMapping("/mine-status")
+    public ApiResponse<Integer> updateMineStatus(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ExpenseMineStatusReq req) {
+        return ApiResponse.ok(service.updateMineStatus(principal, req.ids(), req.request()));
+    }
+
+    /** pay.Pay50_Expense.deleteRequest */
+    @DeleteMapping("/mine")
+    public ApiResponse<Integer> deleteMine(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> ids) {
+        return ApiResponse.ok(service.deleteMine(principal, ids));
+    }
+
+    /** com.Com01_RelateAppr.selectByKeyTableId */
+    @GetMapping("/{expenseId}/relate-apprs")
+    public ApiResponse<List<ExpenseRelateApprRes>> relateApprs(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long expenseId) {
+        return ApiResponse.ok(service.relateApprs(principal, expenseId));
+    }
+
+    /** com.Com01_RelateAppr.modelUpdate */
+    @PostMapping("/{expenseId}/relate-apprs")
+    public ApiResponse<Void> addRelateAppr(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long expenseId,
+                                           @RequestBody ExpenseRelateApprReq req) {
+        service.addRelateAppr(principal, expenseId, req.apprId());
+        return ApiResponse.ok(null);
+    }
+
+    /** com.Com01_RelateAppr.delete */
+    @DeleteMapping("/{expenseId}/relate-apprs")
+    public ApiResponse<Integer> deleteRelateApprs(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long expenseId,
+                                                  @RequestBody List<Long> ids) {
+        return ApiResponse.ok(service.deleteRelateApprs(principal, expenseId, ids));
     }
 
     // ── U07 자금집행결의서 작성(Pay50_Tab_ExpensePayWrite) · U08 조회(Pay50_Tab_ExpensePay) ──

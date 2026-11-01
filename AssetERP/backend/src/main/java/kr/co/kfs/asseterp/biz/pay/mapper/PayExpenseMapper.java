@@ -3,6 +3,10 @@ package kr.co.kfs.asseterp.biz.pay.mapper;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseAccountSumRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmSendRow;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmerRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseMineRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseMineSaveReq;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRelateApprRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalExpenseRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalInfoRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalRes;
@@ -81,6 +85,39 @@ public interface PayExpenseMapper {
 
     /** AS-IS updateConfirmSmsYn */
     int updateConfirmSmsYn(@Param("companyId") Long companyId, @Param("confirmerId") Long confirmerId);
+
+    // ── Y08 사업비 지출요청 Pay50_Tab_ExpenseRequest · Pay50_Lookup_ExpenseRequestInsert ──
+
+    /** AS-IS selectByDate (등록일 기준, PASS 제외) */
+    List<ExpenseMineRes> selectExpenseMine(@Param("companyId") Long companyId, @Param("personId") Long personId,
+                                           @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate);
+
+    /** AS-IS getConfirmerId */
+    ExpenseConfirmerRes selectConfirmer(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("stdDate") LocalDate stdDate);
+
+    int countById(@Param("companyId") Long companyId, @Param("expenseId") Long expenseId);
+
+    /** AS-IS UpdateDataModel(pay50_expense) 새 행 — 등록자·등록일·승인 관련 값은 서버가 정한다 */
+    int insertMine(@Param("companyId") Long companyId, @Param("expenseId") Long expenseId, @Param("userId") Long userId,
+                   @Param("req") ExpenseMineSaveReq req, @Param("confirmerId") Long confirmerId, @Param("confirmStatusCode") String confirmStatusCode,
+                   @Param("confirmReason") String confirmReason, @Param("apprEmpId") Long apprEmpId);
+
+    /** AS-IS UpdateDataModel(pay50_expense) 고친 열 — 승인상태가 없는 건만(수정창이 열리는 조건) */
+    int updateMine(@Param("companyId") Long companyId, @Param("expenseId") Long expenseId, @Param("userId") Long userId,
+                   @Param("req") ExpenseMineSaveReq req);
+
+    /** AS-IS updateConfirmStatusCode */
+    int updateConfirmStatusCode(@Param("companyId") Long companyId, @Param("expenseId") Long expenseId, @Param("confirmStatusCode") String confirmStatusCode);
+
+    /** AS-IS com01_relate_appr.deleteByKeyTableId */
+    int deleteRelateApprByKey(@Param("expenseId") Long expenseId);
+
+    /** AS-IS com01_relate_appr.selectByKeyTableId */
+    List<ExpenseRelateApprRes> selectRelateApprs(@Param("companyId") Long companyId, @Param("expenseId") Long expenseId);
+
+    int insertRelateAppr(@Param("relateApprId") Long relateApprId, @Param("expenseId") Long expenseId, @Param("apprId") Long apprId);
+
+    int deleteRelateApprs(@Param("expenseId") Long expenseId, @Param("ids") List<Long> ids);
 
     // ── U07 자금집행결의서 작성(Pay50_Tab_ExpensePayWrite) · U08 조회(Pay50_Tab_ExpensePay) ──
 

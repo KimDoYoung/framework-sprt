@@ -175,6 +175,7 @@ import { Pay50_Tab_ExpensePay } from './pay/Pay50_Tab_ExpensePay';
 import { Pay50_Tab_ExpenseJournal } from './pay/Pay50_Tab_ExpenseJournal';
 import { Pay50_Tab_ExpenseSettle } from './pay/Pay50_Tab_ExpenseSettle';
 import { Pay50_Tab_ExpenseConfirm } from './pay/Pay50_Tab_ExpenseConfirm';
+import { Pay50_Tab_ExpenseRequest } from './pay/Pay50_Tab_ExpenseRequest';
 import { Pay50_Tab_AccountSumList } from './pay/Pay50_Tab_AccountSumList';
 import { Crd01_Tab_Card } from './crd/Crd01_Tab_Card';
 import { Crd02_Tab_DataUpload } from './crd/Crd02_Tab_DataUpload';
@@ -593,6 +594,7 @@ export const SCREENS: Record<string, React.FC> = {
   Biz01_Tab_EntertmExpenseReport, // U18 (메뉴 #1335. 하위 Biz01_TabPage_MonthEntertmExpense·EntertmExpenseHistory·Biz02_TabPage_CompanyEntertmExpense, 기존 Biz02_Grid_PersonList 재사용. 1단계: 전자결재 편집창은 안내만)
   Crd01_Tab_Card, // U13 (메뉴 #1038·#1478. 하위 Crd01_Edit_Card·Crd03_Grid_User, 결제계좌 Ast01_Lookup_CorpAccount·직원 Emp00_Lookup_SelectSingle 재사용)
   Pay50_Tab_ExpenseConfirm, // Y09 (메뉴 #1384. 하위 Pay50_Lookup_ConfirmReason(=Pay50_Lookup_RejectReason 껍질)·Pay50_Lookup_Content. 증빙자료 Com01_Lookup_RelateAppr는 안내만)
+  Pay50_Tab_ExpenseRequest, // Y08 (메뉴 #1383. 하위 Pay50_Lookup_ExpenseRequestInsert(등록·수정·보기·바로등록)·Pay50_Lookup_ExpenseCopy·Pay50_Lookup_ConfirmReason·Pay50_Lookup_RejectReason. 증빙자료 Com01_Lookup_RelateAppr·[신규문서 작성]의 새 문서 창은 안내만)
   Pay50_Tab_ExpenseSettle, // U11 (메뉴 #1390. 하위 Ast07_Grid_History·Ast07_Lookup_Settle·Ast07_Lookup_SettleMulti, 거래처 조회창은 임직원 포함(empYn). History [전표변경] 아이콘의 Act02_Lookup_ModiJournal은 안내만)
   Ast09_Tab_DepositBookPeriod, // U02 (메뉴 #1238·#1471. 하위 Ast01_Lookup_CorpAccount. 계정별원장 아이콘은 메뉴 1150을 열고 값만 보냄 — 받는 화면 Act02_Tab_JournalSub는 다음 단계)
   Emp17_Tab_Benefit, // Y06 (메뉴 #1221. 하위 Emp17_Lookup_Benefit. 전자결재 편집창 Apr01_Edit_ApprDoc 링크 A21~A23·A37·A49 연결)

@@ -392,6 +392,150 @@
            AND pay50_confirm_status_cd = '30'
     </update>
 
+    <!-- ===== Y08 Pay50_Tab_ExpenseRequest (사업비 지출요청) · Pay50_Lookup_ExpenseRequestInsert ===== -->
+    <!-- AS-IS pay50_expense.selectByDate (IDMS-IC) — 바깥 SELECT 열 목록을 이 화면 그리드가 쓰는 열로 줄였다(같은 FROM·JOIN·WHERE·정렬) -->
+    <select id="selectExpenseMine" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseMineRes">
+        SELECT pay50_expense_id                                                                     AS expense_id
+             , pay50_reg_date                                                                       AS reg_date
+             , pay50_occ_date                                                                       AS occ_date
+             , pay50_desc                                                                           AS "desc"
+             , COALESCE(sys15_corp_nm, f_emp_kor_nm(pay50_corp_id))                                 AS corp_name
+             , pay50_settle_amt                                                                     AS settle_amt
+             , pay50_due_date                                                                       AS due_date
+             , f_cdnm('PayMethodCode', pay50_pay_method_cd, pay50_company_id, f_today())            AS pay_method_name
+             , pay50_pay_account_info                                                               AS pay_account_info
+             , ( SELECT COUNT(*)
+                   FROM sys10_file
+                  WHERE sys10_parent_id = pay50_expense_id )
+               +
+               ( SELECT COUNT(*)
+                   FROM com01_relate_appr
+                  WHERE com01_key_table_id = pay50_expense_id ) ||'건'                               AS file_count_str
+             , f_emp_kor_nm(pay50_confirmer_id)                                                     AS confirmer_name
+             , pay50_confirm_status_cd                                                              AS confirm_status_code
+             , f_cdnm('StatusCode', pay50_confirm_status_cd, pay50_company_id, f_today())           AS confirm_status_name
+             , CASE WHEN pay50_appr_emp_id IS NULL THEN ''
+                    ELSE (CASE WHEN COALESCE(apr1.apr01_status_cd,'99') = '30' THEN '완료'
+                               WHEN COALESCE(apr1.apr01_status_cd,'99') = '40' OR COALESCE(pay50_reject_reason,'') != '' THEN '반려'
+                               ELSE '진행중' END)
+                    END                                                                             AS expense_status_name
+             , f_cdnm('AprStatusCode', apr2.apr01_status_cd, pay50_company_id, f_today())           AS settle_appr_status_name
+             , pay50_reject_reason                                                                  AS reject_reason
+             , pay50_confirm_reason                                                                 AS confirm_reason
+          FROM ( SELECT pay50_expense.*
+                   FROM pay50_expense
+                  WHERE pay50_company_id = #{companyId}
+                    AND pay50_expense_cd IN ('10','90','91')            /*(10:사업비요청/90:기타출금/91:기타출금(선급))*/
+                    AND COALESCE(pay50_confirm_status_cd,'') != '80'    /*(80:PASS)*/
+                    AND pay50_reg_emp_id = #{personId}
+                    AND pay50_reg_date BETWEEN #{startDate} AND #{closeDate}
+               ) pay50
+               LEFT OUTER JOIN sys15_corp            ON sys15_corp_id            = pay50_corp_id
+               LEFT OUTER JOIN apr01_appr apr1       ON apr1.apr01_appr_id       = pay50_expense_appr_id
+               LEFT OUTER JOIN apr01_appr apr2       ON apr2.apr01_appr_id       = pay50_settle_appr_id
+         ORDER BY pay50_reg_date DESC, pay50_occ_date DESC
+    </select>
+
+    <!-- AS-IS pay50_expense.getConfirmerId (IDMS-IC) -->
+    <select id="selectConfirmer" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmerRes">
+        SELECT t.pay50_confirmer_id                                            AS confirmer_id
+             , f_emp_kor_nm(pay50_confirmer_id)                                AS confirmer_name
+             , t.pay50_tax_type                                                AS tax_type
+             , f_cdnm('TaxType', pay50_tax_type, #{companyId}, f_today())      AS tax_type_name
+          FROM (
+                 SELECT f_get_confirmer_parent(#{personId}, #{stdDate}) AS pay50_confirmer_id
+                      , COALESCE(sys01_tax_type,'1')                    AS pay50_tax_type
+                   FROM sys01_company
+                  WHERE sys01_company_id = #{companyId}
+               ) t
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT COUNT(*)
+          FROM pay50_expense
+         WHERE pay50_expense_id = #{expenseId}
+           AND pay50_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(pay50_expense) INSERT — port-save로 만든 열 목록 -->
+    <insert id="insertMine">
+        INSERT INTO pay50_expense
+             ( pay50_expense_id, pay50_company_id, pay50_expense_cd, pay50_reg_emp_id, pay50_reg_date, pay50_occ_date, pay50_desc, pay50_content,
+               pay50_corp_id, pay50_tax_type, pay50_amt, pay50_tax, pay50_settle_amt, pay50_due_date, pay50_pay_method_cd, pay50_pay_account_info,
+               pay50_confirmer_id, pay50_confirm_status_cd, pay50_confirm_reason, pay50_appr_emp_id, pay50_account_cd, pay50_ast_id, pay50_deposit_id )
+        VALUES ( #{expenseId}, #{companyId}, #{req.expenseCode}, #{userId}, f_today(), #{req.occDate}, #{req.desc}, #{req.content},
+                 #{req.corpId}, #{req.taxType}, #{req.amt}, #{req.tax}, #{req.settleAmt}, #{req.dueDate}, #{req.payMethodCode}, #{req.payAccountInfo},
+                 #{confirmerId}, #{confirmStatusCode}, #{confirmReason}, #{apprEmpId}, #{req.accountCode}, #{req.astId}, #{req.depositId} )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(pay50_expense) UPDATE — 승인상태·결의자 조건과 요청자 조건은 TOBE 추가 -->
+    <update id="updateMine">
+        UPDATE pay50_expense
+           SET pay50_expense_cd        = #{req.expenseCode}
+             , pay50_occ_date          = #{req.occDate}
+             , pay50_desc              = #{req.desc}
+             , pay50_content           = #{req.content}
+             , pay50_corp_id           = #{req.corpId}
+             , pay50_tax_type          = #{req.taxType}
+             , pay50_amt               = #{req.amt}
+             , pay50_tax               = #{req.tax}
+             , pay50_settle_amt        = #{req.settleAmt}
+             , pay50_due_date          = #{req.dueDate}
+             , pay50_pay_method_cd     = #{req.payMethodCode}
+             , pay50_pay_account_info  = #{req.payAccountInfo}
+             , pay50_confirmer_id      = #{req.confirmerId}
+             , pay50_account_cd        = #{req.accountCode}
+             , pay50_ast_id            = #{req.astId}
+             , pay50_deposit_id        = #{req.depositId}
+         WHERE pay50_expense_id = #{expenseId}
+           AND pay50_company_id = #{companyId}
+           AND pay50_reg_emp_id = #{userId}
+           AND pay50_confirm_status_cd IS NULL
+    </update>
+
+    <!-- AS-IS pay50_expense.updateConfirmStatusCode — 회사 조건은 TOBE 추가 -->
+    <update id="updateConfirmStatusCode">
+        UPDATE pay50_expense
+           SET pay50_confirm_status_cd = #{confirmStatusCode}
+         WHERE pay50_expense_id = #{expenseId}
+           AND pay50_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS com01_relate_appr.deleteByKeyTableId -->
+    <delete id="deleteRelateApprByKey">
+        DELETE FROM com01_relate_appr
+         WHERE com01_key_table_id = #{expenseId}
+    </delete>
+
+    <!-- AS-IS com01_relate_appr.selectByKeyTableId (IDMS-IC) — 회사 조건은 TOBE 추가 -->
+    <select id="selectRelateApprs" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseRelateApprRes">
+        SELECT a.com01_relate_appr_id                                                               AS relate_appr_id
+             , a.com01_appr_id                                                                      AS appr_id
+             , b.apr01_reg_date                                                                     AS reg_date
+             , b.apr01_effect_date                                                                  AS effect_date
+             , b.apr01_title                                                                        AS title
+             , f_emp_kor_nm(b.apr01_reg_emp_id)                                                     AS reg_emp_name
+             , f_cdnm('AprStatusCode', b.apr01_status_cd, b.apr01_company_id, b.apr01_reg_date)     AS status_name
+          FROM com01_relate_appr a
+               INNER JOIN apr01_appr b ON b.apr01_appr_id = a.com01_appr_id
+         WHERE a.com01_key_table_id = #{expenseId}
+           AND b.apr01_company_id   = #{companyId}
+    </select>
+
+    <!-- AS-IS com.Com01_RelateAppr.modelUpdate — UpdateDataModel(com01_relate_appr) INSERT -->
+    <insert id="insertRelateAppr">
+        INSERT INTO com01_relate_appr (com01_relate_appr_id, com01_key_table, com01_key_table_id, com01_appr_id)
+        VALUES (#{relateApprId}, 'pay50', #{expenseId}, #{apprId})
+    </insert>
+
+    <!-- AS-IS com.Com01_RelateAppr.delete — UpdateDataModel DELETE(PK). 지출요청 건의 것만 지운다(TOBE 추가) -->
+    <delete id="deleteRelateApprs">
+        DELETE FROM com01_relate_appr
+         WHERE com01_key_table_id = #{expenseId}
+           AND com01_relate_appr_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
     <!-- ===== U07 Pay50_Tab_ExpensePayWrite · U08 Pay50_Tab_ExpensePay (자금집행결의서) ===== -->
     <!-- AS-IS pay50_expense.selectExpensePay L908 (IDMS-IC) — 열만 DTO 이름으로, 바깥 SELECT 열 목록을 이 화면 것으로 줄였다 -->
     <select id="selectExpensePay" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseSettleRes">
