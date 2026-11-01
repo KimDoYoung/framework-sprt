@@ -657,3 +657,87 @@ export interface AstTrCodeTreeNode {
   curCode: string | null;
   trUnit: number | null;
 }
+
+/** AS-IS ast.Ast06_Tr.selectEvalList (Ast06_Tab_EvalFinance, W09) — 금융상품 평가처리 한 줄. 아직 평가하지 않은 줄은 evalYnName이 빈칸 */
+export interface AstEval {
+  evalYnName: string | null;
+  evalTypeName: string | null;
+  date: string;
+  corpAccountName: string | null;
+  astClassName: string | null;
+  classTreeName: string | null;
+  qty: number | null;
+  financeBookAmt: number | null;
+  price: number | null;
+  amt: number | null;
+  pl: number | null;
+  holdPeriod: string | null;
+  note: string | null;
+  personName: string | null;
+  trId: number;
+  astClassTreeId: number;
+  trCode: string | null;
+  trName: string | null;
+  personId: number | null;
+  companyId: number | null;
+  corpId: number | null;
+  corpName: string | null;
+  curCode: string | null;
+  forAmt: number | null;
+  fxRate: number | null;
+  preCloseDate: string | null;
+  preEvalDate: string | null;
+  evalType: string | null;
+  journalId: number | null;
+  classTreeFullName: string | null;
+  trFinanceId: number | null;
+  accountId: number;
+  forBookAmt: number | null;
+  trUnit: number | null;
+}
+
+/** 평가처리·취소 대상 한 줄 (AS-IS는 Ast06_TrModel 통째) */
+export interface AstEvalItem {
+  trId: number;
+  astClassTreeId: number;
+  date: string;
+  trCode: string | null;
+  evalType: string | null;
+  amt: number | null;
+  forAmt: number | null;
+  curCode: string | null;
+  note: string | null;
+  trFinanceId: number | null;
+  accountId: number;
+  qty: number | null;
+  trUnit: number | null;
+  bookAmt: number | null;
+  forBookAmt: number | null;
+}
+
+/** AS-IS ast.Ast25_Price.selectHoldItem (Ast25_Lookup_Price, W09) — 시세입력 한 줄 */
+export interface AstPrice {
+  priceId: number;
+  companyId: number | null;
+  stdDate: string;
+  itemType: string;
+  itemTypeName: string | null;
+  itemCode: string | null;
+  itemName: string | null;
+  evalPrice: number | null;
+}
+
+/** AS-IS ast.Ast25_Price.selectByStdDatePaging (Ast25_Tab_Price, W10) — 시세관리 한 줄. lockYn은 공용 시세(회사 0) */
+export interface AstPrc {
+  priceId: number;
+  companyId: number | null;
+  stdDate: string | null;
+  itemType: string | null;
+  itemTypeName: string | null;
+  itemCode: string | null;
+  itemName: string | null;
+  evalPrice: number | null;
+  note: string | null;
+  itemFullCode: string | null;
+  lockYn: boolean;
+}

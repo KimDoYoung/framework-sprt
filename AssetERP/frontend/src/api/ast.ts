@@ -26,6 +26,10 @@ import {
   AstForeignDeposit,
   AstTrFinance,
   AstTrFinanceSaveReq,
+  AstEval,
+  AstEvalItem,
+  AstPrice,
+  AstPrc,
   InvestLimit,
   InvestLimitDate,
   OwnerCapital,
@@ -573,6 +577,77 @@ export const astApi = {
   /** AS-IS ast.Ast41_InvestLimit.delete → 지운 건수 */
   deleteInvestLimits: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/ast/invest-limits', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  // ── W09 평가처리 (Ast06_Tab_EvalFinance) ──
+
+  /** 회사의 자산평가 주기(LoginUser.getCompanyModel().getAstEvalCycleCode()): 'W'면 평가일자, 아니면 평가년월 */
+  getEvalCycle: async (): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>('v1/ast/evals/cycle');
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS sys.Sys12_Calendar.selectBizDate2(0, stdDate, "-0", true) (W09): 시세입력 기준일 → 'yyyy-MM-dd' */
+  getEvalPriceDate: async (stdDate: string): Promise<string> => {
+    const res = await apiClient.get<ApiResponse<string>>('v1/ast/evals/price-date', { params: { stdDate } });
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast06_Tr.selectEvalList (W09): 평가 기준일의 보유 종목과 처리한 평가. evalType '1' 시가평가 / '2' 이자평가 */
+  searchEvals: async (p: { closeDate: string; corpId?: number | null; accountId?: number | null; classTreeId?: number | null; searchText: string; evalType: string }): Promise<AstEval[]> => {
+    const res = await apiClient.get<ApiResponse<AstEval[]>>('v1/ast/evals', {
+      params: { ...p, corpId: p.corpId ?? undefined, accountId: p.accountId ?? undefined, classTreeId: p.classTreeId ?? undefined },
+    });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast06_Tr.updateEval(procType P): 평가처리 → 처리한 줄 */
+  processEvals: async (items: AstEvalItem[]): Promise<AstEval[]> => {
+    const res = await apiClient.post<ApiResponse<AstEval[]>>('v1/ast/evals/process', { items });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast06_Tr.updateEval(procType C): 평가취소 */
+  cancelEvals: async (items: AstEvalItem[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/ast/evals/cancel', { items });
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdEvalFinance → rdGroupId */
+  rdEval: async (p: { closeDate: string; corpId?: number | null; accountId?: number | null; classTreeId?: number | null; searchText: string; evalType: string }): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ast/evals/rd', p);
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast25_Price.selectHoldItem (W09 시세입력): 국내 보유 종목의 시세. itemType '%' 전체 */
+  searchPriceHoldItems: async (holdDate: string, itemType: string, searchText: string): Promise<AstPrice[]> => {
+    const res = await apiClient.get<ApiResponse<AstPrice[]>>('v1/ast/prices/hold-items', { params: { holdDate, itemType, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast25_Price.insert (W09 시세입력): 바뀐 단가 저장 */
+  savePrices: async (rows: Pick<AstPrice, 'stdDate' | 'itemType' | 'itemCode' | 'itemName' | 'evalPrice'>[]): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/ast/prices', { rows });
+  },
+
+  // ── W10 시세관리 (Ast25_Tab_Price) ──
+
+  /** AS-IS ast.Ast25_Price.selectByStdDatePaging (W10): 고객사 시세 + 공용 시세. itemType '%' 전체 */
+  searchPrices: async (p: { startDate: string; closeDate: string; itemType: string; searchText: string; holdYn: boolean; limit: number; offset: number }): Promise<PageRes<AstPrc>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<AstPrc>>>('v1/ast/prices', { params: p });
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast25_Price.upsert (W10): 저장한 ID(요청 순서). 공용 시세(lockYn)는 고객사 시세로 새로 만든다 */
+  upsertPrices: async (rows: AstPrc[]): Promise<number[]> => {
+    const body = rows.map(({ priceId, stdDate, itemType, itemCode, itemName, evalPrice, note, lockYn }) => ({ priceId, stdDate, itemType, itemCode, itemName, evalPrice, note, lockYn }));
+    const res = await apiClient.put<ApiResponse<number[]>>('v1/ast/prices/upsert', { rows: body });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast25_Price.delete (W10) → 지운 건수 */
+  deletePrices: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/ast/prices', { data: ids });
     return res.data.data ?? 0;
   },
 };

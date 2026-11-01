@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- W10 시세관리 Ast25_Tab_Price(selectByStdDatePaging·Total · checkItemCode · delete) + W09 시세입력 Ast25_Lookup_Price — AS-IS(IDMS-IC) server/ast/mapper/ast25_price.xml(selectHoldItem · selectByItemCode · upsert). W10 Ast25_Tab_Price에서도 쓴다 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstPriceMapper">
+
+    <select id="selectHoldItem" resultType="kr.co.kfs.asseterp.biz.ast.dto.PriceRes">
+        SELECT ast25_price_id AS price_id, ast25_company_id AS company_id, ast25_std_date AS std_date, ast25_item_type AS item_type,
+               ast25_item_type_nm AS item_type_name, ast25_item_cd AS item_code, ast25_item_nm AS item_name, ast25_eval_price AS eval_price
+          FROM (
+WITH book AS (
+    WITH book1 AS ( SELECT '1' seq
+                         , ast09_book.*
+                      FROM ast09_book
+                     WHERE ast09_company_id = #{companyId}
+                       AND (ast09_ast_class_tree_id, ast09_keep_account_id, ast09_hold_date) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(ast09_hold_date)
+                                                                                                    FROM ast09_book
+                                                                                                   WHERE ast09_company_id = #{companyId}
+                                                                                                     AND ast09_hold_date &lt;= #{holdDate}
+                                                                                                     
+
+
+                                                                                                     
+
+
+                                                                                                   GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+                     UNION ALL
+                    SELECT '2' seq
+                         , ast11_book_id
+                         , ast11_hold_date
+                         , ast11_ast_class_tree_id
+                         , ast11_keep_account_id
+                         , ast11_hold_qty
+                         , ast11_pur_amt
+                         , ast11_book_amt
+                         , ast11_eval_amt
+                         , ast11_eval_pl
+                         , ast11_first_pur_amt
+                         , ast11_first_pur_date
+                         , ast11_company_id
+                         , ast11_for_pur_amt
+                         , ast11_for_book_amt
+                         , ast11_for_eval_amt
+                         , ast11_for_eval_pl
+                         , ast11_fx_pl
+                         , ast11_book_end_yn
+                         , ast11_acr_int_amt
+                         , ast11_for_acr_int_amt
+                         , ast11_oci
+                         , ast11_for_oci
+                         , ast11_lock_up_period_cd
+                         , ast11_lock_up_date
+                         , ast11_lock_up_qty
+                      FROM ast11_book_close
+                     WHERE ast11_company_id = #{companyId}
+                       AND (ast11_ast_class_tree_id, ast11_keep_account_id, ast11_hold_date) IN ( SELECT ast11_ast_class_tree_id, ast11_keep_account_id, MAX(ast11_hold_date)
+                                                                                                    FROM ast11_book_close
+                                                                                                   WHERE ast11_company_id = #{companyId}
+                                                                                                     AND ast11_hold_date &lt; #{holdDate}
+                                                                                                     
+
+
+                                                                                                     
+
+
+                                                                                                   GROUP BY ast11_ast_class_tree_id, ast11_keep_account_id )
+    )
+    SELECT *
+      FROM book1
+     WHERE (ast09_ast_class_tree_id, ast09_keep_account_id, to_char(ast09_hold_date,'yyyymmdd')||seq) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(to_char(ast09_hold_date,'yyyymmdd')||seq)
+                                                                                                             FROM book1
+                                                                                                            GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+)
+
+    SELECT row_number() over(order by ast01_item_m_class_cd, ast01_isin)                                        AS ast25_price_id
+         , ast09_company_id                                                                                     AS ast25_company_id
+         , #{holdDate}                                                                                          AS ast25_std_date
+         , ast01_item_m_class_cd                                                                                AS ast25_item_type
+         , f_cdnm('ItemMClassCode', ast01_item_m_class_cd, ast09_company_id, #{holdDate})
+          ||CASE WHEN substr(ast01_item_s_class_cd,5) = '99' THEN ''
+                 ELSE '('||f_cdnm('ItemSClassCode',ast01_item_s_class_cd,ast09_company_id,#{holdDate})||')' END AS ast25_item_type_nm
+         , ast01_isin                                                                                           AS ast25_item_cd
+         , ast01_class_tree_nm                                                                                  AS ast25_item_nm
+         , f_get_price(#{holdDate}, ast09_ast_class_tree_id)                                                    AS ast25_eval_price
+      FROM (
+             SELECT ast09_company_id
+                  , ast09_ast_class_tree_id
+                  , ast01_item_m_class_cd
+                  , ast01_item_s_class_cd
+                  , ast01_isin
+                  , ast01_class_tree_nm
+               FROM book
+			        INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast09_ast_class_tree_id
+              WHERE COALESCE(ast09_book_end_yn,'false') != 'true'
+                AND ast01_asset_type                     = '1'      /*(1:고유자산)*/
+                AND ast01_item_l_class_cd                = '20'     /*(20:증권)*/
+                AND COALESCE(ast01_eval_type,'1')        = '1'      /*(1:시가평가)*/
+                AND ( ( '1' = #{abroType}                        AND     /* 1:국내 */
+                        COALESCE(ast01_cur_cd,'KRW')  = 'KRW'    ) OR
+                      ( '2' = #{abroType}                        AND     /* 2:국외 */
+                        COALESCE(ast01_cur_cd,'KRW') != 'KRW'    ) )
+                AND ast01_item_m_class_cd    LIKE #{itemType}
+                AND UPPER(CONCAT(ast01_isin, ast01_class_tree_nm)) LIKE UPPER(#{searchText})
+              GROUP BY ast09_company_id
+                     , ast09_ast_class_tree_id
+                     , ast01_item_m_class_cd
+                     , ast01_item_s_class_cd
+                     , ast01_isin
+                     , ast01_class_tree_nm
+           ) t
+          ) p
+    </select>
+
+    <!-- ast25_price.selectByStdDatePaging — 고객사 시세 + 공용 시세(icam20_price, 고객사 행이 없는 것만). 공용은 lock_yn -->
+    <select id="selectByStdDatePaging" resultType="kr.co.kfs.asseterp.biz.ast.dto.PrcRes">
+        SELECT ast25_price_id AS price_id, ast25_company_id AS company_id, ast25_std_date AS std_date, ast25_item_type AS item_type,
+               ast25_item_type_nm AS item_type_name, ast25_item_cd AS item_code, ast25_item_nm AS item_name, ast25_eval_price AS eval_price,
+               ast25_note AS note, ast25_item_full_cd AS item_full_code, ast25_lock_yn AS lock_yn
+          FROM (
+
+    WITH prc AS ( SELECT ast25_price.*
+                       , com50_item_cd          AS ast25_item_full_cd
+                    FROM ast25_price
+                         LEFT OUTER JOIN com50_item ON (com50_item_short_cd = ast25_item_cd AND com50_item_type = '2010')
+                   WHERE ast25_company_id = #{companyId}
+                     AND ast25_std_date   BETWEEN #{startDate} AND #{closeDate}
+                   UNION ALL
+                  SELECT row_number() over()    AS ast25_price_id
+                       , 0                      AS ast25_company_id
+                       , icam20_std_date        AS ast25_std_date
+                       , icam20_item_type       AS ast25_item_type
+                       , icam20_item_cd         AS ast25_item_cd
+                       , icam20_item_nm         AS ast25_item_nm
+                       , icam20_close_price     AS ast25_eval_price
+                       , null                   AS ast25_note
+                       , icam20_isin            AS ast25_item_full_cd
+                    FROM icam20_price
+                   WHERE icam20_std_date BETWEEN #{startDate} AND #{closeDate}
+
+
+
+
+                     AND NOT EXISTS ( SELECT 1
+                                        FROM ast25_price
+                                       WHERE ast25_company_id   = #{companyId}
+                                         AND ast25_std_date     = icam20_std_date
+                                         AND ast25_item_type    = icam20_item_type
+                                         AND ast25_item_cd      = icam20_item_cd )
+
+
+
+
+    )
+        SELECT prc.*
+             , f_cdnm('ItemMClassCode', ast25_item_type, ast25_company_id, ast25_std_date)  AS ast25_item_type_nm
+             , CASE WHEN ast25_company_id = 0 THEN true ELSE false END                      AS ast25_lock_yn
+          FROM prc
+        WHERE 1=1
+        AND ast25_item_type LIKE #{itemType}
+        AND UPPER(CONCAT(ast25_item_cd, ast25_item_nm)) LIKE UPPER(#{searchText})
+        <choose>
+        <when test="holdYn == true">
+        AND (ast25_item_type, ast25_item_cd) IN ( SELECT ast01_item_m_class_cd, ast01_isin
+        FROM ast09_book
+        INNER JOIN ast01_class_tree ON ( ast01_class_tree_id = ast09_ast_class_tree_id AND
+        ast01_asset_type    = '1'                     AND /*(1:고유자산)*/
+        ast01_item_m_class_cd IN ( SELECT sys09_code
+        FROM sys13_code_group
+        INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+        WHERE sys13_kind_group_cd = 'ItemMClassCode001' ) )
+        WHERE ast09_company_id = #{companyId}
+        AND (ast09_ast_class_tree_id, ast09_hold_date) IN ( SELECT a.ast09_ast_class_tree_id, max(a.ast09_hold_date)
+        FROM ast09_book a
+        WHERE a.ast09_company_id = #{companyId}
+        AND a.ast09_hold_date &lt;= #{closeDate}
+        GROUP BY ast09_ast_class_tree_id )
+        AND coalesce(ast09_book_end_yn,'false') = 'false' )
+        </when>
+        </choose>
+        ORDER BY ast25_std_date, ast25_item_type, ast25_item_cd
+        LIMIT #{limit}
+        OFFSET #{offset}
+    
+          ) q
+         ORDER BY std_date, item_type, item_code
+    </select>
+
+    <select id="selectByStdDatePagingTotal" resultType="long">
+WITH prc AS ( SELECT ast25_price.*
+                       , com50_item_cd          AS ast25_item_full_cd
+                    FROM ast25_price
+                         LEFT OUTER JOIN com50_item ON (com50_item_short_cd = ast25_item_cd AND com50_item_type = '2010')
+                   WHERE ast25_company_id = #{companyId}
+                     AND ast25_std_date   BETWEEN #{startDate} AND #{closeDate}
+                   UNION ALL
+                  SELECT row_number() over()    AS ast25_price_id
+                       , 0                      AS ast25_company_id
+                       , icam20_std_date        AS ast25_std_date
+                       , icam20_item_type       AS ast25_item_type
+                       , icam20_item_cd         AS ast25_item_cd
+                       , icam20_item_nm         AS ast25_item_nm
+                       , icam20_close_price     AS ast25_eval_price
+                       , null                   AS ast25_note
+                       , icam20_isin            AS ast25_item_full_cd
+                    FROM icam20_price
+                   WHERE icam20_std_date BETWEEN #{startDate} AND #{closeDate}
+
+
+
+
+                     AND NOT EXISTS ( SELECT 1
+                                        FROM ast25_price
+                                       WHERE ast25_company_id   = #{companyId}
+                                         AND ast25_std_date     = icam20_std_date
+                                         AND ast25_item_type    = icam20_item_type
+                                         AND ast25_item_cd      = icam20_item_cd )
+
+
+
+
+    )
+
+    SELECT COUNT(*)
+      FROM prc
+     WHERE 1=1
+       
+    AND ast25_item_type LIKE #{itemType}
+    AND UPPER(CONCAT(ast25_item_cd, ast25_item_nm)) LIKE UPPER(#{searchText})
+    
+<if test="holdYn">
+AND (ast25_item_type, ast25_item_cd) IN ( SELECT ast01_item_m_class_cd, ast01_isin
+        FROM ast09_book
+        INNER JOIN ast01_class_tree ON ( ast01_class_tree_id = ast09_ast_class_tree_id AND
+        ast01_asset_type    = '1'                     AND /*(1:고유자산)*/
+        ast01_item_m_class_cd IN ( SELECT sys09_code
+        FROM sys13_code_group
+        INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+        WHERE sys13_kind_group_cd = 'ItemMClassCode001' ) )
+        WHERE ast09_company_id = #{companyId}
+        AND (ast09_ast_class_tree_id, ast09_hold_date) IN ( SELECT a.ast09_ast_class_tree_id, max(a.ast09_hold_date)
+        FROM ast09_book a
+        WHERE a.ast09_company_id = #{companyId}
+        AND a.ast09_hold_date &lt;= #{closeDate}
+        GROUP BY ast09_ast_class_tree_id )
+        AND coalesce(ast09_book_end_yn,'false') = 'false' )
+</if>
+    </select>
+
+    <!-- ast25_price.checkItemCode — 같은 회사·기준일·종목유형·종목코드의 다른 행 수 -->
+    <select id="checkItemCode" resultType="long">
+        SELECT COUNT(*)
+          FROM ast25_price
+         WHERE ast25_company_id = #{companyId}
+           AND ast25_std_date   = #{stdDate}
+           AND ast25_item_type  = #{itemType}
+           AND ast25_item_cd    = #{itemCode}
+           AND ast25_price_id  != #{priceId}
+    </select>
+
+    <!-- UpdateDataModel(ast25_price) 동적 DELETE — 키(ast25_price_id)로, 회사 조건 추가 -->
+    <delete id="deleteByIds">
+        DELETE FROM ast25_price
+         WHERE ast25_company_id = #{companyId}
+           AND ast25_price_id IN <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="selectPriceId" resultType="long">
+        SELECT ast25_price_id
+          FROM ast25_price
+         WHERE ast25_company_id = #{companyId}
+           AND ast25_std_date   = #{stdDate}
+           AND ast25_item_type  = #{itemType}
+           AND ast25_item_cd    = #{itemCode}
+         LIMIT 1
+    </select>
+
+    <!-- Ast25_Price.insert: 이미 있는 시세는 DB에서 읽은 행의 단가만 바꿔 upsert한다(나머지 열은 그대로) -->
+    <update id="updateEvalPrice">
+        UPDATE ast25_price SET ast25_eval_price = #{evalPrice} WHERE ast25_price_id = #{priceId}
+    </update>
+
+    <!-- ast25_price.upsert : 같은 ID가 있으면 갱신, 없으면 넣는다 -->
+    <update id="upsert">
+        WITH upsert AS ( UPDATE ast25_price
+                            SET ast25_std_date   = #{stdDate}
+                              , ast25_item_type  = #{itemType}
+                              , ast25_item_cd    = #{itemCode}
+                              , ast25_item_nm    = #{itemName}
+                              , ast25_eval_price = #{evalPrice}
+                              , ast25_note       = #{note}
+                          WHERE ast25_price_id = #{priceId}
+                         RETURNING * )
+        INSERT INTO ast25_price
+        SELECT #{priceId}, #{companyId}, #{stdDate}, #{itemType}, #{itemCode}, #{itemName}, #{evalPrice}, #{note}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </update>
+</mapper>
