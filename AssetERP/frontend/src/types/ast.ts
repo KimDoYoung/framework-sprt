@@ -789,6 +789,9 @@ export interface AstFinanceBook {
   astClassName: string | null;
   astClassTreeName: string | null;
   accountTypeName: string | null;
+  curCode: string | null;
+  forPurAmt: number | null;
+  forBookAmt: number | null;
   holdQty: number | null;
   purAmt: number | null;
   bookAmt: number | null;

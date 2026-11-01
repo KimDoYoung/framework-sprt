@@ -20,7 +20,7 @@ import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 
 /**
- * A30 금융상품 보유내역 (Apr01_Edit_ApprDoc.insertLinkApprovals L3218-3238, 본문 FinanceBookHtmlData.getHtmlContent, 호출 Ast09_Tab_FinanceBook W12).
+ * A30 금융상품 보유내역 · A03 금융상품 보유내역(외화, W13 — 원본 분기 L3030이 A30과 같은 제목·본문) (Apr01_Edit_ApprDoc.insertLinkApprovals L3218-3238, 본문 FinanceBookHtmlData.getHtmlContent, 호출 Ast09_Tab_FinanceBook W12).
  * AS-IS는 호출 화면이 `ast.Ast09_Book.getHoldDate`(종목유형별 합계)를 읽어 넘긴 목록으로 본문을 만든다 → TOBE는 args.stdDate(보유일자)로 서버가 같은 SQL을 읽는다.
  * 제목 `금융상품 보유내역_yyyy-MM-dd`(고칠 수 있음), 작성일·시행일은 오늘, 본문은 20칸 표(종목유형·취득금액·장부금액·평가금액·평가손익 + 합계 + 안내 문구).
  */
@@ -38,7 +38,7 @@ public class FinanceBookLinkSeedProvider implements AprLinkSeedProvider {
 
     @Override
     public Set<String> linkCodes() {
-        return Set.of("A30");
+        return Set.of("A30", "A03");
     }
 
     @Override

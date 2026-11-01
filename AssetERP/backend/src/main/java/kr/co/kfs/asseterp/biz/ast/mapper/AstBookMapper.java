@@ -28,9 +28,10 @@ public interface AstBookMapper {
                                            @Param("astType") String astType, @Param("searchText") String searchText,
                                            @Param("depositIdStr") String depositIdStr);
 
-    /** selectByHoldDate (astType 2 금융자산) — Ast09_Tab_FinanceBook(W12). 정렬은 AS-IS 그대로 */
+    /** selectByHoldDate (astType 2 금융자산) — Ast09_Tab_FinanceBook(W12)·FinanceForBook(W13, abroType 2). 정렬은 AS-IS 그대로 */
     List<BookFullRes> selectFinanceBook(@Param("companyId") Long companyId, @Param("holdDate") LocalDate holdDate,
-                                        @Param("astType") String astType, @Param("searchText") String searchText);
+                                        @Param("astType") String astType, @Param("abroType") String abroType,
+                                        @Param("searchText") String searchText);
 
     /** sys99_print.insert (Sys99_Print.insertRdFinanceBook이 채우는 열) */
     int insertPrintFinance(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,

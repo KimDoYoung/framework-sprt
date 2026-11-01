@@ -42,9 +42,12 @@ public class AstBookService {
         return mapper.selectHoldList(user.getCompanyId(), holdDate, "2", abroType, "%" + (searchText == null ? "" : searchText) + "%");
     }
 
-    /** ast09_book.selectByHoldDate (W12 Ast09_Tab_FinanceBook) — astType 2 금융자산, searchText는 "%…%" */
-    public List<BookFullRes> searchFinanceBooks(UserPrincipal user, LocalDate holdDate, String searchText) {
-        return mapper.selectFinanceBook(user.getCompanyId(), holdDate, "2", like(searchText));
+    /**
+     * ast09_book.selectByHoldDate (W12 Ast09_Tab_FinanceBook · W13 Ast09_Tab_FinanceForBook) — astType 2 금융자산, searchText는 "%…%".
+     * abroType은 W13(외화)만 "2"(통화가 KRW가 아닌 것)를 준다. W12는 주지 않는다(null = 전체).
+     */
+    public List<BookFullRes> searchFinanceBooks(UserPrincipal user, LocalDate holdDate, String abroType, String searchText) {
+        return mapper.selectFinanceBook(user.getCompanyId(), holdDate, "2", abroType, like(searchText));
     }
 
     /**
@@ -57,7 +60,7 @@ public class AstBookService {
         Long personId = user.getUserId();
         long groupId = mapper.selectNextId();
         mapper.deletePrint(companyId, personId, FINANCE_WINDOW);
-        for (BookFullRes b : mapper.selectFinanceBook(companyId, holdDate, "2", like(searchText))) {
+        for (BookFullRes b : mapper.selectFinanceBook(companyId, holdDate, "2", null, like(searchText))) {
             mapper.insertPrintFinance(mapper.selectNextId(), companyId, personId, FINANCE_WINDOW, groupId, b);
         }
         return groupId;

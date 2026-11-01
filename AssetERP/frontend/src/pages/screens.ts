@@ -230,6 +230,7 @@ import { Ast06_Tab_EvalFinance } from './ast/Ast06_Tab_EvalFinance';
 import { Ast25_Tab_Price } from './ast/Ast25_Tab_Price';
 import { Ast06_Tab_EvalDepn } from './ast/Ast06_Tab_EvalDepn';
 import { Ast09_Tab_FinanceBook } from './ast/Ast09_Tab_FinanceBook';
+import { Ast09_Tab_FinanceForBook } from './ast/Ast09_Tab_FinanceForBook';
 import { Ast06_Tab_TrIPO } from './ast/Ast06_Tab_TrIPO';
 import { Emp17_Tab_Benefit } from './emp/Emp17_Tab_Benefit';
 import { Emp17_Tab_BenefitManager } from './emp/Emp17_Tab_BenefitManager';
@@ -625,6 +626,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ast06_Tab_TrFinance, // W06 (메뉴 #1158. + Ast06_Lookup_TrFinance·Ast09_Lookup_Book. 연관문서·분개 [변경]은 W05와 같은 창)
   Ast06_Tab_TrForFinance, // W07 (메뉴 #1365. + Ast06_Lookup_TrForFinance. 보유자산 조회창·연관문서·분개 [변경]은 W06과 같은 창)
   Ast09_Tab_FinanceBook, // W12 (메뉴 #1160. 상신 A30 = Apr01_Edit_ApprDoc 연결, RD Ast09_Rd_FinanceBook)
+  Ast09_Tab_FinanceForBook, // W13 (메뉴 #1366. 상신 A03, 조회 abroType 2, RD는 W12와 같은 mrd)
   Ast06_Tab_EvalDepn, // W11 (메뉴 #1175. + Ast16_Lookup_NonDeductTax·Ast06_Lookup_ModifyDepnCost. 분개 그리드는 W05~W09와 같은 부품)
   Ast25_Tab_Price, // W10 (메뉴 #1295. 시세 조회·저장·삭제 — 시세입력 창 Ast25_Lookup_Price(W09)와 같은 ast/prices API)
   Ast06_Tab_EvalFinance, // W09 (메뉴 #1167. + Ast06_TabPage_MarketEval·InterestEval·Ast25_Lookup_Price. 거래·분개 그리드는 W05~W08과 같은 부품)

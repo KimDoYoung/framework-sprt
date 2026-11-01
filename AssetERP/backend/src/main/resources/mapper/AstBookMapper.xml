@@ -250,7 +250,8 @@
         ast09_account_type_nm               AS account_type_name,
         ast09_lock_up_period_nm             AS lock_up_period_name,
         ast09_lock_up_date                  AS lock_up_date,
-        ast09_lock_up_qty_nvl               AS lock_up_qty   /* 안쪽 select의 COALESCE(…,0) 열 — book.*의 같은 이름과 겹쳐 이름을 바꿨다 */
+        ast09_lock_up_qty_nvl               AS lock_up_qty,  /* 안쪽 select의 COALESCE(…,0) 열 — book.*의 같은 이름과 겹쳐 이름을 바꿨다 */
+        COALESCE(ast09_for_pur_amt, 0.0)    AS for_pur_amt   /* W13 외화 취득금액 */
     </sql>
 
     <select id="selectByHoldDateFull" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookFullRes">
@@ -261,6 +262,11 @@
     <!-- AS-IS ast09_book.selectByHoldDate (IDMS-IC, W12 Ast09_Tab_FinanceBook) — astType 2 금융자산. 정렬: 보관처명·계좌순번·소분류·종목명 -->
     <select id="selectFinanceBook" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookFullRes">
         <include refid="depositBookQuery"><property name="cols" value="bookFullColumns"/></include>
+        <!-- W13 외화(Ast09_Tab_FinanceForBook): abroType 2 = 통화가 KRW가 아닌 것(1 = KRW). W12는 주지 않는다 -->
+        <if test="abroType != null">
+        AND ( ( '1' = #{abroType} AND ast09_cur_code  = 'KRW' ) OR
+              ( '2' = #{abroType} AND ast09_cur_code != 'KRW' ) )
+        </if>
         ORDER BY ast09_corp_nm collate "ko_KR.utf8" asc, ast09_keep_account_seq, ast09_ast_s_class_cd, ast09_ast_class_tree_nm collate "ko_KR.utf8" asc
     </select>
 

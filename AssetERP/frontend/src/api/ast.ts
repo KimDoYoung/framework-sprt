@@ -699,8 +699,9 @@ export const astApi = {
   // ── W12 금융상품 보유내역 (Ast09_Tab_FinanceBook) ──
 
   /** AS-IS ast.Ast09_Book.selectByHoldDate (W12): astType 2 금융자산, 보관처/계좌/종목유형/종목명 검색 */
-  searchFinanceBooks: async (holdDate: string, searchText: string): Promise<AstFinanceBook[]> => {
-    const res = await apiClient.get<ApiResponse<AstFinanceBook[]>>('v1/ast/books/finance', { params: { holdDate, searchText } });
+  searchFinanceBooks: async (holdDate: string, searchText: string, abroType?: string): Promise<AstFinanceBook[]> => {
+    // abroType: W13 외화 '2'(통화가 KRW가 아닌 것). W12는 주지 않는다
+    const res = await apiClient.get<ApiResponse<AstFinanceBook[]>>('v1/ast/books/finance', { params: { holdDate, searchText, abroType } });
     return res.data.data ?? [];
   },
 

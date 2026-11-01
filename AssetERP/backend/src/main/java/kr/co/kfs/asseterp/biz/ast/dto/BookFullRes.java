@@ -7,5 +7,6 @@ public record BookFullRes(Long bookId, LocalDate holdDate, LocalDate firstPurDat
                           String keepCorpAccountName, String curCode, Double forBookAmt, Double holdQty, Long bookAmt,
                           Long keepAccountId, Long astClassTreeId, Long purAmt, Long acrIntAmt, Long evalAmt, Long evalPl,
                           Long oci, Long firstPurAmt, String keepAccountName, String astClassName, String astClassTreeName,
-                          String accountTypeName, String lockUpPeriodName, LocalDate lockUpDate, Double lockUpQty) {
+                          String accountTypeName, String lockUpPeriodName, LocalDate lockUpDate, Double lockUpQty,
+                          Double forPurAmt) {
 }

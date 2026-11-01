@@ -73,12 +73,13 @@ public class AstBookController {
         return ApiResponse.ok(null);
     }
 
-    /** ast.Ast09_Book.selectByHoldDate (astType 2 금융자산) — 금융상품 보유내역 Ast09_Tab_FinanceBook (W12) */
+    /** ast.Ast09_Book.selectByHoldDate (astType 2 금융자산) — 금융상품 보유내역 Ast09_Tab_FinanceBook (W12) · 외화 Ast09_Tab_FinanceForBook (W13, abroType 2) */
     @GetMapping("/finance")
     public ApiResponse<List<BookFullRes>> finance(@AuthenticationPrincipal UserPrincipal principal,
                                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate holdDate,
+                                                  @RequestParam(required = false) String abroType,
                                                   @RequestParam(defaultValue = "") String searchText) {
-        return ApiResponse.ok(service.searchFinanceBooks(principal, holdDate, searchText));
+        return ApiResponse.ok(service.searchFinanceBooks(principal, holdDate, abroType, searchText));
     }
 
     /** ast.Ast09_Book.getHoldDate — 종목유형별 합계(상신 전에 내용이 있는지 보고, 본문 표를 만든다) */
