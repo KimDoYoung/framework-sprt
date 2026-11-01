@@ -36,10 +36,16 @@ public class EmpTransInfoService {
      */
     public List<TransInfoRes> searchTransInfos(UserPrincipal user, LocalDate transDate, String searchText, String transCode,
                                                boolean separateAddTitle) {
+        return searchTransInfos(user, transDate, searchText, transCode, separateAddTitle, false);
+    }
+
+    /** leaveManager = AS-IS isLeaveManager — 휴가관리(Emp20_Tab_LeaveManager) 화면을 쓸 수 있는 사원만 (Y01 [초과사용 승인요청]) */
+    public List<TransInfoRes> searchTransInfos(UserPrincipal user, LocalDate transDate, String searchText, String transCode,
+                                               boolean separateAddTitle, boolean leaveManager) {
         String date = (transDate == null ? LocalDate.now() : transDate).toString();
         String like = "%" + (searchText == null ? "" : searchText) + "%";
         return empTransInfoMapper.searchTransInfos(
-                new TransInfoSearchParam(user.getCompanyId(), date, like, transCode == null ? "000" : transCode, separateAddTitle, null, null));
+                new TransInfoSearchParam(user.getCompanyId(), date, like, transCode == null ? "000" : transCode, separateAddTitle, null, null, leaveManager));
     }
 
     /** AS-IS Emp00_TransInfo.selectRetireEmpList L587 (S22 퇴직정산 성명): 기준일 최신 발령이 퇴직(900)인 사원 */

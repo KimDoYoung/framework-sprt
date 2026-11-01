@@ -45,13 +45,15 @@ interface Props {
   retire?: boolean;
   /** 널 단추 문구. 기본 '전체'(AS-IS openAll), openNull은 '선택안함'(nullButton.setReText), null이면 단추 없음(callback만 있는 open) */
   noneLabel?: string | null;
+  /** openLeaveManager(baseDate, callback) L93 (Y01 초과사용 승인요청): true면 휴가관리(Emp20_Tab_LeaveManager) 화면을 쓸 수 있는 사원만 보인다 */
+  leaveManager?: boolean;
   /** callback.execute(result): 확인이면 고른 사원, [전체]·[선택안함]이면 null */
   onResult: (row: TransInfo | null) => void;
   /** 취소: hide()만 */
   onClose: () => void;
 }
 
-export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, separateAddTitle = false, retire = false, noneLabel = '전체', searchText = '', transDate, onResult, onClose }) => {
+export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, separateAddTitle = false, leaveManager = false, retire = false, noneLabel = '전체', searchText = '', transDate, onResult, onClose }) => {
   const gridRef = useRef<AgGridReact<TransInfo>>(null);
   // L233-244: transName setText("재직"). 처음 값은 열 때마다 받은 transDate라 초기화는 openValues로 한다
   const openTransName = retire ? '퇴직' : '재직';
@@ -70,11 +72,11 @@ export const Emp00_Lookup_SelectSingle: React.FC<Props> = ({ open, companyId, se
     try {
       setRows(companyId !== undefined
         ? await empApi.searchCompanyTransInfos(companyId, date, text, transCode)
-        : await empApi.searchTransInfos(date, text, transCode, separateAddTitle));
+        : await empApi.searchTransInfos(date, text, transCode, separateAddTitle, leaveManager));
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
     }
-  }, [companyId, separateAddTitle]);
+  }, [companyId, separateAddTitle, leaveManager]);
 
   // open() L165-289 끝: show() → retrieve()
   useEffect(() => {

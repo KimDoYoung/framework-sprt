@@ -1191,3 +1191,100 @@ export interface MyTransportAppr {
   statusCode: string | null;
   statusName: string | null;
 }
+
+/** Y01 휴가신청 한 줄 (Emp20_LeaveModel — 본인 휴가) */
+export interface MyLeave {
+  leaveId: number;
+  personId: number;
+  leaveCode: string;
+  leaveName: string | null;
+  spcLeaveCode: string | null;
+  spcLeaveName: string | null;
+  etcLeaveId: number | null;
+  regDate: string | null;
+  startDate: string;
+  closeDate: string | null;
+  leaveCount: number | null;
+  reason: string | null;
+  managerName: string | null;
+  emergencyTelno: string | null;
+  note: string | null;
+  apprId: number | null;
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+  classTreeId: number | null;
+  classTreeFullName: string | null;
+  altPersonName: string | null;
+  cancel: string | null;
+  overConfirmStatusCode: string | null;
+  overConfirmStatusName: string | null;
+  overConfirmerName: string | null;
+  overConfirmDateStr: string | null;
+}
+
+/** Y01 휴가신청 저장 요청 (leaveId 0 이하는 신규) */
+export interface MyLeaveSave {
+  leaveId: number;
+  leaveCode: string | null;
+  spcLeaveCode: string | null;
+  etcLeaveId: number | null;
+  regDate: string | null;
+  startDate: string | null;
+  closeDate: string | null;
+  leaveCount: number | null;
+  reason: string | null;
+  managerName: string | null;
+  emergencyTelno: string | null;
+  note: string | null;
+  apprId: number | null;
+  classTreeId: number | null;
+}
+
+export interface LeaveCode {
+  code: string;
+  name: string;
+}
+
+export interface MyLeaveCodes {
+  leaveCodes: LeaveCode[];
+  spcLeaveCodes: LeaveCode[];
+  /** 로그인 사원 휴대폰 — 새 행의 비상망 기본값 */
+  mobileTelNo: string | null;
+}
+
+/** Y01 포상휴가 확인 (emp22_etc_leave.selectByEtcLeaveId — useDays는 이 휴가 신청을 뺀 값) */
+export interface EtcLeaveCheck {
+  etcLeaveId: number;
+  startDate: string;
+  closeDate: string;
+  days: number | null;
+  useDays: number;
+}
+
+/** Y02 휴가신청조회 한 줄 (Emp20_Tab_LeaveList — 회사 전체 사원의 상신된 휴가 + 완료된 공동연차) */
+export interface LeaveListRow {
+  leaveId: number;
+  startDate: string;
+  closeDate: string;
+  personName: string | null;
+  leaveCount: number | null;
+  leaveName: string | null;
+  apprId: number | null;
+  managerName: string | null;
+  emergencyTelno: string | null;
+}
+
+/** Y03 연월차휴가 지정통보 한 줄 (Emp21_UnLeaveModel — 본인에게 온 사용시기 지정통보) */
+export interface MyUnLeave {
+  unLeaveId: number;
+  personId: number;
+  unLeaveCode: string;
+  unLeaveName: string | null;
+  startDate: string;
+  remainDays: number | null;
+  apprId: number | null;
+  apprStatusName: string | null;
+  expectApprId: number | null;
+  expectApprStatusCode: string | null;
+  expectApprStatusName: string | null;
+}

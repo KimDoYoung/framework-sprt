@@ -34,8 +34,9 @@ public class EmpTransInfoController {
                                                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate transDate,
                                                             @RequestParam(required = false) String searchText,
                                                             @RequestParam(required = false) String transCode,
-                                                            @RequestParam(defaultValue = "true") boolean separateAddTitle) {
-        return ApiResponse.ok(empTransInfoService.searchTransInfos(principal, transDate, searchText, transCode, separateAddTitle));
+                                                            @RequestParam(defaultValue = "true") boolean separateAddTitle,
+                                                            @RequestParam(defaultValue = "false") boolean leaveManager) {
+        return ApiResponse.ok(empTransInfoService.searchTransInfos(principal, transDate, searchText, transCode, separateAddTitle, leaveManager));
     }
 
     /** AS-IS emp.Emp00_TransInfo.selectRetireEmpList — 퇴직 발령 사원 (S22 퇴직정산) */

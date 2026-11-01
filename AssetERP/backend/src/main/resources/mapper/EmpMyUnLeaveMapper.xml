@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  Y03 연월차휴가 지정통보 (Emp21_Tab_PersonList, 메뉴 #1184) — 본인에게 온 사용시기 지정통보서와 지정통보 상신.
+  AS-IS(IDMS-IC) server/emp/mapper/emp21_un_leave.xml selectByPersonId + Emp21_UnLeave.update(expectApprId).
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpMyUnLeaveMapper">
+
+    <!-- AS-IS emp21_un_leave.selectByPersonId (화면 그리드가 쓰는 열만. 본인·로그인 회사 조건 추가) -->
+    <sql id="myUnLeaveColumns">
+        SELECT emp21_un_leave_id                                                               AS un_leave_id
+             , emp21_person_id                                                                 AS person_id
+             , emp21_un_leave_cd                                                               AS un_leave_code
+             , f_cdnm('unLeaveCode', emp21_un_leave_cd, emp21_company_id, f_sysdate())         AS un_leave_name
+             , emp21_start_date                                                                AS start_date
+             , emp21_remain_days                                                               AS remain_days
+             , emp21_appr_id                                                                   AS appr_id
+             , f_cdnm('AprStatusCode', apr01.apr01_status_cd, emp21_company_id, f_sysdate())   AS appr_status_name
+             , emp21_expect_appr_id                                                            AS expect_appr_id
+             , apr02.apr01_status_cd                                                           AS expect_appr_status_code
+             , f_cdnm('AprStatusCode', apr02.apr01_status_cd, emp21_company_id, f_sysdate())   AS expect_appr_status_name
+          FROM emp21_un_leave
+               INNER JOIN emp01_person ON emp01_person_id = emp21_person_id
+               INNER JOIN emp02_others ON emp02_person_id = emp21_person_id
+               INNER JOIN sys01_company ON sys01_company_id = emp21_company_id
+               INNER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = emp21_appr_id
+               LEFT OUTER JOIN apr01_appr apr02 ON apr02.apr01_appr_id = emp21_expect_appr_id
+    </sql>
+
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.emp.dto.MyUnLeaveRes">
+        <include refid="myUnLeaveColumns"/>
+         WHERE emp21_person_id  = #{personId}
+           AND emp21_company_id = #{companyId}
+           AND emp21_start_date BETWEEN f_get_close_date(#{companyId}, #{stdYear}, '1') AND f_get_close_date(#{companyId}, #{stdYear}, '2')
+         ORDER BY emp21_start_date DESC
+    </select>
+
+    <select id="selectMineById" resultType="kr.co.kfs.asseterp.biz.emp.dto.MyUnLeaveRes">
+        <include refid="myUnLeaveColumns"/>
+         WHERE emp21_un_leave_id = #{unLeaveId}
+           AND emp21_person_id   = #{personId}
+           AND emp21_company_id  = #{companyId}
+    </select>
+
+    <!-- AS-IS Emp21_Tab_PersonList.updateApprId → emp.Emp21_UnLeave.update (지정통보 결재문서 ID) -->
+    <update id="updateExpectApprId">
+        UPDATE emp21_un_leave
+           SET emp21_expect_appr_id = #{apprId}
+         WHERE emp21_un_leave_id = #{unLeaveId}
+           AND emp21_person_id   = #{personId}
+           AND emp21_company_id  = #{companyId}
+    </update>
+</mapper>

@@ -137,6 +137,18 @@
                              WHERE emp04_add_person_id = emp00_person_id
                                AND ( emp04_start_date                        <![CDATA[ > ]]> to_date(#{transDate},'yyyy-mm-dd') OR
                                      COALESCE(emp04_close_date,'9999-12-31') <![CDATA[ < ]]> to_date(#{transDate},'yyyy-mm-dd') ) )
+        <if test="leaveManager">
+           AND EXISTS ( SELECT 1
+                          FROM sys06_menu
+                               INNER JOIN sys07_role_menu ON ( sys07_menu_id    = sys06_menu_id AND
+                                                               sys07_use_yn     = 'true'        )
+                               INNER JOIN sys04_role      ON ( sys04_role_id    = sys07_role_id AND
+                                                               sys04_company_id = #{companyId}  )
+                               INNER JOIN sys05_user_role ON sys05_role_id = sys04_role_id
+                         WHERE sys05_user_id = emp00_person_id
+                           AND sys06_class_nm = 'Emp20_Tab_LeaveManager'    /* 1033 휴가관리(경영관리팀) 화면 사용자만 조회 (AS-IS isLeaveManager) */
+                      )
+        </if>
         <choose>
             <when test="transCode == '900'">
          ORDER BY emp00_close_date DESC, org00_org_cd, emp00_title_cd, emp00_pos_cd, emp01_order_seq

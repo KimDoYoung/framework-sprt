@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { LeaveListRow, MyUnLeave, MyLeave, MyLeaveSave, MyLeaveCodes, EtcLeaveCheck, TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -37,9 +37,10 @@ export const empApi = {
   /**
    * AS-IS emp.Emp00_TransInfo.selectByText: transCode 전체 000 / 재직 100 / 겸직 800 / 퇴직 900.
    * separateAddTitle = isSeparateAddTitle (안 주면 true — C01. A04는 false: 겸직도 재직으로)
+   * leaveManager = isLeaveManager (휴가관리 화면을 쓸 수 있는 사원만, Y01 [초과사용 승인요청]. 안 주면 false)
    */
-  searchTransInfos: async (transDate: string | undefined, searchText: string, transCode: string, separateAddTitle?: boolean): Promise<TransInfo[]> => {
-    const res = await apiClient.get<ApiResponse<TransInfo[]>>('v1/emp/trans-infos', { params: { transDate, searchText, transCode, separateAddTitle } });
+  searchTransInfos: async (transDate: string | undefined, searchText: string, transCode: string, separateAddTitle?: boolean, leaveManager?: boolean): Promise<TransInfo[]> => {
+    const res = await apiClient.get<ApiResponse<TransInfo[]>>('v1/emp/trans-infos', { params: { transDate, searchText, transCode, separateAddTitle, leaveManager } });
     return res.data.data ?? [];
   },
 
@@ -1494,5 +1495,95 @@ export const empMyTransportApi = {
   linkReceiptFiles: async (ids: number[], apprId: number): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>('v1/emp/transport-expenses/appr-files', { ids, apprId });
     return res.data.data ?? 0;
+  },
+};
+
+/** Y01 휴가신청 (Emp20_Tab_Leave · Emp20_Edit_Leave, 메뉴 #1032) — 날짜는 서버가 'yyyy-MM-dd'로 준다 */
+export const empMyLeaveApi = {
+  /** AS-IS emp.Emp20_Leave.selectByPersonId (본인, managerYn=false) */
+  search: async (stdYear: string): Promise<MyLeave[]> => {
+    const res = await apiClient.get<ApiResponse<MyLeave[]>>('v1/emp/my-leaves', { params: { stdYear } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp20_Leave.selectByDays + emp.Emp22_EtcLeave.selectByDays (apprCheckYn=false) */
+  getDays: async (stdYear: string): Promise<LeaveDays | null> => {
+    const res = await apiClient.get<ApiResponse<LeaveDays | null>>('v1/emp/my-leaves/days', { params: { stdYear } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS sys.Sys00_Common.selectLeaveCode · selectSpcLeaveCode */
+  getCodes: async (): Promise<MyLeaveCodes> => {
+    const res = await apiClient.get<ApiResponse<MyLeaveCodes>>('v1/emp/my-leaves/codes');
+    return res.data.data ?? { leaveCodes: [], spcLeaveCodes: [], mobileTelNo: null };
+  },
+
+  /** AS-IS emp.Emp20_Leave.count (calcCode '1'이면 일자기준 countByDate) */
+  count: async (startDate: string, closeDate: string, leaveCode: string, calcCode: string): Promise<number | null> => {
+    const res = await apiClient.get<ApiResponse<number | null>>('v1/emp/my-leaves/count', { params: { startDate, closeDate, leaveCode, calcCode } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS emp.Emp22_EtcLeave.selectByEtcLeaveId */
+  getEtcLeave: async (etcLeaveId: number, leaveId?: number | null): Promise<EtcLeaveCheck> => {
+    const res = await apiClient.get<ApiResponse<EtcLeaveCheck>>(`v1/emp/my-leaves/etc-leaves/${etcLeaveId}`, { params: leaveId ? { leaveId } : {} });
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp20_Leave.update (UpdateDataModel) → 저장한 행. leaveId 0 이하는 새 행 */
+  save: async (row: MyLeaveSave): Promise<MyLeave> => {
+    const res = await apiClient.put<ApiResponse<MyLeave>>('v1/emp/my-leaves', row);
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp20_Leave.update (결재문서 ID) */
+  updateApprId: async (leaveId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/emp/my-leaves/${leaveId}/appr-id`, { apprId });
+  },
+
+  /** AS-IS apr.Apr07_AltAppr.selectByLeaveId — 대결자 지정 내역이 있는가 */
+  hasAltAppr: async (leaveId: number): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>(`v1/emp/my-leaves/${leaveId}/alt-appr`);
+    return res.data.data === true;
+  },
+
+  /** AS-IS Sms02_History.sendMessage + emp.Emp20_Leave.updateOverConfirm → 바뀐 행 */
+  requestOverConfirm: async (leaveId: number, confirmerId: number): Promise<MyLeave> => {
+    const res = await apiClient.put<ApiResponse<MyLeave>>(`v1/emp/my-leaves/${leaveId}/over-confirm-request`, { confirmerId });
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp20_Leave.delete (+ apr.Apr07_AltAppr.deleteByLeaveId) */
+  delete: async (ids: number[], deleteAltAppr: boolean): Promise<void> => {
+    await apiClient.delete<ApiResponse<void>>('v1/emp/my-leaves', { params: { ids: ids.join(','), deleteAltAppr } });
+  },
+};
+
+/** Y02 휴가신청조회 (Emp20_Tab_LeaveList, 메뉴 #1034) */
+export const empLeaveListApi = {
+  /** AS-IS emp.Emp20_Leave.selectByPersonName (사원명이 비면 전체) */
+  search: async (personName: string, startDate: string, closeDate: string): Promise<LeaveListRow[]> => {
+    const res = await apiClient.get<ApiResponse<LeaveListRow[]>>('v1/emp/leave-list', { params: { personName: personName || undefined, startDate, closeDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdLeaveList → rdGroupId */
+  rdDownload: async (personName: string, startDate: string, closeDate: string): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/emp/leave-list/rd-download', { personName: personName || null, startDate, closeDate });
+    return res.data.data;
+  },
+};
+
+/** Y03 연월차휴가 지정통보 (Emp21_Tab_PersonList, 메뉴 #1184) */
+export const empMyUnLeaveApi = {
+  /** AS-IS emp.Emp21_UnLeave.selectByPersonId (본인) */
+  search: async (stdYear: string): Promise<MyUnLeave[]> => {
+    const res = await apiClient.get<ApiResponse<MyUnLeave[]>>('v1/emp/my-un-leaves', { params: { stdYear } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp21_UnLeave.update (지정통보 결재문서 ID) */
+  updateExpectApprId: async (unLeaveId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/emp/my-un-leaves/${unLeaveId}/expect-appr-id`, { apprId });
   },
 };

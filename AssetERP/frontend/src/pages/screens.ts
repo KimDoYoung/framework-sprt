@@ -222,6 +222,9 @@ import { Emp17_Tab_Benefit } from './emp/Emp17_Tab_Benefit';
 import { Emp17_Tab_BenefitManager } from './emp/Emp17_Tab_BenefitManager';
 import { Emp53_Tab_BizTrip } from './emp/Emp53_Tab_BizTrip';
 import { Emp54_Tab_Errand } from './emp/Emp54_Tab_Errand';
+import { Emp20_Tab_Leave } from './emp/Emp20_Tab_Leave';
+import { Emp20_Tab_LeaveList } from './emp/Emp20_Tab_LeaveList';
+import { Emp21_Tab_PersonList } from './emp/Emp21_Tab_PersonList';
 import { Emp50_Tab_TransportExpense } from './emp/Emp50_Tab_TransportExpense';
 import { Emp50_Tab_TransportExpenseMng } from './emp/Emp50_Tab_TransportExpenseMng';
 import { Sms02_Tab_TotalCount } from './sms/Sms02_Tab_TotalCount';
@@ -593,6 +596,9 @@ export const SCREENS: Record<string, React.FC> = {
   Emp17_Tab_Benefit, // Y06 (메뉴 #1221. 하위 Emp17_Lookup_Benefit. 전자결재 편집창 Apr01_Edit_ApprDoc 링크 A21~A23·A37·A49 연결)
   Emp50_Tab_TransportExpense, // Y07 (메뉴 #1349. 영수증 파일·Sys10_Lookup_FileViewer, 전자결재 편집창 Apr01_Edit_ApprDoc 링크 A42 연결)
   Emp54_Tab_Errand, // Y04 (메뉴 #1358. 하위 Emp54_Edit_Errand·Emp56_Lookup_Share(공용). 전자결재 편집창 Apr01_Edit_ApprDoc 링크 A45 연결)
+  Emp20_Tab_Leave, // Y01 (메뉴 #1032. 하위 Emp20_Edit_Leave·Emp22_Lookup_EtcLeave(선택 모드)·Emp00_Lookup_SelectSingle(leaveManager). 전자결재 편집창 Apr01_Edit_ApprDoc 링크 A01 연결. 대결자 지정은 다음 단계)
+  Emp20_Tab_LeaveList, // Y02 (메뉴 #1034. 사원 선택 조회창 Emp00_Lookup_SelectSingle·RD Emp20_Rd_LeaveList. 전자결재 편집창 Apr01_Edit_ApprDoc으로 문서보기)
+  Emp21_Tab_PersonList, // Y03 (메뉴 #1184. 전자결재 편집창 Apr01_Edit_ApprDoc 링크 A15 연결, 문서분류 확인 Dcr01_Lookup_Class)
   Emp53_Tab_BizTrip, // Y05 (메뉴 #1359. 하위 Emp53_Lookup_BizTrip·Emp53_Lookup_BizTripShare·Emp56_Lookup_Share. 전자결재 편집창 Apr01_Edit_ApprDoc 링크 B11~B14 연결)
   Emp17_Tab_BenefitManager, // U05 (메뉴 #1222. 하위 Emp17_Edit_Note·Emp55_Lookup_account. 상신·문서보기의 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Emp50_Tab_TransportExpenseMng, // U06 (메뉴 #1348. 문서보기·상신의 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  Y02 휴가신청조회 (Emp20_Tab_LeaveList, 메뉴 #1034).
+  AS-IS(IDMS-IC) server/emp/mapper/emp20_leave.xml selectByPersonName + sys/Sys99_Print insertRdLeaveList(L4390).
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpLeaveListMapper">
+
+    <!-- AS-IS emp20_leave.selectByPersonName (회사 전체 사원의 휴가: 상신된 휴가 + 완료된 공동연차) -->
+    <sql id="leaveListQuery">
+        SELECT *
+             , CONCAT(CASE WHEN emp20_spc_leave_nm IS NOT NULL THEN '('||emp20_spc_leave_nm||') ' ELSE '' END
+                     ,emp20_reason) AS emp20_reason2
+          FROM (
+                SELECT emp20_leave_id
+                     , emp20_person_id
+                     , emp20_company_id
+                     , emp20_leave_cd
+                     , emp20_reg_date
+                     , emp20_start_date
+                     , emp20_close_date
+                     , emp20_leave_count
+                     , emp20_reason
+                     , emp20_manager_nm
+                     , emp20_emergency_telno
+                     , emp20_note
+                     , emp20_appr_id
+                     , emp20_class_tree_id
+                     , emp20_cancel
+                     , emp20_spc_leave_cd
+                     , f_emp_kor_nm(emp20_person_id)                                                  AS emp20_person_nm
+                     , f_cdnm('leaveCode'       , emp20_leave_cd    , emp20_company_id, f_sysdate())  AS emp20_leave_nm
+                     , f_cdnm('SpecialLeaveCode', emp20_spc_leave_cd, emp20_company_id, f_sysdate())  AS emp20_spc_leave_nm
+                     , emp20_etc_leave_id
+                  FROM emp20_leave
+                       INNER JOIN apr01_appr ON apr01_appr_id = emp20_appr_id
+                 WHERE apr01_status_cd != '99'
+                   AND ( emp20_start_date between #{startDate} and #{closeDate} OR
+                         emp20_close_date between #{startDate} and #{closeDate} )
+                   AND f_emp_kor_nm(emp20_person_id) like #{personName}
+                   AND emp20_company_id = #{companyId}
+                 UNION ALL
+                SELECT emp24_joint_leave_id                                                    AS emp20_leave_id
+                     , null                                                                    AS emp20_person_id
+                     , emp24_company_id                                                        AS emp20_company_id
+                     , '01'                                                                    AS emp20_leave_cd
+                     , apr01_reg_date                                                          AS emp20_reg_date
+                     , emp24_start_date                                                        AS emp20_start_date
+                     , emp24_close_date                                                        AS emp20_close_date
+                     , f_get_biz_days(emp24_company_id, emp24_start_date, emp24_close_date)    AS emp20_leave_count
+                     , '[공동연차]'||emp24_reason                                                AS emp20_reason
+                     , null                                                                    AS emp20_manager_nm
+                     , null                                                                    AS emp20_emergency_telno
+                     , '[공동연차]'||emp24_reason                                                AS emp20_note
+                     , emp24_appr_id                                                           AS emp20_appr_id
+                     , null                                                                    AS emp20_class_tree_id
+                     , null                                                                    AS emp20_cancel
+                     , null                                                                    AS emp20_spc_leave_cd
+                     , '공동연차'                                                                AS emp20_person_nm
+                     , f_cdnm('leaveCode', '01', emp24_company_id, f_sysdate())                AS emp20_leave_nm
+                     , null                                                                    AS emp20_spc_leave_nm
+                     , null                                                                    AS emp20_etc_leave_id
+                  FROM emp24_joint_leave
+                       INNER JOIN apr01_appr ON apr01_appr_id = emp24_appr_id
+                 WHERE emp24_company_id = #{companyId}
+                   AND apr01_status_cd  = '30' /* 상신상태(30:완료) */
+                   AND ( emp24_start_date BETWEEN #{startDate} AND #{closeDate} OR
+                         emp24_close_date BETWEEN #{startDate} AND #{closeDate} )
+               ) t
+         ORDER BY emp20_start_date desc, emp20_start_date desc
+    </sql>
+
+    <select id="selectByPersonName" resultType="kr.co.kfs.asseterp.biz.emp.dto.LeaveListRes">
+        SELECT q.emp20_leave_id        AS leave_id
+             , q.emp20_start_date      AS start_date
+             , q.emp20_close_date      AS close_date
+             , q.emp20_person_nm       AS person_name
+             , q.emp20_leave_count     AS leave_count
+             , q.emp20_leave_nm        AS leave_name
+             , q.emp20_appr_id         AS appr_id
+             , q.emp20_manager_nm      AS manager_name
+             , q.emp20_emergency_telno AS emergency_telno
+          FROM (<include refid="leaveListQuery"/>) q
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{printPersonId}
+           AND sys99_window_class_nm = #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdLeaveList L4390: 조회 결과를 한 건씩 sys99_print에 넣는다 -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_date02, sys99_string01, sys99_double01, sys99_string02, sys99_text01, sys99_string03, sys99_string04 )
+        SELECT f_create_seq(), #{companyId}, #{printPersonId}, #{windowClassName}, #{groupId}
+             , s.emp20_start_date, s.emp20_close_date, s.emp20_person_nm, s.emp20_leave_count, s.emp20_leave_nm
+             , s.emp20_reason2, s.emp20_manager_nm, s.emp20_emergency_telno
+          FROM (<include refid="leaveListQuery"/>) s
+    </insert>
+</mapper>

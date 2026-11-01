@@ -2,7 +2,8 @@
  * 포상휴가 내역 조회창 — 휴가관리(Emp20_Tab_LeaveManager, S06)의 포상휴가 줄 오른쪽 안내 아이콘에서 연다 (AS-IS view(personId)).
  * AS-IS: myApp/client/vi/emp/Emp22_Lookup_EtcLeave.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 open() L69-103: 모달 970×400 "포상휴가 내역", 툴바(기준연도 · [조회]), 체크 단일 그리드 7열, 아래 가운데 [닫기]
- * 열 때 오늘 연도로 조회하고 첫 행을 고른다. [선택]·더블클릭 선택(select() L175-192)은 open(personId, callback)으로 여는 쪽(다른 화면)이 생길 때 더한다 — S06은 view만 쓴다
+ * 열 때 오늘 연도로 조회하고 첫 행을 고른다. open(personId, callback) L58 = onSelect를 주면 [선택] 단추(L95-97)와 더블클릭 선택(E5)이 생긴다 — Y01 휴가신청의 포상휴가 선택.
+ *   select() L175-192: 선택이 없으면 "선택된 내역이 없습니다", 잔여일수가 1 미만이면 "잔여휴가가 남아있지 않습니다", 아니면 callback 뒤 닫는다. view(personId)는 onSelect 없이 연다
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { message } from 'antd';
@@ -35,10 +36,12 @@ const columnDefs = [
 interface Props {
   /** view(personId) L64-67 — 값이 있으면 열린다 */
   personId: number | null;
+  /** open(personId, callback)의 callback — 있으면 [선택]·더블클릭 선택이 켜진다 */
+  onSelect?: (row: EtcLeave) => void;
   onClose: () => void;
 }
 
-export const Emp22_Lookup_EtcLeave: React.FC<Props> = ({ personId, onClose }) => {
+export const Emp22_Lookup_EtcLeave: React.FC<Props> = ({ personId, onSelect, onClose }) => {
   const gridRef = useRef<AgGridReact<EtcLeave>>(null);
   const [year, setYear] = useState('');
   const [rows, setRows] = useState<EtcLeave[]>([]);
@@ -64,8 +67,15 @@ export const Emp22_Lookup_EtcLeave: React.FC<Props> = ({ personId, onClose }) =>
     void retrieve(y);
   }, [personId, retrieve]);
 
-  // [E3 생략] selectButton[선택].Select (L124) → select() L175-192: 단추는 callback이 있을 때(open(personId, callback))만 붙는다 — S06은 view()라 없다
-  // [E5 생략] grid.RowDoubleClick (L137) → select(): callback이 없으면 바로 return — view()에서는 더블클릭이 아무 일도 하지 않는다
+  // [E3] selectButton[선택].Select (L124)·[E5] grid.RowDoubleClick (L137) → select() L175-192 — callback이 있을 때(open(personId, callback))만 동작한다. view()에서는 단추가 없고 더블클릭은 아무 일도 하지 않는다
+  const select = () => {
+    if (!onSelect) return;
+    const row = gridRef.current?.api?.getSelectedRows()[0];
+    if (!row) { message.warning('선택된 내역이 없습니다'); return; }
+    if ((row.remainDays ?? 0) < 1) { message.warning('잔여휴가가 남아있지 않습니다'); return; }
+    onSelect(row);
+    onClose();
+  };
   return (
     <LookupModal
       open={personId != null}
@@ -73,7 +83,10 @@ export const Emp22_Lookup_EtcLeave: React.FC<Props> = ({ personId, onClose }) =>
       width={1070}
       maskClosable={false}
       onCancel={onClose}
-      footer={<div style={{ textAlign: 'center' }}>{/* [E4] closeButton[닫기].Select (L130) → hide() */}<Button type="close" onClick={onClose}>닫기</Button></div>}
+      footer={<div style={{ textAlign: 'center' }}>
+        {onSelect && <Button type="select" onClick={select}>선택</Button>}
+        {/* [E4] closeButton[닫기].Select (L130) → hide() */}<Button type="close" onClick={onClose}>닫기</Button>
+      </div>}
     >
       <div style={{ display: 'flex', flexDirection: 'column', height: 300, gap: 8 }}>
         <SearchBar onSearch={() => retrieve(year)}>
@@ -88,6 +101,7 @@ export const Emp22_Lookup_EtcLeave: React.FC<Props> = ({ personId, onClose }) =>
             columnDefs={columnDefs}
             rowSelection={ROW_SELECTION}
             getRowId={p => String(p.data.etcLeaveId)}
+            onRowDoubleClicked={select}
           />
         </div>
       </div>
