@@ -46,6 +46,10 @@ import {
   AstDepn,
   AstNonDeductTax,
   AstFinanceBook,
+  AstFinanceOpr,
+  AstFinanceOprTr,
+  AstInvestAssetLimit,
+  AstOwnerCapitalMax,
   AstFinanceGroup,
 } from '../types/ast';
 
@@ -705,6 +709,18 @@ export const astApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS ast.Ast09_Book.selectByHoldDatePeriod (W14): astType 2 금융자산 — 조회하면서 서버가 내 sys99_print 자료를 다시 쌓는다 */
+  searchFinancePeriod: async (startDate: string, closeDate: string, searchText: string): Promise<AstFinanceBook[]> => {
+    const res = await apiClient.get<ApiResponse<AstFinanceBook[]>>('v1/ast/books/finance/period', { params: { startDate, closeDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdFinanceBookPeriod (W14): 엑셀 양식 자료를 쌓고 rdGroupId를 받는다 */
+  rdFinanceBookPeriod: async (startDate: string, closeDate: string, searchText: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ast/books/finance/period/rd', null, { params: { startDate, closeDate, searchText } });
+    return res.data.data;
+  },
+
   /** AS-IS ast.Ast09_Book.getHoldDate (W12): 상신 전 종목유형별 합계 — 비어 있으면 상신할 내용이 없다 */
   searchFinanceGroups: async (holdDate: string): Promise<AstFinanceGroup[]> => {
     const res = await apiClient.get<ApiResponse<AstFinanceGroup[]>>('v1/ast/books/finance/groups', { params: { holdDate } });
@@ -714,6 +730,43 @@ export const astApi = {
   /** AS-IS sys.Sys99_Print.insertRdFinanceBook (W12): 출력 자료를 쌓고 rdGroupId를 받는다 */
   rdFinanceBook: async (holdDate: string, searchText: string): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/ast/books/finance/rd', null, { params: { holdDate, searchText } });
+    return res.data.data;
+  },
+  // ── W15 금융상품 운용내역 (Ast09_Tab_FinanceBookOpr) ──
+
+  /** AS-IS ast.Ast40_OwnerCapital.selectByMaxDate: 없으면 null */
+  getOwnerCapitalMax: async (holdDate: string): Promise<AstOwnerCapitalMax | null> => {
+    const res = await apiClient.get<ApiResponse<AstOwnerCapitalMax | null>>('v1/ast/finance-opr/owner-capital', { params: { holdDate } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS ast.Ast09_Book.selectInvestAssetLimit */
+  searchInvestAssetLimits: async (holdDate: string): Promise<AstInvestAssetLimit[]> => {
+    const res = await apiClient.get<ApiResponse<AstInvestAssetLimit[]>>('v1/ast/finance-opr/limits', { params: { holdDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast09_Book.selectFinanceByHoldDate: periodType 0 = 미보유 제외, 1~4 = 미보유 포함 기간(1개월·3개월·1년·기간지정) */
+  searchFinanceOpr: async (p: { holdDate: string; searchText: string; investAssetType: string; holdYn: boolean; periodType: string; startDate?: string; closeDate?: string }): Promise<AstFinanceOpr[]> => {
+    const res = await apiClient.get<ApiResponse<AstFinanceOpr[]>>('v1/ast/finance-opr', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast06_Tr.selectByAstClassTreeId: trType 1 매수 / 2 매도 */
+  searchFinanceOprTrs: async (stdDate: string, astClassTreeId: number, keepAccountId: number, trType: '1' | '2'): Promise<AstFinanceOprTr[]> => {
+    const res = await apiClient.get<ApiResponse<AstFinanceOprTr[]>>('v1/ast/finance-opr/trs', { params: { stdDate, astClassTreeId, keepAccountId, trType } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdFinanceBookOpr1: 투자한도 출력 자료 → 그룹ID */
+  rdFinanceOprLimit: async (holdDate: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ast/finance-opr/rd-limit', null, { params: { holdDate } });
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdFinanceBookOpr2: 보유·매수·매도 출력 자료 → 그룹ID */
+  rdFinanceOprBook: async (p: { holdDate: string; searchText: string; investAssetType: string; holdYn: boolean; periodType: string; startDate?: string; closeDate?: string }): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ast/finance-opr/rd-book', null, { params: p });
     return res.data.data;
   },
 };

@@ -82,6 +82,24 @@ public class AstBookController {
         return ApiResponse.ok(service.searchFinanceBooks(principal, holdDate, abroType, searchText));
     }
 
+    /** ast.Ast09_Book.selectByHoldDatePeriod (astType 2, W14) — GET이지만 조회 전에 내 sys99_print 자료를 다시 만든다(AS-IS 그대로) */
+    @GetMapping("/finance/period")
+    public ApiResponse<List<BookFullRes>> financePeriod(@AuthenticationPrincipal UserPrincipal principal,
+                                                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                        @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchFinancePeriod(principal, startDate, closeDate, searchText));
+    }
+
+    /** sys.Sys99_Print.insertRdFinanceBookPeriod → rdGroupId (엑셀다운로드) */
+    @PostMapping("/finance/period/rd")
+    public ApiResponse<Long> financePeriodRd(@AuthenticationPrincipal UserPrincipal principal,
+                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                             @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.insertRdFinanceBookPeriod(principal, startDate, closeDate, searchText));
+    }
+
     /** ast.Ast09_Book.getHoldDate — 종목유형별 합계(상신 전에 내용이 있는지 보고, 본문 표를 만든다) */
     @GetMapping("/finance/groups")
     public ApiResponse<List<FinanceGroupRes>> financeGroups(@AuthenticationPrincipal UserPrincipal principal,

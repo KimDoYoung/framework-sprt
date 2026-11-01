@@ -27,6 +27,7 @@ public class AstBookService {
     private static final String AST_TYPE_DEPOSIT = "1";
     private static final String FINANCE_WINDOW = "Ast09_Tab_FinanceBook";
     private static final String PERIOD_WINDOW = "Ast09_Tab_DepositBookPeriod";
+    private static final String FINANCE_PERIOD_WINDOW = "Ast09_Tab_FinanceBookPeriod";
 
     private final AstBookMapper mapper;
 
@@ -98,6 +99,43 @@ public class AstBookService {
             }
         }
         return mapper.selectByHoldDatePeriod(groupId, startDate, closeDate);
+    }
+
+    /**
+     * ast09_book.selectByHoldDatePeriod (Ast09_Tab_FinanceBookPeriod, W14, astType 2) — U02와 같은 순서로 sys99_print를 다시 쌓고
+     * 시작일~종료일만 읽는다(depositIdStr 없음 = 전체, 정렬은 금융자산 selectByHoldDate 그대로)
+     */
+    @Transactional
+    public List<BookFullRes> searchFinancePeriod(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText) {
+        Long companyId = user.getCompanyId();
+        Long personId = user.getUserId();
+        long groupId = mapper.selectNextId();
+
+        mapper.deletePrint(companyId, personId, FINANCE_PERIOD_WINDOW);
+
+        String like = like(searchText);
+        for (LocalDate day : mapper.selectCalendarDays(companyId, startDate.minusDays(1), closeDate)) {
+            for (BookFullRes b : mapper.selectFinanceBook(companyId, day, "2", null, like)) {
+                mapper.insertPrintPeriod(mapper.selectBatchId(), companyId, personId, FINANCE_PERIOD_WINDOW, groupId, b);
+            }
+        }
+        return mapper.selectFinancePeriod(groupId, startDate, closeDate);
+    }
+
+    /**
+     * Sys99_Print.insertRdFinanceBookPeriod L3631 — 출력그룹ID를 먼저 받고 내 자료를 지운 뒤 조회(searchFinancePeriod, 자기 그룹을 다시 쌓는다)한 결과를
+     * 엑셀 양식 열로 새 그룹에 쌓는다. 조회용 그룹의 자료도 남는다(AS-IS 그대로)
+     */
+    @Transactional
+    public Long insertRdFinanceBookPeriod(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText) {
+        Long companyId = user.getCompanyId();
+        Long personId = user.getUserId();
+        long groupId = mapper.selectNextId();
+        mapper.deletePrint(companyId, personId, FINANCE_PERIOD_WINDOW);
+        for (BookFullRes b : searchFinancePeriod(user, startDate, closeDate, searchText)) {
+            mapper.insertPrintFinancePeriodExcel(mapper.selectNextId(), companyId, personId, FINANCE_PERIOD_WINDOW, groupId, b);
+        }
+        return groupId;
     }
 
     /** ast09_book.createDepositBook — 'Y'가 아니면 돌려준 메시지로 실패 */

@@ -56,6 +56,13 @@ public interface AstBookMapper {
     int insertPrintPeriod(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
                           @Param("windowClassName") String windowClassName, @Param("groupId") long groupId, @Param("b") BookFullRes b);
 
+    /** selectByHoldDatePeriod — 금융상품(W14): 쌓은 그룹에서 전체 열을 읽는다 */
+    List<BookFullRes> selectFinancePeriod(@Param("groupId") long groupId, @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate);
+
+    /** sys99_print.insert (Sys99_Print.insertRdFinanceBookPeriod가 채우는 열) */
+    int insertPrintFinancePeriodExcel(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
+                                      @Param("windowClassName") String windowClassName, @Param("groupId") long groupId, @Param("b") BookFullRes b);
+
     /** selectByHoldDatePeriod */
     List<BookPeriodRes> selectByHoldDatePeriod(@Param("groupId") long groupId, @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate);
 

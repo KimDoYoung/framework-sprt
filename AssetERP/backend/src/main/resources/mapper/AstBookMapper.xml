@@ -323,6 +323,53 @@
                , #{b.lockUpPeriodName,jdbcType=VARCHAR}, #{b.lockUpDate,jdbcType=DATE}, #{b.lockUpQty,jdbcType=NUMERIC} )
     </insert>
 
+    <!-- AS-IS ast09_book.selectByHoldDatePeriod L324 (IDMS-IC, W14 금융상품) — 같은 SQL에서 이 화면 그리드가 쓰지 않는 전일 대비 증감액(for_diff_amt·diff_amt) 두 열만 뺐다 -->
+    <select id="selectFinancePeriod" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookFullRes">
+        SELECT sys99_print_id   AS book_id
+             , sys99_date01     AS hold_date
+             , sys99_date02     AS first_pur_date
+             , sys99_string01   AS ast_s_class_code
+             , sys99_string02   AS ast_s_class_name
+             , sys99_string03   AS keep_corp_account_name
+             , sys99_string04   AS cur_code
+             , sys99_double01   AS for_book_amt
+             , sys99_double02   AS hold_qty
+             , sys99_long01     AS book_amt
+             , sys99_long02     AS keep_account_id
+             , sys99_long03     AS ast_class_tree_id
+             , sys99_long04     AS pur_amt
+             , sys99_long05     AS acr_int_amt
+             , sys99_long06     AS eval_amt
+             , sys99_long07     AS eval_pl
+             , sys99_long08     AS oci
+             , sys99_long09     AS first_pur_amt
+             , sys99_string05   AS keep_account_name
+             , sys99_string06   AS ast_class_name
+             , sys99_string07   AS ast_class_tree_name
+             , sys99_string08   AS account_type_name
+             , sys99_string09   AS lock_up_period_name
+             , sys99_date03     AS lock_up_date
+             , sys99_double03   AS lock_up_qty
+             , CAST(NULL AS numeric) AS for_pur_amt   /* 이 화면 그리드에 없는 열 — 생성자 매핑에 열 수를 맞춘다 */
+          FROM sys99_print a
+         WHERE sys99_group_id = #{groupId}
+           AND sys99_date01 BETWEEN #{startDate} AND #{closeDate}
+         ORDER BY sys99_print_id
+    </select>
+
+    <!-- AS-IS sys99_print.insert L500 (IDMS-IC) — Sys99_Print.insertRdFinanceBookPeriod(L3631)가 채우는 열만 -->
+    <insert id="insertPrintFinancePeriodExcel">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_string01, sys99_string02, sys99_string03, sys99_string04, sys99_double01
+               , sys99_long01, sys99_long02, sys99_long03, sys99_long04, sys99_long05, sys99_long06
+               , sys99_date02, sys99_long07, sys99_string05, sys99_date03, sys99_double02 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{b.holdDate}, #{b.keepCorpAccountName,jdbcType=VARCHAR}, #{b.astClassName,jdbcType=VARCHAR}, #{b.astClassTreeName,jdbcType=VARCHAR}, #{b.accountTypeName,jdbcType=VARCHAR}, #{b.holdQty,jdbcType=NUMERIC}
+               , #{b.purAmt,jdbcType=NUMERIC}, #{b.bookAmt,jdbcType=NUMERIC}, #{b.acrIntAmt,jdbcType=NUMERIC}, #{b.evalAmt,jdbcType=NUMERIC}, #{b.evalPl,jdbcType=NUMERIC}, #{b.oci,jdbcType=NUMERIC}
+               , #{b.firstPurDate,jdbcType=DATE}, #{b.firstPurAmt,jdbcType=NUMERIC}, #{b.lockUpPeriodName,jdbcType=VARCHAR}, #{b.lockUpDate,jdbcType=DATE}, #{b.lockUpQty,jdbcType=NUMERIC} )
+    </insert>
+
     <!-- AS-IS ast09_book.selectByHoldDatePeriod L324 (IDMS-IC) — 방금 쌓은 sys99_print 그룹에서 전일 대비 증감액까지 -->
     <select id="selectByHoldDatePeriod" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookPeriodRes">
         SELECT sys99_print_id                                                               AS book_id

@@ -815,3 +815,64 @@ export interface AstFinanceGroup {
   evalAmt: number | null;
   evalPl: number | null;
 }
+
+// ── W15 금융상품 운용내역 (Ast09_Tab_FinanceBookOpr) ──
+
+/** 기준일에 적용되는 최근 자기자본 (ast40_owner_capital.selectByMaxDate) */
+export interface AstOwnerCapitalMax {
+  stdDate: string;
+  amt: number | null;
+}
+
+/** 투자한도 현황 한 행 (ast09_book.selectInvestAssetLimit) */
+export interface AstInvestAssetLimit {
+  bookId: number;
+  investAssetTypeName: string | null;
+  limitRate: number | null;
+  limitAmt: number | null;
+  evalAmt: number | null;
+  purAmt: number | null;
+  capitalRatio: number | null;
+  ownerCapital: number | null;
+  ownerCapitalStdYm: string | null;
+}
+
+/** 보유/평가 내역 한 행 (ast09_book.selectFinanceByHoldDate) */
+export interface AstFinanceOpr {
+  bookId: number;
+  holdDate: string;
+  astClassTreeId: number;
+  keepAccountId: number;
+  keepAccountName: string | null;
+  astClassName: string | null;
+  astClassTreeName: string | null;
+  firstPurDate: string | null;
+  holdQty: number | null;
+  purAmt: number | null;
+  bookAmt: number | null;
+  purPrice: number | null;
+  evalPrice: number | null;
+  evalAmt: number | null;
+  evalPl: number | null;
+  purEvalPl: number | null;
+  tyPlRate: number | null;
+  purPlRate: number | null;
+  stopLossNotice: string | null;
+  sellPossibleDate: string | null;
+  holdPeriod: string | null;
+}
+
+/** 종목별 매수·매도 거래 한 행 (ast06_tr.selectByAstClassTreeId) */
+export interface AstFinanceOprTr {
+  trId: number;
+  date: string;
+  qty: number | null;
+  price: number | null;
+  trAmt: number | null;
+  amt: number | null;
+  note: string | null;
+  feeSum: number | null;
+  purBookAmt: number | null;
+  purPlRate: number | null;
+  pl: number | null;
+}
