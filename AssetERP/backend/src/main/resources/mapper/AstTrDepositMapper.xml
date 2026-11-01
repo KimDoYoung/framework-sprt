@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ast/mapper/ast06_tr.xml selectDepositTr L317 · selectById L106 · ast06_tr 저장(UpdateDataModel 동적 INSERT/UPDATE) — 계좌이체 Ast06_Tab_TrDeposit (X06).
+     원본의 `ast06_tr.*`는 화면이 읽는 열만 남겼다. -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstTrDepositMapper">
+
+    <sql id="depositColumns">
+        ast06_tr_id                                          AS tr_id,
+        ast06_date                                           AS date,
+        ast06_tr_cd                                          AS tr_code,
+        ast06_ast_class_tree_id                              AS ast_class_tree_id,
+        f_ast_class_tree_nm(ast06_ast_class_tree_id)         AS class_tree_name,
+        ast06_deposit_id                                     AS deposit_id,
+        b.ast01_class_tree_nm                                AS deposit_name,
+        ast06_corp_id                                        AS corp_id,
+        ast06_cur_cd                                         AS cur_code,
+        ast06_amt                                            AS amt,
+        ast06_fee                                            AS fee,
+        ast06_note                                           AS note,
+        ast06_person_id                                      AS person_id,
+        f_emp_kor_nm(ast06_person_id)                        AS person_name,
+        act02_journal_id                                     AS journal_id,
+        ast06_appr_id                                        AS appr_id,
+        CASE WHEN act02_journal_id IS NULL THEN
+                ( SELECT count(*)
+                    FROM act80_relate_appr
+                         INNER JOIN apr01_appr ON apr01_appr_id = act80_appr_id
+                         LEFT OUTER JOIN act02_journal ON act02_journal_id = act80_journal_id
+                   WHERE ( act80_tr_id IN ( SELECT ast06_tr_id
+                                             UNION
+                                            SELECT ast07_settle_id
+                                              FROM ast07_settle
+                                             WHERE ast07_tr_id = ast06_tr_id ) OR
+                           act02_tr_id IN ( SELECT ast06_tr_id
+                                             UNION
+                                            SELECT ast07_settle_id
+                                              FROM ast07_settle
+                                             WHERE ast07_tr_id = ast06_tr_id ) )
+                     AND apr01_status_cd NOT IN ('40','99') )
+             ELSE f_get_relate_dcr_count(act02_journal_id) END || ' 건'  AS appr_cnt
+    </sql>
+
+    <sql id="depositFrom">
+          FROM ast06_tr
+               INNER JOIN ast01_class_tree a ON a.ast01_class_tree_id = ast06_ast_class_tree_id   /* 출금계좌정보 */
+               INNER JOIN ast01_class_tree b ON b.ast01_class_tree_id = ast06_deposit_id          /* 입금계좌정보 */
+               LEFT OUTER JOIN act02_journal ON act02_tr_id = ast06_tr_id
+    </sql>
+
+    <!-- AS-IS ast06_tr.selectDepositTr (assetType '1'·abroType '1' 고정 값을 넣었다). 계좌는 출금·입금 어느 쪽이든 -->
+    <select id="selectDepositTr" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrDepositRes">
+        SELECT <include refid="depositColumns"/>
+        <include refid="depositFrom"/>
+         WHERE COALESCE(a.ast01_asset_type, '1') LIKE '1'
+           AND ast06_date BETWEEN #{c.startDate} AND #{c.closeDate}
+           AND ast06_company_id = #{c.companyId}
+           AND ast06_tr_cd      = '9005'
+           AND COALESCE(ast06_cur_cd, 'KRW') = 'KRW'
+        <if test="c.accountId != null">
+           AND #{c.accountId} IN (ast06_ast_class_tree_id, ast06_deposit_id)
+        </if>
+           AND ( ( #{c.userId} IN ( SELECT ast06_person_id
+                                     UNION ALL
+                                    SELECT ast10_person_id
+                                      FROM ast10_manager
+                                     WHERE ast10_manager_type = '1'
+                                       AND ast10_link_id IN (ast06_tr_id, ast06_ast_class_tree_id) ) ) OR
+                 ( #{c.orgId} IN ( SELECT ast10_org_id
+                                     FROM ast10_manager
+                                    WHERE ast10_manager_type = '2'
+                                      AND ast10_link_id IN (ast06_tr_id, ast06_ast_class_tree_id)
+                                    UNION ALL
+                                   SELECT CAST(f_get_empTrans(ast06_person_id, to_date(substr(ast06_tr_id || '', 1, 8), 'yyyymmdd'), 'org_code_id') AS NUMERIC) ) ) )
+         ORDER BY ast06_date, ast06_tr_id
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrDepositRes">
+        SELECT <include refid="depositColumns"/>
+        <include refid="depositFrom"/>
+         WHERE ast06_company_id = #{companyId}
+           AND ast06_tr_id      = #{trId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="selectCurCode" resultType="string">
+        SELECT COALESCE(NULLIF(ast01_cur_cd, ''), 'KRW') FROM ast01_class_tree WHERE ast01_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- AS-IS Ast06_Tr.update(UpdateDataModel). openNew() 기본값 거래유형 9005·미수/미지급 아님, preUpdate()가 환율 1·외화금액=금액·장부금액=금액+수수료 -->
+    <insert id="insertTr">
+        INSERT INTO ast06_tr (ast06_tr_id, ast06_company_id, ast06_person_id, ast06_date, ast06_tr_cd, ast06_amt, ast06_fee,
+                              ast06_note, ast06_ast_class_tree_id, ast06_deposit_id, ast06_corp_id, ast06_cur_cd,
+                              ast06_for_amt, ast06_fx_rate, ast06_book_amt, ast06_settle_mng_yn)
+        VALUES (#{trId}, #{companyId}, #{personId}, #{r.date}, '9005', #{r.amt}, #{r.fee},
+                #{r.note}, #{r.astClassTreeId}, #{r.depositId}, #{r.corpId}, #{curCode},
+                #{r.amt}, 1, #{bookAmt}, 'false')
+    </insert>
+
+    <update id="updateTr">
+        UPDATE ast06_tr
+           SET ast06_amt               = #{r.amt},
+               ast06_fee               = #{r.fee},
+               ast06_note              = #{r.note},
+               ast06_ast_class_tree_id = #{r.astClassTreeId},
+               ast06_deposit_id        = #{r.depositId},
+               ast06_corp_id           = #{r.corpId},
+               ast06_cur_cd            = #{curCode},
+               ast06_for_amt           = #{r.amt},
+               ast06_fx_rate           = 1,
+               ast06_book_amt          = #{bookAmt}
+         WHERE ast06_tr_id      = #{r.trId}
+           AND ast06_company_id = #{companyId}
+    </update>
+</mapper>

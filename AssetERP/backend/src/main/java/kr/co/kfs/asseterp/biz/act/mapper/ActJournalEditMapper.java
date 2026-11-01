@@ -20,8 +20,8 @@ public interface ActJournalEditMapper {
 
     long selectNextId();
 
-    /** act02_journal.update (비고·거래처. 통화는 그대로) */
-    int updateJournal(@Param("journalId") Long journalId, @Param("corpId") Long corpId, @Param("note") String note);
+    /** act02_journal.update (비고·거래처·통화. 통화가 비면 그대로) */
+    int updateJournal(@Param("journalId") Long journalId, @Param("corpId") Long corpId, @Param("note") String note, @Param("curCode") String curCode);
 
     /** act06_journal_tmp.deleteByJournalId · act03_journal_dtl.deleteByJournalId */
     int deleteTmpByJournalId(@Param("journalId") Long journalId);

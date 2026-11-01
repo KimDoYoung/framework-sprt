@@ -25,6 +25,8 @@ import {
   AstHoldBook,
   AstForeignDeposit,
   AstTrFinance,
+  AstTrDeposit,
+  AstTrDepositSaveReq,
   AstTrFinanceSaveReq,
   AstDepositIntSaveReq,
   AstEval,
@@ -455,6 +457,24 @@ export const astApi = {
   /** AS-IS ast.Ast06_Tr.updateDepositInt (W23): 예금/예치금 이자수령 저장 → 저장한 거래 ID */
   saveDepositInt: async (req: AstDepositIntSaveReq): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>('v1/ast/trs/finance/deposit-int', req);
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast06_Tr.selectDepositTr (X06): 기간·계좌(출금 또는 입금)의 계좌이체 거래 */
+  searchTrDeposits: async (params: { startDate: string; closeDate: string; accountId?: number | null }): Promise<AstTrDeposit[]> => {
+    const res = await apiClient.get<ApiResponse<AstTrDeposit[]>>('v1/ast/trs/deposits', { params: { ...params, accountId: params.accountId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast06_Tr.selectById (X06): 저장·분개생성·연관문서 뒤 한 건 다시 읽기 */
+  getTrDeposit: async (trId: number): Promise<AstTrDeposit> => {
+    const res = await apiClient.get<ApiResponse<AstTrDeposit>>(`v1/ast/trs/deposits/${trId}`);
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast06_Tr.update (X06): 계좌이체 저장 → 저장한 거래 ID */
+  saveTrDeposit: async (req: AstTrDepositSaveReq): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/ast/trs/deposits', req);
     return res.data.data;
   },
 

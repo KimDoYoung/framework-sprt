@@ -13,6 +13,7 @@ public record JournalEditRes(
         String trName,
         String note,
         boolean fixYn,
+        String curCode,
         List<JournalTmpRes> lines
 ) {
 }

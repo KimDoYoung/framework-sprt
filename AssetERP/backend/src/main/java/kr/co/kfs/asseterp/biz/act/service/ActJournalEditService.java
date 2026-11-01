@@ -34,7 +34,7 @@ public class ActJournalEditService {
     /** 열 때: 전표 머리 + 임시분개 줄 (act03 상세 첫 행이 없는 전표도 열린다) */
     public JournalEditRes get(UserPrincipal user, Long journalId) {
         JournalHeaderRes h = header(user, journalId);
-        return new JournalEditRes(h.journalId(), h.date(), h.journalNo(), h.corpId(), h.corpName(), h.trName(), h.note(), h.fixYn(),
+        return new JournalEditRes(h.journalId(), h.date(), h.journalNo(), h.corpId(), h.corpName(), h.trName(), h.note(), h.fixYn(), h.curCode(),
                 mapper.selectTmpByJournalId(journalId));
     }
 
@@ -50,7 +50,7 @@ public class ActJournalEditService {
         checkLines(req.lines());
         journalService.checkClose(user.getCompanyId(), h.date());
 
-        mapper.updateJournal(journalId, req.corpId(), req.note());
+        mapper.updateJournal(journalId, req.corpId(), req.note(), req.curCode());
         writeLines(user, journalId, h.date(), req.lines());
     }
 
@@ -64,7 +64,7 @@ public class ActJournalEditService {
         journalService.checkClose(user.getCompanyId(), req.date());
         Long journalId = mapper.selectNextId();
         Long journalNo = listMapper.createJournalNo(user.getCompanyId(), req.date());
-        listMapper.insertJournal(journalId, user.getCompanyId(), user.getUserId(), req.date(), req.note(), req.corpId(), "KRW", journalNo);
+        listMapper.insertJournal(journalId, user.getCompanyId(), user.getUserId(), req.date(), req.note(), req.corpId(), req.curCode() == null || req.curCode().isEmpty() ? "KRW" : req.curCode(), journalNo);
         writeLines(user, journalId, req.date(), req.lines());
         return journalId;
     }
@@ -72,13 +72,17 @@ public class ActJournalEditService {
     /** 창의 검사(차/대 구분·계정코드·금액, 차/대 원화 금액)를 서버에서 다시 한다 */
     private static void checkLines(List<JournalSaveReq.Line> lines) {
         long dr = 0, cr = 0;
+        double forDr = 0, forCr = 0;
         for (JournalSaveReq.Line l : lines) {
             if (l.drcrType() == null || l.drcrType().isEmpty()) throw invalid("차/대 구분은 필수선택 항목입니다.");
             if (l.realAccountCode() == null || l.realAccountCode().isEmpty()) throw invalid("계정코드는 필수선택 항목입니다");
             if (l.amt() == null || l.amt() == 0) throw invalid("금액은 필수입력 항목입니다");
-            if ("D".equals(l.drcrType())) dr += l.amt();
-            else if ("C".equals(l.drcrType())) cr += l.amt();
+            double f = l.forAmt() == null ? 0 : l.forAmt();
+            if ("D".equals(l.drcrType())) { dr += l.amt(); forDr += f; }
+            else if ("C".equals(l.drcrType())) { cr += l.amt(); forCr += f; }
         }
+        // 외화 금액 검사가 먼저 (Act02_Lookup_CreateForJournal.preUpdate L538-546). 내국 화면은 외화금액이 0이라 그대로 통과한다
+        if (Math.abs(forCr - forDr) > 1e-9) throw invalid("차/대 외화 금액이 다릅니다.");
         if (cr - dr != 0) throw invalid("차/대 원화 금액이 다릅니다.");
     }
 

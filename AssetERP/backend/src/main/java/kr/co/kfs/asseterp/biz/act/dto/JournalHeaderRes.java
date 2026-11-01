@@ -11,6 +11,7 @@ public record JournalHeaderRes(
         String corpName,
         String trName,
         String note,
-        boolean fixYn
+        boolean fixYn,
+        String curCode
 ) {
 }

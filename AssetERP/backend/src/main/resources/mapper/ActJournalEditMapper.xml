@@ -17,6 +17,7 @@
              , f_cdnm('trCode', f_get_journal_tr_cd(act02_journal_id), act02_company_id, act02_date)     AS tr_name
              , act02_note                                                                                AS note
              , COALESCE(act02_fix_yn, 'false') = 'true'                                                  AS fix_yn
+             , act02_cur_cd                                                                              AS cur_code
           FROM act02_journal
          WHERE act02_company_id = #{companyId}
            AND act02_journal_id = #{journalId}
@@ -51,6 +52,7 @@
         UPDATE act02_journal
            SET act02_note    = #{note}
              , act02_corp_id = #{corpId}
+             , act02_cur_cd  = COALESCE(#{curCode}, act02_cur_cd)
          WHERE act02_journal_id = #{journalId}
     </update>
 

@@ -225,6 +225,7 @@ import { Act15_Tab_CloseCheck } from './act/Act15_Tab_CloseCheck';
 import { Act02_Tab_DepositIoList } from './act/Act02_Tab_DepositIoList';
 import { Act02_Tab_CreateJournal } from './act/Act02_Tab_CreateJournal';
 import { Act02_Tab_JournalFix } from './act/Act02_Tab_JournalFix';
+import { Act02_Tab_CreateForJournal } from './act/Act02_Tab_CreateForJournal';
 import { Act02_Tab_CreateJournalBiz } from './act/Act02_Tab_CreateJournalBiz';
 import { Ast09_Tab_DepositBookPeriod } from './ast/Ast09_Tab_DepositBookPeriod';
 import { Ast06_Tab_TrTax } from './ast/Ast06_Tab_TrTax';
@@ -234,6 +235,7 @@ import { Ast06_Tab_AccruedIntrinsic } from './ast/Ast06_Tab_AccruedIntrinsic';
 import { Ast06_Tab_TrForFinance } from './ast/Ast06_Tab_TrForFinance';
 import { Ast06_Tab_TrAcntTransfer } from './ast/Ast06_Tab_TrAcntTransfer';
 import { Ast06_Tab_TrDepositInt } from './ast/Ast06_Tab_TrDepositInt';
+import { Ast06_Tab_TrDeposit } from './ast/Ast06_Tab_TrDeposit';
 import { Ast06_Tab_EvalFinance } from './ast/Ast06_Tab_EvalFinance';
 import { Ast25_Tab_Price } from './ast/Ast25_Tab_Price';
 import { Ast06_Tab_EvalDepn } from './ast/Ast06_Tab_EvalDepn';
@@ -617,6 +619,7 @@ export const SCREENS: Record<string, React.FC> = {
   Act15_Tab_CloseCheck, // E32
   Act02_Tab_DepositIoList, // U01 (메뉴 #1164·#1470. 상신의 전자결재 편집창은 다음 단계, 문서분류 조회창 Dcr30_Move_DcrClass·RD 출력 재사용)
   Act02_Tab_CreateJournal, // X01 (메뉴 #1148. 하위 Act02_Grid_CreateJournal·Act02_Lookup_CreateJournal·Act02_Lookup_JournalList·Act80_Lookup_RelateAppr)
+  Act02_Tab_CreateForJournal, // X07 (메뉴 #1176. 하위 Act02_Grid_CreateForJournal·Act02_Lookup_CreateForJournal·Act80_Lookup_RelateAppr. 외화 전표 abroType 2)
   Act02_Tab_JournalFix, // X02 (메뉴 #1207. 하위 Act02_Grid_JournalFix. 외화 전표 [변경]의 Act02_Lookup_ModiForJournal은 X07에서)
   Act02_Tab_CreateJournalBiz, // U10 (메뉴 #1180. 하위 Act02_Grid_CreateJournalBiz. 1단계: 분개 [변경] 아이콘의 Act02_Lookup_ModiJournal은 안내만)
   Pay50_Tab_AccountSumList, // U12 (메뉴 #1399. 단독 화면, [엑셀다운로드]는 RD)
@@ -655,6 +658,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ast06_Tab_EvalFinance, // W09 (메뉴 #1167. + Ast06_TabPage_MarketEval·InterestEval·Ast25_Lookup_Price. 거래·분개 그리드는 W05~W08과 같은 부품)
   Ast06_Tab_TrAcntTransfer, // W08 (메뉴 #1208. + Ast06_Lookup_TrAcntTransfer. 보유자산 조회창·연관문서·분개 [변경]은 W06과 같은 창)
   Ast06_Tab_TrDepositInt, // W23 (메뉴 #1472·#1205. + Ast06_Lookup_TrDepositInt. 분개 그리드·연관문서·계좌 조회창은 W05·W08과 같은 창)
+  Ast06_Tab_TrDeposit, // X06 (메뉴 #1166. + Ast06_Lookup_TrDeposit. 분개 그리드·연관문서·계좌 조회창은 W05·W23과 같은 창)
   Ast06_Tab_TrIPO, // W05 1단계 (메뉴 #1288. + Ast06_Lookup_TrIPO·Ast06_Lookup_CreateIpoAstClass·Ast01_Lookup_Info. 연관문서 Act80_Lookup_RelateAppr·분개 [변경] Act02_Lookup_ModiJournal은 다음 단계)
   Tdm50_Tab_TotalDashboard, // N01 1단계 (+ Tdm50_Tab_Dashboard·DashboardExct·DashboardOrg·Tdm01_Lookup_SelectSingle, [보기] 아이콘의 점검 편집창·미흡 조치 상세는 N22·N24)
   Tdm50_Tab_CheckJob, // N20 1단계 (+ Tdm50_TabPage_CheckJob·Tdm50_Edit_CheckJob·Tdm55_Lookup_ChckRecord, 결재요청·문서보기·알림발송의 문자 창은 다른 도메인이라 점검 후 안내, 보고서 PDF는 서버 CheckExctPdfMaker)

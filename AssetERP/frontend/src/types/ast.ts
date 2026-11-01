@@ -1100,3 +1100,36 @@ export interface AstBookDepn {
   depnDate: string | null;
   depnCost: number | null;
 }
+
+/** AS-IS ast.Ast06_Tr.selectDepositTr / selectById (X06 계좌이체, 거래유형 9005) — 그리드 한 행 */
+export interface AstTrDeposit {
+  trId: number;
+  date: string;
+  trCode: string | null;
+  astClassTreeId: number | null;
+  classTreeName: string | null;
+  depositId: number | null;
+  depositName: string | null;
+  corpId: number | null;
+  curCode: string | null;
+  amt: number | null;
+  fee: number | null;
+  note: string | null;
+  personId: number | null;
+  personName: string | null;
+  journalId: number | null;
+  apprId: number | null;
+  apprCnt: string | null;
+}
+
+/** AS-IS Ast06_Lookup_TrDeposit.preUpdate → ast.Ast06_Tr.update (X06 계좌이체) — trId가 없으면 새 거래 */
+export interface AstTrDepositSaveReq {
+  trId: number | null;
+  date: string;
+  astClassTreeId: number | null;
+  corpId: number | null;
+  depositId: number | null;
+  amt: number | null;
+  fee: number | null;
+  note: string | null;
+}

@@ -6,5 +6,5 @@ import java.time.LocalDate;
 import java.util.List;
 
 /** act.Act02_Journal.updateAll — 새 전표(NEW) 요청. 줄 순서가 곧 순번(10, 20, …) */
-public record JournalNewReq(@NotNull LocalDate date, Long corpId, String note, @NotNull List<JournalSaveReq.Line> lines) {
+public record JournalNewReq(@NotNull LocalDate date, Long corpId, String note, String curCode, @NotNull List<JournalSaveReq.Line> lines) {
 }

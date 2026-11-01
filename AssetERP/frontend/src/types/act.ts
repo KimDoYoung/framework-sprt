@@ -191,6 +191,9 @@ export interface JournalLine {
   crAccountCode: string | null;
   crAstAccountName: string | null;
   crAmt: number | null;
+  /** 외화 전표(X07) 분개 그리드의 외화금액 */
+  drForAmt: number | null;
+  crForAmt: number | null;
   crNote: string | null;
 }
 
@@ -267,6 +270,7 @@ export interface JournalEdit {
   trName: string | null;
   note: string | null;
   fixYn: boolean;
+  curCode: string | null;
   lines: JournalTmp[];
 }
 
@@ -274,6 +278,8 @@ export interface JournalEdit {
 export interface JournalSaveReq {
   corpId: number | null;
   note: string | null;
+  /** 외화 전표(X07)만 보낸다. 비면 통화를 바꾸지 않는다(새 전표는 KRW) */
+  curCode?: string | null;
   lines: {
     drcrType: string | null;
     realAccountCode: string | null;

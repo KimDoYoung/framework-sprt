@@ -7,10 +7,12 @@ public record JournalLineRes(
         String drAccountCode,
         String drAstAccountName,
         Long drAmt,
+        Double drForAmt,
         String drNote,
         String crAccountCode,
         String crAstAccountName,
         Long crAmt,
+        Double crForAmt,
         String crNote
 ) {
 }

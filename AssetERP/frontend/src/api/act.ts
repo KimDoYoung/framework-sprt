@@ -272,9 +272,9 @@ export const actApi = {
 
   // ── X01 전표입력 (Act02_Tab_CreateJournal · Act02_Lookup_CreateJournal · Act02_Lookup_JournalList) ──
 
-  /** AS-IS act.Act02_Journal.selectByDate: 국내(abroType 1) 전표, 검색어는 거래처/적요(서버가 %…%) */
-  searchJournals: async (startDate: string, closeDate: string, searchText: string): Promise<Journal[]> => {
-    const res = await apiClient.get<ApiResponse<Journal[]>>('v1/act/journals', { params: { startDate, closeDate, abroType: '1', searchText } });
+  /** AS-IS act.Act02_Journal.selectByDate: 국내(abroType 1)·국외(2, X07) 전표, 검색어는 거래처/적요(서버가 %…%) */
+  searchJournals: async (startDate: string, closeDate: string, searchText: string, abroType: '1' | '2' = '1'): Promise<Journal[]> => {
+    const res = await apiClient.get<ApiResponse<Journal[]>>('v1/act/journals', { params: { startDate, closeDate, abroType, searchText } });
     return res.data.data ?? [];
   },
 
