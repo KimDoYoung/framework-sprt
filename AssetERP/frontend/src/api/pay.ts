@@ -951,7 +951,7 @@ export const payApi = {
 
   // ── U03 지출결의서(경영관리) Pay50_Tab_ExpenseManager ──
   /** AS-IS pay.Pay50_Expense.selectExpenseAppr — 코드는 콤보의 "전체"가 '%', 검색어는 서버가 "%…%"로 감싼다. limit은 불러오기 창의 최대 건수 */
-  searchExpenses: async (p: { startDate: string; closeDate: string; statusCheckYn: boolean; expenseCode: string; payMethodCode: string; searchText: string; managerYn?: boolean; limit?: number }): Promise<PayExpense[]> => {
+  searchExpenses: async (p: { startDate: string; closeDate: string; statusCheckYn: boolean; expenseCode: string; payMethodCode?: string; searchText: string; managerYn?: boolean; limit?: number }): Promise<PayExpense[]> => {
     const res = await apiClient.get<ApiResponse<PayExpense[]>>('v1/pay/expenses', { params: p });
     return res.data.data ?? [];
   },

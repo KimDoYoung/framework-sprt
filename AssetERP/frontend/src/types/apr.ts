@@ -696,6 +696,8 @@ export interface AprLinkOpen {
 }
 
 export interface AprLinkArgs {
+  /** A63 지출결의서 — 'false'면 한 건 본문의 승인자 줄이 빠진다(내 지출결의서 Y10 Pay50_Tab_Expense, 기본은 경영관리 U03와 같이 true) */
+  isManager?: string;
   stdDate?: string;
   cycleType?: string;
   yyyy?: string;

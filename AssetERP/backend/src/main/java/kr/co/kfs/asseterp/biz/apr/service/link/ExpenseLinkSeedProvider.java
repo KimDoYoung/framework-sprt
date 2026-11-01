@@ -57,12 +57,14 @@ public class ExpenseLinkSeedProvider implements AprLinkSeedProvider {
         if (list.size() != ids.size()) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "상신할 지출요청 정보를 찾을 수 없습니다.");
         }
-        return pay ? seedPay(list, ids) : seedExpense(list, ids, refId);
+        // linkParam.isManager — 경영관리(U03) 화면은 true(기본), 내 지출결의서(Y10 Pay50_Tab_Expense)는 false: 한 건 본문의 "승 인 자" 줄이 빠진다
+        boolean isManager = !"false".equals(args.get("isManager"));
+        return pay ? seedPay(list, ids) : seedExpense(list, ids, refId, isManager);
     }
 
     // ───── A63 ─────
 
-    private Seed seedExpense(List<PayExpenseLinkRow> list, List<Long> ids, Long refId) {
+    private Seed seedExpense(List<PayExpenseLinkRow> list, List<Long> ids, Long refId, boolean isManager) {
         PayExpenseLinkRow first = list.get(0);
         if (refId != null) {
             for (PayExpenseLinkRow r : list) {
@@ -79,7 +81,7 @@ public class ExpenseLinkSeedProvider implements AprLinkSeedProvider {
             content = contents(list, first.orgName(), first.accountName());
         } else {
             title = "지출결의서(" + first.desc() + ")";
-            content = content(list, true);
+            content = content(list, isManager);
         }
         List<AprLinkRelateApprRes> relates = mapper.selectRelateApprsByExpenseIds(ids);
         return new Seed(title, content, first.occDate(), false, false).withRelateApprs(relates);
