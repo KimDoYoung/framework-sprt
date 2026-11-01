@@ -258,6 +258,25 @@
         <include refid="depositBookTail"/>
     </select>
 
+    <!-- AS-IS ast09_book.selectByHoldDate (IDMS-IC, W12 Ast09_Tab_FinanceBook) — astType 2 금융자산. 정렬: 보관처명·계좌순번·소분류·종목명 -->
+    <select id="selectFinanceBook" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookFullRes">
+        <include refid="depositBookQuery"><property name="cols" value="bookFullColumns"/></include>
+        ORDER BY ast09_corp_nm collate "ko_KR.utf8" asc, ast09_keep_account_seq, ast09_ast_s_class_cd, ast09_ast_class_tree_nm collate "ko_KR.utf8" asc
+    </select>
+
+    <!-- AS-IS sys99_print.insert L500 (IDMS-IC) — Sys99_Print.insertRdFinanceBook이 채우는 열만 -->
+    <insert id="insertPrintFinance">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_string01, sys99_string02, sys99_string03, sys99_double01
+               , sys99_long01, sys99_long02, sys99_long03, sys99_long04, sys99_date02, sys99_long05
+               , sys99_string04, sys99_date03, sys99_double02 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{b.holdDate}, #{b.keepCorpAccountName,jdbcType=VARCHAR}, #{b.astClassName,jdbcType=VARCHAR}, #{b.astClassTreeName,jdbcType=VARCHAR}, #{b.holdQty,jdbcType=NUMERIC}
+               , #{b.purAmt,jdbcType=NUMERIC}, #{b.bookAmt,jdbcType=NUMERIC}, #{b.evalAmt,jdbcType=NUMERIC}, #{b.evalPl,jdbcType=NUMERIC}, #{b.firstPurDate,jdbcType=DATE}, #{b.firstPurAmt,jdbcType=NUMERIC}
+               , #{b.lockUpPeriodName,jdbcType=VARCHAR}, #{b.lockUpDate,jdbcType=DATE}, #{b.lockUpQty,jdbcType=NUMERIC} )
+    </insert>
+
     <!-- AS-IS sys12_calendar.selectPeriod L110 (IDMS-IC) -->
     <select id="selectCalendarDays" resultType="java.time.LocalDate">
         SELECT CAST(sys12_day AS date)
@@ -405,6 +424,84 @@
          INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast09_ast_class_tree_id
          WHERE ast01_item_l_class_cd = '10' /* 10:현금 및 예치금 */
          GROUP BY coalesce(ast01_cur_cd,'KRW')
+    </select>
+
+    <!-- AS-IS ast09_book.getHoldDate (IDMS-IC, W12 [상신]) — 종목유형(중분류(소분류))별 취득·장부·평가금액·평가손익 합. astType 2 금융자산 -->
+    <select id="selectFinanceGroup" resultType="kr.co.kfs.asseterp.biz.ast.dto.FinanceGroupRes">
+    WITH book AS (
+    WITH book1 AS ( SELECT '1' seq
+                         , ast09_book.*
+                      FROM ast09_book
+                     WHERE ast09_company_id = #{companyId}
+                       AND (ast09_ast_class_tree_id, ast09_keep_account_id, ast09_hold_date) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(ast09_hold_date)
+                                                                                                    FROM ast09_book
+                                                                                                   WHERE ast09_company_id = #{companyId}
+                                                                                                     AND ast09_hold_date &lt;= #{holdDate}
+                                                                                                   GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+                     UNION ALL
+                    SELECT '2' seq
+                         , ast11_book_id
+                         , ast11_hold_date
+                         , ast11_ast_class_tree_id
+                         , ast11_keep_account_id
+                         , ast11_hold_qty
+                         , ast11_pur_amt
+                         , ast11_book_amt
+                         , ast11_eval_amt
+                         , ast11_eval_pl
+                         , ast11_first_pur_amt
+                         , ast11_first_pur_date
+                         , ast11_company_id
+                         , ast11_for_pur_amt
+                         , ast11_for_book_amt
+                         , ast11_for_eval_amt
+                         , ast11_for_eval_pl
+                         , ast11_fx_pl
+                         , ast11_book_end_yn
+                         , ast11_acr_int_amt
+                         , ast11_for_acr_int_amt
+                         , ast11_oci
+                         , ast11_for_oci
+                         , ast11_lock_up_period_cd
+                         , ast11_lock_up_date
+                         , ast11_lock_up_qty
+                      FROM ast11_book_close
+                     WHERE ast11_company_id = #{companyId}
+                       AND (ast11_ast_class_tree_id, ast11_keep_account_id, ast11_hold_date) IN ( SELECT ast11_ast_class_tree_id, ast11_keep_account_id, MAX(ast11_hold_date)
+                                                                                                    FROM ast11_book_close
+                                                                                                   WHERE ast11_company_id = #{companyId}
+                                                                                                     AND ast11_hold_date &lt; #{holdDate}
+                                                                                                   GROUP BY ast11_ast_class_tree_id, ast11_keep_account_id )
+    )
+    SELECT *
+      FROM book1
+     WHERE (ast09_ast_class_tree_id, ast09_keep_account_id, to_char(ast09_hold_date,'yyyymmdd')||seq) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(to_char(ast09_hold_date,'yyyymmdd')||seq)
+                                                                                                             FROM book1
+                                                                                                            GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+)
+        SELECT ROW_NUMBER() OVER()   AS book_id
+             , t.ast_class_name
+             , SUM(t.pur_amt)        AS pur_amt
+             , SUM(t.book_amt)       AS book_amt
+             , SUM(t.eval_amt)       AS eval_amt
+             , SUM(t.eval_pl)        AS eval_pl
+          FROM (
+                 SELECT f_cdnm('ItemMClassCode',ast1.ast01_item_m_class_cd,ast09_company_id,ast09_hold_date)
+                        ||CASE WHEN substr(ast1.ast01_item_s_class_cd,5) = '99' THEN ''
+                               ELSE '('||f_cdnm('ItemSClassCode',ast1.ast01_item_s_class_cd,ast09_company_id,ast09_hold_date)||')'
+                               END   AS ast_class_name
+                      , ast09_pur_amt  AS pur_amt
+                      , ast09_book_amt AS book_amt
+                      , ast09_eval_amt AS eval_amt
+                      , ast09_eval_pl  AS eval_pl
+                   FROM book
+                        INNER JOIN ast01_class_tree ast1 ON ast1.ast01_class_tree_id = ast09_ast_class_tree_id
+                  WHERE COALESCE(ast09_book_end_yn,'false') != 'true'
+                    AND ast1.ast01_asset_type = '1'
+                    AND ast1.ast01_item_l_class_cd = '20'   /* 20:증권 (astType 2 금융자산) */
+               ) t
+         GROUP BY t.ast_class_name
+         ORDER BY t.ast_class_name collate "ko_KR.utf8" asc
     </select>
 
     <!-- AS-IS ast09_book.createDepositBook L647 (IDMS-IC) — 성공이면 'Y', 아니면 오류 메시지 -->

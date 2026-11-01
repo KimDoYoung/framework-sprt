@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.ast.mapper;
 
 import kr.co.kfs.asseterp.biz.ast.dto.BookFullRes;
+import kr.co.kfs.asseterp.biz.ast.dto.FinanceGroupRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookPeriodRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookRes;
 import kr.co.kfs.asseterp.biz.ast.dto.HoldBookRes;
@@ -26,6 +27,17 @@ public interface AstBookMapper {
   List<BookFullRes> selectByHoldDateFull(@Param("companyId") Long companyId, @Param("holdDate") LocalDate holdDate,
                                            @Param("astType") String astType, @Param("searchText") String searchText,
                                            @Param("depositIdStr") String depositIdStr);
+
+    /** selectByHoldDate (astType 2 금융자산) — Ast09_Tab_FinanceBook(W12). 정렬은 AS-IS 그대로 */
+    List<BookFullRes> selectFinanceBook(@Param("companyId") Long companyId, @Param("holdDate") LocalDate holdDate,
+                                        @Param("astType") String astType, @Param("searchText") String searchText);
+
+    /** sys99_print.insert (Sys99_Print.insertRdFinanceBook이 채우는 열) */
+    int insertPrintFinance(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
+                           @Param("windowClassName") String windowClassName, @Param("groupId") long groupId, @Param("b") BookFullRes b);
+
+    /** ast09_book.getHoldDate — 종목유형별 합계(상신 A30) */
+    List<FinanceGroupRes> selectFinanceGroup(@Param("companyId") Long companyId, @Param("holdDate") LocalDate holdDate);
 
     /** sys12_calendar.selectPeriod */
     List<LocalDate> selectCalendarDays(@Param("companyId") Long companyId, @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate);

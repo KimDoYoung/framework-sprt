@@ -780,3 +780,35 @@ export interface AstNonDeductTax {
   applyNonDeductTax: number | null;
   note: string | null;
 }
+
+/** 금융상품 보유내역 한 행 (W12 Ast09_Tab_FinanceBook, AS-IS Ast09_BookModel — ast09_book.selectByHoldDate astType 2) */
+export interface AstFinanceBook {
+  bookId: number;
+  holdDate: string;
+  keepCorpAccountName: string | null;
+  astClassName: string | null;
+  astClassTreeName: string | null;
+  accountTypeName: string | null;
+  holdQty: number | null;
+  purAmt: number | null;
+  bookAmt: number | null;
+  acrIntAmt: number | null;
+  evalAmt: number | null;
+  evalPl: number | null;
+  oci: number | null;
+  firstPurDate: string | null;
+  firstPurAmt: number | null;
+  lockUpPeriodName: string | null;
+  lockUpDate: string | null;
+  lockUpQty: number | null;
+}
+
+/** 종목유형별 합계 한 줄 (ast09_book.getHoldDate) — 상신 전 내용 확인 */
+export interface AstFinanceGroup {
+  bookId: number;
+  astClassName: string | null;
+  purAmt: number | null;
+  bookAmt: number | null;
+  evalAmt: number | null;
+  evalPl: number | null;
+}

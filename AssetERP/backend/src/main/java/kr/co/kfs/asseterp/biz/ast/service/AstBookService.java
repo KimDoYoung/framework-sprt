@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.ast.dto.BookFullRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookPeriodRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookSumRes;
+import kr.co.kfs.asseterp.biz.ast.dto.FinanceGroupRes;
 import kr.co.kfs.asseterp.biz.ast.dto.HoldBookRes;
 import kr.co.kfs.asseterp.biz.ast.mapper.AstBookMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
@@ -24,6 +25,7 @@ public class AstBookService {
 
     /** 자산구분 1 = 예금 */
     private static final String AST_TYPE_DEPOSIT = "1";
+    private static final String FINANCE_WINDOW = "Ast09_Tab_FinanceBook";
     private static final String PERIOD_WINDOW = "Ast09_Tab_DepositBookPeriod";
 
     private final AstBookMapper mapper;
@@ -38,6 +40,36 @@ public class AstBookService {
      */
     public List<HoldBookRes> searchHolds(UserPrincipal user, LocalDate holdDate, String abroType, String searchText) {
         return mapper.selectHoldList(user.getCompanyId(), holdDate, "2", abroType, "%" + (searchText == null ? "" : searchText) + "%");
+    }
+
+    /** ast09_book.selectByHoldDate (W12 Ast09_Tab_FinanceBook) — astType 2 금융자산, searchText는 "%…%" */
+    public List<BookFullRes> searchFinanceBooks(UserPrincipal user, LocalDate holdDate, String searchText) {
+        return mapper.selectFinanceBook(user.getCompanyId(), holdDate, "2", like(searchText));
+    }
+
+    /**
+     * Sys99_Print.insertRdFinanceBook L664 — 내 지난 출력 자료를 지우고 현재 조건의 목록을 sys99_print에 쌓아 출력그룹ID를 돌려준다
+     * (RD 뷰어 mrd Ast09_Rd_FinanceBook이 rdGroupId로 읽는다)
+     */
+    @Transactional
+    public Long insertRdFinanceBook(UserPrincipal user, LocalDate holdDate, String searchText) {
+        Long companyId = user.getCompanyId();
+        Long personId = user.getUserId();
+        long groupId = mapper.selectNextId();
+        mapper.deletePrint(companyId, personId, FINANCE_WINDOW);
+        for (BookFullRes b : mapper.selectFinanceBook(companyId, holdDate, "2", like(searchText))) {
+            mapper.insertPrintFinance(mapper.selectNextId(), companyId, personId, FINANCE_WINDOW, groupId, b);
+        }
+        return groupId;
+    }
+
+    /** ast09_book.getHoldDate — [상신] 전에 상신할 내용이 있는지 보는 종목유형별 합계 */
+    public List<FinanceGroupRes> searchFinanceGroups(UserPrincipal user, LocalDate holdDate) {
+        return mapper.selectFinanceGroup(user.getCompanyId(), holdDate);
+    }
+
+    private static String like(String searchText) {
+        return "%" + (searchText == null ? "" : searchText) + "%";
     }
 
     /** ast09_book.selectDepositCurGroupSum */

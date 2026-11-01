@@ -45,6 +45,8 @@ import {
   TrCodeWindow,
   AstDepn,
   AstNonDeductTax,
+  AstFinanceBook,
+  AstFinanceGroup,
 } from '../types/ast';
 
 /** ast(자산) API (E21 자산상세 항목관리, E29 거래유형 등록) */
@@ -692,5 +694,25 @@ export const astApi = {
   deleteNonDeductTaxes: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/ast/non-deduct-taxes', { data: ids });
     return res.data.data ?? 0;
+  },
+
+  // ── W12 금융상품 보유내역 (Ast09_Tab_FinanceBook) ──
+
+  /** AS-IS ast.Ast09_Book.selectByHoldDate (W12): astType 2 금융자산, 보관처/계좌/종목유형/종목명 검색 */
+  searchFinanceBooks: async (holdDate: string, searchText: string): Promise<AstFinanceBook[]> => {
+    const res = await apiClient.get<ApiResponse<AstFinanceBook[]>>('v1/ast/books/finance', { params: { holdDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast09_Book.getHoldDate (W12): 상신 전 종목유형별 합계 — 비어 있으면 상신할 내용이 없다 */
+  searchFinanceGroups: async (holdDate: string): Promise<AstFinanceGroup[]> => {
+    const res = await apiClient.get<ApiResponse<AstFinanceGroup[]>>('v1/ast/books/finance/groups', { params: { holdDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdFinanceBook (W12): 출력 자료를 쌓고 rdGroupId를 받는다 */
+  rdFinanceBook: async (holdDate: string, searchText: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ast/books/finance/rd', null, { params: { holdDate, searchText } });
+    return res.data.data;
   },
 };
