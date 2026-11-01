@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { SettleAccrued, SettleExpense, SettleHistory, SettleSaveReq } from '../types/ast';
+import { AstBookDepn, AstSettleByTr, AstTrIntrinsic, AstTrIntrinsicSaveReq, SettleAccrued, SettleExpense, SettleHistory, SettleSaveReq } from '../types/ast';
 import {
   AstCf,
   AstCfBatchCreateReq,
@@ -886,6 +886,55 @@ export const astApi = {
   /** AS-IS sys.Sys99_Print.insertRdFinanceBookOpr2: 보유·매수·매도 출력 자료 → 그룹ID */
   rdFinanceOprBook: async (p: { holdDate: string; searchText: string; investAssetType: string; holdYn: boolean; periodType: string; startDate?: string; closeDate?: string }): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/ast/finance-opr/rd-book', null, { params: p });
+    return res.data.data;
+  },
+
+  // ── X03 고유자산 거래처리 (Ast06_Tab_TrIntrinsic) ──
+  /** AS-IS ast.Ast06_Tr.selectByPayCode (windowClassName으로 화면을 가린다. 자산구분 1·국내는 서버가 고정) */
+  searchTrIntrinsics: async (p: { startDate: string; closeDate: string; windowClassName: string; payCode?: string; corpId?: number | null; classTreeId?: number | null; trCodeId?: number | null; searchText: string; bookIoCheck?: boolean }): Promise<AstTrIntrinsic[]> => {
+    const res = await apiClient.get<ApiResponse<AstTrIntrinsic[]>>('v1/ast/trs/intrinsic', {
+      params: { ...p, corpId: p.corpId ?? undefined, classTreeId: p.classTreeId ?? undefined, trCodeId: p.trCodeId ?? undefined },
+    });
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast06_Tr.selectById */
+  getTrIntrinsic: async (trId: number): Promise<AstTrIntrinsic> => {
+    const res = await apiClient.get<ApiResponse<AstTrIntrinsic>>(`v1/ast/trs/intrinsic/${trId}`);
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast06_Tr.update / updateDepn → 저장한 거래ID */
+  saveTrIntrinsic: async (req: AstTrIntrinsicSaveReq): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/ast/trs/intrinsic', req);
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast06_Tr.checkDepn: 상각 대상(대분류 50·55)이 아니면 통과, 거래일 이후 감가상각이 있으면 오류 */
+  checkTrIntrinsicDepn: async (req: { date: string; purTrId: number | null; itemLClassCode: string | null }): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/ast/trs/intrinsic/check-depn', req);
+  },
+
+  /** AS-IS ast.Ast06_Tr.insertByCf → 가져온 건수 */
+  insertTrByCf: async (stdDate: string, windowClassName: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ast/trs/intrinsic/cf', { stdDate, windowClassName });
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast07_Settle.selectByTrId */
+  searchSettlesByTr: async (trId: number): Promise<AstSettleByTr[]> => {
+    const res = await apiClient.get<ApiResponse<AstSettleByTr[]>>('v1/ast/settles/by-tr', { params: { trId } });
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast07_Settle.update (결제변경) */
+  updateSettle: async (settleId: number, req: SettleSaveReq): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/ast/settles/${settleId}`, req);
+  },
+
+  /** AS-IS ast.Ast13_BookDepn.selectByDepnDate */
+  searchBookDepns: async (depnDate: string, searchText: string): Promise<AstBookDepn[]> => {
+    const res = await apiClient.get<ApiResponse<AstBookDepn[]>>('v1/ast/book-depns/hold', { params: { depnDate, searchText } });
     return res.data.data;
   },
 };

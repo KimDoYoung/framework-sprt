@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/act/mapper/act08_journal_upload.xml (journalWork L29 · excelInsert L33 · deleteByCompanyId L67) — 전표입력 [엑셀업로드] (X01) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActJournalUploadMapper">
+
+    <delete id="deleteByCompanyId">DELETE FROM act08_journal_upload WHERE act08_company_id = #{companyId}</delete>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="excelInsert">
+        INSERT INTO act08_journal_upload
+             ( act08_journal_upload_id, act08_company_id, act08_date, act08_journal_no, act08_account_cd, act08_account_nm,
+               act08_dr_amt, act08_cr_amt, act08_account_note, act08_note, act08_upd_nm, act08_upd_date, act08_corp_cd, act08_deposit_cd )
+        VALUES ( #{id}, #{companyId}, #{date}, #{journalNo}, #{accountCode}, #{accountName},
+                 #{drAmt}, #{crAmt}, #{accountNote}, #{note}, #{updName}, f_sysdate(), #{corpCode}, #{depositCode} )
+    </insert>
+
+    <select id="journalWork" resultType="string" flushCache="true">
+        SELECT f_create_journal_upload(#{companyId}, #{personId})
+    </select>
+</mapper>

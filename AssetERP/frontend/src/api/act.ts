@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, JournalEdit, JournalLine, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { AstBook } from '../types/ast';
 import { readBlobError } from './file';
 
@@ -268,6 +268,80 @@ export const actApi = {
   /** AS-IS act.Act02_Journal.updateAll (Act02_Lookup_ModiJournal, W05): 비고·거래처와 임시분개·분개장을 다시 쓴다 */
   saveJournal: async (journalId: number, req: JournalSaveReq): Promise<void> => {
     await apiClient.put<ApiResponse<void>>(`v1/act/journals/${journalId}`, req);
+  },
+
+  // ── X01 전표입력 (Act02_Tab_CreateJournal · Act02_Lookup_CreateJournal · Act02_Lookup_JournalList) ──
+
+  /** AS-IS act.Act02_Journal.selectByDate: 국내(abroType 1) 전표, 검색어는 거래처/적요(서버가 %…%) */
+  searchJournals: async (startDate: string, closeDate: string, searchText: string): Promise<Journal[]> => {
+    const res = await apiClient.get<ApiResponse<Journal[]>>('v1/act/journals', { params: { startDate, closeDate, abroType: '1', searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act02_Journal.selectById */
+  getJournal: async (journalId: number): Promise<Journal> => {
+    const res = await apiClient.get<ApiResponse<Journal>>(`v1/act/journals/${journalId}`);
+    return res.data.data;
+  },
+
+  /** AS-IS act.Act02_Journal.updateAll (NEW): 새 전표 ID */
+  createJournalNew: async (req: JournalNewReq): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/act/journals', req);
+    return res.data.data;
+  },
+
+  /** AS-IS act.Act02_Journal.delete */
+  deleteJournals: async (journalIds: number[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/act/journals/delete', { journalIds });
+  },
+
+  /** 템플릿 받기 (AS-IS downloadForm → ./excelTemplete/Template_분개장 업로드.xlsx) */
+  downloadJournalTemplate: async (): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/act/journals/excel-template', { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Template_분개장 업로드.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** 엑셀업로드 1단계: act.Act08_JournalUpload.deleteByCompanyId + ExcelUpload?uploadType=journalUpload */
+  uploadJournalExcel: async (file: File): Promise<void> => {
+    const form = new FormData();
+    form.append('excelUpload', file);
+    await apiClient.post<ApiResponse<void>>('v1/act/journals/excel', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+
+  /** 엑셀업로드 2단계: act.Act08_JournalUpload.journalWork */
+  journalWork: async (): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/act/journals/excel/work');
+  },
+
+  // ── X02 전표승인처리 (Act02_Tab_JournalFix · Act02_Grid_JournalFix) ──
+
+  /** AS-IS act.Act02_Journal.selectByDateAll: corpId·trCode·trOccType이 비면 서버가 '%' */
+  searchJournalFixes: async (p: { startDate: string; closeDate: string; searchText: string; corpId: number | null; trCode: string | null; unFixYn: boolean; trOccType: string }): Promise<JournalFix[]> => {
+    const res = await apiClient.get<ApiResponse<JournalFix[]>>('v1/act/journal-fixes', { params: { ...p, corpId: p.corpId ?? undefined, trCode: p.trCode ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act02_Journal.selectById (승인 정보 열 포함) */
+  getJournalFix: async (journalId: number): Promise<JournalFix> => {
+    const res = await apiClient.get<ApiResponse<JournalFix>>(`v1/act/journal-fixes/${journalId}`);
+    return res.data.data;
+  },
+
+  /** AS-IS act.Act02_Journal.updateFixYn: procType P 승인 / C 승인취소 → 바뀐 전표 */
+  confirmJournalFixes: async (procType: 'P' | 'C', journalIds: number[]): Promise<JournalFix[]> => {
+    const res = await apiClient.post<ApiResponse<JournalFix[]>>('v1/act/journal-fixes/confirm', { procType, journalIds });
+    return res.data.data ?? [];
   },
 
   // ── W05 2단계 ⓑ 연관문서 (Act80_Lookup_RelateAppr) ──

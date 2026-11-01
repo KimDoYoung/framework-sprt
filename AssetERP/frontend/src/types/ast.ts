@@ -335,6 +335,10 @@ export interface AstTrCodeByWindow {
   note: string | null;
   /** 원장 입출고 구분(act11_tr_map) — 2 출고·3 입/출고·5 원장변경·8 해당없음이면 보유자산에서 종목을 고른다(W06) */
   bookIoType?: string | null;
+  /** 금융상품 관련 거래 여부 (X03) */
+  financeYn?: boolean;
+  /** 거래유형의 자산분류 이름 (X03) */
+  astClassTreeName?: string | null;
 }
 
 /** AS-IS ast.Ast06_Tr.selectTaxTr (Ast06_Tab_TrTax, U04) — 그리드 한 행 + 편집창이 받는 세금·4대보험 상세 */
@@ -1008,4 +1012,89 @@ export interface AstDepositIntSaveReq {
   corpTax: number | null;
   localTax: number | null;
   note: string | null;
+}
+
+// ── X03 고유자산 거래처리 (Ast06_Tab_TrIntrinsic) ──
+/** AS-IS ast.Ast06_Tr.selectByPayCode · selectById (고유자산 거래) */
+export interface AstTrIntrinsic {
+  trId: number;
+  date: string;
+  trCode: string | null;
+  trName: string | null;
+  corpId: number | null;
+  corpName: string | null;
+  astClassTreeId: number | null;
+  classTreeName: string | null;
+  classTreeFullName: string | null;
+  itemLClassCode: string | null;
+  itemMClassCode: string | null;
+  itemSClassCode: string | null;
+  curCode: string | null;
+  contAmt: number | null;
+  tax: number | null;
+  amt: number | null;
+  settleMngYn: boolean;
+  depositId: number | null;
+  depositName: string | null;
+  note: string | null;
+  personId: number | null;
+  personName: string | null;
+  journalId: number | null;
+  apprId: number | null;
+  apprCnt: string | null;
+  dcrClassTreeId: number | null;
+  rcvPayCode: string | null;
+  financeYn: boolean;
+  bookIoType: string | null;
+  purTrId: number | null;
+  bookAmt: number | null;
+  unSettleAmt: number | null;
+}
+
+export interface AstTrIntrinsicSaveReq {
+  trId: number | null;
+  date: string;
+  trCode: string | null;
+  corpId: number | null;
+  astClassTreeId: number | null;
+  contAmt: number | null;
+  tax: number | null;
+  amt: number | null;
+  settleMngYn: boolean;
+  depositId: number | null;
+  note: string | null;
+  curCode: string | null;
+  purTrId: number | null;
+  bookAmt: number | null;
+  itemLClassCode: string | null;
+  itemSClassCode: string | null;
+  /** 원장 입출고 거래가 아니면 true — 서버가 장부금액 = 거래금액, 취득거래ID = 자기 자신으로 둔다 */
+  selfPur: boolean;
+}
+
+/** AS-IS ast.Ast07_Settle.selectByTrId */
+export interface AstSettleByTr {
+  settleId: number;
+  trId: number | null;
+  settleDate: string;
+  settleAmt: number | null;
+  amt: number | null;
+  depositId: number | null;
+  depositName: string | null;
+  note: string | null;
+  trCode: string | null;
+  journalId: number | null;
+}
+
+/** AS-IS ast.Ast13_BookDepn.selectByDepnDate */
+export interface AstBookDepn {
+  purTrId: number;
+  astClassTreeId: number | null;
+  itemType: string | null;
+  itemName: string | null;
+  itemFullName: string | null;
+  purDate: string | null;
+  purAmt: number | null;
+  depnDate: string | null;
+  depnCost: number | null;
 }

@@ -299,3 +299,48 @@ export interface ActRelateAppr {
   regEmpName: string | null;
   lockYn: boolean;
 }
+
+/** AS-IS act.Act02_Journal.selectByDate·selectById (Act02_Tab_CreateJournal, X01) — 전표 한 행. journalNoStr = 전표번호 글자 */
+export interface Journal {
+  journalId: number;
+  companyId: number;
+  date: string;
+  journalNo: number | null;
+  journalNoStr: string | null;
+  corpId: number | null;
+  corpName: string | null;
+  note: string | null;
+  journalAmt: number | null;
+  personName: string | null;
+  dcrCountStr: string | null;
+  fixYn: boolean;
+  fixYnName: string | null;
+  closeName: string | null;
+  curCode: string | null;
+}
+
+/** AS-IS act.Act02_Journal.updateAll (NEW) 요청 */
+export interface JournalNewReq extends JournalSaveReq {
+  date: string;
+}
+
+/** AS-IS act.Act02_Journal.selectByDateAll·selectById (Act02_Tab_JournalFix, X02) — 전표승인처리 위 그리드 한 행 */
+export interface JournalFix {
+  journalId: number;
+  companyId: number;
+  date: string;
+  journalNo: number | null;
+  journalNoStr: string | null;
+  corpId: number | null;
+  corpName: string | null;
+  trName: string | null;
+  note: string | null;
+  curCode: string | null;
+  journalAmt: number | null;
+  personName: string | null;
+  dcrCountStr: string | null;
+  fixYn: boolean;
+  fixYnName: string | null;
+  fixPersonName: string | null;
+  fixDateStr: string | null;
+}

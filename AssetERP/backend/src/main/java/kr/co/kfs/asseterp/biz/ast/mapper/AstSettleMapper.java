@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.ast.mapper;
 
 import kr.co.kfs.asseterp.biz.ast.dto.SettleAccruedRes;
 import kr.co.kfs.asseterp.biz.ast.dto.SettleDeleteRes;
+import kr.co.kfs.asseterp.biz.ast.dto.SettleOriginRes;
 import kr.co.kfs.asseterp.biz.ast.dto.SettleExpenseRes;
 import kr.co.kfs.asseterp.biz.ast.dto.SettleHistoryRes;
 import kr.co.kfs.asseterp.biz.ast.dto.SettleTrAmtRes;
@@ -59,4 +60,12 @@ public interface AstSettleMapper {
     SettleDeleteRes selectSettleForDelete(@Param("companyId") Long companyId, @Param("settleId") Long settleId);
 
     int deleteSettle(@Param("settleId") Long settleId);
+
+    /** 결제변경 대상의 원거래·등록자 — 로그인 회사의 결제만 */
+    SettleOriginRes selectSettleOrigin(@Param("companyId") Long companyId, @Param("settleId") Long settleId);
+
+    /** ast07_settle 고침(UpdateDataModel) — 등록자·원거래는 그대로 */
+    int updateSettle(@Param("settleId") Long settleId, @Param("settleDate") LocalDate settleDate, @Param("settleAmt") Long settleAmt,
+                     @Param("note") String note, @Param("depositId") Long depositId, @Param("trCode") String trCode,
+                     @Param("forSettleAmt") Double forSettleAmt, @Param("amt") Long amt, @Param("forAmt") Double forAmt);
 }

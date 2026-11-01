@@ -2,8 +2,10 @@ package kr.co.kfs.asseterp.biz.act.service;
 
 import kr.co.kfs.asseterp.biz.act.dto.JournalEditRes;
 import kr.co.kfs.asseterp.biz.act.dto.JournalHeaderRes;
+import kr.co.kfs.asseterp.biz.act.dto.JournalNewReq;
 import kr.co.kfs.asseterp.biz.act.dto.JournalSaveReq;
 import kr.co.kfs.asseterp.biz.act.mapper.ActJournalEditMapper;
+import kr.co.kfs.asseterp.biz.act.mapper.ActJournalListMapper;
 import kr.co.kfs.asseterp.biz.ast.service.AstBookService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -25,6 +27,7 @@ import java.util.List;
 public class ActJournalEditService {
 
     private final ActJournalEditMapper mapper;
+    private final ActJournalListMapper listMapper;
     private final ActJournalService journalService;
     private final AstBookService bookService;
 
@@ -44,8 +47,32 @@ public class ActJournalEditService {
     public void save(UserPrincipal user, Long journalId, JournalSaveReq req) {
         JournalHeaderRes h = header(user, journalId);
         if (h.fixYn()) throw invalid("승인완료 전표입니다.");
+        checkLines(req.lines());
+        journalService.checkClose(user.getCompanyId(), h.date());
+
+        mapper.updateJournal(journalId, req.corpId(), req.note());
+        writeLines(user, journalId, h.date(), req.lines());
+    }
+
+    /**
+     * Act02_Lookup_CreateJournal NEW → Act02_Journal.updateAll의 "전표가 없으면 insert" 가지 — 전표번호(f_create_journal_no)를 만들어 전표를 넣고(통화 KRW, 결산·확정 false)
+     * 나머지는 변경과 같이 임시분개·분개장을 쓴다. 새 전표 ID를 돌려준다
+     */
+    @Transactional
+    public Long create(UserPrincipal user, JournalNewReq req) {
+        checkLines(req.lines());
+        journalService.checkClose(user.getCompanyId(), req.date());
+        Long journalId = mapper.selectNextId();
+        Long journalNo = listMapper.createJournalNo(user.getCompanyId(), req.date());
+        listMapper.insertJournal(journalId, user.getCompanyId(), user.getUserId(), req.date(), req.note(), req.corpId(), "KRW", journalNo);
+        writeLines(user, journalId, req.date(), req.lines());
+        return journalId;
+    }
+
+    /** 창의 검사(차/대 구분·계정코드·금액, 차/대 원화 금액)를 서버에서 다시 한다 */
+    private static void checkLines(List<JournalSaveReq.Line> lines) {
         long dr = 0, cr = 0;
-        for (JournalSaveReq.Line l : req.lines()) {
+        for (JournalSaveReq.Line l : lines) {
             if (l.drcrType() == null || l.drcrType().isEmpty()) throw invalid("차/대 구분은 필수선택 항목입니다.");
             if (l.realAccountCode() == null || l.realAccountCode().isEmpty()) throw invalid("계정코드는 필수선택 항목입니다");
             if (l.amt() == null || l.amt() == 0) throw invalid("금액은 필수입력 항목입니다");
@@ -53,16 +80,17 @@ public class ActJournalEditService {
             else if ("C".equals(l.drcrType())) cr += l.amt();
         }
         if (cr - dr != 0) throw invalid("차/대 원화 금액이 다릅니다.");
-        journalService.checkClose(user.getCompanyId(), h.date());
+    }
 
-        mapper.updateJournal(journalId, req.corpId(), req.note());
+    /** 임시분개·분개장을 지우고 줄 순서(10, 20, …)로 임시분개를 다시 쓰고, 분개장은 차변 n번째·대변 n번째를 한 줄로 짝지어 쓴 뒤 관리계좌가 있으면 예금원장정리 */
+    private void writeLines(UserPrincipal user, Long journalId, java.time.LocalDate date, List<JournalSaveReq.Line> lines) {
         mapper.deleteTmpByJournalId(journalId);
         mapper.deleteDtlByJournalId(journalId);
         long seq = 0;
         boolean deposit = false;
         List<JournalSaveReq.Line> drs = new ArrayList<>();
         List<JournalSaveReq.Line> crs = new ArrayList<>();
-        for (JournalSaveReq.Line l : req.lines()) {
+        for (JournalSaveReq.Line l : lines) {
             seq += 10;
             mapper.insertTmp(mapper.selectNextId(), journalId, seq, l);
             if ("D".equals(l.drcrType())) drs.add(l);
@@ -72,7 +100,7 @@ public class ActJournalEditService {
         for (int i = 0; i < Math.max(drs.size(), crs.size()); i++) {
             mapper.insertDtl(journalId, i + 1, i < drs.size() ? drs.get(i) : null, i < crs.size() ? crs.get(i) : null);
         }
-        if (deposit) bookService.createDepositBook(user, h.date());
+        if (deposit) bookService.createDepositBook(user, date);
     }
 
     private JournalHeaderRes header(UserPrincipal user, Long journalId) {

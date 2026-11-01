@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.ast.service;
 import kr.co.kfs.asseterp.biz.act.mapper.ActJournalMapper;
 import kr.co.kfs.asseterp.biz.ast.dto.SettleAccruedRes;
 import kr.co.kfs.asseterp.biz.ast.dto.SettleDeleteRes;
+import kr.co.kfs.asseterp.biz.ast.dto.SettleOriginRes;
 import kr.co.kfs.asseterp.biz.ast.dto.SettleExpenseRes;
 import kr.co.kfs.asseterp.biz.ast.dto.SettleHistoryRes;
 import kr.co.kfs.asseterp.biz.ast.dto.SettleMultiReq;
@@ -109,6 +110,15 @@ public class AstSettleService {
         mapper.insertSettle(settleId, byExpense ? 0L : r.trId(), r.expenseId(), r.settleDate(), r.settleAmt(), r.note(), r.depositId(), r.trCode(),
                 user.getUserId(), r.settleAmt().doubleValue(), 1.0, r.amt(), forAmt);
 
+        finishSettle(user.getCompanyId(), user.getUserId(), settleId, orgId, orgAmt, orgForAmt, forAmt, r.trCode());
+        return settleId;
+    }
+
+    /**
+     * ast.Ast07_Settle.update 의 뒷부분(새 결제·변경 공통) — 전표 승인 검사 → 미수/미지급 원화금액(amt) 정리 → 분개 생성(procType P).
+     * orgId는 원거래(거래ID 또는 지출결의서ID), forAmt는 이 결제가 정리하는 미수/미지급 금액
+     */
+    private void finishSettle(Long companyId, Long personId, long settleId, Long orgId, long orgAmt, double orgForAmt, double forAmt, String trCode) {
         // 전표승인여부 체크
         if (mapper.countFixedJournal(settleId) > 0) throw fail("승인완료 전표입니다.");
 
@@ -127,8 +137,37 @@ public class AstSettleService {
         mapper.updateAmt(settleId, rcvPayAmt, forAmt);
 
         // 분개생성
-        createJournal("P", companyId, user.getUserId(), settleId, r.trCode());
-        return settleId;
+        createJournal("P", companyId, personId, settleId, trCode);
+    }
+
+    /**
+     * ast.Ast07_Settle.update (결제변경, X03 Ast07_Grid_Settle 변경 아이콘) — 결제일자·금액·예금계좌·적요·거래코드를 고치고 같은 정리·분개 생성을 다시 한다.
+     * 등록자·원거래(거래 또는 지출결의서)는 바꾸지 않는다. 로그인 회사의 결제만
+     */
+    @Transactional
+    public void updateSettle(UserPrincipal user, Long settleId, SettleSaveReq r) {
+        Long companyId = user.getCompanyId();
+        SettleOriginRes o = mapper.selectSettleOrigin(companyId, settleId);
+        if (o == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "결제내역을 찾을 수 없습니다.");
+        mapper.updateSettle(settleId, r.settleDate(), r.settleAmt(), r.note(), r.depositId(), r.trCode(), r.settleAmt().doubleValue(), r.amt(), r.amt().doubleValue());
+
+        long orgAmt;
+        double orgForAmt;
+        Long orgId;
+        if (o.expenseId() != null) {
+            SettleExpenseRes e = mapper.selectExpenseSettleInfo(companyId, o.expenseId());
+            if (e == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "지출결의서를 찾을 수 없습니다.");
+            orgAmt = e.settleAmt();
+            orgForAmt = e.settleAmt().doubleValue();
+            orgId = e.expenseId();
+        } else {
+            SettleTrAmtRes t = mapper.selectTrAmt(companyId, o.trId());
+            if (t == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "거래내역을 찾을 수 없습니다.");
+            orgAmt = t.amt();
+            orgForAmt = t.forAmt();
+            orgId = o.trId();
+        }
+        finishSettle(companyId, o.personId(), settleId, orgId, orgAmt, orgForAmt, r.amt().doubleValue(), r.trCode());
     }
 
     /** ast.Ast07_Settle.updateMulti (일괄 결제등록) — 행마다 결제 insert + 분개 생성 */

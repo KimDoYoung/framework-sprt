@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/act/mapper/act02_journal.xml (selectByDate L110 · selectById L46 · createJournalNo L430 · insert L528) · act80_relate_appr.xml (deleteByJournalId)
+     — 전표입력 Act02_Tab_CreateJournal (X01) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActJournalListMapper">
+
+    <!-- AS-IS act02_journal.selectByDate L110 (IDMS-IC). 결과 열만 화면이 쓰는 것으로 줄였다(act02_journal.* 대신). note는 resultMap대로 act02_note -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalRes">
+        SELECT *
+          FROM (
+                 SELECT act02_journal_id                                              AS journal_id
+                      , act02_company_id                                              AS company_id
+                      , act02_date                                                    AS date
+                      , act02_journal_no                                              AS journal_no
+                      , CAST(act02_journal_no AS varchar)                             AS journal_no_str
+                      , act02_corp_id                                                 AS corp_id
+                      , f_get_journal_corp_nm(act02_journal_id)                       AS corp_name
+                      , act02_note                                                    AS note
+                      , COALESCE(( SELECT sum(act03_dr_amt)
+                                     FROM act03_journal_dtl
+                                    WHERE act03_journal_id = act02_journal_id ), 0)   AS journal_amt
+                      , f_emp_kor_nm(act02_person_id)                                 AS person_name
+                      , f_get_relate_dcr_count(act02_journal_id) || ' 건'              AS dcr_count_str
+                      , COALESCE(act02_fix_yn, 'false') = 'true'                      AS fix_yn
+                      , CASE WHEN coalesce(act02_fix_yn, 'false') = 'true'
+                             THEN '승인' ELSE '' END                                   AS fix_yn_name
+                      , CASE WHEN coalesce(act02_close_yn, 'false') = 'true'
+                             THEN '마감' ELSE '' END                                   AS close_name
+                      , act02_cur_cd                                                  AS cur_code
+                   FROM act02_journal
+                  WHERE act02_company_id = #{companyId}
+                    AND act02_date       BETWEEN #{startDate} AND #{closeDate}
+                    AND act02_tr_id        IS NULL
+                    AND act02_biz_id       IS NULL
+                    AND act02_bmt_id       IS NULL
+                    AND act02_pay_month_cd IS NULL
+                    AND NOT EXISTS ( SELECT 1 FROM pay50_expense WHERE pay50_journal_id = act02_journal_id )
+                    AND ( ( '1' = COALESCE(#{abroType}, '1')        AND     /* 1:국내 */
+                            COALESCE(act02_cur_cd, 'KRW') = 'KRW'   ) OR
+                          ( '2' = COALESCE(#{abroType}, '1')        AND     /* 2:국외 */
+                            COALESCE(act02_cur_cd, 'KRW') != 'KRW'  ) )
+               ) a
+         WHERE UPPER(coalesce(note, '') || coalesce(corp_name, '')) LIKE upper(#{searchText})
+         ORDER BY date, journal_id
+    </select>
+
+    <!-- AS-IS act02_journal.selectById L46 (IDMS-IC) — 내 회사 것만 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalRes">
+        SELECT act02_journal_id                                              AS journal_id
+             , act02_company_id                                              AS company_id
+             , act02_date                                                    AS date
+             , act02_journal_no                                              AS journal_no
+             , CAST(act02_journal_no AS varchar)                             AS journal_no_str
+             , act02_corp_id                                                 AS corp_id
+             , f_get_journal_corp_nm(act02_journal_id)                       AS corp_name
+             , f_get_journal_note(act02_journal_id)                          AS note
+             , COALESCE(( SELECT sum(act03_dr_amt)
+                            FROM act03_journal_dtl
+                           WHERE act03_journal_id = act02_journal_id ), 0)   AS journal_amt
+             , f_emp_kor_nm(act02_person_id)                                 AS person_name
+             , f_get_relate_dcr_count(act02_journal_id) || ' 건'              AS dcr_count_str
+             , COALESCE(act02_fix_yn, 'false') = 'true'                      AS fix_yn
+             , CASE WHEN coalesce(act02_fix_yn, 'false') = 'true'
+                    THEN '승인' ELSE '' END                                   AS fix_yn_name
+             , CASE WHEN coalesce(act02_close_yn, 'false') = 'true'
+                    THEN '마감' ELSE '' END                                   AS close_name
+             , COALESCE(act02_cur_cd, 'KRW')                                 AS cur_code
+          FROM act02_journal
+         WHERE act02_company_id = #{companyId}
+           AND act02_journal_id = #{journalId}
+    </select>
+
+    <select id="createJournalNo" resultType="long">
+        SELECT f_create_journal_no(#{companyId}, #{date})
+    </select>
+
+    <!-- AS-IS act02_journal.insert L528 (IDMS-IC) — 새 전표: 결산·확정 여부는 false -->
+    <insert id="insertJournal">
+        INSERT INTO act02_journal
+        SELECT #{journalId}
+             , #{companyId}
+             , #{personId}
+             , #{date}
+             , #{note}
+             , 'false'
+             , #{corpId}
+             , NULL
+             , NULL
+             , NULL
+             , NULL
+             , #{curCode}
+             , #{journalNo}
+             , NULL
+             , 'false'
+             , NULL
+             , NULL
+    </insert>
+
+    <delete id="deleteRelateApprByJournalId">DELETE FROM act80_relate_appr WHERE act80_journal_id = #{journalId}</delete>
+
+    <delete id="deleteJournal">DELETE FROM act02_journal WHERE act02_journal_id = #{journalId}</delete>
+</mapper>

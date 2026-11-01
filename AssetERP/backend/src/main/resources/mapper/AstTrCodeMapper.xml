@@ -50,7 +50,7 @@
          ORDER BY a.ast05_tr_cd
     </select>
 
-    <!-- AS-IS ast05_tr_code.selectByWindowClassName (IDMS-IC, U04 Ast05_Lookup_TrCodeWindow). 그리드가 읽는 열만, 비고는 화면별 비고(ast15_note, 원본 SELECT의 첫 열) -->
+    <!-- AS-IS ast05_tr_code.selectByWindowClassName (IDMS-IC, U04 Ast05_Lookup_TrCodeWindow). 그리드가 읽는 열만, 비고는 화면별 비고(ast15_note, 원본 SELECT의 첫 열). X03: 금융상품 여부(financeYn)·거래유형의 자산분류 이름(astClassTreeName)을 더했다 -->
     <select id="selectByWindowClassName" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrCodeByWindowRes">
         SELECT a.ast05_tr_code_id          AS tr_code_id
              , a.ast05_company_id          AS company_id
@@ -66,9 +66,12 @@
                     AND m.act11_tr_cd      = a.ast05_tr_cd
                     AND COALESCE(m.act11_use_yn,'false') = 'true'
                   LIMIT 1 )                AS book_io_type
+             , COALESCE(a.ast05_finance_yn, 'false') = 'true' AS finance_yn
+             , t.ast01_class_tree_nm       AS ast_class_tree_name
           FROM ast15_tr_code_window w
                INNER JOIN ast05_tr_code a ON ( a.ast05_company_id = w.ast15_company_id AND
                                                a.ast05_tr_cd      = w.ast15_tr_cd      )
+               LEFT OUTER JOIN ast01_class_tree t ON t.ast01_class_tree_id = a.ast05_ast_class_tree_id
          WHERE w.ast15_company_id      = #{companyId}
            AND w.ast15_window_class_nm = #{windowClassName}
            AND COALESCE(a.ast05_use_yn,'false') = 'true'

@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -63,6 +65,13 @@ public class AstSettleController {
     @PostMapping
     public ApiResponse<Long> create(@AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody SettleSaveReq req) {
         return ApiResponse.ok(service.createSettle(principal, req));
+    }
+
+    /** ast.Ast07_Settle.update (결제변경) — 같은 정리·분개 생성을 다시 한다 */
+    @PutMapping("/{settleId}")
+    public ApiResponse<Void> update(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long settleId, @Valid @RequestBody SettleSaveReq req) {
+        service.updateSettle(principal, settleId, req);
+        return ApiResponse.ok(null);
     }
 
     /** ast.Ast07_Settle.updateMulti */

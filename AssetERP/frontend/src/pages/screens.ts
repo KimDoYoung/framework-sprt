@@ -223,10 +223,13 @@ import { Act11_Tab_TrJournalMap } from './act/Act11_Tab_TrJournalMap';
 import { Act13_Tab_RealAccountMap } from './act/Act13_Tab_RealAccountMap';
 import { Act15_Tab_CloseCheck } from './act/Act15_Tab_CloseCheck';
 import { Act02_Tab_DepositIoList } from './act/Act02_Tab_DepositIoList';
+import { Act02_Tab_CreateJournal } from './act/Act02_Tab_CreateJournal';
+import { Act02_Tab_JournalFix } from './act/Act02_Tab_JournalFix';
 import { Act02_Tab_CreateJournalBiz } from './act/Act02_Tab_CreateJournalBiz';
 import { Ast09_Tab_DepositBookPeriod } from './ast/Ast09_Tab_DepositBookPeriod';
 import { Ast06_Tab_TrTax } from './ast/Ast06_Tab_TrTax';
 import { Ast06_Tab_TrFinance } from './ast/Ast06_Tab_TrFinance';
+import { Ast06_Tab_TrIntrinsic } from './ast/Ast06_Tab_TrIntrinsic';
 import { Ast06_Tab_TrForFinance } from './ast/Ast06_Tab_TrForFinance';
 import { Ast06_Tab_TrAcntTransfer } from './ast/Ast06_Tab_TrAcntTransfer';
 import { Ast06_Tab_TrDepositInt } from './ast/Ast06_Tab_TrDepositInt';
@@ -612,6 +615,8 @@ export const SCREENS: Record<string, React.FC> = {
   Act13_Tab_RealAccountMap, // E31 (+ Act10_Lookup_ReprAccount·Act01_Lookup_AccountCode)
   Act15_Tab_CloseCheck, // E32
   Act02_Tab_DepositIoList, // U01 (메뉴 #1164·#1470. 상신의 전자결재 편집창은 다음 단계, 문서분류 조회창 Dcr30_Move_DcrClass·RD 출력 재사용)
+  Act02_Tab_CreateJournal, // X01 (메뉴 #1148. 하위 Act02_Grid_CreateJournal·Act02_Lookup_CreateJournal·Act02_Lookup_JournalList·Act80_Lookup_RelateAppr)
+  Act02_Tab_JournalFix, // X02 (메뉴 #1207. 하위 Act02_Grid_JournalFix. 외화 전표 [변경]의 Act02_Lookup_ModiForJournal은 X07에서)
   Act02_Tab_CreateJournalBiz, // U10 (메뉴 #1180. 하위 Act02_Grid_CreateJournalBiz. 1단계: 분개 [변경] 아이콘의 Act02_Lookup_ModiJournal은 안내만)
   Pay50_Tab_AccountSumList, // U12 (메뉴 #1399. 단독 화면, [엑셀다운로드]는 RD)
   Crd02_Tab_DataUpload, // U14 (메뉴 #1039·#1479. 하위 Crd02_Edit_DataUpload·Crd11_Lookup_ExcelCode, 엑셀업로드·내역확정(Biz01_Promo) 서버 포함)
@@ -634,6 +639,7 @@ export const SCREENS: Record<string, React.FC> = {
   Emp17_Tab_BenefitManager, // U05 (메뉴 #1222. 하위 Emp17_Edit_Note·Emp55_Lookup_account. 상신·문서보기의 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Emp50_Tab_TransportExpenseMng, // U06 (메뉴 #1348. 문서보기·상신의 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Ast06_Tab_TrTax, // U04 (메뉴 #1196. 하위 Ast06_Lookup_TrTax·Ast06_Lookup_Tr4Insure·Ast06_Grid_Journal·Ast05_Lookup_TrCodeWindow. 결재요청·문서보기의 전자결재 편집창, 분개 [변경]의 Act02_Lookup_ModiJournal은 다음 단계)
+  Ast06_Tab_TrIntrinsic, // X03 (메뉴 #1091. + Ast06_Lookup_TrIntrinsic·Ast07_Grid_Settle·Ast06_Lookup_TrList·Ast06_Lookup_InsertCF·Ast13_Lookup_BookDepn. Ast07_Lookup_Settle은 거래 기준 NEW/MODI를 더했다)
   Ast06_Tab_TrFinance, // W06 (메뉴 #1158. + Ast06_Lookup_TrFinance·Ast09_Lookup_Book. 연관문서·분개 [변경]은 W05와 같은 창)
   Ast06_Tab_TrForFinance, // W07 (메뉴 #1365. + Ast06_Lookup_TrForFinance. 보유자산 조회창·연관문서·분개 [변경]은 W06과 같은 창)
   Ast13_Tab_DepnBook, // W17 (메뉴 #1181. + Ast16_Lookup_NonDeductTax(W11). 상신 A29 = Apr01_Edit_ApprDoc 연결, RD Ast13_Rd_DepnBook)

@@ -463,6 +463,30 @@ AND COALESCE(corp_id||'','') LIKE #{corpId}
            AND COALESCE(pay50_company_id, ast06_company_id) = #{companyId}
     </select>
 
+    <!-- 결제변경 대상 — 로그인 회사의 결제만(지출결의서 또는 거래의 회사로 판단) -->
+    <select id="selectSettleOrigin" resultType="kr.co.kfs.asseterp.biz.ast.dto.SettleOriginRes">
+        SELECT NULLIF(ast07_tr_id, 0) AS tr_id, ast07_expense_id AS expense_id, ast07_person_id AS person_id
+          FROM ast07_settle
+               LEFT OUTER JOIN pay50_expense ON pay50_expense_id = ast07_expense_id
+               LEFT OUTER JOIN ast06_tr      ON ast06_tr_id      = ast07_tr_id
+         WHERE ast07_settle_id = #{settleId}
+           AND COALESCE(pay50_company_id, ast06_company_id) = #{companyId}
+    </select>
+
+    <!-- AS-IS ast07_settle.update(UpdateDataModel) — 화면이 바꾸는 열 -->
+    <update id="updateSettle">
+        UPDATE ast07_settle
+           SET ast07_settle_date     = #{settleDate},
+               ast07_settle_amt      = #{settleAmt},
+               ast07_note            = #{note,jdbcType=VARCHAR},
+               ast07_deposit_id      = #{depositId,jdbcType=NUMERIC},
+               ast07_tr_cd           = #{trCode},
+               ast07_for_settle_amt  = #{forSettleAmt},
+               ast07_amt             = #{amt},
+               ast07_for_amt         = #{forAmt}
+         WHERE ast07_settle_id = #{settleId}
+    </update>
+
     <delete id="deleteSettle">
         DELETE FROM ast07_settle WHERE ast07_settle_id = #{settleId}
     </delete>

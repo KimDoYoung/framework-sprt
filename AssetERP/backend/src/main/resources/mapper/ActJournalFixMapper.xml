@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/act/mapper/act02_journal.xml (selectByDateAll L147 · selectById L46 · updateFixYn L565) — 전표승인처리 Act02_Tab_JournalFix (X02) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActJournalFixMapper">
+
+    <!-- AS-IS act02_journal.selectByDateAll L147 (IDMS-IC). act02_journal.*은 쓰는 열만 뽑게 줄였다. 조건·정렬 그대로 -->
+    <select id="selectByDateAll" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalFixRes">
+        SELECT act02_journal_id                                                  AS journal_id
+             , act02_company_id                                                  AS company_id
+             , act02_date                                                        AS date
+             , act02_journal_no                                                  AS journal_no
+             , CAST(act02_journal_no AS varchar)                                 AS journal_no_str
+             , act02_corp_id                                                     AS corp_id
+             , act02_corp_nm                                                     AS corp_name
+             , f_cdnm('trCode', act02_tr_cd, act02_company_id, act02_date)       AS tr_name
+             , note
+             , COALESCE(act02_cur_cd, 'KRW')                                     AS cur_code
+             , act02_journal_amt                                                 AS journal_amt
+             , act02_person_nm                                                   AS person_name
+             , f_get_relate_dcr_count(act02_journal_id) || ' 건'                  AS dcr_count_str
+             , COALESCE(act02_fix_yn, 'false') = 'true'                          AS fix_yn
+             , act02_fix_yn_nm                                                   AS fix_yn_name
+             , act02_fix_person_nm                                               AS fix_person_name
+             , act02_fix_date_str                                                AS fix_date_str
+          FROM (
+                 SELECT act02_journal.*
+                      , f_emp_kor_nm(act02_person_id)                                AS act02_person_nm
+                      , f_get_journal_corp_nm(act02_journal_id)                      AS act02_corp_nm
+                      , CASE WHEN coalesce(act02_fix_yn, 'false') = 'true'
+                             THEN '승인' ELSE '' END                                   AS act02_fix_yn_nm
+                      , COALESCE(( SELECT sum(act03_dr_amt)
+                                     FROM act03_journal_dtl
+                                    WHERE act03_journal_id = act02_journal_id ), 0)  AS act02_journal_amt
+                      , to_char(act02_fix_date, 'yyyy-mm-dd HH24:MI:SS')             AS act02_fix_date_str
+                      , f_get_journal_tr_cd(act02_journal_id)                        AS act02_tr_cd
+                      , f_get_journal_note(act02_journal_id)                         AS note
+                   FROM act02_journal
+                        LEFT OUTER JOIN sys15_corp ON sys15_corp_id = act02_corp_id
+                  WHERE act02_company_id = #{companyId}
+                    AND act02_date BETWEEN #{startDate} AND #{closeDate}
+                    AND COALESCE(CAST(sys15_corp_id AS VARCHAR), '') || '' LIKE #{corpIdStr}
+                    AND ( ( #{unFixYn} = 'true'                      AND
+                            coalesce(act02_fix_yn, 'false') = 'false' ) OR
+                          ( #{unFixYn} = 'false'                     ) )
+               ) t
+               LEFT OUTER JOIN ast05_tr_code ON (ast05_company_id = act02_company_id AND ast05_tr_cd = act02_tr_cd)
+         WHERE act02_tr_cd LIKE #{trCode}
+           AND COALESCE(ast05_tr_occ_type, '') LIKE #{trOccType}
+           AND UPPER(CONCAT(act02_corp_nm
+                           , f_cdnm('trCode', act02_tr_cd, act02_company_id, act02_date)
+                           , note
+                           , COALESCE(act02_cur_cd, 'KRW')
+                           )) LIKE '%' || UPPER(#{searchText}) || '%'
+         ORDER BY act02_date, act02_journal_no
+    </select>
+
+    <!-- AS-IS act02_journal.selectById L46 (IDMS-IC) — 내 회사 것만, 승인 정보 열 포함 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalFixRes">
+        SELECT act02_journal_id                                                  AS journal_id
+             , act02_company_id                                                  AS company_id
+             , act02_date                                                        AS date
+             , act02_journal_no                                                  AS journal_no
+             , CAST(act02_journal_no AS varchar)                                 AS journal_no_str
+             , act02_corp_id                                                     AS corp_id
+             , f_get_journal_corp_nm(act02_journal_id)                           AS corp_name
+             , f_cdnm('trCode', f_get_journal_tr_cd(act02_journal_id), act02_company_id, act02_date) AS tr_name
+             , f_get_journal_note(act02_journal_id)                              AS note
+             , COALESCE(act02_cur_cd, 'KRW')                                     AS cur_code
+             , COALESCE(( SELECT sum(act03_dr_amt)
+                            FROM act03_journal_dtl
+                           WHERE act03_journal_id = act02_journal_id ), 0)       AS journal_amt
+             , f_emp_kor_nm(act02_person_id)                                     AS person_name
+             , f_get_relate_dcr_count(act02_journal_id) || ' 건'                  AS dcr_count_str
+             , COALESCE(act02_fix_yn, 'false') = 'true'                          AS fix_yn
+             , CASE WHEN coalesce(act02_fix_yn, 'false') = 'true'
+                    THEN '승인' ELSE '' END                                       AS fix_yn_name
+             , act02_fix_person_nm                                               AS fix_person_name
+             , to_char(act02_fix_date, 'yyyy-mm-dd HH24:MI:SS')                  AS fix_date_str
+          FROM act02_journal
+         WHERE act02_company_id = #{companyId}
+           AND act02_journal_id = #{journalId}
+    </select>
+
+    <!-- AS-IS act02_journal.updateFixYn L565 (IDMS-IC) -->
+    <update id="updateFixYn">
+        UPDATE act02_journal
+           SET act02_fix_yn        = CASE WHEN #{procType} = 'P' THEN 'true'           ELSE 'false' END
+             , act02_fix_person_nm = CASE WHEN #{procType} = 'P' THEN #{fixPersonName} ELSE null    END
+             , act02_fix_date      = CASE WHEN #{procType} = 'P' THEN f_sysdate()      ELSE null    END
+         WHERE act02_journal_id = #{journalId}
+    </update>
+</mapper>
