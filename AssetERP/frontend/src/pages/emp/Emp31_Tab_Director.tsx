@@ -3,21 +3,20 @@
  * AS-IS: myApp/client/vi/emp/Emp31_Tab_Director.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L71-107: 툴바(검색 250 · 해임임원 포함 · [조회] · [저장] · [문서분류지정] · [임원 선임/해임 보고]) + 임원 셀 편집 그리드(행번호, 체크박스 다중 고정, 성명 고정, 우선주·보통주는 2단 헤더 "주식 보유수").
  * 행 추가·삭제 버튼은 없다(서버 delete 서비스가 있으나 화면에서 부르지 않음). 임원 대상은 서버 SQL이 정한다.
- * 1단계: 보고서 창 RDViewer.openEmp31의 선임/해임 콤보·[결재상신](다른 도메인 apr)은 다음 단계. [문서분류지정]의 Dcr30_Lookup_Link는 B15에서 연결.
- *   [임원 선임/해임 보고]는 두 출력 자료(insertRdDirector01·02)를 채우고 "선임" 보고서(Emp31_Rd_Director)를 연다.
+ * [문서분류지정]의 Dcr30_Lookup_Link는 B15에서 연결. [임원 선임/해임 보고]는 두 출력 자료(insertRdDirector01·02)를 채우고 보고서 창
+ *   RDViewer.openEmp31(구분 콤보 선임/해임·[조회]·[상신하기])을 연다 — 창은 V41에서 Emp31_Lookup_RdDirector로 만들었고 [상신하기]는 전자결재 편집창(A44·A62)을 연다.
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 저장 = 저장(n)(UX-03)
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { Checkbox, message } from 'antd';
 import { empDirectorApi } from '@/api/emp';
-import { rdApi } from '@/api/rd';
 import { errorMessage } from '@/api/client';
 import { Director } from '@/types/emp';
 import { Button } from '@/components/button';
 import { SearchBar } from '@/components/search';
 import { CellEditGrid, gbFor } from '@/components/grid';
 import { useGridCrud } from '@/hooks/useGridCrud';
-import { RdViewer } from '@/components/lookup/RdViewer';
+import { Emp31_Lookup_RdDirector, Emp31RdTarget } from './Emp31_Lookup_RdDirector';
 import { Dcr30_Lookup_Link } from '@/components/lookup/Dcr30_Lookup_Link';
 
 const gb = gbFor<Director>();
@@ -49,7 +48,7 @@ const columnDefs = [
 export const Emp31_Tab_Director: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [endCheck, setEndCheck] = useState(false);  // settings L110: 해임임원 포함 = false
-  const [rdUrl, setRdUrl] = useState<string | null>(null);
+  const [rdTarget, setRdTarget] = useState<Emp31RdTarget | null>(null);
 
   const crud = useGridCrud<Director>({
     idField: 'personId',
@@ -80,14 +79,8 @@ export const Emp31_Tab_Director: React.FC = () => {
       // insertRdDirector01(고른 임원, windowClassName Emp31_Tab_Director01) → insertRdDirector02(전체 현황, Emp31_Tab_Director02, endCheck false)
       const seniorGroupId = await empDirectorApi.rdPrintSenior(searchText, selected.map(r => r.personId));
       const totalGroupId = await empDirectorApi.rdPrintTotal(searchText);
-      // RDViewer.openEmp31(mrd Emp31_Rd_Director · options "/rhtmlimportopt [2]" · rv seniorGroupId·totalGroupId·companyId·personId) — 선임 보고서
-      const res = await rdApi.buildUrl({
-        kind: 'viewer',
-        mrd: 'Emp31_Rd_Director',
-        options: '/rhtmlimportopt [2]',
-        rv: { seniorGroupId, totalGroupId },
-      });
-      setRdUrl(res.url);
+      // RDViewer.openEmp31(map, rvMap) L220-255 — 구분 콤보(선임/해임)·[조회]·[상신하기]가 있는 보고서 창 (V41: Emp31_Lookup_RdDirector)
+      setRdTarget({ seniorGroupId, totalGroupId, personIds: selected.map(r => r.personId) });
     } catch (err) {
       message.error(errorMessage(err, '출력 실패'));
     }
@@ -118,7 +111,7 @@ export const Emp31_Tab_Director: React.FC = () => {
         <div style={{ flex: 1, minHeight: 0 }}><CellEditGrid<Director> crud={crud} columnDefs={columnDefs} /></div>
       </div>
       <Dcr30_Lookup_Link open={linkOpen} linkCodeList="LinkCode0005" onClose={() => setLinkOpen(false)} />
-      <RdViewer url={rdUrl} title="임원 선임/해임 보고" onClose={() => setRdUrl(null)} />
+      <Emp31_Lookup_RdDirector target={rdTarget} onClose={() => setRdTarget(null)} />
     </div>
   );
 };

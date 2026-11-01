@@ -45,7 +45,8 @@ public class AprLinkSeedController {
                                             @RequestParam(required = false) String stdYear, @RequestParam(required = false) String regNo,
                                             @RequestParam(required = false) String regDate, @RequestParam(required = false) String stdTermCode,
                                             @RequestParam(required = false) String dataYm,
-                                            @RequestParam(required = false) String benefitName, @RequestParam(required = false) String benefitCode) {
+                                            @RequestParam(required = false) String benefitName, @RequestParam(required = false) String benefitCode,
+                                            @RequestParam(required = false) String stdDateStr) {
         Map<String, String> args = new HashMap<>();
         put(args, "stdDate", stdDate);
         put(args, "cycleType", cycleType);
@@ -67,6 +68,7 @@ public class AprLinkSeedController {
         put(args, "dataYm", dataYm); // A13 법인카드 내역관리 — 기준년월(yyyy.MM, 마감일은 closeDate)
         put(args, "benefitName", benefitName); // A46~A51 복리후생비 지출결의 — 신청구분 콤보의 이름(제목·본문, V40)
         put(args, "benefitCode", benefitCode); // A46~A51 — 신청구분 코드(계정과목 이름)
+        put(args, "stdDateStr", stdDateStr); // A72 임직원매매 책임자보고 — 제목의 "yyyy년 MM월"(V41)
         put(args, "ids", ids); // 여러 행을 한 문서로 묶는 코드(A77 기준가 정정 월보고)의 행 ID, 쉼표 구분
         return ApiResponse.ok(service.seed(principal, classTreeId, linkCode, refId, args));
     }

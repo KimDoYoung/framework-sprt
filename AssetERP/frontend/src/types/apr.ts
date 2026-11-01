@@ -729,6 +729,8 @@ export interface AprLinkArgs {
   /** A46~A51 복리후생비 지출결의 — 신청구분 콤보 이름과 구분 코드(계정과목 이름을 읽음, V40). 행은 ids, 기준년월은 yyyy·mm */
   benefitName?: string;
   benefitCode?: string;
+  /** A72 임직원매매 책임자보고 — 제목의 "yyyy년 MM월" (stdDate는 기준월 말일, V41) */
+  stdDateStr?: string;
 }
 
 /** 링크코드별 제목·본문·시행일자 (GET apr/apprs/link-seed, V17) */

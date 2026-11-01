@@ -90,4 +90,21 @@
         SELECT f_cdnm('EmpEvalTermCode', #{stdTermCode}, #{companyId}, f_sysdate())
     </select>
 
+
+    <!-- V41 AS-IS emp53_biz_trip.selectByPersonId (행 번호 한 건, 회사 조건 추가) -->
+    <select id="selectBizTripLink" resultType="kr.co.kfs.asseterp.biz.apr.dto.BizTripLinkRow">
+        SELECT f_cdnm('BizTripCode', emp53_biz_trip_cd, emp53_company_id, f_sysdate())   AS biz_trip_name
+             , f_emp_kor_nm(emp53_person_id)                                              AS person_name
+             , f_get_empTrans(emp53_person_id, emp53_start_date, 'org_code_nm')           AS org_name
+             , emp53_num                                                                  AS num
+             , emp53_companion                                                            AS companion
+             , emp53_destination                                                          AS destination
+             , emp53_start_date                                                           AS start_date
+             , emp53_close_date                                                           AS close_date
+             , emp53_purpose                                                              AS purpose
+          FROM emp53_biz_trip
+         WHERE emp53_biz_trip_id = #{bizTripId}
+           AND emp53_company_id  = #{companyId}
+    </select>
+
 </mapper>
