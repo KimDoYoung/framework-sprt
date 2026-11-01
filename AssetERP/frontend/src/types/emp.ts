@@ -1164,3 +1164,30 @@ export interface ErrandCycleReq {
   holidayYn: boolean;
   cycleOption: number | null;
 }
+
+/** Y07 여비교통비 한 줄 (Emp50_TransportExpenseModel — 본인) */
+export interface MyTransport {
+  transportExpenseId: number;
+  personId: number;
+  yyyymm: string;
+  date: string | null;
+  startPoint: string | null;
+  closePoint: string | null;
+  startTime: string | null;
+  closeTime: string | null;
+  amt: number | null;
+  transportCode: string | null;
+  transportName: string | null;
+  note: string | null;
+  receiptStr: string | null;
+  fileId: number | null;
+}
+
+/** Y07 본인 신청서 상신 상태 (Emp51_RelateAppr.selectByPersonId) */
+export interface MyTransportAppr {
+  relateApprId: number;
+  regNo: string | null;
+  apprId: number | null;
+  statusCode: string | null;
+  statusName: string | null;
+}

@@ -11959,5 +11959,40 @@
     "note": "docs/work/V/V44-작업기록.md",
     "history": [],
     "id": "V44"
+  },
+  "Emp50_Tab_TransportExpense": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp50_Tab_TransportExpense.java": "90c1f6bc64932fb133e5039cd0c4da10b5359eec",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp50_TransportExpenseModel.java": "8dc8ce77ca8ac3315636bd52d37ef6528d54d244",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp50_TransportExpenseModelProperties.java": "2f5f85581acabcb46757aaa0140e5b001f1fce99",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp51_RelateApprModel.java": "6798f3af55f4e5612dc22489f13a680657a1f5d0",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/emp/Emp50_TransportExpense.java": "cefc10b367084d6de9b137ac1ada04f37a9e2c1f",
+      "application/src/main/java/myApp/server/emp/Emp51_RelateAppr.java": "10dc9800580248d08866c80a5fc3fbc1b9d66173",
+      "application/src/main/java/myApp/server/emp/mapper/emp50_transport_expense.xml": "8ee2a50eea4bbf83735a9189dc6b13a06fa2a11c",
+      "application/src/main/java/myApp/server/emp/mapper/emp51_relate_appr.xml": "a1ee33fe49caa0f678877c4f83dc6321034a933d",
+      "application/src/main/java/myApp/server/sys/Sys11_RelateFile.java": "3aa633bf0b24c8da3c85ea2f505fb68616f92a11",
+      "application/src/main/java/myApp/server/sys/mapper/sys11_relate_file.xml": "35c5b410b79c0d900e2332f08e15c5f024b05aa6",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Dcr30_Move_DcrClass",
+      "Sys10_Lookup_FileViewer"
+    ],
+    "recorded_at": "2026-11-01T11:00:02+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/V/V45-작업기록.md",
+    "history": [],
+    "id": "V45"
   }
 }

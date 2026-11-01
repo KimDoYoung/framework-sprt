@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  여비교통비 신청 (Y07 Emp50_Tab_TransportExpense)
+  AS-IS(IDMS-IC) server/emp/mapper/emp50_transport_expense.xml selectByYearMonth + UpdateDataModel(emp50_transport_expense)
+  + emp51_relate_appr.xml selectByPersonId·selectByCloseYn·selectByRegno·insert·deleteByApprId·updateApprId.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpMyTransportMapper">
+
+    <sql id="cols">
+        emp50_transport_expense_id                                                   AS transportExpenseId
+      , emp50_person_id                                                              AS personId
+      , emp50_yyyymm                                                                 AS yyyymm
+      , emp50_date                                                                   AS date
+      , emp50_start_point                                                            AS startPoint
+      , emp50_close_point                                                            AS closePoint
+      , emp50_start_time                                                             AS startTime
+      , emp50_close_time                                                             AS closeTime
+      , emp50_amt                                                                    AS amt
+      , emp50_transport_cd                                                           AS transportCode
+      , f_cdnm('TransportCode', emp50_transport_cd, emp50_company_id, f_sysdate())   AS transportName
+      , emp50_note                                                                   AS note
+      , (SELECT CASE WHEN count(*) = 1 THEN 'O'
+                     ELSE '' END
+           FROM sys10_file
+          WHERE sys10_parent_id = emp50_transport_expense_id
+          LIMIT 1)                                                                   AS receiptStr
+      , (SELECT sys10_file_id
+           FROM sys10_file
+          WHERE sys10_parent_id = emp50_transport_expense_id
+          LIMIT 1)                                                                   AS fileId
+    </sql>
+
+    <!-- AS-IS emp50_transport_expense.selectByYearMonth -->
+    <select id="selectByYearMonth" resultType="kr.co.kfs.asseterp.biz.emp.dto.MyTransportRes">
+        SELECT <include refid="cols"/>
+          FROM emp50_transport_expense
+         WHERE emp50_company_id = #{companyId}
+           AND emp50_person_id = #{personId}
+           AND emp50_yyyymm LIKE #{yyyymm}
+         ORDER BY emp50_date, emp50_start_time
+    </select>
+
+    <select id="selectMineById" resultType="kr.co.kfs.asseterp.biz.emp.dto.MyTransportRes">
+        SELECT <include refid="cols"/>
+          FROM emp50_transport_expense
+         WHERE emp50_company_id = #{companyId}
+           AND emp50_person_id = #{personId}
+           AND emp50_transport_expense_id = #{id}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel INSERT -->
+    <insert id="insertRow">
+        INSERT INTO emp50_transport_expense (emp50_transport_expense_id, emp50_company_id, emp50_person_id, emp50_yyyymm, emp50_date,
+                                             emp50_start_point, emp50_close_point, emp50_start_time, emp50_close_time, emp50_amt,
+                                             emp50_transport_cd, emp50_note)
+        VALUES (#{id}, #{companyId}, #{personId}, #{req.yyyymm}, #{req.date},
+                #{req.startPoint}, #{req.closePoint}, #{req.startTime}, #{req.closeTime}, #{req.amt},
+                #{req.transportCode}, #{req.note})
+    </insert>
+
+    <!-- UpdateDataModel UPDATE (화면이 바꾸는 열) -->
+    <update id="updateRow">
+        UPDATE emp50_transport_expense
+           SET emp50_date         = #{req.date}
+             , emp50_start_point  = #{req.startPoint}
+             , emp50_close_point  = #{req.closePoint}
+             , emp50_start_time   = #{req.startTime}
+             , emp50_close_time   = #{req.closeTime}
+             , emp50_amt          = #{req.amt}
+             , emp50_transport_cd = #{req.transportCode}
+             , emp50_note         = #{req.note}
+         WHERE emp50_transport_expense_id = #{req.transportExpenseId}
+           AND emp50_company_id = #{companyId}
+           AND emp50_person_id = #{personId}
+    </update>
+
+    <delete id="deleteRow">
+        DELETE FROM emp50_transport_expense
+         WHERE emp50_transport_expense_id = #{id}
+           AND emp50_company_id = #{companyId}
+           AND emp50_person_id = #{personId}
+    </delete>
+
+    <!-- AS-IS emp51_relate_appr.selectByPersonId -->
+    <select id="selectApprByPersonId" resultType="kr.co.kfs.asseterp.biz.emp.dto.MyTransportApprRes">
+        SELECT emp51_relate_appr_id                                                         AS relateApprId
+             , emp51_reg_no                                                                 AS regNo
+             , emp51_appr_id                                                                AS apprId
+             , apr01_status_cd                                                              AS statusCode
+             , f_cdnm('AprStatusCode', apr01_status_cd, emp51_company_id, apr01_reg_date)   AS statusName
+          FROM emp51_relate_appr
+               LEFT OUTER JOIN apr01_appr b ON emp51_appr_id = apr01_appr_id
+         WHERE emp51_company_id = #{companyId}
+           AND emp51_person_id = #{personId}
+           AND emp51_yyyymm LIKE #{yyyymm}
+         ORDER BY emp51_reg_no
+    </select>
+
+    <!-- AS-IS emp51_relate_appr.selectByCloseYn -->
+    <select id="selectCloseYn" resultType="string">
+        SELECT CASE
+                   WHEN EXISTS (
+                       SELECT 1
+                         FROM emp51_relate_appr
+                        WHERE emp51_close_yn = 'true'
+                          AND emp51_yyyymm LIKE #{yyyymm}
+                          AND emp51_company_id = #{companyId}
+                   ) THEN 'true'
+                   ELSE 'false'
+               END
+    </select>
+
+    <!-- AS-IS emp51_relate_appr.selectByRegno (다른 사원의 신청번호 최대값 + 1) -->
+    <select id="selectRegNo" resultType="string">
+        SELECT TO_CHAR(COALESCE(MAX(emp51_reg_no::INT), 0) + 1, 'FM000')
+          FROM emp51_relate_appr
+         WHERE emp51_company_id = #{companyId}
+           AND emp51_yyyymm LIKE #{yyyymm}
+           AND emp51_person_id != #{personId}
+    </select>
+
+    <delete id="deleteAppr">
+        DELETE FROM emp51_relate_appr
+         WHERE emp51_relate_appr_id = #{relateApprId}
+           AND emp51_company_id = #{companyId}
+    </delete>
+
+    <insert id="insertAppr">
+        INSERT INTO emp51_relate_appr (emp51_relate_appr_id, emp51_company_id, emp51_person_id, emp51_yyyymm, emp51_reg_no,
+                                       emp51_reg_date, emp51_reg_amt, emp51_appr_id)
+        VALUES (#{relateApprId}, #{companyId}, #{personId}, #{yyyymm}, #{regNo}, #{regDate}, #{regAmt}, NULL)
+    </insert>
+
+    <update id="updateApprId">
+        UPDATE emp51_relate_appr SET emp51_appr_id = #{apprId}
+         WHERE emp51_relate_appr_id = #{relateApprId}
+           AND emp51_company_id = #{companyId}
+           AND emp51_person_id = #{personId}
+    </update>
+
+</mapper>

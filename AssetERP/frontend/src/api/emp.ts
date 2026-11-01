@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -1436,5 +1436,63 @@ export const empMyErrandApi = {
   /** AS-IS emp.Emp54_Errand.delete */
   deleteMine: async (ids: number[]): Promise<void> => {
     await apiClient.delete('v1/emp/my-errands', { params: { ids: ids.join(',') } });
+  },
+};
+
+/** Y07 여비교통비 신청 (Emp50_Tab_TransportExpense) */
+export const empMyTransportApi = {
+  /** AS-IS emp.Emp50_TransportExpense.selectByYearMonth (yyyymm = YYYY.MM) */
+  search: async (yyyymm: string): Promise<MyTransport[]> => {
+    const res = await apiClient.get<ApiResponse<MyTransport[]>>('v1/emp/my-transport-expenses', { params: { yyyymm } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp50_TransportExpense.update / copyUpdate → 저장된 행(요청 순서). transportExpenseId 0 이하는 새 행 */
+  save: async (rows: MyTransport[]): Promise<MyTransport[]> => {
+    const res = await apiClient.put<ApiResponse<MyTransport[]>>('v1/emp/my-transport-expenses', rows.map(r => ({
+      transportExpenseId: r.transportExpenseId, yyyymm: r.yyyymm, date: r.date, startPoint: r.startPoint, closePoint: r.closePoint,
+      startTime: r.startTime, closeTime: r.closeTime, amt: r.amt, transportCode: r.transportCode, note: r.note,
+    })));
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp50_TransportExpense.delete */
+  deleteMine: async (ids: number[]): Promise<void> => {
+    await apiClient.delete('v1/emp/my-transport-expenses', { params: { ids: ids.join(',') } });
+  },
+
+  /** AS-IS emp.Emp51_RelateAppr.selectByPersonId — 없으면 null(미상신) */
+  getAppr: async (yyyymm: string): Promise<MyTransportAppr | null> => {
+    const res = await apiClient.get<ApiResponse<MyTransportAppr | null>>('v1/emp/my-transport-expenses/appr', { params: { yyyymm } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS emp.Emp51_RelateAppr.selectApprId */
+  getApprId: async (yyyymm: string): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/emp/my-transport-expenses/appr-id', { params: { yyyymm } });
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp51_RelateAppr.selectByCloseYn */
+  isClosed: async (yyyymm: string): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/emp/my-transport-expenses/closed', { params: { yyyymm } });
+    return res.data.data === true;
+  },
+
+  /** AS-IS emp.Emp51_RelateAppr.insert → 새 신청서 ID·신청번호 */
+  createAppr: async (yyyymm: string, regAmt: number): Promise<{ relateApprId: number; regNo: string }> => {
+    const res = await apiClient.post<ApiResponse<{ relateApprId: number; regNo: string }>>('v1/emp/my-transport-expenses/appr', { yyyymm, regAmt });
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp51_RelateAppr.updateApprId */
+  updateApprId: async (relateApprId: number, apprId: number): Promise<void> => {
+    await apiClient.put(`v1/emp/my-transport-expenses/appr/${relateApprId}/appr-id`, { apprId });
+  },
+
+  /** A42 상신 뒤 영수증 파일을 결재문서 첨부로 연결 (V36 PUT emp/transport-expenses/appr-files) */
+  linkReceiptFiles: async (ids: number[], apprId: number): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/emp/transport-expenses/appr-files', { ids, apprId });
+    return res.data.data ?? 0;
   },
 };
