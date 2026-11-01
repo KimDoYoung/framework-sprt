@@ -43,6 +43,8 @@ import {
   AstRelateAppr,
   TrCode,
   TrCodeWindow,
+  AstDepn,
+  AstNonDeductTax,
 } from '../types/ast';
 
 /** ast(자산) API (E21 자산상세 항목관리, E29 거래유형 등록) */
@@ -648,6 +650,47 @@ export const astApi = {
   /** AS-IS ast.Ast25_Price.delete (W10) → 지운 건수 */
   deletePrices: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/ast/prices', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  // ── W11 감가상각처리 (Ast06_Tab_EvalDepn) ──
+
+  /** AS-IS ast.Ast06_Tr.selectDepn (W11): depnDate = 상각년월의 말일 */
+  searchDepns: async (depnDate: string): Promise<AstDepn[]> => {
+    const res = await apiClient.get<ApiResponse<AstDepn[]>>('v1/ast/depns', { params: { depnDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act04_GenLedger.checkClose (W11): 마감된 날짜면 오류 */
+  checkDepnClose: async (stdDate: string): Promise<void> => {
+    await apiClient.get<ApiResponse<void>>('v1/ast/depns/check-close', { params: { stdDate } });
+  },
+
+  /** AS-IS ast.Ast06_Tr.updateDepnEval (W11): 선택한 줄의 상각비 계산·거래·비품원장·분개 */
+  processDepns: async (items: Pick<AstDepn, 'trId' | 'astClassTreeId' | 'date' | 'purTrId' | 'purDate' | 'bookAmt' | 'nonDeductTax' | 'acmDepnCost' | 'depnCost' | 'depnType' | 'depnYear' | 'depnRate' | 'calcStartDate' | 'classTreeName'>[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/ast/depns/process', { items });
+  },
+
+  /** AS-IS ast.Ast06_Tr.updateDepnCost (W11): 처리한 감가상각비 고치기 */
+  updateDepnCost: async (trId: number, depnCost: number | null): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/ast/depns/${trId}/cost`, { depnCost });
+  },
+
+  /** AS-IS ast.Ast16_NonDeductTax.selectByPurTrId (W11) */
+  searchNonDeductTaxes: async (purTrId: number): Promise<AstNonDeductTax[]> => {
+    const res = await apiClient.get<ApiResponse<AstNonDeductTax[]>>('v1/ast/non-deduct-taxes', { params: { purTrId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast16_NonDeductTax.update (W11): 요청과 같은 순서로 ID를 돌려준다 */
+  saveNonDeductTaxes: async (rows: AstNonDeductTax[]): Promise<number[]> => {
+    const res = await apiClient.put<ApiResponse<number[]>>('v1/ast/non-deduct-taxes', { rows });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast16_NonDeductTax.delete (W11) */
+  deleteNonDeductTaxes: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/ast/non-deduct-taxes', { data: ids });
     return res.data.data ?? 0;
   },
 };

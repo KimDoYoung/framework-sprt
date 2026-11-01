@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- W11 감가상각처리 Ast06_Tab_EvalDepn
+     AS-IS(IDMS-IC) server/ast/mapper/ast06_tr.xml(selectDepn · updateAmt) · ast16_non_deduct_tax.xml(selectByPurTrId) · utils dbConfig.getDateDif · ast09_book.createDepnBook
+     ast06_tr·ast16 저장은 UpdateDataModel의 동적 INSERT/UPDATE라 화면이 바꾸는 열만 명시했다(port-save) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstDepnMapper">
+
+    <!-- ast06_tr.selectDepn — 처리 안 한 줄의 거래ID는 f_create_seq()가 임시 발급(쓰기 가능 트랜잭션에서 호출) -->
+    <select id="selectDepn" resultType="kr.co.kfs.asseterp.biz.ast.dto.DepnRes">
+        SELECT ast06_tr_id              AS tr_id
+             , ast06_ast_class_tree_id  AS ast_class_tree_id
+             , ast06_date               AS date
+             , ast06_tr_cd              AS tr_code
+             , ast06_cur_cd             AS cur_code
+             , ast06_fx_rate            AS fx_rate
+             , ast06_amt                AS amt
+             , ast06_for_amt            AS for_amt
+             , ast06_person_id          AS person_id
+             , ast06_pur_tr_id          AS pur_tr_id
+             , ast06_company_id         AS company_id
+             , ast06_pur_date           AS pur_date
+             , ast06_book_amt           AS book_amt
+             , ast06_acm_depn_cost      AS acm_depn_cost
+             , ast06_depn_cost          AS depn_cost
+             , ast06_item_class_type_nm AS item_class_type_name
+             , ast06_class_tree_nm      AS class_tree_name
+             , ast06_depn_year          AS depn_year
+             , ast06_depn_rt            AS depn_rate
+             , ast06_depn_type          AS depn_type
+             , ast06_depn_type_nm       AS depn_type_name
+             , ast06_status_nm          AS status_name
+             , ast06_journal_id         AS journal_id
+             , ast06_non_deduct_tax     AS non_deduct_tax
+             , ast06_calc_start_date    AS calc_start_date
+        FROM (
+            SELECT COALESCE(ast06_tr_id, f_create_seq())                                                    AS ast06_tr_id
+                 , ast13_ast_class_tree_id                                                                  AS ast06_ast_class_tree_id
+                 , #{depnDate}::date                                                                        AS ast06_date
+                 , '5012'                                                                                   AS ast06_tr_cd
+                 , 'KRW'                                                                                    AS ast06_cur_cd
+                 , 1                                                                                        AS ast06_fx_rate
+                 , COALESCE(ast06_amt    , 0)                                                               AS ast06_amt
+                 , COALESCE(ast06_for_amt, 0)                                                               AS ast06_for_amt
+                 , ast06_person_id                                                                          AS ast06_person_id
+                 , ast13_pur_tr_id                                                                          AS ast06_pur_tr_id
+                 , ast13_company_id                                                                         AS ast06_company_id
+                 , ast13_pur_date                                                                           AS ast06_pur_date
+                 , ast13_pur_amt                                                                            AS ast06_book_amt
+                 , ast13_acm_depn_cost                                                                      AS ast06_acm_depn_cost
+                 , ast13_depn_cost                                                                          AS ast06_depn_cost
+                 , f_cdnm('ItemLClassCode', ast01_item_l_class_cd, ast13_company_id, ast13_pur_date)
+                   ||'-'||f_cdnm('ItemMClassCode', ast01_item_m_class_cd, ast13_company_id, ast13_pur_date)
+                   ||CASE WHEN substr(ast01_item_s_class_cd,5) = '99' THEN ''
+                          ELSE '-'||f_cdnm('ItemSClassCode', ast01_item_s_class_cd, ast13_company_id, ast13_pur_date) END ast06_item_class_type_nm
+                 , ast01_class_tree_nm                                                                      AS ast06_class_tree_nm
+                 , ast01_depn_year                                                                          AS ast06_depn_year
+                 , ast01_depn_rt                                                                            AS ast06_depn_rt
+                 , ast01_depn_type                                                                          AS ast06_depn_type
+                 , f_cdnm('DepnType', ast01_depn_type, ast01_company_id, f_sysdate())                       AS ast06_depn_type_nm
+                 , CASE WHEN ast06_tr_id IS NULL THEN '미처리' ELSE '처리완료' END                              AS ast06_status_nm
+                 , ( SELECT act02_journal_id
+                       FROM act02_journal
+                      WHERE act02_tr_id = ast06_tr_id )                                                     AS ast06_journal_id
+                 , COALESCE(( SELECT ast16_apply_non_deduct_tax
+                                FROM ast16_non_deduct_tax
+                               WHERE ast16_pur_tr_id = ast13_pur_tr_id
+                                 AND ast16_apply_date &lt;= #{depnDate}::date
+                               ORDER BY ast16_apply_date DESC
+                               LIMIT 1 ),0)                                                                 AS ast06_non_deduct_tax
+                 , CASE WHEN (ast13_pur_date  = ast13_depn_date                 AND
+                              COALESCE(ast13_depn_cost,0) = 0                   )
+                        THEN  ast13_depn_date
+                        ELSE (ast13_depn_date + interval '1month')::date END                                AS ast06_calc_start_date
+                 , ast13_pur_amt - COALESCE(ast13_acm_depn_cost,0)                                          AS rem_depn_cost
+              FROM ast13_book_depn
+                   INNER JOIN ast01_class_tree ON ( ast01_class_tree_id = ast13_ast_class_tree_id AND
+                                                    ast01_depn_type IS NOT NULL                   )
+                   LEFT OUTER JOIN ast06_tr    ON ( ast06_company_id  = ast13_company_id AND
+                                                    ast06_pur_tr_id   = ast13_pur_tr_id  AND
+                                                    ast06_date        = #{depnDate}::date AND
+                                                    ast06_tr_cd       = '5012'           )  -- (5012:감가상각)
+             WHERE ast13_company_id  = #{companyId}
+               AND COALESCE(ast13_retire_date,'9999-12-31') &gt; #{depnDate}::date
+               AND (ast13_pur_tr_id, ast13_depn_date) IN ( SELECT ast13_pur_tr_id, MAX(ast13_depn_date)
+                                                             FROM ast13_book_depn
+                                                            WHERE ast13_company_id = #{companyId}
+                                                              AND ast13_depn_date  &lt;= #{depnDate}::date
+                                                            GROUP BY ast13_pur_tr_id )
+        ) t
+        WHERE ( ( ast06_status_nm = '미처리'                                AND
+                  rem_depn_cost + ast06_non_deduct_tax &gt; 1000 ) OR
+                ( ast06_status_nm != '미처리'                               ) )
+        ORDER BY ast06_item_class_type_nm COLLATE "ko_KR.utf8" DESC, ast06_pur_date, ast06_pur_tr_id
+    </select>
+
+    <!-- dbConfig.getDateDif : f_get_datedif(startDate, closeDate, type) -->
+    <select id="selectDateDif" resultType="long">
+        SELECT f_get_datedif(#{startDate}::date, #{closeDate}::date, #{type})
+    </select>
+
+    <select id="existsTr" resultType="int">
+        SELECT count(*) FROM ast06_tr WHERE ast06_tr_id = #{trId}
+    </select>
+
+    <!-- UpdateDataModel(ast06_tr) 동적 INSERT/UPDATE — 거래코드 5012·통화 KRW·환율 1·외화금액 = 금액. 비고·거래처 등은 건드리지 않는다 -->
+    <insert id="insertTr">
+        INSERT INTO ast06_tr (ast06_tr_id, ast06_company_id, ast06_ast_class_tree_id, ast06_date, ast06_tr_cd, ast06_amt, ast06_person_id,
+                              ast06_cur_cd, ast06_for_amt, ast06_fx_rate, ast06_pur_tr_id, ast06_book_amt)
+        VALUES (#{r.trId}, #{companyId}, #{r.astClassTreeId}, #{r.date}, '5012', #{amt}, #{personId},
+                'KRW', #{amt}, 1, #{r.purTrId}, #{r.bookAmt})
+    </insert>
+
+    <update id="updateTr">
+        UPDATE ast06_tr
+           SET ast06_ast_class_tree_id = #{r.astClassTreeId}
+             , ast06_date              = #{r.date}
+             , ast06_tr_cd             = '5012'
+             , ast06_amt               = #{amt}
+             , ast06_person_id         = #{personId}
+             , ast06_cur_cd            = 'KRW'
+             , ast06_for_amt           = #{amt}
+             , ast06_fx_rate           = 1
+             , ast06_pur_tr_id         = #{r.purTrId}
+             , ast06_book_amt          = #{r.bookAmt}
+         WHERE ast06_tr_id      = #{r.trId}
+           AND ast06_company_id = #{companyId}
+    </update>
+
+    <!-- ast06_tr.updateAmt (회사 조건 추가) -->
+    <update id="updateAmt">
+        UPDATE ast06_tr
+           SET ast06_amt       = #{amt}
+             , ast06_for_amt   = #{amt}
+             , ast06_person_id = #{personId}
+         WHERE ast06_tr_id      = #{trId}
+           AND ast06_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS ast09_book.createDepnBook -->
+    <select id="createDepnBook" resultType="string" flushCache="true">
+        SELECT f_create_depnBook(#{procType}, #{trId})
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- ast16_non_deduct_tax.selectByPurTrId -->
+    <select id="selectNonDeductTaxes" resultType="kr.co.kfs.asseterp.biz.ast.dto.NonDeductTaxRes">
+        SELECT ast16_non_deduct_tax_id   AS non_deduct_tax_id
+             , ast16_pur_tr_id           AS pur_tr_id
+             , ast16_apply_date          AS apply_date
+             , ast16_apply_non_deduct_tax AS apply_non_deduct_tax
+             , ast16_note                AS note
+          FROM ast16_non_deduct_tax
+         WHERE ast16_pur_tr_id = #{purTrId}
+         ORDER BY ast16_apply_date
+    </select>
+
+    <insert id="insertNonDeductTax">
+        INSERT INTO ast16_non_deduct_tax (ast16_non_deduct_tax_id, ast16_pur_tr_id, ast16_apply_date, ast16_apply_non_deduct_tax, ast16_note)
+        VALUES (#{id}, #{r.purTrId}, #{r.applyDate}, #{r.applyNonDeductTax}, #{r.note})
+    </insert>
+
+    <update id="updateNonDeductTax">
+        UPDATE ast16_non_deduct_tax
+           SET ast16_apply_date           = #{r.applyDate}
+             , ast16_apply_non_deduct_tax = #{r.applyNonDeductTax}
+             , ast16_note                 = #{r.note}
+         WHERE ast16_non_deduct_tax_id = #{r.nonDeductTaxId}
+    </update>
+
+    <delete id="deleteNonDeductTaxes">
+        DELETE FROM ast16_non_deduct_tax
+         WHERE ast16_non_deduct_tax_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

@@ -741,3 +741,42 @@ export interface AstPrc {
   itemFullCode: string | null;
   lockYn: boolean;
 }
+
+/** 감가상각처리 한 줄 (W11 Ast06_Tab_EvalDepn, AS-IS Ast06_TrModel — ast06_tr.selectDepn) */
+export interface AstDepn {
+  trId: number;
+  astClassTreeId: number | null;
+  date: string;
+  trCode: string;
+  curCode: string;
+  fxRate: number | null;
+  amt: number | null;
+  forAmt: number | null;
+  personId: number | null;
+  purTrId: number;
+  companyId: number;
+  purDate: string;
+  bookAmt: number | null;
+  acmDepnCost: number | null;
+  depnCost: number | null;
+  itemClassTypeName: string | null;
+  classTreeName: string | null;
+  depnYear: number | null;
+  depnRate: number | null;
+  depnType: string | null;
+  depnTypeName: string | null;
+  /** '미처리' | '처리완료' */
+  statusName: string;
+  journalId: number | null;
+  nonDeductTax: number | null;
+  calcStartDate: string | null;
+}
+
+/** 불공제세액(추가분) 한 줄 (W11 Ast16_Lookup_NonDeductTax) */
+export interface AstNonDeductTax {
+  nonDeductTaxId: number;
+  purTrId: number;
+  applyDate: string | null;
+  applyNonDeductTax: number | null;
+  note: string | null;
+}
