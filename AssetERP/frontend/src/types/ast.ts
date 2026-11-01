@@ -462,6 +462,8 @@ export interface SettleAccrued {
   rcvPayCode: string | null;
   accruedAmt: number | null;
   note: string | null;
+  /** 거래유형 이름 (ast05_tr_nm, X04 그리드) */
+  trName: string | null;
 }
 
 /** AS-IS ast.Ast07_Settle.selectByHistoryPaging — 실수령/지급 History 한 행 */

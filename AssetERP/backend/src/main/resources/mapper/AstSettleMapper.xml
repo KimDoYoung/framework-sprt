@@ -15,7 +15,8 @@ SELECT ast06_tr_id AS tr_id, ast06_company_id AS company_id, ast06_date AS date,
                ast06_corp_id AS corp_id, ast06_corp_nm AS corp_name, ast06_rcv_pay_cd AS rcv_pay_code, ast06_accrued_amt AS accrued_amt,
                COALESCE(note, CONCAT( ast06_class_tree_nm
                                     , CASE WHEN COALESCE(ast06_class_tree_nm,'') != '' THEN '/' ELSE '' END
-                                    , ast06_note)) AS note
+                                    , ast06_note)) AS note,
+               ast06_tr_nm AS tr_name
           FROM (
 				SELECT 	ast06_tr_id
                     ,   ast06_company_id

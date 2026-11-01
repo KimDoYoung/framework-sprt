@@ -32,13 +32,14 @@ public class AstSettleController {
 
     private final AstSettleService service;
 
-    /** ast.Ast06_Tr.selectByAccrued (고유자산·국내·지급) */
+    /** ast.Ast06_Tr.selectByAccrued (고유자산·국내). payCode가 없으면 지급(02) — U11, X04는 수령/지급 선택값("%"=전체) */
     @GetMapping("/accrueds")
     public ApiResponse<List<SettleAccruedRes>> accrueds(@AuthenticationPrincipal UserPrincipal principal,
                                                         @RequestParam(required = false) Long corpId,
                                                         @RequestParam(required = false) String searchText,
-                                                        @RequestParam(required = false) String trCode) {
-        return ApiResponse.ok(service.searchAccrueds(principal, corpId, searchText, trCode));
+                                                        @RequestParam(required = false) String trCode,
+                                                        @RequestParam(required = false) String payCode) {
+        return ApiResponse.ok(service.searchAccrueds(principal, corpId, searchText, trCode, payCode));
     }
 
     /** ast.Ast07_Settle.selectByHistoryPaging — selectType 1·3 최근 20건 / 2 조회조건(쪽 나누기) */

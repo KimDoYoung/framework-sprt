@@ -13160,5 +13160,38 @@
     "note": "docs/work/X/X03-작업기록.md",
     "history": [],
     "id": "X03"
+  },
+  "Ast06_Tab_AccruedIntrinsic": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ast/Ast05_Lookup_TrCodeWindow.java": "01381f57ef3c34fb9be608e6d36b106d303ae341",
+      "application/src/main/java/myApp/client/vi/ast/Ast06_Tab_AccruedIntrinsic.java": "9b8a69763474479e151f5618da71e7f13ad4e9b3",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast05_TrCodeModel.java": "88bd761018ed03deeb4032296eb60cce02d28f83",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast05_TrCodeModelProperties.java": "f038cc0656fc2304ccabae9ee202ade9916cdb91",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast06_TrModel.java": "4de9b68f3983c9976055751517785e56546d71ae",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast06_TrModelProperties.java": "f4480a324e232d39a97affbaa1caefc06317f317",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast08_TrFinanceModel.java": "fce67a9b16194b036136b7abd40d66ceed8e9c7c",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast20_TrTaxModel.java": "73b370813f8353b7112262185f9383b67bb1fa60",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast21_Tr4InsureModel.java": "4e19b66c01be6731bc6ed85419875adcb8a56a04",
+      "application/src/main/java/myApp/server/ast/Ast05_TrCode.java": "c9e256f098331c1c98bb8da7f3232fa3e934b898",
+      "application/src/main/java/myApp/server/ast/Ast06_Tr.java": "2702058b182da45864e4313e8ce23ed2b4268dc8",
+      "application/src/main/java/myApp/server/ast/mapper/ast05_tr_code.xml": "2672ce2593c624e22879a20aba3414ab34ffc728",
+      "application/src/main/java/myApp/server/ast/mapper/ast06_tr.xml": "920b374e2a153a0c08ca47690139d316723fede4"
+    },
+    "shared_links": [
+      "Ast07_Grid_History",
+      "Ast07_Lookup_Settle",
+      "Ast07_Lookup_SettleMulti",
+      "Sys15_Lookup_Corp"
+    ],
+    "recorded_at": "2026-11-02T00:56:16+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/X/X04-작업기록.md",
+    "history": [],
+    "id": "X04"
   }
 }

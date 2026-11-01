@@ -51,9 +51,11 @@ public class AstSettleService {
     }
 
     /** ast.Ast06_Tr.selectByAccrued — Pay50_Tab_ExpenseSettle: 고유자산(1)·국내(1)·지급(02), corpId 0/없음은 전체, 검색어가 없으면 "%" */
-    public List<SettleAccruedRes> searchAccrueds(UserPrincipal user, Long corpId, String searchText, String trCode) {
+    public List<SettleAccruedRes> searchAccrueds(UserPrincipal user, Long corpId, String searchText, String trCode, String payCode) {
         Long corp = corpId == null || corpId == 0L ? null : corpId;
-        return mapper.selectAccrueds(user.getCompanyId(), user.getUserId(), orgId(user), "1", "1", "02", orAll(searchText), orAll(trCode), corp);
+        // X04(Ast06_Tab_AccruedIntrinsic)는 수령/지급 콤보 값을 보낸다(전체 "%"). U11은 보내지 않아 지급(02) 고정
+        String pay = payCode == null || payCode.isEmpty() ? "02" : payCode;
+        return mapper.selectAccrueds(user.getCompanyId(), user.getUserId(), orgId(user), "1", "1", pay, orAll(searchText), orAll(trCode), corp);
     }
 
     /**

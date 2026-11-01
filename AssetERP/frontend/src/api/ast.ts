@@ -530,8 +530,8 @@ export const astApi = {
   // ── U11 미수/미지급 결제 (Pay50_Tab_ExpenseSettle) ──
 
   /** AS-IS ast.Ast06_Tr.selectByAccrued (고유자산·국내·지급): corpId가 없으면 전체 */
-  searchSettleAccrueds: async (p: { corpId?: number | null; searchText: string; trCode: string }): Promise<SettleAccrued[]> => {
-    const res = await apiClient.get<ApiResponse<SettleAccrued[]>>('v1/ast/settles/accrueds', { params: { corpId: p.corpId ?? undefined, searchText: p.searchText, trCode: p.trCode } });
+  searchSettleAccrueds: async (p: { corpId?: number | null; searchText: string; trCode: string; payCode?: string }): Promise<SettleAccrued[]> => {
+    const res = await apiClient.get<ApiResponse<SettleAccrued[]>>('v1/ast/settles/accrueds', { params: { corpId: p.corpId ?? undefined, searchText: p.searchText, trCode: p.trCode, payCode: p.payCode } });
     return res.data.data ?? [];
   },
 

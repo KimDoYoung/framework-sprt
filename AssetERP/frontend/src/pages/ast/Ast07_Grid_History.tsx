@@ -24,6 +24,8 @@ interface Props {
   assetType: string;
   /** 사업비지출(9100) 거래만 보는 화면이면 true (expenseOnlyYn) */
   expenseOnly: boolean;
+  /** 수령/지급 (payName 콤보) — 없으면 "%" (X04) */
+  payCode?: string;
   /** 거래 구분 (trCode TextField) — 없으면 "%" */
   trCode: string | null;
   /** 거래처 (corpId LongField) — 없으면 "%" */
@@ -36,7 +38,7 @@ interface Props {
   onChanged: () => void;
 }
 
-export const Ast07_Grid_History: React.FC<Props> = ({ assetType, expenseOnly, trCode, corpId, searchText, nonce, onChanged }) => {
+export const Ast07_Grid_History: React.FC<Props> = ({ assetType, expenseOnly, payCode = '%', trCode, corpId, searchText, nonce, onChanged }) => {
   const gridRef = useRef<AgGridReact<SettleHistory>>(null);
   // setting() L113-126: selectType "1" = 최근입력순, "2" = 조회조건 적용
   const [mode, setMode] = useState<'1' | '2'>('1');
@@ -45,8 +47,8 @@ export const Ast07_Grid_History: React.FC<Props> = ({ assetType, expenseOnly, tr
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const cond = useRef({ trCode, corpId, searchText, mode });
-  cond.current = { trCode, corpId, searchText, mode };
+  const cond = useRef({ payCode, trCode, corpId, searchText, mode });
+  cond.current = { payCode, trCode, corpId, searchText, mode };
 
   // retrieve() L184-229: ast.Ast07_Settle.selectByHistoryPaging(companyId, userId, orgId, assetType, abroType "1", selectType, searchText, payCode "%", trCode, corpId) — 쪽 나누기 100건
   const load = useCallback(async (p: number) => {
@@ -55,7 +57,7 @@ export const Ast07_Grid_History: React.FC<Props> = ({ assetType, expenseOnly, tr
     setLoading(true);
     try {
       const res = await astApi.searchSettleHistories({
-        assetType, selectType, payCode: '%', trCode: c.trCode ?? '%', corpId: c.corpId == null ? '%' : String(c.corpId),
+        assetType, selectType, payCode: c.payCode, trCode: c.trCode ?? '%', corpId: c.corpId == null ? '%' : String(c.corpId),
         searchText: c.searchText, limit: LIMIT, offset: (p - 1) * LIMIT,
       });
       setRows(res.rows);
