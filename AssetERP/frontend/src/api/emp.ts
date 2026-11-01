@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -1396,5 +1396,45 @@ export const empErrandApi = {
   search: async (startDate: string, closeDate: string, searchText: string): Promise<Errand[]> => {
     const res = await apiClient.get<ApiResponse<Errand[]>>('v1/emp/errands', { params: { startDate, closeDate, searchText } });
     return res.data.data ?? [];
+  },
+};
+
+/** Y04 외출등록 (Emp54_Tab_Errand) */
+export const empMyErrandApi = {
+  /** AS-IS emp.Emp54_Errand.selectByDate */
+  search: async (startDate: string, closeDate: string): Promise<MyErrand[]> => {
+    const res = await apiClient.get<ApiResponse<MyErrand[]>>('v1/emp/my-errands', { params: { startDate, closeDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp54_Errand.update (UpdateDataModel) → 저장된 행(요청 순서). errandId 0 이하는 새 행 */
+  save: async (rows: MyErrand[]): Promise<MyErrand[]> => {
+    const res = await apiClient.put<ApiResponse<MyErrand[]>>('v1/emp/my-errands', rows.map(r => ({
+      errandId: r.errandId, errandCode: r.errandCode, date: r.date, departTime: r.departTime, returnTime: r.returnTime,
+      reason: r.reason, venue: r.venue, host: r.host, note: r.note, publicYn: r.publicYn,
+    })));
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp54_Errand.modelUpdate (반복등록) → 넣은 행 수 */
+  createCycle: async (req: ErrandCycleReq): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/emp/my-errands/cycle', req);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp54_Errand.update (결재문서 ID) */
+  updateApprId: async (errandId: number, apprId: number): Promise<void> => {
+    await apiClient.put(`v1/emp/my-errands/${errandId}/appr-id`, { apprId });
+  },
+
+  /** AS-IS emp.Emp54_Errand.updatePublicYn → 바뀐 행 */
+  updatePublic: async (errandId: number, publicYn: boolean): Promise<MyErrand> => {
+    const res = await apiClient.put<ApiResponse<MyErrand>>(`v1/emp/my-errands/${errandId}/public`, { publicYn });
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp54_Errand.delete */
+  deleteMine: async (ids: number[]): Promise<void> => {
+    await apiClient.delete('v1/emp/my-errands', { params: { ids: ids.join(',') } });
   },
 };

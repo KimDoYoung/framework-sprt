@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  외출등록 (Y04 Emp54_Tab_Errand)
+  AS-IS(IDMS-IC) server/emp/mapper/emp54_errand.xml selectByDate·selectById·insert·insertCycle + sys12_calendar.selectByTargetDate + UpdateDataModel(emp54_errand).
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpMyErrandMapper">
+
+    <sql id="cols">
+        emp54_errand_id                                                              AS errandId
+      , emp54_person_id                                                              AS personId
+      , f_emp_kor_nm(emp54_person_id)                                                AS personName
+      , f_org_nm(emp03_org_code_id, f_sysdate())                                     AS orgName
+      , emp54_errand_cd                                                              AS errandCode
+      , f_cdnm('ErrandCode', emp54_errand_cd, emp54_company_id, emp54_date)          AS errandName
+      , emp54_date                                                                   AS date
+      , sys12_weekday                                                                AS weekday
+      , emp54_depart_time                                                            AS departTime
+      , emp54_return_time                                                            AS returnTime
+      , emp54_reason                                                                 AS reason
+      , emp54_venue                                                                  AS venue
+      , emp54_host                                                                   AS host
+      , emp54_note                                                                   AS note
+      , emp54_appr_id                                                                AS apprId
+      , apr01_status_cd                                                              AS aprStatusCode
+      , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)   AS aprStatusName
+      , (COALESCE(emp54_public_yn, 'false') = 'true')                                AS publicYn
+      , CASE WHEN COALESCE(emp54_public_yn,'false') = 'true' THEN '전체공개'
+             ELSE (
+                     SELECT (SELECT CASE WHEN emp56_share_cd = '1'
+                                         THEN f_emp_kor_nm(emp56_person_id)
+                                         ELSE f_org_nm(emp56_org_id, f_today()) END
+                               FROM emp56_share
+                              WHERE emp56_parent_id = emp54_errand_id
+                              ORDER BY emp56_share_cd DESC
+                              LIMIT 1)
+                            ||(CASE WHEN COUNT(*) = 1 THEN ''
+                                    ELSE ' 외 '|| COUNT(*)-1
+                               END)
+                       FROM emp56_share
+                      WHERE emp56_parent_id = emp54_errand_id   ) END                AS shareInfo
+    </sql>
+
+    <sql id="fromJoin">
+          FROM emp54_errand
+               INNER JOIN sys12_calendar ON ( sys12_company_id = emp54_company_id AND
+                                              sys12_day::date  = emp54_date       )
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = emp54_appr_id
+               LEFT OUTER JOIN emp03_trans ON (
+                                                  emp54_person_id = emp03_person_id
+                                              AND emp03_trans_cd NOT IN ('800','900')
+                                              AND emp03_trans_date = (
+                                                                        SELECT MAX(x.emp03_trans_date)
+                                                                          FROM emp03_trans x
+                                                                         WHERE x.emp03_person_id = emp54_person_id
+                                                                           AND x.emp03_trans_date  &lt;=  f_today()
+                                                                     )
+                                             )
+    </sql>
+
+    <!-- AS-IS emp54_errand.selectByDate (회사 조건 추가) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.emp.dto.MyErrandRes">
+        SELECT <include refid="cols"/>
+        <include refid="fromJoin"/>
+         WHERE emp54_company_id = #{companyId}
+           AND emp54_person_id = #{personId}
+           AND emp54_date BETWEEN #{startDate} AND #{closeDate}
+         ORDER BY emp54_date DESC
+    </select>
+
+    <!-- AS-IS emp54_errand.selectById (본인 행만) -->
+    <select id="selectMineById" resultType="kr.co.kfs.asseterp.biz.emp.dto.MyErrandRes">
+        SELECT <include refid="cols"/>
+        <include refid="fromJoin"/>
+         WHERE emp54_company_id = #{companyId}
+           AND emp54_person_id = #{personId}
+           AND emp54_errand_id = #{errandId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS emp54_errand.insert / UpdateDataModel INSERT (결재 ID 비움) -->
+    <insert id="insertErrand">
+        INSERT INTO emp54_errand (emp54_errand_id, emp54_company_id, emp54_person_id, emp54_errand_cd, emp54_date, emp54_depart_time,
+                                  emp54_return_time, emp54_reason, emp54_host, emp54_venue, emp54_note, emp54_appr_id, emp54_public_yn)
+        VALUES (#{errandId}, #{companyId}, #{personId}, #{errandCode}, #{date}, #{departTime},
+                #{returnTime}, #{reason}, #{host}, #{venue}, #{note}, NULL, CAST(#{publicYn} AS VARCHAR))
+    </insert>
+
+    <!-- UpdateDataModel UPDATE (화면이 바꾸는 열) -->
+    <update id="updateErrand">
+        UPDATE emp54_errand
+           SET emp54_errand_cd    = #{req.errandCode}
+             , emp54_date         = #{req.date}
+             , emp54_depart_time  = #{req.departTime}
+             , emp54_return_time  = #{req.returnTime}
+             , emp54_reason       = #{req.reason}
+             , emp54_venue        = #{req.venue}
+             , emp54_host         = #{req.host}
+             , emp54_note         = #{req.note}
+             , emp54_public_yn    = CAST(#{req.publicYn} AS VARCHAR)
+         WHERE emp54_errand_id = #{req.errandId}
+           AND emp54_company_id = #{companyId}
+           AND emp54_person_id = #{personId}
+    </update>
+
+    <!-- AS-IS emp54_errand.insertCycle (반복 날짜마다 원래 행을 복사) -->
+    <insert id="insertCycle">
+        INSERT INTO emp54_errand
+        SELECT f_create_seq()
+             , emp54_company_id
+             , emp54_person_id
+             , emp54_errand_cd
+             , #{date}
+             , emp54_depart_time
+             , emp54_return_time
+             , emp54_reason
+             , emp54_host
+             , emp54_venue
+             , emp54_note
+             , emp54_appr_id
+             , emp54_public_yn
+          FROM emp54_errand
+         WHERE emp54_errand_id = #{errandId}
+           AND emp54_company_id = #{companyId}
+    </insert>
+
+    <!-- AS-IS sys12_calendar.selectByTargetDate — 건수 1이면 근무일 -->
+    <select id="countWorkingDay" resultType="int">
+        SELECT COUNT(*)
+          FROM sys12_calendar
+         WHERE sys12_working_yn LIKE 'true'
+           AND sys12_day = #{targetDate}
+           AND sys12_company_id = #{companyId}
+    </select>
+
+    <update id="updateApprId">
+        UPDATE emp54_errand SET emp54_appr_id = #{apprId}
+         WHERE emp54_errand_id = #{errandId} AND emp54_company_id = #{companyId} AND emp54_person_id = #{personId}
+    </update>
+
+    <!-- AS-IS emp54_errand.updatePublicYn -->
+    <update id="updatePublicYn">
+        UPDATE emp54_errand SET emp54_public_yn = CAST(#{publicYn} AS VARCHAR)
+         WHERE emp54_errand_id = #{errandId} AND emp54_company_id = #{companyId} AND emp54_person_id = #{personId}
+    </update>
+
+    <delete id="deleteErrand">
+        DELETE FROM emp54_errand
+         WHERE emp54_errand_id = #{errandId} AND emp54_company_id = #{companyId} AND emp54_person_id = #{personId}
+    </delete>
+
+</mapper>

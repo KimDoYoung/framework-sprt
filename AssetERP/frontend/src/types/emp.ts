@@ -1125,3 +1125,42 @@ export interface Share {
   orgId: number | null;
   orgName: string | null;
 }
+
+/** Y04 외출등록 한 줄 (Emp54_ErrandModel — 본인 외출) */
+export interface MyErrand {
+  errandId: number;
+  personId: number;
+  personName: string | null;
+  orgName: string | null;
+  errandCode: string | null;
+  errandName: string | null;
+  date: string | null;
+  weekday: string | null;
+  departTime: string | null;
+  returnTime: string | null;
+  reason: string | null;
+  venue: string | null;
+  host: string | null;
+  note: string | null;
+  apprId: number | null;
+  aprStatusCode: string | null;
+  aprStatusName: string | null;
+  publicYn: boolean | null;
+  shareInfo: string | null;
+}
+
+/** Y04 반복등록 요청 (Emp54_Edit_Errand.update) */
+export interface ErrandCycleReq {
+  errandCode: string;
+  date: string;
+  departTime: string | null;
+  returnTime: string | null;
+  reason: string | null;
+  venue: string | null;
+  host: string | null;
+  cycleName: string;
+  cycleNum: number | null;
+  cycleDate: string | null;
+  holidayYn: boolean;
+  cycleOption: number | null;
+}

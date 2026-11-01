@@ -5,6 +5,7 @@ import kr.co.kfs.asseterp.biz.emp.dto.ShareAddReq;
 import kr.co.kfs.asseterp.biz.emp.dto.ShareRes;
 import kr.co.kfs.asseterp.biz.emp.dto.ShareSaveReq;
 import kr.co.kfs.asseterp.biz.emp.mapper.EmpBizTripMapper;
+import kr.co.kfs.asseterp.biz.emp.mapper.EmpMyErrandMapper;
 import kr.co.kfs.asseterp.biz.emp.mapper.EmpShareMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
@@ -15,8 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * 출장 공유지정 (AS-IS Emp56_Lookup_Share → server/emp/Emp56_Share). 지금은 출장(emp53)만 부모로 받는다 —
- * 외출(Y04 emp54)이 같은 창을 쓰게 되면 부모 확인만 넓힌다.
+ * 출장·외출 공유지정 (AS-IS Emp56_Lookup_Share → server/emp/Emp56_Share). 부모는 본인 출장(emp53, Y05) 또는 본인 외출(emp54, Y04).
  */
 @Service
 @RequiredArgsConstructor
@@ -25,6 +25,7 @@ public class EmpShareService {
 
     private final EmpShareMapper mapper;
     private final EmpBizTripMapper bizTripMapper;
+    private final EmpMyErrandMapper errandMapper;
 
     /** AS-IS emp.Emp56_Share.selectByParentId */
     public List<ShareRes> search(UserPrincipal user, Long parentId) {
@@ -56,7 +57,8 @@ public class EmpShareService {
     }
 
     private void requireOwnTrip(UserPrincipal user, Long parentId) {
-        if (parentId == null || bizTripMapper.selectMineById(user.getCompanyId(), user.getUserId(), parentId) == null) {
+        if (parentId == null || (bizTripMapper.selectMineById(user.getCompanyId(), user.getUserId(), parentId) == null
+                && errandMapper.selectMineById(user.getCompanyId(), user.getUserId(), parentId) == null)) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
     }
