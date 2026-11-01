@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.ast.service;
 
 import kr.co.kfs.asseterp.biz.act.service.ActJournalService;
+import kr.co.kfs.asseterp.biz.ast.dto.DepositIntSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.ForeignDepositRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrFinanceRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrFinanceSaveReq;
@@ -109,6 +110,34 @@ public class AstTrFinanceService {
         }
         String msg = mapper.createFinanceBook("P", trId);
         if (!"Y".equals(msg)) throw new BusinessException(ErrorCode.INVALID_INPUT, msg);
+        return trId;
+    }
+
+    /**
+     * Ast06_Tr.updateDepositInt (W23 예금/예치금 이자수령, 거래유형 3212) — 필수 검사(AS-IS Ast06_Lookup_TrDepositInt.preUpdate L294-331)
+     * → 회계마감 검사 → ast06_tr → ast08_tr_finance. 분개 생성·예금원장정리는 화면이 이어서 부른다. 저장한 거래ID를 돌려준다
+     */
+    @Transactional
+    public Long saveDepositInt(UserPrincipal user, DepositIntSaveReq r) {
+        if (r.astClassTreeId() == null) throw invalid("계좌는 필수선택 항목입니다.");
+        if (r.intAmt() == null || r.intAmt() == 0) throw invalid("이자금액은 필수입력 항목입니다");
+        journalService.checkClose(user.getCompanyId(), r.date());
+        // setAmt() L275-292: 실수령액 = 이자 − 법인세 − 지방세 (빈 값은 0)
+        long amt = r.intAmt() - (r.corpTax() == null ? 0 : r.corpTax()) - (r.localTax() == null ? 0 : r.localTax());
+
+        Long trId = r.trId();
+        if (trId == null) {
+            trId = mapper.selectNextId();
+            mapper.insertDepositIntTr(trId, user.getCompanyId(), user.getUserId(), amt, r);
+        } else if (mapper.updateDepositIntTr(user.getCompanyId(), amt, r) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        Long financeId = mapper.selectFinanceId(trId);
+        if (financeId == null) {
+            mapper.insertDepositIntFinance(mapper.selectNextId(), trId, r);
+        } else {
+            mapper.updateDepositIntFinance(financeId, r);
+        }
         return trId;
     }
 

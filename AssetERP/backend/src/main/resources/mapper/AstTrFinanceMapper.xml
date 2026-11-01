@@ -257,4 +257,42 @@
          ORDER BY ast01_parent_tree_id, ast01_seq
     </select>
 
+    <!-- AS-IS Ast06_Tr.updateDepositInt L412-437 (IDMS-IC) — UpdateDataModel(ast06_tr, ast08_tr_finance). 거래유형 3212·통화 KRW·환율 1·미수/미지급 아님은 openNew() 기본값.
+         preUpdate()가 약정금액(cont_amt)=이자금액, 외화값=원화값, 예금ID(deposit_id)=계좌ID로 채운다 -->
+    <insert id="insertDepositIntTr">
+        INSERT INTO ast06_tr (ast06_tr_id, ast06_company_id, ast06_person_id, ast06_date, ast06_tr_cd, ast06_amt, ast06_note,
+                              ast06_deposit_id, ast06_ast_class_tree_id, ast06_cont_amt, ast06_for_cont_amt, ast06_for_amt,
+                              ast06_cur_cd, ast06_fx_rate, ast06_settle_mng_yn)
+        VALUES (#{trId}, #{companyId}, #{personId}, #{r.date}, '3212', #{amt}, #{r.note},
+                #{r.astClassTreeId}, #{r.astClassTreeId}, #{r.intAmt}, #{r.intAmt}, #{amt},
+                'KRW', 1, false)
+    </insert>
+
+    <update id="updateDepositIntTr">
+        UPDATE ast06_tr
+           SET ast06_amt               = #{amt},
+               ast06_note              = #{r.note},
+               ast06_deposit_id        = #{r.astClassTreeId},
+               ast06_ast_class_tree_id = #{r.astClassTreeId},
+               ast06_cont_amt          = #{r.intAmt},
+               ast06_for_cont_amt      = #{r.intAmt},
+               ast06_for_amt           = #{amt}
+         WHERE ast06_tr_id      = #{r.trId}
+           AND ast06_company_id = #{companyId}
+    </update>
+
+    <insert id="insertDepositIntFinance">
+        INSERT INTO ast08_tr_finance (ast08_tr_finance_id, ast08_tr_id, ast08_account_id, ast08_int_amt, ast08_corp_tax, ast08_local_tax)
+        VALUES (#{financeId}, #{trId}, #{r.astClassTreeId}, #{r.intAmt}, #{r.corpTax}, #{r.localTax})
+    </insert>
+
+    <update id="updateDepositIntFinance">
+        UPDATE ast08_tr_finance
+           SET ast08_account_id = #{r.astClassTreeId},
+               ast08_int_amt    = #{r.intAmt},
+               ast08_corp_tax   = #{r.corpTax},
+               ast08_local_tax  = #{r.localTax}
+         WHERE ast08_tr_finance_id = #{financeId}
+    </update>
+
 </mapper>

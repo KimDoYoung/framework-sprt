@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.ast.mapper;
 
+import kr.co.kfs.asseterp.biz.ast.dto.DepositIntSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.ForeignDepositRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrFinanceRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrFinanceSaveReq;
@@ -39,4 +40,15 @@ public interface AstTrFinanceMapper {
 
     /** sys00_common.selectForDeposit — 외화 예금계좌 콤보(W07 Ast06_Lookup_TrForFinance depositName) */
     List<ForeignDepositRes> selectForDeposit(@Param("companyId") Long companyId);
+
+    /** Ast06_Tr.updateDepositInt — ast06_tr 새 행 / 고침(amt는 서버가 계산한 실수령액) */
+    int insertDepositIntTr(@Param("trId") long trId, @Param("companyId") Long companyId, @Param("personId") Long personId,
+                           @Param("amt") long amt, @Param("r") DepositIntSaveReq r);
+
+    int updateDepositIntTr(@Param("companyId") Long companyId, @Param("amt") long amt, @Param("r") DepositIntSaveReq r);
+
+    /** Ast06_Tr.updateDepositInt — ast08_tr_finance 새 행 / 고침 */
+    int insertDepositIntFinance(@Param("financeId") long financeId, @Param("trId") Long trId, @Param("r") DepositIntSaveReq r);
+
+    int updateDepositIntFinance(@Param("financeId") Long financeId, @Param("r") DepositIntSaveReq r);
 }

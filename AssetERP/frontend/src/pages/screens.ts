@@ -229,6 +229,7 @@ import { Ast06_Tab_TrTax } from './ast/Ast06_Tab_TrTax';
 import { Ast06_Tab_TrFinance } from './ast/Ast06_Tab_TrFinance';
 import { Ast06_Tab_TrForFinance } from './ast/Ast06_Tab_TrForFinance';
 import { Ast06_Tab_TrAcntTransfer } from './ast/Ast06_Tab_TrAcntTransfer';
+import { Ast06_Tab_TrDepositInt } from './ast/Ast06_Tab_TrDepositInt';
 import { Ast06_Tab_EvalFinance } from './ast/Ast06_Tab_EvalFinance';
 import { Ast25_Tab_Price } from './ast/Ast25_Tab_Price';
 import { Ast06_Tab_EvalDepn } from './ast/Ast06_Tab_EvalDepn';
@@ -645,6 +646,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ast25_Tab_Price, // W10 (메뉴 #1295. 시세 조회·저장·삭제 — 시세입력 창 Ast25_Lookup_Price(W09)와 같은 ast/prices API)
   Ast06_Tab_EvalFinance, // W09 (메뉴 #1167. + Ast06_TabPage_MarketEval·InterestEval·Ast25_Lookup_Price. 거래·분개 그리드는 W05~W08과 같은 부품)
   Ast06_Tab_TrAcntTransfer, // W08 (메뉴 #1208. + Ast06_Lookup_TrAcntTransfer. 보유자산 조회창·연관문서·분개 [변경]은 W06과 같은 창)
+  Ast06_Tab_TrDepositInt, // W23 (메뉴 #1472·#1205. + Ast06_Lookup_TrDepositInt. 분개 그리드·연관문서·계좌 조회창은 W05·W08과 같은 창)
   Ast06_Tab_TrIPO, // W05 1단계 (메뉴 #1288. + Ast06_Lookup_TrIPO·Ast06_Lookup_CreateIpoAstClass·Ast01_Lookup_Info. 연관문서 Act80_Lookup_RelateAppr·분개 [변경] Act02_Lookup_ModiJournal은 다음 단계)
   Tdm50_Tab_TotalDashboard, // N01 1단계 (+ Tdm50_Tab_Dashboard·DashboardExct·DashboardOrg·Tdm01_Lookup_SelectSingle, [보기] 아이콘의 점검 편집창·미흡 조치 상세는 N22·N24)
   Tdm50_Tab_CheckJob, // N20 1단계 (+ Tdm50_TabPage_CheckJob·Tdm50_Edit_CheckJob·Tdm55_Lookup_ChckRecord, 결재요청·문서보기·알림발송의 문자 창은 다른 도메인이라 점검 후 안내, 보고서 PDF는 서버 CheckExctPdfMaker)

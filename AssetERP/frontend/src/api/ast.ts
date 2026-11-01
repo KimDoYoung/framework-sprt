@@ -26,6 +26,7 @@ import {
   AstForeignDeposit,
   AstTrFinance,
   AstTrFinanceSaveReq,
+  AstDepositIntSaveReq,
   AstEval,
   AstEvalItem,
   AstPrice,
@@ -448,6 +449,12 @@ export const astApi = {
   /** AS-IS ast.Ast06_Tr.updateFinance (W05): 금융상품 거래 저장 → 저장한 거래 ID */
   saveTrFinance: async (req: AstTrFinanceSaveReq): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>('v1/ast/trs/finance', req);
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast06_Tr.updateDepositInt (W23): 예금/예치금 이자수령 저장 → 저장한 거래 ID */
+  saveDepositInt: async (req: AstDepositIntSaveReq): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/ast/trs/finance/deposit-int', req);
     return res.data.data;
   },
 

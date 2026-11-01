@@ -998,3 +998,14 @@ export interface AstBookReal {
   rcntForAmt: number | null;
   note: string | null;
 }
+
+/** AS-IS ast.Ast06_Tr.updateDepositInt (W23 예금/예치금 이자수령) — trId가 없으면 새 거래. 실수령액은 서버가 계산한다 */
+export interface AstDepositIntSaveReq {
+  trId: number | null;
+  date: string;
+  astClassTreeId: number | null;
+  intAmt: number | null;
+  corpTax: number | null;
+  localTax: number | null;
+  note: string | null;
+}

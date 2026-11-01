@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.ast.controller;
 
 import jakarta.validation.Valid;
+import kr.co.kfs.asseterp.biz.ast.dto.DepositIntSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.ForeignDepositRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrFinanceRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrFinanceSaveReq;
@@ -65,6 +66,12 @@ public class AstTrFinanceController {
     @PutMapping
     public ApiResponse<Long> save(@AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody TrFinanceSaveReq req) {
         return ApiResponse.ok(service.save(principal, req));
+    }
+
+    /** ast.Ast06_Tr.updateDepositInt (W23 예금/예치금 이자수령) — 저장한 거래ID */
+    @PutMapping("/deposit-int")
+    public ApiResponse<Long> saveDepositInt(@AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody DepositIntSaveReq req) {
+        return ApiResponse.ok(service.saveDepositInt(principal, req));
     }
 
     /** 엑셀다운로드 (AS-IS ExcelDownload ast06IpoList) — 공모주청약(Ast06_Tab_TrIPO) 조회 결과 */
