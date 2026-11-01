@@ -60,6 +60,12 @@
              , f_cdnm('RcvPayCode', a.ast05_rcv_pay_cd, a.ast05_company_id, f_sysdate()) AS rcv_pay_name
              , a.ast05_ast_class_tree_id   AS ast_class_tree_id
              , w.ast15_note                AS note
+             , ( SELECT m.act11_book_io_type
+                   FROM act11_tr_map m
+                  WHERE m.act11_company_id = a.ast05_company_id
+                    AND m.act11_tr_cd      = a.ast05_tr_cd
+                    AND COALESCE(m.act11_use_yn,'false') = 'true'
+                  LIMIT 1 )                AS book_io_type
           FROM ast15_tr_code_window w
                INNER JOIN ast05_tr_code a ON ( a.ast05_company_id = w.ast15_company_id AND
                                                a.ast05_tr_cd      = w.ast15_tr_cd      )

@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 /**
  * AS-IS ast.Ast06_Tr.selectByPayCode · selectById (금융상품 거래, W05 청약처리) — 그리드 열 + 편집창 값.
- * ast06_tr + ast08_tr_finance. 원본은 `select *`로 훨씬 많은 열을 읽지만 화면이 쓰는 것만 둔다
+ * ast06_tr + ast08_tr_finance. W06 금융상품 거래처리가 쓰는 세금·이자·손익·수령지급·원장입출고 구분(taxSum~bookIoType)을 더했다. 원본은 `select *`로 훨씬 많은 열을 읽지만 화면이 쓰는 것만 둔다
  */
 public record TrFinanceRes(
         Long trId,
@@ -42,6 +42,15 @@ public record TrFinanceRes(
         Long apprId,
         String apprStatusCode,
         String apprCnt,
-        Long dcrClassTreeId
+        Long dcrClassTreeId,
+        Long taxSum,
+        Long trTax,
+        Long corpTax,
+        Long localTax,
+        Long intAmt,
+        Long acrIntAmt,
+        Long pl,
+        String rcvPayCode,
+        String bookIoType
 ) {
 }

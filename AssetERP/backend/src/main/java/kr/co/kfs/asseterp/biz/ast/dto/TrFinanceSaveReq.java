@@ -27,6 +27,13 @@ public record TrFinanceSaveReq(
         Long trAmt,
         String lockUpPeriodCode,
         LocalDate lockUpDate,
-        LocalDate listDate
+        LocalDate listDate,
+        /** 금융상품 거래처리(W06) 편집창이면 true — 세금·이자(거래세·법인세·지방세·이자금액·경과이자금액)도 저장하고 미수/미지급 필수 검사 문구가 다르다 */
+        boolean detail,
+        Long trTax,
+        Long corpTax,
+        Long localTax,
+        Long intAmt,
+        Long acrIntAmt
 ) {
 }

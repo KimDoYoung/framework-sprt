@@ -333,6 +333,8 @@ export interface AstTrCodeByWindow {
   rcvPayName: string | null;
   astClassTreeId: number | null;
   note: string | null;
+  /** 원장 입출고 구분(act11_tr_map) — 2 출고·3 입/출고·5 원장변경·8 해당없음이면 보유자산에서 종목을 고른다(W06) */
+  bookIoType?: string | null;
 }
 
 /** AS-IS ast.Ast06_Tr.selectTaxTr (Ast06_Tab_TrTax, U04) — 그리드 한 행 + 편집창이 받는 세금·4대보험 상세 */
@@ -560,6 +562,16 @@ export interface AstTrFinance {
   apprStatusCode: string | null;
   apprCnt: string | null;
   dcrClassTreeId: number | null;
+  /** W06 금융상품 거래처리: 제세금 합·거래세·법인세·지방세·이자금액·경과이자금액·손익, 수령/지급·원장 입출고 구분 */
+  taxSum: number | null;
+  trTax: number | null;
+  corpTax: number | null;
+  localTax: number | null;
+  intAmt: number | null;
+  acrIntAmt: number | null;
+  pl: number | null;
+  rcvPayCode: string | null;
+  bookIoType: string | null;
 }
 
 /** AS-IS ast.Ast06_Tr.updateFinance 요청 — trId가 없으면 새 거래 */
@@ -582,6 +594,32 @@ export interface AstTrFinanceSaveReq {
   lockUpPeriodCode: string | null;
   lockUpDate: string | null;
   listDate: string | null;
+  /** W06 금융상품 거래처리 편집창이면 true — 세금·이자도 저장한다 */
+  detail?: boolean;
+  trTax?: number | null;
+  corpTax?: number | null;
+  localTax?: number | null;
+  intAmt?: number | null;
+  acrIntAmt?: number | null;
+}
+
+/** W06 AS-IS ast.Ast09_Book.selectByHoldDate(astType 2) — 보유자산 조회창(Ast09_Lookup_Book) 한 행 */
+export interface AstHoldBook {
+  astClassTreeId: number;
+  astClassTreeName: string | null;
+  astClassName: string | null;
+  corpId: number | null;
+  corpName: string | null;
+  keepAccountId: number | null;
+  keepAccountName: string | null;
+  holdQty: number | null;
+  purAmt: number | null;
+  bookAmt: number | null;
+  acrIntAmt: number | null;
+  lockUpDate: string | null;
+  sellPossibleQty: number | null;
+  astTrUnit: number | null;
+  curCode: string | null;
 }
 
 /** AS-IS ast.Ast01_ClassTree.selectByTrCode (Ast01_Lookup_Info, W05) — 종목선택 트리 한 노드(전위 순서 평평한 목록) */

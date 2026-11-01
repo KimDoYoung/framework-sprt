@@ -27,7 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * AS-IS server/ast/Ast06_Tr.java (selectByPayCode L43 · selectById L32 · updateFinance L358) — 청약처리 Ast06_Tab_TrIPO (W05).
@@ -68,9 +70,10 @@ public class AstTrFinanceService {
     @Transactional
     public Long save(UserPrincipal user, TrFinanceSaveReq r) {
         if (r.astClassTreeId() == null) throw invalid("종목(자산구분)은 필수선택 항목입니다.");
-        if (r.corpId() == null) throw invalid("거래처 계좌는 필수선택 항목입니다.");
+        // 금융상품 거래처리(Ast06_Lookup_TrFinance.preUpdate L786-847)는 문구가 "거래처는 …"이고 상장·확약 검사가 없다
+        if (r.corpId() == null) throw invalid(r.detail() ? "거래처는 필수선택 항목입니다." : "거래처 계좌는 필수선택 항목입니다.");
         if (!r.settleMngYn() && r.depositId() == null) throw invalid("미수/미지급 거래가 아닌 경우 예금계좌는 필수선택 항목입니다.");
-        if ("3503".equals(r.trCode()) || "3500".equals(r.trCode()) || "3511".equals(r.trCode())) {
+        if (!r.detail() && ("3503".equals(r.trCode()) || "3500".equals(r.trCode()) || "3511".equals(r.trCode()))) {
             if (r.listDate() == null) throw invalid("상장일자는 필수입력 항목입니다");
             if (!"00".equals(r.lockUpPeriodCode()) && r.lockUpDate() == null) {
                 throw invalid("보유의무확약이 미확약이 아닌경우 매도제한일은 필수입력 항목입니다.");
@@ -105,6 +108,35 @@ public class AstTrFinanceService {
         List<TrFinanceRes> list = search(user, startDate, closeDate, "Ast06_Tab_TrIPO", "1", "1", accountId, classTreeId, trCodeId, searchText);
         String[] heads = {"일자", "거래유형", "거래처", "종목유형", "종목", "거래수량", "거래단가", "거래금액", "수수료", "결제금액", "확약기간", "예금계좌", "적요", "등록자"};
         int[] widths = {3000, 7000, 9000, 4000, 8000, 4000, 4000, 4000, 3000, 4000, 4000, 6000, 9000, 2000};
+        List<Object[]> rows = new ArrayList<>();
+        for (TrFinanceRes t : list) {
+            rows.add(new Object[]{t.date() == null ? null : t.date().toString(), t.trName(), t.corpAccountName(), t.astClassName(), t.classTreeName(),
+                    zero(t.qty()), zero(t.price()), zero(t.trAmt()), zero(t.fee()), zero(t.amt()),
+                    nz(t.lockUpPeriodName()), nz(t.depositName()), t.note(), t.personName()});
+        }
+        return excel(heads, widths, rows, Set.of(5, 7, 8, 9), 6);
+    }
+
+    /**
+     * 엑셀다운로드 (AS-IS ExcelDownload.getAst06FinanceList L1832-2077, actionCode ast06FinanceList): 금융상품 거래처리(Ast06_Tab_TrFinance, 고유자산, 국내) 조회 결과 15열.
+     * 숫자 열 = 거래수량·거래금액·제세금·수수료·결제금액, 거래단가는 소수 둘째 자리 서식
+     */
+    public byte[] downloadFinanceExcel(UserPrincipal user, LocalDate startDate, LocalDate closeDate, Long accountId,
+                                       Long classTreeId, Long trCodeId, String searchText) {
+        List<TrFinanceRes> list = search(user, startDate, closeDate, "Ast06_Tab_TrFinance", "1", "1", accountId, classTreeId, trCodeId, searchText);
+        String[] heads = {"일자", "거래유형", "거래처", "종목유형", "종목", "거래수량", "거래단가", "거래금액", "제세금", "수수료", "결제금액", "미수/미지급", "예금계좌", "적요", "등록자"};
+        int[] widths = {3000, 7000, 9000, 4000, 8000, 4000, 4000, 4000, 3000, 3000, 4000, 3000, 6000, 9000, 2000};
+        List<Object[]> rows = new ArrayList<>();
+        for (TrFinanceRes t : list) {
+            rows.add(new Object[]{t.date() == null ? null : t.date().toString(), t.trName(), t.corpAccountName(), t.astClassName(), t.classTreeName(),
+                    zero(t.qty()), zero(t.price()), zero(t.trAmt()), zero(t.taxSum()), zero(t.fee()), zero(t.amt()),
+                    t.settleMngYn() ? "Y" : "N", nz(t.depositName()), t.note(), t.personName()});
+        }
+        return excel(heads, widths, rows, Set.of(5, 7, 8, 9, 10), 6);
+    }
+
+    /** 두 엑셀이 같은 모양(연노랑 머리글·테두리·#,##0 / ###,###,##0.#0 서식)을 쓴다. numCols = 정수 서식 열, dblCol = 소수 서식 열 */
+    private byte[] excel(String[] heads, int[] widths, List<Object[]> rows, Set<Integer> numCols, int dblCol) {
         try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = wb.createSheet("sheet1");
             CellStyle head = wb.createCellStyle();
@@ -134,17 +166,14 @@ public class AstTrFinanceService {
                 headRow.getCell(i).setCellStyle(head);
             }
             int r = 1;
-            for (TrFinanceRes t : list) {
+            for (Object[] cols : rows) {
                 Row row = sheet.createRow(r++);
-                Object[] cols = {t.date() == null ? null : t.date().toString(), t.trName(), t.corpAccountName(), t.astClassName(), t.classTreeName(),
-                        zero(t.qty()), zero(t.price()), zero(t.trAmt()), zero(t.fee()), zero(t.amt()),
-                        nz(t.lockUpPeriodName()), nz(t.depositName()), t.note(), t.personName()};
                 for (int i = 0; i < cols.length; i++) {
                     var cell = row.createCell(i);
-                    if (i == 5 || i == 7 || i == 8 || i == 9) {
+                    if (numCols.contains(i)) {
                         cell.setCellValue(((Number) cols[i]).doubleValue());
                         cell.setCellStyle(num);
-                    } else if (i == 6) {
+                    } else if (i == dblCol) {
                         cell.setCellValue(((Number) cols[i]).doubleValue());
                         cell.setCellStyle(dbl);
                     } else {

@@ -23,6 +23,25 @@
         ast09_company_id                    AS company_id
     </sql>
 
+    <!-- W06 Ast09_Lookup_Book(보유자산 조회창): 그리드 7열 + 선택 결과가 편집창에 넘기는 열(Ast09_BookModel) -->
+    <sql id="holdColumns">
+        ast09_ast_class_tree_id             AS ast_class_tree_id,
+        ast09_ast_class_tree_nm             AS ast_class_tree_name,
+        ast09_ast_class_nm                  AS ast_class_name,
+        ast09_corp_id                       AS corp_id,
+        ast09_corp_nm                       AS corp_name,
+        ast09_keep_account_id               AS keep_account_id,
+        ast09_keep_account_nm               AS keep_account_name,
+        ast09_hold_qty                      AS hold_qty,
+        ast09_pur_amt                       AS pur_amt,
+        ast09_book_amt                      AS book_amt,
+        ast09_acr_int_amt                   AS acr_int_amt,
+        ast09_lock_up_date                  AS lock_up_date,
+        ast09_sell_possible_qty             AS sell_possible_qty,
+        ast09_ast_tr_unit                   AS ast_tr_unit,
+        ast09_cur_code                      AS cur_code
+    </sql>
+
     <!-- AS-IS ast09_book.selectByHoldDate L100 (IDMS-IC) — 열 목록(cols)만 달리 쓰는 공통 본문. depositIdStr 분기는 일일자금관리(U01)가 안 주므로 null -->
     <sql id="depositBookQuery">
     WITH book AS (
@@ -180,14 +199,28 @@
         AND 'Y' = (CASE WHEN COALESCE(ast1.ast01_use_yn,'false') != 'true' AND ast09_hold_qty = 0 THEN 'N' ELSE 'Y' END)
         ) t
         WHERE UPPER(CONCAT(ast09_corp_nm,ast09_keep_account_nm,ast09_ast_class_tree_nm,ast09_ast_class_nm)) LIKE upper(#{searchText})
+    </sql>
+
+    <!-- 예금(U01·U02)용 꼬리: depositIdStr 조건 + 정렬. 보유내역 조회창(Y·W06)은 자기 꼬리를 쓴다 -->
+    <sql id="depositBookTail">
         <if test="depositIdStr != null">
         AND COALESCE(CAST(ast09_keep_account_id AS VARCHAR),'') LIKE #{depositIdStr}
         </if>
         ORDER BY
-        ast09_ast_m_class_cd, ast09_ast_s_class_seq, ast09_keep_account_seq    </sql>
+        ast09_ast_m_class_cd, ast09_ast_s_class_seq, ast09_keep_account_seq
+    </sql>
 
     <select id="selectByHoldDate" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookRes">
         <include refid="depositBookQuery"><property name="cols" value="bookColumns"/></include>
+        <include refid="depositBookTail"/>
+    </select>
+
+    <!-- AS-IS ast09_book.selectByHoldDate (IDMS-IC) — W06 Ast09_Lookup_Book 보유자산 조회창(astType 2 금융자산, abroType 1 국내 = KRW / 2 국외 = KRW 아님). 정렬은 AS-IS 그대로(보관처명·계좌순번·소분류·종목명) -->
+    <select id="selectHoldList" resultType="kr.co.kfs.asseterp.biz.ast.dto.HoldBookRes">
+        <include refid="depositBookQuery"><property name="cols" value="holdColumns"/></include>
+        AND ( ( '1' = #{abroType} AND ast09_cur_code  = 'KRW' ) OR
+              ( '2' = #{abroType} AND ast09_cur_code != 'KRW' ) )
+        ORDER BY ast09_corp_nm collate "ko_KR.utf8" asc, ast09_keep_account_seq, ast09_ast_s_class_cd, ast09_ast_class_tree_nm collate "ko_KR.utf8" asc
     </select>
 
     <!-- 예금잔고 기간조회(U02) — sys99_print에 쌓을 전체 열 -->
@@ -221,6 +254,7 @@
 
     <select id="selectByHoldDateFull" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookFullRes">
         <include refid="depositBookQuery"><property name="cols" value="bookFullColumns"/></include>
+        <include refid="depositBookTail"/>
     </select>
 
     <!-- AS-IS sys12_calendar.selectPeriod L110 (IDMS-IC) -->

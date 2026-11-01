@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.ast.dto.BookFullRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookPeriodRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookSumRes;
+import kr.co.kfs.asseterp.biz.ast.dto.HoldBookRes;
 import kr.co.kfs.asseterp.biz.ast.mapper.AstBookMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -30,6 +31,13 @@ public class AstBookService {
     /** ast09_book.selectByHoldDate — searchText '%' */
     public List<BookRes> searchDeposits(UserPrincipal user, LocalDate holdDate) {
         return mapper.selectByHoldDate(user.getCompanyId(), holdDate, AST_TYPE_DEPOSIT, "%", null);
+    }
+
+    /**
+     * ast09_book.selectByHoldDate (W06 Ast09_Lookup_Book) — 보유일 현재 금융자산(astType 2) 보유원장. abroType 1 국내(KRW)·2 국외, 검색어는 보관처·계좌·자산명 포함 검색
+     */
+    public List<HoldBookRes> searchHolds(UserPrincipal user, LocalDate holdDate, String abroType, String searchText) {
+        return mapper.selectHoldList(user.getCompanyId(), holdDate, "2", abroType, "%" + (searchText == null ? "" : searchText) + "%");
     }
 
     /** ast09_book.selectDepositCurGroupSum */

@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.ast.mapper;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFullRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookPeriodRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookRes;
+import kr.co.kfs.asseterp.biz.ast.dto.HoldBookRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookSumRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -19,7 +20,10 @@ public interface AstBookMapper {
                                    @Param("depositIdStr") String depositIdStr);
 
     /** selectByHoldDate — 예금잔고 기간조회(U02)가 sys99_print에 쌓는 전체 열 */
-    List<BookFullRes> selectByHoldDateFull(@Param("companyId") Long companyId, @Param("holdDate") LocalDate holdDate,
+    List<HoldBookRes> selectHoldList(@Param("companyId") Long companyId, @Param("holdDate") LocalDate holdDate, @Param("astType") String astType,
+                                     @Param("abroType") String abroType, @Param("searchText") String searchText);
+
+  List<BookFullRes> selectByHoldDateFull(@Param("companyId") Long companyId, @Param("holdDate") LocalDate holdDate,
                                            @Param("astType") String astType, @Param("searchText") String searchText,
                                            @Param("depositIdStr") String depositIdStr);
 

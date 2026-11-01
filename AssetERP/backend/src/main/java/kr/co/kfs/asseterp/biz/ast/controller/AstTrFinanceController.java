@@ -76,4 +76,21 @@ public class AstTrFinanceController {
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(body);
     }
+
+    /** 엑셀다운로드 (AS-IS ExcelDownload ast06FinanceList) — 금융상품 거래처리(Ast06_Tab_TrFinance) 조회 결과 */
+    @GetMapping("/finance-excel")
+    public ResponseEntity<byte[]> downloadFinanceExcel(@AuthenticationPrincipal UserPrincipal principal,
+                                                       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                       @RequestParam(required = false) Long accountId,
+                                                       @RequestParam(required = false) Long classTreeId,
+                                                       @RequestParam(required = false) Long trCodeId,
+                                                       @RequestParam(required = false) String searchText) {
+        byte[] body = service.downloadFinanceExcel(principal, startDate, closeDate, accountId, classTreeId, trCodeId, searchText);
+        String fileName = "금융상품거래처리(" + startDate + " ~ " + closeDate + ").xlsx";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(body);
+    }
 }

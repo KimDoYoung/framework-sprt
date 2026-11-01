@@ -22,6 +22,7 @@ import {
   AstTr,
   AstTrCodeByWindow,
   AstTrCodeTreeNode,
+  AstHoldBook,
   AstTrFinance,
   AstTrFinanceSaveReq,
   InvestLimit,
@@ -418,6 +419,29 @@ export const astApi = {
     } catch (err) {
       throw await readBlobError(err);
     }
+  },
+
+  /** 엑셀다운로드 (AS-IS ExcelDownload ast06FinanceList, W06) — 조회 조건 그대로, 브라우저 저장 */
+  downloadFinanceExcel: async (params: { startDate: string; closeDate: string; accountId?: number | null; classTreeId?: number | null; trCodeId?: number | null; searchText?: string }): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/ast/trs/finance/finance-excel', { params: { ...params, accountId: params.accountId ?? undefined, classTreeId: params.classTreeId ?? undefined, trCodeId: params.trCodeId ?? undefined }, responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `금융상품거래처리(${params.startDate} ~ ${params.closeDate}).xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+
+  /** AS-IS ast.Ast09_Book.selectByHoldDate (Ast09_Lookup_Book, W06): 보유일 현재 금융자산 보유원장. abroType 1 국내·2 국외 */
+  searchHolds: async (holdDate: string, abroType: string, searchText: string): Promise<AstHoldBook[]> => {
+    const res = await apiClient.get<ApiResponse<AstHoldBook[]>>('v1/ast/books/holds', { params: { holdDate, abroType, searchText } });
+    return res.data.data ?? [];
   },
 
   /** AS-IS ast.Ast01_ClassTree.selectByTrCode (Ast01_Lookup_Info, W05): 거래유형에 맞는 종목 트리 */

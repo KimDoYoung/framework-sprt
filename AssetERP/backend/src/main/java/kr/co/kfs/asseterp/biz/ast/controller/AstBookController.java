@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.ast.controller;
 import jakarta.validation.Valid;
 import kr.co.kfs.asseterp.biz.ast.dto.BookPeriodRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookRes;
+import kr.co.kfs.asseterp.biz.ast.dto.HoldBookRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookSumRes;
 import kr.co.kfs.asseterp.biz.ast.dto.DepositCleanReq;
 import kr.co.kfs.asseterp.biz.ast.service.AstBookService;
@@ -34,6 +35,15 @@ public class AstBookController {
     public ApiResponse<List<BookRes>> deposits(@AuthenticationPrincipal UserPrincipal principal,
                                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate holdDate) {
         return ApiResponse.ok(service.searchDeposits(principal, holdDate));
+    }
+
+    /** ast.Ast09_Book.selectByHoldDate (astType 2 금융자산) — W06 보유자산 조회창 */
+    @GetMapping("/holds")
+    public ApiResponse<List<HoldBookRes>> holds(@AuthenticationPrincipal UserPrincipal principal,
+                                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate holdDate,
+                                                @RequestParam(defaultValue = "1") String abroType,
+                                                @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchHolds(principal, holdDate, abroType, searchText));
     }
 
     /** ast.Ast09_Book.selectDepositCurGroupSum */

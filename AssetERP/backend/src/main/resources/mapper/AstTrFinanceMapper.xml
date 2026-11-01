@@ -62,7 +62,21 @@
                                                  WHERE ast07_tr_id = ast06_tr_id ) )
                        AND r.apr01_status_cd NOT IN ('40','99') )
              ELSE f_get_relate_dcr_count(act02_journal_id) END || ' 건'              AS appr_cnt,
-        ast05_dcr_class_tree_id                                                      AS dcr_class_tree_id
+        ast05_dcr_class_tree_id                                                      AS dcr_class_tree_id,
+        COALESCE(ast08_tr_tax, 0) + COALESCE(ast08_corp_tax, 0) + COALESCE(ast08_local_tax, 0) AS tax_sum,
+        ast08_tr_tax                                                                 AS tr_tax,
+        ast08_corp_tax                                                               AS corp_tax,
+        ast08_local_tax                                                              AS local_tax,
+        ast08_int_amt                                                                AS int_amt,
+        ast08_acr_int_amt                                                            AS acr_int_amt,
+        ast08_pl                                                                     AS pl,
+        ast05_rcv_pay_cd                                                             AS rcv_pay_code,
+        ( SELECT act11_book_io_type
+            FROM act11_tr_map
+           WHERE act11_company_id = ast06_company_id
+             AND act11_tr_cd      = ast06_tr_cd
+             AND COALESCE(act11_use_yn,'false') = 'true'
+           LIMIT 1 )                                                                 AS book_io_type
     </sql>
 
     <sql id="financeFrom">
@@ -161,9 +175,15 @@
 
     <insert id="insertFinance">
         INSERT INTO ast08_tr_finance (ast08_tr_finance_id, ast08_tr_id, ast08_account_id, ast08_qty, ast08_price, ast08_tr_amt, ast08_fee,
-                                      ast08_lock_up_period_cd, ast08_lock_up_date, ast08_list_date)
+                                      ast08_lock_up_period_cd, ast08_lock_up_date, ast08_list_date
+                                      <if test="r.detail">
+                                      , ast08_tr_tax, ast08_corp_tax, ast08_local_tax, ast08_int_amt, ast08_acr_int_amt, ast08_for_tr_amt
+                                      </if>)
         VALUES (#{financeId}, #{trId}, #{r.accountId}, #{r.qty}, #{r.price}, #{r.trAmt}, #{r.fee},
-                #{r.lockUpPeriodCode}, #{r.lockUpDate}, #{r.listDate})
+                #{r.lockUpPeriodCode}, #{r.lockUpDate}, #{r.listDate}
+                <if test="r.detail">
+                , #{r.trTax}, #{r.corpTax}, #{r.localTax}, #{r.intAmt}, #{r.acrIntAmt}, #{r.trAmt}
+                </if>)
     </insert>
 
     <update id="updateFinance">
@@ -176,6 +196,14 @@
                ast08_lock_up_period_cd  = #{r.lockUpPeriodCode},
                ast08_lock_up_date       = #{r.lockUpDate},
                ast08_list_date          = #{r.listDate}
+               <if test="r.detail">
+             , ast08_tr_tax             = #{r.trTax}
+             , ast08_corp_tax           = #{r.corpTax}
+             , ast08_local_tax          = #{r.localTax}
+             , ast08_int_amt            = #{r.intAmt}
+             , ast08_acr_int_amt        = #{r.acrIntAmt}
+             , ast08_for_tr_amt         = #{r.trAmt}
+               </if>
          WHERE ast08_tr_finance_id = #{financeId}
     </update>
 
