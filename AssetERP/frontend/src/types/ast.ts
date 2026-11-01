@@ -575,6 +575,10 @@ export interface AstTrFinance {
   /** W07 금융상품 거래처리(외화): 적용환율(ast06_fx_rate)·외화 거래금액(ast08_for_tr_amt) */
   fxRate: number | null;
   forTrAmt: number | null;
+  /** W08 금융상품 계좌대체: 입고계좌·장부금액 */
+  inAccountId: number | null;
+  inAccountName: string | null;
+  bookAmt: number | null;
 }
 
 /** AS-IS sys.Sys00_Common.selectForDeposit (CommonComboBoxField) — 외화 예금계좌 콤보 한 건 (W07) */
@@ -616,6 +620,9 @@ export interface AstTrFinanceSaveReq {
   foreign?: boolean;
   fxRate?: number | null;
   forTrAmt?: number | null;
+  /** W08 금융상품 계좌대체 편집창이면 true — 입고계좌도 저장한다 */
+  transfer?: boolean;
+  inAccountId?: number | null;
 }
 
 /** W06 AS-IS ast.Ast09_Book.selectByHoldDate(astType 2) — 보유자산 조회창(Ast09_Lookup_Book) 한 행 */

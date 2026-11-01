@@ -53,6 +53,10 @@ public record TrFinanceRes(
         String rcvPayCode,
         String bookIoType,
         Double fxRate,
-        Double forTrAmt
+        Double forTrAmt,
+        /** W08 계좌대체: 입고계좌(ast08_in_account_id)·장부금액(ast08_book_amt) */
+        Long inAccountId,
+        String inAccountName,
+        Long bookAmt
 ) {
 }

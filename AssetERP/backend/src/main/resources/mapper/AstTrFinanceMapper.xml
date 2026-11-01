@@ -78,7 +78,10 @@
              AND COALESCE(act11_use_yn,'false') = 'true'
            LIMIT 1 )                                                                 AS book_io_type,
         ast06_fx_rate                                                                AS fx_rate,
-        ast08_for_tr_amt                                                             AS for_tr_amt
+        ast08_for_tr_amt                                                             AS for_tr_amt,
+        ast08_in_account_id                                                          AS in_account_id,
+        f_ast_class_tree_nm(ast08_in_account_id)                                     AS in_account_name,
+        ast08_book_amt                                                               AS book_amt
     </sql>
 
     <sql id="financeFrom">
@@ -187,6 +190,9 @@
                                       </if>
                                       <if test="r.detail or r.foreign">
                                       , ast08_for_tr_amt
+                                      </if>
+                                      <if test="r.transfer">
+                                      , ast08_in_account_id
                                       </if>)
         VALUES (#{financeId}, #{trId}, #{r.accountId}, #{r.qty}, #{r.price}, #{r.trAmt}, #{r.fee},
                 #{r.lockUpPeriodCode}, #{r.lockUpDate}, #{r.listDate}
@@ -195,6 +201,9 @@
                 </if>
                 <if test="r.detail or r.foreign">
                 , COALESCE(CAST(#{r.forTrAmt} AS NUMERIC), #{r.trAmt})
+                </if>
+                <if test="r.transfer">
+                , #{r.inAccountId}
                 </if>)
     </insert>
 
@@ -217,6 +226,9 @@
                </if>
                <if test="r.detail or r.foreign">
              , ast08_for_tr_amt         = COALESCE(CAST(#{r.forTrAmt} AS NUMERIC), #{r.trAmt})
+               </if>
+               <if test="r.transfer">
+             , ast08_in_account_id      = #{r.inAccountId}
                </if>
          WHERE ast08_tr_finance_id = #{financeId}
     </update>
