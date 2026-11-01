@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.emp.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.BenefitCreateReq;
 import kr.co.kfs.asseterp.biz.emp.dto.BenefitPayRequestRes;
 import kr.co.kfs.asseterp.biz.emp.dto.BenefitRes;
 import kr.co.kfs.asseterp.biz.emp.dto.BenefitTypeRes;
@@ -127,6 +128,40 @@ public class EmpBenefitService {
         BenefitRes row = mapper.selectById(user.getCompanyId(), benefitId);
         if (row == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         smsSender.send(0L, null, mapper.selectMobileTelNo(row.personId()), note, String.valueOf(row.personId()));
+    }
+
+    /** Y06 AS-IS selectByPersonId: 본인 신청 목록. benefitYn은 "true"·"false"·전체("%") */
+    public List<BenefitRes> searchMine(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String benefitCode, String benefitYn, String searchText) {
+        return mapper.selectByPersonId(user.getCompanyId(), user.getUserId(), startDate, closeDate, codeOrAll(benefitCode), codeOrAll(benefitYn), like(searchText));
+    }
+
+    /** Y06 AS-IS Emp17_Benefit.modelUpdate (Emp17_Lookup_Benefit.update — 신청일 오늘, 지급여부 false) → 저장한 행 */
+    @Transactional
+    public BenefitRes create(UserPrincipal user, BenefitCreateReq req) {
+        if (req.benefitCode() == null || req.benefitCode().isBlank() || req.dcrClassTreeId() == null) throw new BusinessException(ErrorCode.INVALID_INPUT);
+        long id = mapper.selectNextId();
+        mapper.insertBenefit(id, user.getCompanyId(), LocalDate.now(), req.benefitCode(), user.getUserId(), req.dcrClassTreeId(), req.issueAmt(),
+                req.occDate(), req.benefitDetail());
+        return mapper.selectById(user.getCompanyId(), id);
+    }
+
+    /** Y06 AS-IS Emp17_Benefit.updateApprId */
+    @Transactional
+    public void updateApprId(UserPrincipal user, Long benefitId, Long apprId) {
+        if (apprId == null || mapper.updateApprId(user.getCompanyId(), benefitId, apprId) == 0) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+    }
+
+    /**
+     * Y06 AS-IS Emp17_Benefit.delete / deleteBenefitId — 본인 신청을 지운다. 상신 중인 문서가 있으면(상태가 없음·반려 40·임시저장 99가 아니면) 거절
+     * (원본은 화면이 선택 행 하나의 상태만 검사한다)
+     */
+    @Transactional
+    public void delete(UserPrincipal user, Long benefitId) {
+        BenefitRes row = mapper.selectById(user.getCompanyId(), benefitId);
+        if (row == null || !user.getUserId().equals(row.personId())) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        String st = row.apprStatusCode();
+        if (st != null && !"40".equals(st) && !"99".equals(st)) throw new BusinessException(ErrorCode.INVALID_INPUT, "결재 중인 문서가 존재하여 삭제할 수 없습니다.");
+        mapper.deleteBenefitId(user.getCompanyId(), user.getUserId(), benefitId);
     }
 
     private static List<Long> requireIds(List<Long> ids) {

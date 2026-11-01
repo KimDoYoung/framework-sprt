@@ -36,4 +36,14 @@
         SELECT f_get_emptrans(#{personId}, f_today(), 'org_code_nm')
     </select>
 
+    <!-- V42 Emp17_Lookup_Benefit.createMapping 의 LoginUser 값 -->
+    <select id="selectSender" resultType="kr.co.kfs.asseterp.biz.apr.dto.BenefitSenderRow">
+        SELECT f_get_emptrans(emp01_person_id, f_today(), 'org_code_nm')  AS org_name
+             , f_get_emptrans(emp01_person_id, f_today(), 'pos_nm')       AS pos_name
+             , f_get_emptrans(emp01_person_id, f_today(), 'title_nm')     AS title_name
+             , emp01_mobile_telno                                         AS mobile_tel_no
+          FROM emp01_person
+         WHERE emp01_person_id = #{personId}
+    </select>
+
 </mapper>

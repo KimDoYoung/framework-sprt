@@ -640,6 +640,28 @@ export const empBenefitApi = {
   sendMessage: async (benefitId: number, note: string): Promise<void> => {
     await apiClient.post<ApiResponse<null>>(`v1/emp/benefits/${benefitId}/send-message`, { note });
   },
+
+  /** Y06 AS-IS emp.Emp17_Benefit.selectByPersonId (Emp17_Tab_Benefit — 본인 신청 목록). benefitYn: 'true' 지급완료 / 'false' 미지급 / 없으면 전체 */
+  searchMine: async (p: { startDate: string; closeDate: string; benefitCode?: string; benefitYn?: string; searchText: string }): Promise<Benefit[]> => {
+    const res = await apiClient.get<ApiResponse<Benefit[]>>('v1/emp/benefits/mine', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** Y06 AS-IS emp.Emp17_Benefit.modelUpdate (Emp17_Lookup_Benefit [상신] — 결재창을 열기 전에 신청 행을 만든다) → 만든 행 */
+  createBenefit: async (req: { benefitCode: string; issueAmt: number; occDate: string | null; benefitDetail: string | null; dcrClassTreeId: number }): Promise<Benefit> => {
+    const res = await apiClient.post<ApiResponse<Benefit>>('v1/emp/benefits', req);
+    return res.data.data;
+  },
+
+  /** Y06 AS-IS emp.Emp17_Benefit.updateApprId */
+  updateBenefitApprId: async (benefitId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/emp/benefits/${benefitId}/appr-id`, { apprId });
+  },
+
+  /** Y06 AS-IS emp.Emp17_Benefit.delete / deleteBenefitId (삭제 버튼, 결재창을 저장 없이 닫았을 때의 정리) */
+  deleteBenefit: async (benefitId: number): Promise<void> => {
+    await apiClient.delete<ApiResponse<null>>(`v1/emp/benefits/${benefitId}`);
+  },
 };
 
 /** U06 AS-IS Emp50_Tab_TransportExpenseMng (여비교통비 관리) → server/emp/Emp51_RelateAppr·Emp52_RelateAppr */

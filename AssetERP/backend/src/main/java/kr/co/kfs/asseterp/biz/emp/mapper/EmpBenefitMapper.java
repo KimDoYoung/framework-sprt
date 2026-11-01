@@ -55,4 +55,23 @@ public interface EmpBenefitMapper {
 
     /** emp01_person.selectById 중 휴대폰번호 (sendMessage) */
     String selectMobileTelNo(@Param("personId") Long personId);
+
+    /** AS-IS emp17_benefit.selectByPersonId (Emp17_Tab_Benefit 본인 신청 목록) */
+    List<BenefitRes> selectByPersonId(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("startDate") LocalDate startDate,
+                                      @Param("closeDate") LocalDate closeDate, @Param("benefitCode") String benefitCode,
+                                      @Param("benefitYn") String benefitYn, @Param("searchText") String searchText);
+
+    /** AS-IS dbConfig.getSeq */
+    long selectNextId();
+
+    /** AS-IS Emp17_Benefit.modelUpdate (UpdateDataModel INSERT) */
+    int insertBenefit(@Param("benefitId") Long benefitId, @Param("companyId") Long companyId, @Param("issueDate") LocalDate issueDate,
+                      @Param("benefitCode") String benefitCode, @Param("personId") Long personId, @Param("dcrClassTreeId") Long dcrClassTreeId,
+                      @Param("issueAmt") Long issueAmt, @Param("occDate") LocalDate occDate, @Param("benefitDetail") String benefitDetail);
+
+    /** AS-IS emp17_benefit.updateApprId (회사 조건 추가) */
+    int updateApprId(@Param("companyId") Long companyId, @Param("benefitId") Long benefitId, @Param("apprId") Long apprId);
+
+    /** AS-IS emp17_benefit.deleteBenefitId · Emp17_Benefit.delete (본인 행만) */
+    int deleteBenefitId(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("benefitId") Long benefitId);
 }

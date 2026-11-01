@@ -207,4 +207,49 @@
           FROM emp01_person
          WHERE emp01_person_id = #{personId}
     </select>
+
+    <!-- Y06 AS-IS emp17_benefit.selectByPersonId (Emp17_Tab_Benefit) — 회사 조건 추가 -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.emp.dto.BenefitRes">
+        SELECT <include refid="benefitColumns"/>
+             , NULL AS account_name
+          FROM emp17_benefit
+               LEFT OUTER JOIN apr01_appr ON emp17_appr_id = apr01_appr_id
+         WHERE emp17_company_id = #{companyId}
+           AND emp17_person_id = #{personId}
+           AND emp17_issue_date BETWEEN #{startDate} AND #{closeDate}
+           AND emp17_benefit_cd LIKE #{benefitCode}
+           AND emp17_benefit_yn LIKE #{benefitYn}
+           AND UPPER(CONCAT(COALESCE(apr01_title,''))) LIKE UPPER(#{searchText})
+         ORDER BY emp17_issue_date DESC, apr01_title DESC
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- Y06 AS-IS Emp17_Benefit.modelUpdate (UpdateDataModel INSERT — 지급여부는 신청 때 'false') -->
+    <insert id="insertBenefit">
+        INSERT INTO emp17_benefit (emp17_benefit_id, emp17_company_id, emp17_issue_date, emp17_benefit_cd, emp17_person_id, emp17_benefit_yn,
+                                   emp17_dcr_class_tree_id, emp17_issue_amt, emp17_occ_date, emp17_benefit_detail)
+        VALUES (#{benefitId}, #{companyId}, #{issueDate}, #{benefitCode}, #{personId}, 'false',
+                #{dcrClassTreeId}, #{issueAmt}, #{occDate}, #{benefitDetail})
+    </insert>
+
+    <!-- Y06 AS-IS emp17_benefit.updateApprId — 회사 조건 추가 -->
+    <update id="updateApprId">
+        UPDATE emp17_benefit
+           SET emp17_appr_id = #{apprId}
+         WHERE emp17_benefit_id = #{benefitId}
+           AND emp17_company_id = #{companyId}
+    </update>
+
+    <!-- Y06 AS-IS emp17_benefit.deleteBenefitId — 회사 조건은 원본, 본인 행 조건 추가 -->
+    <delete id="deleteBenefitId">
+        DELETE FROM emp17_benefit
+         WHERE emp17_benefit_id = #{benefitId}
+           AND emp17_company_id = #{companyId}
+           AND emp17_person_id = #{personId}
+    </delete>
+
 </mapper>

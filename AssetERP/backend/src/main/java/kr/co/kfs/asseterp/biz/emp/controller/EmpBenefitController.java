@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.emp.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.emp.dto.BenefitApprIdReq;
+import kr.co.kfs.asseterp.biz.emp.dto.BenefitCreateReq;
 import kr.co.kfs.asseterp.biz.emp.dto.BenefitNoteReq;
 import kr.co.kfs.asseterp.biz.emp.dto.BenefitPayRequestApprReq;
 import kr.co.kfs.asseterp.biz.emp.dto.BenefitPayRequestCheckReq;
@@ -14,6 +16,7 @@ import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -118,6 +121,37 @@ public class EmpBenefitController {
     @PostMapping("/{benefitId}/send-message")
     public ApiResponse<Void> sendMessage(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long benefitId, @RequestBody BenefitNoteReq req) {
         service.sendMessage(principal, benefitId, req.note());
+        return ApiResponse.ok(null);
+    }
+
+    /** Y06 AS-IS emp.Emp17_Benefit.selectByPersonId (Emp17_Tab_Benefit — 본인 신청 목록) */
+    @GetMapping("/mine")
+    public ApiResponse<List<BenefitRes>> searchMine(@AuthenticationPrincipal UserPrincipal principal,
+                                                    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                    @RequestParam(required = false) String benefitCode,
+                                                    @RequestParam(required = false) String benefitYn,
+                                                    @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchMine(principal, startDate, closeDate, benefitCode, benefitYn, searchText));
+    }
+
+    /** Y06 AS-IS emp.Emp17_Benefit.modelUpdate (Emp17_Lookup_Benefit [상신] — 결재창을 열기 전에 신청 행을 먼저 만든다) */
+    @PostMapping
+    public ApiResponse<BenefitRes> create(@AuthenticationPrincipal UserPrincipal principal, @RequestBody BenefitCreateReq req) {
+        return ApiResponse.ok(service.create(principal, req));
+    }
+
+    /** Y06 AS-IS emp.Emp17_Benefit.updateApprId */
+    @PutMapping("/{benefitId}/appr-id")
+    public ApiResponse<Void> updateApprId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long benefitId, @RequestBody BenefitApprIdReq req) {
+        service.updateApprId(principal, benefitId, req.apprId());
+        return ApiResponse.ok(null);
+    }
+
+    /** Y06 AS-IS emp.Emp17_Benefit.delete / deleteBenefitId (삭제 버튼, 결재창을 저장 없이 닫았을 때의 신청 행 정리) */
+    @DeleteMapping("/{benefitId}")
+    public ApiResponse<Void> delete(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long benefitId) {
+        service.delete(principal, benefitId);
         return ApiResponse.ok(null);
     }
 }
