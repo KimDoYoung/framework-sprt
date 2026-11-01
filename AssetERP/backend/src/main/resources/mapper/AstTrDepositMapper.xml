@@ -11,12 +11,15 @@
         ast06_tr_id                                          AS tr_id,
         ast06_date                                           AS date,
         ast06_tr_cd                                          AS tr_code,
+        f_cdnm('trCode', ast06_tr_cd, ast06_company_id, ast06_date) AS tr_name,
         ast06_ast_class_tree_id                              AS ast_class_tree_id,
         f_ast_class_tree_nm(ast06_ast_class_tree_id)         AS class_tree_name,
         ast06_deposit_id                                     AS deposit_id,
         b.ast01_class_tree_nm                                AS deposit_name,
         ast06_corp_id                                        AS corp_id,
         ast06_cur_cd                                         AS cur_code,
+        ast06_fx_rate                                        AS fx_rate,
+        ast06_for_amt                                        AS for_amt,
         ast06_amt                                            AS amt,
         ast06_fee                                            AS fee,
         ast06_note                                           AS note,
@@ -50,7 +53,7 @@
                LEFT OUTER JOIN act02_journal ON act02_tr_id = ast06_tr_id
     </sql>
 
-    <!-- AS-IS ast06_tr.selectDepositTr (assetType '1'·abroType '1' 고정 값을 넣었다). 계좌는 출금·입금 어느 쪽이든 -->
+    <!-- AS-IS ast06_tr.selectDepositTr (assetType '1' 고정 값을 넣었다. abroType 1:국내 KRW / 2:국외 KRW 아님 — X10). 계좌는 출금·입금 어느 쪽이든 -->
     <select id="selectDepositTr" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrDepositRes">
         SELECT <include refid="depositColumns"/>
         <include refid="depositFrom"/>
@@ -58,7 +61,14 @@
            AND ast06_date BETWEEN #{c.startDate} AND #{c.closeDate}
            AND ast06_company_id = #{c.companyId}
            AND ast06_tr_cd      = '9005'
-           AND COALESCE(ast06_cur_cd, 'KRW') = 'KRW'
+        <choose>
+          <when test='c.abroType == "2"'>
+           AND COALESCE(ast06_cur_cd, 'KRW') != 'KRW'   /* 2:국외 */
+          </when>
+          <otherwise>
+           AND COALESCE(ast06_cur_cd, 'KRW') = 'KRW'    /* 1:국내 */
+          </otherwise>
+        </choose>
         <if test="c.accountId != null">
            AND #{c.accountId} IN (ast06_ast_class_tree_id, ast06_deposit_id)
         </if>
@@ -116,5 +126,103 @@
                ast06_book_amt          = #{bookAmt}
          WHERE ast06_tr_id      = #{r.trId}
            AND ast06_company_id = #{companyId}
+    </update>
+
+    <!-- 외화 계좌이체 X10 — AS-IS Ast06_Tr.update(UpdateDataModel). openNew() 기본값 거래유형 9005·미수/미지급 아님, 통화·환율·외화금액·원화금액은 편집창 값 그대로 -->
+    <insert id="insertForTr">
+        INSERT INTO ast06_tr (ast06_tr_id, ast06_company_id, ast06_person_id, ast06_date, ast06_tr_cd, ast06_amt, ast06_fee,
+                              ast06_note, ast06_ast_class_tree_id, ast06_deposit_id, ast06_corp_id, ast06_cur_cd,
+                              ast06_for_amt, ast06_fx_rate, ast06_settle_mng_yn)
+        VALUES (#{trId}, #{companyId}, #{personId}, #{r.date}, '9005', #{r.amt}, #{r.fee},
+                #{r.note}, #{r.astClassTreeId}, #{r.depositId}, #{r.corpId}, #{r.curCode},
+                #{r.forAmt}, #{r.fxRate}, 'false')
+    </insert>
+
+    <update id="updateForTr">
+        UPDATE ast06_tr
+           SET ast06_amt               = #{r.amt},
+               ast06_fee               = #{r.fee},
+               ast06_note              = #{r.note},
+               ast06_ast_class_tree_id = #{r.astClassTreeId},
+               ast06_deposit_id        = #{r.depositId},
+               ast06_corp_id           = #{r.corpId},
+               ast06_cur_cd            = #{r.curCode},
+               ast06_for_amt           = #{r.forAmt},
+               ast06_fx_rate           = #{r.fxRate}
+         WHERE ast06_tr_id      = #{r.trId}
+           AND ast06_company_id = #{companyId}
+    </update>
+
+    <select id="selectRawCurCode" resultType="string">
+        SELECT ast01_cur_cd FROM ast01_class_tree WHERE ast01_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- AS-IS ast09_book.selectTargetBook (keepAccountId 분기 없이) — 출금 계좌의 거래일 기준 보유잔고(마감분 ast11 포함) -->
+    <select id="selectTargetBook" resultType="kr.co.kfs.asseterp.biz.ast.dto.TargetBookRes">
+        <![CDATA[
+        WITH book AS (
+            WITH book1 AS ( SELECT '1' seq
+                                 , ast09_book.*
+                              FROM ast09_book
+                             WHERE ast09_company_id = #{companyId}
+                               AND (ast09_ast_class_tree_id, ast09_keep_account_id, ast09_hold_date) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(ast09_hold_date)
+                                                                                                            FROM ast09_book
+                                                                                                           WHERE ast09_company_id = #{companyId}
+                                                                                                             AND ast09_hold_date <= #{holdDate}
+                                                                                                             AND ast09_ast_class_tree_id = #{astClassTreeId}
+                                                                                                           GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+                             UNION ALL
+                            SELECT '2' seq
+                                 , ast11_book_id
+                                 , ast11_hold_date
+                                 , ast11_ast_class_tree_id
+                                 , ast11_keep_account_id
+                                 , ast11_hold_qty
+                                 , ast11_pur_amt
+                                 , ast11_book_amt
+                                 , ast11_eval_amt
+                                 , ast11_eval_pl
+                                 , ast11_first_pur_amt
+                                 , ast11_first_pur_date
+                                 , ast11_company_id
+                                 , ast11_for_pur_amt
+                                 , ast11_for_book_amt
+                                 , ast11_for_eval_amt
+                                 , ast11_for_eval_pl
+                                 , ast11_fx_pl
+                                 , ast11_book_end_yn
+                                 , ast11_acr_int_amt
+                                 , ast11_for_acr_int_amt
+                                 , ast11_oci
+                                 , ast11_for_oci
+                                 , ast11_lock_up_period_cd
+                                 , ast11_lock_up_date
+                                 , ast11_lock_up_qty
+                              FROM ast11_book_close
+                             WHERE ast11_company_id = #{companyId}
+                               AND (ast11_ast_class_tree_id, ast11_keep_account_id, ast11_hold_date) IN ( SELECT ast11_ast_class_tree_id, ast11_keep_account_id, MAX(ast11_hold_date)
+                                                                                                            FROM ast11_book_close
+                                                                                                           WHERE ast11_company_id = #{companyId}
+                                                                                                             AND ast11_hold_date < #{holdDate}
+                                                                                                             AND ast11_ast_class_tree_id = #{astClassTreeId}
+                                                                                                           GROUP BY ast11_ast_class_tree_id, ast11_keep_account_id )
+            )
+            SELECT *
+              FROM book1
+             WHERE (ast09_ast_class_tree_id, ast09_keep_account_id, to_char(ast09_hold_date,'yyyymmdd')||seq) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(to_char(ast09_hold_date,'yyyymmdd')||seq)
+                                                                                                                     FROM book1
+                                                                                                                    GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+        )
+        SELECT ast09_book_amt AS book_amt, ast09_hold_qty AS hold_qty
+          FROM book
+         WHERE COALESCE(ast09_book_end_yn,'false') != 'true'
+        ]]>
+    </select>
+
+    <!-- AS-IS ast06_tr.updateByBookAmt -->
+    <update id="updateBookAmt">
+        UPDATE ast06_tr
+           SET ast06_book_amt = #{bookAmt}
+         WHERE ast06_tr_id    = #{trId}
     </update>
 </mapper>

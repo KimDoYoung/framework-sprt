@@ -1127,6 +1127,8 @@ export interface AstTrDeposit {
   trId: number;
   date: string;
   trCode: string | null;
+  /** 거래유형 이름(f_cdnm trCode) — 연관문서 창 제목(X10) */
+  trName: string | null;
   astClassTreeId: number | null;
   classTreeName: string | null;
   depositId: number | null;
@@ -1141,6 +1143,9 @@ export interface AstTrDeposit {
   journalId: number | null;
   apprId: number | null;
   apprCnt: string | null;
+  /** 외화 계좌이체(X10) */
+  fxRate: number | null;
+  forAmt: number | null;
 }
 
 /** AS-IS Ast06_Lookup_TrDeposit.preUpdate → ast.Ast06_Tr.update (X06 계좌이체) — trId가 없으면 새 거래 */
@@ -1153,4 +1158,8 @@ export interface AstTrDepositSaveReq {
   amt: number | null;
   fee: number | null;
   note: string | null;
+  /** 외화 계좌이체(X10) — curCode가 있으면 외화 저장(적용통화·적용환율·외화금액) */
+  curCode?: string | null;
+  fxRate?: number | null;
+  forAmt?: number | null;
 }

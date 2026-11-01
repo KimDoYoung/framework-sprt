@@ -461,7 +461,7 @@ export const astApi = {
   },
 
   /** AS-IS ast.Ast06_Tr.selectDepositTr (X06): 기간·계좌(출금 또는 입금)의 계좌이체 거래 */
-  searchTrDeposits: async (params: { startDate: string; closeDate: string; accountId?: number | null }): Promise<AstTrDeposit[]> => {
+  searchTrDeposits: async (params: { startDate: string; closeDate: string; accountId?: number | null; abroType?: '1' | '2' }): Promise<AstTrDeposit[]> => {
     const res = await apiClient.get<ApiResponse<AstTrDeposit[]>>('v1/ast/trs/deposits', { params: { ...params, accountId: params.accountId ?? undefined } });
     return res.data.data ?? [];
   },
@@ -476,6 +476,11 @@ export const astApi = {
   saveTrDeposit: async (req: AstTrDepositSaveReq): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>('v1/ast/trs/deposits', req);
     return res.data.data;
+  },
+
+  /** AS-IS ast.Ast06_Tr.updateDepositSellBookAmt (X10): 외화 계좌이체 분개 전 출금장부금액 UPDATE(MODI는 분개 삭제·예금원장 정리 포함) */
+  updateTrDepositSellBookAmt: async (trId: number, actionName: 'NEW' | 'MODI'): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>(`v1/ast/trs/deposits/${trId}/sell-book-amt`, { actionName });
   },
 
   /** 엑셀다운로드 (AS-IS ExcelDownload ast06IpoList, W05) — 조회 조건 그대로, 브라우저 저장 */

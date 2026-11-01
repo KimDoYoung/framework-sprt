@@ -13380,5 +13380,47 @@
     "note": "docs/work/X/X09-작업기록.md",
     "history": [],
     "id": "X09"
+  },
+  "Ast06_Tab_TrForDeposit": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ast/Ast06_Grid_ForJournal.java": "8d7ca3c42c80da117c89f1dd7cf4aef494902618",
+      "application/src/main/java/myApp/client/vi/ast/Ast06_Lookup_TrForDeposit.java": "846f43a379d51526a9e7714a320f13647e9c31ea",
+      "application/src/main/java/myApp/client/vi/ast/Ast06_Tab_TrForDeposit.java": "56f88bea3447a6db891bff474335bc74250f3026",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast01_ClassTreeModel.java": "ee2cde89198d72acc210c16582a4c1a9e6091262",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast06_TrModel.java": "4de9b68f3983c9976055751517785e56546d71ae",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast06_TrModelProperties.java": "f4480a324e232d39a97affbaa1caefc06317f317",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast08_TrFinanceModel.java": "fce67a9b16194b036136b7abd40d66ceed8e9c7c",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast20_TrTaxModel.java": "73b370813f8353b7112262185f9383b67bb1fa60",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast21_Tr4InsureModel.java": "4e19b66c01be6731bc6ed85419875adcb8a56a04",
+      "application/src/main/java/myApp/server/act/Act02_Journal.java": "2b47b76448d8e80fb79a9474ff98126cbe522804",
+      "application/src/main/java/myApp/server/act/Act03_JournalDtl.java": "ea4892fe161b44e445c18470a6d7a4956e03a859",
+      "application/src/main/java/myApp/server/act/Act04_GenLedger.java": "49a3f72f8d6395c5479d57ef6935a0149218ef4d",
+      "application/src/main/java/myApp/server/act/mapper/act02_journal.xml": "2c7804f20ce46eeb9247b46d67d96de1fbfc8571",
+      "application/src/main/java/myApp/server/act/mapper/act03_journal_dtl.xml": "30693776bf7e446ac02e9099bd5aca30c8dca83e",
+      "application/src/main/java/myApp/server/act/mapper/act04_gen_ledger.xml": "d8900a92e94b48cefec9e7431c42f3547bdadbd7",
+      "application/src/main/java/myApp/server/act/mapper/act06_journal_tmp.xml": "25dd7957dfe95fa25bf0d0e4b585a698611dff8b",
+      "application/src/main/java/myApp/server/act/mapper/act80_relate_appr.xml": "83efce1a67bacbae17dd671a739e68a47e610dec",
+      "application/src/main/java/myApp/server/ast/Ast06_Tr.java": "2702058b182da45864e4313e8ce23ed2b4268dc8",
+      "application/src/main/java/myApp/server/ast/mapper/ast01_class_tree.xml": "4d4dcbefb08aaedcad3120c9a73fd887926fad88",
+      "application/src/main/java/myApp/server/ast/mapper/ast06_tr.xml": "920b374e2a153a0c08ca47690139d316723fede4",
+      "application/src/main/java/myApp/server/ast/mapper/ast07_settle.xml": "8cb313a1bd9e72bb8f913912f56696b73f191cc4",
+      "application/src/main/java/myApp/server/ast/mapper/ast09_book.xml": "fb0636ccfd391f1efae798a56d6aaa46ce71ea4a",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Act02_Lookup_ModiForJournal",
+      "Act80_Lookup_RelateAppr",
+      "Ast01_Lookup_CorpAccount"
+    ],
+    "recorded_at": "2026-11-02T08:41:46+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/X/X10-작업기록.md",
+    "history": [],
+    "id": "X10"
   }
 }

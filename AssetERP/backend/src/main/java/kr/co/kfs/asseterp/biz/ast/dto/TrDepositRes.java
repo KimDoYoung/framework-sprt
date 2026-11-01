@@ -2,11 +2,12 @@ package kr.co.kfs.asseterp.biz.ast.dto;
 
 import java.time.LocalDate;
 
-/** AS-IS ast06_tr.selectDepositTr / selectById — 계좌이체(9005) 그리드 한 행(편집창이 받는 값 포함). 건수 문자열 apprCnt는 "N 건" */
+/** AS-IS ast06_tr.selectDepositTr / selectById — 계좌이체(9005) 그리드 한 행(편집창이 받는 값 포함). 건수 문자열 apprCnt는 "N 건". fxRate·forAmt는 외화 계좌이체(X10)가 쓴다 */
 public record TrDepositRes(
         Long trId,
         LocalDate date,
         String trCode,
+        String trName,
         Long astClassTreeId,
         String classTreeName,
         Long depositId,
@@ -20,6 +21,8 @@ public record TrDepositRes(
         String personName,
         Long journalId,
         Long apprId,
-        String apprCnt
+        String apprCnt,
+        Double fxRate,
+        Double forAmt
 ) {
 }
