@@ -20,6 +20,7 @@ import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseNewRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRejectReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRequestRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseOfficeRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseSettleApprRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseSettleApprRowRes;
@@ -334,5 +335,14 @@ public class PayExpenseController {
     @PutMapping("/settle-appr-id")
     public ApiResponse<Integer> updateSettleApprId(@AuthenticationPrincipal UserPrincipal principal, @RequestBody PayExpenseApprIdReq req) {
         return ApiResponse.ok(service.updateSettleApprId(principal, req.ids(), req.apprId()));
+    }
+
+    /** pay.Pay50_Expense.selectOfficeAssets — 비품대장 등록창의 지출결의서 선택 */
+    @GetMapping("/office-assets")
+    public ApiResponse<List<ExpenseOfficeRes>> officeAssets(@AuthenticationPrincipal UserPrincipal principal,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                            @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchOfficeAssets(principal, startDate, closeDate, searchText));
     }
 }

@@ -1582,4 +1582,36 @@
         VALUES ( #{relateFileId}, #{fileId}, #{apprId}, 'apr01_appr' )
     </insert>
 
+
+    <!-- AS-IS pay50_expense.selectOfficeAssets L1205 (IDMS-IC) — 결재완료(30)된 지출결의서 중 자산(50·55)·소모품_비품(952002) 계정. 비품대장 등록창의 [지출결의서 선택] -->
+    <select id="selectOfficeAssets" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseOfficeRes">
+    SELECT pay50_expense_id AS expense_id
+         , pay50_occ_date   AS occ_date
+         , pay50_desc       AS "desc"
+         , pay50_corp_id    AS corp_id
+         , pay50_corp_nm    AS corp_name
+         , pay50_amt        AS amt
+         , pay50_tax        AS tax
+         , pay50_settle_amt AS settle_amt
+      FROM (
+            SELECT pay50_expense.*
+                 , f_get_corp_nm(pay50_corp_id) AS pay50_corp_nm
+              FROM pay50_expense
+                   INNER JOIN apr01_appr ON apr01_appr_id = pay50_expense_appr_id
+             WHERE pay50_company_id = #{companyId}
+               AND pay50_occ_date BETWEEN #{startDate} AND #{closeDate}
+               AND pay50_appr_emp_id IS NOT NULL
+               AND apr01_status_cd = '30'  /*(30:결재완료)*/
+               AND pay50_account_cd IN ( SELECT act13_real_account_cd
+                                           FROM act13_real_account_map
+                                          WHERE act13_company_id = pay50_company_id
+                                            AND act13_repr_account_cd IN ('1100', '5802')   /*(1100:자산계정 / 5802:소모품비계정)*/
+                                            AND ( act13_account_map LIKE '50%'      OR      /*(50%:유형자산)*/
+                                                  act13_account_map LIKE '55%'      OR      /*(55%:무형자산)*/
+                                                  act13_account_map LIKE '952002%'  )       /*(952002%:소모품_비품)*/
+                                       )
+           ) t
+     WHERE CONCAT(pay50_desc, pay50_corp_nm) ILIKE #{searchText}
+     ORDER BY pay50_occ_date, pay50_expense_id
+    </select>
 </mapper>

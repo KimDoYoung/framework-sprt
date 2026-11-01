@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ast/mapper/ast13_book_depn.xml (selectOfficeAssets L198 · selectOfficeAssetsGroup L235 · updateRetireDate L274) · sys00_common.xml selectOfficeAssets L382 · sys99_print.xml deleteByPersonId·insert — 비품관리대장 W16 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstBookDepnMapper">
+
+    <select id="selectOfficeAssetTypes" resultType="kr.co.kfs.asseterp.biz.ast.dto.OfficeAssetTypeRes">
+    SELECT code, name
+      FROM (
+            SELECT sys09_code AS code
+                 , sys09_name AS name
+                 , sys09_seq  AS seq
+              FROM sys09_code
+                   INNER JOIN sys08_code_kind ON sys08_code_kind_id = sys09_code_kind_id
+             WHERE sys08_kind_cd = 'ItemLClassCode'
+               AND sys09_code LIKE '5%'
+               AND COALESCE(sys09_close_yn, 'false') = 'false'
+             UNION ALL
+            SELECT '95'          AS code
+                 , '소모품_비품'   AS name
+                 , '95'          AS seq
+           ) t
+     ORDER BY seq
+    </select>
+
+    <select id="selectOfficeAssets" resultType="kr.co.kfs.asseterp.biz.ast.dto.OfficeAssetRes">
+    SELECT ast13_book_depn_id    AS book_depn_id
+         , ast13_item_type       AS item_type
+         , ast13_pur_date        AS pur_date
+         , ast13_item_nm         AS item_name
+         , ast13_note            AS note
+         , ast13_pur_amt         AS pur_amt
+         , ast13_corp_nm         AS corp_name
+         , ast13_corp_tel        AS corp_tel
+         , ast13_retire_date     AS retire_date
+         , ast13_item_s_class_cd AS item_s_class_code
+         , ast13_pur_tr_id       AS pur_tr_id
+      FROM (
+            SELECT a.*
+                 , ast01_class_tree_nm                                      AS ast13_item_nm
+                 , f_ast_class_tree_nm_allpath2(ast13_ast_class_tree_id)    AS ast13_item_full_nm
+                 , ast01_item_s_class_cd                                    AS ast13_item_s_class_cd
+                 , ast06_note                                               AS ast13_note
+                 , sys15_corp_nm                                            AS ast13_corp_nm
+                 , sys15_tel                                                AS ast13_corp_tel
+                 , CONCAT( f_cdnm('ItemLClassCode', ast01_item_l_class_cd, ast13_company_id, ast13_pur_date)
+                         , '-'||f_cdnm('ItemMClassCode', ast01_item_m_class_cd, ast13_company_id, ast13_pur_date)
+                         , CASE WHEN substr(ast01_item_s_class_cd,5) = '99' THEN ''
+                                ELSE '-'||f_cdnm('ItemSClassCode', ast01_item_s_class_cd, ast13_company_id, ast13_pur_date) END
+                         ) AS ast13_item_type
+              FROM ast13_book_depn a
+                   INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast13_ast_class_tree_id
+                   LEFT OUTER JOIN ast06_tr    ON ast06_tr_id         = ast13_pur_tr_id
+                   LEFT OUTER JOIN sys15_corp  ON sys15_corp_id       = ast06_corp_id
+             WHERE ast13_company_id = #{companyId}
+               AND ast13_depn_date  = ( SELECT MAX(ast13_depn_date)
+                                          FROM ast13_book_depn b
+                                         WHERE b.ast13_company_id = a.ast13_company_id
+                                           AND b.ast13_pur_tr_id  = a.ast13_pur_tr_id
+                                           AND b.ast13_depn_date &lt;= #{depnDate} )
+               AND COALESCE(ast01_item_l_class_cd,'') ILIKE #{itemLClassCode}
+               <if test="!retireYn">
+               AND COALESCE(ast13_retire_date,'9999-12-31') &gt; #{depnDate}
+               </if>
+           ) t
+     WHERE CONCAT(ast13_item_type, ast13_item_full_nm, ast13_note, ast13_corp_nm) ILIKE '%'||#{searchText}||'%'
+     ORDER BY ast13_item_type collate "ko_KR.utf8" DESC
+            , ast13_pur_date
+            , ast13_item_nm collate "ko_KR.utf8" ASC
+    </select>
+
+    <select id="selectOfficeAssetsGroup" resultType="kr.co.kfs.asseterp.biz.ast.dto.OfficeAssetGroupRes">
+    SELECT row_number() over(order by ast01_item_s_class_cd)    AS book_depn_id
+         , ast13_item_type                                      AS item_type
+         , sum(ast13_pur_amt)                                   AS pur_amt
+      FROM (
+            SELECT ast13_pur_amt
+                 , ast01_item_s_class_cd
+                 , CASE WHEN SUBSTR(ast01_item_s_class_cd,5,2) = '99'
+                          THEN f_cdnm('ItemMClassCode', ast01_item_m_class_cd, ast13_company_id, ast13_pur_date)
+                        WHEN SUBSTR(ast01_item_s_class_cd,1,2) = '95'
+                          THEN '소모품(비품)'
+                        ELSE f_cdnm('ItemSClassCode', ast01_item_s_class_cd, ast13_company_id, ast13_pur_date)
+                   END ast13_item_type
+              FROM ast13_book_depn a
+                   INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast13_ast_class_tree_id
+             WHERE ast13_company_id = #{companyId}
+               AND ast13_depn_date  = ( SELECT MAX(ast13_depn_date)
+                                          FROM ast13_book_depn b
+                                         WHERE b.ast13_company_id = a.ast13_company_id
+                                           AND b.ast13_pur_tr_id  = a.ast13_pur_tr_id
+                                           AND b.ast13_depn_date &lt;= #{depnDate} )
+               AND COALESCE(ast13_retire_date,'9999-12-31') &gt; #{depnDate}
+           ) t
+     GROUP BY ast01_item_s_class_cd, ast13_item_type
+    </select>
+
+    <update id="updateRetireDate">
+    UPDATE ast13_book_depn
+       SET ast13_retire_date  = #{retireDate}
+     WHERE ast13_book_depn_id = #{bookDepnId}
+    </update>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- 구분 string01 · 취득일자 date01 · 품명 string02 · 적요 string03 · 취득금액 long01 · 구입처 string04 · 연락처 string05 · 폐기일자 date02 -->
+    <insert id="insertPrintOffice">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_date01, sys99_string02, sys99_string03, sys99_long01
+               , sys99_string04, sys99_string05, sys99_date02 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{b.itemType,jdbcType=VARCHAR}, #{b.purDate,jdbcType=DATE}, #{b.itemName,jdbcType=VARCHAR}, #{b.note,jdbcType=VARCHAR}, #{b.purAmt,jdbcType=NUMERIC}
+               , #{b.corpName,jdbcType=VARCHAR}, #{b.corpTel,jdbcType=VARCHAR}, #{b.retireDate,jdbcType=DATE} )
+    </insert>
+
+    <!-- ───── 감가상각대장 W17 ───── -->
+
+    <!-- AS-IS sys00_common.selectDepnItemType L370 (kindCode ItemLClassCode · code 5%) -->
+    <select id="selectDepnItemTypes" resultType="kr.co.kfs.asseterp.biz.ast.dto.OfficeAssetTypeRes">
+    SELECT sys09_code AS code
+         , sys09_name AS name
+      FROM sys09_code
+           INNER JOIN sys08_code_kind ON sys08_code_kind_id = sys09_code_kind_id
+     WHERE sys08_kind_cd = 'ItemLClassCode'
+       AND sys09_code LIKE '5%'
+       AND COALESCE(sys09_close_yn, 'false') = 'false'
+    </select>
+
+    <!-- AS-IS ast13_book_depn.selectByDepnDate2 L99 (IDMS-IC) -->
+    <select id="selectByDepnDate2" resultType="kr.co.kfs.asseterp.biz.ast.dto.DepnBookRes">
+    SELECT ast13_book_depn_id     AS book_depn_id
+         , ast13_account_type_nm  AS account_type_name
+         , ast13_item_type        AS item_type
+         , ast13_item_nm          AS item_name
+         , ast13_item_full_nm     AS item_full_name
+         , ast13_note             AS note
+         , ast13_pur_date         AS pur_date
+         , ast13_pur_amt          AS pur_amt
+         , ast13_non_deduct_tax   AS non_deduct_tax
+         , ast13_month_depn_cost  AS month_depn_cost
+         , ast13_depn_cost        AS depn_cost
+         , ast13_acm_depn_cost    AS acm_depn_cost
+         , ast13_rem_depn_cost    AS rem_depn_cost
+         , ast13_retire_date      AS retire_date
+         , ast13_pur_tr_id        AS pur_tr_id
+      FROM (
+    SELECT *
+         , CASE WHEN COALESCE(ast01_depn_type,'0') = '0' THEN 0
+                ELSE ast13_pur_amt + ast13_non_deduct_tax - COALESCE(ast13_acm_depn_cost,0) END     as ast13_rem_depn_cost
+      FROM (
+             SELECT CAST(#{depnDate} AS date)                                                                         as ast13_depn_date
+                  , CASE WHEN to_char(ast13_depn_date,'YYYYMM') = to_char(CAST(#{depnDate} AS date),'YYYYMM')
+                         THEN ast13_month_depn_cost ELSE 0 END                                                        as ast13_month_depn_cost
+                  , CASE WHEN to_char(ast13_depn_date,'YYYY') = to_char(CAST(#{depnDate} AS date),'YYYY')
+                         THEN ast13_depn_cost ELSE 0 END                                                              as ast13_depn_cost
+                  , f_cdnm('ItemLClassCode', ast01_item_l_class_cd, ast13_company_id, ast13_pur_date)
+                  ||'-'||f_cdnm('ItemMClassCode', ast01_item_m_class_cd, ast13_company_id, ast13_pur_date)
+                  ||CASE WHEN substr(ast01_item_s_class_cd,5) = '99' THEN ''
+                         ELSE '-'||f_cdnm('ItemSClassCode', ast01_item_s_class_cd, ast13_company_id, ast13_pur_date) END ast13_item_type
+                  , ast01_class_tree_nm                                                                               as ast13_item_nm
+                  , f_ast_class_tree_nm_allpath2(ast13_ast_class_tree_id)                                             as ast13_item_full_nm
+                  , f_cdnm('AccountType', ast01_account_type, ast13_company_id, ast13_pur_date)                       as ast13_account_type_nm
+                  , COALESCE(( SELECT ast16_apply_non_deduct_tax
+                                 FROM ast16_non_deduct_tax
+                                WHERE ast16_pur_tr_id = ast13_pur_tr_id
+                                  AND ast16_apply_date &lt;= #{depnDate}
+                                ORDER BY ast16_apply_date DESC
+                                LIMIT 1 ),0)                                                                          as ast13_non_deduct_tax
+                  , ast06_note                                                                                        as ast13_note
+                  , ast13_book_depn_id, ast13_pur_tr_id, ast13_pur_date, ast13_pur_amt, ast13_retire_date, ast13_acm_depn_cost, ast01_depn_type
+               FROM ast13_book_depn
+                    LEFT OUTER JOIN ast06_tr    ON ast06_tr_id           = ast13_pur_tr_id
+                    INNER JOIN ast01_class_tree ON ( ast01_class_tree_id = ast13_ast_class_tree_id AND
+                                                     ast01_depn_type IS NOT NULL                   )
+              WHERE ast13_company_id = #{companyId}
+                AND (ast13_pur_tr_id, ast13_depn_date) IN ( SELECT ast13_pur_tr_id, MAX(ast13_depn_date)
+                                                              FROM ast13_book_depn
+                                                             WHERE ast13_company_id = #{companyId}
+                                                               AND ast13_depn_date  &lt;= #{depnDate}
+                                                             GROUP BY ast13_pur_tr_id )
+                AND COALESCE(ast01_item_l_class_cd,'') ILIKE #{itemLClassCode}
+                <if test="!retireYn">
+                AND COALESCE(ast13_retire_date,'9999-12-31') &gt; #{depnDate}
+                </if>
+           ) t
+           ) t2
+     WHERE CONCAT(ast13_account_type_nm, ast13_item_type, ast13_item_full_nm, ast13_note) ILIKE '%'||#{searchText}||'%'
+     ORDER BY ast13_account_type_nm collate "ko_KR.utf8" asc
+            , ast13_item_type collate "ko_KR.utf8" desc
+            , ast13_pur_date
+            , ast13_item_nm collate "ko_KR.utf8" asc
+    </select>
+
+    <!-- AS-IS ast13_book_depn.getDepnDate2 L155 (IDMS-IC) — [상신] 전 구분별 합계 -->
+    <select id="selectDepnDate2Group" resultType="kr.co.kfs.asseterp.biz.ast.dto.DepnBookGroupRes">
+    SELECT ROW_NUMBER() OVER()                                  AS book_depn_id
+         , ast13_item_type                                      AS item_type
+         , SUM(t.ast13_pur_amt + t.ast13_non_deduct_tax)        AS pur_amt
+         , SUM(t.ast13_depn_cost)                               AS depn_cost
+         , SUM(t.ast13_acm_depn_cost)                           AS acm_depn_cost
+         , SUM(t.ast13_rem_depn_cost + t.ast13_non_deduct_tax)  AS rem_depn_cost
+      FROM (
+            SELECT ast13_book_depn_id
+                 , ast13_pur_amt
+                 , ast13_acm_depn_cost
+                 , CASE WHEN to_char(ast13_depn_date,'YYYY') = to_char(CAST(#{depnDate} AS date),'YYYY')
+                        THEN ast13_depn_cost ELSE 0 END                                                     AS ast13_depn_cost
+                 , ast13_pur_amt - COALESCE(ast13_acm_depn_cost,0)                                          AS ast13_rem_depn_cost
+                 , f_cdnm('ItemSClassCode', ast01_item_s_class_cd, ast13_company_id, ast13_pur_date)        AS ast13_item_type
+                 , COALESCE(( SELECT ast16_apply_non_deduct_tax
+                                FROM ast16_non_deduct_tax
+                               WHERE ast16_pur_tr_id = ast13_pur_tr_id
+                                 AND ast16_apply_date &lt;= #{depnDate}
+                               ORDER BY ast16_apply_date DESC
+                               LIMIT 1 ),0)                                                                 AS ast13_non_deduct_tax
+              FROM ast13_book_depn
+                   INNER JOIN ast01_class_tree ON ( ast01_class_tree_id = ast13_ast_class_tree_id AND
+                                                    ast01_depn_type IS NOT NULL                   )
+             WHERE ast13_company_id = #{companyId}
+               AND (ast13_pur_tr_id, ast13_depn_date) IN ( SELECT ast13_pur_tr_id, MAX(ast13_depn_date)
+                                                             FROM ast13_book_depn
+                                                            WHERE ast13_company_id = #{companyId}
+                                                              AND ast13_depn_date &lt;= #{depnDate}
+                                                            GROUP BY ast13_pur_tr_id )
+               AND COALESCE(ast13_retire_date,'9999-12-31') &gt; #{depnDate}
+           ) t
+     GROUP BY ast13_item_type
+     ORDER BY ast13_item_type DESC
+    </select>
+
+    <!-- 구분 string01 · 자산명 string02 · 계정구분 string03 · 취득일자 date01 · 취득금액 long01 · 불공제세액 long06 · 당월 long05 · 당기 long02 · 누계 long03 · 잔여 long04 · 폐기일자 date02 -->
+    <insert id="insertPrintDepn">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_string03, sys99_date01, sys99_long01
+               , sys99_long06, sys99_long05, sys99_long02, sys99_long03, sys99_long04, sys99_date02 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{b.itemType,jdbcType=VARCHAR}, #{b.itemName,jdbcType=VARCHAR}, #{b.accountTypeName,jdbcType=VARCHAR}, #{b.purDate,jdbcType=DATE}, #{b.purAmt,jdbcType=NUMERIC}
+               , #{b.nonDeductTax,jdbcType=NUMERIC}, #{b.monthDepnCost,jdbcType=NUMERIC}, #{b.depnCost,jdbcType=NUMERIC}, #{b.acmDepnCost,jdbcType=NUMERIC}, #{b.remDepnCost,jdbcType=NUMERIC}, #{b.retireDate,jdbcType=DATE} )
+    </insert>
+</mapper>

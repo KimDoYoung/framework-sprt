@@ -19,6 +19,7 @@ import kr.co.kfs.asseterp.biz.pay.dto.ExpenseAccountSumRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseNewRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRequestRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseOfficeRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseSettleApprRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseSettleApprRowRes;
@@ -566,5 +567,10 @@ public class PayExpenseService {
             n += mapper.updateSettleApprId(user.getCompanyId(), id, apprId);
         }
         return n;
+    }
+
+    /** pay.Pay50_Expense.selectOfficeAssets — searchText는 "%…%" */
+    public List<ExpenseOfficeRes> searchOfficeAssets(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText) {
+        return mapper.selectOfficeAssets(user.getCompanyId(), startDate, closeDate, like(searchText));
     }
 }

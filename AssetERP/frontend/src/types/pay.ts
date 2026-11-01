@@ -885,3 +885,15 @@ export interface PayExpenseRelateAppr {
   regEmpName: string | null;
   statusName: string | null;
 }
+
+/** 비품 지출결의서 선택 한 줄 (pay50_expense.selectOfficeAssets) */
+export interface PayExpenseOffice {
+  expenseId: number;
+  occDate: string | null;
+  desc: string | null;
+  corpId: number | null;
+  corpName: string | null;
+  amt: number | null;
+  tax: number | null;
+  settleAmt: number | null;
+}

@@ -876,3 +876,90 @@ export interface AstFinanceOprTr {
   purPlRate: number | null;
   pl: number | null;
 }
+
+// ── W16 비품관리대장 (Ast13_Tab_OfficeAssets) ──
+
+/** 비품관리대장 한 줄 (ast13_book_depn.selectOfficeAssets) */
+export interface AstOfficeAsset {
+  bookDepnId: number;
+  itemType: string | null;
+  purDate: string | null;
+  itemName: string | null;
+  note: string | null;
+  purAmt: number | null;
+  corpName: string | null;
+  corpTel: string | null;
+  retireDate: string | null;
+  itemSClassCode: string | null;
+  purTrId: number | null;
+}
+
+/** 구분별 취득금액 합계 (selectOfficeAssetsGroup) */
+export interface AstOfficeAssetGroup {
+  bookDepnId: number;
+  itemType: string | null;
+  purAmt: number | null;
+}
+
+/** 구분 콤보 / 화면 거래유형 콤보 한 칸 */
+export interface AstCodeName {
+  code: string;
+  name: string;
+}
+
+/** 지출결의서에 딸린 비품 취득 거래 (ast06_tr.selectByExpenseId) — 등록창 그리드 한 줄. 새 줄은 trId가 음수 */
+export interface AstExpenseTr {
+  trId: number;
+  trCode: string | null;
+  trName: string | null;
+  astClassTreeId: number | null;
+  classTreeFullName: string | null;
+  note: string | null;
+  contAmt: number | null;
+  lockYn: boolean;
+}
+
+/** 등록창 저장 한 줄 (ast.Ast06_Tr.updateDepn2) */
+export interface AstOfficeTrRow {
+  trId: number;
+  lockYn: boolean;
+  trCode: string | null;
+  astClassTreeId: number | null;
+  note: string | null;
+  contAmt: number | null;
+  date: string | null;
+  tax: number | null;
+  corpId: number | null;
+  expenseId: number | null;
+}
+
+// ── W17 감가상각대장 (Ast13_Tab_DepnBook) ──
+
+/** 감가상각대장 한 줄 (ast13_book_depn.selectByDepnDate2) */
+export interface AstDepnBook {
+  bookDepnId: number;
+  accountTypeName: string | null;
+  itemType: string | null;
+  itemName: string | null;
+  itemFullName: string | null;
+  note: string | null;
+  purDate: string | null;
+  purAmt: number | null;
+  nonDeductTax: number | null;
+  monthDepnCost: number | null;
+  depnCost: number | null;
+  acmDepnCost: number | null;
+  remDepnCost: number | null;
+  retireDate: string | null;
+  purTrId: number | null;
+}
+
+/** 구분별 합계 (getDepnDate2) */
+export interface AstDepnBookGroup {
+  bookDepnId: number;
+  itemType: string | null;
+  purAmt: number | null;
+  depnCost: number | null;
+  acmDepnCost: number | null;
+  remDepnCost: number | null;
+}

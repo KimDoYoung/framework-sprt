@@ -1,6 +1,9 @@
 package kr.co.kfs.asseterp.biz.ast.mapper;
 
 import kr.co.kfs.asseterp.biz.ast.dto.AstClassCodeRes;
+import kr.co.kfs.asseterp.biz.ast.dto.ExpenseTrRes;
+import kr.co.kfs.asseterp.biz.ast.dto.OfficeTrRow;
+import kr.co.kfs.asseterp.biz.ast.dto.TrCodeUseRes;
 import kr.co.kfs.asseterp.biz.ast.dto.Tr4InsureLedgerRes;
 import kr.co.kfs.asseterp.biz.ast.dto.Tr4InsureSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.TrRes;
@@ -91,4 +94,19 @@ public interface AstTrMapper {
     int deleteSettleByTrId(@Param("trId") Long trId);
 
     int deleteTr(@Param("companyId") Long companyId, @Param("trId") Long trId);
+
+    /** sys00_common.selectWindowUseTrCode */
+    List<TrCodeUseRes> selectWindowUseTrCode(@Param("companyId") Long companyId, @Param("className") String className);
+
+    /** ast06_tr.selectByExpenseId */
+    List<ExpenseTrRes> selectByExpenseId(@Param("companyId") Long companyId, @Param("expenseId") Long expenseId);
+
+    /** ast.Ast06_Tr.updateDepn2의 새 줄 INSERT — 취득 거래(pur_tr_id = 자기 자신, 금액·외화금액 = 취득금액, 원화 KRW·환율 1·미수미지급 아님) */
+    int insertOfficeTr(@Param("trId") long trId, @Param("companyId") Long companyId, @Param("personId") Long personId, @Param("r") OfficeTrRow r);
+
+    /** ast06_tr.updateNote */
+    int updateNote(@Param("trId") Long trId, @Param("note") String note);
+
+    /** ast.Ast06_Tr.checkDepnMulti (ast06_tr.selectDepnCount) — 이 거래일 이후 같은 취득 거래의 감가상각(5012) 건수 */
+    long countDepnAfter(@Param("companyId") Long companyId, @Param("trId") Long trId);
 }

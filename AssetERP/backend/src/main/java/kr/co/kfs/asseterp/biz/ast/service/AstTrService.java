@@ -2,6 +2,9 @@ package kr.co.kfs.asseterp.biz.ast.service;
 
 import kr.co.kfs.asseterp.biz.act.service.ActJournalService;
 import kr.co.kfs.asseterp.biz.ast.dto.AstClassCodeRes;
+import kr.co.kfs.asseterp.biz.ast.dto.ExpenseTrRes;
+import kr.co.kfs.asseterp.biz.ast.dto.OfficeTrRow;
+import kr.co.kfs.asseterp.biz.ast.dto.TrCodeUseRes;
 import kr.co.kfs.asseterp.biz.ast.dto.Tr4InsureLedgerRes;
 import kr.co.kfs.asseterp.biz.ast.dto.Tr4InsureSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.TrRes;
@@ -140,5 +143,54 @@ public class AstTrService {
             mapper.deleteSettleByTrId(trId);
             mapper.deleteTr(companyId, trId);
         }
+    }
+
+    // ───── 비품대장 등록(W16, Ast13_Lookup_ExpenseOfficeAssets) ─────
+
+    /** sys.Sys00_Common.selectWindowUseTrCode — 화면에 지정된 사용 중 거래유형 */
+    public List<TrCodeUseRes> searchWindowCodes(UserPrincipal user, String className) {
+        return mapper.selectWindowUseTrCode(user.getCompanyId(), className);
+    }
+
+    /** ast.Ast06_Tr.selectByExpenseId */
+    public List<ExpenseTrRes> searchByExpense(UserPrincipal user, Long expenseId) {
+        return mapper.selectByExpenseId(user.getCompanyId(), expenseId);
+    }
+
+    /**
+     * ast.Ast06_Tr.updateDepn2 — 새 줄(trId 0 이하)은 취득 거래로 넣고(금액·외화금액 = 취득금액, 취득거래ID = 자기 자신) 비품원장을 만든다(ast09_book.createDepnBook 'P').
+     * 잠긴 줄(이미 있는 거래)은 적요만 고친다 — AS-IS 화면이 적요 말고는 고치지 못하게 막는다. 원장 생성이 실패하면 전부 되돌린다
+     */
+    @Transactional
+    public void saveOfficeAssets(UserPrincipal user, List<OfficeTrRow> rows) {
+        for (OfficeTrRow r : rows) {
+            if (r.lockYn() || r.trId() > 0) {
+                if (mapper.updateNote(r.trId(), r.note()) == 0) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+                continue;
+            }
+            if (r.trCode() == null || r.trCode().isEmpty()) throw new BusinessException(ErrorCode.INVALID_INPUT, "거래유형을 선택하세요");
+            if (r.astClassTreeId() == null) throw new BusinessException(ErrorCode.INVALID_INPUT, "종목을 선택하세요");
+            if (r.contAmt() == null) throw new BusinessException(ErrorCode.INVALID_INPUT, "취득금액을 입력하세요");
+            if (r.date() == null) throw new BusinessException(ErrorCode.INVALID_INPUT, "지출결의서를 선택하세요");
+            long newId = mapper.selectNextId();
+            mapper.insertOfficeTr(newId, user.getCompanyId(), user.getUserId(), r);
+            String msg = mapper.createDepnBook("P", newId);
+            if (!"Y".equals(msg)) throw new BusinessException(ErrorCode.INVALID_INPUT, msg);
+        }
+    }
+
+    /** ast.Ast06_Tr.checkDepnMulti — 거래일 이후 감가상각 처리내역이 있으면 삭제할 수 없다 */
+    public void checkDepn(UserPrincipal user, List<Long> trIds) {
+        for (Long trId : trIds) {
+            if (mapper.countDepnAfter(user.getCompanyId(), trId) != 0) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "거래일 이후 감가상각 처리내역이 존재합니다. 상각 취소 후 거래하세요.");
+            }
+        }
+    }
+
+    /** ast.Ast06_Tr.updateNote */
+    @Transactional
+    public void updateNote(Long trId, String note) {
+        if (mapper.updateNote(trId, note) == 0) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
     }
 }

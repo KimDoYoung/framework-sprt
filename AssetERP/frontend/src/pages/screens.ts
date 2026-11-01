@@ -230,6 +230,8 @@ import { Ast06_Tab_EvalFinance } from './ast/Ast06_Tab_EvalFinance';
 import { Ast25_Tab_Price } from './ast/Ast25_Tab_Price';
 import { Ast06_Tab_EvalDepn } from './ast/Ast06_Tab_EvalDepn';
 import { Ast09_Tab_FinanceBook } from './ast/Ast09_Tab_FinanceBook';
+import { Ast13_Tab_OfficeAssets } from './ast/Ast13_Tab_OfficeAssets';
+import { Ast13_Tab_DepnBook } from './ast/Ast13_Tab_DepnBook';
 import { Ast09_Tab_FinanceForBook } from './ast/Ast09_Tab_FinanceForBook';
 import { Ast09_Tab_FinanceBookPeriod } from './ast/Ast09_Tab_FinanceBookPeriod';
 import { Ast09_Tab_FinanceBookOpr } from './ast/Ast09_Tab_FinanceBookOpr';
@@ -627,6 +629,8 @@ export const SCREENS: Record<string, React.FC> = {
   Ast06_Tab_TrTax, // U04 (메뉴 #1196. 하위 Ast06_Lookup_TrTax·Ast06_Lookup_Tr4Insure·Ast06_Grid_Journal·Ast05_Lookup_TrCodeWindow. 결재요청·문서보기의 전자결재 편집창, 분개 [변경]의 Act02_Lookup_ModiJournal은 다음 단계)
   Ast06_Tab_TrFinance, // W06 (메뉴 #1158. + Ast06_Lookup_TrFinance·Ast09_Lookup_Book. 연관문서·분개 [변경]은 W05와 같은 창)
   Ast06_Tab_TrForFinance, // W07 (메뉴 #1365. + Ast06_Lookup_TrForFinance. 보유자산 조회창·연관문서·분개 [변경]은 W06과 같은 창)
+  Ast13_Tab_DepnBook, // W17 (메뉴 #1181. + Ast16_Lookup_NonDeductTax(W11). 상신 A29 = Apr01_Edit_ApprDoc 연결, RD Ast13_Rd_DepnBook)
+  Ast13_Tab_OfficeAssets, // W16 (메뉴 #1397. + Ast13_Lookup_ExpenseOfficeAssets·Pay50_Lookup_ExpenseOfficeAssets·Ast06_Lookup_ModifyNote. 상신 A65 = Apr01_Edit_ApprDoc 연결, RD Ast13_Rd_OfficeAssets)
   Ast09_Tab_FinanceBook, // W12 (메뉴 #1160. 상신 A30 = Apr01_Edit_ApprDoc 연결, RD Ast09_Rd_FinanceBook)
   Ast09_Tab_FinanceBookOpr, // W15 (메뉴 #1300. 아래 탭 Ast06_TabPage_FinanceBookOpr, RD Ast09_Rd_FinanceBookOpr)
   Ast09_Tab_FinanceBookPeriod, // W14 (메뉴 #1239. 조회가 sys99_print를 다시 쌓음, 엑셀 RD Ast09_Rd_FinanceBookPeriod)

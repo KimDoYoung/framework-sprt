@@ -51,6 +51,13 @@ import {
   AstInvestAssetLimit,
   AstOwnerCapitalMax,
   AstFinanceGroup,
+  AstOfficeAsset,
+  AstDepnBook,
+  AstDepnBookGroup,
+  AstOfficeAssetGroup,
+  AstCodeName,
+  AstExpenseTr,
+  AstOfficeTrRow,
 } from '../types/ast';
 
 /** ast(자산) API (E21 자산상세 항목관리, E29 거래유형 등록) */
@@ -732,6 +739,90 @@ export const astApi = {
     const res = await apiClient.post<ApiResponse<number>>('v1/ast/books/finance/rd', null, { params: { holdDate, searchText } });
     return res.data.data;
   },
+  // ── W16 비품관리대장 (Ast13_Tab_OfficeAssets) ──
+
+  /** AS-IS sys.Sys00_Common.selectOfficeAssets: 구분 콤보(대분류 5x + 소모품_비품) */
+  searchOfficeAssetTypes: async (): Promise<AstCodeName[]> => {
+    const res = await apiClient.get<ApiResponse<AstCodeName[]>>('v1/ast/book-depns/types');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast13_BookDepn.selectOfficeAssets. itemLClassCode 비면 전체 */
+  searchOfficeAssets: async (depnDate: string, itemLClassCode: string, retireYn: boolean, searchText: string): Promise<AstOfficeAsset[]> => {
+    const res = await apiClient.get<ApiResponse<AstOfficeAsset[]>>('v1/ast/book-depns', { params: { depnDate, itemLClassCode, retireYn, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast13_BookDepn.selectOfficeAssetsGroup: 상신 전 구분별 합계 — 비어 있으면 상신할 내용이 없다 */
+  searchOfficeAssetGroups: async (depnDate: string): Promise<AstOfficeAssetGroup[]> => {
+    const res = await apiClient.get<ApiResponse<AstOfficeAssetGroup[]>>('v1/ast/book-depns/groups', { params: { depnDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast13_BookDepn.updateRetireDate: null이면 폐기일 삭제 */
+  updateOfficeRetireDate: async (bookDepnId: number, retireDate: string | null): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/ast/book-depns/${bookDepnId}/retire-date`, { retireDate });
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdOfficeAssets: 출력 자료를 쌓고 rdGroupId를 받는다 */
+  rdOfficeAssets: async (depnDate: string, itemLClassCode: string, retireYn: boolean, searchText: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ast/book-depns/rd', null, { params: { depnDate, itemLClassCode, retireYn, searchText } });
+    return res.data.data;
+  },
+
+  /** AS-IS sys.Sys00_Common.selectWindowUseTrCode: 화면에 지정된 사용 중 거래유형 */
+  searchWindowTrCodes: async (className: string): Promise<AstCodeName[]> => {
+    const res = await apiClient.get<ApiResponse<AstCodeName[]>>('v1/ast/trs/window-codes', { params: { className } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast06_Tr.selectByExpenseId */
+  searchTrsByExpense: async (expenseId: number): Promise<AstExpenseTr[]> => {
+    const res = await apiClient.get<ApiResponse<AstExpenseTr[]>>('v1/ast/trs/by-expense', { params: { expenseId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast06_Tr.updateDepn2: 새 줄은 취득 거래 + 비품원장, 잠긴 줄은 적요만 */
+  saveOfficeAssetTrs: async (rows: AstOfficeTrRow[]): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/ast/trs/office-assets', { rows });
+  },
+
+  /** AS-IS ast.Ast06_Tr.checkDepnMulti: 거래일 이후 감가상각이 있으면 오류 */
+  checkTrDepn: async (trIds: number[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/ast/trs/check-depn', { trIds });
+  },
+
+  /** AS-IS ast.Ast06_Tr.updateNote (Ast06_Lookup_ModifyNote) */
+  updateTrNote: async (trId: number, note: string): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/ast/trs/${trId}/note`, { note });
+  },
+
+  // ── W17 감가상각대장 (Ast13_Tab_DepnBook) ──
+
+  /** AS-IS sys.Sys00_Common.selectDepnItemType: 구분 콤보(대분류 5x) */
+  searchDepnItemTypes: async (): Promise<AstCodeName[]> => {
+    const res = await apiClient.get<ApiResponse<AstCodeName[]>>('v1/ast/book-depns/depn-types');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast13_BookDepn.selectByDepnDate2 */
+  searchDepnBooks: async (depnDate: string, itemLClassCode: string, retireYn: boolean, searchText: string): Promise<AstDepnBook[]> => {
+    const res = await apiClient.get<ApiResponse<AstDepnBook[]>>('v1/ast/book-depns/depn-books', { params: { depnDate, itemLClassCode, retireYn, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast13_BookDepn.getDepnDate2: 상신 전 구분별 합계 — 비어 있으면 상신할 내용이 없다 */
+  searchDepnBookGroups: async (depnDate: string): Promise<AstDepnBookGroup[]> => {
+    const res = await apiClient.get<ApiResponse<AstDepnBookGroup[]>>('v1/ast/book-depns/depn-books/groups', { params: { depnDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdDepnBook: 출력 자료를 쌓고 rdGroupId를 받는다 */
+  rdDepnBook: async (depnDate: string, itemLClassCode: string, retireYn: boolean, searchText: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ast/book-depns/depn-books/rd', null, { params: { depnDate, itemLClassCode, retireYn, searchText } });
+    return res.data.data;
+  },
+
   // ── W15 금융상품 운용내역 (Ast09_Tab_FinanceBookOpr) ──
 
   /** AS-IS ast.Ast40_OwnerCapital.selectByMaxDate: 없으면 null */

@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.pay.mapper;
 
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseOfficeRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseAccountSumRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmSendRow;
@@ -228,4 +229,8 @@ public interface PayExpenseMapper {
 
     /** AS-IS sys11_relate_file.insert (parentTable = apr01_appr) */
     int insertApprRelateFile(@Param("relateFileId") Long relateFileId, @Param("fileId") Long fileId, @Param("apprId") Long apprId);
+
+    /** pay50_expense.selectOfficeAssets (Ast13_Lookup_ExpenseOfficeAssets → Pay50_Lookup_ExpenseOfficeAssets) */
+    List<ExpenseOfficeRes> selectOfficeAssets(@Param("companyId") Long companyId, @Param("startDate") LocalDate startDate,
+                                              @Param("closeDate") LocalDate closeDate, @Param("searchText") String searchText);
 }

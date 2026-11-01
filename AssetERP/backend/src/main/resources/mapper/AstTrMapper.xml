@@ -318,4 +318,61 @@
     <delete id="deleteTr">
         DELETE FROM ast06_tr WHERE ast06_company_id = #{companyId} AND ast06_tr_id = #{trId}
     </delete>
+
+    <!-- AS-IS sys00_common.selectWindowUseTrCode L226 (IDMS-IC) -->
+    <select id="selectWindowUseTrCode" resultType="kr.co.kfs.asseterp.biz.ast.dto.TrCodeUseRes">
+        SELECT ast15_tr_cd AS code
+             , ast05_tr_nm AS name
+          FROM ast15_tr_code_window
+               INNER JOIN ast05_tr_code ON (ast05_company_id = ast15_company_id AND
+                                            ast05_tr_cd      = ast15_tr_cd      )
+         WHERE ast15_company_id      = #{companyId}
+           AND ast15_window_class_nm = #{className}
+           AND COALESCE(ast05_use_yn,'false') = 'true'
+         ORDER BY ast15_tr_cd
+    </select>
+
+    <!-- AS-IS ast06_tr.selectByExpenseId L934 (IDMS-IC) — 읽어 온 줄은 모두 잠금(lockYn true) -->
+    <select id="selectByExpenseId" resultType="kr.co.kfs.asseterp.biz.ast.dto.ExpenseTrRes">
+        SELECT ast06_tr_id                                                  AS tr_id
+             , ast06_tr_cd                                                  AS tr_code
+             , f_cdnm('trCode', ast06_tr_cd, ast06_company_id, ast06_date)  AS tr_name
+             , ast06_ast_class_tree_id                                      AS ast_class_tree_id
+             , f_ast_class_tree_nm_allpath(ast06_ast_class_tree_id)         AS class_tree_full_name
+             , ast06_note                                                   AS note
+             , ast06_cont_amt                                               AS cont_amt
+             , true                                                         AS lock_yn
+          FROM ast06_tr
+         WHERE ast06_company_id = #{companyId}
+           AND ast06_expense_id = #{expenseId}
+         ORDER BY ast06_tr_id
+    </select>
+
+    <!-- port-save ast06_tr (Ast06_Tr.updateDepn2 L609, UpdateDataModel INSERT) — 화면이 채우는 열만 -->
+    <insert id="insertOfficeTr">
+        INSERT INTO ast06_tr (ast06_tr_id, ast06_company_id, ast06_ast_class_tree_id, ast06_date, ast06_tr_cd, ast06_amt, ast06_settle_mng_yn, ast06_note,
+                              ast06_person_id, ast06_corp_id, ast06_tax, ast06_cur_cd, ast06_for_amt, ast06_fx_rate, ast06_cont_amt, ast06_for_cont_amt,
+                              ast06_pur_tr_id, ast06_expense_id)
+        VALUES (#{trId}, #{companyId}, #{r.astClassTreeId}, #{r.date}, #{r.trCode}, #{r.contAmt}, 'false', #{r.note,jdbcType=VARCHAR},
+                #{personId}, #{r.corpId,jdbcType=NUMERIC}, #{r.tax,jdbcType=NUMERIC}, 'KRW', #{r.contAmt}, 1, #{r.contAmt}, #{r.contAmt},
+                #{trId}, #{r.expenseId,jdbcType=NUMERIC})
+    </insert>
+
+    <!-- AS-IS ast06_tr.updateNote L1077 (IDMS-IC) -->
+    <update id="updateNote">
+        UPDATE ast06_tr
+           SET ast06_note   = #{note}
+         WHERE ast06_tr_id  = #{trId}
+    </update>
+
+    <!-- AS-IS ast06_tr.selectDepnCount L683 (IDMS-IC) — 거래일·취득거래ID는 DB의 이 거래에서 읽는다 -->
+    <select id="countDepnAfter" resultType="long">
+        SELECT count(*)
+          FROM ast06_tr d
+               INNER JOIN ast06_tr t ON t.ast06_tr_id = #{trId}
+         WHERE d.ast06_company_id = #{companyId}
+           AND d.ast06_date      >= t.ast06_date
+           AND d.ast06_pur_tr_id  = t.ast06_pur_tr_id
+           AND d.ast06_tr_cd      = '5012'
+    </select>
 </mapper>

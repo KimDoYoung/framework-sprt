@@ -1,10 +1,14 @@
 package kr.co.kfs.asseterp.biz.ast.controller;
 
 import jakarta.validation.Valid;
+import kr.co.kfs.asseterp.biz.ast.dto.ExpenseTrRes;
+import kr.co.kfs.asseterp.biz.ast.dto.OfficeTrSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.Tr4InsureLedgerRes;
 import kr.co.kfs.asseterp.biz.ast.dto.Tr4InsureSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.TrApprReq;
+import kr.co.kfs.asseterp.biz.ast.dto.TrCodeUseRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrDeleteReq;
+import kr.co.kfs.asseterp.biz.ast.dto.TrNoteReq;
 import kr.co.kfs.asseterp.biz.ast.dto.TrRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrTaxLedgerRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrTaxSaveReq;
@@ -89,5 +93,40 @@ public class AstTrController {
     public ApiResponse<Tr4InsureLedgerRes> genLedgerInsure(@AuthenticationPrincipal UserPrincipal principal,
                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return ApiResponse.ok(service.getGenLedgerInsure(principal, date));
+    }
+
+    // ───── 비품대장 등록 W16 (Ast13_Lookup_ExpenseOfficeAssets) ─────
+
+    /** sys.Sys00_Common.selectWindowUseTrCode */
+    @GetMapping("/trs/window-codes")
+    public ApiResponse<List<TrCodeUseRes>> windowCodes(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String className) {
+        return ApiResponse.ok(service.searchWindowCodes(principal, className));
+    }
+
+    /** ast.Ast06_Tr.selectByExpenseId */
+    @GetMapping("/trs/by-expense")
+    public ApiResponse<List<ExpenseTrRes>> byExpense(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long expenseId) {
+        return ApiResponse.ok(service.searchByExpense(principal, expenseId));
+    }
+
+    /** ast.Ast06_Tr.updateDepn2 */
+    @PutMapping("/trs/office-assets")
+    public ApiResponse<Void> saveOfficeAssets(@AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody OfficeTrSaveReq req) {
+        service.saveOfficeAssets(principal, req.rows());
+        return ApiResponse.ok(null);
+    }
+
+    /** ast.Ast06_Tr.checkDepnMulti */
+    @PostMapping("/trs/check-depn")
+    public ApiResponse<Void> checkDepn(@AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody TrDeleteReq req) {
+        service.checkDepn(principal, req.trIds());
+        return ApiResponse.ok(null);
+    }
+
+    /** ast.Ast06_Tr.updateNote */
+    @PutMapping("/trs/{trId}/note")
+    public ApiResponse<Void> updateNote(@PathVariable Long trId, @RequestBody TrNoteReq req) {
+        service.updateNote(trId, req.note());
+        return ApiResponse.ok(null);
     }
 }

@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq, PayBasicSetup, PayBasicSetupSaveReq, PayExpense, PayExpenseForm, PayExpenseRequest, PayExpenseUpdateReq, PayFavoriteAccount, PayExpenseSettle, PayExpenseSettleSaveReq, PayExpenseNew, PayExpenseJournal, PayExpenseSettleAppr, PayExpenseSettleApprRow, PayExpenseAccountSum, PayExpenseConfirm, PayExpenseMine, PayExpenseConfirmer, PayExpenseMineSaveReq, PayExpenseRelateAppr } from '../types/pay';
+import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq, PayBasicSetup, PayBasicSetupSaveReq, PayExpense, PayExpenseForm, PayExpenseRequest, PayExpenseUpdateReq, PayFavoriteAccount, PayExpenseSettle, PayExpenseSettleSaveReq, PayExpenseNew, PayExpenseJournal, PayExpenseSettleAppr, PayExpenseSettleApprRow, PayExpenseAccountSum, PayExpenseConfirm, PayExpenseMine, PayExpenseConfirmer, PayExpenseMineSaveReq, PayExpenseRelateAppr, PayExpenseOffice } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -955,6 +955,12 @@ export const payApi = {
     const res = await apiClient.get<ApiResponse<PayExpense[]>>('v1/pay/expenses', { params: p });
     return res.data.data ?? [];
   },
+  /** AS-IS pay.Pay50_Expense.selectOfficeAssets (Pay50_Lookup_ExpenseOfficeAssets): 결재완료된 자산·소모품_비품 지출결의서 */
+  searchExpenseOffices: async (startDate: string, closeDate: string, searchText: string): Promise<PayExpenseOffice[]> => {
+    const res = await apiClient.get<ApiResponse<PayExpenseOffice[]>>('v1/pay/expenses/office-assets', { params: { startDate, closeDate, searchText } });
+    return res.data.data ?? [];
+  },
+
 
   /** AS-IS pay.Pay50_Expense.selectExpenseRequest */
   searchExpenseRequests: async (searchText: string): Promise<PayExpenseRequest[]> => {
