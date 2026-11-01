@@ -399,6 +399,48 @@ export interface AprStampDoc {
   apprStatusName?: string | null;
 }
 
+/** Y11 AS-IS Apr16_StampDocModel — 내 법인서류 및 날인신청 한 행 (selectByApplEmpId). stampOutYn은 'true'/'false' 글자 */
+export interface AprStampAppl {
+  stampDocId: number;
+  applDate?: string | null;
+  applEmpId?: number | null;
+  applEmpName?: string | null;
+  applType?: string | null;
+  applTypeName?: string | null;
+  stampId?: number | null;
+  stampName?: string | null;
+  reprCorpId?: number | null;
+  reprCorpName?: string | null;
+  stampReprCorpName?: string | null;
+  applQty?: number | null;
+  stampOutYn?: string | null;
+  provideCo?: string | null;
+  purpose?: string | null;
+  requester?: string | null;
+  note?: string | null;
+  regDate?: string | null;
+  stampDate?: string | null;
+  apprId?: number | null;
+  apprName?: string | null;
+  apprStatusName?: string | null;
+}
+
+/** Y11 신청 창 저장 — stampDocId 0이면 새 행. stampQty·docApplQty는 서버가 구분으로 정한다 */
+export interface AprStampApplSaveReq {
+  stampDocId: number;
+  applDate: string;
+  applType: string;
+  stampId: number | null;
+  reprCorpId: number | null;
+  applQty: number | null;
+  stampOutYn: string;
+  provideCo: string | null;
+  purpose: string | null;
+  requester: string | null;
+  note: string | null;
+  apprId: number | null;
+}
+
 /** T24·T25 AS-IS Apr16_StampDocModel — 인감날인대장 한 행 (selectStampByCompanyId). stampDocId는 행번호 키, realStampDocId가 실제 신청 ID(대외문서는 null) */
 export interface AprStampList {
   stampDocId: number;

@@ -2,7 +2,9 @@ package kr.co.kfs.asseterp.biz.bbs.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralMessageSendReq;
+import kr.co.kfs.asseterp.biz.bbs.dto.FloralRequestNewRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralRequestRes;
+import kr.co.kfs.asseterp.biz.bbs.dto.FloralRequestSaveReq;
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralRequestStatusReq;
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralShareRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralShareSaveReq;
@@ -32,6 +34,54 @@ public class BbsFloralRequestController {
                                                       @RequestParam(defaultValue = "") String searchText,
                                                       @RequestParam(defaultValue = "true") boolean confirmYn) {
         return ApiResponse.ok(service.search(principal, startDate, closeDate, searchText, confirmYn));
+    }
+
+    /** Y12 AS-IS bbs.Bbs20_FloralRequest.selectByText — 신청 화면(본인 + 공개 건), confirmYn = 미완료건만 */
+    @GetMapping("/mine")
+    public ApiResponse<List<FloralRequestRes>> searchMine(@AuthenticationPrincipal UserPrincipal principal,
+                                                          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                          @RequestParam(defaultValue = "") String searchText,
+                                                          @RequestParam(defaultValue = "true") boolean confirmYn) {
+        return ApiResponse.ok(service.searchMine(principal, startDate, closeDate, searchText, confirmYn));
+    }
+
+    /** Y12 AS-IS Bbs20_Edit_FloralRequest.insert — 새 신청의 기본값(번호를 새로 받는다) */
+    @PostMapping("/new")
+    public ApiResponse<FloralRequestNewRes> newRequest(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.newRequest(principal));
+    }
+
+    /** Y12 AS-IS bbs.Bbs22_FloralMessage.getMessage — 경조구분의 문구(없으면 null) */
+    @GetMapping("/message")
+    public ApiResponse<String> getMessage(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String code) {
+        return ApiResponse.ok(service.getMessage(principal, code));
+    }
+
+    /** Y12 AS-IS bbs.Bbs20_FloralRequest.modelUpdate → 저장한 번호 */
+    @PutMapping("/save")
+    public ApiResponse<Long> saveRequest(@AuthenticationPrincipal UserPrincipal principal, @RequestBody FloralRequestSaveReq req) {
+        return ApiResponse.ok(service.saveRequest(principal, req));
+    }
+
+    /** Y12 AS-IS bbs.Bbs20_FloralRequest.delete → 지운 건수 */
+    @DeleteMapping
+    public ApiResponse<Integer> deleteRequests(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> ids) {
+        return ApiResponse.ok(service.deleteRequests(principal, ids));
+    }
+
+    /** Y12 AS-IS bbs.Bbs21_FloralRequestShare.insertDefaultShare → "신청공유" 문구(복사한 것이 없으면 null) */
+    @PostMapping("/{floralRequestId}/default-shares")
+    public ApiResponse<String> insertDefaultShare(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long floralRequestId,
+                                                  @RequestParam Long contactId) {
+        return ApiResponse.ok(service.insertDefaultShare(principal, floralRequestId, contactId));
+    }
+
+    /** Y12 AS-IS bbs.Bbs21_FloralRequestShare.deleteDefaultShare */
+    @DeleteMapping("/{floralRequestId}/default-shares")
+    public ApiResponse<Void> deleteDefaultShare(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long floralRequestId) {
+        service.deleteDefaultShare(principal, floralRequestId);
+        return ApiResponse.ok(null);
     }
 
     /** AS-IS bbs.Bbs20_FloralRequest.selectById */

@@ -1,3 +1,14 @@
+/** Y12 업무활동처 및 이익제공처 조회창(Mkt01_Lookup_Select) 한 행 — 활동처 + 담당자 한 줄 */
+export interface MktSelect {
+  targetCompanyId: number;
+  managerId: number | null;
+  targetCompanyName: string | null;
+  managerName: string | null;
+  managerPosName: string | null;
+  managerOrgName: string | null;
+  managerTel: string | null;
+}
+
 /** 업무활동처(거래상대방) 조회창 한 행 (AS-IS Mkt01_TargetCompanyModel 중 조회창이 쓰는 열). 회사별(cmp)은 담당자 열이 null */
 export interface MktTarget {
   targetCompanyId: number;

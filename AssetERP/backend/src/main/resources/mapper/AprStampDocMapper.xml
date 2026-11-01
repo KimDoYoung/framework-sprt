@@ -163,6 +163,77 @@
            AND apr16_company_id   = #{companyId}
     </select>
 
+    <!-- AS-IS apr16_stamp_doc.selectByApplEmpId (IDMS-IC) — Y11 Apr16_Tab_StampDocAppl. SELECT * → AprStampApplRes 열만. procResult(미처리만)이면 등록일·날인일자가 모두 비어 있는 것 -->
+    <select id="selectByApplEmpId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprStampApplRes">
+        SELECT apr16_stamp_doc_id                                                                       AS stamp_doc_id
+             , apr16_appl_date                                                                          AS appl_date
+             , apr16_appl_emp_id                                                                        AS appl_emp_id
+             , emp01_kor_nm                                                                             AS appl_emp_name
+             , apr16_appl_type                                                                          AS appl_type
+             , f_cdnm('CorpDocStampApplType', apr16_appl_type, apr16_company_id, #{startDate}::date)    AS appl_type_name
+             , apr16_stamp_id                                                                           AS stamp_id
+             , apr10_stamp_nm                                                                           AS stamp_name
+             , apr16_repr_corp_id                                                                       AS repr_corp_id
+             , COALESCE(apr15_corp_nm, sys01_company_nm)                                                AS repr_corp_name
+             , CASE WHEN apr16_appl_type = '2' THEN COALESCE(apr15_corp_nm, sys01_company_nm)
+                    ELSE apr10_stamp_nm END                                                             AS stamp_repr_corp_name
+             , CASE WHEN apr16_appl_type = '3' THEN apr16_stamp_qty ELSE apr16_doc_appl_qty END         AS appl_qty
+             , apr16_stamp_out_yn                                                                       AS stamp_out_yn
+             , apr16_provide_co                                                                         AS provide_co
+             , apr16_purpose                                                                            AS purpose
+             , apr16_requester                                                                          AS requester
+             , apr16_note                                                                               AS note
+             , apr16_reg_date                                                                           AS reg_date
+             , apr16_stamp_date                                                                         AS stamp_date
+             , apr16_appr_id                                                                            AS appr_id
+             , apr01_title                                                                              AS appr_name
+             , CASE WHEN apr01_appr_id IS NULL THEN null
+                    ELSE f_cdnm('AprStatusCode', apr01_status_cd, apr16_company_id, #{startDate}::date)
+                    END                                                                                 AS appr_status_name
+          FROM apr16_stamp_doc
+               LEFT JOIN emp01_Person    ON emp01_person_id     = apr16_appl_emp_id
+               LEFT JOIN apr10_stamp     ON apr10_stamp_id      = apr16_stamp_id
+               LEFT JOIN apr15_repr_corp ON apr15_repr_corp_id  = apr16_repr_corp_id
+               LEFT JOIN sys01_company   ON sys01_company_id    = apr16_repr_corp_id
+               LEFT JOIN apr01_appr      ON apr01_appr_id       = apr16_appr_id
+         WHERE apr16_company_id  = #{companyId}
+           AND apr16_appl_emp_id = #{personId}
+           AND apr16_appl_date BETWEEN #{startDate}::date AND #{closeDate}::date
+           AND CONCAT(apr16_provide_co, apr16_purpose) ILIKE #{searchText}
+        <if test="procResult">
+           AND apr16_reg_date IS NULL
+           AND apr16_stamp_date IS NULL
+        </if>
+         ORDER BY apr16_appl_date DESC, apr16_stamp_doc_id DESC
+    </select>
+
+    <!-- AS-IS Apr16_StampDoc.update → UpdateDataModel INSERT (신청 창). 신청자 = 로그인 사원 -->
+    <insert id="insertAppl">
+        INSERT INTO apr16_stamp_doc
+               ( apr16_stamp_doc_id, apr16_company_id, apr16_appl_date, apr16_appl_emp_id, apr16_appl_type, apr16_stamp_id, apr16_repr_corp_id
+               , apr16_doc_appl_qty, apr16_stamp_qty, apr16_stamp_out_yn, apr16_provide_co, apr16_purpose, apr16_requester, apr16_note, apr16_appr_id )
+        VALUES ( #{stampDocId}, #{companyId}, #{r.applDate}, #{applEmpId}, #{r.applType}, #{r.stampId}, #{r.reprCorpId}
+               , #{docApplQty}, #{stampQty}, #{r.stampOutYn}, #{r.provideCo}, #{r.purpose}, #{r.requester}, #{r.note}, #{r.apprId} )
+    </insert>
+
+    <!-- AS-IS Apr16_StampDoc.update → UpdateDataModel UPDATE (신청 창이 바꾸는 열), 로그인 회사의 행만 -->
+    <update id="updateAppl">
+        UPDATE apr16_stamp_doc
+           SET apr16_appl_type     = #{r.applType}
+             , apr16_stamp_id      = #{r.stampId}
+             , apr16_repr_corp_id  = #{r.reprCorpId}
+             , apr16_doc_appl_qty  = #{docApplQty}
+             , apr16_stamp_qty     = #{stampQty}
+             , apr16_stamp_out_yn  = #{r.stampOutYn}
+             , apr16_provide_co    = #{r.provideCo}
+             , apr16_purpose       = #{r.purpose}
+             , apr16_requester     = #{r.requester}
+             , apr16_note          = #{r.note}
+             , apr16_appr_id       = #{r.apprId}
+         WHERE apr16_stamp_doc_id = #{r.stampDocId}
+           AND apr16_company_id   = #{companyId}
+    </update>
+
     <!-- AS-IS dbConfig.getSeq와 같은 식 -->
     <select id="selectNextId" resultType="long" flushCache="true">
         SELECT f_create_seq()

@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.mapper;
 
+import kr.co.kfs.asseterp.biz.apr.dto.AprStampApplRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprStampApplSaveReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampCheckRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampDocApplRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampDocLookupRes;
@@ -25,6 +27,16 @@ public interface AprStampDocMapper {
     List<AprStampDocLookupRes> selectByApplType(@Param("companyId") Long companyId, @Param("applType") String applType);
 
     List<AprStampDocApplRes> selectApplDocByRegDateIsNull(@Param("companyId") Long companyId);
+
+    /** Y11 selectByApplEmpId — 내 신청내역. searchText는 '%검색어%', procResult면 등록일·날인일자가 없는 것만 */
+    List<AprStampApplRes> selectByApplEmpId(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("searchText") String searchText,
+                                            @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate, @Param("procResult") boolean procResult);
+
+    /** Y11 신청 창 저장 — docApplQty·stampQty는 구분으로 정해 넘긴다 */
+    int insertAppl(@Param("companyId") Long companyId, @Param("stampDocId") Long stampDocId, @Param("applEmpId") Long applEmpId,
+                   @Param("docApplQty") Long docApplQty, @Param("stampQty") Long stampQty, @Param("r") AprStampApplSaveReq req);
+
+    int updateAppl(@Param("companyId") Long companyId, @Param("docApplQty") Long docApplQty, @Param("stampQty") Long stampQty, @Param("r") AprStampApplSaveReq req);
 
     /** 삭제·등록일 갱신 전 확인 — 신청일(applDate)이 있는지. 행이 없으면 null */
     LocalDate selectApplDate(@Param("companyId") Long companyId, @Param("stampDocId") Long stampDocId);

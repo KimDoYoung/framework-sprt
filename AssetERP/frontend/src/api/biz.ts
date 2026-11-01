@@ -6,7 +6,7 @@ import {
   BizPromoSimpleUpdateReq, BizPromoUpdateReq, BizProvideCompany, BizProvideList, BizProvideListCond, BizProvideSetup, BizProvideSimple, BizProvideSimpleCond, BizRelateAppr,
   FundPriceModi, FundPriceModiMonth,
 } from '../types/biz';
-import { MktTarget } from '../types/mkt';
+import { MktSelect, MktTarget } from '../types/mkt';
 import { CrmContact } from '../types/crm';
 
 /** L01 AS-IS Biz90_Tab_Limit (이익제공 기준관리) */
@@ -225,6 +225,11 @@ export const mktTargetApi = {
   /** AS-IS mkt.Mkt01_TargetCompany.selectTargetCompanyPaging(cmp) / selectManagerPaging(emp) — searchText는 글자 그대로(서버가 `%…%`로 감싼다), offset = (쪽-1)*limit */
   search: async (type: 'cmp' | 'emp', p: { searchText: string; offset: number; limit: number }): Promise<PageRes<MktTarget>> => {
     const res = await apiClient.get<ApiResponse<PageRes<MktTarget>>>(type === 'cmp' ? 'v1/mkt/target-companies' : 'v1/mkt/target-companies/managers', { params: p });
+    return res.data.data ?? { total: 0, rows: [] };
+  },
+  /** Y12 AS-IS mkt.Mkt01_TargetCompany.selectBySearchTextPaging (Mkt01_Lookup_Select) — favoriteYn이면 내 즐겨찾기 담당자만 */
+  searchSelect: async (p: { searchText: string; favoriteYn: boolean; offset: number; limit: number }): Promise<PageRes<MktSelect>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<MktSelect>>>('v1/mkt/target-companies/select', { params: p });
     return res.data.data ?? { total: 0, rows: [] };
   },
 };

@@ -2,6 +2,8 @@ package kr.co.kfs.asseterp.biz.bbs.mapper;
 
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralMessageRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralRequestRes;
+import kr.co.kfs.asseterp.biz.bbs.dto.FloralRequestSaveReq;
+import kr.co.kfs.asseterp.biz.bbs.dto.FloralTitleHolderRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralRequestStatusReq;
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralShareRes;
 import org.apache.ibatis.annotations.Mapper;
@@ -17,6 +19,38 @@ public interface BbsFloralRequestMapper {
     List<FloralRequestRes> selectByTextAdmin(@Param("companyId") Long companyId, @Param("startDate") LocalDate startDate,
                                             @Param("closeDate") LocalDate closeDate, @Param("searchText") String searchText,
                                             @Param("confirmYn") boolean confirmYn);
+
+    /** Y12 AS-IS bbs20_floral_request.selectByText — 비공개 건은 본인만, confirmYn이면 발송완료(92)·반려(91) 제외 */
+    List<FloralRequestRes> selectByText(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("startDate") LocalDate startDate,
+                                        @Param("closeDate") LocalDate closeDate, @Param("searchText") String searchText, @Param("confirmYn") boolean confirmYn);
+
+    /** Y12 AS-IS emp00_trans_info.selectByTitleCode 첫 행 (없으면 null) */
+    FloralTitleHolderRes selectTitleHolder(@Param("companyId") Long companyId, @Param("titleCode") String titleCode);
+
+    /** Y12 새 모델 기본값 — 신청자 이름·직위 */
+    FloralTitleHolderRes selectPersonDefault(@Param("personId") Long personId);
+
+    String selectCompanyName(@Param("companyId") Long companyId);
+
+    /** Y12 AS-IS bbs22_floral_message.getMessage — 없으면 null */
+    String selectMessage(@Param("companyId") Long companyId, @Param("code") String code);
+
+    int countRequest(@Param("companyId") Long companyId, @Param("floralRequestId") Long floralRequestId);
+
+    /** Y12 AS-IS Bbs20_FloralRequest.modelUpdate INSERT — privateYn은 'true'/'false' 글자 */
+    int insertRequest(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("privateYn") String privateYn, @Param("r") FloralRequestSaveReq req);
+
+    /** Y12 AS-IS Bbs20_FloralRequest.modelUpdate UPDATE */
+    int updateRequest(@Param("companyId") Long companyId, @Param("privateYn") String privateYn, @Param("r") FloralRequestSaveReq req);
+
+    /** Y12 AS-IS Bbs20_FloralRequest.delete */
+    int deleteRequest(@Param("companyId") Long companyId, @Param("floralRequestId") Long floralRequestId);
+
+    /** Y12 AS-IS bbs21_floral_request_share.insertDefaultShare */
+    int insertDefaultShare(@Param("floralRequestId") Long floralRequestId, @Param("contactId") Long contactId);
+
+    /** Y12 AS-IS bbs21_floral_request_share.deleteByFloralRequestId */
+    int deleteSharesByRequest(@Param("companyId") Long companyId, @Param("floralRequestId") Long floralRequestId);
 
     /** AS-IS bbs20_floral_request.selectById — 로그인 회사의 행만(보안 보강) */
     FloralRequestRes selectById(@Param("companyId") Long companyId, @Param("floralRequestId") Long floralRequestId);

@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.mkt.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.mkt.dto.MktSelectRes;
 import kr.co.kfs.asseterp.biz.mkt.dto.MktTargetRes;
 import kr.co.kfs.asseterp.biz.mkt.mapper.MktTargetCompanyMapper;
 import kr.co.kfs.asseterp.common.dto.PageRes;
@@ -28,6 +29,13 @@ public class MktTargetCompanyService {
         String text = like(searchText);
         return new PageRes<>(mapper.selectManagerTotal(user.getCompanyId(), text),
                 mapper.selectManagerPaging(user.getCompanyId(), text, offset, limit));
+    }
+
+    /** Y12 AS-IS mkt.Mkt01_TargetCompany.selectBySearchTextPaging (Mkt01_Lookup_Select) — 구분 전체(`%`) */
+    public PageRes<MktSelectRes> searchSelect(UserPrincipal user, String searchText, boolean favoriteYn, long offset, long limit) {
+        String text = like(searchText);
+        return new PageRes<>(mapper.selectSelectTotal(user.getCompanyId(), "%", text),
+                mapper.selectSelectPaging(user.getCompanyId(), user.getUserId(), "%", text, favoriteYn, offset, limit));
     }
 
     private static String like(String searchText) {

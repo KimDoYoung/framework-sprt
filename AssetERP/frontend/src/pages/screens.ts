@@ -4,6 +4,7 @@ import { Bbs02_Tab_NoticeViewMgt } from './bbs/Bbs02_Tab_NoticeViewMgt';
 import { Bbs15_Tab_CompanyRuleManager } from './bbs/Bbs15_Tab_CompanyRuleManager';
 import { Bbs11_Tab_ApplicationMng } from './bbs/Bbs11_Tab_ApplicationMng';
 import { Bbs20_Tab_FloralRequestMng } from './bbs/Bbs20_Tab_FloralRequestMng';
+import { Bbs20_Tab_FloralRequest } from './bbs/Bbs20_Tab_FloralRequest';
 import { Chk01_Tab_ClassTree } from './chk/Chk01_Tab_ClassTree';
 import { Chk02_Tab_DailyList } from './chk/Chk02_Tab_DailyList';
 import { Chk02_Tab_DailyListAdmin } from './chk/Chk02_Tab_DailyListAdmin';
@@ -92,6 +93,7 @@ import { Apr10_Tab_Stamp } from './apr/Apr10_Tab_Stamp';
 import { Apr15_Tab_ReprCorp } from './apr/Apr15_Tab_ReprCorp';
 import { Apr16_Tab_StampDocManager } from './apr/Apr16_Tab_StampDocManager';
 import { Apr16_Tab_StampList } from './apr/Apr16_Tab_StampList';
+import { Apr16_Tab_StampDocAppl } from './apr/Apr16_Tab_StampDocAppl';
 import { Apr16_Tab_StampListOrg } from './apr/Apr16_Tab_StampListOrg';
 import { Apr16_Tab_StampFileCheck } from './apr/Apr16_Tab_StampFileCheck';
 import { Emp60_Tab_Sign } from './emp/Emp60_Tab_Sign';
@@ -350,6 +352,7 @@ export const SCREENS: Record<string, React.FC> = {
   Emp31_Tab_Director, // S03 (1단계: 문서분류지정 Dcr30_Lookup_Link·보고서 창의 선임/해임 콤보·결재상신은 다음 단계)
   Bbs02_Tab_NoticeViewLaw, // H01 (+ Bbs02_Popup_NoticeAdmin·Bbs07_TapPage_Comment·Bbs07_Lookup_FileList·Bbs02_Lookup_File)
   Bbs11_Tab_ApplicationMng, // T22 (+ Bbs12_Lookup_ApplicationMng)
+  Bbs20_Tab_FloralRequest, // Y12 (+ Bbs20_Edit_FloralRequest 등록·수정·Bbs20_Lookup_OccasionsOption·Mkt01_Lookup_Select)
   Bbs20_Tab_FloralRequestMng, // T21 (+ Bbs20_Edit_FloralRequest 보기 모드·Bbs21_Lookup_FloralRequestShare·Bbs20_Grid_RelateFile·Bbs20_Lookup_RelateFile·Bbs20_Lookup_Message·Bbs22_Lookup_FloralMessage)
   Bbs15_Tab_CompanyRuleManager, // E10 (+ Bbs15_Edit_CompanyRuleManager·Bbs15_Lookup_File, 엑셀다운로드는 RD 리포트 대신 서버가 xlsx 생성)
   Chk01_Tab_ClassTree, // E06
@@ -429,6 +432,7 @@ export const SCREENS: Record<string, React.FC> = {
   Cmp10_Tab_MailBook, // G13 (메뉴 #1212. 권한자 Cmp10_Tab_MailBookList·등록창 Cmp10_Edit_Tab_MailBook 함께)
   Apr16_Tab_StampDocManager, // T23 (+ Apr16_Lookup_StampDocReg·Apr16_Lookup_StampReprCorp·Apr15_Lookup_ReprCorp·Apr16_Lookup_GetDocAppl)
   Apr16_Tab_StampList, // T24 (+ Apr16_Lookup_UpdateStampDate)
+  Apr16_Tab_StampDocAppl, // Y11 (+ Apr16_Lookup_StampDocAppl)
   Apr16_Tab_StampListOrg, // T25 (T24와 같은 구조, org 필터)
   Apr16_Tab_StampFileCheck, // T26
   Apr15_Tab_ReprCorp, // G08 (메뉴 #1506. 인감 조회창 Apr10_Lookup_Stamp 재사용)

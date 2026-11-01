@@ -132,7 +132,7 @@ export const Bbs20_Tab_FloralRequestMng: React.FC = () => {
       <div style={{ flex: 1, minHeight: 0 }}>
         <CellEditGrid<BbsFloralRequest> crud={crud} columnDefs={columnDefs} getRowId={p => String(p.data.floralRequestId)} rowSelection={SINGLE_CHECKED} />
       </div>
-      <Bbs20_Edit_FloralRequest model={editTarget} onClose={() => setEditTarget(null)} />
+      <Bbs20_Edit_FloralRequest target={editTarget ? { mode: 'VIEW', model: editTarget } : null} onClose={() => setEditTarget(null)} />
       <Bbs20_Lookup_RelateFile parentId={fileParentId} onClose={() => setFileParentId(null)} />
       <Bbs20_Lookup_Message target={messageTarget} onClose={() => setMessageTarget(null)} />
       <Bbs22_Lookup_FloralMessage open={floralMessageOpen} onClose={() => setFloralMessageOpen(false)} />

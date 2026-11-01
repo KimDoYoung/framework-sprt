@@ -12241,5 +12241,74 @@
     "note": "docs/work/Y/Y10-작업기록.md",
     "history": [],
     "id": "Y10"
+  },
+  "Apr16_Tab_StampDocAppl": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/apr/Apr15_Lookup_ReprCorp.java": "085c752f693a8c2f072a2994a03c92e61e4cf00d",
+      "application/src/main/java/myApp/client/vi/apr/Apr16_Lookup_StampDocAppl.java": "0df6f7817664e5542728e03cfcd582e09eb951e9",
+      "application/src/main/java/myApp/client/vi/apr/Apr16_Tab_StampDocAppl.java": "db799c883a699d113f0d511754789cc4bec3490c",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr01_ApprModel.java": "4ca7472ada54858472b793f34b0776284ba61880",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr04_ApprStepModel.java": "61621aff816c6816233c4b2eefcffeb9c5adc7a2",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr10_StampModel.java": "fa1aa3c58166aa91762dc8131e7e15934bb83857",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr15_ReprCorpModel.java": "7fbbbcdc478a5e0b61d63adef48a8ff2b68ff054",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr15_ReprCorpModelProperties.java": "90a17886ce9658736a817a6c53f45deb15c0f32e",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr16_StampDocModel.java": "70f501cd8c366e29b153d827ca26fcd69c261bdc",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr16_StampDocModelProperties.java": "0216358e4b5b21f92152ebd53388075cec7b14ce",
+      "application/src/main/java/myApp/server/apr/Apr10_Stamp.java": "aca3583dea42157c4592d462a31b0faf5c75b2aa",
+      "application/src/main/java/myApp/server/apr/Apr15_ReprCorp.java": "e20f53832dd1ee3d6dc9a8c2dc7ca652e62e49d1",
+      "application/src/main/java/myApp/server/apr/Apr16_StampDoc.java": "de526a8cb4cd863c2020371a3b74ee6a415726fb",
+      "application/src/main/java/myApp/server/apr/mapper/apr10_stamp.xml": "ae94c1827409dfb4e5c73c99cb9a9ea6aa12cfd6",
+      "application/src/main/java/myApp/server/apr/mapper/apr15_repr_corp.xml": "5a394b5b68235514bee88a621b8a41ae3fff1e87",
+      "application/src/main/java/myApp/server/apr/mapper/apr16_stamp_doc.xml": "af9b5ef665c181090786468a1d6af5c935a797a8"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Apr05_Lookup_LoadDoc2",
+      "Apr10_Lookup_Stamp"
+    ],
+    "recorded_at": "2026-11-01T12:46:55+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Y/Y11-작업기록.md",
+    "history": [],
+    "id": "Y11"
+  },
+  "Bbs20_Tab_FloralRequest": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/bbs/Bbs20_Lookup_Message.java": "d33de91ff4cbdf57299288547cc818b7dd750087",
+      "application/src/main/java/myApp/client/vi/bbs/Bbs20_Tab_FloralRequest.java": "50aa18489b094d003e6b743dfd2bacbf4744c472",
+      "application/src/main/java/myApp/client/vi/bbs/Bbs21_Lookup_FloralRequestShare.java": "f1605ce3a51f54198efa6a94ff247dad53ae984e",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs20_FloralRequestModel.java": "31c67f5080a9aec6a79755e447d2aa63cdb51196",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs20_FloralRequestModelProperties.java": "f3bdd4c5defa8a004bdc8d3879973dcc15468819",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs21_FloralRequestShareModel.java": "326a7fe0d3c97306c441d43cfe528bca3ccad0b8",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs21_FloralRequestShareModelProperties.java": "1ad08a4653d35e5a1069ef4c13f2b2e4e6a80272",
+      "application/src/main/java/myApp/server/bbs/Bbs20_FloralRequest.java": "ab5d23b6ab862a300bac1406bb083b452420af69",
+      "application/src/main/java/myApp/server/bbs/Bbs21_FloralRequestShare.java": "e36c9327df08df1730517488bf2448bd336f21fd",
+      "application/src/main/java/myApp/server/bbs/mapper/bbs20_floral_request.xml": "5b72187ff81879f1ca3d96aba47a223a61b41965",
+      "application/src/main/java/myApp/server/bbs/mapper/bbs21_floral_request_share.xml": "fd290527d9d3b3f486d867baa19ff3c77cc148f9",
+      "application/src/main/java/myApp/server/emp/Emp00_TransInfo.java": "df97d7f0f13eb8c414b2ce628d93cc02138f6963",
+      "application/src/main/java/myApp/server/emp/mapper/emp00_trans_info.xml": "76c324eda8ede6658a765beeaaebf929930afd47",
+      "application/src/main/java/myApp/server/emp/mapper/emp01_person.xml": "996a542c6a2637d37b8ad6dafdc1de2019cbe902",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Bbs20_Edit_FloralRequest",
+      "Emp00_Lookup_SelectMulti",
+      "Org00_Lookup_SelectMulti"
+    ],
+    "recorded_at": "2026-11-01T13:08:44+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Y/Y12-작업기록.md",
+    "history": [],
+    "id": "Y12"
   }
 }

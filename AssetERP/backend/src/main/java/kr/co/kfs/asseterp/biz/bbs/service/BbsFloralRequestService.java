@@ -4,7 +4,10 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralMessageRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralMessageSaveReq;
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralMessageSendReq;
+import kr.co.kfs.asseterp.biz.bbs.dto.FloralRequestNewRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralRequestRes;
+import kr.co.kfs.asseterp.biz.bbs.dto.FloralRequestSaveReq;
+import kr.co.kfs.asseterp.biz.bbs.dto.FloralTitleHolderRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralRequestStatusReq;
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralShareRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.FloralShareSaveReq;
@@ -35,6 +38,69 @@ public class BbsFloralRequestService {
     /** AS-IS selectByTextAdmin(companyId, startDate, closeDate, "%"+searchText+"%", confirmYn) */
     public List<FloralRequestRes> search(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText, boolean confirmYn) {
         return mapper.selectByTextAdmin(user.getCompanyId(), startDate, closeDate, "%" + (searchText == null ? "" : searchText) + "%", confirmYn);
+    }
+
+    /** Y12 AS-IS Bbs20_Tab_FloralRequest.retrieve → selectByText(companyId, personId, startDate, closeDate, "%"+searchText+"%", confirmYn) */
+    public List<FloralRequestRes> searchMine(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText, boolean confirmYn) {
+        return mapper.selectByText(user.getCompanyId(), user.getUserId(), startDate, closeDate, "%" + (searchText == null ? "" : searchText) + "%", confirmYn);
+    }
+
+    /**
+     * Y12 AS-IS Bbs20_Edit_FloralRequest.insert L107-161 — 새 신청의 기본값. 번호를 먼저 받는다(증빙 파일·거래처 공유를 저장 전에 붙이기 때문, DBUtil.setSeq).
+     * 보내는 사람: 대표이사(직책 100) 발령의 첫 행이 있으면 "직책명 성명"·그 직위, 없으면 "내 직위 내 이름"
+     */
+    @Transactional
+    public FloralRequestNewRes newRequest(UserPrincipal user) {
+        FloralTitleHolderRes holder = mapper.selectTitleHolder(user.getCompanyId(), "100");
+        FloralTitleHolderRes me = mapper.selectPersonDefault(user.getUserId());
+        String sendEmp = holder != null ? holder.titleName() + " " + holder.korName() : me.posName() + " " + me.korName();
+        String sendPos = holder != null ? holder.posName() : me.posName();
+        return new FloralRequestNewRes(mapper.selectNextId(), LocalDate.now(), user.getUserId(), me.korName(),
+                mapper.selectCompanyName(user.getCompanyId()), sendEmp, sendPos);
+    }
+
+    /** Y12 AS-IS Bbs22_FloralMessage.getMessage — 경조구분의 문구 (없으면 null) */
+    public String getMessage(UserPrincipal user, String code) {
+        return mapper.selectMessage(user.getCompanyId(), code);
+    }
+
+    /** Y12 AS-IS Bbs20_FloralRequest.modelUpdate — 이미 있는 번호면 수정, 없으면 등록(신청상태 10). 저장한 번호 */
+    @Transactional
+    public long saveRequest(UserPrincipal user, FloralRequestSaveReq req) {
+        if (req.floralRequestId() == null) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        String privateYn = String.valueOf(req.privateYn());
+        if (mapper.countRequest(user.getCompanyId(), req.floralRequestId()) == 0) {
+            mapper.insertRequest(user.getCompanyId(), user.getUserId(), privateYn, req);
+        } else {
+            mapper.updateRequest(user.getCompanyId(), privateYn, req);
+        }
+        return req.floralRequestId();
+    }
+
+    /** Y12 AS-IS Bbs20_FloralRequest.delete → UpdateDataModel.deleteModel (완료·접수·본인 검사는 화면 deleteRow) */
+    @Transactional
+    public int deleteRequests(UserPrincipal user, List<Long> ids) {
+        for (Long id : ids) {
+            if (mapper.deleteRequest(user.getCompanyId(), id) == 0) {
+                throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+            }
+        }
+        return ids.size();
+    }
+
+    /** Y12 AS-IS Bbs21_FloralRequestShare.deleteDefaultShare — 그 신청의 공유 전부를 지운다 */
+    @Transactional
+    public void deleteDefaultShare(UserPrincipal user, Long floralRequestId) {
+        mapper.deleteSharesByRequest(user.getCompanyId(), floralRequestId);
+    }
+
+    /** Y12 AS-IS Bbs21_FloralRequestShare.insertDefaultShare — 거래처 기본 공유를 복사하고, 복사한 것이 있으면 "신청공유" 문구를 돌려준다(없으면 null) */
+    @Transactional
+    public String insertDefaultShare(UserPrincipal user, Long floralRequestId, Long contactId) {
+        int cnt = mapper.insertDefaultShare(floralRequestId, contactId);
+        return cnt > 0 ? mapper.selectShareInfo(floralRequestId) : null;
     }
 
     /** AS-IS selectById(floralRequestId) */

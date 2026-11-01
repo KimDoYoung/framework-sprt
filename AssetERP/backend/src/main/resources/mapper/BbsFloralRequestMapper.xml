@@ -208,6 +208,128 @@
          WHERE bbs21_floral_request_id = #{floralRequestId}
     </select>
 
+    <!-- AS-IS bbs20_floral_request.selectByText (IDMS-IC) — Y12 Bbs20_Tab_FloralRequest. 비공개 건은 신청자 본인만 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.bbs.dto.FloralRequestRes">
+        SELECT <include refid="requestColumns"/>
+          FROM bbs20_floral_request
+         WHERE bbs20_company_id = #{companyId}
+           AND ( COALESCE(bbs20_private_yn, 'false') = 'false' OR bbs20_person_id = #{personId} )
+           AND bbs20_reg_date BETWEEN #{startDate} AND #{closeDate}
+           AND UPPER(CONCAT(f_emp_kor_nm(bbs20_person_id), bbs20_rcv_company, bbs20_rcv_emp)) LIKE UPPER(#{searchText})
+        <if test="confirmYn">
+           AND COALESCE(bbs20_status_cd, '10') NOT IN ('91','92')
+        </if>
+         ORDER BY bbs20_reg_date DESC, bbs20_occasions_cd
+    </select>
+
+    <!-- AS-IS emp00_trans_info.selectByTitleCode (IDMS-IC) 중 이 창이 쓰는 값 — 직책 코드(예 100 대표이사) 발령의 첫 행(발령일 순). 겸직 조건은 원본 그대로 -->
+    <select id="selectTitleHolder" resultType="kr.co.kfs.asseterp.biz.bbs.dto.FloralTitleHolderRes">
+        SELECT f_cdnm('EmpTitleCode', emp03_title_cd, emp01_company_id, emp03_trans_date) AS title_name
+             , emp01_kor_nm                                                               AS kor_name
+             , f_cdnm('EmpPosCode', emp03_pos_cd, emp01_company_id, emp03_trans_date)     AS pos_name
+          FROM emp01_person t1
+               INNER JOIN emp03_trans t2 ON emp03_person_id = emp01_person_id
+         WHERE emp01_company_id = #{companyId}
+           AND emp03_title_cd   = #{titleCode}
+           AND emp03_trans_cd   = '100'
+           AND 'Y' = (CASE WHEN (SELECT COUNT(*)
+                                   FROM emp04_add_title
+                                  WHERE emp04_add_person_id = emp01_person_id) = 0 THEN 'Y'
+                           ELSE (CASE WHEN (SELECT COUNT(*)
+                                              FROM emp01_person a
+                                                   INNER JOIN emp04_add_title ON emp04_person_id = a.emp01_person_id
+                                             WHERE emp04_add_person_id = t1.emp01_person_id) = 0 THEN 'N'
+                                      ELSE 'Y' END) END)
+         ORDER BY emp03_trans_date
+         LIMIT 1
+    </select>
+
+    <!-- 새 모델 기본값 중 신청자 정보: 이름·회사명·직위(오늘 기준) -->
+    <select id="selectPersonDefault" resultType="kr.co.kfs.asseterp.biz.bbs.dto.FloralTitleHolderRes">
+        SELECT NULL                                                  AS title_name
+             , f_emp_kor_nm(#{personId})                             AS kor_name
+             , f_get_emptrans(#{personId}, f_today()::date, 'pos_nm') AS pos_name
+    </select>
+
+    <select id="selectCompanyName" resultType="string">
+        SELECT sys01_company_nm FROM sys01_company WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS bbs22_floral_message.getMessage — 경조구분의 문구(없으면 null) -->
+    <select id="selectMessage" resultType="string">
+        SELECT bbs22_message
+          FROM bbs22_floral_message
+         WHERE bbs22_company_id   = #{companyId}
+           AND bbs22_occasions_cd = #{code}
+         LIMIT 1
+    </select>
+
+    <select id="countRequest" resultType="int">
+        SELECT COUNT(*) FROM bbs20_floral_request
+         WHERE bbs20_floral_request_id = #{floralRequestId} AND bbs20_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS Bbs20_FloralRequest.modelUpdate → UpdateDataModel INSERT — 신청상태 10, 신청자 = 로그인 사원 -->
+    <insert id="insertRequest">
+        INSERT INTO bbs20_floral_request
+               ( bbs20_floral_request_id, bbs20_company_id, bbs20_reg_date, bbs20_person_id, bbs20_occasions_cd, bbs20_message
+               , bbs20_send_company, bbs20_send_emp, bbs20_send_pos, bbs20_rcv_company, bbs20_rcv_emp, bbs20_rcv_pos, bbs20_rcv_dept
+               , bbs20_rcv_tel, bbs20_rcv_addr, bbs20_send_request_date, bbs20_send_request_time, bbs20_status_cd
+               , bbs20_reason, bbs20_add_info, bbs20_requests, bbs20_private_yn )
+        VALUES ( #{r.floralRequestId}, #{companyId}, #{r.regDate}, #{personId}, #{r.occasionsCode}, #{r.message}
+               , #{r.sendCompany}, #{r.sendEmp}, #{r.sendPos}, #{r.rcvCompany}, #{r.rcvEmp}, #{r.rcvPos}, #{r.rcvDept}
+               , #{r.rcvTel}, #{r.rcvAddr}, #{r.sendRequestDate}, #{r.sendRequestTime}, '10'
+               , #{r.reason}, #{r.addInfo}, #{r.requests}, #{privateYn} )
+    </insert>
+
+    <!-- AS-IS Bbs20_FloralRequest.modelUpdate → UpdateDataModel UPDATE — 창이 고치는 열만(상태·완료일·비고·반려사유는 건드리지 않음), 로그인 회사의 행만 -->
+    <update id="updateRequest">
+        UPDATE bbs20_floral_request
+           SET bbs20_reg_date          = #{r.regDate}
+             , bbs20_occasions_cd      = #{r.occasionsCode}
+             , bbs20_message           = #{r.message}
+             , bbs20_send_company      = #{r.sendCompany}
+             , bbs20_send_emp          = #{r.sendEmp}
+             , bbs20_send_pos          = #{r.sendPos}
+             , bbs20_rcv_company       = #{r.rcvCompany}
+             , bbs20_rcv_emp           = #{r.rcvEmp}
+             , bbs20_rcv_pos           = #{r.rcvPos}
+             , bbs20_rcv_dept          = #{r.rcvDept}
+             , bbs20_rcv_tel           = #{r.rcvTel}
+             , bbs20_rcv_addr          = #{r.rcvAddr}
+             , bbs20_send_request_date = #{r.sendRequestDate}
+             , bbs20_send_request_time = #{r.sendRequestTime}
+             , bbs20_reason            = #{r.reason}
+             , bbs20_add_info          = #{r.addInfo}
+             , bbs20_requests          = #{r.requests}
+             , bbs20_private_yn        = #{privateYn}
+         WHERE bbs20_floral_request_id = #{r.floralRequestId}
+           AND bbs20_company_id        = #{companyId}
+    </update>
+
+    <!-- AS-IS Bbs20_FloralRequest.delete → UpdateDataModel DELETE, 로그인 회사의 행만 -->
+    <delete id="deleteRequest">
+        DELETE FROM bbs20_floral_request
+         WHERE bbs20_floral_request_id = #{floralRequestId}
+           AND bbs20_company_id        = #{companyId}
+    </delete>
+
+    <!-- AS-IS bbs21_floral_request_share.insertDefaultShare — 거래처 기본 공유(crm14_share_default)를 이 신청의 공유로 복사 -->
+    <insert id="insertDefaultShare">
+        INSERT INTO bbs21_floral_request_share
+               ( bbs21_floral_request_share_id, bbs21_floral_request_id, bbs21_share_cd, bbs21_person_id, bbs21_org_id )
+        SELECT f_create_seq(), #{floralRequestId}, crm14_share_cd, crm14_person_id, crm14_org_id
+          FROM crm14_share_default
+         WHERE crm14_contact_id = #{contactId}
+    </insert>
+
+    <!-- AS-IS bbs21_floral_request_share.deleteByFloralRequestId — 로그인 회사 신청의 공유 전부 -->
+    <delete id="deleteSharesByRequest">
+        DELETE FROM bbs21_floral_request_share
+         WHERE bbs21_floral_request_id = #{floralRequestId}
+           AND bbs21_floral_request_id IN (SELECT bbs20_floral_request_id FROM bbs20_floral_request WHERE bbs20_company_id = #{companyId})
+    </delete>
+
     <!-- AS-IS dbConfig.getSeq와 같은 식 -->
     <select id="selectNextId" resultType="long" flushCache="true">
         SELECT f_create_seq()

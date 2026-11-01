@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.mkt.mapper;
 
+import kr.co.kfs.asseterp.biz.mkt.dto.MktSelectRes;
 import kr.co.kfs.asseterp.biz.mkt.dto.MktTargetRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -22,4 +23,12 @@ public interface MktTargetCompanyMapper {
 
     /** AS-IS mkt01_target_company.selectManagerTotal */
     long selectManagerTotal(@Param("companyId") Long companyId, @Param("searchText") String searchText);
+
+    /** Y12 AS-IS mkt01_target_company.selectBySearchTextPaging — itemTypeCode는 `%`, favoriteYn이면 내 즐겨찾기 담당자만 */
+    List<MktSelectRes> selectSelectPaging(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("itemTypeCode") String itemTypeCode,
+                                          @Param("searchText") String searchText, @Param("favoriteYn") boolean favoriteYn,
+                                          @Param("offset") long offset, @Param("limit") long limit);
+
+    /** Y12 AS-IS mkt01_target_company.selectBySearchTextTotal */
+    long selectSelectTotal(@Param("companyId") Long companyId, @Param("itemTypeCode") String itemTypeCode, @Param("searchText") String searchText);
 }

@@ -31,10 +31,12 @@ interface Props {
   aprStatusYn?: boolean;
   /** [확인]에서 고른 문서 전체(apprId 포함) — callback.execute(apprModel)의 apprId가 필요한 부르는 쪽용(Y08). onResult 다음에 불린다 */
   onSelected?: (doc: AprLoadDoc2) => void;
+  /** Apr05_Lookup_LoadDoc2("SINGLE", nullButtonYn=true, aprStatusYn, callback) L119 (Y11): 값을 주면 [확인] 옆에 [선택안함]이 생긴다 — L306-314 callback.execute(null) 뒤 hide. 부른 쪽이 연결을 비운다 */
+  onNull?: () => void;
   onClose: () => void;
 }
 
-export const Apr05_Lookup_LoadDoc2: React.FC<Props> = ({ open, onResult, aprStatusYn = false, onSelected, onClose }) => {
+export const Apr05_Lookup_LoadDoc2: React.FC<Props> = ({ open, onResult, aprStatusYn = false, onSelected, onNull, onClose }) => {
   // init() L133-148: 기간 = 지난달 1일 ~ 오늘
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().subtract(1, 'month').startOf('month'));
   const [endDate, setEndDate] = useState<Dayjs>(() => dayjs());
@@ -108,6 +110,8 @@ export const Apr05_Lookup_LoadDoc2: React.FC<Props> = ({ open, onResult, aprStat
         footer={
           <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
             <Button type="select" onClick={insert}>확인</Button>
+            {/* [E7] nullButton[선택안함].Select (L306) → callback.execute(null), hide() — nullButtonYn 호출(Y11)에서만 */}
+            {onNull && <Button type="delete" onClick={() => { onNull(); onClose(); }}>선택안함</Button>}
             {/* [E8] closeButton[닫기].Select (L315) → hide() */}
             <Button type="close" onClick={onClose}>닫기</Button>
           </div>

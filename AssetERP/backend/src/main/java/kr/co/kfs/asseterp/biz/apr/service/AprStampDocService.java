@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.service;
 
+import kr.co.kfs.asseterp.biz.apr.dto.AprStampApplRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprStampApplSaveReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampCheckRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampConfirmReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampDateReq;
@@ -71,7 +73,41 @@ public class AprStampDocService {
         return rows.size();
     }
 
-    /** AS-IS deleteReg L125 — 신청일이 없으면 행을 지우고, 있으면(신청에서 온 행) 등록일만 비워 신청내역으로 되돌린다 */
+    /** Y11 selectByApplEmpId L26 — 내 신청내역. 검색어는 '%검색어%'(빈 값이면 '%%') */
+    public List<AprStampApplRes> searchMine(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String searchText, boolean procResult) {
+        return mapper.selectByApplEmpId(user.getCompanyId(), user.getUserId(), "%" + (searchText == null ? "" : searchText) + "%", startDate, closeDate, procResult);
+    }
+
+    /** Y11 Apr16_Lookup_StampDocAppl.preUpdate L368-374 → update L120: 구분 3(인감날인)이면 인감날인부수=신청/날인 부수, 아니면 신청매수. 저장한 행의 ID */
+    @Transactional
+    public long saveAppl(UserPrincipal user, AprStampApplSaveReq req) {
+        boolean stampType = "3".equals(req.applType());
+        Long stampQty = stampType ? req.applQty() : null;
+        Long docApplQty = stampType ? null : req.applQty();
+        Long companyId = user.getCompanyId();
+        if (req.stampDocId() == null || req.stampDocId() <= 0) {
+            long id = mapper.selectNextId();
+            mapper.insertAppl(companyId, id, user.getUserId(), docApplQty, stampQty, req);
+            return id;
+        }
+        if (mapper.updateAppl(companyId, docApplQty, stampQty, req) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return req.stampDocId();
+    }
+
+    /** Y11 Apr16_StampDoc.delete L147 — UpdateDataModel.deleteModel: 행을 그대로 지운다(접수등록·날인일자 검사는 화면 deleteChk) */
+    @Transactional
+    public int deleteAppl(UserPrincipal user, List<Long> ids) {
+        for (Long id : ids) {
+            if (mapper.deleteById(user.getCompanyId(), id) == 0) {
+                throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+            }
+        }
+        return ids.size();
+    }
+
+    /** AS-IS deleteReg L125— 신청일이 없으면 행을 지우고, 있으면(신청에서 온 행) 등록일만 비워 신청내역으로 되돌린다 */
     @Transactional
     public int deleteReg(UserPrincipal user, List<Long> ids) {
         Long companyId = user.getCompanyId();

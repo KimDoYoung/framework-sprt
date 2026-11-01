@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { BbsApplication, BbsApplicationForm, BbsApplicationMng, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralShare, BbsNotice } from '../types/bbs';
+import { BbsApplication, BbsApplicationForm, BbsApplicationMng, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice } from '../types/bbs';
 
 /** 요청서(신청서) — 증명서 신청내역 (S05, AS-IS Bbs11_Application) */
 export const bbsApplicationApi = {
@@ -158,6 +158,40 @@ export const bbsFloralApi = {
   searchRequests: async (startDate: string, closeDate: string, searchText: string, confirmYn: boolean): Promise<BbsFloralRequest[]> => {
     const res = await apiClient.get<ApiResponse<BbsFloralRequest[]>>('v1/bbs/floral-requests', { params: { startDate, closeDate, searchText, confirmYn } });
     return res.data.data ?? [];
+  },
+  /** Y12 AS-IS bbs.Bbs20_FloralRequest.selectByText — 신청 화면(공개 건 + 내 비공개 건) */
+  searchMine: async (startDate: string, closeDate: string, searchText: string, confirmYn: boolean): Promise<BbsFloralRequest[]> => {
+    const res = await apiClient.get<ApiResponse<BbsFloralRequest[]>>('v1/bbs/floral-requests/mine', { params: { startDate, closeDate, searchText, confirmYn } });
+    return res.data.data ?? [];
+  },
+  /** Y12 AS-IS Bbs20_Edit_FloralRequest.insert — 새 신청의 기본값(번호를 새로 받는다) */
+  newRequest: async (): Promise<BbsFloralRequestNew> => {
+    const res = await apiClient.post<ApiResponse<BbsFloralRequestNew>>('v1/bbs/floral-requests/new');
+    return res.data.data;
+  },
+  /** Y12 AS-IS bbs.Bbs22_FloralMessage.getMessage — 경조구분의 문구(없으면 null) */
+  getMessage: async (code: string): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>('v1/bbs/floral-requests/message', { params: { code } });
+    return res.data.data ?? null;
+  },
+  /** Y12 AS-IS bbs.Bbs20_FloralRequest.modelUpdate → 저장한 번호 */
+  saveRequest: async (req: BbsFloralRequestSaveReq): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/bbs/floral-requests/save', req);
+    return res.data.data;
+  },
+  /** Y12 AS-IS bbs.Bbs20_FloralRequest.delete → 지운 건수 */
+  deleteRequests: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/bbs/floral-requests', { data: ids });
+    return res.data.data ?? 0;
+  },
+  /** Y12 AS-IS bbs.Bbs21_FloralRequestShare.insertDefaultShare → "신청공유" 문구(복사한 게 없으면 null) */
+  insertDefaultShare: async (floralRequestId: number, contactId: number): Promise<string | null> => {
+    const res = await apiClient.post<ApiResponse<string | null>>(`v1/bbs/floral-requests/${floralRequestId}/default-shares`, null, { params: { contactId } });
+    return res.data.data ?? null;
+  },
+  /** Y12 AS-IS bbs.Bbs21_FloralRequestShare.deleteDefaultShare */
+  deleteDefaultShare: async (floralRequestId: number): Promise<void> => {
+    await apiClient.delete(`v1/bbs/floral-requests/${floralRequestId}/default-shares`);
   },
   /** AS-IS bbs.Bbs20_FloralRequest.selectById */
   getRequest: async (floralRequestId: number): Promise<BbsFloralRequest> => {

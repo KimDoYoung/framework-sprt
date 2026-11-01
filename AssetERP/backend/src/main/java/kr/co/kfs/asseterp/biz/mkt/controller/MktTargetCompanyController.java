@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.mkt.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.mkt.dto.MktSelectRes;
 import kr.co.kfs.asseterp.biz.mkt.dto.MktTargetRes;
 import kr.co.kfs.asseterp.biz.mkt.service.MktTargetCompanyService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -33,5 +34,15 @@ public class MktTargetCompanyController {
                                                              @RequestParam(defaultValue = "0") long offset,
                                                              @RequestParam(defaultValue = "100") long limit) {
         return ApiResponse.ok(service.searchManagers(principal, searchText, offset, limit));
+    }
+
+    /** Y12 AS-IS mkt.Mkt01_TargetCompany.selectBySearchTextPaging — 업무활동처 및 이익제공처(Mkt01_Lookup_Select), 즐겨찾기만 */
+    @GetMapping("/select")
+    public ApiResponse<PageRes<MktSelectRes>> searchSelect(@AuthenticationPrincipal UserPrincipal principal,
+                                                           @RequestParam(defaultValue = "") String searchText,
+                                                           @RequestParam(defaultValue = "false") boolean favoriteYn,
+                                                           @RequestParam(defaultValue = "0") long offset,
+                                                           @RequestParam(defaultValue = "100") long limit) {
+        return ApiResponse.ok(service.searchSelect(principal, searchText, favoriteYn, offset, limit));
     }
 }

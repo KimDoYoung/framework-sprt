@@ -136,6 +136,40 @@ export interface BbsFloralRequest {
   rcvInfo?: string | null;
 }
 
+/** Y12 새 신청의 기본값 (POST bbs/floral-requests/new, AS-IS Bbs20_Edit_FloralRequest.insert) */
+export interface BbsFloralRequestNew {
+  floralRequestId: number;
+  regDate: string;
+  personId: number;
+  personName: string;
+  sendCompany: string;
+  sendEmp: string;
+  sendPos: string;
+}
+
+/** Y12 신청 등록·수정 저장 (PUT bbs/floral-requests/save, AS-IS Bbs20_FloralRequest.modelUpdate) */
+export interface BbsFloralRequestSaveReq {
+  floralRequestId: number;
+  regDate: string;
+  occasionsCode: string;
+  message: string;
+  sendCompany: string;
+  sendEmp: string;
+  sendPos: string | null;
+  rcvCompany: string;
+  rcvEmp: string;
+  rcvPos: string | null;
+  rcvDept: string | null;
+  rcvTel: string;
+  rcvAddr: string;
+  sendRequestDate: string;
+  sendRequestTime: string | null;
+  reason: string;
+  addInfo: string | null;
+  requests: string | null;
+  privateYn: boolean;
+}
+
 /** AS-IS Bbs22_FloralMessageModel */
 export interface BbsFloralMessage {
   floralMessageId: number;

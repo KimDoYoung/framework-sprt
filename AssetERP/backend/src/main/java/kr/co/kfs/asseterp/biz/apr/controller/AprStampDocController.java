@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.apr.controller;
 
+import kr.co.kfs.asseterp.biz.apr.dto.AprStampApplRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprStampApplSaveReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampCheckRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampConfirmReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprStampDateReq;
@@ -57,6 +59,28 @@ public class AprStampDocController {
     @GetMapping("/appl")
     public ApiResponse<List<AprStampDocApplRes>> searchAppl(@AuthenticationPrincipal UserPrincipal principal) {
         return ApiResponse.ok(service.searchAppl(principal));
+    }
+
+    /** Y11 AS-IS apr.Apr16_StampDoc.selectByApplEmpId — 내 법인서류 및 날인신청 (companyId·personId는 로그인 사원) */
+    @GetMapping("/mine")
+    public ApiResponse<List<AprStampApplRes>> searchMine(@AuthenticationPrincipal UserPrincipal principal,
+                                                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                         @RequestParam(required = false) String searchText,
+                                                         @RequestParam(defaultValue = "false") boolean procResult) {
+        return ApiResponse.ok(service.searchMine(principal, startDate, closeDate, searchText, procResult));
+    }
+
+    /** Y11 AS-IS apr.Apr16_StampDoc.update (신청 창) → 저장한 행의 ID */
+    @PutMapping("/mine")
+    public ApiResponse<Long> saveMine(@AuthenticationPrincipal UserPrincipal principal, @RequestBody AprStampApplSaveReq req) {
+        return ApiResponse.ok(service.saveAppl(principal, req));
+    }
+
+    /** Y11 AS-IS apr.Apr16_StampDoc.delete → 지운 건수 */
+    @DeleteMapping("/mine")
+    public ApiResponse<Integer> deleteMine(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> ids) {
+        return ApiResponse.ok(service.deleteAppl(principal, ids));
     }
 
     /** AS-IS apr.Apr16_StampDoc.update → 저장한 건수 */

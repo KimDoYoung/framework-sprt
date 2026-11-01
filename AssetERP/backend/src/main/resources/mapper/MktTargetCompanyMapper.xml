@@ -70,4 +70,52 @@
                  <include refid="managerFrom"/>
                ) t
     </select>
+
+    <!-- AS-IS mkt01_target_company.selectBySearchTextPaging (IDMS-IC) — Y12 Mkt01_Lookup_Select. 활동처+담당자 한 줄씩, favoriteYn이면 내 즐겨찾기 담당자만.
+         원본은 바깥 SELECT에 ORDER BY가 없고 row_number() 순서에 기대므로 같은 정렬을 바깥에도 둔다 -->
+    <select id="selectSelectPaging" resultType="kr.co.kfs.asseterp.biz.mkt.dto.MktSelectRes">
+        SELECT t.mkt01_target_company_id AS target_company_id
+             , t.mkt01_manager_id        AS manager_id
+             , t.mkt01_target_company_nm AS target_company_name
+             , t.mkt01_manager_nm        AS manager_name
+             , t.mkt01_manager_pos_nm    AS manager_pos_name
+             , t.mkt01_manager_org_nm    AS manager_org_name
+             , t.mkt01_manager_tel       AS manager_tel
+          FROM ( SELECT mkt01_target_company.mkt01_target_company_id
+                      , mkt01_target_company.mkt01_target_company_nm
+                      , mkt02_manager_id   AS mkt01_manager_id
+                      , mkt02_manager_nm   AS mkt01_manager_nm
+                      , mkt02_pos_nm       AS mkt01_manager_pos_nm
+                      , mkt02_org_nm       AS mkt01_manager_org_nm
+                      , mkt02_tel          AS mkt01_manager_tel
+                   FROM mkt01_target_company
+                        LEFT OUTER JOIN mkt02_manager ON mkt02_target_company_id = mkt01_target_company_id
+                   <if test="favoriteYn">
+                        INNER JOIN mkt06_favorite ON mkt06_manager_id = mkt02_manager_id
+                   </if>
+                  WHERE 1=1
+                   <if test="favoriteYn">
+                    AND mkt06_person_id = #{personId}
+                   </if>
+                    AND mkt01_company_id = #{companyId}
+                    AND mkt01_item_type_cd LIKE #{itemTypeCode}
+                    AND COALESCE(mkt01_unuse_yn,'false') != 'true'
+                    AND UPPER(CONCAT(mkt01_target_company_nm, mkt02_manager_nm)) LIKE UPPER(#{searchText})
+               ) t
+         ORDER BY t.mkt01_target_company_nm collate "ko_KR.utf8" asc
+                , t.mkt01_manager_nm        collate "ko_KR.utf8" asc
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <!-- AS-IS mkt01_target_company.selectBySearchTextTotal — 원본 그대로: 활동처만 세고(담당자·즐겨찾기·미사용 조건 없음) 검색은 활동처명+비고 -->
+    <select id="selectSelectTotal" resultType="long">
+        SELECT COUNT(*)
+          FROM ( SELECT *
+                   FROM mkt01_target_company
+                  WHERE mkt01_company_id = #{companyId}
+                    AND mkt01_item_type_cd LIKE #{itemTypeCode}
+                    AND UPPER(CONCAT(mkt01_target_company_nm, mkt01_note)) LIKE UPPER(#{searchText})
+               ) t
+    </select>
 </mapper>
