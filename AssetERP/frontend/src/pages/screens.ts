@@ -220,6 +220,7 @@ import { Ast06_Tab_TrTax } from './ast/Ast06_Tab_TrTax';
 import { Ast06_Tab_TrIPO } from './ast/Ast06_Tab_TrIPO';
 import { Emp17_Tab_Benefit } from './emp/Emp17_Tab_Benefit';
 import { Emp17_Tab_BenefitManager } from './emp/Emp17_Tab_BenefitManager';
+import { Emp53_Tab_BizTrip } from './emp/Emp53_Tab_BizTrip';
 import { Emp50_Tab_TransportExpenseMng } from './emp/Emp50_Tab_TransportExpenseMng';
 import { Sms02_Tab_TotalCount } from './sms/Sms02_Tab_TotalCount';
 import { Sms03_Tab_SendAdmin } from './sms/Sms03_Tab_SendAdmin';
@@ -588,6 +589,7 @@ export const SCREENS: Record<string, React.FC> = {
   Pay50_Tab_ExpenseSettle, // U11 (메뉴 #1390. 하위 Ast07_Grid_History·Ast07_Lookup_Settle·Ast07_Lookup_SettleMulti, 거래처 조회창은 임직원 포함(empYn). History [전표변경] 아이콘의 Act02_Lookup_ModiJournal은 안내만)
   Ast09_Tab_DepositBookPeriod, // U02 (메뉴 #1238·#1471. 하위 Ast01_Lookup_CorpAccount. 계정별원장 아이콘은 메뉴 1150을 열고 값만 보냄 — 받는 화면 Act02_Tab_JournalSub는 다음 단계)
   Emp17_Tab_Benefit, // Y06 (메뉴 #1221. 하위 Emp17_Lookup_Benefit. 전자결재 편집창 Apr01_Edit_ApprDoc 링크 A21~A23·A37·A49 연결)
+  Emp53_Tab_BizTrip, // Y05 (메뉴 #1359. 하위 Emp53_Lookup_BizTrip·Emp53_Lookup_BizTripShare·Emp56_Lookup_Share. 전자결재 편집창 Apr01_Edit_ApprDoc 링크 B11~B14 연결)
   Emp17_Tab_BenefitManager, // U05 (메뉴 #1222. 하위 Emp17_Edit_Note·Emp55_Lookup_account. 상신·문서보기의 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Emp50_Tab_TransportExpenseMng, // U06 (메뉴 #1348. 문서보기·상신의 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Ast06_Tab_TrTax, // U04 (메뉴 #1196. 하위 Ast06_Lookup_TrTax·Ast06_Lookup_Tr4Insure·Ast06_Grid_Journal·Ast05_Lookup_TrCodeWindow. 결재요청·문서보기의 전자결재 편집창, 분개 [변경]의 Act02_Lookup_ModiJournal은 다음 단계)

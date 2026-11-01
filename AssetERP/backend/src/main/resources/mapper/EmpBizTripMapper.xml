@@ -58,6 +58,128 @@
            AND emp53_company_id = #{companyId}
     </select>
 
+    <!-- ===== Y05 출장품의 및 결과보고 (Emp53_Tab_BizTrip) ===== -->
+
+    <sql id="myCols">
+        emp53_biz_trip_id                                                                          AS bizTripId
+      , emp53_start_date                                                                           AS startDate
+      , emp53_close_date                                                                           AS closeDate
+      , emp53_biz_trip_cd                                                                          AS bizTripCode
+      , f_cdnm('BizTripCode', emp53_biz_trip_cd, emp53_company_id, f_sysdate())                    AS bizTripName
+      , emp53_destination                                                                          AS destination
+      , emp53_purpose                                                                              AS purpose
+      , emp53_num                                                                                  AS num
+      , emp53_companion                                                                            AS companion
+      , emp53_note                                                                                 AS note
+      , emp53_appr_id                                                                              AS apprId
+      , apr01.apr01_status_cd                                                                      AS apprStatusCode
+      , f_cdnm('AprStatusCode', apr01.apr01_status_cd, emp53_company_id, f_sysdate())              AS apprStatusName
+      , emp53_result_appr_id                                                                       AS resultApprId
+      , apr02.apr01_status_cd                                                                      AS resultApprStatusCode
+      , f_cdnm('AprStatusCode', apr02.apr01_status_cd, emp53_company_id, f_sysdate())              AS resultApprStatusName
+      , (COALESCE(emp53_public_yn,'false') = 'true')                                               AS publicYn
+      , CASE WHEN COALESCE(emp53_public_yn,'false') = 'true' THEN '전체공개'
+             ELSE (
+                     SELECT (SELECT CASE WHEN emp56_share_cd = '1'
+                                         THEN f_emp_kor_nm(emp56_person_id)
+                                         ELSE f_org_nm(emp56_org_id, f_today()) END
+                               FROM emp56_share
+                              WHERE emp56_parent_id = emp53_biz_trip_id
+                              ORDER BY emp56_share_cd DESC
+                              LIMIT 1)
+                            ||(CASE WHEN COUNT(*) = 1 THEN ''
+                                    ELSE ' 외 '|| COUNT(*)-1
+                               END)
+                       FROM emp56_share
+                      WHERE emp56_parent_id = emp53_biz_trip_id   ) END                            AS shareInfo
+    </sql>
+
+    <!-- AS-IS emp53_biz_trip.selectByPersonId (L109) -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.emp.dto.MyBizTripRes">
+        SELECT <include refid="myCols"/>
+          FROM emp53_biz_trip
+               LEFT OUTER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = emp53_appr_id
+               LEFT OUTER JOIN apr01_appr apr02 ON apr02.apr01_appr_id = emp53_result_appr_id
+         WHERE emp53_company_id = #{companyId}
+           AND emp53_person_id = #{personId}
+           AND emp53_start_date BETWEEN #{startDate} AND #{closeDate}
+           AND UPPER(CONCAT(emp53_destination, emp53_purpose)) LIKE UPPER(#{searchText})
+         ORDER BY emp53_start_date DESC
+    </select>
+
+    <!-- AS-IS emp53_biz_trip.selectById (본인 행만) -->
+    <select id="selectMineById" resultType="kr.co.kfs.asseterp.biz.emp.dto.MyBizTripRes">
+        SELECT <include refid="myCols"/>
+          FROM emp53_biz_trip
+               LEFT OUTER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = emp53_appr_id
+               LEFT OUTER JOIN apr01_appr apr02 ON apr02.apr01_appr_id = emp53_result_appr_id
+         WHERE emp53_biz_trip_id = #{bizTripId}
+           AND emp53_company_id = #{companyId}
+           AND emp53_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Emp53_BizTrip.modelUpdate (UpdateDataModel INSERT — port-save 기준 열 + 사원) -->
+    <insert id="insertBizTrip">
+        INSERT INTO emp53_biz_trip (emp53_biz_trip_id, emp53_company_id, emp53_person_id, emp53_start_date, emp53_close_date, emp53_biz_trip_cd, emp53_destination, emp53_purpose, emp53_num, emp53_companion, emp53_note, emp53_public_yn)
+        VALUES (#{bizTripId}, #{companyId}, #{personId}, #{req.startDate}, #{req.closeDate}, #{req.bizTripCode}, #{req.destination}, #{req.purpose}, #{req.num}, #{req.companion}, #{req.note}, CAST(#{req.publicYn} AS VARCHAR))
+    </insert>
+
+    <!-- AS-IS Emp53_BizTrip.modelUpdate (UpdateDataModel UPDATE) -->
+    <update id="updateBizTrip">
+        UPDATE emp53_biz_trip
+           SET emp53_start_date  = #{req.startDate},
+               emp53_close_date  = #{req.closeDate},
+               emp53_biz_trip_cd = #{req.bizTripCode},
+               emp53_destination = #{req.destination},
+               emp53_purpose     = #{req.purpose},
+               emp53_num         = #{req.num},
+               emp53_companion   = #{req.companion},
+               emp53_note        = #{req.note},
+               emp53_public_yn   = CAST(#{req.publicYn} AS VARCHAR)
+         WHERE emp53_biz_trip_id = #{bizTripId}
+           AND emp53_company_id  = #{companyId}
+           AND emp53_person_id   = #{personId}
+    </update>
+
+    <!-- AS-IS Emp53_BizTrip.update (결재문서 ID — 품의서 emp53_appr_id / 결과보고서 emp53_result_appr_id) -->
+    <update id="updateApprId">
+        UPDATE emp53_biz_trip
+           SET emp53_appr_id = #{apprId}
+         WHERE emp53_biz_trip_id = #{bizTripId}
+           AND emp53_company_id  = #{companyId}
+           AND emp53_person_id   = #{personId}
+    </update>
+
+    <update id="updateResultApprId">
+        UPDATE emp53_biz_trip
+           SET emp53_result_appr_id = #{apprId}
+         WHERE emp53_biz_trip_id = #{bizTripId}
+           AND emp53_company_id  = #{companyId}
+           AND emp53_person_id   = #{personId}
+    </update>
+
+    <!-- AS-IS emp53_biz_trip.updatePublicYn (L142, 회사·본인 조건 추가) -->
+    <update id="updatePublicYn">
+        UPDATE emp53_biz_trip
+           SET emp53_public_yn = CAST(#{publicYn} AS VARCHAR)
+         WHERE emp53_biz_trip_id = #{bizTripId}
+           AND emp53_company_id  = #{companyId}
+           AND emp53_person_id   = #{personId}
+    </update>
+
+    <!-- AS-IS Emp53_BizTrip.delete (UpdateDataModel DELETE, 회사·본인 조건 추가) -->
+    <delete id="deleteBizTrip">
+        DELETE FROM emp53_biz_trip
+         WHERE emp53_biz_trip_id = #{bizTripId}
+           AND emp53_company_id  = #{companyId}
+           AND emp53_person_id   = #{personId}
+    </delete>
+
     <!-- AS-IS UpdateDataModel: 그리드에서 고치는 열은 결과보고서 면제 여부·사유뿐 (여부는 'true'/'false' 글자로 저장) -->
     <update id="updateSkip">
         UPDATE emp53_biz_trip

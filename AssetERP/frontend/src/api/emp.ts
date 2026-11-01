@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { TransTarget, BizTrip, Errand, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -1339,8 +1339,57 @@ export const empBizTripApi = {
     const res = await apiClient.put<ApiResponse<BizTrip[]>>('v1/emp/biz-trips', rows.map(r => ({ bizTripId: r.bizTripId, resultSkipYn: r.resultSkipYn, skipReason: r.skipReason })));
     return res.data.data ?? [];
   },
+
+  // ===== Y05 출장품의 및 결과보고 (Emp53_Tab_BizTrip) =====
+  /** AS-IS emp.Emp53_BizTrip.selectByPersonId */
+  searchMine: async (startDate: string, closeDate: string, searchText: string): Promise<MyBizTrip[]> => {
+    const res = await apiClient.get<ApiResponse<MyBizTrip[]>>('v1/emp/biz-trips/mine', { params: { startDate, closeDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp53_BizTrip.modelUpdate (새 출장) */
+  create: async (req: MyBizTripSave): Promise<MyBizTrip> => {
+    const res = await apiClient.post<ApiResponse<MyBizTrip>>('v1/emp/biz-trips', req);
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp53_BizTrip.modelUpdate (고침) */
+  update: async (bizTripId: number, req: MyBizTripSave): Promise<MyBizTrip> => {
+    const res = await apiClient.put<ApiResponse<MyBizTrip>>(`v1/emp/biz-trips/${bizTripId}`, req);
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp53_BizTrip.update (결재문서 ID — result면 결과보고서) */
+  updateApprId: async (bizTripId: number, apprId: number, result: boolean): Promise<void> => {
+    await apiClient.put(`v1/emp/biz-trips/${bizTripId}/appr-id`, { apprId, result });
+  },
+
+  /** AS-IS emp.Emp53_BizTrip.updateShareInfo */
+  updateShare: async (bizTripId: number, publicYn: boolean): Promise<MyBizTrip> => {
+    const res = await apiClient.put<ApiResponse<MyBizTrip>>(`v1/emp/biz-trips/${bizTripId}/share`, { publicYn });
+    return res.data.data;
+  },
+
+  /** AS-IS emp.Emp53_BizTrip.delete */
+  deleteMine: async (ids: number[]): Promise<void> => {
+    await apiClient.delete('v1/emp/biz-trips', { params: { ids: ids.join(',') } });
+  },
 };
 
+/** 출장 공유지정 (Emp56_Lookup_Share) */
+export const empShareApi = {
+  /** AS-IS emp.Emp56_Share.selectByParentId */
+  search: async (parentId: number): Promise<Share[]> => {
+    const res = await apiClient.get<ApiResponse<Share[]>>('v1/emp/shares', { params: { parentId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp56_Share.delete + update + selectShareInfo → 공유명 */
+  save: async (parentId: number, deleteIds: number[], adds: { shareCode: string; personId: number | null; orgId: number }[]): Promise<string> => {
+    const res = await apiClient.put<ApiResponse<string>>(`v1/emp/shares/${parentId}`, { deleteIds, adds });
+    return res.data.data ?? '';
+  },
+};
 /** S12 외출관리 (Emp54_Tab_ErrandManager). 조회만. 1단계: 이익수령 제외신청 상세보기는 다음 단계 */
 export const empErrandApi = {
   /** AS-IS emp.Emp54_Errand.selectByManager */

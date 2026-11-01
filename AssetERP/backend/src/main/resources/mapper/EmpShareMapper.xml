@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출장·외출 공유지정 (Y05 Emp56_Lookup_Share)
+  AS-IS(IDMS-IC) server/emp/mapper/emp56_share.xml selectByParentId(L28)·selectShareInfo(L38) + Emp56_Share.update/delete(UpdateDataModel).
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpShareMapper">
+
+    <!-- AS-IS emp56_share.selectByParentId (회사 조건 추가) -->
+    <select id="selectByParentId" resultType="kr.co.kfs.asseterp.biz.emp.dto.ShareRes">
+        SELECT emp56_share_id                                                   AS shareId
+             , emp56_parent_id                                                  AS parentId
+             , emp56_share_cd                                                   AS shareCode
+             , f_cdnm('ShareCode', emp56_share_cd, emp56_company_id, f_today()) AS shareName
+             , emp56_person_id                                                  AS personId
+             , f_emp_kor_nm(emp56_person_id)                                    AS personName
+             , emp56_org_id                                                     AS orgId
+             , f_org_nm(emp56_org_id, f_today())                                AS orgName
+          FROM emp56_share
+         WHERE emp56_parent_id = #{parentId}
+           AND emp56_company_id = #{companyId}
+         ORDER BY emp56_share_cd, emp56_org_id
+    </select>
+
+    <!-- AS-IS emp56_share.selectShareInfo (회사 조건 추가) -->
+    <select id="selectShareInfo" resultType="string">
+        SELECT (SELECT CASE WHEN emp56_share_cd = '1'
+                            THEN f_emp_kor_nm(emp56_person_id)
+                            ELSE f_org_nm(emp56_org_id, f_today()) END
+                  FROM emp56_share
+                 WHERE emp56_parent_id = #{parentId}
+                   AND emp56_company_id = #{companyId}
+                 ORDER BY emp56_share_cd DESC
+                 LIMIT 1)
+               ||(CASE WHEN COUNT(*) = 1 THEN ''
+                       ELSE ' 외 '|| COUNT(*)-1
+                  END)
+          FROM emp56_share
+         WHERE emp56_parent_id = #{parentId}
+           AND emp56_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertShare">
+        INSERT INTO emp56_share (emp56_share_id, emp56_company_id, emp56_share_cd, emp56_person_id, emp56_org_id, emp56_parent_id)
+        VALUES (#{shareId}, #{companyId}, #{shareCode}, #{personId}, #{orgId}, #{parentId})
+    </insert>
+
+    <delete id="deleteShares">
+        DELETE FROM emp56_share
+         WHERE emp56_company_id = #{companyId}
+           AND emp56_parent_id  = #{parentId}
+           AND emp56_share_id IN
+        <foreach collection="shareIds" item="shareId" open="(" separator="," close=")">#{shareId}</foreach>
+    </delete>
+
+</mapper>

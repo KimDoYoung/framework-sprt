@@ -1079,3 +1079,49 @@ export interface EvalWrite {
   evalGradeScore: number | null;
 }
 
+/** Y05 본인 출장 (GET /api/v1/emp/biz-trips/mine, AS-IS Emp53_BizTripModel) */
+export interface MyBizTrip {
+  bizTripId: number;
+  startDate: string | null;
+  closeDate: string | null;
+  bizTripCode: string | null;
+  bizTripName: string | null;
+  destination: string | null;
+  purpose: string | null;
+  num: string | null;
+  companion: string | null;
+  note: string | null;
+  apprId: number | null;
+  apprStatusCode: string | null;
+  apprStatusName: string | null;
+  resultApprId: number | null;
+  resultApprStatusCode: string | null;
+  resultApprStatusName: string | null;
+  publicYn: boolean;
+  shareInfo: string | null;
+}
+
+/** Y05 출장품의 저장 (POST·PUT /api/v1/emp/biz-trips) */
+export interface MyBizTripSave {
+  startDate: string;
+  closeDate: string;
+  bizTripCode: string;
+  destination: string;
+  purpose: string;
+  num: string | null;
+  companion: string | null;
+  note: string | null;
+  publicYn: boolean;
+}
+
+/** 출장 공유지정 한 줄 (GET /api/v1/emp/shares, AS-IS Emp56_ShareModel) */
+export interface Share {
+  shareId: number;
+  parentId: number;
+  shareCode: string;
+  shareName: string | null;
+  personId: number | null;
+  personName: string | null;
+  orgId: number | null;
+  orgName: string | null;
+}
