@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- AS-IS(IDMS-IC) server/bmt/mapper/bmt12_pc_history.xml — W18 Bmt10_Lookup_History·Bmt12_Edit_PcHistory (PC 이력, W19가 같이 쓴다) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.bmt.mapper.BmtPcHistoryMapper">
+
+    <!-- AS-IS bmt12_pc_history.selectByInfoId L65 (IDMS-IC) — 로그인 회사 조건을 더했다(보안 보강) -->
+    <select id="selectByInfoId" resultType="kr.co.kfs.asseterp.biz.bmt.dto.BmtPcHistoryRes">
+        SELECT a.bmt12_pc_history_id          AS pc_history_id
+             , a.bmt12_info_id                AS info_id
+             , c.ast01_class_tree_nm          AS ast_class_tree_name
+             , a.bmt12_start_date             AS start_date
+             , a.bmt12_host_nm                AS host_name
+             , a.bmt12_setting_date           AS setting_date
+             , a.bmt12_internal_ip            AS internal_ip
+             , a.bmt12_mac_address            AS mac_address
+             , a.bmt12_etc                    AS etc
+             , a.bmt12_note                   AS note
+          FROM bmt12_pc_history a
+               LEFT OUTER JOIN bmt10_info b ON b.bmt10_info_id = a.bmt12_info_id
+               LEFT OUTER JOIN ast01_class_tree c ON c.ast01_class_tree_id = b.bmt10_ast_class_tree_id
+         WHERE 1=1
+           AND a.bmt12_info_id    = #{infoId}
+           AND a.bmt12_company_id = #{companyId}
+         ORDER BY a.bmt12_start_date DESC
+    </select>
+
+    <!-- AS-IS bmt12_pc_history.selectById (UpdateDataModel 저장 뒤 다시 읽기) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.bmt.dto.BmtPcHistoryRes">
+        SELECT a.bmt12_pc_history_id          AS pc_history_id
+             , a.bmt12_info_id                AS info_id
+             , c.ast01_class_tree_nm          AS ast_class_tree_name
+             , a.bmt12_start_date             AS start_date
+             , a.bmt12_host_nm                AS host_name
+             , a.bmt12_setting_date           AS setting_date
+             , a.bmt12_internal_ip            AS internal_ip
+             , a.bmt12_mac_address            AS mac_address
+             , a.bmt12_etc                    AS etc
+             , a.bmt12_note                   AS note
+          FROM bmt12_pc_history a
+               LEFT OUTER JOIN bmt10_info b ON b.bmt10_info_id = a.bmt12_info_id
+               LEFT OUTER JOIN ast01_class_tree c ON c.ast01_class_tree_id = b.bmt10_ast_class_tree_id
+         WHERE a.bmt12_pc_history_id = #{pcHistoryId}
+           AND a.bmt12_company_id    = #{companyId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Bmt12_PcHistory.modelUpdate → UpdateDataModel(bmt12_pc_history) INSERT -->
+    <insert id="insert">
+        INSERT INTO bmt12_pc_history
+               ( bmt12_pc_history_id, bmt12_company_id, bmt12_info_id
+               , bmt12_start_date, bmt12_host_nm, bmt12_setting_date, bmt12_internal_ip, bmt12_mac_address, bmt12_etc, bmt12_note )
+        VALUES ( #{pcHistoryId}, #{companyId}, #{req.infoId}
+               , #{req.startDate}, #{req.hostName}, #{req.settingDate}, #{req.internalIp}, #{req.macAddress}, #{req.etc}, #{req.note} )
+    </insert>
+
+    <!-- AS-IS Bmt12_PcHistory.modelUpdate → UpdateDataModel(bmt12_pc_history) UPDATE — 로그인 회사의 행만(보안 보강) -->
+    <update id="update">
+        UPDATE bmt12_pc_history
+           SET bmt12_info_id      = #{req.infoId}
+             , bmt12_start_date   = #{req.startDate}
+             , bmt12_host_nm      = #{req.hostName}
+             , bmt12_setting_date = #{req.settingDate}
+             , bmt12_internal_ip  = #{req.internalIp}
+             , bmt12_mac_address  = #{req.macAddress}
+             , bmt12_etc          = #{req.etc}
+             , bmt12_note         = #{req.note}
+         WHERE bmt12_pc_history_id = #{pcHistoryId}
+           AND bmt12_company_id    = #{companyId}
+    </update>
+
+    <!-- AS-IS Bmt12_PcHistory.delete → UpdateDataModel(bmt12_pc_history) DELETE — 로그인 회사의 행만(보안 보강) -->
+    <delete id="deleteByIds">
+        DELETE FROM bmt12_pc_history
+         WHERE bmt12_company_id = #{companyId}
+           AND bmt12_pc_history_id IN
+           <foreach collection="pcHistoryIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

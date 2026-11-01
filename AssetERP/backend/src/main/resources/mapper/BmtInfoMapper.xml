@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- AS-IS(IDMS-IC) server/bmt/mapper/bmt10_info.xml — W18 Bmt10_Tab_Info -->
+<mapper namespace="kr.co.kfs.asseterp.biz.bmt.mapper.BmtInfoMapper">
+
+    <!-- AS-IS bmt10_info.selectByCompanyId L32 (IDMS-IC) — 그리드에 쓰는 열만 별칭으로 (원본의 bmt10_info.* 대신) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.bmt.dto.BmtInfoRes">
+        SELECT bmt10_info_id                      AS info_id
+             , bmt10_ast_class_tree_id            AS ast_class_tree_id
+             , ast01_class_tree_nm                AS ast_class_tree_name
+             , bmt10_apply_date::date             AS apply_date
+             , bmt10_retire_date::date            AS retire_date
+             , bmt10_acq_amount                   AS acq_amount
+             , bmt10_acq_info                     AS acq_info
+             , bmt10_spec                         AS spec
+             , bmt10_note                         AS note
+             , COALESCE(f_emp_kor_nm((
+                                SELECT bmt11_person_id
+                                  FROM bmt11_history
+                                 WHERE bmt11_info_id = bmt10_info_id
+                                   AND bmt11_start_date &lt;= #{baseDate}
+                                 ORDER BY bmt11_start_date DESC
+                                 LIMIT 1
+                                )), '')           AS person_name
+          FROM bmt10_info
+               INNER JOIN ast01_class_tree ON ast01_class_tree_id = bmt10_ast_class_tree_id
+         WHERE 1=1
+           AND bmt10_company_id = #{companyId}
+           AND ast01_item_s_class_cd LIKE #{itemClassCode}
+        <if test="!checkYn">
+           AND #{baseDate} &lt;= COALESCE(bmt10_retire_date, to_date('99991231','yyyyMMdd'))
+        </if>
+           AND CONCAT(ast01_class_tree_nm, bmt10_acq_info, bmt10_spec, bmt10_note) ILIKE #{searchText}
+         ORDER BY bmt10_apply_date DESC, bmt10_retire_date DESC, bmt10_acq_amount DESC
+    </select>
+
+    <!-- AS-IS bmt10_info.selectByBaseDate L58 (IDMS-IC) — 로그인 회사의 행만(보안 보강) -->
+    <select id="selectByBaseDate" resultType="kr.co.kfs.asseterp.biz.bmt.dto.BmtInfoRes">
+        SELECT a.bmt10_info_id                    AS info_id
+             , a.bmt10_ast_class_tree_id          AS ast_class_tree_id
+             , b.ast01_class_tree_nm              AS ast_class_tree_name
+             , a.bmt10_apply_date::date           AS apply_date
+             , a.bmt10_retire_date::date          AS retire_date
+             , a.bmt10_acq_amount                 AS acq_amount
+             , a.bmt10_acq_info                   AS acq_info
+             , a.bmt10_spec                       AS spec
+             , a.bmt10_note                       AS note
+             , COALESCE(f_emp_kor_nm((
+                                SELECT c.bmt11_person_id
+                                  FROM bmt11_history c
+                                 WHERE c.bmt11_info_id = a.bmt10_info_id
+                                   AND c.bmt11_start_date &lt;= #{baseDate}
+                                 ORDER BY c.bmt11_start_date DESC
+                                 LIMIT 1
+                                )), '')           AS person_name
+          FROM bmt10_info a
+               INNER JOIN ast01_class_tree b ON b.ast01_class_tree_id = a.bmt10_ast_class_tree_id
+         WHERE 1=1
+           AND a.bmt10_info_id = #{infoId}
+           AND a.bmt10_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS bmt10_info.selectById L22 (IDMS-IC) — 저장 뒤 다시 읽기. 로그인 회사의 행만(보안 보강) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.bmt.dto.BmtInfoRes">
+        SELECT a.bmt10_info_id                    AS info_id
+             , a.bmt10_ast_class_tree_id          AS ast_class_tree_id
+             , b.ast01_class_tree_nm              AS ast_class_tree_name
+             , a.bmt10_apply_date::date           AS apply_date
+             , a.bmt10_retire_date::date          AS retire_date
+             , a.bmt10_acq_amount                 AS acq_amount
+             , a.bmt10_acq_info                   AS acq_info
+             , a.bmt10_spec                       AS spec
+             , a.bmt10_note                       AS note
+             , NULL::varchar                      AS person_name
+          FROM bmt10_info a
+               INNER JOIN ast01_class_tree b ON b.ast01_class_tree_id = a.bmt10_ast_class_tree_id
+         WHERE a.bmt10_info_id = #{infoId}
+           AND a.bmt10_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Bmt10_Info.modelUpdate → UpdateDataModel(bmt10_info) INSERT -->
+    <insert id="insert">
+        INSERT INTO bmt10_info
+               ( bmt10_info_id, bmt10_company_id, bmt10_ast_class_tree_id
+               , bmt10_apply_date, bmt10_retire_date, bmt10_acq_amount, bmt10_acq_info, bmt10_spec, bmt10_note )
+        VALUES ( #{infoId}, #{companyId}, #{req.astClassTreeId}
+               , #{req.applyDate}, #{req.retireDate}, #{req.acqAmount}, #{req.acqInfo}, #{req.spec}, #{req.note} )
+    </insert>
+
+    <!-- AS-IS Bmt10_Info.modelUpdate → UpdateDataModel(bmt10_info) UPDATE — 로그인 회사의 행만(보안 보강) -->
+    <update id="update">
+        UPDATE bmt10_info
+           SET bmt10_ast_class_tree_id = #{req.astClassTreeId}
+             , bmt10_apply_date        = #{req.applyDate}
+             , bmt10_retire_date       = #{req.retireDate}
+             , bmt10_acq_amount        = #{req.acqAmount}
+             , bmt10_acq_info          = #{req.acqInfo}
+             , bmt10_spec              = #{req.spec}
+             , bmt10_note              = #{req.note}
+         WHERE bmt10_info_id    = #{infoId}
+           AND bmt10_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS Bmt10_Info.modelDelete → UpdateDataModel(bmt10_info) DELETE — 로그인 회사의 행만(보안 보강) -->
+    <delete id="delete">
+        DELETE FROM bmt10_info
+         WHERE bmt10_info_id    = #{infoId}
+           AND bmt10_company_id = #{companyId}
+    </delete>
+</mapper>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- AS-IS(IDMS-IC) server/bmt/mapper/bmt20_relate_appr.xml — W18 Bmt20_Lookup_RelateAppr -->
+<mapper namespace="kr.co.kfs.asseterp.biz.bmt.mapper.BmtRelateApprMapper">
+
+    <!-- AS-IS bmt20_relate_appr.selectByInfoId L27 (IDMS-IC) — 원본에 정렬이 없다 -->
+    <select id="selectByInfoId" resultType="kr.co.kfs.asseterp.biz.bmt.dto.BmtRelateApprRes">
+        SELECT a.bmt20_relate_appr_id         AS relate_appr_id
+             , a.bmt20_info_id                AS info_id
+             , a.bmt20_appr_id                AS appr_id
+             , b.apr01_reg_date::date         AS reg_date
+             , b.apr01_title                  AS title
+          FROM bmt20_relate_appr a
+               INNER JOIN apr01_appr b ON b.apr01_appr_id = a.bmt20_appr_id
+         WHERE 1=1
+           AND a.bmt20_info_id    = #{infoId}
+           AND a.bmt20_company_id = #{companyId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Bmt20_RelateAppr.modelUpdate → UpdateDataModel(bmt20_relate_appr) INSERT -->
+    <insert id="insert">
+        INSERT INTO bmt20_relate_appr
+               ( bmt20_relate_appr_id, bmt20_company_id, bmt20_info_id, bmt20_appr_id )
+        VALUES ( #{relateApprId}, #{companyId}, #{infoId}, #{apprId} )
+    </insert>
+
+    <!-- AS-IS Bmt20_RelateAppr.delete → UpdateDataModel(bmt20_relate_appr) DELETE — 로그인 회사의 행만(보안 보강) -->
+    <delete id="deleteByIds">
+        DELETE FROM bmt20_relate_appr
+         WHERE bmt20_company_id = #{companyId}
+           AND bmt20_relate_appr_id IN
+           <foreach collection="relateApprIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>
