@@ -224,6 +224,35 @@
         ORDER BY ast09_corp_nm collate "ko_KR.utf8" asc, ast09_keep_account_seq, ast09_ast_s_class_cd, ast09_ast_class_tree_nm collate "ko_KR.utf8" asc
     </select>
 
+    <!-- 예금잔고대사(W21 Ast09_Tab_DepositBook): astType 1 + depositDiffYn true(잔액대사용 — 청약예치계좌 그룹 ItemSClassCode004 제외) -->
+    <sql id="depositDiffColumns">
+        ast09_book_id                       AS book_id,
+        CAST(#{holdDate} AS date)           AS hold_date,
+        ast09_ast_s_class_nm                AS ast_s_class_name,
+        ast09_keep_corp_account_nm          AS keep_corp_account_name,
+        ast09_corp_nm                       AS corp_name,
+        ast09_account_no                    AS account_no,
+        ast09_cur_code                      AS cur_code,
+        ast09_preDay_amt                    AS pre_day_amt,
+        ast09_for_book_amt                  AS for_book_amt,
+        ast09_hold_qty                      AS hold_qty,
+        ast09_book_amt                      AS book_amt,
+        ast09_fx_pl                         AS fx_pl,
+        ast09_real_amt                      AS real_amt,
+        ast09_diff_amt                      AS diff_amt,
+        ast09_fx_rate                       AS fx_rate
+    </sql>
+
+    <select id="selectDepositDiff" resultType="kr.co.kfs.asseterp.biz.ast.dto.DepositDiffRes">
+        <include refid="depositBookQuery"><property name="cols" value="depositDiffColumns"/></include>
+        /* 잔액대사용 화면에서 호출하는 경우 */
+        AND ast09_ast_s_class_cd NOT IN ( SELECT sys09_code
+                                            FROM sys13_code_group
+                                                 INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+                                           WHERE sys13_kind_group_cd = 'ItemSClassCode004' )
+        ORDER BY ast09_ast_m_class_cd, ast09_ast_s_class_seq, ast09_keep_account_seq
+    </select>
+
     <!-- 예금잔고 기간조회(U02) — sys99_print에 쌓을 전체 열 -->
     <sql id="bookFullColumns">
         ast09_book_id                       AS book_id,

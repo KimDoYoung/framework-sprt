@@ -12912,5 +12912,80 @@
     "note": "docs/work/W/W18-작업기록.md",
     "history": [],
     "id": "W18"
+  },
+  "Bmt12_Tab_PcList": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/bmt/Bmt10_Lookup_History.java": "d4ed1c1a42f5f0f10ed02de2e93ecddea5ada6c3",
+      "application/src/main/java/myApp/client/vi/bmt/Bmt10_Lookup_InfoList.java": "b3f4f3a701972d8a559af3a7fc385aa119e8758e",
+      "application/src/main/java/myApp/client/vi/bmt/Bmt11_TabPage_History.java": "f737b938fe4fb2f632ea7dcd730e0b2edcf4813e",
+      "application/src/main/java/myApp/client/vi/bmt/Bmt12_Edit_PcHistory.java": "c9b583e4a192cb59783430f24c8834643754684e",
+      "application/src/main/java/myApp/client/vi/bmt/Bmt12_Tab_PcList.java": "8171495529402613a911f8b0f8596ad9e61b9435",
+      "application/src/main/java/myApp/client/vi/bmt/model/Bmt10_InfoModel.java": "c250e3c95e92fc321d437b8fc7a89b0eb8d13a7d",
+      "application/src/main/java/myApp/client/vi/bmt/model/Bmt10_InfoModelProperties.java": "88b1b054769c7649cd9572a7dcae37e224fba1ad",
+      "application/src/main/java/myApp/client/vi/bmt/model/Bmt11_HistoryModel.java": "012a687ae77b3df20f763c837eca2adebf210575",
+      "application/src/main/java/myApp/client/vi/bmt/model/Bmt11_HistoryModelProperties.java": "744073aa170865b0d6693cc7d9597e9066344226",
+      "application/src/main/java/myApp/client/vi/bmt/model/Bmt12_PcHistoryModel.java": "bd38208b4ad552c64d153d049d3a7f0d0291973e",
+      "application/src/main/java/myApp/client/vi/bmt/model/Bmt12_PcHistoryModelProperties.java": "03349bfaf107764caee305fa959fc9aacefcf607",
+      "application/src/main/java/myApp/server/bmt/Bmt10_Info.java": "8a8a177df684a87656b7cdb59b9638282c8eebd9",
+      "application/src/main/java/myApp/server/bmt/Bmt11_History.java": "9272698bc1586c69feee2ebd0678235f10592c71",
+      "application/src/main/java/myApp/server/bmt/Bmt12_PcHistory.java": "f383167e543c8fe3e804578a673f264cb956a1e7",
+      "application/src/main/java/myApp/server/bmt/mapper/bmt10_info.xml": "f3d660a803bb529e3a59a8aa4914e3f0f63fe2cc",
+      "application/src/main/java/myApp/server/bmt/mapper/bmt11_history.xml": "0d9fc3f73fc9702e0223c400a5d9e0fcbf8512ef",
+      "application/src/main/java/myApp/server/bmt/mapper/bmt12_pc_history.xml": "f7679f5d1868fa16425cf4c0d897dfc46afac439",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-11-01T22:01:06+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/W/W19-작업기록.md",
+    "history": [],
+    "id": "W19"
+  },
+  "Ast09_Tab_DepositBook": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ast/Ast09_Tab_DepositBook.java": "ed1358ef8882c517bccf44945d783b236e6778a5",
+      "application/src/main/java/myApp/client/vi/ast/Ast12_Lookup_RealDeposit.java": "8e657e59b12a5f63db27a45493b0ca7f94423362",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast09_BookModel.java": "428b3c826da36a0835c239afdea603ad80eb2015",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast09_BookModelProperties.java": "3074cf6b7cfac48ac47543a93cdc9e9249534408",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast12_BookRealModel.java": "580090822f7a14b9f32ccf6d201940c7a0f3c6f5",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast12_BookRealModelProperties.java": "402d1c4f422ba8763ac34dc324594dd5c5704667",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast80_RelateApprModel.java": "f02c623f7cbee6486cd9bcecb79edf02887220d7",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/ast/Ast09_Book.java": "b9ba44f158e27cb4b9efb126262ae2f7ab5eb477",
+      "application/src/main/java/myApp/server/ast/Ast12_BookReal.java": "97a11cc8c0a60ecb7b75f5977c384d0dfc65c0ba",
+      "application/src/main/java/myApp/server/ast/Ast80_RelateAppr.java": "90c4f11098231f7e4303e181bff9d27f82d8caf3",
+      "application/src/main/java/myApp/server/ast/mapper/ast09_book.xml": "fb0636ccfd391f1efae798a56d6aaa46ce71ea4a",
+      "application/src/main/java/myApp/server/ast/mapper/ast12_book_real.xml": "dbf2b859e1867eaac0b1aa15ad9412dcfb4c0a8a",
+      "application/src/main/java/myApp/server/ast/mapper/ast80_relate_appr.xml": "3600c198c779b52192e465a60aec3969e06d0e94",
+      "application/src/main/java/myApp/server/dcr/Dcr30_Link.java": "3376651abbd80cda5d52c0061f97ab6b506e3e2c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Act02_Tab_JournalSub",
+      "Apr01_Edit_ApprDoc",
+      "Dcr30_Move_DcrClass"
+    ],
+    "recorded_at": "2026-11-01T22:20:30+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/W/W21-작업기록.md",
+    "history": [],
+    "id": "W21"
   }
 }

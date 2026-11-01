@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { BmtBuy, BmtEmpIct, BmtHistory, BmtInfo, BmtInfoSaveReq, BmtPcHistory, BmtPcHistorySaveReq, BmtRelateAppr } from '../types/bmt';
+import { BmtBuy, BmtEmpIct, BmtHistory, BmtInfo, BmtInfoSaveReq, BmtPcHistory, BmtPcHistorySaveReq, BmtPcList, BmtRelateAppr } from '../types/bmt';
 
 /** L05 AS-IS Bmt01_Tab_Buy (판촉물 구매 및 제공내역) */
 export const bmtBuyApi = {
@@ -92,6 +92,16 @@ export const bmtPcHistoryApi = {
   search: async (infoId: number): Promise<BmtPcHistory[]> => {
     const res = await apiClient.get<ApiResponse<BmtPcHistory[]>>('v1/bmt/pc-histories', { params: { infoId } });
     return res.data.data ?? [];
+  },
+  /** AS-IS bmt.Bmt12_PcHistory.selectByCompanyId — PC장비상세 목록(W19). baseDate 'yyyy-MM-dd', searchText는 글자만(서버가 %로 감싼다) */
+  searchList: async (baseDate: string, searchText: string): Promise<BmtPcList[]> => {
+    const res = await apiClient.get<ApiResponse<BmtPcList[]>>('v1/bmt/pc-histories/list', { params: { baseDate, searchText } });
+    return res.data.data ?? [];
+  },
+  /** AS-IS bmt.Bmt12_PcHistory.deleteByInfoId — 그 장비의 PC 이력 전부 → 지운 건수 */
+  removeByInfo: async (infoId: number): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/bmt/pc-histories/by-info/${infoId}`);
+    return res.data.data ?? 0;
   },
   /** AS-IS bmt.Bmt12_PcHistory.modelUpdate (신규·추가등록) → 저장한 행 */
   create: async (req: BmtPcHistorySaveReq): Promise<BmtPcHistory> => {

@@ -5,6 +5,7 @@ import kr.co.kfs.asseterp.biz.ast.dto.BookFullRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookPeriodRes;
 import kr.co.kfs.asseterp.biz.ast.dto.FinanceGroupRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookRes;
+import kr.co.kfs.asseterp.biz.ast.dto.DepositDiffRes;
 import kr.co.kfs.asseterp.biz.ast.dto.HoldBookRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookSumRes;
 import kr.co.kfs.asseterp.biz.ast.dto.DepositCleanReq;
@@ -33,6 +34,14 @@ public class AstBookController {
     private final AstBookService service;
 
     /** ast.Ast09_Book.selectByHoldDate (astType 1 예금) */
+    /** AS-IS ast.Ast09_Book.selectByHoldDate (astType 1, depositDiffYn true) — 예금잔고대사 W21 */
+    @GetMapping("/deposits/diffs")
+    public ApiResponse<List<DepositDiffRes>> depositDiffs(@AuthenticationPrincipal UserPrincipal principal,
+                                                          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate holdDate,
+                                                          @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchDepositDiffs(principal, holdDate, searchText));
+    }
+
     @GetMapping("/deposits")
     public ApiResponse<List<BookRes>> deposits(@AuthenticationPrincipal UserPrincipal principal,
                                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate holdDate) {

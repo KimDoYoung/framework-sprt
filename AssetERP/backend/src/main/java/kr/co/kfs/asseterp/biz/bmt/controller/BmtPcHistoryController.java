@@ -3,12 +3,16 @@ package kr.co.kfs.asseterp.biz.bmt.controller;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.bmt.dto.BmtPcHistoryRes;
 import kr.co.kfs.asseterp.biz.bmt.dto.BmtPcHistorySaveReq;
+import kr.co.kfs.asseterp.biz.bmt.dto.BmtPcListRes;
 import kr.co.kfs.asseterp.biz.bmt.service.BmtPcHistoryService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDate;
 import java.util.List;
 
 /** PC 이력 (AS-IS Bmt10_Lookup_History·Bmt12_Edit_PcHistory → server/bmt/Bmt12_PcHistory) */
@@ -23,6 +27,20 @@ public class BmtPcHistoryController {
     @GetMapping
     public ApiResponse<List<BmtPcHistoryRes>> search(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long infoId) {
         return ApiResponse.ok(service.search(principal, infoId));
+    }
+
+    /** AS-IS bmt.Bmt12_PcHistory.selectByCompanyId — PC장비상세 목록(W19) */
+    @GetMapping("/list")
+    public ApiResponse<List<BmtPcListRes>> searchList(@AuthenticationPrincipal UserPrincipal principal,
+                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate,
+                                                      @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchList(principal, baseDate, searchText));
+    }
+
+    /** AS-IS bmt.Bmt12_PcHistory.deleteByInfoId → 지운 건수 */
+    @DeleteMapping("/by-info/{infoId}")
+    public ApiResponse<Integer> deleteByInfoId(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long infoId) {
+        return ApiResponse.ok(service.deleteByInfoId(principal, infoId));
     }
 
     /** AS-IS bmt.Bmt12_PcHistory.modelUpdate (신규·추가등록) */

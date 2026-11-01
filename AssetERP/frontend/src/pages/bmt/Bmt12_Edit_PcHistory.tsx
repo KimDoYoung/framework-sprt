@@ -2,7 +2,7 @@
  * PC 이력 편집창 (W18) — Bmt10_Lookup_History의 [등록]·수정 칸에서 연다 (W19 Bmt12_Tab_PcList도 같은 창을 쓴다)
  * AS-IS: myApp/client/vi/bmt/Bmt12_Edit_PcHistory.java (225줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L116-175: 모달 590×490, 라벨 폭 105, 시작일자 · 장비명(조회창 칸) / 설치일자 · 호스트명 / 내부IP · MAC주소 / 기타사항(높이 200) / 비고(100), 아래 가운데 [저장][닫기]
- * insert(infoId, name) L72-89 = "신규등록"(시작일자 오늘) / add(row) L91-102 = "추가등록"(행을 복사, ID 비움, 장비명 못 바꿈) / edit(row) L104-114 = "정보수정"(장비명 못 바꿈)
+ * insert(callback) L60-70 = "신규등록"(빈 모델 — 장비는 조회창으로, W19) / insert(infoId, name) L72-89 = "신규등록"(시작일자 오늘) / add(row) L91-102 = "추가등록"(행을 복사, ID 비움, 장비명 못 바꿈) / edit(row) L104-114 = "정보수정"(장비명 못 바꿈)
  * 편집창 규격: 11 §4a. 스크롤을 피하려 폭 680·위에서 20만 띄운다(12 원칙)
  */
 import React, { useEffect, useState } from 'react';
@@ -52,7 +52,7 @@ interface Form {
 
 const build = (t: BmtPcHistoryEditTarget): Form => {
   if (t.mode === 'insert') {
-    return { infoId: t.infoId, astClassTreeName: t.astClassTreeName ?? '', startDate: dayjs(), settingDate: null, hostName: '', internalIp: '', macAddress: '', etc: '', note: '' };
+    return { infoId: t.infoId, astClassTreeName: t.astClassTreeName ?? '', startDate: t.infoId != null ? dayjs() : null, settingDate: null, hostName: '', internalIp: '', macAddress: '', etc: '', note: '' };
   }
   const r = t.row;
   return {

@@ -1,10 +1,12 @@
 package kr.co.kfs.asseterp.biz.bmt.mapper;
 
 import kr.co.kfs.asseterp.biz.bmt.dto.BmtPcHistoryRes;
+import kr.co.kfs.asseterp.biz.bmt.dto.BmtPcListRes;
 import kr.co.kfs.asseterp.biz.bmt.dto.BmtPcHistorySaveReq;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Mapper
@@ -27,4 +29,11 @@ public interface BmtPcHistoryMapper {
 
     /** AS-IS Bmt12_PcHistory.delete → UpdateDataModel DELETE */
     int deleteByIds(@Param("companyId") Long companyId, @Param("pcHistoryIds") List<Long> pcHistoryIds);
+
+    /** AS-IS bmt12_pc_history.selectByCompanyId — 장비별 기준일 이전 마지막 이력, 사원명 순 */
+    List<BmtPcListRes> selectByCompanyId(@Param("companyId") Long companyId, @Param("baseDate") LocalDate baseDate,
+                                         @Param("searchText") String searchText);
+
+    /** AS-IS bmt12_pc_history.deleteByInfoId — 그 장비의 PC 이력 전부 (로그인 회사 조건을 더했다) */
+    int deleteByInfoId(@Param("companyId") Long companyId, @Param("infoId") Long infoId);
 }

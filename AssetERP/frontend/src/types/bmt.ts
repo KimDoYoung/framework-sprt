@@ -99,3 +99,15 @@ export interface BmtRelateAppr {
   regDate: string | null;
   title: string | null;
 }
+
+/** W19 Bmt12_Tab_PcList 그리드 한 행 (AS-IS Bmt12_PcHistoryModel) */
+export interface BmtPcList {
+  pcHistoryId: number;
+  infoId: number;
+  personName: string | null;
+  startDate: string | null;
+  internalIp: string | null;
+  macAddress: string | null;
+  astClassTreeName: string | null;
+  etc: string | null;
+}

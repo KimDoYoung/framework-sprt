@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.bmt.service;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.bmt.dto.BmtPcHistoryRes;
 import kr.co.kfs.asseterp.biz.bmt.dto.BmtPcHistorySaveReq;
+import kr.co.kfs.asseterp.biz.bmt.dto.BmtPcListRes;
 import kr.co.kfs.asseterp.biz.bmt.mapper.BmtPcHistoryMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /** AS-IS Bmt10_Lookup_History·Bmt12_Edit_PcHistory → server/bmt/Bmt12_PcHistory.java (selectByInfoId L35 / modelUpdate L48 / delete L81) */
@@ -22,6 +24,17 @@ public class BmtPcHistoryService {
 
     public List<BmtPcHistoryRes> search(UserPrincipal user, Long infoId) {
         return mapper.selectByInfoId(user.getCompanyId(), infoId);
+    }
+
+    /** AS-IS Bmt12_Tab_PcList.retrieve → selectByCompanyId(baseDate, searchText = %…%) */
+    public List<BmtPcListRes> searchList(UserPrincipal user, LocalDate baseDate, String searchText) {
+        return mapper.selectByCompanyId(user.getCompanyId(), baseDate, "%" + (searchText == null ? "" : searchText) + "%");
+    }
+
+    /** AS-IS Bmt12_Tab_PcList.delete → deleteByInfoId (그 장비의 PC 이력 전부) */
+    @Transactional
+    public int deleteByInfoId(UserPrincipal user, Long infoId) {
+        return mapper.deleteByInfoId(user.getCompanyId(), infoId);
     }
 
     /** AS-IS modelUpdate (pcHistoryId 없음) → 새 ID·로그인 회사로 INSERT 뒤 다시 읽기 */

@@ -741,6 +741,8 @@ export interface AprLinkArgs {
   /** A63 지출결의서 — 'false'면 한 건 본문의 승인자 줄이 빠진다(내 지출결의서 Y10 Pay50_Tab_Expense, 기본은 경영관리 U03와 같이 true) */
   isManager?: string;
   stdDate?: string;
+  /** A39 예금잔고대사 — 호출 화면의 검색어(글자만, 서버가 %로 감싼다. W21) */
+  searchText?: string;
   cycleType?: string;
   yyyy?: string;
   mm?: string;

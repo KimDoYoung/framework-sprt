@@ -41,6 +41,8 @@ import {
   AstManager,
   AstManagerSaveReq,
   AstRelateAppr,
+  AstDepositDiff,
+  AstBookReal,
   TrCode,
   TrCodeWindow,
   AstDepn,
@@ -337,6 +339,25 @@ export const astApi = {
   /** AS-IS ast.Ast09_Book.createDepositBook (U01): 기준일부터 오늘까지 예금잔고정리 — 실패는 오류 메시지로 던진다 */
   cleanDepositBook: async (stdDate: string): Promise<void> => {
     await apiClient.post<ApiResponse<null>>('v1/ast/books/deposits/clean', { stdDate });
+  },
+
+  /** AS-IS ast.Ast09_Book.selectByHoldDate (W21 Ast09_Tab_DepositBook): astType 1 + depositDiffYn true, searchText는 글자만(서버가 %로 감싼다) */
+  searchDepositDiffs: async (holdDate: string, searchText: string): Promise<AstDepositDiff[]> => {
+    const res = await apiClient.get<ApiResponse<AstDepositDiff[]>>('v1/ast/books/deposits/diffs', { params: { holdDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast12_BookReal.selectByHoldDate (W21 Ast12_Lookup_RealDeposit): 예금 계좌 전부 + 그날의 실제잔고 */
+  searchBookReals: async (holdDate: string, searchText: string): Promise<AstBookReal[]> => {
+    const res = await apiClient.get<ApiResponse<AstBookReal[]>>('v1/ast/book-reals', { params: { holdDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast12_BookReal.update (W21): 고친 행 → 다시 읽은 행들(요청 순서) */
+  saveBookReals: async (holdDate: string, rows: AstBookReal[]): Promise<AstBookReal[]> => {
+    const body = rows.map(r => ({ bookRealId: r.bookRealId, astClassTreeId: r.astClassTreeId, curCode: r.curCode, realAmt: r.realAmt, realForAmt: r.realForAmt, note: r.note }));
+    const res = await apiClient.put<ApiResponse<AstBookReal[]>>('v1/ast/book-reals', body, { params: { holdDate } });
+    return res.data.data ?? [];
   },
 
   /** AS-IS ast.Ast80_RelateAppr.selectByCompanyId (U01): 일자·링크코드의 상신 문서. 한 건이 아니면 null(미상신) */

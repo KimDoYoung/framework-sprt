@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- AS-IS(IDMS-IC) server/ast/mapper/ast12_book_real.xml — W21 Ast12_Lookup_RealDeposit (대사작업용 예금잔고 입력) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstBookRealMapper">
+
+    <!-- AS-IS ast12_book_real.selectByHoldDate (IDMS-IC) — 그리드 열만 -->
+    <select id="selectByHoldDate" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookRealRes">
+        SELECT ast12_book_real_id          AS book_real_id
+             , ast12_hold_date             AS hold_date
+             , ast12_ast_class_tree_id     AS ast_class_tree_id
+             , ast12_item_s_class_nm       AS item_s_class_name
+             , ast12_corp_nm               AS corp_name
+             , ast12_ast_class_tree_nm     AS ast_class_tree_name
+             , ast12_cur_cd                AS cur_code
+             , ast12_real_amt              AS real_amt
+             , ast12_real_for_amt          AS real_for_amt
+             , ast12_rcnt_amt              AS rcnt_amt
+             , ast12_rcnt_for_amt          AS rcnt_for_amt
+             , ast12_note                  AS note
+          FROM (
+                SELECT COALESCE(a.ast12_book_real_id, f_create_seq())                               as ast12_book_real_id
+                     , ast01_company_id                                                             as ast12_company_id
+                     , CAST(#{holdDate} AS date)                                                    as ast12_hold_date
+                     , ast01_class_tree_id                                                          as ast12_ast_class_tree_id
+                     , COALESCE(a.ast12_real_amt, 0)                                                as ast12_real_amt
+                     , COALESCE(a.ast12_real_for_amt, 0)                                            as ast12_real_for_amt
+                     , a.ast12_note                                                                 as ast12_note
+                     , f_get_corp_nm(ast01_corp_id)                                                 as ast12_corp_nm
+                     , ast01_class_tree_nm                                                          as ast12_ast_class_tree_nm
+                     , COALESCE(ast01_cur_cd,'KRW')                                                 as ast12_cur_cd
+                     , ast01_item_m_class_cd                                                        as ast12_item_m_class_cd
+                     , ast01_item_s_class_cd                                                        as ast12_item_s_class_cd
+                     , f_cdnm('ItemSClassCode',ast01_item_s_class_cd,ast01_company_id,#{holdDate})  as ast12_item_s_class_nm
+                     , ast01_seq                                                                    as ast12_seq
+                     , COALESCE(b.ast12_real_amt    , 0)                                            as ast12_rcnt_amt
+                     , COALESCE(b.ast12_real_for_amt, 0)                                            as ast12_rcnt_for_amt
+                  FROM ast01_class_tree
+                       LEFT OUTER JOIN ast12_book_real a ON ( a.ast12_company_id        = ast01_company_id    AND
+                                                              a.ast12_ast_class_tree_id = ast01_class_tree_id AND
+                                                              a.ast12_hold_date         = #{holdDate}         )
+                       LEFT OUTER JOIN ast12_book_real b ON ( b.ast12_company_id        = ast01_company_id    AND
+                                                              b.ast12_ast_class_tree_id = ast01_class_tree_id AND
+                                                              b.ast12_hold_date         = ( SELECT MAX(ast12_hold_date)
+                                                                                              FROM ast12_book_real
+                                                                                             WHERE ast12_company_id = ast01_company_id
+                                                                                               AND ast12_hold_date &lt; #{holdDate} ) )
+                 WHERE ast01_company_id      = #{companyId}
+                   AND ast01_type_cd         = 'IT'
+                   AND ast01_asset_type      = '1'      /* (1:고유자산) */
+                   AND ast01_item_l_class_cd = '10'     /* (10:현금 및 예치금) */
+                   AND /*(2023-08-18 CYY - 청약예치계좌 제외)*/
+                       ast01_item_s_class_cd NOT IN ( SELECT sys09_code
+                                                        FROM sys13_code_group
+                                                             INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+                                                       WHERE sys13_kind_group_cd = 'ItemSClassCode004' )
+                   AND COALESCE(ast01_mat_date,'9999-12-31') &gt;= #{holdDate}
+                   AND COALESCE(ast01_use_yn,'false') = 'true'
+               ) t
+         WHERE CONCAT(ast12_corp_nm,ast12_ast_class_tree_nm,ast12_cur_cd) ILIKE #{searchText}
+         ORDER BY ast12_item_m_class_cd, ast12_item_s_class_cd, ast12_seq
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT COUNT(*) FROM ast12_book_real
+         WHERE ast12_book_real_id = #{bookRealId}
+           AND ast12_company_id   = #{companyId}
+    </select>
+
+    <!-- AS-IS Ast12_BookReal.update → UpdateDataModel(ast12_book_real) INSERT (보관계좌 = 자산분류 같은 ID) -->
+    <insert id="insert">
+        INSERT INTO ast12_book_real
+               ( ast12_book_real_id, ast12_company_id, ast12_hold_date, ast12_ast_class_tree_id, ast12_keep_account_id
+               , ast12_real_qty, ast12_real_amt, ast12_real_for_amt, ast12_note )
+        VALUES ( #{req.bookRealId}, #{companyId}, #{holdDate}, #{req.astClassTreeId}, #{req.astClassTreeId}
+               , #{realQty}, #{req.realAmt}, #{req.realForAmt}, #{req.note} )
+    </insert>
+
+    <!-- AS-IS Ast12_BookReal.update → UpdateDataModel(ast12_book_real) UPDATE — 로그인 회사의 행만(보안 보강) -->
+    <update id="update">
+        UPDATE ast12_book_real
+           SET ast12_real_qty     = #{realQty}
+             , ast12_real_amt     = #{req.realAmt}
+             , ast12_real_for_amt = #{req.realForAmt}
+             , ast12_note         = #{req.note}
+         WHERE ast12_book_real_id = #{req.bookRealId}
+           AND ast12_company_id   = #{companyId}
+    </update>
+</mapper>

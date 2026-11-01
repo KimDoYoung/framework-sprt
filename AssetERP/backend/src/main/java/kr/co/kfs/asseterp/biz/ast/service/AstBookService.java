@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.ast.service;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFullRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookPeriodRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookRes;
+import kr.co.kfs.asseterp.biz.ast.dto.DepositDiffRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookSumRes;
 import kr.co.kfs.asseterp.biz.ast.dto.FinanceGroupRes;
 import kr.co.kfs.asseterp.biz.ast.dto.HoldBookRes;
@@ -30,6 +31,11 @@ public class AstBookService {
     private static final String FINANCE_PERIOD_WINDOW = "Ast09_Tab_FinanceBookPeriod";
 
     private final AstBookMapper mapper;
+
+    /** ast09_book.selectByHoldDate (astType 1, depositDiffYn true — W21 예금잔고대사), searchText = %…% */
+    public List<DepositDiffRes> searchDepositDiffs(UserPrincipal user, LocalDate holdDate, String searchText) {
+        return mapper.selectDepositDiff(user.getCompanyId(), holdDate, AST_TYPE_DEPOSIT, "%" + (searchText == null ? "" : searchText) + "%");
+    }
 
     /** ast09_book.selectByHoldDate — searchText '%' */
     public List<BookRes> searchDeposits(UserPrincipal user, LocalDate holdDate) {

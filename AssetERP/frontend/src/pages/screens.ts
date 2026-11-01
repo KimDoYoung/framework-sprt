@@ -132,6 +132,8 @@ import { Biz01_Tab_LimitCheckList } from './biz/Biz01_Tab_LimitCheckList';
 import { Bmt01_Tab_Buy } from './bmt/Bmt01_Tab_Buy';
 import { Bmt12_Tab_EmpIct } from './bmt/Bmt12_Tab_EmpIct';
 import { Bmt10_Tab_Info } from './bmt/Bmt10_Tab_Info';
+import { Bmt12_Tab_PcList } from './bmt/Bmt12_Tab_PcList';
+import { Ast09_Tab_DepositBook } from './ast/Ast09_Tab_DepositBook';
 import { Biz01_Tab_PriorApproval } from './biz/Biz01_Tab_PriorApproval';
 import { Ics15_Tab_ChecklistWrite } from './ics/Ics15_Tab_ChecklistWrite';
 import { Ics15_Tab_ChecklistConfirm } from './ics/Ics15_Tab_ChecklistConfirm';
@@ -480,6 +482,8 @@ export const SCREENS: Record<string, React.FC> = {
   Bmt01_Tab_Buy, // L05 (메뉴 #1135. 아래쪽 제공내역은 pages/biz/Biz01_TabPage_List. 전자결재·상대처 조회창은 다음 단계)
   Bmt12_Tab_EmpIct, // T20 (임직원 정보통신수단, RD 출력)
   Bmt10_Tab_Info, // W18 (전산장비관리)
+  Bmt12_Tab_PcList, // W19 (PC장비상세)
+  Ast09_Tab_DepositBook, // W21 (메뉴 #1473·#1159. 상신 A39, 계정별원장 아이콘은 메뉴 1150 X17)
   Biz01_Tab_LimitCheckList, // L07 (메뉴 #1133. 하위 탭 Biz01_TabPage_PersonDay·PersonYear·CompanyYear, 엑셀 서버 생성)
   Biz01_Tab_PriorApproval, // L08 (메뉴 #1136. 거래상대방 조회창 components/lookup/Mkt01_Lookup_Select2, 제공(수령)자는 Emp00_Lookup_SelectSingle)
   Biz01_Tab_CardContents, // L04 (메뉴 #1138. 편집 칸·인원 칸·증빙자료 창은 L02 부품 재사용, RD 내려받기 utils/rdDownload)

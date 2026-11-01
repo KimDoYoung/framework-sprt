@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.ast.dto.BookFullRes;
 import kr.co.kfs.asseterp.biz.ast.dto.FinanceGroupRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookPeriodRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookRes;
+import kr.co.kfs.asseterp.biz.ast.dto.DepositDiffRes;
 import kr.co.kfs.asseterp.biz.ast.dto.HoldBookRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookSumRes;
 import org.apache.ibatis.annotations.Mapper;
@@ -71,4 +72,8 @@ public interface AstBookMapper {
 
     /** createDepositBook — 'Y'면 정상, 아니면 오류 메시지 */
     String createDepositBook(@Param("companyId") Long companyId, @Param("stdDate") LocalDate stdDate);
+
+    /** AS-IS ast09_book.selectByHoldDate (astType 1, depositDiffYn true — 예금잔고대사 W21) */
+    List<DepositDiffRes> selectDepositDiff(@Param("companyId") Long companyId, @Param("holdDate") LocalDate holdDate,
+                                           @Param("astType") String astType, @Param("searchText") String searchText);
 }

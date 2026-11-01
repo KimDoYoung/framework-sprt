@@ -963,3 +963,38 @@ export interface AstDepnBookGroup {
   acmDepnCost: number | null;
   remDepnCost: number | null;
 }
+
+/** W21 Ast09_Tab_DepositBook 그리드 한 행 (AS-IS Ast09_BookModel, 예금잔고대사). 날짜는 'yyyy-MM-dd' */
+export interface AstDepositDiff {
+  bookId: number;
+  holdDate: string;
+  astSClassName: string | null;
+  keepCorpAccountName: string | null;
+  corpName: string | null;
+  accountNo: string | null;
+  curCode: string | null;
+  preDayAmt: number | null;
+  forBookAmt: number | null;
+  holdQty: number | null;
+  bookAmt: number | null;
+  fxPl: number | null;
+  realAmt: number | null;
+  diffAmt: number | null;
+  fxRate: number | null;
+}
+
+/** W21 Ast12_Lookup_RealDeposit 그리드 한 행 (AS-IS Ast12_BookRealModel) */
+export interface AstBookReal {
+  bookRealId: number;
+  holdDate: string;
+  astClassTreeId: number;
+  itemSClassName: string | null;
+  corpName: string | null;
+  astClassTreeName: string | null;
+  curCode: string | null;
+  realAmt: number | null;
+  realForAmt: number | null;
+  rcntAmt: number | null;
+  rcntForAmt: number | null;
+  note: string | null;
+}

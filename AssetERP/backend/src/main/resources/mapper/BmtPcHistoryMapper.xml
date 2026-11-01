@@ -78,4 +78,47 @@
            AND bmt12_pc_history_id IN
            <foreach collection="pcHistoryIds" item="id" open="(" separator="," close=")">#{id}</foreach>
     </delete>
+
+    <!-- AS-IS bmt12_pc_history.selectByCompanyId (IDMS-IC) — a.* 대신 그리드 열만. 정렬은 사원명 없는 행을 맨 뒤로 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.bmt.dto.BmtPcListRes">
+        SELECT a.bmt12_pc_history_id          AS pc_history_id
+             , a.bmt12_info_id                AS info_id
+             , a.bmt12_person_nm              AS person_name
+             , a.bmt12_start_date             AS start_date
+             , a.bmt12_internal_ip            AS internal_ip
+             , a.bmt12_mac_address            AS mac_address
+             , c.ast01_class_tree_nm          AS ast_class_tree_name
+             , a.bmt12_etc                    AS etc
+          FROM (
+                SELECT *
+                     , ROW_NUMBER() OVER (PARTITION BY bmt12_info_id ORDER BY bmt12_start_date DESC) AS sort
+                     , COALESCE(f_emp_kor_nm(
+                                (
+                                 SELECT c.bmt11_person_id
+                                   FROM bmt11_history c
+                                  WHERE c.bmt11_info_id = bmt12_info_id
+                                    AND c.bmt11_start_date &lt;= #{baseDate}
+                                  ORDER BY c.bmt11_start_date DESC
+                                  LIMIT 1
+                                )
+                               ), '')                                                              AS bmt12_person_nm
+                  FROM bmt12_pc_history
+                 WHERE bmt12_start_date &lt;= #{baseDate}
+               ) a
+               LEFT OUTER JOIN bmt10_info b ON b.bmt10_info_id = a.bmt12_info_id
+               LEFT OUTER JOIN ast01_class_tree c ON c.ast01_class_tree_id = b.bmt10_ast_class_tree_id
+         WHERE 1=1
+           AND a.bmt12_company_id = #{companyId}
+           AND a.sort = 1
+           AND (COALESCE(a.bmt12_internal_ip,'')||COALESCE(a.bmt12_mac_address,'')||COALESCE(a.bmt12_host_nm,'')||COALESCE(a.bmt12_etc,'')||a.bmt12_person_nm||c.ast01_class_tree_nm) LIKE #{searchText}
+         ORDER BY (CASE WHEN a.bmt12_person_nm = '' THEN '히' ELSE a.bmt12_person_nm END) COLLATE "ko_KR.utf8"
+                , a.bmt12_start_date
+    </select>
+
+    <!-- AS-IS bmt12_pc_history.deleteByInfoId (IDMS-IC) — 로그인 회사 조건을 더했다(보안 보강) -->
+    <delete id="deleteByInfoId">
+        DELETE FROM bmt12_pc_history
+         WHERE bmt12_info_id    = #{infoId}
+           AND bmt12_company_id = #{companyId}
+    </delete>
 </mapper>
