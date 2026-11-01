@@ -12310,5 +12310,37 @@
     "note": "docs/work/Y/Y12-작업기록.md",
     "history": [],
     "id": "Y12"
+  },
+  "Bbs11_Tab_Application": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/bbs/Bbs11_Edit_Application.java": "210bceb0d6c672bb4f91d97c112c1361d57bae1e",
+      "application/src/main/java/myApp/client/vi/bbs/Bbs11_Tab_Application.java": "cf4ee009f82cfca14b4f4a955dd07f59b3d118ea",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs11_ApplicationModel.java": "118127ccba522d26e6974c95291c9ec2c4e0c0f3",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs11_ApplicationModelProperties.java": "05b569db27385cb1bc12172640d7c1bf52aefb90",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs12_ApplicationFormModel.java": "a1d013b7b777fc4e0382baeacfc3d4c41c1f8e66",
+      "application/src/main/java/myApp/server/bbs/Bbs11_Application.java": "2ddc9b4f2c377a5520f11c8ac421d05cb19d7244",
+      "application/src/main/java/myApp/server/bbs/Bbs12_ApplicationForm.java": "ab0d278808c0360e65098dff4c186104726a8baf",
+      "application/src/main/java/myApp/server/bbs/mapper/bbs11_application.xml": "0d0cf959a135bc98a88c9275c5297fd32cf1cbc4",
+      "application/src/main/java/myApp/server/bbs/mapper/bbs12_application_form.xml": "ecae829a382e7604eb5bb320fe60eaa07cad265e",
+      "application/src/main/java/myApp/server/emp/Emp00_TransInfo.java": "df97d7f0f13eb8c414b2ce628d93cc02138f6963",
+      "application/src/main/java/myApp/server/emp/mapper/emp00_trans_info.xml": "76c324eda8ede6658a765beeaaebf929930afd47",
+      "application/src/main/java/myApp/server/sms/Sms02_History.java": "9266934009808b9f0e1938c2c30a374a398ff4e7",
+      "application/src/main/java/myApp/server/sms/mapper/sms02_history.xml": "a317e77539b5c26864b6910e26052a996f0588e6",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectMulti"
+    ],
+    "recorded_at": "2026-11-01T17:40:24+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Y/Y13-작업기록.md",
+    "history": [],
+    "id": "Y13"
   }
 }

@@ -67,4 +67,12 @@
          WHERE bbs12_application_form_id = #{applicationFormId}
            AND bbs12_company_id          = #{companyId}
     </update>
+
+    <!-- AS-IS bbs12_application_form.selectByAppType (IDMS-IC) — Y13 신청구분을 고르면 그 양식의 내용. SELECT * → 내용만 -->
+    <select id="selectContentByAppType" resultType="string">
+        SELECT bbs12_content
+          FROM bbs12_application_form
+         WHERE bbs12_company_id = #{companyId}
+           AND bbs12_app_type   = #{appType}
+    </select>
 </mapper>

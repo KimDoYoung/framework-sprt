@@ -2,10 +2,14 @@ package kr.co.kfs.asseterp.biz.bbs.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.bbs.dto.ApplicationContentReq;
+import kr.co.kfs.asseterp.biz.bbs.dto.ApplicationMineRes;
+import kr.co.kfs.asseterp.biz.bbs.dto.ApplicationMineSaveReq;
 import kr.co.kfs.asseterp.biz.bbs.dto.ApplicationMngRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.ApplicationMngSaveReq;
 import kr.co.kfs.asseterp.biz.bbs.dto.ApplicationRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.ApplicationSmsReq;
+import kr.co.kfs.asseterp.biz.bbs.dto.ApplicationStatusReq;
+import kr.co.kfs.asseterp.biz.bbs.dto.ApplicationStatusRes;
 import kr.co.kfs.asseterp.biz.bbs.service.BbsApplicationService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -61,5 +65,33 @@ public class BbsApplicationController {
     public ApiResponse<Void> sendMessage(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ApplicationSmsReq req) {
         service.sendMessage(principal, req.personId(), req.msg());
         return ApiResponse.ok(null);
+    }
+
+    /** AS-IS bbs.Bbs11_Application.selectByPersonId — Y13 기타신청서 작성 목록(appTypeCode 없으면 전체) */
+    @GetMapping("/mine")
+    public ApiResponse<List<ApplicationMineRes>> searchMine(@AuthenticationPrincipal UserPrincipal principal,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                            @RequestParam(required = false) String appTypeCode) {
+        return ApiResponse.ok(service.searchMine(principal, startDate, closeDate, appTypeCode));
+    }
+
+    /** AS-IS bbs.Bbs11_Application.modelUpdate — 신청서 저장(applicationId 없으면 새로 만든다) → 저장한 행 */
+    @PutMapping("/mine")
+    public ApiResponse<ApplicationMineRes> saveMine(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ApplicationMineSaveReq req) {
+        return ApiResponse.ok(service.saveMine(principal, req));
+    }
+
+    /** AS-IS bbs.Bbs11_Application.updateAppStatus + 알림문자 — type P = 신청, C = 신청취소 */
+    @PutMapping("/mine/{applicationId}/status")
+    public ApiResponse<ApplicationStatusRes> changeStatus(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long applicationId,
+                                                          @RequestBody ApplicationStatusReq req) {
+        return ApiResponse.ok(service.changeStatus(principal, applicationId, req.type()));
+    }
+
+    /** AS-IS bbs.Bbs11_Application.delete → 지운 건수 */
+    @DeleteMapping("/mine")
+    public ApiResponse<Integer> deleteMine(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> ids) {
+        return ApiResponse.ok(service.deleteMine(principal, ids));
     }
 }

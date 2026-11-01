@@ -39,4 +39,10 @@ public class BbsApplicationFormController {
         service.updateContent(principal, applicationFormId, req);
         return ApiResponse.ok(null);
     }
+
+    /** AS-IS bbs.Bbs12_ApplicationForm.appTypeCall — 신청구분의 양식 내용(없으면 null) */
+    @GetMapping("/content")
+    public ApiResponse<String> getContent(@AuthenticationPrincipal UserPrincipal principal, @RequestParam String appType) {
+        return ApiResponse.ok(service.getContentByAppType(principal, appType));
+    }
 }

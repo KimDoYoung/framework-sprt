@@ -23,4 +23,7 @@ public interface BbsApplicationFormMapper {
 
     int updateContent(@Param("companyId") Long companyId, @Param("applicationFormId") Long applicationFormId,
                       @Param("content") String content, @Param("contentMobi") String contentMobi);
+
+    /** AS-IS selectByAppType (Y13) — 양식 내용 */
+    String selectContentByAppType(@Param("companyId") Long companyId, @Param("appType") String appType);
 }

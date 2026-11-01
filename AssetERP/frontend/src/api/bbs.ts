@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { BbsApplication, BbsApplicationForm, BbsApplicationMng, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice } from '../types/bbs';
+import { BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice } from '../types/bbs';
 
 /** 요청서(신청서) — 증명서 신청내역 (S05, AS-IS Bbs11_Application) */
 export const bbsApplicationApi = {
@@ -33,6 +33,30 @@ export const bbsApplicationApi = {
   sendMessage: async (personId: number, msg: string): Promise<void> => {
     await apiClient.post('v1/bbs/applications/sms', { personId, msg });
   },
+
+  /** Y13 AS-IS bbs.Bbs11_Application.selectByPersonId — 기타신청서 작성 목록(appTypeCode 없으면 전체) */
+  searchMine: async (startDate: string, closeDate: string, appTypeCode: string | undefined): Promise<BbsApplicationMine[]> => {
+    const res = await apiClient.get<ApiResponse<BbsApplicationMine[]>>('v1/bbs/applications/mine', { params: { startDate, closeDate, appTypeCode } });
+    return res.data.data ?? [];
+  },
+
+  /** Y13 AS-IS bbs.Bbs11_Application.modelUpdate — 저장(임시저장·신청 전 저장) → 저장한 행 */
+  saveMine: async (req: BbsApplicationMineSaveReq): Promise<BbsApplicationMine> => {
+    const res = await apiClient.put<ApiResponse<BbsApplicationMine>>('v1/bbs/applications/mine', req);
+    return res.data.data;
+  },
+
+  /** Y13 AS-IS bbs.Bbs11_Application.updateAppStatus + 알림문자 — type P = 신청, C = 신청취소 */
+  changeStatus: async (applicationId: number, type: 'P' | 'C'): Promise<BbsApplicationStatusRes> => {
+    const res = await apiClient.put<ApiResponse<BbsApplicationStatusRes>>(`v1/bbs/applications/mine/${applicationId}/status`, { type });
+    return res.data.data;
+  },
+
+  /** Y13 AS-IS bbs.Bbs11_Application.delete → 지운 건수 */
+  deleteMine: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/bbs/applications/mine', { data: ids });
+    return res.data.data ?? 0;
+  },
 };
 
 /** T22 신청구분 내용 양식 (AS-IS Bbs12_ApplicationForm) */
@@ -41,6 +65,12 @@ export const bbsApplicationFormApi = {
   search: async (): Promise<BbsApplicationForm[]> => {
     const res = await apiClient.get<ApiResponse<BbsApplicationForm[]>>('v1/bbs/application-forms');
     return res.data.data ?? [];
+  },
+
+  /** Y13 AS-IS Bbs12_ApplicationForm.appTypeCall — 신청구분의 양식 내용(없으면 null) */
+  getContent: async (appType: string): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>('v1/bbs/application-forms/content', { params: { appType } });
+    return res.data.data ?? null;
   },
 
   /** AS-IS update — 공개여부 */

@@ -88,6 +88,36 @@ export interface BbsApplicationMng {
   content?: string | null;
 }
 
+/** Y13 AS-IS Bbs11_ApplicationModel — 기타신청서 작성 그리드 행 (bbs11_application.selectByPersonId) */
+export interface BbsApplicationMine {
+  applicationId: number;
+  appDate?: string | null;
+  appEmpId?: number | null;
+  appEmpName?: string | null;
+  appType?: string | null;
+  appTypeName?: string | null;
+  appStatus?: string | null;
+  appStatusName?: string | null;
+  closeDate?: string | null;
+  note?: string | null;
+  content?: string | null;
+}
+
+/** Y13 신청서 저장 요청 — applicationId가 없으면 새 신청서 */
+export interface BbsApplicationMineSaveReq {
+  applicationId?: number | null;
+  appDate: string;
+  appType: string | null;
+  note: string | null;
+  content: string | null;
+}
+
+/** Y13 신청·신청취소 결과 — notice: 1 알림 발송, 0 수신자 없음, -1 문자 발송 실패 */
+export interface BbsApplicationStatusRes {
+  row: BbsApplicationMine;
+  notice: number;
+}
+
 /** T22 AS-IS Bbs12_ApplicationFormModel — 신청구분 내용 양식 */
 export interface BbsApplicationForm {
   applicationFormId: number;

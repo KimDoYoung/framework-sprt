@@ -91,4 +91,105 @@
           FROM emp01_person
          WHERE emp01_person_id = #{personId}
     </select>
+
+    <!-- AS-IS bbs11_application.selectByPersonId (IDMS-IC) — Y13 기타신청서 작성. SELECT * → ApplicationMineRes 열만, 조건·정렬 그대로(공개 안 한 신청구분은 본인 것만) -->
+    <select id="selectByPersonId" resultType="kr.co.kfs.asseterp.biz.bbs.dto.ApplicationMineRes">
+        SELECT bbs11_application_id                                                                      AS application_id,
+               bbs11_app_date                                                                            AS app_date,
+               bbs11_app_emp_id                                                                          AS app_emp_id,
+               f_emp_kor_nm(bbs11_app_emp_id)                                                            AS app_emp_name,
+               bbs11_app_type                                                                            AS app_type,
+               f_cdnm('ApplicationType', bbs11_app_type, bbs11_company_id, f_sysdate())                  AS app_type_name,
+               bbs11_app_status                                                                          AS app_status,
+               f_cdnm('ApplicationStatusCode', bbs11_app_status, bbs11_company_id, f_sysdate())          AS app_status_name,
+               bbs11_close_date                                                                          AS close_date,
+               bbs11_note                                                                                AS note,
+               bbs11_content                                                                             AS content
+          FROM bbs11_application
+               INNER JOIN bbs12_application_form ON bbs12_company_id = bbs11_company_id AND bbs12_app_type = bbs11_app_type
+         WHERE bbs11_company_id = #{companyId}
+           AND bbs11_app_date BETWEEN #{startDate} AND #{closeDate}
+        <if test="appTypeCode != null">
+           AND bbs11_app_type = #{appTypeCode}
+        </if>
+           AND (
+                   (COALESCE(bbs12_public_yn, 'false') = 'false' AND bbs11_app_emp_id = #{personId})
+                   OR
+                   (COALESCE(bbs12_public_yn, 'false') != 'false')
+               )
+         ORDER BY bbs11_app_date DESC, bbs11_app_type
+    </select>
+
+    <!-- AS-IS bbs11_application.selectById (IDMS-IC) — 저장 뒤 다시 읽기(ApplicationMineRes 열) -->
+    <select id="selectMineById" resultType="kr.co.kfs.asseterp.biz.bbs.dto.ApplicationMineRes">
+        SELECT bbs11_application_id                                                                      AS application_id,
+               bbs11_app_date                                                                            AS app_date,
+               bbs11_app_emp_id                                                                          AS app_emp_id,
+               f_emp_kor_nm(bbs11_app_emp_id)                                                            AS app_emp_name,
+               bbs11_app_type                                                                            AS app_type,
+               f_cdnm('ApplicationType', bbs11_app_type, bbs11_company_id, f_sysdate())                  AS app_type_name,
+               bbs11_app_status                                                                          AS app_status,
+               f_cdnm('ApplicationStatusCode', bbs11_app_status, bbs11_company_id, f_sysdate())          AS app_status_name,
+               bbs11_close_date                                                                          AS close_date,
+               bbs11_note                                                                                AS note,
+               bbs11_content                                                                             AS content
+          FROM bbs11_application
+         WHERE bbs11_application_id = #{applicationId}
+           AND bbs11_company_id     = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Bbs11_Application.modelUpdate → UpdateDataModel INSERT — 화면이 넣는 열(신청일·신청자·구분·내용·비고·로그인모드 'P'). 신청상태는 비어 있음 -->
+    <insert id="insertMine">
+        INSERT INTO bbs11_application
+             (bbs11_application_id, bbs11_company_id, bbs11_app_date, bbs11_app_emp_id, bbs11_app_type,
+              bbs11_content, bbs11_note, bbs11_login_mode)
+        VALUES (#{applicationId}, #{companyId}, #{req.appDate}, #{personId}, #{req.appType},
+                #{req.content}, #{req.note}, 'P')
+    </insert>
+
+    <!-- AS-IS Bbs11_Application.modelUpdate → UpdateDataModel UPDATE — 편집창이 바꾸는 열, 로그인 회사·본인 행만(보안 보강) -->
+    <update id="updateMine">
+        UPDATE bbs11_application
+           SET bbs11_app_date   = #{req.appDate}
+             , bbs11_app_type   = #{req.appType}
+             , bbs11_content    = #{req.content}
+             , bbs11_note       = #{req.note}
+             , bbs11_login_mode = 'P'
+         WHERE bbs11_application_id = #{req.applicationId}
+           AND bbs11_company_id     = #{companyId}
+           AND bbs11_app_emp_id     = #{personId}
+    </update>
+
+    <!-- AS-IS bbs11_application.updateAppStatus (IDMS-IC) — 로그인 회사·본인 행만(보안 보강) -->
+    <update id="updateAppStatus">
+        UPDATE bbs11_application
+           SET bbs11_app_status = #{appStatus}
+         WHERE bbs11_application_id = #{applicationId}
+           AND bbs11_company_id     = #{companyId}
+           AND bbs11_app_emp_id     = #{personId}
+    </update>
+
+    <!-- AS-IS Bbs11_Application.delete → UpdateDataModel.deleteModel(ID로 DELETE) — 로그인 회사·본인 행만(보안 보강) -->
+    <delete id="deleteMine">
+        DELETE FROM bbs11_application
+         WHERE bbs11_application_id = #{applicationId}
+           AND bbs11_company_id     = #{companyId}
+           AND bbs11_app_emp_id     = #{personId}
+    </delete>
+
+    <!-- AS-IS emp00_trans_info.selectSmsNoticeTarget (IDMS-IC) — SELECT * → 번호·이름만 -->
+    <select id="selectSmsNoticeTarget" resultType="kr.co.kfs.asseterp.biz.bbs.dto.ApplicationNoticeTarget">
+        SELECT emp00_person_id    AS person_id,
+               emp00_kor_nm       AS kor_name,
+               emp01_mobile_telno AS mobile_telno
+          FROM getPerson(#{companyId}, f_today())
+               INNER JOIN emp01_person            ON emp01_person_id = emp00_person_id
+               INNER JOIN emp93_sms_notice_target ON ( emp93_sms_notice_cd = #{smsNoticeCode} AND
+                                                       emp93_person_id     = emp00_person_id )
+    </select>
 </mapper>

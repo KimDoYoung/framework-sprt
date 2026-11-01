@@ -50,4 +50,9 @@ public class BbsApplicationFormService {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
     }
+
+    /** AS-IS Bbs12_ApplicationForm.appTypeCall(companyId, appType) — Y13 신청구분을 고르면 편집기에 넣는 양식 내용 */
+    public String getContentByAppType(UserPrincipal user, String appType) {
+        return mapper.selectContentByAppType(user.getCompanyId(), appType);
+    }
 }
