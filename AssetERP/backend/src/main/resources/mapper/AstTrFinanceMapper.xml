@@ -76,7 +76,9 @@
            WHERE act11_company_id = ast06_company_id
              AND act11_tr_cd      = ast06_tr_cd
              AND COALESCE(act11_use_yn,'false') = 'true'
-           LIMIT 1 )                                                                 AS book_io_type
+           LIMIT 1 )                                                                 AS book_io_type,
+        ast06_fx_rate                                                                AS fx_rate,
+        ast08_for_tr_amt                                                             AS for_tr_amt
     </sql>
 
     <sql id="financeFrom">
@@ -153,7 +155,7 @@
                               ast06_cur_cd, ast06_fx_rate, ast06_for_amt)
         VALUES (#{trId}, #{companyId}, #{personId}, #{r.date}, #{r.trCode}, #{r.amt}, #{r.fee},
                 #{r.settleMngYn}, #{r.note}, #{r.depositId}, #{r.astClassTreeId}, #{r.corpId},
-                COALESCE(#{r.curCode}, 'KRW'), 1.0, #{r.amt})
+                COALESCE(#{r.curCode}, 'KRW'), COALESCE(#{r.fxRate}, 1.0), COALESCE(CAST(#{r.forTrAmt} AS NUMERIC), #{r.amt}))
     </insert>
 
     <!-- 고칠 때 바뀌는 열: 거래일자·거래유형·종목·거래처는 편집창에서 막혀 있어 건드리지 않는다 -->
@@ -164,7 +166,11 @@
                ast06_settle_mng_yn  = #{r.settleMngYn},
                ast06_note           = #{r.note},
                ast06_deposit_id     = #{r.depositId},
-               ast06_for_amt        = #{r.amt}
+               ast06_for_amt        = COALESCE(CAST(#{r.forTrAmt} AS NUMERIC), #{r.amt})
+               <if test="r.foreign">
+             , ast06_cur_cd         = #{r.curCode}
+             , ast06_fx_rate        = #{r.fxRate}
+               </if>
          WHERE ast06_tr_id      = #{r.trId}
            AND ast06_company_id = #{companyId}
     </update>
@@ -177,12 +183,18 @@
         INSERT INTO ast08_tr_finance (ast08_tr_finance_id, ast08_tr_id, ast08_account_id, ast08_qty, ast08_price, ast08_tr_amt, ast08_fee,
                                       ast08_lock_up_period_cd, ast08_lock_up_date, ast08_list_date
                                       <if test="r.detail">
-                                      , ast08_tr_tax, ast08_corp_tax, ast08_local_tax, ast08_int_amt, ast08_acr_int_amt, ast08_for_tr_amt
+                                      , ast08_tr_tax, ast08_corp_tax, ast08_local_tax, ast08_int_amt, ast08_acr_int_amt
+                                      </if>
+                                      <if test="r.detail or r.foreign">
+                                      , ast08_for_tr_amt
                                       </if>)
         VALUES (#{financeId}, #{trId}, #{r.accountId}, #{r.qty}, #{r.price}, #{r.trAmt}, #{r.fee},
                 #{r.lockUpPeriodCode}, #{r.lockUpDate}, #{r.listDate}
                 <if test="r.detail">
-                , #{r.trTax}, #{r.corpTax}, #{r.localTax}, #{r.intAmt}, #{r.acrIntAmt}, #{r.trAmt}
+                , #{r.trTax}, #{r.corpTax}, #{r.localTax}, #{r.intAmt}, #{r.acrIntAmt}
+                </if>
+                <if test="r.detail or r.foreign">
+                , COALESCE(CAST(#{r.forTrAmt} AS NUMERIC), #{r.trAmt})
                 </if>)
     </insert>
 
@@ -202,7 +214,9 @@
              , ast08_local_tax          = #{r.localTax}
              , ast08_int_amt            = #{r.intAmt}
              , ast08_acr_int_amt        = #{r.acrIntAmt}
-             , ast08_for_tr_amt         = #{r.trAmt}
+               </if>
+               <if test="r.detail or r.foreign">
+             , ast08_for_tr_amt         = COALESCE(CAST(#{r.forTrAmt} AS NUMERIC), #{r.trAmt})
                </if>
          WHERE ast08_tr_finance_id = #{financeId}
     </update>
@@ -210,6 +224,25 @@
     <!-- AS-IS ast09_book.createFinanceBook -->
     <select id="createFinanceBook" resultType="string" flushCache="true">
         SELECT f_create_financeBook(#{procType}, #{trId})
+    </select>
+
+    <!-- AS-IS sys00_common.selectForDeposit (server/sys/mapper/sys00_common.xml:185) — 외화(KRW 아닌) 예금계좌, 그대로 -->
+    <select id="selectForDeposit" resultType="kr.co.kfs.asseterp.biz.ast.dto.ForeignDepositRes">
+        SELECT ast01_class_tree_id  AS code_id
+             , ast01_class_tree_cd  AS code
+             , ast01_class_tree_nm  AS name
+             , ast01_corp_id        AS corp_id
+          FROM ast01_class_tree
+         WHERE ast01_company_id      = #{companyId}
+           AND ast01_item_s_class_cd IN ( SELECT sys09_code
+                                            FROM sys13_code_group
+                                                 INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+                                           WHERE sys13_kind_group_cd = 'ItemSClassCode003' )
+           AND ast01_asset_type      = '1'      /* 1:고유자산 */
+           AND ast01_type_cd         = 'IT'
+           AND COALESCE(ast01_cur_cd,'KRW') != 'KRW'
+           AND COALESCE(ast01_use_yn,'false') = 'true'
+         ORDER BY ast01_parent_tree_id, ast01_seq
     </select>
 
 </mapper>

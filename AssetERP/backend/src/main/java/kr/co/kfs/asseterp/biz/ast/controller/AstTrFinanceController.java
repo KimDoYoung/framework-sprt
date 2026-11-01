@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.ast.controller;
 
 import jakarta.validation.Valid;
+import kr.co.kfs.asseterp.biz.ast.dto.ForeignDepositRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrFinanceRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrFinanceSaveReq;
 import kr.co.kfs.asseterp.biz.ast.service.AstTrFinanceService;
@@ -46,6 +47,12 @@ public class AstTrFinanceController {
                                                   @RequestParam(required = false) Long trCodeId,
                                                   @RequestParam(required = false) String searchText) {
         return ApiResponse.ok(service.search(principal, startDate, closeDate, windowClassName, assetType, abroType, accountId, classTreeId, trCodeId, searchText));
+    }
+
+    /** sys.Sys00_Common.selectForDeposit — 외화 거래 편집창(W07)의 예금계좌 콤보 */
+    @GetMapping("/foreign-deposits")
+    public ApiResponse<List<ForeignDepositRes>> foreignDeposits(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.foreignDeposits(principal));
     }
 
     /** ast.Ast06_Tr.selectById */

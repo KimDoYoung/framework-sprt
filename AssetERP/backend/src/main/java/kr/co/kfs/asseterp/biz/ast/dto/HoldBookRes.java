@@ -18,6 +18,8 @@ public record HoldBookRes(
         LocalDate lockUpDate,
         Double sellPossibleQty,
         Long astTrUnit,
-        String curCode
+        String curCode,
+        /** W07 외화 거래 편집창의 "외화 장부금액" */
+        Double forBookAmt
 ) {
 }

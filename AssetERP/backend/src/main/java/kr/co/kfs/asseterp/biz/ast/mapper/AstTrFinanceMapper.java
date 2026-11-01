@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.ast.mapper;
 
+import kr.co.kfs.asseterp.biz.ast.dto.ForeignDepositRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrFinanceRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrFinanceSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.TrFinanceSearchCond;
@@ -35,4 +36,7 @@ public interface AstTrFinanceMapper {
 
     /** ast09_book.createFinanceBook — 'Y'면 정상 */
     String createFinanceBook(@Param("procType") String procType, @Param("trId") Long trId);
+
+    /** sys00_common.selectForDeposit — 외화 예금계좌 콤보(W07 Ast06_Lookup_TrForFinance depositName) */
+    List<ForeignDepositRes> selectForDeposit(@Param("companyId") Long companyId);
 }

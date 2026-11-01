@@ -34,6 +34,10 @@ public record TrFinanceSaveReq(
         Long corpTax,
         Long localTax,
         Long intAmt,
-        Long acrIntAmt
+        Long acrIntAmt,
+        /** 금융상품 거래처리(외화) W07 편집창이면 true — 적용환율·외화 거래금액(ast06_fx_rate·ast06_for_amt·ast08_for_tr_amt)과 통화를 저장한다. 세금·이자는 저장하지 않는다 */
+        boolean foreign,
+        Double fxRate,
+        Double forTrAmt
 ) {
 }

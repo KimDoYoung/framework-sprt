@@ -7,7 +7,7 @@
  * 편집창 규격(11 §4a): antd Modal + 머리말·푸터 선, 라벨 오른쪽 정렬
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { DatePicker, Input, InputNumber, message, Modal, Space } from 'antd';
+import { DatePicker, Input, message, Modal, Space } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { astApi } from '@/api/ast';
 import { actApi } from '@/api/act';
@@ -15,7 +15,7 @@ import { errorMessage } from '@/api/client';
 import { AstHoldBook, AstTrCodeByWindow, AstTrCodeTreeNode, AstTrFinance } from '@/types/ast';
 import { Button } from '@/components/button';
 import { LookupInput } from '@/components/lookup/LookupInput';
-import { Box, FieldRow, JournalNotice, LongInput, SettleMngField } from './Ast06_EditParts';
+import { Box, DoubleInput, FieldRow, JournalNotice, LongInput, SettleMngField } from './Ast06_EditParts';
 import { Ast05_Lookup_TrCodeWindow } from './Ast05_Lookup_TrCodeWindow';
 import { Ast01_Lookup_CorpAccount } from './Ast01_Lookup_CorpAccount';
 import { Ast01_Lookup_Info } from './Ast01_Lookup_Info';
@@ -101,21 +101,6 @@ const withSettle = (f: Form): Form => {
 
 /** setTrAmt() L588-604: 거래금액 = (long)(수량(빈 값 0) × 단가(빈 값 1) ÷ 거래단위) → setSettleAmt() */
 const withTrAmt = (f: Form): Form => withSettle({ ...f, trAmt: Math.trunc((f.qty ?? 0) * (f.price ?? 1) / f.trUnit) });
-
-/** 소수 자리(최대 dec)까지 천 단위 쉼표 — AS-IS DoubleField의 setFormat("#,###" / "#,###.######") */
-const fmtNum = (v: string | number | undefined, dec: number): string => {
-  if (v == null || v === '') return '';
-  const [int, frac] = String(v).split('.');
-  const head = int.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return frac != null && dec > 0 ? `${head}.${frac.slice(0, dec)}` : head;
-};
-
-const DoubleInput: React.FC<{ value: number | null; dec: number; disabled?: boolean; onChange?: (v: number | null) => void }> = ({ value, dec, disabled, onChange }) => (
-  <InputNumber style={{ width: '100%' }} controls={false} disabled={disabled} value={value ?? null}
-    formatter={v => fmtNum(v, dec)}
-    parser={v => Number((v ?? '').replace(/,/g, ''))}
-    onChange={v => onChange?.(v == null || Number.isNaN(Number(v)) ? null : Number(v))} />
-);
 
 interface Props {
   /** 값이 있으면 열림 */

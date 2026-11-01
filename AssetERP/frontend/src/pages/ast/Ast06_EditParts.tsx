@@ -29,6 +29,22 @@ export const LongInput: React.FC<{ value: number | null | undefined; disabled?: 
     onChange={v => onChange(v == null || Number.isNaN(Number(v)) ? null : Math.trunc(Number(v)))} />
 );
 
+/** 소수 자리(최대 dec)까지 천 단위 쉼표 — AS-IS DoubleField의 setFormat("#,###" / "#,###.######") (W06에서 옮김, W07도 쓴다) */
+const fmtNum = (v: string | number | undefined, dec: number): string => {
+  if (v == null || v === '') return '';
+  const [int, frac] = String(v).split('.');
+  const head = int.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return frac != null && dec > 0 ? `${head}.${frac.slice(0, dec)}` : head;
+};
+
+/** AS-IS DoubleField + setFormat */
+export const DoubleInput: React.FC<{ value: number | null; dec: number; disabled?: boolean; onChange?: (v: number | null) => void }> = ({ value, dec, disabled, onChange }) => (
+  <InputNumber style={{ width: '100%' }} controls={false} disabled={disabled} value={value ?? null}
+    formatter={v => fmtNum(v, dec)}
+    parser={v => Number((v ?? '').replace(/,/g, ''))}
+    onChange={v => onChange?.(v == null || Number.isNaN(Number(v)) ? null : Number(v))} />
+);
+
 /** 분개 안내 라벨 jnlMessage (거래변경에서만) */
 export const JournalNotice: React.FC = () => (
   <div style={{ fontSize: 13, fontWeight: 'bold', color: '#DD5E5E', padding: '5px 0 0 5px' }}> ※ 분개는 자동반영 하지 않습니다. 분개재생성 버튼을 클릭하여 재생성해주세요.</div>

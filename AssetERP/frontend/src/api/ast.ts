@@ -23,6 +23,7 @@ import {
   AstTrCodeByWindow,
   AstTrCodeTreeNode,
   AstHoldBook,
+  AstForeignDeposit,
   AstTrFinance,
   AstTrFinanceSaveReq,
   InvestLimit,
@@ -396,6 +397,12 @@ export const astApi = {
   getTrFinance: async (trId: number): Promise<AstTrFinance> => {
     const res = await apiClient.get<ApiResponse<AstTrFinance>>(`v1/ast/trs/finance/${trId}`);
     return res.data.data;
+  },
+
+  /** AS-IS sys.Sys00_Common.selectForDeposit (W07): 외화 거래 편집창의 예금계좌 콤보 */
+  getForeignDeposits: async (): Promise<AstForeignDeposit[]> => {
+    const res = await apiClient.get<ApiResponse<AstForeignDeposit[]>>('v1/ast/trs/finance/foreign-deposits');
+    return res.data.data ?? [];
   },
 
   /** AS-IS ast.Ast06_Tr.updateFinance (W05): 금융상품 거래 저장 → 저장한 거래 ID */

@@ -51,6 +51,8 @@ public record TrFinanceRes(
         Long acrIntAmt,
         Long pl,
         String rcvPayCode,
-        String bookIoType
+        String bookIoType,
+        Double fxRate,
+        Double forTrAmt
 ) {
 }

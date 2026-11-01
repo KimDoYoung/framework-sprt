@@ -572,6 +572,17 @@ export interface AstTrFinance {
   pl: number | null;
   rcvPayCode: string | null;
   bookIoType: string | null;
+  /** W07 금융상품 거래처리(외화): 적용환율(ast06_fx_rate)·외화 거래금액(ast08_for_tr_amt) */
+  fxRate: number | null;
+  forTrAmt: number | null;
+}
+
+/** AS-IS sys.Sys00_Common.selectForDeposit (CommonComboBoxField) — 외화 예금계좌 콤보 한 건 (W07) */
+export interface AstForeignDeposit {
+  codeId: number;
+  code: string | null;
+  name: string | null;
+  corpId: number | null;
 }
 
 /** AS-IS ast.Ast06_Tr.updateFinance 요청 — trId가 없으면 새 거래 */
@@ -601,6 +612,10 @@ export interface AstTrFinanceSaveReq {
   localTax?: number | null;
   intAmt?: number | null;
   acrIntAmt?: number | null;
+  /** W07 금융상품 거래처리(외화) 편집창이면 true — 통화·적용환율·외화 거래금액도 저장한다 */
+  foreign?: boolean;
+  fxRate?: number | null;
+  forTrAmt?: number | null;
 }
 
 /** W06 AS-IS ast.Ast09_Book.selectByHoldDate(astType 2) — 보유자산 조회창(Ast09_Lookup_Book) 한 행 */
@@ -620,6 +635,8 @@ export interface AstHoldBook {
   sellPossibleQty: number | null;
   astTrUnit: number | null;
   curCode: string | null;
+  /** W07 외화 거래 편집창의 "외화 장부금액" */
+  forBookAmt: number | null;
 }
 
 /** AS-IS ast.Ast01_ClassTree.selectByTrCode (Ast01_Lookup_Info, W05) — 종목선택 트리 한 노드(전위 순서 평평한 목록) */

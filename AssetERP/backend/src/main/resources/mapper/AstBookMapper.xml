@@ -39,7 +39,8 @@
         ast09_lock_up_date                  AS lock_up_date,
         ast09_sell_possible_qty             AS sell_possible_qty,
         ast09_ast_tr_unit                   AS ast_tr_unit,
-        ast09_cur_code                      AS cur_code
+        ast09_cur_code                      AS cur_code,
+        COALESCE(ast09_for_book_amt, 0.0)   AS for_book_amt
     </sql>
 
     <!-- AS-IS ast09_book.selectByHoldDate L100 (IDMS-IC) — 열 목록(cols)만 달리 쓰는 공통 본문. depositIdStr 분기는 일일자금관리(U01)가 안 주므로 null -->

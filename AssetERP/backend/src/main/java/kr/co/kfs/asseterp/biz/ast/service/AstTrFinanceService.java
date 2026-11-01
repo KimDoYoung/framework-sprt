@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.ast.service;
 
 import kr.co.kfs.asseterp.biz.act.service.ActJournalService;
+import kr.co.kfs.asseterp.biz.ast.dto.ForeignDepositRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrFinanceRes;
 import kr.co.kfs.asseterp.biz.ast.dto.TrFinanceSaveReq;
 import kr.co.kfs.asseterp.biz.ast.dto.TrFinanceSearchCond;
@@ -56,6 +57,11 @@ public class AstTrFinanceService {
                 accountId, null, zeroToNull(classTreeId), zeroToNull(trCodeId), windowClassName, blank(searchText) ? "%" : searchText));
     }
 
+    /** sys.Sys00_Common.selectForDeposit — 외화 예금계좌 콤보 */
+    public List<ForeignDepositRes> foreignDeposits(UserPrincipal user) {
+        return mapper.selectForDeposit(user.getCompanyId());
+    }
+
     /** ast06_tr.selectById */
     public TrFinanceRes get(UserPrincipal user, Long trId) {
         TrFinanceRes row = mapper.selectById(user.getCompanyId(), trId);
@@ -71,9 +77,14 @@ public class AstTrFinanceService {
     public Long save(UserPrincipal user, TrFinanceSaveReq r) {
         if (r.astClassTreeId() == null) throw invalid("종목(자산구분)은 필수선택 항목입니다.");
         // 금융상품 거래처리(Ast06_Lookup_TrFinance.preUpdate L786-847)는 문구가 "거래처는 …"이고 상장·확약 검사가 없다
-        if (r.corpId() == null) throw invalid(r.detail() ? "거래처는 필수선택 항목입니다." : "거래처 계좌는 필수선택 항목입니다.");
+        if (r.corpId() == null) throw invalid(r.detail() || r.foreign() ? "거래처는 필수선택 항목입니다." : "거래처 계좌는 필수선택 항목입니다.");
         if (!r.settleMngYn() && r.depositId() == null) throw invalid("미수/미지급 거래가 아닌 경우 예금계좌는 필수선택 항목입니다.");
-        if (!r.detail() && ("3503".equals(r.trCode()) || "3500".equals(r.trCode()) || "3511".equals(r.trCode()))) {
+        // 금융상품 거래처리(외화)(Ast06_Lookup_TrForFinance.preUpdate L660-698): 통화·환율 필수, 상장·확약 검사 없음
+        if (r.foreign()) {
+            if (blank(r.curCode())) throw invalid("적용통화는 필수선택 항목입니다");
+            if (r.fxRate() == null) throw invalid("적용환율은 필수입력 항목입니다");
+        }
+        if (!r.detail() && !r.foreign() && ("3503".equals(r.trCode()) || "3500".equals(r.trCode()) || "3511".equals(r.trCode()))) {
             if (r.listDate() == null) throw invalid("상장일자는 필수입력 항목입니다");
             if (!"00".equals(r.lockUpPeriodCode()) && r.lockUpDate() == null) {
                 throw invalid("보유의무확약이 미확약이 아닌경우 매도제한일은 필수입력 항목입니다.");
