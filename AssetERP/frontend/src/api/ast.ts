@@ -550,13 +550,13 @@ export const astApi = {
   // ── U11 미수/미지급 결제 (Pay50_Tab_ExpenseSettle) ──
 
   /** AS-IS ast.Ast06_Tr.selectByAccrued (고유자산·국내·지급): corpId가 없으면 전체 */
-  searchSettleAccrueds: async (p: { corpId?: number | null; searchText: string; trCode: string; payCode?: string }): Promise<SettleAccrued[]> => {
-    const res = await apiClient.get<ApiResponse<SettleAccrued[]>>('v1/ast/settles/accrueds', { params: { corpId: p.corpId ?? undefined, searchText: p.searchText, trCode: p.trCode, payCode: p.payCode } });
+  searchSettleAccrueds: async (p: { corpId?: number | null; searchText: string; trCode: string; payCode?: string; abroType?: '1' | '2' }): Promise<SettleAccrued[]> => {
+    const res = await apiClient.get<ApiResponse<SettleAccrued[]>>('v1/ast/settles/accrueds', { params: { corpId: p.corpId ?? undefined, searchText: p.searchText, trCode: p.trCode, payCode: p.payCode, abroType: p.abroType } });
     return res.data.data ?? [];
   },
 
   /** AS-IS ast.Ast07_Settle.selectByHistoryPaging — selectType 1·3 최근 20건 / 2 조회조건(쪽 나누기) */
-  searchSettleHistories: async (p: { assetType: string; selectType: string; payCode: string; trCode: string; corpId: string; searchText: string; limit: number; offset: number }): Promise<PageRes<SettleHistory>> => {
+  searchSettleHistories: async (p: { assetType: string; selectType: string; payCode: string; trCode: string; corpId: string; searchText: string; limit: number; offset: number; abroType?: '1' | '2' }): Promise<PageRes<SettleHistory>> => {
     const res = await apiClient.get<ApiResponse<PageRes<SettleHistory>>>('v1/ast/settles/histories', { params: p });
     return res.data.data;
   },

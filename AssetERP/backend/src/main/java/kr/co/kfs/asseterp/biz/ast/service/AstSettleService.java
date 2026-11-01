@@ -50,28 +50,31 @@ public class AstSettleService {
         return v == null || v.isEmpty() ? "%" : v;
     }
 
+    /** 국내외 구분 — 1 국내(기본) · 2 국외(X09 외화 화면) */
+    private static String abro(String v) { return "2".equals(v) ? "2" : "1"; }
+
     /** ast.Ast06_Tr.selectByAccrued — Pay50_Tab_ExpenseSettle: 고유자산(1)·국내(1)·지급(02), corpId 0/없음은 전체, 검색어가 없으면 "%" */
-    public List<SettleAccruedRes> searchAccrueds(UserPrincipal user, Long corpId, String searchText, String trCode, String payCode) {
+    public List<SettleAccruedRes> searchAccrueds(UserPrincipal user, Long corpId, String searchText, String trCode, String payCode, String abroType) {
         Long corp = corpId == null || corpId == 0L ? null : corpId;
         // X04(Ast06_Tab_AccruedIntrinsic)는 수령/지급 콤보 값을 보낸다(전체 "%"). U11은 보내지 않아 지급(02) 고정
         String pay = payCode == null || payCode.isEmpty() ? "02" : payCode;
-        return mapper.selectAccrueds(user.getCompanyId(), user.getUserId(), orgId(user), "1", "1", pay, orAll(searchText), orAll(trCode), corp);
+        return mapper.selectAccrueds(user.getCompanyId(), user.getUserId(), orgId(user), "1", abro(abroType), pay, orAll(searchText), orAll(trCode), corp);
     }
 
     /**
      * ast.Ast07_Settle.selectByHistoryPaging — selectType 1 최근입력순(최대 20건) / 2 조회조건 적용(쪽 나누기) / 3 최근입력순 중 사업비지출(9100) 거래만
      */
     public PageRes<SettleHistoryRes> searchHistory(UserPrincipal user, String assetType, String selectType, String payCode, String trCode,
-                                                   String corpId, String searchText, long limit, long offset) {
+                                                   String corpId, String searchText, long limit, long offset, String abroType) {
         Long companyId = user.getCompanyId();
         Long orgId = orgId(user);
         String asset = orAll(assetType);
         if ("2".equals(selectType)) {
             String pay = orAll(payCode), tr = orAll(trCode), corp = orAll(corpId), text = searchText == null ? "" : searchText;
-            List<SettleHistoryRes> rows = mapper.selectHistoryPaging(companyId, user.getUserId(), orgId, asset, "1", selectType, pay, tr, corp, text, limit, offset);
-            return new PageRes<>(mapper.selectHistoryTotal(companyId, user.getUserId(), orgId, asset, "1", selectType, pay, tr, corp, text), rows);
+            List<SettleHistoryRes> rows = mapper.selectHistoryPaging(companyId, user.getUserId(), orgId, asset, abro(abroType), selectType, pay, tr, corp, text, limit, offset);
+            return new PageRes<>(mapper.selectHistoryTotal(companyId, user.getUserId(), orgId, asset, abro(abroType), selectType, pay, tr, corp, text), rows);
         }
-        List<SettleHistoryRes> rows = mapper.selectHistory(companyId, user.getUserId(), orgId, asset, "1", selectType);
+        List<SettleHistoryRes> rows = mapper.selectHistory(companyId, user.getUserId(), orgId, asset, abro(abroType), selectType);
         return new PageRes<>(rows.size(), rows);
     }
 

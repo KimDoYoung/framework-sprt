@@ -38,8 +38,9 @@ public class AstSettleController {
                                                         @RequestParam(required = false) Long corpId,
                                                         @RequestParam(required = false) String searchText,
                                                         @RequestParam(required = false) String trCode,
-                                                        @RequestParam(required = false) String payCode) {
-        return ApiResponse.ok(service.searchAccrueds(principal, corpId, searchText, trCode, payCode));
+                                                        @RequestParam(required = false) String payCode,
+                                                        @RequestParam(defaultValue = "1") String abroType) {
+        return ApiResponse.ok(service.searchAccrueds(principal, corpId, searchText, trCode, payCode, abroType));
     }
 
     /** ast.Ast07_Settle.selectByHistoryPaging — selectType 1·3 최근 20건 / 2 조회조건(쪽 나누기) */
@@ -52,8 +53,9 @@ public class AstSettleController {
                                                             @RequestParam(required = false) String corpId,
                                                             @RequestParam(required = false) String searchText,
                                                             @RequestParam(defaultValue = "100") long limit,
-                                                            @RequestParam(defaultValue = "0") long offset) {
-        return ApiResponse.ok(service.searchHistory(principal, assetType, selectType, payCode, trCode, corpId, searchText, limit, offset));
+                                                            @RequestParam(defaultValue = "0") long offset,
+                                                            @RequestParam(defaultValue = "1") String abroType) {
+        return ApiResponse.ok(service.searchHistory(principal, assetType, selectType, payCode, trCode, corpId, searchText, limit, offset, abroType));
     }
 
     /** pay.Pay50_Expense.selectById 중 결제등록 창이 쓰는 값 */

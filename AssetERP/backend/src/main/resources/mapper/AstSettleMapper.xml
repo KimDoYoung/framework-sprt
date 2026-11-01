@@ -16,7 +16,7 @@ SELECT ast06_tr_id AS tr_id, ast06_company_id AS company_id, ast06_date AS date,
                COALESCE(note, CONCAT( ast06_class_tree_nm
                                     , CASE WHEN COALESCE(ast06_class_tree_nm,'') != '' THEN '/' ELSE '' END
                                     , ast06_note)) AS note,
-               ast06_tr_nm AS tr_name
+               ast06_tr_nm AS tr_name, ast06_cur_cd AS cur_code, ast06_for_amt AS for_amt
           FROM (
 				SELECT 	ast06_tr_id
                     ,   ast06_company_id
@@ -24,6 +24,7 @@ SELECT ast06_tr_id AS tr_id, ast06_company_id AS company_id, ast06_date AS date,
                     ,   ast06_tr_cd
                     ,   ast06_amt
                     ,   ast06_for_amt
+                    ,   COALESCE(ast06_cur_cd,'KRW')                         as ast06_cur_cd
                     ,   ast06_note
                     ,   f_ast_class_tree_nm(ast06_ast_class_tree_id)         as ast06_class_tree_nm
 					,	f_ast_class_tree_nm_allpath(ast06_ast_class_tree_id) as ast06_class_tree_full_nm
@@ -90,6 +91,7 @@ SELECT ast06_tr_id AS tr_id, ast06_company_id AS company_id, ast06_date AS date,
                     ,  '9100'                                                       as ast06_tr_cd          /*(9100:사업비 발생)*/
                     ,  pay50_settle_amt                                             as ast06_amt
                     ,  pay50_settle_amt                                             as ast06_for_amt
+                    ,  'KRW'                                                        as ast06_cur_cd
                     ,  pay50_desc                                                   as ast06_note
                     ,  null                                                         as ast06_class_tree_nm
                     ,  null                                                         as ast06_class_tree_full_nm
@@ -140,7 +142,8 @@ SELECT ast06_tr_id AS tr_id, ast06_company_id AS company_id, ast06_date AS date,
         <![CDATA[
 SELECT ast07_settle_id AS settle_id, ast07_settle_date AS settle_date, ast07_tr_nm AS tr_name, ast07_org_tr_nm AS org_tr_name,
                ast07_corp_nm AS corp_name, ast07_note AS note, ast07_settle_amt AS settle_amt, ast07_journal_id AS journal_id,
-               ast07_expense_id AS expense_id, ast07_tr_id AS tr_id, ast07_tr_cd AS tr_code, ast07_person_id AS person_id
+               ast07_expense_id AS expense_id, ast07_tr_id AS tr_id, ast07_tr_cd AS tr_code, ast07_person_id AS person_id,
+               ast07_cur_cd AS cur_code, ast07_for_settle_amt AS for_settle_amt
           FROM (
 SELECT ast07_settle_id
          , ast07_tr_id
@@ -222,7 +225,8 @@ SELECT ast07_settle_id
         <![CDATA[
 SELECT ast07_settle_id AS settle_id, ast07_settle_date AS settle_date, ast07_tr_nm AS tr_name, ast07_org_tr_nm AS org_tr_name,
                ast07_corp_nm AS corp_name, ast07_note AS note, ast07_settle_amt AS settle_amt, ast07_journal_id AS journal_id,
-               ast07_expense_id AS expense_id, ast07_tr_id AS tr_id, ast07_tr_cd AS tr_code, ast07_person_id AS person_id
+               ast07_expense_id AS expense_id, ast07_tr_id AS tr_id, ast07_tr_cd AS tr_code, ast07_person_id AS person_id,
+               ast07_cur_cd AS cur_code, ast07_for_settle_amt AS for_settle_amt
       FROM (
     SELECT ast07_settle_id
          , ast07_tr_id

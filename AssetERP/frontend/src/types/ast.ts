@@ -464,6 +464,9 @@ export interface SettleAccrued {
   note: string | null;
   /** 거래유형 이름 (ast05_tr_nm, X04 그리드) */
   trName: string | null;
+  /** 외화 화면(X09) — 통화·외화 거래금액 */
+  curCode: string | null;
+  forAmt: number | null;
 }
 
 /** AS-IS ast.Ast07_Settle.selectByHistoryPaging — 실수령/지급 History 한 행 */
@@ -480,6 +483,9 @@ export interface SettleHistory {
   trId: number | null;
   trCode: string | null;
   personId: number | null;
+  /** 외화 화면(X09) — 통화·외화 결제금액 */
+  curCode: string | null;
+  forSettleAmt: number | null;
 }
 
 /** 결제등록 창이 쓰는 지출결의서 정보 (AS-IS Pay50_ExpenseModel 중 일부) */
