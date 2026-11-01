@@ -82,6 +82,10 @@ public class AstSettleService {
         return info;
     }
 
+    private static Long amtOf(SettleSaveReq r) { return r.amt() == null ? Long.valueOf(0) : r.amt(); }
+
+    private static double nz(Double v) { return v == null ? 0 : v; }
+
     /** ast.Ast07_Settle.update (새 결제) — 결제 insert → 미수/미지급 금액 정리 → 분개 생성. 한 곳이라도 실패하면 모두 되돌린다. 돌려주는 값은 새 결제 ID */
     @Transactional
     public Long createSettle(UserPrincipal user, SettleSaveReq r) {
@@ -108,9 +112,10 @@ public class AstSettleService {
 
         // 결제내역 insert (UpdateDataModel)
         long settleId = mapper.selectNextId();
-        double forAmt = r.amt().doubleValue();
+        boolean fx = r.forAmt() != null;   // 외화 결제(X08)
+        double forAmt = fx ? r.forAmt() : amtOf(r).doubleValue();
         mapper.insertSettle(settleId, byExpense ? 0L : r.trId(), r.expenseId(), r.settleDate(), r.settleAmt(), r.note(), r.depositId(), r.trCode(),
-                user.getUserId(), r.settleAmt().doubleValue(), 1.0, r.amt(), forAmt);
+                user.getUserId(), fx ? nz(r.forSettleAmt()) : r.settleAmt().doubleValue(), fx ? nz(r.fxRate()) : 1.0, amtOf(r), forAmt);
 
         finishSettle(user.getCompanyId(), user.getUserId(), settleId, orgId, orgAmt, orgForAmt, forAmt, r.trCode());
         return settleId;
@@ -151,7 +156,10 @@ public class AstSettleService {
         Long companyId = user.getCompanyId();
         SettleOriginRes o = mapper.selectSettleOrigin(companyId, settleId);
         if (o == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "결제내역을 찾을 수 없습니다.");
-        mapper.updateSettle(settleId, r.settleDate(), r.settleAmt(), r.note(), r.depositId(), r.trCode(), r.settleAmt().doubleValue(), r.amt(), r.amt().doubleValue());
+        boolean fx = r.forAmt() != null;   // 외화 결제(X08)
+        double forAmt = fx ? r.forAmt() : amtOf(r).doubleValue();
+        mapper.updateSettle(settleId, r.settleDate(), r.settleAmt(), r.note(), r.depositId(), r.trCode(), fx ? nz(r.forSettleAmt()) : r.settleAmt().doubleValue(),
+                amtOf(r), forAmt, fx ? nz(r.fxRate()) : null);
 
         long orgAmt;
         double orgForAmt;
@@ -169,7 +177,7 @@ public class AstSettleService {
             orgForAmt = t.forAmt();
             orgId = o.trId();
         }
-        finishSettle(companyId, o.personId(), settleId, orgId, orgAmt, orgForAmt, r.amt().doubleValue(), r.trCode());
+        finishSettle(companyId, o.personId(), settleId, orgId, orgAmt, orgForAmt, forAmt, r.trCode());
     }
 
     /** ast.Ast07_Settle.updateMulti (일괄 결제등록) — 행마다 결제 insert + 분개 생성 */

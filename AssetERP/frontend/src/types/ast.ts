@@ -501,8 +501,12 @@ export interface SettleSaveReq {
   note: string | null;
   depositId: number | null;
   trCode: string;
-  amt: number;
+  amt?: number | null;
   settleAmt: number;
+  /** 외화 결제(X08): forAmt가 있으면 외화 결제 */
+  forAmt?: number | null;
+  forSettleAmt?: number | null;
+  fxRate?: number | null;
 }
 
 /** 자기자본 한 행 (W03 Ast40_Tab_OwnerCapital) */
@@ -1051,6 +1055,9 @@ export interface AstTrIntrinsic {
   purTrId: number | null;
   bookAmt: number | null;
   unSettleAmt: number | null;
+  /** 외화 거래(X08) — 적용환율·외화금액 */
+  fxRate: number | null;
+  forAmt: number | null;
 }
 
 export interface AstTrIntrinsicSaveReq {
@@ -1072,6 +1079,10 @@ export interface AstTrIntrinsicSaveReq {
   itemSClassCode: string | null;
   /** 원장 입출고 거래가 아니면 true — 서버가 장부금액 = 거래금액, 취득거래ID = 자기 자신으로 둔다 */
   selfPur: boolean;
+  /** 외화 고유자산 거래처리(X08)면 true — 환율·외화금액을 저장하고 감가상각·비품원장은 건너뛴다 */
+  foreign?: boolean;
+  fxRate?: number | null;
+  forAmt?: number | null;
 }
 
 /** AS-IS ast.Ast07_Settle.selectByTrId */
@@ -1086,6 +1097,10 @@ export interface AstSettleByTr {
   note: string | null;
   trCode: string | null;
   journalId: number | null;
+  /** 외화 결제(X08) */
+  forSettleAmt: number | null;
+  fxRate: number | null;
+  forAmt: number | null;
 }
 
 /** AS-IS ast.Ast13_BookDepn.selectByDepnDate */

@@ -38,6 +38,9 @@ public record TrIntrinsicRes(
         String bookIoType,
         Long purTrId,
         Long bookAmt,
-        Long unSettleAmt
+        Long unSettleAmt,
+        /** 외화 거래(X08)만 쓴다 — 적용환율·외화금액 */
+        Double fxRate,
+        Double forAmt
 ) {
 }

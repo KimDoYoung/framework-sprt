@@ -911,7 +911,7 @@ export const astApi = {
 
   // ── X03 고유자산 거래처리 (Ast06_Tab_TrIntrinsic) ──
   /** AS-IS ast.Ast06_Tr.selectByPayCode (windowClassName으로 화면을 가린다. 자산구분 1·국내는 서버가 고정) */
-  searchTrIntrinsics: async (p: { startDate: string; closeDate: string; windowClassName: string; payCode?: string; corpId?: number | null; classTreeId?: number | null; trCodeId?: number | null; searchText: string; bookIoCheck?: boolean }): Promise<AstTrIntrinsic[]> => {
+  searchTrIntrinsics: async (p: { startDate: string; closeDate: string; windowClassName: string; payCode?: string; corpId?: number | null; classTreeId?: number | null; trCodeId?: number | null; searchText: string; bookIoCheck?: boolean; abroType?: '1' | '2' }): Promise<AstTrIntrinsic[]> => {
     const res = await apiClient.get<ApiResponse<AstTrIntrinsic[]>>('v1/ast/trs/intrinsic', {
       params: { ...p, corpId: p.corpId ?? undefined, classTreeId: p.classTreeId ?? undefined, trCodeId: p.trCodeId ?? undefined },
     });

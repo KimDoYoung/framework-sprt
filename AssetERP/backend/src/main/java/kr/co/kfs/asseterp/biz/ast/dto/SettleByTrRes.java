@@ -13,6 +13,10 @@ public record SettleByTrRes(
         String depositName,
         String note,
         String trCode,
-        Long journalId
+        Long journalId,
+        /** 외화 결제(X08) — 외화결제금액·적용환율·외화 미수/미지급금액 */
+        Double forSettleAmt,
+        Double fxRate,
+        Double forAmt
 ) {
 }

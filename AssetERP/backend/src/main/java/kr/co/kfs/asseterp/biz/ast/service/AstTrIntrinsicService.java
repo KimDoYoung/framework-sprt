@@ -40,9 +40,9 @@ public class AstTrIntrinsicService {
      * 자산구분 1(고유자산)·국내외 1(국내)은 AS-IS 화면이 고정으로 보낸다. 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0
      */
     public List<TrIntrinsicRes> search(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String windowClassName,
-                                       String payCode, Long corpId, Long classTreeId, Long trCodeId, String searchText, boolean bookIoCheck) {
+                                       String payCode, Long corpId, Long classTreeId, Long trCodeId, String searchText, boolean bookIoCheck, String abroType) {
         return mapper.selectByPayCode(new TrFinanceSearchCond(user.getCompanyId(), user.getUserId(), orgId(user), startDate, closeDate,
-                blank(payCode) ? "%" : payCode, "1", "1", null, zeroToNull(corpId), zeroToNull(classTreeId), zeroToNull(trCodeId),
+                blank(payCode) ? "%" : payCode, "1", blank(abroType) ? "1" : abroType, null, zeroToNull(corpId), zeroToNull(classTreeId), zeroToNull(trCodeId),
                 windowClassName, blank(searchText) ? "%" : searchText), bookIoCheck);
     }
 
@@ -62,18 +62,24 @@ public class AstTrIntrinsicService {
     public Long save(UserPrincipal user, TrIntrinsicSaveReq in) {
         if (in.date() == null) throw invalid("일자는 필수입력 항목입니다");
         if (blank(in.trCode())) throw invalid("거래유형은 필수선택 항목입니다");
+        if (in.foreign()) {   // Ast06_Lookup_TrForIntrinsic.preUpdate L401-416
+            if (blank(in.curCode())) throw invalid("적용통화는 필수선택 항목입니다");
+            if (in.fxRate() == null || in.fxRate() == 0) throw invalid("적용환율은 필수입력 항목입니다");
+            if (in.forAmt() == null || in.forAmt() == 0) throw invalid("외화금액은 필수입력 항목입니다");
+            if (in.amt() == null || in.amt() == 0) throw invalid("원화금액은 필수입력 항목입니다");
+        }
         if (in.depositId() == null && !in.settleMngYn()) throw invalid("미수/미지급 거래가 아닌 경우 예금계좌는 필수선택 항목입니다.");
         // AS-IS 순서: 감가상각 검사(자산만) → 회계마감 검사
-        if (isDepnTarget(in.itemLClassCode())) checkDepn(user, new TrDepnCheckReq(in.date(), in.purTrId(), in.itemLClassCode()));
+        if (!in.foreign() && isDepnTarget(in.itemLClassCode())) checkDepn(user, new TrDepnCheckReq(in.date(), in.purTrId(), in.itemLClassCode()));
         journalService.checkClose(user.getCompanyId(), in.date());
 
         boolean isNew = in.trId() == null;
         Long trId = isNew ? mapper.selectNextId() : in.trId();
         TrIntrinsicSaveReq r = in.selfPur()
                 ? new TrIntrinsicSaveReq(trId, in.date(), in.trCode(), in.corpId(), in.astClassTreeId(), in.contAmt(), in.tax(), in.amt(), in.settleMngYn(),
-                        in.depositId(), in.note(), in.curCode(), trId, in.contAmt(), in.itemLClassCode(), in.itemSClassCode(), true)
+                        in.depositId(), in.note(), in.curCode(), trId, in.contAmt(), in.itemLClassCode(), in.itemSClassCode(), true, false, null, null)
                 : new TrIntrinsicSaveReq(trId, in.date(), in.trCode(), in.corpId(), in.astClassTreeId(), in.contAmt(), in.tax(), in.amt(), in.settleMngYn(),
-                        in.depositId(), in.note(), in.curCode(), in.purTrId(), in.bookAmt(), in.itemLClassCode(), in.itemSClassCode(), false);
+                        in.depositId(), in.note(), in.curCode(), in.purTrId(), in.bookAmt(), in.itemLClassCode(), in.itemSClassCode(), false, in.foreign(), in.fxRate(), in.forAmt());
         if (isNew) {
             mapper.insertTr(trId, user.getCompanyId(), user.getUserId(), r);
         } else {
@@ -84,7 +90,7 @@ public class AstTrIntrinsicService {
             }
             if (mapper.updateTr(user.getCompanyId(), r) == 0) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
-        if (isDepnTarget(r.itemLClassCode()) || "952002".equals(r.itemSClassCode())) {
+        if (!r.foreign() && (isDepnTarget(r.itemLClassCode()) || "952002".equals(r.itemSClassCode()))) {
             String msg = mapper.createDepnBook("P", trId);
             if (!"Y".equals(msg)) throw new BusinessException(ErrorCode.INVALID_INPUT, msg);
         }

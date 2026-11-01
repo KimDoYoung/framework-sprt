@@ -233,6 +233,7 @@ import { Ast06_Tab_TrFinance } from './ast/Ast06_Tab_TrFinance';
 import { Ast06_Tab_TrIntrinsic } from './ast/Ast06_Tab_TrIntrinsic';
 import { Ast06_Tab_AccruedIntrinsic } from './ast/Ast06_Tab_AccruedIntrinsic';
 import { Ast06_Tab_TrForFinance } from './ast/Ast06_Tab_TrForFinance';
+import { Ast06_Tab_TrForIntrinsic } from './ast/Ast06_Tab_TrForIntrinsic';
 import { Ast06_Tab_TrAcntTransfer } from './ast/Ast06_Tab_TrAcntTransfer';
 import { Ast06_Tab_TrDepositInt } from './ast/Ast06_Tab_TrDepositInt';
 import { Ast06_Tab_TrDeposit } from './ast/Ast06_Tab_TrDeposit';
@@ -646,6 +647,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ast06_Tab_TrIntrinsic, // X03 (메뉴 #1091. + Ast06_Lookup_TrIntrinsic·Ast07_Grid_Settle·Ast06_Lookup_TrList·Ast06_Lookup_InsertCF·Ast13_Lookup_BookDepn. Ast07_Lookup_Settle은 거래 기준 NEW/MODI를 더했다)
   Ast06_Tab_AccruedIntrinsic, // X04 (메뉴 #1092. + Ast05_Lookup_TrCodeWindow·Ast07_Grid_History·Ast07_Lookup_Settle(NEW/9100)·Ast07_Lookup_SettleMulti. 결제 이력의 전표변경 Act02_Lookup_ModiJournal은 안내만)
   Ast06_Tab_TrFinance, // W06(메뉴 #1158. + Ast06_Lookup_TrFinance·Ast09_Lookup_Book. 연관문서·분개 [변경]은 W05와 같은 창)
+  Ast06_Tab_TrForIntrinsic, // X08 (메뉴 #1171. + Ast06_Lookup_TrForIntrinsic·Ast07_Grid_ForSettle·Ast07_Lookup_ForSettle·Ast06_Grid_ForJournal·Act02_Lookup_ModiForJournal. 국외 거래 abroType 2)
   Ast06_Tab_TrForFinance, // W07 (메뉴 #1365. + Ast06_Lookup_TrForFinance. 보유자산 조회창·연관문서·분개 [변경]은 W06과 같은 창)
   Ast13_Tab_DepnBook, // W17 (메뉴 #1181. + Ast16_Lookup_NonDeductTax(W11). 상신 A29 = Apr01_Edit_ApprDoc 연결, RD Ast13_Rd_DepnBook)
   Ast13_Tab_OfficeAssets, // W16 (메뉴 #1397. + Ast13_Lookup_ExpenseOfficeAssets·Pay50_Lookup_ExpenseOfficeAssets·Ast06_Lookup_ModifyNote. 상신 A65 = Apr01_Edit_ApprDoc 연결, RD Ast13_Rd_OfficeAssets)

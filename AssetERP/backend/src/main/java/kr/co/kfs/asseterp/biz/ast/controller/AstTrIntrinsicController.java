@@ -44,8 +44,9 @@ public class AstTrIntrinsicController {
                                                     @RequestParam(required = false) Long classTreeId,
                                                     @RequestParam(required = false) Long trCodeId,
                                                     @RequestParam(required = false) String searchText,
-                                                    @RequestParam(defaultValue = "false") boolean bookIoCheck) {
-        return ApiResponse.ok(service.search(principal, startDate, closeDate, windowClassName, payCode, corpId, classTreeId, trCodeId, searchText, bookIoCheck));
+                                                    @RequestParam(defaultValue = "false") boolean bookIoCheck,
+                                                    @RequestParam(defaultValue = "1") String abroType) {
+        return ApiResponse.ok(service.search(principal, startDate, closeDate, windowClassName, payCode, corpId, classTreeId, trCodeId, searchText, bookIoCheck, abroType));
     }
 
     /** ast.Ast06_Tr.selectById */

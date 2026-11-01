@@ -484,7 +484,8 @@ AND COALESCE(corp_id||'','') LIKE #{corpId}
                ast07_tr_cd           = #{trCode},
                ast07_for_settle_amt  = #{forSettleAmt},
                ast07_amt             = #{amt},
-               ast07_for_amt         = #{forAmt}
+               ast07_for_amt         = #{forAmt},
+               ast07_fx_rate         = COALESCE(CAST(#{fxRate,jdbcType=NUMERIC} AS numeric), ast07_fx_rate)
          WHERE ast07_settle_id = #{settleId}
     </update>
 

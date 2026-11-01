@@ -67,5 +67,6 @@ public interface AstSettleMapper {
     /** ast07_settle 고침(UpdateDataModel) — 등록자·원거래는 그대로 */
     int updateSettle(@Param("settleId") Long settleId, @Param("settleDate") LocalDate settleDate, @Param("settleAmt") Long settleAmt,
                      @Param("note") String note, @Param("depositId") Long depositId, @Param("trCode") String trCode,
-                     @Param("forSettleAmt") Double forSettleAmt, @Param("amt") Long amt, @Param("forAmt") Double forAmt);
+                     @Param("forSettleAmt") Double forSettleAmt, @Param("amt") Long amt, @Param("forAmt") Double forAmt,
+                     @Param("fxRate") Double fxRate);
 }

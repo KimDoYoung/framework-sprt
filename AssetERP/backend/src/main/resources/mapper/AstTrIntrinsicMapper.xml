@@ -66,7 +66,9 @@
            LIMIT 1 )                                                                 AS book_io_type,
         ast06_pur_tr_id                                                              AS pur_tr_id,
         ast06_book_amt                                                               AS book_amt,
-        CAST(ast06_for_amt - COALESCE(( SELECT SUM(ast07_for_settle_amt) FROM ast07_settle WHERE ast07_tr_id = ast06_tr_id ), 0) AS BIGINT) AS un_settle_amt
+        CAST(ast06_for_amt - COALESCE(( SELECT SUM(ast07_for_settle_amt) FROM ast07_settle WHERE ast07_tr_id = ast06_tr_id ), 0) AS BIGINT) AS un_settle_amt,
+        ast06_fx_rate                                                                AS fx_rate,
+        ast06_for_amt                                                                AS for_amt
     </sql>
 
     <sql id="intrinsicFrom">
@@ -143,7 +145,7 @@
                               ast06_pur_tr_id, ast06_book_amt, ast06_for_amt, ast06_for_cont_amt, ast06_fx_rate, ast06_fee)
         VALUES (#{trId}, #{companyId}, #{personId}, #{r.date}, #{r.trCode}, #{r.corpId}, #{r.astClassTreeId},
                 #{r.contAmt}, #{r.tax}, #{r.amt}, #{r.settleMngYn}, #{r.depositId}, #{r.note}, COALESCE(#{r.curCode}, 'KRW'),
-                #{r.purTrId}, #{r.bookAmt}, #{r.amt}, #{r.contAmt}, 1, 0)
+                #{r.purTrId}, #{r.bookAmt}, COALESCE(CAST(#{r.forAmt} AS numeric), #{r.amt}), COALESCE(CAST(#{r.forAmt} AS numeric), #{r.contAmt}), COALESCE(CAST(#{r.fxRate} AS numeric), 1), 0)
     </insert>
 
     <update id="updateTr">
@@ -161,8 +163,9 @@
                ast06_cur_cd            = COALESCE(#{r.curCode}, 'KRW'),
                ast06_pur_tr_id         = #{r.purTrId},
                ast06_book_amt          = #{r.bookAmt},
-               ast06_for_amt           = #{r.amt},
-               ast06_for_cont_amt      = #{r.contAmt}
+               ast06_for_amt           = COALESCE(CAST(#{r.forAmt} AS numeric), #{r.amt}),
+               ast06_for_cont_amt      = COALESCE(CAST(#{r.forAmt} AS numeric), #{r.contAmt}),
+               ast06_fx_rate           = COALESCE(CAST(#{r.fxRate} AS numeric), ast06_fx_rate)
          WHERE ast06_tr_id      = #{r.trId}
            AND ast06_company_id = #{companyId}
     </update>
@@ -211,7 +214,10 @@
                ast01_class_tree_nm  AS deposit_name,
                ast07_note           AS note,
                ast07_tr_cd          AS tr_code,
-               act02_journal_id     AS journal_id
+               act02_journal_id     AS journal_id,
+               ast07_for_settle_amt AS for_settle_amt,
+               ast07_fx_rate        AS fx_rate,
+               ast07_for_amt        AS for_amt
           FROM ast07_settle
                LEFT OUTER JOIN ast06_tr        ON ast06_tr_id         = ast07_tr_id
                LEFT OUTER JOIN pay50_expense   ON pay50_expense_id    = ast07_expense_id

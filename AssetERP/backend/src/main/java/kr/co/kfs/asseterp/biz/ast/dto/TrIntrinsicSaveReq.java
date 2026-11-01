@@ -26,6 +26,10 @@ public record TrIntrinsicSaveReq(
         Long bookAmt,
         String itemLClassCode,
         String itemSClassCode,
-        boolean selfPur
+        boolean selfPur,
+        /** 외화 거래 고유자산 거래처리(X08)면 true — 적용환율·외화금액을 저장하고 감가상각·비품원장은 건너뛴다(AS-IS ast.Ast06_Tr.update) */
+        boolean foreign,
+        Double fxRate,
+        Double forAmt
 ) {
 }
