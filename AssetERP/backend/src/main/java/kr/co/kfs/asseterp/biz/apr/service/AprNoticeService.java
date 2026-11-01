@@ -247,6 +247,38 @@ public class AprNoticeService {
         return out;
     }
 
+    /** 회사 메일 발송 여부 (AS-IS getMailFlag(회사 위치)) — 사업비 반려 알림이 이 값으로 발송 표시를 남길지 정한다 */
+    public boolean mailEnabled(Long companyId) {
+        return props.mailEnabled(mapper.selectCompanyLoc(companyId));
+    }
+
+    /**
+     * [반려건 일괄 알림발송] — pay.Pay50_Expense.confirmSendMessage L701-812: 요청자 한 사람에게 "사업비요청 N건이 반려되었습니다".
+     * 앱알림(이메일 있고 A02 차단 아님) · 메일(회사 메일 발송 + 이메일 + 차단 아님 — AS-IS는 이메일이 아니라 비밀번호 유무를 봤다) ·
+     * SMS(회사 메일·SMS 발송 둘 다 + 번호 + 차단 아님 — AS-IS는 SMS 블록이 메일 블록 안에 들어 있다). 수신설정 코드는 셋 다 A02.
+     */
+    public List<AprNoticeCall> planExpenseReject(Long companyId, Long regEmpId, int count) {
+        List<AprNoticeCall> out = new ArrayList<>();
+        AprNoticePerson p = person(regEmpId);
+        if (p == null) {
+            return out;
+        }
+        String loc = mapper.selectCompanyLoc(companyId);
+        String msg = "사업비요청 " + count + "건이 반려되었습니다";
+        if (p.emailAddress() != null && mapper.countTalkBlocked(p.personId(), "A02") == 0) {
+            out.add(new AprNoticeCall("talk", p.emailAddress(), "사업비 요청 반려", msg));
+        }
+        if (props.mailEnabled(loc)) {
+            if (p.emailAddress() != null && mapper.countMailBlocked(p.personId(), "A02") == 0) {
+                out.add(new AprNoticeCall("mail", p.emailAddress(), "[알림] Asset-ERP 전자결재", msg));
+            }
+            if (props.smsEnabled(loc) && p.mobileTelNo() != null && mapper.countSmsBlocked(p.personId(), "A02") == 0) {
+                out.add(new AprNoticeCall("sms", p.mobileTelNo().replace("-", ""), "[Asset-ERP 알림]", msg));
+            }
+        }
+        return out;
+    }
+
     private AprNoticePerson person(Long personId) {
         return personId == null ? null : mapper.selectPerson(personId);
     }

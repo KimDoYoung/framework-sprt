@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
 import { readBlobError } from './file';
-import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq, PayBasicSetup, PayBasicSetupSaveReq, PayExpense, PayExpenseForm, PayExpenseRequest, PayExpenseUpdateReq, PayFavoriteAccount, PayExpenseSettle, PayExpenseSettleSaveReq, PayExpenseNew, PayExpenseJournal, PayExpenseSettleAppr, PayExpenseSettleApprRow, PayExpenseAccountSum } from '../types/pay';
+import { PayAccount, PayApprCheck, PayInsurePay, PayRelateAppr, PayMonth, PayMonthCreateReq, PayMonthGroup, PayMonthItem, PayMonthItemDate, PayMonthItemText, PayMonthPerson, PayRelateNote, PayRetireDeduct, PayRetireInsure, PayRetireLeave, PayRetireTaxDeduct, PayRetireLeaveCalc, PayRetireMonth, PayRetireTaxDetail, PayRetireTaxItem, PayActMapping, PayAnnual, PayDeductTable, PayFormula, PayFormulaDate, PayItem, PayOtherSetup, PayPersonDeduct, PayRate, PaySimpleTax, PaySimpleTaxOther, PayStartDate, PayTaxCalc, PayTaxDeduct, PayTaxWithholding, PayTaxReceipt, PayTaxDeductLimit, PayWorkTime, PayInsureApply, PayInsureApplyCreateReq, PayBasicSetup, PayBasicSetupSaveReq, PayExpense, PayExpenseForm, PayExpenseRequest, PayExpenseUpdateReq, PayFavoriteAccount, PayExpenseSettle, PayExpenseSettleSaveReq, PayExpenseNew, PayExpenseJournal, PayExpenseSettleAppr, PayExpenseSettleApprRow, PayExpenseAccountSum, PayExpenseConfirm } from '../types/pay';
 
 /** pay(급여) API (E22 급여기초정보관리) */
 export const payApi = {
@@ -983,6 +983,25 @@ export const payApi = {
   /** AS-IS pay.Pay50_Expense.updateRejectReason — 사유 null이면 반려취소 */
   rejectExpenses: async (ids: number[], rejectReason: string | null): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>('v1/pay/expenses/reject', { ids, rejectReason });
+    return res.data.data ?? 0;
+  },
+
+  // ── Y09 사업비 지출승인(부서장) Pay50_Tab_ExpenseConfirm ──
+  /** AS-IS pay.Pay50_Expense.selectByDateConfirm — 승인자는 로그인 사원(서버) */
+  searchExpenseConfirms: async (p: { startDate: string; closeDate: string; confirmStatusCheckYn: boolean }): Promise<PayExpenseConfirm[]> => {
+    const res = await apiClient.get<ApiResponse<PayExpenseConfirm[]>>('v1/pay/expenses/confirms', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS pay.Pay50_Expense.updateConfirmReason — 승인 20 · 반려 30(사유) · 취소 10 */
+  updateExpenseConfirms: async (ids: number[], confirmStatusCode: string, confirmReason: string | null): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/pay/expenses/confirms', { ids, confirmStatusCode, confirmReason });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS pay.Pay50_Expense.confirmSendMessage — [반려건 일괄 알림발송]. 돌려주는 값 = 요청자 수("N건이 발송완료되었습니다"의 N) */
+  sendExpenseConfirmNotices: async (): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/pay/expenses/confirm-notices');
     return res.data.data ?? 0;
   },
 

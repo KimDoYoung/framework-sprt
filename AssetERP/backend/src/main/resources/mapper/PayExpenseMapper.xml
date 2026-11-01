@@ -311,6 +311,87 @@
            AND pay50_company_id  = #{companyId}
     </delete>
 
+    <!-- ===== Y09 Pay50_Tab_ExpenseConfirm (사업비 지출승인(부서장)) ===== -->
+    <!-- AS-IS pay50_expense.selectByDateConfirm (IDMS-IC) — 바깥 SELECT 열 목록을 이 화면 그리드가 쓰는 열로 줄였다 -->
+    <select id="selectExpenseConfirm" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmRes">
+        SELECT pay50_expense_id                                                     AS expense_id
+             , pay50_occ_date                                                       AS occ_date
+             , pay50_reg_emp_id                                                     AS reg_emp_id
+             , pay50_reg_emp_nm                                                     AS reg_emp_name
+             , pay50_desc                                                           AS desc
+             , pay50_content                                                        AS content
+             , CASE WHEN pay50_content IS NULL OR pay50_content = '' THEN ''
+                    ELSE '있음' END                                                  AS content_status_name
+             , COALESCE(sys15_corp_nm, f_emp_kor_nm(pay50_corp_id))                 AS corp_name
+             , pay50_settle_amt                                                     AS settle_amt
+             , pay50_due_date                                                       AS due_date
+             , f_cdnm('PayMethodCode', pay50_pay_method_cd, pay50_company_id, f_today()) AS pay_method_name
+             , pay50_pay_account_info                                               AS pay_account_info
+             , ( SELECT COUNT(*)
+                   FROM sys10_file
+                  WHERE sys10_parent_id = pay50_expense_id )
+               +
+               ( SELECT COUNT(*)
+                   FROM com01_relate_appr
+                  WHERE com01_key_table_id = pay50_expense_id ) || '건'              AS file_count_str
+             , pay50_confirm_status_cd                                              AS confirm_status_code
+             , f_cdnm('StatusCode', pay50_confirm_status_cd, pay50_company_id, f_today()) AS confirm_status_name
+             , pay50_confirm_reason                                                 AS confirm_reason
+             , pay50_appr_emp_id                                                    AS appr_emp_id
+          FROM ( SELECT pay50_expense.*
+                      , f_emp_kor_nm(pay50_reg_emp_id) AS pay50_reg_emp_nm
+                   FROM pay50_expense
+                  WHERE pay50_company_id    = #{companyId}
+                    AND pay50_confirmer_id  = #{confirmerId}
+                    AND pay50_expense_cd    IN ('10','90','91')         /*(10:사업비요청/90:기타출금/91:기타출금(선급))*/
+                    AND COALESCE(pay50_confirm_status_cd,'') != '80'    /*(80:PASS)*/
+                  <choose>
+                      <when test="confirmStatusCheckYn">
+                    AND pay50_confirm_status_cd = '10'
+                      </when>
+                      <otherwise>
+                    AND pay50_confirm_status_cd IS NOT NULL
+                      </otherwise>
+                  </choose>
+                    AND pay50_occ_date BETWEEN #{startDate} AND #{closeDate}
+               ) pay50
+               LEFT OUTER JOIN sys15_corp ON sys15_corp_id = pay50_corp_id
+         ORDER BY pay50_occ_date DESC, pay50_reg_emp_nm COLLATE "ko_KR.utf8" ASC
+    </select>
+
+    <!-- AS-IS pay50_expense.updateConfirmReason — 회사 조건은 TOBE 추가 -->
+    <update id="updateConfirmReason">
+        UPDATE pay50_expense
+           SET pay50_confirm_status_cd = #{confirmStatusCode}
+             , pay50_confirm_reason    = #{confirmReason}
+             , pay50_confirm_date      = #{confirmDate}
+             , pay50_confirm_sms_yn    = null
+         WHERE pay50_expense_id = #{expenseId}
+           AND pay50_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS pay50_expense.getConfirmSendMessageList -->
+    <select id="selectConfirmSendList" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmSendRow">
+        SELECT pay50_reg_emp_id AS reg_emp_id
+             , COUNT(*)         AS count
+          FROM pay50_expense
+         WHERE pay50_company_id   = #{companyId}
+           AND pay50_confirmer_id = #{confirmerId}
+           AND COALESCE(pay50_confirm_sms_yn, 'false') = 'false'
+           AND pay50_confirm_status_cd = '30'
+         GROUP BY pay50_reg_emp_id
+    </select>
+
+    <!-- AS-IS pay50_expense.updateConfirmSmsYn -->
+    <update id="updateConfirmSmsYn">
+        UPDATE pay50_expense
+           SET pay50_confirm_sms_yn = 'true'
+         WHERE pay50_company_id   = #{companyId}
+           AND pay50_confirmer_id = #{confirmerId}
+           AND COALESCE(pay50_confirm_sms_yn, 'false') = 'false'
+           AND pay50_confirm_status_cd = '30'
+    </update>
+
     <!-- ===== U07 Pay50_Tab_ExpensePayWrite · U08 Pay50_Tab_ExpensePay (자금집행결의서) ===== -->
     <!-- AS-IS pay50_expense.selectExpensePay L908 (IDMS-IC) — 열만 DTO 이름으로, 바깥 SELECT 열 목록을 이 화면 것으로 줄였다 -->
     <select id="selectExpensePay" resultType="kr.co.kfs.asseterp.biz.pay.dto.ExpenseSettleRes">

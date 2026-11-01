@@ -800,3 +800,26 @@ export interface PayExpenseAccountSum {
   month12Amt: number | null;
   yearAmt: number | null;
 }
+
+/** 사업비 지출승인(부서장) 목록 한 행 (Y09, pay50_expense.selectByDateConfirm) */
+export interface PayExpenseConfirm {
+  expenseId: number;
+  occDate: string | null;
+  regEmpId: number | null;
+  regEmpName: string | null;
+  desc: string | null;
+  content: string | null;
+  contentStatusName: string | null;
+  corpName: string | null;
+  settleAmt: number | null;
+  dueDate: string | null;
+  payMethodName: string | null;
+  payAccountInfo: string | null;
+  fileCountStr: string | null;
+  /** 10 요청 · 20 승인 · 30 반려 */
+  confirmStatusCode: string | null;
+  confirmStatusName: string | null;
+  /** 반려사유 */
+  confirmReason: string | null;
+  apprEmpId: number | null;
+}

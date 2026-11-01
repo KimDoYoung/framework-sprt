@@ -12101,5 +12101,32 @@
     "note": "docs/work/Y/Y03-작업기록.md",
     "history": [],
     "id": "Y03"
+  },
+  "Pay50_Tab_ExpenseConfirm": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/pay/Pay50_Lookup_ConfirmReason.java": "83a61c23e0e5933894f277c147564ef3c79d85f4",
+      "application/src/main/java/myApp/client/vi/pay/Pay50_Lookup_Content.java": "39b73280bacd1ee3d5a3055c9bc9e26d0ee2a709",
+      "application/src/main/java/myApp/client/vi/pay/Pay50_Tab_ExpenseConfirm.java": "65baa4e57ceea08d8eb794d9b3a4fca856eee275",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay50_ExpenseModel.java": "f0b7b3e070e4bc8ca11cd4363404eafc601b3e26",
+      "application/src/main/java/myApp/client/vi/pay/model/Pay50_ExpenseModelProperties.java": "d9bfd9609f9d67c0dd6e873148d48e0291f9e1c9",
+      "application/src/main/java/myApp/server/emp/mapper/emp01_person.xml": "996a542c6a2637d37b8ad6dafdc1de2019cbe902",
+      "application/src/main/java/myApp/server/emp/mapper/emp92_sms_notice.xml": "b606ac566c0c4019f998a6d350b04c09d646fc6e",
+      "application/src/main/java/myApp/server/pay/Pay50_Expense.java": "0e2dddff2b9e0381b6839980838ec1a3ac85ac7c",
+      "application/src/main/java/myApp/server/pay/mapper/pay50_expense.xml": "b778178d41cd12e6537c1f53875659a6ff46f5b9",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a"
+    },
+    "shared_links": [
+      "Com01_Lookup_RelateAppr"
+    ],
+    "recorded_at": "2026-11-01T11:48:37+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Y/Y09-작업기록.md",
+    "history": [],
+    "id": "Y09"
   }
 }

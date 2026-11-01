@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.pay.mapper;
 
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseAccountSumRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmSendRow;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalExpenseRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalInfoRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalRes;
@@ -61,6 +63,24 @@ public interface PayExpenseMapper {
 
     /** AS-IS deleteById */
     int deleteById(@Param("companyId") Long companyId, @Param("expenseId") Long expenseId);
+
+    // ── Y09 사업비 지출승인(부서장) Pay50_Tab_ExpenseConfirm ──
+
+    /** AS-IS selectByDateConfirm */
+    List<ExpenseConfirmRes> selectExpenseConfirm(@Param("companyId") Long companyId, @Param("confirmerId") Long confirmerId,
+                                                 @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate,
+                                                 @Param("confirmStatusCheckYn") boolean confirmStatusCheckYn);
+
+    /** AS-IS updateConfirmReason (confirm_sms_yn은 늘 null로 덮는다 — 원본 그대로) */
+    int updateConfirmReason(@Param("companyId") Long companyId, @Param("expenseId") Long expenseId,
+                            @Param("confirmStatusCode") String confirmStatusCode, @Param("confirmReason") String confirmReason,
+                            @Param("confirmDate") LocalDate confirmDate);
+
+    /** AS-IS getConfirmSendMessageList */
+    List<ExpenseConfirmSendRow> selectConfirmSendList(@Param("companyId") Long companyId, @Param("confirmerId") Long confirmerId);
+
+    /** AS-IS updateConfirmSmsYn */
+    int updateConfirmSmsYn(@Param("companyId") Long companyId, @Param("confirmerId") Long confirmerId);
 
     // ── U07 자금집행결의서 작성(Pay50_Tab_ExpensePayWrite) · U08 조회(Pay50_Tab_ExpensePay) ──
 

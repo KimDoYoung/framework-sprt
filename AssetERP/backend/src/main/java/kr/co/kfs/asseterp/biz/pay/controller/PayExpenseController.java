@@ -4,6 +4,8 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import jakarta.validation.Valid;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseAccountCodeReq;
 import kr.co.kfs.asseterp.biz.pay.dto.PayExpenseApprIdReq;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmReq;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmRes;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseContentReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseDepositReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseJournalCreateReq;
@@ -63,6 +65,29 @@ public class PayExpenseController {
     public ApiResponse<List<ExpenseRequestRes>> requests(@AuthenticationPrincipal UserPrincipal principal,
                                                          @RequestParam(required = false) String searchText) {
         return ApiResponse.ok(service.requests(principal, searchText));
+    }
+
+    // ── Y09 사업비 지출승인(부서장) Pay50_Tab_ExpenseConfirm ──
+
+    /** pay.Pay50_Expense.selectByDateConfirm */
+    @GetMapping("/confirms")
+    public ApiResponse<List<ExpenseConfirmRes>> searchConfirms(@AuthenticationPrincipal UserPrincipal principal,
+                                                               @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                               @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                               @RequestParam(defaultValue = "true") boolean confirmStatusCheckYn) {
+        return ApiResponse.ok(service.searchConfirms(principal, startDate, closeDate, confirmStatusCheckYn));
+    }
+
+    /** pay.Pay50_Expense.updateConfirmReason — 승인(20)·반려(30)·취소(10) */
+    @PutMapping("/confirms")
+    public ApiResponse<Integer> updateConfirms(@AuthenticationPrincipal UserPrincipal principal, @RequestBody ExpenseConfirmReq req) {
+        return ApiResponse.ok(service.updateConfirms(principal, req.ids(), req.confirmStatusCode(), req.confirmReason()));
+    }
+
+    /** pay.Pay50_Expense.confirmSendMessage — [반려건 일괄 알림발송] */
+    @PostMapping("/confirm-notices")
+    public ApiResponse<Integer> sendConfirmNotices(@AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(service.sendConfirmRejectNotices(principal));
     }
 
     // ── U07 자금집행결의서 작성(Pay50_Tab_ExpensePayWrite) · U08 조회(Pay50_Tab_ExpensePay) ──

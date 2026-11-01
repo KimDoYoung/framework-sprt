@@ -1,6 +1,10 @@
 package kr.co.kfs.asseterp.biz.pay.service;
 
 import kr.co.kfs.asseterp.biz.act.service.ActJournalService;
+import kr.co.kfs.asseterp.biz.apr.dto.AprNoticeCall;
+import kr.co.kfs.asseterp.biz.apr.service.AprNoticeService;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmRes;
+import kr.co.kfs.asseterp.biz.pay.dto.ExpenseConfirmSendRow;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseAccountCodeReq;
 import kr.co.kfs.asseterp.biz.pay.dto.ExpenseDepositReq;
@@ -42,6 +46,7 @@ public class PayExpenseService {
     private final PayExpenseMapper mapper;
     private final SysFileService fileService;
     private final ActJournalService journalService;
+    private final AprNoticeService noticeService;
 
     private static String like(String text) {
         return "%" + (text == null ? "" : text) + "%";
@@ -138,6 +143,48 @@ public class PayExpenseService {
                 throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
             }
         }
+        return rows.size();
+    }
+
+    // ── Y09 사업비 지출승인(부서장) Pay50_Tab_ExpenseConfirm ──
+
+    /** pay50_expense.selectByDateConfirm — 승인자는 로그인 사원 */
+    public List<ExpenseConfirmRes> searchConfirms(UserPrincipal user, LocalDate startDate, LocalDate closeDate, boolean confirmStatusCheckYn) {
+        return mapper.selectExpenseConfirm(user.getCompanyId(), user.getUserId(), startDate, closeDate, confirmStatusCheckYn);
+    }
+
+    /** AS-IS updateConfirmReason L487-504 — 승인(20)·반려(30)·취소(10). 승인일자는 승인·반려만 오늘 */
+    @Transactional
+    public int updateConfirms(UserPrincipal user, List<Long> ids, String confirmStatusCode, String confirmReason) {
+        if (!Set.of("10", "20", "30").contains(confirmStatusCode)) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "승인상태가 올바르지 않습니다.");
+        }
+        LocalDate confirmDate = "10".equals(confirmStatusCode) ? null : LocalDate.now();
+        for (Long id : ids) {
+            if (mapper.updateConfirmReason(user.getCompanyId(), id, confirmStatusCode, confirmReason, confirmDate) == 0) {
+                throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+            }
+        }
+        return ids.size();
+    }
+
+    /**
+     * AS-IS confirmSendMessage L701-812 — 로그인 승인자의 미발송 반려건을 요청자별로 묶어 알림을 보낸다.
+     * 발송 표시(confirm_sms_yn)는 AS-IS처럼 회사 메일 발송이 켜져 있고 요청자가 한 명이라도 있을 때만 남긴다. 알림은 커밋 뒤에 보낸다.
+     * @return 요청자 수(AS-IS 메시지 "N건이 발송완료되었습니다"의 N — 반려 건수가 아니라 묶음 수)
+     */
+    @Transactional
+    public int sendConfirmRejectNotices(UserPrincipal user) {
+        Long companyId = user.getCompanyId();
+        List<ExpenseConfirmSendRow> rows = mapper.selectConfirmSendList(companyId, user.getUserId());
+        List<AprNoticeCall> calls = new ArrayList<>();
+        for (ExpenseConfirmSendRow row : rows) {
+            calls.addAll(noticeService.planExpenseReject(companyId, row.regEmpId(), row.count()));
+        }
+        if (!rows.isEmpty() && noticeService.mailEnabled(companyId)) {
+            mapper.updateConfirmSmsYn(companyId, user.getUserId());
+        }
+        noticeService.dispatchAfterCommit(calls);
         return rows.size();
     }
 
