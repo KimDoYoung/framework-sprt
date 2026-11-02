@@ -13422,5 +13422,51 @@
     "note": "docs/work/X/X10-작업기록.md",
     "history": [],
     "id": "X10"
+  },
+  "Ast06_Tab_FxEvalDeposit": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ast/Ast06_Grid_Journal.java": "c32221d931574aac93eb532e425e428381864877",
+      "application/src/main/java/myApp/client/vi/ast/Ast06_Tab_FxEvalDeposit.java": "aa619b17b8c809bf6e7709de3d27c96891fba525",
+      "application/src/main/java/myApp/client/vi/ast/Ast24_Lookup_FxRate.java": "1179130a8723fe5f45969aaa7c9678bae805cfeb",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast01_ClassTreeModel.java": "ee2cde89198d72acc210c16582a4c1a9e6091262",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast06_TrModel.java": "4de9b68f3983c9976055751517785e56546d71ae",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast06_TrModelProperties.java": "f4480a324e232d39a97affbaa1caefc06317f317",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast08_TrFinanceModel.java": "fce67a9b16194b036136b7abd40d66ceed8e9c7c",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast20_TrTaxModel.java": "73b370813f8353b7112262185f9383b67bb1fa60",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast21_Tr4InsureModel.java": "4e19b66c01be6731bc6ed85419875adcb8a56a04",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast24_FxRateModel.java": "5136c0d7ced54cd5a3284235ef034628cd837e81",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast24_FxRateModelProperties.java": "b5aff90315e96ce0f2817fffb442c113c295d4d0",
+      "application/src/main/java/myApp/server/act/Act03_JournalDtl.java": "ea4892fe161b44e445c18470a6d7a4956e03a859",
+      "application/src/main/java/myApp/server/act/Act04_GenLedger.java": "49a3f72f8d6395c5479d57ef6935a0149218ef4d",
+      "application/src/main/java/myApp/server/act/mapper/act02_journal.xml": "2c7804f20ce46eeb9247b46d67d96de1fbfc8571",
+      "application/src/main/java/myApp/server/act/mapper/act03_journal_dtl.xml": "30693776bf7e446ac02e9099bd5aca30c8dca83e",
+      "application/src/main/java/myApp/server/act/mapper/act04_gen_ledger.xml": "d8900a92e94b48cefec9e7431c42f3547bdadbd7",
+      "application/src/main/java/myApp/server/act/mapper/act06_journal_tmp.xml": "25dd7957dfe95fa25bf0d0e4b585a698611dff8b",
+      "application/src/main/java/myApp/server/ast/Ast06_Tr.java": "2702058b182da45864e4313e8ce23ed2b4268dc8",
+      "application/src/main/java/myApp/server/ast/Ast09_Book.java": "b9ba44f158e27cb4b9efb126262ae2f7ab5eb477",
+      "application/src/main/java/myApp/server/ast/Ast24_FxRate.java": "3df26b674f2661820efc13999df4fa8a528fed3a",
+      "application/src/main/java/myApp/server/ast/mapper/ast06_tr.xml": "920b374e2a153a0c08ca47690139d316723fede4",
+      "application/src/main/java/myApp/server/ast/mapper/ast09_book.xml": "fb0636ccfd391f1efae798a56d6aaa46ce71ea4a",
+      "application/src/main/java/myApp/server/ast/mapper/ast24_fx_rate.xml": "12d924cf85445b5ac7012cf38538d9edccef4922",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "02073a29bc7feb680d7fefea312fd41a0ccecc98",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Act02_Lookup_ModiJournal",
+      "Ast01_Lookup_CorpAccount",
+      "Sys15_Lookup_Corp"
+    ],
+    "recorded_at": "2026-11-02T08:58:58+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/X/X12-작업기록.md",
+    "history": [],
+    "id": "X12"
   }
 }

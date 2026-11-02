@@ -25,6 +25,8 @@ import {
   AstHoldBook,
   AstForeignDeposit,
   AstTrFinance,
+  AstFxEval,
+  AstFxRate,
   AstTrDeposit,
   AstTrDepositSaveReq,
   AstTrFinanceSaveReq,
@@ -481,6 +483,46 @@ export const astApi = {
   /** AS-IS ast.Ast06_Tr.updateDepositSellBookAmt (X10): 외화 계좌이체 분개 전 출금장부금액 UPDATE(MODI는 분개 삭제·예금원장 정리 포함) */
   updateTrDepositSellBookAmt: async (trId: number, actionName: 'NEW' | 'MODI'): Promise<void> => {
     await apiClient.post<ApiResponse<void>>(`v1/ast/trs/deposits/${trId}/sell-book-amt`, { actionName });
+  },
+
+  /** AS-IS ast.Ast06_Tr.selectFxEvalList (X12): 평가년월 말일 기준 외화예금 환평가 목록 */
+  searchFxEvals: async (params: { closeDate: string; corpId?: number | null; accountId?: number | null }): Promise<AstFxEval[]> => {
+    const res = await apiClient.get<ApiResponse<AstFxEval[]>>('v1/ast/fx-evals', { params: { ...params, corpId: params.corpId ?? undefined, accountId: params.accountId ?? undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast06_Tr.updateFxEval procType "P" (X12): 선택한 행 평가처리 */
+  processFxEvals: async (items: AstFxEval[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/ast/fx-evals/process', { items });
+  },
+
+  /** AS-IS ast.Ast06_Tr.updateFxEval procType "C" (X12): 평가취소 */
+  cancelFxEvals: async (items: AstFxEval[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/ast/fx-evals/cancel', { items });
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdFxEvalDeposit (X12): 출력 데이터를 만들고 출력그룹ID를 돌려준다 */
+  rdFxEval: async (req: { closeDate: string; corpId?: number | null; accountId?: number | null }): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ast/fx-evals/rd', req);
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast24_FxRate.selectByStdDate (X12 환율입력): 기준일자·통화(%=전체) 평가환율 */
+  searchFxRates: async (stdDate: string, curCode: string): Promise<AstFxRate[]> => {
+    const res = await apiClient.get<ApiResponse<AstFxRate[]>>('v1/ast/fx-rates', { params: { stdDate, curCode } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast24_FxRate.update (X12): 고친 행 저장(fxRateId 0 이하는 새 행) → 저장한 행(요청 순서) */
+  saveFxRates: async (items: AstFxRate[]): Promise<AstFxRate[]> => {
+    const res = await apiClient.put<ApiResponse<AstFxRate[]>>('v1/ast/fx-rates', { items });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast24_FxRate.delete (X12) */
+  deleteFxRates: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/ast/fx-rates', { data: { ids } });
+    return res.data.data;
   },
 
   /** 엑셀다운로드 (AS-IS ExcelDownload ast06IpoList, W05) — 조회 조건 그대로, 브라우저 저장 */

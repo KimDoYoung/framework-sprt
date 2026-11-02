@@ -1163,3 +1163,37 @@ export interface AstTrDepositSaveReq {
   fxRate?: number | null;
   forAmt?: number | null;
 }
+
+/** AS-IS ast.Ast06_Tr.selectFxEvalList (X12 외화예금 환평가처리) — 그리드 한 행. evalYnName은 평가했으면 "평가" */
+export interface AstFxEval {
+  trId: number;
+  astClassTreeId: number | null;
+  depositId: number | null;
+  date: string;
+  trCode: string | null;
+  companyId: number | null;
+  curCode: string | null;
+  fxRate: number | null;
+  forAmt: number | null;
+  depositBookAmt: number | null;
+  corpId: number | null;
+  journalId: number | null;
+  classTreeName: string | null;
+  corpAccountName: string | null;
+  evalYnName: string | null;
+  amt: number | null;
+  note: string | null;
+  personId: number | null;
+  personName: string | null;
+}
+
+/** AS-IS ast.Ast24_FxRate.selectByStdDate (X12 환율입력, fxRateType 01 평가환율) */
+export interface AstFxRate {
+  fxRateId: number;
+  companyId: number | null;
+  fxRateType: string | null;
+  stdDate: string | null;
+  curCode: string | null;
+  applyFxRate: number | null;
+  note: string | null;
+}

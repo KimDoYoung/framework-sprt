@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ast/mapper/ast06_tr.xml selectFxEvalList L562 · checkStdDateAfterFxEval · selectDepositBackJournal · ast09_book.xml(checkBook · selectTargetBook · insert · updateFxPl)
+     · act02_journal.xml/act03_journal_dtl.xml deleteDepositBackJournal · ast24_fx_rate.xml(selectByStdDate · 동적 INSERT/UPDATE/DELETE) · sys99_print.insert — 외화예금 환평가처리 Ast06_Tab_FxEvalDeposit (X12) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstFxEvalMapper">
+
+    <!-- 직전 보유원장(common.ast_book_postgresql): 평가일 이하의 가장 마지막 원장 또는 그 전 마감원장 -->
+    <sql id="bookCte">
+        <![CDATA[
+        WITH book AS (
+            WITH book1 AS ( SELECT '1' seq
+                                 , ast09_book.*
+                              FROM ast09_book
+                             WHERE ast09_company_id = #{c.companyId}
+                               AND (ast09_ast_class_tree_id, ast09_keep_account_id, ast09_hold_date) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(ast09_hold_date)
+                                                                                                            FROM ast09_book
+                                                                                                           WHERE ast09_company_id = #{c.companyId}
+                                                                                                             AND ast09_hold_date <= #{c.holdDate}
+        ]]>
+                                                                                                             <if test="c.keepAccountId != null">AND ast09_keep_account_id = #{c.keepAccountId}</if>
+        <![CDATA[
+                                                                                                           GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+                             UNION ALL
+                            SELECT '2' seq
+                                 , ast11_book_id
+                                 , ast11_hold_date
+                                 , ast11_ast_class_tree_id
+                                 , ast11_keep_account_id
+                                 , ast11_hold_qty
+                                 , ast11_pur_amt
+                                 , ast11_book_amt
+                                 , ast11_eval_amt
+                                 , ast11_eval_pl
+                                 , ast11_first_pur_amt
+                                 , ast11_first_pur_date
+                                 , ast11_company_id
+                                 , ast11_for_pur_amt
+                                 , ast11_for_book_amt
+                                 , ast11_for_eval_amt
+                                 , ast11_for_eval_pl
+                                 , ast11_fx_pl
+                                 , ast11_book_end_yn
+                                 , ast11_acr_int_amt
+                                 , ast11_for_acr_int_amt
+                                 , ast11_oci
+                                 , ast11_for_oci
+                                 , ast11_lock_up_period_cd
+                                 , ast11_lock_up_date
+                                 , ast11_lock_up_qty
+                              FROM ast11_book_close
+                             WHERE ast11_company_id = #{c.companyId}
+                               AND (ast11_ast_class_tree_id, ast11_keep_account_id, ast11_hold_date) IN ( SELECT ast11_ast_class_tree_id, ast11_keep_account_id, MAX(ast11_hold_date)
+                                                                                                            FROM ast11_book_close
+                                                                                                           WHERE ast11_company_id = #{c.companyId}
+                                                                                                             AND ast11_hold_date < #{c.holdDate}
+        ]]>
+                                                                                                             <if test="c.keepAccountId != null">AND ast11_keep_account_id = #{c.keepAccountId}</if>
+        <![CDATA[
+                                                                                                           GROUP BY ast11_ast_class_tree_id, ast11_keep_account_id )
+            )
+            SELECT *
+              FROM book1
+             WHERE (ast09_ast_class_tree_id, ast09_keep_account_id, to_char(ast09_hold_date,'yyyymmdd')||seq) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(to_char(ast09_hold_date,'yyyymmdd')||seq)
+                                                                                                                     FROM book1
+                                                                                                                    GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+        )
+        ]]>
+    </sql>
+
+    <!-- AS-IS ast06_tr.selectFxEvalList: 외화 예치금 계좌별 직전 원장 + 그날 환평가(3700) 거래 + 평가환율(ast24, 01) -->
+    <select id="selectFxEvalList" resultType="kr.co.kfs.asseterp.biz.ast.dto.FxEvalRes">
+        <include refid="bookCte"/>
+        SELECT COALESCE(ast06_tr_id, f_create_seq())                                          AS tr_id
+             , COALESCE(ast06_ast_class_tree_id, ast09_ast_class_tree_id)                     AS ast_class_tree_id
+             , COALESCE(ast06_deposit_id       , ast09_ast_class_tree_id)                     AS deposit_id
+             , COALESCE(ast06_date , #{c.holdDate})                                           AS date
+             , COALESCE(ast06_tr_cd, '3700')                                                  AS tr_code
+             , COALESCE(ast06_company_id, ast09_company_id)                                   AS company_id
+             , COALESCE(ast06_cur_cd, ast01_cur_cd)                                           AS cur_code
+             , COALESCE(ast06_fx_rate, ast24_apply_fx_rate)                                   AS fx_rate
+             , ast09_for_book_amt                                                             AS for_amt
+             , ast09_book_amt                                                                 AS deposit_book_amt
+             , sys15_corp_id                                                                  AS corp_id
+             , act02_journal_id                                                               AS journal_id
+             , f_ast_class_tree_nm(ast09_ast_class_tree_id)                                   AS class_tree_name
+             , sys15_corp_nm||'('||f_ast_class_tree_nm(ast09_keep_account_id)||')'            AS corp_account_name
+             , CASE WHEN ast06_tr_id IS NOT NULL THEN '평가' ELSE '' END                       AS eval_yn_name
+             , tr.ast06_amt                                                                   AS amt
+             , tr.ast06_note                                                                  AS note
+             , tr.ast06_person_id                                                             AS person_id
+             , f_emp_kor_nm(ast06_person_id)                                                  AS person_name
+          FROM book
+               INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast09_ast_class_tree_id
+               INNER JOIN sys15_corp       ON sys15_corp_id       = ast01_corp_id
+               LEFT OUTER JOIN ( SELECT *
+                                   FROM ast06_tr
+                                        LEFT OUTER JOIN act02_journal ON act02_tr_id = ast06_tr_id
+                                  WHERE ast06_company_id = #{c.companyId}
+                                    AND ast06_date       = #{c.holdDate}
+                                    AND ast06_tr_cd      = '3700'   /* (3700:외화예금 환산평가) */
+                               ) tr ON ( ast06_company_id        = ast09_company_id         AND
+                                         ast06_ast_class_tree_id = ast09_ast_class_tree_id  AND
+                                         ast06_date              = #{c.holdDate}            )
+               LEFT OUTER JOIN ast24_fx_rate ON ( ast24_company_id   = ast09_company_id     AND
+                                                  ast24_fx_rate_type = '01'                 AND /* (01:평가환율) */
+                                                  ast24_cur_cd       = ast01_cur_cd         AND
+                                                  ast24_std_date     = #{c.holdDate}        )
+         WHERE COALESCE(ast01_asset_type,'1') like #{c.assetType}
+           AND ast01_item_l_class_cd = '10'   /* 10:현금 및 예치금 */
+           AND COALESCE(ast01_cur_cd,'KRW') != 'KRW'
+        <if test="c.corpId != null">
+           AND sys15_corp_id = #{c.corpId}
+        </if>
+         ORDER BY sys15_corp_nm collate "ko_KR.utf8", ast01_seq
+    </select>
+
+    <select id="countFxEvalAfter" resultType="int">
+        SELECT count(*)
+          FROM ast06_tr
+         WHERE ast06_company_id         = #{companyId}
+           AND ast06_ast_class_tree_id  = #{astId}
+           AND ast06_tr_cd              = '3700'
+           AND ast06_date > #{stdDate}
+    </select>
+
+    <insert id="insertFxTr">
+        INSERT INTO ast06_tr (ast06_tr_id, ast06_company_id, ast06_person_id, ast06_date, ast06_tr_cd, ast06_amt, ast06_note,
+                              ast06_ast_class_tree_id, ast06_deposit_id, ast06_corp_id, ast06_cur_cd, ast06_for_amt, ast06_fx_rate)
+        VALUES (#{r.trId}, #{companyId}, #{personId}, #{r.date}, '3700', #{amt}, #{r.note},
+                #{r.astClassTreeId}, #{r.depositId}, #{r.corpId}, #{r.curCode}, #{r.forAmt}, #{r.fxRate})
+    </insert>
+
+    <delete id="deleteDepositBackJournalDtl">
+        DELETE FROM act03_journal_dtl
+         WHERE act03_journal_id IN (
+                 SELECT act02_journal_id
+                   FROM act02_journal
+                  WHERE act02_tr_id IN (
+                          SELECT ast06_tr_id
+                            FROM ast06_tr
+                           WHERE ast06_company_id = #{companyId}
+                             AND ast06_ast_class_tree_id = #{astClassTreeId}
+                             AND ast06_date = CAST(#{date} AS date) + 1
+                             AND ast06_tr_cd = '3701' ) )   /* (3701:외화예금 환산평가반제) */
+    </delete>
+
+    <delete id="deleteDepositBackJournal">
+        DELETE FROM act02_journal
+         WHERE act02_tr_id IN ( SELECT ast06_tr_id
+                                  FROM ast06_tr
+                                 WHERE ast06_company_id         = #{companyId}
+                                   AND ast06_ast_class_tree_id  = #{astClassTreeId}
+                                   AND ast06_date               = CAST(#{date} AS date) + 1
+                                   AND ast06_tr_cd              = '3701' )   /* (3701:외화예금 환산평가반제) */
+    </delete>
+
+    <select id="selectDepositBackTrId" resultType="long">
+        SELECT ast06_tr_id
+          FROM ast06_tr
+         WHERE ast06_company_id         = #{companyId}
+           AND ast06_ast_class_tree_id  = #{astClassTreeId}
+           AND ast06_date               = CAST(#{date} AS date) + 1
+           AND ast06_tr_cd              = '3701'
+         LIMIT 1
+    </select>
+
+    <select id="countBook" resultType="long">
+        SELECT count(*)
+          FROM ast09_book
+         WHERE ast09_company_id         = #{companyId}
+           AND ast09_ast_class_tree_id  = #{astClassTreeId}
+           AND ast09_keep_account_id    = #{keepAccountId}
+           AND ast09_hold_date          = #{holdDate}
+    </select>
+
+    <!-- AS-IS ast09_book.selectTargetBook(조회 CTE) → bookModel.holdDate·evalAmt(장부금액+환산손익)·fxPl를 바꿔 ast09_book.insert -->
+    <insert id="insertBookFromTarget">
+        INSERT INTO ast09_book (ast09_book_id, ast09_hold_date, ast09_ast_class_tree_id, ast09_keep_account_id, ast09_hold_qty, ast09_pur_amt,
+                                ast09_book_amt, ast09_eval_amt, ast09_eval_pl, ast09_first_pur_amt, ast09_first_pur_date, ast09_company_id,
+                                ast09_for_pur_amt, ast09_for_book_amt, ast09_for_eval_amt, ast09_for_eval_pl, ast09_fx_pl, ast09_book_end_yn,
+                                ast09_acr_int_amt, ast09_for_acr_int_amt, ast09_oci, ast09_for_oci, ast09_lock_up_period_cd, ast09_lock_up_date,
+                                ast09_lock_up_qty)
+        SELECT f_create_seq(), #{holdDate}, ast09_ast_class_tree_id, ast09_keep_account_id, ast09_hold_qty, ast09_pur_amt,
+               ast09_book_amt, ast09_book_amt + #{fxPl}, ast09_eval_pl, ast09_first_pur_amt, ast09_first_pur_date, ast09_company_id,
+               ast09_for_pur_amt, ast09_for_book_amt, ast09_for_eval_amt, ast09_for_eval_pl, #{fxPl}, ast09_book_end_yn,
+               ast09_acr_int_amt, ast09_for_acr_int_amt, ast09_oci, ast09_for_oci, ast09_lock_up_period_cd, ast09_lock_up_date,
+               ast09_lock_up_qty
+          FROM ( <include refid="targetBookSelect"/> ) t
+    </insert>
+
+    <sql id="targetBookSelect">
+        <![CDATA[
+        SELECT * FROM (
+        WITH book AS (
+            WITH book1 AS ( SELECT '1' seq
+                                 , ast09_book.*
+                              FROM ast09_book
+                             WHERE ast09_company_id = #{companyId}
+                               AND (ast09_ast_class_tree_id, ast09_keep_account_id, ast09_hold_date) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(ast09_hold_date)
+                                                                                                            FROM ast09_book
+                                                                                                           WHERE ast09_company_id = #{companyId}
+                                                                                                             AND ast09_hold_date <= #{holdDate}
+                                                                                                             AND ast09_ast_class_tree_id = #{astClassTreeId}
+                                                                                                             AND ast09_keep_account_id = #{keepAccountId}
+                                                                                                           GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+                             UNION ALL
+                            SELECT '2' seq
+                                 , ast11_book_id
+                                 , ast11_hold_date
+                                 , ast11_ast_class_tree_id
+                                 , ast11_keep_account_id
+                                 , ast11_hold_qty
+                                 , ast11_pur_amt
+                                 , ast11_book_amt
+                                 , ast11_eval_amt
+                                 , ast11_eval_pl
+                                 , ast11_first_pur_amt
+                                 , ast11_first_pur_date
+                                 , ast11_company_id
+                                 , ast11_for_pur_amt
+                                 , ast11_for_book_amt
+                                 , ast11_for_eval_amt
+                                 , ast11_for_eval_pl
+                                 , ast11_fx_pl
+                                 , ast11_book_end_yn
+                                 , ast11_acr_int_amt
+                                 , ast11_for_acr_int_amt
+                                 , ast11_oci
+                                 , ast11_for_oci
+                                 , ast11_lock_up_period_cd
+                                 , ast11_lock_up_date
+                                 , ast11_lock_up_qty
+                              FROM ast11_book_close
+                             WHERE ast11_company_id = #{companyId}
+                               AND (ast11_ast_class_tree_id, ast11_keep_account_id, ast11_hold_date) IN ( SELECT ast11_ast_class_tree_id, ast11_keep_account_id, MAX(ast11_hold_date)
+                                                                                                            FROM ast11_book_close
+                                                                                                           WHERE ast11_company_id = #{companyId}
+                                                                                                             AND ast11_hold_date < #{holdDate}
+                                                                                                             AND ast11_ast_class_tree_id = #{astClassTreeId}
+                                                                                                             AND ast11_keep_account_id = #{keepAccountId}
+                                                                                                           GROUP BY ast11_ast_class_tree_id, ast11_keep_account_id )
+            )
+            SELECT *
+              FROM book1
+             WHERE (ast09_ast_class_tree_id, ast09_keep_account_id, to_char(ast09_hold_date,'yyyymmdd')||seq) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(to_char(ast09_hold_date,'yyyymmdd')||seq)
+                                                                                                                     FROM book1
+                                                                                                                    GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+        )
+        SELECT *
+          FROM book
+         WHERE COALESCE(ast09_book_end_yn,'false') != 'true'
+        ) b
+        ]]>
+    </sql>
+
+    <update id="updateFxPl">
+        UPDATE ast09_book
+           SET ast09_eval_amt           = ast09_book_amt + #{fxPl}
+             , ast09_fx_pl              = #{fxPl}
+         WHERE ast09_company_id         = #{companyId}
+           AND ast09_hold_date          = #{holdDate}
+           AND ast09_ast_class_tree_id  = #{astClassTreeId}
+    </update>
+
+    <!-- AS-IS Sys99_Print.insertRdFxEvalDeposit: 평가일자·계좌·통화·외화 잔고·원화 잔고·평가환율·적요·처리자 -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_string01, sys99_string02, sys99_double01, sys99_long01
+               , sys99_double02, sys99_string03, sys99_string04 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{r.date}, #{r.corpAccountName}, #{r.curCode}, #{r.forAmt}, #{r.depositBookAmt}
+               , #{r.fxRate}, #{r.note}, #{r.personName} )
+    </insert>
+
+    <!-- ===== ast24_fx_rate (Ast24_Lookup_FxRate / Ast24_FxRate) ===== -->
+    <sql id="fxRateColumns">
+        ast24_fx_rate_id     AS fx_rate_id,
+        ast24_company_id     AS company_id,
+        ast24_fx_rate_type   AS fx_rate_type,
+        ast24_std_date       AS std_date,
+        ast24_cur_cd         AS cur_code,
+        ast24_apply_fx_rate  AS apply_fx_rate,
+        ast24_note           AS note
+    </sql>
+
+    <select id="selectFxRates" resultType="kr.co.kfs.asseterp.biz.ast.dto.FxRateRes">
+        SELECT <include refid="fxRateColumns"/>
+          FROM ast24_fx_rate
+         WHERE ast24_company_id     = #{companyId}
+           AND ast24_std_date       = #{stdDate}
+           AND ast24_fx_rate_type   = #{fxRateType}
+           AND ast24_cur_cd         LIKE #{curCode}
+    </select>
+
+    <select id="selectFxRateById" resultType="kr.co.kfs.asseterp.biz.ast.dto.FxRateRes">
+        SELECT <include refid="fxRateColumns"/>
+          FROM ast24_fx_rate
+         WHERE ast24_fx_rate_id = #{fxRateId}
+           AND ast24_company_id = #{companyId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertFxRate">
+        INSERT INTO ast24_fx_rate (ast24_fx_rate_id, ast24_company_id, ast24_fx_rate_type, ast24_std_date, ast24_cur_cd, ast24_apply_fx_rate, ast24_note)
+        VALUES (#{fxRateId}, #{companyId}, #{fxRateType}, #{r.stdDate}, #{r.curCode}, #{r.applyFxRate}, #{r.note})
+    </insert>
+
+    <update id="updateFxRate">
+        UPDATE ast24_fx_rate
+           SET ast24_std_date      = #{r.stdDate},
+               ast24_cur_cd        = #{r.curCode},
+               ast24_apply_fx_rate = #{r.applyFxRate},
+               ast24_note          = #{r.note}
+         WHERE ast24_fx_rate_id    = #{r.fxRateId}
+           AND ast24_company_id    = #{companyId}
+    </update>
+
+    <delete id="deleteFxRates">
+        DELETE FROM ast24_fx_rate
+         WHERE ast24_company_id = #{companyId}
+           AND ast24_fx_rate_id IN
+        <foreach collection="fxRateIds" item="fxRateId" open="(" separator="," close=")">#{fxRateId}</foreach>
+    </delete>
+</mapper>
