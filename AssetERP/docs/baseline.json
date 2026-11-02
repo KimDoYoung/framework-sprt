@@ -14618,5 +14618,25 @@
     "note": "docs/work/Z/Z14-작업기록.md",
     "history": [],
     "id": "Z14"
+  },
+  "Kfs01_Tab_RemoteView": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/kfs/Kfs01_Tab_RemoteView.java": "f4f45177b0cff08a5329b5416ecf3fbe2e243dcc",
+      "application/src/main/java/myApp/client/vi/kfs/model/Kfs01_RemoteViewModel.java": "86e45a5d3cd53c441ca4404d5c765c044346271c",
+      "application/src/main/java/myApp/client/vi/kfs/model/Kfs01_RemoteViewModelProperties.java": "1f5816c269db2bdd30239498de082fd322d7ce90",
+      "application/src/main/java/myApp/server/kfs/Kfs01_RemoteView.java": "2ec06bad2c481aacd82570cc25b6cfc483d77f41",
+      "application/src/main/java/myApp/server/kfs/mapper/kfs01_remote_view.xml": "5aac6f97a5f9b7f9c6a71716b0d2012fb90dff28"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-11-02T19:34:59+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Z/Z15-작업기록.md",
+    "history": [],
+    "id": "Z15"
   }
 }

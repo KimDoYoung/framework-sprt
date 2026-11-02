@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/kfs/mapper/kfs01_remote_view.xml selectById · selectByText · selectByPersonName · excelInsert · excelDelete (Z15) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.kfs.mapper.KfsRemoteViewMapper">
+
+    <sql id="remoteViewColumns">
+        kfs01_remote_view_id AS remote_view_id,
+        kfs01_person_nm      AS person_name,
+        kfs01_date           AS date,
+        kfs01_start_time     AS start_time,
+        kfs01_close_time     AS close_time,
+        kfs01_reason         AS reason,
+        kfs01_manager_yn     AS manager_yn
+    </sql>
+
+    <!-- AS-IS kfs01_remote_view.selectByText (날짜 조건이 두 번 있는 것도 원본 그대로) -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.kfs.dto.RemoteViewRes">
+        SELECT <include refid="remoteViewColumns"/>
+          FROM kfs01_remote_view
+         WHERE kfs01_company_id = #{companyId}
+           AND kfs01_person_nm LIKE #{personName}
+           AND kfs01_date BETWEEN #{startDate} AND #{closeDate}
+        <if test="checkBox">
+           AND (kfs01_close_time IS NULL OR kfs01_reason IS NULL)
+        </if>
+           AND kfs01_date BETWEEN #{startDate} AND #{closeDate}
+         ORDER BY kfs01_date, kfs01_start_time, kfs01_person_nm
+    </select>
+
+    <!-- AS-IS kfs01_remote_view.selectByPersonName — 기간 조건 없음 -->
+    <select id="selectByPersonName" resultType="kr.co.kfs.asseterp.biz.kfs.dto.RemoteViewRes">
+        SELECT <include refid="remoteViewColumns"/>
+          FROM kfs01_remote_view
+         WHERE kfs01_company_id = #{companyId}
+           AND kfs01_person_nm LIKE #{personName}
+        <if test="checkBox">
+           AND (kfs01_close_time IS NULL OR kfs01_reason IS NULL)
+        </if>
+         ORDER BY kfs01_date, kfs01_start_time
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.kfs.dto.RemoteViewRes">
+        SELECT <include refid="remoteViewColumns"/>
+          FROM kfs01_remote_view
+         WHERE kfs01_remote_view_id = #{remoteViewId}
+           AND kfs01_company_id = #{companyId}
+    </select>
+
+    <update id="updateRemoteView">
+        UPDATE kfs01_remote_view
+           SET kfs01_reason     = #{r.reason},
+               kfs01_manager_yn = CASE WHEN #{r.managerYn} THEN 'true' ELSE 'false' END
+         WHERE kfs01_remote_view_id = #{r.remoteViewId}
+           AND kfs01_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteRemoteViews">
+        DELETE FROM kfs01_remote_view
+         WHERE kfs01_company_id = #{companyId}
+           AND kfs01_remote_view_id IN
+        <foreach collection="remoteViewIds" item="remoteViewId" open="(" separator="," close=")">#{remoteViewId}</foreach>
+    </delete>
+
+    <!-- AS-IS kfs01_remote_view.excelInsert -->
+    <insert id="excelInsert">
+        INSERT INTO kfs01_remote_view
+        SELECT f_create_seq(), #{companyId}, #{personName}, #{date}, #{startTime}, #{closeTime}, null, null, 'false'
+    </insert>
+
+    <!-- AS-IS kfs01_remote_view.excelDelete -->
+    <delete id="excelDelete">
+        DELETE
+          FROM kfs01_remote_view
+         WHERE kfs01_remote_view_id IN (
+                SELECT sub.kfs01_remote_view_id
+                  FROM (
+                        SELECT kfs01_remote_view_id,
+                               ROW_NUMBER() OVER(PARTITION BY kfs01_person_nm, kfs01_date, kfs01_start_time ORDER BY kfs01_remote_view_id) AS row_num
+                          FROM kfs01_remote_view
+                       ) AS sub
+                 WHERE row_num > 1
+               )
+    </delete>
+</mapper>

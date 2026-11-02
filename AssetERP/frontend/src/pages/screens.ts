@@ -388,6 +388,7 @@ import { Sch10_Tab_Ipo2 } from './sch/Sch10_Tab_Ipo2';
 import { Fnd30_Tab_DemandOpr } from './fnd/Fnd30_Tab_DemandOpr';
 import { Fnd30_Tab_Opr } from './fnd/Fnd30_Tab_Opr';
 import { Fnd32_Tab_Account } from './fnd/Fnd32_Tab_Account';
+import { Kfs01_Tab_RemoteView } from './kfs/Kfs01_Tab_RemoteView';
 import { Est01_Tab_PfFeeType } from './est/Est01_Tab_PfFeeType';
 import { Est02_Tab_PfContract } from './est/Est02_Tab_PfContract';
 import { Est03_Tab_PfHistory } from './est/Est03_Tab_PfHistory';
@@ -620,6 +621,7 @@ export const SCREENS: Record<string, React.FC> = {
   Fnd30_Tab_DemandOpr, // Q05 1단계 (메뉴 #1341. + Fnd31_Page_DemandOprFund·Fnd31_Edit_DemandOprFund·Fnd30_Edit_DemandOpr·components/lookup/Adv02_Lookup_SelectSingle. [결재요청]·[상세보기]가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·문서분류지정 Dcr30_Lookup_Link는 다음 단계)
   Fnd30_Tab_Opr, // Q06 1단계 (메뉴 #1227. + Fnd31_Page_OprFund·Fnd31_Edit_OprFund·Fnd30_Edit_Opr·Fnd30_Lookup_DemandOprList. [결재요청]·[상세보기]가 여는 전자결재 편집창 Apr01_Edit_ApprDoc·문서분류지정 Dcr30_Lookup_Link는 다음 단계)
   Fnd32_Tab_Account, // Q07 (메뉴 #1290. 공모주 참여계좌 — 거래처 조회창 Sys15_Lookup_Corp 재사용)
+  Kfs01_Tab_RemoteView, // Z15 (메뉴 #1334. 리모트뷰 사용기록관리 — 엑셀업로드 remoteViewUpload)
   Est02_Tab_PfResultReport, // Q12 1단계 (메뉴 #1378. 용역결과보고서 — + Est03_TabPage_PfHistoryList·Est04_Lookup_PfFile. 결재 아이콘·문서보기의 전자결재 편집창 Apr01_Edit_ApprDoc·문서분류 Dcr01_Lookup_Class·Dcr30_Link는 다음 단계)
   Est03_Tab_PfHistoryConfirm, // Q11 (메뉴 #1382. 용역수행내역 승인 — + Est03_TabPage_PfHistoryConfirm·Est04_Grid_PfFileConfirm, 조회창은 Q10 Est02_Lookup_PfContract)
   Est03_Tab_PfHistory, // Q10 (메뉴 #1377. 용역수행내역 등록 — + Est03_TabPage_PfHistory·Est04_Grid_PfFile·Est02_Lookup_PfContract)
