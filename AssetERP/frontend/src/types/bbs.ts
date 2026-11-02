@@ -37,6 +37,19 @@ export interface BbsCompanyRuleSaveReq {
   closeDate: string | null;
 }
 
+/** Z03 공지사항 한 행 (AS-IS Bbs02_NoticeModel). noticeDetailFullName·title2는 HTML(구분 색 글씨), notice는 본문 HTML */
+export interface BbsNoticePerson {
+  noticeId: number;
+  topYn: boolean;
+  fromDate: string;
+  noticeNo: string;
+  noticeDetailFullName: string;
+  title: string;
+  title2: string;
+  notice: string | null;
+  commentYn: boolean;
+}
+
 /** H01 법규공지 한 행 (AS-IS Bbs02_NoticeModel). notice는 본문 HTML */
 export interface BbsNotice {
   noticeId: number;

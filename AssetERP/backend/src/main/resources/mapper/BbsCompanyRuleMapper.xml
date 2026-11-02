@@ -35,6 +35,25 @@
          WHERE bbs15_company_rule_id = #{companyRuleId}
     </select>
 
+    <!-- AS-IS(IDMS-IC) bbs15_company_rule.selectBySearchText L45 (Z01 회사규정: 공개된 최신 개정회차 + 종료일 안 지난 규정. taskId 분기는 Tdm10 쪽이라 옮기지 않음) -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.bbs.dto.CompanyRuleRes">
+        SELECT <include refid="companyRuleColumns"/>
+          FROM (
+                SELECT *
+                  FROM bbs15_company_rule a
+                 WHERE bbs15_company_id = #{companyId}
+                   AND bbs15_rule_type LIKE #{ruleType}
+                   AND bbs15_title ILIKE #{searchText}
+                   AND bbs15_revision_no = ( SELECT MAX(b.bbs15_revision_no)
+                                               FROM bbs15_company_rule b
+                                              WHERE b.bbs15_company_id      = a.bbs15_company_id
+                                                AND b.bbs15_company_rule_cd = a.bbs15_company_rule_cd
+                                                AND COALESCE(b.bbs15_public_yn, 'false') = 'true' )
+               ) t
+         WHERE COALESCE(bbs15_close_date, '2999-12-31'::date) &gt;= #{stdDate}::date
+         ORDER BY bbs15_company_rule_cd
+    </select>
+
     <!-- AS-IS(IDMS-IC) bbs15_company_rule.selectBySearchTextManager L87 -->
     <select id="selectBySearchTextManager" resultType="kr.co.kfs.asseterp.biz.bbs.dto.CompanyRuleRes">
         SELECT <include refid="companyRuleColumns"/>

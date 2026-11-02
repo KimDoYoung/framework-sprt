@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Checkbox } from 'antd';
-import { LockOutlined, StarFilled } from '@ant-design/icons';
+import { LockOutlined, PushpinFilled, StarFilled } from '@ant-design/icons';
 import type { CustomCellRendererProps } from 'ag-grid-react';
 import { fmtDouble, fmtLong, toNum } from './format';
 
@@ -21,6 +21,10 @@ export const LockCell: React.FC<CustomCellRendererProps> = ({ value }) =>
 /** AS-IS addBookMarkYn: true면 노란 별(fa-star #FFCD43), 아니면 빈칸. 값은 boolean 또는 'true'/'false' 문자열 */
 export const BookmarkCell: React.FC<CustomCellRendererProps> = ({ value }) =>
   value === true || value === 'true' ? <StarFilled style={{ color: '#FFCD43' }} /> : null;
+
+/** AS-IS addPin: true면 핀 그림(pin.png 13×13), 그 밖(null·false)은 빈칸. 값은 boolean 또는 'true'/'false' 문자열 */
+export const PinCell: React.FC<CustomCellRendererProps> = ({ value }) =>
+  value === true || value === 'true' ? <PushpinFilled style={{ color: '#CE4242', fontSize: 13 }} /> : null;
 
 const escapeHtml = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 

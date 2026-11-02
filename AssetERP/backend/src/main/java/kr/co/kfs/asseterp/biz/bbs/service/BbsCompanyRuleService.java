@@ -56,6 +56,13 @@ public class BbsCompanyRuleService {
     private final SysCompanyMapper sysCompanyMapper;
     private final UploadProperties uploadProperties;
 
+    /** AS-IS bbs.Bbs15_CompanyRule.selectBySearchText (Z01 회사규정 — 로그인 회사, 기준일 = 오늘) */
+    public List<CompanyRuleRes> searchPublic(UserPrincipal user, String ruleType, String searchText) {
+        return mapper.selectBySearchText(user.companyOf(null),
+                ruleType == null || ruleType.isEmpty() ? "%" : ruleType, "%" + (searchText == null ? "" : searchText) + "%",
+                LocalDate.now().toString());
+    }
+
     /** AS-IS bbs.Bbs15_CompanyRule.selectBySearchTextManager (고객사는 관리자 회사만 고른다. 그 밖에는 로그인 회사) */
     public List<CompanyRuleRes> search(UserPrincipal user, Long companyId, String ruleType, String searchText) {
         return mapper.selectBySearchTextManager(user.companyOf(companyId),

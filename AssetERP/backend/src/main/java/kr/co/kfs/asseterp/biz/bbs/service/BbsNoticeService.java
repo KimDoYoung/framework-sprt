@@ -2,6 +2,8 @@ package kr.co.kfs.asseterp.biz.bbs.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeCond;
+import kr.co.kfs.asseterp.biz.bbs.dto.NoticePersonCond;
+import kr.co.kfs.asseterp.biz.bbs.dto.NoticePersonRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeRes;
 import kr.co.kfs.asseterp.biz.bbs.mapper.BbsNoticeMapper;
 import kr.co.kfs.asseterp.common.dto.PageRes;
@@ -23,6 +25,20 @@ public class BbsNoticeService {
         NoticeCond cond = new NoticeCond(user.getCompanyId(), noticeType, noticeDetailCode,
                 "%" + (searchText == null ? "" : searchText) + "%", limit, offset);
         return new PageRes<>(mapper.selectByNoticeDetailCodeTotal(cond), mapper.selectByNoticeDetailCodePaging(cond));
+    }
+
+    /**
+     * AS-IS Bbs02_Notice.selectByPersonIdPaging·Total (Z03 Bbs02_Tab_NoticeView). 구분이 전체('%')일 때만 공지일 기간(startDate~closeDate)을 건다
+     * (화면 retrieve() L244-280: 아니면 null)
+     */
+    public PageRes<NoticePersonRes> searchByPersonId(UserPrincipal user, String noticeType, String noticeDetailCode, String searchText,
+                                                     String startDate, String closeDate, long offset, long limit) {
+        boolean all = "%".equals(noticeType);
+        NoticePersonCond cond = new NoticePersonCond(user.getCompanyId(), user.getUserId(), noticeType, noticeDetailCode,
+                "%" + (searchText == null ? "" : searchText) + "%",
+                all && startDate != null && !startDate.isEmpty() ? startDate : null,
+                all && closeDate != null && !closeDate.isEmpty() ? closeDate : null, limit, offset);
+        return new PageRes<>(mapper.selectByPersonIdTotal(cond), mapper.selectByPersonIdPaging(cond));
     }
 
     /** AS-IS Bbs05_History.updatePersonId L32 — 이 사원의 기록이 아직 없을 때만 1건 넣는다("해당 공지사항 그만보기") */

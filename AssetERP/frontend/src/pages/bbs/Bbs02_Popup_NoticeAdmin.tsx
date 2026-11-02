@@ -14,12 +14,16 @@ import { BbsNotice } from '@/types/bbs';
 import { Button } from '@/components/button';
 import { LookupModal } from '@/components/lookup/LookupModal';
 import { HtmlView } from '@/components/form/HtmlView';
+import { sanitizeHtml } from '@/components/grid/renderers';
 import { Bbs02_Lookup_File } from './Bbs02_Lookup_File';
 import { Bbs07_TapPage_Comment } from './Bbs07_TapPage_Comment';
 
+/** 창이 쓰는 값만 — title2(구분 색 글씨 + 제목, HTML)가 있으면 머리글로 쓴다 (Z03 Bbs02_Tab_NoticeView L219-242) */
+export type NoticePopupInfo = Pick<BbsNotice, 'noticeId' | 'title' | 'notice' | 'commentYn'> & { title2?: string | null };
+
 interface Props {
   /** 있으면 열린다 (AS-IS open/openWithComment(title, notice, noticeId, callback)) */
-  notice: BbsNotice | null;
+  notice: NoticePopupInfo | null;
   /** callback.execute() 뒤 hide() — [닫기]와 그만보기 둘 다 */
   onClose: () => void;
 }
@@ -51,7 +55,9 @@ export const Bbs02_Popup_NoticeAdmin: React.FC<Props> = ({ notice, onClose }) =>
   return (
     <LookupModal
       open={notice != null}
-      title={<b>{notice?.title}</b>}
+      title={notice?.title2
+        ? <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(notice.title2) }} />
+        : <b>{notice?.title}</b>}
       width={withComment ? 1165 : 760}
       maskClosable={false}
       closable={false}

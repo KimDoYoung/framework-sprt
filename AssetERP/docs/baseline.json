@@ -14140,5 +14140,54 @@
     "note": "docs/work/X/X35-작업기록.md",
     "history": [],
     "id": "X35"
+  },
+  "Bbs15_Tab_CompanyRule": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/bbs/Bbs15_Lookup_Content.java": "76f4044545b345cee4691a699f25197490d08a07",
+      "application/src/main/java/myApp/client/vi/bbs/Bbs15_Tab_CompanyRule.java": "ecc889414507cda35256cb87f4f2f8721ed8585d",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs15_CompanyRuleModel.java": "1effccbebaeb9a84938495da1e2558800d2bc815",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs15_CompanyRuleModelProperties.java": "df46467bdedd9d5b5c6e66309b3d58a7466988a4",
+      "application/src/main/java/myApp/server/bbs/Bbs15_CompanyRule.java": "b3268854d102b2224d156bbfb7ddf6c8aa831ff0",
+      "application/src/main/java/myApp/server/bbs/mapper/bbs15_company_rule.xml": "f53b94dddede52ad5f5ace1551a261911161fbc5",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893"
+    },
+    "shared_links": [
+      "Bbs02_Lookup_File"
+    ],
+    "recorded_at": "2026-11-02T13:47:03+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Z/Z01-작업기록.md",
+    "history": [],
+    "id": "Z01"
+  },
+  "Bbs02_Tab_NoticeView": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/bbs/Bbs02_Tab_NoticeView.java": "e65b5637289c131dff4a7ed23793ec0c7fd05bfd",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs02_NoticeModel.java": "f53f949e944d83507fa7c7382e3ff2334a113cae",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs02_NoticeModelProperties.java": "95798a6de9b18ca64adac0f74aa3dc4f2d4e6948",
+      "application/src/main/java/myApp/server/bbs/Bbs02_Notice.java": "cb6bad5a4ac23171c279c3c3f8c2e2e9a0ed34d0",
+      "application/src/main/java/myApp/server/bbs/mapper/bbs02_notice.xml": "c4664317cdb39070b24d4dad8cc7543e9184afb0",
+      "application/src/main/java/myApp/server/sys/Sys09_Code.java": "28d486d654b122ebef05ff7d0c2e7c8f8fd59e2d",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9"
+    },
+    "shared_links": [
+      "Bbs02_Popup_NoticeAdmin"
+    ],
+    "recorded_at": "2026-11-02T13:57:52+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Z/Z03-작업기록.md",
+    "history": [],
+    "id": "Z03"
   }
 }

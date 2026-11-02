@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.bbs.mapper;
 
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeCond;
+import kr.co.kfs.asseterp.biz.bbs.dto.NoticePersonCond;
+import kr.co.kfs.asseterp.biz.bbs.dto.NoticePersonRes;
 import kr.co.kfs.asseterp.biz.bbs.dto.NoticeRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -14,6 +16,10 @@ public interface BbsNoticeMapper {
     List<NoticeRes> selectByNoticeDetailCodePaging(@Param("c") NoticeCond cond);
 
     long selectByNoticeDetailCodeTotal(@Param("c") NoticeCond cond);
+
+    List<NoticePersonRes> selectByPersonIdPaging(@Param("c") NoticePersonCond cond);
+
+    long selectByPersonIdTotal(@Param("c") NoticePersonCond cond);
 
     /** bbs05_history.selectByNoticeId — 이 사원이 이 공지를 이미 "그만보기" 했는지 */
     int countHistory(@Param("noticeId") Long noticeId, @Param("personId") Long personId);

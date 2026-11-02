@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice } from '../types/bbs';
+import { BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice, BbsNoticePerson } from '../types/bbs';
 
 /** 요청서(신청서) — 증명서 신청내역 (S05, AS-IS Bbs11_Application) */
 export const bbsApplicationApi = {
@@ -87,6 +87,14 @@ export const bbsApplicationFormApi = {
 
 /** bbs 화면 API (E10~) */
 export const bbsApi = {
+  // ── Z01 회사규정 (Bbs15_Tab_CompanyRule) ──
+
+  /** AS-IS bbs.Bbs15_CompanyRule.selectBySearchText: 로그인 회사의 공개된 최신 개정회차(종료일 안 지난 것). ruleType 전체는 '%' */
+  searchPublicCompanyRules: async (ruleType: string, searchText: string): Promise<BbsCompanyRule[]> => {
+    const res = await apiClient.get<ApiResponse<BbsCompanyRule[]>>('v1/bbs/company-rules/public', { params: { ruleType, searchText } });
+    return res.data.data ?? [];
+  },
+
   // ── E10 회사규정관리 (Bbs15_Tab_CompanyRuleManager) ──
 
   /** AS-IS bbs.Bbs15_CompanyRule.selectBySearchTextManager: 고객사는 관리자 회사만 고른다(그 밖에는 로그인 회사). ruleType 전체는 '%' */
@@ -153,6 +161,12 @@ export const bbsApi = {
 
 /** H01 공지사항 (Bbs02_Tab_NoticeViewLaw·Bbs02_Popup_NoticeAdmin·Bbs07_TapPage_Comment) */
 export const bbsNoticeApi = {
+  /** AS-IS bbs.Bbs02_Notice.selectByPersonIdPaging (Z03). 구분 전체는 '%', 기간(YYYY-MM-DD)은 구분이 전체일 때만 보낸다 */
+  searchMyNotices: async (params: { noticeType: string; noticeDetailCode: string; searchText: string; startDate?: string; closeDate?: string; offset: number; limit: number }): Promise<PageRes<BbsNoticePerson>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<BbsNoticePerson>>>('v1/bbs/notices/mine', { params });
+    return res.data.data as PageRes<BbsNoticePerson>;
+  },
+
   /** AS-IS bbs.Bbs02_Notice.selectByNoticeDetailCodePaging. 법규공지는 noticeType 10, 구분상세 전체는 '%' */
   searchNotices: async (params: { noticeType: string; noticeDetailCode: string; searchText: string; offset: number; limit: number }): Promise<PageRes<BbsNotice>> => {
     const res = await apiClient.get<ApiResponse<PageRes<BbsNotice>>>('v1/bbs/notices', { params });

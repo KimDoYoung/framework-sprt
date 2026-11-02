@@ -34,6 +34,14 @@ public class BbsCompanyRuleController {
 
     private final BbsCompanyRuleService service;
 
+    /** AS-IS bbs.Bbs15_CompanyRule.selectBySearchText (Z01 회사규정 — 공개·최신 개정회차만) */
+    @GetMapping("/public")
+    public ApiResponse<List<CompanyRuleRes>> searchPublic(@AuthenticationPrincipal UserPrincipal principal,
+                                                          @RequestParam(required = false) String ruleType,
+                                                          @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchPublic(principal, ruleType, searchText));
+    }
+
     /** AS-IS bbs.Bbs15_CompanyRule.selectBySearchTextManager */
     @GetMapping
     public ApiResponse<List<CompanyRuleRes>> search(@AuthenticationPrincipal UserPrincipal principal,
