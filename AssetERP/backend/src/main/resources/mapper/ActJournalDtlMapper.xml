@@ -70,4 +70,128 @@
            AND act02_journal_id = #{journalId}
          ORDER BY act03_seq
     </select>
+
+    <!-- AS-IS act03_journal_dtl.selectByCompanyId (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다(X15). 계산 열 별칭 act02_note는 act02_journal.act02_note와 겹쳐 act02_note_calc로 바꿨다(원본 모델은 둘 중 앞의 계산 열을 읽는다). checkedGroupId는 RD 출력 준비(insertRdJournal)에서만 쓴다 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalDtlListRes">
+        SELECT x.act02_journal_id AS journal_id,
+               x.act03_journal_dtl_id AS journal_dtl_id,
+               x.act03_seq AS seq,
+               x.act02_journal_date_no AS journal_date_no,
+               x.act02_date AS date,
+               x.act02_journal_no AS journal_no,
+               x.act02_tr_nm AS tr_name,
+               x.act02_corp_nm AS corp_name,
+               x.act02_note_calc AS note,
+               x.act02_cur_cd AS cur_code,
+               x.act02_close_nm AS close_name,
+               x.act03_dr_account_cd AS dr_account_code,
+               x.act03_dr_account_nm AS dr_account_name,
+               x.act03_dr_amt AS dr_amt,
+               x.act03_dr_for_amt AS dr_for_amt,
+               x.act03_cr_account_cd AS cr_account_code,
+               x.act03_cr_account_nm AS cr_account_name,
+               x.act03_cr_amt AS cr_amt,
+               x.act03_cr_for_amt AS cr_for_amt
+          FROM (
+<![CDATA[
+SELECT	t2.*
+  FROM	(
+  			SELECT	f_get_account_nm(act02_company_id, act03_dr_account_cd)
+			  		||CASE WHEN act03_dr_ast_id is null THEN ''
+							ELSE '('||f_ast_class_tree_nm(act03_dr_ast_id)||')' END							AS act03_dr_account_nm
+				 ,	f_get_account_nm(act02_company_id, act03_cr_account_cd)
+			  		||CASE WHEN act03_cr_ast_id is null THEN ''
+							ELSE '('||f_ast_class_tree_nm(act03_cr_ast_id)||')' END							AS act03_cr_account_nm
+				 ,	CASE WHEN coalesce(act02_close_yn,'false') = 'true' THEN '마감'
+				 		  ELSE '' END		 																AS act02_close_nm
+				 ,	(
+				 		SELECT	sum(act03_dr_amt)
+				 		  FROM	act03_journal_dtl
+				 		 WHERE	act03_journal_id = act02_journal_id
+				 	)																						AS act02_journal_amt
+				 ,	f_cdnm('trCode', f_get_journal_tr_cd(act02_journal_id), act02_company_id, act02_date)	AS act02_tr_nm
+				 ,	f_get_journal_corp_nm(act02_journal_id)													AS act02_corp_nm
+				 ,	f_get_journal_note(act02_journal_id)													AS act02_note_calc
+				 ,	to_char(act02_date,'yyyy-MM-dd')||' ['||
+
+                    act02_journal_no||'] / '||
+			 		f_cdnm('trCode', tr_cd, act02_company_id, act02_date)||' / '||
+			 		f_get_journal_corp_nm(act02_journal_id)||' / '||
+					f_get_journal_note(act02_journal_id)													AS act02_journal_date_no
+				 ,  t1.*
+			  FROM	(
+			 			SELECT	*
+							 ,	f_get_journal_tr_cd(act02_journal_id)	as tr_cd
+				 		  FROM	act02_journal
+								LEFT OUTER JOIN ast06_tr	  ON ast06_tr_id		= act02_tr_id
+								LEFT OUTER JOIN ast07_settle  ON ast07_settle_id	= act02_tr_id
+								LEFT OUTER JOIN biz01_promo	  ON biz01_promo_id		= act02_biz_id
+								INNER JOIN act03_journal_dtl  ON act03_journal_id	= act02_journal_id
+						 WHERE	act02_company_id = #{companyId}
+				 		   AND	act02_date BETWEEN #{startDate}	AND #{closeDate}
+				 		   AND	COALESCE(CAST(act02_corp_id AS VARCHAR),'%') LIKE #{corpIdStr}
+						   AND	( 
+							   		( '1' = #{abroType}				 AND
+									  COALESCE(act02_cur_cd,'KRW')  = 'KRW'  ) OR	/*	1:국내 */
+									( '2' = #{abroType}				 AND			/*	2:국외 */
+									  COALESCE(act02_cur_cd,'KRW') != 'KRW'  ) OR
+									( '0' = #{abroType}				 ) 		 		/*	0:전체 */
+								)
+						]]><choose>
+							<when test="checkedGroupId != null"><![CDATA[
+						   AND	act02_journal_id IN ( 
+						   								SELECT	sys99_long01
+														  FROM	sys99_print
+														 WHERE	sys99_group_id = #{checkedGroupId}
+													)
+							]]></when>
+						</choose><![CDATA[
+					) t1
+			 WHERE	tr_cd LIKE #{trCode}
+		) t2
+ WHERE	UPPER(
+ 				COALESCE(act02_journal_date_no,'')||
+				COALESCE(act03_dr_account_cd,'')||
+				COALESCE(act03_dr_account_nm,'')||
+			 	COALESCE(act03_cr_account_cd,'')||
+			 	COALESCE(act03_cr_account_nm,'')
+			 ) LIKE UPPER(#{searchText})
+ORDER BY act02_journal_date_no, act03_seq --act02_date, act02_journal_no, act03_seq
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq (f_create_seq()) -->
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS sys99_print.insert (IDMS-IC) — 출력용 선택전표(long01 = 전표ID) -->
+    <insert id="insertPrintChecked">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id, sys99_long01 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}, #{journalId} )
+    </insert>
+
+    <!-- AS-IS Sys99_Print.insertRdJournal 3단계 — 전표일자·전표번호·거래유형·거래처·적요·통화 / 차변(계정코드·계정과목·금액·외화금액) / 대변 -->
+    <insert id="insertPrintJournal">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_long01, sys99_string01, sys99_string02, sys99_string03, sys99_string04
+               , sys99_string10, sys99_string11, sys99_long10, sys99_double10
+               , sys99_string20, sys99_string21, sys99_long20, sys99_double20 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{r.date}, #{r.journalNo}, #{r.trName}, #{r.corpName}, #{r.note}, #{r.curCode}
+               , #{r.drAccountCode}, #{r.drAccountName}, #{r.drAmt}, #{r.drForAmt}
+               , #{r.crAccountCode}, #{r.crAccountName}, #{r.crAmt}, #{r.crForAmt} )
+    </insert>
+
 </mapper>

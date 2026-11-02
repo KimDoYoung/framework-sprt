@@ -379,3 +379,38 @@ export interface GenLedgerCloseProcessRes {
   message: string;
   notes: GenLedgerCloseNote[];
 }
+
+/** 분개장 한 줄 (act03_journal_dtl.selectByCompanyId, X15). 출력 체크는 화면 전용이라 없다 */
+export interface JournalDtlList {
+  journalId: number;
+  journalDtlId: number;
+  seq: number | null;
+  journalDateNo: string | null;
+  date: string;
+  journalNo: number | null;
+  trName: string | null;
+  corpName: string | null;
+  note: string | null;
+  curCode: string | null;
+  closeName: string | null;
+  drAccountCode: string | null;
+  drAccountName: string | null;
+  drAmt: number | null;
+  drForAmt: number | null;
+  crAccountCode: string | null;
+  crAccountName: string | null;
+  crAmt: number | null;
+  crForAmt: number | null;
+}
+
+/** 분개장 출력 준비 요청 — journalIds가 비면 조회 조건 전체 */
+export interface JournalDtlRdReq {
+  windowClassName: string;
+  startDate: string;
+  closeDate: string;
+  corpId: number | null;
+  searchText: string;
+  trCode: string | null;
+  abroType: string;
+  journalIds: number[];
+}

@@ -1,4 +1,8 @@
 package kr.co.kfs.asseterp.biz.act.controller;
+import kr.co.kfs.asseterp.biz.act.dto.JournalDtlListRes;
+import kr.co.kfs.asseterp.biz.act.dto.JournalDtlRdReq;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import kr.co.kfs.asseterp.biz.act.dto.JournalDtlRes;
 import kr.co.kfs.asseterp.biz.act.dto.JournalLineRes;
@@ -46,5 +50,23 @@ public class ActJournalDtlController {
     public ApiResponse<List<JournalLineRes>> byJournal(@AuthenticationPrincipal UserPrincipal principal,
                                                        @RequestParam Long journalId) {
         return ApiResponse.ok(service.searchByJournalId(principal, journalId));
+    }
+
+    /** act.Act03_JournalDtl.selectByCompanyId — 분개장 Act02_Tab_Journal (X15). abroType 0 전체(기본) · 1 국내 · 2 국외 */
+    @GetMapping
+    public ApiResponse<List<JournalDtlListRes>> search(@AuthenticationPrincipal UserPrincipal principal,
+                                                       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                       @RequestParam(required = false) Long corpId,
+                                                       @RequestParam(required = false) String searchText,
+                                                       @RequestParam(required = false) String trCode,
+                                                       @RequestParam(required = false, defaultValue = "0") String abroType) {
+        return ApiResponse.ok(service.searchList(principal, startDate, closeDate, corpId, searchText, trCode, abroType));
+    }
+
+    /** sys.Sys99_Print.insertRdJournal — 출력그룹ID */
+    @PostMapping("/rd")
+    public ApiResponse<Long> rd(@AuthenticationPrincipal UserPrincipal principal, @RequestBody JournalDtlRdReq req) {
+        return ApiResponse.ok(service.insertRd(principal, req));
     }
 }

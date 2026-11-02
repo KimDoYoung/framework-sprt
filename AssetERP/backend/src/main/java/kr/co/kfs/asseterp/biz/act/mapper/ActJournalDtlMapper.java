@@ -1,4 +1,6 @@
 package kr.co.kfs.asseterp.biz.act.mapper;
+import kr.co.kfs.asseterp.biz.act.dto.JournalDtlCond;
+import kr.co.kfs.asseterp.biz.act.dto.JournalDtlListRes;
 
 import kr.co.kfs.asseterp.biz.act.dto.JournalDtlRes;
 import kr.co.kfs.asseterp.biz.act.dto.JournalLineRes;
@@ -22,4 +24,21 @@ public interface ActJournalDtlMapper {
 
     /** AS-IS selectByJournalId (Ast06_Grid_Journal, U04) */
     List<JournalLineRes> selectByJournalId(@Param("companyId") Long companyId, @Param("journalId") Long journalId);
+
+    /** AS-IS selectByCompanyId (분개장, X15) */
+    List<JournalDtlListRes> selectByCompanyId(JournalDtlCond cond);
+
+    /** AS-IS dbConfig.getSeq */
+    long selectNextId();
+
+    /** AS-IS sys99_print.deleteByPersonId */
+    int deletePrint(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("windowClassName") String windowClassName);
+
+    /** AS-IS sys99_print.insert — 출력용 선택전표 */
+    int insertPrintChecked(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
+                           @Param("windowClassName") String windowClassName, @Param("groupId") long groupId, @Param("journalId") Long journalId);
+
+    /** AS-IS sys99_print.insert — 출력용 분개장 한 줄 */
+    int insertPrintJournal(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
+                           @Param("windowClassName") String windowClassName, @Param("groupId") long groupId, @Param("r") JournalDtlListRes r);
 }

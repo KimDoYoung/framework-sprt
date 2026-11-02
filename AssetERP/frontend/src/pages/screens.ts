@@ -221,6 +221,7 @@ import { Act10_Tab_ReprAccount } from './act/Act10_Tab_ReprAccount';
 import { Ast05_Tab_TrCodeAdmin } from './ast/Ast05_Tab_TrCodeAdmin';
 import { Act11_Tab_TrJournalMap } from './act/Act11_Tab_TrJournalMap';
 import { Act13_Tab_RealAccountMap } from './act/Act13_Tab_RealAccountMap';
+import { Act02_Tab_Journal } from './act/Act02_Tab_Journal';
 import { Act04_Tab_Close } from './act/Act04_Tab_Close';
 import { Act15_Tab_CloseCheck } from './act/Act15_Tab_CloseCheck';
 import { Act02_Tab_DepositIoList } from './act/Act02_Tab_DepositIoList';
@@ -622,6 +623,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ast05_Tab_TrCodeAdmin, // E29 (+ Ast15_Lookup_TrCodeWindow·Ast15_Page_TrCodeWindow·Sys06_Lookup_SearchMenu·Sys40_Lookup_Bookmark)
   Act11_Tab_TrJournalMap, // E30 (+ Act11_Grid_TrJournalMap·Ast05_Lookup_TrCode)
   Act13_Tab_RealAccountMap, // E31 (+ Act10_Lookup_ReprAccount·Act01_Lookup_AccountCode)
+  Act02_Tab_Journal, // X15
   Act04_Tab_Close, // X14
   Act15_Tab_CloseCheck, // E32
   Act02_Tab_DepositIoList, // U01 (메뉴 #1164·#1470. 상신의 전자결재 편집창은 다음 단계, 문서분류 조회창 Dcr30_Move_DcrClass·RD 출력 재사용)

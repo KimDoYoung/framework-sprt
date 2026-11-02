@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, JournalDtlList, JournalDtlRdReq, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { AstBook } from '../types/ast';
 import { readBlobError } from './file';
 
@@ -410,6 +410,22 @@ export const actApi = {
   /** AS-IS act.Act04_GenLedger.insertClose: procType P 회계마감 · C 마감취소 · A 마감검증. 검증 실패도 200으로 status -1 + notes */
   processGenLedgerClose: async (req: GenLedgerCloseReq): Promise<GenLedgerCloseProcessRes> => {
     const res = await apiClient.post<ApiResponse<GenLedgerCloseProcessRes>>('v1/act/gen-ledger-closes/process', req);
+    return res.data.data;
+  },
+
+  // ── X15 분개장 (Act02_Tab_Journal) ──
+
+  /** AS-IS act.Act03_JournalDtl.selectByCompanyId: corpId 없으면 전체, 검색어는 서버가 "%…%", trCode 없으면 전체, abroType 0 전체 · 1 국내 · 2 국외 */
+  searchJournalDtlList: async (params: { startDate: string; closeDate: string; corpId?: number | null; searchText?: string; trCode?: string | null; abroType?: string }): Promise<JournalDtlList[]> => {
+    const res = await apiClient.get<ApiResponse<JournalDtlList[]>>('v1/act/journal-dtls', {
+      params: { startDate: params.startDate, closeDate: params.closeDate, corpId: params.corpId ?? undefined, searchText: params.searchText || undefined, trCode: params.trCode ?? undefined, abroType: params.abroType ?? '0' },
+    });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdJournal: journalIds가 비면 조건 전체, 있으면 그 전표만 → 출력그룹ID */
+  insertJournalDtlRd: async (req: JournalDtlRdReq): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/act/journal-dtls/rd', req);
     return res.data.data;
   },
 };
