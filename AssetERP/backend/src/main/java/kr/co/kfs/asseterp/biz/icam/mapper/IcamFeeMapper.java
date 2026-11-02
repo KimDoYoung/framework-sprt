@@ -1,5 +1,7 @@
 package kr.co.kfs.asseterp.biz.icam.mapper;
 
+import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeDetailParam;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeDetailRes;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeParam;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeRes;
 import org.apache.ibatis.annotations.Mapper;
@@ -17,6 +19,9 @@ public interface IcamFeeMapper {
 
     /** AS-IS icam10_fee.selectByFeeTypePagingTotal */
     int selectByFeeTypePagingTotal(@Param("p") IcamFeeParam param);
+
+    /** AS-IS icam10_fee.selectByFundCode (X25, Ast30_Lookup_FeeDetail) */
+    List<IcamFeeDetailRes> selectByFundCode(@Param("p") IcamFeeDetailParam param);
 
     /** AS-IS icam10_fee.updateFee (+ 회사 조건 — TOBE 보강) */
     int updateFee(@Param("feeId") Long feeId, @Param("fee") BigDecimal fee, @Param("companyId") Long companyId);

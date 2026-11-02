@@ -216,3 +216,11 @@ export interface IcamFeeBookCheck {
   workerName?: string | null;
   workDateString?: string | null;
 }
+
+/** 펀드 하루의 적요별 보수 한 행 (X25, AS-IS Icam10_FeeModel 일부) */
+export interface IcamFeeDetail {
+  rmkCode: string;
+  rmkName?: string | null;
+  curCode?: string | null;
+  fee?: number | null;
+}

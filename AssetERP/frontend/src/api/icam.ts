@@ -8,6 +8,7 @@ import {
   IcamData,
   IcamFee,
   IcamFeeBook,
+  IcamFeeDetail,
   IcamFeeBookCheck,
   IcamFeeJobReq,
   IcamFund,
@@ -183,5 +184,13 @@ export const icamApi = {
   /** AS-IS icam.Icam13_FeeBookCheck.checkFeeBook: ICAM 월말잔액 대사 — 외부 ICAM DB 연동이 없으면 오류 */
   checkFeeBook: async (stdDate: string): Promise<void> => {
     await apiClient.post<ApiResponse<null>>('v1/icam/fee-books/checks', { stdDate });
+  },
+
+  // ── X25 증감액 상세 (Ast30_Lookup_FeeDetail) ──
+
+  /** AS-IS icam.Icam10_Fee.selectByFundCode: 펀드 하루의 적요별 보수 */
+  searchFeesByFund: async (params: { corpId?: number; fundCode: string; stdDate: string; searchText: string }): Promise<IcamFeeDetail[]> => {
+    const res = await apiClient.get<ApiResponse<IcamFeeDetail[]>>('v1/icam/fees/by-fund', { params });
+    return res.data.data ?? [];
   },
 };

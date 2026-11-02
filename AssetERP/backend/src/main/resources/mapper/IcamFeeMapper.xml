@@ -54,6 +54,25 @@
             <include refid="whereCondition"/>
     </select>
 
+    <!-- AS-IS icam10_fee.selectByFundCode (IDMS-IC, X25) — 원본은 icam10_fee.*도 같이 내지만 이 화면은 적요·통화·금액만 쓴다. fee는 원본처럼 부호·이중운용 보정값 -->
+    <select id="selectByFundCode" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamFeeDetailRes">
+        SELECT icam10_rmk_cd                                          AS rmk_code,
+               icam10_rmk_nm                                          AS rmk_name,
+               icam10_cur_cd                                          AS cur_code,
+               f_calc_dual_fund_fee(icam10_company_id, icam10_icam_company_cd, icam10_fund_cd, icam10_std_date, icam10_fee)
+                 * CASE WHEN icam10_drcr_type = 'C' THEN 1 ELSE -1 END AS fee
+          FROM icam10_fee
+               LEFT OUTER JOIN sys15_corp ON (sys15_company_id = icam10_company_id AND sys15_corp_cd = icam10_icam_company_cd)
+         WHERE icam10_company_id = #{p.companyId}
+           AND icam10_std_date   = #{p.stdDate}
+           AND icam10_fund_cd    = #{p.fundCode}
+           <if test="p.corpId != null">
+           AND #{p.corpId} IN (sys15_corp_id, icam10_company_id)
+           </if>
+           AND upper(icam10_rmk_cd||icam10_rmk_nm) LIKE '%'||upper(#{p.searchText})||'%'
+         ORDER BY icam10_rmk_cd
+    </select>
+
     <!-- AS-IS icam10_fee.updateFee L497 (IDMS-IC) — 원본 WHERE는 fee_id뿐, TOBE는 회사 조건을 더했다(X23) -->
     <update id="updateFee">
         UPDATE icam10_fee

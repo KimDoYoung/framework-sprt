@@ -1245,3 +1245,33 @@ export interface AstPreDeposit {
   holdQty: number | null;
   astClassTreeId: number | null;
 }
+
+/** 펀드보수원장 현황 — 운용사별 합계 한 행 (X25, AS-IS Ast30_BookFundFeeModel) */
+export interface AstBookFundFeeCorp {
+  corpId: number;
+  corpCode?: string | null;
+  corpName?: string | null;
+  diffFee?: number | null;
+  fee?: number | null;
+  unRcvFee?: number | null;
+  tyFee?: number | null;
+  fixFee?: number | null;
+}
+
+/** 펀드보수원장 현황 — 한 운용사의 펀드별 한 행 (X25). 통화(외화) 열은 KRW면 null */
+export interface AstBookFundFeeFund {
+  bookFundFeeId: number;
+  corpId: number;
+  holdDate?: string | null;
+  fundCode: string;
+  fundName?: string | null;
+  curCode?: string | null;
+  diffFee?: number | null;
+  fee?: number | null;
+  unRcvFee?: number | null;
+  tyFee?: number | null;
+  fixFee?: number | null;
+  forDiffFee?: number | null;
+  forFee?: number | null;
+  forUnRcvFee?: number | null;
+}

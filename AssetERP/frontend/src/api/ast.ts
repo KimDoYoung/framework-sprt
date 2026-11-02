@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { AstBookDepn, AstSettleByTr, AstTrIntrinsic, AstTrIntrinsicSaveReq, SettleAccrued, SettleExpense, SettleHistory, SettleSaveReq } from '../types/ast';
+import { AstBookDepn, AstBookFundFeeCorp, AstBookFundFeeFund, AstSettleByTr, AstTrIntrinsic, AstTrIntrinsicSaveReq, SettleAccrued, SettleExpense, SettleHistory, SettleSaveReq } from '../types/ast';
 import {
   AstCf,
   AstCfBatchCreateReq,
@@ -1049,5 +1049,19 @@ export const astApi = {
   searchBookDepns: async (depnDate: string, searchText: string): Promise<AstBookDepn[]> => {
     const res = await apiClient.get<ApiResponse<AstBookDepn[]>>('v1/ast/book-depns/hold', { params: { depnDate, searchText } });
     return res.data.data;
+  },
+
+  // ── X25 펀드보수원장 현황 (Ast30_Tab_OfficeMngFeeState) ──
+
+  /** AS-IS ast.Ast30_BookFundFee.selectByCompanyId: 기준일의 운용사별 합계 */
+  searchBookFundFeeCorps: async (params: { holdDate: string; searchText: string }): Promise<AstBookFundFeeCorp[]> => {
+    const res = await apiClient.get<ApiResponse<AstBookFundFeeCorp[]>>('v1/ast/book-fund-fees', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast30_BookFundFee.selectByCorpId: 한 운용사의 펀드별 */
+  searchBookFundFeeFunds: async (params: { holdDate: string; corpId: number; searchText: string }): Promise<AstBookFundFeeFund[]> => {
+    const res = await apiClient.get<ApiResponse<AstBookFundFeeFund[]>>('v1/ast/book-fund-fees/funds', { params });
+    return res.data.data ?? [];
   },
 };

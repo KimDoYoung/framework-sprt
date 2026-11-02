@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.icam.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeBatchReq;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeDetailRes;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeJobReq;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeRes;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeUpdateReq;
@@ -14,6 +15,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /** ICAM 보수(관리자용) (AS-IS Icam10_Tab_FeeAdmin → server/icam/Icam10_Fee) — 메뉴 #1203 */
 @RestController
@@ -34,6 +36,16 @@ public class IcamFeeController {
                                                    @RequestParam(defaultValue = "0") int offset,
                                                    @RequestParam(defaultValue = "100") int limit) {
         return ApiResponse.ok(service.search(principal, companyId, feeType, startDate, closeDate, searchText, offset, limit));
+    }
+
+    /** AS-IS icam.Icam10_Fee.selectByFundCode — 펀드 하루의 적요별 보수 (X25 Ast30_Lookup_FeeDetail) */
+    @GetMapping("/by-fund")
+    public ApiResponse<List<IcamFeeDetailRes>> searchByFund(@AuthenticationPrincipal UserPrincipal principal,
+                                                            @RequestParam(required = false) Long corpId,
+                                                            @RequestParam String fundCode,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
+                                                            @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchByFund(principal, corpId, fundCode, stdDate, searchText));
     }
 
     /** AS-IS BatchMain(icamOfficeMngFee·icamFundMngFee): ICAM 발생보수 가져오기 — 외부 ICAM DB 연동이 없어 서버가 거절 */

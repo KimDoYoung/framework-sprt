@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/ast/mapper/ast30_book_fund_fee.xml (selectByCompanyId, selectByCorpId)  (X25)
+  SELECT 목록만 그리드 DTO에 맞춰 별칭. selectByCorpId의 curCode 분기는 이 화면이 넘기지 않아 뺐다
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstBookFundFeeMapper">
+
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeCorpRes">
+        SELECT ast30_corp_id                                  AS corp_id
+             , sys15_corp_cd                                  AS corp_code
+             , sys15_corp_nm                                  AS corp_name
+             , SUM(ast30_diff_fee)                            AS diff_fee
+             , SUM(ast30_fee)                                 AS fee
+             , SUM(ast30_un_rcv_fee)                          AS un_rcv_fee
+             , SUM(ast30_fix_fee)                             AS fix_fee
+             , SUM(ast30_fee - ast30_fix_fee)                 AS ty_fee
+          FROM ( SELECT *
+                      , COALESCE(( SELECT SUM( f_calc_dual_fund_fee(icam10_company_id, icam10_icam_company_cd, icam10_fund_cd, icam10_std_date, icam10_fee)
+                                               * CASE WHEN icam10_drcr_type = 'C' THEN 1 ELSE -1 END
+                                               * COALESCE(icam10_fx_rate,1) )
+                                     FROM icam10_fee
+                                    WHERE icam10_company_id       = ast30_company_id
+                                      AND icam10_std_date         = ast30_hold_date
+                                      AND icam10_icam_company_cd  = sys15_corp_cd
+                                      AND icam10_fund_cd          = ast30_fund_cd ),0) AS ast30_diff_fee
+                   FROM ast30_book_fund_fee
+                        INNER JOIN sys15_corp ON sys15_corp_id = ast30_corp_id
+                  WHERE ast30_company_id = #{p.companyId}
+                    AND ast30_hold_date  = #{p.holdDate}
+                    AND upper(concat(sys15_corp_cd,sys15_corp_nm,ast30_fund_cd,ast30_fund_nm)) LIKE '%'||upper(#{p.searchText})||'%'
+               ) t
+         GROUP BY ast30_corp_id, sys15_corp_cd, sys15_corp_nm
+         ORDER BY sys15_corp_cd
+    </select>
+
+    <select id="selectByCorpId" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeFundRes">
+        SELECT ast30_book_fund_fee_id                         AS book_fund_fee_id
+             , ast30_corp_id                                  AS corp_id
+             , ast30_hold_date                                AS hold_date
+             , ast30_fund_cd                                  AS fund_code
+             , ast30_fund_nm                                  AS fund_name
+             , ast30_cur_cd                                   AS cur_code
+             , ast30_diff_fee                                 AS diff_fee
+             , ast30_fee                                      AS fee
+             , ast30_un_rcv_fee                               AS un_rcv_fee
+             , ast30_ty_fee                                   AS ty_fee
+             , ast30_fix_fee                                  AS fix_fee
+             , ast30_for_diff_fee                             AS for_diff_fee
+             , CASE WHEN ast30_cur_cd = 'KRW' THEN null ELSE ast30_for_fee        END AS for_fee
+             , CASE WHEN ast30_cur_cd = 'KRW' THEN null ELSE ast30_for_un_rcv_fee END AS for_un_rcv_fee
+          FROM ( SELECT *
+                      , sys15_corp_cd                                   AS ast30_corp_cd
+                      , sys15_corp_nm                                   AS ast30_corp_nm
+                      , ast30_fee     - COALESCE(ast30_fix_fee    ,0)   AS ast30_ty_fee
+                      , COALESCE(( SELECT SUM( f_calc_dual_fund_fee(icam10_company_id, icam10_icam_company_cd, icam10_fund_cd, icam10_std_date, icam10_fee)
+                                               * CASE WHEN icam10_drcr_type = 'C' THEN 1 ELSE -1 END
+                                               * COALESCE(icam10_fx_rate,1) )
+                                     FROM icam10_fee
+                                    WHERE icam10_company_id       = ast30_company_id
+                                      AND icam10_std_date         = ast30_hold_date
+                                      AND icam10_icam_company_cd  = sys15_corp_cd
+                                      AND icam10_fund_cd          = ast30_fund_cd ),0) AS ast30_diff_fee
+                      , CASE WHEN ast30_cur_cd = 'KRW' THEN null
+                             ELSE COALESCE(( SELECT SUM(icam10_fee * CASE WHEN icam10_drcr_type = 'C' THEN 1 ELSE -1 END)
+                                               FROM icam10_fee
+                                              WHERE icam10_company_id       = ast30_company_id
+                                                AND icam10_std_date         = ast30_hold_date
+                                                AND icam10_icam_company_cd  = sys15_corp_cd
+                                                AND icam10_fund_cd          = ast30_fund_cd ),0) END AS ast30_for_diff_fee
+                   FROM ast30_book_fund_fee
+                        INNER JOIN sys15_corp ON sys15_corp_id = ast30_corp_id
+                  WHERE ast30_company_id = #{p.companyId}
+                    AND ast30_hold_date  = #{p.holdDate}
+                    AND ast30_corp_id    = #{p.corpId}
+               ) t
+         WHERE upper(concat(sys15_corp_cd,ast30_corp_nm,ast30_fund_cd,ast30_fund_nm)) LIKE '%'||upper(#{p.searchText})||'%'
+         ORDER BY ast30_fund_cd
+    </select>
+</mapper>

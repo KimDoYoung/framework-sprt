@@ -13825,5 +13825,28 @@
     "note": "docs/work/X/X24-작업기록.md",
     "history": [],
     "id": "X24"
+  },
+  "Ast30_Tab_OfficeMngFeeState": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ast/Ast30_Lookup_FeeDetail.java": "f7089a5b0e19d3d3897bb1b3055d89036377810c",
+      "application/src/main/java/myApp/client/vi/ast/Ast30_Tab_OfficeMngFeeState.java": "501963b1bda41d16ddb54e5d16196a2d42547809",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast30_BookFundFeeModel.java": "9ae8ee62724a784d0a8a8c7ff037979ca23609d4",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast30_BookFundFeeModelProperties.java": "1061a932fbbc9309cba5efd99db2b172a7de38ff",
+      "application/src/main/java/myApp/server/ast/Ast30_BookFundFee.java": "e269a85e478f233b5ff8d34c253393ecc6fa807a",
+      "application/src/main/java/myApp/server/ast/mapper/ast30_book_fund_fee.xml": "63fe626cb11db5233421957249729287fc4dc45a",
+      "application/src/main/java/myApp/server/icam/Icam10_Fee.java": "495530a0e51cd7f4cace4fe657973d4506c7813f",
+      "application/src/main/java/myApp/server/icam/mapper/icam10_fee.xml": "ba24a6691b9b6199323288c59b1eee6e90a922a8"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-11-02T11:32:17+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/X/X25-작업기록.md",
+    "history": [],
+    "id": "X25"
   }
 }

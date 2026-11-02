@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.icam.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeDetailParam;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeDetailRes;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeJobReq;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeParam;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeRes;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * AS-IS server/icam/Icam10_Fee.java (selectByFeeTypePaging L29 = 목록 + 전체 건수).
@@ -32,6 +35,14 @@ public class IcamFeeService {
         IcamFeeParam param = new IcamFeeParam(allowedCompany(user, companyId), feeType, startDate, closeDate,
                 searchText == null ? "" : searchText, Math.max(offset, 0), limit > 0 ? limit : 100);
         return new PageRes<>(mapper.selectByFeeTypePagingTotal(param), mapper.selectByFeeTypePaging(param));
+    }
+
+    /** AS-IS icam.Icam10_Fee.selectByFundCode (Ast30_Lookup_FeeDetail) — 로그인 회사의 펀드 하루 적요별 보수 */
+    public List<IcamFeeDetailRes> searchByFund(UserPrincipal user, Long corpId, String fundCode, LocalDate stdDate, String searchText) {
+        if (fundCode == null || fundCode.isBlank() || stdDate == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        return mapper.selectByFundCode(new IcamFeeDetailParam(user.getCompanyId(), corpId, fundCode, stdDate, searchText == null ? "" : searchText));
     }
 
     /** AS-IS BatchMain?actionCode=icamOfficeMngFee|icamFundMngFee&companyId=…&worker=…&startDate=…&closeDate=… (연동이 없으면 거절) */
