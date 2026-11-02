@@ -513,7 +513,7 @@ export const actApi = {
     return res.data.data ?? null;
   },
 
-  /** AS-IS sys.Sys99_Print.insertRdReportPL → 출력그룹ID */
+  /** AS-IS sys.Sys99_Print.insertRdReportPL (X20) · sys.Sys99_Print.insertRdReportBS (X21, reportType '1') → 출력그룹ID */
   insertGenLedgerReportRd: async (req: GenLedgerReportRdReq): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/act/gen-ledger-reports/rd', req);
     return res.data.data;
