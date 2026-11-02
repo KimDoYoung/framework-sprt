@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { AstBookDepn, AstBookFundFeeCorp, AstBookFundFeeFund, AstSettleByTr, AstTrIntrinsic, AstTrIntrinsicSaveReq, SettleAccrued, SettleExpense, SettleHistory, SettleSaveReq } from '../types/ast';
+import { AstBookDepn, AstBookFundFeeCorp, AstBookFundFeeFund, AstBookFundFeePeriod, AstSettleByTr, AstTrIntrinsic, AstTrIntrinsicSaveReq, SettleAccrued, SettleExpense, SettleHistory, SettleSaveReq } from '../types/ast';
 import {
   AstCf,
   AstCfBatchCreateReq,
@@ -1057,6 +1057,12 @@ export const astApi = {
   searchBookFundFeeCorps: async (params: { holdDate: string; searchText: string }): Promise<AstBookFundFeeCorp[]> => {
     const res = await apiClient.get<ApiResponse<AstBookFundFeeCorp[]>>('v1/ast/book-fund-fees', { params });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast30_BookFundFee.selectByHoldDatePaging (X26): 기간의 일자·운용사별 합계 (페이지 행 + 전체 건수) */
+  searchBookFundFeePeriod: async (params: { startDate: string; closeDate: string; searchText: string; offset: number; limit: number }): Promise<PageRes<AstBookFundFeePeriod>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<AstBookFundFeePeriod>>>('v1/ast/book-fund-fees/period', { params });
+    return res.data.data ?? { total: 0, rows: [] };
   },
 
   /** AS-IS ast.Ast30_BookFundFee.selectByCorpId: 한 운용사의 펀드별 */

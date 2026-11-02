@@ -1258,6 +1258,19 @@ export interface AstBookFundFeeCorp {
   fixFee?: number | null;
 }
 
+/** 펀드보수원장 기간조회 — 일자·운용사별 합계 한 행 (X26) */
+export interface AstBookFundFeePeriod {
+  holdDate: string;
+  corpId: number;
+  corpCode?: string | null;
+  corpName?: string | null;
+  diffFee?: number | null;
+  fee?: number | null;
+  unRcvFee?: number | null;
+  tyFee?: number | null;
+  fixFee?: number | null;
+}
+
 /** 펀드보수원장 현황 — 한 운용사의 펀드별 한 행 (X25). 통화(외화) 열은 KRW면 null */
 export interface AstBookFundFeeFund {
   bookFundFeeId: number;
@@ -1274,4 +1287,6 @@ export interface AstBookFundFeeFund {
   forDiffFee?: number | null;
   forFee?: number | null;
   forUnRcvFee?: number | null;
+  calcStartDate?: string | null;
+  calcCloseDate?: string | null;
 }

@@ -37,6 +37,55 @@
          ORDER BY sys15_corp_cd
     </select>
 
+    <!-- AS-IS ast30_book_fund_fee.selectByHoldDatePaging (IDMS-IC, X26) — 원본은 ORDER BY 없이 LIMIT라 row_number 순서(일자, 운용사코드)로 정렬을 더했다 -->
+    <select id="selectByHoldDatePaging" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookFundFeePeriodRes">
+        SELECT ast30_hold_date                                AS hold_date
+             , ast30_corp_id                                  AS corp_id
+             , sys15_corp_cd                                  AS corp_code
+             , sys15_corp_nm                                  AS corp_name
+             , SUM(ast30_diff_fee)                            AS diff_fee
+             , SUM(ast30_fee)                                 AS fee
+             , SUM(ast30_un_rcv_fee)                          AS un_rcv_fee
+             , SUM(ast30_fix_fee)                             AS fix_fee
+             , SUM(ast30_fee - ast30_fix_fee)                 AS ty_fee
+          FROM ( SELECT *
+                      , COALESCE(( SELECT SUM( f_calc_dual_fund_fee(icam10_company_id, icam10_icam_company_cd, icam10_fund_cd, icam10_std_date, icam10_fee)
+                                               * CASE WHEN icam10_drcr_type = 'C' THEN 1 ELSE -1 END
+                                               * COALESCE(icam10_fx_rate,1) )
+                                     FROM icam10_fee
+                                    WHERE icam10_company_id       = ast30_company_id
+                                      AND icam10_std_date         = ast30_hold_date
+                                      AND icam10_icam_company_cd  = sys15_corp_cd
+                                      AND icam10_fund_cd          = ast30_fund_cd ),0) AS ast30_diff_fee
+                   FROM ast30_book_fund_fee
+                        INNER JOIN sys15_corp ON sys15_corp_id = ast30_corp_id
+                  WHERE 1=1
+                    <include refid="holdDateWhere"/>
+               ) t
+         GROUP BY ast30_hold_date, ast30_corp_id, sys15_corp_cd, sys15_corp_nm
+         ORDER BY ast30_hold_date, sys15_corp_cd
+         LIMIT #{p.limit}
+        OFFSET #{p.offset}
+    </select>
+
+    <sql id="holdDateWhere">
+        AND ast30_company_id = #{p.companyId}
+        AND ast30_hold_date  BETWEEN #{p.startDate} AND #{p.closeDate}
+        AND upper(concat(sys15_corp_cd,sys15_corp_nm,ast30_fund_cd,ast30_fund_nm)) LIKE '%'||upper(#{p.searchText})||'%'
+    </sql>
+
+    <!-- AS-IS ast30_book_fund_fee.selectByHoldDatePagingTotal (IDMS-IC, X26) -->
+    <select id="selectByHoldDatePagingTotal" resultType="int">
+        SELECT count(*)
+          FROM ( SELECT ast30_hold_date, ast30_corp_id, sys15_corp_cd, sys15_corp_nm
+                   FROM ast30_book_fund_fee
+                        INNER JOIN sys15_corp ON sys15_corp_id = ast30_corp_id
+                  WHERE 1=1
+                    <include refid="holdDateWhere"/>
+                  GROUP BY ast30_hold_date, ast30_corp_id, sys15_corp_cd, sys15_corp_nm
+               ) t
+    </select>
+
     <select id="selectByCorpId" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeFundRes">
         SELECT ast30_book_fund_fee_id                         AS book_fund_fee_id
              , ast30_corp_id                                  AS corp_id
@@ -52,6 +101,8 @@
              , ast30_for_diff_fee                             AS for_diff_fee
              , CASE WHEN ast30_cur_cd = 'KRW' THEN null ELSE ast30_for_fee        END AS for_fee
              , CASE WHEN ast30_cur_cd = 'KRW' THEN null ELSE ast30_for_un_rcv_fee END AS for_un_rcv_fee
+             , ast30_calc_start_date                          AS calc_start_date
+             , ast30_calc_close_date                          AS calc_close_date
           FROM ( SELECT *
                       , sys15_corp_cd                                   AS ast30_corp_cd
                       , sys15_corp_nm                                   AS ast30_corp_nm

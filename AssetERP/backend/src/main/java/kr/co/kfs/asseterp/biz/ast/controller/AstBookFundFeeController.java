@@ -2,9 +2,11 @@ package kr.co.kfs.asseterp.biz.ast.controller;
 
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeCorpRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeFundRes;
+import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeePeriodRes;
 import kr.co.kfs.asseterp.biz.ast.service.AstBookFundFeeService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
+import kr.co.kfs.asseterp.common.dto.PageRes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,6 +29,17 @@ public class AstBookFundFeeController {
                                                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate holdDate,
                                                              @RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.searchCorps(principal, holdDate, searchText));
+    }
+
+    /** AS-IS ast.Ast30_BookFundFee.selectByHoldDatePaging — 기간의 일자·운용사별 합계 (X26 #1249) */
+    @GetMapping("/period")
+    public ApiResponse<PageRes<BookFundFeePeriodRes>> searchPeriod(@AuthenticationPrincipal UserPrincipal principal,
+                                                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                                   @RequestParam(defaultValue = "") String searchText,
+                                                                   @RequestParam(defaultValue = "0") int offset,
+                                                                   @RequestParam(defaultValue = "100") int limit) {
+        return ApiResponse.ok(service.searchPeriod(principal, startDate, closeDate, searchText, offset, limit));
     }
 
     /** AS-IS ast.Ast30_BookFundFee.selectByCorpId — 한 운용사의 펀드별 */
