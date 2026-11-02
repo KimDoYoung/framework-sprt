@@ -166,6 +166,7 @@ import { Ast30_Tab_OfficeMngFeeStatePeriod } from './ast/Ast30_Tab_OfficeMngFeeS
 import { Ast33_Tab_OfficeMngFundTrans } from './ast/Ast33_Tab_OfficeMngFundTrans';
 import { Icam12_Tab_OfficeMngFeeBook } from './icam/Icam12_Tab_OfficeMngFeeBook';
 import { Icam11_Tab_OfficeMngFeeDeposit } from './icam/Icam11_Tab_OfficeMngFeeDeposit';
+import { Icam11_Tab_FundMngFeeDeposit } from './icam/Icam11_Tab_FundMngFeeDeposit';
 import { Icam50_Tab_DbSource } from './icam/Icam50_Tab_DbSource';
 import { Icam99_Tab_Test } from './icam/Icam99_Tab_Test';
 import { Ifi90_Tab_Config } from './ifi/Ifi90_Tab_Config';
@@ -542,6 +543,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ast30_Tab_FundMngFee, // X32 (메뉴 #1401. `ast/book-fund-fees/month-fees`)
   Ast30_Tab_FundMngFeeState, // X31 (메뉴 #1216. `ast/book-fund-fees/fund-fee-books` + 펀드 조회창 X29 + 증감액 상세 X25 재사용)
   Ast30_Tab_OfficeMngFeeState, // X25 (메뉴 #1201. `ast/book-fund-fees` + 증감액 상세 `icam/fees/by-fund`)
+  Icam11_Tab_FundMngFeeDeposit, // X33 (메뉴 #1217. X27 `icam/fee-deposits`·이력 그리드·예금계좌 조회창 재사용)
   Icam11_Tab_OfficeMngFeeDeposit, // X27 (메뉴 #1204. `icam/fee-deposits`, X33 운용보수 입금계좌 관리가 같은 API를 쓸 수 있다)
   Icam12_Tab_OfficeMngFeeBook, // X24 (메뉴 #1200. `icam/fee-books`, X30 운용보수 월말잔액이 같은 API를 쓸 수 있다)
   Icam50_Tab_DbSource, // D09 (DB소스 가져오기도 같은 연동이 없어 서버가 거절)

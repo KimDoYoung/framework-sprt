@@ -14039,5 +14039,28 @@
     "note": "docs/work/X/X32-작업기록.md",
     "history": [],
     "id": "X32"
+  },
+  "Icam11_Tab_FundMngFeeDeposit": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/icam/Icam11_Grid_MngFeeDeposit.java": "536e55e7f9946b4a739d058e06988f91b3648e5e",
+      "application/src/main/java/myApp/client/vi/icam/Icam11_Tab_FundMngFeeDeposit.java": "51fa9e92e3438e3312b29bfeaa7dc3f04c9f1d3f",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam11_FeeDepositModel.java": "fd04679f11ad136181bf370ec5deb74d103a40e4",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam11_FeeDepositModelProperties.java": "5f008358d9dc7a5c27c65cae01e24c78a9357983",
+      "application/src/main/java/myApp/server/icam/Icam11_FeeDeposit.java": "3b160fd1af72ee1682f435da6cb4d08ce1e3871d",
+      "application/src/main/java/myApp/server/icam/mapper/icam11_fee_deposit.xml": "45ec0e27df5a5f8967b98e6e145c52d50b456640"
+    },
+    "shared_links": [
+      "Ast01_Lookup_CorpAccount"
+    ],
+    "recorded_at": "2026-11-02T13:14:49+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/X/X33-작업기록.md",
+    "history": [],
+    "id": "X33"
   }
 }
