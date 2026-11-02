@@ -233,6 +233,7 @@ import { Car04_Tab_PublicJournalAdmin } from './car/Car04_Tab_PublicJournalAdmin
 import { Car04_Tab_Journal } from './car/Car04_Tab_Journal';
 import { Rpt01_Tab_DailyConfirm } from './rpt/Rpt01_Tab_DailyConfirm';
 import { Rpt02_Tab_MonthWrite } from './rpt/Rpt02_Tab_MonthWrite';
+import { Rpt04_Tab_WeekConfirm } from './rpt/Rpt04_Tab_WeekConfirm';
 import { Rpt03_Tab_WeekWrite } from './rpt/Rpt03_Tab_WeekWrite';
 import { Rpt01_Tab_DailyWrite } from './rpt/Rpt01_Tab_DailyWrite';
 import { Rpt10_Tab_FssOrg } from './rpt/Rpt10_Tab_FssOrg';
@@ -600,6 +601,7 @@ export const SCREENS: Record<string, React.FC> = {
   Rpt01_Tab_DailyConfirm, // Z09 (+ Rpt01_Edit_DailyConfirm, RD Rpt01_Rd_Daily)
   Rpt03_Tab_WeekWrite, // Z11 (+ Rpt03_Page_WeekWrite, Rpt03_Lookup_WeekWrite, Rpt05_Lookup_WeekBizClass, RD Rpt03_Rd_WeekWrite)
   Rpt02_Tab_MonthWrite, // Z10 (+ Rpt02_Edit_MonthWrite, Rpt02_Lookup_FileList, RD Rpt02_Rd_Month)
+  Rpt04_Tab_WeekConfirm, // Z12 (+ Rpt04_Lookup_WeekConfirm, RD Rpt04_Rd_WeekConfirm)
   Rpt01_Tab_DailyWrite, // Z08 (+ Rpt01_Edit_DailyWrite)
   Rpt10_Tab_FssSubmit, // E19 (+ Rpt10_Edit_WriteGuide)
   Sch01_Tab_Info, // O01 (+ Sch01_Lookup_Info·Sch01_Lookup_ManagerModi(Run)·Sch01_Grid_RelateFile·Sch08_Lookup_Class·Sch06_Lookup_AlarmSetup. 기한 Sch03_Lookup_Short/Cycle은 E01-1 재사용)

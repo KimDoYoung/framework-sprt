@@ -147,3 +147,28 @@ export interface RptWeekBizClass {
   weekBizTypeName?: string | null;
   unUseYn?: boolean | null;
 }
+
+/** Z12 주간업무보고 확인 목록 한 줄 (AS-IS Rpt03_WeekModel — rpt03_week.selectByCompanyId) */
+export interface RptWeekConfirm {
+  weekId: number;
+  personId: number;
+  weekStartDate: string;
+  weekCloseDate: string;
+  orgName?: string | null;
+  personName?: string | null;
+  orgCodeId?: number | null;
+  orgCd?: string | null;
+  confirmerId?: number | null;
+  confirmer?: string | null;
+  confirmerOrgName?: string | null;
+  confirmDateStr?: string | null;
+  confirmNote?: string | null;
+  confirmYn: boolean;
+}
+
+/** Z12 내가 확인한 기록 (AS-IS rpt04_week_confirm.selectByConfirmerId) */
+export interface RptWeekConfirmer {
+  confirmerName?: string | null;
+  confirmerOrgName?: string | null;
+  confirmDateStr?: string | null;
+}

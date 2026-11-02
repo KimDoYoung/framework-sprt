@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { RptDaily, RptDailyConfirm, RptDailySaveReq, RptMonth, RptMonthSaveReq, RptWeek, RptWeekBizClass, RptWeekCode, RptWeekDays, RptWeekPrint, RptWeekSaveReq, RptWeekState, RptFssSubmit, RptFssSubmitSaveReq, RptWriteGuide } from '../types/rpt';
+import { RptDaily, RptDailyConfirm, RptDailySaveReq, RptMonth, RptMonthSaveReq, RptWeek, RptWeekBizClass, RptWeekCode, RptWeekConfirm, RptWeekConfirmer, RptWeekDays, RptWeekPrint, RptWeekSaveReq, RptWeekState, RptFssSubmit, RptFssSubmitSaveReq, RptWriteGuide } from '../types/rpt';
 
 /** rpt(보고서) API (E19 금감원 업무보고서) */
 export const rptApi = {
@@ -197,5 +197,50 @@ export const rptWeekApi = {
   saveBizClasses: async (items: { weekBizType: string; unUseYn: boolean }[]): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>('v1/rpt/weeks/biz-classes', { items });
     return res.data.data ?? 0;
+  },
+};
+
+/** 주간업무보고 확인 (Z12, AS-IS Rpt04_WeekConfirm·Rpt03_Week.selectByCompanyId) */
+export const rptWeekConfirmApi = {
+  /** AS-IS rpt.Rpt03_Week.selectByCompanyId — 제출된 보고. confirmYn = 미확인건만 */
+  search: async (startDate: string, orgCodeId: number | null, confirmYn: boolean): Promise<RptWeekConfirm[]> => {
+    const res = await apiClient.get<ApiResponse<RptWeekConfirm[]>>('v1/rpt/week-confirms', { params: { startDate, orgCodeId: orgCodeId ?? undefined, confirmYn } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fixCheck(Rpt04_Tab_WeekConfirm L336) — 그 사원의 보고가 제출 상태인가 */
+  isFixed: async (personId: number, startDate: string, closeDate: string): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/rpt/week-confirms/fixed', { params: { personId, startDate, closeDate } });
+    return res.data.data === true;
+  },
+
+  /** AS-IS rpt.Rpt04_WeekConfirm.selectByConfirmerId — 내가 확인한 기록(없으면 null) */
+  getMyConfirm: async (personId: number, startDate: string): Promise<RptWeekConfirmer | null> => {
+    const res = await apiClient.get<ApiResponse<RptWeekConfirmer | null>>('v1/rpt/week-confirms/confirmer', { params: { personId, startDate } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS rpt.Rpt04_WeekConfirm.updateNote */
+  saveNote: async (personId: number, startDate: string, confirmNote: string): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/rpt/week-confirms/note', { personId, startDate, confirmNote });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS rpt.Rpt04_WeekConfirm.confirmUpdate */
+  confirm: async (personId: number, startDate: string): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/rpt/week-confirms/confirm', { personId, startDate });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS rpt.Rpt04_WeekConfirm.updateByPersonId — 확인 취소(메모는 화면 값) */
+  cancel: async (personId: number, startDate: string, confirmNote: string): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/rpt/week-confirms/cancel', { personId, startDate, confirmNote });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS Rpt04_Tab_WeekConfirm.lookUpRd — getLastWeek + sys.Sys99_Print.insertRdWeekConfirm */
+  rdPrint: async (personId: number, startDate: string): Promise<RptWeekPrint> => {
+    const res = await apiClient.post<ApiResponse<RptWeekPrint>>('v1/rpt/week-confirms/rd-print', { personId, startDate });
+    return res.data.data;
   },
 };
