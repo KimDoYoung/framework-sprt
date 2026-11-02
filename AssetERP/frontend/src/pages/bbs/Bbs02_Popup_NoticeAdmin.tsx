@@ -19,7 +19,8 @@ import { Bbs02_Lookup_File } from './Bbs02_Lookup_File';
 import { Bbs07_TapPage_Comment } from './Bbs07_TapPage_Comment';
 
 /** 창이 쓰는 값만 — title2(구분 색 글씨 + 제목, HTML)가 있으면 머리글로 쓴다 (Z03 Bbs02_Tab_NoticeView L219-242) */
-export type NoticePopupInfo = Pick<BbsNotice, 'noticeId' | 'title' | 'notice' | 'commentYn'> & { title2?: string | null; preview?: boolean };
+export type NoticePopupInfo = Pick<BbsNotice, 'noticeId' | 'title' | 'notice' | 'commentYn'> & { title2?: string | null; preview?: boolean; beforeChange?: boolean };
+/** Z04 기록 상세 — open(notice) L164-190: 머리글 "변경 전 내용", 본문과 [닫기]만 */
 /** Z02 [미리보기] — open(title, notice) L132-162: 머리글 "[미리보기] 제목", 본문과 [닫기]만 */
 
 interface Props {
@@ -51,12 +52,14 @@ export const Bbs02_Popup_NoticeAdmin: React.FC<Props> = ({ notice, onClose }) =>
     }
   };
 
-  const withComment = notice?.commentYn === true && !notice?.preview;
+  const withComment = notice?.commentYn === true && !notice?.preview && !notice?.beforeChange;
 
   return (
     <LookupModal
       open={notice != null}
-      title={notice?.preview
+      title={notice?.beforeChange
+        ? <b>변경 전 내용</b>
+        : notice?.preview
         ? <b>{`[미리보기] ${notice.title ?? ''}`}</b>
         : notice?.title2
         ? <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(notice.title2) }} />
@@ -66,7 +69,7 @@ export const Bbs02_Popup_NoticeAdmin: React.FC<Props> = ({ notice, onClose }) =>
       closable={false}
       onCancel={onClose}
       destroyOnClose
-      footer={notice?.preview ? (
+      footer={notice?.preview || notice?.beforeChange ? (
         <div style={{ textAlign: 'center' }}><Button type="close" onClick={onClose}>닫기</Button></div>
       ) : (
         <div style={{ textAlign: 'center' }}>

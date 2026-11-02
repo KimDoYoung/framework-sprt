@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice, BbsNoticeMng, BbsNoticePerson, BbsNoticeSaveReq, BbsTarget } from '../types/bbs';
+import { BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice, BbsNoticeAdmin, BbsNoticeAdminSaveReq, BbsNoticeHistory, BbsNoticeMng, BbsNoticePerson, BbsNoticeSaveReq, BbsTarget, BbsTargetCompany } from '../types/bbs';
 
 /** 요청서(신청서) — 증명서 신청내역 (S05, AS-IS Bbs11_Application) */
 export const bbsApplicationApi = {
@@ -314,5 +314,59 @@ export const bbsFloralApi = {
   saveMessages: async (rows: BbsFloralMessage[]): Promise<BbsFloralMessage[]> => {
     const res = await apiClient.put<ApiResponse<BbsFloralMessage[]>>('v1/bbs/floral-messages', rows.map(r => ({ floralMessageId: r.floralMessageId, message: r.message ?? null })));
     return res.data.data ?? [];
+  },
+};
+
+/** Z04 KFS공지등록 (Bbs02_Tab_NoticeAdmin·Bbs02_Edit_NoticeAdmin·Bbs09_Lookup_History) — KFS 관리자만 */
+export const bbsNoticeAdminApi = {
+  /** AS-IS bbs.Bbs02_Notice.selectByPublicYnPaging. 구분·구분상세는 코드('%'면 전체), 상태는 '알림'·'대기'·그 밖은 전체, 기간은 구분이 전체일 때만 보낸다 */
+  searchNotices: async (params: { openYn: string; noticeType: string; noticeDetail: string; searchText: string; startDate?: string; closeDate?: string; offset: number; limit: number }): Promise<PageRes<BbsNoticeAdmin>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<BbsNoticeAdmin>>>('v1/bbs/notice-admin', { params });
+    return res.data.data as PageRes<BbsNoticeAdmin>;
+  },
+
+  /** AS-IS DBUtil.setSeq — 새 공지의 ID */
+  getNextId: async (): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/bbs/notice-admin/next-id');
+    return res.data.data as number;
+  },
+
+  /** AS-IS bbs.Bbs09_NoticeHistory.insert + bbs.Bbs02_Notice.modelUpdate + bbs.Bbs04_TargetCompany.update. 저장한 한 줄을 돌려준다 */
+  saveNotice: async (req: BbsNoticeAdminSaveReq): Promise<BbsNoticeAdmin> => {
+    const res = await apiClient.put<ApiResponse<BbsNoticeAdmin>>('v1/bbs/notice-admin', req);
+    return res.data.data as BbsNoticeAdmin;
+  },
+
+  /** AS-IS bbs.Bbs02_Notice.delete */
+  deleteNotice: async (noticeId: number): Promise<void> => {
+    await apiClient.delete(`v1/bbs/notice-admin/${noticeId}`);
+  },
+
+  /** AS-IS bbs.Bbs04_TargetCompany.selectByNoticeId */
+  searchTargetCompanies: async (noticeId: number): Promise<BbsTargetCompany[]> => {
+    const res = await apiClient.get<ApiResponse<BbsTargetCompany[]>>(`v1/bbs/notice-admin/${noticeId}/target-companies`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS bbs.Bbs04_TargetCompany.delete (체크한 고객사) */
+  deleteTargetCompanies: async (noticeId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/bbs/notice-admin/${noticeId}/target-companies`, { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS bbs.Bbs04_TargetCompany.deleteAllTarget */
+  deleteAllTargetCompanies: async (noticeId: number): Promise<void> => {
+    await apiClient.delete(`v1/bbs/notice-admin/${noticeId}/target-companies/all`);
+  },
+
+  /** AS-IS bbs.Bbs09_NoticeHistory.selectByNoticeId */
+  searchHistories: async (noticeId: number): Promise<BbsNoticeHistory[]> => {
+    const res = await apiClient.get<ApiResponse<BbsNoticeHistory[]>>(`v1/bbs/notice-admin/${noticeId}/histories`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sms.Sms03_GroupSend.sendNoticeMessage — 수신자는 사원 ID(번호는 서버가 읽는다) */
+  sendNoticeMessage: async (message: string, personIds: number[]): Promise<void> => {
+    await apiClient.post('v1/bbs/notice-admin/send-message', { message, personIds });
   },
 };

@@ -5,6 +5,7 @@ import { Bbs15_Tab_CompanyRuleManager } from './bbs/Bbs15_Tab_CompanyRuleManager
 import { Bbs15_Tab_CompanyRule } from './bbs/Bbs15_Tab_CompanyRule';
 import { Bbs02_Tab_NoticeView } from './bbs/Bbs02_Tab_NoticeView';
 import { Bbs02_Tab_NoticeManager } from './bbs/Bbs02_Tab_NoticeManager';
+import { Bbs02_Tab_NoticeAdmin } from './bbs/Bbs02_Tab_NoticeAdmin';
 import { Bbs11_Tab_Application } from './bbs/Bbs11_Tab_Application';
 import { Bbs11_Tab_ApplicationMng } from './bbs/Bbs11_Tab_ApplicationMng';
 import { Bbs20_Tab_FloralRequestMng } from './bbs/Bbs20_Tab_FloralRequestMng';
@@ -408,6 +409,7 @@ export const SCREENS: Record<string, React.FC> = {
   Bbs11_Tab_ApplicationMng, // T22 (+ Bbs12_Lookup_ApplicationMng)
   Bbs20_Tab_FloralRequest, // Y12 (+ Bbs20_Edit_FloralRequest 등록·수정·Bbs20_Lookup_OccasionsOption·Mkt01_Lookup_Select)
   Bbs20_Tab_FloralRequestMng, // T21 (+ Bbs20_Edit_FloralRequest 보기 모드·Bbs21_Lookup_FloralRequestShare·Bbs20_Grid_RelateFile·Bbs20_Lookup_RelateFile·Bbs20_Lookup_Message·Bbs22_Lookup_FloralMessage)
+  Bbs02_Tab_NoticeAdmin, // Z04 (+ Bbs02_Edit_NoticeAdmin·Bbs09_Lookup_History·Bbs02_Edit_Message, 고객사 선택 Sys01_Lookup_SelectMulti·문자 수신자 Emp00_Lookup_SelectMulti·첨부 Bbs15_Lookup_File·알람 Sch06_Lookup_AlarmSetup 재사용)
   Bbs02_Tab_NoticeManager, // Z02 (+ Bbs02_Edit_Notice·Bbs02_Lookup_LoadBbs·Bbs07_Lookup_Comment·Emp57_Lookup_List·Emp57_Lookup_DetailList, 첨부는 Bbs15_Lookup_File·알람은 Sch06_Lookup_AlarmSetup 재사용)
   Bbs02_Tab_NoticeView, // Z03 (+ H01의 Bbs02_Popup_NoticeAdmin·Bbs07_TapPage_Comment·Bbs07_Lookup_FileList·Bbs02_Lookup_File 재사용, 새 gb.pin)
   Bbs15_Tab_CompanyRule, // Z01 (+ Bbs15_Lookup_Content·Bbs02_Lookup_File 사용자용)

@@ -287,3 +287,61 @@ export interface BbsNoticeSaveReq {
   topNoticeCloseDate: string | null;
   newTargetPersonIds: number[];
 }
+
+/** Z04 KFS공지 한 행 = 편집창 입력값 (AS-IS Bbs02_NoticeModel, KFS공지등록). 날짜는 YYYY-MM-DD, notice는 본문 HTML */
+export interface BbsNoticeAdmin {
+  noticeId: number;
+  companyId: number | null;
+  fromDate: string | null;
+  toDate: string | null;
+  openYn: string | null;
+  noticeNo: string | null;
+  noticeType: string | null;
+  noticeTypeName: string | null;
+  noticeDetailCode: string | null;
+  noticeDetailName: string | null;
+  noticeDetailFullName: string | null;
+  title: string | null;
+  note: string | null;
+  notice: string | null;
+  userId: number | null;
+  userName: string | null;
+  publicYn: boolean;
+  publicCompanyYn: boolean;
+}
+
+/** 개별 공지 대상 고객사 한 줄 (AS-IS Bbs04_TargetCompanyModel) */
+export interface BbsTargetCompany {
+  targetCompanyId: number;
+  noticeId: number;
+  companyId: number;
+  companyName: string | null;
+}
+
+/** 공지 변경 기록 한 줄 (AS-IS Bbs09_NoticeHistoryModel) */
+export interface BbsNoticeHistory {
+  noticeHistoryId: number;
+  regDateStr: string;
+  openYn: string | null;
+  personName: string | null;
+  contentYn: boolean;
+  notice: string | null;
+}
+
+/** KFS공지 저장 요청 */
+export interface BbsNoticeAdminSaveReq {
+  noticeId: number;
+  title: string;
+  notice: string | null;
+  fromDate: string;
+  toDate: string;
+  openYn: string | null;
+  note: string | null;
+  noticeType: string;
+  noticeDetailCode: string | null;
+  publicYn: boolean;
+  publicCompanyYn: boolean;
+  latestOpenYn: string | null;
+  latestNotice: string | null;
+  newTargetCompanyIds: number[];
+}
