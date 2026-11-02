@@ -14395,5 +14395,27 @@
     "note": "docs/work/Z/Z07-작업기록.md",
     "history": [],
     "id": "Z07"
+  },
+  "Rpt01_Tab_DailyWrite": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/rpt/Rpt01_Edit_DailyWrite.java": "8314bc40a09d790a86293b2931073a7a0f39f1fc",
+      "application/src/main/java/myApp/client/vi/rpt/Rpt01_Tab_DailyWrite.java": "c6c12fec703169a01cfd6e75aeae21630db2e23e",
+      "application/src/main/java/myApp/client/vi/rpt/model/Rpt01_DailyModel.java": "ab73ed6003d7cbeb345a5333d066e3f5ec2bdab6",
+      "application/src/main/java/myApp/client/vi/rpt/model/Rpt01_DailyModelProperties.java": "966d95f9270d7c796f6ac92cff1fbc768854fcf9",
+      "application/src/main/java/myApp/server/rpt/Rpt01_Daily.java": "59e9c7192b0ce667ed27884c1cd45746b406f9de",
+      "application/src/main/java/myApp/server/rpt/mapper/rpt01_daily.xml": "b407b250c0559455597c1d00caf3c8acf1fbb517",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-11-02T17:18:08+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Z/Z08-작업기록.md",
+    "history": [],
+    "id": "Z08"
   }
 }

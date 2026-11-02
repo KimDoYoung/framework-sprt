@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { RptFssSubmit, RptFssSubmitSaveReq, RptWriteGuide } from '../types/rpt';
+import { RptDaily, RptDailySaveReq, RptFssSubmit, RptFssSubmitSaveReq, RptWriteGuide } from '../types/rpt';
 
 /** rpt(보고서) API (E19 금감원 업무보고서) */
 export const rptApi = {
@@ -25,6 +25,27 @@ export const rptApi = {
   /** AS-IS rpt.Rpt10_FssSubmit.delete → 지운 건수 */
   deleteFssSubmits: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/rpt/fss-submits', { data: ids });
+    return res.data.data ?? 0;
+  },
+};
+
+/** 일일업무 입력 (Z08, AS-IS Rpt01_Daily) */
+export const rptDailyApi = {
+  /** AS-IS rpt.Rpt01_Daily.selectByText — 내 일일업무 */
+  search: async (startDate: string, closeDate: string, searchText: string): Promise<RptDaily[]> => {
+    const res = await apiClient.get<ApiResponse<RptDaily[]>>('v1/rpt/dailies', { params: { startDate, closeDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS rpt.Rpt01_Daily.modelUpdate → 저장한 행 */
+  save: async (req: RptDailySaveReq): Promise<RptDaily> => {
+    const res = await apiClient.put<ApiResponse<RptDaily>>('v1/rpt/dailies', req);
+    return res.data.data;
+  },
+
+  /** AS-IS rpt.Rpt01_Daily.delete → 지운 건수 */
+  delete: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/rpt/dailies', { data: ids });
     return res.data.data ?? 0;
   },
 };

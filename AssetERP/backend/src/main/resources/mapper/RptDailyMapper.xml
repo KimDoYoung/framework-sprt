@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/rpt/mapper/rpt01_daily.xml selectByText·selectById + UpdateDataModel(rpt01_daily) (Z08 Rpt01_Tab_DailyWrite) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.rpt.mapper.RptDailyMapper">
+
+    <sql id="dailyColumns">
+        rpt01_daily_id                                                                      AS daily_id
+      , rpt01_date                                                                          AS date
+      , rpt01_content                                                                       AS content
+      , rpt01_note                                                                          AS note
+      , rpt01_person_id                                                                     AS person_id
+      , COALESCE(rpt01_confirm_yn, 'false') = 'true'                                        AS confirm_yn
+      , CASE WHEN COALESCE(rpt01_confirm_yn,'false') = 'false' THEN '' ELSE '확인' END      AS confirm_yn_name
+      , f_emp_kor_nm(rpt01_confirmer_id)                                                    AS confirm_name
+    </sql>
+
+    <!-- AS-IS rpt01_daily.selectByText (IDMS-IC) — SELECT * → DailyRes 열만, 조건·정렬 그대로 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.rpt.dto.DailyRes">
+        SELECT <include refid="dailyColumns"/>
+          FROM rpt01_daily
+         WHERE 1=1
+           AND rpt01_company_id = #{companyId}
+           AND rpt01_person_id  = #{personId}
+           AND rpt01_date BETWEEN #{startDate}::date AND #{closeDate}::date
+           AND CONCAT(rpt01_content, rpt01_note) ILIKE #{searchText}
+         ORDER BY rpt01_date DESC, rpt01_content
+    </select>
+
+    <!-- AS-IS rpt01_daily.selectById (IDMS-IC) — 저장 뒤 다시 읽기 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.rpt.dto.DailyRes">
+        SELECT <include refid="dailyColumns"/>
+          FROM rpt01_daily
+         WHERE rpt01_daily_id   = #{dailyId}
+           AND rpt01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Rpt01_Daily.modelUpdate → UpdateDataModel INSERT (회사·사원은 서버가 로그인 값으로) -->
+    <insert id="insertDaily">
+        INSERT INTO rpt01_daily
+             (rpt01_daily_id, rpt01_company_id, rpt01_date, rpt01_content, rpt01_note, rpt01_person_id)
+        VALUES (#{dailyId}, #{companyId}, #{req.date}, #{req.content}, #{req.note}, #{personId})
+    </insert>
+
+    <!-- AS-IS Rpt01_Daily.modelUpdate → UpdateDataModel UPDATE — 확인 관련 열은 건드리지 않는다, 로그인 회사·본인 행만(보안 보강) -->
+    <update id="updateDaily">
+        UPDATE rpt01_daily
+           SET rpt01_date    = #{req.date}
+             , rpt01_content = #{req.content}
+             , rpt01_note    = #{req.note}
+         WHERE rpt01_daily_id   = #{req.dailyId}
+           AND rpt01_company_id = #{companyId}
+           AND rpt01_person_id  = #{personId}
+    </update>
+
+    <!-- AS-IS Rpt01_Daily.delete → UpdateDataModel.deleteModel(ID로 DELETE) — 로그인 회사·본인 행만(보안 보강) -->
+    <delete id="deleteDaily">
+        DELETE FROM rpt01_daily
+         WHERE rpt01_daily_id   = #{dailyId}
+           AND rpt01_company_id = #{companyId}
+           AND rpt01_person_id  = #{personId}
+    </delete>
+</mapper>
