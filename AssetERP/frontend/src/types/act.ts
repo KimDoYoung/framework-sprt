@@ -350,3 +350,32 @@ export interface JournalFix {
   fixPersonName: string | null;
   fixDateStr: string | null;
 }
+
+/** 회계마감 월 목록 한 행 (act04_gen_ledger.selectCloseStatus, X14) */
+export interface GenLedgerCloseStatus {
+  genLedgerId: number;
+  stdDate: string;
+  monthName: string;
+  closeName: string;
+}
+
+/** 회계마감 처리 요청 — procType P 회계마감 · C 마감취소 · A 마감검증 */
+export interface GenLedgerCloseReq {
+  closeDate: string;
+  procType: 'P' | 'C' | 'A';
+  depositUpdateYn: boolean;
+  genLedgerUpdateYn: boolean;
+}
+
+/** 마감현황(checkGrid) 한 줄 */
+export interface GenLedgerCloseNote {
+  genLedgerId: number;
+  note: string;
+}
+
+/** status 1 성공 · -1 실패(message). notes는 실패여도 마감현황에 채운다 */
+export interface GenLedgerCloseProcessRes {
+  status: number;
+  message: string;
+  notes: GenLedgerCloseNote[];
+}

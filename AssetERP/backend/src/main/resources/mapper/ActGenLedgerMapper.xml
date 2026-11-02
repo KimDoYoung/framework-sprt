@@ -1,0 +1,1529 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/act/mapper/act04_gen_ledger.xml + act09_account_num / act02_journal / act01_account_code /
+  ast09_book / ast30_book_fund_fee / act15_close_check / dbConfig 중 Act04_Tab_Close(X14, #1195)가 쓰는 문장.
+  파라미터는 모두 CloseParam 한 개(companyId·closeDate·startDate·stdDate·holdDate…) — AS-IS의 request.getParam()/Map 대응.
+  검증 SQL은 원본을 그대로 두고 바깥 SELECT로 열 이름만 CloseDiffRes에 맞춘다.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActGenLedgerMapper">
+
+    <!-- AS-IS act04_gen_ledger.selectCloseStatus (IDMS-IC) — 바깥 별칭만 DTO 이름으로 바꿨다 -->
+    <select id="selectCloseStatus" resultType="kr.co.kfs.asseterp.biz.act.dto.GenLedgerCloseStatusRes">
+        SELECT row_number() OVER (ORDER BY sys12_yyyymm)                                        AS gen_ledger_id
+             , f_get_last_day(CAST(sys12_yyyymm||'01' AS DATE))                                 AS std_date
+             , f_cdnm('MonthsCode', substr(sys12_yyyymm,5,2), #{companyId}, f_sysdate())        AS month_name
+             , CASE WHEN COALESCE(act04_close_count,0) = 0 THEN '' ELSE '마감완료' END           AS close_name
+          FROM (
+                SELECT to_char(sys12_day,'yyyymm') as sys12_yyyymm
+                  FROM sys12_calendar
+                 WHERE sys12_company_id      = #{companyId}
+                   AND to_char(sys12_day,'yyyy') = #{year}
+                 GROUP BY to_char(sys12_day,'yyyymm')
+               ) a
+               LEFT OUTER JOIN (
+                                SELECT to_char(act05_std_date,'yyyymm') AS act04_yyyymm
+                                     , count(*)                         AS act04_close_count
+                                  FROM act05_gen_ledger_close
+                                 WHERE act05_company_id = #{companyId}
+                                 GROUP BY to_char(act05_std_date,'yyyymm')
+                               ) b ON act04_yyyymm = sys12_yyyymm
+    </select>
+
+    <!-- AS-IS act15_close_check.selectByText (IDMS-IC) — companyId 분기(AND sys01_company_id = #{companyId})를 켠 형태. ActCloseCheckMapper.selectByText와 같은 열 -->
+    <select id="selectCloseCheck" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseCheckRes">
+        SELECT COALESCE(act15_close_check_id, row_number() over())  AS close_check_id
+             , sys01_company_id                                     AS company_id
+             , sys01_company_nm                                     AS company_name
+             , COALESCE(act15_deposit_real_match_yn     , 'true')   AS deposit_real_match_yn
+             , COALESCE(act15_deposit_appr_yn           , 'true')   AS deposit_appr_yn
+             , COALESCE(act15_deposit_ledger_match_yn   , 'true')   AS deposit_ledger_match_yn
+             , COALESCE(act15_finance_eval_yn           , 'true')   AS finance_eval_yn
+             , COALESCE(act15_finance_ledger_match_yn   , 'true')   AS finance_ledger_match_yn
+             , COALESCE(act15_fx_eval_yn                , 'true')   AS fx_eval_yn
+             , COALESCE(act15_depn_yn                   , 'true')   AS depn_yn
+             , COALESCE(act15_tangible_match_yn         , 'true')   AS tangible_match_yn
+             , COALESCE(act15_intangible_match_yn       , 'true')   AS intangible_match_yn
+             , COALESCE(act15_fund_fee_match_yn         , 'true')   AS fund_fee_match_yn
+             , COALESCE(act15_fund_fee_eval_yn          , 'true')   AS fund_fee_eval_yn
+             , COALESCE(act15_unfix_yn                  , 'true')   AS unfix_yn
+             , COALESCE(act15_supply_match_yn           , 'true')   AS supply_match_yn
+          FROM sys01_company
+               LEFT OUTER JOIN act15_close_check ON act15_company_id = sys01_company_id
+         WHERE COALESCE(sys01_use_yn,'false') = 'true'
+           AND sys01_company_id != 0
+           AND sys01_company_id = #{companyId}
+         ORDER BY sys01_company_id
+    </select>
+
+    <!-- AS-IS act09_account_num.selectByStartDate (IDMS-IC) — act09_num(회기)만 읽는다. 행이 없으면 빈 목록 -->
+    <select id="selectAccountNumByStartDate" resultType="long">
+        SELECT act09_num
+          FROM act09_account_num
+         WHERE act09_company_id = #{companyId}
+           AND #{startDate} BETWEEN act09_start_date AND act09_close_date
+         ORDER BY act09_start_date DESC
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS act09_account_num.insertNext (IDMS-IC) -->
+    <insert id="insertAccountNumNext">
+        INSERT
+          INTO act09_account_num
+        SELECT f_create_seq()
+             , #{companyId}
+             , #{num}
+             , f_get_close_date(#{companyId}, to_char(#{closeDate}::date + 1,'yyyy'), '1')
+             , f_get_close_date(#{companyId}, to_char(#{closeDate}::date + 1,'yyyy'), '2')
+             , null
+    </insert>
+
+    <!-- AS-IS act01_account_code.selectTreeByAccountCodeAsc (IDMS-IC) — 마지막 SELECT를 act01_account_cd 하나만 읽도록 줄였다(act_list.act01_level·t.* → t.act01_account_cd), 순서(ORDER BY act01_level)는 그대로 -->
+    <select id="selectTreeAccountCodes" resultType="string">
+        WITH RECURSIVE act_list ( act01_account_cd
+                                , act01_parent_cd
+                                , act01_level )
+        AS ( SELECT act01_account_cd
+                  , act01_parent_cd
+                  , 0
+               FROM act01_account_code
+              WHERE act01_company_id = #{companyId}
+                AND act01_account_cd = #{accountCode}
+                AND COALESCE(act01_use_yn,'false') = 'true'
+              UNION ALL
+             SELECT a.act01_account_cd
+                  , a.act01_parent_cd
+                  , b.act01_level + 1
+               FROM act01_account_code a
+                  , act_list b
+              WHERE a.act01_company_id = #{companyId}
+                AND a.act01_account_cd = b.act01_parent_cd
+                AND COALESCE(a.act01_use_yn,'false') = 'true'
+        )
+        SELECT t.act01_account_cd
+          FROM act_list
+               INNER JOIN act01_account_code t ON ( t.act01_company_id = #{companyId}               AND
+                                                    t.act01_account_cd = act_list.act01_account_cd  )
+         ORDER BY act_list.act01_level ASC
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.insertUnApprEarnSurplus (IDMS-IC) — :today_diff_amt → #{todayDiffAmt,jdbcType=NUMERIC} -->
+    <insert id="insertUnApprEarnSurplus">
+        INSERT
+          INTO act04_gen_ledger
+        SELECT f_create_seq()
+             , #{companyId}
+             , #{stdDate}
+             , #{accountCode}
+             , 0                    /* 차변당일잔액 */
+             , 0                    /* 차변당일증감액 */
+             , 0                    /* 차변전일잔액 */
+             , #{todayDiffAmt,jdbcType=NUMERIC}      /* 대변당일잔액 */
+             , #{todayDiffAmt,jdbcType=NUMERIC}      /* 대변당일증감액 */
+             , 0                    /* 대변전일잔액 */
+             , f_sysdate()
+             , null
+    </insert>
+
+    <!-- AS-IS act04_gen_ledger.updateUnApprEarnSurplus (IDMS-IC) -->
+    <update id="updateUnApprEarnSurplus">
+        UPDATE act04_gen_ledger
+           SET act04_cr_today_bal_amt  = act04_cr_preday_bal_amt + act04_cr_today_diff_amt + #{todayDiffAmt,jdbcType=NUMERIC}
+             , act04_cr_today_diff_amt = act04_cr_today_diff_amt + #{todayDiffAmt,jdbcType=NUMERIC}
+         WHERE act04_company_id = #{companyId}
+           AND act04_std_date   = #{stdDate}
+           AND act04_account_cd = #{accountCode}
+    </update>
+
+    <!-- AS-IS act04_gen_ledger.insertGenLedgerClose (IDMS-IC) -->
+    <insert id="insertGenLedgerClose">
+        INSERT
+          INTO act05_gen_ledger_close
+        SELECT f_create_seq()
+             , act04_gen_ledger.*
+          FROM act04_gen_ledger
+         WHERE act04_company_id = #{companyId}
+           AND act04_std_date   = #{closeDate}
+    </insert>
+
+    <!-- AS-IS act04_gen_ledger.insertGenLedgerCloseEicp (IDMS-IC) — DB 함수 f_create_genLedgerClose_eicp (INSERT 문장이 아니라 SELECT 호출) -->
+    <select id="insertGenLedgerCloseEicp" resultType="string">
+        SELECT f_create_genLedgerClose_eicp(#{companyId}, #{closeDate})
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.deleteGenLedgerClose (IDMS-IC) -->
+    <delete id="deleteGenLedgerClose">
+        DELETE
+          FROM act05_gen_ledger_close
+         WHERE act05_company_id = #{companyId}
+           AND act05_std_date   = #{closeDate}
+    </delete>
+
+    <!-- AS-IS act02_journal.updateCloseYn (IDMS-IC) -->
+    <update id="updateJournalCloseYn">
+        UPDATE act02_journal
+           SET act02_close_yn = #{closeYn}
+         WHERE act02_company_id                           = #{companyId}
+           AND substr(to_char(act02_date,'yyyymmdd'),1,6) = substr(to_char(#{closeDate}::date,'yyyymmdd'),1,6)
+    </update>
+
+    <!-- AS-IS act04_gen_ledger.selectDepositRealDiff (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectDepositRealDiff" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT CAST(NULL AS varchar) AS account_code,
+               CAST(NULL AS varchar) AS account_name,
+               x.act04_ast_class_tree_nm AS ast_class_tree_name,
+               CAST(NULL AS numeric) AS dr_today_bal_amt,
+               CAST(NULL AS numeric) AS cr_today_bal_amt,
+               x.act04_dr_today_diff_amt AS dr_today_diff_amt,
+               CAST(NULL AS varchar) AS check_code,
+               CAST(NULL AS varchar) AS note,
+               CAST(NULL AS varchar) AS corp_name,
+               CAST(NULL AS varchar) AS corp_code,
+               CAST(NULL AS varchar) AS fund_code,
+               CAST(NULL AS varchar) AS fund_name,
+               CAST(NULL AS numeric) AS icam_fee,
+               CAST(NULL AS numeric) AS for_fee,
+               CAST(NULL AS numeric) AS diff_fee
+          FROM (
+<![CDATA[
+WITH book AS (
+    WITH book1 AS ( SELECT '1' seq
+                         , ast09_book.*
+                      FROM ast09_book
+                     WHERE ast09_company_id = #{companyId}
+                       AND (ast09_ast_class_tree_id, ast09_keep_account_id, ast09_hold_date) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(ast09_hold_date)
+                                                                                                    FROM ast09_book
+                                                                                                   WHERE ast09_company_id = #{companyId}
+                                                                                                     AND ast09_hold_date <= #{holdDate}
+                                                                                                     ]]><choose>
+                                                                                                         <when test="astClassTreeId != null"><![CDATA[
+                                                                                                         AND ast09_ast_class_tree_id = #{astClassTreeId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                     ]]><choose>
+                                                                                                         <when test="keepAccountId != null"><![CDATA[
+                                                                                                         AND ast09_keep_account_id = #{keepAccountId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                   GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+                     UNION ALL
+                    SELECT '2' seq
+                         , ast11_book_id
+                         , ast11_hold_date
+                         , ast11_ast_class_tree_id
+                         , ast11_keep_account_id
+                         , ast11_hold_qty
+                         , ast11_pur_amt
+                         , ast11_book_amt
+                         , ast11_eval_amt
+                         , ast11_eval_pl
+                         , ast11_first_pur_amt
+                         , ast11_first_pur_date
+                         , ast11_company_id
+                         , ast11_for_pur_amt
+                         , ast11_for_book_amt
+                         , ast11_for_eval_amt
+                         , ast11_for_eval_pl
+                         , ast11_fx_pl
+                         , ast11_book_end_yn
+                         , ast11_acr_int_amt
+                         , ast11_for_acr_int_amt
+                         , ast11_oci
+                         , ast11_for_oci
+                         , ast11_lock_up_period_cd
+                         , ast11_lock_up_date
+                         , ast11_lock_up_qty
+                      FROM ast11_book_close
+                     WHERE ast11_company_id = #{companyId}
+                       AND (ast11_ast_class_tree_id, ast11_keep_account_id, ast11_hold_date) IN ( SELECT ast11_ast_class_tree_id, ast11_keep_account_id, MAX(ast11_hold_date)
+                                                                                                    FROM ast11_book_close
+                                                                                                   WHERE ast11_company_id = #{companyId}
+                                                                                                     AND ast11_hold_date < #{holdDate}
+                                                                                                     ]]><choose>
+                                                                                                         <when test="astClassTreeId != null"><![CDATA[
+                                                                                                         AND ast11_ast_class_tree_id = #{astClassTreeId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                     ]]><choose>
+                                                                                                         <when test="keepAccountId != null"><![CDATA[
+                                                                                                         AND ast11_keep_account_id = #{keepAccountId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                   GROUP BY ast11_ast_class_tree_id, ast11_keep_account_id )
+    )
+    SELECT *
+      FROM book1
+     WHERE (ast09_ast_class_tree_id, ast09_keep_account_id, to_char(ast09_hold_date,'yyyymmdd')||seq) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(to_char(ast09_hold_date,'yyyymmdd')||seq)
+                                                                                                             FROM book1
+                                                                                                            GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+)
+
+    SELECT row_number() OVER (ORDER BY ast01_class_tree_nm) AS act04_gen_ledger_id
+         , ast09_ast_class_tree_id                          AS act04_ast_class_tree_id
+         , ast01_class_tree_nm                              AS act04_ast_class_tree_nm
+         , SUM(ast09_hold_qty)                              AS act04_dr_today_diff_amt
+      FROM (
+             SELECT ast09_ast_class_tree_id
+                  , ast01_class_tree_nm
+                  , ast09_hold_qty
+               FROM book
+                    INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast09_ast_class_tree_id
+              WHERE ast01_item_l_class_cd = '10'     /* 10:현금 및 예치금 */
+                AND ast01_asset_type      = '1'      /* 1:고유자산 */
+                AND ast01_item_s_class_cd NOT IN ( SELECT sys09_code
+                                                     FROM sys13_code_group
+                                                          INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+                                                    WHERE sys13_kind_group_cd = 'ItemSClassCode004' )
+              UNION ALL
+             SELECT ast12_ast_class_tree_id
+                  , ast01_class_tree_nm
+                  , COALESCE(ast12_real_qty,0) * -1 as ast09_hold_qty
+               FROM ast12_book_real
+                    INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast12_ast_class_tree_id
+              WHERE ast12_company_id = #{companyId}
+                AND ast12_hold_date  = #{holdDate}
+           ) t
+     GROUP BY ast09_ast_class_tree_id, ast01_class_tree_nm
+     HAVING SUM(ast09_hold_qty) != 0
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.selectDepositApprStatus (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectDepositApprStatus" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT CAST(NULL AS varchar) AS account_code,
+               CAST(NULL AS varchar) AS account_name,
+               CAST(NULL AS varchar) AS ast_class_tree_name,
+               CAST(NULL AS numeric) AS dr_today_bal_amt,
+               CAST(NULL AS numeric) AS cr_today_bal_amt,
+               CAST(NULL AS numeric) AS dr_today_diff_amt,
+               x.act04_check_cd AS check_code,
+               x.act04_note AS note,
+               CAST(NULL AS varchar) AS corp_name,
+               CAST(NULL AS varchar) AS corp_code,
+               CAST(NULL AS varchar) AS fund_code,
+               CAST(NULL AS varchar) AS fund_name,
+               CAST(NULL AS numeric) AS icam_fee,
+               CAST(NULL AS numeric) AS for_fee,
+               CAST(NULL AS numeric) AS diff_fee
+          FROM (
+<![CDATA[
+SELECT apr01_status_cd                                                          AS act04_check_cd
+         , f_cdnm('AprStatusCode', apr01_status_cd, ast80_company_id, ast80_date)   AS act04_note
+      FROM ast80_relate_appr
+           INNER JOIN apr01_appr ON apr01_appr_id = ast80_appr_id
+     WHERE ast80_company_id = #{companyId}
+       AND ast80_date       = #{holdDate}
+       AND ast80_link_cd    = 'A39' /*(A39:예금잔고대사)*/
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.selectBookDiff (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectBookDiff" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT x.act04_account_cd AS account_code,
+               x.act04_account_nm AS account_name,
+               x.act04_ast_class_tree_nm AS ast_class_tree_name,
+               CAST(NULL AS numeric) AS dr_today_bal_amt,
+               CAST(NULL AS numeric) AS cr_today_bal_amt,
+               x.act04_dr_today_diff_amt AS dr_today_diff_amt,
+               CAST(NULL AS varchar) AS check_code,
+               CAST(NULL AS varchar) AS note,
+               CAST(NULL AS varchar) AS corp_name,
+               CAST(NULL AS varchar) AS corp_code,
+               CAST(NULL AS varchar) AS fund_code,
+               CAST(NULL AS varchar) AS fund_name,
+               CAST(NULL AS numeric) AS icam_fee,
+               CAST(NULL AS numeric) AS for_fee,
+               CAST(NULL AS numeric) AS diff_fee
+          FROM (
+<![CDATA[
+WITH book AS (
+    WITH book1 AS ( SELECT '1' seq
+                         , ast09_book.*
+                      FROM ast09_book
+                     WHERE ast09_company_id = #{companyId}
+                       AND (ast09_ast_class_tree_id, ast09_keep_account_id, ast09_hold_date) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(ast09_hold_date)
+                                                                                                    FROM ast09_book
+                                                                                                   WHERE ast09_company_id = #{companyId}
+                                                                                                     AND ast09_hold_date <= #{holdDate}
+                                                                                                     ]]><choose>
+                                                                                                         <when test="astClassTreeId != null"><![CDATA[
+                                                                                                         AND ast09_ast_class_tree_id = #{astClassTreeId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                     ]]><choose>
+                                                                                                         <when test="keepAccountId != null"><![CDATA[
+                                                                                                         AND ast09_keep_account_id = #{keepAccountId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                   GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+                     UNION ALL
+                    SELECT '2' seq
+                         , ast11_book_id
+                         , ast11_hold_date
+                         , ast11_ast_class_tree_id
+                         , ast11_keep_account_id
+                         , ast11_hold_qty
+                         , ast11_pur_amt
+                         , ast11_book_amt
+                         , ast11_eval_amt
+                         , ast11_eval_pl
+                         , ast11_first_pur_amt
+                         , ast11_first_pur_date
+                         , ast11_company_id
+                         , ast11_for_pur_amt
+                         , ast11_for_book_amt
+                         , ast11_for_eval_amt
+                         , ast11_for_eval_pl
+                         , ast11_fx_pl
+                         , ast11_book_end_yn
+                         , ast11_acr_int_amt
+                         , ast11_for_acr_int_amt
+                         , ast11_oci
+                         , ast11_for_oci
+                         , ast11_lock_up_period_cd
+                         , ast11_lock_up_date
+                         , ast11_lock_up_qty
+                      FROM ast11_book_close
+                     WHERE ast11_company_id = #{companyId}
+                       AND (ast11_ast_class_tree_id, ast11_keep_account_id, ast11_hold_date) IN ( SELECT ast11_ast_class_tree_id, ast11_keep_account_id, MAX(ast11_hold_date)
+                                                                                                    FROM ast11_book_close
+                                                                                                   WHERE ast11_company_id = #{companyId}
+                                                                                                     AND ast11_hold_date < #{holdDate}
+                                                                                                     ]]><choose>
+                                                                                                         <when test="astClassTreeId != null"><![CDATA[
+                                                                                                         AND ast11_ast_class_tree_id = #{astClassTreeId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                     ]]><choose>
+                                                                                                         <when test="keepAccountId != null"><![CDATA[
+                                                                                                         AND ast11_keep_account_id = #{keepAccountId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                   GROUP BY ast11_ast_class_tree_id, ast11_keep_account_id )
+    )
+    SELECT *
+      FROM book1
+     WHERE (ast09_ast_class_tree_id, ast09_keep_account_id, to_char(ast09_hold_date,'yyyymmdd')||seq) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(to_char(ast09_hold_date,'yyyymmdd')||seq)
+                                                                                                             FROM book1
+                                                                                                            GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+)
+
+	SELECT row_number() OVER (ORDER BY act04_account_cd)    AS act04_gen_ledger_id
+	     , ast09_ast_class_tree_id                          AS act04_ast_class_tree_id
+	     , f_ast_class_tree_nm(ast09_ast_class_tree_id)     AS act04_ast_class_tree_nm
+	     , act04_account_cd                                 AS act04_account_cd
+	     , f_get_account_nm(#{companyId}, act04_account_cd) AS act04_account_nm
+	     , SUM(ast09_eval_amt)                              AS act04_dr_today_diff_amt
+	  FROM (
+	         SELECT ast09_ast_class_tree_id
+	              , f_get_real_account_code(ast09_company_id, '1100', ast01_item_s_class_cd||COALESCE(ast01_account_type,'')||'00') act04_account_cd
+	              , ast09_eval_amt
+	           FROM book
+	                INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast09_ast_class_tree_id
+	          WHERE (    ast01_item_l_class_cd = '10'     /* 10:현금 및 예치금 */
+	                  OR ast01_item_m_class_cd = '9030' ) /* 9030:선급금 */
+	            AND ast01_asset_type      = '1'      /* 1:고유자산 */
+	          UNION ALL
+	         SELECT act04_ast_class_tree_id
+	              , act04_account_cd
+	              , (act04_dr_today_bal_amt - act04_cr_today_bal_amt) * -1
+	           FROM act04_gen_ledger
+	                INNER JOIN act01_account_code ON ( act01_company_id = act04_company_id       AND
+	                                                   act01_account_cd = act04_account_cd       AND
+	                                                   COALESCE(act01_slip_yn,'false') = 'true'  )
+	          WHERE act04_company_id = #{companyId}
+	            AND act04_std_date   = #{holdDate}
+	            AND COALESCE(act04_ast_class_tree_id,0) != 0
+	       ) t
+	 GROUP BY ast09_ast_class_tree_id, act04_account_cd
+	 HAVING SUM(ast09_eval_amt) != 0
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS ast09_book.selectNoEvalFinance (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectNoEvalFinance" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT CAST(NULL AS varchar) AS account_code,
+               CAST(NULL AS varchar) AS account_name,
+               x.ast09_ast_class_tree_nm AS ast_class_tree_name,
+               CAST(NULL AS numeric) AS dr_today_bal_amt,
+               CAST(NULL AS numeric) AS cr_today_bal_amt,
+               CAST(NULL AS numeric) AS dr_today_diff_amt,
+               CAST(NULL AS varchar) AS check_code,
+               CAST(NULL AS varchar) AS note,
+               CAST(NULL AS varchar) AS corp_name,
+               CAST(NULL AS varchar) AS corp_code,
+               CAST(NULL AS varchar) AS fund_code,
+               CAST(NULL AS varchar) AS fund_name,
+               CAST(NULL AS numeric) AS icam_fee,
+               CAST(NULL AS numeric) AS for_fee,
+               CAST(NULL AS numeric) AS diff_fee
+          FROM (
+<![CDATA[
+WITH book AS (
+    WITH book1 AS ( SELECT '1' seq
+                         , ast09_book.*
+                      FROM ast09_book
+                     WHERE ast09_company_id = #{companyId}
+                       AND (ast09_ast_class_tree_id, ast09_keep_account_id, ast09_hold_date) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(ast09_hold_date)
+                                                                                                    FROM ast09_book
+                                                                                                   WHERE ast09_company_id = #{companyId}
+                                                                                                     AND ast09_hold_date <= #{holdDate}
+                                                                                                     ]]><choose>
+                                                                                                         <when test="astClassTreeId != null"><![CDATA[
+                                                                                                         AND ast09_ast_class_tree_id = #{astClassTreeId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                     ]]><choose>
+                                                                                                         <when test="keepAccountId != null"><![CDATA[
+                                                                                                         AND ast09_keep_account_id = #{keepAccountId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                   GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+                     UNION ALL
+                    SELECT '2' seq
+                         , ast11_book_id
+                         , ast11_hold_date
+                         , ast11_ast_class_tree_id
+                         , ast11_keep_account_id
+                         , ast11_hold_qty
+                         , ast11_pur_amt
+                         , ast11_book_amt
+                         , ast11_eval_amt
+                         , ast11_eval_pl
+                         , ast11_first_pur_amt
+                         , ast11_first_pur_date
+                         , ast11_company_id
+                         , ast11_for_pur_amt
+                         , ast11_for_book_amt
+                         , ast11_for_eval_amt
+                         , ast11_for_eval_pl
+                         , ast11_fx_pl
+                         , ast11_book_end_yn
+                         , ast11_acr_int_amt
+                         , ast11_for_acr_int_amt
+                         , ast11_oci
+                         , ast11_for_oci
+                         , ast11_lock_up_period_cd
+                         , ast11_lock_up_date
+                         , ast11_lock_up_qty
+                      FROM ast11_book_close
+                     WHERE ast11_company_id = #{companyId}
+                       AND (ast11_ast_class_tree_id, ast11_keep_account_id, ast11_hold_date) IN ( SELECT ast11_ast_class_tree_id, ast11_keep_account_id, MAX(ast11_hold_date)
+                                                                                                    FROM ast11_book_close
+                                                                                                   WHERE ast11_company_id = #{companyId}
+                                                                                                     AND ast11_hold_date < #{holdDate}
+                                                                                                     ]]><choose>
+                                                                                                         <when test="astClassTreeId != null"><![CDATA[
+                                                                                                         AND ast11_ast_class_tree_id = #{astClassTreeId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                     ]]><choose>
+                                                                                                         <when test="keepAccountId != null"><![CDATA[
+                                                                                                         AND ast11_keep_account_id = #{keepAccountId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                   GROUP BY ast11_ast_class_tree_id, ast11_keep_account_id )
+    )
+    SELECT *
+      FROM book1
+     WHERE (ast09_ast_class_tree_id, ast09_keep_account_id, to_char(ast09_hold_date,'yyyymmdd')||seq) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(to_char(ast09_hold_date,'yyyymmdd')||seq)
+                                                                                                             FROM book1
+                                                                                                            GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+)
+
+	    SELECT f_ast_class_tree_nm_allpath(ast09_ast_class_tree_id) as ast09_ast_class_tree_nm
+
+
+	      FROM book
+	           INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast09_ast_class_tree_id
+	     WHERE ast01_asset_type                     = '1'      /* 1:고유자산 / 2:운용(펀드)자산 */
+	       AND COALESCE(ast01_item_l_class_cd,'99') = '20'     /* 20:증권 */
+	       AND COALESCE(ast09_book_end_yn,'false') != 'true'
+	       AND NOT EXISTS ( SELECT 1
+	                          FROM ast06_tr
+	                               INNER JOIN ast08_tr_finance ON ast08_tr_id = ast06_tr_id
+	                               INNER JOIN act02_journal    ON act02_tr_id = ast06_tr_id
+	                         WHERE ast06_company_id         = ast09_company_id
+	                           AND ast06_ast_class_tree_id  = ast09_ast_class_tree_id
+	                           AND ast08_account_id         = ast09_keep_account_id
+	                           AND ast06_tr_cd              IN ('3600','3610') /* (3600:금융상품 평가 / 3610:금융상품 이자평가) */
+	                           AND ast06_date               = #{holdDate} )
+         GROUP BY ast01_item_m_class_cd, ast09_ast_class_tree_id
+         ORDER BY ast01_item_m_class_cd, ast09_ast_class_tree_id
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.selectFinanceBookDiff (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectFinanceBookDiff" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT x.act04_account_cd AS account_code,
+               x.act04_account_nm AS account_name,
+               CAST(NULL AS varchar) AS ast_class_tree_name,
+               x.act04_dr_today_bal_amt AS dr_today_bal_amt,
+               x.act04_cr_today_bal_amt AS cr_today_bal_amt,
+               x.act04_dr_today_diff_amt AS dr_today_diff_amt,
+               CAST(NULL AS varchar) AS check_code,
+               CAST(NULL AS varchar) AS note,
+               CAST(NULL AS varchar) AS corp_name,
+               CAST(NULL AS varchar) AS corp_code,
+               CAST(NULL AS varchar) AS fund_code,
+               CAST(NULL AS varchar) AS fund_name,
+               CAST(NULL AS numeric) AS icam_fee,
+               CAST(NULL AS numeric) AS for_fee,
+               CAST(NULL AS numeric) AS diff_fee
+          FROM (
+<![CDATA[
+WITH book AS (
+        
+WITH book AS (
+    WITH book1 AS ( SELECT '1' seq
+                         , ast09_book.*
+                      FROM ast09_book
+                     WHERE ast09_company_id = #{companyId}
+                       AND (ast09_ast_class_tree_id, ast09_keep_account_id, ast09_hold_date) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(ast09_hold_date)
+                                                                                                    FROM ast09_book
+                                                                                                   WHERE ast09_company_id = #{companyId}
+                                                                                                     AND ast09_hold_date <= #{holdDate}
+                                                                                                     ]]><choose>
+                                                                                                         <when test="astClassTreeId != null"><![CDATA[
+                                                                                                         AND ast09_ast_class_tree_id = #{astClassTreeId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                     ]]><choose>
+                                                                                                         <when test="keepAccountId != null"><![CDATA[
+                                                                                                         AND ast09_keep_account_id = #{keepAccountId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                   GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+                     UNION ALL
+                    SELECT '2' seq
+                         , ast11_book_id
+                         , ast11_hold_date
+                         , ast11_ast_class_tree_id
+                         , ast11_keep_account_id
+                         , ast11_hold_qty
+                         , ast11_pur_amt
+                         , ast11_book_amt
+                         , ast11_eval_amt
+                         , ast11_eval_pl
+                         , ast11_first_pur_amt
+                         , ast11_first_pur_date
+                         , ast11_company_id
+                         , ast11_for_pur_amt
+                         , ast11_for_book_amt
+                         , ast11_for_eval_amt
+                         , ast11_for_eval_pl
+                         , ast11_fx_pl
+                         , ast11_book_end_yn
+                         , ast11_acr_int_amt
+                         , ast11_for_acr_int_amt
+                         , ast11_oci
+                         , ast11_for_oci
+                         , ast11_lock_up_period_cd
+                         , ast11_lock_up_date
+                         , ast11_lock_up_qty
+                      FROM ast11_book_close
+                     WHERE ast11_company_id = #{companyId}
+                       AND (ast11_ast_class_tree_id, ast11_keep_account_id, ast11_hold_date) IN ( SELECT ast11_ast_class_tree_id, ast11_keep_account_id, MAX(ast11_hold_date)
+                                                                                                    FROM ast11_book_close
+                                                                                                   WHERE ast11_company_id = #{companyId}
+                                                                                                     AND ast11_hold_date < #{holdDate}
+                                                                                                     ]]><choose>
+                                                                                                         <when test="astClassTreeId != null"><![CDATA[
+                                                                                                         AND ast11_ast_class_tree_id = #{astClassTreeId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                     ]]><choose>
+                                                                                                         <when test="keepAccountId != null"><![CDATA[
+                                                                                                         AND ast11_keep_account_id = #{keepAccountId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                   GROUP BY ast11_ast_class_tree_id, ast11_keep_account_id )
+    )
+    SELECT *
+      FROM book1
+     WHERE (ast09_ast_class_tree_id, ast09_keep_account_id, to_char(ast09_hold_date,'yyyymmdd')||seq) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(to_char(ast09_hold_date,'yyyymmdd')||seq)
+                                                                                                             FROM book1
+                                                                                                            GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+)
+
+        SELECT account_cd
+             , sum(ast09_eval_amt) as book_amt
+          FROM ( SELECT f_get_real_account_code(ast09_company_id, '1100', ast01_item_s_class_cd||ast01_account_type||'00' ) as account_cd
+                      , CASE WHEN COALESCE(ast01_eval_type,'1') = '2' THEN ast09_book_amt ELSE ast09_eval_amt END           as ast09_eval_amt
+                   FROM book
+                        INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast09_ast_class_tree_id
+                  WHERE ast01_asset_type                     = '1'      /* 1:고유자산 / 2:운용(펀드)자산 */
+                    AND COALESCE(ast01_item_l_class_cd,'99') = '20'     /* 20:증권 */
+                    AND COALESCE(ast09_book_end_yn,'false') != 'true'
+               ) t
+         GROUP BY account_cd
+    ),
+    ledger AS (
+        SELECT act04_account_cd
+             , (act04_dr_today_bal_amt - act04_cr_today_bal_amt)
+                * CASE WHEN act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END  as act04_today_bal_amt
+          FROM act04_gen_ledger
+               INNER JOIN act01_account_code ON ( act01_company_id = act04_company_id AND
+                                                  act01_account_cd = act04_account_cd )
+         WHERE act04_company_id = #{companyId}
+           AND act04_std_date   = #{holdDate}
+           AND ( act01_account_cd LIKE '32%'                     OR  /*(32%:증권)*/
+                 act01_account_cd IN ('3101610100','3101610200') )   /*(3101610100:MMT / 3101610100:CMA)*/
+           AND COALESCE(act01_slip_yn,'false') = 'true'
+           AND COALESCE(act01_use_yn ,'false') = 'true'
+    )
+    SELECT row_number() OVER (ORDER BY act04_account_cd)    AS act04_gen_ledger_id
+         , act04_account_cd
+         , f_get_account_nm(#{companyId}, act04_account_cd) AS act04_account_nm
+         , act04_dr_today_bal_amt
+         , act04_cr_today_bal_amt
+         , act04_dr_today_diff_amt
+      FROM (
+		    SELECT account_cd                                   AS act04_account_cd
+		         , sum(book_amt)                                AS act04_dr_today_bal_amt
+		         , sum(ledger_amt)                              AS act04_cr_today_bal_amt
+		         , sum(book_amt) - sum(ledger_amt)              AS act04_dr_today_diff_amt
+		      FROM (
+		             SELECT account_cd      as account_cd
+		                  , book_amt        as book_amt
+		                  , 0               as ledger_amt
+		               FROM ( SELECT account_cd
+		                           , book_amt
+		                        FROM book
+		                      EXCEPT
+		                      SELECT act04_account_cd
+		                           , act04_today_bal_amt
+		                        FROM ledger
+		                    ) t
+		              UNION ALL
+		             SELECT act04_account_cd    as account_cd
+		                  , 0                   as book_amt
+		                  , act04_today_bal_amt as ledger_amt
+		               FROM ( SELECT act04_account_cd
+		                           , act04_today_bal_amt
+		                        FROM ledger
+		                      EXCEPT
+		                      SELECT account_cd
+		                           , book_amt
+		                        FROM book
+		                    ) t
+		           ) t2
+		     GROUP BY account_cd
+           ) t3
+     WHERE act04_dr_today_diff_amt != 0
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS ast09_book.selectNoFxEval (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectNoFxEval" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT CAST(NULL AS varchar) AS account_code,
+               CAST(NULL AS varchar) AS account_name,
+               x.ast09_ast_class_tree_nm AS ast_class_tree_name,
+               CAST(NULL AS numeric) AS dr_today_bal_amt,
+               CAST(NULL AS numeric) AS cr_today_bal_amt,
+               CAST(NULL AS numeric) AS dr_today_diff_amt,
+               CAST(NULL AS varchar) AS check_code,
+               CAST(NULL AS varchar) AS note,
+               CAST(NULL AS varchar) AS corp_name,
+               CAST(NULL AS varchar) AS corp_code,
+               CAST(NULL AS varchar) AS fund_code,
+               CAST(NULL AS varchar) AS fund_name,
+               CAST(NULL AS numeric) AS icam_fee,
+               CAST(NULL AS numeric) AS for_fee,
+               CAST(NULL AS numeric) AS diff_fee
+          FROM (
+<![CDATA[
+WITH book AS (
+    WITH book1 AS ( SELECT '1' seq
+                         , ast09_book.*
+                      FROM ast09_book
+                     WHERE ast09_company_id = #{companyId}
+                       AND (ast09_ast_class_tree_id, ast09_keep_account_id, ast09_hold_date) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(ast09_hold_date)
+                                                                                                    FROM ast09_book
+                                                                                                   WHERE ast09_company_id = #{companyId}
+                                                                                                     AND ast09_hold_date <= #{holdDate}
+                                                                                                     ]]><choose>
+                                                                                                         <when test="astClassTreeId != null"><![CDATA[
+                                                                                                         AND ast09_ast_class_tree_id = #{astClassTreeId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                     ]]><choose>
+                                                                                                         <when test="keepAccountId != null"><![CDATA[
+                                                                                                         AND ast09_keep_account_id = #{keepAccountId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                   GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+                     UNION ALL
+                    SELECT '2' seq
+                         , ast11_book_id
+                         , ast11_hold_date
+                         , ast11_ast_class_tree_id
+                         , ast11_keep_account_id
+                         , ast11_hold_qty
+                         , ast11_pur_amt
+                         , ast11_book_amt
+                         , ast11_eval_amt
+                         , ast11_eval_pl
+                         , ast11_first_pur_amt
+                         , ast11_first_pur_date
+                         , ast11_company_id
+                         , ast11_for_pur_amt
+                         , ast11_for_book_amt
+                         , ast11_for_eval_amt
+                         , ast11_for_eval_pl
+                         , ast11_fx_pl
+                         , ast11_book_end_yn
+                         , ast11_acr_int_amt
+                         , ast11_for_acr_int_amt
+                         , ast11_oci
+                         , ast11_for_oci
+                         , ast11_lock_up_period_cd
+                         , ast11_lock_up_date
+                         , ast11_lock_up_qty
+                      FROM ast11_book_close
+                     WHERE ast11_company_id = #{companyId}
+                       AND (ast11_ast_class_tree_id, ast11_keep_account_id, ast11_hold_date) IN ( SELECT ast11_ast_class_tree_id, ast11_keep_account_id, MAX(ast11_hold_date)
+                                                                                                    FROM ast11_book_close
+                                                                                                   WHERE ast11_company_id = #{companyId}
+                                                                                                     AND ast11_hold_date < #{holdDate}
+                                                                                                     ]]><choose>
+                                                                                                         <when test="astClassTreeId != null"><![CDATA[
+                                                                                                         AND ast11_ast_class_tree_id = #{astClassTreeId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                     ]]><choose>
+                                                                                                         <when test="keepAccountId != null"><![CDATA[
+                                                                                                         AND ast11_keep_account_id = #{keepAccountId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                   GROUP BY ast11_ast_class_tree_id, ast11_keep_account_id )
+    )
+    SELECT *
+      FROM book1
+     WHERE (ast09_ast_class_tree_id, ast09_keep_account_id, to_char(ast09_hold_date,'yyyymmdd')||seq) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(to_char(ast09_hold_date,'yyyymmdd')||seq)
+                                                                                                             FROM book1
+                                                                                                            GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+)
+
+        SELECT ast01_class_tree_nm  as ast09_ast_class_tree_nm
+          FROM book
+               INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast09_ast_class_tree_id
+         WHERE ast01_asset_type                         = '1'      /* 1:고유자산 / 2:운용(펀드)자산 */
+           AND COALESCE(ast01_item_s_class_cd,'999999') = '101005' /* 101005:외화예금 */
+           AND NOT EXISTS ( SELECT 1
+                              FROM ast06_tr
+                                   INNER JOIN act02_journal ON act02_tr_id = ast06_tr_id
+                             WHERE ast06_company_id         = ast09_company_id
+                               AND ast06_ast_class_tree_id  = ast09_ast_class_tree_id
+                               AND ast06_tr_cd              = '3700'    /* 3700:외화예금 환산평가 */
+                               AND ast06_date               = #{holdDate} )
+         ORDER BY ast01_class_tree_nm collate "ko_KR.utf8" asc
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS ast09_book.selectNoDepn (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectNoDepn" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT CAST(NULL AS varchar) AS account_code,
+               CAST(NULL AS varchar) AS account_name,
+               x.ast09_ast_class_tree_nm AS ast_class_tree_name,
+               CAST(NULL AS numeric) AS dr_today_bal_amt,
+               CAST(NULL AS numeric) AS cr_today_bal_amt,
+               CAST(NULL AS numeric) AS dr_today_diff_amt,
+               CAST(NULL AS varchar) AS check_code,
+               CAST(NULL AS varchar) AS note,
+               CAST(NULL AS varchar) AS corp_name,
+               CAST(NULL AS varchar) AS corp_code,
+               CAST(NULL AS varchar) AS fund_code,
+               CAST(NULL AS varchar) AS fund_name,
+               CAST(NULL AS numeric) AS icam_fee,
+               CAST(NULL AS numeric) AS for_fee,
+               CAST(NULL AS numeric) AS diff_fee
+          FROM (
+<![CDATA[
+SELECT f_ast_class_tree_nm_allpath(ast13_ast_class_tree_id) as ast09_ast_class_tree_nm
+          FROM (
+                SELECT *
+                     , COALESCE(( SELECT ast16_apply_non_deduct_tax
+                                    FROM ast16_non_deduct_tax
+                                   WHERE ast16_pur_tr_id = ast13_pur_tr_id
+                                     AND ast16_apply_date <= #{holdDate}
+                                   ORDER BY ast16_apply_date DESC
+                                   LIMIT 1 ),0)     as ast13_non_deduct_tax
+			      FROM ast13_book_depn
+		               INNER JOIN ast01_class_tree ON ( ast01_class_tree_id = ast13_ast_class_tree_id AND
+		                                                ast01_depn_type IS NOT NULL                   )
+			     WHERE ast13_company_id = #{companyId}
+		           AND COALESCE(ast13_retire_date,'9999-12-31') > #{holdDate}
+			       AND (ast13_ast_class_tree_id, ast13_pur_tr_id, ast13_depn_date) IN ( SELECT ast13_ast_class_tree_id, ast13_pur_tr_id, MAX(ast13_depn_date)
+			                                                                              FROM ast13_book_depn
+			                                                                             WHERE ast13_company_id = #{companyId}
+			                                                                               AND ast13_depn_date <= #{holdDate}
+			                                                                             GROUP BY ast13_ast_class_tree_id, ast13_pur_tr_id )
+		           AND NOT EXISTS ( SELECT 1
+		                              FROM ast06_tr
+		                                   INNER JOIN act02_journal ON act02_tr_id = ast06_tr_id
+		                             WHERE ast06_company_id         = ast13_company_id
+		                               AND ast06_ast_class_tree_id  = ast13_ast_class_tree_id
+		                               AND ast06_pur_tr_id          = ast13_pur_tr_id
+		                               AND ast06_tr_cd              = '5012'    /* 5012:감가상각 */
+		                               AND ast06_date               = #{holdDate} )
+               ) t
+         WHERE ast13_pur_amt + ast13_non_deduct_tax - COALESCE(ast13_acm_depn_cost,0) > 1000
+         ORDER BY ast01_item_s_class_cd
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.selectRemDepnCostDiff (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectRemDepnCostDiff" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT CAST(NULL AS varchar) AS account_code,
+               CAST(NULL AS varchar) AS account_name,
+               CAST(NULL AS varchar) AS ast_class_tree_name,
+               x.act04_dr_today_bal_amt AS dr_today_bal_amt,
+               x.act04_cr_today_bal_amt AS cr_today_bal_amt,
+               x.act04_dr_today_diff_amt AS dr_today_diff_amt,
+               CAST(NULL AS varchar) AS check_code,
+               CAST(NULL AS varchar) AS note,
+               CAST(NULL AS varchar) AS corp_name,
+               CAST(NULL AS varchar) AS corp_code,
+               CAST(NULL AS varchar) AS fund_code,
+               CAST(NULL AS varchar) AS fund_name,
+               CAST(NULL AS numeric) AS icam_fee,
+               CAST(NULL AS numeric) AS for_fee,
+               CAST(NULL AS numeric) AS diff_fee
+          FROM (
+<![CDATA[
+SELECT row_number() OVER ()                 AS act04_gen_ledger_id
+         , remDepnCost                          AS act04_dr_today_bal_amt
+         , act04_today_bal_amt                  AS act04_cr_today_bal_amt
+         , remDepnCost - act04_today_bal_amt    AS act04_dr_today_diff_amt
+      FROM (
+             SELECT COALESCE(( SELECT SUM( ast13_pur_amt
+                                           - COALESCE(ast13_acm_depn_cost,0)
+                                           + COALESCE(( SELECT ast16_apply_non_deduct_tax
+                                                          FROM ast16_non_deduct_tax
+                                                         WHERE ast16_pur_tr_id = ast13_pur_tr_id
+                                                           AND ast16_apply_date <= #{holdDate}
+                                                         ORDER BY ast16_apply_date DESC
+                                                         LIMIT 1 ),0) )
+                                 FROM ast13_book_depn
+                                      INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast13_ast_class_tree_id
+                                WHERE ast13_company_id = #{companyId}
+                                  AND (ast13_pur_tr_id, ast13_depn_date) IN ( SELECT ast13_pur_tr_id, MAX(ast13_depn_date)
+                                                                                FROM ast13_book_depn
+                                                                               WHERE ast13_company_id = #{companyId}
+                                                                                 AND ast13_depn_date  <= #{holdDate}
+                                                                               GROUP BY ast13_pur_tr_id )
+                                  AND COALESCE(ast13_retire_date,'9999-12-31') > #{holdDate}
+                                  AND COALESCE(ast01_item_l_class_cd,'99') = '50'  /*(50:유형자산)*/
+                             ),0) as remDepnCost
+                  , COALESCE(( SELECT SUM((act04_dr_today_bal_amt - act04_cr_today_bal_amt)
+                                      * CASE WHEN act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END)
+                                 FROM act04_gen_ledger
+                                      INNER JOIN act01_account_code ON ( act01_company_id = act04_company_id AND
+                                                                         act01_account_cd = act04_account_cd )
+                                WHERE act04_company_id = #{companyId}
+                                  AND act04_std_date   = #{holdDate}
+                                  AND act01_account_cd = '3500000000'              /*(3500000000:유형자산)*/
+                                  AND COALESCE(act01_use_yn ,'false') = 'true'
+                             ),0) as act04_today_bal_amt
+           ) t
+     WHERE remDepnCost != act04_today_bal_amt
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.selectCurrYearOfficeAssetsDiff (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectCurrYearOfficeAssetsDiff" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT CAST(NULL AS varchar) AS account_code,
+               CAST(NULL AS varchar) AS account_name,
+               CAST(NULL AS varchar) AS ast_class_tree_name,
+               x.act04_dr_today_bal_amt AS dr_today_bal_amt,
+               x.act04_cr_today_bal_amt AS cr_today_bal_amt,
+               x.act04_dr_today_diff_amt AS dr_today_diff_amt,
+               CAST(NULL AS varchar) AS check_code,
+               CAST(NULL AS varchar) AS note,
+               CAST(NULL AS varchar) AS corp_name,
+               CAST(NULL AS varchar) AS corp_code,
+               CAST(NULL AS varchar) AS fund_code,
+               CAST(NULL AS varchar) AS fund_name,
+               CAST(NULL AS numeric) AS icam_fee,
+               CAST(NULL AS numeric) AS for_fee,
+               CAST(NULL AS numeric) AS diff_fee
+          FROM (
+<![CDATA[
+SELECT row_number() OVER ()                 AS act04_gen_ledger_id
+         , book_amt                             AS act04_dr_today_bal_amt
+         , account_amt                          AS act04_cr_today_bal_amt
+         , book_amt - account_amt               AS act04_dr_today_diff_amt
+      FROM (
+             SELECT COALESCE(( SELECT SUM(ast13_pur_amt)
+                                 FROM ast13_book_depn
+                                      INNER JOIN ast01_class_tree ON ast01_class_tree_id   = ast13_ast_class_tree_id
+                                WHERE ast13_company_id = #{companyId}
+                                  AND (ast13_pur_tr_id, ast13_depn_date) IN ( SELECT ast13_pur_tr_id, MAX(ast13_depn_date)
+                                                                                FROM ast13_book_depn
+                                                                               WHERE ast13_company_id = #{companyId}
+                                                                                 AND ast13_depn_date  <= #{holdDate}
+                                                                               GROUP BY ast13_pur_tr_id )
+                                  AND COALESCE(ast13_retire_date,'9999-12-31') > #{holdDate}
+                                  AND COALESCE(ast01_item_s_class_cd,'99') = '952002'  /*(952002:소모품-비품)*/
+                                  AND TO_CHAR(ast13_pur_date,'yyyy') = TO_CHAR(#{holdDate}::date,'yyyy')
+                             ),0) as book_amt
+                  , COALESCE(( SELECT SUM((act04_dr_today_bal_amt - act04_cr_today_bal_amt)
+                                      * CASE WHEN act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END)
+                                 FROM act04_gen_ledger
+                                      INNER JOIN act01_account_code ON ( act01_company_id = act04_company_id AND
+                                                                         act01_account_cd = act04_account_cd )
+                                WHERE act04_company_id = #{companyId}
+                                  AND act04_std_date   = #{holdDate}
+                                  AND act01_account_cd = ( SELECT act13_real_account_cd
+                                                             FROM act13_real_account_map
+                                                            WHERE act13_company_id = act04_company_id
+                                                              AND act13_repr_account_cd = '5802'    /*(5802:소모품비계정)*/
+                                                              AND act13_account_map LIKE '952002%'  /*(952002%:소모품_비품)*/
+                                                         )
+                                  AND COALESCE(act01_use_yn ,'false') = 'true'
+                             ),0) as account_amt
+           ) t
+     WHERE book_amt != account_amt
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.selectRemDepnCostDiff2 (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectRemDepnCostDiff2" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT x.act04_account_cd AS account_code,
+               x.act04_account_nm AS account_name,
+               CAST(NULL AS varchar) AS ast_class_tree_name,
+               x.act04_dr_today_bal_amt AS dr_today_bal_amt,
+               x.act04_cr_today_bal_amt AS cr_today_bal_amt,
+               x.act04_dr_today_diff_amt AS dr_today_diff_amt,
+               CAST(NULL AS varchar) AS check_code,
+               CAST(NULL AS varchar) AS note,
+               CAST(NULL AS varchar) AS corp_name,
+               CAST(NULL AS varchar) AS corp_code,
+               CAST(NULL AS varchar) AS fund_code,
+               CAST(NULL AS varchar) AS fund_name,
+               CAST(NULL AS numeric) AS icam_fee,
+               CAST(NULL AS numeric) AS for_fee,
+               CAST(NULL AS numeric) AS diff_fee
+          FROM (
+<![CDATA[
+WITH book AS (
+        SELECT account_cd
+             , SUM(rem_depn_cost) as rem_depn_cost
+          FROM (
+                 SELECT f_get_real_account_code(ast13_company_id, '1100', ast01_item_s_class_cd||ast01_account_type||'00' ) as account_cd
+                      , ast13_pur_amt
+                        - COALESCE(ast13_acm_depn_cost,0)
+                        + COALESCE(( SELECT ast16_apply_non_deduct_tax
+		                               FROM ast16_non_deduct_tax
+		                              WHERE ast16_pur_tr_id = ast13_pur_tr_id
+		                                AND ast16_apply_date <= #{holdDate}
+		                              ORDER BY ast16_apply_date DESC
+		                              LIMIT 1 ),0)                                                                          as rem_depn_cost
+                   FROM ast13_book_depn
+                        INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast13_ast_class_tree_id
+                  WHERE ast13_company_id = #{companyId}
+                    AND (ast13_pur_tr_id, ast13_depn_date) IN ( SELECT ast13_pur_tr_id, MAX(ast13_depn_date)
+                                                                  FROM ast13_book_depn
+                                                                 WHERE ast13_company_id = #{companyId}
+                                                                   AND ast13_depn_date  <= #{holdDate}
+                                                                 GROUP BY ast13_pur_tr_id )
+                    AND COALESCE(ast13_retire_date,'9999-12-31') > #{holdDate}
+                    AND COALESCE(ast01_item_l_class_cd,'99') = '55'  /*(55:무형자산)*/
+               ) t
+         GROUP BY account_cd
+    ),
+    ledger AS (
+        SELECT act04_account_cd
+             , (act04_dr_today_bal_amt - act04_cr_today_bal_amt)
+                * CASE WHEN act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END  as act04_today_bal_amt
+          FROM act04_gen_ledger
+               INNER JOIN act01_account_code ON ( act01_company_id = act04_company_id AND
+                                                  act01_account_cd = act04_account_cd )
+         WHERE act04_company_id = #{companyId}
+           AND act04_std_date   = #{holdDate}
+           AND act01_account_cd LIKE '3812%'  /*(3812% : 무형자산)*/
+           AND COALESCE(act01_slip_yn,'false') = 'true'
+           AND COALESCE(act01_use_yn ,'false') = 'true'
+    )
+    SELECT row_number() OVER (ORDER BY account_cd)      AS act04_gen_ledger_id
+         , account_cd                                   AS act04_account_cd
+         , f_get_account_nm(#{companyId}, account_cd)   AS act04_account_nm
+         , sum(rem_depn_cost)                           AS act04_dr_today_bal_amt
+         , sum(ledger_amt)                              AS act04_cr_today_bal_amt
+         , sum(rem_depn_cost) - sum(ledger_amt)         AS act04_dr_today_diff_amt
+      FROM (
+             SELECT account_cd      as account_cd
+                  , rem_depn_cost   as rem_depn_cost
+                  , 0               as ledger_amt
+               FROM ( SELECT account_cd
+                           , rem_depn_cost
+                        FROM book
+                      EXCEPT
+                      SELECT act04_account_cd
+                           , act04_today_bal_amt
+                        FROM ledger
+                    ) t
+              UNION ALL
+             SELECT act04_account_cd    as account_cd
+                  , 0                   as rem_depn_cost
+                  , act04_today_bal_amt as ledger_amt
+               FROM ( SELECT act04_account_cd
+                           , act04_today_bal_amt
+                        FROM ledger
+                      EXCEPT
+                      SELECT account_cd
+                           , rem_depn_cost
+                        FROM book
+                    ) t
+           ) t2
+     GROUP BY account_cd
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.selectNoSlipAccount (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectNoSlipAccount" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT CAST(NULL AS varchar) AS account_code,
+               CAST(NULL AS varchar) AS account_name,
+               CAST(NULL AS varchar) AS ast_class_tree_name,
+               CAST(NULL AS numeric) AS dr_today_bal_amt,
+               CAST(NULL AS numeric) AS cr_today_bal_amt,
+               CAST(NULL AS numeric) AS dr_today_diff_amt,
+               CAST(NULL AS varchar) AS check_code,
+               x.act04_note AS note,
+               CAST(NULL AS varchar) AS corp_name,
+               CAST(NULL AS varchar) AS corp_code,
+               CAST(NULL AS varchar) AS fund_code,
+               CAST(NULL AS varchar) AS fund_name,
+               CAST(NULL AS numeric) AS icam_fee,
+               CAST(NULL AS numeric) AS for_fee,
+               CAST(NULL AS numeric) AS diff_fee
+          FROM (
+<![CDATA[
+SELECT   '전표발생일:'||to_char(act02_date,'yyyy.mm.dd')||' / '
+           ||'전표번호:'||act02_journal_no||' / '
+           ||'계정과목:'||CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||act01_account_nm
+                      ||'('||act01_account_cd||')'  as act04_note
+      FROM act02_journal
+           INNER JOIN act03_journal_dtl  ON act03_journal_id = act02_journal_id
+           INNER JOIN act01_account_code ON ( act01_company_id = act02_company_id                            AND
+                                              act01_account_cd IN (act03_dr_account_cd, act03_cr_account_cd) )
+     WHERE act02_company_id = #{companyId}
+       AND act02_date BETWEEN #{startDate} AND #{closeDate}
+       AND COALESCE(act01_slip_yn,'false') != 'true'
+     ORDER BY act02_date, act02_journal_no, act01_account_cd
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.selectNoUseAccount (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectNoUseAccount" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT CAST(NULL AS varchar) AS account_code,
+               CAST(NULL AS varchar) AS account_name,
+               CAST(NULL AS varchar) AS ast_class_tree_name,
+               CAST(NULL AS numeric) AS dr_today_bal_amt,
+               CAST(NULL AS numeric) AS cr_today_bal_amt,
+               CAST(NULL AS numeric) AS dr_today_diff_amt,
+               CAST(NULL AS varchar) AS check_code,
+               x.act04_note AS note,
+               CAST(NULL AS varchar) AS corp_name,
+               CAST(NULL AS varchar) AS corp_code,
+               CAST(NULL AS varchar) AS fund_code,
+               CAST(NULL AS varchar) AS fund_name,
+               CAST(NULL AS numeric) AS icam_fee,
+               CAST(NULL AS numeric) AS for_fee,
+               CAST(NULL AS numeric) AS diff_fee
+          FROM (
+<![CDATA[
+SELECT '미사용 계정과목 : '||CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||act01_account_nm
+                          ||'('||act01_account_cd||')'  as act04_note
+      FROM act04_gen_ledger
+           INNER JOIN act01_account_code ON ( act01_company_id = act04_company_id AND
+                                              act01_account_cd = act04_account_cd )
+     WHERE act04_company_id = #{companyId}
+       AND act04_std_date   = #{closeDate}
+       AND COALESCE(act01_use_yn,'false') = 'false'
+       AND (act04_dr_today_bal_amt - act04_cr_today_bal_amt) != 0
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.selectNoneAccount (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectNoneAccount" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT CAST(NULL AS varchar) AS account_code,
+               CAST(NULL AS varchar) AS account_name,
+               CAST(NULL AS varchar) AS ast_class_tree_name,
+               CAST(NULL AS numeric) AS dr_today_bal_amt,
+               CAST(NULL AS numeric) AS cr_today_bal_amt,
+               CAST(NULL AS numeric) AS dr_today_diff_amt,
+               CAST(NULL AS varchar) AS check_code,
+               x.act04_note AS note,
+               CAST(NULL AS varchar) AS corp_name,
+               CAST(NULL AS varchar) AS corp_code,
+               CAST(NULL AS varchar) AS fund_code,
+               CAST(NULL AS varchar) AS fund_name,
+               CAST(NULL AS numeric) AS icam_fee,
+               CAST(NULL AS numeric) AS for_fee,
+               CAST(NULL AS numeric) AS diff_fee
+          FROM (
+<![CDATA[
+SELECT CONCAT('전표번호:'||act02_journal_no||' / '
+                 ,f_cdnm('trCode', f_get_journal_tr_cd(act02_journal_id), act02_company_id, act02_date)) as act04_note
+      FROM act02_journal
+           INNER JOIN act03_journal_dtl ON act03_journal_id = act02_journal_id
+     WHERE act02_company_id = #{companyId}
+       AND act02_date BETWEEN #{startDate} AND #{closeDate}
+       AND ( ( act03_dr_account_cd IS NULL AND COALESCE(act03_dr_for_amt, 0) != 0 ) OR
+             ( act03_cr_account_cd IS NULL AND COALESCE(act03_cr_for_amt, 0) != 0 ) )
+     ORDER BY act02_journal_no
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS ast30_book_fund_fee.selectFeeBookDiff (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectFeeBookDiff" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT CAST(NULL AS varchar) AS account_code,
+               CAST(NULL AS varchar) AS account_name,
+               CAST(NULL AS varchar) AS ast_class_tree_name,
+               CAST(NULL AS numeric) AS dr_today_bal_amt,
+               CAST(NULL AS numeric) AS cr_today_bal_amt,
+               CAST(NULL AS numeric) AS dr_today_diff_amt,
+               CAST(NULL AS varchar) AS check_code,
+               x.ast30_note AS note,
+               x.ast30_corp_nm AS corp_name,
+               x.ast30_corp_cd AS corp_code,
+               x.ast30_fund_cd AS fund_code,
+               x.ast30_fund_nm AS fund_name,
+               x.ast30_icam_fee AS icam_fee,
+               x.ast30_for_fee AS for_fee,
+               x.ast30_diff_fee AS diff_fee
+          FROM (
+<![CDATA[
+WITH ast33 AS ( SELECT ast33_fund_trans.*
+                         , sys15_corp_cd    as ast33_corp_cd
+                      FROM ast33_fund_trans
+                           INNER JOIN sys15_corp ON sys15_corp_id = ast33_corp_id
+                           INNER JOIN icam10_fee ON ( icam10_company_id        = ast33_company_id  AND
+                                                      icam10_icam_company_cd   = sys15_corp_cd     AND
+                                                      icam10_fund_cd           = ast33_fund_cd     AND
+                                                      icam10_rmk_cd            = 'P00'             AND
+                                                      icam10_std_date          = #{closeDate}      )
+                     WHERE ast33_company_id    = #{companyId}
+                       AND ast33_fund_trans_cd = '2'  /*(2:이관(입))*/
+                       AND ast33_date > icam10_bf_pay_date
+    )  
+    , biz17 AS ( SELECT biz17_dual_manage_fund.*
+                      , sys15_corp_cd   as biz17_corp_cd
+                   FROM biz17_dual_manage_fund
+                        INNER JOIN biz13_with_corp ON biz13_cont_corp_id = biz17_cont_corp_id
+                        INNER JOIN sys15_corp      ON sys15_corp_id      = biz13_corp_id
+                  WHERE biz17_company_id = #{companyId}
+                    AND biz17_start_date BETWEEN date_trunc('month',#{closeDate}::date)::date AND #{closeDate}::date
+                    AND biz13_manage_type = '1'        /*(1:자산운용)*/
+    )
+    , icam AS ( SELECT icam12_icam_company_cd
+                     , icam12_fund_cd
+                     , icam12_fund_nm
+                     , CASE WHEN EXISTS ( SELECT 1 
+                                            FROM ast33 
+                                           WHERE ast33_corp_cd = icam12_icam_company_cd
+                                             AND ast33_fund_cd = icam12_fund_cd
+                                           UNION ALL
+                                          SELECT 2
+                                            FROM biz17
+                                           WHERE biz17_corp_cd = icam12_icam_company_cd
+                                             AND biz17_fund_cd = icam12_fund_cd
+                                 )
+                            THEN (
+                                  SELECT SUM(f_calc_dual_fund_fee( icam10_company_id
+                                                                 , icam10_icam_company_cd
+                                                                 , icam10_fund_cd
+                                                                 , icam10_std_date
+                                                                 , icam10_fee ) * CASE WHEN icam10_drcr_type = 'C' THEN 1 ELSE -1 END)
+                                    FROM icam10_fee
+                                   WHERE icam10_company_id       = icam12_company_id
+                                     AND icam10_icam_company_cd  = icam12_icam_company_cd
+                                     AND icam10_fund_cd          = icam12_fund_cd
+                                     AND icam10_rmk_cd           IN ('P00','D20','D30') /* (P00:보수 및 수수료(비용)발생 / D20:보수인출 / D30:해지금/보수인출) */
+                                     AND icam10_std_date BETWEEN date_trunc('month',#{closeDate}::date)::date AND #{closeDate}::date
+                                 ) + COALESCE(ast30_for_fee,0)
+                            ELSE f_calc_dual_fund_fee( icam12_company_id
+                                                     , icam12_icam_company_cd
+                                                     , icam12_fund_cd
+                                                     , icam12_std_date
+                                                     , icam12_for_fee ) END  as icam12_for_fee
+                     , f_calc_dual_fund_fee( icam12_company_id
+                                           , icam12_icam_company_cd
+                                           , icam12_fund_cd
+                                           , icam12_std_date
+                                           , icam12_for_fee ) as icam12_for_fee2
+                  FROM icam12_fee_book
+                       LEFT JOIN ( SELECT sys15_corp_cd
+                                        , ast30_fund_cd
+                                        , ast30_for_fee
+                                     FROM ast30_book_fund_fee
+                                          INNER JOIN sys15_corp ON sys15_corp_id = ast30_corp_id
+                                    WHERE ast30_company_id = #{companyId}
+                                      AND ast30_hold_date  = (date_trunc('month', #{closeDate}::date) + interval '-1day')::date
+                                 ) t ON ( sys15_corp_cd = icam12_icam_company_cd AND
+                                          ast30_fund_cd = icam12_fund_cd         )
+                 WHERE icam12_company_id = #{companyId}
+                   AND icam12_std_date   = #{closeDate}
+    )
+    , erp AS ( SELECT *
+                 FROM ast30_book_fund_fee
+                      INNER JOIN sys15_corp ON sys15_corp_id = ast30_corp_id
+                WHERE ast30_company_id = #{companyId}
+                  AND ast30_hold_date  = #{closeDate}
+    )
+    SELECT row_number() OVER (ORDER BY company_cd, fund_cd) as ast30_book_fund_fee_id
+         , company_cd                                       as ast30_corp_cd
+         , sys15_corp_nm                                    as ast30_corp_nm
+         , fund_cd                                          as ast30_fund_cd
+         , fund_nm                                          as ast30_fund_nm
+         , icam_fee                                         as ast30_icam_fee
+         , ast_fee                                          as ast30_for_fee
+         , CASE WHEN icam_fee != ast_fee THEN icam_fee ELSE icam_fee2 END
+          - ast_fee                                         as ast30_diff_fee
+         , note                                             as ast30_note
+      FROM (
+             SELECT DISTINCT *
+               FROM ( /*================== ICAM = AssetERP(+) ====================== */
+                      SELECT icam12_icam_company_cd                                                     as company_cd
+                           , icam12_fund_cd                                                             as fund_cd
+                           , icam12_fund_nm                                                             as fund_nm
+                           , icam12_for_fee                                                             as icam_fee
+                           , icam12_for_fee2                                                            as icam_fee2
+                           , COALESCE(ast30_for_fee, 0)                                                 as ast_fee
+                           , CASE WHEN ast30_fund_cd IS NULL THEN ' (AssetERP 정보 미존재)' ELSE '' END    as note
+                        FROM icam
+                             LEFT JOIN erp ON ( sys15_corp_cd = icam12_icam_company_cd  AND
+                                                ast30_fund_cd = icam12_fund_cd          )
+                       WHERE icam12_for_fee  != COALESCE(ast30_for_fee, 0)
+                         AND icam12_for_fee2 != COALESCE(ast30_for_fee, 0)
+                      /*==================== AssetERP = ICAM(+) ======================*/
+                       UNION ALL
+                      SELECT sys15_corp_cd                                                              as company_cd
+                           , ast30_fund_cd                                                              as fund_cd
+                           , ast30_fund_nm                                                              as fund_nm
+                           , COALESCE(icam12_for_fee , 0)                                               as icam_fee
+                           , COALESCE(icam12_for_fee2, 0)                                               as icam_fee2
+                           , ast30_for_fee                                                              as ast_fee
+                           , CASE WHEN icam12_fund_cd IS NULL THEN ' (ICAM 정보 미존재)' ELSE '' END       as note
+                        FROM erp
+                             LEFT JOIN icam ON ( icam12_icam_company_cd = sys15_corp_cd AND
+                                                 icam12_fund_cd         = ast30_fund_cd )
+                       WHERE ast30_for_fee != COALESCE(icam12_for_fee , 0)
+                         AND ast30_for_fee != COALESCE(icam12_for_fee2, 0)
+                    ) t
+           ) tt
+           LEFT JOIN sys15_corp ON ( sys15_company_id = #{companyId}    AND
+                                     sys15_corp_cd    = company_cd      AND
+                                     sys15_use_yn     = 'true'          )
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS ast30_book_fund_fee.selectFeeBookDiff2 (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectFeeBookDiff2" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT CAST(NULL AS varchar) AS account_code,
+               CAST(NULL AS varchar) AS account_name,
+               CAST(NULL AS varchar) AS ast_class_tree_name,
+               CAST(NULL AS numeric) AS dr_today_bal_amt,
+               CAST(NULL AS numeric) AS cr_today_bal_amt,
+               CAST(NULL AS numeric) AS dr_today_diff_amt,
+               CAST(NULL AS varchar) AS check_code,
+               x.ast30_note AS note,
+               x.ast30_corp_nm AS corp_name,
+               x.ast30_corp_cd AS corp_code,
+               x.ast30_fund_cd AS fund_code,
+               x.ast30_fund_nm AS fund_name,
+               x.ast30_icam_fee AS icam_fee,
+               x.ast30_for_fee AS for_fee,
+               x.ast30_diff_fee AS diff_fee
+          FROM (
+<![CDATA[
+SELECT row_number() OVER (ORDER BY company_cd, fund_cd) as ast30_book_fund_fee_id
+             , company_cd                                       as ast30_corp_cd
+             , ''                                               as ast30_corp_nm
+             , fund_cd                                          as ast30_fund_cd
+             , fund_nm                                          as ast30_fund_nm
+             , icam_fee                                         as ast30_icam_fee
+             , ast_fee                                          as ast30_for_fee
+             , icam_fee - ast_fee                               as ast30_diff_fee
+             , note                                             as ast30_note
+          FROM ( SELECT DISTINCT *
+                   FROM ( /*================== ICAM = AssetERP(+) ====================== */
+                          SELECT icam12_icam_company_cd                                                     as company_cd
+                               , icam12_fund_cd                                                             as fund_cd
+                               , icam12_fund_nm                                                             as fund_nm
+                               , icam12_for_fee                                                             as icam_fee
+                               , COALESCE(ast30_for_fee, 0)                                                 as ast_fee
+                               , CASE WHEN ast30_fund_cd IS NULL THEN ' (AssetERP 정보 미존재)' ELSE '' END as note
+                            FROM icam12_fee_book
+                                 LEFT OUTER JOIN ast30_book_fund_fee ON ( ast30_company_id = icam12_company_id AND
+                                                                          ast30_hold_date  = icam12_std_date   AND
+                                                                          ast30_fund_cd    = icam12_fund_cd    )
+                           WHERE icam12_company_id = #{companyId}
+                             AND icam12_std_date   = #{closeDate}
+                             AND icam12_for_fee   != COALESCE(ast30_for_fee, 0)
+                           UNION ALL
+                          /*==================== AssetERP = ICAM(+) ======================*/
+                          SELECT ( SELECT sys01_icam_company_cd
+                                     FROM sys01_company
+                                    WHERE sys01_company_id = ast30_company_id )                             as company_cd
+                               , ast30_fund_cd                                                              as fund_cd
+                               , ast30_fund_nm                                                              as fund_nm
+                               , COALESCE(icam12_for_fee, 0)                                                as icam_fee
+                               , ast30_for_fee                                                              as ast_fee
+                               , CASE WHEN icam12_fund_cd IS NULL THEN ' (ICAM 정보 미존재)' ELSE '' END    as note
+                            FROM ast30_book_fund_fee
+                                 LEFT OUTER JOIN icam12_fee_book ON ( icam12_company_id = ast30_company_id AND
+                                                                      icam12_std_date   = ast30_hold_date  AND
+                                                                      icam12_fund_cd    = ast30_fund_cd    )
+                           WHERE ast30_company_id = #{companyId}
+                             AND ast30_hold_date  = #{closeDate}
+                             AND ast30_for_fee != COALESCE(icam12_for_fee, 0)
+                        ) t
+               ) tt
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS ast30_book_fund_fee.selectNoFeeEval (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다  -->
+    <select id="selectNoFeeEval" resultType="kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes">
+        SELECT CAST(NULL AS varchar) AS account_code,
+               CAST(NULL AS varchar) AS account_name,
+               CAST(NULL AS varchar) AS ast_class_tree_name,
+               CAST(NULL AS numeric) AS dr_today_bal_amt,
+               CAST(NULL AS numeric) AS cr_today_bal_amt,
+               CAST(NULL AS numeric) AS dr_today_diff_amt,
+               CAST(NULL AS varchar) AS check_code,
+               CAST(NULL AS varchar) AS note,
+               x.ast30_corp_nm AS corp_name,
+               CAST(NULL AS varchar) AS corp_code,
+               CAST(NULL AS varchar) AS fund_code,
+               CAST(NULL AS varchar) AS fund_name,
+               CAST(NULL AS numeric) AS icam_fee,
+               CAST(NULL AS numeric) AS for_fee,
+               CAST(NULL AS numeric) AS diff_fee
+          FROM (
+<![CDATA[
+SELECT row_number() OVER (ORDER BY sys15_corp_nm)               as ast30_book_fund_fee_id
+             , sys15_corp_nm||'('||sys15_corp_cd||') '||count(*)||'건'   as ast30_corp_nm
+          FROM ast30_book_fund_fee
+               LEFT OUTER JOIN sys15_corp ON sys15_corp_id = ast30_corp_id
+               LEFT OUTER JOIN ast31_book_fund_fee_close ON ast31_book_fund_fee_id = ast30_book_fund_fee_id
+         WHERE ast30_company_id = #{companyId}
+           AND ast30_hold_date  = #{closeDate}
+           AND ast31_book_fund_fee_close_id IS NULL
+         GROUP BY sys15_corp_cd, sys15_corp_nm
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.checkCloseCount (IDMS-IC) -->
+    <select id="checkCloseCount" resultType="long">
+<![CDATA[
+SELECT	count(*) 
+	  FROM	act05_gen_ledger_close
+	 WHERE	act05_company_id = #{companyId}
+	   AND	act05_std_date   > #{closeDate}
+]]>
+    </select>
+    <!-- AS-IS act04_gen_ledger.selectCloseDateCount (IDMS-IC) -->
+    <select id="selectCloseDateCount" resultType="long">
+<![CDATA[
+SELECT	count(*) 
+	  FROM	act05_gen_ledger_close
+	 WHERE	act05_company_id = #{companyId}
+	   AND	act05_std_date   = #{closeDate}
+]]>
+    </select>
+    <!-- AS-IS act04_gen_ledger.selectCloseDate (IDMS-IC) -->
+    <select id="selectCloseDate" resultType="java.time.LocalDate">
+<![CDATA[
+SELECT MAX(act05_std_date)
+	  FROM act05_gen_ledger_close
+	 WHERE act05_company_id = #{companyId}
+	   AND act05_std_date <= #{closeDate}
+]]>
+    </select>
+    <!-- AS-IS act04_gen_ledger.selectPreMonthLastDay (IDMS-IC) -->
+    <select id="selectPreMonthLastDay" resultType="java.time.LocalDate">
+<![CDATA[
+SELECT f_get_last_day(to_date(to_char(#{startDate}::date, 'yyyymm')||'01','yyyymmdd') - 1)
+]]>
+    </select>
+    <!-- AS-IS act04_gen_ledger.setDateInfo (IDMS-IC) -->
+    <select id="setDateInfo" resultType="string">
+<![CDATA[
+SELECT to_char(#{startDate}::date,'yyyy-mm-dd')||' ~ '||to_char(#{closeDate}::date,'yyyy-mm-dd')
+]]>
+    </select>
+    <!-- AS-IS act04_gen_ledger.summaryGenLedger (IDMS-IC) — DB 함수 f_create_genLedger 호출, 결과 "Y" 또는 오류 메시지 -->
+    <select id="summaryGenLedger" resultType="string">
+<![CDATA[
+SELECT f_create_genLedger(#{companyId}, #{startDate}, #{closeDate})
+]]>
+    </select>
+    <!-- AS-IS ast09_book.createDepositBookClose (IDMS-IC) — DB 함수 f_create_depositBook_close 호출 -->
+    <select id="createDepositBookClose" resultType="string">
+<![CDATA[
+SELECT f_create_depositBook_close(#{companyId}, #{stdDate}, #{closeDate})
+]]>
+    </select>
+    <!-- AS-IS act02_journal.selectUnFixCount (IDMS-IC) -->
+    <select id="selectUnFixCount" resultType="long">
+<![CDATA[
+SELECT count(*)
+          FROM act02_journal
+         WHERE act02_company_id = #{companyId}
+           AND act02_date BETWEEN #{startDate} AND #{closeDate}
+           AND COALESCE(act02_fix_yn,'false') != 'true'
+]]>
+    </select>
+    <!-- AS-IS dbConfig.getCompanyCloseDate (IDMS-IC) -->
+    <select id="getCompanyCloseDate" resultType="java.time.LocalDate">
+<![CDATA[
+SELECT	f_get_close_date(#{companyId},#{year},#{type})
+]]>
+    </select>
+    <!-- AS-IS act04_gen_ledger.selectTodayBalAmtByAccountCode (IDMS-IC) -->
+    <select id="selectTodayBalAmtByAccountCode" resultType="java.lang.Long">
+<![CDATA[
+SELECT (act04_dr_today_bal_amt - act04_cr_today_bal_amt)
+            * CASE WHEN act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END
+      FROM act04_gen_ledger
+           INNER JOIN act01_account_code ON ( act01_company_id = act04_company_id AND
+                                              act01_account_cd = act04_account_cd )
+     WHERE act04_company_id  = #{companyId}
+       AND act04_std_date    = #{stdDate}
+       AND act04_account_cd  = #{accountCode}
+]]>
+    </select>
+    <!-- AS-IS act04_gen_ledger.selectCountByAccountCode (IDMS-IC) -->
+    <select id="selectCountByAccountCode" resultType="long">
+<![CDATA[
+SELECT COUNT(*)
+      FROM act04_gen_ledger
+     WHERE act04_company_id = #{companyId}
+       AND act04_std_date   = #{stdDate}
+       AND act04_account_cd = #{accountCode}
+]]>
+    </select>
+
+</mapper>

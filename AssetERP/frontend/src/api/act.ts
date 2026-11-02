@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { AstBook } from '../types/ast';
 import { readBlobError } from './file';
 
@@ -397,5 +397,19 @@ export const actApi = {
   /** AS-IS act.Act02_Journal.deleteJournalBiz */
   deleteJournalBizs: async (stdMonth: string, rows: JournalBizRow[]): Promise<void> => {
     await apiClient.post<ApiResponse<void>>('v1/act/journal-bizs/delete', { stdMonth, rows });
+  },
+
+  // ── X14 회계마감 (Act04_Tab_Close) ──
+
+  /** AS-IS act.Act04_GenLedger.selectCloseStatus: 로그인 회사, 연도의 월별 마감현황 */
+  searchGenLedgerCloses: async (year: string): Promise<GenLedgerCloseStatus[]> => {
+    const res = await apiClient.get<ApiResponse<GenLedgerCloseStatus[]>>('v1/act/gen-ledger-closes', { params: { year } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act04_GenLedger.insertClose: procType P 회계마감 · C 마감취소 · A 마감검증. 검증 실패도 200으로 status -1 + notes */
+  processGenLedgerClose: async (req: GenLedgerCloseReq): Promise<GenLedgerCloseProcessRes> => {
+    const res = await apiClient.post<ApiResponse<GenLedgerCloseProcessRes>>('v1/act/gen-ledger-closes/process', req);
+    return res.data.data;
   },
 };

@@ -13509,5 +13509,33 @@
     "note": "docs/work/X/X13-작업기록.md",
     "history": [],
     "id": "X13"
+  },
+  "Act04_Tab_Close": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/act/Act04_Tab_Close.java": "dc63374482a796b620f22ddb14c5e35b0b84d489",
+      "application/src/main/java/myApp/client/vi/act/model/Act04_GenLedgerModel.java": "c703ee0f4f23e84b1079a9f815b8a2e6c43382b5",
+      "application/src/main/java/myApp/client/vi/act/model/Act04_GenLedgerModelProperties.java": "249bbac70af20f694ccda59d5f2ff79590f0b531",
+      "application/src/main/java/myApp/server/act/Act04_GenLedger.java": "49a3f72f8d6395c5479d57ef6935a0149218ef4d",
+      "application/src/main/java/myApp/server/act/mapper/act01_account_code.xml": "da207c7feec4680d136e33d9582b5f815ff7a7bd",
+      "application/src/main/java/myApp/server/act/mapper/act02_journal.xml": "2c7804f20ce46eeb9247b46d67d96de1fbfc8571",
+      "application/src/main/java/myApp/server/act/mapper/act04_gen_ledger.xml": "d8900a92e94b48cefec9e7431c42f3547bdadbd7",
+      "application/src/main/java/myApp/server/act/mapper/act09_account_num.xml": "3a91e3c95dc87281fb88cf6126028b58055f8494",
+      "application/src/main/java/myApp/server/act/mapper/act15_close_check.xml": "2c537477e05c68c289ba1e3a23b883a5a54a74e6",
+      "application/src/main/java/myApp/server/ast/mapper/ast09_book.xml": "fb0636ccfd391f1efae798a56d6aaa46ce71ea4a",
+      "application/src/main/java/myApp/server/ast/mapper/ast30_book_fund_fee.xml": "63fe626cb11db5233421957249729287fc4dc45a",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-11-02T09:37:18+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/X/X14-작업기록.md",
+    "history": [],
+    "id": "X14"
   }
 }
