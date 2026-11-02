@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/icam/mapper/icam11_fee_deposit.xml (selectByCompanyId, selectByFundCode2, selectById, UpdateDataModel 저장·삭제)  (X27)
+  selectByFundCode2·selectById는 DTO를 위 그리드와 같이 쓰려고 쓰지 않는 열(운용사명·펀드명·통화·수탁사)을 NULL로 채웠다(record 생성자 매핑)
+  selectByCompanyId·selectByFundCode2는 원본 그대로(corpIdStr 분기는 화면이 항상 값을 넘겨 조건 그대로 둔다). 저장·삭제는 UpdateDataModel의 동적 SQL을 명시 SQL로 옮겼다.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.icam.mapper.IcamFeeDepositMapper">
+
+    <!-- AS-IS icam11_fee_deposit.selectByCompanyId (IDMS-IC) -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamFeeDepositRes">
+        SELECT icam11_fee_deposit_id    AS fee_deposit_id,
+               icam11_icam_company_cd   AS icam_company_code,
+               icam11_icam_company_nm   AS icam_company_name,
+               icam11_fund_cd           AS fund_code,
+               icam11_fund_nm           AS fund_name,
+               icam11_cur_cd            AS cur_code,
+               icam11_consignment_nm    AS consignment_name,
+               icam11_deposit_id        AS deposit_id,
+               icam11_deposit_nm        AS deposit_name,
+               icam11_start_date        AS start_date
+          FROM (
+                 SELECT icam11_fee_deposit.*
+                      , sys15_corp_nm            as icam11_icam_company_nm
+                      , icam10_fund_nm           as icam11_fund_nm
+                      , icam10_cur_cd            as icam11_cur_cd
+                      , icam10_consignment_nm    as icam11_consignment_nm
+                      , ast01_class_tree_nm      as icam11_deposit_nm
+                   FROM icam11_fee_deposit
+                        LEFT OUTER JOIN ast01_class_tree ON ast01_class_tree_id = icam11_deposit_id
+                        LEFT OUTER JOIN sys15_corp ON ( sys15_company_id = icam11_company_id      AND
+                                                        sys15_corp_cd    = icam11_icam_company_cd )
+                        INNER JOIN ( SELECT distinct icam10_icam_company_cd, icam10_fund_cd, icam10_fund_nm, icam10_cur_cd, icam10_consignment_nm
+                                       FROM icam10_fee
+                                      WHERE icam10_company_id = #{companyId}
+                                        AND (icam10_icam_company_cd, icam10_fund_cd, icam10_std_date) IN ( SELECT icam10_icam_company_cd, icam10_fund_cd, MAX(icam10_std_date)
+                                                                                                             FROM icam10_fee
+                                                                                                            WHERE icam10_company_id = #{companyId}
+                                                                                                            GROUP BY icam10_icam_company_cd, icam10_fund_cd )
+                                    ) icam10 ON ( icam10_icam_company_cd = icam11_icam_company_cd AND
+                                                  icam10_fund_cd         = icam11_fund_cd         )
+                  WHERE icam11_company_id = #{companyId}
+                    AND sys15_corp_id||'' LIKE #{corpIdStr}
+                    AND (icam11_icam_company_cd, icam11_fund_cd, icam11_start_date) IN ( SELECT icam11_icam_company_cd, icam11_fund_cd, MAX(icam11_start_date)
+                                                                                           FROM icam11_fee_deposit
+                                                                                          WHERE icam11_company_id = #{companyId}
+                                                                                            AND icam11_start_date &lt;= f_today()
+                                                                                          GROUP BY icam11_icam_company_cd, icam11_fund_cd )
+               ) t
+         WHERE UPPER(concat(icam11_icam_company_cd,icam11_icam_company_nm,icam11_fund_cd,icam11_fund_nm,
+                     icam11_cur_cd,icam11_consignment_nm,icam11_deposit_nm)) LIKE '%'||UPPER(#{searchText})||'%'
+         ORDER BY icam11_icam_company_cd, icam11_fund_cd
+    </select>
+
+    <!-- AS-IS icam11_fee_deposit.selectByFundCode2 (IDMS-IC) — icamCompanyCode 분기 포함 -->
+    <select id="selectByFundCode2" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamFeeDepositRes">
+        SELECT icam11_fee_deposit_id    AS fee_deposit_id,
+               icam11_icam_company_cd   AS icam_company_code,
+               NULL::varchar            AS icam_company_name,
+               icam11_fund_cd           AS fund_code,
+               NULL::varchar            AS fund_name,
+               NULL::varchar            AS cur_code,
+               NULL::varchar            AS consignment_name,
+               icam11_deposit_id        AS deposit_id,
+               ast01_class_tree_nm      AS deposit_name,
+               icam11_start_date        AS start_date
+          FROM icam11_fee_deposit
+               LEFT OUTER JOIN ast01_class_tree ON ast01_class_tree_id = icam11_deposit_id
+         WHERE icam11_company_id      = #{companyId}
+           AND icam11_fund_cd         = #{fundCode}
+        <if test="icamCompanyCode != null">
+           AND icam11_icam_company_cd = #{icamCompanyCode}
+        </if>
+         ORDER BY icam11_start_date
+    </select>
+
+    <!-- AS-IS icam11_fee_deposit.selectById (IDMS-IC) — 저장한 행을 돌려줄 때 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamFeeDepositRes">
+        SELECT icam11_fee_deposit_id    AS fee_deposit_id,
+               icam11_icam_company_cd   AS icam_company_code,
+               NULL::varchar            AS icam_company_name,
+               icam11_fund_cd           AS fund_code,
+               NULL::varchar            AS fund_name,
+               NULL::varchar            AS cur_code,
+               NULL::varchar            AS consignment_name,
+               icam11_deposit_id        AS deposit_id,
+               ast01_class_tree_nm      AS deposit_name,
+               icam11_start_date        AS start_date
+          FROM icam11_fee_deposit
+               LEFT OUTER JOIN ast01_class_tree ON ast01_class_tree_id = icam11_deposit_id
+         WHERE icam11_fee_deposit_id = #{feeDepositId}
+           AND icam11_company_id     = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel INSERT -->
+    <insert id="insertFeeDeposit">
+        INSERT INTO icam11_fee_deposit (icam11_fee_deposit_id, icam11_company_id, icam11_icam_company_cd, icam11_fund_cd, icam11_start_date, icam11_deposit_id)
+        VALUES (#{feeDepositId}, #{companyId}, #{r.icamCompanyCode}, #{r.fundCode}, #{r.startDate}, #{r.depositId})
+    </insert>
+
+    <!-- UpdateDataModel UPDATE — 화면이 고치는 열(적용시작일·예금계좌)만 -->
+    <update id="updateFeeDeposit">
+        UPDATE icam11_fee_deposit
+           SET icam11_start_date = #{r.startDate},
+               icam11_deposit_id = #{r.depositId}
+         WHERE icam11_fee_deposit_id = #{r.feeDepositId}
+           AND icam11_company_id     = #{companyId}
+    </update>
+
+    <!-- UpdateDataModel.deleteModel -->
+    <delete id="deleteFeeDeposits">
+        DELETE FROM icam11_fee_deposit
+         WHERE icam11_company_id = #{companyId}
+           AND icam11_fee_deposit_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

@@ -224,3 +224,17 @@ export interface IcamFeeDetail {
   curCode?: string | null;
   fee?: number | null;
 }
+
+/** 펀드별 보수입금계좌 (Icam11_FeeDepositModel) — 위 그리드(현재 계좌)와 아래 그리드(적용시작일별 이력)가 같은 모양 (X27) */
+export interface IcamFeeDeposit {
+  feeDepositId: number;
+  icamCompanyCode: string | null;
+  icamCompanyName: string | null;
+  fundCode: string | null;
+  fundName: string | null;
+  curCode: string | null;
+  consignmentName: string | null;
+  depositId: number | null;
+  depositName: string | null;
+  startDate: string | null;
+}

@@ -10,6 +10,7 @@ import {
   IcamFeeBook,
   IcamFeeDetail,
   IcamFeeBookCheck,
+  IcamFeeDeposit,
   IcamFeeJobReq,
   IcamFund,
   IcamSource,
@@ -192,5 +193,32 @@ export const icamApi = {
   searchFeesByFund: async (params: { corpId?: number; fundCode: string; stdDate: string; searchText: string }): Promise<IcamFeeDetail[]> => {
     const res = await apiClient.get<ApiResponse<IcamFeeDetail[]>>('v1/icam/fees/by-fund', { params });
     return res.data.data ?? [];
+  },
+
+  // ── X27 펀드별 보수입금계좌 등록 (Icam11_Tab_OfficeMngFeeDeposit) ──
+
+  /** AS-IS icam.Icam11_FeeDeposit.selectByCompanyId: 펀드별 현재 입금계좌 (corpId 없으면 전체 운용사) */
+  searchFeeDeposits: async (params: { corpId?: number | null; searchText: string }): Promise<IcamFeeDeposit[]> => {
+    const res = await apiClient.get<ApiResponse<IcamFeeDeposit[]>>('v1/icam/fee-deposits', { params: { corpId: params.corpId ?? undefined, searchText: params.searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS icam.Icam11_FeeDeposit.selectByFundCode2: 한 펀드의 적용시작일별 이력 */
+  searchFeeDepositsByFund: async (icamCompanyCode: string | null, fundCode: string): Promise<IcamFeeDeposit[]> => {
+    const res = await apiClient.get<ApiResponse<IcamFeeDeposit[]>>('v1/icam/fee-deposits/by-fund', { params: { icamCompanyCode: icamCompanyCode ?? undefined, fundCode } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS icam.Icam11_FeeDeposit.update: 고친 행 저장 (feeDepositId 0 이하는 새 행) */
+  saveFeeDeposits: async (rows: IcamFeeDeposit[]): Promise<IcamFeeDeposit[]> => {
+    const items = rows.map(r => ({ feeDepositId: r.feeDepositId, icamCompanyCode: r.icamCompanyCode, fundCode: r.fundCode, startDate: r.startDate, depositId: r.depositId }));
+    const res = await apiClient.put<ApiResponse<IcamFeeDeposit[]>>('v1/icam/fee-deposits', { items });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS icam.Icam11_FeeDeposit.delete */
+  deleteFeeDeposits: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/icam/fee-deposits', { data: { ids } });
+    return res.data.data ?? 0;
   },
 };
