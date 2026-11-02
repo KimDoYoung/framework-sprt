@@ -80,4 +80,8 @@ public interface AstFundFeeCloseMapper {
     /** sys99_print.insert — 출력용 한 줄(결산여부·결산일자·거래유형·운용사코드·운용사·통화·누적보수(통화)·누적보수·적용환율) */
     int insertPrint(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
                     @Param("windowClassName") String windowClassName, @Param("groupId") long groupId, @Param("r") FundFeeCloseRes r);
+
+    /** sys99_print.insert — 펀드운용보수 결산처리(X35) 출력용 한 줄(결산여부·결산일자·거래유형·누적보수) */
+    int insertFundMngPrint(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
+                           @Param("windowClassName") String windowClassName, @Param("groupId") long groupId, @Param("r") FundFeeCloseRes r);
 }

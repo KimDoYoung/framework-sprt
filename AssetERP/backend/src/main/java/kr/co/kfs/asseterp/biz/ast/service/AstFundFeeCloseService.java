@@ -31,6 +31,7 @@ import java.util.List;
 public class AstFundFeeCloseService {
 
     private static final String RD_WINDOW_CLASS_NAME = "Ast30_Tab_OfficeMngFeeClose";
+    private static final String FUND_MNG_RD_WINDOW_CLASS_NAME = "Ast30_Tab_FundMngFeeClose";
 
     private final AstFundFeeCloseMapper mapper;
     private final AstEvalMapper evalMapper;
@@ -168,6 +169,19 @@ public class AstFundFeeCloseService {
         evalMapper.deletePrint(companyId, personId, RD_WINDOW_CLASS_NAME);
         for (FundFeeCloseRes r : mapper.selectEvalFundFee(cond(companyId, req.holdDate(), req.corpId(), req.searchText()))) {
             mapper.insertPrint(mapper.selectNextId(), companyId, personId, RD_WINDOW_CLASS_NAME, groupId, r);
+        }
+        return groupId;
+    }
+
+    /** sys.Sys99_Print.insertRdFundMngFeeClose (X35) — 운용사·검색어 없이 결산일자의 목록을 넣는다(mrd Ast30_Rd_FundMngFeeClose) */
+    @Transactional
+    public Long insertFundMngRd(UserPrincipal user, FundFeeCloseRdReq req) {
+        Long companyId = user.getCompanyId();
+        Long personId = user.getUserId();
+        long groupId = mapper.selectNextId();
+        evalMapper.deletePrint(companyId, personId, FUND_MNG_RD_WINDOW_CLASS_NAME);
+        for (FundFeeCloseRes r : mapper.selectEvalFundFee(cond(companyId, req.holdDate(), req.corpId(), req.searchText()))) {
+            mapper.insertFundMngPrint(mapper.selectNextId(), companyId, personId, FUND_MNG_RD_WINDOW_CLASS_NAME, groupId, r);
         }
         return groupId;
     }

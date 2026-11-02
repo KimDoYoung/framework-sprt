@@ -64,6 +64,12 @@ public class AstFundFeeCloseController {
         return ApiResponse.ok(service.insertRd(principal, req));
     }
 
+    /** 펀드운용보수 결산처리(X35)의 출력그룹ID — 열이 4개뿐인 별도 출력 */
+    @PostMapping("/fund-rd")
+    public ApiResponse<Long> fundRd(@AuthenticationPrincipal UserPrincipal principal, @RequestBody FundFeeCloseRdReq req) {
+        return ApiResponse.ok(service.insertFundMngRd(principal, req));
+    }
+
     /** 환율 및 펀드보수 변경 조회창의 펀드 목록 */
     @GetMapping("/funds")
     public ApiResponse<List<FundFeeFundRes>> searchFunds(@AuthenticationPrincipal UserPrincipal principal,

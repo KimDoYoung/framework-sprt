@@ -164,6 +164,7 @@ import { Ast30_Tab_FundMngFee } from './ast/Ast30_Tab_FundMngFee';
 import { Ast30_Tab_FundMngFeeState } from './ast/Ast30_Tab_FundMngFeeState';
 import { Ast30_Tab_OfficeMngFeeStatePeriod } from './ast/Ast30_Tab_OfficeMngFeeStatePeriod';
 import { Ast33_Tab_OfficeMngFundTrans } from './ast/Ast33_Tab_OfficeMngFundTrans';
+import { Ast33_Tab_FundMngTrans } from './ast/Ast33_Tab_FundMngTrans';
 import { Icam12_Tab_OfficeMngFeeBook } from './icam/Icam12_Tab_OfficeMngFeeBook';
 import { Icam11_Tab_OfficeMngFeeDeposit } from './icam/Icam11_Tab_OfficeMngFeeDeposit';
 import { Icam11_Tab_FundMngFeeDeposit } from './icam/Icam11_Tab_FundMngFeeDeposit';
@@ -261,6 +262,7 @@ import { Ast06_Tab_TrDeposit } from './ast/Ast06_Tab_TrDeposit';
 import { Ast06_Tab_TrForDeposit } from './ast/Ast06_Tab_TrForDeposit';
 import { Ast06_Tab_FxEvalDeposit } from './ast/Ast06_Tab_FxEvalDeposit';
 import { Ast30_Tab_OfficeMngFeeClose } from './ast/Ast30_Tab_OfficeMngFeeClose';
+import { Ast30_Tab_FundMngFeeClose } from './ast/Ast30_Tab_FundMngFeeClose';
 import { Ast06_Tab_EvalFinance } from './ast/Ast06_Tab_EvalFinance';
 import { Ast25_Tab_Price } from './ast/Ast25_Tab_Price';
 import { Ast06_Tab_EvalDepn } from './ast/Ast06_Tab_EvalDepn';
@@ -540,6 +542,7 @@ export const SCREENS: Record<string, React.FC> = {
   Icam10_Tab_OfficeMngFee, // X23 (메뉴 #1199. 같은 `icam/fees` API, 보수구분 20407 고정)
   Ast33_Tab_OfficeMngFundTrans, // X28 (메뉴 #1251. `ast/fund-trans` + `ast/book-fund-fees/pre-hold`, X34 운용보수 이관펀드 등록이 같은 API·편집창을 쓸 수 있다)
   Ast30_Tab_OfficeMngFeeStatePeriod, // X26 (메뉴 #1249. `ast/book-fund-fees/period` + X25 펀드 조회·증감액 상세 재사용)
+  Ast33_Tab_FundMngTrans, // X34 (메뉴 #1252. X28 `ast/fund-trans` + `ast/book-fund-fees/pre-hold` 재사용, 새 API 없음)
   Ast30_Tab_FundMngFee, // X32 (메뉴 #1401. `ast/book-fund-fees/month-fees`)
   Ast30_Tab_FundMngFeeState, // X31 (메뉴 #1216. `ast/book-fund-fees/fund-fee-books` + 펀드 조회창 X29 + 증감액 상세 X25 재사용)
   Ast30_Tab_OfficeMngFeeState, // X25 (메뉴 #1201. `ast/book-fund-fees` + 증감액 상세 `icam/fees/by-fund`)
@@ -708,6 +711,7 @@ export const SCREENS: Record<string, React.FC> = {
   Ast06_Tab_TrDeposit, // X06 (메뉴 #1166. + Ast06_Lookup_TrDeposit. 분개 그리드·연관문서·계좌 조회창은 W05·W23과 같은 창)
   Ast06_Tab_TrForDeposit, // X10 (메뉴 #1172. + Ast06_Lookup_TrForDeposit. 분개 그리드 Ast06_Grid_ForJournal·연관문서·계좌 조회창은 X08·W05와 같은 창)
   Ast06_Tab_FxEvalDeposit, // X12 (메뉴 #1174. + Ast24_Lookup_FxRate. 분개 그리드·보관처·계좌 조회창은 W09·X06과 같은 창)
+  Ast30_Tab_FundMngFeeClose, // X35 (메뉴 #1218. X13 `ast/fund-fee-closes` 조회·처리·취소·보수원장정리 재사용 + 새 `fund-rd`)
   Ast30_Tab_OfficeMngFeeClose, // X13 (메뉴 #1202. + Ast30_Lookup_FeeClose. 분개 그리드·운용사 조회창은 X12와 같은 창)
   Ast06_Tab_TrIPO, // W05 1단계 (메뉴 #1288. + Ast06_Lookup_TrIPO·Ast06_Lookup_CreateIpoAstClass·Ast01_Lookup_Info. 연관문서 Act80_Lookup_RelateAppr·분개 [변경] Act02_Lookup_ModiJournal은 다음 단계)
   Tdm50_Tab_TotalDashboard, // N01 1단계 (+ Tdm50_Tab_Dashboard·DashboardExct·DashboardOrg·Tdm01_Lookup_SelectSingle, [보기] 아이콘의 점검 편집창·미흡 조치 상세는 N22·N24)

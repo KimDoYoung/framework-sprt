@@ -312,4 +312,14 @@
                , #{r.closeYnName}, #{r.holdDate}, #{r.trName}, #{r.corpCode}, #{r.corpName}, #{r.curCode}
                , #{r.forFee}, #{r.fee}, #{r.fxRate} )
     </insert>
+
+    <!-- AS-IS Sys99_Print.insertRdFundMngFeeClose: 결산여부·결산일자·거래유형·누적보수 (X35) -->
+    <!-- AS-IS sys99_print.insert (IDMS-IC) -->
+    <insert id="insertFundMngPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_date01, sys99_string02, sys99_long01 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{r.closeYnName}, #{r.holdDate}, #{r.trName}, #{r.fee} )
+    </insert>
 </mapper>

@@ -559,6 +559,12 @@ export const astApi = {
     return res.data.data;
   },
 
+  /** AS-IS sys.Sys99_Print.insertRdFundMngFeeClose (X35): 열 4개(결산여부·결산일자·거래유형·누적보수)만 담은 출력 데이터를 만들고 출력그룹ID를 돌려준다 */
+  rdFundMngFeeClose: async (req: { holdDate: string }): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ast/fund-fee-closes/fund-rd', req);
+    return res.data.data;
+  },
+
   /** AS-IS ast.Ast30_BookFundFee.selectByCorpId (X13 환율 및 펀드보수 변경): 운용사·통화의 펀드별 보수 */
   searchFundFeeFunds: async (params: { holdDate: string; corpId: number; curCode: string; searchText?: string }): Promise<AstFundFeeFund[]> => {
     const res = await apiClient.get<ApiResponse<AstFundFeeFund[]>>('v1/ast/fund-fee-closes/funds', { params });
