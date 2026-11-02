@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { AstBookDepn, AstBookFundFeeCorp, AstBookFundFeeFund, AstBookFundFeePeriod, AstSettleByTr, AstTrIntrinsic, AstTrIntrinsicSaveReq, SettleAccrued, SettleExpense, SettleHistory, SettleSaveReq } from '../types/ast';
+import { AstBookDepn, FundTrans, PreHoldFee, AstBookFundFeeCorp, AstBookFundFeeFund, AstBookFundFeePeriod, AstSettleByTr, AstTrIntrinsic, AstTrIntrinsicSaveReq, SettleAccrued, SettleExpense, SettleHistory, SettleSaveReq } from '../types/ast';
 import {
   AstCf,
   AstCfBatchCreateReq,
@@ -1069,5 +1069,28 @@ export const astApi = {
   searchBookFundFeeFunds: async (params: { holdDate: string; corpId: number; searchText: string }): Promise<AstBookFundFeeFund[]> => {
     const res = await apiClient.get<ApiResponse<AstBookFundFeeFund[]>>('v1/ast/book-fund-fees/funds', { params });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast30_BookFundFee.selectByPreHoldDate (X28 Ast30_Lookup_HoldFee): 기준일 전날 보수원장. corpId 없으면 전체 운용사 */
+  searchPreHoldFees: async (params: { holdDate: string; corpId?: number | null; searchText: string }): Promise<PreHoldFee[]> => {
+    const res = await apiClient.get<ApiResponse<PreHoldFee[]>>('v1/ast/book-fund-fees/pre-hold', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast33_FundTrans.selectByDate (X28): 기간·구분·검색어(운용사/펀드/비고)의 이관펀드. fundTransCode '%'=전체 */
+  searchFundTrans: async (params: { startDate: string; closeDate: string; fundTransCode: string; searchText: string }): Promise<FundTrans[]> => {
+    const res = await apiClient.get<ApiResponse<FundTrans[]>>('v1/ast/fund-trans', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast33_FundTrans.update (X28): 이관 행 저장(회계마감 검사·이관(출) 거래/분개·보수원장정리는 서버) → 저장한 행들 */
+  saveFundTrans: async (items: FundTrans[]): Promise<FundTrans[]> => {
+    const res = await apiClient.put<ApiResponse<FundTrans[]>>('v1/ast/fund-trans', { items });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast33_FundTrans.delete (X28): 이관(출)이면 거래·분개·결제까지 삭제 */
+  deleteFundTrans: async (fundTransId: number): Promise<void> => {
+    await apiClient.delete(`v1/ast/fund-trans/${fundTransId}`);
   },
 };

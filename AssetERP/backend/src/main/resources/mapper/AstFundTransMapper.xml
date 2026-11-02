@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/ast/mapper/ast33_fund_trans.xml (selectByDate L50 · selectById · UpdateDataModel INSERT/UPDATE/DELETE) (X28)
+  · ast06_tr.upsert(UPDATE 쪽과 INSERT 쪽으로 나눔) · ast05_tr_code.selectByTrCode(자산분류ID만) · ast30_book_fund_fee.deleteBeforeHoldDate
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstFundTransMapper">
+
+    <sql id="fundTransColumns">
+        ast33_fund_trans_id   AS fund_trans_id,
+        ast33_company_id      AS company_id,
+        ast33_fund_trans_cd   AS fund_trans_code,
+        ast33_date            AS date,
+        ast33_corp_id         AS corp_id,
+        ast33_fund_cd         AS fund_code,
+        ast33_fee             AS fee,
+        ast33_for_fee         AS for_fee,
+        ast33_cur_cd          AS cur_code,
+        ast33_note            AS note,
+        ast33_tr_id           AS tr_id,
+        ast33_fund_trans_nm   AS fund_trans_name,
+        ast33_corp_cd         AS corp_code,
+        ast33_corp_nm         AS corp_name,
+        ast33_fund_nm         AS fund_name,
+        ast33_journal_id      AS journal_id
+    </sql>
+
+    <!-- AS-IS ast33_fund_trans.selectByDate (원본 그대로) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.ast.dto.FundTransRes">
+        SELECT <include refid="fundTransColumns"/>
+          FROM (
+        SELECT ast33_fund_trans.*
+        , f_cdnm('FundTransCode', ast33_fund_trans_cd, ast33_company_id, ast33_date)         as ast33_fund_trans_nm
+        , CASE WHEN ast33_company_id = 1 THEN sys15_corp_cd ELSE sys01_icam_company_cd END   as ast33_corp_cd
+        , CASE WHEN ast33_company_id = 1 THEN sys15_corp_nm ELSE sys01_company_nm      END   as ast33_corp_nm
+        , ( SELECT ast30_fund_nm
+              FROM ast30_book_fund_fee
+             WHERE ast30_corp_id = ast33_corp_id
+               AND ast30_fund_cd = ast33_fund_cd
+             ORDER BY ast30_hold_date
+             LIMIT 1 )                                                                       as ast33_fund_nm
+        , act02_journal_id                                                                   as ast33_journal_id
+          FROM ast33_fund_trans
+               INNER JOIN sys01_company ON sys01_company_id = ast33_company_id
+               LEFT OUTER JOIN sys15_corp ON sys15_corp_id = ast33_corp_id
+               LEFT OUTER JOIN ( SELECT *
+                                   FROM ast06_tr
+                                        INNER JOIN act02_journal ON act02_tr_id = ast06_tr_id
+                               ) tr ON ast06_tr_id = ast33_tr_id
+         WHERE ast33_company_id    = #{companyId}
+           AND ast33_date          BETWEEN #{startDate} AND #{closeDate}
+           AND ast33_fund_trans_cd LIKE #{fundTransCode}
+        ) t
+         WHERE UPPER(CONCAT(ast33_corp_cd, ast33_corp_nm, ast33_fund_cd, ast33_fund_nm, ast33_note)) LIKE UPPER(#{searchText})
+         ORDER BY ast33_date, ast33_fund_trans_id
+    </select>
+
+    <!-- AS-IS ast33_fund_trans.selectById (저장·삭제 전 한 건 읽기. 회사 조건 추가) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.ast.dto.FundTransRes">
+        SELECT <include refid="fundTransColumns"/>
+          FROM (
+        SELECT ast33_fund_trans.*
+        , f_cdnm('FundTransCode', ast33_fund_trans_cd, ast33_company_id, ast33_date)       as ast33_fund_trans_nm
+        , CASE WHEN ast33_company_id = 1 THEN sys15_corp_cd ELSE sys01_icam_company_cd END as ast33_corp_cd
+        , CASE WHEN ast33_company_id = 1 THEN sys15_corp_nm ELSE sys01_company_nm      END as ast33_corp_nm
+        , ( SELECT ast30_fund_nm
+              FROM ast30_book_fund_fee
+             WHERE ast30_company_id = ast33_company_id
+               AND ast30_corp_id    = ast33_corp_id
+               AND ast30_fund_cd    = ast33_fund_cd
+             ORDER BY ast30_hold_date
+             LIMIT 1 )                                                                     as ast33_fund_nm
+        , act02_journal_id                                                                 as ast33_journal_id
+          FROM ast33_fund_trans
+               INNER JOIN sys01_company ON sys01_company_id = ast33_company_id
+               LEFT OUTER JOIN sys15_corp ON sys15_corp_id = ast33_corp_id
+               LEFT OUTER JOIN ( SELECT *
+                                   FROM ast06_tr
+                                        INNER JOIN act02_journal ON act02_tr_id = ast06_tr_id
+                               ) tr ON ast06_tr_id = ast33_tr_id
+         WHERE ast33_fund_trans_id = #{fundTransId}
+           AND ast33_company_id    = #{companyId}
+        ) t
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS UpdateDataModel(ast33_fund_trans) 동적 INSERT/UPDATE/DELETE를 명시 SQL로 (port-save). 회사 조건 추가 -->
+    <insert id="insertFundTrans">
+        INSERT INTO ast33_fund_trans (ast33_fund_trans_id, ast33_company_id, ast33_fund_trans_cd, ast33_date, ast33_corp_id, ast33_fund_cd,
+                                      ast33_fee, ast33_for_fee, ast33_cur_cd, ast33_note, ast33_tr_id)
+        VALUES (#{id}, #{companyId}, #{r.fundTransCode}, #{r.date}, #{r.corpId}, #{r.fundCode},
+                #{r.fee}, #{r.forFee}, #{r.curCode}, #{r.note}, #{r.trId})
+    </insert>
+
+    <update id="updateFundTrans">
+        UPDATE ast33_fund_trans
+           SET ast33_fund_trans_cd = #{r.fundTransCode},
+               ast33_date          = #{r.date},
+               ast33_corp_id       = #{r.corpId},
+               ast33_fund_cd       = #{r.fundCode},
+               ast33_fee           = #{r.fee},
+               ast33_for_fee       = #{r.forFee},
+               ast33_cur_cd        = #{r.curCode},
+               ast33_note          = #{r.note},
+               ast33_tr_id         = #{r.trId}
+         WHERE ast33_fund_trans_id = #{r.fundTransId}
+           AND ast33_company_id    = #{companyId}
+    </update>
+
+    <delete id="deleteFundTrans">
+        DELETE FROM ast33_fund_trans
+         WHERE ast33_fund_trans_id = #{fundTransId}
+           AND ast33_company_id    = #{companyId}
+    </delete>
+
+    <!-- AS-IS ast05_tr_code.selectByTrCode — 이 화면은 자산분류ID(ast05_ast_class_tree_id)만 읽는다 -->
+    <select id="selectTrCodeClassTreeId" resultType="long">
+        SELECT ast05_ast_class_tree_id
+          FROM ast05_tr_code
+         WHERE ast05_company_id = #{companyId}
+           AND ast05_tr_cd      = #{trCode}
+    </select>
+
+    <!-- AS-IS ast06_tr.upsert의 INSERT 쪽 — 이 화면이 채우지 않는 열은 NULL -->
+    <insert id="insertTr">
+        INSERT INTO ast06_tr (ast06_tr_id, ast06_ast_class_tree_id, ast06_date, ast06_tr_cd, ast06_amt, ast06_settle_mng_yn, ast06_note,
+                              ast06_person_id, ast06_company_id, ast06_corp_id, ast06_cur_cd, ast06_for_amt)
+        VALUES (#{trId}, #{astClassTreeId}, #{r.date}, #{trCode}, #{r.fee}, 'true', #{note},
+                #{personId}, #{companyId}, #{r.corpId}, #{r.curCode}, #{r.forFee})
+    </insert>
+
+    <!-- AS-IS ast06_tr.upsert의 UPDATE 쪽 — 원본은 읽어 온 거래를 고쳐 전 열을 쓰므로 이 화면이 바꾸는 열만 갱신하면 같다 -->
+    <update id="updateTr">
+        UPDATE ast06_tr
+           SET ast06_date           = #{r.date},
+               ast06_tr_cd          = #{trCode},
+               ast06_amt            = #{r.fee},
+               ast06_settle_mng_yn  = 'true',
+               ast06_note           = #{note},
+               ast06_person_id      = #{personId},
+               ast06_corp_id        = #{r.corpId},
+               ast06_cur_cd         = #{r.curCode},
+               ast06_for_amt        = #{r.forFee}
+         WHERE ast06_tr_id      = #{trId}
+           AND ast06_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS ast30_book_fund_fee.deleteBeforeHoldDate (원본 그대로) -->
+    <delete id="deleteBookFundFeeBeforeHoldDate">
+        DELETE FROM ast30_book_fund_fee
+         WHERE ast30_company_id = #{companyId}
+           AND ast30_hold_date  &lt; #{holdDate}
+           AND ast30_corp_id    = #{corpId}
+           AND ast30_fund_cd    = #{fundCode}
+    </delete>
+
+</mapper>

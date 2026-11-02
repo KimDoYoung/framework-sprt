@@ -13895,5 +13895,46 @@
     "note": "docs/work/X/X27-작업기록.md",
     "history": [],
     "id": "X27"
+  },
+  "Ast33_Tab_OfficeMngFundTrans": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ast/Ast30_Lookup_HoldFee.java": "abd1c15d6abdb5fcfb225fcd6d123b07fee916cf",
+      "application/src/main/java/myApp/client/vi/ast/Ast33_Lookup_OfficeMngFundTrans.java": "d9e37e85f6fff4c17d5b98258e5aa60211911313",
+      "application/src/main/java/myApp/client/vi/ast/Ast33_Lookup_OfficeMngFundTrans2.java": "a4cfa6556b3ad5f0f0657c1990186616ae49075d",
+      "application/src/main/java/myApp/client/vi/ast/Ast33_Tab_OfficeMngFundTrans.java": "15658fd14cae66ade58fe294cc617bbb1a2eb8ef",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast30_BookFundFeeModel.java": "9ae8ee62724a784d0a8a8c7ff037979ca23609d4",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast30_BookFundFeeModelProperties.java": "1061a932fbbc9309cba5efd99db2b172a7de38ff",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast33_FundTransModel.java": "186a507077ee4f57fdcae6c40dc4283cd5b6ea8e",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast33_FundTransModelProperties.java": "75d5c07daa17d181990c7e188a9586d5a4446053",
+      "application/src/main/java/myApp/server/act/Act04_GenLedger.java": "49a3f72f8d6395c5479d57ef6935a0149218ef4d",
+      "application/src/main/java/myApp/server/act/mapper/act02_journal.xml": "2c7804f20ce46eeb9247b46d67d96de1fbfc8571",
+      "application/src/main/java/myApp/server/act/mapper/act03_journal_dtl.xml": "30693776bf7e446ac02e9099bd5aca30c8dca83e",
+      "application/src/main/java/myApp/server/act/mapper/act04_gen_ledger.xml": "d8900a92e94b48cefec9e7431c42f3547bdadbd7",
+      "application/src/main/java/myApp/server/act/mapper/act06_journal_tmp.xml": "25dd7957dfe95fa25bf0d0e4b585a698611dff8b",
+      "application/src/main/java/myApp/server/act/mapper/act80_relate_appr.xml": "83efce1a67bacbae17dd671a739e68a47e610dec",
+      "application/src/main/java/myApp/server/ast/Ast30_BookFundFee.java": "e269a85e478f233b5ff8d34c253393ecc6fa807a",
+      "application/src/main/java/myApp/server/ast/Ast33_FundTrans.java": "ca7c4fd5d5129563ec7e46a0c5bae1156bfbd089",
+      "application/src/main/java/myApp/server/ast/mapper/ast05_tr_code.xml": "2672ce2593c624e22879a20aba3414ab34ffc728",
+      "application/src/main/java/myApp/server/ast/mapper/ast06_tr.xml": "920b374e2a153a0c08ca47690139d316723fede4",
+      "application/src/main/java/myApp/server/ast/mapper/ast07_settle.xml": "8cb313a1bd9e72bb8f913912f56696b73f191cc4",
+      "application/src/main/java/myApp/server/ast/mapper/ast30_book_fund_fee.xml": "63fe626cb11db5233421957249729287fc4dc45a",
+      "application/src/main/java/myApp/server/ast/mapper/ast33_fund_trans.xml": "06c33c86210d1daf603fd9a37eaf127ab396de0e",
+      "application/src/main/java/myApp/server/icam/mapper/icam10_fee.xml": "ba24a6691b9b6199323288c59b1eee6e90a922a8",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Act02_Grid_JournalFix",
+      "Sys15_Lookup_Corp"
+    ],
+    "recorded_at": "2026-11-02T12:16:49+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/X/X28-작업기록.md",
+    "history": [],
+    "id": "X28"
   }
 }

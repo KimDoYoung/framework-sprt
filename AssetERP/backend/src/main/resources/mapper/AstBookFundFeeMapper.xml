@@ -131,4 +131,33 @@
          WHERE upper(concat(sys15_corp_cd,ast30_corp_nm,ast30_fund_cd,ast30_fund_nm)) LIKE '%'||upper(#{p.searchText})||'%'
          ORDER BY ast30_fund_cd
     </select>
+    <!-- AS-IS ast30_book_fund_fee.selectByPreHoldDate (IDMS-IC, X28) — 원본 그대로(corpId 분기 포함), 열은 조회창 그리드에 맞춰 별칭 -->
+    <select id="selectByPreHoldDate" resultType="kr.co.kfs.asseterp.biz.ast.dto.PreHoldFeeRes">
+        SELECT ast30_book_fund_fee_id AS book_fund_fee_id
+             , ast30_corp_id          AS corp_id
+             , ast30_corp_cd          AS corp_code
+             , ast30_corp_nm          AS corp_name
+             , ast30_fund_cd          AS fund_code
+             , ast30_fund_nm          AS fund_name
+             , ast30_cur_cd           AS cur_code
+             , ast30_for_fee          AS for_fee
+             , ast30_fee              AS fee
+          FROM (
+               SELECT ast30_book_fund_fee.*
+                    , ast30_for_fee - COALESCE(ast30_for_fix_fee,0)  as ast30_for_ty_fee
+                    , ast30_fee     - COALESCE(ast30_fix_fee,0)      as ast30_ty_fee
+                    , sys15_corp_cd                                  as ast30_corp_cd
+                    , sys15_corp_nm                                  as ast30_corp_nm
+                 FROM ast30_book_fund_fee
+                      LEFT OUTER JOIN sys15_corp ON sys15_corp_id = ast30_corp_id
+                WHERE ast30_company_id = #{p.companyId}
+                <if test="p.corpId != null">
+                  AND ast30_corp_id    = #{p.corpId}
+                </if>
+                  AND ast30_hold_date  = CAST(#{p.holdDate} AS date) + INTERVAL '-1day'
+               ) t
+         WHERE UPPER(CONCAT(ast30_corp_cd,ast30_corp_nm,ast30_fund_cd,ast30_fund_nm)) LIKE '%'||UPPER(#{p.searchText})||'%'
+         ORDER BY ast30_corp_cd, ast30_fund_cd
+    </select>
+
 </mapper>

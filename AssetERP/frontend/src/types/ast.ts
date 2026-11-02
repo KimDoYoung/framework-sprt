@@ -1290,3 +1290,36 @@ export interface AstBookFundFeeFund {
   calcStartDate?: string | null;
   calcCloseDate?: string | null;
 }
+
+/** AS-IS Ast33_FundTransModel — 이관펀드 한 건 (X28, `ast/fund-trans`). journalId는 이관(출)의 분개 */
+export interface FundTrans {
+  fundTransId: number | null;
+  companyId?: number | null;
+  fundTransCode: string | null;
+  date: string | null;
+  corpId: number | null;
+  fundCode: string | null;
+  fee: number | null;
+  forFee: number | null;
+  curCode: string | null;
+  note: string | null;
+  trId: number | null;
+  fundTransName?: string | null;
+  corpCode?: string | null;
+  corpName?: string | null;
+  fundName: string | null;
+  journalId?: number | null;
+}
+
+/** AS-IS Ast30_BookFundFeeModel — 기준일 전날 보수원장 (X28 Ast30_Lookup_HoldFee 목록 행) */
+export interface PreHoldFee {
+  bookFundFeeId: number;
+  corpId: number | null;
+  corpCode: string | null;
+  corpName: string | null;
+  fundCode: string | null;
+  fundName: string | null;
+  curCode: string | null;
+  forFee: number | null;
+  fee: number | null;
+}

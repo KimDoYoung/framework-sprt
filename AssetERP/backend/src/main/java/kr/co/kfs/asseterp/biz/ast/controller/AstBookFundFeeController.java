@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.ast.controller;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeCorpRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeFundRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeePeriodRes;
+import kr.co.kfs.asseterp.biz.ast.dto.PreHoldFeeRes;
 import kr.co.kfs.asseterp.biz.ast.service.AstBookFundFeeService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -49,5 +50,14 @@ public class AstBookFundFeeController {
                                                              @RequestParam Long corpId,
                                                              @RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.searchFunds(principal, holdDate, corpId, searchText));
+    }
+
+    /** AS-IS ast.Ast30_BookFundFee.selectByPreHoldDate — 기준일 전날 보수원장 (X28 보수원장 조회창) */
+    @GetMapping("/pre-hold")
+    public ApiResponse<List<PreHoldFeeRes>> searchPreHold(@AuthenticationPrincipal UserPrincipal principal,
+                                                          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate holdDate,
+                                                          @RequestParam(required = false) Long corpId,
+                                                          @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchPreHold(principal, holdDate, corpId, searchText));
     }
 }

@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.ast.service;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeCorpRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeFundRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeParam;
+import kr.co.kfs.asseterp.biz.ast.dto.PreHoldFeeRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeePeriodParam;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeePeriodRes;
 import kr.co.kfs.asseterp.biz.ast.mapper.AstBookFundFeeMapper;
@@ -44,6 +45,11 @@ public class AstBookFundFeeService {
             throw new BusinessException(ErrorCode.INVALID_INPUT);
         }
         return mapper.selectByCorpId(param(user, holdDate, corpId, searchText));
+    }
+
+    /** AS-IS Ast30_BookFundFee.selectByPreHoldDate (L30, X28 Ast30_Lookup_HoldFee) — 기준일 전날 보수원장. 운용사 없으면 전체 */
+    public List<PreHoldFeeRes> searchPreHold(UserPrincipal user, LocalDate holdDate, Long corpId, String searchText) {
+        return mapper.selectByPreHoldDate(param(user, holdDate, corpId, searchText));
     }
 
     private static BookFundFeeParam param(UserPrincipal user, LocalDate holdDate, Long corpId, String searchText) {
