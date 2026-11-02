@@ -67,4 +67,107 @@
            AND rpt01_company_id = #{companyId}
            AND rpt01_person_id  = #{personId}
     </delete>
+
+    <!-- ===== Z09 Rpt01_Tab_DailyConfirm ===== -->
+
+    <!-- AS-IS rpt01_daily.selectByConfirmText (IDMS-IC) — SELECT * → DailyConfirmRes 열만, 조건·정렬 그대로(로그인 사원 조직과 그 아래 조직 소속 사원의 글, 기준일 = 조회 시작일) -->
+    <select id="selectByConfirmText" resultType="kr.co.kfs.asseterp.biz.rpt.dto.DailyConfirmRes">
+        SELECT daily_id, person_org, person_id, person_nm AS person_name, date, content, confirm_note,
+               confirm_yn, confirm_yn_name
+          FROM (
+                SELECT rpt01_daily_id                                                                       AS daily_id
+                     , f_get_emptrans(rpt01_person_id, rpt01_date, 'org_code_nm')                           AS person_org
+                     , rpt01_person_id                                                                      AS person_id
+                     , f_emp_kor_nm(rpt01_person_id)                                                        AS person_nm
+                     , rpt01_date                                                                           AS date
+                     , rpt01_content                                                                        AS content
+                     , rpt01_confirm_note                                                                   AS confirm_note
+                     , COALESCE(rpt01_confirm_yn, 'false') = 'true'                                         AS confirm_yn
+                     , CASE WHEN COALESCE(rpt01_confirm_yn,'false') = 'false' THEN '' ELSE '확인' END       AS confirm_yn_name
+                     , CAST(f_get_empTrans(rpt01_person_id, rpt01_date, 'org_code_id') AS numeric)          AS org_id
+                     , f_get_empTrans(rpt01_person_id, rpt01_date, 'org_cd')                                AS org_cd
+                     , f_get_empTrans(rpt01_person_id, rpt01_date, 'pos_cd')                                AS pos_cd
+                  FROM rpt01_daily
+                 WHERE ( ( #{unconfirmedOnly} = 'true' AND COALESCE(rpt01_confirm_yn,'false') = 'false' )
+                      OR ( #{unconfirmedOnly} = 'false' ) )
+                   AND rpt01_company_id = #{companyId}
+                   AND rpt01_date BETWEEN #{startDate}::date AND #{closeDate}::date
+               ) t
+         WHERE CONCAT(person_org, person_nm, content) ILIKE #{searchText}
+           AND org_id IN (
+                /** 기준일, 회사id, 조직코드를 받아서 down방향으로 조직코드 리스트를 구한다 */
+                WITH RECURSIVE org_tree_down(org00_org_code_id, org00_parent_code_id, org00_kor_nm, depth, path, cycle) AS (
+                    SELECT a.org00_org_code_id, a.org00_parent_code_id, a.org00_kor_nm, 0, ARRAY[a.org00_kor_nm::text], false
+                      FROM org00_org_info a
+                     WHERE 1=1
+                       AND org00_company_id = #{companyId}
+                       AND org00_org_code_id = #{orgCodeId}
+                       AND org00_mod_date = (SELECT max(org00_mod_date)
+                                               FROM org00_org_info
+                                              WHERE org00_org_code_id = #{orgCodeId}
+                                                AND f_trunc(org00_mod_date) &lt;= f_trunc(#{startDate}))
+                    UNION ALL
+                    SELECT a.org00_org_code_id, a.org00_parent_code_id, a.org00_kor_nm, b.depth + 1,
+                           array_append(b.path, a.org00_kor_nm::text), a.org00_kor_nm = any(b.path)
+                      FROM org00_org_info a, org_tree_down b
+                     WHERE 1=1
+                       AND a.org00_parent_code_id = b.org00_org_code_id
+                       AND a.org00_company_id = #{companyId}
+                       AND not cycle
+                )
+                SELECT a.org00_org_code_id FROM org_tree_down a
+           )
+         ORDER BY org_cd, pos_cd, person_nm, date
+    </select>
+
+    <!-- AS-IS rpt01_daily.selectById (IDMS-IC) — 확인 화면 열 -->
+    <select id="selectConfirmById" resultType="kr.co.kfs.asseterp.biz.rpt.dto.DailyConfirmRes">
+        SELECT rpt01_daily_id                                                                       AS daily_id
+             , f_get_emptrans(rpt01_person_id, rpt01_date, 'org_code_nm')                           AS person_org
+             , rpt01_person_id                                                                      AS person_id
+             , f_emp_kor_nm(rpt01_person_id)                                                        AS person_name
+             , rpt01_date                                                                           AS date
+             , rpt01_content                                                                        AS content
+             , rpt01_confirm_note                                                                   AS confirm_note
+             , COALESCE(rpt01_confirm_yn, 'false') = 'true'                                         AS confirm_yn
+             , CASE WHEN COALESCE(rpt01_confirm_yn,'false') = 'false' THEN '' ELSE '확인' END       AS confirm_yn_name
+          FROM rpt01_daily
+         WHERE rpt01_daily_id   = #{dailyId}
+           AND rpt01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS Rpt01_Daily.confirmModelUpdate → UpdateDataModel UPDATE — 편집창이 바꾸는 열(확인자 비고)만, 로그인 회사 행만(보안 보강) -->
+    <update id="updateConfirmNote">
+        UPDATE rpt01_daily
+           SET rpt01_confirm_note = #{confirmNote}
+         WHERE rpt01_daily_id   = #{dailyId}
+           AND rpt01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS rpt01_daily.confirmUpdate (IDMS-IC) — 확인일시는 오늘 날짜(AS-IS toDay), 로그인 회사 행만(보안 보강) -->
+    <update id="updateConfirm">
+        UPDATE rpt01_daily
+           SET rpt01_confirm_yn       = #{confirmYn}
+             , rpt01_confirmer_id     = #{confirmerId}
+             , rpt01_confirm_datetime = CURRENT_DATE
+         WHERE rpt01_daily_id   = #{dailyId}
+           AND rpt01_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS sys99_print.deleteByPersonId (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS sys99_print.insert (IDMS-IC) — Sys99_Print.insertRdDaily가 채우는 열만: 일자 d01 · 업무내용 t01 · 본부(부서) s02 · 사원 s03 · 확인자 비고 s04 · 확인여부 s05 -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_text01, sys99_string02, sys99_string03, sys99_string04, sys99_string05 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{row.date}, #{row.content}, #{row.personOrg}, #{row.personName}, #{row.confirmNote}, #{row.confirmYnName} )
+    </insert>
 </mapper>

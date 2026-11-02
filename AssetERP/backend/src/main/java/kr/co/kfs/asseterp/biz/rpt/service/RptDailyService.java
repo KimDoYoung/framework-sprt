@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.rpt.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.rpt.dto.DailyConfirmRes;
+import kr.co.kfs.asseterp.biz.rpt.dto.DailyPrintReq;
 import kr.co.kfs.asseterp.biz.rpt.dto.DailyRes;
 import kr.co.kfs.asseterp.biz.rpt.dto.DailySaveReq;
 import kr.co.kfs.asseterp.biz.rpt.mapper.RptDailyMapper;
@@ -69,5 +71,76 @@ public class RptDailyService {
             count += mapper.deleteDaily(user.getCompanyId(), user.getUserId(), id);
         }
         return count;
+    }
+
+    // ===== Z09 Rpt01_Tab_DailyConfirm =====
+
+    /** AS-IS Rpt01_Tab_DailyConfirm.settings — [출력/다운로드]의 windowClassName */
+    private static final String CONFIRM_WINDOW = "Rpt01_Tab_DailyConfirm";
+
+    /** AS-IS selectByConfirmText L39 — 로그인 사원의 조직과 그 아래 조직 소속 사원의 일일업무. unconfirmedOnly = "미확인건만 조회" */
+    public List<DailyConfirmRes> searchByConfirmText(UserPrincipal user, LocalDate startDate, LocalDate closeDate, boolean unconfirmedOnly, String searchText) {
+        return mapper.selectByConfirmText(user.getCompanyId(), startDate, closeDate, String.valueOf(unconfirmedOnly), orgId(user), like(searchText));
+    }
+
+    /** AS-IS confirmModelUpdate L69 — 확인자 비고 (Rpt01_Edit_DailyConfirm.update) → 다시 읽은 행 */
+    @Transactional
+    public DailyConfirmRes saveConfirmNote(UserPrincipal user, Long dailyId, String confirmNote) {
+        if (mapper.updateConfirmNote(user.getCompanyId(), dailyId, confirmNote == null || confirmNote.isEmpty() ? null : confirmNote) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+        return mapper.selectConfirmById(user.getCompanyId(), dailyId);
+    }
+
+    /**
+     * AS-IS confirmUpdate L83 + 화면 검사(Rpt01_Tab_DailyConfirm.updateConfirmYn L292-332) — 확인이면 이미 확인된 건이 있을 때 "이미 확인완료된 업무가 있습니다.",
+     * 확인취소면 확인 전 건이 있을 때 "확인전인 업무가 있습니다." 확인자 = 로그인 사원(취소면 비움)
+     */
+    @Transactional
+    public int confirm(UserPrincipal user, List<Long> dailyIds, boolean confirmYn) {
+        List<DailyConfirmRes> rows = new java.util.ArrayList<>();
+        for (Long id : dailyIds) {
+            DailyConfirmRes row = mapper.selectConfirmById(user.getCompanyId(), id);
+            if (row == null) {
+                throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+            }
+            if (confirmYn && Boolean.TRUE.equals(row.confirmYn())) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "이미 확인완료된 업무가 있습니다.");
+            }
+            if (!confirmYn && !Boolean.TRUE.equals(row.confirmYn())) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "확인전인 업무가 있습니다.");
+            }
+            rows.add(row);
+        }
+        int count = 0;
+        for (DailyConfirmRes row : rows) {
+            count += mapper.updateConfirm(user.getCompanyId(), row.dailyId(), String.valueOf(confirmYn), confirmYn ? user.getUserId() : null);
+        }
+        return count;
+    }
+
+    /** AS-IS sys.Sys99_Print.insertRdDaily L1272 — ① 내 출력 자료 지움 ② 같은 조건의 조회 결과를 새 그룹 ID로 담음. 돌려주는 값 = 그룹 ID(RD 리포트의 rdGroupId) */
+    @Transactional
+    public String insertRdDaily(UserPrincipal user, DailyPrintReq req) {
+        long groupId = mapper.selectNextId();
+        mapper.deletePrint(user.getCompanyId(), user.getUserId(), CONFIRM_WINDOW);
+        for (DailyConfirmRes row : mapper.selectByConfirmText(user.getCompanyId(), req.startDate(), req.closeDate(), String.valueOf(req.unconfirmedOnly()),
+                orgId(user), like(req.searchText()))) {
+            mapper.insertPrint(mapper.selectNextId(), user.getCompanyId(), user.getUserId(), CONFIRM_WINDOW, groupId, row);
+        }
+        return String.valueOf(groupId);
+    }
+
+    private static String like(String text) {
+        return "%" + (text == null ? "" : text) + "%";
+    }
+
+    /** LoginUser.getOrgCodeId() — 로그인 사원의 조직(없으면 -1: 조회 결과 없음) */
+    private static Long orgId(UserPrincipal user) {
+        try {
+            return user.getDeptId() == null ? -1L : Long.valueOf(user.getDeptId());
+        } catch (NumberFormatException e) {
+            return -1L;
+        }
     }
 }

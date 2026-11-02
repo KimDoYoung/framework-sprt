@@ -46,3 +46,16 @@ export interface RptDailySaveReq {
   content: string;
   note: string | null;
 }
+
+/** Z09 AS-IS Rpt01_DailyModel — 일일업무 확인 그리드 행 (rpt01_daily.selectByConfirmText) */
+export interface RptDailyConfirm {
+  dailyId: number;
+  personOrg?: string | null;
+  personId?: number | null;
+  personName?: string | null;
+  date?: string | null;
+  content?: string | null;
+  confirmNote?: string | null;
+  confirmYn?: boolean | null;
+  confirmYnName?: string | null;
+}

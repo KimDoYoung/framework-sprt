@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { RptDaily, RptDailySaveReq, RptFssSubmit, RptFssSubmitSaveReq, RptWriteGuide } from '../types/rpt';
+import { RptDaily, RptDailyConfirm, RptDailySaveReq, RptFssSubmit, RptFssSubmitSaveReq, RptWriteGuide } from '../types/rpt';
 
 /** rpt(보고서) API (E19 금감원 업무보고서) */
 export const rptApi = {
@@ -47,5 +47,29 @@ export const rptDailyApi = {
   delete: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/rpt/dailies', { data: ids });
     return res.data.data ?? 0;
+  },
+
+  /** Z09 AS-IS rpt.Rpt01_Daily.selectByConfirmText — 내 조직(하위 포함) 사원의 일일업무, unconfirmedOnly = 미확인건만 */
+  searchConfirm: async (startDate: string, closeDate: string, unconfirmedOnly: boolean, searchText: string): Promise<RptDailyConfirm[]> => {
+    const res = await apiClient.get<ApiResponse<RptDailyConfirm[]>>('v1/rpt/dailies/confirm', { params: { startDate, closeDate, unconfirmedOnly, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** Z09 AS-IS rpt.Rpt01_Daily.confirmModelUpdate — 확인자 비고 → 저장한 행 */
+  saveConfirmNote: async (dailyId: number, confirmNote: string | null): Promise<RptDailyConfirm> => {
+    const res = await apiClient.put<ApiResponse<RptDailyConfirm>>(`v1/rpt/dailies/${dailyId}/confirm-note`, { confirmNote });
+    return res.data.data;
+  },
+
+  /** Z09 AS-IS rpt.Rpt01_Daily.confirmUpdate — 확인(true)·확인취소(false) → 바꾼 건수 */
+  confirm: async (dailyIds: number[], confirmYn: boolean): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/rpt/dailies/confirm', { dailyIds, confirmYn });
+    return res.data.data ?? 0;
+  },
+
+  /** Z09 AS-IS sys.Sys99_Print.insertRdDaily → 출력 그룹 ID (RD rdGroupId) */
+  rdPrint: async (startDate: string, closeDate: string, unconfirmedOnly: boolean, searchText: string): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/rpt/dailies/confirm/rd-print', { startDate, closeDate, unconfirmedOnly, searchText });
+    return res.data.data ?? '';
   },
 };

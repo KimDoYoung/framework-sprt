@@ -231,6 +231,7 @@ import { Car04_Tab_PrivateJournal } from './car/Car04_Tab_PrivateJournal';
 import { Car04_Tab_PublicJournal } from './car/Car04_Tab_PublicJournal';
 import { Car04_Tab_PublicJournalAdmin } from './car/Car04_Tab_PublicJournalAdmin';
 import { Car04_Tab_Journal } from './car/Car04_Tab_Journal';
+import { Rpt01_Tab_DailyConfirm } from './rpt/Rpt01_Tab_DailyConfirm';
 import { Rpt01_Tab_DailyWrite } from './rpt/Rpt01_Tab_DailyWrite';
 import { Rpt10_Tab_FssOrg } from './rpt/Rpt10_Tab_FssOrg';
 import { Emp01_Tab_InoutState } from './emp/Emp01_Tab_InoutState';
@@ -594,6 +595,7 @@ export const SCREENS: Record<string, React.FC> = {
   Dcr30_Tab_LinkAdmin, // E17 (열 때 Link 없는 회사에 채우는 linkCheck가 쓰기 — AS-IS 그대로. + Dcr30_TabPage_Company·Dcr30_Lookup_LinkNote·Dcr30_Move_DcrClass·Com10_Lookup_CommonMapping·Pay06_Popup_Example)
   Dcr01_Tab_DcrUser, // F02 1단계 (메뉴 #1002 + Dcr01_Tab_DcrManager·Apr01_Grid_DocList·Apr03_TabPage_Relate. 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList·메일 Dcr10_Lookup_MailSender는 다음 단계)
   Dcr01_Tab_DcrWrite, // F01 1단계 (메뉴 #1318 + Dcr08_Lookup_SelectSingle. 전자결재 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList는 F01-2)
+  Rpt01_Tab_DailyConfirm, // Z09 (+ Rpt01_Edit_DailyConfirm, RD Rpt01_Rd_Daily)
   Rpt01_Tab_DailyWrite, // Z08 (+ Rpt01_Edit_DailyWrite)
   Rpt10_Tab_FssSubmit, // E19 (+ Rpt10_Edit_WriteGuide)
   Sch01_Tab_Info, // O01 (+ Sch01_Lookup_Info·Sch01_Lookup_ManagerModi(Run)·Sch01_Grid_RelateFile·Sch08_Lookup_Class·Sch06_Lookup_AlarmSetup. 기한 Sch03_Lookup_Short/Cycle은 E01-1 재사용)
