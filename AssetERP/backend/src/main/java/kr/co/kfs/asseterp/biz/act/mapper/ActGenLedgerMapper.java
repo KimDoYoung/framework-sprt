@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.act.mapper;
 import kr.co.kfs.asseterp.biz.act.dto.GenLedgerCond;
 import kr.co.kfs.asseterp.biz.act.dto.GenLedgerRes;
+import kr.co.kfs.asseterp.biz.act.dto.GenLedgerReportCond;
+import kr.co.kfs.asseterp.biz.act.dto.GenLedgerReportRes;
 import org.apache.ibatis.annotations.Param;
 
 import kr.co.kfs.asseterp.biz.act.dto.CloseCheckRes;
@@ -114,4 +116,28 @@ public interface ActGenLedgerMapper {
     /** AS-IS sys99_print.insert — 출력용 계정원장 한 줄 */
     int insertPrintGenLedger(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
                              @Param("windowClassName") String windowClassName, @Param("groupId") long groupId, @Param("r") GenLedgerRes r);
+
+    // ---- 재무제표 손익계산서 Act04_Tab_ReportPL (X20) · 재무상태표 X21이 재사용
+
+    /** AS-IS act04_gen_ledger.deleteGenLedgerCloseTmp — 가결산원장 정리 */
+    int deleteGenLedgerCloseTmp(@Param("companyId") Long companyId, @Param("closeDate") LocalDate closeDate);
+
+    /** AS-IS act04_gen_ledger.insertGenLedgerCloseTmp — 가결산원장 생성 */
+    int insertGenLedgerCloseTmp(@Param("companyId") Long companyId, @Param("closeDate") LocalDate closeDate);
+
+    /** AS-IS act04_gen_ledger.insertGenLedgerCloseTmpEicp — 미처분이익잉여금 반영 */
+    String insertGenLedgerCloseTmpEicp(@Param("companyId") Long companyId, @Param("closeDate") LocalDate closeDate);
+
+    /** AS-IS dbConfig.getAccountCloseDate — type -1 전기말 */
+    LocalDate selectAccountCloseDate(@Param("companyId") Long companyId, @Param("stdDate") LocalDate stdDate, @Param("type") int type);
+
+    /** AS-IS dbConfig.getPreQuarterCloseDate — type '2' 반기 · '1' 분기 */
+    LocalDate selectQuarterDate(@Param("stdDate") LocalDate stdDate, @Param("type") String type);
+
+    /** AS-IS act04_gen_ledger.selectBSPL */
+    List<GenLedgerReportRes> selectBSPL(GenLedgerReportCond cond);
+
+    /** AS-IS sys99_print.insert — 재무제표 한 줄 */
+    int insertPrintReport(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
+                          @Param("windowClassName") String windowClassName, @Param("groupId") long groupId, @Param("r") GenLedgerReportRes r);
 }

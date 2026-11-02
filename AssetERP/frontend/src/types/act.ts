@@ -486,6 +486,23 @@ export interface GenLedgerRdReq {
   searchText: string;
 }
 
+/** 재무제표 한 줄 (act04_gen_ledger.selectBSPL — 과목/당기금액/전기금액, X20 손익계산서·X21 재무상태표) */
+export interface GenLedgerReport {
+  genLedgerId: number;
+  accountName2: string;
+  curBalAmt: number | null;
+  preBalAmt: number | null;
+}
+
+/** 재무제표 출력 준비 요청 (reportType 1 재무상태표 / 2 손익계산서) */
+export interface GenLedgerReportRdReq {
+  windowClassName: string;
+  stdDate: string;
+  compareDate: string;
+  exceptZeroYn: boolean;
+  reportType: string;
+}
+
 /** 자산별 분개 이력 한 줄 (act02_journal.selectByAstClassTreeId, Act02_Grid_History, X19) */
 export interface JournalHistory {
   journalId: number;

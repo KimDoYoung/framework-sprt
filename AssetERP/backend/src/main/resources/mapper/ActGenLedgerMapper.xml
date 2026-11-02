@@ -1759,4 +1759,143 @@ with recursive act01List(act01_account_cd, act01_parent_cd, act01_attribute_cd, 
                , #{r.drTodayBalAmt}, #{r.drTodayDiffAmt}, #{r.drPredayBalAmt}, #{r.crTodayBalAmt}, #{r.crTodayDiffAmt}, #{r.crPredayBalAmt}, #{r.todayBalAmt}, #{r.genLedgerId} )
     </insert>
 
+    <!-- ===== 재무제표 손익계산서 Act04_Tab_ReportPL (X20) — 재무상태표 X21이 reportType 1로 재사용 ===== -->
+
+    <!-- AS-IS act04_gen_ledger.deleteGenLedgerCloseTmp (IDMS-IC) -->
+    <delete id="deleteGenLedgerCloseTmp">
+        DELETE
+          FROM  act07_gen_ledger_closetmp
+         WHERE  act07_company_id = #{companyId}
+           AND  act07_std_date   = #{closeDate}
+    </delete>
+
+    <!-- AS-IS act04_gen_ledger.insertGenLedgerCloseTmp (IDMS-IC) -->
+    <insert id="insertGenLedgerCloseTmp">
+        INSERT
+          INTO  act07_gen_ledger_closetmp
+        SELECT  f_create_seq()
+             ,  act04_gen_ledger.*
+          FROM  act04_gen_ledger
+         WHERE  act04_company_id = #{companyId}
+           AND  act04_std_date   = #{closeDate}
+    </insert>
+
+    <!-- AS-IS act04_gen_ledger.insertGenLedgerCloseTmpEicp (IDMS-IC) — 미처분이익잉여금 반영 DB 함수 -->
+    <select id="insertGenLedgerCloseTmpEicp" resultType="string">
+        SELECT f_create_genLedgerCloseTmp_eicp(#{companyId}, #{closeDate})
+    </select>
+
+    <!-- AS-IS dbConfig.getAccountCloseDate (IDMS-IC) — 전기말 비교일(type -1) -->
+    <select id="selectAccountCloseDate" resultType="java.time.LocalDate">
+        SELECT f_get_account_close_date(#{companyId}, #{stdDate}::date, #{type})
+    </select>
+
+    <!-- AS-IS dbConfig.getPreQuarterCloseDate (IDMS-IC) — 반기 '2'·분기 '1' -->
+    <select id="selectQuarterDate" resultType="java.time.LocalDate">
+        SELECT f_get_quarter_date(#{stdDate}::date, #{type})
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.selectBSPL (IDMS-IC) — 결산원장(act05)이 있으면 그것, 없으면 가결산원장(act07). reportType 1 재무상태표 / 2 손익계산서 -->
+    <select id="selectBSPL" resultType="kr.co.kfs.asseterp.biz.act.dto.GenLedgerReportRes">
+        SELECT row_number() OVER (ORDER BY seq)         AS gen_ledger_id
+             , account_nm                               AS account_name2
+             , SUM(cur_bal_amt)                         AS cur_bal_amt
+             , SUM(pre_bal_amt)                         AS pre_bal_amt
+          FROM (
+                /*-------- 기준일 --------*/
+                <choose>
+                  <when test="checkStdCnt != 0">
+                     /**** 결산원장 Select ****/
+                     SELECT act01_account_cd                                                                                    account_cd
+                          , CASE WHEN COALESCE(act01_use_yn,'false') != 'true' THEN '(사용X)' ELSE '' END||act01_account_nm2     account_nm
+                          , (act05_dr_today_bal_amt - act05_cr_today_bal_amt)
+                             * CASE WHEN act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END                                 cur_bal_amt
+                          , 0                                                                                                   pre_bal_amt
+                          , CASE WHEN act05_gen_ledger_close_id IS NOT NULL THEN 'true'
+                                 ELSE COALESCE(act01_use_yn,'false') END                                                        use_yn
+                          , act01_print_seq                                                                                     seq
+                       FROM act01_account_code
+                            LEFT OUTER JOIN act05_gen_ledger_close ON ( act05_company_id = act01_company_id AND
+                                                                        act05_account_cd = act01_account_cd AND
+                                                                        act05_std_date   = #{stdDate}       )
+                  </when>
+                  <otherwise>
+                     /**** 가결산원장 Select ****/
+                     SELECT act01_account_cd                                                                                    account_cd
+                          , CASE WHEN COALESCE(act01_use_yn,'false') != 'true' THEN '(사용X)' ELSE '' END||act01_account_nm2     account_nm
+                          , (act07_dr_today_bal_amt - act07_cr_today_bal_amt)
+                             * CASE WHEN act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END                                 cur_bal_amt
+                          , 0                                                                                                   pre_bal_amt
+                          , CASE WHEN act07_gen_ledger_closetmp_id IS NOT NULL THEN 'true'
+                                 ELSE COALESCE(act01_use_yn,'false') END                                                        use_yn
+                          , act01_print_seq                                                                                     seq
+                       FROM act01_account_code
+                            LEFT OUTER JOIN act07_gen_ledger_closetmp ON ( act07_company_id = act01_company_id AND
+                                                                           act07_account_cd = act01_account_cd AND
+                                                                           act07_std_date   = #{stdDate}       )
+                  </otherwise>
+                </choose>
+                 WHERE act01_company_id                 = #{companyId}
+                   AND COALESCE(act01_print_yn,'false') = 'true'
+                   AND ( ( #{reportType} = '1'                  AND
+                           act01_attribute_cd IN ('1','2','3')  ) OR
+                         ( #{reportType} = '2'                  AND
+                           act01_attribute_cd IN ('4','5')      ) )
+                /*-------- 비교일 --------*/
+                 UNION ALL
+                <choose>
+                  <when test="checkCompareCnt != 0">
+                     /**** 결산원장 Select ****/
+                     SELECT act01_account_cd                                                                                    account_cd
+                          , CASE WHEN COALESCE(act01_use_yn,'false') != 'true' THEN '(사용X)' ELSE '' END||act01_account_nm2     account_nm
+                          , 0                                                                                                   cur_bal_amt
+                          , (act05_dr_today_bal_amt - act05_cr_today_bal_amt)
+                             * CASE WHEN act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END                                 pre_bal_amt
+                          , CASE WHEN act05_gen_ledger_close_id IS NOT NULL THEN 'true'
+                                 ELSE COALESCE(act01_use_yn,'false') END                                                        use_yn
+                          , act01_print_seq                                                                                     seq
+                       FROM act01_account_code
+                            LEFT OUTER JOIN act05_gen_ledger_close ON ( act05_company_id = act01_company_id AND
+                                                                        act05_account_cd = act01_account_cd AND
+                                                                        act05_std_date   = #{compareDate}   )
+                  </when>
+                  <otherwise>
+                     /**** 가결산원장 Select ****/
+                     SELECT act01_account_cd                                                                                    account_cd
+                          , CASE WHEN COALESCE(act01_use_yn,'false') != 'true' THEN '(사용X)' ELSE '' END||act01_account_nm2     account_nm
+                          , 0                                                                                                   cur_bal_amt
+                          , (act07_dr_today_bal_amt - act07_cr_today_bal_amt)
+                             * CASE WHEN act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END                                 pre_bal_amt
+                          , CASE WHEN act07_gen_ledger_closetmp_id IS NOT NULL THEN 'true'
+                                 ELSE COALESCE(act01_use_yn,'false') END                                                        use_yn
+                          , act01_print_seq                                                                                     seq
+                       FROM act01_account_code
+                            LEFT OUTER JOIN act07_gen_ledger_closetmp ON ( act07_company_id = act01_company_id AND
+                                                                           act07_account_cd = act01_account_cd AND
+                                                                           act07_std_date   = #{compareDate}   )
+                  </otherwise>
+                </choose>
+                 WHERE act01_company_id                 = #{companyId}
+                   AND COALESCE(act01_print_yn,'false') = 'true'
+                   AND ( ( #{reportType} = '1'                  AND
+                           act01_attribute_cd IN ('1','2','3')  ) OR
+                         ( #{reportType} = '2'                  AND
+                           act01_attribute_cd IN ('4','5')      ) )
+               ) t
+         WHERE use_yn = 'true'
+           <if test="exceptZeroYn != null and exceptZeroYn == true">
+               AND ( cur_bal_amt != 0 OR pre_bal_amt != 0 )
+           </if>
+         GROUP BY account_cd, account_nm, seq
+    </select>
+
+    <!-- AS-IS Sys99_Print.insertRdReportPL — 과목 / 당기금액 / 전기금액 / id -->
+    <insert id="insertPrintReport">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_long01, sys99_long02, sys99_long03 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{r.accountName2}, #{r.curBalAmt}, #{r.preBalAmt}, #{r.genLedgerId} )
+    </insert>
+
 </mapper>

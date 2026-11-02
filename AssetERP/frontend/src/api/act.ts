@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, JournalDtlList, JournalDtlRdReq, JournalSub, JournalSubRdReq, GenLedger, GenLedgerRdReq, JournalHistory, JournalAccount, JournalRealAccount, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, JournalDtlList, JournalDtlRdReq, JournalSub, JournalSubRdReq, GenLedger, GenLedgerRdReq, GenLedgerReport, GenLedgerReportRdReq, JournalHistory, JournalAccount, JournalRealAccount, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { AstBook } from '../types/ast';
 import { readBlobError } from './file';
 
@@ -496,6 +496,26 @@ export const actApi = {
   /** AS-IS sys.Sys99_Print.insertRdGenLedger → 출력그룹ID */
   insertGenLedgerRd: async (req: GenLedgerRdReq): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/act/gen-ledgers/rd', req);
+    return res.data.data;
+  },
+
+  // ── X20 재무제표 손익계산서 (Act04_Tab_ReportPL) · X21 재무상태표가 reportType '1'로 재사용 ──
+
+  /** AS-IS act.Act04_GenLedger.selectBSPL — reportType 1 재무상태표 / 2 손익계산서 */
+  searchGenLedgerReport: async (stdDate: string, compareDate: string, exceptZeroYn: boolean, reportType: string): Promise<GenLedgerReport[]> => {
+    const res = await apiClient.get<ApiResponse<GenLedgerReport[]>>('v1/act/gen-ledger-reports', { params: { stdDate, compareDate, exceptZeroYn, reportType } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys00_Common.selectAccountCloseDate(전기말)·selectPreQuarterCloseDate(반기·분기) — 비교기준 1·2·3의 비교일자 */
+  getGenLedgerReportCompareDate: async (stdDate: string, compareCode: string): Promise<string | null> => {
+    const res = await apiClient.get<ApiResponse<string | null>>('v1/act/gen-ledger-reports/compare-date', { params: { stdDate, compareCode } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdReportPL → 출력그룹ID */
+  insertGenLedgerReportRd: async (req: GenLedgerReportRdReq): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/act/gen-ledger-reports/rd', req);
     return res.data.data;
   },
 
