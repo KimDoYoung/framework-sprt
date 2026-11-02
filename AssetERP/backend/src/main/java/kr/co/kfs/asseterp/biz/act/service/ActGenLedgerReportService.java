@@ -1,6 +1,8 @@
 package kr.co.kfs.asseterp.biz.act.service;
 
 import kr.co.kfs.asseterp.biz.act.dto.CloseParam;
+import kr.co.kfs.asseterp.biz.act.dto.GenLedgerFssRdReq;
+import kr.co.kfs.asseterp.biz.act.dto.GenLedgerFssRes;
 import kr.co.kfs.asseterp.biz.act.dto.GenLedgerReportCond;
 import kr.co.kfs.asseterp.biz.act.dto.GenLedgerReportRdReq;
 import kr.co.kfs.asseterp.biz.act.dto.GenLedgerReportRes;
@@ -57,6 +59,22 @@ public class ActGenLedgerReportService {
                 Boolean.TRUE.equals(req.exceptZeroYn()), req.reportType());
         for (GenLedgerReportRes r : list) {
             mapper.insertPrintReport(mapper.selectNextId(), companyId, personId, req.windowClassName(), groupId, r);
+        }
+        return groupId;
+    }
+
+    /** sys.Sys99_Print.insertRdReportFSS L1766 (→ Act04_GenLedger.selectFssBSPL L106) — 금감원 재무제표를 sys99_print에 만들고 출력그룹ID를 돌려준다(mrd Act04_Rd_ReportFSS) */
+    @Transactional
+    public Long insertRdReportFss(UserPrincipal user, GenLedgerFssRdReq req) {
+        if (req.windowClassName() == null || req.windowClassName().isBlank()) throw invalid("화면 클래스명이 없습니다.");
+        if (req.stdDate() == null) throw invalid("기준년월을 확인하세요.");
+        Long companyId = user.getCompanyId();
+        Long personId = user.getUserId();
+        long groupId = mapper.selectNextId();
+        mapper.deletePrint(companyId, personId, req.windowClassName());
+        Long checkCnt = createGenLedgerCloseTmp(companyId, req.stdDate());   // 가결산원장 생성
+        for (GenLedgerFssRes r : mapper.selectFssBSPL(companyId, req.stdDate(), checkCnt, req.code())) {
+            mapper.insertPrintFss(mapper.selectNextId(), companyId, personId, req.windowClassName(), groupId, r);
         }
         return groupId;
     }

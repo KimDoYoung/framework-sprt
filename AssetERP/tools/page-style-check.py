@@ -35,6 +35,7 @@ TARGETS = {
     "GDP": ("Sms02_Tab_TotalCount", ["Sys10_Tab_TotalSize", "Sms03_Tab_SendAdmin", "Ics02_Tab_Manager"]),
     "DSBRD": ("Tdm50_Tab_TotalDashboard", ["Tdm35_Tab_TaskList"]),
     "STP": ("Pay10_Tab_Retire", ["Tdm50_Tab_CheckJob", "Biz01_Tab_EntertmExpenseReport"]),
+    "SR": ("Emp01_Tab_InoutState", ["Act04_Tab_ReportFSS"]),  # X22: SR 규칙 추가(SearchBar + RD 영역)
     "TP": ("Rpt10_Tab_FssOrg", ["Pay31_Tab_InsureApply", "Pay20_Tab_DeductAdmin"]),  # Pay20_Tab_Deduct는 DeductAdmin 껍데기라 제외
 }
 
@@ -128,6 +129,14 @@ RULES = {
         ("antd Tabs 안 씀", r"<Tabs\b", False),
         # 조건 줄은 SearchBar 또는 직접 만든 줄(Tdm50_Tab_CheckJob)이라 필수로 확인하지 않는다.
         # 테두리: 견본이 탭 아래 내용 영역의 얇은 테두리를 남기므로 정규식으로 가를 수 없어 점검하지 않는다(눈으로 확인).
+    ],
+    "SR": [
+        ("Splitter 없음", r"<Splitter\b", False),
+        ("바깥 여백 20", r"padding:\s*20\b", True),
+        ("툴바-RD gap 8", r"gap:\s*8\b", True),
+        ("SearchBar", r"<SearchBar\b", True),
+        ("RD 영역 *_Rd_* 사용", r"<\w+_Rd_\w+\b", True),
+        ("외곽 테두리 없음", BORDER, False),
     ],
     "TP": [
         ("PageTabs", r"<PageTabs\b", True),

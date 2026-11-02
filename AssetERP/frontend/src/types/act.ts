@@ -503,6 +503,13 @@ export interface GenLedgerReportRdReq {
   reportType: string;
 }
 
+/** 금감원보고용 재무제표 출력 준비 요청 (X22 — stdDate는 기준년월의 말일, code GA023 재무상태표 / GA025 손익계산서) */
+export interface GenLedgerFssRdReq {
+  windowClassName: string;
+  stdDate: string;
+  code: string;
+}
+
 /** 자산별 분개 이력 한 줄 (act02_journal.selectByAstClassTreeId, Act02_Grid_History, X19) */
 export interface JournalHistory {
   journalId: number;

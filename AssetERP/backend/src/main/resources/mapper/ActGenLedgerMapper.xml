@@ -1898,4 +1898,70 @@ with recursive act01List(act01_account_cd, act01_parent_cd, act01_attribute_cd, 
                , #{r.accountName2}, #{r.curBalAmt}, #{r.preBalAmt}, #{r.genLedgerId} )
     </insert>
 
+    <!-- ===== 금감원보고용 재무제표 Act04_Tab_ReportFSS (X22) ===== -->
+
+    <!-- AS-IS act04_gen_ledger.selectFssBSPL (IDMS-IC) — code GA023 재무상태표 / GA025 손익계산서. 결산원장(act05)이 있으면 그것, 없으면 가결산원장(act07) -->
+    <select id="selectFssBSPL" resultType="kr.co.kfs.asseterp.biz.act.dto.GenLedgerFssRes">
+        WITH act AS (
+            <choose>
+              <when test="checkCnt != 0">
+                 /**** 결산원장 Select ****/
+                 SELECT act01_account_cd                                                          account_cd
+                      , act01_fss_account_nm                                                      account_nm
+                      , act01_attribute_cd                                                        attribute_cd
+                      , SUM((act05_dr_today_bal_amt - act05_cr_today_bal_amt)
+                             * CASE WHEN act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END)  bal_amt
+                   FROM act01_account_code
+                        LEFT OUTER JOIN act05_gen_ledger_close ON ( act05_company_id = act01_company_id AND
+                                                                    act05_account_cd = act01_account_cd AND
+                                                                    act05_std_date   = #{stdDate}       )
+              </when>
+              <otherwise>
+                 /**** 가결산원장 Select ****/
+                 SELECT act01_account_cd                                                          account_cd
+                      , act01_fss_account_nm                                                      account_nm
+                      , act01_attribute_cd                                                        attribute_cd
+                      , SUM((act07_dr_today_bal_amt - act07_cr_today_bal_amt)
+                             * CASE WHEN act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END)  bal_amt
+                   FROM act01_account_code
+                        LEFT OUTER JOIN act07_gen_ledger_closetmp ON ( act07_company_id = act01_company_id AND
+                                                                       act07_account_cd = act01_account_cd AND
+                                                                       act07_std_date   = #{stdDate}       )
+              </otherwise>
+            </choose>
+             WHERE act01_company_id               = #{companyId}
+               AND COALESCE(act01_fss_yn,'false') = 'true'
+             GROUP BY act01_account_cd, act01_fss_account_nm, act01_attribute_cd
+        )
+        SELECT row_number() OVER (ORDER BY act04_account_cd)    AS gen_ledger_id
+             , t.act04_account_cd                               AS account_code
+             , t.act04_account_nm2                              AS account_name2
+             , t.act04_cur_bal_amt                              AS cur_bal_amt
+          FROM (
+                SELECT CASE WHEN account_cd = '1200000000' THEN '9999999999' ELSE account_cd END    AS act04_account_cd
+                     , CASE WHEN account_cd = '1200000000' THEN ' (당기순이익)' ELSE account_nm END    AS act04_account_nm2
+                     , COALESCE(bal_amt,0)                                                          AS act04_cur_bal_amt
+                  FROM act
+                 WHERE #{code} = 'GA023'    /*(GA023:재무상태표)*/
+                   AND ( attribute_cd IN ('1','2','3')  OR
+                         account_cd = '1200000000'      )   /*(1200000000:당기순이익)*/
+                 UNION
+                SELECT account_cd             AS act04_account_cd
+                     , account_nm             AS act04_account_nm2
+                     , COALESCE(bal_amt,0)    AS act04_cur_bal_amt
+                  FROM act
+                 WHERE #{code} = 'GA025'    /*(GA025:손익계산서)*/
+                   AND attribute_cd IN ('4','5')
+               ) t
+    </select>
+
+    <!-- AS-IS Sys99_Print.insertRdReportFSS — 코드 string01 / 과목 string02 / 당기금액 long01 / id long02 -->
+    <insert id="insertPrintFss">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_long01, sys99_long02 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{r.accountCode}, #{r.accountName2}, #{r.curBalAmt}, #{r.genLedgerId} )
+    </insert>
+
 </mapper>

@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.act.mapper;
 import kr.co.kfs.asseterp.biz.act.dto.GenLedgerCond;
 import kr.co.kfs.asseterp.biz.act.dto.GenLedgerRes;
+import kr.co.kfs.asseterp.biz.act.dto.GenLedgerFssRes;
 import kr.co.kfs.asseterp.biz.act.dto.GenLedgerReportCond;
 import kr.co.kfs.asseterp.biz.act.dto.GenLedgerReportRes;
 import org.apache.ibatis.annotations.Param;
@@ -140,4 +141,14 @@ public interface ActGenLedgerMapper {
     /** AS-IS sys99_print.insert — 재무제표 한 줄 */
     int insertPrintReport(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
                           @Param("windowClassName") String windowClassName, @Param("groupId") long groupId, @Param("r") GenLedgerReportRes r);
+
+    // ---- 금감원보고용 재무제표 Act04_Tab_ReportFSS (X22)
+
+    /** AS-IS act04_gen_ledger.selectFssBSPL — code GA023 재무상태표 / GA025 손익계산서 */
+    List<GenLedgerFssRes> selectFssBSPL(@Param("companyId") Long companyId, @Param("stdDate") LocalDate stdDate,
+                                        @Param("checkCnt") Long checkCnt, @Param("code") String code);
+
+    /** AS-IS sys99_print.insert — 금감원 재무제표 한 줄 */
+    int insertPrintFss(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
+                       @Param("windowClassName") String windowClassName, @Param("groupId") long groupId, @Param("r") GenLedgerFssRes r);
 }

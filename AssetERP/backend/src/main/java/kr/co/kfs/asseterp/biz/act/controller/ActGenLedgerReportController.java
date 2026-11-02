@@ -1,5 +1,6 @@
 package kr.co.kfs.asseterp.biz.act.controller;
 
+import kr.co.kfs.asseterp.biz.act.dto.GenLedgerFssRdReq;
 import kr.co.kfs.asseterp.biz.act.dto.GenLedgerReportRdReq;
 import kr.co.kfs.asseterp.biz.act.dto.GenLedgerReportRes;
 import kr.co.kfs.asseterp.biz.act.service.ActGenLedgerReportService;
@@ -48,5 +49,11 @@ public class ActGenLedgerReportController {
     @PostMapping("/rd")
     public ApiResponse<Long> rd(@AuthenticationPrincipal UserPrincipal principal, @RequestBody GenLedgerReportRdReq req) {
         return ApiResponse.ok(service.insertRdReport(principal, req));
+    }
+
+    /** 금감원보고용 재무제표 출력 준비(X22) → 출력그룹ID. code GA023 재무상태표 / GA025 손익계산서 */
+    @PostMapping("/fss-rd")
+    public ApiResponse<Long> fssRd(@AuthenticationPrincipal UserPrincipal principal, @RequestBody GenLedgerFssRdReq req) {
+        return ApiResponse.ok(service.insertRdReportFss(principal, req));
     }
 }

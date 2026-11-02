@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, JournalDtlList, JournalDtlRdReq, JournalSub, JournalSubRdReq, GenLedger, GenLedgerRdReq, GenLedgerReport, GenLedgerReportRdReq, JournalHistory, JournalAccount, JournalRealAccount, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, JournalDtlList, JournalDtlRdReq, JournalSub, JournalSubRdReq, GenLedger, GenLedgerRdReq, GenLedgerReport, GenLedgerReportRdReq, GenLedgerFssRdReq, JournalHistory, JournalAccount, JournalRealAccount, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { AstBook } from '../types/ast';
 import { readBlobError } from './file';
 
@@ -516,6 +516,14 @@ export const actApi = {
   /** AS-IS sys.Sys99_Print.insertRdReportPL (X20) · sys.Sys99_Print.insertRdReportBS (X21, reportType '1') → 출력그룹ID */
   insertGenLedgerReportRd: async (req: GenLedgerReportRdReq): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/act/gen-ledger-reports/rd', req);
+    return res.data.data;
+  },
+
+  // ── X22 금감원보고용 재무제표 (Act04_Tab_ReportFSS) ──
+
+  /** AS-IS sys.Sys99_Print.insertRdReportFSS (→ act.Act04_GenLedger.selectFssBSPL) → 출력그룹ID */
+  insertGenLedgerFssRd: async (req: GenLedgerFssRdReq): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/act/gen-ledger-reports/fss-rd', req);
     return res.data.data;
   },
 
