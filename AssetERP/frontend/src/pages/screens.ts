@@ -297,6 +297,7 @@ import { Emp50_Tab_TransportExpense } from './emp/Emp50_Tab_TransportExpense';
 import { Emp50_Tab_TransportExpenseMng } from './emp/Emp50_Tab_TransportExpenseMng';
 import { Sms02_Tab_TotalCount } from './sms/Sms02_Tab_TotalCount';
 import { Sms03_Tab_SendAdmin } from './sms/Sms03_Tab_SendAdmin';
+import { Sms03_Tab_GroupSend } from './sms/Sms03_Tab_GroupSend';
 import { Sys01_Tab_Company } from './sys/Sys01_Tab_Company';
 import { Sys03_Tab_CompanyMenu } from './sys/Sys03_Tab_CompanyMenu';
 import { Sys06_Tab_Menu } from './sys/Sys06_Tab_Menu';
@@ -755,6 +756,7 @@ export const SCREENS: Record<string, React.FC> = {
   Tdm50_Tab_DutyReconAdmin, // E15 (조회마다 DB 함수 f_recon_tdm('DB_CHK')이 sys99_print의 사용자 몫 행을 다시 만든다 — AS-IS 그대로)
   Sms02_Tab_TotalCount, // C05
   Sms03_Tab_SendAdmin, // C06 (실제 문자 발송은 하지 않음 — SmsSender 기본 구현)
+  Sms03_Tab_GroupSend, // Z14 (C06의 group-sends·Edit 재사용, 재직 사원 대상. 실제 발송 없음)
   Sys01_Tab_Company, // A15 (1단계: 목록·신규 등록)
   Sys03_Tab_ComapnyMenu: Sys03_Tab_CompanyMenu, // A10 (메뉴 키 오타 그대로)
   Sys06_Tab_Menu, // A09

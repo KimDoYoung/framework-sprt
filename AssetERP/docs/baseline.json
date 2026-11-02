@@ -14590,5 +14590,33 @@
     "note": "docs/work/Z/Z13-작업기록.md",
     "history": [],
     "id": "Z13"
+  },
+  "Sms03_Tab_GroupSend": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/sms/Sms03_Edit_GroupSend.java": "576a07220efade36291e4207311ad14ec41ae069",
+      "application/src/main/java/myApp/client/vi/sms/Sms03_Page_UserList.java": "0b716c7c22d3b990b62f62ee3b68e9867a02695d",
+      "application/src/main/java/myApp/client/vi/sms/Sms03_Tab_GroupSend.java": "7c9e168b93f54d23f24c6f067c41284c005cb250",
+      "application/src/main/java/myApp/client/vi/sms/model/Sms03_GroupSendModel.java": "1218203a9d9a6f88a184f59dbc84e55a05931cc3",
+      "application/src/main/java/myApp/client/vi/sms/model/Sms03_GroupSendModelProperties.java": "c5b262224c7c5a2011b5f95b1865cc374471d6ff",
+      "application/src/main/java/myApp/server/emp/Emp00_TransInfo.java": "df97d7f0f13eb8c414b2ce628d93cc02138f6963",
+      "application/src/main/java/myApp/server/emp/mapper/emp00_trans_info.xml": "76c324eda8ede6658a765beeaaebf929930afd47",
+      "application/src/main/java/myApp/server/sms/Sms03_GroupSend.java": "f51945bbaf33df13ab3bb9081a068b7780706dae",
+      "application/src/main/java/myApp/server/sms/mapper/sms03_group_send.xml": "a566f5cf733aea206f8e88033c188a66126290c5",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Emp57_Lookup_List"
+    ],
+    "recorded_at": "2026-11-02T19:20:04+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Z/Z14-작업기록.md",
+    "history": [],
+    "id": "Z14"
   }
 }

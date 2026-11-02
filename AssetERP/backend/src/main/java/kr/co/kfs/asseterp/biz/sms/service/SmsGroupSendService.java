@@ -27,20 +27,17 @@ public class SmsGroupSendService {
 
     /** AS-IS selectByCompanyId */
     public List<GroupSendRes> search(UserPrincipal user) {
-        requireSysAdmin(user);
         return mapper.selectByCompanyId(user.getCompanyId());
     }
 
     /** AS-IS Sms03_Tab_SendAdmin.insertRow() L150-157: 회사·생성자 = 로그인, 생성일자 = 오늘 */
     public GroupSendRes newRow(UserPrincipal user) {
-        requireSysAdmin(user);
         return new GroupSendRes(null, user.getCompanyId(), user.getUserId(), mapper.selectToday(), null, null, null);
     }
 
     /** AS-IS update(UpdateDataModel) + 화면 update() 검사(제목·내용 필수, 90자) → 저장된 행 */
     @Transactional
     public GroupSendRes update(UserPrincipal user, GroupSendSaveReq req) {
-        requireSysAdmin(user);
         if (req.title() == null || req.title().isEmpty()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "제목은 필수입력 항목입니다.");
         }
@@ -63,7 +60,6 @@ public class SmsGroupSendService {
     /** AS-IS delete(UpdateDataModel.deleteModel) → 지운 건수 (회사 조건 추가) */
     @Transactional
     public int delete(UserPrincipal user, List<Long> ids) {
-        requireSysAdmin(user);
         if (ids == null || ids.isEmpty()) {
             return 0;
         }
@@ -76,7 +72,6 @@ public class SmsGroupSendService {
      * (AS-IS의 EUC-KR 바이트 변환은 같은 문자열로 되돌아오는 동작이라 옮기지 않는다)
      */
     public void sendGroupMessage(UserPrincipal user, Long groupSendId, List<GroupSendTargetReq> targets) {
-        requireSysAdmin(user);
         GroupSendRes groupSend = mapper.selectById(groupSendId, user.getCompanyId());
         if (groupSend == null) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
@@ -85,14 +80,13 @@ public class SmsGroupSendService {
             return;
         }
         for (GroupSendTargetReq target : targets) {
-            String targetName = target.companyName() + " " + target.korName();
+            // 고객사 대상(C06)은 "고객사 사원명", 사내 사원(Z14)은 고객사가 없어 사원명만
+            String targetName = target.companyName() == null || target.companyName().isBlank()
+                    ? target.korName() : target.companyName() + " " + target.korName();
             smsSender.send(user.getCompanyId(), groupSendId, target.mobileTelNo(), "[Asset-ERP] " + groupSend.content(), targetName);
         }
     }
 
-    private void requireSysAdmin(UserPrincipal user) {
-        if (!user.isSysAdmin()) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
-        }
-    }
+    // Z14: 일반 사원 화면(Sms03_Tab_GroupSend #1186)도 같은 서버 클래스를 쓴다. AS-IS 서버(Sms03_GroupSend)에는 권한 검사가 없고
+    // 메뉴 권한이 막으므로(C06 #1367 관리자 메뉴 / Z14 커뮤니티 메뉴) sys admin 검사를 뺐다. 모든 문장은 로그인 회사 범위다.
 }
