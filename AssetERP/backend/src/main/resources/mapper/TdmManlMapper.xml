@@ -35,6 +35,7 @@
                 t.tdm43_check_how                                                 AS check_how,
                 t.tdm43_ref_basis                                                 AS ref_basis,
                 TO_CHAR(t.tdm43_start_date, 'YYYY-MM-DD')                         AS start_date,
+                NULL                                                              AS check_cycle_info,
                 t.tdm43_ceo_duty_cd                                               AS ceo_duty_code,
                 t.tdm43_exct_duty_map                                             AS exct_duty_map,
                 f_get_exctDutyMap_nm(t.tdm43_exct_duty_map)                       AS exct_duty_name,
@@ -385,6 +386,8 @@
              ,  t.tdm43_manl_org_id                          AS manl_org_id
              ,  t.tdm43_org_id                               AS org_id
              ,  t.tdm43_role_id                              AS role_id
+             ,  NULL                                         AS role_name
+             ,  NULL                                         AS task_id
              ,  t.tdm43_task_nm                              AS task_name
              ,  t.tdm43_task_relate_detail_id                AS task_relate_detail_id
              ,  t.tdm43_task_relate_detail_nm                AS task_relate_detail_name

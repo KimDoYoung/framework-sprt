@@ -146,3 +146,12 @@ CREATE TABLE public.att13_overtime_req_hist (
   COMMENT ON COLUMN ics32_relate_appr.ics32_appr_type IS '상신구분(1:준수보고 A32 / 2:부서장 준수확인서
   A52)';
 ```
+
+---
+
+```sql
+  ALTER TABLE act08_journal_upload ADD COLUMN act08_corp_cd    varchar(12);
+  ALTER TABLE act08_journal_upload ADD COLUMN act08_deposit_cd varchar(50);
+  COMMENT ON COLUMN act08_journal_upload.act08_corp_cd    IS '거래처코드';
+  COMMENT ON COLUMN act08_journal_upload.act08_deposit_cd IS '관리계좌코드';
+```  

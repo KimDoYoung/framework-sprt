@@ -212,8 +212,9 @@
 
     <!-- AS-IS dcr20_relate_ics.selectByClassTreeId 에서 Apr20_RelateIcs.selectByDcrClassTreeId가 채우는 열 -->
     <select id="selectIcsLines" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprNewLawRes">
-        SELECT b.ics01_class_tree_id                                            AS class_tree_id
-             , b.ics01_class_tree_nm                                            AS class_tree_name
+        SELECT NULL                                                             AS relate_id
+             , b.ics01_class_tree_id                                            AS class_tree_id
+             , b.ics01_class_tree_nm                                           AS class_tree_name
              , f_ics_class_tree_nm_allpath(b.ics01_class_tree_id)               AS class_tree_full_name
              , b.ics01_content                                                  AS content
              , b.ics01_submit_to                                                AS submit_to
@@ -235,8 +236,9 @@
 
     <!-- AS-IS dcr21_relate_icr.selectByClassTreeId -->
     <select id="selectIcrLines" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprNewLawRes">
-        SELECT b.icr01_class_tree_id                                            AS class_tree_id
-             , b.icr01_class_tree_nm                                            AS class_tree_name
+        SELECT NULL                                                             AS relate_id
+             , b.icr01_class_tree_id                                            AS class_tree_id
+             , b.icr01_class_tree_nm                                           AS class_tree_name
              , f_icr_class_tree_nm_allpath(b.icr01_class_tree_id)               AS class_tree_full_name
              , b.icr01_content                                                  AS content
              , b.icr01_submit_to                                                AS submit_to
