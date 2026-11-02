@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/mkt/mapper/mkt02_manager.xml (selectById, selectByTargetCompanyId, updateTargetCompanyId) + Mkt02_Manager.update·delete(UpdateDataModel) (Z05) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.mkt.mapper.MktManagerMapper">
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <sql id="managerCols">
+        SELECT mkt02_manager_id        AS manager_id
+             , mkt02_target_company_id AS target_company_id
+             , mkt02_manager_nm        AS manager_name
+             , mkt02_org_nm            AS org_name
+             , mkt02_pos_nm            AS pos_name
+             , mkt02_tel               AS tel
+             , mkt02_email_addr        AS email_addr
+             , mkt02_note              AS note
+             , mkt02_retire_info       AS retire_info
+          FROM mkt02_manager
+    </sql>
+
+    <select id="selectByTargetCompanyId" resultType="kr.co.kfs.asseterp.biz.mkt.dto.MktManagerRes">
+        <include refid="managerCols"/>
+         WHERE mkt02_target_company_id = #{targetCompanyId}
+           AND mkt02_company_id        = #{companyId}
+         ORDER BY mkt02_manager_nm collate "ko_KR.utf8" asc
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.mkt.dto.MktManagerRes">
+        <include refid="managerCols"/>
+         WHERE mkt02_manager_id = #{managerId}
+           AND mkt02_company_id = #{companyId}
+    </select>
+
+    <update id="updateOne">
+        UPDATE mkt02_manager
+           SET mkt02_manager_nm   = #{r.managerName}
+             , mkt02_org_nm       = #{r.orgName}
+             , mkt02_pos_nm       = #{r.posName}
+             , mkt02_tel          = #{r.tel}
+             , mkt02_email_addr   = #{r.emailAddr}
+             , mkt02_note         = #{r.note}
+             , mkt02_retire_info  = #{r.retireInfo}
+         WHERE mkt02_manager_id = #{r.managerId}
+           AND mkt02_company_id = #{companyId}
+    </update>
+
+    <insert id="insertOne">
+        INSERT INTO mkt02_manager
+               ( mkt02_manager_id, mkt02_target_company_id, mkt02_manager_nm, mkt02_org_nm, mkt02_pos_nm
+               , mkt02_email_addr, mkt02_tel, mkt02_retire_info, mkt02_note, mkt02_company_id )
+        VALUES ( #{r.managerId}, #{r.targetCompanyId}, #{r.managerName}, #{r.orgName}, #{r.posName}
+               , #{r.emailAddr}, #{r.tel}, #{r.retireInfo}, #{r.note}, #{companyId} )
+    </insert>
+
+    <delete id="deleteByIds">
+        DELETE FROM mkt02_manager
+         WHERE mkt02_company_id = #{companyId}
+           AND mkt02_manager_id IN <foreach collection="ids" item="id" separator="," open="(" close=")">#{id}</foreach>
+    </delete>
+
+    <update id="updateTargetCompanyId">
+        UPDATE mkt02_manager
+           SET mkt02_target_company_id = #{targetCompanyId}
+         WHERE mkt02_company_id = #{companyId}
+           AND mkt02_manager_id IN <foreach collection="managerIds" item="id" separator="," open="(" close=")">#{id}</foreach>
+    </update>
+</mapper>

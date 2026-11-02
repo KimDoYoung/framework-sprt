@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/mkt/mapper/mkt06_favorite.xml (deleteFavoriteId) + Mkt06_Favorite.modelUpdate(UpdateDataModel INSERT) (Z05) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.mkt.mapper.MktFavoriteMapper">
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertOne">
+        INSERT INTO mkt06_favorite ( mkt06_favorite_id, mkt06_person_id, mkt06_target_company_id, mkt06_manager_id )
+        VALUES ( #{id}, #{personId}, #{targetCompanyId}, #{managerId} )
+    </insert>
+
+    <delete id="deleteByIds">
+        DELETE FROM mkt06_favorite
+         WHERE mkt06_person_id = #{personId}
+           AND mkt06_favorite_id IN <foreach collection="ids" item="id" separator="," open="(" close=")">#{id}</foreach>
+    </delete>
+</mapper>

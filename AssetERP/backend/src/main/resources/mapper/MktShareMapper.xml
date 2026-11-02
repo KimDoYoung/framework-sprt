@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/mkt/mapper/mkt05_share.xml (selectByParentId, selectShareInfo, insertDefaultShare, deleteByParentId) + Mkt05_Share.update·delete(UpdateDataModel) (Z05) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.mkt.mapper.MktShareMapper">
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <select id="selectByParentId" resultType="kr.co.kfs.asseterp.biz.mkt.dto.MktShareRes">
+        SELECT mkt05_share_id                                                      AS share_id
+             , mkt05_parent_id                                                     AS parent_id
+             , mkt05_share_cd                                                      AS share_code
+             , mkt05_person_id                                                     AS person_id
+             , mkt05_org_id                                                        AS org_id
+             , f_cdnm('ShareCode', mkt05_share_cd, mkt05_company_id, f_today())    AS share_name
+             , f_emp_kor_nm(mkt05_person_id)                                       AS person_name
+             , f_org_nm(mkt05_org_id, f_today())                                   AS org_name
+          FROM mkt05_share
+         WHERE mkt05_parent_id  = #{parentId}
+           AND mkt05_company_id = #{companyId}
+    </select>
+
+    <select id="selectShareInfo" resultType="string">
+        SELECT (SELECT CASE WHEN mkt05_share_cd = '1'
+                            THEN f_emp_kor_nm(mkt05_person_id)
+                            ELSE f_org_nm(mkt05_org_id, f_today()) END
+                  FROM mkt05_share
+                 WHERE mkt05_parent_id = #{parentId}
+                 ORDER BY mkt05_share_cd DESC
+                 LIMIT 1)
+               ||(CASE WHEN COUNT(*) = 1 THEN ''
+                       ELSE ' 외 '|| (COUNT(*) - 1)
+                  END)
+          FROM mkt05_share
+         WHERE mkt05_parent_id = #{parentId}
+    </select>
+
+    <!-- 원본은 컬럼 목록 없이 SELECT 순서에 기대는 INSERT — 컬럼을 이름으로 적는다 -->
+    <insert id="insertDefaultShare">
+        INSERT INTO mkt05_share
+               ( mkt05_share_id, mkt05_parent_id, mkt05_share_cd, mkt05_person_id, mkt05_org_id, mkt05_company_id )
+        SELECT f_create_seq()
+             , #{historyId}
+             , mkt05_share_cd
+             , mkt05_person_id
+             , mkt05_org_id
+             , mkt05_company_id
+          FROM mkt05_share
+         WHERE mkt05_parent_id  = #{targetCompanyId}
+           AND mkt05_company_id = #{companyId}
+    </insert>
+
+    <delete id="deleteByParentId">
+        DELETE FROM mkt05_share
+         WHERE mkt05_parent_id  = #{parentId}
+           AND mkt05_company_id = #{companyId}
+    </delete>
+
+    <delete id="deleteByIds">
+        DELETE FROM mkt05_share
+         WHERE mkt05_company_id = #{companyId}
+           AND mkt05_share_id IN <foreach collection="ids" item="id" separator="," open="(" close=")">#{id}</foreach>
+    </delete>
+
+    <update id="updateOne">
+        UPDATE mkt05_share
+           SET mkt05_share_cd  = #{r.shareCode}
+             , mkt05_person_id = #{r.personId}
+             , mkt05_org_id    = #{r.orgId}
+         WHERE mkt05_share_id   = #{r.shareId}
+           AND mkt05_company_id = #{companyId}
+    </update>
+
+    <insert id="insertOne">
+        INSERT INTO mkt05_share
+               ( mkt05_share_id, mkt05_parent_id, mkt05_share_cd, mkt05_person_id, mkt05_org_id, mkt05_company_id )
+        VALUES ( #{r.shareId}, #{parentId}, #{r.shareCode}, #{r.personId}, #{r.orgId}, #{companyId} )
+    </insert>
+</mapper>

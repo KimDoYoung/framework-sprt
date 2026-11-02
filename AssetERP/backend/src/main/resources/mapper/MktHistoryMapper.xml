@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/mkt/mapper/mkt03_history.xml (selectById, selectByTargetCompanyId) + mkt04_relate_fund.xml (selectByHistoryId, deleteByHistoryId)
+     + Mkt03_History.updateOne·delete, Mkt04_RelateFund.updateByList·delete(UpdateDataModel) (Z05 Mkt03_Grid_History·Mkt03_Lookup_History) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.mkt.mapper.MktHistoryMapper">
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <sql id="selectShareInfo">
+        SELECT (SELECT CASE WHEN mkt05_share_cd = '1'
+                            THEN f_emp_kor_nm(mkt05_person_id)
+                            ELSE f_org_nm(mkt05_org_id, f_today()) END
+                  FROM mkt05_share
+                 WHERE mkt05_parent_id = mkt03_history_id
+                 ORDER BY mkt05_share_cd DESC
+                 LIMIT 1)
+               ||(CASE WHEN COUNT(*) = 1 THEN ''
+                       ELSE ' 외 '|| COUNT(*)-1
+                  END)
+          FROM mkt05_share
+         WHERE mkt05_parent_id = mkt03_history_id
+    </sql>
+
+    <sql id="selectFundInfoByCompanyId">
+        SELECT mkt04_history_id                        as history_id
+             , MAX(fnd02_fund_nm) ||
+               CASE WHEN COUNT(*) = 1 THEN ''
+                    ELSE ' 외 ' || (COUNT(*) - 1) END   as fund_info
+          FROM mkt04_relate_fund
+               INNER JOIN fnd02_fund_info ON (    fnd02_fund_code_id = mkt04_fund_id
+                                              AND fnd02_work_date = ( SELECT MAX(fnd02_work_date)
+                                                                        FROM fnd02_fund_info
+                                                                       WHERE fnd02_fund_code_id = mkt04_fund_id
+                                                                         AND fnd02_work_date <![CDATA[<=]]> f_today() ))
+         WHERE mkt04_company_id = #{companyId}
+         GROUP BY mkt04_history_id
+    </sql>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.mkt.dto.MktHistoryRes">
+        SELECT mkt03_history_id                                                         AS history_id
+             , mkt03_person_id                                                          AS person_id
+             , mkt03_reg_date                                                           AS reg_date
+             , mkt03_target_company_id                                                  AS target_company_id
+             , mkt01_target_company_nm                                                  AS target_company_name
+             , mkt03_activity_date                                                      AS activity_date
+             , mkt03_activity_title                                                     AS activity_title
+             , mkt03_activity_content                                                   AS activity_content
+             , f_get_empTrans(mkt03_person_id, mkt03_activity_date, 'person_org_info')  AS person_org_name
+             , ( SELECT COUNT(*)||'건'
+                   FROM sys10_file
+                  WHERE sys10_parent_id = mkt03_history_id )                            AS file_count
+             , ( SELECT MAX(fnd02_fund_nm) ||
+                        CASE WHEN COUNT(*) = 1 THEN ''
+                             ELSE ' 외 ' || (COUNT(*) - 1) END
+                   FROM mkt04_relate_fund
+                        INNER JOIN fnd02_fund_info ON (    fnd02_fund_code_id = mkt04_fund_id
+                                                       AND fnd02_work_date    = ( SELECT MAX(fnd02_work_date)
+                                                                                    FROM fnd02_fund_info
+                                                                                   WHERE fnd02_fund_code_id = mkt04_fund_id
+                                                                                     AND fnd02_work_date <![CDATA[<=]]> mkt03_activity_date ))
+                  WHERE mkt04_history_id = mkt03_history_id )                           AS fund_info
+             , (<include refid="selectShareInfo"/>)                                     AS share_info
+          FROM mkt03_history
+               INNER JOIN mkt01_target_company ON mkt01_target_company_id = mkt03_target_company_id
+         WHERE mkt03_history_id = #{historyId}
+           AND mkt03_company_id = #{companyId}
+    </select>
+
+    <select id="selectByTargetCompanyId" resultType="kr.co.kfs.asseterp.biz.mkt.dto.MktHistoryRes">
+        SELECT t.mkt03_history_id           AS history_id
+             , t.mkt03_person_id            AS person_id
+             , t.mkt03_reg_date             AS reg_date
+             , t.mkt03_target_company_id    AS target_company_id
+             , t.mkt03_target_company_nm    AS target_company_name
+             , t.mkt03_activity_date        AS activity_date
+             , t.mkt03_activity_title       AS activity_title
+             , t.mkt03_activity_content     AS activity_content
+             , t.mkt03_person_org_nm        AS person_org_name
+             , t.mkt03_file_count           AS file_count
+             , t.mkt03_fund_info            AS fund_info
+             , t.mkt03_share_info           AS share_info
+          FROM (
+                SELECT mkt03_history.*
+                     , mkt01_target_company_nm                                                  AS mkt03_target_company_nm
+                     , f_get_empTrans(mkt03_person_id, mkt03_activity_date, 'person_org_info')  AS mkt03_person_org_nm
+                     , ( SELECT COUNT(*)||'건'
+                           FROM sys10_file
+                          WHERE sys10_parent_id = mkt03_history_id )                            AS mkt03_file_count
+                     , fund_info                                                                AS mkt03_fund_info
+                     , (<include refid="selectShareInfo"/>)                                     AS mkt03_share_info
+                  FROM mkt03_history
+                       INNER JOIN mkt01_target_company ON mkt01_target_company_id = mkt03_target_company_id
+                       LEFT OUTER JOIN (<include refid="selectFundInfoByCompanyId"/>) fnd ON history_id = mkt03_history_id
+                 WHERE mkt03_company_id = #{companyId}
+                   AND mkt03_activity_date BETWEEN #{startDate}::date AND #{closeDate}::date
+                   AND (
+                        #{personId} IN ( SELECT mkt03_person_id
+                                          UNION ALL
+                                         SELECT mkt05_person_id
+                                           FROM mkt05_share
+                                          WHERE mkt05_parent_id = mkt03_history_id
+                                            AND mkt05_share_cd  = '1' )
+                        OR
+                        #{orgId}    IN ( SELECT mkt05_org_id
+                                           FROM mkt05_share
+                                          WHERE mkt05_parent_id = mkt03_history_id
+                                            AND mkt05_share_cd  = '2' )
+                       )
+                <if test="!allContactYn">
+                   AND mkt03_target_company_id = #{targetCompanyId}
+                </if>
+                   AND mkt01_item_type_cd LIKE #{itemType}
+               ) t
+         WHERE UPPER(CONCAT(mkt03_target_company_nm, mkt03_activity_title, mkt03_person_org_nm)) LIKE UPPER(#{searchText})
+         ORDER BY mkt03_activity_date DESC, mkt03_target_company_nm COLLATE "ko_KR.utf8" ASC
+    </select>
+
+    <select id="selectOwner" resultType="long">
+        SELECT mkt03_person_id
+          FROM mkt03_history
+         WHERE mkt03_history_id = #{historyId}
+           AND mkt03_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS Mkt03_History.updateOne(UpdateDataModel) — 편집창이 바꾸는 컬럼: 활동일·활동내용·내용상세 -->
+    <update id="updateOne">
+        UPDATE mkt03_history
+           SET mkt03_activity_date    = #{r.activityDate}
+             , mkt03_activity_title   = #{r.activityTitle}
+             , mkt03_activity_content = #{r.activityContent}
+         WHERE mkt03_history_id = #{r.historyId}
+           AND mkt03_company_id = #{companyId}
+    </update>
+
+    <insert id="insertOne">
+        INSERT INTO mkt03_history
+               ( mkt03_history_id, mkt03_company_id, mkt03_person_id, mkt03_reg_date, mkt03_target_company_id
+               , mkt03_activity_date, mkt03_activity_title, mkt03_activity_content )
+        VALUES ( #{r.historyId}, #{companyId}, #{personId}, CURRENT_DATE, #{r.targetCompanyId}
+               , #{r.activityDate}, #{r.activityTitle}, #{r.activityContent} )
+    </insert>
+
+    <select id="selectOwnedIds" resultType="long">
+        SELECT mkt03_history_id
+          FROM mkt03_history
+         WHERE mkt03_company_id = #{companyId}
+           AND mkt03_person_id  = #{personId}
+           AND mkt03_history_id IN <foreach collection="ids" item="id" separator="," open="(" close=")">#{id}</foreach>
+    </select>
+
+    <delete id="deleteRelateFundsByHistory">
+        DELETE FROM mkt04_relate_fund
+         WHERE mkt04_history_id = #{historyId}
+           AND mkt04_company_id = #{companyId}
+    </delete>
+
+    <delete id="deleteSharesByParent">
+        DELETE FROM mkt05_share
+         WHERE mkt05_parent_id  = #{parentId}
+           AND mkt05_company_id = #{companyId}
+    </delete>
+
+    <delete id="deleteHistory">
+        DELETE FROM mkt03_history
+         WHERE mkt03_history_id = #{historyId}
+           AND mkt03_company_id = #{companyId}
+    </delete>
+
+    <select id="selectRelateFunds" resultType="kr.co.kfs.asseterp.biz.mkt.dto.MktRelateFundRes">
+        SELECT mkt04_relate_fund_id   AS relate_fund_id
+             , mkt04_history_id       AS history_id
+             , mkt04_fund_id          AS fund_id
+             , fnd01_fund_cd          AS fund_code
+             , fnd02_fund_nm          AS fund_name
+          FROM mkt04_relate_fund
+               INNER JOIN fnd01_fund_code ON fnd01_fund_code_id = mkt04_fund_id
+               INNER JOIN fnd02_fund_info ON (    fnd02_fund_code_id = mkt04_fund_id
+                                              AND fnd02_work_date    = (SELECT MAX(fnd02_work_date)
+                                                                          FROM fnd02_fund_info
+                                                                         WHERE fnd02_fund_code_id = mkt04_fund_id
+                                                                           AND fnd02_work_date <![CDATA[<=]]> f_today()) )
+         WHERE mkt04_history_id = #{historyId}
+           AND mkt04_company_id = #{companyId}
+    </select>
+
+    <insert id="insertRelateFund">
+        INSERT INTO mkt04_relate_fund ( mkt04_relate_fund_id, mkt04_history_id, mkt04_fund_id, mkt04_company_id )
+        VALUES ( #{id}, #{historyId}, #{fundId}, #{companyId} )
+    </insert>
+
+    <delete id="deleteRelateFundsByIds">
+        DELETE FROM mkt04_relate_fund
+         WHERE mkt04_company_id = #{companyId}
+           AND mkt04_history_id = #{historyId}
+           AND mkt04_relate_fund_id IN <foreach collection="ids" item="id" separator="," open="(" close=")">#{id}</foreach>
+    </delete>
+</mapper>

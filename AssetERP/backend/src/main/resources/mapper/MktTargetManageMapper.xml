@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/mkt/mapper/mkt01_target_company.xml (selectByCompanyIdPaging·Total, selectById, selectFavoritePaging·Total, selectBytargetCompanyName, excelInsert),
+     mkt02_manager.xml (deleteByTargetCompanyId, excelInsert), mkt03_history.xml checkByTargetCompanyId, mkt05_share.xml deleteByParentId,
+     mkt06_favorite.xml excelInsert, sys09_code.xml selectByCode, sys99_print.xml deleteByPersonId·insert (Z05 Mkt01_Tab_TargetCompany) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.mkt.mapper.MktTargetManageMapper">
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys09_code.selectByCode (IDMS-IC) — 코드 종류 CrmItemTypeCode 의 공통코드 + 맨 위 `%` 전체보기(sys09_seq '0') -->
+    <select id="selectItemTypes" resultType="kr.co.kfs.asseterp.biz.mkt.dto.MktItemTypeRes">
+        SELECT u.code, u.name
+          FROM ( SELECT sys09_code AS code, sys09_name AS name, sys09_seq AS seq
+                   FROM sys09_code a
+                        INNER JOIN sys08_code_kind b ON sys08_code_kind_id = sys09_code_kind_id
+                  WHERE sys09_company_id = #{companyId}
+                    AND sys08_kind_cd LIKE #{kindCd}
+                 UNION
+                 SELECT '%', '전체보기', '0' ) u
+         ORDER BY u.seq
+    </select>
+
+    <select id="selectHistoryEnabled" resultType="boolean">
+        SELECT COALESCE(MAX(sys01_erp_product_cd) = 'A1', false)
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <sql id="selectShareInfo">
+        SELECT (SELECT CASE WHEN mkt05_share_cd = '1'
+                            THEN f_emp_kor_nm(mkt05_person_id)
+                            ELSE f_org_nm(mkt05_org_id, f_today()) END
+                  FROM mkt05_share
+                 WHERE mkt05_parent_id = mkt01_target_company_id
+                 ORDER BY mkt05_share_cd DESC
+                 LIMIT 1)
+               ||(CASE WHEN COUNT(*) = 1 THEN ''
+                       ELSE ' 외 '|| COUNT(*)-1
+                  END)
+          FROM mkt05_share
+         WHERE mkt05_parent_id = mkt01_target_company_id
+    </sql>
+
+    <!-- AS-IS selectTargetCompany — unUseYn(미사용 제외)이면 mkt01_unuse_yn 이 'true'가 아닌 것만 -->
+    <sql id="selectTargetCompany">
+        SELECT *
+          FROM mkt01_target_company
+         WHERE mkt01_company_id = #{companyId}
+           AND mkt01_item_type_cd LIKE #{itemTypeCode}
+        <if test="unUseYn">
+           AND COALESCE(mkt01_unuse_yn,'false') != 'true'
+        </if>
+           AND UPPER(CONCAT(mkt01_target_company_nm, mkt01_note)) LIKE UPPER(#{searchText})
+    </sql>
+
+    <select id="selectByCompanyIdPaging" resultType="kr.co.kfs.asseterp.biz.mkt.dto.MktTargetCompanyRes">
+        SELECT t.mkt01_target_company_id                                                     AS target_company_id
+             , t.mkt01_item_type_cd                                                          AS item_type_code
+             , t.mkt01_target_company_nm                                                     AS target_company_name
+             , t.mkt01_addr                                                                  AS addr
+             , t.mkt01_tel                                                                   AS tel
+             , t.mkt01_note                                                                  AS note
+             , COALESCE(t.mkt01_unuse_yn,'false') = 'true'                                   AS unuse_yn
+             , f_cdnm('CrmItemTypeCode', mkt01_item_type_cd, mkt01_company_id, f_today())    AS item_type_name
+             , manager_info                                                                  AS manager_info
+             , (<include refid="selectShareInfo"/>)                                          AS share_info
+          FROM (<include refid="selectTargetCompany"/>) t
+               LEFT OUTER JOIN ( SELECT mkt02_target_company_id
+                                      , MIN(mkt02_manager_nm) ||
+                                        CASE WHEN COUNT(*) = 1 THEN ''
+                                             ELSE ' 외 ' || (COUNT(*) - 1) END as manager_info
+                                   FROM mkt02_manager
+                                  WHERE mkt02_company_id = #{companyId}
+                                  GROUP BY mkt02_target_company_id
+                               ) mng ON mkt02_target_company_id = mkt01_target_company_id
+         ORDER BY mkt01_target_company_nm collate "ko_KR.utf8" asc
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="selectByCompanyIdTotal" resultType="long">
+        SELECT COUNT(*)
+          FROM (<include refid="selectTargetCompany"/>) t
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.mkt.dto.MktTargetCompanyRes">
+        SELECT mkt01_target_company_id                                                       AS target_company_id
+             , mkt01_item_type_cd                                                            AS item_type_code
+             , mkt01_target_company_nm                                                       AS target_company_name
+             , mkt01_addr                                                                    AS addr
+             , mkt01_tel                                                                     AS tel
+             , mkt01_note                                                                    AS note
+             , COALESCE(mkt01_unuse_yn,'false') = 'true'                                     AS unuse_yn
+             , f_cdnm('CrmItemTypeCode', mkt01_item_type_cd, mkt01_company_id, f_today())    AS item_type_name
+             , ( SELECT MIN(mkt02_manager_nm) ||
+                        CASE WHEN COUNT(*) = 1 THEN ''
+                             ELSE ' 외 '|| (COUNT(*) - 1) END
+                   FROM mkt02_manager
+                  WHERE mkt02_target_company_id = mkt01_target_company_id   )                AS manager_info
+             , (<include refid="selectShareInfo"/>)                                          AS share_info
+          FROM mkt01_target_company
+         WHERE mkt01_target_company_id = #{targetCompanyId}
+           AND mkt01_company_id        = #{companyId}
+    </select>
+
+    <!-- AS-IS Mkt01_TargetCompany.updateOne(UpdateDataModel) — 화면이 바꾸는 컬럼: 구분·활동처명·주소·전화·주요사항·미사용 -->
+    <update id="updateOne">
+        UPDATE mkt01_target_company
+           SET mkt01_item_type_cd      = #{r.itemTypeCode}
+             , mkt01_target_company_nm = #{r.targetCompanyName}
+             , mkt01_addr              = #{r.addr}
+             , mkt01_tel               = #{r.tel}
+             , mkt01_note              = #{r.note}
+             , mkt01_unuse_yn          = CASE WHEN #{r.unuseYn} THEN 'true' ELSE 'false' END
+         WHERE mkt01_target_company_id = #{r.targetCompanyId}
+           AND mkt01_company_id        = #{companyId}
+    </update>
+
+    <insert id="insertOne">
+        INSERT INTO mkt01_target_company
+               ( mkt01_target_company_id, mkt01_company_id, mkt01_item_type_cd, mkt01_target_company_nm
+               , mkt01_addr, mkt01_tel, mkt01_note, mkt01_unuse_yn )
+        VALUES ( #{r.targetCompanyId}, #{companyId}, #{r.itemTypeCode}, #{r.targetCompanyName}
+               , #{r.addr}, #{r.tel}, #{r.note}, CASE WHEN #{r.unuseYn} THEN 'true' ELSE 'false' END )
+    </insert>
+
+    <select id="countHistories" resultType="int">
+        SELECT COUNT(*)
+          FROM mkt03_history
+         WHERE mkt03_target_company_id = #{targetCompanyId}
+           AND mkt03_company_id        = #{companyId}
+    </select>
+
+    <delete id="deleteManagersByTarget">
+        DELETE FROM mkt02_manager
+         WHERE mkt02_target_company_id = #{targetCompanyId}
+           AND mkt02_company_id        = #{companyId}
+    </delete>
+
+    <delete id="deleteSharesByParent">
+        DELETE FROM mkt05_share
+         WHERE mkt05_parent_id  = #{parentId}
+           AND mkt05_company_id = #{companyId}
+    </delete>
+
+    <delete id="deleteTarget">
+        DELETE FROM mkt01_target_company
+         WHERE mkt01_target_company_id = #{targetCompanyId}
+           AND mkt01_company_id        = #{companyId}
+    </delete>
+
+    <!-- AS-IS selectFavoritePaging — 원본의 row_number() 키는 화면 키일 뿐이라 진짜 활동처 ID를 준다 -->
+    <select id="selectFavoritePaging" resultType="kr.co.kfs.asseterp.biz.mkt.dto.MktFavoriteRes">
+        SELECT t.mkt01_favorite_id       AS favorite_id
+             , t.mkt01_target_company_id AS target_company_id
+             , t.mkt01_target_company_nm AS target_company_name
+             , t.mkt01_manager_nm        AS manager_name
+             , t.mkt01_manager_pos_nm    AS manager_pos_name
+             , t.mkt01_manager_org_nm    AS manager_org_name
+          FROM (SELECT mkt01_target_company.*
+                     , mkt02_manager_nm         AS mkt01_manager_nm
+                     , mkt02_pos_nm             AS mkt01_manager_pos_nm
+                     , mkt02_org_nm             AS mkt01_manager_org_nm
+                     , mkt06_favorite_id        AS mkt01_favorite_id
+                  FROM mkt01_target_company
+                       LEFT OUTER JOIN mkt02_manager ON mkt02_target_company_id = mkt01_target_company_id
+                       INNER JOIN mkt06_favorite ON mkt06_manager_id = mkt02_manager_id
+                 WHERE mkt01_company_id = #{companyId}
+                   AND mkt06_person_id = #{personId}
+                   AND COALESCE(mkt01_unuse_yn,'false') != 'true'
+                   AND UPPER(CONCAT(mkt01_target_company_nm, mkt02_manager_nm)) LIKE UPPER(#{searchText})) t
+         ORDER BY t.mkt01_target_company_nm collate "ko_KR.utf8" asc
+                , t.mkt01_manager_nm        collate "ko_KR.utf8" asc
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="selectFavoriteTotal" resultType="long">
+        SELECT COUNT(*)
+          FROM (SELECT mkt01_target_company.*
+                  FROM mkt01_target_company
+                       LEFT OUTER JOIN mkt02_manager ON mkt02_target_company_id = mkt01_target_company_id
+                       INNER JOIN mkt06_favorite ON mkt06_manager_id = mkt02_manager_id
+                 WHERE mkt01_company_id = #{companyId}
+                   AND mkt06_person_id = #{personId}
+                   AND COALESCE(mkt01_unuse_yn,'false') != 'true') t
+    </select>
+
+    <select id="selectIdByName" resultType="long">
+        SELECT mkt01_target_company_id
+          FROM mkt01_target_company
+         WHERE mkt01_company_id   = #{companyId}
+           AND mkt01_item_type_cd = #{itemTypeCode}
+           AND UPPER(REPLACE(mkt01_target_company_nm, ' ', '')) = UPPER(#{name})
+         ORDER BY mkt01_target_company_id
+         LIMIT 1
+    </select>
+
+    <insert id="insertCompanyExcel">
+        INSERT INTO mkt01_target_company
+               ( mkt01_target_company_id, mkt01_company_id, mkt01_item_type_cd, mkt01_target_company_nm, mkt01_unuse_yn )
+        VALUES ( #{id}, #{companyId}, #{itemTypeCode}, #{name}, 'false' )
+    </insert>
+
+    <insert id="insertManagerExcel">
+        INSERT INTO mkt02_manager
+               ( mkt02_manager_id, mkt02_target_company_id, mkt02_manager_nm, mkt02_org_nm, mkt02_pos_nm
+               , mkt02_email_addr, mkt02_tel, mkt02_retire_info, mkt02_note, mkt02_company_id )
+        VALUES ( #{id}, #{targetCompanyId}, #{managerName}, #{orgName}, #{posName}
+               , #{emailAddr}, #{tel}, #{retireInfo}, #{note}, #{companyId} )
+    </insert>
+
+    <insert id="insertFavoriteExcel">
+        INSERT INTO mkt06_favorite ( mkt06_favorite_id, mkt06_person_id, mkt06_manager_id )
+        VALUES ( #{id}, #{personId}, #{managerId} )
+    </insert>
+
+    <!-- AS-IS sys99_print.deleteByPersonId — 창 이름은 LIKE (원본이 `%Mkt01%` 그대로 보낸다) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdTargetCompany: selectBySearchText(searchText `%`, itemTypeCode `%`, 미사용 제외) 한 줄마다 sys99_print 한 줄 -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_string03, sys99_string04, sys99_string05, sys99_string06, sys99_string07, sys99_string08 )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , COALESCE(s.company_nm, ''), COALESCE(s.manager_nm, ''), COALESCE(s.org_nm, ''), COALESCE(s.pos_nm, '')
+             , COALESCE(s.tel, ''), COALESCE(s.email_addr, ''), COALESCE(s.note, ''), COALESCE(s.retire_info, '')
+          FROM ( SELECT mkt01_target_company_nm AS company_nm
+                      , mkt02_manager_nm        AS manager_nm
+                      , mkt02_org_nm            AS org_nm
+                      , mkt02_pos_nm            AS pos_nm
+                      , mkt02_tel               AS tel
+                      , mkt02_email_addr        AS email_addr
+                      , mkt02_note              AS note
+                      , mkt02_retire_info       AS retire_info
+                   FROM mkt01_target_company
+                        LEFT OUTER JOIN mkt02_manager ON mkt02_target_company_id = mkt01_target_company_id
+                  WHERE mkt01_company_id = #{companyId}
+                    AND mkt01_item_type_cd LIKE '%'
+                    AND COALESCE(mkt01_unuse_yn,'false') != 'true'
+                    AND UPPER(CONCAT(mkt01_target_company_nm, mkt02_manager_nm)) LIKE UPPER('%')
+                  ORDER BY mkt01_target_company_nm collate "ko_KR.utf8" asc
+                         , mkt02_manager_nm        collate "ko_KR.utf8" asc ) s
+    </insert>
+</mapper>
