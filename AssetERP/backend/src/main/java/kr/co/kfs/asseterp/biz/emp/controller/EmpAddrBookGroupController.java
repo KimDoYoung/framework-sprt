@@ -5,6 +5,7 @@ import kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookGroupRes;
 import kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookGroupSaveReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookMemberRes;
 import kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookMemberSaveReq;
+import kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookSelectRes;
 import kr.co.kfs.asseterp.biz.emp.service.EmpAddrBookGroupService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -27,6 +29,19 @@ import java.util.List;
 public class EmpAddrBookGroupController {
 
     private final EmpAddrBookGroupService service;
+
+    /** AS-IS emp.Emp57_AddrBookGroup.getList (그룹선택 창 Emp57_Lookup_List) */
+    @GetMapping("/list")
+    public ApiResponse<List<EmpAddrBookGroupRes>> searchList(@AuthenticationPrincipal UserPrincipal principal,
+                                                             @RequestParam(defaultValue = "false") boolean publicYn) {
+        return ApiResponse.ok(service.searchList(principal, publicYn));
+    }
+
+    /** AS-IS emp.Emp57_AddrBookGroup.selectByParentId (그룹선택 창이 고른 그룹의 담당자 전체 열) */
+    @GetMapping("/{parentId}/select-items")
+    public ApiResponse<List<EmpAddrBookSelectRes>> searchSelectItems(@PathVariable Long parentId) {
+        return ApiResponse.ok(service.searchSelectItems(parentId));
+    }
 
     /** AS-IS emp.Emp57_AddrBookGroup.getPersonList */
     @GetMapping

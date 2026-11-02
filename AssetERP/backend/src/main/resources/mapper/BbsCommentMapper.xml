@@ -6,7 +6,7 @@
 <!-- AS-IS(IDMS-IC) server/bbs/mapper/bbs07_comment.xml selectByNoticeId + UpdateDataModel(bbs07_comment) (H01 Bbs07_TapPage_Comment) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.bbs.mapper.BbsCommentMapper">
 
-    <!-- AS-IS bbs07_comment.selectByNoticeId (IDMS-IC) — SELECT *·화면이 쓰는 열만(bbs07_delete_master_str은 안 씀) -->
+    <!-- AS-IS bbs07_comment.selectByNoticeId (IDMS-IC) — SELECT *·화면이 쓰는 열만(bbs07_delete_master_str은 Z02 댓글확인 창이 씀) -->
     <select id="selectByNoticeId" resultType="kr.co.kfs.asseterp.biz.bbs.dto.CommentRes">
         SELECT bbs07_comment_id                                       AS comment_id
              , bbs07_person_id                                        AS person_id
@@ -34,6 +34,7 @@
                        ELSE ''
                        END
                )                                                      AS delete_str
+             , '✕'                                                    AS delete_master_str
              , bbs07_comment                                          AS comment
           FROM bbs07_comment
          WHERE bbs07_notice_id = #{noticeId}

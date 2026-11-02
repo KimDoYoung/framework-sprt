@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice, BbsNoticePerson } from '../types/bbs';
+import { BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice, BbsNoticeMng, BbsNoticePerson, BbsNoticeSaveReq, BbsTarget } from '../types/bbs';
 
 /** 요청서(신청서) — 증명서 신청내역 (S05, AS-IS Bbs11_Application) */
 export const bbsApplicationApi = {
@@ -161,6 +161,48 @@ export const bbsApi = {
 
 /** H01 공지사항 (Bbs02_Tab_NoticeViewLaw·Bbs02_Popup_NoticeAdmin·Bbs07_TapPage_Comment) */
 export const bbsNoticeApi = {
+  // ── Z02 공지사항 등록 (Bbs02_Tab_NoticeManager·Bbs02_Edit_Notice·Bbs02_Lookup_LoadBbs) ──
+
+  /** AS-IS bbs.Bbs02_Notice.selectByCompanyIdPaging. 구분·구분상세는 코드('%'면 전체). systemNoticeYn은 불러오기 창만 true */
+  searchNoticeManage: async (params: { noticeType: string; noticeDetail: string; searchText: string; systemNoticeYn?: boolean; offset: number; limit: number }): Promise<PageRes<BbsNoticeMng>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<BbsNoticeMng>>>('v1/bbs/notices/manage', { params });
+    return res.data.data as PageRes<BbsNoticeMng>;
+  },
+
+  /** AS-IS GridInsertRow의 새 공지 ID */
+  getNoticeNextId: async (): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/bbs/notices/next-id');
+    return res.data.data as number;
+  },
+
+  /** AS-IS bbs.Bbs02_Notice.update + bbs.Bbs03_Target.update. 저장한 한 줄을 돌려준다 */
+  saveNotice: async (req: BbsNoticeSaveReq): Promise<BbsNoticeMng> => {
+    const res = await apiClient.put<ApiResponse<BbsNoticeMng>>('v1/bbs/notices/manage', req);
+    return res.data.data as BbsNoticeMng;
+  },
+
+  /** AS-IS bbs.Bbs02_Notice.delete */
+  deleteNotice: async (noticeId: number): Promise<void> => {
+    await apiClient.delete(`v1/bbs/notices/manage/${noticeId}`);
+  },
+
+  /** AS-IS bbs.Bbs03_Target.selectByNoticeId (공지일 기준 조직·직책) */
+  searchNoticeTargets: async (noticeId: number, fromDate: string): Promise<BbsTarget[]> => {
+    const res = await apiClient.get<ApiResponse<BbsTarget[]>>(`v1/bbs/notices/${noticeId}/targets`, { params: { fromDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS bbs.Bbs03_Target.delete (체크한 대상자) */
+  deleteNoticeTargets: async (noticeId: number, targetIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/bbs/notices/${noticeId}/targets`, { data: targetIds });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS bbs.Bbs03_Target.deleteAllTarget */
+  deleteAllNoticeTargets: async (noticeId: number): Promise<void> => {
+    await apiClient.delete(`v1/bbs/notices/${noticeId}/targets/all`);
+  },
+
   /** AS-IS bbs.Bbs02_Notice.selectByPersonIdPaging (Z03). 구분 전체는 '%', 기간(YYYY-MM-DD)은 구분이 전체일 때만 보낸다 */
   searchMyNotices: async (params: { noticeType: string; noticeDetailCode: string; searchText: string; startDate?: string; closeDate?: string; offset: number; limit: number }): Promise<PageRes<BbsNoticePerson>> => {
     const res = await apiClient.get<ApiResponse<PageRes<BbsNoticePerson>>>('v1/bbs/notices/mine', { params });

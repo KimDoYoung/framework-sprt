@@ -5,6 +5,7 @@ import kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookGroupRes;
 import kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookGroupSaveReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookMemberRes;
 import kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookMemberSaveReq;
+import kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookSelectRes;
 import kr.co.kfs.asseterp.biz.emp.mapper.EmpAddrBookGroupMapper;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
@@ -21,6 +22,16 @@ import java.util.List;
 public class EmpAddrBookGroupService {
 
     private final EmpAddrBookGroupMapper mapper;
+
+    /** AS-IS Emp57_AddrBookGroup.getList (Emp57_Lookup_List): 내 그룹, [전체공개 포함]이면 회사의 공개 그룹까지 */
+    public List<EmpAddrBookGroupRes> searchList(UserPrincipal user, boolean publicYn) {
+        return mapper.getList(user.getCompanyId(), user.getUserId(), publicYn);
+    }
+
+    /** AS-IS Emp57_AddrBookGroup.selectByParentId (Emp57_Lookup_List.selectItem — 모든 열) */
+    public List<EmpAddrBookSelectRes> searchSelectItems(Long parentId) {
+        return mapper.selectSelectItemsByParentId(parentId);
+    }
 
     /** AS-IS Emp57_AddrBookGroup.getPersonList L36: 내 회사의 공개 그룹 + 내가 만든 비공개 그룹 */
     public List<EmpAddrBookGroupRes> search(UserPrincipal user) {

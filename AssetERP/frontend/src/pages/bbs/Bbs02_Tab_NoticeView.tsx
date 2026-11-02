@@ -1,7 +1,7 @@
 /**
  * [1065] 커뮤니티 > 02. 공지사항 > 공지사항 (Z03)
  * AS-IS: myApp/client/vi/bbs/Bbs02_Tab_NoticeView.java (320줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
- * 레이아웃 L64-104: center=테두리 박스(여백 20) — 툴바(공지구분 120 · 구분상세 200 · 공지기간 100~100 · 검색 250 · [조회]) + 공지 그리드(단일 선택, 버튼바 50) + 페이징 툴바(100)
+ * 레이아웃 L64-104: center=박스(여백 20) — 툴바(공지구분 120 · 구분상세 200 · 공지기간 100~100 · 검색 250 · [조회]) + 공지 그리드(단일 선택, 버튼바 50) + 페이징 툴바(100)
  * 연결: Bbs02_Popup_NoticeAdmin(상세보기 아이콘, H01에서 만든 것을 재사용 — 댓글·첨부파일 창은 그 안에서 열림)
  * 스타일: SG (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8). 초기화(UX-02)는 원본에 없어 넣지 않는다
@@ -113,7 +113,7 @@ export const Bbs02_Tab_NoticeView: React.FC = () => {
 
   return (
     <div style={{ height: '100%', padding: 20, boxSizing: 'border-box', background: '#fff' }}>
-      <div style={{ height: '100%', border: '1px solid #d9d9d9', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: '100%', boxSizing: 'border-box', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* [E6] retrieveButton[조회].Select (L192) → retrieve() */}
         <SearchBar onSearch={() => void retrieve()} searchText="조회" loading={loading}>
           <SearchBar.Field label="공지구분">

@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { LeaveListRow, MyUnLeave, MyLeave, MyLeaveSave, MyLeaveCodes, EtcLeaveCheck, TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { LeaveListRow, MyUnLeave, MyLeave, MyLeaveSave, MyLeaveCodes, EtcLeaveCheck, TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, EmpAddrBookSelect, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -997,6 +997,18 @@ export const empAddrBookApi = {
   deleteAddrBooks: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/emp/addr-books', { data: ids });
     return res.data.data ?? 0;
+  },
+
+  /** AS-IS emp.Emp57_AddrBookGroup.getList (Z02 Emp57_Lookup_List): 내 그룹, publicYn이면 회사의 공개 그룹까지 */
+  searchGroupList: async (publicYn: boolean): Promise<EmpAddrBookGroup[]> => {
+    const res = await apiClient.get<ApiResponse<EmpAddrBookGroup[]>>('v1/emp/addr-book-groups/list', { params: { publicYn } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp57_AddrBookGroup.selectByParentId 전체 열 (Z02 Emp57_Lookup_List·Emp57_Lookup_DetailList) */
+  searchGroupSelectItems: async (parentId: number): Promise<EmpAddrBookSelect[]> => {
+    const res = await apiClient.get<ApiResponse<EmpAddrBookSelect[]>>(`v1/emp/addr-book-groups/${parentId}/select-items`);
+    return res.data.data ?? [];
   },
 
   /** AS-IS emp.Emp57_AddrBookGroup.getPersonList (G11): 내 회사의 공개 그룹 + 내가 만든 비공개 그룹 */

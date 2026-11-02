@@ -204,6 +204,199 @@
           FROM bbs
     </select>
 
+    <!-- ======================= Z02 공지사항 등록 (Bbs02_Tab_NoticeManager) ======================= -->
+
+    <!-- AS-IS bbs02_notice.selectBbsByCompanyId L97 (IDMS-IC). systemNoticeYn=true(불러오기 창)면 시스템공지(90)도 합친다 -->
+    <sql id="selectBbsByCompanyId">
+        WITH bbs AS (
+                SELECT t.*
+                     , CASE WHEN bbs02_notice_detail_nm IS NULL THEN bbs02_notice_type_nm
+                            ELSE CONCAT(bbs02_notice_type_nm, '-', bbs02_notice_detail_nm) END        AS bbs02_notice_detail_full_nm
+                     , ( SELECT COUNT(bbs07_comment_id)
+                           FROM bbs07_comment
+                          WHERE bbs07_notice_id = bbs02_notice_id )                                   AS bbs02_comment_cnt
+                  FROM (
+                         SELECT bbs02_notice.*
+                              , f_cdnm('NoticeType', bbs02_notice_type, bbs02_company_id, bbs02_from_date)                AS bbs02_notice_type_nm
+                              , f_cdnm('NoticeDetailCode', bbs02_notice_detail_cd, bbs02_company_id, bbs02_from_date)     AS bbs02_notice_detail_nm
+                              , ( CASE WHEN COALESCE(bbs02_top_notice_yn, 'false') = 'true'
+                                       THEN CASE WHEN f_today() &lt;= bbs02_top_notice_close_date THEN 'true' ELSE 'false' END
+                                       ELSE 'false' END )                                                                  AS bbs02_top_yn
+                           FROM bbs02_notice
+                          WHERE bbs02_company_id  = #{c.companyId}
+                            AND bbs02_notice_type LIKE #{c.noticeType}
+                            AND COALESCE(bbs02_notice_detail_cd,'') LIKE #{c.noticeDetail}
+                         <if test="c.systemNoticeYn">
+                          UNION ALL
+                         SELECT bbs02_notice.*
+                              , f_cdnm('NoticeType', bbs02_notice_type, bbs02_company_id, bbs02_from_date)                AS bbs02_notice_type_nm
+                              , f_cdnm('NoticeDetailCode', bbs02_notice_detail_cd, bbs02_company_id, bbs02_from_date)     AS bbs02_notice_detail_nm
+                              , 'false'                                                                                   AS bbs02_top_yn
+                           FROM bbs02_notice
+                                LEFT JOIN bbs04_target_company ON ( bbs04_notice_id  = bbs02_notice_id  AND
+                                                                    bbs04_company_id = #{c.companyId}     )
+                          WHERE ( bbs02_public_company_yn = 'true' OR bbs04_target_company_id IS NOT NULL )
+                            AND COALESCE(bbs02_public_yn, 'true') = 'true'
+                            AND bbs02_open_yn                       = '알림'
+                            AND bbs02_notice_type                   = '90'     /*(90:시스템공지)*/
+                            AND bbs02_notice_type                   LIKE #{c.noticeType}
+                            AND COALESCE(bbs02_notice_detail_cd,'') LIKE #{c.noticeDetail}
+                            AND ( ( /*** (9010:관리자공지)인 경우 관리자권한에 등록되어 있는 사용자만 조회되도록 함 ***/
+                                    COALESCE(bbs02_notice_detail_cd,'') = '9010'                                  AND
+                                    EXISTS ( SELECT 1
+                                               FROM sys04_role
+                                                    INNER JOIN sys05_user_role ON sys05_role_id = sys04_role_id
+                                              WHERE sys04_company_id = #{c.companyId}
+                                                AND sys04_admin_yn   = 'true'
+                                                AND sys05_user_id    = #{c.personId} )                             ) OR
+                                  ( COALESCE(bbs02_notice_detail_cd,'') != '9010'                                ) )
+                         </if>
+                       ) t
+        )
+    </sql>
+
+    <sql id="noticeMngColumns">
+        bbs02_notice_id                                       AS notice_id
+      , bbs02_company_id                                      AS company_id
+      , (COALESCE(bbs02_top_yn, 'false') = 'true')            AS top_yn
+      , TO_CHAR(bbs02_from_date, 'YYYY-MM-DD')                AS from_date
+      , TO_CHAR(bbs02_to_date, 'YYYY-MM-DD')                  AS to_date
+      , bbs02_open_yn                                         AS open_yn
+      , bbs02_notice_no                                       AS notice_no
+      , bbs02_notice_type                                     AS notice_type
+      , bbs02_notice_type_nm                                  AS notice_type_name
+      , bbs02_notice_detail_cd                                AS notice_detail_code
+      , bbs02_notice_detail_nm                                AS notice_detail_name
+      , bbs02_notice_detail_full_nm                           AS notice_detail_full_name
+      , bbs02_title                                           AS title
+      , bbs02_comment_cnt                                     AS comment_cnt
+      , bbs02_note                                            AS note
+      , bbs02_notice                                          AS notice
+      , bbs02_user_id                                         AS user_id
+      , bbs02_user_nm                                         AS user_name
+      , (COALESCE(bbs02_comment_yn, 'false') = 'true')        AS comment_yn
+      , (COALESCE(bbs02_top_notice_yn, 'false') = 'true')     AS top_notice_yn
+      , TO_CHAR(bbs02_top_notice_close_date, 'YYYY-MM-DD')    AS top_notice_close_date
+    </sql>
+
+    <!-- AS-IS bbs02_notice.selectByCompanyIdPaging L155 (IDMS-IC) — 원본의 `bbs.* AS bbs02_comment_cnt`는 이미 CTE가 만든 열이라 뺐다 -->
+    <select id="selectByCompanyIdPaging" resultType="kr.co.kfs.asseterp.biz.bbs.dto.NoticeMngRes">
+        <include refid="selectBbsByCompanyId"/>
+        SELECT <include refid="noticeMngColumns"/>
+          FROM bbs
+         WHERE UPPER(CONCAT(bbs02_open_yn, bbs02_notice_detail_full_nm, bbs02_title, bbs02_note)) LIKE UPPER(#{c.searchText})
+         ORDER BY (COALESCE(bbs02_top_yn, 'false') = 'true') DESC, bbs02_from_date DESC, bbs02_notice_id DESC
+         LIMIT #{c.limit}
+        OFFSET #{c.offset}
+    </select>
+
+    <!-- AS-IS bbs02_notice.selectByCompanyIdTotal L174 (IDMS-IC) -->
+    <select id="selectByCompanyIdTotal" resultType="long">
+        <include refid="selectBbsByCompanyId"/>
+        SELECT count(*)
+          FROM bbs
+         WHERE UPPER(CONCAT(bbs02_open_yn, bbs02_notice_detail_full_nm, bbs02_title, bbs02_note)) LIKE UPPER(#{c.searchText})
+    </select>
+
+    <!-- 저장 뒤 한 줄 다시 읽기 (selectByCompanyIdPaging의 한 건 버전) -->
+    <select id="selectMngById" resultType="kr.co.kfs.asseterp.biz.bbs.dto.NoticeMngRes">
+        <include refid="selectBbsByCompanyId"/>
+        SELECT <include refid="noticeMngColumns"/>
+          FROM bbs
+         WHERE bbs02_notice_id = #{noticeId}
+    </select>
+
+    <select id="selectNoticeNoById" resultType="string">
+        SELECT bbs02_notice_no
+          FROM bbs02_notice
+         WHERE bbs02_notice_id  = #{noticeId}
+           AND bbs02_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS bbs02_notice.getNoticeNo L853 -->
+    <select id="getNoticeNo" resultType="string" flushCache="true">
+        SELECT f_create_notice_no(#{companyId})
+    </select>
+
+    <!-- AS-IS Bbs02_Notice.update → UpdateDataModel INSERT. 공개(public_yn)는 화면이 true로 고정(update() L648-680), 작성(생성)자·일시는 로그인 사원·DB 시각 -->
+    <insert id="insertNotice">
+        INSERT INTO bbs02_notice (bbs02_notice_id, bbs02_company_id, bbs02_user_id, bbs02_user_nm, bbs02_create_user_id, bbs02_create_date,
+                                  bbs02_title, bbs02_notice, bbs02_from_date, bbs02_to_date, bbs02_open_yn, bbs02_note,
+                                  bbs02_notice_type, bbs02_notice_detail_cd, bbs02_public_yn, bbs02_notice_no, bbs02_comment_yn,
+                                  bbs02_top_notice_yn, bbs02_top_notice_close_date)
+        VALUES (#{r.noticeId}, #{r.companyId}, #{r.userId}, #{r.userName}, #{r.userId}, f_sysdate(),
+                #{r.title}, #{r.notice}, #{r.fromDate}::date, #{r.toDate}::date, #{r.openYn}, #{r.note},
+                #{r.noticeType}, #{r.noticeDetailCode}, 'true', #{r.noticeNo}, #{r.commentYn}::text,
+                #{r.topNoticeYn}::text, #{r.topNoticeCloseDate}::date)
+    </insert>
+
+    <update id="updateNotice">
+        UPDATE bbs02_notice
+           SET bbs02_title                 = #{r.title},
+               bbs02_notice                = #{r.notice},
+               bbs02_from_date             = #{r.fromDate}::date,
+               bbs02_to_date               = #{r.toDate}::date,
+               bbs02_open_yn               = #{r.openYn},
+               bbs02_note                  = #{r.note},
+               bbs02_notice_type           = #{r.noticeType},
+               bbs02_notice_detail_cd      = #{r.noticeDetailCode},
+               bbs02_public_yn             = 'true',
+               bbs02_notice_no             = #{r.noticeNo},
+               bbs02_comment_yn            = #{r.commentYn}::text,
+               bbs02_top_notice_yn         = #{r.topNoticeYn}::text,
+               bbs02_top_notice_close_date = #{r.topNoticeCloseDate}::date
+         WHERE bbs02_notice_id  = #{r.noticeId}
+           AND bbs02_company_id = #{r.companyId}
+    </update>
+
+    <!-- AS-IS Bbs02_Notice.delete → UpdateDataModel DELETE (회사 범위를 더 건다) -->
+    <delete id="deleteNotice">
+        DELETE FROM bbs02_notice
+         WHERE bbs02_notice_id  = #{noticeId}
+           AND bbs02_company_id = #{companyId}
+    </delete>
+
+    <!-- AS-IS bbs03_target.selectByNoticeId L32 (IDMS-IC) — 공지일 기준 발령·조직. 공통 common.emp00_trans_info는 EmpTransInfoMapper.emp00With -->
+    <select id="selectTargets" resultType="kr.co.kfs.asseterp.biz.bbs.dto.TargetRes">
+        <include refid="kr.co.kfs.asseterp.biz.emp.mapper.EmpTransInfoMapper.emp00With"/>
+        SELECT bbs03_target_id                                                          AS target_id
+             , bbs03_notice_id                                                          AS notice_id
+             , bbs03_person_id                                                          AS person_id
+             , org00_kor_nm                                                             AS org_name
+             , f_get_emptrans(emp00_person_id, emp00_trans_date::date, 'title_nm')      AS title_name
+             , emp01_emp_no                                                             AS emp_no
+             , emp01_kor_nm                                                             AS emp_name
+          FROM bbs03_target
+               INNER JOIN emp00            ON emp00.emp00_person_id = bbs03_person_id
+               INNER JOIN emp01_person     ON emp01_person_id = bbs03_person_id
+               INNER JOIN org00            ON org00_org_code_id = emp00.emp00_org_code_id
+         WHERE bbs03_notice_id = #{noticeId}
+           AND org00_mod_date = ( SELECT MAX(x.org00_mod_date)
+                                    FROM org00 x
+                                   WHERE x.org00_org_code_id = emp00_org_code_id
+                                     AND x.org00_mod_date &lt;= #{fromDate}::date )
+         ORDER BY f_code_seq(emp01_company_id, 'EmpTitleCode', emp00_title_cd)
+                , f_code_seq(emp01_company_id, 'EmpPosCode', emp00_pos_cd)
+    </select>
+
+    <insert id="insertTarget">
+        INSERT INTO bbs03_target (bbs03_target_id, bbs03_notice_id, bbs03_person_id)
+        VALUES (#{r.targetId}, #{r.noticeId}, #{r.personId})
+    </insert>
+
+    <delete id="deleteTargets">
+        DELETE FROM bbs03_target
+         WHERE bbs03_notice_id = #{noticeId}
+           AND bbs03_target_id IN
+        <foreach collection="targetIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS bbs03_target.deleteAll L70 -->
+    <delete id="deleteAllTargets">
+        DELETE FROM bbs03_target
+         WHERE bbs03_notice_id = #{noticeId}
+    </delete>
+
     <!-- AS-IS bbs05_history.selectByNoticeId (IDMS-IC) — 행이 있는지만 본다 -->
     <select id="countHistory" resultType="int">
         SELECT count(*)

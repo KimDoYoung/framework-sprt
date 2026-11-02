@@ -1288,3 +1288,19 @@ export interface MyUnLeave {
   expectApprStatusCode: string | null;
   expectApprStatusName: string | null;
 }
+
+/** 그룹선택 창(Emp57_Lookup_List)이 돌려주는 그룹 담당자 (AS-IS Emp57_AddrBookGroupModel). 사내는 relateId = 사원 ID */
+export interface EmpAddrBookSelect {
+  addrBookGroupId: number;
+  relateId: number;
+  parentGubun: string;
+  parentName: string | null;
+  emailAddress: string | null;
+  mobileTelNo: string | null;
+  contacterName: string | null;
+  orgName: string | null;
+  titleName: string | null;
+  empNo: string | null;
+  empName: string | null;
+  note: string | null;
+}

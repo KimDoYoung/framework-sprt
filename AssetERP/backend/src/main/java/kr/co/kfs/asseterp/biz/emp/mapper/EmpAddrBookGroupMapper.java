@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookGroupRes;
 import kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookGroupSaveReq;
 import kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookMemberRes;
 import kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookMemberSaveReq;
+import kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookSelectRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -11,6 +12,12 @@ import java.util.List;
 
 @Mapper
 public interface EmpAddrBookGroupMapper {
+
+    /** emp57_addr_book_group.getList — 내 그룹(+ publicYn이면 회사의 공개 그룹) (그룹선택 창 Emp57_Lookup_List) */
+    List<EmpAddrBookGroupRes> getList(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("publicYn") boolean publicYn);
+
+    /** emp57_addr_book_group.selectByParentId 전체 열 (그룹선택 창이 돌려줄 값) */
+    List<EmpAddrBookSelectRes> selectSelectItemsByParentId(@Param("parentId") Long parentId);
 
     List<EmpAddrBookGroupRes> getPersonList(@Param("personId") Long personId);
 

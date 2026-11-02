@@ -19,7 +19,8 @@ import { Bbs02_Lookup_File } from './Bbs02_Lookup_File';
 import { Bbs07_TapPage_Comment } from './Bbs07_TapPage_Comment';
 
 /** 창이 쓰는 값만 — title2(구분 색 글씨 + 제목, HTML)가 있으면 머리글로 쓴다 (Z03 Bbs02_Tab_NoticeView L219-242) */
-export type NoticePopupInfo = Pick<BbsNotice, 'noticeId' | 'title' | 'notice' | 'commentYn'> & { title2?: string | null };
+export type NoticePopupInfo = Pick<BbsNotice, 'noticeId' | 'title' | 'notice' | 'commentYn'> & { title2?: string | null; preview?: boolean };
+/** Z02 [미리보기] — open(title, notice) L132-162: 머리글 "[미리보기] 제목", 본문과 [닫기]만 */
 
 interface Props {
   /** 있으면 열린다 (AS-IS open/openWithComment(title, notice, noticeId, callback)) */
@@ -50,12 +51,14 @@ export const Bbs02_Popup_NoticeAdmin: React.FC<Props> = ({ notice, onClose }) =>
     }
   };
 
-  const withComment = notice?.commentYn === true;
+  const withComment = notice?.commentYn === true && !notice?.preview;
 
   return (
     <LookupModal
       open={notice != null}
-      title={notice?.title2
+      title={notice?.preview
+        ? <b>{`[미리보기] ${notice.title ?? ''}`}</b>
+        : notice?.title2
         ? <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(notice.title2) }} />
         : <b>{notice?.title}</b>}
       width={withComment ? 1165 : 760}
@@ -63,7 +66,9 @@ export const Bbs02_Popup_NoticeAdmin: React.FC<Props> = ({ notice, onClose }) =>
       closable={false}
       onCancel={onClose}
       destroyOnClose
-      footer={
+      footer={notice?.preview ? (
+        <div style={{ textAlign: 'center' }}><Button type="close" onClick={onClose}>닫기</Button></div>
+      ) : (
         <div style={{ textAlign: 'center' }}>
           <Space>
             {/* [E1] 위 onHide */}
@@ -74,7 +79,7 @@ export const Bbs02_Popup_NoticeAdmin: React.FC<Props> = ({ notice, onClose }) =>
             <Button type="view" onClick={() => setShowFiles(true)}>{`첨부파일 확인(${fileCount})`}</Button>
           </Space>
         </div>
-      }
+      )}
     >
       {/* [E0] 열림 (생성자 L192-194) → settings() */}
       <div style={{ display: 'flex', height: 560 }}>

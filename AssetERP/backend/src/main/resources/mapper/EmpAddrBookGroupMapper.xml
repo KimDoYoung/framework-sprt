@@ -6,6 +6,73 @@
 <!-- AS-IS(IDMS-IC) server/emp/mapper/emp57_addr_book_group.xml (G11 Emp57_Lookup_Insert·Emp57_TabPage_Insert·Emp57_Edit_GroupName) -->
 <mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpAddrBookGroupMapper">
 
+    <!-- AS-IS emp57_addr_book_group.getList (IDMS-IC) — 내 그룹, publicYn이면 내 회사의 공개 그룹까지 -->
+    <select id="getList" resultType="kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookGroupRes">
+        SELECT emp57_addr_book_group_id       AS addr_book_group_id
+             , emp57_group_nm                 AS group_name
+             , emp57_public_yn                AS public_yn
+             , emp57_person_id                AS person_id
+             , f_emp_kor_nm(emp57_person_id)  AS person_name
+          FROM emp57_addr_book_group
+               INNER JOIN emp01_person ON emp57_person_id = emp01_person_id AND emp57_company_id = emp01_company_id
+         WHERE 1=1
+        <choose>
+            <when test="publicYn">
+           AND ( emp57_person_id = #{personId} OR ( emp57_company_id = #{companyId} AND COALESCE(emp57_public_yn, 'false') = 'true' ) )
+            </when>
+            <otherwise>
+           AND emp57_person_id = #{personId}
+            </otherwise>
+        </choose>
+           AND emp57_parent_id = 0
+         ORDER BY emp57_group_nm
+    </select>
+
+    <!-- AS-IS emp57_addr_book_group.selectByParentId (IDMS-IC) — 모든 열(사내 담당자의 조직·직책·사번·이름 포함) -->
+    <select id="selectSelectItemsByParentId" resultType="kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookSelectRes">
+        SELECT emp57_addr_book_group_id AS addr_book_group_id
+             , emp57_relate_id          AS relate_id
+             , parent_gubun
+             , parent_nm                AS parent_name
+             , email_addr               AS email_address
+             , mobile_telno             AS mobile_tel_no
+             , contacter_nm             AS contacter_name
+             , org_nm                   AS org_name
+             , title_nm                 AS title_name
+             , emp_no
+             , emp_nm                   AS emp_name
+             , emp57_note               AS note
+          FROM (
+                SELECT emp57_addr_book_group_id, emp57_parent_id, emp57_relate_id, emp57_note
+                     , '외부'                                                          AS parent_gubun
+                     , emp10_company_nm||' '||emp10_contacter_nm||' '||emp10_pos_nm   AS parent_nm
+                     , emp10_email_addr                                               AS email_addr
+                     , emp10_mobile_telno                                             AS mobile_telno
+                     , emp10_contacter_nm                                             AS contacter_nm
+                     , ''                                                             AS org_nm
+                     , ''                                                             AS title_nm
+                     , ''                                                             AS emp_no
+                     , ''                                                             AS emp_nm
+                  FROM emp57_addr_book_group
+                       INNER JOIN emp10_addr_book ON emp10_addr_book_id = emp57_relate_id
+                 UNION ALL
+                SELECT emp57_addr_book_group_id, emp57_parent_id, emp57_relate_id, emp57_note
+                     , '사내'                                                          AS parent_gubun
+                     , emp01_kor_nm||' ('||f_get_emptrans(emp01_person_id, f_sysdate()::date, 'org_code_nm')||')' AS parent_nm
+                     , emp01_email_addr                                               AS email_addr
+                     , emp01_mobile_telno                                             AS mobile_telno
+                     , emp01_kor_nm                                                   AS contacter_nm
+                     , f_get_emptrans(emp01_person_id, f_sysdate()::date, 'org_code_nm') AS org_nm
+                     , f_get_emptrans(emp01_person_id, f_sysdate()::date, 'title_nm') AS title_nm
+                     , emp01_emp_no                                                   AS emp_no
+                     , emp01_kor_nm                                                   AS emp_nm
+                  FROM emp57_addr_book_group
+                       INNER JOIN emp01_person ON emp01_person_id = emp57_relate_id
+               ) emp57
+         WHERE emp57_parent_id = #{parentId}
+         ORDER BY parent_gubun, parent_nm
+    </select>
+
     <!-- AS-IS emp57_addr_book_group.getPersonList (IDMS-IC) — 내 회사의 공개 그룹 + 내가 만든 비공개 그룹 -->
     <select id="getPersonList" resultType="kr.co.kfs.asseterp.biz.emp.dto.EmpAddrBookGroupRes">
         SELECT addr_book_group_id, group_name, public_yn, person_id, person_name

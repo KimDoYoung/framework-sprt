@@ -70,6 +70,8 @@ export interface BbsComment {
   commentFullStr: string;
   fileStr: string;
   deleteStr: string;
+  /** 관리자 댓글확인 창(Bbs07_Lookup_Comment)의 삭제 칸 — 항상 '✕' */
+  deleteMasterStr: string;
   comment: string;
 }
 
@@ -231,4 +233,57 @@ export interface BbsFloralShare {
   personName?: string | null;
   orgId?: number | null;
   orgName?: string | null;
+}
+
+/** Z02 공지사항 등록 한 행 = 편집창 입력값 (AS-IS Bbs02_NoticeModel). 날짜는 YYYY-MM-DD, notice는 본문 HTML */
+export interface BbsNoticeMng {
+  noticeId: number;
+  companyId: number | null;
+  topYn: boolean;
+  fromDate: string | null;
+  toDate: string | null;
+  openYn: string | null;
+  noticeNo: string | null;
+  noticeType: string | null;
+  noticeTypeName: string | null;
+  noticeDetailCode: string | null;
+  noticeDetailName: string | null;
+  noticeDetailFullName: string | null;
+  title: string | null;
+  commentCnt: number | null;
+  note: string | null;
+  notice: string | null;
+  userId: number | null;
+  userName: string | null;
+  commentYn: boolean;
+  topNoticeYn: boolean;
+  topNoticeCloseDate: string | null;
+}
+
+/** 개별 공지 대상자 한 줄 (AS-IS Bbs03_TargetModel) */
+export interface BbsTarget {
+  targetId: number;
+  noticeId: number;
+  personId: number;
+  orgName: string | null;
+  titleName: string | null;
+  empNo: string | null;
+  empName: string | null;
+}
+
+/** 공지 저장 요청 (AS-IS bbs.Bbs02_Notice.update + bbs.Bbs03_Target.update) */
+export interface BbsNoticeSaveReq {
+  noticeId: number;
+  title: string;
+  notice: string | null;
+  fromDate: string;
+  toDate: string;
+  openYn: string | null;
+  note: string | null;
+  noticeType: string;
+  noticeDetailCode: string | null;
+  commentYn: boolean;
+  topNoticeYn: boolean;
+  topNoticeCloseDate: string | null;
+  newTargetPersonIds: number[];
 }
