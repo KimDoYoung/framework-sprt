@@ -36,7 +36,13 @@ public class MktHistoryService {
                                       boolean allContactYn, String searchText) {
         String type = itemType == null || itemType.isEmpty() ? "%" : itemType;
         return mapper.selectByTargetCompanyId(user.getCompanyId(), user.getUserId(), orgId(user), type, targetCompanyId, startDate, closeDate,
-                allContactYn, "%" + (searchText == null ? "" : searchText) + "%");
+                allContactYn, "%" + (searchText == null ? "" : searchText) + "%", false);
+    }
+
+    /** Z06 Mkt03_Tab_HistoryManager.retrieve — isManager=true(작성자·공유 조건 없음), 구분 전체(`%`) */
+    public List<MktHistoryRes> searchManage(UserPrincipal user, Long targetCompanyId, LocalDate startDate, LocalDate closeDate, String searchText) {
+        return mapper.selectByTargetCompanyId(user.getCompanyId(), user.getUserId(), orgId(user), "%", targetCompanyId, startDate, closeDate,
+                targetCompanyId == null, "%" + (searchText == null ? "" : searchText) + "%", true);
     }
 
     /** AS-IS mkt.Mkt03_History.selectById */

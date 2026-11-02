@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.mkt.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.mkt.dto.MktSelectRes;
+import kr.co.kfs.asseterp.biz.mkt.dto.MktTargetItemRes;
 import kr.co.kfs.asseterp.biz.mkt.dto.MktTargetRes;
 import kr.co.kfs.asseterp.biz.mkt.mapper.MktTargetCompanyMapper;
 import kr.co.kfs.asseterp.common.dto.PageRes;
@@ -22,6 +23,14 @@ public class MktTargetCompanyService {
         String text = like(searchText);
         return new PageRes<>(mapper.selectTargetCompanyTotal(user.getCompanyId(), text),
                 mapper.selectTargetCompanyPaging(user.getCompanyId(), text, offset, limit));
+    }
+
+    /** Z06 AS-IS mkt.Mkt01_TargetCompany.selectTargetCompanyPaging — 구분(`%` 전체) 조건이 있는 활동처 조회창 */
+    public PageRes<MktTargetItemRes> searchByItemType(UserPrincipal user, String itemTypeCode, String searchText, long offset, long limit) {
+        String text = like(searchText);
+        String type = itemTypeCode == null || itemTypeCode.isEmpty() ? "%" : itemTypeCode;
+        return new PageRes<>(mapper.selectTargetCompanyItemTotal(user.getCompanyId(), type, text),
+                mapper.selectTargetCompanyItemPaging(user.getCompanyId(), type, text, offset, limit));
     }
 
     /** AS-IS mkt.Mkt01_TargetCompany.selectManagerPaging — 직원별(`emp`) */

@@ -40,6 +40,16 @@ public class MktHistoryController {
         return ApiResponse.ok(service.search(principal, itemType, targetCompanyId, startDate, closeDate, allContactYn, searchText));
     }
 
+    /** Z06 AS-IS mkt.Mkt03_History.selectByTargetCompanyId(isManager=true) — 업무활동등록(관리자) */
+    @GetMapping("/manage")
+    public ApiResponse<List<MktHistoryRes>> searchManage(@AuthenticationPrincipal UserPrincipal principal,
+                                                         @RequestParam(required = false) Long targetCompanyId,
+                                                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                         @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchManage(principal, targetCompanyId, startDate, closeDate, searchText));
+    }
+
     /** AS-IS mkt.Mkt03_History.selectById */
     @GetMapping("/{id:\\d+}")
     public ApiResponse<MktHistoryRes> get(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long id) {

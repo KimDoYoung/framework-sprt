@@ -36,6 +36,32 @@
                ) t
     </select>
 
+    <!-- Z06 Mkt01_Lookup_TargetCompany2 — 구분(itemTypeCode) 콤보 있음, unUseYn=true(미사용 제외) 고정. AS-IS selectTargetCompanyPaging 그대로(구분 이름 f_cdnm 포함) -->
+    <select id="selectTargetCompanyItemPaging" resultType="kr.co.kfs.asseterp.biz.mkt.dto.MktTargetItemRes">
+        SELECT t.mkt01_target_company_id   AS target_company_id
+             , t.mkt01_target_company_nm   AS target_company_name
+             , f_cdnm('CrmItemTypeCode', t.mkt01_item_type_cd, t.mkt01_company_id, f_today()) AS item_type_name
+          FROM ( SELECT *
+                   FROM mkt01_target_company
+                  WHERE mkt01_company_id = #{companyId}
+                    AND mkt01_item_type_cd LIKE #{itemTypeCode}
+                    AND COALESCE(mkt01_unuse_yn,'false') != 'true'
+                    AND UPPER(CONCAT(mkt01_target_company_nm, mkt01_note)) LIKE UPPER(#{searchText})
+               ) t
+         ORDER BY t.mkt01_target_company_nm collate "ko_KR.utf8" asc
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="selectTargetCompanyItemTotal" resultType="long">
+        SELECT COUNT(*)
+          FROM mkt01_target_company
+         WHERE mkt01_company_id = #{companyId}
+           AND mkt01_item_type_cd LIKE #{itemTypeCode}
+           AND COALESCE(mkt01_unuse_yn,'false') != 'true'
+           AND UPPER(CONCAT(mkt01_target_company_nm, mkt01_note)) LIKE UPPER(#{searchText})
+    </select>
+
     <sql id="managerFrom">
           FROM mkt01_target_company
                LEFT OUTER JOIN mkt02_manager ON mkt02_target_company_id = mkt01_target_company_id

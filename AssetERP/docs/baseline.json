@@ -14338,5 +14338,40 @@
     "note": "docs/work/Z/Z05-작업기록.md",
     "history": [],
     "id": "Z05"
+  },
+  "Mkt03_Tab_HistoryManager": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/mkt/Mkt01_Lookup_TargetCompany2.java": "fc1c4ea5aa0764f16285cd97bc753d16a034132f",
+      "application/src/main/java/myApp/client/vi/mkt/Mkt03_Tab_HistoryManager.java": "a75fe01c53383e213f190b28d33343fe1849d163",
+      "application/src/main/java/myApp/client/vi/mkt/Mkt05_Lookup_Share.java": "77a54ced076c7e86b881c885914e9736c101f8e3",
+      "application/src/main/java/myApp/client/vi/mkt/model/Mkt01_TargetCompanyModel.java": "9beb6d4d83746aec8e32d9b2e298ef4f7dfe27af",
+      "application/src/main/java/myApp/client/vi/mkt/model/Mkt01_TargetCompanyModelProperties.java": "643caf2887c48f7069184833dcffa0636fb20c56",
+      "application/src/main/java/myApp/client/vi/mkt/model/Mkt03_HistoryModel.java": "499a39b3fb0d6f05439e58ba65d6ffc0e844a448",
+      "application/src/main/java/myApp/client/vi/mkt/model/Mkt03_HistoryModelProperties.java": "4657917ade1852123f29b2fc1324a6d13cf205f5",
+      "application/src/main/java/myApp/client/vi/mkt/model/Mkt05_ShareModel.java": "6d1db7236b2e30c74dae60bb0dc36aa6909cd1fe",
+      "application/src/main/java/myApp/client/vi/mkt/model/Mkt05_ShareModelProperties.java": "81bb59e5754a1b8fe94f0e61f853890f97b56901",
+      "application/src/main/java/myApp/server/mkt/Mkt01_TargetCompany.java": "d04565e631bf27326d705f7c60f592f1b58f345f",
+      "application/src/main/java/myApp/server/mkt/Mkt03_History.java": "a8f09a7799593b3a3d2fc30ee90afa01228f9ca4",
+      "application/src/main/java/myApp/server/mkt/Mkt05_Share.java": "4da1cc09f61226cbb658df9585cd4c895d5890ca",
+      "application/src/main/java/myApp/server/mkt/mapper/mkt01_target_company.xml": "97d9adf7cbbbd0f31c159de9459f4f4510b9d63e",
+      "application/src/main/java/myApp/server/mkt/mapper/mkt03_history.xml": "a086a0b207ef1fe7a0aed1715818772ec90e9c41",
+      "application/src/main/java/myApp/server/mkt/mapper/mkt05_share.xml": "5a20ed80465fa86a13ba4d8338df1f7ff8cc84dd"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectMulti",
+      "Mkt03_Lookup_History",
+      "Org00_Lookup_SelectMulti",
+      "Sys10_Lookup_File"
+    ],
+    "recorded_at": "2026-11-02T16:58:31+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Z/Z06-작업기록.md",
+    "history": [],
+    "id": "Z06"
   }
 }

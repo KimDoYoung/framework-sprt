@@ -64,6 +64,13 @@ export interface MktManager {
   retireInfo: string | null;
 }
 
+/** Z06 활동처 조회창 한 행 (AS-IS Mkt01_TargetCompanyModel 의 활동처·구분) */
+export interface MktTargetItem {
+  targetCompanyId: number;
+  targetCompanyName: string;
+  itemTypeName: string | null;
+}
+
 /** Z05 업무활동내역 (AS-IS Mkt03_HistoryModel) */
 export interface MktHistory {
   historyId: number;

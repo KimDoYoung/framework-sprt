@@ -15,11 +15,12 @@ public interface MktHistoryMapper {
 
     long selectNextId();
 
-    /** AS-IS mkt03_history.selectByTargetCompanyId — 본인이 쓴 것이거나 공유 지정된 것만(isManager가 없으니 항상). allContactYn=false면 활동처 한정 */
+    /** AS-IS mkt03_history.selectByTargetCompanyId — isManager=false면 본인이 쓴 것이거나 공유 지정된 것만(Z05), true면 회사 전체(Z06 관리자). allContactYn=false면 활동처 한정 */
     List<MktHistoryRes> selectByTargetCompanyId(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("orgId") Long orgId,
                                                 @Param("itemType") String itemType, @Param("targetCompanyId") Long targetCompanyId,
                                                 @Param("startDate") LocalDate startDate, @Param("closeDate") LocalDate closeDate,
-                                                @Param("allContactYn") boolean allContactYn, @Param("searchText") String searchText);
+                                                @Param("allContactYn") boolean allContactYn, @Param("searchText") String searchText,
+                                                @Param("isManager") boolean isManager);
 
     /** AS-IS mkt03_history.selectById (회사 조건 추가) */
     MktHistoryRes selectById(@Param("companyId") Long companyId, @Param("historyId") Long historyId);

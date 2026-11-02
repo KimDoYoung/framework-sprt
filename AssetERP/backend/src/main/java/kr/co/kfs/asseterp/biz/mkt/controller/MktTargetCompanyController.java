@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.mkt.controller;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.mkt.dto.MktSelectRes;
+import kr.co.kfs.asseterp.biz.mkt.dto.MktTargetItemRes;
 import kr.co.kfs.asseterp.biz.mkt.dto.MktTargetRes;
 import kr.co.kfs.asseterp.biz.mkt.service.MktTargetCompanyService;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
@@ -25,6 +26,16 @@ public class MktTargetCompanyController {
                                                               @RequestParam(defaultValue = "0") long offset,
                                                               @RequestParam(defaultValue = "100") long limit) {
         return ApiResponse.ok(service.searchCompanies(principal, searchText, offset, limit));
+    }
+
+    /** Z06 AS-IS mkt.Mkt01_TargetCompany.selectTargetCompanyPaging — 구분 콤보가 있는 활동처 조회창(Mkt01_Lookup_TargetCompany2) */
+    @GetMapping("/lookup")
+    public ApiResponse<PageRes<MktTargetItemRes>> searchByItemType(@AuthenticationPrincipal UserPrincipal principal,
+                                                                   @RequestParam(defaultValue = "%") String itemTypeCode,
+                                                                   @RequestParam(defaultValue = "") String searchText,
+                                                                   @RequestParam(defaultValue = "0") long offset,
+                                                                   @RequestParam(defaultValue = "100") long limit) {
+        return ApiResponse.ok(service.searchByItemType(principal, itemTypeCode, searchText, offset, limit));
     }
 
     /** AS-IS mkt.Mkt01_TargetCompany.selectManagerPaging — 직원별(emp) */

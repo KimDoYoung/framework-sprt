@@ -98,6 +98,7 @@
                        LEFT OUTER JOIN (<include refid="selectFundInfoByCompanyId"/>) fnd ON history_id = mkt03_history_id
                  WHERE mkt03_company_id = #{companyId}
                    AND mkt03_activity_date BETWEEN #{startDate}::date AND #{closeDate}::date
+                <if test="!isManager">
                    AND (
                         #{personId} IN ( SELECT mkt03_person_id
                                           UNION ALL
@@ -111,6 +112,7 @@
                                           WHERE mkt05_parent_id = mkt03_history_id
                                             AND mkt05_share_cd  = '2' )
                        )
+                </if>
                 <if test="!allContactYn">
                    AND mkt03_target_company_id = #{targetCompanyId}
                 </if>

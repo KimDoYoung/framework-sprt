@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
 import {
-  MktFavorite, MktHistory, MktHistorySave, MktItemType, MktManager, MktRelateFund, MktShare, MktTargetCompany, MktTargetCompanySave,
+  MktFavorite, MktHistory, MktHistorySave, MktItemType, MktManager, MktRelateFund, MktShare, MktTargetCompany, MktTargetCompanySave, MktTargetItem,
 } from '../types/mkt';
 
 /** Z05 업무활동등록 (AS-IS Mkt01_Tab_TargetCompany → server/mkt/Mkt01_TargetCompany) */
@@ -22,6 +22,11 @@ export const mktTargetCompanyApi = {
   /** AS-IS mkt.Mkt01_TargetCompany.selectByCompanyIdPaging — searchText는 글자 그대로(서버가 `%…%`로 감싼다), offset = (쪽-1)*limit */
   search: async (p: { itemTypeCode: string; unUseYn: boolean; searchText: string; offset: number; limit: number }): Promise<PageRes<MktTargetCompany>> => {
     const res = await apiClient.get<ApiResponse<PageRes<MktTargetCompany>>>('v1/mkt/target-companies/list', { params: p });
+    return res.data.data ?? { total: 0, rows: [] };
+  },
+  /** Z06 AS-IS mkt.Mkt01_TargetCompany.selectTargetCompanyPaging (Mkt01_Lookup_TargetCompany2) — 구분 코드(`%` 전체), 미사용 제외 */
+  searchLookup: async (p: { itemTypeCode: string; searchText: string; offset: number; limit: number }): Promise<PageRes<MktTargetItem>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<MktTargetItem>>>('v1/mkt/target-companies/lookup', { params: p });
     return res.data.data ?? { total: 0, rows: [] };
   },
   /** AS-IS mkt.Mkt01_TargetCompany.selectById */
@@ -106,6 +111,9 @@ export const mktHistoryApi = {
   /** AS-IS mkt.Mkt03_History.selectByTargetCompanyId */
   search: async (p: { itemType: string; targetCompanyId?: number | null; startDate: string; closeDate: string; allContactYn: boolean; searchText: string }): Promise<MktHistory[]> =>
     (await apiClient.get<ApiResponse<MktHistory[]>>('v1/mkt/histories', { params: p })).data.data ?? [],
+  /** Z06 AS-IS mkt.Mkt03_History.selectByTargetCompanyId(isManager=true) — 활동처를 안 고르면 전체(allContactYn) */
+  searchManage: async (p: { targetCompanyId?: number | null; startDate: string; closeDate: string; searchText: string }): Promise<MktHistory[]> =>
+    (await apiClient.get<ApiResponse<MktHistory[]>>('v1/mkt/histories/manage', { params: p })).data.data ?? [],
   get: async (id: number): Promise<MktHistory> => (await apiClient.get<ApiResponse<MktHistory>>(`v1/mkt/histories/${id}`)).data.data,
   /** AS-IS mkt.Mkt03_History.updateOne + mkt.Mkt04_RelateFund.updateByList */
   save: async (req: MktHistorySave): Promise<MktHistory> => (await apiClient.put<ApiResponse<MktHistory>>('v1/mkt/histories', req)).data.data,
