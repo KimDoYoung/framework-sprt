@@ -28,10 +28,13 @@
                icam10_std_date                                        AS std_date,
                icam10_icam_company_cd                                 AS icam_company_code,
                icam10_icam_company_nm                                 AS icam_company_name,
+               icam10_fund_cd                                         AS fund_code,
                icam10_fund_nm                                         AS fund_name,
                icam10_rmk_nm                                          AS rmk_name,
+               icam10_cur_cd                                          AS cur_code,
                icam10_fee                                             AS fee,
-               icam10_af_pay_date                                     AS af_pay_date,
+               icam10_fx_rate                                         AS fx_rate,
+               icam10_af_pay_date                                   AS af_pay_date,
                icam10_bf_pay_date                                     AS bf_pay_date,
                to_char(icam10_work_date,'yyyy-mm-dd HH24:MI:SS')      AS work_date_string,
                icam10_worker                                          AS worker
@@ -49,5 +52,42 @@
           FROM icam10_fee
          WHERE 1=1
             <include refid="whereCondition"/>
+    </select>
+
+    <!-- AS-IS icam10_fee.updateFee L497 (IDMS-IC) — 원본 WHERE는 fee_id뿐, TOBE는 회사 조건을 더했다(X23) -->
+    <update id="updateFee">
+        UPDATE icam10_fee
+           SET icam10_fee = #{fee}
+         WHERE icam10_fee_id = #{feeId}
+           AND icam10_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS icam10_fee.createFundFeeBook L456 (IDMS-IC) -->
+    <select id="createFundFeeBook" resultType="String">
+        SELECT f_create_fundFeeBook(#{companyId}, #{stdDate}, #{fundCode})
+    </select>
+
+    <!-- AS-IS icam10_fee.createFundFeeBook2 L460 (IDMS-IC) -->
+    <select id="createFundFeeBook2" resultType="String">
+        SELECT f_create_fundFeeBook2(#{companyId}, #{stdDate}, #{corpId}, #{fundCode})
+    </select>
+
+    <!-- AS-IS icam10_fee.createFundFeeRcvTr L464 (IDMS-IC) -->
+    <select id="createFundFeeRcvTr" resultType="String">
+        SELECT f_create_fundFeeRcvTr(#{companyId}, #{stdDate})
+    </select>
+
+    <!-- AS-IS icam10_fee.createFundFeeRcvTr2 L468 (IDMS-IC) -->
+    <select id="createFundFeeRcvTr2" resultType="String">
+        SELECT f_create_fundFeeRcvTr_officeMng(#{companyId}, #{stdDate}, #{corpId})
+    </select>
+
+    <!-- AS-IS sys12_calendar.selectPeriod L110 (IDMS-IC) — 일자 열만 -->
+    <select id="selectCalendarDays" resultType="java.time.LocalDate">
+        SELECT sys12_day
+          FROM sys12_calendar
+         WHERE sys12_company_id = #{companyId}
+           AND sys12_day BETWEEN #{startDate} AND #{closeDate}
+         ORDER BY sys12_day
     </select>
 </mapper>

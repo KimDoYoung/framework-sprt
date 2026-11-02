@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.icam.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeJobReq;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeParam;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeRes;
 import kr.co.kfs.asseterp.biz.icam.mapper.IcamFeeMapper;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
@@ -45,6 +47,71 @@ public class IcamFeeService {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
         batchRunner.runFee(actionCode, target, user.getName(), startDate, closeDate);
+    }
+
+    /** AS-IS icam.Icam10_Fee.updateFee (Icam10_Lookup_FundFee [저장]) — 발생보수만 바꾼다. TOBE는 로그인 회사의 행만 */
+    @Transactional
+    public void updateFee(UserPrincipal user, Long feeId, BigDecimal fee) {
+        if (feeId == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        if (mapper.updateFee(feeId, fee, user.getCompanyId()) == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        }
+    }
+
+    /** AS-IS icam.Icam10_Fee.getICAMFundFee (Icam10_Lookup_getICAM [보수발생내역 가져오기]) — 외부 ICAM DB 연동이 없으면 거절 */
+    public void runFundFee(UserPrincipal user, IcamFeeJobReq req) {
+        checkJob(req);
+        batchRunner.runFundFee(user.getCompanyId(), req.feeType(), percent(req.corpCode()), percent(req.fundCode()), req.startDate(), req.closeDate());
+    }
+
+    /** AS-IS icam.Icam10_Fee.createFeeBook ([보수원장 재생성]) — DB 함수 f_create_fundFeeBook(2)가 'Y'를 돌려줘야 성공 */
+    @Transactional
+    public void createFeeBook(UserPrincipal user, IcamFeeJobReq req) {
+        checkJob(req);
+        Long companyId = user.getCompanyId();
+        Long corpId = corpIdOf(user, req);
+        String result = corpId == null
+                ? mapper.createFundFeeBook(companyId, req.startDate(), null)
+                : mapper.createFundFeeBook2(companyId, req.startDate(), corpId, percent(req.fundCode()));
+        requireYes(result);
+    }
+
+    /**
+     * AS-IS icam.Icam10_Fee.createFeeRcvTr ([보수인출거래 재생성]) — 시작일부터 어제까지 달력의 날마다 DB 함수를 부른다.
+     * 운용보수(20402) 또는 운용사 "전체"는 f_create_fundFeeRcvTr, 사무관리보수의 운용사 지정은 f_create_fundFeeRcvTr_officeMng. 한 날이라도 실패하면 멈추고 전부 되돌린다
+     */
+    @Transactional
+    public void createFeeRcvTr(UserPrincipal user, IcamFeeJobReq req) {
+        checkJob(req);
+        Long companyId = user.getCompanyId();
+        Long corpId = corpIdOf(user, req);
+        boolean allCorp = "20402".equals(req.feeType()) || "%".equals(percent(req.corpCode()));
+        for (LocalDate day : mapper.selectCalendarDays(companyId, req.startDate(), LocalDate.now().minusDays(1))) {
+            requireYes(allCorp ? mapper.createFundFeeRcvTr(companyId, day) : mapper.createFundFeeRcvTr2(companyId, day, corpId));
+        }
+    }
+
+    private static void checkJob(IcamFeeJobReq req) {
+        if (req == null || req.feeType() == null || req.startDate() == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+    }
+
+    /** 사무관리보수(20407)는 고른 운용사(전체면 null), 그 밖은 로그인 회사 */
+    private static Long corpIdOf(UserPrincipal user, IcamFeeJobReq req) {
+        return "20407".equals(req.feeType()) ? req.corpId() : user.getCompanyId();
+    }
+
+    private static String percent(String value) {
+        return value == null || value.isBlank() ? "%" : value;
+    }
+
+    private static void requireYes(String result) {
+        if (!"Y".equals(result)) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, result == null ? ErrorCode.INVALID_INPUT.getMessage() : result);
+        }
     }
 
     private static Long parseId(String companyId) {

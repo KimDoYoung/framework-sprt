@@ -16,6 +16,12 @@ public interface IcamBatchRunner {
     /** BatchMain?actionCode=icamOfficeMngFee|icamFundMngFee — 기간(startDate~closeDate)의 발생보수를 가져온다 */
     void runFee(String actionCode, String companyId, String worker, LocalDate startDate, LocalDate closeDate);
 
+    /**
+     * icam.Icam10_Fee.getICAMFundFee — 외부 ICAM DB에서 펀드(들)의 발생보수·말일 잔액을 읽어 icam10_fee·icam12_fee_book에 넣는다
+     * (먼저 해당 기간·펀드의 기존 행을 지우고, 사무관리보수는 신규 펀드의 보수입금계좌 icam11_fee_deposit도 만든다)
+     */
+    void runFundFee(Long companyId, String feeType, String corpCode, String fundCode, LocalDate startDate, LocalDate closeDate);
+
     /** icam.Icam50_Source.insertIcamDbSource — 운용서버·자문서버 ICAM 스키마의 all_source를 읽어 icam51_source_tmp에 넣고 icam50_source로 옮긴다 */
     void runSource(String worker);
 

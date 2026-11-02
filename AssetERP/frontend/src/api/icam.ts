@@ -7,6 +7,7 @@ import {
   FundPrice,
   IcamData,
   IcamFee,
+  IcamFeeJobReq,
   IcamFund,
   IcamSource,
   IcamTestBatchReq,
@@ -44,6 +45,28 @@ export const icamApi = {
   /** AS-IS BatchMain(actionCode=icamOfficeMngFee·icamFundMngFee): ICAM 발생보수 가져오기 — 외부 ICAM DB 연동이 없으면 오류 */
   runFeeBatch: async (req: { actionCode: 'icamOfficeMngFee' | 'icamFundMngFee'; companyId: string; startDate: string; closeDate: string }): Promise<void> => {
     await apiClient.post<ApiResponse<null>>('v1/icam/fees/batch', req);
+  },
+
+  // ── X23 ICAM 펀드보수 발생내역 (Icam10_Tab_OfficeMngFee) ──
+
+  /** AS-IS icam.Icam10_Fee.updateFee: 발생보수만 바꾼다 (Icam10_Lookup_FundFee [저장]) */
+  updateFee: async (feeId: string, fee: number | null): Promise<void> => {
+    await apiClient.put<ApiResponse<null>>(`v1/icam/fees/${feeId}`, { fee });
+  },
+
+  /** AS-IS icam.Icam10_Fee.getICAMFundFee: 외부 ICAM DB 연동이 없으면 오류 (Icam10_Lookup_getICAM) */
+  getIcamFundFee: async (req: IcamFeeJobReq): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>('v1/icam/fees/icam-fund-fee', req);
+  },
+
+  /** AS-IS icam.Icam10_Fee.createFeeBook: 펀드보수원장 재생성 */
+  createFeeBook: async (req: IcamFeeJobReq): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>('v1/icam/fees/fee-books', req);
+  },
+
+  /** AS-IS icam.Icam10_Fee.createFeeRcvTr: 펀드보수 인출거래 재생성 (운용사별) */
+  createFeeRcvTr: async (req: IcamFeeJobReq): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>('v1/icam/fees/rcv-trs', req);
   },
 
   // ── D09 ICAM DB Source Get (Icam50_Tab_DbSource) ──

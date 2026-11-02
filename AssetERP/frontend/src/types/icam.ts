@@ -37,6 +37,16 @@ export interface IcamFund {
   worker?: string | null;
 }
 
+/** 펀드보수 발생내역 가져오기 창(Icam10_Lookup_getICAM)의 요청. corpId는 사무관리보수만 쓰고(전체면 null), 그 밖은 서버가 로그인 회사로 정한다 */
+export interface IcamFeeJobReq {
+  feeType: string;
+  startDate: string;
+  closeDate: string;
+  corpId: number | null;
+  corpCode: string;
+  fundCode: string;
+}
+
 /** ICAM 발생보수 한 행 (AS-IS Icam10_FeeModel 중 Icam10_Tab_FeeAdmin 그리드 열). 날짜는 'yyyy-MM-dd' */
 export interface IcamFee {
   /** numeric ID — 문자열 (05 §6) */
@@ -44,9 +54,13 @@ export interface IcamFee {
   stdDate?: string | null;
   icamCompanyCode?: string | null;
   icamCompanyName?: string | null;
+  /** X23 (Icam10_Tab_OfficeMngFee) 그리드 열 */
+  fundCode?: string | null;
   fundName?: string | null;
   rmkName?: string | null;
+  curCode?: string | null;
   fee?: number | null;
+  fxRate?: number | null;
   afPayDate?: string | null;
   bfPayDate?: string | null;
   workDateString?: string | null;
