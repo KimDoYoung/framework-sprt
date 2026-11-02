@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, JournalDtlList, JournalDtlRdReq, JournalSub, JournalSubRdReq, GenLedger, GenLedgerRdReq, JournalAccount, JournalRealAccount, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, JournalDtlList, JournalDtlRdReq, JournalSub, JournalSubRdReq, GenLedger, GenLedgerRdReq, JournalHistory, JournalAccount, JournalRealAccount, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { AstBook } from '../types/ast';
 import { readBlobError } from './file';
 
@@ -497,5 +497,13 @@ export const actApi = {
   insertGenLedgerRd: async (req: GenLedgerRdReq): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/act/gen-ledgers/rd', req);
     return res.data.data;
+  },
+
+  // ── X19 선급금/선급비용 조회의 자산별 분개 이력 (Act02_Grid_History) ──
+
+  /** AS-IS act.Act02_Journal.selectByAstClassTreeId: 자산(종목분류)의 분개 이력 — 차변은 +, 대변은 − */
+  searchJournalHistory: async (astClassTreeId: number): Promise<JournalHistory[]> => {
+    const res = await apiClient.get<ApiResponse<JournalHistory[]>>('v1/act/journals/history', { params: { astClassTreeId } });
+    return res.data.data ?? [];
   },
 };

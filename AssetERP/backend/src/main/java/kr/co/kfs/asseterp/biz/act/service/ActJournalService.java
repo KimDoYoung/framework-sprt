@@ -1,4 +1,6 @@
 package kr.co.kfs.asseterp.biz.act.service;
+import kr.co.kfs.asseterp.biz.act.dto.JournalHistoryRes;
+import java.util.List;
 
 import kr.co.kfs.asseterp.biz.act.mapper.ActJournalMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
@@ -38,5 +40,10 @@ public class ActJournalService {
         if (mapper.countCloseOn(companyId, stdDate) > 0) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "이미 회계마감이 완료되었습니다.");
         }
+    }
+
+    /** act02_journal.selectByAstClassTreeId (Act02_Grid_History, X19) */
+    public List<JournalHistoryRes> searchHistory(UserPrincipal user, Long astClassTreeId) {
+        return mapper.selectByAstClassTreeId(user.getCompanyId(), astClassTreeId);
     }
 }

@@ -1,4 +1,6 @@
 package kr.co.kfs.asseterp.biz.act.controller;
+import kr.co.kfs.asseterp.biz.act.dto.JournalHistoryRes;
+import java.util.List;
 
 import jakarta.validation.Valid;
 import kr.co.kfs.asseterp.biz.act.dto.JournalCreateReq;
@@ -38,5 +40,11 @@ public class ActJournalController {
                                         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate) {
         service.checkClose(principal.getCompanyId(), stdDate);
         return ApiResponse.ok(null);
+    }
+
+    /** act.Act02_Journal.selectByAstClassTreeId — 자산별 분개 이력 (Act02_Grid_History) */
+    @GetMapping("/journals/history")
+    public ApiResponse<List<JournalHistoryRes>> history(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long astClassTreeId) {
+        return ApiResponse.ok(service.searchHistory(principal, astClassTreeId));
     }
 }

@@ -1,4 +1,5 @@
 package kr.co.kfs.asseterp.biz.ast.service;
+import kr.co.kfs.asseterp.biz.ast.dto.PreDepositBookRes;
 
 import kr.co.kfs.asseterp.biz.ast.dto.BookFullRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookPeriodRes;
@@ -154,5 +155,10 @@ public class AstBookService {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "update fail : \n" + e.getMessage());
         }
         if (!"Y".equals(msg)) throw new BusinessException(ErrorCode.INVALID_INPUT, msg);
+    }
+
+    /** ast09_book.selectPreDepositByHoldDate (Ast09_Tab_PreDepositBook, X19) — 검색어는 "%…%" */
+    public List<PreDepositBookRes> searchPreDeposits(UserPrincipal user, LocalDate holdDate, String searchText) {
+        return mapper.selectPreDepositByHoldDate(user.getCompanyId(), holdDate, like(searchText), null, null);
     }
 }

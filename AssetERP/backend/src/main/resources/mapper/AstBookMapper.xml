@@ -590,4 +590,111 @@
     <select id="createDepositBook" resultType="string" flushCache="true">
         SELECT f_create_depositBook(#{companyId}, #{stdDate})
     </select>
+
+    <!-- AS-IS ast09_book.selectPreDepositByHoldDate (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다(X19) -->
+    <select id="selectPreDepositByHoldDate" resultType="kr.co.kfs.asseterp.biz.ast.dto.PreDepositBookRes">
+        SELECT x.ast09_book_id AS book_id,
+               x.ast09_std_date AS std_date,
+               x.ast09_ast_s_class_nm AS ast_s_class_name,
+               x.ast09_ast_class_tree_nm AS ast_class_tree_name,
+               x.ast09_corp_nm AS corp_name,
+               x.ast09_hold_qty AS hold_qty,
+               x.ast09_ast_class_tree_id AS ast_class_tree_id
+          FROM (
+<![CDATA[
+WITH book AS (
+    WITH book1 AS ( SELECT '1' seq
+                         , ast09_book.*
+                      FROM ast09_book
+                     WHERE ast09_company_id = #{companyId}
+                       AND (ast09_ast_class_tree_id, ast09_keep_account_id, ast09_hold_date) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(ast09_hold_date)
+                                                                                                    FROM ast09_book
+                                                                                                   WHERE ast09_company_id = #{companyId}
+                                                                                                     AND ast09_hold_date <= #{holdDate}
+                                                                                                     ]]><choose>
+                                                                                                         <when test="astClassTreeId != null"><![CDATA[
+                                                                                                         AND ast09_ast_class_tree_id = #{astClassTreeId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                     ]]><choose>
+                                                                                                         <when test="keepAccountId != null"><![CDATA[
+                                                                                                         AND ast09_keep_account_id = #{keepAccountId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                   GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+                     UNION ALL
+                    SELECT '2' seq
+                         , ast11_book_id
+                         , ast11_hold_date
+                         , ast11_ast_class_tree_id
+                         , ast11_keep_account_id
+                         , ast11_hold_qty
+                         , ast11_pur_amt
+                         , ast11_book_amt
+                         , ast11_eval_amt
+                         , ast11_eval_pl
+                         , ast11_first_pur_amt
+                         , ast11_first_pur_date
+                         , ast11_company_id
+                         , ast11_for_pur_amt
+                         , ast11_for_book_amt
+                         , ast11_for_eval_amt
+                         , ast11_for_eval_pl
+                         , ast11_fx_pl
+                         , ast11_book_end_yn
+                         , ast11_acr_int_amt
+                         , ast11_for_acr_int_amt
+                         , ast11_oci
+                         , ast11_for_oci
+                         , ast11_lock_up_period_cd
+                         , ast11_lock_up_date
+                         , ast11_lock_up_qty
+                      FROM ast11_book_close
+                     WHERE ast11_company_id = #{companyId}
+                       AND (ast11_ast_class_tree_id, ast11_keep_account_id, ast11_hold_date) IN ( SELECT ast11_ast_class_tree_id, ast11_keep_account_id, MAX(ast11_hold_date)
+                                                                                                    FROM ast11_book_close
+                                                                                                   WHERE ast11_company_id = #{companyId}
+                                                                                                     AND ast11_hold_date < #{holdDate}
+                                                                                                     ]]><choose>
+                                                                                                         <when test="astClassTreeId != null"><![CDATA[
+                                                                                                         AND ast11_ast_class_tree_id = #{astClassTreeId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                     ]]><choose>
+                                                                                                         <when test="keepAccountId != null"><![CDATA[
+                                                                                                         AND ast11_keep_account_id = #{keepAccountId}
+                                                                                                         ]]></when>
+                                                                                                     </choose><![CDATA[
+                                                                                                   GROUP BY ast11_ast_class_tree_id, ast11_keep_account_id )
+    )
+    SELECT *
+      FROM book1
+     WHERE (ast09_ast_class_tree_id, ast09_keep_account_id, to_char(ast09_hold_date,'yyyymmdd')||seq) IN ( SELECT ast09_ast_class_tree_id, ast09_keep_account_id, MAX(to_char(ast09_hold_date,'yyyymmdd')||seq)
+                                                                                                             FROM book1
+                                                                                                            GROUP BY ast09_ast_class_tree_id, ast09_keep_account_id )
+)
+
+        SELECT *
+          FROM (
+		        SELECT book.*
+		             , #{holdDate}                                                                          as ast09_std_date
+		             , f_cdnm('ItemSClassCode', ast01_item_s_class_cd, ast09_company_id, ast09_hold_date)   as ast09_ast_s_class_nm
+                     , ast01_class_tree_nm                                                                  as ast09_ast_class_tree_nm
+		             , f_get_corp_nm(ast01_corp_id)                                                         as ast09_corp_nm
+		             , ast01_seq                                                                            as seq
+		          FROM book
+		               INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast09_ast_class_tree_id
+		         WHERE ast01_asset_type = '1'   /* 1:고유자산 / 2:운용(펀드)자산 */
+		           AND ast01_item_s_class_cd IN ( SELECT sys09_code
+		                                            FROM sys13_code_group
+		                                                 INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+		                                           WHERE sys13_kind_group_cd = 'ItemSClassCode005' )
+               ) t 
+         WHERE trim(upper(concat(ast09_ast_s_class_nm, ast09_ast_class_tree_nm, ast09_corp_nm))) LIKE trim(upper(#{searchText}))
+         ORDER BY ast09_ast_s_class_nm collate "ko_KR.utf8" asc
+                , ast09_ast_class_tree_nm collate "ko_KR.utf8" asc
+]]>
+               ) x
+    </select>
+
 </mapper>

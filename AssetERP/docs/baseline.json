@@ -13678,5 +13678,28 @@
     "note": "docs/work/X/X18-작업기록.md",
     "history": [],
     "id": "X18"
+  },
+  "Ast09_Tab_PreDepositBook": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ast/Ast09_Tab_PreDepositBook.java": "a5bbdc445e74db253fdcbca34bce214066944c9b",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast09_BookModel.java": "428b3c826da36a0835c239afdea603ad80eb2015",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast09_BookModelProperties.java": "3074cf6b7cfac48ac47543a93cdc9e9249534408",
+      "application/src/main/java/myApp/server/ast/Ast09_Book.java": "b9ba44f158e27cb4b9efb126262ae2f7ab5eb477",
+      "application/src/main/java/myApp/server/ast/mapper/ast09_book.xml": "fb0636ccfd391f1efae798a56d6aaa46ce71ea4a",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Act02_Grid_History"
+    ],
+    "recorded_at": "2026-11-02T10:30:03+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/X/X19-작업기록.md",
+    "history": [],
+    "id": "X19"
   }
 }

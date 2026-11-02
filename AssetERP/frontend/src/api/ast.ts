@@ -47,6 +47,7 @@ import {
   AstManagerSaveReq,
   AstRelateAppr,
   AstDepositDiff,
+  AstPreDeposit,
   AstBookReal,
   TrCode,
   TrCodeWindow,
@@ -344,6 +345,12 @@ export const astApi = {
   /** AS-IS ast.Ast09_Book.createDepositBook (U01): 기준일부터 오늘까지 예금잔고정리 — 실패는 오류 메시지로 던진다 */
   cleanDepositBook: async (stdDate: string): Promise<void> => {
     await apiClient.post<ApiResponse<null>>('v1/ast/books/deposits/clean', { stdDate });
+  },
+
+  /** AS-IS ast.Ast09_Book.selectPreDepositByHoldDate (X19 Ast09_Tab_PreDepositBook): 선급금/선급비용, searchText는 글자만(서버가 %로 감싼다) */
+  searchPreDeposits: async (holdDate: string, searchText: string): Promise<AstPreDeposit[]> => {
+    const res = await apiClient.get<ApiResponse<AstPreDeposit[]>>('v1/ast/books/pre-deposits', { params: { holdDate, searchText } });
+    return res.data.data ?? [];
   },
 
   /** AS-IS ast.Ast09_Book.selectByHoldDate (W21 Ast09_Tab_DepositBook): astType 1 + depositDiffYn true, searchText는 글자만(서버가 %로 감싼다) */

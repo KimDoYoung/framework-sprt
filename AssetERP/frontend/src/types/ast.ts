@@ -1234,3 +1234,14 @@ export interface AstFundFeeFund {
   fixFee: number | null;
   fxRate: number | null;
 }
+
+/** 선급금/선급비용 한 줄 (ast09_book.selectPreDepositByHoldDate, X19) */
+export interface AstPreDeposit {
+  bookId: number;
+  stdDate: string;
+  astSClassName: string | null;
+  astClassTreeName: string | null;
+  corpName: string | null;
+  holdQty: number | null;
+  astClassTreeId: number | null;
+}

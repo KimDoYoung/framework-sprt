@@ -485,3 +485,13 @@ export interface GenLedgerRdReq {
   diffType: string;
   searchText: string;
 }
+
+/** 자산별 분개 이력 한 줄 (act02_journal.selectByAstClassTreeId, Act02_Grid_History, X19) */
+export interface JournalHistory {
+  journalId: number;
+  date: string;
+  astClassTreeName: string | null;
+  trName: string | null;
+  journalAmt: number | null;
+  note: string | null;
+}

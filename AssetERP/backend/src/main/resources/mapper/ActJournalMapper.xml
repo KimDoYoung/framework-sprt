@@ -23,4 +23,45 @@
          WHERE act05_company_id = #{companyId}
            AND act05_std_date   = #{closeDate}
     </select>
+
+    <!-- AS-IS act02_journal.selectByAstClassTreeId (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다(X19) — 계산 열 별칭 act02_journal_id·act02_note가 act02_journal.*와 겹쳐 act02_hist_id·act02_note_calc로 바꿨다(원본 모델은 앞의 계산 열을 읽는다) -->
+    <select id="selectByAstClassTreeId" resultType="kr.co.kfs.asseterp.biz.act.dto.JournalHistoryRes">
+        SELECT x.act02_hist_id AS journal_id,
+               x.act02_date AS date,
+               x.act02_ast_class_tree_nm AS ast_class_tree_name,
+               x.act02_tr_nm AS tr_name,
+               x.act02_journal_amt AS journal_amt,
+               x.act02_note_calc AS note
+          FROM (
+<![CDATA[
+SELECT row_number() over()                                                                     as act02_hist_id
+	         , ast01_class_tree_nm                                                                     as act02_ast_class_tree_nm
+	         , f_cdnm('trCode', f_get_journal_tr_cd(act02_journal_id), act02_company_id, act02_date)   as act02_tr_nm
+	         , amt                                                                                     as act02_journal_amt
+	         , COALESCE(ast06_note, act02_note)                                                        as act02_note_calc
+             , act02_journal.*
+	      FROM act02_journal
+	           INNER JOIN ( SELECT ast01_class_tree.*
+	                             , act03_journal_id
+	                             , act03_dr_amt as amt
+	                          FROM act03_journal_dtl
+	                               INNER JOIN ast01_class_tree ON ( ast01_class_tree_id = act03_dr_ast_id AND
+	                                                                ast01_company_id    = #{companyId}    )
+	                         WHERE act03_dr_ast_id = #{astClassTreeId}
+	                         UNION ALL
+	                        SELECT ast01_class_tree.*
+	                             , act03_journal_id
+	                             , act03_cr_amt * -1 as amt
+	                          FROM act03_journal_dtl
+	                               INNER JOIN ast01_class_tree ON ( ast01_class_tree_id = act03_cr_ast_id AND
+	                                                                ast01_company_id    = #{companyId}    )
+	                         WHERE act03_cr_ast_id = #{astClassTreeId}
+	                      ) act03 ON act03_journal_id = act02_journal_id
+	           LEFT OUTER JOIN ast06_tr ON ast06_tr_id = act02_tr_id
+	     WHERE act02_company_id = #{companyId}
+	     ORDER BY act02_date, act02_journal_no
+]]>
+               ) x
+    </select>
+
 </mapper>

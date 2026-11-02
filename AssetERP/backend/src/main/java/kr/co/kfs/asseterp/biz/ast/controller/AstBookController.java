@@ -1,4 +1,5 @@
 package kr.co.kfs.asseterp.biz.ast.controller;
+import kr.co.kfs.asseterp.biz.ast.dto.PreDepositBookRes;
 
 import jakarta.validation.Valid;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFullRes;
@@ -122,5 +123,13 @@ public class AstBookController {
                                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate holdDate,
                                        @RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.insertRdFinanceBook(principal, holdDate, searchText));
+    }
+
+    /** ast.Ast09_Book.selectPreDepositByHoldDate — 선급금/선급비용 조회 Ast09_Tab_PreDepositBook (X19) */
+    @GetMapping("/pre-deposits")
+    public ApiResponse<List<PreDepositBookRes>> preDeposits(@AuthenticationPrincipal UserPrincipal principal,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate holdDate,
+                                                            @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchPreDeposits(principal, holdDate, searchText));
     }
 }

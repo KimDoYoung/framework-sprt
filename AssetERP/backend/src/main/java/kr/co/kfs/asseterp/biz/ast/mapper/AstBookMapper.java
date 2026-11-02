@@ -1,4 +1,5 @@
 package kr.co.kfs.asseterp.biz.ast.mapper;
+import kr.co.kfs.asseterp.biz.ast.dto.PreDepositBookRes;
 
 import kr.co.kfs.asseterp.biz.ast.dto.BookFullRes;
 import kr.co.kfs.asseterp.biz.ast.dto.FinanceGroupRes;
@@ -76,4 +77,8 @@ public interface AstBookMapper {
     /** AS-IS ast09_book.selectByHoldDate (astType 1, depositDiffYn true — 예금잔고대사 W21) */
     List<DepositDiffRes> selectDepositDiff(@Param("companyId") Long companyId, @Param("holdDate") LocalDate holdDate,
                                            @Param("astType") String astType, @Param("searchText") String searchText);
+
+    /** AS-IS selectPreDepositByHoldDate — 선급금/선급비용(종목소분류 ItemSClassCode005), 검색어는 LIKE 패턴. astClassTreeId·keepAccountId는 원본 동적 조건(이 화면은 null) */
+    List<PreDepositBookRes> selectPreDepositByHoldDate(@Param("companyId") Long companyId, @Param("holdDate") LocalDate holdDate, @Param("searchText") String searchText,
+                                                       @Param("astClassTreeId") Long astClassTreeId, @Param("keepAccountId") Long keepAccountId);
 }

@@ -1,4 +1,6 @@
 package kr.co.kfs.asseterp.biz.act.mapper;
+import kr.co.kfs.asseterp.biz.act.dto.JournalHistoryRes;
+import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -18,4 +20,7 @@ public interface ActJournalMapper {
 
     /** act04_gen_ledger.selectCloseDateCount — 처리일 마감 건수 */
     long countCloseOn(@Param("companyId") Long companyId, @Param("closeDate") LocalDate closeDate);
+
+    /** AS-IS act02_journal.selectByAstClassTreeId — 자산(종목분류)의 분개 이력 */
+    List<JournalHistoryRes> selectByAstClassTreeId(Long companyId, Long astClassTreeId);
 }
