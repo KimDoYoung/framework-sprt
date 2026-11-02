@@ -59,6 +59,12 @@ export const fileApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS sys.Sys10_File.selectByFileYn (Z10) — 파일 구분이 true인 것만 */
+  searchByFileYn: async (parentId: number): Promise<FileInfo[]> => {
+    const res = await apiClient.get<ApiResponse<FileInfo[]>>('v1/sys/files/by-file-yn', { params: { parentId } });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS sys.Sys10_File.selectByParentId2 (W05): 잠김(lockYn)이 붙은 목록 */
   searchByParentIdWithLock: async (parentId: number): Promise<FileLock[]> => {
     const res = await apiClient.get<ApiResponse<FileLock[]>>('v1/sys/files/with-lock', { params: { parentId } });

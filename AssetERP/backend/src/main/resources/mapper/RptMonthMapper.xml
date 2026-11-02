@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/rpt/mapper/rpt02_month.xml selectByText·selectById + UpdateDataModel(rpt02_month) (Z10 Rpt02_Tab_MonthWrite) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.rpt.mapper.RptMonthMapper">
+
+    <sql id="monthColumns">
+        rpt02_month_id AS month_id
+      , rpt02_person_id AS person_id
+      , rpt02_org_nm AS org_name
+      , rpt02_yyyymm AS yyyy_mm
+      , rpt02_content AS content
+      , rpt02_note AS note
+      , rpt02_file_count AS file_count
+    </sql>
+
+    <sql id="monthFrom">
+        FROM (
+              SELECT *
+                   , f_emp_kor_nm(rpt02_person_id)                                                                 AS rpt02_person_nm
+                   , CAST(f_get_empTrans(rpt02_person_id, (rpt02_yyyymm||'.01')::date, 'org_code_id') as numeric)  AS rpt02_org_id
+                   , f_get_empTrans(rpt02_person_id, (rpt02_yyyymm||'.01')::date, 'org_cd')                        AS rpt02_org_cd
+                   , f_get_empTrans(rpt02_person_id, (rpt02_yyyymm||'.01')::date, 'org_code_nm')                   AS rpt02_org_nm
+                   , (SELECT COUNT(*) FROM sys10_file WHERE sys10_parent_id = rpt02_month_id)                      AS rpt02_file_count
+                FROM rpt02_month
+               WHERE rpt02_company_id = #{companyId}
+                 AND rpt02_yyyymm LIKE #{yyyyMm}
+             ) t
+    </sql>
+
+    <!-- AS-IS rpt02_month.selectByText (IDMS-IC) — SELECT * → MonthRes 열만, 조건·정렬 그대로 (회사 전체 글, 본부 조건은 orgCodeId가 있을 때만) -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.rpt.dto.MonthRes">
+        SELECT <include refid="monthColumns"/>
+        <include refid="monthFrom"/>
+         WHERE 1=1
+        <if test="orgCodeId != null">
+           AND rpt02_org_id = #{orgCodeId}
+        </if>
+           AND UPPER(CONCAT(rpt02_org_nm, rpt02_content, rpt02_note)) LIKE UPPER(#{searchText})
+         ORDER BY rpt02_org_cd, rpt02_yyyymm
+    </select>
+
+    <!-- AS-IS rpt02_month.selectById (IDMS-IC) — 저장 뒤 다시 읽기 (년월은 행의 값 그대로 LIKE) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.rpt.dto.MonthRes">
+        SELECT <include refid="monthColumns"/>
+          FROM (
+                SELECT *
+                     , f_get_empTrans(rpt02_person_id, (rpt02_yyyymm||'.01')::date, 'org_code_nm') AS rpt02_org_nm
+                     , (SELECT COUNT(*) FROM sys10_file WHERE sys10_parent_id = rpt02_month_id)    AS rpt02_file_count
+                  FROM rpt02_month
+                 WHERE rpt02_month_id   = #{monthId}
+                   AND rpt02_company_id = #{companyId}
+               ) t
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Rpt02_Month.modelUpdate → UpdateDataModel INSERT (회사·사원은 서버가 로그인 값으로) -->
+    <insert id="insertMonth">
+        INSERT INTO rpt02_month
+             (rpt02_month_id, rpt02_company_id, rpt02_person_id, rpt02_yyyymm, rpt02_content, rpt02_note)
+        VALUES (#{monthId}, #{companyId}, #{personId}, #{req.yyyyMm}, #{req.content}, #{req.note})
+    </insert>
+
+    <!-- AS-IS Rpt02_Month.modelUpdate → UpdateDataModel UPDATE — 로그인 회사·본인 행만(보안 보강) -->
+    <update id="updateMonth">
+        UPDATE rpt02_month
+           SET rpt02_yyyymm  = #{req.yyyyMm}
+             , rpt02_content = #{req.content}
+             , rpt02_note    = #{req.note}
+         WHERE rpt02_month_id   = #{req.monthId}
+           AND rpt02_company_id = #{companyId}
+           AND rpt02_person_id  = #{personId}
+    </update>
+
+    <!-- AS-IS Rpt02_Month.delete → UpdateDataModel.deleteModel(ID로 DELETE) — 로그인 회사·본인 행만(보안 보강) -->
+    <delete id="deleteMonth">
+        DELETE FROM rpt02_month
+         WHERE rpt02_month_id   = #{monthId}
+           AND rpt02_company_id = #{companyId}
+           AND rpt02_person_id  = #{personId}
+    </delete>
+
+    <!-- AS-IS sys99_print.deleteByPersonId (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS sys99_print.insert (IDMS-IC) — Sys99_Print.insertRdMonth가 채우는 열만: 본부(부서) s01 · 기준년월 s02 · 비고 s03 · 업무내용 t01 -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_text01, sys99_string03 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{row.orgName}, #{row.yyyyMm}, #{row.content}, #{row.note} )
+    </insert>
+</mapper>

@@ -54,6 +54,15 @@
          ORDER BY LPAD(COALESCE(file.sys10_seq, '99999'), 5, '0'), COALESCE(file.sys10_title_yn, 'false') DESC, file.sys10_file_nm COLLATE "ko-KR-x-icu"
     </select>
 
+    <!-- AS-IS sys10_file.selectByFileYn (IDMS-IC, Z10 Rpt02_Lookup_FileList) — 파일 구분(file_yn)이 'true'인 것만, ORDER BY 1 = 파일ID -->
+    <select id="selectByFileYn" resultType="kr.co.kfs.asseterp.biz.sys.dto.FileRes">
+        SELECT <include refid="fileColumns"/>
+          FROM sys10_file AS file
+         WHERE file.sys10_parent_id = #{parentId}
+           AND file.sys10_file_yn LIKE 'true'
+         ORDER BY file.sys10_file_id
+    </select>
+
     <!-- AS-IS sys10_file.selectByParentId2 L130 (W05 Act80_LookupGrid_RelateFile): 본 파일 + 연관 파일 + 정산·지출결의서에서 따라온 파일(lock). 정렬·SQL 그대로(collation은 03 원칙 19 ko_KR.utf8) -->
     <select id="selectByParentId2" resultType="kr.co.kfs.asseterp.biz.sys.dto.FileLockRes">
 SELECT <include refid="fileColumns"/>

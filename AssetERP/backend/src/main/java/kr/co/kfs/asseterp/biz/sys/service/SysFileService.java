@@ -66,6 +66,11 @@ public class SysFileService {
         return sysFileMapper.selectByParentId(parentId);
     }
 
+    /** AS-IS Sys10_File.selectByFileYn L246 (Z10 Rpt02_Lookup_FileList) — 파일 구분이 true인 것만 */
+    public List<FileRes> searchByFileYn(Long parentId) {
+        return sysFileMapper.selectByFileYn(parentId);
+    }
+
     /** AS-IS Sys10_File.selectByParentId2 L57 (W05 연관문서 창 첨부파일) — 잠김(lockYn) 포함 */
     public List<FileLockRes> searchByParentId2(Long parentId) {
         return sysFileMapper.selectByParentId2(parentId);

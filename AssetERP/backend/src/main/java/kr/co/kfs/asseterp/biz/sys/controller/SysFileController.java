@@ -46,6 +46,12 @@ public class SysFileController {
         return ApiResponse.ok(sysFileService.searchByParentId(parentId));
     }
 
+    /** AS-IS sys.Sys10_File.selectByFileYn (Z10 Rpt02_Lookup_FileList) */
+    @GetMapping("/by-file-yn")
+    public ApiResponse<List<FileRes>> searchByFileYn(@RequestParam Long parentId) {
+        return ApiResponse.ok(sysFileService.searchByFileYn(parentId));
+    }
+
     /** AS-IS sys.Sys10_File.selectByParentId2 (W05 연관문서 창 첨부파일, lockYn 포함) */
     @GetMapping("/with-lock")
     public ApiResponse<List<FileLockRes>> searchByParentId2(@RequestParam Long parentId) {

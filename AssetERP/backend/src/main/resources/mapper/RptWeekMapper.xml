@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/rpt/mapper/rpt03_week.xml selectByStartDate·selectById·getBeforeWeek·getLastWeek·insertBeforeWeek·modelUpsert·boldUpdate·selectByLastStartDate,
+     rpt04_week_confirm.xml selectByCompanyId, rpt05_week_biz_class.xml selectByPersonId·upsert, sys09_code.xml selectWeekBizClass + UpdateDataModel(rpt03_week) (Z11 Rpt03_Tab_WeekWrite) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.rpt.mapper.RptWeekMapper">
+
+    <sql id="weekColumns"><![CDATA[
+        rpt03_week_id                                                                   AS week_id
+      , rpt03_person_id                                                                 AS person_id
+      , rpt03_week_start_date                                                           AS week_start_date
+      , rpt03_week_close_date                                                           AS week_close_date
+      , rpt03_biz_type                                                                  AS biz_type
+      , f_cdnm('WeekBizType', rpt03_biz_type, rpt03_company_id, f_sysdate())            AS biz_type_name
+      , rpt03_content                                                                   AS content
+      , REPLACE(CASE WHEN rpt03_bold = 'true'
+                     THEN '<b>' || REPLACE(REPLACE(rpt03_content, CHR(13)||CHR(10), '<br>'), CHR(10), '<br>')
+                     ELSE REPLACE(REPLACE(rpt03_content, CHR(13)||CHR(10), '<br>'), CHR(10), '<br>')
+                END, ' ', CHR(160))                                                     AS html_content
+      , rpt03_due_date                                                                  AS due_date
+      , rpt03_seq                                                                       AS seq
+      , COALESCE(rpt03_bold, 'false') = 'true'                                          AS bold
+      , rpt03_note                                                                      AS note
+      , rpt03_fix_yn = 'true'                                                           AS fix_yn
+      , CASE WHEN rpt03_fix_yn = 'true' THEN 'O' ELSE '' END                            AS fix_yn_str
+      , f_get_empTrans(rpt03_person_id, rpt03_week_start_date, 'org_code_nm')           AS org_name
+      , f_emp_kor_nm(rpt03_person_id)                                                   AS person_name
+    ]]></sql>
+
+    <!-- AS-IS rpt03_week.selectByStartDate (IDMS-IC) — SELECT * → WeekRes 열만, 조건·정렬 그대로. weekBizTypeCode: null → '999' 제외, '999' → 건의사항만 -->
+    <select id="selectByStartDate" resultType="kr.co.kfs.asseterp.biz.rpt.dto.WeekRes">
+        SELECT <include refid="weekColumns"/>
+          FROM rpt03_week
+         WHERE rpt03_company_id = #{companyId}
+           AND rpt03_person_id = #{personId}
+           AND rpt03_week_start_date = #{startDate}::date
+           AND rpt03_week_close_date = #{closeDate}::date
+        <if test="!suggestion">
+           AND rpt03_biz_type != '999'
+        </if>
+        <if test="suggestion">
+           AND rpt03_biz_type = '999'
+        </if>
+         ORDER BY rpt03_seq
+    </select>
+
+    <!-- AS-IS rpt03_week.selectById (IDMS-IC) — 로그인 회사 조건 추가(보안 보강) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.rpt.dto.WeekRes">
+        SELECT <include refid="weekColumns"/>
+          FROM rpt03_week
+         WHERE rpt03_week_id = #{weekId}
+           AND rpt03_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS rpt03_week.getBeforeWeek (IDMS-IC) -->
+    <select id="selectBeforeWeek" resultType="kr.co.kfs.asseterp.biz.rpt.dto.WeekRes">
+        SELECT <include refid="weekColumns"/>
+          FROM rpt03_week
+         WHERE rpt03_week_start_date &lt; #{startDate}::date
+           AND rpt03_company_id = #{companyId}
+           AND rpt03_person_id = #{personId}
+           AND rpt03_biz_type != '999'
+         ORDER BY rpt03_week_start_date DESC
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS rpt03_week.getLastWeek (IDMS-IC) -->
+    <select id="selectLastWeek" resultType="kr.co.kfs.asseterp.biz.rpt.dto.WeekRes">
+        SELECT <include refid="weekColumns"/>
+          FROM rpt03_week
+         WHERE rpt03_week_start_date = (#{startDate}::date - INTERVAL '1 week')
+           AND rpt03_company_id = #{companyId}
+           AND rpt03_person_id = #{personId}
+           AND rpt03_biz_type != '999'
+         ORDER BY rpt03_week_start_date DESC
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS rpt03_week.insertBeforeWeek (IDMS-IC) — 직전 보고를 이번 주로 복사(제출여부는 비워 둔다) -->
+    <insert id="insertBeforeWeek">
+        INSERT INTO rpt03_week (rpt03_week_id, rpt03_company_id, rpt03_person_id, rpt03_week_start_date, rpt03_week_close_date, rpt03_biz_type, rpt03_content, rpt03_due_date, rpt03_seq, rpt03_bold, rpt03_note)
+        SELECT f_create_seq(), rpt03_company_id, rpt03_person_id, #{startDate}::date, #{closeDate}::date, rpt03_biz_type, rpt03_content, rpt03_due_date, rpt03_seq, rpt03_bold, rpt03_note
+          FROM rpt03_week
+         WHERE rpt03_company_id = #{companyId}
+           AND rpt03_person_id = #{personId}
+           AND rpt03_week_start_date = #{beforeStartDate}::date
+           AND rpt03_biz_type != '999'
+    </insert>
+
+    <!-- AS-IS Rpt03_Week.modelUpsert·update → INSERT (회사·사원은 서버가 로그인 값으로) -->
+    <insert id="insertWeek">
+        INSERT INTO rpt03_week
+             (rpt03_week_id, rpt03_company_id, rpt03_person_id, rpt03_week_start_date, rpt03_week_close_date, rpt03_biz_type,
+              rpt03_content, rpt03_due_date, rpt03_seq, rpt03_bold, rpt03_note)
+        VALUES (#{weekId}, #{companyId}, #{personId}, #{req.weekStartDate}, #{req.weekCloseDate}, #{req.bizType},
+                #{req.content}, #{req.dueDate}, #{req.seq}, #{req.bold}::text, #{req.note})
+    </insert>
+
+    <!-- AS-IS Rpt03_Week.modelUpsert·update → UPDATE — 제출여부는 건드리지 않고, 로그인 회사·본인 행만(보안 보강) -->
+    <update id="updateWeek">
+        UPDATE rpt03_week
+           SET rpt03_week_start_date = #{req.weekStartDate}
+             , rpt03_week_close_date = #{req.weekCloseDate}
+             , rpt03_biz_type        = #{req.bizType}
+             , rpt03_content         = #{req.content}
+             , rpt03_due_date        = #{req.dueDate}
+             , rpt03_seq             = #{req.seq}
+             , rpt03_bold            = #{req.bold}::text
+             , rpt03_note            = #{req.note}
+         WHERE rpt03_week_id   = #{req.weekId}
+           AND rpt03_company_id = #{companyId}
+           AND rpt03_person_id  = #{personId}
+    </update>
+
+    <!-- AS-IS Rpt03_Week.inUpdateData — ▲▼로 바뀌는 값은 순번뿐 -->
+    <update id="updateSeq">
+        UPDATE rpt03_week
+           SET rpt03_seq = #{seq}
+         WHERE rpt03_week_id   = #{weekId}
+           AND rpt03_company_id = #{companyId}
+           AND rpt03_person_id  = #{personId}
+    </update>
+
+    <!-- AS-IS Rpt03_Week.updateFixYn → modelUpsert 의 rpt03_fix_yn -->
+    <update id="updateFix">
+        UPDATE rpt03_week
+           SET rpt03_fix_yn = #{fixYn}
+         WHERE rpt03_week_id   = #{weekId}
+           AND rpt03_company_id = #{companyId}
+           AND rpt03_person_id  = #{personId}
+    </update>
+
+    <!-- AS-IS rpt03_week.boldUpdate (IDMS-IC) — 로그인 회사·본인 행만(보안 보강) -->
+    <update id="updateBold">
+        UPDATE rpt03_week
+           SET rpt03_bold = #{bold}
+         WHERE rpt03_week_id   = #{weekId}
+           AND rpt03_company_id = #{companyId}
+           AND rpt03_person_id  = #{personId}
+    </update>
+
+    <!-- AS-IS Rpt03_Week.delete → UpdateDataModel.deleteModel(ID로 DELETE) — 로그인 회사·본인 행만(보안 보강) -->
+    <delete id="deleteWeek">
+        DELETE FROM rpt03_week
+         WHERE rpt03_week_id   = #{weekId}
+           AND rpt03_company_id = #{companyId}
+           AND rpt03_person_id  = #{personId}
+    </delete>
+
+    <!-- AS-IS rpt04_week_confirm.selectByCompanyId (IDMS-IC) — 확인자 ID -->
+    <select id="selectConfirmerId" resultType="long">
+        SELECT rpt04_confirmer_id
+          FROM rpt04_week_confirm
+         WHERE rpt04_company_id = #{companyId}
+           AND rpt04_person_id = #{personId}
+           AND rpt04_week_start_date = #{startDate}::date
+         LIMIT 1
+    </select>
+
+    <select id="selectConfirmerName" resultType="string">
+        SELECT f_emp_kor_nm(#{confirmerId})
+    </select>
+
+    <!-- AS-IS sys09_code.selectWeekBizClass (IDMS-IC) — 내가 사용으로 정한 업무구분(999 제외) -->
+    <select id="selectWeekBizClass" resultType="kr.co.kfs.asseterp.biz.rpt.dto.WeekCodeRes">
+        WITH sys_code AS ( SELECT a.*
+                             FROM sys08_code_kind
+                                  INNER JOIN sys09_code a ON sys09_code_kind_id = sys08_code_kind_id
+                            WHERE sys08_kind_cd    = 'WeekBizType'
+                              AND sys09_company_id = #{companyId}
+                              AND sys09_apply_date = ( SELECT MAX(b.sys09_apply_date)
+                                                         FROM sys09_code b
+                                                        WHERE b.sys09_code_kind_id = a.sys09_code_kind_id
+                                                          AND b.sys09_company_id   = a.sys09_company_id
+                                                          AND b.sys09_code         = a.sys09_code
+                                                          AND b.sys09_apply_date &lt;= #{stdDate} )
+                              AND ( ( COALESCE(sys09_close_yn,'false') = 'true'                         AND
+                                      COALESCE(sys09_close_date,'1900-12-31') &gt;= #{stdDate} ) OR
+                                    ( COALESCE(sys09_close_yn,'false') != 'true'                        ) )
+        )
+        SELECT sys09_code AS code
+             , sys09_name AS name
+          FROM sys_code
+               LEFT OUTER JOIN rpt05_week_biz_class ON ( rpt05_week_biz_type = sys09_code  AND
+                                                         rpt05_person_id     = #{personId} )
+         WHERE COALESCE(rpt05_un_use_yn,'true') != 'true'
+           AND sys09_code != '999'
+         ORDER BY sys09_seq
+    </select>
+
+    <!-- AS-IS rpt05_week_biz_class.selectByPersonId (IDMS-IC) — kindCode = WeekBizType -->
+    <select id="selectBizClasses" resultType="kr.co.kfs.asseterp.biz.rpt.dto.WeekBizClassRes">
+        WITH sys_code AS ( SELECT a.*
+                             FROM sys08_code_kind
+                                  INNER JOIN sys09_code a ON sys09_code_kind_id = sys08_code_kind_id
+                            WHERE sys08_kind_cd    = 'WeekBizType'
+                              AND sys09_company_id = #{companyId}
+                              AND sys09_apply_date = ( SELECT MAX(b.sys09_apply_date)
+                                                         FROM sys09_code b
+                                                        WHERE b.sys09_code_kind_id = a.sys09_code_kind_id
+                                                          AND b.sys09_company_id   = a.sys09_company_id
+                                                          AND b.sys09_code         = a.sys09_code
+                                                          AND b.sys09_apply_date &lt;= #{stdDate} )
+                              AND ( ( COALESCE(sys09_close_yn,'false') = 'true'                         AND
+                                      COALESCE(sys09_close_date,'1900-12-31') &gt;= #{stdDate} ) OR
+                                    ( COALESCE(sys09_close_yn,'false') != 'true'                        ) )
+        )
+        SELECT COALESCE(rpt05_week_biz_class_id, ROW_NUMBER() OVER()) AS week_biz_class_id
+             , sys09_code                                              AS week_biz_type
+             , sys09_name                                              AS week_biz_type_name
+             , COALESCE(rpt05_un_use_yn,'true') = 'true'              AS un_use_yn
+          FROM sys_code
+               LEFT OUTER JOIN rpt05_week_biz_class ON ( rpt05_week_biz_type = sys09_code  AND
+                                                         rpt05_person_id     = #{personId} )
+         ORDER BY sys09_seq
+    </select>
+
+    <!-- AS-IS rpt05_week_biz_class.upsert (IDMS-IC) -->
+    <insert id="upsertBizClass">
+        WITH upsert AS
+        (
+        UPDATE rpt05_week_biz_class
+           SET rpt05_un_use_yn     = #{unUseYn}
+         WHERE rpt05_company_id    = #{companyId}
+           AND rpt05_person_id     = #{personId}
+           AND rpt05_week_biz_type = #{weekBizType}
+         RETURNING *
+        )
+        INSERT INTO rpt05_week_biz_class
+             ( rpt05_week_biz_class_id, rpt05_company_id, rpt05_person_id, rpt05_week_biz_type, rpt05_un_use_yn )
+        SELECT f_create_seq(), #{companyId}, #{personId}, #{weekBizType}, #{unUseYn}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </insert>
+
+    <!-- AS-IS rpt03_week.selectByLastStartDate (IDMS-IC) — 지난주(시작일 - 1주)와 이번 주를 업무구분·순서별로 맞춰 본다 -->
+    <select id="selectPrintRows" resultType="kr.co.kfs.asseterp.biz.rpt.dto.WeekPrintRow">
+        WITH current_week AS (
+                SELECT rpt03_biz_type
+                     , rpt03_week_start_date
+                     , rpt03_content
+                     , rpt03_due_date
+                     , rpt03_bold
+                     , ROW_NUMBER() OVER (PARTITION BY rpt03_biz_type ORDER BY rpt03_seq) AS row_num
+                  FROM public.rpt03_week
+                 WHERE rpt03_week_start_date = #{startDate}::date
+                   AND rpt03_company_id = #{companyId}
+                   AND rpt03_person_id = #{personId}
+                 ORDER BY rpt03_biz_type, rpt03_seq
+            ),
+        last_week AS (
+                SELECT rpt03_biz_type
+                     , rpt03_week_start_date AS rpt03_last_week_start_date
+                     , rpt03_content AS rpt03_last_content
+                     , rpt03_due_date AS rpt03_last_due_date
+                     , rpt03_bold AS rpt03_last_bold
+                     , ROW_NUMBER() OVER (PARTITION BY rpt03_biz_type ORDER BY rpt03_seq) AS row_num
+                  FROM public.rpt03_week
+                 WHERE rpt03_week_start_date = (#{startDate}::date - INTERVAL '1 week')
+                   AND rpt03_company_id = #{companyId}
+                   AND rpt03_person_id = #{personId}
+                   AND rpt03_biz_type != '999'
+                 ORDER BY rpt03_biz_type, rpt03_seq
+            )
+        SELECT COALESCE(c.rpt03_biz_type, p.rpt03_biz_type)                                                 AS biz_type
+             , COALESCE(p.row_num, c.row_num)                                                               AS rd_seq
+             , f_cdnm('WeekBizType', COALESCE(c.rpt03_biz_type, p.rpt03_biz_type), #{companyId}, f_sysdate()) AS biz_type_name
+             , p.rpt03_last_week_start_date                                                                 AS last_week_start_date
+             , p.rpt03_last_content                                                                         AS last_content
+             , p.rpt03_last_due_date                                                                        AS last_due_date
+             , COALESCE(p.rpt03_last_bold, 'false') = 'true'                                                AS last_bold
+             , c.rpt03_week_start_date                                                                      AS week_start_date
+             , c.rpt03_content                                                                              AS content
+             , c.rpt03_due_date                                                                             AS due_date
+             , COALESCE(c.rpt03_bold, 'false') = 'true'                                                     AS bold
+          FROM last_week p
+               FULL OUTER JOIN current_week c ON p.rpt03_biz_type = c.rpt03_biz_type AND p.row_num = c.row_num
+         ORDER BY COALESCE(c.rpt03_biz_type, p.rpt03_biz_type), COALESCE(p.row_num, c.row_num)
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS sys99_print.insert (IDMS-IC) — Sys99_Print.insertRdWeekWrite가 채우는 열만 -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_long01, sys99_string01, sys99_date01, sys99_text01, sys99_string03
+               , sys99_date02, sys99_text02, sys99_string05, sys99_string06, sys99_string07, sys99_string08 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{row.rdSeq}, #{row.bizTypeName}, #{row.lastWeekStartDate}, #{row.lastContent}, #{row.lastDueDate}
+               , #{row.weekStartDate}, #{row.content}, #{row.dueDate}, #{row.bizType}, #{row.lastBold}::text, #{row.bold}::text )
+    </insert>
+</mapper>
