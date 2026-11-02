@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/ast/mapper/ast30_book_fund_fee.xml selectEvalFundFee · selectByCorpId · insertBookFundFeeRecovery · updateFixFee · insertBookFundFeeClose
+     · deleteBookFundFeeByTrId · insertBookFundFeeByTrId · deleteBookFundFeeRecoveryByTrId · deleteBookFundFeeCloseByTrId · ast06_tr.insert · deleteByOrgTrId
+     · act02_journal/act03_journal_dtl/act06_journal_tmp.deleteBackJournalByOrgTrId · icam10_fee.createFundFeeBook/createFundFeeBook2 · dbConfig.getAccountCloseDate/getCompanyCloseDate
+     · sys99_print.insert — 펀드보수 결산처리 Ast30_Tab_OfficeMngFeeClose (X13) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.ast.mapper.AstFundFeeCloseMapper">
+
+    <!-- AS-IS ast30_book_fund_fee.selectEvalFundFee: 운용사·통화·환율·결산거래별로 묶은 보수원장. 거래유형은 자산분류가 902013이면 9920(사무관리보수), 902001이면 9910(운용보수) -->
+    <!-- AS-IS ast30_book_fund_fee.selectEvalFundFee (IDMS-IC) -->
+    <select id="selectEvalFundFee" resultType="kr.co.kfs.asseterp.biz.ast.dto.FundFeeCloseRes">
+        SELECT row_number() OVER (ORDER BY ast30_corp_cd, ast30_cur_cd)             AS key_id
+             , f_cdnm('trCode', ast30_tr_cd, ast30_company_id, ast30_hold_date)     AS tr_name
+             , CASE WHEN ast30_tr_id IS NULL THEN '' ELSE '결산' END                 AS close_yn_name
+             , CASE WHEN ast30_tr_id IS NULL THEN (ast30_for_fee - ast30_for_fix_fee)
+                    ELSE ( SELECT ast06_for_amt
+                             FROM ast06_tr
+                            WHERE ast06_tr_id = ast30_tr_id ) END                   AS for_ty_fee
+             , CASE WHEN ast30_tr_id IS NULL THEN (ast30_fee - ast30_fix_fee)
+                    ELSE ( SELECT ast06_amt
+                             FROM ast06_tr
+                            WHERE ast06_tr_id = ast30_tr_id ) END                   AS ty_fee
+             , t.ast30_company_id                                                   AS company_id
+             , t.ast30_hold_date                                                    AS hold_date
+             , t.ast30_corp_id                                                      AS corp_id
+             , t.ast30_corp_cd                                                      AS corp_code
+             , t.ast30_corp_nm                                                      AS corp_name
+             , t.ast30_ast_class_tree_id                                            AS ast_class_tree_id
+             , t.ast30_cur_cd                                                       AS cur_code
+             , t.ast30_fx_rate                                                      AS fx_rate
+             , t.ast30_for_fee                                                      AS for_fee
+             , t.ast30_fee                                                          AS fee
+             , t.ast30_for_fix_fee                                                  AS for_fix_fee
+             , t.ast30_fix_fee                                                      AS fix_fee
+             , t.ast30_tr_id                                                        AS tr_id
+             , t.ast30_tr_cd                                                        AS tr_code
+          FROM (
+                 SELECT ast30_company_id
+                      , ast30_hold_date
+                      , ast30_corp_id
+                      , sys15_corp_cd                 AS ast30_corp_cd
+                      , sys15_corp_nm                 AS ast30_corp_nm
+                      , ast30_ast_class_tree_id
+                      , ast30_cur_cd
+                      , ast30_fx_rate
+                      , SUM(ast30_for_fee)            AS ast30_for_fee
+                      , SUM(ast30_fee)                AS ast30_fee
+                      , SUM(ast30_for_fix_fee)        AS ast30_for_fix_fee
+                      , SUM(ast30_fix_fee)            AS ast30_fix_fee
+                      , ast31_tr_id                   AS ast30_tr_id
+                      , CASE ast01_item_s_class_cd
+                            WHEN '902013' THEN '9920'   /* 9920:펀드사무관리보수 미수처리 */
+                            WHEN '902001' THEN '9910'   /* 9910:펀드운용보수 미수처리 */
+                            ELSE NULL END   AS ast30_tr_cd
+                   FROM ast30_book_fund_fee
+                        LEFT OUTER JOIN ast31_book_fund_fee_close ON ast31_book_fund_fee_id = ast30_book_fund_fee_id
+                        LEFT OUTER JOIN sys15_corp ON sys15_corp_id = ast30_corp_id
+                        INNER JOIN ast01_class_tree ON ast01_class_tree_id = ast30_ast_class_tree_id
+                  WHERE ast30_company_id = #{c.companyId}
+                    AND ast30_hold_date  = #{c.holdDate}
+                    <if test="c.corpIdStr != null and c.corpIdStr != ''">
+                        AND ast30_corp_id||'' LIKE #{c.corpIdStr}
+                    </if>
+                    <if test="c.searchText != null and c.searchText != ''">
+                        AND upper(concat(sys15_corp_cd,sys15_corp_nm,ast30_cur_cd)) LIKE '%'||upper(#{c.searchText})||'%'
+                    </if>
+                  GROUP BY ast30_company_id
+                         , ast30_hold_date
+                         , ast30_corp_id
+                         , sys15_corp_cd
+                         , sys15_corp_nm
+                         , ast30_ast_class_tree_id
+                         , ast30_cur_cd
+                         , ast30_fx_rate
+                         , ast31_tr_id
+                         , ast01_item_s_class_cd
+               ) t
+    </select>
+
+    <!-- AS-IS ast30_book_fund_fee.selectByCorpId: 화면이 읽는 열만 남김(차이 보수 ast30_diff_fee 등 그리드에 없는 계산 열은 뺌). 외화 보수는 KRW면 비움 -->
+    <!-- AS-IS ast30_book_fund_fee.selectByCorpId (IDMS-IC) -->
+    <select id="selectByCorpId" resultType="kr.co.kfs.asseterp.biz.ast.dto.FundFeeFundRes">
+        SELECT t.ast30_book_fund_fee_id                                              AS book_fund_fee_id
+             , t.ast30_fund_cd                                                       AS fund_code
+             , t.ast30_fund_nm                                                       AS fund_name
+             , CASE WHEN t.ast30_cur_cd = 'KRW' THEN null ELSE t.ast30_for_fee END   AS for_fee
+             , t.ast30_fee                                                           AS fee
+             , t.ast30_for_ty_fee                                                    AS for_ty_fee
+             , t.ast30_ty_fee                                                        AS ty_fee
+             , t.ast30_for_fix_fee                                                   AS for_fix_fee
+             , t.ast30_fix_fee                                                       AS fix_fee
+             , t.ast30_fx_rate                                                       AS fx_rate
+          FROM ( SELECT ast30_book_fund_fee.*
+                      , sys15_corp_cd                                   AS ast30_corp_cd
+                      , sys15_corp_nm                                   AS ast30_corp_nm
+                      , ast30_fee     - COALESCE(ast30_fix_fee    ,0)   AS ast30_ty_fee
+                      , ast30_for_fee - COALESCE(ast30_for_fix_fee,0)   AS ast30_for_ty_fee
+                   FROM ast30_book_fund_fee
+                        INNER JOIN sys15_corp ON sys15_corp_id = ast30_corp_id
+                  WHERE ast30_company_id = #{companyId}
+                    AND ast30_hold_date  = #{holdDate}
+                    AND ast30_corp_id    = #{corpId}
+                    <if test="curCode != null and curCode != ''">
+                        AND ast30_cur_cd = #{curCode}
+                    </if>
+               ) t
+         WHERE upper(concat(ast30_corp_cd,ast30_corp_nm,ast30_fund_cd,ast30_fund_nm)) LIKE '%'||upper(#{searchText})||'%'
+         ORDER BY ast30_fund_cd
+    </select>
+
+    <!-- dbConfig.getAccountCloseDate / getCompanyCloseDate -->
+    <!-- AS-IS dbConfig.getAccountCloseDate (IDMS-IC) -->
+    <select id="selectAccountCloseDate" resultType="java.time.LocalDate">
+        SELECT f_get_account_close_date(#{companyId}, CAST(#{stdDate} AS date), 0)
+    </select>
+
+    <!-- AS-IS dbConfig.getCompanyCloseDate (IDMS-IC) -->
+    <select id="selectYearCloseDate" resultType="java.time.LocalDate">
+        SELECT f_get_close_date(#{companyId}, #{year}, '2')
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq (IDMS-IC) -->
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS ast06_tr.insert(Ast06_TrModel): 거래ID·회사·등록자·거래유형·거래처·자산·일자·통화·결제관리 true·외화금액·외화계약금액·환율·금액·계약금액·적요. 나머지 열은 원본도 null -->
+    <!-- AS-IS ast06_tr.insert (IDMS-IC) -->
+    <insert id="insertTr">
+        INSERT INTO ast06_tr
+               ( ast06_tr_id, ast06_company_id, ast06_person_id, ast06_tr_cd, ast06_corp_id, ast06_ast_class_tree_id
+               , ast06_date, ast06_cur_cd, ast06_settle_mng_yn, ast06_for_amt, ast06_for_cont_amt
+               , ast06_fx_rate, ast06_amt, ast06_cont_amt, ast06_note )
+        VALUES ( #{trId}, #{companyId}, #{personId}, #{r.trCode}, #{r.corpId}, #{r.astClassTreeId}
+               , #{r.holdDate}, #{r.curCode}, 'true', #{r.forFee}, #{r.forFee}
+               , #{fxRate}, #{amt}, #{contAmt}, '펀드보수결산' )
+    </insert>
+
+    <!-- AS-IS ast30_book_fund_fee.insertBookFundFeeRecovery: 결산 전 원장을 복구용(ast32)에 복사. corpId가 있으면 그 운용사만(AS-IS `<if corpId>` 분기) -->
+    <!-- AS-IS ast30_book_fund_fee.insertBookFundFeeRecovery (IDMS-IC) -->
+    <insert id="insertBookFundFeeRecovery">
+        INSERT INTO ast32_book_fund_fee_recovery
+        SELECT f_create_seq()
+             , ast30_book_fund_fee.*
+          FROM ast30_book_fund_fee
+         WHERE ast30_company_id         = #{companyId}
+           AND ast30_hold_date          = #{holdDate}
+           AND ast30_cur_cd             = #{curCode}
+           AND ast30_ast_class_tree_id  = #{astClassTreeId}
+           <if test="corpId != null">
+               AND ast30_corp_id        = #{corpId}
+           </if>
+    </insert>
+
+    <!-- AS-IS ast30_book_fund_fee.updateFixFee (IDMS-IC) -->
+    <update id="updateFixFee">
+        UPDATE ast30_book_fund_fee
+           SET ast30_for_fix_fee = ast30_for_fee
+             , ast30_fix_fee     = CASE WHEN ast30_cur_cd = 'KRW' THEN ast30_for_fee
+                                        ELSE trunc(ast30_for_fee * ast30_fx_rate) END
+         WHERE ast30_company_id         = #{companyId}
+           AND ast30_hold_date          = #{holdDate}
+           AND ast30_cur_cd             = #{curCode}
+           AND ast30_ast_class_tree_id  = #{astClassTreeId}
+           <if test="corpId != null">
+               AND ast30_corp_id        = #{corpId}
+           </if>
+    </update>
+
+    <!-- AS-IS ast30_book_fund_fee.insertBookFundFeeClose (IDMS-IC) -->
+    <insert id="insertBookFundFeeClose">
+        INSERT INTO ast31_book_fund_fee_close
+        SELECT f_create_seq()
+             , #{trId}
+             , ast30_book_fund_fee.*
+          FROM ast30_book_fund_fee
+         WHERE ast30_company_id         = #{companyId}
+           AND ast30_hold_date          = #{holdDate}
+           AND ast30_cur_cd             = #{curCode}
+           AND ast30_ast_class_tree_id  = #{astClassTreeId}
+           <if test="corpId != null">
+               AND ast30_corp_id        = #{corpId}
+           </if>
+    </insert>
+
+    <!-- AS-IS ast30_book_fund_fee.deleteBookFundFeeByTrId (IDMS-IC) -->
+    <delete id="deleteBookFundFeeByTrId">
+        DELETE FROM ast30_book_fund_fee
+         WHERE ast30_book_fund_fee_id IN ( SELECT ast31_book_fund_fee_id
+                                             FROM ast31_book_fund_fee_close
+                                            WHERE ast31_tr_id = #{trId} )
+    </delete>
+
+    <!-- AS-IS ast30_book_fund_fee.insertBookFundFeeByTrId (IDMS-IC) -->
+    <insert id="insertBookFundFeeByTrId">
+        INSERT INTO ast30_book_fund_fee
+        SELECT ast32_book_fund_fee_id
+             , ast32_hold_date
+             , ast32_company_id
+             , ast32_ast_class_tree_id
+             , ast32_corp_id
+             , ast32_fund_cd
+             , ast32_fund_nm
+             , ast32_cur_cd
+             , ast32_for_fee_today
+             , ast32_fee_today
+             , ast32_for_fee
+             , ast32_fee
+             , ast32_fx_rate
+             , ast32_note
+             , ast32_consignment_cd
+             , ast32_consignment_nm
+             , ast32_calc_start_date
+             , ast32_calc_close_date
+             , ast32_for_un_rcv_fee
+             , ast32_un_rcv_fee
+             , ast32_for_fix_fee
+             , ast32_fix_fee
+          FROM ast32_book_fund_fee_recovery
+         WHERE ast32_book_fund_fee_id IN ( SELECT ast31_book_fund_fee_id
+                                             FROM ast31_book_fund_fee_close
+                                            WHERE ast31_tr_id = #{trId} )
+    </insert>
+
+    <!-- AS-IS ast30_book_fund_fee.deleteBookFundFeeRecoveryByTrId (IDMS-IC) -->
+    <delete id="deleteBookFundFeeRecoveryByTrId">
+        DELETE FROM ast32_book_fund_fee_recovery
+         WHERE ast32_book_fund_fee_id IN ( SELECT ast31_book_fund_fee_id
+                                             FROM ast31_book_fund_fee_close
+                                            WHERE ast31_tr_id = #{trId} )
+    </delete>
+
+    <!-- AS-IS ast30_book_fund_fee.deleteBookFundFeeCloseByTrId (IDMS-IC) -->
+    <delete id="deleteBookFundFeeCloseByTrId">
+        DELETE FROM ast31_book_fund_fee_close WHERE ast31_tr_id = #{trId}
+    </delete>
+
+    <!-- 반제분개·반제거래(원거래ID = 결산 거래) -->
+    <!-- AS-IS act06_journal_tmp.deleteBackJournalByOrgTrId (IDMS-IC) -->
+    <delete id="deleteBackJournalTmpByOrgTrId">
+        DELETE FROM act06_journal_tmp
+         WHERE act06_journal_id IN ( SELECT act02_journal_id
+                                       FROM act02_journal
+                                      WHERE act02_tr_id IN ( SELECT ast06_tr_id
+                                                               FROM ast06_tr
+                                                              WHERE ast06_org_tr_id = #{trId} ) )
+    </delete>
+
+    <!-- AS-IS act03_journal_dtl.deleteBackJournalByOrgTrId (IDMS-IC) -->
+    <delete id="deleteBackJournalDtlByOrgTrId">
+        DELETE FROM act03_journal_dtl
+         WHERE act03_journal_id IN ( SELECT act02_journal_id
+                                       FROM act02_journal
+                                      WHERE act02_tr_id IN ( SELECT ast06_tr_id
+                                                               FROM ast06_tr
+                                                              WHERE ast06_org_tr_id = #{trId} ) )
+    </delete>
+
+    <!-- AS-IS act02_journal.deleteBackJournalByOrgTrId (IDMS-IC) -->
+    <delete id="deleteBackJournalByOrgTrId">
+        DELETE FROM act02_journal
+         WHERE act02_tr_id IN ( SELECT ast06_tr_id
+                                  FROM ast06_tr
+                                 WHERE ast06_org_tr_id = #{trId} )
+    </delete>
+
+    <!-- AS-IS ast06_tr.deleteByOrgTrId (IDMS-IC) -->
+    <delete id="deleteTrByOrgTrId">
+        DELETE FROM ast06_tr WHERE ast06_org_tr_id = #{trId}
+    </delete>
+
+    <!-- AS-IS icam10_fee.createFundFeeBook2 (IDMS-IC) -->
+    <select id="createFundFeeBook2" resultType="string" flushCache="true">
+        SELECT f_create_fundFeeBook2(#{companyId}, CAST(#{stdDate} AS date), #{corpId}, '%')
+    </select>
+
+    <!-- AS-IS icam10_fee.createFundFeeBook (IDMS-IC) -->
+    <select id="createFundFeeBook" resultType="string" flushCache="true">
+        SELECT f_create_fundFeeBook(#{companyId}, CAST(#{stdDate} AS date), CAST(NULL AS varchar))
+    </select>
+
+    <select id="countClosedBook" resultType="int">
+        SELECT count(*)
+          FROM ast31_book_fund_fee_close
+               INNER JOIN ast30_book_fund_fee ON ast30_book_fund_fee_id = ast31_book_fund_fee_id
+         WHERE ast31_book_fund_fee_id = #{bookFundFeeId}
+           AND ast30_company_id       = #{companyId}
+    </select>
+
+    <!-- AS-IS UpdateDataModel(ast30_book_fund_fee): 화면이 바꾸는 열만. 회사 조건은 보안 보강(05 §6) -->
+    <!-- AS-IS ast30_book_fund_fee.update (UpdateDataModel) (IDMS-IC) -->
+    <update id="updateFundFee">
+        UPDATE ast30_book_fund_fee
+           SET ast30_fee     = #{r.fee}
+             , ast30_for_fee = #{r.forFee}
+             , ast30_fx_rate = #{r.fxRate}
+         WHERE ast30_book_fund_fee_id = #{r.bookFundFeeId}
+           AND ast30_company_id       = #{companyId}
+    </update>
+
+    <!-- AS-IS Sys99_Print.insertRdOfficeMngFeeClose: 결산여부·결산일자·거래유형·운용사코드·운용사·통화·누적보수(통화기준)·누적보수(KRW)·적용환율 -->
+    <!-- AS-IS sys99_print.insert (IDMS-IC) -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_date01, sys99_string02, sys99_string03, sys99_string04, sys99_string05
+               , sys99_double01, sys99_long01, sys99_double02 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{r.closeYnName}, #{r.holdDate}, #{r.trName}, #{r.corpCode}, #{r.corpName}, #{r.curCode}
+               , #{r.forFee}, #{r.fee}, #{r.fxRate} )
+    </insert>
+</mapper>

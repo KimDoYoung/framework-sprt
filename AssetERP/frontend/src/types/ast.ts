@@ -1197,3 +1197,40 @@ export interface AstFxRate {
   applyFxRate: number | null;
   note: string | null;
 }
+
+/** AS-IS ast.Ast30_BookFundFee.selectEvalFundFee (X13 펀드보수 결산처리) — 운용사·통화 단위로 묶은 한 행. closeYnName은 결산했으면 "결산", trId는 결산 거래 */
+export interface AstFundFeeClose {
+  keyId: number;
+  trName: string | null;
+  closeYnName: string | null;
+  forTyFee: number | null;
+  tyFee: number | null;
+  companyId: number | null;
+  holdDate: string;
+  corpId: number | null;
+  corpCode: string | null;
+  corpName: string | null;
+  astClassTreeId: number | null;
+  curCode: string | null;
+  fxRate: number | null;
+  forFee: number | null;
+  fee: number | null;
+  forFixFee: number | null;
+  fixFee: number | null;
+  trId: number | null;
+  trCode: string | null;
+}
+
+/** AS-IS ast.Ast30_BookFundFee.selectByCorpId (X13 환율 및 펀드보수 변경 조회창) — 펀드 한 행 */
+export interface AstFundFeeFund {
+  bookFundFeeId: number;
+  fundCode: string | null;
+  fundName: string | null;
+  forFee: number | null;
+  fee: number | null;
+  forTyFee: number | null;
+  tyFee: number | null;
+  forFixFee: number | null;
+  fixFee: number | null;
+  fxRate: number | null;
+}

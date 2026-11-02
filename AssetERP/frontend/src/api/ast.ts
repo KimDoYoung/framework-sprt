@@ -25,7 +25,7 @@ import {
   AstHoldBook,
   AstForeignDeposit,
   AstTrFinance,
-  AstFxEval,
+  AstFxEval, AstFundFeeClose, AstFundFeeFund,
   AstFxRate,
   AstTrDeposit,
   AstTrDepositSaveReq,
@@ -522,6 +522,45 @@ export const astApi = {
   /** AS-IS ast.Ast24_FxRate.delete (X12) */
   deleteFxRates: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/ast/fx-rates', { data: { ids } });
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast30_BookFundFee.selectEvalFundFee (X13): 결산일자(말일) 기준 펀드보수 결산 목록. corpId 없으면 전체 */
+  searchFundFeeCloses: async (params: { holdDate: string; corpId?: number | null; searchText?: string }): Promise<AstFundFeeClose[]> => {
+    const res = await apiClient.get<ApiResponse<AstFundFeeClose[]>>('v1/ast/fund-fee-closes', { params: { ...params, corpId: params.corpId ?? undefined, searchText: params.searchText || undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast30_BookFundFee.updateEvalFundFee procType "P" (X13): 선택한 행 결산처리 */
+  processFundFeeCloses: async (items: AstFundFeeClose[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/ast/fund-fee-closes/process', { items });
+  },
+
+  /** AS-IS ast.Ast30_BookFundFee.updateEvalFundFee procType "C" (X13): 결산취소 */
+  cancelFundFeeCloses: async (items: AstFundFeeClose[]): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/ast/fund-fee-closes/cancel', { items });
+  },
+
+  /** AS-IS ast.Ast30_BookFundFee.reprocFundFee (X13): 보수원장정리 */
+  reprocFundFee: async (closeDate: string): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/ast/fund-fee-closes/reproc', { closeDate });
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdOfficeMngFeeClose (X13): 출력 데이터를 만들고 출력그룹ID를 돌려준다 */
+  rdFundFeeClose: async (req: { holdDate: string; corpId?: number | null; searchText?: string }): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/ast/fund-fee-closes/rd', req);
+    return res.data.data;
+  },
+
+  /** AS-IS ast.Ast30_BookFundFee.selectByCorpId (X13 환율 및 펀드보수 변경): 운용사·통화의 펀드별 보수 */
+  searchFundFeeFunds: async (params: { holdDate: string; corpId: number; curCode: string; searchText?: string }): Promise<AstFundFeeFund[]> => {
+    const res = await apiClient.get<ApiResponse<AstFundFeeFund[]>>('v1/ast/fund-fee-closes/funds', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast30_BookFundFee.update (X13): 고친 펀드 행 저장 → 저장한 건수 */
+  saveFundFeeFunds: async (curCode: string, items: { bookFundFeeId: number; fee: number | null; forFee: number | null; fxRate: number | null }[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/ast/fund-fee-closes/funds', { curCode, items });
     return res.data.data;
   },
 
