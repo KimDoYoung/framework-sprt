@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, JournalDtlList, JournalDtlRdReq, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, JournalDtlList, JournalDtlRdReq, JournalSub, JournalSubRdReq, JournalAccount, JournalRealAccount, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { AstBook } from '../types/ast';
 import { readBlobError } from './file';
 
@@ -427,5 +427,50 @@ export const actApi = {
   insertJournalDtlRd: async (req: JournalDtlRdReq): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/act/journal-dtls/rd', req);
     return res.data.data;
+  },
+
+  // ── X17 계정별원장 (Act02_Tab_JournalSub) ──
+
+  /** AS-IS act.Act03_JournalDtl.selectByAccountCode: 계정과 하위 계정, 첫 줄은 전월이월. corpId·depositId 없으면 전체, 검색어는 서버가 "%…%" */
+  searchJournalSubs: async (params: { startDate: string; closeDate: string; accountCode: string; trCode?: string | null; corpId?: number | null; depositId?: number | null; searchText?: string }): Promise<JournalSub[]> => {
+    const res = await apiClient.get<ApiResponse<JournalSub[]>>('v1/act/journal-dtls/by-account', {
+      params: { ...params, trCode: params.trCode ?? undefined, corpId: params.corpId ?? undefined, depositId: params.depositId ?? undefined, searchText: params.searchText || undefined },
+    });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act02_Journal.getAccountCode: 기간에 분개가 있는 계정 (엑셀다운로드 전 데이터 유무 판정) */
+  searchJournalAccountCodes: async (startDate: string, closeDate: string): Promise<JournalAccount[]> => {
+    const res = await apiClient.get<ApiResponse<JournalAccount[]>>('v1/act/journal-dtls/account-codes', { params: { startDate, closeDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act13_RealAccountMap.selectByAstClassTreeId: 관리계좌(종목분류)의 실계정, 없으면 null */
+  getJournalRealAccount: async (classTreeId: number): Promise<JournalRealAccount | null> => {
+    const res = await apiClient.get<ApiResponse<JournalRealAccount | null>>('v1/act/journal-dtls/real-account', { params: { classTreeId } });
+    return res.data.data ?? null;
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdJournalSub → 출력그룹ID */
+  insertJournalSubRd: async (req: JournalSubRdReq): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/act/journal-dtls/by-account/rd', req);
+    return res.data.data;
+  },
+
+  /** 엑셀다운로드 (AS-IS ExcelDownload act02List, .xls → .xlsx) — accountCode 없으면 기간 중 모든 계정 */
+  downloadJournalSubExcel: async (startDate: string, closeDate: string, accountCode?: string | null): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>('v1/act/journal-dtls/by-account/excel', { params: { startDate, closeDate, accountCode: accountCode ?? undefined }, responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `계정별원장(${startDate}~${closeDate}).xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      throw await readBlobError(err);
+    }
   },
 };

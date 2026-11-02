@@ -1,4 +1,13 @@
 package kr.co.kfs.asseterp.biz.act.controller;
+import kr.co.kfs.asseterp.biz.act.dto.JournalSubRes;
+import kr.co.kfs.asseterp.biz.act.dto.JournalSubRdReq;
+import kr.co.kfs.asseterp.biz.act.dto.JournalAccountRes;
+import kr.co.kfs.asseterp.biz.act.dto.JournalRealAccountRes;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import java.nio.charset.StandardCharsets;
 import kr.co.kfs.asseterp.biz.act.dto.JournalDtlListRes;
 import kr.co.kfs.asseterp.biz.act.dto.JournalDtlRdReq;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -68,5 +77,54 @@ public class ActJournalDtlController {
     @PostMapping("/rd")
     public ApiResponse<Long> rd(@AuthenticationPrincipal UserPrincipal principal, @RequestBody JournalDtlRdReq req) {
         return ApiResponse.ok(service.insertRd(principal, req));
+    }
+
+    // ---- 계정별원장 Act02_Tab_JournalSub (X17)
+
+    /** act.Act03_JournalDtl.selectByAccountCode */
+    @GetMapping("/by-account")
+    public ApiResponse<List<JournalSubRes>> byAccount(@AuthenticationPrincipal UserPrincipal principal,
+                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                      @RequestParam String accountCode,
+                                                      @RequestParam(required = false) String trCode,
+                                                      @RequestParam(required = false) Long corpId,
+                                                      @RequestParam(required = false) Long depositId,
+                                                      @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchByAccountCode(principal, startDate, closeDate, accountCode, trCode, corpId, depositId, searchText));
+    }
+
+    /** act.Act02_Journal.getAccountCode — 기간에 분개가 있는 계정 */
+    @GetMapping("/account-codes")
+    public ApiResponse<List<JournalAccountRes>> accountCodes(@AuthenticationPrincipal UserPrincipal principal,
+                                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate) {
+        return ApiResponse.ok(service.searchAccountCodes(principal, startDate, closeDate));
+    }
+
+    /** act.Act13_RealAccountMap.selectByAstClassTreeId — 관리계좌(종목분류)의 실계정, 없으면 data null */
+    @GetMapping("/real-account")
+    public ApiResponse<JournalRealAccountRes> realAccount(@AuthenticationPrincipal UserPrincipal principal, @RequestParam Long classTreeId) {
+        return ApiResponse.ok(service.getRealAccount(principal, classTreeId));
+    }
+
+    /** sys.Sys99_Print.insertRdJournalSub — 출력그룹ID */
+    @PostMapping("/by-account/rd")
+    public ApiResponse<Long> rdByAccount(@AuthenticationPrincipal UserPrincipal principal, @RequestBody JournalSubRdReq req) {
+        return ApiResponse.ok(service.insertRdSub(principal, req));
+    }
+
+    /** ExcelDownload act02List — accountCode가 없거나 none이면 전체 계정 */
+    @GetMapping("/by-account/excel")
+    public ResponseEntity<byte[]> excelByAccount(@AuthenticationPrincipal UserPrincipal principal,
+                                                 @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                 @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                 @RequestParam(required = false) String accountCode) {
+        byte[] body = service.downloadAccountExcel(principal, startDate, closeDate, accountCode);
+        String fileName = "계정별원장(" + startDate + "~" + closeDate + ").xlsx";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(body);
     }
 }

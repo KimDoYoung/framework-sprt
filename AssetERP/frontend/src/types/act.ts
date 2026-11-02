@@ -414,3 +414,48 @@ export interface JournalDtlRdReq {
   abroType: string;
   journalIds: number[];
 }
+
+/** 계정별원장 한 줄 (act03_journal_dtl.selectByAccountCode, X17) — 첫 줄은 전월이월(journalId 0) */
+export interface JournalSub {
+  journalDtlId: number;
+  date: string;
+  journalNo: number | null;
+  journalNoStr: string | null;
+  journalId: number;
+  trCode: string | null;
+  trName: string | null;
+  corpName: string | null;
+  note: string | null;
+  accountCode: string | null;
+  accountName: string | null;
+  drAmt: number | null;
+  crAmt: number | null;
+  drAstName: string | null;
+  drNote: string | null;
+  balAmt: number | null;
+}
+
+/** 기간 중 분개가 있는 계정 (act02_journal.getAccountCode) */
+export interface JournalAccount {
+  trCode: string;
+  trName: string | null;
+}
+
+/** 관리계좌에 맞는 실계정 (act13_real_account_map.selectByAstClassTreeId) */
+export interface JournalRealAccount {
+  accountCode: string | null;
+  accountName: string | null;
+  realAccountName: string | null;
+}
+
+/** 계정별원장 출력 준비 요청 */
+export interface JournalSubRdReq {
+  windowClassName: string;
+  startDate: string;
+  closeDate: string;
+  accountCode: string;
+  trCode: string | null;
+  corpId: number | null;
+  depositId: number | null;
+  searchText: string;
+}

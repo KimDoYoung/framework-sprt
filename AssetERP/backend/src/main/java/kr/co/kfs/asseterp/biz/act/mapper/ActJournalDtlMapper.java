@@ -1,4 +1,8 @@
 package kr.co.kfs.asseterp.biz.act.mapper;
+import kr.co.kfs.asseterp.biz.act.dto.JournalSubCond;
+import kr.co.kfs.asseterp.biz.act.dto.JournalSubRes;
+import kr.co.kfs.asseterp.biz.act.dto.JournalAccountRes;
+import kr.co.kfs.asseterp.biz.act.dto.JournalRealAccountRes;
 import kr.co.kfs.asseterp.biz.act.dto.JournalDtlCond;
 import kr.co.kfs.asseterp.biz.act.dto.JournalDtlListRes;
 
@@ -41,4 +45,20 @@ public interface ActJournalDtlMapper {
     /** AS-IS sys99_print.insert — 출력용 분개장 한 줄 */
     int insertPrintJournal(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
                            @Param("windowClassName") String windowClassName, @Param("groupId") long groupId, @Param("r") JournalDtlListRes r);
+
+    /** AS-IS selectByAccountCode (계정별원장, X17) */
+    List<JournalSubRes> selectByAccountCode(JournalSubCond cond);
+
+    /** AS-IS act02_journal.getAccountCode — 기간 중 분개가 있는 전표용 계정(보고서 계정 기준) */
+    List<JournalAccountRes> selectAccountCodes(JournalSubCond cond);
+
+    /** AS-IS act02_journal.getOneAccountCode — 계정과 그 하위 중 전표생성 계정 */
+    List<JournalAccountRes> selectOneAccountCodes(JournalSubCond cond);
+
+    /** AS-IS act13_real_account_map.selectByAstClassTreeId */
+    JournalRealAccountRes selectRealAccountByClassTree(@Param("companyId") Long companyId, @Param("classTreeId") Long classTreeId);
+
+    /** AS-IS sys99_print.insert — 출력용 계정별원장 한 줄 */
+    int insertPrintJournalSub(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
+                              @Param("windowClassName") String windowClassName, @Param("groupId") long groupId, @Param("r") JournalSubRes r);
 }
