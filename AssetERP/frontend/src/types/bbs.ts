@@ -345,3 +345,26 @@ export interface BbsNoticeAdminSaveReq {
   latestNotice: string | null;
   newTargetCompanyIds: number[];
 }
+
+/** Z07 AS-IS Bbs10_BizShareModel — 업무공유 그리드 행 (bbs10_biz_share.selectByText) */
+export interface BbsBizShare {
+  bizShareId: number;
+  date?: string | null;
+  bizShareType?: string | null;
+  bizShareTypeName?: string | null;
+  content?: string | null;
+  keyword?: string | null;
+  note?: string | null;
+  personId?: number | null;
+  personName?: string | null;
+}
+
+/** Z07 저장 요청 — bizShareId가 없으면 새 글 */
+export interface BbsBizShareSaveReq {
+  bizShareId?: number | null;
+  date: string;
+  bizShareType: string;
+  content: string;
+  keyword: string | null;
+  note: string | null;
+}

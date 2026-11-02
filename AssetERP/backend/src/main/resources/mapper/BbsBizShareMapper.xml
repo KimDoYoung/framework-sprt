@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/bbs/mapper/bbs10_biz_share.xml selectByText·selectById + UpdateDataModel(bbs10_biz_share) (Z07 Bbs10_Tab_BizShare) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.bbs.mapper.BbsBizShareMapper">
+
+    <!-- AS-IS bbs10_biz_share.selectByText L27 (IDMS-IC) — SELECT * → BizShareRes 열만, 조건·정렬 그대로 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.bbs.dto.BizShareRes">
+        SELECT  bbs10_biz_share_id                                                          AS biz_share_id
+             ,  bbs10_date                                                                  AS date
+             ,  bbs10_biz_share_type                                                        AS biz_share_type
+             ,  f_cdnm('BizShareType', bbs10_biz_share_type, bbs10_company_id, f_sysdate()) AS biz_share_type_name
+             ,  bbs10_content                                                               AS content
+             ,  bbs10_keyword                                                               AS keyword
+             ,  bbs10_note                                                                  AS note
+             ,  bbs10_person_id                                                             AS person_id
+             ,  f_emp_kor_nm(bbs10_person_id)                                               AS person_name
+          FROM  bbs10_biz_share
+         WHERE  bbs10_company_id = #{companyId}
+           AND  bbs10_date BETWEEN #{startDate} AND #{closeDate}
+           AND  bbs10_biz_share_type LIKE #{bizShareType}
+           AND  UPPER(CONCAT(bbs10_content, f_emp_kor_nm(bbs10_person_id), bbs10_note, bbs10_keyword)) LIKE UPPER(#{searchText})
+         ORDER BY bbs10_date DESC, bbs10_content COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS bbs10_biz_share.selectById L21 (IDMS-IC) — 저장 뒤 다시 읽기 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.bbs.dto.BizShareRes">
+        SELECT  bbs10_biz_share_id                                                          AS biz_share_id
+             ,  bbs10_date                                                                  AS date
+             ,  bbs10_biz_share_type                                                        AS biz_share_type
+             ,  f_cdnm('BizShareType', bbs10_biz_share_type, bbs10_company_id, f_sysdate()) AS biz_share_type_name
+             ,  bbs10_content                                                               AS content
+             ,  bbs10_keyword                                                               AS keyword
+             ,  bbs10_note                                                                  AS note
+             ,  bbs10_person_id                                                             AS person_id
+             ,  f_emp_kor_nm(bbs10_person_id)                                               AS person_name
+          FROM  bbs10_biz_share
+         WHERE  bbs10_biz_share_id = #{bizShareId}
+           AND  bbs10_company_id   = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Bbs10_BizShare.modelUpdate → UpdateDataModel INSERT -->
+    <insert id="insertShare">
+        INSERT INTO bbs10_biz_share
+             (bbs10_biz_share_id, bbs10_company_id, bbs10_date, bbs10_biz_share_type, bbs10_content,
+              bbs10_note, bbs10_person_id, bbs10_keyword)
+        VALUES (#{bizShareId}, #{companyId}, #{req.date}, #{req.bizShareType}, #{req.content},
+                #{req.note}, #{personId}, #{req.keyword})
+    </insert>
+
+    <!-- AS-IS Bbs10_BizShare.modelUpdate → UpdateDataModel UPDATE — 등록자(bbs10_person_id)는 바꾸지 않는다, 로그인 회사 행만(보안 보강) -->
+    <update id="updateShare">
+        UPDATE bbs10_biz_share
+           SET bbs10_date           = #{req.date}
+             , bbs10_biz_share_type = #{req.bizShareType}
+             , bbs10_content        = #{req.content}
+             , bbs10_note           = #{req.note}
+             , bbs10_keyword        = #{req.keyword}
+         WHERE bbs10_biz_share_id = #{req.bizShareId}
+           AND bbs10_company_id   = #{companyId}
+    </update>
+
+    <!-- AS-IS Bbs10_BizShare.delete → UpdateDataModel.deleteModel(ID로 DELETE) — 로그인 회사 행만(보안 보강) -->
+    <delete id="deleteShare">
+        DELETE FROM bbs10_biz_share
+         WHERE bbs10_biz_share_id = #{bizShareId}
+           AND bbs10_company_id   = #{companyId}
+    </delete>
+</mapper>

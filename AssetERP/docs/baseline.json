@@ -14373,5 +14373,27 @@
     "note": "docs/work/Z/Z06-작업기록.md",
     "history": [],
     "id": "Z06"
+  },
+  "Bbs10_Tab_BizShare": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/bbs/Bbs10_Edit_BizShare.java": "c21fcaf87f7a8d3f601e2160f681f0ab639b8b75",
+      "application/src/main/java/myApp/client/vi/bbs/Bbs10_Tab_BizShare.java": "fd70a53eeb9b3ef5fd4211ed774f28c6e45b19b2",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs10_BizShareModel.java": "deabfd2add2d9450d5bbaf68a1f3fbc0b134d34a",
+      "application/src/main/java/myApp/client/vi/bbs/model/Bbs10_BizShareModelProperties.java": "06c7be958e5514b196561819251e25cad653ba70",
+      "application/src/main/java/myApp/server/bbs/Bbs10_BizShare.java": "0e62cc6105b2e6240f74328c7b377c68b10e78dc",
+      "application/src/main/java/myApp/server/bbs/mapper/bbs10_biz_share.xml": "fbff33ecdb9d572e9abed45e0e40521abfc0689e",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-11-02T17:11:37+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/Z/Z07-작업기록.md",
+    "history": [],
+    "id": "Z07"
   }
 }

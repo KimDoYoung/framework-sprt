@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice, BbsNoticeAdmin, BbsNoticeAdminSaveReq, BbsNoticeHistory, BbsNoticeMng, BbsNoticePerson, BbsNoticeSaveReq, BbsTarget, BbsTargetCompany } from '../types/bbs';
+import { BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsBizShare, BbsBizShareSaveReq, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice, BbsNoticeAdmin, BbsNoticeAdminSaveReq, BbsNoticeHistory, BbsNoticeMng, BbsNoticePerson, BbsNoticeSaveReq, BbsTarget, BbsTargetCompany } from '../types/bbs';
 
 /** 요청서(신청서) — 증명서 신청내역 (S05, AS-IS Bbs11_Application) */
 export const bbsApplicationApi = {
@@ -55,6 +55,27 @@ export const bbsApplicationApi = {
   /** Y13 AS-IS bbs.Bbs11_Application.delete → 지운 건수 */
   deleteMine: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/bbs/applications/mine', { data: ids });
+    return res.data.data ?? 0;
+  },
+};
+
+/** 업무공유 (Z07, AS-IS Bbs10_BizShare) */
+export const bbsBizShareApi = {
+  /** AS-IS bbs.Bbs10_BizShare.selectByText — bizShareType 없으면 전체 */
+  search: async (startDate: string, closeDate: string, bizShareType: string | undefined, searchText: string): Promise<BbsBizShare[]> => {
+    const res = await apiClient.get<ApiResponse<BbsBizShare[]>>('v1/bbs/biz-shares', { params: { startDate, closeDate, bizShareType, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS bbs.Bbs10_BizShare.modelUpdate → 저장한 행 */
+  save: async (req: BbsBizShareSaveReq): Promise<BbsBizShare> => {
+    const res = await apiClient.put<ApiResponse<BbsBizShare>>('v1/bbs/biz-shares', req);
+    return res.data.data;
+  },
+
+  /** AS-IS bbs.Bbs10_BizShare.delete → 지운 건수 */
+  delete: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/bbs/biz-shares', { data: ids });
     return res.data.data ?? 0;
   },
 };

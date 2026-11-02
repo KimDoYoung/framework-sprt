@@ -8,6 +8,7 @@ import { Bbs02_Tab_NoticeManager } from './bbs/Bbs02_Tab_NoticeManager';
 import { Bbs02_Tab_NoticeAdmin } from './bbs/Bbs02_Tab_NoticeAdmin';
 import { Mkt01_Tab_TargetCompany } from './mkt/Mkt01_Tab_TargetCompany';
 import { Mkt03_Tab_HistoryManager } from './mkt/Mkt03_Tab_HistoryManager';
+import { Bbs10_Tab_BizShare } from './bbs/Bbs10_Tab_BizShare';
 import { Bbs11_Tab_Application } from './bbs/Bbs11_Tab_Application';
 import { Bbs11_Tab_ApplicationMng } from './bbs/Bbs11_Tab_ApplicationMng';
 import { Bbs20_Tab_FloralRequestMng } from './bbs/Bbs20_Tab_FloralRequestMng';
@@ -407,6 +408,7 @@ export const SCREENS: Record<string, React.FC> = {
   Emp35_Tab_DeductPerson, // S28 (급여공제정보 — 아래는 C01-3의 Emp35_Page_DeductDate 공용 + 기본설정 pay30_Popup_BasicSetup·임금계산방법·급여출금계좌. 다음 단계: 4대보험 신고정보 Pay31_Popup_InsureApply)
   Emp31_Tab_Director, // S03 (1단계: 문서분류지정 Dcr30_Lookup_Link·보고서 창의 선임/해임 콤보·결재상신은 다음 단계)
   Bbs02_Tab_NoticeViewLaw, // H01 (+ Bbs02_Popup_NoticeAdmin·Bbs07_TapPage_Comment·Bbs07_Lookup_FileList·Bbs02_Lookup_File)
+  Bbs10_Tab_BizShare, // Z07 (+ Bbs10_Edit_BizShare)
   Bbs11_Tab_Application, // Y13 (+ Bbs11_Edit_Application)
   Bbs11_Tab_ApplicationMng, // T22 (+ Bbs12_Lookup_ApplicationMng)
   Bbs20_Tab_FloralRequest, // Y12 (+ Bbs20_Edit_FloralRequest 등록·수정·Bbs20_Lookup_OccasionsOption·Mkt01_Lookup_Select)
