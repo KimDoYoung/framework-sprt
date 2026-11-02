@@ -4,6 +4,7 @@ import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeDetailParam;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeDetailRes;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeParam;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeRes;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeFundRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -19,6 +20,19 @@ public interface IcamFeeMapper {
 
     /** AS-IS icam10_fee.selectByFeeTypePagingTotal */
     int selectByFeeTypePagingTotal(@Param("p") IcamFeeParam param);
+
+    /** AS-IS icam10_fee.selectFundList (X29, Icam10_Lookup_FundCode) — searchText는 '%…%' 형태로 받는다 */
+    List<IcamFeeFundRes> selectFundList(@Param("companyId") Long companyId, @Param("stdDate") LocalDate stdDate, @Param("searchText") String searchText);
+
+    /** AS-IS f_create_seq (dbConfig.getSeq) */
+    long selectNextId();
+
+    /** AS-IS sys99_print.deleteByPersonId L695 */
+    int deletePrint(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("windowClassName") String windowClassName);
+
+    /** AS-IS Sys99_Print.insertRdFundMngFee L3798 — icam10_fee.selectByFeeType 결과를 sys99_print에 한 행씩 넣는다 */
+    int insertPrintFundMngFee(@Param("p") IcamFeeParam param, @Param("personId") Long personId,
+                              @Param("windowClassName") String windowClassName, @Param("groupId") Long groupId);
 
     /** AS-IS icam10_fee.selectByFundCode (X25, Ast30_Lookup_FeeDetail) */
     List<IcamFeeDetailRes> selectByFundCode(@Param("p") IcamFeeDetailParam param);

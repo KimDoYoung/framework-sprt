@@ -29,9 +29,10 @@ public class IcamFeeBookController {
     public ApiResponse<PageRes<IcamFeeBookRes>> search(@AuthenticationPrincipal UserPrincipal principal,
                                                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
                                                        @RequestParam(defaultValue = "") String searchText,
+                                                       @RequestParam(required = false) String fundCode,
                                                        @RequestParam(defaultValue = "0") int offset,
                                                        @RequestParam(defaultValue = "100") int limit) {
-        return ApiResponse.ok(service.search(principal, stdDate, searchText, offset, limit));
+        return ApiResponse.ok(service.search(principal, stdDate, searchText, fundCode, offset, limit));
     }
 
     /** AS-IS icam.Icam13_FeeBookCheck.selectByStdDate — 대사 결과 */

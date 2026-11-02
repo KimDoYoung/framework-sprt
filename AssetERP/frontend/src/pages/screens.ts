@@ -157,7 +157,10 @@ import { Icam06_Tab_FundOperateStatus } from './icam/Icam06_Tab_FundOperateStatu
 import { Icam10_Tab_CurrentFeeByFund } from './icam/Icam10_Tab_CurrentFeeByFund';
 import { Icam10_Tab_FeeAdmin } from './icam/Icam10_Tab_FeeAdmin';
 import { Icam10_Tab_OfficeMngFee } from './icam/Icam10_Tab_OfficeMngFee';
+import { Icam10_Tab_FundMngFee } from './icam/Icam10_Tab_FundMngFee';
+import { Icam12_Tab_FundMngFeeBook } from './icam/Icam12_Tab_FundMngFeeBook';
 import { Ast30_Tab_OfficeMngFeeState } from './ast/Ast30_Tab_OfficeMngFeeState';
+import { Ast30_Tab_FundMngFeeState } from './ast/Ast30_Tab_FundMngFeeState';
 import { Ast30_Tab_OfficeMngFeeStatePeriod } from './ast/Ast30_Tab_OfficeMngFeeStatePeriod';
 import { Ast33_Tab_OfficeMngFundTrans } from './ast/Ast33_Tab_OfficeMngFundTrans';
 import { Icam12_Tab_OfficeMngFeeBook } from './icam/Icam12_Tab_OfficeMngFeeBook';
@@ -530,9 +533,12 @@ export const SCREENS: Record<string, React.FC> = {
   Icam06_Tab_FundOperateStatus, // R07 (메뉴 #1323. 펀드운용현황(펀드합계))
   Icam10_Tab_CurrentFeeByFund, // R06 (메뉴 #1268. 펀드별 발생보수현황 / #1494. 월별 펀드보수현황)
   Icam10_Tab_FeeAdmin, // D08 (ICAM 발생보수 가져오기도 같은 연동이 없어 서버가 거절)
+  Icam12_Tab_FundMngFeeBook, // X30 (메뉴 #1215. X24 `icam/fee-books`에 fundCode 조건, 펀드 조회창은 X29 재사용)
+  Icam10_Tab_FundMngFee, // X29 (메뉴 #1214. 같은 `icam/fees` API, 보수구분 20402 고정 + 펀드 조회창 `icam/fees/funds` + RD `icam/fees/rd`)
   Icam10_Tab_OfficeMngFee, // X23 (메뉴 #1199. 같은 `icam/fees` API, 보수구분 20407 고정)
   Ast33_Tab_OfficeMngFundTrans, // X28 (메뉴 #1251. `ast/fund-trans` + `ast/book-fund-fees/pre-hold`, X34 운용보수 이관펀드 등록이 같은 API·편집창을 쓸 수 있다)
   Ast30_Tab_OfficeMngFeeStatePeriod, // X26 (메뉴 #1249. `ast/book-fund-fees/period` + X25 펀드 조회·증감액 상세 재사용)
+  Ast30_Tab_FundMngFeeState, // X31 (메뉴 #1216. `ast/book-fund-fees/fund-fee-books` + 펀드 조회창 X29 + 증감액 상세 X25 재사용)
   Ast30_Tab_OfficeMngFeeState, // X25 (메뉴 #1201. `ast/book-fund-fees` + 증감액 상세 `icam/fees/by-fund`)
   Icam11_Tab_OfficeMngFeeDeposit, // X27 (메뉴 #1204. `icam/fee-deposits`, X33 운용보수 입금계좌 관리가 같은 API를 쓸 수 있다)
   Icam12_Tab_OfficeMngFeeBook, // X24 (메뉴 #1200. `icam/fee-books`, X30 운용보수 월말잔액이 같은 API를 쓸 수 있다)

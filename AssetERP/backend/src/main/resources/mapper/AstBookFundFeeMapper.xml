@@ -160,4 +160,97 @@
          ORDER BY ast30_corp_cd, ast30_fund_cd
     </select>
 
+
+    <!-- AS-IS ast30_book_fund_fee.selectFundFeeBook(IDMS-IC, X31) — 원본의 바깥 SELECT는 t.*에 외화 열을 더할 뿐이라 이 화면이 쓰는 열만 낸다.
+         조건·조인·월누계·정렬은 원본 그대로, fundCode 분기를 되살림 -->
+    <sql id="fundFeeBookFrom">
+          FROM ( SELECT t1.ast30_hold_date, t1.ast30_corp_id, t1.ast30_fund_cd, t1.ast30_fund_nm
+                      , t1.ast30_fee, t1.ast30_un_rcv_fee
+                      , COALESCE(icam10_diff_fee,0)                                                             AS ast30_diff_fee
+                      , COALESCE(icam10_occ_fee,0)                                                              AS ast30_occ_fee
+                      , COALESCE(icam10_draw_fee,0)                                                             AS ast30_draw_fee
+                      , COALESCE(t2.ast30_fee,0)                                                                AS ast30_pre_fee
+                      , ( SELECT SUM(a.ast30_fee_today)
+                            FROM ast30_book_fund_fee a
+                           WHERE a.ast30_company_id         = t1.ast30_company_id
+                             AND a.ast30_ast_class_tree_id  = t1.ast30_ast_class_tree_id
+                             AND a.ast30_corp_id            = t1.ast30_corp_id
+                             AND a.ast30_fund_cd            = t1.ast30_fund_cd
+                             AND a.ast30_hold_date BETWEEN CAST(TO_CHAR(t1.ast30_hold_date,'YYYYMM')||'01' AS DATE) AND t1.ast30_hold_date ) AS ast30_month_occ_fee
+                   FROM ast30_book_fund_fee t1
+                        LEFT OUTER JOIN ast30_book_fund_fee t2 ON ( t2.ast30_hold_date         = t1.ast30_hold_date + interval '-1day'  AND
+                                                                    t2.ast30_company_id        = t1.ast30_company_id                    AND
+                                                                    t2.ast30_ast_class_tree_id = t1.ast30_ast_class_tree_id             AND
+                                                                    t2.ast30_corp_id           = t1.ast30_corp_id                       AND
+                                                                    t2.ast30_fund_cd           = t1.ast30_fund_cd                       )
+                        LEFT OUTER JOIN ( SELECT icam10_company_id
+                                               , icam10_std_date
+                                               , icam10_fund_cd
+                                               , SUM(icam10_diff_fee)                                                               AS icam10_diff_fee
+                                               , SUM(CASE WHEN icam10_rmk_cd = 'P00' THEN icam10_diff_fee     ELSE 0 END)           AS icam10_occ_fee
+                                               , SUM(CASE WHEN icam10_rmk_cd IN ('D20','D30') THEN icam10_diff_fee     ELSE 0 END)  AS icam10_draw_fee
+                                            FROM (
+                                                   SELECT *
+                                                        , f_calc_dual_fund_fee(icam10_company_id, icam10_icam_company_cd, icam10_fund_cd, icam10_std_date, icam10_fee)
+                                                          * CASE WHEN icam10_drcr_type = 'C' THEN 1 ELSE -1 END
+                                                          * f_nvl(icam10_fx_rate,1)                                          AS icam10_diff_fee
+                                                     FROM icam10_fee
+                                                    WHERE icam10_company_id  = #{p.companyId}
+                                                      AND icam10_std_date    BETWEEN #{p.startDate} AND #{p.closeDate}
+                                                 ) icam10
+                                           GROUP BY icam10_company_id, icam10_std_date, icam10_fund_cd
+                                        ) t3 ON ( icam10_company_id = t1.ast30_company_id   AND
+                                                  icam10_std_date   = t1.ast30_hold_date    AND
+                                                  icam10_fund_cd    = t1.ast30_fund_cd      )
+                  WHERE t1.ast30_company_id = #{p.companyId}
+                    AND t1.ast30_hold_date  BETWEEN #{p.startDate} AND #{p.closeDate}
+                    <if test="p.fundCode != null">
+                    AND t1.ast30_fund_cd = #{p.fundCode}
+                    </if>
+               ) t
+         WHERE upper(concat(ast30_fund_cd,ast30_fund_nm)) LIKE '%'||upper(#{p.searchText})||'%'
+    </sql>
+
+    <select id="selectFundFeeBook" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeStateRes">
+        SELECT ast30_hold_date     AS hold_date,
+               ast30_corp_id       AS corp_id,
+               ast30_fund_cd       AS fund_code,
+               ast30_fund_nm       AS fund_name,
+               ast30_pre_fee       AS pre_fee,
+               ast30_diff_fee      AS diff_fee,
+               ast30_fee           AS fee,
+               ast30_month_occ_fee AS month_occ_fee,
+               ast30_occ_fee       AS occ_fee,
+               ast30_draw_fee      AS draw_fee,
+               ast30_un_rcv_fee    AS un_rcv_fee
+        <include refid="fundFeeBookFrom"/>
+         ORDER BY ast30_hold_date, ast30_fund_cd
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId L695 (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdFundMngFeeState L2000 (IDMS-IC) — selectFundFeeBook을 읽어 행마다 insert하던 것을 INSERT … SELECT 한 문장으로.
+         보유일자 date01·펀드코드 string01·펀드명 string02·증감액 long01·당일잔액 long02·유보분 long03·전일잔액 long04·당일발생액 long05·당일인출액 long06·당월발생액 long07 -->
+    <insert id="insertPrintFundMngFeeState">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_string01, sys99_string02
+               , sys99_long01, sys99_long02, sys99_long03, sys99_long04, sys99_long05, sys99_long06, sys99_long07 )
+        SELECT f_create_seq(), #{p.companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , ast30_hold_date, ast30_fund_cd, ast30_fund_nm
+             , ast30_diff_fee, ast30_fee, ast30_un_rcv_fee, ast30_pre_fee, ast30_occ_fee, ast30_draw_fee, ast30_month_occ_fee
+        <include refid="fundFeeBookFrom"/>
+         ORDER BY ast30_hold_date, ast30_fund_cd
+    </insert>
+
 </mapper>

@@ -5,7 +5,9 @@ import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeDetailParam;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeDetailRes;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeJobReq;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeParam;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamFeePrintReq;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeRes;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeFundRes;
 import kr.co.kfs.asseterp.biz.icam.mapper.IcamFeeMapper;
 import kr.co.kfs.asseterp.common.dto.PageRes;
 import kr.co.kfs.asseterp.common.error.BusinessException;
@@ -27,14 +29,46 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class IcamFeeService {
 
+    /** insertRdFundMngFee 요청의 windowClassName (클라이언트가 고정값으로 보냄) */
+    private static final String FUND_MNG_FEE_WINDOW = "Icam10_Tab_FundMngFee";
+
     private final IcamFeeMapper mapper;
     private final IcamBatchRunner batchRunner;
 
     public PageRes<IcamFeeRes> search(UserPrincipal user, Long companyId, String feeType, LocalDate startDate, LocalDate closeDate,
-                                      String searchText, int offset, int limit) {
+                                      String searchText, String fundCode, int offset, int limit) {
         IcamFeeParam param = new IcamFeeParam(allowedCompany(user, companyId), feeType, startDate, closeDate,
-                searchText == null ? "" : searchText, Math.max(offset, 0), limit > 0 ? limit : 100);
+                searchText == null ? "" : searchText, blankToNull(fundCode), Math.max(offset, 0), limit > 0 ? limit : 100);
         return new PageRes<>(mapper.selectByFeeTypePagingTotal(param), mapper.selectByFeeTypePaging(param));
+    }
+
+    /** AS-IS icam.Icam10_Fee.selectFundList (Icam10_Lookup_FundCode) — 로그인 회사의 발생보수 펀드 목록. 검색어는 '%…%' */
+    public List<IcamFeeFundRes> searchFunds(UserPrincipal user, LocalDate stdDate, String searchText) {
+        if (stdDate == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        return mapper.selectFundList(user.getCompanyId(), stdDate, "%" + (searchText == null ? "" : searchText) + "%");
+    }
+
+    /**
+     * AS-IS sys.Sys99_Print.insertRdFundMngFee L3798 (Icam10_Tab_FundMngFee [출력/다운로드])
+     * ① 내 출력 자료 정리(화면 클래스) ② 같은 조건 조회 결과를 sys99_print에 삽입 ③ 새 groupId 반환
+     */
+    @Transactional
+    public String insertRdFundMngFee(UserPrincipal user, IcamFeePrintReq req) {
+        if (req.feeType() == null || req.startDate() == null || req.closeDate() == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        IcamFeeParam param = new IcamFeeParam(user.getCompanyId(), req.feeType(), req.startDate(), req.closeDate(),
+                req.searchText() == null ? "" : req.searchText(), blankToNull(req.fundCode()), 0, 0);
+        long groupId = mapper.selectNextId();
+        mapper.deletePrint(user.getCompanyId(), user.getUserId(), FUND_MNG_FEE_WINDOW);
+        mapper.insertPrintFundMngFee(param, user.getUserId(), FUND_MNG_FEE_WINDOW, groupId);
+        return String.valueOf(groupId);
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value;
     }
 
     /** AS-IS icam.Icam10_Fee.selectByFundCode (Ast30_Lookup_FeeDetail) — 로그인 회사의 펀드 하루 적요별 보수 */

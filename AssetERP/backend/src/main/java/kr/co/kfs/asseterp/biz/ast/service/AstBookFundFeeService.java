@@ -3,6 +3,9 @@ package kr.co.kfs.asseterp.biz.ast.service;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeCorpRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeFundRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeParam;
+import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeStateParam;
+import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeStatePrintReq;
+import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeStateRes;
 import kr.co.kfs.asseterp.biz.ast.dto.PreHoldFeeRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeePeriodParam;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeePeriodRes;
@@ -24,6 +27,9 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class AstBookFundFeeService {
 
+    /** insertRdFundMngFeeState 요청의 windowClassName (클라이언트가 고정값으로 보냄) */
+    private static final String FUND_MNG_FEE_STATE_WINDOW = "Ast30_Tab_FundMngFeeState";
+
     private final AstBookFundFeeMapper mapper;
 
     public List<BookFundFeeCorpRes> searchCorps(UserPrincipal user, LocalDate holdDate, String searchText) {
@@ -38,6 +44,32 @@ public class AstBookFundFeeService {
         BookFundFeePeriodParam param = new BookFundFeePeriodParam(user.getCompanyId(), startDate, closeDate,
                 searchText == null ? "" : searchText, Math.max(offset, 0), limit > 0 ? limit : 100);
         return new PageRes<>(mapper.selectByHoldDatePagingTotal(param), mapper.selectByHoldDatePaging(param));
+    }
+
+    /** AS-IS Ast30_BookFundFee.selectFundFeeBook (L54, X31) — 기간의 일자·펀드별 보수원장. 펀드코드가 비면 전체 */
+    public List<BookFundFeeStateRes> searchFundFeeBook(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String fundCode, String searchText) {
+        return mapper.selectFundFeeBook(statePrm(user, startDate, closeDate, fundCode, searchText));
+    }
+
+    /**
+     * AS-IS sys.Sys99_Print.insertRdFundMngFeeState L2000 (Ast30_Tab_FundMngFeeState [출력/다운로드])
+     * ① 내 출력 자료 정리(화면 클래스) ② 같은 조건 조회 결과를 sys99_print에 삽입 ③ 새 groupId 반환
+     */
+    @Transactional
+    public String insertRdFundMngFeeState(UserPrincipal user, BookFundFeeStatePrintReq req) {
+        BookFundFeeStateParam p = statePrm(user, req.startDate(), req.closeDate(), req.fundCode(), req.searchText());
+        long groupId = mapper.selectNextId();
+        mapper.deletePrint(user.getCompanyId(), user.getUserId(), FUND_MNG_FEE_STATE_WINDOW);
+        mapper.insertPrintFundMngFeeState(p, user.getUserId(), FUND_MNG_FEE_STATE_WINDOW, groupId);
+        return String.valueOf(groupId);
+    }
+
+    private static BookFundFeeStateParam statePrm(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String fundCode, String searchText) {
+        if (startDate == null || closeDate == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        return new BookFundFeeStateParam(user.getCompanyId(), startDate, closeDate,
+                fundCode == null || fundCode.isBlank() ? null : fundCode, searchText == null ? "" : searchText);
     }
 
     public List<BookFundFeeFundRes> searchFunds(UserPrincipal user, LocalDate holdDate, Long corpId, String searchText) {

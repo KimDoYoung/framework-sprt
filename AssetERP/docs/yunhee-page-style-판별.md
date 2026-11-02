@@ -48,6 +48,7 @@ SID 정의는 `docs/page-style.md` "스타일 목록", 견본은 `docs/page-styl
 | SGEF | 위아래 분할 + 그리드 + 편집 폼 | `Fnd01_Tab_FundCode` | — 지금도 판별됨 |
 | SGTP | 위아래 분할 + 그리드 + 아래 탭 영역 | `Fnd20_Tab_Plan` | — 지금도 판별됨 |
 | GG | 그리드 2개(마스터·상세) | `Est02_Tab_PfResultReport` | `Est02`는 SGTP로 잘못 나온다(§1) |
+| ★GGH | 위 조회 줄(`SearchBar`) + 좌우 분할(`layout=horizontal`) + 그리드 2개 이상(마스터·상세) | `Pay50_Tab_ExpensePay` | `Ast30_Tab_OfficeMngFeeState`, `Act04_Tab_Close`, `Icam11_Tab_OfficeMngFeeDeposit` |
 | CG | 편집 가능한 그리드 하나 | `Apr10_Tab_Stamp` | — 지금도 판별됨 |
 | SGT | 툴바 전체 폭 + 좌(그리드)·우(트리) 분할 | `Fnd08_Tab_OrgAuth` | — 지금도 판별됨 |
 | TG | 트리 + 오른쪽 내용이 좌우 분할(오른쪽이 `SingleGrid`가 아니어도) | `Sys06_Tab_Menu` | `Dcr01_Tab_DcrManager`, `Dcr01_Tab_DcrUser`(껍데기), `Emp00_Tab_OrgPerson` |
@@ -190,6 +191,14 @@ SGP/SG, TP/TG 등 이미 판별되는 SID는 규칙을 바꾸지 말고 그대�
 3. **GG와 구분**: GG는 위아래 `Splitter`(마스터·상세 그리드), GDP는 좌우 분할이고 오른쪽이 페이지 컴포넌트다.
 4. **GO와 구분**: GO는 오른쪽이 없다(그리드 하나).
 5. 기대: `Sms02_Tab_TotalCount`, `Sys10_Tab_TotalSize`, `Sms03_Tab_SendAdmin`, `Ics02_Tab_Manager` 모두 `GDP`.
+
+## 4-5. 새 SID `GGH` (Grid+Grid 좌우) 판별 (2026-10-30)
+
+`Pay50_Tab_ExpensePay`는 위에 조회 툴바(`SearchBar`), 아래가 좌우 분할(왼쪽 마스터 그리드 / 오른쪽 상세 그리드)이다. 상하 분할인 `GG`와 구분하기 위해 새 SID `GGH`로 등록했다.
+
+1. **판별 규칙**: `grids >= 2` + `layout == "horizontal"` + 위 조회 줄(`top_search`) + 오른쪽이 상세 페이지(`*_Page_*`/`*_TabPage_*`)가 아니고 트리가 없음(`trees == 0`), 또는 머리 주석 선언 `스타일: GGH`.
+2. **순서**: SGT·GDP·SGHF 뒤, 일반 GG 앞.
+3. **기대**: `Pay50_Tab_ExpensePay` (AS-IS `.java` 및 TOBE `.tsx` 모두 `GGH`).
 
 ## 5. 완료 기준
 

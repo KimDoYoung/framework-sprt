@@ -6,7 +6,7 @@
 <!--
   AS-IS(IDMS-IC) server/icam/mapper/icam12_fee_book.xml (selectByStdDatePaging·Total, delete),
   icam13_fee_book_check.xml (selectByStdDate, delete, insert), ast30_book_fund_fee.xml (selectFeeBookDiff)  (X24)
-  selectByStdDatePaging의 fundCode 분기는 이 화면이 넘기지 않아 뺐다. 대사 SQL(selectFeeBookDiff)은 원본 그대로.
+  selectByStdDatePaging의 fundCode 분기는 X24가 넘기지 않아 뺐다가 X30(펀드 칸)에서 되살렸다. 대사 SQL(selectFeeBookDiff)은 원본 그대로.
 -->
 <mapper namespace="kr.co.kfs.asseterp.biz.icam.mapper.IcamFeeBookMapper">
 
@@ -14,6 +14,9 @@
         AND icam12_company_id = #{p.companyId}
         AND icam12_std_date   = #{p.stdDate}
         AND upper(concat(icam12_icam_company_cd,icam12_icam_company_nm,icam12_fund_cd,icam12_fund_nm,icam12_consignment_nm)) LIKE '%'||upper(#{p.searchText})||'%'
+        <if test="p.fundCode != null">
+        AND icam12_fund_cd = #{p.fundCode}   /* X30: 펀드 조회창에서 고른 펀드 */
+        </if>
     </sql>
 
     <!-- AS-IS icam12_fee_book.selectByStdDatePaging (IDMS-IC) -->

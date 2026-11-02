@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { AstBookDepn, FundTrans, PreHoldFee, AstBookFundFeeCorp, AstBookFundFeeFund, AstBookFundFeePeriod, AstSettleByTr, AstTrIntrinsic, AstTrIntrinsicSaveReq, SettleAccrued, SettleExpense, SettleHistory, SettleSaveReq } from '../types/ast';
+import { AstBookDepn, FundTrans, PreHoldFee, AstBookFundFeeCorp, AstBookFundFeeFund, AstBookFundFeePeriod, AstBookFundFeeState, AstSettleByTr, AstTrIntrinsic, AstTrIntrinsicSaveReq, SettleAccrued, SettleExpense, SettleHistory, SettleSaveReq } from '../types/ast';
 import {
   AstCf,
   AstCfBatchCreateReq,
@@ -1060,6 +1060,18 @@ export const astApi = {
   },
 
   /** AS-IS ast.Ast30_BookFundFee.selectByHoldDatePaging (X26): 기간의 일자·운용사별 합계 (페이지 행 + 전체 건수) */
+  /** AS-IS ast.Ast30_BookFundFee.selectFundFeeBook (X31): 기간의 일자·펀드별 보수원장. fundCode가 없으면 전체 */
+  searchFundFeeBook: async (params: { startDate: string; closeDate: string; fundCode?: string | null; searchText: string }): Promise<AstBookFundFeeState[]> => {
+    const res = await apiClient.get<ApiResponse<AstBookFundFeeState[]>>('v1/ast/book-fund-fees/fund-fee-books', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdFundMngFeeState (X31): [출력/다운로드] RD 자료를 준비하고 출력 그룹 ID를 받는다 */
+  insertFundFeeBookRd: async (req: { startDate: string; closeDate: string; fundCode: string | null; searchText: string }): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/ast/book-fund-fees/fund-fee-books/rd', req);
+    return res.data.data ?? '';
+  },
+
   searchBookFundFeePeriod: async (params: { startDate: string; closeDate: string; searchText: string; offset: number; limit: number }): Promise<PageRes<AstBookFundFeePeriod>> => {
     const res = await apiClient.get<ApiResponse<PageRes<AstBookFundFeePeriod>>>('v1/ast/book-fund-fees/period', { params });
     return res.data.data ?? { total: 0, rows: [] };

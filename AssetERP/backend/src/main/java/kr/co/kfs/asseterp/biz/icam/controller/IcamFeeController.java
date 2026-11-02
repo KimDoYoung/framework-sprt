@@ -4,6 +4,8 @@ import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeBatchReq;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeDetailRes;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeJobReq;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamFeePrintReq;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeFundRes;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeRes;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamFeeUpdateReq;
 import kr.co.kfs.asseterp.biz.icam.service.IcamFeeService;
@@ -33,9 +35,24 @@ public class IcamFeeController {
                                                    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
                                                    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
                                                    @RequestParam(defaultValue = "") String searchText,
+                                                   @RequestParam(required = false) String fundCode,
                                                    @RequestParam(defaultValue = "0") int offset,
                                                    @RequestParam(defaultValue = "100") int limit) {
-        return ApiResponse.ok(service.search(principal, companyId, feeType, startDate, closeDate, searchText, offset, limit));
+        return ApiResponse.ok(service.search(principal, companyId, feeType, startDate, closeDate, searchText, fundCode, offset, limit));
+    }
+
+    /** AS-IS icam.Icam10_Fee.selectFundList — 펀드 조회창(Icam10_Lookup_FundCode, X29) */
+    @GetMapping("/funds")
+    public ApiResponse<List<IcamFeeFundRes>> searchFunds(@AuthenticationPrincipal UserPrincipal principal,
+                                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
+                                                      @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchFunds(principal, stdDate, searchText));
+    }
+
+    /** AS-IS sys.Sys99_Print.insertRdFundMngFee — [출력/다운로드] RD 자료 준비 → 출력 그룹 ID (X29) */
+    @PostMapping("/rd")
+    public ApiResponse<String> rd(@AuthenticationPrincipal UserPrincipal principal, @RequestBody IcamFeePrintReq req) {
+        return ApiResponse.ok(service.insertRdFundMngFee(principal, req));
     }
 
     /** AS-IS icam.Icam10_Fee.selectByFundCode — 펀드 하루의 적요별 보수 (X25 Ast30_Lookup_FeeDetail) */

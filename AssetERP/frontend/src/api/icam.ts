@@ -7,6 +7,7 @@ import {
   FundPrice,
   IcamData,
   IcamFee,
+  IcamFeeFund,
   IcamFeeBook,
   IcamFeeDetail,
   IcamFeeBookCheck,
@@ -41,9 +42,23 @@ export const icamApi = {
   // ── D08 ICAM 보수(관리자용) (Icam10_Tab_FeeAdmin) ──
 
   /** AS-IS icam.Icam10_Fee.selectByFeeTypePaging: 기간·보수구분·검색어의 발생보수 (페이지 행 + 전체 건수) */
-  searchFees: async (params: { companyId: number; feeType: string; startDate: string; closeDate: string; searchText: string; offset: number; limit: number }): Promise<PageRes<IcamFee>> => {
+  searchFees: async (params: { companyId: number; feeType: string; startDate: string; closeDate: string; searchText: string; fundCode?: string | null; offset: number; limit: number }): Promise<PageRes<IcamFee>> => {
     const res = await apiClient.get<ApiResponse<PageRes<IcamFee>>>('v1/icam/fees', { params });
     return res.data.data ?? { total: 0, rows: [] };
+  },
+
+  // ── X29 ICAM 운용보수 발생내역 (Icam10_Tab_FundMngFee) ──
+
+  /** AS-IS icam.Icam10_Fee.selectFundList: 펀드 조회창(Icam10_Lookup_FundCode)의 펀드 목록. 검색어 앞뒤 '%'는 서버가 붙인다 */
+  searchFundList: async (stdDate: string, searchText: string): Promise<IcamFeeFund[]> => {
+    const res = await apiClient.get<ApiResponse<IcamFeeFund[]>>('v1/icam/fees/funds', { params: { stdDate, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdFundMngFee: [출력/다운로드] RD 자료를 준비하고 출력 그룹 ID를 받는다 */
+  insertFundMngFeeRd: async (req: { feeType: string; startDate: string; closeDate: string; fundCode: string | null; searchText: string }): Promise<string> => {
+    const res = await apiClient.post<ApiResponse<string>>('v1/icam/fees/rd', req);
+    return res.data.data ?? '';
   },
 
   /** AS-IS BatchMain(actionCode=icamOfficeMngFee·icamFundMngFee): ICAM 발생보수 가져오기 — 외부 ICAM DB 연동이 없으면 오류 */
@@ -171,7 +186,7 @@ export const icamApi = {
   // ── X24 ICAM 펀드보수 월말잔액 (Icam12_Tab_OfficeMngFeeBook) ──
 
   /** AS-IS icam.Icam12_FeeBook.selectByStdDatePaging: 기준일(말일)의 월말잔액 (페이지 행 + 전체 건수) */
-  searchFeeBooks: async (params: { stdDate: string; searchText: string; offset: number; limit: number }): Promise<PageRes<IcamFeeBook>> => {
+  searchFeeBooks: async (params: { stdDate: string; searchText: string; fundCode?: string | null; offset: number; limit: number }): Promise<PageRes<IcamFeeBook>> => {
     const res = await apiClient.get<ApiResponse<PageRes<IcamFeeBook>>>('v1/icam/fee-books', { params });
     return res.data.data ?? { total: 0, rows: [] };
   },

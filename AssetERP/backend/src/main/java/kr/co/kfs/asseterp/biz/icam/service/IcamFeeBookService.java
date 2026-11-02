@@ -28,8 +28,9 @@ public class IcamFeeBookService {
     private final IcamFeeBookMapper mapper;
     private final IcamBatchRunner batchRunner;
 
-    public PageRes<IcamFeeBookRes> search(UserPrincipal user, LocalDate stdDate, String searchText, int offset, int limit) {
+    public PageRes<IcamFeeBookRes> search(UserPrincipal user, LocalDate stdDate, String searchText, String fundCode, int offset, int limit) {
         IcamFeeBookParam param = new IcamFeeBookParam(user.getCompanyId(), stdDate, searchText == null ? "" : searchText,
+                fundCode == null || fundCode.isBlank() ? null : fundCode,
                 Math.max(offset, 0), limit > 0 ? limit : 100);
         return new PageRes<>(mapper.selectByStdDatePagingTotal(param), mapper.selectByStdDatePaging(param));
     }

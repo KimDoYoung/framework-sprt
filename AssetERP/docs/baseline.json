@@ -13936,5 +13936,88 @@
     "note": "docs/work/X/X28-작업기록.md",
     "history": [],
     "id": "X28"
+  },
+  "Icam10_Tab_FundMngFee": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/icam/Icam10_Lookup_FundFee.java": "a98d11bf361bf8dcbb282a0369cf8af7bbbbb17b",
+      "application/src/main/java/myApp/client/vi/icam/Icam10_Lookup_getICAM.java": "f10acaee7fee583897b6649869a69b529e7cde02",
+      "application/src/main/java/myApp/client/vi/icam/Icam10_Tab_FundMngFee.java": "66470bbbd70e15e8f78ba2dfca4800d5c3d84fb0",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam10_FeeModel.java": "616e186ef8659b71f9d4fd84050504c0f9eda2ad",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam10_FeeModelProperties.java": "9ae71f4d65e09e8975970e626e4ad47a483c8f9c",
+      "application/src/main/java/myApp/server/biz/mapper/biz13_with_corp.xml": "8045b8967c88d41f625d719c02a8680814bb753d",
+      "application/src/main/java/myApp/server/icam/Icam10_Fee.java": "495530a0e51cd7f4cace4fe657973d4506c7813f",
+      "application/src/main/java/myApp/server/icam/mapper/icam10_fee.xml": "ba24a6691b9b6199323288c59b1eee6e90a922a8",
+      "application/src/main/java/myApp/server/icam/mapper/icam11_fee_deposit.xml": "45ec0e27df5a5f8967b98e6e145c52d50b456640",
+      "application/src/main/java/myApp/server/icam/mapper/icam12_fee_book.xml": "f933ea92b17bbcd5c88d9ae3f39ca65a50ab4956",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "02073a29bc7feb680d7fefea312fd41a0ccecc98",
+      "application/src/main/java/myApp/server/sys/mapper/sys12_calendar.xml": "9fb50bcfbfb5f1d292411edfa2499a68687a8064",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Icam10_Lookup_FundCode",
+      "Sys15_Lookup_Corp"
+    ],
+    "recorded_at": "2026-11-02T12:47:06+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/X/X29-작업기록.md",
+    "history": [],
+    "id": "X29"
+  },
+  "Icam12_Tab_FundMngFeeBook": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/icam/Icam12_Tab_FundMngFeeBook.java": "779935333a81af48aef53c3db89ea311507e19cb",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam10_FeeModel.java": "616e186ef8659b71f9d4fd84050504c0f9eda2ad",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam12_FeeBookModel.java": "2d0ffd4a06f7bc0d2a1b09d7589e8f6b6b0af980",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam12_FeeBookModelProperties.java": "9f8bb1dc520586560ed26fd5b8623d3d74cf3472",
+      "application/src/main/java/myApp/server/icam/Icam12_FeeBook.java": "0e8b60c3cd03510f7fbf1fdb1c3b77dc768204b3",
+      "application/src/main/java/myApp/server/icam/mapper/icam12_fee_book.xml": "f933ea92b17bbcd5c88d9ae3f39ca65a50ab4956"
+    },
+    "shared_links": [
+      "Icam10_Lookup_FundCode"
+    ],
+    "recorded_at": "2026-11-02T12:50:40+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/X/X30-작업기록.md",
+    "history": [],
+    "id": "X30"
+  },
+  "Ast30_Tab_FundMngFeeState": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/ast/Ast30_Lookup_FeeDetail.java": "f7089a5b0e19d3d3897bb1b3055d89036377810c",
+      "application/src/main/java/myApp/client/vi/ast/Ast30_Tab_FundMngFeeState.java": "f7e6a24e200b78d6f7d23d112e071feb344acd30",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast30_BookFundFeeModel.java": "9ae8ee62724a784d0a8a8c7ff037979ca23609d4",
+      "application/src/main/java/myApp/client/vi/ast/model/Ast30_BookFundFeeModelProperties.java": "1061a932fbbc9309cba5efd99db2b172a7de38ff",
+      "application/src/main/java/myApp/server/ast/Ast30_BookFundFee.java": "e269a85e478f233b5ff8d34c253393ecc6fa807a",
+      "application/src/main/java/myApp/server/ast/mapper/ast30_book_fund_fee.xml": "63fe626cb11db5233421957249729287fc4dc45a",
+      "application/src/main/java/myApp/server/icam/Icam10_Fee.java": "495530a0e51cd7f4cace4fe657973d4506c7813f",
+      "application/src/main/java/myApp/server/icam/mapper/icam10_fee.xml": "ba24a6691b9b6199323288c59b1eee6e90a922a8",
+      "application/src/main/java/myApp/server/sys/Sys99_Print.java": "02073a29bc7feb680d7fefea312fd41a0ccecc98",
+      "application/src/main/java/myApp/server/sys/mapper/sys99_print.xml": "6c9a012179f91e0ac4714cada6431bafc890df72",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Icam10_Lookup_FundCode"
+    ],
+    "recorded_at": "2026-11-02T12:56:13+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/X/X31-작업기록.md",
+    "history": [],
+    "id": "X31"
   }
 }

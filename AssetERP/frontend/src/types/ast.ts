@@ -1259,6 +1259,21 @@ export interface AstBookFundFeeCorp {
 }
 
 /** 펀드보수원장 기간조회 — 일자·운용사별 합계 한 행 (X26) */
+/** X31 펀드보수원장 현황(Ast30_Tab_FundMngFeeState) 그리드 행. corpId는 그리드에 없고 증감액 상세 창에 쓴다 */
+export interface AstBookFundFeeState {
+  holdDate: string;
+  corpId: number;
+  fundCode: string;
+  fundName?: string | null;
+  preFee?: number | null;
+  diffFee?: number | null;
+  fee?: number | null;
+  monthOccFee?: number | null;
+  occFee?: number | null;
+  drawFee?: number | null;
+  unRcvFee?: number | null;
+}
+
 export interface AstBookFundFeePeriod {
   holdDate: string;
   corpId: number;

@@ -48,6 +48,14 @@ export interface IcamFeeJobReq {
 }
 
 /** ICAM 발생보수 한 행 (AS-IS Icam10_FeeModel 중 Icam10_Tab_FeeAdmin 그리드 열). 날짜는 'yyyy-MM-dd' */
+/** X29 펀드 조회창(Icam10_Lookup_FundCode) 행 — AS-IS Icam10_FeeModel의 펀드코드·펀드명 */
+export interface IcamFeeFund {
+  /** 순번(row_number) — 그리드 행 ID */
+  feeId: string;
+  fundCode: string;
+  fundName?: string | null;
+}
+
 export interface IcamFee {
   /** numeric ID — 문자열 (05 §6) */
   feeId: string;

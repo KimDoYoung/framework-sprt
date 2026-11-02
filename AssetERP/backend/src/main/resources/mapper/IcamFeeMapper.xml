@@ -20,6 +20,9 @@
                 icam10_fee_type = #{p.feeType}         ) )
         AND icam10_std_date  BETWEEN #{p.startDate} AND #{p.closeDate}
         AND upper(concat(icam10_icam_company_cd,icam10_icam_company_nm,icam10_fund_cd,icam10_fund_nm,icam10_rmk_nm)) LIKE '%'||upper(#{p.searchText})||'%'
+        <if test="p.fundCode != null">
+        AND icam10_fund_cd = #{p.fundCode}   /* X29: 펀드 조회창에서 고른 펀드 */
+        </if>
     </sql>
 
     <!-- AS-IS icam10_fee.selectByFeeTypePaging L114 (IDMS-IC) -->
@@ -53,6 +56,57 @@
          WHERE 1=1
             <include refid="whereCondition"/>
     </select>
+
+    <!-- AS-IS icam10_fee.selectFundList L76 (IDMS-IC, X29) — 그대로 -->
+    <select id="selectFundList" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamFeeFundRes">
+        SELECT row_number() OVER(ORDER BY icam10_fund_cd)   AS fee_id
+             , icam10_fund_cd                               AS fund_code
+             , COALESCE(fnd02_fund_nm, icam10_fund_nm)      AS fund_name
+          FROM icam10_fee
+               LEFT JOIN ( SELECT fnd01_fund_cd, fnd02_fund_nm
+                             FROM fnd01_fund_code
+                                  INNER JOIN fnd02_fund_info ON (    fnd02_fund_code_id = fnd01_fund_code_id
+                                                                 AND fnd02_work_date    = ( SELECT MAX(fnd02_work_date)
+                                                                                              FROM fnd02_fund_info
+                                                                                             WHERE fnd02_fund_code_id = fnd01_fund_code_id
+                                                                                               AND fnd02_work_date <![CDATA[<=]]> #{stdDate} ) )
+                            WHERE fnd01_company_id = #{companyId}
+                         ) fnd ON fnd01_fund_cd = icam10_fund_cd
+         WHERE icam10_company_id    = #{companyId}
+           AND icam10_std_date      >= #{stdDate}
+           AND UPPER(CONCAT(icam10_fund_cd, icam10_fund_nm)) LIKE UPPER(#{searchText})
+         GROUP BY icam10_fund_cd, COALESCE(fnd02_fund_nm, icam10_fund_nm)
+         ORDER BY icam10_fund_cd
+    </select>
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId L695 (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdFundMngFee L3798 (IDMS-IC) — selectByFeeType(L132)를 읽어 한 행씩 넣던 것을 INSERT … SELECT 한 문장으로.
+         기준일 date01·펀드코드 string01·펀드명 string02·적요 string03·발생보수 double01·다음보수인출일 date02·전보수인출일 date03·생성일시 string04·생성자 string05 -->
+    <insert id="insertPrintFundMngFee">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_string01, sys99_string02, sys99_string03, sys99_double01
+               , sys99_date02, sys99_date03, sys99_string04, sys99_string05 )
+        SELECT f_create_seq(), #{p.companyId}, #{personId}, #{windowClassName}, #{groupId}
+             , icam10_std_date, icam10_fund_cd, icam10_fund_nm, icam10_rmk_nm, icam10_fee
+             , icam10_af_pay_date, icam10_bf_pay_date
+             , to_char(icam10_work_date,'yyyy-mm-dd HH24:MI:SS'), icam10_worker
+          FROM icam10_fee
+         WHERE 1=1
+            <include refid="whereCondition"/>
+         ORDER BY icam10_std_date, icam10_icam_company_cd, icam10_rmk_cd, icam10_fund_cd
+    </insert>
 
     <!-- AS-IS icam10_fee.selectByFundCode (IDMS-IC, X25) — 원본은 icam10_fee.*도 같이 내지만 이 화면은 적요·통화·금액만 쓴다. fee는 원본처럼 부호·이중운용 보정값 -->
     <select id="selectByFundCode" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamFeeDetailRes">
