@@ -33,6 +33,12 @@ public class DisabledIcamBatchRunner implements IcamBatchRunner {
     }
 
     @Override
+    public void runLastDayFeeBook(Long companyId, LocalDate stdDate, String worker) {
+        log.warn("ICAM 연동이 없어 실행하지 않음: 펀드보수 월말잔액 대사, companyId={}, stdDate={}, worker={}", companyId, stdDate, worker);
+        throw new BusinessException(ErrorCode.INVALID_INPUT, "ICAM 연동(외부 ICAM DB)이 아직 없어 ICAM 월말잔액을 가져오지 않았습니다");
+    }
+
+    @Override
     public void runSource(String worker) {
         log.warn("ICAM 배치 연동이 없어 실행하지 않음: DB소스 가져오기, worker={}", worker);
         throw new BusinessException(ErrorCode.INVALID_INPUT, "ICAM 연동(외부 ICAM DB)이 아직 없어 DB소스를 가져오지 않았습니다");

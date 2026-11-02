@@ -22,6 +22,12 @@ public interface IcamBatchRunner {
      */
     void runFundFee(Long companyId, String feeType, String corpCode, String fundCode, LocalDate startDate, LocalDate closeDate);
 
+    /**
+     * icam.Icam13_FeeBookCheck.checkFeeBook의 ICAM 읽기 부분 — 외부 ICAM DB(icam12_fee_book.selectLastDayFeeIcamData, 사무관리보수 20407)에서
+     * 기준일 말일 보수잔액을 읽어 icam12_fee_book에 넣는다('자산운용' 운용사만, 펀드이관 입/출 일자 점검 포함)
+     */
+    void runLastDayFeeBook(Long companyId, LocalDate stdDate, String worker);
+
     /** icam.Icam50_Source.insertIcamDbSource — 운용서버·자문서버 ICAM 스키마의 all_source를 읽어 icam51_source_tmp에 넣고 icam50_source로 옮긴다 */
     void runSource(String worker);
 

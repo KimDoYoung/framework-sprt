@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/icam/mapper/icam12_fee_book.xml (selectByStdDatePaging·Total, delete),
+  icam13_fee_book_check.xml (selectByStdDate, delete, insert), ast30_book_fund_fee.xml (selectFeeBookDiff)  (X24)
+  selectByStdDatePaging의 fundCode 분기는 이 화면이 넘기지 않아 뺐다. 대사 SQL(selectFeeBookDiff)은 원본 그대로.
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.icam.mapper.IcamFeeBookMapper">
+
+    <sql id="whereCondition">
+        AND icam12_company_id = #{p.companyId}
+        AND icam12_std_date   = #{p.stdDate}
+        AND upper(concat(icam12_icam_company_cd,icam12_icam_company_nm,icam12_fund_cd,icam12_fund_nm,icam12_consignment_nm)) LIKE '%'||upper(#{p.searchText})||'%'
+    </sql>
+
+    <!-- AS-IS icam12_fee_book.selectByStdDatePaging (IDMS-IC) -->
+    <select id="selectByStdDatePaging" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamFeeBookRes">
+        SELECT icam12_std_date                                        AS std_date,
+               icam12_icam_company_cd                                 AS icam_company_code,
+               icam12_icam_company_nm                                 AS icam_company_name,
+               icam12_fund_cd                                         AS fund_code,
+               icam12_fund_nm                                         AS fund_name,
+               icam12_cur_cd                                          AS cur_code,
+               icam12_for_fee                                         AS for_fee,
+               icam12_fee                                             AS fee,
+               icam12_consignment_nm                                  AS consignment_name,
+               to_char(icam12_work_date,'yyyy-mm-dd HH24:MI:SS')      AS work_date_string,
+               icam12_worker                                          AS worker
+          FROM icam12_fee_book
+         WHERE 1=1
+            <include refid="whereCondition"/>
+         ORDER BY icam12_icam_company_cd, icam12_fund_cd
+         LIMIT #{p.limit}
+        OFFSET #{p.offset}
+    </select>
+
+    <!-- AS-IS icam12_fee_book.selectByStdDatePagingTotal (IDMS-IC) -->
+    <select id="selectByStdDatePagingTotal" resultType="int">
+        SELECT count(*)
+          FROM icam12_fee_book
+         WHERE 1=1
+            <include refid="whereCondition"/>
+    </select>
+
+    <!-- AS-IS icam13_fee_book_check.selectByStdDate (IDMS-IC) -->
+    <select id="selectCheckByStdDate" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamFeeBookCheckRes">
+        SELECT icam13_std_date                                        AS std_date,
+               icam13_result                                          AS result,
+               icam13_diff_amt                                        AS diff_amt,
+               f_emp_kor_nm(icam13_worker)                            AS worker_name,
+               to_char(icam13_work_date,'yyyy-mm-dd HH24:MI:SS')      AS work_date_string
+          FROM icam13_fee_book_check
+         WHERE icam13_company_id = #{companyId}
+           AND icam13_std_date   = #{stdDate}
+         ORDER BY icam13_fee_book_check_id
+    </select>
+
+    <!-- AS-IS icam12_fee_book.delete (startDate=closeDate=기준일) -->
+    <delete id="deleteFeeBook">
+        DELETE
+          FROM icam12_fee_book
+         WHERE icam12_company_id = #{companyId}
+           AND icam12_std_date BETWEEN #{stdDate} AND #{stdDate}
+    </delete>
+
+    <!-- AS-IS icam13_fee_book_check.delete -->
+    <delete id="deleteCheck">
+        DELETE
+          FROM icam13_fee_book_check
+         WHERE icam13_company_id = #{companyId}
+           AND icam13_std_date BETWEEN #{stdDate} AND #{stdDate}
+    </delete>
+
+    <!-- AS-IS icam13_fee_book_check.insert -->
+    <insert id="insertCheck">
+        INSERT
+          INTO icam13_fee_book_check
+        SELECT f_create_batchseq()
+             , #{companyId}
+             , #{stdDate}
+             , #{result}
+             , #{diffAmt}
+             , #{worker}
+             , f_sysdate()
+    </insert>
+
+    <!-- AS-IS ast30_book_fund_fee.selectFeeBookDiff (IDMS-IC) — 원본 그대로 -->
+    <select id="selectFeeBookDiff" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamFeeBookDiffRes">
+        <![CDATA[
+        WITH ast33 AS ( SELECT ast33_fund_trans.*
+                             , sys15_corp_cd    as ast33_corp_cd
+                          FROM ast33_fund_trans
+                               INNER JOIN sys15_corp ON sys15_corp_id = ast33_corp_id
+                               INNER JOIN icam10_fee ON ( icam10_company_id        = ast33_company_id  AND
+                                                          icam10_icam_company_cd   = sys15_corp_cd     AND
+                                                          icam10_fund_cd           = ast33_fund_cd     AND
+                                                          icam10_rmk_cd            = 'P00'             AND
+                                                          icam10_std_date          = #{closeDate}      )
+                         WHERE ast33_company_id    = #{companyId}
+                           AND ast33_fund_trans_cd = '2'  /*(2:이관(입))*/
+                           AND ast33_date > icam10_bf_pay_date
+        )
+        , biz17 AS ( SELECT biz17_dual_manage_fund.*
+                          , sys15_corp_cd   as biz17_corp_cd
+                       FROM biz17_dual_manage_fund
+                            INNER JOIN biz13_with_corp ON biz13_cont_corp_id = biz17_cont_corp_id
+                            INNER JOIN sys15_corp      ON sys15_corp_id      = biz13_corp_id
+                      WHERE biz17_company_id = #{companyId}
+                        AND biz17_start_date BETWEEN date_trunc('month',#{closeDate}::date)::date AND #{closeDate}::date
+                        AND biz13_manage_type = '1'        /*(1:자산운용)*/
+        )
+        , icam AS ( SELECT icam12_icam_company_cd
+                         , icam12_fund_cd
+                         , icam12_fund_nm
+                         , CASE WHEN EXISTS ( SELECT 1
+                                                FROM ast33
+                                               WHERE ast33_corp_cd = icam12_icam_company_cd
+                                                 AND ast33_fund_cd = icam12_fund_cd
+                                               UNION ALL
+                                              SELECT 2
+                                                FROM biz17
+                                               WHERE biz17_corp_cd = icam12_icam_company_cd
+                                                 AND biz17_fund_cd = icam12_fund_cd
+                                     )
+                                THEN (
+                                      SELECT SUM(f_calc_dual_fund_fee( icam10_company_id
+                                                                     , icam10_icam_company_cd
+                                                                     , icam10_fund_cd
+                                                                     , icam10_std_date
+                                                                     , icam10_fee ) * CASE WHEN icam10_drcr_type = 'C' THEN 1 ELSE -1 END)
+                                        FROM icam10_fee
+                                       WHERE icam10_company_id       = icam12_company_id
+                                         AND icam10_icam_company_cd  = icam12_icam_company_cd
+                                         AND icam10_fund_cd          = icam12_fund_cd
+                                         AND icam10_rmk_cd           IN ('P00','D20','D30') /* (P00:보수 및 수수료(비용)발생 / D20:보수인출 / D30:해지금/보수인출) */
+                                         AND icam10_std_date BETWEEN date_trunc('month',#{closeDate}::date)::date AND #{closeDate}::date
+                                     ) + COALESCE(ast30_for_fee,0)
+                                ELSE f_calc_dual_fund_fee( icam12_company_id
+                                                         , icam12_icam_company_cd
+                                                         , icam12_fund_cd
+                                                         , icam12_std_date
+                                                         , icam12_for_fee ) END  as icam12_for_fee
+                         , f_calc_dual_fund_fee( icam12_company_id
+                                               , icam12_icam_company_cd
+                                               , icam12_fund_cd
+                                               , icam12_std_date
+                                               , icam12_for_fee ) as icam12_for_fee2
+                      FROM icam12_fee_book
+                           LEFT JOIN ( SELECT sys15_corp_cd
+                                            , ast30_fund_cd
+                                            , ast30_for_fee
+                                         FROM ast30_book_fund_fee
+                                              INNER JOIN sys15_corp ON sys15_corp_id = ast30_corp_id
+                                        WHERE ast30_company_id = #{companyId}
+                                          AND ast30_hold_date  = (date_trunc('month', #{closeDate}::date) + interval '-1day')::date
+                                     ) t ON ( sys15_corp_cd = icam12_icam_company_cd AND
+                                              ast30_fund_cd = icam12_fund_cd         )
+                     WHERE icam12_company_id = #{companyId}
+                       AND icam12_std_date   = #{closeDate}
+        )
+        , erp AS ( SELECT *
+                     FROM ast30_book_fund_fee
+                          INNER JOIN sys15_corp ON sys15_corp_id = ast30_corp_id
+                    WHERE ast30_company_id = #{companyId}
+                      AND ast30_hold_date  = #{closeDate}
+        )
+        SELECT company_cd                                       AS corp_code
+             , sys15_corp_nm                                    AS corp_name
+             , fund_cd                                          AS fund_code
+             , fund_nm                                          AS fund_name
+             , icam_fee                                         AS icam_fee
+             , ast_fee                                          AS for_fee
+             , CASE WHEN icam_fee != ast_fee THEN icam_fee ELSE icam_fee2 END
+              - ast_fee                                         AS diff_fee
+          FROM (
+                 SELECT DISTINCT *
+                   FROM ( /*================== ICAM = AssetERP(+) ====================== */
+                          SELECT icam12_icam_company_cd                                                     as company_cd
+                               , icam12_fund_cd                                                             as fund_cd
+                               , icam12_fund_nm                                                             as fund_nm
+                               , icam12_for_fee                                                             as icam_fee
+                               , icam12_for_fee2                                                            as icam_fee2
+                               , COALESCE(ast30_for_fee, 0)                                                 as ast_fee
+                               , CASE WHEN ast30_fund_cd IS NULL THEN ' (AssetERP 정보 미존재)' ELSE '' END    as note
+                            FROM icam
+                                 LEFT JOIN erp ON ( sys15_corp_cd = icam12_icam_company_cd  AND
+                                                    ast30_fund_cd = icam12_fund_cd          )
+                           WHERE icam12_for_fee  != COALESCE(ast30_for_fee, 0)
+                             AND icam12_for_fee2 != COALESCE(ast30_for_fee, 0)
+                          /*==================== AssetERP = ICAM(+) ======================*/
+                           UNION ALL
+                          SELECT sys15_corp_cd                                                              as company_cd
+                               , ast30_fund_cd                                                              as fund_cd
+                               , ast30_fund_nm                                                              as fund_nm
+                               , COALESCE(icam12_for_fee , 0)                                               as icam_fee
+                               , COALESCE(icam12_for_fee2, 0)                                               as icam_fee2
+                               , ast30_for_fee                                                              as ast_fee
+                               , CASE WHEN icam12_fund_cd IS NULL THEN ' (ICAM 정보 미존재)' ELSE '' END       as note
+                            FROM erp
+                                 LEFT JOIN icam ON ( icam12_icam_company_cd = sys15_corp_cd AND
+                                                     icam12_fund_cd         = ast30_fund_cd )
+                           WHERE ast30_for_fee != COALESCE(icam12_for_fee , 0)
+                             AND ast30_for_fee != COALESCE(icam12_for_fee2, 0)
+                        ) t
+               ) tt
+               LEFT JOIN sys15_corp ON ( sys15_company_id = #{companyId}    AND
+                                         sys15_corp_cd    = company_cd      AND
+                                         sys15_use_yn     = 'true'          )
+         ORDER BY company_cd, fund_cd
+        ]]>
+    </select>
+</mapper>

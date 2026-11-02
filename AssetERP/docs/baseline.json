@@ -13797,5 +13797,33 @@
     "note": "docs/work/X/X23-작업기록.md",
     "history": [],
     "id": "X23"
+  },
+  "Icam12_Tab_OfficeMngFeeBook": {
+    "commit": "250d208dff2db4acaba2216b7205edbda56fd307",
+    "commit_short": "250d208",
+    "branch": "ioc",
+    "commit_date": "2026-10-29",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/icam/Icam12_Tab_OfficeMngFeeBook.java": "81ea70110f5a526f2ef62b299ab6eba17a6f931e",
+      "application/src/main/java/myApp/client/vi/icam/Icam13_Lookup_FeeBookCheck.java": "c2a39703004f633e14e4c2ebe406c69061ba0e42",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam12_FeeBookModel.java": "2d0ffd4a06f7bc0d2a1b09d7589e8f6b6b0af980",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam12_FeeBookModelProperties.java": "9f8bb1dc520586560ed26fd5b8623d3d74cf3472",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam13_FeeBookCheckModel.java": "36c5fcd17ddda9b23d5cffdf7ff3f60d8f40782d",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam13_FeeBookCheckModelProperties.java": "fc3b3f2bbd31ebe805dd62fe61a587c11cc2be2b",
+      "application/src/main/java/myApp/server/ast/mapper/ast30_book_fund_fee.xml": "63fe626cb11db5233421957249729287fc4dc45a",
+      "application/src/main/java/myApp/server/ast/mapper/ast33_fund_trans.xml": "06c33c86210d1daf603fd9a37eaf127ab396de0e",
+      "application/src/main/java/myApp/server/biz/mapper/biz13_with_corp.xml": "8045b8967c88d41f625d719c02a8680814bb753d",
+      "application/src/main/java/myApp/server/icam/Icam12_FeeBook.java": "0e8b60c3cd03510f7fbf1fdb1c3b77dc768204b3",
+      "application/src/main/java/myApp/server/icam/Icam13_FeeBookCheck.java": "52d9b9d424b51aad4821f6ee84dcab305e0e29c8",
+      "application/src/main/java/myApp/server/icam/mapper/icam12_fee_book.xml": "f933ea92b17bbcd5c88d9ae3f39ca65a50ab4956",
+      "application/src/main/java/myApp/server/icam/mapper/icam13_fee_book_check.xml": "c74347f427ba16cb218ab3eabd2f132a1c7bce93"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-11-02T11:21:06+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/work/X/X24-작업기록.md",
+    "history": [],
+    "id": "X24"
   }
 }

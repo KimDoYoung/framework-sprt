@@ -192,3 +192,27 @@ export interface FundOperateStatusDetail {
 }
 
 
+
+/** ICAM 펀드보수 월말잔액 한 행 (X24, AS-IS Icam12_FeeBookModel) */
+export interface IcamFeeBook {
+  stdDate?: string | null;
+  icamCompanyCode?: string | null;
+  icamCompanyName?: string | null;
+  fundCode?: string | null;
+  fundName?: string | null;
+  curCode?: string | null;
+  forFee?: number | null;
+  fee?: number | null;
+  consignmentName?: string | null;
+  workDateString?: string | null;
+  worker?: string | null;
+}
+
+/** ICAM 펀드보수 월말잔액 대사 결과 한 행 (X24, AS-IS Icam13_FeeBookCheckModel) */
+export interface IcamFeeBookCheck {
+  stdDate?: string | null;
+  result?: string | null;
+  diffAmt?: number | null;
+  workerName?: string | null;
+  workDateString?: string | null;
+}

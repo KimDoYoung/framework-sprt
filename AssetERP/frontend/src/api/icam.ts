@@ -7,6 +7,8 @@ import {
   FundPrice,
   IcamData,
   IcamFee,
+  IcamFeeBook,
+  IcamFeeBookCheck,
   IcamFeeJobReq,
   IcamFund,
   IcamSource,
@@ -162,5 +164,24 @@ export const icamApi = {
   }): Promise<string> => {
     const res = await apiClient.post<ApiResponse<string>>('v1/icam/fund-operate-status/rd-print', req);
     return res.data.data ?? '';
+  },
+
+  // ── X24 ICAM 펀드보수 월말잔액 (Icam12_Tab_OfficeMngFeeBook) ──
+
+  /** AS-IS icam.Icam12_FeeBook.selectByStdDatePaging: 기준일(말일)의 월말잔액 (페이지 행 + 전체 건수) */
+  searchFeeBooks: async (params: { stdDate: string; searchText: string; offset: number; limit: number }): Promise<PageRes<IcamFeeBook>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<IcamFeeBook>>>('v1/icam/fee-books', { params });
+    return res.data.data ?? { total: 0, rows: [] };
+  },
+
+  /** AS-IS icam.Icam13_FeeBookCheck.selectByStdDate: 기준일의 대사 결과 */
+  searchFeeBookChecks: async (stdDate: string): Promise<IcamFeeBookCheck[]> => {
+    const res = await apiClient.get<ApiResponse<IcamFeeBookCheck[]>>('v1/icam/fee-books/checks', { params: { stdDate } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS icam.Icam13_FeeBookCheck.checkFeeBook: ICAM 월말잔액 대사 — 외부 ICAM DB 연동이 없으면 오류 */
+  checkFeeBook: async (stdDate: string): Promise<void> => {
+    await apiClient.post<ApiResponse<null>>('v1/icam/fee-books/checks', { stdDate });
   },
 };

@@ -157,6 +157,7 @@ import { Icam06_Tab_FundOperateStatus } from './icam/Icam06_Tab_FundOperateStatu
 import { Icam10_Tab_CurrentFeeByFund } from './icam/Icam10_Tab_CurrentFeeByFund';
 import { Icam10_Tab_FeeAdmin } from './icam/Icam10_Tab_FeeAdmin';
 import { Icam10_Tab_OfficeMngFee } from './icam/Icam10_Tab_OfficeMngFee';
+import { Icam12_Tab_OfficeMngFeeBook } from './icam/Icam12_Tab_OfficeMngFeeBook';
 import { Icam50_Tab_DbSource } from './icam/Icam50_Tab_DbSource';
 import { Icam99_Tab_Test } from './icam/Icam99_Tab_Test';
 import { Ifi90_Tab_Config } from './ifi/Ifi90_Tab_Config';
@@ -526,6 +527,7 @@ export const SCREENS: Record<string, React.FC> = {
   Icam10_Tab_CurrentFeeByFund, // R06 (메뉴 #1268. 펀드별 발생보수현황 / #1494. 월별 펀드보수현황)
   Icam10_Tab_FeeAdmin, // D08 (ICAM 발생보수 가져오기도 같은 연동이 없어 서버가 거절)
   Icam10_Tab_OfficeMngFee, // X23 (메뉴 #1199. 같은 `icam/fees` API, 보수구분 20407 고정)
+  Icam12_Tab_OfficeMngFeeBook, // X24 (메뉴 #1200. `icam/fee-books`, X30 운용보수 월말잔액이 같은 API를 쓸 수 있다)
   Icam50_Tab_DbSource, // D09 (DB소스 가져오기도 같은 연동이 없어 서버가 거절)
   Icam99_Tab_Test, // D10 (작업 버튼은 BatchMain 연동이 없어 서버가 거절)
   Ifi90_Tab_Config, // D01 (계정PW 저장은 원본도 안 함 — 작업기록 제안)
