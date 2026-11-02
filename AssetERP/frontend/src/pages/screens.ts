@@ -224,6 +224,7 @@ import { Act13_Tab_RealAccountMap } from './act/Act13_Tab_RealAccountMap';
 import { Act02_Tab_Journal } from './act/Act02_Tab_Journal';
 import { Act02_Tab_ForJournal } from './act/Act02_Tab_ForJournal';
 import { Act02_Tab_JournalSub } from './act/Act02_Tab_JournalSub';
+import { Act04_Tab_GenLedger } from './act/Act04_Tab_GenLedger';
 import { Act04_Tab_Close } from './act/Act04_Tab_Close';
 import { Act15_Tab_CloseCheck } from './act/Act15_Tab_CloseCheck';
 import { Act02_Tab_DepositIoList } from './act/Act02_Tab_DepositIoList';
@@ -626,6 +627,7 @@ export const SCREENS: Record<string, React.FC> = {
   Act11_Tab_TrJournalMap, // E30 (+ Act11_Grid_TrJournalMap·Ast05_Lookup_TrCode)
   Act13_Tab_RealAccountMap, // E31 (+ Act10_Lookup_ReprAccount·Act01_Lookup_AccountCode)
   Act02_Tab_Journal, // X15
+  Act04_Tab_GenLedger, // X18 (메뉴 #1151. 하위 Act04_Lookup_GenLedger — [회계마감]·Act04_Lookup_AccountClose는 원본이 툴바에 넣지 않아 옮기지 않음)
   Act02_Tab_JournalSub, // X17 (메뉴 #1150. 하위 Act01_Lookup_AccountTree. 예금원장(기간) U02의 [계정별원장]이 TempData 'act.journalSub'로 행을 보낸다)
   Act02_Tab_ForJournal, // X16 (메뉴 #1177. X15의 외화 판 — 하위 Act02_Lookup_ModiForJournal)
   Act04_Tab_Close, // X14

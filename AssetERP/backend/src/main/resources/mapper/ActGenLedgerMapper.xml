@@ -1526,4 +1526,237 @@ SELECT COUNT(*)
 ]]>
     </select>
 
+
+    <!-- AS-IS act04_gen_ledger.selectByStdDate1 (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다(X18) -->
+    <select id="selectByStdDate1" resultType="kr.co.kfs.asseterp.biz.act.dto.GenLedgerRes">
+        SELECT x.act04_gen_ledger_id AS gen_ledger_id,
+               x.act04_account_cd AS account_code,
+               x.act04_account_nm AS account_name,
+               x.act04_account_nm2 AS account_name2,
+               x.act04_dr_today_bal_amt AS dr_today_bal_amt,
+               x.act04_dr_today_diff_amt AS dr_today_diff_amt,
+               x.act04_dr_preday_bal_amt AS dr_preday_bal_amt,
+               x.act04_cr_today_bal_amt AS cr_today_bal_amt,
+               x.act04_cr_today_diff_amt AS cr_today_diff_amt,
+               x.act04_cr_preday_bal_amt AS cr_preday_bal_amt,
+               x.act04_today_bal_amt AS today_bal_amt,
+               x.act04_slip_yn AS slip_yn,
+               CAST(NULL AS BIGINT) AS level,
+               CAST(NULL AS VARCHAR) AS parent_code
+          FROM (
+<![CDATA[
+WITH std AS ( SELECT (CASE WHEN #{diffType} = '1'
+                           THEN date_trunc('month', #{stdDate}::date) + interval '-1day'
+                           ELSE f_get_quarter_date(#{stdDate}::date, '1') END)::date  AS preday_date
+                   , f_get_account_close_date(sys01_company_id, #{stdDate}::date, -1) AS account_close_date
+                FROM sys01_company
+               WHERE sys01_company_id = #{companyId}
+)
+, act01 AS ( SELECT act01_account_code.*
+                  , CASE WHEN act01_attribute_cd IN ('1','2','3') THEN 1
+                         WHEN act01_attribute_cd IN ('4','5')     THEN 2
+                         ELSE 9 END                                                     AS seq
+                  , CASE WHEN act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END    AS sign
+               FROM act01_account_code
+              WHERE act01_company_id = #{companyId}
+)
+SELECT ROW_NUMBER() OVER(ORDER BY seq, act01_print_seq)                                                 AS act04_gen_ledger_id
+     , act04_account_cd                                                                                 AS act04_account_cd
+     , CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||act01_account_nm   AS act04_account_nm
+     , CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||act01_account_nm2  AS act04_account_nm2
+     , SUM(act04_dr_today_bal_amt)                                                                      AS act04_dr_today_bal_amt
+     , SUM(act04_dr_today_bal_amt) - SUM(act04_dr_preday_bal_amt)                                       AS act04_dr_today_diff_amt
+     , SUM(act04_dr_preday_bal_amt)                                                                     AS act04_dr_preday_bal_amt
+     , SUM(act04_cr_today_bal_amt)                                                                      AS act04_cr_today_bal_amt
+     , SUM(act04_cr_today_bal_amt) - SUM(act04_cr_preday_bal_amt)                                       AS act04_cr_today_diff_amt
+     , SUM(act04_cr_preday_bal_amt)                                                                     AS act04_cr_preday_bal_amt
+     , (SUM(act04_dr_today_bal_amt) - SUM(act04_cr_today_bal_amt)) * sign                               AS act04_today_bal_amt
+     , act01_slip_yn                                                                                    AS act04_slip_yn
+  FROM (
+         SELECT act04_account_cd            AS act04_account_cd
+              , act04_dr_today_bal_amt      AS act04_dr_today_bal_amt
+              , 0                           AS act04_dr_preday_bal_amt
+              , act04_cr_today_bal_amt      AS act04_cr_today_bal_amt
+              , 0                           AS act04_cr_preday_bal_amt
+          FROM  act04_gen_ledger
+         WHERE  act04_company_id = #{companyId}
+           AND  act04_std_date   = #{stdDate}
+         UNION ALL
+        SELECT act04_account_cd                                         AS act04_account_cd
+              , 0                                                       AS act04_dr_today_bal_amt
+              , CASE WHEN act04_std_date = account_close_date   AND
+                          act01_attribute_cd IN ('4','5')       THEN 0
+                     ELSE act04_dr_today_bal_amt END                    AS act04_dr_preday_bal_amt
+              , 0                                                       AS act04_cr_today_bal_amt
+              , CASE WHEN act04_std_date = account_close_date   AND
+                     act01_attribute_cd IN ('4','5')            THEN 0
+                     ELSE act04_cr_today_bal_amt END                    AS act04_cr_preday_bal_amt
+          FROM act04_gen_ledger
+               INNER JOIN std                ON preday_date = act04_std_date
+               INNER JOIN act01_account_code ON ( act01_company_id = act04_company_id AND
+                                                  act01_account_cd = act04_account_cd )
+         WHERE  act04_company_id = #{companyId}
+       ) t
+       INNER JOIN act01 ON act01_account_cd = act04_account_cd
+ WHERE CONCAT(act01_account_cd, act01_account_nm) ILIKE #{searchText}
+ GROUP BY act04_account_cd
+        , act01_account_nm
+        , act01_account_nm2
+        , act01_use_yn
+        , sign, seq
+        , act01_slip_yn
+        , act01_print_seq
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.selectByStdDate2 (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다(X18) -->
+    <select id="selectByStdDate2" resultType="kr.co.kfs.asseterp.biz.act.dto.GenLedgerRes">
+        SELECT x.act04_gen_ledger_id AS gen_ledger_id,
+               x.act04_account_cd AS account_code,
+               x.act04_account_nm AS account_name,
+               x.act04_account_nm2 AS account_name2,
+               x.act04_dr_today_bal_amt AS dr_today_bal_amt,
+               x.act04_dr_today_diff_amt AS dr_today_diff_amt,
+               x.act04_dr_preday_bal_amt AS dr_preday_bal_amt,
+               x.act04_cr_today_bal_amt AS cr_today_bal_amt,
+               x.act04_cr_today_diff_amt AS cr_today_diff_amt,
+               x.act04_cr_preday_bal_amt AS cr_preday_bal_amt,
+               x.act04_today_bal_amt AS today_bal_amt,
+               x.act04_slip_yn AS slip_yn,
+               CAST(NULL AS BIGINT) AS level,
+               CAST(NULL AS VARCHAR) AS parent_code
+          FROM (
+<![CDATA[
+SELECT	row_number() OVER (ORDER BY seq, act01_print_seq)                                               AS act04_gen_ledger_id
+	     ,  act04_account_cd                                                                                AS act04_account_cd
+	     ,  CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||act01_account_nm  AS act04_account_nm
+	     ,  CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||act01_account_nm2 AS act04_account_nm2
+	     ,  SUM(act04_dr_today_bal_amt)                                                                     AS act04_dr_today_bal_amt
+	     ,  SUM(act04_dr_today_diff_amt)                                                                    AS act04_dr_today_diff_amt
+	     ,  SUM(act04_dr_preday_bal_amt)                                                                    AS act04_dr_preday_bal_amt
+	     ,  SUM(act04_cr_today_bal_amt)                                                                     AS act04_cr_today_bal_amt
+	     ,  SUM(act04_cr_today_diff_amt)                                                                    AS act04_cr_today_diff_amt
+	     ,  SUM(act04_cr_preday_bal_amt)                                                                    AS act04_cr_preday_bal_amt
+		 ,	(SUM(act04_dr_today_bal_amt) - SUM(act04_cr_today_bal_amt))
+			* CASE WHEN act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END	                            AS act04_today_bal_amt
+		 ,  act01_slip_yn														                            AS act04_slip_yn
+	  FROM  act04_gen_ledger
+			INNER JOIN ( SELECT act01_account_code.*
+		                      , CASE WHEN act01_attribute_cd IN ('1','2','3') THEN 1
+			                         WHEN act01_attribute_cd IN ('4','5')     THEN 2
+			                         ELSE 9 END seq
+			               FROM act01_account_code
+			              WHERE act01_company_id = #{companyId} ) t ON ( act01_account_cd = act04_account_cd AND
+			                                                             act01_company_id = act04_company_id )
+	 WHERE  act04_company_id = #{companyId}
+	   AND  act04_std_date   = #{stdDate}
+	   AND  UPPER(act04_account_cd||act01_account_nm) LIKE UPPER(#{searchText})
+	 GROUP BY act04_account_cd
+	        , act01_account_nm
+	        , act01_account_nm2
+	        , act01_attribute_cd
+	        , act01_slip_yn
+	        , act01_use_yn
+	        , seq
+            , act01_print_seq
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS act04_gen_ledger.selectByAccountCode (IDMS-IC) — 원본 SQL 그대로, 바깥 SELECT로 열 이름만 DTO에 맞춘다(X18) -->
+    <select id="selectByAccountCode" resultType="kr.co.kfs.asseterp.biz.act.dto.GenLedgerRes">
+        SELECT x.act04_gen_ledger_id AS gen_ledger_id,
+               x.act04_account_cd AS account_code,
+               x.act04_account_nm AS account_name,
+               x.act04_account_nm2 AS account_name2,
+               CAST(NULL AS NUMERIC) AS dr_today_bal_amt,
+               CAST(NULL AS NUMERIC) AS dr_today_diff_amt,
+               CAST(NULL AS NUMERIC) AS dr_preday_bal_amt,
+               CAST(NULL AS NUMERIC) AS cr_today_bal_amt,
+               CAST(NULL AS NUMERIC) AS cr_today_diff_amt,
+               CAST(NULL AS NUMERIC) AS cr_preday_bal_amt,
+               x.act04_today_bal_amt AS today_bal_amt,
+               x.act04_slip_yn AS slip_yn,
+               x.ast04_level AS level,
+               x.act04_parent_cd AS parent_code
+          FROM (
+<![CDATA[
+with recursive act01List(act01_account_cd, act01_parent_cd, act01_attribute_cd, act01_account_nm, act01_account_nm2, act01_slip_yn, depth, path, cycle) AS
+		(
+			SELECT	a.act01_account_cd
+				 ,	a.act01_parent_cd
+				 ,	a.act01_attribute_cd
+				 ,	CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||a.act01_account_nm  as act01_account_nm
+				 ,	CASE WHEN COALESCE(act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||a.act01_account_nm2 as act01_account_nm2
+				 ,	a.act01_slip_yn
+				 ,	0
+				 ,	ARRAY[a.act01_account_cd::text]
+				 ,	false
+			  FROM	act01_account_code a
+			 WHERE	1=1
+			   AND	act01_company_id = #{companyId}
+			   AND	act01_account_cd LIKE #{accountCode}
+			 UNION ALL
+			SELECT	a.act01_account_cd
+				 ,	a.act01_parent_cd
+				 ,	a.act01_attribute_cd
+				 ,	CASE WHEN COALESCE(a.act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||a.act01_account_nm    as act01_account_nm
+				 ,	CASE WHEN COALESCE(a.act01_use_yn,'false') = 'false' THEN '(사용X)' ELSE '' END||a.act01_account_nm2   as act01_account_nm2
+				 ,	a.act01_slip_yn
+				 ,	b.depth + 1
+				 ,	array_append(b.path, a.act01_account_cd::text) 
+				 ,	a.act01_account_cd = any(b.path)
+			  FROM	act01_account_code a
+			     ,  act01List b
+			 WHERE	1=1
+			   AND	a.act01_parent_cd = b.act01_account_cd
+			   AND	a.act01_company_id = #{companyId}
+			   AND	NOT CYCLE
+		)
+	SELECT	b.*
+		 ,	a.act01_parent_cd														AS act04_parent_cd
+		 ,	a.act01_account_nm							   							AS act04_account_nm
+		 ,	a.act01_account_nm2||
+		    CASE WHEN COALESCE(b.act04_ast_class_tree_id,0) = 0 THEN ''
+		         ELSE (SELECT ' - '||ast01_class_tree_nm
+		                 FROM ast01_class_tree
+		                WHERE ast01_class_tree_id = act04_ast_class_tree_id) END    AS act04_account_nm2
+		 ,	(b.act04_dr_today_bal_amt - b.act04_cr_today_bal_amt)
+			* CASE WHEN a.act01_attribute_cd IN ('1','5','9') THEN 1 ELSE -1 END	AS act04_today_bal_amt
+		 ,  a.act01_slip_yn															AS act04_slip_yn
+		 ,	a.depth 			                                                    AS ast04_level
+	  FROM  act01List a
+			INNER JOIN act04_gen_ledger b ON (b.act04_account_cd = a.act01_account_cd)
+	 WHERE  act04_company_id = #{companyId}
+	   AND  act04_std_date   = #{stdDate}
+	 ORDER BY path
+]]>
+               ) x
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq (f_create_seq()) -->
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS sys99_print.deleteByPersonId (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS Sys99_Print.insertRdGenLedger — 계정코드·계정과목 / 차변(당일잔고·당일증감·전일잔고) / 대변(…) / 당일잔고액 / id -->
+    <insert id="insertPrintGenLedger">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02
+               , sys99_long01, sys99_long02, sys99_long03, sys99_long04, sys99_long05, sys99_long06, sys99_long07, sys99_long08 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{r.accountCode}, #{r.accountName2}
+               , #{r.drTodayBalAmt}, #{r.drTodayDiffAmt}, #{r.drPredayBalAmt}, #{r.crTodayBalAmt}, #{r.crTodayDiffAmt}, #{r.crPredayBalAmt}, #{r.todayBalAmt}, #{r.genLedgerId} )
+    </insert>
+
 </mapper>

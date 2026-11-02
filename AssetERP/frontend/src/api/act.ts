@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, JournalDtlList, JournalDtlRdReq, JournalSub, JournalSubRdReq, JournalAccount, JournalRealAccount, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, JournalDtlList, JournalDtlRdReq, JournalSub, JournalSubRdReq, GenLedger, GenLedgerRdReq, JournalAccount, JournalRealAccount, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { AstBook } from '../types/ast';
 import { readBlobError } from './file';
 
@@ -472,5 +472,30 @@ export const actApi = {
     } catch (err) {
       throw await readBlobError(err);
     }
+  },
+
+  // ── X18 계정원장 (Act04_Tab_GenLedger) ──
+
+  /** AS-IS act.Act04_GenLedger.selectByStdDate1(월별 1·분기별 3) / selectByStdDate2(일별 2) — 검색어는 서버가 "%…%" */
+  searchGenLedgers: async (stdDate: string, diffType: string, searchText?: string): Promise<GenLedger[]> => {
+    const res = await apiClient.get<ApiResponse<GenLedger[]>>('v1/act/gen-ledgers', { params: { stdDate, diffType, searchText: searchText || undefined } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act04_GenLedger.selectByAccountCode — 계정과 하위 계정(전위 순서, level) */
+  searchGenLedgersByAccount: async (stdDate: string, accountCode: string): Promise<GenLedger[]> => {
+    const res = await apiClient.get<ApiResponse<GenLedger[]>>('v1/act/gen-ledgers/by-account', { params: { stdDate, accountCode } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act04_GenLedger.summaryGenLedger — 계정원장 정리(DB 함수) */
+  summaryGenLedger: async (startDate: string, closeDate: string): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/act/gen-ledgers/summary', { startDate, closeDate });
+  },
+
+  /** AS-IS sys.Sys99_Print.insertRdGenLedger → 출력그룹ID */
+  insertGenLedgerRd: async (req: GenLedgerRdReq): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/act/gen-ledgers/rd', req);
+    return res.data.data;
   },
 };

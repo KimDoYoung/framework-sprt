@@ -1,4 +1,7 @@
 package kr.co.kfs.asseterp.biz.act.mapper;
+import kr.co.kfs.asseterp.biz.act.dto.GenLedgerCond;
+import kr.co.kfs.asseterp.biz.act.dto.GenLedgerRes;
+import org.apache.ibatis.annotations.Param;
 
 import kr.co.kfs.asseterp.biz.act.dto.CloseCheckRes;
 import kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes;
@@ -90,4 +93,25 @@ public interface ActGenLedgerMapper {
     int deleteGenLedgerClose(Long companyId, LocalDate closeDate);
 
     int updateJournalCloseYn(Long companyId, LocalDate closeDate, String closeYn);
+
+    // ---- 계정원장 Act04_Tab_GenLedger (X18)
+
+    /** AS-IS selectByStdDate1 — 월별(1)·분기별(3) */
+    List<GenLedgerRes> selectByStdDate1(GenLedgerCond cond);
+
+    /** AS-IS selectByStdDate2 — 일별(2) */
+    List<GenLedgerRes> selectByStdDate2(GenLedgerCond cond);
+
+    /** AS-IS selectByAccountCode — 계정과 하위 계정(전위 순서, level) */
+    List<GenLedgerRes> selectByAccountCode(GenLedgerCond cond);
+
+    /** AS-IS dbConfig.getSeq */
+    long selectNextId();
+
+    /** AS-IS sys99_print.deleteByPersonId */
+    int deletePrint(@Param("companyId") Long companyId, @Param("personId") Long personId, @Param("windowClassName") String windowClassName);
+
+    /** AS-IS sys99_print.insert — 출력용 계정원장 한 줄 */
+    int insertPrintGenLedger(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
+                             @Param("windowClassName") String windowClassName, @Param("groupId") long groupId, @Param("r") GenLedgerRes r);
 }

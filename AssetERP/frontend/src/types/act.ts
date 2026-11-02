@@ -459,3 +459,29 @@ export interface JournalSubRdReq {
   depositId: number | null;
   searchText: string;
 }
+
+/** 계정원장 한 줄 (act04_gen_ledger.selectByStdDate1·2 / selectByAccountCode, X18). level·parentCode는 하위계정 트리에만 있다 */
+export interface GenLedger {
+  genLedgerId: number;
+  accountCode: string | null;
+  accountName: string | null;
+  accountName2: string | null;
+  drTodayBalAmt: number | null;
+  drTodayDiffAmt: number | null;
+  drPredayBalAmt: number | null;
+  crTodayBalAmt: number | null;
+  crTodayDiffAmt: number | null;
+  crPredayBalAmt: number | null;
+  todayBalAmt: number | null;
+  slipYn: string | null;
+  level: number | null;
+  parentCode: string | null;
+}
+
+/** 계정원장 출력 준비 요청 */
+export interface GenLedgerRdReq {
+  windowClassName: string;
+  stdDate: string;
+  diffType: string;
+  searchText: string;
+}

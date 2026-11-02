@@ -1,4 +1,8 @@
 package kr.co.kfs.asseterp.biz.act.service;
+import kr.co.kfs.asseterp.biz.act.dto.GenLedgerCond;
+import kr.co.kfs.asseterp.biz.act.dto.GenLedgerRes;
+import kr.co.kfs.asseterp.biz.act.dto.GenLedgerRdReq;
+import kr.co.kfs.asseterp.biz.act.dto.GenLedgerSummaryReq;
 
 import kr.co.kfs.asseterp.biz.act.dto.CloseCheckRes;
 import kr.co.kfs.asseterp.biz.act.dto.CloseDiffRes;
@@ -479,5 +483,50 @@ public class ActGenLedgerService {
 
     private BusinessException invalid(String msg) {
         return new BusinessException(ErrorCode.INVALID_INPUT, msg);
+    }
+
+    // ---- 계정원장 Act04_Tab_GenLedger (X18)
+
+    /** act.Act04_GenLedger.selectByStdDate1(월별 1·분기별 3) / selectByStdDate2(일별 2) — 검색어는 서버가 "%…%" */
+    public List<GenLedgerRes> searchGenLedgers(UserPrincipal user, LocalDate stdDate, String diffType, String searchText) {
+        return listBy(new GenLedgerCond(user.getCompanyId(), stdDate, diffType, like(searchText), null));
+    }
+
+    private List<GenLedgerRes> listBy(GenLedgerCond cond) {
+        return "1".equals(cond.diffType()) || "3".equals(cond.diffType())
+                ? mapper.selectByStdDate1(cond) : mapper.selectByStdDate2(cond);
+    }
+
+    /** act.Act04_GenLedger.selectByAccountCode — 계정과 하위 계정(전위 순서, level) */
+    public List<GenLedgerRes> searchGenLedgersByAccount(UserPrincipal user, LocalDate stdDate, String accountCode) {
+        if (accountCode == null || accountCode.isBlank()) throw invalid("계정코드가 없습니다");
+        return mapper.selectByAccountCode(new GenLedgerCond(user.getCompanyId(), stdDate, null, null, accountCode));
+    }
+
+    /** act.Act04_GenLedger.summaryGenLedger — DB 함수 f_create_genLedger. "Y"가 아니면 실패(되돌림) */
+    @Transactional
+    public void summaryGenLedger(UserPrincipal user, GenLedgerSummaryReq req) {
+        if (req.startDate() == null || req.closeDate() == null) throw invalid("정리기간을 확인하세요.");
+        String msg = mapper.summaryGenLedger(CloseParam.of(user.getCompanyId(), req.closeDate()).withStart(req.startDate()));
+        if (!"Y".equals(msg)) throw invalid(msg == null ? "계정원장 정리에 실패했습니다." : msg);
+    }
+
+    /** sys.Sys99_Print.insertRdGenLedger L1618-1672 — 현재 조건의 계정원장을 sys99_print에 만들고 출력그룹ID를 돌려준다(mrd Act04_Rd_GenLedger) */
+    @Transactional
+    public Long insertRdGenLedger(UserPrincipal user, GenLedgerRdReq req) {
+        if (req.stdDate() == null) throw invalid("기준일자를 선택해주세요");
+        if (req.windowClassName() == null || req.windowClassName().isBlank()) throw invalid("화면 클래스명이 없습니다.");
+        Long companyId = user.getCompanyId();
+        Long personId = user.getUserId();
+        long groupId = mapper.selectNextId();
+        mapper.deletePrint(companyId, personId, req.windowClassName());
+        for (GenLedgerRes r : listBy(new GenLedgerCond(companyId, req.stdDate(), req.diffType(), like(req.searchText()), null))) {
+            mapper.insertPrintGenLedger(mapper.selectNextId(), companyId, personId, req.windowClassName(), groupId, r);
+        }
+        return groupId;
+    }
+
+    private static String like(String text) {
+        return text == null || text.isEmpty() ? "%" : "%" + text + "%";
     }
 }
