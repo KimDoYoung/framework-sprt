@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.ast.mapper;
 
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeCorpRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeFundRes;
+import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeMonthRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeParam;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeStateParam;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeStateRes;
@@ -21,6 +22,9 @@ public interface AstBookFundFeeMapper {
 
     /** AS-IS ast30_book_fund_fee.selectByHoldDatePaging (X26) */
     List<BookFundFeePeriodRes> selectByHoldDatePaging(@Param("p") BookFundFeePeriodParam param);
+
+    /** AS-IS ast30_book_fund_fee.selectByStdDate (X32) — holdDate = 기준일 */
+    List<BookFundFeeMonthRes> selectByStdDate(@Param("p") BookFundFeeParam param);
 
     /** AS-IS ast30_book_fund_fee.selectByHoldDatePagingTotal (X26) */
     int selectByHoldDatePagingTotal(@Param("p") BookFundFeePeriodParam param);

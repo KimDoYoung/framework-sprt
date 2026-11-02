@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.ast.service;
 
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeCorpRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeFundRes;
+import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeMonthRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeParam;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeStateParam;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeStatePrintReq;
@@ -34,6 +35,11 @@ public class AstBookFundFeeService {
 
     public List<BookFundFeeCorpRes> searchCorps(UserPrincipal user, LocalDate holdDate, String searchText) {
         return mapper.selectByCompanyId(param(user, holdDate, null, searchText));
+    }
+
+    /** AS-IS Ast30_BookFundFee.selectByStdDate (X32 Ast30_Tab_FundMngFee) — 기준일의 펀드별 전월 잔액·당월 발생/인출·당월 잔액 */
+    public List<BookFundFeeMonthRes> searchByStdDate(UserPrincipal user, LocalDate stdDate, String searchText) {
+        return mapper.selectByStdDate(param(user, stdDate, null, searchText));
     }
 
     /** AS-IS Ast30_BookFundFee.selectByHoldDatePaging (L42) — 기간의 일자·운용사별 합계 (페이지 행 + 전체 건수) */

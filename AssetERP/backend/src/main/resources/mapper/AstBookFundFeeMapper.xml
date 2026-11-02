@@ -227,6 +227,43 @@
          ORDER BY ast30_hold_date, ast30_fund_cd
     </select>
 
+    <!-- AS-IS ast30_book_fund_fee.selectByStdDate (IDMS-IC, X32) — 기준일(p.holdDate)의 전월말·기준일 보수원장 + 당월 발생/인출. 원본은 ORDER BY 없이 row_number라 펀드코드순으로 정렬 -->
+    <select id="selectByStdDate" resultType="kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeMonthRes">
+        WITH pre AS ( SELECT *
+                        FROM ast30_book_fund_fee
+                       WHERE ast30_company_id = #{p.companyId}
+                         AND ast30_hold_date  = (date_trunc('month', #{p.holdDate}::date) + interval '-1day')::date
+        ), cur AS ( SELECT *
+                      FROM ast30_book_fund_fee
+                     WHERE ast30_company_id = #{p.companyId}
+                       AND ast30_hold_date  = #{p.holdDate}
+        ), occ AS ( SELECT icam10_fund_cd                                                   fund_cd
+                         , SUM(CASE WHEN icam10_drcr_type = 'C' THEN icam10_fee ELSE 0 END) occ_fee
+                         , SUM(CASE WHEN icam10_drcr_type = 'D' THEN icam10_fee ELSE 0 END) draw_fee
+                      FROM icam10_fee
+                     WHERE icam10_company_id = #{p.companyId}
+                       AND icam10_std_date BETWEEN date_trunc('month', #{p.holdDate}::date)::date AND #{p.holdDate}
+                     GROUP BY icam10_fund_cd
+        )
+        SELECT ast30_fund_cd                                AS fund_code
+             , ast30_fund_nm                                AS fund_name
+             , ast30_pre_fee                                AS pre_fee
+             , occ.occ_fee                                  AS occ_fee
+             , occ.draw_fee                                 AS draw_fee
+             , ast30_fee                                    AS fee
+          FROM (
+                 SELECT COALESCE(cur.ast30_fund_cd, pre.ast30_fund_cd)   AS ast30_fund_cd
+                      , COALESCE(cur.ast30_fund_nm, pre.ast30_fund_nm)   AS ast30_fund_nm
+                      , pre.ast30_fee                                    AS ast30_pre_fee
+                      , cur.ast30_fee                                    AS ast30_fee
+                  FROM cur
+                       FULL JOIN pre ON pre.ast30_fund_cd = cur.ast30_fund_cd
+               ) t
+               LEFT OUTER JOIN occ ON fund_cd = ast30_fund_cd
+         WHERE UPPER(CONCAT(ast30_fund_cd, ast30_fund_nm)) LIKE '%'||UPPER(#{p.searchText})||'%'
+         ORDER BY ast30_fund_cd
+    </select>
+
     <select id="selectNextId" resultType="long">
         SELECT f_create_seq()
     </select>

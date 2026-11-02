@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { AstBookDepn, FundTrans, PreHoldFee, AstBookFundFeeCorp, AstBookFundFeeFund, AstBookFundFeePeriod, AstBookFundFeeState, AstSettleByTr, AstTrIntrinsic, AstTrIntrinsicSaveReq, SettleAccrued, SettleExpense, SettleHistory, SettleSaveReq } from '../types/ast';
+import { AstBookDepn, FundTrans, PreHoldFee, AstBookFundFeeCorp, AstBookFundFeeFund, AstBookFundFeeMonth, AstBookFundFeePeriod, AstBookFundFeeState, AstSettleByTr, AstTrIntrinsic, AstTrIntrinsicSaveReq, SettleAccrued, SettleExpense, SettleHistory, SettleSaveReq } from '../types/ast';
 import {
   AstCf,
   AstCfBatchCreateReq,
@@ -1056,6 +1056,12 @@ export const astApi = {
   /** AS-IS ast.Ast30_BookFundFee.selectByCompanyId: 기준일의 운용사별 합계 */
   searchBookFundFeeCorps: async (params: { holdDate: string; searchText: string }): Promise<AstBookFundFeeCorp[]> => {
     const res = await apiClient.get<ApiResponse<AstBookFundFeeCorp[]>>('v1/ast/book-fund-fees', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS ast.Ast30_BookFundFee.selectByStdDate (X32): 기준일의 펀드별 전월 잔액·당월 발생/인출·당월 잔액 */
+  searchBookFundFeeMonths: async (params: { stdDate: string; searchText: string }): Promise<AstBookFundFeeMonth[]> => {
+    const res = await apiClient.get<ApiResponse<AstBookFundFeeMonth[]>>('v1/ast/book-fund-fees/month-fees', { params });
     return res.data.data ?? [];
   },
 

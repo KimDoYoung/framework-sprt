@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.ast.controller;
 
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeCorpRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeFundRes;
+import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeMonthRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeePeriodRes;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeStatePrintReq;
 import kr.co.kfs.asseterp.biz.ast.dto.BookFundFeeStateRes;
@@ -32,6 +33,14 @@ public class AstBookFundFeeController {
                                                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate holdDate,
                                                              @RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.searchCorps(principal, holdDate, searchText));
+    }
+
+    /** AS-IS ast.Ast30_BookFundFee.selectByStdDate — 기준일의 펀드별 월 보수현황 (X32 #1401) */
+    @GetMapping("/month-fees")
+    public ApiResponse<List<BookFundFeeMonthRes>> searchByStdDate(@AuthenticationPrincipal UserPrincipal principal,
+                                                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate stdDate,
+                                                                  @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchByStdDate(principal, stdDate, searchText));
     }
 
     /** AS-IS ast.Ast30_BookFundFee.selectByHoldDatePaging — 기간의 일자·운용사별 합계 (X26 #1249) */
