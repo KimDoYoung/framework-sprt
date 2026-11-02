@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/bbs/mapper/bbs30_class_tree.xml + UpdateDataModel(bbs30_class_tree) (Z13 Bbs30_Tab_ClassTree) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.bbs.mapper.BbsClassTreeMapper">
+
+    <sql id="cols">
+        a.bbs30_class_tree_id                              AS class_tree_id
+      , a.bbs30_company_id                                 AS company_id
+      , a.bbs30_class_tree_nm                              AS class_tree_nm
+      , a.bbs30_parent_tree_id                             AS parent_tree_id
+      , a.bbs30_seq                                        AS seq
+      , a.bbs30_note                                       AS note
+      , a.bbs30_type_cd                                    AS type_cd
+      , (COALESCE(a.bbs30_use_yn, 'false') = 'true')       AS use_yn
+      , (COALESCE(a.bbs30_public_yn, 'false') = 'true')    AS public_yn
+    </sql>
+
+    <!-- AS-IS bbs30_class_tree.selectByRoleUserTypeCode (IDMS-IC) — 왼쪽 분류 목록: 공개이거나 내게(사원/내 조직) 권한이 있는 세부항목, 숨김 글은 내 글만 센다 -->
+    <select id="selectByRoleUserTypeCode" resultType="kr.co.kfs.asseterp.biz.bbs.dto.ClassTreeRes">
+        SELECT <include refid="cols"/>
+             , CASE WHEN a.bbs30_type_cd = 'C'
+                    THEN NULL
+                    ELSE parent.bbs30_class_tree_nm
+                    END                                    AS parent_tree_nm
+             , (
+                  SELECT COUNT(*)
+                    FROM bbs31_content
+                   WHERE bbs31_class_tree_id = a.bbs30_class_tree_id
+                     AND (
+                              (COALESCE(bbs31_hide_yn,'false') = 'false')
+                              OR
+                              (COALESCE(bbs31_hide_yn,'false') = 'true' AND bbs31_person_id = #{personId})
+                          )
+               )                                           AS count
+          FROM bbs30_class_tree a
+               INNER JOIN bbs30_class_tree parent ON a.bbs30_parent_tree_id = parent.bbs30_class_tree_id AND parent.bbs30_type_cd = 'C'
+         WHERE parent.bbs30_use_yn = 'true'
+           AND a.bbs30_use_yn = 'true'
+           AND a.bbs30_company_id = #{companyId}
+           AND a.bbs30_type_cd = #{typeCode}
+           AND (
+                  a.bbs30_public_yn = 'true'
+                  OR
+                  (
+                      a.bbs30_public_yn = 'false'
+                      AND
+                      EXISTS (
+                                 SELECT 1
+                                   FROM bbs33_role
+                                  WHERE bbs33_class_tree_id = a.bbs30_class_tree_id
+                                    AND (
+                                            (bbs33_role_cd = 'P' AND bbs33_person_id = #{personId})
+                                            OR
+                                            (bbs33_role_cd = 'O' AND bbs33_org_code_id = #{orgId})
+                                        )
+                             )
+                  )
+               )
+         ORDER BY a.bbs30_seq, a.bbs30_class_tree_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS bbs30_class_tree.selectByTypeCode (IDMS-IC) — 관리 창 왼쪽(분류 'C') -->
+    <select id="selectByTypeCode" resultType="kr.co.kfs.asseterp.biz.bbs.dto.ClassTreeRes">
+        SELECT <include refid="cols"/>
+             , CASE WHEN a.bbs30_type_cd = 'C'
+                    THEN NULL
+                    ELSE parent.bbs30_class_tree_nm
+                    END                                    AS parent_tree_nm
+             , (
+                  SELECT COUNT(*)
+                    FROM bbs31_content
+                   WHERE bbs31_class_tree_id = a.bbs30_class_tree_id
+               )                                           AS count
+          FROM bbs30_class_tree a
+               LEFT OUTER JOIN bbs30_class_tree parent ON a.bbs30_parent_tree_id = parent.bbs30_class_tree_id AND parent.bbs30_type_cd = 'C'
+         WHERE a.bbs30_company_id = #{companyId}
+           AND a.bbs30_type_cd = #{typeCode}
+         ORDER BY a.bbs30_seq, a.bbs30_class_tree_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS bbs30_class_tree.selectByParentTreeId (IDMS-IC) — 관리 창 오른쪽(상위 분류의 세부항목 'T') -->
+    <select id="selectByParentTreeId" resultType="kr.co.kfs.asseterp.biz.bbs.dto.ClassTreeRes">
+        SELECT <include refid="cols"/>
+             , CASE WHEN a.bbs30_type_cd = 'C'
+                    THEN NULL
+                    ELSE parent.bbs30_class_tree_nm
+                    END                                    AS parent_tree_nm
+             , (
+                  SELECT COUNT(*)
+                    FROM bbs31_content
+                   WHERE bbs31_class_tree_id = a.bbs30_class_tree_id
+               )                                           AS count
+          FROM bbs30_class_tree a
+               LEFT JOIN bbs30_class_tree parent ON a.bbs30_parent_tree_id = parent.bbs30_class_tree_id AND parent.bbs30_type_cd = 'C'
+         WHERE a.bbs30_company_id = #{companyId}
+           AND a.bbs30_type_cd = #{typeCode}
+           AND a.bbs30_parent_tree_id = #{parentTreeId}
+         ORDER BY a.bbs30_seq, a.bbs30_class_tree_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <!-- AS-IS bbs30_class_tree.selectById (IDMS-IC) — UpdateDataModel이 저장 뒤 다시 읽는 문장 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.bbs.dto.ClassTreeRes">
+        SELECT <include refid="cols"/>
+             , CASE WHEN a.bbs30_type_cd = 'C'
+                    THEN NULL
+                    ELSE parent.bbs30_class_tree_nm
+                    END                                    AS parent_tree_nm
+             , (
+                  SELECT COUNT(*)
+                    FROM bbs31_content
+                   WHERE bbs31_class_tree_id = a.bbs30_class_tree_id
+               )                                           AS count
+          FROM bbs30_class_tree a
+               LEFT JOIN bbs30_class_tree parent ON a.bbs30_parent_tree_id = parent.bbs30_class_tree_id AND parent.bbs30_type_cd = 'C'
+         WHERE a.bbs30_class_tree_id = #{classTreeId}
+           AND a.bbs30_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Bbs30_ClassTree.update → UpdateDataModel INSERT -->
+    <insert id="insertClassTree">
+        INSERT INTO bbs30_class_tree (bbs30_class_tree_id, bbs30_company_id, bbs30_class_tree_nm, bbs30_parent_tree_id, bbs30_seq, bbs30_type_cd, bbs30_use_yn, bbs30_public_yn)
+        VALUES (#{classTreeId}, #{companyId}, #{r.classTreeNm}, #{r.parentTreeId}, #{r.seq}, #{r.typeCd},
+                CASE WHEN #{r.useYn} THEN 'true' ELSE 'false' END, CASE WHEN #{r.publicYn} THEN 'true' ELSE 'false' END)
+    </insert>
+
+    <!-- AS-IS Bbs30_ClassTree.update → UpdateDataModel UPDATE (회사 범위를 더 건다) -->
+    <update id="updateClassTree">
+        UPDATE bbs30_class_tree
+           SET bbs30_class_tree_nm  = #{r.classTreeNm}
+             , bbs30_parent_tree_id = #{r.parentTreeId}
+             , bbs30_seq            = #{r.seq}
+             , bbs30_type_cd        = #{r.typeCd}
+             , bbs30_use_yn         = CASE WHEN #{r.useYn} THEN 'true' ELSE 'false' END
+             , bbs30_public_yn      = CASE WHEN #{r.publicYn} THEN 'true' ELSE 'false' END
+         WHERE bbs30_class_tree_id  = #{r.classTreeId}
+           AND bbs30_company_id     = #{companyId}
+    </update>
+
+    <!-- AS-IS Bbs30_ClassTree.delete → UpdateDataModel DELETE (회사 범위를 더 건다) -->
+    <delete id="deleteClassTree">
+        DELETE FROM bbs30_class_tree
+         WHERE bbs30_company_id    = #{companyId}
+           AND bbs30_class_tree_id = #{classTreeId}
+    </delete>
+
+    <!-- AS-IS bbs30_class_tree.updateParentTreeId (IDMS-IC) -->
+    <update id="updateParentTreeId">
+        UPDATE bbs30_class_tree
+           SET bbs30_parent_tree_id = #{parentTreeId}
+         WHERE bbs30_class_tree_id  = #{classTreeId}
+           AND bbs30_company_id     = #{companyId}
+    </update>
+
+    <!-- AS-IS bbs30_class_tree.updatePublicYn (IDMS-IC) -->
+    <update id="updatePublicYn">
+        UPDATE bbs30_class_tree
+           SET bbs30_public_yn = CASE WHEN #{publicYn} THEN 'true' ELSE 'false' END
+         WHERE bbs30_class_tree_id = #{classTreeId}
+           AND bbs30_company_id    = #{companyId}
+    </update>
+</mapper>

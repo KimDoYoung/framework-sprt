@@ -368,3 +368,56 @@ export interface BbsBizShareSaveReq {
   keyword: string | null;
   note: string | null;
 }
+
+/** Z13 게시판 분류/세부항목 한 행 (AS-IS Bbs30_ClassTreeModel). typeCd 'C' = 분류, 'T' = 세부항목 */
+export interface BbsClassTree {
+  classTreeId: number;
+  companyId?: number;
+  classTreeNm: string | null;
+  parentTreeId: number;
+  seq: number | null;
+  note?: string | null;
+  typeCd: string;
+  useYn: boolean;
+  publicYn: boolean;
+  /** 세부항목의 상위 분류명 (분류 줄은 null) */
+  parentTreeNm?: string | null;
+  /** 세부항목의 게시물 수 */
+  count?: number | null;
+}
+
+/** Z13 게시물 한 행 (AS-IS Bbs31_ContentModel). 목록은 content가 null — 상세 창이 읽는다 */
+export interface BbsContent {
+  contentId: number;
+  classTreeId: number;
+  personId: number;
+  title: string | null;
+  /** 비공개 글이면 앞에 굵은 "(비공개) "가 붙은 HTML 제목 */
+  titleRole: string;
+  content: string | null;
+  hideYn: boolean;
+  regDateStr: string;
+  personName: string;
+}
+
+/** Z13 게시물 저장 요청 — editChk false면 새 글(등록일 = 지금) */
+export interface BbsContentSaveReq {
+  contentId: number;
+  classTreeId: number | null;
+  title: string;
+  content: string;
+  hideYn: boolean;
+  editChk: boolean;
+}
+
+/** Z13 게시판 분류 권한 한 행 (AS-IS Bbs33_RoleModel). roleCd 'P' = 사원, 'O' = 부서 */
+export interface BbsClassRole {
+  roleId: number;
+  classTreeId: number;
+  roleCd: string;
+  personId: number | null;
+  orgCodeId: number | null;
+  personName: string | null;
+  orgName: string | null;
+  roleName: string;
+}

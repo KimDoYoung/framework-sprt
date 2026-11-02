@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/bbs/mapper/bbs33_role.xml + UpdateDataModel(bbs33_role) (Z13 Bbs33_Lookup_Role) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.bbs.mapper.BbsClassRoleMapper">
+
+    <sql id="cols">
+        bbs33_role_id                                          AS role_id
+      , bbs33_class_tree_id                                    AS class_tree_id
+      , bbs33_role_cd                                          AS role_cd
+      , bbs33_person_id                                        AS person_id
+      , bbs33_org_code_id                                      AS org_code_id
+      , f_emp_kor_nm(bbs33_person_id)                          AS person_name
+      , CASE WHEN bbs33_role_cd = 'P'
+             THEN f_get_empTrans(bbs33_person_id, f_sysdate()::date, 'org_code_nm')
+             ELSE f_org_parent_full_nm(bbs33_org_code_id, f_sysdate())
+             END                                               AS org_name
+      , CASE WHEN bbs33_role_cd = 'P'
+             THEN '사원'
+             ELSE '부서'
+             END                                               AS role_name
+    </sql>
+
+    <!-- AS-IS bbs33_role.selectByClassTreeId (IDMS-IC) -->
+    <select id="selectByClassTreeId" resultType="kr.co.kfs.asseterp.biz.bbs.dto.ClassRoleRes">
+        SELECT <include refid="cols"/>
+          FROM bbs33_role
+         WHERE bbs33_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- AS-IS bbs33_role.selectById (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.bbs.dto.ClassRoleRes">
+        SELECT <include refid="cols"/>
+          FROM bbs33_role
+         WHERE bbs33_role_id = #{roleId}
+    </select>
+
+    <!-- AS-IS bbs33_role.checkRole (IDMS-IC) — 줄이 있는지만 본다 -->
+    <select id="countRole" resultType="long">
+        SELECT COUNT(*)
+          FROM bbs33_role
+         WHERE 1=1
+           AND bbs33_class_tree_id = #{classTreeId}
+           AND (
+                  (bbs33_role_cd = 'P' AND bbs33_person_id = #{personId})
+                  OR
+                  (bbs33_role_cd = 'O' AND bbs33_org_code_id = #{orgId})
+               )
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Bbs33_Role.update → UpdateDataModel INSERT -->
+    <insert id="insertRole">
+        INSERT INTO bbs33_role (bbs33_role_id, bbs33_class_tree_id, bbs33_role_cd, bbs33_person_id, bbs33_org_code_id)
+        VALUES (#{roleId}, #{classTreeId}, #{r.roleCd}, #{r.personId}, #{r.orgCodeId})
+    </insert>
+
+    <!-- AS-IS Bbs33_Role.update → UpdateDataModel UPDATE -->
+    <update id="updateRole">
+        UPDATE bbs33_role
+           SET bbs33_role_cd     = #{r.roleCd}
+             , bbs33_person_id   = #{r.personId}
+             , bbs33_org_code_id = #{r.orgCodeId}
+         WHERE bbs33_role_id        = #{r.roleId}
+           AND bbs33_class_tree_id  = #{classTreeId}
+    </update>
+
+    <!-- AS-IS Bbs33_Role.delete → UpdateDataModel DELETE (이 분류의 줄만) -->
+    <delete id="deleteRoles">
+        DELETE FROM bbs33_role
+         WHERE bbs33_class_tree_id = #{classTreeId}
+           AND bbs33_role_id IN
+        <foreach collection="roleIds" item="roleId" open="(" separator="," close=")">#{roleId}</foreach>
+    </delete>
+</mapper>

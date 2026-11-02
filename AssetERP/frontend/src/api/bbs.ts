@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { readBlobError } from './file';
 import { ApiResponse, PageRes } from '../types/auth';
-import { BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsBizShare, BbsBizShareSaveReq, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice, BbsNoticeAdmin, BbsNoticeAdminSaveReq, BbsNoticeHistory, BbsNoticeMng, BbsNoticePerson, BbsNoticeSaveReq, BbsTarget, BbsTargetCompany } from '../types/bbs';
+import { BbsClassRole, BbsClassTree, BbsContent, BbsContentSaveReq, BbsApplication, BbsApplicationForm, BbsApplicationMine, BbsApplicationMineSaveReq, BbsApplicationMng, BbsApplicationStatusRes, BbsBizShare, BbsBizShareSaveReq, BbsCompanyRule, BbsCompanyRuleSaveReq, BbsComment, BbsFloralMessage, BbsFloralRequest, BbsFloralRequestNew, BbsFloralRequestSaveReq, BbsFloralShare, BbsNotice, BbsNoticeAdmin, BbsNoticeAdminSaveReq, BbsNoticeHistory, BbsNoticeMng, BbsNoticePerson, BbsNoticeSaveReq, BbsTarget, BbsTargetCompany } from '../types/bbs';
 
 /** 요청서(신청서) — 증명서 신청내역 (S05, AS-IS Bbs11_Application) */
 export const bbsApplicationApi = {
@@ -389,5 +389,119 @@ export const bbsNoticeAdminApi = {
   /** AS-IS sms.Sms03_GroupSend.sendNoticeMessage — 수신자는 사원 ID(번호는 서버가 읽는다) */
   sendNoticeMessage: async (message: string, personIds: number[]): Promise<void> => {
     await apiClient.post('v1/bbs/notice-admin/send-message', { message, personIds });
+  },
+};
+
+/** 게시판 — 분류/세부항목·게시물·댓글·권한 (Z13, AS-IS Bbs30_ClassTree·Bbs31_Content·Bbs32_Comment·Bbs33_Role) */
+export const bbsBoardApi = {
+  /** AS-IS bbs.Bbs30_ClassTree.selectByRoleUserTypeCode — 내가 볼 수 있는 세부항목(왼쪽 목록) */
+  searchMyClassTrees: async (): Promise<BbsClassTree[]> => {
+    const res = await apiClient.get<ApiResponse<BbsClassTree[]>>('v1/bbs/class-trees/mine');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS bbs.Bbs30_ClassTree.selectByTypeCode(C) / selectByParentTreeId(T, parentTreeId) */
+  searchClassTrees: async (typeCode: 'C' | 'T', parentTreeId?: number | null): Promise<BbsClassTree[]> => {
+    const res = await apiClient.get<ApiResponse<BbsClassTree[]>>('v1/bbs/class-trees', { params: { typeCode, parentTreeId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS bbs.Bbs30_ClassTree.update — 변경·새 행(classTreeId 0 이하) → 저장한 행들(요청 순서) */
+  saveClassTrees: async (rows: BbsClassTree[]): Promise<BbsClassTree[]> => {
+    const body = rows.map(({ classTreeId, classTreeNm, parentTreeId, seq, typeCd, useYn, publicYn }) => ({ classTreeId, classTreeNm, parentTreeId, seq, typeCd, useYn, publicYn }));
+    const res = await apiClient.put<ApiResponse<BbsClassTree[]>>('v1/bbs/class-trees', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS bbs.Bbs30_ClassTree.delete */
+  deleteClassTree: async (classTreeId: number): Promise<void> => {
+    await apiClient.delete(`v1/bbs/class-trees/${classTreeId}`);
+  },
+
+  /** AS-IS bbs.Bbs30_ClassTree.updateParentTreeId — [이동] */
+  updateParentTreeId: async (classTreeId: number, parentTreeId: number): Promise<void> => {
+    await apiClient.put(`v1/bbs/class-trees/${classTreeId}/parent`, null, { params: { parentTreeId } });
+  },
+
+  /** AS-IS bbs.Bbs30_ClassTree.updatePublicYn */
+  updatePublicYn: async (classTreeId: number, publicYn: boolean): Promise<void> => {
+    await apiClient.put(`v1/bbs/class-trees/${classTreeId}/public`, null, { params: { publicYn } });
+  },
+
+  /** AS-IS bbs.Bbs31_Content.selectByClassTreeIdPaging·Total */
+  searchContents: async (params: { classTreeId: number; searchText: string; offset: number; limit: number }): Promise<PageRes<BbsContent>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<BbsContent>>>('v1/bbs/contents', { params });
+    return res.data.data as PageRes<BbsContent>;
+  },
+
+  /** AS-IS bbs.Bbs31_Content.selectByClassTreeId(byParent false) / selectByParentTreeId(true) — 지우기 전 게시물이 있는가 */
+  existsContents: async (classTreeId: number, byParent: boolean): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/bbs/contents/exists', { params: { classTreeId, byParent } });
+    return res.data.data === true;
+  },
+
+  /** AS-IS DBUtil.setSeq — 새 글 ID */
+  getContentNextId: async (): Promise<number> => {
+    const res = await apiClient.get<ApiResponse<number>>('v1/bbs/contents/next-id');
+    return res.data.data as number;
+  },
+
+  /** AS-IS bbs.Bbs31_Content.selectById */
+  getContent: async (contentId: number): Promise<BbsContent> => {
+    const res = await apiClient.get<ApiResponse<BbsContent>>(`v1/bbs/contents/${contentId}`);
+    return res.data.data as BbsContent;
+  },
+
+  /** AS-IS bbs.Bbs31_Content.modelUpdate — 저장한 글 */
+  saveContent: async (req: BbsContentSaveReq): Promise<BbsContent> => {
+    const res = await apiClient.put<ApiResponse<BbsContent>>('v1/bbs/contents', req);
+    return res.data.data as BbsContent;
+  },
+
+  /** AS-IS bbs.Bbs31_Content.modelDelete */
+  deleteContent: async (contentId: number): Promise<void> => {
+    await apiClient.delete(`v1/bbs/contents/${contentId}`);
+  },
+
+  /** AS-IS bbs.Bbs32_Comment.selectByContentId */
+  searchContentComments: async (contentId: number): Promise<BbsComment[]> => {
+    const res = await apiClient.get<ApiResponse<BbsComment[]>>(`v1/bbs/contents/${contentId}/comments`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS bbs.Bbs32_Comment.modelUpdate — 새 댓글 ID */
+  createContentComment: async (contentId: number, comment: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>(`v1/bbs/contents/${contentId}/comments`, { comment });
+    return res.data.data as number;
+  },
+
+  /** AS-IS bbs.Bbs32_Comment.delete */
+  deleteContentComment: async (commentId: number): Promise<void> => {
+    await apiClient.delete(`v1/bbs/content-comments/${commentId}`);
+  },
+
+  /** AS-IS bbs.Bbs33_Role.selectByClassTreeId */
+  searchRoles: async (classTreeId: number): Promise<BbsClassRole[]> => {
+    const res = await apiClient.get<ApiResponse<BbsClassRole[]>>(`v1/bbs/class-trees/${classTreeId}/roles`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS bbs.Bbs33_Role.checkRole — 내게 이 세부항목 권한이 있는가 */
+  hasRole: async (classTreeId: number): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>(`v1/bbs/class-trees/${classTreeId}/roles/mine`);
+    return res.data.data === true;
+  },
+
+  /** AS-IS bbs.Bbs33_Role.update — 새 행(roleId 0 이하) → 저장한 행들 */
+  saveRoles: async (classTreeId: number, rows: BbsClassRole[]): Promise<BbsClassRole[]> => {
+    const body = rows.map(({ roleId, roleCd, personId, orgCodeId }) => ({ roleId, roleCd, personId, orgCodeId }));
+    const res = await apiClient.put<ApiResponse<BbsClassRole[]>>(`v1/bbs/class-trees/${classTreeId}/roles`, body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS bbs.Bbs33_Role.delete (체크한 행) */
+  deleteRoles: async (classTreeId: number, ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(`v1/bbs/class-trees/${classTreeId}/roles`, { data: ids });
+    return res.data.data ?? 0;
   },
 };

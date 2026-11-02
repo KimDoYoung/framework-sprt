@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/bbs/mapper/bbs31_content.xml + UpdateDataModel(bbs31_content) (Z13 Bbs31_Grid_Content·Lookup_Content·Edit_Content) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.bbs.mapper.BbsContentMapper">
+
+    <!-- AS-IS bbs31_content.selectByClassTreeIdPaging (IDMS-IC) — SELECT *·화면이 쓰는 열만(내용 본문은 싣지 않는다) -->
+    <select id="selectByClassTreeIdPaging" resultType="kr.co.kfs.asseterp.biz.bbs.dto.ContentRes">
+        SELECT bbs31_content_id                              AS content_id
+             , bbs31_class_tree_id                           AS class_tree_id
+             , bbs31_person_id                               AS person_id
+             , bbs31_title                                   AS title
+             , CASE WHEN COALESCE(bbs31_hide_yn,'false') = 'false'
+                    THEN bbs31_title
+                    ELSE '&lt;'||'b'||'&gt;(비공개) '||'&lt;'||'/b'||'&gt;'||bbs31_title
+                    END                                      AS title_role
+             , NULL                                          AS content
+             , (COALESCE(bbs31_hide_yn,'false') = 'true')    AS hide_yn
+             , (
+                  TO_CHAR(bbs31_reg_date, 'YY.MM.DD')
+                  ||' '||
+                  bbs31_time
+               )                                             AS reg_date_str
+             , f_emp_kor_nm(bbs31_person_id)                 AS person_name
+          FROM bbs31_content
+         WHERE 1=1
+           AND bbs31_class_tree_id = #{classTreeId}
+           AND CONCAT(bbs31_title, f_emp_kor_nm(bbs31_person_id)) ILIKE #{searchText}
+           AND (
+                  (COALESCE(bbs31_hide_yn,'false') = 'false')
+                  OR
+                  (COALESCE(bbs31_hide_yn,'false') = 'true' AND bbs31_person_id = #{personId})
+               )
+         ORDER BY bbs31_reg_date DESC, bbs31_time DESC
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <!-- AS-IS bbs31_content.selectByClassTreeIdPagingTotal (IDMS-IC) -->
+    <select id="selectByClassTreeIdPagingTotal" resultType="long">
+        SELECT COUNT(*)
+          FROM bbs31_content
+         WHERE 1=1
+           AND bbs31_class_tree_id = #{classTreeId}
+           AND CONCAT(bbs31_title, f_emp_kor_nm(bbs31_person_id)) ILIKE #{searchText}
+           AND (
+                  (COALESCE(bbs31_hide_yn,'false') = 'false')
+                  OR
+                  (COALESCE(bbs31_hide_yn,'false') = 'true' AND bbs31_person_id = #{personId})
+               )
+    </select>
+
+    <!-- AS-IS bbs31_content.selectById (IDMS-IC) — 상세 창·저장 뒤 다시 읽기 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.bbs.dto.ContentRes">
+        SELECT bbs31_content_id                              AS content_id
+             , bbs31_class_tree_id                           AS class_tree_id
+             , bbs31_person_id                               AS person_id
+             , bbs31_title                                   AS title
+             , CASE WHEN COALESCE(bbs31_hide_yn,'false') = 'false'
+                    THEN bbs31_title
+                    ELSE '&lt;'||'b'||'&gt;(비공개) '||'&lt;'||'/b'||'&gt;'||bbs31_title
+                    END                                      AS title_role
+             , bbs31_content                                 AS content
+             , (COALESCE(bbs31_hide_yn,'false') = 'true')    AS hide_yn
+             , (
+                  TO_CHAR(bbs31_reg_date, 'YY.MM.DD')
+                  ||' '||
+                  bbs31_time
+               )                                             AS reg_date_str
+             , f_emp_kor_nm(bbs31_person_id)                 AS person_name
+          FROM bbs31_content
+         WHERE bbs31_content_id = #{contentId}
+           AND bbs31_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS bbs31_content.selectByClassTreeId (IDMS-IC) — 세부항목을 지우기 전 게시물 유무 -->
+    <select id="countByClassTreeId" resultType="long">
+        SELECT COUNT(*)
+          FROM bbs31_content
+         WHERE bbs31_class_tree_id = #{classTreeId}
+           AND bbs31_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS bbs31_content.selectByParentTreeId (IDMS-IC) — 분류를 지우기 전, 그 아래 세부항목들의 게시물 유무 -->
+    <select id="countByParentTreeId" resultType="long">
+        SELECT COUNT(*)
+          FROM bbs31_content
+         WHERE bbs31_class_tree_id IN (
+                                         SELECT bbs30_class_tree_id
+                                           FROM bbs30_class_tree
+                                          WHERE bbs30_parent_tree_id = #{parentTreeId}
+                                            AND bbs30_company_id = #{companyId}
+                                      )
+           AND bbs31_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS Bbs31_Content.modelUpdate L58 → UpdateDataModel INSERT. 등록일·시각(HH:mm:ss)은 DB의 f_sysdate() -->
+    <insert id="insertContent">
+        INSERT INTO bbs31_content (bbs31_content_id, bbs31_company_id, bbs31_class_tree_id, bbs31_person_id, bbs31_title, bbs31_content, bbs31_hide_yn, bbs31_reg_date, bbs31_time)
+        VALUES (#{contentId}, #{companyId}, #{classTreeId}, #{personId}, #{title}, #{content},
+                CASE WHEN #{hideYn} THEN 'true' ELSE 'false' END, f_sysdate(), TO_CHAR(f_sysdate(), 'HH24:MI:SS'))
+    </insert>
+
+    <!-- AS-IS Bbs31_Content.modelUpdate L58 → UpdateDataModel UPDATE (editchk = true: 등록일·시각·분류·등록자는 그대로) -->
+    <update id="updateContent">
+        UPDATE bbs31_content
+           SET bbs31_title    = #{title}
+             , bbs31_content  = #{content}
+             , bbs31_hide_yn  = CASE WHEN #{hideYn} THEN 'true' ELSE 'false' END
+         WHERE bbs31_content_id = #{contentId}
+           AND bbs31_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS Bbs31_Content.modelDelete L79 → UpdateDataModel DELETE (회사 범위를 더 건다) -->
+    <delete id="deleteContent">
+        DELETE FROM bbs31_content
+         WHERE bbs31_company_id = #{companyId}
+           AND bbs31_content_id = #{contentId}
+    </delete>
+</mapper>
