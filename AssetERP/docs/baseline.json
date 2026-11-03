@@ -15436,5 +15436,46 @@
     "note": "docs/변환/work/EE/EE21-작업기록.md",
     "history": [],
     "id": "EE21"
+  },
+  "Biz51_Tab_ErpContCorp": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/biz/Biz50_Lookup_ErpSetup.java": "47d800460fa432d1edcf7a3d3be86abb1cc35cdf",
+      "application/src/main/java/myApp/client/vi/biz/Biz50_Lookup_MailMapping.java": "cea95c1b8f5984e471aee6c887d540bca363b744",
+      "application/src/main/java/myApp/client/vi/biz/Biz51_Edit_ErpContCorp.java": "dd67b28dc639dba2c8f5d803e742d3bce4fdd611",
+      "application/src/main/java/myApp/client/vi/biz/Biz51_Tab_ErpContCorp.java": "ec993b7b696757b51afd8ab6b6d2e2d0ce94427b",
+      "application/src/main/java/myApp/client/vi/biz/Biz52_Lookup_ErpFee.java": "edd3fe1cbf9a2a3c67670bdda71540d50fbee335",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz50_ErpSetupModel.java": "e9434efb13068c99805a3c83bd2dc5f14bfbe729",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz50_ErpSetupModelProperties.java": "037b1fc13433b868ed893aedd63c7f31f527ab0a",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz51_ErpContCorpModel.java": "823413c4ad63f71c6f18de6d7b6c49101cc595b4",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz51_ErpContCorpModelProperties.java": "dfcd1cb1c5bf8f2162c1fc7217e1ed5c0730ffb0",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz52_ErpFeeModel.java": "a50e296d6459932c2e787b58d3ee278adbf61676",
+      "application/src/main/java/myApp/client/vi/biz/model/Biz52_ErpFeeModelProperties.java": "543c7fa2101203bafba46e0a0017211bca77f8da",
+      "application/src/main/java/myApp/server/biz/Biz50_ErpSetup.java": "40a09b07c405356c8acd38f7397b3f1317255e58",
+      "application/src/main/java/myApp/server/biz/Biz51_ErpContCorp.java": "e5df3a83a19a2f690fc312e912deeb3f175dfddb",
+      "application/src/main/java/myApp/server/biz/Biz52_ErpFee.java": "5d0988a86a065b7363f290c536834d39e95bfdc9",
+      "application/src/main/java/myApp/server/biz/mapper/biz50_erp_setup.xml": "2a847a052b77652e2c6f0b60e3ec64de037b39c1",
+      "application/src/main/java/myApp/server/biz/mapper/biz51_erp_cont_corp.xml": "f33be744a96416b71fdede29d48809773526c647",
+      "application/src/main/java/myApp/server/biz/mapper/biz52_erp_fee.xml": "5bb92715d3426b3d0bf8cb85fa80efdef59fac7a",
+      "application/src/main/java/myApp/server/com/mapper/com01_relate_appr.xml": "dfb8d01d5a409fecc59ef532238d85c4e4041a16",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Com01_Lookup_RelateAppr",
+      "Sys01_Lookup_Company",
+      "Sys15_Lookup_Corp"
+    ],
+    "recorded_at": "2026-11-03T20:03:05+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE22-작업기록.md",
+    "history": [],
+    "id": "EE22"
   }
 }
