@@ -35,6 +35,12 @@ public class AprDisposalListService {
         return mapper.selectByCompanyId(new AprDisposalApprCond(user.getCompanyId(), startDate, closeDate, code, user.getUserId()));
     }
 
+    /** AS-IS selectByCompanyId L38 (관리자 화면 EE04): confirmEmpId를 보내지 않아 회사 전체. 처리상태 빈 값은 '%'(전체) */
+    public List<AprDisposalApprRes> searchAllByCompany(UserPrincipal user, LocalDate startDate, LocalDate closeDate, String disposalCode) {
+        String code = disposalCode == null || disposalCode.isBlank() ? "%" : disposalCode;
+        return mapper.selectByCompanyId(new AprDisposalApprCond(user.getCompanyId(), startDate, closeDate, code, null));
+    }
+
     /** AS-IS updateAppr L81: 승인(20)·반려(99). 승인이면 문서를 apr99로 옮기고 삭제하며 연결(작성·계획·광고도서)을 푼다 */
     @Transactional
     public void updateDisposalCode(UserPrincipal user, String disposalCode, List<Long> disposalListIds) {

@@ -89,6 +89,7 @@ import { Ics01_Tab_ClassTree } from './ics/Ics01_Tab_ClassTree';
 import { Ics01_Tab_ApprList } from './ics/Ics01_Tab_ApprList';
 import { Apr90_Tab_DisposalAppr } from './apr/Apr90_Tab_DisposalAppr';
 import { Apr90_Tab_DisposalList } from './apr/Apr90_Tab_DisposalList';
+import { Apr90_Tab_DisposalListAdmin } from './apr/Apr90_Tab_DisposalListAdmin';
 import { Apr01_Tab_Restore } from './apr/Apr01_Tab_Restore';
 import { Apr30_Tab_ApprStepGroup } from './apr/Apr30_Tab_ApprStepGroup';
 import { Apr07_Tab_AltApprMgr } from './apr/Apr07_Tab_AltApprMgr';
@@ -520,6 +521,7 @@ export const SCREENS: Record<string, React.FC> = {
   Apr30_Tab_ApprStepGroup, // EE03 (메뉴 #1282. 멤버 Apr31_Page_ApprStepGroupMember, 사원찾기 Emp00_Lookup_SelectMulti 재사용)
   Apr01_Tab_Restore, // EE01 1단계 (메뉴 #1098. 상세보기가 여는 폐기문서 보기 Apr01_Edit_ApprDoc.getApprDelModel은 다음 단계)
   Apr90_Tab_DisposalList, // F04 1단계 (메뉴 #1443. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
+  Apr90_Tab_DisposalListAdmin, // EE04 1단계 (메뉴 #1253. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Ics01_Tab_ClassTree, // E01 (기한 설정 Sch03_Lookup_Ics는 다른 도메인이라 별도 ID)
   Ics01_Tab_IcsFileUpload, // E02
   Ics20_Tab_RevisionHistoryAdmin, // E03

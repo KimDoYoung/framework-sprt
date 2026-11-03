@@ -45,6 +45,15 @@ public class AprDisposalListController {
         return ApiResponse.ok(service.searchByCompany(principal, startDate, closeDate, disposalCode));
     }
 
+    /** AS-IS apr.Apr90_DisposalList.selectByCompanyId (Apr90_Tab_DisposalListAdmin, EE04) — confirmEmpId를 안 보내므로 회사 전체 폐기 신청. disposalCode 없으면 전체 */
+    @GetMapping("/admin")
+    public ApiResponse<List<AprDisposalApprRes>> searchAdmin(@AuthenticationPrincipal UserPrincipal principal,
+                                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                             @RequestParam(required = false) String disposalCode) {
+        return ApiResponse.ok(service.searchAllByCompany(principal, startDate, closeDate, disposalCode));
+    }
+
     /** AS-IS apr.Apr90_DisposalList.updateAppr — 승인(20)·반려(99) */
     @PutMapping("/disposal-code")
     public ApiResponse<Void> updateDisposalCode(@AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody AprDisposalApprUpdateReq req) {

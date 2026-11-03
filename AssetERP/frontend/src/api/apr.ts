@@ -230,6 +230,12 @@ export const aprApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS apr.Apr90_DisposalList.selectByCompanyId (Apr90_Tab_DisposalListAdmin, EE04): 회사 전체 폐기 신청(confirmEmpId 조건 없음). disposalCode '%'=전체 */
+  searchDisposalAdmin: async (params: { startDate: string; closeDate: string; disposalCode: string }): Promise<AprDisposalAppr[]> => {
+    const res = await apiClient.get<ApiResponse<AprDisposalAppr[]>>('v1/apr/disposal-lists/admin', { params });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS apr.Apr90_DisposalList.updateAppr: 선택한 폐기 신청을 승인(20)·반려(99) */
   updateDisposalCode: async (disposalCode: '20' | '99', disposalListIds: number[]): Promise<void> => {
     await apiClient.put('v1/apr/disposal-lists/disposal-code', { disposalCode, disposalListIds });
