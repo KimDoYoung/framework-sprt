@@ -14926,5 +14926,25 @@
     "note": "docs/변환/work/EE/EE09-작업기록.md",
     "history": [],
     "id": "EE09"
+  },
+  "Act09_Tab_AccountNum": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/act/Act09_Tab_AccountNum.java": "0cc411416a3bb4e522a08dbd3a484cf2b62a5ef0",
+      "application/src/main/java/myApp/client/vi/act/model/Act09_AccountNumModel.java": "947763dbdc7bce2ad9f13710c6b4d45da9183bad",
+      "application/src/main/java/myApp/client/vi/act/model/Act09_AccountNumModelProperties.java": "d575a53d8d53cec590520130b3e74127a40a9592",
+      "application/src/main/java/myApp/server/act/Act09_AccountNum.java": "b3520ea4af9a78f79934283c32f059c552ba8c7b",
+      "application/src/main/java/myApp/server/act/mapper/act09_account_num.xml": "3a91e3c95dc87281fb88cf6126028b58055f8494"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-11-03T13:19:17+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE10-작업기록.md",
+    "history": [],
+    "id": "EE10"
   }
 }

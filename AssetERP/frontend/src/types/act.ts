@@ -519,3 +519,12 @@ export interface JournalHistory {
   journalAmt: number | null;
   note: string | null;
 }
+
+/** 결산회기관리 한 행 (act09_account_num.selectByRetrieve, EE10). 날짜는 'YYYY-MM-DD' */
+export interface AccountNum {
+  accountNumId: number;
+  num: number | null;
+  startDate: string | null;
+  closeDate: string | null;
+  note: string | null;
+}

@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { ActRelateAppr, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, JournalDtlList, JournalDtlRdReq, JournalSub, JournalSubRdReq, GenLedger, GenLedgerRdReq, GenLedgerReport, GenLedgerReportRdReq, GenLedgerFssRdReq, JournalHistory, JournalAccount, JournalRealAccount, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
+import { ActRelateAppr, AccountNum, AccountCode, AccountCodeAdmin, AccountCodePrintSaveReq, AccountCodeSaveReq, AccountCodeTree, ActCodeOption, ActCompany, ActLink, CloseCheck, GenLedgerCloseReq, GenLedgerCloseProcessRes, JournalDtlList, JournalDtlRdReq, JournalSub, JournalSubRdReq, GenLedger, GenLedgerRdReq, GenLedgerReport, GenLedgerReportRdReq, GenLedgerFssRdReq, JournalHistory, JournalAccount, JournalRealAccount, GenLedgerCloseStatus, JournalBiz, JournalBizLine, JournalBizRow, JournalDtl, Journal, JournalEdit, JournalFix, JournalLine, JournalNewReq, JournalMap, JournalPayMonth, JournalSaveReq, RealAccountMap, ReprAccount, TrMap } from '../types/act';
 import { AstBook } from '../types/ast';
 import { readBlobError } from './file';
 
@@ -533,5 +533,25 @@ export const actApi = {
   searchJournalHistory: async (astClassTreeId: number): Promise<JournalHistory[]> => {
     const res = await apiClient.get<ApiResponse<JournalHistory[]>>('v1/act/journals/history', { params: { astClassTreeId } });
     return res.data.data ?? [];
+  },
+
+  // ── EE10 결산회기관리 (Act09_Tab_AccountNum) ──
+
+  /** AS-IS act.Act09_AccountNum.selectByRetrieve: 로그인 회사의 회기 목록(회기 순) */
+  searchAccountNums: async (): Promise<AccountNum[]> => {
+    const res = await apiClient.get<ApiResponse<AccountNum[]>>('v1/act/account-nums');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act09_AccountNum.update: 새 행(accountNumId 0 이하)은 서버가 채번. 저장한 행을 요청 순서로 */
+  saveAccountNums: async (rows: AccountNum[]): Promise<AccountNum[]> => {
+    const res = await apiClient.put<ApiResponse<AccountNum[]>>('v1/act/account-nums', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS act.Act09_AccountNum.delete → 지운 건수 */
+  deleteAccountNums: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/act/account-nums', { data: ids });
+    return res.data.data;
   },
 };

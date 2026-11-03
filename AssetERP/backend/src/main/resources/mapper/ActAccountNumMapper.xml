@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/act/mapper/act09_account_num.xml (selectByRetrieve, selectById) + UpdateDataModel(act09_account_num) 저장·삭제  (EE10)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.act.mapper.ActAccountNumMapper">
+
+    <sql id="accountNumColumns">
+        act09_account_num_id AS account_num_id,
+        act09_num            AS num,
+        act09_start_date     AS start_date,
+        act09_close_date     AS close_date,
+        act09_note           AS note
+    </sql>
+
+    <!-- AS-IS act09_account_num.selectByRetrieve (IDMS-IC) -->
+    <select id="selectByRetrieve" resultType="kr.co.kfs.asseterp.biz.act.dto.AccountNumRes">
+        SELECT <include refid="accountNumColumns"/>
+          FROM act09_account_num
+         WHERE act09_company_id = #{companyId}
+         ORDER BY act09_num
+    </select>
+
+    <!-- AS-IS act09_account_num.selectById (IDMS-IC) + 로그인 회사 조건(보안 보강) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.act.dto.AccountNumRes">
+        SELECT <include refid="accountNumColumns"/>
+          FROM act09_account_num
+         WHERE act09_account_num_id = #{accountNumId}
+           AND act09_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertAccountNum">
+        INSERT INTO act09_account_num (act09_account_num_id, act09_company_id, act09_num, act09_start_date, act09_close_date, act09_note)
+        VALUES (#{accountNumId}, #{companyId}, #{req.num}, #{req.startDate}, #{req.closeDate}, #{req.note})
+    </insert>
+
+    <update id="updateAccountNum">
+        UPDATE act09_account_num
+           SET act09_num        = #{req.num},
+               act09_start_date = #{req.startDate},
+               act09_close_date = #{req.closeDate},
+               act09_note       = #{req.note}
+         WHERE act09_account_num_id = #{req.accountNumId}
+           AND act09_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteAccountNums">
+        DELETE FROM act09_account_num
+         WHERE act09_company_id = #{companyId}
+           AND act09_account_num_id IN
+        <foreach collection="accountNumIds" item="accountNumId" open="(" separator="," close=")">#{accountNumId}</foreach>
+    </delete>
+</mapper>
