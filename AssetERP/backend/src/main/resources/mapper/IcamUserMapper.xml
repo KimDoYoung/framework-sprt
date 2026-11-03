@@ -215,4 +215,51 @@
         VALUES (f_create_seq(), #{row.regDate}, '2', #{row.companyName}, #{row.userName},
                 #{row.userId}, 'true', #{row.regEmpId}, #{row.email})
     </insert>
+    <!-- ===== EE32 Icam55_Tab_UserStopAuth 미사용ID 기록관리 ===== -->
+
+    <!-- AS-IS icam55_icam_user.selectByProcStateCode (IDMS-IC) — 삭제대상만 조회(delTarget)면 90일 넘게 정지된 미삭제·미해제 행만 -->
+    <select id="selectByProcStateCode" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamStopAuthRes">
+        SELECT icam55_icam_user_id          AS icamUserId
+             , icam55_company_nm            AS companyName
+             , icam55_user_id               AS userId
+             , icam55_user_nm               AS userName
+             , icam55_email                 AS email
+             , icam55_proc_date             AS procDate
+             , icam55_stop_month_period     AS stopMonthPeriod
+             , icam55_state                 AS state
+             , icam55_del_date              AS delDate
+             , icam55_unstop_date           AS unstopDate
+             , icam55_mng_emp_nm            AS mngEmpName
+             , icam55_note                  AS note
+          FROM (SELECT *
+                     , CASE WHEN icam55_stop_Day_period > 90 AND icam55_del_date IS NULL AND icam55_unstop_date IS NULL THEN '삭제대상'
+                            WHEN icam55_unstop_date IS NOT NULL THEN '정지해제'
+                            WHEN icam55_del_date IS NOT NULL THEN '삭제' ELSE '정지' END AS icam55_state
+                  FROM (SELECT *
+                             , f_get_datediff(icam55_proc_date, f_sysdate()::date, '2') AS icam55_stop_month_period
+                             , f_get_datedif (icam55_proc_date, f_sysdate()::date, 'D') AS icam55_stop_Day_period
+                             , f_emp_kor_nm(icam55_mng_emp_id)                          AS icam55_mng_emp_nm
+                          FROM icam55_icam_user
+                         WHERE icam55_proc_date BETWEEN #{startDate} AND #{closeDate}
+                           AND icam55_proc_state_cd = #{procStateCode}
+                           AND icam55_reg_type = '2') t) t
+         WHERE UPPER(CONCAT(icam55_company_nm, icam55_user_id, icam55_state, icam55_user_nm, icam55_note)) LIKE UPPER(#{searchText})
+        <if test="delTarget">
+           AND icam55_stop_Day_period >= '90'
+           AND icam55_del_date IS NULL
+           AND icam55_unstop_date IS NULL
+        </if>
+         ORDER BY icam55_proc_date DESC
+    </select>
+
+    <!-- AS-IS icam55_icam_user.updateStopAuth -->
+    <update id="updateStopAuth">
+        UPDATE icam55_icam_user
+           SET icam55_del_date    = #{delDate}
+             , icam55_unstop_date = #{unstopDate}
+             , icam55_note        = #{note}
+             , icam55_mng_emp_id  = #{mngEmpId}
+         WHERE icam55_icam_user_id = #{icamUserId}
+    </update>
+
 </mapper>

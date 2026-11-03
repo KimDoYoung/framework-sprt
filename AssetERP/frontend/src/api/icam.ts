@@ -18,6 +18,7 @@ import {
   IcamSource,
   IcamTestBatchReq,
   IcamStop,
+  IcamStopAuth,
   IcamUser,
   IcamUserResult,
   IcamUserSaveReq,
@@ -336,5 +337,23 @@ export const icamUserApi = {
     form.append('excelUpload', file);
     const res = await apiClient.post<ApiResponse<number>>('v1/icam/users/stops/excel', form, { headers: { 'Content-Type': 'multipart/form-data' } });
     return res.data.data ?? 0;
+  },
+
+  // ── EE32 미사용ID 기록관리 (Icam55_Tab_UserStopAuth) ──
+
+  /** AS-IS icam.Icam55_IcamUser.selectByProcStateCode (처리상태 1) */
+  searchStopAuths: async (params: { searchText: string; startDate: string; closeDate: string; delTarget: boolean }): Promise<IcamStopAuth[]> => {
+    const res = await apiClient.get<ApiResponse<IcamStopAuth[]>>('v1/icam/users/stop-auths', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS icam.Icam55_IcamUser.updateEachAuth — [변경] 창 (처리자는 서버가 정한다) */
+  updateStopAuth: async (icamUserId: number, req: { delDate: string | null; unstopDate: string | null; note: string | null }): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/icam/users/stop-auths/${icamUserId}`, req);
+  },
+
+  /** AS-IS icam.Icam55_IcamUser.updateMultiAuth — 선택내역 일괄반영 */
+  updateStopAuths: async (req: { ids: number[]; delDate: string | null; unstopDate: string | null; note: string | null }): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/icam/users/stop-auths/batch', req);
   },
 };

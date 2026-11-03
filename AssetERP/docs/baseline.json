@@ -15618,5 +15618,27 @@
     "note": "docs/변환/work/EE/EE31-작업기록.md",
     "history": [],
     "id": "EE31"
+  },
+  "Icam55_Tab_UserStopAuth": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/icam/Icam55_Edit_UserStopAuth.java": "974d0ea31d69064baadec3ea3c2a03a78dde86a5",
+      "application/src/main/java/myApp/client/vi/icam/Icam55_Lookup_UserStopAuth.java": "ed7ff10cbf0e1ee5e5f1d1d0dae0f4a320c331f5",
+      "application/src/main/java/myApp/client/vi/icam/Icam55_Tab_UserStopAuth.java": "e1f570436ea12c95b1b00baebfc3cab8bfd2a05f",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam55_IcamUserModel.java": "9e66a84377a1781ab94f003f20fd07223296a850",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam55_IcamUserModelProperties.java": "0f80c4d5040e59618f71685c235995c6ade767a6",
+      "application/src/main/java/myApp/server/icam/Icam55_IcamUser.java": "1361a616c5f6cc5eb60a1f873d566bf5fc8ba7ed",
+      "application/src/main/java/myApp/server/icam/mapper/icam55_icam_user.xml": "542dbc430e96cd4fd100cad30d0d8f58d877b88c"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-11-03T21:20:17+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE32-작업기록.md",
+    "history": [],
+    "id": "EE32"
   }
 }

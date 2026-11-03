@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import kr.co.kfs.asseterp.biz.icam.dto.IcamStopExcelRow;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamStopAuthRes;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamStopRes;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamStopSaveReq;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamUserResultRes;
@@ -70,4 +71,15 @@ public interface IcamUserMapper {
 
     /** AS-IS icam55_icam_user.excelInsert */
     int excelInsert(@Param("row") IcamStopExcelRow row);
+
+    // ── EE32 미사용ID 기록관리 (Icam55_Tab_UserStopAuth) ──
+
+    /** AS-IS icam55_icam_user.selectByProcStateCode (regType '2') */
+    List<IcamStopAuthRes> selectByProcStateCode(@Param("searchText") String searchText, @Param("startDate") LocalDate startDate,
+                                                @Param("closeDate") LocalDate closeDate, @Param("delTarget") boolean delTarget,
+                                                @Param("procStateCode") String procStateCode);
+
+    /** AS-IS icam55_icam_user.updateStopAuth */
+    int updateStopAuth(@Param("icamUserId") Long icamUserId, @Param("delDate") LocalDate delDate, @Param("unstopDate") LocalDate unstopDate,
+                       @Param("note") String note, @Param("mngEmpId") Long mngEmpId);
 }

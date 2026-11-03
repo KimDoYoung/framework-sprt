@@ -328,3 +328,21 @@ export interface IcamStop {
   procEmpName?: string | null;
   procNote?: string | null;
 }
+
+/** 미사용ID 기록관리 한 줄 (AS-IS Icam55_IcamUserModel — selectByProcStateCode, EE32) */
+export interface IcamStopAuth {
+  icamUserId: number;
+  companyName?: string | null;
+  userId?: string | null;
+  userName?: string | null;
+  email?: string | null;
+  procDate?: string | null;
+  stopMonthPeriod?: string | null;
+  /** 삭제대상 · 정지해제 · 삭제 · 정지 */
+  state?: string | null;
+  delDate?: string | null;
+  unstopDate?: string | null;
+  mngEmpName?: string | null;
+  note?: string | null;
+}
+
