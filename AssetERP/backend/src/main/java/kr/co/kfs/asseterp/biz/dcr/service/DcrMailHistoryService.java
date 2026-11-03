@@ -27,4 +27,14 @@ public class DcrMailHistoryService {
     public List<DcrMailFileRes> searchFiles(UserPrincipal user, Long mailHistoryId) {
         return mapper.selectMailFileHistory(user.getUserId(), mailHistoryId);
     }
+
+    /** AS-IS Dcr10_MailHistory.selectByTitleText (EE09 관리자): 로그인 회사 사원이 보낸 모든 메일. 제목은 "%…%"로 감싼다 */
+    public List<DcrMailHistoryRes> searchByCompany(UserPrincipal user, String startDate, String endDate, String titleText, Long fundId, String mailGubun) {
+        return mapper.selectByTitleText(user.getCompanyId(), startDate, endDate, "%" + (titleText == null ? "" : titleText) + "%", fundId, mailGubun);
+    }
+
+    /** AS-IS Sys10_File.selectMailFileHistory (EE09 관리자): 회사 메일의 첨부파일 */
+    public List<DcrMailFileRes> searchFilesByCompany(UserPrincipal user, Long mailHistoryId) {
+        return mapper.selectMailFileHistoryByCompany(user.getCompanyId(), mailHistoryId);
+    }
 }

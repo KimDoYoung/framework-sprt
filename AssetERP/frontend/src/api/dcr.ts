@@ -351,9 +351,17 @@ export const dcrMailHistoryApi = {
     return res.data.data ?? [];
   },
 
-  /** AS-IS sys.Sys10_File.selectMailFileHistory: 메일의 첨부파일 */
-  searchMailFiles: async (mailHistoryId: number): Promise<DcrMailFile[]> => {
-    const res = await apiClient.get<ApiResponse<DcrMailFile[]>>(`v1/dcr/mail-histories/${mailHistoryId}/files`);
+  /** AS-IS sys.Sys10_File.selectMailFileHistory: 메일의 첨부파일. manager(EE09)면 회사 사원이 보낸 메일의 첨부파일 */
+  searchMailFiles: async (mailHistoryId: number, manager = false): Promise<DcrMailFile[]> => {
+    const res = await apiClient.get<ApiResponse<DcrMailFile[]>>(`v1/dcr/mail-histories/${mailHistoryId}/${manager ? 'manager-files' : 'files'}`);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr10_MailHistory.selectByTitleText (EE09 Dcr10_Tab_MailHistory_Manager): 로그인 회사 사원이 보낸 모든 메일 */
+  searchMailHistoriesManager: async (p: { startDate: string; endDate: string; titleText: string; fundId?: number | null; mailGubun: string }): Promise<DcrMailHistory[]> => {
+    const res = await apiClient.get<ApiResponse<DcrMailHistory[]>>('v1/dcr/mail-histories/manager', {
+      params: { startDate: p.startDate, endDate: p.endDate, titleText: p.titleText, mailGubun: p.mailGubun, ...(p.fundId != null ? { fundId: p.fundId } : {}) },
+    });
     return res.data.data ?? [];
   },
 };

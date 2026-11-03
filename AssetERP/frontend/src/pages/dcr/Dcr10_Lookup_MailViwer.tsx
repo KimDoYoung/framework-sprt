@@ -20,12 +20,14 @@ const gb = gbFor<DcrMailFile>();
 interface Props {
   /** open(selectModel) L152 — 볼 메일. null이면 닫힘 */
   mail: DcrMailHistory | null;
+  /** EE09 관리자 목록이 연 경우 — 첨부파일을 회사 사원이 보낸 메일 것으로 읽는다(기본은 내가 보낸 메일) */
+  manager?: boolean;
   onClose: () => void;
 }
 
 const LABEL_WIDTH = 85;
 
-export const Dcr10_Lookup_MailViwer: React.FC<Props> = ({ mail, onClose }) => {
+export const Dcr10_Lookup_MailViwer: React.FC<Props> = ({ mail, manager = false, onClose }) => {
   const [files, setFiles] = useState<DcrMailFile[]>([]);
 
   // [E0] 화면 열림 (생성자 L61-121) → settings()
@@ -33,10 +35,10 @@ export const Dcr10_Lookup_MailViwer: React.FC<Props> = ({ mail, onClose }) => {
   useEffect(() => {
     if (!mail) return;
     setFiles([]);
-    dcrMailHistoryApi.searchMailFiles(mail.mailHistoryId)
+    dcrMailHistoryApi.searchMailFiles(mail.mailHistoryId, manager)
       .then(setFiles)
       .catch(err => message.error(errorMessage(err, '조회 실패')));
-  }, [mail]);
+  }, [mail, manager]);
 
   // buildGrid() L123-141 (체크박스 단일)
   const columnDefs = useMemo(() => [

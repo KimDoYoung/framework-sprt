@@ -38,4 +38,20 @@ public class DcrMailHistoryController {
     public ApiResponse<List<DcrMailFileRes>> searchFiles(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long mailHistoryId) {
         return ApiResponse.ok(service.searchFiles(principal, mailHistoryId));
     }
+
+    /** AS-IS dcr.Dcr10_MailHistory.selectByTitleText (EE09 관리자) — 회사 전체 발신메일 */
+    @GetMapping("/manager")
+    public ApiResponse<List<DcrMailHistoryRes>> searchByCompany(@AuthenticationPrincipal UserPrincipal principal,
+                                                                @RequestParam String startDate, @RequestParam String endDate,
+                                                                @RequestParam(required = false, defaultValue = "") String titleText,
+                                                                @RequestParam(required = false) Long fundId,
+                                                                @RequestParam(required = false, defaultValue = "전체") String mailGubun) {
+        return ApiResponse.ok(service.searchByCompany(principal, startDate, endDate, titleText, fundId, mailGubun));
+    }
+
+    /** AS-IS sys.Sys10_File.selectMailFileHistory (EE09 관리자) — 회사 메일의 첨부파일 */
+    @GetMapping("/{mailHistoryId}/manager-files")
+    public ApiResponse<List<DcrMailFileRes>> searchFilesByCompany(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long mailHistoryId) {
+        return ApiResponse.ok(service.searchFilesByCompany(principal, mailHistoryId));
+    }
 }

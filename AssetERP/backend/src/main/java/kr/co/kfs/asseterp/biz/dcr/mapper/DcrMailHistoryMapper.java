@@ -15,4 +15,11 @@ public interface DcrMailHistoryMapper {
                                                 @Param("titleText") String titleText, @Param("fundId") Long fundId, @Param("mailGubun") String mailGubun);
 
     List<DcrMailFileRes> selectMailFileHistory(@Param("empId") Long empId, @Param("mailHistoryId") Long mailHistoryId);
+
+    /** AS-IS dcr10_mail_history.selectByTitleText (EE09): 회사 사원이 보낸 모든 메일 */
+    List<DcrMailHistoryRes> selectByTitleText(@Param("companyId") Long companyId, @Param("startDate") String startDate, @Param("endDate") String endDate,
+                                              @Param("titleText") String titleText, @Param("fundId") Long fundId, @Param("mailGubun") String mailGubun);
+
+    /** AS-IS sys10_file.selectMailFileHistory (EE09): 회사 메일의 첨부파일 */
+    List<DcrMailFileRes> selectMailFileHistoryByCompany(@Param("companyId") Long companyId, @Param("mailHistoryId") Long mailHistoryId);
 }

@@ -14897,5 +14897,34 @@
     "note": "docs/변환/work/EE/EE08-작업기록.md",
     "history": [],
     "id": "EE08"
+  },
+  "Dcr10_Tab_MailHistory_Manager": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/dcr/Dcr10_Lookup_MailViwer.java": "af35594acf1f450f17c17a70ada97ea81950feec",
+      "application/src/main/java/myApp/client/vi/dcr/Dcr10_Tab_MailHistory_Manager.java": "d63ac08e6dc96f0c9d07e17832c33eb56d0bb063",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr10_MailHistoryModel.java": "142040c675f3b8bb999b16a49fcf82ab768407e1",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr10_MailHistoryModelProperties.java": "60ec108b222bacc87c391fdc4303e36cdd58f83f",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/dcr/Dcr10_MailHistory.java": "aa6c3232ca95e2c647cae071008f19caa1c1e3b2",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr10_mail_history.xml": "7c2ab0641997bf1b98a115eb7484e1485481fc3a",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Fnd01_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-11-03T13:10:39+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE09-작업기록.md",
+    "history": [],
+    "id": "EE09"
   }
 }
