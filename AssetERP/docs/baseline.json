@@ -14775,5 +14775,32 @@
     "note": "docs/변환/work/EE/EE04-작업기록.md",
     "history": [],
     "id": "EE04"
+  },
+  "Dcr01_Tab_DcrClassModify": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/dcr/Dcr01_Grid_DcrClassList.java": "72d451c56d022234b81137c5e2ae5573590454ec",
+      "application/src/main/java/myApp/client/vi/dcr/Dcr01_Move_DcrClass.java": "428a372e27ef578dfdc54fca901f014e47bdd4fb",
+      "application/src/main/java/myApp/client/vi/dcr/Dcr01_Tab_DcrClassModify.java": "e7e10879782faa28b36a40ec7ee3c275f06a62dd",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr01_ClassTreeModel.java": "b11f72ec7b9f373dd86ec5303bac1785335febf4",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr03_OrgAuthModel.java": "9d159b0f64709f2e044abe12af5c0cc6308ddeaf",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/dcr/Dcr01_ClassTree.java": "5da5a4d3ddaf00433d72f012858df89306345b21",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc"
+    ],
+    "recorded_at": "2026-11-03T12:38:07+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE05-작업기록.md",
+    "history": [],
+    "id": "EE05"
   }
 }

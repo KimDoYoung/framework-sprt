@@ -7,6 +7,7 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprFundDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprIcsDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprItemDocRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprLoadDocRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprMoveClassReq;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyApproveRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyAuthRes;
 import kr.co.kfs.asseterp.biz.apr.dto.AprMyReferenceRes;
@@ -22,6 +23,7 @@ import kr.co.kfs.asseterp.biz.apr.service.AprApprService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import kr.co.kfs.asseterp.common.dto.PageRes;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ContentDisposition;
@@ -32,6 +34,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -69,6 +72,23 @@ public class AprApprController {
                                                       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
                                                       @RequestParam(defaultValue = "") String searchText) {
         return ApiResponse.ok(service.searchDocList(principal, classTreeId, startDate, endDate, searchText));
+    }
+
+    /** AS-IS apr.Apr01_Appr.selectByClassTreeId2 admin=true (Dcr01_Grid_DcrClassList, EE05 문서이동) */
+    @GetMapping("/doc-list/admin")
+    public ApiResponse<List<AprDocRes>> searchDocListAdmin(@AuthenticationPrincipal UserPrincipal principal,
+                                                           @RequestParam Long classTreeId,
+                                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                                                           @RequestParam(defaultValue = "") String searchText) {
+        return ApiResponse.ok(service.searchDocListAdmin(principal, classTreeId, startDate, endDate, searchText));
+    }
+
+    /** AS-IS apr.Apr01_Appr.updateParentId (Dcr01_Move_DcrClass.update, EE05) — 고른 문서를 최하위 문서분류로 이동 */
+    @PutMapping("/class-tree")
+    public ApiResponse<Void> moveClass(@AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody AprMoveClassReq req) {
+        service.moveClass(principal, req.apprIds(), req.classTreeId());
+        return ApiResponse.ok(null);
     }
 
     /** AS-IS apr.Apr01_Appr.selectByText2 (Dcr00_Tab_DocList, F05 통합 문서검색). 검색어·수신처는 서버가 %…%로, 상태·문서구분은 비면 전체 */

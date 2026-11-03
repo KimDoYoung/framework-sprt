@@ -232,6 +232,97 @@
                 , apr01_effect_date
     </select>
 
+    <!-- AS-IS apr01_appr.selectByClassTreeId2 L139 (IDMS-IC) — EE05(Dcr01_Grid_DcrClassList, 문서이동). admin == 'true' 분기(<otherwise>)만: 열람권한 조건 없이 Link 문서만 뺀다. SELECT *·모델 열 중 그리드가 쓰는 열만.
+         AS-IS와 같은 collate "ko_KR.utf8"(03 원칙 19) -->
+    <select id="selectByClassTreeId2Admin" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprDocRes">
+        WITH fund_count AS (
+            SELECT apr03_appr_id
+                 , MAX(COALESCE(fnd01_r.fnd01_fund_code_id, fnd01.fnd01_fund_code_id))                                                      AS fund_id
+                 , COUNT(DISTINCT apr03_fund_id)                                                                                            AS fund_cnt
+                 , STRING_AGG(COALESCE(fnd01_r.fnd01_fund_cd, fnd01.fnd01_fund_cd), ', ')                                                   AS fund_code_all
+                 , STRING_AGG(f_get_fund_nm2(COALESCE(fnd01_r.fnd01_fund_code_id, fnd01.fnd01_fund_code_id), f_today()::date), ', ')       AS fund_name_all
+              FROM apr03_relate_fund
+                   INNER JOIN fnd01_fund_code fnd01 ON fnd01.fnd01_fund_code_id = apr03_fund_id
+                   LEFT JOIN fnd01_fund_code fnd01_r ON fnd01_r.fnd01_fund_code_id = fnd01.fnd01_real_fund_id
+             GROUP BY apr03_appr_id
+        ),
+        adv_count AS (
+            SELECT apr12_appr_id
+                 , MAX(adv02_manage_nm)               AS adv_nm
+                 , COUNT(DISTINCT apr12_adv_id)       AS adv_cnt
+                 , STRING_AGG(adv02_manage_cd, ', ')  AS adv_code_all
+                 , STRING_AGG(adv02_manage_nm, ', ')  AS adv_name_all
+              FROM apr12_relate_adv
+                   INNER JOIN adv02_account ON adv02_account_id = apr12_adv_id
+             GROUP BY apr12_appr_id
+        )
+        SELECT apr01_appr_id                                                                    AS appr_id
+             , (
+                   SELECT CASE WHEN COUNT(*) > 0 THEN 'true' ELSE 'false' END
+                     FROM apr50_bookmark
+                    WHERE apr50_appr_id = apr01_appr_id
+                      AND ( apr50_person_id = #{c.personId} OR apr50_public_yn = 'true' )
+               )                                                                                AS bookmark_yn
+             , apr01_title                                                                      AS title
+             , CASE WHEN COALESCE(fc.fund_cnt, 0) + COALESCE(ac.adv_cnt, 0) = 0
+                    THEN ''
+                    ELSE COALESCE(fc.fund_cnt, 0) + COALESCE(ac.adv_cnt, 0) || '건'
+               END                                                                              AS relate_display_name
+             , (
+                   CASE WHEN apr01_status_cd = '40'
+                        THEN '&lt;' || 'b style=color:#E33E31;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                        WHEN apr01_status_cd = '99'
+                        THEN '&lt;' || 'b style=color:#4B81B9;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                        ELSE '&lt;' || 'b style=color:#404040;' || '&gt;' || f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date) || '&lt;' || '/b' || '&gt;'
+                   END
+               )                                                                                AS status_name
+             , apr01_status_cd                                                                  AS status_code
+             , apr01_reg_date                                                                   AS reg_date
+             , apr01_effect_date                                                                AS effect_date
+             , f_emp_kor_nm(apr01_reg_emp_id)                                                   AS reg_emp_name
+          FROM apr01_appr
+               INNER JOIN dcr01_class_tree ON dcr01_class_tree_id = apr01_class_tree_id
+               LEFT OUTER JOIN apr10_stamp ON apr10_stamp_id = apr01_stamp_id
+               LEFT OUTER JOIN fund_count fc ON fc.apr03_appr_id = apr01_appr_id
+               LEFT OUTER JOIN adv_count ac ON ac.apr12_appr_id = apr01_appr_id
+         WHERE 1=1
+           AND COALESCE(apr01_link_cd, ' ') NOT IN ( SELECT sys52_link_cd
+                                                        FROM sys52_specific_menu_link
+                                                       WHERE sys52_company_id = apr01_company_id
+                                                       GROUP BY sys52_link_cd )
+           AND apr01_class_tree_id = #{c.classTreeId}
+           AND f_trunc(apr01_reg_date) BETWEEN #{c.startDate} AND #{c.endDate}
+           AND UPPER(CONCAT( f_emp_kor_nm(apr01_reg_emp_id)
+                           , f_get_empTrans(apr01_reg_emp_id, apr01_reg_date::date, 'org_code_nm')
+                           , apr01_title
+                           , fc.fund_code_all
+                           , fc.fund_name_all
+                           , ac.adv_code_all
+                           , ac.adv_name_all
+                           )) LIKE UPPER(#{c.searchText})
+         ORDER BY apr01_reg_date DESC
+                , apr01_appr_id DESC
+                , apr01_title COLLATE "ko_KR.utf8" ASC
+                , apr01_status_cd
+                , apr01_effect_date
+    </select>
+
+    <!-- AS-IS apr01_appr.updateParentId L2929 (IDMS-IC) — 문서분류 변경. 회사 조건 추가(보안 보강) -->
+    <update id="updateClassTreeId">
+        UPDATE apr01_appr
+           SET apr01_class_tree_id = #{classTreeId}
+         WHERE apr01_appr_id = #{apprId}
+           AND apr01_company_id = #{companyId}
+    </update>
+
+    <select id="countLeafClassTree" resultType="int">
+        SELECT COUNT(*)
+          FROM dcr01_class_tree
+         WHERE dcr01_class_tree_id = #{classTreeId}
+           AND dcr01_company_id = #{companyId}
+           AND dcr01_type_cd = 'T'
+    </select>
+
     <!-- AS-IS apr01_appr.selectApprListByEmpId L1119 (IDMS-IC) — G01(Apr01_Tab_MyApproveList 결재내역 조회). SELECT *·모델 열 중 그리드가 쓰는 열만, 행을 정하는 조인·조건은 그대로.
          내가 결재자이거나 내가 대결자인 사람의 결재 단계가 있는 문서. 분류 조건은 common.dcr_tree_down을 푼 것(typeCode '%'). 정렬은 원본에 없음 -->
     <select id="selectApprListByEmpId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprMyApproveRes">

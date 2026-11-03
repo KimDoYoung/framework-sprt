@@ -195,6 +195,17 @@ export const aprApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS apr.Apr01_Appr.selectByClassTreeId2 admin=true (Dcr01_Grid_DcrClassList, EE05 문서이동): 열람권한 조건 없이 문서분류의 문서 목록 */
+  searchDocListAdmin: async (params: { classTreeId: number; startDate: string; endDate: string; searchText: string }): Promise<AprDoc[]> => {
+    const res = await apiClient.get<ApiResponse<AprDoc[]>>('v1/apr/apprs/doc-list/admin', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr01_Appr.updateParentId (Dcr01_Move_DcrClass, EE05): 고른 문서를 최하위 문서분류로 이동 */
+  moveDocClass: async (apprIds: number[], classTreeId: number): Promise<void> => {
+    await apiClient.put('v1/apr/apprs/class-tree', { apprIds, classTreeId });
+  },
+
   /** AS-IS apr.Apr03_RelateFund.selectByClassTreeId·selectBySearch (Apr05_Grid_RelateAprList, W05 ⓒ): searchText를 주지 않으면 분류 클릭 조회, 주면 [찾기](서버가 %…%로) */
   searchLoadDocs: async (classTreeId: number, searchText?: string): Promise<AprLoadDoc[]> => {
     const res = await apiClient.get<ApiResponse<AprLoadDoc[]>>('v1/apr/apprs/load-docs', { params: { classTreeId, searchText } });

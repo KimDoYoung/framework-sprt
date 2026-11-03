@@ -81,6 +81,24 @@ public class AprApprService {
         return mapper.selectByClassTreeId2(new AprDocListCond(classTreeId, orgId, user.getUserId(), startDate, endDate, like(searchText)));
     }
 
+    /** AS-IS Apr01_Appr.selectByClassTreeId2 (EE05 문서이동, admin=true): 열람권한 조건 없이 Link 문서만 뺀다. searchText는 서비스가 %…%로 */
+    public List<AprDocRes> searchDocListAdmin(UserPrincipal user, Long classTreeId, LocalDate startDate, LocalDate endDate, String searchText) {
+        return mapper.selectByClassTreeId2Admin(new AprDocListCond(classTreeId, 0L, user.getUserId(), startDate, endDate, like(searchText)));
+    }
+
+    /** AS-IS Apr01_Appr.updateParentId (EE05): 고른 문서를 최하위 문서분류로 옮긴다("최하위 문서분류를 선택해주세요"는 화면이, 서버도 다시 검사). 한 트랜잭션 */
+    @Transactional
+    public void moveClass(UserPrincipal user, List<Long> apprIds, Long classTreeId) {
+        if (mapper.countLeafClassTree(classTreeId, user.getCompanyId()) == 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        for (Long apprId : apprIds) {
+            if (mapper.updateClassTreeId(apprId, classTreeId, user.getCompanyId()) == 0) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT);
+            }
+        }
+    }
+
     /**
      * AS-IS Apr03_RelateFund.selectByIcsClassTreeId (F03, 이 메뉴는 admin=false). 법규분류에 연결된 문서 중 내 조직이 열람할 수 있는 연관펀드만.
      * 조직은 LoginUser.getOrgCodeId() — 회사관리자(userId < 0)는 0. searchText는 서비스가 %…%로 만든다(빈 글자면 %%)

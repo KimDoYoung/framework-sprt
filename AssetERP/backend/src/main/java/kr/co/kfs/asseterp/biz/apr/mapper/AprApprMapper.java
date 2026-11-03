@@ -60,6 +60,15 @@ public interface AprApprMapper {
     /** AS-IS selectByClassTreeId2 L139 (F02, admin=false) */
     List<AprDocRes> selectByClassTreeId2(@Param("c") AprDocListCond cond);
 
+    /** AS-IS selectByClassTreeId2 L139 (EE05, admin=true) */
+    List<AprDocRes> selectByClassTreeId2Admin(@Param("c") AprDocListCond cond);
+
+    /** AS-IS apr01_appr.updateParentId L2929 (EE05) — 회사 조건 추가 */
+    int updateClassTreeId(@Param("apprId") Long apprId, @Param("classTreeId") Long classTreeId, @Param("companyId") Long companyId);
+
+    /** 이동 대상이 이 회사의 최하위 문서분류(dcr01_type_cd = 'T')인지 */
+    int countLeafClassTree(@Param("classTreeId") Long classTreeId, @Param("companyId") Long companyId);
+
     /** AS-IS apr03_relate_fund.selectByIcsClassTreeId L106 (F03, admin=false) */
     /** AS-IS apr01_appr.selectByText2 (F05 통합 문서검색) */
     List<AprDocSearchRes> selectByText2(@Param("c") AprDocSearchCond cond);
