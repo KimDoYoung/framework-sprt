@@ -2,12 +2,15 @@ package kr.co.kfs.asseterp.biz.scm.service;
 
 import kr.co.kfs.asseterp.biz.scm.dto.DevRes;
 import kr.co.kfs.asseterp.biz.scm.dto.DevSaveReq;
+import kr.co.kfs.asseterp.biz.scm.dto.DevStatusRes;
 import kr.co.kfs.asseterp.biz.scm.dto.DevStepListReq;
 import kr.co.kfs.asseterp.biz.scm.dto.DevStepRes;
 import kr.co.kfs.asseterp.biz.scm.dto.DevStepRuleListReq;
 import kr.co.kfs.asseterp.biz.scm.dto.DevStepRuleRes;
 import kr.co.kfs.asseterp.biz.scm.dto.DevStepRuleSaveReq;
 import kr.co.kfs.asseterp.biz.scm.dto.DevStepSaveReq;
+import kr.co.kfs.asseterp.biz.scm.dto.DevStepStatusReq;
+import kr.co.kfs.asseterp.biz.scm.dto.DevStepUpdateReq;
 import kr.co.kfs.asseterp.biz.scm.dto.ExpectProgramRes;
 import kr.co.kfs.asseterp.biz.scm.dto.ExpectProgramSaveReq;
 import kr.co.kfs.asseterp.biz.scm.mapper.ScmDevMapper;
@@ -20,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -36,6 +40,50 @@ public class ScmDevService {
     private final ScmExpectProgramMapper expectMapper;
     private final ScmDevStepMapper stepMapper;
     private final ScmDevStepRuleMapper ruleMapper;
+
+    // ---- 개발 탭 (Scm10_Tab_Dev, EE17) ----
+
+    /** AS-IS scm10_dev.selectByText — searchText 가 비었으면 검색어 조건을 뺀다("%%"와 같은 결과) */
+    public List<DevRes> searchDevsByText(LocalDate startDate, LocalDate closeDate, String searchText, String systemCode,
+                                         String devStatus, boolean checkBox01, boolean checkBoxMyDev, Long personId) {
+        String text = searchText == null || searchText.isBlank() ? null : "%" + searchText + "%";
+        return devMapper.selectByText(startDate, closeDate, text, systemCode == null ? "%" : systemCode,
+                devStatus == null ? "%" : devStatus, checkBox01, checkBoxMyDev, personId);
+    }
+
+    /** AS-IS sys.Sys00_Common.selectDevStatus */
+    public List<DevStatusRes> searchDevStatuses() {
+        return devMapper.selectDevStatus();
+    }
+
+    /** AS-IS Scm11_DevStep.checkMyTurn — 내 뒤 순서에 아직 열린 단계가 없어야(0건) 수정할 수 있다 */
+    public boolean checkMyTurn(Long devId, Long devStepId) {
+        return stepMapper.countAfterOpen(devId, devStepId) == 0;
+    }
+
+    /**
+     * AS-IS Scm11_DevStep.updateStatus — 진행중(20)·완료(90)·이행불가(10) 버튼. 뒤 단계가 열려 있으면 -1(수정 불가).
+     * 비고·결과상세 저장 → 개발 시작일·완료예정일 → 개발상태(90이면 결과 '1'·확인일시, 아니면 비움)
+     */
+    @Transactional
+    public int updateStepStatus(Long devStepId, DevStepStatusReq req) {
+        if (!checkMyTurn(req.devId(), devStepId)) return -1;
+        stepMapper.updateNoteResult(devStepId, req.note(), req.result());
+        devMapper.updateDate(req.devId(), req.startDate(), req.dueDate());
+        stepMapper.updateDevStatusCode(devStepId, req.devStatusCd());
+        return 1;
+    }
+
+    /**
+     * AS-IS Scm11_DevStep.modelUpdate — [저장]. 시작일·완료예정일 중 하나라도 있으면 개발 날짜를 바꾸고,
+     * 비고·결과상세를 저장한 뒤 확인일시를 다시 맞춘다(결과코드가 있으면 지금 시각)
+     */
+    @Transactional
+    public void updateStep(Long devStepId, DevStepUpdateReq req) {
+        if (req.startDate() != null || req.dueDate() != null) devMapper.updateDate(req.devId(), req.startDate(), req.dueDate());
+        stepMapper.updateNoteResult(devStepId, req.note(), req.result());
+        stepMapper.updateResultDate(devStepId, req.resultCd());
+    }
 
     // ---- 개발자 (Scm10_Dev) ----
 

@@ -108,6 +108,19 @@
                scm13_deploy_seq     = EXCLUDED.scm13_deploy_seq
     </update>
 
+    <!-- AS-IS scm30_program.updateUseYn (IDMS-IC L250, EE17) — [삭제]는 프로그램을 쓰지 않음으로 바꾼다 -->
+    <update id="updateUseYn">
+        UPDATE scm30_program
+           SET scm30_use_yn = #{useYn}
+         WHERE scm30_program_id = #{programId}
+    </update>
+
+    <!-- AS-IS Scm13_DevProgram.delete (UpdateDataModel.deleteModel, EE17) -->
+    <delete id="deleteDevProgram">
+        DELETE FROM scm13_dev_program
+         WHERE scm13_dev_program_id = #{devProgramId}
+    </delete>
+
     <sql id="pagingFrom">
           FROM ( SELECT a.*
                       , f_cdnm('ProgramType', scm30_program_type, 1, f_sysdate()) AS scm30_program_type_nm

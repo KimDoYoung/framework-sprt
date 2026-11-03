@@ -123,6 +123,26 @@
          WHERE scm01_sr_id = #{srId}
     </select>
 
+    <!-- AS-IS scm01_sr.getSrModel (IDMS-IC L275, EE17) — 개발ID로 의뢰 한 건 -->
+    <select id="selectByDevId" resultType="kr.co.kfs.asseterp.biz.scm.dto.SrRes">
+        WITH <include refid="codeCtes"/>
+        SELECT <include refid="srColumns"><property name="personNm" value="f_emp_kor_nm(scm01_person_id)"/><property name="corpNm" value="f_get_corp_nm(scm01_corp_id)"/></include>
+          FROM scm01_sr
+               LEFT JOIN systemCode        ON systemCode.cd        = scm01_system_cd
+               LEFT JOIN srType            ON srType.cd            = scm01_sr_type
+               LEFT JOIN aprStatusCode     ON aprStatusCode.cd     = scm01_appr_status_cd
+               LEFT JOIN srStatus          ON srStatus.cd          = scm01_sr_status_cd
+               LEFT JOIN devImportanceCode ON devImportanceCode.cd = scm01_dev_importance_cd
+               LEFT JOIN LATERAL ( SELECT COUNT(*) dev_total_cnt
+                                        , SUM(CASE WHEN f_get_dev_status(scm10_dev_id) = '완료' THEN 1 ELSE 0 END) dev_end_cnt
+                                     FROM scm10_dev
+                                    WHERE scm01_sr_id = scm10_sr_id ) t ON TRUE
+         WHERE scm01_sr_id = ( SELECT scm10_sr_id
+                                 FROM scm10_dev
+                                WHERE scm10_dev_id = #{devId}
+                                GROUP BY scm10_sr_id )
+    </select>
+
     <!-- AS-IS scm01_sr.createSrNo (IDMS-IC) -->
     <select id="createSrNo" resultType="string">
         SELECT to_char(scm01_sr_date, 'yymmdd-')||lpad((max(coalesce(cast(substr(scm01_sr_no,8,3) as numeric),0)) + 1)||'',3,'0') AS sr_no

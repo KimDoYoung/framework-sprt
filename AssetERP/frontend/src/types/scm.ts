@@ -207,3 +207,9 @@ export interface Program {
   fileParentId?: number | null;
   fileNm?: string | null;
 }
+
+/** 개발 진행상태 콤보 한 건 (AS-IS sys.Sys00_Common.selectDevStatus, EE17) */
+export interface DevStatus {
+  code: string;
+  name: string;
+}

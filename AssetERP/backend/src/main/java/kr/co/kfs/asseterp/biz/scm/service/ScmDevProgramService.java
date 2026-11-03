@@ -11,6 +11,7 @@ import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.List;
 public class ScmDevProgramService {
 
     private final ScmDevProgramMapper mapper;
+    private final kr.co.kfs.asseterp.biz.sys.service.SysFileService sysFileService;
 
     public List<DevProgramRes> searchByDevId(Long devId) {
         return mapper.selectByDevId(devId);
@@ -60,6 +62,42 @@ public class ScmDevProgramService {
         mapper.upsertProgram(req.programId(), req.systemCd(), req.programType(), req.programCd().trim(), programNm, req.source(),
                 version, user.getUserId(), req.note());
         mapper.updateRegDate(req.programId(), isNew || req.regDate() == null ? LocalDateTime.now() : req.regDate());
+    }
+
+    /** AS-IS Scm13_Grid_DevProgram.deleteRow — scm.Scm30_Program.updateUseYn(false) 뒤 scm.Scm13_DevProgram.delete (EE17) */
+    @Transactional
+    public void deleteDevProgram(Long devProgramId, Long programId) {
+        if (programId != null) mapper.updateUseYn(programId, "false");
+        mapper.deleteDevProgram(devProgramId);
+    }
+
+    /**
+     * AS-IS FileUpload.uploadScm13 (mode=scm13, EE17 Scm13_Lookup_MultiUpload) — 고른 파일마다 ① 프로그램(scm30: 파일명에서 확장자를 뺀 코드,
+     * 같은 시스템·구분·코드의 최신 버전 + 1, 없으면 1) ② 개발 프로그램(scm13, 배포대상) ③ 첨부파일(sys10_file, parentId = 프로그램번호)을 만든다.
+     * 한 트랜잭션 — 하나라도 실패하면 모두 되돌린다(원본은 DB만 되돌리고 저장한 파일은 남겼다)
+     */
+    @Transactional
+    public int multiUpload(UserPrincipal user, Long devId, boolean deployTgtYn, String systemCd, String programType, List<MultipartFile> files) {
+        if (files == null || files.isEmpty()) throw new BusinessException(ErrorCode.INVALID_INPUT, "업로드 파일 없음");
+        int count = 0;
+        for (MultipartFile file : files) {
+            if (file == null || file.isEmpty() || file.getOriginalFilename() == null) continue;
+            String name = file.getOriginalFilename();
+            int dot = name.lastIndexOf('.');
+            String programCd = dot < 0 ? name : name.substring(0, dot);
+            long programId = mapper.selectNextId();
+            long devProgramId = mapper.selectNextId();
+            long version = 1L;
+            for (ProgramRes p : mapper.selectByProgramCode(user.getCompanyId(), systemCd, programType, programCd)) {
+                version = (p.version() == null ? 0 : p.version()) + 1;
+            }
+            mapper.upsertProgram(programId, systemCd, programType, programCd, null, null, version, user.getUserId(), null);
+            mapper.updateRegDate(programId, LocalDateTime.now());
+            mapper.upsertDevProgram(devProgramId, devId, programId, deployTgtYn ? "true" : "false", null);
+            sysFileService.upload(user, programId, null, "false", file);
+            count++;
+        }
+        return count;
     }
 
     /** AS-IS Scm30_Program.selectByTextPaging + Total — 프로그램 선택 창 (페이지 행 + 전체 건수). searchText 는 '%…%' */

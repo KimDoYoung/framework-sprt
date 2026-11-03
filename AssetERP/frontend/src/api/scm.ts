@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { Dev, DevProgram, DevSaveReq, DevStep, DevStepRule, ExpectProgram, Program, Sr, SrApprStep, SrDevMngSaveReq, SrSaveReq } from '../types/scm';
+import { Dev, DevProgram, DevStatus, DevSaveReq, DevStep, DevStepRule, ExpectProgram, Program, Sr, SrApprStep, SrDevMngSaveReq, SrSaveReq } from '../types/scm';
 import { PageRes } from '../types/auth';
 import { FileInfo } from '../types/sys';
 
@@ -171,6 +171,62 @@ export const scmApi = {
   /** AS-IS scm.Scm30_Program.selectByTextPaging — 프로그램 선택 창 */
   searchPrograms: async (p: { systemCode: string; programType: string; searchText: string; offset: number; limit: number }): Promise<PageRes<Program>> => {
     const res = await apiClient.get<ApiResponse<PageRes<Program>>>('v1/scm/programs', { params: p });
+    return res.data.data;
+  },
+
+  // ---- 시스템 개발 (Scm10_Tab_Dev, EE17) ----
+
+  /** AS-IS scm.Scm10_Dev.selectByText */
+  searchDevsByText: async (p: {
+    startDate: string; closeDate: string; searchText: string; systemCode: string; devStatus: string; checkBox01: boolean; checkBoxMyDev: boolean;
+  }): Promise<Dev[]> => {
+    const res = await apiClient.get<ApiResponse<Dev[]>>('v1/scm/devs/search', { params: p });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS sys.Sys00_Common.selectDevStatus — 상태 콤보 */
+  searchDevStatuses: async (): Promise<DevStatus[]> => {
+    const res = await apiClient.get<ApiResponse<DevStatus[]>>('v1/scm/dev-statuses');
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS scm.Scm01_Sr.getSrModel — 개발ID로 의뢰 한 건 */
+  getSrByDev: async (devId: number): Promise<Sr> => {
+    const res = await apiClient.get<ApiResponse<Sr>>(`v1/scm/srs/by-dev/${devId}`);
+    return res.data.data;
+  },
+
+  /** AS-IS scm.Scm11_DevStep.checkMyTurn — true 면 수정할 수 있다 */
+  checkMyTurn: async (devId: number, devStepId: number): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>(`v1/scm/dev-steps/${devStepId}/my-turn`, { params: { devId } });
+    return !!res.data.data;
+  },
+
+  /** AS-IS scm.Scm11_DevStep.updateStatus — 1 정상 / -1 수정 불가 */
+  updateDevStepStatus: async (devStepId: number, req: {
+    devId: number; devStatusCd: string; result: string; note: string; startDate: string | null; dueDate: string | null;
+  }): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>(`v1/scm/dev-steps/${devStepId}/status`, req);
+    return res.data.data;
+  },
+
+  /** AS-IS scm.Scm11_DevStep.modelUpdate */
+  updateDevStep: async (devStepId: number, req: {
+    devId: number; resultCd: string | null; result: string; note: string; startDate: string | null; dueDate: string | null;
+  }): Promise<void> => {
+    await apiClient.put(`v1/scm/dev-steps/${devStepId}`, req);
+  },
+
+  /** AS-IS scm.Scm30_Program.updateUseYn(false) + scm.Scm13_DevProgram.delete (Scm13_Grid_DevProgram.deleteRow) */
+  deleteDevProgram: async (devProgramId: number, programId: number): Promise<void> => {
+    await apiClient.delete(`v1/scm/dev-programs/${devProgramId}`, { params: { programId } });
+  },
+
+  /** AS-IS FileUpload?mode=scm13 — 변경프로그램 파일일괄등록. 올린 파일 수 */
+  multiUploadDevPrograms: async (p: { devId: number; deployTgtYn: boolean; systemCd: string; programType: string }, files: File[]): Promise<number> => {
+    const form = new FormData();
+    files.forEach(f => form.append('files', f));
+    const res = await apiClient.post<ApiResponse<number>>('v1/scm/dev-programs/multi-upload', form, { params: p });
     return res.data.data;
   },
 

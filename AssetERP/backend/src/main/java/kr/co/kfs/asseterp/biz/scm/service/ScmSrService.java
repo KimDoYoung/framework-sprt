@@ -34,6 +34,13 @@ public class ScmSrService {
                 checkBox01, checkBox02, checkBoxMyReg, user.getUserId());
     }
 
+    /** AS-IS scm01_sr.getSrModel (EE17) — 개발ID로 의뢰 한 건 */
+    public SrRes getByDevId(Long devId) {
+        SrRes row = mapper.selectByDevId(devId);
+        if (row == null) throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+        return row;
+    }
+
     /** AS-IS selectById */
     public SrRes get(Long srId) {
         SrRes row = mapper.selectById(srId);

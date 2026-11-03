@@ -22,6 +22,9 @@ public interface ScmSrMapper {
     /** AS-IS scm01_sr.selectById */
     SrRes selectById(@Param("srId") Long srId);
 
+    /** AS-IS scm01_sr.getSrModel — 개발ID로 의뢰 한 건 (EE17) */
+    SrRes selectByDevId(@Param("devId") Long devId);
+
     /** AS-IS scm01_sr.createSrNo — 그날 의뢰번호의 다음 번호(그날 첫 건이면 null) */
     String createSrNo(@Param("srDate") LocalDate srDate);
 

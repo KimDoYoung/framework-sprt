@@ -66,6 +66,59 @@
          WHERE scm11_dev_step_id = #{devStepId}
     </update>
 
+    <!-- AS-IS scm11_dev_step.checkMyTurn (IDMS-IC L305) — 내 뒤 순서에 아직 단계(구분 NULL)가 남은 줄 수. 0보다 크면 수정 불가 -->
+    <select id="countAfterOpen" resultType="int">
+        SELECT COUNT(*)
+          FROM scm11_dev_step
+         WHERE scm11_dev_id = #{devId}
+           AND scm11_dev_step_cd IS NULL
+           AND scm11_dev_step_seq > ( SELECT scm11_dev_step_seq
+                                        FROM scm11_dev_step
+                                       WHERE scm11_dev_step_id = #{devStepId} )
+    </select>
+
+    <!-- AS-IS Scm11_DevStep.updateStatus/modelUpdate 의 UpdateDataModel(scm11_dev_step) — 화면이 바꾸는 열(비고·결과상세)만 -->
+    <update id="updateNoteResult">
+        UPDATE scm11_dev_step
+           SET scm11_note   = #{note}
+             , scm11_result = #{result}
+         WHERE scm11_dev_step_id = #{devStepId}
+    </update>
+
+    <!-- AS-IS scm11_dev_step.updateDevStatusCode (IDMS-IC L339) -->
+    <update id="updateDevStatusCode">
+        UPDATE scm11_dev_step
+           SET scm11_dev_status_cd = #{devStatusCd}
+        <choose>
+            <when test="devStatusCd == '90'">
+             , scm11_result_cd   = '1'
+             , scm11_result_date = f_sysdate()
+            </when>
+            <otherwise>
+             , scm11_result_cd   = NULL
+             , scm11_result_date = NULL
+            </otherwise>
+        </choose>
+         WHERE scm11_dev_step_id = #{devStepId}
+    </update>
+
+    <!-- AS-IS scm11_dev_step.updateResultDate (IDMS-IC L363) -->
+    <update id="updateResultDate">
+        UPDATE scm11_dev_step
+           SET
+        <choose>
+            <when test="resultCd == null">
+               scm11_result_cd   = NULL
+             , scm11_result_date = NULL
+            </when>
+            <otherwise>
+               scm11_result_cd   = #{resultCd}
+             , scm11_result_date = f_sysdate()
+            </otherwise>
+        </choose>
+         WHERE scm11_dev_step_id = #{devStepId}
+    </update>
+
     <delete id="deleteSteps">
         DELETE FROM scm11_dev_step
          WHERE scm11_dev_step_id IN

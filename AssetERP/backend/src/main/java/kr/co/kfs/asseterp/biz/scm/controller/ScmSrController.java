@@ -68,6 +68,12 @@ public class ScmSrController {
         return ApiResponse.ok(null);
     }
 
+    /** AS-IS scm.Scm01_Sr.getSrModel (EE17 Scm10_Tab_Dev·Scm11_Edit_DevStep) — 개발ID로 의뢰 한 건 */
+    @GetMapping("/by-dev/{devId}")
+    public ApiResponse<SrRes> getByDev(@PathVariable Long devId) {
+        return ApiResponse.ok(service.getByDevId(devId));
+    }
+
     /** AS-IS scm.Scm01_Sr.selectById */
     @GetMapping("/{srId}")
     public ApiResponse<SrRes> get(@PathVariable Long srId) {

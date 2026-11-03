@@ -91,4 +91,80 @@
          WHERE scm10_dev_id IN
         <foreach collection="devIds" item="devId" open="(" separator="," close=")">#{devId}</foreach>
     </delete>
+
+    <!-- AS-IS scm10_dev.selectByText (IDMS-IC L54) — 개발 탭(Scm10_Tab_Dev, EE17). checkBox01 = 미완료건만, checkBoxMyDev = 내 개발건만 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.scm.dto.DevRes"><![CDATA[
+        SELECT *
+          FROM ( SELECT scm10_dev_id        AS dev_id
+                      , scm10_sr_id         AS sr_id
+                      , scm10_person_id     AS person_id
+                      , scm10_start_date    AS start_date
+                      , scm10_due_date      AS due_date
+                      , scm10_note          AS note
+                      , scm10_reg_date      AS reg_date
+                      , scm01_sr_status_cd  AS sr_status_cd
+                      , regexp_replace(regexp_replace(scm10_note, '<[^>]*>', '', 'g'), E'&#[0-9]+;|&\w+;', '', 'g') AS arrange_note
+                      , emp01_kor_nm        AS person_nm
+                      , scm01_sr_date       AS sr_date
+                      , scm01_sr_no         AS sr_no
+                      , f_cdnm('SystemCode', scm01_system_cd, 1, f_sysdate()) AS system_nm
+                      , scm01_requestor||CASE WHEN scm01_corp_id IS NULL THEN ''
+                                              ELSE '('||f_get_corp_nm(scm01_corp_id)||')' END AS requestor
+                      , ( SELECT scm11_result_date
+                            FROM scm11_dev_step
+                           WHERE scm11_dev_id = scm10_dev_id
+                             AND scm11_result_cd LIKE '1'
+                           ORDER BY scm11_dev_step_seq DESC
+                           LIMIT 1 )        AS result_date
+                      , f_get_dev_status(scm10_dev_id) AS dev_step_result
+                      , NULL::bigint        AS dev_program_cnt  -- DevRes 공용 열(이 목록 SQL에는 없다)
+                      , NULL::bigint        AS file_cnt
+                   FROM scm10_dev
+                        INNER JOIN scm01_sr ON scm10_sr_id = scm01_sr_id
+                        INNER JOIN emp01_person ON emp01_person_id = scm10_person_id
+                  WHERE f_trunc(scm10_reg_date) BETWEEN #{startDate} AND #{closeDate}
+                    AND COALESCE(scm01_system_cd, '%') LIKE #{systemCode}
+               ) t
+         WHERE 1=1
+    ]]>
+        <if test="checkBox01">
+           AND COALESCE(sr_status_cd,'10') NOT IN ('30', '80', '90')
+           AND dev_step_result NOT IN ('완료', '이행불가')
+        </if>
+        <if test="checkBoxMyDev">
+           AND #{personId} IN ( SELECT person_id
+                                 UNION
+                                SELECT scm11_person_id
+                                  FROM scm11_dev_step
+                                 WHERE scm11_dev_id      = dev_id
+                                   AND scm11_dev_step_cd = '10' )
+        </if>
+        <if test="searchText != null">
+           AND ( CONCAT(requestor, note, person_nm, dev_step_result, sr_no) ILIKE #{searchText}
+                 OR EXISTS ( SELECT 1
+                               FROM scm11_dev_step
+                              WHERE scm11_dev_id = dev_id
+                                AND CONCAT(scm11_result, scm11_note) ILIKE #{searchText} ) )
+        </if>
+           AND dev_step_result LIKE #{devStatus}
+         ORDER BY reg_date DESC, dev_id DESC
+    </select>
+
+    <!-- AS-IS scm10_dev.updateDate (IDMS-IC L159) -->
+    <update id="updateDate">
+        UPDATE scm10_dev
+           SET scm10_start_date = #{startDate}
+             , scm10_due_date   = #{dueDate}
+         WHERE scm10_dev_id = #{devId}
+    </update>
+
+    <!-- AS-IS sys00_common.selectDevStatus (IDMS-IC L294) -->
+    <select id="selectDevStatus" resultType="kr.co.kfs.asseterp.biz.scm.dto.DevStatusRes">
+        SELECT dev_status AS code
+             , dev_status AS name
+          FROM ( SELECT f_get_dev_status(scm10_dev_id) dev_status
+                   FROM scm10_dev ) t
+         GROUP BY dev_status
+         ORDER BY SUBSTR(dev_status, 1, 1), dev_status
+    </select>
 </mapper>

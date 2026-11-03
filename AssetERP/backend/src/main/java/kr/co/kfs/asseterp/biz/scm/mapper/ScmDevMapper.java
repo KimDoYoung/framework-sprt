@@ -39,4 +39,16 @@ public interface ScmDevMapper {
 
     /** AS-IS Scm10_Dev.delete (UpdateDataModel.deleteModel) */
     int deleteDevs(@Param("devIds") List<Long> devIds);
+
+    /** AS-IS scm10_dev.selectByText (EE17) */
+    List<DevRes> selectByText(@Param("startDate") java.time.LocalDate startDate, @Param("closeDate") java.time.LocalDate closeDate,
+                              @Param("searchText") String searchText, @Param("systemCode") String systemCode,
+                              @Param("devStatus") String devStatus, @Param("checkBox01") boolean checkBox01,
+                              @Param("checkBoxMyDev") boolean checkBoxMyDev, @Param("personId") Long personId);
+
+    /** AS-IS scm10_dev.updateDate (EE17) */
+    int updateDate(@Param("devId") Long devId, @Param("startDate") java.time.LocalDate startDate, @Param("dueDate") java.time.LocalDate dueDate);
+
+    /** AS-IS sys.Sys00_Common.selectDevStatus (EE17) */
+    List<kr.co.kfs.asseterp.biz.scm.dto.DevStatusRes> selectDevStatus();
 }
