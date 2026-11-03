@@ -19,13 +19,15 @@ import kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeSaveReq;
 import kr.co.kfs.asseterp.biz.biz.dto.BizFeeAccountRes;
 import kr.co.kfs.asseterp.biz.biz.dto.BizFeeAccountSaveReq;
+import kr.co.kfs.asseterp.biz.apr.service.link.AprLinkSeedProvider;
+import kr.co.kfs.asseterp.biz.apr.service.link.FeeChargeLinkSeedProvider;
 import kr.co.kfs.asseterp.biz.biz.service.BizFeeAccountService;
 import kr.co.kfs.asseterp.biz.biz.service.BizFeeChargeService;
 
 /** EE21 최저보수 청구(Biz20_Tab_FeeCharge) 목록·편집·확정·삭제·자료생성을 asseterpdb에서 돌리고 롤백한다(03 원칙 2) */
 @MybatisTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({BizFeeChargeService.class, BizFeeAccountService.class})
+@Import({BizFeeChargeService.class, BizFeeAccountService.class, FeeChargeLinkSeedProvider.class})
 class BizFeeChargeDbTest {
 
     private static final LocalDate Q = LocalDate.of(2024, 6, 30);
@@ -34,6 +36,7 @@ class BizFeeChargeDbTest {
 
     @Autowired BizFeeChargeService service;
     @Autowired BizFeeAccountService accountService;
+    @Autowired FeeChargeLinkSeedProvider seedProvider;
     @Autowired JdbcTemplate jdbc;
 
     private static UserPrincipal user() {
@@ -126,5 +129,19 @@ class BizFeeChargeDbTest {
         assertThat(again.get(0).accountNo()).isEqualTo("999-99");
         assertThat(accountService.delete(user(), List.of(id))).isEqualTo(1);
         assertThat(accountService.search(user(), "").size()).isEqualTo(before);
+    }
+
+    @Test
+    void 상신_문서_시드는_운용사_제목과_입금계좌_본문을_만든다() {
+        // 입금계좌가 있는 2024-06-30 청구 (블랙펄자산운용(일임))
+        AprLinkSeedProvider.Seed seed = seedProvider.seed(user(), "A19", 202407041718265L);
+        assertThat(seed.title()).endsWith(" 사무관리보수 발생내역 및 비용청구의 건");
+        assertThat(seed.titleReadOnly()).isFalse();
+        assertThat(seed.receiveName()).isNotBlank();
+        assertThat(seed.content()).contains("3. 입금계좌 : ").contains("4. 입금기한 : 청구일로부터 10일 이내. 끝.");
+        // 통합본(A20)은 제목·본문 없이 제목만 편집 가능
+        AprLinkSeedProvider.Seed all = seedProvider.seed(user(), "A20", 0L);
+        assertThat(all.title()).isNull();
+        assertThat(all.titleReadOnly()).isFalse();
     }
 }

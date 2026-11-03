@@ -468,4 +468,6 @@ export interface BizWithCorp {
   corpCd?: string | null;
   corpNm?: string | null;
   manageTypeNm?: string | null;
+  /** EE21: 최저보수 청구 편집창이 계약사를 정하는 데 쓴다 */
+  contCorpId?: number | null;
 }

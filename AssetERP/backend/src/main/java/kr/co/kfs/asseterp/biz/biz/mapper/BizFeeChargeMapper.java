@@ -109,4 +109,12 @@ public interface BizFeeChargeMapper {
 
     int insertPrint(@Param("printId") long printId, @Param("companyId") Long companyId, @Param("personId") Long personId,
                     @Param("windowClassName") String windowClassName, @Param("groupId") long groupId, @Param("r") BizFeeChargeRes r);
+
+    // ── 상신 문서 첨부 자동등록 (Apr01_Edit_ApprDoc 의 copyFileLine → Sys10_File.copyFile) ──
+
+    List<Long> selectFileIds(@Param("parentId") Long parentId);
+
+    int countApprRelateFile(@Param("fileId") Long fileId, @Param("apprId") Long apprId);
+
+    int insertApprRelateFile(@Param("relateFileId") long relateFileId, @Param("fileId") Long fileId, @Param("apprId") Long apprId);
 }

@@ -856,4 +856,34 @@
                , #{r.occFee,jdbcType=NUMERIC}, #{r.realChargeFee,jdbcType=NUMERIC}
                , #{r.aprStatusNm,jdbcType=VARCHAR}, #{r.note,jdbcType=VARCHAR}, #{r.chargeDate,jdbcType=DATE} )
     </insert>
+
+    <!-- AS-IS sys10_file.selectByParentId (IDMS-IC) 의 파일 ID — BizFundPriceModiMapper.selectFileIds 와 같은 식 -->
+    <select id="selectFileIds" resultType="long">
+        SELECT file.sys10_file_id
+          FROM (
+                SELECT *
+                  FROM sys10_file
+                 WHERE sys10_parent_id = #{parentId}
+                 UNION
+                SELECT sys10_file.*
+                  FROM sys11_relate_file
+                       INNER JOIN sys10_file ON sys10_file_id = sys11_file_id
+                 WHERE sys11_parent_id = #{parentId}
+               ) AS file
+         ORDER BY COALESCE(sys10_file_yn, 'false') ASC, LPAD(COALESCE(sys10_seq, '99999'), 5, '0'), COALESCE(sys10_title_yn, 'false') DESC, sys10_file_nm COLLATE "ko_KR.utf8"
+    </select>
+
+    <select id="countApprRelateFile" resultType="int">
+        SELECT COUNT(*)
+          FROM sys11_relate_file
+         WHERE sys11_file_id = #{fileId}
+           AND sys11_parent_id = #{apprId}
+           AND sys11_parent_table = 'apr01_appr'
+    </select>
+
+    <!-- AS-IS sys11_relate_file.insert -->
+    <insert id="insertApprRelateFile">
+        INSERT INTO sys11_relate_file ( sys11_relate_file_id, sys11_file_id, sys11_parent_id, sys11_parent_table )
+        VALUES ( #{relateFileId}, #{fileId}, #{apprId}, 'apr01_appr' )
+    </insert>
 </mapper>

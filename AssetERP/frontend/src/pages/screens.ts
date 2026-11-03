@@ -415,6 +415,7 @@ import { Scm10_Tab_Dev } from './scm/Scm10_Tab_Dev';
 import { Scm13_Tab_Deploy } from './scm/Scm13_Tab_Deploy';
 import { Scm30_Tab_Program } from './scm/Scm30_Tab_Program';
 import { Biz10_Tab_ContCorp } from './biz/Biz10_Tab_ContCorp';
+import { Biz20_Tab_FeeCharge } from './biz/Biz20_Tab_FeeCharge';
 import { Test_Tab_ReactComponents } from './test/Test_Tab_ReactComponents';
 
 /**
@@ -836,6 +837,7 @@ export const SCREENS: Record<string, React.FC> = {
   Scm10_Tab_Dev, // EE17 (메뉴 #1263. + Scm11_Grid_DevStep·Scm11_Edit_DevStep·Scm11_Grid_ApprFile·Scm13_Grid_DevProgram·Scm13_Lookup_MultiUpload·Scm03_Lookup_ExpectProgram·Scm01_Lookup_Detail·Scm11_Lookup_ResultMessage, 나머지는 EE15·EE16 재사용)
   Scm30_Tab_Program, // EE19 (메뉴 #1265. + Scm30_Lookup_Program·Scm30_Lookup_MultiUpload, Scm30_Edit_Program의 insert·edit·versionEdit)
   Biz10_Tab_ContCorp, // EE20 (메뉴 #1209. + Biz11_Edit_ContHistory·Biz12_Edit_FeeInfo·Biz14_Lookup_RelateAppr·Biz11_Lookup_FileList·Biz17_Lookup_HoldFee·탭 4개, Sys15_Lookup_Corp_OnlyKFS)
+  Biz20_Tab_FeeCharge, // EE21 (메뉴 #1210. + Biz20_Edit_FeeCharge·Biz22_Lookup_FeeChargeCalc·Biz20_Lookup_FileList·Biz29_Lookup_Account·Biz10_Lookup_ContCorp)
   Scm13_Tab_Deploy, // EE18 (메뉴 #1266. + Scm13_Page_Deploy·Scm13_Lookup_Note·Scm30_Edit_Program(read), 나머지는 EE15~EE17 재사용)
   Scm01_Tab_DevMng, // EE16 (메뉴 #1262. + Scm01_Edit_DevMngRO·Scm01_Edit_DevMng·Scm10_Grid_Dev·Scm03_Grid_ExpectProgram·Scm11_Lookup_DevStep·Scm11_Lookup_Result·Scm10_Lookup_Note·Scm12_Lookup_DevStepRule·Scm13_Lookup_DevProgram·Scm13_Edit_DevProgram·Scm30_Lookup_SelectMulti·Scm01_Lookup_ResultContent·Scm01_Lookup_ApprFile + components/lookup/Biz13_Lookup_WithCorp)
   Scm01_Tab_Sr, // EE15 (메뉴 #1261. + Scm01_Edit_Sr·Scm01_Edit_SrRO·Scm01_Lookup_SrContent·Scm01_Grid_ApprFile·Scm02_Grid_ApprStep·Scm02_Edit_ApprStep·Scm02_Edit_NoteMessage)

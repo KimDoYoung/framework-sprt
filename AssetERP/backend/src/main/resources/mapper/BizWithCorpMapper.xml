@@ -14,6 +14,7 @@
              , sys15_corp_cd      AS corp_cd
              , sys15_corp_nm      AS corp_nm
              , f_cdnm('ManageType', biz13_manage_type, biz13_company_id, f_today()) AS manage_type_nm
+             , biz13_cont_corp_id AS cont_corp_id
           FROM biz13_with_corp
                INNER JOIN sys15_corp ON sys15_corp_id = biz13_corp_id
          WHERE sys15_corp_nm LIKE #{searchText}

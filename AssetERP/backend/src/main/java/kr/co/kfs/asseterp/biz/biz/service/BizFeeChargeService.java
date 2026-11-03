@@ -102,10 +102,26 @@ public class BizFeeChargeService {
         return mapper.selectHtmlContent(user.getCompanyId(), feeChargeId);
     }
 
-    /** biz.Biz20_FeeCharge.updateApprId (L833) */
+    /**
+     * biz.Biz20_FeeCharge.updateApprId (L833) — 개별 상신(A18·A19) 뒤 결재문서 ID 기록.
+     * 문서의 첨부 자동등록 `copyFileLine`(Apr01_Edit_ApprDoc L2785-2787 → Sys10_File.copyFile)도 같이 한다 —
+     * AS-IS 는 문서를 저장할 때 청구보수의 첨부파일을 결재문서에 연결하고, TOBE 는 문서 ID 가 정해지는 이 때 한다(이미 연결된 파일은 다시 넣지 않는다)
+     */
     @Transactional
     public int updateApprId(UserPrincipal user, Long feeChargeId, Long apprId) {
-        return mapper.updateApprId(user.getCompanyId(), feeChargeId, apprId);
+        if (feeChargeId == null || apprId == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "결재문서 정보가 없습니다.");
+        }
+        int n = mapper.updateApprId(user.getCompanyId(), feeChargeId, apprId);
+        if (n == 0) {
+            throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "최저보수 청구정보를 찾을 수 없습니다.");
+        }
+        for (Long fileId : mapper.selectFileIds(feeChargeId)) {
+            if (mapper.countApprRelateFile(fileId, apprId) == 0) {
+                mapper.insertApprRelateFile(mapper.selectNextId(), fileId, apprId);
+            }
+        }
+        return n;
     }
 
     // ── 구간 계산 상세 ──
