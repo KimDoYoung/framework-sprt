@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprLinkArgs, AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampAppl, AprStampApplSaveReq, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck, AprStampApplAddReq, AprStampApplEdit,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprAltApprMgr, AprApprDel, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprLinkSeed, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprIdRow, AprApprDetail, AprAfterFile, AprAfterFund, AprDocForm, AprEditFile, AprFileDel, AprLoadDoc2, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcsRow, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampLine, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
+import { AprLinkArgs, AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampAppl, AprStampApplSaveReq, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck, AprStampApplAddReq, AprStampApplEdit,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprAltApprMgr, AprApprDel, AprApprStepGroupMember, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprLinkSeed, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprIdRow, AprApprDetail, AprAfterFile, AprAfterFund, AprDocForm, AprEditFile, AprFileDel, AprLoadDoc2, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcsRow, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampLine, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -149,6 +149,38 @@ export const aprApi = {
   searchApprStepGroups: async (): Promise<AprApprStepGroup[]> => {
     const res = await apiClient.get<ApiResponse<AprApprStepGroup[]>>('v1/apr/appr-step-groups');
     return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr30_ApprStepGroup.update (Apr30_Tab_ApprStepGroup, EE03) → 저장된 행(요청 순서). 새 행(id ≤ 0)은 id를 빼고 보낸다. companyId는 서버가 세션에서 */
+  saveApprStepGroups: async (rows: AprApprStepGroup[]): Promise<AprApprStepGroup[]> => {
+    const body = rows.map(({ apprStepGroupId, apprStepGroupName, note }) => ({ apprStepGroupId: apprStepGroupId > 0 ? apprStepGroupId : null, apprStepGroupName, note }));
+    const res = await apiClient.put<ApiResponse<AprApprStepGroup[]>>('v1/apr/appr-step-groups', body);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr30_ApprStepGroup.delete → 지운 건수 */
+  deleteApprStepGroups: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/apr/appr-step-groups', { data: ids });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS apr.Apr31_ApprStepGroupMember.selectByApprStepGroupId (Apr31_Page_ApprStepGroupMember, EE03) */
+  searchApprStepGroupMembers: async (apprStepGroupId: number): Promise<AprApprStepGroupMember[]> => {
+    const res = await apiClient.get<ApiResponse<AprApprStepGroupMember[]>>('v1/apr/appr-step-group-members', { params: { apprStepGroupId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS apr.Apr31_ApprStepGroupMember.update — 화면 순서가 결재 순서(서버가 seq 001~을 매긴다) */
+  saveApprStepGroupMembers: async (apprStepGroupId: number, rows: AprApprStepGroupMember[]): Promise<void> => {
+    const body = rows.map(({ apprStepGroupMemberId, stepTypeCode, stepEmpId, note }) =>
+      ({ apprStepGroupMemberId: apprStepGroupMemberId > 0 ? apprStepGroupMemberId : null, stepTypeCode, stepEmpId, note }));
+    await apiClient.put('v1/apr/appr-step-group-members', body, { params: { apprStepGroupId } });
+  },
+
+  /** AS-IS apr.Apr31_ApprStepGroupMember.delete → 지운 건수 */
+  deleteApprStepGroupMembers: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/apr/appr-step-group-members', { data: ids });
+    return res.data.data ?? 0;
   },
 
   /** AS-IS apr.Apr01_Appr.selectByPaging (Dcr01_Tab_DcrWrite): 내가 등록·결재·열람하는 문서, 페이징 */

@@ -14714,5 +14714,34 @@
     "note": "docs/변환/work/EE/EE02-작업기록.md",
     "history": [],
     "id": "EE02"
+  },
+  "Apr30_Tab_ApprStepGroup": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/apr/Apr30_Tab_ApprStepGroup.java": "e46006f1ff0fe4c4f0252160b39fceef5b2202f0",
+      "application/src/main/java/myApp/client/vi/apr/Apr31_Page_ApprStepGroupMember.java": "66966dcc7ee46aedc02fde4f97d98a1bbe3b8ec6",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr30_ApprStepGroupModel.java": "3f8b4a469b8a90b628d5f47f99a46f6826e9b2cb",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr30_ApprStepGroupModelProperties.java": "d370aecfe4fea8d8e868f8aaa32990ef2e5ca6f4",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr31_ApprStepGroupMemberModel.java": "40360d4d2eaaa66ef905a6f083d9ba8251ccc075",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr31_ApprStepGroupMemberModelProperties.java": "3ad9abdee25014e5085c7799ba1ff8fe01da7faf",
+      "application/src/main/java/myApp/server/apr/Apr30_ApprStepGroup.java": "debe44766ab7bdb253271c4157bb8ca4e901f077",
+      "application/src/main/java/myApp/server/apr/Apr31_ApprStepGroupMember.java": "07cb6e48309d7019aca78476c84f69d2f4e3ddf1",
+      "application/src/main/java/myApp/server/apr/mapper/apr30_appr_step_group.xml": "7499b7a167b88484c6b852eabca8de6064a5539f",
+      "application/src/main/java/myApp/server/apr/mapper/apr31_appr_step_group_member.xml": "88e8a7a2549aa661795a603c51d25851dedbb1fc",
+      "application/src/main/java/myApp/server/sys/Sys00_Common.java": "af65e3eedc4060e20a26e3d97058cba611ab9a0b",
+      "application/src/main/java/myApp/server/sys/mapper/sys09_code.xml": "4b10e3638d6c824c62e7a80ff2e60bc47a325ff9"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectMulti"
+    ],
+    "recorded_at": "2026-11-03T11:35:05+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE03-작업기록.md",
+    "history": [],
+    "id": "EE03"
   }
 }

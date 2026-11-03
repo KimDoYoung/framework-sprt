@@ -1,12 +1,16 @@
 package kr.co.kfs.asseterp.biz.apr.controller;
 
 import kr.co.kfs.asseterp.biz.apr.dto.AprApprStepGroupRes;
+import kr.co.kfs.asseterp.biz.apr.dto.AprApprStepGroupSaveReq;
 import kr.co.kfs.asseterp.biz.apr.service.AprApprStepGroupService;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,5 +28,17 @@ public class AprApprStepGroupController {
     @GetMapping
     public ApiResponse<List<AprApprStepGroupRes>> search(@AuthenticationPrincipal UserPrincipal principal) {
         return ApiResponse.ok(service.search(principal));
+    }
+
+    /** AS-IS apr.Apr30_ApprStepGroup.update → 저장된 행(요청 순서) */
+    @PutMapping
+    public ApiResponse<List<AprApprStepGroupRes>> save(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<AprApprStepGroupSaveReq> rows) {
+        return ApiResponse.ok(service.save(principal, rows));
+    }
+
+    /** AS-IS apr.Apr30_ApprStepGroup.delete → 지운 건수 */
+    @DeleteMapping
+    public ApiResponse<Integer> delete(@AuthenticationPrincipal UserPrincipal principal, @RequestBody List<Long> ids) {
+        return ApiResponse.ok(service.delete(principal, ids));
     }
 }

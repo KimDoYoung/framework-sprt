@@ -15,6 +15,20 @@ export interface AprApprStepGroup {
   note?: string | null;
 }
 
+/** 결재선 지정그룹 멤버 한 행 (AS-IS Apr31_ApprStepGroupMemberModel, EE03). 새 행은 임시 음수 ID. titleName은 조회에서는 비어 있다(원본 SQL에 열이 없음) */
+export interface AprApprStepGroupMember {
+  apprStepGroupMemberId: number;
+  apprStepGroupId?: number | null;
+  stepTypeCode?: string | null;
+  stepTypeName?: string | null;
+  orgName?: string | null;
+  titleName?: string | null;
+  empKorName?: string | null;
+  stepEmpId?: number | null;
+  seq?: string | null;
+  note?: string | null;
+}
+
 /** 문서작성 목록 한 행 (AS-IS Apr01_ApprModel 중 Dcr01_Tab_DcrWrite 그리드 열) */
 export interface AprDcrWrite {
   apprId: number;

@@ -14,4 +14,38 @@
          WHERE apr30_company_id = #{companyId}
          ORDER BY apr30_appr_step_group_nm
     </select>
+
+    <!-- AS-IS apr30_appr_step_group.selectById (IDMS-IC) — 이 회사 그룹만 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprApprStepGroupRes">
+        SELECT apr30_appr_step_group_id AS appr_step_group_id,
+               apr30_appr_step_group_nm AS appr_step_group_name,
+               apr30_note               AS note
+          FROM apr30_appr_step_group
+         WHERE apr30_appr_step_group_id = #{apprStepGroupId}
+           AND apr30_company_id = #{companyId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- UpdateDataModel INSERT/UPDATE/DELETE (EE03) — 화면이 바꾸는 열 -->
+    <insert id="insert">
+        INSERT INTO apr30_appr_step_group (apr30_appr_step_group_id, apr30_company_id, apr30_appr_step_group_nm, apr30_note)
+        VALUES (#{req.apprStepGroupId}, #{companyId}, #{req.apprStepGroupName}, #{req.note})
+    </insert>
+
+    <update id="update">
+        UPDATE apr30_appr_step_group
+           SET apr30_appr_step_group_nm = #{req.apprStepGroupName},
+               apr30_note               = #{req.note}
+         WHERE apr30_appr_step_group_id = #{req.apprStepGroupId}
+           AND apr30_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM apr30_appr_step_group
+         WHERE apr30_appr_step_group_id = #{apprStepGroupId}
+           AND apr30_company_id = #{companyId}
+    </delete>
 </mapper>
