@@ -6,7 +6,7 @@
  *   south(400, 여백 20) = Icam55_Edit_UserRegAppr.
  * 결재요청 = 전자결재 편집창 Apr01_Edit_ApprDoc 링크코드 A33 — insertLinkApproval() L336-397 → updateApprId() L289-301. 본문은 서버 IcamUserLinkSeedProvider가 양식(com10_form_mapping)에 #{키}를 치환해 만든다.
  * 스타일: SGEF (견본 Sys90_Tab_AfterService — docs/page-style.md)
- * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
+ * UX보강(10): 툴바 = SearchBar(UX-01·04), 날짜 열 폭 90(UX-08). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Checkbox, DatePicker, message, Modal, Splitter } from 'antd';
@@ -180,7 +180,7 @@ export const Icam55_Tab_UserRegAppr: React.FC = () => {
 
   // buildGrid() L206-267
   const columnDefs = [
-    gb.date('regDate', 100, '신청일자'),                                    // L251
+    gb.date('regDate', 90, '신청일자'),                                     // L251 (UX-08: 읽기 전용 날짜 90)
     gb.text('companyName', 300, '회사명'),                                  // L252
     gb.text('userName', 150, '사용자'),                                     // L253
     gb.group('처리구분', [                                                   // addHeaderGroupMap(0, 4, "처리구분", 1, 3)
@@ -193,7 +193,7 @@ export const Icam55_Tab_UserRegAppr: React.FC = () => {
     iconCell<IcamUser>('view', 'viewCell', 60, '문서보기', apprView),             // L259
     gb.textCenter('regEmpName', 80, '등록자'),                              // L260
     gb.textCenter('procStateName', 100, '처리결과'),                         // L261
-    gb.date('procDate', 100, '처리일자'),                                    // L262
+    gb.date('procDate', 90, '처리일자'),                                    // L262 (UX-08)
     gb.textCenter('procEmpName', 80, '처리자'),                              // L263
     gb.textArea('procNote', 300, '처리상세'),                                // L264
   ];

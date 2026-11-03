@@ -33,6 +33,7 @@ interface Props {
 
 export const Icam55_Edit_UserRegAppr: React.FC<Props> = ({ model, onSaved, onContentSaved }) => {
   const disabled = !model;
+  // [E0] 화면 열림 (생성자 L85-119) → getEditor() — 선택한 신청서로 칸을 채운다(부르는 쪽 key로 다시 만든다)
   const [regDate, setRegDate] = useState<string | null>(model?.regDate ?? null);
   const [companyName, setCompanyName] = useState(model?.companyName ?? '');
   const [userName, setUserName] = useState(model?.userName ?? '');

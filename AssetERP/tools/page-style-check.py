@@ -23,7 +23,7 @@ TARGETS = {
     "SGHF": ("Biz01_Tab_Card", ["Biz01_Tab_Other", "Biz01_Tab_CardContents", "Biz01_Tab_CardSimple",
                                 "Biz01_Tab_OtherSimple", "Biz01_Tab_CardContentsSimple"]),
     "SGEF": ("Sys90_Tab_AfterService", ["Sys90_Tab_AfterServiceAdmin", "Ics20_Tab_RevisionHistory",
-                                      "Ics20_Tab_RevisionHistoryAdmin"]),
+                                      "Ics20_Tab_RevisionHistoryAdmin", "Icam55_Tab_UserRegAppr"]),
     # Fbx01_Tab_Document는 TO가 아니다(SID 미정)
     "TO": ("Org01_Tab_OrgCode", ["Chk01_Tab_ClassTree"]),
     "GO": ("Tdm54_Tab_CheckInsuff", []),
