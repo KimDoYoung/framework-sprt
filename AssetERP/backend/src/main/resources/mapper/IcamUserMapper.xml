@@ -97,4 +97,61 @@
         DELETE FROM icam55_icam_user
          WHERE icam55_icam_user_id = #{icamUserId}
     </delete>
+
+    <!-- ===== EE30 Icam55_Tab_UserApprResult 사용자ID 처리결과 등록 ===== -->
+
+    <!-- AS-IS icam55_icam_user.selectByDate (server/icam/mapper/icam55_icam_user.xml) -->
+    <select id="selectByDate" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamUserResultRes">
+        SELECT icam55_icam_user_id                                                        AS icamUserId
+             , icam55_reg_date                                                            AS regDate
+             , f_cdnm('IcamUserRegType', icam55_reg_Type, 1, f_sysdate())                 AS regTypeName
+             , icam55_company_nm                                                          AS companyName
+             , icam55_user_nm                                                             AS userName
+             , CONCAT(CASE WHEN icam55_proc_add_yn = 'true' THEN coalesce(replace(icam55_proc_add_yn,'true','추가'), '') ELSE '' END,
+                      (CASE WHEN icam55_proc_add_yn = 'true' AND icam55_proc_modi_yn = 'true' THEN '/'
+                            WHEN icam55_proc_add_yn = 'true' AND icam55_proc_del_yn = 'true' THEN '/' ELSE '' END),
+                      CASE WHEN icam55_proc_modi_yn = 'true' THEN coalesce(replace(icam55_proc_modi_yn,'true','변경'), '') ELSE '' END,
+                      (CASE WHEN icam55_proc_modi_yn = 'true' AND icam55_proc_del_yn = 'true' THEN '/' ELSE '' END),
+                      CASE WHEN icam55_proc_del_yn = 'true' THEN coalesce(replace(icam55_proc_del_yn,'true','삭제'), '') ELSE '' END,
+                      CASE WHEN icam55_proc_stop_yn = 'true' THEN coalesce(replace(icam55_proc_stop_yn,'true','권한정지'),'') ELSE '' END) AS procTypeName
+             , icam55_appr_id                                                             AS apprId
+             , apr01.apr01_status_cd                                                      AS apprStatusCode
+             , f_emp_kor_nm(icam55_reg_emp_id)                                            AS regEmpName
+             , icam55_proc_state_cd                                                       AS procStateCode
+             , f_cdnm('ProcStateCode', icam55_proc_state_cd, 1, f_sysdate())              AS procStateName
+             , icam55_proc_date                                                           AS procDate
+             , icam55_proc_emp_id                                                         AS procEmpId
+             , f_emp_kor_nm(icam55_proc_emp_id)                                           AS procEmpName
+             , icam55_proc_note                                                           AS procNote
+          FROM icam55_icam_user
+               LEFT OUTER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = icam55_appr_id
+         WHERE UPPER(CONCAT(icam55_company_nm, icam55_user_nm,
+                            f_cdnm('ProcStateCode', icam55_proc_state_cd, 1, f_sysdate()), icam55_proc_note)) LIKE UPPER(#{searchText})
+           AND icam55_reg_date BETWEEN #{startDate} AND #{closeDate}
+           AND apr01.apr01_status_cd IN ('10','20','30', '40')
+           AND icam55_reg_type LIKE #{regType}
+        <if test="procResult">
+           AND icam55_proc_state_cd IS NULL
+        </if>
+         ORDER BY icam55_reg_date DESC, icam55_reg_type
+    </select>
+
+    <update id="updateProcResult">
+        UPDATE icam55_icam_user
+           SET icam55_proc_state_cd = #{req.procStateCode},
+               icam55_proc_date     = #{req.procDate},
+               icam55_proc_note     = #{req.procNote},
+               icam55_proc_emp_id   = #{req.procEmpId}
+         WHERE icam55_icam_user_id  = #{req.icamUserId}
+    </update>
+
+    <!-- AS-IS icam55_icam_user.updateResult -->
+    <update id="updateResult">
+        UPDATE icam55_icam_user
+           SET icam55_proc_state_cd = #{procStateCode}
+             , icam55_proc_date     = #{procDate}
+             , icam55_proc_note     = #{procNote}
+             , icam55_proc_emp_id   = #{procEmpId}
+         WHERE icam55_icam_user_id  = #{icamUserId}
+    </update>
 </mapper>

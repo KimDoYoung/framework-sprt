@@ -13,6 +13,9 @@ import kr.co.kfs.asseterp.biz.apr.dto.AprFileDelRow;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprApprActionMapper;
 import kr.co.kfs.asseterp.biz.apr.mapper.AprApprWriteMapper;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamUserResultBatchReq;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamUserResultRes;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamUserResultSaveReq;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamUserRes;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamUserSaveReq;
 import kr.co.kfs.asseterp.biz.icam.mapper.IcamUserMapper;
@@ -151,5 +154,43 @@ public class IcamUserService {
 
     private static boolean isBlank(String s) {
         return s == null || s.isEmpty();
+    }
+
+    // ───────────────────── EE30 사용자ID 처리결과 등록 (Icam55_Tab_UserApprResult) ─────────────────────
+
+    /** AS-IS icam.Icam55_IcamUser.selectByDate — 검색어는 `%글자%`, 신청서구분은 `%코드%`(없으면 `%`)로 클라이언트가 만들어 보냈다 */
+    public List<IcamUserResultRes> searchResults(String searchText, String regType, LocalDate startDate, LocalDate closeDate, boolean procResult) {
+        String like = (searchText == null || searchText.isBlank()) ? "%" : "%" + searchText + "%";
+        String type = (regType == null || regType.isBlank() || "%".equals(regType)) ? "%" : "%" + regType + "%";
+        return mapper.selectByDate(like, startDate, closeDate, procResult, type);
+    }
+
+    /** AS-IS icam.Icam55_IcamUser.update (UpdateDataModel — 바뀐 행의 처리결과·처리일자·처리상세·처리자) */
+    @Transactional
+    public void saveResults(List<IcamUserResultSaveReq> rows) {
+        if (rows == null) {
+            return;
+        }
+        for (IcamUserResultSaveReq row : rows) {
+            mapper.updateProcResult(row);
+        }
+    }
+
+    /** AS-IS icam.Icam55_IcamUser.updateResult — 선택한 행 모두에 같은 처리결과를 넣고 처리자는 로그인 사원 */
+    @Transactional
+    public void updateResult(UserPrincipal user, IcamUserResultBatchReq req) {
+        if (req.ids() == null || req.ids().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "선택된 내역이 없습니다.");
+        }
+        boolean none = req.procStateCode() == null || req.procStateCode().isEmpty();
+        if (none && req.procDate() != null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "처리결과가 (선택안함)이면 처리일자는 세팅될 수 없습니다.");
+        }
+        if (!none && req.procDate() == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "처리일자를 세팅해주세요.");
+        }
+        for (Long id : req.ids()) {
+            mapper.updateResult(id, none ? null : req.procStateCode(), req.procDate(), req.procNote(), user.getUserId());
+        }
     }
 }

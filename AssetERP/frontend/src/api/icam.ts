@@ -17,6 +17,7 @@ import {
   IcamSource,
   IcamTestBatchReq,
   IcamUser,
+  IcamUserResult,
   IcamUserSaveReq,
 } from '../types/icam';
 
@@ -267,5 +268,25 @@ export const icamUserApi = {
   /** AS-IS icam.Icam55_IcamUser.deleteApprId + delete */
   remove: async (ids: number[]): Promise<void> => {
     await apiClient.delete<ApiResponse<void>>('v1/icam/users', { params: { ids: ids.join(',') } });
+  },
+
+  // ── EE30 사용자ID 처리결과 등록 (Icam55_Tab_UserApprResult) ──
+
+  /** AS-IS icam.Icam55_IcamUser.selectByDate */
+  searchResults: async (params: { searchText: string; regType: string; startDate: string; closeDate: string; procResult: boolean }): Promise<IcamUserResult[]> => {
+    const res = await apiClient.get<ApiResponse<IcamUserResult[]>>('v1/icam/users/results', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS icam.Icam55_IcamUser.update — 바뀐 행의 처리결과·처리일자·처리상세·처리자 */
+  saveResults: async (rows: IcamUserResult[]): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/icam/users/results', rows.map(r => ({
+      icamUserId: r.icamUserId, procStateCode: r.procStateCode ?? null, procDate: r.procDate ?? null, procNote: r.procNote ?? null, procEmpId: r.procEmpId ?? null,
+    })));
+  },
+
+  /** AS-IS icam.Icam55_IcamUser.updateResult — 선택내역 일괄반영(처리자는 서버가 로그인 사원) */
+  updateResult: async (req: { ids: number[]; procStateCode: string | null; procDate: string | null; procNote: string | null }): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>('v1/icam/users/results/batch', req);
   },
 };

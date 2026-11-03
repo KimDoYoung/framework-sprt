@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamUserApprIdReq;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamUserResultBatchReq;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamUserResultRes;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamUserResultSaveReq;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamUserRes;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamUserSaveReq;
 import kr.co.kfs.asseterp.biz.icam.service.IcamUserService;
@@ -64,6 +67,32 @@ public class IcamUserController {
     @DeleteMapping
     public ApiResponse<Void> delete(@AuthenticationPrincipal UserPrincipal principal, @RequestParam List<Long> ids) {
         service.delete(principal, ids);
+        return ApiResponse.ok(null);
+    }
+
+    // ── EE30 사용자ID 처리결과 등록 (Icam55_Tab_UserApprResult, 메뉴 #1316) ──
+
+    /** AS-IS icam.Icam55_IcamUser.selectByDate */
+    @GetMapping("/results")
+    public ApiResponse<List<IcamUserResultRes>> searchResults(@RequestParam(required = false) String searchText,
+                                                              @RequestParam(required = false) String regType,
+                                                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closeDate,
+                                                              @RequestParam(defaultValue = "false") boolean procResult) {
+        return ApiResponse.ok(service.searchResults(searchText, regType, startDate, closeDate, procResult));
+    }
+
+    /** AS-IS icam.Icam55_IcamUser.update (UpdateDataModel) */
+    @PutMapping("/results")
+    public ApiResponse<Void> saveResults(@RequestBody List<IcamUserResultSaveReq> rows) {
+        service.saveResults(rows);
+        return ApiResponse.ok(null);
+    }
+
+    /** AS-IS icam.Icam55_IcamUser.updateResult (선택내역 일괄반영) */
+    @PutMapping("/results/batch")
+    public ApiResponse<Void> updateResult(@AuthenticationPrincipal UserPrincipal principal, @RequestBody IcamUserResultBatchReq req) {
+        service.updateResult(principal, req);
         return ApiResponse.ok(null);
     }
 }

@@ -15565,5 +15565,31 @@
     "note": "docs/변환/work/EE/EE29-작업기록.md",
     "history": [],
     "id": "EE29"
+  },
+  "Icam55_Tab_UserApprResult": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/icam/Icam55_Lookup_UserApprResult.java": "b906eb3cc3b734c45f73035451d5f852e6c65495",
+      "application/src/main/java/myApp/client/vi/icam/Icam55_Tab_UserApprResult.java": "2e16dd3334b982ffa3856a51bc9f72e0acb23aa1",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam55_IcamUserModel.java": "9e66a84377a1781ab94f003f20fd07223296a850",
+      "application/src/main/java/myApp/client/vi/icam/model/Icam55_IcamUserModelProperties.java": "0f80c4d5040e59618f71685c235995c6ade767a6",
+      "application/src/main/java/myApp/server/apr/Apr01_Appr.java": "7838921f342553cb2be99f54319950229ce14347",
+      "application/src/main/java/myApp/server/apr/mapper/apr01_appr.xml": "0148e4e013b3c75c3fc3b171dfa6a7b00d6823d2",
+      "application/src/main/java/myApp/server/icam/Icam55_IcamUser.java": "1361a616c5f6cc5eb60a1f873d566bf5fc8ba7ed",
+      "application/src/main/java/myApp/server/icam/mapper/icam55_icam_user.xml": "542dbc430e96cd4fd100cad30d0d8f58d877b88c",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc"
+    ],
+    "recorded_at": "2026-11-03T21:00:04+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE30-작업기록.md",
+    "history": [],
+    "id": "EE30"
   }
 }

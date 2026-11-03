@@ -6,6 +6,8 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import kr.co.kfs.asseterp.biz.icam.dto.IcamUserResultRes;
+import kr.co.kfs.asseterp.biz.icam.dto.IcamUserResultSaveReq;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamUserRes;
 import kr.co.kfs.asseterp.biz.icam.dto.IcamUserSaveReq;
 
@@ -35,4 +37,16 @@ public interface IcamUserMapper {
 
     /** UpdateDataModel DELETE */
     int deleteIcamUser(@Param("icamUserId") Long icamUserId);
+
+    /** AS-IS icam55_icam_user.selectByDate (EE30 처리결과 등록) */
+    List<IcamUserResultRes> selectByDate(@Param("searchText") String searchText, @Param("startDate") LocalDate startDate,
+                                         @Param("closeDate") LocalDate closeDate, @Param("procResult") boolean procResult,
+                                         @Param("regType") String regType);
+
+    /** UpdateDataModel UPDATE — 처리결과 그리드가 바꾸는 열 */
+    int updateProcResult(@Param("req") IcamUserResultSaveReq req);
+
+    /** AS-IS icam55_icam_user.updateResult */
+    int updateResult(@Param("icamUserId") Long icamUserId, @Param("procStateCode") String procStateCode, @Param("procDate") LocalDate procDate,
+                     @Param("procNote") String procNote, @Param("procEmpId") Long procEmpId);
 }

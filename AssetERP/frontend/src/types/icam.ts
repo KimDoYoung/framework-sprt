@@ -287,3 +287,23 @@ export interface IcamUserSaveReq {
   procdelYn: boolean;
   regContent: string | null;
 }
+
+/** 사용자ID 처리결과 등록 한 줄 (AS-IS Icam55_IcamUserModel — selectByDate, EE30) */
+export interface IcamUserResult {
+  icamUserId: number;
+  regDate?: string | null;
+  regTypeName?: string | null;
+  companyName?: string | null;
+  userName?: string | null;
+  procTypeName?: string | null;
+  apprId?: number | null;
+  apprStatusCode?: string | null;
+  regEmpName?: string | null;
+  /** 1 완료 · 9 이행불가, 없으면 미처리 */
+  procStateCode?: string | null;
+  procStateName?: string | null;
+  procDate?: string | null;
+  procEmpId?: number | null;
+  procEmpName?: string | null;
+  procNote?: string | null;
+}
