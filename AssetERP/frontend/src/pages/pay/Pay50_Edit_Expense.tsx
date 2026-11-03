@@ -20,6 +20,7 @@ import { Sys15_Lookup_Corp } from '@/components/lookup/Sys15_Lookup_Corp';
 import { Sys17_Lookup_Account } from '@/components/lookup/Sys17_Lookup_Account';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { Ast01_Lookup_CorpAccount } from '../ast/Ast01_Lookup_CorpAccount';
+import { Com01_Lookup_RelateAppr } from '../com/Com01_Lookup_RelateAppr';
 import { Pay50_Lookup_Content } from './Pay50_Lookup_Content';
 import { Pay52_Lookup_AccountCode } from './Pay52_Lookup_AccountCode';
 
@@ -63,6 +64,7 @@ export const Pay50_Edit_Expense: React.FC<Props> = ({ model, isManager, onSaved,
   const [bankOpen, setBankOpen] = useState(false);
   const [codeOpen, setCodeOpen] = useState(false);
   const [contentOpen, setContentOpen] = useState(false);
+  const [relateOpen, setRelateOpen] = useState(false);
 
   // [E0] 화면 열림 (생성자 L109-119) → getEditor() / retrieve(param) L493-516: editDriver.edit(model) → 상신된 건이면 disabled(true) → setPayAccountInfo()
   useEffect(() => {
@@ -144,8 +146,19 @@ export const Pay50_Edit_Expense: React.FC<Props> = ({ model, isManager, onSaved,
   };
 
   // [E1] contentButton[내역상세].Select (L144) → lookupContent() L603-617: 상신된 건은 보기, 아니면 편집(저장하면 "내역상세가 저장되었습니다.")
-  // [E2] fileButton[증빙자료].Select (L151) → lookupFile() L619-659: Com01_Lookup_RelateAppr — 다른 도메인 컴포넌트라 다음 단계
-  const lookupFile = () => message.info('증빙자료 창(Com01_Lookup_RelateAppr)은 다음 단계에서 변환합니다.');
+  // [E2] fileButton[증빙자료].Select (L151) → lookupFile() L619-659: Com01_Lookup_RelateAppr — 지출결의서 상신(expenseApprStatusCode)이 없으면 open, 있으면 view.
+  //   callback → pay.Pay50_Expense.selectById → fileButton "증빙자료(n건)" 다시 쓰기
+  const lookupFile = () => setRelateOpen(true);
+  const relateChanged = async () => {
+    if (!model) return;
+    try {
+      const row = await payApi.getExpense(model.expenseId);
+      set({ fileCountStr: row.fileCountStr });
+      onChanged({ ...model, fileCountStr: row.fileCountStr });
+    } catch (err) {
+      message.error(errorMessage(err, '조회 실패'));
+    }
+  };
 
   // [E3] updateButton[저장].Select (L158) → update() L522-582
   const update = async () => {
@@ -314,6 +327,8 @@ export const Pay50_Edit_Expense: React.FC<Props> = ({ model, isManager, onSaved,
       <Pay52_Lookup_AccountCode open={codeOpen} isManager={isManager}
         onResult={a => { setCodeOpen(false); set({ accountCode: a.accountCode, accountName: a.accountName }); }}
         onClose={() => setCodeOpen(false)} />
+      <Com01_Lookup_RelateAppr open={relateOpen} mode={f?.expenseApprStatusCode != null ? 'view' : 'open'} keyTable="pay50" keyTableId={model?.expenseId ?? null}
+        onChanged={() => { void relateChanged(); }} onClose={() => setRelateOpen(false)} />
       <Pay50_Lookup_Content open={contentOpen} mode={f?.expenseApprStatusCode != null ? 'view' : 'edit'} content={f?.content} expenseId={model?.expenseId}
         onResult={html => { message.success('내역상세가 저장되었습니다.'); if (model) onChanged({ ...model, content: html }); }}
         onClose={() => setContentOpen(false)} />

@@ -4,6 +4,8 @@
  * init() L133-204: 1700×700 모달 "문서 불러오기", 위 기간(지난달 1일 ~ 오늘)·문서구분(Dcr01_Lookup_DcrClass)·검색 250·[조회], 왼쪽 그리드(등록일 90·상신제목 300·수신처 130·펀드 300·상태 75·상신자 75·문서구분 250·열람권한 75),
  *   오른쪽 620 미리보기(고른 문서의 본문), 푸터 [확인][닫기]
  * 이 호출은 `Apr05_Lookup_LoadDoc2(false, cb)` — 단일 선택, 결재완료 제한 없음, [선택안함] 없음, tdm52 아님.
+ * EE34: `Apr05_Lookup_LoadDoc2("MULTI", true, cb)`(증빙자료 연결 Com01_Lookup_RelateAppr) — `multi`면 체크박스 다중 선택(setChecked(MULTI), 행 클릭으로도 선택)이고 [확인]은 고른 문서 목록을 `onSelectedList`로 준다.
+ *   tdm52 호출(`selectNoAuthByText`·[연결된 문서분류만 조회])은 아직 없다 — Tdm 증빙자료 창의 다음 단계
  * [E0] 화면 열림 (생성자 L103-108) → init() · [E1] tdmRelateDcrYn.ValueChange (L215) · [E7] nullButton[선택안함].Select (L306) — tdm52 호출과 [선택안함] 호출에서만 쓰여 이 호출에는 없다
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -13,7 +15,7 @@ import { aprAttachApi } from '@/api/apr';
 import { errorMessage } from '@/api/client';
 import { AprLoadDoc2 } from '@/types/apr';
 import { Button } from '@/components/button';
-import { SingleGrid, gbFor } from '@/components/grid';
+import { MultiGrid, SingleGrid, gbFor } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { LookupModal } from '@/components/lookup/LookupModal';
@@ -26,7 +28,10 @@ const FMT = 'YYYY-MM-DD';
 interface Props {
   open: boolean;
   /** [확인] — callback.execute(apprModel): 고른 문서의 제목·본문 */
-  onResult: (doc: { title: string; content: string }) => void;
+  onResult?: (doc: { title: string; content: string }) => void;
+  /** EE34 "MULTI": 체크박스 다중 선택 — [확인]은 `onSelectedList(고른 문서 전체)`를 부른다(onResult·onSelected는 부르지 않는다). 닫기는 부른 쪽이 한다 */
+  multi?: boolean;
+  onSelectedList?: (docs: AprLoadDoc2[]) => void;
   /** Apr05_Lookup_LoadDoc2(aprStatusYn, callback) L127 (Y08): true면 결재완료(30) 문서만 고를 수 있다("결재완료된 문서만 연결할 수 있습니다", L416-424) — 증빙문서 연결 */
   aprStatusYn?: boolean;
   /** [확인]에서 고른 문서 전체(apprId 포함) — callback.execute(apprModel)의 apprId가 필요한 부르는 쪽용(Y08). onResult 다음에 불린다 */
@@ -36,7 +41,7 @@ interface Props {
   onClose: () => void;
 }
 
-export const Apr05_Lookup_LoadDoc2: React.FC<Props> = ({ open, onResult, aprStatusYn = false, onSelected, onNull, onClose }) => {
+export const Apr05_Lookup_LoadDoc2: React.FC<Props> = ({ open, onResult, multi = false, onSelectedList, aprStatusYn = false, onSelected, onNull, onClose }) => {
   // init() L133-148: 기간 = 지난달 1일 ~ 오늘
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().subtract(1, 'month').startOf('month'));
   const [endDate, setEndDate] = useState<Dayjs>(() => dayjs());
@@ -46,6 +51,7 @@ export const Apr05_Lookup_LoadDoc2: React.FC<Props> = ({ open, onResult, aprStat
   const [searchText, setSearchText] = useState('');
   const [rows, setRows] = useState<AprLoadDoc2[]>([]);
   const [selected, setSelected] = useState<AprLoadDoc2 | undefined>(undefined);
+  const [checked, setChecked] = useState<AprLoadDoc2[]>([]);
   const [loading, setLoading] = useState(false);
 
   // retrieve() L344-386: dcr.Dcr00_DocList.selectByText
@@ -67,7 +73,7 @@ export const Apr05_Lookup_LoadDoc2: React.FC<Props> = ({ open, onResult, aprStat
     if (!open) return;
     const start = dayjs().subtract(1, 'month').startOf('month');
     const end = dayjs();
-    setStartDate(start); setEndDate(end); setClassTreeId(null); setClassTreeName(''); setSearchText(''); setSelected(undefined);
+    setStartDate(start); setEndDate(end); setClassTreeId(null); setClassTreeName(''); setSearchText(''); setSelected(undefined); setChecked([]);
     void retrieve({ start, end, classTreeId: null, searchText: '' });
   }, [open, retrieve]);
 
@@ -75,10 +81,16 @@ export const Apr05_Lookup_LoadDoc2: React.FC<Props> = ({ open, onResult, aprStat
 
   // [E6] insertButton[확인].Select (L300) → insert() L408-442: 고른 문서가 없으면 "문서를 선택해주세요"
   const insert = () => {
+    if (multi) {
+      if (checked.length === 0) { Modal.info({ title: '확인', content: '문서를 선택해주세요', okText: '확인' }); return; }
+      if (aprStatusYn && checked.some(d => d.statusCode !== '30')) { Modal.info({ title: '확인', content: '결재완료된 문서만 연결할 수 있습니다', okText: '확인' }); return; }
+      onSelectedList?.(checked);
+      return;
+    }
     if (!selected) { Modal.info({ title: '확인', content: '문서를 선택해주세요', okText: '확인' }); return; }
     // 완료된 상신문서만 증빙자료로 연결할 수 있음 (L416-424)
     if (aprStatusYn && selected.statusCode !== '30') { Modal.info({ title: '확인', content: '결재완료된 문서만 연결할 수 있습니다', okText: '확인' }); return; }
-    onResult({ title: selected.title ?? '', content: selected.content ?? '' });
+    onResult?.({ title: selected.title ?? '', content: selected.content ?? '' });
     onSelected?.(selected);
   };
 
@@ -136,14 +148,25 @@ export const Apr05_Lookup_LoadDoc2: React.FC<Props> = ({ open, onResult, aprStat
           </SearchBar>
           <div style={{ display: 'flex', gap: 8, height: 'min(520px, calc(100vh - 290px))' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <SingleGrid<AprLoadDoc2>
-                rowData={rows}
-                columnDefs={columnDefs}
-                getRowId={p => String(p.data.docId)}
-                loading={loading}
-                rowSelection={{ mode: 'singleRow', checkboxes: true, enableClickSelection: true }}
-                onSelect={setSelected}
-              />
+              {multi ? (
+                <MultiGrid<AprLoadDoc2>
+                  rowData={rows}
+                  columnDefs={columnDefs}
+                  getRowId={p => String(p.data.docId)}
+                  loading={loading}
+                  rowClick
+                  onCheckedChange={list => { setChecked(list); setSelected(list.length > 0 ? list[list.length - 1] : undefined); }}
+                />
+              ) : (
+                <SingleGrid<AprLoadDoc2>
+                  rowData={rows}
+                  columnDefs={columnDefs}
+                  getRowId={p => String(p.data.docId)}
+                  loading={loading}
+                  rowSelection={{ mode: 'singleRow', checkboxes: true, enableClickSelection: true }}
+                  onSelect={setSelected}
+                />
+              )}
             </div>
             {/* [E3] grid.SelectionChanged [선택>0] (L277) → setHtml() L388-398: 고른 문서의 본문 (열람권한이 없으면 안내 글) */}
             <div style={{ width: 620, display: 'flex', flexDirection: 'column', gap: 4 }}>

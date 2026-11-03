@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/com/mapper/com01_relate_appr.xml(selectByKeyTableId·insert·delete) · apr01_appr.xml(permissionsCheck)  (EE34 Com01_Lookup_RelateAppr 증빙자료 창).
+     회사 열이 없는 테이블이라 모든 문장이 문서(apr01_appr)의 회사로 로그인 회사를 막는다(TOBE 추가) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.com.mapper.ComRelateApprMapper">
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS com01_relate_appr.selectByKeyTableId -->
+    <select id="selectByKeyTableId" resultType="kr.co.kfs.asseterp.biz.com.dto.ComRelateApprRes">
+        <![CDATA[
+        SELECT a.com01_relate_appr_id                                                           AS relate_appr_id
+             , a.com01_key_table                                                                AS key_table
+             , a.com01_key_table_id                                                             AS key_table_id
+             , a.com01_appr_id                                                                  AS appr_id
+             , b.apr01_reg_date                                                                 AS reg_date
+             , b.apr01_effect_date                                                              AS effect_date
+             , b.apr01_title                                                                    AS title
+             , f_emp_kor_nm(b.apr01_reg_emp_id)                                                 AS reg_emp_name
+             , f_cdnm('AprStatusCode', b.apr01_status_cd, b.apr01_company_id, b.apr01_reg_date) AS status_name
+          FROM com01_relate_appr a
+               INNER JOIN apr01_appr b ON b.apr01_appr_id = a.com01_appr_id
+         WHERE com01_key_table_id = #{keyTableId}
+           AND b.apr01_company_id = #{companyId}
+        ]]>
+    </select>
+
+    <!-- AS-IS com01_relate_appr 저장(UpdateDataModel INSERT) — 로그인 회사의 문서만 연결한다 -->
+    <insert id="insertRelateAppr">
+        INSERT INTO com01_relate_appr ( com01_relate_appr_id, com01_key_table, com01_key_table_id, com01_appr_id )
+        SELECT #{relateApprId}, #{keyTable}, #{keyTableId}, apr01_appr_id
+          FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+           AND apr01_company_id = #{companyId}
+    </insert>
+
+    <!-- AS-IS com01_relate_appr 삭제(UpdateDataModel DELETE) — 로그인 회사의 문서 연결만 -->
+    <delete id="deleteRelateAppr">
+        DELETE FROM com01_relate_appr
+         WHERE com01_relate_appr_id = #{relateApprId}
+           AND EXISTS ( SELECT 1 FROM apr01_appr WHERE apr01_appr_id = com01_appr_id AND apr01_company_id = #{companyId} )
+    </delete>
+
+    <!-- AS-IS sys01_company.sys01_erp_product_cd 가 S1이 아닌 회사만 [신규문서 작성] 단추를 둔다 (Com01_Lookup_RelateAppr 생성자 L78) -->
+    <select id="selectApprButtonEnabled" resultType="boolean">
+        SELECT COALESCE(sys01_erp_product_cd, '') &lt;&gt; 'S1'
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS apr01_appr.permissionsCheck — 열람권한이 있으면 1 이상 -->
+    <select id="countPermission" resultType="int">
+        <![CDATA[
+WITH auth_info AS (
+	SELECT	EXISTS (
+            	SELECT	1
+            	  FROM	apr04_appr_step
+            	 WHERE	apr04_appr_id = #{apprId}
+            	   AND	apr04_appr_emp_id = #{empId}
+			)											AS is_appr_emp
+		 ,	EXISTS (
+		 		SELECT	1
+		 		  FROM	apr04_appr_step
+		 		 WHERE	apr04_appr_id = #{apprId}
+		 		   AND	apr04_step_emp_id = #{empId}
+	        )											AS is_step_emp
+		 ,	EXISTS (
+		 		SELECT	1
+		 		  FROM	apr13_person_auth
+		 		 WHERE	apr13_appr_id = #{apprId}
+		 		   AND	apr13_person_id = #{empId}
+		 	)											AS is_auth_emp
+		 ,	EXISTS (
+				SELECT	1
+				  FROM	apr04_appr_step s
+				 WHERE	s.apr04_appr_id = #{apprId}
+				   AND	s.apr04_appr_emp_id IS NULL
+				   AND	s.apr04_step_emp_id IN (
+				   									SELECT	apr07_target_emp_id
+				   									  FROM	apr07_alt_appr
+				   									 WHERE	apr07_alt_emp_id = s.apr04_step_emp_id
+				   									   AND	f_sysdate() BETWEEN apr07_start_date AND apr07_close_date
+				   							   )
+			)											AS is_alt_appr
+)
+SELECT COUNT(*)
+  FROM  apr01_appr a 
+		INNER JOIN dcr01_class_tree b       ON a.apr01_class_tree_id = b.dcr01_class_tree_id
+		INNER JOIN emp01_person e           ON a.apr01_reg_emp_id = e.emp01_person_id
+		LEFT OUTER JOIN apr10_stamp d       ON a.apr01_stamp_id = apr10_stamp_id
+		LEFT OUTER JOIN dcr03_org_auth g    ON a.apr01_class_tree_id = dcr03_class_tree_id
+		LEFT OUTER JOIN apr03_relate_fund h ON a.apr01_appr_id = apr03_appr_id
+		LEFT OUTER JOIN dcr04_emp_auth i	ON a.apr01_class_tree_id = dcr04_class_tree_id AND dcr04_person_id = #{empId}
+		CROSS JOIN auth_info au
+ WHERE  apr01_appr_id = #{apprId}
+   AND  apr01_company_id = #{companyId} /* TOBE: 로그인 회사의 문서만 */
+   AND	(
+    		(
+				
+        		(
+        			apr01_link_cd IS NULL
+        			OR
+        			NOT EXISTS	(
+					            	SELECT	1
+					                  FROM	sys52_specific_menu_link l
+					                 WHERE	l.sys52_company_id = apr01_company_id
+					                   AND	l.sys52_link_cd = apr01_link_cd
+					            )
+        		)
+        		AND
+        		(
+            		( 
+						COALESCE(dcr04_retrieve_yn, dcr03_retrieve_yn, 'false') = 'true'
+            			OR au.is_appr_emp
+		                OR au.is_step_emp
+		                OR au.is_auth_emp
+		                OR au.is_alt_appr
+            		)
+            		AND
+					(
+						dcr03_org_code_id = #{orgId}
+            			OR au.is_appr_emp
+		                OR au.is_step_emp
+		                OR au.is_auth_emp
+		                OR au.is_alt_appr
+					)
+       			)
+    		)
+			OR
+			(
+				
+        		EXISTS	(
+        					SELECT	1
+				              FROM	sys52_specific_menu_link l
+				                   	INNER JOIN sys50_specific_menu m ON l.sys52_specific_work_cd = m.sys50_specific_work_cd AND m.sys50_company_id = apr01_company_id
+				                   	INNER JOIN sys51_specific_menu_person p ON p.sys51_specific_menu_id = m.sys50_specific_menu_id AND p.sys51_person_id = #{empId}
+							 WHERE	l.sys52_company_id = apr01_company_id
+							   AND	COALESCE(p.sys51_use_yn, 'false') = 'true'
+							   AND	l.sys52_link_cd = apr01_link_cd
+        				)
+				OR
+				(
+            		au.is_appr_emp
+		            OR au.is_step_emp
+		            OR au.is_auth_emp
+		            OR au.is_alt_appr
+        		)
+			)
+		)
+        ]]>
+    </select>
+</mapper>

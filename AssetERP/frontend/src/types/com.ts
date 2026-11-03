@@ -27,3 +27,16 @@ export interface FormMappingMulti {
   content: string | null;
   note: string | null;
 }
+
+/** EE34 증빙자료 창(Com01_Lookup_RelateAppr) 그리드 한 행 — AS-IS Com01_RelateApprModel, 서버 com01_relate_appr.selectByKeyTableId */
+export interface ComRelateAppr {
+  relateApprId: number;
+  keyTable: string;
+  keyTableId: number;
+  apprId: number;
+  regDate: string | null;
+  effectDate: string | null;
+  title: string | null;
+  regEmpName: string | null;
+  statusName: string | null;
+}

@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay50_Tab_ExpenseRequest.java (436줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L64-92: 가운데(여백 20) = 툴바(조회기간 · [조회] · [등록][삭제][요청하기][요청취소]) + 지출요청 그리드(MultiGrid, 합계 행)
  * 함께: Pay50_Lookup_ExpenseRequestInsert(등록·수정·보기, 1303줄) · Pay50_Lookup_ExpenseCopy(불러오기, 바로등록 모드) · Pay50_Lookup_ConfirmReason(승인상태 칸, 반려사유 보기) · Pay50_Lookup_RejectReason(지출결의 칸, 반려사유 보기)
- *   Com01_Lookup_RelateAppr(증빙자료 아이콘)는 다른 도메인 창이라 1단계에서는 안내만 띄운다(U03·Y09와 같음)
+ *   Com01_Lookup_RelateAppr(증빙자료 아이콘)는 EE34에서 연결했다
  * 스타일: SG (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04)
  */
@@ -17,6 +17,7 @@ import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
+import { Com01_Lookup_RelateAppr } from '../com/Com01_Lookup_RelateAppr';
 import { Pay50_Lookup_ConfirmReason } from './Pay50_Lookup_ConfirmReason';
 import { Pay50_Lookup_RejectReason } from './Pay50_Lookup_RejectReason';
 import { ExpenseRequestMode, Pay50_Lookup_ExpenseRequestInsert } from './Pay50_Lookup_ExpenseRequestInsert';
@@ -43,6 +44,8 @@ export const Pay50_Tab_ExpenseRequest: React.FC = () => {
   /** 승인상태·지출결의 칸을 눌러 여는 반려사유 보기 */
   const [confirmReason, setConfirmReason] = useState<string | null | undefined>(undefined);
   const [rejectReason, setRejectReason] = useState<string | null | undefined>(undefined);
+  /** [증빙자료] 아이콘이 여는 Com01_Lookup_RelateAppr — 승인상태가 없으면 open, 있으면 view */
+  const [relateTarget, setRelateTarget] = useState<{ id: number; view: boolean } | null>(null);
   const retrieveSeq = useRef(0);
 
   // retrieve() L237-251: pay.Pay50_Expense.selectByDate (companyId·personId는 서버)
@@ -132,8 +135,8 @@ export const Pay50_Tab_ExpenseRequest: React.FC = () => {
     gb.textCenter('payMethodName', 80, '지급방법'),  // L222
     gb.text('payAccountInfo', 220, '지급요청계좌'),  // L223
     gb.textCenter('fileCountStr', 60, '증빙자료'),  // L224
-    // L185-208 viewCell(ImageCell "View") → [E9]·[E10] Com01_Lookup_RelateAppr.open|view("pay50", expenseId) — 다른 도메인 창, 다음 단계
-    iconCell<PayExpenseMine>('view', 'relateCell', 40, '', () => message.info('증빙자료 창(Com01_Lookup_RelateAppr)은 다음 단계에서 변환합니다.')),
+    // L185-208 viewCell(ImageCell "View") → [E9]·[E10] Com01_Lookup_RelateAppr.open("pay50", expenseId, callback → lookupEnd) | 승인상태가 있으면 view
+    iconCell<PayExpenseMine>('view', 'relateCell', 40, '', row => setRelateTarget({ id: row.expenseId, view: row.confirmStatusCode != null })),
     gb.textCenter('confirmerName', 70, '승인자'),  // L226
     gb.textCenter('confirmStatusName', 70, '승인상태'),  // L227
     gb.textCenter('expenseStatusName', 70, '지출결의'),  // L228
@@ -189,6 +192,8 @@ export const Pay50_Tab_ExpenseRequest: React.FC = () => {
         onSaved={() => void retrieve()}
         onClose={() => setInsertTarget(null)}
       />
+      <Com01_Lookup_RelateAppr open={relateTarget != null} mode={relateTarget?.view ? 'view' : 'open'} keyTable="pay50" keyTableId={relateTarget?.id ?? null}
+        onChanged={() => { if (!relateTarget?.view) void retrieve(); }} onClose={() => setRelateTarget(null)} />
       <Pay50_Lookup_ConfirmReason open={confirmReason !== undefined} mode="view" value={confirmReason} onClose={() => setConfirmReason(undefined)} />
       <Pay50_Lookup_RejectReason open={rejectReason !== undefined} mode="view" value={rejectReason} onClose={() => setRejectReason(undefined)} />
     </div>

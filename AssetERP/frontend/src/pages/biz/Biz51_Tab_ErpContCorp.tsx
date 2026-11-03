@@ -5,7 +5,7 @@
  * 레이아웃 L58-84: 바깥 여백 20, 위 툴바 50 = 검색 [200 "계약사명/비고"] · ☑계약건만 보기(기본 켜짐) · [조회][등록][삭제] [기본설정], 아래 그리드(체크 다중, 18열)
  * 스타일: SGP (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 조건이 2개라 넣지 않는다
- * 미완(다음 단계 EE34): [증빙자료] 아이콘이 여는 Com01_Lookup_RelateAppr(증빙자료 창) — 안내만
+ * [증빙자료] 아이콘이 여는 Com01_Lookup_RelateAppr(증빙자료 창)은 EE34에서 연결했다
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Checkbox, message, Modal } from 'antd';
@@ -16,6 +16,7 @@ import { BizErpContCorp } from '@/types/bizErp';
 import { Button } from '@/components/button';
 import { MultiGrid, gbFor, iconCell } from '@/components/grid';
 import { SearchBar } from '@/components/search';
+import { Com01_Lookup_RelateAppr } from '../com/Com01_Lookup_RelateAppr';
 import { Biz50_Lookup_ErpSetup } from './Biz50_Lookup_ErpSetup';
 import { Biz51_Edit_ErpContCorp, BizErpContCorpEditTarget } from './Biz51_Edit_ErpContCorp';
 import { Biz52_Lookup_ErpFee } from './Biz52_Lookup_ErpFee';
@@ -33,6 +34,7 @@ export const Biz51_Tab_ErpContCorp: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [editTarget, setEditTarget] = useState<BizErpContCorpEditTarget | null>(null);
   const [feeId, setFeeId] = useState<number | null>(null);
+  const [relateId, setRelateId] = useState<number | null>(null);
   const [setupOpen, setSetupOpen] = useState(false);
 
   // retrieve() L200-219: biz.Biz51_ErpContCorp.selectByContStatusCode(contStatusCode = 체크면 "1" 아니면 null, searchText)
@@ -99,8 +101,8 @@ export const Biz51_Tab_ErpContCorp: React.FC = () => {
     gb.textArea('note', 200, '비고'),  // L191
     gb.text('locationNm', 90, '서브도메인'),  // L192
     gb.textCenter('fileCountStr', 60, '증빙자료'),  // L193
-    // [E8 생략] dataCell → Com01_Lookup_RelateAppr.open("biz51", id, …) (L159-173): 증빙자료 창은 다른 도메인 공통 컴포넌트라 EE34로 분리 — 지금은 안내만
-    iconCell<BizErpContCorp>('view', 'dataCell', 40, '', () => { message.info('증빙자료 창(Com01_Lookup_RelateAppr)은 다음 단계(EE34)에서 변환합니다.'); }),  // L194
+    // [E8] dataCell → Com01_Lookup_RelateAppr.open("biz51", id, callback → lookupEnd(id)) (L159-173)
+    iconCell<BizErpContCorp>('view', 'dataCell', 40, '', row => setRelateId(row.erpContCorpId)),  // L194
   ], []);
 
   return (
@@ -138,6 +140,7 @@ export const Biz51_Tab_ErpContCorp: React.FC = () => {
       </div>
       <Biz51_Edit_ErpContCorp target={editTarget} onClose={() => setEditTarget(null)} onSaved={() => { void retrieve(); }} />
       <Biz52_Lookup_ErpFee erpContCorpId={feeId} onClose={() => { const id = feeId; setFeeId(null); if (id != null) void lookupEnd(id); }} />
+      <Com01_Lookup_RelateAppr open={relateId != null} keyTable="biz51" keyTableId={relateId} onChanged={() => { if (relateId != null) void lookupEnd(relateId); }} onClose={() => setRelateId(null)} />
       <Biz50_Lookup_ErpSetup open={setupOpen} onClose={() => { setSetupOpen(false); void retrieve(); }} />
     </div>
   );

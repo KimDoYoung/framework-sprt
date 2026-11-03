@@ -5,7 +5,7 @@
  *   — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L108-168: Center(여백 20·20·0·20) = 테두리 박스(툴바 두 줄 50 + 지출결의서 그리드) / South(350, 분할, 여백 20) = 편집 폼(Pay50_Edit_Expense)
  * 열 때 한 번 조회한다(구분 콤보 생성 콜백 → retrieve). 조회가 끝나면 첫 행을 고른다(select(0))
- * 1단계: 바로등록(Pay50_Lookup_ExpenseRequestInsert)·반려건 일괄 알림발송(SMS·톡·메일)·증빙자료(Com01_Lookup_RelateAppr)는 다음 단계 — 안내만 띄운다
+ * 1단계: 바로등록(Pay50_Lookup_ExpenseRequestInsert)·반려건 일괄 알림발송(SMS·톡·메일)는 다음 단계(증빙자료 Com01_Lookup_RelateAppr는 EE34에서 연결 — Pay50_Edit_Expense의 [증빙자료]) — 안내만 띄운다
  * 상신/문서보기(Apr01_Edit_ApprDoc — apprSelect·insertLinkApproval "A63"·updateExpenseApprId·retrieveApproval)는 V27(2026-10-31)에서 연결했다
  * 스타일: SGEF (견본 — docs/page-style.md. yunhee page-style은 SGVF로 읽으나 아래 폼이 저장이 있는 편집형이라 SGEF를 따른다)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다

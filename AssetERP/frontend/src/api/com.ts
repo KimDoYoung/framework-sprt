@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { Com50Item, FormMapping, FormMappingMulti } from '../types/com';
+import { Com50Item, ComRelateAppr, FormMapping, FormMappingMulti } from '../types/com';
 
 /** com(공통) 화면 API (E17~) */
 export const comApi = {
@@ -47,5 +47,34 @@ export const comApi = {
   updateFormMappingMulti: async (req: { formMappingMultiId: number; sysKindCode: string; sysDetailCode: string | null; linkCode: string; content: string }): Promise<number> => {
     const res = await apiClient.put<ApiResponse<number>>('v1/com/form-mapping-multis', req);
     return res.data.data as number;
+  },
+};
+
+/** EE34 증빙자료 창 Com01_Lookup_RelateAppr (AS-IS server/com/Com01_RelateAppr) */
+export const comRelateApprApi = {
+  /** AS-IS com.Com01_RelateAppr.selectByKeyTableId */
+  search: async (keyTableId: number): Promise<ComRelateAppr[]> => {
+    const res = await apiClient.get<ApiResponse<ComRelateAppr[]>>('v1/com/relate-apprs', { params: { keyTableId } });
+    return res.data.data ?? [];
+  },
+  /** AS-IS com.Com01_RelateAppr.modelUpdate·listUpdate — 문서마다 연결 한 행. keyTable 은 연결 테이블명 앞 5자리 */
+  add: async (keyTable: string, keyTableId: number, apprIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/com/relate-apprs', { keyTable, keyTableId, apprIds });
+    return res.data.data ?? 0;
+  },
+  /** AS-IS com.Com01_RelateAppr.delete */
+  delete: async (relateApprIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/com/relate-apprs', { data: relateApprIds });
+    return res.data.data ?? 0;
+  },
+  /** erpProductCode 가 S1이 아닌 회사만 [신규문서 작성]을 둔다 */
+  apprButton: async (): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/com/relate-apprs/appr-button');
+    return res.data.data ?? false;
+  },
+  /** AS-IS apr.Apr01_Appr.permissionsCheck — 상세보기 열람권한 */
+  permission: async (apprId: number): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>(`v1/com/relate-apprs/${apprId}/permission`);
+    return res.data.data ?? false;
   },
 };

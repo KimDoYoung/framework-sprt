@@ -15640,5 +15640,36 @@
     "note": "docs/변환/work/EE/EE32-작업기록.md",
     "history": [],
     "id": "EE32"
+  },
+  "Com01_Lookup_RelateAppr": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/com/Com01_Grid_RelateFile.java": "753aefed0d44d8fd93b60ad443058a0184535638",
+      "application/src/main/java/myApp/client/vi/com/Com01_Lookup_RelateAppr.java": "0d17b4124c437be4772cc9dd82df5b589d29c2dd",
+      "application/src/main/java/myApp/client/vi/com/model/Com01_RelateApprModel.java": "4ebfc47220dfbb48c77cfd9ea04ae70cc1782a56",
+      "application/src/main/java/myApp/client/vi/com/model/Com01_RelateApprModelProperties.java": "f2e677166f6450404bbfb7accae6123988164513",
+      "application/src/main/java/myApp/server/com/Com01_RelateAppr.java": "6a11eeb9855cf587bd7cc284ac79b9b632021458",
+      "application/src/main/java/myApp/server/com/mapper/com01_relate_appr.xml": "dfb8d01d5a409fecc59ef532238d85c4e4041a16",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/Sys11_RelateFile.java": "3aa633bf0b24c8da3c85ea2f505fb68616f92a11",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/sys/mapper/sys11_relate_file.xml": "35c5b410b79c0d900e2332f08e15c5f024b05aa6",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Apr01_Edit_ApprDoc",
+      "Apr05_Lookup_LoadDoc2",
+      "Dcr01_Lookup_Class",
+      "Sys10_Lookup_FileViewer"
+    ],
+    "recorded_at": "2026-11-03T21:43:16+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE34-작업기록.md",
+    "history": [],
+    "id": "EE34"
   }
 }

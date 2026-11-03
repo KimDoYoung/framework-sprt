@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/pay/Pay50_Tab_ExpenseConfirm.java (410줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 생성자 L65-94: 가운데(여백 20, 테두리) = 툴바(조회기간 · 미승인내역만 조회 · [조회] · [승인][반려][취소][반려건 일괄 알림발송]) + 지출요청 그리드(MultiGrid, 합계 행)
  * 함께: Pay50_Lookup_Content(내역상세 보기, U03), Pay50_Lookup_ConfirmReason(반려사유, Pay50_Lookup_RejectReason 껍질)
- *   Com01_Lookup_RelateAppr(증빙자료 아이콘)는 다른 도메인 창이라 1단계에서는 안내만 띄운다(U03 Pay50_Tab_ExpenseManager와 같음)
+ *   Com01_Lookup_RelateAppr(증빙자료 아이콘, 보기만)는 EE34에서 연결했다
  * 스타일: SG (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04)
  */
@@ -17,6 +17,7 @@ import { Button } from '@/components/button';
 import { MultiGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
+import { Com01_Lookup_RelateAppr } from '../com/Com01_Lookup_RelateAppr';
 import { Pay50_Lookup_Content } from './Pay50_Lookup_Content';
 import { Pay50_Lookup_ConfirmReason } from './Pay50_Lookup_ConfirmReason';
 
@@ -41,6 +42,7 @@ export const Pay50_Tab_ExpenseConfirm: React.FC = () => {
   const [checked, setChecked] = useState<PayExpenseConfirm[]>([]);
   const [contentRow, setContentRow] = useState<PayExpenseConfirm | null>(null);
   const [reasonTarget, setReasonTarget] = useState<ReasonTarget | null>(null);
+  const [relateId, setRelateId] = useState<number | null>(null);
   const retrieveSeq = useRef(0);
 
   // retrieve() L198-213: pay.Pay50_Expense.selectByDateConfirm (companyId·confirmerId는 서버)
@@ -131,8 +133,8 @@ export const Pay50_Tab_ExpenseConfirm: React.FC = () => {
     gb.textCenter('payMethodName', 80, '지급방법'),  // L178
     gb.text('payAccountInfo', 220, '지급요청계좌'),  // L179
     gb.textCenter('fileCountStr', 60, '증빙자료'),  // L180
-    // L181 addCell(ImageCell("View")) → Com01_Lookup_RelateAppr.view("pay50", expenseId) — 다른 도메인 창, 다음 단계
-    iconCell<PayExpenseConfirm>('view', 'relateCell', 40, '', () => message.info('증빙자료 창(Com01_Lookup_RelateAppr)은 다음 단계에서 변환합니다.')),
+    // L189 addCell(ImageCell("View")) → Com01_Lookup_RelateAppr.view("pay50", expenseId) — 보기만
+    iconCell<PayExpenseConfirm>('view', 'relateCell', 40, '', row => setRelateId(row.expenseId)),
     gb.textCenter('confirmStatusName', 70, '승인상태'),  // L182
   ], []);
 
@@ -177,6 +179,7 @@ export const Pay50_Tab_ExpenseConfirm: React.FC = () => {
         </div>
       </div>
       {/* [E7] viewCell (ImageCell).callbackOnCreate (L167) → 인라인 L167-172 */}
+      <Com01_Lookup_RelateAppr open={relateId != null} mode="view" keyTable="pay50" keyTableId={relateId} onClose={() => setRelateId(null)} />
       <Pay50_Lookup_Content open={contentRow != null} mode="view" content={contentRow?.content} onClose={() => setContentRow(null)} />
       <Pay50_Lookup_ConfirmReason
         open={reasonTarget != null}
