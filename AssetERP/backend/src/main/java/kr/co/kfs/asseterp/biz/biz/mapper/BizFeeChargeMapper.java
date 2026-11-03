@@ -117,4 +117,17 @@ public interface BizFeeChargeMapper {
     int countApprRelateFile(@Param("fileId") Long fileId, @Param("apprId") Long apprId);
 
     int insertApprRelateFile(@Param("relateFileId") long relateFileId, @Param("fileId") Long fileId, @Param("apprId") Long apprId);
+
+    // ── EE33 엑셀·PDF 생성이 읽는 보수 상세 (biz21_fee_charge_dtl) ──
+
+    List<String> selectDtlFundCodes(@Param("feeChargeId") Long feeChargeId);
+
+    /** 펀드코드별 행 수의 최댓값 — 상세가 하나도 없으면 null */
+    Long selectDtlMaxSize(@Param("feeChargeId") Long feeChargeId);
+
+    List<BizFeeChargeDtlRes> selectDtlByFundCode(@Param("feeChargeId") Long feeChargeId, @Param("fundCode") String fundCode);
+
+    List<BizFeeChargeDtlRes> selectDtlGroupFundName(@Param("feeChargeId") Long feeChargeId);
+
+    List<BizFeeChargeDtlRes> selectDtlByFeeChargeId(@Param("feeChargeId") Long feeChargeId);
 }

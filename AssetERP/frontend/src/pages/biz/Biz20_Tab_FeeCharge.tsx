@@ -8,8 +8,8 @@
  * 그리드 buildGrid() L346-447: 체크 다중 · 헤더 묶음 전분기(456EA6)·당분기(DD5E5E) · 합계 행 getSumGrid("합계", 3, 4, 7)
  * 스타일: SGP (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04), 초기화(UX-02)는 조건이 연도·분기·검색 3개지만 줄이 이미 가득 차서 넣지 않는다
- * 미완(다음 단계): 자료생성 뒤 엑셀·PDF 만들기(makeExcel·makePDF), [파일 일괄 다운로드](zip), 통합상신의 통합 엑셀 첨부(createTotalFeeExcel), 계산상세의 [엑셀다운로드]
- *   · ICAM 발생보수는 외부 DB라 자료생성에서 빠져 있다(새로 만든 자료의 발생보수는 0)
+ * 후처리(EE33): 자료생성 뒤 엑셀·PDF 만들기(makeExcel·makePDF), [파일 일괄 다운로드](zip), 통합상신의 통합 엑셀 첨부(createTotalFeeExcel), 계산상세의 [엑셀다운로드]
+ * 미완: ICAM 발생보수는 외부 DB라 자료생성에서 빠져 있다(새로 만든 자료의 발생보수는 0 — 엑셀·PDF의 펀드 내역도 비어 있다)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Modal, Select } from 'antd';
@@ -93,7 +93,7 @@ export const Biz20_Tab_FeeCharge: React.FC = () => {
   const checked = () => gridRef.current?.api?.getSelectedRows() ?? [];
 
   // ── 자료생성 ──
-  // batch() L742-763: 마스크 "생성 중" → biz.Biz20_FeeCharge.createFeeCharge(companyId, chargeDate, contCorpId) → makeExcel → makePDF → retrieve (엑셀·PDF는 다음 단계)
+  // batch() L742-763: 마스크 "생성 중" → biz.Biz20_FeeCharge.createFeeCharge(companyId, chargeDate, contCorpId) → makeExcel L765-783 → makePDF L785-803 → retrieve
   const batch = async (contCorpId: number | null) => {
     const hide = message.loading('생성 중', 0);
     try {
@@ -101,6 +101,20 @@ export const Biz20_Tab_FeeCharge: React.FC = () => {
     } catch (err) {
       hide();
       message.error(errorMessage(err, '자료 생성 실패'));
+      return;
+    }
+    try {
+      await bizFeeChargeApi.createExcel(chargeDateOf(), quarter, contCorpId);
+    } catch {
+      hide();
+      message.error('Excel 생성 중 오류가 발생했습니다. 관리자에게 연락해주세요');
+      return;
+    }
+    try {
+      await bizFeeChargeApi.createPdf(chargeDateOf(), quarter, contCorpId);
+    } catch {
+      hide();
+      message.error('PDF 생성 중 오류가 발생했습니다. 관리자에게 연락해주세요');
       return;
     }
     hide();
@@ -124,8 +138,15 @@ export const Biz20_Tab_FeeCharge: React.FC = () => {
     });
   };
 
-  // [E7] allFileDownloadButton[파일 일괄 다운로드].Select (L220) → allFileDownload() L711-719: FileDownload?fileType=feeCharge&companyId&chargeDate (zip) — 다음 단계
-  const allFileDownload = () => { message.info('파일 일괄 다운로드(zip)는 다음 단계에서 변환합니다.'); };
+  // [E7] allFileDownloadButton[파일 일괄 다운로드].Select (L220) → allFileDownload() L711-719: FileDownload?fileType=feeCharge&companyId&chargeDate (zip)
+  // [E16] allFileDownloadForm.SubmitComplete (L325): 응답 본문(오류 글)을 안내로 띄운다 — 오류 응답이면 그 글, 정상(zip)이면 내려받기
+  const allFileDownload = async () => {
+    try {
+      await bizFeeChargeApi.downloadFilesZip(chargeDateOf());
+    } catch (err) {
+      message.info(errorMessage(err, '파일 다운로드 실패'));
+    }
+  };
 
   // [E8] printDownButton[츨력/다운로드].Select (L226) → sys.Sys99_Print.insertRdFeeCharge → 성공이면 RD Biz20_Rd_FeeCharge(rv: rdGroupId·companyId·personId·year·quarter)
   const printDown = async () => {
@@ -240,9 +261,19 @@ export const Biz20_Tab_FeeCharge: React.FC = () => {
     if (!apprLinkCode) return;
     setLinkDoc({ classTreeId: c.classTreeId, linkCode: apprLinkCode, refId: apprRow?.realFeeChargeId ?? 0 });
   };
-  // 문서를 저장·결재요청한 뒤: A18·A19 는 updateApprId(L893-907)로 청구보수에 문서 ID를 기록하고 retrieve, A20 은 "정상적으로 상신이 완료되었습니다"
+  // 문서를 저장·결재요청한 뒤: A18·A19 는 updateApprId(L893-907)로 청구보수에 문서 ID를 기록하고 retrieve,
+  // A20 은 통합 엑셀(Apr01_Edit_ApprDoc L2789-2807 createTotalFeeExcel: 연초~이 분기 청구)을 문서에 붙이고 "정상적으로 상신이 완료되었습니다"
   const onLinkSaved = async (apprId: number) => {
-    if (linkDoc?.linkCode === 'A20') { message.success('정상적으로 상신이 완료되었습니다'); return; }
+    if (linkDoc?.linkCode === 'A20') {
+      try {
+        await bizFeeChargeApi.createTotalExcel(apprId, chargeDateOf(), quarter);
+      } catch {
+        message.error('Excel 생성 중 오류가 발생했습니다. 관리자에게 연락해주세요');
+        return;
+      }
+      message.success('정상적으로 상신이 완료되었습니다');
+      return;
+    }
     if (apprRow?.realFeeChargeId == null) return;
     try {
       await bizFeeChargeApi.updateApprId(apprRow.realFeeChargeId, apprId);

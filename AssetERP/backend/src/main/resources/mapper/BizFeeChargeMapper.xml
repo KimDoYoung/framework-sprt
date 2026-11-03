@@ -886,4 +886,78 @@
         INSERT INTO sys11_relate_file ( sys11_relate_file_id, sys11_file_id, sys11_parent_id, sys11_parent_table )
         VALUES ( #{relateFileId}, #{fileId}, #{apprId}, 'apr01_appr' )
     </insert>
+
+    <!-- ── EE33 엑셀·PDF 생성이 읽는 보수 상세 (biz21_fee_charge_dtl) ── -->
+
+    <!-- AS-IS biz21_fee_charge_dtl.selectByGroupFundCode (순번 열은 쓰지 않아 펀드코드만) -->
+    <select id="selectDtlFundCodes" resultType="string">
+        SELECT biz21_fund_cd
+          FROM biz21_fee_charge_dtl
+         WHERE biz21_fee_charge_id = #{feeChargeId}
+         GROUP BY biz21_fund_cd
+         ORDER BY biz21_fund_cd
+    </select>
+
+    <!-- AS-IS biz21_fee_charge_dtl.getMaxSize — 펀드코드별 행 수의 최댓값 (행이 없으면 null) -->
+    <select id="selectDtlMaxSize" resultType="long">
+        SELECT MAX(CNT)
+          FROM (
+                 SELECT COUNT(*) AS CNT
+                   FROM biz21_fee_charge_dtl
+                  WHERE biz21_fee_charge_id = #{feeChargeId}
+                  GROUP BY biz21_fund_cd
+               ) T
+    </select>
+
+    <!-- AS-IS biz21_fee_charge_dtl.selectByFundCode -->
+    <select id="selectDtlByFundCode" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeDtlRes">
+        SELECT biz21_fee_charge_dtl_id     AS fee_charge_dtl_id
+             , biz21_fund_cd               AS fund_code
+             , biz21_fund_nm               AS fund_name
+             , biz21_occ_date              AS occ_date
+             , biz21_total_net_asset       AS total_net_asset
+             , biz21_occ_fee               AS occ_fee
+             , biz21_fee_type_nm           AS fee_type_name
+             , biz21_target_account_cnt    AS target_account_cnt
+             , biz21_change_account_cnt    AS change_account_cnt
+             , biz21_fee_rate              AS fee_rate
+          FROM biz21_fee_charge_dtl
+         WHERE biz21_fee_charge_id = #{feeChargeId}
+           AND biz21_fund_cd = #{fundCode}
+         ORDER BY COALESCE(biz21_fund_cd, '0'), biz21_occ_date
+    </select>
+
+    <!-- AS-IS biz21_fee_charge_dtl.selectByGroupFundName -->
+    <select id="selectDtlGroupFundName" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeDtlRes">
+        SELECT ROW_NUMBER() OVER()         AS fee_charge_dtl_id
+             , NULL::varchar               AS fund_code
+             , biz21_fund_nm               AS fund_name
+             , NULL::date                  AS occ_date
+             , NULL::numeric               AS total_net_asset
+             , SUM(biz21_occ_fee)          AS occ_fee
+             , NULL::varchar               AS fee_type_name
+             , NULL::numeric               AS target_account_cnt
+             , NULL::numeric               AS change_account_cnt
+             , NULL::numeric               AS fee_rate
+          FROM biz21_fee_charge_dtl
+         WHERE biz21_fee_charge_id = #{feeChargeId}
+         GROUP BY biz21_fund_nm
+    </select>
+
+    <!-- AS-IS biz21_fee_charge_dtl.selectByFeeChargeId -->
+    <select id="selectDtlByFeeChargeId" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeDtlRes">
+        SELECT biz21_fee_charge_dtl_id     AS fee_charge_dtl_id
+             , biz21_fund_cd               AS fund_code
+             , biz21_fund_nm               AS fund_name
+             , biz21_occ_date              AS occ_date
+             , biz21_total_net_asset       AS total_net_asset
+             , biz21_occ_fee               AS occ_fee
+             , biz21_fee_type_nm           AS fee_type_name
+             , biz21_target_account_cnt    AS target_account_cnt
+             , biz21_change_account_cnt    AS change_account_cnt
+             , biz21_fee_rate              AS fee_rate
+          FROM biz21_fee_charge_dtl
+         WHERE biz21_fee_charge_id = #{feeChargeId}
+         ORDER BY COALESCE(biz21_fund_cd, '0'), biz21_occ_date
+    </select>
 </mapper>

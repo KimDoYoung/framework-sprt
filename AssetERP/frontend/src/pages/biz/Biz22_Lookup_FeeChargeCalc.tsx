@@ -4,7 +4,7 @@
  * open(selectModel) L45-73: 모달 1800×400 "최저보수청구 구간계산정보", 위 [새로고침][엑셀다운로드] / 그리드(행번호 없음) / [닫기]
  * buildGrid() L104-142: 헤더 묶음 운용보수(456EA6)·자문보수(B36D3D)·일임보수(258A65)·병행보수(404040) + getSumGrid("합계", 1, 3, 23, "4,9,14,19,20") — 합계 행은 구간일수와
  *   각 보수의 계산구간 열만 더한다(청구기간 최저보수·병행적용여부·청구기간 병행보수 제외)
- * [엑셀다운로드] L84-95: ExcelDownload?actionCode=biz22List(HSSF 시트 생성 281줄)는 엑셀 생성 묶음이라 다음 단계 — 누르면 안내만 (작업기록 "미완(Excel)")
+ * [엑셀다운로드] L84-95: ExcelDownload?actionCode=biz22List — 서버가 HSSF 시트를 만들어 내려 준다(EE33). 엑셀 머리는 운용·자문·병행 묶음뿐이다(AS-IS 그대로, 일임보수 열 없음)
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { message, Space } from 'antd';
@@ -88,6 +88,15 @@ export const Biz22_Lookup_FeeChargeCalc: React.FC<Props> = ({ row, onClose }) =>
   }, [row]);
   useEffect(() => { void retrieve(); }, [retrieve]);
 
+  const downloadExcel = async () => {
+    if (!row || row.contCorpId == null) { return; }
+    try {
+      await bizFeeChargeApi.downloadCalcExcel(row.contCorpId, row.chargeDate);
+    } catch (err) {
+      message.error(errorMessage(err, '엑셀 다운로드 실패'));
+    }
+  };
+
   return (
     <LookupModal
       open={row !== null}
@@ -111,8 +120,8 @@ export const Biz22_Lookup_FeeChargeCalc: React.FC<Props> = ({ row, onClose }) =>
       <div style={{ height: 'calc(100vh - 250px)', minHeight: 260, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <Space>
           <Button type="reset" onClick={retrieve}>새로고침</Button>
-          {/* [E2] downloadButton[엑셀다운로드].Select (L84) → ExcelDownload?actionCode=biz22List&contCorpId&chargeDate — 엑셀 생성은 다음 단계 */}
-          <Button type="download" onClick={() => { message.info('엑셀 파일 생성은 다음 단계에서 변환합니다.'); }}>엑셀다운로드</Button>
+          {/* [E2] downloadButton[엑셀다운로드].Select (L84) → ExcelDownload?actionCode=biz22List&contCorpId&chargeDate */}
+          <Button type="download" onClick={() => { void downloadExcel(); }}>엑셀다운로드</Button>
         </Space>
         <div style={{ flex: 1, minHeight: 0 }}>
           <SingleGrid<BizFeeChargeCalc>

@@ -3,6 +3,7 @@ package kr.co.kfs.asseterp.biz.biz.service;
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.biz.dto.*;
 import kr.co.kfs.asseterp.biz.biz.mapper.BizFeeChargeMapper;
+import kr.co.kfs.asseterp.biz.sys.service.SysFileService;
 import kr.co.kfs.asseterp.common.error.BusinessException;
 import kr.co.kfs.asseterp.common.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import java.util.List;
 public class BizFeeChargeService {
 
     private final BizFeeChargeMapper mapper;
+    private final SysFileService sysFileService;
 
     // ── 목록·한 건 ──
 
@@ -122,6 +124,20 @@ public class BizFeeChargeService {
             }
         }
         return n;
+    }
+
+    /**
+     * [파일 일괄 다운로드] FileDownload?fileType=feeCharge (downloadFeeChargeZip L315-344) — 그 분기 청구 목록(검색어 '%')의 행마다 청구보수 ID 의 첨부를 모아 zip 하나로.
+     * 파일이 하나도 없으면 공통 zip 처리와 같이 "파일 리스트가 없습니다."(AS-IS 는 빈 zip 을 내려 준다)
+     */
+    public List<SysFileService.StoredFile> zipEntries(UserPrincipal user, LocalDate chargeDate) {
+        List<Long> fileIds = new java.util.ArrayList<>();
+        for (BizFeeChargeRes r : mapper.selectByChargeDate(user.getCompanyId(), chargeDate, "%")) {
+            if (r.realFeeChargeId() != null) {
+                fileIds.addAll(mapper.selectFileIds(r.realFeeChargeId()));
+            }
+        }
+        return sysFileService.getZipEntries(user, fileIds);
     }
 
     // ── 구간 계산 상세 ──

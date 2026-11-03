@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { readBlobError } from './file';
 import { ApiResponse } from '../types/auth';
 import {
   BizFeeAccount, BizFeeAccountSaveReq, BizFeeCharge, BizFeeChargeAppr, BizFeeChargeCalc, BizFeeChargeDetail, BizFeeChargeSaveReq,
@@ -6,6 +7,17 @@ import {
 
 const BASE = 'v1/biz/fee-charges';
 const ACCOUNT_BASE = 'v1/biz/fee-accounts';
+
+function saveBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 /** EE21 Biz20_Tab_FeeCharge (최저보수 청구) — AS-IS server/biz Biz20_FeeCharge·Biz22_FeeChargeCalc */
 export const bizFeeChargeApi = {
@@ -68,6 +80,41 @@ export const bizFeeChargeApi = {
   rdPrint: async (chargeDate: string, searchText: string): Promise<string> => {
     const res = await apiClient.post<ApiResponse<string>>(`${BASE}/rd-print`, null, { params: { chargeDate, searchText } });
     return res.data.data ?? '';
+  },
+
+  // ── EE33 후처리 ──
+  /** AS-IS utils.excel.ExcelCreate.createFeeExcel (makeExcel) — 자료생성 뒤 운용사별 엑셀. 만든 파일 수 */
+  createExcel: async (chargeDate: string, quarter: string, contCorpId: number | null): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>(`${BASE}/files/excel`, { chargeDate, quarter, contCorpId });
+    return res.data.data ?? 0;
+  },
+  /** AS-IS utils.pdf.PDFCreate.createFeePDF (makePDF) — 운용사별 PDF. 만든 파일 수 */
+  createPdf: async (chargeDate: string, quarter: string, contCorpId: number | null): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>(`${BASE}/files/pdf`, { chargeDate, quarter, contCorpId });
+    return res.data.data ?? 0;
+  },
+  /** AS-IS utils.excel.ExcelCreate.createTotalFeeExcel — 통합상신(A20) 문서(apprId)에 붙는 통합 엑셀. 올린 파일 ID */
+  createTotalExcel: async (apprId: number, chargeDate: string, quarter: string): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>(`${BASE}/files/total-excel`, { apprId, chargeDate, quarter });
+    return res.data.data as number;
+  },
+  /** AS-IS ExcelDownload?actionCode=biz22List — 계산상세 [엑셀다운로드] "최저보수청구 구간계산정보.xls" */
+  downloadCalcExcel: async (contCorpId: number, chargeDate: string): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>(`${BASE}/calcs/excel`, { params: { contCorpId, chargeDate }, responseType: 'blob' });
+      saveBlob(res.data, '최저보수청구 구간계산정보.xls');
+    } catch (err) {
+      throw await readBlobError(err);
+    }
+  },
+  /** AS-IS FileDownload?fileType=feeCharge — [파일 일괄 다운로드] "Asset-ERP.zip" */
+  downloadFilesZip: async (chargeDate: string): Promise<void> => {
+    try {
+      const res = await apiClient.get<Blob>(`${BASE}/files/zip`, { params: { chargeDate }, responseType: 'blob' });
+      saveBlob(res.data, 'Asset-ERP.zip');
+    } catch (err) {
+      throw await readBlobError(err);
+    }
   },
 };
 
