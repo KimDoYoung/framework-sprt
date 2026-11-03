@@ -1,6 +1,6 @@
 # AssetERP/CLAUDE.md
 
-실제 AssetERP 원본을 Spring Boot + React로 변환하는 작업 폴더.
+실제 AssetERP 원본을 Spring Boot + React로 변환하는 작업 폴더. **이 문서는 "변환" 작업의 규칙이다**(파악·변경반영·비교 등 다른 작업은 루트 `CLAUDE.md`의 작업 표와 `docs/` 작업별 폴더를 따른다).
 상위 `../CLAUDE.md`(저장소 공통 규칙, yunhee 사용 규칙)도 함께 적용된다.
 
 ## 읽는 순서
