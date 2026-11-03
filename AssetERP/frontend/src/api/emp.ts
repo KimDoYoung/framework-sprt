@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
-import { LeaveListRow, MyUnLeave, MyLeave, MyLeaveSave, MyLeaveCodes, EtcLeaveCheck, TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, EmpAddrBookSelect, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
+import { LeaveListRow, MyUnLeave, MyLeave, MyLeaveSave, MyLeaveCodes, EtcLeaveCheck, TransTarget, BizTrip, MyBizTrip, MyBizTripSave, Share, Errand, MyErrand, ErrandCycleReq, MyTransport, MyTransportAppr, Cert, CertSaveReq, EtcLeaveManage, EtcLeavePerson, JointLeave, JointLeaveExcept, UnLeave, YearLeave, YearLeaveParam, Leave, LeaveDays, LeaveOption, InitLeave, EtcLeave, Director, ChangeHistoryLicense, ChangeHistoryPrintReq, ChangeHistoryReward, ChangeHistoryTrans, Academic, Account, AddDeduct, EmpAddrBook, EmpAddrBookGroup, EmpAddrBookMember, EmpAddrBookSelect, BenefitInfo, Benefit, BenefitType, BenefitPayRequest, RelateAppr, RelateApprStatus, AddTitle, AddTitleSaveReq, Education, EmpApprStepExcept, Career, Deduct, DeductPerson, EmpEvent, EvalGrade, EvalList, EvalListStd, EvalCandidate, EvalAdmin, EvalExecute, EvalRelateAppr, EvalSetting, EvalTarget, EvalWrite, HighInfo, Evaluation, EmpSign, ExceptBiz, Family, License, CompanyPerson, NoteAdmin, OrgEmpManager, OrgInfo, OrgPerson, OrgTdm, Others, PersonSaveReq, Project, RelateFile, Reward, Trans, TransInfo, TransInfoCreateReq, TransPerson, TransTdm, UserInfo } from '../types/emp';
 
 /** 날짜 칸은 'yyyy-MM-dd'로 맞춘다 (서버 LocalDateTime 'yyyy-MM-ddTHH:mm:ss' → 날짜 편집기) */
 const day = (v?: string | null) => (v ? v.slice(0, 10) : v);
@@ -54,6 +54,12 @@ export const empApi = {
   searchCompanyTransInfos: async (companyId: number, transDate: string | undefined, searchText: string, transCode: string): Promise<TransInfo[]> => {
     const res = await apiClient.get<ApiResponse<TransInfo[]>>(`v1/emp/companies/${companyId}/trans-infos`, { params: { transDate, searchText, transCode } });
     return res.data.data ?? [];
+  },
+
+  /** AS-IS emp.Emp00_TransInfo.selectByAllOrgCodeId — 조직별 사원조회(관리자)(EE12): 성별·생년월일·주민번호 등이 더 있다 */
+  searchOrgEmpManagers: async (orgCodeId: number, baseDate: string): Promise<OrgEmpManager[]> => {
+    const res = await apiClient.get<ApiResponse<OrgEmpManager[]>>(`v1/emp/org-codes/${orgCodeId}/trans-infos/manager`, { params: { baseDate } });
+    return (res.data.data ?? []).map(r => ({ ...r, birthday: day(r.birthday) }));
   },
 
   /** AS-IS emp.Emp00_TransInfo.selectByAllOrgCodeId — 조직별 사원조회(S04): 그 조직과 하위 조직의 기준일 사원 */

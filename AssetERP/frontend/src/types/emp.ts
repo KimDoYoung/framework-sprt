@@ -699,6 +699,27 @@ export interface OrgPerson {
   empNo?: string | null;
 }
 
+/** 조직별 사원조회(관리자) 그리드 행 (EE12, AS-IS Emp00_TransInfoModel · selectByAllOrgCodeId) */
+export interface OrgEmpManager {
+  transId: number;
+  personId: number;
+  empKorName?: string | null;
+  genderName?: string | null;
+  birthday?: string | null;
+  posName?: string | null;
+  orgKorName?: string | null;
+  titleName2?: string | null;
+  hireDate?: string | null;
+  hireName?: string | null;
+  emailAddress?: string | null;
+  mobileTelNo?: string | null;
+  officeTelNo?: string | null;
+  homeTelNo?: string | null;
+  decCtzNo?: string | null;
+  kindName?: string | null;
+  empNo?: string | null;
+}
+
 /** 증명서 발급 그리드 행 (S05, AS-IS Emp15_CertModel · selectByCompanyId) */
 export interface Cert {
   certId: number;

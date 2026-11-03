@@ -406,6 +406,8 @@ import { Est02_Tab_PfResultReport } from './est/Est02_Tab_PfResultReport';
 import { Est03_Tab_PfHistoryConfirm } from './est/Est03_Tab_PfHistoryConfirm';
 import { Act09_Tab_AccountNum } from './act/Act09_Tab_AccountNum';
 import { Ast05_Tab_TrCodeIntrinsic } from './ast/Ast05_Tab_TrCodeIntrinsic';
+import { Emp00_Tab_OrgEmpManager } from './emp/Emp00_Tab_OrgEmpManager';
+import { Fnd07_Tab_IssuingEntity } from './fnd/Fnd07_Tab_IssuingEntity';
 import { Test_Tab_ReactComponents } from './test/Test_Tab_ReactComponents';
 
 /**
@@ -821,5 +823,7 @@ export const SCREENS: Record<string, React.FC> = {
   Fbx01_Tab_Search, // F12 (메뉴 #1122 파일조회 + Fbx01_Grid_DocList. Fbx02_Popup_History·Sys10_Lookup_FileViewer 재사용)
   Act09_Tab_AccountNum, // EE10 (메뉴 #1206)
   Ast05_Tab_TrCodeIntrinsic, // EE11 (메뉴 #1090. + Ast15_Lookup_TrCodeWindow·Ast01_Lookup_Info·Dcr30_Move_DcrClass)
+  Emp00_Tab_OrgEmpManager, // EE12 (메뉴 #1031. + Org01_Tree_OrgCode)
+  Fnd07_Tab_IssuingEntity, // EE13 (메뉴 #1053. 저장은 원본 서버에 update가 없어 거절)
   Test_Tab_ReactComponents, // B11 공통 컴포넌트 테스트 (원본 없음, mock)
 };

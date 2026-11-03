@@ -179,7 +179,7 @@
 
     <!-- AS-IS emp00_trans_info.selectByAllOrgCodeId L978 (IDMS-IC) — common.emp00_trans_info + org00_org_info + orgCodeDown(조직+하위 조직).
          기준일 최신 발령(900은 기준일 미만) 사원 중 기준일에 재직(close_date ≥ 기준일)·겸직 기간 밖이 아닌 사람. SELECT 목록은 그리드 열만 -->
-    <select id="selectOrgPersons" resultType="kr.co.kfs.asseterp.biz.emp.dto.OrgPersonRes">
+    <sql id="orgPersonsWith">
         WITH emp00 AS (
             SELECT t2.emp03_trans_id                                                             AS emp00_trans_id,
                    t2.emp03_trans_date                                                           AS emp00_trans_date,
@@ -193,6 +193,7 @@
                    t2.emp03_pos_cd                                                               AS emp00_pos_cd,
                    f_cdnm('EmpPosCode', t2.emp03_pos_cd, t1.emp01_company_id, t2.emp03_trans_date)     AS emp00_pos_nm,
                    t2.emp03_title_cd                                                             AS emp00_title_cd,
+                   t2.emp03_kind_cd                                                              AS emp00_kind_cd,
                    f_cdnm('EmpGradeCode', t2.emp03_grade_cd, t1.emp01_company_id, t2.emp03_trans_date) AS emp00_grade_nm,
                    t2.emp03_org_code_id                                                          AS emp00_org_code_id,
                    t1.emp01_emp_no                                                               AS emp00_emp_no
@@ -220,6 +221,10 @@
                    INNER JOIN org02_info ON org02_code_id = org01_code_id
              WHERE org01_company_id = #{companyId}
         )
+    </sql>
+
+    <select id="selectOrgPersons" resultType="kr.co.kfs.asseterp.biz.emp.dto.OrgPersonRes">
+        <include refid="orgPersonsWith"/>
         SELECT emp00_trans_id                                                                    AS trans_id,
                emp00_person_id                                                                   AS person_id,
                emp01_kor_nm                                                                      AS emp_kor_name,
@@ -233,6 +238,36 @@
                emp01_mobile_telno                                                                AS mobile_tel_no,
                emp01_office_telno                                                                AS office_tel_no,
                emp00_emp_no                                                                      AS emp_no
+        <include refid="orgPersonsFrom"/>
+    </select>
+
+    <!-- AS-IS emp00_trans_info.selectByAllOrgCodeId L978 (IDMS-IC) — 관리자용 조직별 사원조회(Emp00_Tab_OrgEmpManager): 같은 SQL, 그리드 열만
+         (성별·생년월일·입사구분·집전화·주민번호(to_decrypts)·사원구분이 더 있다) -->
+    <select id="selectOrgEmpManagers" resultType="kr.co.kfs.asseterp.biz.emp.dto.OrgEmpManagerRes">
+        <include refid="orgPersonsWith"/>
+        SELECT emp00_trans_id                                                                    AS trans_id,
+               emp00_person_id                                                                   AS person_id,
+               emp01_kor_nm                                                                      AS emp_kor_name,
+               f_cdnm('EmpGenderCode', emp02_gender_cd, emp01_company_id, emp00_trans_date)      AS gender_name,
+               emp02_birthday                                                                    AS birthday,
+               emp00_pos_nm                                                                      AS pos_name,
+               org00_kor_nm                                                                      AS org_kor_name,
+               CASE WHEN emp00_grade_nm IS NULL
+                    THEN f_cdnm('EmpTitleCode', emp00_title_cd, emp01_company_id, emp00_trans_date)
+                    ELSE emp00_grade_nm END                                                      AS title_name2,
+               emp01_hire_date                                                                   AS hire_date,
+               f_cdnm('HireCode', emp01_hire_cd, emp01_company_id, emp00_trans_date)             AS hire_name,
+               emp01_email_addr                                                                  AS email_address,
+               emp01_mobile_telno                                                                AS mobile_tel_no,
+               emp01_office_telno                                                                AS office_tel_no,
+               emp02_home_telno                                                                  AS home_tel_no,
+               to_decrypts(emp02_ctz_no)                                                         AS dec_ctz_no,
+               f_cdnm('EmpKindCode', emp00_kind_cd, emp01_company_id, emp00_trans_date)          AS kind_name,
+               emp00_emp_no                                                                      AS emp_no
+        <include refid="orgPersonsFrom"/>
+    </select>
+
+    <sql id="orgPersonsFrom">
           FROM emp00
                INNER JOIN emp01_person      ON emp00_person_id   = emp01_person_id
                INNER JOIN org00             ON org00_org_code_id = emp00_org_code_id
@@ -269,7 +304,7 @@
                 SELECT a.org00_org_code_id FROM org_tree_down a )
          ORDER BY LPAD(COALESCE(CASE WHEN emp01_order_seq = '' THEN null ELSE emp01_order_seq END,'9999999999'), 10, '0'),
                   org00_org_cd, org00_seq, emp00_pos_cd, emp01_hire_date
-    </select>
+    </sql>
 
     <!-- AS-IS selectById L66 (등록 후 다시 읽기, transId 한 건) -->
     <select id="selectTransInfo" resultType="kr.co.kfs.asseterp.biz.emp.dto.TransInfoRes">

@@ -2,6 +2,7 @@ package kr.co.kfs.asseterp.biz.emp.service;
 
 import kr.co.kfs.asseterp.biz.auth.dto.UserPrincipal;
 import kr.co.kfs.asseterp.biz.emp.dto.DeductRow;
+import kr.co.kfs.asseterp.biz.emp.dto.OrgEmpManagerRes;
 import kr.co.kfs.asseterp.biz.emp.dto.OrgPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.PersonRow;
 import kr.co.kfs.asseterp.biz.emp.dto.TransInfoCreateReq;
@@ -72,6 +73,11 @@ public class EmpTransInfoService {
     /** AS-IS selectByAllOrgCodeId(orgCodeId, baseDate, companyId): 고른 조직과 그 하위 조직의 기준일 재직 사원 (조직 트리는 로그인 회사 것) */
     public List<OrgPersonRes> searchOrgPersons(UserPrincipal user, Long orgCodeId, LocalDate baseDate) {
         return empTransInfoMapper.selectOrgPersons(user.getCompanyId(), orgCodeId, baseDate == null ? LocalDate.now() : baseDate);
+    }
+
+    /** AS-IS selectByAllOrgCodeId — 관리자용 조직별 사원조회(Emp00_Tab_OrgEmpManager), 열만 더 많다 */
+    public List<OrgEmpManagerRes> searchOrgEmpManagers(UserPrincipal user, Long orgCodeId, LocalDate baseDate) {
+        return empTransInfoMapper.selectOrgEmpManagers(user.getCompanyId(), orgCodeId, baseDate == null ? LocalDate.now() : baseDate);
     }
 
     /** AS-IS selectOneByPersonId(personId, '%') — Emp00_Current_TransInfoModel: 겸직 아닌 최신 발령 */

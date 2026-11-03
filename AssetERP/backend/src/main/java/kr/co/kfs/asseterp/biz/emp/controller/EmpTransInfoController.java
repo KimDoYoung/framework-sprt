@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import kr.co.kfs.asseterp.biz.emp.dto.OrgEmpManagerRes;
 import kr.co.kfs.asseterp.biz.emp.dto.OrgPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.TransInfoCreateReq;
 import kr.co.kfs.asseterp.biz.emp.dto.TransInfoRes;
@@ -63,6 +64,14 @@ public class EmpTransInfoController {
                                                             @PathVariable Long orgCodeId,
                                                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
         return ApiResponse.ok(empTransInfoService.searchOrgPersons(principal, orgCodeId, baseDate));
+    }
+
+    /** AS-IS emp.Emp00_TransInfo.selectByAllOrgCodeId — 조직별 사원조회(관리자)(Emp00_Tab_OrgEmpManager): 성별·생년월일·주민번호 등이 더 있다 */
+    @GetMapping("/org-codes/{orgCodeId}/trans-infos/manager")
+    public ApiResponse<List<OrgEmpManagerRes>> searchOrgEmpManagers(@AuthenticationPrincipal UserPrincipal principal,
+                                                                    @PathVariable Long orgCodeId,
+                                                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
+        return ApiResponse.ok(empTransInfoService.searchOrgEmpManagers(principal, orgCodeId, baseDate));
     }
 
     /** AS-IS emp.Emp00_TransInfo.update (신규사원 등록) → 등록된 행 */

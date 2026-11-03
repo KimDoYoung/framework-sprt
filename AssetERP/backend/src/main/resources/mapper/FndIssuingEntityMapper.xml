@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  AS-IS(IDMS-IC) server/fnd/mapper/fnd07_issuing_entity.xml (selectByCodeName, insertUpdate)  (EE13 Fnd07_Tab_IssuingEntity)
+  화면의 저장이 부르는 fnd.Fnd07_IssuingEntity.update가 원본 서버에 없어(원본에서도 실패) 저장 SQL은 옮기지 않았다. insertUpdate는 [파일업로드]가 쓴다(PostgreSQL 분기만)
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.fnd.mapper.FndIssuingEntityMapper">
+
+    <!-- AS-IS fnd07_issuing_entity.selectByCodeName L30 — 회사 조건이 없다(원본 그대로). 열은 그리드·업로드가 쓰는 것. 사용여부는 DB에 'TRUE'가 있어(AS-IS 모델은 Boolean) 화면 체크 표시가 읽는 'true' 글자로 맞춘다 -->
+    <select id="selectByCodeName" resultType="kr.co.kfs.asseterp.biz.fnd.dto.IssuingEntityRes">
+        SELECT fnd07_issuing_entity_id                                                             AS issuing_entity_id,
+               fnd07_issuing_entity_cd                                                             AS issuing_entity_code,
+               fnd07_issuing_entity_nm                                                             AS issuing_entity_name,
+               fnd07_issuing_entity_attach_cd                                                      AS issuing_entity_attach_code,
+               fnd07_issuing_entity_face_value                                                     AS issuing_entity_face_value,
+               fnd07_issuing_entity_settle_month                                                   AS issuing_entity_settle_month,
+               fnd07_issuing_entity_nation_cd                                                      AS issuing_entity_nation_code,
+               f_cdnm('EmpNationCode', fnd07_issuing_entity_nation_cd, '0', f_sysdate())           AS kuka_name,
+               LOWER(fnd07_issuing_entity_use_yn)                                                  AS issuing_entity_use_yn,
+               fnd07_issuing_entity_note                                                           AS issuing_entity_note,
+               fnd07_company_id                                                                    AS company_id
+          FROM fnd07_issuing_entity a
+         WHERE fnd07_issuing_entity_nm LIKE #{issuingEntityName}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq (IsNewData.getSeq) -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS fnd07_issuing_entity.insertUpdate L43 (PostgreSQL 분기) — 아이디로 UPDATE, 없으면 INSERT -->
+    <insert id="insertUpdate">
+        WITH upsert AS (
+            UPDATE fnd07_issuing_entity
+               SET fnd07_issuing_entity_cd           = #{row.issuingEntityCode}
+                 , fnd07_issuing_entity_nm           = #{row.issuingEntityName}
+                 , fnd07_issuing_entity_face_value   = #{row.issuingEntityFaceValue}
+                 , fnd07_issuing_entity_settle_month = #{row.issuingEntitySettleMonth}
+                 , fnd07_issuing_entity_nation_cd    = #{row.issuingEntityNationCode}
+                 , fnd07_issuing_entity_use_yn       = #{row.issuingEntityUseYn}
+                 , fnd07_issuing_entity_note         = #{row.issuingEntityNote}
+                 , fnd07_issuing_entity_attach_cd    = #{row.issuingEntityAttachCode}
+                 , fnd07_company_id                  = #{row.companyId}
+             WHERE fnd07_issuing_entity_id = #{row.issuingEntityId}
+            RETURNING *
+        )
+        INSERT INTO fnd07_issuing_entity
+        ( fnd07_issuing_entity_id
+        , fnd07_issuing_entity_cd
+        , fnd07_issuing_entity_nm
+        , fnd07_issuing_entity_attach_cd
+        , fnd07_issuing_entity_face_value
+        , fnd07_issuing_entity_settle_month
+        , fnd07_issuing_entity_nation_cd
+        , fnd07_issuing_entity_use_yn
+        , fnd07_issuing_entity_note
+        , fnd07_company_id )
+        SELECT #{row.issuingEntityId}
+             , #{row.issuingEntityCode}
+             , #{row.issuingEntityName}
+             , #{row.issuingEntityAttachCode}
+             , #{row.issuingEntityFaceValue}
+             , #{row.issuingEntitySettleMonth}
+             , #{row.issuingEntityNationCode}
+             , #{row.issuingEntityUseYn}
+             , #{row.issuingEntityNote}
+             , #{row.companyId}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </insert>
+
+    <!-- AS-IS UpdateDataModel(fnd07_issuing_entity) DELETE — 원본은 회사 조건이 없지만 로그인 회사 행만 지운다(보안 보강, EE11과 같음) -->
+    <delete id="deleteIssuingEntities">
+        DELETE FROM fnd07_issuing_entity
+         WHERE fnd07_company_id = #{companyId}
+           AND fnd07_issuing_entity_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

@@ -14979,5 +14979,51 @@
     "note": "docs/변환/work/EE/EE11-작업기록.md",
     "history": [],
     "id": "EE11"
+  },
+  "Emp00_Tab_OrgEmpManager": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/emp/Emp00_Tab_OrgEmpManager.java": "6d3c7cd1979f257df9509f138ef0cd09e3c09c76",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp00_TransInfoModel.java": "dc29160bc09265170d01009c5353bd56081484c3",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp00_TransInfoModelProperties.java": "2c3866aa16a482f692073e25312b9f4f76eb2709",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp01_PersonModel.java": "f4478d406df99853f5315401fc09f28e760101fe",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp02_OthersModel.java": "361f61b4bebfd1073f0769db40e42327748e6897",
+      "application/src/main/java/myApp/client/vi/emp/model/Emp20_LeaveModel.java": "08d4fe0e87a0e52d15d517f341428f632a6b3ef0",
+      "application/src/main/java/myApp/server/emp/Emp00_TransInfo.java": "df97d7f0f13eb8c414b2ce628d93cc02138f6963",
+      "application/src/main/java/myApp/server/emp/mapper/emp00_trans_info.xml": "76c324eda8ede6658a765beeaaebf929930afd47",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1"
+    },
+    "shared_links": [
+      "Org01_Tree_OrgCode"
+    ],
+    "recorded_at": "2026-11-03T13:40:47+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE12-작업기록.md",
+    "history": [],
+    "id": "EE12"
+  },
+  "Fnd07_Tab_IssuingEntity": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/fnd/Fnd07_Tab_IssuingEntity.java": "6099a81b59bdf19f819a76757a5d31ba94d9913f",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd07_IssuingEntityModel.java": "e06847eb5bbd9a944d6475fc0e4593af71d2bc1f",
+      "application/src/main/java/myApp/client/vi/fnd/model/Fnd07_IssuingEntityModelProperties.java": "bcd4fb4adb117ee2caa3e8dc24aaaf1087591450",
+      "application/src/main/java/myApp/server/fnd/Fnd07_IssuingEntity.java": "bd23dc4d64dd45a988a2171d7c9dcfcd74418c23",
+      "application/src/main/java/myApp/server/fnd/mapper/fnd07_issuing_entity.xml": "79cd7dfa0f01362927c34e088b6c74a9abb9524b"
+    },
+    "shared_links": [],
+    "recorded_at": "2026-11-03T13:48:06+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE13-작업기록.md",
+    "history": [],
+    "id": "EE13"
   }
 }

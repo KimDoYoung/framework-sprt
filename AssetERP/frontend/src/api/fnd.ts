@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AstAssetItem, BookExtr, BookRelateAst, BookRelateFnd, Consignment, FundCode, FundDetail, FundHistory, FundInfo, FundLookup, FundMulti, FundPlan, FundRelate, FundSearch, FundSingle, FundTermsDetail, IpoAccount, FundPlanAuth, FundPlanList, OfficeWork, OprDemand, OprDemandOffer, OprDemandSave, OprFund, OprFundSave, OprSub, OprSubSave, Plan, Terms, TermsRevision, TermsRevisionSaveReq, TermsView, TrustBank } from '../types/fnd';
+import { AstAssetItem, BookExtr, BookRelateAst, BookRelateFnd, Consignment, FundCode, FundDetail, FundHistory, FundInfo, FundLookup, FundMulti, FundPlan, FundRelate, FundSearch, FundSingle, FundTermsDetail, IpoAccount, IssuingEntity, FundPlanAuth, FundPlanList, OfficeWork, OprDemand, OprDemandOffer, OprDemandSave, OprFund, OprFundSave, OprSub, OprSubSave, Plan, Terms, TermsRevision, TermsRevisionSaveReq, TermsView, TrustBank } from '../types/fnd';
 
 /** fnd(기관정보) 화면 API (D11~) */
 export interface FundOrgAuthParams {
@@ -263,6 +263,33 @@ export const fndApi = {
   /** AS-IS fnd.Fnd06_OfficeWork.selectIcamOfficeWork (회사별 화면) */
   importCompanyIcamOfficeWorks: async (): Promise<void> => {
     await apiClient.post<ApiResponse<null>>('v1/fnd/office-works/company/import');
+  },
+
+  // ── EE13 발행기관정보 관리 (Fnd07_Tab_IssuingEntity) ──
+
+  /** AS-IS fnd.Fnd07_IssuingEntity.selectByCodeName — 발행기관명 "%…%" (회사 조건 없음) */
+  searchIssuingEntities: async (issuingEntityName: string): Promise<IssuingEntity[]> => {
+    const res = await apiClient.get<ApiResponse<IssuingEntity[]>>('v1/fnd/issuing-entities', { params: { issuingEntityName } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd07_IssuingEntity.update — 원본 서버에 없는 서비스라 서버가 거절 */
+  saveIssuingEntities: async (rows: IssuingEntity[]): Promise<IssuingEntity[]> => {
+    const res = await apiClient.put<ApiResponse<IssuingEntity[]>>('v1/fnd/issuing-entities', rows);
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS fnd.Fnd07_IssuingEntity.delete */
+  deleteIssuingEntities: async (ids: number[]): Promise<number> => {
+    await apiClient.delete<ApiResponse<null>>('v1/fnd/issuing-entities', { data: ids });
+    return ids.length;
+  },
+
+  /** AS-IS 서블릿 IssuingEntityUpload — MS949 텍스트(`|` 구분)를 한 줄씩 등록 */
+  uploadIssuingEntities: async (file: File): Promise<void> => {
+    const form = new FormData();
+    form.append('file', file);
+    await apiClient.post<ApiResponse<null>>('v1/fnd/issuing-entities/upload', form, { headers: { 'Content-Type': 'multipart/form-data' } });
   },
 
   // ── D13 수탁은행정보 관리(관리자) (Fnd09_Tab_TrustBankManager) ──

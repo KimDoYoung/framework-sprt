@@ -1,6 +1,7 @@
 package kr.co.kfs.asseterp.biz.emp.mapper;
 
 import kr.co.kfs.asseterp.biz.emp.dto.DeductRow;
+import kr.co.kfs.asseterp.biz.emp.dto.OrgEmpManagerRes;
 import kr.co.kfs.asseterp.biz.emp.dto.OrgPersonRes;
 import kr.co.kfs.asseterp.biz.emp.dto.PersonRow;
 import kr.co.kfs.asseterp.biz.emp.dto.TransInfoRes;
@@ -30,6 +31,10 @@ public interface EmpTransInfoMapper {
     /** AS-IS selectByAllOrgCodeId (조직 + 하위 조직의 사원) */
     List<OrgPersonRes> selectOrgPersons(@Param("companyId") Long companyId, @Param("orgCodeId") Long orgCodeId,
                                         @Param("baseDate") LocalDate baseDate);
+
+    /** AS-IS selectByAllOrgCodeId — 관리자용(Emp00_Tab_OrgEmpManager) 열 */
+    List<OrgEmpManagerRes> selectOrgEmpManagers(@Param("companyId") Long companyId, @Param("orgCodeId") Long orgCodeId,
+                                                @Param("baseDate") LocalDate baseDate);
 
     /** AS-IS getSeq (= f_create_seq) */
     Long selectNextId();

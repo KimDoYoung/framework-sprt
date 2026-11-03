@@ -32,6 +32,21 @@ export interface OfficeWork {
   companyId?: number | null;
 }
 
+/** 발행기관 한 행 (AS-IS Fnd07_IssuingEntityModel — Fnd07_Tab_IssuingEntity #1053). issuingEntityUseYn은 DB 형태('true'/'false') */
+export interface IssuingEntity {
+  issuingEntityId: number;
+  issuingEntityCode?: string | null;
+  issuingEntityName?: string | null;
+  issuingEntityAttachCode?: string | null;
+  issuingEntityFaceValue?: number | null;
+  issuingEntitySettleMonth?: string | null;
+  issuingEntityNationCode?: string | null;
+  kukaName?: string | null;
+  issuingEntityUseYn?: string | null;
+  issuingEntityNote?: string | null;
+  companyId?: number | null;
+}
+
 /** 수탁은행 한 행 (AS-IS Fnd09_TrustBankModel — Fnd09_Tab_TrustBankManager #1103 / Fnd09_Tab_TrustBank #1100). useYn은 DB 형태('true'/'false') 그대로 */
 export interface TrustBank {
   trustBankId: number;
