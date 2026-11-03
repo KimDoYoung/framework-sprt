@@ -16,6 +16,8 @@ import {
   IcamFund,
   IcamSource,
   IcamTestBatchReq,
+  IcamUser,
+  IcamUserSaveReq,
 } from '../types/icam';
 
 /** icam 화면 API (D07~) */
@@ -235,5 +237,35 @@ export const icamApi = {
   deleteFeeDeposits: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/icam/fee-deposits', { data: { ids } });
     return res.data.data ?? 0;
+  },
+};
+
+/** ICAM 사용자ID 신청서 작성 (EE29 Icam55_Tab_UserRegAppr, AS-IS icam.Icam55_IcamUser) */
+export const icamUserApi = {
+  /** AS-IS icam.Icam55_IcamUser.selectBySearchText (신청구분 1) — procResult면 처리결과가 없는 것만 */
+  search: async (params: { searchText: string; startDate: string; closeDate: string; procResult: boolean }): Promise<IcamUser[]> => {
+    const res = await apiClient.get<ApiResponse<IcamUser[]>>('v1/icam/users', { params });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS icam.Icam55_IcamUser.update (UpdateDataModel) → 저장된 행 */
+  save: async (req: IcamUserSaveReq): Promise<IcamUser> => {
+    const res = await apiClient.put<ApiResponse<IcamUser>>('v1/icam/users', req);
+    return res.data.data;
+  },
+
+  /** AS-IS icam.Icam55_IcamUser.updateApprId */
+  updateApprId: async (icamUserId: number, apprId: number): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(`v1/icam/users/${icamUserId}/appr-id`, { apprId });
+  },
+
+  /** AS-IS apr.Apr01_Appr.deleteByApprId (새 결재요청을 진행할 때 기존 문서 삭제) */
+  deleteAppr: async (apprId: number): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>('v1/icam/users/appr-delete', { apprId });
+  },
+
+  /** AS-IS icam.Icam55_IcamUser.deleteApprId + delete */
+  remove: async (ids: number[]): Promise<void> => {
+    await apiClient.delete<ApiResponse<void>>('v1/icam/users', { params: { ids: ids.join(',') } });
   },
 };

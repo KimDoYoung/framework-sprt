@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  ICAM 사용자ID 신청서 작성 (EE29 Icam55_Tab_UserRegAppr)
+  AS-IS(IDMS-IC) server/icam/mapper/icam55_icam_user.xml selectBySearchText·selectById·updateApprId + UpdateDataModel(icam55_icam_user).
+-->
+<mapper namespace="kr.co.kfs.asseterp.biz.icam.mapper.IcamUserMapper">
+
+    <sql id="cols">
+        icam55_icam_user_id                                                          AS icamUserId
+      , icam55_reg_date                                                              AS regDate
+      , icam55_reg_type                                                              AS regType
+      , icam55_company_nm                                                            AS companyName
+      , icam55_user_nm                                                               AS userName
+      , (COALESCE(icam55_proc_add_yn, 'false') = 'true')                             AS procAddYn
+      , (COALESCE(icam55_proc_modi_yn, 'false') = 'true')                            AS procModiYn
+      , (COALESCE(icam55_proc_del_yn, 'false') = 'true')                             AS procdelYn
+      , CASE WHEN COALESCE(icam55_proc_add_yn ,'false') = 'true' THEN 'O' ELSE '' END AS procAddYnStr
+      , CASE WHEN COALESCE(icam55_proc_modi_yn,'false') = 'true' THEN 'O' ELSE '' END AS procModiYnStr
+      , CASE WHEN COALESCE(icam55_proc_del_yn ,'false') = 'true' THEN 'O' ELSE '' END AS procdelYnStr
+      , CONCAT(CASE WHEN icam55_proc_add_yn = 'true' THEN coalesce(replace(icam55_proc_add_yn,'true','추가'), '') ELSE '' END,
+               (CASE WHEN icam55_proc_add_yn = 'true' AND icam55_proc_modi_yn = 'true' THEN '/'
+                     WHEN icam55_proc_add_yn = 'true' AND icam55_proc_del_yn = 'true' THEN '/' ELSE '' END),
+               CASE WHEN icam55_proc_modi_yn = 'true' THEN coalesce(replace(icam55_proc_modi_yn,'true','변경'), '') ELSE '' END,
+               (CASE WHEN icam55_proc_modi_yn = 'true' AND icam55_proc_del_yn = 'true' THEN '/' ELSE '' END),
+               CASE WHEN icam55_proc_del_yn = 'true' THEN coalesce(replace(icam55_proc_del_yn,'true','삭제'), '') ELSE '' END) AS procTypeName
+      , icam55_appr_id                                                               AS apprId
+      , apr01.apr01_status_cd                                                        AS apprStatusCode
+      , f_cdnm('AprStatusCode', apr01.apr01_status_cd, 1, f_sysdate())               AS apprStatusName
+      , icam55_reg_content                                                           AS regContent
+      , icam55_reg_emp_id                                                            AS regEmpId
+      , f_emp_kor_nm(icam55_reg_emp_id)                                              AS regEmpName
+      , icam55_proc_state_cd                                                         AS procStateCode
+      , f_cdnm('ProcStateCode', icam55_proc_state_cd, 1, f_sysdate())                AS procStateName
+      , icam55_proc_date                                                             AS procDate
+      , f_emp_kor_nm(icam55_proc_emp_id)                                             AS procEmpName
+      , icam55_proc_note                                                             AS procNote
+    </sql>
+
+    <!-- AS-IS icam55_icam_user.selectBySearchText (server/icam/mapper/icam55_icam_user.xml L67) -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamUserRes">
+        SELECT <include refid="cols"/>
+          FROM icam55_icam_user
+               LEFT OUTER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = icam55_appr_id
+         WHERE UPPER(CONCAT(icam55_company_nm, icam55_user_nm, icam55_proc_note)) LIKE UPPER(#{searchText})
+           AND icam55_reg_type = #{regType}
+           AND icam55_reg_date BETWEEN #{startDate} AND #{closeDate}
+        <if test="procResult">
+           AND icam55_proc_state_cd IS NULL
+        </if>
+         ORDER BY icam55_reg_date DESC
+    </select>
+
+    <!-- AS-IS icam55_icam_user.selectById (server/icam/mapper/icam55_icam_user.xml L46) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.icam.dto.IcamUserRes">
+        SELECT <include refid="cols"/>
+          FROM icam55_icam_user
+               LEFT OUTER JOIN apr01_appr apr01 ON apr01.apr01_appr_id = icam55_appr_id
+         WHERE icam55_icam_user_id = #{icamUserId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insertIcamUser">
+        INSERT INTO icam55_icam_user (icam55_icam_user_id, icam55_reg_date, icam55_reg_type, icam55_company_nm, icam55_user_nm,
+                                      icam55_proc_add_yn, icam55_proc_modi_yn, icam55_proc_del_yn, icam55_reg_content, icam55_reg_emp_id)
+        VALUES (#{icamUserId}, #{req.regDate}, '1', #{req.companyName}, #{req.userName},
+                #{req.procAddYn}::text, #{req.procModiYn}::text, #{req.procdelYn}::text, #{req.regContent}, #{regEmpId})
+    </insert>
+
+    <update id="updateIcamUser">
+        UPDATE icam55_icam_user
+           SET icam55_reg_date     = #{req.regDate},
+               icam55_company_nm   = #{req.companyName},
+               icam55_user_nm      = #{req.userName},
+               icam55_proc_add_yn  = #{req.procAddYn}::text,
+               icam55_proc_modi_yn = #{req.procModiYn}::text,
+               icam55_proc_del_yn  = #{req.procdelYn}::text,
+               icam55_reg_content  = #{req.regContent}
+         WHERE icam55_icam_user_id = #{req.icamUserId}
+    </update>
+
+    <!-- AS-IS icam55_icam_user.updateApprId (server/icam/mapper/icam55_icam_user.xml) -->
+    <update id="updateApprId">
+        UPDATE icam55_icam_user
+           SET icam55_appr_id = #{apprId}
+         WHERE icam55_icam_user_id = #{icamUserId}
+    </update>
+
+    <delete id="deleteIcamUser">
+        DELETE FROM icam55_icam_user
+         WHERE icam55_icam_user_id = #{icamUserId}
+    </delete>
+</mapper>

@@ -246,3 +246,44 @@ export interface IcamFeeDeposit {
   depositName: string | null;
   startDate: string | null;
 }
+
+/** ICAM 사용자ID 신청서 한 줄 (AS-IS Icam55_IcamUserModel, EE29). 날짜는 'yyyy-MM-dd' */
+export interface IcamUser {
+  /** 새 행(아직 저장 전)은 0 이하의 임시 번호 */
+  icamUserId: number;
+  regDate?: string | null;
+  regType?: string | null;
+  companyName?: string | null;
+  userName?: string | null;
+  procAddYn: boolean;
+  procModiYn: boolean;
+  procdelYn: boolean;
+  procAddYnStr?: string | null;
+  procModiYnStr?: string | null;
+  procdelYnStr?: string | null;
+  procTypeName?: string | null;
+  apprId?: number | null;
+  /** 10 결재중 · 20 · 30 완료 · 40 반려 · 99 임시저장 */
+  apprStatusCode?: string | null;
+  apprStatusName?: string | null;
+  regContent?: string | null;
+  regEmpId?: number | null;
+  regEmpName?: string | null;
+  procStateCode?: string | null;
+  procStateName?: string | null;
+  procDate?: string | null;
+  procEmpName?: string | null;
+  procNote?: string | null;
+}
+
+/** 사용자ID 신청서 저장 한 줄 (AS-IS Icam55_IcamUser.update) — icamUserId 0 이하는 새 행 */
+export interface IcamUserSaveReq {
+  icamUserId: number;
+  regDate: string | null;
+  companyName: string | null;
+  userName: string | null;
+  procAddYn: boolean;
+  procModiYn: boolean;
+  procdelYn: boolean;
+  regContent: string | null;
+}
