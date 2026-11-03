@@ -1,0 +1,859 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz20_fee_charge.xml · biz21_fee_charge_dtl.xml(deleteByFeeChargeId·selectOccFeeSum) · biz22_fee_charge_calc.xml
+     · biz11_cont_history.xml(selectContCorp·selectByStartDate·selectByDate) · biz13_with_corp.xml(selectByContCorpId2) · biz29_account.xml(insertNotAccount)
+     · dbConfig(getSeq·getQuarterStartDate)  (EE21 Biz20_Tab_FeeCharge). ICAM 외부 DB 를 읽는 SQL(icam10_fee·selectFirstStartDateIsNull·updateFirstStartDate·
+     biz11.updateDate·ast33.selectFundTransByDate·biz17.calcDualFundFee·biz21.insert)은 옮기지 않았다 — 03 원칙 1, 작업기록 참고 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizFeeChargeMapper">
+
+    <!-- AS-IS dbConfig.getSeq 와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS dbConfig.getQuarterStartDate -->
+    <select id="selectQuarterStartDate" resultType="java.time.LocalDate">
+        SELECT f_get_quarter_date(#{stdDate}::date, #{type}) + 1
+    </select>
+
+    <!-- AS-IS biz20_fee_charge.selectByChargeDate (:contCorpId·:fixYn 조건은 이 화면이 안 넘겨 옮기지 않았다) -->
+    <select id="selectByChargeDate" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeRes">
+        <![CDATA[
+        SELECT row_number() OVER(ORDER BY sys15_corp_nm collate "ko_KR.utf8" asc)			AS fee_charge_id
+             , sys15_corp_nm																AS corp_nm
+             , pre_occ_fee																	AS pre_occ_fee
+             , pre_real_charge_fee															AS pre_real_charge_fee
+             , occ_fee																		AS occ_fee
+             , real_charge_fee																AS real_charge_fee
+             , biz20_fee_charge_id															AS real_fee_charge_id
+             , CASE WHEN COALESCE(biz20_fix_yn,'false') = 'false' THEN '' ELSE '확정' END		AS fix_nm
+             , CASE WHEN biz20_appr_id IS NULL THEN ''
+                    ELSE ( SELECT f_cdnm('AprStatusCode', apr01_status_cd  , biz20_company_id, biz20_charge_date)
+                             FROM apr01_appr
+                            WHERE apr01_appr_id = biz20_appr_id ) END						AS apr_status_nm
+             , COALESCE(biz20_company_id  , #{companyId})                                   AS company_id
+             , COALESCE(biz20_charge_date , #{chargeDate})                                  AS charge_date
+             , COALESCE(biz20_corp_id     , sys15_corp_id)                                  AS corp_id
+             , biz20_target_yn                                                              AS target_yn
+             , biz20_charge_fee                                                             AS charge_fee
+             , biz20_tax                                                                    AS tax
+             , biz20_note                                                                   AS note
+             , biz20_fix_yn                                                                 AS fix_yn
+             , biz20_appr_id                                                                AS appr_id
+             , biz20_cont_corp_id                                                           AS cont_corp_id
+             , biz20_tr_id                                                                  AS tr_id
+             , biz20_min_fee                                                                AS min_fee
+             , biz20_occ_start_date                                                         AS occ_start_date
+             , biz20_occ_close_date                                                         AS occ_close_date
+             , biz20_occ_days                                                               AS occ_days
+             , manage_type                                          						AS manage_type
+             , f_cdnm('ManageType', manage_type, biz20_company_id, biz20_charge_date)	    AS manage_type_nm
+          FROM (
+                 SELECT biz20_corp_id                   AS corp_id
+                      , biz20_cont_corp_id              AS cont_corp_id
+                      , SUM(biz20_pre_occ_fee        )  AS pre_occ_fee
+                      , SUM(biz20_pre_real_charge_fee)  AS pre_real_charge_fee
+                      , SUM(biz20_occ_fee            )  AS occ_fee
+                      , SUM(biz20_real_charge_fee    )  AS real_charge_fee
+                      , ( SELECT biz13_manage_type
+                            FROM biz13_with_corp
+                           WHERE biz13_cont_corp_id = biz20_cont_corp_id
+                             AND biz13_corp_id      = biz20_corp_id
+                             AND biz13_first_start_date <= #{chargeDate}
+                           LIMIT 1 ) AS manage_type
+                   FROM (
+                          SELECT biz20_corp_id
+                               , biz20_cont_corp_id
+                               , 0                                                    AS biz20_pre_occ_fee
+                               , 0                                                    AS biz20_pre_real_charge_fee
+                               , biz20_occ_fee                                        AS biz20_occ_fee
+                               , COALESCE(biz20_charge_fee,0) + COALESCE(biz20_tax,0) AS biz20_real_charge_fee
+                            FROM biz20_fee_charge
+                           WHERE biz20_company_id  = #{companyId}
+                             AND biz20_charge_date = #{chargeDate} /* 당분기 */
+                           UNION ALL
+                          SELECT biz20_corp_id
+                               , biz20_cont_corp_id
+                               , biz20_occ_fee                                        AS biz20_pre_occ_fee
+                               , COALESCE(biz20_charge_fee,0) + COALESCE(biz20_tax,0) AS biz20_pre_real_charge_fee
+                               , 0                                                    AS biz20_occ_fee
+                               , 0                                                    AS biz20_real_charge_fee
+                            FROM biz20_fee_charge
+                           WHERE biz20_company_id  = #{companyId}
+                             AND biz20_charge_date = f_get_quarter_date(#{chargeDate}, '1')   /* 전분기 */
+                        ) t
+                  GROUP BY biz20_cont_corp_id, biz20_corp_id
+               ) t2
+               INNER JOIN sys15_corp ON sys15_corp_id = corp_id
+               LEFT OUTER JOIN biz20_fee_charge ON ( biz20_company_id   = #{companyId}  AND
+                                                     biz20_charge_date  = #{chargeDate} AND
+                                                     biz20_cont_corp_id = cont_corp_id  AND
+                                                     biz20_corp_id      = corp_id       )
+         WHERE CONCAT(sys15_corp_cd, sys15_corp_nm) ILIKE #{searchText}
+        ]]>
+    </select>
+
+    <!-- AS-IS biz20_fee_charge.selectById (회사 조건은 TOBE 가 더함) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeDetailRes">
+        <![CDATA[
+        SELECT t.biz20_fee_charge_id     AS fee_charge_id
+             , t.biz20_company_id        AS company_id
+             , t.biz20_charge_date       AS charge_date
+             , t.biz20_corp_id           AS corp_id
+             , t.biz20_occ_start_date    AS occ_start_date
+             , t.biz20_occ_close_date    AS occ_close_date
+             , t.biz20_occ_days          AS occ_days
+             , t.biz20_occ_fee           AS occ_fee
+             , t.biz20_min_start_date    AS min_start_date
+             , t.biz20_min_close_date    AS min_close_date
+             , t.biz20_min_days          AS min_days
+             , t.biz20_min_fee           AS min_fee
+             , t.biz20_with_start_date   AS with_start_date
+             , t.biz20_with_close_date   AS with_close_date
+             , t.biz20_with_days         AS with_days
+             , t.biz20_with_fee          AS with_fee
+             , t.biz20_target_yn         AS target_yn
+             , t.biz20_charge_fee        AS charge_fee
+             , t.biz20_tax               AS tax
+             , t.biz20_fix_yn            AS fix_yn
+             , t.biz20_appr_id           AS appr_id
+             , t.biz20_tr_id             AS tr_id
+             , t.biz20_note              AS note
+             , t.biz20_calc_start_date   AS calc_start_date
+             , t.biz20_calc_close_date   AS calc_close_date
+             , t.biz20_calc_days         AS calc_days
+             , t.biz20_cont_corp_id      AS cont_corp_id
+             , t.biz20_real_charge_fee   AS real_charge_fee
+             , t.biz20_corp_cd           AS corp_cd
+             , t.biz20_corp_nm           AS corp_nm
+             , t.biz20_manage_type       AS manage_type
+             , t.biz20_apr_status_nm     AS apr_status_nm
+             , t.biz20_fix_nm            AS fix_nm
+             , f_cdnm('ManageType', biz20_manage_type, biz20_company_id, biz20_charge_date)     AS manage_type_nm
+          FROM (
+                 SELECT biz20_fee_charge.*
+                      , COALESCE(biz20_charge_fee,0) + COALESCE(biz20_tax,0)                             AS biz20_real_charge_fee
+                      , sys15_corp_cd                                                                    AS biz20_corp_cd
+                      , sys15_corp_nm                                                                    AS biz20_corp_nm
+                      , ( SELECT biz13_manage_type
+                            FROM biz13_with_corp
+                           WHERE biz13_cont_corp_id = biz20_cont_corp_id
+                             AND biz13_corp_id      = biz20_corp_id
+                             AND biz13_first_start_date <= biz20_calc_close_date
+                             AND COALESCE(biz13_last_close_date,'9999-12-31') >= biz20_calc_start_date
+                           LIMIT 1 )                                                                     AS biz20_manage_type
+                      , f_cdnm('AprStatusCode', apr01_status_cd  , biz20_company_id, biz20_charge_date)  AS biz20_apr_status_nm
+                      , CASE WHEN COALESCE(biz20_fix_yn,'false') = 'false' THEN '' ELSE '확정' END        AS biz20_fix_nm
+                   FROM biz20_fee_charge
+                        LEFT OUTER JOIN apr01_appr ON apr01_appr_id = biz20_appr_id
+                        INNER JOIN sys15_corp      ON sys15_corp_id = biz20_corp_id
+                  WHERE biz20_fee_charge_id = #{feeChargeId}
+                    AND biz20_company_id    = #{companyId}
+               ) t
+        ]]>
+    </select>
+
+    <!-- AS-IS biz20_fee_charge.updateCheck — 건수만 필요해 COUNT 로 -->
+    <select id="countSameCorp" resultType="int">
+        SELECT COUNT(*)
+          FROM biz20_fee_charge
+         WHERE biz20_corp_id     = #{corpId}
+           AND biz20_charge_date = #{chargeDate}
+           AND biz20_company_id  = #{companyId}
+           AND biz20_fee_charge_id NOT IN (#{feeChargeId})
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT COUNT(*)
+          FROM biz20_fee_charge
+         WHERE biz20_fee_charge_id = #{feeChargeId}
+           AND biz20_company_id    = #{companyId}
+    </select>
+
+    <!-- AS-IS modelUpdate = UpdateDataModel(biz20_fee_charge): 번호가 없으면 INSERT, 있으면 UPDATE. 편집창이 바꾸는 열만 쓴다 -->
+    <insert id="insertFeeCharge">
+        INSERT INTO biz20_fee_charge (biz20_fee_charge_id, biz20_company_id, biz20_charge_date, biz20_corp_id, biz20_cont_corp_id,
+                                      biz20_occ_fee, biz20_charge_fee, biz20_tax, biz20_note, biz20_target_yn, biz20_fix_yn)
+        VALUES (#{r.feeChargeId}, #{companyId}, #{r.chargeDate}, #{r.corpId}, #{r.contCorpId},
+                #{r.occFee}, #{r.chargeFee}, #{r.tax}, #{r.note}, #{targetYn}, 'false')
+    </insert>
+
+    <update id="updateFeeCharge">
+        UPDATE biz20_fee_charge
+           SET biz20_charge_date  = #{r.chargeDate}
+             , biz20_corp_id      = #{r.corpId}
+             , biz20_cont_corp_id = #{r.contCorpId}
+             , biz20_occ_fee      = #{r.occFee}
+             , biz20_charge_fee   = #{r.chargeFee}
+             , biz20_tax          = #{r.tax}
+             , biz20_note         = #{r.note}
+             , biz20_target_yn    = #{targetYn}
+         WHERE biz20_fee_charge_id = #{r.feeChargeId}
+           AND biz20_company_id    = #{companyId}
+    </update>
+
+    <!-- AS-IS biz20_fee_charge.deleteByFeeChargeId -->
+    <delete id="deleteByFeeChargeId">
+        DELETE
+          FROM biz20_fee_charge
+         WHERE biz20_fee_charge_id = #{feeChargeId}
+           AND biz20_company_id    = #{companyId}
+    </delete>
+
+    <!-- AS-IS biz20_fee_charge.confirmUpdate -->
+    <update id="confirmUpdate">
+        UPDATE biz20_fee_charge
+           SET biz20_fix_yn = #{fixYn}
+         WHERE biz20_fee_charge_id = #{feeChargeId}
+           AND biz20_company_id    = #{companyId}
+    </update>
+
+    <!-- AS-IS biz20_fee_charge.updateApprId -->
+    <update id="updateApprId">
+        UPDATE biz20_fee_charge
+           SET biz20_appr_id = #{apprId}
+         WHERE biz20_fee_charge_id = #{feeChargeId}
+           AND biz20_company_id    = #{companyId}
+    </update>
+
+    <!-- AS-IS biz20_fee_charge.getHtmlContent -->
+    <select id="selectHtmlContent" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeApprRes">
+        SELECT sys15_corp_nm										               AS corp_nm
+             , SUM(biz20_occ_fee)                                                  AS occ_fee
+             , (COALESCE(biz20_charge_fee,0) + COALESCE(biz20_tax,0))              AS real_charge_fee
+             , biz20_min_fee										               AS min_fee
+             , biz20_occ_start_date									               AS occ_start_date
+             , biz20_occ_close_date									               AS occ_close_date
+             , ( SELECT MIN(biz13_first_start_date)
+                   FROM biz13_with_corp
+                  WHERE biz13_cont_corp_id = biz20_cont_corp_id
+                    AND biz13_corp_id      = biz20_corp_id
+                  LIMIT 1 )                                                        AS first_start_date
+             , biz29_account_no                                                    AS account_no
+             , f_cdnm('BankCode', biz29_bank_cd, biz29_company_id, f_sysdate())    AS bank_nm
+             , biz29_account_nm                                                    AS account_nm
+          FROM biz20_fee_charge
+               INNER JOIN biz29_account ON biz29_corp_id = biz20_corp_id
+               INNER JOIN sys15_corp ON sys15_corp_id = biz20_corp_id
+         WHERE biz20_fee_charge_id = #{feeChargeId}
+           AND biz20_company_id    = #{companyId}
+         Group BY biz20_charge_fee, biz20_tax, sys15_corp_nm, biz20_min_fee
+                , biz20_occ_start_date, biz20_occ_close_date, biz20_cont_corp_id, biz20_corp_id
+                , biz29_account_no, biz29_account_nm, biz29_bank_cd, biz29_company_id
+    </select>
+
+    <!-- 구간 계산 한 행의 열 (biz22_fee_charge_calc 전체) -->
+    <sql id="calcCols">
+        biz22_fee_charge_calc_id      AS fee_charge_calc_id
+      , biz22_cont_corp_id            AS cont_corp_id
+      , biz22_charge_date             AS charge_date
+      , biz22_term_start_date         AS term_start_date
+      , biz22_term_close_date         AS term_close_date
+      , biz22_term_days               AS term_days
+      , biz22_min_fee_yn              AS min_fee_yn
+      , biz22_manage_min_fee          AS manage_min_fee
+      , biz22_manage_term_min_fee     AS manage_term_min_fee
+      , biz22_manage_term_occ_fee     AS manage_term_occ_fee
+      , biz22_manage_term_with_fee    AS manage_term_with_fee
+      , biz22_manage_term_charge_fee  AS manage_term_charge_fee
+      , biz22_adv_min_fee             AS adv_min_fee
+      , biz22_adv_term_min_fee        AS adv_term_min_fee
+      , biz22_adv_term_occ_fee        AS adv_term_occ_fee
+      , biz22_adv_term_with_fee       AS adv_term_with_fee
+      , biz22_adv_term_charge_fee     AS adv_term_charge_fee
+      , biz22_discr_min_fee           AS discr_min_fee
+      , biz22_discr_term_min_fee      AS discr_term_min_fee
+      , biz22_discr_term_occ_fee      AS discr_term_occ_fee
+      , biz22_discr_term_with_fee     AS discr_term_with_fee
+      , biz22_discr_term_charge_fee   AS discr_term_charge_fee
+      , biz22_with_yn                 AS with_yn
+      , biz22_with_fee                AS with_fee
+      , biz22_with_term_with_fee      AS with_term_with_fee
+      , biz22_with_term_occ_fee       AS with_term_occ_fee
+      , biz22_with_term_charge_fee    AS with_term_charge_fee
+    </sql>
+
+    <!-- AS-IS biz22_fee_charge_calc.selectByContCorpId (회사 확인은 TOBE 가 더함) -->
+    <select id="selectCalcs" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeCalc">
+        SELECT <include refid="calcCols"/>
+          FROM biz22_fee_charge_calc
+         WHERE biz22_cont_corp_id = #{contCorpId}
+           AND biz22_charge_date  = #{chargeDate}
+           AND EXISTS ( SELECT 1
+                          FROM biz10_cont_corp
+                         WHERE biz10_cont_corp_id = biz22_cont_corp_id
+                           AND biz10_company_id   = #{companyId} )
+         ORDER BY biz22_term_start_date
+    </select>
+
+    <!-- AS-IS biz22_fee_charge_calc.selectByContCorpId (자료생성 안) -->
+    <select id="selectCalcsByContCorp" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeCalc">
+        SELECT <include refid="calcCols"/>
+          FROM biz22_fee_charge_calc
+         WHERE biz22_cont_corp_id = #{contCorpId}
+           AND biz22_charge_date  = #{chargeDate}
+         ORDER BY biz22_term_start_date
+    </select>
+
+    <!-- AS-IS biz11_cont_history.selectContCorp — 필요한 열만 고르고 정렬은 AS-IS 그대로 -->
+    <select id="selectContCorp" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeContCorpRow">
+        <![CDATA[
+        SELECT t.biz11_cont_corp_id                                                              AS cont_corp_id
+             , t.biz11_company_id                                                                AS company_id
+             , t.biz11_fee_calc_start_date                                                       AS fee_calc_start_date
+             , t.biz11_fee_calc_close_date                                                       AS fee_calc_close_date
+             , f_get_datedif(biz11_fee_calc_start_date, biz11_fee_calc_close_date, 'D') + 1      AS calc_days
+          FROM (
+                 SELECT biz11.*
+                      , biz10_company_id                                                                    as biz11_company_id
+                      , ( SELECT MIN(biz11_cont_date)
+                            FROM biz11_cont_history
+                           WHERE biz11_cont_corp_id = biz10_cont_corp_id )                                  as biz11_first_cont_date
+                      , CASE WHEN COALESCE(biz12_fee_charge_type,'1') = '1' THEN #{startDate}::date
+                             ELSE CAST(to_date(to_char(#{closeDate}::date,'yyyy')||
+                                               to_char(biz11_start_date,'mmdd'),'yyyymmdd')
+                                     - INTERVAL '1year' as DATE) END                                        as biz11_fee_calc_start_date
+                      , CASE WHEN COALESCE(biz12_fee_charge_type,'1') = '1' THEN #{closeDate}::date
+                             ELSE CAST(to_date(to_char(#{closeDate}::date,'yyyy')
+                                             ||to_char(biz11_start_date,'mmdd'),'yyyymmdd')
+                                       - INTERVAL '1day' as DATE) END                                       as biz11_fee_calc_close_date
+                   FROM biz10_cont_corp
+                        INNER JOIN ( SELECT *
+                                       FROM biz11_cont_history
+                                            LEFT OUTER JOIN biz12_fee_info ON biz12_cont_history_id = biz11_cont_history_id
+                                      WHERE (biz11_cont_corp_id, biz11_reg_date) IN ( SELECT biz11_cont_corp_id, MAX(biz11_reg_date)
+                                                                                        FROM biz11_cont_history
+                                                                                       WHERE #{startDate}::date <= biz11_close_date
+                                                                                         AND #{closeDate}::date >= biz11_start_date
+                                                                                       GROUP BY biz11_cont_corp_id )
+                                   ) biz11 ON biz11_cont_corp_id = biz10_cont_corp_id
+                  WHERE biz10_company_id = #{companyId}
+                    AND NOT EXISTS ( SELECT 1
+                                       FROM biz20_fee_charge
+                                      WHERE biz20_charge_date  = #{closeDate}::date
+                                        AND biz20_cont_corp_id = biz10_cont_corp_id
+                                        AND biz20_fix_yn       = 'true' ) /* 청구자료가 확정된 경우 처리대상에서 제외*/
+        ]]>
+        <if test="contCorpId != null">
+                    AND biz10_cont_corp_id = #{contCorpId}
+        </if>
+        <![CDATA[
+                    AND biz11_cont_status_cd IN ('1','2','3')  /* (1:계약/2:재계약/3:계약연장) */
+                    AND ( ( /* (1:분기별 청구) */
+                            COALESCE(biz12_fee_charge_type,'1') = '1'                                                    AND
+                            biz11_start_date <= #{closeDate}::date                                                       AND
+                            biz11_close_date >= #{startDate}::date                                                       ) OR
+                          ( /* (2:연별 청구-1년 후취) */
+                            COALESCE(biz12_fee_charge_type,'1') = '2'                                                    AND
+                            biz11_start_date <= #{closeDate}::date                AND
+                            biz11_close_date >= CAST(#{closeDate}::date + INTERVAL '-1year + 1day' as DATE)  AND
+                            f_get_last_day(cast(f_get_quarter_date(to_date(to_char(#{closeDate}::date,'yyyy')||
+                                                                           to_char(biz11_start_date,'mmdd'),'yyyymmdd')
+                                                                  ,'1') + interval '3month' as date)) = #{closeDate}::date ) )
+               ) t
+         ORDER BY biz11_first_cont_date, biz11_cont_corp_nm
+        ]]>
+    </select>
+
+    <!-- AS-IS biz13_with_corp.selectByContCorpId2 -->
+    <select id="selectWithCorps" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeWithCorpRow">
+        <![CDATA[
+        SELECT DISTINCT
+               biz13_cont_corp_id AS cont_corp_id
+             , biz13_corp_id      AS corp_id
+             , biz13_company_id   AS company_id
+             , biz13_manage_type  AS manage_type
+             , sys15_corp_cd      AS corp_cd
+             , sys15_corp_nm      AS corp_nm
+          FROM biz13_with_corp
+               INNER JOIN sys15_corp ON sys15_corp_id = biz13_corp_id
+         WHERE biz13_cont_corp_id                            = #{contCorpId}
+           AND biz13_first_start_date                       <= #{calcCloseDate}
+           AND COALESCE(biz13_last_close_date,'9999-12-31') >= #{calcStartDate}
+        ]]>
+    </select>
+
+    <!-- AS-IS biz20_fee_charge.selectByCorpId -->
+    <select id="selectByCorpId" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeRow">
+        SELECT biz20_fee_charge_id AS fee_charge_id
+             , biz20_fix_yn        AS fix_yn
+             , CAST(NULL AS varchar) AS manage_type
+          FROM biz20_fee_charge
+         WHERE biz20_company_id   = #{companyId}
+           AND biz20_charge_date  = #{chargeDate}
+           AND biz20_cont_corp_id = #{contCorpId}
+           AND biz20_corp_id      = #{corpId}
+    </select>
+
+    <!-- AS-IS biz20_fee_charge.insert — 새 청구 한 건(자료생성이 채우는 열만, 나머지는 null) -->
+    <insert id="insertNewCharge">
+        INSERT INTO biz20_fee_charge (biz20_fee_charge_id, biz20_company_id, biz20_charge_date, biz20_corp_id, biz20_cont_corp_id,
+                                      biz20_calc_start_date, biz20_calc_close_date, biz20_fix_yn)
+        VALUES (#{feeChargeId}, #{companyId}, #{chargeDate}, #{corpId}, #{contCorpId}, #{calcStartDate}, #{calcCloseDate}, 'false')
+    </insert>
+
+    <!-- AS-IS biz21_fee_charge_dtl.deleteByFeeChargeId -->
+    <delete id="deleteDtlByFeeChargeId">
+        DELETE
+          FROM biz21_fee_charge_dtl
+         WHERE biz21_fee_charge_id = #{feeChargeId}
+    </delete>
+
+    <!-- AS-IS biz21_fee_charge_dtl.selectOccFeeSum -->
+    <select id="selectOccFeeSum" resultType="long">
+        SELECT sum(biz21_occ_fee)
+          FROM biz21_fee_charge_dtl
+         WHERE biz21_fee_charge_id IN ( SELECT biz20_fee_charge_id
+                                          FROM biz20_fee_charge
+                                         WHERE biz20_charge_date  = #{chargeDate}
+                                           AND biz20_cont_corp_id = #{contCorpId}
+                                           AND biz20_corp_id      = #{corpId} )
+           AND biz21_occ_date BETWEEN #{startDate} AND #{closeDate}
+    </select>
+
+    <!-- AS-IS biz22_fee_charge_calc.deleteByContCorpId -->
+    <delete id="deleteCalcByContCorpId">
+        DELETE
+          FROM biz22_fee_charge_calc
+         WHERE biz22_cont_corp_id = #{contCorpId}
+           AND biz22_charge_date  = #{chargeDate}
+    </delete>
+
+    <!-- AS-IS biz22_fee_charge_calc.selectTermStartDate -->
+    <select id="selectTermStartDates" resultType="java.time.LocalDate">
+        <![CDATA[
+        SELECT stdDate
+          FROM (
+                SELECT CASE WHEN biz11_start_date < #{calcStartDate} THEN #{calcStartDate}::date
+                            ELSE biz11_start_date END as stdDate
+                  FROM biz11_cont_history
+                 WHERE biz11_cont_corp_id = #{contCorpId}
+                   AND #{calcStartDate} <= biz11_close_date
+                   AND #{calcCloseDate} >= biz11_start_date
+                 UNION
+                SELECT biz13_first_start_date as stdDate
+                  FROM biz13_with_corp
+                 WHERE biz13_cont_corp_id = #{contCorpId}
+                 UNION
+                SELECT biz13_last_close_date + 1 as stdDate
+                  FROM biz13_with_corp
+                 WHERE biz13_cont_corp_id = #{contCorpId}
+               ) t
+         WHERE stdDate IS NOT NULL
+           AND stdDate BETWEEN #{calcStartDate} AND #{calcCloseDate}
+         ORDER BY stdDate DESC
+        ]]>
+    </select>
+
+    <!-- AS-IS biz22_fee_charge_calc.insert — 구간 한 행(보수 열은 0, 이어서 updateFeeInfo 가 채운다) -->
+    <insert id="insertCalcTerm">
+        INSERT INTO biz22_fee_charge_calc
+        SELECT f_create_seq()
+             , #{contCorpId}
+             , #{chargeDate}
+             , #{termStartDate}
+             , #{termCloseDate}
+             , CAST(NULL AS numeric)
+             , CAST(NULL AS varchar)
+             , 0, 0, 0, 0, 0
+             , 0, 0, 0, 0, 0
+             , 0, 0, 0, 0, 0
+             , CAST(NULL AS varchar)
+             , 0, 0, 0, 0
+    </insert>
+
+    <!-- AS-IS biz22_fee_charge_calc.deleteTermLastCloseDate — 원본 WHERE 에는 계약사·청구일자 조건이 없어 다른 계약사·분기의 구간 행까지 지운다.
+         사용자 승인(2026-11-03, 03 원칙 4 예외)으로 biz22_cont_corp_id = :contCorpId AND biz22_charge_date = :chargeDate 를 더했다.
+         원래 SQL: DELETE FROM biz22_fee_charge_calc WHERE biz22_term_start_date > (SELECT MAX(COALESCE(biz13_last_close_date,'9999-12-31')) FROM biz13_with_corp WHERE biz13_cont_corp_id = :contCorpId) -->
+    <delete id="deleteTermLastCloseDate">
+        <![CDATA[
+        DELETE
+          FROM biz22_fee_charge_calc
+         WHERE biz22_cont_corp_id = #{contCorpId}
+           AND biz22_charge_date  = #{chargeDate}
+           AND biz22_term_start_date > ( SELECT MAX(COALESCE(biz13_last_close_date, '9999-12-31'))
+                                           FROM biz13_with_corp
+                                          WHERE biz13_cont_corp_id = #{contCorpId} )
+        ]]>
+    </delete>
+
+    <!-- AS-IS biz11_cont_history.selectByStartDate (계약상태코드만) -->
+    <select id="selectContStatusByStartDate" resultType="string">
+        <![CDATA[
+        SELECT biz11_cont_status_cd
+          FROM biz11_cont_history
+         WHERE biz11_cont_corp_id = #{contCorpId}
+           AND biz11_start_date  <= #{startDate}
+         ORDER BY biz11_start_date DESC
+         LIMIT 1
+        ]]>
+    </select>
+
+    <!-- AS-IS biz22_fee_charge_calc.deleteByFeeChargeCalcId -->
+    <delete id="deleteCalcById">
+        DELETE
+          FROM biz22_fee_charge_calc
+         WHERE biz22_fee_charge_calc_id = #{feeChargeCalcId}
+    </delete>
+
+    <!-- AS-IS biz22_fee_charge_calc.updateTermCloseDate -->
+    <update id="updateTermCloseDate">
+        UPDATE biz22_fee_charge_calc
+           SET biz22_term_close_date = #{termCloseDate}
+         WHERE biz22_fee_charge_calc_id = #{feeChargeCalcId}
+    </update>
+
+    <!-- AS-IS biz11_cont_history.selectByDate — 필요한 열만 -->
+    <select id="selectHistoryByDate" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeHistoryRow">
+        SELECT biz11_cont_status_cd                                                                      AS cont_status_cd
+             , biz12_min_fee_yn                                                                          AS min_fee_yn
+             , CASE WHEN COALESCE(biz12_min_fee_yn,'false') = 'false' THEN 0
+                    ELSE biz12_manage_min_fee / (CASE WHEN COALESCE(biz12_fee_charge_type,'1') = '1'
+                                                      THEN 4 ELSE 1 END) END                         AS manage_min_fee
+             , CASE WHEN COALESCE(biz12_min_fee_yn,'false') = 'false' THEN 0
+                    ELSE biz12_adv_min_fee / (CASE WHEN COALESCE(biz12_fee_charge_type,'1') = '1'
+                                                   THEN 4 ELSE 1 END) END                            AS adv_min_fee
+             , CASE WHEN COALESCE(biz12_min_fee_yn,'false') = 'false' THEN 0
+                    ELSE biz12_discr_min_fee / (CASE WHEN COALESCE(biz12_fee_charge_type,'1') = '1'
+                                                     THEN 4 ELSE 1 END) END                          AS discr_min_fee
+             , biz12_with_yn                                                                             AS with_yn
+             , CASE WHEN COALESCE(biz12_with_yn,'false') = 'false' THEN 0
+                    ELSE biz12_with_fee / (CASE WHEN COALESCE(biz12_fee_charge_type,'1') = '1'
+                                                THEN 4 ELSE 1 END) END                               AS with_fee
+          FROM biz11_cont_history
+               INNER JOIN biz12_fee_info ON biz12_cont_history_id = biz11_cont_history_id
+         WHERE biz11_cont_corp_id = #{contCorpId}
+           AND #{stdDate} BETWEEN biz11_start_date AND biz11_close_date
+         ORDER BY biz11_reg_date DESC
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS biz22_fee_charge_calc.updateFeeInfo -->
+    <update id="updateCalcFeeInfo">
+        UPDATE biz22_fee_charge_calc
+           SET biz22_term_days              = f_get_datedif(#{t.termStartDate}, #{t.termCloseDate}, 'D') + 1
+             , biz22_min_fee_yn             = #{t.minFeeYn}
+             , biz22_manage_min_fee         = #{t.manageMinFee}
+             , biz22_manage_term_min_fee    = #{t.manageTermMinFee}
+             , biz22_manage_term_occ_fee    = #{t.manageTermOccFee}
+             , biz22_manage_term_with_fee   = #{t.manageTermWithFee}
+             , biz22_manage_term_charge_fee = #{t.manageTermChargeFee}
+             , biz22_adv_min_fee            = #{t.advMinFee}
+             , biz22_adv_term_min_fee       = #{t.advTermMinFee}
+             , biz22_adv_term_occ_fee       = #{t.advTermOccFee}
+             , biz22_adv_term_with_fee      = #{t.advTermWithFee}
+             , biz22_adv_term_charge_fee    = #{t.advTermChargeFee}
+             , biz22_discr_min_fee          = #{t.discrMinFee}
+             , biz22_discr_term_min_fee     = #{t.discrTermMinFee}
+             , biz22_discr_term_occ_fee     = #{t.discrTermOccFee}
+             , biz22_discr_term_with_fee    = #{t.discrTermWithFee}
+             , biz22_discr_term_charge_fee  = #{t.discrTermChargeFee}
+             , biz22_with_yn                = #{t.withYn}
+             , biz22_with_fee               = #{t.withFee}
+             , biz22_with_term_with_fee     = #{t.withTermWithFee}
+             , biz22_with_term_occ_fee      = #{t.withTermOccFee}
+             , biz22_with_term_charge_fee   = #{t.withTermChargeFee}
+         WHERE biz22_fee_charge_calc_id = #{t.feeChargeCalcId}
+    </update>
+
+    <!-- AS-IS biz20_fee_charge.selectByContCorpId2 -->
+    <select id="selectByContCorpId2" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeChargeRow">
+        <![CDATA[
+        SELECT biz20_fee_charge_id AS fee_charge_id
+             , biz20_fix_yn        AS fix_yn
+             , ( SELECT biz13_manage_type
+                   FROM biz13_with_corp
+                  WHERE biz13_cont_corp_id = biz20_cont_corp_id
+                    AND biz13_corp_id      = biz20_corp_id
+                    AND biz13_first_start_date <= biz20_calc_close_date
+                    AND COALESCE(biz13_last_close_date,'9999-12-31') >= biz20_calc_start_date
+                  LIMIT 1 ) AS manage_type
+          FROM biz20_fee_charge
+         WHERE biz20_cont_corp_id = #{contCorpId}
+           AND biz20_charge_date  = #{chargeDate}
+        ]]>
+    </select>
+
+    <!-- AS-IS biz20_fee_charge.selectFeeInfo — 구간 계산을 운용/자문/일임별로 합친다. AS-IS 와 같은 SQL -->
+    <select id="selectFeeInfo" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeInfoRow">
+        SELECT MIN(biz20_occ_start_date )                                                   as occ_start_date
+             , MIN(biz20_occ_close_date )                                                   as occ_close_date
+             , SUM(biz20_occ_days       )                                                   as occ_days
+             , SUM(biz20_occ_fee        )                                                   as occ_fee
+             , MIN(biz20_min_start_date )                                                   as min_start_date
+             , MIN(biz20_min_close_date )                                                   as min_close_date
+             , SUM(biz20_min_days       )                                                   as min_days
+             , SUM(biz20_min_fee        )                                                   as min_fee
+             , MIN(biz20_with_start_date)                                                   as with_start_date
+             , MIN(biz20_with_close_date)                                                   as with_close_date
+             , SUM(biz20_with_days      )                                                   as with_days
+             , SUM(biz20_with_fee       )                                                   as with_fee
+             , SUM(biz20_charge_fee     )                                                   as charge_fee
+             , CASE WHEN #{manageType,jdbcType=VARCHAR} != '1' THEN SUM(biz20_charge_fee) * 0.1 ELSE 0 END   as tax
+             , CASE WHEN SUM(biz20_charge_fee) != 0 THEN 'true' ELSE 'false' END            as target_yn
+          FROM (
+<![CDATA[
+             /***************** 병행정보 ************************************/
+             SELECT '9999-12-31'::date                   as biz20_occ_start_date
+                  , '9999-12-31'::date                   as biz20_occ_close_date
+                  , 0                                    as biz20_occ_days
+                  , 0                                    as biz20_occ_fee
+                  , '9999-12-31'::date                   as biz20_min_start_date
+                  , '9999-12-31'::date                   as biz20_min_close_date
+                  , 0                                    as biz20_min_days
+                  , 0                                    as biz20_min_fee
+                  , MIN(biz22_term_start_date)           as biz20_with_start_date
+                  , MAX(biz22_term_close_date)           as biz20_with_close_date
+                  , SUM(biz22_term_days)                 as biz20_with_days
+                  , SUM(biz22_with_term_charge_fee)      as biz20_with_fee
+                  , 0                                    as biz20_charge_fee
+               FROM biz22_fee_charge_calc
+              WHERE biz22_cont_corp_id        = #{contCorpId}
+                AND biz22_charge_date         = #{chargeDate}
+                AND biz22_with_term_with_fee != 0
+
+             /***************** 운용 ************************************/
+              UNION
+             SELECT MIN(biz22_term_start_date)           as biz20_occ_start_date
+                  , MAX(biz22_term_close_date)           as biz20_occ_close_date
+                  , SUM(biz22_term_days)                 as biz20_occ_days
+                  , SUM(biz22_manage_term_occ_fee)       as biz20_occ_fee
+                  , '9999-12-31'                         as biz20_min_start_date
+                  , '9999-12-31'                         as biz20_min_close_date
+                  , 0                                    as biz20_min_days
+                  , 0                                    as biz20_min_fee
+                  , '9999-12-31'                         as biz20_with_start_date
+                  , '9999-12-31'                         as biz20_with_close_date
+                  , 0                                    as biz20_with_days
+                  , 0                                    as biz20_with_fee
+                  , 0                                    as biz20_charge_fee
+               FROM biz22_fee_charge_calc
+              WHERE biz22_cont_corp_id         = #{contCorpId}
+                AND biz22_charge_date          = #{chargeDate}
+                AND '1'                        = #{manageType,jdbcType=VARCHAR}
+                AND biz22_manage_term_occ_fee != 0
+              UNION
+             SELECT '9999-12-31'                         as biz20_occ_start_date
+                  , '9999-12-31'                         as biz20_occ_close_date
+                  , 0                                    as biz20_occ_days
+                  , 0                                    as biz20_occ_fee
+                  , MIN(biz22_term_start_date)           as biz20_min_start_date
+                  , MAX(biz22_term_close_date)           as biz20_min_close_date
+                  , SUM(biz22_term_days)                 as biz20_min_days
+                  , SUM(biz22_manage_term_min_fee)       as biz20_min_fee
+                  , '9999-12-31'                         as biz20_with_start_date
+                  , '9999-12-31'                         as biz20_with_close_date
+                  , 0                                    as biz20_with_days
+                  , 0                                    as biz20_with_fee
+                  , 0                                    as biz20_charge_fee
+               FROM biz22_fee_charge_calc
+              WHERE biz22_cont_corp_id         = #{contCorpId}
+                AND biz22_charge_date          = #{chargeDate}
+                AND '1'                        = #{manageType,jdbcType=VARCHAR}
+                AND biz22_manage_term_min_fee != 0
+              UNION
+             SELECT '9999-12-31'                         as biz20_occ_start_date
+                  , '9999-12-31'                         as biz20_occ_close_date
+                  , 0                                    as biz20_occ_days
+                  , 0                                    as biz20_occ_fee
+                  , '9999-12-31'                         as biz20_min_start_date
+                  , '9999-12-31'                         as biz20_min_close_date
+                  , 0                                    as biz20_min_days
+                  , 0                                    as biz20_min_fee
+                  , '9999-12-31'                         as biz20_with_start_date
+                  , '9999-12-31'                         as biz20_with_close_date
+                  , 0                                    as biz20_with_days
+                  , 0                                    as biz20_with_fee
+                  , SUM(biz22_manage_term_charge_fee)    as biz20_charge_fee
+               FROM biz22_fee_charge_calc
+              WHERE biz22_cont_corp_id            = #{contCorpId}
+                AND biz22_charge_date             = #{chargeDate}
+                AND '1'                           = #{manageType,jdbcType=VARCHAR}
+                AND biz22_manage_term_charge_fee != 0
+
+             /***************** 자문 ************************************/
+              UNION
+             SELECT MIN(biz22_term_start_date)           as biz20_occ_start_date
+                  , MAX(biz22_term_close_date)           as biz20_occ_close_date
+                  , SUM(biz22_term_days)                 as biz20_occ_days
+                  , SUM(biz22_adv_term_occ_fee)          as biz20_occ_fee
+                  , '9999-12-31'                         as biz20_min_start_date
+                  , '9999-12-31'                         as biz20_min_close_date
+                  , 0                                    as biz20_min_days
+                  , 0                                    as biz20_min_fee
+                  , '9999-12-31'                         as biz20_with_start_date
+                  , '9999-12-31'                         as biz20_with_close_date
+                  , 0                                    as biz20_with_days
+                  , 0                                    as biz20_with_fee
+                  , 0                                    as biz20_charge_fee
+               FROM biz22_fee_charge_calc
+              WHERE biz22_cont_corp_id         = #{contCorpId}
+                AND biz22_charge_date          = #{chargeDate}
+                AND '2'                        = #{manageType,jdbcType=VARCHAR}
+                AND biz22_adv_term_occ_fee    != 0
+              UNION
+             SELECT '9999-12-31'                         as biz20_occ_start_date
+                  , '9999-12-31'                         as biz20_occ_close_date
+                  , 0                                    as biz20_occ_days
+                  , 0                                    as biz20_occ_fee
+                  , MIN(biz22_term_start_date)           as biz20_min_start_date
+                  , MAX(biz22_term_close_date)           as biz20_min_close_date
+                  , SUM(biz22_term_days)                 as biz20_min_days
+                  , SUM(biz22_adv_term_min_fee)          as biz20_min_fee
+                  , '9999-12-31'                         as biz20_with_start_date
+                  , '9999-12-31'                         as biz20_with_close_date
+                  , 0                                    as biz20_with_days
+                  , 0                                    as biz20_with_fee
+                  , 0                                    as biz20_charge_fee
+               FROM biz22_fee_charge_calc
+              WHERE biz22_cont_corp_id         = #{contCorpId}
+                AND biz22_charge_date          = #{chargeDate}
+                AND '2'                        = #{manageType,jdbcType=VARCHAR}
+                AND biz22_adv_term_min_fee    != 0
+              UNION
+             SELECT '9999-12-31'                         as biz20_occ_start_date
+                  , '9999-12-31'                         as biz20_occ_close_date
+                  , 0                                    as biz20_occ_days
+                  , 0                                    as biz20_occ_fee
+                  , '9999-12-31'                         as biz20_min_start_date
+                  , '9999-12-31'                         as biz20_min_close_date
+                  , 0                                    as biz20_min_days
+                  , 0                                    as biz20_min_fee
+                  , '9999-12-31'                         as biz20_with_start_date
+                  , '9999-12-31'                         as biz20_with_close_date
+                  , 0                                    as biz20_with_days
+                  , 0                                    as biz20_with_fee
+                  , SUM(biz22_adv_term_charge_fee)       as biz20_charge_fee
+               FROM biz22_fee_charge_calc
+              WHERE biz22_cont_corp_id            = #{contCorpId}
+                AND biz22_charge_date             = #{chargeDate}
+                AND '2'                           = #{manageType,jdbcType=VARCHAR}
+                AND biz22_adv_term_charge_fee    != 0
+
+             /***************** 일임 ************************************/
+              UNION
+             SELECT MIN(biz22_term_start_date)           as biz20_occ_start_date
+                  , MAX(biz22_term_close_date)           as biz20_occ_close_date
+                  , SUM(biz22_term_days)                 as biz20_occ_days
+                  , SUM(biz22_discr_term_occ_fee)        as biz20_occ_fee
+                  , '9999-12-31'                         as biz20_min_start_date
+                  , '9999-12-31'                         as biz20_min_close_date
+                  , 0                                    as biz20_min_days
+                  , 0                                    as biz20_min_fee
+                  , '9999-12-31'                         as biz20_with_start_date
+                  , '9999-12-31'                         as biz20_with_close_date
+                  , 0                                    as biz20_with_days
+                  , 0                                    as biz20_with_fee
+                  , 0                                    as biz20_charge_fee
+               FROM biz22_fee_charge_calc
+              WHERE biz22_cont_corp_id         = #{contCorpId}
+                AND biz22_charge_date          = #{chargeDate}
+                AND '3'                        = #{manageType,jdbcType=VARCHAR}
+                AND biz22_discr_term_occ_fee   != 0
+              UNION
+             SELECT '9999-12-31'                         as biz20_occ_start_date
+                  , '9999-12-31'                         as biz20_occ_close_date
+                  , 0                                    as biz20_occ_days
+                  , 0                                    as biz20_occ_fee
+                  , MIN(biz22_term_start_date)           as biz20_min_start_date
+                  , MAX(biz22_term_close_date)           as biz20_min_close_date
+                  , SUM(biz22_term_days)                 as biz20_min_days
+                  , SUM(biz22_discr_term_min_fee)        as biz20_min_fee
+                  , '9999-12-31'                         as biz20_with_start_date
+                  , '9999-12-31'                         as biz20_with_close_date
+                  , 0                                    as biz20_with_days
+                  , 0                                    as biz20_with_fee
+                  , 0                                    as biz20_charge_fee
+               FROM biz22_fee_charge_calc
+              WHERE biz22_cont_corp_id         = #{contCorpId}
+                AND biz22_charge_date          = #{chargeDate}
+                AND '3'                        = #{manageType,jdbcType=VARCHAR}
+                AND biz22_discr_term_min_fee   != 0
+              UNION
+             SELECT '9999-12-31'                         as biz20_occ_start_date
+                  , '9999-12-31'                         as biz20_occ_close_date
+                  , 0                                    as biz20_occ_days
+                  , 0                                    as biz20_occ_fee
+                  , '9999-12-31'                         as biz20_min_start_date
+                  , '9999-12-31'                         as biz20_min_close_date
+                  , 0                                    as biz20_min_days
+                  , 0                                    as biz20_min_fee
+                  , '9999-12-31'                         as biz20_with_start_date
+                  , '9999-12-31'                         as biz20_with_close_date
+                  , 0                                    as biz20_with_days
+                  , 0                                    as biz20_with_fee
+                  , SUM(biz22_discr_term_charge_fee)     as biz20_charge_fee
+               FROM biz22_fee_charge_calc
+              WHERE biz22_cont_corp_id            = #{contCorpId}
+                AND biz22_charge_date             = #{chargeDate}
+                AND '3'                           = #{manageType,jdbcType=VARCHAR}
+                AND biz22_discr_term_charge_fee   != 0
+]]>
+               ) t
+    </select>
+
+    <!-- AS-IS biz20_fee_charge.updateFeeCalcInfo -->
+    <update id="updateFeeCalcInfo">
+        UPDATE biz20_fee_charge
+           SET biz20_calc_start_date = #{calcStartDate}
+             , biz20_calc_close_date = #{calcCloseDate}
+             , biz20_calc_days       = #{calcDays}
+             , biz20_occ_start_date  = #{f.occStartDate}
+             , biz20_occ_close_date  = #{f.occCloseDate}
+             , biz20_occ_days        = #{f.occDays}
+             , biz20_occ_fee         = #{f.occFee}
+             , biz20_min_start_date  = #{f.minStartDate}
+             , biz20_min_close_date  = #{f.minCloseDate}
+             , biz20_min_days        = #{f.minDays}
+             , biz20_min_fee         = #{f.minFee}
+             , biz20_with_start_date = #{f.withStartDate}
+             , biz20_with_close_date = #{f.withCloseDate}
+             , biz20_with_days       = #{f.withDays}
+             , biz20_with_fee        = #{f.withFee}
+             , biz20_target_yn       = #{f.targetYn}
+             , biz20_charge_fee      = #{f.chargeFee}
+             , biz20_tax             = #{f.tax}
+         WHERE biz20_fee_charge_id = #{feeChargeId}
+    </update>
+
+    <!-- AS-IS biz29_account.insertNotAccount — 입금계좌가 없는 운용사에 빈 계좌 행을 만든다(계좌번호 없이) -->
+    <insert id="insertNotAccount">
+        INSERT
+          INTO biz29_account (biz29_account_id, biz29_company_id, biz29_corp_id, biz29_start_date)
+        SELECT f_create_seq()
+             , biz20_company_id
+             , biz20_corp_id
+             , '2000-01-01'::date
+          FROM biz20_fee_charge
+         WHERE biz20_company_id  = #{companyId}
+           AND biz20_charge_date = #{chargeDate}
+           AND NOT EXISTS ( SELECT 1
+                              FROM biz29_account
+                             WHERE biz29_company_id = biz20_company_id
+                               AND biz29_corp_id    = biz20_corp_id )
+    </insert>
+
+    <!-- AS-IS sys99_print.deleteByPersonId (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS sys99_print.insert (IDMS-IC) — Sys99_Print.insertRdFeeCharge 가 채우는 열만:
+         string01 확정여부 · 02 운용사 · long01 전분기 발생보수 · 02 전분기 청구액 · 03 당분기 발생보수 · 04 당분기 청구액 · string03 결재상태 · text01 비고 · date01 청구일자 -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_string01, sys99_string02, sys99_long01, sys99_long02, sys99_long03, sys99_long04
+               , sys99_string03, sys99_text01, sys99_date01 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{r.fixNm,jdbcType=VARCHAR}, #{r.corpNm,jdbcType=VARCHAR}, #{r.preOccFee,jdbcType=NUMERIC}, #{r.preRealChargeFee,jdbcType=NUMERIC}
+               , #{r.occFee,jdbcType=NUMERIC}, #{r.realChargeFee,jdbcType=NUMERIC}
+               , #{r.aprStatusNm,jdbcType=VARCHAR}, #{r.note,jdbcType=VARCHAR}, #{r.chargeDate,jdbcType=DATE} )
+    </insert>
+</mapper>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz29_account.xml + UpdateDataModel(biz29_account) 의 INSERT/UPDATE/DELETE  (EE21 Biz29_Lookup_Account) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizFeeAccountMapper">
+
+    <!-- AS-IS dbConfig.getSeq 와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <sql id="accountCols">
+        biz29_account_id                                                    AS account_id
+      , biz29_company_id                                                    AS company_id
+      , biz29_corp_id                                                       AS corp_id
+      , biz29_start_date                                                    AS start_date
+      , biz29_bank_cd                                                       AS bank_cd
+      , biz29_account_no                                                    AS account_no
+      , biz29_account_nm                                                    AS account_nm
+      , biz29_ast_class_tree_id                                             AS ast_class_tree_id
+      , biz29_note                                                          AS note
+      , sys15_corp_nm                                                       AS corp_nm
+      , f_cdnm('BankCode', biz29_bank_cd, biz29_company_id, f_sysdate())    AS bank_nm
+      , ast01_class_tree_nm                                                 AS ast_class_tree_nm
+    </sql>
+
+    <!-- AS-IS biz29_account.selectBySearchText -->
+    <select id="selectBySearchText" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeAccountRes">
+        SELECT <include refid="accountCols"/>
+          FROM biz29_account
+               LEFT OUTER JOIN sys15_corp       ON sys15_corp_id = biz29_corp_id
+               LEFT OUTER JOIN ast01_class_tree ON ast01_class_tree_id = biz29_ast_class_tree_id
+         WHERE biz29_company_id = #{companyId}
+           AND upper(concat(biz29_account_nm,sys15_corp_nm,ast01_class_tree_nm, biz29_note)) LIKE upper(#{searchText})
+    </select>
+
+    <!-- AS-IS biz29_account.selectById (회사 조건은 TOBE 가 더함) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizFeeAccountRes">
+        SELECT <include refid="accountCols"/>
+          FROM biz29_account
+               LEFT OUTER JOIN sys15_corp       ON sys15_corp_id = biz29_corp_id
+               LEFT OUTER JOIN ast01_class_tree ON ast01_class_tree_id = biz29_ast_class_tree_id
+         WHERE biz29_account_id = #{accountId}
+           AND biz29_company_id = #{companyId}
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT COUNT(*)
+          FROM biz29_account
+         WHERE biz29_account_id = #{accountId}
+           AND biz29_company_id = #{companyId}
+    </select>
+
+    <insert id="insertAccount">
+        INSERT INTO biz29_account (biz29_account_id, biz29_company_id, biz29_corp_id, biz29_start_date, biz29_bank_cd, biz29_account_no,
+                                   biz29_account_nm, biz29_ast_class_tree_id, biz29_note)
+        VALUES (#{r.accountId}, #{companyId}, #{r.corpId}, #{r.startDate}, #{r.bankCd}, #{r.accountNo},
+                #{r.accountNm}, #{r.astClassTreeId}, #{r.note})
+    </insert>
+
+    <update id="updateAccount">
+        UPDATE biz29_account
+           SET biz29_corp_id            = #{r.corpId}
+             , biz29_start_date         = #{r.startDate}
+             , biz29_bank_cd            = #{r.bankCd}
+             , biz29_account_no         = #{r.accountNo}
+             , biz29_account_nm         = #{r.accountNm}
+             , biz29_ast_class_tree_id  = #{r.astClassTreeId}
+             , biz29_note               = #{r.note}
+         WHERE biz29_account_id = #{r.accountId}
+           AND biz29_company_id = #{companyId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz29_account
+         WHERE biz29_account_id = #{accountId}
+           AND biz29_company_id = #{companyId}
+    </delete>
+</mapper>
