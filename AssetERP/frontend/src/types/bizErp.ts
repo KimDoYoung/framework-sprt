@@ -102,3 +102,92 @@ export interface BizErpMailForm {
   erpSetupId: number;
   mailForm: string | null;
 }
+
+/** EE23 Biz55_Tab_ErpFeeCharge (AssetERP 사용료청구) — 백엔드 `/api/v1/biz/erp-fee-charges` 응답. fixYn 은 'true'/'false' 글자 */
+
+/** biz55_erp_fee_charge.selectByStdDate 한 행 (AS-IS Biz55_ErpFeeChargeModel) */
+export interface BizErpFeeCharge {
+  erpFeeChargeId: number;
+  erpContCorpId: number;
+  companyId: number | null;
+  corpNm: string | null;
+  erpProductCd: string | null;
+  chargeDate: string | null;
+  startDate: string | null;
+  closeDate: string | null;
+  erpFee: number | null;
+  dataFee: number | null;
+  smsCount: number | null;
+  addSmsFee: number | null;
+  serverUsage: number | null;
+  addServerFee: number | null;
+  userCount: number | null;
+  addUserFee: number | null;
+  etcAmt: number | null;
+  etcDesc: string | null;
+  totalAmt: number | null;
+  totalVat: number | null;
+  chargeAmt: number | null;
+  apprId: number | null;
+  fixYn: string;
+  trId: number | null;
+  apprStatusCd: string | null;
+  apprStatusNm: string | null;
+  apprTitle: string | null;
+  managerEmail: string | null;
+  mailYn: string | null;
+}
+
+/** 편집창 [저장] (AS-IS biz.Biz55_ErpFeeCharge.insertUpdate) */
+export interface BizErpFeeChargeSaveReq {
+  erpFeeChargeId: number | null;
+  erpContCorpId: number | null;
+  corpNm: string | null;
+  chargeDate: string | null;
+  startDate: string | null;
+  closeDate: string | null;
+  erpFee: number | null;
+  dataFee: number | null;
+  smsCount: number | null;
+  addSmsFee: number | null;
+  serverUsage: number | null;
+  addServerFee: number | null;
+  userCount: number | null;
+  addUserFee: number | null;
+  etcAmt: number | null;
+  etcDesc: string | null;
+  totalAmt: number | null;
+  totalVat: number | null;
+  chargeAmt: number | null;
+}
+
+/** biz51_erp_cont_corp.selectErpCompany 한 행 — 계약사 조회창 (AS-IS Biz51_ErpContCorpModel 중 쓰는 속성) */
+export interface BizErpCompany {
+  erpContCorpId: number;
+  companyId: number | null;
+  corpName: string | null;
+  contEndDate: string | null;
+  erpEndDate: string | null;
+  serviceTypeName: string | null;
+  chargeCalcMonthType: string | null;
+}
+
+/** biz52_erp_fee.selectDefaultData — 편집창 기준값·사용량 (AS-IS Biz52_ErpFeeModel) */
+export interface BizErpFeeDefault {
+  vatCd: string | null;
+  addFeeSmsYn: boolean | null;
+  addFeeServerYn: boolean | null;
+  addFeeUserYn: boolean | null;
+  smsBaseCount: number | null;
+  smsAddPrice: number | null;
+  serverBaseUsage: number | null;
+  serverAddUnit: number | null;
+  serverAddPrice: number | null;
+  userBaseCount: number | null;
+  userAddPrice: number | null;
+  erpFee: number | null;
+  dataFee: number | null;
+  smsTotalCount: number | null;
+  serverUsage: number | null;
+  userTotalCount: number | null;
+}

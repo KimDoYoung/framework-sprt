@@ -1,10 +1,13 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { BizErpContCorp, BizErpContCorpSaveReq, BizErpFee, BizErpMailForm, BizErpSetup } from '../types/bizErp';
+import {
+  BizErpCompany, BizErpContCorp, BizErpContCorpSaveReq, BizErpFee, BizErpFeeCharge, BizErpFeeChargeSaveReq, BizErpFeeDefault, BizErpMailForm, BizErpSetup,
+} from '../types/bizErp';
 
 const CORP = 'v1/biz/erp-cont-corps';
 const FEE = 'v1/biz/erp-fees';
 const SETUP = 'v1/biz/erp-setups';
+const CHARGE = 'v1/biz/erp-fee-charges';
 
 /** EE22 Biz51_Tab_ErpContCorp (AssetERP 계약사 관리) — AS-IS server/biz Biz51_ErpContCorp */
 export const bizErpContCorpApi = {
@@ -99,5 +102,51 @@ export const bizErpSetupApi = {
   saveMailForm: async (erpSetupId: number | null, mailForm: string | null): Promise<BizErpMailForm> => {
     const res = await apiClient.put<ApiResponse<BizErpMailForm>>(`${SETUP}/mail-form`, { erpSetupId, mailForm });
     return res.data.data as BizErpMailForm;
+  },
+};
+
+/** EE23 Biz55_Tab_ErpFeeCharge (AssetERP 사용료청구) — AS-IS server/biz Biz55_ErpFeeCharge */
+export const bizErpFeeChargeApi = {
+  /** AS-IS biz.Biz55_ErpFeeCharge.selectByStdDate — stdDate 는 청구년월의 1일 'yyyy-MM-dd' */
+  search: async (stdDate: string, searchText: string): Promise<BizErpFeeCharge[]> => {
+    const res = await apiClient.get<ApiResponse<BizErpFeeCharge[]>>(CHARGE, { params: { stdDate, searchText } });
+    return res.data.data ?? [];
+  },
+  /** AS-IS biz.Biz51_ErpContCorp.selectErpCompany — 계약사 조회창(그 달 청구가 없는 계약사) */
+  companies: async (stdDate: string, searchText: string): Promise<BizErpCompany[]> => {
+    const res = await apiClient.get<ApiResponse<BizErpCompany[]>>(`${CHARGE}/companies`, { params: { stdDate, searchText } });
+    return res.data.data ?? [];
+  },
+  /** AS-IS biz.Biz52_ErpFee.selectDefaultData — 사용료 설정이 없으면 null */
+  defaultData: async (erpContCorpId: number, companyId: number | null, startDate: string, closeDate: string): Promise<BizErpFeeDefault | null> => {
+    const res = await apiClient.get<ApiResponse<BizErpFeeDefault | null>>(`${CHARGE}/default`, {
+      params: { erpContCorpId, companyId: companyId ?? undefined, startDate, closeDate },
+    });
+    return res.data.data ?? null;
+  },
+  /** AS-IS biz.Biz55_ErpFeeCharge.updateErpCompany — dataYm 'YYYY.MM' → 만든 건수 */
+  create: async (dataYm: string, erpContCorpIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>(CHARGE, { dataYm, erpContCorpIds });
+    return res.data.data ?? 0;
+  },
+  /** AS-IS biz.Biz55_ErpFeeCharge.insertUpdate */
+  save: async (req: BizErpFeeChargeSaveReq): Promise<BizErpFeeCharge> => {
+    const res = await apiClient.put<ApiResponse<BizErpFeeCharge>>(CHARGE, req);
+    return res.data.data as BizErpFeeCharge;
+  },
+  /** AS-IS biz.Biz55_ErpFeeCharge.confirmUpdate */
+  confirm: async (erpFeeChargeIds: number[], fixYn: boolean): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>(`${CHARGE}/confirm`, { erpFeeChargeIds, fixYn });
+    return res.data.data ?? 0;
+  },
+  /** AS-IS biz.Biz55_ErpFeeCharge.updateApprId */
+  updateApprId: async (apprId: number, erpFeeChargeIds: number[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>(`${CHARGE}/appr-id`, { apprId, erpFeeChargeIds });
+    return res.data.data ?? 0;
+  },
+  /** AS-IS biz.Biz55_ErpFeeCharge.delete → 지운 건수 */
+  delete: async (erpFeeChargeIds: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>(CHARGE, { data: erpFeeChargeIds });
+    return res.data.data ?? 0;
   },
 };

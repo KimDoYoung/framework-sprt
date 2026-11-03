@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- AssetERP 사용료청구 (EE23, 원본 IDMS-IC): biz55_erp_fee_charge.* + biz51_erp_cont_corp.selectErpCompany + biz52_erp_fee.selectDefaultData·selectByDate
+     + sms02_history.selectByCompanyId + sys10_file.selectByCompanyId + emp01_person.getPersonCount. KFS 전체 표라 로그인 회사로 거르지 않는다 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizErpFeeChargeMapper">
+
+    <select id="selectNextId" resultType="long">
+        SELECT f_create_seq()
+    </select>
+
+    <sql id="chargeCols">
+        sys15_corp_nm                                                                   AS corp_nm
+      , sys01_erp_product_cd                                                            AS erp_product_cd
+      , (biz55_erp_fee + biz55_data_fee + biz55_add_sms_fee + biz55_add_server_fee + biz55_add_user_fee + biz55_etc_amt)                                    AS total_amt
+      , FLOOR((biz55_erp_fee + biz55_data_fee + biz55_add_sms_fee + biz55_add_server_fee + biz55_add_user_fee + biz55_etc_amt) * 0.1)                       AS total_vat
+      , (biz55_erp_fee + biz55_data_fee + biz55_add_sms_fee + biz55_add_server_fee + biz55_add_user_fee + biz55_etc_amt)
+        + FLOOR((biz55_erp_fee + biz55_data_fee + biz55_add_sms_fee + biz55_add_server_fee + biz55_add_user_fee + biz55_etc_amt) * 0.1)                    AS charge_amt
+      , COALESCE(biz55_etc_amt, 0)                                                      AS etc_amt
+      , biz51_company_id                                                                AS company_id
+      , biz55_erp_fee_charge_id                                                         AS erp_fee_charge_id
+      , biz55_charge_date                                                               AS charge_date
+      , biz55_start_date                                                                AS start_date
+      , biz55_close_date                                                                AS close_date
+      , biz55_erp_cont_corp_id                                                          AS erp_cont_corp_id
+      , biz55_erp_fee                                                                   AS erp_fee
+      , biz55_data_fee                                                                  AS data_fee
+      , biz55_sms_count                                                                 AS sms_count
+      , biz55_server_usage                                                              AS server_usage
+      , biz55_user_count                                                                AS user_count
+      , biz55_add_sms_fee                                                               AS add_sms_fee
+      , biz55_add_server_fee                                                            AS add_server_fee
+      , biz55_add_user_fee                                                              AS add_user_fee
+      , biz55_appr_id                                                                   AS appr_id
+      , biz55_etc_desc                                                                  AS etc_desc
+      , COALESCE(biz55_fix_yn, 'false')                                                 AS fix_yn
+      , biz55_tr_id                                                                     AS tr_id
+      , apr01_status_cd                                                                 AS appr_status_cd
+      , f_cdnm('AprStatusCode', apr01_status_cd, apr01_company_id, apr01_reg_date)      AS appr_status_nm
+      , apr01_title                                                                     AS appr_title
+      , biz51_manager_email                                                             AS manager_email
+      , CASE WHEN (SELECT COUNT(*) FROM dcr10_mail_history WHERE dcr10_apr_id = apr01_appr_id) > 0 THEN '송신' ELSE '' END   AS mail_yn
+    </sql>
+
+    <sql id="chargeFrom">
+          FROM biz55_erp_fee_charge
+               INNER JOIN biz51_erp_cont_corp ON biz51_erp_cont_corp_id = biz55_erp_cont_corp_id
+               INNER JOIN sys15_corp ON sys15_corp_id = biz51_corp_id
+               LEFT OUTER JOIN sys01_company ON biz51_company_id = sys01_company_id
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = biz55_appr_id
+    </sql>
+
+    <!-- AS-IS biz55_erp_fee_charge.selectByStdDate: 기준일의 연·월에 청구일이 있는 행. searchText 는 "%…%" -->
+    <select id="selectByStdDate" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizErpFeeChargeRes">
+        SELECT <include refid="chargeCols"/>
+        <include refid="chargeFrom"/>
+         WHERE EXTRACT(YEAR FROM biz55_charge_date) = EXTRACT(YEAR FROM #{stdDate}::date)
+           AND EXTRACT(MONTH FROM biz55_charge_date) = EXTRACT(MONTH FROM #{stdDate}::date)
+           AND CONCAT(sys15_corp_nm, sys01_erp_product_cd) ILIKE #{searchText}
+    </select>
+
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizErpFeeChargeRes">
+        SELECT <include refid="chargeCols"/>
+        <include refid="chargeFrom"/>
+         WHERE biz55_erp_fee_charge_id = #{erpFeeChargeId}
+    </select>
+
+    <sql id="companyCols">
+        biz51_erp_cont_corp_id                                                          AS erp_cont_corp_id
+      , biz51_company_id                                                                AS company_id
+      , sys15_corp_nm                                                                   AS corp_name
+      , biz51_cont_end_date                                                             AS cont_end_date
+      , biz51_erp_end_date                                                              AS erp_end_date
+      , f_cdnm('ErpServiceType', biz51_service_type, 0, f_sysdate())                    AS service_type_name
+      , biz52_charge_calc_month_type                                                    AS charge_calc_month_type
+    </sql>
+
+    <!-- AS-IS biz51_erp_cont_corp.selectErpCompany: 기준일에 사용료 설정이 있고 계약 중이며 그 달 청구가 아직 없는 계약사. searchText 는 "%…%" -->
+    <select id="selectErpCompany" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizErpCompanyRes">
+        <![CDATA[
+        SELECT ]]><include refid="companyCols"/><![CDATA[
+          FROM biz51_erp_cont_corp
+               INNER JOIN sys15_corp ON biz51_corp_id = sys15_corp_id
+               INNER JOIN biz52_erp_fee ON biz52_erp_cont_corp_id = biz51_erp_cont_corp_id
+         WHERE #{stdDate}::date >= COALESCE(biz52_start_date, '1900-01-01')
+           AND #{stdDate}::date <= COALESCE(biz52_close_date, '2999-12-31')
+           AND biz52_erp_cont_corp_id IN (
+                   SELECT biz52_erp_cont_corp_id
+                     FROM biz52_erp_fee
+                    WHERE #{stdDate}::date >= COALESCE(biz52_start_date, '1900-01-01')
+                      AND #{stdDate}::date <= COALESCE(biz52_close_date, '2999-12-31')
+                    GROUP BY biz52_erp_cont_corp_id
+               )
+           AND biz51_first_cont_date <= #{stdDate}::date
+           AND COALESCE(biz51_cont_end_date, current_timestamp) >= #{stdDate}::date
+           AND UPPER(CONCAT(sys15_corp_nm, biz51_note)) LIKE UPPER(#{searchText})
+           AND biz51_erp_cont_corp_id NOT IN (SELECT biz55_erp_cont_corp_id
+                                                FROM biz55_erp_fee_charge
+                                               WHERE EXTRACT(YEAR FROM biz55_start_date) = EXTRACT(YEAR FROM #{stdDate}::date)
+                                                 AND EXTRACT(MONTH FROM biz55_start_date) = EXTRACT(MONTH FROM #{stdDate}::date))
+        ]]>
+    </select>
+
+    <!-- [생성] 서버가 고른 계약사를 다시 읽는다 (AS-IS 는 화면이 보낸 모델). selectErpCompany 에서 "이 달 청구 없음" 조건만 뺀 같은 조건 -->
+    <select id="selectErpCompanyById" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizErpCompanyRes">
+        <![CDATA[
+        SELECT ]]><include refid="companyCols"/><![CDATA[
+          FROM biz51_erp_cont_corp
+               INNER JOIN sys15_corp ON biz51_corp_id = sys15_corp_id
+               INNER JOIN biz52_erp_fee ON biz52_erp_cont_corp_id = biz51_erp_cont_corp_id
+         WHERE #{stdDate}::date >= COALESCE(biz52_start_date, '1900-01-01')
+           AND #{stdDate}::date <= COALESCE(biz52_close_date, '2999-12-31')
+           AND biz51_erp_cont_corp_id = #{erpContCorpId}
+        ]]>
+    </select>
+
+    <!-- AS-IS biz52_erp_fee.selectDefaultData: 시작일 기준 사용료 설정 1건 + 기간 문자 건수·서버 사용량·사용 인원·기간 안분 사용료 -->
+    <select id="selectDefaultData" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizErpFeeDefaultRes">
+        <![CDATA[
+        SELECT setup.biz52_vat_cd                      AS vat_cd
+             , setup.biz52_add_fee_sms_yn              AS add_fee_sms_yn
+             , setup.biz52_add_fee_server_yn           AS add_fee_server_yn
+             , setup.biz52_add_fee_user_yn             AS add_fee_user_yn
+             , setup.biz52_sms_base_count              AS sms_base_count
+             , setup.biz52_sms_add_price               AS sms_add_price
+             , setup.biz52_server_base_usage           AS server_base_usage
+             , setup.biz52_server_add_unit             AS server_add_unit
+             , setup.biz52_server_add_price            AS server_add_price
+             , setup.biz52_user_base_count             AS user_base_count
+             , setup.biz52_user_add_price              AS user_add_price
+             , fee.biz52_erp_fee                       AS erp_fee
+             , fee.biz52_data_fee                      AS data_fee
+             , sms.sms02_total_count                   AS sms_total_count
+             , sys.sys10_running_total_size            AS server_usage
+             , emp.emp01_total_count                   AS user_total_count
+          FROM (SELECT biz52_sms_base_count
+                     , biz52_sms_add_price
+                     , biz52_server_base_usage
+                     , biz52_server_add_unit
+                     , biz52_server_add_price
+                     , biz52_user_base_count
+                     , biz52_user_add_price
+                     , COALESCE(biz52_add_fee_sms_yn, 'false')                  AS biz52_add_fee_sms_yn
+                     , COALESCE(biz52_add_fee_server_yn, 'false')               AS biz52_add_fee_server_yn
+                     , COALESCE(biz52_add_fee_user_yn, 'false')                 AS biz52_add_fee_user_yn
+                     , COALESCE(biz52_vat_cd, '2')                              AS biz52_vat_cd
+                  FROM biz52_erp_fee
+                 WHERE #{startDate}::date >= COALESCE(biz52_start_date, '1900-01-01')
+                   AND #{startDate}::date <= COALESCE(biz52_close_date, '2999-12-31')
+                   AND biz52_erp_cont_corp_id = #{erpContCorpId}
+                 ORDER BY biz52_start_date
+                 LIMIT 1) setup
+         CROSS JOIN (SELECT count(*) AS sms02_total_count
+                       FROM sms02_history
+                      WHERE sms02_company_id = #{companyId}
+                        AND #{startDate}::date <= sms02_send_date
+                        AND coalesce(#{closeDate}::date, current_timestamp) >= sms02_send_date) sms
+         CROSS JOIN (SELECT SUM((SELECT ROUND(SUM(sys10_size) * 0.001 / 1024, 3)
+                                   FROM sys10_file
+                                  WHERE REPLACE(sys10_server_path, RIGHT(sys10_server_path, 7), '') = a.server_nm
+                                    AND sys10_reg_date::date <= #{closeDate}::date)) AS sys10_running_total_size
+                       FROM sys01_company
+                       LEFT JOIN (SELECT REPLACE(sys10_server_path, RIGHT(sys10_server_path, 7), '') AS server_nm
+                                    FROM sys10_file
+                                   WHERE sys10_server_path NOT LIKE '%KIDMS%'
+                                     AND sys10_reg_date::date <= #{closeDate}::date
+                                   GROUP BY REPLACE(sys10_server_path, RIGHT(sys10_server_path, 7), '')) a ON sys01_loc_nm = SUBSTRING(server_nm FROM '[^/]+$')
+                      WHERE sys01_company_id = #{companyId}) sys
+         CROSS JOIN (SELECT count(*) AS emp01_total_count
+                       FROM emp01_person
+                            INNER JOIN emp02_others  ON emp02_person_id  = emp01_person_id
+                            INNER JOIN emp03_trans   ON emp03_person_id  = emp01_person_id
+                            INNER JOIN sys01_company ON sys01_company_id = emp01_company_id
+                      WHERE emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                                   FROM emp03_trans
+                                                  WHERE emp03_person_id  = emp01_person_id
+                                                    AND emp03_trans_date <= CASE WHEN sys01_start_date > (DATE_TRUNC('year', f_today()) - INTERVAL '1 day')
+                                                                                 THEN sys01_start_date
+                                                                                 ELSE (DATE_TRUNC('year', f_today()) - INTERVAL '1 day') END)
+                        AND emp03_trans_cd NOT IN ('800', '900')
+                        AND emp01_company_id = #{companyId}) emp
+         CROSS JOIN (WITH fee_calc AS (
+                              SELECT biz52_erp_fee_id
+                                   , biz52_erp_cont_corp_id
+                                   , GREATEST(biz52_start_date, #{startDate}::date) AS calc_start
+                                   , LEAST(COALESCE(biz52_close_date, #{closeDate}::date), #{closeDate}::date) AS calc_end
+                                   , biz52_erp_fee
+                                   , biz52_data_fee
+                                FROM biz52_erp_fee
+                               WHERE biz52_start_date <= #{closeDate}::date
+                                 AND COALESCE(biz52_close_date, current_timestamp) >= #{startDate}::date
+                                 AND biz52_erp_cont_corp_id = #{erpContCorpId}
+                            ),
+                            month_days AS (
+                              SELECT date_part('day', (date_trunc('month', #{startDate}::date) + interval '1 month - 1 day')) AS month_day_count
+                            )
+                    SELECT SUM(TRUNC((biz52_erp_fee / month_day_count) * (calc_end - calc_start + 1))) AS biz52_erp_fee
+                         , SUM(TRUNC((biz52_data_fee / month_day_count) * (calc_end - calc_start + 1))) AS biz52_data_fee
+                      FROM fee_calc
+                     CROSS JOIN month_days m
+                     WHERE calc_end >= calc_start
+                     GROUP BY biz52_erp_cont_corp_id) fee
+        ]]>
+    </select>
+
+    <!-- AS-IS biz52_erp_fee.selectByDate: 기간에 걸친 사용료 설정을 일수로 안분해 합친 한 행. ROW_NUMBER 정렬의 '2026-02-01' 은 원본에 박혀 있는 상수(원본-이상한점 #194) -->
+    <select id="selectFeeByDate" resultType="kr.co.kfs.asseterp.biz.biz.mapper.BizErpFeeChargeMapper$ErpFeePeriod">
+        <![CDATA[
+        WITH fee_calc AS (
+          SELECT biz52_erp_fee_id
+               , biz52_erp_cont_corp_id
+               , biz52_charge_day
+               , GREATEST(biz52_start_date, #{startDate}::date) AS calc_start
+               , LEAST(COALESCE(biz52_close_date, #{closeDate}::date), #{closeDate}::date) AS calc_end
+               , biz52_erp_fee
+               , biz52_data_fee
+               , biz52_vat_cd
+               , biz52_add_fee_sms_yn
+               , biz52_add_fee_server_yn
+               , biz52_add_fee_user_yn
+               , biz52_sms_base_count
+               , biz52_sms_add_price
+               , biz52_server_base_usage
+               , biz52_server_add_unit
+               , biz52_server_add_price
+               , biz52_user_base_count
+               , biz52_user_add_price
+               , biz52_user_count_std_cd
+               , ROW_NUMBER() OVER (PARTITION BY biz52_erp_cont_corp_id ORDER BY GREATEST(biz52_start_date, '2026-02-01'::date) ASC) AS biz52_row_number
+            FROM biz52_erp_fee
+           WHERE biz52_start_date <= #{closeDate}::date
+             AND (biz52_close_date IS NULL OR biz52_close_date >= #{startDate}::date)
+             AND biz52_erp_cont_corp_id = #{erpContCorpId}
+        ),
+        month_days AS (
+          SELECT date_part('day', (date_trunc('month', #{startDate}::date) + interval '1 month - 1 day')) AS month_day_count
+        )
+        SELECT MAX(CASE WHEN biz52_row_number = 1 THEN biz52_charge_day END)                       AS charge_day
+             , CASE WHEN BOOL_OR(biz52_vat_cd = '1') THEN '1' ELSE '2' END                        AS vat_cd
+             , BOOL_OR(COALESCE(biz52_add_fee_sms_yn, 'false')::boolean)                           AS add_fee_sms_yn
+             , BOOL_OR(COALESCE(biz52_add_fee_server_yn, 'false')::boolean)                        AS add_fee_server_yn
+             , BOOL_OR(COALESCE(biz52_add_fee_user_yn, 'false')::boolean)                          AS add_fee_user_yn
+             , TRUNC(SUM((biz52_erp_fee / month_day_count) * (calc_end - calc_start + 1)))         AS erp_fee
+             , TRUNC(SUM((biz52_data_fee / month_day_count) * (calc_end - calc_start + 1)))        AS data_fee
+             , COALESCE(MAX(CASE WHEN biz52_row_number = 1 THEN biz52_sms_base_count END), 0)      AS sms_base_count
+             , COALESCE(MAX(CASE WHEN biz52_row_number = 1 THEN biz52_sms_add_price END), 0)       AS sms_add_price
+             , COALESCE(MAX(CASE WHEN biz52_row_number = 1 THEN biz52_server_base_usage END), 0)   AS server_base_usage
+             , COALESCE(MAX(CASE WHEN biz52_row_number = 1 THEN biz52_server_add_unit END), 0)     AS server_add_unit
+             , COALESCE(MAX(CASE WHEN biz52_row_number = 1 THEN biz52_server_add_price END), 0)    AS server_add_price
+             , COALESCE(MAX(CASE WHEN biz52_row_number = 1 THEN biz52_user_base_count END), 0)     AS user_base_count
+             , COALESCE(MAX(CASE WHEN biz52_row_number = 1 THEN biz52_user_add_price END), 0)      AS user_add_price
+             , MAX(CASE WHEN biz52_row_number = 1 THEN biz52_user_count_std_cd END)                AS user_count_std_cd
+          FROM fee_calc
+         CROSS JOIN month_days m
+         WHERE calc_end >= calc_start
+         GROUP BY biz52_erp_cont_corp_id
+        ]]>
+    </select>
+
+    <!-- AS-IS sms02_history.selectByCompanyId -->
+    <select id="selectSmsCount" resultType="long">
+        <![CDATA[
+        SELECT count(*)
+          FROM sms02_history
+         WHERE sms02_company_id = #{companyId}
+           AND #{startDate}::date <= sms02_send_date
+           AND coalesce(#{closeDate}::date, current_timestamp) >= sms02_send_date
+        ]]>
+    </select>
+
+    <!-- AS-IS sys10_file.selectByCompanyId 의 sys10_running_total_size (회사 서버 폴더의 종료일까지 누적 GB) -->
+    <select id="selectServerUsage" resultType="double">
+        <![CDATA[
+        SELECT	(
+                    SELECT	ROUND(SUM(sys10_size) * 0.001 / 1024, 3)
+                      FROM	sys10_file
+                     WHERE	REPLACE(sys10_server_path, RIGHT(sys10_server_path, 7), '') = a.server_nm
+                       AND  sys10_reg_date::date <= #{closeDate}::date
+                )
+          FROM	(
+                    SELECT	REPLACE(sys10_server_path, RIGHT(sys10_server_path, 7), '')		AS server_nm
+                         ,	ROUND(SUM(sys10_size) * 0.001 / 1024, 3)						AS total_size
+                      FROM	sys10_file
+                     WHERE	sys10_server_path NOT LIKE '%KIDMS%'
+                       AND  sys10_reg_date::date <= #{closeDate}::date
+                     GROUP BY REPLACE(sys10_server_path, RIGHT(sys10_server_path, 7), '')
+                ) a
+                INNER JOIN sys01_company ON sys01_loc_nm = REPLACE(a.server_nm, LEFT(a.server_nm, 17), '')
+         WHERE	sys01_company_id = #{companyId}
+        ]]>
+    </select>
+
+    <!-- AS-IS emp01_person.getPersonCount: 1 = 전월말, 2 = 전년말 직전 인사발령 기준 재직자 수 -->
+    <select id="selectPersonCount" resultType="long">
+        SELECT count(*)
+          FROM emp01_person
+               INNER JOIN emp02_others  ON emp02_person_id  = emp01_person_id
+               INNER JOIN emp03_trans   ON emp03_person_id  = emp01_person_id
+               INNER JOIN sys01_company ON sys01_company_id = emp01_company_id
+         WHERE 1=1
+        <if test="userCountStdCode == '1'">
+           AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                      FROM emp03_trans
+                                     WHERE emp03_person_id  = emp01_person_id
+                                       AND emp03_trans_date &lt;= CASE WHEN sys01_start_date &gt; (DATE_TRUNC('month', f_today()) - INTERVAL '1 day')
+                                                                      THEN sys01_start_date
+                                                                      ELSE (DATE_TRUNC('month', f_today()) - INTERVAL '1 day') END)
+        </if>
+        <if test="userCountStdCode == '2'">
+           AND emp03_trans_date = ( SELECT MAX(emp03_trans_date)
+                                      FROM emp03_trans
+                                     WHERE emp03_person_id  = emp01_person_id
+                                       AND emp03_trans_date &lt;= CASE WHEN sys01_start_date &gt; (DATE_TRUNC('year', f_today()) - INTERVAL '1 day')
+                                                                      THEN sys01_start_date
+                                                                      ELSE (DATE_TRUNC('year', f_today()) - INTERVAL '1 day') END)
+        </if>
+           AND emp03_trans_cd NOT IN ('800', '900')
+           AND emp01_company_id = #{companyId}
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT count(*) FROM biz55_erp_fee_charge WHERE biz55_erp_fee_charge_id = #{erpFeeChargeId}
+    </select>
+
+    <!-- AS-IS biz55_erp_fee_charge.insertErpFeeCharge — 부가세 5개는 0 (AS-IS 가 0 고정) -->
+    <insert id="insertErpFeeCharge">
+        INSERT INTO biz55_erp_fee_charge
+             ( biz55_erp_fee_charge_id, biz55_charge_date, biz55_start_date, biz55_close_date, biz55_erp_cont_corp_id
+             , biz55_erp_fee, biz55_erp_fee_vat, biz55_data_fee, biz55_data_fee_vat
+             , biz55_sms_count, biz55_server_usage, biz55_user_count
+             , biz55_add_sms_fee, biz55_add_sms_fee_vat, biz55_add_server_fee, biz55_add_server_fee_vat, biz55_add_user_fee, biz55_add_user_fee_vat
+             , biz55_etc_amt, biz55_total_amt, biz55_total_vat, biz55_charge_amt )
+        VALUES ( #{r.erpFeeChargeId}, #{r.chargeDate}, #{r.startDate}, #{r.closeDate}, #{r.erpContCorpId}
+               , #{r.erpFee}, 0, #{r.dataFee}, 0
+               , #{r.smsCount}, #{r.serverUsage}, #{r.userCount}
+               , #{r.addSmsFee}, 0, #{r.addServerFee}, 0, #{r.addUserFee}, 0
+               , #{r.etcAmt}, #{r.totalAmt}, #{r.totalVat}, #{r.chargeAmt} )
+    </insert>
+
+    <!-- AS-IS insertUpdate(UpdateDataModel): 편집창이 바꾸는 열만 -->
+    <insert id="insertSaved">
+        INSERT INTO biz55_erp_fee_charge
+             ( biz55_erp_fee_charge_id, biz55_charge_date, biz55_start_date, biz55_close_date, biz55_erp_cont_corp_id
+             , biz55_erp_fee, biz55_data_fee, biz55_sms_count, biz55_server_usage, biz55_user_count
+             , biz55_add_sms_fee, biz55_add_server_fee, biz55_add_user_fee
+             , biz55_etc_amt, biz55_etc_desc, biz55_total_amt, biz55_total_vat, biz55_charge_amt )
+        VALUES ( #{r.erpFeeChargeId}, #{r.chargeDate}, #{r.startDate}, #{r.closeDate}, #{r.erpContCorpId}
+               , #{r.erpFee}, #{r.dataFee}, #{r.smsCount}, #{r.serverUsage}, #{r.userCount}
+               , #{r.addSmsFee}, #{r.addServerFee}, #{r.addUserFee}
+               , #{r.etcAmt}, #{r.etcDesc}, #{r.totalAmt}, #{r.totalVat}, #{r.chargeAmt} )
+    </insert>
+
+    <update id="updateSaved">
+        UPDATE biz55_erp_fee_charge
+           SET biz55_charge_date     = #{r.chargeDate}
+             , biz55_start_date      = #{r.startDate}
+             , biz55_close_date      = #{r.closeDate}
+             , biz55_erp_fee         = #{r.erpFee}
+             , biz55_data_fee        = #{r.dataFee}
+             , biz55_sms_count       = #{r.smsCount}
+             , biz55_server_usage    = #{r.serverUsage}
+             , biz55_user_count      = #{r.userCount}
+             , biz55_add_sms_fee     = #{r.addSmsFee}
+             , biz55_add_server_fee  = #{r.addServerFee}
+             , biz55_add_user_fee    = #{r.addUserFee}
+             , biz55_etc_amt         = #{r.etcAmt}
+             , biz55_etc_desc        = #{r.etcDesc}
+             , biz55_total_amt       = #{r.totalAmt}
+             , biz55_total_vat       = #{r.totalVat}
+             , biz55_charge_amt      = #{r.chargeAmt}
+         WHERE biz55_erp_fee_charge_id = #{r.erpFeeChargeId}
+    </update>
+
+    <update id="confirmUpdate">
+        UPDATE biz55_erp_fee_charge
+           SET biz55_fix_yn = #{fixYn}
+         WHERE biz55_erp_fee_charge_id = #{erpFeeChargeId}
+    </update>
+
+    <update id="updateApprId">
+        UPDATE biz55_erp_fee_charge
+           SET biz55_appr_id = #{apprId}
+         WHERE biz55_erp_fee_charge_id = #{erpFeeChargeId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz55_erp_fee_charge WHERE biz55_erp_fee_charge_id = #{erpFeeChargeId}
+    </delete>
+</mapper>
