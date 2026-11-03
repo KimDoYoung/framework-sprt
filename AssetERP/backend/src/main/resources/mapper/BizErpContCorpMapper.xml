@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz51_erp_cont_corp.xml · biz52_erp_fee.xml(deleteByErpContCorpId) · com01_relate_appr.xml(deleteByKeyTableId)
+     · sys10_file.xml(deleteByParentId) · UpdateDataModel(biz51_erp_cont_corp)  (EE22 Biz51_Tab_ErpContCorp) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizErpContCorpMapper">
+
+    <!-- AS-IS dbConfig.getSeq 와 같은 식 -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS biz51_erp_cont_corp.selectByContStatusCode — 열은 화면이 쓰는 것만 이름을 붙였다. KFS 가 고객사를 관리하는 표라 회사 조건은 AS-IS 도 없다 -->
+    <select id="selectByContStatusCode" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizErpContCorpRes">
+        SELECT biz51_erp_cont_corp_id                                           AS erp_cont_corp_id
+             , biz51_cont_corp_nm                                               AS cont_corp_nm
+             , biz51_service_type                                               AS service_type
+             , biz51_first_cont_date                                            AS first_cont_date
+             , biz51_cont_date                                                  AS cont_date
+             , biz51_cont_end_date                                              AS cont_end_date
+             , biz51_cont_status_cd                                             AS cont_status_cd
+             , biz51_erp_start_date                                             AS erp_start_date
+             , biz51_erp_end_date                                               AS erp_end_date
+             , biz51_manager_nm                                                 AS manager_nm
+             , biz51_manager_tel                                                AS manager_tel
+             , biz51_manager_email                                              AS manager_email
+             , biz51_company_ceo                                                AS company_ceo
+             , biz51_company_addr                                               AS company_addr
+             , biz51_note                                                       AS note
+             , biz51_company_id                                                 AS company_id
+             , biz51_corp_id                                                    AS corp_id
+             , sys01_erp_product_cd                                             AS erp_product_cd
+             , f_cdnm('ErpProductCode', sys01_erp_product_cd, 0, f_sysdate())   AS erp_product_nm
+             , sys15_corp_nm                                                    AS corp_nm
+             , f_cdnm('ContStatusCode', biz51_cont_status_cd, 0, f_sysdate())   AS cont_status_nm
+             , f_cdnm('ErpServiceType', biz51_service_type, 0, f_sysdate())     AS service_type_nm
+             , sys01_loc_nm                                                     AS location_nm
+             , (SELECT '시스템사용료:'||TO_CHAR(biz52_erp_fee, 'FM999,999,999')||'원, 데이터사용료:'||TO_CHAR(biz52_data_fee, 'FM999,999,999')||'원'
+                  FROM biz52_erp_fee
+                 WHERE biz52_erp_cont_corp_id = biz51_erp_cont_corp_id
+                   AND f_sysdate() >= biz52_start_date
+                 ORDER BY biz52_start_date DESC
+                 LIMIT 1)                                                       AS erp_fee_nm
+             , ( SELECT COUNT(*)
+                   FROM sys10_file
+                  WHERE sys10_parent_id = biz51_erp_cont_corp_id )
+               +
+               ( SELECT COUNT(*)
+                   FROM com01_relate_appr
+                  WHERE com01_key_table_id = biz51_erp_cont_corp_id ) ||'건'     AS file_count_str
+          FROM biz51_erp_cont_corp
+               INNER JOIN sys15_corp ON biz51_corp_id = sys15_corp_id
+               LEFT OUTER JOIN sys01_company ON biz51_company_id = sys01_company_id
+         WHERE 1=1
+           AND UPPER(CONCAT(sys15_corp_nm,biz51_note,sys01_erp_product_cd)) LIKE UPPER(#{searchText})
+        <if test="contStatusCode != null">
+           AND biz51_cont_status_cd = #{contStatusCode}
+        </if>
+         ORDER BY biz51_first_cont_date
+    </select>
+
+    <!-- AS-IS biz51_erp_cont_corp.selectById — 상품코드 이름을 'ContStatusCode' 그룹으로 찾는 것(목록은 'ErpProductCode')까지 AS-IS 그대로 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizErpContCorpRes">
+        SELECT biz51_erp_cont_corp_id                                           AS erp_cont_corp_id
+             , biz51_cont_corp_nm                                               AS cont_corp_nm
+             , biz51_service_type                                               AS service_type
+             , biz51_first_cont_date                                            AS first_cont_date
+             , biz51_cont_date                                                  AS cont_date
+             , biz51_cont_end_date                                              AS cont_end_date
+             , biz51_cont_status_cd                                             AS cont_status_cd
+             , biz51_erp_start_date                                             AS erp_start_date
+             , biz51_erp_end_date                                               AS erp_end_date
+             , biz51_manager_nm                                                 AS manager_nm
+             , biz51_manager_tel                                                AS manager_tel
+             , biz51_manager_email                                              AS manager_email
+             , biz51_company_ceo                                                AS company_ceo
+             , biz51_company_addr                                               AS company_addr
+             , biz51_note                                                       AS note
+             , biz51_company_id                                                 AS company_id
+             , biz51_corp_id                                                    AS corp_id
+             , sys01_erp_product_cd                                             AS erp_product_cd
+             , f_cdnm('ContStatusCode', sys01_erp_product_cd, 0, f_sysdate())   AS erp_product_nm
+             , sys15_corp_nm                                                    AS corp_nm
+             , f_cdnm('ContStatusCode', biz51_cont_status_cd, 0, f_sysdate())   AS cont_status_nm
+             , f_cdnm('ErpServiceType', biz51_service_type, 0, f_sysdate())     AS service_type_nm
+             , sys01_loc_nm                                                     AS location_nm
+             , (SELECT '시스템사용료:'||TO_CHAR(biz52_erp_fee, 'FM999,999,999')||'원, 데이터사용료:'||TO_CHAR(biz52_data_fee, 'FM999,999,999')||'원'
+                  FROM biz52_erp_fee
+                 WHERE biz52_erp_cont_corp_id = biz51_erp_cont_corp_id
+                   AND f_sysdate() >= biz52_start_date
+                 ORDER BY biz52_start_date DESC
+                 LIMIT 1)                                                       AS erp_fee_nm
+             , ( SELECT COUNT(*)
+                   FROM sys10_file
+                  WHERE sys10_parent_id = biz51_erp_cont_corp_id )
+               +
+               ( SELECT COUNT(*)
+                   FROM com01_relate_appr
+                  WHERE com01_key_table_id = biz51_erp_cont_corp_id ) ||'건'     AS file_count_str
+          FROM biz51_erp_cont_corp
+               INNER JOIN sys15_corp ON biz51_corp_id = sys15_corp_id
+               LEFT OUTER JOIN sys01_company ON biz51_company_id = sys01_company_id
+         WHERE biz51_erp_cont_corp_id = #{erpContCorpId}
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT COUNT(*) FROM biz51_erp_cont_corp WHERE biz51_erp_cont_corp_id = #{erpContCorpId}
+    </select>
+
+    <!-- AS-IS insertUpdate = UpdateDataModel(biz51_erp_cont_corp): 번호가 이미 있으면 UPDATE, 없으면 INSERT -->
+    <insert id="insertErpContCorp">
+        INSERT INTO biz51_erp_cont_corp ( biz51_erp_cont_corp_id, biz51_corp_id, biz51_cont_status_cd, biz51_service_type, biz51_first_cont_date
+                                        , biz51_cont_date, biz51_cont_end_date, biz51_erp_start_date, biz51_erp_end_date, biz51_company_id
+                                        , biz51_manager_nm, biz51_manager_tel, biz51_manager_email, biz51_company_ceo, biz51_company_addr, biz51_note )
+        VALUES ( #{r.erpContCorpId}, #{r.corpId}, #{r.contStatusCd}, #{r.serviceType}, #{r.firstContDate}
+               , #{r.contDate}, #{r.contEndDate}, #{r.erpStartDate}, #{r.erpEndDate}, #{r.companyId}
+               , #{r.managerNm}, #{r.managerTel}, #{r.managerEmail}, #{r.companyCeo}, #{r.companyAddr}, #{r.note} )
+    </insert>
+
+    <update id="updateErpContCorp">
+        UPDATE biz51_erp_cont_corp
+           SET biz51_corp_id         = #{r.corpId}
+             , biz51_cont_status_cd  = #{r.contStatusCd}
+             , biz51_service_type    = #{r.serviceType}
+             , biz51_first_cont_date = #{r.firstContDate}
+             , biz51_cont_date       = #{r.contDate}
+             , biz51_cont_end_date   = #{r.contEndDate}
+             , biz51_erp_start_date  = #{r.erpStartDate}
+             , biz51_erp_end_date    = #{r.erpEndDate}
+             , biz51_company_id      = #{r.companyId}
+             , biz51_manager_nm      = #{r.managerNm}
+             , biz51_manager_tel     = #{r.managerTel}
+             , biz51_manager_email   = #{r.managerEmail}
+             , biz51_company_ceo     = #{r.companyCeo}
+             , biz51_company_addr    = #{r.companyAddr}
+             , biz51_note            = #{r.note}
+         WHERE biz51_erp_cont_corp_id = #{r.erpContCorpId}
+    </update>
+
+    <!-- AS-IS com01_relate_appr.deleteByKeyTableId -->
+    <delete id="deleteRelateApprByKey">
+        DELETE FROM com01_relate_appr WHERE com01_key_table_id = #{erpContCorpId}
+    </delete>
+
+    <!-- AS-IS sys10_file.deleteByParentId (원본은 ${apprId} 치환, TOBE 는 바인드 변수) -->
+    <delete id="deleteFilesByParent">
+        DELETE FROM sys10_file WHERE sys10_parent_id = #{erpContCorpId}
+    </delete>
+
+    <!-- AS-IS biz52_erp_fee.deleteByErpContCorpId -->
+    <delete id="deleteFeesByErpContCorp">
+        DELETE FROM biz52_erp_fee WHERE biz52_erp_cont_corp_id = #{erpContCorpId}
+    </delete>
+
+    <!-- AS-IS biz51_erp_cont_corp.deleteById -->
+    <delete id="deleteById">
+        DELETE FROM biz51_erp_cont_corp WHERE biz51_erp_cont_corp_id = #{erpContCorpId}
+    </delete>
+</mapper>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz50_erp_setup.xml · UpdateDataModel(biz50_erp_setup)  (EE22 Biz50_Lookup_ErpSetup·Biz50_Lookup_MailMapping) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizErpSetupMapper">
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <sql id="setupCols">
+        biz50_erp_setup_id        AS erp_setup_id
+      , biz50_start_date          AS start_date
+      , biz50_sms_base_count      AS sms_base_count
+      , biz50_sms_add_price       AS sms_add_price
+      , biz50_server_base_usage   AS server_base_usage
+      , biz50_server_add_unit     AS server_add_unit
+      , biz50_server_add_price    AS server_add_price
+      , biz50_charge_day          AS charge_day
+      , biz50_vat_cd              AS vat_cd
+      , biz50_user_base_count     AS user_base_count
+      , biz50_user_add_price      AS user_add_price
+      , biz50_deposit_due_day     AS deposit_due_day
+    </sql>
+
+    <!-- AS-IS biz50_erp_setup.selectAll — 메모 행(note_yn = 'true')은 빠지고, note_yn 이 null 인 메일양식 행도 비교가 null 이라 빠진다 -->
+    <select id="selectAll" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizErpSetupRes">
+        SELECT <include refid="setupCols"/>
+             , f_cdnm('DateCode', biz50_charge_day, #{companyId}, biz50_start_date)       AS charge_day_str
+             , f_cdnm('DateCode', biz50_deposit_due_day, #{companyId}, biz50_start_date)  AS deposit_due_day_str
+             , f_cdnm('VatCode', biz50_vat_cd, #{companyId}, biz50_start_date)            AS vat_nm
+          FROM biz50_erp_setup
+         WHERE biz50_note_yn != 'true'
+         ORDER BY biz50_start_date DESC
+    </select>
+
+    <!-- AS-IS biz50_erp_setup.selectByStartDate -->
+    <select id="selectByStartDate" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizErpSetupRes">
+        <![CDATA[
+        SELECT ]]><include refid="setupCols"/><![CDATA[
+             , f_cdnm('DateCode', biz50_charge_day, #{companyId}, biz50_start_date)       AS charge_day_str
+             , f_cdnm('DateCode', biz50_deposit_due_day, #{companyId}, biz50_start_date)  AS deposit_due_day_str
+             , f_cdnm('VatCode', biz50_vat_cd, #{companyId}, biz50_start_date)            AS vat_nm
+          FROM biz50_erp_setup
+         WHERE biz50_note_yn != 'true'
+           AND biz50_start_date <= #{stdDate}
+         ORDER BY ABS(biz50_start_date - #{stdDate})
+         LIMIT 1
+        ]]>
+    </select>
+
+    <!-- AS-IS biz50_erp_setup.selectById (UpdateDataModel 저장 뒤 다시 읽기, companyId 0) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizErpSetupRes">
+        SELECT <include refid="setupCols"/>
+             , f_cdnm('DateCode', biz50_charge_day, 0, biz50_start_date)       AS charge_day_str
+             , f_cdnm('DateCode', biz50_deposit_due_day, 0, biz50_start_date)  AS deposit_due_day_str
+             , f_cdnm('VatCode', biz50_vat_cd, 0, biz50_start_date)            AS vat_nm
+          FROM biz50_erp_setup
+         WHERE biz50_erp_setup_id = #{erpSetupId}
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT COUNT(*) FROM biz50_erp_setup WHERE biz50_erp_setup_id = #{erpSetupId}
+    </select>
+
+    <!-- 새 행의 메모 구분은 'false' (Biz50_Lookup_ErpSetup.insertRow: setNoteYn(false)) -->
+    <insert id="insertErpSetup">
+        INSERT INTO biz50_erp_setup ( biz50_erp_setup_id, biz50_start_date, biz50_sms_base_count, biz50_sms_add_price, biz50_server_base_usage
+                                    , biz50_server_add_unit, biz50_server_add_price, biz50_charge_day, biz50_vat_cd, biz50_user_base_count
+                                    , biz50_user_add_price, biz50_deposit_due_day, biz50_note_yn )
+        VALUES ( #{r.erpSetupId}, #{r.startDate}, #{r.smsBaseCount}, #{r.smsAddPrice}, #{r.serverBaseUsage}
+               , #{r.serverAddUnit}, #{r.serverAddPrice}, #{r.chargeDay}, #{r.vatCd}, #{r.userBaseCount}
+               , #{r.userAddPrice}, #{r.depositDueDay}, 'false' )
+    </insert>
+
+    <update id="updateErpSetup">
+        UPDATE biz50_erp_setup
+           SET biz50_start_date        = #{r.startDate}
+             , biz50_sms_base_count    = #{r.smsBaseCount}
+             , biz50_sms_add_price     = #{r.smsAddPrice}
+             , biz50_server_base_usage = #{r.serverBaseUsage}
+             , biz50_server_add_unit   = #{r.serverAddUnit}
+             , biz50_server_add_price  = #{r.serverAddPrice}
+             , biz50_charge_day        = #{r.chargeDay}
+             , biz50_vat_cd            = #{r.vatCd}
+             , biz50_user_base_count   = #{r.userBaseCount}
+             , biz50_user_add_price    = #{r.userAddPrice}
+             , biz50_deposit_due_day   = #{r.depositDueDay}
+         WHERE biz50_erp_setup_id = #{r.erpSetupId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz50_erp_setup WHERE biz50_erp_setup_id = #{erpSetupId}
+    </delete>
+
+    <!-- AS-IS biz50_erp_setup.getNote (noteYn = 'true') -->
+    <select id="selectNote" resultType="string">
+        SELECT biz50_note
+          FROM biz50_erp_setup
+         WHERE biz50_note_yn = 'true'
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS biz50_erp_setup.updateNote (noteYn = 'true') — 있으면 UPDATE, 없으면 메모 행을 INSERT -->
+    <update id="upsertNote">
+        WITH upsert AS ( UPDATE biz50_erp_setup
+                            SET biz50_note = #{note}
+                          WHERE biz50_note_yn = 'true'
+                          RETURNING * )
+        INSERT INTO biz50_erp_setup ( biz50_erp_setup_id, biz50_note, biz50_note_yn )
+        SELECT f_create_seq(), #{note}, 'true'
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </update>
+
+    <!-- AS-IS biz50_erp_setup.selectMailForm (noteYn = 'false') -->
+    <select id="selectMailForm" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizErpMailFormRes">
+        SELECT biz50_erp_setup_id AS erp_setup_id
+             , biz50_mail_form    AS mail_form
+          FROM biz50_erp_setup
+         WHERE COALESCE(biz50_note_yn, 'false') = 'false'
+           AND biz50_start_date IS NULL
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS insertMailForm = UpdateDataModel: 새 메일양식 행은 메모 구분(note_yn)이 비어 있다 -->
+    <insert id="insertMailForm">
+        INSERT INTO biz50_erp_setup ( biz50_erp_setup_id, biz50_mail_form )
+        VALUES ( #{erpSetupId}, #{mailForm} )
+    </insert>
+
+    <update id="updateMailForm">
+        UPDATE biz50_erp_setup
+           SET biz50_mail_form = #{mailForm}
+         WHERE biz50_erp_setup_id = #{erpSetupId}
+    </update>
+</mapper>

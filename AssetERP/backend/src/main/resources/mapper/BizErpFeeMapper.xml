@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz52_erp_fee.xml · UpdateDataModel(biz52_erp_fee)  (EE22 Biz52_Lookup_ErpFee) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizErpFeeMapper">
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- 사용료 한 행의 열 — 코드 이름 5개는 companyId·적용시작일 기준(selectById 는 companyId 0) -->
+    <sql id="feeCols">
+        biz52_erp_fee_id                AS erp_fee_id
+      , biz52_erp_cont_corp_id          AS erp_cont_corp_id
+      , biz52_start_date                AS start_date
+      , biz52_close_date                AS close_date
+      , biz52_erp_fee                   AS erp_fee
+      , biz52_data_fee                  AS data_fee
+      , biz52_charge_day                AS charge_day
+      , biz52_vat_cd                    AS vat_cd
+      , biz52_deposit_due_day           AS deposit_due_day
+      , biz52_add_fee_sms_yn            AS add_fee_sms_yn
+      , biz52_add_fee_server_yn         AS add_fee_server_yn
+      , biz52_add_fee_user_yn           AS add_fee_user_yn
+      , biz52_sms_base_count            AS sms_base_count
+      , biz52_sms_add_price             AS sms_add_price
+      , biz52_server_base_usage         AS server_base_usage
+      , biz52_server_add_unit           AS server_add_unit
+      , biz52_server_add_price          AS server_add_price
+      , biz52_user_base_count           AS user_base_count
+      , biz52_user_add_price            AS user_add_price
+      , biz52_user_count_std_cd         AS user_count_std_cd
+      , biz52_charge_calc_month_type    AS charge_calc_month_type
+    </sql>
+
+    <!-- AS-IS biz52_erp_fee.selectByErpContCorpId -->
+    <select id="selectByErpContCorpId" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizErpFeeRes">
+        SELECT <include refid="feeCols"/>
+             , f_cdnm('DateCode', biz52_charge_day, #{companyId}, biz52_start_date)                      AS charge_day_str
+             , f_cdnm('DateCode', biz52_deposit_due_day, #{companyId}, biz52_start_date)                 AS deposit_due_day_str
+             , f_cdnm('VatCode', biz52_vat_cd, #{companyId}, biz52_start_date)                           AS vat_nm
+             , f_cdnm('UserCountStdMonthCode', biz52_user_count_std_cd, #{companyId}, biz52_start_date)  AS user_count_std_str
+             , f_cdnm('MonthType', biz52_charge_calc_month_type, #{companyId}, biz52_start_date)         AS charge_calc_month_type_nm
+          FROM biz52_erp_fee
+         WHERE biz52_erp_cont_corp_id = #{erpContCorpId}
+         ORDER BY biz52_start_date DESC
+    </select>
+
+    <!-- AS-IS biz52_erp_fee.selectByStartDate -->
+    <select id="selectByStartDate" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizErpFeeRes">
+        SELECT <include refid="feeCols"/>
+             , f_cdnm('DateCode', biz52_charge_day, #{companyId}, biz52_start_date)                      AS charge_day_str
+             , f_cdnm('DateCode', biz52_deposit_due_day, #{companyId}, biz52_start_date)                 AS deposit_due_day_str
+             , f_cdnm('VatCode', biz52_vat_cd, #{companyId}, biz52_start_date)                           AS vat_nm
+             , f_cdnm('UserCountStdMonthCode', biz52_user_count_std_cd, #{companyId}, biz52_start_date)  AS user_count_std_str
+             , f_cdnm('MonthType', biz52_charge_calc_month_type, #{companyId}, biz52_start_date)         AS charge_calc_month_type_nm
+          FROM biz52_erp_fee
+         WHERE biz52_erp_cont_corp_id = #{erpContCorpId}
+           AND #{stdDate} >= biz52_start_date
+         ORDER BY biz52_start_date DESC
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS biz52_erp_fee.selectById (UpdateDataModel 저장 뒤 다시 읽기) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizErpFeeRes">
+        SELECT <include refid="feeCols"/>
+             , f_cdnm('DateCode', biz52_charge_day, 0, biz52_start_date)                      AS charge_day_str
+             , f_cdnm('DateCode', biz52_deposit_due_day, 0, biz52_start_date)                 AS deposit_due_day_str
+             , f_cdnm('VatCode', biz52_vat_cd, 0, biz52_start_date)                           AS vat_nm
+             , f_cdnm('UserCountStdMonthCode', biz52_user_count_std_cd, 0, biz52_start_date)  AS user_count_std_str
+             , f_cdnm('MonthType', biz52_charge_calc_month_type, 0, biz52_start_date)         AS charge_calc_month_type_nm
+          FROM biz52_erp_fee
+         WHERE biz52_erp_fee_id = #{erpFeeId}
+    </select>
+
+    <select id="countById" resultType="int">
+        SELECT COUNT(*) FROM biz52_erp_fee WHERE biz52_erp_fee_id = #{erpFeeId}
+    </select>
+
+    <insert id="insertErpFee">
+        INSERT INTO biz52_erp_fee ( biz52_erp_fee_id, biz52_erp_cont_corp_id, biz52_start_date, biz52_close_date, biz52_erp_fee, biz52_data_fee
+                                  , biz52_charge_day, biz52_vat_cd, biz52_deposit_due_day, biz52_add_fee_sms_yn, biz52_add_fee_server_yn, biz52_add_fee_user_yn
+                                  , biz52_sms_base_count, biz52_sms_add_price, biz52_server_base_usage, biz52_server_add_unit, biz52_server_add_price
+                                  , biz52_user_base_count, biz52_user_add_price, biz52_user_count_std_cd, biz52_charge_calc_month_type )
+        VALUES ( #{r.erpFeeId}, #{r.erpContCorpId}, #{r.startDate}, #{r.closeDate}, #{r.erpFee}, #{r.dataFee}
+               , #{r.chargeDay}, #{r.vatCd}, #{r.depositDueDay}, #{r.addFeeSmsYn}, #{r.addFeeServerYn}, #{r.addFeeUserYn}
+               , #{r.smsBaseCount}, #{r.smsAddPrice}, #{r.serverBaseUsage}, #{r.serverAddUnit}, #{r.serverAddPrice}
+               , #{r.userBaseCount}, #{r.userAddPrice}, #{r.userCountStdCd}, #{r.chargeCalcMonthType} )
+    </insert>
+
+    <update id="updateErpFee">
+        UPDATE biz52_erp_fee
+           SET biz52_erp_cont_corp_id        = #{r.erpContCorpId}
+             , biz52_start_date              = #{r.startDate}
+             , biz52_close_date              = #{r.closeDate}
+             , biz52_erp_fee                 = #{r.erpFee}
+             , biz52_data_fee                = #{r.dataFee}
+             , biz52_charge_day              = #{r.chargeDay}
+             , biz52_vat_cd                  = #{r.vatCd}
+             , biz52_deposit_due_day         = #{r.depositDueDay}
+             , biz52_add_fee_sms_yn          = #{r.addFeeSmsYn}
+             , biz52_add_fee_server_yn       = #{r.addFeeServerYn}
+             , biz52_add_fee_user_yn         = #{r.addFeeUserYn}
+             , biz52_sms_base_count          = #{r.smsBaseCount}
+             , biz52_sms_add_price           = #{r.smsAddPrice}
+             , biz52_server_base_usage       = #{r.serverBaseUsage}
+             , biz52_server_add_unit         = #{r.serverAddUnit}
+             , biz52_server_add_price        = #{r.serverAddPrice}
+             , biz52_user_base_count         = #{r.userBaseCount}
+             , biz52_user_add_price          = #{r.userAddPrice}
+             , biz52_user_count_std_cd       = #{r.userCountStdCd}
+             , biz52_charge_calc_month_type  = #{r.chargeCalcMonthType}
+         WHERE biz52_erp_fee_id = #{r.erpFeeId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz52_erp_fee WHERE biz52_erp_fee_id = #{erpFeeId}
+    </delete>
+</mapper>
