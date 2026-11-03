@@ -24,6 +24,7 @@ import { SearchBar } from '@/components/search';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Biz60_Edit_FundPriceModi, FundPriceModiEdit } from './Biz60_Edit_FundPriceModi';
 import dayjs from 'dayjs';
+import { Dcr10_Lookup_MailSender, MailSenderTarget } from '../dcr/Dcr10_Lookup_MailSender';
 
 const gb = gbFor<FundPriceModi>();
 
@@ -39,6 +40,7 @@ interface ClassPick { id: number; name: string }
 export const Biz60_Tab_FundPriceModiReport: React.FC = () => {
   const gridRef = useRef<AgGridReact<FundPriceModi>>(null);
   const [ym, setYm] = useState<YearMonth>(() => ({ year: dayjs().year(), month: dayjs().month() + 1 }));
+  const [mailTarget, setMailTarget] = useState<MailSenderTarget | null>(null);
   const [searchText, setSearchText] = useState('');
   const [rows, setRows] = useState<FundPriceModi[]>([]);
   // apprChk() L323-378: 변경년월의 월 통합 상신 상태 (stepCode '00' = 미상신)
@@ -182,7 +184,7 @@ export const Biz60_Tab_FundPriceModiReport: React.FC = () => {
       // [E11 인접] actionCell03 (Send) L279-303: ApprCallbackResult → 완료(30)가 아니면 "완료되지 않은 문서입니다", 맞으면 Dcr10_Lookup_MailSender.open(apprId)
       if (row.apprId == null) { message.warning('해당문서의 열람권한이 없습니다'); return; }
       if (row.statusCode !== '30') { message.warning('완료되지 않은 문서입니다'); return; }
-      message.info('메일 보내기 창(Dcr10_Lookup_MailSender)은 다음 단계에서 연결됩니다');
+      setMailTarget({ mode: 'open', apprId: row.apprId });
     });
     const base = mail.cellRenderer;
     return [
@@ -254,6 +256,8 @@ export const Biz60_Tab_FundPriceModiReport: React.FC = () => {
         onClosed={() => void retrieve()}
         onClose={() => { setViewApprId(null); setRowLink(null); setMonthLink(null); }}
       />
+      {/* Dcr10_Lookup_MailSender.open(apprId) — 확인창 뒤 발송창 (EE35) */}
+      <Dcr10_Lookup_MailSender target={mailTarget} onClose={() => setMailTarget(null)} />
     </div>
   );
 };

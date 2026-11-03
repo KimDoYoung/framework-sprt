@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) emp01_person.xml · emp00_trans_info.xml · cmp10_mail_book.xml · sys10_file.xml · dcr10_mail_history.xml · dcr11_mail_file_history.xml (EE35 메일 발송창) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.dcr.mapper.DcrMailSenderMapper">
+
+    <!-- AS-IS emp01_person.selectByPersonId(to_decrypts(emp01_password)) + emp00_trans_info.getPersonInfo 의 마지막 발령(발령일 최신)에서 서명에 쓰는 부서·직위만 (큰 CTE 전체는 쓰지 않는다) -->
+    <select id="selectSender" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrMailSenderRow">
+        SELECT p.emp01_person_id                          AS person_id
+             , p.emp01_company_id                         AS company_id
+             , p.emp01_kor_nm                             AS kor_nm
+             , p.emp01_email_addr                         AS email_addr
+             , to_decrypts(p.emp01_password)              AS dec_password
+             , p.emp01_office_telno                       AS office_telno
+             , p.emp01_mobile_telno                       AS mobile_telno
+             , f_org_parent_full_nm(t.emp03_org_code_id, t.emp03_trans_date)                                 AS parent_full_nm
+             , f_cdnm('EmpPosCode', t.emp03_pos_cd, p.emp01_company_id, t.emp03_trans_date)                  AS pos_nm
+          FROM emp01_person p
+               LEFT JOIN LATERAL (
+                     SELECT emp03_org_code_id, emp03_trans_date, emp03_pos_cd
+                       FROM emp03_trans
+                      WHERE emp03_person_id = p.emp01_person_id
+                      ORDER BY emp03_trans_date DESC, emp03_trans_id DESC
+                      LIMIT 1
+               ) t ON TRUE
+         WHERE p.emp01_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS cmp10_mail_book.selectByPersonId : INNER JOIN cmp11_mail_role ON cmp11_person_id = :personId (메일과 이어 주는 조건이 없다 — 그대로) -->
+    <select id="countPublicMailRole" resultType="long">
+        SELECT COUNT(*)
+          FROM cmp10_mail_book
+               INNER JOIN cmp11_mail_role ON cmp11_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS cmp10_mail_book.selectByText — 이메일||비고 LIKE, 내 역할인 공용메일 -->
+    <select id="selectPublicMails" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrPublicMailRes">
+        SELECT cmp10_mail_book.cmp10_mail_book_id  AS mail_book_id
+             , cmp10_mail_book.cmp10_email_addr    AS email_addr
+             , cmp10_mail_book.cmp10_note          AS note
+          FROM cmp10_mail_book
+               INNER JOIN cmp11_mail_role ON cmp11_mail_book_id = cmp10_mail_book_id
+         WHERE cmp10_email_addr || COALESCE(cmp10_note, '') LIKE #{searchText}
+           AND cmp11_person_id = #{personId}
+    </select>
+
+    <!-- AS-IS cmp10_mail_book.selectByEmailAddress — 회사의 사원이 역할을 가진 공용메일, 첫 행 -->
+    <select id="selectPublicSender" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrPublicSenderRow">
+        SELECT cmp10_email_addr                AS email_addr
+             , to_decrypts(cmp10_password)     AS dec_password
+          FROM cmp10_mail_book
+               INNER JOIN cmp11_mail_role ON cmp11_mail_book_id = cmp10_mail_book_id
+               INNER JOIN emp01_person ON emp01_person_id = cmp11_person_id
+         WHERE UPPER(cmp10_email_addr) LIKE UPPER(#{emailAddr})
+           AND emp01_company_id = #{companyId}
+         LIMIT 1
+    </select>
+
+    <!-- AS-IS sys01_company.selectById / selectByPersonId (sys01_mail_log_yn 기본 'false') -->
+    <select id="selectCompany" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrMailCompanyRow">
+        SELECT sys01_loc_nm                           AS location_name
+             , sys01_company_nm                       AS company_name
+             , sys01_mail_info                        AS mail_info
+             , COALESCE(sys01_mail_log_yn, 'false')   AS mail_log_yn
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS sys10_file.selectApprRelateDoc — 문서에 올린 파일 + 관련문서 파일 (ORDER BY 없음, 파일ID 순으로 고정) -->
+    <select id="selectApprRelateDoc" resultType="kr.co.kfs.asseterp.biz.sys.dto.FileRes">
+        SELECT <include refid="kr.co.kfs.asseterp.biz.sys.mapper.SysFileMapper.fileColumns"/>
+          FROM (
+                SELECT *
+                  FROM sys10_file
+                 WHERE sys10_parent_id = #{apprId}
+                 UNION ALL
+                SELECT *
+                  FROM sys10_file
+                 WHERE sys10_file_id IN ( SELECT apr05_file_id
+                                            FROM apr05_relate_doc
+                                           WHERE apr05_appr_id = #{apprId} )
+               ) AS file
+         ORDER BY file.sys10_file_id
+    </select>
+
+    <select id="countApprInCompany" resultType="long">
+        SELECT COUNT(*)
+          FROM apr01_appr
+         WHERE apr01_appr_id = #{apprId}
+           AND apr01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS dbConfig.getSeq -->
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- AS-IS dcr10_mail_history.insertMailHistory — 문서ID·첨부파일·PDF·인감은 AS-IS도 넣지 않는 값(null) -->
+    <insert id="insertMailHistory">
+        INSERT INTO dcr10_mail_history
+             ( dcr10_mail_history_id, dcr10_doc_id, dcr10_apr_id, dcr10_person_id, dcr10_sender_email, dcr10_send_time
+             , dcr10_receiver_email, dcr10_referencer_email, dcr10_attached_file, dcr10_pdf_file, dcr10_seal_file
+             , dcr10_title_text, dcr10_body_text )
+        VALUES ( #{id}, NULL, #{req.apprId}, #{personId}, #{req.senderEmail}, f_sysdate()
+               , #{req.receiverEmail}, #{req.referencerEmail}, NULL, NULL, NULL
+               , #{req.titleText}, #{req.bodyText} )
+    </insert>
+
+    <!-- AS-IS dcr11_mail_file_history.insertMailFileHistory -->
+    <insert id="insertMailFileHistory">
+        INSERT INTO dcr11_mail_file_history ( dcr11_mail_file_history_id, dcr11_mail_history_id, dcr11_file_id )
+        VALUES ( f_create_seq(), #{mailHistoryId}, #{fileId} )
+    </insert>
+
+</mapper>

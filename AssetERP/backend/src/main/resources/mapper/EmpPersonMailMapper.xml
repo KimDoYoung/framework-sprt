@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/emp/mapper/emp01_person.xml selectByPersonId / changeMail L762 / resetMail L769 (EE35 Emp10_Lookup_MailRetrieve) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.emp.mapper.EmpPersonMailMapper">
+
+    <select id="selectMail" resultType="kr.co.kfs.asseterp.biz.emp.dto.EmpPersonMailRes">
+        SELECT emp01_email_addr              AS mail_address
+             , to_decrypts(emp01_password)   AS password
+          FROM emp01_person
+         WHERE emp01_person_id = #{personId}
+    </select>
+
+    <update id="changeMail">
+        UPDATE emp01_person
+           SET emp01_email_addr = #{mailAddress}
+             , emp01_password   = to_encrypts(#{password})
+         WHERE emp01_person_id  = #{personId}
+    </update>
+
+    <update id="resetMail">
+        UPDATE emp01_person
+           SET emp01_password = NULL
+         WHERE emp01_person_id = #{personId}
+    </update>
+
+    <select id="selectMailInfo" resultType="string">
+        SELECT sys01_mail_info
+          FROM sys01_company
+         WHERE sys01_company_id = #{companyId}
+    </select>
+
+</mapper>

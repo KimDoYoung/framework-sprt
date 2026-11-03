@@ -19,6 +19,7 @@ import { SearchBar } from '@/components/search';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Dcr01_Lookup_DcrClass } from '@/pages/dcr/Dcr01_Lookup_DcrClass';
+import { Dcr10_Lookup_MailSender, MailSenderTarget } from '../dcr/Dcr10_Lookup_MailSender';
 
 const gb = gbFor<AprMyAuth>();
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -34,6 +35,7 @@ export const Apr01_Tab_MyAuthList: React.FC = () => {
   // [E0] 화면 열림 (생성자 L77-113) → settings() L115-221 — 열 때 자동 조회는 없다(원본 생성자는 retrieve()를 부르지 않는다)
   // settings(): 등록기간 = 오늘 -7일 ~ 오늘, 결재상태 "전체", 문서분류 "전체"
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().subtract(7, 'day'));
+  const [mailTarget, setMailTarget] = useState<MailSenderTarget | null>(null);
   const [closeDate, setCloseDate] = useState<Dayjs>(() => dayjs());
   const [classTreeId, setClassTreeId] = useState<number | null>(null);
   const [classTreeName, setClassTreeName] = useState(ALL_TEXT);
@@ -72,10 +74,9 @@ export const Apr01_Tab_MyAuthList: React.FC = () => {
   // [E4] downLoadButton[출력/다운로드].Select (L166) → sys.Sys99_Print.insertRdReferenceList: 도달 불가(downLoadButton이 컬럼·툴바에 연결되지 않음) — 화면에 버튼도 API도 없다
 
   // sendMail() L328-336 — 완료(30)가 아니면 "완료되지 않은 문서입니다", 아니면 Dcr10_Lookup_MailSender.open(apprId)
-  // [생략] 메일 보내기 창은 다음 단계
   const sendMail = (row: AprMyAuth) => {
     if (row.statusCode !== '30') message.warning('완료되지 않은 문서입니다');
-    else message.info('메일 보내기 창은 다음 단계에서 연결됩니다');
+    else setMailTarget({ mode: 'open', apprId: row.apprId });
   };
 
   // buildGrid() L223-287 (체크박스 단일 선택)
@@ -150,6 +151,8 @@ export const Apr01_Tab_MyAuthList: React.FC = () => {
         onAll={() => { setClassTreeId(null); setClassTreeName(ALL_TEXT); }}
         onClose={() => setClassOpen(false)}
       />
+      {/* Dcr10_Lookup_MailSender.open(apprId) — 확인창 뒤 발송창 (EE35) */}
+      <Dcr10_Lookup_MailSender target={mailTarget} onClose={() => setMailTarget(null)} />
     </div>
   );
 };

@@ -2,8 +2,8 @@
  * 문서작성 > 01. 문서작성 > 업무별 문서작성 > 오른쪽 문서 목록 (F02, 1단계)
  * AS-IS: myApp/client/vi/apr/Apr01_Grid_DocList.java (321줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 init() L77-139: vlc = 툴바(49: 등록기간 · 검색 · [검색] · [신규문서 작성] · 작성도움말 · 북마크) / 문서 그리드(1) | 회색 칸(10) | Apr03_TabPage_Relate(300)
- * 1단계(F01과 같은 사유): 보기·[신규문서 작성]이 여는 전자결재 편집창 Apr01_Edit_ApprDoc, 북마크 아이콘이 여는 Apr50_Lookup_ApprList, 메일 아이콘이 여는
- *   Dcr10_Lookup_MailSender는 다른 도메인이라 다음 단계에서 연결한다 — 지금은 안내만 띄운다.
+ * 1단계(F01과 같은 사유): 보기·[신규문서 작성]이 여는 전자결재 편집창 Apr01_Edit_ApprDoc, 북마크 아이콘이 여는 Apr50_Lookup_ApprList, 
+ *   메일 아이콘은 Dcr10_Lookup_MailSender.open(apprId)을 연다(EE35).
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 원본에 없어 넣지 않는다
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -20,6 +20,7 @@ import { SingleGrid, gbFor } from '@/components/grid';
 import { iconCell } from '@/components/grid/iconCell';
 import { SearchBar } from '@/components/search';
 import { Apr03_TabPage_Relate } from './Apr03_TabPage_Relate';
+import { Dcr10_Lookup_MailSender, MailSenderTarget } from '../dcr/Dcr10_Lookup_MailSender';
 
 const gb = gbFor<AprDoc>();
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -39,6 +40,7 @@ export const Apr01_Grid_DocList: React.FC<Props> = ({ node, showInsert, padded }
   // [E0] 화면 열림 (생성자 L69-71) → init() L77-139, settings() L145-176
   // settings() L145-176: 등록기간 = 올해 1월 1일 ~ 오늘(LoginUser.getToday())
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().startOf('year'));
+  const [mailTarget, setMailTarget] = useState<MailSenderTarget | null>(null);
   const [endDate, setEndDate] = useState<Dayjs>(() => dayjs());
   const [searchText, setSearchText] = useState('');
   const [rows, setRows] = useState<AprDoc[]>([]);
@@ -134,10 +136,9 @@ export const Apr01_Grid_DocList: React.FC<Props> = ({ node, showInsert, padded }
     // [L209 생략] 편집창은 다음 단계
     iconCell<AprDoc>('view', 'actionCell', 50, '보기', () => message.info('전자결재 문서 보기 창은 다음 단계에서 연결됩니다')),
     // L210 actionCell(Send) → sendMail() L308-316: 완료(30)가 아니면 "완료되지 않은 문서입니다", 맞으면 Dcr10_Lookup_MailSender.open(apprId)
-    // [L210 일부 생략] 메일 보내기 창은 다음 단계
     iconCell<AprDoc>('send', 'actionCell02', 50, '메일', row => {
       if (row.statusCode !== '30') message.warning('완료되지 않은 문서입니다');
-      else message.info('메일 보내기 창은 다음 단계에서 연결됩니다');
+      else setMailTarget({ mode: 'open', apprId: row.apprId });
     }),
     gb.date('regDate', 100, '등록일'),  // L211
     gb.date('effectDate', 100, '시행일'),  // L212
@@ -181,6 +182,8 @@ export const Apr01_Grid_DocList: React.FC<Props> = ({ node, showInsert, padded }
           <Apr03_TabPage_Relate apprId={apprId} />
         </div>
       </div>
+      {/* Dcr10_Lookup_MailSender.open(apprId) — 확인창 뒤 발송창 (EE35) */}
+      <Dcr10_Lookup_MailSender target={mailTarget} onClose={() => setMailTarget(null)} />
     </div>
   );
 };

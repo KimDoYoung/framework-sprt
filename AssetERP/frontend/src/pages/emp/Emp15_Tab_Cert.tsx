@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/emp/Emp15_Tab_Cert.java — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본)
  * 레이아웃(init() L87-182, SG): 가운데 테두리 박스 = 툴바(조회기간 · [조회][생성][삭제] · [문서분류지정](문서관리자만) · 신청내역 안내) + 증명서 그리드
  * 전자결재 상신(checkAppr·checkDcr·apprView·insertLinkApproval·updateApprId — Apr01_Edit_ApprDoc·Dcr01_Lookup_Class)은 V22에서 연결했다
- * (링크코드 B01~B04, 제목·본문은 서버가 만든다 `GET apr/apprs/link-seed`). 메일보내기(Dcr10_Lookup_MailSender)는 다음 단계 — 눌렀을 때 원본의 조건 검사까지만 한다
+ * (링크코드 B01~B04, 제목·본문은 서버가 만든다 `GET apr/apprs/link-seed`). 메일보내기는 완료된 문서만 Dcr10_Lookup_MailSender.certOpen(apprId, 사원 e-mail)(EE35)
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { DatePicker, message, Modal } from 'antd';
@@ -26,6 +26,7 @@ import { Emp15_Lookup_GetCert } from './Emp15_Lookup_GetCert';
 import { Emp15_Lookup_StampDocCert } from './Emp15_Lookup_StampDocCert';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
+import { Dcr10_Lookup_MailSender, MailSenderTarget } from '../dcr/Dcr10_Lookup_MailSender';
 
 const gb = gbFor<Cert>();
 
@@ -39,6 +40,7 @@ const statusStyle = (p: { value?: string | null }): Record<string, string> =>
 export const Emp15_Tab_Cert: React.FC = () => {
   const gridRef = useRef<AgGridReact<Cert>>(null);
   const [startDate, setStartDate] = useState<Dayjs>(dayjs().startOf('year')); // L91-93: 올해 1월 1일
+  const [mailTarget, setMailTarget] = useState<MailSenderTarget | null>(null);
   const [closeDate, setCloseDate] = useState<Dayjs>(dayjs()); // L94: 오늘
   const [rows, setRows] = useState<Cert[]>([]);
   const [hasApplication, setHasApplication] = useState(false); // checkStampDoc() L392-416: 신청내역 안내 표시
@@ -149,7 +151,7 @@ export const Emp15_Tab_Cert: React.FC = () => {
   const sendMail = (row: Cert) => {
     gridRef.current?.api?.getRowNode(String(row.certId))?.setSelected(true, true);
     if (row.apprStatusName !== '완료') return message.warning('완료되지 않은 문서입니다');
-    message.info('메일 보내기(Dcr10_Lookup_MailSender)는 아직 변환 전입니다.');
+    if (row.apprId != null) setMailTarget({ mode: 'cert', apprId: row.apprId, emailAddress: row.emailAddress });
   };
 
   // buildGrid() L184-212 — setChecked(SINGLE), 행번호 있음
@@ -220,6 +222,8 @@ export const Emp15_Tab_Cert: React.FC = () => {
         onClosed={() => void retrieve()}
         onClose={() => { setViewApprId(null); setLinkDoc(null); }}
       />
+      {/* Dcr10_Lookup_MailSender.certOpen(apprId, 사원 메일) — 확인창 뒤 발송창 (EE35) */}
+      <Dcr10_Lookup_MailSender target={mailTarget} onClose={() => setMailTarget(null)} />
     </div>
   );
 };

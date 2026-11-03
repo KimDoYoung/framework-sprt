@@ -5,7 +5,7 @@
  * 레이아웃 생성자 L90-120: 가운데(여백 20) = 툴바(청구년월 YYYY.MM [70] · 검색 [200 "계약사"] · [조회][생성][삭제][확정][확정취소][일괄메일발송]) + 그리드(체크 다중, 22열, 헤더 묶음 3)
  * 스타일: SG (견본 — docs/page-style.md)
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 초기화(UX-02)는 조건이 2개라 넣지 않는다
- * 미완(다음 단계 EE35): [메일보내기] 아이콘이 여는 Dcr10_Lookup_MailSender(SMTP 발송 + 메일 이력)와 [일괄메일발송]의 실제 발송 — 앞 검사까지만 하고 안내
+ * 메일(EE35): [메일보내기] 아이콘 = Dcr10_Lookup_MailSender.erpFeeChargeOpen(메일양식 #{계약사명}·#{청구일}·#{청구금액} 치환), [일괄메일발송] = 선택 행마다 sendMailSessionTest + 이력(진행창 "파일 재생성" E8·E15)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Input, message, Modal } from 'antd';
@@ -13,6 +13,7 @@ import dayjs from 'dayjs';
 import type { AgGridReact } from 'ag-grid-react';
 import { aprDetailApi } from '@/api/apr';
 import { bizErpFeeChargeApi, bizErpSetupApi } from '@/api/bizErp';
+import { dcrMailSenderApi } from '@/api/dcrMail';
 import { errorMessage } from '@/api/client';
 import { dcrApi } from '@/api/dcr';
 import { BizErpCompany, BizErpFeeCharge } from '@/types/bizErp';
@@ -21,6 +22,7 @@ import { MultiGrid, gbFor, iconCell } from '@/components/grid';
 import { SearchBar } from '@/components/search';
 import { Apr01_Edit_ApprDoc } from '../apr/Apr01_Edit_ApprDoc';
 import { Dcr01_Lookup_Class } from '../dcr/Dcr01_Lookup_Class';
+import { Dcr10_Lookup_MailSender, MailSenderTarget } from '../dcr/Dcr10_Lookup_MailSender';
 import { Biz55_Lookup_ErpCompany } from './Biz55_Lookup_ErpCompany';
 import { Biz55_Lookup_ErpFeeCharge } from './Biz55_Lookup_ErpFeeCharge';
 
@@ -28,6 +30,17 @@ const gb = gbFor<BizErpFeeCharge>();
 /** setChecked(MULTI) — 삭제·확정용 체크라 행 클릭이 선택을 바꾸지 않는다 */
 const MULTI_CHECK = { mode: 'multiRow', checkboxes: true } as const;
 const LINK_CODE = 'A69';
+
+/** createMapping() L846-854 — 값이 없으면 "- " (checkStringNull·checkDateNull "yyyy년 MM월 dd일"·checkLongNull "#,###") */
+const mailMapping = (row: BizErpFeeCharge): Record<string, string> => ({
+  계약사명: row.corpNm ?? '- ',
+  청구일: row.chargeDate ? dayjs(row.chargeDate).format('YYYY년 MM월 DD일') : '- ',
+  청구금액: row.chargeAmt == null ? '- ' : row.chargeAmt.toLocaleString('en-US'),
+});
+/** 메일양식의 #{태그}를 값으로 바꾼다 (AS-IS replaceAll("#{키}", 값)) */
+const fillMailForm = (form: string, row: BizErpFeeCharge): string =>
+  Object.entries(mailMapping(row)).reduce((text, [key, value]) => text.split(`#{${key}}`).join(value), form);
+const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
 /** dataYMText 'YYYY.MM'(또는 'YYYY-MM') → 그 달 1일 'yyyy-MM-dd', 틀리면 null (getStartDate L816-820) */
 const stdDateOf = (ym: string): string | null => {
@@ -52,6 +65,9 @@ export const Biz55_Tab_ErpFeeCharge: React.FC = () => {
   const [apprRows, setApprRows] = useState<BizErpFeeCharge[]>([]);
   const [linkDoc, setLinkDoc] = useState<{ classTreeId: number; linkCode: string; refId: number } | null>(null);
   const [viewApprId, setViewApprId] = useState<number | null>(null);
+  const [mailTarget, setMailTarget] = useState<MailSenderTarget | null>(null);
+  /** [일괄메일발송] 진행창 (AS-IS messageBox "파일 재생성" + button01[닫기], E15) */
+  const [batch, setBatch] = useState<{ lines: string[]; done: boolean } | null>(null);
 
   // retrieve() L341-353: biz.Biz55_ErpFeeCharge.selectByStdDate(stdDate = getStartDate(), searchText)
   const retrieve = useCallback(async () => {
@@ -202,22 +218,64 @@ export const Biz55_Tab_ErpFeeCharge: React.FC = () => {
     setViewApprId(row.apprId);
   };
 
-  // 행의 [메일보내기] 아이콘 (actionCell02 → sendMail L591-620): 결재 완료(30)가 아니면 "완료되지 않은 문서입니다", 메일양식이 없으면 "메일양식을 등록하고 진행바랍니다." — 발송창은 다음 단계(EE35)
+  // 행의 [메일보내기] 아이콘 (actionCell02 → sendMail L591-620): 결재 완료(30)가 아니면 "완료되지 않은 문서입니다", 메일양식이 없으면 "메일양식을 등록하고 진행바랍니다."
+  //   → 양식의 #{계약사명}·#{청구일}·#{청구금액}을 바꿔 Dcr10_Lookup_MailSender.erpFeeChargeOpen(apprId, 담당자 메일, 상신제목, 양식)
   const sendMail = async (row: BizErpFeeCharge) => {
     if (row.apprStatusCd !== '30') { message.warning('완료되지 않은 문서입니다'); return; }
     try {
       const form = await bizErpSetupApi.mailForm();
       if (!form || !form.mailForm) { message.warning('메일양식을 등록하고 진행바랍니다.'); return; }
+      if (row.apprId == null) return;
+      setMailTarget({ mode: 'erpFeeCharge', apprId: row.apprId, managerEmail: row.managerEmail, apprTitle: row.apprTitle, mailForm: fillMailForm(form.mailForm, row) });
     } catch (err) {
       message.error(errorMessage(err, '조회 실패'));
-      return;
     }
-    message.info('메일 발송 창(Dcr10_Lookup_MailSender)은 다음 단계(EE35)에서 변환합니다.');
   };
-  // [E8] multiSendButton[일괄메일발송].Select (L181) → multiSendMailReady() L622-655: 선택이 없으면 "발송할 메일을 해주길 선택바랍니다." — 실제 발송은 다음 단계(EE35)
-  const multiSendMailReady = () => {
-    if (checked().length === 0) { message.warning('발송할 메일을 해주길 선택바랍니다.'); return; }
-    message.info('일괄 메일 발송(SMTP 발송·메일 이력)은 다음 단계(EE35)에서 변환합니다.');
+  // [E8] multiSendButton[일괄메일발송].Select (L181) → multiSendMailReady() L622-655 → processSendMail() L657-686
+  //   선택이 없으면 "발송할 메일을 해주길 선택바랍니다." / 진행창 "파일 재생성" "파일 생성준비중 ..." → 행마다 "메일 발송 (i/n)" + "메일 발송준비중 [계약사]" (행 사이 0.5초)
+  //   각 행(multiSetMailCheck L688-728): 결재 완료(30)가 아니면 건너뜀 · 메일양식 없음 "메일양식 등록 후 진행바랍니다."(멈춤) · 담당자 메일 없음 "수신(메일주소)은 필수입력 항목입니다 [계약사]"(건너뜀)
+  //   → fileRetrieve L730-749(첨부 목록) → multiSendMail L751-778(sendMailSessionTest, 개인정보 서명 true) → addLog L780-809(이력, 보낸이 = 메일서버정보)
+  const multiSendMailReady = async () => {
+    const list = checked();
+    if (list.length === 0) { message.warning('발송할 메일을 해주길 선택바랍니다.'); return; }
+    setBatch({ lines: ['파일 생성준비중 ...'], done: false });
+    const stop = (lines: string[]) => setBatch({ lines, done: true });   // button01[닫기] 켜기
+    try {
+      const mailInfo = (await dcrMailSenderApi.init(null)).mailInfo ?? '';
+      for (let i = 0; i < list.length; i++) {
+        const row = list[i];
+        const head = `메일 발송 (${i + 1}/${list.length})`;
+        setBatch({ lines: [head, `메일 발송준비중 [${row.corpNm}]`], done: false });
+        if (row.apprStatusCd === '30') {
+          const form = await bizErpSetupApi.mailForm();
+          if (!form || !form.mailForm) { stop(['메일양식 등록 후 진행바랍니다.']); return; }
+          const content = fillMailForm(form.mailForm, row);
+          if (!row.managerEmail) {
+            setBatch({ lines: [`수신(메일주소)은 필수입력 항목입니다 [${row.corpNm}]`], done: false });
+          } else {
+            const fileIds = (await dcrMailSenderApi.init(row.apprId)).files.map(f => f.fileId);
+            const res = await dcrMailSenderApi.send({
+              apprId: row.apprId, receptor: row.managerEmail, ccReceptor: '', header: row.apprTitle ?? '', content,
+              publicCheck: null, privacyInfo: true, testYn: true, fileIds,
+            });
+            if (!res.ok) {
+              message.warning(res.message ?? '메일발송 중 에러가 발생했습니다');
+              stop([head, `메일 발송준비중 [${row.corpNm}]`]);
+              return;
+            }
+            await dcrMailSenderApi.saveHistory({
+              apprId: row.apprId, senderEmail: mailInfo, receiverEmail: row.managerEmail, referencerEmail: '',
+              titleText: row.apprTitle ?? '', bodyText: content, fileIds,
+            });
+          }
+        }
+        await sleep(500);
+      }
+      stop([`${list.length}개의 파일이 전부 재생성이 완료되었습니다.`]);
+    } catch (err) {
+      message.error(errorMessage(err, '메일 발송 실패'));
+      stop(['메일 발송 중 오류가 발생했습니다.']);
+    }
   };
 
   // buildGrid() L190-339
@@ -288,6 +346,16 @@ export const Biz55_Tab_ErpFeeCharge: React.FC = () => {
         onClosed={() => { void retrieve(); }}
         onClose={() => { setViewApprId(null); setLinkDoc(null); setApprRows([]); }}
       />
+      {/* sendMail() L591-620 → Dcr10_Lookup_MailSender.erpFeeChargeOpen(…) */}
+      <Dcr10_Lookup_MailSender target={mailTarget} onClose={() => setMailTarget(null)} />
+      {/* [E15] button01[닫기].Select (L643) → messageBox.hide() — 모두 끝나기 전에는 꺼 둔다 */}
+      <Modal open={!!batch} title="파일 재생성" width={430} closable={false} maskClosable={false} keyboard={false}
+        styles={{ header: { borderBottom: '1px solid #d9d9d9', paddingBottom: 12, marginBottom: 0 }, footer: { borderTop: '1px solid #d9d9d9', paddingTop: 12, marginTop: 0 } }}
+        footer={<div style={{ textAlign: 'center' }}><Button type="close" disabled={!batch?.done} onClick={() => setBatch(null)}>닫기</Button></div>}>
+        <div style={{ padding: '12px 2px', minHeight: 60 }}>
+          {batch?.lines.map((line, i) => <div key={i}>{line}</div>)}
+        </div>
+      </Modal>
     </div>
   );
 };

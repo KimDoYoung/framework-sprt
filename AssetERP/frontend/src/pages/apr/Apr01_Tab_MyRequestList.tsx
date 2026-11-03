@@ -3,7 +3,7 @@
  * AS-IS: myApp/client/vi/apr/Apr01_Tab_MyRequestList.java (423줄) — 함수 이름은 원본 메서드 이름 그대로 (줄 번호는 원본, 새 원본 IDMS-IC)
  * 레이아웃 L82-120: center=vlc — 툴바 2줄(등록기간 · 문서분류 / 결재상태 · 검색 · 완료/반려건 포함 · [검색] [출력/다운로드]) + 상신 문서 그리드(체크박스 단일 선택)
  * 1단계(F01~F12·G01과 같은 사유): [상세보기]가 여는 전자결재 편집창 Apr01_Edit_ApprDoc, [신청]이 여는 Ics40_Edit_DcrPreconfirm,
- *   준감인의견 아이콘이 여는 Ics40_Edit_Msg, [메일보내기]가 여는 Dcr10_Lookup_MailSender는 다른 도메인이라 다음 단계에서 연결한다 — 지금은 원본의 사전 검사 메시지까지만 하고 안내를 띄운다.
+ *   준감인의견 아이콘이 여는 Ics40_Edit_Msg, [메일보내기]는 Dcr10_Lookup_MailSender.open(apprId)(EE35). 준감인의견 Ics40_Edit_Msg 등은 다음 단계.
  * UX보강(10): 툴바 = SearchBar(UX-01·04). 박스 안 여백 = 11 §5(padding 10·gap 8)
  */
 import React, { useMemo, useRef, useState } from 'react';
@@ -19,6 +19,7 @@ import { SearchBar } from '@/components/search';
 import { SystemCodeComboBox } from '@/components/form/SystemCodeComboBox';
 import { LookupInput } from '@/components/lookup/LookupInput';
 import { Dcr01_Lookup_DcrClass } from '@/pages/dcr/Dcr01_Lookup_DcrClass';
+import { Dcr10_Lookup_MailSender, MailSenderTarget } from '../dcr/Dcr10_Lookup_MailSender';
 
 const gb = gbFor<AprMyRequest>();
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -34,6 +35,7 @@ export const Apr01_Tab_MyRequestList: React.FC = () => {
   // [E0] 화면 열림 (생성자 L82-120) → settings() L122-228 — 열 때 자동 조회는 없다(원본 생성자는 retrieve()를 부르지 않는다)
   // settings(): 등록기간 = 오늘 -7일 ~ 오늘, 결재상태 "전체", 문서분류 "전체", [완료/반려건 포함] 체크
   const [startDate, setStartDate] = useState<Dayjs>(() => dayjs().subtract(7, 'day'));
+  const [mailTarget, setMailTarget] = useState<MailSenderTarget | null>(null);
   const [closeDate, setCloseDate] = useState<Dayjs>(() => dayjs());
   const [classTreeId, setClassTreeId] = useState<number | null>(null);
   const [classTreeName, setClassTreeName] = useState(ALL_TEXT);
@@ -82,10 +84,9 @@ export const Apr01_Tab_MyRequestList: React.FC = () => {
   };
 
   // sendMail() L406-414 — 완료(30)가 아니면 "완료되지 않은 문서입니다", 아니면 Dcr10_Lookup_MailSender.open(apprId)
-  // [생략] 메일 보내기 창은 다음 단계
   const sendMail = (row: AprMyRequest) => {
     if (row.statusCode !== '30') message.warning('완료되지 않은 문서입니다');
-    else message.info('메일 보내기 창은 다음 단계에서 연결됩니다');
+    else setMailTarget({ mode: 'open', apprId: row.apprId });
   };
 
   // buildGrid() L230-364 (체크박스 단일 선택, 머리글 묶음 "준법감시인 사전확인" = 신청·상태·준감인의견·아이콘 4열)
@@ -183,6 +184,8 @@ export const Apr01_Tab_MyRequestList: React.FC = () => {
         onAll={() => { setClassTreeId(null); setClassTreeName(ALL_TEXT); }}
         onClose={() => setClassOpen(false)}
       />
+      {/* Dcr10_Lookup_MailSender.open(apprId) — 확인창 뒤 발송창 (EE35) */}
+      <Dcr10_Lookup_MailSender target={mailTarget} onClose={() => setMailTarget(null)} />
     </div>
   );
 };

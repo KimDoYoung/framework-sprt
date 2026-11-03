@@ -15671,5 +15671,41 @@
     "note": "docs/변환/work/EE/EE34-작업기록.md",
     "history": [],
     "id": "EE34"
+  },
+  "Dcr10_Lookup_MailSender": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/dcr/Dcr10_Lookup_MailSender.java": "bf8df47fdec0f853f1a803f7638a78e1c53785b0",
+      "application/src/main/java/myApp/client/vi/dcr/Dcr10_Lookup_MailSender_20261027.java": "a43f46b10d2373633447fe0f9b6fc250b280a1e2",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr10_MailHistoryModel.java": "142040c675f3b8bb999b16a49fcf82ab768407e1",
+      "application/src/main/java/myApp/server/cmp/Cmp10_MailBook.java": "1bc690934ecf5d5cf3acfdf132b6a737cb408a9f",
+      "application/src/main/java/myApp/server/cmp/mapper/cmp10_mail_book.xml": "431a2d269cc3005056cf4373167a4cc273623acd",
+      "application/src/main/java/myApp/server/dcr/Dcr10_MailHistory.java": "aa6c3232ca95e2c647cae071008f19caa1c1e3b2",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr10_mail_history.xml": "7c2ab0641997bf1b98a115eb7484e1485481fc3a",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr11_mail_file_history.xml": "f9ff914744829db12c7567d0a77d820440a79578",
+      "application/src/main/java/myApp/server/emp/Emp01_Person.java": "4fff22179802bd493eeb621520dbee1320450bf0",
+      "application/src/main/java/myApp/server/emp/mapper/emp00_trans_info.xml": "76c324eda8ede6658a765beeaaebf929930afd47",
+      "application/src/main/java/myApp/server/emp/mapper/emp01_person.xml": "996a542c6a2637d37b8ad6dafdc1de2019cbe902",
+      "application/src/main/java/myApp/server/sys/Sys10_File.java": "899c1a3dbf5c84e9f25edd8ef789d7bd57c76907",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/sys/mapper/sys10_file.xml": "50278807e89296ec886fd1029e40ec732a1bc893",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603",
+      "application/src/main/java/myApp/server/utils/mail/SendMailSMTP.java": "2d430f36543108847b0910be4321eeb1c0770d65"
+    },
+    "shared_links": [
+      "Cmp10_Lookup_MailBookList",
+      "Emp10_Lookup_MailAddress",
+      "Emp10_Lookup_MailRetrieve"
+    ],
+    "recorded_at": "2026-11-03T22:17:23+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE35-작업기록.md",
+    "history": [],
+    "id": "EE35"
   }
 }
