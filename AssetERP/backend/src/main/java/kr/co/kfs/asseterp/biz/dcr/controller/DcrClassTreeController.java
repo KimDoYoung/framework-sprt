@@ -60,7 +60,11 @@ public class DcrClassTreeController {
     @GetMapping
     public ApiResponse<List<DcrClassTreeRes>> searchTree(@AuthenticationPrincipal UserPrincipal principal,
                                                          @RequestParam(required = false) String typeCode,
-                                                         @RequestParam(required = false) Long companyId) {
+                                                         @RequestParam(required = false) Long companyId,
+                                                         @RequestParam(required = false) Long orgCodeId) {
+        if (orgCodeId != null) {  // EE08: 조직의 조회권한 분류만 (selectByOrgCodeId)
+            return ApiResponse.ok(dcrClassTreeService.searchTreeByOrg(principal, typeCode, orgCodeId));
+        }
         return ApiResponse.ok(dcrClassTreeService.searchTree(principal, typeCode, companyId));
     }
 

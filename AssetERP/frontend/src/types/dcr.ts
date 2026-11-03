@@ -330,3 +330,33 @@ export interface DcrOrgAuthClass {
   seq?: string | null;
   note?: string | null;
 }
+
+/** 조회권한 예외사원 한 행 (AS-IS Dcr04_EmpAuthModel, selectByText). 새 행은 empAuthId가 음수(임시) */
+export interface DcrEmpAuth {
+  empAuthId: number;
+  personId: number;
+  classTreeId: number;
+  orgName?: string | null;
+  personName?: string | null;
+  posName?: string | null;
+  kindName?: string | null;
+  note?: string | null;
+  retrieveYn?: string | null;
+}
+
+/** 예외 권한이 있는 사원 (getTargetList) */
+export interface DcrEmpAuthTarget {
+  personId: number;
+  orgName?: string | null;
+  personName?: string | null;
+  posName?: string | null;
+  kindName?: string | null;
+}
+
+/** 사원 한 명의 예외 문서분류 (getTargetClassTreeList) */
+export interface DcrEmpAuthClass {
+  empAuthId: number;
+  classTreeId: number;
+  classTreeFullName?: string | null;
+}
+

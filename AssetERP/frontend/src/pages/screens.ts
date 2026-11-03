@@ -379,6 +379,7 @@ import { Dcr30_Tab_LinkAdmin } from './dcr/Dcr30_Tab_LinkAdmin';
 import { Dcr01_Tab_DcrClassModify } from './dcr/Dcr01_Tab_DcrClassModify';
 import { Dcr03_Tab_DcrAuth } from './dcr/Dcr03_Tab_DcrAuth';
 import { Dcr03_Tab_OrgAuth } from './dcr/Dcr03_Tab_OrgAuth';
+import { Dcr04_Tab_EmpAuth } from './dcr/Dcr04_Tab_EmpAuth';
 import { Dcr01_Tab_DcrUser } from './dcr/Dcr01_Tab_DcrUser';
 import { Dcr01_Tab_DcrWrite } from './dcr/Dcr01_Tab_DcrWrite';
 import { Rpt10_Tab_FssSubmit } from './rpt/Rpt10_Tab_FssSubmit';
@@ -616,6 +617,7 @@ export const SCREENS: Record<string, React.FC> = {
   Dcr01_Tab_DcrClassModify, // EE05 1단계 (메뉴 #1004 + Dcr01_Grid_DcrClassList·Dcr01_Move_DcrClass. 보기 아이콘이 여는 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Dcr03_Tab_DcrAuth, // EE06 (메뉴 #1073 + Dcr03_TabPage_DcrAuth·Dcr03_LinkNote. 문서분류지정 창 Dcr30_Lookup_Link 연결)
   Dcr03_Tab_OrgAuth, // EE07 (메뉴 #1074 + Dcr03_TabPage_OrgAuth·Dcr03_LinkNote. 권한복사 조직찾기 Org00_Lookup_SelectMulti·문서분류지정 창 Dcr30_Lookup_Link 연결)
+  Dcr04_Tab_EmpAuth, // EE08 (메뉴 #1491 + Dcr04_TabPage_EmpAuth·Dcr04_Lookup_DocList·Dcr04_TabPage_DocList. 사원찾기 Emp00_Lookup_SelectMulti·조직찾기 Org00_Lookup_SelectSingle 재사용)
   Dcr01_Tab_DcrUser, // F02 1단계 (메뉴 #1002 + Dcr01_Tab_DcrManager·Apr01_Grid_DocList·Apr03_TabPage_Relate. 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList·메일 Dcr10_Lookup_MailSender는 다음 단계)
   Dcr01_Tab_DcrWrite, // F01 1단계 (메뉴 #1318 + Dcr08_Lookup_SelectSingle. 전자결재 편집창 Apr01_Edit_ApprDoc·북마크 Apr50_Lookup_ApprList는 F01-2)
   Rpt01_Tab_DailyConfirm, // Z09 (+ Rpt01_Edit_DailyConfirm, RD Rpt01_Rd_Daily)

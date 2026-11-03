@@ -97,6 +97,53 @@
          ORDER BY a.path
     </select>
 
+    <!-- AS-IS dcr01_class_tree.selectByOrgCodeId1Bang (EE08 부서별 조회권한 필터링): selectTree + 조직 orgCodeId가 조회권한(dcr03_retrieve_yn)을 가진 분류만 -->
+    <select id="selectTreeByOrg" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeRes">
+        WITH RECURSIVE dcr_tree(
+              dcr01_class_tree_id, dcr01_company_id, dcr01_class_tree_nm, dcr01_parent_tree_id, dcr01_seq, dcr01_note,
+              dcr01_class_tree_cd, dcr01_type_cd, dcr01_use_yn, dcr01_admin_yn, depth, path, cycle
+        ) AS (
+            SELECT a.dcr01_class_tree_id, a.dcr01_company_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, a.dcr01_seq, a.dcr01_note,
+                   a.dcr01_class_tree_cd, a.dcr01_type_cd, a.dcr01_use_yn, a.dcr01_admin_yn,
+                   1,
+                   ARRAY[CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar),10,'0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id],
+                   false
+              FROM dcr01_class_tree a
+             WHERE a.dcr01_company_id     = #{companyId}
+               AND a.dcr01_parent_tree_id = 0
+               AND a.dcr01_use_yn         = 'true'
+               AND a.dcr01_type_cd LIKE #{typeCode}
+            UNION ALL
+            SELECT a.dcr01_class_tree_id, a.dcr01_company_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, a.dcr01_seq, a.dcr01_note,
+                   a.dcr01_class_tree_cd, a.dcr01_type_cd, a.dcr01_use_yn, a.dcr01_admin_yn,
+                   b.depth + 1,
+                   array_append(b.path, CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar),10,'0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id),
+                   a.dcr01_class_tree_nm = any(b.path)
+              FROM dcr01_class_tree a
+                   INNER JOIN dcr_tree b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+             WHERE a.dcr01_company_id = #{companyId}
+               AND a.dcr01_use_yn     = 'true'
+               AND a.dcr01_type_cd LIKE #{typeCode}
+               AND NOT cycle
+        )
+        SELECT a.dcr01_class_tree_id    AS class_tree_id,
+               a.dcr01_company_id       AS company_id,
+               a.dcr01_parent_tree_id   AS parent_tree_id,
+               a.dcr01_class_tree_nm    AS class_tree_name,
+               a.dcr01_class_tree_cd    AS class_tree_code,
+               a.dcr01_seq              AS seq,
+               a.dcr01_note             AS note,
+               a.dcr01_type_cd          AS type_code,
+               COALESCE(a.dcr01_use_yn, 'false')   AS use_yn,
+               COALESCE(a.dcr01_admin_yn, 'false') AS admin_yn,
+               a.depth - 1              AS depth
+          FROM dcr_tree a
+               LEFT OUTER JOIN dcr03_org_auth b ON (a.dcr01_class_tree_id = b.dcr03_class_tree_id AND b.dcr03_org_code_id = #{orgCodeId})
+         WHERE a.dcr01_type_cd IN ('T','C')
+           AND COALESCE(b.dcr03_retrieve_yn, 'false') = 'true'
+         ORDER BY a.path
+    </select>
+
     <!-- AS-IS dcr01_class_tree.selectByAll: 사용 여부 조건 없이 전체 + 문서구분(T)별 상신문서 건수 -->
     <select id="selectTreeAll" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeAllRes">
         WITH RECURSIVE dcr_tree(

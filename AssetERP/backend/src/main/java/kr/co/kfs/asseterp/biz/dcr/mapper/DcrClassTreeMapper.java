@@ -35,6 +35,10 @@ public interface DcrClassTreeMapper {
     /** AS-IS selectByParentId1Bang (selectByCompanyId): 사용 중인 분류의 전위 순서 목록. typeCode는 LIKE 패턴('C'·'%') */
     List<DcrClassTreeRes> selectTree(@Param("companyId") Long companyId, @Param("typeCode") String typeCode);
 
+    /** AS-IS dcr01_class_tree.selectByOrgCodeId1Bang (EE08): 조직 orgCodeId에 조회권한이 있는 분류만 */
+    List<DcrClassTreeRes> selectTreeByOrg(@Param("companyId") Long companyId, @Param("orgCodeId") Long orgCodeId,
+                                          @Param("typeCode") String typeCode);
+
     /** AS-IS selectByOrgIdRoleWrite_1Bang (F02): 조직이 작성권한을 가진 문서구분과 그 조상·하위의 전위 순서 목록 */
     List<DcrWriteTreeRes> selectWriteTree(@Param("companyId") Long companyId, @Param("orgId") Long orgId, @Param("personId") Long personId);
 

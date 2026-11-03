@@ -4,7 +4,7 @@ import {
   DcrCheckRes, DcrCheckRowReq, DcrClassDetail, DcrClassTree, DcrClassTreeAll, DcrClassTreeLookup, DcrClassTreeSaveReq,
   DcrCopyCompany, DcrFundPlanLookup, DcrDocAppr, DcrDocFile, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrClassLink, DcrLink, DcrLinkClassTree, DcrLinkSaveReq, DcrRelateDocType, DcrRelateIcr,
   DcrOftenUse, DcrRelateIcs, DcrRelateSaveReq, DcrStampAuthTree, DcrUseYnReq, DcrWriteCode, DcrWriteTree,
-  DcrMailFile, DcrMailHistory, DcrOrgAuthClass, DcrOrgAuthOrg,
+  DcrEmpAuth, DcrEmpAuthClass, DcrEmpAuthTarget, DcrMailFile, DcrMailHistory, DcrOrgAuthClass, DcrOrgAuthOrg,
 } from '../types/dcr';
 
 /** dcr(문서분류) API (E13-3 조회창, E16 문서분류, F02 업무별 문서작성) */
@@ -29,8 +29,8 @@ export const dcrApi = {
   // ── E16 문서분류 (Dcr01_Tab_ClassTree 외) ──
 
   /** AS-IS dcr.Dcr01_ClassTree.selectByCompanyId: 사용 중인 분류 트리(전위 순서, depth). typeCode 기본 'C', 이동·반영 창은 '%'. companyId(E17)는 다른 회사 지정 — 관리자 회사만 */
-  searchClassTree: async (typeCode = 'C', companyId?: number): Promise<DcrClassTree[]> => {
-    const res = await apiClient.get<ApiResponse<DcrClassTree[]>>('v1/dcr/class-trees', { params: { typeCode, companyId } });
+  searchClassTree: async (typeCode = 'C', companyId?: number, orgCodeId?: number): Promise<DcrClassTree[]> => {
+    const res = await apiClient.get<ApiResponse<DcrClassTree[]>>('v1/dcr/class-trees', { params: { typeCode, companyId, orgCodeId } });
     return res.data.data ?? [];
   },
 
@@ -395,6 +395,39 @@ export const dcrOrgAuthApi = {
   /** AS-IS org.Org01_Code.copyDcrRight: 출발 조직의 문서권한을 도착 조직들에 복사 → 복사한 도착 조직 수 */
   copy: async (startOrgCodeId: number, closeOrgCodeIds: number[]): Promise<number> => {
     const res = await apiClient.post<ApiResponse<number>>('v1/dcr/org-auths/copy', { startOrgCodeId, closeOrgCodeIds });
+    return res.data.data ?? 0;
+  },
+};
+
+/** EE08 조회권한 예외사원 등록 (dcr04_emp_auth) */
+export const dcrEmpAuthApi = {
+  /** AS-IS dcr.Dcr04_EmpAuth.selectByText: 문서분류의 예외사원 (검색어는 부서·성명·직위·사원구분 이어붙인 글자에서 찾는다) */
+  search: async (classTreeId: number, searchText: string): Promise<DcrEmpAuth[]> => {
+    const res = await apiClient.get<ApiResponse<DcrEmpAuth[]>>('v1/dcr/emp-auths', { params: { classTreeId, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr04_EmpAuth.getTargetList: 예외 권한이 있는 사원 (사원별 권한현황 창) */
+  searchTargets: async (searchText: string): Promise<DcrEmpAuthTarget[]> => {
+    const res = await apiClient.get<ApiResponse<DcrEmpAuthTarget[]>>('v1/dcr/emp-auths/targets', { params: { searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr04_EmpAuth.getTargetClassTreeList: 사원 한 명의 예외 문서분류 */
+  searchByPerson: async (personId: number, searchText: string): Promise<DcrEmpAuthClass[]> => {
+    const res = await apiClient.get<ApiResponse<DcrEmpAuthClass[]>>('v1/dcr/emp-auths/by-person', { params: { personId, searchText } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr04_EmpAuth.updateList: 새 행은 넣고 있는 행은 비고만 고친다 → 처리한 행 수 */
+  update: async (rows: { classTreeId: number; personId: number; note?: string | null }[]): Promise<number> => {
+    const res = await apiClient.put<ApiResponse<number>>('v1/dcr/emp-auths', { rows });
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS dcr.Dcr04_EmpAuth.delete: 체크한 행(ID) → 지운 행 수 */
+  delete: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/dcr/emp-auths', { data: ids });
     return res.data.data ?? 0;
   },
 };

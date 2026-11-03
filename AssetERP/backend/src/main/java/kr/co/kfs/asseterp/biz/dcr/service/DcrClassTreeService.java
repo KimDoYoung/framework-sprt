@@ -71,6 +71,11 @@ public class DcrClassTreeService {
         return searchTree(user, typeCode, null);
     }
 
+    /** AS-IS selectByOrgCodeId (EE08 Dcr04_Tab_EmpAuth 부서별 조회권한 필터링): 조직에 조회권한이 있는 분류 트리 */
+    public List<DcrClassTreeRes> searchTreeByOrg(UserPrincipal user, String typeCode, Long orgCodeId) {
+        return mapper.selectTreeByOrg(user.getCompanyId(), orgCodeId, typeCode == null || typeCode.isEmpty() ? "C" : typeCode);
+    }
+
     /** E17 Dcr30_Move_DcrClass.openNull(companyId, …): 고른 회사의 트리. 다른 회사는 관리자 회사만 */
     public List<DcrClassTreeRes> searchTree(UserPrincipal user, String typeCode, Long companyId) {
         Long target = user.getCompanyId();
