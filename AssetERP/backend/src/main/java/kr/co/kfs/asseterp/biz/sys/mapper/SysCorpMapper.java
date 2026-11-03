@@ -18,6 +18,10 @@ public interface SysCorpMapper {
     /** selectByUseYn empYn=true — 임직원(구분 Z99) 포함 */
     List<CorpRes> selectLookupWithEmp(@Param("companyId") Long companyId, @Param("corpType") String corpType, @Param("searchText") String searchText);
 
+    /** AS-IS sys15_corp.selectByKFS (EE20) — 구분 그룹 CorpType0001 거래처 */
+    List<CorpRes> selectByKfs(@Param("companyId") Long companyId, @Param("corpType") String corpType,
+                              @Param("useYn") boolean useYn, @Param("searchText") String searchText);
+
     List<CorpRes> selectLookup(@Param("companyId") Long companyId, @Param("corpType") String corpType, @Param("searchText") String searchText);
 
     CorpRes selectById(@Param("corpId") Long corpId);

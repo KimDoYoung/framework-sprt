@@ -40,6 +40,15 @@ public class SysCorpController {
         return ApiResponse.ok(service.search(principal, corpType, searchText, useYn));
     }
 
+    /** AS-IS sys.Sys15_Corp.selectByKFS (EE20 운용사 코드 관리 조회창 Sys15_Lookup_Corp_OnlyKFS) */
+    @GetMapping("/kfs")
+    public ApiResponse<List<CorpRes>> kfs(@AuthenticationPrincipal UserPrincipal principal,
+                                          @RequestParam(required = false) String corpType,
+                                          @RequestParam(defaultValue = "false") boolean useYn,
+                                          @RequestParam(required = false) String searchText) {
+        return ApiResponse.ok(service.searchKfs(principal, corpType, useYn, searchText));
+    }
+
     /** AS-IS sys.Sys15_Corp.selectByUseYn (거래처 조회창 Sys15_Lookup_Corp) */
     @GetMapping("/lookup")
     public ApiResponse<List<CorpRes>> lookup(@AuthenticationPrincipal UserPrincipal principal,

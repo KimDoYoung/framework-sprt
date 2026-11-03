@@ -1071,6 +1071,12 @@ export const sysApi = {
     return res.data.data ?? [];
   },
 
+  /** AS-IS sys.Sys15_Corp.selectByKFS (EE20 Sys15_Lookup_Corp_OnlyKFS): corpType 코드('%'면 전체), useYn=사용 거래처만, searchText는 코드·이름·비고 포함 */
+  searchKfsCorps: async (corpType: string, useYn: boolean, searchText: string): Promise<Corp[]> => {
+    const res = await apiClient.get<ApiResponse<Corp[]>>('v1/sys/corps/kfs', { params: { corpType, useYn, searchText } });
+    return res.data.data ?? [];
+  },
+
   /** AS-IS sys.Sys15_Corp.update → 저장된 행(요청 순서) */
   updateCorps: async (rows: Corp[]): Promise<Corp[]> => {
     const body = rows.map(({ corpId, corpType, corpName, bizNo, corpCode, seq, useYn, note, tel, addr, issCorpCode }) =>

@@ -1,0 +1,601 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/biz/mapper/biz10_cont_corp.xml · biz11_cont_history.xml · biz12_fee_info.xml · biz13_with_corp.xml · biz14_relate_appr.xml
+     · biz15_share.xml · biz16_each_contract.xml · biz17_dual_manage_fund.xml · ast30_book_fund_fee.xml(selectByContCorpId)  (EE20 Biz10_Tab_ContCorp) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.biz.mapper.BizContCorpMapper">
+
+    <!-- 계약사 한 건(최근 이력 + 보수정보) 열 — BizContCorpRes. 바깥 SELECT 가 쓰는 안쪽 별칭은 AS-IS 열 이름 그대로 -->
+    <sql id="corpCols">
+        biz11_cont_corp_id        AS cont_corp_id
+      , biz10_company_id          AS company_id
+      , biz11_cont_history_id     AS cont_history_id
+      , biz11_reg_date            AS reg_date
+      , biz11_cont_corp_nm        AS cont_corp_nm
+      , biz11_cont_status_cd      AS cont_status_cd
+      , biz11_cont_status_nm      AS cont_status_nm
+      , biz11_corp_status_cd      AS corp_status_cd
+      , biz11_corp_status_nm      AS corp_status_nm
+      , biz11_tr_type             AS tr_type
+      , biz11_cont_period_cd      AS cont_period_cd
+      , biz11_cont_period_nm      AS cont_period_nm
+      , biz11_cont_date           AS cont_date
+      , biz11_start_date          AS start_date
+      , biz11_close_date          AS close_date
+      , biz11_base_fee            AS base_fee
+      , biz11_manager             AS manager
+      , biz11_manager_tel         AS manager_tel
+      , biz11_note                AS note
+      , biz11_person_id           AS person_id
+      , biz11_person_nm           AS person_nm
+      , biz11_address             AS address
+      , biz11_ceo                 AS ceo
+      , biz12_fee_info_id         AS fee_info_id
+      , biz12_min_fee_yn          AS min_fee_yn
+      , biz12_manage_min_fee      AS manage_min_fee
+      , biz12_adv_min_fee         AS adv_min_fee
+      , biz12_discr_min_fee       AS discr_min_fee
+      , biz12_fee_charge_type     AS fee_charge_type
+      , biz12_fee_charge_type_nm  AS fee_charge_type_nm
+      , biz12_with_yn             AS with_yn
+      , biz12_with_fee            AS with_fee
+      , biz12_min_fee_str         AS min_fee_str
+      , biz12_with_fee_str        AS with_fee_str
+    </sql>
+
+    <!-- AS-IS biz10_cont_corp.selectByText (IDMS-IC) — 계약일 이후 가장 최근(오늘까지) 이력 기준 -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizContCorpRes">
+        SELECT <include refid="corpCols"/>
+          FROM (
+                SELECT *
+                     , f_emp_kor_nm(biz11_person_id)                                                         as biz11_person_nm
+                     , f_cdnm('ContStatusCode'    , biz11_cont_status_cd , biz10_company_id, biz11_reg_date) as biz11_cont_status_nm
+                     , f_cdnm('ContCorpStatusCode', biz11_corp_status_cd , biz10_company_id, biz11_reg_date) as biz11_corp_status_nm
+                     , f_cdnm('ContPeriodCode'    , biz11_cont_period_cd , biz10_company_id, biz11_reg_date) as biz11_cont_period_nm
+                     , f_cdnm('FundFeeChargeType' , biz12_fee_charge_type, biz10_company_id, biz11_reg_date) as biz12_fee_charge_type_nm
+                     , CASE WHEN COALESCE(biz12_min_fee_yn,'false') = 'false' THEN '최저보수 없음'
+                            ELSE
+                                '운용:'||CASE WHEN COALESCE(biz12_manage_min_fee,0) = 0 THEN 0 ELSE TRUNC(biz12_manage_min_fee / 10000) END ||'만원/'||
+                                '자문:'||CASE WHEN COALESCE(biz12_adv_min_fee   ,0) = 0 THEN 0 ELSE TRUNC(biz12_adv_min_fee    / 10000) END ||'만원/'||
+                                '일임:'||CASE WHEN COALESCE(biz12_discr_min_fee ,0) = 0 THEN 0 ELSE TRUNC(biz12_discr_min_fee  / 10000) END ||'만원 '
+                            END AS biz12_min_fee_str
+                     , CASE WHEN COALESCE(biz12_with_yn,'false') = 'false' THEN '병행보수 없음'
+                            ELSE TRUNC(biz12_with_fee / 10000)||'만원' END AS biz12_with_fee_str
+                     , ( SELECT MIN(biz11_cont_date)
+                           FROM biz11_cont_history
+                          WHERE biz11_cont_corp_id = biz10_cont_corp_id ) as first_cont_date
+                  FROM biz10_cont_corp
+                       INNER JOIN ( SELECT *
+                                      FROM biz11_cont_history
+                                           LEFT OUTER JOIN biz12_fee_info ON biz12_cont_history_id = biz11_cont_history_id
+                                     WHERE (biz11_cont_corp_id, biz11_reg_date) IN ( SELECT biz11_cont_corp_id, MAX(biz11_reg_date)
+                                                                                       FROM biz11_cont_history
+                                                                                      WHERE biz11_reg_date &lt;= f_today()
+                                                                                      GROUP BY biz11_cont_corp_id )
+                                  ) biz11 ON biz11_cont_corp_id = biz10_cont_corp_id
+                 WHERE biz10_company_id = #{companyId}
+                   AND biz11_cont_status_cd LIKE #{statusCode}
+                   AND ( ( #{statusCheck} = 'true'               AND
+                           biz11_cont_status_cd IN ('1','2','3') ) OR
+                         ( #{statusCheck} = 'false'              ) )
+               ) t
+         WHERE 1=1
+        <if test="check == 'true'">
+           AND TO_CHAR("first_cont_date",'YYYY') = #{stdYear}
+        </if>
+        <if test="searchText != '%%'">
+           AND biz11_cont_corp_id IN ( SELECT biz10_cont_corp_id
+                                         FROM biz10_cont_corp
+                                              INNER JOIN biz11_cont_history ON biz11_cont_corp_id = biz10_cont_corp_id
+                                        WHERE biz10_company_id = #{companyId}
+                                          AND UPPER(CONCAT(biz11_cont_corp_nm,biz11_tr_type,biz11_note)) LIKE UPPER(#{searchText}) )
+        </if>
+        <if test="endMonth != null">
+           AND biz11_cont_status_cd NOT IN ('8','9')  /*(8:계약종료(이관)/9:계약종료)*/
+           AND CAST(f_today() + #{endMonth} * interval '+1month' AS DATE) &gt;= COALESCE(biz11_close_date,'9999-12-31'::date)
+        </if>
+         ORDER BY CASE WHEN #{sortType} = '2' THEN biz11_close_date ELSE biz11_cont_date END
+    </select>
+
+    <!-- AS-IS biz10_cont_corp.selectById (IDMS-IC) — 저장·삭제 뒤 그리드 한 줄을 다시 읽는다 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizContCorpRes">
+        SELECT <include refid="corpCols"/>
+          FROM (
+                SELECT *
+                     , f_emp_kor_nm(biz11_person_id)                                                         as biz11_person_nm
+                     , f_cdnm('ContStatusCode'    , biz11_cont_status_cd , biz10_company_id, biz11_reg_date) as biz11_cont_status_nm
+                     , f_cdnm('ContCorpStatusCode', biz11_corp_status_cd , biz10_company_id, biz11_reg_date) as biz11_corp_status_nm
+                     , f_cdnm('ContPeriodCode'    , biz11_cont_period_cd , biz10_company_id, biz11_reg_date) as biz11_cont_period_nm
+                     , f_cdnm('FundFeeChargeType' , biz12_fee_charge_type, biz10_company_id, biz11_reg_date) as biz12_fee_charge_type_nm
+                     , CASE WHEN COALESCE(biz12_min_fee_yn,'false') = 'false' THEN '최저보수 없음'
+                            ELSE
+                                '운용:'||CASE WHEN COALESCE(biz12_manage_min_fee,0) = 0 THEN 0 ELSE TRUNC(biz12_manage_min_fee / 10000) END ||'만원/'||
+                                '자문:'||CASE WHEN COALESCE(biz12_adv_min_fee   ,0) = 0 THEN 0 ELSE TRUNC(biz12_adv_min_fee    / 10000) END ||'만원/'||
+                                '일임:'||CASE WHEN COALESCE(biz12_discr_min_fee ,0) = 0 THEN 0 ELSE TRUNC(biz12_discr_min_fee  / 10000) END ||'만원'
+                            END AS biz12_min_fee_str
+                     , CASE WHEN COALESCE(biz12_with_yn,'false') = 'false' THEN '병행보수 없음'
+                            ELSE TRUNC(biz12_with_fee / 10000)||'만원' END AS biz12_with_fee_str
+                  FROM biz10_cont_corp
+                       INNER JOIN ( SELECT *
+                                      FROM biz11_cont_history
+                                           LEFT OUTER JOIN biz12_fee_info ON biz12_cont_history_id = biz11_cont_history_id
+                                     WHERE (biz11_cont_corp_id, biz11_reg_date) IN ( SELECT biz11_cont_corp_id, MAX(biz11_reg_date)
+                                                                                       FROM biz11_cont_history
+                                                                                      WHERE biz11_reg_date &lt;= f_today()
+                                                                                      GROUP BY biz11_cont_corp_id )
+                                  ) biz11 ON biz11_cont_corp_id = biz10_cont_corp_id
+                 WHERE biz10_cont_corp_id = #{contCorpId}
+                   AND biz10_company_id = #{companyId}
+               ) t
+    </select>
+
+    <!-- AS-IS biz11_cont_history.selectByContCorpId (IDMS-IC) — 이력관리 탭 -->
+    <select id="selectHistories" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizContCorpRes">
+        SELECT <include refid="corpCols"/>
+          FROM (
+                SELECT biz11_cont_history.*
+                     , biz12_fee_info.*
+                     , biz10_company_id
+                     , f_cdnm('FundFeeChargeType' , biz12_fee_charge_type, biz10_company_id, biz11_reg_date) AS biz12_fee_charge_type_nm
+                     , f_cdnm('ContStatusCode'    , biz11_cont_status_cd, biz10_company_id, biz11_reg_date)  AS biz11_cont_status_nm
+                     , f_cdnm('ContCorpStatusCode', biz11_corp_status_cd, biz10_company_id, biz11_reg_date)  AS biz11_corp_status_nm
+                     , f_cdnm('ContPeriodCode'    , biz11_cont_period_cd, biz10_company_id, biz11_reg_date)  AS biz11_cont_period_nm
+                     , f_emp_kor_nm(biz11_person_id)                                                         AS biz11_person_nm
+                     , CASE WHEN COALESCE(biz12_min_fee_yn,'false') = 'false' THEN '최저보수 없음'
+                            ELSE
+                                '운용:'||CASE WHEN COALESCE(biz12_manage_min_fee,0) = 0 THEN 0 ELSE TRUNC(biz12_manage_min_fee / 10000) END ||'만원/'||
+                                '자문:'||CASE WHEN COALESCE(biz12_adv_min_fee   ,0) = 0 THEN 0 ELSE TRUNC(biz12_adv_min_fee    / 10000) END ||'만원/'||
+                                '일임:'||CASE WHEN COALESCE(biz12_discr_min_fee ,0) = 0 THEN 0 ELSE TRUNC(biz12_discr_min_fee  / 10000) END ||'만원'
+                            END AS biz12_min_fee_str
+                     , CASE WHEN COALESCE(biz12_with_yn,'false') = 'false' THEN '병행보수 없음'
+                            ELSE TRUNC(biz12_with_fee / 10000)||'만원' END AS biz12_with_fee_str
+                  FROM biz11_cont_history
+                       LEFT OUTER JOIN biz12_fee_info ON biz12_cont_history_id = biz11_cont_history_id
+                       INNER JOIN biz10_cont_corp     ON biz10_cont_corp_id    = biz11_cont_corp_id
+                 WHERE biz11_cont_corp_id = #{contCorpId}
+                   AND biz10_company_id = #{companyId}
+               ) t
+         ORDER BY biz11_reg_date
+    </select>
+
+    <!-- AS-IS biz11_cont_history.deleteCheck (IDMS-IC) -->
+    <select id="selectHistoryIds" resultType="long">
+        SELECT biz11_cont_history_id
+          FROM biz11_cont_history
+         WHERE 1=1
+           AND biz11_cont_corp_id = #{contCorpId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <!-- 계약사 존재·회사 확인 (AS-IS 는 서비스 호출자가 회사 ID 를 보내므로 서버가 한 번 더 막는다) -->
+    <select id="countCorp" resultType="int">
+        SELECT COUNT(*) FROM biz10_cont_corp WHERE biz10_cont_corp_id = #{contCorpId} AND biz10_company_id = #{companyId}
+    </select>
+
+    <!-- UpdateDataModel(biz10_cont_corp) INSERT / DELETE -->
+    <insert id="insertCorp">
+        INSERT INTO biz10_cont_corp (biz10_cont_corp_id, biz10_company_id) VALUES (#{contCorpId}, #{companyId})
+    </insert>
+
+    <delete id="deleteCorp">
+        DELETE FROM biz10_cont_corp WHERE biz10_cont_corp_id = #{contCorpId} AND biz10_company_id = #{companyId}
+    </delete>
+
+    <!-- AS-IS biz15_share.deleteContCorpId · biz14_relate_appr.deleteContCorpId · biz13_with_corp.deleteContCorpId
+         · biz12_fee_info.deleteContCorpId · biz11_cont_history.deleteContCorpId (IDMS-IC) — Biz11_ContHistory.deleteContCorpId 순서 그대로 -->
+    <delete id="deleteSharesByCorp">
+        DELETE FROM biz15_share
+         WHERE biz15_cont_history_id IN ( SELECT biz11_cont_history_id FROM biz11_cont_history WHERE biz11_cont_corp_id = #{contCorpId} )
+    </delete>
+
+    <delete id="deleteRelateApprsByCorp">
+        DELETE FROM biz14_relate_appr
+         WHERE biz14_cont_history_id IN ( SELECT biz11_cont_history_id FROM biz11_cont_history WHERE biz11_cont_corp_id = #{contCorpId} )
+    </delete>
+
+    <delete id="deleteWithCorpsByCorp">
+        DELETE FROM biz13_with_corp WHERE biz13_cont_corp_id = #{contCorpId}
+    </delete>
+
+    <delete id="deleteFeeInfosByCorp">
+        DELETE FROM biz12_fee_info
+         WHERE biz12_cont_history_id IN ( SELECT biz11_cont_history_id FROM biz11_cont_history WHERE biz11_cont_corp_id = #{contCorpId} )
+    </delete>
+
+    <delete id="deleteHistoriesByCorp">
+        DELETE FROM biz11_cont_history WHERE biz11_cont_corp_id = #{contCorpId}
+    </delete>
+
+    <!-- Biz11_ContHistory.delete — UpdateDataModel(biz11_cont_history) DELETE -->
+    <delete id="deleteHistories">
+        DELETE FROM biz11_cont_history
+         WHERE biz11_cont_history_id IN
+        <foreach collection="contHistoryIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+           AND biz11_cont_corp_id IN ( SELECT biz10_cont_corp_id FROM biz10_cont_corp WHERE biz10_company_id = #{companyId} )
+    </delete>
+
+    <!-- AS-IS biz15_share.insertUpdate (IDMS-IC) — 계약사의 가장 최근 이력 공유자를 새 이력으로 복사 (자동연장·저장 때 이력 ID 가 비어 있을 때) -->
+    <insert id="copyShareFromLatest">
+        INSERT INTO biz15_share
+        SELECT f_create_seq()
+             , #{contHistoryId}
+             , biz15_share_cd
+             , biz15_person_id
+             , biz15_org_id
+             , biz15_company_id
+          FROM biz15_share
+         WHERE biz15_cont_history_id = (
+                                         SELECT biz11_cont_history_id
+                                           FROM biz11_cont_history
+                                                INNER JOIN biz10_cont_corp ON biz10_cont_corp_id = biz11_cont_corp_id
+                                          WHERE biz10_cont_corp_id = #{contCorpId}
+                                          ORDER BY biz11_reg_date DESC
+                                          LIMIT 1
+                                       )
+    </insert>
+
+    <!-- AS-IS biz15_share.insert (IDMS-IC) — 새 이력 창을 열 때: 직전(자기 자신 제외) 이력의 공유자를 복사 -->
+    <insert id="copyShareFromPrevious">
+        INSERT INTO biz15_share
+        SELECT f_create_seq()
+             , #{contHistoryId}
+             , biz15_share_cd
+             , biz15_person_id
+             , biz15_org_id
+             , biz15_company_id
+          FROM biz15_share
+         WHERE biz15_cont_history_id = (
+                                         SELECT biz11_cont_history_id
+                                           FROM biz11_cont_history
+                                                INNER JOIN biz10_cont_corp ON biz10_cont_corp_id = biz11_cont_corp_id
+                                          WHERE biz10_cont_corp_id = #{contCorpId}
+                                            AND biz11_cont_history_id != #{contHistoryId}
+                                          ORDER BY biz11_reg_date DESC
+                                          LIMIT 1
+                                       )
+    </insert>
+
+    <!-- UpdateDataModel(biz11_cont_history) UPDATE / INSERT — 편집창이 보내는 열만 -->
+    <update id="updateHistory">
+        UPDATE biz11_cont_history
+           SET biz11_cont_corp_id    = #{contCorpId}
+             , biz11_reg_date        = #{h.regDate}
+             , biz11_cont_corp_nm    = #{h.contCorpNm}
+             , biz11_cont_status_cd  = #{h.contStatusCd}
+             , biz11_corp_status_cd  = #{h.corpStatusCd}
+             , biz11_tr_type         = #{h.trType}
+             , biz11_cont_period_cd  = #{h.contPeriodCd}
+             , biz11_cont_date       = #{h.contDate}
+             , biz11_start_date      = #{h.startDate}
+             , biz11_close_date      = #{h.closeDate}
+             , biz11_base_fee        = #{h.baseFee}
+             , biz11_manager         = #{h.manager}
+             , biz11_manager_tel     = #{h.managerTel}
+             , biz11_note            = #{h.note}
+             , biz11_person_id       = #{h.personId}
+             , biz11_address         = #{h.address}
+             , biz11_ceo             = #{h.ceo}
+         WHERE biz11_cont_history_id = #{h.contHistoryId}
+    </update>
+
+    <insert id="insertHistory">
+        INSERT INTO biz11_cont_history ( biz11_cont_history_id, biz11_cont_corp_id, biz11_reg_date, biz11_cont_corp_nm, biz11_cont_status_cd
+                                       , biz11_corp_status_cd, biz11_tr_type, biz11_cont_period_cd, biz11_cont_date, biz11_start_date, biz11_close_date
+                                       , biz11_base_fee, biz11_manager, biz11_manager_tel, biz11_note, biz11_person_id, biz11_address, biz11_ceo )
+        VALUES ( #{h.contHistoryId}, #{contCorpId}, #{h.regDate}, #{h.contCorpNm}, #{h.contStatusCd}
+               , #{h.corpStatusCd}, #{h.trType}, #{h.contPeriodCd}, #{h.contDate}, #{h.startDate}, #{h.closeDate}
+               , #{h.baseFee}, #{h.manager}, #{h.managerTel}, #{h.note}, #{h.personId}, #{h.address}, #{h.ceo} )
+    </insert>
+
+    <!-- UpdateDataModel(biz12_fee_info) UPDATE / INSERT -->
+    <update id="updateFeeInfo">
+        UPDATE biz12_fee_info
+           SET biz12_cont_history_id  = #{contHistoryId}
+             , biz12_min_fee_yn       = #{f.minFeeYn}
+             , biz12_manage_min_fee   = #{f.manageMinFee}
+             , biz12_adv_min_fee      = #{f.advMinFee}
+             , biz12_discr_min_fee    = #{f.discrMinFee}
+             , biz12_fee_charge_type  = #{f.feeChargeType}
+             , biz12_with_yn          = #{f.withYn}
+             , biz12_with_fee         = #{f.withFee}
+         WHERE biz12_fee_info_id = #{f.feeInfoId}
+    </update>
+
+    <insert id="insertFeeInfo">
+        INSERT INTO biz12_fee_info ( biz12_fee_info_id, biz12_cont_history_id, biz12_min_fee_yn, biz12_manage_min_fee, biz12_adv_min_fee
+                                   , biz12_discr_min_fee, biz12_fee_charge_type, biz12_with_yn, biz12_with_fee )
+        VALUES ( #{f.feeInfoId}, #{contHistoryId}, #{f.minFeeYn}, #{f.manageMinFee}, #{f.advMinFee}
+               , #{f.discrMinFee}, #{f.feeChargeType}, #{f.withYn}, #{f.withFee} )
+    </insert>
+
+    <!-- AS-IS biz12_fee_info.selectById — 저장한 보수정보를 되돌려 준다(Biz12_FeeInfo.modelUpdate 가 돌려주는 모델) -->
+    <select id="selectFeeInfoById" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizContFeeInfoRes">
+        SELECT biz12_fee_info_id      AS fee_info_id
+             , biz12_cont_history_id  AS cont_history_id
+             , biz12_min_fee_yn       AS min_fee_yn
+             , biz12_manage_min_fee   AS manage_min_fee
+             , biz12_adv_min_fee      AS adv_min_fee
+             , biz12_discr_min_fee    AS discr_min_fee
+             , biz12_fee_charge_type  AS fee_charge_type
+             , f_cdnm('FundFeeChargeType', biz12_fee_charge_type, #{companyId}, f_today()) AS fee_charge_type_nm
+             , biz12_with_yn          AS with_yn
+             , biz12_with_fee         AS with_fee
+             , CASE WHEN COALESCE(biz12_min_fee_yn,'false') = 'false' THEN '최저보수 없음'
+                    ELSE
+                        '운용:'||CASE WHEN COALESCE(biz12_manage_min_fee,0) = 0 THEN 0 ELSE TRUNC(biz12_manage_min_fee / 10000) END ||'만원/'||
+                        '자문:'||CASE WHEN COALESCE(biz12_adv_min_fee   ,0) = 0 THEN 0 ELSE TRUNC(biz12_adv_min_fee    / 10000) END ||'만원/'||
+                        '일임:'||CASE WHEN COALESCE(biz12_discr_min_fee ,0) = 0 THEN 0 ELSE TRUNC(biz12_discr_min_fee  / 10000) END ||'만원'
+                    END AS min_fee_str
+             , CASE WHEN COALESCE(biz12_with_yn,'false') = 'false' THEN '병행보수 없음'
+                    ELSE TRUNC(biz12_with_fee / 10000)||'만원' END AS with_fee_str
+          FROM biz12_fee_info
+         WHERE biz12_fee_info_id = #{feeInfoId}
+    </select>
+
+    <!-- AS-IS biz15_share.selectByContHistoryId (IDMS-IC) — AS-IS 는 조건이 `biz15_cont_history_id = 1` 로 고정돼 있어 실제로는 이력 ID 를 받는 것으로 본다 -->
+    <select id="selectShares" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizContShareRes">
+        SELECT a.biz15_share_id         AS share_id
+             , a.biz15_cont_history_id  AS cont_history_id
+             , a.biz15_share_cd         AS share_cd
+             , a.biz15_person_id        AS person_id
+             , a.biz15_org_id           AS org_id
+             , a.biz15_company_id       AS company_id
+             , f_cdnm('ShareCode', biz15_share_cd, c.sys01_company_id, f_sysdate())  AS share_nm
+             , f_emp_kor_nm(biz15_person_id)                                          AS person_nm
+             , f_org_nm(biz15_org_id, f_sysdate())                                    AS org_nm
+          FROM biz15_share a
+               LEFT OUTER JOIN biz11_cont_history b ON b.biz11_cont_history_id = a.biz15_cont_history_id
+               INNER JOIN sys01_company c           ON c.sys01_company_id = a.biz15_company_id
+         WHERE biz15_cont_history_id = #{contHistoryId}
+           AND biz15_company_id = #{companyId}
+         ORDER BY biz15_share_cd, biz15_org_id
+    </select>
+
+    <insert id="insertShare">
+        INSERT INTO biz15_share ( biz15_share_id, biz15_cont_history_id, biz15_share_cd, biz15_person_id, biz15_org_id, biz15_company_id )
+        VALUES ( #{shareId}, #{r.contHistoryId}, #{r.shareCd}, #{r.personId}, #{r.orgId}, #{companyId} )
+    </insert>
+
+    <delete id="deleteShares">
+        DELETE FROM biz15_share
+         WHERE biz15_company_id = #{companyId}
+           AND biz15_share_id IN
+        <foreach collection="shareIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS biz13_with_corp.selectByHistoryContCorpId (IDMS-IC) -->
+    <select id="selectWithCorps" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizContWithCorpRes">
+        SELECT biz13_with_corp_id      AS with_corp_id
+             , biz13_cont_corp_id      AS cont_corp_id
+             , biz13_company_id        AS company_id
+             , biz13_manage_type       AS manage_type
+             , biz13_corp_id           AS corp_id
+             , biz13_first_start_date  AS first_start_date
+             , biz13_last_close_date   AS last_close_date
+             , sys15_corp_cd           AS corp_cd
+             , sys15_corp_nm           AS corp_nm
+             , f_cdnm('ManageType', biz13_manage_type, biz13_company_id, f_today()) AS manage_type_nm
+          FROM biz13_with_corp
+               INNER JOIN sys15_corp ON sys15_corp_id = biz13_corp_id
+         WHERE biz13_cont_corp_id = #{contCorpId}
+           AND biz13_company_id = #{companyId}
+         ORDER BY COALESCE(biz13_first_start_date,'9999-12-31')
+    </select>
+
+    <update id="updateWithCorp">
+        UPDATE biz13_with_corp
+           SET biz13_manage_type      = #{r.manageType}
+             , biz13_corp_id          = #{r.corpId}
+             , biz13_first_start_date = #{r.firstStartDate}
+             , biz13_last_close_date  = #{r.lastCloseDate}
+         WHERE biz13_with_corp_id = #{r.withCorpId}
+           AND biz13_company_id = #{companyId}
+    </update>
+
+    <insert id="insertWithCorp">
+        INSERT INTO biz13_with_corp ( biz13_with_corp_id, biz13_cont_corp_id, biz13_company_id, biz13_manage_type, biz13_corp_id
+                                    , biz13_first_start_date, biz13_last_close_date )
+        VALUES ( #{withCorpId}, #{r.contCorpId}, #{companyId}, #{r.manageType}, #{r.corpId}, #{r.firstStartDate}, #{r.lastCloseDate} )
+    </insert>
+
+    <delete id="deleteWithCorps">
+        DELETE FROM biz13_with_corp
+         WHERE biz13_company_id = #{companyId}
+           AND biz13_with_corp_id IN
+        <foreach collection="withCorpIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS biz14_relate_appr.selectByContHistoryId (IDMS-IC) -->
+    <select id="selectRelateApprs" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizContRelateApprRes">
+        SELECT a.biz14_relate_appr_id     AS relate_appr_id
+             , a.biz14_appr_id            AS appr_id
+             , a.biz14_cont_history_id    AS cont_history_id
+             , b.apr01_reg_date           AS reg_date
+             , b.apr01_effect_date        AS effect_date
+             , b.apr01_title              AS title
+             , f_emp_kor_nm(b.apr01_reg_emp_id)                                                  AS reg_emp_nm
+             , f_cdnm('AprStatusCode', b.apr01_status_cd, b.apr01_company_id, b.apr01_reg_date)  AS status_nm
+          FROM biz14_relate_appr a
+               INNER JOIN apr01_appr b ON b.apr01_appr_id = a.biz14_appr_id
+         WHERE biz14_cont_history_id = #{contHistoryId}
+           AND b.apr01_company_id = #{companyId}
+    </select>
+
+    <insert id="insertRelateAppr">
+        INSERT INTO biz14_relate_appr ( biz14_relate_appr_id, biz14_appr_id, biz14_cont_history_id )
+        VALUES ( #{relateApprId}, #{r.apprId}, #{r.contHistoryId} )
+    </insert>
+
+    <delete id="deleteRelateApprs">
+        DELETE FROM biz14_relate_appr
+         WHERE biz14_relate_appr_id IN
+        <foreach collection="relateApprIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS biz16_each_contract.selectByCorpId (IDMS-IC) -->
+    <select id="selectEachConts" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizContEachRes">
+        SELECT biz16_each_contract_id    AS contract_id
+             , biz16_company_id          AS company_id
+             , biz16_cont_corp_id        AS cont_corp_id
+             , biz16_date                AS date
+             , biz16_fund_nm             AS fund_nm
+             , biz16_fund_start_date     AS fund_start_date
+             , biz16_fund_fee            AS fund_fee
+             , biz16_note                AS note
+             , biz16_cont_start_date     AS start_date
+             , biz16_appr_id             AS appr_id
+             , apr01_status_cd           AS appr_status_cd
+             , f_cdnm('AprStatusCode', apr01_status_cd, biz16_company_id, f_sysdate()) AS apr_status_nm
+          FROM biz16_each_contract
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = biz16_appr_id
+         WHERE biz16_cont_corp_id = #{contCorpId}
+           AND biz16_company_id = #{companyId}
+         ORDER BY biz16_date
+    </select>
+
+    <!-- AS-IS biz16_each_contract.selectByContCorpId (IDMS-IC) — [상신] 전 계약사 주소·대표이사 확인 -->
+    <select id="selectEachContAddr" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizContEachAddrRes">
+        SELECT biz16_each_contract.biz16_each_contract_id AS contract_id
+             , biz11_address                              AS address
+             , biz11_ceo                                  AS ceo
+             , biz11_cont_corp_nm                         AS cont_corp_nm
+          FROM biz16_each_contract
+               LEFT OUTER JOIN apr01_appr ON apr01_appr_id = biz16_appr_id
+               LEFT OUTER JOIN biz11_cont_history on biz11_cont_corp_id = biz16_cont_corp_id
+         WHERE biz16_cont_corp_id = #{contCorpId}
+           AND biz16_company_id = #{companyId}
+         ORDER BY biz11_reg_date DESC LIMIT 1
+    </select>
+
+    <update id="updateEachCont">
+        UPDATE biz16_each_contract
+           SET biz16_date            = #{r.date}
+             , biz16_fund_nm         = #{r.fundNm}
+             , biz16_fund_start_date = #{r.fundStartDate}
+             , biz16_fund_fee        = #{r.fundFee}
+             , biz16_note            = #{r.note}
+             , biz16_cont_start_date = #{r.startDate}
+         WHERE biz16_each_contract_id = #{r.contractId}
+           AND biz16_company_id = #{companyId}
+    </update>
+
+    <insert id="insertEachCont">
+        INSERT INTO biz16_each_contract ( biz16_each_contract_id, biz16_company_id, biz16_cont_corp_id, biz16_date, biz16_fund_nm
+                                        , biz16_fund_start_date, biz16_fund_fee, biz16_note, biz16_cont_start_date )
+        VALUES ( #{contractId}, #{companyId}, #{r.contCorpId}, #{r.date}, #{r.fundNm}
+               , #{r.fundStartDate}, #{r.fundFee}, #{r.note}, #{r.startDate} )
+    </insert>
+
+    <delete id="deleteEachConts">
+        DELETE FROM biz16_each_contract
+         WHERE biz16_company_id = #{companyId}
+           AND biz16_each_contract_id IN
+        <foreach collection="contractIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS biz16_each_contract.updateApprId (IDMS-IC) -->
+    <update id="updateEachContApprId">
+        UPDATE biz16_each_contract
+           SET biz16_appr_id = #{apprId}
+         WHERE biz16_each_contract_id = #{contractId}
+           AND biz16_company_id = #{companyId}
+    </update>
+
+    <!-- AS-IS biz17_dual_manage_fund.selectByContCorpId (IDMS-IC) -->
+    <select id="selectDualFunds" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizContDualFundRes">
+        SELECT biz17_dual_manage_fund_id AS dual_fund_id
+             , biz17_company_id          AS company_id
+             , biz17_cont_corp_id        AS cont_corp_id
+             , biz17_fund_cd             AS fund_cd
+             , biz17_start_date          AS start_date
+             , biz17_fund_fee            AS fund_fee
+             , biz17_fund_sub_fee        AS fund_sub_fee
+             , biz17_note                AS note
+             , biz17_position_type       AS position_type
+             , f_cdnm('FundMngPositionType' , biz17_position_type, biz17_company_id, biz17_start_date) AS position_type_nm
+             , ( SELECT ast30_fund_nm
+                   FROM ast30_book_fund_fee
+                        INNER JOIN biz13_with_corp ON (    biz13_company_id  = ast30_company_id
+                                                       AND biz13_corp_id     = ast30_corp_id
+                                                       AND biz13_manage_type = '1' )
+                  WHERE ast30_company_id    = biz17_company_id
+                    AND ast30_fund_cd       = biz17_fund_cd
+                    AND biz13_cont_corp_id  = biz17_cont_corp_id
+                  ORDER BY ast30_hold_date DESC
+                  LIMIT 1 )                AS fund_nm
+          FROM biz17_dual_manage_fund
+         WHERE biz17_cont_corp_id = #{contCorpId}
+           AND biz17_company_id = #{companyId}
+         ORDER BY biz17_fund_cd
+    </select>
+
+    <update id="updateDualFund">
+        UPDATE biz17_dual_manage_fund
+           SET biz17_fund_cd       = #{r.fundCd}
+             , biz17_start_date    = #{r.startDate}
+             , biz17_fund_fee      = #{r.fundFee}
+             , biz17_fund_sub_fee  = #{r.fundSubFee}
+             , biz17_position_type = #{r.positionType}
+         WHERE biz17_dual_manage_fund_id = #{r.dualFundId}
+           AND biz17_company_id = #{companyId}
+    </update>
+
+    <insert id="insertDualFund">
+        INSERT INTO biz17_dual_manage_fund ( biz17_dual_manage_fund_id, biz17_company_id, biz17_cont_corp_id, biz17_fund_cd
+                                           , biz17_start_date, biz17_fund_fee, biz17_fund_sub_fee, biz17_position_type )
+        VALUES ( #{dualFundId}, #{companyId}, #{r.contCorpId}, #{r.fundCd}, #{r.startDate}, #{r.fundFee}, #{r.fundSubFee}, #{r.positionType} )
+    </insert>
+
+    <delete id="deleteDualFunds">
+        DELETE FROM biz17_dual_manage_fund
+         WHERE biz17_company_id = #{companyId}
+           AND biz17_dual_manage_fund_id IN
+        <foreach collection="dualFundIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- AS-IS ast30_book_fund_fee.selectByContCorpId (IDMS-IC) — 열은 조회창이 쓰는 펀드코드·펀드명만 -->
+    <select id="selectHoldFees" resultType="kr.co.kfs.asseterp.biz.biz.dto.BizContHoldFeeRes">
+        SELECT ast30_fund_cd AS fund_cd
+             , ast30_fund_nm AS fund_nm
+          FROM ast30_book_fund_fee
+         WHERE ast30_company_id = #{companyId}
+           AND ast30_hold_date  = #{holdDate}::date
+           AND ast30_corp_id IN ( SELECT DISTINCT biz13_corp_id
+                                    FROM biz13_with_corp
+                                   WHERE biz13_company_id   = ast30_company_id
+                                     AND biz13_cont_corp_id = #{contCorpId}
+                                     AND biz13_manage_type  = '1'    /*(1:자산운용)*/
+                                )
+           AND UPPER(CONCAT(ast30_fund_cd, ast30_fund_nm)) LIKE UPPER(#{searchText})
+         ORDER BY ast30_fund_cd
+    </select>
+    <!-- AS-IS sys99_print.deleteByPersonId (IDMS-IC) -->
+    <delete id="deletePrint">
+        DELETE FROM sys99_print
+         WHERE sys99_company_id      = #{companyId}
+           AND sys99_person_id       = #{personId}
+           AND sys99_window_class_nm LIKE #{windowClassName}
+    </delete>
+
+    <!-- AS-IS sys99_print.insert (IDMS-IC) — Sys99_Print.insertRdContCorp 가 채우는 열만:
+         date01 계약일 · string01 계약사명 · 02 계약상태 · 03 거래유무 · 04 거래형태 · 05 계약기간 · date02 개시일 · date03 종료일
+         · long01~03 운용/자문/일임 최저보수 · long04 병행보수 · string06 청구구분 · 07 기본보수 · 08 담당자 · 09 연락처 · 10 비고 · 11 최저보수 -->
+    <insert id="insertPrint">
+        INSERT INTO sys99_print
+               ( sys99_print_id, sys99_company_id, sys99_person_id, sys99_window_class_nm, sys99_group_id
+               , sys99_date01, sys99_string01, sys99_string02, sys99_string03, sys99_string04, sys99_string05, sys99_date02, sys99_date03
+               , sys99_long01, sys99_long02, sys99_long03, sys99_long04
+               , sys99_string06, sys99_string07, sys99_string08, sys99_string09, sys99_string10, sys99_string11 )
+        VALUES ( #{printId}, #{companyId}, #{personId}, #{windowClassName}, #{groupId}
+               , #{r.contDate,jdbcType=DATE}, #{r.contCorpNm,jdbcType=VARCHAR}, #{r.contStatusNm,jdbcType=VARCHAR}, #{r.corpStatusNm,jdbcType=VARCHAR}
+               , #{r.trType,jdbcType=VARCHAR}, #{r.contPeriodNm,jdbcType=VARCHAR}, #{r.startDate,jdbcType=DATE}, #{r.closeDate,jdbcType=DATE}
+               , #{r.manageMinFee,jdbcType=NUMERIC}, #{r.advMinFee,jdbcType=NUMERIC}, #{r.discrMinFee,jdbcType=NUMERIC}, #{r.withFee,jdbcType=NUMERIC}
+               , #{r.feeChargeTypeNm,jdbcType=VARCHAR}, #{r.baseFee,jdbcType=VARCHAR}, #{r.manager,jdbcType=VARCHAR}, #{r.managerTel,jdbcType=VARCHAR}
+               , #{r.note,jdbcType=VARCHAR}, #{r.minFeeStr,jdbcType=VARCHAR} )
+    </insert>
+</mapper>

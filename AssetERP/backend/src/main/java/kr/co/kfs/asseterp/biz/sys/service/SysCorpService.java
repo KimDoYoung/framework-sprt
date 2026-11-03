@@ -28,6 +28,13 @@ public class SysCorpService {
         return mapper.selectByCompanyId(user.getCompanyId(), type, text, useYn);
     }
 
+    /** AS-IS sys.Sys15_Corp.selectByKFS (EE20 Sys15_Lookup_Corp_OnlyKFS L203): 구분 코드('%'면 전체), 검색어는 "%"+값+"%" (코드·이름·비고) */
+    public List<CorpRes> searchKfs(UserPrincipal user, String corpType, boolean useYn, String searchText) {
+        String type = corpType == null || corpType.isEmpty() ? "%" : corpType;
+        String text = "%" + (searchText == null ? "" : searchText) + "%";
+        return mapper.selectByKfs(user.getCompanyId(), type, useYn, text);
+    }
+
     /** AS-IS selectByUseYn(거래처 조회창, empYn=false): 구분 콤보 코드('%'면 전체), 검색어는 "%"+값+"%" (거래처명·기관코드·비고) */
     public List<CorpRes> lookup(UserPrincipal user, String corpType, String searchText, boolean empYn) {
         String type = corpType == null || corpType.isEmpty() ? "%" : corpType;

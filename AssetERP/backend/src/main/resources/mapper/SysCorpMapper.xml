@@ -177,4 +177,21 @@
           FROM sys15_corp
          WHERE sys15_company_id = 0
     </insert>
+    <!-- AS-IS(IDMS-IC) sys15_corp.selectByKFS (EE20 Sys15_Lookup_Corp_OnlyKFS) — 구분이 CorpType0001 그룹인 거래처만 -->
+    <select id="selectByKfs" resultType="kr.co.kfs.asseterp.biz.sys.dto.CorpRes">
+        SELECT <include refid="corpColumns"/>
+          FROM sys15_corp
+         WHERE sys15_company_id = #{companyId}
+           AND sys15_corp_type  LIKE #{corpType}
+        <if test="useYn">
+           AND sys15_use_yn = 'true'
+        </if>
+           AND CONCAT(sys15_corp_cd, sys15_corp_nm, sys15_note) ILIKE #{searchText}
+           AND sys15_corp_type IN ( SELECT sys09_code
+                                      FROM sys13_code_group
+                                           INNER JOIN sys09_code ON sys09_code_id = sys13_code_id
+                                     WHERE sys13_kind_group_cd = 'CorpType0001'
+                                       AND sys09_company_id    = sys15_company_id )
+         ORDER BY sys15_corp_type, sys15_corp_nm COLLATE "ko_KR.utf8"
+    </select>
 </mapper>
