@@ -4,7 +4,7 @@ import {
   DcrCheckRes, DcrCheckRowReq, DcrClassDetail, DcrClassTree, DcrClassTreeAll, DcrClassTreeLookup, DcrClassTreeSaveReq,
   DcrCopyCompany, DcrFundPlanLookup, DcrDocAppr, DcrDocFile, DcrDocType, DcrDocTypeRow, DcrDocTypeSaveReq, DcrDocTypeUpdateReq, DcrClassLink, DcrLink, DcrLinkClassTree, DcrLinkSaveReq, DcrRelateDocType, DcrRelateIcr,
   DcrOftenUse, DcrRelateIcs, DcrRelateSaveReq, DcrStampAuthTree, DcrUseYnReq, DcrWriteCode, DcrWriteTree,
-  DcrMailFile, DcrMailHistory,
+  DcrMailFile, DcrMailHistory, DcrOrgAuthClass, DcrOrgAuthOrg,
 } from '../types/dcr';
 
 /** dcr(문서분류) API (E13-3 조회창, E16 문서분류, F02 업무별 문서작성) */
@@ -355,5 +355,46 @@ export const dcrMailHistoryApi = {
   searchMailFiles: async (mailHistoryId: number): Promise<DcrMailFile[]> => {
     const res = await apiClient.get<ApiResponse<DcrMailFile[]>>(`v1/dcr/mail-histories/${mailHistoryId}/files`);
     return res.data.data ?? [];
+  },
+};
+
+/** EE06·EE07 문서권한관리 (dcr03_org_auth) */
+export const dcrOrgAuthApi = {
+  /** AS-IS sys.Sys01_Company.selectById 중 dcrDetailUseYn (안내 문구) */
+  getDetailUse: async (): Promise<boolean> => {
+    const res = await apiClient.get<ApiResponse<boolean>>('v1/dcr/org-auths/detail-use');
+    return res.data.data ?? false;
+  },
+
+  /** AS-IS org.Org01_Code.selectByDcrCodeId: 문서분류의 조직 권한 트리(전위 순서 + depth) */
+  searchOrgsByClassTree: async (classTreeId: number): Promise<DcrOrgAuthOrg[]> => {
+    const res = await apiClient.get<ApiResponse<DcrOrgAuthOrg[]>>('v1/dcr/org-auths/by-class-tree', { params: { classTreeId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS org.Org01_Code.updateDcrAuth: 바뀐 조직 행만 → 저장한 건수 */
+  updateByClassTree: async (classTreeId: number, rows: DcrOrgAuthOrg[]): Promise<number> => {
+    const body = { classTreeId, rows: rows.map(r => ({ orgCodeId: r.codeId, retrieveYn: r.retrieveYn, updateYn: r.updateYn })) };
+    const res = await apiClient.put<ApiResponse<number>>('v1/dcr/org-auths/by-class-tree', body);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS dcr.Dcr03_OrgAuth.selectByOrgCodeId: 조직의 문서분류 권한 트리(전위 순서 + depth) */
+  searchClassTreesByOrg: async (orgCodeId: number): Promise<DcrOrgAuthClass[]> => {
+    const res = await apiClient.get<ApiResponse<DcrOrgAuthClass[]>>('v1/dcr/org-auths/by-org', { params: { orgCodeId } });
+    return res.data.data ?? [];
+  },
+
+  /** AS-IS dcr.Dcr03_OrgAuth.update: 바뀐 문서분류 행만 → 저장한 건수 */
+  updateByOrg: async (orgCodeId: number, rows: DcrOrgAuthClass[]): Promise<number> => {
+    const body = { orgCodeId, rows: rows.map(r => ({ classTreeId: r.classTreeId, retrieveYn: r.retrieveYn, updateYn: r.updateYn })) };
+    const res = await apiClient.put<ApiResponse<number>>('v1/dcr/org-auths/by-org', body);
+    return res.data.data ?? 0;
+  },
+
+  /** AS-IS org.Org01_Code.copyDcrRight: 출발 조직의 문서권한을 도착 조직들에 복사 → 복사한 도착 조직 수 */
+  copy: async (startOrgCodeId: number, closeOrgCodeIds: number[]): Promise<number> => {
+    const res = await apiClient.post<ApiResponse<number>>('v1/dcr/org-auths/copy', { startOrgCodeId, closeOrgCodeIds });
+    return res.data.data ?? 0;
   },
 };

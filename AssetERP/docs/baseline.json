@@ -14802,5 +14802,69 @@
     "note": "docs/변환/work/EE/EE05-작업기록.md",
     "history": [],
     "id": "EE05"
+  },
+  "Dcr03_Tab_DcrAuth": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/dcr/Dcr03_TabPage_DcrAuth.java": "3908bdc650bd6f6e0d36f8310299ef507170b6a1",
+      "application/src/main/java/myApp/client/vi/dcr/Dcr03_Tab_DcrAuth.java": "4df860a36bccc06330985bc724765972ffc0bd46",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr01_ClassTreeModel.java": "b11f72ec7b9f373dd86ec5303bac1785335febf4",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr03_OrgAuthModel.java": "9d159b0f64709f2e044abe12af5c0cc6308ddeaf",
+      "application/src/main/java/myApp/server/dcr/Dcr01_ClassTree.java": "5da5a4d3ddaf00433d72f012858df89306345b21",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr03_org_auth.xml": "5da3fd2370625731dccb0be70b7581e0968dd065",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr30_link.xml": "ea6fd1a9a684d167a513a2d0f2bd444d7f30e937",
+      "application/src/main/java/myApp/server/org/Org01_Code.java": "f0e6a0c84939b5f2fccd14ee3dcd22c6ff5e8797",
+      "application/src/main/java/myApp/server/org/mapper/org01_code.xml": "45bce5ce97e58acb58ac7bad89d1ac9a849fb7af",
+      "application/src/main/java/myApp/server/sys/Sys01_Company.java": "0f7e212738f8a84c9f952803f8d5dfe4521dd61c",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Dcr30_Lookup_Link"
+    ],
+    "recorded_at": "2026-11-03T12:50:35+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE06-작업기록.md",
+    "history": [],
+    "id": "EE06"
+  },
+  "Dcr03_Tab_OrgAuth": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/dcr/Dcr03_TabPage_OrgAuth.java": "9ee56ff0ff8f58bc6dfe20e771b56827775e7175",
+      "application/src/main/java/myApp/client/vi/dcr/Dcr03_Tab_OrgAuth.java": "36ea0cf819f9d7ff8f5465cc132c4d6ca6410ed4",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr01_ClassTreeModel.java": "b11f72ec7b9f373dd86ec5303bac1785335febf4",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr01_ClassTreeModelProperties.java": "5e7c74eb13d3c598139c13fc39e848ce58f16ebc",
+      "application/src/main/java/myApp/client/vi/dcr/model/Dcr03_OrgAuthModel.java": "9d159b0f64709f2e044abe12af5c0cc6308ddeaf",
+      "application/src/main/java/myApp/server/dcr/Dcr03_OrgAuth.java": "9e1532af0df961c6fd661964dc9501f21930f87c",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr01_class_tree.xml": "6f7a00823f0f051c88abf54370626965e3b8640d",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr03_org_auth.xml": "5da3fd2370625731dccb0be70b7581e0968dd065",
+      "application/src/main/java/myApp/server/dcr/mapper/dcr30_link.xml": "ea6fd1a9a684d167a513a2d0f2bd444d7f30e937",
+      "application/src/main/java/myApp/server/org/Org01_Code.java": "f0e6a0c84939b5f2fccd14ee3dcd22c6ff5e8797",
+      "application/src/main/java/myApp/server/org/mapper/org01_code.xml": "45bce5ce97e58acb58ac7bad89d1ac9a849fb7af",
+      "application/src/main/java/myApp/server/sys/Sys01_Company.java": "0f7e212738f8a84c9f952803f8d5dfe4521dd61c",
+      "application/src/main/java/myApp/server/sys/mapper/sys01_company.xml": "6e30397f1a8745413a428d1ed0af7a4f7ac7028a",
+      "application/src/main/java/myApp/server/utils/db/mapper/Common.xml": "5e4e01cf0ad9adad9bad25200a05795c72cb60e1",
+      "application/src/main/java/myApp/server/utils/db/mapper/DBConfig.xml": "73a5d91522e49f548f1d1e905c09b2d8b0961603"
+    },
+    "shared_links": [
+      "Dcr30_Lookup_Link",
+      "Org00_Lookup_SelectMulti"
+    ],
+    "recorded_at": "2026-11-03T12:50:35+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE07-작업기록.md",
+    "history": [],
+    "id": "EE07"
   }
 }

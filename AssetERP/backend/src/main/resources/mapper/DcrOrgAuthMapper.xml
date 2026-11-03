@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/dcr/mapper/dcr03_org_auth.xml, org01_code.xml(selectByDcrCodeId), dcr01_class_tree.xml(selectByOrgCodeId_1Bang·selectByClasssTreeId) — EE06·EE07 -->
+<mapper namespace="kr.co.kfs.asseterp.biz.dcr.mapper.DcrOrgAuthMapper">
+
+    <!-- AS-IS(IDMS-IC) org01_code.selectByDcrCodeId (한 단계). 열은 Dcr03_TabPage_DcrAuth 그리드 5개 + dcr03 조회/작성 -->
+    <select id="selectOrgsByClassTree" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrOrgAuthOrgRes">
+        SELECT org01_code.org01_code_id             AS code_id
+             , org02_info.org02_parent_code_id      AS parent_code_id
+             , 0                                    AS depth
+             , org02_info.org02_kor_nm              AS kor_name
+             , org01_code.org01_org_cd              AS org_code
+             , COALESCE(dcr03_org_auth.dcr03_retrieve_yn, 'false') AS retrieve_yn
+             , COALESCE(dcr03_org_auth.dcr03_update_yn,   'false') AS update_yn
+             , org02_info.org02_note                AS note
+          FROM org01_code
+               INNER JOIN org02_info ON org01_code_id = org02_code_id
+               LEFT OUTER JOIN dcr03_org_auth ON ( org01_code_id = dcr03_org_code_id AND dcr03_class_tree_id = #{dcrCodeId} )
+         WHERE org01_company_id = #{companyId}
+           AND org02_parent_code_id = #{parentCodeId}
+           AND f_sysdate() BETWEEN org01_open_date AND COALESCE(org01_close_date, to_date('99991231', 'yyyymmdd'))
+           AND org02_mod_date = ( SELECT MAX(x.org02_mod_date)
+                                    FROM org02_info x
+                                   WHERE x.org02_code_id = org02_info.org02_code_id
+                                     AND x.org02_mod_date &lt;= f_sysdate() )
+         ORDER BY org02_sort_order
+    </select>
+
+    <!-- AS-IS(IDMS-IC) dcr01_class_tree.selectByOrgCodeId_1Bang (typeCode %, parentId 0). 정렬 a.path, a.dcr01_seq -->
+    <select id="selectClassTreesByOrg" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrOrgAuthClassRes">
+        WITH RECURSIVE dcr_tree(
+              dcr01_class_tree_id, dcr01_class_tree_nm, dcr01_parent_tree_id, dcr01_seq, dcr01_note,
+              dcr01_class_tree_cd, dcr01_type_cd, depth, path, cycle
+        ) AS (
+            SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, a.dcr01_seq, a.dcr01_note,
+                   a.dcr01_class_tree_cd, a.dcr01_type_cd,
+                   1,
+                   ARRAY[CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar),10,'0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id],
+                   false
+              FROM dcr01_class_tree a
+             WHERE a.dcr01_company_id     = #{companyId}
+               AND a.dcr01_parent_tree_id = 0
+               AND a.dcr01_use_yn         = 'true'
+               AND a.dcr01_type_cd LIKE '%'
+            UNION ALL
+            SELECT a.dcr01_class_tree_id, a.dcr01_class_tree_nm, a.dcr01_parent_tree_id, a.dcr01_seq, a.dcr01_note,
+                   a.dcr01_class_tree_cd, a.dcr01_type_cd,
+                   b.depth + 1,
+                   array_append(b.path, CAST(a.dcr01_parent_tree_id AS varchar) || LPAD(CAST(a.dcr01_seq AS varchar),10,'0') || a.dcr01_class_tree_cd || a.dcr01_class_tree_id),
+                   a.dcr01_class_tree_nm = any(b.path)
+              FROM dcr01_class_tree a
+                   INNER JOIN dcr_tree b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+             WHERE a.dcr01_company_id = #{companyId}
+               AND a.dcr01_use_yn     = 'true'
+               AND a.dcr01_type_cd LIKE '%'
+               AND NOT cycle
+        )
+        SELECT a.dcr01_class_tree_id    AS class_tree_id,
+               a.dcr01_parent_tree_id   AS parent_tree_id,
+               a.depth - 1              AS depth,
+               a.dcr01_class_tree_nm    AS class_tree_name,
+               COALESCE(b.dcr03_retrieve_yn, 'false') AS retrieve_yn,
+               COALESCE(b.dcr03_update_yn,   'false') AS update_yn,
+               a.dcr01_seq              AS seq,
+               a.dcr01_note             AS note
+          FROM dcr_tree a
+               LEFT OUTER JOIN dcr03_org_auth b ON ( a.dcr01_class_tree_id = b.dcr03_class_tree_id AND b.dcr03_org_code_id = #{orgCodeId} )
+         WHERE a.dcr01_type_cd IN ('T','C')
+         ORDER BY a.path, a.dcr01_seq
+    </select>
+
+    <!-- AS-IS(IDMS-IC) dcr01_class_tree.selectByClasssTreeId (문서분류와 하위, 사용 중인 것만) -->
+    <select id="selectDownClassTrees" resultType="kr.co.kfs.asseterp.biz.dcr.dto.DcrClassTreeRef">
+        WITH RECURSIVE dcr_down_tree(dcr01_class_tree_id, dcr01_company_id, dcr01_class_tree_nm, depth, path, cycle) AS (
+            SELECT a.dcr01_class_tree_id, a.dcr01_company_id, a.dcr01_class_tree_nm,
+                   1, ARRAY[a.dcr01_parent_tree_id || a.dcr01_seq::text], false
+              FROM dcr01_class_tree a
+             WHERE a.dcr01_class_tree_id = #{classTreeId}
+               AND a.dcr01_use_yn        = 'true'
+            UNION ALL
+            SELECT a.dcr01_class_tree_id, a.dcr01_company_id, a.dcr01_class_tree_nm,
+                   b.depth + 1, array_append(b.path, a.dcr01_parent_tree_id || a.dcr01_seq::text),
+                   a.dcr01_class_tree_nm = any(b.path)
+              FROM dcr01_class_tree a
+                   INNER JOIN dcr_down_tree b ON a.dcr01_parent_tree_id = b.dcr01_class_tree_id
+             WHERE a.dcr01_use_yn = 'true'
+               AND NOT cycle
+        )
+        SELECT dcr01_class_tree_id AS class_tree_id, dcr01_company_id AS company_id
+          FROM dcr_down_tree
+    </select>
+
+    <!-- 보안 보강: 문서분류·조직은 로그인 회사 것만 -->
+    <select id="countClassTree" resultType="int">
+        SELECT COUNT(*) FROM dcr01_class_tree
+         WHERE dcr01_class_tree_id = #{classTreeId} AND dcr01_company_id = #{companyId}
+    </select>
+
+    <select id="countOrg" resultType="int">
+        SELECT COUNT(*) FROM org01_code
+         WHERE org01_code_id = #{orgCodeId} AND org01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) sys01_company.selectById (dcrDetailUseYn만) -->
+    <select id="selectDcrDetailUseYn" resultType="string">
+        SELECT sys01_dcr_detail_use_yn FROM sys01_company WHERE sys01_company_id = #{companyId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) dcr30_link.selectByClassTreeId (건수만) -->
+    <select id="countLinksByClassTree" resultType="int">
+        SELECT COUNT(*) FROM dcr30_link
+         WHERE dcr30_company_id = #{companyId} AND dcr30_class_tree_id = #{classTreeId}
+    </select>
+
+    <!-- AS-IS(IDMS-IC) dcr03_org_auth.deleteByOrgAuthId — selectByDcrOrgId(id DESC)의 첫 행만 남기고 지운다 -->
+    <delete id="deleteDuplicates">
+        DELETE FROM dcr03_org_auth
+         WHERE dcr03_class_tree_id = #{classTreeId}
+           AND dcr03_org_code_id   = #{orgCodeId}
+           AND dcr03_org_auth_id NOT IN ( SELECT MAX(x.dcr03_org_auth_id) FROM dcr03_org_auth x
+                                           WHERE x.dcr03_class_tree_id = #{classTreeId} AND x.dcr03_org_code_id = #{orgCodeId} )
+    </delete>
+
+    <!-- AS-IS(IDMS-IC) dcr03_org_auth.inUpdateRight (UpdateDataModel(dcr03_org_auth)의 INSERT/UPDATE도 같은 결과) -->
+    <update id="upsertAuth">
+        WITH upsert AS (
+            UPDATE dcr03_org_auth
+               SET dcr03_retrieve_yn = #{retrieveYn}
+                 , dcr03_update_yn   = #{updateYn}
+             WHERE dcr03_org_code_id   = #{orgCodeId}
+               AND dcr03_class_tree_id = #{classTreeId}
+            RETURNING *
+        )
+        INSERT INTO dcr03_org_auth (dcr03_org_auth_id, dcr03_org_code_id, dcr03_class_tree_id, dcr03_retrieve_yn, dcr03_update_yn)
+        SELECT f_create_seq(), #{orgCodeId}, #{classTreeId}, #{retrieveYn}, #{updateYn}
+         WHERE NOT EXISTS ( SELECT * FROM upsert )
+    </update>
+</mapper>

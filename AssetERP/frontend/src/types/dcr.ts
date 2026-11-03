@@ -304,3 +304,29 @@ export interface DcrMailFile {
   fileId: number;
   fileName?: string | null;
 }
+
+// ── EE06·EE07 문서권한관리 (Dcr03_Tab_DcrAuth · Dcr03_Tab_OrgAuth → dcr03_org_auth) ──
+
+/** 문서분류별 조직 맵핑 트리 한 행 (AS-IS Org01_CodeModel + dcr03). 전위 순서 + depth(0부터), 조회·작성은 'true'/'false' */
+export interface DcrOrgAuthOrg {
+  codeId: number;
+  parentCodeId: number;
+  depth: number;
+  korName?: string | null;
+  orgCode?: string | null;
+  retrieveYn: string;
+  updateYn: string;
+  note?: string | null;
+}
+
+/** 조직별 문서분류 맵핑 트리 한 행 (AS-IS Dcr01_ClassTreeModel + dcr03). 전위 순서 + depth(0부터) */
+export interface DcrOrgAuthClass {
+  classTreeId: number;
+  parentTreeId: number;
+  depth: number;
+  classTreeName: string;
+  retrieveYn: string;
+  updateYn: string;
+  seq?: string | null;
+  note?: string | null;
+}
