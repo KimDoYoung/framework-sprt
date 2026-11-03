@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/scm/mapper/scm30_program.xml (selectByCompanyIdPaging·selectByCompanyIdTotal·selectBySystemCode·selectById) + UpdateDataModel  (EE19) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.scm.mapper.ScmProgramMapper">
+
+    <sql id="pagingFrom">
+          FROM ( SELECT a.*
+                      , f_cdnm('ProgramType', scm30_program_type, #{companyId}, f_sysdate()) AS scm30_program_type_nm
+                      , b.sys10_file_id   AS scm30_file_id
+                      , b.sys10_parent_id AS scm30_file_parent_id
+                      , b.sys10_file_nm   AS scm30_file_nm
+                      , ROW_NUMBER() OVER(PARTITION BY scm30_system_cd, scm30_program_type, scm30_program_cd
+                                              ORDER BY scm30_version DESC) AS rn
+                   FROM scm30_program a
+                        LEFT OUTER JOIN sys10_file b ON a.scm30_program_id = b.sys10_parent_id
+                  WHERE scm30_system_cd = #{systemCode}
+                    AND coalesce(scm30_use_yn, 'false') LIKE #{useYn} ) t
+         WHERE rn = 1
+           AND scm30_program_type LIKE #{programType}
+           AND UPPER(CONCAT(scm30_program_type_nm, scm30_program_cd, scm30_program_nm, scm30_note, scm30_file_nm)) LIKE UPPER(#{searchText})
+    </sql>
+
+    <!-- AS-IS scm30_program.selectByCompanyIdPaging (IDMS-IC) — 안쪽 SELECT *는 열 이름으로 풀었다 -->
+    <select id="selectByCompanyIdPaging" resultType="kr.co.kfs.asseterp.biz.scm.dto.ProgramRes">
+        SELECT scm30_program_id    AS program_id
+             , scm30_system_cd     AS system_cd
+             , scm30_program_type  AS program_type
+             , scm30_program_cd    AS program_cd
+             , scm30_program_nm    AS program_nm
+             , scm30_source        AS source
+             , scm30_version       AS version
+             , scm30_person_id     AS person_id
+             , scm30_reg_date      AS reg_date
+             , scm30_note          AS note
+             , scm30_use_yn        AS use_yn
+             , f_cdnm('SystemCode', scm30_system_cd, #{companyId}, f_sysdate()) AS system_nm
+             , scm30_program_type_nm AS program_type_nm
+             , to_char(scm30_reg_date, 'YYYY-MM-DD HH24:MI:SS')                 AS reg_date_str
+             , scm30_file_id        AS file_id
+             , scm30_file_parent_id AS file_parent_id
+             , scm30_file_nm        AS file_nm
+        <include refid="pagingFrom"/>
+         ORDER BY scm30_system_cd, scm30_program_type, scm30_program_cd
+         LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- AS-IS scm30_program.selectByCompanyIdTotal (IDMS-IC) -->
+    <select id="selectByCompanyIdTotal" resultType="long">
+        SELECT count(*)
+        <include refid="pagingFrom"/>
+    </select>
+
+    <!-- AS-IS scm30_program.selectBySystemCode (IDMS-IC) — 같은 시스템·구분·프로그램ID의 모든 버전 -->
+    <select id="selectBySystemCode" resultType="kr.co.kfs.asseterp.biz.scm.dto.ProgramVersionRes">
+        SELECT scm30_program.scm30_program_id    AS program_id
+             , scm30_system_cd     AS system_cd
+             , scm30_program_type  AS program_type
+             , scm30_program_cd    AS program_cd
+             , scm30_program_nm    AS program_nm
+             , scm30_source        AS source
+             , scm30_version       AS version
+             , scm30_person_id     AS person_id
+             , scm30_reg_date      AS reg_date
+             , scm30_note          AS note
+             , scm30_use_yn        AS use_yn
+             , sys10_file_id       AS file_id
+             , sys10_parent_id     AS file_parent_id
+             , sys10_file_nm       AS file_nm
+             , f_cdnm('SystemCode', scm30_system_cd, #{companyId}, f_sysdate())     AS system_nm
+             , f_cdnm('ProgramType', scm30_program_type, #{companyId}, f_sysdate()) AS program_type_nm
+             , to_char(scm30_reg_date, 'YYYY-MM-DD HH24:MI:SS')                      AS reg_date_str
+             , to_char(scm13_deploy_date, 'YYYY-MM-DD HH24:MI:SS')                   AS deploy_date_str
+             , f_emp_kor_nm(scm30_person_id)                                         AS person_nm
+          FROM scm30_program
+               LEFT OUTER JOIN sys10_file         ON scm30_program.scm30_program_id = sys10_parent_id
+               LEFT OUTER JOIN scm13_dev_program  ON scm30_program.scm30_program_id = scm13_program_id
+         WHERE scm30_system_cd    = #{systemCode}
+           AND scm30_program_type = #{programType}
+           AND scm30_program_cd LIKE #{programCode}
+         ORDER BY scm30_version
+    </select>
+
+    <!-- AS-IS scm30_program.selectById (IDMS-IC) -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.scm.dto.ProgramRes">
+        SELECT scm30_program_id    AS program_id
+             , scm30_system_cd     AS system_cd
+             , scm30_program_type  AS program_type
+             , scm30_program_cd    AS program_cd
+             , scm30_program_nm    AS program_nm
+             , scm30_source        AS source
+             , scm30_version       AS version
+             , scm30_person_id     AS person_id
+             , scm30_reg_date      AS reg_date
+             , scm30_note          AS note
+             , scm30_use_yn        AS use_yn
+             , f_cdnm('SystemCode', scm30_system_cd, 1, f_sysdate())     AS system_nm
+             , f_cdnm('ProgramType', scm30_program_type, 1, f_sysdate()) AS program_type_nm
+             , to_char(scm30_reg_date, 'YYYY-MM-DD HH24:MI:SS')           AS reg_date_str
+             , CAST(NULL AS numeric) AS file_id
+             , CAST(NULL AS numeric) AS file_parent_id
+             , CAST(NULL AS varchar) AS file_nm
+          FROM scm30_program
+         WHERE scm30_program_id = #{programId}
+    </select>
+
+    <!-- UpdateDataModel(scm30_program) — 있으면 UPDATE, 없으면 INSERT. 등록일시는 updateRegDate 가 따로 넣는다 -->
+    <update id="upsertProgram">
+        INSERT INTO scm30_program (scm30_program_id, scm30_system_cd, scm30_program_type, scm30_program_cd, scm30_program_nm,
+                                   scm30_source, scm30_version, scm30_person_id, scm30_note, scm30_use_yn)
+        VALUES (#{programId}, #{systemCd}, #{programType}, #{programCd}, #{programNm}, #{source}, #{version}, #{personId}, #{note}, #{useYn})
+        ON CONFLICT (scm30_program_id) DO UPDATE
+           SET scm30_system_cd    = EXCLUDED.scm30_system_cd,
+               scm30_program_type = EXCLUDED.scm30_program_type,
+               scm30_program_cd   = EXCLUDED.scm30_program_cd,
+               scm30_program_nm   = EXCLUDED.scm30_program_nm,
+               scm30_source       = EXCLUDED.scm30_source,
+               scm30_version      = EXCLUDED.scm30_version,
+               scm30_person_id    = EXCLUDED.scm30_person_id,
+               scm30_note         = EXCLUDED.scm30_note,
+               scm30_use_yn       = EXCLUDED.scm30_use_yn
+    </update>
+</mapper>

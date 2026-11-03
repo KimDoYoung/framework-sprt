@@ -234,3 +234,24 @@ export interface DeployProgram extends DevProgram {
   deployDateStr?: string | null;
   personNm?: string | null;
 }
+
+/** 프로그램 Version 조회창 한 줄 (AS-IS Scm30_ProgramModel, scm30_program.selectBySystemCode) (EE19) */
+export interface ProgramVersion extends Program {
+  deployDateStr?: string | null;
+  personNm?: string | null;
+}
+
+/** 프로그램 저장 요청 (AS-IS Scm30_Edit_Program.update → scm.Scm30_Program.modelUpdate) (EE19) */
+export interface ProgramSaveReq {
+  programId: number;
+  systemCd: string;
+  programType: string;
+  programCd: string;
+  programNm: string | null;
+  source: string | null;
+  note: string | null;
+  useYn: string;
+  version: number | null;
+  regDate: string | null;
+  insertWay: 'new' | 'edit';
+}

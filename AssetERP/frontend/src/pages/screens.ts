@@ -413,6 +413,7 @@ import { Scm01_Tab_Sr } from './scm/Scm01_Tab_Sr';
 import { Scm01_Tab_DevMng } from './scm/Scm01_Tab_DevMng';
 import { Scm10_Tab_Dev } from './scm/Scm10_Tab_Dev';
 import { Scm13_Tab_Deploy } from './scm/Scm13_Tab_Deploy';
+import { Scm30_Tab_Program } from './scm/Scm30_Tab_Program';
 import { Test_Tab_ReactComponents } from './test/Test_Tab_ReactComponents';
 
 /**
@@ -832,6 +833,7 @@ export const SCREENS: Record<string, React.FC> = {
   Fnd07_Tab_IssuingEntity, // EE13 (메뉴 #1053. 저장은 원본 서버에 update가 없어 거절)
   Mrb01_Tab_List, // EE14 (메뉴 #1067. + Mrb01_Tab_DayofMonth, Mrb01_Popup_MeetingRoomReg, Mrb01_TimelineChart. 첨부파일은 Bbs02_Lookup_File admin)
   Scm10_Tab_Dev, // EE17 (메뉴 #1263. + Scm11_Grid_DevStep·Scm11_Edit_DevStep·Scm11_Grid_ApprFile·Scm13_Grid_DevProgram·Scm13_Lookup_MultiUpload·Scm03_Lookup_ExpectProgram·Scm01_Lookup_Detail·Scm11_Lookup_ResultMessage, 나머지는 EE15·EE16 재사용)
+  Scm30_Tab_Program, // EE19 (메뉴 #1265. + Scm30_Lookup_Program·Scm30_Lookup_MultiUpload, Scm30_Edit_Program의 insert·edit·versionEdit)
   Scm13_Tab_Deploy, // EE18 (메뉴 #1266. + Scm13_Page_Deploy·Scm13_Lookup_Note·Scm30_Edit_Program(read), 나머지는 EE15~EE17 재사용)
   Scm01_Tab_DevMng, // EE16 (메뉴 #1262. + Scm01_Edit_DevMngRO·Scm01_Edit_DevMng·Scm10_Grid_Dev·Scm03_Grid_ExpectProgram·Scm11_Lookup_DevStep·Scm11_Lookup_Result·Scm10_Lookup_Note·Scm12_Lookup_DevStepRule·Scm13_Lookup_DevProgram·Scm13_Edit_DevProgram·Scm30_Lookup_SelectMulti·Scm01_Lookup_ResultContent·Scm01_Lookup_ApprFile + components/lookup/Biz13_Lookup_WithCorp)
   Scm01_Tab_Sr, // EE15 (메뉴 #1261. + Scm01_Edit_Sr·Scm01_Edit_SrRO·Scm01_Lookup_SrContent·Scm01_Grid_ApprFile·Scm02_Grid_ApprStep·Scm02_Edit_ApprStep·Scm02_Edit_NoteMessage)

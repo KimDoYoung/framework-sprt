@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiResponse } from '../types/auth';
-import { Deploy, DeployProgram, Dev, DevProgram, DevStatus, DevSaveReq, DevStep, DevStepRule, ExpectProgram, Program, Sr, SrApprStep, SrDevMngSaveReq, SrSaveReq } from '../types/scm';
+import { Deploy, DeployProgram, Dev, DevProgram, DevStatus, DevSaveReq, DevStep, DevStepRule, ExpectProgram, Program, ProgramSaveReq, ProgramVersion, Sr, SrApprStep, SrDevMngSaveReq, SrSaveReq } from '../types/scm';
 import { PageRes } from '../types/auth';
 import { FileInfo } from '../types/sys';
 
@@ -261,5 +261,32 @@ export const scmApi = {
   /** AS-IS scm.Scm13_DevProgram.updateResultDeploy — 모든 대상이 배포되면 배포 단계 완료 */
   completeDeploy: async (devId: number): Promise<void> => {
     await apiClient.put(`v1/scm/deploys/${devId}/complete`);
+  },
+  // ---- 프로그램 관리 (Scm30_Tab_Program, EE19) ----
+
+  /** AS-IS scm.Scm30_Program.selectByPaging — useYn '%'=전체 / 'true' / 'false' */
+  searchProgramList: async (p: { systemCode: string; programType: string; useYn: string; searchText: string; offset: number; limit: number }): Promise<PageRes<Program>> => {
+    const res = await apiClient.get<ApiResponse<PageRes<Program>>>('v1/scm/programs/search', { params: p });
+    return res.data.data;
+  },
+
+  /** AS-IS scm.Scm30_Program.selectBySystemCode — 프로그램 Version 조회창 */
+  searchProgramVersions: async (p: { systemCode: string; programType: string; programCode: string }): Promise<ProgramVersion[]> => {
+    const res = await apiClient.get<ApiResponse<ProgramVersion[]>>('v1/scm/programs/versions', { params: p });
+    return res.data.data;
+  },
+
+  /** AS-IS scm.Scm30_Program.modelUpdate — 저장된 한 줄 */
+  saveProgram: async (req: ProgramSaveReq): Promise<Program> => {
+    const res = await apiClient.put<ApiResponse<Program>>('v1/scm/programs', req);
+    return res.data.data;
+  },
+
+  /** AS-IS FileUpload?mode=scm30 — 프로그램 파일일괄등록. 올린 파일 수 */
+  multiUploadPrograms: async (p: { systemCd: string; programType: string }, files: File[]): Promise<number> => {
+    const form = new FormData();
+    files.forEach(f => form.append('files', f));
+    const res = await apiClient.post<ApiResponse<number>>('v1/scm/programs/multi-upload', form, { params: p });
+    return res.data.data;
   },
 };
