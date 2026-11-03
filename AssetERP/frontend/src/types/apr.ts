@@ -116,6 +116,19 @@ export interface AprIcsDoc {
   title?: string | null;
 }
 
+/** 폐기문서 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Tab_Restore 그리드가 쓰는 속성, apr99_appr_del) */
+export interface AprApprDel {
+  apprId: number;
+  regDate?: string | null;
+  effectDate?: string | null;
+  classTreeNameAllPath?: string | null;
+  title?: string | null;
+  aprOrgName?: string | null;
+  aprPersonName?: string | null;
+  delDate?: string | null;
+  delEmpName?: string | null;
+}
+
 /** 폐기문서 신청현황 한 행 (AS-IS Apr90_DisposalListModel 중 Apr90_Tab_DisposalList가 쓰는 열) */
 export interface AprDisposalList {
   disposalListId: number;

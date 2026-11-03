@@ -89,6 +89,7 @@ import { Ics01_Tab_ClassTree } from './ics/Ics01_Tab_ClassTree';
 import { Ics01_Tab_ApprList } from './ics/Ics01_Tab_ApprList';
 import { Apr90_Tab_DisposalAppr } from './apr/Apr90_Tab_DisposalAppr';
 import { Apr90_Tab_DisposalList } from './apr/Apr90_Tab_DisposalList';
+import { Apr01_Tab_Restore } from './apr/Apr01_Tab_Restore';
 import { Apr01_Tab_MyApproveList } from './apr/Apr01_Tab_MyApproveList';
 import { Apr01_Tab_MyRequestList } from './apr/Apr01_Tab_MyRequestList';
 import { Apr01_Tab_BizPriorApproval } from './apr/Apr01_Tab_BizPriorApproval';
@@ -513,6 +514,7 @@ export const SCREENS: Record<string, React.FC> = {
   Apr16_Tab_StampFileCheck, // T26
   Apr15_Tab_ReprCorp, // G08 (메뉴 #1506. 인감 조회창 Apr10_Lookup_Stamp 재사용)
   Apr07_Tab_AltAppr, // G05 (메뉴 #1021. 사원찾기 Emp00_Lookup_SelectSingle 재사용)
+  Apr01_Tab_Restore, // EE01 1단계 (메뉴 #1098. 상세보기가 여는 폐기문서 보기 Apr01_Edit_ApprDoc.getApprDelModel은 다음 단계)
   Apr90_Tab_DisposalList, // F04 1단계 (메뉴 #1443. 상세보기가 여는 전자결재 편집창 Apr01_Edit_ApprDoc은 다음 단계)
   Ics01_Tab_ClassTree, // E01 (기한 설정 Sch03_Lookup_Ics는 다른 도메인이라 별도 ID)
   Ics01_Tab_IcsFileUpload, // E02

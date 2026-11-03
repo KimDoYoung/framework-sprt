@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr99_appr_del.xml selectByCompanyId·restore·deleteApprId (EE01 Apr01_Tab_Restore), apr90_disposal_list.deleteByApprId, apr91_disposal_history.insert -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprApprDelMapper">
+
+    <!-- AS-IS apr99_appr_del.selectByCompanyId L88 (IDMS-IC) — SELECT a.*,b.*,d.*,f.* 중 그리드가 쓰는 열만, 조인·조건은 그대로(정렬 없음).
+         emp00 CTE(common.emp00_trans_info, 회사 조건)는 DB 뷰 emp00_trans_info(emp00_all_title = 0)로, org00 CTE(common.org00_org_info, 회사 조건)는 org01_code·org02_info 조인으로 쓴 열(코드ID·변경일)만 -->
+    <select id="selectByCompanyId" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprApprDelRes">
+        WITH emp00 AS (
+            SELECT *
+              FROM emp00_trans_info
+             WHERE emp00_all_title = 0
+               AND emp00_company_id = #{c.companyId}
+        )
+        , org00 AS (
+            SELECT org01_code_id   AS org00_org_code_id
+                 , org02_mod_date  AS org00_mod_date
+              FROM org01_code
+                   INNER JOIN org02_info ON org02_code_id = org01_code_id
+             WHERE org01_company_id = #{c.companyId}
+        )
+        SELECT a.apr99_appr_id                                  AS appr_id
+             , a.apr99_reg_date                                 AS reg_date
+             , a.apr99_effect_date                              AS effect_date
+             , f_class_tree_nm_allpath(dcr01_class_tree_id)     AS class_tree_name_all_path
+             , a.apr99_title                                    AS title
+             , c.emp00_org_kor_nm                               AS apr_org_name
+             , f_emp_kor_nm(c.emp00_person_id)                  AS apr_person_name
+             , a.apr99_del_date                                 AS del_date
+             , f_emp_kor_nm(a.apr99_del_emp_id)                 AS del_emp_name
+          FROM apr99_appr_del a
+               LEFT OUTER JOIN dcr01_class_tree b  ON a.apr99_class_tree_id = b.dcr01_class_tree_id
+               LEFT OUTER JOIN emp00 c             ON a.apr99_reg_emp_id = c.emp00_person_id AND a.apr99_reg_date BETWEEN c.emp00_trans_date AND COALESCE(c.emp00_close_date, to_date('99991231','yyyyMMdd'))
+               LEFT OUTER JOIN apr10_stamp d       ON a.apr99_stamp_id = apr10_stamp_id
+               LEFT OUTER JOIN org00 f             ON c.emp00_org_code_id = f.org00_org_code_id
+         WHERE 1=1
+           AND apr99_company_id = #{c.companyId}
+           AND apr99_reg_date BETWEEN #{c.startDate} AND #{c.closeDate}
+           AND apr99_title LIKE #{c.aprName}
+           AND emp00_org_kor_nm LIKE #{c.orgName}
+           AND f_emp_kor_nm(emp00_person_id) LIKE #{c.personName}
+           AND org00_mod_date = (
+                                  SELECT MAX(org00_mod_date)
+                                    FROM org00_org_info
+                                   WHERE org00_org_code_id = emp00_org_code_id
+                                     AND org00_mod_date <![CDATA[ <= ]]> emp00_trans_date
+                                )
+    </select>
+
+    <!-- AS-IS apr99_appr_del.restore L121 (IDMS-IC) — 열 순서·고정 null 그대로. 이 회사 문서만(보안 보강) -->
+    <insert id="restore">
+        INSERT INTO apr01_appr
+        SELECT apr99_appr_id
+             , apr99_title
+             , apr99_reg_date
+             , apr99_status_cd
+             , apr99_content
+             , apr99_note
+             , apr99_reg_emp_id
+             , apr99_effect_date
+             , apr99_class_tree_id
+             , apr99_stamp_id
+             , apr99_receive_nm
+             , apr99_reference_nm
+             , apr99_stamp_seq
+             , apr99_inout_cd
+             , null
+             , null
+             , apr99_company_id
+             , apr99_form_type
+             , apr99_dcr_id_word
+             , apr99_stamp_position
+             , apr99_sign_company
+             , apr99_sign_ceo
+             , apr99_link_cd
+          FROM apr99_appr_del
+         WHERE apr99_appr_id = #{apprId}
+           AND apr99_company_id = #{companyId}
+    </insert>
+
+    <!-- AS-IS apr99_appr_del.deleteApprId (IDMS-IC) -->
+    <delete id="deleteApprId">
+        DELETE FROM apr99_appr_del
+         WHERE apr99_appr_id = #{apprId}
+    </delete>
+
+    <!-- AS-IS apr90_disposal_list.deleteByApprId (IDMS-IC) -->
+    <delete id="deleteDisposalListByApprId">
+        DELETE FROM apr90_disposal_list
+         WHERE apr90_appr_id = #{apprId}
+    </delete>
+
+    <!-- AS-IS apr91_disposal_history.insert (IDMS-IC) — 열 순서: seq, 회사, 등록자, 등록일, 문서, 코드 -->
+    <insert id="insertDisposalHistory">
+        INSERT INTO apr91_disposal_history
+        SELECT f_create_seq()
+             , #{companyId}
+             , #{regEmpId}
+             , #{regDate}
+             , #{apprId}
+             , #{disposalCode}
+    </insert>
+</mapper>
