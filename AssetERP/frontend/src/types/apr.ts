@@ -327,6 +327,27 @@ export interface AprAltAppr {
   emgrPoint?: string | null;
 }
 
+/** 대결자 지정(관리자) 한 행 (AS-IS Apr07_AltApprModel, EE02). 날짜는 'yyyy-MM-dd', stampYn은 'true'/'false' 문자열 */
+export interface AprAltApprMgr {
+  altApprId: number;
+  targetEmpId?: number | null;
+  targetEmpNo?: string | null;
+  targetEmpName?: string | null;
+  targetOrgName?: string | null;
+  targetTitleName?: string | null;
+  altEmpId?: number | null;
+  altEmpNo?: string | null;
+  altEmpName?: string | null;
+  altOrgName?: string | null;
+  altTitleName?: string | null;
+  startDate?: string | null;
+  closeDate?: string | null;
+  stampYn?: string | null;
+  reasonCd?: string | null;
+  emgrPoint?: string | null;
+  note?: string | null;
+}
+
 /** 인감대장 한 행 (AS-IS Apr01_ApprModel 중 Apr01_Tab_StampSeq 그리드 열, G06). title은 HTML(폐기 문서는 빨간 [폐기]). 날짜는 'yyyy-MM-ddTHH:mm:ss' */
 export interface AprStampSeq {
   apprId: number;

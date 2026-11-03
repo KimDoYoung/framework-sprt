@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { ApiResponse, PageRes } from '../types/auth';
 import { readBlobError } from './file';
-import { AprLinkArgs, AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampAppl, AprStampApplSaveReq, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck, AprStampApplAddReq, AprStampApplEdit,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprApprDel, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprLinkSeed, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprIdRow, AprApprDetail, AprAfterFile, AprAfterFund, AprDocForm, AprEditFile, AprFileDel, AprLoadDoc2, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcsRow, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampLine, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
+import { AprLinkArgs, AprAltAppr, AprCorpStamp, AprReprCorpLookup, AprStampDoc, AprStampAppl, AprStampApplSaveReq, AprStampDocAppl, AprStampDocLookup, AprStampDocSaveReq, AprStampDocSum, AprStampList, AprStampCheck, AprStampApplAddReq, AprStampApplEdit,AprApprStepGroup, AprDcrWrite, AprDcrWriteParams, AprAltApprMgr, AprApprDel, AprDisposalAppr, AprDisposalList, AprDoc, AprDownloadHistory, AprDocSearch, AprFundDoc, AprIcsDoc, AprItemDoc, AprLoadDoc, AprApprActionRes, AprApprActionState, AprRecentDoc, AprApprNew, AprLinkSeed, AprApprSaveReq, AprApprSaveStep, AprApprWriteRes, AprStepEmp, AprNewStep, AprApprAdv, AprApprIdRow, AprApprDetail, AprAfterFile, AprAfterFund, AprDocForm, AprEditFile, AprFileDel, AprLoadDoc2, AprBookmark, AprComment, AprCommentNotice, AprDisposalCheck, AprDisposalConfirmEmp, AprPersonAuth, AprRelateIcsRow, AprRelateIcsSaveReq, AprTypo, AprTypoSaveReq, AprOpenHistory, AprApprFile, AprApprFund, AprApprStampAppl, AprApprStep, AprRelateAppr, AprRelateLaw, AprMyApprove, AprMyAuth, AprMyReference, AprMyRequest, AprPreProvide, AprPutSeal, AprRelateAdv, AprRelateFund, AprReprCorp, AprStamp, AprStampLine, AprStampManage, AprStampSeq, AprSubList, AprTotalList } from '../types/apr';
 
 /** apr(전자결재) API (E16 조회창, F01 문서작성 목록, F02 업무별 문서작성 목록, F03 법규별 문서작성 목록, F04 폐기문서 신청현황) */
 export interface DocTextParams {
@@ -357,6 +357,27 @@ export const aprAltApprApi = {
   /** AS-IS apr.Apr07_AltAppr.delete → 지운 건수 */
   deleteAltApprs: async (ids: number[]): Promise<number> => {
     const res = await apiClient.delete<ApiResponse<number>>('v1/apr/alt-apprs', { data: ids });
+    return res.data.data ?? 0;
+  },
+};
+
+/** EE02 AS-IS Apr07_Tab_AltApprMgr (대결자 지정(관리자)) */
+export const aprAltApprMgrApi = {
+  /** AS-IS apr.Apr07_AltAppr.selectByText — companyId는 서버가 세션에서, searchText는 원결재자 이름(서버가 %로 감싼다) */
+  search: async (params: { startDate: string; endDate: string; searchText: string }): Promise<AprAltApprMgr[]> => {
+    const res = await apiClient.get<ApiResponse<AprAltApprMgr[]>>('v1/apr/alt-appr-mgrs', { params });
+    return res.data.data ?? [];
+  },
+  /** AS-IS apr.Apr07_AltAppr.notAltApprIdList + update → 저장된 행(요청 순서). 새 행(id ≤ 0)은 id를 빼고 보낸다 */
+  save: async (rows: AprAltApprMgr[]): Promise<AprAltApprMgr[]> => {
+    const body = rows.map(({ altApprId, targetEmpId, targetEmpName, altEmpId, altEmpName, startDate, closeDate, stampYn, reasonCd, emgrPoint, note }) =>
+      ({ altApprId: altApprId > 0 ? altApprId : null, targetEmpId, targetEmpName, altEmpId, altEmpName, startDate, closeDate, stampYn, reasonCd, emgrPoint, note }));
+    const res = await apiClient.put<ApiResponse<AprAltApprMgr[]>>('v1/apr/alt-appr-mgrs', body);
+    return res.data.data ?? [];
+  },
+  /** AS-IS apr.Apr07_AltAppr.delete → 지운 건수 */
+  remove: async (ids: number[]): Promise<number> => {
+    const res = await apiClient.delete<ApiResponse<number>>('v1/apr/alt-appr-mgrs', { data: ids });
     return res.data.data ?? 0;
   },
 };

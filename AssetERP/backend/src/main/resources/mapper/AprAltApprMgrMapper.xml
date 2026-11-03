@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AS-IS(IDMS-IC) server/apr/mapper/apr07_alt_appr.xml selectByText, notAltApprIdList, selectById + UpdateDataModel(apr07_alt_appr)  (EE02 Apr07_Tab_AltApprMgr) -->
+<mapper namespace="kr.co.kfs.asseterp.biz.apr.mapper.AprAltApprMgrMapper">
+
+    <!-- 그리드가 쓰는 열만(SELECT apr07_alt_appr.* 중). 날짜는 timestamp라 ::date -->
+    <sql id="mgrColumns">
+        apr07_alt_appr_id                                                            AS alt_appr_id,
+        apr07_target_emp_id                                                          AS target_emp_id,
+        tgt.emp01_emp_no                                                             AS target_emp_no,
+        tgt.emp01_kor_nm                                                             AS target_emp_name,
+        f_get_empTrans(tgt.emp01_person_id, apr07_close_date::date, 'org_code_nm')   AS target_org_name,
+        f_get_empTrans(tgt.emp01_person_id, apr07_close_date::date, 'title_nm')      AS target_title_name,
+        apr07_alt_emp_id                                                             AS alt_emp_id,
+        org.emp01_emp_no                                                             AS alt_emp_no,
+        org.emp01_kor_nm                                                             AS alt_emp_name,
+        f_get_empTrans(org.emp01_person_id, apr07_close_date::date, 'org_code_nm')   AS alt_org_name,
+        f_get_empTrans(org.emp01_person_id, apr07_close_date::date, 'title_nm')      AS alt_title_name,
+        apr07_start_date::date                                                       AS start_date,
+        apr07_close_date::date                                                       AS close_date,
+        COALESCE(apr07_stamp_yn, 'false')                                            AS stamp_yn,
+        apr07_reason_cd                                                              AS reason_cd,
+        apr07_emgr_point                                                             AS emgr_point,
+        apr07_note                                                                   AS note
+    </sql>
+
+    <!-- AS-IS apr07_alt_appr.selectByText L204 (IDMS-IC) — 조건·정렬 그대로(원결재자 이름 LIKE, 시작일 내림차순) -->
+    <select id="selectByText" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprAltApprMgrRes">
+        SELECT *
+          FROM (
+                 SELECT <include refid="mgrColumns"/>
+                      , apr07_start_date                                                             AS sort_start_date
+                   FROM apr07_alt_appr
+                        INNER JOIN emp01_person tgt ON tgt.emp01_person_id = apr07_target_emp_id
+                        INNER JOIN emp01_person org ON org.emp01_person_id = apr07_alt_emp_id
+                  WHERE tgt.emp01_company_id = #{companyId}
+                    AND ( apr07_start_date BETWEEN f_trunc(#{startDate}) AND f_trunc(#{endDate}) OR
+                          apr07_close_date BETWEEN f_trunc(#{startDate}) AND f_trunc(#{endDate}) )
+               ) t
+         WHERE target_emp_name LIKE #{searchText}
+         ORDER BY sort_start_date DESC
+    </select>
+
+    <!-- AS-IS apr07_alt_appr.notAltApprIdList L71 (IDMS-IC) — empId = null: 회사 전체 -->
+    <select id="selectNotInIds" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprAltApprMgrRes">
+        SELECT <include refid="mgrColumns"/>
+          FROM apr07_alt_appr
+               INNER JOIN emp01_person tgt ON tgt.emp01_person_id = apr07_target_emp_id AND tgt.emp01_company_id = #{companyId}
+               INNER JOIN emp01_person org ON org.emp01_person_id = apr07_alt_emp_id AND org.emp01_company_id = #{companyId}
+         WHERE 1=1
+        <if test="altApprIds != null and altApprIds.size() != 0">
+           AND apr07_alt_appr_id NOT IN
+            <foreach collection="altApprIds" item="item" open="(" separator="," close=")">#{item}</foreach>
+        </if>
+         ORDER BY apr07_start_date
+    </select>
+
+    <!-- AS-IS apr07_alt_appr.selectById (IDMS-IC) — 이 회사 원결재자만 -->
+    <select id="selectById" resultType="kr.co.kfs.asseterp.biz.apr.dto.AprAltApprMgrRes">
+        SELECT <include refid="mgrColumns"/>
+          FROM apr07_alt_appr
+               INNER JOIN emp01_person tgt ON tgt.emp01_person_id = apr07_target_emp_id
+               INNER JOIN emp01_person org ON org.emp01_person_id = apr07_alt_emp_id
+         WHERE apr07_alt_appr_id = #{altApprId}
+           AND tgt.emp01_company_id = #{companyId}
+    </select>
+
+    <select id="selectNextId" resultType="long" flushCache="true">
+        SELECT f_create_seq()
+    </select>
+
+    <insert id="insert">
+        INSERT INTO apr07_alt_appr
+               ( apr07_alt_appr_id, apr07_target_emp_id, apr07_start_date, apr07_close_date, apr07_alt_emp_id,
+                 apr07_reason_cd, apr07_emgr_point, apr07_note, apr07_stamp_yn )
+        SELECT #{req.altApprId}, #{req.targetEmpId}, #{req.startDate}, #{req.closeDate}, #{req.altEmpId},
+               #{req.reasonCd}, #{req.emgrPoint}, #{req.note}, #{req.stampYn}
+          WHERE EXISTS (SELECT 1 FROM emp01_person WHERE emp01_person_id = #{req.targetEmpId} AND emp01_company_id = #{companyId})
+            AND EXISTS (SELECT 1 FROM emp01_person WHERE emp01_person_id = #{req.altEmpId} AND emp01_company_id = #{companyId})
+    </insert>
+
+    <!-- UpdateDataModel UPDATE — 화면이 바꾸는 열(원결재자 포함) -->
+    <update id="update">
+        UPDATE apr07_alt_appr
+           SET apr07_target_emp_id = #{req.targetEmpId},
+               apr07_start_date    = #{req.startDate},
+               apr07_close_date    = #{req.closeDate},
+               apr07_alt_emp_id    = #{req.altEmpId},
+               apr07_reason_cd     = #{req.reasonCd},
+               apr07_emgr_point    = #{req.emgrPoint},
+               apr07_note          = #{req.note},
+               apr07_stamp_yn      = #{req.stampYn}
+         WHERE apr07_alt_appr_id = #{req.altApprId}
+           AND apr07_target_emp_id IN (SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId})
+           AND #{req.targetEmpId} IN (SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId})
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM apr07_alt_appr
+         WHERE apr07_alt_appr_id = #{altApprId}
+           AND apr07_target_emp_id IN (SELECT emp01_person_id FROM emp01_person WHERE emp01_company_id = #{companyId})
+    </delete>
+</mapper>

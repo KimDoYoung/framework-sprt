@@ -14692,5 +14692,27 @@
     "note": "docs/변환/work/EE/EE01-작업기록.md",
     "history": [],
     "id": "EE01"
+  },
+  "Apr07_Tab_AltApprMgr": {
+    "commit": "d1e87a1bafb2db9ff52d27e4c7182e6eb97a66be",
+    "commit_short": "d1e87a1",
+    "branch": "ioc",
+    "commit_date": "2026-11-02",
+    "repo_name": "IDMS-IC",
+    "files": {
+      "application/src/main/java/myApp/client/vi/apr/Apr07_Tab_AltApprMgr.java": "ecbe4c3be5f8150b8d796f4e6b328cb8733d73b1",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr07_AltApprModel.java": "49cd7086d8cb346e13a22a42230c85603a4ebac7",
+      "application/src/main/java/myApp/client/vi/apr/model/Apr07_AltApprModelProperties.java": "8cb000841ddf8b346d686ead64b8fba975911def",
+      "application/src/main/java/myApp/server/apr/Apr07_AltAppr.java": "f872a82e5c4452519a676c7a9539a113cd3eb2f7",
+      "application/src/main/java/myApp/server/apr/mapper/apr07_alt_appr.xml": "5b159372dacfefa13963f603c30707b5702651ad"
+    },
+    "shared_links": [
+      "Emp00_Lookup_SelectSingle"
+    ],
+    "recorded_at": "2026-11-03T11:21:02+09:00",
+    "recorded_by": "kdy987",
+    "note": "docs/변환/work/EE/EE02-작업기록.md",
+    "history": [],
+    "id": "EE02"
   }
 }
